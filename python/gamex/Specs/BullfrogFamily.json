@@ -1,0 +1,252 @@
+﻿{
+  "id": "Bullfrog",
+  "name": "Bullfrog",
+  "studio": "Bullfrog",
+  "description": "The file formats used in Bullfrog",
+  "url": "https://en.wikipedia.org/wiki/List_of_Bullfrog_Productions_games",
+  "samples": [
+    "BullfrogFamily.Sample.json"
+  ],
+  "engines": {
+    "Danae": {},
+    "Void": {}
+  },
+  "games": {
+    "*": {
+      "gameType": "GameX.Bullfrog.BullfrogGame, GameX.Bullfrog",
+      "pakFileType": "GameX.Bullfrog.BullfrogPakFile, GameX.Bullfrog"
+    },
+    "Fusion": {
+      "name": "Fusion",
+      "url": "https://en.wikipedia.org/wiki/Fusion_(video_game)",
+      "date": "October 1, 1988",
+      "tag": "Amiga"
+    },
+    "P": {
+      "name": "Populous",
+      "url": "https://en.wikipedia.org/wiki/Populous_(video_game)",
+      "date": "April 1, 1989",
+      "pakExt": ".dat",
+      "files": {
+        "key": [
+          "Steam:2203860",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 2203860",
+          "Local:Populous"
+        ],
+        "path": "DATA"
+      }
+    },
+    "Flood": {
+      "name": "Flood",
+      "date": "June 1, 1990",
+      "tag": "Amiga"
+    },
+    "PM": {
+      "name": "Powermonger",
+      "url": "https://en.wikipedia.org/wiki/Powermonger",
+      "date": "November 1, 1990"
+    },
+    "BF": {
+      "name": "Bullfrogger",
+      "url": "https://www.gog.com/index.php/game/dishonored_2",
+      "date": "September 1, 1991",
+      "tag": "Amiga"
+    },
+    "P2": {
+      "name": "Populous II: Trials of the Olympian Gods",
+      "url": "https://en.wikipedia.org/wiki/Populous_II:_Trials_of_the_Olympian_Gods",
+      "date": "November 1, 1991",
+      "pakExt": ".dat",
+      "pathx": [
+        "DATA",
+        "SOUND"
+      ],
+      "files": {
+        "key": [
+          "Steam:2616450",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 2616450",
+          "Local:Populous 2"
+        ]
+      }
+    },
+    "PS": {
+      "name": "Psycho Santa",
+      "url": "https://www.gog.com/en/game/dishonored_death_of_the_outsider",
+      "date": "2017-09-15",
+      "tag": "Amiga"
+    },
+    "S": {
+      "name": "Syndicate",
+      "url": "https://en.wikipedia.org/wiki/Syndicate_(1993_video_game)",
+      "date": "June 6, 1993",
+      "pakExt": ".vir",
+      "editions": {
+        "": {
+          "name": "Original",
+          "path": "SYNDICAT"
+        },
+        "plus": {
+          "name": "Plus"
+        }
+      },
+      "files": {
+        "key": [
+          "Gog:1207658992",
+          "WinReg:GOG.com/Games/1207658992",
+          "Local:Syndicate Plus"
+        ]
+      },
+      "virtuals": {
+        "MAIN.vir": null
+      }
+    },
+    "MC": {
+      "name": "Magic Carpet",
+      "url": "https://en.wikipedia.org/wiki/Magic_Carpet_(video_game)",
+      "date": "2019-07-25",
+      "pakExt": ".xyz",
+      "files": {
+        "key": [
+          "Gog:1207658935",
+          "WinReg:GOG.com/Games/1207658935",
+          "Local:Magic Carpet Plus"
+        ],
+        "path": "CARPET.CD"
+      }
+    },
+    "TP": {
+      "name": "Theme Park",
+      "url": "https://en.wikipedia.org/wiki/Theme_Park_(video_game)",
+      "date": "June 1, 1994",
+      "pakExt": ".xyz",
+      "files": {
+        "key": [
+          "Gog:1207660423",
+          "WinReg:GOG.com/Games/1207660423",
+          "Local:Theme Park"
+        ]
+      }
+    },
+    "Tube": {
+      "name": "Tube",
+      "date": "1994-01-01",
+      "tag": "Amiga"
+    },
+    "HO": {
+      "name": "Hi-Octane",
+      "url": "https://en.wikipedia.org/wiki/Hi-Octane",
+      "date": "August 1, 1995",
+      "tag": "Amiga"
+    },
+    "MC2": {
+      "name": "Magic Carpet 2",
+      "url": "https://en.wikipedia.org/wiki/Magic_Carpet_2",
+      "date": "1995-01-01",
+      "pakExt": ".xyz",
+      "files": {
+        "key": [
+          "Gog:1207659187",
+          "WinReg:GOG.com/Games/1207659187",
+          "Local:Magic Carpet 2"
+        ],
+        "path": "GAME/NETHERW"
+      }
+    },
+    "GW": {
+      "name": "Genewars",
+      "url": "https://en.wikipedia.org/wiki/Genewars",
+      "date": "June 24, 1996"
+    },
+    "S2": {
+      "name": "Syndicate Wars",
+      "url": "https://en.wikipedia.org/wiki/Syndicate_Wars",
+      "date": "October 31, 1996",
+      "pakExt": ".xyz",
+      "files": {
+        "key": [
+          "Gog:1207659193",
+          "WinReg:GOG.com/Games/1207659193",
+          "Local:Syndicate Wars"
+        ],
+        "path": "SWARS"
+      }
+    },
+    "TH": {
+      "name": "Theme Hospital",
+      "url": "https://en.wikipedia.org/wiki/Theme_Hospital",
+      "date": "March 28, 1997",
+      "files": {
+        "key": [
+          "Gog:1207659026",
+          "WinReg:GOG.com/Games/1207659026",
+          "Local:Theme Hospital"
+        ]
+      }
+    },
+    "DK": {
+      "name": "Dungeon Keeper",
+      "url": "https://en.wikipedia.org/wiki/Dungeon_Keeper",
+      "date": "26 June 1997",
+      "pakExt": [
+        ".dat",
+        ".jty"
+      ],
+      "files": {
+        "key": [
+          "Steam:1996630",
+          "Gog:1207658934",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 1996630",
+          "WinReg:GOG.com/Games/1207658934",
+          "Local:Dungeon Keeper"
+        ]
+      }
+    },
+    "P3": {
+      "name": "Populous: The Beginning",
+      "url": "https://en.wikipedia.org/wiki/Populous:_The_Beginning",
+      "date": "November 30, 1998",
+      "pakExt": [
+        ".dat",
+        ".spr"
+      ],
+      "files": {
+        "key": [
+          "Steam:2616430",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 2616430",
+          "Local:Populous 3"
+        ]
+      }
+    },
+    "TA": {
+      "name": "Theme Aquarium",
+      "url": "https://en.wikipedia.org/wiki/Theme_Aquarium",
+      "date": "December 17, 1998"
+    },
+    "DK2": {
+      "name": "Dungeon Keeper 2",
+      "url": "https://en.wikipedia.org/wiki/Dungeon_Keeper_2",
+      "date": "July 7, 1999",
+      "pakExt": [
+        ".dat",
+        ".spr"
+      ],
+      "files": {
+        "key": [
+          "Steam:2616460",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 2616460",
+          "Local:Dungeon Keeper 2"
+        ]
+      }
+    },
+    "TP:W": {
+      "name": "Theme Park World",
+      "url": "https://en.wikipedia.org/wiki/Theme_Park_World",
+      "date": "November 4, 1999"
+    },
+    "TP:I": {
+      "name": "Theme Park Inc.",
+      "url": "https://en.wikipedia.org/wiki/Theme_Park_Inc",
+      "date": "January 30, 2001"
+    }
+  }
+}

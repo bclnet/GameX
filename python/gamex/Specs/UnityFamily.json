@@ -1,0 +1,76 @@
+﻿{
+  "id": "Unity",
+  "name": "Unity",
+  "studio": "Unity",
+  "description": "Unity formats",
+  "url": "https://steamdb.info/tech/Engine/Unity/",
+  "samples": [
+    "UnityFamily.Sample.json"
+  ],
+  "games": {
+    "*": {
+      "pakFileType": "GameX.Unity.UnityPakFile, GameX.Unity",
+      "pakExt": ".assets"
+    },
+    "AmongUs": {
+      "name": "Among Us",
+      "url": "https://store.steampowered.com/app/945360",
+      "files": {
+        "key": [
+          "Steam:945360",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 945360",
+          "Local:Among Us"
+        ],
+        "path": "Among Us_Data"
+      }
+    },
+    "Cities": {
+      "name": "Cities: Skylines",
+      "url": "https://store.steampowered.com/app/255710",
+      "files": {
+        "key": [
+          "Steam:255710",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 255710",
+          "Local:Cities_Skylines"
+        ],
+        "path": "Cities_Data"
+      }
+    },
+    "Tabletop": {
+      "name": "Tabletop Simulator",
+      "url": "https://store.steampowered.com/app/286160",
+      "files": {
+        "key": [
+          "Steam:286160",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 286160",
+          "Local:Tabletop Simulator"
+        ],
+        "path": "Tabletop Simulator_Data"
+      }
+    },
+    "UBoat": {
+      "name": "Destroyer: The U-Boat Hunter",
+      "url": "https://store.steampowered.com/app/1272010",
+      "files": {
+        "key": [
+          "Steam:1272010",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 1272010",
+          "Local:xx"
+        ],
+        "path": "Destroyer The U-Boat Hunter_Data"
+      }
+    },
+    "7D2D": {
+      "name": "7 Days to Die",
+      "url": "https://store.steampowered.com/app/251570",
+      "files": {
+        "key": [
+          "Steam:251570",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 251570",
+          "Local:7 Days To Die"
+        ],
+        "path": "7DaysToDie_Data"
+      }
+    }
+  }
+}

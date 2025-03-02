@@ -1,0 +1,256 @@
+﻿{
+  "id": "Bethesda",
+  "name": "Bethesda Game Studios",
+  "studio": "Bethesda Game Studios",
+  "description": "TES formats used by Bethesda",
+  "url": "https://en.wikipedia.org/wiki/Bethesda_Game_Studios",
+  "samples": [
+    "BethesdaFamily.Sample.json"
+  ],
+  "familyType": "GameX.Bethesda.BethesdaFamily, GameX.Bethesda",
+  "engines": {
+    "TES3": {}
+  },
+  "games": {
+    "*": {
+      "gameType": "GameX.Bethesda.BethesdaGame, GameX.Bethesda",
+      "pakFileType": "GameX.Bethesda.BethesdaPakFile, GameX.Bethesda"
+    },
+    "Morrowind": {
+      "name": "The Elder Scrolls III: Morrowind",
+      "url": "https://store.steampowered.com/app/22320",
+      "date": "2002-04-29",
+      "pakExt": [
+        ".bsa",
+        ".esm"
+      ],
+      "paky": "game:/Morrowind.esm",
+      "pak": "game:/Morrowind.bsa",
+      "pakx": [
+        "game:/Morrowind.bsa",
+        "game:/Morrowind.esm"
+      ],
+      "files": {
+        "key": [
+          "Steam:22320",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 22320",
+          "Local:Morrowind"
+        ],
+        "path": "Data Files"
+      }
+    },
+    "IHRA": {
+      "name": "IHRA Professional Drag Racing 2005",
+      "url": "https://en.wikipedia.org/wiki/IHRA_Drag_Racing",
+      "date": "2004-11-01"
+    },
+    "Oblivion": {
+      "name": "The Elder Scrolls IV: Oblivion",
+      "url": [
+        "https://store.steampowered.com/app/22330/The_Elder_Scrolls_IV_Oblivion_Game_of_the_Year_Edition/",
+        "https://en.wikipedia.org/wiki/The_Elder_Scrolls_IV:_Oblivion"
+      ],
+      "date": "2007-09-11",
+      "pakExt": ".bsa",
+      "datExt": ".esm",
+      "pak": "game:/Oblivion*.bsa",
+      "pakx": "game:/Oblivion - Meshes.bsa",
+      "dat": "game:/Oblivion.esm",
+      "files": {
+        "key": [
+          "Steam:22330",
+          "WinReg:Bethesda Softworks/Oblivion",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 22330",
+          "Local:Oblivion"
+        ],
+        "path": "Data"
+      }
+    },
+    "Fallout3": {
+      "name": "Fallout 3",
+      "url": "https://store.steampowered.com/app/22370/Fallout_3_Game_of_the_Year_Edition/",
+      "date": "2009-10-13",
+      "pakExt": ".bsa",
+      "datExt": ".esm",
+      "pak": "game:/Fallout*.bsa",
+      "dat": "game:/Fallout3.esm",
+      "files": {
+        "key": [
+          "Steam:22370",
+          "WinReg:Bethesda Softworks/Fallout3",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 22370",
+          "Local:Fallout 3 goty"
+        ],
+        "path": "Data"
+      }
+    },
+    "FalloutNV": {
+      "name": "Fallout New Vegas",
+      "url": "https://store.steampowered.com/app/22380",
+      "date": "2010-10-19",
+      "pakExt": ".bsa",
+      "datExt": ".esm",
+      "pak": "game:/Fallout*.bsa",
+      "dat": "game:/FalloutNV.esm",
+      "files": {
+        "key": [
+          "Steam:22380",
+          "WinReg:Bethesda Softworks/falloutnv",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 22380",
+          "Local:Fallout New Vegas"
+        ],
+        "path": "Data"
+      }
+    },
+    "Skyrim": {
+      "name": "The Elder Scrolls V: Skyrim",
+      "url": "https://store.steampowered.com/app/72850",
+      "date": "2011-11-10",
+      "pakExt": ".bsa",
+      "datExt": ".esm",
+      "pak": "game:/Skyrim*.bsa",
+      "dat": "game:/Skyrim.esm",
+      "files": {
+        "reg": [
+          "Steam:72850",
+          "WinReg:Bethesda Softworks/skyrim",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 72850",
+          "Local:Skyrim"
+        ],
+        "path": "Data"
+      }
+    },
+    "Fallout4": {
+      "name": "Fallout 4",
+      "url": "https://store.steampowered.com/app/377160",
+      "date": "2015-11-09",
+      "pakExt": ".ba2",
+      "datExt": ".esm",
+      "pak": "game:/Fallout4*.ba2",
+      "dat": "game:/Fallout4.esm",
+      "files": {
+        "key": [
+          "Steam:377160",
+          "WinReg:Bethesda Softworks/Fallout4",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 377160",
+          "Local:Fallout 4"
+        ],
+        "path": "Data"
+      }
+    },
+    "SkyrimSE": {
+      "name": "The Elder Scrolls V: Skyrim - Special Edition",
+      "url": "https://store.steampowered.com/app/489830",
+      "date": "2016-10-27",
+      "pakExt": ".bsa",
+      "datExt": ".esm",
+      "pak": "game:/Skyrim*.bsa",
+      "dat": "game:/Skyrim.esm",
+      "files": {
+        "key": [
+          "Steam:489830",
+          "WinReg:Bethesda Softworks/Skyrim SE",
+          "WinReg:Bethesda Softworks/Skyrim Special Edition",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 489830",
+          "Local:Skyrim Special Edition"
+        ],
+        "path": "Data"
+      }
+    },
+    "Fallout:S": {
+      "name": "Fallout Shelter",
+      "url": "https://store.steampowered.com/app/588430",
+      "date": "2017-03-29",
+      "files": {
+        "key": [
+          "Steam:588430",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 588430",
+          "Local:Fallout Shelter"
+        ]
+      },
+      "Fallout4VR": {
+        "name": "Fallout 4 VR",
+        "url": "https://store.steampowered.com/app/611660",
+        "date": "2017-12-11",
+        "pakExt": ".ba2",
+        "datExt": ".esm",
+        "pak": "game:/Fallout4*.ba2",
+        "dat": "game:/Fallout4.esm",
+        "files": {
+          "key": [
+            "Steam:611660",
+            "WinReg:Bethesda Softworks/Fallout 4 VR",
+            "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 611660",
+            "Local:Fallout 4 VR"
+          ],
+          "path": "Data"
+        }
+      },
+      "SkyrimVR": {
+        "name": "The Elder Scrolls V: Skyrim VR",
+        "url": "https://store.steampowered.com/app/611670",
+        "date": "2018-04-02",
+        "pakExt": ".bsa",
+        "datExt": ".esm",
+        "pak": "game:/Skyrim*.bsa",
+        "dat": "game:/Skyrim.esm",
+        "files": {
+          "key": [
+            "Steam:611670",
+            "WinReg:Bethesda Softworks/Skyrim VR",
+            "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 611670",
+            "Local:SkyrimVR"
+          ],
+          "path": "Data"
+        }
+      },
+      "Blades": {
+        "name": "The Elder Scrolls: Blades",
+        "url": "https://elderscrolls.bethesda.net/en/blades",
+        "date": "2019-03-27"
+      },
+      "Fallout76": {
+        "name": "Fallout 76",
+        "url": "https://store.steampowered.com/app/1151340",
+        "date": "2020-04-14",
+        "pakExt": ".ba2",
+        "datExt": ".esm",
+        "pak": "game:/SeventySix.ba2",
+        "dat": "game:/SeventySix.esm",
+        "files": {
+          "key": [
+            "Steam:1151340",
+            "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 1151340",
+            "Local:Fallout76"
+          ],
+          "path": "Data"
+        }
+      },
+      "Starfield": {
+        "name": "Starfield",
+        "url": "https://store.steampowered.com/app/1716740",
+        "date": "2023-09-05",
+        "pakExt": ".ba2",
+        "datExt": ".esm",
+        "pak": "game:/Starfield*.ba2",
+        "dat": "game:/Starfield.esm",
+        "files": {
+          "key": [
+            "Steam:1716740",
+            "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 1716740",
+            "Local:Starfield"
+          ],
+          "path": "Data"
+        }
+      },
+      "Tes6": {
+        "name": "The Elder Scrolls VI (future)",
+        "url": "https://en.wikipedia.org/wiki/The_Elder_Scrolls"
+      },
+      "Fallout5": {
+        "name": "Fallout 5 (future)",
+        "url": "https://en.wikipedia.org/wiki/Fallout_(series)"
+      }
+    }
+  }
+}

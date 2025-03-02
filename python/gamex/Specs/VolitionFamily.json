@@ -1,0 +1,312 @@
+﻿{
+  "id": "Volition",
+  "name": "Volition",
+  "studio": "Deep Silver Volition, LLC",
+  "description": "The file formats used in the Volition family",
+  "url": "https://en.wikipedia.org/wiki/List_of_Volition_games",
+  "samples": [
+    "VolitionFamily.Sample.json"
+  ],
+  "engines": {
+    "Descent": {},
+    "CTG": {},
+    "Geo-Mod": {}
+  },
+  "games": {
+    "*": {
+      "gameType": "GameX.Volition.VolitionGame, GameX.Volition",
+      "pakFileType": "GameX.Volition.VolitionPakFile, GameX.Volition"
+    },
+    "D": {
+      "name": "Descent",
+      "engine": "Descent",
+      "url": "https://en.wikipedia.org/wiki/Descent_(video_game)",
+      "date": "March 5, 1995",
+      "pakExt": [
+        ".hog",
+        ".pig"
+      ],
+      "files": {
+        "key": [
+          "Steam:273570",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 273570",
+          "Local:Descent"
+        ],
+        "path": "descent"
+      }
+    },
+    "D2": {
+      "name": "Descent II",
+      "engine": "Descent",
+      "url": "https://en.wikipedia.org/wiki/Descent_II",
+      "date": "March 13, 1996",
+      "pakExt": [
+        ".hog",
+        ".pig",
+        ".s11",
+        ".s22"
+      ],
+      "files": {
+        "key": [
+          "Steam:273580",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 273580",
+          "Local:Descent II"
+        ],
+        "path": "descent2"
+      }
+    },
+    "FS": {
+      "name": "Descent: FreeSpace - The Great War",
+      "engine": "CTG",
+      "url": "https://en.wikipedia.org/wiki/Descent:_FreeSpace_%E2%80%93_The_Great_War",
+      "date": "March 19, 1998",
+      "pakExt": ".xx",
+      "files": {
+        "key": [
+          "Steam:273600",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 273600",
+          "Local:Descent: FreeSpace - The Great War"
+        ]
+      }
+    },
+    "FS2": {
+      "name": "FreeSpace 2",
+      "engine": "CTG",
+      "url": "https://en.wikipedia.org/wiki/FreeSpace_2",
+      "date": "September 30, 1999",
+      "pakExt": ".xx",
+      "files": {
+        "key": [
+          "Steam:273620",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 273620",
+          "Local:Freespace 2"
+        ]
+      }
+    },
+    "S": {
+      "name": "Summoner",
+      "engine": "CTG",
+      "url": "https://en.wikipedia.org/wiki/Summoner_(video_game)",
+      "date": "October 24, 2000",
+      "pakExt": ".xx",
+      "files": {
+        "key": [
+          "Steam:275570",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 275570",
+          "Local:Summoner"
+        ]
+      }
+    },
+    "RF": {
+      "name": "Red Faction",
+      "engine": "Geo-Mod",
+      "url": "https://en.wikipedia.org/wiki/Red_Faction_(video_game)",
+      "date": "May 22, 2001",
+      "pakExt": ".xx",
+      "files": {
+        "key": [
+          "Steam:20530",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 20530",
+          "Local:Red Faction"
+        ]
+      }
+    },
+    "S2": {
+      "name": "Summoner 2",
+      "engine": "CTG",
+      "url": "https://en.wikipedia.org/wiki/Summoner_2",
+      "date": "September 23, 2002",
+      "pakExt": ".xx",
+      "files": {
+        "key": [
+          "Unknown:XX",
+          "WinReg:XX",
+          "Local:Summoner 2"
+        ]
+      }
+    },
+    "RF2": {
+      "name": "Red Faction II",
+      "engine": "Geo-Mod",
+      "url": "https://en.wikipedia.org/wiki/Red_Faction_II",
+      "date": "October 16, 2002",
+      "pakExt": ".xx",
+      "files": {
+        "key": [
+          "Steam:20550",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 20550",
+          "Local:Red Faction II"
+        ]
+      }
+    },
+    "TP": {
+      "name": "The Punisher",
+      "engine": "CTG",
+      "url": "https://en.wikipedia.org/wiki/The_Punisher_(2004_video_game)",
+      "date": "April 12, 2004",
+      "pakExt": ".xx",
+      "files": {
+        "key": [
+          "Unknown:XX",
+          "WinReg:XX",
+          "Local:The Punisher"
+        ]
+      }
+    },
+    "SR06": {
+      "name": "Saints Row",
+      "engine": "CTG",
+      "url": "https://en.wikipedia.org/wiki/Saints_Row_(2006_video_game)",
+      "date": "August 29, 2006",
+      "pakExt": ".xx",
+      "files": {
+        "key": [
+          "Unknown:XX",
+          "WinReg:XX",
+          "Local:Saints Row"
+        ]
+      }
+    },
+    "SR2": {
+      "name": "Saints Row 2",
+      "engine": "CTG",
+      "url": "https://en.wikipedia.org/wiki/Saints_Row_2",
+      "date": "October 14, 2008",
+      "pakExt": ".xx",
+      "files": {
+        "key": [
+          "Steam:9480",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 9480",
+          "Local:Saints Row 2"
+        ]
+      }
+    },
+    "RF:G": {
+      "name": "Red Faction: Guerrilla",
+      "engine": "Geo-Mod2",
+      "url": "https://en.wikipedia.org/wiki/Red_Faction:_Guerrilla",
+      "date": "June 2, 2009",
+      "pakExt": ".xx",
+      "files": {
+        "key": [
+          "Steam:20500",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 20500",
+          "Local:Red Faction Guerrilla"
+        ]
+      }
+    },
+    "RF:A": {
+      "name": "Red Faction: Armageddon",
+      "engine": "Geo-Mod2",
+      "url": "https://en.wikipedia.org/wiki/Red_Faction:_Armageddon",
+      "date": "June 7, 2011",
+      "pakExt": ".xx",
+      "files": {
+        "key": [
+          "Steam:55110",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 55110",
+          "Local:red faction armageddon"
+        ]
+      }
+    },
+    "SR3": {
+      "name": "Saints Row: The Third",
+      "engine": "CTG",
+      "url": "https://en.wikipedia.org/wiki/Saints_Row:_The_Third",
+      "date": "November 15, 2011",
+      "pakExt": ".xx",
+      "files": {
+        "key": [
+          "Steam:55230",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 55230",
+          "Local:Saints Row the Third"
+        ]
+      }
+    },
+    "SR4": {
+      "name": "Saints Row IV",
+      "engine": "CTG",
+      "url": "https://en.wikipedia.org/wiki/Saints_Row_IV",
+      "date": "August 20, 2013",
+      "pakExt": ".xx",
+      "files": {
+        "key": [
+          "Steam:206420",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 206420",
+          "Local:Saints Row IV"
+        ]
+      }
+    },
+    "D3": {
+      "name": "Descent 3",
+      "engine": "CTG",
+      "url": "https://store.steampowered.com/app/273590",
+      "date": "Apr 15, 2014",
+      "pakExt": ".xx",
+      "tag": "OtherStudio",
+      "files": {
+        "key": [
+          "Steam:273590",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 273590",
+          "Local:Descent 3"
+        ]
+      }
+    },
+    "SR:G": {
+      "name": "Saints Row: Gat out of Hell",
+      "engine": "CTG",
+      "url": "https://en.wikipedia.org/wiki/Saints_Row:_Gat_out_of_Hell",
+      "date": "January 20, 2015",
+      "pakExt": ".xx",
+      "files": {
+        "key": [
+          "Steam:301910",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 301910",
+          "Local:Saints Row Gat out of Hell"
+        ]
+      }
+    },
+    "AoM": {
+      "name": "Agents of Mayhem",
+      "engine": "CTG",
+      "url": "https://en.wikipedia.org/wiki/Agents_of_Mayhem",
+      "date": "August 15, 2017",
+      "pakExt": ".xx",
+      "files": {
+        "key": [
+          "Steam:304530",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 304530",
+          "Local:Agents of Mayhem"
+        ]
+      }
+    },
+    "RF:GR": {
+      "name": "Red Faction: Guerrilla Re-Mars-tered",
+      "engine": "CTG",
+      "url": "https://en.wikipedia.org/wiki/Red_Faction:_Guerrilla",
+      "date": "Jul 3, 2018",
+      "pakExt": ".xx",
+      "files": {
+        "key": [
+          "Steam:667720",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 667720",
+          "Local:Red Faction Guerrilla Re-MARS-tered"
+        ]
+      }
+    },
+    "SR": {
+      "name": "Saints Row",
+      "engine": "CTG",
+      "url": "https://en.wikipedia.org/wiki/Saints_Row_(2022_video_game)",
+      "date": "August 23, 2022",
+      "pakExt": ".xx",
+      "files": {
+        "key": [
+          "Steam:742420",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 742420",
+          "Local:Saints Row"
+        ]
+      }
+    }
+  }
+}

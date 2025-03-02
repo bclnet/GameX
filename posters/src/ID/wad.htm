@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="../base.css">
+    <style type="text/css">
+        #body {
+            position: relative;
+            width: 400px;
+        }
+
+        #title {
+            float: right;
+        }
+
+        #Header {
+            position: absolute;
+        }
+
+        #Lump {
+            position: absolute;
+            left: 150px;
+        }
+       
+        #Magic {
+            position: absolute;
+            font-size: .75em;
+            top: 120px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="body" />
+
+    <div id="title">
+        <h1>WAD</h1>
+    </div>
+
+    <div id="Header">
+        <h2>I2i</h2>
+        <h3>Header</h3>
+        Magic<br />
+        LumpCount<br />
+        LumpOffset<br />
+    </div>
+
+    <div id="Lump">
+        <h2>3i4b16s</h2>
+        <h3>Lump</h3>
+        Offset<br />
+        PackedSize<br />
+        FileSize<br />
+        Type<br />
+        Compression<br />
+        Padding0<br />
+        Padding1<br />
+        Path<br />
+    </div>
+
+    <div id="Magic">
+        <h2>Magic</h2>
+        MAGIC = 0x32444157<br />
+    </div>
+</body>
+
+</html>

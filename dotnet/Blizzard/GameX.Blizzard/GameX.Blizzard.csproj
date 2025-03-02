@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <Optimize>False</Optimize>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <Optimize>True</Optimize>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Formats\Casc\WDB2Reader.cs" />
+    <Compile Remove="Formats\Casc\WDB3Reader.cs" />
+    <Compile Remove="Formats\Casc\WDB5Reader.cs" />
+    <Compile Remove="Formats\Casc\WDB6Reader.cs" />
+    <Compile Remove="Formats\Casc\WDBCReader.cs" />
+    <Compile Remove="Formats\Casc\WDC2ReaderGeneric.cs" />
+    <Compile Remove="Formats\Casc\WDC3Reader.cs" />
+    <Compile Remove="Formats\Casc\WDC3ReaderGeneric.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Base\GameX.FileSystems\GameX.FileSystems.csproj" />
+    <ProjectReference Include="..\..\Base\GameX\GameX.csproj" />
+  </ItemGroup>
+
+</Project>

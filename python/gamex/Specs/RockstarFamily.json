@@ -1,0 +1,878 @@
+﻿{
+  "id": "Rockstar",
+  "name": "Rockstar Games",
+  "studio": "Rockstar Games",
+  "description": "",
+  "url": "https://en.wikipedia.org/wiki/List_of_video_games_published_by_Rockstar_Games",
+  "samples": [
+    "RockstarFamily.Sample.json"
+  ],
+  "games": {
+    "*": {
+      "pakFileType": "GameX.Rockstar.RockstarPakFile, GameX.Rockstar"
+    },
+    "GTA": {
+      "name": "Grand Theft Auto",
+      "url": [
+        "https://archive.org/details/gta-1-max",
+        "https://archive.org/download/sony_playstation_part2/Grand%20Theft%20Auto%20%28USA%29.zip",
+        "https://www.rockstargames.com/games/gta",
+        "https://en.wikipedia.org/wiki/Grand_Theft_Auto_(video_game)"
+      ],
+      "dev": "DMA Design;Tarantula Studios",
+      "date": "1997-11-28",
+      "form": "Console;Windows",
+      "dlc": {
+        "mp1": {
+          "name": "Mission Pack #1 - London 1969",
+          "date": "1999-04-06",
+          "url": "https://archive.org/download/sony_playstation_part2/Grand%20Theft%20Auto%20-%20Mission%20Pack%201%20-%20London%201969%20%28USA%29.zip"
+        },
+        "mp2": {
+          "name": "Mission Pack #2 - London 1961",
+          "date": "1999-07-01"
+        }
+      },
+      "files": {
+        "key": [
+          "Archive:GTA1-MAX.zip",
+          "Archive:Grand Theft Auto (USA).7z#cue.psx"
+        ]
+      }
+    },
+    "WM": {
+      "n/a": false,
+      "name": "Wild Metal",
+      "url": [
+        "https://www.rockstargames.com/games/wildmetal",
+        "https://en.wikipedia.org/wiki/Wild_Metal"
+      ],
+      "dev": "Rockstar North;DMA Design",
+      "date": "1999-02-01",
+      "form": "Console;Windows"
+    },
+    "MTM64": {
+      "name": "Monster Truck Madness 64",
+      "url": [
+        "https://archive.org/download/nointro.n64/Monster%20Truck%20Madness%2064%20%28USA%29.7z",
+        "https://en.wikipedia.org/wiki/Monster_Truck_Madness_2#Monster_Truck_Madness_64"
+      ],
+      "dev": "Edge of Reality",
+      "date": "1999-07-30",
+      "form": "Console",
+      "files": {
+        "key": "Archive:Monster Truck Madness 64 (USA).7z#n64"
+      }
+    },
+    "GTA2": {
+      "name": "Grand Theft Auto 2",
+      "url": [
+        "https://archive.org/details/grand-theft-auto-2-pc_202107",
+        "https://archive.org/download/sony_playstation_part2/Grand%20Theft%20Auto%202%20%28USA%29.zip",
+        "https://www.rockstargames.com/games/gta2",
+        "https://en.wikipedia.org/wiki/Grand_Theft_Auto_2"
+      ],
+      "dev": "DMA Design;Tarantula Studios",
+      "date": "1999-10-22",
+      "form": "Console;Windows",
+      "files": {
+        "key": [
+          "Archive:Grand Theft Auto 2 - PC.zip#iso",
+          "Archive:Grand Theft Auto 2 (USA).zip#cue.psx"
+        ]
+      }
+    },
+    "EWJ3D": {
+      "name": "Earthworm Jim 3D",
+      "url": [
+        "https://store.steampowered.com/app/41600/Earthworm_Jim_3D/",
+        "https://archive.org/download/nointro.n64/Earthworm%20Jim%203D%20%28USA%29.7z",
+        "https://www.gog.com/en/game/earthworm_jim_3d",
+        "https://en.wikipedia.org/wiki/Earthworm_Jim_3D"
+      ],
+      "dev": "VIS Entertainment",
+      "date": "1999-10-31",
+      "form": "Console",
+      "files": {
+        "key": [
+          "Steam:41600",
+          "Gog:1207658649",
+          "Archive:Earthworm Jim 3D (USA).7z#n64"
+        ]
+      }
+    },
+    "TSaD": {
+      "name": "Thrasher: Skate and Destroy",
+      "url": [
+        "https://archive.org/download/sony_playstation_part5/Thrasher%20-%20Skate%20and%20Destroy%20%28USA%29.zip",
+        "https://www.rockstargames.com/games/skateanddestroy",
+        "https://en.wikipedia.org/wiki/Thrasher_Presents_Skate_and_Destroy"
+      ],
+      "dev": "Z-Axis",
+      "date": "1999-11-15",
+      "form": "Console",
+      "files": {
+        "key": "Archive:Thrasher - Skate and Destroy (USA).zip#cue.psx"
+      }
+    },
+    "EK": {
+      "name": "Evel Knievel",
+      "url": [
+        "https://archive.org/download/nointro.gbc-1/Evel%20Knievel%20%28USA%29%20%28GB%20Compatible%29.7z",
+        "https://gamefaqs.gamespot.com/gbc/197242-evel-knievel"
+      ],
+      "dev": "Tarantula Studios",
+      "date": "1999-11-22",
+      "form": "Console",
+      "files": {
+        "key": "Archive:Evel Knievel (USA) (GB Compatible).7z#rom.gbc"
+      }
+    },
+    "AP:OB": {
+      "name": "Austin Powers: Oh, Behave!",
+      "url": [
+        "https://archive.org/download/nointro.gbc-1/Austin%20Powers%20-%20Oh%2C%20Behave%21%20%28USA%29.7z",
+        "https://en.wikipedia.org/wiki/Austin_Powers:_Oh,_Behave!"
+      ],
+      "dev": "Tarantula Studios",
+      "date": "2000-09-17",
+      "form": "Console",
+      "files": {
+        "key": "Archive:Austin Powers - Oh, Behave! (USA).7z#rom.gbc"
+      }
+    },
+    "AP:WtMUL": {
+      "name": "Austin Powers: Welcome to My Underground Lair!",
+      "url": [
+        "https://archive.org/download/nointro.gbc-1/Austin%20Powers%20-%20Welcome%20to%20My%20Underground%20Lair%21%20%28USA%29.7z",
+        "https://en.wikipedia.org/wiki/Austin_Powers:_Welcome_to_My_Underground_Lair!"
+      ],
+      "dev": "Tarantula Studios",
+      "date": "2000-09-17",
+      "form": "Console",
+      "files": {
+        "key": "Archive:Austin Powers - Welcome to My Underground Lair! (USA).7z#rom.gbc"
+      }
+    },
+    "MC": {
+      "name": "Midnight Club: Street Racing",
+      "url": [
+        "https://archive.org/download/sony_playstation2_m_part2/Midnight%20Club%20-%20Street%20Racing%20%28USA%29.zip",
+        "https://www.rockstargames.com/games/midnightclub",
+        "https://en.wikipedia.org/wiki/Midnight_Club:_Street_Racing"
+      ],
+      "urlx": [
+        "https://archive.org/download/midnight-club-street-racing-usa/Midnight%20Club%20-%20Street%20Racing%20%28USA%29.rar"
+      ],
+      "dev": "Angel Studios",
+      "date": "2000-10-26",
+      "form": "Console",
+      "files": {
+        "key": "Archive:Midnight Club - Street Racing (USA).zip#cue.ps2"
+      }
+    },
+    "SR": {
+      "name": "Smuggler's Run",
+      "url": [
+        "https://archive.org/download/sony_playstation2_s_part3/Smuggler%27s%20Run%20%28USA%29.zip",
+        "https://archive.org/download/SmugglersRunUSA/Smuggler%27s%20Run%20%28USA%29.7z",
+        "https://www.rockstargames.com/games/smugglersrun",
+        "https://en.wikipedia.org/wiki/Smuggler%27s_Run"
+      ],
+      "dev": "Angel Studios",
+      "date": "2000-10-26",
+      "form": "Console",
+      "files": {
+        "key": "Archive:Smuggler's Run (USA).7z#cue.ps2"
+      }
+    },
+    "SH": {
+      "name": "Surfing H3O",
+      "url": [
+        "https://archive.org/download/PS2CollectionPart2ByGhostware/Surfing%20H3O%20%28USA%29.zip",
+        "https://en.wikipedia.org/wiki/Surfing_H3O"
+      ],
+      "dev": "Opus Corp",
+      "date": "2000-10-27",
+      "form": "Console",
+      "files": {
+        "key": "Archive:Surfing H3O (USA).zip#bin.ps2"
+      }
+    },
+    "ON": {
+      "name": "Oni",
+      "url": [
+        "https://archive.org/download/sony_playstation2_o_part2/Oni%20%28USA%29.zip",
+        "https://archive.org/download/oni-pc-redump/ONI-PC-REDUMP/Oni%20%28USA%29.zip",
+        "https://www.rockstargames.com/games/oni",
+        "https://en.wikipedia.org/wiki/Oni_(video_game)"
+      ],
+      "dev": "Rockstar Canada;Tarantula Studios",
+      "date": "2001-01-29",
+      "form": "Console",
+      "files": {
+        "key": "Archive:Oni (USA).zip#cue.ps2"
+      }
+    },
+    "YDKJ": {
+      "name": "You Don't Know Jack",
+      "url": [
+        "https://archive.org/download/YouDontKnowJackDisc1.7z/You%20Don%27t%20Know%20Jack%20%28Disc%201%29.7z",
+        "https://archive.org/download/YouDontKnowJackDisc2.7z/You%20Don%27t%20Know%20Jack%20%28Disc%202%29.7z",
+        "https://en.wikipedia.org/wiki/You_Don%27t_Know_Jack_(1999_video_game)"
+      ],
+      "dev": "Starsphere",
+      "date": "2001-05-21",
+      "form": "Console",
+      "files": {
+        "key": [
+          "Archive:You Don't Know Jack (Disc 1).7z#cue.ps2",
+          "Archive:You Don't Know Jack (Disc 2).7z#cue.ps2"
+        ]
+      }
+    },
+    "GTA3": {
+      "name": "Grand Theft Auto III",
+      "url": [
+        "https://store.steampowered.com/app/1546970/Grand_Theft_Auto_III__The_Definitive_Edition/",
+        "https://archive.org/download/sony_playstation2_g/Grand%20Theft%20Auto%20III%20%28USA%29.zip",
+        "https://www.rockstargames.com/games/grandtheftauto3",
+        "https://en.wikipedia.org/wiki/Grand_Theft_Auto_III"
+      ],
+      "urlx": [
+        "https://dl6b.cdromance.org/download.php?file=Grand%20Theft%20Auto%20III%20%28USA%29.7z&id=83500&platform=ps2-iso&key=9760857763",
+      ],
+      "dev": "War Drum Studios",
+      "date": "2001-10-22",
+      "form": "Mobile;Console;Windows",
+      "files": {
+        "key": [
+          "Steam:1546970",
+          "Archive:XYZ"
+        ]
+      }
+    },
+    "SR2": {
+      "name": "Smuggler's Run 2: Hostile Territory",
+      "url": [
+        "https://archive.org/download/sony_playstation2_s_part3/Smuggler%27s%20Run%202%20-%20Hostile%20Territory%20%28USA%29.zip",
+        "https://www.rockstargames.com/games/smugglersrun2",
+        "https://en.wikipedia.org/wiki/Smuggler%27s_Run_2:_Hostile_Territory"
+      ],
+      "dev": "Angel Studios",
+      "date": "2001-10-29",
+      "form": "Console",
+      "files": {
+        "key": "Archive:Max Payne (USA).zip#cue.ps2"
+      }
+    },
+    "MP": {
+      "name": "Max Payne",
+      "url": [
+        "https://store.steampowered.com/app/12140/Max_Payne/",
+        "https://archive.org/download/sony_playstation2_m_part1/Max%20Payne%20%28USA%29.zip",
+        "https://store.playstation.com/en-us/product/UP1004-CUSA03513_00-SLUS202300000001",
+        "https://www.xbox.com/en-US/games/store/max-payne/9NTGH3ZZ3PX3",
+        "https://www.rockstargames.com/games/maxpayne",
+        "https://en.wikipedia.org/wiki/Max_Payne_(video_game)"
+      ],
+      "dev": "Neo Software Produktions;Rockstar Canada;Mobius Entertainment;War Drum Studios",
+      "date": "2001-12-06",
+      "form": "Mobile;Console",
+      "files": {
+        "key": [
+          "Steam:12140",
+          "Archive:Max Payne (USA).zip#cue.ps2",
+          "Play:UP1004-CUSA03513_00-SLUS202300000001",
+          "XBox:9NTGH3ZZ3PX3"
+        ]
+      }
+    },
+    "SoE": {
+      "name": "State of Emergency",
+      "url": [
+        "https://archive.org/download/sony_playstation2_s_part4/State%20of%20Emergency%20%28USA%29.zip",
+        "https://www.rockstargames.com/games/stateofemergency",
+        "https://en.wikipedia.org/wiki/State_of_Emergency_(video_game)"
+      ],
+      "dev": "VIS Entertainment",
+      "date": "2002-02-13",
+      "form": "Console",
+      "files": {
+        "key": "Archive:State of Emergency (USA).zip#iso.ps2"
+      }
+    },
+    "TIJ": {
+      "name": "The Italian Job",
+      "url": [
+        "https://archive.org/download/sony_playstation_part2/Italian%20Job%2C%20The%20%28USA%29.zip",
+        "https://www.myabandonware.com/game/the-italian-job-des",
+        "https://www.rockstargames.com/games/italianjob",
+        "https://en.wikipedia.org/wiki/The_Italian_Job_(2001_video_game)"
+      ],
+      "dev": "Pixelogic Limited",
+      "date": "2002-05-03",
+      "form": "Console",
+      "files": {
+        "key": [
+          "Abandon:The-Italian-Job_Win_EN_RIP.zip#.win",
+          "Archive:Italian Job, The (USA).zip#cue.psx"
+        ]
+      }
+    },
+    "SR:W": {
+      "name": "Smuggler's Run: Warzones",
+      "url": [
+        "https://archive.org/download/rvz-gc-usa-redump/RVZ-GC-USA-REDUMP/Smuggler%27s%20Run%20-%20Warzones%20%28USA%29.rvz",
+        "https://www.rockstargames.com/games/smugglersrunwarzones",
+        "https://en.wikipedia.org/wiki/Smuggler%27s_Run:_Warzones"
+      ],
+      "urlx": [
+        "https://www.emulatorgames.net/roms/gamecube/smugglers-run-warzones/"
+      ],
+      "dev": "Angel Studios",
+      "date": "2002-08-06",
+      "form": "Console",
+      "files": {
+        "key": "Archive:Smuggler's Run - Warzones (USA).rvz#rom.gc"
+      }
+    },
+    "GTA:VC": {
+      "name": "Grand Theft Auto: Vice City",
+      "url": [
+        "https://store.steampowered.com/app/1546990/Grand_Theft_Auto_Vice_City__The_Definitive_Edition/",
+        "https://archive.org/download/sony_playstation2_g/Grand%20Theft%20Auto%20-%20Vice%20City%20%28USA%29%20%28v4.00%29.zip",
+        "https://www.rockstargames.com/games/vicecity",
+        "https://en.wikipedia.org/wiki/Grand_Theft_Auto:_Vice_City"
+      ],
+      "dev": "Rockstar North;TransGaming;War Drum Studios",
+      "date": "2002-10-29",
+      "form": "Mobile;Console;Windows",
+      "files": {
+        "key": [
+          "Steam:1546990",
+          "Archive:Grand Theft Auto - Vice City (USA) (v4.00).zip#iso.ps2"
+        ]
+      }
+    },
+    "MC2": {
+      "name": "Midnight Club II",
+      "url": [
+        "https://store.steampowered.com/app/12160/Midnight_Club_2/",
+        "https://www.myabandonware.com/game/midnight-club-ii-d4c",
+        "https://archive.org/download/sony_playstation2_m_part2/Midnight%20Club%20II%20%28USA%29.zip",
+        "https://archive.org/download/PS3_NOINTRO_USA__5/Midnight%20Club%20II%20%28USA%29%20%28PS2%20Classics%29.zip",
+        "https://www.rockstargames.com/games/midnightclub2",
+        "https://en.wikipedia.org/wiki/Midnight_Club_II"
+      ],
+      "dev": "Rockstar San Diego",
+      "date": "2003-04-08",
+      "form": "Console;Windows",
+      "files": {
+        "key": [
+          "Steam:12160",
+          "Abandon:Midnight-Club-II_Win_EN_MagiPack.zip#bin.win",
+          "Archive:Midnight Club II (USA).zip#iso.ps2",
+          "Archive:Midnight Club II (USA) (PS2 Classics).zip#iso.ps3"
+        ]
+      }
+    },
+    "MP2": {
+      "name": "Max Payne 2: The Fall of Max Payne",
+      "url": [
+        "https://store.steampowered.com/app/12150/Max_Payne_2_The_Fall_of_Max_Payne/",
+        "https://archive.org/download/sony_playstation2_m_part1/Max%20Payne%202%20-%20The%20Fall%20of%20Max%20Payne%20%28USA%29.zip",
+        "https://www.xbox.com/en-US/games/store/max-payne-2-the-fall-of-max-payne/9P8MQ0X518GC",
+        "https://www.rockstargames.com/games/maxpayne2",
+        "https://en.wikipedia.org/wiki/Max_Payne_2:_The_Fall_of_Max_Payne"
+      ],
+      "dev": "Remedy Entertainment;Rockstar Vienna",
+      "date": "2003-10-14",
+      "form": "Console;Windows",
+      "files": {
+        "key": [
+          "Steam:12150",
+          "XBox:9P8MQ0X518GC",
+          "Archive:Max Payne 2 - The Fall of Max Payne (USA).zip#iso.ps2",
+        ]
+      }
+    },
+    "MH": {
+      "name": "Manhunt",
+      "url": [
+        "https://store.steampowered.com/app/12130/Manhunt/",
+        "https://www.xbox.com/en-US/games/store/manhunt/9NN3VX0L45VL",
+        "https://archive.org/details/manhunt_202109",
+        "https://archive.org/download/sony_playstation2_m_part1/Manhunt%20%28USA%29.zip",
+        "https://archive.org/download/PS3_NOINTRO_USA__5/Manhunt%20%28USA%29%20%28PS2%20Classics%29.zip",
+        "https://www.rockstargames.com/games/manhunt",
+        "https://en.wikipedia.org/wiki/Manhunt_(video_game)"
+      ],
+      "urlx": [
+        "https://www.myabandonware.com/game/manhunt-d4b"
+      ],
+      "dev": "Rockstar North",
+      "date": "2003-11-18",
+      "form": "Console;Windows",
+      "files": {
+        "key": [
+          "Steam:12130",
+          "XBox:9NN3VX0L45VL",
+          "Archive:Manhunt.rar#.win",
+          "Archive:Manhunt (USA).zip#iso.ps2",
+          "Archive:Manhunt (USA) (PS2 Classics).zip#iso.ps3"
+        ]
+      }
+    },
+    "RDV": {
+      "name": "Red Dead Revolver",
+      "url": [
+        "https://store.playstation.com/en-us/product/UP1004-CUSA03517_00-SLUS205000000001",
+        "https://www.xbox.com/en-US/games/store/red-dead-revolver/9NP7Q2SSS81W",
+        "https://archive.org/download/sony_playstation2_r/Red%20Dead%20Revolver%20%28USA%29.zip",
+        "https://archive.org/download/PS3_NOINTRO_USA_7/Red%20Dead%20Revolver%20%28USA%29%20%28PS2%20Classics%29.zip",
+        "https://www.rockstargames.com/games/reddeadrevolver",
+        "https://en.wikipedia.org/wiki/Red_Dead_Revolver"
+      ],
+      "dev": "Rockstar San Diego",
+      "date": "2004-04-25",
+      "form": "Console",
+      "files": {
+        "key": [
+          "Play:UP1004-CUSA03517_00-SLUS205000000001",
+          "XBox:9NP7Q2SSS81W",
+          "Archive:Red Dead Revolver (USA).zip#iso.ps2",
+          "Archive:Red Dead Revolver (USA) (PS2 Classics).zip#iso.ps3"
+        ]
+      }
+    },
+    "GTA:A": {
+      "name": "Grand Theft Auto Advance",
+      "url": [
+        "https://archive.org/download/nointro.gba/Grand%20Theft%20Auto%20%28USA%29.7z",
+        "https://www.rockstargames.com/games/grandtheftauto-gba",
+        "https://en.wikipedia.org/wiki/Grand_Theft_Auto_Advance"
+      ],
+      "dev": "Digital Eclipse",
+      "date": "2004-10-26",
+      "form": "Console",
+      "files": {
+        "key": "Archive:Grand Theft Auto (USA).7z#rom.gba"
+      }
+    },
+    "GTA:SA": {
+      "name": "Grand Theft Auto: San Andreas",
+      "url": [
+        "https://store.steampowered.com/app/1547000/Grand_Theft_Auto_San_Andreas__The_Definitive_Edition/",
+        "https://archive.org/download/sony_playstation2_g/Grand%20Theft%20Auto%20-%20San%20Andreas%20%28USA%29%20%28v3.00%29.zip",
+        "https://www.rockstargames.com/games/sanandreas",
+        "https://en.wikipedia.org/wiki/Grand_Theft_Auto:_San_Andreas"
+      ],
+      "dev": "Rockstar North;TransGaming;War Drum Studios",
+      "date": "2004-10-26",
+      "form": "Mobile;Console;Windows",
+      "files": {
+        "key": [
+          "Steam:1547000",
+          "Archive:Grand Theft Auto - San Andreas (USA) (v3.00).zip#iso.ps2"
+        ]
+      }
+    },
+    "MC3:DE": {
+      "name": "Midnight Club 3: DUB Edition",
+      "url": [
+        "https://archive.org/download/sony_playstation2_m_part2/Midnight%20Club%203%20-%20DUB%20Edition%20%28USA%29%20%28v2.00%29.zip",
+        "https://www.rockstargames.com/games/midnightclub3",
+        "https://en.wikipedia.org/wiki/Midnight_Club_3:_Dub_Edition"
+      ],
+      "dev": "Rockstar San Diego;Rockstar Leeds",
+      "date": "2005-04-12",
+      "form": "Console",
+      "files": {
+        "key": [
+          "Archive:Midnight Club 3 - DUB Edition (USA) (v2.00).zip#iso.ps2",
+          "Archive:Midnight Club 3 - DUB Edition Remix (USA) (PS2 Classics).zip#iso.ps3"
+        ]
+      }
+    },
+    "TW": {
+      "name": "The Warriors",
+      "url": [
+        "https://archive.org/download/sony_playstation2_w/Warriors%2C%20The%20%28USA%29%20%28En%2CFr%2CDe%2CEs%2CIt%29.zip",
+        "https://store.playstation.com/en-us/product/UP1004-CUSA03515_00-SLUS212150000001",
+        "https://www.rockstargames.com/games/thewarriors",
+        "https://en.wikipedia.org/wiki/The_Warriors_(video_game)"
+      ],
+      "dev": "Rockstar Toronto;Rockstar Leeds",
+      "date": "2005-10-17",
+      "form": "Console",
+      "files": {
+        "key": [
+          "Archive:Warriors, The (USA) (En,Fr,De,Es,It).zip#iso.ps2",
+          "Play:UP1004-CUSA03515_00-SLUS212150000001"
+        ]
+      }
+    },
+    "GTA:LCS": {
+      "name": "Grand Theft Auto: Liberty City Stories",
+      "url": [
+        "https://archive.org/download/sony_playstation2_g/Grand%20Theft%20Auto%20-%20Liberty%20City%20Stories%20%28USA%29.zip",
+        "https://play.google.com/store/apps/details?id=com.rockstargames.gtalcs&hl=en_US",
+        "https://www.rockstargames.com/games/libertycitystories",
+        "https://en.wikipedia.org/wiki/Grand_Theft_Auto:_Liberty_City_Stories"
+      ],
+      "dev": "Rockstar Leeds;Rockstar North;Lucid Games",
+      "date": "2005-10-24",
+      "form": "Mobile;Console",
+      "files": {
+        "key": [
+          "Archive:Grand Theft Auto - Liberty City Stories (USA).zip#iso.ps2",
+          "Droid:com.rockstargames.gtalcs"
+        ]
+      }
+    },
+    "MC3:DER": {
+      "name": "Midnight Club 3: DUB Edition Remix",
+      "url": [
+        "https://archive.org/download/sony_playstation2_m_part2/Midnight%20Club%203%20-%20DUB%20Edition%20Remix%20%28USA%29.zip",
+        "https://archive.org/download/PS3_NOINTRO_USA__5/Midnight%20Club%203%20-%20DUB%20Edition%20Remix%20%28USA%29%20%28PS2%20Classics%29.zip",
+        "https://en.wikipedia.org/wiki/Midnight_Club_3:_Dub_Edition#Midnight_Club_3:_Dub_Edition_Remix"
+      ],
+      "urlx": [
+        "https://www.emulatorgames.net/roms/xbox/midnight-club-3-dub-edition-remix/"
+      ],
+      "dev": "Rockstar San Diego",
+      "date": "2006-03-13",
+      "form": "Console",
+      "files": {
+        "key": "Rom:XYZ"
+      }
+    },
+    "RTT": {
+      "name": "Rockstar Games Presents Table Tennis",
+      "url": [
+        "https://www.xbox.com/en-US/games/store/rockstar-table-tennis/BVZ4H08BMQ3H",
+        "https://www.rockstargames.com/games/tabletennis",
+        "https://en.wikipedia.org/wiki/Rockstar_Games_Presents_Table_Tennis"
+      ],
+      "dev": "Rockstar San Diego;Rockstar Vienna;Rockstar Leeds",
+      "date": "2006-05-22",
+      "form": "Console",
+      "files": {
+        "key": "XBox:BVZ4H08BMQ3H"
+      }
+    },
+    "B": {
+      "name": "Bully",
+      "url": [
+        "https://archive.org/download/sony_playstation2_b/Bully%20%28USA%29.zip",
+        "https://www.rockstargames.com/bully",
+        "https://en.wikipedia.org/wiki/Bully_(video_game)"
+      ],
+      "dev": "Rockstar Vancouver",
+      "date": "2006-10-17",
+      "form": "Console",
+      "files": {
+        "key": "Archive:Bully (USA).zip#iso.ps2"
+      }
+    },
+    "GTA:VCS": {
+      "name": "Grand Theft Auto: Vice City Stories",
+      "url": [
+        "https://archive.org/download/sony_playstation2_g/Grand%20Theft%20Auto%20-%20Vice%20City%20Stories%20%28USA%29.zip",
+        "https://www.rockstargames.com/games/vicecitystories",
+        "https://en.wikipedia.org/wiki/Grand_Theft_Auto:_Vice_City_Stories"
+      ],
+      "dev": "Rockstar Leeds;Rockstar North",
+      "date": "2006-10-31",
+      "form": "Console",
+      "files": {
+        "key": "Archive:Grand Theft Auto - Vice City Stories (USA).zip#iso.ps2"
+      }
+    },
+    "MH2": {
+      "name": "Manhunt 2",
+      "url": [
+        "https://www.myabandonware.com/game/manhunt-2-e1d",
+        "https://archive.org/download/sony_playstation2_m_part1/Manhunt%202%20%28USA%29.zip",
+        "https://www.rockstargames.com/games/manhunt2",
+        "https://en.wikipedia.org/wiki/Manhunt_2"
+      ],
+      "dev": "Rockstar London;Rockstar North;Rockstar Leeds;Rockstar Toronto",
+      "date": "2007-10-30",
+      "form": "Console;Windows",
+      "files": {
+        "key": [
+          "Abandon:Manhunt-2_Win_EN_ISO-Version.zip",
+          "Archive:Manhunt 2 (USA).zip#iso.ps2"
+        ]
+      }
+    },
+    "B:SE": {
+      "name": "Bully: Scholarship Edition",
+      "url": [
+        "https://store.steampowered.com/app/12200/Bully_Scholarship_Edition/",
+        "https://www.xbox.com/en-US/games/store/bully-scholarship-edition/C3WX803ZX8SD",
+        "https://www.rockstargames.com/bully",
+        "https://en.wikipedia.org/wiki/Bully_(video_game)#Scholarship_Edition"
+      ],
+      "dev": "Rockstar Toronto;Mad Doc Software;Rockstar New England",
+      "date": "2008-03-04",
+      "form": "Console;Windows",
+      "files": {
+        "key": [
+          "Steam:12200",
+          "XBox:C3WX803ZX8SD"
+        ]
+      }
+    },
+    "GTA4": {
+      "name": "Grand Theft Auto IV",
+      "url": [
+        "https://store.steampowered.com/app/12210/Grand_Theft_Auto_IV_The_Complete_Edition/",
+        "https://www.xbox.com/en-US/games/store/grand-theft-auto-iv/BRQ2SCZCTXF2",
+        "https://www.rockstargames.com/games/IV",
+        "https://en.wikipedia.org/wiki/Grand_Theft_Auto_IV"
+      ],
+      "dev": "Rockstar North;Rockstar Toronto",
+      "date": "2008-04-29",
+      "form": "Console;Windows",
+      "dlc": {
+        "ld": {
+          "name": "The Lost and Damned",
+          "url": "https://en.wikipedia.org/wiki/Grand_Theft_Auto_IV:_The_Lost_and_Damned",
+          "date": "2009-02-17"
+        },
+        "bgt": {
+          "name": "The Ballad of Gay Tony",
+          "url": "https://en.wikipedia.org/wiki/Grand_Theft_Auto:_The_Ballad_of_Gay_Tony",
+          "date": "2009-10-29"
+        }
+      },
+      "files": {
+        "key": [
+          "Steam:12210",
+          "XBox:BRQ2SCZCTXF2"
+        ]
+      }
+    },
+    "MC:LA": {
+      "name": "Midnight Club: Los Angeles",
+      "engine": "RAGE",
+      "url": [
+        "https://archive.org/download/PS3_NOINTRO_USA__5/Midnight%20Club%20-%20Los%20Angeles%20-%20Complete%20Edition%20%28USA%29.zip",
+        "https://www.xbox.com/en-US/games/store/midnight-club-los-angeles-complete/BV6WLXGS887C",
+        "https://www.rockstargames.com/games/midnightclubLA",
+        "https://en.wikipedia.org/wiki/Midnight_Club:_Los_Angeles"
+      ],
+      "dev": "Rockstar San Diego;Rockstar London",
+      "date": "2008-10-21",
+      "form": "Console;Windows",
+      "files": {
+        "key": [
+          "Archive:Midnight Club - Los Angeles - Complete Edition (USA).zip#iso.ps3",
+          "XBox:BV6WLXGS887C"
+        ]
+      }
+    },
+    "GTA:CW": {
+      "name": "Grand Theft Auto: Chinatown Wars",
+      "url": [
+        "https://www.emulatorgames.net/roms/playstation-portable/grand-theft-auto-chinatown-wars/",
+        "https://www.rockstargames.com/games/chinatownwars",
+        "https://en.wikipedia.org/wiki/Grand_Theft_Auto:_Chinatown_Wars"
+      ],
+      "dev": "Rockstar Leeds;Rockstar North;War Drum Studios",
+      "date": "2009-03-17",
+      "form": "Mobile;Console;Windows",
+      "files": {
+        "key": "Rom:XYZ"
+      }
+    },
+    "BTR": {
+      "name": "Beaterator",
+      "url": [
+        "https://www.emulatorgames.net/roms/playstation-portable/beaterator/",
+        "https://www.rockstargames.com/games/beaterator",
+        "https://en.wikipedia.org/wiki/Beaterator"
+      ],
+      "dev": "Rockstar Leeds",
+      "date": "2009-09-29",
+      "form": "Mobile;Console",
+      "BTR": {
+        "key": "Rom:XYZ"
+      }
+    },
+    "RDR": {
+      "name": "Red Dead Redemption",
+      "url": [
+        "https://store.steampowered.com/app/2668510/Red_Dead_Redemption/",
+        "https://archive.org/download/PS3_NOINTRO_USA_7/Red%20Dead%20Redemption%20%28USA%29.zip",
+        "https://www.xbox.com/en-US/games/store/red-dead-redemption/BWKLFHWT7DHC",
+        "https://www.rockstargames.com/reddeadredemption",
+        "https://en.wikipedia.org/wiki/Red_Dead_Redemption"
+      ],
+      "dev": "Rockstar San Diego;Rockstar North;Rockstar Leeds;Rockstar New England;Double Eleven",
+      "date": "2010-05-18",
+      "form": "Console;Windows",
+      "dlc": {
+        "un": {
+          "name": "Undead Nightmare",
+          "url": "https://en.wikipedia.org/wiki/Undead_Nightmare",
+          "date": "2009-02-17"
+        }
+      },
+      "files": {
+        "key": [
+          "Steam:2668510",
+          "XBox:BWKLFHWT7DHC"
+        ]
+      }
+    },
+    "LAN": {
+      "name": "L.A. Noire",
+      "url": [
+        "https://store.steampowered.com/app/110800/LA_Noire/",
+        "https://archive.org/download/PS3_NOINTRO_USA_4/L.A.%20Noire%20%28USA%29.zip",
+        "https://www.xbox.com/en-US/games/store/la-noire/BQDVBCS5Z4N1",
+        "https://www.rockstargames.com/games/lanoire",
+        "https://en.wikipedia.org/wiki/L.A._Noire"
+      ],
+      "dev": "Team Bondi;Rockstar North;Rockstar Leeds;Rockstar San Diego;Rockstar New England;Rockstar Toronto;Virtuos",
+      "date": "2011-05-17",
+      "form": "Console;Windows",
+      "files": {
+        "key": [
+          "Steam:110800",
+          "XBox:BQDVBCS5Z4N1"
+        ]
+      }
+    },
+    "MP3": {
+      "name": "Max Payne 3",
+      "url": [
+        "https://store.steampowered.com/app/12120/Grand_Theft_Auto_San_Andreas/",
+        "https://archive.org/download/PS3_NOINTRO_USA__5/Max%20Payne%203%20%28USA%29.zip",
+        "https://www.xbox.com/en-US/games/store/max-payne-3/9PFKHJH25TFF",
+        "https://www.rockstargames.com/games/maxpayne3",
+        "https://en.wikipedia.org/wiki/Max_Payne_3"
+      ],
+      "dev": "Rockstar Studios",
+      "date": "2012-05-15",
+      "form": "Console;Windows",
+      "files": {
+        "key": [
+          "Steam:12120",
+          "XBox:9PFKHJH25TFF"
+        ]
+      }
+    },
+    "GTA5": {
+      "name": "Grand Theft Auto V",
+      "url": [
+        "https://store.steampowered.com/app/271590/Grand_Theft_Auto_V/",
+        "https://archive.org/download/PS3_NOINTRO_USA_3/Grand%20Theft%20Auto%20V%20%28USA%29.zip",
+        "https://www.xbox.com/en-US/games/store/grand-theft-auto-v-xbox-series-xs/9NXMBTB02ZSF",
+        "https://www.rockstargames.com/gta-v",
+        "https://en.wikipedia.org/wiki/Grand_Theft_Auto_V"
+      ],
+      "dev": "Rockstar North;Rockstar San Diego;Rockstar Leeds;Rockstar Toronto;Rockstar New England;Rockstar London",
+      "date": "2013-09-17",
+      "form": "Console;Windows",
+      "files": {
+        "key": [
+          "Steam:271590",
+          "XBox:9NXMBTB02ZSF"
+        ]
+      }
+    },
+    "GTAO": {
+      "name": "Grand Theft Auto Online",
+      "url": [
+        "https://www.xbox.com/en-US/games/store/grand-theft-auto-online-xbox-series-xs/9NKC1Z4Z92VN",
+        "https://www.rockstargames.com/gta-online",
+        "https://en.wikipedia.org/wiki/Grand_Theft_Auto_Online"
+      ],
+      "dev": "Rockstar North",
+      "date": "2013-10-01",
+      "form": "Console;Windows",
+      "files": {
+        "key": "XBox:9NKC1Z4Z92VN"
+      }
+    },
+    "LAN:VR": {
+      "name": "L.A. Noire: The VR Case Files",
+      "url": [
+        "https://store.steampowered.com/app/722230/LA_Noire_The_VR_Case_Files/",
+        "https://en.wikipedia.org/wiki/L.A._Noire:_The_VR_Case_Files"
+      ],
+      "dev": "Videogames Deluxe Sydney;Rockstar San Diego;Rockstar Toronto;Rockstar North;Rockstar Leeds;Virtuos",
+      "date": "2017-12-15",
+      "form": "Console;Windows",
+      "files": {
+        "key": "Steam:722230"
+      }
+    },
+    "RDR2": {
+      "name": "Red Dead Redemption 2",
+      "url": [
+        "https://store.steampowered.com/app/1174180/Red_Dead_Redemption_2/",
+        "https://www.xbox.com/en-US/games/store/red-dead-redemption-2/9N2ZDN7NWQKV",
+        "https://www.rockstargames.com/reddeadredemption2",
+        "https://en.wikipedia.org/wiki/Red_Dead_Redemption_2"
+      ],
+      "dev": "Rockstar Games",
+      "date": "2018-10-26",
+      "form": "Console;Windows",
+      "files": {
+        "key": [
+          "Steam:1174180",
+          "XBox:9N2ZDN7NWQKV"
+        ]
+      }
+    },
+    "RDO": {
+      "name": "Red Dead Online",
+      "url": [
+        "https://store.steampowered.com/app/1404210/Red_Dead_Online/",
+        "https://www.xbox.com/en-us/games/store/red-dead-online/9N3L5FF8M6SW",
+        "https://www.rockstargames.com/reddeadonline",
+        "https://en.wikipedia.org/wiki/Red_Dead_Online"
+      ],
+      "dev": "Rockstar Games",
+      "date": "2019-05-14",
+      "form": "Console;Windows",
+      "files": {
+        "key": [
+          "Steam:1404210",
+          "XBox:9N3L5FF8M6SW"
+        ]
+      }
+    },
+    "GTA:T": {
+      "name": "Grand Theft Auto: The Trilogy - The Definitive Edition",
+      "url": [
+        "https://www.xbox.com/en-US/games/store/grand-theft-auto-the-trilogy-the-definitive-edition/9MXMJFNZMVWD",
+        "https://store.rockstargames.com/game/buy-grand-theft-auto-the-trilogy-the-definitive-edition",
+        "https://store.epicgames.com/en-US/bundles/grand-theft-auto-the-trilogy-the-definitive-edition",
+        "https://www.rockstargames.com/GTATrilogy",
+        "https://en.wikipedia.org/wiki/Grand_Theft_Auto:_The_Trilogy_%E2%80%93_The_Definitive_Edition"
+      ],
+      "dev": "Grove Street Games",
+      "date": "2021-11-11",
+      "form": "Bundle"
+    },
+    "GTA6": {
+      "name": "Grand Theft Auto VI (future)",
+      "url": [
+        "https://www.rockstargames.com/VI",
+        "https://en.wikipedia.org/wiki/Grand_Theft_Auto_VI"
+      ],
+      "form": "Console;Windows"
+    },
+    "MPX": {
+      "name": "Max Payne (future)",
+      "form": "Console"
+    }
+  }
+}

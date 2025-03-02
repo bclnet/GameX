@@ -1,0 +1,228 @@
+﻿{
+  "P": {
+    "name": "Populous",
+    "files": [
+      {
+        "path": "VGASPR0.DAT",
+        "type": "Image"
+      }
+    ]
+  },
+  "P2": {
+    "name": "Populous II: Trials of the Olympian Gods",
+    "files": [
+      {
+        "path": "DATA/EMSSPR-0.DAT:sprs/001.raw",
+        "type": "Image"
+      },
+      {
+        "path": "DATA/MJUDGE.DAT",
+        "type": "Image"
+      },
+      {
+        "path": "DATA/MENDGAME.DAT",
+        "type": "Image"
+      },
+      {
+        "path": "DATA/MTITLE.DAT",
+        "type": "Image"
+      },
+      {
+        "path": "DATA/INTRO.DAT",
+        "type": "Video"
+      }
+    ]
+  },
+  "S": {
+    "name": "Syndicate",
+    "files": [
+      {
+        "path": "DATA/INTRO.DAT",
+        "type": "Fli"
+      },
+      {
+        "path": "DATA/ISNDS-0.TAB",
+        "type": "Sound"
+      },
+      {
+        "path": "DATA/SOUND-0.TAB",
+        "type": "Sound"
+      },
+      {
+        "path": "DATA/INTRO.XMI",
+        "type": "Music"
+      },
+      {
+        "path": "DATA/SYNGAME.XMI",
+        "type": "Music"
+      },
+      {
+        "path": "DATA/HPAL01.DAT",
+        "type": "Palette"
+      },
+      {
+        "path": "DATA/HFNT01.DAT",
+        "type": "Font"
+      },
+      {
+        "path": "DATA/HREQ.DAT",
+        "type": "Req"
+      },
+      {
+        "path": "DATA/MAP01.DAT",
+        "type": "MapData"
+      },
+      {
+        "path": "DATA/HBLK01.DAT",
+        "type": "MapTile"
+      },
+      {
+        "path": "DATA/HSPR-0.TAB",
+        "type": "SpriteTab"
+      },
+      {
+        "path": "DATA/HELE-0.ANI",
+        "type": "SpriteElement"
+      },
+      {
+        "path": "DATA/HFRA-0.ANI",
+        "type": "SpriteFrame"
+      },
+      {
+        "path": "DATA/HSTA-0.ANI",
+        "type": "SpriteAnim"
+      },
+      {
+        "path": "DATA/MISS01.DAT",
+        "type": "Mission"
+      },
+      {
+        "path": "DATA/GAME01.DAT",
+        "type": "Game"
+      },
+      {
+        "path": "DATA/MCONSCR.DAT",
+        "type": "Raw:15"
+      }
+    ]
+  },
+  "MC": {
+    "name": "Magic Carpet",
+    "files": [
+      {
+        "path": "VGASPR0.DAT",
+        "type": "Image"
+      }
+    ]
+  },
+  "TP": {
+    "name": "Theme Park",
+    "files": [
+      {
+        "path": "VGASPR0.DAT",
+        "type": "Image"
+      }
+    ]
+  },
+  "MC2": {
+    "name": "Magic Carpet 2",
+    "files": [
+      {
+        "path": "VGASPR0.DAT",
+        "type": "Image"
+      }
+    ]
+  },
+  "S2": {
+    "name": "Syndicate Wars",
+    "files": [
+      {
+        "path": "VGASPR0.DAT",
+        "type": "Image"
+      }
+    ]
+  },
+  "DK": {
+    "name": "Dungeon Keeper",
+    "files": [
+      {
+        "path": "DATA/CREATURE.JTY:001.tex",
+        "type": "Creature"
+      },
+      {
+        "path": "DATA/GUI.DAT:gui/001.tex",
+        "type": "Image"
+      },
+      {
+        "path": "SOUND/SOUND.DAT:ALARM.WAV",
+        "type": "Sound"
+      },
+      {
+        "path": "SOUND/SPEECH.DAT:DEFAULT.WAV",
+        "type": "Sound"
+      },
+      {
+        "path": "SOUND/ATMOS1.SBK",
+        "type": "SoundBank"
+      },
+      {
+        "path": "SOUND/ATMOS2.SBK",
+        "type": "SoundBank"
+      },
+      {
+        "path": "SOUND/BULLFROG.SBK",
+        "type": "SoundBank"
+      },
+      {
+        "path": "DATA/TMAPA000.DAT:texs/001.tex",
+        "type": "Texture"
+      },
+      {
+        "path": "ldata/DKMAP00.RAW",
+        "type": "Image"
+      },
+      {
+        "path": "DATA/FRONTEND.RAW",
+        "type": "Image"
+      },
+      {
+        "path": "DATA/GMAP.RAW",
+        "type": "Image"
+      },
+      {
+        "path": "DATA/GMAPHI.RAW",
+        "type": "Image"
+      },
+      {
+        "path": "DATA/LEGAL.RAW",
+        "type": "Image"
+      }
+    ]
+  },
+  "P3": {
+    "name": "Populous: The Beginning",
+    "files": [
+      {
+        "path": "data/fenew/Fepointe.spr",
+        "type": "Image"
+      },
+      {
+        "path": "data/hfx0-0.dat",
+        "type": "Image"
+      },
+      {
+        "path": "data/HSPRO-0.DAT",
+        "type": "Image"
+      }
+    ]
+  },
+  "DK2": {
+    "name": "Dungeon Keeper 2",
+    "files": [
+      {
+        "path": "DATA/CREATURE.JTY:001.tex",
+        "type": "Creature"
+      }
+    ]
+  }
+}

@@ -1,0 +1,115 @@
+﻿{
+  "AF": {
+    "name": "Arx Fatalis",
+    "files": [
+      {
+        "path": "readme.txt",
+        "type": "Text"
+      },
+      {
+        "path": "Graph/interface/misc/quit1.bmp",
+        "type": "Texture"
+      },
+      {
+        "path": "data.pak:GRAPH/particles/DEFAULT.jpg",
+        "type": "Texture"
+      },
+      {
+        "path": "data.pak:GRAPH/particles/Boom.bmp",
+        "type": "Texture"
+      },
+      {
+        "path": "data.pak:GAME/GRAPH/INTERFACE/BOOK/RUNES/LACET.FTL",
+        "type": "Model"
+      },
+      {
+        "path": "data.pak:GAME/GRAPH/OBJ3D/INTERACTIVE/NPC/RATMAN_BASE/RATMAN_BASE.FTL",
+        "type": "Model"
+      },
+      {
+        "path": "data.pak:GAME/GRAPH/Levels/Level10/fast.fts",
+        "type": "Level"
+      }
+    ]
+  },
+  "DOM": {
+    "name": "Dark Messiah of Might and Magic",
+    "files": [
+      {
+        "path": "depot_2102_dir.vpk:mm/maps/l00.bsp",
+        "type": "Bsp"
+      },
+      {
+        "path": "depot_2101_dir.vpk:platform/config/server.vdf",
+        "type": "Unknown"
+      }
+    ]
+  },
+  "D": {
+    "name": "Dishonored",
+    "files": [
+      {
+        "path": "TBD",
+        "type": "Unknown"
+      }
+    ]
+  },
+  "D2": {
+    "name": "Dishonored 2",
+    "files": [
+      {
+        "path": "TBD",
+        "type": "Unknown"
+      }
+    ]
+  },
+  "P": {
+    "name": "Prey",
+    "files": [
+      {
+        "path": "game.cfg",
+        "type": "Text"
+      }
+    ]
+  },
+  "D:DOTO": {
+    "name": "Dishonored: Death of the Outsider",
+    "files": [
+      {
+        "path": "game1_patch.index:strings/english_m.lang",
+        "type": "Text"
+      }
+    ]
+  },
+  "W:YB": {
+    "name": "Wolfenstein: Youngblood",
+    "files": [
+      {
+        "path": "default.cfg",
+        "type": "Text"
+      }
+    ]
+  },
+  "W:CP": {
+    "name": "Wolfenstein: Cyberpilot",
+    "files": [
+      {
+        "path": "default.cfg",
+        "type": "Text"
+      }
+    ]
+  },
+  "DL": {
+    "name": "Deathloop",
+    "files": [
+      {
+        "path": "TBD",
+        "type": "Unknown"
+      }
+    ]
+  },
+  "RF": {
+    "name": "Redfall (future)",
+    "files": []
+  }
+}

@@ -1,0 +1,3 @@
+[submodule "OpenStack"]
+	path = OpenStack
+	url = git@github.com:bclnet/OpenStack.git

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="../base.css">
+    <style type="text/css">
+        #body {
+            position: relative;
+            width: 400px;
+        }
+
+        #title {
+            float: right;
+        }
+
+        #Header {
+            position: absolute;
+        }
+
+        #ChunkHeader {
+            position: absolute;
+            left: 150px;
+        }
+
+        #ChunkType {
+            position: absolute;
+            font-size: .75em;
+            left: 150px;
+            top: 95px;
+        }
+
+        #FrameHeader {
+            position: absolute;
+            top: 160px;
+        }
+
+        #OpCode {
+            position: absolute;
+            font-size: .75em;
+            left: 150px;
+            top: 185px;
+        }
+
+        #Magic {
+            position: absolute;
+            font-size: .75em;
+            left: 150px;
+            top: 270px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="body" />
+
+    <div id="title">
+        <h1>FLI</h1>
+    </div>
+
+    <div id="Header">
+        <h2>I4H</h2>
+        <h3>Header</h3>
+        Size<br />
+        Type<br />
+        Frames<br />
+        Width<br />
+        Height<br />
+    </div>
+
+    <div id="ChunkHeader">
+        <h2>IH</h2>
+        <h3>ChunkHeader</h3>
+        Size<br />
+        Type (ChunkType)<br />
+    </div>
+
+    <div id="ChunkType">
+        <h3>ChunkType</h3>
+        COLOR_256 = 0x4<br />
+        DELTA_FLC = 0x7<br />
+        BYTE_RUN = 0xF<br />
+        FRAME = 0xF1FA<br />
+    </div>
+
+    <div id="FrameHeader">
+        <h2>5H</h2>
+        <h3>FrameHeader</h3>
+        NumChunks<br />
+        Delay<br />
+        Reserved<br />
+        WidthOverride<br />
+        HeightOverride<br />
+    </div>
+
+    <div id="OpCode">
+        <h3>OpCode</h3>
+        PACKETCOUNT = 0<br />
+        UNDEFINED = 1<br />
+        LASTPIXEL = 2<br />
+        LINESKIPCOUNT = 3<br />
+    </div>
+
+    <div id="Magic">
+        <h2>Magic</h2>
+        MAGIC = 0xAF12<br />
+    </div>
+</body>
+
+</html>

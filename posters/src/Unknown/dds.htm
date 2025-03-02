@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="../base.css">
+    <style type="text/css">
+        #body {
+            position: relative;
+            width: 400px;
+        }
+
+        #title {
+            float: right;
+        }
+
+        #Header {
+            position: absolute;
+        }
+
+        #PixelFormat {
+            position: absolute;
+            top: 110px;
+            left: 150px;
+        }
+
+        #Header_DXT10 {
+            position: absolute;
+            top: 340px;
+        }
+
+        #Data {
+            position: absolute;
+            top: 490px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="body" />
+
+    <div id="title">
+        <h1>DDS</h1>
+    </div>
+
+    <div id="Header">
+        <h2>7I44s{8I}5I</h2>
+        <h3>Header</h3>
+        Size<br />
+        Flags<br />
+        Height<br />
+        Width<br />
+        PitchOrLinearSize<br />
+        Depth<br />
+        MipMapCount<br />
+        Reserved<br />
+        PF (PixelFormat)<br />
+        Caps<br />
+        Caps2<br />
+        Caps3<br />
+        Caps4<br />
+        Reserved2<br />
+    </div>
+
+    <div id="PixelFormat">
+        <h2>8I</h2>
+        <h3>PixelFormat</h3>
+        Size<br />
+        Flags<br />
+        FourCC<br />
+        RGBBitCount<br />
+        RBitMask<br />
+        GBitMask<br />
+        BBitMask<br />
+        ABitMask<br />
+    </div>
+
+    <div id="Header_DXT10">
+        <h2>5I</h2>
+        <h3>Header_DXT10</h3>
+        DigiFormat<br />
+        ResourceDimension<br />
+        MiscFlag<br />
+        ArraySize<br />
+        MiscFlags2<br />
+    </div>
+
+    <div id="Data">
+        <h3>Data</h3>
+        <img src="imgs/dds_data.png" />
+    </div>
+</body>
+
+</html>

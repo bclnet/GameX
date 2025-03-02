@@ -1,0 +1,81 @@
+﻿{
+  "Q": {
+    "name": "Quake",
+    "files": [
+      {
+        "path": "PAK0.PAK:gfx.wad:BACKTILE.tex",
+        "type": "Texture"
+      },
+      {
+        "path": "PAK0.PAK:maps/b_batt0.bsp",
+        "type": "Bsp"
+      },
+      {
+        "path": "PAK0.PAK:gfx/palette.lmp",
+        "type": "Lump:Palette"
+      },
+      {
+        "path": "PAK0.PAK:gfx/colormap.lmp",
+        "type": "Lump:Colormap"
+      },
+      {
+        "path": "PAK0.PAK:gfx/conback.lmp",
+        "type": "Lump"
+      },
+      {
+        "path": "gfx.wad:xxx",
+        "type": "Palette"
+      }
+    ]
+  },
+  "Q2": {
+    "name": "Quake II",
+    "files": [
+      {
+        "path": "pak0.pak:env/space1bk.pcx",
+        "type": "Texture"
+      },
+      {
+        "path": "pak0.pak:maps/base1.bsp",
+        "type": "Bsp"
+      }
+    ]
+  },
+  "Q3": {
+    "name": "Quake III Arena",
+    "files": [
+      {
+        "path": "pak0.pk3:textures/skin/nibbles.tga",
+        "type": "Texture"
+      }
+    ]
+  },
+  "D3": {
+    "name": "Doom 3",
+    "files": []
+  },
+  "R": {
+    "name": "Rage",
+    "files": []
+  },
+  "D": {
+    "name": "Doom (2016)",
+    "files": []
+  },
+  "D:VFR": {
+    "name": "Doom VFR",
+    "files": []
+  },
+  "R2": {
+    "name": "Rage 2",
+    "files": []
+  },
+  "D:E": {
+    "name": "Doom Eternal",
+    "files": []
+  },
+  "Q:C": {
+    "name": "Quake Champions",
+    "files": []
+  }
+}

@@ -1,3 +1,4 @@
+using GameX.Platforms;
 using OpenStack.Gfx;
 using OpenStack.Gfx.Gl;
 using OpenStack.Gfx.Renders;
@@ -11,6 +12,8 @@ namespace GameX.App.Explorer.Controls
 {
     public class ViewOpenGL : GLViewerControl
     {
+        static ViewOpenGL() => Platform.Platforms.Add(OpenGLPlatform.Startup);
+
         int Id = 0;
 
         #region Binding

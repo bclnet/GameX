@@ -1,29 +1,24 @@
 using GameX.Platforms;
 using OpenStack.Gfx;
-using Stride.Core.IO;
-using Stride.Core.VisualStudio;
-using System;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection.Metadata;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms.Integration;
-using System.Windows.Interop;
 using ViewBase = Godot.Views.ViewBase;
 
 namespace GameX.App.Explorer.Controls
 {
     public class ViewGodot : UserControl
     {
-        // https://forum.godotengine.org/t/embed-godot-application-into-wpf-window/23378/3
-
         public ViewGodot()
         {
-            Loaded += ViewGodot_Loaded;
-            Unloaded += ViewGodot_Unloaded;
-            SizeChanged += ViewGodot_SizeChanged;
+            AddChild(Host = new WindowsFormsHost());
+            Host.Child = new System.Windows.Forms.MaskedTextBox("00/00/0000");
+            Host.Loaded += ViewGodot_Loaded;
+            Host.Unloaded += ViewGodot_Unloaded;
+            Host.SizeChanged += ViewGodot_SizeChanged;
         }
 
         #region Attach
@@ -39,12 +34,7 @@ namespace GameX.App.Explorer.Controls
         void ViewGodot_Loaded(object sender, RoutedEventArgs e)
         {
             Process = null;
-            Host = new WindowsFormsHost();
-
-            /*
             var handle = Host.Handle;
-            //var window = Window.GetWindow(this);
-            //var handle = new WindowInteropHelper(window).Handle;
             var processFile = new FileInfo(GodotFile);
             var processName = processFile.Name.Replace(".exe", ""); // Clean up extra processes beforehand
             foreach (var p in Process.GetProcesses().Where(p => p.ProcessName == processName))
@@ -57,13 +47,11 @@ namespace GameX.App.Explorer.Controls
             Process.StartInfo.FileName = GodotFile;
             Process.StartInfo.UseShellExecute = true;
             Process.StartInfo.CreateNoWindow = true;
-            Process.StartInfo.WindowStyle = ProcessWindowStyle.Minimized;
             Process.Start();
             Process.WaitForInputIdle();
             Thread.Sleep(100); // Wait a minute for the handle
             SetParent(Process.MainWindowHandle, handle);
             ShowWindow(Process.MainWindowHandle, (int)ProcessWindowStyle.Maximized);
-            */
         }
 
         void ViewGodot_Unloaded(object sender, RoutedEventArgs e)

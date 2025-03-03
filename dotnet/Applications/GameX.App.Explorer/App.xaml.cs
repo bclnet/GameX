@@ -11,9 +11,8 @@ namespace GameX.App.Explorer
     /// </summary>
     public partial class App : Application
     {
-        //static App() => Platform.Startups.Add(GodotPlatform.Startup);
-        //static App() => Platform.Startups.Add(OpenGLPlatform.Startup);
-        //static App() => Platform.Startups.Add(StridePlatform.Startup);
+        static App() => Platform.Platforms.Add(OpenGLPlatform.Startup);
+        //static App() => Platform.Platforms.Add(StridePlatform.Startup);
 
         static readonly string[] args = [];
         //static readonly string[] args = ["open", "-f", "Arkane", "-u", "game:/readme.txt#AF"];

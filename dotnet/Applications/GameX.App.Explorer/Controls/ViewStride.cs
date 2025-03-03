@@ -16,6 +16,8 @@ namespace GameX.App.Explorer.Controls
 {
     public class ViewStride : UserControl
     {
+        static ViewStride() => Platform.Platforms.Add(StridePlatform.Startup);
+
         #region Embedding
 
         readonly TaskCompletionSource<bool> GameStartedTaskSource = new();

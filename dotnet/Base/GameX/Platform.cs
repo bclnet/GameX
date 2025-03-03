@@ -335,7 +335,7 @@ public static class Platform
     /// <summary>
     /// Gets the platform startups.
     /// </summary>
-    public static readonly List<Func<bool>> Startups = [];
+    public static readonly List<Func<bool>> Platforms = [];
 
     /// <summary>
     /// Determines if in a test host.
@@ -373,8 +373,8 @@ public static class Platform
 
     public static void Startup()
     {
-        if (InTestHost && Startups.Count == 0) Startups.Add(TestPlatform.Startup);
-        foreach (var startup in Startups) if (startup()) return;
+        if (InTestHost && Platforms.Count == 0) Platforms.Add(TestPlatform.Startup);
+        foreach (var p in Platforms) if (p()) return;
         PlatformType = "UK";
         GfxFactory = source => null; // throw new Exception("No GfxFactory");
         SfxFactory = source => null; // throw new Exception("No SfxFactory");

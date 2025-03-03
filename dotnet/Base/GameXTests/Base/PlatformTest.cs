@@ -12,12 +12,12 @@ public class PlatformTest
     {
         lock (this)
         {
-            Platform.Startups.Clear();
-            Assert.AreEqual(0, Platform.Startups.Count, "None registered");
-            Platform.Startups.Add(SomePlatform.Startup);
+            Platform.Platforms.Clear();
+            Assert.AreEqual(0, Platform.Platforms.Count, "None registered");
+            Platform.Platforms.Add(SomePlatform.Startup);
             Family.Touch();
-            Assert.AreEqual(1, Platform.Startups.Count, "Single Startup");
-            Assert.AreEqual(SomePlatform.Startup, Platform.Startups.First(), $"Default is {nameof(SomePlatform.Startup)}");
+            Assert.AreEqual(1, Platform.Platforms.Count, "Single Startup");
+            Assert.AreEqual(SomePlatform.Startup, Platform.Platforms.First(), $"Default is {nameof(SomePlatform.Startup)}");
         }
     }
 }

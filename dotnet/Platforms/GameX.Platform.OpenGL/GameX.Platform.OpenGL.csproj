@@ -23,8 +23,4 @@
     <ProjectReference Include="..\..\Base\GameX\GameX.csproj" />
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="xcopy /Y &quot;$(TargetDir)GameX.*.dll&quot; &quot;$(ProjectDir)..\..\..\Examples\Unity\Simple\Assets\Plugins\&quot;&#xD;&#xA;xcopy /Y &quot;$(TargetDir)OpenStack.*.dll&quot; &quot;$(ProjectDir)..\..\..\Examples\Unity\Simple\Assets\Plugins\&quot;" />
-  </Target>
-
 </Project>

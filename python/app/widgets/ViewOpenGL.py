@@ -14,8 +14,8 @@ class IOpenGLGfx: pass
 
 # ViewGLBase
 class ViewOpenGL(OpenGLView):
-    id: int = 0
     view: object = None
+    id: int = 0
 
     # Binding
 

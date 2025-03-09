@@ -12,7 +12,7 @@ namespace GameX.App.Explorer
     public partial class App : Application
     {
         //static App() => Platform.Platforms.Add(OpenGLPlatform.Startup);
-        static App() => Platform.Platforms.Add(StridePlatform.Startup);
+        //static App() => Platform.Platforms.Add(StridePlatform.Startup);
 
         static readonly string[] args = [];
         //static readonly string[] args = ["open", "-f", "Arkane", "-u", "game:/readme.txt#AF"];

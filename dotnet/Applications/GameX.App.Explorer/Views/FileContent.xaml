@@ -34,8 +34,8 @@
             </DataTemplate>
             <DataTemplate x:Key="TViewGfx" DataType="{x:Type model:MetaContent}">
                 <!--<controls:ViewOpenGL Source="{Binding Value}" Type="{Binding Type}" Gfx="{Binding RelativeSource={RelativeSource AncestorType={x:Type views:FileContent}}, Path=Gfx}" Margin="3,3,3,3" />-->
-                <controls:ViewStride Source="{Binding Value}" Type="{Binding Type}" Gfx="{Binding RelativeSource={RelativeSource AncestorType={x:Type views:FileContent}}, Path=Gfx}" Margin="3,3,3,3" />
-                <!--<controls:ViewGodot Source="{Binding Value}" Type="{Binding Type}" Gfx="{Binding RelativeSource={RelativeSource AncestorType={x:Type views:FileContent}}, Path=Gfx}" Margin="3,3,3,3" />-->
+                <!--<controls:ViewStride Source="{Binding Value}" Type="{Binding Type}" Gfx="{Binding RelativeSource={RelativeSource AncestorType={x:Type views:FileContent}}, Path=Gfx}" Margin="3,3,3,3" />-->
+                <controls:ViewGodot Source="{Binding Value}" Type="{Binding Type}" Gfx="{Binding RelativeSource={RelativeSource AncestorType={x:Type views:FileContent}}, Path=Gfx}" Margin="3,3,3,3" />
             </DataTemplate>
             <DataTemplate x:Key="TCustom" DataType="{x:Type model:MetaContent}">
                 <views:Custom Source="{Binding Value}" Margin="3,3,3,3" />

@@ -10,8 +10,6 @@ class IOpenGLGfx: pass
 
 # ViewBase
 class ViewBase:
-    gfx: IOpenGLGfx = None
-    obj: object = None
     renderers: list[IRenderer] = []
     toggleValue: bool = False
     level: range = None

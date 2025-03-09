@@ -21,7 +21,7 @@ public abstract class ViewBase(IStrideGfx gfx, object obj) : IDisposable
     public abstract void Start();
     public virtual void Update() { }
 
-    public static ViewBase Create(IStrideGfx gfx, object obj, string type)
+    public static ViewBase Create(object parent, IStrideGfx gfx, object obj, string type)
         => type switch
         {
             "Material" => new ViewMaterial(gfx, obj),

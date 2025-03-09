@@ -20,7 +20,7 @@ public abstract class ViewBase(IUnityGfx gfx, object obj) : IDisposable
     public abstract void Start();
     public virtual void Update() { }
 
-    public static ViewBase Create(IUnityGfx gfx, object obj)
+    public static ViewBase Create(object parent, IUnityGfx gfx, object obj)
     {
         //ViewKind switch
         //{
@@ -216,7 +216,7 @@ public class ViewInfo : UnityEngine.MonoBehaviour
         if (!string.IsNullOrEmpty(PakUri)) PakFiles.Add(Family.OpenPakFile(new Uri(PakUri)));
         var first = PakFiles.FirstOrDefault();
         Gfx = (IUnityGfx)first?.Gfx;
-        View = ViewBase.Create(Gfx, (ViewKind, Param1));
+        View = ViewBase.Create(this, Gfx, (ViewKind, Param1));
     }
 
     public void OnDestroy()

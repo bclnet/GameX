@@ -8,59 +8,40 @@ class IPygameGfx: pass
 
 # ViewBase
 class ViewBase:
-    def __init__(self, gfx: IPygameGfx, surface: object, obj: object):
+    gfx: IOpenGLGfx = None
+    obj: object = None
+    def __init__(self, gfx: IPygameGfx, obj: object, surf: object):
         self.gfx = gfx
-        self.surface = surface
         self.obj = obj
+        self.surf = surf
     def start(self) -> None: pass
     def update(self) -> None: pass
 
-# ViewCell
-class ViewCell(ViewBase):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-    pass
-
-# ViewEngine
-class ViewEngine(ViewBase):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-# ViewInfo
-class ViewInfo:
-    pass
-
-# ViewObject
-class ViewObject(ViewBase):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-    pass
-
 # ViewTexture
 class ViewTexture(ViewBase):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-    pass
+    def __init__(self, gfx: IOpenGLGfx, obj: object, surf: object):
+        super().__init__(gfx, obj, surf)
 
 # ViewTexture
 class TestAnim(ViewBase):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, gfx: IOpenGLGfx, obj: object, surf: object):
+        super().__init__(gfx, obj, surf)
 
     def start(self) -> None:
         self.x = 320 # Initial x position of the moving object
         self.dx = 5 # Speed of the moving object
 
     def update(self) -> None:
-        w = self.surface.get_width()
+        w = self.surf.get_width()
         # Draw the moving object
-        pygame.draw.circle(self.surface, (0, 0, 0), (self.x, 240), 30)  # Draw a black circle at the current
+        pygame.draw.circle(self.surf, (0, 0, 0), (self.x, 240), 30)  # Draw a black circle at the current
         # position
         self.x += self.dx  # Update the position of the moving object
         if self.x + 30 > w or self.x - 30 < 0:  # Check if the moving object has reached the edge of the surface
             self.dx = -self.dx  # Reverse the direction of the moving object
 
-@staticmethod
-def createView(gfx: IPygameGfx, surface: object, obj: object) -> ViewBase:
-    if isinstance(obj, ITexture): return ViewTexture(gfx, surface, obj)
-    return TestAnim(gfx, surface, obj)
+def createView(parent: object, gfx: IPygameGfx, obj: object, type: str) -> ViewBase:
+    surf = parent.surface
+    match type:
+        # case 'Texture': return ViewTexture(gfx, obj, surf)
+        case _: return TestAnim(gfx, obj, surf)

@@ -110,7 +110,7 @@ namespace GameX.App.Explorer.Controls
         void OnSourceChanged()
         {
             if (Gfx == null || Source == null || Type == null) return;
-            View = ViewBase.Create(Gfx as IGodotGfx, Source, Type);
+            View = ViewBase.Create(this, Gfx as IGodotGfx, Source, Type);
         }
 
         #endregion

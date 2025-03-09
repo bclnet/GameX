@@ -2,7 +2,6 @@ import sys, os
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QSurfaceFormat
-# from gamex.platform_opengl import OpenGLPlatform
 from widgets.MainPage import MainPage
 
 if __name__ == '__main__':

@@ -1,4 +1,4 @@
-﻿//#define Arkane
+﻿#define Arkane
 //#define Bethesda
 //#define Bioware
 //#define Black
@@ -23,7 +23,7 @@
 //#define Rockstar
 //#define Ubisoft
 //#define Unity
-#define Unknown
+//#define Unknown
 //#define Valve
 //#define Volition
 //#define WB
@@ -53,7 +53,7 @@ public partial class FamilyManager
     public static GlobalOption Option = new()
     {
         ForceOpen = true,
-        ForcePath = "sample:0",
+        ForcePath = "sample:1",
         Family = "Arkane",
         Game = "AF", // Arx Fatalis
         //Game = "DOM", // Dark Messiah of Might and Magic [source]

@@ -5,6 +5,9 @@ from openstk.gfx.gfx_texture import TextureFlags, TextureFormat, TexturePixel
 from gamex.platform_system import SystemSfx
 from gamex.platform import ObjectBuilderBase, ObjectManager, MaterialBuilderBase, MaterialManager, ShaderBuilderBase, ShaderManager, TextureManager, TextureBuilderBase, Platform
 
+# typedefs
+class IPygameGfx: pass
+
 # PygameObjectBuilder
 class PygameObjectBuilder(ObjectBuilderBase):
     def ensurePrefab(self) -> None: pass
@@ -13,8 +16,7 @@ class PygameObjectBuilder(ObjectBuilderBase):
 
 # PygameShaderBuilder
 class PygameShaderBuilder(ShaderBuilderBase):
-    _loader: ShaderLoader = ShaderDebugLoader()
-    def createShader(self, path: object, args: dict[str, bool]) -> Shader: return self._loader.createShader(path, args)
+    def createShader(self, path: object, args: dict[str, bool]) -> Shader: raise NotImplementedError()
 
 # PygameTextureBuilder
 class PygameTextureBuilder(TextureBuilderBase):

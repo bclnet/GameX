@@ -16,8 +16,6 @@ from panda3d.core import Vec3, Vec4, Point3, Point4, Quat, LQuaternion
 # typedefs
 class IPanda3dGfx: pass
 
-TObj = TypeVar('TObj')
-
 class ViewPanda3d(QWidget):
     def __init__(self, parent: object, tab: object):
         super().__init__(parent)
@@ -29,11 +27,13 @@ class ViewPanda3d(QWidget):
         props.set_size(self.width(), self.height())
         self.window = self.engine.make_output(self.pipe, 'window', 0, props, GraphicsPipe.BF_refuse_window, None)
         self.engine.open_windows()
+
         self.scene = NodePath('scene')
         self.camera = Camera('camera')
         self.camera_node = self.scene.attach_new_node(self.camera)
         self.lens = PerspectiveLens()
         self.camera.set_lens(self.lens)
+        
         self.render_target = self.window.make_texture_buffer('render_target', self.width(), self.height())
         self.render_target.set_clear_color(Vec4(0, 0, 0, 1))
         self.render_target_node = self.render_target.get_texture()

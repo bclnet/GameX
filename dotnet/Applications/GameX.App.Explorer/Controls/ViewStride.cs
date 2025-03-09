@@ -143,7 +143,7 @@ namespace GameX.App.Explorer.Controls
         void OnSourceChanged()
         {
             if (Gfx == null || Source == null || Type == null) return;
-            View = ViewBase.Create(Gfx as IStrideGfx, Source, Type);
+            View = ViewBase.Create(this, Gfx as IStrideGfx, Source, Type);
             View.Start();
         }
 

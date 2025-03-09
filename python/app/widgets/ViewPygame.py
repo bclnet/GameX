@@ -4,8 +4,8 @@ from typing import TypeVar
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QWindow
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton
-# from openstk.gfx.gfx_render import IRenderer
-# from openstk.gfx.gfx_texture import ITexture
+from openstk.gfx.gfx_texture import ITextureSelect
+from gamex.platform_pygame import PygamePlatform
 from gamex.platform_pygame_views import createView
 
 # https://stackoverflow.com/questions/38280057/how-to-integrate-pygame-and-pyqt4
@@ -14,20 +14,20 @@ from gamex.platform_pygame_views import createView
 # https://stackoverflow.com/questions/34910086/pygame-how-do-i-resize-a-surface-and-keep-all-objects-within-proportionate-to-t
 
 # typedefs
-class IPygameGfx: pass
-
-TObj = TypeVar('TObj')
+class IOpenGfx: pass
 
 # ViewPygame
 class ViewPygame(QWidget):
-    gfx: IPygameGfx = None
-    obj: TObj = None
+    id: int = 0
+    view: object = None
+
+    #region Embedding
 
     def __init__(self, parent: object, tab: object):
         super().__init__()
-        self.parent: object = parent
-        self.gfx: IPygameGfx = parent.gfx
+        self.gfx: IOpenGfx = parent.gfx
         self.source: object = tab.value
+        self.type: str = tab.type
 
         # create a Pygame surface and pass it to a QWindow
         pygame.init()
@@ -39,7 +39,7 @@ class ViewPygame(QWidget):
         self.widget.setFocusPolicy(Qt.FocusPolicy.StrongFocus) # set the focus policy of the QWidget
         self.widget.setGeometry(0, 0, 640, 480)  # set the size and position of the QWidget
         self.timer = QTimer(self) # create a timer to control the animation
-        self.timer.timeout.connect(self.update) # connect the timeout signal of the timer to the
+        self.timer.timeout.connect(self.tick) # connect the timeout signal of the timer to the
 
         # add the Pygame widget to the main window
         layout = QVBoxLayout()
@@ -55,25 +55,27 @@ class ViewPygame(QWidget):
         # button_layout.addWidget(self.stop_button)
         # layout.addLayout(button_layout)
 
-        self.view = createView(self.gfx, self.surface, self.source)
-
         # start / update
-        self.start()
         if not self.timer.isActive(): self.timer.start(1000 // 60) # start the timer with an interval of 1000 / 60 milliseconds to update the Pygame surface at 60 FPS
         else: self.timer.start()
-
-    def resizeEvent(self, event):
-    #   print(self.size())
-        pass
+        self.onSourceChanged()
 
     def unload(self):
         self.timer.stop()
 
-    def start(self):
+    def onSourceChanged(self) -> None:
+        if not self.gfx or not self.source or not self.type: return
+        self.view = createView(self, self.gfx, self.source, self.type)
         self.view.start()
+        if isinstance(self.source, ITextureSelect): self.source.select(self.id)
 
-    def update(self):
-        # Update the Pygame surface
-        self.surface.fill((220, 220, 220)) # clear the surface
+    # Render
+
+    def resizeEvent(self, event):
+        # print(self.size())
+        pass
+
+    def tick(self):
+        self.surface.fill((220, 220, 220))
         self.view.update()
-        pygame.display.update() # update the Pygame display
+        pygame.display.update()

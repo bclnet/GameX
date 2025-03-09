@@ -24,8 +24,13 @@ public abstract class ViewBase(IOpenGLGfx gfx, object obj) : IDisposable
     public virtual void Dispose() { }
     public abstract void Start();
     public virtual void Update(int deltaTime) { }
+    public void Render(Camera camera, float frameTime)
+    {
+        if (Renderers == null) return;
+        foreach (var renderer in Renderers) renderer.Render(camera, RenderPass.Both);
+    }
 
-    public static ViewBase Create(IOpenGLGfx gfx, object obj, string type)
+    public static ViewBase CreateView(object parent, IOpenGLGfx gfx, object obj, string type)
         => type switch
         {
             "Material" => new ViewMaterial(gfx, obj),
@@ -39,12 +44,6 @@ public abstract class ViewBase(IOpenGLGfx gfx, object obj) : IDisposable
             "Engine" => new ViewEngine(gfx, obj),
             _ => default,
         };
-
-    public void Render(Camera camera, float frameTime)
-    {
-        if (Renderers == null) return;
-        foreach (var renderer in Renderers) renderer.Render(camera, RenderPass.Both);
-    }
 }
 
 #endregion
@@ -137,7 +136,7 @@ public class ViewVideoTexture(IOpenGLGfx gfx, object obj) : ViewBase(gfx, obj)
 
     public override void Start()
     {
-        var obj = (ITexture)Obj;
+        var obj = (ITextureFrames)Obj;
         Gfx.TextureManager.DeleteTexture(obj);
         var (texture, _) = Gfx.TextureManager.CreateTexture(obj, Level);
         Renderers = [new TextureRenderer(Gfx, texture, ToggleValue)];

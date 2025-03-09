@@ -8,9 +8,7 @@ from PyQt6 import QtCore, QtMultimedia
 from gamex.pak import PakFile
 from gamex.meta import MetaContent, MetaInfo
 from .ViewHex import ViewHex
-from .ViewGLTestTri import ViewGLTestTri
-from .ViewGLTexture import ViewGLTexture
-from .ViewGLVideoTexture import ViewGLVideoTexture
+from .ViewOpenGL import ViewOpenGL
 from .ViewPygame import ViewPygame
 from .ViewPanda3d import ViewPanda3d
 
@@ -62,15 +60,30 @@ class FileContent(QTabWidget):
         self.contentTab.clear()
         if not self.contentTabs: return
         for tab in self.contentTabs:
+            key = \
+                'THex' if tab.type == 'Hex' else \
+                'TText' if tab.type == 'Text' else \
+                'TDataGrid' if tab.type == 'DataGrid' else \
+                'TAudioPlayer' if tab.type == 'AudioPlayer' else \
+                'TViewGfx' if tab.type == 'Material' else \
+                'TViewGfx' if tab.type == 'Particle' else \
+                'TViewGfx' if tab.type == 'TestTri' else \
+                'TViewGfx' if tab.type == 'Texture' else \
+                'TViewGfx' if tab.type == 'VideoTexture' else \
+                'TViewGfx' if tab.type == 'Object' else \
+                'TViewGfx' if tab.type == 'World' else \
+                'TNull' if tab.type == None else \
+                'TText'
             control = \
-                ViewText(self, tab) if tab.type == 'Text' else \
-                ViewHex(self, tab) if tab.type == 'Hex' else \
-                ViewGLTestTri(self, tab) if tab.type == 'xTestTri' else \
-                ViewGLTexture(self, tab) if tab.type == 'xTexture' else \
-                ViewGLVideoTexture(self, tab) if tab.type == 'xVideoTexture' else \
-                ViewPanda3d(self, tab) if tab.type == 'Texture' else \
-                ViewPygame(self, tab) if tab.type == 'zTexture' else \
-                ViewNull(self, tab)
+                ViewHex(self, tab) if key == 'THex' else \
+                ViewText(self, tab) if key == 'TText' else \
+                ViewText(self, tab) if key == 'TDataGrid' else \
+                ViewText(self, tab) if key == 'TAudioPlayer' else \
+                ViewOpenGL(self, tab) if key == 'xTViewGfx' else \
+                ViewPanda3d(self, tab) if key == 'TViewGfx' else \
+                ViewPygame(self, tab) if key == 'xTViewGfx' else \
+                ViewNull(self, tab) if key == 'TNull' else \
+                None
             self.contentTab.addTab(control, tab.name)
 
     @property

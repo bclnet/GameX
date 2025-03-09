@@ -49,7 +49,7 @@ namespace GameX.App.Explorer.Controls
         void OnSourceChanged()
         {
             if (Gfx == null || Source == null || Type == null) return;
-            View = ViewBase.Create(Gfx as IOpenGLGfx, Source, Type);
+            View = ViewBase.CreateView(this, Gfx as IOpenGLGfx, Source, Type);
             View.Start();
             if (Source is ITextureSelect z2) z2.Select(Id);
             //Camera.SetLocation(new Vector3(200));
@@ -62,9 +62,8 @@ namespace GameX.App.Explorer.Controls
 
         protected override void SetViewport(int x, int y, int width, int height)
         {
-            (int width, int height)? p = View?.GetViewport((width, height));
-            if (p == null) base.SetViewport(x, y, width, height);
-            else base.SetViewport(x, y, p.Value.width, p.Value.height);
+            (int width, int height) p = View?.GetViewport((width, height)) ?? (width, height);
+            base.SetViewport(x, y, p.width, p.height);
         }
 
         protected override void Render(Camera camera, float frameTime)

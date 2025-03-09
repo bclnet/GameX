@@ -15,7 +15,7 @@ public abstract class ViewBase(IGodotGfx gfx, object obj) : IDisposable
     public virtual void Dispose() { }
     public abstract void Start();
     public virtual void Update() { }
-    public static ViewBase Create(IGodotGfx gfx, object obj, string type)
+    public static ViewBase Create(object parent, IGodotGfx gfx, object obj, string type)
     {
         //ViewKind switch
         //{

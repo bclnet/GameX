@@ -19,14 +19,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Controls\Old\ViewGLEngine.cs" />
-    <Compile Remove="Controls\Old\ViewGLModel.cs" />
-    <Compile Remove="Controls\Old\ViewGLParticle.cs" />
-    <Compile Remove="Controls\Old\ViewGLScene.cs" />
-    <Compile Remove="Controls\Old\WorldView.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <EmbeddedResource Include="..\..\..\python\app\resources\icons\agrp.png" Link="Resources\Icons\agrp.png" />
     <EmbeddedResource Include="..\..\..\python\app\resources\icons\anim.png" Link="Resources\Icons\anim.png" />
     <EmbeddedResource Include="..\..\..\python\app\resources\icons\bsp.png" Link="Resources\Icons\bsp.png" />
@@ -77,22 +69,16 @@
 
   <ItemGroup>
     <None Include="..\..\..\docs\Applications\Explorer\Readme.md" Link="Readme.md" />
-    <None Include="Controls\Old\ViewGLEngine.cs" />
-    <None Include="Controls\Old\ViewGLModel.cs" />
-    <None Include="Controls\Old\ViewGLParticle.cs" />
-    <None Include="Controls\Old\ViewGLScene.cs" />
-    <None Include="Controls\Old\WorldView.cs" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.9.1" />
     <PackageReference Include="NLayer.NAudioSupport" Version="1.1.0" />
-    <PackageReference Include="Stride.CommunityToolkit" Version="1.0.0-preview.53" />
-    <PackageReference Include="Stride.Core.Presentation.Wpf" Version="4.2.0.2293" />
     <PackageReference Include="WPFHexaEditor" Version="2.1.7" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Platforms\GameX.Platform.Controls.Wpf\GameX.Platform.Controls.Wpf.csproj" />
     <ProjectReference Include="..\..\Platforms\GameX.Platform.Godot\GameX.Platform.Godot.csproj" />
     <ProjectReference Include="..\..\Platforms\GameX.Platform.OpenGL\GameX.Platform.OpenGL.csproj" />
     <ProjectReference Include="..\..\..\OpenStack\dotnet\Gfx\OpenStack.Gfx.GlControl\OpenStack.Gfx.GlControl.csproj" />

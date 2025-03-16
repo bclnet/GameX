@@ -8,9 +8,7 @@ from PyQt6 import QtCore, QtMultimedia
 from gamex.pak import PakFile
 from gamex.meta import MetaContent, MetaInfo
 from .ViewHex import ViewHex
-from .ViewOpenGL import ViewOpenGL
-from .ViewPygame import ViewPygame
-from .ViewPanda3d import ViewPanda3d
+from .ViewGfx import ViewOpenGL, ViewPanda3d, ViewPygame
 
 # ViewText
 class ViewText(QWidget):
@@ -79,8 +77,8 @@ class FileContent(QTabWidget):
                 ViewText(self, tab) if key == 'TText' else \
                 ViewText(self, tab) if key == 'TDataGrid' else \
                 ViewText(self, tab) if key == 'TAudioPlayer' else \
-                ViewOpenGL(self, tab) if key == 'xTViewGfx' else \
-                ViewPanda3d(self, tab) if key == 'TViewGfx' else \
+                ViewOpenGL(self, tab) if key == 'TViewGfx' else \
+                ViewPanda3d(self, tab) if key == 'xTViewGfx' else \
                 ViewPygame(self, tab) if key == 'xTViewGfx' else \
                 ViewNull(self, tab) if key == 'TNull' else \
                 None

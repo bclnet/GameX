@@ -17,6 +17,8 @@ class Panda3dShaderBuilder(ShaderBuilderBase):
     def createShader(self, path: object, args: dict[str, bool]) -> Shader: return self._loader.createShader(path, args)
 
 # Panda3dTextureBuilder
+# https://docs.panda3d.org/1.10/python/programming/texturing/simple-texturing#simple-texturing
+# https://docs.panda3d.org/1.10/python/programming/texturing/creating-textures#creating-new-textures-from-scratch
 class Panda3dTextureBuilder(TextureBuilderBase):
     _defaultTexture: int = -1
     @property
@@ -51,15 +53,12 @@ class Panda3dTextureBuilder(TextureBuilderBase):
         ], dtype = np.float32))
 
     def createTexture(self, reuse: int, source: ITexture, level2: range = None) -> int:
-        id = reuse if reuse != None else glGenTextures(1)
+        id = reuse if reuse != None else Texture('name')
         numMipMaps = max(1, source.mipMaps)
         level = range(level2.start if level2 else 0, numMipMaps)
 
         # bind
-        glBindTexture(GL_TEXTURE_2D, id)
-        if level.start > 0: glTexParameter(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, level.start)
-        glTexParameter(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, level.stop - 1)
-        bytes, fmt, spans = source.begin('GL')
+        bytes, fmt, spans = source.begin('Panda3d')
 
         # decode
         pixels = []
@@ -154,6 +153,7 @@ class Panda3dTextureBuilder(TextureBuilderBase):
     def deleteTexture(self, texture: int) -> None: glDeleteTexture(texture)
 
 # Panda3dMaterialBuilder
+# https://docs.panda3d.org/1.10/python/programming/render-attributes/materials
 class Panda3dMaterialBuilder(MaterialBuilderBase):
     _defaultMaterial: GLRenderMaterial
     @property

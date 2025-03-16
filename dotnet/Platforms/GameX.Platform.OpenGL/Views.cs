@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using SimpleEngine = System.Object;
 
-namespace OpenTK.Views;
+namespace OpenGL.Views;
 
 #region ViewBase
 

@@ -422,6 +422,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.X2K.Platform", "X2K\G
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Platform.Godot", "Platforms\GameX.Platform.Godot\GameX.Platform.Godot.csproj", "{80194B0B-B444-CECE-EC5B-D0BE8DBA2B5D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Platform.Controls.Wpf", "Platforms\GameX.Platform.Controls.Wpf\GameX.Platform.Controls.Wpf.csproj", "{ED877E28-DD8C-37C5-FEFD-808BA2A0795A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -1478,6 +1480,18 @@ Global
 		{80194B0B-B444-CECE-EC5B-D0BE8DBA2B5D}.Release|x64.Build.0 = Release|Any CPU
 		{80194B0B-B444-CECE-EC5B-D0BE8DBA2B5D}.Release|x86.ActiveCfg = Release|Any CPU
 		{80194B0B-B444-CECE-EC5B-D0BE8DBA2B5D}.Release|x86.Build.0 = Release|Any CPU
+		{ED877E28-DD8C-37C5-FEFD-808BA2A0795A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ED877E28-DD8C-37C5-FEFD-808BA2A0795A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED877E28-DD8C-37C5-FEFD-808BA2A0795A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{ED877E28-DD8C-37C5-FEFD-808BA2A0795A}.Debug|x64.Build.0 = Debug|Any CPU
+		{ED877E28-DD8C-37C5-FEFD-808BA2A0795A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{ED877E28-DD8C-37C5-FEFD-808BA2A0795A}.Debug|x86.Build.0 = Debug|Any CPU
+		{ED877E28-DD8C-37C5-FEFD-808BA2A0795A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ED877E28-DD8C-37C5-FEFD-808BA2A0795A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ED877E28-DD8C-37C5-FEFD-808BA2A0795A}.Release|x64.ActiveCfg = Release|Any CPU
+		{ED877E28-DD8C-37C5-FEFD-808BA2A0795A}.Release|x64.Build.0 = Release|Any CPU
+		{ED877E28-DD8C-37C5-FEFD-808BA2A0795A}.Release|x86.ActiveCfg = Release|Any CPU
+		{ED877E28-DD8C-37C5-FEFD-808BA2A0795A}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1576,6 +1590,7 @@ Global
 		{3674D896-35DE-C346-D97B-8F76D754BB93} = {50042B9E-D19F-47DE-8D30-293DCD2DBF52}
 		{70085606-1C51-FA56-4D8B-20A86950185D} = {50042B9E-D19F-47DE-8D30-293DCD2DBF52}
 		{80194B0B-B444-CECE-EC5B-D0BE8DBA2B5D} = {6EC2027E-D509-415E-8939-62A2A3C2CE1F}
+		{ED877E28-DD8C-37C5-FEFD-808BA2A0795A} = {6EC2027E-D509-415E-8939-62A2A3C2CE1F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A9F1BB93-CFBC-4E41-A865-325B22465054}

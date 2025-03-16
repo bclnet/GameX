@@ -51,6 +51,13 @@ namespace GameX.App.Explorer.Views
             return this;
         }
 
+        IList<(string id, string name)> _platforms;
+        public IList<(string id, string name)> Platforms
+        {
+            get => _platforms;
+            set { _platforms = value; OnPropertyChanged(); }
+        }
+
         IList<MainPageTab> _mainTabs = [];
         public IList<MainPageTab> MainTabs
         {
@@ -63,6 +70,7 @@ namespace GameX.App.Explorer.Views
 
         public Task OnOpenedAsync(Family family, string path = null)
         {
+            Platforms = [("GL", "OpenGL"), ("ST", "Stride")];
             var tabs = PakFiles.Select(pakFile => new MainPageTab
             {
                 Name = pakFile.Name,
@@ -74,7 +82,7 @@ namespace GameX.App.Explorer.Views
                 {
                     Name = "Apps",
                     PakFile = firstPakFile,
-                    AppList = [..FamilyApps.Values],
+                    AppList = [.. FamilyApps.Values],
                     Text = "Choose an application.",
                 });
             if (!string.IsNullOrEmpty(family.Description))
@@ -86,8 +94,14 @@ namespace GameX.App.Explorer.Views
             MainTabs = tabs;
 
             // default main tab to first / second
+            Platform.SelectedIndex = 0;
             MainTabControl.SelectedIndex = 0; // family.Apps != null ? 1 : 0;
             return Task.CompletedTask;
+        }
+
+        void Platform_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var selected = ((string id, string name))Platform.SelectedItem;
         }
 
         #region Menu

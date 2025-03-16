@@ -1,6 +1,7 @@
 from __future__ import annotations
 import os
 from openstk.gfx.gfx_texture import ITexture, ITextureFrames
+from panda3d.core import *
 
 # typedefs
 class IPanda3dGfx: pass
@@ -49,10 +50,12 @@ class ViewTexture(ViewBase):
     def __init__(self, base: object, gfx: IPanda3dGfx, obj: object):
         super().__init__(base, gfx, obj)
     def start(self):
-        self.scene = self.base.loader.loadModel('models/environment')
-        self.scene.reparentTo(self.base.render)
-        self.scene.setScale(0.25, 0.25, 0.25)
-        self.scene.setPos(-8, 42, 0)
+        base = self.base
+        card = base.render.attachNewNode(CardMaker('card').generate())
+        tex = loader.loadTexture('maps/noise.rgb')
+        card.setTexture(tex)
+        card.setScale(2.0, 2.0, 2.0)
+        card.setPos(-8, 42, 0)
 
 # ViewVideoTexture
 class ViewVideoTexture(ViewBase):
@@ -65,10 +68,11 @@ class ViewTestTri(ViewBase):
     def __init__(self, gfx: IPanda3dGfx, obj: object):
         super().__init__(gfx, obj)
     def start(self):
-        self.scene = self.base.loader.loadModel('models/environment')
-        self.scene.reparentTo(self.base.render)
-        self.scene.setScale(0.25, 0.25, 0.25)
-        self.scene.setPos(-8, 42, 0)
+        base = self.base
+        scene = self.scene = base.loader.loadModel('models/environment')
+        scene.reparentTo(base.render)
+        scene.setScale(0.25, 0.25, 0.25)
+        scene.setPos(-8, 42, 0)
         # self.scene = self.loader.loadModel('teapot')
         # self.scene.reparentTo(self.render)
 

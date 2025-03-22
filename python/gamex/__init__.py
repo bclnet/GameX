@@ -2,7 +2,7 @@ from ._config import __title__, __version__, option, familyKeys
 from .family import *
 from .meta import *
 from .pak import *
-from .platform import Platform
+from .platform import PlatformX
 # from .util import _value
 
 init()

@@ -28,6 +28,7 @@ using GodotViewBase = Godot.Views.ViewBase;
 using Key = OpenTK.Input.Key;
 using OpenGLViewBase = OpenGL.Views.ViewBase;
 using StrideViewBase = Stride.Views.ViewBase;
+using UnityViewBase = Unity.Views.ViewBase;
 
 namespace GameX.App.Explorer.Controls;
 
@@ -112,12 +113,9 @@ public class GodotControl : UserControl
     protected object Obj;
     protected GodotViewBase View;
 
-    public static readonly DependencyProperty GfxProperty = DependencyProperty.Register(nameof(Gfx), typeof(IOpenGfx), typeof(GodotControl),
-        new PropertyMetadata((d, e) => (d as GodotControl).OnSourceChanged()));
-    public static readonly DependencyProperty SourceProperty = DependencyProperty.Register(nameof(Source), typeof(object), typeof(GodotControl),
-        new PropertyMetadata((d, e) => (d as GodotControl).OnSourceChanged()));
-    public static readonly DependencyProperty TypeProperty = DependencyProperty.Register(nameof(Type), typeof(string), typeof(GodotControl),
-        new PropertyMetadata((d, e) => (d as GodotControl).OnSourceChanged()));
+    public static readonly DependencyProperty GfxProperty = DependencyProperty.Register(nameof(Gfx), typeof(IOpenGfx), typeof(GodotControl), new PropertyMetadata((d, e) => (d as GodotControl).OnSourceChanged()));
+    public static readonly DependencyProperty SourceProperty = DependencyProperty.Register(nameof(Source), typeof(object), typeof(GodotControl), new PropertyMetadata((d, e) => (d as GodotControl).OnSourceChanged()));
+    public static readonly DependencyProperty TypeProperty = DependencyProperty.Register(nameof(Type), typeof(string), typeof(GodotControl), new PropertyMetadata((d, e) => (d as GodotControl).OnSourceChanged()));
 
     public IOpenGfx Gfx
     {
@@ -152,8 +150,6 @@ public class GodotControl : UserControl
 
 public class OpenGLControl : GLViewerControl
 {
-    static OpenGLControl() => Platform.Platforms.Add(OpenGLPlatform.Startup);
-
     int Id = 0;
 
     #region Binding
@@ -161,12 +157,9 @@ public class OpenGLControl : GLViewerControl
     protected object Obj;
     protected OpenGLViewBase View;
 
-    public static readonly DependencyProperty GfxProperty = DependencyProperty.Register(nameof(Gfx), typeof(IOpenGfx), typeof(OpenGLControl),
-        new PropertyMetadata((d, e) => (d as OpenGLControl).OnSourceChanged()));
-    public static readonly DependencyProperty SourceProperty = DependencyProperty.Register(nameof(Source), typeof(object), typeof(OpenGLControl),
-        new PropertyMetadata((d, e) => (d as OpenGLControl).OnSourceChanged()));
-    public static readonly DependencyProperty TypeProperty = DependencyProperty.Register(nameof(Type), typeof(string), typeof(OpenGLControl),
-        new PropertyMetadata((d, e) => (d as OpenGLControl).OnSourceChanged()));
+    public static readonly DependencyProperty GfxProperty = DependencyProperty.Register(nameof(Gfx), typeof(IOpenGfx), typeof(OpenGLControl), new PropertyMetadata((d, e) => (d as OpenGLControl).OnSourceChanged()));
+    public static readonly DependencyProperty SourceProperty = DependencyProperty.Register(nameof(Source), typeof(object), typeof(OpenGLControl), new PropertyMetadata((d, e) => (d as OpenGLControl).OnSourceChanged()));
+    public static readonly DependencyProperty TypeProperty = DependencyProperty.Register(nameof(Type), typeof(string), typeof(OpenGLControl), new PropertyMetadata((d, e) => (d as OpenGLControl).OnSourceChanged()));
 
     public IOpenGfx Gfx
     {
@@ -266,8 +259,6 @@ public class OpenGLControl : GLViewerControl
 
 public class StrideControl : UserControl
 {
-    static StrideControl() => Platform.Platforms.Add(StridePlatform.Startup);
-
     #region Embedding
 
     readonly TaskCompletionSource<bool> GameStartedTaskSource = new();
@@ -365,12 +356,9 @@ public class StrideControl : UserControl
     protected object Obj;
     protected StrideViewBase View;
 
-    public static readonly DependencyProperty GfxProperty = DependencyProperty.Register(nameof(Gfx), typeof(IOpenGfx), typeof(StrideControl),
-        new PropertyMetadata((d, e) => (d as StrideControl).OnSourceChanged()));
-    public static readonly DependencyProperty SourceProperty = DependencyProperty.Register(nameof(Source), typeof(object), typeof(StrideControl),
-        new PropertyMetadata((d, e) => (d as StrideControl).OnSourceChanged()));
-    public static readonly DependencyProperty TypeProperty = DependencyProperty.Register(nameof(Type), typeof(string), typeof(StrideControl),
-        new PropertyMetadata((d, e) => (d as StrideControl).OnSourceChanged()));
+    public static readonly DependencyProperty GfxProperty = DependencyProperty.Register(nameof(Gfx), typeof(IOpenGfx), typeof(StrideControl), new PropertyMetadata((d, e) => (d as StrideControl).OnSourceChanged()));
+    public static readonly DependencyProperty SourceProperty = DependencyProperty.Register(nameof(Source), typeof(object), typeof(StrideControl), new PropertyMetadata((d, e) => (d as StrideControl).OnSourceChanged()));
+    public static readonly DependencyProperty TypeProperty = DependencyProperty.Register(nameof(Type), typeof(string), typeof(StrideControl), new PropertyMetadata((d, e) => (d as StrideControl).OnSourceChanged()));
 
     public IOpenGfx Gfx
     {
@@ -539,4 +527,104 @@ public class StrideControl : UserControl
 #endregion
 
 #region UnityControl
+
+public class UnityControl : UserControl
+{
+    public UnityControl()
+    {
+        AddChild(Host = new WindowsFormsHost());
+        Host.Child = new System.Windows.Forms.MaskedTextBox("00/00/0000");
+        Host.Loaded += OnLoaded;
+        Host.Unloaded += OnUnloaded;
+        Host.SizeChanged += OnSizeChanged;
+    }
+
+    #region Attach
+
+    static readonly string GodotFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Game2.exe");
+    readonly WindowsFormsHost Host;
+    Process Process;
+
+    void OnLoaded(object sender, RoutedEventArgs e)
+    {
+        Process = null;
+        var handle = Host.Handle;
+        var processFile = new FileInfo(GodotFile);
+        var processName = processFile.Name.Replace(".exe", ""); // Clean up extra processes beforehand
+        foreach (var p in Process.GetProcesses().Where(p => p.ProcessName == processName))
+        {
+            Debug.WriteLine("Clean up extra processes, Process number: {0}", p.Id);
+            p.Kill();
+        }
+        if (!processFile.Exists) return;
+        Process = new Process();
+        Process.StartInfo.FileName = GodotFile;
+        Process.StartInfo.UseShellExecute = true;
+        Process.StartInfo.CreateNoWindow = true;
+        Process.Start();
+        Process.WaitForInputIdle();
+        Thread.Sleep(100); // Wait a minute for the handle
+        SetParent(Process.MainWindowHandle, handle);
+        _ = ShowWindow(Process.MainWindowHandle, (int)ProcessWindowStyle.Maximized);
+    }
+
+    void OnUnloaded(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            if (Process != null)
+            {
+                Process.CloseMainWindow();
+                Thread.Sleep(1000);
+                while (!Process.HasExited) Process.Kill();
+            }
+        }
+        catch (Exception) { }
+    }
+
+    void OnSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (Process == null || Process.MainWindowHandle == IntPtr.Zero) return;
+        var size = e.NewSize;
+        MoveWindow(Process.MainWindowHandle, 0, 0, (int)size.Width, (int)size.Height, true);
+    }
+
+    #endregion
+
+    #region Binding
+
+    protected object Obj;
+    protected UnityViewBase View;
+
+    public static readonly DependencyProperty GfxProperty = DependencyProperty.Register(nameof(Gfx), typeof(IOpenGfx), typeof(UnityControl), new PropertyMetadata((d, e) => (d as UnityControl).OnSourceChanged()));
+    public static readonly DependencyProperty SourceProperty = DependencyProperty.Register(nameof(Source), typeof(object), typeof(UnityControl), new PropertyMetadata((d, e) => (d as UnityControl).OnSourceChanged()));
+    public static readonly DependencyProperty TypeProperty = DependencyProperty.Register(nameof(Type), typeof(string), typeof(UnityControl), new PropertyMetadata((d, e) => (d as UnityControl).OnSourceChanged()));
+
+    public IOpenGfx Gfx
+    {
+        get => GetValue(GfxProperty) as IOpenGfx;
+        set => SetValue(GfxProperty, value);
+    }
+
+    public object Source
+    {
+        get => GetValue(SourceProperty);
+        set => SetValue(SourceProperty, value);
+    }
+
+    public string Type
+    {
+        get => GetValue(TypeProperty) as string;
+        set => SetValue(TypeProperty, value);
+    }
+
+    void OnSourceChanged()
+    {
+        if (Gfx == null || Source == null || Type == null) return;
+        View = UnityViewBase.Create(this, Gfx as IUnityGfx, Source, Type);
+    }
+
+    #endregion
+}
+
 #endregion

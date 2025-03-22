@@ -1,7 +1,6 @@
-﻿using GameX;
-using GameX.Platforms;
+﻿using GameX.Platforms;
 
 public class UnityPlatform : UnityEngine.MonoBehaviour
 {
-    static UnityPlatform() => Platform.Platforms.Add(GameX.Platforms.UnityPlatform.Startup);
+    static UnityPlatform() => PlatformX.Activate(GameX.Platforms.UnityPlatform.This);
 }

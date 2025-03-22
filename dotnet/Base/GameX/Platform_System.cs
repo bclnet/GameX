@@ -112,7 +112,7 @@ internal class VirtualFileSystem(IFileSystem @base, Dictionary<string, byte[]> v
 
     public IEnumerable<string> Glob(string path, string searchPattern)
     {
-        var matcher = Platform.CreateMatcher(searchPattern);
+        var matcher = PlatformX.CreateMatcher(searchPattern);
         return Virtuals.Keys.Where(matcher).Concat(Base.Glob(path, searchPattern));
     }
     public bool FileExists(string path) => Virtuals.ContainsKey(path) || Base.FileExists(path);
@@ -137,7 +137,7 @@ internal class ZipFileSystem(string root, string path) : IFileSystem
     {
         var root = Path.Combine(Root, path);
         var skip = root.Length;
-        var matcher = Platform.CreateMatcher(searchPattern);
+        var matcher = PlatformX.CreateMatcher(searchPattern);
         return [.. Pak.Entries.Where(x =>
         {
             var fn = x.FullName;
@@ -164,7 +164,7 @@ internal class ZipIsoFileSystem(string root, string path) : IFileSystem
 
     public IEnumerable<string> Glob(string path, string searchPattern)
     {
-        var matcher = Platform.CreateMatcher(searchPattern);
+        var matcher = PlatformX.CreateMatcher(searchPattern);
         return Pak.Entries.Where(x => matcher(x.Name)).Select(x => x.Name);
     }
     public bool FileExists(string path) => Pak.GetEntry(path) != null;

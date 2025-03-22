@@ -529,8 +529,6 @@ public class Family
     /// <returns></returns>
     public Dictionary<string, FamilyApp> Apps { get; set; }
 
-    static unsafe Family() => Platform.Startup();
-
     /// <summary>
     /// Family
     /// </summary>
@@ -1212,7 +1210,7 @@ public class FamilyGame
             string k = p[0], v = p.Length > 1 ? p[1] : default;
             var path = Store.GetPathByKey(key, family, elem);
             if (path == null) { continue; }
-            path = Path.GetFullPath(Platform.DecodePath(path));
+            path = Path.GetFullPath(PlatformX.DecodePath(path));
             if (!Directory.Exists(path) && !File.Exists(path)) { continue; }
             return new SystemPath { Root = path, Type = null, Paths = Files.Paths };
         }
@@ -1226,13 +1224,13 @@ public class FamilyGame
     /// </summary>
     /// <param name="pakFile">The pak file.</param>
     /// <returns></returns>
-    static PakFile WithPlatform(PakFile pakFile)
-    {
-        if (pakFile == null) { return null; }
-        pakFile.Gfx = Platform.GfxFactory?.Invoke(pakFile);
-        pakFile.Sfx = Platform.SfxFactory?.Invoke(pakFile);
-        return pakFile;
-    }
+    //public static PakFile SetPlatform(PakFile pakFile, Platform platform)
+    //{
+    //    if (pakFile == null) { return null; }
+    //    pakFile.Gfx = platform.GfxFactory?.Invoke(pakFile);
+    //    pakFile.Sfx = platform.SfxFactory?.Invoke(pakFile);
+    //    return pakFile;
+    //}
 
     /// <summary>
     /// Creates the search patterns.
@@ -1285,7 +1283,7 @@ public class FamilyGame
                             : p));
                         break;
                 }
-        return WithPlatform(pakFiles.Count == 1 ? pakFiles[0] : CreatePakFileObj(fileSystem, edition, pakFiles));
+        return (pakFiles.Count == 1 ? pakFiles[0] : CreatePakFileObj(fileSystem, edition, pakFiles))?.SetPlatform(PlatformX.Current);
     }
 
     /// <summary>

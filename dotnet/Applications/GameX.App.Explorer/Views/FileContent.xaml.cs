@@ -1,4 +1,5 @@
-﻿using OpenStack.Gfx;
+﻿using GameX.Platforms;
+using OpenStack.Gfx;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Controls;
@@ -18,6 +19,13 @@ namespace GameX.App.Explorer.Views
             InitializeComponent();
             Current = this;
             DataContext = this;
+        }
+
+        public void SetPlatform(Platform platform)
+        {
+            var res = ((Grid)Content).Resources;
+            var plat = platform?.Id ?? "UK";
+            res["TViewGfx"] = res[$"TViewGfx:{plat}"] ?? res["THex"];
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

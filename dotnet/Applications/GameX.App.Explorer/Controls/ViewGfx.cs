@@ -11,4 +11,8 @@ namespace GameX.App.Explorer.Controls
     public class ViewStride : StrideControl
     {
     }
+
+    public class ViewUnity : UnityControl
+    {
+    }
 }

@@ -307,7 +307,7 @@ static class Store_Local
     {
         // get locale games
         var gameRoots = DriveInfo.GetDrives().Select(x => Path.Combine(x.Name, GAMESPATH)).ToList();
-        if (Platform.PlatformOS == Platform.OS.Android) gameRoots.Add(Path.Combine("/sdcard", GAMESPATH));
+        if (PlatformX.PlatformOS == PlatformX.OS.Android) gameRoots.Add(Path.Combine("/sdcard", GAMESPATH));
         Paths = gameRoots.Where(Directory.Exists).SelectMany(Directory.GetDirectories).ToDictionary(Path.GetFileName, x => x);
     }
 }
@@ -510,7 +510,7 @@ static class Store_Ubisoft
 static class Store_WinReg
 {
     public static string GetPathByKey(string key, JsonElement elem)
-        => Platform.PlatformOS == Platform.OS.Windows ? default
+        => PlatformX.PlatformOS == PlatformX.OS.Windows ? default
         : GetPathByRegistryKey(key, elem.TryGetProperty(key, out var y) ? y : null);
 
     /// <summary>
@@ -554,8 +554,8 @@ static class Store_WinReg
     {
         var path = FindRegistryPath([$@"Wow6432Node\{key}", key]);
         return elem == null ? path
-        : elem.Value.TryGetProperty("path", out var z) ? Path.GetFullPath(Platform.DecodePath(z.GetString(), path))
-        : elem.Value.TryGetProperty("xml", out z) && elem.Value.TryGetProperty("xmlPath", out var y) ? GetSingleFileValue(Platform.DecodePath(z.GetString(), path), "xml", y.GetString())
+        : elem.Value.TryGetProperty("path", out var z) ? Path.GetFullPath(PlatformX.DecodePath(z.GetString(), path))
+        : elem.Value.TryGetProperty("xml", out z) && elem.Value.TryGetProperty("xmlPath", out var y) ? GetSingleFileValue(PlatformX.DecodePath(z.GetString(), path), "xml", y.GetString())
         : null;
     }
 

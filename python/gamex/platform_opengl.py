@@ -233,14 +233,9 @@ class OpenGLGfx(IOpenGLGfx):
     meshBufferCache: GLMeshBufferCache
 
 # OpenGLPlatform
-class OpenGLPlatform:
-    def startup() -> bool:
-        Platform.platformType = 'GL'
-        Platform.gfxFactory = lambda source: OpenGLGfx(source)
-        Platform.sfxFactory = lambda source: SystemSfx(source)
-        Platform.logFunc = lambda a: print(a)
-        return True
-
-# OpenGL:startup
-Platform.startups.append(OpenGLPlatform.startup)
-Platform.startup()
+class OpenGLPlatform(Platform):
+    def __init__(self):
+        super().__init__('GL', 'OpenGL')
+        self.gfxFactory = lambda self, source: OpenGLGfx(source)
+        self.sfxFactory = lambda self, source: SystemSfx(source)
+OpenGLPlatform.This = OpenGLPlatform()

@@ -6,7 +6,7 @@ from importlib import resources
 from openstk.poly import findType
 from gamex import option, familyKeys
 from gamex.pak import PakState, ManyPakFile, MultiPakFile
-from gamex.platform import Platform
+from gamex.platform import PlatformX
 from gamex.platform_system import HostFileSystem, StandardFileSystem, VirtualFileSystem
 from gamex.store import getPathByKey as Store_getPathByKey
 from .util import _throw, _valueF, _value, _list, _related, _dictTrim
@@ -399,18 +399,10 @@ class FamilyGame:
             k = p[0]; v = None if len(p) < 2 else p[1]
             path = Store_getPathByKey(key, family, elem)
             if not path: continue
-            path = os.path.abspath(Platform.decodePath(path))
+            path = os.path.abspath(PlatformX.decodePath(path))
             if not os.path.exists(path): continue
             return SystemPath(root = path, type = None, paths = self.files.paths)
         return None
-
-    # with platform
-    @staticmethod
-    def withPlatform(pakFile: PakFile) -> PakFile:
-        if not pakFile: return None
-        if Platform.gfxFactory: pakFile.gfx = Platform.gfxFactory(pakFile)
-        if Platform.sfxFactory: pakFile.sfx = Platform.sfxFactory(pakFile)
-        return pakFile
 
     # create SearchPatterns
     def createSearchPatterns(self, searchPattern: str) -> str:
@@ -440,7 +432,7 @@ class FamilyGame:
                 else:
                     pakFiles.append(self.createPakFileObj(fileSystem, edition,
                         (p[0], [x for x in p[1] if x.find(slash) >= 0]) if self.searchBy == SearchBy.DirDown else p))
-        return FamilyGame.withPlatform(pakFiles[0] if len(pakFiles) == 1 else self.createPakFileObj(fileSystem, edition, pakFiles))
+        return (pakFiles[0] if len(pakFiles) == 1 else self.createPakFileObj(fileSystem, edition, pakFiles)).setPlatform(PlatformX.current)
 
     # create createPakFileObj
     def createPakFileObj(self, fileSystem: IFileSystem, edition: Edition, value: object, tag: object = None) -> PakFile:

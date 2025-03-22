@@ -269,6 +269,18 @@ public abstract class PakFile : IDisposable
     }
 
     /// <summary>
+    /// Sets the platform.
+    /// </summary>
+    /// <param name="pakFile">The pak file.</param>
+    /// <returns></returns>
+    public PakFile SetPlatform(Platform platform)
+    {
+        Gfx = platform.GfxFactory?.Invoke(this);
+        Sfx = platform.SfxFactory?.Invoke(this);
+        return this;
+    }
+
+    /// <summary>
     /// Gets the gfx.
     /// </summary>
     /// <value>

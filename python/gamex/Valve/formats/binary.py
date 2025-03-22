@@ -7,7 +7,6 @@ from openstk.gfx.gfx_texture import ITexture, ITextureFrames, TextureFlags, Text
 from openstk.poly import Reader, unsafe, X_LumpON, X_LumpNO, X_LumpNO2, X_Lump2NO
 from gamex import PakFile, BinaryPakFile, PakBinary, PakBinaryT, FileSource, FileOption, MetaInfo, MetaManager, MetaContent, IHaveMetaInfo
 from gamex.compression import decompressBlast
-from gamex.platform import Platform
 from gamex.util import _throw, _pathExtension
 from hashlib import md5
 from cryptography.hazmat.primitives import hashes

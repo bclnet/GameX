@@ -297,20 +297,12 @@ public class OpenGLGfx : IOpenGLGfx
 /// <summary>
 /// OpenGLPlatform
 /// </summary>
-public static class OpenGLPlatform
+public class OpenGLPlatform : Platform
 {
-    public static unsafe bool Startup()
+    public static readonly Platform This = new OpenGLPlatform();
+    OpenGLPlatform() : base("GL", "OpenGL")
     {
-        try
-        {
-            Platform.PlatformType = "GL";
-            Platform.GfxFactory = source => new OpenGLGfx(source);
-            Platform.SfxFactory = source => new SystemSfx(source);
-            Debug.AssertFunc = x => System.Diagnostics.Debug.Assert(x);
-            Debug.LogFunc = a => System.Diagnostics.Debug.Print(a);
-            Debug.LogFormatFunc = (a, b) => System.Diagnostics.Debug.Print(a, b);
-            return true;
-        }
-        catch { return false; }
+        GfxFactory = source => new OpenGLGfx(source);
+        SfxFactory = source => new SystemSfx(source);
     }
 }

@@ -11,8 +11,11 @@ namespace GameX.App.Explorer
     /// </summary>
     public partial class App : Application
     {
-        //static App() => Platform.Platforms.Add(OpenGLPlatform.Startup);
-        //static App() => Platform.Platforms.Add(StridePlatform.Startup);
+        static App() => PlatformX.Platforms.UnionWith([
+            OpenGLPlatform.This,
+            //StridePlatform.This,
+            UnityShellPlatform.This,
+            GodotShellPlatform.This]);
 
         static readonly string[] args = [];
         //static readonly string[] args = ["open", "-f", "Arkane", "-u", "game:/readme.txt#AF"];
@@ -33,6 +36,7 @@ namespace GameX.App.Explorer
 
         void Application_Startup(object sender, StartupEventArgs e)
         {
+            //PlatformX.Activate(OpenGLPlatform.This);
             //GLViewerControl.ShowConsole = true;
             _ = new AppShell();
             Parser.Default.ParseArguments<DefaultOptions, TestOptions, OpenOptions>(args ?? e.Args)

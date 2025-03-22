@@ -228,14 +228,9 @@ class Panda3dGfx(IPanda3dGfx):
     meshBufferCache: GLMeshBufferCache
 
 # Panda3dPlatform
-class Panda3dPlatform:
-    def startup() -> bool:
-        Platform.platformType = 'P3'
-        Platform.gfxFactory = lambda source: Panda3dGfx(source)
-        Platform.sfxFactory = lambda source: SystemSfx(source)
-        Platform.logFunc = lambda a: print(a)
-        return True
-
-# Panda3d:startup
-Platform.startups.append(Panda3dPlatform.startup)
-Platform.startup()
+class Panda3dPlatform(Platform):
+    def __init__(self):
+        super().__init__('P3', 'Panda3d')
+        self.gfxFactory = lambda self, source: Panda3dGfx(source)
+        self.sfxFactory = lambda self, source: SystemSfx(source)
+Panda3dPlatform.This = Panda3dPlatform()

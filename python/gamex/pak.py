@@ -70,6 +70,10 @@ class PakFile:
         print(f'Opened: {self.name} @ {elapsed}ms')
         return self
     def opening(self) -> None: pass
+    def setPlatform(self, platform: Platform) -> PakFile:
+        if platform.gfxFactory: self.gfx = platform.gfxFactory(self)
+        if platform.sfxFactory: self.sfx = platform.sfxFactory(self)
+        return self
     def contains(self, path: FileSource | str | int) -> bool: pass
     def getFileSource(self, path: FileSource | str | int, throwOnError: bool = True) -> (PakFile, FileSource): pass
     def loadFileData(self, path: FileSource | str | int, option: FileOption = FileOption.Default, throwOnError: bool = True) -> bytes: pass

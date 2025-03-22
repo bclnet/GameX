@@ -1,17 +1,20 @@
 import sys, os
 from typing import Any
-from PyQt6.QtWidgets import QMainWindow, QApplication, QWidget, QProgressBar, QScrollArea, QTableView, QTableWidget, QTableWidgetItem, QGridLayout, QHeaderView, QAbstractItemView, QLabel, QTextEdit, QVBoxLayout, QHBoxLayout, QMenu, QFileDialog, QSplitter, QTabWidget
+from PyQt6.QtWidgets import QMainWindow, QApplication, QWidget, QProgressBar, QScrollArea, QTableView, QTableWidget, QTableWidgetItem, QGridLayout, QHeaderView, QAbstractItemView, QLabel, QComboBox, QTextEdit, QVBoxLayout, QHBoxLayout, QMenu, QFileDialog, QSplitter, QTabWidget
 from PyQt6.QtGui import QIcon, QFont, QDrag, QPixmap, QPainter, QColor, QBrush, QAction
-from PyQt6.QtCore import Qt, QBuffer, QByteArray, QUrl, QMimeData, pyqtSignal
+from PyQt6.QtCore import Qt, QBuffer, QByteArray, QUrl, QMimeData, QPoint, pyqtSignal
 from PyQt6.QtMultimedia import QMediaPlayer
 from PyQt6.QtMultimediaWidgets import QVideoWidget
 from PyQt6 import QtCore, QtMultimedia
-from gamex import Family, option
+from gamex import PlatformX, Family, option
+from gamex.util import _find
 from .SaveFileWidget import SaveFileWidget
 from .OpenWidget import OpenWidget
 from .FileContent import FileContent
 from .FileExplorer import FileExplorer
 from .resourcemgr import ResourceManager
+
+platformValues = list(PlatformX.platforms)
 
 # ExplorerMainTab
 class ExplorerMainTab:
@@ -101,22 +104,34 @@ class MainPage(QMainWindow):
         logBar.setAlignment(Qt.AlignmentFlag.AlignTop)
         logBar.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         logBar.setStyleSheet('background-color: lightgray;')
+        platformInput = self.platformInput = QComboBox(logBar)
+        platformInput.currentIndexChanged.connect(self.platform_change)
+        p = QPoint(300, 0)
+        platformInput.move(p)
 
         # add to layout
         mainWidget = self.mainWidget = QWidget(self)
-        layout = QVBoxLayout(mainWidget)
-        layout.addWidget(splitter, 9)
-        layout.addWidget(logBar, 1)
-        mainWidget.setLayout(layout)
+        mainWidgetLayout = QVBoxLayout(mainWidget)
+        mainWidgetLayout.addWidget(splitter, 9)
+        mainWidgetLayout.addWidget(logBar, 1)
+        mainWidget.setLayout(mainWidgetLayout)
         self.setCentralWidget(mainWidget)
 
+        # mainMenu
         mainMenu = self.menuBar()
         fileMenu = mainMenu.addMenu('&File')
         fileMenu.addAction('&Open', self.openPage_click)
 
+        # setup
+        platformInput.addItems([None] + [x.name for x in platformValues])
+        platformInput.setCurrentIndex(_find([x.id for x in platformValues], option.Platform) + 1)
+
         # show widget
         self.show()
-    
+
+    def platform_change(self, index):
+        selected = self.platformSelected = platformValues[index - 1] if index > 0 else None
+
     def startup(self):
         if option.ForcePath and option.ForcePath.startswith('app:') and self.familyApps and option.ForcePath[:4] in self.familyApps:
             app = self.familyApps[option.ForcePath[:4]]

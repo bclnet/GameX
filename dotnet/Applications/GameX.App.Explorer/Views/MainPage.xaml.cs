@@ -1,7 +1,9 @@
-﻿using System.ComponentModel;
+﻿using GameX.Platforms;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
+using static GameX.FamilyManager;
 
 namespace GameX.App.Explorer.Views
 {
@@ -29,6 +31,8 @@ namespace GameX.App.Explorer.Views
             InitializeComponent();
             Current = this;
             DataContext = this;
+            Platforms = [.. PlatformX.Platforms.Where(x => x != null && x.Enabled)];
+            Platform.SelectedIndex = ((List<Platform>)Platforms)?.FindIndex(x => x.Id == Option.Platform) ?? 0;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -36,6 +40,8 @@ namespace GameX.App.Explorer.Views
 
         public MainPage Open(Family family, IEnumerable<Uri> pakUris, string path = null)
         {
+            var selected = (Platform)Platform.SelectedItem;
+            PlatformX.Activate(selected);
             foreach (var pakFile in PakFiles) pakFile?.Dispose();
             PakFiles.Clear();
             if (family == null) return this;
@@ -51,8 +57,13 @@ namespace GameX.App.Explorer.Views
             return this;
         }
 
-        IList<(string id, string name)> _platforms;
-        public IList<(string id, string name)> Platforms
+        public void SetPlatform(Platform platform)
+        {
+            foreach (var s in PakFiles) s.SetPlatform(platform);
+        }
+
+        IList<Platform> _platforms;
+        public IList<Platform> Platforms
         {
             get => _platforms;
             set { _platforms = value; OnPropertyChanged(); }
@@ -70,7 +81,6 @@ namespace GameX.App.Explorer.Views
 
         public Task OnOpenedAsync(Family family, string path = null)
         {
-            Platforms = [("GL", "OpenGL"), ("ST", "Stride")];
             var tabs = PakFiles.Select(pakFile => new MainPageTab
             {
                 Name = pakFile.Name,
@@ -94,14 +104,15 @@ namespace GameX.App.Explorer.Views
             MainTabs = tabs;
 
             // default main tab to first / second
-            Platform.SelectedIndex = 0;
             MainTabControl.SelectedIndex = 0; // family.Apps != null ? 1 : 0;
             return Task.CompletedTask;
         }
 
         void Platform_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            var selected = ((string id, string name))Platform.SelectedItem;
+            var selected = (Platform)Platform.SelectedItem;
+            SetPlatform(selected);
+            FileContent.SetPlatform(selected);
         }
 
         #region Menu

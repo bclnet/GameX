@@ -27,8 +27,7 @@ public class GodotTextureBuilder : TextureBuilderBase<Texture>
         if (_defaultTexture != null) { /*DeleteTexture(_defaultTexture);*/ _defaultTexture = null; }
     }
 
-    Texture CreateDefaultTexture() => CreateSolidTexture(4, 4, new[]
-    {
+    Texture CreateDefaultTexture() => CreateSolidTexture(4, 4, [
         0.9f, 0.2f, 0.8f, 1f,
         0f, 0.9f, 0f, 1f,
         0.9f, 0.2f, 0.8f, 1f,
@@ -48,7 +47,7 @@ public class GodotTextureBuilder : TextureBuilderBase<Texture>
         0.9f, 0.2f, 0.8f, 1f,
         0f, 0.9f, 0f, 1f,
         0.9f, 0.2f, 0.8f, 1f,
-    });
+    ]);
 
     public override Texture CreateTexture(Texture reuse, ITexture source, System.Range? level = null)
     {
@@ -116,22 +115,21 @@ public class GodotSfx(PakFile source) : SystemSfx(source)
 }
 
 // GodotPlatform
-public static class GodotPlatform
+public class GodotPlatform : Platform
 {
-    public static unsafe bool Startup()
+    public static readonly Platform This = new GodotPlatform();
+    GodotPlatform() : base("GD", "Godot")
     {
-        //Log = GlobalLogger.GetLogger(typeof(GodotPlatform).FullName);
-        //Log.Debug("Start loading MyTexture");
-        try
-        {
-            Platform.PlatformType = "ST";
-            Platform.GfxFactory = source => new GodotGfx(source);
-            Platform.SfxFactory = source => new GodotSfx(source);
-            Debug.AssertFunc = x => System.Diagnostics.Debug.Assert(x);
-            Debug.LogFunc = a => GD.Print(a);
-            Debug.LogFormatFunc = (a, b) => GD.Print(string.Format(a, b));
-            return true;
-        }
-        catch { return false; }
+        GfxFactory = source => new GodotGfx(source);
+        SfxFactory = source => new GodotSfx(source);
+        LogFunc = GD.Print;
+        LogFormatFunc = (a, b) => GD.Print(string.Format(a, b));
     }
+}
+
+// GodotShellPlatform
+public class GodotShellPlatform : Platform
+{
+    public static readonly Platform This = new GodotShellPlatform();
+    GodotShellPlatform() : base("GD", "Godot") { }
 }

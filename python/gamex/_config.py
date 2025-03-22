@@ -8,7 +8,8 @@ __current__ = "Arkane"
 # __current__ = "Valve"
 
 class GlobalOption:
-    def __init__(self, FindKey:str=None, Family:str=None, Game:str=None, Edition:str=None, ForcePath:str=None, ForceOpen:bool=False):
+    def __init__(self, Platform:str=None, FindKey:str=None, Family:str=None, Game:str=None, Edition:str=None, ForcePath:str=None, ForceOpen:bool=False):
+        self.Platform = Platform
         self.FindKey = FindKey
         self.Family = Family
         self.Game = Game
@@ -21,6 +22,7 @@ match __current__:
         familyKeys = [ "Arkane", "Unknown" ]
 
         option = GlobalOption(
+            Platform = "GL",
             ForceOpen = True,
             ForcePath = "sample:1",
             Family = "Arkane",
@@ -39,6 +41,7 @@ match __current__:
         familyKeys = [ "Bethesda", "Unknown" ]
 
         option = GlobalOption(
+            Platform = "GL",
             ForceOpen = True,
             ForcePath = "sample:0",
             Family = "Bethesda",
@@ -59,6 +62,7 @@ match __current__:
         familyKeys = [ "Bioware", "Unknown" ]
 
         option = GlobalOption(
+            Platform = "GL",
             ForceOpen = True,
             ForcePath = "sample:*",
             Family = "Bioware",
@@ -85,6 +89,7 @@ match __current__:
         familyKeys = [ "Black", "Unknown" ]
 
         option = GlobalOption(
+            Platform = "GL",
             ForceOpen = True,
             ForcePath = "sample:*",
             Family = "Black",
@@ -95,6 +100,7 @@ match __current__:
         familyKeys = [ "Blizzard", "Unknown" ]
 
         option = GlobalOption(
+            Platform = "GL",
             ForceOpen = True,
             ForcePath = "sample:*",
             Family = "Blizzard",
@@ -115,6 +121,7 @@ match __current__:
         familyKeys = [ "Bullfrog", "Unknown" ]
 
         option = GlobalOption(
+            Platform = "GL",
             ForceOpen = True,
             ForcePath = "sample:0",
             Family = "Bullfrog",
@@ -134,6 +141,7 @@ match __current__:
         familyKeys = [ "Capcom", "Unknown" ]
 
         option = GlobalOption(
+            Platform = "GL",
             ForceOpen = True,
             ForcePath = "sample:*",
             Family = "Capcom",
@@ -182,7 +190,7 @@ match __current__:
             # ForcePath = "app:DataForge",
             # ForcePath = "app:StarWords",
             # ForcePath = "app:Subsumption",
-
+            Platform = "GL",
             ForceOpen = True,
             ForcePath = "sample:*",
             Family = "Cig",
@@ -192,6 +200,7 @@ match __current__:
         familyKeys = [ "Cryptic", "Unknown" ]
 
         option = GlobalOption(
+            Platform = "GL",
             ForceOpen = True,
             ForcePath = "sample:*",
             Family = "Cryptic",
@@ -203,6 +212,7 @@ match __current__:
         familyKeys = [ "Crytek", "Unknown" ]
 
         option = GlobalOption(
+            Platform = "GL",
             ForceOpen = True,
             ForcePath = "sample:*",
             Family = "Crytek",
@@ -220,6 +230,7 @@ match __current__:
         familyKeys = [ "Cyanide", "Unknown" ]
 
         option = GlobalOption(
+            Platform = "GL",
             ForceOpen = True,
             ForcePath = "sample:*",
             Family = "Cyanide",
@@ -230,6 +241,7 @@ match __current__:
         familyKeys = [ "EA", "Unknown" ]
 
         option = GlobalOption(
+            Platform = "GL",
             ForceOpen = True,
             ForcePath = "sample:*",
             Family = "EA",
@@ -239,6 +251,7 @@ match __current__:
         familyKeys = [ "Epic", "Unknown" ]
 
         option = GlobalOption(
+            Platform = "GL",
             ForceOpen = True,
             ForcePath = "sample:*",
             Family = "Epic",
@@ -253,6 +266,7 @@ match __current__:
         familyKeys = [ "Frictional", "Unknown" ]
 
         option = GlobalOption(
+            Platform = "GL",
             ForceOpen = True,
             ForcePath = "sample:*",
             Family = "Frictional",
@@ -268,6 +282,7 @@ match __current__:
         familyKeys = [ "Frontier", "Unknown" ]
 
         option = GlobalOption(
+            Platform = "GL",
             ForceOpen = True,
             ForcePath = "sample:*",
             Family = "Frontier",
@@ -277,6 +292,7 @@ match __current__:
         familyKeys = [ "ID", "Unknown" ]
 
         option = GlobalOption(
+            Platform = "GL",
             ForceOpen = True,
             ForcePath = "sample:0",
             Family = "ID",
@@ -296,6 +312,7 @@ match __current__:
         familyKeys = [ "IW", "Unknown" ]
 
         option = GlobalOption(
+            Platform = "GL",
             ForceOpen = True,
             ForcePath = "sample:*",
             Family = "IW",
@@ -319,6 +336,7 @@ match __current__:
         familyKeys = [ "Lucas", "Unknown" ]
 
         option = GlobalOption(
+            Platform = "GL",
             ForceOpen = True,
             ForcePath = "sample:*",
             Family = "Lucas",
@@ -404,6 +422,7 @@ match __current__:
         familyKeys = [ "Monolith", "Unknown" ]
 
         option = GlobalOption(
+            Platform = "GL",
             ForceOpen = True,
             ForcePath = "sample:*",
             Family = "Monolith",
@@ -417,6 +436,7 @@ match __current__:
         familyKeys = [ "Origin", "Unknown" ]
 
         option = GlobalOption(
+            Platform = "GL",
             ForceOpen = True,
             # ForcePath = "sample:6",
             ForcePath = "sample:0",
@@ -429,6 +449,7 @@ match __current__:
         familyKeys = [ "Red", "Unknown" ]
 
         option = GlobalOption(
+            Platform = "GL",
             ForceOpen = True,
             ForcePath = "sample:*",
             Family = "Red",
@@ -442,6 +463,7 @@ match __current__:
         familyKeys = [ "Ubisoft", "Unknown" ]
 
         option = GlobalOption(
+            Platform = "GL",
             ForceOpen = True,
             ForcePath = "sample:*",
             Family = "Ubisoft",
@@ -451,6 +473,7 @@ match __current__:
         familyKeys = [ "Unity", "Unknown" ]
 
         option = GlobalOption(
+            Platform = "GL",
             ForceOpen = True,
             ForcePath = "sample:*",
             Family = "Unity",
@@ -464,6 +487,7 @@ match __current__:
         familyKeys = [ "Unknown" ]
 
         option = GlobalOption(
+            Platform = "GL",
             ForceOpen = True,
             ForcePath = "sample:*",
             Family = "Unknown",
@@ -473,6 +497,7 @@ match __current__:
         familyKeys = [ "Valve", "Unknown" ]
 
         option = GlobalOption(
+            Platform = "GL",
             ForceOpen = True,
             ForcePath = "sample:0",
             Family = "Valve",
@@ -511,6 +536,7 @@ match __current__:
         familyKeys = [ "Volition", "Unknown" ]
 
         option = GlobalOption(
+            Platform = "GL",
             ForceOpen = True,
             ForcePath = "sample:*",
             Family = "Volition",
@@ -539,6 +565,7 @@ match __current__:
         familyKeys = [ "WB", "Unknown" ]
 
         option = GlobalOption(
+            Platform = "GL",
             ForceOpen = True,
             ForcePath = "sample:*",
             Family = "WB",
@@ -547,5 +574,4 @@ match __current__:
     case _:
         familyKeys = [ "Arkane", "Bethesda", "Bioware", "Black", "Blizzard", "Bullfrog", "Capcom", "Cig", "Cryptic", "Crytek", "Cyanide", "EA", "Epic", "Frictional", "Frontier", "Id", "IW", "Lucas", "Monolith", "Origin", "Red", "Ubisoft", "Unity", "Unknown", "Valve", "Volition", "WbB" ]
 
-        option = GlobalOption(
-        )
+        option = GlobalOption()

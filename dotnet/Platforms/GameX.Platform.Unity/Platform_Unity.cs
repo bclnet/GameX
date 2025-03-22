@@ -1,5 +1,6 @@
 ﻿using OpenStack.Gfx;
 using OpenStack.Gfx.Textures;
+using OpenStack.Sfx;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -432,24 +433,41 @@ public class UnitySfx(PakFile source) : SystemSfx(source)
 }
 
 // UnityPlatform
-public static class UnityPlatform
+public class UnityPlatform : Platform
 {
-    public static unsafe bool Startup()
+    public static readonly Platform This = new UnityPlatform();
+    UnityPlatform() : base("UN", "Unity")
     {
         var task = Task.Run(Application.platform.ToString);
         try
         {
-            Platform.PlatformType = "UN";
-            Platform.PlatformTag = task.Result;
-            Platform.GfxFactory = source => new UnityGfx(source);
-            Platform.SfxFactory = source => new UnitySfx(source);
-            //Debug.Log(Platform);
-            UnsafeX.Memcpy = (dest, src, count) => UnsafeUtility.MemCpy(dest, src, count);
-            Debug.AssertFunc = x => UnityEngine.Debug.Assert(x);
-            Debug.LogFunc = UnityEngine.Debug.Log;
-            Debug.LogFormatFunc = UnityEngine.Debug.LogFormat;
-            return true;
+            Tag = task.Result;
+            //Debug.Log(Tag);
+            GfxFactory = source => new UnityGfx(source);
+            SfxFactory = source => new UnitySfx(source);
+            AssertFunc = x => UnityEngine.Debug.Assert(x);
+            LogFunc = UnityEngine.Debug.Log;
+            LogFormatFunc = UnityEngine.Debug.LogFormat;
         }
-        catch { return false; }
+        catch { Enabled = false; }
     }
+
+    public override unsafe void Activate()
+    {
+        base.Activate();
+        UnsafeX.Memcpy = (dest, src, count) => UnsafeUtility.MemCpy(dest, src, count);
+    }
+
+    public override unsafe void Deactivate()
+    {
+        base.Deactivate();
+        UnsafeX.Memcpy = null;
+    }
+}
+
+// UnityShellPlatform
+public class UnityShellPlatform : Platform
+{
+    public static readonly Platform This = new UnityShellPlatform();
+    UnityShellPlatform() : base("UN", "Unity") { }
 }

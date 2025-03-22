@@ -38,6 +38,7 @@ public partial class FamilyManager
     /// </summary>
     public class GlobalOption
     {
+        public string Platform;
         public string FindKey;
         public string Family;
         public string Game;
@@ -52,6 +53,7 @@ public partial class FamilyManager
 
     public static GlobalOption Option = new()
     {
+        Platform = "UN",
         ForceOpen = true,
         ForcePath = "sample:1",
         Family = "Arkane",
@@ -71,6 +73,7 @@ public partial class FamilyManager
 
     public static GlobalOption Option = new()
     {
+        Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:0",
         Family = "Bethesda",
@@ -92,6 +95,7 @@ public partial class FamilyManager
 
     public static GlobalOption Option = new()
     {
+        Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:0",
         Family = "Bioware",
@@ -119,6 +123,7 @@ public partial class FamilyManager
 
     public static GlobalOption Option = new()
     {
+        Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:*",
         Family = "Black",
@@ -130,6 +135,7 @@ public partial class FamilyManager
 
     public static GlobalOption Option = new()
     {
+        Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:*",
         Family = "Blizzard",
@@ -151,6 +157,7 @@ public partial class FamilyManager
 
     public static GlobalOption Option = new()
     {
+        Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:*",
         Family = "Bohemia",
@@ -161,6 +168,7 @@ public partial class FamilyManager
 
     public static GlobalOption Option = new()
     {
+        Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:0",
         Family = "Bullfrog",
@@ -181,6 +189,7 @@ public partial class FamilyManager
 
     public static GlobalOption Option = new()
     {
+        Platform = "GL",
         //ForceOpen = true,
         ForcePath = "sample:*",
         Family = "Capcom",
@@ -252,7 +261,7 @@ public partial class FamilyManager
         //ForcePath = "app:DataForge",
         //ForcePath = "app:StarWords",
         //ForcePath = "app:Subsumption",
-
+        Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:*",
         Family = "Cig",
@@ -263,6 +272,7 @@ public partial class FamilyManager
 
     public static GlobalOption Option = new()
     {
+        Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:1",
         Family = "Cryptic",
@@ -275,6 +285,7 @@ public partial class FamilyManager
 
     public static GlobalOption Option = new()
     {
+        Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:*",
         Family = "Crytek",
@@ -293,6 +304,7 @@ public partial class FamilyManager
 
     public static GlobalOption Option = new()
     {
+        Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:*",
         Family = "Cyanide",
@@ -304,6 +316,7 @@ public partial class FamilyManager
 
     public static GlobalOption Option = new()
     {
+        Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:*",
         Family = "EA",
@@ -314,6 +327,7 @@ public partial class FamilyManager
 
     public static GlobalOption Option = new()
     {
+        Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:*",
         Family = "Epic",
@@ -329,6 +343,7 @@ public partial class FamilyManager
 
     public static GlobalOption Option = new()
     {
+        Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:*",
         Family = "Frictional",
@@ -345,6 +360,7 @@ public partial class FamilyManager
 
     public static GlobalOption Option = new()
     {
+        Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:*",
         Family = "Frontier",
@@ -355,6 +371,7 @@ public partial class FamilyManager
 
     public static GlobalOption Option = new()
     {
+        Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:1",
         Family = "ID",
@@ -375,6 +392,7 @@ public partial class FamilyManager
 
     public static GlobalOption Option = new()
     {
+        Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:*",
         Family = "IW",
@@ -400,6 +418,7 @@ public partial class FamilyManager
     public static GlobalOption Option = new()
     {
         //Edition = "enhanced",
+        Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:0",
         Family = "Lucas",
@@ -486,6 +505,7 @@ public partial class FamilyManager
 
     public static GlobalOption Option = new()
     {
+        Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:*",
         Family = "Monolith",
@@ -500,6 +520,7 @@ public partial class FamilyManager
 
     public static GlobalOption Option = new()
     {
+        Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:6",
         //ForcePath = "sample:13",
@@ -513,6 +534,7 @@ public partial class FamilyManager
 
     public static GlobalOption Option = new()
     {
+        Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:*",
         Family = "Red",
@@ -527,6 +549,7 @@ public partial class FamilyManager
 
     public static GlobalOption Option = new()
     {
+        Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:0",
         Family = "Rockstar",
@@ -584,6 +607,7 @@ public partial class FamilyManager
 
     public static GlobalOption Option = new()
     {
+        Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:*",
         Family = "Ubisoft",
@@ -594,6 +618,7 @@ public partial class FamilyManager
 
     public static GlobalOption Option = new()
     {
+        Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:*",
         Family = "Unity",
@@ -608,6 +633,7 @@ public partial class FamilyManager
 
     public static GlobalOption Option = new()
     {
+        Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:0",
         Family = "Unknown",
@@ -618,6 +644,7 @@ public partial class FamilyManager
 
     public static GlobalOption Option = new()
     {
+        Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:0",
         Family = "Valve",
@@ -657,6 +684,7 @@ public partial class FamilyManager
 
     public static GlobalOption Option = new()
     {
+        Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:0",
         Family = "Volition",
@@ -686,6 +714,7 @@ public partial class FamilyManager
 
     public static GlobalOption Option = new()
     {
+        Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:0",
         Family = "WB",
@@ -696,6 +725,7 @@ public partial class FamilyManager
 
     public static GlobalOption Option = new()
     {
+        Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:0",
         Family = "X2K",
@@ -704,8 +734,6 @@ public partial class FamilyManager
 #else
     static readonly string[] FamilyKeys = ["Arkane", "Bethesda", "Bioware", "Black", "Blizzard",  "Bohemia", "Bullfrog", "Capcom", "Cig", "Cryptic", "Crytek", "Cyanide", "EA", "Epic", "Frictional", "Frontier", "ID", "IW", "Lucas", "Monolith", "Origin", "Red", "Rockstar", "Ubisoft", "Unity", "Unknown", "Valve", "Volition", "WB", "X2K"];
 
-    public static GlobalOption Option = new()
-    {
-    };
+    public static GlobalOption Option = new() { };
 #endif
 }

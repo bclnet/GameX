@@ -227,16 +227,26 @@ class MaterialManager(IMaterialManager):
 # class Type(Enum): pass
 # class OS(Enum): pass
 
-# Platform
+# PlatformX
 class Platform:
-    class Type(Enum):
-        Unknown = 0
-        OpenGL = 1
-        Unity = 2
-        Vulken = 3
-        Test = 4
-        Other = 5
+    enabled: bool = True
+    id: str = None
+    name: str = None
+    tag: str = None
+    gfxFactory: callable = lambda self, source: None
+    sfxFactory: callable = lambda self, source: None
+    logFunc: callable = lambda a: print(a)
+    def __init__(self, id: str, name: str): self.id = id; self.name = name
+    def activate(self) -> None: pass
+    def deactivate(self) -> None: pass
 
+# UnknownPlatform
+class UnknownPlatform(Platform):
+    def __init__(self): super().__init__('UK', 'Unknown')
+UnknownPlatform.This = UnknownPlatform()
+
+# PlatformX
+class PlatformX:
     class OS(Enum):
         Windows = 1
         OSX = 2
@@ -248,31 +258,27 @@ class Platform:
         path = f'{os.getenv("APPDATA")}.gamex'
         return None
 
-    platformType: Type = None
-    platformTag: str = None
     platformOS: OS = OS.Windows
-    gfxFactory: callable = None
-    sfxFactory: callable = None
-    startups: list[object] = []
+    platforms: set[object] = {UnknownPlatform.This}
     inTestHost: bool = False
-    logFunc: callable = None
-
     applicationPath = os.getcwd()
     options = decodeOptions()
+    current: Platform = None
 
     class Stats:
         maxTextureMaxAnisotropy: int
 
-    # startup
+    # activate
     @staticmethod
-    def startup() -> None:
-        if Platform.inTestHost and len(Platform.startups) == 0: Platform.startups.append(TestPlatform.startup)
-        for startup in Platform.startups:
-            if startup(): return
-        Platform.platformType = 'UK'
-        Platform.gfxFactory = lambda source: None
-        Platform.sfxFactory = lambda source: None
-        Platform.logFunc = lambda a: print(a)
+    def activate(platform: Platform) -> None:
+        if not platform or not platform.enabled: platform = UnknownPlatform.This
+        PlatformX.platforms.add(platform)
+        current = PlatformX.current
+        if current != platform:
+            if current: current.deactivate()
+            platform.activate()
+            PlatformX.current = platform
+        return platform
 
     @staticmethod
     def createMatcher(searchPattern: str) -> callable:
@@ -293,27 +299,25 @@ class Platform:
     def decodePath(path: str, rootPath: str = None) -> str:
         lowerPath = path.lower()
         return f'{rootPath}{path[6:]}' if lowerPath.startswith('%path%') else \
-        f'{Platform.applicationPath}{path[9:]}' if lowerPath.startswith('%apppath%') else \
+        f'{PlatformX.applicationPath}{path[9:]}' if lowerPath.startswith('%apppath%') else \
         f'{os.getenv("APPDATA")}{path[9:]}' if lowerPath.startswith('%appdata%') else \
         f'{os.getenv("LOCALAPPDATA")}{path[14:]}' if lowerPath.startswith('%localappdata%') else \
         path
 
 # TestGfx
 class TestGfx:
-    def __init__(self, source):
-        self._source = source
+    def __init__(self, source): self._source = source
 
 # TestGfx
 class TestSfx:
-    def __init__(self, source):
-        self._source = source
+    def __init__(self, source): self._source = source
 
 # TestPlatform
-class TestPlatform:
-    @staticmethod
-    def startup() -> bool:
-        Platform.platformType = 'TT'
-        Platform.gfxFactory = lambda source: TestGfx(source)
-        Platform.sfxFactory = lambda source: TestSfx(source)
-        Platform.logFunc = lambda a: print(a)
-        return True
+class TestPlatform(Platform):
+    def __init__(self):
+        super().__init__('TT', 'Test')
+        self.gfxFactory = lambda self, source: TestGfx(source)
+        self.sfxFactory = lambda self, source: TestSfx(source)
+TestPlatform.This = TestPlatform()
+
+PlatformX.current = PlatformX.activate(TestPlatform.This if PlatformX.inTestHost else UnknownPlatform.This)

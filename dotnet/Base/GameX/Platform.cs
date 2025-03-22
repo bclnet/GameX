@@ -294,24 +294,97 @@ public class MaterialManager<Material, Texture>(PakFile pakFile, ITextureManager
 #region Platform
 
 /// <summary>
-/// Platform
+/// Gets the platform.
 /// </summary>
-public static class Platform
+public abstract class Platform(string id, string name)
+{
+    /// <summary>
+    /// Gets the active.
+    /// </summary>
+    public bool Enabled = true;
+
+    /// <summary>
+    /// Gets the platform id.
+    /// </summary>
+    public readonly string Id = id;
+
+    /// <summary>
+    /// Gets the platform name.
+    /// </summary>
+    public readonly string Name = name;
+
+    /// <summary>
+    /// Gets the platform tag.
+    /// </summary>
+    public string Tag;
+
+    /// <summary>
+    /// Gets the platforms gfx factory.
+    /// </summary>
+    public Func<PakFile, IOpenGfx> GfxFactory = source => null; // throw new Exception("No GfxFactory");
+
+    /// <summary>
+    /// Gets the platforms sfx factory.
+    /// </summary>
+    public Func<PakFile, IOpenSfx> SfxFactory = source => null; // throw new Exception("No SfxFactory");
+
+    /// <summary>
+    /// Gets the platforms assert func.
+    /// </summary>
+    public Action<bool> AssertFunc = x => System.Diagnostics.Debug.Assert(x);
+
+    /// <summary>
+    /// Gets the platforms log func.
+    /// </summary>
+    public Action<string> LogFunc = a => System.Diagnostics.Debug.Print(a);
+
+    /// <summary>
+    /// Gets the platforms logformat func.
+    /// </summary>
+    public Action<string, object[]> LogFormatFunc = (a, b) => System.Diagnostics.Debug.Print(a, b);
+
+    /// <summary>
+    /// Activates the platform.
+    /// </summary>
+    public virtual void Activate()
+    {
+        OpenStack.Debug.AssertFunc = AssertFunc;
+        OpenStack.Debug.LogFunc = LogFunc;
+        OpenStack.Debug.LogFormatFunc = LogFormatFunc;
+    }
+
+    /// <summary>
+    /// Deactivates the platform.
+    /// </summary>
+    public virtual void Deactivate() { }
+
+    /// <summary>
+    /// Converts to string.
+    /// </summary>
+    /// <returns>
+    /// A <see cref="System.String" /> that represents this instance.
+    /// </returns>
+    public override string ToString() => Name;
+}
+
+/// <summary>
+/// UnknownPlatform
+/// </summary>
+public class UnknownPlatform : Platform
+{
+    public static readonly Platform This = new UnknownPlatform();
+    UnknownPlatform() : base("UK", "Unknown") { }
+}
+
+/// <summary>
+/// PlatformX
+/// </summary>
+public static class PlatformX
 {
     /// <summary>
     /// The platform OS.
     /// </summary>
     public enum OS { Windows, OSX, Linux, Android }
-
-    /// <summary>
-    /// Gets or sets the platform.
-    /// </summary>
-    public static string PlatformType;
-
-    /// <summary>
-    /// Gets or sets the platform tag.
-    /// </summary>
-    public static string PlatformTag;
 
     /// <summary>
     /// Gets the platform os.
@@ -323,19 +396,9 @@ public static class Platform
         : throw new ArgumentOutOfRangeException(nameof(RuntimeInformation.IsOSPlatform), RuntimeInformation.OSDescription);
 
     /// <summary>
-    /// Gets or sets the platforms gfx factory.
-    /// </summary>
-    public static Func<PakFile, IOpenGfx> GfxFactory;
-
-    /// <summary>
-    /// Gets or sets the platforms sfx factory.
-    /// </summary>
-    public static Func<PakFile, IOpenSfx> SfxFactory;
-
-    /// <summary>
     /// Gets the platform startups.
     /// </summary>
-    public static readonly List<Func<bool>> Platforms = [];
+    public static readonly HashSet<Platform> Platforms = [UnknownPlatform.This];
 
     /// <summary>
     /// Determines if in a test host.
@@ -351,6 +414,28 @@ public static class Platform
     /// Gets the platform startups.
     /// </summary>
     public static Dictionary<object, object> Options = DecodeOptions();
+
+    /// <summary>
+    /// Gets or sets the current platform.
+    /// </summary>
+    public static Platform Current = Activate(InTestHost ? TestPlatform.This : UnknownPlatform.This);
+
+    /// <summary>
+    /// Activates a platform.
+    /// </summary>
+    public static Platform Activate(Platform platform)
+    {
+        if (platform == null || !platform.Enabled) platform = UnknownPlatform.This;
+        Platforms.Add(platform);
+        var current = Current;
+        if (current != platform)
+        {
+            current?.Deactivate();
+            platform?.Activate();
+            Current = platform;
+        }
+        return platform;
+    }
 
     /// <summary>
     /// The platform stats.
@@ -369,18 +454,6 @@ public static class Platform
         public static int ProcessorCount { get; private set; }
         public static bool Unix { get; private set; }
         public static bool VR { get; private set; }
-    }
-
-    public static void Startup()
-    {
-        if (InTestHost && Platforms.Count == 0) Platforms.Add(TestPlatform.Startup);
-        foreach (var p in Platforms) if (p()) return;
-        PlatformType = "UK";
-        GfxFactory = source => null; // throw new Exception("No GfxFactory");
-        SfxFactory = source => null; // throw new Exception("No SfxFactory");
-        AssertFunc = x => System.Diagnostics.Debug.Assert(x);
-        LogFunc = a => System.Diagnostics.Debug.Print(a);
-        LogFormatFunc = (a, b) => System.Diagnostics.Debug.Print(a, b);
     }
 
     /// <summary>
@@ -426,7 +499,7 @@ public static class Platform
 
 #endregion
 
-#region TestGfx
+#region TestPlatform
 
 public interface ITestGfx : IOpenGfx { }
 
@@ -439,10 +512,6 @@ public class TestGfx(PakFile source) : ITestGfx
     public void PreloadObject(object path) => throw new NotSupportedException();
 }
 
-#endregion
-
-#region TestSfx
-
 public interface ITestSfx : IOpenSfx { }
 
 public class TestSfx(PakFile source) : ITestSfx
@@ -451,25 +520,16 @@ public class TestSfx(PakFile source) : ITestSfx
     public object Source => _source;
 }
 
-#endregion
-
-#region TestPlatform
-
-public static class TestPlatform
+/// <summary>
+/// TestPlatform
+/// </summary>
+public class TestPlatform : Platform
 {
-    public static bool Startup()
+    public static readonly Platform This = new TestPlatform();
+    TestPlatform() : base("TT", "Test")
     {
-        try
-        {
-            Platform.PlatformType = "TT";
-            Platform.GfxFactory = source => new TestGfx(source);
-            Platform.SfxFactory = source => new TestSfx(source);
-            AssertFunc = x => System.Diagnostics.Debug.Assert(x);
-            LogFunc = a => System.Diagnostics.Debug.Print(a);
-            LogFormatFunc = (a, b) => System.Diagnostics.Debug.Print(a, b);
-            return true;
-        }
-        catch { return false; }
+        GfxFactory = source => new TestGfx(source);
+        SfxFactory = source => new TestSfx(source);
     }
 }
 

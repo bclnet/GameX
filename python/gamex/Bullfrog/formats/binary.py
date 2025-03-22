@@ -5,7 +5,6 @@ from io import BytesIO
 from openstk.gfx.gfx_render import Rasterize
 from openstk.gfx.gfx_texture import ITextureFrames, TextureFormat, TexturePixel
 from gamex import PakBinary, FileOption, PakBinaryT, FileSource, MetaInfo, MetaContent, IHaveMetaInfo
-from gamex.platform import Platform
 from gamex.util import _pathExtension
 
 #region Binary_Bullfrog

@@ -230,14 +230,9 @@ class PygameGfx(IPygameGfx):
     meshBufferCache: GLMeshBufferCache
 
 # PygamePlatform
-class PygamePlatform:
-    def startup() -> bool:
-        Platform.platformType = 'PG'
-        Platform.gfxFactory = lambda source: PygameGfx(source)
-        Platform.sfxFactory = lambda source: SystemSfx(source)
-        Platform.logFunc = lambda a: print(a)
-        return True
-
-# Pygame:startup
-Platform.startups.append(PygamePlatform.startup)
-Platform.startup()
+class PygamePlatform(Platform):
+    def __init__(self):
+        super().__init__('PG', 'Pygame')
+        self.gfxFactory = lambda self, source: PygameGfx(source)
+        self.sfxFactory = lambda self, source: SystemSfx(source)
+PygamePlatform.This = PygamePlatform()

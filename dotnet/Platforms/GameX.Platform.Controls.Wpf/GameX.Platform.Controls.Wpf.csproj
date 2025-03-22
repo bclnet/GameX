@@ -29,11 +29,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Stride.CommunityToolkit" Version="1.0.0-preview.53" />
-    <PackageReference Include="Stride.Core.Presentation.Wpf" Version="4.2.0.2293" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Include="OpenGL\Old2\GL2MapViewer.cs" />
     <None Include="OpenGL\Old2\GL2ModelViewer.cs" />
     <None Include="OpenGL\Old2\GL2ParticleViewer.cs" />
@@ -45,6 +40,11 @@
     <None Include="OpenGL\Old\ViewGLParticle.cs" />
     <None Include="OpenGL\Old\ViewGLScene.cs" />
     <None Include="OpenGL\Old\WorldView.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Stride.CommunityToolkit" Version="1.0.0-preview.56" />
+    <PackageReference Include="Stride.Core.Presentation.Wpf" Version="4.2.0.2381" />
   </ItemGroup>
 
   <ItemGroup>

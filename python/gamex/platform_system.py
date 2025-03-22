@@ -4,7 +4,7 @@ import os, io, pathlib
 from zipfile import ZipFile
 from openstk.poly import Reader
 from openstk.sfx.sys import ISystemSfx
-from gamex.platform import IFileSystem, Platform, AudioBuilderBase, AudioManager
+from gamex.platform import IFileSystem, PlatformX, AudioBuilderBase, AudioManager
 
 # SystemAudioBuilder
 class SystemAudioBuilder(AudioBuilderBase):
@@ -47,7 +47,7 @@ class VirtualFileSystem(IFileSystem):
         self.base = base
         self.virtuals = virtuals
     def glob(self, path: str, searchPattern: str) -> list[str]:
-        matcher = Platform.createMatcher(searchPattern)
+        matcher = PlatformX.createMatcher(searchPattern)
         return [x for x in self.virtuals.keys() if matcher(x)] + self.base.glob(path, searchPattern)
     def fileExists(self, path: str) -> bool: return path in self.virtuals or self.base.fileExists(path)
     def fileInfo(self, path: str) -> (str, int): return (path, x.size() if (x := self.virtuals[path] and x) else 0) if path in self.virtuals else self.base.fileInfo(path)

@@ -26,6 +26,7 @@ class OpenWidget(QWidget):
 
         familyLabel = QLabel(self); familyLabel.setText("Family:")
         familyInput = self.familyInput = QComboBox(self)
+        familyInput.addItems([None] + [x.name for x in familyValues])
         familyInput.currentIndexChanged.connect(self.family_change)
 
         gameLabel = QLabel(self); gameLabel.setText("Game:")
@@ -65,8 +66,6 @@ class OpenWidget(QWidget):
         layout.addWidget(pak3uriLabel, 5, 0); layout.addWidget(pak3uriInput, 5, 1); layout.addWidget(pak3uriButton, 5, 2)
         layout.addWidget(cancelButton, 6, 1); layout.addWidget(openButton, 6, 2)
         self.setLayout(layout)
-        # setup
-        self.familyInput.addItems([None] + [x.name for x in familyValues])
 
     def closeEvent(self, e=None):
         self.app.closeWidget(self)

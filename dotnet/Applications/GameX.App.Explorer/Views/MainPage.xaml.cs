@@ -59,7 +59,9 @@ namespace GameX.App.Explorer.Views
 
         public void SetPlatform(Platform platform)
         {
+            PlatformX.Activate(platform);
             foreach (var s in PakFiles) s.SetPlatform(platform);
+            FileContent.SetPlatform(platform);
         }
 
         IList<Platform> _platforms;
@@ -112,7 +114,6 @@ namespace GameX.App.Explorer.Views
         {
             var selected = (Platform)Platform.SelectedItem;
             SetPlatform(selected);
-            FileContent.SetPlatform(selected);
         }
 
         #region Menu

@@ -14,7 +14,8 @@ from .FileContent import FileContent
 from .FileExplorer import FileExplorer
 from .resourcemgr import ResourceManager
 
-platformValues = list(PlatformX.platforms)
+platformValues = sorted(PlatformX.platforms, key=lambda s: s.name)
+platformIndex = max(_find([x.id for x in platformValues], option.Platform), 0)
 
 # ExplorerMainTab
 class ExplorerMainTab:
@@ -105,7 +106,9 @@ class MainPage(QMainWindow):
         logBar.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         logBar.setStyleSheet('background-color: lightgray;')
         platformInput = self.platformInput = QComboBox(logBar)
+        platformInput.addItems([x.name for x in platformValues])
         platformInput.currentIndexChanged.connect(self.platform_change)
+        platformInput.setCurrentIndex(platformIndex)
         p = QPoint(300, 0)
         platformInput.move(p)
 
@@ -121,16 +124,16 @@ class MainPage(QMainWindow):
         mainMenu = self.menuBar()
         fileMenu = mainMenu.addMenu('&File')
         fileMenu.addAction('&Open', self.openPage_click)
-
-        # setup
-        platformInput.addItems([None] + [x.name for x in platformValues])
-        platformInput.setCurrentIndex(_find([x.id for x in platformValues], option.Platform) + 1)
-
-        # show widget
         self.show()
 
+    def setPlatform(self, platform):
+        PlatformX.activate(platform)
+        for s in self.pakFiles: s.setPlatform(platform)
+        self.contentBlock.setPlatform(platform)
+
     def platform_change(self, index):
-        selected = self.platformSelected = platformValues[index - 1] if index > 0 else None
+        selected = self.platformSelected = platformValues[index] if index >= 0 else None
+        self.setPlatform(selected)
 
     def startup(self):
         if option.ForcePath and option.ForcePath.startswith('app:') and self.familyApps and option.ForcePath[:4] in self.familyApps:

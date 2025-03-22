@@ -2,6 +2,12 @@ import sys, os
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QSurfaceFormat
+from gamex import PlatformX
+from gamex.platform_opengl import OpenGLPlatform
+from gamex.platform_panda3d import Panda3dPlatform
+from gamex.platform_pygame import PygamePlatform
+
+PlatformX.platforms = PlatformX.platforms.union({OpenGLPlatform.This, Panda3dPlatform.This, PygamePlatform.This})
 from widgets.MainPage import MainPage
 
 if __name__ == '__main__':

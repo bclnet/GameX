@@ -54,6 +54,15 @@ class FileContent(QTabWidget):
         # contentTab.setMinimumWidth(300)
         # contentTab.setMinimumHeight(300)
 
+    def setPlatform(self, platform: object):
+        plat = platform.id if platform else 'UK'
+        self.ViewGfx = \
+            ViewOpenGL if plat == 'GL' else \
+            ViewPanda3d if plat == 'PD' else \
+            ViewPygame if plat == 'PG' else \
+            ViewNull
+        if len(self.contentTab) > 0: self.updateTabs()
+
     def updateTabs(self):
         self.contentTab.clear()
         if not self.contentTabs: return
@@ -77,9 +86,7 @@ class FileContent(QTabWidget):
                 ViewText(self, tab) if key == 'TText' else \
                 ViewText(self, tab) if key == 'TDataGrid' else \
                 ViewText(self, tab) if key == 'TAudioPlayer' else \
-                ViewOpenGL(self, tab) if key == 'TViewGfx' else \
-                ViewPanda3d(self, tab) if key == 'xTViewGfx' else \
-                ViewPygame(self, tab) if key == 'xTViewGfx' else \
+                self.ViewGfx(self, tab) if key == 'TViewGfx' else \
                 ViewNull(self, tab) if key == 'TNull' else \
                 None
             self.contentTab.addTab(control, tab.name)

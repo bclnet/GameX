@@ -7,16 +7,17 @@ from openstk.gfx.gfx_ui import MouseState, KeyboardState
 # opengl
 from OpenGL.GL import *
 from openstk.gfx.gl_view import OpenGLView
-from gamex.platform_opengl import OpenGLPlatform
+# from gamex.platform_opengl import OpenGLPlatform
 from gamex.platform_opengl_views import createView as openGLCreateView
 # panda3d
 from panda3d.core import loadPrcFileData, WindowProperties, FrameBufferProperties
 from direct.showbase.ShowBase import ShowBase
+# from gamex.platform_panda3d import Panda3dPlatform
 from gamex.platform_panda3d_views import createView as panda3dCreateView
 # pygame
 import pygame
 # from pygame.locals import *
-from gamex.platform_pygame import PygamePlatform
+# from gamex.platform_pygame import PygamePlatform
 from gamex.platform_pygame_views import createView as pygameCreateView
 
 # typedefs

@@ -19,13 +19,11 @@ class ViewBase:
 
 # ViewTexture
 class ViewTexture(ViewBase):
-    def __init__(self, gfx: IOpenGLGfx, obj: object, surf: object):
-        super().__init__(gfx, obj, surf)
+    def __init__(self, gfx: IOpenGLGfx, obj: object, surf: object): super().__init__(gfx, obj, surf)
 
 # ViewTexture
 class TestAnim(ViewBase):
-    def __init__(self, gfx: IOpenGLGfx, obj: object, surf: object):
-        super().__init__(gfx, obj, surf)
+    def __init__(self, gfx: IOpenGLGfx, obj: object, surf: object): super().__init__(gfx, obj, surf)
 
     def start(self) -> None:
         self.x = 320 # Initial x position of the moving object

@@ -22,7 +22,7 @@ match __current__:
         familyKeys = [ "Arkane", "Unknown" ]
 
         option = GlobalOption(
-            Platform = "GL",
+            Platform = "PD",
             ForceOpen = True,
             ForcePath = "sample:1",
             Family = "Arkane",

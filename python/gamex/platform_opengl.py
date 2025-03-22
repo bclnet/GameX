@@ -236,6 +236,6 @@ class OpenGLGfx(IOpenGLGfx):
 class OpenGLPlatform(Platform):
     def __init__(self):
         super().__init__('GL', 'OpenGL')
-        self.gfxFactory = lambda self, source: OpenGLGfx(source)
-        self.sfxFactory = lambda self, source: SystemSfx(source)
+        self.gfxFactory = staticmethod(lambda source: OpenGLGfx(source))
+        self.sfxFactory = staticmethod(lambda source: SystemSfx(source))
 OpenGLPlatform.This = OpenGLPlatform()

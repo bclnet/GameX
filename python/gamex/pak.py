@@ -71,8 +71,8 @@ class PakFile:
         return self
     def opening(self) -> None: pass
     def setPlatform(self, platform: Platform) -> PakFile:
-        if platform.gfxFactory: self.gfx = platform.gfxFactory(self)
-        if platform.sfxFactory: self.sfx = platform.sfxFactory(self)
+        self.gfx = platform.gfxFactory(self) if platform and platform.gfxFactory else None
+        self.sfx = platform.sfxFactory(self) if platform and platform.sfxFactory else None
         return self
     def contains(self, path: FileSource | str | int) -> bool: pass
     def getFileSource(self, path: FileSource | str | int, throwOnError: bool = True) -> (PakFile, FileSource): pass

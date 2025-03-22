@@ -275,8 +275,8 @@ public abstract class PakFile : IDisposable
     /// <returns></returns>
     public PakFile SetPlatform(Platform platform)
     {
-        Gfx = platform.GfxFactory?.Invoke(this);
-        Sfx = platform.SfxFactory?.Invoke(this);
+        Gfx = platform?.GfxFactory?.Invoke(this);
+        Sfx = platform?.SfxFactory?.Invoke(this);
         return this;
     }
 

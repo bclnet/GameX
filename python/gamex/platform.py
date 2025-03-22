@@ -233,8 +233,8 @@ class Platform:
     id: str = None
     name: str = None
     tag: str = None
-    gfxFactory: callable = lambda self, source: None
-    sfxFactory: callable = lambda self, source: None
+    gfxFactory: callable = None
+    sfxFactory: callable = None
     logFunc: callable = lambda a: print(a)
     def __init__(self, id: str, name: str): self.id = id; self.name = name
     def activate(self) -> None: pass
@@ -276,7 +276,7 @@ class PlatformX:
         current = PlatformX.current
         if current != platform:
             if current: current.deactivate()
-            platform.activate()
+            if platform: platform.activate()
             PlatformX.current = platform
         return platform
 
@@ -316,8 +316,8 @@ class TestSfx:
 class TestPlatform(Platform):
     def __init__(self):
         super().__init__('TT', 'Test')
-        self.gfxFactory = lambda self, source: TestGfx(source)
-        self.sfxFactory = lambda self, source: TestSfx(source)
+        self.gfxFactory = staticmethod(lambda source: TestGfx(source))
+        self.sfxFactory = staticmethod(lambda source: TestSfx(source))
 TestPlatform.This = TestPlatform()
 
 PlatformX.current = PlatformX.activate(TestPlatform.This if PlatformX.inTestHost else UnknownPlatform.This)

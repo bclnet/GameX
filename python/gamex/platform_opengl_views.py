@@ -27,33 +27,27 @@ class ViewBase:
 
 # ViewCell
 class ViewCell(ViewBase):
-    def __init__(self, gfx: IOpenGLGfx, obj: object):
-        super().__init__(gfx, obj)
+    def __init__(self, gfx: IOpenGLGfx, obj: object): super().__init__(gfx, obj)
 
 # ViewParticle
 class ViewParticle(ViewBase):
-    def __init__(self, gfx: IOpenGLGfx, obj: object):
-        super().__init__(gfx, obj)
+    def __init__(self, gfx: IOpenGLGfx, obj: object): super().__init__(gfx, obj)
 
 # ViewEngine
 class ViewEngine(ViewBase):
-    def __init__(self, gfx: IOpenGLGfx, obj: object):
-        super().__init__(gfx, obj)
+    def __init__(self, gfx: IOpenGLGfx, obj: object): super().__init__(gfx, obj)
 
 # ViewObject
 class ViewObject(ViewBase):
-    def __init__(self, gfx: IOpenGLGfx, obj: object):
-        super().__init__(gfx, obj)
+    def __init__(self, gfx: IOpenGLGfx, obj: object): super().__init__(gfx, obj)
 
 # ViewMaterial
 class ViewMaterial(ViewBase):
-    def __init__(self, gfx: IOpenGLGfx, obj: object):
-        super().__init__(gfx, obj)
+    def __init__(self, gfx: IOpenGLGfx, obj: object): super().__init__(gfx, obj)
 
 # ViewTexture
 class ViewTexture(ViewBase):
-    def __init__(self, gfx: IOpenGLGfx, obj: object):
-        super().__init__(gfx, obj)
+    def __init__(self, gfx: IOpenGLGfx, obj: object): super().__init__(gfx, obj)
     def getViewport(self, size: tuple) -> tuple:
         return None if not (o := self.obj) else \
         size if o.width > 1024 or o.height > 1024 or False else (o.width << self.FACTOR, o.height << self.FACTOR)
@@ -86,8 +80,7 @@ class ViewVideoTexture(ViewBase):
 
 # ViewTestTri
 class ViewTestTri(ViewBase):
-    def __init__(self, gfx: IOpenGLGfx, obj: object):
-        super().__init__(gfx, obj)
+    def __init__(self, gfx: IOpenGLGfx, obj: object): super().__init__(gfx, obj)
     def start(self) -> None:
         self.renderers = [TestTriRenderer(self.gfx)]
 

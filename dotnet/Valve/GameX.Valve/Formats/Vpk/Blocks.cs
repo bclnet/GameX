@@ -528,18 +528,19 @@ public class XKV3 : DATA, IHaveMetaInfo
             if (compressionDictionaryId != 0) throw new ArgumentOutOfRangeException(nameof(compressionDictionaryId), $"Unhandled {compressionDictionaryId}");
             else if (compressionFrameSize != 0) throw new ArgumentOutOfRangeException(nameof(compressionFrameSize), $"Unhandled {compressionFrameSize}");
 
-            using var zstd = new ZstdSharp.Decompressor();
-            var totalSize = uncompressedSize + blockTotalSize;
-            var output = new Span<byte>(new byte[totalSize]);
-            var buf = ArrayPool<byte>.Shared.Rent((int)compressedSize);
-            try
-            {
-                var input = buf.AsSpan(0, (int)compressedSize);
-                r.Read(input);
-                if (!zstd.TryUnwrap(input, output, out var written) || totalSize != written) throw new InvalidDataException($"Failed to decompress zstd correctly (written {written} bytes, expected {totalSize} bytes)");
-            }
-            finally { ArrayPool<byte>.Shared.Return(buf); }
-            s.Write(output);
+            throw new NotImplementedException();
+            //using var zstd = new ZstdSharp.Decompressor();
+            //var totalSize = uncompressedSize + blockTotalSize;
+            //var output = new Span<byte>(new byte[totalSize]);
+            //var buf = ArrayPool<byte>.Shared.Rent((int)compressedSize);
+            //try
+            //{
+            //    var input = buf.AsSpan(0, (int)compressedSize);
+            //    r.Read(input);
+            //    if (!zstd.TryUnwrap(input, output, out var written) || totalSize != written) throw new InvalidDataException($"Failed to decompress zstd correctly (written {written} bytes, expected {totalSize} bytes)");
+            //}
+            //finally { ArrayPool<byte>.Shared.Return(buf); }
+            //s.Write(output);
         }
         else throw new ArgumentOutOfRangeException(nameof(compressionMethod), $"Unknown compression method {compressionMethod}");
 

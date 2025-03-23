@@ -1,5 +1,0 @@
-﻿GameX.All.dll
-GameX.Platform.Controls.Wpf.dll
-GameX.Platform.Godot.dll
-GameX.Platform.OpenGL.dll
-GameX.Platform.Stride.dll

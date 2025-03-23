@@ -548,36 +548,16 @@
       <HintPath>C:\Program Files\Unity\Hub\Editor\6000.0.38f1\Editor\Data\PlaybackEngines\AndroidPlayer\UnityEditor.Android.Extensions.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="OpenStack.PolyIO">
+      <HintPath>Assets\Plugins\GameX\OpenStack.PolyIO.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Unity.VisualScripting.YamlDotNet">
       <HintPath>Library\PackageCache\com.unity.visualscripting@1b53f46e931b\Editor\VisualScripting.Core\Dependencies\YamlDotNet\Unity.VisualScripting.YamlDotNet.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="GameX.Bohemia">
-      <HintPath>Assets\GameX\GameX.Bohemia.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Text.Json">
-      <HintPath>Assets\Packages\System.Text.Json.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.EA.Platform">
-      <HintPath>Assets\GameX\GameX.EA.Platform.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.Frontier.Platform">
-      <HintPath>Assets\GameX\GameX.Frontier.Platform.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="ZstdNet">
-      <HintPath>Assets\Packages\ZstdNet.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.Cyanide.Platform">
-      <HintPath>Assets\GameX\GameX.Cyanide.Platform.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.Lucas.Platform">
-      <HintPath>Assets\GameX\GameX.Lucas.Platform.dll</HintPath>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe">
+      <HintPath>Assets\Plugins\System\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Collections.LowLevel.ILSupport">
@@ -588,348 +568,156 @@
       <HintPath>Library\PackageCache\com.unity.ext.nunit@60ef35ffd3cd\net40\unity-custom\nunit.framework.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="GameX.Monolith">
-      <HintPath>Assets\GameX\GameX.Monolith.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.IO.Pipelines">
-      <HintPath>Assets\Packages\System.IO.Pipelines.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.Bethesda">
-      <HintPath>Assets\GameX\GameX.Bethesda.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="BouncyCastle.Crypto">
-      <HintPath>Assets\Packages\BouncyCastle.Crypto.dll</HintPath>
+    <Reference Include="ZstdNet">
+      <HintPath>Assets\Plugins\System\ZstdNet.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System.Text.Encodings.Web">
-      <HintPath>Assets\Packages\System.Text.Encodings.Web.dll</HintPath>
+      <HintPath>Assets\Plugins\System\System.Text.Encodings.Web.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="GameX.Frontier">
-      <HintPath>Assets\GameX\GameX.Frontier.dll</HintPath>
+    <Reference Include="ZstdSharp">
+      <HintPath>Assets\Plugins\System\ZstdSharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="OpenTK">
-      <HintPath>Assets\Packages\OpenTK.dll</HintPath>
+    <Reference Include="Microsoft.Extensions.Logging.Abstractions">
+      <HintPath>Assets\Plugins\System\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="MimeKitLite">
-      <HintPath>Assets\Packages\MimeKitLite.dll</HintPath>
+    <Reference Include="GameX">
+      <HintPath>Assets\Plugins\GameX\GameX.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="GameX.Frictional">
-      <HintPath>Assets\GameX\GameX.Frictional.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="OpenStack.PolyIO">
-      <HintPath>Assets\GameX\OpenStack.PolyIO.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.Blizzard">
-      <HintPath>Assets\GameX\GameX.Blizzard.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="MathNet.Numerics">
-      <HintPath>Assets\Packages\MathNet.Numerics.dll</HintPath>
+    <Reference Include="Google.Protobuf">
+      <HintPath>Assets\Plugins\System\Google.Protobuf.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="unityplastic">
       <HintPath>Library\PackageCache\com.unity.collab-proxy@50ac96531b63\Lib\Editor\unityplastic.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="GameX.Unity.Platform">
-      <HintPath>Assets\GameX\GameX.Unity.Platform.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Unity.Plastic.Antlr3.Runtime">
       <HintPath>Library\PackageCache\com.unity.collab-proxy@50ac96531b63\Lib\Editor\Unity.Plastic.Antlr3.Runtime.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Microsoft.Extensions.Caching.Abstractions">
-      <HintPath>Assets\Packages\Microsoft.Extensions.Caching.Abstractions.dll</HintPath>
+    <Reference Include="System.Runtime.Intrinsics">
+      <HintPath>Assets\Plugins\System\System.Runtime.Intrinsics.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="GameX.ID">
-      <HintPath>Assets\GameX\GameX.ID.dll</HintPath>
+    <Reference Include="Microsoft.Extensions.Caching.Abstractions">
+      <HintPath>Assets\Plugins\System\Microsoft.Extensions.Caching.Abstractions.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.FileSystemGlobbing">
+      <HintPath>Assets\Plugins\System\Microsoft.Extensions.FileSystemGlobbing.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="OpenStack.Polyfills">
-      <HintPath>Assets\GameX\OpenStack.Polyfills.dll</HintPath>
+      <HintPath>Assets\Plugins\GameX\OpenStack.Polyfills.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="GameX.IW">
-      <HintPath>Assets\GameX\GameX.IW.dll</HintPath>
+    <Reference Include="OpenStack.Gfx">
+      <HintPath>Assets\Plugins\GameX\OpenStack.Gfx.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="ICSharpCode.SharpZipLib">
-      <HintPath>Assets\Packages\ICSharpCode.SharpZipLib.dll</HintPath>
+    <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions">
+      <HintPath>Assets\Plugins\System\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="GameX.Bethesda">
+      <HintPath>Assets\Plugins\GameX\GameX.Bethesda.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Plastic.Newtonsoft.Json">
       <HintPath>Library\PackageCache\com.unity.collab-proxy@50ac96531b63\Lib\Editor\Unity.Plastic.Newtonsoft.Json.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="GameX.ID.Platform">
-      <HintPath>Assets\GameX\GameX.ID.Platform.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.Red">
-      <HintPath>Assets\GameX\GameX.Red.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.Extensions.Options">
-      <HintPath>Assets\Packages\Microsoft.Extensions.Options.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.Cryptic.Platform">
-      <HintPath>Assets\GameX\GameX.Cryptic.Platform.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.Crytek.Platform">
-      <HintPath>Assets\GameX\GameX.Crytek.Platform.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="log4netPlastic">
       <HintPath>Library\PackageCache\com.unity.collab-proxy@50ac96531b63\Lib\Editor\log4netPlastic.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="ZstdSharp">
-      <HintPath>Assets\Packages\ZstdSharp.dll</HintPath>
+    <Reference Include="Microsoft.Extensions.Caching.Memory">
+      <HintPath>Assets\Plugins\System\Microsoft.Extensions.Caching.Memory.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.VisualScripting.IonicZip">
       <HintPath>Library\PackageCache\com.unity.visualscripting@1b53f46e931b\Editor\VisualScripting.Core\Dependencies\DotNetZip\Unity.VisualScripting.IonicZip.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="GameX.Cig">
-      <HintPath>Assets\GameX\GameX.Cig.dll</HintPath>
+    <Reference Include="GameX.Platform.Unity">
+      <HintPath>Assets\Plugins\GameX.Platform.Unity\GameX.Platform.Unity.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="GameX.Monolith.Platform">
-      <HintPath>Assets\GameX\GameX.Monolith.Platform.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.Red.Platform">
-      <HintPath>Assets\GameX\GameX.Red.Platform.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.Extensions.Caching.Memory">
-      <HintPath>Assets\Packages\Microsoft.Extensions.Caching.Memory.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.Capcom">
-      <HintPath>Assets\GameX\GameX.Capcom.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.Extensions.Primitives">
-      <HintPath>Assets\Packages\Microsoft.Extensions.Primitives.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.Extensions.Logging.Abstractions">
-      <HintPath>Assets\Packages\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.Volition">
-      <HintPath>Assets\GameX\GameX.Volition.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.FileSystems">
-      <HintPath>Assets\GameX\GameX.FileSystems.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="OpenStack.Gfx.Gl">
-      <HintPath>Assets\GameX\OpenStack.Gfx.Gl.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="K4os.Compression.LZ4">
-      <HintPath>Assets\Packages\K4os.Compression.LZ4.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.Capcom.Platform">
-      <HintPath>Assets\GameX\GameX.Capcom.Platform.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.Resource">
-      <HintPath>Assets\GameX\GameX.Resource.dll</HintPath>
+    <Reference Include="YamlDotNet">
+      <HintPath>Assets\Plugins\System\YamlDotNet.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="GameX.Bethesda.Platform">
-      <HintPath>Assets\GameX\GameX.Bethesda.Platform.dll</HintPath>
+      <HintPath>Assets\Plugins\GameX\GameX.Bethesda.Platform.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="OpenStack.Sfx">
-      <HintPath>Assets\GameX\OpenStack.Sfx.dll</HintPath>
+    <Reference Include="OpenTK">
+      <HintPath>Assets\Plugins\System\OpenTK.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="BouncyCastle.Crypto">
+      <HintPath>Assets\Plugins\System\BouncyCastle.Crypto.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="MathNet.Numerics">
+      <HintPath>Assets\Plugins\System\MathNet.Numerics.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.VisualScripting.Antlr3.Runtime">
       <HintPath>Library\PackageCache\com.unity.visualscripting@1b53f46e931b\Runtime\VisualScripting.Flow\Dependencies\NCalc\Unity.VisualScripting.Antlr3.Runtime.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="GameX.Arkane.Platform">
-      <HintPath>Assets\GameX\GameX.Arkane.Platform.dll</HintPath>
+    <Reference Include="System.Text.Json">
+      <HintPath>Assets\Plugins\System\System.Text.Json.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="GameX.Bohemia.Platform">
-      <HintPath>Assets\GameX\GameX.Bohemia.Platform.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.Cryptic">
-      <HintPath>Assets\GameX\GameX.Cryptic.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.Unity">
-      <HintPath>Assets\GameX\GameX.Unity.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.Epic">
-      <HintPath>Assets\GameX\GameX.Epic.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.Frictional.Platform">
-      <HintPath>Assets\GameX\GameX.Frictional.Platform.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="CsvHelper">
-      <HintPath>Assets\Packages\CsvHelper.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.Epic.Platform">
-      <HintPath>Assets\GameX\GameX.Epic.Platform.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.Bioware.Platform">
-      <HintPath>Assets\GameX\GameX.Bioware.Platform.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.Blizzard.Platform">
-      <HintPath>Assets\GameX\GameX.Blizzard.Platform.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.Arkane">
-      <HintPath>Assets\GameX\GameX.Arkane.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.Bcl.AsyncInterfaces">
-      <HintPath>Assets\Packages\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.IW.Platform">
-      <HintPath>Assets\GameX\GameX.IW.Platform.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.EA">
-      <HintPath>Assets\GameX\GameX.EA.dll</HintPath>
+    <Reference Include="K4os.Compression.LZ4">
+      <HintPath>Assets\Plugins\System\K4os.Compression.LZ4.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.VisualScripting.TextureAssets">
       <HintPath>Library\PackageCache\com.unity.visualscripting@1b53f46e931b\Editor\VisualScripting.Core\EditorAssetResources\Unity.VisualScripting.TextureAssets.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="GameX.Platform.Unity">
-      <HintPath>Assets\GameX\GameX.Platform.Unity.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Mono.Cecil">
       <HintPath>Library\PackageCache\com.unity.nuget.mono-cecil@d6f9955a5d5f\Mono.Cecil.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="System.Runtime.CompilerServices.Unsafe">
-      <HintPath>Assets\Packages\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    <Reference Include="SQLitePCLRaw.core">
+      <HintPath>Assets\Plugins\System\SQLitePCLRaw.core.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="GameX.Origin">
-      <HintPath>Assets\GameX\GameX.Origin.dll</HintPath>
+    <Reference Include="Microsoft.Bcl.AsyncInterfaces">
+      <HintPath>Assets\Plugins\System\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="GameX.WB">
-      <HintPath>Assets\GameX\GameX.WB.dll</HintPath>
+    <Reference Include="Microsoft.Extensions.Options">
+      <HintPath>Assets\Plugins\System\Microsoft.Extensions.Options.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions">
-      <HintPath>Assets\Packages\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.Black.Platform">
-      <HintPath>Assets\GameX\GameX.Black.Platform.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="ICSharpCode.SharpZipLib.Cry3">
-      <HintPath>Assets\Packages\ICSharpCode.SharpZipLib.Cry3.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.Crytek">
-      <HintPath>Assets\GameX\GameX.Crytek.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.Ubisoft.Platform">
-      <HintPath>Assets\GameX\GameX.Ubisoft.Platform.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.Black">
-      <HintPath>Assets\GameX\GameX.Black.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.Bioware">
-      <HintPath>Assets\GameX\GameX.Bioware.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.WB.Platform">
-      <HintPath>Assets\GameX\GameX.WB.Platform.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.All">
-      <HintPath>Assets\GameX\GameX.All.dll</HintPath>
+    <Reference Include="Microsoft.Extensions.Primitives">
+      <HintPath>Assets\Plugins\System\Microsoft.Extensions.Primitives.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System.Drawing.Common">
-      <HintPath>Assets\Packages\System.Drawing.Common.dll</HintPath>
+      <HintPath>Assets\Plugins\System\System.Drawing.Common.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="OpenStack.Gfx">
-      <HintPath>Assets\GameX\OpenStack.Gfx.dll</HintPath>
+    <Reference Include="SQLitePCLRaw.provider.e_sqlite3">
+      <HintPath>Assets\Plugins\System\SQLitePCLRaw.provider.e_sqlite3.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="GameX.Cyanide">
-      <HintPath>Assets\GameX\GameX.Cyanide.dll</HintPath>
+    <Reference Include="OpenStack.Sfx">
+      <HintPath>Assets\Plugins\GameX\OpenStack.Sfx.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="GameX.Lucas">
-      <HintPath>Assets\GameX\GameX.Lucas.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.Origin.Platform">
-      <HintPath>Assets\GameX\GameX.Origin.Platform.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="ICSharpCode.SharpZipLib.P4k">
-      <HintPath>Assets\Packages\ICSharpCode.SharpZipLib.P4k.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.Bullfrog">
-      <HintPath>Assets\GameX\GameX.Bullfrog.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.Ubisoft">
-      <HintPath>Assets\GameX\GameX.Ubisoft.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.Extensions.FileSystemGlobbing">
-      <HintPath>Assets\Packages\Microsoft.Extensions.FileSystemGlobbing.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.Bullfrog.Platform">
-      <HintPath>Assets\GameX\GameX.Bullfrog.Platform.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.Volition.Platform">
-      <HintPath>Assets\GameX\GameX.Volition.Platform.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GameX.Cig.Platform">
-      <HintPath>Assets\GameX\GameX.Cig.Platform.dll</HintPath>
+    <Reference Include="lzo.net">
+      <HintPath>Assets\Plugins\System\lzo.net.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Android.Types">

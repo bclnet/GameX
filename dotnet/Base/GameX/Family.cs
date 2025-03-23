@@ -12,6 +12,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using static GameX.FamilyManager;
 using static GameX.Util;
+using static OpenStack.Debug;
 
 namespace GameX;
 
@@ -1318,7 +1319,10 @@ public class FamilyGame
     /// <param name="state">The state.</param>
     /// <returns></returns>
     public PakFile CreatePakFileType(PakState state)
-        => (PakFile)Activator.CreateInstance(PakFileType ?? throw new InvalidOperationException($"{Id} missing PakFileType"), state);
+    {
+        Log($"CreatePakFileType: {PakFileType}");
+        return (PakFile)Activator.CreateInstance(PakFileType ?? throw new InvalidOperationException($"{Id} missing PakFileType"), state);
+    }
 
     /// <summary>
     /// Is pak file.

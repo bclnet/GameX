@@ -21,7 +21,22 @@
 
   <ItemGroup>
     <Reference Include="UnityEngine">
-	    <HintPath>..\..\Platforms\Unity\6000.0.38f1\UnityEngine.dll</HintPath>
+      <HintPath>..\..\Platforms\Unity\6000.0.38f1\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AudioModule">
+      <HintPath>..\..\Platforms\Unity\6000.0.38f1\UnityEngine.AudioModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>..\..\Platforms\Unity\6000.0.38f1\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>..\..\Platforms\Unity\6000.0.38f1\UnityEngine.PhysicsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TerrainModule">
+      <HintPath>..\..\Platforms\Unity\6000.0.38f1\UnityEngine.TerrainModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TerrainPhysicsModule">
+      <HintPath>..\..\Platforms\Unity\6000.0.38f1\UnityEngine.TerrainPhysicsModule.dll</HintPath>
     </Reference>
   </ItemGroup>
 

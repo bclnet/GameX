@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using SimpleEngine = System.Object;
+using static OpenStack.Debug;
 
 namespace Unity.Views;
 
@@ -185,6 +186,8 @@ public class ViewTexture(IUnityGfx gfx, object obj) : ViewBase(gfx, obj)
 
 public class ViewInfo : UnityEngine.MonoBehaviour
 {
+    static ViewInfo() => PlatformX.Activate(UnityPlatform.This);
+
     public enum Kind
     {
         Texture,
@@ -197,7 +200,7 @@ public class ViewInfo : UnityEngine.MonoBehaviour
     ViewBase View;
 
     [Header("Pak Settings")]
-    public string FamilyId = "Tes";
+    public string FamilyId = "Bethesda";
     public string PakUri = "game:/Morrowind.bsa#Morrowind";
 
     [Header("View Params")]
@@ -211,12 +214,16 @@ public class ViewInfo : UnityEngine.MonoBehaviour
 
     public void Awake()
     {
+        Log($"Open {FamilyId}");
         if (string.IsNullOrEmpty(FamilyId)) return;
         Family = FamilyManager.GetFamily(FamilyId);
+        Log($"Family {Family.Id}");
         if (!string.IsNullOrEmpty(PakUri)) PakFiles.Add(Family.OpenPakFile(new Uri(PakUri)));
+        Log($"PakUri {PakUri}");
         var first = PakFiles.FirstOrDefault();
         Gfx = (IUnityGfx)first?.Gfx;
-        View = ViewBase.Create(this, Gfx, Param1, "");
+        //View = ViewBase.Create(this, Gfx, Param1, "");
+        Log("LOADED");
     }
 
     public void OnDestroy()

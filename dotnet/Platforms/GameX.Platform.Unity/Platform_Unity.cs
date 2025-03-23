@@ -1,13 +1,11 @@
 ﻿using OpenStack.Gfx;
 using OpenStack.Gfx.Textures;
-using OpenStack.Sfx;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using static OpenStack.Gfx.Textures.TextureFormat;
-using Debug = OpenStack.Debug;
 using Rendering = UnityEngine.Rendering;
 using Shader = UnityEngine.Shader;
 using TextureFormat = UnityEngine.TextureFormat;
@@ -442,14 +440,13 @@ public class UnityPlatform : Platform
         try
         {
             Tag = task.Result;
-            //Debug.Log(Tag);
             GfxFactory = source => new UnityGfx(source);
             SfxFactory = source => new UnitySfx(source);
             AssertFunc = x => UnityEngine.Debug.Assert(x);
             LogFunc = UnityEngine.Debug.Log;
             LogFormatFunc = UnityEngine.Debug.LogFormat;
         }
-        catch { Enabled = false; }
+        catch { Debug.Log($"UnityPlatform: Error"); Enabled = false; }
     }
 
     public override unsafe void Activate()

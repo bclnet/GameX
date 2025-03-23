@@ -17,11 +17,5 @@
   <ItemGroup>
     <ProjectReference Include="..\GameX.Unity\GameX.Unity.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="UnityEngine">
-       <HintPath>..\..\Platforms\Unity\6000.0.15f1\UnityEngine.dll</HintPath>
-    </Reference>
-  </ItemGroup>
 	
 </Project>

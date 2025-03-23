@@ -179,7 +179,8 @@ public abstract class PakFile : IDisposable
         Game = state.Game ?? throw new ArgumentNullException(nameof(state.Game));
         Edition = state.Edition;
         PakPath = state.Path;
-        Name = !string.IsNullOrEmpty(z = Path.GetFileName(state.Path)) ? z : Path.GetFileName(Path.GetDirectoryName(state.Path));
+        Name = string.IsNullOrEmpty(state.Path) ? ""
+            : !string.IsNullOrEmpty(z = Path.GetFileName(state.Path)) ? z : Path.GetFileName(Path.GetDirectoryName(state.Path));
         Tag = state.Tag;
         ObjectFactoryFunc = null;
         Gfx = null;
@@ -433,8 +434,8 @@ public abstract class BinaryPakFile(PakState state, PakBinary pakBinary) : PakFi
 
     #region Pool
 
-    readonly ConcurrentDictionary<string, GenericPool<BinaryReader>> Readers = new();
-    readonly ConcurrentDictionary<string, GenericPool<BinaryWriter>> Writers = new();
+    readonly ConcurrentDictionary<string, GenericPoolX<BinaryReader>> Readers = new();
+    readonly ConcurrentDictionary<string, GenericPoolX<BinaryWriter>> Writers = new();
 
     /// <summary>
     /// Gets the binary reader.
@@ -442,7 +443,7 @@ public abstract class BinaryPakFile(PakState state, PakBinary pakBinary) : PakFi
     /// <param name="path">The path.</param>
     /// <returns></returns>
     public virtual IGenericPool<BinaryReader> GetReader(string path = default, bool pooled = true) => pooled
-        ? Readers.GetOrAdd(path ?? PakPath, path => FileSystem.FileExists(path) ? new GenericPool<BinaryReader>(() => FileSystem.OpenReader(path), r => r.Seek(0), RetainInPool) : null)
+        ? Readers.GetOrAdd(path ?? PakPath, path => FileSystem.FileExists(path) ? new GenericPoolX<BinaryReader>(() => FileSystem.OpenReader(path), r => r.Seek(0), RetainInPool) : null)
         : new SinglePool<BinaryReader>(FileSystem.FileExists(path ??= PakPath) ? FileSystem.OpenReader(path) : null);
 
     /// <summary>
@@ -486,8 +487,8 @@ public abstract class BinaryPakFile(PakState state, PakBinary pakBinary) : PakFi
     /// </summary>
     /// <param name="path">The path.</param>
     /// <returns></returns>
-    public GenericPool<BinaryWriter> GetWriter(string path = default)
-        => Writers.GetOrAdd(path ?? PakPath, path => FileSystem.FileExists(path) ? new GenericPool<BinaryWriter>(() => FileSystem.OpenWriter(path), r => r.Seek(0), RetainInPool) : null);
+    public GenericPoolX<BinaryWriter> GetWriter(string path = default)
+        => Writers.GetOrAdd(path ?? PakPath, path => FileSystem.FileExists(path) ? new GenericPoolX<BinaryWriter>(() => FileSystem.OpenWriter(path), r => r.Seek(0), RetainInPool) : null);
 
     /// <summary>
     /// Writer

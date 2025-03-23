@@ -27,6 +27,15 @@
     <Reference Include="UnityEngine">
       <HintPath>..\..\Platforms\Unity\6000.0.38f1\UnityEngine.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>..\..\Platforms\Unity\6000.0.38f1\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>..\..\Platforms\Unity\6000.0.38f1\UnityEngine.PhysicsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UIElementsModule">
+      <HintPath>..\..\Platforms\Unity\6000.0.38f1\UnityEngine.UIElementsModule.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

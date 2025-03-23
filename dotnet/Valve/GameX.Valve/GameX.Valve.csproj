@@ -15,10 +15,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="ZstdSharp.Port" Version="0.7.2" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\..\Base\GameX\GameX.csproj" />
     <ProjectReference Include="..\..\Id\GameX.Id\GameX.ID.csproj" />
     <ProjectReference Include="..\..\Unity\GameX.Unity\GameX.Unity.csproj" />

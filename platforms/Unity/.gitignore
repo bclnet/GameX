@@ -17,3 +17,7 @@ UIElementsSchema/
 
 # Unity3D Plugins
 **/Assets/Plugins/**/*
+
+# GameX Simlinks
+**/Assets/GameX/*
+**/Assets/Packages/*

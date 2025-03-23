@@ -82,7 +82,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' == 'Windows_NT'">
-    <Exec Command="xcopy /Y &quot;$(TargetDir)GameX.*.dll&quot; &quot;$(SolutionDir)..\platforms\GameX\$(Configuration)\&quot;&#xD;&#xA;xcopy /Y &quot;$(TargetDir)OpenStack.*.dll&quot; &quot;$(SolutionDir)..\platforms\GameX\$(Configuration)\&quot;" />
+    <Exec Command="xcopy /Y &quot;$(TargetDir)GameX.*.dll&quot; &quot;$(SolutionDir)..\platforms\Assets\GameX\$(Configuration)\&quot; /EXCLUDE:$(SolutionDir)excludeg.txt&#xD;&#xA;xcopy /Y &quot;$(TargetDir)GameX.Platform.*.dll&quot; &quot;$(SolutionDir)..\platforms\Assets\GameX.Platform\$(Configuration)\&quot; /EXCLUDE:$(SolutionDir)excludep.txt&#xD;&#xA;xcopy /Y &quot;$(TargetDir)OpenStack.*.dll&quot; &quot;$(SolutionDir)..\platforms\Assets\GameX\$(Configuration)\&quot; /EXCLUDE:$(SolutionDir)excludeo.txt" />
   </Target>
 
 </Project>

@@ -21,7 +21,7 @@
 
   <ItemGroup>
     <Reference Include="UnityEngine">
-	    <HintPath>..\..\Platforms\Unity\6000.0.15f1\UnityEngine.dll</HintPath>
+	    <HintPath>..\..\Platforms\Unity\6000.0.38f1\UnityEngine.dll</HintPath>
     </Reference>
   </ItemGroup>
 

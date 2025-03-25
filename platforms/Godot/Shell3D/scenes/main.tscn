@@ -1,5 +1,6 @@
-[gd_scene load_steps=7 format=3 uid="uid://drmypb74xyi3q"]
+[gd_scene load_steps=8 format=3 uid="uid://drmypb74xyi3q"]
 
+[ext_resource type="Script" uid="uid://ccxoo4hrfdmpd" path="res://scripts/ViewInfoX.cs" id="1_0wfyh"]
 [ext_resource type="PackedScene" uid="uid://b57bmgmx7yfiv" path="res://scenes/player.tscn" id="1_o5qli"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sgp6g"]
@@ -22,6 +23,7 @@ size = Vector2(10, 10)
 data = PackedVector3Array(5, 0, 5, -5, 0, 5, 5, 0, -5, -5, 0, 5, -5, 0, -5, 5, 0, -5)
 
 [node name="Main" type="Node3D"]
+script = ExtResource("1_0wfyh")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_0wfyh")

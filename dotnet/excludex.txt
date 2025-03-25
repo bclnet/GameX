@@ -23,10 +23,13 @@ GameX.Lucas.
 GameX.Monolith.
 GameX.Origin.
 GameX.Red.
+GameX.Rockstar.
 GameX.Ubisoft.
 GameX.Unity.
 GameX.Valve.
 GameX.Volition.
 GameX.WB.
+GameX.X2X.
+
 GameX.FileSystems.
 GameX.Resource.

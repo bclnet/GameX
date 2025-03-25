@@ -1,8 +1,11 @@
-﻿using GameX.Platforms;
+﻿using GameX;
+using GameX.Platforms;
 using OpenStack.Gfx;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using SimpleEngine = System.Object;
+using static OpenStack.Debug;
 
 namespace Godot.Views;
 
@@ -110,6 +113,69 @@ public class ViewTexture(IGodotGfx gfx, object obj) : ViewBase(gfx, obj)
     }
 
     //void MakeCursor(string path) => Cursor.SetCursor(Gfx.TextureManager.CreateTexture(path).tex, Vector2.zero, CursorMode.Auto);
+}
+
+#endregion
+
+#region ViewInfo
+
+public class ViewInfo : Node
+{
+    static ViewInfo() => PlatformX.Activate(GodotPlatform.This);
+
+    public enum Kind
+    {
+        Texture,
+        TextureCursor,
+        Object,
+        Cell,
+        Engine,
+    }
+
+    ViewBase View;
+
+    public string FamilyId = "Bethesda";
+    public string PakUri = "game:/Morrowind.bsa#Morrowind";
+
+    public Kind ViewKind = Kind.Texture;
+    public string Param1 = "bookart/boethiah_256.dds";
+    //public string Param1 = "meshes/x/ex_common_balcony_01.nif";
+
+    protected Family Family;
+    protected List<PakFile> PakFiles = [];
+    protected IGodotGfx Gfx;
+
+    public override void _Ready()
+    {
+        Log($"_Ready {FamilyId}");
+        if (string.IsNullOrEmpty(FamilyId)) return;
+        Family = FamilyManager.GetFamily(FamilyId);
+        Log($"Family {Family}");
+        if (!string.IsNullOrEmpty(PakUri)) PakFiles.Add(Family.OpenPakFile(new Uri(PakUri)));
+        var first = PakFiles.FirstOrDefault();
+        Gfx = (IGodotGfx)first?.Gfx;
+        View = ViewBase.Create(this, Gfx, Param1, ViewKind.ToString());
+    }
+
+    //public override void _Process(double delta)
+    //{
+    //}
+
+    public override void _Notification(int what)
+    {
+        base._Notification(what);
+        switch ((long)what)
+        {
+            case NotificationPredelete:
+                View?.Dispose();
+                foreach (var pakFile in PakFiles) pakFile.Dispose();
+                PakFiles.Clear();
+                break;
+        }
+    }
+
+    public void Start() => View?.Start();
+    public void Update() => View?.Update();
 }
 
 #endregion

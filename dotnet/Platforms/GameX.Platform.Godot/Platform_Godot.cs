@@ -4,7 +4,6 @@ using OpenStack.Gfx.Textures;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Debug = OpenStack.Debug;
 using GShader = Godot.Shader;
 
 namespace GameX.Platforms;
@@ -122,8 +121,8 @@ public class GodotPlatform : Platform
     {
         GfxFactory = source => new GodotGfx(source);
         SfxFactory = source => new GodotSfx(source);
-        LogFunc = GD.Print;
-        LogFormatFunc = (a, b) => GD.Print(string.Format(a, b));
+        LogFunc = a => GD.Print(a?.Replace("\r", ""));
+        LogFormatFunc = (a, b) => GD.Print(string.Format(a, b)?.Replace("\r", ""));
     }
 }
 

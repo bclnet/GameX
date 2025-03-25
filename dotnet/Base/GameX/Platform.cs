@@ -408,7 +408,7 @@ public static class PlatformX
     /// <summary>
     /// Gets the application Path
     /// </summary>
-    public static readonly string ApplicationPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+    public static readonly string ApplicationPath = AppDomain.CurrentDomain.BaseDirectory;
 
     /// <summary>
     /// Gets the platform startups.

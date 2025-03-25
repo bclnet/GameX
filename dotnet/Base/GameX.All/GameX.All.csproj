@@ -57,8 +57,14 @@
     <ProjectReference Include="..\..\Monolith\GameX.Monolith\GameX.Monolith.csproj" />
     <ProjectReference Include="..\..\Origin\GameX.Origin.Platform\GameX.Origin.Platform.csproj" />
     <ProjectReference Include="..\..\Origin\GameX.Origin\GameX.Origin.csproj" />
+    <ProjectReference Include="..\..\Platforms\GameX.Platform.Godot\GameX.Platform.Godot.csproj" />
+    <ProjectReference Include="..\..\Platforms\GameX.Platform.OpenGL\GameX.Platform.OpenGL.csproj" />
+    <ProjectReference Include="..\..\Platforms\GameX.Platform.Stride\GameX.Platform.Stride.csproj" />
+    <ProjectReference Include="..\..\Platforms\GameX.Platform.Unity\GameX.Platform.Unity.csproj" />
     <ProjectReference Include="..\..\Red\GameX.Red.Platform\GameX.Red.Platform.csproj" />
     <ProjectReference Include="..\..\Red\GameX.Red\GameX.Red.csproj" />
+    <ProjectReference Include="..\..\Rockstar\GameX.Rockstar.Platform\GameX.Rockstar.Platform.csproj" />
+    <ProjectReference Include="..\..\Rockstar\GameX.Rockstar\GameX.Rockstar.csproj" />
 	<ProjectReference Include="..\..\Ubisoft\GameX.Ubisoft.Platform\GameX.Ubisoft.Platform.csproj" />
 	<ProjectReference Include="..\..\Ubisoft\GameX.Ubisoft\GameX.Ubisoft.csproj" />
     <ProjectReference Include="..\..\Unity\GameX.Unity.Platform\GameX.Unity.Platform.csproj" />
@@ -69,6 +75,9 @@
     <ProjectReference Include="..\..\Volition\GameX.Volition\GameX.Volition.csproj" />
 	<ProjectReference Include="..\..\WB\GameX.WB.Platform\GameX.WB.Platform.csproj" />
     <ProjectReference Include="..\..\WB\GameX.WB\GameX.WB.csproj" />
+    <ProjectReference Include="..\..\X2K\GameX.X2K.Platform\GameX.X2K.Platform.csproj" />
+    <ProjectReference Include="..\..\X2K\GameX.X2K\GameX.X2K.csproj" />
+    <ProjectReference Include="..\GameX.Resource\GameX.Resource.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -82,7 +91,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' == 'Windows_NT'">
-    <Exec Command="xcopy /Y &quot;$(TargetDir)GameX*.dll&quot; &quot;$(SolutionDir)..\platforms\Plugins\GameX\$(Configuration)\&quot; /EXCLUDE:$(SolutionDir)excludex.txt&#xD;&#xA;xcopy /Y &quot;$(TargetDir)GameX.Platform.Unity*.dll&quot; &quot;$(SolutionDir)..\platforms\Plugins\GameX.Platform.Unity\$(Configuration)\&quot;&#xD;&#xA;xcopy /Y &quot;$(TargetDir)OpenStack*.dll&quot; &quot;$(SolutionDir)..\platforms\Plugins\GameX\$(Configuration)\&quot; /EXCLUDE:$(SolutionDir)excludes.txt" />
+    <Exec Command="xcopy /Y &quot;$(TargetDir)GameX*.dll&quot; &quot;$(SolutionDir)..\platforms\Plugins\GameX\$(Configuration)\&quot; /EXCLUDE:$(SolutionDir)excludex.txt&#xD;&#xA;xcopy /Y &quot;$(TargetDir)GameX.Platform.Unity*.dll&quot; &quot;$(SolutionDir)..\platforms\Plugins\GameX.Platform.Unity\$(Configuration)\&quot;&#xD;&#xA;xcopy /Y &quot;$(TargetDir)GameX.Platform.Godot*.dll&quot; &quot;$(SolutionDir)..\platforms\Plugins\GameX.Platform.Godot\$(Configuration)\&quot;&#xD;&#xA;xcopy /Y &quot;$(TargetDir)OpenStack*.dll&quot; &quot;$(SolutionDir)..\platforms\Plugins\GameX\$(Configuration)\&quot; /EXCLUDE:$(SolutionDir)excludes.txt" />
   </Target>
 
 </Project>

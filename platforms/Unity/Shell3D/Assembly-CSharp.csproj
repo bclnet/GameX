@@ -576,6 +576,10 @@
       <HintPath>Assets\Plugins\System\Microsoft.Extensions.Caching.Abstractions.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="GameX.X2K.Platform">
+      <HintPath>Assets\Plugins\GameX\GameX.X2K.Platform.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Microsoft.Extensions.FileSystemGlobbing">
       <HintPath>Assets\Plugins\System\Microsoft.Extensions.FileSystemGlobbing.dll</HintPath>
       <Private>False</Private>
@@ -598,6 +602,10 @@
     </Reference>
     <Reference Include="Microsoft.Extensions.Caching.Memory">
       <HintPath>Assets\Plugins\System\Microsoft.Extensions.Caching.Memory.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="GameX.X2K">
+      <HintPath>Assets\Plugins\GameX\GameX.X2K.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="GameX.Platform.Unity">

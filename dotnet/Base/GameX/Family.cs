@@ -263,6 +263,7 @@ public partial class FamilyManager
             }
             catch (Exception e)
             {
+                Log(e.ToString());
                 Console.WriteLine(e.ToString());
             }
 
@@ -1210,9 +1211,9 @@ public class FamilyGame
             var p = key.Split('#', 2);
             string k = p[0], v = p.Length > 1 ? p[1] : default;
             var path = Store.GetPathByKey(key, family, elem);
-            if (path == null) { continue; }
+            if (string.IsNullOrEmpty(path)) continue;
             path = Path.GetFullPath(PlatformX.DecodePath(path));
-            if (!Directory.Exists(path) && !File.Exists(path)) { continue; }
+            if (!Directory.Exists(path) && !File.Exists(path)) continue;
             return new SystemPath { Root = path, Type = null, Paths = Files.Paths };
         }
         return default;
@@ -1319,10 +1320,7 @@ public class FamilyGame
     /// <param name="state">The state.</param>
     /// <returns></returns>
     public PakFile CreatePakFileType(PakState state)
-    {
-        Log($"CreatePakFileType: {PakFileType}");
-        return (PakFile)Activator.CreateInstance(PakFileType ?? throw new InvalidOperationException($"{Id} missing PakFileType"), state);
-    }
+        => (PakFile)Activator.CreateInstance(PakFileType ?? throw new InvalidOperationException($"{Id} missing PakFileType"), state);
 
     /// <summary>
     /// Is pak file.

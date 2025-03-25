@@ -608,6 +608,10 @@
       <HintPath>Assets\Plugins\System\Microsoft.Extensions.Caching.Abstractions.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="GameX.X2K.Platform">
+      <HintPath>Assets\Plugins\GameX\GameX.X2K.Platform.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Microsoft.Extensions.FileSystemGlobbing">
       <HintPath>Assets\Plugins\System\Microsoft.Extensions.FileSystemGlobbing.dll</HintPath>
       <Private>False</Private>
@@ -642,6 +646,10 @@
     </Reference>
     <Reference Include="Unity.VisualScripting.IonicZip">
       <HintPath>Library\PackageCache\com.unity.visualscripting@1b53f46e931b\Editor\VisualScripting.Core\Dependencies\DotNetZip\Unity.VisualScripting.IonicZip.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="GameX.X2K">
+      <HintPath>Assets\Plugins\GameX\GameX.X2K.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="GameX.Platform.Unity">

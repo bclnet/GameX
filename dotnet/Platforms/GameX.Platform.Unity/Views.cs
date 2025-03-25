@@ -5,8 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using SimpleEngine = System.Object;
-using static OpenStack.Debug;
 
 namespace Unity.Views;
 
@@ -23,15 +21,14 @@ public abstract class ViewBase(IUnityGfx gfx, object obj) : IDisposable
 
     public static ViewBase Create(object parent, IUnityGfx gfx, object obj, string type)
     {
-        //ViewKind switch
-        //{
-        //    Kind.Texture => new ViewTexture(this),
-        //    Kind.Object => new ViewObject(this),
-        //    Kind.Cell => new ViewCell(this),
-        //    Kind.Engine => new ViewEngine(this),
-        //    _ => new ViewObject(this),
-        //};
-        return default;
+        return type switch
+        {
+            "Texture" => new ViewTexture(gfx, obj),
+            "Object" => new ViewObject(gfx, obj),
+            "Cell" => new ViewCell(gfx, obj),
+            "Engine" => new ViewEngine(gfx, obj),
+            _ => new ViewObject(gfx, obj),
+        };
     }
 }
 
@@ -85,7 +82,7 @@ public class ViewCell(IUnityGfx gfx, object obj) : ViewBase(gfx, obj)
 
 public class ViewEngine(IUnityGfx gfx, object obj) : ViewBase(gfx, obj)
 {
-    SimpleEngine Engine;
+    object Engine;
     GameObject PlayerPrefab = GameObject.Find("Player00");
 
     public override void Dispose()
@@ -164,8 +161,9 @@ public class ViewTexture(IUnityGfx gfx, object obj) : ViewBase(gfx, obj)
 
     public override void Start()
     {
-        //if (!string.IsNullOrEmpty(View.Param1)) MakeTexture(View.Param1);
-        //if (!string.IsNullOrEmpty(View.Param2)) MakeCursor(View.Param2);
+        var path = Obj is string z ? z : null;
+        if (!string.IsNullOrEmpty(path)) MakeTexture(path);
+        //if (!string.IsNullOrEmpty(path)) MakeCursor(path);
     }
 
     GameObject MakeTexture(string path)
@@ -214,16 +212,12 @@ public class ViewInfo : UnityEngine.MonoBehaviour
 
     public void Awake()
     {
-        Log($"Open {FamilyId}");
         if (string.IsNullOrEmpty(FamilyId)) return;
         Family = FamilyManager.GetFamily(FamilyId);
-        Log($"Family {Family.Id}");
         if (!string.IsNullOrEmpty(PakUri)) PakFiles.Add(Family.OpenPakFile(new Uri(PakUri)));
-        Log($"PakUri {PakUri}");
         var first = PakFiles.FirstOrDefault();
         Gfx = (IUnityGfx)first?.Gfx;
-        //View = ViewBase.Create(this, Gfx, Param1, "");
-        Log("LOADED");
+        View = ViewBase.Create(this, Gfx, Param1, ViewKind.ToString());
     }
 
     public void OnDestroy()

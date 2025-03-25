@@ -9,6 +9,7 @@ using static OpenStack.Gfx.Textures.TextureFormat;
 using Rendering = UnityEngine.Rendering;
 using Shader = UnityEngine.Shader;
 using TextureFormat = UnityEngine.TextureFormat;
+using static OpenStack.Debug;
 
 namespace GameX.Platforms;
 
@@ -97,7 +98,6 @@ public class UnityTextureBuilder : TextureBuilderBase<Texture2D>
                     BC7 => TextureFormat.BC7,
                     ETC2 => TextureFormat.ETC2_RGB,
                     ETC2_EAC => TextureFormat.ETC2_RGBA8,
-                    //
                     I8 => default,
                     L8 => default,
                     R8 => TextureFormat.R8,
@@ -127,7 +127,7 @@ public class UnityTextureBuilder : TextureBuilderBase<Texture2D>
         finally { source.End(); }
     }
 
-    public override Texture2D CreateSolidTexture(int width, int height, float[] rgba) => new Texture2D(width, height);
+    public override Texture2D CreateSolidTexture(int width, int height, float[] rgba) => new(width, height);
 
     public override Texture2D CreateNormalMap(Texture2D texture, float strength)
     {

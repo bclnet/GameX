@@ -1,11 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:local="clr-namespace:GameX.App.Explorer.Views"
-             xmlns:control="clr-namespace:GameX.App.Explorer.Controls"
              xmlns:model="clr-namespace:GameX;assembly=GameX"
-             x:Name="this"
-             x:Class="GameX.App.Explorer.Views.FileContent">
+             xmlns:views="clr-namespace:GameX.App.Explorer.Views"
+             xmlns:controls="clr-namespace:GameX.App.Explorer.Controls"
+             x:Class="GameX.App.Explorer.Views.FileContent" x:Name="this">
     <Grid RowDefinitions="30,*">
         <Grid.Resources>
             <ControlTemplate x:Key="TabTemplate">
@@ -37,7 +36,7 @@
             </ControlTemplate>
             <ControlTemplate x:Key="THex" x:DataType="{x:Type model:MetaContent}">
                 <Label Text="Hex" />
-                <!--<control:HexEditor Margin="5,5,5,5" Stream="{Binding Value}"/>-->
+                <!--<controls:HexEditor Margin="5,5,5,5" Stream="{Binding Value}"/>-->
             </ControlTemplate>
             <ControlTemplate x:Key="TText" x:DataType="{x:Type model:MetaContent}">
                 <ScrollView>
@@ -49,17 +48,17 @@
                 <!--<DataGrid VerticalAlignment="Top" ItemsSource="{Binding Value}" Margin="5,5,5,5" />-->
             </ControlTemplate>
             <ControlTemplate x:Key="TAudioPlayer" x:DataType="{x:Type model:MetaContent}">
-                <local:AudioPlayer Stream="{Binding Value}" Format="{Binding Tag}" />
+                <views:AudioPlayer Stream="{Binding Value}" Format="{Binding Tag}" />
             </ControlTemplate>
             <ControlTemplate x:Key="TImage" x:DataType="{x:Type model:MetaContent}">
                 <Image MaximumWidthRequest="{Binding MaxWidth}" MaximumHeightRequest="{Binding MaxHeight}" Margin="5,5,5,5" />
             </ControlTemplate>
             <ControlTemplate x:Key="TViewGfx" x:DataType="{x:Type model:MetaContent}">
                 <Label Text="ViewGfx" />
-                <!--<control:ViewMaterial Source="{Binding Value}" Gfx="{Binding Gfx, RelativeSource={RelativeSource AncestorType={x:Type local:FileContent}}}" Margin="3,3,3,3" />-->
+                <!--<controls:ViewMaterial Source="{Binding Value}" Gfx="{Binding Gfx, RelativeSource={RelativeSource AncestorType={x:Type views:FileContent}}}" Margin="3,3,3,3" />-->
             </ControlTemplate>
         </Grid.Resources>
-        <HorizontalStackLayout x:Name="ContentTab" Grid.Row="0" BindableLayout.ItemsSource="{Binding ContentTabs}" VerticalOptions="StartAndExpand" RadioButtonGroup.GroupName="Tabs" BackgroundColor="LightGrey">
+        <HorizontalStackLayout x:Name="ContentTab" Grid.Row="0" BindableLayout.ItemsSource="{Binding ContentTabs, x:DataType=views:FileContent}" VerticalOptions="StartAndExpand" RadioButtonGroup.GroupName="Tabs" BackgroundColor="LightGrey">
             <BindableLayout.ItemTemplate>
                 <DataTemplate x:DataType="{x:Type model:MetaContent}">
                     <RadioButton Content="{Binding}" ControlTemplate="{StaticResource TabTemplate}" CheckedChanged="ContentTab_Changed" />
@@ -71,43 +70,43 @@
                 <Style TargetType="ContentView">
                     <Setter Property="ControlTemplate" Value="{StaticResource TText}" />
                     <Style.Triggers>
-                        <DataTrigger TargetType="ContentView" Binding="{Binding Type}" Value="Hex">
+                        <DataTrigger TargetType="ContentView" Binding="{Binding Type, x:DataType=model:MetaContent}" Value="Hex">
                             <Setter Property="ControlTemplate" Value="{StaticResource THex}" />
                         </DataTrigger>
-                        <DataTrigger TargetType="ContentView" Binding="{Binding Type}" Value="Text">
+                        <DataTrigger TargetType="ContentView" Binding="{Binding Type, x:DataType=model:MetaContent}" Value="Text">
                             <Setter Property="ControlTemplate" Value="{StaticResource TText}" />
                         </DataTrigger>
-                        <DataTrigger TargetType="ContentView" Binding="{Binding Type}" Value="DataGrid">
+                        <DataTrigger TargetType="ContentView" Binding="{Binding Type, x:DataType=model:MetaContent}" Value="DataGrid">
                             <Setter Property="ControlTemplate" Value="{StaticResource TDataGrid}" />
                         </DataTrigger>
-                        <DataTrigger TargetType="ContentView" Binding="{Binding Type}" Value="AudioPlayer">
+                        <DataTrigger TargetType="ContentView" Binding="{Binding Type, x:DataType=model:MetaContent}" Value="AudioPlayer">
                             <Setter Property="ControlTemplate" Value="{StaticResource TAudioPlayer}" />
                         </DataTrigger>
-                        <DataTrigger TargetType="ContentView" Binding="{Binding Type}" Value="Image">
+                        <DataTrigger TargetType="ContentView" Binding="{Binding Type, x:DataType=model:MetaContent}" Value="Image">
                             <Setter Property="ControlTemplate" Value="{StaticResource TImage}" />
                         </DataTrigger>
-                        <DataTrigger TargetType="ContentView" Binding="{Binding Type}" Value="Material">
+                        <DataTrigger TargetType="ContentView" Binding="{Binding Type, x:DataType=model:MetaContent}" Value="Material">
                             <Setter Property="ControlTemplate" Value="{StaticResource TViewGfx}" />
                         </DataTrigger>
-                        <DataTrigger TargetType="ContentView" Binding="{Binding Type}" Value="Particle">
+                        <DataTrigger TargetType="ContentView" Binding="{Binding Type, x:DataType=model:MetaContent}" Value="Particle">
                             <Setter Property="ControlTemplate" Value="{StaticResource TViewGfx}" />
                         </DataTrigger>
-                        <DataTrigger TargetType="ContentView" Binding="{Binding Type}" Value="TestTri">
+                        <DataTrigger TargetType="ContentView" Binding="{Binding Type, x:DataType=model:MetaContent}" Value="TestTri">
                             <Setter Property="ControlTemplate" Value="{StaticResource TViewGfx}" />
                         </DataTrigger>
-                        <DataTrigger TargetType="ContentView" Binding="{Binding Type}" Value="Texture">
+                        <DataTrigger TargetType="ContentView" Binding="{Binding Type, x:DataType=model:MetaContent}" Value="Texture">
                             <Setter Property="ControlTemplate" Value="{StaticResource TViewGfx}" />
                         </DataTrigger>
-                        <DataTrigger TargetType="ContentView" Binding="{Binding Type}" Value="VideoTexture">
+                        <DataTrigger TargetType="ContentView" Binding="{Binding Type, x:DataType=model:MetaContent}" Value="VideoTexture">
                             <Setter Property="ControlTemplate" Value="{StaticResource TViewGfx}" />
                         </DataTrigger>
-                        <DataTrigger TargetType="ContentView" Binding="{Binding Type}" Value="Object">
+                        <DataTrigger TargetType="ContentView" Binding="{Binding Type, x:DataType=model:MetaContent}" Value="Object">
                             <Setter Property="ControlTemplate" Value="{StaticResource TViewGfx}" />
                         </DataTrigger>
-                        <DataTrigger TargetType="ContentView" Binding="{Binding Type}" Value="World">
+                        <DataTrigger TargetType="ContentView" Binding="{Binding Type, x:DataType=model:MetaContent}" Value="World">
                             <Setter Property="ControlTemplate" Value="{StaticResource TViewGfx}" />
                         </DataTrigger>
-                        <DataTrigger TargetType="ContentView" Binding="{Binding Value}" Value="{x:Null}">
+                        <DataTrigger TargetType="ContentView" Binding="{Binding Value, x:DataType=model:MetaContent}" Value="{x:Null}">
                             <Setter Property="ControlTemplate" Value="{StaticResource TNull}" />
                         </DataTrigger>
                     </Style.Triggers>

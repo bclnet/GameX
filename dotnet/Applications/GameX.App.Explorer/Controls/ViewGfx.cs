@@ -1,3 +1,5 @@
+using System.Windows.Controls;
+
 namespace GameX.App.Explorer.Controls
 {
     public class ViewGodot : GodotControl
@@ -8,7 +10,7 @@ namespace GameX.App.Explorer.Controls
     {
     }
 
-    public class ViewStride : StrideControl
+    public class ViewStride : UserControl //StrideControl
     {
     }
 

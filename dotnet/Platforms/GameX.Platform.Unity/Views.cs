@@ -20,8 +20,7 @@ public abstract class ViewBase(IUnityGfx gfx, object obj) : IDisposable
     public virtual void Update() { }
 
     public static ViewBase Create(object parent, IUnityGfx gfx, object obj, string type)
-    {
-        return type switch
+        => type switch
         {
             "Texture" => new ViewTexture(gfx, obj),
             "Object" => new ViewObject(gfx, obj),
@@ -29,7 +28,6 @@ public abstract class ViewBase(IUnityGfx gfx, object obj) : IDisposable
             "Engine" => new ViewEngine(gfx, obj),
             _ => new ViewObject(gfx, obj),
         };
-    }
 }
 
 #endregion

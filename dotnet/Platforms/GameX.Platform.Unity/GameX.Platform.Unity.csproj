@@ -38,4 +38,8 @@
     </Reference>
   </ItemGroup>
 
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="xcopy /Y &quot;$(TargetDir)GameX.Platform.Unity*.dll&quot; &quot;$(SolutionDir)..\platforms\Plugins\GameX.Platform.Unity\$(Configuration)\&quot;" />
+  </Target>
+
 </Project>

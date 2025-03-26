@@ -5,7 +5,8 @@ namespace GameX.App.Explorer
 {
     public partial class App : Application
     {
-        static App() => Platforms.Platform.Platforms.Add(OpenGLPlatform.Startup);
+        static App() => PlatformX.Platforms.UnionWith([
+            OpenGLPlatform.This]);
 
         static readonly string[] args = [];
         //static readonly string[] args = ["open", "-e", "AC", "-u", "game:/client_portal.dat#AC", "-p", "01000001.obj"];

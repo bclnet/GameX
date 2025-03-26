@@ -1,4 +1,5 @@
 ﻿using OpenStack.Gfx;
+using Platform = GameX.Platforms.Platform;
 
 namespace GameX.App.Explorer.Views
 {
@@ -11,6 +12,13 @@ namespace GameX.App.Explorer.Views
             InitializeComponent();
             Current = this;
             BindingContext = this;
+        }
+
+        public void SetPlatform(Platform platform)
+        {
+            //var res = ((Grid)Content).Resources;
+            //var plat = platform?.Id ?? "UK";
+            //res["TViewGfx"] = res[$"TViewGfx:{plat}"] ?? res["THex"];
         }
 
         void ContentTab_Changed(object sender, CheckedChangedEventArgs e) => ContentTabContent.BindingContext = ((RadioButton)sender).BindingContext;

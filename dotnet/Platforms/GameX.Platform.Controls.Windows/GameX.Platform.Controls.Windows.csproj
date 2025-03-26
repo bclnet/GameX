@@ -4,6 +4,7 @@
     <TargetFramework>net9.0-windows</TargetFramework>
     <LangVersion>latest</LangVersion>
     <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -43,15 +44,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Stride.CommunityToolkit" Version="1.0.0-preview.56" />
-    <PackageReference Include="Stride.Core.Presentation.Wpf" Version="4.2.0.2381" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\..\..\OpenStack\dotnet\Gfx\OpenStack.Gfx.GlControl\OpenStack.Gfx.GlControl.csproj" />
     <ProjectReference Include="..\GameX.Platform.Godot\GameX.Platform.Godot.csproj" />
     <ProjectReference Include="..\GameX.Platform.OpenGL\GameX.Platform.OpenGL.csproj" />
-    <ProjectReference Include="..\GameX.Platform.Stride\GameX.Platform.Stride.csproj" />
     <ProjectReference Include="..\GameX.Platform.Unity\GameX.Platform.Unity.csproj" />
   </ItemGroup>
 

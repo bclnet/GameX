@@ -6,8 +6,6 @@
     <LangVersion>latest</LangVersion>
     <UseWPF>true</UseWPF>
     <ImplicitUsings>enable</ImplicitUsings>
-    <!-- Force msbuild to check to rebuild this assembly instead of letting VS IDE guess -->
-    <DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -80,13 +78,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Platforms\GameX.Platform.Controls.Wpf\GameX.Platform.Controls.Wpf.csproj" />
+    <ProjectReference Include="..\..\Platforms\GameX.Platform.Controls.Windows\GameX.Platform.Controls.Windows.csproj" />
     <ProjectReference Include="..\..\Platforms\GameX.Platform.Godot\GameX.Platform.Godot.csproj" />
     <ProjectReference Include="..\..\Platforms\GameX.Platform.OpenGL\GameX.Platform.OpenGL.csproj" />
     <ProjectReference Include="..\..\..\OpenStack\dotnet\Gfx\OpenStack.Gfx.GlControl\OpenStack.Gfx.GlControl.csproj" />
     <ProjectReference Include="..\..\Cig\GameX.Cig.Explorer\GameX.Cig.Explorer.csproj" />
     <ProjectReference Include="..\..\Base\GameX.All\GameX.All.csproj" />
-    <ProjectReference Include="..\..\Platforms\GameX.Platform.Stride\GameX.Platform.Stride.csproj" />
   </ItemGroup>
 
 </Project>

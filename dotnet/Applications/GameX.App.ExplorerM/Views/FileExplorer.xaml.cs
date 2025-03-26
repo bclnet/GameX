@@ -22,10 +22,23 @@ namespace GameX.App.Explorer.Views
                 fileExplorer.Nodes = fileExplorer.PakNodes = pakFile.GetMetaItems(Resource);
                 fileExplorer.Ready(pakFile);
             });
+        //public PakFile PakFile
+        //{
+        //    get => (PakFile)GetValue(PakFileProperty);
+        //    set => SetValue(PakFileProperty, value);
+        //}
+
+        PakFile _pakFile;
         public PakFile PakFile
         {
-            get => (PakFile)GetValue(PakFileProperty);
-            set => SetValue(PakFileProperty, value);
+            get => _pakFile;
+            set
+            {
+                _pakFile = value; OnPropertyChanged();
+                Filters = _pakFile.GetMetaFilters(Resource);
+                Nodes = PakNodes = _pakFile.GetMetaItems(Resource);
+                Ready(_pakFile);
+            }
         }
 
         List<MetaItem.Filter> _filters;

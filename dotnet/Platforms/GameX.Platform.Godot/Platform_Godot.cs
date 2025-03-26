@@ -74,7 +74,7 @@ public class GodotTextureBuilder : TextureBuilderBase<Texture>
 // GodotMaterialBuilder : MISSING
 
 // IGodotfx
-public interface IGodotGfx : IOpenGfxAny<GodotObject, Material, Texture, GShader> { }
+public interface IGodotGfx : IOpenGfxAny<Node, Material, Texture, GShader> { }
 
 // GodotGfx
 public class GodotGfx : IGodotGfx
@@ -82,7 +82,7 @@ public class GodotGfx : IGodotGfx
     readonly PakFile _source;
     readonly ITextureManager<Texture> _textureManager;
     readonly MaterialManager<Material, Texture> _materialManager;
-    readonly ObjectManager<GodotObject, Material, Texture> _objectManager;
+    readonly ObjectManager<Node, Material, Texture> _objectManager;
     readonly ShaderManager<GShader> _shaderManager;
 
     public GodotGfx(PakFile source)
@@ -97,11 +97,11 @@ public class GodotGfx : IGodotGfx
     public PakFile Source => _source;
     public ITextureManager<Texture> TextureManager => _textureManager;
     public IMaterialManager<Material, Texture> MaterialManager => _materialManager;
-    public IObjectManager<GodotObject, Material, Texture> ObjectManager => _objectManager;
+    public IObjectManager<Node, Material, Texture> ObjectManager => _objectManager;
     public IShaderManager<GShader> ShaderManager => _shaderManager;
     public Texture CreateTexture(object path, System.Range? level = null) => _textureManager.CreateTexture(path, level).tex;
     public void PreloadTexture(object path) => throw new NotImplementedException();
-    public GodotObject CreateObject(object path) => throw new NotImplementedException();
+    public Node CreateObject(object path) => throw new NotImplementedException();
     public void PreloadObject(object path) => throw new NotImplementedException();
     public GShader CreateShader(object path, IDictionary<string, bool> args = null) => throw new NotImplementedException();
 

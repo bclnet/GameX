@@ -31,7 +31,7 @@ namespace GameX.App.Explorer.Views
             {
                 if (d is not FileExplorer fileExplorer || e.NewValue is not PakFile pakFile) return;
                 fileExplorer.Filters = pakFile.GetMetaFilters(Resource);
-                fileExplorer.Nodes = new ObservableCollection<MetaItem>(fileExplorer.PakNodes = pakFile.GetMetaItems(Resource));
+                fileExplorer.Nodes = [.. fileExplorer.PakNodes = pakFile.GetMetaItems(Resource)];
                 fileExplorer.Ready(pakFile);
             }));
         public PakFile PakFile
@@ -49,8 +49,8 @@ namespace GameX.App.Explorer.Views
 
         void OnFilterKeyUp(object sender, KeyEventArgs e)
         {
-            if (string.IsNullOrEmpty(Filter.Text)) Nodes = new ObservableCollection<MetaItem>(PakNodes);
-            else Nodes = new ObservableCollection<MetaItem>(PakNodes.Select(x => x.Search(y => y.Name.Contains(Filter.Text))).Where(x => x != null));
+            if (string.IsNullOrEmpty(Filter.Text)) Nodes = [.. PakNodes];
+            else Nodes = [.. PakNodes.Select(x => x.Search(y => y.Name.Contains(Filter.Text))).Where(x => x != null)];
             //var view = (CollectionView)CollectionViewSource.GetDefaultView(Node.ItemsSource);
             //view.Filter = o =>
             //{
@@ -64,8 +64,8 @@ namespace GameX.App.Explorer.Views
         {
             if (e.AddedItems.Count <= 0) return;
             var filter = e.AddedItems[0] as MetaItem.Filter;
-            if (string.IsNullOrEmpty(Filter.Text)) Nodes = new ObservableCollection<MetaItem>(PakNodes);
-            else Nodes = new ObservableCollection<MetaItem>(PakNodes.Select(x => x.Search(y => y.Name.Contains(filter.Description))).Where(x => x != null));
+            if (string.IsNullOrEmpty(Filter.Text)) Nodes = [.. PakNodes];
+            else Nodes = [.. PakNodes.Select(x => x.Search(y => y.Name.Contains(filter.Description))).Where(x => x != null)];
         }
 
         List<MetaItem> PakNodes;

@@ -4,39 +4,36 @@ using OpenStack.Gfx;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using SimpleEngine = System.Object;
 using static OpenStack.Debug;
 
 namespace Godot.Views;
 
 #region ViewBase
 
-public abstract class ViewBase(IGodotGfx gfx, object obj) : IDisposable
+public abstract class ViewBase(Node parent, IGodotGfx gfx, object obj) : IDisposable
 {
+    protected readonly Node Parent = parent;
     protected readonly IGodotGfx Gfx = gfx;
     protected readonly object Obj = obj;
     public virtual void Dispose() { }
     public abstract void Start();
-    public virtual void Update() { }
+    public virtual void Update(double delta) { }
     public static ViewBase Create(object parent, IGodotGfx gfx, object obj, string type)
-    {
-        //ViewKind switch
-        //{
-        //    Kind.Texture => new ViewTexture(this),
-        //    Kind.Object => new ViewObject(this),
-        //    Kind.Cell => new ViewCell(this),
-        //    Kind.Engine => new ViewEngine(this),
-        //    _ => new ViewObject(this),
-        //};
-        return default;
-    }
+        => type switch
+        {
+            "Texture" => new ViewTexture(parent as Node, gfx, obj),
+            "Object" => new ViewObject(parent as Node, gfx, obj),
+            "Cell" => new ViewCell(parent as Node, gfx, obj),
+            //"Engine" => new ViewEngine(parent as Node, gfx, obj),
+            _ => new ViewObject(parent as Node, gfx, obj),
+        };
 }
 
 #endregion
 
 #region ViewCell
 
-public class ViewCell(IGodotGfx gfx, object obj) : ViewBase(gfx, obj)
+public class ViewCell(Node parent, IGodotGfx gfx, object obj) : ViewBase(parent, gfx, obj)
 {
     public override void Start() { }
 }
@@ -45,9 +42,9 @@ public class ViewCell(IGodotGfx gfx, object obj) : ViewBase(gfx, obj)
 
 #region ViewEngine
 
-public class ViewEngin(IGodotGfx gfx, object obj) : ViewBase(gfx, obj)
+public class ViewEngin(Node parent, IGodotGfx gfx, object obj) : ViewBase(parent, gfx, obj)
 {
-    SimpleEngine Engine;
+    object Engine;
     public override void Start() { }
 }
 
@@ -55,7 +52,7 @@ public class ViewEngin(IGodotGfx gfx, object obj) : ViewBase(gfx, obj)
 
 #region ViewObject
 
-public class ViewObject(IGodotGfx gfx, object obj) : ViewBase(gfx, obj)
+public class ViewObject(Node parent, IGodotGfx gfx, object obj) : ViewBase(parent, gfx, obj)
 {
     public override void Start()
     {
@@ -69,7 +66,7 @@ public class ViewObject(IGodotGfx gfx, object obj) : ViewBase(gfx, obj)
 
 #region ViewTexture
 
-public class ViewTexture(IGodotGfx gfx, object obj) : ViewBase(gfx, obj)
+public class ViewTexture(Node parent, IGodotGfx gfx, object obj) : ViewBase(parent, gfx, obj)
 {
     class FixedMaterialInfo : IFixedMaterial
     {
@@ -93,22 +90,67 @@ public class ViewTexture(IGodotGfx gfx, object obj) : ViewBase(gfx, obj)
 
     public override void Start()
     {
-        //if (!string.IsNullOrEmpty(View.Param1)) MakeTexture(View.Param1);
-        //if (!string.IsNullOrEmpty(View.Param2)) MakeCursor(View.Param2);
+        var path = Obj is string z ? z : null;
+        if (!string.IsNullOrEmpty(path)) MakeTexture(path);
+        //if (!string.IsNullOrEmpty(path)) MakeCursor(path);
     }
 
-    GodotObject MakeTexture(string path)
+    Node MakeTexture(string path)
     {
-        //var obj = GeometricPrimitive.Plane.New(Game.GraphicsDevice).ToMeshDraw();
-        var obj = new GodotObject();
-        //var obj = new GodotObject("Name", rotation: Quaternion.CreateFromYawPitchRoll(-90f, 180f, -180f))
-        //{
-        //    new ModelComponent(new PlaneProceduralModel().Generate(Game.Services))
-        //};
-        //var obj = Content.CreatePrimitive(PrimitiveType.Plane);
-        //obj.transform.rotation = ;
-        //var meshRenderer = obj.GetComponent<MeshRenderer>();
+        Log($"MakeTexture {path}");
+
+        //var material = Parent
+        var surfaceTool = new SurfaceTool();
+        surfaceTool.Begin(Mesh.PrimitiveType.TriangleStrip);
+        //surfaceTool.SetSmoothGroup(-1);
+
+//        var st = SurfaceTool.new()
+
+//st.begin(Mesh.PRIMITIVE_TRIANGLES)
+
+//# Prepare attributes for add_vertex.
+//st.add_normal(Vector3(0, 0, 1))
+//st.add_uv(Vector2(0, 0))
+//# Call last for each vertex, adds the above attributes.
+//st.add_vertex(Vector3(-1, -1, 0))
+
+//st.add_normal(Vector3(0, 0, 1))
+//st.add_uv(Vector2(0, 1))
+//st.add_vertex(Vector3(-1, 1, 0))
+
+//st.add_normal(Vector3(0, 0, 1))
+//st.add_uv(Vector2(1, 1))
+//st.add_vertex(Vector3(1, 1, 0))
+
+//# Create indices, indices are optional.
+//st.index()
+
+//# Commit to a mesh.
+//var mesh = st.commit()
+
+        Vector3[] vertices = [
+            new Vector3(-1f, -1f, +0f),
+            new Vector3(-1f, +1f, +0f),
+            new Vector3(+1f, -1f, +0f),
+            new Vector3(+1f, +1f, +0f)
+        ];
+        foreach (var v in vertices) surfaceTool.AddVertex(v);
+        //surfaceTool.GenerateNormals();
+        surfaceTool.Index();
+        //surfaceTool.SetMaterial(material);
+        var mesh = surfaceTool.Commit();
+        //var mesh = new ArrayMesh();
+        //mesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles)
+        var obj = new MeshInstance3D
+        {
+            Name = "Texture",
+            Mesh = mesh,
+        };
+        //obj.Transform.Rotated(new Vector3(-90f, 180f, -180f), 0f);
+        //obj.AddChild
         //(meshRenderer.material, _) = Gfx.MaterialManager.CreateMaterial(new FixedMaterialInfo { MainFilePath = path });
+        Parent.AddChild(obj);
+        Log($"Done {obj}");
         return obj;
     }
 
@@ -147,19 +189,16 @@ public class ViewInfo : Node
 
     public override void _Ready()
     {
-        Log($"_Ready {FamilyId}");
         if (string.IsNullOrEmpty(FamilyId)) return;
         Family = FamilyManager.GetFamily(FamilyId);
-        Log($"Family {Family}");
         if (!string.IsNullOrEmpty(PakUri)) PakFiles.Add(Family.OpenPakFile(new Uri(PakUri)));
         var first = PakFiles.FirstOrDefault();
         Gfx = (IGodotGfx)first?.Gfx;
         View = ViewBase.Create(this, Gfx, Param1, ViewKind.ToString());
+        View?.Start();
     }
 
-    //public override void _Process(double delta)
-    //{
-    //}
+    public override void _Process(double delta) => View?.Update(delta);
 
     public override void _Notification(int what)
     {
@@ -173,9 +212,6 @@ public class ViewInfo : Node
                 break;
         }
     }
-
-    public void Start() => View?.Start();
-    public void Update() => View?.Update();
 }
 
 #endregion

@@ -314,6 +314,11 @@ public abstract class Platform(string id, string name)
     public readonly string Name = name;
 
     /// <summary>
+    /// Gets the platform name.
+    /// </summary>
+    public string DisplayName => name;
+
+    /// <summary>
     /// Gets the platform tag.
     /// </summary>
     public string Tag;

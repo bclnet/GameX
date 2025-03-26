@@ -4,14 +4,6 @@ using OpenStack.Gfx.Gl;
 using OpenStack.Gfx.Renders;
 using OpenStack.Gfx.Textures;
 using OpenTK.Input;
-using Stride.CommunityToolkit.Engine;
-using Stride.Core.Diagnostics;
-using Stride.Core.Mathematics;
-using Stride.Core.Presentation.Controls;
-using Stride.Editor.Engine;
-using Stride.Engine;
-using Stride.Games;
-using Stride.Rendering.ProceduralModels;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -19,7 +11,6 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms.Integration;
@@ -27,7 +18,7 @@ using static GameX.App.Explorer.Controls.WindowsNative;
 using GodotViewBase = Godot.Views.ViewBase;
 using Key = OpenTK.Input.Key;
 using OpenGLViewBase = OpenGL.Views.ViewBase;
-using StrideViewBase = Stride.Views.ViewBase;
+//using StrideViewBase = Stride.Views.ViewBase;
 using UnityViewBase = Unity.Views.ViewBase;
 
 namespace GameX.App.Explorer.Controls;
@@ -256,6 +247,17 @@ public class OpenGLControl : GLViewerControl
 #endregion
 
 #region StrideControl
+#if false
+
+using Stride.CommunityToolkit.Engine;
+using Stride.Core.Presentation.Controls;
+using Stride.Editor.Engine;
+using System.Threading.Tasks;
+using Stride.Core.Diagnostics;
+using Stride.Core.Mathematics;
+using Stride.Engine;
+using Stride.Games;
+using Stride.Rendering.ProceduralModels;
 
 public class StrideControl : UserControl
 {
@@ -524,6 +526,7 @@ public class StrideControl : UserControl
     #endregion
 }
 
+#endif
 #endregion
 
 #region UnityControl

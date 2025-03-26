@@ -97,7 +97,7 @@
                  TextWrapping="Wrap" 
                  ScrollViewer.VerticalScrollBarVisibility="Auto" />
 
-        <Grid x:Name="LogControl" Grid.Row="2" Grid.ColumnSpan="3" Margin="7.5,0,7.5,7.5" Panel.ZIndex="1000" HorizontalAlignment="Right" Width="200">
+        <Grid x:Name="LogPane" Grid.Row="2" Grid.ColumnSpan="3" Margin="7.5,0,7.5,7.5" Panel.ZIndex="1000" HorizontalAlignment="Right" Width="200">
             <!--<Grid.Background>
                 <SolidColorBrush Color="Black" Opacity="0"/>
             </Grid.Background>-->
@@ -111,8 +111,9 @@
                 </Grid.RowDefinitions>
                 <!--<Label Grid.Row="1">Platform:</Label>-->
                 <ComboBox Name="Platform" Grid.Row="1" Grid.Column="1" Margin="0,0,0,5" Padding="5,0"
-                  ItemsSource="{Binding Platforms}"
-                  SelectionChanged="Platform_SelectionChanged" />
+                    ItemsSource="{Binding Platforms}"
+                    DisplayMemberPath="DisplayName"
+                    SelectionChanged="Platform_SelectionChanged" />
             </Grid>
         </Grid>
     </Grid>

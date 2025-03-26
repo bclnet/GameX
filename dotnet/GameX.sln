@@ -422,7 +422,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.X2K.Platform", "X2K\G
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Platform.Godot", "Platforms\GameX.Platform.Godot\GameX.Platform.Godot.csproj", "{80194B0B-B444-CECE-EC5B-D0BE8DBA2B5D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Platform.Controls.Wpf", "Platforms\GameX.Platform.Controls.Wpf\GameX.Platform.Controls.Wpf.csproj", "{ED877E28-DD8C-37C5-FEFD-808BA2A0795A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Platform.Controls.Windows", "Platforms\GameX.Platform.Controls.Windows\GameX.Platform.Controls.Windows.csproj", "{ED877E28-DD8C-37C5-FEFD-808BA2A0795A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Platform.Controls.Stride", "Platforms\GameX.Platform.Controls.Stride\GameX.Platform.Controls.Stride.csproj", "{E06290B0-BEDC-4EB1-F893-4D42A56A2AB5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Platform.Sdl", "Platforms\GameX.Platform.Sdl\GameX.Platform.Sdl.csproj", "{79E5E91A-426D-4A56-2C48-502EC85CE5F2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -1492,6 +1496,30 @@ Global
 		{ED877E28-DD8C-37C5-FEFD-808BA2A0795A}.Release|x64.Build.0 = Release|Any CPU
 		{ED877E28-DD8C-37C5-FEFD-808BA2A0795A}.Release|x86.ActiveCfg = Release|Any CPU
 		{ED877E28-DD8C-37C5-FEFD-808BA2A0795A}.Release|x86.Build.0 = Release|Any CPU
+		{E06290B0-BEDC-4EB1-F893-4D42A56A2AB5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E06290B0-BEDC-4EB1-F893-4D42A56A2AB5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E06290B0-BEDC-4EB1-F893-4D42A56A2AB5}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E06290B0-BEDC-4EB1-F893-4D42A56A2AB5}.Debug|x64.Build.0 = Debug|Any CPU
+		{E06290B0-BEDC-4EB1-F893-4D42A56A2AB5}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E06290B0-BEDC-4EB1-F893-4D42A56A2AB5}.Debug|x86.Build.0 = Debug|Any CPU
+		{E06290B0-BEDC-4EB1-F893-4D42A56A2AB5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E06290B0-BEDC-4EB1-F893-4D42A56A2AB5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E06290B0-BEDC-4EB1-F893-4D42A56A2AB5}.Release|x64.ActiveCfg = Release|Any CPU
+		{E06290B0-BEDC-4EB1-F893-4D42A56A2AB5}.Release|x64.Build.0 = Release|Any CPU
+		{E06290B0-BEDC-4EB1-F893-4D42A56A2AB5}.Release|x86.ActiveCfg = Release|Any CPU
+		{E06290B0-BEDC-4EB1-F893-4D42A56A2AB5}.Release|x86.Build.0 = Release|Any CPU
+		{79E5E91A-426D-4A56-2C48-502EC85CE5F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{79E5E91A-426D-4A56-2C48-502EC85CE5F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{79E5E91A-426D-4A56-2C48-502EC85CE5F2}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{79E5E91A-426D-4A56-2C48-502EC85CE5F2}.Debug|x64.Build.0 = Debug|Any CPU
+		{79E5E91A-426D-4A56-2C48-502EC85CE5F2}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{79E5E91A-426D-4A56-2C48-502EC85CE5F2}.Debug|x86.Build.0 = Debug|Any CPU
+		{79E5E91A-426D-4A56-2C48-502EC85CE5F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{79E5E91A-426D-4A56-2C48-502EC85CE5F2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{79E5E91A-426D-4A56-2C48-502EC85CE5F2}.Release|x64.ActiveCfg = Release|Any CPU
+		{79E5E91A-426D-4A56-2C48-502EC85CE5F2}.Release|x64.Build.0 = Release|Any CPU
+		{79E5E91A-426D-4A56-2C48-502EC85CE5F2}.Release|x86.ActiveCfg = Release|Any CPU
+		{79E5E91A-426D-4A56-2C48-502EC85CE5F2}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1591,6 +1619,8 @@ Global
 		{70085606-1C51-FA56-4D8B-20A86950185D} = {50042B9E-D19F-47DE-8D30-293DCD2DBF52}
 		{80194B0B-B444-CECE-EC5B-D0BE8DBA2B5D} = {6EC2027E-D509-415E-8939-62A2A3C2CE1F}
 		{ED877E28-DD8C-37C5-FEFD-808BA2A0795A} = {6EC2027E-D509-415E-8939-62A2A3C2CE1F}
+		{E06290B0-BEDC-4EB1-F893-4D42A56A2AB5} = {6EC2027E-D509-415E-8939-62A2A3C2CE1F}
+		{79E5E91A-426D-4A56-2C48-502EC85CE5F2} = {6EC2027E-D509-415E-8939-62A2A3C2CE1F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A9F1BB93-CFBC-4E41-A865-325B22465054}

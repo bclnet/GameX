@@ -32,7 +32,7 @@ namespace GameX.App.Explorer.Views
             Current = this;
             DataContext = this;
             Platforms = [.. PlatformX.Platforms.Where(x => x != null && x.Enabled)];
-            Platform.SelectedIndex = ((List<Platform>)Platforms)?.FindIndex(x => x.Id == Option.Platform) ?? 0;
+            Platform.SelectedIndex = ((List<Platform>)Platforms)?.FindIndex(x => x.Id == Option.Platform) ?? -1;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

@@ -40,7 +40,7 @@
                 <controls:ViewOpenGL Source="{Binding Value}" Type="{Binding Type}" Gfx="{Binding RelativeSource={RelativeSource AncestorType={x:Type views:FileContent}}, Path=Gfx}" Margin="3,3,3,3" />
             </DataTemplate>
             <DataTemplate x:Key="TViewGfx:ST" DataType="{x:Type model:MetaContent}">
-                <controls:ViewStride Source="{Binding Value}" Type="{Binding Type}" Gfx="{Binding RelativeSource={RelativeSource AncestorType={x:Type views:FileContent}}, Path=Gfx}" Margin="3,3,3,3" />
+                <!--<controls:ViewStride Source="{Binding Value}" Type="{Binding Type}" Gfx="{Binding RelativeSource={RelativeSource AncestorType={x:Type views:FileContent}}, Path=Gfx}" Margin="3,3,3,3" />-->
             </DataTemplate>
             <DataTemplate x:Key="TViewGfx:GD" DataType="{x:Type model:MetaContent}">
                 <controls:ViewGodot Source="{Binding Value}" Type="{Binding Type}" Gfx="{Binding RelativeSource={RelativeSource AncestorType={x:Type views:FileContent}}, Path=Gfx}" Margin="3,3,3,3" />

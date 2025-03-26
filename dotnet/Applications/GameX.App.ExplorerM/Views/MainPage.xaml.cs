@@ -1,4 +1,8 @@
-﻿namespace GameX.App.Explorer.Views
+﻿using GameX.Platforms;
+using static GameX.FamilyManager;
+using Platform = GameX.Platforms.Platform;
+
+namespace GameX.App.Explorer.Views
 {
     /// <summary>
     /// MainPageTab
@@ -22,6 +26,8 @@
             InitializeComponent();
             Current = this;
             BindingContext = this;
+            Platforms = [.. PlatformX.Platforms.Where(x => x != null && x.Enabled)];
+            Platform.SelectedIndex = ((List<Platform>)Platforms)?.FindIndex(x => x.Id == Option.Platform) ?? -1;
         }
 
         // https://dev.to/davidortinau/making-a-tabbar-or-segmentedcontrol-in-net-maui-54ha
@@ -42,6 +48,32 @@
             Log.WriteLine("Done");
             OnOpenedAsync(family, path).Wait();
             return this;
+        }
+
+        public void SetPlatform(Platform platform)
+        {
+            PlatformX.Activate(platform);
+            foreach (var s in PakFiles) s.SetPlatform(platform);
+            FileContent.SetPlatform(platform);
+        }
+
+        //public static readonly BindableProperty PlatformProperty = BindableProperty.Create(nameof(MainTabs), typeof(IList<Platform>), typeof(MainPage),
+        //    propertyChanged: (d, e, n) =>
+        //    {
+        //        //var selected = (Platform)Platform.SelectedItem;
+        //        //SetPlatform(selected);
+        //    });
+        //public IList<Platform> Platforms
+        //{
+        //    get => (IList<Platform>)GetValue(PlatformProperty);
+        //    set => SetValue(PlatformProperty, value);
+        //}
+
+        IList<Platform> _platforms;
+        public IList<Platform> Platforms
+        {
+            get => _platforms;
+            set { _platforms = value; OnPropertyChanged(); }
         }
 
         public static readonly BindableProperty MainTabsProperty = BindableProperty.Create(nameof(MainTabs), typeof(IList<MainPageTab>), typeof(MainPage),
@@ -86,6 +118,12 @@
             // default main tab to first / second
             //MainTabContent.BindingContext = Tabs ...Children.FirstOrDefault(). s.LastOrDefault(); //.SelectedIndex = 0; // family.Apps != null ? 1 : 0
             return Task.CompletedTask;
+        }
+
+        void Platform_SelectionChanged(object sender, EventArgs e)
+        {
+            var selected = (Platform)Platform.SelectedItem;
+            SetPlatform(selected);
         }
 
         internal void App_Click(object sender, EventArgs e)

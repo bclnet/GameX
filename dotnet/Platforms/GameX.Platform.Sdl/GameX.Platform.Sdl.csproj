@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <Optimize>False</Optimize>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <Optimize>True</Optimize>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\..\docs\Platforms\Sdl\Readme.md" Link="Readme.md" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ppy.SDL3-CS" Version="2025.220.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\OpenStack\dotnet\Sfx\OpenStack.Sfx\OpenStack.Sfx.csproj" />
+    <ProjectReference Include="..\..\Base\GameX\GameX.csproj" />
+  </ItemGroup>
+
+</Project>

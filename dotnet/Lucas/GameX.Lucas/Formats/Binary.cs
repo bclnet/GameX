@@ -1,5 +1,5 @@
 using GameX.Formats;
-using OpenStack.Gfx.Textures;
+using OpenStack.Gfx.Texture;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -142,7 +142,7 @@ public unsafe class Binary_Jedi : PakBinary<Binary_Jedi>
         }
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
     {
         r.Seek(file.Offset);
         return Task.FromResult((Stream)new MemoryStream(r.ReadBytes((int)file.FileSize)));
@@ -1072,7 +1072,7 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
     {
         throw new NotImplementedException();
     }
@@ -1091,7 +1091,7 @@ public unsafe class Binary_XX : PakBinary<Binary_XX>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
     {
         throw new NotImplementedException();
     }

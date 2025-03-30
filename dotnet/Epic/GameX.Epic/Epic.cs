@@ -28,7 +28,7 @@ public class EpicPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel
     #region Factories
 
     // object factory
-    public static (FileOption, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    public static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch
         {
             _ => UnknownPakFile.ObjectFactory(source, game),

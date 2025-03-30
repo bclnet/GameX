@@ -61,7 +61,7 @@ public class OriginPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMod
             _ => throw new ArgumentOutOfRangeException(),
         };
 
-    static (FileOption, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => game.Id switch
         {
             "U8" => Binary_U8.ObjectFactory(source, game),

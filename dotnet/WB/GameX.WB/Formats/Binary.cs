@@ -107,7 +107,7 @@ public unsafe class Binary_AC : PakBinary<Binary_AC>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
         => Task.FromResult((Stream)new MemoryStream(ReadBytes(r, file.Offset, (int)file.FileSize, (int)file.Hash)));
 
     static T ReadT<T>(BinaryReader r, long offset, int size, int blockSize) where T : struct

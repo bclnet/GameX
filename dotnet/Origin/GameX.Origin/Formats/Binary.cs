@@ -14,7 +14,7 @@ namespace GameX.Origin.Formats;
 
 public unsafe class Binary_U8 : PakBinary<Binary_U8>
 {
-    public static (FileOption, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    public static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => source.Path.ToLowerInvariant() switch
         {
             _ => Path.GetExtension(source.Path).ToLowerInvariant() switch
@@ -100,7 +100,7 @@ public unsafe class Binary_U8 : PakBinary<Binary_U8>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
     {
         r.Seek(file.Offset);
         return Task.FromResult((Stream)new MemoryStream(r.ReadBytes((int)file.FileSize)));
@@ -115,7 +115,7 @@ public unsafe class Binary_U9 : PakBinary<Binary_U9>
 {
     #region Factories
 
-    public static (FileOption, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    public static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => source.Path.ToLowerInvariant() switch
         {
             //"abc" => (0, Binary_Palette.Factory),
@@ -188,7 +188,7 @@ public unsafe class Binary_U9 : PakBinary<Binary_U9>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
     {
         r.Seek(file.Offset);
         return Task.FromResult((Stream)new MemoryStream(r.ReadBytes((int)file.FileSize)));
@@ -205,7 +205,7 @@ public unsafe class Binary_UO : PakBinary<Binary_UO>
 
     #region Factories
 
-    public static (FileOption, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    public static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => source.Path.ToLowerInvariant() switch
         {
             "animdata.mul" => (0, Binary_Animdata.Factory),
@@ -518,7 +518,7 @@ public unsafe class Binary_UO : PakBinary<Binary_UO>
     public static ushort Art_ClampItemId(int itemId, bool checkMaxId = true)
         => itemId < 0 || (checkMaxId && itemId > Art_MaxItemId) ? (ushort)0U : (ushort)itemId;
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
     {
         if (file.Offset < 0) return Task.FromResult<Stream>(null);
         var fileSize = (int)(file.FileSize & 0x7FFFFFFF);

@@ -89,7 +89,7 @@ public class StreamPakFile : BinaryPakFile
     /// <param name="option">The option.</param>
     /// <param name="exception">The exception.</param>
     /// <returns></returns>
-    public override async Task<Stream> ReadData(FileSource file, FileOption option = default)
+    public override async Task<Stream> ReadData(FileSource file, object option = default)
     {
         var path = file.Path;
         // http pak
@@ -109,5 +109,5 @@ public class StreamPakFile : BinaryPakFile
     /// <param name="exception">The exception.</param>
     /// <returns></returns>
     /// <exception cref="NotSupportedException"></exception>
-    public override Task WriteData(FileSource file, Stream data, FileOption option = default) => throw new NotSupportedException();
+    public override Task WriteData(FileSource file, Stream data, object option = default) => throw new NotSupportedException();
 }

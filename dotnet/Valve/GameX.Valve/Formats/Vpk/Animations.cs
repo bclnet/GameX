@@ -1,5 +1,5 @@
 using OpenStack.Gfx;
-using OpenStack.Gfx.Animates;
+using OpenStack.Gfx.Animate;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -235,7 +235,7 @@ public class AnimationFrameBlock(IDictionary<string, object> frameBlock)
 
 public static class AnimationGroupLoader
 {
-    public static IEnumerable<Animation> LoadAnimationGroup(Binary_Src resource, IOpenGfx gfx, Skeleton skeleton)
+    public static IEnumerable<Animation> LoadAnimationGroup(Binary_Src resource, IOpenGfx3d gfx, Skeleton skeleton)
     {
         var data = resource.DATA.AsKeyValue();
         var decodeKey = data.GetSub("m_decodeKey"); // Get the key to decode the animations

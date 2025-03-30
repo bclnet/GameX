@@ -42,7 +42,7 @@ public class ValvePakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMode
             _ => throw new ArgumentOutOfRangeException(nameof(game.Engine), game.Engine.n),
         });
 
-    public static (FileOption, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    public static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => game.Engine.n switch
         {
             "GoldSrc" => Path.GetExtension(source.Path).ToLowerInvariant() switch

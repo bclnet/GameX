@@ -19,7 +19,7 @@ class UnknownPakFile(PakFile):
     #region Factories
 
     @staticmethod
-    def objectFactory(source: FileSource, game: FamilyGame) -> (FileOption, callable):
+    def objectFactory(source: FileSource, game: FamilyGame) -> (object, callable):
         match _pathExtension(source.path).lower():
             case '.txt' | '.ini' | '.cfg' | '.csv' | '.xml': return (0, Binary_Txt.factory)
             case '.wav': return (0, Binary_Snd.factory)

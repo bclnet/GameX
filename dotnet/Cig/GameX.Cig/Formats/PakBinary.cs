@@ -75,7 +75,7 @@ public class PakBinary_P4k : PakBinary<PakBinary_P4k>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
     {
         var pak = (P4kFile)source.Tag;
         var entry = (ZipEntry)file.Tag;
@@ -118,7 +118,7 @@ public class PakBinary_P4k : PakBinary<PakBinary_P4k>
         return Task.CompletedTask;
     }
 
-    public override Task WriteData(BinaryPakFile source, BinaryWriter w, FileSource file, Stream data, FileOption option = default)
+    public override Task WriteData(BinaryPakFile source, BinaryWriter w, FileSource file, Stream data, object option = default)
     {
         var pak = (P4kFile)source.Tag;
         var entry = (ZipEntry)file.Tag;

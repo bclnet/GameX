@@ -1,7 +1,7 @@
 using GameX.Formats.Apple;
 using ICSharpCode.SharpZipLib.Zip;
-using OpenStack.Gfx.Renders;
-using OpenStack.Gfx.Textures;
+using OpenStack.Gfx.Render;
+using OpenStack.Gfx.Texture;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -948,7 +948,7 @@ public unsafe class Binary_Plist : PakBinary<Binary_Plist>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
         => Task.FromResult<Stream>(new MemoryStream((byte[])file.Tag));
 }
 
@@ -1557,7 +1557,7 @@ public class Binary_Zip(object key = null) : PakBinary
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
     {
         //try
         //{

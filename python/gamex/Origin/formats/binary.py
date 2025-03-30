@@ -2,7 +2,7 @@ import os, numpy as np
 from pathlib import Path
 from ctypes import c_ulong, c_ulonglong
 from io import BytesIO
-from gamex.pak import FileOption, PakBinaryT
+from gamex.pak import PakBinaryT
 from gamex.meta import FileSource
 from gamex.util import _pathExtension
 
@@ -11,7 +11,6 @@ class Reader: pass
 class BinaryPakFile: pass
 class FamilyGame: pass
 class IFileSystem: pass
-class FileOption: pass
 
 #region Binary_U8
 
@@ -21,7 +20,7 @@ class Binary_U8(PakBinaryT):
     #region Factories
 
     @staticmethod
-    def objectFactory(source: FileSource, game: FamilyGame) -> (FileOption, callable):
+    def objectFactory(source: FileSource, game: FamilyGame) -> (object, callable):
         match source.path.lower():
             case _: pass
 
@@ -36,7 +35,7 @@ class Binary_U8(PakBinaryT):
         pass
         
     # readData
-    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: FileOption = None) -> BytesIO:
+    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None) -> BytesIO:
         pass
 
 #endregion
@@ -49,7 +48,7 @@ class Binary_U9(PakBinaryT):
     #region Factories
 
     @staticmethod
-    def objectFactory(source: FileSource, game: FamilyGame) -> (FileOption, callable):
+    def objectFactory(source: FileSource, game: FamilyGame) -> (object, callable):
         match source.path.lower():
             case _: pass
             # case 'animdata.mul': return (0, Binary_Animdata.factory)
@@ -70,7 +69,7 @@ class Binary_U9(PakBinaryT):
         pass
         
     # readData
-    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: FileOption = None) -> BytesIO:
+    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None) -> BytesIO:
         pass
 
 #endregion
@@ -83,7 +82,7 @@ class Binary_UO(PakBinaryT):
     #region Factories
 
     @staticmethod
-    def objectFactory(source: FileSource, game: FamilyGame) -> (FileOption, callable):
+    def objectFactory(source: FileSource, game: FamilyGame) -> (object, callable):
         match source.path.lower():
             case 'animdata.mul': return (0, Binary_Animdata.factory)
             case 'fonts.mul': return (0, Binary_AsciiFont.factory)
@@ -374,7 +373,7 @@ class Binary_UO(PakBinaryT):
     #endregion
 
     # readData
-    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: FileOption = None) -> BytesIO:
+    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None) -> BytesIO:
         if file.offset < 0: return None
         fileSize = file.fileSize & 0x7FFFFFFF
         if (file.fileSize & (1 << 31)) != 0:

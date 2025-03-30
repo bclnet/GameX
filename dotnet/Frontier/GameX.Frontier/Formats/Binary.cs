@@ -35,7 +35,7 @@ public unsafe class Binary_Frontier : PakBinary<Binary_Frontier>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
     {
         throw new NotImplementedException();
     }

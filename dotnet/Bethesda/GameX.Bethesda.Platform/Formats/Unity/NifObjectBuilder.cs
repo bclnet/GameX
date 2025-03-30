@@ -1,5 +1,5 @@
-﻿using GameX.Platforms;
-using OpenStack.Gfx;
+﻿using OpenStack.Gfx;
+using OpenStack.Unity;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -11,24 +11,31 @@ public class NifObjectBuilder
 {
     public enum MatTestMode { Always, Less, LEqual, Equal, GEqual, Greater, NotEqual, Never }
 
-    class FixedMaterialInfo : IFixedMaterial
+    class MaterialInfo : IMaterial
     {
-        public string Name { get; set; }
-        public string ShaderName { get; set; }
-        public IDictionary<string, bool> GetShaderArgs() => null;
-        public IDictionary<string, object> Data { get; set; }
-        public string MainFilePath { get; set; }
-        public string DarkFilePath { get; set; }
-        public string DetailFilePath { get; set; }
-        public string GlossFilePath { get; set; }
-        public string GlowFilePath { get; set; }
-        public string BumpFilePath { get; set; }
-        public bool AlphaBlended { get; set; }
-        public int SrcBlendMode { get; set; }
-        public int DstBlendMode { get; set; }
-        public bool AlphaTest { get; set; }
-        public float AlphaCutoff { get; set; }
-        public bool ZWrite { get; set; }
+        public string Name;
+        public string ShaderName;
+        public IDictionary<string, bool> ShaderArgs;
+        public IDictionary<string, object> Data;
+        public string MainFilePath;
+        public string DarkFilePath;
+        public string DetailFilePath;
+        public string GlossFilePath;
+        public string GlowFilePath;
+        public string BumpFilePath;
+        public bool AlphaBlended;
+        public int SrcBlendMode;
+        public int DstBlendMode;
+        public bool AlphaTest;
+        public float AlphaCutoff;
+        public bool ZWrite;
+
+        public MaterialProp Begin(string platform)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void End() { }
     }
 
     const bool KinematicRigidbodies = true;
@@ -247,7 +254,7 @@ public class NifObjectBuilder
         }
 
         // Create the material properties.
-        var mp = new FixedMaterialInfo();
+        var mp = new MaterialInfo();
 
         if (alphaProperty != null)
         {
@@ -320,7 +327,7 @@ public class NifObjectBuilder
         return mp;
     }
 
-    void ConfigureTextureProperties(FixedMaterialInfo info, NiTexturingProperty ntp)
+    void ConfigureTextureProperties(MaterialInfo info, NiTexturingProperty ntp)
     {
         if (ntp.TextureCount < 1) return;
         if (ntp.BaseTexture != null) { var src = (NiSourceTexture)_obj.Blocks[ntp.BaseTexture.source.Value]; info.MainFilePath = src.FileName; }

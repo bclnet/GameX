@@ -45,14 +45,14 @@ public class UnknownPakFile : PakFile
     public override void Opening() { }
     public override bool Contains(object path) => false;
     public override (PakFile, FileSource) GetFileSource(object path, bool throwOnError = true) => throw new NotImplementedException();
-    public override Task<Stream> LoadFileData(object path, FileOption option = default, bool throwOnError = true) => throw new NotImplementedException();
-    public override Task<T> LoadFileObject<T>(object path, FileOption option = default, bool throwOnError = true) => throw new NotImplementedException();
+    public override Task<Stream> LoadFileData(object path, object option = default, bool throwOnError = true) => throw new NotImplementedException();
+    public override Task<T> LoadFileObject<T>(object path, object option = default, bool throwOnError = true) => throw new NotImplementedException();
 
     #endregion
 
     #region Factories
 
-    public static (FileOption, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    public static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch
         {
             ".txt" or ".ini" or ".cfg" or ".csv" or ".xml" => (0, Binary_Txt.Factory),

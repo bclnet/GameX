@@ -2,7 +2,7 @@
 using GameX.Bethesda.Transforms;
 using GameX.Formats.Unknown;
 using GameX.Unknown;
-using OpenStack.Gfx.Textures;
+using OpenStack.Gfx.Texture;
 using System;
 using System.IO;
 using System.Text.Json;
@@ -94,7 +94,7 @@ public class BethesdaPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileM
 
     static Task<object> NiFactory(BinaryReader r, FileSource f, PakFile s) { var file = new NiFile(Path.GetFileNameWithoutExtension(f.Path)); file.Read(r); return Task.FromResult((object)file); }
 
-    static (FileOption, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch
         {
             ".nif" => (0, NiFactory),

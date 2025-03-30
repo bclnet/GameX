@@ -85,7 +85,7 @@ public class Binary_ArcheAge : PakBinary
         return Task.CompletedTask;
     }
 
-    public unsafe override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public unsafe override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
     {
         // position
         r.Seek(file.Offset);
@@ -162,7 +162,7 @@ public unsafe class Binary_Cry3 : PakBinary<Binary_Cry3>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
     {
         var pak = (Cry3File)source.Tag;
         var entry = (ZipEntry)file.Tag;
@@ -178,7 +178,7 @@ public unsafe class Binary_Cry3 : PakBinary<Binary_Cry3>
         catch (Exception e) { HandleException(file, option, $"{file.Path} - Exception: {e.Message}"); return Task.FromResult(System.IO.Stream.Null); }
     }
 
-    public override Task WriteData(BinaryPakFile source, BinaryWriter w, FileSource file, Stream data, FileOption option = default)
+    public override Task WriteData(BinaryPakFile source, BinaryWriter w, FileSource file, Stream data, object option = default)
     {
         var pak = (Cry3File)source.Tag;
         var entry = (ZipEntry)file.Tag;

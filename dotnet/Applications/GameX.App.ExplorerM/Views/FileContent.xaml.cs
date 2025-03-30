@@ -1,5 +1,5 @@
 ﻿using OpenStack.Gfx;
-using Platform = GameX.Platforms.Platform;
+using Platform = OpenStack.Platform;
 
 namespace GameX.App.Explorer.Views
 {

@@ -1830,7 +1830,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
     {
         //var pak = (P4kFile)source.Tag;
         //var entry = (ZipEntry)file.Tag;

@@ -1,8 +1,7 @@
-using GameX.Platforms;
 using GameX.WB.Formats.AC.AnimationHooks;
 using GameX.WB.Formats.AC.Entity;
 using GameX.WB.Formats.AC.Props;
-using OpenStack.Gfx.Textures;
+using OpenStack.Gfx.Texture;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -2185,7 +2184,7 @@ public class SurfaceTexture : FileType, IHaveMetaInfo
         new($"{nameof(SurfaceTexture)}: {Id:X8}", items: [
             new($"Unknown: {Unknown}"),
             new($"UnknownByte: {UnknownByte}"),
-            new("Textures", items: Textures.Select(x => new MetaInfo($"{x:X8}", clickable: true))),
+            new("Texture", items: Textures.Select(x => new MetaInfo($"{x:X8}", clickable: true))),
         ])
     ];
 }

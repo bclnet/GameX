@@ -7,7 +7,7 @@ namespace GameX.App;
 
 public static class ImportManager
 {
-    public static async Task ImportAsync(Family family, Resource resource, string filePath, int from, FileOption option)
+    public static async Task ImportAsync(Family family, Resource resource, string filePath, int from, object option)
     {
         //foreach (var path in resource.Paths)
         //{
@@ -19,7 +19,7 @@ public static class ImportManager
         //}
     }
 
-    static async Task<BinaryWriter> ImportPakAsync(string filePath, int from, string path, FileOption option, BinaryPakFile pak)
+    static async Task<BinaryWriter> ImportPakAsync(string filePath, int from, string path, object option, BinaryPakFile pak)
     {
         // import pak
         var w = new BinaryWriter(new FileStream(path, FileMode.Create, FileAccess.Write));

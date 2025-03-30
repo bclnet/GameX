@@ -4,8 +4,8 @@ using K4os.Compression.LZ4;
 using K4os.Compression.LZ4.Encoders;
 using OpenStack.Gfx;
 using OpenStack.Gfx.Algorithms;
-using OpenStack.Gfx.Renders;
-using OpenStack.Gfx.Textures;
+using OpenStack.Gfx.Render;
+using OpenStack.Gfx.Texture;
 using System;
 using System.Buffers;
 using System.Collections.Concurrent;
@@ -8211,19 +8211,19 @@ public class D_EntityLump : XKV3_NTRO
 
 #region D_Material
 
-public class D_Material : XKV3_NTRO, IParamMaterial
+public class D_Material : XKV3_NTRO, IMaterial
 {
-    public string Name { get; set; }
-    public string ShaderName { get; set; }
+    public string Name;
+    public string ShaderName;
 
-    public Dictionary<string, long> IntParams { get; } = [];
-    public Dictionary<string, float> FloatParams { get; } = [];
-    public Dictionary<string, Vector4> VectorParams { get; } = [];
-    public Dictionary<string, string> TextureParams { get; } = [];
-    public Dictionary<string, long> IntAttributes { get; } = [];
-    public Dictionary<string, float> FloatAttributes { get; } = [];
-    public Dictionary<string, Vector4> VectorAttributes { get; } = [];
-    public Dictionary<string, string> StringAttributes { get; } = [];
+    public Dictionary<string, long> IntParams = [];
+    public Dictionary<string, float> FloatParams  = [];
+    public Dictionary<string, Vector4> VectorParams = [];
+    public Dictionary<string, string> TextureParams = [];
+    public Dictionary<string, long> IntAttributes = [];
+    public Dictionary<string, float> FloatAttributes = [];
+    public Dictionary<string, Vector4> VectorAttributes = [];
+    public Dictionary<string, string> StringAttributes = [];
 
     public override void Read(Binary_Src parent, BinaryReader r)
     {
@@ -8265,6 +8265,13 @@ public class D_Material : XKV3_NTRO, IParamMaterial
 
         return args;
     }
+
+    public MaterialProp Begin(string platform)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void End() { }
 }
 
 #endregion
@@ -8448,7 +8455,7 @@ public class D_Model : XKV3_NTRO, IValveModel
         return Animation.FromData(animationDataBlock.Data, decodeKey, Skeleton);
     }
 
-    public IEnumerable<Animation> GetAllAnimations(IOpenGfx gfx)
+    public IEnumerable<Animation> GetAllAnimations(IOpenGfx3d gfx)
     {
         if (CachedAnimations != null) return CachedAnimations;
 

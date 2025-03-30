@@ -60,7 +60,7 @@ public class BullfrogPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileM
             _ => throw new ArgumentOutOfRangeException(),
         };
 
-    static (FileOption, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => game.Id switch
         {
             "DK" or "DK2" => Binary_Bullfrog.ObjectFactory(source, game),

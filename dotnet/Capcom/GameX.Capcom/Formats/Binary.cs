@@ -60,7 +60,7 @@ public unsafe class Binary_Arc : PakBinary<Binary_Arc>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
     {
         r.Seek(file.Offset);
         return Task.FromResult<Stream>(new MemoryStream(r.DecompressZlib((int)file.PackedSize, (int)file.FileSize)));
@@ -86,7 +86,7 @@ public unsafe class Binary_Big : PakBinary<Binary_Big>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
     {
         throw new NotImplementedException();
     }
@@ -105,7 +105,7 @@ public unsafe class Binary_Bundle : PakBinary<Binary_Bundle>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
     {
         throw new NotImplementedException();
     }
@@ -205,7 +205,7 @@ public unsafe class Binary_Kpka : PakBinary<Binary_Kpka>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
     {
         r.Seek(file.Offset);
         return Task.FromResult<Stream>(new MemoryStream(Decompress(r, file.Compressed, (int)file.PackedSize, (int)file.FileSize)));

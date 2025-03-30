@@ -1,9 +1,9 @@
 using GameX.Valve.Formats;
 using OpenStack.Gfx;
-using OpenStack.Gfx.Gl;
-using OpenStack.Gfx.Gl.Renders;
-using OpenStack.Gfx.Renders;
-using OpenStack.Gfx.Scenes;
+using OpenStack.Gfx.Render;
+using OpenStack.Gfx.Scene;
+using OpenStack.Gl;
+using OpenStack.Gl.Render;
 using OpenTK.Graphics.OpenGL;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,13 +23,13 @@ public class SpriteSceneNode : SceneNode
 
     public SpriteSceneNode(Scene scene, Binary_Src resource, Vector3 position) : base(scene)
     {
-        var gfx = scene.Gfx as IOpenGLGfx;
+        var gfx = scene.Gfx as IOpenGLGfx3d;
         (material, _) = gfx.MaterialManager.CreateMaterial(resource);
-        (shader, _) = gfx.ShaderManager.CreateShader(material.Material.ShaderName, material.Material.GetShaderArgs());
+        (shader, _) = gfx.ShaderManager.CreateShader(material.Material.ShaderName, material.Material.ShaderArgs);
 
         if (quadVao == 0) quadVao = SetupQuadBuffer();
 
-        var paramMaterial = material.Material as IParamMaterial;
+        var paramMaterial = material.Material as MaterialPropShaderV;
         size = paramMaterial.FloatParams.GetValueOrDefault("g_flUniformPointSize", 16);
 
         this.position = position;

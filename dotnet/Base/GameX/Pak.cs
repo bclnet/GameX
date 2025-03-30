@@ -1,6 +1,6 @@
 ﻿using GameX.Formats;
-using GameX.Platforms;
 using GameX.Unknown;
+using OpenStack;
 using OpenStack.Gfx;
 using OpenStack.Sfx;
 using System;
@@ -104,9 +104,9 @@ public class PakState(IFileSystem fileSystem, FamilyGame game, FamilyGame.Editio
 /// PakFile
 /// </summary>
 /// <seealso cref="System.IDisposable" />
-public abstract class PakFile : IDisposable
+public abstract class PakFile : ISource, IDisposable
 {
-    public delegate (FileOption option, Func<BinaryReader, FileSource, PakFile, Task<object>> factory) FuncObjectFactory(FileSource source, FamilyGame game);
+    public delegate (object option, Func<BinaryReader, FileSource, PakFile, Task<object>> factory) FuncObjectFactory(FileSource source, FamilyGame game);
 
     /// <summary>
     /// An empty family.
@@ -314,7 +314,7 @@ public abstract class PakFile : IDisposable
     /// <param name="option">The option.</param>
     /// <param name="throwOnError">Throws on error.</param>
     /// <returns></returns>
-    public abstract Task<Stream> LoadFileData(object path, FileOption option = default, bool throwOnError = true);
+    public abstract Task<Stream> LoadFileData(object path, object option = default, bool throwOnError = true);
 
     /// <summary>
     /// Loads the object asynchronous.
@@ -324,7 +324,7 @@ public abstract class PakFile : IDisposable
     /// <param name="option">The option.</param>
     /// <param name="throwOnError">Throws on error.</param>
     /// <returns></returns>
-    public abstract Task<T> LoadFileObject<T>(object path, FileOption option = default, bool throwOnError = true);
+    public abstract Task<T> LoadFileObject<T>(object path, object option = default, bool throwOnError = true);
 
     /// Opens the family pak file.
     /// </summary>
@@ -611,7 +611,7 @@ public abstract class BinaryPakFile(PakState state, PakBinary pakBinary) : PakFi
     /// <returns></returns>
     /// <exception cref="FileNotFoundException"></exception>
     /// <exception cref="InvalidOperationException"></exception>
-    public override Task<Stream> LoadFileData(object path, FileOption option = default, bool throwOnError = true)
+    public override Task<Stream> LoadFileData(object path, object option = default, bool throwOnError = true)
     {
         if (path == null) return default;
         else if (path is not FileSource)
@@ -631,7 +631,7 @@ public abstract class BinaryPakFile(PakState state, PakBinary pakBinary) : PakFi
     /// <param name="option">The option.</param>
     /// <param name="throwOnError">Throws on error.</param>
     /// <returns></returns>
-    public override async Task<T> LoadFileObject<T>(object path, FileOption option = default, bool throwOnError = true)
+    public override async Task<T> LoadFileObject<T>(object path, object option = default, bool throwOnError = true)
     {
         if (path == null) return default;
         else if (path is not FileSource)
@@ -724,7 +724,7 @@ public abstract class BinaryPakFile(PakState state, PakBinary pakBinary) : PakFi
     /// <param name="file">The file.</param>
     /// <param name="option">The option.</param>
     /// <returns></returns>
-    public virtual Task<Stream> ReadData(FileSource file, FileOption option = default) => UseReader
+    public virtual Task<Stream> ReadData(FileSource file, object option = default) => UseReader
         ? ReaderT(r => PakBinary.ReadData(this, r, file, option))
         : PakBinary.ReadData(this, null, file, option);
 
@@ -745,7 +745,7 @@ public abstract class BinaryPakFile(PakState state, PakBinary pakBinary) : PakFi
     /// <param name="data">The data.</param>
     /// <param name="option">The option.</param>
     /// <returns></returns>
-    public virtual Task WriteData(FileSource file, Stream data, FileOption option = default) => UseWriter
+    public virtual Task WriteData(FileSource file, Stream data, object option = default) => UseWriter
         ? WriterActionAsync(w => PakBinary.WriteData(this, w, file, data, option))
         : PakBinary.WriteData(this, null, file, data, option);
 
@@ -821,7 +821,7 @@ public class ManyPakFile : BinaryPakFile
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(FileSource file, object option = default)
         => file.Pak != null
             ? file.Pak.ReadData(file, option)
             : Task.FromResult<Stream>(new MemoryStream(FileSystem.OpenReader(file.Path).ReadBytes((int)file.FileSize)));
@@ -933,7 +933,7 @@ public class MultiPakFile : PakFile
     /// <param name="throwOnError">Throws on error.</param>
     /// <returns></returns>
     /// <exception cref="System.IO.FileNotFoundException">Could not find file \"{path}\".</exception>
-    public override Task<Stream> LoadFileData(object path, FileOption option = default, bool throwOnError = true)
+    public override Task<Stream> LoadFileData(object path, object option = default, bool throwOnError = true)
         => path switch
         {
             null => throw new ArgumentNullException(nameof(path)),
@@ -952,7 +952,7 @@ public class MultiPakFile : PakFile
     /// <param name="throwOnError">Throws on error.</param>
     /// <returns></returns>
     /// <exception cref="System.IO.FileNotFoundException">Could not find file \"{path}\".</exception>
-    public override Task<T> LoadFileObject<T>(object path, FileOption option = default, bool throwOnError = true)
+    public override Task<T> LoadFileObject<T>(object path, object option = default, bool throwOnError = true)
         => path switch
         {
             null => throw new ArgumentNullException(nameof(path)),
@@ -1012,7 +1012,7 @@ public class PakBinary
     /// <param name="option">The option.</param>
     /// <returns></returns>
     /// <exception cref="NotSupportedException"></exception>
-    public virtual Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default) => throw new NotSupportedException();
+    public virtual Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) => throw new NotSupportedException();
 
     /// <summary>
     /// Writes the asynchronous.
@@ -1034,7 +1034,7 @@ public class PakBinary
     /// <param name="data">The data.</param>
     /// <returns></returns>
     /// <exception cref="NotSupportedException"></exception>
-    public virtual Task WriteData(BinaryPakFile source, BinaryWriter w, FileSource file, Stream data, FileOption option = default) => throw new NotSupportedException();
+    public virtual Task WriteData(BinaryPakFile source, BinaryWriter w, FileSource file, Stream data, object option = default) => throw new NotSupportedException();
 
     /// <summary>
     /// Processes this instance.
@@ -1050,10 +1050,10 @@ public class PakBinary
     /// <param name="option">The option.</param>
     /// <param name="message">The message.</param>
     /// <exception cref="NotSupportedException"></exception>
-    public static void HandleException(object source, FileOption option, string message)
+    public static void HandleException(object source, object option, string message)
     {
         Log(message);
-        if ((option & FileOption.Supress) != 0) throw new Exception(message);
+        // if ((option & FileOption.Supress) != 0) throw new Exception(message);
     }
 }
 

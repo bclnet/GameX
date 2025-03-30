@@ -45,7 +45,8 @@ class PakFile:
         self.name = z if not state.path or (z := os.path.basename(state.path)) else os.path.basename(os.path.dirname(state.path))
         self.tag = state.tag
         self.objectFactoryFunc = None
-        self.gfx = None
+        self.gfx2d = None
+        self.gfx3d = None
         self.sfx = None
     def __enter__(self): return self
     def __exit__(self, type, value, traceback): self.close()
@@ -71,13 +72,14 @@ class PakFile:
         return self
     def opening(self) -> None: pass
     def setPlatform(self, platform: Platform) -> PakFile:
-        self.gfx = platform.gfxFactory(self) if platform and platform.gfxFactory else None
+        self.gfx2d = platform.gfx2dFactory(self) if platform and platform.gfx2dFactory else None
+        self.gfx3d = platform.gfx3dFactory(self) if platform and platform.gfx3dFactory else None
         self.sfx = platform.sfxFactory(self) if platform and platform.sfxFactory else None
         return self
     def contains(self, path: FileSource | str | int) -> bool: pass
     def getFileSource(self, path: FileSource | str | int, throwOnError: bool = True) -> (PakFile, FileSource): pass
-    def loadFileData(self, path: FileSource | str | int, option: FileOption = FileOption.Default, throwOnError: bool = True) -> bytes: pass
-    def loadFileObject(self, path: FileSource | str | int, option: FileOption = FileOption.Default, throwOnError: bool = True) -> object: pass
+    def loadFileData(self, path: FileSource | str | int, option: object = None, throwOnError: bool = True) -> bytes: pass
+    def loadFileObject(self, path: FileSource | str | int, option: object = None, throwOnError: bool = True) -> object: pass
     def openPakFile(self, res: object, throwOnError: bool = True) -> PakFile:
         raise Exception('TODO')
     #region Transform
@@ -164,7 +166,7 @@ class BinaryPakFile(PakFile):
                 return (None, None)
             case _: raise Exception(f'Unknown: {path}')
 
-    def loadFileData(self, path: FileSource | str | int, option: FileOption = FileOption.Default, throwOnError: bool = True) -> bytes:
+    def loadFileData(self, path: FileSource | str | int, option: object = None, throwOnError: bool = True) -> bytes:
         if not path: return None
         elif not isinstance(path, FileSource):
             (p, f2) = self.getFileSource(path, throwOnError)
@@ -172,7 +174,7 @@ class BinaryPakFile(PakFile):
         f = path
         return self.readData(f, option)
 
-    def loadFileObject(self, type: type, path: FileSource | str | int, option: FileOption = FileOption.Default, throwOnError: bool = True) -> object:
+    def loadFileObject(self, type: type, path: FileSource | str | int, option: object = None, throwOnError: bool = True) -> object:
         if not path: return None
         elif not isinstance(path, FileSource):
             (p, f2) = self.getFileSource(path, throwOnError)
@@ -219,7 +221,7 @@ class BinaryPakFile(PakFile):
         self.readerT(lambda r: self.pakBinary.read(self, r, tag)) if self.useReader else \
         self.pakBinary.read(self, None, tag)
 
-    def readData(self, file: FileSource, option: FileOption = None) -> bytes: return \
+    def readData(self, file: FileSource, option: object = None) -> bytes: return \
         self.readerT(lambda r: self.pakBinary.readData(self, r, file, option)) if self.useReader else \
         self.pakBinary.readData(self, None, file, option)
     #endregion
@@ -250,7 +252,7 @@ class ManyPakFile(BinaryPakFile):
             fileSize = self.fileSystem.fileInfo(s)[1])
             for s in self.paths]
 
-    def readData(self, file: FileSource, option: FileOption = None) -> BytesIO:
+    def readData(self, file: FileSource, option: object = None) -> BytesIO:
         return file.pak.readData(file, option) if file.pak else \
             BytesIO(self.fileSystem.openReader(file.path).readBytes(file.fileSize))
     #endregion
@@ -299,7 +301,7 @@ class MultiPakFile(PakFile):
                 return value.getFileSource(i, throwOnError)
             case _: raise Exception(f'Unknown: {path}')
 
-    def loadFileData(self, path: FileSource | str | int, option: FileOption = FileOption.Default) -> bytes:
+    def loadFileData(self, path: FileSource | str | int, option: object = None) -> bytes:
         match path:
             case None: raise Exception('Null')
             case s if isinstance(path, str):
@@ -339,11 +341,11 @@ class MultiPakFile(PakFile):
 # PakBinary
 class PakBinary:
     def read(self, source: BinaryPakFile, r: Reader, tag: object = None) -> None: pass
-    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: FileOption = None): pass
+    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None): pass
     def process(self, source: BinaryPakFile): pass
-    def handleException(self, source: object, option: FileOption, message: str):
+    def handleException(self, source: object, option: object, message: str):
         print(message)
-        if (option & FileOption.Supress) != 0: raise Exception(message)
+        # if (option & FileOption.Supress) != 0: raise Exception(message)
 
 # PakBinaryT
 class PakBinaryT(PakBinary):

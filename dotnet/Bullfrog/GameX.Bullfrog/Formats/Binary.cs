@@ -1,6 +1,6 @@
 ﻿using GameX.Formats;
-using OpenStack.Gfx.Renders;
-using OpenStack.Gfx.Textures;
+using OpenStack.Gfx.Render;
+using OpenStack.Gfx.Texture;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -19,7 +19,7 @@ public class Binary_Bullfrog : PakBinary<Binary_Bullfrog>
 {
     #region Factories
 
-    public static (FileOption, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    public static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
      => game.Id switch
      {
          _ => default
@@ -133,7 +133,7 @@ public class Binary_Bullfrog : PakBinary<Binary_Bullfrog>
         //return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
     {
         var bytes = Data.AsSpan((int)file.Offset, (int)file.FileSize);
         return Task.FromResult((Stream)new MemoryStream(bytes.ToArray()));
@@ -476,7 +476,7 @@ public class Binary_Populus : PakBinary<Binary_Populus>
 {
     #region Factories
 
-    public static (FileOption, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    public static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => source.Path.ToLowerInvariant() switch
         {
             _ => Path.GetExtension(source.Path).ToLowerInvariant() switch
@@ -615,7 +615,7 @@ public class Binary_Populus : PakBinary<Binary_Populus>
             });
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
     {
         r.Seek(file.Offset);
         var bytes = r.ReadBytes((int)file.FileSize);
@@ -632,7 +632,7 @@ public class Binary_Syndicate : PakBinary<Binary_Syndicate>
     #region Factories
 
     static readonly string[] S_FLIFILES = ["INTRO.DAT", "MBRIEF.DAT", "MBRIEOUT.DAT", "MCONFOUT.DAT", "MCONFUP.DAT", "MDEBRIEF.DAT", "MDEOUT.DAT", "MENDLOSE.DAT", "MENDWIN.DAT", "MGAMEWIN.DAT", "MLOSA.DAT", "MLOSAOUT.DAT", "MLOSEGAM.DAT", "MMAP.DAT", "MMAPOUT.DAT", "MOPTION.DAT", "MOPTOUT.DAT", "MRESOUT.DAT", "MRESRCH.DAT", "MSCRENUP.DAT", "MSELECT.DAT", "MSELOUT.DAT", "MTITLE.DAT", "MMULTI.DAT", "MMULTOUT.DAT"];
-    public static (FileOption, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    public static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
      => Path.GetFileName(source.Path).ToUpperInvariant() switch
      {
          var x when S_FLIFILES.Contains(x) => (0, Binary_Fli.Factory),

@@ -32,7 +32,7 @@ public class CrypticPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMo
         => Binary_Hogg.Current;
 
     //ref https://github.com/PlumberTaskForce/Datamining-Guide/blob/master/README.md
-    internal static (FileOption, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    internal static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch
         {
             ".bin" => (0, Binary_Bin.Factory),

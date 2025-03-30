@@ -1,8 +1,8 @@
 using GameX.Algorithms;
 using GameX.Valve.Formats.Vpk;
 using OpenStack.Gfx;
-using OpenStack.Gfx.Renders;
-using OpenStack.Gfx.Textures;
+using OpenStack.Gfx.Render;
+using OpenStack.Gfx.Texture;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -122,7 +122,7 @@ public unsafe class Binary_Bsp30 : PakBinary<Binary_Bsp30>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
     {
         r.Seek(file.Offset);
         return Task.FromResult<Stream>(new MemoryStream(r.ReadBytes((int)file.FileSize)));
@@ -1458,7 +1458,7 @@ public unsafe class Binary_Vpk : PakBinary<Binary_Vpk>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
     {
         var fileDataLength = file.Data.Length;
         var data = new byte[fileDataLength + file.FileSize];
@@ -1547,7 +1547,7 @@ public unsafe class Binary_Wad3 : PakBinary<Binary_Wad3>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
     {
         r.Seek(file.Offset);
         return Task.FromResult<Stream>(new MemoryStream(file.Compressed == 0

@@ -5,7 +5,7 @@ from enum import Enum, Flag
 from openstk.gfx.gfx_render import Rasterize
 from openstk.gfx.gfx_texture import ITexture, ITextureFrames, TextureFlags, TextureFormat, TexturePixel
 from openstk.poly import Reader, unsafe, X_LumpON, X_LumpNO, X_LumpNO2, X_Lump2NO
-from gamex import PakFile, BinaryPakFile, PakBinary, PakBinaryT, FileSource, FileOption, MetaInfo, MetaManager, MetaContent, IHaveMetaInfo
+from gamex import PakFile, BinaryPakFile, PakBinary, PakBinaryT, FileSource, MetaInfo, MetaManager, MetaContent, IHaveMetaInfo
 from gamex.compression import decompressBlast
 from gamex.util import _throw, _pathExtension
 from hashlib import md5
@@ -114,7 +114,7 @@ class Binary_Bsp30(PakBinaryT):
         files.append(FileSource(path = 'markSurfaces.dat', offset = header.markSurfaces.offset, fileSize = header.markSurfaces.num))
 
     # readData
-    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: FileOption = None) -> BytesIO:
+    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None) -> BytesIO:
         r.seek(file.offset)
         return BytesIO(r.readBytes(file.fileSize))
 
@@ -1178,7 +1178,7 @@ class Binary_Vpk(PakBinaryT):
             v.verifySignature(r)
 
     # readData
-    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: FileOption = None) -> BytesIO:
+    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None) -> BytesIO:
         fileDataLength = len(file.data)
         data = bytearray(fileDataLength + file.fileSize); mv = memoryview(data)
         if fileDataLength > 0: data[0:] = file.data
@@ -1253,7 +1253,7 @@ class Binary_Wad3(PakBinaryT):
                 ))
 
     # readData
-    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: FileOption = None) -> BytesIO:
+    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None) -> BytesIO:
         r.seek(file.offset)
         return BytesIO(
             r.readBytes(file.fileSize) if file.compressed == 0 else \

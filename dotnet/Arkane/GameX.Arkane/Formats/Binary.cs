@@ -81,7 +81,7 @@ public unsafe class Binary_Danae : PakBinary<Binary_Danae>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
     {
         r.Seek(file.Offset);
         return Task.FromResult((Stream)new MemoryStream((file.Compressed & 1) != 0
@@ -194,7 +194,7 @@ public unsafe class Binary_Void : PakBinary<Binary_Void>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
     {
         if (file.FileSize == 0 || _badPositions.Contains(file.Offset)) return Task.FromResult(System.IO.Stream.Null);
         var (path, tag1, tag2) = ((string, string, string))file.Tag;

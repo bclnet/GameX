@@ -1,8 +1,8 @@
 using GameX.Valve.Formats;
 using GameX.Valve.Formats.Vpk;
 using GameX.Valve.OpenGL.Scenes;
-using OpenStack.Gfx.Gl;
-using OpenStack.Gfx.Scenes;
+using OpenStack.Gl;
+using OpenStack.Gfx.Scene;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -17,7 +17,7 @@ namespace GameX.Valve.OpenGL.Formats;
 public class WorldLoader
 {
     readonly D_World World;
-    readonly IOpenGLGfx Gfx;
+    readonly IOpenGLGfx3d Gfx;
 
     // Contains metadata that can't be captured by manipulating the scene itself. Returned from Load().
     public class LoadResult
@@ -30,7 +30,7 @@ public class WorldLoader
         public Vector3 SkyboxOrigin = Vector3.Zero;
     }
 
-    public WorldLoader(IOpenGLGfx gfx, D_World world)
+    public WorldLoader(IOpenGLGfx3d gfx, D_World world)
     {
         World = world;
         Gfx = gfx;

@@ -53,7 +53,7 @@ public class CapcomPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMod
             },
         };
 
-    static (FileOption, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch
         {
             _ => UnknownPakFile.ObjectFactory(source, game),

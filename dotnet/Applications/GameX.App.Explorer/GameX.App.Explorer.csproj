@@ -78,12 +78,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Platforms\GameX.Platform.Controls.Windows\GameX.Platform.Controls.Windows.csproj" />
-    <ProjectReference Include="..\..\Platforms\GameX.Platform.Godot\GameX.Platform.Godot.csproj" />
-    <ProjectReference Include="..\..\Platforms\GameX.Platform.OpenGL\GameX.Platform.OpenGL.csproj" />
-    <ProjectReference Include="..\..\..\OpenStack\dotnet\Gfx\OpenStack.Gfx.GlControl\OpenStack.Gfx.GlControl.csproj" />
+    <ProjectReference Include="..\..\..\OpenStack\dotnet\Platform\OpenStack.Wpf.Control\OpenStack.Wpf.Control.csproj" />
+    <ProjectReference Include="..\..\..\OpenStack\dotnet\Platform\OpenStack.Wpf.Stride\OpenStack.Wpf.Stride.csproj" />
     <ProjectReference Include="..\..\Cig\GameX.Cig.Explorer\GameX.Cig.Explorer.csproj" />
     <ProjectReference Include="..\..\Base\GameX.All\GameX.All.csproj" />
+    <ProjectReference Include="..\..\Platforms\GameX.Platform.Godot\GameX.Platform.Godot.csproj" />
+    <ProjectReference Include="..\..\Platforms\GameX.Platform.Ogre\GameX.Platform.Ogre.csproj" />
+    <ProjectReference Include="..\..\Platforms\GameX.Platform.OpenGL\GameX.Platform.OpenGL.csproj" />
+    <ProjectReference Include="..\..\Platforms\GameX.Platform.Sdl\GameX.Platform.Sdl.csproj" />
+    <ProjectReference Include="..\..\Platforms\GameX.Platform.Stride\GameX.Platform.Stride.csproj" />
+    <ProjectReference Include="..\..\Platforms\GameX.Platform.Unity\GameX.Platform.Unity.csproj" />
   </ItemGroup>
 
 </Project>

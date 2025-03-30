@@ -31,14 +31,14 @@ public unsafe class Binary_Pck : PakBinary<Binary_Pck>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
     {
         var R = (BinaryReader)file.Tag;
         R.Seek(file.Offset);
         return Task.FromResult((Stream)new MemoryStream(R.ReadBytes((int)file.FileSize)));
     }
 
-    public override Task WriteData(BinaryPakFile source, BinaryWriter w, FileSource file, Stream data, FileOption option = default)
+    public override Task WriteData(BinaryPakFile source, BinaryWriter w, FileSource file, Stream data, object option = default)
         => throw new NotImplementedException();
 }
 

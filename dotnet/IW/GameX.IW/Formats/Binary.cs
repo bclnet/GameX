@@ -1,6 +1,6 @@
 ﻿using GameX.Blizzard.Formats.Casc;
 using ICSharpCode.SharpZipLib.Zip;
-using OpenStack.Gfx.Textures;
+using OpenStack.Gfx.Texture;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -406,7 +406,7 @@ public unsafe class Binary_IW : PakBinary<Binary_IW>
         }
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
     {
         switch ((Magic)source.Magic)
         {

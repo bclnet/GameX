@@ -43,7 +43,7 @@ public class CrytekPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMod
             _ => new Binary_Cry3((byte[])game.Key),
         };
 
-    public static (FileOption, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    public static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch
         {
             ".xml" => (0, CryXmlFile.Factory),

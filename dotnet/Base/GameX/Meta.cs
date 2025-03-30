@@ -31,7 +31,7 @@ public class FileSource
     public object Tag2;
     // cached
     internal Func<BinaryReader, FileSource, PakFile, Task<object>> CachedObjectFactory;
-    internal FileOption CachedObjectOption;
+    internal object CachedObjectOption;
 }
 
 #endregion

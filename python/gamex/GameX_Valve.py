@@ -25,7 +25,7 @@ class ValvePakFile(BinaryPakFile):
             case _: raise Exception(f'Unknown: {game.engine[0]}')
 
     @staticmethod
-    def objectFactory(source: FileSource, game: FamilyGame) -> (FileOption, callable):
+    def objectFactory(source: FileSource, game: FamilyGame) -> (object, callable):
         match game.engine[0]:
             case 'GoldSrc':
                 match _pathExtension(source.path).lower():

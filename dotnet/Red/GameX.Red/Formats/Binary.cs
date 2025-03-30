@@ -1,5 +1,5 @@
 using GameX.Formats;
-using OpenStack.Gfx.Textures;
+using OpenStack.Gfx.Texture;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -720,7 +720,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
         BC5 = 7,        // 3DC, ATI2
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
     {
         Stream fileData = null;
         r.Seek(file.Offset);

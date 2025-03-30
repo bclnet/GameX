@@ -19,13 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Stride.Core" Version="4.2.0.2381" />
-    <PackageReference Include="Stride.Engine" Version="4.2.0.2381" />
-    <PackageReference Include="Stride.Particles" Version="4.2.0.2381" />
-    <PackageReference Include="Stride.UI" Version="4.2.0.2381" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <ProjectReference Include="..\..\..\OpenStack\dotnet\Platform\OpenStack.Stride\OpenStack.Stride.csproj" />
     <ProjectReference Include="..\..\..\OpenStack\dotnet\Sfx\OpenStack.Sfx\OpenStack.Sfx.csproj" />
     <ProjectReference Include="..\..\Base\GameX\GameX.csproj" />
   </ItemGroup>

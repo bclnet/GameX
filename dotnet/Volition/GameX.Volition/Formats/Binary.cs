@@ -38,7 +38,7 @@ public unsafe class Binary_Ctg : PakBinary<Binary_Ctg>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
     {
         throw new NotImplementedException();
     }
@@ -242,7 +242,7 @@ public unsafe class Binary_Descent : PakBinary<Binary_Descent>
             }));
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
     {
         r.Seek(file.Offset);
         var bytes = r.ReadBytes((int)file.FileSize);
@@ -384,7 +384,7 @@ public unsafe class Binary_GeoMod : PakBinary<Binary_GeoMod>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
     {
         throw new NotImplementedException();
     }
@@ -403,7 +403,7 @@ public unsafe class Binary_Hpl : PakBinary<Binary_Hpl>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
     {
         throw new NotImplementedException();
     }

@@ -19,7 +19,7 @@ namespace GameX.App.Cli
             public string Path { get; set; }
 
             [Option("option", Default = FileOption.Stream | FileOption.Model, HelpText = "Data option")]
-            public FileOption Option { get; set; }
+            public object Option { get; set; }
         }
 
         static async Task<int> RunGetAsync(GetOptions args)

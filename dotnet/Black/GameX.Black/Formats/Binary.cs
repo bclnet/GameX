@@ -1,5 +1,5 @@
 ﻿using GameX.Formats;
-using OpenStack.Gfx.Textures;
+using OpenStack.Gfx.Texture;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -142,7 +142,7 @@ public unsafe class Binary_Dat : PakBinary<Binary_Dat>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
     {
         var magic = source.Magic;
         // F1

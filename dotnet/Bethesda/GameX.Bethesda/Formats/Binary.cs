@@ -1,6 +1,6 @@
 ﻿using GameX.Bethesda.Formats.Records;
 using GameX.Formats;
-using OpenStack.Gfx.Textures;
+using OpenStack.Gfx.Texture;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -182,7 +182,7 @@ public unsafe class Binary_Ba2 : PakBinary<Binary_Ba2>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
     {
         const int GNF_HEADER_MAGIC = 0x20464E47;
         const int GNF_HEADER_CONTENT_SIZE = 248;
@@ -544,7 +544,7 @@ public unsafe class Binary_Bsa : PakBinary<Binary_Bsa>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
     {
         // position
         var fileSize = (int)file.FileSize;

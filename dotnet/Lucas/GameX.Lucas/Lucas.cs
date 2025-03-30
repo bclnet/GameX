@@ -35,7 +35,7 @@ public class LucasPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMode
             _ => null,
         };
 
-    static (FileOption, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch
         {
             ".nwx" => (0, Binary_Nwx.Factory),

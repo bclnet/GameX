@@ -1,7 +1,7 @@
 import os
 from io import BytesIO
 from openstk.poly import Reader
-from gamex.pak import FileOption, PakBinaryT
+from gamex.pak import PakBinaryT
 from gamex.meta import FileSource
 from gamex.compression import decompressLzss, decompressZlib
 
@@ -117,7 +117,7 @@ class Binary_Hogg(PakBinaryT):
         source.files = [x for x in files if x.fileSize != -1 and x.id != 0]
 
     # readData
-    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: FileOption = None) -> BytesIO:
+    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None) -> BytesIO:
         r.seek(file.offset)
         return BytesIO(
             decompressZlib(r, file.packedSize, file.fileSize) if file.compressed != 0 else \

@@ -1,5 +1,11 @@
 ﻿using CommandLine;
-using GameX.Platforms;
+using OpenStack;
+using OpenStack.Gl;
+using OpenStack.Godot;
+using OpenStack.Ogre;
+using OpenStack.Sdl;
+using OpenStack.Stride;
+using OpenStack.Unity;
 using System.Windows;
 [assembly: ThemeInfo(ResourceDictionaryLocation.None, ResourceDictionaryLocation.SourceAssembly)]
 
@@ -12,10 +18,12 @@ namespace GameX.App.Explorer
     public partial class App : Application
     {
         static App() => PlatformX.Platforms.UnionWith([
+            GodotShellPlatform.This,
+            OgrePlatform.This,
             OpenGLPlatform.This,
-            //StridePlatform.This,
-            UnityShellPlatform.This,
-            GodotShellPlatform.This]);
+            SdlPlatform.This,
+            StridePlatform.This,
+            UnityShellPlatform.This]);
 
         static readonly string[] args = [];
         //static readonly string[] args = ["open", "-f", "Arkane", "-u", "game:/readme.txt#AF"];

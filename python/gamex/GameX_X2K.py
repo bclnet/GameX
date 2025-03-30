@@ -20,7 +20,7 @@ class X2KPakFile(BinaryPakFile):
         pass
 
     @staticmethod
-    def objectFactory(source: FileSource, game: FamilyGame) -> (FileOption, callable):
+    def objectFactory(source: FileSource, game: FamilyGame) -> (object, callable):
         match _pathExtension(source.path).lower():
             case _: return UnknownPakFile.objectFactory(source, game)
 

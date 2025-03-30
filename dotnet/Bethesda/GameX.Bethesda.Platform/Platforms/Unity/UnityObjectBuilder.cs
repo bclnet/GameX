@@ -1,12 +1,11 @@
 using GameX.Bethesda.Formats;
 using GameX.Bethesda.Formats.Unity;
-using GameX.Platforms;
 using OpenStack.Gfx;
 using UnityEngine;
 
 namespace GameX.Bethesda.Platforms.Unity;
 
-public class UnityObjectBuilder : ObjectBuilderBase<GameObject, Material, Texture2D>
+public class UnityObjectBuilder : Object3dBuilderBase<GameObject, Material, Texture2D>
 {
     GameObject _prefabObject;
     readonly int _markerLayer;
@@ -37,7 +36,7 @@ public class UnityObjectBuilder : ObjectBuilderBase<GameObject, Material, Textur
         prefab.transform.parent = _prefabObject.transform;
         // Add LOD support to the prefab.
         var LODComponent = prefab.AddComponent<LODGroup>();
-        var LODs = new LOD[1] { new LOD(0.015f, prefab.GetComponentsInChildren<Renderer>()) };
+        var LODs = new LOD[1] { new(0.015f, prefab.GetComponentsInChildren<UnityEngine.Renderer>()) };
         LODComponent.SetLODs(LODs);
         return prefab;
     }

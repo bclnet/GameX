@@ -52,7 +52,7 @@ public class ArkanePakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMod
             _ => throw new ArgumentOutOfRangeException(nameof(game.Engine)),
         });
 
-    internal static (FileOption, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    internal static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch
         {
             ".asl" => (0, Binary_Txt.Factory),

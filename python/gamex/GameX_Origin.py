@@ -22,7 +22,7 @@ class OriginPakFile(BinaryPakFile):
             case _: raise Exception(f'Unknown: {game.id}')
         
     @staticmethod
-    def objectFactory(source: FileSource, game: FamilyGame) -> (FileOption, callable):
+    def objectFactory(source: FileSource, game: FamilyGame) -> (object, callable):
         match game.id:
             case 'U8': return Binary_U8.objectFactory(source, game)
             case 'UO': return Binary_UO.objectFactory(source, game)

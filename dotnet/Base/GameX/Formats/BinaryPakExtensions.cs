@@ -11,8 +11,10 @@ public static class BinaryPakExtensions
 
     #region Export
 
-    public static async Task ExportAsync(this BinaryPakFile source, string filePath, int from = 0, FileOption option = 0, Action<FileSource, int> advance = null, Action<FileSource, string> exception = null)
+    public static async Task ExportAsync(this BinaryPakFile source, string filePath, int from = 0, object option = default, Action<FileSource, int> advance = null, Action<FileSource, string> exception = null)
     {
+        var fo = option as FileOption?;
+
         // write pak
         if (!string.IsNullOrEmpty(filePath) && !Directory.Exists(filePath)) Directory.CreateDirectory(filePath);
 
@@ -30,13 +32,13 @@ public static class BinaryPakExtensions
             if (file.Pak != null) { await file.Pak.ExportAsync(newPath); return; }
 
             // ensure cached object factory
-            if ((option & (FileOption.Stream | FileOption.Model)) != 0) source.EnsureCachedObjectFactory(file);
+            if ((fo & (FileOption.Stream | FileOption.Model)) != 0) source.EnsureCachedObjectFactory(file);
 
             // extract file
             try
             {
                 await ExportFileAsync(file, source, newPath, option);
-                if (file.Parts != null && (option & FileOption.Raw) != 0)
+                if (file.Parts != null && (fo & FileOption.Raw) != 0)
                     foreach (var part in file.Parts) await ExportFileAsync(part, source, Path.Combine(filePath, part.Path), option);
                 advance?.Invoke(file, index);
             }
@@ -44,22 +46,24 @@ public static class BinaryPakExtensions
         });
 
         // write pak-raw
-        if ((option & FileOption.Marker) != 0) await new StreamPakFile(source, new PakState(source.FileSystem, source.Game, source.Edition, filePath)).Write(null);
+        if ((fo & FileOption.Marker) != 0) await new StreamPakFile(source, new PakState(source.FileSystem, source.Game, source.Edition, filePath)).Write(null);
     }
 
-    static async Task ExportFileAsync(FileSource file, BinaryPakFile source, string newPath, FileOption option = default)
+    static async Task ExportFileAsync(FileSource file, BinaryPakFile source, string newPath, object option = default)
     {
+        var fo = option as FileOption?;
+
         if (file.FileSize == 0 && file.PackedSize == 0) return;
-        var fileOption = file.CachedObjectOption;
-        if ((option & fileOption) != 0)
+        var fileOption = file.CachedObjectOption as FileOption?;
+        if ((fo & fileOption) != 0)
         {
-            if ((fileOption & FileOption.Model) != 0)
+            if ((fo & FileOption.Model) != 0)
             {
                 var model = await source.LoadFileObject<IUnknownFileModel>(file, FamilyManager.UnknownPakFile);
                 UnknownFileWriter.Factory("default", model).Write(newPath, false);
                 return;
             }
-            else if ((fileOption & FileOption.Stream) != 0)
+            else if ((fo & FileOption.Stream) != 0)
             {
                 if (!(await source.LoadFileObject<object>(file) is IHaveStream haveStream))
                 {
@@ -79,7 +83,7 @@ public static class BinaryPakExtensions
             ? new FileStream(newPath, FileMode.Create, FileAccess.Write)
             : (Stream)new MemoryStream();
         b.CopyTo(s);
-        if (file.Parts != null && (option & FileOption.Raw) == 0)
+        if (file.Parts != null && (fo & FileOption.Raw) == 0)
             foreach (var part in file.Parts)
             {
                 using var b2 = await source.LoadFileData(part, option);
@@ -91,7 +95,7 @@ public static class BinaryPakExtensions
 
     #region Import
 
-    public static async Task ImportAsync(this BinaryPakFile source, BinaryWriter w, string filePath, int from = 0, FileOption option = 0, Action<FileSource, int> advance = null, Action<FileSource, string> exception = null)
+    public static async Task ImportAsync(this BinaryPakFile source, BinaryWriter w, string filePath, int from = 0, object option = default, Action<FileSource, int> advance = null, Action<FileSource, string> exception = null)
     {
         // read pak
         if (string.IsNullOrEmpty(filePath) || !Directory.Exists(filePath)) { exception?.Invoke(null, $"Directory Missing: {filePath}"); return; }

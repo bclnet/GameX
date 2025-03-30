@@ -36,7 +36,7 @@ class BullfrogPakFile(BinaryPakFile):
             case _: raise Exception(f'Unknown: {game.id}')
 
     @staticmethod
-    def objectFactory(source: FileSource, game: FamilyGame) -> (FileOption, callable):
+    def objectFactory(source: FileSource, game: FamilyGame) -> (object, callable):
         match game.id:
             case 'DK' | 'DK2': return Binary_Bullfrog.objectFactory(source, game)
             case 'P' | 'P2' | 'P3': return Binary_Populus.objectFactory(source, game)

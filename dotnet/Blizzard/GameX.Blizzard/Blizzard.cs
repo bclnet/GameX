@@ -1,9 +1,9 @@
 ﻿using GameX.Blizzard.Formats;
 using GameX.Blizzard.Transforms;
 using GameX.Formats.Unknown;
-using GameX.Platforms;
 using GameX.Unknown;
 using Microsoft.Extensions.FileSystemGlobbing;
+using OpenStack;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -72,7 +72,7 @@ public class BlizzardPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileM
     static PakBinary GetPakBinary(FamilyGame game, string extension)
         => Binary_Blizzard.Current;
 
-    static (FileOption, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch
         {
             _ => UnknownPakFile.ObjectFactory(source, game),

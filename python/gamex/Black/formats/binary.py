@@ -1,6 +1,6 @@
 import os
 from io import BytesIO
-from gamex.pak import FileOption, PakBinaryT
+from gamex.pak import PakBinaryT
 from gamex.meta import FileSource
 from gamex.compression import decompressLzss, decompressZlib
 
@@ -100,7 +100,7 @@ class Binary_Dat(PakBinaryT):
                     ))
 
     # readData
-    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: FileOption = None) -> BytesIO:
+    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None) -> BytesIO:
         magic = source.magic
         # F1
         if magic == self.F1_HEADER_FILEID:

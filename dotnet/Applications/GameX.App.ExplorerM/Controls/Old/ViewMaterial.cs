@@ -39,8 +39,8 @@
 //        {
 //            if (Gfx == null || Source == null) return;
 //            var gfx = Gfx as IOpenGLGfx;
-//            var source = Source is IMaterial z ? z
-//                : Source is IRedirected<IMaterial> y ? y.Value
+//            var source = Source is MaterialProp z ? z
+//                : Source is IRedirected<MaterialProp> y ? y.Value
 //                : null;
 //            if (source == null) return;
 //            var material = gfx.MaterialManager.LoadMaterial(source, out var _);

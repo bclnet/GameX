@@ -65,7 +65,7 @@ public class WBPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel>
         };
     }
 
-    static (FileOption, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
     {
         var (pakType, type) = ((PakType, PakFileType?))source.Tag2;
         if ((uint)source.Id == Iteration.FILE_ID) return (0, (r, m, s) => Task.FromResult((object)new Iteration(r)));

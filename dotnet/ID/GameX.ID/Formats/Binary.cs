@@ -1,5 +1,5 @@
-using OpenStack.Gfx.Renders;
-using OpenStack.Gfx.Textures;
+using OpenStack.Gfx.Render;
+using OpenStack.Gfx.Texture;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -196,7 +196,7 @@ public unsafe class Binary_BspY : PakBinary<Binary_BspY>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
     {
         r.Seek(file.Offset);
         return Task.FromResult<Stream>(new MemoryStream(r.ReadBytes((int)file.FileSize)));
@@ -990,7 +990,7 @@ public unsafe class Binary_Pak : PakBinary<Binary_Pak>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
     {
         r.Seek(file.Offset);
         return Task.FromResult<Stream>(new MemoryStream(r.ReadBytes((int)file.FileSize)));
@@ -1198,7 +1198,7 @@ public unsafe class Binary_Wad : PakBinary<Binary_Wad>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, FileOption option = default)
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
     {
         r.Seek(file.Offset);
         return Task.FromResult<Stream>(new MemoryStream(r.ReadBytes((int)file.FileSize)));

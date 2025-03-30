@@ -1,6 +1,6 @@
 import os
 from io import BytesIO
-from gamex.pak import FileOption, PakBinaryT
+from gamex.pak import PakBinaryT
 from gamex.meta import FileSource
 from gamex.compression import decompressZlib, decompressZstd
 from gamex.util import _guessExtension
@@ -58,7 +58,7 @@ class Binary_Arc(PakBinaryT):
             file.path += _guessExtension(buf)
 
     # readData
-    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: FileOption = None) -> BytesIO:
+    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None) -> BytesIO:
         r.seek(file.offset)
         return BytesIO(_decompress(r, file.compressed, file.packedSize, file.fileSize))
 
@@ -180,7 +180,7 @@ class Binary_Kpka(PakBinaryT):
             ) for x in tr.readTArray(self.K_FileV4, header.numFiles)]
 
     # readData
-    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: FileOption = None) -> BytesIO:
+    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None) -> BytesIO:
         r.seek(file.offset)
         return BytesIO(_decompress(r, file.compressed, file.packedSize, file.fileSize))
 

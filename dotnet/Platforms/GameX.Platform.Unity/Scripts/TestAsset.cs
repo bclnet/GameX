@@ -36,11 +36,11 @@
 //            var materialManager = PakFile.MaterialManager;
 //            var obj = GameObject.CreatePrimitive(PrimitiveType.Cube); // GameObject.Find("Cube"); // CreatePrimitive(PrimitiveType.Cube);
 //            var meshRenderer = obj.GetComponent<MeshRenderer>();
-//            var materialProps = new MaterialProps
+//            var materialProp = new MaterialProp
 //            {
 //                Textures = new MaterialTextures { MainFilePath = path },
 //            };
-//            meshRenderer.material = materialManager.BuildMaterialFromProperties(materialProps);
+//            meshRenderer.material = materialManager.BuildMaterialFromProperties(materialProp);
 //            return obj;
 //        }
 //        static void MakeCursor(string path) => Cursor.SetCursor(PakFile.LoadTexture(path), Vector2.zero, CursorMode.Auto);

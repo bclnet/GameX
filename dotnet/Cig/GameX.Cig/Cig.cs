@@ -28,14 +28,14 @@ public class CigPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel>
 
     #region Factories
 
-    internal static (FileOption, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    internal static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch
         {
             //".cfg" => (0, BinaryDcb.Factory),
-            ".mtl" or ".xml" => (FileOption.Stream, CryXmlFile.Factory),
+            ".mtl" or ".xml" => (0, CryXmlFile.Factory),
             ".a" => (0, Binary_DdsA.Factory),
             ".dcb" => (0, Binary_Dcb.Factory),
-            ".soc" or ".cgf" or ".cga" or ".chr" or ".skin" or ".anim" => (FileOption.Model, CryFile.Factory),
+            ".soc" or ".cgf" or ".cga" or ".chr" or ".skin" or ".anim" => (0, CryFile.Factory),
             _ => UnknownPakFile.ObjectFactory(source, game),
         };
 

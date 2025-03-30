@@ -1,7 +1,7 @@
-using OpenStack.Gfx.Gl;
-using OpenStack.Gfx.Gl.Renders;
-using OpenStack.Gfx.Renders;
-using OpenStack.Gfx.Scenes;
+using OpenStack.Gfx.Render;
+using OpenStack.Gfx.Scene;
+using OpenStack.Gl;
+using OpenStack.Gl.Render;
 using System.Collections.Generic;
 using System.Numerics;
 
@@ -13,7 +13,7 @@ namespace GameX.Scenes
 
         public MeshSceneNode(Scene scene, IMesh mesh, int meshIndex, IDictionary<string, string> skinMaterials = null) : base(scene)
         {
-            Mesh = new GLRenderableMesh(Scene.Gfx as IOpenGLGfx, mesh, meshIndex, skinMaterials);
+            Mesh = new GLRenderableMesh(Scene.Gfx as IOpenGLGfx3d, mesh, meshIndex, skinMaterials);
             LocalBoundingBox = Mesh.BoundingBox;
         }
 

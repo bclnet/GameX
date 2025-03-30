@@ -5,7 +5,7 @@ from PIL import Image
 from enum import Enum
 from openstk.gfx.gfx_render import Rasterize
 from openstk.gfx.gfx_texture import DDS_HEADER, ITexture, TextureFormat, TexturePixel
-from gamex import PakBinary, PakBinaryT, FileSource, FileOption, BinaryPakFile, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
+from gamex import PakBinary, PakBinaryT, FileSource, BinaryPakFile, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
 from gamex.util import _pathExtension
 from zipfile import ZipFile
 
@@ -593,7 +593,7 @@ class Binary_Zip(PakBinaryT):
             ) for s in pak.infolist() if not s.is_dir()]
 
     # readData
-    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: FileOption = None) -> BytesIO:
+    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None) -> BytesIO:
         pak: ZipFile = source.tag
         print(pak.read(file.path))
 

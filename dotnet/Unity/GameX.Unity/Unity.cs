@@ -27,7 +27,7 @@ public class UnityPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMode
 
     #region Factories
 
-    public static (FileOption, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    public static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch
         {
             _ => UnknownPakFile.ObjectFactory(source, game),

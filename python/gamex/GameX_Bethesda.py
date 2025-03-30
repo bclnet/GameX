@@ -46,7 +46,7 @@ class BethesdaPakFile(BinaryPakFile):
     # def NiFactory(r: Reader, f: FileSource, s: PakFile): file = NiFile(Path.GetFileNameWithoutExtension(f.Path)); file.Read(r); return file
 
     @staticmethod
-    def objectFactory(source: FileSource, game: FamilyGame) -> (FileOption, callable):
+    def objectFactory(source: FileSource, game: FamilyGame) -> (object, callable):
         match _pathExtension(source.path).lower():
             case '.dds': return (0, Binary_Dds.factory)
             # case '.nif': return (0, NiFactory)

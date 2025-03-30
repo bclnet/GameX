@@ -37,7 +37,7 @@ public class BlackPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMode
     //    _ => throw new ArgumentOutOfRangeException(nameof(extension)),
     //};
 
-    static (FileOption, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch
         {
             var x when x.StartsWith(".fr") => (0, Binary_Frm.Factory),

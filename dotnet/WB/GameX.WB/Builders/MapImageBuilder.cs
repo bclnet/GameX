@@ -1,5 +1,5 @@
 ﻿using GameX.WB.Formats.AC.FileTypes;
-using OpenStack.Gfx.Bitmaps;
+using OpenStack.Gfx.Bitmap;
 using System;
 using System.Drawing;
 using System.Linq;

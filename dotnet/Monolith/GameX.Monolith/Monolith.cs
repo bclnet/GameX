@@ -32,7 +32,7 @@ public class MonolithPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileM
             ? Binary_Lith.Current
             : Binary_Zip.GetPakBinary(game);
 
-    static (FileOption, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch
         {
             ".dds" => (0, Binary_Dds.Factory),

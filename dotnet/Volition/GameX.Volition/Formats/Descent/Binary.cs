@@ -73,7 +73,7 @@ public class Binary_Bmp : IHaveMetaInfo, ITexture
         pixel += 4;
     }
 
-    public (byte[] bytes, object format, Range[] spans) Begin(string platform)
+    public T Create<T>(string platform, Func<object, T> func)
     {
         byte[] DecodeRLE()
         {
@@ -101,12 +101,10 @@ public class Binary_Bmp : IHaveMetaInfo, ITexture
         }
 
         byte[] DecodeRaw() => Body.SelectMany(s => Palette[s]).ToArray();
-
-        return ((PigFlags & (PIG_Flags.RLE | PIG_Flags.RLEBIG)) != 0
+        return func(new Texture_Bytes((PigFlags & (PIG_Flags.RLE | PIG_Flags.RLEBIG)) != 0
             ? DecodeRLE()
-            : DecodeRaw(), Format, null);
+            : DecodeRaw(), Format, null));
     }
-    public void End() { }
 
     #endregion
 

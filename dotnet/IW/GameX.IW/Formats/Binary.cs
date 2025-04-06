@@ -682,9 +682,7 @@ public class Binary_Iwi : ITexture, IHaveMetaInfo
     public int Depth => 0;
     public int MipMaps => Mips.Length;
     public TextureFlags TexFlags => (Header.Flags & FLAGS.CUBEMAP) != 0 ? TextureFlags.CUBE_TEXTURE : 0;
-
-    public (byte[] bytes, object format, Range[] spans) Begin(string platform) => (Bytes, Format.value, Mips);
-    public void End() { }
+    public T Create<T>(string platform, Func<object, T> func) => func(new Texture_Bytes(Bytes, Format.value, Mips));
     #endregion
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [

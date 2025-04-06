@@ -5,6 +5,7 @@ using OpenStack.Unity.Renderers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static OpenStack.Debug;
 
 namespace GameX.Platforms.Unity;
 
@@ -61,7 +62,6 @@ public class ViewInfo : UnityEngine.MonoBehaviour
         var first = PakFiles.FirstOrDefault();
         Gfx = (UnityGfx3dModel)first?.Gfx[GFX.X3dModel];
         Renderer = UnityRenderer.CreateRenderer(this, Gfx, Param1, ViewKind.ToString());
-        Renderer?.Start();
     }
 
     public void OnDestroy()

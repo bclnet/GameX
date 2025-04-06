@@ -1,4 +1,5 @@
 using OpenStack.Gfx.Texture;
+using Org.BouncyCastle.Utilities;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -49,8 +50,7 @@ public unsafe class Texture : IHaveMetaInfo, ITexture
     public int Depth => 0;
     public int MipMaps => 1;
     public TextureFlags TexFlags => 0;
-
-    public (byte[] bytes, object format, Range[] spans) Begin(string platform)
+    public T Create<T>(string platform, Func<object, T> func)
     {
         //byte[] Expand()
         //{
@@ -166,9 +166,8 @@ public unsafe class Texture : IHaveMetaInfo, ITexture
         //var bytes = Expand();
         //mips = new[] { Range.All };
         //return bytes;
-        return (null, null, null);
+        return func(new Texture_Bytes(null, null, null));
     }
-    public void End() { }
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
     {

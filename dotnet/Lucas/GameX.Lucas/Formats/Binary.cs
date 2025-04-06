@@ -1,5 +1,6 @@
 using GameX.Formats;
 using OpenStack.Gfx.Texture;
+using Org.BouncyCastle.Utilities;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -294,9 +295,7 @@ public class Binary_Nwx : IHaveMetaInfo, ITextureSelect
     public int Depth { get; } = 0;
     public int MipMaps { get; } = 1;
     public TextureFlags TexFlags { get; } = 0;
-
-    public void Select(int id) => (Width, Height, Flip, CellData) = Cells[id % Cells.Count];
-    public (byte[] bytes, object format, Range[] spans) Begin(string platform)
+    public T Create<T>(string platform, Func<object, T> func)
     {
         int width = Width, height = Height;
         var data = CellData;
@@ -328,10 +327,9 @@ public class Binary_Nwx : IHaveMetaInfo, ITextureSelect
                     bytes[i + 3] = pixel == 0 ? (byte)0 : (byte)255;
                 }
         }
-
-        return (bytes, Format, null);
+        return func(new Texture_Bytes(bytes, Format, null));
     }
-    public void End() { }
+    public void Select(int id) => (Width, Height, Flip, CellData) = Cells[id % Cells.Count];
     #endregion
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
@@ -1157,8 +1155,7 @@ public unsafe class Binary_Xga : IHaveMetaInfo, ITexture
     public int Depth { get; } = 0;
     public int MipMaps { get; } = 1;
     public TextureFlags TexFlags { get; } = 0;
-
-    public (byte[] bytes, object format, Range[] spans) Begin(string platform)
+    public T Create<T>(string platform, Func<object, T> func)
     {
         //var bytes = Header.Bpp switch
         //{
@@ -1166,9 +1163,8 @@ public unsafe class Binary_Xga : IHaveMetaInfo, ITexture
         //    //1 => Decode4bpp(),
         //    _ => throw new FormatException($"Unsupported bpp: {Header.Bpp}"),
         //};
-        return (null, Format, null); // bytes;
+        return func(new Texture_Bytes(null, Format, null)); // bytes;
     }
-    public void End() { }
     #endregion
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [

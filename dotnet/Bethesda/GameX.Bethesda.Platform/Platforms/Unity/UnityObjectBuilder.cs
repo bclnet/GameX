@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace GameX.Bethesda.Platforms.Unity;
 
-public class UnityObjectBuilder : Object3dBuilderBase<GameObject, Material, Texture2D>
+public class UnityObjectBuilder : ObjectModelBuilderBase<GameObject, Material, Texture2D>
 {
     GameObject _prefabObject;
     readonly int _markerLayer;

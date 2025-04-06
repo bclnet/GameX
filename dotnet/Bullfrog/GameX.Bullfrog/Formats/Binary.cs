@@ -318,8 +318,7 @@ public unsafe class Binary_Fli : IDisposable, ITextureFrames, IHaveMetaInfo
     public int MipMaps => 0;
     public TextureFlags TexFlags => 0;
     public int Fps { get; }
-    public (byte[] bytes, object format, Range[] spans) Begin(string platform) => (Bytes, Format, null);
-    public void End() { }
+    public T Create<T>(string platform, Func<object, T> func) => func(new Texture_Bytes(Bytes, Format, null));
     #endregion
 
     public bool HasFrames => NumFrames > 0;

@@ -532,6 +532,10 @@
       <HintPath>Assets\Plugins\GameX\OpenStack.PolyIO.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe">
+      <HintPath>Assets\Plugins\System\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="OpenStack.Gfx.Unity">
       <HintPath>Assets\Plugins\GameX\OpenStack.Gfx.Unity.dll</HintPath>
       <Private>False</Private>
@@ -544,12 +548,44 @@
       <HintPath>Library\PackageCache\com.unity.ext.nunit@60ef35ffd3cd\net40\unity-custom\nunit.framework.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="ZstdNet">
+      <HintPath>Assets\Plugins\System\ZstdNet.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Text.Encodings.Web">
+      <HintPath>Assets\Plugins\System\System.Text.Encodings.Web.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="ZstdSharp">
+      <HintPath>Assets\Plugins\System\ZstdSharp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Logging.Abstractions">
+      <HintPath>Assets\Plugins\System\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="GameX">
       <HintPath>Assets\Plugins\GameX\GameX.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Google.Protobuf">
+      <HintPath>Assets\Plugins\System\Google.Protobuf.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Runtime.Intrinsics">
+      <HintPath>Assets\Plugins\System\System.Runtime.Intrinsics.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Caching.Abstractions">
+      <HintPath>Assets\Plugins\System\Microsoft.Extensions.Caching.Abstractions.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="GameX.X2K.Platform">
       <HintPath>Assets\Plugins\GameX\GameX.X2K.Platform.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.FileSystemGlobbing">
+      <HintPath>Assets\Plugins\System\Microsoft.Extensions.FileSystemGlobbing.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="OpenStack.Polyfills">
@@ -560,8 +596,16 @@
       <HintPath>Assets\Plugins\GameX\OpenStack.Gfx.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions">
+      <HintPath>Assets\Plugins\System\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="GameX.Bethesda">
       <HintPath>Assets\Plugins\GameX\GameX.Bethesda.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Caching.Memory">
+      <HintPath>Assets\Plugins\System\Microsoft.Extensions.Caching.Memory.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="GameX.X2K">
@@ -572,20 +616,84 @@
       <HintPath>Assets\Plugins\GameX.Platform.Unity\GameX.Platform.Unity.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="YamlDotNet">
+      <HintPath>Assets\Plugins\System\YamlDotNet.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="GameX.Bethesda.Platform">
       <HintPath>Assets\Plugins\GameX\GameX.Bethesda.Platform.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="OpenTK">
+      <HintPath>Assets\Plugins\System\OpenTK.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="BouncyCastle.Crypto">
+      <HintPath>Assets\Plugins\System\BouncyCastle.Crypto.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="MathNet.Numerics">
+      <HintPath>Assets\Plugins\System\MathNet.Numerics.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.VisualScripting.Antlr3.Runtime">
       <HintPath>Library\PackageCache\com.unity.visualscripting@1b53f46e931b\Runtime\VisualScripting.Flow\Dependencies\NCalc\Unity.VisualScripting.Antlr3.Runtime.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="System.Text.Json">
+      <HintPath>Assets\Plugins\System\System.Text.Json.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="K4os.Compression.LZ4">
+      <HintPath>Assets\Plugins\System\K4os.Compression.LZ4.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="OpenStack.Gl">
+      <HintPath>Assets\Plugins\GameX\OpenStack.Gl.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="OpenStack">
+      <HintPath>Assets\Plugins\GameX\OpenStack.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Mono.Cecil">
       <HintPath>Library\PackageCache\com.unity.nuget.mono-cecil@d6f9955a5d5f\Mono.Cecil.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="SQLitePCLRaw.core">
+      <HintPath>Assets\Plugins\System\SQLitePCLRaw.core.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.Bcl.AsyncInterfaces">
+      <HintPath>Assets\Plugins\System\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Options">
+      <HintPath>Assets\Plugins\System\Microsoft.Extensions.Options.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Primitives">
+      <HintPath>Assets\Plugins\System\Microsoft.Extensions.Primitives.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Drawing.Common">
+      <HintPath>Assets\Plugins\System\System.Drawing.Common.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="SQLitePCLRaw.provider.e_sqlite3">
+      <HintPath>Assets\Plugins\System\SQLitePCLRaw.provider.e_sqlite3.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="OpenStack.Sfx">
       <HintPath>Assets\Plugins\GameX\OpenStack.Sfx.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="OpenStack.Unity">
+      <HintPath>Assets\Plugins\GameX\OpenStack.Unity.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="lzo.net">
+      <HintPath>Assets\Plugins\System\lzo.net.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Android.Types">

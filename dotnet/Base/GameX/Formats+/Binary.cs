@@ -2,6 +2,7 @@ using GameX.Formats.Apple;
 using ICSharpCode.SharpZipLib.Zip;
 using OpenStack.Gfx.Render;
 using OpenStack.Gfx.Texture;
+using Org.BouncyCastle.Utilities;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -15,6 +16,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using static OpenStack.Debug;
+using static OpenStack.Gfx.Renderer;
 using ZipFile = ICSharpCode.SharpZipLib.Zip.ZipFile;
 
 
@@ -76,9 +78,7 @@ public class Binary_Dds : IHaveMetaInfo, ITexture
     public int Depth => 0;
     public int MipMaps { get; }
     public TextureFlags TexFlags => 0;
-
-    public (byte[] bytes, object format, Range[] spans) Begin(string platform) => (Bytes, Format.value, Spans);
-    public void End() { }
+    public T Create<T>(string platform, Func<object, T> func) => func(new Texture_Bytes(Bytes, Format.value, Spans));
 
     #endregion
 
@@ -642,9 +642,7 @@ public unsafe class Binary_Img : IHaveMetaInfo, ITexture
     public int Depth { get; } = 0;
     public int MipMaps { get; } = 1;
     public TextureFlags TexFlags { get; } = 0;
-
-    public (byte[] bytes, object format, Range[] spans) Begin(string platform) => (Bytes, Format.value, null);
-    public void End() { }
+    public T Create<T>(string platform, Func<object, T> func) => func(new Texture_Bytes(Bytes, Format.value, null));
 
     #endregion
 
@@ -832,7 +830,7 @@ public unsafe class Binary_Pcx : IHaveMetaInfo, ITexture
     /// <returns></returns>
     static int RleLength(byte[] body, int offset) => body[offset] & 63;
 
-    public (byte[] bytes, object format, Range[] spans) Begin(string platform)
+    public T Create<T>(string platform, Func<object, T> func)
     {
         // decodes 4bpp pixel data
         byte[] Decode4bpp()
@@ -916,9 +914,8 @@ public unsafe class Binary_Pcx : IHaveMetaInfo, ITexture
             1 => Decode4bpp(),
             _ => throw new FormatException($"Unsupported bpp: {Header.Bpp}"),
         };
-        return (bytes, Format, null);
+        return func(new Texture_Bytes(bytes, Format, null));
     }
-    public void End() { }
 
     #endregion
 
@@ -1016,12 +1013,7 @@ public class Binary_Raw : IHaveMetaInfo, ITexture
     //    pixel += 4;
     //}
 
-    public (byte[] bytes, object format, Range[] spans) Begin(string platform)
-    {
-        byte[] DecodeRaw() => Body.SelectMany(s => PaletteData[s]).ToArray();
-        return (DecodeRaw(), Format, null);
-    }
-    public void End() { }
+    public T Create<T>(string platform, Func<object, T> func) => func(new Texture_Bytes([.. Body.SelectMany(s => PaletteData[s])], Format, null));
 
     #endregion
 
@@ -1306,7 +1298,7 @@ public unsafe class Binary_Tga : IHaveMetaInfo, ITexture
         Buffer.BlockCopy(map.Pixels, map.BytesPerEntry * index, dest, offset, map.BytesPerEntry);
     }
 
-    public (byte[] bytes, object format, Range[] spans) Begin(string platform)
+    public T Create<T>(string platform, Func<object, T> func)
     {
         // decodeRle
         void decodeRle(byte[] data)
@@ -1380,9 +1372,8 @@ public unsafe class Binary_Tga : IHaveMetaInfo, ITexture
         if (flipH) FlipH(bytes);
         if (flipV) FlipV(bytes);
 
-        return (bytes, Format, null);
+        return func(new Texture_Bytes(bytes, Format, null));
     }
-    public void End() { }
 
     // Returns the pixel at coordinates (x,y) for reading or writing.
     // If the pixel coordinates are out of bounds (larger than width/height or small than 0), they will be clamped.
@@ -1480,17 +1471,15 @@ public unsafe class Binary_Xga(BinaryReader r, object tag) : IHaveMetaInfo, ITex
     public int Depth { get; } = 0;
     public int MipMaps { get; } = 1;
     public TextureFlags TexFlags { get; } = 0;
-
-    public (byte[] bytes, object format, Range[] spans) Begin(string platform)
+    public T Create<T>(string platform, Func<object, T> func)
     {
         static byte[] Decode1() => null;
-        return (Type switch
+        return func(new Texture_Bytes(Type switch
         {
             1 => Decode1(),
             _ => throw new FormatException($"Unsupported type: {Type}"),
-        }, Format, null);
+        }, Format, null));
     }
-    public void End() { }
 
     #endregion
 

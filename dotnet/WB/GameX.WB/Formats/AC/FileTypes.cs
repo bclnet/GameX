@@ -2,6 +2,7 @@ using GameX.WB.Formats.AC.AnimationHooks;
 using GameX.WB.Formats.AC.Entity;
 using GameX.WB.Formats.AC.Props;
 using OpenStack.Gfx.Texture;
+using Org.BouncyCastle.Utilities;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -2295,8 +2296,7 @@ public unsafe class Texture : FileType, IHaveMetaInfo, ITexture
     public int Depth => 0;
     public int MipMaps => 1;
     public TextureFlags TexFlags => 0;
-
-    public (byte[] bytes, object format, Range[] spans) Begin(string platform)
+    public T Create<T>(string platform, Func<object, T> func)
     {
         byte[] Expand()
         {
@@ -2401,9 +2401,8 @@ public unsafe class Texture : FileType, IHaveMetaInfo, ITexture
                 default: Console.WriteLine($"Unhandled SurfacePixelFormat ({Format}) in RenderSurface {Id:X8}"); return null;
             }
         }
-        return (Expand(), Format.value, new[] { Range.All });
+        return func(new Texture_Bytes(Expand(), Format.value, new[] { Range.All }));
     }
-    public void End() { }
     #endregion
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [

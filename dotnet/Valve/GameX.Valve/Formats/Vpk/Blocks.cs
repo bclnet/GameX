@@ -9669,8 +9669,7 @@ public class D_Texture : DATA, ITexture
     int ITexture.Depth => Depth;
     int ITexture.MipMaps => NumMipMaps;
     TextureFlags ITexture.TexFlags => (TextureFlags)Flags;
-
-    public (byte[] bytes, object format, Range[] spans) Begin(string platform)
+    T ITexture.Create<T>(string platform, Func<object, T> func)
     {
         Reader.BaseStream.Position = Offset + Size;
         using (var b = new MemoryStream())
@@ -9685,9 +9684,8 @@ public class D_Texture : DATA, ITexture
             }
             Bytes = b.ToArray();
         }
-        return (Bytes, TexFormat.value, Mips);
+        return func(new Texture_Bytes(Bytes, TexFormat.value, Mips));
     }
-    void ITexture.End() { }
 
     #endregion
 

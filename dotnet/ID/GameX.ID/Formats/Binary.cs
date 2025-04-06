@@ -1,5 +1,6 @@
 using OpenStack.Gfx.Render;
 using OpenStack.Gfx.Texture;
+using Org.BouncyCastle.Utilities;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -895,9 +896,7 @@ public unsafe class Binary_Lmp : IHaveMetaInfo, ITexture
     public int Depth { get; } = 0;
     public int MipMaps { get; } = 1;
     public TextureFlags TexFlags { get; } = 0;
-
-    public (byte[] bytes, object format, Range[] spans) Begin(string platform) => (Pixels, Format, null);
-    public void End() { }
+    public T Create<T>(string platform, Func<object, T> func) => func(new Texture_Bytes(Pixels, Format, null));
 
     #endregion
 
@@ -1111,9 +1110,7 @@ public unsafe class Binary_Spr : ITextureFrames, IHaveMetaInfo
     public int MipMaps => 1;
     public TextureFlags TexFlags => 0;
     public int Fps { get; } = 60;
-
-    public (byte[] bytes, object format, Range[] spans) Begin(string platform) => (bytes, Format, null);
-    public void End() { }
+    public T Create<T>(string platform, Func<object, T> func) => func(new Texture_Bytes(bytes, Format, null));
 
     public bool HasFrames => frame < frames.Length;
 

@@ -263,9 +263,7 @@ public class Binary_Frm : IHaveMetaInfo, ITextureFramesSelect
     public int Depth => 0;
     public int MipMaps => 1;
     public TextureFlags TexFlags => 0;
-
-    public (byte[] bytes, object format, Range[] spans) Begin(string platform) => (Bytes, Format, null);
-    public void End() { }
+    public T Create<T>(string platform, Func<object, T> func) => func(new Texture_Bytes(Bytes, Format, null));
 
     // ITextureFrames
     public int Fps => Header.Fps;
@@ -388,9 +386,7 @@ public unsafe class Binary_Rix : IHaveMetaInfo, ITexture
     public int Depth => 0;
     public int MipMaps => 1;
     public TextureFlags TexFlags => 0;
-
-    public (byte[] bytes, object format, Range[] spans) Begin(string platform) => (Bytes, Format, null);
-    public void End() { }
+    public T Create<T>(string platform, Func<object, T> func) => func(new Texture_Bytes(Bytes, Format, null));
 
     // IHaveMetaInfo
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [

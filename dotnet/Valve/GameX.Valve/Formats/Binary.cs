@@ -3,6 +3,7 @@ using GameX.Valve.Formats.Vpk;
 using OpenStack.Gfx;
 using OpenStack.Gfx.Render;
 using OpenStack.Gfx.Texture;
+using Org.BouncyCastle.Utilities;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -1035,16 +1036,14 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo
     public int Depth => 0;
     public int MipMaps => 1;
     public TextureFlags TexFlags => 0;
-
-    public (byte[] bytes, object format, Range[] spans) Begin(string platform)
+    public T Create<T>(string platform, Func<object, T> func)
     {
         var tex = Textures[0];
         Width = tex.Width; Height = tex.Height;
         var buf = new byte[Width * Height * 3];
         Rasterize.CopyPixelsByPalette(buf, 3, tex.Pixels, tex.Palette, 3);
-        return (buf, Format, null);
+        return func(new Texture_Bytes(buf, Format, null));
     }
-    public void End() { }
 
     #endregion
 
@@ -1662,8 +1661,7 @@ public unsafe class Binary_Wad3X : ITexture, IHaveMetaInfo
     public int Depth => 0;
     public int MipMaps => pixels.Length;
     public TextureFlags TexFlags => 0;
-
-    public (byte[] bytes, object format, Range[] spans) Begin(string platform)
+    public T Create<T>(string platform, Func<object, T> func)
     {
         var bbp = transparent ? 4 : 3;
         var buf = new byte[pixels.Sum(x => x.Length) * bbp];
@@ -1676,9 +1674,8 @@ public unsafe class Binary_Wad3X : ITexture, IHaveMetaInfo
             if (transparent) Rasterize.CopyPixelsByPaletteWithAlpha(buf.AsSpan(span), bbp, p, palette, 3, 0xFF);
             else Rasterize.CopyPixelsByPalette(buf.AsSpan(span), bbp, p, palette, 3);
         }
-        return (buf, Format.value, spans);
+        return func(new Texture_Bytes(buf, Format.value, spans));
     }
-    public void End() { }
 
     #endregion
 

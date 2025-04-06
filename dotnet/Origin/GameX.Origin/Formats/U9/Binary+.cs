@@ -281,9 +281,8 @@ public unsafe class Binary_Bitmap : IHaveMetaInfo, ITexture
     public int Depth { get; } = 0;
     public int MipMaps { get; } = 1;
     public TextureFlags TexFlags { get; } = 0;
+    public T Create<T>(string platform, Func<object, T> func) => func(new Texture_Bytes(Current?.Pixels, Format[BytesPerPixel == 1 ? 0 : 1], null));
 
-    public (byte[] bytes, object format, Range[] spans) Begin(string platform) => (Current?.Pixels, Format[BytesPerPixel == 1 ? 0 : 1], null);
-    public void End() { }
     #endregion
 
     // IHaveMetaInfo
@@ -450,9 +449,7 @@ public unsafe class Binary_Texture : IHaveMetaInfo, ITexture
     public int Depth { get; } = 0;
     public int MipMaps { get; } = 1;
     public TextureFlags TexFlags { get; } = 0;
-
-    public (byte[] bytes, object format, Range[] spans) Begin(string platform) => (Pixels, Formats[BytesPerPixel == 1 ? 0 : 1], null);
-    public void End() { }
+    public T Create<T>(string platform, Func<object, T> func) => func(new Texture_Bytes(Pixels, Formats[BytesPerPixel == 1 ? 0 : 1], null));
     #endregion
 
     // IHaveMetaInfo

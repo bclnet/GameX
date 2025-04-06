@@ -1,5 +1,6 @@
 using GameX.Origin.Structs.UO;
 using OpenStack.Gfx.Texture;
+using Org.BouncyCastle.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -832,9 +833,7 @@ public unsafe class Binary_Gump : IHaveMetaInfo, ITexture
     public int Depth { get; } = 0;
     public int MipMaps { get; } = 1;
     public TextureFlags TexFlags { get; } = 0;
-
-    public (byte[] bytes, object format, Range[] spans) Begin(string platform) => (Pixels, Format, null);
-    public void End() { }
+    public T Create<T>(string platform, Func<object, T> func) => func(new Texture_Bytes(Pixels, Format, null));
     #endregion
 
     // IHaveMetaInfo
@@ -1030,9 +1029,7 @@ public unsafe class Binary_Land : IHaveMetaInfo, ITexture
     public int Depth { get; } = 0;
     public int MipMaps { get; } = 1;
     public TextureFlags TexFlags { get; } = 0;
-
-    public (byte[] bytes, object format, Range[] spans) Begin(string platform) => (Pixels, Format, null);
-    public void End() { }
+    public T Create<T>(string platform, Func<object, T> func) => func(new Texture_Bytes(Pixels, Format, null));
     #endregion
 
     // IHaveMetaInfo
@@ -1090,9 +1087,7 @@ public unsafe class Binary_Light : IHaveMetaInfo, ITexture
     public int Depth { get; } = 0;
     public int MipMaps { get; } = 1;
     public TextureFlags TexFlags { get; } = 0;
-
-    public (byte[] bytes, object format, Range[] spans) Begin(string platform) => (Pixels, Format, null);
-    public void End() { }
+    public T Create<T>(string platform, Func<object, T> func) => func(new Texture_Bytes(Pixels, Format, null));
     #endregion
 
     // IHaveMetaInfo
@@ -1265,9 +1260,7 @@ public unsafe class Binary_MultiMap : IHaveMetaInfo, ITexture
     public int Depth { get; } = 0;
     public int MipMaps { get; } = 1;
     public TextureFlags TexFlags { get; } = 0;
-
-    public (byte[] bytes, object format, Range[] spans) Begin(string platform) => (Pixels, Format, null);
-    public void End() { }
+    public T Create<T>(string platform, Func<object, T> func) => func(new Texture_Bytes(Pixels, Format, null));
     #endregion
 
     // IHaveMetaInfo
@@ -1710,9 +1703,7 @@ public unsafe class Binary_Static : IHaveMetaInfo, ITexture
     public int Depth { get; } = 0;
     public int MipMaps { get; } = 1;
     public TextureFlags TexFlags { get; } = 0;
-
-    public (byte[] bytes, object format, Range[] spans) Begin(string platform) => (Pixels, Format, null);
-    public void End() { }
+    public T Create<T>(string platform, Func<object, T> func) => func(new Texture_Bytes(Pixels, Format, null));
     #endregion
 
     // IHaveMetaInfo

@@ -8455,7 +8455,7 @@ public class D_Model : XKV3_NTRO, IValveModel
         return Animation.FromData(animationDataBlock.Data, decodeKey, Skeleton);
     }
 
-    public IEnumerable<Animation> GetAllAnimations(IOpenGfx3d gfx)
+    public IEnumerable<Animation> GetAllAnimations(IOpenGfx3dModel gfx)
     {
         if (CachedAnimations != null) return CachedAnimations;
 

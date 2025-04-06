@@ -15,7 +15,7 @@ public interface IValveModel : IModel
     IEnumerable<bool> GetActiveMeshMaskForGroup(string groupName);
     IEnumerable<string> GetMeshGroups();
     IEnumerable<string> GetDefaultMeshGroups();
-    IEnumerable<Animation> GetAllAnimations(IOpenGfx3d gfx);
+    IEnumerable<Animation> GetAllAnimations(IOpenGfx3dModel gfx);
     D_PhysAggregateData GetEmbeddedPhys();
     IEnumerable<string> GetReferencedPhysNames();
 }

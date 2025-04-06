@@ -6,7 +6,7 @@ namespace GameX.Platforms.Sdl;
 
 public static class SdlRenderer
 {
-    public static Renderer CreateRenderer(object parent, ISdlGfx2d gfx, object obj, string type)
+    public static Renderer CreateRenderer(object parent, SdlGfx2dSprite gfx, object obj, string type)
         => type switch
         {
             "TestTri" => new SdlTestTriRenderer(gfx, obj),
@@ -16,6 +16,6 @@ public static class SdlRenderer
         };
 }
 
-public class SdlTestTriRenderer(ISdlGfx2d gfx, object obj) : TestTriRenderer(gfx, obj) { }
-public class SdlSpriteRenderer(ISdlGfx2d gfx, object obj) : SpriteRenderer(gfx, obj) { }
-public class SdlObjectRenderer(ISdlGfx2d gfx, object obj) : Renderer { }
+public class SdlTestTriRenderer(SdlGfx2dSprite gfx, object obj) : TestTriRenderer(gfx, obj) { }
+public class SdlSpriteRenderer(SdlGfx2dSprite gfx, object obj) : SpriteRenderer(gfx, obj) { }
+public class SdlObjectRenderer(SdlGfx2dSprite gfx, object obj) : Renderer { }

@@ -10,7 +10,7 @@ namespace GameX.Platforms.Unity;
 
 public static class UnityRenderer
 {
-    public static Renderer CreateRenderer(object parent, IUnityGfx3d gfx, object obj, string type)
+    public static Renderer CreateRenderer(object parent, UnityGfx3dModel gfx, object obj, string type)
         => type switch
         {
             "TestTri" => new UnityTestTriRenderer(gfx, obj),
@@ -24,13 +24,13 @@ public static class UnityRenderer
         };
 }
 
-public class UnityTestTriRenderer(IUnityGfx3d gfx, object obj) : TestTriRenderer(gfx, obj) { }
-public class UnityCellRenderer(IUnityGfx3d gfx, object obj) : CellRenderer(gfx, obj) { }
-public class UnityMaterialRenderer(IUnityGfx3d gfx, object obj) : Renderer { }
-public class UnityParticleRenderer(IUnityGfx3d gfx, object obj) : Renderer { }
-public class UnityEngineRenderer(IUnityGfx3d gfx, object obj) : EngineRenderer(gfx, obj) { }
-public class UnityObjectRenderer(IUnityGfx3d gfx, object obj) : ObjectRenderer(gfx, obj) { }
-public class UnityTextureRenderer(IUnityGfx3d gfx, object obj) : TextureRenderer(gfx, obj) { }
+public class UnityTestTriRenderer(UnityGfx3dModel gfx, object obj) : TestTriRenderer(gfx, obj) { }
+public class UnityCellRenderer(UnityGfx3dModel gfx, object obj) : CellRenderer(gfx, obj) { }
+public class UnityMaterialRenderer(UnityGfx3dModel gfx, object obj) : Renderer { }
+public class UnityParticleRenderer(UnityGfx3dModel gfx, object obj) : Renderer { }
+public class UnityEngineRenderer(UnityGfx3dModel gfx, object obj) : EngineRenderer(gfx, obj) { }
+public class UnityObjectRenderer(UnityGfx3dModel gfx, object obj) : ObjectRenderer(gfx, obj) { }
+public class UnityTextureRenderer(UnityGfx3dModel gfx, object obj) : TextureRenderer(gfx, obj) { }
 
 public class ViewInfo : UnityEngine.MonoBehaviour
 {
@@ -49,7 +49,7 @@ public class ViewInfo : UnityEngine.MonoBehaviour
 
     protected Family Family;
     protected List<PakFile> PakFiles = [];
-    protected IUnityGfx3d Gfx;
+    protected UnityGfx3dModel Gfx;
 
     Renderer Renderer;
 
@@ -59,7 +59,7 @@ public class ViewInfo : UnityEngine.MonoBehaviour
         Family = FamilyManager.GetFamily(FamilyId);
         if (!string.IsNullOrEmpty(PakUri)) PakFiles.Add(Family.OpenPakFile(new Uri(PakUri)));
         var first = PakFiles.FirstOrDefault();
-        Gfx = (IUnityGfx3d)first?.Gfx;
+        Gfx = (UnityGfx3dModel)first?.Gfx[GFX.X3dModel];
         Renderer = UnityRenderer.CreateRenderer(this, Gfx, Param1, ViewKind.ToString());
         Renderer?.Start();
     }

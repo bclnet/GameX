@@ -9,7 +9,7 @@ namespace GameX.Platforms.Ogre;
 
 public static class OgreRenderer
 {
-    public static Renderer CreateRenderer(object parent, IOgreGfx3d gfx, object obj, string type)
+    public static Renderer CreateRenderer(object parent, OgreGfx3dModel gfx, object obj, string type)
         => type switch
         {
             "TestTri" => new OgreTestTriRenderer(gfx, obj),
@@ -21,11 +21,11 @@ public static class OgreRenderer
         };
 }
 
-public class OgreTestTriRenderer(IOgreGfx3d gfx, object obj) : TestTriRenderer(gfx, obj) { }
-public class OgreCellRenderer(IOgreGfx3d gfx, object obj) : Renderer { }
-public class OgreEngineRenderer(IOgreGfx3d gfx, object obj) : Renderer { }
-public class OgreObjectRenderer(IOgreGfx3d gfx, object obj) : Renderer { }
-public class OgreTextureRenderer(IOgreGfx3d gfx, object obj) : TextureRenderer(gfx, obj, Level)
+public class OgreTestTriRenderer(OgreGfx3dModel gfx, object obj) : TestTriRenderer(gfx, obj) { }
+public class OgreCellRenderer(OgreGfx3dModel gfx, object obj) : Renderer { }
+public class OgreEngineRenderer(OgreGfx3dModel gfx, object obj) : Renderer { }
+public class OgreObjectRenderer(OgreGfx3dModel gfx, object obj) : Renderer { }
+public class OgreTextureRenderer(OgreGfx3dModel gfx, object obj) : TextureRenderer(gfx, obj, Level)
 {
     static Range Level = 0..;
 }
@@ -45,7 +45,7 @@ public class ViewInfo
 
     protected Family Family;
     protected List<PakFile> PakFiles = [];
-    protected IOgreGfx3d Gfx;
+    protected OgreGfx3dModel Gfx;
 
     Renderer Renderer;
 

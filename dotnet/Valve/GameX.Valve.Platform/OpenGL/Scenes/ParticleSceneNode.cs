@@ -26,7 +26,7 @@ public class ParticleSceneNode : SceneNode
 
     public ParticleSceneNode(Scene scene, D_ParticleSystem particleSystem) : base(scene)
     {
-        ParticleRenderer = new ParticleRenderer(Scene.Gfx as IOpenGLGfx3d, new ParticleSystemWrapper(particleSystem));
+        ParticleRenderer = new ParticleRenderer(Scene.Gfx as OpenGLGfx3dModel, new ParticleSystemWrapper(particleSystem));
         LocalBoundingBox = ParticleRenderer.BoundingBox;
     }
 

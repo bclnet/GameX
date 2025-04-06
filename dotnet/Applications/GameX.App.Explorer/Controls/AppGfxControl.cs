@@ -12,36 +12,37 @@ using OpenStack.Sdl;
 using OpenStack.Stride;
 using OpenStack.Unity;
 using OpenStack.Wpf.Control;
+using static OpenStack.Gfx.GFX;
 
 namespace GameX.App.Explorer.Controls
 {
+    public class AppOpenGLControl : OpenGLControl
+    {
+        protected override Renderer CreateRenderer() => OpenGLRenderer.CreateRenderer(this, Gfx[X3dModel] as OpenGLGfx3dModel, Source, Type);
+    }
+
     public class AppGodotControl : GodotControl
     {
-        protected override Renderer CreateRenderer() => GodotRenderer.CreateRenderer(this, Gfx as IGodotGfx3d, Source, Type);
+        protected override Renderer CreateRenderer() => GodotRenderer.CreateRenderer(this, Gfx[X3dModel] as GodotGfx3dModel, Source, Type);
     }
 
     public class AppOgreControl : OgreControl
     {
-        protected override Renderer CreateRenderer() => OgreRenderer.CreateRenderer(this, Gfx as IOgreGfx3d, Source, Type);
-    }
-
-    public class AppOpenGLControl : OpenGLControl
-    {
-        protected override Renderer CreateRenderer() => OpenGLRenderer.CreateRenderer(this, Gfx as IOpenGLGfx3d, Source, Type);
+        protected override Renderer CreateRenderer() => OgreRenderer.CreateRenderer(this, Gfx[X3dModel] as OgreGfx3dModel, Source, Type);
     }
 
     public class AppSdlControl : SdlControl
     {
-        protected override Renderer CreateRenderer() => SdlRenderer.CreateRenderer(this, Gfx as ISdlGfx2d, Source, Type);
+        protected override Renderer CreateRenderer() => SdlRenderer.CreateRenderer(this, Gfx[X2dSprite] as SdlGfx2dSprite, Source, Type);
     }
 
     public class AppStrideControl : StrideControl
     {
-        protected override Renderer CreateRenderer() => StrideRenderer.CreateRenderer(this, Gfx as IStrideGfx3d, Source, Type);
+        protected override Renderer CreateRenderer() => StrideRenderer.CreateRenderer(this, Gfx[X3dModel] as StrideGfx3dModel, Source, Type);
     }
 
     public class AppUnityControl : UnityControl
     {
-        protected override Renderer CreateRenderer() => UnityRenderer.CreateRenderer(this, Gfx as IUnityGfx3d, Source, Type);
+        protected override Renderer CreateRenderer() => UnityRenderer.CreateRenderer(this, Gfx[X3dModel] as UnityGfx3dModel, Source, Type);
     }
 }

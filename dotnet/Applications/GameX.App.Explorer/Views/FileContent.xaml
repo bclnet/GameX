@@ -36,35 +36,41 @@
             <DataTemplate x:Key="TCustom" DataType="{x:Type model:MetaContent}">
                 <views:Custom Source="{Binding Value}" Margin="3,3,3,3" />
             </DataTemplate>
+            <DataTemplate x:Key="TViewGfx:GL" DataType="{x:Type model:MetaContent}">
+                <controls:AppOpenGLControl Source="{Binding Value}" Type="{Binding Type}"
+                    Gfx="{Binding RelativeSource={RelativeSource AncestorType={x:Type views:FileContent}}, Path=Gfx}"
+                    Sfx="{Binding RelativeSource={RelativeSource AncestorType={x:Type views:FileContent}}, Path=Sfx}"
+                    Margin="3,3,3,3" />
+            </DataTemplate>
             <DataTemplate x:Key="TViewGfx:GD" DataType="{x:Type model:MetaContent}">
                 <controls:AppGodotControl Source="{Binding Value}" Type="{Binding Type}"
-                                    Gfx="{Binding RelativeSource={RelativeSource AncestorType={x:Type views:FileContent}}, Path=Gfx}"
-                                    Margin="3,3,3,3" />
+                    Gfx="{Binding RelativeSource={RelativeSource AncestorType={x:Type views:FileContent}}, Path=Gfx}"
+                    Sfx="{Binding RelativeSource={RelativeSource AncestorType={x:Type views:FileContent}}, Path=Sfx}"
+                    Margin="3,3,3,3" />
             </DataTemplate>
             <DataTemplate x:Key="TViewGfx:OG" DataType="{x:Type model:MetaContent}">
                 <controls:AppOgreControl Source="{Binding Value}" Type="{Binding Type}"
-                                   Gfx="{Binding RelativeSource={RelativeSource AncestorType={x:Type views:FileContent}}, Path=Gfx}"
-                                   Margin="3,3,3,3" />
-            </DataTemplate>
-            <DataTemplate x:Key="TViewGfx:GL" DataType="{x:Type model:MetaContent}">
-                <controls:AppOpenGLControl Source="{Binding Value}" Type="{Binding Type}"
-                                     Gfx="{Binding RelativeSource={RelativeSource AncestorType={x:Type views:FileContent}}, Path=Gfx}"
-                                     Margin="3,3,3,3" />
+                    Gfx="{Binding RelativeSource={RelativeSource AncestorType={x:Type views:FileContent}}, Path=Gfx}"
+                    Sfx="{Binding RelativeSource={RelativeSource AncestorType={x:Type views:FileContent}}, Path=Sfx}"
+                    Margin="3,3,3,3" />
             </DataTemplate>
             <DataTemplate x:Key="TViewGfx:SD" DataType="{x:Type model:MetaContent}">
                 <controls:AppSdlControl Source="{Binding Value}" Type="{Binding Type}"
-                                  Gfx="{Binding RelativeSource={RelativeSource AncestorType={x:Type views:FileContent}}, Path=Gfx}"
-                                  Margin="3,3,3,3" />
+                    Gfx="{Binding RelativeSource={RelativeSource AncestorType={x:Type views:FileContent}}, Path=Gfx}"
+                    Sfx="{Binding RelativeSource={RelativeSource AncestorType={x:Type views:FileContent}}, Path=Sfx}"
+                    Margin="3,3,3,3" />
             </DataTemplate>
             <DataTemplate x:Key="TViewGfx:ST" DataType="{x:Type model:MetaContent}">
                 <controls:AppStrideControl Source="{Binding Value}" Type="{Binding Type}"
-                                     Gfx="{Binding RelativeSource={RelativeSource AncestorType={x:Type views:FileContent}}, Path=Gfx}"
-                                     Margin="3,3,3,3" />
+                    Gfx="{Binding RelativeSource={RelativeSource AncestorType={x:Type views:FileContent}}, Path=Gfx}"
+                    Sfx="{Binding RelativeSource={RelativeSource AncestorType={x:Type views:FileContent}}, Path=Sfx}"
+                    Margin="3,3,3,3" />
             </DataTemplate>
             <DataTemplate x:Key="TViewGfx:UN" DataType="{x:Type model:MetaContent}">
                 <controls:AppUnityControl Source="{Binding Value}" Type="{Binding Type}"
-                                    Gfx="{Binding RelativeSource={RelativeSource AncestorType={x:Type views:FileContent}}, Path=Gfx}"
-                                    Margin="3,3,3,3" />
+                    Gfx="{Binding RelativeSource={RelativeSource AncestorType={x:Type views:FileContent}}, Path=Gfx}"
+                    Sfx="{Binding RelativeSource={RelativeSource AncestorType={x:Type views:FileContent}}, Path=Sfx}"
+                    Margin="3,3,3,3" />
             </DataTemplate>
         </Grid.Resources>
 

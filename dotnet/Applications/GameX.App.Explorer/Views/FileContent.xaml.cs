@@ -1,5 +1,6 @@
 ﻿using OpenStack;
 using OpenStack.Gfx;
+using OpenStack.Sfx;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Controls;
@@ -31,11 +32,18 @@ namespace GameX.App.Explorer.Views
         public event PropertyChangedEventHandler PropertyChanged;
         void OnPropertyChanged([CallerMemberName] string propertyName = "") => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
-        IOpenGfx _gfx;
-        public IOpenGfx Gfx
+        IList<IOpenGfx> _gfx;
+        public IList<IOpenGfx> Gfx
         {
             get => _gfx;
             set { _gfx = value; OnPropertyChanged(); }
+        }
+
+        IList<IOpenSfx> _sfx;
+        public IList<IOpenSfx> Sfx
+        {
+            get => _sfx;
+            set { _sfx = value; OnPropertyChanged(); }
         }
 
         IList<MetaContent> _contentTabs;
@@ -49,6 +57,7 @@ namespace GameX.App.Explorer.Views
         {
             if (ContentTabs != null) foreach (var dispose in ContentTabs.Where(x => x.Dispose != null).Select(x => x.Dispose)) dispose.Dispose();
             Gfx = pakFile.Gfx;
+            Sfx = pakFile.Sfx;
             ContentTabs = infos?.Select(x => x.Tag as MetaContent).Where(x => x != null).ToList();
             ContentTab.SelectedIndex = ContentTabs != null ? 0 : -1;
         }

@@ -10,7 +10,7 @@ public static class StrideRenderer
     //using Stride.Engine;
     //protected static Game Game;
 
-    public static Renderer CreateRenderer(object parent, IStrideGfx3d gfx, object obj, string type)
+    public static Renderer CreateRenderer(object parent, StrideGfx3dModel gfx, object obj, string type)
         => type switch
         {
             "TestTri" => new StrideTestTriRenderer(gfx, obj),
@@ -25,13 +25,13 @@ public static class StrideRenderer
         };
 }
 
-public class StrideTestTriRenderer(IStrideGfx3d gfx, object obj) : TestTriRenderer(gfx, obj) { }
-public class StrideCellRenderer(IStrideGfx3d gfx, object obj) : Renderer { }
-public class StrideMaterialRenderer(IStrideGfx3d gfx, object obj) : Renderer { }
-public class StrideParticleRenderer(IStrideGfx3d gfx, object obj) : Renderer { }
-public class StrideEngineRenderer(IStrideGfx3d gfx, object obj) : Renderer { }
-public class StrideObjectRenderer(IStrideGfx3d gfx, object obj) : Renderer { }
-public class StrideTextureRenderer(IStrideGfx3d gfx, object obj) : TextureRenderer(gfx, obj, Level)
+public class StrideTestTriRenderer(StrideGfx3dModel gfx, object obj) : TestTriRenderer(gfx, obj) { }
+public class StrideCellRenderer(StrideGfx3dModel gfx, object obj) : Renderer { }
+public class StrideMaterialRenderer(StrideGfx3dModel gfx, object obj) : Renderer { }
+public class StrideParticleRenderer(StrideGfx3dModel gfx, object obj) : Renderer { }
+public class StrideEngineRenderer(StrideGfx3dModel gfx, object obj) : Renderer { }
+public class StrideObjectRenderer(StrideGfx3dModel gfx, object obj) : Renderer { }
+public class StrideTextureRenderer(StrideGfx3dModel gfx, object obj) : TextureRenderer(gfx, obj, Level)
 {
     static Range Level = 0..;
 }

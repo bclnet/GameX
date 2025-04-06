@@ -287,7 +287,7 @@ public abstract class PakFile : ISource, IDisposable
     /// <value>
     /// The gfx.
     /// </value>
-    public IOpenGfx Gfx { get; internal set; }
+    public IOpenGfx[] Gfx { get; internal set; }
 
     /// <summary>
     /// Gets the gfx.
@@ -295,7 +295,7 @@ public abstract class PakFile : ISource, IDisposable
     /// <value>
     /// The sfx.
     /// </value>
-    public IOpenSfx Sfx { get; internal set; }
+    public IOpenSfx[] Sfx { get; internal set; }
 
     /// <summary>
     /// Gets the file source.

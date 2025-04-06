@@ -11,10 +11,10 @@ using System.Numerics;
 namespace GameX.Valve.OpenGL.Formats;
 
 //was:Renderer/WorldLoader
-public class WorldNodeLoader(IOpenGLGfx3d gfx, D_WorldNode node)
+public class WorldNodeLoader(OpenGLGfx3dModel gfx, D_WorldNode node)
 {
     readonly D_WorldNode Node = node;
-    readonly IOpenGLGfx3d Gfx = gfx;
+    readonly OpenGLGfx3dModel Gfx = gfx;
 
     public void Load(Scene scene)
     {

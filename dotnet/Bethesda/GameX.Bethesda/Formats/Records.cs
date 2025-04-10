@@ -944,8 +944,6 @@ public struct FMID2Field<TRecord>(BinaryReader r, int dataSize) where TRecord : 
 
 #endregion
 
-
-
 #region 0050 : AACT.Action
 
 public class AACTRecord : Record

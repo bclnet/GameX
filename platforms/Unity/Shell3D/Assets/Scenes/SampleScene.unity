@@ -271,8 +271,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   FamilyId: Bethesda
   PakUri: game:/Morrowind.bsa#Morrowind
-  ViewKind: 0
-  Param1: bookart/boethiah_256.dds
+  ViewKind: 2
+  Param1: meshes/x/ex_common_balcony_01.nif
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0

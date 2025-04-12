@@ -1,5 +1,7 @@
-﻿using GameX.Bethesda.Formats.Records;
+﻿using GameX.Bethesda.Formats.Nif;
+using GameX.Bethesda.Formats.Records;
 using GameX.Formats;
+using OpenStack.Gfx.Model;
 using OpenStack.Gfx.Texture;
 using System;
 using System.Collections.Generic;
@@ -502,7 +504,7 @@ public unsafe class Binary_Bsa : PakBinary<Binary_Bsa>
                         PackedSize = packedSize,
                         FileSize = source.Version == SSE_BSAHEADER_VERSION ? packedSize & OB_BSAFILE_SIZEMASK : packedSize,
                     };
-                };
+                }
             }
 
             // read-all names
@@ -690,6 +692,55 @@ public unsafe class Binary_Esm : PakBinary<Binary_Esm>
         LTEXsByEid = Groups[FormType.LTEX].Load().Cast<LTEXRecord>().ToDictionary(x => x.EDID.Value);
         return Task.CompletedTask;
     }
+}
+
+#endregion
+
+#region Binary_Nif
+
+public class Binary_Nif : IHaveMetaInfo, IModel
+{
+    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Nif(r, f));
+
+    public string Name;
+    public NiHeader Header;
+    public NiObject[] Blocks;
+    public NiFooter Footer;
+
+    public Binary_Nif(BinaryReader r, FileSource f)
+    {
+        Name = Path.GetFileNameWithoutExtension(f.Path);
+        Header = new NiHeader(r);
+        Blocks = r.ReadFArray(NiReaderUtils.ReadNiObject, (int)Header.NumBlocks);
+        Footer = new NiFooter(r);
+    }
+
+    #region IModel
+
+    public T Create<T>(string platform, Func<object, T> func)
+    {
+        //Activator.CreateInstance("");
+        func(null);
+        return default;
+    }
+
+    #endregion
+
+    public bool IsSkinnedMesh() => Blocks.Any(b => b is NiSkinInstance);
+
+    public IEnumerable<string> GetTexturePaths()
+    {
+        foreach (var niObject in Blocks)
+            if (niObject is NiSourceTexture niSourceTexture && !string.IsNullOrEmpty(niSourceTexture.FileName))
+                yield return niSourceTexture.FileName;
+    }
+
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
+        new(null, new MetaContent { Type = "Text", Name = Name, Value = this }),
+        new("Nif", items: [
+            new($"NumBlocks: {Header.NumBlocks}"),
+        ]),
+    ];
 }
 
 #endregion

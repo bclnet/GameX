@@ -158,7 +158,7 @@ public abstract class PakFile : ISource, IDisposable
     /// <summary>
     /// The pak path finders.
     /// </summary>
-    public readonly Dictionary<Type, Func<string, string>> PathFinders = [];
+    public readonly Dictionary<Type, Func<object, object>> PathFinders = [];
 
     /// <summary>
     /// The pak path finders.
@@ -262,9 +262,9 @@ public abstract class PakFile : ISource, IDisposable
     /// </summary>
     /// <param name="path">The path.</param>
     /// <returns></returns>
-    public string FindPath<T>(string path)
+    public object FindPath<T>(object path)
     {
-        if (PathFinders.Count != 1) return PathFinders.TryGetValue(typeof(T), out var pathFinder) ? pathFinder(path) : path;
+        if (PathFinders.Count != 1) return PathFinders.TryGetValue(typeof(T), out var z) ? z(path) : path;
         var first = PathFinders.First();
         return first.Key == typeof(T) || first.Key == typeof(object) ? first.Value(path) : path;
     }

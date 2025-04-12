@@ -61,21 +61,17 @@ public class BethesdaPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileM
     /// <summary>
     /// Finds the actual path of a texture.
     /// </summary>
-    public string FindTexture(string path)
+    public object FindTexture(object path)
     {
-        var textureName = Path.GetFileNameWithoutExtension(path);
+        if (path is not string p) return path;
+        var textureName = Path.GetFileNameWithoutExtension(p);
         var textureNameInTexturesDir = $"textures/{textureName}";
-        var filePath = $"{textureNameInTexturesDir}.dds";
-        if (Contains(filePath)) return filePath;
-        //filePath = $"{textureNameInTexturesDir}.tga";
-        //if (Contains(filePath)) return filePath;
-        var texturePathWithoutExtension = $"{Path.GetDirectoryName(path)}/{textureName}";
-        filePath = $"{texturePathWithoutExtension}.dds";
-        if (Contains(filePath)) return filePath;
-        //filePath = $"{texturePathWithoutExtension}.tga";
-        //if (Contains(filePath)) return filePath;
-        Log($"Could not find file '{path}' in a PAK file.");
-        return null;
+        var texturePathWithoutExtension = $"{Path.GetDirectoryName(p)}/{textureName}";
+        if (Contains(p = $"{textureNameInTexturesDir}.dds")) return p;
+        else if (Contains(p = $"{texturePathWithoutExtension}.dds")) return p;
+        else if (Contains(p = $"{textureNameInTexturesDir}.tga")) return p;
+        else if (Contains(p = $"{texturePathWithoutExtension}.tga")) return p;
+        else { Log($"Could not find file '{p}' in a PAK file."); return null; }
     }
 
     #endregion
@@ -92,12 +88,10 @@ public class BethesdaPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileM
             _ => throw new ArgumentOutOfRangeException(nameof(extension)),
         };
 
-    static Task<object> NiFactory(BinaryReader r, FileSource f, PakFile s) { var file = new NiFile(Path.GetFileNameWithoutExtension(f.Path)); file.Read(r); return Task.FromResult((object)file); }
-
     static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch
         {
-            ".nif" => (0, NiFactory),
+            ".nif" => (0, Binary_Nif.Factory),
             _ => UnknownPakFile.ObjectFactory(source, game),
         };
 

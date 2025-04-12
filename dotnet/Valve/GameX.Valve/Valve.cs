@@ -69,12 +69,13 @@ public class ValvePakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMode
     /// <summary>
     /// Finds the actual path of a texture.
     /// </summary>
-    public string FindBinary(string path)
+    public object FindBinary(object path)
     {
-        if (Contains(path)) return path;
-        if (!path.EndsWith("_c", StringComparison.Ordinal)) path = $"{path}_c";
-        if (Contains(path)) return path;
-        Log($"Could not find file '{path}' in a PAK file.");
+        if (path is not string p) return path;
+        if (Contains(p)) return p;
+        if (!p.EndsWith("_c", StringComparison.Ordinal)) path = $"{p}_c";
+        if (Contains(p)) return p;
+        Log($"Could not find file '{p}' in a PAK file.");
         return null;
     }
 

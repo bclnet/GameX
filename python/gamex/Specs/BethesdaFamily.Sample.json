@@ -7,13 +7,36 @@
         "type": "Texture"
       },
       {
-        "path": "icons/handtohand.dds",
+        "path": "textures/vfx_poison03.dds",
         "type": "Texture"
       },
       {
-        "path": "textures/vfx_poison03.dds",
-        "size": 11040,
-        "type": "Texture"
+        "path": "meshes/i/in_dae_room_l_floor_01.nif",
+        "type": "Model"
+      },
+      {
+        "path": "meshes/x/ex_common_balcony_01.nif",
+        "type": "Model"
+      },
+      {
+        "path": "meshes/w/w_arrow01.nif",
+        "type": "Model"
+      },
+      {
+        "path": "meshes/a/a_apostle_boots_f.nif",
+        "type": "Model"
+      },
+      {
+        "path": "meshes/a/a_iron_hands.1st.nif",
+        "type": "Model"
+      },
+      {
+        "path": "meshes/xbase_anim.nif",
+        "type": "Model"
+      },
+      {
+        "path": "meshes/box.nif",
+        "type": "Model"
       }
     ]
   },

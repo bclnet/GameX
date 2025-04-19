@@ -1605,13 +1605,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 330585543}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: -1534844814, guid: 48f9829f31687fc49ae8af4865d38604, type: 3}
+  m_Script: {fileID: -1546406650, guid: 48f9829f31687fc49ae8af4865d38604, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   FamilyId: Bethesda
   PakUri: game:/Morrowind.bsa#Morrowind
-  ViewKind: 0
-  Param1: bookart/boethiah_256.dds
+  ViewKind: 2
+  Param1: meshes/x/ex_common_balcony_01.nif
 --- !u!1 &371425842
 GameObject:
   m_ObjectHideFlags: 0

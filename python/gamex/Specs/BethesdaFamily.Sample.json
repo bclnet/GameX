@@ -99,6 +99,14 @@
       {
         "path": "Skyrim - Textures.bsa:textures/sky/skyrimcloudsupper01.dds",
         "type": "Texture"
+      },
+      {
+        "path": "meshes/actors/alduin/alduin.nif",
+        "type": "Model"
+      },
+      {
+        "path": "meshes/markerx.nif",
+        "type": "Model"
       }
     ]
   },

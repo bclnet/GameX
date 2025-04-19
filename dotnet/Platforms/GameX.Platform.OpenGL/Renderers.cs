@@ -7,7 +7,7 @@ namespace GameX.Platforms.OpenGL;
 
 public static class OpenGLRenderer
 {
-    public static Renderer CreateRenderer(object parent, OpenGLGfx3dModel gfx, object obj, string type)
+    public static Renderer CreateRenderer(object parent, OpenGLGfxModel gfx, object obj, string type)
         => type switch
         {
             "TestTri" => new OpenGLTestTriRenderer(gfx, obj),
@@ -22,13 +22,13 @@ public static class OpenGLRenderer
         };
 }
 
-public class OpenGLTestTriRenderer(OpenGLGfx3dModel gfx, object obj) : TestTriRenderer(gfx, obj) { }
-public class OpenGLCellRenderer(OpenGLGfx3dModel gfx, object obj) : Renderer { }
-public class OpenGLParticleRenderer(OpenGLGfx3dModel gfx, object obj) : Renderer { }
-public class OpenGLEngineRenderer(OpenGLGfx3dModel gfx, object obj) : Renderer { }
-public class OpenGLObjectRenderer(OpenGLGfx3dModel gfx, object obj) : Renderer { }
-public class OpenGLMaterialRenderer(OpenGLGfx3dModel gfx, object obj) : MaterialRenderer(gfx, obj) { }
-public class OpenGLTextureRenderer(OpenGLGfx3dModel gfx, object obj) : TextureRenderer(gfx, obj, Level, Value0)
+public class OpenGLTestTriRenderer(OpenGLGfxModel gfx, object obj) : TestTriRenderer(gfx, obj) { }
+public class OpenGLCellRenderer(OpenGLGfxModel gfx, object obj) : Renderer { }
+public class OpenGLParticleRenderer(OpenGLGfxModel gfx, object obj) : Renderer { }
+public class OpenGLEngineRenderer(OpenGLGfxModel gfx, object obj) : Renderer { }
+public class OpenGLObjectRenderer(OpenGLGfxModel gfx, object obj) : Renderer { }
+public class OpenGLMaterialRenderer(OpenGLGfxModel gfx, object obj) : MaterialRenderer(gfx, obj) { }
+public class OpenGLTextureRenderer(OpenGLGfxModel gfx, object obj) : TextureRenderer(gfx, obj, Level, Value0)
 {
     static Range Level = 0..;
     static bool Value0;

@@ -1,7 +1,5 @@
 using GameX.Valve.Formats.Vpk;
 using OpenStack.Gfx;
-using OpenStack.Gfx.Render;
-using OpenStack.Gfx.Scene;
 using OpenStack.Gl;
 using OpenTK.Graphics.OpenGL;
 using System;
@@ -190,7 +188,7 @@ public class PhysSceneNode : SceneNode
             //Console.WriteLine($"Phys mesh verts {verts.Count} inds {inds.Count}");
         }
 
-        (shader, _) = (Scene.Gfx as OpenGLGfx3dModel).ShaderManager.CreateShader("vrf.grid", new Dictionary<string, bool>());
+        (shader, _) = (Scene.Gfx as OpenGLGfxModel).ShaderManager.CreateShader("vrf.grid", new Dictionary<string, bool>());
         GL.UseProgram(shader.Program);
 
         vaoHandle = GL.GenVertexArray();

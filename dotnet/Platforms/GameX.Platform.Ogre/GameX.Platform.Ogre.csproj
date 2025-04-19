@@ -15,7 +15,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\..\..\docs\Platforms\Sdl\Readme.md" Link="Readme.md" />
+    <None Include="..\..\..\docs\Platforms\Ogre\Readme.md" Link="Readme.md" />
   </ItemGroup>
 
   <ItemGroup>

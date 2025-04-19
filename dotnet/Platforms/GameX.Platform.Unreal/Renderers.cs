@@ -1,15 +1,15 @@
 ﻿using OpenStack;
 using OpenStack.Gfx;
-using OpenStack.Ogre;
-using OpenStack.Ogre.Renderers;
+using OpenStack.Unreal;
+using OpenStack.Unreal.Renderers;
 using System;
 using System.Collections.Generic;
 
-namespace GameX.Platforms.Ogre;
+namespace GameX.Platforms.Unreal;
 
-public static class OgreRenderer
+public static class UnrealRenderer
 {
-    public static Renderer CreateRenderer(object parent, OgreGfxModel gfx, object obj, string type)
+    public static Renderer CreateRenderer(object parent, UnrealGfxModel gfx, object obj, string type)
         => type switch
         {
             "TestTri" => new OgreTestTriRenderer(gfx, obj),
@@ -21,18 +21,18 @@ public static class OgreRenderer
         };
 }
 
-public class OgreTestTriRenderer(OgreGfxModel gfx, object obj) : TestTriRenderer(gfx, obj) { }
-public class OgreCellRenderer(OgreGfxModel gfx, object obj) : Renderer { }
-public class OgreEngineRenderer(OgreGfxModel gfx, object obj) : Renderer { }
-public class OgreObjectRenderer(OgreGfxModel gfx, object obj) : Renderer { }
-public class OgreTextureRenderer(OgreGfxModel gfx, object obj) : TextureRenderer(gfx, obj, Level)
+public class OgreTestTriRenderer(UnrealGfxModel gfx, object obj) : TestTriRenderer(gfx, obj) { }
+public class OgreCellRenderer(UnrealGfxModel gfx, object obj) : Renderer { }
+public class OgreEngineRenderer(UnrealGfxModel gfx, object obj) : Renderer { }
+public class OgreObjectRenderer(UnrealGfxModel gfx, object obj) : Renderer { }
+public class OgreTextureRenderer(UnrealGfxModel gfx, object obj) : TextureRenderer(gfx, obj, Level)
 {
     static Range Level = 0..;
 }
 
 public class ViewInfo
 {
-    static ViewInfo() => PlatformX.Activate(OgrePlatform.This);
+    static ViewInfo() => PlatformX.Activate(UnrealPlatform.This);
 
     public enum Kind { Texture, TextureCursor, Object, Cell, Engine }
 
@@ -45,7 +45,7 @@ public class ViewInfo
 
     protected Family Family;
     protected List<PakFile> PakFiles = [];
-    protected OgreGfxModel Gfx;
+    protected UnrealGfxModel Gfx;
 
     Renderer Renderer;
 

@@ -1,4 +1,5 @@
 ﻿using GameX.Formats;
+using OpenStack.Gfx;
 using OpenStack.Gfx.Render;
 using OpenStack.Gfx.Texture;
 using System;
@@ -350,7 +351,7 @@ public unsafe class Binary_Fli : IDisposable, ITextureFrames, IHaveMetaInfo
             header = r.ReadS<X_ChunkHeader>();
         }
         while (header.IsValid && header.Type != ChunkType.FRAME);
-        Rasterize.CopyPixelsByPalette(Bytes, 3, Pixels, Palette, 3);
+        Raster.BlitByPalette(Bytes, 3, Pixels, Palette, 3);
         if (header.Type == ChunkType.FRAME) r.Skip(-sizeof(X_ChunkHeader));
         return header.IsValid;
     }

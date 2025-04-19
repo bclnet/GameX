@@ -1,5 +1,6 @@
 using GameX.Formats;
 using OpenStack.Gfx;
+using OpenStack.Gfx.Render;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -625,7 +626,7 @@ public class FieldHeader(BinaryReader r, FormType format)
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct ColorRef3 { public override readonly string ToString() => $"{Red}:{Green}:{Blue}"; public static (string, int) Struct = ("<3c", 3); public byte Red; public byte Green; public byte Blue; }
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
-public struct ColorRef4 { public override readonly string ToString() => $"{Red}:{Green}:{Blue}"; public static (string, int) Struct = ("<4c", 4); public byte Red; public byte Green; public byte Blue; public byte Null; public GXColor32 AsColor32 => new(Red, Green, Blue, 255); }
+public struct ColorRef4 { public override readonly string ToString() => $"{Red}:{Green}:{Blue}"; public static (string, int) Struct = ("<4c", 4); public byte Red; public byte Green; public byte Blue; public byte Null; public Color32 AsColor32 => new(Red, Green, Blue, 255); }
 public struct STRVField { public override readonly string ToString() => Value; public string Value; }
 public struct FILEField { public override readonly string ToString() => Value; public string Value; }
 public struct DATVField { public override readonly string ToString() => "DATV"; public bool B; public int I; public float F; public string S; }
@@ -2204,7 +2205,7 @@ public unsafe class TES4Record : Record
 {
     public struct HEDRField
     {
-        public static (string, int) Struct = ("<fiI", sizeof(HEDRField));
+        public static (string, int) Struct = ("<fiI", 12);
         public float Version;
         public int NumRecords; // Number of records and groups (not including TES4 record itself).
         public uint NextObjectId; // Next available object ID.
@@ -2409,7 +2410,7 @@ public unsafe class WRLDRecord : Record
 {
     public struct MNAMField
     {
-        public static (string, int) Struct = ($"<2i4h", sizeof(MNAMField));
+        public static (string, int) Struct = ($"<2i4h", 16);
         public Int2 UsableDimensions;
         // Cell Coordinates
         public short NWCell_X;
@@ -2420,7 +2421,8 @@ public unsafe class WRLDRecord : Record
 
     public struct NAM0Field(BinaryReader r, int dataSize)
     {
-        public static (string, int) Struct = ("<2f2f", sizeof(NAM0Field));
+        //public static (string, int) Struct = ("<2f", 8);
+        //public static (string, int) Struct = ("<4f", 16);
         public Vector2 Min = new(r.ReadSingle(), r.ReadSingle());
         public Vector2 Max = Vector2.Zero;
         public object NAM9Field(BinaryReader r, int dataSize) => Max = new Vector2(r.ReadSingle(), r.ReadSingle());
@@ -3563,10 +3565,9 @@ public unsafe class CELLRecord : Record, ICellRecord
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct XCLCField
     {
-        public static Dictionary<int, string> Struct = new()
-        {
+        public static Dictionary<int, string> Struct = new() {
             { 8, "<2i" },
-            { 12, "<2iI" },
+            { 12, "<2iI" }
         };
         public int GridX;
         public int GridY;
@@ -3577,7 +3578,11 @@ public unsafe class CELLRecord : Record, ICellRecord
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct XCLLField
     {
-        public static (string, int) Struct = ("<12c2f2i3f", -1);
+        public static Dictionary<int, string> Struct = new() {
+            { 16, "<12cf" },
+            { 36, "<12c2f2i2f" },
+            { 40, "<12c2f2i3f" }
+        };
         public ColorRef4 AmbientColor;
         public ColorRef4 DirectionalColor; //: SunlightColor
         public ColorRef4 FogColor;
@@ -3604,7 +3609,7 @@ public unsafe class CELLRecord : Record, ICellRecord
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct XYZAField
         {
-            public static (string, int) Struct = ("<3f3f", sizeof(XYZAField));
+            public static (string, int) Struct = ("<3f3f", 24);
             public Float3 Position;
             public Float3 EulerAngles;
         }
@@ -3658,7 +3663,7 @@ public unsafe class CELLRecord : Record, ICellRecord
 
     public bool IsInterior => (DATA.Value & 0x01) == 0x01;
     public Int3 GridId; // => new Int3(XCLC.Value.GridX, XCLC.Value.GridY, !IsInterior ? 0 : -1);
-    public GXColor? AmbientLight => XCLL != null ? (GXColor?)XCLL.Value.AmbientColor.AsColor32 : null;
+    public Colorf? AmbientLight => XCLL != null ? (Colorf?)XCLL.Value.AmbientColor.AsColor32 : null;
 
     public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize)
     {
@@ -4591,7 +4596,7 @@ public unsafe class LANDRecord : Record
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct CORDField
     {
-        public static (string, int) Struct = ("<ii", sizeof(CORDField));
+        public static (string, int) Struct = ("<2i", 8);
         public int CellX;
         public int CellY;
         public override readonly string ToString() => $"{CellX},{CellY}";
@@ -4612,7 +4617,7 @@ public unsafe class LANDRecord : Record
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct BTXTField
     {
-        public static (string, int) Struct = ("<Icch", sizeof(BTXTField));
+        public static (string, int) Struct = ("<I2ch", 8);
         public uint Texture;
         public byte Quadrant;
         public byte Pad01;

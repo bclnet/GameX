@@ -8,6 +8,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using static GameX.FamilyManager;
@@ -66,16 +67,12 @@ public partial class FamilyManager
     {
         var str = elem.ToString();
         if (string.IsNullOrEmpty(str)) { return null; }
-        else if (str.StartsWith("b64:", StringComparison.OrdinalIgnoreCase)) return Convert.FromBase64String(str[4..]);
-        else if (str.StartsWith("hex:", StringComparison.OrdinalIgnoreCase))
-        {
-            var keyStr = str[4..];
-            return keyStr.StartsWith("/")
-                ? Enumerable.Range(0, keyStr.Length >> 2).Select(x => byte.Parse(keyStr.Substring((x << 2) + 2, 2), NumberStyles.HexNumber)).ToArray()
-                : Enumerable.Range(0, keyStr.Length >> 1).Select(x => byte.Parse(keyStr.Substring(x << 1, 2), NumberStyles.HexNumber)).ToArray();
-        }
-        else if (str.StartsWith("txt:", StringComparison.OrdinalIgnoreCase)) return str[4..];
-        else throw new ArgumentOutOfRangeException(nameof(str), str);
+        else if (str.StartsWith("b64:", StringComparison.Ordinal)) return Convert.FromBase64String(str[4..]);
+        else if (str.StartsWith("hex:", StringComparison.Ordinal)) return (str = str[4..]).StartsWith("/")
+            ? Enumerable.Range(0, str.Length >> 2).Select(x => byte.Parse(str.Substring((x << 2) + 2, 2), NumberStyles.HexNumber)).ToArray()
+            : Enumerable.Range(0, str.Length >> 1).Select(x => byte.Parse(str.Substring(x << 1, 2), NumberStyles.HexNumber)).ToArray();
+        else if (str.StartsWith("asc:", StringComparison.Ordinal)) return Encoding.ASCII.GetBytes(str[4..]);
+        else return str;
     }
 
     /// <summary>
@@ -1161,7 +1158,7 @@ public class FamilyGame
         // files
         Files = _valueF(elem, "files", x => new FileSet(x));
         Ignores = [.. _list(elem, "ignores", default_: [])];
-        Virtuals = _related(elem, "virtuals", (k, v) => v.ValueKind == JsonValueKind.String ? Convert.FromBase64String(v.GetString()) : null);
+        Virtuals = _related(elem, "virtuals", (k, v) => (byte[])ParseKey(v));
         Filters = _related(elem, "filters", (k, v) => _valueV(v).ToString());
         // find
         Found = GetSystemPath(Option.FindKey, family.Id, elem);

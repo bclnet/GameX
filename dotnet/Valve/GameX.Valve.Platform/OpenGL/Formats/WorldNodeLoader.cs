@@ -1,8 +1,7 @@
-using GameX.Scenes;
 using GameX.Valve.Formats;
 using GameX.Valve.Formats.Vpk;
 using GameX.Valve.OpenGL.Scenes;
-using OpenStack.Gfx.Scene;
+using OpenStack.Gfx;
 using OpenStack.Gl;
 using System;
 using System.Collections.Generic;
@@ -11,10 +10,10 @@ using System.Numerics;
 namespace GameX.Valve.OpenGL.Formats;
 
 //was:Renderer/WorldLoader
-public class WorldNodeLoader(OpenGLGfx3dModel gfx, D_WorldNode node)
+public class WorldNodeLoader(OpenGLGfxModel gfx, D_WorldNode node)
 {
     readonly D_WorldNode Node = node;
-    readonly OpenGLGfx3dModel Gfx = gfx;
+    readonly OpenGLGfxModel Gfx = gfx;
 
     public void Load(Scene scene)
     {

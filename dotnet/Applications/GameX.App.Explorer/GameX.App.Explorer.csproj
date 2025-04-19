@@ -83,11 +83,13 @@
     <ProjectReference Include="..\..\Cig\GameX.Cig.Explorer\GameX.Cig.Explorer.csproj" />
     <ProjectReference Include="..\..\Base\GameX.All\GameX.All.csproj" />
     <ProjectReference Include="..\..\Platforms\GameX.Platform.Godot\GameX.Platform.Godot.csproj" />
+    <ProjectReference Include="..\..\Platforms\GameX.Platform.O3de\GameX.Platform.O3de.csproj" />
     <ProjectReference Include="..\..\Platforms\GameX.Platform.Ogre\GameX.Platform.Ogre.csproj" />
     <ProjectReference Include="..\..\Platforms\GameX.Platform.OpenGL\GameX.Platform.OpenGL.csproj" />
     <ProjectReference Include="..\..\Platforms\GameX.Platform.Sdl\GameX.Platform.Sdl.csproj" />
     <ProjectReference Include="..\..\Platforms\GameX.Platform.Stride\GameX.Platform.Stride.csproj" />
     <ProjectReference Include="..\..\Platforms\GameX.Platform.Unity\GameX.Platform.Unity.csproj" />
+    <ProjectReference Include="..\..\Platforms\GameX.Platform.Unreal\GameX.Platform.Unreal.csproj" />
   </ItemGroup>
 
 </Project>

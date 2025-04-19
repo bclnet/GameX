@@ -1,38 +1,38 @@
 ﻿using OpenStack;
 using OpenStack.Gfx;
-using OpenStack.Ogre;
-using OpenStack.Ogre.Renderers;
+using OpenStack.O3de;
+using OpenStack.O3de.Renderers;
 using System;
 using System.Collections.Generic;
 
-namespace GameX.Platforms.Ogre;
+namespace GameX.Platforms.O3de;
 
-public static class OgreRenderer
+public static class O3deRenderer
 {
-    public static Renderer CreateRenderer(object parent, OgreGfxModel gfx, object obj, string type)
+    public static Renderer CreateRenderer(object parent, O3deGfxModel gfx, object obj, string type)
         => type switch
         {
-            "TestTri" => new OgreTestTriRenderer(gfx, obj),
-            "Texture" => new OgreTextureRenderer(gfx, obj),
-            "Object" => new OgreObjectRenderer(gfx, obj),
-            "Cell" => new OgreCellRenderer(gfx, obj),
-            "Engine" => new OgreEngineRenderer(gfx, obj),
-            _ => new OgreObjectRenderer(gfx, obj),
+            "TestTri" => new O3deTestTriRenderer(gfx, obj),
+            "Texture" => new O3deTextureRenderer(gfx, obj),
+            "Object" => new O3deObjectRenderer(gfx, obj),
+            "Cell" => new O3deCellRenderer(gfx, obj),
+            "Engine" => new O3deEngineRenderer(gfx, obj),
+            _ => new O3deObjectRenderer(gfx, obj),
         };
 }
 
-public class OgreTestTriRenderer(OgreGfxModel gfx, object obj) : TestTriRenderer(gfx, obj) { }
-public class OgreCellRenderer(OgreGfxModel gfx, object obj) : Renderer { }
-public class OgreEngineRenderer(OgreGfxModel gfx, object obj) : Renderer { }
-public class OgreObjectRenderer(OgreGfxModel gfx, object obj) : Renderer { }
-public class OgreTextureRenderer(OgreGfxModel gfx, object obj) : TextureRenderer(gfx, obj, Level)
+public class O3deTestTriRenderer(O3deGfxModel gfx, object obj) : TestTriRenderer(gfx, obj) { }
+public class O3deCellRenderer(O3deGfxModel gfx, object obj) : Renderer { }
+public class O3deEngineRenderer(O3deGfxModel gfx, object obj) : Renderer { }
+public class O3deObjectRenderer(O3deGfxModel gfx, object obj) : Renderer { }
+public class O3deTextureRenderer(O3deGfxModel gfx, object obj) : TextureRenderer(gfx, obj, Level)
 {
     static Range Level = 0..;
 }
 
 public class ViewInfo
 {
-    static ViewInfo() => PlatformX.Activate(OgrePlatform.This);
+    static ViewInfo() => PlatformX.Activate(O3dePlatform.This);
 
     public enum Kind { Texture, TextureCursor, Object, Cell, Engine }
 
@@ -45,7 +45,7 @@ public class ViewInfo
 
     protected Family Family;
     protected List<PakFile> PakFiles = [];
-    protected OgreGfxModel Gfx;
+    protected O3deGfxModel Gfx;
 
     Renderer Renderer;
 
@@ -55,8 +55,8 @@ public class ViewInfo
     //    Family = FamilyManager.GetFamily(FamilyId);
     //    if (!string.IsNullOrEmpty(PakUri)) PakFiles.Add(Family.OpenPakFile(new Uri(PakUri)));
     //    var first = PakFiles.FirstOrDefault();
-    //    Gfx = (IOgreGfx3d)first?.Gfx;
-    //    Renderer = OgreRenderer.CreateRenderer(this, Gfx, Param1, ViewKind.ToString());
+    //    Gfx = (IO3deGfx3d)first?.Gfx;
+    //    Renderer = O3deRenderer.CreateRenderer(this, Gfx, Param1, ViewKind.ToString());
     //    Renderer?.Start();
     //}
 

@@ -1,6 +1,6 @@
+using OpenStack.Gfx;
 using OpenStack.Gfx.Render;
 using OpenStack.Gfx.Texture;
-using Org.BouncyCastle.Utilities;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -1117,7 +1117,7 @@ public unsafe class Binary_Spr : ITextureFrames, IHaveMetaInfo
     public bool DecodeFrame()
     {
         var p = pixels[frame];
-        Rasterize.CopyPixelsByPalette(bytes, 4, p, palette, 3);
+        Raster.BlitByPalette(bytes, 4, p, palette, 3);
         frame++;
         return true;
     }

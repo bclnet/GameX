@@ -1,8 +1,7 @@
 using GameX.Valve.Formats;
 using GameX.Valve.Formats.Vpk;
+using OpenStack.Gfx;
 using OpenStack.Gfx.Animate;
-using OpenStack.Gfx.Render;
-using OpenStack.Gfx.Scene;
 using OpenStack.Gl;
 using OpenStack.Gl.Render;
 using OpenTK.Graphics.OpenGL;
@@ -122,7 +121,7 @@ public class ModelSceneNode : SceneNode, IMeshCollection
     {
         // Get embedded meshes
         foreach (var embeddedMesh in Model.GetEmbeddedMeshesAndLoD().Where(m => (m.LoDMask & 1) != 0))
-            MeshRenderers.Add(new GLRenderableMesh(Scene.Gfx as OpenGLGfx3dModel, embeddedMesh.Mesh, embeddedMesh.MeshIndex, SkinMaterials, Model));
+            MeshRenderers.Add(new GLRenderableMesh(Scene.Gfx as OpenGLGfxModel, embeddedMesh.Mesh, embeddedMesh.MeshIndex, SkinMaterials, Model));
 
         // Load referred meshes from file (only load meshes with LoD 1)
         foreach (var refMesh in GetLod1RefMeshes())
@@ -132,7 +131,7 @@ public class ModelSceneNode : SceneNode, IMeshCollection
 
             if (!newResource.ContainsBlockType<VBIB>()) { Console.WriteLine("Old style model, no VBIB!"); continue; }
 
-            MeshRenderers.Add(new GLRenderableMesh(Scene.Gfx as OpenGLGfx3dModel, (D_Mesh)newResource.DATA, refMesh.MeshIndex, SkinMaterials, Model));
+            MeshRenderers.Add(new GLRenderableMesh(Scene.Gfx as OpenGLGfxModel, (D_Mesh)newResource.DATA, refMesh.MeshIndex, SkinMaterials, Model));
         }
 
         // Set active meshes to default

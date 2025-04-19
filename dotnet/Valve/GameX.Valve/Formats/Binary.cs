@@ -1041,7 +1041,7 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo
         var tex = Textures[0];
         Width = tex.Width; Height = tex.Height;
         var buf = new byte[Width * Height * 3];
-        Rasterize.CopyPixelsByPalette(buf, 3, tex.Pixels, tex.Palette, 3);
+        Raster.BlitByPalette(buf, 3, tex.Pixels, tex.Palette, 3);
         return func(new Texture_Bytes(buf, Format, null));
     }
 
@@ -1671,8 +1671,8 @@ public unsafe class Binary_Wad3X : ITexture, IHaveMetaInfo
         {
             var p = pixels[index];
             size = p.Length * bbp; var span = spans[index] = new Range(offset, offset + size);
-            if (transparent) Rasterize.CopyPixelsByPaletteWithAlpha(buf.AsSpan(span), bbp, p, palette, 3, 0xFF);
-            else Rasterize.CopyPixelsByPalette(buf.AsSpan(span), bbp, p, palette, 3);
+            if (transparent) Raster.BlitByPalette(buf.AsSpan(span), bbp, p, palette, 3, 0xFF);
+            else Raster.BlitByPalette(buf.AsSpan(span), bbp, p, palette, 3);
         }
         return func(new Texture_Bytes(buf, Format.value, spans));
     }

@@ -97,7 +97,7 @@
       "name": "Mega Man Legacy Collection",
       "url": "https://store.steampowered.com/app/363440",
       "date": "Aug 24, 2015",
-      "key": "txt:P091uWEdwe4lI6StDNMNlkodPGvJ38bL3HW6t3BCMYdFi83FXKu7k0NsHP8caDKS",
+      "key": "P091uWEdwe4lI6StDNMNlkodPGvJ38bL3HW6t3BCMYdFi83FXKu7k0NsHP8caDKS",
       "engine": "Zip",
       "pakExt": "data.pie",
       "files": {
@@ -112,7 +112,7 @@
       "name": "Mega Man Legacy Collection 2",
       "url": "https://store.steampowered.com/app/495050",
       "date": "Aug 8, 2017",
-      "key": "txt:NEED",
+      "key": "NEED",
       "engine": "Zip",
       "pakExt": "disc",
       "files": {

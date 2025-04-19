@@ -6,8 +6,9 @@ namespace GameX.Valve.Formats.Vpk;
 /// <summary>
 /// IValveModel
 /// </summary>
-public interface IValveModel : IModel
+public interface IValveModel : IEginModel
 {
+    IDictionary<string, object> Data { get; }
     Skeleton Skeleton { get; }
 
     IEnumerable<(int MeshIndex, string MeshName, long LoDMask)> GetReferenceMeshNamesAndLoD();
@@ -15,7 +16,7 @@ public interface IValveModel : IModel
     IEnumerable<bool> GetActiveMeshMaskForGroup(string groupName);
     IEnumerable<string> GetMeshGroups();
     IEnumerable<string> GetDefaultMeshGroups();
-    IEnumerable<Animation> GetAllAnimations(IOpenGfx3dModel gfx);
+    IEnumerable<Animation> GetAllAnimations(IOpenGfxModel gfx);
     D_PhysAggregateData GetEmbeddedPhys();
     IEnumerable<string> GetReferencedPhysNames();
 }

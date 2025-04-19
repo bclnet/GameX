@@ -2,10 +2,12 @@
 using OpenStack;
 using OpenStack.Gl;
 using OpenStack.Godot;
+using OpenStack.O3de;
 using OpenStack.Ogre;
 using OpenStack.Sdl;
 using OpenStack.Stride;
 using OpenStack.Unity;
+using OpenStack.Unreal;
 using System.Windows;
 [assembly: ThemeInfo(ResourceDictionaryLocation.None, ResourceDictionaryLocation.SourceAssembly)]
 
@@ -19,11 +21,13 @@ namespace GameX.App.Explorer
     {
         static App() => PlatformX.Platforms.UnionWith([
             GodotShellPlatform.This,
+            O3deShellPlatform.This,
             OgrePlatform.This,
             OpenGLPlatform.This,
             SdlPlatform.This,
             StridePlatform.This,
-            UnityShellPlatform.This]);
+            UnityShellPlatform.This,
+            UnrealShellPlatform.This]);
 
         static readonly string[] args = [];
         //static readonly string[] args = ["open", "-f", "Arkane", "-u", "game:/readme.txt#AF"];

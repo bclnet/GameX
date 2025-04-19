@@ -1,7 +1,5 @@
 using GameX.Valve.Formats;
 using OpenStack.Gfx;
-using OpenStack.Gfx.Render;
-using OpenStack.Gfx.Scene;
 using OpenStack.Gl;
 using OpenStack.Gl.Render;
 using OpenTK.Graphics.OpenGL;
@@ -23,7 +21,7 @@ public class SpriteSceneNode : SceneNode
 
     public SpriteSceneNode(Scene scene, Binary_Src resource, Vector3 position) : base(scene)
     {
-        var gfx = scene.Gfx as OpenGLGfx3dModel;
+        var gfx = scene.Gfx as OpenGLGfxModel;
         (material, _) = gfx.MaterialManager.CreateMaterial(resource);
         (shader, _) = gfx.ShaderManager.CreateShader(material.Material.ShaderName, material.Material.ShaderArgs);
 

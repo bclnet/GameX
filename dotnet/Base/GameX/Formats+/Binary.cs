@@ -1,5 +1,6 @@
 using GameX.Formats.Apple;
 using ICSharpCode.SharpZipLib.Zip;
+using OpenStack.Gfx;
 using OpenStack.Gfx.Render;
 using OpenStack.Gfx.Texture;
 using System;
@@ -628,7 +629,7 @@ public unsafe class Binary_Img : IHaveMetaInfo, ITexture
         {
             var pal = palette.SelectMany<Color, byte>(x => [x.R, x.G, x.B]).ToArray();
             Bytes = new byte[Width * Height * 3];
-            Rasterize.CopyPixelsByPalette(Bytes, 3, bytes, pal, 3);
+            Raster.BlitByPalette(Bytes, 3, bytes, pal, 3);
         }
     }
 

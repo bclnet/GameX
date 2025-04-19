@@ -1,5 +1,6 @@
 using GameX.Algorithms;
 using GameX.Formats;
+using GameX.Valve.Algorithms;
 using K4os.Compression.LZ4;
 using K4os.Compression.LZ4.Encoders;
 using OpenStack.Gfx;
@@ -8455,7 +8456,7 @@ public class D_Model : XKV3_NTRO, IValveModel
         return Animation.FromData(animationDataBlock.Data, decodeKey, Skeleton);
     }
 
-    public IEnumerable<Animation> GetAllAnimations(IOpenGfx3dModel gfx)
+    public IEnumerable<Animation> GetAllAnimations(IOpenGfxModel gfx)
     {
         if (CachedAnimations != null) return CachedAnimations;
 
@@ -8492,6 +8493,11 @@ public class D_Model : XKV3_NTRO, IValveModel
         return groupIndex >= 0
             ? meshGroupMasks.Select(mask => (mask & 1 << groupIndex) != 0)
             : meshGroupMasks.Select(_ => false);
+    }
+
+    public T Create<T>(string platform, Func<object, T> func)
+    {
+        throw new NotImplementedException();
     }
 }
 

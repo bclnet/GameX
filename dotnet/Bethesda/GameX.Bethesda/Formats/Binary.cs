@@ -1,7 +1,7 @@
 ﻿using GameX.Bethesda.Formats.Nif;
 using GameX.Bethesda.Formats.Records;
 using GameX.Formats;
-using OpenStack.Gfx.Model;
+using OpenStack.Gfx;
 using OpenStack.Gfx.Texture;
 using System;
 using System.Collections.Generic;
@@ -736,7 +736,7 @@ public class Binary_Nif : IHaveMetaInfo, IModel
     }
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new(null, new MetaContent { Type = "Text", Name = Name, Value = this }),
+        new(null, new MetaContent { Type = "Object", Name = Name, Value = this }),
         new("Nif", items: [
             new($"NumBlocks: {Header.NumBlocks}"),
         ]),

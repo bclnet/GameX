@@ -19,14 +19,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\OpenStack\dotnet\Sfx\OpenStack.Sfx\OpenStack.Sfx.csproj" />
+    <ProjectReference Include="..\..\..\OpenStack\dotnet\Platform\OpenStack.Unreal\OpenStack.Unreal.csproj" />
     <ProjectReference Include="..\..\Base\GameX\GameX.csproj" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <Reference Include="UnrealEngine.Framework">
-      <HintPath>..\..\Platforms\Unreal\5.2\UnrealEngine.Framework.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
 </Project>

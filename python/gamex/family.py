@@ -32,15 +32,18 @@ class SystemPath:
         self.paths = paths
 # tag::FoundPath[]
 
+# TODO: HostFactory = HttpHost.Factory
+
+
 # tag::parseKey[]
 # parse key
 @staticmethod
 def parseKey(value: str) -> object:
     if not value: return None
-    elif value.startswith('b64:'): return base64.b64decode(value[4:].encode('ascii')) 
+    elif value.startswith('b64:'): return base64.b64decode(value[4:].encode('ascii'))
     elif value.startswith('hex:'): return bytes.fromhex(value[4:].replace('/x', ''))
-    elif value.startswith('txt:'): return value[4:]
-    else: raise Exception(f'Unknown value: {value}')
+    elif value.startswith('asc:'): return value[4:].encode('ascii')
+    else: value
 # end::parseKey[]
 
 # tag::parseEngine[]
@@ -364,7 +367,7 @@ class FamilyGame:
         # files
         self.files = _valueF(elem, 'files', lambda x: FamilyGame.FileSet(x)) #files: dict[str, PathItem] = {}
         self.ignores = _list(elem, 'ignores') #ignores: dict[str, object] = {}
-        self.virtuals = _related(elem, 'virtuals', lambda k,v: v) #virtuals: dict[str, object] = {}
+        self.virtuals = _related(elem, 'virtuals', lambda k,v: parseVirtual) #virtuals: dict[str, object] = {}
         self.filters = _related(elem, 'filters', lambda k,v: v) #filters: dict[str, object] = {}
         # find
         self.found = self.getSystemPath(option.FindKey, family.id, elem)

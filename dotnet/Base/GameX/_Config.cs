@@ -73,7 +73,7 @@ public partial class FamilyManager
 
     public static GlobalOption Option = new()
     {
-        Platform = "GL",
+        Platform = "UN",
         ForceOpen = true,
         ForcePath = "sample:2",
         Family = "Bethesda",

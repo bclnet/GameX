@@ -1,6 +1,5 @@
 using GameX.Valve.Formats.Vpk;
 using OpenStack.Gfx;
-using OpenStack.Gfx.Scene;
 using OpenStack.Gl;
 using OpenStack.Gl.Renderers;
 using System.Collections.Generic;
@@ -26,7 +25,7 @@ public class ParticleSceneNode : SceneNode
 
     public ParticleSceneNode(Scene scene, D_ParticleSystem particleSystem) : base(scene)
     {
-        ParticleRenderer = new ParticleRenderer(Scene.Gfx as OpenGLGfx3dModel, new ParticleSystemWrapper(particleSystem));
+        ParticleRenderer = new ParticleRenderer(Scene.Gfx as OpenGLGfxModel, new ParticleSystemWrapper(particleSystem));
         LocalBoundingBox = ParticleRenderer.BoundingBox;
     }
 

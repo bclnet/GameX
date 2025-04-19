@@ -92,7 +92,7 @@ namespace GameX.App.Explorer.Views
             {
                 if (_selectedItem == value) return;
                 _selectedItem = value;
-                if (value == null) { OnInfo(null); return; }
+                if (value == null) { OnInfo(value, null); return; }
                 try
                 {
                     var pak = (value.Source as FileSource)?.Pak;
@@ -102,11 +102,11 @@ namespace GameX.App.Explorer.Views
                         pak.Open(value.Items, Resource);
                         OnFilterKeyUp(null, null);
                     }
-                    OnInfo(value.PakFile?.GetMetaInfos(Resource, value).Result);
+                    OnInfo(value, value.PakFile?.GetMetaInfos(Resource, value).Result);
                 }
                 catch (Exception ex)
                 {
-                    OnInfo([
+                    OnInfo(value, [
                         new MetaInfo($"EXCEPTION: {ex.Message}"),
                         new MetaInfo(ex.StackTrace),
                     ]);
@@ -118,9 +118,9 @@ namespace GameX.App.Explorer.Views
         {
         }
 
-        public void OnInfo(IEnumerable<MetaInfo> infos)
+        public void OnInfo(MetaItem item, IEnumerable<MetaInfo> infos)
         {
-            FileContent.Current.OnInfo(PakFile, infos?.Where(x => x.Name == null).ToList());
+            FileContent.Current.OnInfo(item, PakFile, infos?.Where(x => x.Name == null).ToList());
             Infos = infos?.Where(x => x.Name != null).ToList();
         }
 

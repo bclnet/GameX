@@ -11,7 +11,7 @@ namespace GameX.Platforms.Godot;
 
 public static class GodotRenderer
 {
-    public static Renderer CreateRenderer(object parent, GodotGfx3dModel gfx, object obj, string type)
+    public static Renderer CreateRenderer(object parent, GodotGfxModel gfx, object obj, string type)
         => type switch
         {
             "TestTri" => new GodotTestTriRenderer(parent as Node, gfx, obj),
@@ -23,11 +23,11 @@ public static class GodotRenderer
         };
 }
 
-public class GodotTestTriRenderer(Node parent, GodotGfx3dModel gfx, object obj) : TestTriRenderer(parent, gfx, obj) { }
-public class GodotCellRenderer(Node parent, GodotGfx3dModel gfx, object obj) : Renderer { }
-public class GodotEngineRenderer(Node parent, GodotGfx3dModel gfx, object obj) : Renderer { }
-public class GodotObjectRenderer(Node parent, GodotGfx3dModel gfx, object obj) : Renderer { }
-public class GodotTextureRenderer(Node parent, GodotGfx3dModel gfx, object obj) : TextureRenderer(parent, gfx, obj, Level)
+public class GodotTestTriRenderer(Node parent, GodotGfxModel gfx, object obj) : TestTriRenderer(parent, gfx, obj) { }
+public class GodotCellRenderer(Node parent, GodotGfxModel gfx, object obj) : Renderer { }
+public class GodotEngineRenderer(Node parent, GodotGfxModel gfx, object obj) : Renderer { }
+public class GodotObjectRenderer(Node parent, GodotGfxModel gfx, object obj) : Renderer { }
+public class GodotTextureRenderer(Node parent, GodotGfxModel gfx, object obj) : TextureRenderer(parent, gfx, obj, Level)
 {
     static System.Range Level = 0..;
 }
@@ -47,7 +47,7 @@ public class ViewInfo : Node
 
     protected Family Family;
     protected List<PakFile> PakFiles = [];
-    protected GodotGfx3dModel Gfx;
+    protected GodotGfxModel Gfx;
 
     Renderer Renderer;
 
@@ -57,7 +57,7 @@ public class ViewInfo : Node
         Family = FamilyManager.GetFamily(FamilyId);
         if (!string.IsNullOrEmpty(PakUri)) PakFiles.Add(Family.OpenPakFile(new Uri(PakUri)));
         var first = PakFiles.FirstOrDefault();
-        Gfx = (GodotGfx3dModel)first?.Gfx[GFX.X3dModel];
+        Gfx = (GodotGfxModel)first?.Gfx[OpenStack.Gfx.Gfx.XModel];
         Renderer = GodotRenderer.CreateRenderer(this, Gfx, Param1, ViewKind.ToString());
         Renderer?.Start();
     }

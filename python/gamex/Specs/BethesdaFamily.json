@@ -25,7 +25,7 @@
         ".esm"
       ],
       "paky": "game:/Morrowind.esm",
-      "pak": "game:/Morrowind.bsa",
+      "pakz": "game:/Morrowind.bsa",
       "pakx": [
         "game:/Morrowind.bsa",
         "game:/Morrowind.esm"
@@ -37,6 +37,10 @@
           "Local:Morrowind"
         ],
         "path": "Data Files"
+      },
+      "virtuals": {
+        "Morrowind.cell": "asc:-2,-9",
+        "Morrowind.start": "asc:-137.94f,2.30f,-1037.6f"
       }
     },
     "IHRA": {

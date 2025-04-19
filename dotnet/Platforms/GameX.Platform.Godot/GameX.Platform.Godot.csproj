@@ -15,7 +15,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\..\..\docs\Platforms\Stride\Readme.md" Link="Readme.md" />
+    <None Include="..\..\..\docs\Platforms\Godot\Readme.md" Link="Readme.md" />
   </ItemGroup>
 
   <ItemGroup>

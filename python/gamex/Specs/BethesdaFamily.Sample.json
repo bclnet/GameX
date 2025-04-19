@@ -3,39 +3,39 @@
     "name": "The Elder Scrolls III: Morrowind",
     "files": [
       {
-        "path": "bookart/boethiah_256.dds",
+        "path": "Morrowind.bsa:bookart/boethiah_256.dds",
         "type": "Texture"
       },
       {
-        "path": "textures/vfx_poison03.dds",
+        "path": "Morrowind.bsa:textures/vfx_poison03.dds",
         "type": "Texture"
       },
       {
-        "path": "meshes/i/in_dae_room_l_floor_01.nif",
+        "path": "Morrowind.bsa:meshes/i/in_dae_room_l_floor_01.nif",
+        "type": "Object"
+      },
+      {
+        "path": "Morrowind.bsa:meshes/x/ex_common_balcony_01.nif",
         "type": "Model"
       },
       {
-        "path": "meshes/x/ex_common_balcony_01.nif",
+        "path": "Morrowind.bsa:meshes/w/w_arrow01.nif",
         "type": "Model"
       },
       {
-        "path": "meshes/w/w_arrow01.nif",
+        "path": "Morrowind.bsa:meshes/a/a_apostle_boots_f.nif",
         "type": "Model"
       },
       {
-        "path": "meshes/a/a_apostle_boots_f.nif",
+        "path": "Morrowind.bsa:meshes/a/a_iron_hands.1st.nif",
         "type": "Model"
       },
       {
-        "path": "meshes/a/a_iron_hands.1st.nif",
+        "path": "Morrowind.bsa:meshes/xbase_anim.nif",
         "type": "Model"
       },
       {
-        "path": "meshes/xbase_anim.nif",
-        "type": "Model"
-      },
-      {
-        "path": "meshes/box.nif",
+        "path": "Morrowind.bsa:meshes/box.nif",
         "type": "Model"
       }
     ]

@@ -1,11 +1,11 @@
 ﻿using Godot;
 using OpenStack;
 using OpenStack.Gfx;
-using OpenStack.Godot;
-using OpenStack.Godot.Renderers;
+using OpenStack.Gfx.Godot;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static OpenStack.Gfx.GfxX;
 
 namespace GameX.Platforms.Godot;
 
@@ -57,7 +57,7 @@ public class ViewInfo : Node
         Family = FamilyManager.GetFamily(FamilyId);
         if (!string.IsNullOrEmpty(PakUri)) PakFiles.Add(Family.OpenPakFile(new Uri(PakUri)));
         var first = PakFiles.FirstOrDefault();
-        Gfx = (GodotGfxModel)first?.Gfx[OpenStack.Gfx.Gfx.XModel];
+        Gfx = (GodotGfxModel)first?.Gfx[XModel];
         Renderer = GodotRenderer.CreateRenderer(this, Gfx, Param1, ViewKind.ToString());
         Renderer?.Start();
     }

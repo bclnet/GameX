@@ -1,4 +1,4 @@
-﻿using grendgine_collada;
+﻿using Khronos.Collada;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -14,7 +14,7 @@ partial class ColladaFileWriter
     void SetLibraryVisualScenesWithSkeleton()
     {
         // There can be multiple visual scenes.  Will just have one (World) for now.  All node chunks go under Nodes for that visual scene
-        var nodes = new List<Grendgine_Collada_Node>();
+        var nodes = new List<Collada_Node>();
 
         //// Check to see if there is a CompiledBones chunk.  If so, add a Node.  
         //if (File.Chunks.Any(a => a.ChunkType == ChunkTypeEnum.CompiledBones || a.ChunkType == ChunkTypeEnum.CompiledBonesSC))
@@ -22,21 +22,21 @@ partial class ColladaFileWriter
 
         // Geometry visual Scene.
         var firstModel = File.Models.First();
-        nodes.Add(new Grendgine_Collada_Node
+        nodes.Add(new Collada_Node
         {
             ID = firstModel.Path,
             Name = firstModel.Path,
-            Type = Grendgine_Collada_Node_Type.NODE,
-            Matrix = [new Grendgine_Collada_Matrix { Value_As_String = CreateStringFromMatrix44(Matrix4x4.Identity) }],
-            Instance_Controller = [ new Grendgine_Collada_Instance_Controller {
+            Type = Collada_Node_Type.NODE,
+            Matrix = [new Collada_Matrix { Value_As_String = CreateStringFromMatrix44(Matrix4x4.Identity) }],
+            Instance_Controller = [ new Collada_Instance_Controller {
                 URL = "#Controller",
-                Skeleton = [new Grendgine_Collada_Skeleton { Value = "#Armature" }],
-                Bind_Material = [ new Grendgine_Collada_Bind_Material {
+                Skeleton = [new Collada_Skeleton { Value = "#Armature" }],
+                Bind_Material = [ new Collada_Bind_Material {
                     // This gets complicated. We need to make one instance_material for each material used in this node chunk.
                     // The mat IDs used in this node chunk are stored in meshsubsets, so for each subset we need to grab the mat, get the target (id), and make an instance_material for it.
-                    Technique_Common = new Grendgine_Collada_Technique_Common_Bind_Material {
+                    Technique_Common = new Collada_Technique_Common_Bind_Material {
                         // For each mesh subset, we want to create an instance material and add it to instanceMaterials list.
-                        Instance_Material =File.Materials.Select(material => new Grendgine_Collada_Instance_Material_Geometry
+                        Instance_Material =File.Materials.Select(material => new Collada_Instance_Material_Geometry
                         {
                             Target = $"#{material.Name}-material",
                             Symbol = $"{material.Name}-material"
@@ -47,9 +47,9 @@ partial class ColladaFileWriter
         });
 
         // Set up the library
-        daeObject.Library_Visual_Scene = new Grendgine_Collada_Library_Visual_Scenes
+        daeObject.Library_Visual_Scene = new Collada_Library_Visual_Scenes
         {
-            Visual_Scene = [new Grendgine_Collada_Visual_Scene { Node = [.. nodes], ID = "Scene" }]
+            Visual_Scene = [new Collada_Visual_Scene { Node = [.. nodes], ID = "Scene" }]
         };
     }
 }

@@ -1,7 +1,6 @@
 ﻿using OpenStack;
 using OpenStack.Gfx;
-using OpenStack.O3de;
-using OpenStack.O3de.Renderers;
+using OpenStack.Gfx.O3de;
 using System;
 using System.Collections.Generic;
 

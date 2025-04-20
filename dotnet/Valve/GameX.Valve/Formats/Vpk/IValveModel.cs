@@ -1,4 +1,5 @@
 ﻿using OpenStack.Gfx;
+using OpenStack.Gfx.Egin;
 using System.Collections.Generic;
 
 namespace GameX.Valve.Formats.Vpk;

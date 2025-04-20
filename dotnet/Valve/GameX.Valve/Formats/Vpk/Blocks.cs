@@ -1,12 +1,10 @@
-using GameX.Algorithms;
 using GameX.Formats;
 using GameX.Valve.Algorithms;
 using K4os.Compression.LZ4;
 using K4os.Compression.LZ4.Encoders;
+using OpenStack.Algorithms;
 using OpenStack.Gfx;
-using OpenStack.Gfx.Algorithms;
-using OpenStack.Gfx.Render;
-using OpenStack.Gfx.Texture;
+using OpenStack.Gfx.Egin;
 using System;
 using System.Buffers;
 using System.Collections.Concurrent;
@@ -8267,12 +8265,10 @@ public class D_Material : XKV3_NTRO, IMaterial
         return args;
     }
 
-    public MaterialProp Begin(string platform)
+    public T Create<T>(string platform, Func<object, T> func)
     {
         throw new NotImplementedException();
     }
-
-    public void End() { }
 }
 
 #endregion

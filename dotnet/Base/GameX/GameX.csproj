@@ -17,6 +17,8 @@
   <ItemGroup>
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\ArkaneFamily.json" Link="Specs\ArkaneFamily.json" />
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\ArkaneFamily.Sample.json" Link="Specs\ArkaneFamily.Sample.json" />
+    <EmbeddedResource Include="..\..\..\python\gamex\Specs\BeamdogFamily.json" Link="Specs\BeamdogFamily.json" />
+    <EmbeddedResource Include="..\..\..\python\gamex\Specs\BeamdogFamily.Sample.json" Link="Specs\BeamdogFamily.Sample.json" />
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\BethesdaFamily.json" Link="Specs\BethesdaFamily.json" />
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\BethesdaFamily.Sample.json" Link="Specs\BethesdaFamily.Sample.json" />
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\BiowareFamily.json" Link="Specs\BiowareFamily.json" />
@@ -25,6 +27,8 @@
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\BlackFamily.Sample.json" Link="Specs\BlackFamily.Sample.json" />
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\BlizzardFamily.json" Link="Specs\BlizzardFamily.json" />
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\BlizzardFamily.Sample.json" Link="Specs\BlizzardFamily.Sample.json" />
+    <EmbeddedResource Include="..\..\..\python\gamex\Specs\BohemiaFamily.json" Link="Specs\BohemiaFamily.json" />
+    <EmbeddedResource Include="..\..\..\python\gamex\Specs\BohemiaFamily.Sample.json" Link="Specs\BohemiaFamily.Sample.json" />
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\BullfrogFamily.json" Link="Specs\BullfrogFamily.json" />
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\BullfrogFamily.Sample.json" Link="Specs\BullfrogFamily.Sample.json" />
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\CapcomFamily.json" Link="Specs\CapcomFamily.json" />
@@ -63,6 +67,8 @@
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\OriginFamily.Sample.json" Link="Specs\OriginFamily.Sample.json" />
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\RedFamily.json" Link="Specs\RedFamily.json" />
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\RedFamily.Sample.json" Link="Specs\RedFamily.Sample.json" />
+    <EmbeddedResource Include="..\..\..\python\gamex\Specs\RockstarFamily.json" Link="Specs\RockstarFamily.json" />
+    <EmbeddedResource Include="..\..\..\python\gamex\Specs\RockstarFamily.Sample.json" Link="Specs\RockstarFamily.Sample.json" />
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\UbisoftFamily.json" Link="Specs\UbisoftFamily.json" />
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\UbisoftFamily.Sample.json" Link="Specs\UbisoftFamily.Sample.json" />
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\UbisoftFamily+1986-1999.json" Link="Specs\UbisoftFamily+1986-1999.json" />
@@ -79,6 +85,8 @@
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\VolitionFamily.Sample.json" Link="Specs\VolitionFamily.Sample.json" />  
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\WBFamily.json" Link="Specs\WBFamily.json" />
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\WBFamily.Sample.json" Link="Specs\WBFamily.Sample.json" />
+    <EmbeddedResource Include="..\..\..\python\gamex\Specs\X2KFamily.json" Link="Specs\X2KFamily.json" />
+    <EmbeddedResource Include="..\..\..\python\gamex\Specs\X2KFamily.Sample.json" Link="Specs\X2KFamily.Sample.json" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,6 +1,6 @@
-﻿using OpenStack.Gfx;
-using OpenStack.Stride;
-using OpenStack.Stride.Renderers;
+﻿using OpenStack;
+using OpenStack.Gfx;
+using OpenStack.Gfx.Stride;
 using System;
 
 namespace GameX.Platforms.Stride;

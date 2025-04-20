@@ -1,8 +1,7 @@
 from __future__ import annotations
 import os, pygame
 # from pygame.locals import *
-from openstk.gfx.gfx_render import IRenderer, RenderPass
-from openstk.gfx.gfx_texture import ITexture, ITextureFrames
+from openstk.gfx import ITexture, ITextureFrames, IRenderer, RenderPass
 from openstk.gfx.gl_renderer import TextureRenderer, TestTriRenderer
 
 # typedefs

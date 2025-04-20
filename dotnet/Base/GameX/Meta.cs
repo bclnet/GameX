@@ -124,13 +124,6 @@ public class MetaItem(object source, string name, object icon, object tag = null
     }
 }
 
-public class MetaReference
-{
-    public string Family;
-    public string Url;
-    public string Path;
-}
-
 public abstract class MetaManager
 {
     public abstract object FolderIcon { get; }

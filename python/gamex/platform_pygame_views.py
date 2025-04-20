@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os, pygame
 # from pygame.locals import *
-from openstk.gfx.gfx_texture import ITexture
+from openstk.gfx import ITexture
 
 # typedefs
 class IPygameGfx: pass

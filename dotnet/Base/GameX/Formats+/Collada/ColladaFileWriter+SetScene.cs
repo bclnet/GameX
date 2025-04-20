@@ -1,4 +1,4 @@
-﻿using grendgine_collada;
+﻿using Khronos.Collada;
 
 namespace GameX.Formats.Collada;
 
@@ -8,8 +8,8 @@ partial class ColladaFileWriter
     /// Adds the Scene element to the Collada document.
     /// </summary>
     void SetScene()
-        => daeObject.Scene = new Grendgine_Collada_Scene
+        => daeObject.Scene = new Collada_Scene
         {
-            Visual_Scene = new Grendgine_Collada_Instance_Visual_Scene { URL = "#Scene", Name = "Scene" }
+            Visual_Scene = new Collada_Instance_Visual_Scene { URL = "#Scene", Name = "Scene" }
         };
 }

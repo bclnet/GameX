@@ -1,12 +1,12 @@
-﻿using OpenStack.Gfx;
-using OpenStack.Sdl;
-using OpenStack.Sdl.Renderers;
+﻿using OpenStack;
+using OpenStack.Gfx;
+using OpenStack.Gfx.Sdl;
 
 namespace GameX.Platforms.Sdl;
 
 public static class SdlRenderer
 {
-    public static Renderer CreateRenderer(object parent, SdlGfx2dSprite gfx, object obj, string type)
+    public static Renderer CreateRenderer(object parent, SdlGfxSprite2D gfx, object obj, string type)
         => type switch
         {
             "TestTri" => new SdlTestTriRenderer(gfx, obj),
@@ -16,6 +16,6 @@ public static class SdlRenderer
         };
 }
 
-public class SdlTestTriRenderer(SdlGfx2dSprite gfx, object obj) : TestTriRenderer(gfx, obj) { }
-public class SdlSpriteRenderer(SdlGfx2dSprite gfx, object obj) : SpriteRenderer(gfx, obj) { }
-public class SdlObjectRenderer(SdlGfx2dSprite gfx, object obj) : Renderer { }
+public class SdlTestTriRenderer(SdlGfxSprite2D gfx, object obj) : TestTriRenderer(gfx, obj) { }
+public class SdlSpriteRenderer(SdlGfxSprite2D gfx, object obj) : SpriteRenderer(gfx, obj) { }
+public class SdlObjectRenderer(SdlGfxSprite2D gfx, object obj) : Renderer { }

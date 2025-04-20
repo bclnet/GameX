@@ -1,6 +1,6 @@
-﻿using OpenStack.Gfx;
-using OpenStack.Gl;
-using OpenStack.Gl.Renderers;
+﻿using OpenStack;
+using OpenStack.Gfx;
+using OpenStack.Gfx.OpenGL;
 using System;
 
 namespace GameX.Platforms.OpenGL;

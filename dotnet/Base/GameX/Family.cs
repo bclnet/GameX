@@ -17,7 +17,7 @@ using static OpenStack.Debug;
 
 namespace GameX;
 
-#region FamilyManager
+#region Factory
 
 /// <summary>
 /// FamilyManager
@@ -54,8 +54,6 @@ public partial class FamilyManager
     /// The host factory.
     /// </value>
     public virtual Func<Uri, string, AbstractHost> HostFactory { get; } = HttpHost.Factory;
-
-    #region Factory
 
     /// <summary>
     /// Parse Key.
@@ -221,68 +219,7 @@ public partial class FamilyManager
         }
         return virtuals == null ? system : new VirtualFileSystem(system, virtuals);
     }
-
-    #endregion
-
-    #region Loader
-
-    /// <summary>
-    /// The families.
-    /// </summary>
-    public static readonly Dictionary<string, Family> Families = new(StringComparer.OrdinalIgnoreCase);
-    /// <summary>
-    /// The Unknown family.
-    /// </summary>
-    public static readonly Family Unknown;
-    /// <summary>
-    /// The Unknown pak file.
-    /// </summary>
-    public static readonly PakFile UnknownPakFile;
-
-    static readonly Func<string, Stream> GetManifestResourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream;
-    static string FamilyJsonLoader(string path)
-    {
-        using var r = new StreamReader(GetManifestResourceStream($"GameX.Specs.{path}") ?? throw new Exception($"Unable to spec: GameX.Specs.{path}"));
-        return r.ReadToEnd();
-    }
-
-    static FamilyManager()
-    {
-        Family.Touch();
-        var loadSamples = true;
-
-        // load families
-        foreach (var id in FamilyKeys)
-            try
-            {
-                var family = CreateFamily($"{id}Family.json", FamilyJsonLoader, loadSamples);
-                Families.Add(family.Id, family);
-            }
-            catch (Exception e)
-            {
-                Log(e.ToString());
-                Console.WriteLine(e.ToString());
-            }
-
-        // load unknown
-        Unknown = GetFamily("Unknown");
-        UnknownPakFile = Unknown.OpenPakFile(new Uri("game:/#APP"), throwOnError: false);
-    }
-
-    /// <summary>
-    /// Gets the specified family.
-    /// </summary>
-    /// <param name="id">Name of the family.</param>
-    /// <param name="throwOnError">Throw on error.</param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentOutOfRangeException">estateName</exception>
-    public static Family GetFamily(string id, bool throwOnError = true)
-        => Families.TryGetValue(id, out var family) ? family
-        : throwOnError ? throw new ArgumentOutOfRangeException(nameof(id), id) : default;
-
-    #endregion
 }
-
 #endregion
 
 #region Detector
@@ -614,6 +551,16 @@ public class Family
     }
 
     /// <summary>
+    /// Generates the specified family game string.
+    /// </summary>
+    /// <param name="game">The game.</param>
+    /// <param name="edition">The edition.</param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentOutOfRangeException">game</exception>
+    public string ToGame(FamilyGame game, FamilyGame.Edition edition)
+        => edition != null ? $"{game.Id}.{edition.Id}" : game.Id;
+
+    /// <summary>
     /// Parses the family resource uri.
     /// </summary>
     /// <param name="uri">The URI.</param>
@@ -643,6 +590,16 @@ public class Family
             Edition = edition,
             SearchPattern = searchPattern
         };
+    }
+
+    /// <summary>
+    /// Generates the family resource uri.
+    /// </summary>
+    /// <param name="res">The res.</param>
+    /// <returns></returns>
+    public Uri ToResource(Resource res)
+    {
+        return default;
     }
 
     /// <summary>
@@ -1346,6 +1303,67 @@ public class FamilyGame
     }
 
     #endregion
+}
+
+#endregion
+
+#region Loader
+
+public partial class FamilyManager
+{
+    /// <summary>
+    /// The families.
+    /// </summary>
+    public static readonly Dictionary<string, Family> Families = new(StringComparer.OrdinalIgnoreCase);
+    /// <summary>
+    /// The Unknown family.
+    /// </summary>
+    public static readonly Family Unknown;
+    /// <summary>
+    /// The Unknown pak file.
+    /// </summary>
+    public static readonly PakFile UnknownPakFile;
+
+    static readonly Func<string, Stream> GetManifestResourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream;
+    static string FamilyJsonLoader(string path)
+    {
+        using var r = new StreamReader(GetManifestResourceStream($"GameX.Specs.{path}") ?? throw new Exception($"Unable to spec: GameX.Specs.{path}"));
+        return r.ReadToEnd();
+    }
+
+    static FamilyManager()
+    {
+        Family.Touch();
+        var loadSamples = true;
+
+        // load families
+        foreach (var id in FamilyKeys)
+            try
+            {
+                var family = CreateFamily($"{id}Family.json", FamilyJsonLoader, loadSamples);
+                Families.Add(family.Id, family);
+            }
+            catch (Exception e)
+            {
+                Log(e.ToString());
+                Console.WriteLine(e.ToString());
+            }
+
+        // load unknown
+        Unknown = GetFamily("Unknown");
+        UnknownPakFile = Unknown.OpenPakFile(new Uri("game:/#APP"), throwOnError: false);
+    }
+
+    /// <summary>
+    /// Gets the specified family.
+    /// </summary>
+    /// <param name="id">Name of the family.</param>
+    /// <param name="throwOnError">Throw on error.</param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentOutOfRangeException">estateName</exception>
+    public static Family GetFamily(string id, bool throwOnError = true)
+        => Families.TryGetValue(id, out var family) ? family
+        : throwOnError ? throw new ArgumentOutOfRangeException(nameof(id), id) : default;
 }
 
 #endregion

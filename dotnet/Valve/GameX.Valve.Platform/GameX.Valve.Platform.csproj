@@ -15,7 +15,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\OpenStack\dotnet\Platform\OpenStack.Gl\OpenStack.Gl.csproj" />
+    <ProjectReference Include="..\..\..\OpenStack\dotnet\Platform\OpenStack.OpenGL\OpenStack.OpenGL.csproj" />
     <ProjectReference Include="..\GameX.Valve\GameX.Valve.csproj" />
   </ItemGroup>
 

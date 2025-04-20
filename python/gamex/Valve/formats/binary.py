@@ -2,8 +2,7 @@ from __future__ import annotations
 import os, numpy as np
 from io import BytesIO
 from enum import Enum, Flag
-from openstk.gfx.gfx_render import Rasterize
-from openstk.gfx.gfx_texture import ITexture, ITextureFrames, TextureFlags, TextureFormat, TexturePixel
+from openstk.gfx import Raster, ITexture, ITextureFrames, TextureFlags, TextureFormat, TexturePixel
 from openstk.poly import Reader, unsafe, X_LumpON, X_LumpNO, X_LumpNO2, X_Lump2NO
 from gamex import PakFile, BinaryPakFile, PakBinary, PakBinaryT, FileSource, MetaInfo, MetaManager, MetaContent, IHaveMetaInfo
 from gamex.compression import decompressBlast

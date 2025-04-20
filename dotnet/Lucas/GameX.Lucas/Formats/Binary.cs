@@ -1,6 +1,5 @@
 using GameX.Formats;
 using OpenStack.Gfx;
-using OpenStack.Gfx.Texture;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;

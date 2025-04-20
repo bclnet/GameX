@@ -1,7 +1,8 @@
 using GameX.Valve.Formats;
+using OpenStack;
 using OpenStack.Gfx;
-using OpenStack.Gl;
-using OpenStack.Gl.Render;
+using OpenStack.Gfx.Egin;
+using OpenStack.Gfx.OpenGL;
 using OpenTK.Graphics.OpenGL;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,7 +28,7 @@ public class SpriteSceneNode : SceneNode
 
         if (quadVao == 0) quadVao = SetupQuadBuffer();
 
-        var paramMaterial = material.Material as MaterialPropShaderV;
+        var paramMaterial = material.Material as MaterialShaderVProp;
         size = paramMaterial.FloatParams.GetValueOrDefault("g_flUniformPointSize", 16);
 
         this.position = position;

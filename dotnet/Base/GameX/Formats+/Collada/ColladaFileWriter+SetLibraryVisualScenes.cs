@@ -1,4 +1,4 @@
-﻿using grendgine_collada;
+﻿using Khronos.Collada;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -13,7 +13,7 @@ partial class ColladaFileWriter
     public void SetLibraryVisualScenes()
     {
         // There can be multiple visual scenes.  Will just have one (World) for now.  All node chunks go under Nodes for that visual scene
-        var nodes = new List<Grendgine_Collada_Node>();
+        var nodes = new List<Collada_Node>();
 
         //// Check to see if there is a CompiledBones chunk.  If so, add a Node.
         //if (File.Chunks.Any(a => a.ChunkType == ChunkTypeEnum.CompiledBones || a.ChunkType == ChunkTypeEnum.CompiledBonesSC))
@@ -25,7 +25,7 @@ partial class ColladaFileWriter
         //    // First model file (.cga or .cgf) will contain the main Root Node, along with all non geometry Node chunks (placeholders).
         //    // Second one will have all the datastreams, but needs to be tied to the RootNode of the first model.
         //    // THERE CAN BE MULTIPLE ROOT NODES IN EACH FILE!  Check to see if the parentnodeid ~0 and be sure to add a node for it.
-        //    var positionNodes = new List<Grendgine_Collada_Node>();        // For SC files, these are the nodes in the .cga/.cgf files.
+        //    var positionNodes = new List<Collada_Node>();        // For SC files, these are the nodes in the .cga/.cgf files.
         //    foreach (var root in File.Models[0].NodeMap.Values.Where(a => a.ParentNodeID == ~0))
         //        positionNodes.Add(CreateNode(root));
         //    nodes.AddRange(positionNodes.ToArray());
@@ -33,9 +33,9 @@ partial class ColladaFileWriter
         //else nodes.Add(CreateNode(File.RootNode));
 
         // Set up the library
-        daeObject.Library_Visual_Scene = new Grendgine_Collada_Library_Visual_Scenes
+        daeObject.Library_Visual_Scene = new Collada_Library_Visual_Scenes
         {
-            Visual_Scene = new[] { new Grendgine_Collada_Visual_Scene { Node = nodes.ToArray(), ID = "Scene" } }
+            Visual_Scene = new[] { new Collada_Visual_Scene { Node = nodes.ToArray(), ID = "Scene" } }
         };
     }
 }

@@ -4,12 +4,13 @@ from enum import Enum
 from urllib.parse import urlparse
 from importlib import resources
 from openstk.poly import findType
+from openstk.platform import PlatformX, HostFileSystem, StandardFileSystem, VirtualFileSystem
 from gamex import option, familyKeys
 from gamex.pak import PakState, ManyPakFile, MultiPakFile
-from gamex.platform import PlatformX
-from gamex.platform_system import HostFileSystem, StandardFileSystem, VirtualFileSystem
 from gamex.store import getPathByKey as Store_getPathByKey
 from .util import _throw, _valueF, _value, _list, _related, _dictTrim
+
+#region Factory
 
 # tag::SearchBy[]
 class SearchBy(Enum):
@@ -34,7 +35,6 @@ class SystemPath:
 
 # TODO: HostFactory = HttpHost.Factory
 
-
 # tag::parseKey[]
 # parse key
 @staticmethod
@@ -51,7 +51,7 @@ def parseKey(value: str) -> object:
 @staticmethod
 def parseEngine(value: str) -> (str, str):
     if not value: return (None, None)
-    p = value.split(':', 2)
+    p = value.split(':', 1)
     return (p[0], None if len(p) < 2 else p[1])
 # end::parseEngine[]
 
@@ -118,6 +118,10 @@ def createFileSystem(fileSystemType: str, path: FileManager.PathItem, subPath: s
             case _: raise Exception(f'Unknown {path.type}')
     return system if not virtuals else VirtualFileSystem(system, virtuals)
 
+#endregion
+
+#region Detector
+
 # tag::Detector[]
 class Detector:
     def __init__(self, game: FamilyGame, id: str, elem: dict[str, object]):
@@ -144,6 +148,10 @@ class Detector:
     #TODO:Needsmore
 # end::Detector[]
 
+#endregion
+
+#region Resource
+
 # tag::Resource[]
 class Resource:
     def __init__(self, fileSystem: IFileSystem, game: FamilyGame, edition: Edition, searchPattern: str):
@@ -153,6 +161,10 @@ class Resource:
         self.searchPattern = searchPattern
     def __repr__(self): return f'res:/{self.searchPattern}#{self.game}'
 # end::Resource[]
+
+#endregion
+
+#region Family
 
 # tag::Family[]
 class Family:
@@ -200,6 +212,10 @@ games: {[x for x in self.games.values()]}'''
         edition = _value(game.editions, eid)
         return (game, edition)
 
+    # to Game
+    def toGame(self, game: FamilyGame, edition: FamilyGame.Edition) -> str:
+        return f'{game.id}.{edition.id}' if edition else game.id
+
     # tag::Family.parseResource[]
     # parse Resource
     def parseResource(self, uri: str, throwOnError: bool = True) -> Resource:
@@ -224,7 +240,11 @@ games: {[x for x in self.games.values()]}'''
             edition = edition,
             searchPattern = searchPattern
             )
-    # end::Family.parseResource[]            
+    # end::Family.parseResource[]
+
+    # to Game
+    def toResource(self, res: Resource) -> str:
+        return ''
 
     # open PakFile
     def openPakFile(self, res: Resource | str, throwOnError: bool = True) -> PakFile:
@@ -236,6 +256,10 @@ games: {[x for x in self.games.values()]}'''
         return (pak := r.game.createPakFile(r.fileSystem, r.edition, r.searchPattern, throwOnError)) and pak.open() if r.game else \
             _throw(f'Undefined Game')
 # end::Family[]
+
+#endregion
+
+#region FamilyApp
 
 # tag::FamilyApp[]
 class FamilyApp:
@@ -251,8 +275,14 @@ class FamilyApp:
                 case _: return v
         self.data = { k:switch(k,v) for k,v in elem.items() }
     def __repr__(self): return f'\n  {self.id}: {self.name}'
-    #TODO:def openAsync(self, explorerType: Type, manager: MetaManager)
+    def openAsync(self, explorerType: Type, manager: MetaManager):
+        #TODO:
+        raise Exception('Not Implemented')
 # end::FamilyApp[]
+
+#endregion
+
+#region FamilyEngine
 
 # tag::FamilyEngine[]
 class FamilyEngine:
@@ -267,6 +297,10 @@ class FamilyEngine:
         self.data = { k:switch(k,v) for k,v in elem.items() }
     def __repr__(self): return f'\n  {self.id}: {self.name}'
 # end::FamilyEngine[]
+
+#endregion
+
+#region FamilySample
 
 # tag::FamilySample[]
 class FamilySample:
@@ -285,6 +319,10 @@ class FamilySample:
         for k,v in elem.items():
             self.samples[k] = [FamilySample.File(x) for x in v['files']]
 # end::FamilySample[]
+
+#endregion
+
+#region FamilyGame
 
 # tag::FamilyGame[]
 class FamilyGame:
@@ -367,7 +405,7 @@ class FamilyGame:
         # files
         self.files = _valueF(elem, 'files', lambda x: FamilyGame.FileSet(x)) #files: dict[str, PathItem] = {}
         self.ignores = _list(elem, 'ignores') #ignores: dict[str, object] = {}
-        self.virtuals = _related(elem, 'virtuals', lambda k,v: parseVirtual) #virtuals: dict[str, object] = {}
+        self.virtuals = _related(elem, 'virtuals', lambda k,v: parseKey(v)) #virtuals: dict[str, object] = {}
         self.filters = _related(elem, 'filters', lambda k,v: v) #filters: dict[str, object] = {}
         # find
         self.found = self.getSystemPath(option.FindKey, family.id, elem)
@@ -398,7 +436,7 @@ class FamilyGame:
     def getSystemPath(self, startsWith: str, family: str, elem: map[str, object]) -> SystemPath:
         if not self.files or not self.files.keys: return None
         for key in [x for x in self.files.keys if x.startsWith(startsWith)] if startsWith else self.files.keys:
-            p = key.split(':', 2)
+            p = key.split(':', 1)
             k = p[0]; v = None if len(p) < 2 else p[1]
             path = Store_getPathByKey(key, family, elem)
             if not path: continue
@@ -471,6 +509,10 @@ class FamilyGame:
         return self.pakExts and any([x for x in self.pakExts if path.endswith(x)])
 # end::FamilyGame[]
 
+#endregion
+
+#region Loader
+
 families = {}
 # unknown = None
 # unknownPakFile = None
@@ -499,3 +541,5 @@ def getFamily(id: str, throwOnError: bool = True) -> Family:
     family = _value(families, id)
     if not family and throwOnError: raise Exception(f'Unknown family: {id}')
     return family
+
+#endregion

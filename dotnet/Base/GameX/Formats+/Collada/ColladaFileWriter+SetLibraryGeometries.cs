@@ -1,4 +1,4 @@
-﻿//using grendgine_collada;
+﻿//using Khronos.Collada;
 //using System;
 //using System.Collections.Generic;
 //using System.Linq;
@@ -19,7 +19,7 @@
 //        {
 //            // Make a list for all the geometries objects we will need. Will convert to array at end.  Define the array here as well
 //            // Unfortunately we have to define a Geometry for EACH meshsubset in the meshsubsets, since the mesh can contain multiple materials
-//            var geometrys = new List<Grendgine_Collada_Geometry>();
+//            var geometrys = new List<Collada_Geometry>();
 
 //            // For each of the nodes, we need to write the geometry.
 //            // Use a foreach statement to get all the node chunks.  This will get us the meshes, which will contain the vertex, UV and normal info.
@@ -31,9 +31,9 @@
 //                // If the Object ID of Node chunk points to a Helper or a Controller though, place an empty.
 //                // Will have to figure out transforms here too.
 //                // need to make a list of the sources and triangles to add to tmpGeo.Mesh
-//                var sourceList = new List<Grendgine_Collada_Source>();
-//                //var triList = new List<Grendgine_Collada_Triangles>();  // Use PolyList over trilist
-//                var polylistList = new List<Grendgine_Collada_Polylist>();
+//                var sourceList = new List<Collada_Source>();
+//                //var triList = new List<Collada_Triangles>();  // Use PolyList over trilist
+//                var polylistList = new List<Collada_Polylist>();
 //                ChunkDataStream tmpNormals = null;
 //                ChunkDataStream tmpUVs = null;
 //                ChunkDataStream tmpVertices = null;
@@ -92,47 +92,47 @@
 //                            continue;
 
 //                        // tmpGeo is a Geometry object for each meshsubset.  Name will be "Nodechunk name_matID".  Hopefully there is only one matID used per submesh
-//                        var tmpGeo = new Grendgine_Collada_Geometry { Name = nodeChunk.Name, ID = nodeChunk.Name + "-mesh" };
-//                        var tmpMesh = new Grendgine_Collada_Mesh();
+//                        var tmpGeo = new Collada_Geometry { Name = nodeChunk.Name, ID = nodeChunk.Name + "-mesh" };
+//                        var tmpMesh = new Collada_Mesh();
 //                        tmpGeo.Mesh = tmpMesh;
 
-//                        var source = new Grendgine_Collada_Source[3]; // 3 possible source types.
+//                        var source = new Collada_Source[3]; // 3 possible source types.
 //                        // need a collada_source for position, normal, UV, tangents and color, what the source is (verts), and the tri index
-//                        var posSource = source[0] = new Grendgine_Collada_Source { ID = nodeChunk.Name + "-mesh-pos", Name = nodeChunk.Name + "-pos" };
-//                        var normSource = source[1] = new Grendgine_Collada_Source { ID = nodeChunk.Name + "-mesh-norm", Name = nodeChunk.Name + "-norm" };
-//                        var uvSource = source[2] = new Grendgine_Collada_Source { Name = nodeChunk.Name + "-UV", ID = nodeChunk.Name + "-mesh-UV" };
-//                        //var tangentSource = source[3] = new Grendgine_Collada_Source { Name = nodeChunk.Name + "-tangent", ID = nodeChunk.Name + "-mesh-tangent" };
+//                        var posSource = source[0] = new Collada_Source { ID = nodeChunk.Name + "-mesh-pos", Name = nodeChunk.Name + "-pos" };
+//                        var normSource = source[1] = new Collada_Source { ID = nodeChunk.Name + "-mesh-norm", Name = nodeChunk.Name + "-norm" };
+//                        var uvSource = source[2] = new Collada_Source { Name = nodeChunk.Name + "-UV", ID = nodeChunk.Name + "-mesh-UV" };
+//                        //var tangentSource = source[3] = new Collada_Source { Name = nodeChunk.Name + "-tangent", ID = nodeChunk.Name + "-mesh-tangent" };
 //                        //
-//                        var posInput = new Grendgine_Collada_Input_Unshared { Semantic = Grendgine_Collada_Input_Semantic.POSITION, source = "#" + posSource.ID };
-//                        var normInput = new Grendgine_Collada_Input_Unshared { Semantic = Grendgine_Collada_Input_Semantic.NORMAL, source = "#" + normSource.ID };
-//                        var uvInput = new Grendgine_Collada_Input_Unshared { Semantic = Grendgine_Collada_Input_Semantic.TEXCOORD, source = "#" + uvSource.ID };    // might need to replace TEXCOORD with UV
-//                        var colorInput = new Grendgine_Collada_Input_Unshared { Semantic = Grendgine_Collada_Input_Semantic.COLOR };
-//                        //var tangentInput = new Grendgine_Collada_Input_Unshared { Semantic = Grendgine_Collada_Input_Semantic.TANGENT, source = "#" + tangentSource.ID } ;
+//                        var posInput = new Collada_Input_Unshared { Semantic = Collada_Input_Semantic.POSITION, source = "#" + posSource.ID };
+//                        var normInput = new Collada_Input_Unshared { Semantic = Collada_Input_Semantic.NORMAL, source = "#" + normSource.ID };
+//                        var uvInput = new Collada_Input_Unshared { Semantic = Collada_Input_Semantic.TEXCOORD, source = "#" + uvSource.ID };    // might need to replace TEXCOORD with UV
+//                        var colorInput = new Collada_Input_Unshared { Semantic = Collada_Input_Semantic.COLOR };
+//                        //var tangentInput = new Collada_Input_Unshared { Semantic = Collada_Input_Semantic.TANGENT, source = "#" + tangentSource.ID } ;
 
 //                        // Create vertices node.  For polylist will just have VERTEX.
-//                        var vertices = tmpGeo.Mesh.Vertices = new Grendgine_Collada_Vertices { ID = nodeChunk.Name + "-vertices", Input = new[] { posInput, null, null } };
+//                        var vertices = tmpGeo.Mesh.Vertices = new Collada_Vertices { ID = nodeChunk.Name + "-vertices", Input = new[] { posInput, null, null } };
 
 //                        // Create a float_array object to store all the data
-//                        Grendgine_Collada_Float_Array floatArrayVerts, floatArrayNormals, floatArrayUVs; //floatArrayColors, floatArrayTangents;
+//                        Collada_Float_Array floatArrayVerts, floatArrayNormals, floatArrayUVs; //floatArrayColors, floatArrayTangents;
 //                        // Strings for vertices
 //                        StringBuilder vertString = new StringBuilder(), normString = new StringBuilder(), uvString = new StringBuilder(); //tangentString = new StringBuilder()
 //                        if (tmpVertices != null)  // Will be null if it's using VertsUVs.
 //                        {
-//                            floatArrayVerts = new Grendgine_Collada_Float_Array
+//                            floatArrayVerts = new Collada_Float_Array
 //                            {
 //                                ID = posSource.ID + "-array",
 //                                Digits = 6,
 //                                Magnitude = 38,
 //                                Count = (int)tmpVertices.NumElements * 3
 //                            };
-//                            floatArrayUVs = new Grendgine_Collada_Float_Array
+//                            floatArrayUVs = new Collada_Float_Array
 //                            {
 //                                ID = uvSource.ID + "-array",
 //                                Digits = 6,
 //                                Magnitude = 38,
 //                                Count = (int)tmpUVs.NumElements * 2
 //                            };
-//                            floatArrayNormals = new Grendgine_Collada_Float_Array
+//                            floatArrayNormals = new Collada_Float_Array
 //                            {
 //                                ID = normSource.ID + "-array",
 //                                Digits = 6,
@@ -155,21 +155,21 @@
 //                        // VertsUV structure.  Pull out verts and UVs from tmpVertsUVs.
 //                        else
 //                        {
-//                            floatArrayVerts = new Grendgine_Collada_Float_Array
+//                            floatArrayVerts = new Collada_Float_Array
 //                            {
 //                                ID = posSource.ID + "-array",
 //                                Digits = 6,
 //                                Magnitude = 38,
 //                                Count = (int)tmpVertsUVs.NumElements * 3
 //                            };
-//                            floatArrayUVs = new Grendgine_Collada_Float_Array
+//                            floatArrayUVs = new Collada_Float_Array
 //                            {
 //                                ID = uvSource.ID + "-array",
 //                                Digits = 6,
 //                                Magnitude = 38,
 //                                Count = (int)tmpVertsUVs.NumElements * 2
 //                            };
-//                            floatArrayNormals = new Grendgine_Collada_Float_Array
+//                            floatArrayNormals = new Collada_Float_Array
 //                            {
 //                                ID = normSource.ID + "-array",
 //                                Digits = 6,
@@ -218,7 +218,7 @@
 //                        CleanNumbers(normString);
 //                        CleanNumbers(uvString);
 
-//                        //floatArrayNormals = new Grendgine_Collada_Float_Array
+//                        //floatArrayNormals = new Collada_Float_Array
 //                        //{
 //                        //    ID = tangentSource.ID + "-array",
 //                        //    Digits = 6,
@@ -235,7 +235,7 @@
 
 //                        #region Create the polylist node.
 
-//                        var polylists = tmpGeo.Mesh.Polylist = new Grendgine_Collada_Polylist[tmpMeshSubsets.NumMeshSubset];
+//                        var polylists = tmpGeo.Mesh.Polylist = new Collada_Polylist[tmpMeshSubsets.NumMeshSubset];
 //                        StringBuilder b0 = new StringBuilder(), b1 = new StringBuilder();
 //                        for (var j = 0U; j < tmpMeshSubsets.NumMeshSubset; j++) // Need to make a new Polylist entry for each submesh.
 //                        {
@@ -252,17 +252,17 @@
 //                                b1.AppendFormat("{0} {0} {0} {1} {1} {1} {2} {2} {2} ", tmpIndices.Indices[k], tmpIndices.Indices[k + 1], tmpIndices.Indices[k + 2]);
 //                                k += 2;
 //                            }
-//                            polylists[j] = new Grendgine_Collada_Polylist
+//                            polylists[j] = new Collada_Polylist
 //                            {
 //                                Count = (int)tmpMeshSubsets.MeshSubsets[j].NumIndices / 3,
 //                                Input = new[] { // Create the 4 inputs.  vertex, normal, texcoord, tangent
-//                                    new Grendgine_Collada_Input_Shared { Semantic = Grendgine_Collada_Input_Semantic.VERTEX, Offset = 0, source = "#" + vertices.ID },
-//                                    new Grendgine_Collada_Input_Shared { Semantic = Grendgine_Collada_Input_Semantic.NORMAL, Offset = 1, source = "#" + normSource.ID },
-//                                    new Grendgine_Collada_Input_Shared { Semantic = Grendgine_Collada_Input_Semantic.TEXCOORD, Offset = 2, source = "#" + uvSource.ID }
-//                                    //new Grendgine_Collada_Input_Shared { Semantic = Grendgine_Collada_Input_Semantic.TANGENT, Offset = 3, source = "#" + tangentSource.ID }
+//                                    new Collada_Input_Shared { Semantic = Collada_Input_Semantic.VERTEX, Offset = 0, source = "#" + vertices.ID },
+//                                    new Collada_Input_Shared { Semantic = Collada_Input_Semantic.NORMAL, Offset = 1, source = "#" + normSource.ID },
+//                                    new Collada_Input_Shared { Semantic = Collada_Input_Semantic.TEXCOORD, Offset = 2, source = "#" + uvSource.ID }
+//                                    //new Collada_Input_Shared { Semantic = Collada_Input_Semantic.TANGENT, Offset = 3, source = "#" + tangentSource.ID }
 //                                },
-//                                VCount = new Grendgine_Collada_Int_Array_String { Value_As_String = b0.ToString().TrimEnd() },
-//                                P = new Grendgine_Collada_Int_Array_String { Value_As_String = b1.ToString().TrimEnd() },
+//                                VCount = new Collada_Int_Array_String { Value_As_String = b0.ToString().TrimEnd() },
+//                                P = new Collada_Int_Array_String { Value_As_String = b1.ToString().TrimEnd() },
 //                                Material = CryFile.Materials.Count() != 0 ? CryFile.Materials[tmpMeshSubsets.MeshSubsets[j].MatID].Name + "-material" : null
 //                            };
 //                        }
@@ -285,50 +285,50 @@
 //                        tmpGeo.Mesh.Source = source;
 
 //                        // create the technique_common for each of these
-//                        posSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source
+//                        posSource.Technique_Common = new Collada_Technique_Common_Source
 //                        {
-//                            Accessor = new Grendgine_Collada_Accessor
+//                            Accessor = new Collada_Accessor
 //                            {
 //                                Source = "#" + floatArrayVerts.ID,
 //                                Stride = 3,
 //                                Count = (uint)tmpMeshChunk.NumVertices,
 //                                Param = new[] {
-//                                    new Grendgine_Collada_Param { Name = "X", Type = "float" },
-//                                    new Grendgine_Collada_Param { Name = "Y", Type = "float" },
-//                                    new Grendgine_Collada_Param { Name = "Z", Type = "float" }
+//                                    new Collada_Param { Name = "X", Type = "float" },
+//                                    new Collada_Param { Name = "Y", Type = "float" },
+//                                    new Collada_Param { Name = "Z", Type = "float" }
 //                                }
 //                            }
 //                        };
-//                        normSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source
+//                        normSource.Technique_Common = new Collada_Technique_Common_Source
 //                        {
-//                            Accessor = new Grendgine_Collada_Accessor
+//                            Accessor = new Collada_Accessor
 //                            {
 //                                Source = "#" + floatArrayNormals.ID,
 //                                Stride = 3,
 //                                Count = (uint)tmpMeshChunk.NumVertices,
 //                                Param = new[] {
-//                                    new Grendgine_Collada_Param { Name = "X", Type = "float" },
-//                                    new Grendgine_Collada_Param { Name = "Y", Type = "float" },
-//                                    new Grendgine_Collada_Param { Name = "Z", Type = "float" }
+//                                    new Collada_Param { Name = "X", Type = "float" },
+//                                    new Collada_Param { Name = "Y", Type = "float" },
+//                                    new Collada_Param { Name = "Z", Type = "float" }
 //                                }
 //                            }
 //                        };
-//                        uvSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source
+//                        uvSource.Technique_Common = new Collada_Technique_Common_Source
 //                        {
-//                            Accessor = new Grendgine_Collada_Accessor
+//                            Accessor = new Collada_Accessor
 //                            {
 //                                Source = "#" + floatArrayUVs.ID,
 //                                Stride = 2,
 //                                Count = tmpVertices != null ? tmpUVs.NumElements : tmpVertsUVs.NumElements,
 //                                Param = new[] {
-//                                    new Grendgine_Collada_Param { Name = "S", Type = "float" },
-//                                    new Grendgine_Collada_Param { Name = "T", Type = "float" }
+//                                    new Collada_Param { Name = "S", Type = "float" },
+//                                    new Collada_Param { Name = "T", Type = "float" }
 //                                }
 //                            }
 //                        };
-//                        //tangentSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source
+//                        //tangentSource.Technique_Common = new Collada_Technique_Common_Source
 //                        //{
-//                        //    Accessor = new Grendgine_Collada_Accessor
+//                        //    Accessor = new Collada_Accessor
 //                        //    {
 //                        //        Source = "#" + floatArrayTangents.ID,
 //                        //        Stride = 8,
@@ -336,17 +336,17 @@
 //                        //    }
 //                        //};
 //                        //if (tmpColors != null)
-//                        //    colorSource.Technique_Common = new Grendgine_Collada_Technique_Common_Source
+//                        //    colorSource.Technique_Common = new Collada_Technique_Common_Source
 //                        //    {
-//                        //        Accessor = new Grendgine_Collada_Accessor
+//                        //        Accessor = new Collada_Accessor
 //                        //        {
 //                        //            Source = "#" + floatArrayColors.ID,
 //                        //            Stride = 3,
 //                        //            Count = tmpColors.NumElements,
 //                        //            Param = new[] {
-//                        //              new Grendgine_Collada_Param { Name = "R", Type = "float"},
-//                        //              new Grendgine_Collada_Param { Name = "G", Type = "float"},
-//                        //              new Grendgine_Collada_Param { Name = "B", Type = "float"}},
+//                        //              new Collada_Param { Name = "R", Type = "float"},
+//                        //              new Collada_Param { Name = "G", Type = "float"},
+//                        //              new Collada_Param { Name = "B", Type = "float"}},
 //                        //        }
 //                        //    };
 //                        geometrys.Add(tmpGeo);
@@ -357,7 +357,7 @@
 //                // There is no geometry for a helper or controller node.  Can skip the rest.
 //            }
 
-//            daeObject.Library_Geometries = new Grendgine_Collada_Library_Geometries
+//            daeObject.Library_Geometries = new Collada_Library_Geometries
 //            {
 //                Geometry = geometrys.ToArray()
 //            };

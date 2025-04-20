@@ -2,8 +2,7 @@ import sys, os, numpy as np
 from PyQt6.QtCore import Qt, QEvent, QTimer
 from PyQt6.QtGui import QWindow
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton
-from openstk.gfx.gfx_texture import ITextureSelect
-from openstk.gfx.gfx_ui import MouseState, KeyboardState
+from openstk.gfx import ITextureSelect, MouseState, KeyboardState
 # opengl
 from OpenGL.GL import *
 from openstk.gfx.gl_view import OpenGLView

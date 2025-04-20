@@ -4,8 +4,7 @@ from typing import TypeVar
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QWindow
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton
-# from openstk.gfx.gfx_render import IRenderer
-# from openstk.gfx.gfx_texture import ITexture
+# from openstk.gfx import ITexture, IRenderer
 from gamex.platform_pygame_views import createView
 # from panda3d.core import loadPrcFileData, ClockObject, WindowProperties, GraphicsEngine, GraphicsPipe, GraphicsOutput
 # from panda3d.core import Filename, Texture, TextureStage, NodePath, Camera, PerspectiveLens, AmbientLight, DirectionalLight

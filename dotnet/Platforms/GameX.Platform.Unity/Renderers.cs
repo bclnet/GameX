@@ -1,11 +1,10 @@
 ﻿using OpenStack;
 using OpenStack.Gfx;
-using OpenStack.Unity;
-using OpenStack.Unity.Renderers;
+using OpenStack.Gfx.Unity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using static OpenStack.Debug;
+using static OpenStack.Gfx.GfxX;
 
 namespace GameX.Platforms.Unity;
 
@@ -60,7 +59,7 @@ public class ViewInfo : UnityEngine.MonoBehaviour
         Family = FamilyManager.GetFamily(FamilyId);
         if (!string.IsNullOrEmpty(PakUri)) PakFiles.Add(Family.OpenPakFile(new Uri(PakUri)));
         var first = PakFiles.FirstOrDefault();
-        Gfx = (UnityGfxModel)first?.Gfx[OpenStack.Gfx.Gfx.XModel];
+        Gfx = (UnityGfxModel)first?.Gfx[XModel];
         Renderer = UnityRenderer.CreateRenderer(this, Gfx, Param1, ViewKind.ToString());
     }
 

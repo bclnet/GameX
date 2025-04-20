@@ -2,7 +2,6 @@ using GameX.WB.Formats.AC.AnimationHooks;
 using GameX.WB.Formats.AC.Entity;
 using GameX.WB.Formats.AC.Props;
 using OpenStack.Gfx;
-using OpenStack.Gfx.Texture;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;

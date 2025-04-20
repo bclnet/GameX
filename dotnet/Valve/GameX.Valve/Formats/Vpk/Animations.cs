@@ -1,5 +1,5 @@
 using OpenStack.Gfx;
-using OpenStack.Gfx.Animate;
+using OpenStack.Gfx.Egin;
 using System;
 using System.Collections.Generic;
 using System.IO;

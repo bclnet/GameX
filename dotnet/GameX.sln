@@ -210,7 +210,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Gfx", "Gfx", "{8AFD3AEA-A28
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStack.Gfx", "..\OpenStack\dotnet\Gfx\OpenStack.Gfx\OpenStack.Gfx.csproj", "{5D3D4FC2-C888-4462-96CD-72B6030C9E26}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStack.Gl", "..\OpenStack\dotnet\Platform\OpenStack.Gl\OpenStack.Gl.csproj", "{CEE4D753-134D-4B37-877B-912CBD0AE852}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStack.OpenGL", "..\OpenStack\dotnet\Platform\OpenStack.OpenGL\OpenStack.OpenGL.csproj", "{CEE4D753-134D-4B37-877B-912CBD0AE852}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStack.GfxTests", "..\OpenStack\dotnet\Gfx\OpenStack.GfxTests\OpenStack.GfxTests.csproj", "{408C5AA0-004B-4237-9D5D-D9ECC35EE35F}"
 EndProject

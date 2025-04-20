@@ -1,5 +1,4 @@
 ﻿using GameX.Formats.Unknown;
-using grendgine_collada;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,6 +8,7 @@ using System.Text;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using static OpenStack.Debug;
+using ColladaX = Khronos.Collada.Collada;
 
 namespace GameX.Formats.Collada;
 
@@ -28,7 +28,7 @@ public partial class ColladaFileWriter : UnknownFileWriter
         TargetNamespace = "https://www.khronos.org/files/collada_schema_1_5",
     };
 
-    public Grendgine_Collada daeObject = new() // This is the serializable class.
+    public ColladaX daeObject = new() // This is the serializable class.
     {
         //Collada_Version = "1.5.0", // Blender doesn't like 1.5. :(
         Collada_Version = "1.4.1",
@@ -63,7 +63,7 @@ public partial class ColladaFileWriter : UnknownFileWriter
 
         // Make the StreamWriter and Serializes the daeObject
         if (!ModelFile.Directory.Exists) ModelFile.Directory.Create();
-        using (var w = new StreamWriter(ModelFile.FullName)) new XmlSerializer(typeof(Grendgine_Collada)).Serialize(w, daeObject);
+        using (var w = new StreamWriter(ModelFile.FullName)) new XmlSerializer(typeof(ColladaX)).Serialize(w, daeObject);
 
         // Validate that the Collada document is ok
 #if false

@@ -4,10 +4,10 @@ partial class ColladaFileWriter
 {
 
 #if false
-    Grendgine_Collada_Node CreateNode(ChunkNode nodeChunk)
+    Collada_Node CreateNode(ChunkNode nodeChunk)
     {
         // This will be used recursively to create a node object and return it to WriteLibrary_VisualScenes
-        Grendgine_Collada_Node tmpNode;
+        Collada_Node tmpNode;
         // Check to see if there is a second model file, and if the mesh chunk is actually there.
         if (CryFile.Models.Count > 1)
         {
@@ -47,8 +47,8 @@ partial class ColladaFileWriter
     /// This will be used to make the Collada node element for Node chunks that point to Helper Chunks and MeshPhysics
     /// </summary>
     /// <param name="nodeChunk">The node chunk for this Collada Node.</param>
-    /// <returns>Grendgine_Collada_Node for the node chunk</returns>
-    Grendgine_Collada_Node CreateSimpleNode(ChunkNode nodeChunk)
+    /// <returns>Collada_Node for the node chunk</returns>
+    Collada_Node CreateSimpleNode(ChunkNode nodeChunk)
     {
         var matrixString = new StringBuilder();
         CalculateTransform(nodeChunk);
@@ -58,13 +58,13 @@ partial class ColladaFileWriter
             nodeChunk.LocalTransform.m20, nodeChunk.LocalTransform.m21, nodeChunk.LocalTransform.m22, nodeChunk.LocalTransform.m23,
             nodeChunk.LocalTransform.m30, nodeChunk.LocalTransform.m31, nodeChunk.LocalTransform.m32, nodeChunk.LocalTransform.m33);
         // This will be used to make the Collada node element for Node chunks that point to Helper Chunks and MeshPhysics
-        return new Grendgine_Collada_Node
+        return new Collada_Node
         {
-            Type = Grendgine_Collada_Node_Type.NODE,
+            Type = Collada_Node_Type.NODE,
             Name = nodeChunk.Name,
             ID = nodeChunk.Name,
             // we can have multiple matrices, but only need one since there is only one per Node chunk anyway
-            Matrix = new[] { new Grendgine_Collada_Matrix { Value_As_String = matrixString.ToString(), sID = "transform" } },
+            Matrix = new[] { new Collada_Matrix { Value_As_String = matrixString.ToString(), sID = "transform" } },
             // Add childnodes
             node = CreateChildNodes(nodeChunk),
         };
@@ -75,11 +75,11 @@ partial class ColladaFileWriter
     /// </summary>
     /// <param name="nodeChunk">Node with children to add.</param>
     /// <returns>A node with all the children added.</returns>
-    Grendgine_Collada_Node[] CreateChildNodes(ChunkNode nodeChunk)
+    Collada_Node[] CreateChildNodes(ChunkNode nodeChunk)
     {
         if (nodeChunk.__NumChildren != 0)
         {
-            var childNodes = new List<Grendgine_Collada_Node>();
+            var childNodes = new List<Collada_Node>();
             foreach (var childNodeChunk in nodeChunk.AllChildNodes.ToList())
                 childNodes.Add(CreateNode(childNodeChunk));
             return childNodes.ToArray();
@@ -87,7 +87,7 @@ partial class ColladaFileWriter
         return null;
     }
 
-    Grendgine_Collada_Node CreateJointNode(CompiledBone bone)
+    Collada_Node CreateJointNode(CompiledBone bone)
     {
         // Populate the matrix.  This is based on the BONETOWORLD data in this bone.
         var matrixValues = new StringBuilder();
@@ -108,21 +108,21 @@ partial class ColladaFileWriter
 
         // This will be used recursively to create a node object and return it to WriteLibrary_VisualScenes
         // If this is the root bone, set the node id to Armature.  Otherwise set to armature_<bonename>
-        var tmpNode = new Grendgine_Collada_Node
+        var tmpNode = new Collada_Node
         {
             ID = bone.parentID != 0 ? "Armature_" + bone.boneName.Replace(' ', '_') : "Armature",
             Name = bone.boneName.Replace(' ', '_'),
             sID = bone.boneName.Replace(' ', '_'),
-            Type = Grendgine_Collada_Node_Type.JOINT,
+            Type = Collada_Node_Type.JOINT,
             // we can have multiple matrices, but only need one since there is only one per Node chunk anyway
-            Matrix = new[] { new Grendgine_Collada_Matrix { Value_As_String = matrixValues.ToString() } }
+            Matrix = new[] { new Collada_Matrix { Value_As_String = matrixValues.ToString() } }
         };
 
         // Recursively call this for each of the child bones to this bone.
         if (bone.numChildren > 0)
         {
             var idx = 0;
-            var childNodes = new Grendgine_Collada_Node[bone.numChildren];
+            var childNodes = new Collada_Node[bone.numChildren];
             foreach (var childBone in CryFile.Bones.GetAllChildBones(bone))
                 childNodes[idx++] = CreateJointNode(childBone);
             tmpNode.node = childNodes;
@@ -130,7 +130,7 @@ partial class ColladaFileWriter
         return tmpNode;
     }
 
-    Grendgine_Collada_Node CreateGeometryNode(ChunkNode nodeChunk, ChunkMesh tmpMeshChunk)
+    Collada_Node CreateGeometryNode(ChunkNode nodeChunk, ChunkMesh tmpMeshChunk)
     {
         var matrixString = new StringBuilder();
         // matrixString might have to be an identity matrix, since GetTransform is applying the transform to all the vertices.
@@ -144,30 +144,30 @@ partial class ColladaFileWriter
 
         // This gets complicated.  We need to make one instance_material for each material used in this node chunk.  The mat IDs used in this
         // node chunk are stored in meshsubsets, so for each subset we need to grab the mat, get the target (id), and make an instance_material for it.
-        var instanceMaterials = new List<Grendgine_Collada_Instance_Material_Geometry>();
+        var instanceMaterials = new List<Collada_Instance_Material_Geometry>();
         var tmpMeshSubsets = (ChunkMeshSubsets)nodeChunk._model.ChunkMap[tmpMeshChunk.MeshSubsets];  // Listed as Object ID for the Node
         for (var i = 0; i < tmpMeshSubsets.NumMeshSubset; i++)
             // For each mesh subset, we want to create an instance material and add it to instanceMaterials list.
             if (CryFile.Materials.Count() > 0)
-                instanceMaterials.Add(new Grendgine_Collada_Instance_Material_Geometry
+                instanceMaterials.Add(new Collada_Instance_Material_Geometry
                 {
                     Target = "#" + CryFile.Materials[tmpMeshSubsets.MeshSubsets[i].MatID].Name + "-material",
                     Symbol = CryFile.Materials[tmpMeshSubsets.MeshSubsets[i].MatID].Name + "-material"
                 });
 
         // we can have multiple matrices, but only need one since there is only one per Node chunk anyway
-        return new Grendgine_Collada_Node
+        return new Collada_Node
         {
-            Type = Grendgine_Collada_Node_Type.NODE,
+            Type = Collada_Node_Type.NODE,
             Name = nodeChunk.Name,
             ID = nodeChunk.Name,
-            Matrix = new[] { new Grendgine_Collada_Matrix { Value_As_String = matrixString.ToString(), sID = "transform" } },
+            Matrix = new[] { new Collada_Matrix { Value_As_String = matrixString.ToString(), sID = "transform" } },
             // Each node will have one instance geometry, although it could be a list.
-            Instance_Geometry = new[] { new Grendgine_Collada_Instance_Geometry {
+            Instance_Geometry = new[] { new Collada_Instance_Geometry {
                 Name = nodeChunk.Name,
                 URL = "#" + nodeChunk.Name + "-mesh",  // this is the ID of the geometry.
-                Bind_Material = new[]{new Grendgine_Collada_Bind_Material {
-                    Technique_Common = new Grendgine_Collada_Technique_Common_Bind_Material {
+                Bind_Material = new[]{new Collada_Bind_Material {
+                    Technique_Common = new Collada_Technique_Common_Bind_Material {
                         Instance_Material = instanceMaterials.ToArray()
                     }
                 }}
@@ -180,8 +180,8 @@ partial class ColladaFileWriter
     /// </summary>
     /// <param name="vertices">The vertices of the source datastream.  This can be position, normals, colors, tangents, etc.</param>
     /// <param name="nodeChunk">The Node chunk of the datastream.  Need this for names, mesh, and submesh info.</param>
-    /// <returns>Grendgine_Collada_Source object with the source data.</returns>
-    Grendgine_Collada_Source GetMeshSource(ChunkDataStream vertices, ChunkNode nodeChunk) => new Grendgine_Collada_Source
+    /// <returns>Collada_Source object with the source data.</returns>
+    Collada_Source GetMeshSource(ChunkDataStream vertices, ChunkNode nodeChunk) => new Collada_Source
     {
         ID = nodeChunk.Name + "-mesh-pos",
         Name = nodeChunk.Name + "-pos"

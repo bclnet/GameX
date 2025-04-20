@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os
 from panda3d.core import *
-from openstk.gfx.gfx_render import IRenderer
+from openstk.gfx import IRenderer
 
 # typedefs
 class IPanda3dGfx: pass

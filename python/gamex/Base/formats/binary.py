@@ -3,8 +3,7 @@ import os, numpy as np
 from io import BytesIO
 from PIL import Image
 from enum import Enum
-from openstk.gfx.gfx_render import Rasterize
-from openstk.gfx.gfx_texture import DDS_HEADER, ITexture, TextureFormat, TexturePixel
+from openstk.gfx import Raster, DDS_HEADER, ITexture, TextureFormat, TexturePixel
 from gamex import PakBinary, PakBinaryT, FileSource, BinaryPakFile, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
 from gamex.util import _pathExtension
 from zipfile import ZipFile

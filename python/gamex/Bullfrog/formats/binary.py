@@ -2,8 +2,7 @@ from __future__ import annotations
 import os, ctypes
 from enum import Enum
 from io import BytesIO
-from openstk.gfx.gfx_render import Rasterize
-from openstk.gfx.gfx_texture import ITextureFrames, TextureFormat, TexturePixel
+from openstk.gfx import Raster, ITextureFrames, TextureFormat, TexturePixel
 from gamex import PakBinary, PakBinaryT, FileSource, MetaInfo, MetaContent, IHaveMetaInfo
 from gamex.util import _pathExtension
 

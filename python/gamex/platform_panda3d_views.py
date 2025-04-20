@@ -1,6 +1,6 @@
 from __future__ import annotations
 import os
-from openstk.gfx.gfx_texture import ITexture, ITextureFrames
+from openstk.gfx import ITexture, ITextureFrames
 from panda3d.core import *
 from gamex.platform_panda3d_renders import TextureRenderer
 

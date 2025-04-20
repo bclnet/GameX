@@ -6,17 +6,10 @@ using GameX.Platforms.Sdl;
 using GameX.Platforms.Stride;
 using GameX.Platforms.Unity;
 using GameX.Platforms.Unreal;
+using OpenStack;
 using OpenStack.Gfx;
-using OpenStack.Gl;
-using OpenStack.Godot;
-using OpenStack.O3de;
-using OpenStack.Ogre;
-using OpenStack.Sdl;
-using OpenStack.Stride;
-using OpenStack.Unity;
-using OpenStack.Unreal;
 using OpenStack.Wpf.Control;
-using static OpenStack.Gfx.Gfx;
+using static OpenStack.Gfx.GfxX;
 
 namespace GameX.App.Explorer.Controls
 {
@@ -42,7 +35,7 @@ namespace GameX.App.Explorer.Controls
 
     public class AppSdlControl : SdlControl
     {
-        protected override Renderer CreateRenderer() => SdlRenderer.CreateRenderer(this, Gfx[XSprite2D] as SdlGfx2dSprite, Source, Type);
+        protected override Renderer CreateRenderer() => SdlRenderer.CreateRenderer(this, Gfx[XSprite2D] as SdlGfxSprite2D, Source, Type);
     }
 
     public class AppStrideControl : StrideControl
@@ -58,5 +51,10 @@ namespace GameX.App.Explorer.Controls
     public class AppUnrealControl : UnrealControl
     {
         protected override Renderer CreateRenderer() => UnrealRenderer.CreateRenderer(this, Gfx[XModel] as UnrealGfxModel, Source, Type);
+
+        void X()
+        {
+            //OpenStack.Gfx
+        }
     }
 }

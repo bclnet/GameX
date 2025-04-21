@@ -9,7 +9,7 @@ using GameX.Platforms.Unreal;
 using OpenStack;
 using OpenStack.Gfx;
 using OpenStack.Wpf.Control;
-using static OpenStack.Gfx.GfxX;
+using static OpenStack.Gfx.GfX;
 
 namespace GameX.App.Explorer.Controls
 {

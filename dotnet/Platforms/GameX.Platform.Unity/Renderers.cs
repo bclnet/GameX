@@ -4,7 +4,7 @@ using OpenStack.Gfx.Unity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using static OpenStack.Gfx.GfxX;
+using static OpenStack.Gfx.GfX;
 
 namespace GameX.Platforms.Unity;
 

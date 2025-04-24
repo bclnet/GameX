@@ -1,11 +1,9 @@
 ﻿namespace GameX.Epic.Formats.Core;
 
-public static class UDecrypt
-{
+public static class UDecrypt {
     const string BladeAndSoul_Key = "qiffjdlerdoqymvketdcl0er2subioxq";
 
-    public static void DecryptBladeAndSoul(byte[] CompressedBuffer, int CompressedSize)
-    {
+    public static void DecryptBladeAndSoul(byte[] CompressedBuffer, int CompressedSize) {
         if (CompressedSize >= 32)
             for (var i = 0; i < CompressedSize; i++)
                 CompressedBuffer[i] ^= (byte)BladeAndSoul_Key[i % 32];
@@ -17,8 +15,7 @@ public static class UDecrypt
         243, 67, 95, 158, 69, 106, 107, 187, 237, 35, 103, 142, 72, 142, 243
     };
 
-    public static void DecryptTaoYuan(byte[] CompressedBuffer, int CompressedSize)
-    {
+    public static void DecryptTaoYuan(byte[] CompressedBuffer, int CompressedSize) {
         for (var i = 0; i < CompressedSize; i++)
             CompressedBuffer[i] ^= BladeAndSoul_TaoYuan[i % 31];     // note: "N % 31" is not the same as "N & 0x1F"
     }
@@ -75,12 +72,10 @@ public static class UDecrypt
         220, 169, 141,   1, 131,  82,  44,  91, 172,
     };
 
-    public static void DecryptDevlsThird(byte[] CompressedBuffer, int CompressedSize)
-    {
+    public static void DecryptDevlsThird(byte[] CompressedBuffer, int CompressedSize) {
         //Debug.Assert(DevlsThird_Key.Length == 761, "Bad key");
         var XorIndex = (uint)(244109 * CompressedSize + 240169);
-        for (var i = 0; i < CompressedSize; i++)
-        {
+        for (var i = 0; i < CompressedSize; i++) {
             CompressedBuffer[i] ^= DevlsThird_Key[XorIndex % 761];
             XorIndex = XorIndex % 761 + 1;
         }

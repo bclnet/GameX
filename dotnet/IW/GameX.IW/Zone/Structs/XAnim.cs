@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace GameX.IW.Zone
-{
+namespace GameX.IW.Zone {
     [StructLayout(LayoutKind.Explicit)]
     public unsafe struct XAnimDynamicIndices //: union
     {
@@ -18,23 +17,20 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct XAnimNotifyInfo
-    {
+    public unsafe struct XAnimNotifyInfo {
         public ushort name;
         public float time;
     }
 
     [StructLayout(LayoutKind.Explicit)] //: union
-    public unsafe struct XAnimIndices
-    {
+    public unsafe struct XAnimIndices {
         [FieldOffset(0)] public char* _1;
         [FieldOffset(0)] public ushort* _2;
         [FieldOffset(0)] public void* data;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct XAnimPartTransFrames
-    {
+    public unsafe struct XAnimPartTransFrames {
         public fixed float mins[3];
         public fixed float size[3];
         public XAnimDynamicFrames frames;
@@ -42,23 +38,20 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Explicit)] //: union
-    public unsafe struct XAnimPartTransData
-    {
+    public unsafe struct XAnimPartTransData {
         [FieldOffset(0)] public XAnimPartTransFrames frames;
         [FieldOffset(0)] public fixed float frame0[3];
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct XAnimPartTrans
-    {
+    public unsafe struct XAnimPartTrans {
         public ushort size;
         public char smallTrans;
         public XAnimPartTransData u;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct XAnimDeltaPartQuatDataFrames2
-    {
+    public unsafe struct XAnimDeltaPartQuatDataFrames2 {
         public short* frames;
         public fixed char indices[1];
     }
@@ -71,15 +64,13 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct XAnimDeltaPartQuat2
-    {
+    public unsafe struct XAnimDeltaPartQuat2 {
         public ushort size;
         public XAnimDeltaPartQuatData2 u;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct XAnimDeltaPartQuatDataFrames
-    {
+    public unsafe struct XAnimDeltaPartQuatDataFrames {
         public short* frames;
         public fixed char indices[1];
     }
@@ -92,22 +83,19 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct XAnimDeltaPartQuat
-    {
+    public unsafe struct XAnimDeltaPartQuat {
         public ushort size;
         public XAnimDeltaPartQuatData u;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct XAnimDeltaPart
-    {
+    public unsafe struct XAnimDeltaPart {
         public XAnimPartTrans* trans;
         public XAnimDeltaPartQuat2* quat2;
         public XAnimDeltaPartQuat* quat;
     }
 
-    public enum XAnimPartType
-    {
+    public enum XAnimPartType {
         PART_TYPE_NO_QUAT = 0x0,
         PART_TYPE_HALF_QUAT = 0x1,
         PART_TYPE_FULL_QUAT = 0x2,
@@ -120,8 +108,7 @@ namespace GameX.IW.Zone
         PART_TYPE_ALL = 0x9,
     }
 
-    public enum XAnimFlags
-    {
+    public enum XAnimFlags {
         XANIM_LOOP_SYNC_TIME = 0x1,
         XANIM_NONLOOP_SYNC_TIME = 0x2,
         XANIM_SYNC_ROOT = 0x4,
@@ -134,8 +121,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe partial struct XAnim
-    {
+    public unsafe partial struct XAnim {
         public char* name; // 0
         public ushort dataByteCount; // 4
         public ushort dataShortCount; // 6
@@ -182,8 +168,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct XAnimPartQuatDataFrames
-    {
+    public unsafe struct XAnimPartQuatDataFrames {
         public XAnimPartQuatFrames u;
         public XAnimDynamicIndices indices;
     }
@@ -197,23 +182,20 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct XAnimPartQuat
-    {
+    public unsafe struct XAnimPartQuat {
         public ushort size;
         public XAnimPartQuatData u;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct XAnimPartQuatPtr
-    {
+    public unsafe struct XAnimPartQuatPtr {
         public XAnimPartQuat* quat;
         public char partIndex;
         public char quatType;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct XAnimPartTransPtr
-    {
+    public unsafe struct XAnimPartTransPtr {
         public XAnimPartTrans* trans;
         public char partIndex;
         public char transType;

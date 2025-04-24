@@ -18,8 +18,7 @@ namespace GameX.Unity.Formats;
 /// PakBinaryUnity
 /// </summary>
 /// <seealso cref="GameX.Formats.PakBinary" />
-public unsafe class Binary_Unity : PakBinary<Binary_Unity>
-{
+public unsafe class Binary_Unity : PakBinary<Binary_Unity> {
     readonly byte[] Key;
 
     //public PakBinaryUnity(byte[] key = null) => Key = key;
@@ -27,10 +26,8 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
     // File : ASSETS
     #region File : ASSETS
 
-    internal class AssetsFile
-    {
-        public class FileInfo
-        {
+    internal class AssetsFile {
+        public class FileInfo {
             public ulong Index;                     // 0x00 version < 0x0E : only uint32_t
             public long OffsCurFile;                // 0x08, version < 0x16 : only uint32_t
             public uint CurFileSize;                // 0x0C
@@ -43,8 +40,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
             public ushort ScriptIndex;              // 0x16, only version <= 0x10
             public byte Unknown1;					// 0x18, only 0x0F <= version <= 0x10 //with alignment always a uint32_t
 
-            public FileInfo(BinaryReader r, uint version, bool endian)
-            {
+            public FileInfo(BinaryReader r, uint version, bool endian) {
                 if (version >= 0x0E) r.Align();
                 Index = version >= 0x0E ? r.ReadUInt64X(endian) : r.ReadUInt32X(endian);
                 OffsCurFile = version >= 0x16 ? (long)r.ReadUInt64X(endian) : r.ReadUInt32X(endian);
@@ -56,15 +52,13 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
                 Unknown1 = version >= 0x0F && version <= 0x10 ? r.ReadByte() : (byte)0;
             }
 
-            public static int GetSize(int count, uint version)
-            {
+            public static int GetSize(int count, uint version) {
                 var sizePerFile = GetSize(version);
                 if (count == 0) return 0;
                 else if (version < 0x0F || version > 0x10) return count * sizePerFile;
                 else return ((sizePerFile + 3) & (~3)) * (count - 1) + sizePerFile;
             }
-            public static int GetSize(uint version)
-            {
+            public static int GetSize(uint version) {
                 if (version >= 0x16) return 24;
                 else if (version >= 0x11) return 20;
                 else if (version >= 0x10) return 23;
@@ -86,15 +80,13 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
             public bool BigEndian;                  // 0x20, for format < 0x16 @ 0x10, for format < 9 at (fileSize - metadataSize) right before TypeTree
             public byte[] Unknown;                  // 0x21, for format < 0x16 @ 0x11, exists for format >= 9
 
-            public FileHeader(BinaryReader r)
-            {
+            public FileHeader(BinaryReader r) {
                 var beginPosition = r.Tell();
                 var dw00 = r.ReadUInt32E();
                 var dw04 = r.ReadUInt32E();
                 Format = r.ReadUInt32E();
                 var dw0C = r.ReadUInt32E();
-                if (Format >= 0x16)
-                {
+                if (Format >= 0x16) {
                     Unknown00 = (dw00 << 32) | dw04;
                     // dw0C is padding for format >= 0x16
                     MetadataSize = (long)r.ReadUInt64E();
@@ -104,8 +96,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
                     Unknown = r.ReadBytes(3);
                     r.Skip(4); // Padding
                 }
-                else
-                {
+                else {
                     Unknown00 = 0;
                     MetadataSize = dw00;
                     FileSize = dw04;
@@ -116,8 +107,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
             }
         };
 
-        public struct FileDependency
-        {
+        public struct FileDependency {
             // version < 6 : no bufferedPath
             // version < 5 : no bufferedPath, guid, type
             public string BufferedPath; // for buffered (type=1)
@@ -125,8 +115,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
             public uint Type;
             public string AssetPath; // path to the .assets file
 
-            public FileDependency(BinaryReader r, uint format, bool endian)
-            {
+            public FileDependency(BinaryReader r, uint format, bool endian) {
                 BufferedPath = format >= 6 ? r.ReadVAString(1000) : null;
                 Guid = format >= 5 ? r.ReadGuid() : Guid.Empty;
                 Type = format >= 5 ? r.ReadUInt32X(endian) : 0U;
@@ -134,8 +123,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
             }
         }
 
-        public class TypeField_0D
-        {
+        public class TypeField_0D {
             public ushort Version;         // 0x00
             public byte Depth;             // 0x02 //specifies the amount of parents
                                            // 0x01 : IsArray
@@ -160,8 +148,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
             public uint Flags;             // 0x14 
             public byte[] Unknown1;        // 0x18 //since format 0x12
 
-            public TypeField_0D(BinaryReader r, uint format, bool endian)
-            {
+            public TypeField_0D(BinaryReader r, uint format, bool endian) {
                 Version = r.ReadUInt16X(endian);
                 Depth = r.ReadByte();
                 var isArrayTemp = r.ReadByte();
@@ -174,10 +161,8 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
                 if (format >= 0x12) Unknown1 = r.ReadBytes(8);
             }
 
-            public string GetString(string[] strings)
-            {
-                if ((TypeStringOffset & 0x80000000) != 0)
-                {
+            public string GetString(string[] strings) {
+                if ((TypeStringOffset & 0x80000000) != 0) {
                     if ((TypeStringOffset & 0x7FFFFFFF) < GlobalTypeTreeStrings.Length - 1) fixed (byte* _ = &GlobalTypeTreeStrings[(byte)(TypeStringOffset & 0x7FFFFFFF)]) return new string((sbyte*)_);
                     return null;
                 }
@@ -317,8 +302,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
             // For types in assetsFile.typeTree :
             public string[] Headers;                // format >= 0x15
 
-            public Type_0D(bool hasTypeTree, BinaryReader r, uint version, bool endian, bool secondaryTypeTree = false)
-            {
+            public Type_0D(bool hasTypeTree, BinaryReader r, uint version, bool endian, bool secondaryTypeTree = false) {
                 ClassId = r.ReadInt32X(endian);
                 Unknown16_1 = version >= 16 ? r.ReadByte() : (byte)0;
                 ScriptIndex = version >= 17 ? r.ReadUInt16X(endian) : (ushort)0xffff;
@@ -345,8 +329,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
                 Strings = stringTable.ToArray();
 
                 // read secondary
-                if (version >= 0x15)
-                {
+                if (version >= 0x15) {
                     //var depListLen = (int)r.ReadUInt32E(endian); Deps = depListLen >= 0 ? r.ReadPArray("I" => r.ReadUInt32E(endian)), depListLen) : new uint[0];
                     if (!secondaryTypeTree) Deps = r.ReadL32PArray<uint>("I", endian: endian);
                     else Headers = r.ReadZAStringList().ToArray();
@@ -365,8 +348,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
             public uint Flags2; // Flag 0x4000 : align to 4 bytes after this field.
             public TypeField_07[] Children;
 
-            public TypeField_07(bool hasTypeTree, BinaryReader r, uint version, bool endian)
-            {
+            public TypeField_07(bool hasTypeTree, BinaryReader r, uint version, bool endian) {
                 Type = r.ReadVAString(256);
                 Name = r.ReadVAString(256);
                 Size = r.ReadUInt32X(endian);
@@ -380,33 +362,28 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
             }
         }
 
-        public struct Type_07
-        {
+        public struct Type_07 {
             public int ClassId; // big endian
             public TypeField_07 Base;
 
-            public Type_07(bool hasTypeTree, BinaryReader r, uint version, bool endian)
-            {
+            public Type_07(bool hasTypeTree, BinaryReader r, uint version, bool endian) {
                 ClassId = r.ReadInt32X(endian);
                 Base = new TypeField_07(hasTypeTree, r, version, endian);
             }
         }
 
-        public struct Preload
-        {
+        public struct Preload {
             public uint FileId;
             public ulong PathId;
 
-            public Preload(BinaryReader r, uint format, bool endian)
-            {
+            public Preload(BinaryReader r, uint format, bool endian) {
                 FileId = r.ReadUInt32X(endian);
                 if (format >= 0x0E) r.Align();
                 PathId = format >= 0x0E ? r.ReadUInt64X(endian) : r.ReadUInt32X(endian);
             }
         }
 
-        public class TypeTree
-        {
+        public class TypeTree {
             public uint _fmt;                       // not stored here in the .assets file, the variable is just to remember the .assets file version
             // The actual 4-byte-alignment base starts here. Using the header as the base still works since its length is 20.
             public string UnityVersion;             // null-terminated; stored for .assets format > 6
@@ -421,14 +398,12 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
             {
                 _fmt = version;
                 HasTypeTree = true;
-                if (version > 6)
-                {
+                if (version > 6) {
                     UnityVersion = r.ReadVAString(64);
                     if (UnityVersion[0] < '0' || UnityVersion[0] > '9') { FieldCount = 0; return; }
                     Platform = r.ReadUInt32X(endian);
                 }
-                else
-                {
+                else {
                     Platform = 0;
                     if (version == 6) UnityVersion = "Unsupported 2.6+";
                     else if (version == 5) UnityVersion = "Unsupported 2.0+";
@@ -439,8 +414,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
 
                 if (version >= 0x0D) HasTypeTree = r.ReadBoolean(); // Unity 5
                 FieldCount = (int)r.ReadUInt32X(endian);
-                if (FieldCount > 0)
-                {
+                if (FieldCount > 0) {
                     if (version < 0x0D) Types_Unity4 = r.ReadFArray(_ => new Type_07(HasTypeTree, r, version, endian), FieldCount);
                     else Types_Unity5 = r.ReadFArray(_ => new Type_0D(HasTypeTree, r, version, endian), FieldCount);
                 }
@@ -481,8 +455,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
             Success = Verify(r);
         }
 
-        bool Verify(BinaryReader r)
-        {
+        bool Verify(BinaryReader r) {
             string errorData = null;
             var format = Header.Format; var endian = Header.BigEndian;
             if (format == 0 || format > 0x40) { errorData = "Invalid file format"; goto _fileFormatError; }
@@ -493,11 +466,11 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
             r.Seek(AssetTablePos);
             var fileInfos = r.ReadL32FArray(_ => new FileInfo(_, format, endian), endian: endian);
             Log($"INFO: The .assets file has {fileInfos.Length} assets (info list : {FileInfo.GetSize(format)} bytes)");
-            if (fileInfos.Length > 0)
-            {
+            if (fileInfos.Length > 0) {
                 if (Header.MetadataSize < 8) { errorData = "Invalid metadata size"; goto _fileFormatError; }
                 var lastFileInfo = fileInfos[^1];
-                if ((Header.OffsFirstFile + lastFileInfo.OffsCurFile + lastFileInfo.CurFileSize - 1) < Header.MetadataSize) { errorData = "Last asset begins before the header ends"; goto _fileFormatError; };
+                if ((Header.OffsFirstFile + lastFileInfo.OffsCurFile + lastFileInfo.CurFileSize - 1) < Header.MetadataSize) { errorData = "Last asset begins before the header ends"; goto _fileFormatError; }
+                ;
                 if (r.Peek(_ => _.ReadBytes(1), Header.OffsFirstFile + lastFileInfo.OffsCurFile + lastFileInfo.CurFileSize - 1, SeekOrigin.Begin).Length != 1) { errorData = "File data are cut off"; goto _fileFormatError; }
             }
             Log("SUCCESS: The .assets file seems to be ok!");
@@ -510,24 +483,19 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
         public AssetsTable CreateTable(BinaryReader r) => new AssetsTable(this, r);
     }
 
-    internal class AssetsTable
-    {
+    internal class AssetsTable {
         AssetsFile File;
         public FileInfo[] FileInfos;
 
-        public class FileInfo : AssetsFile.FileInfo
-        {
+        public class FileInfo : AssetsFile.FileInfo {
             public uint CurFileType;
             public long AbsolutePos;
 
-            public FileInfo(AssetsFile file, BinaryReader r, uint version, bool endian) : base(r, version, endian)
-            {
+            public FileInfo(AssetsFile file, BinaryReader r, uint version, bool endian) : base(r, version, endian) {
                 var tree = file.Tree;
-                if (version >= 0x10)
-                {
+                if (version >= 0x10) {
                     if (CurFileTypeOrIndex >= tree.FieldCount) { CurFileType = 0x80000000; InheritedUnityClass = 0xffff; ScriptIndex = 0xffff; }
-                    else
-                    {
+                    else {
                         var classId = tree.Types_Unity5[CurFileTypeOrIndex].ClassId;
                         if (tree.Types_Unity5[CurFileTypeOrIndex].ScriptIndex != 0xffff) { CurFileType = (uint)(-1 - tree.Types_Unity5[CurFileTypeOrIndex].ScriptIndex); InheritedUnityClass = (ushort)classId; ScriptIndex = tree.Types_Unity5[CurFileTypeOrIndex].ScriptIndex; }
                         else { CurFileType = (uint)classId; InheritedUnityClass = (ushort)classId; ScriptIndex = 0xffff; }
@@ -537,8 +505,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
                 AbsolutePos = file.Header.OffsFirstFile + OffsCurFile;
             }
 
-            bool ReadName(BinaryReader r, AssetsFile file, out string name)
-            {
+            bool ReadName(BinaryReader r, AssetsFile file, out string name) {
                 name = null;
                 if (!HasName(CurFileType)) return false;
                 var endian = file.Header.BigEndian;
@@ -552,10 +519,8 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
                 return true;
             }
 
-            static bool HasName(uint type)
-            {
-                switch (type)
-                {
+            static bool HasName(uint type) {
+                switch (type) {
                     case 21:
                     case 27:
                     case 28:
@@ -619,8 +584,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
             }
         }
 
-        public AssetsTable(AssetsFile file, BinaryReader r)
-        {
+        public AssetsTable(AssetsFile file, BinaryReader r) {
             File = file;
             var format = file.Header.Format; var endian = file.Header.BigEndian;
             r.Seek(file.AssetTablePos);
@@ -628,10 +592,8 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
         }
     }
 
-    internal class AssetType
-    {
-        enum ValueType
-        {
+    internal class AssetType {
+        enum ValueType {
             None,
             Bool,
             Int8,
@@ -649,16 +611,13 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
             ByteArray
         }
 
-        class TypeArray
-        {
+        class TypeArray {
             public int Size;
         }
 
-        class TypeValue
-        {
+        class TypeValue {
             [StructLayout(LayoutKind.Explicit)]
-            public struct UValue
-            {
+            public struct UValue {
                 [FieldOffset(0)] public TypeArray asArray;
                 [FieldOffset(0)] public byte[] asByteArray;
                 [FieldOffset(0)] public bool asBool;
@@ -679,22 +638,18 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
             public ValueType Type;
             public UValue Value;
 
-            public TypeValue(ValueType type, object value)
-            {
+            public TypeValue(ValueType type, object value) {
                 Type = type;
                 Set(value);
             }
-            public TypeValue(ValueType type, UValue value)
-            {
+            public TypeValue(ValueType type, UValue value) {
                 Type = type;
                 Value = value;
             }
-            void Set(object valueContainer, ValueType contType = ValueType.None)
-            {
+            void Set(object valueContainer, ValueType contType = ValueType.None) {
                 var mismatch = false;
                 Value = new UValue();
-                switch (Type)
-                {
+                switch (Type) {
                     case ValueType.None: break;
                     case ValueType.Bool: if (contType >= ValueType.None && contType <= ValueType.UInt64) Value.asBool = (bool)valueContainer; else mismatch = true; break;
                     case ValueType.Int8:
@@ -716,10 +671,8 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
             public TypeArray AsArray() => Type == ValueType.Array ? Value.asArray : null;
             public byte[] AsByteArray() => Type == ValueType.ByteArray ? Value.asByteArray : null;
             public string AsString() => Type == ValueType.String ? Value.asString : null;
-            public bool AsBool()
-            {
-                switch (Type)
-                {
+            public bool AsBool() {
+                switch (Type) {
                     case ValueType.Float:
                     case ValueType.Double:
                     case ValueType.String:
@@ -728,10 +681,8 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
                     default: return Value.asBool;
                 }
             }
-            public int AsInt()
-            {
-                switch (Type)
-                {
+            public int AsInt() {
+                switch (Type) {
                     case ValueType.Float: return (int)Value.asFloat;
                     case ValueType.Double: return (int)Value.asDouble;
                     case ValueType.String:
@@ -743,10 +694,8 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
                     default: return Value.asInt32;
                 }
             }
-            public uint AsUInt()
-            {
-                switch (Type)
-                {
+            public uint AsUInt() {
+                switch (Type) {
                     case ValueType.Float: return (uint)Value.asFloat;
                     case ValueType.Double: return (uint)Value.asDouble;
                     case ValueType.String:
@@ -755,10 +704,8 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
                     default: return Value.asUInt32;
                 }
             }
-            public long AsInt64()
-            {
-                switch (Type)
-                {
+            public long AsInt64() {
+                switch (Type) {
                     case ValueType.Float: return (long)Value.asFloat;
                     case ValueType.Double: return (long)Value.asDouble;
                     case ValueType.String:
@@ -770,10 +717,8 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
                     default: return Value.asInt64;
                 }
             }
-            public ulong AsUInt64()
-            {
-                switch (Type)
-                {
+            public ulong AsUInt64() {
+                switch (Type) {
                     case ValueType.Float: return (ulong)Value.asFloat;
                     case ValueType.Double: return (ulong)Value.asDouble;
                     case ValueType.String:
@@ -782,10 +727,8 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
                     default: return Value.asUInt64;
                 }
             }
-            public float AsFloat()
-            {
-                switch (Type)
-                {
+            public float AsFloat() {
+                switch (Type) {
                     case ValueType.Float: return Value.asFloat;
                     case ValueType.Double: return (float)Value.asDouble;
                     case ValueType.String:
@@ -798,10 +741,8 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
                     default: return (float)Value.asUInt64;
                 }
             }
-            public double AsDouble()
-            {
-                switch (Type)
-                {
+            public double AsDouble() {
+                switch (Type) {
                     case ValueType.Float: return (double)Value.asFloat;
                     case ValueType.Double: return Value.asDouble;
                     case ValueType.String:
@@ -816,8 +757,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
             }
         }
 
-        class TypeTemplateField
-        {
+        class TypeTemplateField {
             public string Name;
             public string Type;
             public ValueType ValueType;
@@ -908,30 +848,24 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
             //    return ret;
             //}
 
-            static void _RecursiveMakeValues(TypeTemplateField template, BinaryReader r, long maxFilePos, List<TypeValueField> valueFields, bool endian)
-            {
+            static void _RecursiveMakeValues(TypeTemplateField template, BinaryReader r, long maxFilePos, List<TypeValueField> valueFields, bool endian) {
                 TypeValue curValue;
-                if (template.IsArray)
-                {
+                if (template.IsArray) {
                     if (template.Children.Length != 2) Debug.Assert(false);
                     if (template.Children[0].ValueType == ValueType.Int32 || template.Children[0].ValueType == ValueType.UInt32) Debug.Assert(false);
                     var arrayLen = (int)r.ReadUInt32X(endian);
-                    if (string.Equals(template.Type, "TypelessData", StringComparison.OrdinalIgnoreCase))
-                    {
+                    if (string.Equals(template.Type, "TypelessData", StringComparison.OrdinalIgnoreCase)) {
                         var curRawData = r.ReadBytes(arrayLen);
-                        if (r.Tell() <= maxFilePos)
-                        {
+                        if (r.Tell() <= maxFilePos) {
                             curValue = new TypeValue(ValueType.ByteArray, curRawData);
                             valueFields.Add(new TypeValueField(curValue, template, 0, null));
                         }
                     }
-                    else
-                    {
+                    else {
                         curValue = new TypeValue(ValueType.Array, new TypeArray { Size = arrayLen });
                         var arrayItemList = new TypeValueField[arrayLen];
                         valueFields.Add(new TypeValueField(curValue, template, arrayLen, arrayItemList));
-                        for (var i = 0; i < arrayLen; i++)
-                        {
+                        for (var i = 0; i < arrayLen; i++) {
                             arrayItemList[i] = valueFields[^1];
                             _RecursiveMakeValues(template.Children[1], r, maxFilePos, valueFields, endian);
                             if (r.Tell() > maxFilePos) break;
@@ -939,8 +873,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
                     }
                     if (template.Align) r.Align();
                 }
-                else if (template.ValueType == ValueType.String)
-                {
+                else if (template.ValueType == ValueType.String) {
                     var stringLen = (int)r.ReadUInt32X(endian);
                     if ((r.Tell() + stringLen) > maxFilePos) stringLen = (int)(maxFilePos - r.Tell());
                     var bytes = r.ReadBytes(stringLen);
@@ -948,11 +881,9 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
                     valueFields.Add(new TypeValueField(curValue, template, 0, null));
                     if (template.Align || (template.Children.Length > 0 && template.Children[0].Align)) r.Align();
                 }
-                else if (template.Children.Length == 0)
-                {
+                else if (template.Children.Length == 0) {
                     object valueContainer = null;
-                    switch (template.ValueType)
-                    {
+                    switch (template.ValueType) {
                         case ValueType.Bool: case ValueType.Int8: case ValueType.UInt8: valueContainer = r.ReadByte(); break;
                         case ValueType.Int16: case ValueType.UInt16: valueContainer = r.ReadUInt16X(endian); break;
                         case ValueType.Int32: case ValueType.UInt32: valueContainer = r.ReadUInt32X(endian); break;
@@ -962,16 +893,14 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
                         case ValueType.String: break;
                     }
                     if (template.Align) r.Align();
-                    if (r.Tell() <= maxFilePos)
-                    {
+                    if (r.Tell() <= maxFilePos) {
                         curValue = new TypeValue(template.ValueType, valueContainer);
                         valueFields.Add(new TypeValueField(curValue, template, 0, null));
                     }
                 }
             }
 
-            void MakeValue(BinaryReader r, long fileLen, List<TypeValueField> ppValueField, bool endian)
-            {
+            void MakeValue(BinaryReader r, long fileLen, List<TypeValueField> ppValueField, bool endian) {
                 //TypeValue newValue = null;
                 //int newValueByteLen = 0; int childListByteLen = 0; int rawDataByteLen = 0;
                 ////Set to true if it goes EOF while reading an array; This allows parsing empty files and having them filled with zeros without risking crashes on invalid files. 
@@ -1001,8 +930,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
                 return;
             }
 
-            bool From0D(AssetsFile.Type_0D type, uint fieldIndex)
-            {
+            bool From0D(AssetsFile.Type_0D type, uint fieldIndex) {
                 if (type.TypeFields.Length <= fieldIndex) return false;
                 var typeField = type.TypeFields[fieldIndex];
                 Type = typeField.GetString(type.Strings);
@@ -1013,8 +941,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
                 Align = (typeField.Flags & 0x4000) != 0;
 
                 int newChildCount = 0; byte directChildDepth = 0;
-                for (var i = fieldIndex + 1; i < type.TypeFields.Length; i++)
-                {
+                for (var i = fieldIndex + 1; i < type.TypeFields.Length; i++) {
                     if (type.TypeFields[i].Depth <= typeField.Depth) break;
                     if (directChildDepth == 0) { directChildDepth = type.TypeFields[i].Depth; newChildCount++; }
                     else if (type.TypeFields[i].Depth == directChildDepth) newChildCount++;
@@ -1022,11 +949,9 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
                 HasValue = newChildCount == 0;
                 Array.Resize(ref Children, newChildCount);
                 var childIndex = 0; var ret = true;
-                for (var i = fieldIndex + 1; i < type.TypeFields.Length; i++)
-                {
+                for (var i = fieldIndex + 1; i < type.TypeFields.Length; i++) {
                     if (type.TypeFields[i].Depth <= typeField.Depth) break;
-                    if (type.TypeFields[i].Depth == directChildDepth)
-                    {
+                    if (type.TypeFields[i].Depth == directChildDepth) {
                         if (!Children[childIndex].From0D(type, i)) ret = false;
                         childIndex++;
                     }
@@ -1034,8 +959,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
                 return ret;
             }
 
-            bool FromClassDatabase(ClassDatabaseFile file, ClassDatabaseFile.Type type, int fieldIndex)
-            {
+            bool FromClassDatabase(ClassDatabaseFile file, ClassDatabaseFile.Type type, int fieldIndex) {
                 if (type.Fields.Count <= fieldIndex) return false;
                 var typeField = type.Fields[fieldIndex];
                 IsArray = (typeField.IsArray & 1) != 0;
@@ -1046,8 +970,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
 
                 var newChildCount = 0;
                 var directChildDepth = (byte)0;
-                for (var i = fieldIndex + 1; i < type.Fields.Count; i++)
-                {
+                for (var i = fieldIndex + 1; i < type.Fields.Count; i++) {
                     if (type.Fields[i].Depth <= typeField.Depth) break;
                     if (directChildDepth == 0) { directChildDepth = type.Fields[i].Depth; newChildCount++; }
                     else if (type.Fields[i].Depth == directChildDepth) newChildCount++;
@@ -1055,11 +978,9 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
                 HasValue = type.Fields.Count <= fieldIndex + 1 || newChildCount == 0;
                 Array.Resize(ref Children, newChildCount);
                 var childIndex = 0; var ret = true;
-                for (var i = fieldIndex + 1; i < type.Fields.Count; i++)
-                {
+                for (var i = fieldIndex + 1; i < type.Fields.Count; i++) {
                     if (type.Fields[i].Depth <= typeField.Depth) break;
-                    if (type.Fields[i].Depth == directChildDepth)
-                    {
+                    if (type.Fields[i].Depth == directChildDepth) {
                         if (!Children[childIndex].FromClassDatabase(file, type, i)) ret = false;
                         childIndex++;
                     }
@@ -1067,8 +988,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
                 return ret;
             }
 
-            bool From07(AssetsFile.TypeField_07 typeField)
-            {
+            bool From07(AssetsFile.TypeField_07 typeField) {
                 IsArray = typeField.ArrayFlag != 0;
                 Align = (typeField.Flags2 & 0x4000) != 0;
                 Name = typeField.Name;
@@ -1081,8 +1001,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
                 return true;
             }
 
-            static ValueType GetValueTypeByTypeName(string type)
-            {
+            static ValueType GetValueTypeByTypeName(string type) {
                 if (string.Equals(type, "string", StringComparison.OrdinalIgnoreCase)) return ValueType.String;
                 else if (string.Equals(type, "SInt8", StringComparison.OrdinalIgnoreCase) || string.Equals(type, "char", StringComparison.OrdinalIgnoreCase)) return ValueType.Int8;
                 else if (string.Equals(type, "UInt8", StringComparison.OrdinalIgnoreCase) || string.Equals(type, "unsigned char", StringComparison.OrdinalIgnoreCase)) return ValueType.UInt8;
@@ -1099,8 +1018,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
             }
         }
 
-        class TypeValueField
-        {
+        class TypeValueField {
             public const int SizeOf = 0;
             public static TypeValueField Empty = new TypeValueField();
 
@@ -1108,39 +1026,32 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
             TypeValueField[] Children;
             TypeValue Value; //pointer so it may also have no value (NULL)
 
-            public TypeValueField this[string name]
-            {
-                get
-                {
+            public TypeValueField this[string name] {
+                get {
                     if (Children.Length >= 0)
                         foreach (var child in Children) if (child.TemplateField != null && child.TemplateField.Name == name) return child;
                     return Empty;
                 }
             }
 
-            public TypeValueField this[int index]
-            {
-                get
-                {
+            public TypeValueField this[int index] {
+                get {
                     if (Children.Length == 0 || index >= Children.Length) return Empty;
                     return Children[index];
                 }
             }
 
             TypeValueField() { }
-            public TypeValueField(TypeValue value, TypeTemplateField template, int childrenCount, TypeValueField[] children)
-            {
+            public TypeValueField(TypeValue value, TypeTemplateField template, int childrenCount, TypeValueField[] children) {
                 Value = value;
                 TemplateField = template;
                 Children = children;
             }
 
-            void Write(BinaryWriter w, bool endian)
-            {
+            void Write(BinaryWriter w, bool endian) {
                 var doPadding = TemplateField.Align;
                 if (TemplateField.Children.Length == 0 && Value != null && Value.Type != ValueType.ByteArray)
-                    switch (TemplateField.ValueType)
-                    {
+                    switch (TemplateField.ValueType) {
                         case ValueType.Bool:
                         case ValueType.Int8:
                         case ValueType.UInt8: w.Write((byte)(Value.AsInt() & 0xff)); break;
@@ -1153,35 +1064,29 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
                         case ValueType.Float: w.WriteX(Value.AsFloat(), endian); break;
                         case ValueType.Double: w.WriteX(Value.AsDouble(), endian); break;
                     }
-                else if (Value != null && Value.Type == ValueType.String)
-                {
+                else if (Value != null && Value.Type == ValueType.String) {
                     var strVal = Encoding.ASCII.GetBytes(Value.AsString() ?? string.Empty);
                     w.WriteE((uint)strVal.Length);
                     w.Write(strVal);
                     if (TemplateField.Children.Length == 1 && TemplateField.Children[0].Align) doPadding = true;
                 }
-                else if (Value != null && (Value.Type == ValueType.Array || Value.Type == ValueType.ByteArray))
-                {
-                    if (Value.Type == ValueType.ByteArray)
-                    {
+                else if (Value != null && (Value.Type == ValueType.Array || Value.Type == ValueType.ByteArray)) {
+                    if (Value.Type == ValueType.ByteArray) {
                         var bytes = Value.AsByteArray();
                         w.WriteX(bytes.Length, endian);
                         w.Write(bytes);
                     }
-                    else
-                    {
+                    else {
                         var curArrLen = Value.AsArray().Size;
                         w.WriteX(curArrLen, endian);
                         for (var i = 0; i < curArrLen; i++) Children[i].Write(w, endian);
                     }
                     if (TemplateField.Children.Length == 1 && TemplateField.Children[0].Align) doPadding = true; //For special case: String overwritten with ByteArray value.
                 }
-                else if (Children.Length > 0)
-                {
+                else if (Children.Length > 0) {
                     for (var i = 0; i < Children.Length; i++) Children[i].Write(w, endian);
                 }
-                if (doPadding)
-                {
+                if (doPadding) {
                     var paddingLen = 3 - (((int)(w.Tell() & 3) - 1) & 3);
                     //if (paddingLen > 0)
                     //{
@@ -1191,13 +1096,10 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
                 }
             }
 
-            int GetByteSize(int filePos)
-            {
+            int GetByteSize(int filePos) {
                 var doPadding = TemplateField.Align;
-                if (TemplateField.Children.Length == 0 && Value != null)
-                {
-                    switch (TemplateField.ValueType)
-                    {
+                if (TemplateField.Children.Length == 0 && Value != null) {
+                    switch (TemplateField.ValueType) {
                         case ValueType.Bool:
                         case ValueType.Int8:
                         case ValueType.UInt8: filePos++; break;
@@ -1211,19 +1113,16 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
                         case ValueType.Double: filePos += 8; break;
                     }
                 }
-                else if (TemplateField.ValueType == ValueType.String && Value != null)
-                {
+                else if (TemplateField.ValueType == ValueType.String && Value != null) {
                     filePos += 4 + Value.AsString().Length;
                     if (TemplateField.Children.Length > 0 && TemplateField.Children[0].Align) doPadding = true;
                 }
-                else if (TemplateField.IsArray && Value != null)
-                {
+                else if (TemplateField.IsArray && Value != null) {
                     filePos += 4;
                     if (string.Equals(TemplateField.Type, "TypelessData", StringComparison.OrdinalIgnoreCase)) filePos += Value.AsByteArray().Length;
                     else for (var i = 0; i < Value.AsArray().Size; i++) filePos = Children[i].GetByteSize(filePos);
                 }
-                else if (Children.Length > 0)
-                {
+                else if (Children.Length > 0) {
                     for (var i = 0; i < Children.Length; i++) filePos = Children[i].GetByteSize(filePos);
                 }
                 if (doPadding) filePos = (filePos + 3) & (~3);
@@ -1237,8 +1136,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
     // File : CLASSDATABASE
     #region File : CLASSDATABASE
 
-    internal class ClassDatabaseFile
-    {
+    internal class ClassDatabaseFile {
         public struct FileString //:was ClassDatabaseFileString
         {
             public static readonly FileString Empty = new FileString { };
@@ -1246,15 +1144,13 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
             public uint StringTableOffset; // Don't trust this offset! GetString makes sure no out-of-bounds offset is used.
             public string String;
 
-            public string GetString(ClassDatabaseFile file)
-            {
+            public string GetString(ClassDatabaseFile file) {
                 if (!FromStringTable) return String;
                 if (StringTableOffset >= file.Header.StringTableLen) return String.Empty;
                 return file.Strings[StringTableOffset];
             }
 
-            public FileString(BinaryReader r)
-            {
+            public FileString(BinaryReader r) {
                 FromStringTable = true;
                 StringTableOffset = r.ReadUInt32();
                 String = null;
@@ -1279,8 +1175,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
                 IsArray = r.ReadByte();
                 Size = r.ReadUInt32();
                 Version = 1;
-                if (version < 1)
-                {
+                if (version < 1) {
                     var index = r.ReadUInt32();
                     if ((index & 0x80000000) != 0) Version = r.ReadUInt16();
                 }
@@ -1297,8 +1192,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
             public FileString AssemblyFileName; // set if (header.flags & 1)
             public List<TypeField> Fields;
 
-            public Type(BinaryReader r, int version, byte flags)
-            {
+            public Type(BinaryReader r, int version, byte flags) {
                 ClassId = r.ReadUInt32();
                 BaseClass = r.ReadUInt32();
                 Name = new FileString(r);
@@ -1309,11 +1203,9 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
                 for (var i = 0; i < fieldCount; i++) Fields.Add(new TypeField(r, version));
             }
 
-            public byte[] MakeTypeHash(ClassDatabaseFile file)
-            {
+            public byte[] MakeTypeHash(ClassDatabaseFile file) {
                 using var md5 = MD5.Create();
-                foreach (var field in Fields)
-                {
+                foreach (var field in Fields) {
                     md5.TransformBlock(field.TypeName.GetString(file));
                     md5.TransformBlock(field.FieldName.GetString(file));
                     md5.TransformBlock(BitConverter.GetBytes(field.Size));
@@ -1324,8 +1216,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
                 return md5.ToFinalHash();
             }
 
-            public static byte[] MakeScriptId(string scriptName, string scriptNamespace, string scriptAssembly)
-            {
+            public static byte[] MakeScriptId(string scriptName, string scriptNamespace, string scriptAssembly) {
                 using var md5 = MD5.Create();
                 md5.TransformBlock(scriptName);
                 md5.TransformBlock(scriptNamespace);
@@ -1349,20 +1240,17 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
             public uint StringTableLen;
             public uint StringTablePos;
 
-            public FileHeader(BinaryReader r)
-            {
+            public FileHeader(BinaryReader r) {
                 Header = r.ReadUInt32();
                 if (Header != Header_CLDB) throw new FormatException("Bad Header");
                 FileVersion = r.ReadByte();
                 Flags = FileVersion >= 4 ? r.ReadByte() : (byte)0;
-                if (FileVersion >= 2)
-                {
+                if (FileVersion >= 2) {
                     CompressionType = r.ReadByte();
                     CompressedSize = r.ReadUInt32();
                     UncompressedSize = r.ReadUInt32();
                 }
-                else
-                {
+                else {
                     CompressionType = 0;
                     CompressedSize = UncompressedSize = 0;
                 }
@@ -1373,15 +1261,13 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
             }
         }
 
-        public struct FileRef
-        {
+        public struct FileRef {
             public uint Offset;
             public uint Length;
             public string Name;
         }
 
-        public struct PackageHeader
-        {
+        public struct PackageHeader {
             public uint Magic;                  // "CLPK"
             public byte FileVersion;            // 0 or 1
             public byte CompressionType;        // Version 1 flags : 0x80 compressed all files in one block; 0x40 string table uncompressed; 0x20 file block uncompressed;
@@ -1391,21 +1277,18 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
             public uint FileBlockSize;
             public uint FileCount;
             public List<FileRef> Files;
-            public PackageHeader(BinaryReader r)
-            {
+            public PackageHeader(BinaryReader r) {
                 throw new NotImplementedException();
             }
         }
 
-        public class DatabasePackage
-        {
+        public class DatabasePackage {
             public bool Valid;
             public PackageHeader Header;
             public ClassDatabaseFile[] Files;
             public string[] Strings;
 
-            public DatabasePackage(BinaryReader r)
-            {
+            public DatabasePackage(BinaryReader r) {
                 throw new NotImplementedException();
             }
         }
@@ -1416,17 +1299,13 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
         public List<Type> Classes;
         public string[] Strings;
 
-        public ClassDatabaseFile(BinaryReader r)
-        {
+        public ClassDatabaseFile(BinaryReader r) {
             Header = new FileHeader(r);
             long compressedFilePos = r.Tell(), postHeaderPos = r.Tell();
             var ds = r.BaseStream;
-            if (Header.CompressionType != 0 && Header.CompressionType < 3)
-            {
-                try
-                {
-                    switch (Header.CompressionType)
-                    {
+            if (Header.CompressionType != 0 && Header.CompressionType < 3) {
+                try {
+                    switch (Header.CompressionType) {
                         case 1: ds = new MemoryStream(r.DecompressLz4((int)Header.CompressedSize, (int)Header.UncompressedSize)); break;
                         case 2: ds = new MemoryStream(r.DecompressLzma((int)Header.CompressedSize - GameX.Formats.Compression.LZMAPropsSize, (int)Header.UncompressedSize)); break;
                     }
@@ -1444,51 +1323,43 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
     // File : BUNDLE
     #region File : BUNDLE
 
-    internal class BundleFile
-    {
+    internal class BundleFile {
         [Flags]
-        public enum HeaderFlag : uint
-        {
+        public enum HeaderFlag : uint {
             Compressed = 0x3F,          // (flags & 0x3F) is the compression mode (0 = none; 1 = LZMA; 2-3 = LZ4)
             HasDirectoryInfo = 0x40,    // (flags & 0x40) says whether the bundle has directory info
             ListAtEnd = 0x80,           // (flags & 0x80) says whether the block and directory list is at the end
             Unknown = 0x100,
         }
 
-        public class Directory
-        {
+        public class Directory {
             public ulong Offset;
             public ulong DecompressedSize;
             public uint Flags;
             public string Name;
         }
 
-        public class Block
-        {
+        public class Block {
             public uint DecompressedSize;
             public uint CompressedSize;
             public ushort Flags;
         }
 
-        public class BlockAndDirectory
-        {
+        public class BlockAndDirectory {
             public ulong ChecksumLow;
             public ulong ChecksumHigh;
             public Block[] Blocks;
             public Directory[] Directories;
 
-            public BlockAndDirectory(BinaryReader r)
-            {
+            public BlockAndDirectory(BinaryReader r) {
                 ChecksumLow = r.ReadUInt64();
                 ChecksumHigh = r.ReadUInt64();
-                Blocks = r.ReadL32FArray(_ => new Block
-                {
+                Blocks = r.ReadL32FArray(_ => new Block {
                     DecompressedSize = _.ReadUInt32E(),
                     CompressedSize = _.ReadUInt32E(),
                     Flags = _.ReadUInt16E(),
                 }, endian: true);
-                Directories = r.ReadL32FArray(_ => new Directory
-                {
+                Directories = r.ReadL32FArray(_ => new Directory {
                     Offset = _.ReadUInt64E(),
                     DecompressedSize = _.ReadUInt64E(),
                     Flags = _.ReadUInt32E(),
@@ -1517,11 +1388,9 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
         public uint DecompressedSize;               // sizes for the blocks info
         public HeaderFlag Flags;
 
-        public long GetU6InfoOffset()
-        {
+        public long GetU6InfoOffset() {
             if ((Flags & HeaderFlag.ListAtEnd) != 0) return FileSize == 0 ? -1 : (long)(FileSize - CompressedSize);
-            else
-            {
+            else {
                 //if (Signature == "UnityWeb" || Signature == "UnityRaw") return 9L;
                 var ret = MinPlayerVersion.Length + FileEngineVersion.Length + 0x1AL;
                 ret += (Flags & HeaderFlag.Unknown) != 0 ? 0x0A : Signature.Length + 1;
@@ -1530,12 +1399,10 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
             }
         }
 
-        public long GetU6DataOffset()
-        {
+        public long GetU6DataOffset() {
             var ret = 0L;
             if (Signature == "UnityArchive") return (int)CompressedSize;
-            else if (Signature == "UnityFS" || Signature == "UnityWeb")
-            {
+            else if (Signature == "UnityFS" || Signature == "UnityWeb") {
                 ret = MinPlayerVersion.Length + FileEngineVersion.Length + 0x1A;
                 ret += (Flags & HeaderFlag.Unknown) != 0 ? 0x0A : Signature.Length + 1;
                 if (FileVersion >= 7) ret = (ret + 15) & ~15; // 16 byte alignment
@@ -1544,17 +1411,14 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
             return ret;
         }
 
-        public BundleFile(BinaryReader r)
-        {
+        public BundleFile(BinaryReader r) {
             Signature = r.ReadVAString(13);
             FileVersion = Signature == "UnityArchive" ? 6 : r.ReadUInt32E();
             // early exit
-            if (FileVersion >= 6)
-            {
+            if (FileVersion >= 6) {
                 if (FileVersion != 6 && FileVersion != 7) { Log("That file version is unknown!"); return; }
             }
-            else if (FileVersion == 3)
-            {
+            else if (FileVersion == 3) {
                 if (!Signature.StartsWith("UnityRaw", StringComparison.OrdinalIgnoreCase) || !Signature.StartsWith("UnityWeb", StringComparison.OrdinalIgnoreCase)) { Log("AssetBundleHeader : Unknown file type!"); return; }
             }
 
@@ -1562,8 +1426,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
             MinPlayerVersion = r.ReadVAString(24);
             FileEngineVersion = r.ReadVAString(64);
             var hasCompression = false;
-            if (FileVersion >= 6)
-            {
+            if (FileVersion >= 6) {
                 FileSize = r.ReadUInt64E();
                 CompressedSize = r.ReadUInt32E();
                 DecompressedSize = r.ReadUInt32E();
@@ -1574,43 +1437,35 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
                 // read asset
                 var ds = r.BaseStream;
                 ds.Position = GetU6InfoOffset();
-                if ((Flags & HeaderFlag.Compressed) != 0)
-                {
+                if ((Flags & HeaderFlag.Compressed) != 0) {
                     var compressionType = (byte)((int)Flags & 0x3F);
-                    if (compressionType < 4)
-                    {
+                    if (compressionType < 4) {
                         hasCompression = true;
-                        try
-                        {
+                        try {
                             var decompressSuccess = false;
-                            switch (compressionType)
-                            {
+                            switch (compressionType) {
                                 case 0: if (CompressedSize == DecompressedSize) decompressSuccess = true; break;
                                 case 1: ds = new MemoryStream(r.DecompressLzma((int)CompressedSize, (int)DecompressedSize)); decompressSuccess = true; break;
                                 case 2: case 3: ds = new MemoryStream(r.DecompressLz4((int)CompressedSize, (int)DecompressedSize)); decompressSuccess = true; break;
                             }
                             if (!decompressSuccess || ds.Length != DecompressedSize) return;
                         }
-                        catch
-                        {
+                        catch {
                             Log("AssetBundleFile.Read : Failed to decompress the directory!");
                             throw;
                         }
                     }
                 }
-                if (hasCompression || (Flags & HeaderFlag.Compressed) == 0)
-                {
+                if (hasCompression || (Flags & HeaderFlag.Compressed) == 0) {
                     var dr = new BinaryReader(ds);
                     BlockAndDirectory6 = new BlockAndDirectory(dr);
                 }
             }
-            else if (FileVersion == 3)
-            {
+            else if (FileVersion == 3) {
                 MinimumStreamedBytes = r.ReadUInt32E();
                 DataOffs = r.ReadUInt32E();
                 NumberOfAssetsToDownload = r.ReadUInt32E();
-                Blocks3 = r.ReadL32FArray(_ => new Block
-                {
+                Blocks3 = r.ReadL32FArray(_ => new Block {
                     CompressedSize = _.ReadUInt32E(),
                     DecompressedSize = _.ReadUInt32E(),
                 }, endian: true);
@@ -1621,8 +1476,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
                 if (Signature.StartsWith("UnityRaw")) // compressed bundles only have an uncompressed header
                 {
                     r.Seek(DataOffs);
-                    Directories3 = r.ReadL32FArray(_ => new Directory
-                    {
+                    Directories3 = r.ReadL32FArray(_ => new Directory {
                         Name = _.ReadVAString(400),
                         Offset = _.ReadUInt32E(),
                         DecompressedSize = _.ReadUInt32E(),
@@ -1636,14 +1490,12 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
             Success = Verify();
         }
 
-        void Write(BinaryWriter w)
-        {
+        void Write(BinaryWriter w) {
             w.WriteZASCII(Signature);
             w.WriteE(FileVersion);
             w.WriteZASCII(MinPlayerVersion);
             w.WriteZASCII(FileEngineVersion);
-            if (FileVersion >= 6)
-            {
+            if (FileVersion >= 6) {
                 w.WriteE(FileSize);
                 w.WriteE(CompressedSize);
                 w.WriteE(DecompressedSize);
@@ -1651,12 +1503,10 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
                 if (Signature == "UnityWeb" || Signature == "UnityRaw") w.Write((byte)0);
                 if (FileVersion >= 7) w.Align(16);
             }
-            else if (FileVersion == 3)
-            {
+            else if (FileVersion == 3) {
                 w.WriteE(DataOffs);
                 w.WriteE(NumberOfAssetsToDownload);
-                w.WriteL32FArray(Blocks3, (_, v) =>
-                {
+                w.WriteL32FArray(Blocks3, (_, v) => {
                     _.WriteE(v.CompressedSize);
                     _.WriteE(v.DecompressedSize);
                 }, true);
@@ -1666,24 +1516,19 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
             }
         }
 
-        bool Verify()
-        {
-            if (FileVersion >= 6)
-            {
-                if (BlockAndDirectory6 == null)
-                {
+        bool Verify() {
+            if (FileVersion >= 6) {
+                if (BlockAndDirectory6 == null) {
                     if ((Flags & HeaderFlag.Compressed) != 0) return true;
                     Log("[ERROR] Unable to process the bundle directory.");
                     return false;
                 }
-                else
-                {
+                else {
                     foreach (var block in BlockAndDirectory6.Blocks) if ((block.Flags & 0x3F) != 0) return true;
                     return true;
                 }
             }
-            else if (FileVersion == 3)
-            {
+            else if (FileVersion == 3) {
                 if (Signature == "UnityWeb") return true;
                 else if (Blocks3 == null) { Log("[ERROR] Unable to process the bundle directory."); return false; }
                 return true;
@@ -1692,11 +1537,9 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
             return false;
         }
 
-        bool Unpack()
-        {
+        bool Unpack() {
             using var w = new BinaryWriter(File.OpenWrite(@"C:\T_\temp"));
-            if (FileVersion >= 6)
-            {
+            if (FileVersion >= 6) {
                 var compressionType = (byte)((int)Flags & 0x3F);
                 if (compressionType >= 4) return false;
                 if ((Flags & HeaderFlag.Unknown) != 0) Signature = "UnityWeb";
@@ -1704,8 +1547,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
                 if ((Flags & HeaderFlag.Unknown) != 0) Signature = "UnityFS";
                 var curFilePos = GetU6InfoOffset();
                 var curUpFilePos = curFilePos;
-                try
-                {
+                try {
                     //var decompressSuccess = false;
                     //switch (compressionType)
                     //{
@@ -1714,14 +1556,12 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
                     //    case 2: case 3: ds = new MemoryStream(r.DecompressLz4((int)CompressedSize, (int)DecompressedSize)); decompressSuccess = true; break;
                     //}
                 }
-                catch
-                {
+                catch {
                     Log("AssetBundleFile.Read : Failed to decompress the directory!");
                     throw;
                 }
             }
-            else if (FileVersion == 3)
-            {
+            else if (FileVersion == 3) {
                 if (Signature != "UnityWeb") return false;
             }
             return false;
@@ -1730,12 +1570,10 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
         public BundleTable CreateTable(BinaryReader r) => new BundleTable(this, r);
     }
 
-    internal class BundleTable
-    {
+    internal class BundleTable {
         BundleFile File;
 
-        public BundleTable(BundleFile file, BinaryReader r)
-        {
+        public BundleTable(BundleFile file, BinaryReader r) {
             File = file;
             //var format = file.Header.Format; var endian = file.Header.BigEndian;
             //r.Position(file.AssetTablePos);
@@ -1748,12 +1586,10 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
     // File : RESOURCES
     #region File : RESOURCES
 
-    internal class ResourcesFile
-    {
+    internal class ResourcesFile {
         public bool Success;
 
-        public ResourcesFile(BinaryReader r)
-        {
+        public ResourcesFile(BinaryReader r) {
         }
     }
 
@@ -1762,18 +1598,15 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
     // File : GENERIC
     #region File : GENERIC
 
-    internal class GenericFile
-    {
+    internal class GenericFile {
     }
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         // try-bundle
         var bundleFile = new BundleFile(r);
-        if (bundleFile.Success)
-        {
+        if (bundleFile.Success) {
             //var table = bundleFile.CreateTable(r);
             return Task.CompletedTask;
         }
@@ -1781,8 +1614,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
         // try-asset
         r.Seek(0);
         var assetsFile = new AssetsFile(r);
-        if (assetsFile.Success)
-        {
+        if (assetsFile.Success) {
             var table = assetsFile.CreateTable(r);
             return Task.CompletedTask;
         }
@@ -1790,8 +1622,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
         // try-resources
         r.Seek(0);
         var resourcesFile = new ResourcesFile(r);
-        if (resourcesFile.Success)
-        {
+        if (resourcesFile.Success) {
             return Task.CompletedTask;
         }
 
@@ -1812,8 +1643,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
         return Task.CompletedTask;
     }
 
-    public override Task Write(BinaryPakFile source, BinaryWriter w, object tag)
-    {
+    public override Task Write(BinaryPakFile source, BinaryWriter w, object tag) {
 
 
         //source.UseBinaryReader = false;
@@ -1830,8 +1660,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
-    {
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         //var pak = (P4kFile)source.Tag;
         //var entry = (ZipEntry)file.Tag;
         //try

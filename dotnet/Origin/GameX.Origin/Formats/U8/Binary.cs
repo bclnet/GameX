@@ -7,15 +7,13 @@ namespace GameX.Origin.Formats.U8;
 
 #region Binary_Shp
 
-public unsafe class Binary_Shp
-{
+public unsafe class Binary_Shp {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Shp(r));
 
     #region Headers
 
     [StructLayout(LayoutKind.Sequential)]
-    struct Header
-    {
+    struct Header {
         public static (string, int) Struct = ("<3H", sizeof(Header));
         public ushort MaximumSizeX;     // In u8fonts.flx and u8mouse.shp, contains the maximum width of the shape's frames. In u8shapes.flx, sometimes contains the ShapeIndex.
         public ushort MaximumSizeY;     // In u8fonts.flx and u8mouse.shp, contains the maximum height of the shape's frames.
@@ -23,8 +21,7 @@ public unsafe class Binary_Shp
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct ShapeHeader
-    {
+    struct ShapeHeader {
         public static (string, int) Struct = ("<3x6i", sizeof(ShapeHeader));
         public uint Offset;        // Offset from the start of the shape to the beginning of the frame in bytes.
         public readonly uint FrameOffset => Offset & 0x0fff;
@@ -32,8 +29,7 @@ public unsafe class Binary_Shp
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct Shape
-    {
+    struct Shape {
         public static (string, int) Struct = ("<2HI5H", sizeof(Shape));
         public ushort ShapeIndex;       // Always either the zero-based index of the shape in its archive or zero. Seems meaningless either way.
         public ushort FrameIndex;       // Always either the zero-based index of the frame in its shape or zero. Seems meaningless either way.
@@ -47,8 +43,7 @@ public unsafe class Binary_Shp
 
     #endregion
 
-    public Binary_Shp(BinaryReader r)
-    {
+    public Binary_Shp(BinaryReader r) {
         var header = r.ReadS<Header>();
         var shapes = r.ReadSArray<ShapeHeader>(header.Count)
             .Select(s => r.Seek(s.FrameOffset).ReadS<Shape>())

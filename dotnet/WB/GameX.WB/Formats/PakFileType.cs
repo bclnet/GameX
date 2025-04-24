@@ -4,8 +4,7 @@ using System.Reflection;
 
 namespace GameX.WB.Formats;
 
-public enum PakType : uint
-{
+public enum PakType : uint {
     Portal = 1, // client_portal.dat and client_highres.dat both have this value
     Cell = 2, // client_cell_1.dat
     // This is not explicity defined in the client, but we may want to use these
@@ -13,23 +12,19 @@ public enum PakType : uint
 }
 
 [AttributeUsage(AttributeTargets.Field)]
-public class PakTypeAttribute(PakType type) : Attribute
-{
+public class PakTypeAttribute(PakType type) : Attribute {
     public PakType Type { get; set; } = type;
 }
 
 [AttributeUsage(AttributeTargets.Class)]
-public class PakFileTypeAttribute(PakFileType fileType) : Attribute
-{
+public class PakFileTypeAttribute(PakFileType fileType) : Attribute {
     public PakFileType FileType { get; set; } = fileType;
 }
 
 [AttributeUsage(AttributeTargets.Field)]
-public class PakFileExtensionAttribute : Attribute
-{
+public class PakFileExtensionAttribute : Attribute {
     public PakFileExtensionAttribute(string extension) => Value = extension;
-    public PakFileExtensionAttribute(Type classType, string methodName)
-    {
+    public PakFileExtensionAttribute(Type classType, string methodName) {
         ExtensionMethod = classType.GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
         Value = (Func<FileSource, BinaryReader, string>)((s, r) => (string)ExtensionMethod.Invoke(null, [s, r]));
     }
@@ -38,16 +33,14 @@ public class PakFileExtensionAttribute : Attribute
 }
 
 [AttributeUsage(AttributeTargets.Field)]
-public class PakFileIdRangeAttribute(uint begin, uint end) : Attribute
-{
+public class PakFileIdRangeAttribute(uint begin, uint end) : Attribute {
     public uint Begin { get; set; } = begin; public uint End { get; set; } = end;
 }
 
 /// <summary>
 /// File types inside .dat files.  These constants were extracted from the decompiled client
 /// </summary>
-public enum PakFileType : uint
-{
+public enum PakFileType : uint {
     /// <summary>
     /// File Format:
     ///     DWORD LandblockId

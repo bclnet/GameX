@@ -12,13 +12,10 @@ namespace GameX.Origin.Formats;
 
 #region Binary_U8
 
-public unsafe class Binary_U8 : PakBinary<Binary_U8>
-{
+public unsafe class Binary_U8 : PakBinary<Binary_U8> {
     public static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
-        => source.Path.ToLowerInvariant() switch
-        {
-            _ => Path.GetExtension(source.Path).ToLowerInvariant() switch
-            {
+        => source.Path.ToLowerInvariant() switch {
+            _ => Path.GetExtension(source.Path).ToLowerInvariant() switch {
                 _ => (0, null),
             }
         };
@@ -43,8 +40,7 @@ public unsafe class Binary_U8 : PakBinary<Binary_U8>
     //}
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct FLX_Header
-    {
+    struct FLX_Header {
         public static (string, int) Struct = ("<803I", sizeof(FLX_Header));
         public fixed byte Title[80];
         public uint Magic;
@@ -53,8 +49,7 @@ public unsafe class Binary_U8 : PakBinary<Binary_U8>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct FLX_Record
-    {
+    struct FLX_Record {
         public static (string, int) Struct = ("<2I", sizeof(FLX_Record));
         public uint Offset;
         public uint Size;
@@ -74,8 +69,7 @@ public unsafe class Binary_U8 : PakBinary<Binary_U8>
         ("music", ".mus")
     };
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         var fileName = Path.GetFileName(source.PakPath).ToLowerInvariant();
         var nameToExt = NameToExts.FirstOrDefault(x => fileName.Contains(x.name));
         var ext = nameToExt.ext ?? ".dat";
@@ -90,8 +84,7 @@ public unsafe class Binary_U8 : PakBinary<Binary_U8>
         var id = 0;
         source.Files = r.ReadSArray<FLX_Record>((int)header.Count)
             .Where(s => s.Offset > 0 && s.Size > 0)
-            .Select(s => new FileSource
-            {
+            .Select(s => new FileSource {
                 Path = $"file_{id++:x}{ext}",
                 Id = id,
                 Offset = s.Offset,
@@ -100,8 +93,7 @@ public unsafe class Binary_U8 : PakBinary<Binary_U8>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
-    {
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         return Task.FromResult((Stream)new MemoryStream(r.ReadBytes((int)file.FileSize)));
     }
@@ -111,16 +103,13 @@ public unsafe class Binary_U8 : PakBinary<Binary_U8>
 
 #region Binary_U9
 
-public unsafe class Binary_U9 : PakBinary<Binary_U9>
-{
+public unsafe class Binary_U9 : PakBinary<Binary_U9> {
     #region Factories
 
     public static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
-        => source.Path.ToLowerInvariant() switch
-        {
+        => source.Path.ToLowerInvariant() switch {
             //"abc" => (0, Binary_Palette.Factory),
-            _ => Path.GetExtension(source.Path).ToLowerInvariant() switch
-            {
+            _ => Path.GetExtension(source.Path).ToLowerInvariant() switch {
                 ".pal" => (0, Binary_Pal.Factory_4),
                 ".sfm" => (0, Binary_Music.Factory),
                 ".sfx" => (0, Binary_Sfx.Factory),
@@ -142,8 +131,7 @@ public unsafe class Binary_U9 : PakBinary<Binary_U9>
     // http://wiki.ultimacodex.com/wiki/Ultima_IX_Internal_Formats#FLX_Format
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct FlxRecord
-    {
+    struct FlxRecord {
         public static (string, int) Struct = ("<2I", sizeof(FlxRecord));
         public uint Offset;     // Offset of the record from the start of the file, or 0 if there is no record in this entry.
         public uint FileSize;   // Length of the record in bytes.
@@ -164,8 +152,7 @@ public unsafe class Binary_U9 : PakBinary<Binary_U9>
         ("typename", ".type"),
     };
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         var fileName = Path.GetFileName(source.PakPath).ToLowerInvariant();
         var nameToExt = NameToExts.FirstOrDefault(x => fileName.Contains(x.name));
         var ext = nameToExt.ext ?? ".dat";
@@ -179,8 +166,7 @@ public unsafe class Binary_U9 : PakBinary<Binary_U9>
 
         // read files
         var i = 0;
-        source.Files = r.ReadSArray<FlxRecord>(numFiles).Select(s => new FileSource
-        {
+        source.Files = r.ReadSArray<FlxRecord>(numFiles).Select(s => new FileSource {
             Path = $"file{i++:x4}{ext}",
             FileSize = s.FileSize,
             Offset = s.Offset,
@@ -188,8 +174,7 @@ public unsafe class Binary_U9 : PakBinary<Binary_U9>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
-    {
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         return Task.FromResult((Stream)new MemoryStream(r.ReadBytes((int)file.FileSize)));
     }
@@ -199,15 +184,13 @@ public unsafe class Binary_U9 : PakBinary<Binary_U9>
 
 #region Binary_UO
 
-public unsafe class Binary_UO : PakBinary<Binary_UO>
-{
+public unsafe class Binary_UO : PakBinary<Binary_UO> {
     public static PakFile Art_Instance = Games.UO.Database.PakFile?.GetFileSource("artLegacyMUL.uop").Item2.Pak;
 
     #region Factories
 
     public static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
-        => source.Path.ToLowerInvariant() switch
-        {
+        => source.Path.ToLowerInvariant() switch {
             "animdata.mul" => (0, Binary_Animdata.Factory),
             "fonts.mul" => (0, Binary_AsciiFont.Factory),
             "bodyconv.def" => (0, Binary_BodyConverter.Factory),
@@ -227,8 +210,7 @@ public unsafe class Binary_UO : PakBinary<Binary_UO>
             // server
             "data/containers.cfg" => (0, ServerBinary_Container.Factory),
             "data/bodytable.cfg" => (0, ServerBinary_BodyTable.Factory),
-            _ => Path.GetExtension(source.Path).ToLowerInvariant() switch
-            {
+            _ => Path.GetExtension(source.Path).ToLowerInvariant() switch {
                 ".anim" => (0, Binary_AnimUO.Factory),
                 ".tex" => (0, Binary_Gump.Factory),
                 ".land" => (0, Binary_Land.Factory),
@@ -245,8 +227,7 @@ public unsafe class Binary_UO : PakBinary<Binary_UO>
     #region Headers
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct IdxFile
-    {
+    struct IdxFile {
         public static (string, int) Struct = ("<3i", sizeof(IdxFile));
         public int Offset;
         public int FileSize;
@@ -254,8 +235,7 @@ public unsafe class Binary_UO : PakBinary<Binary_UO>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct UopHeader
-    {
+    struct UopHeader {
         public static (string, int) Struct = ("<i2q2i", sizeof(UopHeader));
         public int Magic;
         public long VersionSignature;
@@ -265,8 +245,7 @@ public unsafe class Binary_UO : PakBinary<Binary_UO>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct UopRecord
-    {
+    struct UopRecord {
         public static (string, int) Struct = ("<q3iQIh", sizeof(UopRecord));
         public long Offset;
         public int HeaderLength;
@@ -282,8 +261,7 @@ public unsafe class Binary_UO : PakBinary<Binary_UO>
 
     int Count;
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         if (source.PakPath.EndsWith(".uop")) ReadUop(source, r);
         else ReadIdx(source, r);
         return Task.CompletedTask;
@@ -293,11 +271,9 @@ public unsafe class Binary_UO : PakBinary<Binary_UO>
 
     const int UOP_MAGIC = 0x50594D;
 
-    Task ReadUop(BinaryPakFile source, BinaryReader r)
-    {
+    Task ReadUop(BinaryPakFile source, BinaryReader r) {
         FileSource[] files;
-        (string extension, int length, int idxLength, bool extra, Func<int, string> pathFunc) pair = source.PakPath switch
-        {
+        (string extension, int length, int idxLength, bool extra, Func<int, string> pathFunc) pair = source.PakPath switch {
             "artLegacyMUL.uop" => (".tga", 0x14000, 0x13FDC, false, i => i < 0x4000 ? $"land/file{i:x5}.land" : $"static/file{i:x5}.art"),
             "gumpartLegacyMUL.uop" => (".tga", 0xFFFF, 0, true, i => $"file{i:x5}.tex"),
             "soundLegacyMUL.uop" => (".dat", 0xFFF, 0, false, i => $"file{i:x5}.wav"),
@@ -325,8 +301,7 @@ public unsafe class Binary_UO : PakBinary<Binary_UO>
         // load empties
         source.Files = files = new FileSource[length];
         for (var i = 0; i < files.Length; i++)
-            files[i] = new FileSource
-            {
+            files[i] = new FileSource {
                 Id = i,
                 Path = pathFunc(i),
                 Offset = -1,
@@ -337,12 +312,10 @@ public unsafe class Binary_UO : PakBinary<Binary_UO>
         // load files
         var nextBlock = header.NextBlock;
         r.Seek(nextBlock);
-        do
-        {
+        do {
             var filesCount = r.ReadInt32();
             nextBlock = r.ReadInt64();
-            for (var i = 0; i < filesCount; i++)
-            {
+            for (var i = 0; i < filesCount; i++) {
                 var record = r.ReadS<UopRecord>();
                 if (record.Offset == 0 || !hashes.TryGetValue(record.Hash, out var idx)) continue;
                 if (idx < 0 || idx > files.Length)
@@ -354,8 +327,7 @@ public unsafe class Binary_UO : PakBinary<Binary_UO>
 
                 // load extra
                 if (!extra) continue;
-                r.Peek(x =>
-                {
+                r.Peek(x => {
                     r.Seek(file.Offset);
                     var extra = r.ReadBytes(8);
                     var extra1 = (ushort)((extra[3] << 24) | (extra[2] << 16) | (extra[1] << 8) | extra[0]);
@@ -368,14 +340,12 @@ public unsafe class Binary_UO : PakBinary<Binary_UO>
         return Task.CompletedTask;
     }
 
-    static ulong CreateUopHash(string s)
-    {
+    static ulong CreateUopHash(string s) {
         uint eax, ebx, ecx, edx, esi, edi;
         //eax = ebx = ecx = edx = esi = edi = 0;
         eax = 0; ebx = edi = esi = (uint)s.Length + 0xDEADBEEF;
         int i;
-        for (i = 0; i + 12 < s.Length; i += 12)
-        {
+        for (i = 0; i + 12 < s.Length; i += 12) {
             edi = (uint)((s[i + 7] << 24) | (s[i + 6] << 16) | (s[i + 5] << 8) | s[i + 4]) + edi;
             esi = (uint)((s[i + 11] << 24) | (s[i + 10] << 16) | (s[i + 9] << 8) | s[i + 8]) + esi;
             edx = (uint)((s[i + 3] << 24) | (s[i + 2] << 16) | (s[i + 1] << 8) | s[i]) - esi;
@@ -387,10 +357,8 @@ public unsafe class Binary_UO : PakBinary<Binary_UO>
             esi = (esi - edi) ^ (edi >> 28) ^ (edi << 4); edi += ebx;
         }
         var length2 = s.Length - i;
-        if (length2 > 0)
-        {
-            switch (length2)
-            {
+        if (length2 > 0) {
+            switch (length2) {
                 case 12: esi += (uint)s[i + 11] << 24; goto case 11;
                 case 11: esi += (uint)s[i + 10] << 16; goto case 10;
                 case 10: esi += (uint)s[i + 9] << 8; goto case 9;
@@ -420,8 +388,7 @@ public unsafe class Binary_UO : PakBinary<Binary_UO>
 
     #region IDX
 
-    Task ReadIdx(BinaryPakFile source, BinaryReader r)
-    {
+    Task ReadIdx(BinaryPakFile source, BinaryReader r) {
         /*
         FileIDs
         --------------
@@ -445,8 +412,7 @@ public unsafe class Binary_UO : PakBinary<Binary_UO>
         30 - tiledata.mul
         31 - animdata.mul
         */
-        (string mulPath, int length, int fileId, Func<int, string> pathFunc) pair = source.PakPath switch
-        {
+        (string mulPath, int length, int fileId, Func<int, string> pathFunc) pair = source.PakPath switch {
             "anim.idx" => ("anim.mul", 0x40000, 6, i => $"file{i:x5}.anim"),
             "anim2.idx" => ("anim2.mul", 0x10000, -1, i => $"file{i:x5}.anim"),
             "anim3.idx" => ("anim3.mul", 0x20000, -1, i => $"file{i:x5}.anim"),
@@ -472,8 +438,7 @@ public unsafe class Binary_UO : PakBinary<Binary_UO>
         // load files
         var id = 0;
         List<FileSource> files;
-        source.Files = files = r.ReadSArray<IdxFile>(Count).Select(s => new FileSource
-        {
+        source.Files = files = r.ReadSArray<IdxFile>(Count).Select(s => new FileSource {
             Id = id,
             Path = pathFunc(id++),
             Offset = s.Offset,
@@ -483,8 +448,7 @@ public unsafe class Binary_UO : PakBinary<Binary_UO>
 
         // fill with empty
         for (var i = Count; i < length; ++i)
-            files.Add(new FileSource
-            {
+            files.Add(new FileSource {
                 Id = i,
                 Path = pathFunc(i),
                 Offset = -1,
@@ -495,8 +459,7 @@ public unsafe class Binary_UO : PakBinary<Binary_UO>
         // apply patch
         var verdata = Binary_Verdata.Instance;
         if (verdata != null && verdata.Patches.TryGetValue(fileId, out var patches))
-            foreach (var patch in patches.Where(patch => patch.Index > 0 && patch.Index < files.Count))
-            {
+            foreach (var patch in patches.Where(patch => patch.Index > 0 && patch.Index < files.Count)) {
                 var file = files[patch.Index];
                 file.Offset = patch.Offset;
                 file.FileSize = patch.FileSize | (1 << 31);
@@ -518,8 +481,7 @@ public unsafe class Binary_UO : PakBinary<Binary_UO>
     public static ushort Art_ClampItemId(int itemId, bool checkMaxId = true)
         => itemId < 0 || (checkMaxId && itemId > Art_MaxItemId) ? (ushort)0U : (ushort)itemId;
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
-    {
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         if (file.Offset < 0) return Task.FromResult<Stream>(null);
         var fileSize = (int)(file.FileSize & 0x7FFFFFFF);
         if ((file.FileSize & (1 << 31)) != 0)

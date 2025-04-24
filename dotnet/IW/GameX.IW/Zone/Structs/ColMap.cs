@@ -1,26 +1,22 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace GameX.IW.Zone
-{
+namespace GameX.IW.Zone {
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct PhysMass
-    {
+    public unsafe struct PhysMass {
         public fixed float centerOfMass[3];
         public fixed float momentsOfInertia[3];
         public fixed float productsOfInertia[3];
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct cPlane
-    {
+    public unsafe struct cPlane {
         public vec3 a;
         public float dist;
         public int type;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct cStaticModel
-    {
+    public unsafe struct cStaticModel {
         public XModel* xmodel;
         public fixed float origin[3];
         public fixed float invScaledAxis[3 * 3];
@@ -29,30 +25,26 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct dMaterial
-    {
+    public unsafe struct dMaterial {
         public char* name;
         public int unk;
         public int unk2;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct cNode
-    {
+    public unsafe struct cNode {
         public cPlane* plane;
         public fixed short children[2];
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe partial struct cBrushSide
-    {
+    public unsafe partial struct cBrushSide {
         public cPlane* side;
         public short texInfo, dispInfo;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct cBrush
-    {
+    public unsafe struct cBrush {
         public int count;
         public cBrushSide* brushSide;
         public char* brushEdge;
@@ -60,8 +52,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct cLeaf
-    {
+    public unsafe struct cLeaf {
         public ushort firstCollAabbIndex;
         public ushort collAabbCount;
         public int brushContents;
@@ -72,14 +63,12 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct cLeafBrushNodeLeaf
-    {
+    public unsafe struct cLeafBrushNodeLeaf {
         public ushort* brushes;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct cLeafBrushNodeChildren
-    {
+    public unsafe struct cLeafBrushNodeChildren {
         public fixed ushort childOffset[6];
     }
 
@@ -91,8 +80,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct cLeafBrushNode
-    {
+    public unsafe struct cLeafBrushNode {
         public char axis;
         public short leafBrushCount;
         public int contents;
@@ -100,16 +88,14 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct cModel
-    {
+    public unsafe struct cModel {
         public fixed float mins[3];
         public fixed float maxs[3];
         public float radius;
         public cLeaf leaf;
     }
 
-    public enum DynEntityType
-    {
+    public enum DynEntityType {
         DYNENT_TYPE_INVALID = 0x0,
         DYNENT_TYPE_CLUTTER = 0x1,
         DYNENT_TYPE_DESTRUCT = 0x2,
@@ -117,15 +103,13 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct GfxPlacement
-    {
+    public unsafe struct GfxPlacement {
         public fixed float quat[4];
         public fixed float origin[3];
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct DynEntityDef
-    {
+    public unsafe struct DynEntityDef {
         public DynEntityType type;
         public GfxPlacement pose;
         public XModel* xModel;
@@ -139,15 +123,13 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct DynEntityPose
-    {
+    public unsafe struct DynEntityPose {
         public GfxPlacement pose;
         public float radius;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct DynEntityClient
-    {
+    public unsafe struct DynEntityClient {
         public int physObjId;
         public ushort flags;
         public ushort lightingHandle;
@@ -155,8 +137,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct DynEntityColl
-    {
+    public unsafe struct DynEntityColl {
         public ushort sector;
         public ushort nextEntInSector;
         public fixed float linkMins[2];
@@ -164,8 +145,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct CollisionBorder
-    {
+    public unsafe struct CollisionBorder {
         public fixed float distEq[3];
         public float zBase;
         public float zSlope;
@@ -174,8 +154,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct CollisionPartition
-    {
+    public unsafe struct CollisionPartition {
         public char triCount;
         public char borderCount;
         public int firstTri;
@@ -183,15 +162,13 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Explicit)] //: union
-    public unsafe struct CollisionAabbTreeIndex
-    {
+    public unsafe struct CollisionAabbTreeIndex {
         [FieldOffset(0)] public int firstChildIndex;
         [FieldOffset(0)] public int partitionIndex;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct CollisionAabbTree
-    {
+    public unsafe struct CollisionAabbTree {
         public vec3 origin;
         public ushort materialIndex;
         public ushort childCount;
@@ -200,8 +177,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct ClipMap
-    {
+    public unsafe struct ClipMap {
         public char* name;
         public int unknown1; // +8
         public int numCPlanes; // +8

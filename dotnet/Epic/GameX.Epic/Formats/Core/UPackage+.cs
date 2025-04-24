@@ -8,14 +8,12 @@ using static GameX.Epic.Formats.Core.UPackage;
 namespace GameX.Epic.Formats.Core;
 
 [DebuggerDisplay("E:{ExportCount},N:{NameCount},O:{NetObjectCount}")]
-struct FGenerationInfo
-{
+struct FGenerationInfo {
     public uint ExportCount;
     public uint NameCount;
     public uint NetObjectCount;
     public FGenerationInfo(uint exportCount, uint nameCount) { ExportCount = exportCount; NameCount = nameCount; NetObjectCount = 0; }
-    public FGenerationInfo(BinaryReader r, UPackage Ar)
-    {
+    public FGenerationInfo(BinaryReader r, UPackage Ar) {
         ExportCount = r.ReadUInt32();
         NameCount = r.ReadUInt32();
         NetObjectCount = 0;
@@ -24,17 +22,14 @@ struct FGenerationInfo
     }
 }
 
-class FCompressedChunk
-{
+class FCompressedChunk {
     public int UncompressedOffset;
     public int UncompressedSize;
     public int CompressedOffset;
     public int CompressedSize;
     public FCompressedChunk() { }
-    public FCompressedChunk(BinaryReader r, UPackage Ar)
-    {
-        if ((Ar.Game == MK && Ar.ArVer >= 677) || (Ar.Game == RocketLeague && Ar.ArLicenseeVer >= 22))
-        {
+    public FCompressedChunk(BinaryReader r, UPackage Ar) {
+        if ((Ar.Game == MK && Ar.ArVer >= 677) || (Ar.Game == RocketLeague && Ar.ArLicenseeVer >= 22)) {
             // MK X and Rocket League has 64-bit file offsets
             var UncompressedOffset64 = r.ReadInt64();
             UncompressedSize = r.ReadInt32();
@@ -53,13 +48,11 @@ class FCompressedChunk
     public override string ToString() => $"comp={CompressedOffset:X}+{CompressedSize:X}, uncomp={UncompressedOffset:X}+{UncompressedSize:X}";
 }
 
-class FCompressedChunkBlock
-{
+class FCompressedChunkBlock {
     public int CompressedSize;
     public int UncompressedSize;
     public FCompressedChunkBlock() { }
-    public FCompressedChunkBlock(BinaryReader r, UPackage Ar)
-    {
+    public FCompressedChunkBlock(BinaryReader r, UPackage Ar) {
         if (Ar.Game == MK && Ar.ArVer >= 677) goto int64_offsets;   // MK X
         if (Ar.Game >= UE4_BASE) goto int64_offsets;
         CompressedSize = r.ReadInt32();
@@ -75,15 +68,13 @@ class FCompressedChunkBlock
     }
 }
 
-class FCompressedChunkHeader
-{
+class FCompressedChunkHeader {
     public uint Tag;
     public int BlockSize;                       // maximal size of uncompressed block
     public FCompressedChunkBlock Sum;          // summary for the whole compressed block
     public FCompressedChunkBlock[] Blocks;
     public FCompressedChunkHeader() { }
-    public FCompressedChunkHeader(BinaryReader r, UPackage Ar)
-    {
+    public FCompressedChunkHeader(BinaryReader r, UPackage Ar) {
         Tag = r.ReadUInt32();
         if (Tag == TAG_REV) Ar.ReverseBytes = !Ar.ReverseBytes;
         else if (Ar.Game == Berkanix && Tag == 0xF2BAC156) goto tag_ok;
@@ -111,8 +102,7 @@ class FCompressedChunkHeader
         BlockSize = 0x20000;
         Blocks = new FCompressedChunkBlock[(Sum.UncompressedSize + 0x20000 - 1) / 0x20000];   // optimized for block size 0x20000
         int i = 0, CompSize = 0, UncompSize = 0;
-        while (CompSize < Sum.CompressedSize && UncompSize < Sum.UncompressedSize)
-        {
+        while (CompSize < Sum.CompressedSize && UncompSize < Sum.UncompressedSize) {
             var Block = Blocks[i++] = new FCompressedChunkBlock(r, Ar);
             CompSize += Block.CompressedSize;
             UncompSize += Block.UncompressedSize;
@@ -124,8 +114,7 @@ class FCompressedChunkHeader
 }
 
 [DebuggerDisplay("{Major}.{Minor}.{Patch}")]
-struct FEngineVersion
-{
+struct FEngineVersion {
     ushort Major, Minor, Patch;
     int Changelist;
     string Branch;
@@ -135,8 +124,7 @@ struct FEngineVersion
     //}
 }
 
-struct FCustomVersion
-{
+struct FCustomVersion {
     Guid Key;
     int Version;
     //void Do(BinaryReader ar)
@@ -145,14 +133,12 @@ struct FCustomVersion
     //}
 }
 
-struct FCustomVersionContainer
-{
+struct FCustomVersionContainer {
     FCustomVersion[] Versions;
     //void Serialize(FArchive& Ar, int LegacyVersion);
 }
 
-partial class FPackageFileSummary
-{
+partial class FPackageFileSummary {
     UPackage Ar;
     uint Tag;
     uint LegacyVersion;
@@ -179,8 +165,7 @@ partial class FPackageFileSummary
     int U3unk60;
     long BulkDataStartOffset;
 
-    public FPackageFileSummary(BinaryReader r, UPackage ar)
-    {
+    public FPackageFileSummary(BinaryReader r, UPackage ar) {
         Ar = ar;
         // read package tag
         Tag = r.ReadUInt32();
@@ -211,8 +196,7 @@ partial class FPackageFileSummary
         // The value is used as some version for package header, and it's not changed frequently. We can't
         // expect these values to have large values in the future. The code below checks this value for
         // being less than zero, but allows UE1-UE3 LicenseeVersion up to 32767.
-        if ((Version & 0xFFFFF000) == 0xFFFFF000)
-        {
+        if ((Version & 0xFFFFF000) == 0xFFFFF000) {
             LegacyVersion = Version;
             Ar.Game = UE4_BASE;
             Serialize4(r);
@@ -244,8 +228,7 @@ partial class FPackageFileSummary
     }
 }
 
-public partial class FObjectExport
-{
+public partial class FObjectExport {
     public int ClassIndex;              // object reference
     public int PackageIndex;            // object reference
     public FName ObjectName;
@@ -275,8 +258,7 @@ public partial class FObjectExport
     // think that offset is like in original package.
     uint RealSerialOffset;
 
-    public FObjectExport(BinaryReader r, UPackage Ar)
-    {
+    public FObjectExport(BinaryReader r, UPackage Ar) {
         if (Ar.Game >= UE4_BASE) Serialize4(r, Ar);
         else if (Ar.Game >= UE3) Serialize3(r, Ar);
         else if (Ar.Engine == UE2X) Serialize2X(r, Ar);
@@ -285,8 +267,7 @@ public partial class FObjectExport
     public override string ToString() => $"'{ObjectName}' offs={SerialOffset:08X} size={SerialSize:08X} parent={PackageIndex} exp_f={ExportFlags:08X}";
 }
 
-public partial class FObjectImport
-{
+public partial class FObjectImport {
 #if !USE_COMPACT_PACKAGE_STRUCTS
     FName ClassPackage;
 #endif
@@ -295,29 +276,25 @@ public partial class FObjectImport
     public FName ObjectName;
     bool Missing;                   // not serialized
 
-    public FObjectImport(BinaryReader r, UPackage Ar)
-    {
+    public FObjectImport(BinaryReader r, UPackage Ar) {
 #if USE_COMPACT_PACKAGE_STRUCTS
         FName ClassPackage;
 #endif
-        if (Ar.Engine == UE2X && Ar.ArVer >= 150)
-        {
+        if (Ar.Engine == UE2X && Ar.ArVer >= 150) {
             ClassPackage = new FName(r, Ar);
             ClassName = new FName(r, Ar);
             PackageIndex = r.ReadUInt16();
             ObjectName = new FName(r, Ar);
             return;
         }
-        if (Ar.Game == Pariah)
-        {
+        if (Ar.Game == Pariah) {
             PackageIndex = r.ReadInt32();
             ObjectName = new FName(r, Ar);
             ClassPackage = new FName(r, Ar);
             ClassName = new FName(r, Ar);
             return;
         }
-        if (Ar.Game == AA2)
-        {
+        if (Ar.Game == AA2) {
             ClassPackage = new FName(r, Ar);
             ClassName = new FName(r, Ar);
             r.Skip(sizeof(byte)); // serialized length of ClassName string?
@@ -339,12 +316,10 @@ public partial class FObjectImport
     public override string ToString() => $"{ClassName}'{ObjectName}'";
 }
 
-partial class UPackage
-{
+partial class UPackage {
     int GameSetCount;
     public void SetGame(Game value) { Game = value; GameSetCount++; }
-    void CheckGameCollision()
-    {
+    void CheckGameCollision() {
         if (GameSetCount > 1) throw new Exception($"DetectGame collision: detected {GameSetCount} titles, Ver={ArVer}, LicVer={ArLicenseeVer}");
     }
 
@@ -362,20 +337,17 @@ partial class UPackage
         : (Summary.PackageFlags & PKG_FilterEditorOnly) != 0 ? false
         : true;
 
-    public string GetName(int index)
-    {
+    public string GetName(int index) {
         if ((uint)index >= Summary.NameCount) throw new ArgumentOutOfRangeException(nameof(index), $"wrong name index {index}");
         return Names[index];
     }
 
-    FObjectImport GetImport(int index)
-    {
+    FObjectImport GetImport(int index) {
         if ((uint)index >= Summary.ImportCount) throw new ArgumentOutOfRangeException(nameof(index), $"wrong import index {index}");
         return Imports[index];
     }
 
-    FObjectExport GetExport(int index)
-    {
+    FObjectExport GetExport(int index) {
         if ((uint)index >= Summary.ExportCount) throw new ArgumentOutOfRangeException(nameof(index), $"wrong export index {index}");
         return Exports[index];
     }

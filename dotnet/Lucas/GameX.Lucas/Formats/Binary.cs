@@ -14,8 +14,7 @@ namespace GameX.Lucas.Formats;
 
 #region Binary_Abc
 
-public class Binary_Abc : IHaveMetaInfo
-{
+public class Binary_Abc : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Abc(r, (int)f.FileSize));
 
     public Binary_Abc(BinaryReader r, int fileSize) => Data = r.ReadBytes(fileSize);
@@ -31,21 +30,18 @@ public class Binary_Abc : IHaveMetaInfo
 
 #region Binary_Jedi
 
-public unsafe class Binary_Jedi : PakBinary<Binary_Jedi>
-{
+public unsafe class Binary_Jedi : PakBinary<Binary_Jedi> {
     #region Headers
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct GOB_Header
-    {
+    struct GOB_Header {
         public static (string, int) Struct = ("<2I", sizeof(GOB_Header));
         public uint Magic;              // Always 'GOB '
         public uint EntryOffset;        // Offset to GOB_Entry
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct GOB_Entry
-    {
+    struct GOB_Entry {
         public static (string, int) Struct = ("<2I13s", sizeof(GOB_Entry));
         public uint Offset;             // Offset in the archive file
         public uint FileSize;           // Size in bytes of this entry
@@ -53,8 +49,7 @@ public unsafe class Binary_Jedi : PakBinary<Binary_Jedi>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct LFD_Entry
-    {
+    struct LFD_Entry {
         public static (string, int) Struct = ("<I8sI", sizeof(LFD_Entry));
         public uint Type;
         public fixed byte Name[8];
@@ -62,8 +57,7 @@ public unsafe class Binary_Jedi : PakBinary<Binary_Jedi>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct LAB_Header
-    {
+    struct LAB_Header {
         public static (string, int) Struct = ("<4I", sizeof(LAB_Header));
         public uint Magic;              // Always 'LABN'
         public uint Version;            // Apparently always 0x10000 for Outlaws
@@ -72,8 +66,7 @@ public unsafe class Binary_Jedi : PakBinary<Binary_Jedi>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct LAB_Entry
-    {
+    struct LAB_Entry {
         public static (string, int) Struct = ("<4I", sizeof(LAB_Entry));
         public uint NameOffset;         // Offset in the name string
         public uint Offset;             // Offset in the archive file
@@ -83,55 +76,47 @@ public unsafe class Binary_Jedi : PakBinary<Binary_Jedi>
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         const uint GOB_MAGIC = 0x0a424f47;
         const uint LFD_MAGIC = 0x50414d52;
         const uint LAB_MAGIC = 0x4e42414c;
 
-        switch (Path.GetExtension(source.Name).ToLowerInvariant())
-        {
-            case ".gob":
-                {
+        switch (Path.GetExtension(source.Name).ToLowerInvariant()) {
+            case ".gob": {
                     var header = r.ReadS<GOB_Header>();
                     if (header.Magic != GOB_MAGIC) throw new FormatException("BAD MAGIC");
 
                     r.Seek(header.EntryOffset);
                     var entries = r.ReadL32SArray<GOB_Entry>();
-                    source.Files = entries.Select(s => new FileSource
-                    {
+                    source.Files = entries.Select(s => new FileSource {
                         Path = UnsafeX.FixedAString(s.Path, 13),
                         Offset = s.Offset,
                         FileSize = s.FileSize,
                     }).ToArray();
                     return Task.CompletedTask;
                 }
-            case ".lfd":
-                {
+            case ".lfd": {
                     var header = r.ReadS<LFD_Entry>();
                     if (header.Type != LFD_MAGIC) throw new FormatException("BAD MAGIC");
                     else if (UnsafeX.FixedAString(header.Name, 8) != "resource") throw new FormatException("BAD NAME");
                     else if (header.Size % 16 != 0) throw new FormatException("BAD SIZE");
                     var entries = r.ReadSArray<LFD_Entry>((int)header.Size / 16);
                     var offset = header.Size + 16;
-                    source.Files = entries.Select(s => new FileSource
-                    {
+                    source.Files = entries.Select(s => new FileSource {
                         Path = UnsafeX.FixedAString(s.Name, 8),
                         Offset = (offset += s.Size + 16) - s.Size,
                         FileSize = s.Size,
                     }).ToArray();
                     return Task.CompletedTask;
                 }
-            case ".lab":
-                {
+            case ".lab": {
                     var header = r.ReadS<LAB_Header>();
                     if (header.Magic != LAB_MAGIC) throw new FormatException("BAD MAGIC");
                     else if (header.Version != 0x10000) throw new FormatException("BAD VERSION");
 
                     var entries = r.ReadSArray<LAB_Entry>((int)header.FileCount);
                     var paths = r.ReadCStringArray((int)header.FileCount);
-                    source.Files = entries.Select((s, i) => new FileSource
-                    {
+                    source.Files = entries.Select((s, i) => new FileSource {
                         Path = paths[i],
                         Offset = s.Offset,
                         FileSize = s.FileSize,
@@ -142,8 +127,7 @@ public unsafe class Binary_Jedi : PakBinary<Binary_Jedi>
         }
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
-    {
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         return Task.FromResult((Stream)new MemoryStream(r.ReadBytes((int)file.FileSize)));
     }
@@ -153,15 +137,13 @@ public unsafe class Binary_Jedi : PakBinary<Binary_Jedi>
 
 #region Binary_Nwx
 
-public class Binary_Nwx : IHaveMetaInfo, ITextureSelect
-{
+public class Binary_Nwx : IHaveMetaInfo, ITextureSelect {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Nwx(r, f, s));
 
     #region Headers
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    unsafe struct X_Header
-    {
+    unsafe struct X_Header {
         public static (string, int) Struct = ("<3I2F3I", sizeof(X_Header));
         public uint Magic; // 'WAXF'
         public uint MajorVersion;
@@ -174,8 +156,7 @@ public class Binary_Nwx : IHaveMetaInfo, ITextureSelect
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    unsafe struct X_CellHeader
-    {
+    unsafe struct X_CellHeader {
         public static (string, int) Struct = ("<3I", sizeof(X_CellHeader));
         public uint Magic; // 'CELT'
         public uint Count;
@@ -183,8 +164,7 @@ public class Binary_Nwx : IHaveMetaInfo, ITextureSelect
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    unsafe struct X_Cell
-    {
+    unsafe struct X_Cell {
         public static (string, int) Struct = ("<5I", sizeof(X_Cell));
         public uint Id;
         public uint Size;
@@ -199,8 +179,7 @@ public class Binary_Nwx : IHaveMetaInfo, ITextureSelect
 
     static readonly ConcurrentDictionary<string, (byte r, byte g, byte b)[]> Palettes = new ConcurrentDictionary<string, (byte r, byte g, byte b)[]>();
 
-    static (byte r, byte g, byte b)[] PaletteBuilder(string path, PakFile pak)
-    {
+    static (byte r, byte g, byte b)[] PaletteBuilder(string path, PakFile pak) {
         var paths = path.Split(':');
         var pcx = pak.OpenPakFile(paths[0]).LoadFileObject<Binary_Pcx>(paths[1], throwOnError: false).Result;
         if (pcx == null) return null;
@@ -213,13 +192,11 @@ public class Binary_Nwx : IHaveMetaInfo, ITextureSelect
 
     #endregion
 
-    public Binary_Nwx(BinaryReader r, FileSource f, PakFile s)
-    {
+    public Binary_Nwx(BinaryReader r, FileSource f, PakFile s) {
         const uint WAXF_MAGIC = 0x46584157;
         const uint CELT_MAGIC = 0x544c4543;
 
-        Palette = Palettes.GetOrAdd(s.Game.Id switch
-        {
+        Palette = Palettes.GetOrAdd(s.Game.Id switch {
             "O" => "outlaws.lab:simms.pcx",
             "SW:DF" => "DARK.GOB:simms.pcx",
             _ => throw new ArgumentOutOfRangeException(),
@@ -238,8 +215,7 @@ public class Binary_Nwx : IHaveMetaInfo, ITextureSelect
 
         // read each cell
         Cells = [];
-        for (var i = 0; i < cellHeader.Count; i++)
-        {
+        for (var i = 0; i < cellHeader.Count; i++) {
             var cell = r.ReadS<X_Cell>();
             if (cell.Size == 1 && cell.Width == 0) { Log($"Empty Cell: {i}"); r.ReadByte(); continue; } // 0xCD Terminator
 
@@ -250,21 +226,17 @@ public class Binary_Nwx : IHaveMetaInfo, ITextureSelect
             var cellOffsetTablePosition = r.Tell();
             var cellOffsets = r.ReadPArray<uint>("I", (int)cell.Width);
             var data = new List<byte>();
-            foreach (var offset in cellOffsets)
-            {
+            foreach (var offset in cellOffsets) {
                 r.Seek(cellOffsetTablePosition + offset);
                 var pixels = new List<byte>();
                 var pixelCount = 0;
-                while (pixelCount < cell.Height)
-                {
+                while (pixelCount < cell.Height) {
                     var control = r.ReadByte();
-                    if (control < 0x02)
-                    {
+                    if (control < 0x02) {
                         pixels.Add(r.ReadByte());
                         pixelCount += 1;
                     }
-                    else
-                    {
+                    else {
                         var length = (control / 2) + 1;
                         pixels.AddRange(control % 2 == 0 ? r.ReadBytes(length) : Enumerable.Repeat(r.ReadByte(), length));
                         pixelCount += length;
@@ -294,18 +266,15 @@ public class Binary_Nwx : IHaveMetaInfo, ITextureSelect
     public int Depth { get; } = 0;
     public int MipMaps { get; } = 1;
     public TextureFlags TexFlags { get; } = 0;
-    public T Create<T>(string platform, Func<object, T> func)
-    {
+    public T Create<T>(string platform, Func<object, T> func) {
         int width = Width, height = Height;
         var data = CellData;
 
         var bytes = new byte[width * height * 4];
-        if (Flip)
-        {
+        if (Flip) {
             var i = 0;
             for (var row = 0; row < height; row++)
-                for (var col = 0; col < width; col++, i += 4)
-                {
+                for (var col = 0; col < width; col++, i += 4) {
                     var pixel = data[col * height + row];
                     bytes[i + 0] = Palette[pixel].r;
                     bytes[i + 1] = Palette[pixel].g;
@@ -313,12 +282,10 @@ public class Binary_Nwx : IHaveMetaInfo, ITextureSelect
                     bytes[i + 3] = pixel == 0 ? (byte)0 : (byte)255;
                 }
         }
-        else
-        {
+        else {
             var i = bytes.Length - 4;
             for (var row = 0; row < height; row++)
-                for (var col = 0; col < width; col++, i -= 4)
-                {
+                for (var col = 0; col < width; col++, i -= 4) {
                     var pixel = data[col * height + row];
                     bytes[i + 0] = Palette[pixel].r;
                     bytes[i + 1] = Palette[pixel].g;
@@ -345,23 +312,20 @@ public class Binary_Nwx : IHaveMetaInfo, ITextureSelect
 
 #region Binary_San
 
-public class Binary_San : IHaveMetaInfo
-{
+public class Binary_San : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_San(r, (int)f.FileSize));
 
     #region Headers
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    unsafe struct X_Header
-    {
+    unsafe struct X_Header {
         public static (string, int) Struct = (">2I", sizeof(X_Header)); //: BE
         public uint Magic; // 'ANIM'
         public uint ChunkSize;
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    unsafe struct X_AHeader
-    {
+    unsafe struct X_AHeader {
         public static (string, int) Struct = (">2I3H", sizeof(X_AHeader));
         public uint Magic; // 'AHDR'
         public uint Size;
@@ -372,8 +336,7 @@ public class Binary_San : IHaveMetaInfo
     }
 
     Range _palDirty = 0..255;
-    void SetDirtyColors(int min, int max)
-    {
+    void SetDirtyColors(int min, int max) {
         //if (_palDirty.Start.Value > min)
         //    _palDirty.Start = min;
         //if (_palDirtyMax < max)
@@ -381,8 +344,7 @@ public class Binary_San : IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    unsafe struct X_Chunk
-    {
+    unsafe struct X_Chunk {
         public static (string, int) Struct = (">2I", sizeof(X_Chunk));
         public uint Magic; // 'FRME'
         public uint ChunkSize;
@@ -415,8 +377,7 @@ public class Binary_San : IHaveMetaInfo
 
     #endregion
 
-    public Binary_San(BinaryReader r, int fileSize)
-    {
+    public Binary_San(BinaryReader r, int fileSize) {
         const uint ANIM_MAGIC = 0x414e494d;
         const uint AHDR_MAGIC = 0x41484452;
         const uint FRME_MAGIC = 0x46524d45;
@@ -434,16 +395,13 @@ public class Binary_San : IHaveMetaInfo
         var aheaderBody = r.ReadBytes((int)aheader.Size - 6);
 
         // read frames
-        for (var f = 0; f < aheader.NumFrames; f++)
-        {
+        for (var f = 0; f < aheader.NumFrames; f++) {
             var chunk = r.ReadS<X_Chunk>();
             if (chunk.Magic != FRME_MAGIC) throw new FormatException("BAD MAGIC");
             var chunkEnd = r.BaseStream.Position + chunk.ChunkSize;
-            while (r.BaseStream.Position < chunkEnd)
-            {
+            while (r.BaseStream.Position < chunkEnd) {
                 chunk = r.ReadS<X_Chunk>();
-                switch (chunk.Magic)
-                {
+                switch (chunk.Magic) {
                     //case NPAL_MAGIC:
                     //case ZFOB_MAGIC:
                     default:
@@ -455,8 +413,7 @@ public class Binary_San : IHaveMetaInfo
         }
     }
 
-    void HandleFrame(BinaryReader r, int frameSize)
-    {
+    void HandleFrame(BinaryReader r, int frameSize) {
     }
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
@@ -468,11 +425,9 @@ public class Binary_San : IHaveMetaInfo
 
 #region Binary_Scumm
 
-public unsafe class Binary_Scumm : PakBinary<Binary_Scumm>
-{
+public unsafe class Binary_Scumm : PakBinary<Binary_Scumm> {
     [Flags]
-    public enum Features
-    {
+    public enum Features {
         None,
         SixteenColors = 0x01,
         Old256 = 0x02,
@@ -482,8 +437,7 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm>
         AudioTracks = 0x20,
     }
 
-    public enum Platform
-    {
+    public enum Platform {
         None,
         Apple2GS,
         C64,
@@ -494,16 +448,14 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm>
         FMTowns,
     }
 
-    public class ArrayDefinition
-    {
+    public class ArrayDefinition {
         public uint Index;
         public int Type;
         public int Dim1;
         public int Dim2;
     }
 
-    public class ResourceIndex
-    {
+    public class ResourceIndex {
         public const ushort CLASSIC_MAGIC = 0x0A31;
         public const ushort ENHANCE_MAGIC = 0x0100;
 
@@ -534,14 +486,12 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm>
         public byte[] ObjectRoomTable;
         public string[] AudioNames = new string[0];
 
-        public ResourceIndex(BinaryReader r, FamilyGame game, Dictionary<string, object> detect)
-        {
+        public ResourceIndex(BinaryReader r, FamilyGame game, Dictionary<string, object> detect) {
             var varient = (Dictionary<string, object>)detect["variant"];
             var features = ((Features)detect["features"]);
             var version = (int)varient["version"];
             var oldBundle = version <= 3 && features.HasFlag(Features.SixteenColors);
-            switch (version)
-            {
+            switch (version) {
                 case 0: Load0(game, r, detect); break;
                 case 1: if ((Platform)detect["platform"] == Platform.C64) Load0(game, r, detect); else Load2(game, r, detect); break;
                 case 2: Load2(game, r, detect); break;
@@ -559,8 +509,7 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm>
         #region Reads
 
         [Flags]
-        enum ObjectFlags
-        {
+        enum ObjectFlags {
             CountX = 0b00,
             CountS = 0b01,
             CountI = 0b10,
@@ -581,8 +530,7 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm>
         }
 
         [Flags]
-        enum ResourceFlags
-        {
+        enum ResourceFlags {
             CountX = 0b00,
             CountB = 0b01,
             CountS = 0b10,
@@ -603,23 +551,19 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm>
 
         static uint ToOffset(ushort offset) => offset == 0xFFFF ? 0xFFFFFFFF : offset;
 
-        void ReadObjects(BinaryReader r, ObjectFlags flags, int count = 0)
-        {
-            count = (flags & ObjectFlags.CountMask) switch
-            {
+        void ReadObjects(BinaryReader r, ObjectFlags flags, int count = 0) {
+            count = (flags & ObjectFlags.CountMask) switch {
                 ObjectFlags.CountX => count,
                 ObjectFlags.CountS => r.ReadUInt16(),
                 ObjectFlags.CountI => r.ReadInt32(),
                 _ => throw new NotSupportedException(),
             };
-            switch (flags & ObjectFlags.LoopMask)
-            {
+            switch (flags & ObjectFlags.LoopMask) {
                 case ObjectFlags.Loop1:
                     ObjectOwnerTable = new byte[count];
                     ObjectStateTable = new byte[count];
                     ClassData = new uint[count];
-                    for (var i = 0; i < count; i++)
-                    {
+                    for (var i = 0; i < count; i++) {
                         var tmp = r.ReadByte();
                         ObjectStateTable[i] = (byte)(tmp >> 4);
                         ObjectOwnerTable[i] = (byte)(tmp & 0x0F);
@@ -629,8 +573,7 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm>
                     ObjectOwnerTable = new byte[count];
                     ObjectStateTable = new byte[count];
                     ClassData = new uint[count];
-                    for (var i = 0; i < count; i++)
-                    {
+                    for (var i = 0; i < count; i++) {
                         ClassData[i] = r.ReadByte() | (uint)(r.ReadByte() << 8) | (uint)(r.ReadByte() << 16);
                         var tmp = r.ReadByte();
                         ObjectStateTable[i] = (byte)(tmp >> 4);
@@ -640,8 +583,7 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm>
                 case ObjectFlags.Loop3:
                     ObjectOwnerTable = new byte[count];
                     ObjectStateTable = new byte[count];
-                    for (var i = 0; i < count; i++)
-                    {
+                    for (var i = 0; i < count; i++) {
                         var tmp = r.ReadByte();
                         ObjectStateTable[i] = (byte)(tmp >> 4);
                         ObjectOwnerTable[i] = (byte)(tmp & 0x0F);
@@ -662,8 +604,7 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm>
                     ObjectRoomTable = new byte[count];
                     ObjectOwnerTable = new byte[count];
                     ClassData = new uint[count];
-                    for (var i = 0; i < count; i++)
-                    {
+                    for (var i = 0; i < count; i++) {
                         var name = r.ReadFUString(40);
                         ObjectIDMap[name] = i;
                         ObjectStateTable[i] = r.ReadByte();
@@ -675,10 +616,8 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm>
             }
         }
 
-        static (byte, long)[] ReadResources(BinaryReader r, ResourceFlags flags, int count = 0)
-        {
-            count = (flags & ResourceFlags.CountMask) switch
-            {
+        static (byte, long)[] ReadResources(BinaryReader r, ResourceFlags flags, int count = 0) {
+            count = (flags & ResourceFlags.CountMask) switch {
                 ResourceFlags.CountX => count,
                 ResourceFlags.CountB => r.ReadByte(),
                 ResourceFlags.CountS => r.ReadUInt16(),
@@ -686,8 +625,7 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm>
             };
             var res = new (byte, long)[count];
             var rooms = r.ReadBytes(count);
-            switch (flags & ResourceFlags.LoopMask)
-            {
+            switch (flags & ResourceFlags.LoopMask) {
                 case ResourceFlags.Loop1: for (var i = 0; i < count; i++) res[i] = ((byte)i, ToOffset(r.ReadUInt16())); break;
                 case ResourceFlags.Loop2: for (var i = 0; i < count; i++) res[i] = (rooms[i], ToOffset(r.ReadUInt16())); break;
                 case ResourceFlags.Loop3: for (var i = 0; i < count; i++) res[i] = (r.ReadByte(), r.ReadUInt32()); break;
@@ -696,23 +634,19 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm>
             return res;
         }
 
-        static string[] ReadNames(BinaryReader r)
-        {
+        static string[] ReadNames(BinaryReader r) {
             var values = new string[r.ReadUInt16()];
             for (var i = 0; i < values.Length; i++)
                 values[i] = r.ReadFUString(9);
             return values;
         }
 
-        static Dictionary<byte, string> ReadRoomNames(BinaryReader r)
-        {
+        static Dictionary<byte, string> ReadRoomNames(BinaryReader r) {
             var values = new Dictionary<byte, string>();
-            for (byte room; (room = r.ReadByte()) != 0;)
-            {
+            for (byte room; (room = r.ReadByte()) != 0;) {
                 var name = r.ReadBytes(9);
                 var b = new StringBuilder();
-                for (var i = 0; i < 9; i++)
-                {
+                for (var i = 0; i < 9; i++) {
                     var c = name[i] ^ 0xFF;
                     if (c == 0) continue;
                     b.Append((char)c);
@@ -722,12 +656,9 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm>
             return values;
         }
 
-        void ReadMaxSizes(BinaryReader r, FamilyGame game, Features features, int ver)
-        {
-            switch (ver)
-            {
-                case 5:
-                    {
+        void ReadMaxSizes(BinaryReader r, FamilyGame game, Features features, int ver) {
+            switch (ver) {
+                case 5: {
                         NumVariables = r.ReadUInt16();      // 800
                         r.ReadUInt16();                     // 16
                         NumBitVariables = r.ReadUInt16();   // 2048
@@ -739,8 +670,7 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm>
                         NumInventory = r.ReadUInt16();      // 80
                         break;
                     }
-                case 6:
-                    {
+                case 6: {
                         NumVariables = r.ReadUInt16();      // 800
                         r.ReadUInt16();                     // 16
                         NumBitVariables = r.ReadUInt16();   // 2048
@@ -758,8 +688,7 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm>
                         var numGlobalObjects = r.ReadUInt16();
                         break;
                     }
-                case 7:
-                    {
+                case 7: {
                         r.Skip(50); // Skip over SCUMM engine version
                         r.Skip(50); // Skip over data file version
                         NumVariables = r.ReadUInt16();
@@ -780,8 +709,7 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm>
                         NumGlobalScripts = game.Id == "FT" && features.HasFlag(Features.Demo) ? 300 : 2000;
                         break;
                     }
-                case 8:
-                    {
+                case 8: {
                         r.Skip(50); // Skip over SCUMM engine version
                         r.Skip(50); // Skip over data file version
                         NumVariables = r.ReadInt32();
@@ -807,12 +735,10 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm>
             }
         }
 
-        static List<ArrayDefinition> ReadIndexFile(BinaryReader r)
-        {
+        static List<ArrayDefinition> ReadIndexFile(BinaryReader r) {
             var values = new List<ArrayDefinition>();
             uint num;
-            while ((num = r.ReadUInt16()) != 0)
-            {
+            while ((num = r.ReadUInt16()) != 0) {
                 var a = r.ReadUInt16();
                 var b = r.ReadUInt16();
                 var c = r.ReadUInt16();
@@ -831,8 +757,7 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm>
         byte[] V0_roomTracks;
         byte[] V0_roomSectors;
 
-        void Load0(FamilyGame game, BinaryReader r, Dictionary<string, object> detect)
-        {
+        void Load0(FamilyGame game, BinaryReader r, Dictionary<string, object> detect) {
             V0_roomDisks = new byte[59];
             V0_roomTracks = new byte[59];
             V0_roomSectors = new byte[59];
@@ -858,8 +783,7 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm>
 
             // room offsets
             for (var i = 0; i < numRooms; i++) V0_roomDisks[i] = (byte)(r.ReadByte() - '0');
-            for (var i = 0; i < numRooms; i++)
-            {
+            for (var i = 0; i < numRooms; i++) {
                 V0_roomSectors[i] = r.ReadByte();
                 V0_roomTracks[i] = r.ReadByte();
             }
@@ -868,14 +792,11 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm>
             SoundResources = ReadResources(r, ResourceFlags.CXL2, numSounds);
         }
 
-        void Load2(FamilyGame game, BinaryReader r_, Dictionary<string, object> detect)
-        {
+        void Load2(FamilyGame game, BinaryReader r_, Dictionary<string, object> detect) {
             var r = new BinaryReader(new ByteXorStream(r_.BaseStream, 0xff));
             var magic = r.ReadUInt16();
-            switch (magic)
-            {
-                case CLASSIC_MAGIC:
-                    {
+            switch (magic) {
+                case CLASSIC_MAGIC: {
                         int numGlobalObjects, numRooms, numCostumes, numScripts, numSounds;
                         if (game.Id == "MM") { numGlobalObjects = 800; numRooms = 55; numCostumes = 35; numScripts = 200; numSounds = 100; }
                         else if (game.Id == "ZMatAM") { numGlobalObjects = 775; numRooms = 61; numCostumes = 37; numScripts = 155; numSounds = 120; }
@@ -887,8 +808,7 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm>
                         SoundResources = ReadResources(r, ResourceFlags.CXL2, numSounds);
                         return;
                     }
-                case ENHANCE_MAGIC:
-                    {
+                case ENHANCE_MAGIC: {
                         ReadObjects(r, ObjectFlags.CSL1);
                         RoomResources = ReadResources(r, ResourceFlags.CBL1);
                         CostumeResources = ReadResources(r, ResourceFlags.CBL2);
@@ -900,8 +820,7 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm>
             }
         }
 
-        void Load3_16(FamilyGame game, BinaryReader r_, Dictionary<string, object> detect)
-        {
+        void Load3_16(FamilyGame game, BinaryReader r_, Dictionary<string, object> detect) {
             var r = new BinaryReader(new ByteXorStream(r_.BaseStream, 0xff));
             var magic = r.ReadUInt16();
             if (magic != ENHANCE_MAGIC) throw new FormatException("BAD MAGIC");
@@ -912,16 +831,13 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm>
             SoundResources = ReadResources(r, ResourceFlags.CBL2);
         }
 
-        void Load3(FamilyGame game, BinaryReader r_, Dictionary<string, object> detect, byte xorByte)
-        {
+        void Load3(FamilyGame game, BinaryReader r_, Dictionary<string, object> detect, byte xorByte) {
             var indy3FmTowns = game.Id == "IJatLC" && (Platform)detect["platform"] == Platform.FMTowns;
             var r = xorByte != 0 ? new BinaryReader(new ByteXorStream(r_.BaseStream, xorByte)) : r_;
-            while (r.BaseStream.Position < r.BaseStream.Length)
-            {
+            while (r.BaseStream.Position < r.BaseStream.Length) {
                 r.ReadUInt32();
                 var block = r.ReadInt16();
-                switch (block)
-                {
+                switch (block) {
                     case 0x4E52: RoomNames = ReadRoomNames(r); break;
                     case 0x5230: RoomResources = ReadResources(r, ResourceFlags.CSL3); break; // 'R0'
                     case 0x5330: ScriptResources = ReadResources(r, ResourceFlags.CSL3); break; // 'S0'
@@ -935,16 +851,13 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm>
 
         void Load4(FamilyGame game, BinaryReader r_, Dictionary<string, object> detect) => Load3(game, r_, detect, 0);
 
-        void Load5(FamilyGame game, BinaryReader r_, Dictionary<string, object> detect)
-        {
+        void Load5(FamilyGame game, BinaryReader r_, Dictionary<string, object> detect) {
             var features = (Features)detect["features"];
             var r = new BinaryReader(new ByteXorStream(r_.BaseStream, 0x69));
-            while (r.BaseStream.Position < r.BaseStream.Length)
-            {
+            while (r.BaseStream.Position < r.BaseStream.Length) {
                 var block = r.ReadUInt32();
                 r.ReadUInt32E(); // size
-                switch (block)
-                {
+                switch (block) {
                     case 0x4D414E52: RoomNames = ReadRoomNames(r); break; // 'RNAM'
                     case 0x5358414D: ReadMaxSizes(r, game, features, 5); break; // 'MAXS'
                     case 0x4F4F5244: RoomResources = ReadResources(r, ResourceFlags.CSL4); break; // 'DROO'
@@ -958,16 +871,13 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm>
             }
         }
 
-        void Load6(FamilyGame game, BinaryReader r_, Dictionary<string, object> detect)
-        {
+        void Load6(FamilyGame game, BinaryReader r_, Dictionary<string, object> detect) {
             var features = (Features)detect["features"];
             var r = new BinaryReader(new ByteXorStream(r_.BaseStream, 0x69));
-            while (r.BaseStream.Position < r.BaseStream.Length)
-            {
+            while (r.BaseStream.Position < r.BaseStream.Length) {
                 var block = r.ReadUInt32();
                 r.ReadUInt32E(); // size
-                switch (block)
-                {
+                switch (block) {
                     case 0x52484344: case 0x46524944: CharsetResources = ReadResources(r, ResourceFlags.CSL4); break; // 'DCHR'/'DIRF'
                     case 0x4A424F44: ReadObjects(r, ObjectFlags.CSL3); break; // 'DOBJ'
                     case 0x4D414E52: RoomNames = ReadRoomNames(r); break; // 'RNAM'
@@ -982,15 +892,12 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm>
             }
         }
 
-        void Load7(FamilyGame game, BinaryReader r, Dictionary<string, object> detect)
-        {
+        void Load7(FamilyGame game, BinaryReader r, Dictionary<string, object> detect) {
             var features = (Features)detect["features"];
-            while (r.BaseStream.Position < r.BaseStream.Length)
-            {
+            while (r.BaseStream.Position < r.BaseStream.Length) {
                 var block = r.ReadUInt32();
                 r.ReadUInt32E(); // size
-                switch (block)
-                {
+                switch (block) {
                     case 0x52484344: case 0x46524944: CharsetResources = ReadResources(r, ResourceFlags.CSL4); break; // 'DCHR'/'DIRF'
                     case 0x4A424F44: ReadObjects(r, ObjectFlags.CSL4); break; // 'DOBJ'
                     case 0x4D414E52: RoomNames = ReadRoomNames(r); break; // 'RNAM'
@@ -1006,15 +913,12 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm>
             }
         }
 
-        void Load8(FamilyGame game, BinaryReader r, Dictionary<string, object> detect)
-        {
+        void Load8(FamilyGame game, BinaryReader r, Dictionary<string, object> detect) {
             var features = (Features)detect["features"];
-            while (r.BaseStream.Position < r.BaseStream.Length)
-            {
+            while (r.BaseStream.Position < r.BaseStream.Length) {
                 var block = r.ReadUInt32();
                 r.ReadUInt32E(); // size
-                switch (block)
-                {
+                switch (block) {
                     case 0x52484344: case 0x46524944: CharsetResources = ReadResources(r, ResourceFlags.CSL4); break; // 'DCHR'/'DIRF'
                     case 0x4A424F44: ReadObjects(r, ObjectFlags.CIL5); break; // 'DOBJ'
                     case 0x4D414E52: RoomNames = ReadRoomNames(r); break; // 'RNAM'
@@ -1034,15 +938,12 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm>
         #endregion
     }
 
-    public class ResourceFile
-    {
+    public class ResourceFile {
     }
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         var game = source.Game;
-        var detect = source.Game.Detect<Dictionary<string, object>>("scumm", source.PakPath, r, (p, s) =>
-        {
+        var detect = source.Game.Detect<Dictionary<string, object>>("scumm", source.PakPath, r, (p, s) => {
             s["variant"] = ((Dictionary<string, object>)p.Data["variants"])[(string)s["variant"]];
             s["features"] = ((string)s["features"]).Split(' ').Aggregate(Features.None, (a, f) => a |= (Features)Enum.Parse(typeof(Features), f, true));
             s["platform"] = (Platform)Enum.Parse(typeof(Platform), s.TryGetValue("platform", out var z) ? (string)z : "None", true);
@@ -1069,8 +970,7 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
-    {
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         throw new NotImplementedException();
     }
 }
@@ -1079,17 +979,14 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm>
 
 #region Binary_XX
 
-public unsafe class Binary_XX : PakBinary<Binary_XX>
-{
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+public unsafe class Binary_XX : PakBinary<Binary_XX> {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         var files = source.Files = [];
 
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
-    {
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         throw new NotImplementedException();
     }
 }
@@ -1101,15 +998,13 @@ public unsafe class Binary_XX : PakBinary<Binary_XX>
 // https://en.wikipedia.org/wiki/Color_Graphics_Adapter
 // https://www.quora.com/What-is-the-difference-between-an-EGA-and-VGA-card-What-are-the-benefits-of-using-an-EGA-or-VGA-card-over-a-standard-VGA-card#:~:text=EGA%20(Enhanced%20Graphics%20Adapter)%20was,graphics%20and%20more%20detailed%20images.
 
-public unsafe class Binary_Xga : IHaveMetaInfo, ITexture
-{
+public unsafe class Binary_Xga : IHaveMetaInfo, ITexture {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Xga(r, f));
 
     #region Headers
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct X_Header
-    {
+    struct X_Header {
         public static (string, int) Struct = ("<4B6H48c2B4H54c", sizeof(X_Header));
         public byte Magic;              // Fixed header field valued at a hexadecimal
         public byte Version;            // Version number referring to the Paintbrush software release
@@ -1133,8 +1028,7 @@ public unsafe class Binary_Xga : IHaveMetaInfo, ITexture
 
     #endregion
 
-    public Binary_Xga(BinaryReader r, FileSource f)
-    {
+    public Binary_Xga(BinaryReader r, FileSource f) {
         Header = r.ReadS<X_Header>();
         if (Header.Magic != 0x0a) throw new FormatException("BAD MAGIC");
         Body = r.ReadToEnd();
@@ -1154,8 +1048,7 @@ public unsafe class Binary_Xga : IHaveMetaInfo, ITexture
     public int Depth { get; } = 0;
     public int MipMaps { get; } = 1;
     public TextureFlags TexFlags { get; } = 0;
-    public T Create<T>(string platform, Func<object, T> func)
-    {
+    public T Create<T>(string platform, Func<object, T> func) {
         //var bytes = Header.Bpp switch
         //{
         //    //8 => Decode8bpp(),

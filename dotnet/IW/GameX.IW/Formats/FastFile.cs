@@ -10,13 +10,10 @@ using System.Security.Cryptography;
 using FF_Header = GameX.IW.Formats.Binary_IW.FF_Header;
 using FF_VERSION = GameX.IW.Formats.Binary_IW.FF_VERSION;
 
-namespace GameX.IW.Formats
-{
-    public unsafe static partial class FastFile
-    {
+namespace GameX.IW.Formats {
+    public unsafe static partial class FastFile {
         [StructLayout(LayoutKind.Sequential)]
-        struct FF_BO3BlockHeader
-        {
+        struct FF_BO3BlockHeader {
             public static (string, int) Struct = ("<?", sizeof(FF_BO3BlockHeader));
             public int CompressedSize;
             public int DecompressedSize;
@@ -43,8 +40,7 @@ namespace GameX.IW.Formats
         //}
 
         [StructLayout(LayoutKind.Explicit)]
-        struct FF_ZoneHeader
-        {
+        struct FF_ZoneHeader {
             public static (string, int) Struct = ("<?", sizeof(FF_ZoneHeader));
             [FieldOffset(0)] public uint Size;                  // decompressed fastfile size minus 44 (0x2C)
             [FieldOffset(4)] public uint ReferenceSize;         // about the total size of referenced data, e.g. the required memory for IWI textures if material files are in the ff
@@ -68,8 +64,7 @@ namespace GameX.IW.Formats
 
             // https://en.wikipedia.org/wiki/IW_(game_engine)
             (int seek, int argCount, int assetCount, int endSkip) GetArgsAndAssetsOffsets(FF_VERSION version)
-                => version switch
-                {
+                => version switch {
                     FF_VERSION.CO4_WWII => (0x3C, CO_Args, CO_Assets, 0),       // IW 3.0: Call of Duty 4: Modern Warfare
                     FF_VERSION.WaW => (0x34, AW_Args, AW_Assets, 0),     // IW 3.0+: Call of Duty: World at War
                     FF_VERSION.MW2 => (0x3C, CO_Args, CO_Assets, 0),     // IW 4.0: Call of Duty: Modern Warfare 2
@@ -79,8 +74,7 @@ namespace GameX.IW.Formats
                     _ => throw new FormatException($"Unknown Version: {version}"),
                 };
 
-            public (Dictionary<string, long> args, string[] assetInfos) GetArgsAndAssetInfos(BinaryReader r, ref FF_Header header)
-            {
+            public (Dictionary<string, long> args, string[] assetInfos) GetArgsAndAssetInfos(BinaryReader r, ref FF_Header header) {
                 var version = header.Version;
                 var (seek, argCount, assetCount, endSkip) = GetArgsAndAssetsOffsets(version);
                 var args = new Dictionary<string, long>();
@@ -103,18 +97,15 @@ namespace GameX.IW.Formats
                 //}
                 //else
                 {
-                    if (argCount > 0)
-                    {
+                    if (argCount > 0) {
                         var argsValues = r.ReadPArray<int>("i", argCount);
                         var argsNames = r.ReadFArray(r => r.ReadVAString(), argCount);
                         if (argsNames[argCount - 1] == "\u0005") { argCount--; r.Skip(-2); }
                         for (var i = 0; i < argCount; i++) args[argsNames[i] ?? $"${i}"] = argsValues[i];
                     }
-                    if (assetCount > 0)
-                    {
+                    if (assetCount > 0) {
                         var assetType = r.ReadPArray<long>("q", assetCount);
-                        switch (version)
-                        {
+                        switch (version) {
                             case FF_VERSION.CO4_WWII: assetInfos = assetType.Select(x => ((IW3XAssetType)x).ToString()).ToArray(); break; // Call of Duty 4: Modern Warfare
                             case FF_VERSION.WaW: assetInfos = assetType.Select(x => ((IW3XAssetType)x).ToString()).ToArray(); break; // Call of Duty: World at War
                             case FF_VERSION.BO: assetInfos = assetType.Select(x => ((Oth_AssetType)x).ToString()).ToArray(); break; // Call of Duty: Black Ops
@@ -132,8 +123,7 @@ namespace GameX.IW.Formats
         static readonly byte[] FF_Stop8 = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
         static readonly byte[] FF_Stop4 = { 0xFF, 0xFF, 0xFF, 0xFF };
 
-        static string GetZoneFile(string filePath, byte[] cryptKey, BinaryReader r, ref FF_Header header)
-        {
+        static string GetZoneFile(string filePath, byte[] cryptKey, BinaryReader r, ref FF_Header header) {
             var zonePath = Path.Combine(Path.GetDirectoryName(filePath), Path.GetFileNameWithoutExtension(filePath) + ".ff~");
             //if (File.Exists(zonePath)) return zonePath;
 
@@ -169,13 +159,11 @@ namespace GameX.IW.Formats
             //    return ivTable;
             //}
 
-            static byte[] CreateIVTable(byte[] source)
-            {
+            static byte[] CreateIVTable(byte[] source) {
                 var ivTable = new byte[16000];
                 int addDiv = 0, nameKeyLength = Array.FindIndex(source, b => b == 0);
                 for (var i = 0; i < ivTable.Length; i += nameKeyLength * 4)
-                    for (var x = 0; x < nameKeyLength * 4; x += 4)
-                    {
+                    for (var x = 0; x < nameKeyLength * 4; x += 4) {
                         if ((i + addDiv) >= ivTable.Length || i + x >= ivTable.Length) return ivTable;
                         addDiv = x > 0 ? x / 4 : 0;
                         for (var y = 0; y < 4; y++) ivTable[i + x + y] = source[addDiv];
@@ -183,18 +171,15 @@ namespace GameX.IW.Formats
                 return ivTable;
             }
 
-            static void UpdateIVTable(int index, byte[] hash, byte[] ivTable, int[] ivCounter)
-            {
-                for (var i = 0; i < 20; i += 5)
-                {
+            static void UpdateIVTable(int index, byte[] hash, byte[] ivTable, int[] ivCounter) {
+                for (var i = 0; i < 20; i += 5) {
                     var value = (index + 4 * ivCounter[index]) % 800 * 5;
                     for (var x = 0; x < 5; x++) ivTable[4 * value + x + i] ^= hash[i + x];
                 }
                 ivCounter[index]++;
             }
 
-            static byte[] GetIV(int index, byte[] ivTable, int[] ivCounter)
-            {
+            static byte[] GetIV(int index, byte[] ivTable, int[] ivCounter) {
                 var iv = new byte[8];
                 var arrayIndex = (index + 4 * (ivCounter[index] - 1)) % 800 * 20;
                 Array.Copy(ivTable, arrayIndex, iv, 0, 8);
@@ -203,19 +188,15 @@ namespace GameX.IW.Formats
 
             // extract zone
             using (var zoneStream = File.Create(zonePath))
-                try
-                {
-                    switch (header.Version)
-                    {
+                try {
+                    switch (header.Version) {
                         case FF_VERSION.MW:
-                        case FF_VERSION.AW:
-                            {
+                        case FF_VERSION.AW: {
                             }
                             break;
                         case FF_VERSION.CO4_WWII:
                         case FF_VERSION.BO:
-                        case FF_VERSION.WaW:
-                            {
+                        case FF_VERSION.WaW: {
                                 r.Seek(0x0E);
                                 var decryptedData = r.ReadBytes((int)(r.BaseStream.Length - r.BaseStream.Position));
                                 using (var s = new MemoryStream(decryptedData))
@@ -224,8 +205,7 @@ namespace GameX.IW.Formats
                                 zoneStream.Flush();
                             }
                             break;
-                        case FF_VERSION.MW2:
-                            {
+                        case FF_VERSION.MW2: {
                                 r.Seek(0x0E);
                                 var decryptedData = r.ReadBytes((int)(r.BaseStream.Length - r.BaseStream.Position));
                                 using (var s = new MemoryStream(decryptedData))
@@ -234,8 +214,7 @@ namespace GameX.IW.Formats
                                 zoneStream.Flush();
                             }
                             break;
-                        case FF_VERSION.BO2:
-                            {
+                        case FF_VERSION.BO2: {
                                 // Get IV Table
                                 r.Seek(0x18);
                                 var ivCount = Enumerable.Repeat(1, 4).ToArray();
@@ -244,8 +223,7 @@ namespace GameX.IW.Formats
                                 var salsa = new Salsa20 { Key = cryptKey };
 
                                 var sectionIndex = 0;
-                                while (true)
-                                {
+                                while (true) {
                                     // Read section size.
                                     var size = r.ReadInt32();
 
@@ -258,15 +236,13 @@ namespace GameX.IW.Formats
                                     using (var sha1 = SHA1.Create()) UpdateIVTable(sectionIndex % 4, sha1.ComputeHash(decryptedData), ivTable, ivCount);
 
                                     // Uncompress the decrypted data.
-                                    try
-                                    {
+                                    try {
                                         using (var s = new MemoryStream(decryptedData))
                                         using (var decompressor = new DeflateStream(s, CompressionMode.Decompress))
                                             decompressor.CopyTo(zoneStream);
                                         zoneStream.Flush();
                                     }
-                                    catch
-                                    {
+                                    catch {
                                         Console.WriteLine("Error Decoding");
                                         return zonePath;
                                     }
@@ -274,8 +250,7 @@ namespace GameX.IW.Formats
                                 }
                                 break;
                             }
-                        case FF_VERSION.BO3:
-                            {
+                        case FF_VERSION.BO3: {
                                 var unknown = r.ReadByte();
                                 var flagsZLIB = r.ReadByte();
                                 var flagsPC = r.ReadByte();
@@ -292,15 +267,13 @@ namespace GameX.IW.Formats
                                 // decode blocks
                                 r.Seek(0x248);
                                 var consumed = 0;
-                                while (consumed < size)
-                                {
+                                while (consumed < size) {
                                     // Read Block Header & validate the block position, it should match 
                                     var block = r.ReadS<FF_BO3BlockHeader>();
                                     if (block.Position != r.BaseStream.Position - 16) throw new Exception("Block Position does not match Stream Position.");
 
                                     // Check for padding blocks
-                                    if (block.DecompressedSize == 0)
-                                    {
+                                    if (block.DecompressedSize == 0) {
                                         r.Align(0x800000); //r.Skip(Utility.ComputePadding((int)r.BaseStream.Position, 0x800000));
                                         continue;
                                     }
@@ -323,30 +296,26 @@ namespace GameX.IW.Formats
                     }
                     return zonePath;
                 }
-                catch
-                {
+                catch {
                     zoneStream.Close();
                     File.Delete(zonePath);
                     return null;
                 }
         }
 
-        internal class FileHeader
-        {
+        internal class FileHeader {
             public int Id;
             public string Path;
             public long Position;
             public long FileSize;
         }
 
-        struct COD_Material
-        {
+        struct COD_Material {
             public short Size;
             public byte B1;
             public byte B2;
 
-            public COD_Material(BinaryReader r)
-            {
+            public COD_Material(BinaryReader r) {
                 Size = r.ReadInt16();
                 var end = r.Tell() + Size;
                 B1 = r.ReadByte();
@@ -356,13 +325,11 @@ namespace GameX.IW.Formats
             }
         }
 
-        struct COD_Shader
-        {
+        struct COD_Shader {
             public int[] Pointers;
             public string Name;
 
-            public COD_Shader(BinaryReader r)
-            {
+            public COD_Shader(BinaryReader r) {
                 Pointers = r.ReadPArray<int>("I", 36);  // 36 pointers (0x90 bytes) (bytes 0x19 up to 0x22 say if we get any content at all?)
                 Name = r.ReadVAString();                          // Then techset file name (0x00 termination) if pointer is 0xFFFFFFFF?
 
@@ -376,8 +343,7 @@ namespace GameX.IW.Formats
                     var packPointer3 = r.ReadPArray<short>("H", 0x32); // 0x64 bytes of some short length options / flags? If the second pointer above is 0xFFFFFFFF
 
                     // start of shader
-                    while (true)
-                    {
+                    while (true) {
                         var shadePointer1 = r.ReadInt32();      // pointer, if not 0xFFFFFFFF, no filename is further on
                         var shadePointer2 = r.ReadInt32();      // pointer, often 00 00 00 00
                         var shadeSeparator = r.ReadInt32();     // Separator
@@ -396,8 +362,7 @@ namespace GameX.IW.Formats
         // https://www.itsmods.com/forum/Thread-Release-Black-Ops-2-FastFile-decrypter.html - BO2
         // https://gist.github.com/Scobalula/a0fd08197497336f67b7ff551b2db404 - S1ff 0x42|0x72e 
         // https://wiki.zeroy.com/index.php?title=Call_of_Duty_4:_FastFile_Format - COD4 FF
-        internal static List<FileHeader> GetAssets(BinaryPakFile source, BinaryReader r, byte[] cryptKey, ref FF_Header header)
-        {
+        internal static List<FileHeader> GetAssets(BinaryPakFile source, BinaryReader r, byte[] cryptKey, ref FF_Header header) {
             var zonePath = GetZoneFile(source.PakPath, cryptKey, r, ref header);
             if (zonePath == null) return null;
             var headers = new List<FileHeader>();
@@ -409,18 +374,14 @@ namespace GameX.IW.Formats
 
             // foreach asset
             string path = null;
-            for (var i = 0; i < assetInfos.Length; i++)
-            {
+            for (var i = 0; i < assetInfos.Length; i++) {
                 var info = assetInfos[i];
-                switch (info)
-                {
-                    case "Material":
-                        {
+                switch (info) {
+                    case "Material": {
                             var mat = new COD_Material(r);
                             break;
                         }
-                    case "PixelShader":
-                        {
+                    case "PixelShader": {
                             var mat = new COD_Shader(r);
                             //path = r.ReadZASCII(128);
                             //var ps = r.ReadS<PixelShader>(PixelShader.COD4_SizeOf);
@@ -431,8 +392,7 @@ namespace GameX.IW.Formats
                         path = $"{i}.{assetInfos[i]}";
                         break;
                 }
-                headers.Add(new FileHeader
-                {
+                headers.Add(new FileHeader {
                     Id = i,
                     Path = path,
                     Position = 0,

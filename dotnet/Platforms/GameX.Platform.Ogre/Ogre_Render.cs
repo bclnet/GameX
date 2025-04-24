@@ -7,11 +7,9 @@ using static OpenStack.Gfx.GfX;
 
 namespace GameX.Platforms.Ogre;
 
-public static class OgreRenderer
-{
+public static class OgreRenderer {
     public static Renderer CreateRenderer(object parent, IList<IOpenGfx> gfx, object obj, string type)
-        => type switch
-        {
+        => type switch {
             "TestTri" => new OgreTestTriRenderer(gfx[XModel] as OgreGfxModel, obj),
             "Texture" => new OgreTextureRenderer(gfx[XModel] as OgreGfxModel, obj),
             "Object" => new OgreObjectRenderer(gfx[XModel] as OgreGfxModel, obj),
@@ -25,13 +23,11 @@ public class OgreTestTriRenderer(OgreGfxModel gfx, object obj) : TestTriRenderer
 public class OgreCellRenderer(OgreGfxModel gfx, object obj) : Renderer { }
 public class OgreEngineRenderer(OgreGfxModel gfx, object obj) : Renderer { }
 public class OgreObjectRenderer(OgreGfxModel gfx, object obj) : Renderer { }
-public class OgreTextureRenderer(OgreGfxModel gfx, object obj) : TextureRenderer(gfx, obj, Level)
-{
+public class OgreTextureRenderer(OgreGfxModel gfx, object obj) : TextureRenderer(gfx, obj, Level) {
     static Range Level = 0..;
 }
 
-public class ViewInfo
-{
+public class ViewInfo {
     static ViewInfo() => PlatformX.Activate(OgrePlatform.This);
 
     public string FamilyId = "Bethesda";

@@ -1,14 +1,10 @@
 ﻿using System;
 using static GameX.IW.Zone.Asset;
 
-namespace GameX.IW.Zone
-{
-    public unsafe partial struct cBrushSide
-    {
-        public static void writecbrushside_t(ZStream buf, cBrushSide* data, int num)
-        {
-            fixed (byte* _ = buf.at)
-            {
+namespace GameX.IW.Zone {
+    public unsafe partial struct cBrushSide {
+        public static void writecbrushside_t(ZStream buf, cBrushSide* data, int num) {
+            fixed (byte* _ = buf.at) {
                 //: WRITE_ASSET_NUM(data, cBrushSide, num);
                 var dest = (cBrushSide*)_;
                 buf.write((byte*)data, sizeof(cBrushSide), num);
@@ -25,28 +21,22 @@ namespace GameX.IW.Zone
         }
     }
 
-    public unsafe partial struct BrushWrapper
-    {
-        public static void writeBrush(ZStream buf, BrushWrapper* data, BrushWrapper* dest)
-        {
-            fixed (byte* _ = buf.at)
-            {
+    public unsafe partial struct BrushWrapper {
+        public static void writeBrush(ZStream buf, BrushWrapper* data, BrushWrapper* dest) {
+            fixed (byte* _ = buf.at) {
                 cBrushSide.writecbrushside_t(buf, data->brush.brushSide, data->brush.count);
                 data->brush.brushSide = (cBrushSide*)-1;
 
                 //: WRITE_FIELD(data, brush.brushEdge, char, totalEdgeCount);
-                if (data->brush.brushEdge != null)
-                {
+                if (data->brush.brushEdge != null) {
                     buf.write((byte*)data->planes, sizeof(char), data->totalEdgeCount);
                     dest->brush.brushEdge = (char*)-1;
                 }
             }
         }
 
-        public static void writeBrushWrapper(ZStream buf, BrushWrapper* data)
-        {
-            fixed (byte* _ = buf.at)
-            {
+        public static void writeBrushWrapper(ZStream buf, BrushWrapper* data) {
+            fixed (byte* _ = buf.at) {
                 //: WRITE_ASSET(data, BrushWrapper);
                 var dest = (BrushWrapper*)_;
                 buf.write((byte*)data, sizeof(BrushWrapper), 1);
@@ -54,8 +44,7 @@ namespace GameX.IW.Zone
                 writeBrush(buf, data, dest);
 
                 //: WRITE_FIELD_ALIGNED(data, planes, cPlane, brush.count, ALIGN_TO_4); // OffsetToPoiner
-                if (data->planes != null)
-                {
+                if (data->planes != null) {
                     buf.align(ZStream.ALIGN_TO_4);
                     buf.write((byte*)data->planes, sizeof(cPlane), data->brush.count);
                     dest->planes = (cPlane*)-1;
@@ -64,19 +53,15 @@ namespace GameX.IW.Zone
         }
     }
 
-    public unsafe partial struct PhysGeomInfo
-    {
-        public static void writePhysGeomInfo(ZStream buf, PhysGeomInfo* data, int num)
-        {
-            fixed (byte* _ = buf.at)
-            {
+    public unsafe partial struct PhysGeomInfo {
+        public static void writePhysGeomInfo(ZStream buf, PhysGeomInfo* data, int num) {
+            fixed (byte* _ = buf.at) {
                 //: WRITE_ASSET_NUM(data, PhysGeomInfo, num);
                 var dest = (PhysGeomInfo*)_;
                 buf.write((byte*)data, sizeof(PhysGeomInfo), num);
 
                 for (var i = 0; i < num; i++)
-                    if (dest[i].brush != null)
-                    {
+                    if (dest[i].brush != null) {
                         buf.align(ZStream.ALIGN_TO_4);
                         BrushWrapper.writeBrushWrapper(buf, dest[i].brush);
                     }
@@ -84,12 +69,9 @@ namespace GameX.IW.Zone
         }
     }
 
-    public unsafe partial struct PhysGeomList
-    {
-        public static void writePhysCollmap(ZoneInfo info, ZStream buf, PhysGeomList* data)
-        {
-            fixed (byte* _ = buf.at)
-            {
+    public unsafe partial struct PhysGeomList {
+        public static void writePhysCollmap(ZoneInfo info, ZStream buf, PhysGeomList* data) {
+            fixed (byte* _ = buf.at) {
                 //: WRITE_ASSET(data, PhysGeomList);
                 var dest = (PhysGeomList*)_;
                 buf.write((byte*)data, sizeof(PhysGeomList), 1);
@@ -99,8 +81,7 @@ namespace GameX.IW.Zone
                 buf.write(data->name, strlen(data->name) + 1, 1);
                 dest->name = (char*)-1;
 
-                if (data->geoms != null)
-                {
+                if (data->geoms != null) {
                     buf.align(ZStream.ALIGN_TO_4);
                     PhysGeomInfo.writePhysGeomInfo(buf, data->geoms, (int)data->count);
                 }
@@ -109,8 +90,7 @@ namespace GameX.IW.Zone
             }
         }
 
-        public static object addPhysCollmap(ZoneInfo info, string name, char* data, int dataLen)
-        {
+        public static object addPhysCollmap(ZoneInfo info, string name, char* data, int dataLen) {
             if (dataLen < 0) return null;
             Console.Write("Can't add new PhysCollmap assets!");
             return null;

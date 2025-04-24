@@ -10,12 +10,10 @@ namespace GameX.Valve.Formats.Vpk;
 
 #region ClosedCaption
 
-public class ClosedCaptions : IEnumerable<ClosedCaptions.ClosedCaption>, IHaveMetaInfo
-{
+public class ClosedCaptions : IEnumerable<ClosedCaptions.ClosedCaption>, IHaveMetaInfo {
     public const int MAGIC = 0x44434356; // "VCCD"
 
-    public class ClosedCaption
-    {
+    public class ClosedCaption {
         public uint Hash;
         public uint UnknownV2;
         public int Blocknum;
@@ -38,17 +36,14 @@ public class ClosedCaptions : IEnumerable<ClosedCaptions.ClosedCaption>, IHaveMe
 
     public IEnumerator<ClosedCaption> GetEnumerator() => ((IEnumerable<ClosedCaption>)Captions).GetEnumerator();
 
-    public ClosedCaption this[string key]
-    {
-        get
-        {
+    public ClosedCaption this[string key] {
+        get {
             var hash = Crc32Digest.Compute(Encoding.UTF8.GetBytes(key));
             return Captions.Find(caption => caption.Hash == hash);
         }
     }
 
-    public void Read(BinaryReader r)
-    {
+    public void Read(BinaryReader r) {
         if (r.ReadUInt32() != MAGIC) throw new InvalidDataException("Given file is not a VCCD.");
 
         var version = r.ReadUInt32();
@@ -60,8 +55,7 @@ public class ClosedCaptions : IEnumerable<ClosedCaptions.ClosedCaption>, IHaveMe
         var directorysize = r.ReadUInt32();
         var dataoffset = r.ReadUInt32();
         for (var i = 0U; i < directorysize; i++)
-            Captions.Add(new ClosedCaption
-            {
+            Captions.Add(new ClosedCaption {
                 Hash = r.ReadUInt32(),
                 UnknownV2 = version >= 2 ? r.ReadUInt32() : 0,
                 Blocknum = r.ReadInt32(),
@@ -70,8 +64,7 @@ public class ClosedCaptions : IEnumerable<ClosedCaptions.ClosedCaption>, IHaveMe
             });
 
         // Probably could be inside the for loop above, but I'm unsure what the performance costs are of moving the position head manually a bunch compared to reading sequentually
-        foreach (var caption in Captions)
-        {
+        foreach (var caption in Captions) {
             r.Seek(dataoffset + caption.Blocknum * blocksize + caption.Offset);
             caption.Text = r.ReadZEncoding(Encoding.Unicode);
         }
@@ -84,8 +77,7 @@ public class ClosedCaptions : IEnumerable<ClosedCaptions.ClosedCaption>, IHaveMe
 
 #region CompiledShader
 
-public class CompiledShader : IHaveMetaInfo
-{
+public class CompiledShader : IHaveMetaInfo {
     public const int MAGIC = 0x32736376; // "vcs2"
 
     string ShaderType;
@@ -103,8 +95,7 @@ public class CompiledShader : IHaveMetaInfo
         ]),
     ];
 
-    public void Read(BinaryReader r, string filename)
-    {
+    public void Read(BinaryReader r, string filename) {
         var b = new StringBuilder();
         if (filename.EndsWith("vs.vcs")) ShaderType = "vertex";
         else if (filename.EndsWith("ps.vcs")) ShaderType = "pixel";
@@ -125,8 +116,7 @@ public class CompiledShader : IHaveMetaInfo
         Shader = b.ToString();
     }
 
-    void ReadFeatures(BinaryReader r, StringBuilder b_)
-    {
+    void ReadFeatures(BinaryReader r, StringBuilder b_) {
         var anotherFileRef = r.ReadInt32(); // new in version 64, mostly 0 but sometimes 1
 
         var wtf = r.ReadUInt32(); // appears to be 0 in 'features'
@@ -150,8 +140,7 @@ public class CompiledShader : IHaveMetaInfo
         var count = r.ReadUInt32();
         long prevPos;
         b_.AppendLine($"Count: {count}");
-        for (var i = 0; i < count; i++)
-        {
+        for (var i = 0; i < count; i++) {
             prevPos = r.BaseStream.Position;
 
             name = r.ReadVUString();
@@ -160,8 +149,7 @@ public class CompiledShader : IHaveMetaInfo
             var type = r.ReadUInt32();
             b_.AppendLine($"Name: {name} - Type: {type} - Offsets: {r.BaseStream.Position}");
 
-            if (type == 1)
-            {
+            if (type == 1) {
                 prevPos = r.BaseStream.Position;
                 var subname = r.ReadVUString();
                 b_.AppendLine(subname);
@@ -174,8 +162,7 @@ public class CompiledShader : IHaveMetaInfo
         if (anotherFileRef == 1) identifierCount++;
 
         // Appears to be always 128 bytes in version 63 and higher, 112 before
-        for (var i = 0; i < identifierCount; i++)
-        {
+        for (var i = 0; i < identifierCount; i++) {
             // either 6 or 7 is cs (compute shader)
             // 0 - ?
             // 1 - vertex shader
@@ -193,8 +180,7 @@ public class CompiledShader : IHaveMetaInfo
         r.ReadUInt32(); // 0E 00 00 00
 
         count = r.ReadUInt32();
-        for (var i = 0; i < count; i++)
-        {
+        for (var i = 0; i < count; i++) {
             prevPos = r.BaseStream.Position;
             name = r.ReadVUString();
             r.BaseStream.Position = prevPos + 64;
@@ -210,8 +196,7 @@ public class CompiledShader : IHaveMetaInfo
         b_.AppendLine($"Count: {count}");
     }
 
-    void ReadShader(BinaryReader r, StringBuilder b_)
-    {
+    void ReadShader(BinaryReader r, StringBuilder b_) {
         // This uint controls whether or not there's an additional uint and file identifier in header for features shader, might be something different in these.
         var unk0_a = r.ReadInt32(); // new in version 64, mostly 0 but sometimes 1
 
@@ -228,8 +213,7 @@ public class CompiledShader : IHaveMetaInfo
         var count = r.ReadUInt32();
         b_.AppendLine($"[CHUNK 1] Count: {count} - Offsets: {r.BaseStream.Position}");
 
-        for (var i = 0; i < count; i++)
-        {
+        for (var i = 0; i < count; i++) {
             var previousPosition = r.BaseStream.Position;
             var name = r.ReadVUString();
             r.BaseStream.Position = previousPosition + 128;
@@ -247,8 +231,7 @@ public class CompiledShader : IHaveMetaInfo
         count = r.ReadUInt32();
         b_.AppendLine($"[CHUNK 2] Count: {count} - Offsets: {r.BaseStream.Position}");
 
-        for (var i = 0; i < count; i++)
-        {
+        for (var i = 0; i < count; i++) {
             // Initial research based on brushsplat_pc_40_ps, might be different for other shaders
             var unk2_a = r.ReadUInt32(); // always 3?
             var unk2_b = r.ReadUInt32(); // always 2?
@@ -270,8 +253,7 @@ public class CompiledShader : IHaveMetaInfo
         count = r.ReadUInt32();
         b_.AppendLine($"[CHUNK 3] Count: {count} - Offsets: {r.BaseStream.Position}");
 
-        for (var i = 0; i < count; i++)
-        {
+        for (var i = 0; i < count; i++) {
             var previousPosition = r.BaseStream.Position;
             var name = r.ReadVUString();
             r.BaseStream.Position = previousPosition + 128;
@@ -289,8 +271,7 @@ public class CompiledShader : IHaveMetaInfo
         count = r.ReadUInt32();
         b_.AppendLine($"[CHUNK 4] Count: {count} - Offsets: {r.BaseStream.Position}");
 
-        for (var i = 0; i < count; i++)
-        {
+        for (var i = 0; i < count; i++) {
             var unk4_a = r.ReadUInt32();
             var unk4_b = r.ReadUInt32();
             var unk4_c = r.ReadUInt16();
@@ -310,8 +291,7 @@ public class CompiledShader : IHaveMetaInfo
         count = r.ReadUInt32();
         b_.AppendLine($"[CHUNK 5] Count: {count} - Offsets: {r.BaseStream.Position}");
 
-        for (var i = 0; i < count; i++)
-        {
+        for (var i = 0; i < count; i++) {
             var previousPosition = r.BaseStream.Position;
             var name = r.ReadVUString();
             r.BaseStream.Position = previousPosition + 128; // ??
@@ -342,11 +322,9 @@ public class CompiledShader : IHaveMetaInfo
             //  Type 11: 480 (post_process_pc_30_ps.vcs)
             //  Type 13: 480 (spriteentity_pc_41_vs.vcs)
             // Needs further investigation. This is where parsing a lot of shaders break right now.
-            if (length > -1 && type != 0 && type != 2 && type != 10 && type != 11 && type != 13)
-            {
+            if (length > -1 && type != 0 && type != 2 && type != 10 && type != 11 && type != 13) {
                 if (type != 1 && type != 5 && type != 6 && type != 7) b_.AppendLine($"!!! Unknown type of type {type} encountered at position {r.BaseStream.Position - 8}. Assuming normal sized chunk.");
-                else
-                {
+                else {
                     var unk5_b = r.ReadBytes(length);
                     var unk5_c = r.ReadUInt32();
                 }
@@ -360,8 +338,7 @@ public class CompiledShader : IHaveMetaInfo
         count = r.ReadUInt32();
         b_.AppendLine($"[CHUNK 6] Count: {count} - Offsets: {r.BaseStream.Position}");
 
-        for (var i = 0; i < count; i++)
-        {
+        for (var i = 0; i < count; i++) {
             var unk6_a = r.ReadBytes(4); // unsure, maybe shorts or bytes
             var unk6_b = r.ReadUInt32(); // 12, 13, 14 or 15 in brushplat_pc_40_ps.vcs
             var unk6_c = r.ReadBytes(12); // FF
@@ -378,8 +355,7 @@ public class CompiledShader : IHaveMetaInfo
         count = r.ReadUInt32();
         b_.AppendLine($"[CHUNK 7] Count: {count} - Offsets: {r.BaseStream.Position}");
 
-        for (var i = 0; i < count; i++)
-        {
+        for (var i = 0; i < count; i++) {
             var prevPos = r.BaseStream.Position;
             var name = r.ReadVUString(8);
             r.BaseStream.Position = prevPos + 64;
@@ -389,8 +365,7 @@ public class CompiledShader : IHaveMetaInfo
             var subCount = r.ReadUInt32();
             b_.AppendLine($"[SUB CHUNK] Name: {name} - unk1: {a} - unk2: {b} - Count: {subCount} - Offsets: {r.BaseStream.Position}");
 
-            for (var j = 0; j < subCount; j++)
-            {
+            for (var j = 0; j < subCount; j++) {
                 var previousPosition = r.BaseStream.Position;
                 var subname = r.ReadVUString();
                 r.BaseStream.Position = previousPosition + 64;
@@ -408,17 +383,14 @@ public class CompiledShader : IHaveMetaInfo
         b_.AppendLine($"Offsets: {r.BaseStream.Position}");
 
         // Vertex shader has a string chunk which seems to be vertex buffer specifications
-        if (ShaderType == "vertex")
-        {
+        if (ShaderType == "vertex") {
             var bufferCount = r.ReadUInt32();
             b_.AppendLine($"{bufferCount} vertex buffer descriptors");
-            for (var h = 0; h < bufferCount; h++)
-            {
+            for (var h = 0; h < bufferCount; h++) {
                 count = r.ReadUInt32(); // number of attributes
                 b_.AppendLine($"Buffer #{h}, {count} attributes");
 
-                for (var i = 0; i < count; i++)
-                {
+                for (var i = 0; i < count; i++) {
                     var name = r.ReadVUString();
                     var type = r.ReadVUString();
                     var option = r.ReadVUString();
@@ -437,8 +409,7 @@ public class CompiledShader : IHaveMetaInfo
         var lzmaOffsets = new int[lzmaCount];
         for (var i = 0; i < lzmaCount; i++) lzmaOffsets[i] = r.ReadInt32();
 
-        for (var i = 0; i < lzmaCount; i++)
-        {
+        for (var i = 0; i < lzmaCount; i++) {
             b_.AppendLine("Extracting shader {i}..");
             // File.WriteAllBytes(Path.Combine(@"D:\shaders\PCGL DotA Core\processed spritecard\", "shader_out_" + i + ".bin"), ReadShaderChunk(lzmaOffsets[i]));
 
@@ -448,14 +419,12 @@ public class CompiledShader : IHaveMetaInfo
             // What follows here is super experimental and barely works as is. It is a very rough implementation to read and extract shader stringblocks for PCGL shaders.
             using var inputStream = new MemoryStream(ReadShaderChunk(r, b_, lzmaOffsets[i]));
             using var chunkReader = new BinaryReader(inputStream);
-            while (chunkReader.BaseStream.Position < chunkReader.BaseStream.Length)
-            {
+            while (chunkReader.BaseStream.Position < chunkReader.BaseStream.Length) {
                 // Read count that also doubles as mode?
                 var modeAndCount = chunkReader.ReadInt16();
 
                 // Mode never seems to be 20 for anything but the FF chunk before shader stringblock
-                if (modeAndCount != 20)
-                {
+                if (modeAndCount != 20) {
                     chunkReader.ReadInt16();
                     var unk2 = chunkReader.ReadInt32();
                     var unk3 = chunkReader.ReadInt32();
@@ -471,8 +440,7 @@ public class CompiledShader : IHaveMetaInfo
                     if (unk4 == 1) chunkReader.ReadBytes(26);
                     else chunkReader.BaseStream.Position -= 2;
                 }
-                else if (modeAndCount == 20)
-                {
+                else if (modeAndCount == 20) {
                     // Read 40 byte 0xFF chunk
                     chunkReader.ReadBytes(40);
 
@@ -489,8 +457,7 @@ public class CompiledShader : IHaveMetaInfo
                     if (shaderContentCount > 100) { b_.AppendLine($"Having issues reading shader {i}, skipping.."); chunkReader.BaseStream.Position = chunkReader.BaseStream.Length; continue; }
 
                     // Read and dump all shader stringblocks
-                    for (var j = 0; j < shaderContentCount; j++)
-                    {
+                    for (var j = 0; j < shaderContentCount; j++) {
                         var shaderLengthInclHeader = chunkReader.ReadInt32();
                         var unk = chunkReader.ReadUInt32(); //type?
                         b_.AppendLine(unk.ToString());
@@ -508,8 +475,7 @@ public class CompiledShader : IHaveMetaInfo
         }
     }
 
-    byte[] ReadShaderChunk(BinaryReader r, StringBuilder b_, int offset)
-    {
+    byte[] ReadShaderChunk(BinaryReader r, StringBuilder b_, int offset) {
         var prevPos = r.BaseStream.Position;
         r.BaseStream.Position = offset;
         var chunkSize = r.ReadUInt32();
@@ -542,11 +508,9 @@ public class CompiledShader : IHaveMetaInfo
 #region HammerEntities
 //was:Utils/HammerEntities
 
-public static class HammerEntities
-{
+public static class HammerEntities {
     public static string GetToolModel(string classname)
-        => classname switch
-        {
+        => classname switch {
             "ai_attached_item_manager" => "materials/editor/info_target.vmat",
             "ai_battle_line" => "models/pigeon.vmdl",
             "ai_goal_fightfromcover" => "materials/editor/ai_goal_follow.vmat",
@@ -878,8 +842,7 @@ public static class HammerEntities
 
 #region ToolsAssetInfo
 
-public class ToolsAssetInfo : IHaveMetaInfo
-{
+public class ToolsAssetInfo : IHaveMetaInfo {
     public const uint MAGIC = 0xC4CCACE8;
     public const uint MAGIC2 = 0xC4CCACE9;
     public const uint GUARD = 0x049A48B2;
@@ -910,8 +873,7 @@ public class ToolsAssetInfo : IHaveMetaInfo
     public readonly List<string> UnknownSoundField1 = [];
     public readonly List<string> UnknownSoundField2 = [];
 
-    public void Read(BinaryReader r)
-    {
+    public void Read(BinaryReader r) {
         var magic = r.ReadUInt32();
         if (magic != MAGIC && magic != MAGIC2) throw new InvalidDataException("Given file is not tools_asset_info.");
 
@@ -926,14 +888,12 @@ public class ToolsAssetInfo : IHaveMetaInfo
         ReadStringsBlock(r, Extensions);
         ReadStringsBlock(r, EditInfoKeys);
         ReadStringsBlock(r, MiscStrings);
-        if (version >= 12)
-        {
+        if (version >= 12) {
             ReadStringsBlock(r, UnknownSoundField1);
             ReadStringsBlock(r, UnknownSoundField2);
         }
 
-        for (var i = 0; i < fileCount; i++)
-        {
+        for (var i = 0; i < fileCount; i++) {
             var hash = r.ReadUInt64();
             var unk1 = (int)(hash >> 61) & 7;
             var addonIndex = (int)(hash >> 52) & 0x1FF;
@@ -950,14 +910,12 @@ public class ToolsAssetInfo : IHaveMetaInfo
         }
     }
 
-    static void ReadStringsBlock(BinaryReader r, ICollection<string> output)
-    {
+    static void ReadStringsBlock(BinaryReader r, ICollection<string> output) {
         var count = r.ReadUInt32();
         for (var i = 0U; i < count; i++) output.Add(r.ReadVUString());
     }
 
-    public override string ToString()
-    {
+    public override string ToString() {
         var b = new StringBuilder();
         foreach (var str in ConstructedFilepaths) b.AppendLine(str);
         return b.ToString();
@@ -968,13 +926,11 @@ public class ToolsAssetInfo : IHaveMetaInfo
 
 #region ValveFont
 
-public class ValveFont
-{
+public class ValveFont {
     const string MAGIC = "VFONT1";
     const byte MAGICTRICK = 167;
 
-    public byte[] Read(BinaryReader r)
-    {
+    public byte[] Read(BinaryReader r) {
         // Magic is at the end
         r.BaseStream.Seek(-MAGIC.Length, SeekOrigin.End);
         if (Encoding.ASCII.GetString(r.ReadBytes(MAGIC.Length)) != MAGIC) throw new InvalidDataException("Given file is not a vfont, version 1.");
@@ -992,8 +948,7 @@ public class ValveFont
 
         // Decode the rest
         r.Seek(0);
-        for (var i = 0; i < output.Length; i++)
-        {
+        for (var i = 0; i < output.Length; i++) {
             var currentByte = r.ReadByte();
             output[i] = (byte)(currentByte ^ magic);
             magic = (currentByte + MAGICTRICK) % 256;

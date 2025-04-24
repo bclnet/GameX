@@ -14,13 +14,11 @@ namespace GameX.Origin.Formats.UO;
 
 #region Binary_Anim - TODO
 
-public unsafe class Binary_AnimUO : IHaveMetaInfo
-{
+public unsafe class Binary_AnimUO : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_AnimUO(r));
 
     // file: artLegacyMUL.mul:static/file04000.art
-    public Binary_AnimUO(BinaryReader r)
-    {
+    public Binary_AnimUO(BinaryReader r) {
     }
 
     // IHaveMetaInfo
@@ -37,15 +35,13 @@ public unsafe class Binary_AnimUO : IHaveMetaInfo
 
 #region Binary_Animdata
 
-public unsafe class Binary_Animdata : IHaveMetaInfo
-{
+public unsafe class Binary_Animdata : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Animdata(r));
 
     #region Headers
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct AnimRecord
-    {
+    public struct AnimRecord {
         public static (string, int) Struct = ("<64b4B", sizeof(AnimRecord));
         public fixed sbyte Frames[64];
         public byte Unknown;
@@ -54,15 +50,13 @@ public unsafe class Binary_Animdata : IHaveMetaInfo
         public byte StartInterval;
     }
 
-    public class Record
-    {
+    public class Record {
         public sbyte[] Frames = new sbyte[64];
         public byte FrameCount;
         public byte FrameInterval;
         public byte StartInterval;
 
-        public Record(ref AnimRecord record)
-        {
+        public Record(ref AnimRecord record) {
             fixed (sbyte* frames_ = record.Frames) Frames = UnsafeX.FixedTArray(frames_, 64);
             FrameCount = record.FrameCount;
             FrameInterval = record.FrameInterval;
@@ -75,16 +69,13 @@ public unsafe class Binary_Animdata : IHaveMetaInfo
     #endregion
 
     // file: animdata.mul
-    public Binary_Animdata(BinaryReader r)
-    {
+    public Binary_Animdata(BinaryReader r) {
         var id = 0;
         var length = r.BaseStream.Length / (4 + (8 * (64 + 4)));
-        for (var i = 0; i < length; i++)
-        {
+        for (var i = 0; i < length; i++) {
             r.Skip(4);
             var records = r.ReadSArray<AnimRecord>(8);
-            for (var j = 0; j < 8; j++, id++)
-            {
+            for (var j = 0; j < 8; j++, id++) {
                 ref AnimRecord record = ref records[j];
                 if (record.FrameCount > 0)
                     Records[id] = new Record(ref record);
@@ -106,22 +97,18 @@ public unsafe class Binary_Animdata : IHaveMetaInfo
 
 #region Binary_AsciiFont
 
-public unsafe class Binary_AsciiFont : IHaveMetaInfo
-{
+public unsafe class Binary_AsciiFont : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_AsciiFont(r));
 
     #region Headers
 
-    public class AsciiFont
-    {
+    public class AsciiFont {
         public byte[][] Characters = new byte[224][];
         public int Height;
 
-        public AsciiFont(BinaryReader r)
-        {
+        public AsciiFont(BinaryReader r) {
             r.ReadByte();
-            for (var i = 0; i < 224; ++i)
-            {
+            for (var i = 0; i < 224; ++i) {
                 var width = r.ReadByte();
                 var height = r.ReadByte();
                 r.ReadByte();
@@ -135,16 +122,13 @@ public unsafe class Binary_AsciiFont : IHaveMetaInfo
 
                 var bd = new byte[width * height << 1];
                 var bd_Stride = width << 1;
-                fixed (byte* bd_Scan0 = bd)
-                {
+                fixed (byte* bd_Scan0 = bd) {
                     var line = (ushort*)bd_Scan0;
                     var delta = bd_Stride >> 1;
 
-                    for (var y = 0; y < height; ++y, line += delta)
-                    {
+                    for (var y = 0; y < height; ++y, line += delta) {
                         ushort* cur = line;
-                        for (var x = 0; x < width; ++x)
-                        {
+                        for (var x = 0; x < width; ++x) {
                             var pixel = (ushort)(r.ReadByte() | (r.ReadByte() << 8));
                             cur[x] = pixel == 0 ? pixel : (ushort)(pixel ^ 0x8000);
                         }
@@ -160,15 +144,13 @@ public unsafe class Binary_AsciiFont : IHaveMetaInfo
     #endregion
 
     // file: fonts.mul
-    public Binary_AsciiFont(BinaryReader r)
-    {
+    public Binary_AsciiFont(BinaryReader r) {
         for (var i = 0; i < Fonts.Length; i++)
             Fonts[i] = new AsciiFont(r);
     }
 
     // IHaveMetaInfo
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
-    {
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
         var nodes = new List<MetaInfo> {
             new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "AsciiFont File" }),
             new MetaInfo("AsciiFont", items: new List<MetaInfo> {
@@ -183,8 +165,7 @@ public unsafe class Binary_AsciiFont : IHaveMetaInfo
 
 #region Binary_BodyConverter
 
-public unsafe class Binary_BodyConverter : IHaveMetaInfo
-{
+public unsafe class Binary_BodyConverter : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_BodyConverter(r.ToStream()));
 
     #region Headers
@@ -201,8 +182,7 @@ public unsafe class Binary_BodyConverter : IHaveMetaInfo
         : Table4 != null && body >= 0 && body < Table4.Length && Table4[body] != -1 ? true
         : false;
 
-    public int Convert(ref int body)
-    {
+    public int Convert(ref int body) {
         // Converts MountItemID to BodyID
         //if (body > 0x3E93)
         //    for (var i = 0; i < MountIDConv.Length; ++i)
@@ -210,55 +190,45 @@ public unsafe class Binary_BodyConverter : IHaveMetaInfo
         //        var conv = MountIDConv[i];
         //        if (conv[0] == body) { body = conv[1]; break; }
         //    }
-        if (Table1 != null && body >= 0 && body < Table1.Length)
-        {
+        if (Table1 != null && body >= 0 && body < Table1.Length) {
             var val = Table1[body];
             if (val != -1) { body = val; return 2; }
         }
-        if (Table2 != null && body >= 0 && body < Table2.Length)
-        {
+        if (Table2 != null && body >= 0 && body < Table2.Length) {
             var val = Table2[body];
             if (val != -1) { body = val; return 3; }
         }
-        if (Table3 != null && body >= 0 && body < Table3.Length)
-        {
+        if (Table3 != null && body >= 0 && body < Table3.Length) {
             var val = Table3[body];
             if (val != -1) { body = val; return 4; }
         }
-        if (Table4 != null && body >= 0 && body < Table4.Length)
-        {
+        if (Table4 != null && body >= 0 && body < Table4.Length) {
             var val = Table4[body];
             if (val != -1) { body = val; return 5; }
         }
         return 1;
     }
 
-    public int GetTrueBody(int fileType, int index)
-    {
-        switch (fileType)
-        {
+    public int GetTrueBody(int fileType, int index) {
+        switch (fileType) {
             case 1:
             default: { return index; }
-            case 2:
-                {
+            case 2: {
                     if (Table1 != null && index >= 0)
                         for (var i = 0; i < Table1.Length; ++i) if (Table1[i] == index) return i;
                     break;
                 }
-            case 3:
-                {
+            case 3: {
                     if (Table2 != null && index >= 0)
                         for (var i = 0; i < Table2.Length; ++i) if (Table2[i] == index) return i;
                     break;
                 }
-            case 4:
-                {
+            case 4: {
                     if (Table3 != null && index >= 0)
                         for (var i = 0; i < Table3.Length; ++i) if (Table3[i] == index) return i;
                     break;
                 }
-            case 5:
-                {
+            case 5: {
                     if (Table4 != null && index >= 0)
                         for (var i = 0; i < Table4.Length; ++i) if (Table4[i] == index) return i;
                     break;
@@ -345,18 +315,15 @@ public unsafe class Binary_BodyConverter : IHaveMetaInfo
     #endregion
 
     // file: Bodyconv.def
-    public Binary_BodyConverter(StreamReader r)
-    {
+    public Binary_BodyConverter(StreamReader r) {
         List<int> list1 = new List<int>(), list2 = new List<int>(), list3 = new List<int>(), list4 = new List<int>();
         int max1 = 0, max2 = 0, max3 = 0, max4 = 0;
 
-        while (r.ReadLine() is { } line)
-        {
+        while (r.ReadLine() is { } line) {
             line = line.Trim();
             if (line.Length == 0 || line.StartsWith("#") || line.StartsWith("\"#")) continue;
 
-            try
-            {
+            try {
                 var split = line.Split(new[] { '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
                 var hasOriginalBodyId = int.TryParse(split[0], out int original);
@@ -367,27 +334,23 @@ public unsafe class Binary_BodyConverter : IHaveMetaInfo
                 if (!int.TryParse(split[3], out var anim4)) anim4 = -1;
                 if (!int.TryParse(split[4], out var anim5)) anim5 = -1;
 
-                if (anim2 != -1)
-                {
+                if (anim2 != -1) {
                     if (anim2 == 68) anim2 = 122;
                     if (original > max1) max1 = original;
                     list1.Add(original);
                     list1.Add(anim2);
                 }
-                if (anim3 != -1)
-                {
+                if (anim3 != -1) {
                     if (original > max2) max2 = original;
                     list2.Add(original);
                     list2.Add(anim3);
                 }
-                if (anim4 != -1)
-                {
+                if (anim4 != -1) {
                     if (original > max3) max3 = original;
                     list3.Add(original);
                     list3.Add(anim4);
                 }
-                if (anim5 != -1)
-                {
+                if (anim5 != -1) {
                     if (original > max4) max4 = original;
                     list4.Add(original);
                     list4.Add(anim5);
@@ -414,8 +377,7 @@ public unsafe class Binary_BodyConverter : IHaveMetaInfo
     }
 
     // IHaveMetaInfo
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
-    {
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
         var nodes = new List<MetaInfo> {
             new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "BodyConverter Config" }),
             new MetaInfo("BodyConverter", items: new List<MetaInfo> {
@@ -433,20 +395,17 @@ public unsafe class Binary_BodyConverter : IHaveMetaInfo
 
 #region Binary_BodyTable
 
-public unsafe class Binary_BodyTable : IHaveMetaInfo
-{
+public unsafe class Binary_BodyTable : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_BodyTable(r.ToStream()));
 
     #region Headers
 
-    public class Record
-    {
+    public class Record {
         public readonly int OldId;
         public readonly int NewId;
         public readonly int NewHue;
 
-        public Record(int oldId, int newId, int newHue)
-        {
+        public Record(int oldId, int newId, int newHue) {
             OldId = oldId;
             NewId = newId;
             NewHue = newHue;
@@ -467,15 +426,12 @@ public unsafe class Binary_BodyTable : IHaveMetaInfo
     #endregion
 
     // file: Body.def
-    public Binary_BodyTable(StreamReader r)
-    {
-        while (r.ReadLine() is { } line)
-        {
+    public Binary_BodyTable(StreamReader r) {
+        while (r.ReadLine() is { } line) {
             line = line.Trim();
             if (line.Length == 0 || line.StartsWith("#")) continue;
 
-            try
-            {
+            try {
                 var index1 = line.IndexOf("{", StringComparison.Ordinal);
                 var index2 = line.IndexOf("}", StringComparison.Ordinal);
 
@@ -496,8 +452,7 @@ public unsafe class Binary_BodyTable : IHaveMetaInfo
     }
 
     // IHaveMetaInfo
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
-    {
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
         var nodes = new List<MetaInfo> {
             new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "BodyTable config" }),
             new MetaInfo("BodyTable", items: new List<MetaInfo> {
@@ -512,14 +467,12 @@ public unsafe class Binary_BodyTable : IHaveMetaInfo
 
 #region Binary_CalibrationInfo
 
-public unsafe class Binary_CalibrationInfo : IHaveMetaInfo
-{
+public unsafe class Binary_CalibrationInfo : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_CalibrationInfo(r.ToStream()));
 
     #region Headers
 
-    public class Record
-    {
+    public class Record {
         public readonly byte[] Mask;
         public readonly byte[] Vals;
         public readonly byte[] DetX;
@@ -527,8 +480,7 @@ public unsafe class Binary_CalibrationInfo : IHaveMetaInfo
         public readonly byte[] DetZ;
         public readonly byte[] DetF;
 
-        public Record(byte[] mask, byte[] vals, byte[] detx, byte[] dety, byte[] detz, byte[] detf)
-        {
+        public Record(byte[] mask, byte[] vals, byte[] detx, byte[] dety, byte[] detz, byte[] detf) {
             Mask = mask;
             Vals = vals;
             DetX = detx;
@@ -626,10 +578,8 @@ public unsafe class Binary_CalibrationInfo : IHaveMetaInfo
     #endregion
 
     // file: calibration.cfg
-    public Binary_CalibrationInfo(StreamReader r)
-    {
-        while (r.ReadLine() is { } line)
-        {
+    public Binary_CalibrationInfo(StreamReader r) {
+        while (r.ReadLine() is { } line) {
             line = line.Trim();
             if (!line.Equals("Begin", StringComparison.OrdinalIgnoreCase)) continue;
 
@@ -645,15 +595,13 @@ public unsafe class Binary_CalibrationInfo : IHaveMetaInfo
         Records.AddRange(DefaultRecords);
     }
 
-    static byte[] ReadBytes(TextReader r)
-    {
+    static byte[] ReadBytes(TextReader r) {
         var line = r.ReadLine();
         if (line == null) return null;
 
         var b = new byte[(line.Length + 2) / 3];
         var index = 0;
-        for (var i = 0; (i + 1) < line.Length; i += 3)
-        {
+        for (var i = 0; (i + 1) < line.Length; i += 3) {
             var ch = line[i + 0];
             var cl = line[i + 1];
 
@@ -673,8 +621,7 @@ public unsafe class Binary_CalibrationInfo : IHaveMetaInfo
     }
 
     // IHaveMetaInfo
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
-    {
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
         var nodes = new List<MetaInfo> {
             new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "CalibrationInfo File" }),
             new MetaInfo("CalibrationInfo", items: new List<MetaInfo> {
@@ -689,8 +636,7 @@ public unsafe class Binary_CalibrationInfo : IHaveMetaInfo
 
 #region Binary_Gump
 
-public unsafe class Binary_Gump : IHaveMetaInfo, ITexture
-{
+public unsafe class Binary_Gump : IHaveMetaInfo, ITexture {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Gump(r, (int)f.FileSize, f.Compressed));
 
     #region Headers
@@ -703,38 +649,31 @@ public unsafe class Binary_Gump : IHaveMetaInfo, ITexture
     #endregion
 
     // file: gumpartLegacyMUL.uop:file00000.tex
-    public Binary_Gump(BinaryReader r, int length, int extra)
-    {
+    public Binary_Gump(BinaryReader r, int length, int extra) {
         int width = Width = (extra >> 16) & 0xFFFF;
         int height = Height = extra & 0xFFFF;
         if (width <= 0 || height <= 0) return;
         Load(r.ReadBytes(length), width, height);
     }
 
-    void Load(byte[] data, int width, int height)
-    {
-        fixed (byte* _ = data)
-        {
+    void Load(byte[] data, int width, int height) {
+        fixed (byte* _ = data) {
             var bd = Pixels = new byte[width * height << 1];
             var delta = width;
-            fixed (byte* bd_Scan0 = bd)
-            {
+            fixed (byte* bd_Scan0 = bd) {
                 var lookup = (int*)_;
                 var dat = (ushort*)_;
                 var line = (ushort*)bd_Scan0;
 
-                for (var y = 0; y < height; ++y, line += delta)
-                {
+                for (var y = 0; y < height; ++y, line += delta) {
                     var count = *lookup++ << 1;
                     ushort* cur = line, end = line + width;
-                    while (cur < end)
-                    {
+                    while (cur < end) {
                         var color = dat[count++];
                         var next = cur + dat[count++];
 
                         if (color == 0) cur = next;
-                        else
-                        {
+                        else {
                             color ^= 0x8000;
                             while (cur < next) *cur++ = color;
                         }
@@ -744,11 +683,9 @@ public unsafe class Binary_Gump : IHaveMetaInfo, ITexture
         }
     }
 
-    void LoadWithHue(byte[] data, Binary_Hues.Record hue, bool onlyHueGrayPixels)
-    {
+    void LoadWithHue(byte[] data, Binary_Hues.Record hue, bool onlyHueGrayPixels) {
         int width = Width, height = Height;
-        fixed (byte* _ = data)
-        {
+        fixed (byte* _ = data) {
             if (width <= 0 || height <= 0) return;
 
             int bytesPerLine = width << 1, bytesPerStride = (bytesPerLine + 3) & ~3, bytesForImage = height * bytesPerStride;
@@ -759,8 +696,7 @@ public unsafe class Binary_Gump : IHaveMetaInfo, ITexture
 
             fixed (ushort* hueColors_ = hue.Colors)
             fixed (byte* pixels_ = _pixels)
-            fixed (byte* colors_ = _colors)
-            {
+            fixed (byte* colors_ = _colors) {
                 var hueColors = hueColors_;
                 var hueColorsEnd = hueColors + 32;
                 var colors = (ushort*)colors_;
@@ -776,13 +712,11 @@ public unsafe class Binary_Gump : IHaveMetaInfo, ITexture
 
                 ushort color, count;
                 if (onlyHueGrayPixels)
-                    while (lookup < lookupEnd)
-                    {
+                    while (lookup < lookupEnd) {
                         pixelRle = pixelRleStart + *lookup++;
                         rleEnd = pixel;
 
-                        while (pixel < pixelEnd)
-                        {
+                        while (pixel < pixelEnd) {
                             color = *(ushort*)pixelRle;
                             count = *(1 + (ushort*)pixelRle);
                             ++pixelRle;
@@ -799,13 +733,11 @@ public unsafe class Binary_Gump : IHaveMetaInfo, ITexture
                         pixelEnd += pixelsPerStride;
                     }
                 else
-                    while (lookup < lookupEnd)
-                    {
+                    while (lookup < lookupEnd) {
                         pixelRle = pixelRleStart + *lookup++;
                         rleEnd = pixel;
 
-                        while (pixel < pixelEnd)
-                        {
+                        while (pixel < pixelEnd) {
                             color = *(ushort*)pixelRle;
                             count = *(1 + (ushort*)pixelRle);
                             ++pixelRle;
@@ -849,16 +781,13 @@ public unsafe class Binary_Gump : IHaveMetaInfo, ITexture
 
 #region Binary_GumpDef
 
-public unsafe class Binary_GumpDef : IHaveMetaInfo
-{
+public unsafe class Binary_GumpDef : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_GumpDef(r.ToStream()));
 
     #region Headers
 
-    public bool ItemHasGumpTranslation(int gumpIndex, out int gumpIndexTranslated, out int defaultHue)
-    {
-        if (Records.TryGetValue(gumpIndex, out var translation))
-        {
+    public bool ItemHasGumpTranslation(int gumpIndex, out int gumpIndexTranslated, out int defaultHue) {
+        if (Records.TryGetValue(gumpIndex, out var translation)) {
             gumpIndexTranslated = translation.Item1;
             defaultHue = translation.Item2;
             return true;
@@ -873,11 +802,9 @@ public unsafe class Binary_GumpDef : IHaveMetaInfo
     #endregion
 
     // file: gump.def
-    public Binary_GumpDef(StreamReader r)
-    {
+    public Binary_GumpDef(StreamReader r) {
         string line;
-        while ((line = r.ReadLine()) != null)
-        {
+        while ((line = r.ReadLine()) != null) {
             line = line.Trim();
             if (line.Length == 0 || line.StartsWith("#")) continue;
             var defs = line.Replace('\t', ' ').Split(' ');
@@ -890,8 +817,7 @@ public unsafe class Binary_GumpDef : IHaveMetaInfo
     }
 
     // IHaveMetaInfo
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
-    {
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
         var nodes = new List<MetaInfo> {
             new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "Gump Language File" }),
             new MetaInfo("GumpDef", items: new List<MetaInfo> {
@@ -906,28 +832,24 @@ public unsafe class Binary_GumpDef : IHaveMetaInfo
 
 #region Binary_Hues
 
-public unsafe class Binary_Hues : IHaveMetaInfo
-{
+public unsafe class Binary_Hues : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Hues(r));
 
     #region Headers
 
-    public class Record
-    {
+    public class Record {
         public int Id;
         public ushort[] Colors = new ushort[32];
         public ushort TableStart;
         public ushort TableEnd;
         public string Name;
 
-        public Record(int id)
-        {
+        public Record(int id) {
             Id = id;
             Colors = new ushort[32];
             Name = "Null";
         }
-        public Record(int id, ref HueRecord record)
-        {
+        public Record(int id, ref HueRecord record) {
             Id = id;
             fixed (ushort* colors_ = record.Colors) Colors = UnsafeX.FixedTArray(colors_, 32);
             TableStart = record.TableStart;
@@ -937,8 +859,7 @@ public unsafe class Binary_Hues : IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct HueRecord
-    {
+    public struct HueRecord {
         public static (string, int) Struct = ("<?", sizeof(HueRecord));
         public fixed ushort Colors[32];
         public ushort TableStart;
@@ -951,14 +872,12 @@ public unsafe class Binary_Hues : IHaveMetaInfo
     #endregion
 
     // file: hues.mul
-    public Binary_Hues(BinaryReader r)
-    {
+    public Binary_Hues(BinaryReader r) {
         var blockCount = (int)r.BaseStream.Length / 708;
         if (blockCount > 375) blockCount = 375;
 
         var id = 0;
-        for (var i = 0; i < blockCount; ++i)
-        {
+        for (var i = 0; i < blockCount; ++i) {
             r.Skip(4);
             var records = r.ReadSArray<HueRecord>(8);
             for (var j = 0; j < 8; j++, id++)
@@ -969,8 +888,7 @@ public unsafe class Binary_Hues : IHaveMetaInfo
     }
 
     // IHaveMetaInfo
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
-    {
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
         var nodes = new List<MetaInfo> {
             new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "Hues File" }),
             new MetaInfo("Hues", items: new List<MetaInfo> {
@@ -985,35 +903,29 @@ public unsafe class Binary_Hues : IHaveMetaInfo
 
 #region Binary_Land
 
-public unsafe class Binary_Land : IHaveMetaInfo, ITexture
-{
+public unsafe class Binary_Land : IHaveMetaInfo, ITexture {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Land(r, (int)f.FileSize));
 
     byte[] Pixels;
 
     // file: artLegacyMUL.uop:land/file00000.land
-    public Binary_Land(BinaryReader r, int length)
-    {
-        fixed (byte* _ = r.ReadBytes(length))
-        {
+    public Binary_Land(BinaryReader r, int length) {
+        fixed (byte* _ = r.ReadBytes(length)) {
             var bd = Pixels = new byte[44 * 44 << 1];
             var bd_Stride = 44 << 1;
-            fixed (byte* bd_Scan0 = bd)
-            {
+            fixed (byte* bd_Scan0 = bd) {
                 var bdata = (ushort*)_;
                 int xOffset = 21, xRun = 2;
                 var line = (ushort*)bd_Scan0;
                 var delta = bd_Stride >> 1;
 
-                for (var y = 0; y < 22; ++y, --xOffset, xRun += 2, line += delta)
-                {
+                for (var y = 0; y < 22; ++y, --xOffset, xRun += 2, line += delta) {
                     ushort* cur = line + xOffset, end = cur + xRun;
                     while (cur < end) *cur++ = (ushort)(*bdata++ | 0x8000);
                 }
 
                 xOffset = 0; xRun = 44;
-                for (var y = 0; y < 22; ++y, ++xOffset, xRun -= 2, line += delta)
-                {
+                for (var y = 0; y < 22; ++y, ++xOffset, xRun -= 2, line += delta) {
                     ushort* cur = line + xOffset, end = cur + xRun;
                     while (cur < end) *cur++ = (ushort)(*bdata++ | 0x8000);
                 }
@@ -1045,17 +957,14 @@ public unsafe class Binary_Land : IHaveMetaInfo, ITexture
 
 #region Binary_Light
 
-public unsafe class Binary_Light : IHaveMetaInfo, ITexture
-{
+public unsafe class Binary_Light : IHaveMetaInfo, ITexture {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Light(r, (int)f.FileSize, f.Compressed));
 
     byte[] Pixels;
 
     // file: lightidx.mul:file00000.light
-    public Binary_Light(BinaryReader r, int length, int extra)
-    {
-        fixed (byte* _ = r.ReadBytes(length))
-        {
+    public Binary_Light(BinaryReader r, int length, int extra) {
+        fixed (byte* _ = r.ReadBytes(length)) {
             var bdata = (sbyte*)_;
             var width = Width = extra & 0xFFFF;
             var height = Height = (extra >> 16) & 0xFFFF;
@@ -1063,14 +972,11 @@ public unsafe class Binary_Light : IHaveMetaInfo, ITexture
 
             var bd = Pixels = new byte[width * height << 1];
             var delta = width;
-            fixed (byte* bd_Scan0 = bd)
-            {
+            fixed (byte* bd_Scan0 = bd) {
                 var line = (ushort*)bd_Scan0;
-                for (var y = 0; y < height; ++y, line += delta)
-                {
+                for (var y = 0; y < height; ++y, line += delta) {
                     ushort* cur = line, end = cur + width;
-                    while (cur < end)
-                    {
+                    while (cur < end) {
                         var value = *bdata++;
                         *cur++ = (ushort)(((0x1f + value) << 10) + ((0x1F + value) << 5) + (0x1F + value));
                     }
@@ -1103,30 +1009,25 @@ public unsafe class Binary_Light : IHaveMetaInfo, ITexture
 
 #region Binary_MobType
 
-public unsafe class Binary_MobType : IHaveMetaInfo
-{
+public unsafe class Binary_MobType : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_MobType(r.ToStream()));
 
     #region Headers
 
-    public enum MobType
-    {
+    public enum MobType {
         Null = -1,
         Monster = 0,
         Animal = 1,
         Humanoid = 2
     }
 
-    struct Record
-    {
+    struct Record {
         public string Flags;
         public MobType AnimationType;
 
-        public Record(string type, string flags)
-        {
+        public Record(string type, string flags) {
             Flags = flags;
-            AnimationType = type switch
-            {
+            AnimationType = type switch {
                 "MONSTER" => MobType.Monster,
                 "ANIMAL" => MobType.Animal,
                 "SEA_MONSTER" => MobType.Monster,
@@ -1144,11 +1045,9 @@ public unsafe class Binary_MobType : IHaveMetaInfo
     #endregion
 
     // file: mobtypes.txt
-    public Binary_MobType(StreamReader r)
-    {
+    public Binary_MobType(StreamReader r) {
         string line;
-        while ((line = r.ReadLine()) != null)
-        {
+        while ((line = r.ReadLine()) != null) {
             line = line.Trim();
             if (line.Length == 0 || line.StartsWith("#")) continue;
             var data = line.Replace("   ", "\t").Split('\t');
@@ -1158,8 +1057,7 @@ public unsafe class Binary_MobType : IHaveMetaInfo
     }
 
     // IHaveMetaInfo
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
-    {
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
         var nodes = new List<MetaInfo> {
             new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "MobType File" }),
             new MetaInfo("MobType", items: new List<MetaInfo> {
@@ -1174,38 +1072,31 @@ public unsafe class Binary_MobType : IHaveMetaInfo
 
 #region Binary_MultiMap
 
-public unsafe class Binary_MultiMap : IHaveMetaInfo, ITexture
-{
+public unsafe class Binary_MultiMap : IHaveMetaInfo, ITexture {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_MultiMap(r, f));
 
     byte[] Pixels;
 
     // file: Multimap.rle
-    public Binary_MultiMap(BinaryReader r, FileSource f)
-    {
-        if (f.Path.StartsWith("facet"))
-        {
+    public Binary_MultiMap(BinaryReader r, FileSource f) {
+        if (f.Path.StartsWith("facet")) {
             Width = r.ReadInt16();
             Height = r.ReadInt16();
 
             var bd = Pixels = new byte[Width * Height << 1];
             var bd_Stride = Width << 1;
-            fixed (byte* bd_Scan0 = bd)
-            {
+            fixed (byte* bd_Scan0 = bd) {
                 var line = (ushort*)bd_Scan0;
                 int delta = bd_Stride >> 1;
 
-                for (var y = 0; y < Height; y++, line += delta)
-                {
+                for (var y = 0; y < Height; y++, line += delta) {
                     var colorsCount = r.ReadInt32() / 3;
                     ushort* cur = line, endline = line + delta;
-                    for (var c = 0; c < colorsCount; c++)
-                    {
+                    for (var c = 0; c < colorsCount; c++) {
                         var count = r.ReadByte();
                         var color = r.ReadInt16();
                         var end = cur + count;
-                        while (cur < end)
-                        {
+                        while (cur < end) {
                             if (cur > endline) break;
                             *cur++ = (ushort)(color ^ 0x8000);
                         }
@@ -1213,15 +1104,13 @@ public unsafe class Binary_MultiMap : IHaveMetaInfo, ITexture
                 }
             }
         }
-        else
-        {
+        else {
             Width = r.ReadInt32();
             Height = r.ReadInt32();
 
             var bd = Pixels = new byte[Width * Height << 1];
             var bd_Stride = Width << 1;
-            fixed (byte* bd_Scan0 = bd)
-            {
+            fixed (byte* bd_Scan0 = bd) {
                 var line = (ushort*)bd_Scan0;
                 var delta = bd_Stride >> 1;
 
@@ -1232,16 +1121,14 @@ public unsafe class Binary_MultiMap : IHaveMetaInfo, ITexture
                 r.Read(b, 0, len);
 
                 int j = 0, x = 0;
-                while (j != len)
-                {
+                while (j != len) {
                     var pixel = b[j++];
                     var count = pixel & 0x7f;
 
                     // black or white color
                     var c = (pixel & 0x80) != 0 ? (ushort)0x8000 : (ushort)0xffff;
 
-                    for (var i = 0; i < count; ++i)
-                    {
+                    for (var i = 0; i < count; ++i) {
                         cur[x++] = c;
                         if (x < Width) continue;
                         cur += delta;
@@ -1276,16 +1163,13 @@ public unsafe class Binary_MultiMap : IHaveMetaInfo, ITexture
 
 #region Binary_MusicDef
 
-public unsafe class Binary_MusicDef : IHaveMetaInfo
-{
+public unsafe class Binary_MusicDef : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_MusicDef(r.ToStream()));
 
     #region Headers
 
-    public static bool TryGetMusicData(int index, out string name, out bool doesLoop)
-    {
-        if (Records.ContainsKey(index))
-        {
+    public static bool TryGetMusicData(int index, out string name, out bool doesLoop) {
+        if (Records.ContainsKey(index)) {
             name = Records[index].Item1;
             doesLoop = Records[index].Item2;
             return true;
@@ -1300,11 +1184,9 @@ public unsafe class Binary_MusicDef : IHaveMetaInfo
     #endregion
 
     // file: Music/Digital/Config.txt
-    public Binary_MusicDef(StreamReader r)
-    {
+    public Binary_MusicDef(StreamReader r) {
         string line;
-        while ((line = r.ReadLine()) != null)
-        {
+        while ((line = r.ReadLine()) != null) {
             var splits = line.Split(new[] { ' ', ',', '\t' });
             if (splits.Length < 2 || splits.Length > 3) continue;
             var index = int.Parse(splits[0]);
@@ -1315,8 +1197,7 @@ public unsafe class Binary_MusicDef : IHaveMetaInfo
     }
 
     // IHaveMetaInfo
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
-    {
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
         var nodes = new List<MetaInfo> {
             new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "Music config" }),
             new MetaInfo("MusicDef", items: new List<MetaInfo> {
@@ -1331,14 +1212,12 @@ public unsafe class Binary_MusicDef : IHaveMetaInfo
 
 #region Binary_Multi
 
-public unsafe class Binary_Multi : IHaveMetaInfo
-{
+public unsafe class Binary_Multi : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Multi(r, (int)f.FileSize, Art_IsUOAHS));
 
     #region Headers
 
-    public class Record
-    {
+    public class Record {
         public ushort ItemId;
         public short OffsetX;
         public short OffsetY;
@@ -1346,16 +1225,14 @@ public unsafe class Binary_Multi : IHaveMetaInfo
         public int Flags;
         public int Unknown;
 
-        public Record(ref MultiRecordV1 record)
-        {
+        public Record(ref MultiRecordV1 record) {
             ItemId = Art_ClampItemId(record.ItemId);
             OffsetX = record.OffsetX;
             OffsetY = record.OffsetY;
             OffsetZ = record.OffsetZ;
             Flags = record.Flags;
         }
-        public Record(ref MultiRecordV2 record)
-        {
+        public Record(ref MultiRecordV2 record) {
             ItemId = Art_ClampItemId(record.ItemId);
             OffsetX = record.OffsetX;
             OffsetY = record.OffsetY;
@@ -1366,8 +1243,7 @@ public unsafe class Binary_Multi : IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct MultiRecordV1
-    {
+    public struct MultiRecordV1 {
         public static (string, int) Struct = ("<?", sizeof(MultiRecordV1));
         public ushort ItemId;
         public short OffsetX;
@@ -1377,8 +1253,7 @@ public unsafe class Binary_Multi : IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct MultiRecordV2
-    {
+    public struct MultiRecordV2 {
         public static (string, int) Struct = ("<?", sizeof(MultiRecordV2));
         public ushort ItemId;
         public short OffsetX;
@@ -1400,24 +1275,20 @@ public unsafe class Binary_Multi : IHaveMetaInfo
 
     #endregion
 
-    public class MTileList : List<MTile>
-    {
+    public class MTileList : List<MTile> {
     }
 
-    public class MTile
-    {
+    public class MTile {
         public int Solver { get; internal set; }
     }
 
     // file: multi.idx:file00000.multi
-    public Binary_Multi(BinaryReader r, int length, bool newFormat)
-    {
+    public Binary_Multi(BinaryReader r, int length, bool newFormat) {
         length &= 0x7FFFFFFF;
         SortedTiles = newFormat
             ? r.ReadSArray<MultiRecordV1>(length / 16).Select(x => new Record(ref x)).ToArray()
             : r.ReadSArray<MultiRecordV2>(length / 12).Select(x => new Record(ref x)).ToArray();
-        foreach (var e in SortedTiles)
-        {
+        foreach (var e in SortedTiles) {
             if (e.OffsetX < Min.X) Min.X = e.OffsetX;
             if (e.OffsetY < Min.Y) Min.Y = e.OffsetY;
             if (e.OffsetX > Max.X) Max.X = e.OffsetX;
@@ -1427,8 +1298,7 @@ public unsafe class Binary_Multi : IHaveMetaInfo
         ConvertList();
     }
 
-    void ConvertList()
-    {
+    void ConvertList() {
         Center = new Point(-Min.X, -Min.Y);
         Width = (Max.X - Min.X) + 1;
         Height = (Max.Y - Min.Y) + 1;
@@ -1436,15 +1306,13 @@ public unsafe class Binary_Multi : IHaveMetaInfo
         // build tiles
         var tiles = new MTileList[Width][];
         Tiles = new MTile[Width][][];
-        for (var x = 0; x < Width; ++x)
-        {
+        for (var x = 0; x < Width; ++x) {
             tiles[x] = new MTileList[Height];
             Tiles[x] = new MTile[Height][];
             for (var y = 0; y < Height; ++y)
                 tiles[x][y] = new MTileList();
         }
-        for (var i = 0; i < SortedTiles.Length; ++i)
-        {
+        for (var i = 0; i < SortedTiles.Length; ++i) {
             var xOffset = SortedTiles[i].OffsetX + Center.X;
             var yOffset = SortedTiles[i].OffsetY + Center.Y;
             //tiles[xOffset][yOffset].Add(SortedTiles[i].ItemId, (sbyte)SortedTiles[i].OffsetZ,
@@ -1454,8 +1322,7 @@ public unsafe class Binary_Multi : IHaveMetaInfo
         // count surfaces
         Surfaces = 0;
         for (var x = 0; x < Width; ++x)
-            for (var y = 0; y < Height; ++y)
-            {
+            for (var y = 0; y < Height; ++y) {
                 Tiles[x][y] = tiles[x][y].ToArray();
                 for (var i = 0; i < Tiles[x][y].Length; ++i) Tiles[x][y][i].Solver = i;
                 if (Tiles[x][y].Length > 1) Array.Sort(Tiles[x][y]);
@@ -1464,8 +1331,7 @@ public unsafe class Binary_Multi : IHaveMetaInfo
     }
 
     // IHaveMetaInfo
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
-    {
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
         var nodes = new List<MetaInfo> {
             new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "Multi File" }),
             new MetaInfo("Multi", items: new List<MetaInfo> {
@@ -1486,8 +1352,7 @@ public unsafe class Binary_Multi : IHaveMetaInfo
 
 #region Binary_RadarColor
 
-public unsafe class Binary_RadarColor : IHaveMetaInfo
-{
+public unsafe class Binary_RadarColor : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_RadarColor(r));
 
     #region Headers
@@ -1497,13 +1362,11 @@ public unsafe class Binary_RadarColor : IHaveMetaInfo
     #endregion
 
     // file: radarcol.mul
-    public Binary_RadarColor(BinaryReader r)
-    {
+    public Binary_RadarColor(BinaryReader r) {
         const int multiplier = 0xFF / 0x1F;
         // Prior to 7.0.7.1, all clients have 0x10000 colors. Newer clients have fewer colors.
         var colorCount = (int)r.BaseStream.Length >> 1;
-        for (var i = 0; i < colorCount; i++)
-        {
+        for (var i = 0; i < colorCount; i++) {
             var c = (uint)r.ReadUInt16();
             Colors[i] = 0xFF000000 |
                     ((((c >> 10) & 0x1F) * multiplier)) |
@@ -1515,8 +1378,7 @@ public unsafe class Binary_RadarColor : IHaveMetaInfo
     }
 
     // IHaveMetaInfo
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
-    {
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
         var nodes = new List<MetaInfo> {
             new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "Radar Color File" }),
             new MetaInfo("RadarColor", items: new List<MetaInfo> {
@@ -1531,8 +1393,7 @@ public unsafe class Binary_RadarColor : IHaveMetaInfo
 
 #region Binary_SkillGroups
 
-public unsafe class Binary_SkillGroups : IHaveMetaInfo
-{
+public unsafe class Binary_SkillGroups : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_SkillGroups(r));
 
     #region Headers
@@ -1541,13 +1402,11 @@ public unsafe class Binary_SkillGroups : IHaveMetaInfo
     #endregion
 
     // file: skillgrp.mul
-    public Binary_SkillGroups(BinaryReader r)
-    {
+    public Binary_SkillGroups(BinaryReader r) {
     }
 
     // IHaveMetaInfo
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
-    {
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
         var nodes = new List<MetaInfo> {
             new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "SkillGroups File" }),
             new MetaInfo("SkillGroups", items: new List<MetaInfo> {
@@ -1570,14 +1429,12 @@ public unsafe class Binary_SkillGroups : IHaveMetaInfo
 
 #region Binary_SpeechList
 
-public unsafe class Binary_SpeechList : IHaveMetaInfo
-{
+public unsafe class Binary_SpeechList : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_SpeechList(r));
 
     #region Headers
 
-    public class Record
-    {
+    public class Record {
         public int Index;
         public List<string> Strings = new List<string>();
         //public List<Regex> Regex = new List<Regex>();
@@ -1601,13 +1458,11 @@ public unsafe class Binary_SpeechList : IHaveMetaInfo
     #endregion
 
     // file: speech.mul
-    public Binary_SpeechList(BinaryReader r)
-    {
+    public Binary_SpeechList(BinaryReader r) {
         var lastId = -1;
         Dictionary<int, Record> records = null;
         //while (r.PeekChar() >= 0)
-        while (r.BaseStream.Length != r.BaseStream.Position)
-        {
+        while (r.BaseStream.Length != r.BaseStream.Position) {
             var id = r.ReadInt16E(); // (r.ReadByte() << 8) | r.ReadByte();
             var length = r.ReadInt16E(); //(r.ReadByte() << 8) | r.ReadByte();
             if (length > 128) length = 128;
@@ -1615,8 +1470,7 @@ public unsafe class Binary_SpeechList : IHaveMetaInfo
             var text = Encoding.UTF8.GetString(r.ReadBytes(length)).Trim();
             if (text.Length == 0) continue;
 
-            if (records == null || lastId > id)
-            {
+            if (records == null || lastId > id) {
                 if (id == 0 && text == "*withdraw*") Records.Insert(0, records = new Dictionary<int, Record>());
                 else Records.Add(records = new Dictionary<int, Record>());
             }
@@ -1629,8 +1483,7 @@ public unsafe class Binary_SpeechList : IHaveMetaInfo
     }
 
     // IHaveMetaInfo
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
-    {
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
         var nodes = new List<MetaInfo> {
             new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "SpeechList File" }),
             new MetaInfo("SpeechList", items: new List<MetaInfo> {
@@ -1645,17 +1498,14 @@ public unsafe class Binary_SpeechList : IHaveMetaInfo
 
 #region Binary_Static
 
-public unsafe class Binary_Static : IHaveMetaInfo, ITexture
-{
+public unsafe class Binary_Static : IHaveMetaInfo, ITexture {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Static(r, (int)f.FileSize));
 
     byte[] Pixels;
 
     // file: artLegacyMUL.mul:static/file04000.art
-    public Binary_Static(BinaryReader r, int length)
-    {
-        fixed (byte* _ = r.ReadBytes(length))
-        {
+    public Binary_Static(BinaryReader r, int length) {
+        fixed (byte* _ = r.ReadBytes(length)) {
             var bdata = (ushort*)_;
             var count = 2;
             var width = Width = bdata[count++];
@@ -1669,18 +1519,15 @@ public unsafe class Binary_Static : IHaveMetaInfo, ITexture
 
             var bd = Pixels = new byte[width * height << 1];
             var bd_Stride = width << 1;
-            fixed (byte* bd_Scan0 = bd)
-            {
+            fixed (byte* bd_Scan0 = bd) {
                 var line = (ushort*)bd_Scan0;
                 var delta = bd_Stride >> 1;
 
-                for (var y = 0; y < height; ++y, line += delta)
-                {
+                for (var y = 0; y < height; ++y, line += delta) {
                     count = lookups[y];
                     var cur = line;
                     int xOffset, xRun;
-                    while ((xOffset = bdata[count++]) + (xRun = bdata[count++]) != 0)
-                    {
+                    while ((xOffset = bdata[count++]) + (xRun = bdata[count++]) != 0) {
                         if (xOffset > delta) break;
 
                         cur += xOffset;
@@ -1719,27 +1566,23 @@ public unsafe class Binary_Static : IHaveMetaInfo, ITexture
 
 #region Binary_StringTable
 
-public unsafe class Binary_StringTable : IHaveMetaInfo
-{
+public unsafe class Binary_StringTable : IHaveMetaInfo {
     public static Dictionary<string, Binary_StringTable> Instances = new Dictionary<string, Binary_StringTable>();
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_StringTable(r, f));
 
     #region Headers
 
     [Flags]
-    public enum RecordFlag : byte
-    {
+    public enum RecordFlag : byte {
         Original = 0x0,
         Custom = 0x1,
         Modified = 0x2
     }
 
-    public class Record
-    {
+    public class Record {
         public string Text;
         public RecordFlag Flag;
-        public Record(string text, RecordFlag flag)
-        {
+        public Record(string text, RecordFlag flag) {
             Text = text;
             Flag = flag;
         }
@@ -1753,11 +1596,9 @@ public unsafe class Binary_StringTable : IHaveMetaInfo
     #endregion
 
     // file: Cliloc.enu
-    public Binary_StringTable(BinaryReader r, FileSource f)
-    {
+    public Binary_StringTable(BinaryReader r, FileSource f) {
         r.Skip(6);
-        while (r.BaseStream.Position < r.BaseStream.Length)
-        {
+        while (r.BaseStream.Position < r.BaseStream.Length) {
             var id = r.ReadInt32();
             var flag = (RecordFlag)r.ReadByte();
             var text = r.ReadL16AString();
@@ -1768,8 +1609,7 @@ public unsafe class Binary_StringTable : IHaveMetaInfo
     }
 
     // IHaveMetaInfo
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
-    {
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
         var nodes = new List<MetaInfo> {
             new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "StringTable File" }),
             new MetaInfo("StringTable", items: new List<MetaInfo> {
@@ -1784,31 +1624,27 @@ public unsafe class Binary_StringTable : IHaveMetaInfo
 
 #region Binary_TileData - VERIFY
 
-public unsafe class Binary_TileData : IHaveMetaInfo
-{
+public unsafe class Binary_TileData : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_TileData(r));
 
     #region Headers
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public unsafe struct LandV1
-    {
+    public unsafe struct LandV1 {
         public readonly uint flags;
         public readonly ushort texID;
         public fixed byte name[20];
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public unsafe struct LandV2
-    {
+    public unsafe struct LandV2 {
         public readonly ulong flags;
         public readonly ushort texID;
         public fixed byte name[20];
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public unsafe struct ItemV1
-    {
+    public unsafe struct ItemV1 {
         public readonly uint flags;
         public readonly byte weight;
         public readonly byte quality;
@@ -1825,8 +1661,7 @@ public unsafe class Binary_TileData : IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public unsafe struct ItemV2
-    {
+    public unsafe struct ItemV2 {
         public readonly ulong flags;
         public readonly byte weight;
         public readonly byte quality;
@@ -1842,8 +1677,7 @@ public unsafe class Binary_TileData : IHaveMetaInfo
         public fixed byte name[20];
     }
 
-    public struct ItemData
-    {
+    public struct ItemData {
         public int ItemId;
         public int Weight;
         public TileFlag Flags;
@@ -1875,8 +1709,7 @@ public unsafe class Binary_TileData : IHaveMetaInfo
         public readonly bool IsWet => (Flags & TileFlag.Wet) != 0;
     }
 
-    public struct LandData
-    {
+    public struct LandData {
         public TileFlag Flags;
         public short TextureID;
         public string Name;
@@ -1902,8 +1735,7 @@ public unsafe class Binary_TileData : IHaveMetaInfo
         7636, 7639
     };
 
-    public ItemData ItemDataByAnimID(int animID)
-    {
+    public ItemData ItemDataByAnimID(int animID) {
         for (var i = 0; i < ItemDatas.Length; i++)
             if (ItemDatas[i].AnimID == animID)
                 return ItemDatas[i];
@@ -1916,8 +1748,7 @@ public unsafe class Binary_TileData : IHaveMetaInfo
     #endregion
 
     // file: tiledata.mul
-    public Binary_TileData(BinaryReader r)
-    {
+    public Binary_TileData(BinaryReader r) {
         //var useNeW = r.BaseStream.Length == 0x30A800;
         LandData landData;
         ItemData itemData;
@@ -1925,8 +1756,7 @@ public unsafe class Binary_TileData : IHaveMetaInfo
         if (length == 0x30A800) // 7.0.9.0
         {
             LandDatas = new LandData[0x4000];
-            for (var i = 0; i < 0x4000; ++i)
-            {
+            for (var i = 0; i < 0x4000; ++i) {
                 landData = new LandData();
                 if (i == 1 || (i > 0 && (i & 0x1F) == 0)) r.ReadInt32();
                 var flags = (TileFlag)r.ReadInt64();
@@ -1937,8 +1767,7 @@ public unsafe class Binary_TileData : IHaveMetaInfo
                 LandDatas[i] = landData;
             }
             ItemDatas = new ItemData[0x10000];
-            for (var i = 0; i < 0x10000; ++i)
-            {
+            for (var i = 0; i < 0x10000; ++i) {
                 itemData = new ItemData();
                 itemData.ItemId = i;
                 if ((i & 0x1F) == 0) r.ReadInt32();
@@ -1960,11 +1789,9 @@ public unsafe class Binary_TileData : IHaveMetaInfo
                 ItemDatas[i] = itemData;
             }
         }
-        else
-        {
+        else {
             LandDatas = new LandData[0x4000];
-            for (var i = 0; i < 0x4000; ++i)
-            {
+            for (var i = 0; i < 0x4000; ++i) {
                 landData = new LandData();
                 if ((i & 0x1F) == 0) r.ReadInt32();
                 var flags = (TileFlag)r.ReadInt32();
@@ -1978,8 +1805,7 @@ public unsafe class Binary_TileData : IHaveMetaInfo
             if (length == 0x191800) // 7.0.0.0
             {
                 ItemDatas = new ItemData[0x8000];
-                for (var i = 0; i < 0x8000; ++i)
-                {
+                for (var i = 0; i < 0x8000; ++i) {
                     itemData = new ItemData();
                     itemData.ItemId = i;
                     if ((i & 0x1F) == 0) r.ReadInt32();
@@ -2000,11 +1826,9 @@ public unsafe class Binary_TileData : IHaveMetaInfo
                     ItemDatas[i] = itemData;
                 }
             }
-            else
-            {
+            else {
                 ItemDatas = new ItemData[0x4000];
-                for (var i = 0; i < 0x4000; ++i)
-                {
+                for (var i = 0; i < 0x4000; ++i) {
                     itemData = new ItemData();
                     itemData.ItemId = i;
                     if ((i & 0x1F) == 0)
@@ -2030,8 +1854,7 @@ public unsafe class Binary_TileData : IHaveMetaInfo
     }
 
     // IHaveMetaInfo
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
-    {
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
         var nodes = new List<MetaInfo> {
             new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "Tile Data File" }),
             new MetaInfo("TileData", items: new List<MetaInfo> {
@@ -2047,22 +1870,18 @@ public unsafe class Binary_TileData : IHaveMetaInfo
 
 #region Binary_UnicodeFont - TODO
 
-public unsafe class Binary_UnicodeFont : IHaveMetaInfo
-{
+public unsafe class Binary_UnicodeFont : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_UnicodeFont(r));
 
     #region Headers
 
-    public class UnicodeFont
-    {
+    public class UnicodeFont {
         public byte[][] Characters = new byte[224][];
         public int Height;
 
-        public UnicodeFont(BinaryReader r)
-        {
+        public UnicodeFont(BinaryReader r) {
             r.ReadByte();
-            for (var i = 0; i < 224; ++i)
-            {
+            for (var i = 0; i < 224; ++i) {
                 var width = r.ReadByte();
                 var height = r.ReadByte();
                 r.ReadByte();
@@ -2072,16 +1891,13 @@ public unsafe class Binary_UnicodeFont : IHaveMetaInfo
 
                 var bd = new byte[width * height << 1];
                 var bd_Stride = width << 1;
-                fixed (byte* bd_Scan0 = bd)
-                {
+                fixed (byte* bd_Scan0 = bd) {
                     var line = (ushort*)bd_Scan0;
                     var delta = bd_Stride >> 1;
 
-                    for (var y = 0; y < height; ++y, line += delta)
-                    {
+                    for (var y = 0; y < height; ++y, line += delta) {
                         ushort* cur = line;
-                        for (var x = 0; x < width; ++x)
-                        {
+                        for (var x = 0; x < width; ++x) {
                             var pixel = (ushort)(r.ReadByte() | (r.ReadByte() << 8));
                             cur[x] = pixel == 0 ? pixel : (ushort)(pixel ^ 0x8000);
                         }
@@ -2097,14 +1913,12 @@ public unsafe class Binary_UnicodeFont : IHaveMetaInfo
     #endregion
 
     // file: unifont.mul - unifont12.mul
-    public Binary_UnicodeFont(BinaryReader r)
-    {
+    public Binary_UnicodeFont(BinaryReader r) {
         Font = new UnicodeFont(r);
     }
 
     // IHaveMetaInfo
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
-    {
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
         var nodes = new List<MetaInfo> {
             new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "UnicodeFont File" }),
             new MetaInfo("UnicodeFont", items: new List<MetaInfo> {
@@ -2119,16 +1933,14 @@ public unsafe class Binary_UnicodeFont : IHaveMetaInfo
 
 #region Binary_Verdata
 
-public unsafe class Binary_Verdata : IHaveMetaInfo
-{
+public unsafe class Binary_Verdata : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Verdata(r, (BinaryPakFile)s));
     public static Binary_Verdata Instance;
 
     #region Headers
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct Patch
-    {
+    public struct Patch {
         public static (string, int) Struct = ("<5i", sizeof(Patch));
         public int File;
         public int Index;
@@ -2145,16 +1957,14 @@ public unsafe class Binary_Verdata : IHaveMetaInfo
     #endregion
 
     // file: verdata.mul
-    public Binary_Verdata(BinaryReader r, BinaryPakFile s)
-    {
+    public Binary_Verdata(BinaryReader r, BinaryPakFile s) {
         PakFile = s;
         Patches = r.ReadL32SArray<Patch>().GroupBy(x => x.File).ToDictionary(x => x.Key, x => x.ToArray());
         Instance = this;
     }
 
     // IHaveMetaInfo
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
-    {
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
         var nodes = new List<MetaInfo> {
             new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "Version Data" }),
             new MetaInfo("Verdata", items: new List<MetaInfo> {

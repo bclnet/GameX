@@ -6,11 +6,9 @@ using static OpenStack.Gfx.GfX;
 
 namespace GameX.Platforms.Sdl;
 
-public static class SdlRenderer
-{
+public static class SdlRenderer {
     public static Renderer CreateRenderer(object parent, IList<IOpenGfx> gfx, object obj, string type)
-        => type switch
-        {
+        => type switch {
             "TestTri" => new SdlTestTriRenderer(gfx[XSprite2D] as SdlGfxSprite2D, obj),
             "Texture" => new SdlSpriteRenderer(gfx[XSprite2D] as SdlGfxSprite2D, obj),
             "Object" => new SdlObjectRenderer(gfx[XSprite2D] as SdlGfxSprite2D, obj),

@@ -17,14 +17,12 @@ namespace GameX.Valve;
 /// ValvePakFile
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class ValvePakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel>
-{
+public class ValvePakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="ValvePakFile" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public ValvePakFile(PakState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant()))
-    {
+    public ValvePakFile(PakState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         ObjectFactoryFunc = ObjectFactory;
         PathFinders.Add(typeof(object), FindBinary);
     }
@@ -34,8 +32,7 @@ public class ValvePakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMode
     static readonly ConcurrentDictionary<string, PakBinary> PakBinarys = new();
 
     static PakBinary GetPakBinary(FamilyGame game, string extension)
-        => PakBinarys.GetOrAdd(game.Id, _ => game.Engine.n switch
-        {
+        => PakBinarys.GetOrAdd(game.Id, _ => game.Engine.n switch {
             "Unity" => Unity.Formats.Binary_Unity.Current,
             "GoldSrc" => Binary_Wad3.Current,
             "Source" or "Source2" => Binary_Vpk.Current,
@@ -43,18 +40,15 @@ public class ValvePakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMode
         });
 
     public static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
-        => game.Engine.n switch
-        {
-            "GoldSrc" => Path.GetExtension(source.Path).ToLowerInvariant() switch
-            {
+        => game.Engine.n switch {
+            "GoldSrc" => Path.GetExtension(source.Path).ToLowerInvariant() switch {
                 ".pic" or ".tex" or ".tex2" or ".fnt" => (0, Binary_Wad3X.Factory),
                 ".bsp" => (0, Binary_BspX.Factory),
                 ".spr" => (0, Binary_Spr.Factory),
                 ".mdl" => (0, Binary_Mdl10.Factory),
                 _ => UnknownPakFile.ObjectFactory(source, game),
             },
-            "Source" => Path.GetExtension(source.Path).ToLowerInvariant() switch
-            {
+            "Source" => Path.GetExtension(source.Path).ToLowerInvariant() switch {
                 ".mdl" => (0, Binary_Mdl40.Factory),
                 _ => UnknownPakFile.ObjectFactory(source, game),
             },
@@ -69,8 +63,7 @@ public class ValvePakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMode
     /// <summary>
     /// Finds the actual path of a texture.
     /// </summary>
-    public object FindBinary(object path)
-    {
+    public object FindBinary(object path) {
         if (path is not string p) return path;
         if (Contains(p)) return p;
         if (!p.EndsWith("_c", StringComparison.Ordinal)) path = $"{p}_c";

@@ -1,7 +1,6 @@
 ﻿namespace GameX.Epic.Formats.Core;
 
-public class UObject
-{
+public class UObject {
     // internal storage
     UPackage Package;
     string Name;

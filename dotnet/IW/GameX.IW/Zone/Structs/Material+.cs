@@ -1,13 +1,9 @@
 ﻿using static GameX.IW.Zone.Asset;
 
-namespace GameX.IW.Zone
-{
-    public unsafe partial struct Material
-    {
-        public static void writeGfxImage(ZoneInfo info, ZStream buf, GfxImage* data)
-        {
-            fixed (byte* _ = buf.at)
-            {
+namespace GameX.IW.Zone {
+    public unsafe partial struct Material {
+        public static void writeGfxImage(ZoneInfo info, ZStream buf, GfxImage* data) {
+            fixed (byte* _ = buf.at) {
                 var img = (GfxImage*)_;
                 buf.write((byte*)data, sizeof(GfxImage), 1);
                 buf.pushStream(ZSTREAM.VIRTUAL);
@@ -26,10 +22,8 @@ namespace GameX.IW.Zone
             }
         }
 
-        public static void writeMaterial(ZoneInfo info, ZStream buf, Material* data)
-        {
-            fixed (byte* _ = buf.at)
-            {
+        public static void writeMaterial(ZoneInfo info, ZStream buf, Material* data) {
+            fixed (byte* _ = buf.at) {
                 // require this asset
                 var techsetOffset = ZoneWriter.requireAsset(info, UnkAssetType.TECHSET, new string(data->techniqueSet->name), buf);
 
@@ -45,19 +39,16 @@ namespace GameX.IW.Zone
                 dest->techniqueSet = (MaterialTechniqueSet*)(techsetOffset);
 
                 // write texturedefs here
-                if (data->textureTable != null)
-                {
+                if (data->textureTable != null) {
                     buf.align(ZStream.ALIGN_TO_4);
                     for (var i = 0; i < data->textureCount; i++)
-                        fixed (byte* _2 = buf.at)
-                        {
+                        fixed (byte* _2 = buf.at) {
                             var tex = (MaterialTextureDef*)_2;
                             buf.write((byte)&data->textureTable[i], sizeof(MaterialTextureDef), 1);
                             tex->info.image = (GfxImage*)-1;
                         }
 
-                    for (var i = 0; i < data->textureCount; i++)
-                    {
+                    for (var i = 0; i < data->textureCount; i++) {
                         // TODO, make with work with water images too
                         buf.pushStream(ZSTREAM.TEMP);
                         buf.align(ZStream.ALIGN_TO_4);

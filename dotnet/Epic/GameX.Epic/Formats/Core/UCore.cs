@@ -12,8 +12,7 @@ namespace GameX.Epic.Formats.Core;
 
 #region Enums
 
-public enum Game
-{
+public enum Game {
     UNKNOWN = 0,           // should be 0
     //
     UE1 = 0x0100000,
@@ -157,8 +156,7 @@ public enum Game
     Dauntless = UE4_BASE + 26 << 4 + 1, // 4.26
 }
 
-public enum Platform
-{
+public enum Platform {
     UNKNOWN = 0,
     PC,
     XBOX360,
@@ -175,8 +173,7 @@ public enum Platform
 #region UE4Versions
 
 // Unreal engine 4 versions, declared as enum to be able to see all revisions in a single place
-public enum VERUE4
-{
+public enum VERUE4 {
     // Pre-release UE4 file versions
     ASSET_REGISTRY_TAGS = 112,
     TEXTURE_DERIVED_DATA2 = 124,
@@ -275,8 +272,7 @@ public enum VERUE4
 
 #region GameDatabase
 
-static class GameDatabase
-{
+static class GameDatabase {
     public const int LATEST_UE4_VERSION = 27; // UE4.XX
     public static Game GAME_UE4(int x) => UE4_BASE + (x << 4);
     public static int GAME_UE4_GET_MINOR(Game x) => (x - UE4_BASE) >> 4;	// reverse operation for GAME_UE4(x)
@@ -457,8 +453,7 @@ static class GameDatabase
 
 #region UPackage
 
-partial class UPackage
-{
+partial class UPackage {
     const int PACKAGE_V2 = 100;
     const int PACKAGE_V3 = 180;
 
@@ -466,8 +461,7 @@ partial class UPackage
     public const uint TAG_REV = 0xc1832a9e;
 
     // UE3 compression flags; may be used for other engines, so keep it outside of #if UNREAL3 block
-    public enum COMPRESS : int
-    {
+    public enum COMPRESS : int {
         None = -1,
         ZLIB = 1,
         LZO = 2,
@@ -489,19 +483,16 @@ partial class UPackage
     public const uint PKG_UnversionedProperties = 0x00002000;       // UE4.25+
     public const uint PKG_FilterEditorOnly = 0x80000000;		    // UE4
 
-    public void DetectGame()
-    {
+    public void DetectGame() {
         if (GForcePlatform != Platform.UNKNOWN) Platform = GForcePlatform;
         if (GForceGame != UNKNOWN) { SetGame(GForceGame); return; }
 
         // check if already detected game requires some additional logic
-        if (Game == Lineage2)
-        {
+        if (Game == Lineage2) {
             if (ArLicenseeVer >= 1000) SetGame(Exteel);   // lineage LicenseeVer < 1000, exteel >= 1000
             return;
         }
-        else if (Game == UE4_BASE)
-        {
+        else if (Game == UE4_BASE) {
             // Detection for UE4 games
             if (ArVer == 415 && ArLicenseeVer == 17) SetGame(FableLegends); // UE4 game
             CheckGameCollision();
@@ -627,8 +618,7 @@ partial class UPackage
         if (ArVer == 867 && ArLicenseeVer == 9) SetGame(Gigantic);
         #endregion
         CheckGameCollision();
-        if (Game == UNKNOWN)
-        {
+        if (Game == UNKNOWN) {
             // generic or unknown engine
             if (ArVer < PACKAGE_V2) SetGame(UE1);
             else if (ArVer < PACKAGE_V3) SetGame(UE2);
@@ -670,8 +660,7 @@ partial class UPackage
 	        // NEW_ENGINE_VERSION
     };
 
-    public void OverrideVersion()
-    {
+    public void OverrideVersion() {
         if (GForcePackageVersion != 0) { ArVer = GForcePackageVersion; return; }
 
         // Remember current versions for logging
@@ -682,16 +671,14 @@ partial class UPackage
         for (var i = 0; i < ueVersions.Length; i++)
             if (ueVersions[i].g == Game) { ArVer = ueVersions[i].v; goto end_override; }
 
-        if (Game >= GAME_UE4(0) && Game < GAME_UE4(LATEST_UE4_VERSION + 1) && ArVer == 0)
-        {
+        if (Game >= GAME_UE4(0) && Game < GAME_UE4(LATEST_UE4_VERSION + 1) && ArVer == 0) {
             // Special path for UE4, when engine version is specified and packages are unversioned.
             // Override version only if package is unversioned. Mixed versioned and unversioned packages could
             // appear in UE4 game when it has editor support (like UT4).
             ArVer = ue4Versions[GAME_UE4_GET_MINOR(Game)];
             return;
         }
-        else if (Game == UE4_BASE && ArVer != 0)
-        {
+        else if (Game == UE4_BASE && ArVer != 0) {
             // Path for UE4 when packages are versioned: detect engine version by ArVer.
             // Versioned packages provides FCustomVersion info, however some objects like UStaticMesh doesn't
             // use versioning, we're relying of GAME_UE4(x) there.
@@ -703,18 +690,15 @@ partial class UPackage
         // Convert game tag to ArVer
         if (Game == MassEffect) ArLicenseeVer = OVERRIDE_ME1_LVER;
         else if (Game == Transformers && ArLicenseeVer >= 181) ArVer = OVERRIDE_TRANSFORMERS3; // Transformers: Fall of Cybertron
-        else if (Game == SpecialForce2)
-        {
+        else if (Game == SpecialForce2) {
             // engine for this game is upgraded without changing ArVer, they have ArVer set too high and changind ArLicenseeVer only
             if (ArLicenseeVer >= 14) ArVer = OVERRIDE_SF2_VER2;
             else if (ArLicenseeVer == 9) ArVer = OVERRIDE_SF2_VER;
         }
-        else if (Game == RememberMe)
-        {
+        else if (Game == RememberMe) {
             if (ArVer > 832) ArVer = OVERRIDE_LIS_VER; // 832 = Remember Me, higher - Life is Strange
         }
-        else if (Game == DunDef)
-        {
+        else if (Game == DunDef) {
             if (ArVer >= 686) ArVer = OVERRIDE_DUNDEF_VER;
         }
 
@@ -728,22 +712,19 @@ partial class UPackage
 
 #region FName
 
-public class FName
-{
+public class FName {
     public string Str = "None";
 #if !USE_COMPACT_PACKAGE_STRUCTS
     int Index;
     int ExtraIndex;
 #endif
-    public FName(BinaryReader r, UPackage Ar)
-    {
+    public FName(BinaryReader r, UPackage Ar) {
         // Declare aliases for FName.Index and ExtraIndex to allow USE_COMPACT_PACKAGE_STRUCTS to work
 #if USE_COMPACT_PACKAGE_STRUCTS
         int Index = 0;
         int ExtraIndex = 0;
 #endif
-        if (Ar.Game == Bioshock)
-        {
+        if (Ar.Game == Bioshock) {
             Index = r.ReadCompactIndex(Ar);
             ExtraIndex = r.ReadInt32();
             Str = ExtraIndex == 0 ? Ar.GetName(Index) : $"{Ar.GetName(Index)}{ExtraIndex - 1}";  // without "_" char
@@ -751,12 +732,10 @@ public class FName
         }
         else if (Ar.Engine == UE2X && Ar.ArVer >= 145) Index = r.ReadInt32();
         else if (Ar.Game == SplinterCellConv && Ar.ArVer >= 64) Index = r.ReadInt32();
-        else if (Ar.Engine >= UE3)
-        {
+        else if (Ar.Engine >= UE3) {
             Index = r.ReadInt32();
             if (Ar.Game >= UE4_BASE) { ExtraIndex = r.ReadInt32(); goto extra_index; }
-            if (Ar.Game == R6Vegas2)
-            {
+            if (Ar.Game == R6Vegas2) {
                 ExtraIndex = Index >> 19;
                 Index &= 0x7FFFF;
             }

@@ -7,11 +7,9 @@ using static OpenStack.Gfx.GfX;
 
 namespace GameX.Platforms.OpenGL;
 
-public static class OpenGLRenderer
-{
+public static class OpenGLRenderer {
     public static Renderer CreateRenderer(object parent, IList<IOpenGfx> gfx, object obj, string type)
-        => type switch
-        {
+        => type switch {
             "Texture" or "VideoTexture" => new OpenGLTextureRenderer(gfx[XModel] as OpenGLGfxModel, obj, 0.., false),
             "Object" => new OpenGLObjectRenderer(gfx[XModel] as OpenGLGfxModel, obj),
             "Material" => new OpenGLMaterialRenderer(gfx[XModel] as OpenGLGfxModel, obj),

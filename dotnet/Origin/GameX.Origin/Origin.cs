@@ -14,16 +14,13 @@ namespace GameX.Origin;
 /// OriginGame
 /// </summary>
 /// <seealso cref="GameX.FamilyGame" />
-public class OriginGame(Family family, string id, JsonElement elem, FamilyGame dgame) : FamilyGame(family, id, elem, dgame)
-{
+public class OriginGame(Family family, string id, JsonElement elem, FamilyGame dgame) : FamilyGame(family, id, elem, dgame) {
     /// <summary>
     /// Ensures this instance.
     /// </summary>
     /// <returns></returns>
-    public override FamilyGame Ensure()
-    {
-        switch (Id)
-        {
+    public override FamilyGame Ensure() {
+        switch (Id) {
             case "U9": Games.U9.Database.Ensure(this); return this;
             //case "U8": Structs.UO.Database.Ensure(this); return this;
             default: return this;
@@ -39,22 +36,19 @@ public class OriginGame(Family family, string id, JsonElement elem, FamilyGame d
 /// OriginPakFile
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class OriginPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel>
-{
+public class OriginPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="OriginPakFile" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public OriginPakFile(PakState state) : base(state, GetPakBinary(state.Game))
-    {
+    public OriginPakFile(PakState state) : base(state, GetPakBinary(state.Game)) {
         ObjectFactoryFunc = ObjectFactory;
     }
 
     #region Factories
 
     static PakBinary GetPakBinary(FamilyGame game)
-        => game.Id switch
-        {
+        => game.Id switch {
             "U8" => Binary_U8.Current,
             "UO" => Binary_UO.Current,
             "U9" => Binary_U9.Current,
@@ -62,8 +56,7 @@ public class OriginPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMod
         };
 
     static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
-        => game.Id switch
-        {
+        => game.Id switch {
             "U8" => Binary_U8.ObjectFactory(source, game),
             "UO" => Binary_UO.ObjectFactory(source, game),
             "U9" => Binary_U9.ObjectFactory(source, game),

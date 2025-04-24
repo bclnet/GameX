@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace GameX.Origin.Formats.UO
-{
-    public unsafe class Binary_Hue_DEL : IHaveMetaInfo
-    {
+namespace GameX.Origin.Formats.UO {
+    public unsafe class Binary_Hue_DEL : IHaveMetaInfo {
         public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Hue_DEL(r));
 
         #region Records
@@ -70,22 +68,19 @@ namespace GameX.Origin.Formats.UO
         //    return t;
         //}
 
-        public static ushort GetHue(int index, int offset)
-        {
+        public static ushort GetHue(int index, int offset) {
             index += offset;
             return index < 0 ? (ushort)0xffffU : Hues[index & 0x1fff];
         }
 
-        public static uint[] GetAllHues()
-        {
+        public static uint[] GetAllHues() {
             var hues = new uint[HueCount];
             var pixels = Pixels;
             for (var i = 0; i < HueCount; i++) hues[i] = pixels[i * 32 + 31];
             return hues;
         }
 
-        public static int GetWebSafeHue(int r, int g, int b)
-        {
+        public static int GetWebSafeHue(int r, int g, int b) {
             var index = 0;
             for (var i = 0; i < 6; i++) if (r <= CutOffValuesForWebSafeColors[i]) { index += i * 1; break; }
             for (var i = 0; i < 6; i++) if (g <= CutOffValuesForWebSafeColors[i]) { index += i * 6; break; }
@@ -96,8 +91,7 @@ namespace GameX.Origin.Formats.UO
         #endregion
 
         // file: hues.mul
-        public Binary_Hue_DEL(BinaryReader r)
-        {
+        public Binary_Hue_DEL(BinaryReader r) {
             const float multiplier = 0xff / 0x1f;
 
             //var blockCount = (int)r.BaseStream.Length / 708;
@@ -107,13 +101,10 @@ namespace GameX.Origin.Formats.UO
             var currentIndex = 0;
             Pixels = new uint[HueWidth * HueHeight * 2];
             currentIndex += 32;
-            while (r.BaseStream.Position < r.BaseStream.Length)
-            {
+            while (r.BaseStream.Position < r.BaseStream.Length) {
                 r.Skip(4);
-                for (var entry = 0; entry < 8; entry++)
-                {
-                    for (var i = 0; i < 32; i++)
-                    {
+                for (var entry = 0; entry < 8; entry++) {
+                    for (var i = 0; i < 32; i++) {
                         var color = r.ReadUInt16();
                         if (i == 31) Hues[currentHue] = color;
                         Pixels[currentIndex++] = 0xFF000000 + (
@@ -138,8 +129,7 @@ namespace GameX.Origin.Formats.UO
         }
 
         // IHaveMetaInfo
-        List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
-        {
+        List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
             var nodes = new List<MetaInfo> {
                 new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "Hue File" }),
                 new MetaInfo("Hue", items: new List<MetaInfo> {

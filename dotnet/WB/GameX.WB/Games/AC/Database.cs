@@ -4,8 +4,7 @@ using static OpenStack.Debug;
 
 namespace GameX.WB;
 
-public class Database
-{
+public class Database {
     public readonly BinaryPakFile Source;
 
     public Database(PakFile source) => Source = source as BinaryPakFile;
@@ -29,15 +28,13 @@ public class Database
     /// Language: 994
     /// </summary>
     /// <returns>The iteration from the dat file, or 0 if there was an error</returns>
-    internal int GetIteration()
-    {
+    internal int GetIteration() {
         var iteration = GetFile<Iteration>(Iteration.FILE_ID);
         if (iteration.Ints.Length > 0) return iteration.Ints[0];
         else { Log($"Unable to read iteration from {Source}"); return 0; }
     }
 
-    public T GetFile<T>(uint fileId) where T : FileType
-    {
+    public T GetFile<T>(uint fileId) where T : FileType {
         if (FileCache.TryGetValue(fileId, out var result)) return (T)result;
         T obj = Source.LoadFileObject<T>((int)fileId).Result;
         obj = (T)FileCache.GetOrAdd(fileId, obj);

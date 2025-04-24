@@ -14,14 +14,12 @@ namespace GameX.Epic;
 /// EpicPakFile
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class EpicPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel>
-{
+public class EpicPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="EpicPakFile" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public EpicPakFile(PakState state) : base(state, Binary_Pck.Current)
-    {
+    public EpicPakFile(PakState state) : base(state, Binary_Pck.Current) {
         ObjectFactoryFunc = ObjectFactory;
     }
 
@@ -29,8 +27,7 @@ public class EpicPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel
 
     // object factory
     public static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
-        => Path.GetExtension(source.Path).ToLowerInvariant() switch
-        {
+        => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             _ => UnknownPakFile.ObjectFactory(source, game),
         };
 

@@ -5,8 +5,7 @@ using static GameX.Epic.Formats.Core.Game;
 
 namespace GameX.Epic.Formats.Core;
 
-public partial class UPackage
-{
+public partial class UPackage {
     const int MAX_FNAME_LEN = 1024;
     public static Game GForceGame = UNKNOWN;
     public static int GForcePackageVersion = 0;
@@ -29,8 +28,7 @@ public partial class UPackage
     public FObjectExport[] Exports;
     //FPackageObjectIndex ExportIndices_IOS;
 
-    public UPackage(BinaryReader r, string path)
-    {
+    public UPackage(BinaryReader r, string path) {
         Filename = Path.GetFileName(path);
         r = CreateLoader(r);
         Summary = new FPackageFileSummary(r, this);
@@ -59,8 +57,7 @@ public partial class UPackage
         R = r;
     }
 
-    bool VerifyName(ref string nameStr, int nameIndex)
-    {
+    bool VerifyName(ref string nameStr, int nameIndex) {
         // Verify name, some Korean games (B&S) has garbage in FName (unicode?)
         var goodName = true;
         var numBadChars = 0;
@@ -68,13 +65,11 @@ public partial class UPackage
             if (c == 0) break; // end of line is included into FString unreadable character
             else if (c < ' ' || c > 0x7F) { goodName = false; break; }
             else if (c == '$') numBadChars++; // unicode characters replaced with '$' in FString serializer
-        if (goodName && numBadChars != 0)
-        {
+        if (goodName && numBadChars != 0) {
             var nameLen = nameStr.Length;
             if (nameLen >= 64 || (numBadChars >= nameLen / 2 && nameLen > 16)) goodName = false;
         }
-        if (!goodName)
-        {
+        if (!goodName) {
             // replace name
             Debug.WriteLine($"WARNING: XX: fixing name {nameIndex} ({nameStr})");
             nameStr = $"__name_{nameIndex}__";
@@ -82,13 +77,11 @@ public partial class UPackage
         return goodName;
     }
 
-    BinaryReader CreateLoader(BinaryReader r)
-    {
+    BinaryReader CreateLoader(BinaryReader r) {
         const long MAX_FILE_SIZE32 = 1L << 31;		// 2Gb for int32
         // Verify the file size first, taking into account that it might be too large to open (requires 64-bit size support).
         var FileSize = r.BaseStream.Length;
-        if (FileSize < 16 || FileSize >= MAX_FILE_SIZE32)
-        {
+        if (FileSize < 16 || FileSize >= MAX_FILE_SIZE32) {
             if (FileSize > 1024) Debug.WriteLine($"WARNING: package file {Filename} is too large ({FileSize >> 20} Mb), ignoring");
             // The file is too small, possibly invalid one.
             return null;
@@ -118,8 +111,7 @@ public partial class UPackage
         if (checkDword == 0xB01F713F) return new BinaryReader(new NurienStream(r));
 
         // BLADENSOUL
-        if (checkDword == 0xF84CEAB0)
-        {
+        if (checkDword == 0xF84CEAB0) {
             if (GForceGame == 0) GForceGame = BladeNSoul;
             Game = BladeNSoul;
             return new BinaryReader(new BnSStream(r));
@@ -127,13 +119,11 @@ public partial class UPackage
 
         // Code for loading UE3 "fully compressed packages"
         var checkDword1 = r.ReadUInt32();
-        if (checkDword1 == TAG_REV)
-        {
+        if (checkDword1 == TAG_REV) {
             ReverseBytes = true;
             if (GForcePlatform == Platform.UNKNOWN) Platform = Platform.XBOX360;            // default platform for "ReverseBytes" mode is PLATFORM_XBOX360
         }
-        else if (checkDword1 != TAG)
-        {
+        else if (checkDword1 != TAG) {
             // fully compressed package always starts with package tag
             r.Seek(0);
             return r;
@@ -165,21 +155,17 @@ public partial class UPackage
         return r;
     }
 
-    BinaryReader ReplaceLoader(BinaryReader r)
-    {
+    BinaryReader ReplaceLoader(BinaryReader r) {
         // Current FArchive position is after FPackageFileSummary
-        if ((Game == Bioshock) && (Summary.PackageFlags & 0x20000) != 0)
-        {
+        if ((Game == Bioshock) && (Summary.PackageFlags & 0x20000) != 0) {
             // Bioshock has a special flag indicating compression. Compression table follows the package summary.
             // Read compression tables.
             var NumChunks = r.ReadInt32();
             var Chunks = new FCompressedChunk[NumChunks];
             var UncompOffset = (int)r.Tell() - 4;              //?? there should be a flag signalling presence of compression structures, because of "Tell()-4"
-            for (var i = 0; i < NumChunks; i++)
-            {
+            for (var i = 0; i < NumChunks; i++) {
                 var Offset = r.ReadInt32();
-                Chunks[i] = new FCompressedChunk
-                {
+                Chunks[i] = new FCompressedChunk {
                     UncompressedOffset = UncompOffset,
                     UncompressedSize = 32768,
                     CompressedOffset = Offset,
@@ -190,18 +176,15 @@ public partial class UPackage
             // Replace Loader for reading compressed Bioshock archives.
             return new BinaryReader(new UE3Stream(r, this, COMPRESS.ZLIB, Chunks));
         }
-        else if (Game == AA2)
-        {
+        else if (Game == AA2) {
             // America's Army 2 has encryption after FPackageFileSummary
-            if (ArLicenseeVer >= 19)
-            {
+            if (ArLicenseeVer >= 19) {
                 var IsEncrypted = r.ReadInt32();
                 if (IsEncrypted != 0) r = new BinaryReader(new AA2Stream(r));
             }
             return r;
         }
-        else if (Game == RocketLeague && (Summary.PackageFlags & PKG_Cooked) != 0)
-        {
+        else if (Game == RocketLeague && (Summary.PackageFlags & PKG_Cooked) != 0) {
             throw new NotImplementedException();
             //    // Rocket League has an encrypted header after FPackageFileSummary containing the name/import/export tables and a compression table.
             //    TArray<FString> AdditionalPackagesToCook;
@@ -241,21 +224,18 @@ public partial class UPackage
             //    return r;
         }
         // Nurien has encryption in header, and no encryption after
-        else if (r.BaseStream is NurienStream z)
-        {
+        else if (r.BaseStream is NurienStream z) {
             z.Threshold = Summary.HeadersSize;
             return r;
         }
-        else if (Game >= UE3 && Summary.CompressionFlags != 0 && Summary.CompressedChunks.Length != 0)
-        {
+        else if (Game >= UE3 && Summary.CompressionFlags != 0 && Summary.CompressedChunks.Length != 0) {
             if (IsFullyCompressed) throw new Exception($"Fully compressed package {Filename} has additional compression table");
             return new BinaryReader(new UE3Stream(r, this, Summary.CompressionFlags, Summary.CompressedChunks)); // replace Loader with special reader for compressed UE3 archives
         }
         else return r;
     }
 
-    void LoadNames(BinaryReader r)
-    {
+    void LoadNames(BinaryReader r) {
         if (Summary.NameCount == 0) return;
         r.Seek(Summary.NameOffset);
         Names = new string[Summary.NameCount];
@@ -264,8 +244,7 @@ public partial class UPackage
         else LoadNames2(r, this);
     }
 
-    void LoadImports(BinaryReader r)
-    {
+    void LoadImports(BinaryReader r) {
         if (Summary.ImportCount == 0) return;
         r.Seek(Summary.ImportOffset);
         Imports = r.ReadFArray(r => new FObjectImport(r, this), (int)Summary.ImportCount);
@@ -277,8 +256,7 @@ public partial class UPackage
     void PatchBnSExports(FObjectExport[] exp, FPackageFileSummary summary) { }
     void PatchDunDefExports(FObjectExport[] exp, FPackageFileSummary summary) { }
 
-    void LoadExports(BinaryReader r)
-    {
+    void LoadExports(BinaryReader r) {
         if (Summary.ExportCount == 0) return;
         r.Seek(Summary.ExportOffset);
         Exports = r.ReadFArray(r => new FObjectExport(r, this), (int)Summary.ExportCount);
@@ -292,8 +270,7 @@ public partial class UPackage
     // Process Event Driven Loader packages: such packages are split into 2 pieces: .uasset with headers
     // and .uexp with object's data. At this moment we already have FPackageFileSummary fully loaded,
     // so we can replace loader with .uexp file - with providing correct position offset.
-    void ProcessEventDrivenFile(BinaryReader r)
-    {
+    void ProcessEventDrivenFile(BinaryReader r) {
         //if (Game >= UE4_BASE && Summary.HeadersSize == Loader->GetFileSize())
         //{
         //    var name = $"{Path.GetFileNameWithoutExtension(filename)}.uexp";

@@ -7,11 +7,9 @@ using static OpenStack.Gfx.GfX;
 
 namespace GameX.Platforms.Unity;
 
-public static class UnityRenderer
-{
+public static class UnityRenderer {
     public static Renderer CreateRenderer(object parent, IList<IOpenGfx> gfx, object obj, string type)
-        => type switch
-        {
+        => type switch {
             "TestTri" => new UnityTestTriRenderer(gfx[XModel] as UnityGfxModel, obj),
             "Material" => new UnityMaterialRenderer(gfx[XModel] as UnityGfxModel, obj),
             "Particle" => new UnityParticleRenderer(gfx[XModel] as UnityGfxModel, obj),
@@ -31,8 +29,7 @@ public class UnityEngineRenderer(UnityGfxModel gfx, object obj) : EngineRenderer
 public class UnityObjectRenderer(UnityGfxModel gfx, object obj) : ObjectRenderer(gfx, obj) { }
 public class UnityTextureRenderer(UnityGfxModel gfx, object obj) : TextureRenderer(gfx, obj) { }
 
-public class ViewInfo : UnityEngine.MonoBehaviour
-{
+public class ViewInfo : UnityEngine.MonoBehaviour {
     static ViewInfo() => PlatformX.Activate(UnityPlatform.This);
 
     [UnityEngine.Header("View")]
@@ -46,16 +43,14 @@ public class ViewInfo : UnityEngine.MonoBehaviour
     protected PakFile Source;
     Renderer Renderer;
 
-    public void Awake()
-    {
+    public void Awake() {
         if (string.IsNullOrEmpty(FamilyId)) return;
         Family = FamilyManager.GetFamily(FamilyId);
         if (!string.IsNullOrEmpty(PakUri)) Source = Family.OpenPakFile(new Uri(PakUri));
         Renderer = UnityRenderer.CreateRenderer(this, Source?.Gfx, Path, Type);
     }
 
-    public void OnDestroy()
-    {
+    public void OnDestroy() {
         Renderer?.Dispose();
         Source?.Dispose();
     }

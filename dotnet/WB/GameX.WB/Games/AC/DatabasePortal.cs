@@ -2,10 +2,8 @@ using GameX.WB.Formats.AC.FileTypes;
 
 namespace GameX.WB;
 
-public class DatabasePortal : Database
-{
-    public DatabasePortal(PakFile pakFile) : base(pakFile)
-    {
+public class DatabasePortal : Database {
+    public DatabasePortal(PakFile pakFile) : base(pakFile) {
         BadData = GetFile<BadData>(BadData.FILE_ID);
         ChatPoseTable = GetFile<ChatPoseTable>(ChatPoseTable.FILE_ID);
         CharGen = GetFile<CharGen>(CharGen.FILE_ID);

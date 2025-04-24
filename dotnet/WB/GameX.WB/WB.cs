@@ -17,8 +17,7 @@ namespace GameX.WB;
 /// WBGame
 /// </summary>
 /// <seealso cref="GameX.FamilyGame" />
-public class WBGame(Family family, string id, JsonElement elem, FamilyGame dgame) : FamilyGame(family, id, elem, dgame)
-{
+public class WBGame(Family family, string id, JsonElement elem, FamilyGame dgame) : FamilyGame(family, id, elem, dgame) {
     /// <summary>
     /// Ensures this instance.
     /// </summary>
@@ -34,30 +33,26 @@ public class WBGame(Family family, string id, JsonElement elem, FamilyGame dgame
 /// WBPakFile
 /// </summary>
 /// <seealso cref="GameEstate.Formats.BinaryPakFile" />
-public class WBPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel>
-{
+public class WBPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> {
     static WBPakFile() => Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="WBPakFile" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public WBPakFile(PakState state) : base(state, Binary_AC.Current)
-    {
+    public WBPakFile(PakState state) : base(state, Binary_AC.Current) {
         ObjectFactoryFunc = ObjectFactory;
         UseFileId = true;
     }
 
     #region Factories
 
-    internal static string GetPath(FileSource source, BinaryReader r, PakType pakType, out PakFileType? fileType)
-    {
+    internal static string GetPath(FileSource source, BinaryReader r, PakType pakType, out PakFileType? fileType) {
         if ((uint)source.Id == Iteration.FILE_ID) { fileType = null; return "Iteration"; }
         var (type, ext) = GetFileType(source, pakType);
         if (type == 0) { fileType = null; return $"{source.Id:X8}"; }
         fileType = type;
-        return ext switch
-        {
+        return ext switch {
             null => $"{fileType}/{source.Id:X8}",
             string extension => $"{fileType}/{source.Id:X8}.{extension}",
             Func<FileSource, BinaryReader, string> func => $"{fileType}/{source.Id:X8}.{func(source, r)}",
@@ -65,13 +60,11 @@ public class WBPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel>
         };
     }
 
-    static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
-    {
+    static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game) {
         var (pakType, type) = ((PakType, PakFileType?))source.Tag2;
         if ((uint)source.Id == Iteration.FILE_ID) return (0, (r, m, s) => Task.FromResult((object)new Iteration(r)));
         else if (type == null) return (0, null);
-        else return type.Value switch
-        {
+        else return type.Value switch {
             PakFileType.LandBlock => (0, (r, m, s) => Task.FromResult((object)new Landblock(r))),
             PakFileType.LandBlockInfo => (0, (r, m, s) => Task.FromResult((object)new LandblockInfo(r))),
             PakFileType.EnvCell => (0, (r, m, s) => Task.FromResult((object)new EnvCell(r))),
@@ -141,19 +134,15 @@ public class WBPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel>
         };
     }
 
-    public static (PakFileType fileType, object ext) GetFileType(FileSource source, PakType pakType)
-    {
+    public static (PakFileType fileType, object ext) GetFileType(FileSource source, PakType pakType) {
         var objectId = (uint)source.Id;
-        if (pakType == PakType.Cell)
-        {
+        if (pakType == PakType.Cell) {
             if ((objectId & 0xFFFF) == 0xFFFF) return (PakFileType.LandBlock, "land");
             else if ((objectId & 0xFFFF) == 0xFFFE) return (PakFileType.LandBlockInfo, "lbi");
             else return (PakFileType.EnvCell, "cell");
         }
-        else if (pakType == PakType.Portal)
-        {
-            switch (objectId >> 24)
-            {
+        else if (pakType == PakType.Portal) {
+            switch (objectId >> 24) {
                 case 0x01: return (PakFileType.GfxObject, "obj");
                 case 0x02: return (PakFileType.Setup, "set");
                 case 0x03: return (PakFileType.Animation, "anm");
@@ -188,8 +177,7 @@ public class WBPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel>
                 case 0x40: return (PakFileType.Font, "font");
                 case 0x78: return (PakFileType.DbProperties, new PakFileExtensionAttribute(typeof(WBPakFile), "DbPropertyExtensionLookup").Value);
             }
-            switch (objectId >> 16)
-            {
+            switch (objectId >> 16) {
                 case 0x0E01: return (PakFileType.QualityFilter, null);
                 case 0x0E02: return (PakFileType.MonitoredProperties, "monprop");
             }
@@ -208,8 +196,7 @@ public class WBPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel>
             else if (objectId == 0x0E000020) return (PakFileType.NameFilterTable, "nft");
         }
         if (pakType == PakType.Language)
-            switch (objectId >> 24)
-            {
+            switch (objectId >> 24) {
                 case 0x21: return (PakFileType.UILayout, null);
                 case 0x23: return (PakFileType.StringTable, null);
                 case 0x41: return (PakFileType.StringState, null);
@@ -219,8 +206,7 @@ public class WBPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel>
     }
 
     static string DbPropertyExtensionLookup(FileSource source, BinaryReader r)
-        => 0 switch
-        {
+        => 0 switch {
             0 => "dbpc",
             1 => "pmat",
             _ => throw new ArgumentOutOfRangeException(),

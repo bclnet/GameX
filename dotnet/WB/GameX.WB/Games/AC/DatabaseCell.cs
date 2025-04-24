@@ -1,7 +1,6 @@
 namespace GameX.WB;
 
-public class DatabaseCell : Database
-{
+public class DatabaseCell : Database {
     public DatabaseCell(PakFile pakFile) : base(pakFile) { }
 
     //public void ExtractLandblockContents(string path)

@@ -11,8 +11,7 @@ using System.Numerics;
 namespace GameX.Valve.OpenGL.Scenes;
 
 //was:Renderer/SpriteSceneNode
-public class SpriteSceneNode : SceneNode
-{
+public class SpriteSceneNode : SceneNode {
     readonly int quadVao;
 
     readonly GLRenderMaterial material;
@@ -20,8 +19,7 @@ public class SpriteSceneNode : SceneNode
     readonly Vector3 position;
     readonly float size;
 
-    public SpriteSceneNode(Scene scene, Binary_Src resource, Vector3 position) : base(scene)
-    {
+    public SpriteSceneNode(Scene scene, Binary_Src resource, Vector3 position) : base(scene) {
         var gfx = scene.Gfx as OpenGLGfxModel;
         (material, _) = gfx.MaterialManager.CreateMaterial(resource);
         (shader, _) = gfx.ShaderManager.CreateShader(material.Material.ShaderName, material.Material.ShaderArgs);
@@ -36,8 +34,7 @@ public class SpriteSceneNode : SceneNode
         LocalBoundingBox = new AABB(position - size3, position + size3);
     }
 
-    int SetupQuadBuffer()
-    {
+    int SetupQuadBuffer() {
         GL.UseProgram(shader.Program);
 
         var vao = GL.GenVertexArray();
@@ -65,8 +62,7 @@ public class SpriteSceneNode : SceneNode
         var stride = sizeof(float) * attributes.Sum(x => x.Size);
         var offset = 0;
 
-        foreach (var (name, size) in attributes)
-        {
+        foreach (var (name, size) in attributes) {
             var attributeLocation = shader.GetAttribLocation(name);
             GL.EnableVertexAttribArray(attributeLocation);
             GL.VertexAttribPointer(attributeLocation, size, VertexAttribPointerType.Float, false, stride, offset);
@@ -78,8 +74,7 @@ public class SpriteSceneNode : SceneNode
         return vao;
     }
 
-    public override void Render(Scene.RenderContext context)
-    {
+    public override void Render(Scene.RenderContext context) {
         GL.UseProgram(shader.Program);
         GL.BindVertexArray(quadVao);
 

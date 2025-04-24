@@ -13,13 +13,11 @@ namespace GameX.Red.Formats;
 
 #region Binary_Abc
 
-public class Binary_Abc : IHaveMetaInfo
-{
+public class Binary_Abc : IHaveMetaInfo {
     public Binary_Abc() { }
     public Binary_Abc(BinaryReader r) => Read(r);
 
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
-    {
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
         var nodes = new List<MetaInfo> {
             new MetaInfo("BinaryPak", items: new List<MetaInfo> {
                 //new MetaInfo($"Type: {Type}"),
@@ -43,8 +41,7 @@ public class Binary_Abc : IHaveMetaInfo
 
 #region Binary_Red
 
-public unsafe class Binary_Red : PakBinary<Binary_Red>
-{
+public unsafe class Binary_Red : PakBinary<Binary_Red> {
     //class SubPakFile : BinaryPakFile
     //{
     //    public SubPakFile(FamilyGame game, IFileSystem fileSystem, string filePath, object tag = null) : base(game, fileSystem, filePath, Instance, tag) => Open();
@@ -62,8 +59,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
     const uint BIFF_VERSION = 0x312e3156;
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct KEY_Header
-    {
+    struct KEY_Header {
         public static (string, int) Struct = ("<8i32c", sizeof(KEY_Header));
         public uint Version;            // Version ("V1.1")
         public uint NumFiles;           // Number of entries in FILETABLE
@@ -77,8 +73,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct KEY_HeaderFile
-    {
+    struct KEY_HeaderFile {
         public static (string, int) Struct = ("<3i", sizeof(KEY_HeaderFile));
         public uint FileSize;           // BIF Filesize
         public uint FileNameOffset;     // Offset To BIF name
@@ -86,8 +81,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct KEY_HeaderKey
-    {
+    struct KEY_HeaderKey {
         public static (string, int) Struct = ("<16sH2I", sizeof(KEY_HeaderKey));
         public fixed byte Name[0x10];   // Null-padded string Resource Name (sans extension).
         public ushort ResourceType;     // Resource Type
@@ -97,8 +91,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct BIFF_Header
-    {
+    struct BIFF_Header {
         public static (string, int) Struct = ("<4I", sizeof(BIFF_Header));
         public uint Version;            // Version ("V1.1")
         public uint NumFiles;           // Resource Count
@@ -107,8 +100,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct BIFF_HeaderFile
-    {
+    struct BIFF_HeaderFile {
         public static (string, int) Struct = ("<4I2H", sizeof(BIFF_HeaderFile));
         public uint FileId;             // File ID
         public uint Flags;              // Flags (BIF index is now in this value, (flags & 0xFFF00000) >> 20). The rest appears to define 'fixed' index.
@@ -258,8 +250,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
     const uint DZIP_VERSION = 0x50495a44;
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct DZIP_Header
-    {
+    struct DZIP_Header {
         public static (string, int) Struct = ("<3I2Q", sizeof(DZIP_Header));
         public uint Version;            //
         public uint NumFiles;           //
@@ -269,8 +260,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct DZIP_HeaderFile
-    {
+    struct DZIP_HeaderFile {
         public static (string, int) Struct = ("<4Q", sizeof(DZIP_HeaderFile));
         public ulong Timestamp;         // 
         public ulong FileSize;          // 
@@ -287,8 +277,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
     const uint BUNDLE_MAGIC = 0x41544f50; const uint BUNDLE_MAGIC2 = 0x30374f54; // POTATO70
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct BUNDLE_Header
-    {
+    struct BUNDLE_Header {
         public static (string, int) Struct = ("<3I", sizeof(BUNDLE_Header));
         public uint FileSize;           // 
         public uint NotUsed01;          // 
@@ -297,8 +286,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct BUNDLE_HeaderFile
-    {
+    struct BUNDLE_HeaderFile {
         public static (string, int) Struct = ("<256s16s4IQ16c2I", sizeof(BUNDLE_Header));
         public fixed byte Name[0x100];  //
         public fixed byte Hash[16];     //
@@ -319,8 +307,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
     // https://github.com/hhrhhr/Lua-utils-for-Witcher-3
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct CACHE_TEX_Header
-    {
+    struct CACHE_TEX_Header {
         public static (string, int) Struct = ("<5I", sizeof(CACHE_TEX_Header));
         public uint NumFiles;           // number of textures
         public uint NamesSize;          // names
@@ -330,8 +317,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct CACHE_TEX_HeaderFile
-    {
+    struct CACHE_TEX_HeaderFile {
         public static (string, int) Struct = ("<6I4H4I2cH", sizeof(CACHE_TEX_Header));
         public uint Id;                 // 01:crc or id??
         public uint FileNameOffset;     // 02:filename, start offset in block2
@@ -362,8 +348,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
     const uint CS3W_MAGIC = 0x57335343;
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct CACHE_CS3W_Header
-    {
+    struct CACHE_CS3W_Header {
         public static (string, int) Struct = ("<5Q", sizeof(CACHE_CS3W_Header));
         public ulong NotUsed01;         // Not used
         public ulong InfoPosition;      // Offset to Info
@@ -373,8 +358,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct CACHE_CS3W_HeaderV1
-    {
+    struct CACHE_CS3W_HeaderV1 {
         public static (string, int) Struct = ("<Q4I", sizeof(CACHE_CS3W_HeaderV1));
         public ulong NotUsed01;         // Not used
         public uint InfoPosition;       // Offset to Info
@@ -382,8 +366,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
         public uint NameOffset;         // Offset to Names
         public uint NameSize;           // Size of to Names
 
-        public CACHE_CS3W_Header ToHeader() => new CACHE_CS3W_Header
-        {
+        public CACHE_CS3W_Header ToHeader() => new CACHE_CS3W_Header {
             NotUsed01 = NotUsed01,
             InfoPosition = InfoPosition,
             NumFiles = NumFiles,
@@ -393,8 +376,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct CS3W_HeaderFileV1
-    {
+    struct CS3W_HeaderFileV1 {
         public static (string, int) Struct = ("<3I", sizeof(CS3W_HeaderFileV1));
         public uint NamePosition;       // 
         public uint Position;           // 
@@ -402,8 +384,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct CS3W_HeaderFileV2
-    {
+    struct CS3W_HeaderFileV2 {
         public static (string, int) Struct = ("<3Q", sizeof(CS3W_HeaderFileV2));
         public ulong NamePosition;      // 
         public ulong Position;          // 
@@ -418,8 +399,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
     const uint RDAR_MAGIC = 0x52414452; // RDAR
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct RDAR_Header
-    {
+    struct RDAR_Header {
         public static (string, int) Struct = ("<I4Q", sizeof(RDAR_Header));
         public uint Version;
         public ulong TableOffset;
@@ -429,8 +409,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct RDAR_HeaderTable
-    {
+    struct RDAR_HeaderTable {
         public static (string, int) Struct = ("<2IQ3I", sizeof(RDAR_HeaderTable));
         public uint Num;
         public uint Size;
@@ -441,8 +420,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct RDAR_HeaderFile
-    {
+    struct RDAR_HeaderFile {
         public static (string, int) Struct = ("<Qq5I20c", sizeof(RDAR_HeaderFile));
         public ulong NameHash64;
         public long DateTime;
@@ -456,8 +434,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct RDAR_HeaderOffset
-    {
+    struct RDAR_HeaderOffset {
         public static (string, int) Struct = ("<Q2I", sizeof(RDAR_HeaderOffset));
         public ulong Offset;
         public uint PhysicalSize;
@@ -469,15 +446,13 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
     // https://zenhax.com/viewtopic.php?t=3954
     // https://forums.cdprojektred.com/index.php?threads/modding-the-witcher-3-a-collection-of-tools-you-need.64557/
     // https://github.com/rfuzzo/CP77Tools
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         FileSource[] files; List<FileSource> files2;
         var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(source.PakPath);
         var extension = Path.GetExtension(source.PakPath);
         var magic = source.Magic = r.ReadUInt32();
         // KEY
-        switch (magic)
-        {
+        switch (magic) {
             case KEY_MAGIC: // Signature("KEY ")
                 {
                     var header = r.ReadS<KEY_Header>();
@@ -495,13 +470,11 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
                     var sourceName = source.Name;
                     var voiceKey = sourceName[0] == 'M' && char.IsNumber(sourceName[1]);
                     var subPathFormat = Path.Combine(Path.GetDirectoryName(source.PakPath), !voiceKey ? "{0}" : "voices\\{0}");
-                    for (var i = 0; i < header.NumFiles; i++)
-                    {
+                    for (var i = 0; i < header.NumFiles; i++) {
                         var (file, path) = headerFiles[i];
                         var subPath = string.Format(subPathFormat, path);
                         if (!File.Exists(subPath)) continue;
-                        files[i] = new FileSource
-                        {
+                        files[i] = new FileSource {
                             Path = path,
                             FileSize = file.FileSize,
                             Pak = new SubPakFile(source, null, subPath, (headerKeys, (uint)i)),
@@ -523,14 +496,12 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
                     var fileTypes = BIFF_FileTypes;
                     r.Seek(header.FilesOffset);
                     var headerFiles = r.ReadSArray<BIFF_HeaderFile>((int)header.NumFiles);
-                    for (var i = 0; i < header.NumFiles; i++)
-                    {
+                    for (var i = 0; i < header.NumFiles; i++) {
                         var headerFile = headerFiles[i];
                         // Curiously the last resource entry of djinni.bif seem to be missing
                         if (headerFile.FileId > i) continue;
                         var path = $"{(keys.TryGetValue((bifId, headerFile.FileId), out var key) ? key : $"{i}")}{(BIFF_FileTypes.TryGetValue(headerFile.FileType, out var z) ? $".{z}" : string.Empty)}".Replace('\\', '/');
-                        files2.Add(new FileSource
-                        {
+                        files2.Add(new FileSource {
                             Path = path,
                             FileSize = headerFile.FileSize,
                             Offset = headerFile.FileOffset,
@@ -548,20 +519,17 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
                     var cryptKey = source.Tag as ulong?;
                     r.Seek((long)header.FilesPosition);
                     var hash = 0x00000000FFFFFFFFUL;
-                    for (var i = 0; i < header.NumFiles; i++)
-                    {
+                    for (var i = 0; i < header.NumFiles; i++) {
                         string path;
                         if (cryptKey == null) path = r.ReadL16YEncoding();
-                        else
-                        {
+                        else {
                             var pathBytes = r.ReadBytes(r.ReadUInt16());
                             for (var j = 0; j < pathBytes.Length; j++) { pathBytes[j] ^= (byte)(cryptKey >> j % 8); cryptKey *= 0x00000100000001B3UL; }
                             var nameBytesLength = pathBytes.Length - 1;
                             path = Encoding.ASCII.GetString(pathBytes, 0, pathBytes[nameBytesLength] == 0 ? nameBytesLength : pathBytes.Length);
                         }
                         var headerFile = r.ReadS<DZIP_HeaderFile>();
-                        files[i] = new FileSource
-                        {
+                        files[i] = new FileSource {
                             Path = path.Replace('\\', '/'),
                             Compressed = 1,
                             PackedSize = (long)headerFile.PackedSize,
@@ -569,8 +537,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
                             Offset = (long)headerFile.Position,
                         };
                         // build digest
-                        if (!string.IsNullOrEmpty(path))
-                        {
+                        if (!string.IsNullOrEmpty(path)) {
                             for (var j = 0; j < path.Length; j++) { hash ^= (byte)path[j]; hash *= 0x00000100000001B3UL; }
                             hash ^= (ulong)path.Length;
                             hash *= 0x00000100000001B3UL;
@@ -598,11 +565,9 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
                     // files
                     r.Seek(0x20);
                     var headerFiles = r.ReadSArray<BUNDLE_HeaderFile>(header.NumFiles);
-                    for (var i = 0; i < header.NumFiles; i++)
-                    {
+                    for (var i = 0; i < header.NumFiles; i++) {
                         var headerFile = headerFiles[i];
-                        files[i] = new FileSource
-                        {
+                        files[i] = new FileSource {
                             Path = UnsafeX.FixedAString(headerFile.Name, 0x100).Replace('\\', '/'),
                             Compressed = (int)headerFile.Compressed,
                             FileSize = headerFile.FileSize,
@@ -626,14 +591,12 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
                     //var headerHashs = r.ReadPArray<ulong>("Q", (int)headerTable.Table3Count);
                     source.Files = files2 = new List<FileSource>();
                     var nameHashs = new HashSet<ulong>();
-                    for (var i = 0; i < headerFiles.Length; i++)
-                    {
+                    for (var i = 0; i < headerFiles.Length; i++) {
                         var headerFile = headerFiles[i];
                         var hash = headerFile.NameHash64;
                         if (nameHashs.Contains(hash)) { Console.WriteLine($"File already added in Archive {source.PakPath}: hash {hash}, idx {i}"); continue; }
                         nameHashs.Add(hash);
-                        files2.Add(new FileSource
-                        {
+                        files2.Add(new FileSource {
                             Path = hashLookup.TryGetValue(hash, out var z) ? z.Replace('\\', '/') : $"{hash:X2}.bin",
                             Tag = (headerFile.FirstDataSector, headerFile.NextDataSector, headerOffsets),
                         });
@@ -642,10 +605,8 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
                 return Task.CompletedTask;
             default:
                 // CACHE
-                if (extension == ".cache")
-                {
-                    if (fileNameWithoutExtension == "texture")
-                    {
+                if (extension == ".cache") {
+                    if (fileNameWithoutExtension == "texture") {
                         source.Version = 'T';
                         r.Seek(r.BaseStream.Length - 20);
                         var header = r.ReadS<CACHE_TEX_Header>();
@@ -666,8 +627,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
                         // file block
                         var headerFiles = r.ReadSArray<CACHE_TEX_HeaderFile>((int)header.NumFiles);
                         for (var i = 0; i < header.NumFiles; i++)
-                            files[i] = new FileSource
-                            {
+                            files[i] = new FileSource {
                                 Path = filePaths[i].Replace('\\', '/'),
                                 Offset = headerFiles[i].StartOffset,
                                 PackedSize = headerFiles[i].PackedSize,
@@ -675,8 +635,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
                                 Tag = headerFiles[i],
                             };
                     }
-                    else if (magic == CS3W_MAGIC)
-                    {
+                    else if (magic == CS3W_MAGIC) {
                         var version = r.ReadUInt32();
                         var header = version >= 2
                             ? r.ReadS<CACHE_CS3W_Header>()
@@ -684,8 +643,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
                         r.Seek((long)header.NameOffset);
                         var name = r.ReadFAString((int)header.NameSize);
                     }
-                    else
-                    {
+                    else {
                         r.Seek(0);
                         var packedSize = r.ReadUInt32();
                         if (packedSize == 0) packedSize = r.ReadUInt32() << 4;
@@ -698,8 +656,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
         }
     }
 
-    public enum FORMAT : uint
-    {
+    public enum FORMAT : uint {
         RGB = 0,
         RGBA = RGB,
 
@@ -720,19 +677,15 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
         BC5 = 7,        // 3DC, ATI2
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
-    {
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         Stream fileData = null;
         r.Seek(file.Offset);
-        switch (source.Version)
-        {
-            case BIFF_VERSION:
-                {
+        switch (source.Version) {
+            case BIFF_VERSION: {
                     fileData = new MemoryStream(r.ReadBytes((int)file.FileSize));
                 }
                 return Task.FromResult(fileData);
-            case DZIP_VERSION:
-                {
+            case DZIP_VERSION: {
                     var blocks = (int)((file.FileSize + 0xFFFF) >> 16);
                     var positions = new long[blocks + 1];
                     for (var i = 0; i < positions.Length; i++) positions[i] = file.Offset + r.ReadUInt32();
@@ -741,8 +694,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
                     var bytesLeft = file.PackedSize;
                     var s = new MemoryStream();
                     {
-                        for (var i = 0; i < blocks; i++)
-                        {
+                        for (var i = 0; i < blocks; i++) {
                             r.Seek(positions[i]);
                             var bytesRead = r.DecompressLzf((int)(positions[i + 1] - positions[i + 0]), buffer);
                             if (i + 1 < blocks && bytesRead != buffer.Length) throw new FormatException();
@@ -755,11 +707,9 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
                     }
                 }
                 return Task.FromResult(fileData);
-            case BUNDLE_MAGIC:
-                {
+            case BUNDLE_MAGIC: {
                     var newFileSize = file.FileSize;
-                    switch (file.Compressed)
-                    {
+                    switch (file.Compressed) {
                         case 0: break; // no compression
                         case 1: fileData = new MemoryStream(r.DecompressZlib2((int)file.PackedSize, (int)newFileSize)); break;
                         case 2: fileData = new MemoryStream(r.DecompressSnappy((int)file.PackedSize, (int)newFileSize)); break;
@@ -769,12 +719,10 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
                     }
                 }
                 return Task.FromResult(fileData);
-            case RDAR_MAGIC:
-                {
+            case RDAR_MAGIC: {
                     var (startIndex, nextIndex, offsets) = ((uint, uint, RDAR_HeaderOffset[]))file.Tag;
                     fileData = new MemoryStream();
-                    for (var i = startIndex; i < nextIndex; i++)
-                    {
+                    for (var i = startIndex; i < nextIndex; i++) {
                         var offset = offsets[i];
                         r.Seek((long)offset.Offset);
                         var buf = offset.PhysicalSize == offset.VirtualSize
@@ -784,12 +732,10 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
                     }
                 }
                 return Task.FromResult(fileData);
-            case 'T':
-                {
+            case 'T': {
                     var headerChunks = (uint[])source.Tag;
                     var tex = (CACHE_TEX_HeaderFile)file.Tag;
-                    var fmt = tex.Format switch
-                    {
+                    var fmt = tex.Format switch {
                         7 => FORMAT.DXT1,
                         8 => FORMAT.DXT5,
                         10 => FORMAT.DXT5,
@@ -818,8 +764,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
                     {
                         // write header
                         var w = new BinaryWriter(s);
-                        var ddsHeader = new DDS_HEADER
-                        {
+                        var ddsHeader = new DDS_HEADER {
                             dwSize = DDS_HEADER.SizeOf,
                             dwFlags = DDSD.HEADER_FLAGS_TEXTURE | (tex.NumMips > 1 ? DDSD.MIPMAPCOUNT : 0),
                             dwHeight = tex.Height,
@@ -828,8 +773,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
                             dwCaps = DDSCAPS.TEXTURE,
                         };
                         ddsHeader.ddspf.dwSize = DDS_PIXELFORMAT.SizeOf;
-                        var dxt10 = new DDS_HEADER_DXT10
-                        {
+                        var dxt10 = new DDS_HEADER_DXT10 {
                             dxgiFormat = DXGI_FORMAT.UNKNOWN,
                             resourceDimension = D3D10_RESOURCE_DIMENSION.UNKNOWN,
                             miscFlag = 0,
@@ -838,8 +782,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
                         };
 
                         // depth
-                        if (depth > 0)
-                        {
+                        if (depth > 0) {
                             ddsHeader.dwFlags |= DDSD.DEPTH;
                             ddsHeader.dwDepth = depth;
                             ddsHeader.dwCaps2 = DDSCAPS2.VOLUME;
@@ -848,8 +791,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
                         else dxt10.resourceDimension = D3D10_RESOURCE_DIMENSION.TEXTURE2D;
 
                         // cubemap
-                        if (cubemap)
-                        {
+                        if (cubemap) {
                             ddsHeader.dwCaps |= DDSCAPS.COMPLEX;
                             ddsHeader.dwCaps2 |= DDSCAPS2.CUBEMAP | DDSCAPS2.CUBEMAP_ALLFACES;
                             dxt10.resourceDimension = D3D10_RESOURCE_DIMENSION.TEXTURE2D;
@@ -857,13 +799,11 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
                         }
 
                         // ddspf
-                        if (fmt == FORMAT.RGBA)
-                        {
+                        if (fmt == FORMAT.RGBA) {
                             ddsHeader.dwFlags |= DDSD.PITCH;
                             var pitch = (tex.Bpp + 7) / 8 * tex.Width;
                             ddsHeader.dwPitchOrLinearSize = (pitch + 3) / 4 * 4;
-                            if (tex.Bpp == 8)
-                            {
+                            if (tex.Bpp == 8) {
                                 ddsHeader.ddspf.dwFlags = DDPF.RGB | DDPF.ALPHAPIXELS;
                                 ddsHeader.ddspf.dwRGBBitCount = 8;
                                 ddsHeader.ddspf.dwRBitMask = 0x0f00;
@@ -871,8 +811,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
                                 ddsHeader.ddspf.dwBBitMask = 0x000f;
                                 ddsHeader.ddspf.dwABitMask = 0xf000;
                             }
-                            else if (tex.Bpp == 16)
-                            {
+                            else if (tex.Bpp == 16) {
                                 ddsHeader.ddspf.dwFlags = DDPF.RGB | DDPF.ALPHAPIXELS;
                                 ddsHeader.ddspf.dwRGBBitCount = 16;
                                 ddsHeader.ddspf.dwRBitMask = 0x03f000;
@@ -880,8 +819,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
                                 ddsHeader.ddspf.dwBBitMask = 0x00003f;
                                 ddsHeader.ddspf.dwABitMask = 0xfc0000;
                             }
-                            else if (tex.Bpp == 32)
-                            {
+                            else if (tex.Bpp == 32) {
                                 ddsHeader.ddspf.dwFlags = DDPF.RGB | DDPF.ALPHAPIXELS;
                                 ddsHeader.ddspf.dwRGBBitCount = 32;
                                 ddsHeader.ddspf.dwRBitMask = 0x00ff0000;
@@ -890,8 +828,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
                                 ddsHeader.ddspf.dwABitMask = 0xff000000;
                             }
                         }
-                        else
-                        {
+                        else {
                             var bs = new[] { 8U, 8U, 16U, 16U, 16U, 8U, 16U };
                             ddsHeader.dwPitchOrLinearSize = (uint)(bs[(int)fmt] * ((tex.Width + 3) / 4) * ((tex.Height + 3) / 4));
                             ddsHeader.dwFlags = DDSD.LINEARSIZE;
@@ -906,8 +843,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red>
                         w.Write(DDS_HEADER.MAGIC);
                         w.WriteT(ddsHeader, sizeof(DDS_HEADER));
 
-                        void Read(long position)
-                        {
+                        void Read(long position) {
                             r.Seek(position);
                             var packedSize = r.ReadUInt32();
                             var fileSize = r.ReadUInt32();

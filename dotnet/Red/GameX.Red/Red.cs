@@ -15,22 +15,19 @@ namespace GameX.Red;
 /// RedPakFile
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class RedPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel>
-{
+public class RedPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="RedPakFile" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public RedPakFile(PakState state) : base(state, Binary_Red.Current)
-    {
+    public RedPakFile(PakState state) : base(state, Binary_Red.Current) {
         ObjectFactoryFunc = ObjectFactory;
     }
 
     #region Factories
 
     static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
-        => Path.GetExtension(source.Path).ToLowerInvariant() switch
-        {
+        => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             // witcher 1
             ".dlg" or ".qdb" or ".qst" => (0, Binary_Gff.Factory),
             _ => UnknownPakFile.ObjectFactory(source, game),

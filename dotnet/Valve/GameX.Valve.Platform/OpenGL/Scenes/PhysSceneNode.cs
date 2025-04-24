@@ -13,8 +13,7 @@ using System.Numerics;
 namespace GameX.Valve.OpenGL.Scenes;
 
 //was:Renderer/PhysSceneNode
-public class PhysSceneNode : SceneNode
-{
+public class PhysSceneNode : SceneNode {
     public bool Enabled { get; set; }
     public bool IsTrigger { get; set; }
     readonly Shader shader;
@@ -23,8 +22,7 @@ public class PhysSceneNode : SceneNode
     readonly int iboHandle;
     readonly int vaoHandle;
 
-    public PhysSceneNode(Scene scene, D_PhysAggregateData phys) : base(scene)
-    {
+    public PhysSceneNode(Scene scene, D_PhysAggregateData phys) : base(scene) {
         var verts = new List<float>();
         var inds = new List<int>();
 
@@ -35,13 +33,11 @@ public class PhysSceneNode : SceneNode
         var firstBbox = true;
 
         var parts = phys.Data.GetArray("m_parts");
-        for (var p = 0; p < parts.Length; p++)
-        {
+        for (var p = 0; p < parts.Length; p++) {
             var shape = parts[p].GetSub("m_rnShape");
 
             var spheres = shape.GetArray("m_spheres");
-            foreach (var s in spheres)
-            {
+            foreach (var s in spheres) {
                 var sphere = s.GetSub("m_Sphere");
                 var center = sphere.GetVector3("m_vCenter");
                 var radius = sphere.Get<float>("m_flRadius");
@@ -55,8 +51,7 @@ public class PhysSceneNode : SceneNode
             }
 
             var capsules = shape.GetArray("m_capsules");
-            foreach (var c in capsules)
-            {
+            foreach (var c in capsules) {
                 var capsule = c.GetSub("m_Capsule");
                 var center = capsule.Get<object[][]>("m_vCenter").Select(v => v.ToVector3()).ToArray();
                 var radius = capsule.Get<float>("m_flRadius");
@@ -65,16 +60,14 @@ public class PhysSceneNode : SceneNode
                 center[1] = Vector3.Transform(center[1], bindPose[p]);
 
                 AddCapsule(verts, inds, center[0], center[1], radius);
-                foreach (var cn in center)
-                {
+                foreach (var cn in center) {
                     var bbox = new AABB(cn + new Vector3(radius), cn - new Vector3(radius));
                     LocalBoundingBox = firstBbox ? bbox : LocalBoundingBox.Union(bbox);
                     firstBbox = false;
                 }
             }
             var hulls = shape.GetArray("m_hulls");
-            foreach (var h in hulls)
-            {
+            foreach (var h in hulls) {
                 var hull = h.GetSub("m_Hull");
 
                 //m_vCentroid
@@ -82,15 +75,13 @@ public class PhysSceneNode : SceneNode
                 //m_Vertices
                 IEnumerable<Vector3> vertices = null;
                 if (hull["m_Vertices"] is Array) vertices = hull.Get<object[][]>("m_Vertices").Select(v => v.ToVector3()).ToArray();
-                else
-                {
+                else {
                     var verticesBlob = hull.Get<byte[]>("m_Vertices");
                     vertices = Enumerable.Range(0, verticesBlob.Length / 12)
                         .Select(i => new Vector3(BitConverter.ToSingle(verticesBlob, i * 12), BitConverter.ToSingle(verticesBlob, i * 12 + 4), BitConverter.ToSingle(verticesBlob, i * 12 + 8))).ToArray();
                 }
                 var vertOffset = verts.Count / 7;
-                foreach (var v in vertices)
-                {
+                foreach (var v in vertices) {
                     var vec = v;
                     if (bindPose.Any()) vec = Vector3.Transform(vec, bindPose[p]);
 
@@ -100,20 +91,17 @@ public class PhysSceneNode : SceneNode
                 }
                 //m_Planes
                 (int origin, int next)[] edges = null;
-                if (hull["m_Edges"] is Array)
-                {
+                if (hull["m_Edges"] is Array) {
                     var edgesArr = hull.GetArray("m_Edges");
                     edges = edgesArr.Select(e => (e.Get<int>("m_nOrigin"), e.Get<int>("m_nNext"))).ToArray();
                 }
-                else
-                {
+                else {
                     // 0 - m_nNext, 1 - m_nTwin, 2 - m_nOrigin, 3 - m_nFace
                     var edgesBlob = hull.Get<byte[]>("m_Edges");
                     edges = Enumerable.Range(0, edgesBlob.Length / 4)
                         .Select(i => ((int)edgesBlob[i * 4 + 2], (int)edgesBlob[i * 4 + 1])).ToArray();
                 }
-                foreach (var e in edges)
-                {
+                foreach (var e in edges) {
                     inds.Add(vertOffset + e.origin);
                     var next = edges[e.next];
                     inds.Add(vertOffset + next.origin);
@@ -126,28 +114,24 @@ public class PhysSceneNode : SceneNode
                 firstBbox = false;
             }
             var meshes = shape.GetArray("m_meshes");
-            foreach (var m in meshes)
-            {
+            foreach (var m in meshes) {
                 var mesh = m.GetSub("m_Mesh");
                 //m_Nodes
 
                 var vertOffset = verts.Count / 7;
                 Vector3[] vertices = null;
-                if (mesh["m_Vertices"] is Array)
-                {
+                if (mesh["m_Vertices"] is Array) {
                     //NTRO has vertices as array of structs
                     vertices = mesh.Get<object[][]>("m_Vertices").Select(v => v.ToVector3()).ToArray();
                 }
-                else
-                {
+                else {
                     //KV3 has vertices as blob
                     var verticesBlob = mesh.Get<byte[]>("m_Vertices");
                     vertices = Enumerable.Range(0, verticesBlob.Length / 12)
                         .Select(i => new Vector3(BitConverter.ToSingle(verticesBlob, i * 12), BitConverter.ToSingle(verticesBlob, i * 12 + 4), BitConverter.ToSingle(verticesBlob, i * 12 + 8))).ToArray();
                 }
 
-                foreach (var vec in vertices)
-                {
+                foreach (var vec in vertices) {
                     var v = vec;
                     if (bindPose.Any()) v = Vector3.Transform(vec, bindPose[p]);
 
@@ -157,22 +141,19 @@ public class PhysSceneNode : SceneNode
                 }
 
                 int[] triangles = null;
-                if (mesh["m_Triangles"] is Array)
-                {
+                if (mesh["m_Triangles"] is Array) {
                     //NTRO and SOME KV3 has triangles as array of structs
                     var trianglesArr = mesh.GetArray("m_Triangles");
                     triangles = trianglesArr.SelectMany(t => t.Get<object[]>("m_nIndex").Select(Convert.ToInt32)).ToArray();
                 }
-                else
-                {
+                else {
                     //some KV3 has triangles as blob
                     var trianglesBlob = mesh.Get<byte[]>("m_Triangles");
                     triangles = new int[trianglesBlob.Length / 4];
                     System.Buffer.BlockCopy(trianglesBlob, 0, triangles, 0, trianglesBlob.Length);
                 }
 
-                for (var i = 0; i < triangles.Length; i += 3)
-                {
+                for (var i = 0; i < triangles.Length; i += 3) {
                     inds.Add(vertOffset + triangles[i]);
                     inds.Add(vertOffset + triangles[i + 1]);
                     inds.Add(vertOffset + triangles[i + 1]);
@@ -223,8 +204,7 @@ public class PhysSceneNode : SceneNode
             a[2], a[6], a[10], 0,
             a[3], a[7], a[11], 1);
 
-    static void AddCapsule(List<float> verts, List<int> inds, Vector3 c0, Vector3 c1, float radius)
-    {
+    static void AddCapsule(List<float> verts, List<int> inds, Vector3 c0, Vector3 c1, float radius) {
         var mtx = Matrix4x4.CreateLookAt(c0, c1, Vector3.UnitY);
         mtx.Translation = Vector3.Zero;
         AddSphere(verts, inds, c0, radius);
@@ -232,8 +212,7 @@ public class PhysSceneNode : SceneNode
 
         var vertOffset = verts.Count / 7;
 
-        for (var i = 0; i < 4; i++)
-        {
+        for (var i = 0; i < 4; i++) {
             var vr = new Vector3(MathF.Cos(i * MathF.PI / 2) * radius, MathF.Sin(i * MathF.PI / 2) * radius, 0);
             vr = Vector3.Transform(vr, mtx);
             var v = vr + c0;
@@ -253,18 +232,15 @@ public class PhysSceneNode : SceneNode
         }
     }
 
-    static void AddSphere(List<float> verts, List<int> inds, Vector3 center, float radius)
-    {
+    static void AddSphere(List<float> verts, List<int> inds, Vector3 center, float radius) {
         AddCircle(verts, inds, center, radius, Matrix4x4.Identity);
         AddCircle(verts, inds, center, radius, Matrix4x4.CreateRotationX(MathF.PI * 0.5f));
         AddCircle(verts, inds, center, radius, Matrix4x4.CreateRotationY(MathF.PI * 0.5f));
     }
 
-    static void AddCircle(List<float> verts, List<int> inds, Vector3 center, float radius, Matrix4x4 mtx)
-    {
+    static void AddCircle(List<float> verts, List<int> inds, Vector3 center, float radius, Matrix4x4 mtx) {
         var vertOffset = verts.Count / 7;
-        for (var i = 0; i < 16; i++)
-        {
+        for (var i = 0; i < 16; i++) {
             var v = new Vector3(MathF.Cos(i * MathF.PI / 8) * radius, MathF.Sin(i * MathF.PI / 8) * radius, 0);
             v = Vector3.Transform(v, mtx) + center;
 
@@ -277,8 +253,7 @@ public class PhysSceneNode : SceneNode
         }
     }
 
-    public override void Render(Scene.RenderContext context)
-    {
+    public override void Render(Scene.RenderContext context) {
         if (!Enabled) return;
 
         var viewProjectionMatrix = (Transform * context.Camera.ViewProjectionMatrix).ToOpenTK();

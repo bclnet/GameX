@@ -7,10 +7,8 @@ using System.Collections.Generic;
 namespace GameX.Valve.OpenGL.Scenes;
 
 //was:Renderer/ParticleSceneNode
-public class ParticleSceneNode : SceneNode
-{
-    class ParticleSystemWrapper : IParticleSystem
-    {
+public class ParticleSceneNode : SceneNode {
+    class ParticleSystemWrapper : IParticleSystem {
         readonly D_ParticleSystem _source;
         public ParticleSystemWrapper(D_ParticleSystem source) => _source = source;
         IDictionary<string, object> IParticleSystem.Data => _source.Data;
@@ -23,14 +21,12 @@ public class ParticleSceneNode : SceneNode
 
     OpenGLParticleRenderer ParticleRenderer;
 
-    public ParticleSceneNode(Scene scene, D_ParticleSystem particleSystem) : base(scene)
-    {
+    public ParticleSceneNode(Scene scene, D_ParticleSystem particleSystem) : base(scene) {
         ParticleRenderer = new OpenGLParticleRenderer(Scene.Gfx as OpenGLGfxModel, new ParticleSystemWrapper(particleSystem));
         LocalBoundingBox = ParticleRenderer.BoundingBox;
     }
 
-    public override void Update(Scene.UpdateContext context)
-    {
+    public override void Update(Scene.UpdateContext context) {
         ParticleRenderer.Position = Transform.Translation;
         ParticleRenderer.Update(context.Timestep);
 

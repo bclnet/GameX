@@ -1,16 +1,12 @@
 ﻿using static GameX.IW.Zone.Asset;
 
-namespace GameX.IW.Zone
-{
-    public unsafe partial struct PhysPreset
-    {
+namespace GameX.IW.Zone {
+    public unsafe partial struct PhysPreset {
         #region PhysPresetData
 
         // easy
-        public static void writePhysPreset(ZoneInfo info, ZStream buf, PhysPreset* data)
-        {
-            fixed (byte* _ = buf.at)
-            {
+        public static void writePhysPreset(ZoneInfo info, ZStream buf, PhysPreset* data) {
+            fixed (byte* _ = buf.at) {
                 //: WRITE_ASSET(data, PhysPreset);
                 var dest = (PhysPreset*)_;
                 buf.write((byte*)data, sizeof(PhysPreset), 1);
@@ -28,8 +24,7 @@ namespace GameX.IW.Zone
             }
         }
 
-        public static object addPhysPreset(ZoneInfo info, string name, char* data, int dataLen)
-        {
+        public static object addPhysPreset(ZoneInfo info, string name, char* data, int dataLen) {
             if (dataLen < 0) { return null; }
 
             var ret = new PhysPreset();
@@ -50,10 +45,8 @@ namespace GameX.IW.Zone
 
         #region RawfileData
 
-        public static void writeRawfile(ZoneInfo info, ZStream buf, Rawfile* data)
-        {
-            fixed (byte* _ = buf.at)
-            {
+        public static void writeRawfile(ZoneInfo info, ZStream buf, Rawfile* data) {
+            fixed (byte* _ = buf.at) {
                 var dest = (Rawfile*)_;
                 buf.write((byte*)data, sizeof(Rawfile), 1);
                 buf.pushStream(ZSTREAM.VIRTUAL);
@@ -64,8 +57,7 @@ namespace GameX.IW.Zone
                 buf.write(data->name, strlen(data->name) + 1, 1);
                 dest->name = (char*)-1;
 
-                if (data->compressedData != null)
-                {
+                if (data->compressedData != null) {
                     //buf->align(ALIGN_TO_0);
                     buf.write((byte*)data->compressedData, writeLen, 1);
                     dest->compressedData = (char*)-1;
@@ -75,8 +67,7 @@ namespace GameX.IW.Zone
             }
         }
 
-        public static object addRawfile(ZoneInfo info, char* name, char* data, int dataLen)
-        {
+        public static object addRawfile(ZoneInfo info, char* name, char* data, int dataLen) {
             if (dataLen < 0) return null; // no fixups needed here
 
             //z_stream strm;

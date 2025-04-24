@@ -1,25 +1,21 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace GameX.IW.Zone
-{
+namespace GameX.IW.Zone {
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct Bounds
-    {
+    public unsafe struct Bounds {
         public vec3 midPoint;
         public vec3 halfSize;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct TriggerModel
-    {
+    public unsafe struct TriggerModel {
         public int contents;
         public ushort hullCount;
         public ushort firstHull;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct TriggerHull
-    {
+    public unsafe struct TriggerHull {
         public Bounds bounds;
         public int contents;
         public ushort slabCount;
@@ -27,16 +23,14 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct TriggerSlab
-    {
+    public unsafe struct TriggerSlab {
         public vec3 dir;
         public float midPoint;
         public float halfSize;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct MapTriggers
-    {
+    public unsafe struct MapTriggers {
         public int modelCount;
         public TriggerModel* models; // sizeof 8
         public int hullCount;
@@ -46,16 +40,14 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct Stage
-    {
+    public unsafe struct Stage {
         public char* stageName;
         public fixed float offset[3];
         public int flags;
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public unsafe struct MapEnts
-    {
+    public unsafe struct MapEnts {
         public char* name;
         public char* entityString;
         public int numEntityChars;
@@ -66,8 +58,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    public unsafe partial struct BrushWrapper
-    {
+    public unsafe partial struct BrushWrapper {
         public fixed float mins[3];
         public fixed float maxs[3];
         public cBrush brush;
@@ -76,8 +67,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe partial struct PhysGeomInfo
-    {
+    public unsafe partial struct PhysGeomInfo {
         public BrushWrapper* brush;
         public int type;
         public fixed float orientation[3 * 3];
@@ -86,8 +76,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe partial struct PhysGeomList
-    {
+    public unsafe partial struct PhysGeomList {
         public char* name;
         public uint count;
         public PhysGeomInfo* geoms;
@@ -96,8 +85,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct ComPrimaryLight
-    {
+    public unsafe struct ComPrimaryLight {
         public char type;
         public char canUseShadowMap;
         public char exponent;
@@ -115,8 +103,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct ComWorld
-    {
+    public unsafe struct ComWorld {
         public char* name;
         public int isInUse;
         public int lightCount;
@@ -124,8 +111,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct GameMap_Data
-    {
+    public unsafe struct GameMap_Data {
         public void* unk1;
         public int unkCount1;
         public int unkCount2;
@@ -134,16 +120,14 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct GameMap_SP
-    {
+    public unsafe struct GameMap_SP {
         public char* name;
         public fixed char pad[48];
         public GameMap_Data* data;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct GameMap_MP
-    {
+    public unsafe struct GameMap_MP {
         public char* name;
         public GameMap_Data* data;
     }

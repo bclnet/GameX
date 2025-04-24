@@ -1,38 +1,29 @@
 ﻿using static GameX.IW.Zone.Asset;
 
-namespace GameX.IW.Zone
-{
-    public unsafe partial struct XAnim
-    {
-        public static void writeXAnimDeltaParts(ZoneInfo info, ZStream buf, XAnim* parts)
-        {
-            fixed (byte* _ = buf.at)
-            {
+namespace GameX.IW.Zone {
+    public unsafe partial struct XAnim {
+        public static void writeXAnimDeltaParts(ZoneInfo info, ZStream buf, XAnim* parts) {
+            fixed (byte* _ = buf.at) {
                 XAnimDeltaPart* data = parts->delta;
                 XAnimDeltaPart* dest = (XAnimDeltaPart*)_;
                 buf.write((byte*)data, sizeof(XAnimDeltaPart), 1);
 
-                if (data->trans != null)
-                {
+                if (data->trans != null) {
                     buf.align(ZStream.ALIGN_TO_4);
                     buf.write((byte*)data->trans, 4, 1); // not full struct
-                    if (data->trans->size != 0)
-                    {
+                    if (data->trans->size != 0) {
                         buf.write((byte*)&data->trans->u, 0x1C, 1); // not full struct
                         if (parts->framecount > 0x100)
                             buf.write((byte*)&data->trans->u.frames.indices, sizeof(short), data->trans->size + 1);
                         else
                             buf.write((byte*)&data->trans->u.frames.indices, sizeof(char), data->trans->size + 1);
 
-                        if (data->trans->u.frames.frames._1 != null)
-                        {
-                            if (data->trans->smallTrans != 0)
-                            {
+                        if (data->trans->u.frames.frames._1 != null) {
+                            if (data->trans->smallTrans != 0) {
                                 buf.align(ZStream.ALIGN_TO_1);
                                 buf.write((byte*)data->trans->u.frames.frames._1, sizeof(char) * 3, data->trans->size + 1);
                             }
-                            else
-                            {
+                            else {
                                 buf.align(ZStream.ALIGN_TO_4);
                                 buf.write((byte*)data->trans->u.frames.frames._2, sizeof(short) * 3, data->trans->size + 1);
                             }
@@ -44,20 +35,17 @@ namespace GameX.IW.Zone
                     dest->trans = (XAnimPartTrans*)-1;
                 }
 
-                if (data->quat2 != null)
-                {
+                if (data->quat2 != null) {
                     buf.align(ZStream.ALIGN_TO_4);
                     buf.write((byte*)data->quat2, 4, 1); // not full struct
-                    if (data->quat2->size != 0)
-                    {
+                    if (data->quat2->size != 0) {
                         buf.write((byte*)&data->quat2->u, 0x4, 1); // not full struct
                         if (parts->framecount > 0x100)
                             buf.write((byte*)&data->quat2->u.frames.indices, sizeof(short), data->quat2->size + 1);
                         else
                             buf.write((byte*)&data->quat2->u.frames.indices, sizeof(char), data->quat2->size + 1);
 
-                        if (data->quat2->u.frames.frames != null)
-                        {
+                        if (data->quat2->u.frames.frames != null) {
                             buf.align(ZStream.ALIGN_TO_4);
                             buf.write((byte*)data->quat2->u.frames.frames, sizeof(short) * 2, data->quat2->size + 1);
                             //dest->quat2->u.frames.frames = (short*)-1;
@@ -68,20 +56,17 @@ namespace GameX.IW.Zone
                     dest->quat2 = (XAnimDeltaPartQuat2*)-1;
                 }
 
-                if (data->quat != null)
-                {
+                if (data->quat != null) {
                     buf.align(ZStream.ALIGN_TO_4);
                     buf.write((byte*)data->quat, 4, 1);
-                    if (data->quat->size != 0)
-                    {
+                    if (data->quat->size != 0) {
                         buf.write((byte*)&data->quat->u, 0x4, 1); // not full struct
                         if (parts->framecount > 0x100)
                             buf.write((byte*)&data->quat->u.frames.indices, sizeof(short), data->quat->size + 1);
                         else
                             buf.write((byte*)&data->quat->u.frames.indices, sizeof(char), data->quat->size + 1);
 
-                        if (data->quat->u.frames.frames != null)
-                        {
+                        if (data->quat->u.frames.frames != null) {
                             buf.align(ZStream.ALIGN_TO_4);
                             buf.write((byte*)data->quat->u.frames.frames, sizeof(short) * 4, data->quat->size + 1);
                             //dest->quat->u.frames.frames = (short*)-1;
@@ -94,10 +79,8 @@ namespace GameX.IW.Zone
             }
         }
 
-        public static void writeXAnim(ZoneInfo info, ZStream buf, XAnim* data)
-        {
-            fixed (byte* _ = buf.at)
-            {
+        public static void writeXAnim(ZoneInfo info, ZStream buf, XAnim* data) {
+            fixed (byte* _ = buf.at) {
                 //: WRITE_ASSET(data, XAnim);
                 var dest = (XAnim*)_;
                 buf.write((byte*)data, sizeof(XAnim), 1);
@@ -107,76 +90,64 @@ namespace GameX.IW.Zone
                 dest->name = (char*)-1;
 
                 //: WRITE_FIELD_ALIGNED(data, tagnames, short, boneCount[PART_TYPE_ALL], ALIGN_TO_2);
-                if (data->tagnames != null)
-                {
+                if (data->tagnames != null) {
                     buf.align(ZStream.ALIGN_TO_2);
                     buf.write((byte*)data->tagnames, sizeof(short), data->boneCount[(int)XAnimPartType.PART_TYPE_ALL]);
                     dest->tagnames = (short*)-1;
                 }
                 //: WRITE_FIELD_ALIGNED(data, notetracks, XAnimNotifyInfo, notetrackCount, ALIGN_TO_4);
-                if (data->notetracks != null)
-                {
+                if (data->notetracks != null) {
                     buf.align(ZStream.ALIGN_TO_4);
                     buf.write((byte*)data->notetracks, sizeof(XAnimNotifyInfo), data->notetrackCount);
                     dest->notetracks = (XAnimNotifyInfo*)-1;
                 }
-                if (data->delta != null)
-                {
+                if (data->delta != null) {
                     buf.align(ZStream.ALIGN_TO_4);
                     writeXAnimDeltaParts(info, buf, data);
                     dest->delta = (XAnimDeltaPart*)-1;
                 }
                 //: WRITE_FIELD_ALIGNED(data, dataByte, char, dataByteCount, ALIGN_TO_1);
-                if (data->dataByte != null)
-                {
+                if (data->dataByte != null) {
                     buf.align(ZStream.ALIGN_TO_1);
                     buf.write((byte*)data->dataByte, sizeof(char), data->dataByteCount);
                     dest->dataByte = (char*)-1;
                 }
                 //: WRITE_FIELD_ALIGNED(data, dataShort, short, dataShortCount, ALIGN_TO_2);
-                if (data->dataShort != null)
-                {
+                if (data->dataShort != null) {
                     buf.align(ZStream.ALIGN_TO_2);
                     buf.write((byte*)data->dataShort, sizeof(short), data->dataShortCount);
                     dest->dataShort = (short*)-1;
                 }
                 //: WRITE_FIELD_ALIGNED(data, dataInt, int, dataIntCount, ALIGN_TO_4);
-                if (data->dataInt != null)
-                {
+                if (data->dataInt != null) {
                     buf.align(ZStream.ALIGN_TO_4);
                     buf.write((byte*)data->dataInt, sizeof(int), data->dataIntCount);
                     dest->dataInt = (int*)-1;
                 }
                 //: WRITE_FIELD_ALIGNED(data, randomDataShort, short, randomDataShortCount, ALIGN_TO_2);
-                if (data->randomDataShort != null)
-                {
+                if (data->randomDataShort != null) {
                     buf.align(ZStream.ALIGN_TO_2);
                     buf.write((byte*)data->randomDataShort, sizeof(short), data->randomDataShortCount);
                     dest->randomDataShort = (short*)-1;
                 }
                 //: WRITE_FIELD_ALIGNED(data, randomDataByte, char, randomDataByteCount, ALIGN_TO_1);
-                if (data->randomDataByte != null)
-                {
+                if (data->randomDataByte != null) {
                     buf.align(ZStream.ALIGN_TO_1);
                     buf.write((byte*)data->randomDataByte, sizeof(char), data->randomDataByteCount);
                     dest->randomDataByte = (char*)-1;
                 }
                 //: WRITE_FIELD_ALIGNED(data, randomDataInt, int, randomDataIntCount, ALIGN_TO_4);
-                if (data->randomDataInt != null)
-                {
+                if (data->randomDataInt != null) {
                     buf.align(ZStream.ALIGN_TO_4);
                     buf.write((byte*)data->randomDataInt, sizeof(int), data->randomDataIntCount);
                     dest->randomDataInt = (int*)-1;
                 }
-                if (data->indices.data != null)
-                {
-                    if (data->framecount > 255)
-                    {
+                if (data->indices.data != null) {
+                    if (data->framecount > 255) {
                         buf.align(ZStream.ALIGN_TO_2);
                         buf.write((byte*)data->indices.data, data->indexcount * 2, 1);
                     }
-                    else
-                    {
+                    else {
                         buf.align(ZStream.ALIGN_TO_1);
                         buf.write((byte*)data->indices.data, data->indexcount, 1);
                     }
@@ -187,8 +158,7 @@ namespace GameX.IW.Zone
             }
         }
 
-        public static object addXAnim(ZoneInfo info, string name, char* data, int dataLen)
-        {
+        public static object addXAnim(ZoneInfo info, string name, char* data, int dataLen) {
             //    if (dataLen < 0)
             //    {
             //        XAnim* a = (XAnim*)data;

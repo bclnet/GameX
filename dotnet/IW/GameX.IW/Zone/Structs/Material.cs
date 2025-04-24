@@ -1,9 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace GameX.IW.Zone
-{
-    public enum IWI_COMPRESSION
-    {
+namespace GameX.IW.Zone {
+    public enum IWI_COMPRESSION {
         IWI_INVALID = 0x0,
         IWI_ARGB = 0x1,
         IWI_RGB8 = 0x2,
@@ -12,16 +10,14 @@ namespace GameX.IW.Zone
         IWI_DXT5 = 0xD,
     }
 
-    public enum MaterialMapHashes : uint
-    {
+    public enum MaterialMapHashes : uint {
         HASH_COLORMAP = 0xa0ab1041,
         HASH_DETAILMAP = 0xeb529b4d,
         HASH_SPECULARMAP = 0x34ecccb3,
         HASH_NORMALMAP = 0x59d30d0f
     }
 
-    public enum MaterialSemantic
-    {
+    public enum MaterialSemantic {
         SEMANTIC_2D = 0x0,
         SEMANTIC_FUNCTION = 0x1,
         SEMANTIC_COLOR_MAP = 0x2,
@@ -31,8 +27,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct _IWI
-    {
+    public unsafe struct _IWI {
         public fixed char magic[3]; //IWi
         public char version; // 8
         public int flags;
@@ -58,8 +53,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct GfxImage
-    {
+    public unsafe struct GfxImage {
         public GfxImageLoadDef* /*Direct3DTexture9**/ texture;
         public char mapType; // 5 is cube, 4 is 3d, 3 is 2d
         public char semantic;
@@ -77,8 +71,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct Water
-    {
+    public unsafe struct Water {
         public float floatTime;
         public float* H0X;     // Count = M * N
         public float* H0Y;     // Count = M * N
@@ -103,8 +96,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct MaterialTextureDef
-    {
+    public unsafe struct MaterialTextureDef {
         public uint nameHash;
         public char nameStart;
         public char nameEnd;
@@ -114,8 +106,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct ShaderArgumentDef
-    {
+    public unsafe struct ShaderArgumentDef {
         public short type;
         public short dest;
         public short paramID;
@@ -123,8 +114,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct MaterialPass
-    {
+    public unsafe struct MaterialPass {
         public VertexDecl* vertexDecl;
         public VertexShader* vertexShader;
         public PixelShader* pixelShader;
@@ -136,8 +126,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct MaterialTechnique
-    {
+    public unsafe struct MaterialTechnique {
         public char* name;
         public short pad2;
         public short numPasses;
@@ -145,8 +134,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct MaterialTechniqueSet
-    {
+    public unsafe struct MaterialTechniqueSet {
         public char* name;
         public fixed char pad[4];
         public MaterialTechniqueSet* remappedTechniques;
@@ -163,8 +151,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct Material_old
-    {
+    public unsafe struct Material_old {
         public char* name;
         public char gameFlags;
         public char sortKey;
@@ -188,16 +175,14 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct MaterialConstantDef
-    {
+    public unsafe struct MaterialConstantDef {
         public int nameHash;
         public fixed char name[12];
         public vec4 literal;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe partial struct Material
-    {
+    public unsafe partial struct Material {
         public char* name;
         public char gameFlags;
         public char sortKey;

@@ -6,24 +6,19 @@ using static GameX.Epic.Formats.Core.UPackage;
 
 namespace GameX.Epic.Formats.Core;
 
-partial class FPackageFileSummary
-{
+partial class FPackageFileSummary {
     // Engine-specific serializers
-    void Serialize3(BinaryReader r)
-    {
+    void Serialize3(BinaryReader r) {
         if (Ar.Game == Batman4) { Ar.ArLicenseeVer &= 0x7FFF; LicenseeVersion &= 0x7FFF; } // higher bit is used for something else, and it's set to 1
-        else if (Ar.Game == R6Vegas2)
-        {
+        else if (Ar.Game == R6Vegas2) {
             if (Ar.ArLicenseeVer >= 48) r.Skip(sizeof(int));
             if (Ar.ArLicenseeVer >= 49) r.Skip(sizeof(int));
         }
-        else if (Ar.Game == Huxley && Ar.ArLicenseeVer >= 8)
-        {
+        else if (Ar.Game == Huxley && Ar.ArLicenseeVer >= 8) {
             r.Skip(sizeof(int)); // 0xFEFEFEFE
             if (Ar.ArLicenseeVer >= 17) r.Skip(sizeof(int)); // unknown used field
         }
-        else if (Ar.Game == Transformers)
-        {
+        else if (Ar.Game == Transformers) {
             if (Ar.ArLicenseeVer >= 181) r.Skip(sizeof(int) * 4);
             if (Ar.ArLicenseeVer >= 55) r.Skip(sizeof(int)); // always 0x4BF1EB6B? (not true for later game versions)
         }
@@ -51,8 +46,7 @@ partial class FPackageFileSummary
         if ((((Ar.Game == MassEffect3 || Ar.Game == MassEffectLE) && Ar.ArLicenseeVer >= 194)) && (PackageFlags & PKG_Cooked) != 0) r.Skip(sizeof(int)); // ME3 or ME3LE
         else if (Ar.Game == Hawken && Ar.ArLicenseeVer >= 2) r.Skip(sizeof(int));
         else if (Ar.Game == Gigantic && Ar.ArLicenseeVer >= 2) r.Skip(sizeof(int));
-        else if (Ar.Game == MK && Ar.ArVer >= 677)
-        {
+        else if (Ar.Game == MK && Ar.ArVer >= 677) {
             // MK X, no explicit version
             NameCount = r.ReadUInt32();
             var NameOffset64 = r.ReadUInt64();
@@ -84,8 +78,7 @@ partial class FPackageFileSummary
         ExportCount = r.ReadUInt32();
         ExportOffset = r.ReadUInt32();
 
-        if (Ar.Game == APB)
-        {
+        if (Ar.Game == APB) {
             if (Ar.ArLicenseeVer >= 29) r.Skip(sizeof(int));
             if (Ar.ArLicenseeVer >= 28) r.Skip(sizeof(float) * 5);
         }
@@ -93,15 +86,13 @@ partial class FPackageFileSummary
         ImportCount = r.ReadUInt32();
         ImportOffset = r.ReadUInt32();
 
-        if (Ar.Game == MK)
-        {
+        if (Ar.Game == MK) {
             if (Ar.ArVer >= 524) r.Skip(sizeof(int));       // Injustice
             if (midwayVer >= 16) r.Skip(sizeof(int));
             if (Ar.ArVer >= 391) r.Skip(sizeof(int));
             if (Ar.ArVer >= 482) r.Skip(sizeof(int) * 3);       // Injustice
             if (Ar.ArVer >= 484) r.Skip(sizeof(int));        // Injustice
-            if (Ar.ArVer >= 472)
-            {
+            if (Ar.ArVer >= 472) {
                 // Mortal Kombat, Injustice:
                 // - no DependsOffset
                 // - no generations (since version 446)
@@ -139,8 +130,7 @@ partial class FPackageFileSummary
         if (Ar.ArVer >= 277) CookerVersion = r.ReadInt32();
 
         // ... MassEffect has some additional structure here ...
-        if (Ar.Game >= MassEffect && Ar.Game <= MassEffectLE)
-        {
+        if (Ar.Game >= MassEffect && Ar.Game <= MassEffectLE) {
             if (Ar.ArLicenseeVer >= 16 && Ar.ArLicenseeVer < 136) r.Skip(sizeof(int));                 // random value, ME1&2
             if (Ar.ArLicenseeVer >= 32 && Ar.ArLicenseeVer < 136) r.Skip(sizeof(int));                 // unknown, ME1&2
             if (Ar.ArLicenseeVer >= 35 && Ar.ArLicenseeVer < 113)   // ME1
@@ -152,8 +142,7 @@ partial class FPackageFileSummary
             if (Ar.ArLicenseeVer >= 37) r.Skip(sizeof(int) * 2);   // 2 ints: 1, 0
             if (Ar.ArLicenseeVer >= 39 && Ar.ArLicenseeVer < 136) r.Skip(sizeof(int) * 2);   // 2 ints: -1, -1 (ME1&2)
         }
-        if (Ar.ArVer >= 334)
-        {
+        if (Ar.ArVer >= 334) {
             CompressionFlags = (COMPRESS)r.ReadInt32();
             CompressedChunks = r.ReadArray(Ar, r => new FCompressedChunk(r, Ar));
         }
@@ -164,10 +153,8 @@ partial class FPackageFileSummary
     }
 }
 
-partial class FObjectExport
-{
-    void Serialize3(BinaryReader r, UPackage Ar)
-    {
+partial class FObjectExport {
+    void Serialize3(BinaryReader r, UPackage Ar) {
 #if USE_COMPACT_PACKAGE_STRUCTS
         // locally declare FObjectImport data which are stripped
         int SuperIndex;
@@ -180,8 +167,7 @@ partial class FObjectExport
 #endif
         var AA3Obfuscator = 0;
         if (Ar.Game == AA3) AA3Obfuscator = r.ReadInt32();
-        else if (Ar.Game == Wheelman)
-        {
+        else if (Ar.Game == Wheelman) {
             // Wheelman has special code for quick serialization of FObjectExport struc
             // using a single Serialize(&S, 0x64) call
             // Ar.MidwayVer >= 22; when < 22 => standard version w/o ObjectFlags
@@ -222,68 +208,57 @@ partial class FObjectExport
         SerialSize = r.ReadInt32();
         if (SerialSize != 0 || Ar.ArVer >= 249) SerialOffset = r.ReadInt32();
 
-        if (Ar.Game == GoWU)
-        {
+        if (Ar.Game == GoWU) {
             var unk = r.ReadInt32();
             if (unk != 0) r.Seek(unk * 12);
         }
         else if (Ar.Game == Huxley && Ar.ArLicenseeVer >= 22) r.Skip(sizeof(int));
         else if (Ar.Game == AlphaProtocol && Ar.ArLicenseeVer >= 53) goto ue3_export_flags; // no ComponentMap
         else if (Ar.Game == Transformers && Ar.ArLicenseeVer >= 37) goto ue3_export_flags;  // no ComponentMap
-        else if (Ar.Game == MK)
-        {
-            if (Ar.ArVer >= 677)
-            {
+        else if (Ar.Game == MK) {
+            if (Ar.ArVer >= 677) {
                 // MK X has 64-bit SerialOffset, skip HIDWORD
                 var SerialOffsetUpper = r.ReadInt32();
                 Debug.Assert(SerialOffsetUpper == 0);
             }
-            if (Ar.ArVer >= 573)
-            {
+            if (Ar.ArVer >= 573) {
                 var tmpComponentMap = r.ReadMap(Ar, r => (new FName(r, Ar), r.ReadInt32()));
                 goto ue3_export_flags; // Injustice, version unknown
             }
         }
-        else if (Ar.Game == RocketLeague && Ar.ArLicenseeVer >= 22)
-        {
+        else if (Ar.Game == RocketLeague && Ar.ArLicenseeVer >= 22) {
             // Rocket League has 64-bit SerialOffset in LicenseeVer >= 22, skip HIDWORD
             var SerialOffsetUpper = r.ReadInt32();
             Debug.Assert(SerialOffsetUpper == 0);
         }
-        if (Ar.ArVer < 543)
-        {
+        if (Ar.ArVer < 543) {
             var tmpComponentMap = r.ReadMap(Ar, r => (new FName(r, Ar), r.ReadInt32()));
         }
     ue3_export_flags:
         if (Ar.ArVer >= 247) ExportFlags = r.ReadUInt32();
-        if (Ar.Game == Transformers && Ar.ArLicenseeVer >= 116)
-        {
+        if (Ar.Game == Transformers && Ar.ArLicenseeVer >= 116) {
             // version prior 116
             var someFlag = r.ReadByte();
             if (someFlag == 0) return;
             // else - continue serialization of remaining fields
         }
-        else if (Ar.Game == MK && Ar.ArVer >= 446)
-        {
+        else if (Ar.Game == MK && Ar.ArVer >= 446) {
             // removed generations (NetObjectCount)
             Guid = r.ReadGuid();
             return;
         }
-        else if (Ar.Game == Bioshock3)
-        {
+        else if (Ar.Game == Bioshock3) {
             var flag = r.ReadInt32();
             if (flag == 0) return;              // stripped some fields
         }
-        if (Ar.ArVer >= 322)
-        {
+        if (Ar.ArVer >= 322) {
             NetObjectCount = r.ReadArray(Ar, r => r.ReadInt32());
             Guid = r.ReadGuid();
         }
         if (Ar.Game == Undertow && Ar.ArVer >= 431) U3unk6C = r.ReadInt32(); // partially upgraded?
         else if (Ar.Game == ArmyOf2) return;
         if (Ar.ArVer >= 475) U3unk6C = r.ReadInt32();
-        if (Ar.Game == AA3)
-        {
+        if (Ar.Game == AA3) {
             // deobfuscate data
             ClassIndex ^= AA3Obfuscator;
             SuperIndex ^= AA3Obfuscator;
@@ -296,13 +271,10 @@ partial class FObjectExport
     }
 }
 
-partial class UPackage
-{
-    unsafe void LoadNames3(BinaryReader r, UPackage Ar)
-    {
+partial class UPackage {
+    unsafe void LoadNames3(BinaryReader r, UPackage Ar) {
         string nameStr;
-        for (var i = 0; i < Summary.NameCount; i++)
-        {
+        for (var i = 0; i < Summary.NameCount; i++) {
             if (Game == DCUniverse)        // no version checking
             {
                 var buf = stackalloc char[MAX_FNAME_LEN];
@@ -313,8 +285,7 @@ partial class UPackage
                 Names[i] = new string(buf, 0, len);
                 goto qword_flags;
             }
-            else if (Game == R6Vegas2 && ArLicenseeVer >= 71)
-            {
+            else if (Game == R6Vegas2 && ArLicenseeVer >= 71) {
                 var buf = stackalloc char[256];
                 var len = r.ReadByte();
                 r.BaseStream.Read(new Span<byte>(buf, len));
@@ -335,8 +306,7 @@ partial class UPackage
             VerifyName(ref nameStr, i);
             Names[i] = nameStr;
 
-            if (Game == AVA)
-            {
+            if (Game == AVA) {
                 // Strange code - package contains some bytes:
                 // V(0) = len ^ 0x3E
                 // V(i) = V(i-1) + 0x48 ^ 0xE1
@@ -346,14 +316,12 @@ partial class UPackage
                 r.Seek(skip);
             }
             else if (Game == Wheelman) goto dword_flags;
-            else if (Game >= MassEffect && Game <= MassEffectLE)
-            {
+            else if (Game >= MassEffect && Game <= MassEffectLE) {
                 if (ArLicenseeVer >= 142) continue;            // ME3, no flags
                 if (ArLicenseeVer >= 102) goto dword_flags;     // ME2
             }
             else if (Game == MK && ArVer >= 677) continue;      // no flags for MK X
-            else if (Game == MetroConflict)
-            {
+            else if (Game == MetroConflict) {
                 var TrashLen = ArLicenseeVer < 3 ? 0
                     : ArLicenseeVer < 16 ? nameStr.Length ^ 7
                     : nameStr.Length ^ 6;

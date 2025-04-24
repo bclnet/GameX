@@ -1,9 +1,6 @@
-﻿namespace GameX.IW.Formats
-{
-    public unsafe static partial class FastFile
-    {
-        public enum IW3XAssetType : int
-        {
+﻿namespace GameX.IW.Formats {
+    public unsafe static partial class FastFile {
+        public enum IW3XAssetType : int {
             xmodelpieces,
             physpreset,
             xanim,
@@ -46,8 +43,7 @@
             max,
         }
 
-        public enum IW4XAssetType : int
-        {
+        public enum IW4XAssetType : int {
             physpreset,
             phys_collmap,
             xanim,
@@ -100,8 +96,7 @@
             max,
         }
 
-        public enum IW5XAssetType : int
-        {
+        public enum IW5XAssetType : int {
             physpreset,
             phys_collmap,
             xanim,
@@ -158,8 +153,7 @@
             col_map_sp = col_map_mp,
         }
 
-        public enum Oth_AssetType : int
-        {
+        public enum Oth_AssetType : int {
             PhysPreset = 0,
             PhysColMap = 1,
             XAnim = 2,

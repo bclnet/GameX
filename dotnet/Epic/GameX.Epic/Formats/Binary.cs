@@ -11,18 +11,15 @@ namespace GameX.Epic.Formats;
 /// PakBinaryPck
 /// </summary>
 /// <seealso cref="GameX.Formats.PakBinary" />
-public unsafe class Binary_Pck : PakBinary<Binary_Pck>
-{
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+public unsafe class Binary_Pck : PakBinary<Binary_Pck> {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         List<FileSource> files;
         source.Files = files = new List<FileSource>();
         var header = new Core.UPackage(r, source.PakPath);
         if (header.Exports == null) return Task.CompletedTask;
         var R = header.R;
         foreach (var item in header.Exports)
-            files.Add(new FileSource
-            {
+            files.Add(new FileSource {
                 Path = $"{header.GetClassNameFor(item)}/{item.ObjectName}",
                 Offset = item.SerialOffset,
                 FileSize = item.SerialSize,
@@ -31,8 +28,7 @@ public unsafe class Binary_Pck : PakBinary<Binary_Pck>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
-    {
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         var R = (BinaryReader)file.Tag;
         R.Seek(file.Offset);
         return Task.FromResult((Stream)new MemoryStream(R.ReadBytes((int)file.FileSize)));

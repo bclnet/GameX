@@ -1,5 +1,4 @@
-﻿using GameX.Formats;
-using GameX.Formats.Unknown;
+﻿using GameX.Formats.Unknown;
 using GameX.IW.Formats;
 using GameX.IW.Transforms;
 using GameX.Unknown;
@@ -7,22 +6,19 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace GameX.IW
-{
+namespace GameX.IW {
     #region IWPakFile
 
     /// <summary>
     /// IWPakFile
     /// </summary>
     /// <seealso cref="GameX.Formats.BinaryPakFile" />
-    public class IWPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel>
-    {
+    public class IWPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> {
         /// <summary>
         /// Initializes a new instance of the <see cref="IWPakFile" /> class.
         /// </summary>
         /// <param name="state">The state.</param>
-        public IWPakFile(PakState state) : base(state, Binary_IW.Current)
-        {
+        public IWPakFile(PakState state) : base(state, Binary_IW.Current) {
             ObjectFactoryFunc = ObjectFactory;
             UseReader = false;
         }
@@ -30,8 +26,7 @@ namespace GameX.IW
         #region Factories
 
         static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
-            => Path.GetExtension(source.Path).ToLowerInvariant() switch
-            {
+            => Path.GetExtension(source.Path).ToLowerInvariant() switch {
                 //".roq" => (0, VIDEO.Factory),
                 //".wav" => (0, BinaryWav.Factory),
                 //".d3dbsp" => (0, BinaryD3dbsp.Factory),

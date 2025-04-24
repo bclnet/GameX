@@ -14,14 +14,12 @@ namespace GameX.Monolith;
 /// MonolithPakFile
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class MonolithPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel>
-{
+public class MonolithPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="MonolithPakFile" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public MonolithPakFile(PakState state) : base(state, GetPakBinary(state.Game, state.Path))
-    {
+    public MonolithPakFile(PakState state) : base(state, GetPakBinary(state.Game, state.Path)) {
         ObjectFactoryFunc = ObjectFactory;
     }
 
@@ -33,8 +31,7 @@ public class MonolithPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileM
             : Binary_Zip.GetPakBinary(game);
 
     static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
-        => Path.GetExtension(source.Path).ToLowerInvariant() switch
-        {
+        => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             ".dds" => (0, Binary_Dds.Factory),
             _ => (0, null),
         };

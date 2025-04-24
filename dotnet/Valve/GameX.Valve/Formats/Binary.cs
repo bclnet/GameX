@@ -134,11 +134,9 @@ public unsafe class Binary_Bsp30 : PakBinary<Binary_Bsp30>
 #region Binary_Src
 //was:Resource/Resource
 
-public class Binary_Src : IDisposable, IHaveMetaInfo, IRedirected<ITexture>, IRedirected<IMaterial>, IRedirected<IMesh>, IRedirected<IModel>, IRedirected<IParticleSystem>
-{
+public class Binary_Src : IDisposable, IHaveMetaInfo, IRedirected<ITexture>, IRedirected<IMaterial>, IRedirected<IMesh>, IRedirected<IModel>, IRedirected<IParticleSystem> {
     internal const ushort KnownHeaderVersion = 12;
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s)
-    {
+    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) {
         if (r.BaseStream.Length < 6) return null;
         var input = r.Peek(z => z.ReadBytes(6));
         var magic = BitConverter.ToUInt32(input, 0);
@@ -164,8 +162,7 @@ public class Binary_Src : IDisposable, IHaveMetaInfo, IRedirected<ITexture>, IRe
     public Binary_Src() { }
     public Binary_Src(BinaryReader r) => Read(r);
 
-    public void Dispose()
-    {
+    public void Dispose() {
         Reader?.Dispose();
         Reader = null;
         GC.SuppressFinalize(this);
@@ -185,14 +182,12 @@ public class Binary_Src : IDisposable, IHaveMetaInfo, IRedirected<ITexture>, IRe
         var blockOffset = r.ReadUInt32();
         var blockCount = r.ReadUInt32();
         r.Skip(blockOffset - 8); // 8 is uint32 x2 we just read
-        for (var i = 0; i < blockCount; i++)
-        {
+        for (var i = 0; i < blockCount; i++) {
             var blockType = Encoding.UTF8.GetString(r.ReadBytes(4));
             var position = r.BaseStream.Position;
             var offset = (uint)position + r.ReadUInt32();
             var size = r.ReadUInt32();
-            var block = size >= 4 && blockType == "DATA" && !Block.IsHandledType(DataType) ? r.Peek(z =>
-            {
+            var block = size >= 4 && blockType == "DATA" && !Block.IsHandledType(DataType) ? r.Peek(z => {
                 var magic = z.ReadUInt32();
                 return magic == XKV3.MAGIC || magic == XKV3.MAGIC2 || magic == XKV3.MAGIC3
                     ? new XKV3()
@@ -203,26 +198,22 @@ public class Binary_Src : IDisposable, IHaveMetaInfo, IRedirected<ITexture>, IRe
             block.Size = size;
             if (blockType == "REDI" || blockType == "RED2" || blockType == "NTRO") block.Read(this, r);
             Blocks.Add(block);
-            switch (block)
-            {
+            switch (block) {
                 case REDI redi:
                     // Try to determine resource type by looking at first compiler indentifier
-                    if (DataType == ResourceType.Unknown && REDI.Structs.TryGetValue(REDI.REDIStruct.SpecialDependencies, out var specialBlock))
-                    {
+                    if (DataType == ResourceType.Unknown && REDI.Structs.TryGetValue(REDI.REDIStruct.SpecialDependencies, out var specialBlock)) {
                         var specialDeps = (R_SpecialDependencies)specialBlock;
                         if (specialDeps.List.Count > 0) DataType = Block.DetermineTypeByCompilerIdentifier(specialDeps.List[0]);
                     }
                     // Try to determine resource type by looking at the input dependency if there is only one
-                    if (DataType == ResourceType.Unknown && REDI.Structs.TryGetValue(REDI.REDIStruct.InputDependencies, out var inputBlock))
-                    {
+                    if (DataType == ResourceType.Unknown && REDI.Structs.TryGetValue(REDI.REDIStruct.InputDependencies, out var inputBlock)) {
                         var inputDeps = (R_InputDependencies)inputBlock;
                         if (inputDeps.List.Count == 1) DataType = Block.DetermineResourceTypeByFileExtension(Path.GetExtension(inputDeps.List[0].ContentRelativeFilename));
                     }
                     break;
                 case NTRO ntro:
                     if (DataType == ResourceType.Unknown && ntro.ReferencedStructs.Count > 0)
-                        switch (ntro.ReferencedStructs[0].Name)
-                        {
+                        switch (ntro.ReferencedStructs[0].Name) {
                             case "VSoundEventScript_t": DataType = ResourceType.SoundEventScript; break;
                             case "CWorldVisibility": DataType = ResourceType.WorldVisibility; break;
                         }
@@ -233,10 +224,8 @@ public class Binary_Src : IDisposable, IHaveMetaInfo, IRedirected<ITexture>, IRe
         foreach (var block in Blocks) if (!(block is REDI) && !(block is RED2) && !(block is NTRO)) block.Read(this, r);
 
         var fullFileSize = FullFileSize;
-        if (verifyFileSize && Reader.BaseStream.Length != fullFileSize)
-        {
-            if (DataType == ResourceType.Texture)
-            {
+        if (verifyFileSize && Reader.BaseStream.Length != fullFileSize) {
+            if (DataType == ResourceType.Texture) {
                 var data = (D_Texture)DATA;
                 // TODO: We do not currently have a way of calculating buffer size for these types, Texture.GenerateBitmap also just reads until end of the buffer
                 if (data.Format == VTexFormat.JPEG_DXT5 || data.Format == VTexFormat.JPEG_RGBA8888) return;
@@ -253,8 +242,7 @@ public class Binary_Src : IDisposable, IHaveMetaInfo, IRedirected<ITexture>, IRe
     IModel IRedirected<IModel>.Value => DATA as IModel;
     IParticleSystem IRedirected<IParticleSystem>.Value => DATA as IParticleSystem;
 
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
-    {
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
         var nodes = new List<MetaInfo> {
             new("BinaryPak", items: [
                 new($"FileSize: {FileSize}"),
@@ -263,13 +251,10 @@ public class Binary_Src : IDisposable, IHaveMetaInfo, IRedirected<ITexture>, IRe
                 new($"DataType: {DataType}"),
             ])
         };
-        switch (DataType)
-        {
-            case ResourceType.Texture:
-                {
+        switch (DataType) {
+            case ResourceType.Texture: {
                     var data = (D_Texture)DATA;
-                    try
-                    {
+                    try {
                         nodes.AddRange([
                             //new(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "PICTURE" }), //(tex.GenerateBitmap().ToBitmap(), tex.Width, tex.Height)
                             new(null, new MetaContent { Type = "Texture", Name = "Texture", Value = this, Dispose = this }),
@@ -280,14 +265,12 @@ public class Binary_Src : IDisposable, IHaveMetaInfo, IRedirected<ITexture>, IRe
                             ])
                         ]);
                     }
-                    catch (Exception e)
-                    {
+                    catch (Exception e) {
                         nodes.Add(new MetaInfo(null, new MetaContent { Type = "Text", Name = "Exception", Value = e.Message }));
                     }
                 }
                 break;
-            case ResourceType.Panorama:
-                {
+            case ResourceType.Panorama: {
                     var data = (D_Panorama)DATA;
                     nodes.AddRange([
                         new(null, new MetaContent { Type = "DataGrid", Name = "Panorama Names", Value = data.Names }),
@@ -301,8 +284,7 @@ public class Binary_Src : IDisposable, IHaveMetaInfo, IRedirected<ITexture>, IRe
             case ResourceType.PanoramaScript: break;
             case ResourceType.PanoramaStyle: break;
             case ResourceType.ParticleSystem: nodes.Add(new MetaInfo(null, new MetaContent { Type = "ParticleSystem", Name = "ParticleSystem", Value = this, Dispose = this })); break;
-            case ResourceType.Sound:
-                {
+            case ResourceType.Sound: {
                     var sound = (D_Sound)DATA;
                     var stream = sound.GetSoundStream();
                     nodes.Add(new(null, new MetaContent { Type = "AudioPlayer", Name = "Sound", Value = stream, Tag = $".{sound.SoundType}", Dispose = this }));
@@ -314,19 +296,16 @@ public class Binary_Src : IDisposable, IHaveMetaInfo, IRedirected<ITexture>, IRe
             case ResourceType.Mesh: nodes.Add(new(null, new MetaContent { Type = "Model", Name = "Mesh", Value = this, Dispose = this })); break;
             case ResourceType.Material: nodes.Add(new(null, new MetaContent { Type = "Material", Name = "Material", Value = this, Dispose = this })); break;
         }
-        foreach (var block in Blocks)
-        {
+        foreach (var block in Blocks) {
             if (block is RERL repl) { nodes.Add(new(null, new MetaContent { Type = "DataGrid", Name = "External Refs", Value = repl.RERLInfos })); continue; }
-            else if (block is NTRO ntro)
-            {
+            else if (block is NTRO ntro) {
                 if (ntro.ReferencedStructs.Count > 0) nodes.Add(new(null, new MetaContent { Type = "DataGrid", Name = "Introspection Manifest: Structs", Value = ntro.ReferencedStructs }));
                 if (ntro.ReferencedEnums.Count > 0) nodes.Add(new(null, new MetaContent { Type = "DataGrid", Name = "Introspection Manifest: Enums", Value = ntro.ReferencedEnums }));
             }
             var tab = new MetaContent { Type = "Text", Name = block.GetType().Name };
             nodes.Add(new(null, tab));
             if (block is DATA)
-                switch (DataType)
-                {
+                switch (DataType) {
                     case ResourceType.Sound: tab.Value = ((D_Sound)block).ToString(); break;
                     case ResourceType.ParticleSystem:
                     case ResourceType.Mesh:
@@ -369,18 +348,14 @@ public class Binary_Src : IDisposable, IHaveMetaInfo, IRedirected<ITexture>, IRe
     /// Resource files have a FileSize in the metadata, however certain file types such as sounds have streaming audio data come
     /// after the resource file, and the size is specified within the DATA block. This property attemps to return the correct size.
     /// </summary>
-    public uint FullFileSize
-    {
-        get
-        {
+    public uint FullFileSize {
+        get {
             var size = FileSize;
-            if (DataType == ResourceType.Sound)
-            {
+            if (DataType == ResourceType.Sound) {
                 var data = (D_Sound)DATA;
                 size += data.StreamingDataSize;
             }
-            else if (DataType == ResourceType.Texture)
-            {
+            else if (DataType == ResourceType.Texture) {
                 var data = (D_Texture)DATA;
                 size += (uint)data.CalculateTextureDataSize();
             }
@@ -393,8 +368,7 @@ public class Binary_Src : IDisposable, IHaveMetaInfo, IRedirected<ITexture>, IRe
 
 #region Binary_Mdl10
 
-public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo
-{
+public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Mdl10(r, f, (BinaryPakFile)s));
 
     #region Headers
@@ -408,8 +382,7 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo
     /// header flags
     /// </summary>
     [Flags]
-    public enum HeaderFlags : int
-    {
+    public enum HeaderFlags : int {
         ROCKET = 1,             // leave a trail
         GRENADE = 2,            // leave a trail
         GIB = 4,                // leave a trail
@@ -427,8 +400,7 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo
     /// lighting flags
     /// </summary>
     [Flags]
-    public enum LightFlags : int
-    {
+    public enum LightFlags : int {
         FLATSHADE = 0x0001,
         CHROME = 0x0002,
         FULLBRIGHT = 0x0004,
@@ -443,8 +415,7 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo
     /// motion flags
     /// </summary>
     [Flags]
-    public enum MotionFlags : int
-    {
+    public enum MotionFlags : int {
         X = 0x0001,
         Y = 0x0002,
         Z = 0x0004,
@@ -471,8 +442,7 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo
     /// sequence flags
     /// </summary>
     [Flags]
-    public enum SeqFlags : int
-    {
+    public enum SeqFlags : int {
         LOOPING = 0x0001
     }
 
@@ -480,8 +450,7 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo
     /// bone flags
     /// </summary>
     [Flags]
-    public enum BoneFlags : int
-    {
+    public enum BoneFlags : int {
         NORMALS = 0x0001,
         VERTICES = 0x0002,
         BBOX = 0x0004,
@@ -489,8 +458,7 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo
     }
 
     // sequence header
-    public struct M_SeqHeader
-    {
+    public struct M_SeqHeader {
         public static (string, int) Struct = ("<2i64si", sizeof(M_SeqHeader));
         public int Magic;
         public int Version;
@@ -499,8 +467,7 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo
     }
 
     // bones
-    public struct M_Bone
-    {
+    public struct M_Bone {
         public static (string, int) Struct = ("<32s8i12f", sizeof(M_Bone));
         public fixed byte Name[32]; // bone name for symbolic links
         public int Parent; // parent bone
@@ -510,15 +477,13 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo
         public fixed float Scale[CoordinateAxes]; // scale for delta DoF values
     }
 
-    public class BoneAxis(BoneController controller, float value, float scale)
-    {
+    public class BoneAxis(BoneController controller, float value, float scale) {
         public BoneController Controller = controller;
         public float Value = value;
         public float Scale = scale;
     }
 
-    public class Bone(M_Bone s, int id, BoneController[] controllers)
-    {
+    public class Bone(M_Bone s, int id, BoneController[] controllers) {
         public string Name = UnsafeX.FixedAString(s.Name, 32);
         public Bone Parent;
         public int ParentId = s.Parent;
@@ -532,15 +497,13 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo
             new BoneAxis(s.BoneController[5] != -1 ? controllers[s.BoneController[5]] : null, s.Value[5], s.Scale[5])];
         public int Id = id;
 
-        public static void Remap(Bone[] bones)
-        {
+        public static void Remap(Bone[] bones) {
             foreach (var bone in bones) if (bone.ParentId != -1) bone.Parent = bones[bone.ParentId];
         }
     }
 
     // bone controllers
-    public struct M_BoneController
-    {
+    public struct M_BoneController {
         public static (string, int) Struct = ("<2i2f2i", sizeof(M_BoneController));
         public int Bone;   // -1 == 0
         public int Type;   // X, Y, Z, XR, YR, ZR, M
@@ -549,8 +512,7 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo
         public int Index;  // 0-3 user set controller, 4 mouth
     }
 
-    public class BoneController(ref M_BoneController s, int id)
-    {
+    public class BoneController(ref M_BoneController s, int id) {
         public int Type = s.Type;
         public float Start = s.Start, End = s.End;
         public int Rest = s.Rest;
@@ -559,24 +521,21 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo
     }
 
     // intersection boxes
-    public struct M_BBox
-    {
+    public struct M_BBox {
         public static (string, int) Struct = ("<2i6f", sizeof(M_BBox));
         public int Bone;
         public int Group; // intersection group
         public Vector3 BBMin, BBMax; // bounding box
     }
 
-    public class BBox(ref M_BBox s, Bone[] bones)
-    {
+    public class BBox(ref M_BBox s, Bone[] bones) {
         public Bone Bone = bones[s.Bone];
         public int Group = s.Group;
         public Vector3 BBMin = s.BBMin, BBMax = s.BBMax;
     }
 
     // sequence groups
-    public struct M_SeqGroup
-    {
+    public struct M_SeqGroup {
         public static (string, int) Struct = ("<32s64s2i", sizeof(M_SeqGroup));
         public fixed byte Label[32]; // textual name
         public fixed byte Name[64]; // file name
@@ -584,16 +543,14 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo
         public int Unused2; // was "data" -  hack for group 0
     }
 
-    public class SeqGroup(M_SeqGroup s)
-    {
+    public class SeqGroup(M_SeqGroup s) {
         public string Label = UnsafeX.FixedAString(s.Label, 32);
         public string Name = UnsafeX.FixedAString(s.Name, 64);
         public int Offset = s.Unused2;
     }
 
     // sequence descriptions
-    public struct M_Seq
-    {
+    public struct M_Seq {
         public static (string, int) Struct = ("<32sf10i3f2i6f4i4f6i", sizeof(M_Seq));
         public fixed byte Label[32]; // sequence label
         public float Fps;           // frames per second
@@ -622,27 +579,23 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo
         public int NextSeq;         // auto advancing sequences
     }
 
-    public class SeqBlend(int type, float start, float end)
-    {
+    public class SeqBlend(int type, float start, float end) {
         public int Type = type;
         public float Start = start;
         public float End = end;
     }
 
-    public class SeqPivot(Vector3 origin, int start, int end)
-    {
+    public class SeqPivot(Vector3 origin, int start, int end) {
         public Vector3 Origin = origin;
         public int Start = start;
         public int End = end;
     }
 
-    public class SeqAnimation(M_AnimValue[][] axis)
-    {
+    public class SeqAnimation(M_AnimValue[][] axis) {
         public M_AnimValue[][] Axis = axis;
     }
 
-    public class Seq
-    {
+    public class Seq {
         public string Label;
         public float Fps;
         public int Flags;
@@ -663,8 +616,7 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo
         public int NodeFlags;
         public int NextSequence;
 
-        public Seq(BinaryReader r, M_Seq s, (BinaryReader r, M_SeqHeader h)[] sequences, int zeroGroupOffset, bool isXashModel, Bone[] bones)
-        {
+        public Seq(BinaryReader r, M_Seq s, (BinaryReader r, M_SeqHeader h)[] sequences, int zeroGroupOffset, bool isXashModel, Bone[] bones) {
             if (s.SeqGroup < 0 || (s.SeqGroup != 0 && (s.SeqGroup - 1) >= sequences.Length)) throw new Exception("Invalid seqgroup value");
             Label = UnsafeX.FixedAString(s.Label, 32);
             Fps = s.Fps;
@@ -688,27 +640,22 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo
             NextSequence = s.NextSeq;
         }
 
-        static SeqAnimation[][] GetAnimationBlends(BinaryReader r, M_Seq s, (BinaryReader r, M_SeqHeader h)[] sequences, int zeroGroupOffset, int numBones)
-        {
+        static SeqAnimation[][] GetAnimationBlends(BinaryReader r, M_Seq s, (BinaryReader r, M_SeqHeader h)[] sequences, int zeroGroupOffset, int numBones) {
             BinaryReader sr; int so;
             (sr, so) = s.SeqGroup == 0 ? (r, zeroGroupOffset + s.AnimIndex) : (sequences[s.SeqGroup - 1].r, s.AnimIndex);
             sr.Seek(so);
             var anim = sr.ReadS<M_Anim>();
             var blends = new SeqAnimation[s.NumBlends][];
-            for (var i = 0; i < s.NumBlends; i++)
-            {
+            for (var i = 0; i < s.NumBlends; i++) {
                 var animations = new SeqAnimation[numBones];
-                for (var b = 0; b < numBones; b++)
-                {
+                for (var b = 0; b < numBones; b++) {
                     var animation = new SeqAnimation(new M_AnimValue[CoordinateAxes][]);
                     for (var j = 0; j < CoordinateAxes; j++)
-                        if (anim.Offsets[j] != 0)
-                        {
+                        if (anim.Offsets[j] != 0) {
                             sr.Seek(so + anim.Offsets[j]);
                             var values = new List<M_AnimValue> { sr.ReadS<M_AnimValue>() };
                             if (s.NumFrames > 0)
-                                for (var f = 0; f < s.NumFrames;)
-                                {
+                                for (var f = 0; f < s.NumFrames;) {
                                     var v = values[^1];
                                     f += v.Total;
                                     values.AddRange(sr.ReadSArray<M_AnimValue>(1 + v.Valid));
@@ -724,8 +671,7 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo
     }
 
     // events
-    public struct M_Event
-    {
+    public struct M_Event {
         public static (string, int) Struct = ("<3i64s", sizeof(M_Event));
         public int Frame;
         public int Event;
@@ -734,16 +680,14 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo
     }
 
     // pivots
-    public struct M_Pivot
-    {
+    public struct M_Pivot {
         public static (string, int) Struct = ("<3f2i", sizeof(M_Pivot));
         public Vector3 Org;         // pivot point
         public int Start, End;
     }
 
     // attachments
-    public struct M_Attachment
-    {
+    public struct M_Attachment {
         public static (string, int) Struct = ("<32s2i12f", sizeof(M_Attachment));
         public fixed byte Name[32]; // Name of this attachment. Unused in GoldSource.
         public int Type;            // Type of this attachment. Unused in GoldSource;
@@ -752,8 +696,7 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo
         public Vector3 Vector0, Vector1, Vector2; // Directional vectors? Unused in GoldSource.
     }
 
-    public class Attachment(M_Attachment s, Bone[] bones)
-    {
+    public class Attachment(M_Attachment s, Bone[] bones) {
         public string Name = UnsafeX.FixedAString(s.Name, 32);
         public int Type = s.Type;
         public Bone Bone = bones[s.Bone];
@@ -762,35 +705,30 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo
     }
 
     // animations
-    public struct M_Anim
-    {
+    public struct M_Anim {
         public static (string, int) Struct = ("<6H", sizeof(M_Anim));
         public fixed ushort Offsets[CoordinateAxes];
     }
 
-    public struct M_AnimValue
-    {
+    public struct M_AnimValue {
         public static (string, int) Struct = ("<2B", sizeof(M_AnimValue));
         public byte Valid;
         public byte Total;
     }
 
     // body part index
-    public struct M_Bodypart
-    {
+    public struct M_Bodypart {
         public static (string, int) Struct = ("<64s3i", sizeof(M_Bodypart));
         public fixed byte Name[64];
         public X_LumpNO2 Models;
     }
 
-    public class Bodypart
-    {
+    public class Bodypart {
         public string Name;
         public int Base;
         public Model[] Models;
 
-        public Bodypart(BinaryReader r, M_Bodypart s, Bone[] bones)
-        {
+        public Bodypart(BinaryReader r, M_Bodypart s, Bone[] bones) {
             Name = UnsafeX.FixedAString(s.Name, 64);
             Base = s.Models.Offset;
             r.Seek(s.Models.Offset2); Models = r.ReadSArray<M_Model>(s.Models.Num).Select(x => new Model(r, x, bones)).ToArray();
@@ -798,8 +736,7 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo
     }
 
     // skin info
-    public struct M_Texture
-    {
+    public struct M_Texture {
         public static (string, int) Struct = ("<64s4i", sizeof(M_Texture));
         public fixed byte Name[64];
         public int Flags;
@@ -807,16 +744,14 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo
         public int Index;
     }
 
-    public class Texture
-    {
+    public class Texture {
         public string Name;
         public int Flags;
         public int Width, Height;
         public byte[] Pixels;
         public byte[] Palette;
 
-        public Texture(BinaryReader r, M_Texture s)
-        {
+        public Texture(BinaryReader r, M_Texture s) {
             Name = UnsafeX.FixedAString(s.Name, 64);
             Flags = s.Flags;
             Width = s.Width; Height = s.Height;
@@ -826,8 +761,7 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo
     }
 
     // studio models
-    public struct M_Model
-    {
+    public struct M_Model {
         public static (string, int) Struct = ("<64sif10i", sizeof(M_Model));
         public fixed byte Name[64];
         public int Type;
@@ -838,20 +772,17 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo
         public X_LumpNO Groups;     // deformation groups
     }
 
-    public class ModelVertex(Bone bone, Vector3 vertex)
-    {
+    public class ModelVertex(Bone bone, Vector3 vertex) {
         public Bone Bone = bone;
         public Vector3 Vertex = vertex;
-        public static ModelVertex[] Create(BinaryReader r, X_LumpNO2 s, Bone[] bones)
-        {
+        public static ModelVertex[] Create(BinaryReader r, X_LumpNO2 s, Bone[] bones) {
             r.Seek(s.Offset); var boneIds = r.ReadPArray<byte>("B", s.Num);
             r.Seek(s.Offset2); var verts = r.ReadPArray<Vector3>("3f", s.Num);
             return Enumerable.Range(0, s.Num).Select(i => new ModelVertex(bones[boneIds[i]], verts[i])).ToArray();
         }
     }
 
-    public class Model
-    {
+    public class Model {
         public string Name;
         public int Type;
         public float BoundingRadius;
@@ -859,8 +790,7 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo
         public ModelVertex[] Vertices;
         public ModelVertex[] Normals;
 
-        public Model(BinaryReader r, M_Model s, Bone[] bones)
-        {
+        public Model(BinaryReader r, M_Model s, Bone[] bones) {
             Name = UnsafeX.FixedAString(s.Name, 64);
             Type = s.Type;
             BoundingRadius = s.BoundingRadius;
@@ -871,23 +801,20 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo
     }
 
     // meshes
-    public struct M_Mesh
-    {
+    public struct M_Mesh {
         public static (string, int) Struct = ("<5i", sizeof(M_Mesh));
         public X_LumpNO Tris;
         public int SkinRef;
         public X_LumpNO Norms; // per mesh normals, normal vec3
     }
 
-    public class Mesh
-    {
+    public class Mesh {
         public short[] Triangles;
         public int NumTriangles;
         public int NumNorms;
         public int SkinRef;
 
-        public Mesh(BinaryReader r, M_Mesh s)
-        {
+        public Mesh(BinaryReader r, M_Mesh s) {
             r.Seek(s.Tris.Offset); Triangles = r.ReadPArray<short>("H", s.Tris.Num); //TODO
             NumTriangles = s.Tris.Num;
             NumNorms = s.Norms.Num;
@@ -897,8 +824,7 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo
 
     // header
     [StructLayout(LayoutKind.Sequential)]
-    public struct M_Header
-    {
+    public struct M_Header {
         public static (string, int) Struct = ("<2i64si15f27i", sizeof(M_Header));
         public int Magic;
         public int Version;
@@ -944,8 +870,7 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo
     public Texture[] Textures;
     public short[][] SkinFamilies;
 
-    public Binary_Mdl10(BinaryReader r, FileSource f, BinaryPakFile s)
-    {
+    public Binary_Mdl10(BinaryReader r, FileSource f, BinaryPakFile s) {
         // read file
         var header = r.ReadS<M_Header>();
         if (header.Magic != M_MAGIC) throw new FormatException("BAD MAGIC");
@@ -962,8 +887,7 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo
         // load texture
         BinaryReader tr; M_Header theader;
         (tr, theader) = HasTextureFile
-            ? s.ReaderT(r2 =>
-            {
+            ? s.ReaderT(r2 => {
                 if (r2 == null) throw new Exception($"External texture file '{path}' does not exist");
                 var header = r2.ReadS<M_Header>();
                 if (header.Magic != M_MAGIC) throw new FormatException("BAD MAGIC");
@@ -974,12 +898,10 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo
 
         // load animations
         (BinaryReader r, M_SeqHeader h)[] sequences;
-        if (header.SeqGroups.Num > 1)
-        {
+        if (header.SeqGroups.Num > 1) {
             sequences = new (BinaryReader, M_SeqHeader)[header.SeqGroups.Num - 1];
             for (var i = 0; i < sequences.Length; i++)
-                sequences[i] = s.ReaderT(r2 =>
-                {
+                sequences[i] = s.ReaderT(r2 => {
                     if (r2 == null) throw new Exception($"Sequence group file '{path}' does not exist");
                     var header = r2.ReadS<M_SeqHeader>();
                     if (header.Magic != M_MAGIC2) throw new FormatException("BAD MAGIC");
@@ -1034,8 +956,7 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo
     public int Depth => 0;
     public int MipMaps => 1;
     public TextureFlags TexFlags => 0;
-    public T Create<T>(string platform, Func<object, T> func)
-    {
+    public T Create<T>(string platform, Func<object, T> func) {
         var tex = Textures[0];
         Width = tex.Width; Height = tex.Height;
         var buf = new byte[Width * Height * 3];
@@ -1058,8 +979,7 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo
 #region Binary_Mdl40
 //https://developer.valvesoftware.com/wiki/MDL
 
-public unsafe class Binary_Mdl40 : IHaveMetaInfo
-{
+public unsafe class Binary_Mdl40 : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Mdl40(r, f, (BinaryPakFile)s));
 
     #region Headers
@@ -1071,8 +991,7 @@ public unsafe class Binary_Mdl40 : IHaveMetaInfo
     /// header flags
     /// </summary>
     [Flags]
-    public enum HeaderFlags : int
-    {
+    public enum HeaderFlags : int {
         AUTOGENERATED_HITBOX = 0x00000001,          // This flag is set if no hitbox information was specified
         USES_ENV_CUBEMAP = 0x00000002,              // This flag is set at loadtime, not mdl build time so that we don't have to rebuild models when we change materials.
         FORCE_OPAQUE = 0x00000004,                  // Use this when there are translucent parts to the model but we're not going to sort it
@@ -1097,8 +1016,7 @@ public unsafe class Binary_Mdl40 : IHaveMetaInfo
         VERT_ANIM_FIXED_POINT_SCALE = 0x00200000,   // flagged on load to indicate no animation events on this model
     }
 
-    public struct M_Texture
-    {
+    public struct M_Texture {
         public static (string, int) Struct = ("<6i10s", sizeof(M_Texture));
         public int NameOffset;
         public int Flags;
@@ -1111,8 +1029,7 @@ public unsafe class Binary_Mdl40 : IHaveMetaInfo
 
     // header
     [StructLayout(LayoutKind.Sequential)]
-    public struct M_Header
-    {
+    public struct M_Header {
         public static (string, int) Struct = ("<3i64si18f44if11i4B3if3i", sizeof(M_Header));
         public int Magic;
         public int Version;
@@ -1169,8 +1086,7 @@ public unsafe class Binary_Mdl40 : IHaveMetaInfo
 
     // header
     [StructLayout(LayoutKind.Sequential)]
-    public struct M_Header2
-    {
+    public struct M_Header2 {
         public static (string, int) Struct = ("<3ifi64s", sizeof(M_Header2));
         public X_LumpNO SrcBoneTransform;
         public int IllumPositionAttachmentIndex;
@@ -1188,8 +1104,7 @@ public unsafe class Binary_Mdl40 : IHaveMetaInfo
     public Vector3 ClippingMin, ClippingMax;
     public HeaderFlags Flags;
 
-    public Binary_Mdl40(BinaryReader r, FileSource f, BinaryPakFile s)
-    {
+    public Binary_Mdl40(BinaryReader r, FileSource f, BinaryPakFile s) {
         // read file
         var header = r.ReadS<M_Header>();
         if (header.Magic != M_MAGIC) throw new FormatException("BAD MAGIC");
@@ -1275,15 +1190,13 @@ public unsafe class Binary_Mdl40 : IHaveMetaInfo
 #region Binary_Vpk
 // https://developer.valvesoftware.com/wiki/VPK_File_Format
 
-public unsafe class Binary_Vpk : PakBinary<Binary_Vpk>
-{
+public unsafe class Binary_Vpk : PakBinary<Binary_Vpk> {
     #region Headers
 
     public const int MAGIC = 0x55AA1234;
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct V_HeaderV2
-    {
+    struct V_HeaderV2 {
         public static (string, int) Struct = ("<4I", sizeof(V_HeaderV2));
         public uint FileDataSectionSize;
         public uint ArchiveMd5SectionSize;
@@ -1292,8 +1205,7 @@ public unsafe class Binary_Vpk : PakBinary<Binary_Vpk>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct V_ArchiveMd5
-    {
+    struct V_ArchiveMd5 {
         public static (string, int) Struct = ("<3I16s", sizeof(V_ArchiveMd5));
         public uint ArchiveIndex;       // Gets or sets the CRC32 checksum of this entry.
         public uint Offset;             // Gets or sets the offset in the package.
@@ -1304,8 +1216,7 @@ public unsafe class Binary_Vpk : PakBinary<Binary_Vpk>
     /// <summary>
     /// Verification
     /// </summary>
-    class Verification
-    {
+    class Verification {
         public (long p, V_ArchiveMd5[] h) ArchiveMd5s;  // Gets the archive MD5 checksum section entries. Also known as cache line hashes.
         public byte[] TreeChecksum;                     // Gets the MD5 checksum of the file tree.
         public byte[] ArchiveMd5EntriesChecksum;        // Gets the MD5 checksum of the archive MD5 checksum section entries.
@@ -1313,23 +1224,19 @@ public unsafe class Binary_Vpk : PakBinary<Binary_Vpk>
         public byte[] PublicKey;                        // Gets the public key.
         public (long p, byte[] h) Signature;            // Gets the signature.
 
-        public Verification(BinaryReader r, ref V_HeaderV2 h)
-        {
+        public Verification(BinaryReader r, ref V_HeaderV2 h) {
             // archive md5
-            if (h.ArchiveMd5SectionSize != 0)
-            {
+            if (h.ArchiveMd5SectionSize != 0) {
                 ArchiveMd5s = (r.Tell(), r.ReadSArray<V_ArchiveMd5>((int)h.ArchiveMd5SectionSize / sizeof(V_ArchiveMd5)));
             }
             // other md5
-            if (h.OtherMd5SectionSize != 0)
-            {
+            if (h.OtherMd5SectionSize != 0) {
                 TreeChecksum = r.ReadBytes(16);
                 ArchiveMd5EntriesChecksum = r.ReadBytes(16);
                 WholeFileChecksum = (r.Tell(), r.ReadBytes(16));
             }
             // signature
-            if (h.SignatureSectionSize != 0)
-            {
+            if (h.SignatureSectionSize != 0) {
                 var position = r.Tell();
                 var publicKeySize = r.ReadInt32();
                 if (h.SignatureSectionSize == 20 && publicKeySize == MAGIC) return; // CS2 has this
@@ -1341,8 +1248,7 @@ public unsafe class Binary_Vpk : PakBinary<Binary_Vpk>
         /// <summary>
         /// Verify checksums and signatures provided in the VPK
         /// </summary>
-        public void VerifyHashes(BinaryReader r, uint treeSize, ref V_HeaderV2 h, long headerPosition)
-        {
+        public void VerifyHashes(BinaryReader r, uint treeSize, ref V_HeaderV2 h, long headerPosition) {
             byte[] hash;
             using var md5 = MD5.Create();
             // treeChecksum
@@ -1362,8 +1268,7 @@ public unsafe class Binary_Vpk : PakBinary<Binary_Vpk>
         /// <summary>
         /// Verifies the RSA signature
         /// </summary>
-        public void VerifySignature(BinaryReader r)
-        {
+        public void VerifySignature(BinaryReader r) {
             if (PublicKey == null || Signature.h == null) return;
             using var rsa = RSA.Create();
             rsa.ImportSubjectPublicKeyInfo(PublicKey, out _);
@@ -1375,14 +1280,12 @@ public unsafe class Binary_Vpk : PakBinary<Binary_Vpk>
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         var extended = source.Game.Engine.v?.Contains('x') == true;
         var files = source.Files = [];
 
         // file mask
-        source.FileMask = path =>
-        {
+        source.FileMask = path => {
             var extension = Path.GetExtension(path);
             if (extension.EndsWith("_c", StringComparison.Ordinal)) extension = extension[..^2];
             if (extension.StartsWith(".v")) extension = extension.Remove(1, 1);
@@ -1405,21 +1308,17 @@ public unsafe class Binary_Vpk : PakBinary<Binary_Vpk>
 
         // read entires
         var ms = new MemoryStream();
-        while (true)
-        {
+        while (true) {
             var typeName = r.ReadVUString(ms: ms);
             if (string.IsNullOrEmpty(typeName)) break;
-            while (true)
-            {
+            while (true) {
                 var directoryName = r.ReadVUString(ms: ms);
                 if (string.IsNullOrEmpty(directoryName)) break;
-                while (true)
-                {
+                while (true) {
                     var fileName = r.ReadVUString(ms: ms);
                     if (string.IsNullOrEmpty(fileName)) break;
                     // get file
-                    var file = new FileSource
-                    {
+                    var file = new FileSource {
                         Path = $"{(directoryName[0] != ' ' ? $"{directoryName}/" : null)}{fileName}.{typeName}",
                         Hash = r.ReadUInt32(),
                         Data = new byte[r.ReadUInt16()],
@@ -1430,8 +1329,7 @@ public unsafe class Binary_Vpk : PakBinary<Binary_Vpk>
                     var terminator = r.ReadUInt16();
                     if (terminator != 0xFFFF) throw new FormatException($"Invalid terminator, was 0x{terminator:X} but expected 0x{0xFFFF:X}");
                     if (file.Data.Length > 0) r.Read(file.Data, 0, file.Data.Length);
-                    if (file.Id != 0x7FFF)
-                    {
+                    if (file.Id != 0x7FFF) {
                         if (!dirVpk) throw new FormatException("Given VPK is not a _dir, but entry is referencing an external archive.");
                         file.Tag = $"{pakPath}_{file.Id:D3}.vpk";
                     }
@@ -1443,8 +1341,7 @@ public unsafe class Binary_Vpk : PakBinary<Binary_Vpk>
         }
 
         // verification
-        if (version == 2)
-        {
+        if (version == 2) {
             // skip over file data, if any
             r.Skip(headerV2.FileDataSectionSize);
             var v = new Verification(r, ref headerV2);
@@ -1455,8 +1352,7 @@ public unsafe class Binary_Vpk : PakBinary<Binary_Vpk>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
-    {
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         var fileDataLength = file.Data.Length;
         var data = new byte[fileDataLength + file.FileSize];
         if (fileDataLength > 0) file.Data.CopyTo(data, 0);
@@ -1474,15 +1370,13 @@ public unsafe class Binary_Vpk : PakBinary<Binary_Vpk>
 #region Binary_Wad3
 // https://github.com/Rupan/HLLib/blob/master/HLLib/WADFile.h
 
-public unsafe class Binary_Wad3 : PakBinary<Binary_Wad3>
-{
+public unsafe class Binary_Wad3 : PakBinary<Binary_Wad3> {
     #region Headers
 
     const uint W_MAGIC = 0x33444157; //: WAD3
 
     [StructLayout(LayoutKind.Sequential)]
-    struct W_Header
-    {
+    struct W_Header {
         public static (string, int) Struct = ("<3I", sizeof(W_Header));
         public uint Magic;
         public uint LumpCount;
@@ -1490,8 +1384,7 @@ public unsafe class Binary_Wad3 : PakBinary<Binary_Wad3>
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct W_Lump
-    {
+    struct W_Lump {
         public static (string, int) Struct = ("<3I2bH16s", 32);
         public uint Offset;
         public uint DiskSize;
@@ -1503,8 +1396,7 @@ public unsafe class Binary_Wad3 : PakBinary<Binary_Wad3>
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct W_LumpInfo
-    {
+    struct W_LumpInfo {
         public static (string, int) Struct = ("<3I", 32);
         public uint Width;
         public uint Height;
@@ -1513,8 +1405,7 @@ public unsafe class Binary_Wad3 : PakBinary<Binary_Wad3>
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         var files = source.Files = [];
 
         // read file
@@ -1522,13 +1413,10 @@ public unsafe class Binary_Wad3 : PakBinary<Binary_Wad3>
         if (header.Magic != W_MAGIC) throw new FormatException("BAD MAGIC");
         r.Seek(header.LumpOffset);
         var lumps = r.ReadSArray<W_Lump>((int)header.LumpCount);
-        foreach (var lump in lumps)
-        {
+        foreach (var lump in lumps) {
             var name = UnsafeX.FixedAString(lump.Name, 16);
-            files.Add(new FileSource
-            {
-                Path = lump.Type switch
-                {
+            files.Add(new FileSource {
+                Path = lump.Type switch {
                     0x40 => $"{name}.tex2",
                     0x42 => $"{name}.pic",
                     0x43 => $"{name}.tex",
@@ -1544,8 +1432,7 @@ public unsafe class Binary_Wad3 : PakBinary<Binary_Wad3>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
-    {
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         return Task.FromResult<Stream>(new MemoryStream(file.Compressed == 0
             ? r.ReadBytes((int)file.FileSize)
@@ -1560,22 +1447,19 @@ public unsafe class Binary_Wad3 : PakBinary<Binary_Wad3>
 // https://greg-kennedy.com/hl_materials/
 // https://github.com/tmp64/BSPRenderer
 
-public unsafe class Binary_Wad3X : ITexture, IHaveMetaInfo
-{
+public unsafe class Binary_Wad3X : ITexture, IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Wad3X(r, f));
 
     #region Headers
 
     [StructLayout(LayoutKind.Sequential)]
-    struct CharInfo
-    {
+    struct CharInfo {
         public static (string, int) Struct = ("<2H", sizeof(CharInfo));
         public ushort StartOffset;
         public ushort CharWidth;
     }
 
-    enum Formats : byte
-    {
+    enum Formats : byte {
         None = 0,
         Tex2 = 0x40,
         Pic = 0x42,
@@ -1585,10 +1469,8 @@ public unsafe class Binary_Wad3X : ITexture, IHaveMetaInfo
 
     #endregion
 
-    public Binary_Wad3X(BinaryReader r, FileSource f)
-    {
-        var type = Path.GetExtension(f.Path) switch
-        {
+    public Binary_Wad3X(BinaryReader r, FileSource f) {
+        var type = Path.GetExtension(f.Path) switch {
             ".pic" => Formats.Pic,
             ".tex" => Formats.Tex,
             ".tex2" => Formats.Tex2,
@@ -1610,13 +1492,11 @@ public unsafe class Binary_Wad3X : ITexture, IHaveMetaInfo
         else if (width == 0 || height == 0) throw new FormatException("Texture width and height must be larger than 0!");
 
         // read pixel offsets
-        if (type == Formats.Tex2 || type == Formats.Tex)
-        {
+        if (type == Formats.Tex2 || type == Formats.Tex) {
             uint[] offsets = [r.ReadUInt32(), r.ReadUInt32(), r.ReadUInt32(), r.ReadUInt32()];
             if (r.BaseStream.Position != offsets[0]) throw new Exception("BAD OFFSET");
         }
-        else if (type == Formats.Fnt)
-        {
+        else if (type == Formats.Fnt) {
             width = 0x100;
             var rowCount = r.ReadUInt32();
             var rowHeight = r.ReadUInt32();
@@ -1633,8 +1513,7 @@ public unsafe class Binary_Wad3X : ITexture, IHaveMetaInfo
         r.Skip(2);
         var p = palette = r.ReadBytes(0x100 * 3);
         if (type == Formats.Tex2) //e.g.: tempdecal.wad
-            for (int i = 0, j = 0; i < 0x100; i++, j += 3)
-            {
+            for (int i = 0, j = 0; i < 0x100; i++, j += 3) {
                 p[j + 0] = (byte)i;
                 p[j + 1] = (byte)i;
                 p[j + 2] = (byte)i;
@@ -1659,14 +1538,12 @@ public unsafe class Binary_Wad3X : ITexture, IHaveMetaInfo
     public int Depth => 0;
     public int MipMaps => pixels.Length;
     public TextureFlags TexFlags => 0;
-    public T Create<T>(string platform, Func<object, T> func)
-    {
+    public T Create<T>(string platform, Func<object, T> func) {
         var bbp = transparent ? 4 : 3;
         var buf = new byte[pixels.Sum(x => x.Length) * bbp];
         var spans = new Range[pixels.Length];
         int size;
-        for (int index = 0, offset = 0; index < pixels.Length; index++, offset += size)
-        {
+        for (int index = 0, offset = 0; index < pixels.Length; index++, offset += size) {
             var p = pixels[index];
             size = p.Length * bbp; var span = spans[index] = new Range(offset, offset + size);
             if (transparent) Raster.BlitByPalette(buf.AsSpan(span), bbp, p, palette, 3, 0xFF);

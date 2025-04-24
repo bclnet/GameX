@@ -17,16 +17,13 @@ namespace GameX.Volition;
 /// VolitionGame
 /// </summary>
 /// <seealso cref="GameX.FamilyGame" />
-public class VolitionGame(Family family, string id, JsonElement elem, FamilyGame dgame) : FamilyGame(family, id, elem, dgame)
-{
+public class VolitionGame(Family family, string id, JsonElement elem, FamilyGame dgame) : FamilyGame(family, id, elem, dgame) {
     /// <summary>
     /// Ensures this instance.
     /// </summary>
     /// <returns></returns>
-    public override FamilyGame Ensure()
-    {
-        switch (Id)
-        {
+    public override FamilyGame Ensure() {
+        switch (Id) {
             case "D": Games.D.Database.Ensure(this); return this;
             case "D2": Games.D2.Database.Ensure(this); return this;
             default: return this;
@@ -42,14 +39,12 @@ public class VolitionGame(Family family, string id, JsonElement elem, FamilyGame
 /// VolitionPakFile
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class VolitionPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel>
-{
+public class VolitionPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="VolitionPakFile" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public VolitionPakFile(PakState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant()))
-    {
+    public VolitionPakFile(PakState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         ObjectFactoryFunc = ObjectFactory;
     }
 
@@ -58,8 +53,7 @@ public class VolitionPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileM
     static readonly ConcurrentDictionary<string, PakBinary> PakBinarys = new ConcurrentDictionary<string, PakBinary>();
 
     static PakBinary GetPakBinary(FamilyGame game, string extension)
-        => PakBinarys.GetOrAdd(game.Id, _ => game.Engine.n switch
-        {
+        => PakBinarys.GetOrAdd(game.Id, _ => game.Engine.n switch {
             "Descent" => Binary_Descent.Current,
             "CTG" => Binary_Ctg.Current,
             "Geo-Mod" => Binary_GeoMod.Current,
@@ -68,8 +62,7 @@ public class VolitionPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileM
         });
 
     static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
-        => Path.GetExtension(source.Path).ToLowerInvariant() switch
-        {
+        => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             ".256" => (0, Binary_Pal.Factory_3),
             ".mvl" => (0, Binary_Mvl.Factory),
             _ => UnknownPakFile.ObjectFactory(source, game),

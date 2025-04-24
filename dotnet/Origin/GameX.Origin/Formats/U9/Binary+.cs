@@ -16,8 +16,7 @@ namespace GameX.Origin.Formats.U9;
 
 #region Binary_Music
 
-public unsafe class Binary_Music : IHaveMetaInfo
-{
+public unsafe class Binary_Music : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Music(r));
 
     #region Records
@@ -25,8 +24,7 @@ public unsafe class Binary_Music : IHaveMetaInfo
     #endregion
 
     // file: sound/music.flx:file0000.sfm
-    public Binary_Music(BinaryReader r)
-    {
+    public Binary_Music(BinaryReader r) {
     }
 
     // IHaveMetaInfo
@@ -43,8 +41,7 @@ public unsafe class Binary_Music : IHaveMetaInfo
 
 #region Binary_Sfx
 
-public unsafe class Binary_Sfx : IHaveMetaInfo
-{
+public unsafe class Binary_Sfx : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Sfx(r));
 
     #region Records
@@ -52,8 +49,7 @@ public unsafe class Binary_Sfx : IHaveMetaInfo
     #endregion
 
     // file: sound/sfx.flx:file0000.sfx
-    public Binary_Sfx(BinaryReader r)
-    {
+    public Binary_Sfx(BinaryReader r) {
     }
 
     // IHaveMetaInfo
@@ -70,8 +66,7 @@ public unsafe class Binary_Sfx : IHaveMetaInfo
 
 #region Binary_Speech
 
-public unsafe class Binary_Speech : IHaveMetaInfo
-{
+public unsafe class Binary_Speech : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Speech(r));
 
     #region Records
@@ -79,8 +74,7 @@ public unsafe class Binary_Speech : IHaveMetaInfo
     #endregion
 
     // file: sound/Speech.flx:file0000.spk
-    public Binary_Speech(BinaryReader r)
-    {
+    public Binary_Speech(BinaryReader r) {
     }
 
     // IHaveMetaInfo
@@ -97,15 +91,13 @@ public unsafe class Binary_Speech : IHaveMetaInfo
 
 #region Binary_AnimU9
 
-public unsafe class Binary_AnimU9 : IHaveMetaInfo
-{
+public unsafe class Binary_AnimU9 : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_AnimU9(r));
 
     #region Records
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct AnimHeader
-    {
+    struct AnimHeader {
         public static (string, int) Struct = ("<IQIQ", sizeof(AnimHeader));
         public uint Index;              // Same as the record index.
         public ulong Unknown1;          //
@@ -113,8 +105,7 @@ public unsafe class Binary_AnimU9 : IHaveMetaInfo
         public ulong Unknown2;           //
     }
 
-    public struct AnimPart
-    {
+    public struct AnimPart {
         public uint Id;
         public string Name;
         public AnimFrame[] Frames;
@@ -122,8 +113,7 @@ public unsafe class Binary_AnimU9 : IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct AnimFrame
-    {
+    public struct AnimFrame {
         public static (string, int) Struct = ("<5HI", sizeof(AnimFrame));
         public uint MS;             // The number of milliseconds from the start of the animation to display this frame for this part.
         public float RotationW;     // Rotation quaternion
@@ -142,13 +132,11 @@ public unsafe class Binary_AnimU9 : IHaveMetaInfo
     #endregion
 
     // file: static/anim.flx:file00ac.anim
-    public Binary_AnimU9(BinaryReader r)
-    {
+    public Binary_AnimU9(BinaryReader r) {
         var header = r.ReadS<AnimHeader>();
         Filename = r.ReadL32AString();
         Elements = r.ReadL32PArray<uint>("I");
-        Parts = r.ReadFArray(s => new AnimPart
-        {
+        Parts = r.ReadFArray(s => new AnimPart {
             Id = r.ReadUInt32(),
             Name = r.ReadL32AString(),
             Frames = r.ReadL32SArray<AnimFrame>(),
@@ -172,22 +160,19 @@ public unsafe class Binary_AnimU9 : IHaveMetaInfo
 
 #region Binary_Bitmap
 
-public unsafe class Binary_Bitmap : IHaveMetaInfo, ITexture
-{
+public unsafe class Binary_Bitmap : IHaveMetaInfo, ITexture {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Bitmap(r, s));
 
     #region Headers
 
-    class Record(int width, int height, byte[] pixels)
-    {
+    class Record(int width, int height, byte[] pixels) {
         public int Width = width;
         public int Height = height;
         public byte[] Pixels = pixels;
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct BmpHeader
-    {
+    struct BmpHeader {
         public static (string, int) Struct = ("<5HI", sizeof(BmpHeader));
         public ushort Width;        // Maximum width in pixels of all frames.
         public ushort Format;       // Possibly format-related.
@@ -198,16 +183,14 @@ public unsafe class Binary_Bitmap : IHaveMetaInfo, ITexture
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct BmpFrameOffset
-    {
+    struct BmpFrameOffset {
         public static (string, int) Struct = ("<2I", sizeof(BmpFrameOffset));
         public uint Offset;     // Offset of the frame from the beginning of the file.
         public uint Size;       // Length of the frame in bytes.
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct BmpFrame
-    {
+    struct BmpFrame {
         public static (string, int) Struct = ("<2H4I", sizeof(BmpFrame));
         public ushort Unknown1;     // Unknown
         public ushort Unknown2;     // Unknown, usually 0x6000.
@@ -225,18 +208,15 @@ public unsafe class Binary_Bitmap : IHaveMetaInfo, ITexture
     #endregion
 
     // file: static/bitmap16.flx:file0001.bmp
-    public Binary_Bitmap(BinaryReader r, PakFile s)
-    {
-        switch ((char)s.Tag)
-        {
+    public Binary_Bitmap(BinaryReader r, PakFile s) {
+        switch ((char)s.Tag) {
             case '6': BytesPerPixel = 2; break;
             case 'c': BytesPerPixel = 2; break;
         }
 
         // get palette
         byte[][] palette = null;
-        if (BytesPerPixel == 1)
-        {
+        if (BytesPerPixel == 1) {
             s.Game.Ensure();
             palette = Database.Palette?.Records ?? throw new NotImplementedException();
         }
@@ -246,8 +226,7 @@ public unsafe class Binary_Bitmap : IHaveMetaInfo, ITexture
         var compression = header.Compression;
 
         // read records
-        Records = r.ReadSArray<BmpFrameOffset>((int)header.FrameCount).Select(s =>
-        {
+        Records = r.ReadSArray<BmpFrameOffset>((int)header.FrameCount).Select(s => {
             r.Seek(s.Offset);
             var frame = r.ReadS<BmpFrame>();
             int width = (int)frame.Width, height = (int)frame.Height;
@@ -301,8 +280,7 @@ public unsafe class Binary_Bitmap : IHaveMetaInfo, ITexture
 
 #region Binary_Book
 
-public unsafe class Binary_Book : IHaveMetaInfo
-{
+public unsafe class Binary_Book : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Book(r));
 
     #region Records
@@ -313,8 +291,7 @@ public unsafe class Binary_Book : IHaveMetaInfo
     #endregion
 
     // file: static/BOOKS-EN.FLX:file0000.book
-    public Binary_Book(BinaryReader r)
-    {
+    public Binary_Book(BinaryReader r) {
         Title = r.ReadL32AString();
         Body = r.ReadL32AString();
     }
@@ -333,8 +310,7 @@ public unsafe class Binary_Book : IHaveMetaInfo
 
 #region Binary_Text
 
-public unsafe class Binary_Text : IHaveMetaInfo
-{
+public unsafe class Binary_Text : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Text(r, (int)f.FileSize));
 
     #region Records
@@ -345,8 +321,7 @@ public unsafe class Binary_Text : IHaveMetaInfo
 
     // file: static/misctext.flx:file0000.str
     // file: static/text.flx:file0000.str
-    public Binary_Text(BinaryReader r, int length)
-    {
+    public Binary_Text(BinaryReader r, int length) {
         Text = Encoding.Unicode.GetString(r.ReadBytes(length));
     }
 
@@ -363,8 +338,7 @@ public unsafe class Binary_Text : IHaveMetaInfo
 
 #region Binary_Mesh
 
-public unsafe class Binary_Mesh : IHaveMetaInfo
-{
+public unsafe class Binary_Mesh : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Mesh(r));
 
     #region Records
@@ -372,8 +346,7 @@ public unsafe class Binary_Mesh : IHaveMetaInfo
     #endregion
 
     // file: static/sappear.flx:file0000.mesh
-    public Binary_Mesh(BinaryReader r)
-    {
+    public Binary_Mesh(BinaryReader r) {
     }
 
     // IHaveMetaInfo
@@ -390,8 +363,7 @@ public unsafe class Binary_Mesh : IHaveMetaInfo
 
 #region Binary_Texture
 
-public unsafe class Binary_Texture : IHaveMetaInfo, ITexture
-{
+public unsafe class Binary_Texture : IHaveMetaInfo, ITexture {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Texture(r, s));
 
     #region Records
@@ -404,17 +376,14 @@ public unsafe class Binary_Texture : IHaveMetaInfo, ITexture
 
     // file: static/Texture8.9:file043f.tex
     // file: static/texture16.9:file043f.tex
-    public Binary_Texture(BinaryReader r, PakFile s)
-    {
-        switch ((char)s.Tag)
-        {
+    public Binary_Texture(BinaryReader r, PakFile s) {
+        switch ((char)s.Tag) {
             case '6': BytesPerPixel = 2; break;
         }
 
         // get palette
         byte[][] palette = null;
-        if (BytesPerPixel == 1)
-        {
+        if (BytesPerPixel == 1) {
             s.Game.Ensure();
             palette = Database.Palette?.Records ?? throw new NotImplementedException();
         }
@@ -467,8 +436,7 @@ public unsafe class Binary_Texture : IHaveMetaInfo, ITexture
 
 #region Binary_Typename
 
-public unsafe class Binary_Typename : IHaveMetaInfo
-{
+public unsafe class Binary_Typename : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Typename(r));
 
     #region Records
@@ -480,8 +448,7 @@ public unsafe class Binary_Typename : IHaveMetaInfo
     #endregion
 
     // file: static/TYPENAME.FLX:file0001.type
-    public Binary_Typename(BinaryReader r)
-    {
+    public Binary_Typename(BinaryReader r) {
         ScriptId = r.ReadUInt32();
         IconId = r.ReadUInt16();
         ToolTip = r.ReadVUString();

@@ -18,13 +18,11 @@ namespace GameX.ID.Formats;
 // https://developer.valvesoftware.com/wiki/BSP_(Quake)
 // https://www.flipcode.com/archives/Quake_2_BSP_File_Format.shtml
 
-public unsafe class Binary_BspY : PakBinary<Binary_BspY>
-{
+public unsafe class Binary_BspY : PakBinary<Binary_BspY> {
     #region Headers
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct D_Model
-    {
+    struct D_Model {
         public X_BoundBox Bound;            // The bounding box of the Model
         public Vector3 Origin;              // origin of model, usually (0,0,0)
         public int NodeId0;                 // index of first BSP node
@@ -37,8 +35,7 @@ public unsafe class Binary_BspY : PakBinary<Binary_BspY>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct D_TexInfo
-    {
+    struct D_TexInfo {
         public Vector3 VectorS;             // S vector, horizontal in texture space)
         public float DistS;                 // horizontal offset in texture space
         public Vector3 VectorT;             // T vector, vertical in texture space
@@ -48,8 +45,7 @@ public unsafe class Binary_BspY : PakBinary<Binary_BspY>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct D_Face
-    {
+    struct D_Face {
         public ushort PlaneId;              // The plane in which the face lies: must be in [0,numplanes]
         public ushort Side;                 // 0 if in front of the plane, 1 if behind the plane
         public int LedgeId;                 // first edge in the List of edges: must be in [0,numledges]
@@ -62,8 +58,7 @@ public unsafe class Binary_BspY : PakBinary<Binary_BspY>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct D_Node
-    {
+    struct D_Node {
         public long PlaneId;                // The plane that splits the node: must be in [0,numplanes[
         public ushort Front;                // If bit15==0, index of Front child node: If bit15==1, ~front = index of child leaf
         public ushort Back;                 // If bit15==0, id of Back child node: If bit15==1, ~back =  id of child leaf
@@ -73,8 +68,7 @@ public unsafe class Binary_BspY : PakBinary<Binary_BspY>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct D_Leaf
-    {
+    struct D_Leaf {
         public int Type;                    // Special type of leaf
         public int VisList;                 // Beginning of visibility lists: must be -1 or in [0,numvislist[
         Vector2<short> Bound;               // Bounding box of the leaf
@@ -87,24 +81,21 @@ public unsafe class Binary_BspY : PakBinary<Binary_BspY>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct D_Plane
-    {
+    struct D_Plane {
         public Vector3 Normal;              // Vector orthogonal to plane (Nx,Ny,Nz): with Nx2+Ny2+Nz2 = 1
         public float Dist;                  // Offset to plane, along the normal vector: Distance from (0,0,0) to the plane
         public int Type;                    // Type of plane, depending on normal vector.
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct D_ClipNode
-    {
+    struct D_ClipNode {
         public uint PlaneNum;               // The plane which splits the node
         public short Front;                 // If positive, id of Front child node: If -2, the Front part is inside the model: If -1, the Front part is outside the model
         public short Back;                  // If positive, id of Back child node: If -2, the Back part is inside the model: If -1, the Back part is outside the model
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct X_Header
-    {
+    struct X_Header {
         public static (string, int) Struct = ("<31i", sizeof(X_Header));
         public int Version;
         public X_LumpON Entities;
@@ -123,14 +114,12 @@ public unsafe class Binary_BspY : PakBinary<Binary_BspY>
         public X_LumpON SurfEdges; //: Ledges
         public X_LumpON Models;
 
-        public void ForGameId(string id)
-        {
+        public void ForGameId(string id) {
         }
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct X_Texture
-    {
+    struct X_Texture {
         public static (string, int) Struct = ("<16s6I", sizeof(X_Texture));
         public fixed byte Name[16];
         public uint Width;
@@ -161,8 +150,7 @@ public unsafe class Binary_BspY : PakBinary<Binary_BspY>
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         var files = source.Files = [];
 
         // read file
@@ -173,8 +161,7 @@ public unsafe class Binary_BspY : PakBinary<Binary_BspY>
         files.Add(new FileSource { Path = "entities.txt", Offset = header.Entities.Offset, FileSize = header.Entities.Num });
         files.Add(new FileSource { Path = "planes.dat", Offset = header.Planes.Offset, FileSize = header.Planes.Num });
         r.Seek(start = header.Textures.Offset);
-        foreach (var o in r.ReadL32PArray<uint>("I"))
-        {
+        foreach (var o in r.ReadL32PArray<uint>("I")) {
             r.Seek(start + o);
             var tex = r.ReadS<X_Texture>();
             files.Add(new FileSource { Path = $"textures/{UnsafeX.FixedAString(tex.Name, 16)}.tex", Tag = tex });
@@ -195,8 +182,7 @@ public unsafe class Binary_BspY : PakBinary<Binary_BspY>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
-    {
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         return Task.FromResult<Stream>(new MemoryStream(r.ReadBytes((int)file.FileSize)));
     }
@@ -206,27 +192,23 @@ public unsafe class Binary_BspY : PakBinary<Binary_BspY>
 
 #region Binary_BspX
 
-public unsafe class Binary_BspX : IHaveMetaInfo
-{
+public unsafe class Binary_BspX : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_BspX(r, s));
 
     #region Headers
 
     #region Ent
 
-    public unsafe class Ent
-    {
+    public unsafe class Ent {
         const int MAX_MAP_ENTITIES = 2048;
 
-        public class epair
-        {
+        public class epair {
             epair next;
             object key;
             object value;
         }
 
-        public class Entity
-        {
+        public class Entity {
             Vector3 Origin;
             int FirstBrush;
             int NumBrushes;
@@ -246,18 +228,15 @@ public unsafe class Binary_BspX : IHaveMetaInfo
 
     #region DHeader
 
-    internal static T[] CopyLump<T>(BinaryReader r, int fileLength, X_LumpON lump, string pat, int size, int maxSize) where T : struct
-    {
+    internal static T[] CopyLump<T>(BinaryReader r, int fileLength, X_LumpON lump, string pat, int size, int maxSize) where T : struct {
         int length = lump.Num, ofs = lump.Offset;
         if ((length % size) != 0) throw new FormatException("LoadBSPFile: odd lump size");
         // somehow things got out of range
-        if ((length / size) > maxSize)
-        {
+        if ((length / size) > maxSize) {
             Console.WriteLine("WARNING: exceeded max size for lump %d size %d > maxSize %d\n", lump, length / size, maxSize);
             length = maxSize * size;
         }
-        if (ofs + length > fileLength)
-        {
+        if (ofs + length > fileLength) {
             Console.WriteLine($"WARNING: exceeded file length for lump {lump}\n");
             length = fileLength - ofs;
             if (length <= 0) return default;
@@ -269,8 +248,7 @@ public unsafe class Binary_BspX : IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_DHeader_H1
-    {
+    internal struct X_DHeader_H1 {
         public static (string, int) Struct = ("<31i", sizeof(X_DHeader_H1));
         public int Version;
         public X_LumpON ENTITIES;
@@ -289,8 +267,7 @@ public unsafe class Binary_BspX : IHaveMetaInfo
         public X_LumpON SURFEDGES;
         public X_LumpON MODELS;
 
-        public object Read(BinaryReader r, string id, bool h1)
-        {
+        public object Read(BinaryReader r, string id, bool h1) {
             if (id == "HL:BS") (ENTITIES, PLANES) = (PLANES, ENTITIES);
             if (Version != (h1 ? 30 : 29)) throw new FormatException("BAD VERSION");
             var fileLength = (int)r.BaseStream.Length;
@@ -313,8 +290,7 @@ public unsafe class Binary_BspX : IHaveMetaInfo
         }
     }
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_DHeader_S2
-    {
+    internal struct X_DHeader_S2 {
         public static (string, int) Struct = ("<42i", sizeof(X_DHeader_S2));
         public int Magic, Version;
         public X_LumpON ENTITIES;
@@ -339,8 +315,7 @@ public unsafe class Binary_BspX : IHaveMetaInfo
         public X_LumpON AREAPORTALS;
         public X_LumpON LIGHTINFO_S;
 
-        public object Read(BinaryReader r, string id, bool sin)
-        {
+        public object Read(BinaryReader r, string id, bool sin) {
             if (Magic != (sin ? 0x0 : 0x0)) throw new FormatException("BAD MAGIC");
             if (Version != (sin ? 30 : 38)) throw new FormatException("BAD VERSION");
             var fileLength = (int)r.BaseStream.Length;
@@ -367,8 +342,7 @@ public unsafe class Binary_BspX : IHaveMetaInfo
         }
     }
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_DHeader_3
-    {
+    internal struct X_DHeader_3 {
         public static (string, int) Struct = ("<36i", sizeof(X_DHeader_3));
         public int Magic, Version;
         public X_LumpON ENTITIES;
@@ -389,8 +363,7 @@ public unsafe class Binary_BspX : IHaveMetaInfo
         public X_LumpON LIGHTGRID;
         public X_LumpON VISIBILITY;
 
-        public object Read(BinaryReader r, string id)
-        {
+        public object Read(BinaryReader r, string id) {
             if (Magic != 0x0) throw new FormatException("BAD MAGIC");
             if (Version != 46) throw new FormatException("BAD VERSION");
             var fileLength = (int)r.BaseStream.Length;
@@ -420,8 +393,7 @@ public unsafe class Binary_BspX : IHaveMetaInfo
     #region DModel
 
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_DModel_H1
-    {
+    internal struct X_DModel_H1 {
         public static (string, int) Struct = ("<9f7i", sizeof(X_DModel_H1));
         public Vector3 Mins, Maxs;
         public Vector3 Origin;
@@ -430,8 +402,7 @@ public unsafe class Binary_BspX : IHaveMetaInfo
         public int FirstFace, NumFaces;
     }
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_DModel_S2
-    {
+    internal struct X_DModel_S2 {
         public static (string, int) Struct = ("<9f3i", sizeof(X_DModel_S2));
         public Vector3 Mins, Maxs;
         public Vector3 Origin;
@@ -439,8 +410,7 @@ public unsafe class Binary_BspX : IHaveMetaInfo
         public int FirstFace, NumFaces;
     }
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_DModel_3
-    {
+    internal struct X_DModel_3 {
         public static (string, int) Struct = ("<6f4i", sizeof(X_DModel_3));
         public Vector3 Mins, Maxs;
         public int FirstSurface, NumSurfaces;
@@ -452,15 +422,13 @@ public unsafe class Binary_BspX : IHaveMetaInfo
     #region DMiptex
 
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_DMiptexLump_H1
-    {
+    internal struct X_DMiptexLump_H1 {
         public static (string, int) Struct = ("<5i", sizeof(X_DMiptexLump_H1));
         public int NumMiptex;
         public fixed int Dataofs[4]; // [nummiptex]
     }
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_Miptex_H1
-    {
+    internal struct X_Miptex_H1 {
         public static (string, int) Struct = ("<16s6I", sizeof(X_Miptex_H1));
         public fixed byte Name[16];
         public uint Width, Height;
@@ -471,8 +439,7 @@ public unsafe class Binary_BspX : IHaveMetaInfo
 
     #region DPlane
 
-    internal enum PLANE : int
-    {
+    internal enum PLANE : int {
         // 0-2 are axial planes
         X = 0,
         Y = 1,
@@ -483,16 +450,14 @@ public unsafe class Binary_BspX : IHaveMetaInfo
         ANYZ = 5,
     }
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_DPlane_H1S2
-    {
+    internal struct X_DPlane_H1S2 {
         public static (string, int) Struct = ("<4fi", sizeof(X_DPlane_H1S2));
         public Vector3 Normal;
         public float Dist;
         public int Type; // PLANE_X - PLANE_ANYZ
     }
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_DPlane_3
-    {
+    internal struct X_DPlane_3 {
         public static (string, int) Struct = ("<4f", sizeof(X_DPlane_3));
         public Vector3 Normal;
         public float Dist;
@@ -503,8 +468,7 @@ public unsafe class Binary_BspX : IHaveMetaInfo
     #region DNode
 
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_DNode_H1S2
-    {
+    internal struct X_DNode_H1S2 {
         public static (string, int) Struct = ("<i8h2H", sizeof(X_DNode_H1S2));
         public int PlaneNum;
         public (short l, short r) Children; // negative numbers are -(leafs+1), not nodes
@@ -512,16 +476,14 @@ public unsafe class Binary_BspX : IHaveMetaInfo
         public ushort FirstFace, NumFaces; // counting both sides
     }
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_DNode_3
-    {
+    internal struct X_DNode_3 {
         public static (string, int) Struct = ("<9i", sizeof(X_DNode_3));
         public int PlaneNum;
         public (int l, int r) Children; // negative numbers are -(leafs+1), not nodes
         public Vector3<int> Mins, Maxs; // for frustom culling
     }
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_DClipNode_H1
-    {
+    internal struct X_DClipNode_H1 {
         public static (string, int) Struct = ("<I2h", sizeof(X_DClipNode_H1));
         public int PlaneNum;
         public (short l, short r) Children;// negative numbers are contents
@@ -532,16 +494,14 @@ public unsafe class Binary_BspX : IHaveMetaInfo
     #region Texinfo
 
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_Texinfo_H1
-    {
+    internal struct X_Texinfo_H1 {
         public static (string, int) Struct = ("<8f2i", sizeof(X_Texinfo_H1));
         public Vector4 Vecs0, Vecs1; // [s/t][xyz offset]
         public int Miptex;
         public int Flags;
     }
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_Lightinfo_S
-    {
+    internal struct X_Lightinfo_S {
         public static (string, int) Struct = ("<i6fs32", sizeof(X_Lightinfo_S));
         public int Value; // light emission, etc
         public Vector3 Color;
@@ -551,8 +511,7 @@ public unsafe class Binary_BspX : IHaveMetaInfo
         public fixed byte DirectstyleName[32];
     }
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_Texinfo_S
-    {
+    internal struct X_Texinfo_S {
         public static (string, int) Struct = ("<8f2i", sizeof(X_Texinfo_S));
         public Vector4 Vecs0, Vecs1; // [s/t][xyz offset]
         public int Flags; // miptex flags + overrides
@@ -571,8 +530,7 @@ public unsafe class Binary_BspX : IHaveMetaInfo
 
     }
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_Texinfo_2
-    {
+    internal struct X_Texinfo_2 {
         public static (string, int) Struct = ("<8f2i", sizeof(X_Texinfo_2));
         public Vector4 Vecs0, Vecs1; // [s/t][xyz offset]
         public int Flags; // miptex flags + overrides
@@ -586,8 +544,7 @@ public unsafe class Binary_BspX : IHaveMetaInfo
     #region DEdge
 
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_DEdge_H1S2
-    {
+    internal struct X_DEdge_H1S2 {
         public static (string, int) Struct = ("<2H", sizeof(X_DEdge_H1S2));
         public Vector2<ushort> V; // vertex numbers
     }
@@ -597,8 +554,7 @@ public unsafe class Binary_BspX : IHaveMetaInfo
     #region DSurface
 
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_DFace_H12
-    {
+    internal struct X_DFace_H12 {
         public static (string, int) Struct = ("<Hhi2h4Bi", sizeof(X_DFace_H12));
         public ushort PlaneNum;
         public short Side;
@@ -609,8 +565,7 @@ public unsafe class Binary_BspX : IHaveMetaInfo
         public int LightOfs; // start of [numstyles*surfsize] samples
     }
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_DFace_S
-    {
+    internal struct X_DFace_S {
         public static (string, int) Struct = ("<Hhi2h4B2i", sizeof(X_DFace_S));
         public ushort PlaneNum;
         public short Side;
@@ -622,8 +577,7 @@ public unsafe class Binary_BspX : IHaveMetaInfo
         public int LightInfo;
     }
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_DSurface_3
-    {
+    internal struct X_DSurface_3 {
         public static (string, int) Struct = ("<12i6f2i", sizeof(X_DSurface_3));
         public int ShaderNum;
         public int FogNum;
@@ -642,8 +596,7 @@ public unsafe class Binary_BspX : IHaveMetaInfo
 
     #region DLeaf
 
-    internal enum AMBIENT_H1 : byte
-    {
+    internal enum AMBIENT_H1 : byte {
         WATER = 0,
         SKY = 1,
         SLIME = 2,
@@ -651,8 +604,7 @@ public unsafe class Binary_BspX : IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_DLeaf_H1
-    {
+    internal struct X_DLeaf_H1 {
         public static (string, int) Struct = ("<2i6h2H4B", sizeof(X_DLeaf_H1));
         public int Contents;
         public int VisOfs; // -1 = no visibility info
@@ -661,8 +613,7 @@ public unsafe class Binary_BspX : IHaveMetaInfo
         public fixed byte AmbientLevel[4]; // automatic ambient sounds
     }
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_DLeaf_S2
-    {
+    internal struct X_DLeaf_S2 {
         public static (string, int) Struct = ("<i8h8H", sizeof(X_DLeaf_S2));
         public int Contents; // -1 = no visibility info
         public short Cluster;
@@ -672,8 +623,7 @@ public unsafe class Binary_BspX : IHaveMetaInfo
         public ushort FirstLeafBrush, NumLeafBrushes;
     }
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_DLeaf_3
-    {
+    internal struct X_DLeaf_3 {
         public static (string, int) Struct = ("<12i", sizeof(X_DLeaf_3));
         public int Cluster;
         public int Area;
@@ -687,28 +637,24 @@ public unsafe class Binary_BspX : IHaveMetaInfo
     #region DBrush
 
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_DBrushside_2
-    {
+    internal struct X_DBrushside_2 {
         public static (string, int) Struct = ("<Hh", sizeof(X_DBrushside_2));
         public ushort PlaneNum; // facing out of the leaf
         public short Texinfo;
     }
-    internal struct X_DBrushside_S
-    {
+    internal struct X_DBrushside_S {
         public static (string, int) Struct = ("<Hhi", sizeof(X_DBrushside_S));
         public ushort PlaneNum; // facing out of the leaf
         public short Texinfo;
         public int Lightinfo;
     }
-    internal struct X_DBrushside_3
-    {
+    internal struct X_DBrushside_3 {
         public static (string, int) Struct = ("<2i", sizeof(X_DBrushside_3));
         public int PlaneNum; // positive plane side faces out of the leaf
         public int ShaderNum;
     }
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_DBrush_S23
-    {
+    internal struct X_DBrush_S23 {
         public static (string, int) Struct = ("<3i", sizeof(X_DBrush_S23));
         public int FirstSide, NumSides;
         public int Contents_ShaderNum; // the shader that determines the contents flags
@@ -719,8 +665,7 @@ public unsafe class Binary_BspX : IHaveMetaInfo
     #region DShader
 
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_DShader_3
-    {
+    internal struct X_DShader_3 {
         public static (string, int) Struct = ("<64s2i", sizeof(X_DShader_3));
         public fixed byte Shader[64];
         public int SurfaceFlags, ContentFlags;
@@ -731,14 +676,12 @@ public unsafe class Binary_BspX : IHaveMetaInfo
     #region DArea
 
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_DAreaportal_S2
-    {
+    internal struct X_DAreaportal_S2 {
         public static (string, int) Struct = ("<2i", sizeof(X_DAreaportal_S2));
         public int PortalNum, OtherArea;
     }
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_DArea_S2
-    {
+    internal struct X_DArea_S2 {
         public static (string, int) Struct = ("<2i", sizeof(X_DAreaportal_S2));
         public int NumAreaportals, FirstAreaportal;
     }
@@ -748,8 +691,7 @@ public unsafe class Binary_BspX : IHaveMetaInfo
     #region DFog
 
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_DFog_3
-    {
+    internal struct X_DFog_3 {
         public static (string, int) Struct = ("<64s3i", sizeof(X_DFog_3));
         public fixed byte Shader[64];
         public int BrushNum;
@@ -761,8 +703,7 @@ public unsafe class Binary_BspX : IHaveMetaInfo
     #region DrawVert
 
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_DrawVert_3
-    {
+    internal struct X_DrawVert_3 {
         public static (string, int) Struct = ("<3i", sizeof(X_DBrush_S23));
         public int FirstSide, NumSides;
         public int Contents_ShaderNum;
@@ -772,8 +713,7 @@ public unsafe class Binary_BspX : IHaveMetaInfo
 
     #region CONTENTS
 
-    internal enum CONTENTS_H1 : int
-    {
+    internal enum CONTENTS_H1 : int {
         EMPTY = -1,
         SOLID = -2,
         WATER = -3,
@@ -792,8 +732,7 @@ public unsafe class Binary_BspX : IHaveMetaInfo
         TRANSLUCENT = -15,
     }
     [Flags]
-    internal enum CONTENTS_S2 : int
-    {
+    internal enum CONTENTS_S2 : int {
         SOLID = 1, // an eye is never valid in a solid
         WINDOW = 2,
         AUX = 4,
@@ -829,8 +768,7 @@ public unsafe class Binary_BspX : IHaveMetaInfo
     object s2;
     object x3;
 
-    public Binary_BspX(BinaryReader r, PakFile s)
-    {
+    public Binary_BspX(BinaryReader r, PakFile s) {
         var flag = false;
         var gameId = s.Game.Id; var engine = s.Game.Engine;
         h1 = engine.v == "2" || (flag = engine.n == "GoldSrc") ? r.ReadS<X_DHeader_H1>().Read(r, gameId, flag) : default;
@@ -852,8 +790,7 @@ public unsafe class Binary_BspX : IHaveMetaInfo
 
 #region Binary_Lmp
 
-public unsafe class Binary_Lmp : IHaveMetaInfo, ITexture
-{
+public unsafe class Binary_Lmp : IHaveMetaInfo, ITexture {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Lmp(r, f, s));
 
     public static Binary_Lmp Palette;
@@ -864,10 +801,8 @@ public unsafe class Binary_Lmp : IHaveMetaInfo, ITexture
     byte[] Pixels;
 
     // file: PAK0.PAK:gfx/bigbox.lmp
-    public Binary_Lmp(BinaryReader r, FileSource f, PakFile s)
-    {
-        switch (Path.GetFileNameWithoutExtension(f.Path))
-        {
+    public Binary_Lmp(BinaryReader r, FileSource f, PakFile s) {
+        switch (Path.GetFileNameWithoutExtension(f.Path)) {
             case "palette":
                 PaletteRecords = r.ReadFArray(s => s.ReadBytes(3).Concat(new byte[] { 0 }).ToArray(), 256);
                 Palette = this;
@@ -913,8 +848,7 @@ public unsafe class Binary_Lmp : IHaveMetaInfo, ITexture
 #region Binary_Mdl
 // https://icculus.org/homepages/phaethon/q3a/formats/md2-schoenblum.html#:~:text=Quake2%20models%20are%20stored%20in,md2%20extension.
 
-public unsafe class Binary_Mdl : IHaveMetaInfo
-{
+public unsafe class Binary_Mdl : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Mdl(r));
 
     #region Headers
@@ -922,8 +856,7 @@ public unsafe class Binary_Mdl : IHaveMetaInfo
     #endregion
 
     // file: xxxx.mdl
-    public Binary_Mdl(BinaryReader r)
-    {
+    public Binary_Mdl(BinaryReader r) {
     }
 
     // IHaveMetaInfo
@@ -939,15 +872,13 @@ public unsafe class Binary_Mdl : IHaveMetaInfo
 
 #region Binary_Pak
 
-public unsafe class Binary_Pak : PakBinary<Binary_Pak>
-{
+public unsafe class Binary_Pak : PakBinary<Binary_Pak> {
     #region Headers
 
     const uint P_MAGIC = 0x4b434150; // PACK
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct P_Header
-    {
+    struct P_Header {
         public static (string, int) Struct = ("<I2i", sizeof(P_Header));
         public uint Magic;
         public int DirOffset;
@@ -955,8 +886,7 @@ public unsafe class Binary_Pak : PakBinary<Binary_Pak>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct P_File
-    {
+    struct P_File {
         public static (string, int) Struct = ("<56s2i", sizeof(P_File));
         public fixed byte Path[56];
         public int Offset;
@@ -965,18 +895,15 @@ public unsafe class Binary_Pak : PakBinary<Binary_Pak>
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         // read file
         var header = r.ReadS<P_Header>();
         if (header.Magic != P_MAGIC) throw new FormatException("BAD MAGIC");
         var numFiles = header.DirLength / sizeof(P_File);
         r.Seek(header.DirOffset);
         string path;
-        source.Files = r.ReadSArray<P_File>(numFiles).Select(s =>
-        {
-            var file = new FileSource
-            {
+        source.Files = r.ReadSArray<P_File>(numFiles).Select(s => {
+            var file = new FileSource {
                 Path = path = UnsafeX.FixedAString(s.Path, 56).Replace('\\', '/'),
                 Offset = s.Offset,
                 FileSize = s.FileSize,
@@ -987,8 +914,7 @@ public unsafe class Binary_Pak : PakBinary<Binary_Pak>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
-    {
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         return Task.FromResult<Stream>(new MemoryStream(r.ReadBytes((int)file.FileSize)));
     }
@@ -999,8 +925,7 @@ public unsafe class Binary_Pak : PakBinary<Binary_Pak>
 #region Binary_Spr
 // https://github.com/yuraj11/HL-Texture-Tools
 
-public unsafe class Binary_Spr : ITextureFrames, IHaveMetaInfo
-{
+public unsafe class Binary_Spr : ITextureFrames, IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Spr(r, f));
 
     #region Headers
@@ -1010,8 +935,7 @@ public unsafe class Binary_Spr : ITextureFrames, IHaveMetaInfo
     /// <summary>
     /// Type of sprite.
     /// </summary>
-    public enum Type : int
-    {
+    public enum Type : int {
         VP_PARALLEL_UPRIGHT,
         FACING_UPRIGHT,
         VP_PARALLEL,
@@ -1022,8 +946,7 @@ public unsafe class Binary_Spr : ITextureFrames, IHaveMetaInfo
     /// <summary>
     /// Texture format of sprite.
     /// </summary>
-    public enum TextFormat : int
-    {
+    public enum TextFormat : int {
         SPR_NORMAL,
         SPR_ADDITIVE,
         SPR_INDEXALPHA,
@@ -1033,15 +956,13 @@ public unsafe class Binary_Spr : ITextureFrames, IHaveMetaInfo
     /// <summary>
     /// Synch. type of sprite.
     /// </summary>
-    public enum SynchType : int
-    {
+    public enum SynchType : int {
         Synchronized,
         Random
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct X_Header
-    {
+    struct X_Header {
         public static (string, int) Struct = ("<I3if3ifi", sizeof(X_Header));
         public uint Magic;
         public int Version;
@@ -1056,8 +977,7 @@ public unsafe class Binary_Spr : ITextureFrames, IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct X_Frame
-    {
+    struct X_Frame {
         public static (string, int) Struct = ("<5i", sizeof(X_Frame));
         public int Group;
         public int OriginX;
@@ -1076,8 +996,7 @@ public unsafe class Binary_Spr : ITextureFrames, IHaveMetaInfo
     int frame;
     byte[] bytes;
 
-    public Binary_Spr(BinaryReader r, FileSource f)
-    {
+    public Binary_Spr(BinaryReader r, FileSource f) {
         // read file
         var header = r.ReadS<X_Header>();
         if (header.Magic != X_MAGIC) throw new FormatException("BAD MAGIC");
@@ -1088,8 +1007,7 @@ public unsafe class Binary_Spr : ITextureFrames, IHaveMetaInfo
         // load frames
         frames = new X_Frame[header.NumFrames];
         pixels = new byte[header.NumFrames][];
-        for (var i = 0; i < header.NumFrames; i++)
-        {
+        for (var i = 0; i < header.NumFrames; i++) {
             frames[i] = r.ReadS<X_Frame>();
             ref X_Frame frame = ref frames[i];
             pixels[i] = r.ReadBytes(frame.Width * frame.Height);
@@ -1112,8 +1030,7 @@ public unsafe class Binary_Spr : ITextureFrames, IHaveMetaInfo
 
     public bool HasFrames => frame < frames.Length;
 
-    public bool DecodeFrame()
-    {
+    public bool DecodeFrame() {
         var p = pixels[frame];
         Raster.BlitByPalette(bytes, 4, p, palette, 3);
         frame++;
@@ -1137,15 +1054,13 @@ public unsafe class Binary_Spr : ITextureFrames, IHaveMetaInfo
 
 #region Binary_Wad
 
-public unsafe class Binary_Wad : PakBinary<Binary_Wad>
-{
+public unsafe class Binary_Wad : PakBinary<Binary_Wad> {
     #region Headers
 
     const uint W_MAGIC = 0x32444157; //: WAD2
 
     [StructLayout(LayoutKind.Sequential)]
-    struct W_Header
-    {
+    struct W_Header {
         public static (string, int) Struct = ("<I2i", sizeof(W_Header));
         public uint Magic;
         public int LumpCount;
@@ -1153,8 +1068,7 @@ public unsafe class Binary_Wad : PakBinary<Binary_Wad>
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct W_Lump
-    {
+    struct W_Lump {
         public static (string, int) Struct = ("<3i4b16s", sizeof(W_Lump));
         public int Offset;
         public int PackedSize;
@@ -1175,14 +1089,12 @@ public unsafe class Binary_Wad : PakBinary<Binary_Wad>
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         // read file
         var header = r.ReadS<W_Header>();
         if (header.Magic != W_MAGIC) throw new FormatException("BAD MAGIC");
         r.Seek(header.LumpOffset);
-        source.Files = r.ReadSArray<W_Lump>(header.LumpCount).Select(s => new FileSource
-        {
+        source.Files = r.ReadSArray<W_Lump>(header.LumpCount).Select(s => new FileSource {
             Path = $"{UnsafeX.FixedAString(s.Path, 16).Replace('\\', '/')}.tex",
             Hash = s.Type,
             Offset = s.Offset,
@@ -1193,8 +1105,7 @@ public unsafe class Binary_Wad : PakBinary<Binary_Wad>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
-    {
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         return Task.FromResult<Stream>(new MemoryStream(r.ReadBytes((int)file.FileSize)));
     }

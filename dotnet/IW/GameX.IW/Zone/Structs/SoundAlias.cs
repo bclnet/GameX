@@ -1,48 +1,41 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace GameX.IW.Zone
-{
+namespace GameX.IW.Zone {
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct SndCurve
-    {
+    public unsafe struct SndCurve {
         public char* name;
         public fixed char field_4[132];
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct SpeakerLevels
-    {
+    public unsafe struct SpeakerLevels {
         public int speaker;
         public int numLevels;
         public fixed float levels[2];
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct ChannelMap
-    {
+    public unsafe struct ChannelMap {
         public int entryCount; // how many entries are used
         public SpeakerLevels speakers0; public SpeakerLevels speakers1; public SpeakerLevels speakers2; public SpeakerLevels speakers3; public SpeakerLevels speakers4; public SpeakerLevels speakers5;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct SpeakerMap
-    {
+    public unsafe struct SpeakerMap {
         public bool isDefault;
         public char* name;
         public ChannelMap* channelMaps0;
         public ChannelMap* channelMaps1;
     }
 
-    public enum snd_alias_type_t : byte
-    {
+    public enum snd_alias_type_t : byte {
         SAT_UNKNOWN = 0x0,
         SAT_LOADED = 0x1,
         SAT_STREAMED = 0x2
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct MssSound
-    {
+    public unsafe struct MssSound {
         public fixed char unknown1[8];
         public int dataLenth;
         public fixed char unknown2[24];
@@ -50,15 +43,13 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct LoadedSound
-    {
+    public unsafe struct LoadedSound {
         public char* name;
         public MssSound data;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct StreamedSound
-    {
+    public unsafe struct StreamedSound {
         public char* dir;
         public char* name;
     }
@@ -79,8 +70,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct SoundAlias
-    {
+    public unsafe struct SoundAlias {
         public char* name;
         public char* subtitle;
         public char* secondaryAliasName;
@@ -109,8 +99,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct SoundAliasList
-    {
+    public unsafe struct SoundAliasList {
         public char* name;
         public SoundAlias* head;
         public int count;

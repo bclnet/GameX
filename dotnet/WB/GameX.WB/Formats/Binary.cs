@@ -8,15 +8,13 @@ namespace GameX.WB.Formats;
 
 #region PakBinary_AC
 
-public unsafe class Binary_AC : PakBinary<Binary_AC>
-{
+public unsafe class Binary_AC : PakBinary<Binary_AC> {
     #region Headers
 
     const uint DAT_HEADER_OFFSET = 0x140;
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct Header
-    {
+    struct Header {
         public uint FileType;
         public uint BlockSize;
         public uint FileSize;
@@ -42,8 +40,7 @@ public unsafe class Binary_AC : PakBinary<Binary_AC>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct DirectoryHeader
-    {
+    struct DirectoryHeader {
         public const int SizeOf = (sizeof(uint) * 0x3E) + sizeof(uint) + (File.SizeOf * 0x3D);
         public fixed uint Branches[0x3E];
         public uint EntryCount;
@@ -51,8 +48,7 @@ public unsafe class Binary_AC : PakBinary<Binary_AC>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct File
-    {
+    struct File {
         public const int SizeOf = sizeof(uint) * 6;
         public uint BitFlags; // not-used
         public uint ObjectId;
@@ -62,26 +58,21 @@ public unsafe class Binary_AC : PakBinary<Binary_AC>
         public uint Iteration; // not-used
     }
 
-    class Directory
-    {
+    class Directory {
         public readonly DirectoryHeader Header;
         public readonly List<Directory> Directories = new List<Directory>();
 
-        public Directory(BinaryReader r, long offset, int blockSize)
-        {
+        public Directory(BinaryReader r, long offset, int blockSize) {
             Header = ReadT<DirectoryHeader>(r, offset, DirectoryHeader.SizeOf, blockSize);
             if (Header.Branches[0] != 0) for (var i = 0; i < Header.EntryCount + 1; i++) Directories.Add(new Directory(r, Header.Branches[i], blockSize));
         }
 
-        public void AddFiles(BinaryReader r, PakType pakType, IList<FileSource> files, string path, int blockSize)
-        {
+        public void AddFiles(BinaryReader r, PakType pakType, IList<FileSource> files, string path, int blockSize) {
             //var did = 0; Directories.ForEach(d => d.AddFiles(pakType, files, Path.Combine(path, did++.ToString()), blockSize));
             Directories.ForEach(d => d.AddFiles(r, pakType, files, path, blockSize));
-            for (var i = 0; i < Header.EntryCount; i++)
-            {
+            for (var i = 0; i < Header.EntryCount; i++) {
                 var entry = Header.Entries[i];
-                var file = new FileSource
-                {
+                var file = new FileSource {
                     Id = (int)entry.ObjectId,
                     Offset = entry.FileOffset,
                     FileSize = entry.FileSize,
@@ -97,8 +88,7 @@ public unsafe class Binary_AC : PakBinary<Binary_AC>
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         var files = source.Files = [];
         r.Seek(DAT_HEADER_OFFSET);
         var header = r.ReadS<Header>();
@@ -113,8 +103,7 @@ public unsafe class Binary_AC : PakBinary<Binary_AC>
     static T ReadT<T>(BinaryReader r, long offset, int size, int blockSize) where T : struct
         => UnsafeX.MarshalT<T>(ReadBytes(r, offset, size, blockSize));
 
-    static byte[] ReadBytes(BinaryReader r, long offset, int size, int blockSize)
-    {
+    static byte[] ReadBytes(BinaryReader r, long offset, int size, int blockSize) {
         int read;
         var buffer = new byte[size];
         r.Seek(offset);
@@ -123,8 +112,7 @@ public unsafe class Binary_AC : PakBinary<Binary_AC>
         var bufferOffset = 0;
 
         while (size > 0)
-            if (size >= blockSize)
-            {
+            if (size >= blockSize) {
                 read = r.Read(buffer, bufferOffset, blockSize - 4); // Read in our sector into the buffer[]
                 bufferOffset += read; // Adjust this so we know where in our buffer[] the next sector gets appended to
                 size -= read; // Decrease this by the amount of data we just read into buffer[] so we know how much more to go

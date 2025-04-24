@@ -1,9 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace GameX.IW.Zone
-{
-    public enum StructuredDataTypeCategory
-    {
+namespace GameX.IW.Zone {
+    public enum StructuredDataTypeCategory {
         DATA_INT = 0x0,
         DATA_BYTE = 0x1,
         DATA_BOOL = 0x2,
@@ -18,15 +16,13 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    public unsafe struct StructuredDataEnumEntry
-    {
+    public unsafe struct StructuredDataEnumEntry {
         public char* name;
         public ushort index;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct StructuredDataEnum
-    {
+    public unsafe struct StructuredDataEnum {
         public int entryCount;
         public int reservedEntryCount;
         public StructuredDataEnumEntry* entries;
@@ -43,23 +39,20 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct StructuredDataType
-    {
+    public unsafe struct StructuredDataType {
         public StructuredDataTypeCategory type;
         public StructuredDataTypeUnion u;
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    public unsafe struct StructuredDataStructProperty
-    {
+    public unsafe struct StructuredDataStructProperty {
         public char* name;
         public StructuredDataType item;
         public int offset;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct StructuredDataStruct
-    {
+    public unsafe struct StructuredDataStruct {
         public int propertyCount;
         public StructuredDataStructProperty* properties;
         public int size;
@@ -67,24 +60,21 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct StructuredDataIndexedArray
-    {
+    public unsafe struct StructuredDataIndexedArray {
         public int arraySize;
         public StructuredDataType elementType;
         public uint elementSize;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct StructuredDataEnumedArray
-    {
+    public unsafe struct StructuredDataEnumedArray {
         public int enumIndex;
         public StructuredDataType elementType;
         public uint elementSize;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct StructuredDataDef
-    {
+    public unsafe struct StructuredDataDef {
         public int version;
         public uint formatChecksum;
         public int enumCount;
@@ -100,8 +90,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct StructuredDataDefSet
-    {
+    public unsafe struct StructuredDataDefSet {
         public char* name;
         public uint defCount;
         public StructuredDataDef* defs;

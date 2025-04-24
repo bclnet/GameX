@@ -12,16 +12,14 @@ namespace GameX.Valve.Formats.Vpk;
 #region Animation
 //was:Resource/ResourceTypes/ModelAnimation/Animation
 
-public class Animation : IAnimation
-{
+public class Animation : IAnimation {
     public string Name { get; private set; }
     public float Fps { get; private set; }
     public int FrameCount { get; private set; }
     AnimationFrameBlock[] FrameBlocks { get; }
     AnimationSegmentDecoder[] SegmentArray { get; }
 
-    Animation(IDictionary<string, object> animDesc, AnimationSegmentDecoder[] segmentArray)
-    {
+    Animation(IDictionary<string, object> animDesc, AnimationSegmentDecoder[] segmentArray) {
         // Get animation properties
         Name = animDesc.Get<string>("m_name");
         Fps = animDesc.GetFloat("fps");
@@ -38,11 +36,9 @@ public class Animation : IAnimation
         for (var i = 0; i < frameBlockArray.Length; i++) FrameBlocks[i] = new AnimationFrameBlock(frameBlockArray[i]);
     }
 
-    public static IEnumerable<Animation> FromData(IDictionary<string, object> animationData, IDictionary<string, object> decodeKey, Skeleton skeleton)
-    {
+    public static IEnumerable<Animation> FromData(IDictionary<string, object> animationData, IDictionary<string, object> decodeKey, Skeleton skeleton) {
         var animArray = animationData.Get<IDictionary<string, object>[]>("m_animArray");
-        if (animArray.Length == 0)
-        {
+        if (animArray.Length == 0) {
             Console.WriteLine("Empty animation file found.");
             return [];
         }
@@ -58,8 +54,7 @@ public class Animation : IAnimation
 
         var segmentArrayKV = animationData.GetArray("m_segmentArray");
         var segmentArray = new AnimationSegmentDecoder[segmentArrayKV.Length];
-        for (var i = 0; i < segmentArrayKV.Length; i++)
-        {
+        for (var i = 0; i < segmentArrayKV.Length; i++) {
             var segmentKV = segmentArrayKV[i];
             var container = segmentKV.Get<byte[]>("m_container");
             var localChannel = dataChannelArray[segmentKV.GetInt32("m_nLocalChannel")];
@@ -79,23 +74,20 @@ public class Animation : IAnimation
             var remapTable = localChannel.RemapTable.Select(i => Array.IndexOf(elements, i)).ToArray();
             var wantedElements = remapTable.Where(boneID => boneID != -1).ToArray();
             remapTable = remapTable.Select((boneID, i) => (boneID, i)).Where(t => t.boneID != -1).Select(t => t.i).ToArray();
-            var channelAttribute = localChannel.ChannelAttribute switch
-            {
+            var channelAttribute = localChannel.ChannelAttribute switch {
                 "Position" => ChannelAttribute.Position,
                 "Angle" => ChannelAttribute.Angle,
                 "Scale" => ChannelAttribute.Scale,
                 _ => ChannelAttribute.Unknown,
             };
 
-            if (channelAttribute == ChannelAttribute.Unknown)
-            {
+            if (channelAttribute == ChannelAttribute.Unknown) {
                 if (localChannel.ChannelAttribute != "data") Console.Error.WriteLine($"Unknown channel attribute '{localChannel.ChannelAttribute}' encountered with '{decoder}' decoder");
                 continue;
             }
 
             // Look at the decoder to see what to read
-            switch (decoder)
-            {
+            switch (decoder) {
                 case "CCompressedStaticFullVector3": segmentArray[i] = new CCompressedStaticFullVector3(containerSegment, wantedElements, remapTable, channelAttribute); break;
                 case "CCompressedStaticVector3": segmentArray[i] = new CCompressedStaticVector3(containerSegment, wantedElements, remapTable, channelAttribute); break;
                 case "CCompressedStaticQuaternion": segmentArray[i] = new CCompressedStaticQuaternion(containerSegment, wantedElements, remapTable, channelAttribute); break;
@@ -132,29 +124,25 @@ public class Animation : IAnimation
     /// <summary>
     /// Get the animation matrix for each bone.
     /// </summary>
-    public Matrix4x4[] GetAnimationMatrices(FrameCache frameCache, object index, ISkeleton skeleton)
-    {
+    public Matrix4x4[] GetAnimationMatrices(FrameCache frameCache, object index, ISkeleton skeleton) {
         // Get bone transformations
         var frame = FrameCount != 0 ? frameCache.GetFrame(this, index) : null;
         return GetAnimationMatrices(frame, skeleton);
     }
 
-    Matrix4x4[] GetAnimationMatrices(Frame frame, ISkeleton skeleton)
-    {
+    Matrix4x4[] GetAnimationMatrices(Frame frame, ISkeleton skeleton) {
         // Create output array
         var matrices = new Matrix4x4[skeleton.Bones.Length];
         foreach (var root in skeleton.Roots) GetAnimationMatrixRecursive(root, Matrix4x4.Identity, Matrix4x4.Identity, frame, ref matrices);
         return matrices;
     }
 
-    public void DecodeFrame(int frameIndex, Frame outFrame)
-    {
+    public void DecodeFrame(int frameIndex, Frame outFrame) {
         // Read all frame blocks
         foreach (var frameBlock in FrameBlocks)
             // Only consider blocks that actual contain info for this frame
             if (frameIndex >= frameBlock.StartFrame && frameIndex <= frameBlock.EndFrame)
-                foreach (var segmentIndex in frameBlock.SegmentIndexArray)
-                {
+                foreach (var segmentIndex in frameBlock.SegmentIndexArray) {
                     var segment = SegmentArray[segmentIndex];
                     // Segment could be null for unknown decoders
                     if (segment != null) segment.Read(frameIndex - frameBlock.StartFrame, outFrame);
@@ -164,14 +152,12 @@ public class Animation : IAnimation
     /// <summary>
     /// Get animation matrix recursively.
     /// </summary>
-    void GetAnimationMatrixRecursive(Bone bone, Matrix4x4 bindPose, Matrix4x4 invBindPose, Frame frame, ref Matrix4x4[] matrices)
-    {
+    void GetAnimationMatrixRecursive(Bone bone, Matrix4x4 bindPose, Matrix4x4 invBindPose, Frame frame, ref Matrix4x4[] matrices) {
         // Calculate world space inverse bind pose
         invBindPose *= bone.InverseBindPose;
 
         // Calculate and apply tranformation matrix
-        if (frame != null)
-        {
+        if (frame != null) {
             var transform = frame.Bones[bone.Index];
             bindPose = Matrix4x4.CreateScale(transform.Scale)
                 * Matrix4x4.CreateFromQuaternion(transform.Angle)
@@ -196,18 +182,15 @@ public class Animation : IAnimation
 #region AnimationDataChannel
 //was:Resource/ResourceTypes/ModelAnimation/AnimationDataChannel
 
-public class AnimationDataChannel
-{
+public class AnimationDataChannel {
     public int[] RemapTable { get; } // Bone ID => Element Index
     public string ChannelAttribute { get; }
 
-    public AnimationDataChannel(Skeleton skeleton, IDictionary<string, object> dataChannel, int channelElements)
-    {
+    public AnimationDataChannel(Skeleton skeleton, IDictionary<string, object> dataChannel, int channelElements) {
         RemapTable = Enumerable.Range(0, skeleton.Bones.Length).Select(_ => -1).ToArray();
         var elementNameArray = dataChannel.Get<string[]>("m_szElementNameArray");
         var elementIndexArray = dataChannel.Get<int[]>("m_nElementIndexArray");
-        for (var i = 0; i < elementIndexArray.Length; i++)
-        {
+        for (var i = 0; i < elementIndexArray.Length; i++) {
             var elementName = elementNameArray[i];
             var boneID = Array.FindIndex(skeleton.Bones, bone => bone.Name == elementName);
             if (boneID != -1) RemapTable[boneID] = (int)elementIndexArray[i];
@@ -221,8 +204,7 @@ public class AnimationDataChannel
 #region AnimationFrameBlock
 //was:Resource/ResourceTypes/ModelAnimation/AnimationFrameBlock
 
-public class AnimationFrameBlock(IDictionary<string, object> frameBlock)
-{
+public class AnimationFrameBlock(IDictionary<string, object> frameBlock) {
     public int StartFrame { get; } = frameBlock.GetInt32("m_nStartFrame");
     public int EndFrame { get; } = frameBlock.GetInt32("m_nEndFrame");
     public long[] SegmentIndexArray { get; } = frameBlock.GetInt64Array("m_segmentIndexArray");
@@ -233,24 +215,20 @@ public class AnimationFrameBlock(IDictionary<string, object> frameBlock)
 #region AnimationGroupLoader
 //was:Resource/ResourceTypes/ModelAnimation/AnimationGroupLoader
 
-public static class AnimationGroupLoader
-{
-    public static IEnumerable<Animation> LoadAnimationGroup(Binary_Src resource, IOpenGfxModel gfx, Skeleton skeleton)
-    {
+public static class AnimationGroupLoader {
+    public static IEnumerable<Animation> LoadAnimationGroup(Binary_Src resource, IOpenGfxModel gfx, Skeleton skeleton) {
         var data = resource.DATA.AsKeyValue();
         var decodeKey = data.GetSub("m_decodeKey"); // Get the key to decode the animations
 
         // Load animation files
         var animationList = new List<Animation>();
-        if (resource.ContainsBlockType<ANIM>())
-        {
+        if (resource.ContainsBlockType<ANIM>()) {
             var animBlock = (XKV3_NTRO)resource.GetBlockByType<ANIM>();
             animationList.AddRange(Animation.FromData(animBlock.Data, decodeKey, skeleton));
             return animationList;
         }
         var animArray = data.Get<string[]>("m_localHAnimArray").Where(a => a != null); // Get the list of animation files
-        foreach (var animationFile in animArray)
-        {
+        foreach (var animationFile in animArray) {
             var animResource = gfx.LoadFileObject<Binary_Src>($"{animationFile}_c").Result;
             if (animResource != null) animationList.AddRange(Animation.FromResource(animResource, decodeKey, skeleton)); // Build animation classes
         }
@@ -263,8 +241,7 @@ public static class AnimationGroupLoader
 #region AnimationSegmentDecoder
 
 //was:Resource/ResourceTypes/ModelAnimation/AnimationSegmentDecoder
-public abstract class AnimationSegmentDecoder(int[] remapTable, ChannelAttribute channelAttribute)
-{
+public abstract class AnimationSegmentDecoder(int[] remapTable, ChannelAttribute channelAttribute) {
     public int[] RemapTable { get; } = remapTable;
     public ChannelAttribute ChannelAttribute { get; } = channelAttribute;
 
@@ -276,8 +253,7 @@ public abstract class AnimationSegmentDecoder(int[] remapTable, ChannelAttribute
     /// </summary>
     /// <param name="reader">Binary reader.</param>
     /// <returns>Quaternion.</returns>
-    internal static Quaternion ReadQuaternion(ReadOnlySpan<byte> bytes)
-    {
+    internal static Quaternion ReadQuaternion(ReadOnlySpan<byte> bytes) {
         // Values
         var i1 = bytes[0] + ((bytes[1] & 63) << 8);
         var i2 = bytes[2] + ((bytes[3] & 63) << 8);
@@ -310,12 +286,10 @@ public abstract class AnimationSegmentDecoder(int[] remapTable, ChannelAttribute
 #region AnimationSegmentDecoder : CCompressedAnimQuaternion
 //was:Resource/ResourceTypes/ModelAnimation/SegmentDecoders/CCompressedAnimQuaternion
 
-public class CCompressedAnimQuaternion : AnimationSegmentDecoder
-{
+public class CCompressedAnimQuaternion : AnimationSegmentDecoder {
     readonly byte[] Data;
 
-    public CCompressedAnimQuaternion(ArraySegment<byte> data, int[] wantedElements, int[] remapTable, int elementCount, ChannelAttribute channelAttribute) : base(remapTable, channelAttribute)
-    {
+    public CCompressedAnimQuaternion(ArraySegment<byte> data, int[] wantedElements, int[] remapTable, int elementCount, ChannelAttribute channelAttribute) : base(remapTable, channelAttribute) {
         const int elementSize = 6;
         var stride = elementCount * elementSize;
         var elements = data.Count / stride;
@@ -323,15 +297,13 @@ public class CCompressedAnimQuaternion : AnimationSegmentDecoder
         Data = new byte[remapTable.Length * elementSize * elements];
         var pos = 0;
         for (var i = 0; i < elements; i++)
-            foreach (var j in wantedElements)
-            {
+            foreach (var j in wantedElements) {
                 data.Slice(i * stride + j * elementSize, elementSize).CopyTo(Data, pos);
                 pos += elementSize;
             }
     }
 
-    public override void Read(int frameIndex, Frame outFrame)
-    {
+    public override void Read(int frameIndex, Frame outFrame) {
         const int elementSize = 6;
         var offset = frameIndex * RemapTable.Length * elementSize;
         for (var i = 0; i < RemapTable.Length; i++)
@@ -352,12 +324,10 @@ public class CCompressedAnimQuaternion : AnimationSegmentDecoder
 #region AnimationSegmentDecoder : CCompressedAnimVector3
 //was:Resource/ResourceTypes/ModelAnimation/SegmentDecoders/CCompressedAnimVector3
 
-public class CCompressedAnimVector3 : AnimationSegmentDecoder
-{
+public class CCompressedAnimVector3 : AnimationSegmentDecoder {
     readonly Half[] Data;
 
-    public CCompressedAnimVector3(ArraySegment<byte> data, int[] wantedElements, int[] remapTable, int elementCount, ChannelAttribute channelAttribute) : base(remapTable, channelAttribute)
-    {
+    public CCompressedAnimVector3(ArraySegment<byte> data, int[] wantedElements, int[] remapTable, int elementCount, ChannelAttribute channelAttribute) : base(remapTable, channelAttribute) {
         const int elementSize = 2;
         var stride = elementCount * elementSize;
         var elements = data.Count / stride;
@@ -369,8 +339,7 @@ public class CCompressedAnimVector3 : AnimationSegmentDecoder
                 Data[pos++] = BitConverterX.ToHalf(data.Slice(i * stride + j * elementSize, elementSize));
     }
 
-    public override void Read(int frameIndex, Frame outFrame)
-    {
+    public override void Read(int frameIndex, Frame outFrame) {
         var offset = frameIndex * RemapTable.Length * 3;
         for (var i = 0; i < RemapTable.Length; i++)
             outFrame.SetAttribute(
@@ -390,21 +359,18 @@ public class CCompressedAnimVector3 : AnimationSegmentDecoder
 #region AnimationSegmentDecoder : CCompressedDeltaVector3
 //was:Resource/ResourceTypes/ModelAnimation/SegmentDecoders/CCompressedDeltaVector3
 
-public class CCompressedDeltaVector3 : AnimationSegmentDecoder
-{
+public class CCompressedDeltaVector3 : AnimationSegmentDecoder {
     readonly Vector3[] BaseFrame;
     readonly Half[] DeltaData;
 
-    public CCompressedDeltaVector3(ArraySegment<byte> data, int[] wantedElements, int[] remapTable, int elementCount, ChannelAttribute channelAttribute) : base(remapTable, channelAttribute)
-    {
+    public CCompressedDeltaVector3(ArraySegment<byte> data, int[] wantedElements, int[] remapTable, int elementCount, ChannelAttribute channelAttribute) : base(remapTable, channelAttribute) {
         const int baseElementSize = 4;
         const int deltaElementSize = 2;
 
         BaseFrame = new Vector3[wantedElements.Length];
 
         var pos = 0;
-        foreach (var i in wantedElements)
-        {
+        foreach (var i in wantedElements) {
             var offset = i * 3 * baseElementSize;
             BaseFrame[pos++] = new Vector3(
                 BitConverter.ToSingle(data.Slice(offset + (0 * baseElementSize), baseElementSize)),
@@ -425,11 +391,9 @@ public class CCompressedDeltaVector3 : AnimationSegmentDecoder
                 DeltaData[pos++] = BitConverterX.ToHalf(deltaData.Slice(i * stride + j * deltaElementSize, deltaElementSize));
     }
 
-    public override void Read(int frameIndex, Frame outFrame)
-    {
+    public override void Read(int frameIndex, Frame outFrame) {
         var offset = frameIndex * RemapTable.Length * 3;
-        for (var i = 0; i < RemapTable.Length; i++)
-        {
+        for (var i = 0; i < RemapTable.Length; i++) {
             var baseFrame = BaseFrame[i];
             outFrame.SetAttribute(
                 RemapTable[i],
@@ -449,12 +413,10 @@ public class CCompressedDeltaVector3 : AnimationSegmentDecoder
 #region AnimationSegmentDecoder : CCompressedFullFloat
 //was:Resource/ResourceTypes/ModelAnimation/SegmentDecoders/CCompressedFullFloat
 
-public class CCompressedFullFloat : AnimationSegmentDecoder
-{
+public class CCompressedFullFloat : AnimationSegmentDecoder {
     readonly float[] Data;
 
-    public CCompressedFullFloat(ArraySegment<byte> data, int[] wantedElements, int[] remapTable, int elementCount, ChannelAttribute channelAttribute) : base(remapTable, channelAttribute)
-    {
+    public CCompressedFullFloat(ArraySegment<byte> data, int[] wantedElements, int[] remapTable, int elementCount, ChannelAttribute channelAttribute) : base(remapTable, channelAttribute) {
         const int elementSize = 4;
         var stride = elementCount * elementSize;
         Data = Enumerable.Range(0, data.Count / stride)
@@ -462,8 +424,7 @@ public class CCompressedFullFloat : AnimationSegmentDecoder
             .ToArray();
     }
 
-    public override void Read(int frameIndex, Frame outFrame)
-    {
+    public override void Read(int frameIndex, Frame outFrame) {
         var offset = frameIndex * RemapTable.Length;
         for (var i = 0; i < RemapTable.Length; i++) outFrame.SetAttribute(RemapTable[i], ChannelAttribute, Data[offset + i]);
     }
@@ -474,17 +435,14 @@ public class CCompressedFullFloat : AnimationSegmentDecoder
 #region AnimationSegmentDecoder : CCompressedFullQuaternion
 //was:Resource/ResourceTypes/ModelAnimation/SegmentDecoders/CCompressedFullQuaternion
 
-public class CCompressedFullQuaternion : AnimationSegmentDecoder
-{
+public class CCompressedFullQuaternion : AnimationSegmentDecoder {
     readonly Quaternion[] Data;
 
-    public CCompressedFullQuaternion(ArraySegment<byte> data, int[] wantedElements, int[] remapTable, int elementCount, ChannelAttribute channelAttribute) : base(remapTable, channelAttribute)
-    {
+    public CCompressedFullQuaternion(ArraySegment<byte> data, int[] wantedElements, int[] remapTable, int elementCount, ChannelAttribute channelAttribute) : base(remapTable, channelAttribute) {
         const int elementSize = 4 * 4;
         var stride = elementCount * elementSize;
         Data = Enumerable.Range(0, data.Count / stride)
-            .SelectMany(i => wantedElements.Select(j =>
-            {
+            .SelectMany(i => wantedElements.Select(j => {
                 var offset = i * stride + j * elementSize;
                 return new Quaternion(
                     BitConverter.ToSingle(data.Slice(offset + (0 * 4))),
@@ -496,8 +454,7 @@ public class CCompressedFullQuaternion : AnimationSegmentDecoder
             .ToArray();
     }
 
-    public override void Read(int frameIndex, Frame outFrame)
-    {
+    public override void Read(int frameIndex, Frame outFrame) {
         var offset = frameIndex * RemapTable.Length;
         for (var i = 0; i < RemapTable.Length; i++) outFrame.SetAttribute(RemapTable[i], ChannelAttribute, Data[offset + i]);
     }
@@ -508,20 +465,17 @@ public class CCompressedFullQuaternion : AnimationSegmentDecoder
 #region AnimationSegmentDecoder : CCompressedFullVector3
 //was:Resource/ResourceTypes/ModelAnimation/SegmentDecoders/CCompressedFullVector3
 
-public class CCompressedFullVector3 : AnimationSegmentDecoder
-{
+public class CCompressedFullVector3 : AnimationSegmentDecoder {
     readonly Vector3[] Data;
 
-    public CCompressedFullVector3(ArraySegment<byte> data, int[] wantedElements, int[] remapTable, int elementCount, ChannelAttribute channelAttribute) : base(remapTable, channelAttribute)
-    {
+    public CCompressedFullVector3(ArraySegment<byte> data, int[] wantedElements, int[] remapTable, int elementCount, ChannelAttribute channelAttribute) : base(remapTable, channelAttribute) {
         const int elementSize = 3 * 4;
         var stride = elementCount * elementSize;
         var elements = data.Count / stride;
         Data = new Vector3[remapTable.Length * elements];
         var pos = 0;
         for (var i = 0; i < elements; i++)
-            foreach (var j in wantedElements)
-            {
+            foreach (var j in wantedElements) {
                 var offset = i * stride + j * elementSize;
                 Data[pos++] = new Vector3(
                     BitConverter.ToSingle(data.Slice(offset + (0 * 4), 4)),
@@ -531,8 +485,7 @@ public class CCompressedFullVector3 : AnimationSegmentDecoder
             }
     }
 
-    public override void Read(int frameIndex, Frame outFrame)
-    {
+    public override void Read(int frameIndex, Frame outFrame) {
         var offset = frameIndex * RemapTable.Length;
         for (var i = 0; i < RemapTable.Length; i++) outFrame.SetAttribute(RemapTable[i], ChannelAttribute, Data[offset + i]);
     }
@@ -543,12 +496,10 @@ public class CCompressedFullVector3 : AnimationSegmentDecoder
 #region AnimationSegmentDecoder : CCompressedStaticFloat
 //was:Resource/ResourceTypes/ModelAnimation/SegmentDecoders/CCompressedStaticFloat
 
-public class CCompressedStaticFloat(ArraySegment<byte> data, int[] wantedElements, int[] remapTable, ChannelAttribute channelAttribute) : AnimationSegmentDecoder(remapTable, channelAttribute)
-{
+public class CCompressedStaticFloat(ArraySegment<byte> data, int[] wantedElements, int[] remapTable, ChannelAttribute channelAttribute) : AnimationSegmentDecoder(remapTable, channelAttribute) {
     readonly float[] Data = wantedElements.Select(i => BitConverter.ToSingle(data.Slice(i * 4))).ToArray();
 
-    public override void Read(int frameIndex, Frame outFrame)
-    {
+    public override void Read(int frameIndex, Frame outFrame) {
         for (var i = 0; i < RemapTable.Length; i++) outFrame.SetAttribute(RemapTable[i], ChannelAttribute, Data[i]);
     }
 }
@@ -558,10 +509,8 @@ public class CCompressedStaticFloat(ArraySegment<byte> data, int[] wantedElement
 #region AnimationSegmentDecoder : CCompressedStaticFullVector3
 //was:Resource/ResourceTypes/ModelAnimation/SegmentDecoders/CCompressedStaticFullVector3
 
-public class CCompressedStaticFullVector3(ArraySegment<byte> data, int[] wantedElements, int[] remapTable, ChannelAttribute channelAttribute) : AnimationSegmentDecoder(remapTable, channelAttribute)
-{
-    readonly Vector3[] Data = wantedElements.Select(i =>
-    {
+public class CCompressedStaticFullVector3(ArraySegment<byte> data, int[] wantedElements, int[] remapTable, ChannelAttribute channelAttribute) : AnimationSegmentDecoder(remapTable, channelAttribute) {
+    readonly Vector3[] Data = wantedElements.Select(i => {
         var offset = i * (3 * 4);
         return new Vector3(
             BitConverter.ToSingle(data.Slice(offset + (0 * 4))),
@@ -570,8 +519,7 @@ public class CCompressedStaticFullVector3(ArraySegment<byte> data, int[] wantedE
         );
     }).ToArray();
 
-    public override void Read(int frameIndex, Frame outFrame)
-    {
+    public override void Read(int frameIndex, Frame outFrame) {
         for (var i = 0; i < RemapTable.Length; i++) outFrame.SetAttribute(RemapTable[i], ChannelAttribute, Data[i]);
     }
 }
@@ -581,12 +529,10 @@ public class CCompressedStaticFullVector3(ArraySegment<byte> data, int[] wantedE
 #region AnimationSegmentDecoder : CCompressedStaticQuaternion
 //was:Resource/ResourceTypes/ModelAnimation/SegmentDecoders/CCompressedStaticQuaternion
 
-public class CCompressedStaticQuaternion(ArraySegment<byte> data, int[] wantedElements, int[] remapTable, ChannelAttribute channelAttribute) : AnimationSegmentDecoder(remapTable, channelAttribute)
-{
+public class CCompressedStaticQuaternion(ArraySegment<byte> data, int[] wantedElements, int[] remapTable, ChannelAttribute channelAttribute) : AnimationSegmentDecoder(remapTable, channelAttribute) {
     readonly Quaternion[] Data = wantedElements.Select(i => ReadQuaternion(data.Slice(i * 6))).ToArray();
 
-    public override void Read(int frameIndex, Frame outFrame)
-    {
+    public override void Read(int frameIndex, Frame outFrame) {
         for (var i = 0; i < RemapTable.Length; i++) outFrame.SetAttribute(RemapTable[i], ChannelAttribute, Data[i]);
     }
 }
@@ -596,10 +542,8 @@ public class CCompressedStaticQuaternion(ArraySegment<byte> data, int[] wantedEl
 #region AnimationSegmentDecoder : CCompressedStaticVector3
 //was:Resource/ResourceTypes/ModelAnimation/SegmentDecoders/CCompressedStaticVector3
 
-public class CCompressedStaticVector3(ArraySegment<byte> data, int[] wantedElements, int[] remapTable, ChannelAttribute channelAttribute) : AnimationSegmentDecoder(remapTable, channelAttribute)
-{
-    readonly Vector3[] Data = wantedElements.Select(i =>
-    {
+public class CCompressedStaticVector3(ArraySegment<byte> data, int[] wantedElements, int[] remapTable, ChannelAttribute channelAttribute) : AnimationSegmentDecoder(remapTable, channelAttribute) {
+    readonly Vector3[] Data = wantedElements.Select(i => {
         var offset = i * (3 * 2);
         return new Vector3(
             (float)BitConverterX.ToHalf(data.Slice(offset + (0 * 2))),
@@ -608,8 +552,7 @@ public class CCompressedStaticVector3(ArraySegment<byte> data, int[] wantedEleme
         );
     }).ToArray();
 
-    public override void Read(int frameIndex, Frame outFrame)
-    {
+    public override void Read(int frameIndex, Frame outFrame) {
         for (var i = 0; i < RemapTable.Length; i++) outFrame.SetAttribute(RemapTable[i], ChannelAttribute, Data[i]);
     }
 }
@@ -619,8 +562,7 @@ public class CCompressedStaticVector3(ArraySegment<byte> data, int[] wantedEleme
 #region Skeleton
 
 //was:Resource/ResourceTypes/ModelAnimation/Skeleton
-public class Skeleton : ISkeleton
-{
+public class Skeleton : ISkeleton {
     [Flags]
     public enum ModelSkeletonBoneFlags //was:Resource/Enums/ModelSkeletonBoneFlags
     {
@@ -655,8 +597,7 @@ public class Skeleton : ISkeleton
     /// <summary>
     /// Initializes a new instance of the <see cref="Skeleton"/> class.
     /// </summary>
-    public static Skeleton FromModelData(IDictionary<string, object> modelData)
-    {
+    public static Skeleton FromModelData(IDictionary<string, object> modelData) {
         // Check if there is any skeleton data present at all
         if (!modelData.ContainsKey("m_modelSkeleton")) Console.WriteLine("No skeleton data found.");
         // Construct the armature from the skeleton KV
@@ -666,8 +607,7 @@ public class Skeleton : ISkeleton
     /// <summary>
     /// Initializes a new instance of the <see cref="Skeleton"/> class.
     /// </summary>
-    public Skeleton(IDictionary<string, object> skeletonData)
-    {
+    public Skeleton(IDictionary<string, object> skeletonData) {
         var boneNames = skeletonData.Get<string[]>("m_boneName");
         var boneParents = skeletonData.GetInt64Array("m_nParent");
         var boneFlags = skeletonData.GetInt64Array("m_nFlag").Select(flags => (ModelSkeletonBoneFlags)flags).ToArray();
@@ -687,11 +627,9 @@ public class Skeleton : ISkeleton
             .Select((boneID, i) => new Bone(i, boneNames[boneID], bonePositions[boneID], boneRotations[boneID]))
             .ToArray();
 
-        for (var i = 0; i < LocalRemapTable.Length; i++)
-        {
+        for (var i = 0; i < LocalRemapTable.Length; i++) {
             var remappeBoneID = LocalRemapTable[i];
-            if (remappeBoneID != -1 && boneParents[i] != -1)
-            {
+            if (remappeBoneID != -1 && boneParents[i] != -1) {
                 var remappedParent = LocalRemapTable[boneParents[i]];
                 Bones[remappeBoneID].SetParent(Bones[remappedParent]);
             }

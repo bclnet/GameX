@@ -14,8 +14,7 @@ namespace GameX.IW.Formats;
 
 #region Binary_Abc
 
-public class Binary_Abc : IHaveMetaInfo
-{
+public class Binary_Abc : IHaveMetaInfo {
     public Binary_Abc() { }
     public Binary_Abc(BinaryReader r) => Read(r);
 
@@ -34,8 +33,7 @@ public class Binary_Abc : IHaveMetaInfo
 #region Binary_D3dBsp
 // https://github.com/SE2Dev/D3DBSP_Converter
 
-public class Binary_D3dBsp : IHaveMetaInfo
-{
+public class Binary_D3dBsp : IHaveMetaInfo {
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new(null, new MetaContent { Type = "Model", Name = Path.GetFileName(file.Path), Value = this })
     ];
@@ -46,8 +44,7 @@ public class Binary_D3dBsp : IHaveMetaInfo
 #region Binary_Gsc
 // https://github.com/SE2Dev/gsc_parser
 
-public class Binary_Gsc : IHaveMetaInfo
-{
+public class Binary_Gsc : IHaveMetaInfo {
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new(null, new MetaContent { Type = "GSC", Name = Path.GetFileName(file.Path), Value = this })
     ];
@@ -57,8 +54,7 @@ public class Binary_Gsc : IHaveMetaInfo
 
 #region Binary_IW
 
-public unsafe class Binary_IW : PakBinary<Binary_IW>
-{
+public unsafe class Binary_IW : PakBinary<Binary_IW> {
     CascContext casc;
 
     //class XSUB_PakFile : BinaryPakFile
@@ -66,8 +62,7 @@ public unsafe class Binary_IW : PakBinary<Binary_IW>
     //    public XSUB_PakFile(FamilyGame game, IFileSystem fileSystem, string filePath, object tag = null) : base(game, fileSystem, filePath, Instance, tag) { Open(); }
     //}
 
-    enum Magic
-    {
+    enum Magic {
         CASC,
         IWD,
         FF,
@@ -80,23 +75,20 @@ public unsafe class Binary_IW : PakBinary<Binary_IW>
     // Headers : FF
     #region Headers : FF
 
-    internal enum FF_MAGIC : uint
-    {
+    internal enum FF_MAGIC : uint {
         IWff = 0x66665749, // IWff
         S1ff = 0x66663153, // S1ff
         TAff = 0x66664154, // TAff
     }
 
-    internal enum FF_FORMAT : uint
-    {
+    internal enum FF_FORMAT : uint {
         U100 = 0x30303175, // u100
         A100 = 0x30303161, // a100
         _100 = 0x30303130, // 0100
         _000 = 0x30303030, // 0000
     }
 
-    internal enum FF_VERSION : uint
-    {
+    internal enum FF_VERSION : uint {
         // IW X.0 : 2017 - Call of Duty: WWII
         CO4_WWII = 0x0005,  // IW 3.0 : 2007 - Call of Duty 4: Modern Warfare
         WaW = 0x0183,       // IW 3.0+: 2008 - Call of Duty: World at War
@@ -116,8 +108,7 @@ public unsafe class Binary_IW : PakBinary<Binary_IW>
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    internal struct FF_Header
-    {
+    internal struct FF_Header {
         public static (string, int) Struct = ("<?", sizeof(FF_Header));
         [MarshalAs(UnmanagedType.U4)] public FF_MAGIC Magic;
         [MarshalAs(UnmanagedType.U4)] public FF_FORMAT Format;
@@ -132,8 +123,7 @@ public unsafe class Binary_IW : PakBinary<Binary_IW>
     const uint IPAK_MAGIC = 0x12345678;
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct IPAK_Header
-    {
+    struct IPAK_Header {
         public static (string, int) Struct = ("<?", sizeof(IPAK_Header));
         public uint Magic;
         public uint Version;
@@ -142,8 +132,7 @@ public unsafe class Binary_IW : PakBinary<Binary_IW>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct IPAK_Segment
-    {
+    struct IPAK_Segment {
         public static (string, int) Struct = ("<?", sizeof(IPAK_Segment));
         public uint Type;
         public uint Offset;
@@ -152,8 +141,7 @@ public unsafe class Binary_IW : PakBinary<Binary_IW>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct IPAK_DataHeader
-    {
+    struct IPAK_DataHeader {
         public static (string, int) Struct = ("<?", sizeof(IPAK_DataHeader));
         public uint OffsetCount; // Count and offset are packed into a single integer
         public fixed uint Commands[31]; // The commands tell what each block of data does
@@ -162,8 +150,7 @@ public unsafe class Binary_IW : PakBinary<Binary_IW>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct IPAK_Entry
-    {
+    struct IPAK_Entry {
         public static (string, int) Struct = ("<?", sizeof(IPAK_Entry));
         public ulong Key;
         public uint Offset;
@@ -268,8 +255,7 @@ public unsafe class Binary_IW : PakBinary<Binary_IW>
     const uint WWII_MAGIC = 0x12345678;
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct WWII_Header
-    {
+    struct WWII_Header {
         public static (string, int) Struct = ("<?", sizeof(WWII_Header));
         public ulong Magic;
         public uint Version;
@@ -277,8 +263,7 @@ public unsafe class Binary_IW : PakBinary<Binary_IW>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct WWII_Segment
-    {
+    struct WWII_Segment {
         public static (string, int) Struct = ("<?", sizeof(WWII_Segment));
         public fixed byte Hash[16];
         public ulong Offset;
@@ -288,13 +273,11 @@ public unsafe class Binary_IW : PakBinary<Binary_IW>
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         var files = source.Files = new List<FileSource>();
         var extension = Path.GetExtension(source.PakPath);
 
-        switch (source.Game.Id)
-        {
+        switch (source.Game.Id) {
             case "BO4":
             case "BOCW":
             case "Vanguard":
@@ -306,19 +289,16 @@ public unsafe class Binary_IW : PakBinary<Binary_IW>
                 return Task.CompletedTask;
         }
 
-        switch (extension)
-        {
+        switch (extension) {
             // IWD
-            case ".iwd":
-                {
+            case ".iwd": {
                     source.UseReader = false;
                     source.Magic = (int)Magic.IWD;
 
                     var pak = (ZipFile)(source.Tag = new ZipFile(r.BaseStream));
                     foreach (ZipEntry entry in pak)
                         if (entry.Size != 0)
-                            files.Add(new FileSource
-                            {
+                            files.Add(new FileSource {
                                 Path = entry.Name.Replace('\\', '/'),
                                 Flags = entry.Flags,
                                 PackedSize = entry.CompressedSize,
@@ -328,8 +308,7 @@ public unsafe class Binary_IW : PakBinary<Binary_IW>
                     return Task.CompletedTask;
                 }
             // FF
-            case ".ff":
-                {
+            case ".ff": {
                     source.Magic = (int)Magic.FF;
 
                     var header = r.ReadS<FF_Header>();
@@ -351,20 +330,17 @@ public unsafe class Binary_IW : PakBinary<Binary_IW>
                     //return Task.CompletedTask;
                 }
             // PAK
-            case ".pak":
-                {
+            case ".pak": {
                     source.Magic = (int)Magic.PAK;
                     return Task.CompletedTask;
                 }
             // IPAK
-            case ".ipak":
-                {
+            case ".ipak": {
                     source.Magic = (int)Magic.IPAK;
                     return Task.CompletedTask;
                 }
             // XPAK
-            case ".xpak":
-                {
+            case ".xpak": {
                     source.Magic = (int)Magic.XPAK;
                     var header = r.ReadS<XPAK_Header>();
                     // Verify the magic and offset
@@ -386,12 +362,10 @@ public unsafe class Binary_IW : PakBinary<Binary_IW>
                     // Read hash entries
                     r.Seek((long)body.HashOffset);
                     var entries = r.ReadSArray<XPAK_HashEntry>((int)body.HashCount);
-                    for (var i = 0; i < (int)body.HashCount; i++)
-                    {
+                    for (var i = 0; i < (int)body.HashCount; i++) {
                         // Read it
                         ref XPAK_HashEntry entry = ref entries[i];
-                        files.Add(new FileSource
-                        {
+                        files.Add(new FileSource {
                             Id = (int)entry.Key,
                             Path = entry.Key.ToString(),
                             Offset = (long)(body.DataOffset + entry.Offset), //: Offset
@@ -406,17 +380,14 @@ public unsafe class Binary_IW : PakBinary<Binary_IW>
         }
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
-    {
-        switch ((Magic)source.Magic)
-        {
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
+        switch ((Magic)source.Magic) {
             case Magic.CASC:
                 return Task.FromResult(casc.ReadData(file));
             case Magic.IWD:
                 var pak = (ZipFile)source.Tag;
                 var entry = (ZipEntry)file.Tag;
-                try
-                {
+                try {
                     using var input = pak.GetInputStream(entry);
                     if (!input.CanRead) { HandleException(file, option, $"Unable to read stream for file: {file.Path}"); return Task.FromResult(System.IO.Stream.Null); }
                     var s = new MemoryStream();
@@ -425,8 +396,7 @@ public unsafe class Binary_IW : PakBinary<Binary_IW>
                     return Task.FromResult((Stream)s);
                 }
                 catch (Exception e) { HandleException(file, option, $"{file.Path} - Exception: {e.Message}"); return Task.FromResult(System.IO.Stream.Null); }
-            case Magic.FF:
-                {
+            case Magic.FF: {
                     var s = new MemoryStream();
                     s.Position = 0;
                     return Task.FromResult((Stream)s);
@@ -443,14 +413,12 @@ public unsafe class Binary_IW : PakBinary<Binary_IW>
 // https://github.com/DentonW/DevIL/blob/master/DevIL/src-IL/src/il_iwi.cpp - IWI
 // https://github.com/XLabsProject/img-format-helper - IWI
 
-public class Binary_Iwi : ITexture, IHaveMetaInfo
-{
+public class Binary_Iwi : ITexture, IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Iwi(r));
 
     #region Headers
 
-    public enum VERSION : byte
-    {
+    public enum VERSION : byte {
         /// <summary>
         /// COD2
         /// </summary>
@@ -481,8 +449,7 @@ public class Binary_Iwi : ITexture, IHaveMetaInfo
         CODBO2 = 0x1B,
     }
 
-    public enum FORMAT : byte
-    {
+    public enum FORMAT : byte {
         /// <summary>
         /// ARGB32 - DDS_Standard_A8R8G8B8
         /// </summary>
@@ -526,8 +493,7 @@ public class Binary_Iwi : ITexture, IHaveMetaInfo
     }
 
     [Flags]
-    public enum FLAGS : byte
-    {
+    public enum FLAGS : byte {
         NOPICMIP = 1 << 0,
         /// <summary>
         /// NOMIPMAPS
@@ -560,8 +526,7 @@ public class Binary_Iwi : ITexture, IHaveMetaInfo
     }
 
     [Flags]
-    public enum FLAGS_EXT : int
-    {
+    public enum FLAGS_EXT : int {
         /// <summary>
         /// DYNAMIC
         /// </summary>
@@ -580,8 +545,7 @@ public class Binary_Iwi : ITexture, IHaveMetaInfo
     /// Describes a IWI file header.
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public unsafe struct HEADER
-    {
+    public unsafe struct HEADER {
         /// <summary>
         /// MAGIC (IWi)
         /// </summary>
@@ -614,15 +578,13 @@ public class Binary_Iwi : ITexture, IHaveMetaInfo
         /// <summary>
         /// Verifies this instance.
         /// </summary>
-        public void Verify()
-        {
+        public void Verify() {
             if (Width == 0 || Height == 0) throw new FormatException($"Invalid DDS file header");
             if (Format >= DXT1 && Format <= DXT5 && Width != MathX.NextPower(Width) && Height != MathX.NextPower(Height)) throw new FormatException($"DXT images must have power-of-2 dimensions..");
             if (Format > DXT5) throw new FormatException($"Unknown Format: {Format}");
         }
 
-        public static byte[] Read(BinaryReader r, out HEADER header, out Range[] ranges, out (FORMAT type, object value) format)
-        {
+        public static byte[] Read(BinaryReader r, out HEADER header, out Range[] ranges, out (FORMAT type, object value) format) {
             var magic = r.ReadUInt32();
             var version = (VERSION)(magic >> 24);
             magic <<= 8;
@@ -632,8 +594,7 @@ public class Binary_Iwi : ITexture, IHaveMetaInfo
             header.Verify();
 
             // read mips offsets
-            r.Seek(version switch
-            {
+            r.Seek(version switch {
                 VERSION.COD2 => 0xC,
                 VERSION.COD4 => 0xC,
                 VERSION.CODMW2 => 0x10,
@@ -650,8 +611,7 @@ public class Binary_Iwi : ITexture, IHaveMetaInfo
                 ? Enumerable.Range(0, mipsLength).Select(i => new Range(mips[i + 1] - mipsBase, mips[i] - mipsBase)).ToArray()
                 : [new Range(0, size)];
             r.Seek(mipsBase);
-            format = header.Format switch
-            {
+            format = header.Format switch {
                 ARGB32 => (ARGB32, (TextureFormat.ARGB32, TexturePixel.Unknown)),
                 RGB24 => (RGB24, (TextureFormat.RGB24, TexturePixel.Unknown)),
                 DXT1 => (DXT1, (TextureFormat.DXT1, TexturePixel.Unknown)),
@@ -666,8 +626,7 @@ public class Binary_Iwi : ITexture, IHaveMetaInfo
 
     #endregion
 
-    public Binary_Iwi(BinaryReader r)
-    {
+    public Binary_Iwi(BinaryReader r) {
         Bytes = HEADER.Read(r, out Header, out Mips, out Format);
     }
 

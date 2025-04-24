@@ -15,8 +15,7 @@ namespace GameX.Origin.Structs.UO;
 #region Direction
 
 [Flags]
-public enum Direction : byte
-{
+public enum Direction : byte {
     North = 0x0,
     Right = 0x1,
     East = 0x2,
@@ -31,18 +30,15 @@ public enum Direction : byte
     Nothing = 0xED
 }
 
-public static class DirectionHelper
-{
+public static class DirectionHelper {
     public static Direction DirectionFromPoints(Vector2<int> from, Vector2<int> to) => DirectionFromVectors(new Vector2(from.X, from.Y), new Vector2(to.X, to.Y));
-    public static Direction DirectionFromVectors(Vector2 fromPosition, Vector2 toPosition)
-    {
+    public static Direction DirectionFromVectors(Vector2 fromPosition, Vector2 toPosition) {
         var angle = Math.Atan2(toPosition.Y - fromPosition.Y, toPosition.X - fromPosition.X);
         if (angle < 0) angle = Math.PI + (Math.PI + angle);
         var piPerSegment = (Math.PI * 2f) / 8f;
         var segmentValue = (Math.PI * 2f) / 16f;
         var direction = int.MaxValue;
-        for (var i = 0; i < 8; i++)
-        {
+        for (var i = 0; i < 8; i++) {
             if (angle >= segmentValue && angle <= (segmentValue + piPerSegment)) { direction = i + 1; break; }
             segmentValue += piPerSegment;
         }
@@ -58,8 +54,7 @@ public static class DirectionHelper
 
 #region Serial
 
-public struct Serial : IComparable, IComparable<Serial>
-{
+public struct Serial : IComparable, IComparable<Serial> {
     public readonly static Serial ProtectedAction = int.MinValue;
     public readonly static Serial Null = 0;
     public readonly static Serial World = unchecked((int)0xFFFFFFFF);
@@ -97,8 +92,7 @@ public struct Serial : IComparable, IComparable<Serial>
 /// features. However, because this client doesn't support Razor, for the most part, you can ignore these.
 /// </summary>
 [Flags]
-public enum AssistantFeatures : ulong
-{
+public enum AssistantFeatures : ulong {
     None = 0,
     FilterWeather = 1 << 0,  // Weather Filter
     FilterLight = 1 << 1,  // Light Filter
@@ -133,8 +127,7 @@ public enum AssistantFeatures : ulong
 
 #region Body
 
-public enum BodyType : byte
-{
+public enum BodyType : byte {
     Empty,
     Monster,
     Sea,
@@ -143,8 +136,7 @@ public enum BodyType : byte
     Equipment
 }
 
-public struct Body
-{
+public struct Body {
     internal static BodyType[] Types = new BodyType[0];
     public int BodyID;
 
@@ -246,8 +238,7 @@ public struct Body
 
 #region Books
 
-public class Books
-{
+public class Books {
     //ushort[] _gumpBaseIDs =
     //{
     //    0x1F4, // Yellow Cornered Book
@@ -280,8 +271,7 @@ public class Books
 /// <summary>
 /// Contains a list of all chair objects, which are hardcoded in the legacy client.
 /// </summary>
-public static class Chairs
-{
+public static class Chairs {
     static Dictionary<int, ChairData> _chairs = new[]
     {
         // 0x0459 - 0x045C - marble benches
@@ -399,8 +389,7 @@ public static class Chairs
     //    }
     //}
 
-    public class ChairData
-    {
+    public class ChairData {
         public readonly int ItemID;
         public readonly Direction Facing;
         public readonly ChairType ChairType;
@@ -429,8 +418,7 @@ public static class Chairs
         /// <param name="itemID">ItemID of the chair.</param>
         /// <param name="facing">The valid facing of the chair. Must be North, West, South, or East.</param>
         /// <param name="chairType">Whether the chair is a single facing (chair) reversible facing (bench) or any facing (stool) object.</param>
-        public ChairData(int itemID, Direction facing, ChairType chairType)
-        {
+        public ChairData(int itemID, Direction facing, ChairType chairType) {
             ItemID = itemID;
             Facing = facing;
             ChairType = chairType;
@@ -439,13 +427,11 @@ public static class Chairs
             if (SittingPixelOffset > 32) SittingPixelOffset -= 32;
         }
 
-        public Direction GetSittingFacing(Direction inFacing)
-        {
+        public Direction GetSittingFacing(Direction inFacing) {
             if (ChairType == ChairType.SingleFacing) return Facing;
             inFacing = DirectionHelper.GetCardinal(inFacing);
             if (inFacing == Facing) return Facing;
-            else if (ChairType == ChairType.ReversibleFacing)
-            {
+            else if (ChairType == ChairType.ReversibleFacing) {
                 if (DirectionHelper.Reverse(inFacing) == Facing) return inFacing;
             }
             else if (ChairType == ChairType.AnyFacing) return inFacing; // which has been made cardinal already, so this works.
@@ -453,8 +439,7 @@ public static class Chairs
         }
     }
 
-    public enum ChairType
-    {
+    public enum ChairType {
         /// <summary>
         /// The chair has only one valid facing. The mobile defaults to being drawn in the single default facing.
         /// </summary>
@@ -474,8 +459,7 @@ public static class Chairs
 
 #region ChatMode
 
-public enum ChatMode
-{
+public enum ChatMode {
     Default,
     Whisper,
     Emote,
@@ -489,8 +473,7 @@ public enum ChatMode
 
 #region ClientVersion
 
-public static class ClientVersion
-{
+public static class ClientVersion {
     // NOTE FROM ZaneDubya: DO NOT change DefaultVersion from 6.0.6.2.
     // We are focusing our efforts on getting a specific version of the client working.
     // Once we have this version working, we will attempt to support additional versions.
@@ -501,8 +484,7 @@ public static class ClientVersion
     static readonly byte[] _convertedToUOPVersion = { 7, 0, 24, 0 };
     static byte[] _clientExeVersion;
 
-    static byte[] FindClientVersion(string path)
-    {
+    static byte[] FindClientVersion(string path) {
         //var p = FileManager.GetPath("client.exe");
         var s = File.Exists(path) ? FileVersionInfo.GetVersionInfo(path) : null;
         return s != null
@@ -513,26 +495,22 @@ public static class ClientVersion
     public static bool InstallationIsUopFormat => GreaterThanOrEqualTo(ClientExe, _convertedToUOPVersion);
     public static bool HasExtendedFeatures(byte[] version) => GreaterThanOrEqualTo(version, _extendedFeaturesVersion);
     public static bool HasExtendedAddItemPacket(byte[] version) => GreaterThanOrEqualTo(version, _extendedAddItemToContainer);
-    public static bool EqualTo(byte[] a, byte[] b)
-    {
+    public static bool EqualTo(byte[] a, byte[] b) {
         if (a == null || b == null) return false;
         if (a.Length != b.Length) return false;
         var index = 0;
-        while (index < a.Length)
-        {
+        while (index < a.Length) {
             if (a[index] != b[index]) return false;
             index++;
         }
         return true;
     }
     /// <summary> Compare two arrays of equal size. Returns true if first parameter array is greater than or equal to second. </summary>
-    static bool GreaterThanOrEqualTo(byte[] a, byte[] b)
-    {
+    static bool GreaterThanOrEqualTo(byte[] a, byte[] b) {
         if (a == null || b == null) return false;
         if (a.Length != b.Length) return false;
         var index = 0;
-        while (index < a.Length)
-        {
+        while (index < a.Length) {
             if (a[index] > b[index]) return true;
             if (a[index] < b[index]) return false;
             index++;
@@ -545,8 +523,7 @@ public static class ClientVersion
 
 #region ContextMenu
 
-public class ContextMenuData
-{
+public class ContextMenuData {
     readonly List<ContextMenuItem> _entries = new List<ContextMenuItem>();
     public readonly Serial Serial;
     public int Count => _entries.Count;
@@ -558,12 +535,10 @@ public class ContextMenuData
         => _entries.Add(new ContextMenuItem(responseCode, stringID, flags, hue));
 }
 
-public class ContextMenuItem
-{
+public class ContextMenuItem {
     public readonly int ResponseCode;
     public readonly string Caption;
-    public ContextMenuItem(int responseCode, int stringID, int flags, int hue)
-    {
+    public ContextMenuItem(int responseCode, int stringID, int flags, int hue) {
         Caption = GetString(stringID);
         ResponseCode = responseCode;
     }
@@ -575,8 +550,7 @@ public class ContextMenuItem
 #region FeatureFlags
 
 [Flags]
-public enum FeatureFlags : uint
-{
+public enum FeatureFlags : uint {
     TheSecondAge = 0x1,
     Renaissance = 0x2,
     ThirdDawn = 0x4,
@@ -603,8 +577,7 @@ public enum FeatureFlags : uint
 
 #region Genders
 
-public enum Genders
-{
+public enum Genders {
     Male = 0,
     Female = 1
 }
@@ -613,8 +586,7 @@ public enum Genders
 
 #region HairStyles
 
-public class HairStyles
-{
+public class HairStyles {
     static readonly int[] MaleStylesIDs = { 3000340, 3000341, 3000342, 3000343, 3000344, 3000345, 3000346, 3000347, 3000348, 3000349 };
     static string[] _maleHairNames;
     public static string[] MaleHairNames => _maleHairNames ??= MaleStylesIDs.Select(s => { var t = GetString(s); return t != "Pigtails" ? "2 Tails" : t; }).ToArray();
@@ -644,12 +616,10 @@ public class HairStyles
 
 #region HouseRevisionState
 
-public class HouseRevisionState
-{
+public class HouseRevisionState {
     public Serial Serial;
     public int Hash;
-    public HouseRevisionState(Serial serial, int revisionHash)
-    {
+    public HouseRevisionState(Serial serial, int revisionHash) {
         Serial = serial;
         Hash = revisionHash;
     }
@@ -659,8 +629,7 @@ public class HouseRevisionState
 
 #region Hues
 
-public static class Hues
-{
+public static class Hues {
     public static int[] SkinTones => Enumerable.Range(0, 7 * 8).Select(i => i < 37 ? i + 1002 : i + 1003).ToArray();
     public static int[] HairTones => Enumerable.Range(0, 8 * 6).Select(i => i + 1102).ToArray();
     public static int[] TextTones => Enumerable.Range(0, 1024).Select(i => i + 2).ToArray();
@@ -670,8 +639,7 @@ public static class Hues
 
 #region ItemInContainer
 
-public class ItemInContainer
-{
+public class ItemInContainer {
     public readonly Serial Serial;
     public readonly int ItemID;
     public readonly int Amount;
@@ -681,8 +649,7 @@ public class ItemInContainer
     public readonly Serial ContainerSerial;
     public readonly int Hue;
 
-    public ItemInContainer(Serial serial, int itemId, int amount, int x, int y, int gridLocation, int containerSerial, int hue)
-    {
+    public ItemInContainer(Serial serial, int itemId, int amount, int x, int y, int gridLocation, int containerSerial, int hue) {
         Serial = serial;
         ItemID = itemId;
         Amount = amount;
@@ -699,8 +666,7 @@ public class ItemInContainer
 #region MessageTypes
 
 [Flags]
-public enum MessageTypes
-{
+public enum MessageTypes {
     Normal = 0x00,
     System = 0x01,
     Emote = 0x02,
@@ -725,8 +691,7 @@ public enum MessageTypes
 
 #region ParticleData
 
-public class ParticleData
-{
+public class ParticleData {
     static readonly ParticleData[] Data = new[] {
         new ParticleData("Explosion", 0x36B0, 0),           // 14000 explosion 1
         new ParticleData("Explosion", 0x36BD, 0),           // 14013 explosion 2
@@ -764,29 +729,25 @@ public class ParticleData
         new ParticleData("<null>", 0x39A0, 0)               // Used to determine the frame length of the preceding effect.
     };
 
-    static ParticleData()
-    {
+    static ParticleData() {
         for (var i = 0; i < Data.Length - 1; i++) Data[i].FrameLength = Data[i + 1].ItemID - Data[i].ItemID;
         DefaultEffect ??= Data[0];
     }
 
     public static ParticleData DefaultEffect;
 
-    public static ParticleData RandomExplosion => (object)_randomValue(0, 2) switch
-    {
+    public static ParticleData RandomExplosion => (object)_randomValue(0, 2) switch {
         0 => Get(0x36B0),
         1 => Get(0x36BD),
         2 => Get(0x36CB),
         _ => Get(0x36B0),
     };
 
-    public static ParticleData Get(int itemID)
-    {
+    public static ParticleData Get(int itemID) {
         if (itemID < Data[0].ItemID || itemID >= Data[^1].ItemID) return null;
         ParticleData data;
         for (var i = 1; i < Data.Length; i++)
-            if (itemID < Data[i].ItemID)
-            {
+            if (itemID < Data[i].ItemID) {
                 data = Data[i - 1];
                 if (itemID != data.ItemID) Log($"ERROR: Mismatch? Requested particle: {itemID}, returning particle: {data.ItemID}.");
                 return Data[i - 1];
@@ -800,8 +761,7 @@ public class ParticleData
     public int SpeedOffset;
     public string Name;
 
-    public ParticleData(string name, int itemID, int speed)
-    {
+    public ParticleData(string name, int itemID, int speed) {
         Name = name;
         ItemID = itemID;
         SpeedOffset = speed;
@@ -812,8 +772,7 @@ public class ParticleData
 
 #region Races
 
-public enum Races
-{
+public enum Races {
     Human = 1,
     Elf = 2
 }
@@ -822,8 +781,7 @@ public enum Races
 
 #region Reagents
 
-public enum Reagents
-{
+public enum Reagents {
     // britannia reagents
     BlackPearl,
     Bloodmoss,
@@ -845,8 +803,7 @@ public enum Reagents
 
 #region Seasons
 
-public enum Seasons
-{
+public enum Seasons {
     Spring = 0,
     Summer = 1,
     Fall = 2,
@@ -858,20 +815,17 @@ public enum Seasons
 
 #region Spellbook
 
-public class SpellbookData
-{
+public class SpellbookData {
     public readonly Serial Serial;
     public readonly ushort ItemID;
     public readonly SpellbookTypes BookType;
     public readonly ulong SpellsBitfield;
 
-    public SpellbookData(Serial serial, ushort itemID, ushort bookTypePacketID, ulong spellBitFields)
-    {
+    public SpellbookData(Serial serial, ushort itemID, ushort bookTypePacketID, ulong spellBitFields) {
         Serial = serial;
         ItemID = itemID;
         SpellsBitfield = spellBitFields;
-        switch (bookTypePacketID)
-        {
+        switch (bookTypePacketID) {
             case 1: BookType = SpellbookTypes.Magic; break;
             case 101: BookType = SpellbookTypes.Necromancer; break;
             case 201: BookType = SpellbookTypes.Chivalry; break;
@@ -883,8 +837,7 @@ public class SpellbookData
     }
 
     public static SpellbookTypes GetSpellBookTypeFromItemID(int itemID)
-        => itemID switch
-        {
+        => itemID switch {
             0x0E3B or 0x0EFA => SpellbookTypes.Magic,
             0x2252 => SpellbookTypes.Chivalry,  // paladin spellbook
             0x2253 => SpellbookTypes.Necromancer,  // necromancer book
@@ -895,8 +848,7 @@ public class SpellbookData
         };
 
     public static int GetOffsetFromSpellBookType(SpellbookTypes spellbooktype)
-        => spellbooktype switch
-        {
+        => spellbooktype switch {
             SpellbookTypes.Magic => 1,
             SpellbookTypes.Necromancer => 101,
             SpellbookTypes.Chivalry => 201,
@@ -925,8 +877,7 @@ public class SpellbookData
     //}
 }
 
-public enum SpellbookTypes
-{
+public enum SpellbookTypes {
     Magic,
     Necromancer,
     Chivalry,
@@ -940,8 +891,7 @@ public enum SpellbookTypes
 
 #region SpellDefinition
 
-public struct SpellDefinition
-{
+public struct SpellDefinition {
     public static SpellDefinition EmptySpell = new SpellDefinition();
 
     public readonly string Name;
@@ -950,8 +900,7 @@ public struct SpellDefinition
     public readonly int GumpIconSmallID;
     public readonly Reagents[] Regs;
 
-    public SpellDefinition(string name, int index, int gumpIconID, params Reagents[] regs)
-    {
+    public SpellDefinition(string name, int index, int gumpIconID, params Reagents[] regs) {
         Name = name;
         ID = index;
         GumpIconID = gumpIconID;
@@ -959,13 +908,10 @@ public struct SpellDefinition
         Regs = regs;
     }
 
-    public string CreateReagentListString(string separator)
-    {
+    public string CreateReagentListString(string separator) {
         var b = new StringBuilder();
-        for (var i = 0; i < Regs.Length; i++)
-        {
-            switch (Regs[i])
-            {
+        for (var i = 0; i < Regs.Length; i++) {
+            switch (Regs[i]) {
                 // britanian reagents
                 case Reagents.BlackPearl: b.Append("Black Pearl"); break;
                 case Reagents.Bloodmoss: b.Append("Bloodmoss"); break;
@@ -993,17 +939,13 @@ public struct SpellDefinition
 
 #region SpellsMagery
 
-public static class SpellsMagery
-{
+public static class SpellsMagery {
     static Dictionary<int, SpellDefinition> _spells;
     static ReadOnlyCollection<SpellDefinition> _readOnlySpells;
 
-    public static ReadOnlyCollection<SpellDefinition> Spells
-    {
-        get
-        {
-            if (_readOnlySpells == null)
-            {
+    public static ReadOnlyCollection<SpellDefinition> Spells {
+        get {
+            if (_readOnlySpells == null) {
                 var spells = new List<SpellDefinition>();
                 for (var i = 1; i <= 64; i++)
                     spells.Add(_spells[i]);
@@ -1013,16 +955,14 @@ public static class SpellsMagery
         }
     }
 
-    public static SpellDefinition GetSpell(int spellIndex)
-    {
+    public static SpellDefinition GetSpell(int spellIndex) {
         SpellDefinition spell;
         if (_spells.TryGetValue(spellIndex, out spell))
             return spell;
         return SpellDefinition.EmptySpell;
     }
 
-    static SpellsMagery()
-    {
+    static SpellsMagery() {
         _spells = new Dictionary<int, SpellDefinition>()
         {
             // first circle
@@ -1109,14 +1049,12 @@ public static class SpellsMagery
 
 #region StatLocks
 
-public class StatLocks
-{
+public class StatLocks {
     public int Strength;
     public int Dexterity;
     public int Intelligence;
 
-    public StatLocks(int stren, int dexte, int intel)
-    {
+    public StatLocks(int stren, int dexte, int intel) {
         Strength = stren;
         Dexterity = dexte;
         Intelligence = intel;
@@ -1128,8 +1066,7 @@ public class StatLocks
 #region TileFlag
 
 [Flags]
-public enum TileFlag
-{
+public enum TileFlag {
     None = 0x00000000,
     Background = 0x00000001,
     Weapon = 0x00000002,

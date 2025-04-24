@@ -1,9 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace GameX.IW.Zone
-{
-    public enum weapFireType_t : int
-    {
+namespace GameX.IW.Zone {
+    public enum weapFireType_t : int {
         WEAPON_FIRETYPE_FULLAUTO = 0x0,
         WEAPON_FIRETYPE_SINGLESHOT = 0x1,
         WEAPON_FIRETYPE_BURSTFIRE2 = 0x2,
@@ -13,8 +11,7 @@ namespace GameX.IW.Zone
         WEAPON_FIRETYPE_MAX
     }
 
-    public enum weapInventoryType_t : int
-    {
+    public enum weapInventoryType_t : int {
         WEAPINVENTORY_PRIMARY = 0,
         WEAPINVENTORY_OFFHAND = 1,
         WEAPINVENTORY_ITEM = 2,
@@ -24,8 +21,7 @@ namespace GameX.IW.Zone
         WEAPINVENTORY_MAX
     }
 
-    public enum PenetrateType
-    {
+    public enum PenetrateType {
         PENETRATE_TYPE_NONE = 0x0,
         PENETRATE_TYPE_SMALL = 0x1,
         PENETRATE_TYPE_MEDIUM = 0x2,
@@ -33,16 +29,14 @@ namespace GameX.IW.Zone
         PENETRATE_TYPE_COUNT = 0x4
     }
 
-    public enum activeReticleType_t : int
-    {
+    public enum activeReticleType_t : int {
         VEH_ACTIVE_RETICLE_NONE = 0,
         VEH_ACTIVE_RETICLE_PIP_ON_A_STICK = 1,
         VEH_ACTIVE_RETICLE_BOUNCING_DIAMOND = 2,
         VEH_ACTIVE_RETICLE_MAX
     }
 
-    public enum weapType_t : int
-    {
+    public enum weapType_t : int {
         WEAPTYPE_BULLET = 0,
         WEAPTYPE_GRENADE = 1,
         WEAPTYPE_PROJECTILE = 2,
@@ -50,8 +44,7 @@ namespace GameX.IW.Zone
         WEAPTYPE_MAX
     }
 
-    public enum weapClass_t : int
-    {
+    public enum weapClass_t : int {
         WEAPCLASS_RIFLE = 0,
         WEAPCLASS_SNIPER = 1,
         WEAPCLASS_MG = 2,
@@ -67,8 +60,7 @@ namespace GameX.IW.Zone
         WEAPCLASS_MAX
     }
 
-    public enum OffhandClass : int
-    {
+    public enum OffhandClass : int {
         OFFHAND_CLASS_NONE = 0,
         OFFHAND_CLASS_FRAG_GRENADE = 1,
         OFFHAND_CLASS_SMOKE_GRENADE = 2,
@@ -76,8 +68,7 @@ namespace GameX.IW.Zone
         OFFHAND_CLASS_MAX
     }
 
-    public enum playerAnimType_t : int
-    {
+    public enum playerAnimType_t : int {
         PLAER_ANIM_TYPE_NONE = 0x0,
         PLAER_ANIM_TYPE_OTHER = 0x1,
         PLAER_ANIM_TYPE_PISTOL = 0x2,
@@ -98,8 +89,7 @@ namespace GameX.IW.Zone
         PLAER_ANIM_TYPE_THROWINGKNIFE = 0x11
     }
 
-    public enum weapProjExplosion_t
-    {
+    public enum weapProjExplosion_t {
         WEAPPROJEXP_GRENADE = 0x0,
         WEAPPROJEXP_ROCKET = 0x1,
         WEAPPROJEXP_FLASHBANG = 0x2,
@@ -110,8 +100,7 @@ namespace GameX.IW.Zone
         WEAPPROJEXP_NUM = 0x7
     }
 
-    public enum WeapStickinessType
-    {
+    public enum WeapStickinessType {
         WEAPSTICKINESS_NONE = 0x0,
         WEAPSTICKINESS_ALL = 0x1,
         WEAPSTICKINESS_ALL_ORIENT = 0x2,
@@ -121,16 +110,14 @@ namespace GameX.IW.Zone
         WEAPSTICKINESS_COUNT = 0x6
     }
 
-    public enum weaponIconRatioType_t
-    {
+    public enum weaponIconRatioType_t {
         WEAPON_ICON_RATIO_1TO1 = 0x0,
         WEAPON_ICON_RATIO_2TO1 = 0x1,
         WEAPON_ICON_RATIO_4TO1 = 0x2,
         WEAPON_ICON_RATIO_COUNT = 0x3
     }
 
-    public enum ammoCounterClipType_t
-    {
+    public enum ammoCounterClipType_t {
         AMMO_COUNTER_CLIP_NONE = 0x0,
         AMMO_COUNTER_CLIP_MAGAZINE = 0x1,
         AMMO_COUNTER_CLIP_SHORTMAGAZINE = 0x2,
@@ -141,31 +128,27 @@ namespace GameX.IW.Zone
         AMMO_COUNTER_CLIP_COUNT = 0x7
     }
 
-    public enum weapOverlayReticle_t
-    {
+    public enum weapOverlayReticle_t {
         WEAPOVERLAYRETICLE_NONE = 0x0,
         WEAPOVERLAYRETICLE_CROSSHAIR = 0x1,
         WEAPOVERLAYRETICLE_NUM = 0x2
     }
 
-    public enum weapOverlayInterface_t
-    {
+    public enum weapOverlayInterface_t {
         WEAPOVERLAYINTERFACE_NONE = 0x0,
         WEAPOVERLAYINTERFACE_JAVELIN = 0x1,
         WEAPOVERLAYINTERFACE_TURRETSCOPE = 0x2,
         WEAPOVERLAYINTERFACECOUNT = 0x3
     }
 
-    public enum weapStance_t
-    {
+    public enum weapStance_t {
         WEAPSTANCE_STAND = 0x0,
         WEAPSTANCE_DUCK = 0x1,
         WEAPSTANCE_PRONE = 0x2,
         WEAPSTANCE_NUM = 0x3
     }
 
-    public enum ImpactType
-    {
+    public enum ImpactType {
         IMPACT_TYPE_NONE = 0,
         IMPACT_TYPE_BULLET_SMALL = 1,
         IMPACT_TYPE_BULLET_LARGE = 2,
@@ -179,8 +162,7 @@ namespace GameX.IW.Zone
         IMPACT_TYPE_MAX
     }
 
-    public enum guidedMissileType_t
-    {
+    public enum guidedMissileType_t {
         MISSILE_GUIDANCE_NONE = 0x0,
         MISSILE_GUIDANCE_SIDEWINDER = 0x1,
         MISSILE_GUIDANCE_HELLFIRE = 0x2,
@@ -188,8 +170,7 @@ namespace GameX.IW.Zone
         MISSILE_GUIDANCE_MAX
     }
 
-    public enum surfaceNames_t
-    {
+    public enum surfaceNames_t {
         bark,
         brick,
         carpet,
@@ -231,8 +212,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe partial struct WeaponDef
-    {
+    public unsafe partial struct WeaponDef {
         public char* szInternalName;
         public XModel** gunXModel;           //Count = 16
         public XModel* handXModel;
@@ -619,8 +599,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct WeaponVariantDef
-    {
+    public unsafe struct WeaponVariantDef {
         public char* name;
         public WeaponDef* WeaponDef;
         public char* displayName;

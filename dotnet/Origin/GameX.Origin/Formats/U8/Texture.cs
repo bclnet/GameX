@@ -5,16 +5,14 @@ using System.IO;
 
 namespace GameX.Origin.Formats.U8;
 
-public unsafe class Texture : IHaveMetaInfo, ITexture
-{
+public unsafe class Texture : IHaveMetaInfo, ITexture {
     public readonly int Unknown;
     //public readonly SurfacePixelFormat PixFormat;
     public readonly int Length;
     public readonly byte[] SourceData;
     public readonly uint[] Palette;
 
-    public Texture(BinaryReader r, FamilyGame game)
-    {
+    public Texture(BinaryReader r, FamilyGame game) {
         //Id = r.ReadUInt32();
         //Unknown = r.ReadInt32();
         //Width = r.ReadInt32();
@@ -49,8 +47,7 @@ public unsafe class Texture : IHaveMetaInfo, ITexture
     public int Depth => 0;
     public int MipMaps => 1;
     public TextureFlags TexFlags => 0;
-    public T Create<T>(string platform, Func<object, T> func)
-    {
+    public T Create<T>(string platform, Func<object, T> func) {
         //byte[] Expand()
         //{
         //    switch (PixFormat)
@@ -168,8 +165,7 @@ public unsafe class Texture : IHaveMetaInfo, ITexture
         return func(new Texture_Bytes(null, null, null));
     }
 
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
-    {
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
         var nodes = new List<MetaInfo> {
             //new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "PICTURE" }),
             new MetaInfo(null, new MetaContent { Type = "Texture", Name = Path.GetFileName(file.Path), Value = this }),

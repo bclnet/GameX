@@ -7,8 +7,7 @@ namespace GameX.Valve.Formats.Vpk;
 /// <summary>
 /// IValveModel
 /// </summary>
-public interface IValveModel : IEginModel
-{
+public interface IValveModel : IEginModel {
     IDictionary<string, object> Data { get; }
     Skeleton Skeleton { get; }
 

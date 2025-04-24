@@ -7,11 +7,9 @@ using static OpenStack.Gfx.GfX;
 
 namespace GameX.Platforms.Unreal;
 
-public static class UnrealRenderer
-{
+public static class UnrealRenderer {
     public static Renderer CreateRenderer(object parent, IList<IOpenGfx> gfx, object obj, string type)
-        => type switch
-        {
+        => type switch {
             "TestTri" => new OgreTestTriRenderer(gfx[XModel] as UnrealGfxModel, obj),
             "Texture" => new OgreTextureRenderer(gfx[XModel] as UnrealGfxModel, obj),
             "Object" => new OgreObjectRenderer(gfx[XModel] as UnrealGfxModel, obj),
@@ -25,13 +23,11 @@ public class OgreTestTriRenderer(UnrealGfxModel gfx, object obj) : TestTriRender
 public class OgreCellRenderer(UnrealGfxModel gfx, object obj) : Renderer { }
 public class OgreEngineRenderer(UnrealGfxModel gfx, object obj) : Renderer { }
 public class OgreObjectRenderer(UnrealGfxModel gfx, object obj) : Renderer { }
-public class OgreTextureRenderer(UnrealGfxModel gfx, object obj) : TextureRenderer(gfx, obj, Level)
-{
+public class OgreTextureRenderer(UnrealGfxModel gfx, object obj) : TextureRenderer(gfx, obj, Level) {
     static Range Level = 0..;
 }
 
-public class ViewInfo
-{
+public class ViewInfo {
     static ViewInfo() => PlatformX.Activate(UnrealPlatform.This);
 
     public enum Kind { Texture, TextureCursor, Object, Cell, Engine }

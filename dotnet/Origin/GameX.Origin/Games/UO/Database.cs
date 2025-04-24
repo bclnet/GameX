@@ -3,8 +3,7 @@ using static OpenStack.Debug;
 
 namespace GameX.Origin.Games.UO;
 
-public static class Database
-{
+public static class Database {
     public static PakFile PakFile = FamilyManager.GetFamily("Origin").OpenPakFile(new Uri("game:/#UO"));
 
     //Games.UO.Database.PakFile?.LoadFileObject<Binary_StringTable>("Cliloc.enu").Result;

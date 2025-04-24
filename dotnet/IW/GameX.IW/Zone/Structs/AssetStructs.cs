@@ -1,28 +1,23 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace GameX.IW.Zone
-{
+namespace GameX.IW.Zone {
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct vec2
-    {
+    public unsafe struct vec2 {
         public float x, y;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct vec3
-    {
+    public unsafe struct vec3 {
         public float x, y, z;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct vec4
-    {
+    public unsafe struct vec4 {
         public float x, y, z, w;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe partial struct PhysPreset
-    {
+    public unsafe partial struct PhysPreset {
         public char* name;
         public int type;
         public float mass;
@@ -37,8 +32,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct VertexDecl
-    {
+    public unsafe struct VertexDecl {
         public char* name;
         public int unknown;
         public fixed char pad[28];
@@ -62,8 +56,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct PixelShader
-    {
+    public unsafe struct PixelShader {
         public const int COD4_SizeOf = 115;
         public char* name;
         /*IDirect3DPixelShader9*/
@@ -73,8 +66,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct VertexShader
-    {
+    public unsafe struct VertexShader {
         public char* name;
         public void* /*IDirect3DVertexShader9**/ shader;
         public uint* bytecode;
@@ -82,23 +74,20 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct GfxLightImage
-    {
+    public unsafe struct GfxLightImage {
         public GfxImage image;
         public char samplerState;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct GfxLightDef
-    {
+    public unsafe struct GfxLightDef {
         public char* name;
         public GfxLightImage attenuation;
         public int lmapLookupStart;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct FontEntry
-    {
+    public unsafe struct FontEntry {
         public ushort character;
         public byte padLeft;
         public byte padTop;
@@ -113,8 +102,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct Font
-    {
+    public unsafe struct Font {
         public char* name;
         public int size;
         public int entries;
@@ -126,15 +114,13 @@ namespace GameX.IW.Zone
     //// we will leave menus out of this as they are compicated as hell
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct Localize
-    {
+    public unsafe struct Localize {
         public char* localizedString;
         public char* name;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct FxImpactEntry
-    {
+    public unsafe struct FxImpactEntry {
         public FxEffectDef* nonflesh_00; public FxEffectDef* nonflesh_01; public FxEffectDef* nonflesh_02; public FxEffectDef* nonflesh_03; public FxEffectDef* nonflesh_04;
         public FxEffectDef* nonflesh_05; public FxEffectDef* nonflesh_06; public FxEffectDef* nonflesh_07; public FxEffectDef* nonflesh_08; public FxEffectDef* nonflesh_09;
         public FxEffectDef* nonflesh_10; public FxEffectDef* nonflesh_11; public FxEffectDef* nonflesh_12; public FxEffectDef* nonflesh_13; public FxEffectDef* nonflesh_14;
@@ -146,15 +132,13 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct FxImpactTable
-    {
+    public unsafe struct FxImpactTable {
         public char* name;
         public FxImpactEntry* table;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct LbColumnDef
-    {
+    public unsafe struct LbColumnDef {
         public char* title;
         public int id;
         public int propertyId;
@@ -166,8 +150,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct LeaderboardDef
-    {
+    public unsafe struct LeaderboardDef {
         public char* name;
         public int id;
         public int columnCount;
@@ -177,8 +160,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct Tracer
-    {
+    public unsafe struct Tracer {
         public char* name;
         public Material* material;
         public uint drawInterval;
@@ -191,8 +173,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct Rawfile
-    {
+    public unsafe struct Rawfile {
         public char* name;
         public int sizeCompressed;
         public int sizeUnCompressed;
@@ -200,8 +181,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct StringTable
-    {
+    public unsafe struct StringTable {
         public char* name;
         public int columns;
         public int rows;

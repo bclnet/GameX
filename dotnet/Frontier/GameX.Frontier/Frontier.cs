@@ -14,22 +14,19 @@ namespace GameX.Frontier;
 /// FrontierPakFile
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class FrontierPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel>
-{
+public class FrontierPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="FrontierPakFile" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public FrontierPakFile(PakState state) : base(state, Binary_Frontier.Current)
-    {
+    public FrontierPakFile(PakState state) : base(state, Binary_Frontier.Current) {
         ObjectFactoryFunc = ObjectFactory;
     }
 
     #region Factories
 
     static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
-        => Path.GetExtension(source.Path).ToLowerInvariant() switch
-        {
+        => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             _ => UnknownPakFile.ObjectFactory(source, game),
         };
 

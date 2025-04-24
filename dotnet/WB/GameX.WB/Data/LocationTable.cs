@@ -2,20 +2,16 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace GameX.WB.Data
-{
-    public static class LocationTable
-    {
-        public enum TeleportLocationType
-        {
+namespace GameX.WB.Data {
+    public static class LocationTable {
+        public enum TeleportLocationType {
             Undef,
             Town,
             Dungeon,
             POI
         }
 
-        public class Row
-        {
+        public class Row {
             public string Name;
             public string Type;
             public string Location;
@@ -29,17 +25,14 @@ namespace GameX.WB.Data
 
         public readonly static Dictionary<string, Row> Table = new Dictionary<string, Row>();
 
-        public static void Load()
-        {
+        public static void Load() {
             var data = new StreamReader(typeof(DIDTable).Assembly.GetManifestResourceStream($"GameX.WB.Data.LocationTable.txt")).ReadToEnd();
-            foreach (var line in File.ReadAllLines(data))
-            {
+            foreach (var line in File.ReadAllLines(data)) {
                 if (line.StartsWith("#")) continue; // comment
                 var pieces = line.Split(new string[] { " | " }, StringSplitOptions.None);
                 if (pieces.Length < 3) throw new Exception($"Location.Load() - failed to parse {line}");
 
-                var row = new Row
-                {
+                var row = new Row {
                     Name = pieces[0],
                     Type = pieces[1],
                     Location = pieces[2],

@@ -12,12 +12,10 @@ using System.Numerics;
 namespace GameX.Valve.OpenGL.Scenes;
 
 //was:Renderer/ModelSceneNode
-public class ModelSceneNode : SceneNode, IMeshCollection
-{
+public class ModelSceneNode : SceneNode, IMeshCollection {
     IValveModel Model { get; }
 
-    public Vector4 Tint
-    {
+    public Vector4 Tint {
         get => MeshRenderers.Count > 0 ? MeshRenderers[0].Tint : Vector4.One;
         set { foreach (var renderer in MeshRenderers) renderer.Tint = value; }
     }
@@ -36,8 +34,7 @@ public class ModelSceneNode : SceneNode, IMeshCollection
 
     bool LoadedAnimations;
 
-    public ModelSceneNode(Scene scene, IValveModel model, string skin = null, bool loadAnimations = true) : base(scene)
-    {
+    public ModelSceneNode(Scene scene, IValveModel model, string skin = null, bool loadAnimations = true) : base(scene) {
         Model = model;
         AnimationController = new AnimationController(model.Skeleton);
 
@@ -49,8 +46,7 @@ public class ModelSceneNode : SceneNode, IMeshCollection
         if (loadAnimations) LoadAnimations();
     }
 
-    public override void Update(Scene.UpdateContext context)
-    {
+    public override void Update(Scene.UpdateContext context) {
         if (!AnimationController.Update(context.Timestep)) return;
 
         UpdateBoundingBox(); // Reset back to the mesh bbox
@@ -68,8 +64,7 @@ public class ModelSceneNode : SceneNode, IMeshCollection
         GL.BindTexture(TextureTarget.Texture2D, 0);
 
         var first = true;
-        foreach (var matrix in matrices)
-        {
+        foreach (var matrix in matrices) {
             var bbox = LocalBoundingBox.Transform(matrix);
             newBoundingBox = first ? bbox : newBoundingBox.Union(bbox);
             first = false;
@@ -82,22 +77,18 @@ public class ModelSceneNode : SceneNode, IMeshCollection
 
     public override IEnumerable<string> GetSupportedRenderModes() => MeshRenderers.SelectMany(renderer => renderer.GetSupportedRenderModes()).Distinct();
 
-    public override void SetRenderMode(string renderMode)
-    {
+    public override void SetRenderMode(string renderMode) {
         foreach (var renderer in MeshRenderers) renderer.SetRenderMode(renderMode);
     }
 
-    void SetSkin(string skin)
-    {
+    void SetSkin(string skin) {
         ActiveSkin = skin;
 
         string[] defaultMaterials = null;
-        foreach (var materialGroup in Model.Data.Get<IDictionary<string, object>[]>("m_materialGroups"))
-        {
+        foreach (var materialGroup in Model.Data.Get<IDictionary<string, object>[]>("m_materialGroups")) {
             // The first item needs to match the default materials on the model
             defaultMaterials ??= materialGroup.Get<string[]>("m_materials");
-            if (materialGroup.Get<string>("m_name") == skin)
-            {
+            if (materialGroup.Get<string>("m_name") == skin) {
                 var materials = materialGroup.Get<string[]>("m_materials");
                 SkinMaterials = [];
                 for (var i = 0; i < defaultMaterials.Length; i++) SkinMaterials[defaultMaterials[i]] = materials[i];
@@ -108,23 +99,20 @@ public class ModelSceneNode : SceneNode, IMeshCollection
         foreach (var mesh in MeshRenderers) mesh.SetSkin(SkinMaterials);
     }
 
-    public void LoadAnimations()
-    {
+    public void LoadAnimations() {
         if (LoadedAnimations) return;
         LoadedAnimations = true;
         Animations.AddRange(Model.GetAllAnimations(null));
         if (Animations.Any()) SetupAnimationTextures();
     }
 
-    void LoadMeshes()
-    {
+    void LoadMeshes() {
         // Get embedded meshes
         foreach (var embeddedMesh in Model.GetEmbeddedMeshesAndLoD().Where(m => (m.LoDMask & 1) != 0))
             MeshRenderers.Add(new GLRenderableMesh(Scene.Gfx as OpenGLGfxModel, embeddedMesh.Mesh, embeddedMesh.MeshIndex, SkinMaterials, Model));
 
         // Load referred meshes from file (only load meshes with LoD 1)
-        foreach (var refMesh in GetLod1RefMeshes())
-        {
+        foreach (var refMesh in GetLod1RefMeshes()) {
             var newResource = Scene.Gfx.LoadFileObject<Binary_Src>($"{refMesh.MeshName}_c").Result;
             if (newResource == null) continue;
 
@@ -137,10 +125,8 @@ public class ModelSceneNode : SceneNode, IMeshCollection
         SetActiveMeshGroups(Model.GetDefaultMeshGroups());
     }
 
-    void SetupAnimationTextures()
-    {
-        if (AnimationTexture == -1)
-        {
+    void SetupAnimationTextures() {
+        if (AnimationTexture == -1) {
             // Create animation texture
             AnimationTexture = GL.GenTexture();
             GL.BindTexture(TextureTarget.Texture2D, AnimationTexture);
@@ -157,8 +143,7 @@ public class ModelSceneNode : SceneNode, IMeshCollection
 
     public IEnumerable<string> GetSupportedAnimationNames() => Animations.Select(a => a.Name);
 
-    public void SetAnimation(string animationName)
-    {
+    public void SetAnimation(string animationName) {
         var activeAnimation = Animations.FirstOrDefault(a => a.Name == animationName);
         AnimationController.SetAnimation(activeAnimation);
         UpdateBoundingBox();
@@ -173,16 +158,13 @@ public class ModelSceneNode : SceneNode, IMeshCollection
 
     public ICollection<string> GetActiveMeshGroups() => ActiveMeshGroups;
 
-    public void SetActiveMeshGroups(IEnumerable<string> meshGroups)
-    {
+    public void SetActiveMeshGroups(IEnumerable<string> meshGroups) {
         ActiveMeshGroups = new HashSet<string>(GetMeshGroups().Intersect(meshGroups));
 
         var groups = GetMeshGroups();
-        if (groups.Count() > 1)
-        {
+        if (groups.Count() > 1) {
             ActiveMeshRenderers.Clear();
-            foreach (var group in ActiveMeshGroups)
-            {
+            foreach (var group in ActiveMeshGroups) {
                 var meshMask = Model.GetActiveMeshMaskForGroup(group).ToArray();
                 foreach (var meshRenderer in MeshRenderers) if (meshMask[meshRenderer.MeshIndex]) ActiveMeshRenderers.Add(meshRenderer);
             }
@@ -190,11 +172,9 @@ public class ModelSceneNode : SceneNode, IMeshCollection
         else ActiveMeshRenderers = new HashSet<RenderableMesh>(MeshRenderers);
     }
 
-    void UpdateBoundingBox()
-    {
+    void UpdateBoundingBox() {
         var first = true;
-        foreach (var mesh in MeshRenderers)
-        {
+        foreach (var mesh in MeshRenderers) {
             LocalBoundingBox = first ? mesh.BoundingBox : BoundingBox.Union(mesh.BoundingBox);
             first = false;
         }

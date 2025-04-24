@@ -16,15 +16,13 @@ namespace GameX.ID.Formats;
 // https://www.mralligator.com/q3/
 // https://github.com/demoth/jake2/blob/main/info/BSP.md
 
-public unsafe class Binary_Bsp2 : IHaveMetaInfo
-{
+public unsafe class Binary_Bsp2 : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Bsp2(r, s));
 
     #region Headers
 
     #region Vertex
-    public enum Side
-    {
+    public enum Side {
         FRONT = 0,
         BACK = 1,
         ON = 2,
@@ -47,8 +45,7 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
         public Vector3 Normal;
         public float Dist;
     }
-    public class Plane
-    {
+    public class Plane {
         internal static Plane Create(X_Plane12 s) => new() { Normal = s.Normal, Dist = s.Dist, Type = (byte)s.Type, Signbits = ToBits(ref s.Normal) };
         internal static Plane Create(X_Plane3 s) => new() { Normal = s.Normal, Dist = s.Dist, Signbits = ToBits(ref s.Normal) };
         public Vector3 Normal;
@@ -69,8 +66,7 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
         public uint Width, Height;
         public fixed uint Offsets[4]; // four mip maps stored
     }
-    public class Texture
-    {
+    public class Texture {
         const int OFFSETX = 72 - 40;
         internal static Texture Create(BinaryReader r, X_Texture1 s) => new() { Name = UnsafeX.FixedAStringScan(s.Name, 16), Width = (int)s.Width, Height = (int)s.Height, Offsets = [s.Offsets[0] + OFFSETX, s.Offsets[1] + OFFSETX, s.Offsets[2] + OFFSETX, s.Offsets[3] + OFFSETX], Pixels = r.ReadBytes((int)s.Width * (int)s.Height / 64 * 85) };
         public string Name;
@@ -85,8 +81,7 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
     #endregion
 
     #region Edge
-    public struct Edge
-    {
+    public struct Edge {
         internal static Edge Create(Vector2<ushort> s) => new() { V = s };
         public Vector2<ushort> V;
         //public int CachedEdgeOffset;
@@ -113,8 +108,7 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
         public int NextTexinfo; // for animations, -1 = end of chain
     }
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_Texinfo3
-    {
+    internal struct X_Texinfo3 {
         public static (string, int) Struct = ("<?", sizeof(X_Texinfo3));
         public Vector3 VectorS;
         public float DistS;
@@ -123,8 +117,7 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
         public uint TextureId;
         public uint Animated;
     }
-    public class Texinfo
-    {
+    public class Texinfo {
         internal static Texinfo Create(Binary_Bsp2 p, X_Texinfo1 s) => new Texinfo() { Vecs = [s.Vec0, s.Vec1], Flags = s.Flags, Mipadjust = ToMipadjust(ref s.Vec0, ref s.Vec1) }.Set(p, s.Miptex);
         internal static Texinfo Create(Binary_Bsp2 p, X_Texinfo2 s) => new() { Vecs = [s.Vec0, s.Vec1], Flags = s.Flags, Value = s.Value, TextureName = UnsafeX.FixedAString(s.Texture, 32), NextTexinfo = s.NextTexinfo };
         public Vector4[] Vecs;
@@ -136,8 +129,7 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
         // calc
         public int Mipadjust;
         public Texture Texture;
-        static int ToMipadjust(ref Vector4 s0, ref Vector4 s1)
-        {
+        static int ToMipadjust(ref Vector4 s0, ref Vector4 s1) {
             var len1 = s0.Length();
             var len2 = s1.Length();
             len1 = (len1 + len2) / 2;
@@ -146,8 +138,7 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
             else if (len1 < 0.99) return 2;
             else return 1;
         }
-        Texinfo Set(Binary_Bsp2 p, int miptex)
-        {
+        Texinfo Set(Binary_Bsp2 p, int miptex) {
             var texs = p.Textures;
             Texture = texs == null ? null : miptex < texs.Length ? texs[miptex] : throw new FormatException("miptex >= numtextures");
             if (Texture == null) Flags = 0;
@@ -158,8 +149,7 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
 
     #region Surface
     [Flags]
-    public enum SurfaceFlags
-    {
+    public enum SurfaceFlags {
         PLANEBACK = 2,
         DRAWSKY = 4,
         DRAWSPRITE = 8,
@@ -179,8 +169,7 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
         public int LightOffset; // start of [numstyles*surfsize] samples
     }
     [StructLayout(LayoutKind.Sequential)]
-    struct X_Surface3__
-    {
+    struct X_Surface3__ {
         public ushort PlaneId;
         public ushort Side;
         public int LedgeId;
@@ -191,8 +180,7 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
         public fixed byte Light[2];
         public int LightMap;
     }
-    public class Surface
-    {
+    public class Surface {
         internal static Surface Create(Binary_Bsp2 p, X_Surface12 s) => new Surface() { FirstEdge = s.FirstEdge, NumEdges = s.NumEdges, Plane = p.Planes[s.PlaneNum], Texinfo = p.Texinfos[s.Texinfo], Styles = [s.Styles[0], s.Styles[1], s.Styles[2], s.Styles[3]], Samples = s.LightOffset != -1 ? p.Lightmaps.AsMemory(s.LightOffset) : null }.Set(p, s.Side);
         internal static Surface Get(Binary_Bsp2 p, short s) => s < p.Surfaces.Length ? p.Surfaces[s] : throw new FormatException("MarkSurfaces: bad surface number");
         public int VisFrame; // should be drawn when node is crossed
@@ -208,12 +196,10 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
         // lighting info
         public int[] Styles;
         public Memory<byte> Samples; // [numstyles*surfsize]
-        Surface Set(Binary_Bsp2 p, ushort side)
-        {
+        Surface Set(Binary_Bsp2 p, ushort side) {
             if (side != 0) Flags |= SurfaceFlags.PLANEBACK;
             if (Texinfo.Texture.Name.StartsWith("sky")) Flags |= SurfaceFlags.DRAWSKY | SurfaceFlags.DRAWTILED; // sky
-            else if (Texinfo.Texture.Name.StartsWith("*"))
-            {
+            else if (Texinfo.Texture.Name.StartsWith("*")) {
                 Flags |= SurfaceFlags.DRAWTURB | SurfaceFlags.DRAWTILED; // turbulent
                 Extents[0] = Extents[1] = 16384;
                 TextureMins[0] = TextureMins[1] = -8192;
@@ -222,26 +208,22 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
             return this;
         }
 
-        void CalcSurfaceExtents(Binary_Bsp2 p)
-        {
+        void CalcSurfaceExtents(Binary_Bsp2 p) {
             float val; var mins = stackalloc float[2]; var maxs = stackalloc float[2];
             int i, j, e; var bmins = stackalloc int[2]; var bmaxs = stackalloc int[2];
             mins[0] = mins[1] = 999999;
             maxs[0] = maxs[1] = -99999;
             var tex = Texinfo;
-            for (i = 0; i < NumEdges; i++)
-            {
+            for (i = 0; i < NumEdges; i++) {
                 e = p.SurfaceEdges[FirstEdge + i];
                 ref Vector3 v = ref p.Vertices[p.Edges[e >= 0 ? e : -e].V[0]];
-                for (j = 0; j < 2; j++)
-                {
+                for (j = 0; j < 2; j++) {
                     val = v.X * tex.Vecs[j].X + v.Y * tex.Vecs[j].Y + v.Z * tex.Vecs[j].Z + tex.Vecs[j].W;
                     if (val < mins[j]) mins[j] = val;
                     if (val > maxs[j]) maxs[j] = val;
                 }
             }
-            for (i = 0; i < 2; i++)
-            {
+            for (i = 0; i < 2; i++) {
                 bmins[i] = (int)Math.Floor(mins[i] / 16);
                 bmaxs[i] = (int)Math.Ceiling(maxs[i] / 16);
                 TextureMins[i] = (short)(bmins[i] * 16);
@@ -271,20 +253,17 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
         public Vector3<int> Min, Max; // for frustom culling
     }
 
-    public class Node
-    {
+    public class Node {
         public int Contents; // 0, to differentiate from leafs
         public int VisFrame; // node needs to be traversed if current
         public Vector3<int> Min, Max; // for bounding box culling
         public Node Parent;
-        internal static void Bind(Binary_Bsp2 p)
-        {
+        internal static void Bind(Binary_Bsp2 p) {
             foreach (var s in p.Nodes) { s.Children = (ToNode(p, s.ChildrenId.l), ToNode(p, s.ChildrenId.r)); }
             SetParent(p.Nodes[0], null);
         }
         static Node ToNode(Binary_Bsp2 p, int id) => id >= 0 ? p.Nodes[id] : p.Leafs[-1 - id];
-        static void SetParent(Node node, Node parent)
-        {
+        static void SetParent(Node node, Node parent) {
             return;
             node.Parent = parent;
             if (node.Contents < 0) return;
@@ -294,10 +273,8 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
         }
     }
 
-    public class NodeX : Node
-    {
-        internal static NodeX Create(Binary_Bsp2 p, X_Node12 s) => new()
-        {
+    public class NodeX : Node {
+        internal static NodeX Create(Binary_Bsp2 p, X_Node12 s) => new() {
             Min = new Vector3<int>(s.Min.X, s.Min.Y, s.Min.Z),
             Max = new Vector3<int>(s.Max.X, s.Max.Y, s.Max.Z),
             Plane = p.Planes[s.PlaneNum],
@@ -305,8 +282,7 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
             NumSurfaces = s.NumSurfaces,
             ChildrenId = (s.Children[0], s.Children[1])
         };
-        internal static NodeX Create(Binary_Bsp2 p, X_Node3 s) => new()
-        {
+        internal static NodeX Create(Binary_Bsp2 p, X_Node3 s) => new() {
             Min = s.Min,
             Max = s.Max,
             Plane = p.Planes[s.PlaneNum],
@@ -331,8 +307,7 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
         public fixed byte AmbientLevel[4]; // automatic ambient sounds
     }
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_Leaf3
-    {
+    internal struct X_Leaf3 {
         public static (string, int) Struct = ("<", sizeof(X_Leaf3));
         public int Cluster; // -1 = opaque cluster (do I still store these?)
         public int Area;
@@ -340,10 +315,8 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
         public int FirstLeafSurface, NumLeafSurfaces;
         public int FirstLeafBrush, NumLeafBrushes;
     }
-    public class Leaf : Node
-    {
-        internal static Leaf Create(Binary_Bsp2 p, X_Leaf12 s) => new()
-        {
+    public class Leaf : Node {
+        internal static Leaf Create(Binary_Bsp2 p, X_Leaf12 s) => new() {
             Min = new Vector3<int>(s.Min.X, s.Min.Y, s.Min.Z),
             Max = new Vector3<int>(s.Max.X, s.Max.Y, s.Max.Z),
             Contents = s.Contents,
@@ -361,8 +334,7 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
     #endregion
 
     #region Hull
-    public class Hull
-    {
+    public class Hull {
         public ClipNode ClipNodes;
         public Plane[] Planes;
         public int FirstClipNode, LastClipNode;
@@ -372,8 +344,7 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
 
     #region Model
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_Model1
-    {
+    internal struct X_Model1 {
         public static (string, int) Struct = ("<9f7i", sizeof(X_Model1));
         public Vector3 Min, Max;
         public Vector3 Origin;
@@ -382,8 +353,7 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
         public int FirstSurface, NumSurfaces;
     }
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_Model2
-    {
+    internal struct X_Model2 {
         public static (string, int) Struct = ("<9f3i", sizeof(X_Model2));
         public Vector3 Min, Max;
         public Vector3 Origin; // for sounds or lights
@@ -391,17 +361,14 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
         public int FirstSurface, NumSurfaces; // submodels just draw faces without walking the bsp tree
     }
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_Model3
-    {
+    internal struct X_Model3 {
         public static (string, int) Struct = ("<6f4i", sizeof(X_Model3));
         public Vector3 Min, Max;
         public int FirstSurface, NumSurfaces;
         public int FirstBrush, NumBrushes;
     }
-    public class Model
-    {
-        internal static Model Create(X_Model1 s) => new()
-        {
+    public class Model {
+        internal static Model Create(X_Model1 s) => new() {
             Min = new Vector3(s.Min.X - 1, s.Min.Y - 1, s.Min.Z - 1), // spread the mins / maxs by a pixel
             Max = new Vector3(s.Max.X + 1, s.Max.Y + 1, s.Max.Z + 1), // spread the mins / maxs by a pixel
             Origin = s.Origin,
@@ -423,14 +390,12 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
 
     #region Brush
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_Brush23
-    {
+    internal struct X_Brush23 {
         public static (string, int) Struct = ("<3i", sizeof(X_BrushSide3));
         public int FirstSide, NumSides;
         public int ContentsShaderNum; // the shader that determines the contents flags
     }
-    public class Brush
-    {
+    public class Brush {
         internal static Brush Create(X_Brush23 s) => new() { FirstSide = s.FirstSide, NumSides = s.NumSides, ContentsShaderNum = s.ContentsShaderNum };
         public int FirstSide, NumSides;
         public int ContentsShaderNum;
@@ -451,8 +416,7 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
         public int PlaneNum; // positive plane side faces out of the leaf
         public int ShaderNum;
     }
-    public class BrushSide
-    {
+    public class BrushSide {
         internal static BrushSide Create(X_BrushSide2 s) => new() { PlaneNum = s.PlaneNum, Texinfo = s.Texinfo };
         internal static BrushSide Create(X_BrushSide3 s) => new() { PlaneNum = s.PlaneNum, ShaderNum = s.ShaderNum };
         public int PlaneNum;
@@ -463,8 +427,7 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
 
     #region DrawVert
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_DrawVert3
-    {
+    internal struct X_DrawVert3 {
         public static (string, int) Struct = ("<14f", sizeof(X_DrawVert3));
         public Vector3 Xyz;
         public fixed float St[2];
@@ -472,8 +435,7 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
         public Vector3 Normal;
         public fixed float Color[3];
     }
-    public struct DrawVert
-    {
+    public struct DrawVert {
         internal static DrawVert Create(X_DrawVert3 s) => new() { Xyz = s.Xyz, St = [s.St[0], s.St[1]], Lightmap = [s.Lightmap[0], s.Lightmap[1]], Normal = s.Normal, Color = [s.Color[0], s.Color[1], s.Color[2]] };
         public Vector3 Xyz;
         public float[] St;
@@ -485,15 +447,13 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
 
     #region Fog
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_Fog3
-    {
+    internal struct X_Fog3 {
         public static (string, int) Struct = ("<64s2i", sizeof(X_Fog3));
         public fixed byte Name[64];
         public int BrushNum;
         public int VisibleSide; // the brush side that ray tests need to clip against (-1 == none)
     }
-    public struct Fogx
-    {
+    public struct Fogx {
         internal static Fogx Create(X_Fog3 s) => new() { Name = UnsafeX.FixedAString(s.Name, 64), BrushNum = s.BrushNum, VisibleSide = s.VisibleSide };
         public string Name;
         public int BrushNum;
@@ -503,14 +463,12 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
 
     #region ClipNode
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_ClipNode1
-    {
+    internal struct X_ClipNode1 {
         public static (string, int) Struct = ("<I2h", sizeof(X_ClipNode1));
         public uint PlaneNum;
         public (short l, short r) Children;
     }
-    public class ClipNode
-    {
+    public class ClipNode {
         internal static ClipNode Create(X_ClipNode1 s) => new() { PlaneNum = s.PlaneNum, Children = s.Children };
         public uint PlaneNum;
         public (short l, short r) Children; // negative numbers are contents
@@ -525,8 +483,7 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
         public int NumAreaPortals;
         public int FirstAreaPortal;
     }
-    public struct Area
-    {
+    public struct Area {
         internal static Area Create(X_Area2 s) => new() { NumAreaPortals = s.NumAreaPortals, FirstAreaPortal = s.FirstAreaPortal };
         public int NumAreaPortals;
         public int FirstAreaPortal;
@@ -541,8 +498,7 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
         public int PortalNum;
         public int OtherArea;
     }
-    public struct AreaPortal
-    {
+    public struct AreaPortal {
         internal static AreaPortal Create(X_AreaPortal2 s) => new() { PortalNum = s.PortalNum, OtherArea = s.OtherArea };
         public int PortalNum;
         public int OtherArea;
@@ -551,15 +507,13 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
 
     #region Shader
     [StructLayout(LayoutKind.Sequential)]
-    internal struct X_Shader3
-    {
+    internal struct X_Shader3 {
         public static (string, int) Struct = ("<64s2I", sizeof(X_Shader3));
         public fixed byte Name[64];
         public int SurfaceFlags;
         public int ContentFlags;
     }
-    public class Shader
-    {
+    public class Shader {
         internal static Shader Create(X_Shader3 s) => new() { Name = UnsafeX.FixedAString(s.Name, 64), SurfaceFlags = s.SurfaceFlags, ContentFlags = s.ContentFlags };
         public string Name;
         public int SurfaceFlags;
@@ -568,8 +522,7 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
     #endregion
 
     [StructLayout(LayoutKind.Sequential)]
-    struct X_Header
-    {
+    struct X_Header {
         public static (string, int) Struct = ("<31i", sizeof(X_Header));
         public int Version;
         public X_LumpON Lump00;
@@ -627,23 +580,20 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
     AreaPortal[] AreaPortals; // | -- | 18 | --
     Surface[] MarkSurfaces; // | 11 | -- | --
 
-    public Binary_Bsp2(BinaryReader r, PakFile s)
-    {
+    public Binary_Bsp2(BinaryReader r, PakFile s) {
         var engineV = s.Game.Engine.v;
         // read file
         var magic = engineV == "2" ? 0 : r.ReadUInt32();
         var header = r.ReadS<X_Header>();
 
-        static Texture[] LoadTextures(BinaryReader r, int offset)
-        {
+        static Texture[] LoadTextures(BinaryReader r, int offset) {
             int i, j, num, max, altmax;
             Texture tx, tx2;
             Texture[] anims = new Texture[10], altanims = new Texture[10];
 
             var offsets = r.ReadL32PArray<int>("i");
             var textures = new Texture[offsets.Length];
-            for (i = 0; i < offsets.Length; i++)
-            {
+            for (i = 0; i < offsets.Length; i++) {
                 if (offsets[i] == -1) continue;
                 r.Seek(offset + offsets[i]); tx = Texture.Create(r, r.ReadS<X_Texture1>());
                 if ((tx.Width & 15) != 0 || (tx.Height & 15) != 0) throw new FormatException($"Texture {tx.Name} is not 16 aligned");
@@ -652,8 +602,7 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
             }
 
             // sequence the animations
-            for (i = 0; i < textures.Length; i++)
-            {
+            for (i = 0; i < textures.Length; i++) {
                 tx = textures[i];
                 if (tx == null || tx.Name[0] == '+') continue;
                 if (tx.AnimNext == null) continue;   // already sequenced
@@ -669,8 +618,7 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
                 else if (max >= 'A' && max <= 'J') { altmax = max - 'A'; max = 0; altanims[altmax] = tx; altmax++; }
                 else throw new FormatException($"Bad animating texture {tx.Name}");
 
-                for (j = i + 1; j < textures.Length; j++)
-                {
+                for (j = i + 1; j < textures.Length; j++) {
                     tx2 = textures[j];
                     if (tx2 == null || tx2.Name[0] != '+') continue;
                     if (tx2.Name[2..] != tx.Name[2..]) continue;
@@ -684,8 +632,7 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
 
                 // link them all together
                 const int ANIM_CYCLE = 2;
-                for (j = 0; j < max; j++)
-                {
+                for (j = 0; j < max; j++) {
                     tx2 = anims[j];
                     if (tx2 == null) throw new FormatException($"Missing frame {j} of {tx.Name}");
                     tx2.AnimTotal = max * ANIM_CYCLE;
@@ -694,8 +641,7 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
                     tx2.AnimNext = anims[(j + 1) % max];
                     if (altmax != 0) tx2.AlternateAnims = altanims[0];
                 }
-                for (j = 0; j < altmax; j++)
-                {
+                for (j = 0; j < altmax; j++) {
                     tx2 = altanims[j];
                     if (tx2 == null) throw new FormatException($"Missing frame {j} of {tx.Name}");
                     tx2.AnimTotal = altmax * ANIM_CYCLE;
@@ -708,8 +654,7 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
             return textures;
         }
 
-        switch (header.Version)
-        {
+        switch (header.Version) {
             case 29:
                 // https://github.com/id-Software/Quake/blob/master/WinQuake/bspfile.h, https://github.com/id-Software/Quake/blob/master/WinQuake/model.c#L1143
                 r.Seek(header.Lump03.Offset); Vertices = (header.Lump03.Num % sizeof(Vector3)) == 0 ? r.ReadPArray<Vector3>("3f", header.Lump03.Num / sizeof(Vector3)) : throw new FormatException("Vertices: bad lump size");
@@ -969,16 +914,14 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo
 
 #region Binary_Spr
 
-public unsafe class Binary_Spr : IHaveMetaInfo
-{
+public unsafe class Binary_Spr : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Spr(r));
 
     #region Records
 
     const uint SPR_MAGIC = 0x1122; // IDSP
 
-    enum SpriteType
-    {
+    enum SpriteType {
         ParallelUpright = 0, // vp parallel upright
         FaceUpright = 1, // facing upright
         Parallel = 2, // vp parallel
@@ -987,8 +930,7 @@ public unsafe class Binary_Spr : IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct SPR_Header
-    {
+    struct SPR_Header {
         public static (string, int) Struct = ("<I2i", sizeof(SPR_Header));
         public uint Magic;      // "IDSP"
         public int Version;     // Version = 1
@@ -1002,8 +944,7 @@ public unsafe class Binary_Spr : IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct SPR_Picture
-    {
+    struct SPR_Picture {
         public static (string, int) Struct = ("<I2i", sizeof(SPR_Picture));
         public int OfsX;        // horizontal offset, in 3D space
         public int OfsY;        // vertical offset, in 3D space
@@ -1015,8 +956,7 @@ public unsafe class Binary_Spr : IHaveMetaInfo
     // R_GetSpriteFrame
 
     // file: xxxx.spr
-    public Binary_Spr(BinaryReader r)
-    {
+    public Binary_Spr(BinaryReader r) {
         var header = r.ReadS<SPR_Header>();
     }
 

@@ -1,37 +1,31 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace GameX.IW.Zone
-{
+namespace GameX.IW.Zone {
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct XModelDrawInfo
-    {
+    public unsafe struct XModelDrawInfo {
         public ushort lod;
         public ushort surfId;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct GfxSceneDynModel
-    {
+    public unsafe struct GfxSceneDynModel {
         public XModelDrawInfo info;
         public ushort dynEntId;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct BModelDrawInfo
-    {
+    public unsafe struct BModelDrawInfo {
         public ushort surfId;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct GfxSceneDynBrush
-    {
+    public unsafe struct GfxSceneDynBrush {
         public BModelDrawInfo info;
         public ushort dynEntId;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct GfxStreamingAabbTree
-    {
+    public unsafe struct GfxStreamingAabbTree {
         public ushort firstItem;
         public ushort itemCount;
         public ushort firstChild;
@@ -41,8 +35,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct GfxWorldStreamInfo
-    {
+    public unsafe struct GfxWorldStreamInfo {
         public int aabbTreeCount;
         public GfxStreamingAabbTree* aabbTrees;
         public int leafRefCount;
@@ -64,8 +57,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct GfxWorldVertex
-    {
+    public unsafe struct GfxWorldVertex {
         public fixed float xyz[3];
         public float binormalSign;
         public GfxColor color;
@@ -76,15 +68,13 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct GfxWorldVertexData
-    {
+    public unsafe struct GfxWorldVertexData {
         public GfxWorldVertex* vertices;
         public IDirect3DVertexBuffer9* worldVb;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct GfxLight
-    {
+    public unsafe struct GfxLight {
         public char type;
         public char canUseShadowMap;
         public fixed char unused[2];
@@ -100,14 +90,12 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct GfxReflectionProbe
-    {
+    public unsafe struct GfxReflectionProbe {
         public fixed float offset[3];
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct GfxWorldDpvsPlanes
-    {
+    public unsafe struct GfxWorldDpvsPlanes {
         public int cellCount;
         public cplane_s* planes;
         public ushort* nodes;
@@ -115,8 +103,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct GfxAabbTree
-    {
+    public unsafe struct GfxAabbTree {
         public fixed float mins[3];
         public fixed float maxs[3];
         public ushort childCount;
@@ -128,30 +115,26 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct GfxLightGridEntry
-    {
+    public unsafe struct GfxLightGridEntry {
         public ushort colorsIndex;
         public char primaryLightIndex;
         public char needsTrace;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct GfxLightGridColors
-    {
+    public unsafe struct GfxLightGridColors {
         public fixed char rgb[56 * 3];
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct GfxStaticModelInst
-    {
+    public unsafe struct GfxStaticModelInst {
         public fixed float mins[3];
         public fixed float maxs[3];
         public GfxColor groundLighting;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct srfTriangles_t
-    {
+    public unsafe struct srfTriangles_t {
         public int vertexLayerData;
         public int firstVertex;
         public ushort vertexCount;
@@ -160,8 +143,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct GfxSurface
-    {
+    public unsafe struct GfxSurface {
         public srfTriangles_t tris;
         public Material* material;
         public char lightmapIndex;
@@ -171,8 +153,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct GfxCullGroup
-    {
+    public unsafe struct GfxCullGroup {
         public fixed float mins[3];
         public fixed float maxs[3];
         public int surfaceCount;
@@ -180,8 +161,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct GfxDrawSurfFields
-    {
+    public unsafe struct GfxDrawSurfFields {
         public long _bf0;
     }
 
@@ -193,8 +173,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct GfxWorldDpvsStatic
-    {
+    public unsafe struct GfxWorldDpvsStatic {
         public uint smodelCount;
         public uint staticSurfaceCount;
         public uint litSurfsBegin;
@@ -213,16 +192,14 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    public unsafe struct GfxPackedPlacement
-    {
+    public unsafe struct GfxPackedPlacement {
         public fixed float origin[3];
         public PackedUnitVec axis0; public PackedUnitVec axis1; public PackedUnitVec axis2;
         public float scale;
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    public unsafe struct GfxStaticModelDrawInst
-    {
+    public unsafe struct GfxStaticModelDrawInst {
         public GfxPackedPlacement placement;
         public XModel* model;
         public float cullDist;
@@ -233,8 +210,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    public unsafe struct cplane_s
-    {
+    public unsafe struct cplane_s {
         public fixed float normal[3];
         public float dist;
         public char type;
@@ -242,8 +218,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    public unsafe struct GfxPortalWritable
-    {
+    public unsafe struct GfxPortalWritable {
         public bool isQueued;
         public bool isAncestor;
         public char recursionDepth;
@@ -252,15 +227,13 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    public unsafe struct DpvsPlane
-    {
+    public unsafe struct DpvsPlane {
         public fixed float coeffs[4];
         public fixed char side[3];
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    public unsafe struct GfxPortal
-    {
+    public unsafe struct GfxPortal {
         public GfxPortalWritable writable;
         public DpvsPlane plane;
         public float** vertices; //:float (* vertices)[3]
@@ -270,8 +243,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    public unsafe struct GfxCell
-    {
+    public unsafe struct GfxCell {
         public fixed float mins[3];
         public fixed float maxs[3];
         public int portalCount;
@@ -281,15 +253,13 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    public unsafe struct GfxLightmapArray
-    {
+    public unsafe struct GfxLightmapArray {
         public GfxImage* primary;
         public GfxImage* secondary;
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    public unsafe struct GfxLightGrid
-    {
+    public unsafe struct GfxLightGrid {
         public bool hasLightRegions;
         public uint sunPrimaryLightIndex;
         public fixed ushort mins[3];
@@ -306,15 +276,13 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    public unsafe struct GfxBrushModelWritable
-    {
+    public unsafe struct GfxBrushModelWritable {
         public fixed float mins[3];
         public fixed float maxs[3];
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    public unsafe struct GfxBrushModel
-    {
+    public unsafe struct GfxBrushModel {
         public GfxBrushModelWritable writable;
         public fixed float bounds[2 * 3];
         public uint surfaceCount;
@@ -322,15 +290,13 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    public unsafe struct MaterialMemory
-    {
+    public unsafe struct MaterialMemory {
         public Material* material;
         public int memory;
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    public unsafe struct sunflare_t
-    {
+    public unsafe struct sunflare_t {
         public bool hasValidData;
         public Material* spriteMaterial;
         public Material* flareMaterial;
@@ -356,8 +322,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    public unsafe struct GfxShadowGeometry
-    {
+    public unsafe struct GfxShadowGeometry {
         public ushort surfaceCount;
         public ushort smodelCount;
         public ushort* sortedSurfIndex;
@@ -365,16 +330,14 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    public unsafe struct GfxLightRegionAxis
-    {
+    public unsafe struct GfxLightRegionAxis {
         public fixed float dir[3];
         public float midPoint;
         public float halfSize;
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    public unsafe struct GfxLightRegionHull
-    {
+    public unsafe struct GfxLightRegionHull {
         public fixed float kdopMidPoint[9];
         public fixed float kdopHalfSize[9];
         public uint axisCount;
@@ -382,15 +345,13 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    public unsafe struct GfxLightRegion
-    {
+    public unsafe struct GfxLightRegion {
         public uint hullCount;
         public GfxLightRegionHull* hulls;
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    public unsafe struct GfxWorldDpvsDynamic
-    {
+    public unsafe struct GfxWorldDpvsDynamic {
         public fixed uint dynEntClientWordCount[2];
         public fixed uint dynEntClientCount[2];
         //public fixed uint* dynEntCellBits[2];
@@ -398,8 +359,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    public unsafe struct SunLightParseParams
-    {
+    public unsafe struct SunLightParseParams {
         public fixed char name[64];
         public float ambientScale;
         public fixed float ambientColor[3];
@@ -412,15 +372,13 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    public unsafe struct GfxWorldVertexLayerData
-    {
+    public unsafe struct GfxWorldVertexLayerData {
         public char* data;
         public IDirect3DVertexBuffer9* layerVb;
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    public unsafe struct GfxWorldDraw
-    {
+    public unsafe struct GfxWorldDraw {
         public uint reflectionProbeCount;
         public GfxImage** reflectionImages;
         public GfxReflectionProbe* reflectionProbes;
@@ -441,8 +399,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    public unsafe struct unknownGfxWorldStruct2
-    {
+    public unsafe struct unknownGfxWorldStruct2 {
         public int unknownCount;
         public int* unknownArray;
         public GfxImage* unknownImage;
@@ -450,8 +407,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    public unsafe struct GfxWorld
-    {
+    public unsafe struct GfxWorld {
         public char* name;
         public char* baseName;
         public int planeCount;

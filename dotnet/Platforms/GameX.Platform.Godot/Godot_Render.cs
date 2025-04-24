@@ -8,11 +8,9 @@ using static OpenStack.Gfx.GfX;
 
 namespace GameX.Platforms.Godot;
 
-public static class GodotRenderer
-{
+public static class GodotRenderer {
     public static Renderer CreateRenderer(object parent, IList<IOpenGfx> gfx, object obj, string type)
-        => type switch
-        {
+        => type switch {
             "TestTri" => new GodotTestTriRenderer(parent as Node, gfx[XModel] as GodotGfxModel, obj),
             "Texture" => new GodotTextureRenderer(parent as Node, gfx[XModel] as GodotGfxModel, obj),
             "Object" => new GodotObjectRenderer(parent as Node, gfx[XModel] as GodotGfxModel, obj),
@@ -26,13 +24,11 @@ public class GodotTestTriRenderer(Node parent, GodotGfxModel gfx, object obj) : 
 public class GodotCellRenderer(Node parent, GodotGfxModel gfx, object obj) : Renderer { }
 public class GodotEngineRenderer(Node parent, GodotGfxModel gfx, object obj) : Renderer { }
 public class GodotObjectRenderer(Node parent, GodotGfxModel gfx, object obj) : Renderer { }
-public class GodotTextureRenderer(Node parent, GodotGfxModel gfx, object obj) : TextureRenderer(parent, gfx, obj, Level)
-{
+public class GodotTextureRenderer(Node parent, GodotGfxModel gfx, object obj) : TextureRenderer(parent, gfx, obj, Level) {
     static System.Range Level = 0..;
 }
 
-public class ViewInfo : Node
-{
+public class ViewInfo : Node {
     static ViewInfo() => PlatformX.Activate(GodotPlatform.This);
 
     public string FamilyId = "Bethesda";
@@ -45,8 +41,7 @@ public class ViewInfo : Node
     protected PakFile Source;
     Renderer Renderer;
 
-    public override void _Ready()
-    {
+    public override void _Ready() {
         if (string.IsNullOrEmpty(FamilyId)) return;
         Family = FamilyManager.GetFamily(FamilyId);
         if (!string.IsNullOrEmpty(PakUri)) Source = Family.OpenPakFile(new Uri(PakUri));
@@ -56,11 +51,9 @@ public class ViewInfo : Node
 
     public override void _Process(double delta) => Renderer?.Update((float)delta);
 
-    public override void _Notification(int what)
-    {
+    public override void _Notification(int what) {
         base._Notification(what);
-        switch ((long)what)
-        {
+        switch ((long)what) {
             case NotificationPredelete:
                 Renderer?.Dispose();
                 Source?.Dispose();

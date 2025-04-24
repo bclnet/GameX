@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace GameX.IW.Zone
-{
+namespace GameX.IW.Zone {
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct XModelAngle
-    {
+    public unsafe struct XModelAngle {
         public ushort x;
         public ushort y;
         public ushort z;
@@ -13,16 +11,14 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct XModelTagPos
-    {
+    public unsafe struct XModelTagPos {
         public float x;
         public float y;
         public float z;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct DObjAnimMat
-    {
+    public unsafe struct DObjAnimMat {
         public fixed float quat[4];
         public fixed float trans[3];
         public float transWeight;
@@ -40,8 +36,7 @@ namespace GameX.IW.Zone
     */
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct XSurfaceCTEntry
-    {
+    public unsafe struct XSurfaceCTEntry {
         public fixed char pad[24];
         public int numNode;
         public char* node; // el size 16
@@ -50,16 +45,14 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct XSurfaceCT
-    {
+    public unsafe struct XSurfaceCT {
         public int pad;
         public int pad2;
         public XSurfaceCTEntry* entry;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct GfxPackedVertex
-    {
+    public unsafe struct GfxPackedVertex {
         public float x;
         public float y;
         public float z;
@@ -69,16 +62,14 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct Face
-    {
+    public unsafe struct Face {
         public ushort v1;
         public ushort v2;
         public ushort v3;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct XSurface
-    {
+    public unsafe struct XSurface {
         public short pad; // +0
         public ushort numVertices; // +2
         public ushort numPrimitives; // +4
@@ -101,8 +92,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct XModelSurfaces
-    {
+    public unsafe struct XModelSurfaces {
         public char* name; // +0
         public XSurface* surfaces; // +4
         public int numSurfaces; // +8
@@ -110,8 +100,7 @@ namespace GameX.IW.Zone
     } // total size, 36
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct XSurfaceLod
-    {
+    public unsafe struct XSurfaceLod {
         public fixed char pad[4]; // +0
         public short numSurfs; // +4
         public short pad2;// +6
@@ -120,16 +109,14 @@ namespace GameX.IW.Zone
     } // +44
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct XColSurf
-    {
+    public unsafe struct XColSurf {
         public void* tris; // +0, sizeof 48
         public int count; // +4
         public fixed char pad[36]; // +8
     } // +44
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe partial struct XModel
-    {
+    public unsafe partial struct XModel {
         public char* name; // +0
         public char numBones; // +4
         public char numRootBones; // +5

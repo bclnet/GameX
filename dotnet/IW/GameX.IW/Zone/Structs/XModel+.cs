@@ -1,17 +1,13 @@
 ﻿using static GameX.IW.Zone.Asset;
 
-namespace GameX.IW.Zone
-{
-    public unsafe partial struct XModel
-    {
-        public static void writeXModel(ZoneInfo info, ZStream buf, XModel* data)
-        {
+namespace GameX.IW.Zone {
+    public unsafe partial struct XModel {
+        public static void writeXModel(ZoneInfo info, ZStream buf, XModel* data) {
             var materialOffs = stackalloc int[data->numSurfaces];
             for (var i = 0; i < data->numSurfaces; i++)
                 materialOffs[i] = ZoneWriter.requireAsset(info, UnkAssetType.MATERIAL, new string(data->materials[i]->name), buf);
 
-            fixed (byte* _ = buf.at)
-            {
+            fixed (byte* _ = buf.at) {
                 var dest = (XModel*)_;
                 buf.write((byte*)data, sizeof(XModel), 1);
                 buf.pushStream(ZSTREAM.VIRTUAL);
@@ -19,74 +15,63 @@ namespace GameX.IW.Zone
                 buf.write(data->name, strlen(data->name) + 1, 1);
                 dest->name = (char*)-1;
 
-                if (data->boneNames != null)
-                {
+                if (data->boneNames != null) {
                     buf.align(ZStream.ALIGN_TO_2);
                     buf.write((byte*)data->boneNames, sizeof(short), dest->numBones);
                     dest->boneNames = (short*)-1;
                 }
 
-                if (data->parentList != null)
-                {
+                if (data->parentList != null) {
                     buf.align(ZStream.ALIGN_TO_1);
                     buf.write(dest->parentList, 1, dest->numBones - dest->numRootBones);
                     dest->parentList = (char*)-1;
                 }
 
-                if (data->tagAngles != null)
-                {
+                if (data->tagAngles != null) {
                     buf.align(ZStream.ALIGN_TO_2);
                     buf.write((byte*)dest->tagAngles, sizeof(XModelAngle), dest->numBones - dest->numRootBones);
                     dest->tagAngles = (XModelAngle*)-1;
                 }
 
-                if (data->tagPositions != null)
-                {
+                if (data->tagPositions != null) {
                     buf.align(ZStream.ALIGN_TO_4);
                     buf.write((byte*)dest->tagPositions, sizeof(XModelTagPos), dest->numBones - dest->numRootBones);
                     dest->tagPositions = (XModelTagPos*)-1;
                 }
 
-                if (data->partClassification != null)
-                {
+                if (data->partClassification != null) {
                     buf.align(ZStream.ALIGN_TO_1);
                     buf.write(dest->partClassification, 1, dest->numBones);
                     dest->partClassification = (char*)-1;
                 }
 
-                if (data->animMatrix != null)
-                {
+                if (data->animMatrix != null) {
                     buf.align(ZStream.ALIGN_TO_4);
                     buf.write((byte*)dest->animMatrix, sizeof(DObjAnimMat), dest->numBones);
                     dest->animMatrix = (DObjAnimMat*)-1;
                 }
 
-                if (data->materials != null)
-                {
+                if (data->materials != null) {
                     buf.align(ZStream.ALIGN_TO_4);
                     buf.write((byte*)materialOffs, sizeof(int), dest->numSurfaces); // should be just the offsets
                     dest->materials = (Material**)-1;
                 }
 
-                for (var i = 0; i < 4; i++)
-                {
+                for (var i = 0; i < 4; i++) {
                     if (data->lods(i)->surfaces == null) continue;
 
-                    fixed (byte* _2 = buf.at)
-                    {
+                    fixed (byte* _2 = buf.at) {
                         var surfs = (XModelSurfaces*)_2;
                         buf.write((byte*)dest->lods(i)->surfaces, sizeof(XModelSurfaces), 1);
                         buf.write((byte*)dest->lods(i)->surfaces->name, strlen(dest->lods(i)->surfaces->name) + 1, 1);
 
                         if (surfs->surfaces != null)
-                            fixed (byte* _3 = buf.at)
-                            {
+                            fixed (byte* _3 = buf.at) {
                                 buf.align(ZStream.ALIGN_TO_4);
                                 var surf = (XSurface*)_3;
                                 buf.write((byte*)dest->lods(i)->surfaces->surfaces, sizeof(XSurface) * surfs->numSurfaces, 1);
 
-                                for (var j = 0; j < surfs->numSurfaces; j++)
-                                {
+                                for (var j = 0; j < surfs->numSurfaces; j++) {
                                     if (surf[j].blendInfo != null) // OffsetToPointer
                                     {
                                         buf.align(ZStream.ALIGN_TO_2);
@@ -105,28 +90,24 @@ namespace GameX.IW.Zone
                                     }
 
                                     if (surf[j].ct != null)
-                                        fixed (byte* _4 = buf.at)
-                                        {
+                                        fixed (byte* _4 = buf.at) {
                                             buf.align(ZStream.ALIGN_TO_4);
                                             var ct = (XSurfaceCT*)_4;
                                             buf.write((byte*)surf[j].ct, 12, surf[j].numCT);
 
                                             for (var k = 0; k < surf[j].numCT; k++)
                                                 if (ct[k].entry != null) // OffsetToPointer
-                                                    fixed (byte* _5 = buf.at)
-                                                    {
+                                                    fixed (byte* _5 = buf.at) {
                                                         buf.align(ZStream.ALIGN_TO_4);
                                                         var entry = (XSurfaceCTEntry*)_5;
                                                         buf.write((byte*)ct[k].entry, 40, 1);
 
-                                                        if (entry->node != null)
-                                                        {
+                                                        if (entry->node != null) {
                                                             buf.write(entry->node, 16, entry->numNode);
                                                             entry->node = (char*)-1;
                                                         }
 
-                                                        if (entry->leaf != null)
-                                                        {
+                                                        if (entry->leaf != null) {
                                                             buf.write((byte*)entry->leaf, 2, entry->numLeaf);
                                                             entry->leaf = (short*)-1;
                                                         }
@@ -137,8 +118,7 @@ namespace GameX.IW.Zone
                                             surf[j].ct = (XSurfaceCT*)-1;
                                         }
 
-                                    if (surf[j].indexBuffer != null)
-                                    {
+                                    if (surf[j].indexBuffer != null) {
                                         buf.pushStream(ZSTREAM.INDEX);
                                         buf.align(ZStream.ALIGN_TO_16);
                                         buf.write((byte*)surf[j].indexBuffer, 6, surf[j].numPrimitives);
@@ -155,13 +135,11 @@ namespace GameX.IW.Zone
                     }
                 }
 
-                if (data->colSurf != null)
-                {
+                if (data->colSurf != null) {
                     buf.align(ZStream.ALIGN_TO_4);
                     buf.write((byte*)dest->colSurf, sizeof(XColSurf), dest->numColSurfs);
 
-                    for (var i = 0; i < dest->numColSurfs; i++)
-                    {
+                    for (var i = 0; i < dest->numColSurfs; i++) {
                         buf.align(ZStream.ALIGN_TO_4);
                         buf.write((byte*)dest->colSurf[i].tris, 48, dest->colSurf[i].count);
                         dest->colSurf[i].tris = (void*)-1;
@@ -170,22 +148,19 @@ namespace GameX.IW.Zone
                     dest->colSurf = (XColSurf*)-1;
                 }
 
-                if (data->boneInfo != null)
-                {
+                if (data->boneInfo != null) {
                     buf.align(ZStream.ALIGN_TO_4);
                     buf.write(dest->boneInfo, 28, dest->numBones);
                     dest->boneInfo = (char*)-1;
                 }
 
-                if (dest->physPreset != null)
-                {
+                if (dest->physPreset != null) {
                     buf.align(ZStream.ALIGN_TO_4);
                     PhysPreset.writePhysPreset(info, buf, dest->physPreset);
                     dest->physPreset = (PhysPreset*)-1;
                 }
 
-                if (dest->physCollmap != null)
-                {
+                if (dest->physCollmap != null) {
                     buf.align(ZStream.ALIGN_TO_4);
                     PhysGeomList.writePhysCollmap(info, buf, dest->physCollmap);
                     dest->physCollmap = (PhysGeomList*)-1;

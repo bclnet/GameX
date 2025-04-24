@@ -1,7 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace GameX.IW.Zone
-{
+namespace GameX.IW.Zone {
     [StructLayout(LayoutKind.Sequential)]
     public struct IDirect3DVertexBuffer9 { }
 

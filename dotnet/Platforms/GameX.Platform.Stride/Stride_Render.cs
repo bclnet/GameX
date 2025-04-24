@@ -7,11 +7,9 @@ using static OpenStack.Gfx.GfX;
 
 namespace GameX.Platforms.Stride;
 
-public static class StrideRenderer
-{
+public static class StrideRenderer {
     public static Renderer CreateRenderer(object parent, IList<IOpenGfx> gfx, object obj, string type)
-        => type switch
-        {
+        => type switch {
             "TestTri" => new StrideTestTriRenderer(gfx[XModel] as StrideGfxModel, obj),
             "Material" => new StrideMaterialRenderer(gfx[XModel] as StrideGfxModel, obj),
             "Particle" => new StrideParticleRenderer(gfx[XModel] as StrideGfxModel, obj),
@@ -30,7 +28,6 @@ public class StrideMaterialRenderer(StrideGfxModel gfx, object obj) : Renderer {
 public class StrideParticleRenderer(StrideGfxModel gfx, object obj) : Renderer { }
 public class StrideEngineRenderer(StrideGfxModel gfx, object obj) : Renderer { }
 public class StrideObjectRenderer(StrideGfxModel gfx, object obj) : Renderer { }
-public class StrideTextureRenderer(StrideGfxModel gfx, object obj) : TextureRenderer(gfx, obj, Level)
-{
+public class StrideTextureRenderer(StrideGfxModel gfx, object obj) : TextureRenderer(gfx, obj, Level) {
     static Range Level = 0..;
 }

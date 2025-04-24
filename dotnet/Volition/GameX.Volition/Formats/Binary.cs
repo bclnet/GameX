@@ -11,8 +11,7 @@ namespace GameX.Volition.Formats;
 
 #region Binary_Abc
 
-public class Binary_Abc : IHaveMetaInfo
-{
+public class Binary_Abc : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Abc(r));
 
     public Binary_Abc(BinaryReader r) { }
@@ -29,17 +28,14 @@ public class Binary_Abc : IHaveMetaInfo
 
 #region Binary_Ctg
 
-public unsafe class Binary_Ctg : PakBinary<Binary_Ctg>
-{
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+public unsafe class Binary_Ctg : PakBinary<Binary_Ctg> {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         var files = source.Files = [];
 
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
-    {
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         throw new NotImplementedException();
     }
 }
@@ -48,13 +44,11 @@ public unsafe class Binary_Ctg : PakBinary<Binary_Ctg>
 
 #region Binary_Descent
 
-public unsafe class Binary_Descent : PakBinary<Binary_Descent>
-{
+public unsafe class Binary_Descent : PakBinary<Binary_Descent> {
     #region Headers
 
     [Flags]
-    public enum PIG_Flags : byte
-    {
+    public enum PIG_Flags : byte {
         TRANSPARENT = 1,
         SUPER_TRANSPARENT = 2,
         NO_LIGHTING = 4,
@@ -65,8 +59,7 @@ public unsafe class Binary_Descent : PakBinary<Binary_Descent>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    internal struct PIG_Bitmap
-    {
+    internal struct PIG_Bitmap {
         public static (string, int) Struct = ("<13s5bi", sizeof(PIG_Bitmap));
         public fixed byte Path[8];      // name
         public byte Frame;              // Frame
@@ -78,8 +71,7 @@ public unsafe class Binary_Descent : PakBinary<Binary_Descent>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    internal struct PIG_Bitmap2
-    {
+    internal struct PIG_Bitmap2 {
         public static (string, int) Struct = ("<8s6bi", sizeof(PIG_Bitmap2));
         public fixed byte Path[8];      // name
         public byte Frame;              // Frame
@@ -92,8 +84,7 @@ public unsafe class Binary_Descent : PakBinary<Binary_Descent>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    internal struct PIG_Sound
-    {
+    internal struct PIG_Sound {
         public static (string, int) Struct = ("<8s3i", sizeof(PIG_Sound));
         public fixed byte Path[8];      // name
         public int Length;              // length (Samples)
@@ -102,16 +93,14 @@ public unsafe class Binary_Descent : PakBinary<Binary_Descent>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct DHF_Record
-    {
+    struct DHF_Record {
         public static (string, int) Struct = ("<13si", sizeof(DHF_Record));
         public fixed byte Path[13];     // filename, padded to 13 bytes with 0s
         public int FileSize;            // filesize in bytes
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct HOG2_Header
-    {
+    struct HOG2_Header {
         public static (string, int) Struct = ("<13s2i56x", sizeof(HOG2_Header));
         public int NumFiles;            // number of files
         public int Offset;              // offset to first file (end of file list)
@@ -119,8 +108,7 @@ public unsafe class Binary_Descent : PakBinary<Binary_Descent>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct HOG2_Record
-    {
+    struct HOG2_Record {
         public static (string, int) Struct = ("<36s3i", sizeof(HOG2_Record));
         public fixed byte Path[36];     // null-terminated (usually is filled up with "CD")
         public int Unknown;             // always 0
@@ -130,8 +118,7 @@ public unsafe class Binary_Descent : PakBinary<Binary_Descent>
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         const uint MAGIC_PPIG = 0x47495050;
         //const uint MAGIC_DPOG = 0x474f5044;
         const uint MAGIC_DHF = 0x00464844;
@@ -143,21 +130,17 @@ public unsafe class Binary_Descent : PakBinary<Binary_Descent>
         // read files
         List<FileSource> files;
         source.Files = files = [];
-        switch (magic)
-        {
+        switch (magic) {
             case MAGIC_PPIG:
                 //case MAGIC_DPOG:
                 {
                     LoadPig(r, files, true, magic, source.Game.Id);
                     return Task.CompletedTask;
                 }
-            case MAGIC_DHF:
-                {
-                    while (r.BaseStream.Position < r.BaseStream.Length)
-                    {
+            case MAGIC_DHF: {
+                    while (r.BaseStream.Position < r.BaseStream.Length) {
                         var record = r.ReadS<DHF_Record>();
-                        files.Add(new FileSource
-                        {
+                        files.Add(new FileSource {
                             Path = UnsafeX.FixedAString(record.Path, 13),
                             Offset = r.BaseStream.Position,
                             FileSize = record.FileSize,
@@ -166,15 +149,12 @@ public unsafe class Binary_Descent : PakBinary<Binary_Descent>
                     }
                 }
                 return Task.CompletedTask;
-            case MAGIC_HOG2:
-                {
+            case MAGIC_HOG2: {
                     var header = r.ReadS<HOG2_Header>();
                     var offset = header.Offset;
-                    for (var i = 0; i < header.NumFiles; i++)
-                    {
+                    for (var i = 0; i < header.NumFiles; i++) {
                         var record = r.ReadS<HOG2_Record>();
-                        files.Add(new FileSource
-                        {
+                        files.Add(new FileSource {
                             Path = UnsafeX.FixedAString(record.Path, 13),
                             Offset = offset,
                             FileSize = record.FileSize,
@@ -194,8 +174,7 @@ public unsafe class Binary_Descent : PakBinary<Binary_Descent>
 
     // https://github.com/arbruijn/DesDump/blob/master/DesDump/ClassicLoader.cs
     // https://web.archive.org/web/20020213004051/http://descent-3.com/ddn/specs/hog/
-    void LoadPig(BinaryReader r, List<FileSource> files, bool d2, uint magic, string gameId)
-    {
+    void LoadPig(BinaryReader r, List<FileSource> files, bool d2, uint magic, string gameId) {
         if (d2) r.Skip(4); // descent 2 pig, skip version
         else if (magic >= 65536) r.Seek(magic); // descent reg 1.4+ pig, first int is offset
         else r.Seek(0); // descent 1 sw / pre 1.4 pig: first int is count
@@ -207,10 +186,8 @@ public unsafe class Binary_Descent : PakBinary<Binary_Descent>
         FileSource n = null, l = null;
         var fileSize = 0L;
         if (d2)
-            foreach (var s in r.ReadSArray<PIG_Bitmap2>(numBitmaps))
-            {
-                files.Add(n = new FileSource
-                {
+            foreach (var s in r.ReadSArray<PIG_Bitmap2>(numBitmaps)) {
+                files.Add(n = new FileSource {
                     Path = $"bmps/{UnsafeX.FixedAString(s.Path, 8)}{((s.Frame & 64) != 0 ? $".{(int)s.Frame & 63}" : "")}.bmp",
                     Offset = s.Offset + dataOffset,
                     Tag = (s.Flags, s.Width + (short)((s.WHExtra & 0x0f) << 8), s.Height + (short)((s.WHExtra & 0xf0) << 4)),
@@ -219,10 +196,8 @@ public unsafe class Binary_Descent : PakBinary<Binary_Descent>
                 l = n;
             }
         else
-            foreach (var s in r.ReadSArray<PIG_Bitmap>(numBitmaps))
-            {
-                files.Add(n = new FileSource
-                {
+            foreach (var s in r.ReadSArray<PIG_Bitmap>(numBitmaps)) {
+                files.Add(n = new FileSource {
                     Path = $"bmps/{UnsafeX.FixedAString(s.Path, 8)}{((s.Frame & 64) != 0 ? $".{(int)s.Frame & 63}" : "")}.bmp",
                     Offset = s.Offset + dataOffset,
                     Tag = (s.Flags, (short)s.Width, (short)s.Height),
@@ -233,8 +208,7 @@ public unsafe class Binary_Descent : PakBinary<Binary_Descent>
         // Width + ((b.Frame & 128) != 0 ? 256 : 0);
         l.FileSize = fileSize;
         if (numSounds > 0)
-            files.AddRange(r.ReadSArray<PIG_Sound>(numSounds).Select(s => new FileSource
-            {
+            files.AddRange(r.ReadSArray<PIG_Sound>(numSounds).Select(s => new FileSource {
                 Path = $"snds/{UnsafeX.FixedAString(s.Path, 8)}.wav",
                 Offset = s.Offset + dataOffset,
                 FileSize = s.DataLength,
@@ -242,25 +216,21 @@ public unsafe class Binary_Descent : PakBinary<Binary_Descent>
             }));
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
-    {
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         var bytes = r.ReadBytes((int)file.FileSize);
         if (file.Tag != null)
-            if (file.Tag is PIG_Sound t)
-            {
+            if (file.Tag is PIG_Sound t) {
                 var length = t.Length;
                 var s = new MemoryStream();
                 // write header
                 var w = new BinaryWriter(s);
-                w.WriteT(new WavHeader
-                {
+                w.WriteT(new WavHeader {
                     ChunkId = WavHeader.RIFF,
                     ChunkSize = sizeof(WavFmt) + sizeof(WavData) + length,
                     Format = WavHeader.WAVE,
                 });
-                w.WriteT(new WavFmt
-                {
+                w.WriteT(new WavFmt {
                     ChunkId = WavFmt.FMT_,
                     ChunkSize = sizeof(WavHeader) + sizeof(uint), // fmt size
                     AudioFormat = 1, // pcm
@@ -270,8 +240,7 @@ public unsafe class Binary_Descent : PakBinary<Binary_Descent>
                     BlockAlign = 1, // align
                     BitsPerSample = 8, // bits per sample
                 });
-                w.WriteT(new WavData
-                {
+                w.WriteT(new WavData {
                     ChunkId = WavData.DATA,
                     ChunkSize = length,
                 });
@@ -375,17 +344,14 @@ public unsafe class Binary_Descent : PakBinary<Binary_Descent>
 
 #region Binary_GeoMod
 
-public unsafe class Binary_GeoMod : PakBinary<Binary_GeoMod>
-{
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+public unsafe class Binary_GeoMod : PakBinary<Binary_GeoMod> {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         var files = source.Files = [];
 
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
-    {
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         throw new NotImplementedException();
     }
 }
@@ -394,17 +360,14 @@ public unsafe class Binary_GeoMod : PakBinary<Binary_GeoMod>
 
 #region Binary_Hpl
 
-public unsafe class Binary_Hpl : PakBinary<Binary_Hpl>
-{
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+public unsafe class Binary_Hpl : PakBinary<Binary_Hpl> {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         var files = source.Files = [];
 
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
-    {
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         throw new NotImplementedException();
     }
 }
@@ -416,12 +379,10 @@ public unsafe class Binary_Hpl : PakBinary<Binary_Hpl>
 // https://falloutmods.fandom.com/wiki/MVE_File_Format#Header
 // https://wiki.multimedia.cx/index.php/Interplay_MVE
 
-public class Binary_Mvl : IHaveMetaInfo
-{
+public class Binary_Mvl : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Mvl(r));
 
-    enum Chunk : ushort
-    {
+    enum Chunk : ushort {
         INIT_AUDIO = 0x0000,
         AUDIO_ONLY = 0x0001,
         INIT_VIDEO = 0x0002,
@@ -430,8 +391,7 @@ public class Binary_Mvl : IHaveMetaInfo
         END = 0x0005,
     }
 
-    enum Opcode : byte
-    {
+    enum Opcode : byte {
         END_OF_STREAM = 0x00,
         END_OF_CHUNK = 0x01,
         CREATE_TIMER = 0x02,
@@ -456,8 +416,7 @@ public class Binary_Mvl : IHaveMetaInfo
         UNKNOWN_15 = 0x15,
     }
 
-    public Binary_Mvl(BinaryReader r)
-    {
+    public Binary_Mvl(BinaryReader r) {
         const int MAGIC = 0x4c564d44;
         const string SIGNATURE = "Interplay MVE File\x1A\x00";
 
@@ -479,13 +438,11 @@ public class Binary_Mvl : IHaveMetaInfo
         int opcodeSize;
 
         // iterate through the chunks in the file
-        while (chunkType != Chunk.END)
-        {
+        while (chunkType != Chunk.END) {
             chunkSize = r.ReadUInt16();
             chunkType = (Chunk)r.ReadUInt16();
             Log($"\nchunk type {chunkType}, {chunkSize} bytes: ");
-            switch (chunkType)
-            {
+            switch (chunkType) {
                 case Chunk.INIT_AUDIO:
                     Log("initialize audio");
                     break;
@@ -518,15 +475,13 @@ public class Binary_Mvl : IHaveMetaInfo
             Log("------------------------------------------------------\n");
 
             // iterate through individual opcodes
-            while (chunkSize > 0)
-            {
+            while (chunkSize > 0) {
                 opcodeSize = r.ReadUInt16();
                 opcodeType = (Opcode)r.ReadByte();
                 opcodeVersion = r.ReadByte();
                 chunkSize -= 4 - opcodeSize;
                 Log($"  opcode type {opcodeType}, version {opcodeVersion}, {opcodeSize} bytes: ");
-                switch (opcodeType)
-                {
+                switch (opcodeType) {
                     case Opcode.END_OF_STREAM:
                         Log("end of stream");
                         break;

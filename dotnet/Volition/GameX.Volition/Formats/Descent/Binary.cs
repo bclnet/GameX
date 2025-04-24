@@ -12,19 +12,16 @@ namespace GameX.Volition.Formats.Descent;
 
 #region Binary_Bmp
 
-public class Binary_Bmp : IHaveMetaInfo, ITexture
-{
+public class Binary_Bmp : IHaveMetaInfo, ITexture {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Bmp(r, s.Game, f.Tag));
 
-    public Binary_Bmp(BinaryReader r, FamilyGame game, object tag)
-    {
+    public Binary_Bmp(BinaryReader r, FamilyGame game, object tag) {
         // get body
         game.Ensure();
         Body = r.ReadToEnd();
 
         // parse tag
-        if (tag is ValueTuple<PIG_Flags, short, short> b)
-        {
+        if (tag is ValueTuple<PIG_Flags, short, short> b) {
             PigFlags = b.Item1;
             Width = b.Item2;
             Height = b.Item3;
@@ -32,8 +29,7 @@ public class Binary_Bmp : IHaveMetaInfo, ITexture
         else throw new ArgumentOutOfRangeException(nameof(tag), tag.ToString());
 
         // get palette
-        Palette = game.Id switch
-        {
+        Palette = game.Id switch {
             "D" => Games.D.Database.Palette.Records,
             "D2" => Games.D2.Database.Palette.Records,
             _ => throw new ArgumentOutOfRangeException(nameof(game.Id), game.Id),
@@ -63,8 +59,7 @@ public class Binary_Bmp : IHaveMetaInfo, ITexture
     /// <param name="pixels"></param>
     /// <param name="pixel"></param>
     /// <param name="color"></param>
-    static void SetPixel(byte[][] palette, byte[] pixels, ref int pixel, int color)
-    {
+    static void SetPixel(byte[][] palette, byte[] pixels, ref int pixel, int color) {
         var record = palette[color];
         pixels[pixel + 0] = record[0];
         pixels[pixel + 1] = record[1];
@@ -73,10 +68,8 @@ public class Binary_Bmp : IHaveMetaInfo, ITexture
         pixel += 4;
     }
 
-    public T Create<T>(string platform, Func<object, T> func)
-    {
-        byte[] DecodeRLE()
-        {
+    public T Create<T>(string platform, Func<object, T> func) {
+        byte[] DecodeRLE() {
             var palette = Palette;
             var pixels = new byte[Width * Height * 4];
             var pixel = 0;
@@ -85,11 +78,9 @@ public class Binary_Bmp : IHaveMetaInfo, ITexture
             var ofsEnd = ofs + size;
             ofs += 4;
             ofs += (PigFlags & PIG_Flags.RLEBIG) != 0 ? Height * 2 : Height;
-            while (ofs < ofsEnd)
-            {
+            while (ofs < ofsEnd) {
                 var b = Body[ofs++];
-                if ((b & 0xe0) == 0xe0)
-                {
+                if ((b & 0xe0) == 0xe0) {
                     var c = b & 0x1f;
                     if (c == 0) continue;
                     b = Body[ofs++];
@@ -158,15 +149,13 @@ return Task.FromResult<Stream>(s);
 
 #region Binary_Rdl
 
-public unsafe class Binary_Rdl : IHaveMetaInfo
-{
+public unsafe class Binary_Rdl : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Rdl(r));
 
     #region Headers
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct X_Header
-    {
+    struct X_Header {
         public static (string, int) Struct = ("<3I", sizeof(X_Header));
         public uint Magic;
         public uint Version;
@@ -175,31 +164,26 @@ public unsafe class Binary_Rdl : IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct X_Geo
-    {
+    struct X_Geo {
         public static (string, int) Struct = ("<2H", sizeof(X_Geo));
         public ushort NumVerts;
         public ushort NumSegments;
     }
 
-    public class Side
-    {
+    public class Side {
         public int Bitmap;
         public int Bitmap2;
         public Vector2[] Uvs = new Vector2[4];
         public double[] Lights = new double[4];
 
-        public Side(BinaryReader r)
-        {
+        public Side(BinaryReader r) {
             Bitmap = r.ReadUInt16();
-            if ((Bitmap & 0x8000) != 0)
-            {
+            if ((Bitmap & 0x8000) != 0) {
                 Bitmap &= 0x7fff;
                 Bitmap2 = r.ReadUInt16();
             }
             else Bitmap2 = -1;
-            for (var j = 0; j < 4; j++)
-            {
+            for (var j = 0; j < 4; j++) {
                 Uvs[j] = r.ReadVector2();
                 Lights[j] = ReadInt16Fixed(r);
             }
@@ -208,8 +192,7 @@ public unsafe class Binary_Rdl : IHaveMetaInfo
             => $"[t: {Bitmap} t2: {Bitmap2} uv: {string.Join(",", Array.ConvertAll(Uvs, x => x.ToString()))} l: {string.Join(",", Array.ConvertAll(Lights, x => x.ToString()))}]";
     }
 
-    public class Segment
-    {
+    public class Segment {
         public int[] ChildIdxs = new int[6]; // left, top, right, bottom, back, front
         public int[] VertIdxs = new int[8];
         public byte[] WallIds = new byte[6];
@@ -220,14 +203,12 @@ public unsafe class Binary_Rdl : IHaveMetaInfo
         public double StaticLight;
         public Side[] Sides = new Side[6];
 
-        public Segment(BinaryReader r)
-        {
+        public Segment(BinaryReader r) {
             var mask = r.ReadByte();
             for (var i = 0; i < 6; i++) ChildIdxs[i] = (mask & (1 << i)) != 0 ? r.ReadInt16() : -1;
             for (var i = 0; i < 8; i++) VertIdxs[i] = r.ReadInt16();
             IsSpecial = (mask & 64) != 0;
-            if (IsSpecial)
-            {
+            if (IsSpecial) {
                 Special = r.ReadByte();
                 EcNum = r.ReadByte();
                 Value = r.ReadInt16();
@@ -248,8 +229,7 @@ public unsafe class Binary_Rdl : IHaveMetaInfo
     public Vector3[] Vectors;
     public Segment[] Segments;
 
-    public Binary_Rdl(BinaryReader r)
-    {
+    public Binary_Rdl(BinaryReader r) {
         const uint MAGIC = 0x0;
 
         var header = r.ReadS<X_Header>();

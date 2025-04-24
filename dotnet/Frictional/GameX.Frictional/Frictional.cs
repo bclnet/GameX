@@ -14,22 +14,19 @@ namespace GameX.Frictional;
 /// FrictionalPakFile
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class FrictionalPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel>
-{
+public class FrictionalPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="FrictionalPakFile" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public FrictionalPakFile(PakState state) : base(state, Binary_Hpl.Current)
-    {
+    public FrictionalPakFile(PakState state) : base(state, Binary_Hpl.Current) {
         ObjectFactoryFunc = ObjectFactory;
     }
 
     #region Factories
 
     static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
-        => Path.GetExtension(source.Path).ToLowerInvariant() switch
-        {
+        => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             _ => UnknownPakFile.ObjectFactory(source, game),
         };
 

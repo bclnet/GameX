@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace GameX.IW.Zone
-{
-    public enum VehicleType : int
-    {
+namespace GameX.IW.Zone {
+    public enum VehicleType : int {
         VEH_WHEELS_4 = 0x0,
         VEH_TANK = 0x1,
         VEH_PLANE = 0x2,
@@ -15,8 +13,7 @@ namespace GameX.IW.Zone
         VEH_TYPE_COUNT = 0x7,
     }
 
-    public enum VehicleAxleType
-    {
+    public enum VehicleAxleType {
         VEH_AXLE_FRONT = 0x0,
         VEH_AXLE_REAR = 0x1,
         VEH_AXLE_ALL = 0x2,
@@ -24,8 +21,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct VehiclePhysDef
-    {
+    public unsafe struct VehiclePhysDef {
         public int physicsEnabled;
         public char* physPresetName;
         public PhysPreset* physPreset;
@@ -74,8 +70,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe partial struct VehicleDef
-    {
+    public unsafe partial struct VehicleDef {
         public char* name;
         public VehicleType type;
         public char* useHintString;

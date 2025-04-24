@@ -1,9 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace GameX.IW.Zone
-{
-    public static class FX
-    {
+namespace GameX.IW.Zone {
+    public static class FX {
         /* FxEffectDef::flags */
         public const uint FX_ELEM_LOOPING = 0x1;
         public const uint FX_ELEM_USE_RAND_COLOR = 0x2;
@@ -68,8 +66,7 @@ namespace GameX.IW.Zone
         public const uint FX_ATLAS_LOOP_ONLY_N_TIMES = 0x8;
     }
 
-    public enum FxElemType : byte
-    {
+    public enum FxElemType : byte {
         FX_ELEM_TYPE_SPRITE_BILLBOARD = 0x0,
         FX_ELEM_TYPE_SPRITE_ORIENTED = 0x1,
         FX_ELEM_TYPE_TAIL = 0x2,
@@ -89,36 +86,31 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct FxElemVec3Range
-    {
+    public unsafe struct FxElemVec3Range {
         public fixed float @base[3];
         public fixed float amplitude[3];
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct FxIntRange
-    {
+    public unsafe struct FxIntRange {
         public int @base;
         public int amplitude;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct FxFloatRange
-    {
+    public unsafe struct FxFloatRange {
         public float @base;
         public float amplitude;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct FxSpawnDefLooping
-    {
+    public unsafe struct FxSpawnDefLooping {
         public int intervalMsec;
         public int count;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct FxSpawnDefOneShot
-    {
+    public unsafe struct FxSpawnDefOneShot {
         public FxIntRange count;
     }
 
@@ -147,8 +139,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct FxElemMarkVisuals
-    {
+    public unsafe struct FxElemMarkVisuals {
         public Material* data0; public Material* data1;
     }
 
@@ -165,16 +156,14 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct FxTrailVertex
-    {
+    public unsafe struct FxTrailVertex {
         public fixed float pos[2];
         public fixed float normal[2];
         public fixed float texCoord[2];
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct FxTrailDef
-    {
+    public unsafe struct FxTrailDef {
         public int scrollTimeMsec;
         public int repeatDist;
         public float splitArcDist;
@@ -187,8 +176,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct FxSparkFountain
-    {
+    public unsafe struct FxSparkFountain {
         public float sparkFountainGravity;
         public float sparkFountainBounceFrac;
         public float sparkFountainBounceRand;
@@ -213,8 +201,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct FxElemAtlas
-    {
+    public unsafe struct FxElemAtlas {
         public char behavior;
         public char index;
         public char fps;
@@ -225,22 +212,19 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct FxElemVelStateInFrame
-    {
+    public unsafe struct FxElemVelStateInFrame {
         public FxElemVec3Range velocity;
         public FxElemVec3Range totalDelta;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct FxElemVelStateSample
-    {
+    public unsafe struct FxElemVelStateSample {
         public FxElemVelStateInFrame local;
         public FxElemVelStateInFrame world;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct FxElemVisualState
-    {
+    public unsafe struct FxElemVisualState {
         public fixed char color[4];
         public float rotationDelta;
         public float rotationTotal;
@@ -249,8 +233,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct FxElemVisStateSample
-    {
+    public unsafe struct FxElemVisStateSample {
         public FxElemVisualState @base;
         public FxElemVisualState amplitude;
     }
@@ -302,8 +285,7 @@ namespace GameX.IW.Zone
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct FxEffectDef
-    {
+    public unsafe struct FxEffectDef {
         public char* name;
         public int flags;
         public int totalSize;

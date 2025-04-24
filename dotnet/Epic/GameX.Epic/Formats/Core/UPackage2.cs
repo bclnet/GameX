@@ -7,11 +7,9 @@ using static GameX.Epic.Formats.Core.UPackage;
 
 namespace GameX.Epic.Formats.Core;
 
-partial class FPackageFileSummary
-{
+partial class FPackageFileSummary {
     // Engine-specific serializers
-    void Serialize2(BinaryReader r)
-    {
+    void Serialize2(BinaryReader r) {
         if (Ar.Game == SplinterCell && Ar.ArLicenseeVer >= 83) r.Skip(sizeof(int));
 
         PackageFlags = r.ReadInt32();
@@ -25,8 +23,7 @@ partial class FPackageFileSummary
         ImportCount = r.ReadUInt32();
         ImportOffset = r.ReadUInt32();
 
-        if (Ar.Game == SplinterCellConv && Ar.ArLicenseeVer >= 48)
-        {
+        if (Ar.Game == SplinterCellConv && Ar.ArLicenseeVer >= 48) {
             // this game has additional name table for some packages
             var ExtraNameCount = r.ReadInt32();
             var ExtraNameOffset = r.ReadInt32();
@@ -34,8 +31,7 @@ partial class FPackageFileSummary
             if (Ar.ArLicenseeVer >= 85) r.Skip(sizeof(int));
             goto generations;   // skip Guid
         }
-        else if (Ar.Game == SplinterCell)
-        {
+        else if (Ar.Game == SplinterCell) {
             r.Skip(4); // 0xFF0ADDE
             var tmp2 = r.ReadArray(Ar, r => r.ReadByte());
         }
@@ -54,15 +50,13 @@ partial class FPackageFileSummary
         else if (Ar.Game == EOS && Ar.ArLicenseeVer >= 49) goto generations;
 
         // Guid and generations
-        if (Ar.ArVer < 68)
-        {
+        if (Ar.ArVer < 68) {
             // old generations code
             var HeritageCount = r.ReadInt32();
             var HeritageOffset = r.ReadInt32();
             Generations = new[] { new FGenerationInfo(ExportCount, NameCount) };
         }
-        else
-        {
+        else {
             Guid = r.ReadGuid();
             goto generations;
         }
@@ -74,16 +68,13 @@ partial class FPackageFileSummary
     }
 }
 
-partial class FObjectExport
-{
-    void Serialize2(BinaryReader r, UPackage Ar)
-    {
+partial class FObjectExport {
+    void Serialize2(BinaryReader r, UPackage Ar) {
 #if USE_COMPACT_PACKAGE_STRUCTS
         int SuperIndex;
         uint ObjectFlags;
 #endif
-        if (Ar.Game == Pariah)
-        {
+        if (Ar.Game == Pariah) {
             ObjectName = new FName(r, Ar);
             SuperIndex = r.ReadCompactIndex(Ar);
             PackageIndex = r.ReadInt32();
@@ -93,8 +84,7 @@ partial class FObjectExport
             if (SerialSize != 0) SerialOffset = r.ReadCompactIndex(Ar);
             return;
         }
-        else if (Ar.Game == Bioshock)
-        {
+        else if (Ar.Game == Bioshock) {
             ClassIndex = r.ReadCompactIndex(Ar);
             SuperIndex = r.ReadCompactIndex(Ar);
             PackageIndex = r.ReadInt32();
@@ -107,8 +97,7 @@ partial class FObjectExport
             if (Ar.ArVer >= 130) r.Skip(sizeof(int));           // unknown
             return;
         }
-        else if (Ar.Game == RepCommando && Ar.ArVer >= 151)
-        {
+        else if (Ar.Game == RepCommando && Ar.ArVer >= 151) {
             ClassIndex = r.ReadCompactIndex(Ar);
             SuperIndex = r.ReadCompactIndex(Ar);
             PackageIndex = r.ReadInt32();
@@ -119,8 +108,7 @@ partial class FObjectExport
             SerialOffset = r.ReadInt32();
             return;
         }
-        else if (Ar.Game == AA2)
-        {
+        else if (Ar.Game == AA2) {
             SuperIndex = r.ReadCompactIndex(Ar);
             r.Skip(sizeof(int));
             ClassIndex = r.ReadCompactIndex(Ar);
@@ -142,8 +130,7 @@ partial class FObjectExport
         if (SerialSize != 0) SerialOffset = r.ReadCompactIndex(Ar);
     }
 
-    void Serialize2X(BinaryReader r, UPackage Ar)
-    {
+    void Serialize2X(BinaryReader r, UPackage Ar) {
 #if USE_COMPACT_PACKAGE_STRUCTS
         int SuperIndex;
         uint ObjectFlags;
@@ -162,21 +149,17 @@ partial class FObjectExport
     }
 }
 
-partial class UPackage
-{
-    unsafe void LoadNames2(BinaryReader r, UPackage Ar)
-    {
+partial class UPackage {
+    unsafe void LoadNames2(BinaryReader r, UPackage Ar) {
         var buf = stackalloc char[MAX_FNAME_LEN];
         // Korean games sometimes uses Unicode strings, so use FString for serialization
         string nameStr;
-        for (var i = 0; i < Summary.NameCount; i++)
-        {
+        for (var i = 0; i < Summary.NameCount; i++) {
             if (ArVer < 64) // UE1
             {
                 //var buf = stackalloc char[MAX_FNAME_LEN];
                 int len;
-                for (len = 0; len < MAX_FNAME_LEN; len++)
-                {
+                for (len = 0; len < MAX_FNAME_LEN; len++) {
                     var c = (char)r.ReadByte();
                     buf[len] = c;
                     if (c == 0) break;
@@ -185,8 +168,7 @@ partial class UPackage
                 Names[i] = new string(buf, 0, len);
                 goto dword_flags;
             }
-            else if ((Game == UC1 && ArLicenseeVer >= 28) || (Game == Pariah && (ArLicenseeVer & 0x3F) >= 28))
-            {
+            else if ((Game == UC1 && ArLicenseeVer >= 28) || (Game == Pariah && (ArLicenseeVer & 0x3F) >= 28)) {
                 // used uint16 + char[] instead of FString
                 //char* buf = stackalloc char[MAX_FNAME_LEN];
                 var len = r.ReadUInt16();
@@ -195,16 +177,14 @@ partial class UPackage
                 Names[i] = new string(buf, 0, len);
                 goto dword_flags;
             }
-            else if (Game == SplinterCell && ArLicenseeVer >= 85)
-            {
+            else if (Game == SplinterCell && ArLicenseeVer >= 85) {
                 //char* buf = stackalloc char[256];
                 var len = r.ReadByte();
                 r.BaseStream.Read(new Span<byte>(buf, len + 1));
                 Names[i] = new string(buf, 0, len);
                 goto dword_flags;
             }
-            else if (Game == SplinterCellConv && ArVer >= 68)
-            {
+            else if (Game == SplinterCellConv && ArVer >= 68) {
                 //char* buf = stackalloc char[MAX_FNAME_LEN];
                 var len = r.ReadCompactIndex(Ar);
                 Debug.Assert(len < MAX_FNAME_LEN);
@@ -212,8 +192,7 @@ partial class UPackage
                 Names[i] = new string(buf, 0, len);
                 continue;
             }
-            else if (Game == AA2)
-            {
+            else if (Game == AA2) {
                 //char* buf = stackalloc char[MAX_FNAME_LEN];
                 var len = r.ReadCompactIndex(Ar);
                 // read as unicode string and decrypt
@@ -222,8 +201,7 @@ partial class UPackage
                 Debug.Assert(len < MAX_FNAME_LEN);
                 var d = buf;
                 var shift = (byte)5;
-                for (var j = 0; j < len; j++, d++)
-                {
+                for (var j = 0; j < len; j++, d++) {
                     var c = r.ReadUInt16();
                     var c2 = ROR16(c, shift);
                     Debug.Assert(c2 < 256);

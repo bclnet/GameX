@@ -9,8 +9,7 @@ using static GameX.Formats.Compression;
 
 namespace GameX.Epic.Formats.Core;
 
-class LineageStream : Stream
-{
+class LineageStream : Stream {
     public const int LINEAGE_HEADER_SIZE = 28;
     Stream B;
     byte XorKey;
@@ -20,19 +19,16 @@ class LineageStream : Stream
     public override bool CanSeek => B.CanSeek;
     public override bool CanWrite => B.CanWrite;
     public override long Length => B.Length;
-    public override long Position
-    {
+    public override long Position {
         get => B.Position;
         set => B.Position = value;
     }
     public override void Flush() => B.Flush();
-    public unsafe override int Read(byte[] buffer, int offset, int count)
-    {
+    public unsafe override int Read(byte[] buffer, int offset, int count) {
         var r = B.Read(buffer, offset, count);
         int i; byte* p;
         if (XorKey != 0)
-            fixed (byte* data = &buffer[offset])
-            {
+            fixed (byte* data = &buffer[offset]) {
                 for (i = 0, p = data; i < count; i++, p++) *p ^= XorKey;
             }
         return r;
@@ -42,8 +38,7 @@ class LineageStream : Stream
     public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
 }
 
-class BattleTerrStream : Stream
-{
+class BattleTerrStream : Stream {
     Stream B;
     public BattleTerrStream(BinaryReader r) => B = r.BaseStream;
 
@@ -51,19 +46,16 @@ class BattleTerrStream : Stream
     public override bool CanSeek => B.CanSeek;
     public override bool CanWrite => B.CanWrite;
     public override long Length => B.Length;
-    public override long Position
-    {
+    public override long Position {
         get => B.Position;
         set => B.Position = value;
     }
     public override void Flush() => B.Flush();
-    public unsafe override int Read(byte[] buffer, int offset, int count)
-    {
+    public unsafe override int Read(byte[] buffer, int offset, int count) {
         var r = B.Read(buffer, offset, count);
         int i; byte* p;
         fixed (byte* data = &buffer[offset])
-            for (i = 0, p = data; i < count; i++, p++)
-            {
+            for (i = 0, p = data; i < count; i++, p++) {
                 byte b = *p;
                 int shift;
                 byte v;
@@ -78,8 +70,7 @@ class BattleTerrStream : Stream
     public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
 }
 
-class AA2Stream : Stream
-{
+class AA2Stream : Stream {
     Stream B;
     public AA2Stream(BinaryReader r) => B = r.BaseStream;
 
@@ -87,20 +78,17 @@ class AA2Stream : Stream
     public override bool CanSeek => B.CanSeek;
     public override bool CanWrite => B.CanWrite;
     public override long Length => B.Length;
-    public override long Position
-    {
+    public override long Position {
         get => B.Position;
         set => B.Position = value;
     }
     public override void Flush() => B.Flush();
-    public unsafe override int Read(byte[] buffer, int offset, int count)
-    {
+    public unsafe override int Read(byte[] buffer, int offset, int count) {
         var StartPos = (int)B.Position;
         var r = B.Read(buffer, offset, count);
         int i; byte* p;
         fixed (byte* data = &buffer[offset])
-            for (i = 0, p = data; i < count; i++, p++)
-            {
+            for (i = 0, p = data; i < count; i++, p++) {
                 byte b = *p;
                 var PosXor = StartPos + i;
                 PosXor = (PosXor >> 8) ^ PosXor;
@@ -115,8 +103,7 @@ class AA2Stream : Stream
     public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
 }
 
-class BnSStream : Stream
-{
+class BnSStream : Stream {
     const string key = "qiffjdlerdoqymvketdcl0er2subioxq";
     Stream B;
     public BnSStream(BinaryReader r) => B = r.BaseStream;
@@ -125,14 +112,12 @@ class BnSStream : Stream
     public override bool CanSeek => B.CanSeek;
     public override bool CanWrite => B.CanWrite;
     public override long Length => B.Length;
-    public override long Position
-    {
+    public override long Position {
         get => B.Position;
         set => B.Position = value;
     }
     public override void Flush() => B.Flush();
-    public unsafe override int Read(byte[] buffer, int offset, int count)
-    {
+    public unsafe override int Read(byte[] buffer, int offset, int count) {
         var Pos = (int)B.Position;
         var r = B.Read(buffer, offset, count);
         // Note: similar code exists in DecryptBladeAndSoul()
@@ -148,12 +133,10 @@ class BnSStream : Stream
     static void DecodeBnSPointer(ref int Value, uint Code1, uint Code2, int Index)
         => Value = (int)(ROR32((uint)Value, (int)((Index + Code2) & 0x1F)) ^ ROR32(Code1, Index % 32));
 
-    void PatchBnSExports(FObjectExport[] Exps, FPackageFileSummary Summary)
-    {
+    void PatchBnSExports(FObjectExport[] Exps, FPackageFileSummary Summary) {
         var Code1 = (uint)((Summary.HeadersSize & 0xFF) << 24) | ((Summary.NameCount & 0xFF) << 16) | ((Summary.NameOffset & 0xFF) << 8) | ((Summary.ExportCount & 0xFF));
         var Code2 = (Summary.ExportOffset + Summary.ImportCount + Summary.ImportOffset) & 0x1F;
-        for (var i = 0; i < Summary.ExportCount; i++)
-        {
+        for (var i = 0; i < Summary.ExportCount; i++) {
             var Exp = Exps[i];
             DecodeBnSPointer(ref Exp.SerialSize, Code1, Code2, i);
             DecodeBnSPointer(ref Exp.SerialOffset, Code1, Code2, i);
@@ -161,15 +144,12 @@ class BnSStream : Stream
     }
 }
 
-class DunDefStream
-{
-    static void PatchDunDefExports(FObjectExport[] Exps, FPackageFileSummary Summary)
-    {
+class DunDefStream {
+    static void PatchDunDefExports(FObjectExport[] Exps, FPackageFileSummary Summary) {
         // Dungeon Defenders has nullified ExportOffset entries starting from some version.
         // Let's recover them.
         var CurrentOffset = Summary.HeadersSize;
-        for (var i = 0; i < Summary.ExportCount; i++)
-        {
+        for (var i = 0; i < Summary.ExportCount; i++) {
             var Exp = Exps[i];
             if (Exp.SerialOffset == 0) Exp.SerialOffset = CurrentOffset;
             CurrentOffset = Exp.SerialOffset + Exp.SerialSize;
@@ -177,8 +157,7 @@ class DunDefStream
     }
 }
 
-class NurienStream : Stream
-{
+class NurienStream : Stream {
     static readonly byte[] key = {
         0xFE, 0xF2, 0x35, 0x2E, 0x12, 0xFF, 0x47, 0x8A,
         0xE1, 0x2D, 0x53, 0xE2, 0x21, 0xA3, 0x74, 0xA8
@@ -191,21 +170,18 @@ class NurienStream : Stream
     public override bool CanSeek => B.CanSeek;
     public override bool CanWrite => B.CanWrite;
     public override long Length => B.Length;
-    public override long Position
-    {
+    public override long Position {
         get => B.Position;
         set => B.Position = value;
     }
     public override void Flush() => B.Flush();
-    public unsafe override int Read(byte[] buffer, int offset, int count)
-    {
+    public unsafe override int Read(byte[] buffer, int offset, int count) {
         var Pos = (int)B.Position;
         var r = B.Read(buffer, offset, count);
         if (Pos >= Threshold) return r; // only first Threshold bytes are compressed (package headers)
         int i; byte* p;
         fixed (byte* data = &buffer[offset])
-            for (i = 0, p = data; i < count; i++, p++, Pos++)
-            {
+            for (i = 0, p = data; i < count; i++, p++, Pos++) {
                 if (Pos >= Threshold) return r;
                 *p ^= key[Pos & 0xF];
             }
@@ -216,8 +192,7 @@ class NurienStream : Stream
     public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
 }
 
-class RocketLeagueStream : Stream
-{
+class RocketLeagueStream : Stream {
     static readonly byte[] key = {
         0xC7, 0xDF, 0x6B, 0x13, 0x25, 0x2A, 0xCC, 0x71,
         0x47, 0xBB, 0x51, 0xC9, 0x8A, 0xD7, 0xE3, 0x4B,
@@ -233,14 +208,12 @@ class RocketLeagueStream : Stream
     public override bool CanSeek => B.CanSeek;
     public override bool CanWrite => B.CanWrite;
     public override long Length => B.Length;
-    public override long Position
-    {
+    public override long Position {
         get => B.Position;
         set => B.Position = value;
     }
     public override void Flush() => B.Flush();
-    public unsafe override int Read(byte[] buffer, int offset, int count)
-    {
+    public unsafe override int Read(byte[] buffer, int offset, int count) {
         var Pos = (int)B.Position;
         var r = B.Read(buffer, offset, count);
 
@@ -283,8 +256,7 @@ class RocketLeagueStream : Stream
     public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
 }
 
-unsafe class UE3Stream : Stream
-{
+unsafe class UE3Stream : Stream {
     BinaryReader R;
     Stream B;
     UPackage Ar;
@@ -305,8 +277,7 @@ unsafe class UE3Stream : Stream
     int ChunkDataPos;
     int PositionOffset;
 
-    public UE3Stream(BinaryReader r, UPackage ar, COMPRESS compressionFlags, FCompressedChunk[] chunks)
-    {
+    public UE3Stream(BinaryReader r, UPackage ar, COMPRESS compressionFlags, FCompressedChunk[] chunks) {
         R = r;
         B = r.BaseStream;
         Ar = ar;
@@ -318,21 +289,17 @@ unsafe class UE3Stream : Stream
     public override bool CanSeek => B.CanSeek;
     public override bool CanWrite => B.CanWrite;
     public override long Length => B.Length;
-    public override long Position
-    {
+    public override long Position {
         get => Position_ + PositionOffset;
         set => Position_ = value - PositionOffset;
     }
     public override void Flush() => B.Flush();
-    public unsafe override int Read(byte[] buffer, int offset, int count)
-    {
+    public unsafe override int Read(byte[] buffer, int offset, int count) {
         if (Stopper > 0 && Position_ + offset + count > Stopper) throw new Exception($"Serializing behind stopper ({Position_:X}+{offset}+{count:X} > {Stopper:X})");
         var bufferOffset = 0;
-        while (true)
-        {
+        while (true) {
             // check for valid buffer
-            if (Position_ >= BufferStart && Position_ < BufferEnd)
-            {
+            if (Position_ >= BufferStart && Position_ < BufferEnd) {
                 var ToCopy = (int)(BufferEnd - Position_ - offset);     // available size
                 if (ToCopy > count) ToCopy = count;                     // shrink by required size
                 Buffer.BlockCopy(Buffer_, (int)(Position_ - offset - BufferStart), buffer, bufferOffset, ToCopy);  // copy data
@@ -348,20 +315,17 @@ unsafe class UE3Stream : Stream
         }
     }
 
-    void PrepareBuffer(int Pos)
-    {
+    void PrepareBuffer(int Pos) {
         // find compressed chunk
         FCompressedChunk Chunk = null;
-        for (var ChunkIndex = 0; ChunkIndex < CompressedChunks.Length; ChunkIndex++)
-        {
+        for (var ChunkIndex = 0; ChunkIndex < CompressedChunks.Length; ChunkIndex++) {
             Chunk = CompressedChunks[ChunkIndex];
             if (Pos < Chunk.UncompressedOffset + Chunk.UncompressedSize) break;
         }
         Debug.Assert(Chunk != null); // should be at least 1 chunk in CompressedChunks
 
         // DC Universe has uncompressed package headers but compressed remaining package part
-        if (Pos < Chunk.UncompressedOffset)
-        {
+        if (Pos < Chunk.UncompressedOffset) {
             var Size = Chunk.CompressedOffset;
             Buffer_ = new byte[Size];
             BufferSize = Size;
@@ -371,15 +335,12 @@ unsafe class UE3Stream : Stream
             B.Read(Buffer_, 0, Size);
             return;
         }
-        else if (Chunk != CurrentChunk)
-        {
+        else if (Chunk != CurrentChunk) {
             // serialize compressed chunk header
             B.Position = Chunk.CompressedOffset;
-            if (Ar.Game == Bioshock)
-            {
+            if (Ar.Game == Bioshock) {
                 var CompressedSize = R.ReadInt32();
-                ChunkHeader = new FCompressedChunkHeader
-                {
+                ChunkHeader = new FCompressedChunkHeader {
                     Blocks = new[] {
                         new FCompressedChunkBlock
                         {
@@ -390,11 +351,9 @@ unsafe class UE3Stream : Stream
                 };
             }
             else if (Chunk.CompressedSize != Chunk.UncompressedSize) ChunkHeader = new FCompressedChunkHeader(R, Ar);
-            else
-            {
+            else {
                 // have seen such block in Borderlands: chunk has CompressedSize==UncompressedSize and has no compression; no such code in original engine
-                ChunkHeader = new FCompressedChunkHeader
-                {
+                ChunkHeader = new FCompressedChunkHeader {
                     BlockSize = -1, // mark as uncompressed (checked below)
                     Blocks = new[] {
                         new FCompressedChunkBlock
@@ -415,8 +374,7 @@ unsafe class UE3Stream : Stream
         var ChunkData = ChunkDataPos;
         Debug.Assert(ChunkPosition <= Pos);
         FCompressedChunkBlock Block = null;
-        for (var BlockIndex = 0; BlockIndex < ChunkHeader.Blocks.Length; BlockIndex++)
-        {
+        for (var BlockIndex = 0; BlockIndex < ChunkHeader.Blocks.Length; BlockIndex++) {
             Block = ChunkHeader.Blocks[BlockIndex];
             if (ChunkPosition + Block.UncompressedSize > Pos) break;
             ChunkPosition += Block.UncompressedSize;
@@ -430,8 +388,7 @@ unsafe class UE3Stream : Stream
         R.Seek(ChunkData);
         R.Read(CompressedBlock, 0, Block.CompressedSize);
         // prepare buffer for decompression
-        if (Block.UncompressedSize > BufferSize)
-        {
+        if (Block.UncompressedSize > BufferSize) {
             Buffer_ = new byte[Block.UncompressedSize];
             BufferSize = Block.UncompressedSize;
         }
@@ -443,8 +400,7 @@ unsafe class UE3Stream : Stream
             if (Ar.Game == Batman4 && CompressionFlags == COMPRESS.LZO_ENC_BNS) UsedCompressionFlags = COMPRESS.LZ4;
             appDecompress(CompressedBlock, Block.CompressedSize, Buffer_, Block.UncompressedSize, UsedCompressionFlags);
         }
-        else
-        {
+        else {
             // No compression
             Debug.Assert(Block.CompressedSize == Block.UncompressedSize);
             Buffer.BlockCopy(CompressedBlock, 0, Buffer_, 0, Block.CompressedSize);
@@ -456,8 +412,7 @@ unsafe class UE3Stream : Stream
 
     COMPRESS FoundCompression = COMPRESS.None;
 
-    static COMPRESS DetectCompressionMethod(byte[] CompressedBuffer)
-    {
+    static COMPRESS DetectCompressionMethod(byte[] CompressedBuffer) {
         byte b1 = CompressedBuffer[0], b2 = CompressedBuffer[1];
         return b1 == 0x78 && (b2 == 0x9C || b2 == 0xDA) ? COMPRESS.ZLIB // b1=CMF: 7=32k buffer (CINFO), 8=deflate (CM), b2=FLG
             : (b1 == 0x8C || b1 == 0xCC) && (b2 == 5 || b2 == 6 || b2 == 10 || b2 == 11 || b2 == 12) ? COMPRESS.OODLE
@@ -465,11 +420,9 @@ unsafe class UE3Stream : Stream
             : COMPRESS.LZO; // LZO was used only with UE3 games as standard compression method
     }
 
-    int appDecompress(byte[] CompressedBuffer, int CompressedSize, byte[] UncompressedBuffer, int UncompressedSize, COMPRESS Flags)
-    {
+    int appDecompress(byte[] CompressedBuffer, int CompressedSize, byte[] UncompressedBuffer, int UncompressedSize, COMPRESS Flags) {
         var OldFlags = Flags;
-        if (GForceGame == GoWU)
-        {
+        if (GForceGame == GoWU) {
             // It is strange, but this game has 2 Flags both used for LZ4 - probably they were used for different compression settings of the same algorithm.
             if (Flags == COMPRESS.LZX || Flags == (COMPRESS)32) Flags = COMPRESS.LZ4;
         }
@@ -478,39 +431,33 @@ unsafe class UE3Stream : Stream
             DecryptBladeAndSoul(CompressedBuffer, CompressedSize);
             Flags = COMPRESS.LZO; // overide compression
         }
-        else if (GForceGame == Smite)
-        {
-            if ((Flags & (COMPRESS)512) != 0)
-            {
+        else if (GForceGame == Smite) {
+            if ((Flags & (COMPRESS)512) != 0) {
                 for (var i = 0; i < CompressedSize; i++) CompressedBuffer[i] ^= 0x2A; // Simple encryption
                 Flags &= ~(COMPRESS)512; // Remove encryption flag
             }
             if (Flags == COMPRESS.XXX) Flags = COMPRESS.OODLE; // Overide compression, appeared in late 2019 builds
         }
-        else if (GForceGame == MassEffectLE)
-        {
+        else if (GForceGame == MassEffectLE) {
             if (Flags == (COMPRESS)0x400) Flags = COMPRESS.OODLE;
         }
         else if (GForceGame == TaoYuan) // note: GForceGame is required (to not pass 'Game' here);
         {
             DecryptTaoYuan(CompressedBuffer, CompressedSize);
         }
-        else if ((GForceGame == DevilsThird) && (Flags & COMPRESS.XXX) != 0)
-        {
+        else if ((GForceGame == DevilsThird) && (Flags & COMPRESS.XXX) != 0) {
             DecryptDevlsThird(CompressedBuffer, CompressedSize);
             // override compression
             Flags &= ~COMPRESS.XXX;
         }
 
-        if (Flags == COMPRESS.FIND && FoundCompression >= 0)
-        {
+        if (Flags == COMPRESS.FIND && FoundCompression >= 0) {
             // Do not detect compression multiple times: there were cases (Sea of Thieves) when
             // game is using LZ4 compression, however its first 2 bytes occasionally matched oodle,
             // so one of blocks were mistakenly used oodle.
             Flags = FoundCompression;
         }
-        else if (Flags == COMPRESS.FIND && CompressedSize >= 2)
-        {
+        else if (Flags == COMPRESS.FIND && CompressedSize >= 2) {
             Flags = DetectCompressionMethod(CompressedBuffer);
             FoundCompression = Flags; // Cache detected compression method
         }
@@ -519,8 +466,7 @@ unsafe class UE3Stream : Stream
         if (CompressedBuffer.Length != CompressedSize || UncompressedBuffer.Length != UncompressedSize) throw new Exception("Internal error");
 
         int newLen;
-        switch (Flags)
-        {
+        switch (Flags) {
             case COMPRESS.LZO:
                 newLen = DecompressLzo(CompressedBuffer, UncompressedBuffer);
                 if (newLen != UncompressedSize) throw new Exception($"len mismatch: {newLen} != {UncompressedSize}");
@@ -549,8 +495,7 @@ unsafe class UE3Stream : Stream
             default:
                 // Try to use compression detection
                 if (FoundCompression >= 0) { } // Already detected a working decompressor (if it wouldn't be working, we'd already crash)
-                else
-                {
+                else {
                     Debug.Assert(CompressedSize >= 2);
                     FoundCompression = DetectCompressionMethod(CompressedBuffer);
                     Debug.WriteLine($"appDecompress: unknown compression flags {Flags:X}, detected {FoundCompression:X}, retrying ...");

@@ -1,11 +1,9 @@
 ﻿using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace GameX.Engine.UI
-{
+namespace GameX.Engine.UI {
     [RequireComponent(typeof(Image))]
-    public class UICrosshair : MonoBehaviour
-    {
+    public class UICrosshair : MonoBehaviour {
         Image _crosshair = null;
 
         //public bool Enabled
@@ -17,8 +15,7 @@ namespace GameX.Engine.UI
         void Awake()
             => _crosshair = GetComponent<Image>();
 
-        void Start()
-        {
+        void Start() {
             //var crosshairTexture = (Texture2D)null; // BaseEngine.instance.Asset.LoadTexture("target", true);
             //_crosshair.image = UIUtils.CreateSprite(crosshairTexture);
         }

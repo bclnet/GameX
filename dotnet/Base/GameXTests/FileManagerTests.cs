@@ -4,8 +4,7 @@ using System;
 namespace GameX;
 
 [TestClass]
-public class FileManagerTests
-{
+public class FileManagerTests {
     [TestMethod]
     public void MissingEstate_ShouldThrow()
         => Assert.ThrowsException<ArgumentOutOfRangeException>(() => FamilyManager.GetFamily("Missing"));
@@ -72,8 +71,7 @@ public class FileManagerTests
     [DataRow("Origin", "UltimaOnline", "*.idx", 0)]
     [DataRow("Origin", "UltimaIX", "static/*.flx", 0)]
     [DataRow("Valve", "Dota2", "core/pak01_dir.vpk", 0)]
-    public void FileManager(string familyName, string game, string searchPattern, int count)
-    {
+    public void FileManager(string familyName, string game, string searchPattern, int count) {
         var family = FamilyManager.GetFamily(familyName);
         //var fileManager = family.FileManager;
         //Assert.IsTrue(fileManager.HasPaths);

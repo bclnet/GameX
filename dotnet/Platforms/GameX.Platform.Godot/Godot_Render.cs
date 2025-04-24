@@ -4,22 +4,21 @@ using OpenStack.Gfx;
 using OpenStack.Gfx.Godot;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using static OpenStack.Gfx.GfX;
 
 namespace GameX.Platforms.Godot;
 
 public static class GodotRenderer
 {
-    public static Renderer CreateRenderer(object parent, GodotGfxModel gfx, object obj, string type)
+    public static Renderer CreateRenderer(object parent, IList<IOpenGfx> gfx, object obj, string type)
         => type switch
         {
-            "TestTri" => new GodotTestTriRenderer(parent as Node, gfx, obj),
-            "Texture" => new GodotTextureRenderer(parent as Node, gfx, obj),
-            "Object" => new GodotObjectRenderer(parent as Node, gfx, obj),
-            "Cell" => new GodotCellRenderer(parent as Node, gfx, obj),
-            "Engine" => new GodotEngineRenderer(parent as Node, gfx, obj),
-            _ => new GodotObjectRenderer(parent as Node, gfx, obj),
+            "TestTri" => new GodotTestTriRenderer(parent as Node, gfx[XModel] as GodotGfxModel, obj),
+            "Texture" => new GodotTextureRenderer(parent as Node, gfx[XModel] as GodotGfxModel, obj),
+            "Object" => new GodotObjectRenderer(parent as Node, gfx[XModel] as GodotGfxModel, obj),
+            "Cell" => new GodotCellRenderer(parent as Node, gfx[XModel] as GodotGfxModel, obj),
+            "Engine" => new GodotEngineRenderer(parent as Node, gfx[XModel] as GodotGfxModel, obj),
+            _ => new GodotObjectRenderer(parent as Node, gfx[XModel] as GodotGfxModel, obj),
         };
 }
 
@@ -36,29 +35,22 @@ public class ViewInfo : Node
 {
     static ViewInfo() => PlatformX.Activate(GodotPlatform.This);
 
-    public enum Kind { Texture, TextureCursor, Object, Cell, Engine }
-
     public string FamilyId = "Bethesda";
     public string PakUri = "game:/Morrowind.bsa#Morrowind";
-
-    public Kind ViewKind = Kind.Texture;
-    public string Param1 = "bookart/boethiah_256.dds";
-    //public string Param1 = "meshes/x/ex_common_balcony_01.nif";
+    public string Type = "Texture";
+    public string Path = "bookart/boethiah_256.dds";
+    //public string Path = "meshes/x/ex_common_balcony_01.nif";
 
     protected Family Family;
-    protected List<PakFile> PakFiles = [];
-    protected GodotGfxModel Gfx;
-
+    protected PakFile Source;
     Renderer Renderer;
 
     public override void _Ready()
     {
         if (string.IsNullOrEmpty(FamilyId)) return;
         Family = FamilyManager.GetFamily(FamilyId);
-        if (!string.IsNullOrEmpty(PakUri)) PakFiles.Add(Family.OpenPakFile(new Uri(PakUri)));
-        var first = PakFiles.FirstOrDefault();
-        Gfx = (GodotGfxModel)first?.Gfx[XModel];
-        Renderer = GodotRenderer.CreateRenderer(this, Gfx, Param1, ViewKind.ToString());
+        if (!string.IsNullOrEmpty(PakUri)) Source = Family.OpenPakFile(new Uri(PakUri));
+        Renderer = GodotRenderer.CreateRenderer(this, Source?.Gfx, Path, Type);
         Renderer?.Start();
     }
 
@@ -71,8 +63,7 @@ public class ViewInfo : Node
         {
             case NotificationPredelete:
                 Renderer?.Dispose();
-                foreach (var pakFile in PakFiles) pakFile.Dispose();
-                PakFiles.Clear();
+                Source?.Dispose();
                 break;
         }
     }

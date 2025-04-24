@@ -1,8 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 
-namespace GameX.App.Explorer.Views
-{
+namespace GameX.App.Explorer.Views {
     //public class BindingProxy_ : Freezable
     //{
     //    protected override Freezable CreateInstanceCore() => new BindingProxy_();
@@ -29,10 +28,8 @@ namespace GameX.App.Explorer.Views
     //    return child;
     //}
 
-    public static class ViewExtensions
-    {
-        public static void WriteLine(this TextBox textBox, string line)
-        {
+    public static class ViewExtensions {
+        public static void WriteLine(this TextBox textBox, string line) {
             if (textBox.Text.Length != 0) textBox.AppendText("\n");
             textBox.AppendText(line);
             textBox.ScrollToEnd();

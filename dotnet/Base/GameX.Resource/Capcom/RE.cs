@@ -8,11 +8,9 @@ using System.Linq;
 
 namespace GameX.Capcom;
 
-public static class RE
-{
+public static class RE {
     static readonly IDictionary<string, ZipArchiveEntry> HashEntries;
-    static RE()
-    {
+    static RE() {
         var assembly = typeof(RE).Assembly;
         var s = assembly.GetManifestResourceStream("GameX.Resource.Capcom.RE.zip");
         var pak = new ZipArchive(s, ZipArchiveMode.Read);
@@ -20,13 +18,11 @@ public static class RE
     }
 
     static readonly ConcurrentDictionary<string, IDictionary<ulong, string>> HashLookups = new();
-    public static IDictionary<ulong, string> GetHashLookup(string path) => HashLookups.GetOrAdd(path, x =>
-    {
+    public static IDictionary<ulong, string> GetHashLookup(string path) => HashLookups.GetOrAdd(path, x => {
         var value = new Dictionary<ulong, string>();
         string line;
         using var r = new StreamReader(HashEntries[path].Open());
-        while ((line = r.ReadLine()) != null)
-        {
+        while ((line = r.ReadLine()) != null) {
             var hashLower = MurmurHash3.Hash(line.ToLowerInvariant());
             var hashUpper = MurmurHash3.Hash(line.ToUpperInvariant());
             var hash = (ulong)hashUpper << 32 | hashLower;

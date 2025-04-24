@@ -7,15 +7,11 @@ using System.Threading.Tasks;
 
 namespace GameX.Formats;
 
-public class PakBinaryCanStream : PakBinary
-{
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
-        switch ((string)tag)
-        {
+public class PakBinaryCanStream : PakBinary {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+        switch ((string)tag) {
             case null: return Task.CompletedTask;
-            case "Set":
-                {
+            case "Set": {
                     var files = source.Files = new List<FileSource>();
                     var data = r.ReadToEnd();
                     // dir /s/b/a-d > .set
@@ -28,8 +24,7 @@ public class PakBinaryCanStream : PakBinary
                             files.Add(new FileSource { Path = path });
                     return Task.CompletedTask;
                 }
-            case "Meta":
-                {
+            case "Meta": {
                     _ = source.Process();
 
                     var data = r.ReadToEnd();
@@ -38,22 +33,18 @@ public class PakBinaryCanStream : PakBinary
                     var state = -1;
                     var paramsx = source.Params;
                     var filesByPath = source.FilesByPath;
-                    foreach (var line in lines)
-                    {
+                    foreach (var line in lines) {
                         var path = line.TrimEnd().Replace('\\', '/');
-                        if (state == -1)
-                        {
+                        if (state == -1) {
                             if (path == "Params:") state = 0;
                             else if (path == "AllCompressed") foreach (var file in source.Files) file.Compressed = 1;
                             else if (path == "Compressed:") state = 1;
                             else if (path == "Crypted:") state = 2;
                         }
-                        else
-                        {
+                        else {
                             if (string.IsNullOrEmpty(line)) { state = -1; continue; }
                             var files = filesByPath[line];
-                            switch (state)
-                            {
+                            switch (state) {
                                 case 0: var args = line.Split([':'], 2); paramsx[args[0]] = args[1]; continue;
                                 case 1: if (files != null) files.First().Compressed = 1; continue;
                                 case 2: if (files != null) files.First().Flags = 1; continue;
@@ -62,8 +53,7 @@ public class PakBinaryCanStream : PakBinary
                     }
                     return Task.CompletedTask;
                 }
-            case "Raw":
-                {
+            case "Raw": {
                     var filesRawSet = source.FilesRawSet = [];
                     var data = r.ReadToEnd();
                     var lines = Encoding.ASCII.GetString(data)?.Split('\n');
@@ -75,13 +65,10 @@ public class PakBinaryCanStream : PakBinary
         }
     }
 
-    public override Task Write(BinaryPakFile source, BinaryWriter w, object tag)
-    {
-        switch ((string)tag)
-        {
+    public override Task Write(BinaryPakFile source, BinaryWriter w, object tag) {
+        switch ((string)tag) {
             case null: return Task.CompletedTask;
-            case "Set":
-                {
+            case "Set": {
                     var pathAsBytes = Encoding.ASCII.GetBytes($@"C:/{source.Name}/");
                     w.Write(pathAsBytes);
                     w.Write(Encoding.ASCII.GetBytes(".set"));
@@ -98,15 +85,12 @@ public class PakBinaryCanStream : PakBinary
                     }
                     return Task.CompletedTask;
                 }
-            case "Meta":
-                {
+            case "Meta": {
                     // meta
                     var @params = source.Params;
-                    if (@params.Count > 0)
-                    {
+                    if (@params.Count > 0) {
                         w.Write(Encoding.ASCII.GetBytes("Params:\n"));
-                        foreach (var param in @params)
-                        {
+                        foreach (var param in @params) {
                             w.Write(Encoding.ASCII.GetBytes($"{param.Key}:{param.Value}"));
                             w.Write((byte)'\n');
                             w.Flush();
@@ -118,11 +102,9 @@ public class PakBinaryCanStream : PakBinary
                     var files = source.Files;
                     var numCompressed = files.Count(x => x.Compressed != 0);
                     if (files.Count == numCompressed) w.Write(Encoding.ASCII.GetBytes("AllCompressed\n"));
-                    else if (numCompressed > 0)
-                    {
+                    else if (numCompressed > 0) {
                         w.Write(Encoding.ASCII.GetBytes("Compressed:\n"));
-                        foreach (var file in files.Where(x => x.Compressed != 0))
-                        {
+                        foreach (var file in files.Where(x => x.Compressed != 0)) {
                             w.Write(Encoding.ASCII.GetBytes(file.Path));
                             w.Write((byte)'\n');
                             w.Flush();
@@ -131,11 +113,9 @@ public class PakBinaryCanStream : PakBinary
                         w.Flush();
                     }
                     // crypted
-                    if (files.Any(x => x.Flags != 0))
-                    {
+                    if (files.Any(x => x.Flags != 0)) {
                         w.Write(Encoding.ASCII.GetBytes("Crypted:\n"));
-                        foreach (var file in files.Where(x => x.Flags != 0))
-                        {
+                        foreach (var file in files.Where(x => x.Flags != 0)) {
                             w.Write(Encoding.ASCII.GetBytes(file.Path));
                             w.Write((byte)'\n');
                             w.Flush();
@@ -145,11 +125,9 @@ public class PakBinaryCanStream : PakBinary
                     }
                     return Task.CompletedTask;
                 }
-            case "Raw":
-                {
+            case "Raw": {
                     if (source.FilesRawSet == null) throw new ArgumentNullException(nameof(source.FilesRawSet));
-                    foreach (var file in source.FilesRawSet)
-                    {
+                    foreach (var file in source.FilesRawSet) {
                         w.Write(Encoding.ASCII.GetBytes(file));
                         w.Write((byte)'\n');
                         w.Flush();

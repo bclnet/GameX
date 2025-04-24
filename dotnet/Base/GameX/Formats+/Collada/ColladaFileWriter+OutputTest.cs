@@ -1,9 +1,7 @@
 ﻿namespace GameX.Formats.Collada;
 
-partial class ColladaFileWriter
-{
-    void OutputTest()
-    {
+partial class ColladaFileWriter {
+    void OutputTest() {
         //foreach (ChunkDataStream stream in CryData.Models[1].ChunkMap.Values.Where(a => a.ChunkType == ChunkTypeEnum.DataStream))
         //    if (stream.DataStreamType == DataStreamTypeEnum.TANGENTS)
         //    {

@@ -17,16 +17,13 @@ namespace GameX.Arkane;
 /// ArkanePakFile
 /// </summary>
 /// <seealso cref="GameEstate.Formats.BinaryPakFile" />
-public class ArkanePakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel>
-{
+public class ArkanePakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="Arkane" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public ArkanePakFile(PakState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant()))
-    {
-        ObjectFactoryFunc = state.Game.Engine.n switch
-        {
+    public ArkanePakFile(PakState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+        ObjectFactoryFunc = state.Game.Engine.n switch {
             "CryEngine" => Crytek.CrytekPakFile.ObjectFactory,
             "Unreal" => Epic.EpicPakFile.ObjectFactory,
             "Source" => Valve.ValvePakFile.ObjectFactory,
@@ -41,8 +38,7 @@ public class ArkanePakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMod
     static readonly ConcurrentDictionary<string, PakBinary> PakBinarys = new();
 
     static PakBinary GetPakBinary(FamilyGame game, string extension)
-        => PakBinarys.GetOrAdd(game.Id, _ => game.Engine.n switch
-        {
+        => PakBinarys.GetOrAdd(game.Id, _ => game.Engine.n switch {
             "Danae" => Binary_Danae.Current,
             "Void" => Binary_Void.Current,
             "CryEngine" => Crytek.Formats.Binary_Cry3.Current,
@@ -53,8 +49,7 @@ public class ArkanePakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMod
         });
 
     internal static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
-        => Path.GetExtension(source.Path).ToLowerInvariant() switch
-        {
+        => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             ".asl" => (0, Binary_Txt.Factory),
             // Danae (AF)
             ".ftl" => (0, Binary_Ftl.Factory),

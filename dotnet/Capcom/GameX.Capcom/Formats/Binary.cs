@@ -13,22 +13,19 @@ namespace GameX.Capcom.Formats;
 
 #region Binary_Arc
 
-public unsafe class Binary_Arc : PakBinary<Binary_Arc>
-{
+public unsafe class Binary_Arc : PakBinary<Binary_Arc> {
     #region Headers
 
     const uint K_MAGIC = 0x00435241;
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct X_Header
-    {
+    struct X_Header {
         public ushort Version;
         public ushort NumFiles;
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct X_File
-    {
+    struct X_File {
         public fixed byte Path[0x40];
         public uint Compressed;
         public uint PackedSize;
@@ -38,8 +35,7 @@ public unsafe class Binary_Arc : PakBinary<Binary_Arc>
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         var magic = r.ReadUInt32();
         magic &= 0x00FFFFFF;
         if (magic != K_MAGIC) throw new FormatException("BAD MAGIC");
@@ -49,8 +45,7 @@ public unsafe class Binary_Arc : PakBinary<Binary_Arc>
 
         // get files
         source.Files = r.ReadSArray<X_File>(header.NumFiles)
-            .Select(x => new FileSource
-            {
+            .Select(x => new FileSource {
                 Path = $"{Encoding.UTF8.GetString(new Span<byte>(x.Path, 0x40)).TrimEnd('\0')}{GetExtension(r, x.Offset)}".Replace('\\', '/'),
                 Compressed = (int)x.Compressed,
                 PackedSize = x.PackedSize,
@@ -60,14 +55,12 @@ public unsafe class Binary_Arc : PakBinary<Binary_Arc>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
-    {
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         return Task.FromResult<Stream>(new MemoryStream(r.DecompressZlib((int)file.PackedSize, (int)file.FileSize)));
     }
 
-    static string GetExtension(BinaryReader r, long position)
-    {
+    static string GetExtension(BinaryReader r, long position) {
         r.Seek(position);
         return _guessExtension(r.DecompressZlib(150, 0));
     }
@@ -77,17 +70,14 @@ public unsafe class Binary_Arc : PakBinary<Binary_Arc>
 
 #region Binary_Big
 
-public unsafe class Binary_Big : PakBinary<Binary_Big>
-{
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+public unsafe class Binary_Big : PakBinary<Binary_Big> {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         var files = source.Files = [];
 
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
-    {
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         throw new NotImplementedException();
     }
 }
@@ -96,17 +86,14 @@ public unsafe class Binary_Big : PakBinary<Binary_Big>
 
 #region Binary_Bundle
 
-public unsafe class Binary_Bundle : PakBinary<Binary_Bundle>
-{
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+public unsafe class Binary_Bundle : PakBinary<Binary_Bundle> {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         var files = source.Files = [];
 
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
-    {
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         throw new NotImplementedException();
     }
 }
@@ -115,15 +102,13 @@ public unsafe class Binary_Bundle : PakBinary<Binary_Bundle>
 
 #region Binary_Kpka
 
-public unsafe class Binary_Kpka : PakBinary<Binary_Kpka>
-{
+public unsafe class Binary_Kpka : PakBinary<Binary_Kpka> {
     #region Headers
 
     const uint K_MAGIC = 0x414b504b;
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct K_Header
-    {
+    struct K_Header {
         public byte MajorVersion;
         public byte MinorVersion;
         public short Feature;
@@ -132,16 +117,14 @@ public unsafe class Binary_Kpka : PakBinary<Binary_Kpka>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct K_FileV2
-    {
+    struct K_FileV2 {
         public long Offset;
         public long FileSize;
         public ulong HashName;
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct K_FileV4
-    {
+    struct K_FileV4 {
         public ulong HashName;
         public long Offset;
         public long PackedSize;
@@ -152,8 +135,7 @@ public unsafe class Binary_Kpka : PakBinary<Binary_Kpka>
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         var magic = r.ReadUInt32();
         if (magic != K_MAGIC) throw new FormatException("BAD MAGIC");
 
@@ -166,8 +148,7 @@ public unsafe class Binary_Kpka : PakBinary<Binary_Kpka>
 
         // decrypt table
         var tr = r;
-        if (header.Feature == 8)
-        {
+        if (header.Feature == 8) {
             var entrySize = header.MajorVersion == 2 ? sizeof(K_FileV2) : sizeof(K_FileV4);
             var table = r.ReadBytes(header.NumFiles * entrySize);
             var key = r.ReadBytes(128);
@@ -175,11 +156,9 @@ public unsafe class Binary_Kpka : PakBinary<Binary_Kpka>
         }
 
         // get files
-        if (header.MajorVersion == 2)
-        {
+        if (header.MajorVersion == 2) {
             source.Files = tr.ReadSArray<K_FileV2>(header.NumFiles)
-                .Select(x => new FileSource
-                {
+                .Select(x => new FileSource {
                     Path = hashLookup != null && hashLookup.TryGetValue(x.HashName, out var z)
                         ? z.Replace('\\', '/')
                         : $"_unknown/{x.HashName:x16}{GetExtension(r, x.Offset, 0)}",
@@ -187,12 +166,10 @@ public unsafe class Binary_Kpka : PakBinary<Binary_Kpka>
                     FileSize = x.FileSize,
                 }).ToArray();
         }
-        else if (header.MajorVersion == 4)
-        {
+        else if (header.MajorVersion == 4) {
             int compressed;
             source.Files = tr.ReadSArray<K_FileV4>(header.NumFiles)
-                .Select(x => new FileSource
-                {
+                .Select(x => new FileSource {
                     Compressed = compressed = GetCompressed(x.Flag),
                     Path = hashLookup != null && hashLookup.TryGetValue(x.HashName, out var z)
                         ? z.Replace('\\', '/')
@@ -205,8 +182,7 @@ public unsafe class Binary_Kpka : PakBinary<Binary_Kpka>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
-    {
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         return Task.FromResult<Stream>(new MemoryStream(Decompress(r, file.Compressed, (int)file.PackedSize, (int)file.FileSize)));
     }
@@ -222,8 +198,7 @@ public unsafe class Binary_Kpka : PakBinary<Binary_Kpka>
         : (f & 0xF) == 2 ? f >> 16 > 0 ? 0 : 'S'
         : 0;
 
-    static string GetExtension(BinaryReader r, long offset, int compressed)
-    {
+    static string GetExtension(BinaryReader r, long offset, int compressed) {
         r.Seek(offset);
         return _guessExtension(Decompress(r, compressed, 150));
     }
@@ -244,14 +219,12 @@ public unsafe class Binary_Kpka : PakBinary<Binary_Kpka>
         0x01, 0x00, 0x01, 0x00
     });
 
-    static byte[] DecryptKey(byte[] key)
-    {
+    static byte[] DecryptKey(byte[] key) {
         Array.Resize(ref key, 129);
         return BigInteger.ModPow(new BigInteger(key), Exponent, Modulus).ToByteArray();
     }
 
-    static Stream DecryptTable(byte[] buf, byte[] key)
-    {
+    static Stream DecryptTable(byte[] buf, byte[] key) {
         if (key.Length == 0) return new MemoryStream(buf);
         for (var i = 0; i < buf.Length; i++)
             buf[i] ^= (byte)(i + key[i % 32] * key[i % 29]);
@@ -263,10 +236,8 @@ public unsafe class Binary_Kpka : PakBinary<Binary_Kpka>
 
 #region Binary_Abc
 
-public class Binary_Abc : IHaveMetaInfo
-{
-    public Binary_Abc(BinaryReader r)
-    {
+public class Binary_Abc : IHaveMetaInfo {
+    public Binary_Abc(BinaryReader r) {
     }
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
@@ -280,10 +251,8 @@ public class Binary_Abc : IHaveMetaInfo
 
 #region Binary_Tex
 
-public class Binary_Tex : IHaveMetaInfo
-{
-    public Binary_Tex(BinaryReader r)
-    {
+public class Binary_Tex : IHaveMetaInfo {
+    public Binary_Tex(BinaryReader r) {
     }
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [

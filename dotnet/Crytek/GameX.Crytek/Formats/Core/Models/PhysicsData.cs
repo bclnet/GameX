@@ -5,8 +5,7 @@ namespace GameX.Crytek.Formats.Models;
 /// <summary>
 /// Collision or hitbox info. Part of the MeshPhysicsData chunk
 /// </summary>
-public struct PhysicsData
-{
+public struct PhysicsData {
     public int Unknown4;
     public int Unknown5;
     public float[] Unknown6;        // array length 3, Inertia?

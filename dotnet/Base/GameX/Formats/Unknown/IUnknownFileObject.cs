@@ -2,10 +2,8 @@
 
 namespace GameX.Formats.Unknown;
 
-public interface IUnknownFileObject
-{
-    public struct Source
-    {
+public interface IUnknownFileObject {
+    public struct Source {
         public string Author;
         public string SourceFile;
     }

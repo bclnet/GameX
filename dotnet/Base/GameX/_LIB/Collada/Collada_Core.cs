@@ -10,8 +10,7 @@ namespace Khronos.Collada;
 #region Animation
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Animation
-{
+public partial class Collada_Animation {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("name")] public string Name;
     [XmlElement(ElementName = "animation")] public Collada_Animation[] Animation;
@@ -23,8 +22,7 @@ public partial class Collada_Animation
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Animation_Clip
-{
+public partial class Collada_Animation_Clip {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("name")] public string Name;
     [XmlAttribute("start")] public double Start;
@@ -36,15 +34,13 @@ public partial class Collada_Animation_Clip
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Channel
-{
+public partial class Collada_Channel {
     [XmlAttribute("source")] public string Source;
     [XmlAttribute("target")] public string Target;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Instance_Animation
-{
+public partial class Collada_Instance_Animation {
     [XmlAttribute("sid")] public string sID;
     [XmlAttribute("name")] public string Name;
     [XmlAttribute("url")] public string URL;
@@ -52,8 +48,7 @@ public partial class Collada_Instance_Animation
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Library_Animation_Clips
-{
+public partial class Collada_Library_Animation_Clips {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("name")] public string Name;
     [XmlElement(ElementName = "animation_clip")] public Collada_Animation_Clip[] Animation_Clip;
@@ -62,8 +57,7 @@ public partial class Collada_Library_Animation_Clips
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Library_Animations
-{
+public partial class Collada_Library_Animations {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("name")] public string Name;
     [XmlElement(ElementName = "animation")] public Collada_Animation[] Animation;
@@ -72,8 +66,7 @@ public partial class Collada_Library_Animations
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Sampler
-{
+public partial class Collada_Sampler {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("pre_behavior"), DefaultValue(Collada_Sampler_Behavior.UNDEFINED)] public Collada_Sampler_Behavior Pre_Behavior;
     [XmlAttribute("post_behavior"), DefaultValue(Collada_Sampler_Behavior.UNDEFINED)] public Collada_Sampler_Behavior Post_Behavior;
@@ -85,8 +78,7 @@ public partial class Collada_Sampler
 #region Camera
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Camera
-{
+public partial class Collada_Camera {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("name")] public string Name;
     [XmlElement(ElementName = "optics")] public Collada_Optics Optics;
@@ -96,15 +88,13 @@ public partial class Collada_Camera
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Imager
-{
+public partial class Collada_Imager {
     [XmlElement(ElementName = "technique")] public Collada_Technique[] Technique;
     [XmlElement(ElementName = "extra")] public Collada_Extra[] Extra;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Instance_Camera
-{
+public partial class Collada_Instance_Camera {
     [XmlAttribute("sid")] public string sID;
     [XmlAttribute("name")] public string Name;
     [XmlAttribute("url")] public string URL;
@@ -112,8 +102,7 @@ public partial class Collada_Instance_Camera
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Library_Cameras
-{
+public partial class Collada_Library_Cameras {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("name")] public string Name;
     [XmlElement(ElementName = "camera")] public Collada_Camera[] Camera;
@@ -122,16 +111,14 @@ public partial class Collada_Library_Cameras
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Optics
-{
+public partial class Collada_Optics {
     [XmlElement(ElementName = "technique_common")] public Collada_Technique_Common_Optics Technique_Common;
     [XmlElement(ElementName = "technique")] public Collada_Technique[] Technique;
     [XmlElement(ElementName = "extra")] public Collada_Extra[] Extra;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Orthographic
-{
+public partial class Collada_Orthographic {
     [XmlElement(ElementName = "xmag")] public Collada_SID_Float XMag;
     [XmlElement(ElementName = "ymag")] public Collada_SID_Float YMag;
     [XmlElement(ElementName = "aspect_ratio")] public Collada_SID_Float Aspect_Ratio;
@@ -140,8 +127,7 @@ public partial class Collada_Orthographic
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Perspective
-{
+public partial class Collada_Perspective {
     [XmlElement(ElementName = "xfov")] public Collada_SID_Float XFov;
     [XmlElement(ElementName = "yfov")] public Collada_SID_Float YFov;
     [XmlElement(ElementName = "aspect_ratio")] public Collada_SID_Float Aspect_Ratio;
@@ -154,8 +140,7 @@ public partial class Collada_Perspective
 #region Controller
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Controller
-{
+public partial class Collada_Controller {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("name")] public string Name;
     [XmlElement(ElementName = "skin")] public Collada_Skin Skin;
@@ -165,8 +150,7 @@ public partial class Collada_Controller
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Instance_Controller
-{
+public partial class Collada_Instance_Controller {
     [XmlAttribute("sid")] public string sID;
     [XmlAttribute("name")] public string Name;
     [XmlAttribute("url")] public string URL;
@@ -176,15 +160,13 @@ public partial class Collada_Instance_Controller
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Joints
-{
+public partial class Collada_Joints {
     [XmlElement(ElementName = "input")] public Collada_Input_Unshared[] Input;
     [XmlElement(ElementName = "extra")] public Collada_Extra[] Extra;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Library_Controllers
-{
+public partial class Collada_Library_Controllers {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("name")] public string Name;
     [XmlElement(ElementName = "controller")] public Collada_Controller[] Controller;
@@ -193,8 +175,7 @@ public partial class Collada_Library_Controllers
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Morph
-{
+public partial class Collada_Morph {
     [XmlAttribute("source")] public string Source_Attribute;
     [XmlAttribute("method")] public string Method;
     [XmlArray("targets")] public Collada_Input_Shared[] Targets;
@@ -203,14 +184,12 @@ public partial class Collada_Morph
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Skeleton
-{
+public partial class Collada_Skeleton {
     [XmlText()] public string Value;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Skin
-{
+public partial class Collada_Skin {
     [XmlAttribute("sid")] public string sID;
     [XmlAttribute("source")] public string source;
     [XmlElement(ElementName = "bind_shape_matrix")] public Collada_Float_Array_String Bind_Shape_Matrix;
@@ -221,15 +200,13 @@ public partial class Collada_Skin
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Targets
-{
+public partial class Collada_Targets {
     [XmlElement(ElementName = "input")] public Collada_Input_Unshared[] Input;
     [XmlElement(ElementName = "extra")] public Collada_Extra[] Extra;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Vertex_Weights
-{
+public partial class Collada_Vertex_Weights {
     [XmlAttribute("count")] public int Count;
     [XmlElement(ElementName = "input")] public Collada_Input_Shared[] Input;
     [XmlElement(ElementName = "vcount")] public Collada_Int_Array_String VCount;
@@ -242,15 +219,13 @@ public partial class Collada_Vertex_Weights
 #region Custom_Types
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Geographic_Location_Altitude
-{
+public partial class Collada_Geographic_Location_Altitude {
     [XmlText()] public float Altitude;
     [XmlAttribute("mode"), DefaultValue(Collada_Geographic_Location_Altitude_Mode.relativeToGround)] public Collada_Geographic_Location_Altitude_Mode Mode;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Poly_PH
-{
+public partial class Collada_Poly_PH {
     [XmlElement(ElementName = "p")] public Collada_Int_Array_String P;
     [XmlElement(ElementName = "h")] public Collada_Int_Array_String[] H;
 }
@@ -260,8 +235,7 @@ public partial class Collada_Poly_PH
 #region Data_Flow
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Accessor
-{
+public partial class Collada_Accessor {
     [XmlAttribute("count")] public uint Count;
     [XmlAttribute("offset")] public uint Offset;
     [XmlAttribute("source")] public string Source;
@@ -270,16 +244,14 @@ public partial class Collada_Accessor
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Bool_Array : Collada_Bool_Array_String
-{
+public partial class Collada_Bool_Array : Collada_Bool_Array_String {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("name")] public string Name;
     [XmlAttribute("count")] public int Count;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Float_Array : Collada_Float_Array_String
-{
+public partial class Collada_Float_Array : Collada_Float_Array_String {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("name")] public string Name;
     [XmlAttribute("count")] public int Count;
@@ -288,30 +260,26 @@ public partial class Collada_Float_Array : Collada_Float_Array_String
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_IDREF_Array : Collada_String_Array_String
-{
+public partial class Collada_IDREF_Array : Collada_String_Array_String {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("name")] public string Name;
     [XmlAttribute("count")] public int Count;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Input_Shared : Collada_Input_Unshared
-{
+public partial class Collada_Input_Shared : Collada_Input_Unshared {
     [XmlAttribute("offset")] public int Offset;
     [XmlAttribute("set")] public int Set;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Input_Unshared
-{
+public partial class Collada_Input_Unshared {
     [XmlAttribute("semantic")] public Collada_Input_Semantic Semantic; //: Commenting out default value as it won't write. [DefaultValue(Collada_Input_Semantic.NORMAL)]
     [XmlAttribute("source")] public string source;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Int_Array : Collada_Int_Array_String
-{
+public partial class Collada_Int_Array : Collada_Int_Array_String {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("name")] public string Name;
     [XmlAttribute("count")] public int Count;
@@ -320,24 +288,21 @@ public partial class Collada_Int_Array : Collada_Int_Array_String
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Name_Array : Collada_String_Array_String
-{
+public partial class Collada_Name_Array : Collada_String_Array_String {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("name")] public string Name;
     [XmlAttribute("count")] public int Count;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_SIDREF_Array : Collada_String_Array_String
-{
+public partial class Collada_SIDREF_Array : Collada_String_Array_String {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("name")] public string Name;
     [XmlAttribute("count")] public int Count;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Source
-{
+public partial class Collada_Source {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("name")] public string Name;
     [XmlElement(ElementName = "bool_array")] public Collada_Bool_Array Bool_Array;
@@ -355,8 +320,7 @@ public partial class Collada_Source
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Token_Array : Collada_String_Array_String
-{
+public partial class Collada_Token_Array : Collada_String_Array_String {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("name")] public string Name;
     [XmlAttribute("count")] public int Count;
@@ -367,11 +331,9 @@ public partial class Collada_Token_Array : Collada_String_Array_String
 #region Extensibility
 
 [Serializable, XmlRoot(ElementName = "bump")]
-public partial class Collada_BumpMap
-{
+public partial class Collada_BumpMap {
     [XmlElement(ElementName = "texture")] public Collada_Texture[] Textures { get; set; }
-    public static implicit operator XmlElement(Collada_BumpMap bump)
-    {
+    public static implicit operator XmlElement(Collada_BumpMap bump) {
         var xs = new XmlSerializer(typeof(Collada_BumpMap));
         var ns = new XmlSerializerNamespaces();
         ns.Add(string.Empty, string.Empty);
@@ -383,16 +345,14 @@ public partial class Collada_BumpMap
         return doc.DocumentElement;
     }
 
-    public static implicit operator Collada_BumpMap(XmlElement bump)
-    {
+    public static implicit operator Collada_BumpMap(XmlElement bump) {
         using var s = new MemoryStream(Encoding.UTF8.GetBytes(bump.OuterXml));
         return (Collada_BumpMap)new XmlSerializer(typeof(Collada_BumpMap)).Deserialize(s);
     }
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Extra
-{
+public partial class Collada_Extra {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("name")] public string Name;
     [XmlAttribute("type")] public string Type;
@@ -401,8 +361,7 @@ public partial class Collada_Extra
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Technique
-{
+public partial class Collada_Technique {
     [XmlAttribute("profile")] public string profile;
     [XmlAttribute("xmlns")] public string xmlns;
     [XmlAnyElement] public XmlElement[] Data;
@@ -411,8 +370,7 @@ public partial class Collada_Technique
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Technique_Common
-{
+public partial class Collada_Technique_Common {
 }
 
 #endregion
@@ -420,15 +378,13 @@ public partial class Collada_Technique_Common
 #region Geometry
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Control_Vertices
-{
+public partial class Collada_Control_Vertices {
     [XmlElement(ElementName = "input")] public Collada_Input_Unshared[] Input;
     [XmlElement(ElementName = "extra")] public Collada_Extra[] Extra;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Geometry
-{
+public partial class Collada_Geometry {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("name")] public string Name;
     [XmlElement(ElementName = "brep")] public Collada_B_Rep B_Rep;
@@ -440,8 +396,7 @@ public partial class Collada_Geometry
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Geometry_Common_Fields
-{
+public partial class Collada_Geometry_Common_Fields {
     [XmlAttribute("count")] public int Count;
     [XmlAttribute("name")] public string Name;
     [XmlAttribute("material")] public string Material;
@@ -451,8 +406,7 @@ public partial class Collada_Geometry_Common_Fields
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Instance_Geometry
-{
+public partial class Collada_Instance_Geometry {
     [XmlAttribute("sid")] public string sID;
     [XmlAttribute("name")] public string Name;
     [XmlAttribute("url")] public string URL;
@@ -461,8 +415,7 @@ public partial class Collada_Instance_Geometry
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Library_Geometries
-{
+public partial class Collada_Library_Geometries {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("name")] public string Name;
     [XmlElement(ElementName = "geometry")] public Collada_Geometry[] Geometry;
@@ -471,18 +424,15 @@ public partial class Collada_Library_Geometries
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Lines : Collada_Geometry_Common_Fields
-{
+public partial class Collada_Lines : Collada_Geometry_Common_Fields {
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Linestrips : Collada_Geometry_Common_Fields
-{
+public partial class Collada_Linestrips : Collada_Geometry_Common_Fields {
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Mesh
-{
+public partial class Collada_Mesh {
     [XmlElement(ElementName = "source")] public Collada_Source[] Source;
     [XmlElement(ElementName = "vertices")] public Collada_Vertices Vertices;
     [XmlElement(ElementName = "lines")] public Collada_Lines[] Lines;
@@ -496,20 +446,17 @@ public partial class Collada_Mesh
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Polygons : Collada_Geometry_Common_Fields
-{
+public partial class Collada_Polygons : Collada_Geometry_Common_Fields {
     [XmlElement(ElementName = "ph")] public Collada_Poly_PH[] PH;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Polylist : Collada_Geometry_Common_Fields
-{
+public partial class Collada_Polylist : Collada_Geometry_Common_Fields {
     [XmlElement(ElementName = "vcount")] public Collada_Int_Array_String VCount;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Spline
-{
+public partial class Collada_Spline {
     [XmlAttribute("closed")] public bool Closed;
     [XmlElement(ElementName = "source")] public Collada_Source[] Source;
     [XmlElement(ElementName = "control_vertices")] public Collada_Control_Vertices Control_Vertices;
@@ -517,23 +464,19 @@ public partial class Collada_Spline
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Triangles : Collada_Geometry_Common_Fields
-{
+public partial class Collada_Triangles : Collada_Geometry_Common_Fields {
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Trifans : Collada_Geometry_Common_Fields
-{
+public partial class Collada_Trifans : Collada_Geometry_Common_Fields {
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Tristrips : Collada_Geometry_Common_Fields
-{
+public partial class Collada_Tristrips : Collada_Geometry_Common_Fields {
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Vertices
-{
+public partial class Collada_Vertices {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("name")] public string Name;
     [XmlElement(ElementName = "input")] public Collada_Input_Unshared[] Input;
@@ -545,25 +488,21 @@ public partial class Collada_Vertices
 #region Lighting
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Ambient
-{
+public partial class Collada_Ambient {
     [XmlElement(ElementName = "color")] public Collada_Color Color;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Color : Collada_SID_Float_Array_String
-{
+public partial class Collada_Color : Collada_SID_Float_Array_String {
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Directional
-{
+public partial class Collada_Directional {
     [XmlElement(ElementName = "color")] public Collada_Color Color;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Instance_Light
-{
+public partial class Collada_Instance_Light {
     [XmlAttribute("sid")] public string sID;
     [XmlAttribute("name")] public string Name;
     [XmlAttribute("url")] public string URL;
@@ -571,8 +510,7 @@ public partial class Collada_Instance_Light
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Library_Lights
-{
+public partial class Collada_Library_Lights {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("name")] public string Name;
     [XmlElement(ElementName = "light")] public Collada_Light[] Light;
@@ -581,8 +519,7 @@ public partial class Collada_Library_Lights
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Light
-{
+public partial class Collada_Light {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("name")] public string Name;
     [XmlElement(ElementName = "technique_common")] public Collada_Technique_Common_Light Technique_Common;
@@ -592,8 +529,7 @@ public partial class Collada_Light
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Point
-{
+public partial class Collada_Point {
     [XmlElement(ElementName = "color")] public Collada_Color Color;
     [XmlElement(ElementName = "constant_attenuation"), DefaultValue(typeof(float), "1.0")] public Collada_SID_Float Constant_Attenuation;
     [XmlElement(ElementName = "linear_attenuation"), DefaultValue(typeof(float), "0.0")] public Collada_SID_Float Linear_Attenuation;
@@ -601,8 +537,7 @@ public partial class Collada_Point
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Spot
-{
+public partial class Collada_Spot {
     [XmlElement(ElementName = "color")] public Collada_Color Color;
     [XmlElement(ElementName = "constant_attenuation"), DefaultValue(typeof(float), "1.0")] public Collada_SID_Float Constant_Attenuation;
     [XmlElement(ElementName = "linear_attenuation"), DefaultValue(typeof(float), "0.0")] public Collada_SID_Float Linear_Attenuation;
@@ -616,8 +551,7 @@ public partial class Collada_Spot
 #region Mathematics
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Formula
-{
+public partial class Collada_Formula {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("name")] public string Name;
     [XmlAttribute("sid")] public string sID;
@@ -628,8 +562,7 @@ public partial class Collada_Formula
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Instance_Formula
-{
+public partial class Collada_Instance_Formula {
     [XmlAttribute("sid")] public string sID;
     [XmlAttribute("name")] public string Name;
     [XmlAttribute("url")] public string URL;
@@ -637,8 +570,7 @@ public partial class Collada_Instance_Formula
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Library_Formulas
-{
+public partial class Collada_Library_Formulas {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("name")] public string Name;
     [XmlElement(ElementName = "formula")] public Collada_Formula[] Formula;
@@ -651,8 +583,7 @@ public partial class Collada_Library_Formulas
 #region Metadata
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Asset
-{
+public partial class Collada_Asset {
     [XmlElement(ElementName = "created")] public DateTime Created;
     [XmlElement(ElementName = "modified")] public DateTime Modified;
     [XmlElement(ElementName = "unit")] public Collada_Asset_Unit Unit;
@@ -667,8 +598,7 @@ public partial class Collada_Asset
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Asset_Contributor
-{
+public partial class Collada_Asset_Contributor {
     [XmlElement(ElementName = "author")] public string Author;
     [XmlElement(ElementName = "author_email")] public string Author_Email;
     [XmlElement(ElementName = "author_website")] public string Author_Website;
@@ -679,21 +609,18 @@ public partial class Collada_Asset_Contributor
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Asset_Coverage
-{
+public partial class Collada_Asset_Coverage {
     [XmlElement(ElementName = "geographic_location")] Collada_Geographic_Location Geographic_Location;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Asset_Unit
-{
+public partial class Collada_Asset_Unit {
     [XmlAttribute("meter")] public double Meter; //: [DefaultValue(1.0)] // Commented out to force it to write these values.
     [XmlAttribute("name")] public string Name; //: [DefaultValue("meter")]
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Geographic_Location
-{
+public partial class Collada_Geographic_Location {
     [XmlElement(ElementName = "longitude")] public float Longitude;
     [XmlElement(ElementName = "latitude")] public float Latitude;
     [XmlElement(ElementName = "altitude")] public Collada_Geographic_Location_Altitude Altitude;
@@ -704,8 +631,7 @@ public partial class Collada_Geographic_Location
 #region Parameters
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_New_Param
-{
+public partial class Collada_New_Param {
     [XmlAttribute("sid")] public string sID;
     [XmlElement(ElementName = "semantic")] public string Semantic;
     [XmlElement(ElementName = "modifier")] public string Modifier;
@@ -717,8 +643,7 @@ public partial class Collada_New_Param
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Param
-{
+public partial class Collada_Param {
     [XmlAttribute("ref")] public string Ref;
     [XmlAttribute("sid")] public string sID;
     [XmlAttribute("name")] public string Name;
@@ -729,8 +654,7 @@ public partial class Collada_Param
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Set_Param
-{
+public partial class Collada_Set_Param {
     [XmlAttribute("ref")] public string Ref;
     [XmlAnyElement] public XmlElement[] Data;
 }
@@ -740,8 +664,7 @@ public partial class Collada_Set_Param
 #region Scene
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Evaluate_Scene
-{
+public partial class Collada_Evaluate_Scene {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("name")] public string Name;
     [XmlAttribute("sid")] public string sid;
@@ -752,8 +675,7 @@ public partial class Collada_Evaluate_Scene
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Instance_Node
-{
+public partial class Collada_Instance_Node {
     [XmlAttribute("sid")] public string sID;
     [XmlAttribute("name")] public string Name;
     [XmlAttribute("url")] public string URL;
@@ -762,8 +684,7 @@ public partial class Collada_Instance_Node
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Instance_Visual_Scene
-{
+public partial class Collada_Instance_Visual_Scene {
     [XmlAttribute("sid")] public string sID;
     [XmlAttribute("name")] public string Name;
     [XmlAttribute("url")] public string URL;
@@ -771,8 +692,7 @@ public partial class Collada_Instance_Visual_Scene
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Library_Nodes
-{
+public partial class Collada_Library_Nodes {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("name")] public string Name;
     [XmlElement(ElementName = "node")] public Collada_Node[] Node;
@@ -781,8 +701,7 @@ public partial class Collada_Library_Nodes
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Library_Visual_Scenes
-{
+public partial class Collada_Library_Visual_Scenes {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("name")] public string Name;
     [XmlElement(ElementName = "asset")] public Collada_Asset Asset;
@@ -791,8 +710,7 @@ public partial class Collada_Library_Visual_Scenes
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Node
-{
+public partial class Collada_Node {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("sid")] public string sID;
     [XmlAttribute("name")] public string Name;
@@ -815,8 +733,7 @@ public partial class Collada_Node
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Scene
-{
+public partial class Collada_Scene {
     [XmlElement(ElementName = "instance_visual_scene")] public Collada_Instance_Visual_Scene Visual_Scene;
     [XmlElement(ElementName = "instance_physics_scene")] public Collada_Instance_Physics_Scene[] Physics_Scene;
     [XmlElement(ElementName = "instance_kinematics_scene")] public Collada_Instance_Kinematics_Scene Kinematics_Scene;
@@ -824,8 +741,7 @@ public partial class Collada_Scene
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Visual_Scene
-{
+public partial class Collada_Visual_Scene {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("name")] public string Name;
     [XmlElement(ElementName = "asset")] public Collada_Asset Asset;
@@ -839,14 +755,12 @@ public partial class Collada_Visual_Scene
 #region Technique_Common
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Technique_Common_Formula : Collada_Technique_Common
-{
+public partial class Collada_Technique_Common_Formula : Collada_Technique_Common {
     [XmlAnyElement] public XmlElement[] Data;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Technique_Common_Light : Collada_Technique_Common
-{
+public partial class Collada_Technique_Common_Light : Collada_Technique_Common {
     [XmlElement(ElementName = "ambient")] public Collada_Ambient Ambient;
     [XmlElement(ElementName = "directional")] public Collada_Directional Directional;
     [XmlElement(ElementName = "point")] public Collada_Point Point;
@@ -854,15 +768,13 @@ public partial class Collada_Technique_Common_Light : Collada_Technique_Common
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Technique_Common_Optics : Collada_Technique_Common
-{
+public partial class Collada_Technique_Common_Optics : Collada_Technique_Common {
     [XmlElement(ElementName = "orthographic")] public Collada_Orthographic Orthographic;
     [XmlElement(ElementName = "perspective")] public Collada_Perspective Perspective;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Technique_Common_Source : Collada_Technique_Common
-{
+public partial class Collada_Technique_Common_Source : Collada_Technique_Common {
     [XmlElement(ElementName = "accessor")] public Collada_Accessor Accessor;
     [XmlElement(ElementName = "asset")] public Collada_Asset Asset;
 }
@@ -872,33 +784,27 @@ public partial class Collada_Technique_Common_Source : Collada_Technique_Common
 #region Transform
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Lookat : Collada_SID_Float_Array_String
-{
+public partial class Collada_Lookat : Collada_SID_Float_Array_String {
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Matrix : Collada_SID_Float_Array_String
-{
+public partial class Collada_Matrix : Collada_SID_Float_Array_String {
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Rotate : Collada_SID_Float_Array_String
-{
+public partial class Collada_Rotate : Collada_SID_Float_Array_String {
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Scale : Collada_SID_Float_Array_String
-{
+public partial class Collada_Scale : Collada_SID_Float_Array_String {
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Skew : Collada_SID_Float_Array_String
-{
+public partial class Collada_Skew : Collada_SID_Float_Array_String {
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Translate : Collada_SID_Float_Array_String
-{
+public partial class Collada_Translate : Collada_SID_Float_Array_String {
 }
 
 #endregion

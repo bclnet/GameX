@@ -3,8 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace GameX.Base;
 
 [TestClass]
-public class FamilyGameTest
-{
+public class FamilyGameTest {
     //[TestMethod]
     //public void ShouldCreateFileSystem()
     //{

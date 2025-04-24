@@ -1,11 +1,8 @@
 ﻿using CommandLine;
 using OpenStack;
-using OpenStack.Gl;
 
-namespace GameX.App.Explorer
-{
-    public partial class App : Application
-    {
+namespace GameX.App.Explorer {
+    public partial class App : Application {
         static App() => PlatformX.Platforms.UnionWith([
             OpenGLPlatform.This]);
 
@@ -25,19 +22,16 @@ namespace GameX.App.Explorer
         //static readonly string[] args = ["open", "-e", "Valve", "-u", "game:/dota/pak01_dir.vpk#Dota2", "-p", "models/npc_minions/draft_siege_good.vmdl_c"];
         //static readonly string[] args = ["open", "-e", "Valve", "-u", "game:/dota/pak01_dir.vpk#Dota2", "-p", "particles/hw_fx/candy_carrying_overhead.vpcf_c"];
 
-        public App()
-        {
+        public App() {
             InitializeComponent();
             //MainPage = new AppShell();
         }
 
-        protected override Window CreateWindow(IActivationState activationState)
-        {
+        protected override Window CreateWindow(IActivationState activationState) {
             return new Window(new AppShell());
         }
 
-        protected override void OnStart()
-        {
+        protected override void OnStart() {
             if (!HasPermissions()) return;
             //GLViewerControl.ShowConsole = true;
             Parser.Default.ParseArguments<DefaultOptions, TestOptions, OpenOptions>(args)
@@ -58,8 +52,7 @@ namespace GameX.App.Explorer
         class TestOptions { }
 
         [Verb("open", HelpText = "Extract files contents to folder.")]
-        class OpenOptions
-        {
+        class OpenOptions {
             [Option('f', "family", HelpText = "Family", Required = true)]
             public string Family { get; set; }
 
@@ -78,8 +71,7 @@ namespace GameX.App.Explorer
 
         int RunOpen(OpenOptions opts) => (Shell.Current as AppShell).StartupOpen(FamilyManager.GetFamily(opts.Family), [opts.Uri], opts.Path);
 
-        int RunError(IEnumerable<Error> errs)
-        {
+        int RunError(IEnumerable<Error> errs) {
             //MainPage.DisplayAlert("Alert", $"Errors: \n\n {errs.First()}", "Cancel").Wait();
             Current.Windows[0].Page.DisplayAlert("Alert", $"Errors: \n\n {errs.First()}", "Cancel").Wait();
             //Current.Shutdown(1);

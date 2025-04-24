@@ -6,8 +6,7 @@ using System.Threading.Tasks;
 namespace GameX.Formats;
 
 [TestClass]
-public class LoadFileObjectsTest
-{
+public class LoadFileObjectsTest {
     [DataTestMethod]
     [DataRow("AC:AC")]
     [DataRow("Arkane:D2")]
@@ -30,25 +29,21 @@ public class LoadFileObjectsTest
     [DataRow("Tes:Fallout4VR")]
     [DataRow("Tes:Fallout76")]
     [DataRow("Valve:Dota2")]
-    public async Task LoadAllFileObjectsAsync(string pak)
-    {
+    public async Task LoadAllFileObjectsAsync(string pak) {
         var source = TestHelper.Paks[pak].Value;
         if (source is MultiPakFile multiPak)
-            foreach (var p in multiPak.PakFiles)
-            {
+            foreach (var p in multiPak.PakFiles) {
                 if (p is not BinaryPakFile z) throw new InvalidOperationException("multiPak not a BinaryPakFile");
                 await ExportAsync(z);
             }
         else await ExportAsync(source);
     }
 
-    static Task ExportAsync(PakFile source)
-    {
+    static Task ExportAsync(PakFile source) {
         if (source is not BinaryPakFile pak) throw new NotSupportedException();
 
         // write files
-        Parallel.For(0, pak.Files.Count, new ParallelOptions { MaxDegreeOfParallelism = 1 }, async index =>
-        {
+        Parallel.For(0, pak.Files.Count, new ParallelOptions { MaxDegreeOfParallelism = 1 }, async index => {
             var file = pak.Files[index];
 
             // extract pak
@@ -62,8 +57,7 @@ public class LoadFileObjectsTest
 
             // extract file
             var obj = await pak.LoadFileObject<object>(file);
-            if (obj is Stream stream)
-            {
+            if (obj is Stream stream) {
                 var value = MetaManager.GuessStringOrBytes(stream);
             }
             else if (obj is IDisposable disposable) disposable.Dispose();

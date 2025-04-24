@@ -15,14 +15,12 @@ namespace GameX.Cryptic;
 /// CrypticPakFile
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class CrypticPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel>
-{
+public class CrypticPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="CrypticPakFile" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public CrypticPakFile(PakState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant()))
-    {
+    public CrypticPakFile(PakState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         ObjectFactoryFunc = ObjectFactory;
     }
 
@@ -33,8 +31,7 @@ public class CrypticPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMo
 
     //ref https://github.com/PlumberTaskForce/Datamining-Guide/blob/master/README.md
     internal static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
-        => Path.GetExtension(source.Path).ToLowerInvariant() switch
-        {
+        => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             ".bin" => (0, Binary_Bin.Factory),
             ".htex" or ".wtex" => (0, Binary_Tex.Factory), // Textures
             ".mset" => (0, Binary_MSet.Factory), // 3D Models

@@ -4,8 +4,7 @@ using System;
 namespace GameX.Blizzard;
 
 [TestClass]
-public class FormatsTest
-{
+public class FormatsTest {
     static readonly Family family = FamilyManager.GetFamily("Blizzard");
 
     [DataTestMethod]
@@ -25,8 +24,7 @@ public class FormatsTest
     [DataRow(false, "game:/code_post_gfx.ff#BOCW")]         // 2020 - Call of Duty: Black Ops Cold War
     [DataRow(false, "game:/code_post_gfx.ff#Vanguard")]     // 2021 - Call of Duty: Vanguard
     [DataRow(true, "game:/code_post_gfx.ff#COD:MW2")]       // 2022 - Call of Duty: Modern Warfare II
-    public void DLG(bool installed, string sampleFile)
-    {
+    public void DLG(bool installed, string sampleFile) {
         if (!installed) return;
         var dat = family.OpenPakFile(new Uri(sampleFile));
     }
@@ -48,8 +46,7 @@ public class FormatsTest
     //[DataRow(false, "game:/karma_gump_checkin.ff#BOCW")]   // 2020 - Call of Duty: Black Ops Cold War
     //[DataRow(false, "game:/karma_gump_checkin.ff#Vanguard")]   // 2021 - Call of Duty: Vanguard
     //[DataRow(true, "game:/karma_gump_checkin.ff#COD:MW2")]    // 2022 - Call of Duty: Modern Warfare II
-    public void DLG2(bool installed, string sampleFile)
-    {
+    public void DLG2(bool installed, string sampleFile) {
         if (!installed) return;
         var dat = family.OpenPakFile(new Uri(sampleFile));
     }

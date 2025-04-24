@@ -4,11 +4,9 @@ using System;
 namespace GameX.Base;
 
 [TestClass]
-public class FamilyTest
-{
+public class FamilyTest {
     [TestMethod]
-    public void ShouldGetGame()
-    {
+    public void ShouldGetGame() {
         var family = Some.Family;
         Assert.ThrowsException<ArgumentOutOfRangeException>(() => family.GetGame("Wrong", out var _));
         Assert.IsNotNull(family.GetGame("Missing", out var _));
@@ -16,8 +14,7 @@ public class FamilyTest
     }
 
     [TestMethod]
-    public void ShouldParseResource()
-    {
+    public void ShouldParseResource() {
         var family = Some.Family;
         Assert.IsNotNull(family.ParseResource(null, true));
     }
@@ -34,8 +31,7 @@ public class FamilyTest
     //}
 
     [TestMethod]
-    public void ShouldOpenPakFile_Resource()
-    {
+    public void ShouldOpenPakFile_Resource() {
         var family = Some.Family;
         Assert.ThrowsException<ArgumentNullException>(() => family.OpenPakFile(new Resource { }));
         //Assert.IsNull(family.OpenPakFile(new Resource { Paths = null, Game = FamilyGame.Empty }, throwOnError: false));
@@ -43,8 +39,7 @@ public class FamilyTest
     }
 
     [TestMethod]
-    public void ShouldOpenPakFile_Uri()
-    {
+    public void ShouldOpenPakFile_Uri() {
         var family = Some.Family;
         Assert.IsNull(family.OpenPakFile(null, throwOnError: false));
         //// game-scheme

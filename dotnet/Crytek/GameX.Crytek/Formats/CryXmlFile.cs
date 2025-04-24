@@ -9,10 +9,8 @@ using System.Xml.Serialization;
 
 namespace GameX.Crytek.Formats;
 
-public class CryXmlFile : XmlDocument, IHaveStream, IHaveMetaInfo
-{
-    class Node
-    {
+public class CryXmlFile : XmlDocument, IHaveStream, IHaveMetaInfo {
+    class Node {
         public int NodeId { get; set; }
         public int NodeNameOffset { get; set; }
         public int ItemType { get; set; }
@@ -33,8 +31,7 @@ public class CryXmlFile : XmlDocument, IHaveStream, IHaveMetaInfo
 
     public CryXmlFile(string inFile, bool writeLog = false) : this(new BinaryReader(File.OpenRead(inFile)), writeLog) { }
     public CryXmlFile(byte[] bytes, bool writeLog = false) : this(new BinaryReader(new MemoryStream(bytes)), writeLog) { }
-    public CryXmlFile(BinaryReader r, bool writeLog = false)
-    {
+    public CryXmlFile(BinaryReader r, bool writeLog = false) {
         var startOffset = (int)r.BaseStream.Position;
         var peek = r.PeekChar();
         if (peek == '<') { Load(r.BaseStream); return; } // File is already XML, so return the XML.
@@ -65,8 +62,7 @@ public class CryXmlFile : XmlDocument, IHaveStream, IHaveMetaInfo
         var stringTableCount = r.ReadInt32();
 
         // NODE TABLE
-        if (writeLog)
-        {
+        if (writeLog) {
             Console.WriteLine("Header");
             Console.WriteLine($"0x{0x00:X6}: {header}");
             Console.WriteLine($"0x{headerLength + 0x00:X6}: {{0:X8}} (Dec: {{0:D8}})", fileLength);
@@ -83,11 +79,9 @@ public class CryXmlFile : XmlDocument, IHaveStream, IHaveMetaInfo
         var nodeTable = new List<Node> { };
         r.BaseStream.Seek(nodeTableOffset, SeekOrigin.Begin);
         var nodeId = 0;
-        while (r.BaseStream.Position < nodeTableOffset + nodeTableCount * nodeTableSize)
-        {
+        while (r.BaseStream.Position < nodeTableOffset + nodeTableCount * nodeTableSize) {
             var position = r.BaseStream.Position;
-            var value = new Node
-            {
+            var value = new Node {
                 NodeId = nodeId++,
                 NodeNameOffset = r.ReadInt32(),
                 ItemType = r.ReadInt32(),
@@ -106,8 +100,7 @@ public class CryXmlFile : XmlDocument, IHaveStream, IHaveMetaInfo
         if (writeLog) Console.WriteLine("\nAttribute Table");
         var attributeTable = new List<(int NameOffset, int ValueOffset)> { };
         r.BaseStream.Seek(attributeTableOffset, SeekOrigin.Begin);
-        while (r.BaseStream.Position < attributeTableOffset + attributeTableCount * attributeTableSize)
-        {
+        while (r.BaseStream.Position < attributeTableOffset + attributeTableCount * attributeTableSize) {
             var position = r.BaseStream.Position;
             var value = (NameOffset: r.ReadInt32(), ValueOffset: r.ReadInt32());
             attributeTable.Add(value);
@@ -118,8 +111,7 @@ public class CryXmlFile : XmlDocument, IHaveStream, IHaveMetaInfo
         if (writeLog) Console.WriteLine("\nParent Table");
         var parentTable = new List<int> { };
         r.BaseStream.Seek(childTableOffset, SeekOrigin.Begin);
-        while (r.BaseStream.Position < childTableOffset + childTableCount * childTableSize)
-        {
+        while (r.BaseStream.Position < childTableOffset + childTableCount * childTableSize) {
             var position = r.BaseStream.Position;
             var value = r.ReadInt32();
             parentTable.Add(value);
@@ -131,8 +123,7 @@ public class CryXmlFile : XmlDocument, IHaveStream, IHaveMetaInfo
 
         var dataTable = new List<(int Offset, string Value)> { };
         r.BaseStream.Seek(stringTableOffset, SeekOrigin.Begin);
-        while (r.BaseStream.Position < r.BaseStream.Length)
-        {
+        while (r.BaseStream.Position < r.BaseStream.Length) {
             var position = r.BaseStream.Position;
             var value = (Offset: (int)position - stringTableOffset, Value: r.ReadVUString());
             dataTable.Add(value);
@@ -144,11 +135,9 @@ public class CryXmlFile : XmlDocument, IHaveStream, IHaveMetaInfo
 
         // DOCUMENT
         var xmlMap = new Dictionary<int, XmlElement> { };
-        foreach (var node in nodeTable)
-        {
+        foreach (var node in nodeTable) {
             var element = CreateElement(dataMap[node.NodeNameOffset]);
-            for (int i = 0, j = node.AttributeCount; i < j; i++)
-            {
+            for (int i = 0, j = node.AttributeCount; i < j; i++) {
                 if (dataMap.ContainsKey(attributeTable[attributeIndex].ValueOffset)) element.SetAttribute(dataMap[attributeTable[attributeIndex].NameOffset], dataMap[attributeTable[attributeIndex].ValueOffset]);
                 else { element.SetAttribute(dataMap[attributeTable[attributeIndex].NameOffset], "BUGGED"); }
                 attributeIndex++;
@@ -159,8 +148,7 @@ public class CryXmlFile : XmlDocument, IHaveStream, IHaveMetaInfo
         }
     }
 
-    public override string ToString()
-    {
+    public override string ToString() {
         using var s = new MemoryStream();
         using var w = new XmlTextWriter(s, Encoding.Unicode) { Formatting = Formatting.Indented };
         WriteContentTo(w);
@@ -170,8 +158,7 @@ public class CryXmlFile : XmlDocument, IHaveStream, IHaveMetaInfo
         return new StreamReader(s).ReadToEnd();
     }
 
-    public static TObject Deserialize<TObject>(Stream inStream) where TObject : class
-    {
+    public static TObject Deserialize<TObject>(Stream inStream) where TObject : class {
         using var s = new MemoryStream();
         var xs = new XmlSerializer(typeof(TObject));
         var xmlDoc = new CryXmlFile(new BinaryReader(inStream));
@@ -180,8 +167,7 @@ public class CryXmlFile : XmlDocument, IHaveStream, IHaveMetaInfo
         return xs.Deserialize(s) as TObject;
     }
 
-    public static TObject Deserialize<TObject>(string inFile) where TObject : class
-    {
+    public static TObject Deserialize<TObject>(string inFile) where TObject : class {
         using var s = new MemoryStream();
         var xmlDoc = new CryXmlFile(inFile);
         xmlDoc.Save(s);
@@ -190,8 +176,7 @@ public class CryXmlFile : XmlDocument, IHaveStream, IHaveMetaInfo
         return xs.Deserialize(s) as TObject;
     }
 
-    public Stream GetStream()
-    {
+    public Stream GetStream() {
         var s = new MemoryStream();
         Save(s);
         s.Seek(0, SeekOrigin.Begin);

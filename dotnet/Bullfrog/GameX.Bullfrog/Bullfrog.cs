@@ -14,14 +14,12 @@ namespace GameX.Bullfrog;
 /// BullfrogGame
 /// </summary>
 /// <seealso cref="GameX.FamilyGame" />
-public class BullfrogGame(Family family, string id, JsonElement elem, FamilyGame dgame) : FamilyGame(family, id, elem, dgame)
-{
+public class BullfrogGame(Family family, string id, JsonElement elem, FamilyGame dgame) : FamilyGame(family, id, elem, dgame) {
     /// <summary>
     /// Ensures this instance.
     /// </summary>
     /// <returns></returns>
-    public override FamilyGame Ensure() => Id switch
-    {
+    public override FamilyGame Ensure() => Id switch {
         "DK" => Games.DK.Database.Ensure(this),
         "DK2" => Games.DK2.Database.Ensure(this),
         "P2" => Games.P2.Database.Ensure(this),
@@ -38,8 +36,7 @@ public class BullfrogGame(Family family, string id, JsonElement elem, FamilyGame
 /// BullfrogPakFile
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class BullfrogPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel>
-{
+public class BullfrogPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="BullfrogPakFile" /> class.
     /// </summary>
@@ -50,8 +47,7 @@ public class BullfrogPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileM
     #region Factories
 
     static PakBinary GetPakBinary(FamilyGame game, string filePath)
-        => game.Id switch
-        {
+        => game.Id switch {
             "DK" or "DK2" => Binary_Bullfrog.Current,           // Keeper
             "P" or "P2" or "P3" => Binary_Populus.Current, // Populus
             "S" or "S2" => Binary_Syndicate.Current,             // Syndicate
@@ -61,8 +57,7 @@ public class BullfrogPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileM
         };
 
     static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
-        => game.Id switch
-        {
+        => game.Id switch {
             "DK" or "DK2" => Binary_Bullfrog.ObjectFactory(source, game),
             "P" or "P2" or "P3" => Binary_Populus.ObjectFactory(source, game),
             "S" or "S2" => Binary_Syndicate.ObjectFactory(source, game),

@@ -21,11 +21,11 @@ public class ParticleSceneNode : SceneNode
         IEnumerable<string> IParticleSystem.GetChildParticleNames(bool enabledOnly) => _source.GetChildParticleNames(enabledOnly);
     }
 
-    ParticleRenderer ParticleRenderer;
+    OpenGLParticleRenderer ParticleRenderer;
 
     public ParticleSceneNode(Scene scene, D_ParticleSystem particleSystem) : base(scene)
     {
-        ParticleRenderer = new ParticleRenderer(Scene.Gfx as OpenGLGfxModel, new ParticleSystemWrapper(particleSystem));
+        ParticleRenderer = new OpenGLParticleRenderer(Scene.Gfx as OpenGLGfxModel, new ParticleSystemWrapper(particleSystem));
         LocalBoundingBox = ParticleRenderer.BoundingBox;
     }
 

@@ -15,25 +15,22 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace GameX.Cig.Apps.Subsumption.Views
-{
-    /// <summary>
-    /// Interaction logic for MainPage.xaml
-    /// </summary>
-    public partial class MainPage : Window, INotifyPropertyChanged
-    {
-        public static MainPage Instance;
-        public SubsumptionApp App;
+namespace GameX.Cig.Apps.Subsumption.Views;
 
-        public MainPage(SubsumptionApp App)
-        {
-            InitializeComponent();
-            Instance = this;
-            DataContext = this;
-            App = App;
-        }
+/// <summary>
+/// Interaction logic for MainPage.xaml
+/// </summary>
+public partial class MainPage : Window, INotifyPropertyChanged {
+    public static MainPage Instance;
+    public SubsumptionApp App;
 
-        public event PropertyChangedEventHandler PropertyChanged;
-        void OnPropertyChanged([CallerMemberName] string propertyName = "") => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    public MainPage(SubsumptionApp App) {
+        InitializeComponent();
+        Instance = this;
+        DataContext = this;
+        App = App;
     }
+
+    public event PropertyChangedEventHandler PropertyChanged;
+    void OnPropertyChanged([CallerMemberName] string propertyName = "") => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 }

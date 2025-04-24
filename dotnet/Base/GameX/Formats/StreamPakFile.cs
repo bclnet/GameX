@@ -8,8 +8,7 @@ namespace GameX.Formats;
 /// StreamPakFile
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class StreamPakFile : BinaryPakFile
-{
+public class StreamPakFile : BinaryPakFile {
     readonly AbstractHost Host;
 
     /// <summary>
@@ -18,8 +17,7 @@ public class StreamPakFile : BinaryPakFile
     /// <param name="factory">The factory.</param>
     /// <param name="state">The state.</param>
     /// <param name="address">The host.</param>
-    public StreamPakFile(Func<Uri, string, AbstractHost> factory, PakState state, Uri address = null) : base(state, new PakBinaryCanStream())
-    {
+    public StreamPakFile(Func<Uri, string, AbstractHost> factory, PakState state, Uri address = null) : base(state, new PakBinaryCanStream()) {
         UseReader = false;
         if (address != null) Host = factory(address, state.Path);
     }
@@ -28,8 +26,7 @@ public class StreamPakFile : BinaryPakFile
     /// </summary>
     /// <param name="parent">The parent.</param>
     /// <param name="state">The state.</param>
-    public StreamPakFile(BinaryPakFile parent, PakState state) : base(state, new PakBinaryCanStream())
-    {
+    public StreamPakFile(BinaryPakFile parent, PakState state) : base(state, new PakBinaryCanStream()) {
         UseReader = false;
         Files = parent.Files;
     }
@@ -38,11 +35,9 @@ public class StreamPakFile : BinaryPakFile
     /// Reads the asynchronous.
     /// </summary>
     /// <param name="tag">The tag.</param>
-    public override async Task Read(object tag)
-    {
+    public override async Task Read(object tag) {
         // http pak
-        if (Host != null)
-        {
+        if (Host != null) {
             var files = Files = [];
             var set = await Host.GetSetAsync() ?? throw new NotSupportedException(".set not found");
             foreach (var item in set) files.Add(new FileSource { Path = item });
@@ -65,8 +60,7 @@ public class StreamPakFile : BinaryPakFile
     /// </summary>
     /// <param name="tag">The tag.</param>
     /// <exception cref="NotSupportedException"></exception>
-    public override async Task Write(object tag)
-    {
+    public override async Task Write(object tag) {
         // http pak
         if (Host != null) throw new NotSupportedException();
 
@@ -89,8 +83,7 @@ public class StreamPakFile : BinaryPakFile
     /// <param name="option">The option.</param>
     /// <param name="exception">The exception.</param>
     /// <returns></returns>
-    public override async Task<Stream> ReadData(FileSource file, object option = default)
-    {
+    public override async Task<Stream> ReadData(FileSource file, object option = default) {
         var path = file.Path;
         // http pak
         if (Host != null) return await Host.GetFileAsync(path);

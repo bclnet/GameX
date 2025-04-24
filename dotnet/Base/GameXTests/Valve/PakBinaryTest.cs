@@ -5,8 +5,7 @@ using System;
 namespace GameX.Valve;
 
 [TestClass]
-public class PakBinaryTest
-{
+public class PakBinaryTest {
     static readonly Family family = FamilyManager.GetFamily("Valve");
     //static readonly PakFile dota2 = family.OpenPakFile(new Uri("game:/platform_misc_dir.vpk#H2"));
 

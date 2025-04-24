@@ -1,20 +1,17 @@
 ﻿namespace GameX.Crytek.Formats;
 
-public enum FileVersion : uint
-{
+public enum FileVersion : uint {
     CryTek_3_4 = 0x744,
     CryTek_3_5 = 0x745,
     CryTek_3_6 = 0x746,
 }
 
-public enum FileType : uint
-{
+public enum FileType : uint {
     GEOM = 0xFFFF0000,
     ANIM = 0xFFFF0001
 }
 
-public enum MtlNameType : uint
-{
+public enum MtlNameType : uint {
     // It looks like there is a 0x04 type now as well, for mech parts.  Not sure what that is.
     // Also a 0x0B type now as well.
     Library = 0x01,
@@ -25,8 +22,7 @@ public enum MtlNameType : uint
     Unknown2 = 0x04
 }
 
-public enum ChunkType : uint
-{
+public enum ChunkType : uint {
     Any = 0x0,
     Mesh = 0xCCCC0000,
     Helper = 0xCCCC0001,
@@ -90,13 +86,11 @@ public enum ChunkType : uint
     NotSureUkn1SC = 0xCCCBF002
 }
 
-public enum ChunkVersion : uint
-{
+public enum ChunkVersion : uint {
     ChkVersion
 }
 
-public enum HelperType : uint
-{
+public enum HelperType : uint {
     POINT,
     DUMMY,
     XREF,
@@ -104,16 +98,14 @@ public enum HelperType : uint
     GEOMETRY
 }
 
-public enum MtlType : uint
-{
+public enum MtlType : uint {
     UNKNOWN,
     STANDARD,
     MULTI,
     TWOSIDED
 }
 
-public enum MtlNamePhysicsType : uint
-{
+public enum MtlNamePhysicsType : uint {
     NONE = 0xFFFFFFFF,
     DEFAULT = 0x00000000,
     NOCOLLIDE = 0x00000001,
@@ -123,16 +115,14 @@ public enum MtlNamePhysicsType : uint
     UNKNOWN2 = 0x00001000
 }
 
-public enum LightType : uint
-{
+public enum LightType : uint {
     OMNI,
     SPOT,
     DIRECT,
     AMBIENT
 }
 
-public enum CtrlType : uint
-{
+public enum CtrlType : uint {
     NONE,
     CRYBONE,
     LINEAR1,
@@ -151,8 +141,7 @@ public enum CtrlType : uint
     CONST               // this was given a value of 11, which is the same as BSPLINE2o.
 }
 
-public enum TextureMapping : uint
-{
+public enum TextureMapping : uint {
     NORMAL,
     ENVIRONMENT,
     SCREENENVIRONMENT,
@@ -160,8 +149,7 @@ public enum TextureMapping : uint
     AUTOCUBIC
 }
 
-public enum DataStreamType : uint
-{
+public enum DataStreamType : uint {
     VERTICES,
     NORMALS,
     UVS,
@@ -190,16 +178,14 @@ public enum DataStreamType : uint
     IVOUNKNOWN2 = 0x6ECA3708,           // Objects\Characters\Human\heads\male\npc\male01\male01_t2_head.skinm
 }
 
-public enum PhysicsPrimitiveType : uint
-{
+public enum PhysicsPrimitiveType : uint {
     CUBE = 0X0,
     POLYHEDRON = 0X1,
     CYLINDER = 0X5,
     UNKNOWN6 = 0X6   // nothing between 2-4, no idea what unknown is.
 }
 
-public enum ECgfStreamType : uint
-{
+public enum ECgfStreamType : uint {
     CGF_STREAM_POSITIONS,
     CGF_STREAM_NORMALS,
     CGF_STREAM_TEXCOORDS,
@@ -219,8 +205,7 @@ public enum ECgfStreamType : uint
     CGF_STREAM_NUM_TYPES
 };
 
-public enum XmlFileType
-{
+public enum XmlFileType {
     MATERIAL,
     PREFAB,
     CHRPARAMS

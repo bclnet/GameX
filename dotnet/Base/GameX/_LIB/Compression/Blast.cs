@@ -1,10 +1,8 @@
 ﻿using System;
 using System.IO;
 
-namespace Compression
-{
-    internal unsafe class Blast
-    {
+namespace Compression {
+    internal unsafe class Blast {
         public delegate int blast_in(object how, ref byte* buf);
         public delegate int blast_out(object how, byte* buf, int length);
 
@@ -29,8 +27,7 @@ namespace Compression
         static readonly short[] basex = { 3, 2, 4, 5, 6, 7, 8, 9, 10, 12, 16, 24, 40, 72, 136, 264 }; // base for length codes 
         static readonly byte[] extra = { 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8 }; // extra bits for length codes
 
-        static Blast()
-        {
+        static Blast() {
             // set up decoding tables once
             fixed (byte* litlen_ = litlen) litcode.construct(litlen_, litlen.Length);
             fixed (byte* lenlen_ = lenlen) lencode.construct(lenlen_, lenlen.Length);
@@ -62,16 +59,13 @@ namespace Compression
         /// </summary>
         /// <param name="need"></param>
         /// <returns></returns>
-        int bits(int need)
-        {
+        int bits(int need) {
             int val; // bit accumulator
 
             // load at least need bits into val
             val = this.bitbuf;
-            while (this.bitcnt < need)
-            {
-                if (this.left == 0)
-                {
+            while (this.bitcnt < need) {
+                if (this.left == 0) {
                     this.left = this.infun(this.inhow, ref this.inx);
                     if (this.left == 0) throw new Exception("EOF"); // out of input
                 }
@@ -104,8 +98,7 @@ namespace Compression
         /// </summary>
         /// <param name="h"></param>
         /// <returns></returns>
-        int decode(ref Huffman h)
-        {
+        int decode(ref Huffman h) {
             int len;        // current number of bits in code
             int code;       // len bits being decoded
             int first;      // first code of length len
@@ -120,18 +113,14 @@ namespace Compression
             code = first = index = 0;
             len = 1;
 
-            fixed (short* _ = &h.count[1])
-            {
+            fixed (short* _ = &h.count[1]) {
                 next = _;
-                while (true)
-                {
-                    while (left-- != 0)
-                    {
+                while (true) {
+                    while (left-- != 0) {
                         code |= (bitbuf & 1) ^ 1; // invert code
                         bitbuf >>= 1;
                         count = *next++;
-                        if (code < first + count)
-                        {
+                        if (code < first + count) {
                             // if length len, return symbol
                             this.bitbuf = bitbuf;
                             this.bitcnt = (this.bitcnt - len) & 7;
@@ -145,8 +134,7 @@ namespace Compression
                     }
                     left = MAXBITS + 1 - len;
                     if (left == 0) break;
-                    if (this.left == 0)
-                    {
+                    if (this.left == 0) {
                         this.left = this.infun(this.inhow, ref this.inx);
                         if (this.left == 0) throw new Exception("EOF"); // out of input
                     }
@@ -163,8 +151,7 @@ namespace Compression
         /// symbol[] are the symbol values in canonical order, where the number of entries is the sum of the counts in count[]. The decoding process can be
         /// seen in the function decode() below.
         /// </summary>
-        struct Huffman
-        {
+        struct Huffman {
             public short[] count;       // number of symbols of each length
             public short[] symbol;      // canonically ordered symbols
 
@@ -182,8 +169,7 @@ namespace Compression
             /// <param name="rep"></param>
             /// <param name="n"></param>
             /// <returns></returns>
-            public int construct(byte* rep, int n)
-            {
+            public int construct(byte* rep, int n) {
                 short symbol;                                   // current symbol when stepping through length[]
                 short len;                                      // current length when stepping through h.count[]
                 int left;                                       // number of possible codes left of current length
@@ -192,8 +178,7 @@ namespace Compression
 
                 // convert compact repeat counts into symbol bit length list
                 symbol = 0;
-                do
-                {
+                do {
                     len = *rep++;
                     left = (len >> 4) + 1;
                     len &= 15;
@@ -208,8 +193,7 @@ namespace Compression
 
                 // check for an over-subscribed or incomplete set of lengths
                 left = 1;                                                                   // one possible code of zero length
-                for (len = 1; len <= MAXBITS; len++)
-                {
+                for (len = 1; len <= MAXBITS; len++) {
                     left <<= 1;                     // one more bit, double codes left
                     left -= this.count[len];        // deduct count from possible codes
                     if (left < 0) return left;      // over-subscribed--return negative
@@ -255,8 +239,7 @@ namespace Compression
         ///   ignoring whether the length is greater than the distance or not implements this correctly.
         /// </summary>
         /// <returns></returns>
-        public int decomp()
-        {
+        public int decomp() {
             int lit;            // true if literals are coded
             int dict;           // log2(dictionary size) - 6
             int symbol;         // decoded symbol, extra bits for distance
@@ -273,10 +256,8 @@ namespace Compression
 
             // decode literals and length/distance pairs
             fixed (byte* out_ = this.outx)
-                do
-                {
-                    if (bits(1) != 0)
-                    {
+                do {
+                    if (bits(1) != 0) {
                         // get length
                         symbol = decode(ref lencode);
                         len = basex[symbol] + bits(extra[symbol]);
@@ -290,13 +271,11 @@ namespace Compression
                         if (this.first != 0 && dist > this.next) return -3;              // distance too far back
 
                         // copy length bytes from distance bytes back
-                        do
-                        {
+                        do {
                             to = out_ + this.next;
                             from = to - dist;
                             copy = MAXWIN;
-                            if (this.next < dist)
-                            {
+                            if (this.next < dist) {
                                 from += copy;
                                 copy = dist;
                             }
@@ -304,25 +283,21 @@ namespace Compression
                             if (copy > len) copy = len;
                             len -= copy;
                             this.next += copy;
-                            do
-                            {
+                            do {
                                 *to++ = *from++;
                             } while (--copy != 0);
-                            if (this.next == MAXWIN)
-                            {
+                            if (this.next == MAXWIN) {
                                 if (this.outfun(this.outhow, out_, this.next) != 0) return 1;
                                 this.next = 0;
                                 this.first = 0;
                             }
                         } while (len != 0);
                     }
-                    else
-                    {
+                    else {
                         // get literal and write it
                         symbol = lit != 0 ? decode(ref litcode) : bits(8);
                         out_[this.next++] = (byte)symbol;
-                        if (this.next == MAXWIN)
-                        {
+                        if (this.next == MAXWIN) {
                             if (this.outfun(this.outhow, out_, this.next) != 0) return 1;
                             this.next = 0;
                             this.first = 0;
@@ -333,8 +308,7 @@ namespace Compression
         }
 
         // https://github.com/karablin/arx-unpacker/blob/master/src/blast.c#L377
-        public int blast(blast_in infun, object inhow, blast_out outfun, object outhow)
-        {
+        public int blast(blast_in infun, object inhow, blast_out outfun, object outhow) {
             // initialize input state
             this.infun = infun;
             this.inhow = inhow;
@@ -361,17 +335,14 @@ namespace Compression
 
         // Decompress a PKWare Compression Library stream from stdin to stdout
         // https://github.com/karablin/arx-unpacker/blob/master/src/blast.c#L428
-        public int Decompress(byte[] inputBuffer, byte[] outputBuffer)
-        {
+        public int Decompress(byte[] inputBuffer, byte[] outputBuffer) {
             const int CHUNK = 16384;
             var hold = stackalloc byte[CHUNK];
             var holdPtr = hold;
-            fixed (byte* input = inputBuffer, output = outputBuffer)
-            {
+            fixed (byte* input = inputBuffer, output = outputBuffer) {
                 int inputLen = inputBuffer.Length, outputLen = outputBuffer.Length;
                 IntPtr inputPtr = (IntPtr)input, outputPtr = (IntPtr)output;
-                int inf(object how, ref byte* buf)
-                {
+                int inf(object how, ref byte* buf) {
                     if (inputLen <= 0) return 0;
                     buf = hold;
                     var len = Math.Min(inputLen, CHUNK);
@@ -380,8 +351,7 @@ namespace Compression
                     inputLen -= len;
                     return len;
                 }
-                int outf(object how, byte* buf, int length)
-                {
+                int outf(object how, byte* buf, int length) {
                     if (outputLen <= 0) return 0;
                     UnsafeX.Memcpy((void*)outputPtr, (void*)buf, (uint)length);
                     outputPtr += length;
@@ -396,17 +366,14 @@ namespace Compression
             }
         }
 
-        public int Decompress(byte[] inputBuffer, Stream outputBuffer)
-        {
+        public int Decompress(byte[] inputBuffer, Stream outputBuffer) {
             const int CHUNK = 16384;
             var hold = stackalloc byte[CHUNK];
             var holdPtr = hold;
-            fixed (byte* input = inputBuffer)
-            {
+            fixed (byte* input = inputBuffer) {
                 int inputLen = inputBuffer.Length;
                 IntPtr inputPtr = (IntPtr)input;
-                int inf(object how, ref byte* buf)
-                {
+                int inf(object how, ref byte* buf) {
                     if (inputLen <= 0) return 0;
                     buf = hold;
                     var len = Math.Min(inputLen, CHUNK);
@@ -415,8 +382,7 @@ namespace Compression
                     inputLen -= len;
                     return len;
                 }
-                int outf(object how, byte* buf, int length)
-                {
+                int outf(object how, byte* buf, int length) {
                     outputBuffer.Write(new ReadOnlySpan<byte>(buf, length));
                     //if (outputLen <= 0) return 0;
                     //UnsafeX.Memcpy(outputPtr, (IntPtr)buf, (uint)length);

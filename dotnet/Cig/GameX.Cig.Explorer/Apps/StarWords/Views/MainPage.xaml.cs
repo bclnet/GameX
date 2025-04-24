@@ -16,49 +16,44 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace GameX.Cig.Apps.StarWords.Views
-{
-    /// <summary>
-    /// ContentTab
-    /// </summary>
-    public class ContentTab
-    {
-        public bool Fixed { get; set; }
-        public string Name { get; set; }
-        public object Document { get; set; }
+namespace GameX.Cig.Apps.StarWords.Views;
+
+/// <summary>
+/// ContentTab
+/// </summary>
+public class ContentTab {
+    public bool Fixed { get; set; }
+    public string Name { get; set; }
+    public object Document { get; set; }
+}
+
+/// <summary>
+/// Interaction logic for MainPage.xaml
+/// </summary>
+public partial class MainPage : Window, INotifyPropertyChanged {
+    public static MainPage Instance;
+    public StarWordsApp App;
+
+    public MainPage(StarWordsApp app) {
+        InitializeComponent();
+        Instance = this;
+        DataContext = this;
+        App = app;
+        Navigator.Nodes = new ObservableCollection<Node>(app.Db.Nodes);
+        ContentTabs.Add(new ContentTab { Fixed = false, Name = "Dashboard" });
+        Tabs.SelectedIndex = 0;
+        Tabs.ItemsSource = ContentTabs;
     }
 
-    /// <summary>
-    /// Interaction logic for MainPage.xaml
-    /// </summary>
-    public partial class MainPage : Window, INotifyPropertyChanged
-    {
-        public static MainPage Instance;
-        public StarWordsApp App;
+    public event PropertyChangedEventHandler PropertyChanged;
+    void OnPropertyChanged([CallerMemberName] string propertyName = "") => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
-        public MainPage(StarWordsApp app)
-        {
-            InitializeComponent();
-            Instance = this;
-            DataContext = this;
-            App = app;
-            Navigator.Nodes = new ObservableCollection<Node>(app.Db.Nodes);
-            ContentTabs.Add(new ContentTab { Fixed = false, Name = "Dashboard" });
-            Tabs.SelectedIndex = 0;
-            Tabs.ItemsSource = ContentTabs;
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-        void OnPropertyChanged([CallerMemberName] string propertyName = "") => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-
-        public void AddContentTab(ContentTab contentTab)
-        {
-            ContentTabs.Add(contentTab);
-            Tabs.SelectedIndex = ContentTabs.Count - 1;
-        }
-
-        void OnContentTabClose(object sender, MouseButtonEventArgs e) => ContentTabs.RemoveAt(Tabs.SelectedIndex);
-
-        public ObservableCollection<ContentTab> ContentTabs = new ObservableCollection<ContentTab>();
+    public void AddContentTab(ContentTab contentTab) {
+        ContentTabs.Add(contentTab);
+        Tabs.SelectedIndex = ContentTabs.Count - 1;
     }
+
+    void OnContentTabClose(object sender, MouseButtonEventArgs e) => ContentTabs.RemoveAt(Tabs.SelectedIndex);
+
+    public ObservableCollection<ContentTab> ContentTabs = new ObservableCollection<ContentTab>();
 }

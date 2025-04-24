@@ -5,13 +5,10 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace GameX.App.Cli
-{
-    partial class Program
-    {
+namespace GameX.App.Cli {
+    partial class Program {
         [Verb("list", HelpText = "List files contents.")]
-        class ListOptions
-        {
+        class ListOptions {
             [Option('f', "family", HelpText = "Family")]
             public string Family { get; set; }
 
@@ -19,11 +16,9 @@ namespace GameX.App.Cli
             public Uri Uri { get; set; }
         }
 
-        static Task<int> RunListAsync(ListOptions args)
-        {
+        static Task<int> RunListAsync(ListOptions args) {
             // list families
-            if (string.IsNullOrEmpty(args.Family))
-            {
+            if (string.IsNullOrEmpty(args.Family)) {
                 Console.WriteLine("Families installed:\n");
                 foreach (var _ in FamilyManager.Families) Console.WriteLine($"{_.Key} - {_.Value.Name}");
                 return Task.FromResult(0);
@@ -34,8 +29,7 @@ namespace GameX.App.Cli
             if (family == null) { Console.WriteLine($"No family found named \"{args.Family}\"."); return Task.FromResult(0); }
 
             // list found paths in family
-            if (args.Uri == null)
-            {
+            if (args.Uri == null) {
                 //Console.WriteLine($"{family.Name}\nDescription: {family.Description}\nStudio: {family.Studio}");
                 //Console.WriteLine($"\nGames:");
                 //foreach (var game in family.Games.Values)
@@ -48,15 +42,13 @@ namespace GameX.App.Cli
             }
 
             // list files in pack for family
-            else
-            {
+            else {
                 Console.WriteLine($"{family.Name} - {args.Uri}\n");
                 //if (estate.OpenPakFile(estate.ParseResource(opts.Uri)) is not MultiPakFile multiPak) throw new InvalidOperationException("multiPak not a MultiPakFile");
                 using var multiPak = family.OpenPakFile(args.Uri) as MultiPakFile ?? throw new InvalidOperationException("multiPak not a MultiPakFile");
                 if (multiPak.PakFiles.Count == 0) { Console.WriteLine("No paks found."); return Task.FromResult(0); }
                 Console.WriteLine("Paks found:");
-                foreach (var p in multiPak.PakFiles)
-                {
+                foreach (var p in multiPak.PakFiles) {
                     if (p is not BinaryPakFile pak) throw new InvalidOperationException("multiPak not a BinaryPakFile");
                     Console.WriteLine($"\n{pak.Name}");
                     foreach (var exts in pak.Files.Select(x => Path.GetExtension(x.Path)).GroupBy(x => x)) Console.WriteLine($"  files{exts.Key}: {exts.Count()}");

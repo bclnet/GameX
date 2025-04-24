@@ -2,11 +2,9 @@
 
 namespace GameX.Formats.Unknown;
 
-public interface IUnknownTexture
-{
+public interface IUnknownTexture {
     [Flags]
-    public enum Map
-    {
+    public enum Map {
         Diffuse = 1 << 0,
         Bumpmap = 1 << 1,
         Specular = 1 << 2,

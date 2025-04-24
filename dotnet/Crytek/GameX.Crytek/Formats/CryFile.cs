@@ -9,10 +9,8 @@ using static OpenStack.Debug;
 
 namespace GameX.Crytek.Formats;
 
-public partial class CryFile
-{
-    public static Task<object> Factory(BinaryReader r, FileSource m, PakFile s)
-    {
+public partial class CryFile {
+    public static Task<object> Factory(BinaryReader r, FileSource m, PakFile s) {
         var file = new CryFile(m.Path);
         file.LoadFromPak(r.BaseStream, m, s);
         return Task.FromResult((object)file);
@@ -31,39 +29,33 @@ public partial class CryFile
         ".anim"
     };
 
-    public CryFile(string fileName)
-    {
+    public CryFile(string fileName) {
         // Validate file extension - handles .cgam / skinm
         if (!_validExtensions.Contains(Path.GetExtension(fileName))) throw new FileLoadException("Warning: Unsupported file extension - please use a cga, cgf, chr, skin or anim file", fileName);
         InputFile = fileName;
     }
 
-    public void LoadFromFile()
-    {
+    public void LoadFromFile() {
         var files = new List<(string, Stream)> { (InputFile, File.Open(InputFile, FileMode.Open)) };
         var mFilePath = Path.ChangeExtension(InputFile, $"{Path.GetExtension(InputFile)}m");
-        if (File.Exists(mFilePath))
-        {
+        if (File.Exists(mFilePath)) {
             Log($"Found geometry file {Path.GetFileName(mFilePath)}");
             files.Add((mFilePath, File.Open(mFilePath, FileMode.Open))); // Add to list of files to process
         }
         LoadAsync(null, files, FindMaterialFromFile, path => Task.FromResult<(string, Stream)>((path, File.Open(path, FileMode.Open)))).Wait();
     }
 
-    public void LoadFromPak(Stream stream, FileSource metadata, PakFile pak)
-    {
+    public void LoadFromPak(Stream stream, FileSource metadata, PakFile pak) {
         var files = new List<(string, Stream)> { (InputFile, stream) };
         var mFilePath = Path.ChangeExtension(InputFile, $"{Path.GetExtension(InputFile)}m");
-        if (pak.Contains(mFilePath))
-        {
+        if (pak.Contains(mFilePath)) {
             Log($"Found geometry file {Path.GetFileName(mFilePath)}");
             files.Add((mFilePath, pak.LoadFileData(mFilePath).Result)); // Add to list of files to process
         }
         LoadAsync(pak, files, FindMaterialFromPak, path => Task.FromResult<(string, Stream)>((path, pak.LoadFileData(path).Result))).Wait();
     }
 
-    static string FindMaterialFromFile(PakFile pak, string materialPath, string fileName, string cleanName)
-    {
+    static string FindMaterialFromFile(PakFile pak, string materialPath, string fileName, string cleanName) {
         // First try relative to file being processed
         if (Path.GetExtension(materialPath) != ".mtl") materialPath = Path.ChangeExtension(materialPath, "mtl");
         // Then try just the last part of the chunk, relative to the file being processed
@@ -79,8 +71,7 @@ public partial class CryFile
         return File.Exists(materialPath) ? materialPath : null;
     }
 
-    static string FindMaterialFromPak(PakFile pak, string materialPath, string fileName, string cleanName)
-    {
+    static string FindMaterialFromPak(PakFile pak, string materialPath, string fileName, string cleanName) {
         // First try relative to file being processed
         if (Path.GetExtension(materialPath) != ".mtl") materialPath = Path.ChangeExtension(materialPath, "mtl");
         // Then try just the last part of the chunk, relative to the file being processed
@@ -96,13 +87,10 @@ public partial class CryFile
         return pak.Contains(materialPath) ? materialPath : null;
     }
 
-    public async Task LoadAsync(PakFile pak, IEnumerable<(string, Stream)> files, Func<PakFile, string, string, string, string> getMaterialPath, Func<string, Task<(string, Stream)>> getFileAsync)
-    {
-        try
-        {
+    public async Task LoadAsync(PakFile pak, IEnumerable<(string, Stream)> files, Func<PakFile, string, string, string, string> getMaterialPath, Func<string, Task<(string, Stream)>> getFileAsync) {
+        try {
             Models = new List<Model> { };
-            foreach (var file in files)
-            {
+            foreach (var file in files) {
                 // Each file (.cga and .cgam if applicable) will have its own RootNode.  This can cause problems.  .cga files with a .cgam files won't have geometry for the one root node.
                 var model = new Model(file);
                 if (RootNode == null) RootNode = model.RootNode; // This makes the assumption that we read the .cga file before the .cgam file.
@@ -114,16 +102,14 @@ public partial class CryFile
             ConsolidateGeometryInfo();
             // Get the material file name
             var fileName = files.First().Item1;
-            foreach (ChunkMtlName mtlChunk in Models.SelectMany(a => a.ChunkMap.Values).Where(c => c.ChunkType == ChunkType.MtlName))
-            {
+            foreach (ChunkMtlName mtlChunk in Models.SelectMany(a => a.ChunkMap.Values).Where(c => c.ChunkType == ChunkType.MtlName)) {
                 // Don't process child or collision materials for now
                 if (mtlChunk.MatType == MtlNameType.Child || mtlChunk.MatType == MtlNameType.Unknown1) continue;
                 // The Replace part is for SC files that point to a _core material file that doesn't exist.
                 var cleanName = mtlChunk.Name.Replace("_core", string.Empty);
                 //
                 string materialFilePath;
-                if (mtlChunk.Name.Contains("default_body"))
-                {
+                if (mtlChunk.Name.Contains("default_body")) {
                     // New MWO models for some crazy reason don't put the actual mtl file name in the mtlchunk.  They just have /objects/mechs/default_body
                     // have to assume that it's /objects/mechs/<mechname>/body/<mechname>_body.mtl.  There is also a <mechname>.mtl that contains mtl 
                     // info for hitboxes, but not needed.
@@ -132,8 +118,7 @@ public partial class CryFile
                     if (charsToClean.Length > 0) foreach (char character in charsToClean) cleanName = cleanName.Replace(character.ToString(), string.Empty);
                     materialFilePath = Path.Combine(Path.GetDirectoryName(fileName), cleanName);
                 }
-                else if (mtlChunk.Name.Contains("/") || mtlChunk.Name.Contains("\\"))
-                {
+                else if (mtlChunk.Name.Contains("/") || mtlChunk.Name.Contains("\\")) {
                     // The mtlname has a path.  Most likely starts at the Objects directory.
                     var stringSeparators = new[] { "/", "\\" };
                     // if objectdir is provided, check objectdir + mtlchunk.name
@@ -144,8 +129,7 @@ public partial class CryFile
                     //    materialFilePath = r[r.Length - 1];
                     //}
                 }
-                else
-                {
+                else {
                     var charsToClean = cleanName.ToCharArray().Intersect(Path.GetInvalidFileNameChars()).ToArray();
                     if (charsToClean.Length > 0) foreach (var character in charsToClean) cleanName = cleanName.Replace(character.ToString(), string.Empty);
                     materialFilePath = Path.Combine(Path.GetDirectoryName(fileName), cleanName);
@@ -153,8 +137,7 @@ public partial class CryFile
                 // Populate CryEngine_Core.Material
                 var materialPath = getMaterialPath(pak, materialFilePath, fileName, cleanName);
                 var material = materialPath != null ? Material.FromFile(await getFileAsync(materialPath)) : null;
-                if (material != null)
-                {
+                if (material != null) {
                     Log($"Located material file {Path.GetFileName(materialPath)}");
                     Materials = FlattenMaterials(material).Where(m => m.Textures != null).ToArray();
                     // only one material, so it's a material file with no submaterials.  Check and set the name
@@ -166,25 +149,21 @@ public partial class CryFile
             Log("Unable to locate any material file");
             Materials = new Material[0];
         }
-        catch (Exception e)
-        {
+        catch (Exception e) {
             throw e;
         }
     }
 
-    void ConsolidateGeometryInfo()
-    {
+    void ConsolidateGeometryInfo() {
         //foreach (Model model in Models)
         //{
         //    var nodes = model.ChunkNodes;
         //}
     }
 
-    SkinningInfo ConsolidateSkinningInfo()
-    {
+    SkinningInfo ConsolidateSkinningInfo() {
         var skin = new SkinningInfo();
-        foreach (var model in Models)
-        {
+        foreach (var model in Models) {
             skin.HasSkinningInfo = Models.Any(a => a.SkinningInfo.HasSkinningInfo);
             skin.HasBoneMapDatastream = Models.Any(a => a.SkinningInfo.HasBoneMapDatastream);
             if (model.SkinningInfo.IntFaces != null) skin.IntFaces = model.SkinningInfo.IntFaces;
@@ -213,10 +192,8 @@ public partial class CryFile
     public string Name => Path.GetFileName(InputFile);
 
     Chunk[] _chunks;
-    public Chunk[] Chunks
-    {
-        get
-        {
+    public Chunk[] Chunks {
+        get {
             if (_chunks == null) _chunks = Models.SelectMany(m => m.ChunkMap.Values).ToArray();
             return _chunks;
         }
@@ -224,23 +201,17 @@ public partial class CryFile
 
     // Cannot use the Node name for the key.  Across a couple files, you may have multiple nodes with same name.
     public Dictionary<string, ChunkNode> _nodeMap;
-    public Dictionary<string, ChunkNode> NodeMap
-    {
-        get
-        {
-            if (_nodeMap == null)
-            {
+    public Dictionary<string, ChunkNode> NodeMap {
+        get {
+            if (_nodeMap == null) {
                 _nodeMap = new Dictionary<string, ChunkNode>(StringComparer.InvariantCultureIgnoreCase) { };
                 ChunkNode rootNode = null;
                 //Log("Mapping Nodes");
-                foreach (var model in Models)
-                {
+                foreach (var model in Models) {
                     model.RootNode = rootNode ??= model.RootNode; // Each model will have it's own rootnode.
-                    foreach (var node in model.ChunkMap.Values.Where(c => c.ChunkType == ChunkType.Node).Select(c => c as ChunkNode))
-                    {
+                    foreach (var node in model.ChunkMap.Values.Where(c => c.ChunkType == ChunkType.Node).Select(c => c as ChunkNode)) {
                         // Preserve existing parents
-                        if (_nodeMap.ContainsKey(node.Name))
-                        {
+                        if (_nodeMap.ContainsKey(node.Name)) {
                             var parentNode = _nodeMap[node.Name].ParentNode;
                             if (parentNode != null) parentNode = _nodeMap[parentNode.Name];
                             node.ParentNode = parentNode;
@@ -258,10 +229,8 @@ public partial class CryFile
     /// </summary>
     /// <param name="material"></param>
     /// <returns></returns>
-    public static IEnumerable<Material> FlattenMaterials(Material material)
-    {
-        if (material != null)
-        {
+    public static IEnumerable<Material> FlattenMaterials(Material material) {
+        if (material != null) {
             yield return material;
             if (material.SubMaterials != null)
                 foreach (var subMaterial in material.SubMaterials.SelectMany(m => FlattenMaterials(m)))
@@ -269,8 +238,7 @@ public partial class CryFile
         }
     }
 
-    public IEnumerable<string> GetTexturePaths()
-    {
+    public IEnumerable<string> GetTexturePaths() {
         foreach (var texture in Materials.SelectMany(x => x.Textures))
             if (!string.IsNullOrEmpty(texture.File))
                 yield return $@"Data\{texture.File}";

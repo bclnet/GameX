@@ -23,16 +23,13 @@
 using System;
 using System.Diagnostics;
 
-namespace Compression.Doboz
-{
+namespace Compression.Doboz {
     /// <summary>
     /// Doboz decoder.
     /// </summary>
-    public unsafe class DobozDecoder
-    {
+    public unsafe class DobozDecoder {
         // Use a decoding lookup table in order to avoid expensive branches
-        struct LUTEntry
-        {
+        struct LUTEntry {
             public uint mask; // the mask for the entire encoded match
             public byte offsetShift;
             public byte lengthMask;
@@ -40,23 +37,20 @@ namespace Compression.Doboz
             public sbyte size; // the size of the encoded match in bytes
         }
 
-        internal enum Result
-        {
+        internal enum Result {
             RESULT_OK,
             RESULT_ERROR_BUFFER_TOO_SMALL,
             RESULT_ERROR_CORRUPTED_DATA,
             RESULT_ERROR_UNSUPPORTED_VERSION,
         }
 
-        internal struct Match
-        {
+        internal struct Match {
             public int length;
             public int offset;
         }
 
         /// <summary>HEader structure.</summary>
-        internal struct Header
-        {
+        internal struct Header {
             public int uncompressedSize;
             public int compressedSize;
             public int version;
@@ -64,8 +58,7 @@ namespace Compression.Doboz
         }
 
         /// <summary>Compression info.</summary>
-        internal struct CompressionInfo
-        {
+        internal struct CompressionInfo {
             public int uncompressedSize;
             public int compressedSize;
             public int version;
@@ -99,8 +92,7 @@ namespace Compression.Doboz
         /// <summary>Gets the maximum length of the output.</summary>
         /// <param name="size">The uncompressed length.</param>
         /// <returns>Maximum compressed length.</returns>
-        public static int MaximumOutputLength(int size)
-        {
+        public static int MaximumOutputLength(int size) {
             // The header + the original uncompressed data
             return GetHeaderSize(size) + size;
         }
@@ -110,8 +102,7 @@ namespace Compression.Doboz
         /// <param name="inputOffset">The buffer offset.</param>
         /// <param name="inputLength">Length of the buffer.</param>
         /// <returns>Length of uncompressed data.</returns>
-        public static int UncompressedLength(byte[] input, int inputOffset, int inputLength)
-        {
+        public static int UncompressedLength(byte[] input, int inputOffset, int inputLength) {
             CheckArguments(
                 input, inputOffset, ref inputLength);
 
@@ -135,8 +126,7 @@ namespace Compression.Doboz
         /// <param name="inputLength">Length of the input.</param>
         /// <returns>Decoded buffer.</returns>
         public static byte[] Decode(
-            byte[] input, int inputOffset, int inputLength)
-        {
+            byte[] input, int inputOffset, int inputLength) {
             CheckArguments(
                 input, inputOffset, ref inputLength);
 
@@ -177,8 +167,7 @@ namespace Compression.Doboz
         /// <returns>Number of decoded bytes.</returns>
         public static int Decode(
             byte[] input, int inputOffset, int inputLength,
-            byte[] output, int outputOffset, int outputLength)
-        {
+            byte[] output, int outputOffset, int outputLength) {
             CheckArguments(
                 input, inputOffset, ref inputLength,
                 output, outputOffset, ref outputLength);
@@ -214,8 +203,7 @@ namespace Compression.Doboz
         /// <summary>Gets the size of size field (1, 2 or 4 bytes).</summary>
         /// <param name="size">The size.</param>
         /// <returns>Number of bytes needed to store size.</returns>
-        protected static int GetSizeCodedSize(int size)
-        {
+        protected static int GetSizeCodedSize(int size) {
             return
                 size <= byte.MaxValue ? sizeof(byte) :
                     size <= ushort.MaxValue ? sizeof(ushort) :
@@ -225,8 +213,7 @@ namespace Compression.Doboz
         /// <summary>Gets the size of the header.</summary>
         /// <param name="size">The size.</param>
         /// <returns>Size of header.</returns>
-        protected static int GetHeaderSize(int size)
-        {
+        protected static int GetHeaderSize(int size) {
             return 1 + 2 * GetSizeCodedSize(size);
         }
 
@@ -237,8 +224,7 @@ namespace Compression.Doboz
         /// <exception cref="System.ArgumentNullException">input</exception>
         /// <exception cref="System.ArgumentException">inputOffset and inputLength are invalid for given input</exception>
         protected static void CheckArguments(
-            byte[] input, int inputOffset, ref int inputLength)
-        {
+            byte[] input, int inputOffset, ref int inputLength) {
             if (input == null)
                 throw new ArgumentNullException("input");
             if (inputLength < 0)
@@ -260,8 +246,7 @@ namespace Compression.Doboz
         /// </exception>
         protected static void CheckArguments(
             byte[] input, int inputOffset, ref int inputLength,
-            byte[] output, int outputOffset, ref int outputLength)
-        {
+            byte[] output, int outputOffset, ref int outputLength) {
             if (input == null)
                 throw new ArgumentNullException("input");
             if (output == null)
@@ -361,31 +346,26 @@ namespace Compression.Doboz
         /// <param name="src">The source.</param>
         /// <param name="dst">The destination.</param>
         /// <param name="len">The length (in bytes).</param>
-        internal static void BlockCopy(byte* src, byte* dst, int len)
-        {
-            while (len >= 8)
-            {
+        internal static void BlockCopy(byte* src, byte* dst, int len) {
+            while (len >= 8) {
                 *(ulong*)dst = *(ulong*)src;
                 dst += 8;
                 src += 8;
                 len -= 8;
             }
-            if (len >= 4)
-            {
+            if (len >= 4) {
                 *(uint*)dst = *(uint*)src;
                 dst += 4;
                 src += 4;
                 len -= 4;
             }
-            if (len >= 2)
-            {
+            if (len >= 2) {
                 *(ushort*)dst = *(ushort*)src;
                 dst += 2;
                 src += 2;
                 len -= 2;
             }
-            if (len >= 1)
-            {
+            if (len >= 1) {
                 *dst = *src; /* d++; s++; l--; */
             }
         }
@@ -404,8 +384,7 @@ namespace Compression.Doboz
             var headerSize = 0;
             var decodeHeaderResult = DecodeHeader(ref header, source, sourceOffset, sourceSize, ref headerSize);
 
-            if (decodeHeaderResult != Result.RESULT_OK)
-            {
+            if (decodeHeaderResult != Result.RESULT_OK) {
                 return decodeHeaderResult;
             }
 
@@ -424,14 +403,12 @@ namespace Compression.Doboz
         {
             var src_p = sourceOffset;
 #else
-        static Result DecodeHeader(ref Header header, byte* source, int sourceOffset, int sourceSize, ref int headerSize)
-        {
+        static Result DecodeHeader(ref Header header, byte* source, int sourceOffset, int sourceSize, ref int headerSize) {
             var src_p = source + sourceOffset;
 #endif
 
             // Decode the attribute bytes
-            if (sourceSize < 1)
-            {
+            if (sourceSize < 1) {
                 return Result.RESULT_ERROR_BUFFER_TOO_SMALL;
             }
 
@@ -447,16 +424,14 @@ namespace Compression.Doboz
             // Compute the size of the header
             headerSize = 1 + 2 * sizeCodedSize;
 
-            if (sourceSize < headerSize)
-            {
+            if (sourceSize < headerSize) {
                 return Result.RESULT_ERROR_BUFFER_TOO_SMALL;
             }
 
             header.isStored = (attributes & 128) != 0;
 
             // Decode the uncompressed and compressed sizes
-            switch (sizeCodedSize)
-            {
+            switch (sizeCodedSize) {
 #if DOBOZ_SAFE
                 case 1:
                     header.uncompressedSize = source[src_p];
@@ -517,8 +492,7 @@ namespace Compression.Doboz
                     "The source and destination buffers must not overlap.");
 
 #else
-            fixed (LUTEntry* lut = LUT)
-            {
+            fixed (LUTEntry* lut = LUT) {
                 var src_0 = source + sourceOffset;
                 var dst_0 = destination + destinationOffset;
 
@@ -535,29 +509,25 @@ namespace Compression.Doboz
                 var headerSize = 0;
                 var decodeHeaderResult = DecodeHeader(ref header, source, sourceOffset, sourceSize, ref headerSize);
 
-                if (decodeHeaderResult != Result.RESULT_OK)
-                {
+                if (decodeHeaderResult != Result.RESULT_OK) {
                     return decodeHeaderResult;
                 }
 
                 src_p += headerSize;
 
-                if (header.version != VERSION)
-                {
+                if (header.version != VERSION) {
                     return Result.RESULT_ERROR_UNSUPPORTED_VERSION;
                 }
 
                 // Check whether the supplied buffers are large enough
-                if (sourceSize < header.compressedSize || destinationSize < header.uncompressedSize)
-                {
+                if (sourceSize < header.compressedSize || destinationSize < header.uncompressedSize) {
                     return Result.RESULT_ERROR_BUFFER_TOO_SMALL;
                 }
 
                 var uncompressedSize = header.uncompressedSize;
 
                 // If the data is simply stored, copy it to the destination buffer and we're done
-                if (header.isStored)
-                {
+                if (header.isStored) {
 #if DOBOZ_SAFE
                     BlockCopy(source, src_p, destination, dst_0, uncompressedSize);
 #else
@@ -577,19 +547,16 @@ namespace Compression.Doboz
                 uint controlWord = 1;
 
                 // Decoding loop
-                while (true)
-                {
+                while (true) {
                     // Check whether there is enough data left in the input buffer
                     // In order to decode the next literal/match, we have to read up to 8 bytes (2 words)
                     // Thanks to the trailing dummy, there must be at least 8 remaining input bytes
-                    if (src_p + 2 * WORD_SIZE > src_end)
-                    {
+                    if (src_p + 2 * WORD_SIZE > src_end) {
                         return Result.RESULT_ERROR_CORRUPTED_DATA;
                     }
 
                     // Check whether we must read a control word
-                    if (controlWord == 1)
-                    {
+                    if (controlWord == 1) {
                         Debug.Assert(src_p + WORD_SIZE <= src_end);
 #if DOBOZ_SAFE
                         controlWord = Peek4(source, src_p);
@@ -600,13 +567,11 @@ namespace Compression.Doboz
                     }
 
                     // Detect whether it's a literal or a match
-                    if ((controlWord & 1) == 0)
-                    {
+                    if ((controlWord & 1) == 0) {
                         // It's a literal
 
                         // If we are before the tail, we can safely use fast writing operations
-                        if (dst_p < outputTail)
-                        {
+                        if (dst_p < outputTail) {
                             // We copy literals in runs of up to 4 because it's faster than copying one by one
 
                             // Copy implicitly 4 literals regardless of the run length
@@ -632,22 +597,18 @@ namespace Compression.Doboz
                             // Consume as much control word bits as the run length
                             controlWord >>= runLength;
                         }
-                        else
-                        {
+                        else {
                             // We have reached the tail, we cannot output literals in runs anymore
                             // Output all remaining literals
-                            while (dst_p < dst_end)
-                            {
+                            while (dst_p < dst_end) {
                                 // Check whether there is enough data left in the input buffer
                                 // In order to decode the next literal, we have to read up to 5 bytes
-                                if (src_p + WORD_SIZE + 1 > src_end)
-                                {
+                                if (src_p + WORD_SIZE + 1 > src_end) {
                                     return Result.RESULT_ERROR_CORRUPTED_DATA;
                                 }
 
                                 // Check whether we must read a control word
-                                if (controlWord == 1)
-                                {
+                                if (controlWord == 1) {
                                     Debug.Assert(src_p + WORD_SIZE <= src_end);
 #if DOBOZ_SAFE
                                     controlWord = Peek4(source, src_p);
@@ -675,8 +636,7 @@ namespace Compression.Doboz
                             return Result.RESULT_OK;
                         }
                     }
-                    else
-                    {
+                    else {
                         // It's a match
 
                         // Decode the match
@@ -708,19 +668,16 @@ namespace Compression.Doboz
                         var matchString = dst_p - match.offset;
 
                         // Check whether the match is out of range
-                        if (matchString < dst_0 || dst_p + match.length > outputTail)
-                        {
+                        if (matchString < dst_0 || dst_p + match.length > outputTail) {
                             return Result.RESULT_ERROR_CORRUPTED_DATA;
                         }
 
                         var i = 0;
 
-                        if (match.offset < WORD_SIZE)
-                        {
+                        if (match.offset < WORD_SIZE) {
                             // The match offset is less than the word size
                             // In order to correctly handle the overlap, we have to copy the first three bytes one by one
-                            do
-                            {
+                            do {
                                 Debug.Assert(matchString + i >= dst_0);
                                 Debug.Assert(matchString + i + WORD_SIZE <= dst_end);
                                 Debug.Assert(dst_p + i + WORD_SIZE <= dst_end);
@@ -739,8 +696,7 @@ namespace Compression.Doboz
 
                         // Fast copying
                         // There must be no overlap between the source and destination words
-                        do
-                        {
+                        do {
                             Debug.Assert(matchString + i >= dst_0);
                             Debug.Assert(matchString + i + WORD_SIZE <= dst_end);
                             Debug.Assert(dst_p + i + WORD_SIZE <= dst_end);

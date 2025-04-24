@@ -14,22 +14,19 @@ namespace GameX.Cyanide;
 /// CyanidePakFile
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class CyanidePakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel>
-{
+public class CyanidePakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="CyanidePakFile" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public CyanidePakFile(PakState state) : base(state, Binary_Cpk.Current)
-    {
+    public CyanidePakFile(PakState state) : base(state, Binary_Cpk.Current) {
         ObjectFactoryFunc = ObjectFactory;
     }
 
     #region Factories
 
     static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
-        => Path.GetExtension(source.Path).ToLowerInvariant() switch
-        {
+        => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             ".dds" => (0, Binary_Dds.Factory),
             _ => (0, null),
         };

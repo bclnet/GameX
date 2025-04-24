@@ -11,8 +11,7 @@ namespace GameX.Crytek.Formats;
 
 #region Binary_ArcheAge
 
-public class Binary_ArcheAge : PakBinary
-{
+public class Binary_ArcheAge : PakBinary {
     readonly byte[] Key;
 
     public Binary_ArcheAge(byte[] key) => Key = key;
@@ -22,8 +21,7 @@ public class Binary_ArcheAge : PakBinary
     const uint AA_MAGIC = 0x4f424957; // Magic for Archeage, the literal string "WIBO".
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct AA_Header
-    {
+    struct AA_Header {
         public uint Magic;
         public uint Dummy1;
         public uint FileCount;
@@ -36,13 +34,11 @@ public class Binary_ArcheAge : PakBinary
 
     #endregion
 
-    public unsafe override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+    public unsafe override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         FileSource[] files;
 
         var stream = r.BaseStream;
-        using (var aes = Aes.Create())
-        {
+        using (var aes = Aes.Create()) {
             aes.Key = Key;
             aes.IV = new byte[16];
             aes.Mode = CipherMode.CBC;
@@ -56,8 +52,7 @@ public class Binary_ArcheAge : PakBinary
             var totalSize = (header.FileCount + header.ExtraFiles) * 0x150;
             var infoOffset = stream.Length - 0x200;
             infoOffset -= totalSize;
-            while (infoOffset >= 0)
-            {
+            while (infoOffset >= 0) {
                 if ((infoOffset % 0x200) != 0) infoOffset -= 0x10;
                 else break;
             }
@@ -65,13 +60,11 @@ public class Binary_ArcheAge : PakBinary
             // read-all files
             var fileIdx = 0U;
             source.Files = files = new FileSource[header.FileCount];
-            for (var i = 0; i < header.FileCount; i++)
-            {
+            for (var i = 0; i < header.FileCount; i++) {
                 stream.Seek(infoOffset, SeekOrigin.Begin);
                 r = new BinaryReader(new CryptoStream(stream, aes.CreateDecryptor(), CryptoStreamMode.Read));
                 var nameAsSpan = r.ReadBytes(0x108).AsSpan();
-                files[fileIdx++] = new FileSource
-                {
+                files[fileIdx++] = new FileSource {
                     //.Replace('\\', '/')
                     Path = Encoding.ASCII.GetString(nameAsSpan[..nameAsSpan.IndexOf(byte.MinValue)]), //: name
                     Offset = r.ReadInt64(),   //: offset
@@ -85,8 +78,7 @@ public class Binary_ArcheAge : PakBinary
         return Task.CompletedTask;
     }
 
-    public unsafe override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
-    {
+    public unsafe override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         // position
         r.Seek(file.Offset);
         Stream fileData = new MemoryStream(r.ReadBytes((int)file.FileSize));
@@ -102,25 +94,21 @@ public class Binary_ArcheAge : PakBinary
 /// Binary_Cry3
 /// </summary>
 /// <seealso cref="GameX.Formats.PakBinary" />
-public unsafe class Binary_Cry3 : PakBinary<Binary_Cry3>
-{
+public unsafe class Binary_Cry3 : PakBinary<Binary_Cry3> {
     readonly byte[] Key;
 
     public Binary_Cry3() { }
     public Binary_Cry3(byte[] key = null) => Key = key;
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         var files = source.Files = new List<FileSource>();
         source.UseReader = false;
 
         var pak = (Cry3File)(source.Tag = new Cry3File(r.BaseStream, Key));
         var parentByPath = new Dictionary<string, FileSource>();
         var partByPath = new Dictionary<string, SortedList<string, FileSource>>();
-        foreach (ZipEntry entry in pak)
-        {
-            var metadata = new FileSource
-            {
+        foreach (ZipEntry entry in pak) {
+            var metadata = new FileSource {
                 Path = entry.Name.Replace('\\', '/'),
                 Flags = entry.Flags,
                 PackedSize = entry.CompressedSize,
@@ -129,8 +117,7 @@ public unsafe class Binary_Cry3 : PakBinary<Binary_Cry3>
             };
             var metadataPath = metadata.Path;
             if (metadataPath.EndsWith(".dds", StringComparison.OrdinalIgnoreCase)) parentByPath.Add(metadataPath, metadata);
-            else if (metadataPath[^8..].Contains(".dds.", StringComparison.OrdinalIgnoreCase))
-            {
+            else if (metadataPath[^8..].Contains(".dds.", StringComparison.OrdinalIgnoreCase)) {
                 var parentPath = metadataPath[..(metadataPath.IndexOf(".dds", StringComparison.OrdinalIgnoreCase) + 4)];
                 var parts = partByPath.TryGetValue(parentPath, out var z) ? z : null;
                 if (parts == null) partByPath.Add(parentPath, parts = []);
@@ -146,14 +133,12 @@ public unsafe class Binary_Cry3 : PakBinary<Binary_Cry3>
         return Task.CompletedTask;
     }
 
-    public override Task Write(BinaryPakFile source, BinaryWriter w, object tag)
-    {
+    public override Task Write(BinaryPakFile source, BinaryWriter w, object tag) {
         source.UseReader = false;
         var files = source.Files;
         var pak = (Cry3File)(source.Tag = new Cry3File(w.BaseStream, Key));
         pak.BeginUpdate();
-        foreach (var file in files)
-        {
+        foreach (var file in files) {
             var entry = (ZipEntry)(file.Tag = new ZipEntry(Path.GetFileName(file.Path)));
             pak.Add(entry);
             source.PakBinary.WriteData(source, w, file, null);
@@ -162,12 +147,10 @@ public unsafe class Binary_Cry3 : PakBinary<Binary_Cry3>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
-    {
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         var pak = (Cry3File)source.Tag;
         var entry = (ZipEntry)file.Tag;
-        try
-        {
+        try {
             using var input = pak.GetInputStream(entry);
             if (!input.CanRead) { HandleException(file, option, $"Unable to read stream for file: {file.Path}"); return Task.FromResult(System.IO.Stream.Null); }
             var s = new MemoryStream();
@@ -178,12 +161,10 @@ public unsafe class Binary_Cry3 : PakBinary<Binary_Cry3>
         catch (Exception e) { HandleException(file, option, $"{file.Path} - Exception: {e.Message}"); return Task.FromResult(System.IO.Stream.Null); }
     }
 
-    public override Task WriteData(BinaryPakFile source, BinaryWriter w, FileSource file, Stream data, object option = default)
-    {
+    public override Task WriteData(BinaryPakFile source, BinaryWriter w, FileSource file, Stream data, object option = default) {
         var pak = (Cry3File)source.Tag;
         var entry = (ZipEntry)file.Tag;
-        try
-        {
+        try {
             using var s = pak.GetInputStream(entry);
             data.CopyTo(s);
         }

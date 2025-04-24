@@ -5,13 +5,11 @@ using System.Text;
 
 namespace GameX.Formats.Collada;
 
-partial class ColladaFileWriter
-{
+partial class ColladaFileWriter {
     /// <summary>
     /// Adds the Library_Controllers element to the Collada document.
     /// </summary>
-    void SetLibraryControllers()
-    {
+    void SetLibraryControllers() {
         var compiledBones = File.SkinningInfo.CompiledBones;
         var intVertexs = File.SkinningInfo.IntVertexs;
         var boneMaps = File.SkinningInfo.BoneMaps;
@@ -21,23 +19,19 @@ partial class ColladaFileWriter
         var sources = new List<Collada_Source>();
         var boneNames = new StringBuilder();
         foreach (var compiledBone in compiledBones) boneNames.Append(compiledBone.Name.Replace(' ', '_') + " ");
-        sources.Add(new Collada_Source
-        {
+        sources.Add(new Collada_Source {
             ID = "Controller-joints",
             Name_Array = new Collada_Name_Array { ID = "Controller-joints-array", Count = compiledBones.Count, Value_Pre_Parse = boneNames.ToString().TrimEnd() },
-            Technique_Common = new Collada_Technique_Common_Source
-            {
+            Technique_Common = new Collada_Technique_Common_Source {
                 Accessor = new Collada_Accessor { Source = "#Controller-joints-array", Count = (uint)compiledBones.Count, Stride = 1 }
             }
         });
 
         // SOURCES : BIND POSE
-        sources.Add(new Collada_Source
-        {
+        sources.Add(new Collada_Source {
             ID = "Controller-bind_poses",
             Float_Array = new Collada_Float_Array { ID = "Controller-bind_poses-array", Count = compiledBones.Count * 16, Value_As_String = GetBindPoseArray(compiledBones) },
-            Technique_Common = new Collada_Technique_Common_Source
-            {
+            Technique_Common = new Collada_Technique_Common_Source {
                 Accessor = new Collada_Accessor { Source = "#Controller-bind_poses-array", Count = (uint)compiledBones.Count, Stride = 16, Param = new[] { new Collada_Param { Name = "TRANSFORM", Type = "float4x4" } } }
             }
         });
@@ -53,19 +47,16 @@ partial class ColladaFileWriter
         else
             foreach (var ext2IntMap in ext2IntMaps)
                 for (var j = 0; j < 4; j++) weights.Append(intVertexs[ext2IntMap].Weights[j] + " ");
-        sources.Add(new Collada_Source
-        {
+        sources.Add(new Collada_Source {
             ID = "Controller-weights",
             Float_Array = new Collada_Float_Array { ID = "Controller-weights-array", Count = weightsCount, Value_As_String = CleanNumbers(weights.ToString()).TrimEnd() },
-            Technique_Common = new Collada_Technique_Common_Source
-            {
+            Technique_Common = new Collada_Technique_Common_Source {
                 Accessor = new Collada_Accessor { Source = "#Controller-weights-array", Count = (uint)weightsCount * 4, Stride = 1, Param = new[] { new Collada_Param { Name = "WEIGHT", Type = "float" } } }
             }
         });
 
         // JOINTS
-        var joints = new Collada_Joints
-        {
+        var joints = new Collada_Joints {
             Input = [
                 new Collada_Input_Unshared { Semantic = Collada_Input_Semantic.JOINT, source = "#Controller-joints" },
                 new Collada_Input_Unshared { Semantic = Collada_Input_Semantic.INV_BIND_MATRIX, source = "#Controller-bind_poses" }
@@ -79,8 +70,7 @@ partial class ColladaFileWriter
         var idx = 0;
         // Need to map the exterior vertices (geometry) to the int vertices. Or use the Bone Map datastream if it exists (check HasBoneMapDatastream).
         if (ext2IntMaps == null)
-            foreach (var boneMap in boneMaps)
-            {
+            foreach (var boneMap in boneMaps) {
                 vertexs.Append($"{boneMap.BoneIndex[0]} {idx + 0}");
                 vertexs.Append($"{boneMap.BoneIndex[1]} {idx + 1}");
                 vertexs.Append($"{boneMap.BoneIndex[2]} {idx + 2}");
@@ -88,16 +78,14 @@ partial class ColladaFileWriter
                 idx += 4;
             }
         else
-            foreach (var ext2IntMap in ext2IntMaps)
-            {
+            foreach (var ext2IntMap in ext2IntMaps) {
                 vertexs.Append($"{intVertexs[ext2IntMap].BoneIDs[0]} {idx + 0}");
                 vertexs.Append($"{intVertexs[ext2IntMap].BoneIDs[1]} {idx + 1}");
                 vertexs.Append($"{intVertexs[ext2IntMap].BoneIDs[2]} {idx + 2}");
                 vertexs.Append($"{intVertexs[ext2IntMap].BoneIDs[3]} {idx + 3}");
                 idx += 4;
             }
-        var vertexWeights = new Collada_Vertex_Weights
-        {
+        var vertexWeights = new Collada_Vertex_Weights {
             Count = boneMaps.Length,
             VCount = new Collada_Int_Array_String { Value_As_String = vcounts.ToString().TrimEnd() },
             V = new Collada_Int_Array_String { Value_As_String = vertexs.ToString().TrimEnd() },
@@ -108,16 +96,14 @@ partial class ColladaFileWriter
         };
 
         // CONTROLLER
-        var controller = new Collada_Controller
-        {
+        var controller = new Collada_Controller {
             ID = "Controller",
             // create the extra element for the FCOLLADA profile
             Extra = [ new Collada_Extra {
                 Technique = [new Collada_Technique { profile = "FCOLLADA", UserProperties = "SkinController" }]
             }],
             // Create the skin object and assign to the controller
-            Skin = new Collada_Skin
-            {
+            Skin = new Collada_Skin {
                 source = "#" + daeObject.Library_Geometries.Geometry[0].ID,
                 // We will assume the BSM is the identity matrix for now
                 Bind_Shape_Matrix = new Collada_Float_Array_String { Value_As_String = CreateStringFromMatrix44(Matrix4x4.Identity) },
@@ -129,8 +115,7 @@ partial class ColladaFileWriter
         };
 
         // Set up the controller library.
-        daeObject.Library_Controllers = new Collada_Library_Controllers
-        {
+        daeObject.Library_Controllers = new Collada_Library_Controllers {
             // There can be multiple controllers in the controller library.  But for Cryengine files, there is only one rig.
             // So if a rig exists, make that the controller.  This applies mostly to .chr files, which will have a rig and geometry.
             Controller = [controller]

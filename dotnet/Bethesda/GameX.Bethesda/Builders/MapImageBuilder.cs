@@ -6,10 +6,8 @@ using System.Threading.Tasks;
 
 namespace GameX.Bethesda.Builders;
 
-public class MapImageBuilder : IDisposable
-{
-    class LandData
-    {
+public class MapImageBuilder : IDisposable {
+    class LandData {
         public ushort Type { get; set; }
         public int Z { get; set; }
         public bool Used { get; set; }
@@ -23,8 +21,7 @@ public class MapImageBuilder : IDisposable
     const float AMBIENTLIGHT = 0.25f; // Increasing AMBIENTLIGHT makes everyting brighter.
     LandData[,] land { get; set; } = new LandData[LANDSIZE, LANDSIZE];
 
-    public MapImageBuilder()
-    {
+    public MapImageBuilder() {
         for (var x = 0; x < LANDSIZE; x++) for (var y = 0; y < LANDSIZE; y++) land[x, y] = new LandData();
 
         //var cell = DatabaseManager.Cell;
@@ -60,8 +57,7 @@ public class MapImageBuilder : IDisposable
 
     public DirectBitmap MapImage { get; set; }
 
-    void CreateMap()
-    {
+    void CreateMap() {
         var emptyColor = Color.LimeGreen; // #32cd32
         var lightVector = new float[3] { -1.0f, -1.0f, 0.0f };
         var topo = new byte[LANDSIZE, LANDSIZE, 3];

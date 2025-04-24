@@ -1,11 +1,8 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace Compression
-{
-    public static class OodleLZ
-    {
-        enum OodleLZ_Compressor : int
-        {
+namespace Compression {
+    public static class OodleLZ {
+        enum OodleLZ_Compressor : int {
             LZH = 0,
             LZHLW = 1,
             LZNIB = 2,
@@ -21,8 +18,7 @@ namespace Compression
             Akkorokamui = 12,
         }
 
-        enum OodleLZ_Compression : int
-        {
+        enum OodleLZ_Compression : int {
             None = 0,
             SuperFast = 1,
             VertFast = 2,
@@ -35,25 +31,21 @@ namespace Compression
             Optimal5 = 9,
         }
 
-        enum OodleLZ_FuzzSafe : int
-        {
+        enum OodleLZ_FuzzSafe : int {
             No = 0,
             Yes = 1,
         }
 
-        enum OodleLZ_CheckCRC : int
-        {
+        enum OodleLZ_CheckCRC : int {
             No = 0,
             Yes = 1,
         }
 
-        enum OodleLZ_Verbosity : int
-        {
+        enum OodleLZ_Verbosity : int {
             None = 0,
         }
 
-        enum OodleLZ_Decode : int
-        {
+        enum OodleLZ_Decode : int {
             ThreadPhase1 = 1,
             ThreadPhase2 = 2,
             Unthreaded = 3,

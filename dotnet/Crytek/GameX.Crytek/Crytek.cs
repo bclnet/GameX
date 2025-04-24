@@ -18,14 +18,12 @@ namespace GameX.Crytek;
 /// CrytekPakFile
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class CrytekPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel>
-{
+public class CrytekPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="CrytekPakFile" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public CrytekPakFile(PakState state) : base(state, GetPakBinary(state.Game))
-    {
+    public CrytekPakFile(PakState state) : base(state, GetPakBinary(state.Game)) {
         ObjectFactoryFunc = ObjectFactory;
     }
 
@@ -37,15 +35,13 @@ public class CrytekPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMod
         => PakBinarys.GetOrAdd(game.Id, _ => PakBinaryFactory(game));
 
     static PakBinary PakBinaryFactory(FamilyGame game)
-        => game.Engine.n switch
-        {
+        => game.Engine.n switch {
             "ArcheAge" => new Binary_ArcheAge((byte[])game.Key),
             _ => new Binary_Cry3((byte[])game.Key),
         };
 
     public static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
-        => Path.GetExtension(source.Path).ToLowerInvariant() switch
-        {
+        => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             ".xml" => (0, CryXmlFile.Factory),
             ".cgf" or ".cga" or ".chr" or ".skin" or ".anim" => (0, CryFile.Factory),
             _ => UnknownPakFile.ObjectFactory(source, game),

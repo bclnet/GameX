@@ -8,16 +8,12 @@ using static OpenStack.Debug;
 
 namespace GameX.Crytek.Formats;
 
-partial class CryFile : IUnknownFileModel
-{
+partial class CryFile : IUnknownFileModel {
     IEnumerable<string> IUnknownFileModel.RootNodes => NodeMap.Values.Where(x => x.ParentNode == null).Select(x => x.Name);
     IEnumerable<IUnknownModel> IUnknownFileModel.Models => throw new NotImplementedException();
-    IEnumerable<UnknownMesh> IUnknownFileModel.Meshes
-    {
-        get
-        {
-            foreach (var node in NodeMap.Values)
-            {
+    IEnumerable<UnknownMesh> IUnknownFileModel.Meshes {
+        get {
+            foreach (var node in NodeMap.Values) {
                 if (node.ObjectChunk == null) { Log($"Skipped node with missing Object {node.Name}"); continue; }
                 if (node.ObjectChunk.ChunkType == ChunkType.Helper) { continue; }
                 if (node.ObjectChunk.ChunkType != ChunkType.Mesh) { Log($"Skipped a {node.ObjectChunk.ChunkType} chunk"); continue; }
@@ -41,13 +37,11 @@ partial class CryFile : IUnknownFileModel
                 var uvs = chunkMap.Get(chunk.UVsData, null) as ChunkDataStream;
                 var vertsUVs = chunkMap.Get(chunk.VertsUVsData, null) as ChunkDataStream;
 
-                var mesh = new UnknownMesh
-                {
+                var mesh = new UnknownMesh {
                     Name = node.Name,
                     MaxBound = chunk.MaxBound,
                     MinBound = chunk.MinBound,
-                    Subsets = meshSubsets.MeshSubsets.Select(s => new UnknownMesh.Subset
-                    {
+                    Subsets = meshSubsets.MeshSubsets.Select(s => new UnknownMesh.Subset {
                         Vertexs = new Range((int)s.FirstVertex, (int)(s.NumVertices + s.FirstVertex)),
                         Indexs = new Range((int)s.FirstVertex, (int)(s.NumIndices + s.FirstVertex)),
                         MatId = (int)s.MatID,
@@ -60,8 +54,7 @@ partial class CryFile : IUnknownFileModel
 
                 // Let's try this using this node chunk's rotation matrix, and the transform is the sum of all the transforms.
                 // Scales the object by the bounding box.
-                if (chunk.VerticesData == 0)
-                {
+                if (chunk.VerticesData == 0) {
                     var scaleX = Math.Abs(chunk.MinBound.X - chunk.MaxBound.X) / 2f; if (scaleX < 1f) scaleX = 1f;
                     var scaleY = Math.Abs(chunk.MinBound.Y - chunk.MaxBound.Y) / 2f; if (scaleY < 1f) scaleY = 1f;
                     var scaleZ = Math.Abs(chunk.MinBound.Z - chunk.MaxBound.Z) / 2f; if (scaleZ < 1f) scaleZ = 1f;
@@ -82,8 +75,7 @@ partial class CryFile : IUnknownFileModel
     IUnknownSkin IUnknownFileModel.SkinningInfo => throw new NotImplementedException();
     string IUnknownFileObject.Name => Name;
     string IUnknownFileObject.Path => InputFile;
-    IEnumerable<IUnknownFileObject.Source> IUnknownFileObject.Sources => Chunks.Where(a => a.ChunkType == ChunkType.SourceInfo).Select(x =>
-    {
+    IEnumerable<IUnknownFileObject.Source> IUnknownFileObject.Sources => Chunks.Where(a => a.ChunkType == ChunkType.SourceInfo).Select(x => {
         var s = (ChunkSourceInfo)x;
         return new IUnknownFileObject.Source { Author = s.Author, SourceFile = s.SourceFile };
     });

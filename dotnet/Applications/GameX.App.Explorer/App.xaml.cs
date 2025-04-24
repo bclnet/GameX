@@ -4,13 +4,11 @@ using System.Windows;
 [assembly: ThemeInfo(ResourceDictionaryLocation.None, ResourceDictionaryLocation.SourceAssembly)]
 
 // https://www.wpf-tutorial.com/data-binding/debugging/
-namespace GameX.App.Explorer
-{
+namespace GameX.App.Explorer {
     /// <summary>
     /// Interaction logic for App.xaml
     /// </summary>
-    public partial class App : Application
-    {
+    public partial class App : Application {
         static App() => PlatformX.Platforms.UnionWith([
             GodotShellPlatform.This,
             O3deShellPlatform.This,
@@ -38,8 +36,7 @@ namespace GameX.App.Explorer
         //static readonly string[] args = ["open", "-f", "Valve", "-u", "game:/dota/pak01_dir.vpk#Dota2", "-p", "models/npc_minions/draft_siege_good.vmdl_c"];
         //static readonly string[] args = ["open", "-f", "Valve", "-u", "game:/dota/pak01_dir.vpk#Dota2", "-p", "particles/hw_fx/candy_carrying_overhead.vpcf_c"];
 
-        void Application_Startup(object sender, StartupEventArgs e)
-        {
+        void Application_Startup(object sender, StartupEventArgs e) {
             //PlatformX.Activate(OpenGLPlatform.This);
             //GLViewerControl.ShowConsole = true;
             _ = new AppShell();
@@ -60,8 +57,7 @@ namespace GameX.App.Explorer
         class TestOptions { }
 
         [Verb("open", HelpText = "Extract files contents to folder.")]
-        class OpenOptions
-        {
+        class OpenOptions {
             [Option('f', "family", HelpText = "Family", Required = true)]
             public string Family { get; set; }
 

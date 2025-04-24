@@ -9,12 +9,10 @@ namespace GameX.Blizzard.Formats;
 
 #region Binary_Blizzard
 
-public unsafe class Binary_Blizzard : PakBinary<Binary_Blizzard>
-{
+public unsafe class Binary_Blizzard : PakBinary<Binary_Blizzard> {
     CascContext casc;
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         var files = source.Files = [];
 
         // load casc
@@ -33,8 +31,7 @@ public unsafe class Binary_Blizzard : PakBinary<Binary_Blizzard>
 
 #region Binary_Pak
 
-public class Binary_Pak : IHaveMetaInfo
-{
+public class Binary_Pak : IHaveMetaInfo {
     public Binary_Pak() { }
     public Binary_Pak(BinaryReader r) => Read(r);
 

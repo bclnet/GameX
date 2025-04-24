@@ -12,8 +12,7 @@ namespace GameX.Unknown;
 /// UnknownFamily
 /// </summary>
 /// <seealso cref="GameX.Family" />
-public class UnknownFamily : Family
-{
+public class UnknownFamily : Family {
     /// <summary>
     /// Initializes a new instance of the <see cref="UnknownFamily"/> class.
     /// </summary>
@@ -25,14 +24,12 @@ public class UnknownFamily : Family
 /// UnknownPakFile
 /// </summary>
 /// <seealso cref="GameX.Formats.PakFile" />
-public class UnknownPakFile : PakFile
-{
+public class UnknownPakFile : PakFile {
     /// <summary>
     /// Initializes a new instance of the <see cref="UnknownPakFile" /> class.
     /// </summary>
     /// <param name="state">The game.</param>
-    public UnknownPakFile(PakState state) : base(state)
-    {
+    public UnknownPakFile(PakState state) : base(state) {
         Name = "Unknown";
         ObjectFactoryFunc = ObjectFactory;
     }
@@ -53,16 +50,14 @@ public class UnknownPakFile : PakFile
     #region Factories
 
     public static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
-        => Path.GetExtension(source.Path).ToLowerInvariant() switch
-        {
+        => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             ".txt" or ".ini" or ".cfg" or ".csv" or ".xml" => (0, Binary_Txt.Factory),
             ".wav" => (0, Binary_Snd.Factory),
             ".bmp" or ".jpg" or ".png" or ".gif" or ".tiff" => (0, Binary_Img.Factory), // Exif
             ".pcx" => (0, Binary_Pcx.Factory),
             ".tga" => (0, Binary_Tga.Factory),
             ".dds" => (0, Binary_Dds.Factory),
-            _ => source.Path switch
-            {
+            _ => source.Path switch {
                 "testtri.gfx" => (0, Binary_TestTri.Factory),
                 _ => (0, null),
             }
@@ -72,8 +67,7 @@ public class UnknownPakFile : PakFile
 
     #region Binary
 
-    public class Binary_TestTri : IHaveMetaInfo
-    {
+    public class Binary_TestTri : IHaveMetaInfo {
         public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_TestTri());
 
         // IHaveMetaInfo

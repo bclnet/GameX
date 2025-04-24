@@ -7,16 +7,13 @@ using System.Linq;
 
 namespace GameX.Red;
 
-public static class CP77
-{
-    class HashRecord
-    {
+public static class CP77 {
+    class HashRecord {
         public string String { get; set; }
         public string Hash { get; set; }
     }
 
-    static CP77()
-    {
+    static CP77() {
         var assembly = typeof(CP77).Assembly;
         using var s = assembly.GetManifestResourceStream("GameX.Resource.Red.CP77.zip");
         var pak = new ZipArchive(s, ZipArchiveMode.Read);

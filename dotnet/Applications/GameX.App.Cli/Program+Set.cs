@@ -2,13 +2,10 @@
 using System;
 using System.Threading.Tasks;
 
-namespace GameX.App.Cli
-{
-    partial class Program
-    {
+namespace GameX.App.Cli {
+    partial class Program {
         [Verb("import", HelpText = "Insert files contents to pak.")]
-        class ImportOptions
-        {
+        class ImportOptions {
             [Option('f', "family", Required = true, HelpText = "Family")]
             public string Family { get; set; }
 
@@ -22,8 +19,7 @@ namespace GameX.App.Cli
             public object Option { get; set; }
         }
 
-        static async Task<int> RunImportAsync(ImportOptions args)
-        {
+        static async Task<int> RunImportAsync(ImportOptions args) {
             var from = ProgramState.Load(Convert.ToInt32, 0);
 
             // get family
@@ -32,7 +28,7 @@ namespace GameX.App.Cli
 
             // import
             await ImportManager.ImportAsync(family, family.ParseResource(args.Uri), GetPlatformPath(args.Path), from, args.Option);
-            
+
             ProgramState.Clear();
             return 0;
         }

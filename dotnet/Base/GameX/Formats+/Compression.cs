@@ -13,14 +13,12 @@ using Decoder = SevenZip.Compression.LZMA.Decoder;
 
 namespace GameX.Formats;
 
-public static class Compression
-{
+public static class Compression {
     const int BufferSize = 4096 * 10;
     public const int LZMAPropsSize = 5;
 
     #region Doboz
-    public static byte[] DecompressDoboz(this BinaryReader r, int length, int newLength)
-    {
+    public static byte[] DecompressDoboz(this BinaryReader r, int length, int newLength) {
         var fileData = r.ReadBytes(length);
         return DobozDecoder.Decode(fileData, 0, fileData.Length);
     }
@@ -29,8 +27,7 @@ public static class Compression
     #endregion
 
     #region Lz4
-    public static byte[] DecompressLz4(this BinaryReader r, int length, int newLength)
-    {
+    public static byte[] DecompressLz4(this BinaryReader r, int length, int newLength) {
         var fileData = r.ReadBytes(length);
         var newFileData = new byte[newLength];
         LZ4Codec.Decode(fileData, newFileData);
@@ -40,13 +37,11 @@ public static class Compression
     #endregion
 
     #region Lzo
-    public static byte[] DecompressLzo(this BinaryReader r, int length, int newLength)
-    {
+    public static byte[] DecompressLzo(this BinaryReader r, int length, int newLength) {
         var fs = new LzoStream(r.BaseStream, CompressionMode.Decompress);
         return fs.ReadBytes(newLength);
     }
-    public static int DecompressLzo(byte[] source, byte[] target)
-    {
+    public static int DecompressLzo(byte[] source, byte[] target) {
         using var fs = new LzoStream(new MemoryStream(source), CompressionMode.Decompress);
         var r = fs.ReadBytes(target.Length);
         Buffer.BlockCopy(r, 0, target, 0, r.Length);
@@ -55,8 +50,7 @@ public static class Compression
     #endregion
 
     #region Lzf
-    public static int DecompressLzf(this BinaryReader r, int length, byte[] buffer)
-    {
+    public static int DecompressLzf(this BinaryReader r, int length, byte[] buffer) {
         var fileData = r.ReadBytes(length);
         return Lzf.Decompress(fileData, buffer);
     }
@@ -78,8 +72,7 @@ public static class Compression
     #endregion
 
     #region Oodle
-    public static byte[] DecompressOodle(this BinaryReader r, int length, int newLength)
-    {
+    public static byte[] DecompressOodle(this BinaryReader r, int length, int newLength) {
         var oodleCompression = r.ReadBytes(4);
         if (!(oodleCompression.SequenceEqual(new byte[] { 0x4b, 0x41, 0x52, 0x4b }))) throw new NotImplementedException();
         var size = r.ReadUInt32();
@@ -99,13 +92,11 @@ public static class Compression
     #endregion
 
     #region Zstd
-    public static byte[] DecompressZstd(this BinaryReader r, int length, int newLength)
-    {
+    public static byte[] DecompressZstd(this BinaryReader r, int length, int newLength) {
         using var fs = new DecompressionStream(r.BaseStream);
         return fs.ReadBytes(newLength);
     }
-    public static int DecompressZstd(byte[] source, byte[] target)
-    {
+    public static int DecompressZstd(byte[] source, byte[] target) {
         using var fs = new DecompressionStream(new MemoryStream(source));
         var r = fs.ReadBytes(target.Length);
         Buffer.BlockCopy(r, 0, target, 0, r.Length);
@@ -114,8 +105,7 @@ public static class Compression
     #endregion
 
     #region Zlib
-    public static byte[] DecompressZlib(this BinaryReader r, int length, int newLength, bool noHeader = false)
-    {
+    public static byte[] DecompressZlib(this BinaryReader r, int length, int newLength, bool noHeader = false) {
         var fileData = r.ReadBytes(length);
         var inflater = new Inflater(noHeader);
         inflater.SetInput(fileData, 0, fileData.Length);
@@ -125,22 +115,19 @@ public static class Compression
         while ((count = inflater.Inflate(buffer)) > 0) s.Write(buffer, 0, count);
         return s.ToArray();
     }
-    public static int DecompressZlib(byte[] source, byte[] target)
-    {
+    public static int DecompressZlib(byte[] source, byte[] target) {
         var inflater = new Inflater(false);
         inflater.SetInput(source, 0, source.Length);
         return inflater.Inflate(target, 0, target.Length);
     }
-    public static byte[] DecompressZlib2(this BinaryReader r, int length, int newLength)
-    {
+    public static byte[] DecompressZlib2(this BinaryReader r, int length, int newLength) {
         var fileData = r.ReadBytes(length);
         using var s = new InflaterInputStream(new MemoryStream(fileData), new Inflater(false), 4096);
         var newFileData = new byte[newLength];
         s.Read(newFileData, 0, newFileData.Length);
         return newFileData;
     }
-    public static byte[] CompressZlib(byte[] source, int length)
-    {
+    public static byte[] CompressZlib(byte[] source, int length) {
         var deflater = new Deflater(Deflater.BEST_COMPRESSION);
         deflater.SetInput(source, 0, length);
         int count;
@@ -168,8 +155,7 @@ public static class Compression
     #endregion
 
     #region Lzma
-    public static byte[] DecompressLzma(this BinaryReader r, int length, int newLength)
-    {
+    public static byte[] DecompressLzma(this BinaryReader r, int length, int newLength) {
         var decoder = new Decoder();
         decoder.SetDecoderProperties(r.ReadBytes(5));
         var fileData = r.ReadBytes(length);
@@ -182,8 +168,7 @@ public static class Compression
     #endregion
 
     #region Blast
-    public static byte[] DecompressBlast(this BinaryReader r, int length, int newLength)
-    {
+    public static byte[] DecompressBlast(this BinaryReader r, int length, int newLength) {
         var decoder = new Blast();
         var fs = r.ReadBytes(length);
         //var os = new byte[newLength];
@@ -195,8 +180,7 @@ public static class Compression
     #endregion
 
     #region Lzss
-    public static byte[] DecompressLzss(this BinaryReader r, int length, int newLength)
-    {
+    public static byte[] DecompressLzss(this BinaryReader r, int length, int newLength) {
         using var stream = new Lzss.BinaryReaderE(new MemoryStream(r.ReadBytes(length)));
         var numArray = new Lzss(stream, newLength).Decompress();
         return numArray;

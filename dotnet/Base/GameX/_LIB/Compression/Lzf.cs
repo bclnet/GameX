@@ -1,20 +1,15 @@
 ﻿using System;
 
-namespace Compression
-{
-    internal class Lzf
-    {
-        public static int Decompress(byte[] input, byte[] output)
-        {
+namespace Compression {
+    internal class Lzf {
+        public static int Decompress(byte[] input, byte[] output) {
             int i = 0;
             int o = 0;
             int inputLength = input.Length;
             int outputLength = output.Length;
-            while (i < inputLength)
-            {
+            while (i < inputLength) {
                 var control = (uint)input[i++];
-                if (control < (1 << 5))
-                {
+                if (control < (1 << 5)) {
                     var length = (int)(control + 1);
                     if (o + length > outputLength)
                         throw new InvalidOperationException();
@@ -23,8 +18,7 @@ namespace Compression
                     i += length;
                     o += length;
                 }
-                else
-                {
+                else {
                     var length = (int)(control >> 5);
                     if (length == 7)
                         length += input[i++];
@@ -44,8 +38,7 @@ namespace Compression
                     offset += block;
                     length -= block;
 
-                    while (length > 0)
-                    {
+                    while (length > 0) {
                         output[o++] = output[offset++];
                         length--;
                     }

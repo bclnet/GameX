@@ -4,8 +4,7 @@ using System;
 namespace GameX.IW;
 
 [TestClass]
-public class FormatTest2
-{
+public class FormatTest2 {
     static readonly Family family = FamilyManager.GetFamily("IW");
     static PakFile main = family.OpenPakFile(new Uri("game:/xxx#MW2"));
 
@@ -25,8 +24,7 @@ public class FormatTest2
     //[DataRow("meshes00.bif/alpha_dummy.mdb")]
     //public void MDB(string sampleFile) => LoadObject<BiowareBinaryPak>(main, sampleFile);
 
-    static void LoadObject<T>(PakFile source, string sampleFile)
-    {
+    static void LoadObject<T>(PakFile source, string sampleFile) {
         Assert.IsTrue(source.Contains(sampleFile));
         var result = source.LoadFileObject<T>(sampleFile).Result;
     }

@@ -5,15 +5,12 @@ using System.Windows;
 using System.Windows.Controls;
 using static GameX.FamilyManager;
 
-namespace GameX.App.Explorer.Views
-{
+namespace GameX.App.Explorer.Views {
     /// <summary>
     /// Interaction logic for OpenPage.xaml
     /// </summary>
-    public partial class OpenPage : Window, INotifyPropertyChanged
-    {
-        public OpenPage()
-        {
+    public partial class OpenPage : Window, INotifyPropertyChanged {
+        public OpenPage() {
             InitializeComponent();
             DataContext = this;
             Loaded += Loadedx;
@@ -24,19 +21,15 @@ namespace GameX.App.Explorer.Views
 
         public IList<Family> Families { get; } = [.. FamilyManager.Families.Values];
 
-        public IList<Uri> PakUris
-        {
+        public IList<Uri> PakUris {
             get => new[] { _pak1Uri, _pak2Uri, _pak3Uri }.Where(x => x != null).ToList();
-            set
-            {
+            set {
                 var idx = 0;
                 Uri pak1Uri = null, pak2Uri = null, pak3Uri = null;
                 if (value != null)
-                    foreach (var uri in value)
-                    {
+                    foreach (var uri in value) {
                         if (uri == null) continue;
-                        switch (++idx)
-                        {
+                        switch (++idx) {
                             case 1: pak1Uri = uri; break;
                             case 2: pak2Uri = uri; break;
                             case 3: pak3Uri = uri; break;
@@ -50,49 +43,42 @@ namespace GameX.App.Explorer.Views
         }
 
         IList<FamilyGame> _games;
-        public IList<FamilyGame> Games
-        {
+        public IList<FamilyGame> Games {
             get => _games;
             set { _games = value; OnPropertyChanged(); }
         }
 
         IList<FamilyGame.Edition> _editions;
-        public IList<FamilyGame.Edition> Editions
-        {
+        public IList<FamilyGame.Edition> Editions {
             get => _editions;
             set { _editions = value; OnPropertyChanged(); }
         }
 
         Uri _pak1Uri;
-        public Uri Pak1Uri
-        {
+        public Uri Pak1Uri {
             get => _pak1Uri;
             set { _pak1Uri = value; OnPropertyChanged(); }
         }
 
         Uri _pak2Uri;
-        public Uri Pak2Uri
-        {
+        public Uri Pak2Uri {
             get => _pak2Uri;
             set { _pak2Uri = value; OnPropertyChanged(); }
         }
 
         Uri _pak3Uri;
-        public Uri Pak3Uri
-        {
+        public Uri Pak3Uri {
             get => _pak3Uri;
             set { _pak3Uri = value; OnPropertyChanged(); }
         }
 
-        void Family_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
+        void Family_SelectionChanged(object sender, SelectionChangedEventArgs e) {
             var selectedFamily = (Family)Family.SelectedItem;
             Games = selectedFamily?.Games.Values.Where(x => x.Files != null).ToList();
             Game.SelectedIndex = -1;
         }
 
-        void Game_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
+        void Game_SelectionChanged(object sender, SelectionChangedEventArgs e) {
             var selectedGame = (FamilyGame)Game.SelectedItem;
             Editions = selectedGame?.Editions.Values.ToList();
             Edition.SelectedIndex = Editions != null ? ((List<FamilyGame.Edition>)Editions).FindIndex(x => x.Id == string.Empty) : default;
@@ -100,18 +86,15 @@ namespace GameX.App.Explorer.Views
             PakUris = selectedGame?.ToPaks(selectedEdition?.Id);
         }
 
-        void Edition_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
+        void Edition_SelectionChanged(object sender, SelectionChangedEventArgs e) {
             var selectedGame = (FamilyGame)Game.SelectedItem;
             var selectedEdition = (FamilyGame.Edition)Edition.SelectedItem;
             PakUris = selectedGame?.ToPaks(selectedEdition?.Id);
         }
 
-        void Pak1Uri_Click(object sender, RoutedEventArgs e)
-        {
+        void Pak1Uri_Click(object sender, RoutedEventArgs e) {
             var openDialog = new OpenFileDialog { Filter = "PAK files|*.*" };
-            if (openDialog.ShowDialog() == true)
-            {
+            if (openDialog.ShowDialog() == true) {
                 var files = openDialog.FileNames;
                 if (files.Length < 1) return;
                 var file = files[0];
@@ -120,11 +103,9 @@ namespace GameX.App.Explorer.Views
             }
         }
 
-        void Pak2Uri_Click(object sender, RoutedEventArgs e)
-        {
+        void Pak2Uri_Click(object sender, RoutedEventArgs e) {
             var openDialog = new OpenFileDialog { Filter = "PAK files|*.*" };
-            if (openDialog.ShowDialog() == true)
-            {
+            if (openDialog.ShowDialog() == true) {
                 var files = openDialog.FileNames;
                 if (files.Length < 1) return;
                 var file = files[0];
@@ -133,11 +114,9 @@ namespace GameX.App.Explorer.Views
             }
         }
 
-        void Pak3Uri_Click(object sender, RoutedEventArgs e)
-        {
+        void Pak3Uri_Click(object sender, RoutedEventArgs e) {
             var openDialog = new OpenFileDialog { Filter = "PAK files|*.*" };
-            if (openDialog.ShowDialog() == true)
-            {
+            if (openDialog.ShowDialog() == true) {
                 var files = openDialog.FileNames;
                 if (files.Length < 1) return;
                 var file = files[0];
@@ -150,8 +129,7 @@ namespace GameX.App.Explorer.Views
 
         void Open_Click(object sender, RoutedEventArgs e) { DialogResult = true; Close(); }
 
-        void Loadedx(object sender, RoutedEventArgs e)
-        {
+        void Loadedx(object sender, RoutedEventArgs e) {
             if (string.IsNullOrEmpty(Option.Family)) return;
             Family.SelectedIndex = FamilyManager.Families.Keys.ToList().IndexOf(Option.Family);
             if (string.IsNullOrEmpty(Option.Game)) return;

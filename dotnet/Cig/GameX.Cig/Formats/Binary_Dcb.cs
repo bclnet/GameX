@@ -11,12 +11,10 @@ using Obj = System.Collections.Generic.Dictionary<string, object>;
 
 namespace GameX.Cig.Formats;
 
-public unsafe partial class Binary_Dcb : IHaveMetaInfo
-{
+public unsafe partial class Binary_Dcb : IHaveMetaInfo {
     #region Base Types
 
-    struct Header
-    {
+    struct Header {
         public static (string, int) Struct = ("<5I9I8I4I", sizeof(Header));
         public int StructTypes;
         public int PropertyTypes;
@@ -49,30 +47,26 @@ public unsafe partial class Binary_Dcb : IHaveMetaInfo
         public int Unknown;
     }
 
-    struct DataMapV1_
-    {
+    struct DataMapV1_ {
         public static (string, int) Struct = ("<2I", sizeof(DataMapV1_));
         public uint StructCount;
         public uint StructIndex;
     }
 
-    struct DataMapV0_
-    {
+    struct DataMapV0_ {
         public static (string, int) Struct = ("<2H", sizeof(DataMapV0_));
         public ushort StructCount;
         public ushort StructIndex;
     }
 
-    struct EnumType_
-    {
+    struct EnumType_ {
         public static (string, int) Struct = ("<I2H", sizeof(EnumType_));
         public uint NameOffset; public string GetName(Dictionary<uint, string> map) => map[NameOffset];
         public ushort ValueCount;
         public ushort FirstValueIndex;
     }
 
-    struct PropertyType_
-    {
+    struct PropertyType_ {
         public static (string, int) Struct = ("<I4H", sizeof(PropertyType_));
         public uint NameOffset; public string GetName(Dictionary<uint, string> map) => map[NameOffset];
         public ushort StructIndex;
@@ -81,8 +75,7 @@ public unsafe partial class Binary_Dcb : IHaveMetaInfo
         public ushort Padding;
     }
 
-    struct RecordTypeV1_
-    {
+    struct RecordTypeV1_ {
         public static (string, int) Struct = ("<3I16x2H", sizeof(RecordTypeV1_));
         public uint NameOffset; public string GetName(Dictionary<uint, string> map) => map[NameOffset];
         public uint FileNameOffset;  // !Legacy
@@ -92,8 +85,7 @@ public unsafe partial class Binary_Dcb : IHaveMetaInfo
         public ushort OtherIndex;
     }
 
-    struct RecordTypeV0_
-    {
+    struct RecordTypeV0_ {
         public static (string, int) Struct = ("<2I16x2H", sizeof(RecordTypeV0_));
         public uint NameOffset; public string GetName(Dictionary<uint, string> map) => map[NameOffset];
         public uint StructIndex;
@@ -102,8 +94,7 @@ public unsafe partial class Binary_Dcb : IHaveMetaInfo
         public ushort OtherIndex;
     }
 
-    internal struct StructType_
-    {
+    internal struct StructType_ {
         public static (string, int) Struct = ("<2I2JO", sizeof(StructType_));
         public uint NameOffset; public string GetName(Dictionary<uint, string> map) => map[NameOffset];
         public uint ParentTypeIndex;
@@ -112,28 +103,24 @@ public unsafe partial class Binary_Dcb : IHaveMetaInfo
         public uint NodeType;
     }
 
-    struct Pointer_
-    {
+    struct Pointer_ {
         public static (string, int) Struct = ("<2I", sizeof(Pointer_));
         public uint StructType;
         public uint Index;
     }
 
-    struct Reference_
-    {
+    struct Reference_ {
         public static (string, int) Struct = ("<I16c", sizeof(Reference_));
         public uint Item1;
         public Guid Value;
     }
 
-    struct Lookup_
-    {
+    struct Lookup_ {
         public static (string, int) Struct = ("<I", sizeof(Lookup_));
         public uint ValueOffset; public string GetValue(Dictionary<uint, string> map) => map[ValueOffset];
     }
 
-    public enum EDataType : ushort
-    {
+    public enum EDataType : ushort {
         Reference = 0x0310,
         WeakPointer = 0x0210,
         StrongPointer = 0x0110,
@@ -155,15 +142,13 @@ public unsafe partial class Binary_Dcb : IHaveMetaInfo
         Boolean = 0x0001,
     }
 
-    public enum EConversionType : ushort
-    {
+    public enum EConversionType : ushort {
         Attribute = 0x00,
         ComplexArray = 0x01,
         SimpleArray = 0x02,
     }
 
-    public enum StringSizeEnum
-    {
+    public enum StringSizeEnum {
         Int8 = 1,
         Int16 = 2,
         Int32 = 4,
@@ -173,8 +158,7 @@ public unsafe partial class Binary_Dcb : IHaveMetaInfo
 
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Dcb(r));
 
-    public class Record
-    {
+    public class Record {
         public string Name { get; set; }
         public string FileName { get; set; }
         public Obj Obj { get; set; }
@@ -182,8 +166,7 @@ public unsafe partial class Binary_Dcb : IHaveMetaInfo
         public Guid Hash { get; internal set; }
     }
 
-    public Binary_Dcb(BinaryReader r)
-    {
+    public Binary_Dcb(BinaryReader r) {
         var sw = new Stopwatch();
         sw.Start();
 
@@ -227,8 +210,7 @@ public unsafe partial class Binary_Dcb : IHaveMetaInfo
         var b = new List<string>();
         var maxPosition = r.BaseStream.Position + h.TextLength;
         var startPosition = r.BaseStream.Position;
-        while (r.BaseStream.Position < maxPosition)
-        {
+        while (r.BaseStream.Position < maxPosition) {
             var offset = r.BaseStream.Position - startPosition;
             var str = r.ReadVUString();
             b.Add(str);
@@ -238,12 +220,10 @@ public unsafe partial class Binary_Dcb : IHaveMetaInfo
 
         // read datamap
         if (DataMapV1s != null)
-            foreach (var m in DataMapV1s)
-            {
+            foreach (var m in DataMapV1s) {
                 DataMap[m.StructIndex] = new List<Obj>();
                 ref StructType_ s = ref StructTypes[m.StructIndex];
-                for (var i = 0; i < m.StructCount; i++)
-                {
+                for (var i = 0; i < m.StructCount; i++) {
                     var node = ReadStruct(r, ref s);
                     node["__name"] = s.GetName(ValueMap);
                     DataMap[m.StructIndex].Add(node);
@@ -251,12 +231,10 @@ public unsafe partial class Binary_Dcb : IHaveMetaInfo
                 }
             }
         else
-            foreach (var m in DataMapV0s)
-            {
+            foreach (var m in DataMapV0s) {
                 DataMap[m.StructIndex] = new List<Obj>();
                 ref StructType_ s = ref StructTypes[m.StructIndex];
-                for (var i = 0; i < m.StructCount; i++)
-                {
+                for (var i = 0; i < m.StructCount; i++) {
                     var node = ReadStruct(r, ref s);
                     node["__name"] = s.GetName(ValueMap);
                     DataMap[m.StructIndex].Add(node);
@@ -273,14 +251,12 @@ public unsafe partial class Binary_Dcb : IHaveMetaInfo
                         { "__class", $"{m.StructIndex:X8}" },
                         { "__index", $"{m.Index:X8}" }
                 }, m.I);
-        foreach (var m in Remap_Strong)
-        {
+        foreach (var m in Remap_Strong) {
             var strong = Value_Strongs[m.Index];
             if (strong.Index == 0xFFFFFFFF) m.Map(null, m.I);
             else m.Map(DataMap[strong.StructType][(int)strong.Index], m.I);
         }
-        foreach (var m in Remap_Weak1)
-        {
+        foreach (var m in Remap_Weak1) {
             var weak = Value_Weaks[m.Index];
             m.Map(weak.Index == 0xFFFFFFFF ? 0
                 : (object)new WeakReference(DataMap[weak.StructType][(int)weak.Index]), m.I);
@@ -303,8 +279,7 @@ public unsafe partial class Binary_Dcb : IHaveMetaInfo
     }
 
     Record ReadRecord(uint nameOffset, uint fileNameOffset, uint structIndex, Guid hash, ushort variantIndex, ushort otherIndex)
-        => new Record
-        {
+        => new Record {
             Name = ValueMap[nameOffset],
             FileName = fileNameOffset != uint.MaxValue ? ValueMap[fileNameOffset] : null,
             Hash = hash,
@@ -312,14 +287,12 @@ public unsafe partial class Binary_Dcb : IHaveMetaInfo
             Other = otherIndex,
         };
 
-    Obj ReadStruct(BinaryReader r, ref StructType_ s)
-    {
+    Obj ReadStruct(BinaryReader r, ref StructType_ s) {
         // add properties
         ref StructType_ p = ref s;
         var properties = new List<PropertyType_>();
         properties.InsertRange(0, Enumerable.Range(p.FirstAttributeIndex, p.AttributeCount).Select(i => PropertyTypes[i]));
-        while (p.ParentTypeIndex != 0xFFFFFFFF)
-        {
+        while (p.ParentTypeIndex != 0xFFFFFFFF) {
             p = ref StructTypes[p.ParentTypeIndex];
             properties.InsertRange(0, Enumerable.Range(p.FirstAttributeIndex, p.AttributeCount).Select(i => PropertyTypes[i]));
         }
@@ -329,26 +302,20 @@ public unsafe partial class Binary_Dcb : IHaveMetaInfo
         obj.Add("__type", p.GetName(ValueMap));
         if (s.ParentTypeIndex != 0xFFFFFFFF) obj.Add("__polyType", s.GetName(ValueMap));
 
-        foreach (var node in properties)
-        {
+        foreach (var node in properties) {
             var nodeName = node.GetName(ValueMap);
             var conversionType = (EConversionType)((int)node.ConversionType & 0xFF);
-            if (conversionType == EConversionType.Attribute)
-            {
-                if (node.DataType == EDataType.Class)
-                {
+            if (conversionType == EConversionType.Attribute) {
+                if (node.DataType == EDataType.Class) {
                     o = ReadStruct(r, ref StructTypes[node.StructIndex]);
                     obj.Add(nodeName, o);
                 }
-                else if (node.DataType == EDataType.StrongPointer)
-                {
+                else if (node.DataType == EDataType.StrongPointer) {
                     Remap_Class.Add(new Remap { Map = (v, i) => obj.Add(nodeName, v), StructIndex = (ushort)r.ReadUInt32(), Index = (int)r.ReadUInt32() });
                 }
-                else
-                {
+                else {
                     object value;
-                    switch (node.DataType)
-                    {
+                    switch (node.DataType) {
                         case EDataType.Reference: value = r.ReadS<Reference_>(); break;
                         case EDataType.Locale: value = ValueMap[r.ReadUInt32()]; break;
                         case EDataType.StrongPointer: Remap_Strong.Add(new Remap { Map = (v, i) => obj.Add(nodeName, v), StructIndex = (ushort)r.ReadUInt32(), Index = (int)r.ReadUInt32() }); continue;
@@ -372,14 +339,12 @@ public unsafe partial class Binary_Dcb : IHaveMetaInfo
                     obj.Add(nodeName, value);
                 }
             }
-            else
-            {
+            else {
                 var arrayCount = r.ReadUInt32();
                 var firstIndex = r.ReadUInt32();
                 var value = new object[arrayCount];
                 for (var i = 0; i < arrayCount; i++)
-                    switch (node.DataType)
-                    {
+                    switch (node.DataType) {
                         case EDataType.Boolean: value[i] = Value_Booleans[firstIndex + i]; break;
                         case EDataType.Double: value[i] = Value_Doubles[firstIndex + i]; break;
                         case EDataType.Enum: value[i] = Value_Enums[firstIndex + i].GetValue(ValueMap); break;
@@ -422,8 +387,7 @@ public unsafe partial class Binary_Dcb : IHaveMetaInfo
     static Obj CreateObj() => new Obj { };
     static Obj CreateObj(string name) => new Obj { { "__name", name } };
 
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
-    {
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
         var nodes = new List<MetaInfo> {
             new MetaInfo(null, new MetaContent { EngineType = typeof(ICustomFormatter), Type = "DataForge", Name = Path.GetFileName(file.Path), Value = this }),
             new MetaInfo("DatabasePak", items: new List<MetaInfo> {
@@ -471,8 +435,7 @@ public unsafe partial class Binary_Dcb : IHaveMetaInfo
 
     public readonly List<Record> RecordTable = new List<Record>();
 
-    class Remap
-    {
+    class Remap {
         public Action<object, int> Map;
         public int I;
         public ushort StructIndex;

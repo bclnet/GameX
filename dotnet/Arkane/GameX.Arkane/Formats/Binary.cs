@@ -11,10 +11,8 @@ namespace GameX.Arkane.Formats;
 
 #region Binary_Danae
 
-public unsafe class Binary_Danae : PakBinary<Binary_Danae>
-{
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+public unsafe class Binary_Danae : PakBinary<Binary_Danae> {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         var files = source.Files = [];
         var key = Encoding.ASCII.GetBytes((string)source.Game.Key); int keyLength = key.Length, keyIndex = 0;
 
@@ -24,8 +22,7 @@ public unsafe class Binary_Danae : PakBinary<Binary_Danae>
         var fatBytes = r.ReadBytes(fatSize);
 
         // read int32
-        int readInt32(ref byte* b)
-        {
+        int readInt32(ref byte* b) {
             var p = b;
             *(p + 0) = (byte)(*(p + 0) ^ key[keyIndex++]); if (keyIndex >= keyLength) keyIndex = 0;
             *(p + 1) = (byte)(*(p + 1) ^ key[keyIndex++]); if (keyIndex >= keyLength) keyIndex = 0;
@@ -36,11 +33,9 @@ public unsafe class Binary_Danae : PakBinary<Binary_Danae>
         }
 
         // read string
-        string readString(ref byte* b)
-        {
+        string readString(ref byte* b) {
             var p = b;
-            while (true)
-            {
+            while (true) {
                 *p = (byte)(*p ^ key[keyIndex++]); if (keyIndex >= keyLength) keyIndex = 0;
                 if (*p == 0) break;
                 p++;
@@ -52,18 +47,14 @@ public unsafe class Binary_Danae : PakBinary<Binary_Danae>
         }
 
         // while there are bytes
-        fixed (byte* _ = fatBytes)
-        {
+        fixed (byte* _ = fatBytes) {
             byte* c = _, end = _ + fatSize;
-            while (c < end)
-            {
+            while (c < end) {
                 var dirPath = readString(ref c).Replace('\\', '/');
                 var numFiles = readInt32(ref c);
-                for (var i = 0; i < numFiles; i++)
-                {
+                for (var i = 0; i < numFiles; i++) {
                     // get file
-                    var file = new FileSource
-                    {
+                    var file = new FileSource {
                         Path = dirPath + readString(ref c).Replace('\\', '/'),
                         Offset = readInt32(ref c),
                         Compressed = readInt32(ref c),
@@ -81,8 +72,7 @@ public unsafe class Binary_Danae : PakBinary<Binary_Danae>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
-    {
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         return Task.FromResult((Stream)new MemoryStream((file.Compressed & 1) != 0
             ? r.DecompressBlast((int)file.PackedSize, (int)file.FileSize)
@@ -94,13 +84,11 @@ public unsafe class Binary_Danae : PakBinary<Binary_Danae>
 
 #region Binary_Void
 
-public unsafe class Binary_Void : PakBinary<Binary_Void>
-{
+public unsafe class Binary_Void : PakBinary<Binary_Void> {
     #region Headers
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct V_File
-    {
+    struct V_File {
         public static (string, int) Struct = (">Q4IH", sizeof(V_File));
         public ulong Offset;
         public uint FileSize;
@@ -112,16 +100,14 @@ public unsafe class Binary_Void : PakBinary<Binary_Void>
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         // must be .index file
         if (!source.PakPath.EndsWith(".index")) throw new FormatException("must be a .index file");
 
         var files = source.Files = [];
 
         // master.index file
-        if (source.PakPath == "master.index")
-        {
+        if (source.PakPath == "master.index") {
             const uint MAGIC = 0x04534552;
             const uint SubMarker = 0x18000000;
             const uint EndMarker = 0x01000000;
@@ -130,16 +116,14 @@ public unsafe class Binary_Void : PakBinary<Binary_Void>
             if (magic != MAGIC) throw new FormatException("BAD MAGIC");
             r.Skip(4);
             var first = true;
-            while (true)
-            {
+            while (true) {
                 var pathSize = r.ReadUInt32();
                 if (pathSize == SubMarker) { first = false; pathSize = r.ReadUInt32(); }
                 else if (pathSize == EndMarker) break;
                 var path = r.ReadFAString((int)pathSize).Replace('\\', '/');
                 var packId = first ? 0 : r.ReadUInt16();
                 if (!path.EndsWith(".index")) continue;
-                files.Add(new FileSource
-                {
+                files.Add(new FileSource {
                     Path = path,
                     Pak = new SubPakFile(source, null, path),
                 });
@@ -164,8 +148,7 @@ public unsafe class Binary_Void : PakBinary<Binary_Void>
         r.Skip(24);
         var numFiles = r.ReadUInt32E();
         files = source.Files = new FileSource[numFiles];
-        for (var i = 0; i < numFiles; i++)
-        {
+        for (var i = 0; i < numFiles; i++) {
             var id = r.ReadUInt32E();
             var tag1 = r.ReadL32Encoding();
             var tag2 = r.ReadL32Encoding();
@@ -180,8 +163,7 @@ public unsafe class Binary_Void : PakBinary<Binary_Void>
             var useSharedResources = (file.Flags & 0x20) != 0 && file.Flags2 == 0x8000;
             if (useSharedResources && sharedResourcePath == null) throw new FormatException("sharedResourcePath not available");
             var newPath = useSharedResources ? sharedResourcePath : resourcePath;
-            files[i] = new FileSource
-            {
+            files[i] = new FileSource {
                 Id = (int)id,
                 Path = path,
                 Compressed = file.FileSize != file.PackedSize ? 1 : 0,
@@ -194,12 +176,10 @@ public unsafe class Binary_Void : PakBinary<Binary_Void>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
-    {
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         if (file.FileSize == 0 || _badPositions.Contains(file.Offset)) return Task.FromResult(System.IO.Stream.Null);
         var (path, tag1, tag2) = ((string, string, string))file.Tag;
-        return Task.FromResult((Stream)source.ReaderT(r2 =>
-        {
+        return Task.FromResult((Stream)source.ReaderT(r2 => {
             r2.Seek(file.Offset);
             return new MemoryStream(file.Compressed != 0
                 ? r2.DecompressZlib((int)file.PackedSize, (int)file.FileSize)

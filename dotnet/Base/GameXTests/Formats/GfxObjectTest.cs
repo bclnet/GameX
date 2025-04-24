@@ -4,8 +4,7 @@ using System.Threading.Tasks;
 namespace GameX.Formats;
 
 [TestClass]
-public class GfxObjectTest
-{
+public class GfxObjectTest {
     [DataTestMethod]
     [DataRow("AC:AC", "client_highres.dat:Texture/060043BE.tex")]
     [DataRow("Cry:MWO", "GameData.pak:GameModeObjects.xml")]
@@ -25,8 +24,7 @@ public class GfxObjectTest
     [DataRow("Origin:UltimaOnline", "anim.idx:Engine/default_cch.dds")]
     [DataRow("Origin:UltimaIX", "static/activity.flx:Engine/default_cch.dds")]
     [DataRow("Valve:Dota2", "dota/pak01_dir.vpk:stringtokendatabase.txt")]
-    public async Task GfxObject(string pak, string sampleFile)
-    {
+    public async Task GfxObject(string pak, string sampleFile) {
         var source = TestHelper.Paks[pak].Value;
         Assert.IsTrue(source.Contains(sampleFile));
         var obj0 = await source.LoadFileObject<object>(sampleFile);

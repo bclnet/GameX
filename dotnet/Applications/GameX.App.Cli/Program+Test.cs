@@ -2,11 +2,9 @@
 using System;
 using System.Threading.Tasks;
 
-namespace GameX.App.Cli
-{
+namespace GameX.App.Cli {
     [Verb("dev", HelpText = "View.")]
-    class TestOptions
-    {
+    class TestOptions {
         [Option('f', "family", HelpText = "Family")]
         public string Family { get; set; }
 
@@ -14,10 +12,8 @@ namespace GameX.App.Cli
         public Uri Uri { get; set; }
     }
 
-    partial class Program
-    {
-        static Task<int> RunTestAsync(TestOptions args)
-        {
+    partial class Program {
+        static Task<int> RunTestAsync(TestOptions args) {
             //await new FamilyTest().TestAsync();
             return Task.FromResult(0);
         }

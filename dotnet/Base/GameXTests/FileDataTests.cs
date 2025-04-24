@@ -5,12 +5,10 @@ using static OpenStack.Debug;
 namespace GameX;
 
 [TestClass]
-public class FileDataTests
-{
+public class FileDataTests {
     [DataTestMethod]
     [DataRow("Arkane", "game:/#AF", "sample:0")]
-    public void Resource(string familyName, string file0, string file1)
-    {
+    public void Resource(string familyName, string file0, string file1) {
         // get family
         var family = GetFamily(familyName);
         Log($"studio: {family.Studio}");

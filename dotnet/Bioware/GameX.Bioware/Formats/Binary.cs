@@ -10,8 +10,7 @@ namespace GameX.Bioware.Formats;
 
 #region Binary_Aurora
 
-public unsafe class Binary_Aurora : PakBinary<Binary_Aurora>
-{
+public unsafe class Binary_Aurora : PakBinary<Binary_Aurora> {
     // https://nwn2.fandom.com/wiki/File_formats
 
     #region Headers : KEY/BIF
@@ -23,8 +22,7 @@ public unsafe class Binary_Aurora : PakBinary<Binary_Aurora>
     const uint BIFF_VERSION = 0x20203156;
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct KEY_Header
-    {
+    struct KEY_Header {
         public uint Version;            // Version ("V1  ")
         public uint NumFiles;           // Number of entries in FILETABLE
         public uint NumKeys;            // Number of entries in KEYTABLE.
@@ -36,8 +34,7 @@ public unsafe class Binary_Aurora : PakBinary<Binary_Aurora>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct KEY_HeaderFile
-    {
+    struct KEY_HeaderFile {
         public uint FileSize;           // BIF Filesize
         public uint FileNameOffset;     // Offset To BIF name
         public ushort FileNameSize;     // Size of BIF name
@@ -45,22 +42,19 @@ public unsafe class Binary_Aurora : PakBinary<Binary_Aurora>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct KEY_HeaderFileName
-    {
+    struct KEY_HeaderFileName {
         public fixed byte Name[0x10];   // Null-padded string Resource Name (sans extension).
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct KEY_HeaderKey
-    {
+    struct KEY_HeaderKey {
         public fixed byte Name[0x10];   // Null-padded string Resource Name (sans extension).
         public ushort ResourceType;     // Resource Type
         public uint Id;                 // Resource ID
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct BIFF_Header
-    {
+    struct BIFF_Header {
         public uint Version;            // Version ("V1  ")
         public uint NumFiles;           // File Count
         public uint NotUsed01;          // Not used
@@ -68,8 +62,7 @@ public unsafe class Binary_Aurora : PakBinary<Binary_Aurora>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct BIFF_HeaderFile
-    {
+    struct BIFF_HeaderFile {
         public uint FileId;             // File ID
         public uint Offset;             // Offset to File Data.
         public uint FileSize;           // Size of File Data.
@@ -209,8 +202,7 @@ public unsafe class Binary_Aurora : PakBinary<Binary_Aurora>
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         FileSource[] files; List<FileSource> files2;
 
         // KEY
@@ -224,8 +216,7 @@ public unsafe class Binary_Aurora : PakBinary<Binary_Aurora>
 
             // parts
             r.Seek(header.FilesOffset);
-            var headerFiles = r.ReadSArray<KEY_HeaderFile>((int)header.NumFiles).Select(x =>
-            {
+            var headerFiles = r.ReadSArray<KEY_HeaderFile>((int)header.NumFiles).Select(x => {
                 r.Seek(x.FileNameOffset);
                 return (file: x, path: r.ReadFAString(x.FileNameSize - 1));
             }).ToArray();
@@ -234,13 +225,11 @@ public unsafe class Binary_Aurora : PakBinary<Binary_Aurora>
 
             // combine
             var subPathFormat = Path.Combine(Path.GetDirectoryName(source.PakPath), "{0}");
-            for (var i = 0; i < header.NumFiles; i++)
-            {
+            for (var i = 0; i < header.NumFiles; i++) {
                 var (file, path) = headerFiles[i];
                 var subPath = string.Format(subPathFormat, path);
                 if (!File.Exists(subPath)) continue;
-                files[i] = new FileSource
-                {
+                files[i] = new FileSource {
                     Path = path,
                     FileSize = file.FileSize,
                     Pak = new SubPakFile(source, null, subPath, (headerKeys, (uint)i)),
@@ -260,13 +249,11 @@ public unsafe class Binary_Aurora : PakBinary<Binary_Aurora>
             // files
             r.Seek(header.FilesOffset);
             var headerFiles = r.ReadSArray<BIFF_HeaderFile>((int)header.NumFiles);
-            for (var i = 0; i < headerFiles.Length; i++)
-            {
+            for (var i = 0; i < headerFiles.Length; i++) {
                 var headerFile = headerFiles[i];
                 if (headerFile.Id > i) continue;
                 var path = $"{(keys.TryGetValue(headerFile.Id, out var key) ? key : $"{i}")}{(BIFF_FileTypes.TryGetValue((int)headerFile.FileType, out var z) ? $".{z}" : string.Empty)}".Replace('\\', '/');
-                files2.Add(new FileSource
-                {
+                files2.Add(new FileSource {
                     Id = (int)headerFile.Id,
                     Path = path,
                     FileSize = headerFile.FileSize,
@@ -278,8 +265,7 @@ public unsafe class Binary_Aurora : PakBinary<Binary_Aurora>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
-    {
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         Stream fileData;
         r.Seek(file.Offset);
         if (source.Version == BIFF_VERSION) fileData = new MemoryStream(r.ReadBytes((int)file.FileSize));
@@ -292,15 +278,13 @@ public unsafe class Binary_Aurora : PakBinary<Binary_Aurora>
 
 #region Binary_Myp
 
-public unsafe class Binary_Myp : PakBinary<Binary_Myp>
-{
+public unsafe class Binary_Myp : PakBinary<Binary_Myp> {
     #region Headers : KEY/BIF
 
     const uint MYP_MAGIC = 0x0050594d;
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct MYP_Header
-    {
+    struct MYP_Header {
         public uint Magic;              // "MYP\0"
         public uint Version;            // Version
         public uint Bom;                // Byte order marker
@@ -310,8 +294,7 @@ public unsafe class Binary_Myp : PakBinary<Binary_Myp>
         public uint Unk1;               //
         public uint Unk2;               //
 
-        public void Verify()
-        {
+        public void Verify() {
             if (Magic != MYP_MAGIC) throw new FormatException("Not a .tor file (Wrong file header)");
             if (Version != 5 && Version != 6) throw new FormatException($"Only versions 5 and 6 are supported, file has {Version}");
             if (Bom != 0xfd23ec43) throw new FormatException("Unexpected byte order");
@@ -320,8 +303,7 @@ public unsafe class Binary_Myp : PakBinary<Binary_Myp>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct MYP_HeaderFile
-    {
+    struct MYP_HeaderFile {
         public ulong Offset;            //
         public uint HeaderSize;         //
         public uint PackedSize;         //
@@ -333,8 +315,7 @@ public unsafe class Binary_Myp : PakBinary<Binary_Myp>
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         var files = source.Files = [];
         var hashLookup = TOR.HashLookup;
 
@@ -343,8 +324,7 @@ public unsafe class Binary_Myp : PakBinary<Binary_Myp>
         source.Version = header.Version;
 
         var tableOffset = (long)header.TableOffset;
-        while (tableOffset != 0)
-        {
+        while (tableOffset != 0) {
             r.Seek(tableOffset);
 
             var numFiles = r.ReadInt32();
@@ -352,14 +332,12 @@ public unsafe class Binary_Myp : PakBinary<Binary_Myp>
             tableOffset = r.ReadInt64();
 
             var headerFiles = r.ReadSArray<MYP_HeaderFile>(numFiles);
-            for (var i = 0; i < headerFiles.Length; i++)
-            {
+            for (var i = 0; i < headerFiles.Length; i++) {
                 var headerFile = headerFiles[i];
                 if (headerFile.Offset == 0) continue;
                 var hash = headerFile.Digest;
                 var path = hashLookup.TryGetValue(hash, out var z) ? z.Replace('\\', '/') : $"{hash:X2}.bin";
-                files.Add(new FileSource
-                {
+                files.Add(new FileSource {
                     Id = i,
                     Path = path.StartsWith('/') ? path[1..] : path,
                     FileSize = headerFile.FileSize,
@@ -373,15 +351,12 @@ public unsafe class Binary_Myp : PakBinary<Binary_Myp>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
-    {
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         if (file.FileSize == 0) return Task.FromResult(System.IO.Stream.Null);
         r.Seek(file.Offset);
-        return Task.FromResult((Stream)new MemoryStream(file.Compressed switch
-        {
+        return Task.FromResult((Stream)new MemoryStream(file.Compressed switch {
             0 => r.ReadBytes((int)file.PackedSize),
-            _ => source.Version switch
-            {
+            _ => source.Version switch {
                 6 => r.DecompressZstd((int)file.PackedSize, (int)file.FileSize),
                 _ => r.DecompressZlib((int)file.PackedSize, (int)file.FileSize),
             }
@@ -393,8 +368,7 @@ public unsafe class Binary_Myp : PakBinary<Binary_Myp>
 
 #region Binary_Gff
 
-public unsafe class Binary_Gff : IHaveMetaInfo
-{
+public unsafe class Binary_Gff : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Gff(r));
 
     #region Headers
@@ -403,8 +377,7 @@ public unsafe class Binary_Gff : IHaveMetaInfo
     const uint GFF_VERSION3_3 = 0x332e3356; // literal string "V3.3".
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    unsafe struct GFF_Header
-    {
+    unsafe struct GFF_Header {
         public uint Version;            // Version ("V3.3")
         public uint StructOffset;       // Offset of Struct array as bytes from the beginning of the file
         public uint StructCount;        // Number of elements in Struct array
@@ -421,8 +394,7 @@ public unsafe class Binary_Gff : IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    unsafe struct GFF_Struct
-    {
+    unsafe struct GFF_Struct {
         public uint Id;                 // Programmer-defined integer ID.
         public uint DataOrDataOffset;   // If FieldCount = 1, this is an index into the Field Array.
                                         // If FieldCount > 1, this is a byte offset into the Field Indices array.
@@ -430,8 +402,7 @@ public unsafe class Binary_Gff : IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    unsafe struct GFF_Field
-    {
+    unsafe struct GFF_Field {
         public uint Type;               // Data type
         public uint LabelIndex;         // Index into the Label Array
         public uint DataOrDataOffset;   // If Type is a simple data type, then this is the value actual of the field.
@@ -439,15 +410,13 @@ public unsafe class Binary_Gff : IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    unsafe struct GFF_Label
-    {
+    unsafe struct GFF_Label {
         public fixed byte Name[0x10];     // Label
     }
 
     #endregion
 
-    public enum DataType : uint
-    {
+    public enum DataType : uint {
         DLG = 0x20474c44,
         QDB = 0x20424451,
         QST = 0x20545351,
@@ -457,19 +426,16 @@ public unsafe class Binary_Gff : IHaveMetaInfo
     public IDictionary<string, object> Root { get; private set; }
     public IDictionary<uint, object> Index { get; private set; }
 
-    public class ResourceRef
-    {
+    public class ResourceRef {
         public string Name;
     }
 
-    public class LocalizedRef
-    {
+    public class LocalizedRef {
         public uint DialogID;
         public (uint id, string value)[] Values;
     }
 
-    public Binary_Gff(BinaryReader r)
-    {
+    public Binary_Gff(BinaryReader r) {
         Type = (DataType)r.ReadUInt32();
         var header = r.ReadS<GFF_Header>();
         if (header.Version != GFF_VERSION3_2 && header.Version != GFF_VERSION3_3) throw new FormatException("BAD MAGIC");
@@ -477,8 +443,7 @@ public unsafe class Binary_Gff : IHaveMetaInfo
         var headerStructs = r.ReadSArray<GFF_Struct>((int)header.StructCount);
         var index = new Dictionary<uint, object>();
         var structs = new IDictionary<string, object>[header.StructCount];
-        for (var i = 0; i < structs.Length; i++)
-        {
+        for (var i = 0; i < structs.Length; i++) {
             var id = headerStructs[i].Id;
             var s = structs[i] = new Dictionary<string, object>();
             if (id == 0) continue;
@@ -486,10 +451,8 @@ public unsafe class Binary_Gff : IHaveMetaInfo
             index.Add(id, s);
         }
         r.Seek(header.FieldOffset);
-        var headerFields = r.ReadSArray<GFF_Field>((int)header.FieldCount).Select<GFF_Field, (uint label, object value)>(x =>
-        {
-            switch (x.Type)
-            {
+        var headerFields = r.ReadSArray<GFF_Field>((int)header.FieldCount).Select<GFF_Field, (uint label, object value)>(x => {
+            switch (x.Type) {
                 case 0: return (x.LabelIndex, (byte)x.DataOrDataOffset);    //: Byte
                 case 1: return (x.LabelIndex, (char)x.DataOrDataOffset);    //: Char
                 case 2: return (x.LabelIndex, (ushort)x.DataOrDataOffset);  //: Word
@@ -501,8 +464,7 @@ public unsafe class Binary_Gff : IHaveMetaInfo
                 case 15: //: List
                     r.Seek(header.ListIndicesOffset + x.DataOrDataOffset);
                     var list = new IDictionary<string, object>[(int)r.ReadUInt32()];
-                    for (var i = 0; i < list.Length; i++)
-                    {
+                    for (var i = 0; i < list.Length; i++) {
                         var idx = r.ReadUInt32();
                         if (idx >= structs.Length) throw new Exception();
                         list[i] = structs[idx];
@@ -510,8 +472,7 @@ public unsafe class Binary_Gff : IHaveMetaInfo
                     return (x.LabelIndex, list);
             }
             r.Seek(header.FieldDataOffset + x.DataOrDataOffset);
-            switch (x.Type)
-            {
+            switch (x.Type) {
                 case 6: return (x.LabelIndex, r.ReadUInt64());              //: DWord64
                 case 7: return (x.LabelIndex, r.ReadInt64());               //: Int64
                 case 9: return (x.LabelIndex, r.ReadDouble());              //: Double
@@ -530,20 +491,17 @@ public unsafe class Binary_Gff : IHaveMetaInfo
         r.Seek(header.LabelOffset);
         var headerLabels = r.ReadSArray<GFF_Label>((int)header.LabelCount).Select(x => UnsafeX.FixedAString(x.Name, 0x10)).ToArray();
         // combine
-        for (var i = 0; i < structs.Length; i++)
-        {
+        for (var i = 0; i < structs.Length; i++) {
             var fieldCount = headerStructs[i].FieldCount;
             var dataOrDataOffset = headerStructs[i].DataOrDataOffset;
-            if (fieldCount == 1)
-            {
+            if (fieldCount == 1) {
                 var (label, value) = headerFields[dataOrDataOffset];
                 structs[i].Add(headerLabels[label], value);
                 continue;
             }
             var fields = structs[i];
             r.Seek(header.FieldIndicesOffset + dataOrDataOffset);
-            foreach (var idx in r.ReadPArray<uint>("I", (int)fieldCount))
-            {
+            foreach (var idx in r.ReadPArray<uint>("I", (int)fieldCount)) {
                 var (label, value) = headerFields[idx];
                 fields.Add(headerLabels[label], value);
             }

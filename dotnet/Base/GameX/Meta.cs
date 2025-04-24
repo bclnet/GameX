@@ -11,8 +11,7 @@ namespace GameX;
 #region FileSource
 
 [DebuggerDisplay("{Path}")]
-public class FileSource
-{
+public class FileSource {
     internal static readonly Func<BinaryReader, FileSource, PakFile, Task<object>> EmptyObjectFactory = (a, b, c) => null;
 
     // common
@@ -39,8 +38,7 @@ public class FileSource
 #region Meta
 
 [DebuggerDisplay("{Type}: {Name}")]
-public class MetaContent
-{
+public class MetaContent {
     public string Type { get; set; }
     public string Name { get; set; }
     public object Value { get; set; }
@@ -51,14 +49,12 @@ public class MetaContent
     public Type EngineType { get; set; }
 }
 
-public interface IHaveMetaInfo
-{
+public interface IHaveMetaInfo {
     List<MetaInfo> GetInfoNodes(MetaManager resource = null, FileSource file = null, object tag = null);
 }
 
 [DebuggerDisplay("{Name}, items: {Items.Count} [{Tag}]")]
-public class MetaInfo(string name, object tag = null, IEnumerable<MetaInfo> items = null, bool clickable = false)
-{
+public class MetaInfo(string name, object tag = null, IEnumerable<MetaInfo> items = null, bool clickable = false) {
     public string Name { get; set; } = name;
     public object Tag { get; } = tag;
     public IEnumerable<MetaInfo> Items { get; } = items ?? [];
@@ -71,11 +67,9 @@ public class MetaInfo(string name, object tag = null, IEnumerable<MetaInfo> item
 }
 
 [DebuggerDisplay("{Name}, items: {Items.Count}")]
-public class MetaItem(object source, string name, object icon, object tag = null, PakFile pakFile = null, List<MetaItem> items = null)
-{
+public class MetaItem(object source, string name, object icon, object tag = null, PakFile pakFile = null, List<MetaItem> items = null) {
     [DebuggerDisplay("{Name}")]
-    public class Filter(string name, string description = "")
-    {
+    public class Filter(string name, string description = "") {
         public string Name = name;
         public string Description = description;
 
@@ -89,16 +83,13 @@ public class MetaItem(object source, string name, object icon, object tag = null
     public PakFile PakFile { get; } = pakFile;
     public List<MetaItem> Items { get; private set; } = items ?? [];
 
-    public MetaItem Search(Func<MetaItem, bool> predicate)
-    {
+    public MetaItem Search(Func<MetaItem, bool> predicate) {
         // if node is a leaf
         if (Items == null || Items.Count == 0) return predicate(this) ? this : null;
         // otherwise if node is not a leaf
-        else
-        {
+        else {
             var results = Items.Select(i => i.Search(predicate)).Where(i => i != null).ToList();
-            if (results.Any())
-            {
+            if (results.Any()) {
                 var result = (MetaItem)MemberwiseClone();
                 result.Items = results;
                 return result;
@@ -107,16 +98,14 @@ public class MetaItem(object source, string name, object icon, object tag = null
         }
     }
 
-    public MetaItem FindByPath(string path, MetaManager manager)
-    {
+    public MetaItem FindByPath(string path, MetaManager manager) {
         var paths = path.Split(['\\', '/', ':'], 2);
         var node = Items.FirstOrDefault(x => x.Name == paths[0]);
         (node?.Source as FileSource)?.Pak?.Open(node.Items, manager);
         return node == null || paths.Length == 1 ? node : node.FindByPath(paths[1], manager);
     }
 
-    public static MetaItem FindByPathForNodes(List<MetaItem> nodes, string path, MetaManager manager)
-    {
+    public static MetaItem FindByPathForNodes(List<MetaItem> nodes, string path, MetaManager manager) {
         var paths = path.Split(['\\', '/', ':'], 2);
         var node = nodes.FirstOrDefault(x => x.Name == paths[0]);
         (node?.Source as FileSource)?.Pak?.Open(node.Items, manager);
@@ -124,8 +113,7 @@ public class MetaItem(object source, string name, object icon, object tag = null
     }
 }
 
-public abstract class MetaManager
-{
+public abstract class MetaManager {
     public abstract object FolderIcon { get; }
     public abstract object PackageIcon { get; }
     public abstract object GetIcon(string name);
@@ -138,8 +126,7 @@ public abstract class MetaManager
     /// <param name="stream">The stream.</param>
     /// <param name="dispose">The dispose.</param>
     /// <returns></returns>
-    public static object GuessStringOrBytes(Stream stream, bool dispose = true)
-    {
+    public static object GuessStringOrBytes(Stream stream, bool dispose = true) {
         using var ms = new MemoryStream();
         stream.Position = 0;
         stream.CopyTo(ms);
@@ -158,14 +145,12 @@ public abstract class MetaManager
     /// <param name="file">The file.</param>
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
-    public static async Task<List<MetaInfo>> GetMetaInfos(MetaManager manager, BinaryPakFile pakFile, FileSource file)
-    {
+    public static async Task<List<MetaInfo>> GetMetaInfos(MetaManager manager, BinaryPakFile pakFile, FileSource file) {
         List<MetaInfo> nodes = null;
         var obj = await pakFile.LoadFileObject<object>(file);
         if (obj == null) return null;
         else if (obj is IHaveMetaInfo info) nodes = info.GetInfoNodes(manager, file);
-        else if (obj is Stream stream)
-        {
+        else if (obj is Stream stream) {
             var value = GuessStringOrBytes(stream);
             nodes = value is string text ? [
                 new(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = text }),
@@ -199,8 +184,7 @@ public abstract class MetaManager
     /// <param name="manager">The manager.</param>
     /// <param name="pakFile">The pak file.</param>
     /// <returns></returns>
-    public static List<MetaItem> GetMetaItems(MetaManager manager, BinaryPakFile pakFile)
-    {
+    public static List<MetaItem> GetMetaItems(MetaManager manager, BinaryPakFile pakFile) {
         if (manager == null) throw new ArgumentNullException(nameof(manager));
 
         var root = new List<MetaItem>();
@@ -208,25 +192,21 @@ public abstract class MetaManager
         string currentPath = null; List<MetaItem> currentFolder = null;
 
         // parse paths
-        foreach (var file in pakFile.Files.OrderBy(x => x.Path))
-        {
+        foreach (var file in pakFile.Files.OrderBy(x => x.Path)) {
             // next path, skip empty
             var path = file.Path[pakFile.PathSkip..];
             if (string.IsNullOrEmpty(path)) continue;
 
             // folder
             var fileFolder = Path.GetDirectoryName(path);
-            if (currentPath != fileFolder)
-            {
+            if (currentPath != fileFolder) {
                 currentPath = fileFolder;
                 currentFolder = root;
                 if (!string.IsNullOrEmpty(fileFolder))
-                    foreach (var folder in fileFolder.Split('\\'))
-                    {
+                    foreach (var folder in fileFolder.Split('\\')) {
                         var found = currentFolder.Find(x => x.Name == folder && x.PakFile == null);
                         if (found != null) currentFolder = found.Items;
-                        else
-                        {
+                        else {
                             found = new MetaItem(null, folder, manager.FolderIcon);
                             currentFolder.Add(found);
                             currentFolder = found.Items;
@@ -235,8 +215,7 @@ public abstract class MetaManager
             }
 
             // pakfile
-            if (file.Pak != null)
-            {
+            if (file.Pak != null) {
                 var items = GetMetaItems(manager, file.Pak);
                 currentFolder.Add(new MetaItem(file, Path.GetFileName(file.Path), manager.PackageIcon, pakFile: pakFile, items: items));
                 continue;

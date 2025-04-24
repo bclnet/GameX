@@ -7,8 +7,7 @@ namespace Khronos.Collada;
 #region Articulated_Systems
 
 [Serializable, XmlType(AnonymousType = true), XmlRoot(ElementName = "articulated_system", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-public partial class Collada_Articulated_System
-{
+public partial class Collada_Articulated_System {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("name")] public string Name;
     [XmlElement(ElementName = "kinematics")] public Collada_Kinematics Kinematics;
@@ -18,16 +17,14 @@ public partial class Collada_Articulated_System
 }
 
 [Serializable, XmlType(AnonymousType = true), XmlRoot(ElementName = "axis_info", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-public partial class Collada_Axis_Info
-{
+public partial class Collada_Axis_Info {
     [XmlAttribute("sid")] public string sID;
     [XmlAttribute("name")] public string Name;
     [XmlAttribute("axis")] public string Axis;
 }
 
 [Serializable, XmlType(AnonymousType = true), XmlRoot(ElementName = "bind", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-public partial class Collada_Bind
-{
+public partial class Collada_Bind {
     [XmlAttribute("symbol")] public string Symbol;
     [XmlElement(ElementName = "param")] public Collada_Param Param;
     [XmlElement(ElementName = "float")] public float Float;
@@ -37,14 +34,12 @@ public partial class Collada_Bind
 }
 
 [Serializable, XmlType(AnonymousType = true), XmlRoot(ElementName = "connect_param", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-public partial class Collada_Connect_Param
-{
+public partial class Collada_Connect_Param {
     [XmlAttribute("ref")] public string Ref;
 }
 
 [Serializable, XmlType(AnonymousType = true), XmlRoot(ElementName = "effector_info", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-public partial class Collada_Effector_Info
-{
+public partial class Collada_Effector_Info {
     [XmlAttribute("sid")] public string sID;
     [XmlAttribute("name")] public string Name;
     [XmlElement(ElementName = "bind")] public Collada_Bind[] Bind;
@@ -57,40 +52,35 @@ public partial class Collada_Effector_Info
 }
 
 [Serializable, XmlType(AnonymousType = true), XmlRoot(ElementName = "frame_object", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-public class Collada_Frame_Object
-{
+public class Collada_Frame_Object {
     [XmlAttribute("link")] public string Link;
     [XmlElement(ElementName = "translate")] public Collada_Translate[] Translate;
     [XmlElement(ElementName = "rotate")] public Collada_Rotate[] Rotate;
 }
 
 [Serializable, XmlType(AnonymousType = true), XmlRoot(ElementName = "frame_origin", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-public class Collada_Frame_Origin
-{
+public class Collada_Frame_Origin {
     [XmlAttribute("link")] public string Link;
     [XmlElement(ElementName = "translate")] public Collada_Translate[] Translate;
     [XmlElement(ElementName = "rotate")] public Collada_Rotate[] Rotate;
 }
 
 [Serializable, XmlType(AnonymousType = true), XmlRoot(ElementName = "frame_tcp", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-public partial class Collada_Frame_TCP
-{
+public partial class Collada_Frame_TCP {
     [XmlAttribute("link")] public string Link;
     [XmlElement(ElementName = "translate")] public Collada_Translate[] Translate;
     [XmlElement(ElementName = "rotate")] public Collada_Rotate[] Rotate;
 }
 
 [Serializable, XmlType(AnonymousType = true), XmlRoot(ElementName = "frame_tip", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-public partial class Collada_Frame_Tip
-{
+public partial class Collada_Frame_Tip {
     [XmlAttribute("link")] public string Link;
     [XmlElement(ElementName = "translate")] public Collada_Translate[] Translate;
     [XmlElement(ElementName = "rotate")] public Collada_Rotate[] Rotate;
 }
 
 [Serializable, XmlType(AnonymousType = true), XmlRoot(ElementName = "instance_articulated_system", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-public partial class Collada_Instance_Articulated_System
-{
+public partial class Collada_Instance_Articulated_System {
     [XmlAttribute("sid")] public string sID;
     [XmlAttribute("name")] public string Name;
     [XmlAttribute("url")] public string URL;
@@ -101,8 +91,7 @@ public partial class Collada_Instance_Articulated_System
 }
 
 [Serializable, XmlType(AnonymousType = true), XmlRoot(ElementName = "kinematics", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-public partial class Collada_Kinematics
-{
+public partial class Collada_Kinematics {
     [XmlElement(ElementName = "instance_kinematics_model")] public Collada_Instance_Kinematics_Model[] Instance_Kinematics_Model;
     [XmlElement(ElementName = "technique_common")] public Collada_Technique_Common_Kinematics Technique_Common;
     [XmlElement(ElementName = "technique")] public Collada_Technique[] Technique;
@@ -110,8 +99,7 @@ public partial class Collada_Kinematics
 }
 
 [Serializable, XmlType(AnonymousType = true), XmlRoot(ElementName = "library_articulated_systems", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-public partial class Collada_Library_Articulated_Systems
-{
+public partial class Collada_Library_Articulated_Systems {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("name")] public string Name;
     [XmlElement(ElementName = "articulated_system")] public Collada_Articulated_System[] Articulated_System;
@@ -120,8 +108,7 @@ public partial class Collada_Library_Articulated_Systems
 }
 
 [Serializable, XmlType(AnonymousType = true), XmlRoot(ElementName = "motion", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-public partial class Collada_Motion
-{
+public partial class Collada_Motion {
     [XmlElement(ElementName = "instance_articulated_system")] public Collada_Instance_Articulated_System Instance_Articulated_System;
     [XmlElement(ElementName = "technique_common")] public Collada_Technique_Common_Motion Technique_Common;
     [XmlElement(ElementName = "technique")] public Collada_Technique[] Technique;
@@ -133,8 +120,7 @@ public partial class Collada_Motion
 #region Custom_Types
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Axis_Info_Kinematics : Collada_Axis_Info
-{
+public partial class Collada_Axis_Info_Kinematics : Collada_Axis_Info {
     [XmlElement(ElementName = "newparam")] public Collada_New_Param[] New_Param;
     [XmlElement(ElementName = "active")] public Collada_Common_Bool_Or_Param_Type Active;
     [XmlElement(ElementName = "locked")] public Collada_Common_Bool_Or_Param_Type Locked;
@@ -145,8 +131,7 @@ public partial class Collada_Axis_Info_Kinematics : Collada_Axis_Info
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Axis_Info_Motion : Collada_Axis_Info
-{
+public partial class Collada_Axis_Info_Motion : Collada_Axis_Info {
     [XmlElement(ElementName = "bind")] public Collada_Bind[] Bind;
     [XmlElement(ElementName = "newparam")] public Collada_New_Param[] New_Param;
     [XmlElement(ElementName = "setparam")] public Collada_New_Param[] Set_Param;
@@ -157,21 +142,18 @@ public partial class Collada_Axis_Info_Motion : Collada_Axis_Info
 }
 
 [Serializable, XmlType(AnonymousType = true), XmlRoot(ElementName = "index", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-public partial class Collada_Kinematics_Axis_Info_Index : Collada_Common_Int_Or_Param_Type
-{
+public partial class Collada_Kinematics_Axis_Info_Index : Collada_Common_Int_Or_Param_Type {
     [XmlAttribute("semantic")] public string Semantic;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Kinematics_Axis_Info_Limits
-{
+public partial class Collada_Kinematics_Axis_Info_Limits {
     [XmlElement(ElementName = "min")] public Collada_Common_Float_Or_Param_Type Min;
     [XmlElement(ElementName = "max")] public Collada_Common_Float_Or_Param_Type Max;
 }
 
 [Serializable, XmlType(AnonymousType = true), XmlRoot(ElementName = "limits", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-public partial class Collada_Kinematics_Limits
-{
+public partial class Collada_Kinematics_Limits {
     [XmlElement(ElementName = "min")] public Collada_SID_Name_Float Min;
     [XmlElement(ElementName = "max")] public Collada_SID_Name_Float Max;
 }
@@ -181,8 +163,7 @@ public partial class Collada_Kinematics_Limits
 #region Joints
 
 [Serializable, XmlType(AnonymousType = true), XmlRoot(ElementName = "joint", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-public partial class Collada_Joint
-{
+public partial class Collada_Joint {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("name")] public string Name;
     [XmlAttribute("sid")] public string sID;
@@ -192,8 +173,7 @@ public partial class Collada_Joint
 }
 
 [Serializable, XmlType(AnonymousType = true), XmlRoot(ElementName = "library_joints", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-public partial class Collada_Library_Joints
-{
+public partial class Collada_Library_Joints {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("name")] public string Name;
     [XmlElement(ElementName = "joint")] public Collada_Joint[] Joint;
@@ -202,16 +182,14 @@ public partial class Collada_Library_Joints
 }
 
 [Serializable, XmlType(AnonymousType = true), XmlRoot(ElementName = "prismatic", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-public partial class Collada_Prismatic
-{
+public partial class Collada_Prismatic {
     [XmlAttribute("sid")] public string sID;
     [XmlElement(ElementName = "axis")] public Collada_SID_Float_Array_String Axis;
     [XmlElement(ElementName = "limits")] public Collada_Kinematics_Limits Limits;
 }
 
 [Serializable, XmlType(AnonymousType = true), XmlRoot(ElementName = "revolute", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-public partial class Collada_Revolute
-{
+public partial class Collada_Revolute {
     [XmlAttribute("sid")] public string sID;
     [XmlElement(ElementName = "axis")] public Collada_SID_Float_Array_String Axis;
     [XmlElement(ElementName = "limits")] public Collada_Kinematics_Limits Limits;
@@ -222,16 +200,14 @@ public partial class Collada_Revolute
 #region Kinematics_Models
 
 [Serializable, XmlType(AnonymousType = true), XmlRoot(ElementName = "attachment_end", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-public partial class Collada_Attachment_End
-{
+public partial class Collada_Attachment_End {
     [XmlAttribute("joint")] public string Joint;
     [XmlElement(ElementName = "translate")] public Collada_Translate[] Translate;
     [XmlElement(ElementName = "rotate")] public Collada_Rotate[] Rotate;
 }
 
 [Serializable, XmlType(AnonymousType = true), XmlRoot(ElementName = "attachment_full", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-public partial class Collada_Attachment_Full
-{
+public partial class Collada_Attachment_Full {
     [XmlAttribute("joint")] public string Joint;
     [XmlElement(ElementName = "translate")] public Collada_Translate[] Translate;
     [XmlElement(ElementName = "rotate")] public Collada_Rotate[] Rotate;
@@ -239,16 +215,14 @@ public partial class Collada_Attachment_Full
 }
 
 [Serializable, XmlType(AnonymousType = true), XmlRoot(ElementName = "attachment_start", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-public partial class Collada_Attachment_Start
-{
+public partial class Collada_Attachment_Start {
     [XmlAttribute("joint")] public string Joint;
     [XmlElement(ElementName = "translate")] public Collada_Translate[] Translate;
     [XmlElement(ElementName = "rotate")] public Collada_Rotate[] Rotate;
 }
 
 [Serializable, XmlType(AnonymousType = true), XmlRoot(ElementName = "instance_joint", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-public partial class Collada_Instance_Joint
-{
+public partial class Collada_Instance_Joint {
     [XmlAttribute("sid")] public string sID;
     [XmlAttribute("name")] public string Name;
     [XmlAttribute("url")] public string URL;
@@ -256,8 +230,7 @@ public partial class Collada_Instance_Joint
 }
 
 [Serializable, XmlType(AnonymousType = true), XmlRoot(ElementName = "instance_kinematics_model", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-public partial class Collada_Instance_Kinematics_Model
-{
+public partial class Collada_Instance_Kinematics_Model {
     [XmlAttribute("sid")] public string sID;
     [XmlAttribute("name")] public string Name;
     [XmlAttribute("url")] public string URL;
@@ -268,8 +241,7 @@ public partial class Collada_Instance_Kinematics_Model
 }
 
 [Serializable, XmlType(AnonymousType = true), XmlRoot(ElementName = "kinematics_model", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-public partial class Collada_Kinematics_Model
-{
+public partial class Collada_Kinematics_Model {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("name")] public string Name;
     [XmlElement(ElementName = "technique_common")] public Collada_Technique_Common_Kinematics_Model Technique_Common;
@@ -279,8 +251,7 @@ public partial class Collada_Kinematics_Model
 }
 
 [Serializable, XmlType(AnonymousType = true), XmlRoot(ElementName = "library_kinematics_models", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-public partial class Collada_Library_Kinematics_Models
-{
+public partial class Collada_Library_Kinematics_Models {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("name")] public string Name;
     [XmlElement(ElementName = "kinematics_model")] public Collada_Kinematics_Model[] Kinematics_Model;
@@ -289,8 +260,7 @@ public partial class Collada_Library_Kinematics_Models
 }
 
 [Serializable, XmlType(AnonymousType = true), XmlRoot(ElementName = "link", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-public partial class Collada_Link
-{
+public partial class Collada_Link {
     [XmlAttribute("sid")] public string sID;
     [XmlAttribute("name")] public string Name;
     [XmlElement(ElementName = "translate")] public Collada_Translate[] Translate;
@@ -305,24 +275,21 @@ public partial class Collada_Link
 #region Kinematics_Scenes
 
 [Serializable, XmlType(AnonymousType = true), XmlRoot(ElementName = "bind_joint_axis", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-public partial class Collada_Bind_Joint_Axis
-{
+public partial class Collada_Bind_Joint_Axis {
     [XmlAttribute("target")] public string Target;
     [XmlElement(ElementName = "axis")] public Collada_Common_SIDREF_Or_Param_Type Axis;
     [XmlElement(ElementName = "value")] public Collada_Common_Float_Or_Param_Type Value;
 }
 
 [Serializable, XmlType(AnonymousType = true), XmlRoot(ElementName = "bind_kinematics_model", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-public partial class Collada_Bind_Kinematics_Model
-{
+public partial class Collada_Bind_Kinematics_Model {
     [XmlAttribute("node")] public string Node;
     [XmlElement(ElementName = "param")] public Collada_Param Param;
     [XmlElement(ElementName = "SIDREF")] public string SIDREF;
 }
 
 [Serializable, XmlType(AnonymousType = true), XmlRoot(ElementName = "instance_kinematics_scene", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-public partial class Collada_Instance_Kinematics_Scene
-{
+public partial class Collada_Instance_Kinematics_Scene {
     [XmlAttribute("sid")] public string sID;
     [XmlAttribute("name")] public string Name;
     [XmlAttribute("url")] public string URL;
@@ -335,8 +302,7 @@ public partial class Collada_Instance_Kinematics_Scene
 }
 
 [Serializable, XmlType(AnonymousType = true), XmlRoot(ElementName = "kinematics_scene", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-public partial class Collada_Kinematics_Scene
-{
+public partial class Collada_Kinematics_Scene {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("name")] public string Name;
     [XmlElement(ElementName = "instance_kinematics_model")] public Collada_Instance_Kinematics_Model[] Instance_Kinematics_Model;
@@ -346,8 +312,7 @@ public partial class Collada_Kinematics_Scene
 }
 
 [Serializable, XmlType(AnonymousType = true), XmlRoot(ElementName = "library_kinematics_scene", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-public partial class Collada_Library_Kinematics_Scene
-{
+public partial class Collada_Library_Kinematics_Scene {
     [XmlAttribute("id")] public string ID;
     [XmlAttribute("name")] public string Name;
     [XmlElement(ElementName = "kinematics_scene")] public Collada_Kinematics_Scene[] Kinematics_Scene;
@@ -360,8 +325,7 @@ public partial class Collada_Library_Kinematics_Scene
 #region Technique_Common
 
 [Serializable, XmlType(AnonymousType = true), XmlRoot(ElementName = "technique_common", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-public partial class Collada_Technique_Common_Kinematics : Collada_Technique_Common
-{
+public partial class Collada_Technique_Common_Kinematics : Collada_Technique_Common {
     [XmlElement(ElementName = "axis_info")] public Collada_Axis_Info_Kinematics[] Axis_Info;
     [XmlElement(ElementName = "frame_origin")] public Collada_Frame_Origin Frame_Origin;
     [XmlElement(ElementName = "frame_tip")] public Collada_Frame_Tip Frame_Tip;
@@ -370,8 +334,7 @@ public partial class Collada_Technique_Common_Kinematics : Collada_Technique_Com
 }
 
 [Serializable, XmlType(AnonymousType = true), XmlRoot(ElementName = "technique_common", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-public partial class Collada_Technique_Common_Kinematics_Model : Collada_Technique_Common
-{
+public partial class Collada_Technique_Common_Kinematics_Model : Collada_Technique_Common {
     [XmlElement(ElementName = "newparam")] public Collada_New_Param[] New_Param;
     [XmlElement(ElementName = "joint")] public Collada_Joint[] Joint;
     [XmlElement(ElementName = "instance_joint")] public Collada_Instance_Joint[] Instance_Joint;
@@ -381,8 +344,7 @@ public partial class Collada_Technique_Common_Kinematics_Model : Collada_Techniq
 }
 
 [Serializable, XmlType(AnonymousType = true), XmlRoot(ElementName = "technique_common", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = true)]
-public partial class Collada_Technique_Common_Motion : Collada_Technique_Common
-{
+public partial class Collada_Technique_Common_Motion : Collada_Technique_Common {
     [XmlElement(ElementName = "axis_info")] public Collada_Axis_Info_Motion[] Axis_Info;
     [XmlElement(ElementName = "effector_info")] public Collada_Effector_Info Effector_Info;
 }

@@ -15,8 +15,7 @@ namespace GameX.Bethesda.Formats;
 #region Binary_Ba2
 // http://en.uesp.net/wiki/Bethesda5Mod:Archive_File_Format
 
-public unsafe class Binary_Ba2 : PakBinary<Binary_Ba2>
-{
+public unsafe class Binary_Ba2 : PakBinary<Binary_Ba2> {
     #region Headers : TES5
 
     // Default header data
@@ -24,16 +23,14 @@ public unsafe class Binary_Ba2 : PakBinary<Binary_Ba2>
     const uint F4_BSAHEADER_VERSION1 = 0x01; // Version number of a Fallout 4 BA2
     const uint F4_BSAHEADER_VERSION2 = 0x02; // Version number of a Starfield BA2
 
-    public enum F4_HeaderType : uint
-    {
+    public enum F4_HeaderType : uint {
         GNRL = 0x4c524e47,
         DX10 = 0x30315844,
         GNMF = 0x464d4e47,
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct F4_Header
-    {
+    struct F4_Header {
         public static (string, int) Struct = ("<3IQ", sizeof(F4_Header));
         public uint Version;            // 04
         public F4_HeaderType Type;      // 08 GNRL=General, DX10=Textures, GNMF=?, ___=?
@@ -42,8 +39,7 @@ public unsafe class Binary_Ba2 : PakBinary<Binary_Ba2>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct F4_File
-    {
+    struct F4_File {
         public static (string, int) Struct = ("<4IQ3I", sizeof(F4_File));
         public uint NameHash;           // 00
         public uint Ext;                // 04 - extension
@@ -56,8 +52,7 @@ public unsafe class Binary_Ba2 : PakBinary<Binary_Ba2>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct F4_Texture
-    {
+    struct F4_Texture {
         public static (string, int) Struct = ("<3I2B3H4B", sizeof(F4_Texture));
         public uint NameHash;           // 00
         public uint Ext;                // 04 - extension
@@ -74,8 +69,7 @@ public unsafe class Binary_Ba2 : PakBinary<Binary_Ba2>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct F4_TextureChunk
-    {
+    struct F4_TextureChunk {
         public static (string, int) Struct = ("<Q2I2HI", sizeof(F4_TextureChunk));
         public ulong Offset;            // 00
         public uint PackedSize;         // 08
@@ -86,8 +80,7 @@ public unsafe class Binary_Ba2 : PakBinary<Binary_Ba2>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct F4_GNMF
-    {
+    struct F4_GNMF {
         public static (string, int) Struct = ("<3I2BH32sQ4I", sizeof(F4_GNMF));
         public uint NameHash;           // 00
         public uint Ext;                // 04 - extension
@@ -105,14 +98,12 @@ public unsafe class Binary_Ba2 : PakBinary<Binary_Ba2>
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         FileSource[] files;
 
         // Fallout 4 - Starfield
         var magic = source.Magic = r.ReadUInt32();
-        if (magic == F4_BSAHEADER_FILEID)
-        {
+        if (magic == F4_BSAHEADER_FILEID) {
             var header = r.ReadS<F4_Header>();
             if (header.Version > F4_BSAHEADER_VERSION2) throw new FormatException("BAD MAGIC");
             source.Version = header.Version;
@@ -120,16 +111,13 @@ public unsafe class Binary_Ba2 : PakBinary<Binary_Ba2>
             // version2
             //if (header.Version == F4_BSAHEADER_VERSION2) r.Skip(8);
 
-            switch (header.Type)
-            {
+            switch (header.Type) {
                 // General BA2 Format
                 case F4_HeaderType.GNRL:
                     var headerFiles = r.ReadSArray<F4_File>((int)header.NumFiles);
-                    for (var i = 0; i < headerFiles.Length; i++)
-                    {
+                    for (var i = 0; i < headerFiles.Length; i++) {
                         ref F4_File headerFile = ref headerFiles[i];
-                        files[i] = new FileSource
-                        {
+                        files[i] = new FileSource {
                             Compressed = headerFile.PackedSize != 0 ? 1 : 0,
                             PackedSize = headerFile.PackedSize,
                             FileSize = headerFile.FileSize,
@@ -139,13 +127,11 @@ public unsafe class Binary_Ba2 : PakBinary<Binary_Ba2>
                     break;
                 // Texture BA2 Format
                 case F4_HeaderType.DX10:
-                    for (var i = 0; i < header.NumFiles; i++)
-                    {
+                    for (var i = 0; i < header.NumFiles; i++) {
                         var headerTexture = r.ReadS<F4_Texture>();
                         var headerTextureChunks = r.ReadSArray<F4_TextureChunk>(headerTexture.NumChunks);
                         ref F4_TextureChunk firstChunk = ref headerTextureChunks[0];
-                        files[i] = new FileSource
-                        {
+                        files[i] = new FileSource {
                             PackedSize = firstChunk.PackedSize,
                             FileSize = firstChunk.FileSize,
                             Offset = (long)firstChunk.Offset,
@@ -155,12 +141,10 @@ public unsafe class Binary_Ba2 : PakBinary<Binary_Ba2>
                     break;
                 // GNMF BA2 Format
                 case F4_HeaderType.GNMF:
-                    for (var i = 0; i < header.NumFiles; i++)
-                    {
+                    for (var i = 0; i < header.NumFiles; i++) {
                         var headerGNMF = r.ReadS<F4_GNMF>();
                         var headerTextureChunks = r.ReadSArray<F4_TextureChunk>(headerGNMF.NumChunks);
-                        files[i] = new FileSource
-                        {
+                        files[i] = new FileSource {
                             PackedSize = headerGNMF.PackedSize,
                             FileSize = headerGNMF.FileSize,
                             Offset = (long)headerGNMF.Offset,
@@ -172,8 +156,7 @@ public unsafe class Binary_Ba2 : PakBinary<Binary_Ba2>
             }
 
             // assign full names to each file
-            if (header.NameTableOffset > 0)
-            {
+            if (header.NameTableOffset > 0) {
                 r.Seek((long)header.NameTableOffset);
                 var path = r.ReadL16Encoding().Replace('\\', '/');
                 foreach (var file in files) file.Path = path;
@@ -183,8 +166,7 @@ public unsafe class Binary_Ba2 : PakBinary<Binary_Ba2>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
-    {
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         const int GNF_HEADER_MAGIC = 0x20464E47;
         const int GNF_HEADER_CONTENT_SIZE = 248;
 
@@ -200,13 +182,11 @@ public unsafe class Binary_Ba2 : PakBinary<Binary_Ba2>
         var tag = ((object tex, F4_TextureChunk[] chunks))file.Tag;
 
         // Texture BA2 Format
-        if (tag.tex is F4_Texture tex)
-        {
+        if (tag.tex is F4_Texture tex) {
             var s = new MemoryStream();
             // write header
             var w = new BinaryWriter(s);
-            var ddsHeader = new DDS_HEADER
-            {
+            var ddsHeader = new DDS_HEADER {
                 dwSize = DDS_HEADER.SizeOf,
                 dwFlags = DDSD.HEADER_FLAGS_TEXTURE | DDSD.HEADER_FLAGS_LINEARSIZE | DDSD.HEADER_FLAGS_MIPMAP,
                 dwHeight = tex.Height,
@@ -216,8 +196,7 @@ public unsafe class Binary_Ba2 : PakBinary<Binary_Ba2>
                 dwCaps2 = tex.IsCubemap == 1 ? DDSCAPS2.CUBEMAP_ALLFACES : 0,
             };
             ddsHeader.ddspf.dwSize = DDS_PIXELFORMAT.SizeOf;
-            switch ((DXGI_FORMAT)tex.Format)
-            {
+            switch ((DXGI_FORMAT)tex.Format) {
                 case DXGI_FORMAT.BC1_UNORM:
                     ddsHeader.ddspf.dwFlags = DDPF.FOURCC;
                     ddsHeader.ddspf.dwFourCC = FourCC.DXT1;
@@ -282,16 +261,14 @@ public unsafe class Binary_Ba2 : PakBinary<Binary_Ba2>
             }
             w.Write(DDS_HEADER.MAGIC);
             w.WriteS(ddsHeader);
-            switch ((DXGI_FORMAT)tex.Format)
-            {
+            switch ((DXGI_FORMAT)tex.Format) {
                 case DXGI_FORMAT.BC1_UNORM_SRGB:
                 case DXGI_FORMAT.BC3_UNORM_SRGB:
                 case DXGI_FORMAT.BC4_UNORM:
                 case DXGI_FORMAT.BC5_SNORM:
                 case DXGI_FORMAT.BC7_UNORM:
                 case DXGI_FORMAT.BC7_UNORM_SRGB:
-                    w.WriteS(new DDS_HEADER_DXT10
-                    {
+                    w.WriteS(new DDS_HEADER_DXT10 {
                         dxgiFormat = (DXGI_FORMAT)tex.Format,
                         resourceDimension = D3D10_RESOURCE_DIMENSION.TEXTURE2D,
                         miscFlag = 0,
@@ -303,8 +280,7 @@ public unsafe class Binary_Ba2 : PakBinary<Binary_Ba2>
 
             // write chunks
             var chunks = tag.chunks;
-            for (var i = 0; i < tex.NumChunks; i++)
-            {
+            for (var i = 0; i < tex.NumChunks; i++) {
                 var chunk = chunks[i];
                 r.Seek((long)chunk.Offset);
                 if (chunk.PackedSize != 0) s.WriteBytes(r.DecompressZlib((int)file.PackedSize, (int)file.FileSize));
@@ -314,8 +290,7 @@ public unsafe class Binary_Ba2 : PakBinary<Binary_Ba2>
             return Task.FromResult<Stream>(s);
         }
         // GNMF BA2 Format
-        else if (tag.tex is F4_GNMF gnmf)
-        {
+        else if (tag.tex is F4_GNMF gnmf) {
             var s = new MemoryStream();
             // write header
             var w = new BinaryWriter(s);
@@ -331,8 +306,7 @@ public unsafe class Binary_Ba2 : PakBinary<Binary_Ba2>
 
             // write chunks
             var chunks = tag.chunks;
-            for (var i = 0; i < gnmf.NumChunks; i++)
-            {
+            for (var i = 0; i < gnmf.NumChunks; i++) {
                 var chunk = chunks[i];
                 r.Seek((long)chunk.Offset);
                 if (chunk.PackedSize != 0) s.WriteBytes(r.DecompressZlib2((int)file.PackedSize, (int)file.FileSize));
@@ -351,8 +325,7 @@ public unsafe class Binary_Ba2 : PakBinary<Binary_Ba2>
 // http://en.uesp.net/wiki/Bethesda4Mod:BSA_File_Format
 // http://en.uesp.net/wiki/Bethesda3Mod:BSA_File_Format
 
-public unsafe class Binary_Bsa : PakBinary<Binary_Bsa>
-{
+public unsafe class Binary_Bsa : PakBinary<Binary_Bsa> {
     #region Headers : TES4
 
     // Default header data
@@ -387,8 +360,7 @@ public unsafe class Binary_Bsa : PakBinary<Binary_Bsa>
     const uint OB_BSAFILE_SIZECOMPRESS = 0xC0000000; // Bit mask with OB_HeaderFile:SizeFlags to get the compression status
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct OB_Header
-    {
+    struct OB_Header {
         public static (string, int) Struct = ("<8I", sizeof(OB_Header));
         public uint Version;            // 04
         public uint FolderRecordOffset; // Offset of beginning of folder records
@@ -401,8 +373,7 @@ public unsafe class Binary_Bsa : PakBinary<Binary_Bsa>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct OB_Folder
-    {
+    struct OB_Folder {
         public static (string, int) Struct = ("<Q2I", sizeof(OB_Folder));
         public ulong Hash;              // Hash of the folder name
         public uint FileCount;          // Number of files in folder
@@ -410,8 +381,7 @@ public unsafe class Binary_Bsa : PakBinary<Binary_Bsa>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct OB_FolderSSE
-    {
+    struct OB_FolderSSE {
         public static (string, int) Struct = ("<Q2IQ", sizeof(OB_FolderSSE));
         public ulong Hash;              // Hash of the folder name
         public uint FileCount;          // Number of files in folder
@@ -420,8 +390,7 @@ public unsafe class Binary_Bsa : PakBinary<Binary_Bsa>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct OB_File
-    {
+    struct OB_File {
         public static (string, int) Struct = ("<Q2I", sizeof(OB_File));
         public ulong Hash;              // Hash of the filename
         public uint Size;               // Size of the data, possibly with OB_BSAFILE_SIZECOMPRESS set
@@ -436,16 +405,14 @@ public unsafe class Binary_Bsa : PakBinary<Binary_Bsa>
     const uint MW_BSAHEADER_FILEID = 0x00000100; // Magic for Morrowind BSA
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct MW_Header
-    {
+    struct MW_Header {
         public static (string, int) Struct = ("<2I", sizeof(MW_Header));
         public uint HashOffset;         // Offset of hash table minus header size (12)
         public uint FileCount;          // Number of files in the archive
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct MW_File
-    {
+    struct MW_File {
         public static (string, int) Struct = ("<2I", sizeof(MW_File));
         public uint FileSize;           // File size
         public uint FileOffset;         // File offset relative to data position
@@ -454,14 +421,12 @@ public unsafe class Binary_Bsa : PakBinary<Binary_Bsa>
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         FileSource[] files;
         var magic = source.Magic = r.ReadUInt32();
 
         // Oblivion - Skyrim
-        if (magic == OB_BSAHEADER_FILEID)
-        {
+        if (magic == OB_BSAHEADER_FILEID) {
             var header = r.ReadS<OB_Header>();
             if (header.Version != OB_BSAHEADER_VERSION
                 && header.Version != F3_BSAHEADER_VERSION
@@ -486,17 +451,14 @@ public unsafe class Binary_Bsa : PakBinary<Binary_Bsa>
             // read-all folder files
             var fileX = 0U;
             source.Files = files = new FileSource[header.FileCount];
-            for (var i = 0; i < header.FolderCount; i++)
-            {
+            for (var i = 0; i < header.FolderCount; i++) {
                 var folderName = r.ReadFAString(r.ReadByte() - 1).Replace('\\', '/');
                 r.Skip(1);
                 var headerFiles = r.ReadSArray<OB_File>((int)foldersFiles[i]);
-                foreach (var headerFile in headerFiles)
-                {
+                foreach (var headerFile in headerFiles) {
                     var compressed = (headerFile.Size & OB_BSAFILE_SIZECOMPRESS) != 0;
                     var packedSize = compressed ? headerFile.Size ^ OB_BSAFILE_SIZECOMPRESS : headerFile.Size;
-                    files[fileX++] = new FileSource
-                    {
+                    files[fileX++] = new FileSource {
                         Path = folderName,
                         Offset = headerFile.Offset,
                         Compressed = compressed ^ compressedToggle ? 1 : 0,
@@ -510,20 +472,17 @@ public unsafe class Binary_Bsa : PakBinary<Binary_Bsa>
             foreach (var file in files) file.Path = $"{file.Path}/{r.ReadVUString()}";
         }
         // Morrowind
-        else if (magic == MW_BSAHEADER_FILEID)
-        {
+        else if (magic == MW_BSAHEADER_FILEID) {
             var header = r.ReadS<MW_Header>();
             var dataOffset = 12 + header.HashOffset + (header.FileCount << 3);
 
             // create filesources
             source.Files = files = new FileSource[header.FileCount];
             var headerFiles = r.ReadSArray<MW_File>((int)header.FileCount);
-            for (var i = 0; i < headerFiles.Length; i++)
-            {
+            for (var i = 0; i < headerFiles.Length; i++) {
                 ref MW_File headerFile = ref headerFiles[i];
                 var size = headerFile.Size;
-                files[i] = new FileSource
-                {
+                files[i] = new FileSource {
                     Offset = dataOffset + headerFile.FileOffset,
                     FileSize = size,
                     PackedSize = size,
@@ -535,8 +494,7 @@ public unsafe class Binary_Bsa : PakBinary<Binary_Bsa>
 
             // read filenames
             var filenamesPosition = r.Tell();
-            for (var i = 0; i < files.Length; i++)
-            {
+            for (var i = 0; i < files.Length; i++) {
                 r.Seek(filenamesPosition + filenameOffsets[i]);
                 files[i].Path = r.ReadVAString(1000).Replace('\\', '/');
             }
@@ -545,13 +503,11 @@ public unsafe class Binary_Bsa : PakBinary<Binary_Bsa>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
-    {
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         // position
         var fileSize = (int)file.FileSize;
         r.Seek(file.Offset);
-        if (source.Tag is bool z && z)
-        {
+        if (source.Tag is bool z && z) {
             var prefixLength = r.ReadByte() + 1;
             if (source.Version == SSE_BSAHEADER_VERSION) fileSize -= prefixLength;
             r.Seek(file.Offset + prefixLength);
@@ -590,15 +546,13 @@ public unsafe class Binary_Bsa : PakBinary<Binary_Bsa>
 /// Binary_Esm
 /// </summary>
 /// <seealso cref="GameX.Formats._Packages.PakBinaryBethesdaEsm" />
-public unsafe class Binary_Esm : PakBinary<Binary_Esm>
-{
+public unsafe class Binary_Esm : PakBinary<Binary_Esm> {
     const int RecordHeaderSizeInBytes = 16;
     public FormType Format;
     public Dictionary<FormType, RecordGroup> Groups;
 
     static FormType GetFormat(string game)
-        => game switch
-        {
+        => game switch {
             // tes
             "Morrowind" => FormType.TES3,
             "Oblivion" => FormType.TES4,
@@ -618,8 +572,7 @@ public unsafe class Binary_Esm : PakBinary<Binary_Esm>
     /// <param name="stage">The stage.</param>
     /// <returns></returns>
     /// <exception cref="ArgumentOutOfRangeException">stage</exception>
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         Format = GetFormat(source.Game.Id);
         var recordLevel = 1;
         var filePath = source.PakPath;
@@ -630,13 +583,11 @@ public unsafe class Binary_Esm : PakBinary<Binary_Esm>
         rootRecord.Read(r, filePath, Format);
 
         // morrowind hack
-        if (Format == FormType.TES3)
-        {
+        if (Format == FormType.TES3) {
             var group = new RecordGroup(poolAction, filePath, Format, recordLevel);
             group.AddHeader(new Header { Label = 0, DataSize = (uint)(r.BaseStream.Length - r.Tell()), Position = r.Tell() });
             group.Load();
-            Groups = group.Records.GroupBy(x => x.Header.Type).ToDictionary(x => x.Key, x =>
-            {
+            Groups = group.Records.GroupBy(x => x.Header.Type).ToDictionary(x => x.Key, x => {
                 var s = new RecordGroup(null, filePath, Format, recordLevel) { Records = [.. x] };
                 s.AddHeader(new Header { Label = x.Key }, load: false);
                 return s;
@@ -647,8 +598,7 @@ public unsafe class Binary_Esm : PakBinary<Binary_Esm>
         // read groups
         Groups = [];
         var endPosition = r.BaseStream.Length;
-        while (r.BaseStream.Position < endPosition)
-        {
+        while (r.BaseStream.Position < endPosition) {
             var header = new Header(r, Format, null);
             if (header.Type != FormType.GRUP) throw new InvalidOperationException($"{header.Type} not GRUP");
             var nextPosition = r.Tell() + header.DataSize;
@@ -670,10 +620,8 @@ public unsafe class Binary_Esm : PakBinary<Binary_Esm>
     Dictionary<uint, Tuple<WRLDRecord, RecordGroup[]>> WRLDsById;
     Dictionary<string, LTEXRecord> LTEXsByEid;
 
-    public override Task Process(BinaryPakFile source)
-    {
-        if (Format == FormType.TES3)
-        {
+    public override Task Process(BinaryPakFile source) {
+        if (Format == FormType.TES3) {
             var statGroups = new List<Record>[] { Groups.ContainsKey(FormType.STAT) ? Groups[FormType.STAT].Load() : null };
             MANYsById = statGroups.SelectMany(x => x).Where(x => x != null).ToDictionary(x => x.EDID.Value, x => (IRecord)x);
             LTEXsById = Groups[FormType.LTEX].Load().Cast<LTEXRecord>().ToDictionary(x => x.INTV.Value);
@@ -697,8 +645,7 @@ public unsafe class Binary_Esm : PakBinary<Binary_Esm>
 
 #region Binary_Nif
 
-public class Binary_Nif : IHaveMetaInfo, IModel
-{
+public class Binary_Nif : IHaveMetaInfo, IModel {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Nif(r, f));
 
     public string Name;
@@ -706,8 +653,7 @@ public class Binary_Nif : IHaveMetaInfo, IModel
     public NiObject[] Blocks;
     public NiFooter Footer;
 
-    public Binary_Nif(BinaryReader r, FileSource f)
-    {
+    public Binary_Nif(BinaryReader r, FileSource f) {
         Name = Path.GetFileNameWithoutExtension(f.Path);
         Header = new NiHeader(r);
         Blocks = r.ReadFArray(NiReaderUtils.ReadNiObject, (int)Header.NumBlocks);
@@ -716,8 +662,7 @@ public class Binary_Nif : IHaveMetaInfo, IModel
 
     #region IModel
 
-    public T Create<T>(string platform, Func<object, T> func)
-    {
+    public T Create<T>(string platform, Func<object, T> func) {
         //Activator.CreateInstance("");
         func(null);
         return default;
@@ -727,8 +672,7 @@ public class Binary_Nif : IHaveMetaInfo, IModel
 
     public bool IsSkinnedMesh() => Blocks.Any(b => b is NiSkinInstance);
 
-    public IEnumerable<string> GetTexturePaths()
-    {
+    public IEnumerable<string> GetTexturePaths() {
         foreach (var niObject in Blocks)
             if (niObject is NiSourceTexture niSourceTexture && !string.IsNullOrEmpty(niSourceTexture.FileName))
                 yield return niSourceTexture.FileName;

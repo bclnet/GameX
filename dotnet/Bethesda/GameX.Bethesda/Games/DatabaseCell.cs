@@ -1,5 +1,4 @@
 namespace GameX.Bethesda;
 
-public class DatabaseCell(PakFile pakFile) : Database(pakFile)
-{
+public class DatabaseCell(PakFile pakFile) : Database(pakFile) {
 }

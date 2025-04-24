@@ -3,20 +3,21 @@ using OpenStack.Gfx;
 using OpenStack.Gfx.Unreal;
 using System;
 using System.Collections.Generic;
+using static OpenStack.Gfx.GfX;
 
 namespace GameX.Platforms.Unreal;
 
 public static class UnrealRenderer
 {
-    public static Renderer CreateRenderer(object parent, UnrealGfxModel gfx, object obj, string type)
+    public static Renderer CreateRenderer(object parent, IList<IOpenGfx> gfx, object obj, string type)
         => type switch
         {
-            "TestTri" => new OgreTestTriRenderer(gfx, obj),
-            "Texture" => new OgreTextureRenderer(gfx, obj),
-            "Object" => new OgreObjectRenderer(gfx, obj),
-            "Cell" => new OgreCellRenderer(gfx, obj),
-            "Engine" => new OgreEngineRenderer(gfx, obj),
-            _ => new OgreObjectRenderer(gfx, obj),
+            "TestTri" => new OgreTestTriRenderer(gfx[XModel] as UnrealGfxModel, obj),
+            "Texture" => new OgreTextureRenderer(gfx[XModel] as UnrealGfxModel, obj),
+            "Object" => new OgreObjectRenderer(gfx[XModel] as UnrealGfxModel, obj),
+            "Cell" => new OgreCellRenderer(gfx[XModel] as UnrealGfxModel, obj),
+            "Engine" => new OgreEngineRenderer(gfx[XModel] as UnrealGfxModel, obj),
+            _ => new OgreObjectRenderer(gfx[XModel] as UnrealGfxModel, obj),
         };
 }
 

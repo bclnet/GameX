@@ -4,13 +4,11 @@ using System.Collections.Concurrent;
 
 namespace GameX.Bullfrog.Games.S;
 
-public static class Database
-{
+public static class Database {
     public static PakFile PakFile;
     static ConcurrentDictionary<string, Binary_Pal> Palettes = new();
 
-    internal static FamilyGame Ensure(FamilyGame game)
-    {
+    internal static FamilyGame Ensure(FamilyGame game) {
         PakFile = game.Family.OpenPakFile(new Uri("game:/#S"));
         return game;
     }

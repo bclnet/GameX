@@ -1,22 +1,18 @@
 ﻿using static GameX.FamilyManager;
 
-namespace GameX.App.Explorer.Views
-{
-    public partial class FileExplorer : ContentView
-    {
+namespace GameX.App.Explorer.Views {
+    public partial class FileExplorer : ContentView {
         public readonly static MetaManager Resource = ResourceManager.Current;
         public static FileExplorer Current;
 
-        public FileExplorer()
-        {
+        public FileExplorer() {
             InitializeComponent();
             Current = this;
             BindingContext = this;
         }
 
         public static readonly BindableProperty PakFileProperty = BindableProperty.Create(nameof(PakFile), typeof(PakFile), typeof(FileExplorer),
-            propertyChanged: (d, e, n) =>
-            {
+            propertyChanged: (d, e, n) => {
                 if (d is not FileExplorer fileExplorer || n is not PakFile pakFile) return;
                 fileExplorer.Filters = pakFile.GetMetaFilters(Resource);
                 fileExplorer.Nodes = fileExplorer.PakNodes = pakFile.GetMetaItems(Resource);
@@ -29,11 +25,9 @@ namespace GameX.App.Explorer.Views
         //}
 
         PakFile _pakFile;
-        public PakFile PakFile
-        {
+        public PakFile PakFile {
             get => _pakFile;
-            set
-            {
+            set {
                 _pakFile = value; OnPropertyChanged();
                 Filters = _pakFile.GetMetaFilters(Resource);
                 Nodes = PakNodes = _pakFile.GetMetaItems(Resource);
@@ -42,8 +36,7 @@ namespace GameX.App.Explorer.Views
         }
 
         List<MetaItem.Filter> _filters;
-        public List<MetaItem.Filter> Filters
-        {
+        public List<MetaItem.Filter> Filters {
             get => _filters;
             set { _filters = value; OnPropertyChanged(); }
         }
@@ -61,8 +54,7 @@ namespace GameX.App.Explorer.Views
         //    //view.Refresh();
         //}
 
-        void OnFilterSelected(object s, EventArgs e)
-        {
+        void OnFilterSelected(object s, EventArgs e) {
             var filter = (MetaItem.Filter)Filter.SelectedItem;
             if (filter == null) Nodes = PakNodes;
             else Nodes = PakNodes.Select(x => x.Search(y => y.Name.Contains(filter.Description))).Where(x => x != null).ToList();
@@ -71,41 +63,34 @@ namespace GameX.App.Explorer.Views
         List<MetaItem> PakNodes;
 
         List<MetaItem> _nodes;
-        public List<MetaItem> Nodes
-        {
+        public List<MetaItem> Nodes {
             get => _nodes;
             set { _nodes = value; OnPropertyChanged(); }
         }
 
         List<MetaInfo> _infos;
-        public List<MetaInfo> Infos
-        {
+        public List<MetaInfo> Infos {
             get => _infos;
             set { _infos = value; OnPropertyChanged(); }
         }
 
         MetaItem _selectedItem;
-        public MetaItem SelectedItem
-        {
+        public MetaItem SelectedItem {
             get => _selectedItem;
-            set
-            {
+            set {
                 if (_selectedItem == value) return;
                 _selectedItem = value;
                 if (value == null) { OnInfo(); return; }
-                try
-                {
+                try {
                     var pak = (value.Source as FileSource)?.Pak;
-                    if (pak != null)
-                    {
+                    if (pak != null) {
                         if (pak.Status == PakFile.PakStatus.Opened) return;
                         pak.Open(value.Items, Resource);
                         //OnFilterKeyUp(null, null); //value.Items.AddRange(pak.GetMetaItemsAsync(Resource).Result);
                     }
                     OnInfo(value.PakFile?.GetMetaInfos(Resource, value).Result);
                 }
-                catch (Exception ex)
-                {
+                catch (Exception ex) {
                     OnInfo([
                         new MetaInfo($"EXCEPTION: {ex.Message}"),
                         new MetaInfo(ex.StackTrace),
@@ -114,25 +99,21 @@ namespace GameX.App.Explorer.Views
             }
         }
 
-        public void OnInfoUpdated()
-        {
+        public void OnInfoUpdated() {
         }
 
-        public void OnInfo(IEnumerable<MetaInfo> infos = null)
-        {
+        public void OnInfo(IEnumerable<MetaInfo> infos = null) {
             FileContent.Current.OnInfo(PakFile, infos?.Where(x => x.Name == null).ToList());
             Infos = infos?.Where(x => x.Name != null).ToList();
         }
 
-        void OnNodeSelected(object s, EventArgs args)
-        {
+        void OnNodeSelected(object s, EventArgs args) {
             var parameter = ((TappedEventArgs)args).Parameter;
             if (parameter is MetaItem item && item.PakFile != null) SelectedItem = item;
             //e.Handled = true;
         }
 
-        void Ready(PakFile pakFile)
-        {
+        void Ready(PakFile pakFile) {
             if (string.IsNullOrEmpty(Option.ForcePath) || Option.ForcePath.StartsWith("app:")) return;
             var sample = Option.ForcePath.StartsWith("sample:") ? pakFile.Game.GetSample(Option.ForcePath[7..]) : null;
             var forcePath = sample != null ? sample.Path : Option.ForcePath;

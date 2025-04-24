@@ -14,35 +14,30 @@ using GameX.Formats;
 using System.Collections.Specialized;
 using System.Collections.ObjectModel;
 
-namespace GameX.Cig.Apps.StarWords.Views
-{
-    /// <summary>
-    /// Interaction logic for DocumentView.xaml
-    /// </summary>
-    public partial class DocumentView : UserControl, INotifyPropertyChanged
-    {
-        public DocumentView()
-        {
-            InitializeComponent();
-            DataContext = this;
-        }
+namespace GameX.Cig.Apps.StarWords.Views;
 
-        public event PropertyChangedEventHandler PropertyChanged;
-        void OnPropertyChanged([CallerMemberName] string propertyName = "") => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+/// <summary>
+/// Interaction logic for DocumentView.xaml
+/// </summary>
+public partial class DocumentView : UserControl, INotifyPropertyChanged {
+    public DocumentView() {
+        InitializeComponent();
+        DataContext = this;
+    }
 
-        public static readonly DependencyProperty DocumentProperty = DependencyProperty.Register(nameof(Document), typeof(object), typeof(DocumentView),
-            new PropertyMetadata((d, e) =>
-            {
-                //if (d is not FileExplorer fileExplorer || e.NewValue is not PakFile pakFile) return;
-                //fileExplorer.NodeFilters = pakFile.GetMetaItemFiltersAsync(Resource).Result;
-                //fileExplorer.Nodes = new ObservableCollection<MetaItem>(fileExplorer.PakNodes = pakFile.GetMetaItemsAsync(Resource).Result.ToList());
-                //fileExplorer.SelectedItem = string.IsNullOrEmpty(fileExplorer.OpenPath) ? null : fileExplorer.FindByPath(fileExplorer.OpenPath);
-                //fileExplorer.OnReady();
-            }));
-        public object Document
-        {
-            get => (object)GetValue(DocumentProperty);
-            set => SetValue(DocumentProperty, value);
-        }
+    public event PropertyChangedEventHandler PropertyChanged;
+    void OnPropertyChanged([CallerMemberName] string propertyName = "") => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
+    public static readonly DependencyProperty DocumentProperty = DependencyProperty.Register(nameof(Document), typeof(object), typeof(DocumentView),
+        new PropertyMetadata((d, e) => {
+            //if (d is not FileExplorer fileExplorer || e.NewValue is not PakFile pakFile) return;
+            //fileExplorer.NodeFilters = pakFile.GetMetaItemFiltersAsync(Resource).Result;
+            //fileExplorer.Nodes = new ObservableCollection<MetaItem>(fileExplorer.PakNodes = pakFile.GetMetaItemsAsync(Resource).Result.ToList());
+            //fileExplorer.SelectedItem = string.IsNullOrEmpty(fileExplorer.OpenPath) ? null : fileExplorer.FindByPath(fileExplorer.OpenPath);
+            //fileExplorer.OnReady();
+        }));
+    public object Document {
+        get => (object)GetValue(DocumentProperty);
+        set => SetValue(DocumentProperty, value);
     }
 }

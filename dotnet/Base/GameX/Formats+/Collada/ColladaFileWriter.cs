@@ -16,8 +16,7 @@ namespace GameX.Formats.Collada;
 /// export to .dae format (COLLADA)
 /// </summary>
 /// <seealso cref="UnknownFileWriter" />
-public partial class ColladaFileWriter : UnknownFileWriter
-{
+public partial class ColladaFileWriter : UnknownFileWriter {
     public ColladaFileWriter(IUnknownFileModel file) : base(file) { }
 
     public FileInfo ModelFile;
@@ -34,8 +33,7 @@ public partial class ColladaFileWriter : UnknownFileWriter
         Collada_Version = "1.4.1",
     };
 
-    public override void Write(string outputDir = null, bool preservePath = true)
-    {
+    public override void Write(string outputDir = null, bool preservePath = true) {
         // The root of the functions to write Collada files
         // At this point, we should have a cryData.Asset object, fully populated.
         Log("*** Starting WriteCOLLADA() ***");
@@ -54,8 +52,7 @@ public partial class ColladaFileWriter : UnknownFileWriter
         SetLibraryMaterials();
         //SetLibraryGeometries();
         // If there is Skinning info, create the controller library and set up visual scene to refer to it. Otherwise just write the Visual Scene
-        if (File.SkinningInfo.HasSkinningInfo)
-        {
+        if (File.SkinningInfo.HasSkinningInfo) {
             SetLibraryControllers();
             SetLibraryVisualScenesWithSkeleton();
         }
@@ -78,8 +75,7 @@ public partial class ColladaFileWriter : UnknownFileWriter
     /// </summary>
     /// <param name="compiledBones">List of bones to get the BPM from.</param>
     /// <returns>The float_array that represents the BPM of all the bones, in order.</returns>
-    string GetBindPoseArray(ICollection<IUnknownBone> compiledBones)
-    {
+    string GetBindPoseArray(ICollection<IUnknownBone> compiledBones) {
         var b = new StringBuilder();
         foreach (var compiledBone in compiledBones) b.Append($"{CreateStringFromMatrix44(compiledBone.WorldToBone)} ");
         return b.ToString().TrimEnd();
@@ -102,8 +98,7 @@ public partial class ColladaFileWriter : UnknownFileWriter
         => CleanNumbers($"{m.M11:F6} {m.M12:F6} {m.M13:F6} {m.M14:F6} {m.M21:F6} {m.M22:F6} {m.M23:F6} {m.M24:F6} {m.M31:F6} {m.M32:F6} {m.M33:F6} {m.M34:F6} {m.M41:F6} {m.M42:F6} {m.M43:F6} {m.M44:F6}");
 
     /// <summary>Takes the Material file name and returns just the file name with no extension</summary>
-    string CleanMtlFileName(string cleanMe)
-    {
+    string CleanMtlFileName(string cleanMe) {
         var stringSeparators = new string[] { "\\", "/" };
         string[] f;
         // Take out path info

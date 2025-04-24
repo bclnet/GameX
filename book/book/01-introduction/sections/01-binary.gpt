@@ -11,3 +11,19 @@ Table:
 ReadInt32
 ReadInt16
 ReadInt8
+
+one block
+two block
+four block
+eight block
+
+Integer
+1 byte (c)
+1 sbyte (b) | byte (B)
+2 short (h) | ushort (H)
+4 int (i) | uint (I)
+8 long (q) | ulong (Q)
+
+Floating
+4 float (f)
+8 double (d)

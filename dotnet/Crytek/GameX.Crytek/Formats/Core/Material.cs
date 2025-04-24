@@ -11,21 +11,18 @@ namespace GameX.Crytek.Formats.Core;
 /// Representation of a CryEngine .mtl file
 /// </summary>
 [XmlRoot(ElementName = "Material")]
-public partial class Material
-{
+public partial class Material {
     #region Data Structures
 
     /// <summary>
     /// Color used in XML serialization/deserialization
     /// </summary>
-    internal partial class Color
-    {
+    internal partial class Color {
         public double Red;
         public double Green;
         public double Blue;
 
-        public static Color Deserialize(string value)
-        {
+        public static Color Deserialize(string value) {
             if (string.IsNullOrWhiteSpace(value)) return null;
             var p = value.Split(',');
             if (p.Length != 3) return null;
@@ -46,18 +43,15 @@ public partial class Material
     /// The texture object
     /// </summary>
     [XmlRoot(ElementName = "Texture")]
-    public partial class Texture
-    {
-        public enum TypeEnum
-        {
+    public partial class Texture {
+        public enum TypeEnum {
             [XmlEnum("0")] Default = 0,
             [XmlEnum("3")] Environment = 3,
             [XmlEnum("5")] Interface = 5,
             [XmlEnum("7")] CubeMap = 7,
             [XmlEnum("Nearest Cube-Map probe for alpha blended")] NearestCubeMap = 8
         }
-        public enum MapTypeEnum
-        {
+        public enum MapTypeEnum {
             Unknown = 0,
             Diffuse,
             Bumpmap,
@@ -72,8 +66,7 @@ public partial class Material
             BlendDetail
         }
         [XmlAttribute(AttributeName = "Map")]
-        public string __Map
-        {
+        public string __Map {
             get => Enum.GetName(typeof(MapTypeEnum), Map);
             set { _ = Enum.TryParse(value, out MapTypeEnum z); Map = z; }
         }
@@ -87,13 +80,11 @@ public partial class Material
     /// The texture modifier
     /// </summary>
     [XmlRoot(ElementName = "TexMod")]
-    public class TextureModifier
-    {
+    public class TextureModifier {
         [XmlAttribute(AttributeName = "TexMod_RotateType")] public int RotateType { get; set; }
         [XmlAttribute(AttributeName = "TexMod_TexGenType")] public int GenType { get; set; }
         [XmlAttribute(AttributeName = "TexMod_bTexGenProjected"), DefaultValue(1)]
-        public int __Projected
-        {
+        public int __Projected {
             get => Projected ? 1 : 0;
             set => Projected = value == 1;
         }
@@ -108,8 +99,7 @@ public partial class Material
     /// Not really needed
     /// </summary>
     [XmlRoot(ElementName = "PublicParams")]
-    internal class PublicParameters
-    {
+    internal class PublicParameters {
         [XmlAttribute(AttributeName = "FresnelPower")] public string FresnelPower { get; set; }
         [XmlAttribute(AttributeName = "GlossFromDiffuseContrast")] public string GlossFromDiffuseContrast { get; set; }
         [XmlAttribute(AttributeName = "FresnelScale")] public string FresnelScale { get; set; }
@@ -148,22 +138,19 @@ public partial class Material
     [XmlAttribute(AttributeName = "StringGenMask"), DefaultValue("")] public string StringGenMask { get; set; }
     [XmlAttribute(AttributeName = "SurfaceType"), DefaultValue(null)] public string SurfaceType { get; set; }
     [XmlAttribute(AttributeName = "Diffuse"), DefaultValue("")]
-    public string __Diffuse
-    {
+    public string __Diffuse {
         get => Color.Serialize(Diffuse);
         set => Diffuse = Color.Deserialize(value);
     }
     [XmlIgnore] internal Color Diffuse { get; set; }
     [XmlAttribute(AttributeName = "Specular"), DefaultValue("")]
-    public string __Specular
-    {
+    public string __Specular {
         get => Color.Serialize(Specular);
         set => Specular = Color.Deserialize(value);
     }
     [XmlIgnore] internal Color Specular { get; set; }
     [XmlAttribute(AttributeName = "Emissive"), DefaultValue("")]
-    public string __Emissive
-    {
+    public string __Emissive {
         get => Color.Serialize(Emissive);
         set => Emissive = Color.Deserialize(value);
     }
@@ -190,11 +177,9 @@ public partial class Material
 
     #endregion
 
-    public static Material FromFile((string fileName, Stream stream) file)
-    {
+    public static Material FromFile((string fileName, Stream stream) file) {
         if (file.stream == null) return null;
-        try
-        {
+        try {
             var fileData = CryXmlFile.Deserialize<Material>(file.stream);
             fileData.SourceFileName = file.fileName.Replace('.', '_');
             return fileData;

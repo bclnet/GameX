@@ -3,20 +3,21 @@ using OpenStack.Gfx;
 using OpenStack.Gfx.Ogre;
 using System;
 using System.Collections.Generic;
+using static OpenStack.Gfx.GfX;
 
 namespace GameX.Platforms.Ogre;
 
 public static class OgreRenderer
 {
-    public static Renderer CreateRenderer(object parent, OgreGfxModel gfx, object obj, string type)
+    public static Renderer CreateRenderer(object parent, IList<IOpenGfx> gfx, object obj, string type)
         => type switch
         {
-            "TestTri" => new OgreTestTriRenderer(gfx, obj),
-            "Texture" => new OgreTextureRenderer(gfx, obj),
-            "Object" => new OgreObjectRenderer(gfx, obj),
-            "Cell" => new OgreCellRenderer(gfx, obj),
-            "Engine" => new OgreEngineRenderer(gfx, obj),
-            _ => new OgreObjectRenderer(gfx, obj),
+            "TestTri" => new OgreTestTriRenderer(gfx[XModel] as OgreGfxModel, obj),
+            "Texture" => new OgreTextureRenderer(gfx[XModel] as OgreGfxModel, obj),
+            "Object" => new OgreObjectRenderer(gfx[XModel] as OgreGfxModel, obj),
+            "Cell" => new OgreCellRenderer(gfx[XModel] as OgreGfxModel, obj),
+            "Engine" => new OgreEngineRenderer(gfx[XModel] as OgreGfxModel, obj),
+            _ => new OgreObjectRenderer(gfx[XModel] as OgreGfxModel, obj),
         };
 }
 
@@ -33,19 +34,15 @@ public class ViewInfo
 {
     static ViewInfo() => PlatformX.Activate(OgrePlatform.This);
 
-    public enum Kind { Texture, TextureCursor, Object, Cell, Engine }
-
     public string FamilyId = "Bethesda";
     public string PakUri = "game:/Morrowind.bsa#Morrowind";
-
-    public Kind ViewKind = Kind.Texture;
-    public string Param1 = "bookart/boethiah_256.dds";
-    //public string Param1 = "meshes/x/ex_common_balcony_01.nif";
+    public string Type = "Texture";
+    public string Path = "bookart/boethiah_256.dds";
+    //public string Path = "meshes/x/ex_common_balcony_01.nif";
 
     protected Family Family;
-    protected List<PakFile> PakFiles = [];
+    protected PakFile Source;
     protected OgreGfxModel Gfx;
-
     Renderer Renderer;
 
     //public override void _Ready()

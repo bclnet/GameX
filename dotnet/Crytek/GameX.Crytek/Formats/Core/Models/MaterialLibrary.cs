@@ -3,10 +3,8 @@ using System.Collections.Generic;
 
 namespace GameX.Crytek.Formats.Models;
 
-public class MaterialLibrary
-{
-    public class Item
-    {
+public class MaterialLibrary {
+    public class Item {
         /// <summary>
         /// Unique identifier for this material.
         /// </summary>

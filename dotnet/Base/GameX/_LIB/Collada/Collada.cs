@@ -13,8 +13,7 @@ namespace Khronos.Collada;
 //[XmlRoot(ElementName = "COLLADA", Namespace = "https://www.khronos.org/files/collada_schema_1_5", IsNullable = false)]
 //[XmlRoot(ElementName = "COLLADA", Namespace = "http://www.khronos.org/files/collada_schema_1_4", IsNullable = false)]
 [Serializable, DebuggerStepThrough(), DesignerCategory("code"), XmlType(AnonymousType = true), XmlRoot(ElementName = "COLLADA", Namespace = "http://www.collada.org/2005/11/COLLADASchema", IsNullable = false)]
-public partial class Collada
-{
+public partial class Collada {
     [XmlAttribute("version")] public string Collada_Version;
     [XmlElement(ElementName = "asset")] public Collada_Asset Asset;
 
@@ -48,25 +47,20 @@ public partial class Collada
     [XmlElement(ElementName = "scene")] public Collada_Scene Scene;
     [XmlElement(ElementName = "extra")] public Collada_Extra[] Extra;
 
-    public Collada()
-    {
+    public Collada() {
         Collada_Version = "1.5";
-        Asset = new Collada_Asset
-        {
+        Asset = new Collada_Asset {
             Title = "Test Engine 1"
         };
         Library_Visual_Scene = new Collada_Library_Visual_Scenes();
     }
 
-    public static Collada Load_File(string file_name)
-    {
-        try
-        {
+    public static Collada Load_File(string file_name) {
+        try {
             using (var tr = new StreamReader(file_name))
                 return (Collada)new XmlSerializer(typeof(Collada)).Deserialize(tr);
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             Log(ex.ToString());
             Console.ReadLine();
             return null;
@@ -104,73 +98,59 @@ public partial class Collada
 
 #region Collada_Helpers
 
-public partial class Collada_Bool_Array_String
-{
+public partial class Collada_Bool_Array_String {
     public bool[] Value() => Collada_Parse_Utils.String_To_Bool(Value_As_String);
 }
 
-public partial class Collada_Common_Float2_Or_Param_Type
-{
+public partial class Collada_Common_Float2_Or_Param_Type {
     public float[] Value() => Collada_Parse_Utils.String_To_Float(Value_As_String);
 }
 
-public partial class Collada_Float_Array_String
-{
+public partial class Collada_Float_Array_String {
     public float[] Value() => Collada_Parse_Utils.String_To_Float(Value_As_String);
 }
 
-public partial class Collada_Int_Array_String
-{
+public partial class Collada_Int_Array_String {
     public int[] Value() => Collada_Parse_Utils.String_To_Int(this.Value_As_String);
 }
 
-public class Collada_Parse_Utils
-{
-    public static int[] String_To_Int(string int_array)
-    {
+public class Collada_Parse_Utils {
+    public static int[] String_To_Int(string int_array) {
         var str = int_array.Split(' ');
         var array = new int[str.LongLength];
-        try
-        {
+        try {
             for (var i = 0L; i < str.LongLength; i++)
                 array[i] = Convert.ToInt32(str[i]);
         }
-        catch (Exception e)
-        {
+        catch (Exception e) {
             Log(e.ToString());
             Log(int_array);
         }
         return array;
     }
 
-    public static float[] String_To_Float(string float_array)
-    {
+    public static float[] String_To_Float(string float_array) {
         var str = float_array.Split(' ');
         var array = new float[str.LongLength];
-        try
-        {
+        try {
             for (var i = 0L; i < str.LongLength; i++)
                 array[i] = Convert.ToSingle(str[i]);
         }
-        catch (Exception e)
-        {
+        catch (Exception e) {
             Log(e.ToString());
             Log(float_array);
         }
         return array;
     }
 
-    public static bool[] String_To_Bool(string bool_array)
-    {
+    public static bool[] String_To_Bool(string bool_array) {
         var str = bool_array.Split(' ');
         var array = new bool[str.LongLength];
-        try
-        {
+        try {
             for (var i = 0L; i < str.LongLength; i++)
                 array[i] = Convert.ToBoolean(str[i]);
         }
-        catch (Exception e)
-        {
+        catch (Exception e) {
             Log(e.ToString());
             Log(bool_array);
         }
@@ -178,18 +158,15 @@ public class Collada_Parse_Utils
     }
 }
 
-public partial class Collada_SID_Float_Array_String
-{
+public partial class Collada_SID_Float_Array_String {
     public float[] Value() => Collada_Parse_Utils.String_To_Float(Value_As_String);
 }
 
-public partial class Collada_SID_Int_Array_String
-{
+public partial class Collada_SID_Int_Array_String {
     public int[] Value() => Collada_Parse_Utils.String_To_Int(Value_As_String);
 }
 
-public partial class Collada_String_Array_String
-{
+public partial class Collada_String_Array_String {
     public string[] Value() => Value_Pre_Parse.Split(' ');
 }
 
@@ -198,8 +175,7 @@ public partial class Collada_String_Array_String
 #region Enums
 
 [Serializable, XmlType(Namespace = "http://www.collada.org/2005/11/COLLADASchema")]
-public enum Collada_Alpha_Operator
-{
+public enum Collada_Alpha_Operator {
     REPLACE,
     MODULATE,
     ADD,
@@ -209,15 +185,13 @@ public enum Collada_Alpha_Operator
 }
 
 [Serializable, XmlType(Namespace = "http://www.collada.org/2005/11/COLLADASchema")]
-public enum Collada_Argument_Alpha_Operand
-{
+public enum Collada_Argument_Alpha_Operand {
     SRC_ALPHA,
     ONE_MINUS_SRC_ALPHA
 }
 
 [Serializable, XmlType(Namespace = "http://www.collada.org/2005/11/COLLADASchema")]
-public enum Collada_Argument_RGB_Operand
-{
+public enum Collada_Argument_RGB_Operand {
     SRC_COLOR,
     ONE_MINUS_SRC_COLOR,
     SRC_ALPHA,
@@ -225,8 +199,7 @@ public enum Collada_Argument_RGB_Operand
 }
 
 [Serializable, XmlType(Namespace = "http://www.collada.org/2005/11/COLLADASchema")]
-public enum Collada_Argument_Source
-{
+public enum Collada_Argument_Source {
     TEXTURE,
     CONSTANT,
     PRIMARY,
@@ -234,8 +207,7 @@ public enum Collada_Argument_Source
 }
 
 [Serializable, XmlType(Namespace = "http://www.collada.org/2005/11/COLLADASchema")]
-public enum Collada_Face
-{
+public enum Collada_Face {
     POSITIVE_X,
     NEGATIVE_X,
     POSITIVE_Y,
@@ -245,8 +217,7 @@ public enum Collada_Face
 }
 
 [Serializable, XmlType(Namespace = "http://www.collada.org/2005/11/COLLADASchema")]
-public enum Collada_Format_Hint_Channels
-{
+public enum Collada_Format_Hint_Channels {
     RGB,
     RGBA,
     RGBE,
@@ -256,8 +227,7 @@ public enum Collada_Format_Hint_Channels
 }
 
 [Serializable, XmlType(Namespace = "http://www.collada.org/2005/11/COLLADASchema")]
-public enum Collada_Format_Hint_Precision
-{
+public enum Collada_Format_Hint_Precision {
     DEFAULT,
     LOW,
     MID,
@@ -266,8 +236,7 @@ public enum Collada_Format_Hint_Precision
 }
 
 [Serializable, XmlType(Namespace = "http://www.collada.org/2005/11/COLLADASchema")]
-public enum Collada_Format_Hint_Range
-{
+public enum Collada_Format_Hint_Range {
     SNORM,
     UNORM,
     SINT,
@@ -276,8 +245,7 @@ public enum Collada_Format_Hint_Range
 }
 
 [Serializable, XmlType(Namespace = "http://www.collada.org/2005/11/COLLADASchema")]
-public enum Collada_FX_Opaque_Channel
-{
+public enum Collada_FX_Opaque_Channel {
     A_ONE,
     RGB_ZERO,
     A_ZERO,
@@ -285,8 +253,7 @@ public enum Collada_FX_Opaque_Channel
 }
 
 [Serializable, XmlType(Namespace = "http://www.collada.org/2005/11/COLLADASchema")]
-public enum Collada_FX_Sampler_Common_Filter_Type
-{
+public enum Collada_FX_Sampler_Common_Filter_Type {
     NONE,
     NEAREST,
     LINEAR,
@@ -294,8 +261,7 @@ public enum Collada_FX_Sampler_Common_Filter_Type
 }
 
 [Serializable, XmlType(Namespace = "http://www.collada.org/2005/11/COLLADASchema")]
-public enum Collada_FX_Sampler_Common_Wrap_Mode
-{
+public enum Collada_FX_Sampler_Common_Wrap_Mode {
     WRAP,
     MIRROR,
     CLAMP,
@@ -307,15 +273,13 @@ public enum Collada_FX_Sampler_Common_Wrap_Mode
 }
 
 [Serializable, XmlType(Namespace = "http://www.collada.org/2005/11/COLLADASchema")]
-public enum Collada_Geographic_Location_Altitude_Mode
-{
+public enum Collada_Geographic_Location_Altitude_Mode {
     absolute,
     relativeToGround
 }
 
 [Serializable, XmlType(Namespace = "http://www.collada.org/2005/11/COLLADASchema")]
-public enum Collada_Input_Semantic
-{
+public enum Collada_Input_Semantic {
     BINORMAL,
     COLOR,
     CONTINUITY,
@@ -342,8 +306,7 @@ public enum Collada_Input_Semantic
 }
 
 [Serializable, XmlType(Namespace = "http://www.collada.org/2005/11/COLLADASchema")]
-public enum Collada_Modifier_Value
-{
+public enum Collada_Modifier_Value {
     CONST,
     UNIFORM,
     VARYING,
@@ -354,15 +317,13 @@ public enum Collada_Modifier_Value
 }
 
 [Serializable, XmlType(Namespace = "http://www.collada.org/2005/11/COLLADASchema")]
-public enum Collada_Node_Type
-{
+public enum Collada_Node_Type {
     JOINT,
     NODE
 }
 
 [Serializable, XmlType(Namespace = "http://www.collada.org/2005/11/COLLADASchema")]
-public enum Collada_RGB_Operator
-{
+public enum Collada_RGB_Operator {
     REPLACE,
     MODULATE,
     ADD,
@@ -374,8 +335,7 @@ public enum Collada_RGB_Operator
 }
 
 [Serializable, XmlType(Namespace = "http://www.collada.org/2005/11/COLLADASchema")]
-public enum Collada_Sampler_Behavior
-{
+public enum Collada_Sampler_Behavior {
     UNDEFINED,
     CONSTANT,
     GRADIENT,
@@ -385,8 +345,7 @@ public enum Collada_Sampler_Behavior
 }
 
 [Serializable, XmlType(Namespace = "http://www.collada.org/2005/11/COLLADASchema")]
-public enum Collada_Shader_Stage
-{
+public enum Collada_Shader_Stage {
     TESSELATION,
     VERTEX,
     GEOMETRY,
@@ -394,8 +353,7 @@ public enum Collada_Shader_Stage
 }
 
 [Serializable, XmlType(Namespace = "http://www.collada.org/2005/11/COLLADASchema")]
-public enum Collada_TexEnv_Operator
-{
+public enum Collada_TexEnv_Operator {
     REPLACE,
     MODULATE,
     DECAL,
@@ -408,107 +366,91 @@ public enum Collada_TexEnv_Operator
 #region Types
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Bool_Array_String
-{
+public partial class Collada_Bool_Array_String {
     [XmlText()] public string Value_As_String;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Common_Bool_Or_Param_Type : Collada_Common_Param_Type
-{
+public partial class Collada_Common_Bool_Or_Param_Type : Collada_Common_Param_Type {
     [XmlElement(ElementName = "bool")] public bool Bool;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Common_Float_Or_Param_Type : Collada_Common_Param_Type
-{
+public partial class Collada_Common_Float_Or_Param_Type : Collada_Common_Param_Type {
     [XmlText()] public string Value_As_String;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Common_Float2_Or_Param_Type
-{
+public partial class Collada_Common_Float2_Or_Param_Type {
     [XmlElement(ElementName = "param")] public Collada_Param Param;
     [XmlText()] public string Value_As_String;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Common_Int_Or_Param_Type : Collada_Common_Param_Type
-{
+public partial class Collada_Common_Int_Or_Param_Type : Collada_Common_Param_Type {
     [XmlText()] public string Value_As_String;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Common_Param_Type
-{
+public partial class Collada_Common_Param_Type {
     [XmlElement(ElementName = "param")] public Collada_Param Param;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Common_SIDREF_Or_Param_Type : Collada_Common_Param_Type
-{
+public partial class Collada_Common_SIDREF_Or_Param_Type : Collada_Common_Param_Type {
     [XmlText()] public string Value;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Float_Array_String
-{
+public partial class Collada_Float_Array_String {
     [XmlText()] public string Value_As_String;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_Int_Array_String
-{
+public partial class Collada_Int_Array_String {
     [XmlText()] public string Value_As_String;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_SID_Bool
-{
+public partial class Collada_SID_Bool {
     [XmlAttribute("sid")] public string sID;
     [XmlText()] public bool Value;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_SID_Float
-{
+public partial class Collada_SID_Float {
     [XmlAttribute("sid")] public string sID;
     [XmlText()] public float Value;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_SID_Float_Array_String
-{
+public partial class Collada_SID_Float_Array_String {
     [XmlAttribute("sid")] public string sID;
     [XmlText()] public string Value_As_String;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_SID_Int_Array_String
-{
+public partial class Collada_SID_Int_Array_String {
     [XmlAttribute("sid")] public string sID;
     [XmlText()] public string Value_As_String;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_SID_Name_Float
-{
+public partial class Collada_SID_Name_Float {
     [XmlAttribute("sid")] public string sID;
     [XmlAttribute("name")] public string Name;
     [XmlText()] public float Value;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_SID_Name_String
-{
+public partial class Collada_SID_Name_String {
     [XmlAttribute("sid")] public string sID;
     [XmlAttribute("name")] public string Name;
     [XmlText()] public string Value;
 }
 
 [Serializable, XmlType(AnonymousType = true)]
-public partial class Collada_String_Array_String
-{
+public partial class Collada_String_Array_String {
     [XmlText()] public string Value_Pre_Parse;
 }
 

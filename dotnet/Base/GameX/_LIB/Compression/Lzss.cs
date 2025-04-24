@@ -1,12 +1,9 @@
 ﻿using System;
 using System.IO;
 
-namespace Compression
-{
-    internal class Lzss
-    {
-        internal class BinaryReaderE : BinaryReader
-        {
+namespace Compression {
+    internal class Lzss {
+        internal class BinaryReaderE : BinaryReader {
             public BinaryReaderE(Stream stream) : base(stream) { }
             public override short ReadInt16() { var numArray = ReadBytes(2); Array.Reverse((Array)numArray); return BitConverter.ToInt16(numArray, 0); }
             public override int ReadInt32() { var numArray = ReadBytes(4); Array.Reverse((Array)numArray); return BitConverter.ToInt32(numArray, 0); }
@@ -26,16 +23,14 @@ namespace Compression
         short DI;
         int OI;
 
-        public Lzss(BinaryReaderE stream, int uncompressedSize)
-        {
+        public Lzss(BinaryReaderE stream, int uncompressedSize) {
             this.stream = stream;
             this.uncompressedSize = uncompressedSize;
         }
 
         bool LastByte() => stream.BaseStream.Position == stream.BaseStream.Length;
 
-        void ClearDict()
-        {
+        void ClearDict() {
             for (var index = 0; index < DICT_SIZE; ++index) dictionary[index] = 32;
             DI = DICT_SIZE - MAX_MATCH;
         }
@@ -44,16 +39,13 @@ namespace Compression
 
         byte[] ReadBytes(int bytes) => stream.ReadBytes(bytes);
 
-        void WriteByte(byte b)
-        {
+        void WriteByte(byte b) {
             output[OI++] = b;
             dictionary[DI++ % DICT_SIZE] = b;
         }
 
-        void WriteBytes(byte[] bytes)
-        {
-            foreach (var num in bytes)
-            {
+        void WriteBytes(byte[] bytes) {
+            foreach (var num in bytes) {
                 if (OI >= uncompressedSize) break;
                 output[OI++] = num;
             }
@@ -63,26 +55,20 @@ namespace Compression
 
         short ReadInt16() => stream.ReadInt16();
 
-        void ReadBlock(int N)
-        {
+        void ReadBlock(int N) {
             NR = 0;
             if (N < 0) WriteBytes(ReadBytes(N * -1));
-            else
-            {
+            else {
                 ClearDict();
-                while (NR < N && !LastByte())
-                {
+                while (NR < N && !LastByte()) {
                     var num1 = ReadByte();
                     if (NR >= N || LastByte()) break;
-                    for (var index1 = 0; index1 < 8; ++index1)
-                    {
-                        if (num1 % 2 == 1)
-                        {
+                    for (var index1 = 0; index1 < 8; ++index1) {
+                        if (num1 % 2 == 1) {
                             WriteByte(ReadByte());
                             if (NR >= N) return;
                         }
-                        else
-                        {
+                        else {
                             if (NR >= N) return;
                             DO = ReadByte();
                             if (NR >= N) return;
@@ -98,12 +84,10 @@ namespace Compression
             }
         }
 
-        public byte[] Decompress()
-        {
+        public byte[] Decompress() {
             output = new byte[uncompressedSize];
             dictionary = new byte[DICT_SIZE];
-            while (!LastByte())
-            {
+            while (!LastByte()) {
                 var N = ReadInt16();
                 if (N != 0) ReadBlock(N);
                 else break;

@@ -4,8 +4,8 @@ from PyQt6.QtGui import QFont
 from PyQt6.QtCore import Qt
 from .util import _pathExtension, _pathTempFile
 
-# ViewHex
-class ViewHex(QWidget):
+# AppHexWidget
+class AppHexWidget(QWidget):
     def __init__(self, parent, tab):
         super().__init__()
         self.parent = parent

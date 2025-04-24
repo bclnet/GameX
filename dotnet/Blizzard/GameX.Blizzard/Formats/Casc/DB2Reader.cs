@@ -11,36 +11,30 @@ using System.Text;
 namespace GameX.Blizzard.Formats.Casc;
 
 [AttributeUsage(AttributeTargets.Field)]
-public sealed class ArraySizeAttribute : Attribute
-{
+public sealed class ArraySizeAttribute : Attribute {
     public int Size { get; private set; }
 
-    public ArraySizeAttribute(int size)
-    {
+    public ArraySizeAttribute(int size) {
         Size = size;
     }
 }
 
-public class FieldCache
-{
+public class FieldCache {
     public FieldInfo Field;
     public int ArraySize;
     public bool IsIndex;
     public bool IsArray;
 }
 
-public class FieldCache<T, V> : FieldCache
-{
+public class FieldCache<T, V> : FieldCache {
     public readonly Action<T, V> Setter;
     public readonly Func<T, V> Getter;
 
-    public FieldCache(FieldInfo field)
-    {
+    public FieldCache(FieldInfo field) {
         Field = field;
         IsArray = field.FieldType.IsArray;
 
-        if (IsArray)
-        {
+        if (IsArray) {
             ArraySizeAttribute atr = (ArraySizeAttribute)field.GetCustomAttribute(typeof(ArraySizeAttribute));
 
             if (atr == null)
@@ -54,33 +48,26 @@ public class FieldCache<T, V> : FieldCache
     }
 }
 
-public abstract class ClientDBRow : IDB2Row
-{
+public abstract class ClientDBRow : IDB2Row {
     public abstract int GetId();
 
-    public void Read<T>(FieldCache[] fields, T entry, BitReader r, int recordOffset, Dictionary<long, string> stringsTable, FieldMetaData[] fieldMeta, ColumnMetaData[] columnMeta, Value32[][] palletData, Dictionary<int, Value32>[] commonData, int id, int refId, bool isSparse = false) where T : ClientDBRow
-    {
+    public void Read<T>(FieldCache[] fields, T entry, BitReader r, int recordOffset, Dictionary<long, string> stringsTable, FieldMetaData[] fieldMeta, ColumnMetaData[] columnMeta, Value32[][] palletData, Dictionary<int, Value32>[] commonData, int id, int refId, bool isSparse = false) where T : ClientDBRow {
         int fieldIndex = 0;
 
-        foreach (var f in fields)
-        {
-            if (f.IsIndex && id != -1)
-            {
+        foreach (var f in fields) {
+            if (f.IsIndex && id != -1) {
                 ((FieldCache<T, int>)f).Setter(entry, id);
                 continue;
             }
 
-            if (fieldIndex >= fieldMeta.Length)
-            {
+            if (fieldIndex >= fieldMeta.Length) {
                 if (refId != -1)
                     ((FieldCache<T, int>)f).Setter(entry, refId);
                 continue;
             }
 
-            if (f.IsArray)
-            {
-                switch (f)
-                {
+            if (f.IsArray) {
+                switch (f) {
                     case FieldCache<T, int[]> c1:
                         c1.Setter(entry, FieldReader.GetFieldValueArray<int>(r, fieldMeta[fieldIndex], columnMeta[fieldIndex], palletData[fieldIndex], commonData[fieldIndex], c1.ArraySize));
                         break;
@@ -115,10 +102,8 @@ public abstract class ClientDBRow : IDB2Row
                         throw new Exception($"Unhandled DbcTable type: {f.Field.FieldType.FullName} in {f.Field.DeclaringType.FullName}.{f.Field.Name}");
                 }
             }
-            else
-            {
-                switch (f)
-                {
+            else {
+                switch (f) {
                     case FieldCache<T, int> c1:
                         c1.Setter(entry, FieldReader.GetFieldValue<int>(GetId(), r, fieldMeta[fieldIndex], columnMeta[fieldIndex], palletData[fieldIndex], commonData[fieldIndex]));
                         break;
@@ -163,16 +148,14 @@ public abstract class ClientDBRow : IDB2Row
     public IDB2Row Clone() => (IDB2Row)MemberwiseClone();
 }
 
-public interface IDB2Row
-{
+public interface IDB2Row {
     int GetId();
     void SetId(int id);
     T GetField<T>(int fieldIndex, int arrayIndex = -1);
     IDB2Row Clone();
 }
 
-public abstract class DB2Reader<T> : IEnumerable<KeyValuePair<int, T>> where T : IDB2Row
-{
+public abstract class DB2Reader<T> : IEnumerable<KeyValuePair<int, T>> where T : IDB2Row {
     public int RecordsCount { get; protected set; }
     public int FieldsCount { get; protected set; }
     public int RecordSize { get; protected set; }
@@ -199,8 +182,7 @@ public abstract class DB2Reader<T> : IEnumerable<KeyValuePair<int, T>> where T :
 
     public bool HasRow(int id) => _Records.ContainsKey(id);
 
-    public T GetRow(int id)
-    {
+    public T GetRow(int id) {
         _Records.TryGetValue(id, out T row);
         return row;
     }
@@ -209,15 +191,13 @@ public abstract class DB2Reader<T> : IEnumerable<KeyValuePair<int, T>> where T :
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
 
-public struct FieldMetaData
-{
+public struct FieldMetaData {
     public short Bits;
     public short Offset;
 }
 
 [StructLayout(LayoutKind.Explicit)]
-public struct ColumnMetaData
-{
+public struct ColumnMetaData {
     [FieldOffset(0)]
     public ushort RecordOffset;
     [FieldOffset(2)]
@@ -234,39 +214,33 @@ public struct ColumnMetaData
     public ColumnCompressionData_Common Common;
 }
 
-public struct ColumnCompressionData_Immediate
-{
+public struct ColumnCompressionData_Immediate {
     public int BitOffset;
     public int BitWidth;
     public int Flags; // 0x1 signed
 }
 
-public struct ColumnCompressionData_Pallet
-{
+public struct ColumnCompressionData_Pallet {
     public int BitOffset;
     public int BitWidth;
     public int Cardinality;
 }
 
-public struct ColumnCompressionData_Common
-{
+public struct ColumnCompressionData_Common {
     public Value32 DefaultValue;
     public int B;
     public int C;
 }
 
-public struct Value32
-{
+public struct Value32 {
     private uint Value;
 
-    public T As<T>() where T : unmanaged
-    {
+    public T As<T>() where T : unmanaged {
         return Unsafe.As<uint, T>(ref Value);
     }
 }
 
-public enum CompressionType
-{
+public enum CompressionType {
     None = 0,
     Immediate = 1,
     Common = 2,
@@ -275,14 +249,12 @@ public enum CompressionType
     SignedImmediate = 5
 }
 
-public struct ReferenceEntry
-{
+public struct ReferenceEntry {
     public int Id;
     public int Index;
 }
 
-public class ReferenceData
-{
+public class ReferenceData {
     public int NumRecords { get; set; }
     public int MinId { get; set; }
     public int MaxId { get; set; }
@@ -290,8 +262,7 @@ public class ReferenceData
 }
 
 [Flags]
-public enum DB2Flags
-{
+public enum DB2Flags {
     None = 0x0,
     Sparse = 0x1,
     SecondaryKey = 0x2,
@@ -301,15 +272,13 @@ public enum DB2Flags
 }
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
-public struct SparseEntry
-{
+public struct SparseEntry {
     public int Offset;
     public ushort Size;
 }
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
-public struct SectionHeader_WDC2
-{
+public struct SectionHeader_WDC2 {
     public ulong TactKeyLookup;
     public int FileOffset;
     public int NumRecords;
@@ -321,8 +290,7 @@ public struct SectionHeader_WDC2
 }
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
-public struct SectionHeader_WDC3
-{
+public struct SectionHeader_WDC3 {
     public ulong TactKeyLookup;
     public int FileOffset;
     public int NumRecords;
@@ -334,8 +302,7 @@ public struct SectionHeader_WDC3
     public int NumCopyRecords;
 }
 
-public class BitReader
-{
+public class BitReader {
     private byte[] m_data;
     private int m_bitPosition;
     private int m_offset;
@@ -344,26 +311,22 @@ public class BitReader
     public int Offset { get => m_offset; set => m_offset = value; }
     public byte[] Data { get => m_data; set => m_data = value; }
 
-    public BitReader(byte[] data)
-    {
+    public BitReader(byte[] data) {
         m_data = data;
     }
 
-    public BitReader(byte[] data, int offset)
-    {
+    public BitReader(byte[] data, int offset) {
         m_data = data;
         m_offset = offset;
     }
 
-    public T Read<T>(int numBits) where T : unmanaged
-    {
+    public T Read<T>(int numBits) where T : unmanaged {
         ulong result = Unsafe.As<byte, ulong>(ref m_data[m_offset + (m_bitPosition >> 3)]) << (64 - numBits - (m_bitPosition & 7)) >> (64 - numBits);
         m_bitPosition += numBits;
         return Unsafe.As<ulong, T>(ref result);
     }
 
-    public T ReadSigned<T>(int numBits) where T : unmanaged
-    {
+    public T ReadSigned<T>(int numBits) where T : unmanaged {
         ulong result = Unsafe.As<byte, ulong>(ref m_data[m_offset + (m_bitPosition >> 3)]) << (64 - numBits - (m_bitPosition & 7)) >> (64 - numBits);
         m_bitPosition += numBits;
         ulong signedShift = (1UL << (numBits - 1));
@@ -371,8 +334,7 @@ public class BitReader
         return Unsafe.As<ulong, T>(ref result);
     }
 
-    public string ReadCString()
-    {
+    public string ReadCString() {
         int start = m_bitPosition;
 
         while (m_data[m_offset + (m_bitPosition >> 3)] != 0)
@@ -384,12 +346,9 @@ public class BitReader
     }
 }
 
-public class FieldReader
-{
-    public static T GetFieldValue<T>(int id, BitReader r, FieldMetaData fieldMeta, ColumnMetaData columnMeta, Value32[] palletData, Dictionary<int, Value32> commonData) where T : unmanaged
-    {
-        switch (columnMeta.CompressionType)
-        {
+public class FieldReader {
+    public static T GetFieldValue<T>(int id, BitReader r, FieldMetaData fieldMeta, ColumnMetaData columnMeta, Value32[] palletData, Dictionary<int, Value32> commonData) where T : unmanaged {
+        switch (columnMeta.CompressionType) {
             case CompressionType.None:
                 int bitSize = 32 - fieldMeta.Bits;
                 if (bitSize > 0)
@@ -412,17 +371,14 @@ public class FieldReader
         throw new Exception(string.Format("Unexpected compression type {0}", columnMeta.CompressionType));
     }
 
-    public static T[] GetFieldValueArray<T>(BitReader r, FieldMetaData fieldMeta, ColumnMetaData columnMeta, Value32[] palletData, Dictionary<int, Value32> commonData, int arraySize) where T : unmanaged
-    {
-        switch (columnMeta.CompressionType)
-        {
+    public static T[] GetFieldValueArray<T>(BitReader r, FieldMetaData fieldMeta, ColumnMetaData columnMeta, Value32[] palletData, Dictionary<int, Value32> commonData, int arraySize) where T : unmanaged {
+        switch (columnMeta.CompressionType) {
             case CompressionType.None:
                 int bitSize = 32 - fieldMeta.Bits;
 
                 T[] arr1 = new T[arraySize];
 
-                for (int i = 0; i < arr1.Length; i++)
-                {
+                for (int i = 0; i < arr1.Length; i++) {
                     if (bitSize > 0)
                         arr1[i] = r.Read<T>(bitSize);
                     else
@@ -462,17 +418,14 @@ public class FieldReader
         throw new Exception(string.Format("Unexpected compression type {0}", columnMeta.CompressionType));
     }
 
-    public static string[] GetFieldValueStringsArray(BitReader r, FieldMetaData fieldMeta, ColumnMetaData columnMeta, Value32[] palletData, Dictionary<int, Value32> commonData, Dictionary<long, string> stringsTable, bool isSparse, int recordOffset, int arraySize)
-    {
+    public static string[] GetFieldValueStringsArray(BitReader r, FieldMetaData fieldMeta, ColumnMetaData columnMeta, Value32[] palletData, Dictionary<int, Value32> commonData, Dictionary<long, string> stringsTable, bool isSparse, int recordOffset, int arraySize) {
         string[] array = new string[arraySize];
 
-        if (isSparse)
-        {
+        if (isSparse) {
             for (int i = 0; i < array.Length; i++)
                 array[i] = r.ReadCString();
         }
-        else
-        {
+        else {
             var pos = recordOffset + (r.Position >> 3);
 
             int[] strIdx = GetFieldValueArray<int>(r, fieldMeta, columnMeta, palletData, commonData, arraySize);
@@ -485,12 +438,10 @@ public class FieldReader
     }
 }
 
-public class FieldsCache<T>
-{
+public class FieldsCache<T> {
     private static readonly FieldCache[] fieldsCache;
 
-    static FieldsCache()
-    {
+    static FieldsCache() {
         FieldInfo[] fields = typeof(T).GetFields(BindingFlags.Public | BindingFlags.Instance).OrderBy(f => f.MetadataToken).ToArray();
 
         fieldsCache = new FieldCache[fields.Length];

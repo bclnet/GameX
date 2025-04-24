@@ -2,8 +2,7 @@
 
 namespace GameX.Formats.Unknown;
 
-public interface IUnknownFileModel : IUnknownFileObject
-{
+public interface IUnknownFileModel : IUnknownFileObject {
     IEnumerable<IUnknownModel> Models { get; }
     IEnumerable<UnknownMesh> Meshes { get; }
     IEnumerable<IUnknownMaterial> Materials { get; }

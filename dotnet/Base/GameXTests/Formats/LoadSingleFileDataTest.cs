@@ -4,8 +4,7 @@ using System.Threading.Tasks;
 namespace GameX.Formats;
 
 [TestClass]
-public class LoadSingleFileDataTest
-{
+public class LoadSingleFileDataTest {
     [DataTestMethod]
     [DataRow("AC:AC", ">client_highres.dat:Texture/060043BE.tex", 32792)]
     [DataRow("Arkane:AF", ">data.pak:GRAPH/particles/BOOM.jpg", 1923)]
@@ -37,8 +36,7 @@ public class LoadSingleFileDataTest
     //[DataRow("Tes:Fallout4VR", ">Fallout4 - Startup.ba2:Textures/Water/WaterRainRipples.dds", 349680)]
     //[DataRow("Tes:Fallout4VR", ">Fallout4 - Textures8.ba2:Textures/Terrain/DiamondCity/DiamondCity.16.-2.-2.DDS", 174904)]
     //[DataRow("Valve:Dota2", ">dota/pak01_dir.vpk:stringtokendatabase.txt", 35624)]
-    public async Task LoadFileData(string pak, string sampleFile, int sampleFileSize)
-    {
+    public async Task LoadFileData(string pak, string sampleFile, int sampleFileSize) {
         var source = TestHelper.Paks[pak].Value;
         Assert.IsTrue(source.Contains(sampleFile));
         Assert.AreEqual(sampleFileSize, (await source.LoadFileData(sampleFile)).Length);

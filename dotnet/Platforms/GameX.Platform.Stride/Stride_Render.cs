@@ -2,25 +2,24 @@
 using OpenStack.Gfx;
 using OpenStack.Gfx.Stride;
 using System;
+using System.Collections.Generic;
+using static OpenStack.Gfx.GfX;
 
 namespace GameX.Platforms.Stride;
 
 public static class StrideRenderer
 {
-    //using Stride.Engine;
-    //protected static Game Game;
-
-    public static Renderer CreateRenderer(object parent, StrideGfxModel gfx, object obj, string type)
+    public static Renderer CreateRenderer(object parent, IList<IOpenGfx> gfx, object obj, string type)
         => type switch
         {
-            "TestTri" => new StrideTestTriRenderer(gfx, obj),
-            "Material" => new StrideMaterialRenderer(gfx, obj),
-            "Particle" => new StrideParticleRenderer(gfx, obj),
-            "Texture" or "VideoTexture" => new StrideTextureRenderer(gfx, obj),
-            "Object" => new StrideObjectRenderer(gfx, obj),
-            "Cell" => new StrideCellRenderer(gfx, obj),
+            "TestTri" => new StrideTestTriRenderer(gfx[XModel] as StrideGfxModel, obj),
+            "Material" => new StrideMaterialRenderer(gfx[XModel] as StrideGfxModel, obj),
+            "Particle" => new StrideParticleRenderer(gfx[XModel] as StrideGfxModel, obj),
+            "Texture" or "VideoTexture" => new StrideTextureRenderer(gfx[XModel] as StrideGfxModel, obj),
+            "Object" => new StrideObjectRenderer(gfx[XModel] as StrideGfxModel, obj),
+            "Cell" => new StrideCellRenderer(gfx[XModel] as StrideGfxModel, obj),
             "World" => throw new NotImplementedException(),
-            "Engine" => new StrideEngineRenderer(gfx, obj),
+            "Engine" => new StrideEngineRenderer(gfx[XModel] as StrideGfxModel, obj),
             _ => default,
         };
 }

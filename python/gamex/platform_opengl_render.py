@@ -83,16 +83,15 @@ class ViewTestTri(ViewBase):
     def start(self) -> None:
         self.renderers = [TestTriRenderer(self.gfx)]
 
-@staticmethod
-def createView(parent: object, gfx: IOpenGLGfx, obj: object, type: str) -> ViewBase:
-    match type:
-        case 'Material': return ViewMaterial(gfx, obj)
-        case 'Particle': return ViewParticle(gfx, obj)
-        case 'TestTri': return ViewTestTri(gfx, obj)
-        case 'Texture': return ViewTexture(gfx, obj)
-        case 'VideoTexture': return ViewVideoTexture(gfx, obj)
-        case 'Object': return ViewObject(gfx, obj)
-        case 'Cell': return ViewCell(gfx, obj)
-        case 'World': return None
-        case 'Engine': return ViewEngine(gfx, obj)
-        case _: return None
+class OpenGLRenderer:
+    @staticmethod
+    def createRenderer(parent: object, gfx: OpenGLGfxModel, obj: object, type: str) -> ViewBase:
+        match type:
+            case 'TestTri': return OpenGLTestTriRenderer(gfx, obj)
+            case 'Material': return OpenGLMaterialRenderer(gfx, obj)
+            case 'Particle': return OpenGLParticleRenderer(gfx, obj)
+            case 'Texture', 'VideoTexture': return OpenGLTextureRenderer(gfx, obj)
+            case 'Object': return OpenGLObjectRenderer(gfx, obj)
+            case 'Cell': return OpenGLCellRenderer(gfx, obj)
+            case 'World': return OpenGLWorldRenderer(gfx, obj)
+            case _: return None

@@ -15,20 +15,17 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace GameX.Cig.Apps.Subsumption.Views
-{
-    /// <summary>
-    /// Interaction logic for MissionsPage.xaml
-    /// </summary>
-    public partial class MissionsPage : UserControl, INotifyPropertyChanged
-    {
-        public MissionsPage()
-        {
-            InitializeComponent();
-            DataContext = this;
-        }
+namespace GameX.Cig.Apps.Subsumption.Views;
 
-        public event PropertyChangedEventHandler PropertyChanged;
-        void OnPropertyChanged([CallerMemberName] string propertyName = "") => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+/// <summary>
+/// Interaction logic for MissionsPage.xaml
+/// </summary>
+public partial class MissionsPage : UserControl, INotifyPropertyChanged {
+    public MissionsPage() {
+        InitializeComponent();
+        DataContext = this;
     }
+
+    public event PropertyChangedEventHandler PropertyChanged;
+    void OnPropertyChanged([CallerMemberName] string propertyName = "") => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 }

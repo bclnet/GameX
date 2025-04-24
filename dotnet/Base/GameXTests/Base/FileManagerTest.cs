@@ -5,8 +5,7 @@ using System.Text.Json;
 namespace GameX.Base;
 
 [TestClass]
-public class FileManagerTest
-{
+public class FileManagerTest {
     static readonly Family Family = FamilyManager.Unknown;
 
     [DataTestMethod]
@@ -14,8 +13,7 @@ public class FileManagerTest
     [DataRow("game:/#APP")]
     [DataRow("file:///C:/#APP")]
     [DataRow("https://localhost#APP")]
-    public void ShouldParseResource(string uri)
-    {
+    public void ShouldParseResource(string uri) {
         Assert.IsNotNull(Family.ParseResource(uri != null ? new Uri(uri) : null, false));
     }
 

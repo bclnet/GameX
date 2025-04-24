@@ -23,13 +23,11 @@
 using System;
 using System.Diagnostics;
 
-namespace Compression.Doboz
-{
+namespace Compression.Doboz {
     /// <summary>
     /// Doboz codec.
     /// </summary>
-    public unsafe class DobozCodec : DobozDecoder
-    {
+    public unsafe class DobozCodec : DobozDecoder {
         internal const int MAX_MATCH_LENGTH = 255 + MIN_MATCH_LENGTH;
         internal const int MAX_MATCH_CANDIDATE_COUNT = 128;
         internal const int DICTIONARY_SIZE = 1 << 21; // 2 MB, must be a power of 2!
@@ -45,8 +43,7 @@ namespace Compression.Doboz
         /// <returns>Number of bytes in compressed buffer. Negative value means thet output buffer was too small.</returns>
         public static int Encode(
             byte[] input, int inputOffset, int inputLength,
-            byte[] output, int outputOffset, int outputLength)
-        {
+            byte[] output, int outputOffset, int outputLength) {
             CheckArguments(
                 input, inputOffset, ref inputLength,
                 output, outputOffset, ref outputLength);
@@ -75,8 +72,7 @@ namespace Compression.Doboz
         /// <param name="inputLength">Length of the input.</param>
         /// <returns>Encoded buffer.</returns>
         public static byte[] Encode(
-            byte[] input, int inputOffset, int inputLength)
-        {
+            byte[] input, int inputOffset, int inputLength) {
             CheckArguments(input, inputOffset, ref inputLength);
 
             var maxOutputSize = MaximumOutputLength(inputLength);
@@ -106,8 +102,7 @@ namespace Compression.Doboz
                 var dst = output;
                 BlockCopy(src, 0, dst, 0, outputLength);
 #else
-                fixed (byte* dst = output)
-                {
+                fixed (byte* dst = output) {
                     BlockCopy(src, dst, outputLength);
                 }
 #endif
@@ -153,8 +148,7 @@ namespace Compression.Doboz
 
             compressedSize = headerSize + sourceSize;
 
-            var header = new Header
-            {
+            var header = new Header {
                 version = VERSION,
                 isStored = true,
                 uncompressedSize = sourceSize,
@@ -193,8 +187,7 @@ namespace Compression.Doboz
             var sizeCodedSize = GetSizeCodedSize(maxCompressedSize);
             attributes |= (sizeCodedSize - 1) << 3;
 
-            if (header.isStored)
-            {
+            if (header.isStored) {
                 attributes |= 128;
             }
 
@@ -205,8 +198,7 @@ namespace Compression.Doboz
 #endif
 
             // Encode the uncompressed and compressed sizes
-            switch (sizeCodedSize)
-            {
+            switch (sizeCodedSize) {
 #if DOBOZ_SAFE
                 case 1:
                     destination[dst_p] = (byte)header.uncompressedSize;
@@ -254,8 +246,7 @@ namespace Compression.Doboz
             Debug.Assert(source != null);
             Debug.Assert(destination != null);
 
-            if (sourceSize == 0)
-            {
+            if (sourceSize == 0) {
                 compressedSize = 0;
                 return Result.RESULT_ERROR_BUFFER_TOO_SMALL;
             }
@@ -327,12 +318,10 @@ namespace Compression.Doboz
 #endif
             {
                 // Iterate while there is still data left
-                while (dictionary.Position - 1 < sourceSize)
-                {
+                while (dictionary.Position - 1 < sourceSize) {
                     // Check whether the output is too large
                     // During each iteration, we may output up to 8 bytes (2 words), and the compressed stream ends with 4 dummy bytes
-                    if (dst_p + 2 * WORD_SIZE + TRAILING_DUMMY_SIZE > maxOutputEnd)
-                    {
+                    if (dst_p + 2 * WORD_SIZE + TRAILING_DUMMY_SIZE > maxOutputEnd) {
                         compressedSize = 0;
                         return
                             storedSize <= destinationSize
@@ -341,8 +330,7 @@ namespace Compression.Doboz
                     }
 
                     // Check whether the control word must be flushed
-                    if (controlWordBit == controlWordBitCount)
-                    {
+                    if (controlWordBit == controlWordBitCount) {
                         // Flush current control word
 #if DOBOZ_SAFE
                         Poke4(destination, controlWordPointer, controlWord);
@@ -368,14 +356,12 @@ namespace Compression.Doboz
 
                     // If we have a match, do not immediately use it, because we may miss an even better match (lazy evaluation)
                     // If encoding a literal and the next match has a higher compression ratio than encoding the current match, discard the current match
-                    if (match.length > 0 && (1 + nextMatch.length) * GetMatchCodedSize(ref match) > match.length * (1 + GetMatchCodedSize(ref nextMatch)))
-                    {
+                    if (match.length > 0 && (1 + nextMatch.length) * GetMatchCodedSize(ref match) > match.length * (1 + GetMatchCodedSize(ref nextMatch))) {
                         match.length = 0;
                     }
 
                     // Check whether we must encode a literal or a match
-                    if (match.length == 0)
-                    {
+                    if (match.length == 0) {
                         // Encode a literal (0 control word flag)
                         // In order to efficiently decode literals in runs, the literal bit (0) must differ from the guard bit (1)
 
@@ -388,8 +374,7 @@ namespace Compression.Doboz
 #endif
                         ++dst_p;
                     }
-                    else
-                    {
+                    else {
                         // Encode a match (1 control word flag)
                         controlWord |= 1u << controlWordBit;
 
@@ -401,8 +386,7 @@ namespace Compression.Doboz
 #endif
 
                         // Skip the matched characters
-                        for (var i = 0; i < match.length - 2; ++i)
-                        {
+                        for (var i = 0; i < match.length - 2; ++i) {
                             dictionary.Skip();
                         }
 
@@ -437,8 +421,7 @@ namespace Compression.Doboz
                 // ReSharper restore RedundantCast
 
                 // Encode the header
-                var header = new Header
-                {
+                var header = new Header {
                     version = VERSION,
                     isStored = false,
                     uncompressedSize = sourceSize,
@@ -462,10 +445,8 @@ namespace Compression.Doboz
             var bestMatch = new Match { length = 0 };
 
             // Select the longest match which can be coded efficiently (coded size is less than the length)
-            for (var i = matchCandidateCount - 1; i >= 0; --i)
-            {
-                if (matchCandidates[i].length > GetMatchCodedSize(ref matchCandidates[i]))
-                {
+            for (var i = matchCandidateCount - 1; i >= 0; --i) {
+                if (matchCandidates[i].length > GetMatchCodedSize(ref matchCandidates[i])) {
                     bestMatch = matchCandidates[i];
                     break;
                 }
@@ -474,8 +455,7 @@ namespace Compression.Doboz
             return bestMatch;
         }
 
-        static int GetMatchCodedSize(ref Match match)
-        {
+        static int GetMatchCodedSize(ref Match match) {
 #if DOBOZ_SAFE
             return EncodeMatch(ref match, null, 0);
 #else
@@ -498,37 +478,30 @@ namespace Compression.Doboz
             var lengthCode = (uint)(match.length - MIN_MATCH_LENGTH);
             var offsetCode = (uint)(match.offset);
 
-            if (lengthCode == 0 && offsetCode < 64)
-            {
+            if (lengthCode == 0 && offsetCode < 64) {
                 word = offsetCode << 2; // 00
                 size = 1;
             }
-            else if (lengthCode == 0 && offsetCode < 16384)
-            {
+            else if (lengthCode == 0 && offsetCode < 16384) {
                 word = (offsetCode << 2) | 1; // 01
                 size = 2;
             }
-            else if (lengthCode < 16 && offsetCode < 1024)
-            {
+            else if (lengthCode < 16 && offsetCode < 1024) {
                 word = (offsetCode << 6) | (lengthCode << 2) | 2; // 10
                 size = 2;
             }
-            else if (lengthCode < 32 && offsetCode < 65536)
-            {
+            else if (lengthCode < 32 && offsetCode < 65536) {
                 word = (offsetCode << 8) | (lengthCode << 3) | 3; // 11
                 size = 3;
             }
-            else
-            {
+            else {
                 word = (offsetCode << 11) | (lengthCode << 3) | 7; // 111
                 size = 4;
             }
 
-            if (destination != null)
-            {
+            if (destination != null) {
                 {
-                    switch (size)
-                    {
+                    switch (size) {
 #if DOBOZ_SAFE
                         case 4:
                         case 3:

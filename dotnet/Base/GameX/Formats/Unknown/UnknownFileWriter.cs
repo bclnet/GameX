@@ -4,8 +4,7 @@ using System.IO;
 
 namespace GameX.Formats.Unknown;
 
-public abstract class UnknownFileWriter
-{
+public abstract class UnknownFileWriter {
     public static readonly Dictionary<string, Func<IUnknownFileModel, UnknownFileWriter>> Factories = new Dictionary<string, Func<IUnknownFileModel, UnknownFileWriter>>(StringComparer.OrdinalIgnoreCase);
 
     // ARGS
@@ -23,13 +22,11 @@ public abstract class UnknownFileWriter
 
     public abstract void Write(string outputDir = null, bool preservePath = true);
 
-    protected FileInfo GetFileInfo(string extension, string outputDir = null, bool preservePath = true)
-    {
+    protected FileInfo GetFileInfo(string extension, string outputDir = null, bool preservePath = true) {
         var fileName = $"temp.{extension}";
         // Empty output directory means place alongside original models If you want relative path, use "."
         if (string.IsNullOrWhiteSpace(outputDir)) fileName = Path.Combine(new FileInfo(File.Path).DirectoryName, $"{Path.GetFileNameWithoutExtension(File.Path)}{(NoConflicts ? "_out" : string.Empty)}.{extension}");
-        else
-        {
+        else {
             // If we have an output directory
             var preserveDir = preservePath ? Path.GetDirectoryName(File.Path) : string.Empty;
             // Remove drive letter if necessary

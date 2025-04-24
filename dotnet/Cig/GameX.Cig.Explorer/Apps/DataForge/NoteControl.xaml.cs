@@ -16,13 +16,11 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.IO;
 
-namespace GameX.Cig.Apps.DataForge
-{
-    /// <summary>
-    /// Interaction logic for NoteControl.xaml
-    /// </summary>
-    public partial class NoteControl : UserControl
-    {
-        public NoteControl() => InitializeComponent();
-    }
+namespace GameX.Cig.Apps.DataForge;
+
+/// <summary>
+/// Interaction logic for NoteControl.xaml
+/// </summary>
+public partial class NoteControl : UserControl {
+    public NoteControl() => InitializeComponent();
 }

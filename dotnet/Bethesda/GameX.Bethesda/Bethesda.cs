@@ -27,8 +27,7 @@ public class BethesdaFamily(JsonElement elem) : Family(elem) { }
 /// BethesdaGame
 /// </summary>
 /// <seealso cref="GameX.FamilyGame" />
-public class BethesdaGame(Family family, string id, JsonElement elem, FamilyGame dgame) : FamilyGame(family, id, elem, dgame)
-{
+public class BethesdaGame(Family family, string id, JsonElement elem, FamilyGame dgame) : FamilyGame(family, id, elem, dgame) {
     /// <summary>
     /// Ensures this instance.
     /// </summary>
@@ -44,14 +43,12 @@ public class BethesdaGame(Family family, string id, JsonElement elem, FamilyGame
 /// BethesdaPakFile
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class BethesdaPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel>
-{
+public class BethesdaPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="BethesdaPakFile" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public BethesdaPakFile(PakState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant()))
-    {
+    public BethesdaPakFile(PakState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         ObjectFactoryFunc = ObjectFactory;
         PathFinders.Add(typeof(ITexture), FindTexture);
     }
@@ -61,8 +58,7 @@ public class BethesdaPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileM
     /// <summary>
     /// Finds the actual path of a texture.
     /// </summary>
-    public object FindTexture(object path)
-    {
+    public object FindTexture(object path) {
         if (path is not string p) return path;
         var textureName = Path.GetFileNameWithoutExtension(p);
         var textureNameInTexturesDir = $"textures/{textureName}";
@@ -79,8 +75,7 @@ public class BethesdaPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileM
     #region Factories
 
     static PakBinary GetPakBinary(FamilyGame game, string extension)
-        => extension switch
-        {
+        => extension switch {
             "" => Binary_Bsa.Current,
             ".bsa" => Binary_Bsa.Current,
             ".ba2" => Binary_Ba2.Current,
@@ -89,8 +84,7 @@ public class BethesdaPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileM
         };
 
     static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
-        => Path.GetExtension(source.Path).ToLowerInvariant() switch
-        {
+        => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             ".nif" => (0, Binary_Nif.Factory),
             _ => UnknownPakFile.ObjectFactory(source, game),
         };

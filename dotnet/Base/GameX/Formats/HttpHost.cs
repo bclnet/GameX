@@ -14,8 +14,7 @@ namespace GameX.Formats;
 /// <summary>
 /// AbstractHost
 /// </summary>
-public abstract class AbstractHost
-{
+public abstract class AbstractHost {
     /// <summary>
     /// Gets the set asynchronous.
     /// </summary>
@@ -36,8 +35,7 @@ public abstract class AbstractHost
 /// HttpHost
 /// </summary>
 /// <seealso cref="GameEstate.Core.AbstractHost" />
-public class HttpHost : AbstractHost
-{
+public class HttpHost : AbstractHost {
     readonly MemoryCache _cache = new(new MemoryCacheOptions { });
     readonly HttpClient _hc = new() { Timeout = TimeSpan.FromMinutes(30) };
 
@@ -46,8 +44,7 @@ public class HttpHost : AbstractHost
 
     public static readonly Func<Uri, string, AbstractHost> Factory = (address, folder) => new HttpHost(address, folder);
 
-    public async Task<T> CallAsync<T>(string path, NameValueCollection nvc = null, bool shouldThrow = false)
-    {
+    public async Task<T> CallAsync<T>(string path, NameValueCollection nvc = null, bool shouldThrow = false) {
         var requestUri = ToPathAndQueryString(path, nvc);
         //Log($"query: {requestUri}");
         var r = await _hc.GetAsync(requestUri).ConfigureAwait(false);
@@ -62,8 +59,7 @@ public class HttpHost : AbstractHost
     public override async Task<Stream> GetFileAsync(string filePath, bool shouldThrow = false)
         => await _cache.GetOrCreateAsync(filePath.Replace('\\', '/'), async x => await CallAsync<Stream>((string)x.Key));
 
-    static string ToPathAndQueryString(string path, NameValueCollection nvc)
-    {
+    static string ToPathAndQueryString(string path, NameValueCollection nvc) {
         if (nvc == null) return path;
         var array = (
             from key in nvc.AllKeys
@@ -73,17 +69,14 @@ public class HttpHost : AbstractHost
         return path + (array.Length > 0 ? "?" + string.Join("&", array) : string.Empty);
     }
 
-    static T FromBytes<T>(byte[] data)
-    {
+    static T FromBytes<T>(byte[] data) {
         string path;
         if (typeof(T) == typeof(Stream)) return (T)(object)new MemoryStream(data);
-        else if (typeof(T) == typeof(HashSet<string>))
-        {
+        else if (typeof(T) == typeof(HashSet<string>)) {
             var d = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             // dir /s/b/a-d > .set
             var lines = Encoding.ASCII.GetString(data)?.Split('\n');
-            if (lines?.Length >= 0)
-            {
+            if (lines?.Length >= 0) {
                 var startIndex = Path.GetDirectoryName(lines[0].TrimEnd().Replace('\\', '/')).Length + 1;
                 foreach (var line in lines) if (line.Length >= startIndex && (path = line[startIndex..].TrimEnd().Replace('\\', '/')) != ".set") d.Add(path);
             }

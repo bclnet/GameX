@@ -3,24 +3,23 @@ using OpenStack.Gfx;
 using OpenStack.Gfx.Unity;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using static OpenStack.Gfx.GfX;
 
 namespace GameX.Platforms.Unity;
 
 public static class UnityRenderer
 {
-    public static Renderer CreateRenderer(object parent, UnityGfxModel gfx, object obj, string type)
+    public static Renderer CreateRenderer(object parent, IList<IOpenGfx> gfx, object obj, string type)
         => type switch
         {
-            "TestTri" => new UnityTestTriRenderer(gfx, obj),
-            "Material" => new UnityMaterialRenderer(gfx, obj),
-            "Particle" => new UnityParticleRenderer(gfx, obj),
-            "Texture" or "VideoTexture" => new UnityTextureRenderer(gfx, obj),
-            "Object" => new UnityObjectRenderer(gfx, obj),
-            "Cell" => new UnityCellRenderer(gfx, obj),
-            "Engine" => new UnityEngineRenderer(gfx, obj),
-            _ => new UnityObjectRenderer(gfx, obj),
+            "TestTri" => new UnityTestTriRenderer(gfx[XModel] as UnityGfxModel, obj),
+            "Material" => new UnityMaterialRenderer(gfx[XModel] as UnityGfxModel, obj),
+            "Particle" => new UnityParticleRenderer(gfx[XModel] as UnityGfxModel, obj),
+            "Texture" or "VideoTexture" => new UnityTextureRenderer(gfx[XModel] as UnityGfxModel, obj),
+            "Object" => new UnityObjectRenderer(gfx[XModel] as UnityGfxModel, obj),
+            "Cell" => new UnityCellRenderer(gfx[XModel] as UnityGfxModel, obj),
+            "Engine" => new UnityEngineRenderer(gfx[XModel] as UnityGfxModel, obj),
+            _ => new UnityObjectRenderer(gfx[XModel] as UnityGfxModel, obj),
         };
 }
 
@@ -36,38 +35,29 @@ public class ViewInfo : UnityEngine.MonoBehaviour
 {
     static ViewInfo() => PlatformX.Activate(UnityPlatform.This);
 
-    public enum Kind { Texture, TextureCursor, Object, Cell, Engine }
-
-    [UnityEngine.Header("Pak Settings")]
+    [UnityEngine.Header("View")]
     public string FamilyId = "Bethesda";
     public string PakUri = "game:/Morrowind.bsa#Morrowind";
-
-    [UnityEngine.Header("View Params")]
-    public Kind ViewKind = Kind.Texture;
-    public string Param1 = "bookart/boethiah_256.dds";
-    //public string Param1 = "meshes/x/ex_common_balcony_01.nif";
+    public string Type = "Texture";
+    public string Path = "bookart/boethiah_256.dds";
+    //public string Path = "meshes/x/ex_common_balcony_01.nif";
 
     protected Family Family;
-    protected List<PakFile> PakFiles = [];
-    protected UnityGfxModel Gfx;
-
+    protected PakFile Source;
     Renderer Renderer;
 
     public void Awake()
     {
         if (string.IsNullOrEmpty(FamilyId)) return;
         Family = FamilyManager.GetFamily(FamilyId);
-        if (!string.IsNullOrEmpty(PakUri)) PakFiles.Add(Family.OpenPakFile(new Uri(PakUri)));
-        var first = PakFiles.FirstOrDefault();
-        Gfx = (UnityGfxModel)first?.Gfx[XModel];
-        Renderer = UnityRenderer.CreateRenderer(this, Gfx, Param1, ViewKind.ToString());
+        if (!string.IsNullOrEmpty(PakUri)) Source = Family.OpenPakFile(new Uri(PakUri));
+        Renderer = UnityRenderer.CreateRenderer(this, Source?.Gfx, Path, Type);
     }
 
     public void OnDestroy()
     {
         Renderer?.Dispose();
-        foreach (var pakFile in PakFiles) pakFile.Dispose();
-        PakFiles.Clear();
+        Source?.Dispose();
     }
 
     public void Start() => Renderer?.Start();

@@ -5,14 +5,12 @@ using System.Numerics;
 
 namespace GameX.Formats.Collada;
 
-partial class ColladaFileWriter
-{
+partial class ColladaFileWriter {
     /// <summary>
     /// Adds the Library_Visual_Scene element to the Collada document.
     /// Provides a library in which to place visual_scene elements for chr files (rigs + geometry). 
     /// </summary>
-    void SetLibraryVisualScenesWithSkeleton()
-    {
+    void SetLibraryVisualScenesWithSkeleton() {
         // There can be multiple visual scenes.  Will just have one (World) for now.  All node chunks go under Nodes for that visual scene
         var nodes = new List<Collada_Node>();
 
@@ -22,8 +20,7 @@ partial class ColladaFileWriter
 
         // Geometry visual Scene.
         var firstModel = File.Models.First();
-        nodes.Add(new Collada_Node
-        {
+        nodes.Add(new Collada_Node {
             ID = firstModel.Path,
             Name = firstModel.Path,
             Type = Collada_Node_Type.NODE,
@@ -47,8 +44,7 @@ partial class ColladaFileWriter
         });
 
         // Set up the library
-        daeObject.Library_Visual_Scene = new Collada_Library_Visual_Scenes
-        {
+        daeObject.Library_Visual_Scene = new Collada_Library_Visual_Scenes {
             Visual_Scene = [new Collada_Visual_Scene { Node = [.. nodes], ID = "Scene" }]
         };
     }

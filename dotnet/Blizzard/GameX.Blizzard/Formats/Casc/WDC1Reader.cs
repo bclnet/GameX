@@ -9,8 +9,7 @@ using Ext = GameX.FileSystems.Casc.CStringExtensions;
 
 namespace GameX.Blizzard.Formats.Casc;
 
-public class WDC1Row : IDB2Row
-{
+public class WDC1Row : IDB2Row {
     BitReader m_data;
     WDC1Reader m_reader;
     int m_dataOffset;
@@ -26,8 +25,7 @@ public class WDC1Row : IDB2Row
     Dictionary<int, Value32>[] m_commonData;
     Dictionary<long, string> m_stringsTable;
 
-    public WDC1Row(WDC1Reader reader, BitReader data, int id, int refId, Dictionary<long, string> stringsTable)
-    {
+    public WDC1Row(WDC1Reader reader, BitReader data, int id, int refId, Dictionary<long, string> stringsTable) {
         m_reader = reader;
         m_data = data;
         m_refId = refId;
@@ -42,8 +40,7 @@ public class WDC1Row : IDB2Row
 
         if (id != -1)
             m_id = id;
-        else
-        {
+        else {
             int idFieldIndex = reader.IdFieldIndex;
 
             m_data.Position = m_columnMeta[idFieldIndex].RecordOffset;
@@ -52,8 +49,7 @@ public class WDC1Row : IDB2Row
         }
     }
 
-    static Dictionary<Type, Func<int, BitReader, FieldMetaData, ColumnMetaData, Value32[], Dictionary<int, Value32>, Dictionary<long, string>, object>> simpleReaders = new Dictionary<Type, Func<int, BitReader, FieldMetaData, ColumnMetaData, Value32[], Dictionary<int, Value32>, Dictionary<long, string>, object>>
-    {
+    static Dictionary<Type, Func<int, BitReader, FieldMetaData, ColumnMetaData, Value32[], Dictionary<int, Value32>, Dictionary<long, string>, object>> simpleReaders = new Dictionary<Type, Func<int, BitReader, FieldMetaData, ColumnMetaData, Value32[], Dictionary<int, Value32>, Dictionary<long, string>, object>> {
         [typeof(float)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable) => FieldReader.GetFieldValue<float>(id, data, fieldMeta, columnMeta, palletData, commonData),
         [typeof(int)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable) => FieldReader.GetFieldValue<int>(id, data, fieldMeta, columnMeta, palletData, commonData),
         [typeof(uint)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable) => FieldReader.GetFieldValue<uint>(id, data, fieldMeta, columnMeta, palletData, commonData),
@@ -64,8 +60,7 @@ public class WDC1Row : IDB2Row
         [typeof(string)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable) => { int strOfs = FieldReader.GetFieldValue<int>(id, data, fieldMeta, columnMeta, palletData, commonData); return stringTable[strOfs]; },
     };
 
-    static Dictionary<Type, Func<BitReader, FieldMetaData, ColumnMetaData, Value32[], Dictionary<int, Value32>, Dictionary<long, string>, int, object>> arrayReaders = new Dictionary<Type, Func<BitReader, FieldMetaData, ColumnMetaData, Value32[], Dictionary<int, Value32>, Dictionary<long, string>, int, object>>
-    {
+    static Dictionary<Type, Func<BitReader, FieldMetaData, ColumnMetaData, Value32[], Dictionary<int, Value32>, Dictionary<long, string>, int, object>> arrayReaders = new Dictionary<Type, Func<BitReader, FieldMetaData, ColumnMetaData, Value32[], Dictionary<int, Value32>, Dictionary<long, string>, int, object>> {
         [typeof(float)] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable, arrayIndex) => FieldReader.GetFieldValueArray<float>(data, fieldMeta, columnMeta, palletData, commonData, arrayIndex + 1)[arrayIndex],
         [typeof(int)] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable, arrayIndex) => FieldReader.GetFieldValueArray<int>(data, fieldMeta, columnMeta, palletData, commonData, arrayIndex + 1)[arrayIndex],
         [typeof(uint)] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable, arrayIndex) => FieldReader.GetFieldValueArray<uint>(data, fieldMeta, columnMeta, palletData, commonData, arrayIndex + 1)[arrayIndex],
@@ -75,12 +70,10 @@ public class WDC1Row : IDB2Row
         [typeof(string)] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable, arrayIndex) => { int strOfs = FieldReader.GetFieldValueArray<int>(data, fieldMeta, columnMeta, palletData, commonData, arrayIndex + 1)[arrayIndex]; return stringTable[strOfs]; },
     };
 
-    public T GetField<T>(int fieldIndex, int arrayIndex = -1)
-    {
+    public T GetField<T>(int fieldIndex, int arrayIndex = -1) {
         object value = null;
 
-        if (fieldIndex >= m_reader.Meta.Length)
-        {
+        if (fieldIndex >= m_reader.Meta.Length) {
             if (m_refId != -1)
                 value = m_refId;
             else
@@ -91,15 +84,13 @@ public class WDC1Row : IDB2Row
         m_data.Position = m_columnMeta[fieldIndex].RecordOffset;
         m_data.Offset = m_dataOffset;
 
-        if (arrayIndex >= 0)
-        {
+        if (arrayIndex >= 0) {
             if (arrayReaders.TryGetValue(typeof(T), out var reader))
                 value = reader(m_data, m_fieldMeta[fieldIndex], m_columnMeta[fieldIndex], m_palletData[fieldIndex], m_commonData[fieldIndex], m_stringsTable, arrayIndex);
             else
                 throw new Exception("Unhandled array type: " + typeof(T).Name);
         }
-        else
-        {
+        else {
             if (simpleReaders.TryGetValue(typeof(T), out var reader))
                 value = reader(m_id, m_data, m_fieldMeta[fieldIndex], m_columnMeta[fieldIndex], m_palletData[fieldIndex], m_commonData[fieldIndex], m_stringsTable);
             else
@@ -112,17 +103,14 @@ public class WDC1Row : IDB2Row
     public IDB2Row Clone() => (IDB2Row)MemberwiseClone();
 }
 
-public class WDC1Reader : DB2Reader<WDC1Row>
-{
+public class WDC1Reader : DB2Reader<WDC1Row> {
     const int HeaderSize = 84;
     const uint WDC1FmtSig = 0x31434457; // WDC1
 
     public WDC1Reader(string dbcFile) : this(new FileStream(dbcFile, FileMode.Open)) { }
 
-    public WDC1Reader(Stream stream)
-    {
-        using (var reader = new BinaryReader(stream, Encoding.UTF8))
-        {
+    public WDC1Reader(Stream stream) {
+        using (var reader = new BinaryReader(stream, Encoding.UTF8)) {
             if (reader.BaseStream.Length < HeaderSize)
                 throw new InvalidDataException(String.Format("WDC1 file is corrupted!"));
 
@@ -162,8 +150,7 @@ public class WDC1Reader : DB2Reader<WDC1Row>
             Dictionary<long, string> stringsTable = null;
             SparseEntry[] sparseEntries = null;
 
-            if ((flags & 0x1) == 0)
-            {
+            if ((flags & 0x1) == 0) {
                 // records data
                 recordsData = reader.ReadBytes(RecordsCount * RecordSize);
 
@@ -172,8 +159,7 @@ public class WDC1Reader : DB2Reader<WDC1Row>
                 // string data
                 stringsTable = new Dictionary<long, string>();
 
-                for (int i = 0; i < StringTableSize;)
-                {
+                for (int i = 0; i < StringTableSize;) {
                     long oldPos = reader.BaseStream.Position;
 
                     stringsTable[i] = Ext.ReadCString(reader);
@@ -181,8 +167,7 @@ public class WDC1Reader : DB2Reader<WDC1Row>
                     i += (int)(reader.BaseStream.Position - oldPos);
                 }
             }
-            else
-            {
+            else {
                 // sparse data with inlined strings
                 recordsData = reader.ReadBytes(sparseTableOffset - HeaderSize - Marshal.SizeOf<FieldMetaData>() * FieldsCount);
 
@@ -212,10 +197,8 @@ public class WDC1Reader : DB2Reader<WDC1Row>
             // pallet data
             m_palletData = new Value32[m_columnMeta.Length][];
 
-            for (int i = 0; i < m_columnMeta.Length; i++)
-            {
-                if (m_columnMeta[i].CompressionType == CompressionType.Pallet || m_columnMeta[i].CompressionType == CompressionType.PalletArray)
-                {
+            for (int i = 0; i < m_columnMeta.Length; i++) {
+                if (m_columnMeta[i].CompressionType == CompressionType.Pallet || m_columnMeta[i].CompressionType == CompressionType.PalletArray) {
                     m_palletData[i] = reader.ReadArray<Value32>((int)m_columnMeta[i].AdditionalDataSize / 4);
                 }
             }
@@ -223,10 +206,8 @@ public class WDC1Reader : DB2Reader<WDC1Row>
             // common data
             m_commonData = new Dictionary<int, Value32>[m_columnMeta.Length];
 
-            for (int i = 0; i < m_columnMeta.Length; i++)
-            {
-                if (m_columnMeta[i].CompressionType == CompressionType.Common)
-                {
+            for (int i = 0; i < m_columnMeta.Length; i++) {
+                if (m_columnMeta[i].CompressionType == CompressionType.Common) {
                     Dictionary<int, Value32> commonValues = new Dictionary<int, Value32>();
                     m_commonData[i] = commonValues;
 
@@ -238,10 +219,8 @@ public class WDC1Reader : DB2Reader<WDC1Row>
             // reference data
             ReferenceData refData = null;
 
-            if (referenceDataSize > 0)
-            {
-                refData = new ReferenceData
-                {
+            if (referenceDataSize > 0) {
+                refData = new ReferenceData {
                     NumRecords = reader.ReadInt32(),
                     MinId = reader.ReadInt32(),
                     MaxId = reader.ReadInt32()
@@ -250,18 +229,15 @@ public class WDC1Reader : DB2Reader<WDC1Row>
                 ReferenceEntry[] entries = reader.ReadArray<ReferenceEntry>(refData.NumRecords);
                 refData.Entries = entries.ToDictionary(e => e.Index, e => e.Id);
             }
-            else
-            {
-                refData = new ReferenceData
-                {
+            else {
+                refData = new ReferenceData {
                     Entries = new Dictionary<int, int>()
                 };
             }
 
             BitReader bitReader = new BitReader(recordsData);
 
-            for (int i = 0; i < RecordsCount; ++i)
-            {
+            for (int i = 0; i < RecordsCount; ++i) {
                 bitReader.Position = 0;
                 bitReader.Offset = i * RecordSize;
 
@@ -278,8 +254,7 @@ public class WDC1Reader : DB2Reader<WDC1Row>
                     Console.Write("\r{0} records read", i);
             }
 
-            foreach (var copyRow in copyData)
-            {
+            foreach (var copyRow in copyData) {
                 WDC1Row rec = (WDC1Row)_Records[copyRow.Value].Clone();
                 rec.SetId(copyRow.Key);
                 _Records.Add(copyRow.Key, rec);

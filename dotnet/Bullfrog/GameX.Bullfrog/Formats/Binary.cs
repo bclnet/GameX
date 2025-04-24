@@ -14,13 +14,11 @@ namespace GameX.Bullfrog.Formats;
 
 #region Binary_Bullfrog
 
-public class Binary_Bullfrog : PakBinary<Binary_Bullfrog>
-{
+public class Binary_Bullfrog : PakBinary<Binary_Bullfrog> {
     #region Factories
 
     public static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
-     => game.Id switch
-     {
+     => game.Id switch {
          _ => default
      };
     //=> source.Path.ToLowerInvariant() switch
@@ -39,14 +37,11 @@ public class Binary_Bullfrog : PakBinary<Binary_Bullfrog>
     //    }
     //};
 
-    static void Binary_RawFunc(Binary_Raw s, BinaryReader r, FileSource f)
-    {
+    static void Binary_RawFunc(Binary_Raw s, BinaryReader r, FileSource f) {
         s.Body = r.Peek(x => x.ReadUInt32()) == Rnc.RNC_MAGIC ? Rnc.Read(r) : r.ReadToEnd();
-        if (f.Tag == null)
-        {
+        if (f.Tag == null) {
             s.Palette = f.Path.EndsWith(".bmp") ? "" : f.Path[..^4];
-            switch (s.Body.Length)
-            {
+            switch (s.Body.Length) {
                 case 1024: s.Width = 32; s.Height = 32; break;
                 case 64000: s.Width = 320; s.Height = 200; break;
                 case 307200: s.Width = 640; s.Height = 480; break;
@@ -66,16 +61,14 @@ public class Binary_Bullfrog : PakBinary<Binary_Bullfrog>
 
     // Dungeon Keeper
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    unsafe struct SBK_Header
-    {
+    unsafe struct SBK_Header {
         public static (string, int) Struct = ("<14sI", sizeof(SBK_Header));
         public fixed byte Unknown1[14];
         public uint Unknown2;
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    unsafe struct SBK_Entry
-    {
+    unsafe struct SBK_Entry {
         public static (string, int) Struct = ("<4I", sizeof(SBK_Entry));
         public uint EntryOffset;
         public uint BankOffset;
@@ -84,8 +77,7 @@ public class Binary_Bullfrog : PakBinary<Binary_Bullfrog>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    unsafe struct SBK_Sample
-    {
+    unsafe struct SBK_Sample {
         public static (string, int) Struct = ("<18QI2x", sizeof(SBK_Sample));
         public fixed byte Path[18];
         public ulong Offset;
@@ -96,8 +88,7 @@ public class Binary_Bullfrog : PakBinary<Binary_Bullfrog>
 
     // Dungeon Keeper
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    internal unsafe struct CRE_Sprite
-    {
+    internal unsafe struct CRE_Sprite {
         public static (string, int) Struct = ("<I8x2h", sizeof(CRE_Sprite));
         public uint DataOffset;
         public byte SWidth;
@@ -116,8 +107,7 @@ public class Binary_Bullfrog : PakBinary<Binary_Bullfrog>
 
     byte[] Data;
 
-    public override async Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+    public override async Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         //Data = Rnc.Read(r);
         List<FileSource> files;
         source.Files = files = new List<FileSource>();
@@ -132,22 +122,18 @@ public class Binary_Bullfrog : PakBinary<Binary_Bullfrog>
         //return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
-    {
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         var bytes = Data.AsSpan((int)file.Offset, (int)file.FileSize);
         return Task.FromResult((Stream)new MemoryStream(bytes.ToArray()));
     }
 
-    unsafe static Task ParseCreature(BinaryReader r, List<FileSource> files)
-    {
+    unsafe static Task ParseCreature(BinaryReader r, List<FileSource> files) {
         var numSprites = (int)(r.BaseStream.Length / sizeof(CRE_Sprite));
         var sprites = r.ReadSArray<CRE_Sprite>(numSprites);
         var lastI = numSprites - 1;
-        for (var i = 0; i < numSprites; i++)
-        {
+        for (var i = 0; i < numSprites; i++) {
             ref CRE_Sprite s = ref sprites[i];
-            files.Add(new FileSource
-            {
+            files.Add(new FileSource {
                 Path = $"{i:000}.tex",
                 Offset = s.DataOffset,
                 FileSize = (i != lastI ? sprites[i + 1].DataOffset : r.BaseStream.Length) - s.DataOffset,
@@ -157,12 +143,10 @@ public class Binary_Bullfrog : PakBinary<Binary_Bullfrog>
         return Task.CompletedTask;
     }
 
-    static void ParseGui(BinaryReader r, List<FileSource> files)
-    {
+    static void ParseGui(BinaryReader r, List<FileSource> files) {
         const int TextureBlockSize = 100 * 100;
         for (int i = 1, o = 0; i < 1; i++, o += TextureBlockSize)
-            files.Add(new FileSource
-            {
+            files.Add(new FileSource {
                 Path = $"gui/{i:000}.tex",
                 Offset = o,
                 FileSize = TextureBlockSize,
@@ -170,12 +154,10 @@ public class Binary_Bullfrog : PakBinary<Binary_Bullfrog>
             });
     }
 
-    static void ParseTexure(List<FileSource> files, int count)
-    {
+    static void ParseTexure(List<FileSource> files, int count) {
         const int TextureBlockSize = 32 * 32;
         for (int i = 1, o = 0; i < count; i++, o += TextureBlockSize)
-            files.Add(new FileSource
-            {
+            files.Add(new FileSource {
                 Path = $"texs/{i:000}.tex",
                 Offset = o,
                 FileSize = TextureBlockSize,
@@ -183,8 +165,7 @@ public class Binary_Bullfrog : PakBinary<Binary_Bullfrog>
             });
     }
 
-    unsafe static void ParseSound(BinaryReader r, List<FileSource> files, int bankId)
-    {
+    unsafe static void ParseSound(BinaryReader r, List<FileSource> files, int bankId) {
         r.BaseStream.Seek(-4, SeekOrigin.End);
         var offset = r.ReadUInt32();
         r.Seek(offset);
@@ -197,8 +178,7 @@ public class Binary_Bullfrog : PakBinary<Binary_Bullfrog>
         r.Seek(bank.EntryOffset);
         var numSamples = (int)bank.Size / sizeof(SBK_Sample);
         files.AddRange(r.ReadSArray<SBK_Sample>(numSamples).Select(s =>
-            new FileSource
-            {
+            new FileSource {
                 Path = UnsafeX.FixedAString(s.Path, 18) ?? "DEFAULT.WAV",
                 Offset = (long)(bankOffset + s.Offset),
                 FileSize = s.DataSize,
@@ -211,8 +191,7 @@ public class Binary_Bullfrog : PakBinary<Binary_Bullfrog>
 
 #region Binary_Fli
 
-public unsafe class Binary_Fli : IDisposable, ITextureFrames, IHaveMetaInfo
-{
+public unsafe class Binary_Fli : IDisposable, ITextureFrames, IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Fli(r, f));
 
     // logging
@@ -226,8 +205,7 @@ public unsafe class Binary_Fli : IDisposable, ITextureFrames, IHaveMetaInfo
     public const int MAGIC = 0xAF12;
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public unsafe struct X_Header
-    {
+    public unsafe struct X_Header {
         public static (string, int) Struct = ("<I4H", sizeof(X_Header));
         public uint Size;
         public ushort Type;
@@ -236,8 +214,7 @@ public unsafe class Binary_Fli : IDisposable, ITextureFrames, IHaveMetaInfo
         public ushort Height;
     }
 
-    public enum ChunkType : ushort
-    {
+    public enum ChunkType : ushort {
         COLOR_256 = 0x4,    // COLOR_256
         DELTA_FLC = 0x7,    // DELTA_FLC (FLI_SS2)
         BYTE_RUN = 0xF,     // BYTE_RUN
@@ -245,8 +222,7 @@ public unsafe class Binary_Fli : IDisposable, ITextureFrames, IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public unsafe struct X_ChunkHeader
-    {
+    public unsafe struct X_ChunkHeader {
         public static (string, int) Struct = ("<IH", sizeof(X_ChunkHeader));
         public uint Size;
         public ChunkType Type;
@@ -254,8 +230,7 @@ public unsafe class Binary_Fli : IDisposable, ITextureFrames, IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public unsafe struct X_FrameHeader
-    {
+    public unsafe struct X_FrameHeader {
         public static (string, int) Struct = ("<5H", sizeof(X_FrameHeader));
         public ushort NumChunks;
         public ushort Delay;
@@ -264,8 +239,7 @@ public unsafe class Binary_Fli : IDisposable, ITextureFrames, IHaveMetaInfo
         public ushort HeightOverride;
     }
 
-    public enum OpCode : ushort
-    {
+    public enum OpCode : ushort {
         PACKETCOUNT = 0,    // PACKETCOUNT
         UNDEFINED = 1,      // UNDEFINED
         LASTPIXEL = 2,      // LASTPIXEL
@@ -283,8 +257,7 @@ public unsafe class Binary_Fli : IDisposable, ITextureFrames, IHaveMetaInfo
     public int NumFrames;
     public byte[] Bytes;
 
-    public Binary_Fli(BinaryReader r, FileSource f)
-    {
+    public Binary_Fli(BinaryReader r, FileSource f) {
         // read events
         Events = S.GetEvents($"{Path.GetFileNameWithoutExtension(f.Path).ToLowerInvariant()}.evt");
 
@@ -322,16 +295,13 @@ public unsafe class Binary_Fli : IDisposable, ITextureFrames, IHaveMetaInfo
 
     public bool HasFrames => NumFrames > 0;
 
-    public bool DecodeFrame()
-    {
+    public bool DecodeFrame() {
         var r = R;
         X_FrameHeader frameHeader;
         var header = r.ReadS<X_ChunkHeader>();
-        do
-        {
+        do {
             var nextPosition = r.BaseStream.Position + (header.Size - 6);
-            switch (header.Type)
-            {
+            switch (header.Type) {
                 case ChunkType.COLOR_256: SetPalette(r); break;
                 case ChunkType.DELTA_FLC: DecodeDeltaFLC(r); break;
                 case ChunkType.BYTE_RUN: DecodeByteRun(r); break;
@@ -354,14 +324,12 @@ public unsafe class Binary_Fli : IDisposable, ITextureFrames, IHaveMetaInfo
         return header.IsValid;
     }
 
-    void SetPalette(BinaryReader r)
-    {
+    void SetPalette(BinaryReader r) {
         var numPackets = r.ReadUInt16();
         if (r.ReadUInt16() == 0) // special case
         {
             var data = r.ReadBytes(256 * 3);
-            for (int i = 0; i < data.Length; i += 3)
-            {
+            for (int i = 0; i < data.Length; i += 3) {
                 Palette[i + 0] = (byte)((data[i + 0] << 2) | (data[i + 0] & 3));
                 Palette[i + 1] = (byte)((data[i + 1] << 2) | (data[i + 1] & 3));
                 Palette[i + 2] = (byte)((data[i + 2] << 2) | (data[i + 2] & 3));
@@ -370,13 +338,11 @@ public unsafe class Binary_Fli : IDisposable, ITextureFrames, IHaveMetaInfo
         }
         r.Skip(-2);
         var palPos = 0;
-        while (numPackets-- != 0)
-        {
+        while (numPackets-- != 0) {
             palPos += r.ReadByte() * 3;
             var change = r.ReadByte();
             var data = r.ReadBytes(change * 3);
-            for (int i = 0; i < data.Length; i += 3)
-            {
+            for (int i = 0; i < data.Length; i += 3) {
                 Palette[palPos + i + 0] = (byte)((data[i + 0] << 2) | (data[i + 0] & 3));
                 Palette[palPos + i + 1] = (byte)((data[i + 1] << 2) | (data[i + 1] & 3));
                 Palette[palPos + i + 2] = (byte)((data[i + 2] << 2) | (data[i + 2] & 3));
@@ -385,20 +351,16 @@ public unsafe class Binary_Fli : IDisposable, ITextureFrames, IHaveMetaInfo
         }
     }
 
-    void DecodeDeltaFLC(BinaryReader r)
-    {
+    void DecodeDeltaFLC(BinaryReader r) {
         var linesInChunk = r.ReadUInt16();
         int curLine = 0, numPackets = 0, value;
-        while (linesInChunk-- > 0)
-        {
+        while (linesInChunk-- > 0) {
             // first process all the opcodes.
             OpCode opcode;
-            do
-            {
+            do {
                 value = r.ReadUInt16();
                 opcode = (OpCode)((value >> 14) & 3);
-                switch (opcode)
-                {
+                switch (opcode) {
                     case OpCode.PACKETCOUNT: numPackets = value; break;
                     case OpCode.UNDEFINED: break;
                     case OpCode.LASTPIXEL: Pixels[(curLine * Width) + (Width - 1)] = (byte)(value & 0xFF); break;
@@ -408,21 +370,17 @@ public unsafe class Binary_Fli : IDisposable, ITextureFrames, IHaveMetaInfo
 
             // now interpret the RLE data
             value = 0;
-            while (numPackets-- > 0)
-            {
+            while (numPackets-- > 0) {
                 value += r.ReadByte();
                 var pixels = Pixels.AsSpan((curLine * Width) + value);
-                fixed (byte* _ = pixels)
-                {
+                fixed (byte* _ = pixels) {
                     var count = (int)r.ReadSByte();
-                    if (count > 0)
-                    {
+                    if (count > 0) {
                         var size = count << 1;
                         Unsafe.CopyBlock(ref *_, ref r.ReadBytes(size)[0], (uint)size);
                         value += size;
                     }
-                    else if (count < 0)
-                    {
+                    else if (count < 0) {
                         var __ = (ushort*)_;
                         count = -count;
                         var size = count << 1;
@@ -437,16 +395,12 @@ public unsafe class Binary_Fli : IDisposable, ITextureFrames, IHaveMetaInfo
         }
     }
 
-    void DecodeByteRun(BinaryReader r)
-    {
-        fixed (byte* _ = Pixels)
-        {
+    void DecodeByteRun(BinaryReader r) {
+        fixed (byte* _ = Pixels) {
             byte* ptr = _, endPtr = _ + (Width * Height);
-            while (ptr < endPtr)
-            {
+            while (ptr < endPtr) {
                 var numChunks = r.ReadByte();
-                while (numChunks-- != 0)
-                {
+                while (numChunks-- != 0) {
                     var count = (int)r.ReadSByte();
                     if (count > 0) { Unsafe.InitBlock(ref *ptr, r.ReadByte(), (uint)count); ptr += count; }
                     else { count = -count; Unsafe.CopyBlock(ref *ptr, ref r.ReadBytes(count)[0], (uint)count); ptr += count; }
@@ -470,19 +424,15 @@ public unsafe class Binary_Fli : IDisposable, ITextureFrames, IHaveMetaInfo
 
 #region Binary_Populus
 
-public class Binary_Populus : PakBinary<Binary_Populus>
-{
+public class Binary_Populus : PakBinary<Binary_Populus> {
     #region Factories
 
     public static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
-        => source.Path.ToLowerInvariant() switch
-        {
-            _ => Path.GetExtension(source.Path).ToLowerInvariant() switch
-            {
+        => source.Path.ToLowerInvariant() switch {
+            _ => Path.GetExtension(source.Path).ToLowerInvariant() switch {
                 ".pal" => (0, Binary_Pal.Factory_3),
                 ".wav" => (0, Binary_Snd.Factory),
-                ".raw" => (0, Binary_Raw.FactoryMethod(Binary_RawFunc, (id, value) => id switch
-                {
+                ".raw" => (0, Binary_Raw.FactoryMethod(Binary_RawFunc, (id, value) => id switch {
                     "P2" => Games.P2.Database.GetPalette(value, "DATA/MQAZ"),
                     _ => throw new ArgumentOutOfRangeException(nameof(game.Id), game.Id),
                 })),
@@ -490,14 +440,11 @@ public class Binary_Populus : PakBinary<Binary_Populus>
             }
         };
 
-    static void Binary_RawFunc(Binary_Raw s, BinaryReader r, FileSource f)
-    {
-        if (f.Tag == null)
-        {
+    static void Binary_RawFunc(Binary_Raw s, BinaryReader r, FileSource f) {
+        if (f.Tag == null) {
             s.Body = r.ReadToEnd();
             s.Palette = f.Path[..^4];
-            switch (s.Body.Length)
-            {
+            switch (s.Body.Length) {
                 case 64000: s.Width = 320; s.Height = 200; break;
                 //case 307200: s.Width = 640; s.Height = 480; break;
                 default: throw new ArgumentOutOfRangeException(nameof(s.Body), $"{s.Body.Length}");
@@ -513,8 +460,7 @@ public class Binary_Populus : PakBinary<Binary_Populus>
     const uint MAGIC_SPR = 0x42465350;
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    unsafe struct SPR_Record
-    {
+    unsafe struct SPR_Record {
         public static (string, int) Struct = ("<2HI", sizeof(SPR_Record));
         public ushort Width;
         public ushort Height;
@@ -522,8 +468,7 @@ public class Binary_Populus : PakBinary<Binary_Populus>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    unsafe struct DAT_Sprite
-    {
+    unsafe struct DAT_Sprite {
         public static (string, int) Struct = ("<2bI", sizeof(DAT_Sprite));
         public byte Width;
         public byte Height;
@@ -533,14 +478,12 @@ public class Binary_Populus : PakBinary<Binary_Populus>
 
     #endregion
 
-    public override async Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+    public override async Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         List<FileSource> files;
         source.Files = files = [];
         var tabPath = $"{source.PakPath[..^4]}.TAB";
         var fileName = Path.GetFileName(source.PakPath);
-        switch (source.Game.Id)
-        {
+        switch (source.Game.Id) {
             case "P2":
                 if (fileName.StartsWith("EMSCBLK")) await source.ReaderT(s => ParseSprite(s, files), tabPath);
                 else if (fileName.StartsWith("EMSFACES") || fileName.StartsWith("MEMSFACE")) await source.ReaderT(s => ParseSprite(s, files), tabPath);
@@ -552,18 +495,14 @@ public class Binary_Populus : PakBinary<Binary_Populus>
                 return;
             case "P3":
                 var magic = r.ReadUInt32();
-                switch (magic)
-                {
-                    case MAGIC_SPR:
-                        {
+                switch (magic) {
+                    case MAGIC_SPR: {
                             var count = r.ReadUInt32();
                             int i = 0;
                             FileSource n, l = null;
                             var lastOffset = r.Tell();
-                            foreach (var s in r.ReadSArray<SPR_Record>((int)count))
-                            {
-                                files.Add(n = new FileSource
-                                {
+                            foreach (var s in r.ReadSArray<SPR_Record>((int)count)) {
+                                files.Add(n = new FileSource {
                                     Path = $"sprs/spr{i++}.spr",
                                     Offset = s.Offset,
                                     Tag = (s.Width, s.Height),
@@ -580,17 +519,14 @@ public class Binary_Populus : PakBinary<Binary_Populus>
         }
     }
 
-    unsafe static Task ParseSprite(BinaryReader r, List<FileSource> files)
-    {
+    unsafe static Task ParseSprite(BinaryReader r, List<FileSource> files) {
         r.Skip(4);
         var numSprites = (int)(r.BaseStream.Length - 4 / sizeof(DAT_Sprite));
         var sprites = r.ReadSArray<DAT_Sprite>(numSprites);
         var lastI = numSprites - 1;
-        for (var i = 0; i < numSprites; i++)
-        {
+        for (var i = 0; i < numSprites; i++) {
             ref DAT_Sprite s = ref sprites[i];
-            files.Add(new FileSource
-            {
+            files.Add(new FileSource {
                 Path = $"{i:000}.raw",
                 Offset = s.Offset,
                 FileSize = (i != lastI ? sprites[i + 1].Offset : r.BaseStream.Length) - s.Offset,
@@ -600,12 +536,10 @@ public class Binary_Populus : PakBinary<Binary_Populus>
         return Task.CompletedTask;
     }
 
-    static void ParseOther(List<FileSource> files, int count)
-    {
+    static void ParseOther(List<FileSource> files, int count) {
         const int TextureBlockSize = 32 * 32;
         for (int i = 1, o = 0; i < count; i++, o += TextureBlockSize)
-            files.Add(new FileSource
-            {
+            files.Add(new FileSource {
                 Path = $"sprs/{i:000}.raw",
                 Offset = o,
                 FileSize = TextureBlockSize,
@@ -613,8 +547,7 @@ public class Binary_Populus : PakBinary<Binary_Populus>
             });
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
-    {
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         var bytes = r.ReadBytes((int)file.FileSize);
         return Task.FromResult((Stream)new MemoryStream(bytes));
@@ -625,14 +558,12 @@ public class Binary_Populus : PakBinary<Binary_Populus>
 
 #region Binary_Syndicate
 
-public class Binary_Syndicate : PakBinary<Binary_Syndicate>
-{
+public class Binary_Syndicate : PakBinary<Binary_Syndicate> {
     #region Factories
 
     static readonly string[] S_FLIFILES = ["INTRO.DAT", "MBRIEF.DAT", "MBRIEOUT.DAT", "MCONFOUT.DAT", "MCONFUP.DAT", "MDEBRIEF.DAT", "MDEOUT.DAT", "MENDLOSE.DAT", "MENDWIN.DAT", "MGAMEWIN.DAT", "MLOSA.DAT", "MLOSAOUT.DAT", "MLOSEGAM.DAT", "MMAP.DAT", "MMAPOUT.DAT", "MOPTION.DAT", "MOPTOUT.DAT", "MRESOUT.DAT", "MRESRCH.DAT", "MSCRENUP.DAT", "MSELECT.DAT", "MSELOUT.DAT", "MTITLE.DAT", "MMULTI.DAT", "MMULTOUT.DAT"];
     public static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
-     => Path.GetFileName(source.Path).ToUpperInvariant() switch
-     {
+     => Path.GetFileName(source.Path).ToUpperInvariant() switch {
          var x when S_FLIFILES.Contains(x) => (0, Binary_Fli.Factory),
          //"MCONSCR.DAT" => (0, Binary_Raw.FactoryMethod()),
          //"MLOGOS.DAT" => (0, Binary_Raw.FactoryMethod()),
@@ -665,8 +596,7 @@ public class Binary_Syndicate : PakBinary<Binary_Syndicate>
 
 #region Binary_SyndicateX
 
-public unsafe class Binary_SyndicateX : IHaveMetaInfo
-{
+public unsafe class Binary_SyndicateX : IHaveMetaInfo {
     public enum Kind { Font, Game, MapColumn, MapData, MapTile, Mission, Palette, Raw, Req, SoundData, SoundTab, SpriteAnim, SpriteFrame, SpriteElement, SpriteTab, SpriteData };
 
     public static Task<object> Factory_Font(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_SyndicateX(r, f, s, Kind.Font));
@@ -689,8 +619,7 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo
     #region Headers
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public unsafe struct X_Palette
-    {
+    public unsafe struct X_Palette {
         public static (string, int) Struct = ("<3x", sizeof(X_Palette));
         public byte R;
         public byte G;
@@ -698,8 +627,7 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public unsafe struct X_Font
-    {
+    public unsafe struct X_Font {
         public static (string, int) Struct = ("<H3x", sizeof(X_Font));
         public ushort Offset;
         public byte Width;
@@ -708,8 +636,7 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public unsafe struct X_MapData
-    {
+    public unsafe struct X_MapData {
         public static (string, int) Struct = ("<3I", sizeof(X_MapData));
         public uint MaxX;
         public uint MaxY;
@@ -717,15 +644,13 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public unsafe struct X_SoundTab
-    {
+    public unsafe struct X_SoundTab {
         public static (string, int) Struct = ("<I28x", sizeof(X_SoundTab));
         public uint Size;
         public fixed byte Unknown[28];
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Patch(int i, byte[] sample)
-        {
+        public static void Patch(int i, byte[] sample) {
             // patch sample rates
             if (i == 13) sample[0x1e] = 0x9c;
             else if (i == 24) sample[0x1e] = 0x9c;
@@ -734,8 +659,7 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public unsafe struct X_MapTile
-    {
+    public unsafe struct X_MapTile {
         public static (string, int) Struct = ("<6I", sizeof(X_MapTile));
         public uint Offsets0;
         public uint Offsets1;
@@ -746,8 +670,7 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public unsafe struct X_SpriteTab
-    {
+    public unsafe struct X_SpriteTab {
         public static (string, int) Struct = ("<I2x", sizeof(X_SpriteTab));
         public uint Offset;
         public byte Width;
@@ -757,8 +680,7 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public unsafe struct X_SpriteElement
-    {
+    public unsafe struct X_SpriteElement {
         public static (string, int) Struct = ("<5H", sizeof(X_SpriteElement));
         public ushort Sprite;
         public ushort OffsetX;
@@ -768,8 +690,7 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public unsafe struct X_SpriteFrame
-    {
+    public unsafe struct X_SpriteFrame {
         public static (string, int) Struct = ("<H2x2H", sizeof(X_SpriteFrame));
         public ushort FirstElement;
         public byte Width;
@@ -779,8 +700,7 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public unsafe struct X_GameHeader
-    {
+    public unsafe struct X_GameHeader {
         public static (string, int) Struct = ("<8x16384HH", sizeof(X_GameHeader));
         public fixed byte Header[6];
         public fixed ushort Offsets[16384]; //: 128 * 128
@@ -798,8 +718,7 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo
     //static const int kScenarioTypeReset = 0x09;
 
 
-    public enum ObjectLocation : byte
-    {
+    public enum ObjectLocation : byte {
         OnMap = 0x04,               // Obj is on the map (Visible)
         NotOnMap = 0x05,            // Obj is not on map (Hidden)
         OnMap2 = 0x06,              // Static: On map, but why not 0x04
@@ -809,15 +728,13 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo
         // 0x0D and 0x0C are excluded from being loaded
     }
 
-    public enum ObjectState : byte
-    {
+    public enum ObjectState : byte {
         Ped_Standing = 0x0,         // Ped is standing
         Ped_Walking = 0x10,         // Ped is walking
         Ped_Dead = 0x11,            // Ped is dead
     }
 
-    public enum ObjectType : byte
-    {
+    public enum ObjectType : byte {
         Ped = 0x01,                 // Ped
         Vehicle = 0x02,             // Vehicle
         Weapon = 0x04,              // Weapon
@@ -915,8 +832,7 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo
         public ushort Unkn27;
     }
 
-    public enum GameWeaponSubType : byte
-    {
+    public enum GameWeaponSubType : byte {
         Persuadertron = 0x01,           // Persuadertron
         Pistol = 0x02,                  // Pistol
         GaussGun = 0x03,                // Gauss Gun
@@ -955,8 +871,7 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo
         public ushort OffsetOwner;
     }
 
-    public enum GameScenarioType : byte
-    {
+    public enum GameScenarioType : byte {
         Scn0 = 0x00,                // unset scenario type, is found at start of array and end;
         Scn1 = 0x01,                // walking/driving to pos, x,y defined, no object offset
         Scn2 = 0x02,                // vehicle to use and goto
@@ -1023,19 +938,16 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo
 
     #region Objects
 
-    public class Palette
-    {
+    public class Palette {
         public X_Palette[] Records;
     }
 
-    public class Font
-    {
+    public class Font {
         public X_Font[] Records;
         public byte[] Data;
     }
 
-    public class MapData
-    {
+    public class MapData {
         public int MapId;
         public int MaxX;
         public int MaxY;
@@ -1048,11 +960,9 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo
         void PatchTile(int x, int y, int z, byte tile) => Tiles[(y * MaxX + x) * MaxZ + z] = tile;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public MapData Patch()
-        {
+        public MapData Patch() {
             // patch for "YUKON" map
-            if (MapId == 0x27)
-            {
+            if (MapId == 0x27) {
                 PatchTile(60, 63, 1, 0x27);
                 PatchTile(61, 63, 1, 0x27);
                 PatchTile(62, 63, 1, 0x27);
@@ -1070,8 +980,7 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo
                 PatchTile(62, 67, 1, 0x27);
             }
             // patch for "INDONESIA" map
-            else if (MapId == 0x5B)
-            {
+            else if (MapId == 0x5B) {
                 PatchTile(49, 27, 2, 0);
                 PatchTile(49, 28, 2, 0);
                 PatchTile(49, 29, 2, 0);
@@ -1080,8 +989,7 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo
         }
     }
 
-    public enum ColType : byte
-    {
+    public enum ColType : byte {
         None,
         SlopeSN,
         SlopeNS,
@@ -1101,22 +1009,19 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo
         Unknown
     }
 
-    public class MapTile
-    {
+    public class MapTile {
         public byte[][] Tiles;
         public ColType[] Types;
     }
 
-    public class Sprite
-    {
+    public class Sprite {
         public int Width;
         public int Height;
         public int Stride;
         public byte[] Pixels;
     }
 
-    public class SpriteElement
-    {
+    public class SpriteElement {
         public int Sprite;
         public int OffsetX;
         public int OffsetY;
@@ -1124,8 +1029,7 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo
         public int NextElement;
     }
 
-    public class SpriteFrame
-    {
+    public class SpriteFrame {
         public int FirstElement;
         public int Width;
         public int Height;
@@ -1133,15 +1037,13 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo
         public int NextElement;
     }
 
-    public class Mission
-    {
+    public class Mission {
         public int[] InfoCosts;
         public int[] EnhtsCosts;
         public string[] Briefings;
     }
 
-    public class Game
-    {
+    public class Game {
         public X_GameHeader Header;
         public X_GamePerson[] People;
         public X_GameVehicle[] Vehicles;
@@ -1159,8 +1061,7 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo
 
     public object Obj;
 
-    public Binary_SyndicateX(BinaryReader r, FileSource f, PakFile s, Kind kind)
-    {
+    public Binary_SyndicateX(BinaryReader r, FileSource f, PakFile s, Kind kind) {
         const int NUMOFTILES = 256;
         const int PIXELS_PER_BLOCK = 8;
         const int COLOR_BYTES_PER_BLOCK = PIXELS_PER_BLOCK / 2, ALPHA_BYTES_PER_BLOCK = PIXELS_PER_BLOCK / 8;
@@ -1170,8 +1071,7 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo
 
         using var r2 = new BinaryReader(new MemoryStream(Rnc.Read(r)));
         var streamSize = r2.BaseStream.Length;
-        switch (kind)
-        {
+        switch (kind) {
             case Kind.SoundData: throw new FormatException("Please load the .TAB");
             case Kind.SoundTab: // Skips Kind.SoundData
                 {
@@ -1180,8 +1080,7 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo
                     var sounds = new List<byte[]>();
                     r2.Seek(OFFSET);
                     var offset = 0;
-                    Obj = r2.ReadSArray<X_SoundTab>((int)((streamSize - OFFSET) / sizeof(X_SoundTab)) + 1).Select((t, i) =>
-                    {
+                    Obj = r2.ReadSArray<X_SoundTab>((int)((streamSize - OFFSET) / sizeof(X_SoundTab)) + 1).Select((t, i) => {
                         if (t.Size <= 144) return null;
                         var sample = data[offset..(offset + (int)t.Size)];
                         offset += (int)t.Size;
@@ -1191,14 +1090,12 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo
                     break;
                 }
             case Kind.Palette:
-                Obj = new Palette
-                {
+                Obj = new Palette {
                     Records = r2.ReadSArray<X_Palette>(256)
                 };
                 break;
             case Kind.Font:
-                Obj = new Font
-                {
+                Obj = new Font {
                     Records = r2.ReadSArray<X_Font>(128),
                     Data = r2.ReadToEnd(),
                 };
@@ -1208,8 +1105,7 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo
                 //var data = r2.ReadToEnd();
                 Obj = null;
                 break;
-            case Kind.MapData:
-                {
+            case Kind.MapData: {
                     var mapId = int.Parse(Path.GetFileNameWithoutExtension(f.Path)[3..]);
                     var t = r2.ReadS<X_MapData>();
                     int maxX = (int)t.MaxX, maxY = (int)t.MaxY, maxZ = (int)t.MaxZ;
@@ -1222,8 +1118,7 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo
                     var tiles = new byte[maxX * maxY * (maxZ + 1)];
                     for (int h = 0, zr = maxZ + 1; h < maxY; h++)
                         for (int w = 0; w < maxX; w++)
-                            for (int z = 0, idx = h * maxX + w; z < maxZ; z++)
-                            {
+                            for (int z = 0, idx = h * maxX + w; z < maxZ; z++) {
                                 var tileNum = data[lookups[idx] + z];
                                 tiles[idx * zr + z] = tileNum;
                             }
@@ -1233,8 +1128,7 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo
                         for (int w = 0; w < maxX; w++)
                             tiles[(h * maxX + w) * maxZ + z] = 0;
                     // set obj
-                    Obj = new MapData
-                    {
+                    Obj = new MapData {
                         MapId = mapId,
                         Width = width,
                         Height = height,
@@ -1250,8 +1144,7 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo
                 {
                     var types = (ColType[])s.LoadFileObject<Binary_SyndicateX>(f.Path.Replace("HBLK", "COL")).Result.Obj;
 
-                    static void UnpackBlock(byte[] data, Span<byte> pixels)
-                    {
+                    static void UnpackBlock(byte[] data, Span<byte> pixels) {
                         for (var j = 0; j < 4; ++j)
                             for (var i = 0; i < 8; ++i)
                                 pixels[j * 8 + i] = BitValue(data[j], 7 - i) == 0
@@ -1263,15 +1156,13 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo
                                     : (byte)0xff; // transparent
                     }
 
-                    static void LoadSubTile(BinaryReader r2, uint offset, int index, int stride, byte[] pixels)
-                    {
+                    static void LoadSubTile(BinaryReader r2, uint offset, int index, int stride, byte[] pixels) {
                         r2.Seek(offset);
                         for (var i = 0; i < SUBTILE_HEIGHT; i++)
                             UnpackBlock(r2.ReadBytes(SUBTILE_ROW_LENGTH), pixels.AsSpan(index + (SUBTILE_HEIGHT - 1 - i) * stride));
                     }
 
-                    var tiles = r2.ReadSArray<X_MapTile>(NUMOFTILES).Select(t =>
-                    {
+                    var tiles = r2.ReadSArray<X_MapTile>(NUMOFTILES).Select(t => {
                         var b = new byte[TILE_WIDTH * TILE_HEIGHT];
                         LoadSubTile(r2, t.Offsets0, 2 * SUBTILE_HEIGHT * TILE_WIDTH + 0 * SUBTILE_WIDTH, TILE_WIDTH, b);
                         LoadSubTile(r2, t.Offsets1, 1 * SUBTILE_HEIGHT * TILE_WIDTH + 0 * SUBTILE_WIDTH, TILE_WIDTH, b);
@@ -1281,8 +1172,7 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo
                         LoadSubTile(r2, t.Offsets5, 0 * SUBTILE_HEIGHT * TILE_WIDTH + 1 * SUBTILE_WIDTH, TILE_WIDTH, b);
                         return b;
                     }).ToArray();
-                    Obj = new MapTile
-                    {
+                    Obj = new MapTile {
                         Tiles = tiles,
                         Types = types,
                     };
@@ -1293,8 +1183,7 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo
                 {
                     using var r3 = new BinaryReader((MemoryStream)s.LoadFileObject<Binary_SyndicateX>(Path.ChangeExtension(f.Path, ".DAT")).Result.Obj);
 
-                    static void UnpackBlock(byte[] data, Span<byte> pixels)
-                    {
+                    static void UnpackBlock(byte[] data, Span<byte> pixels) {
                         for (var i = 0; i < 8; ++i)
                             pixels[i] = BitValue(data[0], 7 - i) == 0
                                     ? (byte)(
@@ -1305,35 +1194,30 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo
                                     : (byte)0xff; // transparent
                     }
 
-                    static Sprite LoadSprite(BinaryReader r, ref X_SpriteTab t, bool rle)
-                    {
+                    static Sprite LoadSprite(BinaryReader r, ref X_SpriteTab t, bool rle) {
                         int width = t.Width, height = t.Height, stride = t.Stride();
                         if (width == 0 || height == 0) return new Sprite();
                         var pixels = new byte[stride * height];
                         r.Seek(t.Offset);
                         if (rle)
-                            for (var i = 0; i < height; i++)
-                            {
+                            for (var i = 0; i < height; i++) {
                                 var spriteWidth = width;
                                 var currentPixel = i * stride;
 
                                 // first
                                 var b = r.ReadByte();
                                 var runLength = b < 128 ? b : -(256 - b);
-                                while (runLength != 0)
-                                {
+                                while (runLength != 0) {
                                     spriteWidth -= runLength;
 
                                     // pixel run
-                                    if (runLength > 0)
-                                    {
+                                    if (runLength > 0) {
                                         if (currentPixel < 0) currentPixel = 0;
                                         if (currentPixel + runLength > height * stride) runLength = height * stride - currentPixel;
                                         for (var j = 0; j < runLength; j++) pixels[currentPixel++] = r.ReadByte();
                                     }
                                     // transparent run
-                                    else if (runLength < 0)
-                                    {
+                                    else if (runLength < 0) {
                                         runLength *= -1;
                                         if (currentPixel < 0) currentPixel = 0;
                                         if (currentPixel + runLength > height * stride) runLength = height * stride - currentPixel;
@@ -1351,17 +1235,14 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo
                                 }
                             }
                         else
-                            for (var j = 0; j < height; ++j)
-                            {
+                            for (var j = 0; j < height; ++j) {
                                 var currentPixel = j * stride;
-                                for (var i = 0; i < width; i += PIXELS_PER_BLOCK)
-                                {
+                                for (var i = 0; i < width; i += PIXELS_PER_BLOCK) {
                                     UnpackBlock(r.ReadBytes(BLOCK_LENGTH), pixels.AsSpan(currentPixel));
                                     currentPixel += PIXELS_PER_BLOCK;
                                 }
                             }
-                        return new Sprite
-                        {
+                        return new Sprite {
                             Width = width,
                             Height = height,
                             Stride = stride,
@@ -1374,10 +1255,8 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo
                     ).ToArray();
                     break;
                 }
-            case Kind.SpriteElement:
-                {
-                    Obj = r2.ReadSArray<X_SpriteElement>((int)streamSize / sizeof(X_SpriteElement)).Select(t => new SpriteElement
-                    {
+            case Kind.SpriteElement: {
+                    Obj = r2.ReadSArray<X_SpriteElement>((int)streamSize / sizeof(X_SpriteElement)).Select(t => new SpriteElement {
                         Sprite = t.Sprite / 6,
                         OffsetX = (t.OffsetX & (1 << 15)) != 0 ? -(65536 - t.OffsetX) : t.OffsetX,
                         OffsetY = (t.OffsetY & (1 << 15)) != 0 ? -(65536 - t.OffsetY) : t.OffsetY,
@@ -1386,10 +1265,8 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo
                     }).ToArray();
                     break;
                 }
-            case Kind.SpriteFrame:
-                {
-                    Obj = r2.ReadSArray<X_SpriteFrame>((int)streamSize / sizeof(X_SpriteFrame)).Select(t => new SpriteFrame
-                    {
+            case Kind.SpriteFrame: {
+                    Obj = r2.ReadSArray<X_SpriteFrame>((int)streamSize / sizeof(X_SpriteFrame)).Select(t => new SpriteFrame {
                         FirstElement = t.FirstElement,
                         Width = t.Width,
                         Height = t.Height,
@@ -1398,26 +1275,21 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo
                     }).ToArray();
                     break;
                 }
-            case Kind.SpriteAnim:
-                {
+            case Kind.SpriteAnim: {
                     Obj = r2.ReadPArray<ushort>("H", (int)streamSize / sizeof(ushort));
                     break;
                 }
-            case Kind.Mission:
-                {
+            case Kind.Mission: {
                     var p = Encoding.ASCII.GetString(r2.ReadToEnd()).Split("\n|\n");
-                    Obj = new Mission
-                    {
+                    Obj = new Mission {
                         InfoCosts = p[0].Split('\n').Select(UnsafeX.Atoi).ToArray(),
                         EnhtsCosts = p[1].Split('\n').Select(UnsafeX.Atoi).ToArray(),
                         Briefings = p[2..],
                     };
                     break;
                 }
-            case Kind.Game:
-                {
-                    Obj = new Game
-                    {
+            case Kind.Game: {
+                    Obj = new Game {
                         Header = r2.ReadS<X_GameHeader>(),
                         People = r2.ReadSArray<X_GamePerson>(256),
                         Vehicles = r2.ReadSArray<X_GameVehicle>(64),

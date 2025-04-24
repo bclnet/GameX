@@ -3,8 +3,7 @@ using System.Numerics;
 
 namespace GameX.Formats.Unknown;
 
-public interface IUnknownMaterial
-{
+public interface IUnknownMaterial {
     string Name { get; }
     Vector3? Diffuse { get; } // Color:RGB
     Vector3? Specular { get; } // Color:RGB

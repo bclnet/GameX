@@ -5,15 +5,13 @@ using System.Reflection;
 
 namespace GameX.Formats.Collada;
 
-partial class ColladaFileWriter
-{
+partial class ColladaFileWriter {
     /// <summary>
     /// Adds the Asset element to the Collada document.
     /// </summary>
     void SetAsset()
         // Writes the Asset element in a Collada XML doc
-        => daeObject.Asset = new Collada_Asset
-        {
+        => daeObject.Asset = new Collada_Asset {
             Revision = $"{Assembly.GetExecutingAssembly().GetName().Version}",
             Created = DateTime.Now,
             Modified = DateTime.Now,
@@ -30,8 +28,7 @@ partial class ColladaFileWriter
                     Source_Data = File.Name // The cgf/cga/skin/whatever file we read
                 }}.Concat(File.Sources?.Select(source =>
                 // append the actual file creators from file
-                new Collada_Asset_Contributor
-                {
+                new Collada_Asset_Contributor {
                     Author = source.Author,
                     Source_Data = source.SourceFile,
                 })).ToArray()

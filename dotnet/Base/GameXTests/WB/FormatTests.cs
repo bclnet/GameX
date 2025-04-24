@@ -10,44 +10,38 @@ using System.Threading.Tasks;
 namespace GameX.WB;
 
 [TestClass]
-public class FormatTests
-{
+public class FormatTests {
     static readonly Family family = FamilyManager.GetFamily("WB");
     static readonly PakFile cell = family.OpenPakFile(new Uri("game:/client_cell_1.dat#AC")); const int ExpectedCellCount = 805003;
     static readonly PakFile portal = family.OpenPakFile(new Uri("game:/client_portal.dat#AC")); const int ExpectedPortalCount = 79694;
     static readonly PakFile localEnglish = family.OpenPakFile(new Uri("game:/client_local_English.dat#AC")); const int ExpectedLocalEnglishCount = 118;
 
     [TestMethod]
-    public void LoadCellDat_NoExceptions()
-    {
+    public void LoadCellDat_NoExceptions() {
         var dat = new Database(cell);
         var count = dat.Source.Count;
         Assert.IsTrue(ExpectedCellCount <= count, $"Insufficient files parsed from .dat. Expected: >= {ExpectedCellCount}, Actual: {count}");
     }
 
     [TestMethod]
-    public void LoadPortalDat_NoExceptions()
-    {
+    public void LoadPortalDat_NoExceptions() {
         var dat = new Database(portal);
         var count = dat.Source.Count;
         Assert.IsTrue(ExpectedPortalCount <= count, $"Insufficient files parsed from .dat. Expected: >= {ExpectedPortalCount}, Actual: {count}");
     }
 
     [TestMethod]
-    public void LoadLocalEnglishDat_NoExceptions()
-    {
+    public void LoadLocalEnglishDat_NoExceptions() {
         var dat = new Database(localEnglish);
         var count = dat.Source.Count;
         Assert.IsTrue(ExpectedLocalEnglishCount <= count, $"Insufficient files parsed from .dat. Expected: >= {ExpectedLocalEnglishCount}, Actual: {count}");
     }
 
     [TestMethod]
-    public async Task UnpackCellDatFiles_NoExceptions()
-    {
+    public async Task UnpackCellDatFiles_NoExceptions() {
         var dat = new Database(cell);
         var source = dat.Source;
-        foreach (var (key, file) in source.FilesById.Select(x => KeyValuePair.Create(x.Key, x.First())))
-        {
+        foreach (var (key, file) in source.FilesById.Select(x => KeyValuePair.Create(x.Key, x.First()))) {
             if ((uint)key == Iteration.FILE_ID) continue;
             if (file.FileSize == 0) continue; // DatFileType.LandBlock files can be empty
 
@@ -64,12 +58,10 @@ public class FormatTests
     }
 
     [TestMethod]
-    public async Task UnpackPortalDatFiles_NoExceptions()
-    {
+    public async Task UnpackPortalDatFiles_NoExceptions() {
         var dat = new Database(portal);
         var source = dat.Source;
-        foreach (var (key, file) in source.FilesById.Select(x => KeyValuePair.Create(x.Key, x.First())))
-        {
+        foreach (var (key, file) in source.FilesById.Select(x => KeyValuePair.Create(x.Key, x.First()))) {
             if ((uint)key == Iteration.FILE_ID) continue;
 
             var fileType = WBPakFile.GetFileType(file, PakType.Portal).fileType;
@@ -94,12 +86,10 @@ public class FormatTests
     }
 
     [TestMethod]
-    public async Task UnpackLocalEnglishDatFiles_NoExceptions()
-    {
+    public async Task UnpackLocalEnglishDatFiles_NoExceptions() {
         var dat = new Database(localEnglish);
         var source = dat.Source;
-        foreach (var (key, file) in source.FilesById.Select(x => KeyValuePair.Create(x.Key, x.First())))
-        {
+        foreach (var (key, file) in source.FilesById.Select(x => KeyValuePair.Create(x.Key, x.First()))) {
             if ((uint)key == Iteration.FILE_ID) continue;
 
             var fileType = WBPakFile.GetFileType(file, PakType.Language).fileType;
@@ -120,8 +110,7 @@ public class FormatTests
 
     // uncomment if you want to run this
     // [TestMethod]
-    public void ExtractCellDatByLandblock()
-    {
+    public void ExtractCellDatByLandblock() {
         //var output = @"C:\T_\cell_dat_export_by_landblock";
         var dat = new DatabaseCell(cell);
         //dat.ExtractLandblockContents(output);
@@ -129,8 +118,7 @@ public class FormatTests
 
     // uncomment if you want to run this
     // [TestMethod]
-    public void ExportPortalDatsWithTypeInfo()
-    {
+    public void ExportPortalDatsWithTypeInfo() {
         //var output = @"C:\T_\typed_portal_dat_export";
         var dat = new DatabasePortal(portal);
         //dat.ExtractCategorizedPortalContents(output);

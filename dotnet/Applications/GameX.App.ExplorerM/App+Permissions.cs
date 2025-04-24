@@ -13,15 +13,12 @@ namespace GameX.App.Explorer;
 //#endif
 //    }
 
-public partial class App
-{
-    static bool HasPermissions()
-    {
+public partial class App {
+    static bool HasPermissions() {
         var status = CheckAndRequestPermission<StorageWrite>().Result;
         if (status == PermissionStatus.Granted)
             status = CheckAndRequestPermission<StorageRead>().Result;
-        if (status != PermissionStatus.Granted)
-        {
+        if (status != PermissionStatus.Granted) {
             //Current.MainPage.DisplayAlert("Prompt", $"NO ACCESS", "Cancel").Wait();
             Current.Windows[0].Page.DisplayAlert("Prompt", $"NO ACCESS", "Cancel").Wait();
             return false;
@@ -29,18 +26,15 @@ public partial class App
         return true;
     }
 
-    async static Task<PermissionStatus> CheckAndRequestPermission<TPermission>() where TPermission : BasePermission, new()
-    {
+    async static Task<PermissionStatus> CheckAndRequestPermission<TPermission>() where TPermission : BasePermission, new() {
         var status = await CheckStatusAsync<TPermission>();
         if (status == PermissionStatus.Granted) return status;
-        else if (status == PermissionStatus.Denied && DeviceInfo.Platform == DevicePlatform.iOS)
-        {
+        else if (status == PermissionStatus.Denied && DeviceInfo.Platform == DevicePlatform.iOS) {
             //await Current.MainPage.DisplayAlert("Prompt", $"turn on in settings", "Cancel");
             await Current.Windows[0].Page.DisplayAlert("Prompt", $"turn on in settings", "Cancel");
             return status;
         }
-        else if (ShouldShowRationale<TPermission>())
-        {
+        else if (ShouldShowRationale<TPermission>()) {
             //await Current.MainPage.DisplayAlert("Prompt", "Why the permission is needed", "Cancel");
             await Current.Windows[0].Page.DisplayAlert("Prompt", "Why the permission is needed", "Cancel");
         }

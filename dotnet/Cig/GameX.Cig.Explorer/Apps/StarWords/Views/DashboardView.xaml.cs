@@ -14,20 +14,17 @@ using GameX.Formats;
 using System.Collections.Specialized;
 using System.Collections.ObjectModel;
 
-namespace GameX.Cig.Apps.StarWords.Views
-{
-    /// <summary>
-    /// Interaction logic for DashboardView.xaml
-    /// </summary>
-    public partial class DashboardView : UserControl, INotifyPropertyChanged
-    {
-        public DashboardView()
-        {
-            InitializeComponent();
-            DataContext = this;
-        }
+namespace GameX.Cig.Apps.StarWords.Views;
 
-        public event PropertyChangedEventHandler PropertyChanged;
-        void OnPropertyChanged([CallerMemberName] string propertyName = "") => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+/// <summary>
+/// Interaction logic for DashboardView.xaml
+/// </summary>
+public partial class DashboardView : UserControl, INotifyPropertyChanged {
+    public DashboardView() {
+        InitializeComponent();
+        DataContext = this;
     }
+
+    public event PropertyChangedEventHandler PropertyChanged;
+    void OnPropertyChanged([CallerMemberName] string propertyName = "") => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 }

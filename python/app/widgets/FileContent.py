@@ -7,11 +7,11 @@ from PyQt6.QtMultimediaWidgets import QVideoWidget
 from PyQt6 import QtCore, QtMultimedia
 from gamex.pak import PakFile
 from gamex.meta import MetaContent, MetaInfo
-from .ViewHex import ViewHex
-from .ViewGfx import ViewOpenGL, ViewPanda3d, ViewPygame
+from .AppHexWidget import AppHexWidget
+from .AppGfxWidget import AppOpenGLWidget, AppPanda3dWidget, AppPygameWidget
 
-# ViewText
-class ViewText(QWidget):
+# AppTextWidget
+class AppTextWidget(QWidget):
     def __init__(self, parent, tab):
         super().__init__()
         self.parent = parent
@@ -26,8 +26,8 @@ class ViewText(QWidget):
         self.layout.addWidget(self.text)
         self.setLayout(self.layout)
 
-# ViewNull
-class ViewNull(QWidget):
+# AppNullWidget
+class AppNullWidget(QWidget):
     def __init__(self, parent, tab):
         super().__init__()
 
@@ -56,11 +56,11 @@ class FileContent(QTabWidget):
 
     def setPlatform(self, platform: object):
         plat = platform.id if platform else 'UK'
-        self.ViewGfx = \
-            ViewOpenGL if plat == 'GL' else \
-            ViewPanda3d if plat == 'PD' else \
-            ViewPygame if plat == 'PG' else \
-            ViewNull
+        self.gfxWidget = \
+            AppOpenGLWidget if plat == 'GL' else \
+            AppPanda3dWidget if plat == 'PD' else \
+            AppPygameWidget if plat == 'PG' else \
+            AppNullWidget
         if len(self.contentTab) > 0: self.updateTabs()
 
     def updateTabs(self):
@@ -82,12 +82,12 @@ class FileContent(QTabWidget):
                 'TNull' if tab.type == None else \
                 'TText'
             control = \
-                ViewHex(self, tab) if key == 'THex' else \
-                ViewText(self, tab) if key == 'TText' else \
-                ViewText(self, tab) if key == 'TDataGrid' else \
-                ViewText(self, tab) if key == 'TAudioPlayer' else \
-                self.ViewGfx(self, tab) if key == 'TViewGfx' else \
-                ViewNull(self, tab) if key == 'TNull' else \
+                AppHexWidget(self, tab) if key == 'THex' else \
+                AppTextWidget(self, tab) if key == 'TText' else \
+                AppTextWidget(self, tab) if key == 'TDataGrid' else \
+                AppTextWidget(self, tab) if key == 'TAudioPlayer' else \
+                self.gfxWidget(self, tab) if key == 'TViewGfx' else \
+                AppNullWidget(self, tab) if key == 'TNull' else \
                 None
             self.contentTab.addTab(control, tab.name)
 

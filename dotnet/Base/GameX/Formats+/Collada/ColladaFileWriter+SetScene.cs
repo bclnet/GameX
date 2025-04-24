@@ -2,14 +2,12 @@
 
 namespace GameX.Formats.Collada;
 
-partial class ColladaFileWriter
-{
+partial class ColladaFileWriter {
     /// <summary>
     /// Adds the Scene element to the Collada document.
     /// </summary>
     void SetScene()
-        => daeObject.Scene = new Collada_Scene
-        {
+        => daeObject.Scene = new Collada_Scene {
             Visual_Scene = new Collada_Instance_Visual_Scene { URL = "#Scene", Name = "Scene" }
         };
 }

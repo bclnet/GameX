@@ -16,14 +16,12 @@ namespace GameX.Bioware;
 /// BiowarePakFile
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class BiowarePakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel>
-{
+public class BiowarePakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="BiowarePakFile" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public BiowarePakFile(PakState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant()))
-    {
+    public BiowarePakFile(PakState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         ObjectFactoryFunc = ObjectFactory;
     }
 
@@ -37,8 +35,7 @@ public class BiowarePakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMo
             : Binary_Zip.GetPakBinary(game);
 
     static PakBinary PakBinaryFactory(FamilyGame game)
-        => game.Engine.n switch
-        {
+        => game.Engine.n switch {
             //"Infinity" => PakBinary_Infinity.Instance,
             "Aurora" => Binary_Aurora.Current,
             "HeroEngine" => Binary_Myp.Current,
@@ -46,8 +43,7 @@ public class BiowarePakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMo
         };
 
     static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
-        => Path.GetExtension(source.Path).ToLowerInvariant() switch
-        {
+        => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             ".dlg" or ".qdb" or ".qst" => (0, Binary_Gff.Factory),
             _ => UnknownPakFile.ObjectFactory(source, game),
         };

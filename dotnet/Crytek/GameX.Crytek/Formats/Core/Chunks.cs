@@ -12,8 +12,7 @@ namespace GameX.Crytek.Formats.Core.Chunks;
 
 #region Chunk
 
-public abstract class Chunk : IBinaryChunk
-{
+public abstract class Chunk : IBinaryChunk {
     protected static readonly Random _rnd = new Random();
     protected static readonly HashSet<int> _alreadyPickedRandoms = new HashSet<int>();
 
@@ -50,8 +49,7 @@ public abstract class Chunk : IBinaryChunk
     internal Dictionary<long, byte> SkippedBytes = new Dictionary<long, byte> { };
 
     public static Chunk New(ChunkType chunkType, uint version)
-        => chunkType switch
-        {
+        => chunkType switch {
             ChunkType.SourceInfo => New<ChunkSourceInfo>(version),
             ChunkType.Timing => New<ChunkTimingFormat>(version),
             ChunkType.ExportFlags => New<ChunkExportFlags>(version),
@@ -95,11 +93,9 @@ public abstract class Chunk : IBinaryChunk
             _ => new ChunkUnknown(),
         };
 
-    public static T New<T>(uint version) where T : Chunk
-    {
+    public static T New<T>(uint version) where T : Chunk {
         if (!_chunkFactoryCache.TryGetValue(typeof(T), out var versionMap)) _chunkFactoryCache[typeof(T)] = versionMap = new Dictionary<uint, Func<dynamic>> { };
-        if (!versionMap.TryGetValue(version, out var factory))
-        {
+        if (!versionMap.TryGetValue(version, out var factory)) {
             var targetType = typeof(T).Assembly.GetTypes()
                 .FirstOrDefault(type => !type.IsAbstract && type.IsClass && !type.IsGenericType && typeof(T).IsAssignableFrom(type) && type.Name == $"{typeof(T).Name}_{version:X}");
             if (targetType != null) factory = () => Activator.CreateInstance(targetType) as T;
@@ -108,14 +104,12 @@ public abstract class Chunk : IBinaryChunk
         return (factory?.Invoke() as T) ?? throw new NotSupportedException($"Version {version:X} of {typeof(T).Name} is not supported");
     }
 
-    public void Load(Model model, ChunkHeader header)
-    {
+    public void Load(Model model, ChunkHeader header) {
         _model = model;
         _header = header;
     }
 
-    public void SkipBytes(BinaryReader r, long bytesToSkip)
-    {
+    public void SkipBytes(BinaryReader r, long bytesToSkip) {
         if (bytesToSkip == 0) return;
         if (r.BaseStream.Position > Offset + Size && Size > 0) Log($"Buffer Overflow in {GetType().Name} 0x{ID:X} ({r.BaseStream.Position - Offset - Size} bytes)");
         if (r.BaseStream.Length < Offset + Size) Log($"Corrupt Headers in {GetType().Name} 0x{ID:X}");
@@ -124,8 +118,7 @@ public abstract class Chunk : IBinaryChunk
     }
     public void SkipBytesRemaining(BinaryReader r) => SkipBytes(r, Size - Math.Max(r.BaseStream.Position - Offset, 0));
 
-    public virtual void Read(BinaryReader r)
-    {
+    public virtual void Read(BinaryReader r) {
         if (r == null) throw new ArgumentNullException(nameof(r));
         ChunkType = _header.ChunkType;
         Version = _header.Version;
@@ -137,16 +130,14 @@ public abstract class Chunk : IBinaryChunk
         r.BaseStream.Seek(_header.Offset, SeekOrigin.Begin);
 
         // Star Citizen files don't have the type, version, offset and ID at the start of a chunk, so don't read them.
-        if (_model.FileVersion == FileVersion.CryTek_3_4 || _model.FileVersion == FileVersion.CryTek_3_5)
-        {
+        if (_model.FileVersion == FileVersion.CryTek_3_4 || _model.FileVersion == FileVersion.CryTek_3_5) {
             ChunkType = (ChunkType)r.ReadUInt32();
             Version = r.ReadUInt32();
             Offset = r.ReadUInt32();
             ID = r.ReadInt32();
             DataSize = Size - 16;
         }
-        if (Offset != _header.Offset || Size != _header.Size)
-        {
+        if (Offset != _header.Offset || Size != _header.Size) {
             Log($"Conflict in chunk definition");
             Log($"{_header.Offset:X}+{_header.Size:X}");
             Log($"{Offset:X}+{Size:X}");
@@ -157,8 +148,7 @@ public abstract class Chunk : IBinaryChunk
     /// Gets a link to the SkinningInfo model.
     /// </summary>
     /// <returns>Link to the SkinningInfo model.</returns>
-    public SkinningInfo GetSkinningInfo()
-    {
+    public SkinningInfo GetSkinningInfo() {
         if (_model.SkinningInfo == null) _model.SkinningInfo = new SkinningInfo();
         return _model.SkinningInfo;
     }
@@ -168,12 +158,10 @@ public abstract class Chunk : IBinaryChunk
     public override string ToString()
         => $@"Chunk Type: {ChunkType}, Ver: {Version:X}, Offset: {Offset:X}, ID: {ID:X}, Size: {Size}";
 
-    protected static int GetNextRandom()
-    {
+    protected static int GetNextRandom() {
         var available = false;
         var rand = 0;
-        while (!available)
-        {
+        while (!available) {
             rand = _rnd.Next(100000);
             if (!_alreadyPickedRandoms.Contains(rand)) { _alreadyPickedRandoms.Add(rand); available = true; }
         }
@@ -182,8 +170,7 @@ public abstract class Chunk : IBinaryChunk
 
     #region Log
 #if LOG
-    public virtual void LogChunk()
-    {
+    public virtual void LogChunk() {
         Log($"*** CHUNK ***");
         Log($"    ChunkType: {ChunkType}");
         Log($"    ChunkVersion: {Version:X}");
@@ -206,12 +193,10 @@ public abstract class ChunkBinaryXmlData : Chunk { } // 0xCCCBF004:  Binary XML 
 
 #region ChunkBinaryXmlData_3
 
-public class ChunkBinaryXmlData_3 : ChunkBinaryXmlData
-{
+public class ChunkBinaryXmlData_3 : ChunkBinaryXmlData {
     public XmlDocument Data;
 
-    public override void Read(BinaryReader r)
-    {
+    public override void Read(BinaryReader r) {
         base.Read(r);
 
         //var bytesToRead = (int)(Size - Math.Max(r.BaseStream.Position - Offset, 0));
@@ -226,14 +211,12 @@ public class ChunkBinaryXmlData_3 : ChunkBinaryXmlData
 
 #region ChunkBoneAnim
 
-public abstract class ChunkBoneAnim : Chunk
-{
+public abstract class ChunkBoneAnim : Chunk {
     public int NumBones;
 
     #region Log
 #if LOG
-    public override void LogChunk()
-    {
+    public override void LogChunk() {
         Log($"*** START MorphTargets Chunk ***");
         Log($"    ChunkType:           {ChunkType}");
         Log($"    Node ID:             {ID:X}");
@@ -247,10 +230,8 @@ public abstract class ChunkBoneAnim : Chunk
 
 #region ChunkBoneAnim_290
 
-public class ChunkBoneAnim_290 : ChunkBoneAnim
-{
-    public override void Read(BinaryReader r)
-    {
+public class ChunkBoneAnim_290 : ChunkBoneAnim {
+    public override void Read(BinaryReader r) {
         base.Read(r);
 
         //TODO: Implement this.
@@ -264,8 +245,7 @@ public class ChunkBoneAnim_290 : ChunkBoneAnim
 /// <summary>
 /// Legacy class. Not used
 /// </summary>
-public abstract class ChunkBoneNameList : Chunk
-{
+public abstract class ChunkBoneNameList : Chunk {
     public int NumEntities;
     public List<string> BoneNames;
 
@@ -274,8 +254,7 @@ public abstract class ChunkBoneNameList : Chunk
 
     #region Log
 #if LOG
-    public override void LogChunk()
-    {
+    public override void LogChunk() {
         Log($"*** START MorphTargets Chunk ***");
         Log($"    ChunkType:           {ChunkType}");
         Log($"    Node ID:             {ID:X}");
@@ -290,10 +269,8 @@ public abstract class ChunkBoneNameList : Chunk
 
 #region ChunkBoneNameList_745
 
-public class ChunkBoneNameList_745 : ChunkBoneNameList
-{
-    public override void Read(BinaryReader r)
-    {
+public class ChunkBoneNameList_745 : ChunkBoneNameList {
+    public override void Read(BinaryReader r) {
         base.Read(r);
 
         BoneNames = r.ReadVUString().Split(' ').ToList();
@@ -317,8 +294,7 @@ public abstract class ChunkCompiledBones : Chunk //  0xACDC0000:  Bones info
 
     public List<string> GetBoneNames() => BoneList.Select(a => a.boneName).ToList();
 
-    protected void AddChildIDToParent(CompiledBone bone)
-    {
+    protected void AddChildIDToParent(CompiledBone bone) {
         if (bone.parentID != 0) BoneList.FirstOrDefault(a => a.ControllerID == bone.parentID)?.childIDs.Add(bone.ControllerID); // Should only be one parent.
     }
 
@@ -327,8 +303,7 @@ public abstract class ChunkCompiledBones : Chunk //  0xACDC0000:  Bones info
 
     #region Log
 #if LOG
-    public override void LogChunk()
-    {
+    public override void LogChunk() {
         Log($"*** START CompiledBone Chunk ***");
         Log($"    ChunkType:           {ChunkType}");
         Log($"    Node ID:             {ID:X}");
@@ -338,8 +313,7 @@ public abstract class ChunkCompiledBones : Chunk //  0xACDC0000:  Bones info
     /// Writes the results of common matrix math.  For testing purposes.
     /// </summary>
     /// <param name="localRotation">The matrix that the math functions will be applied to.</param>
-    void LogMatrices(Matrix3x3 localRotation)
-    {
+    void LogMatrices(Matrix3x3 localRotation) {
         localRotation.LogMatrix3x3("Regular");
         localRotation.Inverse().LogMatrix3x3("Inverse");
         localRotation.Conjugate().LogMatrix3x3("Conjugate");
@@ -370,18 +344,15 @@ public abstract class ChunkCompiledBones : Chunk //  0xACDC0000:  Bones info
 
 #region ChunkCompiledBones_800
 
-public class ChunkCompiledBones_800 : ChunkCompiledBones
-{
-    public override void Read(BinaryReader r)
-    {
+public class ChunkCompiledBones_800 : ChunkCompiledBones {
+    public override void Read(BinaryReader r) {
         base.Read(r);
         SkipBytes(r, 32); // Padding between the chunk header and the first bone.
 
         // Read the first bone with ReadCompiledBone, then recursively grab all the children for each bone you find.
         // Each bone structure is 584 bytes, so will need to seek childOffset * 584 each time, and go back.
         NumBones = (int)((Size - 32) / 584);
-        for (var i = 0; i < NumBones; i++)
-        {
+        for (var i = 0; i < NumBones; i++) {
             var bone = new CompiledBone();
             bone.ReadCompiledBone_800(r);
             // First bone read is root bone
@@ -404,18 +375,15 @@ public class ChunkCompiledBones_800 : ChunkCompiledBones
 
 #region ChunkCompiledBones_801
 
-public class ChunkCompiledBones_801 : ChunkCompiledBones
-{
-    public override void Read(BinaryReader r)
-    {
+public class ChunkCompiledBones_801 : ChunkCompiledBones {
+    public override void Read(BinaryReader r) {
         base.Read(r);
         SkipBytes(r, 32); // Padding between the chunk header and the first bone.
 
         // Read the first bone with ReadCompiledBone, then recursively grab all the children for each bone you find.
         // Each bone structure is 324 bytes, so will need to seek childOffset * 324 each time, and go back.
         NumBones = (int)((Size - 48) / 324);
-        for (var i = 0; i < NumBones; i++)
-        {
+        for (var i = 0; i < NumBones; i++) {
             var bone = new CompiledBone();
             bone.ReadCompiledBone_801(r);
             // First bone read is root bone
@@ -438,15 +406,12 @@ public class ChunkCompiledBones_801 : ChunkCompiledBones
 
 #region ChunkCompiledBones_900
 
-public class ChunkCompiledBones_900 : ChunkCompiledBones
-{
-    public override void Read(BinaryReader r)
-    {
+public class ChunkCompiledBones_900 : ChunkCompiledBones {
+    public override void Read(BinaryReader r) {
         base.Read(r);
 
         NumBones = r.ReadInt32();
-        for (var i = 0; i < NumBones; i++)
-        {
+        for (var i = 0; i < NumBones; i++) {
             var bone = new CompiledBone();
             bone.ReadCompiledBone_900(r);
             // First bone read is root bone
@@ -457,8 +422,7 @@ public class ChunkCompiledBones_900 : ChunkCompiledBones
         // Post bone read setup. Parents, children, etc.
         // Add the ChildID to the parent bone. This will help with navigation.
         var boneNames = r.ReadCStringArray(NumBones);
-        for (var i = 0; i < NumBones; i++)
-        {
+        for (var i = 0; i < NumBones; i++) {
             BoneList[i].boneName = boneNames[i];
             SetParentBone(BoneList[i]);
             AddChildIDToParent(BoneList[i]);
@@ -471,11 +435,9 @@ public class ChunkCompiledBones_900 : ChunkCompiledBones
         skin.CompiledBones = BoneList;
     }
 
-    void SetParentBone(CompiledBone bone)
-    {
+    void SetParentBone(CompiledBone bone) {
         // offsetParent is really parent index.
-        if (bone.offsetParent != -1)
-        {
+        if (bone.offsetParent != -1) {
             bone.parentID = BoneList[bone.offsetParent].ControllerID;
             bone.ParentBone = BoneList[bone.offsetParent];
         }
@@ -486,8 +448,7 @@ public class ChunkCompiledBones_900 : ChunkCompiledBones
 
 #region ChunkCompiledExtToIntMap
 
-public abstract class ChunkCompiledExtToIntMap : Chunk
-{
+public abstract class ChunkCompiledExtToIntMap : Chunk {
     public int Reserved;
     public int NumExtVertices;
     public ushort[] Source;
@@ -497,8 +458,7 @@ public abstract class ChunkCompiledExtToIntMap : Chunk
 
     #region Log
 #if LOG
-    public override void LogChunk()
-    {
+    public override void LogChunk() {
         Log($"*** START MorphTargets Chunk ***");
         Log($"    ChunkType:           {ChunkType}");
         Log($"    Node ID:             {ID:X}");
@@ -511,10 +471,8 @@ public abstract class ChunkCompiledExtToIntMap : Chunk
 
 #region ChunkCompiledExtToIntMap_800
 
-public class ChunkCompiledExtToIntMap_800 : ChunkCompiledExtToIntMap
-{
-    public override void Read(BinaryReader r)
-    {
+public class ChunkCompiledExtToIntMap_800 : ChunkCompiledExtToIntMap {
+    public override void Read(BinaryReader r) {
         base.Read(r);
 
         NumExtVertices = (int)(DataSize / sizeof(ushort));
@@ -531,16 +489,14 @@ public class ChunkCompiledExtToIntMap_800 : ChunkCompiledExtToIntMap
 
 #region ChunkCompiledIntFaces
 
-public abstract class ChunkCompiledIntFaces : Chunk
-{
+public abstract class ChunkCompiledIntFaces : Chunk {
     public int Reserved;
     public int NumIntFaces;
     public TFace[] Faces;
 
     #region Log
 #if LOG
-    public override void LogChunk()
-    {
+    public override void LogChunk() {
         Log($"*** START MorphTargets Chunk ***");
         Log($"    ChunkType:           {ChunkType}");
         Log($"    Node ID:             {ID:X}");
@@ -553,10 +509,8 @@ public abstract class ChunkCompiledIntFaces : Chunk
 
 #region ChunkCompiledIntFaces_800
 
-public class ChunkCompiledIntFaces_800 : ChunkCompiledIntFaces
-{
-    public override void Read(BinaryReader r)
-    {
+public class ChunkCompiledIntFaces_800 : ChunkCompiledIntFaces {
+    public override void Read(BinaryReader r) {
         base.Read(r);
 
         NumIntFaces = (int)(DataSize / 6); // This is an array of TFaces, which are 3 uint16.
@@ -572,16 +526,14 @@ public class ChunkCompiledIntFaces_800 : ChunkCompiledIntFaces
 
 #region ChunkCompiledIntSkinVertices
 
-public abstract class ChunkCompiledIntSkinVertices : Chunk
-{
+public abstract class ChunkCompiledIntSkinVertices : Chunk {
     public int Reserved;
     public int NumIntVertices; // Calculate by size of data div by size of IntSkinVertex structure.
     public IntSkinVertex[] IntSkinVertices;
 
     #region Log
 #if LOG
-    public override void LogChunk()
-    {
+    public override void LogChunk() {
         Log($"*** START MorphTargets Chunk ***");
         Log($"    ChunkType:           {ChunkType}");
         Log($"    Node ID:             {ID:X}");
@@ -594,18 +546,15 @@ public abstract class ChunkCompiledIntSkinVertices : Chunk
 
 #region ChunkCompiledIntSkinVertices_800
 
-public unsafe class ChunkCompiledIntSkinVertices_800 : ChunkCompiledIntSkinVertices
-{
-    public override void Read(BinaryReader r)
-    {
+public unsafe class ChunkCompiledIntSkinVertices_800 : ChunkCompiledIntSkinVertices {
+    public override void Read(BinaryReader r) {
         base.Read(r);
         SkipBytes(r, 32); // Padding between the chunk header and the first IntVertex.
 
         // Size of the IntSkinVertex is 64 bytes
         NumIntVertices = (int)((Size - 32) / 64);
         IntSkinVertices = new IntSkinVertex[NumIntVertices];
-        for (var i = 0; i < NumIntVertices; i++)
-        {
+        for (var i = 0; i < NumIntVertices; i++) {
             IntSkinVertices[i].Obsolete0 = r.ReadVector3();
             IntSkinVertices[i].Position = r.ReadVector3();
             IntSkinVertices[i].Obsolete2 = r.ReadVector3();
@@ -624,18 +573,15 @@ public unsafe class ChunkCompiledIntSkinVertices_800 : ChunkCompiledIntSkinVerti
 
 #region ChunkCompiledIntSkinVertices_801
 
-public unsafe class ChunkCompiledIntSkinVertices_801 : ChunkCompiledIntSkinVertices
-{
-    public override void Read(BinaryReader r)
-    {
+public unsafe class ChunkCompiledIntSkinVertices_801 : ChunkCompiledIntSkinVertices {
+    public override void Read(BinaryReader r) {
         base.Read(r);
         SkipBytes(r, 32); // Padding between the chunk header and the first IntVertex.
 
         // Size of the IntSkinVertex is 40 bytes
         NumIntVertices = (int)((Size - 32) / 40);
         IntSkinVertices = new IntSkinVertex[NumIntVertices];
-        for (var i = 0; i < NumIntVertices; i++)
-        {
+        for (var i = 0; i < NumIntVertices; i++) {
             IntSkinVertices[i].Position = r.ReadVector3();
             IntSkinVertices[i].BoneIDs = r.ReadPArray<ushort>("H", 4); // Read 4 bone IDs
             IntSkinVertices[i].Weights = r.ReadPArray<float>("f", 4); // Read the weights for those bone IDs
@@ -652,15 +598,13 @@ public unsafe class ChunkCompiledIntSkinVertices_801 : ChunkCompiledIntSkinVerti
 
 #region ChunkCompiledMorphTargets
 
-public abstract class ChunkCompiledMorphTargets : Chunk
-{
+public abstract class ChunkCompiledMorphTargets : Chunk {
     public int NumberOfMorphTargets;
     public MeshMorphTargetVertex[] MorphTargetVertices;
 
     #region Log
 #if LOG
-    public override void LogChunk()
-    {
+    public override void LogChunk() {
         Log($"*** START MorphTargets Chunk ***");
         Log($"    ChunkType:           {ChunkType}");
         Log($"    Node ID:             {ID:X}");
@@ -674,11 +618,9 @@ public abstract class ChunkCompiledMorphTargets : Chunk
 
 #region ChunkCompiledMorphTargets_800
 
-public class ChunkCompiledMorphTargets_800 : ChunkCompiledMorphTargets
-{
+public class ChunkCompiledMorphTargets_800 : ChunkCompiledMorphTargets {
     // TODO: Implement this.
-    public override void Read(BinaryReader r)
-    {
+    public override void Read(BinaryReader r) {
         base.Read(r);
 
         NumberOfMorphTargets = (int)r.ReadUInt32();
@@ -694,11 +636,9 @@ public class ChunkCompiledMorphTargets_800 : ChunkCompiledMorphTargets
 
 #region ChunkCompiledMorphTargets_801
 
-public class ChunkCompiledMorphTargets_801 : ChunkCompiledMorphTargets
-{
+public class ChunkCompiledMorphTargets_801 : ChunkCompiledMorphTargets {
     // TODO: Implement this.
-    public override void Read(BinaryReader r)
-    {
+    public override void Read(BinaryReader r) {
         base.Read(r);
 
         //NumberOfMorphTargets = (int)r.ReadUInt32();
@@ -723,8 +663,7 @@ public abstract class ChunkCompiledPhysicalBones : Chunk     //  0xACDC0000:  Bo
     public Dictionary<uint, CompiledPhysicalBone> PhysicalBoneDictionary = new Dictionary<uint, CompiledPhysicalBone>(); // Dictionary of all the CompiledBone objects based on bone name.
     public List<CompiledPhysicalBone> PhysicalBoneList = new List<CompiledPhysicalBone>();
 
-    protected void AddChildIDToParent(CompiledPhysicalBone bone)
-    {
+    protected void AddChildIDToParent(CompiledPhysicalBone bone) {
         // Root bone parent ID will be zero.
         if (bone.parentID != 0) PhysicalBoneList.Where(a => a.ControllerID == bone.parentID).FirstOrDefault()?.childIDs.Add(bone.ControllerID); // Should only be one parent.
     }
@@ -733,8 +672,7 @@ public abstract class ChunkCompiledPhysicalBones : Chunk     //  0xACDC0000:  Bo
         => bone.NumChildren > 0 ? PhysicalBoneList.Where(a => bone.childIDs.Contains(a.ControllerID)).ToList() : null;
 
     protected Matrix4x4 GetTransformFromParts(Vector3 localTranslation, Matrix3x3 localRotation)
-        => new Matrix4x4
-        {
+        => new Matrix4x4 {
             // Translation part
             M14 = localTranslation.X,
             M24 = localTranslation.Y,
@@ -761,8 +699,7 @@ public abstract class ChunkCompiledPhysicalBones : Chunk     //  0xACDC0000:  Bo
 
     #region Log
 #if LOG
-    public override void LogChunk()
-    {
+    public override void LogChunk() {
         Log($"*** START CompiledBone Chunk ***");
         Log($"    ChunkType:           {ChunkType}");
         Log($"    Node ID:             {ID:X}");
@@ -777,14 +714,12 @@ public abstract class ChunkCompiledPhysicalBones : Chunk     //  0xACDC0000:  Bo
 
 public class ChunkCompiledPhysicalBones_800 : ChunkCompiledPhysicalBones     //  0xACDC0000:  Bones info
 {
-    public override void Read(BinaryReader r)
-    {
+    public override void Read(BinaryReader r) {
         base.Read(r);
         SkipBytes(r, 32); // Padding between the chunk header and the first bone.
 
         NumBones = (int)((Size - 32) / 152);
-        for (var i = 0U; i < NumBones; i++)
-        {
+        for (var i = 0U; i < NumBones; i++) {
             // Start reading at the root bone.  First bone found is root, then read until no more bones.
             var bone = new CompiledPhysicalBone();
             bone.ReadCompiledPhysicalBone(r);
@@ -818,8 +753,7 @@ public abstract partial class ChunkCompiledPhysicalProxies : Chunk        // 0xA
 
     #region Log
 #if LOG
-    public override void LogChunk()
-    {
+    public override void LogChunk() {
         Log($"*** START CompiledPhysicalProxies Chunk ***");
         Log($"    ChunkType:           {ChunkType}");
         Log($"    Node ID:             {ID:X}");
@@ -833,16 +767,13 @@ public abstract partial class ChunkCompiledPhysicalProxies : Chunk        // 0xA
 
 #region ChunkCompiledPhysicalProxies_800
 
-public class ChunkCompiledPhysicalProxies_800 : ChunkCompiledPhysicalProxies
-{
-    public override void Read(BinaryReader r)
-    {
+public class ChunkCompiledPhysicalProxies_800 : ChunkCompiledPhysicalProxies {
+    public override void Read(BinaryReader r) {
         base.Read(r);
 
         NumPhysicalProxies = (int)r.ReadUInt32(); // number of Bones in this chunk.
         PhysicalProxies = new PhysicalProxy[NumPhysicalProxies]; // now have an array of physical proxies
-        for (var i = 0; i < NumPhysicalProxies; i++)
-        {
+        for (var i = 0; i < NumPhysicalProxies; i++) {
             ref PhysicalProxy proxy = ref PhysicalProxies[i];
             // Start populating the physical stream array.  This is the Header.
             proxy.ID = r.ReadUInt32();
@@ -878,8 +809,7 @@ public abstract class ChunkController : Chunk    // cccc000d:  Controller chunk
 
     #region Log
 #if LOG
-    public override void LogChunk()
-    {
+    public override void LogChunk() {
         Log($"*** Controller Chunk ***");
         Log($"Version:                 {Version:X}");
         Log($"ID:                      {ID:X}");
@@ -887,8 +817,7 @@ public abstract class ChunkController : Chunk    // cccc000d:  Controller chunk
         Log($"Controller Type:         {ControllerType}");
         Log($"Conttroller Flags:       {ControllerFlags}");
         Log($"Controller ID:           {ControllerID}");
-        for (var i = 0; i < NumKeys; i++)
-        {
+        for (var i = 0; i < NumKeys; i++) {
             Log($"        Key {i}:       Time: {Keys[i].Time}");
             Log($"        AbsPos {i}:    {Keys[i].AbsPos.X:F7}, {Keys[i].AbsPos.Y:F7}, {Keys[i].AbsPos.Z:F7}");
             Log($"        RelPos {i}:    {Keys[i].RelPos.X:F7}, {Keys[i].RelPos.Y:F7}, {Keys[i].RelPos.Z:F7}");
@@ -902,10 +831,8 @@ public abstract class ChunkController : Chunk    // cccc000d:  Controller chunk
 
 #region ChunkController_826
 
-public class ChunkController_826 : ChunkController
-{
-    public override void Read(BinaryReader r)
-    {
+public class ChunkController_826 : ChunkController {
+    public override void Read(BinaryReader r) {
         base.Read(r);
 
         //Log($"ID is: {id}");
@@ -914,8 +841,7 @@ public class ChunkController_826 : ChunkController
         ControllerFlags = r.ReadUInt32();
         ControllerID = r.ReadUInt32();
         Keys = new Key[NumKeys];
-        for (var i = 0; i < NumKeys; i++)
-        {
+        for (var i = 0; i < NumKeys; i++) {
             ref Key key = ref Keys[i];
             // Will implement fully later. Not sure I understand the structure, or if it's necessary.
             key.Time = r.ReadInt32(); //Log($"Time {Keys[i].Time}");
@@ -958,8 +884,7 @@ public abstract class ChunkDataStream : Chunk // cccc0016:  Contains data such a
 
     #region Log
 #if LOG
-    public override void LogChunk()
-    {
+    public override void LogChunk() {
         Log($"*** START DATASTREAM ***");
         Log($"    ChunkType:                       {ChunkType}");
         Log($"    Version:                         {Version:X}");
@@ -978,13 +903,11 @@ public abstract class ChunkDataStream : Chunk // cccc0016:  Contains data such a
 
 #region ChunkDataStream_800
 
-public class ChunkDataStream_800 : ChunkDataStream
-{
+public class ChunkDataStream_800 : ChunkDataStream {
     // This includes changes for 2. (byte4/1/2hex, and 20 byte per element vertices).
     short starCitizenFlag = 0;
 
-    public override void Read(BinaryReader r)
-    {
+    public override void Read(BinaryReader r) {
         base.Read(r);
 
         Flags2 = r.ReadUInt32(); // another filler
@@ -995,11 +918,9 @@ public class ChunkDataStream_800 : ChunkDataStream
         SkipBytes(r, 8);
 
         // Now do loops to read for each of the different Data Stream Types. If vertices, need to populate Vector3s for example.
-        switch (DataStreamType)
-        {
+        switch (DataStreamType) {
             case DataStreamType.VERTICES: // Ref is 0x00000000
-                switch (BytesPerElement)
-                {
+                switch (BytesPerElement) {
                     case 12: Vertices = r.ReadPArray<Vector3>("3f", NumElements); break;
                     // Prey files, and old Star Citizen files. 2 byte floats.
                     case 8: Vertices = new Vector3[NumElements]; for (var i = 0; i < NumElements; i++) { Vertices[i] = r.ReadHalfVector3(); r.ReadUInt16(); } break;
@@ -1016,8 +937,7 @@ public class ChunkDataStream_800 : ChunkDataStream
                 Tangents = new Tangent[NumElements, 2];
                 Normals = new Vector3[NumElements];
                 for (var i = 0; i < NumElements; i++)
-                    switch (BytesPerElement)
-                    {
+                    switch (BytesPerElement) {
                         // These have to be divided by 32767 to be used properly (value between 0 and 1)
                         case 0x10:
                             // Tangent
@@ -1055,8 +975,7 @@ public class ChunkDataStream_800 : ChunkDataStream
                     }
                 break;
             case DataStreamType.COLORS:
-                switch (BytesPerElement)
-                {
+                switch (BytesPerElement) {
                     case 3:
                         Colors = new IRGBA[NumElements];
                         for (var i = 0; i < NumElements; i++)
@@ -1075,12 +994,10 @@ public class ChunkDataStream_800 : ChunkDataStream
                 Normals = new Vector3[NumElements];
                 Colors = new IRGBA[NumElements];
                 UVs = new Vector2[NumElements];
-                switch (BytesPerElement)
-                {
+                switch (BytesPerElement) {
                     // Used in 2.6 skin files. 3 floats for vertex position, 4 bytes for normals, 2 halfs for UVs.  Normals are calculated from Tangents
                     case 20:
-                        for (var i = 0; i < NumElements; i++)
-                        {
+                        for (var i = 0; i < NumElements; i++) {
                             Vertices[i] = r.ReadVector3(); // For some reason, skins are an extra 1 meter in the z direction.
                             // Normals are stored in a signed byte, prob div by 127.
                             Normals[i].X = r.ReadSByte() / 127f;
@@ -1093,8 +1010,7 @@ public class ChunkDataStream_800 : ChunkDataStream
                         break;
                     // 3 half floats for verts, 3 colors, 2 half floats for UVs
                     case 16 when starCitizenFlag == 257:
-                        for (var i = 0; i < NumElements; i++)
-                        {
+                        for (var i = 0; i < NumElements; i++) {
                             Vertices[i] = r.ReadHalf16Vector3();
                             SkipBytes(r, 2);
 
@@ -1116,8 +1032,7 @@ public class ChunkDataStream_800 : ChunkDataStream
                     case 16 when starCitizenFlag != 257:
                         Normals = new Vector3[NumElements];
                         // Legacy version using Halfs (Also Hunt models)
-                        for (var i = 0; i < NumElements; i++)
-                        {
+                        for (var i = 0; i < NumElements; i++) {
                             Vertices[i] = r.ReadHalfVector3();
                             Normals[i] = r.ReadHalfVector3();
                             UVs[i] = r.ReadHalfVector2();
@@ -1134,11 +1049,9 @@ public class ChunkDataStream_800 : ChunkDataStream
                 skin.HasBoneMapDatastream = true;
                 skin.BoneMapping = new List<MeshBoneMapping>();
                 // Bones should have 4 bone IDs (index) and 4 weights.
-                for (var i = 0; i < NumElements; i++)
-                {
+                for (var i = 0; i < NumElements; i++) {
                     var map = new MeshBoneMapping();
-                    switch (BytesPerElement)
-                    {
+                    switch (BytesPerElement) {
                         case 8:
                             map.BoneIndex = new int[4];
                             map.Weight = new int[4];
@@ -1160,8 +1073,7 @@ public class ChunkDataStream_800 : ChunkDataStream
             case DataStreamType.QTANGENTS:
                 Tangents = new Tangent[NumElements, 2];
                 Normals = new Vector3[NumElements];
-                for (var i = 0; i < NumElements; i++)
-                {
+                for (var i = 0; i < NumElements; i++) {
                     Tangents[i, 0].W = r.ReadSByte() / 127f;
                     Tangents[i, 0].X = r.ReadSByte() / 127f;
                     Tangents[i, 0].Y = r.ReadSByte() / 127f;
@@ -1187,10 +1099,8 @@ public class ChunkDataStream_800 : ChunkDataStream
 #region ChunkDataStream_80000800
 
 // Reversed endian class of x0800 for console games
-public class ChunkDataStream_80000800 : ChunkDataStream
-{
-    public override void Read(BinaryReader r)
-    {
+public class ChunkDataStream_80000800 : ChunkDataStream {
+    public override void Read(BinaryReader r) {
         base.Read(r);
 
         Flags2 = MathX.SwapEndian(r.ReadUInt32()); // another filler
@@ -1200,15 +1110,12 @@ public class ChunkDataStream_80000800 : ChunkDataStream
         SkipBytes(r, 8);
 
         // Now do loops to read for each of the different Data Stream Types. If vertices, need to populate Vector3s for example.
-        switch (DataStreamType)
-        {
+        switch (DataStreamType) {
             case DataStreamType.VERTICES: // Ref is 0x00000000
                 Vertices = new Vector3[NumElements];
-                switch (BytesPerElement)
-                {
+                switch (BytesPerElement) {
                     case 12:
-                        for (int i = 0; i < NumElements; i++)
-                        {
+                        for (int i = 0; i < NumElements; i++) {
                             Vertices[i].X = MathX.SwapEndian(r.ReadSingle());
                             Vertices[i].Y = MathX.SwapEndian(r.ReadSingle());
                             Vertices[i].Z = MathX.SwapEndian(r.ReadSingle());
@@ -1223,8 +1130,7 @@ public class ChunkDataStream_80000800 : ChunkDataStream
                 break;
             case DataStreamType.NORMALS:
                 Normals = new Vector3[NumElements];
-                for (var i = 0; i < NumElements; i++)
-                {
+                for (var i = 0; i < NumElements; i++) {
                     Normals[i].X = MathX.SwapEndian(r.ReadSingle());
                     Normals[i].Y = MathX.SwapEndian(r.ReadSingle());
                     Normals[i].Z = MathX.SwapEndian(r.ReadSingle());
@@ -1232,8 +1138,7 @@ public class ChunkDataStream_80000800 : ChunkDataStream
                 break;
             case DataStreamType.UVS:
                 UVs = new Vector2[NumElements];
-                for (var i = 0; i < NumElements; i++)
-                {
+                for (var i = 0; i < NumElements; i++) {
                     Normals[i].X = MathX.SwapEndian(r.ReadSingle());
                     Normals[i].Y = MathX.SwapEndian(r.ReadSingle());
                 }
@@ -1242,8 +1147,7 @@ public class ChunkDataStream_80000800 : ChunkDataStream
                 Tangents = new Tangent[NumElements, 2];
                 Normals = new Vector3[NumElements];
                 for (var i = 0; i < NumElements; i++)
-                    switch (BytesPerElement)
-                    {
+                    switch (BytesPerElement) {
                         // These have to be divided by 32767 to be used properly (value between 0 and 1)
                         case 0x10:
                             // Tangent
@@ -1276,8 +1180,7 @@ public class ChunkDataStream_80000800 : ChunkDataStream
                     }
                 break;
             case DataStreamType.COLORS:
-                switch (BytesPerElement)
-                {
+                switch (BytesPerElement) {
                     case 3:
                         Colors = new IRGBA[NumElements];
                         for (var i = 0; i < NumElements; i++)
@@ -1296,11 +1199,9 @@ public class ChunkDataStream_80000800 : ChunkDataStream
                 skin.HasBoneMapDatastream = true;
                 skin.BoneMapping = new List<MeshBoneMapping>();
                 // Bones should have 4 bone IDs (index) and 4 weights.
-                for (var i = 0; i < NumElements; i++)
-                {
+                for (var i = 0; i < NumElements; i++) {
                     var map = new MeshBoneMapping();
-                    switch (BytesPerElement)
-                    {
+                    switch (BytesPerElement) {
                         case 8:
                             map.BoneIndex = new int[4];
                             map.Weight = new int[4];
@@ -1322,8 +1223,7 @@ public class ChunkDataStream_80000800 : ChunkDataStream
             case DataStreamType.QTANGENTS:
                 Tangents = new Tangent[NumElements, 2];
                 Normals = new Vector3[NumElements];
-                for (var i = 0; i < NumElements; i++)
-                {
+                for (var i = 0; i < NumElements; i++) {
                     Tangents[i, 0].W = r.ReadSByte() / 127f;
                     Tangents[i, 0].X = r.ReadSByte() / 127f;
                     Tangents[i, 0].Y = r.ReadSByte() / 127f;
@@ -1348,10 +1248,8 @@ public class ChunkDataStream_80000800 : ChunkDataStream
 
 #region ChunkDataStream_801
 
-public class ChunkDataStream_801 : ChunkDataStream
-{
-    public override void Read(BinaryReader r)
-    {
+public class ChunkDataStream_801 : ChunkDataStream {
+    public override void Read(BinaryReader r) {
         base.Read(r);
 
         Flags2 = r.ReadUInt32(); // another filler
@@ -1361,11 +1259,9 @@ public class ChunkDataStream_801 : ChunkDataStream
         BytesPerElement = (int)r.ReadUInt32();
         SkipBytes(r, 8);
 
-        switch (DataStreamType)
-        {
+        switch (DataStreamType) {
             case DataStreamType.VERTICES:
-                switch (BytesPerElement)
-                {
+                switch (BytesPerElement) {
                     case 12: Vertices = r.ReadPArray<Vector3>("3f", NumElements); break;
                     // Prey files, and old Star Citizen files. 2 byte floats.
                     case 8: Vertices = new Vector3[NumElements]; for (var i = 0; i < NumElements; i++) { Vertices[i] = r.ReadHalfVector3(); r.ReadUInt16(); } break;
@@ -1382,8 +1278,7 @@ public class ChunkDataStream_801 : ChunkDataStream
                 Tangents = new Tangent[NumElements, 2];
                 Normals = new Vector3[NumElements];
                 for (var i = 0; i < NumElements; i++)
-                    switch (BytesPerElement)
-                    {
+                    switch (BytesPerElement) {
                         // These have to be divided by 32767 to be used properly (value between 0 and 1)
                         case 0x10:
                             // Tangent
@@ -1421,8 +1316,7 @@ public class ChunkDataStream_801 : ChunkDataStream
                     }
                 break;
             case DataStreamType.COLORS:
-                switch (BytesPerElement)
-                {
+                switch (BytesPerElement) {
                     case 3:
                         Colors = new IRGBA[NumElements];
                         for (var i = 0; i < NumElements; i++)
@@ -1441,12 +1335,10 @@ public class ChunkDataStream_801 : ChunkDataStream
                 Normals = new Vector3[NumElements];
                 Colors = new IRGBA[NumElements];
                 UVs = new Vector2[NumElements];
-                switch (BytesPerElement)
-                {
+                switch (BytesPerElement) {
                     // Used in 2.6 skin files. 3 floats for vertex position, 4 bytes for normals, 2 halfs for UVs.  Normals are calculated from Tangents
                     case 20:
-                        for (var i = 0; i < NumElements; i++)
-                        {
+                        for (var i = 0; i < NumElements; i++) {
                             Vertices[i] = r.ReadVector3(); // For some reason, skins are an extra 1 meter in the z direction.
                             // Normals are stored in a signed byte, prob div by 127.
                             Normals[i].X = r.ReadSByte() / 127f;
@@ -1459,14 +1351,12 @@ public class ChunkDataStream_801 : ChunkDataStream
                         break;
                     // 3 half floats for verts, 3 colors, 2 half floats for UVs
                     case 16:
-                        for (var i = 0; i < NumElements; i++)
-                        {
+                        for (var i = 0; i < NumElements; i++) {
                             Vertices[i] = r.ReadHalf16Vector3();
                             SkipBytes(r, 2);
 
                             // Read a Quat, convert it to vector3
-                            var quat = new Vector4
-                            {
+                            var quat = new Vector4 {
                                 X = (r.ReadByte() - 128.0f) / 127.5f,
                                 Y = (r.ReadByte() - 128.0f) / 127.5f,
                                 Z = (r.ReadByte() - 128.0f) / 127.5f,
@@ -1492,11 +1382,9 @@ public class ChunkDataStream_801 : ChunkDataStream
                 skin.HasBoneMapDatastream = true;
                 skin.BoneMapping = new List<MeshBoneMapping>();
                 // Bones should have 4 bone IDs (index) and 4 weights.
-                for (var i = 0; i < NumElements; i++)
-                {
+                for (var i = 0; i < NumElements; i++) {
                     var map = new MeshBoneMapping();
-                    switch (BytesPerElement)
-                    {
+                    switch (BytesPerElement) {
                         case 8:
                             map.BoneIndex = new int[4];
                             map.Weight = new int[4];
@@ -1518,8 +1406,7 @@ public class ChunkDataStream_801 : ChunkDataStream
             case DataStreamType.QTANGENTS:
                 Tangents = new Tangent[NumElements, 2];
                 Normals = new Vector3[NumElements];
-                for (var i = 0; i < NumElements; i++)
-                {
+                for (var i = 0; i < NumElements; i++) {
                     Tangents[i, 0].W = r.ReadSByte() / 127f;
                     Tangents[i, 0].X = r.ReadSByte() / 127f;
                     Tangents[i, 0].Y = r.ReadSByte() / 127f;
@@ -1544,28 +1431,23 @@ public class ChunkDataStream_801 : ChunkDataStream
 
 #region ChunkDataStream_900
 
-public class ChunkDataStream_900 : ChunkDataStream
-{
+public class ChunkDataStream_900 : ChunkDataStream {
     public ChunkDataStream_900(int numElements)
         => NumElements = numElements;
 
-    public override void Read(BinaryReader r)
-    {
+    public override void Read(BinaryReader r) {
         base.Read(r);
 
         DataStreamType = (DataStreamType)r.ReadUInt32();
         SkipBytes(r, 4);
         BytesPerElement = (int)r.ReadUInt32();
 
-        switch (DataStreamType)
-        {
+        switch (DataStreamType) {
             case DataStreamType.IVOINDICES:
-                if (BytesPerElement == 2)
-                {
+                if (BytesPerElement == 2) {
                     Indices = new uint[NumElements]; for (var i = 0; i < NumElements; i++) Indices[i] = r.ReadUInt16();
                     if (NumElements % 2 == 1) SkipBytes(r, 2);
-                    else
-                    {
+                    else {
                         var peek = Convert.ToChar(r.ReadByte()); // Sometimes the next Ivo chunk has a 4 byte filler, sometimes it doesn't.
                         r.BaseStream.Position -= 1;
                         if (peek == 0) SkipBytes(r, 4);
@@ -1578,11 +1460,9 @@ public class ChunkDataStream_900 : ChunkDataStream
                 Normals = new Vector3[NumElements];
                 Colors = new IRGBA[NumElements];
                 UVs = new Vector2[NumElements];
-                switch (BytesPerElement)
-                {
+                switch (BytesPerElement) {
                     case 20:
-                        for (var i = 0; i < NumElements; i++)
-                        {
+                        for (var i = 0; i < NumElements; i++) {
                             Vertices[i] = r.ReadVector3(); // For some reason, skins are an extra 1 meter in the z direction.
                             Colors[i] = new IRGBA(
                                 b: r.ReadByte(),
@@ -1603,12 +1483,10 @@ public class ChunkDataStream_900 : ChunkDataStream
                 break;
             case DataStreamType.IVONORMALS:
             case DataStreamType.IVONORMALS2:
-                switch (BytesPerElement)
-                {
+                switch (BytesPerElement) {
                     case 4:
                         Normals = new Vector3[NumElements];
-                        for (var i = 0; i < NumElements; i++)
-                        {
+                        for (var i = 0; i < NumElements; i++) {
                             var x = r.ReadSByte() / 128f;
                             var y = r.ReadSByte() / 128f;
                             var z = r.ReadSByte() / 128f;
@@ -1626,8 +1504,7 @@ public class ChunkDataStream_900 : ChunkDataStream
             case DataStreamType.IVOTANGENTS:
                 Tangents = new Tangent[NumElements, 2];
                 Normals = new Vector3[NumElements];
-                for (var i = 0; i < NumElements; i++)
-                {
+                for (var i = 0; i < NumElements; i++) {
                     Tangents[i, 0].W = r.ReadSByte() / 127f;
                     Tangents[i, 0].X = r.ReadSByte() / 127f;
                     Tangents[i, 0].Y = r.ReadSByte() / 127f;
@@ -1649,11 +1526,9 @@ public class ChunkDataStream_900 : ChunkDataStream
                 var skin = GetSkinningInfo();
                 skin.HasBoneMapDatastream = true;
                 skin.BoneMapping = new List<MeshBoneMapping>();
-                switch (BytesPerElement)
-                {
+                switch (BytesPerElement) {
                     case 12:
-                        for (var i = 0; i < NumElements; i++)
-                        {
+                        for (var i = 0; i < NumElements; i++) {
                             var map = new MeshBoneMapping();
                             for (var j = 0; j < 4; j++) map.BoneIndex[j] = r.ReadUInt16();  // read the 4 bone indexes first
                             for (var j = 0; j < 4; j++) map.Weight[j] = r.ReadByte();       // read the weights. 
@@ -1686,8 +1561,7 @@ public abstract class ChunkExportFlags : Chunk  // cccc0015:  Export Flags
 
     #region Log
 #if LOG
-    public override void LogChunk()
-    {
+    public override void LogChunk() {
         Log($"*** START EXPORT FLAGS ***");
         Log($"    Export Chunk ID: {ID:X}");
         Log($"    ChunkType: {ChunkType}");
@@ -1708,10 +1582,8 @@ public abstract class ChunkExportFlags : Chunk  // cccc0015:  Export Flags
 
 #region ChunkExportFlags_1
 
-public class ChunkExportFlags_1 : ChunkExportFlags
-{
-    public override void Read(BinaryReader r)
-    {
+public class ChunkExportFlags_1 : ChunkExportFlags {
+    public override void Read(BinaryReader r) {
         base.Read(r);
 
         ChunkType = (ChunkType)r.ReadUInt32();
@@ -1729,10 +1601,8 @@ public class ChunkExportFlags_1 : ChunkExportFlags
 
 #region ChunkHeader
 
-public abstract class ChunkHeader : Chunk
-{
-    public override string ToString()
-    {
+public abstract class ChunkHeader : Chunk {
+    public override string ToString() {
         var b = new StringBuilder();
         b.Append($"*** CHUNK HEADER ***");
         b.Append($"    ChunkType: {ChunkType}");
@@ -1749,10 +1619,8 @@ public abstract class ChunkHeader : Chunk
 
 #region ChunkHeader_744
 
-public class ChunkHeader_744 : ChunkHeader
-{
-    public override void Read(BinaryReader r)
-    {
+public class ChunkHeader_744 : ChunkHeader {
+    public override void Read(BinaryReader r) {
         ChunkType = (ChunkType)r.ReadUInt32();
         Version = r.ReadUInt32();
         Offset = r.ReadUInt32();
@@ -1765,10 +1633,8 @@ public class ChunkHeader_744 : ChunkHeader
 
 #region ChunkHeader_745
 
-public class ChunkHeader_745 : ChunkHeader
-{
-    public override void Read(BinaryReader r)
-    {
+public class ChunkHeader_745 : ChunkHeader {
+    public override void Read(BinaryReader r) {
         ChunkType = (ChunkType)r.ReadUInt32();
         Version = r.ReadUInt32();
         Offset = r.ReadUInt32();
@@ -1781,10 +1647,8 @@ public class ChunkHeader_745 : ChunkHeader
 
 #region ChunkHeader_746
 
-public class ChunkHeader_746 : ChunkHeader
-{
-    public override void Read(BinaryReader r)
-    {
+public class ChunkHeader_746 : ChunkHeader {
+    public override void Read(BinaryReader r) {
         ChunkType = (ChunkType)r.ReadUInt16() + 0xCCCBF000;
         Version = r.ReadUInt16();
         ID = r.ReadInt32();
@@ -1797,10 +1661,8 @@ public class ChunkHeader_746 : ChunkHeader
 
 #region ChunkHeader_900
 
-public class ChunkHeader_900 : ChunkHeader
-{
-    public override void Read(BinaryReader r)
-    {
+public class ChunkHeader_900 : ChunkHeader {
+    public override void Read(BinaryReader r) {
         ChunkType = (ChunkType)r.ReadUInt32();
         Version = r.ReadUInt32();
         Offset = (uint)r.ReadUInt64(); // All other versions use uint. No idea why uint64 is needed.
@@ -1828,8 +1690,7 @@ public abstract class ChunkHelper : Chunk // CCCC0001
 
     #region Log
 #if LOG
-    public override void LogChunk()
-    {
+    public override void LogChunk() {
         Log($"*** START Helper Chunk ***");
         Log($"    ChunkType:   {ChunkType}");
         Log($"    Version:     {Version:X}");
@@ -1846,10 +1707,8 @@ public abstract class ChunkHelper : Chunk // CCCC0001
 
 #region ChunkHelper_744
 
-public class ChunkHelper_744 : ChunkHelper
-{
-    public override void Read(BinaryReader r)
-    {
+public class ChunkHelper_744 : ChunkHelper {
+    public override void Read(BinaryReader r) {
         base.Read(r);
         HelperType = (HelperType)Enum.ToObject(typeof(HelperType), r.ReadUInt32());
         if (Version == 0x744) Pos = r.ReadVector3(); // only has the Position.
@@ -1869,8 +1728,7 @@ public class ChunkHelper_744 : ChunkHelper
 
 #region ChunkIvoSkin
 
-public class ChunkIvoSkin : Chunk
-{
+public class ChunkIvoSkin : Chunk {
     public GeometryInfo geometryInfo;
     public ChunkMesh meshChunk;
     public ChunkMeshSubsets meshSubsetsChunk;
@@ -1884,8 +1742,7 @@ public class ChunkIvoSkin : Chunk
 
 #region ChunkIvoSkin_900
 
-class ChunkIvoSkin_900 : ChunkIvoSkin
-{
+class ChunkIvoSkin_900 : ChunkIvoSkin {
     // Node IDs for Ivo models
     // 1: NodeChunk
     // 2: MeshChunk
@@ -1898,15 +1755,13 @@ class ChunkIvoSkin_900 : ChunkIvoSkin
     // 9: Colors
     bool hasNormalsChunk = false; // If Flags2 of the meshchunk is 5, there is a separate normals chunk
 
-    public override void Read(BinaryReader r)
-    {
+    public override void Read(BinaryReader r) {
         var model = _model;
         base.Read(r);
         SkipBytes(r, 4);
 
         _header.Offset = (uint)r.BaseStream.Position;
-        var meshChunk = new ChunkMesh_900
-        {
+        var meshChunk = new ChunkMesh_900 {
             _model = _model,
             _header = _header,
             ChunkType = ChunkType.Mesh,
@@ -1922,8 +1777,7 @@ class ChunkIvoSkin_900 : ChunkIvoSkin
 
         _header.Offset = (uint)r.BaseStream.Position;
         // Create dummy header info here (ChunkType, version, size, offset)
-        var subsetsChunk = new ChunkMeshSubsets_900(meshChunk.NumVertSubsets)
-        {
+        var subsetsChunk = new ChunkMeshSubsets_900(meshChunk.NumVertSubsets) {
             _model = _model,
             _header = _header,
             ChunkType = ChunkType.MeshSubsets,
@@ -1932,17 +1786,14 @@ class ChunkIvoSkin_900 : ChunkIvoSkin
         subsetsChunk.Read(r);
         model.ChunkMap.Add(subsetsChunk.ID, subsetsChunk);
 
-        while (r.BaseStream.Position != r.BaseStream.Length)
-        {
+        while (r.BaseStream.Position != r.BaseStream.Length) {
             var chunkType = (DataStreamType)r.ReadUInt32();
             r.BaseStream.Position = r.BaseStream.Position - 4;
-            switch (chunkType)
-            {
+            switch (chunkType) {
                 case DataStreamType.IVOINDICES:
                     // Indices datastream
                     _header.Offset = (uint)r.BaseStream.Position;
-                    var indicesDatastreamChunk = new ChunkDataStream_900(meshChunk.NumIndices)
-                    {
+                    var indicesDatastreamChunk = new ChunkDataStream_900(meshChunk.NumIndices) {
                         _model = _model,
                         _header = _header,
                         DataStreamType = DataStreamType.INDICES,
@@ -1954,8 +1805,7 @@ class ChunkIvoSkin_900 : ChunkIvoSkin
                     break;
                 case DataStreamType.IVOVERTSUVS:
                     _header.Offset = (uint)r.BaseStream.Position;
-                    var vertsUvsDatastreamChunk = new ChunkDataStream_900(meshChunk.NumVertices)
-                    {
+                    var vertsUvsDatastreamChunk = new ChunkDataStream_900(meshChunk.NumVertices) {
                         _model = _model,
                         _header = _header,
                         DataStreamType = DataStreamType.VERTSUVS,
@@ -1966,8 +1816,7 @@ class ChunkIvoSkin_900 : ChunkIvoSkin
                     model.ChunkMap.Add(vertsUvsDatastreamChunk.ID, vertsUvsDatastreamChunk);
 
                     // Create colors chunk
-                    var c = new ChunkDataStream_900(meshChunk.NumVertices)
-                    {
+                    var c = new ChunkDataStream_900(meshChunk.NumVertices) {
                         _model = _model,
                         _header = _header,
                         ChunkType = ChunkType.DataStream,
@@ -1982,8 +1831,7 @@ class ChunkIvoSkin_900 : ChunkIvoSkin
                 case DataStreamType.IVONORMALS2:
                 case DataStreamType.IVONORMALS3:
                     _header.Offset = (uint)r.BaseStream.Position;
-                    var normals = new ChunkDataStream_900(meshChunk.NumVertices)
-                    {
+                    var normals = new ChunkDataStream_900(meshChunk.NumVertices) {
                         _model = _model,
                         _header = _header,
                         DataStreamType = DataStreamType.NORMALS,
@@ -1995,8 +1843,7 @@ class ChunkIvoSkin_900 : ChunkIvoSkin
                     break;
                 case DataStreamType.IVOTANGENTS:
                     _header.Offset = (uint)r.BaseStream.Position;
-                    var tangents = new ChunkDataStream_900(meshChunk.NumVertices)
-                    {
+                    var tangents = new ChunkDataStream_900(meshChunk.NumVertices) {
                         _model = _model,
                         _header = _header,
                         DataStreamType = DataStreamType.TANGENTS,
@@ -2005,11 +1852,9 @@ class ChunkIvoSkin_900 : ChunkIvoSkin
                     };
                     tangents.Read(r);
                     model.ChunkMap.Add(tangents.ID, tangents);
-                    if (!hasNormalsChunk)
-                    {
+                    if (!hasNormalsChunk) {
                         // Create a normals chunk from Tangents data
-                        var norms = new ChunkDataStream_900(meshChunk.NumVertices)
-                        {
+                        var norms = new ChunkDataStream_900(meshChunk.NumVertices) {
                             _model = _model,
                             _header = _header,
                             ChunkType = ChunkType.DataStream,
@@ -2023,8 +1868,7 @@ class ChunkIvoSkin_900 : ChunkIvoSkin
                     break;
                 case DataStreamType.IVOBONEMAP:
                     _header.Offset = (uint)r.BaseStream.Position;
-                    var bonemap = new ChunkDataStream_900(meshChunk.NumVertices)
-                    {
+                    var bonemap = new ChunkDataStream_900(meshChunk.NumVertices) {
                         _model = _model,
                         _header = _header,
                         DataStreamType = DataStreamType.BONEMAP,
@@ -2101,8 +1945,7 @@ public abstract partial class ChunkMesh : Chunk      //  cccc0000:  Object that 
 
     #region Log
 #if LOG
-    public override void LogChunk()
-    {
+    public override void LogChunk() {
         Log($"*** START MESH CHUNK ***");
         Log($"    ChunkType:           {ChunkType}");
         Log($"    Chunk ID:            {ID:X}");
@@ -2126,10 +1969,8 @@ public abstract partial class ChunkMesh : Chunk      //  cccc0000:  Object that 
 
 #region ChunkMesh_800
 
-public class ChunkMesh_800 : ChunkMesh
-{
-    public override void Read(BinaryReader r)
-    {
+public class ChunkMesh_800 : ChunkMesh {
+    public override void Read(BinaryReader r) {
         base.Read(r);
 
         NumVertSubsets = 1;
@@ -2152,8 +1993,7 @@ public class ChunkMesh_800 : ChunkMesh
         FaceMapData = r.ReadInt32();
         VertMatsData = r.ReadInt32();
         SkipBytes(r, 16);
-        for (var i = 0; i < 4; i++)
-        {
+        for (var i = 0; i < 4; i++) {
             PhysicsData[i] = r.ReadInt32();
             if (PhysicsData[i] != 0) MeshPhysicsData = PhysicsData[i];
         }
@@ -2166,10 +2006,8 @@ public class ChunkMesh_800 : ChunkMesh
 
 #region ChunkMesh_80000800
 
-public class ChunkMesh_80000800 : ChunkMesh
-{
-    public override void Read(BinaryReader r)
-    {
+public class ChunkMesh_80000800 : ChunkMesh {
+    public override void Read(BinaryReader r) {
         base.Read(r);
 
         NumVertSubsets = 1;
@@ -2192,8 +2030,7 @@ public class ChunkMesh_80000800 : ChunkMesh
         FaceMapData = MathX.SwapEndian(r.ReadInt32());
         VertMatsData = MathX.SwapEndian(r.ReadInt32());
         SkipBytes(r, 16);
-        for (var i = 0; i < 4; i++)
-        {
+        for (var i = 0; i < 4; i++) {
             PhysicsData[i] = MathX.SwapEndian(r.ReadInt32());
             if (PhysicsData[i] != 0) MeshPhysicsData = PhysicsData[i];
         }
@@ -2210,10 +2047,8 @@ public class ChunkMesh_80000800 : ChunkMesh
 
 #region ChunkMesh_801
 
-public class ChunkMesh_801 : ChunkMesh
-{
-    public override void Read(BinaryReader r)
-    {
+public class ChunkMesh_801 : ChunkMesh {
+    public override void Read(BinaryReader r) {
         base.Read(r);
 
         Flags1 = r.ReadInt32();
@@ -2246,10 +2081,8 @@ public class ChunkMesh_801 : ChunkMesh
 
 #region ChunkMesh_802
 
-public class ChunkMesh_802 : ChunkMesh
-{
-    public override void Read(BinaryReader r)
-    {
+public class ChunkMesh_802 : ChunkMesh {
+    public override void Read(BinaryReader r) {
         base.Read(r);
 
         Flags1 = r.ReadInt32();
@@ -2296,10 +2129,8 @@ public class ChunkMesh_802 : ChunkMesh
 
 #region ChunkMesh_900
 
-public class ChunkMesh_900 : ChunkMesh
-{
-    public override void Read(BinaryReader r)
-    {
+public class ChunkMesh_900 : ChunkMesh {
+    public override void Read(BinaryReader r) {
         base.Read(r);
 
         Flags1 = 0;
@@ -2327,8 +2158,7 @@ public class ChunkMesh_900 : ChunkMesh
 /// <summary>
 /// Legacy class.  No longer used.
 /// </summary>
-public abstract class ChunkMeshMorphTargets : Chunk
-{
+public abstract class ChunkMeshMorphTargets : Chunk {
     public uint ChunkIDMesh;
     public int NumMorphVertices;
 
@@ -2337,8 +2167,7 @@ public abstract class ChunkMeshMorphTargets : Chunk
 
     #region Log
 #if LOG
-    public override void LogChunk()
-    {
+    public override void LogChunk() {
         Log($"*** START MorphTargets Chunk ***");
         Log($"    ChunkType:           {ChunkType}");
         Log($"    Node ID:             {ID:X}");
@@ -2352,10 +2181,8 @@ public abstract class ChunkMeshMorphTargets : Chunk
 
 #region ChunkMeshMorphTargets_800
 
-public abstract class ChunkMeshMorphTargets_800 : ChunkMeshMorphTargets
-{
-    public override void Read(BinaryReader r)
-    {
+public abstract class ChunkMeshMorphTargets_800 : ChunkMeshMorphTargets {
+    public override void Read(BinaryReader r) {
         base.Read(r);
 
         // TODO: Implement ChunkMeshMorphTargets ver 0x801.
@@ -2370,8 +2197,7 @@ public abstract class ChunkMeshMorphTargets_800 : ChunkMeshMorphTargets
 /// Collision mesh or something like that. TODO
 /// </summary>
 /// <seealso cref="GameX.Crytek.Formats.Core.Chunks.Chunk" />
-class ChunkMeshPhysicsData : Chunk
-{
+class ChunkMeshPhysicsData : Chunk {
     public int PhysicsDataSize;             // Size of the physical data at the end of the chunk.
     public int Flags;
     public int TetrahedraDataSize;          // Bytes per data entry
@@ -2385,8 +2211,7 @@ class ChunkMeshPhysicsData : Chunk
 
     #region Log
 #if LOG
-    public override void LogChunk()
-    {
+    public override void LogChunk() {
         Log($"*** START CompiledBone Chunk ***");
         Log($"    ChunkType:           {ChunkType}");
         Log($"    Node ID:             {ID:X}");
@@ -2403,10 +2228,8 @@ class ChunkMeshPhysicsData : Chunk
 
 #region ChunkMeshPhysicsData_800
 
-class ChunkMeshPhysicsData_800 : ChunkMeshPhysicsData
-{
-    public override void Read(BinaryReader r)
-    {
+class ChunkMeshPhysicsData_800 : ChunkMeshPhysicsData {
+    public override void Read(BinaryReader r) {
         base.Read(r);
 
         // TODO: Implement ChunkMeshPhysicsData ver 0x800.
@@ -2417,10 +2240,8 @@ class ChunkMeshPhysicsData_800 : ChunkMeshPhysicsData
 
 #region ChunkMeshPhysicsData_80000800
 
-class ChunkMeshPhysicsData_80000800 : ChunkMeshPhysicsData
-{
-    public override void Read(BinaryReader r)
-    {
+class ChunkMeshPhysicsData_80000800 : ChunkMeshPhysicsData {
+    public override void Read(BinaryReader r) {
         base.Read(r);
 
         // TODO: Implement ChunkMeshPhysicsData ver 0x800.
@@ -2433,27 +2254,25 @@ class ChunkMeshPhysicsData_80000800 : ChunkMeshPhysicsData
 
 public abstract class ChunkMeshSubsets : Chunk // cccc0017:  The different parts of a mesh.  Needed for obj exporting
 {
-	public uint Flags; // probably the offset
-	public int NumMeshSubset; // number of mesh subsets
-	public MeshSubset[] MeshSubsets;
+    public uint Flags; // probably the offset
+    public int NumMeshSubset; // number of mesh subsets
+    public MeshSubset[] MeshSubsets;
 
-	// For bone ID meshes? Not sure where this is used yet.
-	public int NumberOfBoneIDs;
-	public ushort[] BoneIDs;
+    // For bone ID meshes? Not sure where this is used yet.
+    public int NumberOfBoneIDs;
+    public ushort[] BoneIDs;
 
-	public override string ToString()
-		=> $@"Chunk Type: {ChunkType}, ID: {ID:X}, Version: {Version}, Number of Mesh Subsets: {NumMeshSubset}";
+    public override string ToString()
+        => $@"Chunk Type: {ChunkType}, ID: {ID:X}, Version: {Version}, Number of Mesh Subsets: {NumMeshSubset}";
 
-	#region Log
+    #region Log
 #if LOG
-    public override void LogChunk()
-    {
+    public override void LogChunk() {
         Log("*** START MESH SUBSET CHUNK ***");
         Log("    ChunkType:       {ChunkType}");
         Log("    Mesh SubSet ID:  {ID:X}");
         Log("    Number of Mesh Subsets: {NumMeshSubset}");
-        for (var i = 0; i < NumMeshSubset; i++)
-        {
+        for (var i = 0; i < NumMeshSubset; i++) {
             Log($"        ** Mesh Subset:          {i}");
             Log($"           First Index:          {MeshSubsets[i].FirstIndex}");
             Log($"           Number of Indices:    {MeshSubsets[i].NumIndices}");
@@ -2467,25 +2286,22 @@ public abstract class ChunkMeshSubsets : Chunk // cccc0017:  The different parts
         Log("*** END MESH SUBSET CHUNK ***");
     }
 #endif
-	#endregion
+    #endregion
 }
 
 #endregion
 
 #region ChunkMeshSubsets_800
 
-public class ChunkMeshSubsets_800 : ChunkMeshSubsets
-{
-    public override void Read(BinaryReader r)
-    {
+public class ChunkMeshSubsets_800 : ChunkMeshSubsets {
+    public override void Read(BinaryReader r) {
         base.Read(r);
 
         Flags = r.ReadUInt32();   // Might be a ref to this chunk
         NumMeshSubset = (int)r.ReadUInt32();  // number of mesh subsets
         SkipBytes(r, 8);
         MeshSubsets = new MeshSubset[NumMeshSubset];
-        for (var i = 0; i < NumMeshSubset; i++)
-        {
+        for (var i = 0; i < NumMeshSubset; i++) {
             MeshSubsets[i].FirstIndex = (int)r.ReadUInt32();
             MeshSubsets[i].NumIndices = (int)r.ReadUInt32();
             MeshSubsets[i].FirstVertex = (int)r.ReadUInt32();
@@ -2503,18 +2319,15 @@ public class ChunkMeshSubsets_800 : ChunkMeshSubsets
 
 #region ChunkMeshSubsets_800000800
 
-public class ChunkMeshSubsets_800000800 : ChunkMeshSubsets
-{
-    public override void Read(BinaryReader r)
-    {
+public class ChunkMeshSubsets_800000800 : ChunkMeshSubsets {
+    public override void Read(BinaryReader r) {
         base.Read(r);
 
         Flags = MathX.SwapEndian(r.ReadUInt32());   // Might be a ref to this chunk
         NumMeshSubset = (int)MathX.SwapEndian(r.ReadUInt32());  // number of mesh subsets
         SkipBytes(r, 8);
         MeshSubsets = new MeshSubset[NumMeshSubset];
-        for (var i = 0; i < NumMeshSubset; i++)
-        {
+        for (var i = 0; i < NumMeshSubset; i++) {
             MeshSubsets[i].FirstIndex = (int)MathX.SwapEndian(r.ReadUInt32());
             MeshSubsets[i].NumIndices = (int)MathX.SwapEndian(r.ReadUInt32());
             MeshSubsets[i].FirstVertex = (int)MathX.SwapEndian(r.ReadUInt32());
@@ -2532,16 +2345,13 @@ public class ChunkMeshSubsets_800000800 : ChunkMeshSubsets
 
 #region ChunkMeshSubsets_900
 
-public class ChunkMeshSubsets_900 : ChunkMeshSubsets
-{
+public class ChunkMeshSubsets_900 : ChunkMeshSubsets {
     public ChunkMeshSubsets_900(int numMeshSubset) => NumMeshSubset = numMeshSubset;
 
-    public override void Read(BinaryReader r)
-    {
+    public override void Read(BinaryReader r) {
         base.Read(r);
         MeshSubsets = new MeshSubset[NumMeshSubset];
-        for (var i = 0; i < NumMeshSubset; i++)
-        {
+        for (var i = 0; i < NumMeshSubset; i++) {
             MeshSubsets[i].MatID = (uint)r.ReadInt32();
             MeshSubsets[i].FirstIndex = r.ReadInt32();
             MeshSubsets[i].NumIndices = r.ReadInt32();
@@ -2581,8 +2391,7 @@ public abstract class ChunkMtlName : Chunk  // cccc0014:  provides material name
 
     #region Log
 #if LOG
-    public override void LogChunk()
-    {
+    public override void LogChunk() {
         Log("*** START MATERIAL NAMES ***");
         Log($"    ChunkType:           {ChunkType} ({ChunkType:X})");
         Log($"    Material Name:       {Name}");
@@ -2603,10 +2412,8 @@ public abstract class ChunkMtlName : Chunk  // cccc0014:  provides material name
 #region ChunkMtlName_744
 
 // provides material name as used in the .mtl file. CCCC0014
-public class ChunkMtlName_744 : ChunkMtlName
-{
-    public override void Read(BinaryReader r)
-    {
+public class ChunkMtlName_744 : ChunkMtlName {
+    public override void Read(BinaryReader r) {
         base.Read(r);
 
         Name = r.ReadFUString(128);
@@ -2621,10 +2428,8 @@ public class ChunkMtlName_744 : ChunkMtlName
 
 #region ChunkMtlName_800
 
-public class ChunkMtlName_800 : ChunkMtlName
-{
-    public override void Read(BinaryReader r)
-    {
+public class ChunkMtlName_800 : ChunkMtlName {
+    public override void Read(BinaryReader r) {
         base.Read(r);
 
         MatType = (MtlNameType)r.ReadUInt32();
@@ -2643,10 +2448,8 @@ public class ChunkMtlName_800 : ChunkMtlName
 
 #region ChunkMtlName_80000800
 
-public class ChunkMtlName_80000800 : ChunkMtlName
-{
-    public override void Read(BinaryReader r)
-    {
+public class ChunkMtlName_80000800 : ChunkMtlName {
+    public override void Read(BinaryReader r) {
         base.Read(r);
 
         MatType = (MtlNameType)MathX.SwapEndian(r.ReadUInt32());
@@ -2666,11 +2469,9 @@ public class ChunkMtlName_80000800 : ChunkMtlName
 
 #region ChunkMtlName_802
 
-public class ChunkMtlName_802 : ChunkMtlName
-{
+public class ChunkMtlName_802 : ChunkMtlName {
     // Appears to have 4 more Bytes than ChunkMtlName_744
-    public override void Read(BinaryReader r)
-    {
+    public override void Read(BinaryReader r) {
         base.Read(r);
 
         Name = r.ReadFUString(128);
@@ -2685,10 +2486,8 @@ public class ChunkMtlName_802 : ChunkMtlName
 
 #region ChunkMtlName_900
 
-public class ChunkMtlName_900 : ChunkMtlName
-{
-    public override void Read(BinaryReader r)
-    {
+public class ChunkMtlName_900 : ChunkMtlName {
+    public override void Read(BinaryReader r) {
         base.Read(r);
 
         Name = r.ReadFUString(128);
@@ -2737,16 +2536,13 @@ public abstract class ChunkNode : Chunk // cccc000b:   Node
         => Matrix4x4.Transpose(Transform);
 
     ChunkNode _parentNode;
-    public ChunkNode ParentNode
-    {
-        get
-        {
+    public ChunkNode ParentNode {
+        get {
             if (ParentNodeID == ~0) return null; // aka 0xFFFFFFFF, or -1
             if (_parentNode == null) _parentNode = _model.ChunkMap.TryGetValue(ParentNodeID, out var node) ? node as ChunkNode : _model.RootNode;
             return _parentNode;
         }
-        set
-        {
+        set {
             ParentNodeID = value == null ? ~0 : value.ID;
             _parentNode = value;
         }
@@ -2755,10 +2551,8 @@ public abstract class ChunkNode : Chunk // cccc000b:   Node
     public List<ChunkNode> ChildNodes { get; set; }
 
     Chunk _objectChunk;
-    public Chunk ObjectChunk
-    {
-        get
-        {
+    public Chunk ObjectChunk {
+        get {
             if (_objectChunk == null) _model.ChunkMap.TryGetValue(ObjectNodeID, out _objectChunk);
             return _objectChunk;
         }
@@ -2770,8 +2564,7 @@ public abstract class ChunkNode : Chunk // cccc000b:   Node
 
     #region Log
 #if LOG
-    public override void LogChunk()
-    {
+    public override void LogChunk() {
         Log($"*** START Node Chunk ***");
         Log($"    ChunkType:           {ChunkType}");
         Log($"    Node ID:             {ID:X}");
@@ -2828,10 +2621,8 @@ public abstract class ChunkNode : Chunk // cccc000b:   Node
 
 #region ChunkNode_80000823
 
-public class ChunkNode_80000823 : ChunkNode
-{
-    public override void Read(BinaryReader r)
-    {
+public class ChunkNode_80000823 : ChunkNode {
+    public override void Read(BinaryReader r) {
         base.Read(r);
 
         Name = r.ReadFUString(64);
@@ -2843,8 +2634,7 @@ public class ChunkNode_80000823 : ChunkNode
         SkipBytes(r, 4);
 
         // Read the 4x4 transform matrix.
-        var transform = new Matrix4x4
-        {
+        var transform = new Matrix4x4 {
             M11 = MathX.SwapEndian(r.ReadSingle()),
             M12 = MathX.SwapEndian(r.ReadSingle()),
             M13 = MathX.SwapEndian(r.ReadSingle()),
@@ -2868,16 +2658,14 @@ public class ChunkNode_80000823 : ChunkNode
         Transform = transform;
 
         // Read the position Pos Vector3
-        Pos = new Vector3
-        {
+        Pos = new Vector3 {
             X = MathX.SwapEndian(r.ReadSingle()) * VERTEX_SCALE,
             Y = MathX.SwapEndian(r.ReadSingle()) * VERTEX_SCALE,
             Z = MathX.SwapEndian(r.ReadSingle()) * VERTEX_SCALE,
         };
 
         // Read the rotation Rot Quad
-        Rot = new Quaternion
-        {
+        Rot = new Quaternion {
             X = MathX.SwapEndian(r.ReadSingle()),
             Y = MathX.SwapEndian(r.ReadSingle()),
             Z = MathX.SwapEndian(r.ReadSingle()),
@@ -2885,8 +2673,7 @@ public class ChunkNode_80000823 : ChunkNode
         };
 
         // Read the Scale Vector 3
-        Scale = new Vector3
-        {
+        Scale = new Vector3 {
             X = MathX.SwapEndian(r.ReadSingle()),
             Y = MathX.SwapEndian(r.ReadSingle()),
             Z = MathX.SwapEndian(r.ReadSingle()),
@@ -2905,10 +2692,8 @@ public class ChunkNode_80000823 : ChunkNode
 
 #region ChunkNode_823
 
-public class ChunkNode_823 : ChunkNode
-{
-    public override void Read(BinaryReader r)
-    {
+public class ChunkNode_823 : ChunkNode {
+    public override void Read(BinaryReader r) {
         base.Read(r);
 
         Name = r.ReadFUString(64);
@@ -2920,8 +2705,7 @@ public class ChunkNode_823 : ChunkNode
         SkipBytes(r, 4);
 
         // Read the 4x4 transform matrix.
-        var transform = new Matrix4x4
-        {
+        var transform = new Matrix4x4 {
             M11 = r.ReadSingle(),
             M12 = r.ReadSingle(),
             M13 = r.ReadSingle(),
@@ -2961,10 +2745,8 @@ public class ChunkNode_823 : ChunkNode
 
 #region ChunkNode_824
 
-public class ChunkNode_824 : ChunkNode
-{
-    public override void Read(BinaryReader r)
-    {
+public class ChunkNode_824 : ChunkNode {
+    public override void Read(BinaryReader r) {
         base.Read(r);
 
         Name = r.ReadFUString(64);
@@ -2976,8 +2758,7 @@ public class ChunkNode_824 : ChunkNode
         SkipBytes(r, 4);
 
         // Read the 4x4 transform matrix.
-        var transform = new Matrix4x4
-        {
+        var transform = new Matrix4x4 {
             M11 = r.ReadSingle(),
             M12 = r.ReadSingle(),
             M13 = r.ReadSingle(),
@@ -3030,8 +2811,7 @@ public abstract class ChunkSceneProp : Chunk     // cccc0008
 
     #region Log
 #if LOG
-    public override void LogChunk()
-    {
+    public override void LogChunk() {
         Log($"*** START SceneProp Chunk ***");
         Log($"    ChunkType:   {ChunkType}");
         Log($"    Version:     {Version:X}");
@@ -3047,10 +2827,8 @@ public abstract class ChunkSceneProp : Chunk     // cccc0008
 
 #region ChunkSceneProp_744
 
-public class ChunkSceneProp_744 : ChunkSceneProp
-{
-    public override void Read(BinaryReader r)
-    {
+public class ChunkSceneProp_744 : ChunkSceneProp {
+    public override void Read(BinaryReader r) {
         base.Read(r);
 
         NumProps = (int)r.ReadUInt32(); // Should be 31 for 0x744
@@ -3076,8 +2854,7 @@ public abstract class ChunkSourceInfo : Chunk  // cccc0013:  Source Info chunk. 
 
     #region Log
 #if LOG
-    public override void LogChunk()
-    {
+    public override void LogChunk() {
         Log($"*** SOURCE INFO CHUNK ***");
         Log($"    ID: {ID:X}");
         Log($"    Sourcefile: {SourceFile}.");
@@ -3093,10 +2870,8 @@ public abstract class ChunkSourceInfo : Chunk  // cccc0013:  Source Info chunk. 
 
 #region ChunkSourceInfo_0
 
-public class ChunkSourceInfo_0 : ChunkSourceInfo
-{
-    public override void Read(BinaryReader r)
-    {
+public class ChunkSourceInfo_0 : ChunkSourceInfo {
+    public override void Read(BinaryReader r) {
         ChunkType = _header.ChunkType;
         Version = _header.Version;
         Offset = _header.Offset;
@@ -3109,8 +2884,7 @@ public class ChunkSourceInfo_0 : ChunkSourceInfo
         if ((peek == (uint)ChunkType.SourceInfo) || (peek + 0xCCCBF000 == (uint)ChunkType.SourceInfo)) SkipBytes(r, 12);
         else r.BaseStream.Seek(_header.Offset, 0);
 
-        if (Offset != _header.Offset || Size != _header.Size)
-        {
+        if (Offset != _header.Offset || Size != _header.Size) {
             Log($"Conflict in chunk definition:  SourceInfo chunk");
             Log($"{_header.Offset:X}+{_header.Size:X}");
             Log($"{Offset:X}+{Size:X}");
@@ -3143,8 +2917,7 @@ public abstract class ChunkTimingFormat : Chunk  // cccc000e:  Timing format chu
 
     #region Log
 #if LOG
-    public override void LogChunk()
-    {
+    public override void LogChunk() {
         Log($"*** TIMING CHUNK ***");
         Log($"    ID: {ID:X}");
         Log($"    Version: {Version:X}");
@@ -3163,10 +2936,8 @@ public abstract class ChunkTimingFormat : Chunk  // cccc000e:  Timing format chu
 
 #region ChunkTimingFormat_918
 
-public class ChunkTimingFormat_918 : ChunkTimingFormat
-{
-    public override void Read(BinaryReader r)
-    {
+public class ChunkTimingFormat_918 : ChunkTimingFormat {
+    public override void Read(BinaryReader r) {
         base.Read(r);
 
         SecsPerTick = r.ReadSingle();
@@ -3181,10 +2952,8 @@ public class ChunkTimingFormat_918 : ChunkTimingFormat
 
 #region ChunkTimingFormat_919
 
-public class ChunkTimingFormat_919 : ChunkTimingFormat
-{
-    public override void Read(BinaryReader r)
-    {
+public class ChunkTimingFormat_919 : ChunkTimingFormat {
+    public override void Read(BinaryReader r) {
         base.Read(r);
 
         // TODO:  This is copied from 918 but may not be entirely accurate.  Not tested.
@@ -3210,8 +2979,7 @@ public class ChunkUnknown : Chunk { }
 /// Geometry info contains all the vertex, color, normal, UV, tangent, index, etc.  Basically if you have a Node chunk with a Mesh and Submesh, this will contain the summary of all
 /// the datastream chunks that contain geometry info.
 /// </summary>
-public class GeometryInfo
-{
+public class GeometryInfo {
     /// <summary>
     /// The MeshSubset chunk that contains this geometry.
     /// </summary>

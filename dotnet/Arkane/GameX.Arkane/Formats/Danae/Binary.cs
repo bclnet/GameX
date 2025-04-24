@@ -12,8 +12,7 @@ namespace GameX.Arkane.Formats.Danae;
 
 #region Binary_Ftl
 
-public unsafe class Binary_Ftl : IHaveMetaInfo
-{
+public unsafe class Binary_Ftl : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Ftl(r));
 
     #region Headers
@@ -22,8 +21,7 @@ public unsafe class Binary_Ftl : IHaveMetaInfo
     const float FTL_VERSION = 0.83257f;
 
     [StructLayout(LayoutKind.Sequential)]
-    struct FTL_HEADER
-    {
+    struct FTL_HEADER {
         public static (string, int) Struct = ("<6i", sizeof(FTL_HEADER));
         public int Offset3Ddata;                // -1 = no
         public int OffsetCylinder;              // -1 = no
@@ -34,30 +32,26 @@ public unsafe class Binary_Ftl : IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct FTL_PROGRESSIVEHEADER
-    {
+    struct FTL_PROGRESSIVEHEADER {
         public static (string, int) Struct = ("<i", sizeof(FTL_PROGRESSIVEHEADER));
         public int NumVertex;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct FTL_CLOTHESHEADER
-    {
+    struct FTL_CLOTHESHEADER {
         public static (string, int) Struct = ("<2i", sizeof(FTL_CLOTHESHEADER));
         public int NumCvert;
         public int NumSprings;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct FTL_COLLISIONSPHERESHEADER
-    {
+    struct FTL_COLLISIONSPHERESHEADER {
         public static (string, int) Struct = ("<i", sizeof(FTL_COLLISIONSPHERESHEADER));
         public int NumSpheres;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct FTL_3DHEADER
-    {
+    struct FTL_3DHEADER {
         public static (string, int) Struct = ("<7i256s", 28 + 256);
         public int NumVertex;
         public int NumFaces;
@@ -70,14 +64,12 @@ public unsafe class Binary_Ftl : IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct FTL_VERTEX
-    {
+    struct FTL_VERTEX {
         public static (string, int) Struct = ($"<{TLVERTEX.Struct.Item1}6f", sizeof(FTL_VERTEX));
         public TLVERTEX Vert;
         public Vector3 V;
         public Vector3 Norm;
-        public static implicit operator E_VERTEX(FTL_VERTEX s) => new()
-        {
+        public static implicit operator E_VERTEX(FTL_VERTEX s) => new() {
             Vert = s.Vert,
             V = s.V,
             Norm = s.Norm,
@@ -86,13 +78,11 @@ public unsafe class Binary_Ftl : IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct FTL_TEXTURE
-    {
+    struct FTL_TEXTURE {
         public static (string, int) Struct = ("<256s", 256);
         public const int SizeOf = 256;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)] public string Name;
-        public static implicit operator E_TEXTURE(FTL_TEXTURE s)
-        {
+        public static implicit operator E_TEXTURE(FTL_TEXTURE s) {
             var name = s.Name;
             POLY poly = 0;
             if (name.Contains("NPC_")) poly |= POLY.LATE_MIP;
@@ -103,8 +93,7 @@ public unsafe class Binary_Ftl : IHaveMetaInfo
             if (name.Contains("water")) poly |= POLY.WATER | POLY.TRANS;
             else if (name.Contains("spider_web")) poly |= POLY.WATER | POLY.TRANS;
             else if (name.Contains("[metal]")) poly |= POLY.METAL;
-            return new E_TEXTURE
-            {
+            return new E_TEXTURE {
                 Path = s.Name,
                 Poly = poly,
             };
@@ -112,8 +101,7 @@ public unsafe class Binary_Ftl : IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct FTL_FACE
-    {
+    struct FTL_FACE {
         public static (string, int) Struct = ("<4i3Hh6f6h14f", sizeof(FTL_FACE));
         public int FaceType;  // 0 = flat, 1 = text, 2 = Double-Side
         public Vector3<int> Rgb;
@@ -127,8 +115,7 @@ public unsafe class Binary_Ftl : IHaveMetaInfo
         public Vector3 Norm;
         public Vector3 Nrmls0; public Vector3 Nrmls1; public Vector3 Nrmls2;
         public float Temp;
-        public static implicit operator E_FACE(FTL_FACE s) => new()
-        {
+        public static implicit operator E_FACE(FTL_FACE s) => new() {
             FaceType = s.FaceType,
             TexId = s.TexId,
             U = s.U,
@@ -143,8 +130,7 @@ public unsafe class Binary_Ftl : IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct FTL_GROUPLIST
-    {
+    struct FTL_GROUPLIST {
         public static (string, int) Struct = ("<256s3if", 256 + 16);
         public const int SizeOf = 256 + 16;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)] public string Name;
@@ -152,8 +138,7 @@ public unsafe class Binary_Ftl : IHaveMetaInfo
         public int NumIndex;
         public int Trash; // Indexes;
         public float Size;
-        public static implicit operator E_GROUPLIST(FTL_GROUPLIST s) => new()
-        {
+        public static implicit operator E_GROUPLIST(FTL_GROUPLIST s) => new() {
             Name = s.Name,
             Origin = s.Origin,
             NumIndex = s.NumIndex,
@@ -162,15 +147,13 @@ public unsafe class Binary_Ftl : IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct FTL_ACTIONLIST
-    {
+    struct FTL_ACTIONLIST {
         public static (string, int) Struct = ("<256s3i", 256 + 12);
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)] public string Name;
         public int Idx; //index vertex;
         public int Act; //action
         public int Sfx; //sfx
-        public static implicit operator E_ACTIONLIST(FTL_ACTIONLIST s) => new()
-        {
+        public static implicit operator E_ACTIONLIST(FTL_ACTIONLIST s) => new() {
             Name = s.Name,
             Idx = s.Idx,
             Act = s.Act,
@@ -179,14 +162,12 @@ public unsafe class Binary_Ftl : IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct FTL_SELECTIONS
-    {
+    struct FTL_SELECTIONS {
         public static (string, int) Struct = ("<64s2i", 64 + 8);
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)] string Name;
         public int NumSelected;
         public int Trash; //Selected;
-        public static implicit operator E_SELECTIONS(FTL_SELECTIONS s) => new()
-        {
+        public static implicit operator E_SELECTIONS(FTL_SELECTIONS s) => new() {
             Name = s.Name,
             NumSelected = s.NumSelected,
         };
@@ -197,8 +178,7 @@ public unsafe class Binary_Ftl : IHaveMetaInfo
     public readonly E_3DOBJ Obj;
 
     // https://github.com/OpenSourcedGames/Arx-Fatalis/blob/master/Sources/DANAE/ARX_FTL.cpp#L575
-    public Binary_Ftl(BinaryReader r)
-    {
+    public Binary_Ftl(BinaryReader r) {
         Obj = new E_3DOBJ();
         var magic = r.ReadUInt32();
         if (magic != FTL_MAGIC) throw new FormatException($"Invalid FTL magic: \"{magic}\".");
@@ -208,8 +188,7 @@ public unsafe class Binary_Ftl : IHaveMetaInfo
         var header = r.ReadS<FTL_HEADER>();
 
         // Check For & Load 3D Data
-        if (header.Offset3Ddata != -1)
-        {
+        if (header.Offset3Ddata != -1) {
             r.Seek(header.Offset3Ddata);
             var _3Dh = r.ReadS<FTL_3DHEADER>();
             Obj.NumVertex = _3Dh.NumVertex;
@@ -222,12 +201,10 @@ public unsafe class Binary_Ftl : IHaveMetaInfo
             Obj.File = _3Dh.Name;
 
             // Alloc'n'Copy vertices
-            if (_3Dh.NumVertex > 0)
-            {
+            if (_3Dh.NumVertex > 0) {
                 var vertexList = r.ReadSArray<FTL_VERTEX>(_3Dh.NumVertex);
                 Obj.VertexList = new E_VERTEX[_3Dh.NumVertex];
-                for (var i = 0; i < Obj.VertexList.Length; i++)
-                {
+                for (var i = 0; i < Obj.VertexList.Length; i++) {
                     Obj.VertexList[i] = vertexList[i];
                     Obj.VertexList[i].Vert.Color = 0xFF000000;
                 }
@@ -235,8 +212,7 @@ public unsafe class Binary_Ftl : IHaveMetaInfo
             }
 
             // Alloc'n'Copy faces
-            if (_3Dh.NumFaces > 0)
-            {
+            if (_3Dh.NumFaces > 0) {
                 var faceList = r.ReadSArray<FTL_FACE>(_3Dh.NumFaces);
                 Obj.FaceList = new E_FACE[_3Dh.NumFaces];
                 for (var i = 0; i < Obj.FaceList.Length; i++)
@@ -244,8 +220,7 @@ public unsafe class Binary_Ftl : IHaveMetaInfo
             }
 
             // Alloc'n'Copy textures
-            if (_3Dh.NumMaps > 0)
-            {
+            if (_3Dh.NumMaps > 0) {
                 var textures = r.ReadTEach<FTL_TEXTURE>(FTL_TEXTURE.SizeOf, _3Dh.NumMaps);
                 Obj.Textures = new E_TEXTURE[_3Dh.NumMaps];
                 for (var i = 0; i < Obj.Textures.Length; i++)
@@ -253,20 +228,17 @@ public unsafe class Binary_Ftl : IHaveMetaInfo
             }
 
             // Alloc'n'Copy groups
-            if (_3Dh.NumGroups > 0)
-            {
+            if (_3Dh.NumGroups > 0) {
                 var groupList = r.ReadTEach<FTL_GROUPLIST>(FTL_GROUPLIST.SizeOf, _3Dh.NumGroups);
                 Obj.GroupList = new E_GROUPLIST[_3Dh.NumGroups];
-                for (var i = 0; i < Obj.GroupList.Length; i++)
-                {
+                for (var i = 0; i < Obj.GroupList.Length; i++) {
                     Obj.GroupList[i] = groupList[i];
                     if (Obj.GroupList[i].NumIndex > 0) Obj.GroupList[i].Indexes = r.ReadPArray<int>("i", Obj.GroupList[i].NumIndex);
                 }
             }
 
             // Alloc'n'Copy action points
-            if (_3Dh.NumAction > 0)
-            {
+            if (_3Dh.NumAction > 0) {
                 var actionList = r.ReadTEach<FTL_ACTIONLIST>(FTL_ACTIONLIST.Struct.Item2, _3Dh.NumAction);
                 Obj.ActionList = new E_ACTIONLIST[_3Dh.NumAction];
                 for (var i = 0; i < Obj.ActionList.Length; i++)
@@ -274,12 +246,10 @@ public unsafe class Binary_Ftl : IHaveMetaInfo
             }
 
             // Alloc'n'Copy selections
-            if (_3Dh.NumSelections > 0)
-            {
+            if (_3Dh.NumSelections > 0) {
                 var selections = r.ReadFArray(x => r.ReadS<FTL_SELECTIONS>(), _3Dh.NumSelections);
                 Obj.Selections = new E_SELECTIONS[_3Dh.NumSelections];
-                for (var i = 0; i < Obj.Selections.Length; i++)
-                {
+                for (var i = 0; i < Obj.Selections.Length; i++) {
                     Obj.Selections[i] = selections[i];
                     Obj.Selections[i].Selected = r.ReadPArray<int>("i", Obj.Selections[i].NumSelected);
                 }
@@ -287,32 +257,27 @@ public unsafe class Binary_Ftl : IHaveMetaInfo
         }
 
         // Alloc'n'Copy Collision Spheres Data
-        if (header.OffsetCollisionSpheres != -1)
-        {
+        if (header.OffsetCollisionSpheres != -1) {
             r.Seek(header.OffsetCollisionSpheres);
             var csh = r.ReadS<FTL_COLLISIONSPHERESHEADER>();
-            Obj.Sdata = new COLLISION_SPHERES_DATA
-            {
+            Obj.Sdata = new COLLISION_SPHERES_DATA {
                 NumSpheres = csh.NumSpheres,
                 Spheres = r.ReadSArray<COLLISION_SPHERE>(csh.NumSpheres),
             };
         }
 
         // Alloc'n'Copy Progressive DATA
-        if (header.OffsetProgressiveData != -1)
-        {
+        if (header.OffsetProgressiveData != -1) {
             r.Seek(header.OffsetProgressiveData);
             var ph = r.ReadS<FTL_PROGRESSIVEHEADER>();
             r.Skip(sizeof(PROGRESSIVE_DATA) * ph.NumVertex);
         }
 
         // Alloc'n'Copy Clothes DATA
-        if (header.OffsetClothesData != -1)
-        {
+        if (header.OffsetClothesData != -1) {
             r.Seek(header.OffsetClothesData);
             var ch = r.ReadS<FTL_CLOTHESHEADER>();
-            Obj.Cdata = new CLOTHES_DATA
-            {
+            Obj.Cdata = new CLOTHES_DATA {
                 NumCvert = (short)ch.NumCvert,
                 NumSprings = (short)ch.NumSprings,
                 Cvert = r.ReadSArray<CLOTHESVERTEX>(ch.NumCvert),
@@ -333,14 +298,12 @@ public unsafe class Binary_Ftl : IHaveMetaInfo
 
 #region Binary_Fts
 
-public unsafe class Binary_Fts : IHaveMetaInfo
-{
+public unsafe class Binary_Fts : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Fts(r));
 
     #region Headers : Struct
 
-    struct ANCHOR_DATA
-    {
+    struct ANCHOR_DATA {
         public static (string, int) Struct = ("<3f2h?2f", sizeof(ANCHOR_DATA));
         public Vector3 Pos;
         public short NumLinked;
@@ -350,8 +313,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo
         public float Height;
     }
 
-    public struct E_BKG_INFO
-    {
+    public struct E_BKG_INFO {
         public static (string, int) Struct = ("<?", sizeof(E_BKG_INFO));
         public byte Treat;
         public bool Nothing;
@@ -368,8 +330,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo
         public float TileMaxY;
     }
 
-    struct E_SMINMAX
-    {
+    struct E_SMINMAX {
         public static (string, int) Struct = ("<2h", sizeof(E_SMINMAX));
         public short Min;
         public short Max;
@@ -381,8 +342,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo
     //const int FBD_TREAT = 1;
     //const int FBD_NOTHING = 2;
 
-    struct FAST_BKG_DATA
-    {
+    struct FAST_BKG_DATA {
         public static (string, int) Struct = ("<?", sizeof(FAST_BKG_DATA));
         public byte Treat;
         public byte Nothing;
@@ -402,8 +362,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo
     const int BKG_SIZX = 100;
     const int BKG_SIZZ = 100;
 
-    class E_BACKGROUND
-    {
+    class E_BACKGROUND {
         public FAST_BKG_DATA[,] fastdata = new FAST_BKG_DATA[MAX_BKGX, MAX_BKGZ];
         public int exist = 1;
         public short XSize;
@@ -419,8 +378,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo
         public int NumAnchors;
         public ANCHOR_DATA[] Anchors;
         public string Name;
-        public E_BACKGROUND(short sx = MAX_BKGX, short sz = MAX_BKGZ, short xdiv = BKG_SIZX, short zdiv = BKG_SIZZ)
-        {
+        public E_BACKGROUND(short sx = MAX_BKGX, short sz = MAX_BKGZ, short xdiv = BKG_SIZX, short zdiv = BKG_SIZZ) {
             XSize = sx;
             ZSize = sz;
             if (xdiv < 0) xdiv = 1;
@@ -432,8 +390,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo
             Backg = new E_BKG_INFO[sx * sz];
             for (var i = 0; i < Backg.Length; i++) Backg[i].Nothing = true;
             MinMax = new E_SMINMAX[sz];
-            for (var i = 0; i < MinMax.Length; i++)
-            {
+            for (var i = 0; i < MinMax.Length; i++) {
                 MinMax[i].Min = 9999;
                 MinMax[i].Max = -1;
             }
@@ -448,8 +405,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo
     const float FTS_VERSION = 0.141f;
 
     [StructLayout(LayoutKind.Sequential)]
-    struct FTS_HEADER
-    {
+    struct FTS_HEADER {
         public static (string, int) Struct = ("<256sifi3i", 256 + 24);
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)] public string Path;
         public int Count;
@@ -459,16 +415,14 @@ public unsafe class Binary_Fts : IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct FTS_HEADER2
-    {
+    struct FTS_HEADER2 {
         public static (string, int) Struct = ("<256s", 256);
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)] public string Path;
     }
 
     const int SIZ_WRK = 10;
 
-    public class FastLevel
-    {
+    public class FastLevel {
         public Vector3 PlayerPos;
         public Vector3 MscenePos;
         public E_TEXTURE[] Textures;
@@ -479,8 +433,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct FAST_VERTEX
-    {
+    struct FAST_VERTEX {
         public static (string, int) Struct = ("<5f", sizeof(FAST_VERTEX));
         public float sy;
         public float ssx;
@@ -490,8 +443,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct FAST_EERIEPOLY
-    {
+    struct FAST_EERIEPOLY {
         public static (string, int) Struct = ("<20fi20f?2h", sizeof(FAST_EERIEPOLY));
         public FAST_VERTEX V0; public FAST_VERTEX V1; public FAST_VERTEX V2; public FAST_VERTEX V3;
         public int TexPtr;
@@ -505,8 +457,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo
         public short Paddy;
     }
 
-    struct FAST_SCENE_HEADER
-    {
+    struct FAST_SCENE_HEADER {
         public static (string, int) Struct = ("<f5i6f2i", sizeof(FAST_SCENE_HEADER));
         public float Version;
         public int SizeX;
@@ -521,8 +472,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct FAST_TEXTURE_CONTAINER
-    {
+    struct FAST_TEXTURE_CONTAINER {
         public static (string, int) Struct = ("<2i256s", 8 + 256);
         public int TcPtr;
         public int TempPtr;
@@ -530,8 +480,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct FAST_ANCHOR_DATA
-    {
+    struct FAST_ANCHOR_DATA {
         public static (string, int) Struct = ("<5f2h", sizeof(FAST_ANCHOR_DATA));
         public Vector3 Pos;
         public float Radius;
@@ -541,24 +490,21 @@ public unsafe class Binary_Fts : IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct FAST_SCENE_INFO
-    {
+    struct FAST_SCENE_INFO {
         public static (string, int) Struct = ("<2I", sizeof(FAST_SCENE_INFO));
         public int NumPoly;
         public int NumIAnchors;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct ROOM_DIST_DATA_SAVE
-    {
+    struct ROOM_DIST_DATA_SAVE {
         public static (string, int) Struct = ("<7f", sizeof(ROOM_DIST_DATA_SAVE));
         public float Distance; // -1 means use truedist
         public Vector3 StartPos;
         public Vector3 EndPos;
     }
 
-    public struct ROOM_DIST_DATA
-    {
+    public struct ROOM_DIST_DATA {
         public static (string, int) Struct = ("<7f", sizeof(ROOM_DIST_DATA));
         public float Distance; // -1 means use truedist
         public Vector3 StartPos;
@@ -571,17 +517,14 @@ public unsafe class Binary_Fts : IHaveMetaInfo
     readonly E_BACKGROUND Bkg;
 
     // https://github.com/OpenSourcedGames/Arx-Fatalis/blob/master/Sources/EERIE/EERIEPoly.cpp#L3755
-    public Binary_Fts(BinaryReader r)
-    {
+    public Binary_Fts(BinaryReader r) {
         int i, j, k, kk;
         var header = r.ReadS<FTS_HEADER>();
         if (header.Version != FTS_VERSION) throw new FormatException("BAD MAGIC");
         //Log($"Header1: {r.Position():x}, {header.Path}");
-        if (header.Count > 0)
-        {
+        if (header.Count > 0) {
             var count = 0;
-            while (count < header.Count)
-            {
+            while (count < header.Count) {
                 r.ReadS<FTS_HEADER2>();
                 r.Skip(512); // skip check
                 //Log($"Unique[{count}]: {r.Position():x}");
@@ -607,8 +550,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo
 
         // textures
         var textures = Level.Textures = new E_TEXTURE[fsh.NumTextures];
-        for (k = 0; k < textures.Length; k++)
-        {
+        for (k = 0; k < textures.Length; k++) {
             var ftc = r2.ReadS<FAST_TEXTURE_CONTAINER>();
             textures[k] = new E_TEXTURE { Id = ftc.TcPtr, Path = ftc.Fic };
         }
@@ -617,8 +559,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo
         // backg
         var backg = Bkg.Backg;
         for (j = 0; j < fsh.SizeZ; j++)
-            for (i = 0; i < fsh.SizeX; i++)
-            {
+            for (i = 0; i < fsh.SizeX; i++) {
                 ref E_BKG_INFO bi = ref backg[i + j * fsh.SizeX];
                 var fsi = r2.ReadS<FAST_SCENE_INFO>();
                 //if (fsi.NumPoly > 0) Log($"F[{j},{i}]: {r2.Position():x}, {fsi.NumPoly}, {fsi.NumIAnchors}");
@@ -629,8 +570,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo
                 bi.Nothing = fsi.NumPoly == 0;
                 bi.FrustrumMaxY = -99999999f;
                 bi.FrustrumMinY = 99999999f;
-                for (k = 0; k < fsi.NumPoly; k++)
-                {
+                for (k = 0; k < fsi.NumPoly; k++) {
                     var ep = r2.ReadS<FAST_EERIEPOLY>();
                     var tex = ep.TexPtr != 0
                         ? textures.FirstOrDefault(x => x.Id == ep.TexPtr)
@@ -661,13 +601,11 @@ public unsafe class Binary_Fts : IHaveMetaInfo
                     if ((ep.Type & POLY.QUAD) != 0) { to = 4; div = 0.25f; }
                     else { to = 3; div = 0.333333333333f; }
                     ep2.Center = Vector3.Zero;
-                    for (var h = 0; h < to; h++)
-                    {
+                    for (var h = 0; h < to; h++) {
                         ep2.Center.X += ep2.V[h].S.X;
                         ep2.Center.Y += ep2.V[h].S.Y;
                         ep2.Center.Z += ep2.V[h].S.Z;
-                        if (h != 0)
-                        {
+                        if (h != 0) {
                             ep2.Max.X = Math.Max(ep2.Max.X, ep2.V[h].S.X);
                             ep2.Min.X = Math.Min(ep2.Min.X, ep2.V[h].S.X);
                             ep2.Max.Y = Math.Max(ep2.Max.Y, ep2.V[h].S.Y);
@@ -675,8 +613,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo
                             ep2.Max.Z = Math.Max(ep2.Max.Z, ep2.V[h].S.Z);
                             ep2.Min.Z = Math.Min(ep2.Min.Z, ep2.V[h].S.Z);
                         }
-                        else
-                        {
+                        else {
                             ep2.Min.X = ep2.Max.X = ep2.V[0].S.X;
                             ep2.Min.Y = ep2.Max.Y = ep2.V[0].S.Y;
                             ep2.Min.Z = ep2.Max.Z = ep2.V[0].S.Z;
@@ -705,8 +642,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo
         // anchors
         Bkg.NumAnchors = fsh.NumAnchors;
         var anchors = Bkg.Anchors = fsh.NumAnchors > 0 ? new ANCHOR_DATA[fsh.NumAnchors] : null;
-        for (i = 0; i < fsh.NumAnchors; i++)
-        {
+        for (i = 0; i < fsh.NumAnchors; i++) {
             ref ANCHOR_DATA a = ref anchors[i];
             var fad = r2.ReadS<FAST_ANCHOR_DATA>();
             a.Flags = fad.Flags;
@@ -720,15 +656,13 @@ public unsafe class Binary_Fts : IHaveMetaInfo
 
         // rooms
         E_PORTAL_DATA portals = null;
-        if (fsh.NumRooms > 0)
-        {
+        if (fsh.NumRooms > 0) {
             portals = Level.Portals = new E_PORTAL_DATA();
             portals.NumRooms = fsh.NumRooms;
             portals.Room = new E_ROOM_DATA[portals.NumRooms + 1];
             portals.NumTotal = fsh.NumPortals;
             var levelPortals = portals.Portals = new E_PORTALS[portals.NumTotal];
-            for (i = 0; i < portals.NumTotal; i++)
-            {
+            for (i = 0; i < portals.NumTotal; i++) {
                 ref E_PORTALS p = ref levelPortals[i];
                 var epo = r2.ReadS<E_SAVE_PORTALS>();
                 p.memset();
@@ -750,8 +684,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo
                 p.Poly.V = [epo.Poly.V0, epo.Poly.V1, epo.Poly.V2, epo.Poly.V3];
                 p.Poly.Tv = [epo.Poly.Tv0, epo.Poly.Tv1, epo.Poly.Tv2, epo.Poly.Tv3];
             }
-            for (i = 0; i < portals.NumRooms + 1; i++)
-            {
+            for (i = 0; i < portals.NumRooms + 1; i++) {
                 var rd = portals.Room[i] = new E_ROOM_DATA();
                 var erd = r2.ReadS<E_SAVE_ROOM_DATA>();
                 rd.NumPortals = erd.NumPortals;
@@ -762,19 +695,16 @@ public unsafe class Binary_Fts : IHaveMetaInfo
         }
         //Log($"Portals: {r2.Position():x}");
 
-        if (portals != null)
-        {
+        if (portals != null) {
             var numRoomDistance = Level.NumRoomDistance = portals.NumRooms + 1;
             Level.RoomDistance = new ROOM_DIST_DATA[numRoomDistance * numRoomDistance];
             for (var n = 0; n < numRoomDistance; n++)
-                for (var m = 0; m < numRoomDistance; m++)
-                {
+                for (var m = 0; m < numRoomDistance; m++) {
                     var rdds = r2.ReadS<ROOM_DIST_DATA_SAVE>();
                     SetRoomDistance(Level, m, n, rdds.Distance, ref rdds.StartPos, ref rdds.EndPos);
                 }
         }
-        else
-        {
+        else {
             Level.NumRoomDistance = 0;
             Level.RoomDistance = null;
         }
@@ -785,8 +715,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo
         //ComputePortalVertexBuffer();
     }
 
-    static void DeclareEGInfo(E_BACKGROUND bkg, float x, float y, float z)
-    {
+    static void DeclareEGInfo(E_BACKGROUND bkg, float x, float y, float z) {
         var posx = (int)(float)(x * bkg.Xmul);
         if (posx < 0) return;
         else if (posx >= bkg.XSize) return;
@@ -799,8 +728,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo
         eg.Nothing = false;
     }
 
-    static void SetRoomDistance(FastLevel level, long i, long j, float val, ref Vector3 p1, ref Vector3 p2)
-    {
+    static void SetRoomDistance(FastLevel level, long i, long j, float val, ref Vector3 p1, ref Vector3 p2) {
         if (i < 0 || j < 0 || i >= level.NumRoomDistance || j >= level.NumRoomDistance || level.RoomDistance == null) return;
         var offs = i + j * level.NumRoomDistance;
         ref ROOM_DIST_DATA rd = ref level.RoomDistance[offs];
@@ -809,8 +737,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo
         rd.Distance = val;
     }
 
-    static void ComputePolyIn()
-    {
+    static void ComputePolyIn() {
     }
 
     // IHaveMetaInfo
@@ -827,13 +754,11 @@ public unsafe class Binary_Fts : IHaveMetaInfo
 
 #region Binary_Tea
 
-public unsafe class Binary_Tea : IHaveMetaInfo
-{
+public unsafe class Binary_Tea : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Tea(r));
 
     // https://github.com/OpenSourcedGames/Arx-Fatalis/blob/master/Sources/EERIE/EERIEAnim.cpp#L355
-    public Binary_Tea(BinaryReader r)
-    {
+    public Binary_Tea(BinaryReader r) {
     }
 
     // IHaveMetaInfo

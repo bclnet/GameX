@@ -4,8 +4,7 @@ using static GameX.FamilyManager;
 
 namespace GameX;
 
-public static class TestHelper
-{
+public static class TestHelper {
     static readonly Family familyAC = GetFamily("AC");
     static readonly Family familyArkane = GetFamily("Arkane");
     static readonly Family familyBioware = GetFamily("Bioware");

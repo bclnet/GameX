@@ -11,8 +11,7 @@ namespace GameX.Black.Formats;
 #region Binary_Dat
 
 // Fallout 2
-public unsafe class Binary_Dat : PakBinary<Binary_Dat>
-{
+public unsafe class Binary_Dat : PakBinary<Binary_Dat> {
     // Header : F1
     #region Headers : F1
     // https://falloutmods.fandom.com/wiki/DAT_file_format
@@ -20,8 +19,7 @@ public unsafe class Binary_Dat : PakBinary<Binary_Dat>
     const uint F1_HEADER_FILEID = 0x000000001;
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct F1_Header
-    {
+    struct F1_Header {
         //public static string Map = "B4B4B4B4";
         public static (string, int) Struct = (">4I", sizeof(F1_Header));
         public uint DirectoryCount; // DirectoryCount
@@ -31,8 +29,7 @@ public unsafe class Binary_Dat : PakBinary<Binary_Dat>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct F1_Directory
-    {
+    struct F1_Directory {
         //public static string Map = "B4B4B4B4";
         public static (string, int) Struct = (">4I", sizeof(F1_Directory));
         public uint FileCount; // Number of files in the directory.
@@ -42,8 +39,7 @@ public unsafe class Binary_Dat : PakBinary<Binary_Dat>
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct F1_File
-    {
+    struct F1_File {
         //public static string Map = "B4B4B4B4";
         public static (string, int) Struct = (">4I", sizeof(F1_File));
         public uint Attributes; // 0x20 means plain-text, 0x40 - compressed with LZSS.
@@ -61,16 +57,14 @@ public unsafe class Binary_Dat : PakBinary<Binary_Dat>
     const uint F2_HEADER_FILEID = 0x000000011;
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct F2_Header
-    {
+    struct F2_Header {
         public static (string, int) Struct = ("<2I", sizeof(F2_Header));
         public uint TreeSize;               // Size of DirTree in bytes
         public uint DataSize;               // Full size of the archive in bytes
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct F2_File
-    {
+    struct F2_File {
         public static (string, int) Struct = ("<B3I", sizeof(F2_File));
         public byte Type;               // 1 = Compressed 0 = Decompressed
         public uint RealSize;           // Size of the file without compression.
@@ -80,13 +74,11 @@ public unsafe class Binary_Dat : PakBinary<Binary_Dat>
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         var gameId = source.Game.Id;
 
         // Fallout
-        if (gameId == "Fallout")
-        {
+        if (gameId == "Fallout") {
             source.Magic = F1_HEADER_FILEID;
             var header = r.ReadS<F1_Header>();
             var directoryPaths = new string[header.DirectoryCount];
@@ -94,16 +86,13 @@ public unsafe class Binary_Dat : PakBinary<Binary_Dat>
                 directoryPaths[i] = r.ReadL8Encoding().Replace('\\', '/');
             // Create file metadatas
             var files = new List<FileSource>(); source.Files = files;
-            for (var i = 0; i < header.DirectoryCount; i++)
-            {
+            for (var i = 0; i < header.DirectoryCount; i++) {
                 var directory = r.ReadS<F1_Directory>();
                 var directoryPath = directoryPaths[i] != "." ? directoryPaths[i] + "/" : string.Empty;
-                for (var j = 0; j < directory.FileCount; j++)
-                {
+                for (var j = 0; j < directory.FileCount; j++) {
                     var path = directoryPath + r.ReadL8Encoding().Replace('\\', '/');
                     var file = r.ReadS<F1_File>();
-                    files.Add(new FileSource
-                    {
+                    files.Add(new FileSource {
                         Path = path,
                         Compressed = (int)file.Attributes & 0x40,
                         Offset = file.Offset,
@@ -115,8 +104,7 @@ public unsafe class Binary_Dat : PakBinary<Binary_Dat>
         }
 
         // Fallout2
-        else if (gameId == "Fallout2")
-        {
+        else if (gameId == "Fallout2") {
             source.Magic = F2_HEADER_FILEID;
             r.Seek(r.BaseStream.Length - sizeof(F2_Header));
             var header = r.ReadS<F2_Header>();
@@ -125,12 +113,10 @@ public unsafe class Binary_Dat : PakBinary<Binary_Dat>
 
             // Create file metadatas
             var files = new FileSource[r.ReadInt32()]; source.Files = files;
-            for (var i = 0; i < files.Length; i++)
-            {
+            for (var i = 0; i < files.Length; i++) {
                 var path = r.ReadL32Encoding().Replace('\\', '/');
                 var file = r.ReadS<F2_File>();
-                files[i] = new FileSource
-                {
+                files[i] = new FileSource {
                     Path = path,
                     Compressed = file.Type,
                     FileSize = file.RealSize,
@@ -142,12 +128,10 @@ public unsafe class Binary_Dat : PakBinary<Binary_Dat>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
-    {
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         var magic = source.Magic;
         // F1
-        if (magic == F1_HEADER_FILEID)
-        {
+        if (magic == F1_HEADER_FILEID) {
             r.Seek(file.Offset);
             Stream fileData = new MemoryStream(file.Compressed == 0
                 ? r.ReadBytes((int)file.PackedSize)
@@ -155,8 +139,7 @@ public unsafe class Binary_Dat : PakBinary<Binary_Dat>
             return Task.FromResult(fileData);
         }
         // F2
-        else if (magic == F2_HEADER_FILEID)
-        {
+        else if (magic == F2_HEADER_FILEID) {
             r.Seek(file.Offset);
             Stream fileData = new MemoryStream(r.Peek(z => z.ReadUInt16()) == 0xda78
                 ? r.DecompressZlib((int)file.PackedSize, -1)
@@ -171,16 +154,14 @@ public unsafe class Binary_Dat : PakBinary<Binary_Dat>
 
 #region Binary_Frm
 
-public class Binary_Frm : IHaveMetaInfo, ITextureFramesSelect
-{
+public class Binary_Frm : IHaveMetaInfo, ITextureFramesSelect {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Frm(r, f, s));
 
     #region Headers
     // https://falloutmods.fandom.com/wiki/FRM_File_Format
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public unsafe struct FrmHeader
-    {
+    public unsafe struct FrmHeader {
         //internal static string Endian = "B4B2B2B2B2B2B2B2B2B2B2B2B2B2B2B2B4B4B4B4B4B4B4";
         public static (string, int) Struct = (">I3H6h6h6II", sizeof(FrmHeader));
         public uint Version;                            // Version
@@ -194,8 +175,7 @@ public class Binary_Frm : IHaveMetaInfo, ITextureFramesSelect
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public unsafe struct FrmFrame
-    {
+    public unsafe struct FrmFrame {
         //internal static string Endian = "B2B2B4B2B2";
         public static (string, int) Struct = (">2HI2h", sizeof(FrmFrame));
         public ushort Width;                            // FRAME-0-WIDTH: Width of frame 0 
@@ -213,8 +193,7 @@ public class Binary_Frm : IHaveMetaInfo, ITextureFramesSelect
     public (FrmFrame f, byte[] b)[] Frames;
     byte[] Bytes;
 
-    public unsafe Binary_Frm(BinaryReader r, FileSource f, PakFile s)
-    {
+    public unsafe Binary_Frm(BinaryReader r, FileSource f, PakFile s) {
         var pallet = GetPalletObjAsync(f.Path, (BinaryPakFile)s).Result ?? throw new Exception("No pallet found");
         var rgba32 = pallet.Rgba32;
 
@@ -222,14 +201,12 @@ public class Binary_Frm : IHaveMetaInfo, ITextureFramesSelect
         var header = r.ReadS<FrmHeader>();
         var frames = new List<(FrmFrame f, byte[] b)>();
         var stream = r.BaseStream;
-        for (var i = 0; i < 6 * header.FramesPerDirection && stream.Position < stream.Length; i++)
-        {
+        for (var i = 0; i < 6 * header.FramesPerDirection && stream.Position < stream.Length; i++) {
             var frameOffset = Header.FrameOffset[i];
             var frame = r.ReadS<FrmFrame>();
             var data = r.ReadBytes((int)frame.Size);
             var image = new byte[frame.Width * frame.Height * 4];
-            fixed (byte* image_ = image)
-            {
+            fixed (byte* image_ = image) {
                 var _ = image_;
                 for (var j = 0; j < data.Length; j++, _ += 4) *(uint*)_ = rgba32[data[j]];
             }
@@ -242,13 +219,11 @@ public class Binary_Frm : IHaveMetaInfo, ITextureFramesSelect
         FrameSelect(0);
     }
 
-    async Task<Binary_Pal2> GetPalletObjAsync(string path, BinaryPakFile s)
-    {
+    async Task<Binary_Pal2> GetPalletObjAsync(string path, BinaryPakFile s) {
         var palletPath = $"{path[..^4]}.PAL";
         if (s.Contains(palletPath))
             return await s.LoadFileObject<Binary_Pal2>(palletPath);
-        if (DefaultPallet == null && s.Contains("COLOR.PAL"))
-        {
+        if (DefaultPallet == null && s.Contains("COLOR.PAL")) {
             DefaultPallet ??= await s.LoadFileObject<Binary_Pal2>("COLOR.PAL");
             DefaultPallet.SetColors();
         }
@@ -268,8 +243,7 @@ public class Binary_Frm : IHaveMetaInfo, ITextureFramesSelect
     // ITextureFrames
     public int Fps => Header.Fps;
     public int FrameMax => Frames.Length == 1 ? 1 : Header.FramesPerDirection;
-    public void FrameSelect(int id)
-    {
+    public void FrameSelect(int id) {
         Bytes = Frames[id].b;
         Width = Frames[id].f.Width;
         Height = Frames[id].f.Height;
@@ -292,18 +266,15 @@ public class Binary_Frm : IHaveMetaInfo, ITextureFramesSelect
 
 #region Binary_Pal2
 
-public unsafe class Binary_Pal2 : IHaveMetaInfo
-{
+public unsafe class Binary_Pal2 : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Pal2(r, f));
 
     public uint[] Rgba32 = new uint[256];
 
-    public Binary_Pal2(BinaryReader r, FileSource f)
-    {
+    public Binary_Pal2(BinaryReader r, FileSource f) {
         var rgb = r.ReadBytes(256 * 3);
         fixed (byte* s = rgb)
-        fixed (uint* d = Rgba32)
-        {
+        fixed (uint* d = Rgba32) {
             var _ = s;
             for (var i = 0; i < 256; i++, _ += 3)
                 d[i] = (uint)(0x00 << 24 | _[2] << (16 + 2) | _[1] << (8 + 2) | _[0]);
@@ -311,8 +282,7 @@ public unsafe class Binary_Pal2 : IHaveMetaInfo
         }
     }
 
-    public void SetColors()
-    {
+    public void SetColors() {
         for (var i = 229; i <= 232; i++) Rgba32[i] = 0x00ff0000; // animated green (for radioactive waste)
         for (var i = 233; i <= 237; i++) Rgba32[i] = 0x0000ff00; // bright blue (computer screens)
         for (var i = 238; i <= 247; i++) Rgba32[i] = 0xff000000; // orange, red and yellow (for fires)
@@ -330,16 +300,14 @@ public unsafe class Binary_Pal2 : IHaveMetaInfo
 
 #region Binary_Rix
 
-public unsafe class Binary_Rix : IHaveMetaInfo, ITexture
-{
+public unsafe class Binary_Rix : IHaveMetaInfo, ITexture {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Rix(r, f));
 
     #region Headers
     // https://falloutmods.fandom.com/wiki/RIX_File_Format
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct Header
-    {
+    struct Header {
         public uint Magic;                      // RIX3 - the file signature 
         public ushort Width;                    // 640 - width of the image
         public ushort Height;                   // 480 - height of the image
@@ -351,13 +319,11 @@ public unsafe class Binary_Rix : IHaveMetaInfo, ITexture
 
     byte[] Bytes;
 
-    public Binary_Rix(BinaryReader r, FileSource f)
-    {
+    public Binary_Rix(BinaryReader r, FileSource f) {
         var header = r.ReadS<Header>();
         var rgb = r.ReadBytes(256 * 3);
         var rgba32 = stackalloc uint[256];
-        fixed (byte* s = rgb)
-        {
+        fixed (byte* s = rgb) {
             var d = rgba32;
             var _ = s;
             for (var i = 0; i < 256; i++, _ += 3)
@@ -365,8 +331,7 @@ public unsafe class Binary_Rix : IHaveMetaInfo, ITexture
         }
         var data = r.ReadBytes(header.Width * header.Height);
         var image = new byte[header.Width * header.Height * 4];
-        fixed (byte* image_ = image)
-        {
+        fixed (byte* image_ = image) {
             var _ = image_;
             for (var j = 0; j < data.Length; j++, _ += 4) *(uint*)_ = rgba32[data[j]];
         }

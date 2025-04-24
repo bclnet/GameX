@@ -10,8 +10,7 @@ namespace GameX.Formats.Wavefront;
 /// export to .obj/.mat format (WAVEFRONT)
 /// </summary>
 /// <seealso cref="UnknownFileWriter" />
-public partial class WavefrontFileWriter(IUnknownFileModel file) : UnknownFileWriter(file)
-{
+public partial class WavefrontFileWriter(IUnknownFileModel file) : UnknownFileWriter(file) {
     public FileInfo ModelFile { get; internal set; }
     public FileInfo MaterialFile { get; internal set; }
     public int CurrentVertexPosition { get; internal set; }
@@ -26,8 +25,7 @@ public partial class WavefrontFileWriter(IUnknownFileModel file) : UnknownFileWr
     /// </summary>
     /// <param name="outputDir">Folder to write files to</param>
     /// <param name="preservePath">When using an <paramref name="outputDir"/>, preserve the original hierarchy</param>
-    public override void Write(string outputDir = null, bool preservePath = true)
-    {
+    public override void Write(string outputDir = null, bool preservePath = true) {
         // We need to create the obj header, then for each submesh write the vertex, UV and normal data.
         // First, let's figure out the name of the output file.  Should be <object name>.obj
         // Each Mesh will have a mesh subset and a series of datastream objects.  Need temporary pointers to these so we can manipulate
@@ -53,8 +51,7 @@ public partial class WavefrontFileWriter(IUnknownFileModel file) : UnknownFileWr
             foreach (var node in rootNodes) Log($"Rendering node with null parent {node}");
 
         FaceIndex = 1;
-        foreach (var mesh in File.Meshes)
-        {
+        foreach (var mesh in File.Meshes) {
             if (SkipShieldNodes && mesh.Name.StartsWith("$shield")) { Log($"Skipped shields node {mesh.Name}"); continue; }
             if (SkipStreamNodes && mesh.Name.StartsWith("stream")) { Log($"Skipped stream node {mesh.Name}"); continue; }
             WriteMesh(w, mesh);

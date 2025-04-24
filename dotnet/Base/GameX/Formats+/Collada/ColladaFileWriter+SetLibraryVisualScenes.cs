@@ -4,14 +4,12 @@ using System.Linq;
 
 namespace GameX.Formats.Collada;
 
-partial class ColladaFileWriter
-{
+partial class ColladaFileWriter {
     /// <summary>
     /// Adds the Library_Visual_Scene element to the Collada document.
     /// Provides a library in which to place visual_scene elements. 
     /// </summary>
-    public void SetLibraryVisualScenes()
-    {
+    public void SetLibraryVisualScenes() {
         // There can be multiple visual scenes.  Will just have one (World) for now.  All node chunks go under Nodes for that visual scene
         var nodes = new List<Collada_Node>();
 
@@ -33,8 +31,7 @@ partial class ColladaFileWriter
         //else nodes.Add(CreateNode(File.RootNode));
 
         // Set up the library
-        daeObject.Library_Visual_Scene = new Collada_Library_Visual_Scenes
-        {
+        daeObject.Library_Visual_Scene = new Collada_Library_Visual_Scenes {
             Visual_Scene = new[] { new Collada_Visual_Scene { Node = nodes.ToArray(), ID = "Scene" } }
         };
     }

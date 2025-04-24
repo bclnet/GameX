@@ -3,20 +3,21 @@ using OpenStack.Gfx;
 using OpenStack.Gfx.O3de;
 using System;
 using System.Collections.Generic;
+using static OpenStack.Gfx.GfX;
 
 namespace GameX.Platforms.O3de;
 
 public static class O3deRenderer
 {
-    public static Renderer CreateRenderer(object parent, O3deGfxModel gfx, object obj, string type)
+    public static Renderer CreateRenderer(object parent, IList<IOpenGfx> gfx, object obj, string type)
         => type switch
         {
-            "TestTri" => new O3deTestTriRenderer(gfx, obj),
-            "Texture" => new O3deTextureRenderer(gfx, obj),
-            "Object" => new O3deObjectRenderer(gfx, obj),
-            "Cell" => new O3deCellRenderer(gfx, obj),
-            "Engine" => new O3deEngineRenderer(gfx, obj),
-            _ => new O3deObjectRenderer(gfx, obj),
+            "TestTri" => new O3deTestTriRenderer(gfx[XModel] as O3deGfxModel, obj),
+            "Texture" => new O3deTextureRenderer(gfx[XModel] as O3deGfxModel, obj),
+            "Object" => new O3deObjectRenderer(gfx[XModel] as O3deGfxModel, obj),
+            "Cell" => new O3deCellRenderer(gfx[XModel] as O3deGfxModel, obj),
+            "Engine" => new O3deEngineRenderer(gfx[XModel] as O3deGfxModel, obj),
+            _ => new O3deObjectRenderer(gfx[XModel] as O3deGfxModel, obj),
         };
 }
 
@@ -33,19 +34,15 @@ public class ViewInfo
 {
     static ViewInfo() => PlatformX.Activate(O3dePlatform.This);
 
-    public enum Kind { Texture, TextureCursor, Object, Cell, Engine }
-
     public string FamilyId = "Bethesda";
     public string PakUri = "game:/Morrowind.bsa#Morrowind";
-
-    public Kind ViewKind = Kind.Texture;
-    public string Param1 = "bookart/boethiah_256.dds";
-    //public string Param1 = "meshes/x/ex_common_balcony_01.nif";
+    public string Type = "Texture";
+    public string Path = "bookart/boethiah_256.dds";
+    //public string Path = "meshes/x/ex_common_balcony_01.nif";
 
     protected Family Family;
-    protected List<PakFile> PakFiles = [];
+    protected PakFile Source;
     protected O3deGfxModel Gfx;
-
     Renderer Renderer;
 
     //public override void _Ready()

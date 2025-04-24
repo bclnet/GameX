@@ -4,8 +4,7 @@ using static OpenStack.Debug;
 
 namespace GameX.Bethesda;
 
-public static class DatabaseManager
-{
+public static class DatabaseManager {
     // Retail Iteration versions
     const int ITERATION_CELL = 982;
     const int ITERATION_PORTAL = 2072;
@@ -16,8 +15,7 @@ public static class DatabaseManager
 
     public static DatabaseCell Cell { get; private set; }
 
-    internal static FamilyGame Ensure(FamilyGame game, bool loadCell = true)
-    {
+    internal static FamilyGame Ensure(FamilyGame game, bool loadCell = true) {
         if (loaded) return game;
         loaded = true;
 

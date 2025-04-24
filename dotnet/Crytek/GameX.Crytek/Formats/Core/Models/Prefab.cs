@@ -9,56 +9,45 @@ namespace GameX.Crytek.Formats.Models;
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
 [System.Xml.Serialization.XmlRootAttribute(Namespace = "", IsNullable = false)]
 
-public partial class PrefabsLibrary
-{
+public partial class PrefabsLibrary {
     private PrefabsLibraryPrefab[] prefabField;
 
     private string nameField;
 
     /// <remarks/>
     [System.Xml.Serialization.XmlElementAttribute("Prefab")]
-    public PrefabsLibraryPrefab[] Prefab
-    {
-        get
-        {
+    public PrefabsLibraryPrefab[] Prefab {
+        get {
             return this.prefabField;
         }
-        set
-        {
+        set {
             this.prefabField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string Name
-    {
-        get
-        {
+    public string Name {
+        get {
             return this.nameField;
         }
-        set
-        {
+        set {
             this.nameField = value;
         }
     }
 
-    public static PrefabsLibrary FromFile(FileInfo materialfile)
-    {
+    public static PrefabsLibrary FromFile(FileInfo materialfile) {
         if (!materialfile.Exists)
             return null;
 
-        try
-        {
-            using (Stream fileStream = materialfile.OpenRead())
-            {
+        try {
+            using (Stream fileStream = materialfile.OpenRead()) {
                 //return HoloXPLOR.DataForge.CryXmlSerializer.Deserialize<PrefabsLibrary>(fileStream);
                 //return HoloXPLOR.DataForge.CryXmlSerializer.Deserialize<CryEngineCore.Material>(materialfile.FullName);
                 return null;
             }
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             Debug.WriteLine("{0} failed deserialize - {1}", materialfile, ex.Message);
         }
 
@@ -71,8 +60,7 @@ public partial class PrefabsLibrary
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefab
-{
+public partial class PrefabsLibraryPrefab {
 
     private PrefabsLibraryPrefabObject[] objectsField;
 
@@ -84,56 +72,44 @@ public partial class PrefabsLibraryPrefab
 
     /// <remarks/>
     [System.Xml.Serialization.XmlArrayItemAttribute("Object", IsNullable = false)]
-    public PrefabsLibraryPrefabObject[] Objects
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObject[] Objects {
+        get {
             return this.objectsField;
         }
-        set
-        {
+        set {
             this.objectsField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string Name
-    {
-        get
-        {
+    public string Name {
+        get {
             return this.nameField;
         }
-        set
-        {
+        set {
             this.nameField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string Id
-    {
-        get
-        {
+    public string Id {
+        get {
             return this.idField;
         }
-        set
-        {
+        set {
             this.idField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string Library
-    {
-        get
-        {
+    public string Library {
+        get {
             return this.libraryField;
         }
-        set
-        {
+        set {
             this.libraryField = value;
         }
     }
@@ -143,8 +119,7 @@ public partial class PrefabsLibraryPrefab
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObject
-{
+public partial class PrefabsLibraryPrefabObject {
 
     private PrefabsLibraryPrefabObjectProperties propertiesField;
 
@@ -303,1091 +278,857 @@ public partial class PrefabsLibraryPrefabObject
     private string boxMaxField;
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectProperties Properties
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectProperties Properties {
+        get {
             return this.propertiesField;
         }
-        set
-        {
+        set {
             this.propertiesField = value;
         }
     }
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectProperties2 Properties2
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectProperties2 Properties2 {
+        get {
             return this.properties2Field;
         }
-        set
-        {
+        set {
             this.properties2Field = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlArrayItemAttribute("Link", IsNullable = false)]
-    public PrefabsLibraryPrefabObjectLink[] EntityLinks
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectLink[] EntityLinks {
+        get {
             return this.entityLinksField;
         }
-        set
-        {
+        set {
             this.entityLinksField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlArrayItemAttribute("Object", IsNullable = false)]
-    public PrefabsLibraryPrefabObjectObject[] Objects
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectObject[] Objects {
+        get {
             return this.objectsField;
         }
-        set
-        {
+        set {
             this.objectsField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string Type
-    {
-        get
-        {
+    public string Type {
+        get {
             return this.typeField;
         }
-        set
-        {
+        set {
             this.typeField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string Layer
-    {
-        get
-        {
+    public string Layer {
+        get {
             return this.layerField;
         }
-        set
-        {
+        set {
             this.layerField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string LayerGUID
-    {
-        get
-        {
+    public string LayerGUID {
+        get {
             return this.layerGUIDField;
         }
-        set
-        {
+        set {
             this.layerGUIDField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string Id
-    {
-        get
-        {
+    public string Id {
+        get {
             return this.idField;
         }
-        set
-        {
+        set {
             this.idField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string Name
-    {
-        get
-        {
+    public string Name {
+        get {
             return this.nameField;
         }
-        set
-        {
+        set {
             this.nameField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string Pos
-    {
-        get
-        {
+    public string Pos {
+        get {
             return this.posField;
         }
-        set
-        {
+        set {
             this.posField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public sbyte FloorNumber
-    {
-        get
-        {
+    public sbyte FloorNumber {
+        get {
             return this.floorNumberField;
         }
-        set
-        {
+        set {
             this.floorNumberField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string Rotate
-    {
-        get
-        {
+    public string Rotate {
+        get {
             return this.rotateField;
         }
-        set
-        {
+        set {
             this.rotateField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public uint ColorRGB
-    {
-        get
-        {
+    public uint ColorRGB {
+        get {
             return this.colorRGBField;
         }
-        set
-        {
+        set {
             this.colorRGBField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte MergeGeom
-    {
-        get
-        {
+    public byte MergeGeom {
+        get {
             return this.mergeGeomField;
         }
-        set
-        {
+        set {
             this.mergeGeomField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool MergeGeomSpecified
-    {
-        get
-        {
+    public bool MergeGeomSpecified {
+        get {
             return this.mergeGeomFieldSpecified;
         }
-        set
-        {
+        set {
             this.mergeGeomFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte Opened
-    {
-        get
-        {
+    public byte Opened {
+        get {
             return this.openedField;
         }
-        set
-        {
+        set {
             this.openedField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool OpenedSpecified
-    {
-        get
-        {
+    public bool OpenedSpecified {
+        get {
             return this.openedFieldSpecified;
         }
-        set
-        {
+        set {
             this.openedFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte MatLayersMask
-    {
-        get
-        {
+    public byte MatLayersMask {
+        get {
             return this.matLayersMaskField;
         }
-        set
-        {
+        set {
             this.matLayersMaskField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool MatLayersMaskSpecified
-    {
-        get
-        {
+    public bool MatLayersMaskSpecified {
+        get {
             return this.matLayersMaskFieldSpecified;
         }
-        set
-        {
+        set {
             this.matLayersMaskFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string Geometry
-    {
-        get
-        {
+    public string Geometry {
+        get {
             return this.geometryField;
         }
-        set
-        {
+        set {
             this.geometryField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte OutdoorOnly
-    {
-        get
-        {
+    public byte OutdoorOnly {
+        get {
             return this.outdoorOnlyField;
         }
-        set
-        {
+        set {
             this.outdoorOnlyField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool OutdoorOnlySpecified
-    {
-        get
-        {
+    public bool OutdoorOnlySpecified {
+        get {
             return this.outdoorOnlyFieldSpecified;
         }
-        set
-        {
+        set {
             this.outdoorOnlyFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte CastShadow
-    {
-        get
-        {
+    public byte CastShadow {
+        get {
             return this.castShadowField;
         }
-        set
-        {
+        set {
             this.castShadowField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool CastShadowSpecified
-    {
-        get
-        {
+    public bool CastShadowSpecified {
+        get {
             return this.castShadowFieldSpecified;
         }
-        set
-        {
+        set {
             this.castShadowFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte LodRatio
-    {
-        get
-        {
+    public byte LodRatio {
+        get {
             return this.lodRatioField;
         }
-        set
-        {
+        set {
             this.lodRatioField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool LodRatioSpecified
-    {
-        get
-        {
+    public bool LodRatioSpecified {
+        get {
             return this.lodRatioFieldSpecified;
         }
-        set
-        {
+        set {
             this.lodRatioFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte ViewDistRatio
-    {
-        get
-        {
+    public byte ViewDistRatio {
+        get {
             return this.viewDistRatioField;
         }
-        set
-        {
+        set {
             this.viewDistRatioField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool ViewDistRatioSpecified
-    {
-        get
-        {
+    public bool ViewDistRatioSpecified {
+        get {
             return this.viewDistRatioFieldSpecified;
         }
-        set
-        {
+        set {
             this.viewDistRatioFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte HiddenInGame
-    {
-        get
-        {
+    public byte HiddenInGame {
+        get {
             return this.hiddenInGameField;
         }
-        set
-        {
+        set {
             this.hiddenInGameField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool HiddenInGameSpecified
-    {
-        get
-        {
+    public bool HiddenInGameSpecified {
+        get {
             return this.hiddenInGameFieldSpecified;
         }
-        set
-        {
+        set {
             this.hiddenInGameFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte RecvWind
-    {
-        get
-        {
+    public byte RecvWind {
+        get {
             return this.recvWindField;
         }
-        set
-        {
+        set {
             this.recvWindField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool RecvWindSpecified
-    {
-        get
-        {
+    public bool RecvWindSpecified {
+        get {
             return this.recvWindFieldSpecified;
         }
-        set
-        {
+        set {
             this.recvWindFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte RenderNearest
-    {
-        get
-        {
+    public byte RenderNearest {
+        get {
             return this.renderNearestField;
         }
-        set
-        {
+        set {
             this.renderNearestField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool RenderNearestSpecified
-    {
-        get
-        {
+    public bool RenderNearestSpecified {
+        get {
             return this.renderNearestFieldSpecified;
         }
-        set
-        {
+        set {
             this.renderNearestFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte NoStaticDecals
-    {
-        get
-        {
+    public byte NoStaticDecals {
+        get {
             return this.noStaticDecalsField;
         }
-        set
-        {
+        set {
             this.noStaticDecalsField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool NoStaticDecalsSpecified
-    {
-        get
-        {
+    public bool NoStaticDecalsSpecified {
+        get {
             return this.noStaticDecalsFieldSpecified;
         }
-        set
-        {
+        set {
             this.noStaticDecalsFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte CreatedThroughPool
-    {
-        get
-        {
+    public byte CreatedThroughPool {
+        get {
             return this.createdThroughPoolField;
         }
-        set
-        {
+        set {
             this.createdThroughPoolField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool CreatedThroughPoolSpecified
-    {
-        get
-        {
+    public bool CreatedThroughPoolSpecified {
+        get {
             return this.createdThroughPoolFieldSpecified;
         }
-        set
-        {
+        set {
             this.createdThroughPoolFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string EntityClass
-    {
-        get
-        {
+    public string EntityClass {
+        get {
             return this.entityClassField;
         }
-        set
-        {
+        set {
             this.entityClassField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string Scale
-    {
-        get
-        {
+    public string Scale {
+        get {
             return this.scaleField;
         }
-        set
-        {
+        set {
             this.scaleField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string Prefab
-    {
-        get
-        {
+    public string Prefab {
+        get {
             return this.prefabField;
         }
-        set
-        {
+        set {
             this.prefabField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte NoCollision
-    {
-        get
-        {
+    public byte NoCollision {
+        get {
             return this.noCollisionField;
         }
-        set
-        {
+        set {
             this.noCollisionField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool NoCollisionSpecified
-    {
-        get
-        {
+    public bool NoCollisionSpecified {
+        get {
             return this.noCollisionFieldSpecified;
         }
-        set
-        {
+        set {
             this.noCollisionFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte CastShadowMaps
-    {
-        get
-        {
+    public byte CastShadowMaps {
+        get {
             return this.castShadowMapsField;
         }
-        set
-        {
+        set {
             this.castShadowMapsField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool CastShadowMapsSpecified
-    {
-        get
-        {
+    public bool CastShadowMapsSpecified {
+        get {
             return this.castShadowMapsFieldSpecified;
         }
-        set
-        {
+        set {
             this.castShadowMapsFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte RainOccluder
-    {
-        get
-        {
+    public byte RainOccluder {
+        get {
             return this.rainOccluderField;
         }
-        set
-        {
+        set {
             this.rainOccluderField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool RainOccluderSpecified
-    {
-        get
-        {
+    public bool RainOccluderSpecified {
+        get {
             return this.rainOccluderFieldSpecified;
         }
-        set
-        {
+        set {
             this.rainOccluderFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte SupportSecondVisarea
-    {
-        get
-        {
+    public byte SupportSecondVisarea {
+        get {
             return this.supportSecondVisareaField;
         }
-        set
-        {
+        set {
             this.supportSecondVisareaField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool SupportSecondVisareaSpecified
-    {
-        get
-        {
+    public bool SupportSecondVisareaSpecified {
+        get {
             return this.supportSecondVisareaFieldSpecified;
         }
-        set
-        {
+        set {
             this.supportSecondVisareaFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte Hideable
-    {
-        get
-        {
+    public byte Hideable {
+        get {
             return this.hideableField;
         }
-        set
-        {
+        set {
             this.hideableField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool HideableSpecified
-    {
-        get
-        {
+    public bool HideableSpecified {
+        get {
             return this.hideableFieldSpecified;
         }
-        set
-        {
+        set {
             this.hideableFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte MeshIntegrationType
-    {
-        get
-        {
+    public byte MeshIntegrationType {
+        get {
             return this.meshIntegrationTypeField;
         }
-        set
-        {
+        set {
             this.meshIntegrationTypeField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool MeshIntegrationTypeSpecified
-    {
-        get
-        {
+    public bool MeshIntegrationTypeSpecified {
+        get {
             return this.meshIntegrationTypeFieldSpecified;
         }
-        set
-        {
+        set {
             this.meshIntegrationTypeFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte NotTriangulate
-    {
-        get
-        {
+    public byte NotTriangulate {
+        get {
             return this.notTriangulateField;
         }
-        set
-        {
+        set {
             this.notTriangulateField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool NotTriangulateSpecified
-    {
-        get
-        {
+    public bool NotTriangulateSpecified {
+        get {
             return this.notTriangulateFieldSpecified;
         }
-        set
-        {
+        set {
             this.notTriangulateFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public sbyte AIRadius
-    {
-        get
-        {
+    public sbyte AIRadius {
+        get {
             return this.aIRadiusField;
         }
-        set
-        {
+        set {
             this.aIRadiusField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool AIRadiusSpecified
-    {
-        get
-        {
+    public bool AIRadiusSpecified {
+        get {
             return this.aIRadiusFieldSpecified;
         }
-        set
-        {
+        set {
             this.aIRadiusFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte NoAmnbShadowCaster
-    {
-        get
-        {
+    public byte NoAmnbShadowCaster {
+        get {
             return this.noAmnbShadowCasterField;
         }
-        set
-        {
+        set {
             this.noAmnbShadowCasterField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool NoAmnbShadowCasterSpecified
-    {
-        get
-        {
+    public bool NoAmnbShadowCasterSpecified {
+        get {
             return this.noAmnbShadowCasterFieldSpecified;
         }
-        set
-        {
+        set {
             this.noAmnbShadowCasterFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public uint RndFlags
-    {
-        get
-        {
+    public uint RndFlags {
+        get {
             return this.rndFlagsField;
         }
-        set
-        {
+        set {
             this.rndFlagsField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool RndFlagsSpecified
-    {
-        get
-        {
+    public bool RndFlagsSpecified {
+        get {
             return this.rndFlagsFieldSpecified;
         }
-        set
-        {
+        set {
             this.rndFlagsFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string Material
-    {
-        get
-        {
+    public string Material {
+        get {
             return this.materialField;
         }
-        set
-        {
+        set {
             this.materialField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public ushort cubemap_resolution
-    {
-        get
-        {
+    public ushort cubemap_resolution {
+        get {
             return this.cubemap_resolutionField;
         }
-        set
-        {
+        set {
             this.cubemap_resolutionField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool cubemap_resolutionSpecified
-    {
-        get
-        {
+    public bool cubemap_resolutionSpecified {
+        get {
             return this.cubemap_resolutionFieldSpecified;
         }
-        set
-        {
+        set {
             this.cubemap_resolutionFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte preview_cubemap
-    {
-        get
-        {
+    public byte preview_cubemap {
+        get {
             return this.preview_cubemapField;
         }
-        set
-        {
+        set {
             this.preview_cubemapField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool preview_cubemapSpecified
-    {
-        get
-        {
+    public bool preview_cubemapSpecified {
+        get {
             return this.preview_cubemapFieldSpecified;
         }
-        set
-        {
+        set {
             this.preview_cubemapFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte OriginAtCorner
-    {
-        get
-        {
+    public byte OriginAtCorner {
+        get {
             return this.originAtCornerField;
         }
-        set
-        {
+        set {
             this.originAtCornerField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool OriginAtCornerSpecified
-    {
-        get
-        {
+    public bool OriginAtCornerSpecified {
+        get {
             return this.originAtCornerFieldSpecified;
         }
-        set
-        {
+        set {
             this.originAtCornerFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte Width
-    {
-        get
-        {
+    public byte Width {
+        get {
             return this.widthField;
         }
-        set
-        {
+        set {
             this.widthField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool WidthSpecified
-    {
-        get
-        {
+    public bool WidthSpecified {
+        get {
             return this.widthFieldSpecified;
         }
-        set
-        {
+        set {
             this.widthFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte Length
-    {
-        get
-        {
+    public byte Length {
+        get {
             return this.lengthField;
         }
-        set
-        {
+        set {
             this.lengthField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool LengthSpecified
-    {
-        get
-        {
+    public bool LengthSpecified {
+        get {
             return this.lengthFieldSpecified;
         }
-        set
-        {
+        set {
             this.lengthFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte Height
-    {
-        get
-        {
+    public byte Height {
+        get {
             return this.heightField;
         }
-        set
-        {
+        set {
             this.heightField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool HeightSpecified
-    {
-        get
-        {
+    public bool HeightSpecified {
+        get {
             return this.heightFieldSpecified;
         }
-        set
-        {
+        set {
             this.heightFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte DisableGI
-    {
-        get
-        {
+    public byte DisableGI {
+        get {
             return this.disableGIField;
         }
-        set
-        {
+        set {
             this.disableGIField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool DisableGISpecified
-    {
-        get
-        {
+    public bool DisableGISpecified {
+        get {
             return this.disableGIFieldSpecified;
         }
-        set
-        {
+        set {
             this.disableGIFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string BoxMin
-    {
-        get
-        {
+    public string BoxMin {
+        get {
             return this.boxMinField;
         }
-        set
-        {
+        set {
             this.boxMinField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string BoxMax
-    {
-        get
-        {
+    public string BoxMax {
+        get {
             return this.boxMaxField;
         }
-        set
-        {
+        set {
             this.boxMaxField = value;
         }
     }
@@ -1397,8 +1138,7 @@ public partial class PrefabsLibraryPrefabObject
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectProperties
-{
+public partial class PrefabsLibraryPrefabObjectProperties {
 
     private PrefabsLibraryPrefabObjectPropertiesSize sizeField;
 
@@ -1503,699 +1243,546 @@ public partial class PrefabsLibraryPrefabObjectProperties
     private bool volumeTypeFieldSpecified;
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectPropertiesSize Size
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectPropertiesSize Size {
+        get {
             return this.sizeField;
         }
-        set
-        {
+        set {
             this.sizeField = value;
         }
     }
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectPropertiesBreakage Breakage
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectPropertiesBreakage Breakage {
+        get {
             return this.breakageField;
         }
-        set
-        {
+        set {
             this.breakageField = value;
         }
     }
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectPropertiesDamage Damage
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectPropertiesDamage Damage {
+        get {
             return this.damageField;
         }
-        set
-        {
+        set {
             this.damageField = value;
         }
     }
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectPropertiesDamageMultipliers DamageMultipliers
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectPropertiesDamageMultipliers DamageMultipliers {
+        get {
             return this.damageMultipliersField;
         }
-        set
-        {
+        set {
             this.damageMultipliersField = value;
         }
     }
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectPropertiesExplosion Explosion
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectPropertiesExplosion Explosion {
+        get {
             return this.explosionField;
         }
-        set
-        {
+        set {
             this.explosionField = value;
         }
     }
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectPropertiesModel Model
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectPropertiesModel Model {
+        get {
             return this.modelField;
         }
-        set
-        {
+        set {
             this.modelField = value;
         }
     }
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectPropertiesPhysics Physics
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectPropertiesPhysics Physics {
+        get {
             return this.physicsField;
         }
-        set
-        {
+        set {
             this.physicsField = value;
         }
     }
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectPropertiesSounds Sounds
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectPropertiesSounds Sounds {
+        get {
             return this.soundsField;
         }
-        set
-        {
+        set {
             this.soundsField = value;
         }
     }
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectPropertiesVulnerability Vulnerability
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectPropertiesVulnerability Vulnerability {
+        get {
             return this.vulnerabilityField;
         }
-        set
-        {
+        set {
             this.vulnerabilityField = value;
         }
     }
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectPropertiesColor Color
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectPropertiesColor Color {
+        get {
             return this.colorField;
         }
-        set
-        {
+        set {
             this.colorField = value;
         }
     }
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectPropertiesOptions Options
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectPropertiesOptions Options {
+        get {
             return this.optionsField;
         }
-        set
-        {
+        set {
             this.optionsField = value;
         }
     }
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectPropertiesOptionsAdvanced OptionsAdvanced
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectPropertiesOptionsAdvanced OptionsAdvanced {
+        get {
             return this.optionsAdvancedField;
         }
-        set
-        {
+        set {
             this.optionsAdvancedField = value;
         }
     }
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectPropertiesProjector Projector
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectPropertiesProjector Projector {
+        get {
             return this.projectorField;
         }
-        set
-        {
+        set {
             this.projectorField = value;
         }
     }
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectPropertiesStyle Style
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectPropertiesStyle Style {
+        get {
             return this.styleField;
         }
-        set
-        {
+        set {
             this.styleField = value;
         }
     }
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectPropertiesHealth Health
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectPropertiesHealth Health {
+        get {
             return this.healthField;
         }
-        set
-        {
+        set {
             this.healthField = value;
         }
     }
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectPropertiesInterest Interest
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectPropertiesInterest Interest {
+        get {
             return this.interestField;
         }
-        set
-        {
+        set {
             this.interestField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string esFaction
-    {
-        get
-        {
+    public string esFaction {
+        get {
             return this.esFactionField;
         }
-        set
-        {
+        set {
             this.esFactionField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bActive
-    {
-        get
-        {
+    public byte bActive {
+        get {
             return this.bActiveField;
         }
-        set
-        {
+        set {
             this.bActiveField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool bActiveSpecified
-    {
-        get
-        {
+    public bool bActiveSpecified {
+        get {
             return this.bActiveFieldSpecified;
         }
-        set
-        {
+        set {
             this.bActiveFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public decimal Radius
-    {
-        get
-        {
+    public decimal Radius {
+        get {
             return this.radiusField;
         }
-        set
-        {
+        set {
             this.radiusField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool RadiusSpecified
-    {
-        get
-        {
+    public bool RadiusSpecified {
+        get {
             return this.radiusFieldSpecified;
         }
-        set
-        {
+        set {
             this.radiusFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public sbyte _nVersion
-    {
-        get
-        {
+    public sbyte _nVersion {
+        get {
             return this._nVersionField;
         }
-        set
-        {
+        set {
             this._nVersionField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool _nVersionSpecified
-    {
-        get
-        {
+    public bool _nVersionSpecified {
+        get {
             return this._nVersionFieldSpecified;
         }
-        set
-        {
+        set {
             this._nVersionFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bPickable
-    {
-        get
-        {
+    public byte bPickable {
+        get {
             return this.bPickableField;
         }
-        set
-        {
+        set {
             this.bPickableField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool bPickableSpecified
-    {
-        get
-        {
+    public bool bPickableSpecified {
+        get {
             return this.bPickableFieldSpecified;
         }
-        set
-        {
+        set {
             this.bPickableFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bUsable
-    {
-        get
-        {
+    public byte bUsable {
+        get {
             return this.bUsableField;
         }
-        set
-        {
+        set {
             this.bUsableField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool bUsableSpecified
-    {
-        get
-        {
+    public bool bUsableSpecified {
+        get {
             return this.bUsableFieldSpecified;
         }
-        set
-        {
+        set {
             this.bUsableFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string UseText
-    {
-        get
-        {
+    public string UseText {
+        get {
             return this.useTextField;
         }
-        set
-        {
+        set {
             this.useTextField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string color_Color
-    {
-        get
-        {
+    public string color_Color {
+        get {
             return this.color_ColorField;
         }
-        set
-        {
+        set {
             this.color_ColorField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte DensityOffset
-    {
-        get
-        {
+    public byte DensityOffset {
+        get {
             return this.densityOffsetField;
         }
-        set
-        {
+        set {
             this.densityOffsetField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool DensityOffsetSpecified
-    {
-        get
-        {
+    public bool DensityOffsetSpecified {
+        get {
             return this.densityOffsetFieldSpecified;
         }
-        set
-        {
+        set {
             this.densityOffsetFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte FallOffDirLati
-    {
-        get
-        {
+    public byte FallOffDirLati {
+        get {
             return this.fallOffDirLatiField;
         }
-        set
-        {
+        set {
             this.fallOffDirLatiField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool FallOffDirLatiSpecified
-    {
-        get
-        {
+    public bool FallOffDirLatiSpecified {
+        get {
             return this.fallOffDirLatiFieldSpecified;
         }
-        set
-        {
+        set {
             this.fallOffDirLatiFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte FallOffDirLong
-    {
-        get
-        {
+    public byte FallOffDirLong {
+        get {
             return this.fallOffDirLongField;
         }
-        set
-        {
+        set {
             this.fallOffDirLongField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool FallOffDirLongSpecified
-    {
-        get
-        {
+    public bool FallOffDirLongSpecified {
+        get {
             return this.fallOffDirLongFieldSpecified;
         }
-        set
-        {
+        set {
             this.fallOffDirLongFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte FallOffScale
-    {
-        get
-        {
+    public byte FallOffScale {
+        get {
             return this.fallOffScaleField;
         }
-        set
-        {
+        set {
             this.fallOffScaleField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool FallOffScaleSpecified
-    {
-        get
-        {
+    public bool FallOffScaleSpecified {
+        get {
             return this.fallOffScaleFieldSpecified;
         }
-        set
-        {
+        set {
             this.fallOffScaleFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte FallOffShift
-    {
-        get
-        {
+    public byte FallOffShift {
+        get {
             return this.fallOffShiftField;
         }
-        set
-        {
+        set {
             this.fallOffShiftField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool FallOffShiftSpecified
-    {
-        get
-        {
+    public bool FallOffShiftSpecified {
+        get {
             return this.fallOffShiftFieldSpecified;
         }
-        set
-        {
+        set {
             this.fallOffShiftFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public decimal GlobalDensity
-    {
-        get
-        {
+    public decimal GlobalDensity {
+        get {
             return this.globalDensityField;
         }
-        set
-        {
+        set {
             this.globalDensityField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool GlobalDensitySpecified
-    {
-        get
-        {
+    public bool GlobalDensitySpecified {
+        get {
             return this.globalDensityFieldSpecified;
         }
-        set
-        {
+        set {
             this.globalDensityFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte fHDRDynamic
-    {
-        get
-        {
+    public byte fHDRDynamic {
+        get {
             return this.fHDRDynamicField;
         }
-        set
-        {
+        set {
             this.fHDRDynamicField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool fHDRDynamicSpecified
-    {
-        get
-        {
+    public bool fHDRDynamicSpecified {
+        get {
             return this.fHDRDynamicFieldSpecified;
         }
-        set
-        {
+        set {
             this.fHDRDynamicFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte NearCutoff
-    {
-        get
-        {
+    public byte NearCutoff {
+        get {
             return this.nearCutoffField;
         }
-        set
-        {
+        set {
             this.nearCutoffField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool NearCutoffSpecified
-    {
-        get
-        {
+    public bool NearCutoffSpecified {
+        get {
             return this.nearCutoffFieldSpecified;
         }
-        set
-        {
+        set {
             this.nearCutoffFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte SoftEdges
-    {
-        get
-        {
+    public byte SoftEdges {
+        get {
             return this.softEdgesField;
         }
-        set
-        {
+        set {
             this.softEdgesField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool SoftEdgesSpecified
-    {
-        get
-        {
+    public bool SoftEdgesSpecified {
+        get {
             return this.softEdgesFieldSpecified;
         }
-        set
-        {
+        set {
             this.softEdgesFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bUseGlobalFogColor
-    {
-        get
-        {
+    public byte bUseGlobalFogColor {
+        get {
             return this.bUseGlobalFogColorField;
         }
-        set
-        {
+        set {
             this.bUseGlobalFogColorField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool bUseGlobalFogColorSpecified
-    {
-        get
-        {
+    public bool bUseGlobalFogColorSpecified {
+        get {
             return this.bUseGlobalFogColorFieldSpecified;
         }
-        set
-        {
+        set {
             this.bUseGlobalFogColorFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte VolumeType
-    {
-        get
-        {
+    public byte VolumeType {
+        get {
             return this.volumeTypeField;
         }
-        set
-        {
+        set {
             this.volumeTypeField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool VolumeTypeSpecified
-    {
-        get
-        {
+    public bool VolumeTypeSpecified {
+        get {
             return this.volumeTypeFieldSpecified;
         }
-        set
-        {
+        set {
             this.volumeTypeFieldSpecified = value;
         }
     }
@@ -2205,8 +1792,7 @@ public partial class PrefabsLibraryPrefabObjectProperties
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectPropertiesSize
-{
+public partial class PrefabsLibraryPrefabObjectPropertiesSize {
 
     private byte xField;
 
@@ -2216,42 +1802,33 @@ public partial class PrefabsLibraryPrefabObjectPropertiesSize
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte x
-    {
-        get
-        {
+    public byte x {
+        get {
             return this.xField;
         }
-        set
-        {
+        set {
             this.xField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte y
-    {
-        get
-        {
+    public byte y {
+        get {
             return this.yField;
         }
-        set
-        {
+        set {
             this.yField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte z
-    {
-        get
-        {
+    public byte z {
+        get {
             return this.zField;
         }
-        set
-        {
+        set {
             this.zField = value;
         }
     }
@@ -2261,8 +1838,7 @@ public partial class PrefabsLibraryPrefabObjectPropertiesSize
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectPropertiesBreakage
-{
+public partial class PrefabsLibraryPrefabObjectPropertiesBreakage {
 
     private byte fExplodeImpulseField;
 
@@ -2272,42 +1848,33 @@ public partial class PrefabsLibraryPrefabObjectPropertiesBreakage
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte fExplodeImpulse
-    {
-        get
-        {
+    public byte fExplodeImpulse {
+        get {
             return this.fExplodeImpulseField;
         }
-        set
-        {
+        set {
             this.fExplodeImpulseField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte fLifeTime
-    {
-        get
-        {
+    public byte fLifeTime {
+        get {
             return this.fLifeTimeField;
         }
-        set
-        {
+        set {
             this.fLifeTimeField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bSurfaceEffects
-    {
-        get
-        {
+    public byte bSurfaceEffects {
+        get {
             return this.bSurfaceEffectsField;
         }
-        set
-        {
+        set {
             this.bSurfaceEffectsField = value;
         }
     }
@@ -2317,8 +1884,7 @@ public partial class PrefabsLibraryPrefabObjectPropertiesBreakage
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectPropertiesDamage
-{
+public partial class PrefabsLibraryPrefabObjectPropertiesDamage {
 
     private byte fDamageTresholdField;
 
@@ -2328,42 +1894,33 @@ public partial class PrefabsLibraryPrefabObjectPropertiesDamage
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte fDamageTreshold
-    {
-        get
-        {
+    public byte fDamageTreshold {
+        get {
             return this.fDamageTresholdField;
         }
-        set
-        {
+        set {
             this.fDamageTresholdField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bExplode
-    {
-        get
-        {
+    public byte bExplode {
+        get {
             return this.bExplodeField;
         }
-        set
-        {
+        set {
             this.bExplodeField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte fHealth
-    {
-        get
-        {
+    public byte fHealth {
+        get {
             return this.fHealthField;
         }
-        set
-        {
+        set {
             this.fHealthField = value;
         }
     }
@@ -2373,8 +1930,7 @@ public partial class PrefabsLibraryPrefabObjectPropertiesDamage
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectPropertiesDamageMultipliers
-{
+public partial class PrefabsLibraryPrefabObjectPropertiesDamageMultipliers {
 
     private byte fBulletField;
 
@@ -2382,28 +1938,22 @@ public partial class PrefabsLibraryPrefabObjectPropertiesDamageMultipliers
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte fBullet
-    {
-        get
-        {
+    public byte fBullet {
+        get {
             return this.fBulletField;
         }
-        set
-        {
+        set {
             this.fBulletField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte fCollision
-    {
-        get
-        {
+    public byte fCollision {
+        get {
             return this.fCollisionField;
         }
-        set
-        {
+        set {
             this.fCollisionField = value;
         }
     }
@@ -2413,8 +1963,7 @@ public partial class PrefabsLibraryPrefabObjectPropertiesDamageMultipliers
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectPropertiesExplosion
-{
+public partial class PrefabsLibraryPrefabObjectPropertiesExplosion {
 
     private PrefabsLibraryPrefabObjectPropertiesExplosionDelayEffect delayEffectField;
 
@@ -2447,208 +1996,163 @@ public partial class PrefabsLibraryPrefabObjectPropertiesExplosion
     private byte terrainHoleSizeField;
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectPropertiesExplosionDelayEffect DelayEffect
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectPropertiesExplosionDelayEffect DelayEffect {
+        get {
             return this.delayEffectField;
         }
-        set
-        {
+        set {
             this.delayEffectField = value;
         }
     }
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectPropertiesExplosionDirection Direction
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectPropertiesExplosionDirection Direction {
+        get {
             return this.directionField;
         }
-        set
-        {
+        set {
             this.directionField = value;
         }
     }
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectPropertiesExplosionVOffset vOffset
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectPropertiesExplosionVOffset vOffset {
+        get {
             return this.vOffsetField;
         }
-        set
-        {
+        set {
             this.vOffsetField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public ushort Damage
-    {
-        get
-        {
+    public ushort Damage {
+        get {
             return this.damageField;
         }
-        set
-        {
+        set {
             this.damageField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string Decal
-    {
-        get
-        {
+    public string Decal {
+        get {
             return this.decalField;
         }
-        set
-        {
+        set {
             this.decalField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte Delay
-    {
-        get
-        {
+    public byte Delay {
+        get {
             return this.delayField;
         }
-        set
-        {
+        set {
             this.delayField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string Effect
-    {
-        get
-        {
+    public string Effect {
+        get {
             return this.effectField;
         }
-        set
-        {
+        set {
             this.effectField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte EffectScale
-    {
-        get
-        {
+    public byte EffectScale {
+        get {
             return this.effectScaleField;
         }
-        set
-        {
+        set {
             this.effectScaleField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte HoleSize
-    {
-        get
-        {
+    public byte HoleSize {
+        get {
             return this.holeSizeField;
         }
-        set
-        {
+        set {
             this.holeSizeField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public decimal MinPhysRadius
-    {
-        get
-        {
+    public decimal MinPhysRadius {
+        get {
             return this.minPhysRadiusField;
         }
-        set
-        {
+        set {
             this.minPhysRadiusField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte MinRadius
-    {
-        get
-        {
+    public byte MinRadius {
+        get {
             return this.minRadiusField;
         }
-        set
-        {
+        set {
             this.minRadiusField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte PhysRadius
-    {
-        get
-        {
+    public byte PhysRadius {
+        get {
             return this.physRadiusField;
         }
-        set
-        {
+        set {
             this.physRadiusField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public ushort Pressure
-    {
-        get
-        {
+    public ushort Pressure {
+        get {
             return this.pressureField;
         }
-        set
-        {
+        set {
             this.pressureField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte Radius
-    {
-        get
-        {
+    public byte Radius {
+        get {
             return this.radiusField;
         }
-        set
-        {
+        set {
             this.radiusField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte TerrainHoleSize
-    {
-        get
-        {
+    public byte TerrainHoleSize {
+        get {
             return this.terrainHoleSizeField;
         }
-        set
-        {
+        set {
             this.terrainHoleSizeField = value;
         }
     }
@@ -2658,8 +2162,7 @@ public partial class PrefabsLibraryPrefabObjectPropertiesExplosion
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectPropertiesExplosionDelayEffect
-{
+public partial class PrefabsLibraryPrefabObjectPropertiesExplosionDelayEffect {
 
     private PrefabsLibraryPrefabObjectPropertiesExplosionDelayEffectParams paramsField;
 
@@ -2672,68 +2175,53 @@ public partial class PrefabsLibraryPrefabObjectPropertiesExplosionDelayEffect
     private byte bHasDelayEffectField;
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectPropertiesExplosionDelayEffectParams Params
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectPropertiesExplosionDelayEffectParams Params {
+        get {
             return this.paramsField;
         }
-        set
-        {
+        set {
             this.paramsField = value;
         }
     }
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectPropertiesExplosionDelayEffectVOffset vOffset
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectPropertiesExplosionDelayEffectVOffset vOffset {
+        get {
             return this.vOffsetField;
         }
-        set
-        {
+        set {
             this.vOffsetField = value;
         }
     }
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectPropertiesExplosionDelayEffectVRotation vRotation
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectPropertiesExplosionDelayEffectVRotation vRotation {
+        get {
             return this.vRotationField;
         }
-        set
-        {
+        set {
             this.vRotationField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string Effect
-    {
-        get
-        {
+    public string Effect {
+        get {
             return this.effectField;
         }
-        set
-        {
+        set {
             this.effectField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bHasDelayEffect
-    {
-        get
-        {
+    public byte bHasDelayEffect {
+        get {
             return this.bHasDelayEffectField;
         }
-        set
-        {
+        set {
             this.bHasDelayEffectField = value;
         }
     }
@@ -2743,8 +2231,7 @@ public partial class PrefabsLibraryPrefabObjectPropertiesExplosionDelayEffect
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectPropertiesExplosionDelayEffectParams
-{
+public partial class PrefabsLibraryPrefabObjectPropertiesExplosionDelayEffectParams {
 
     private string attachFormField;
 
@@ -2764,112 +2251,88 @@ public partial class PrefabsLibraryPrefabObjectPropertiesExplosionDelayEffectPar
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string AttachForm
-    {
-        get
-        {
+    public string AttachForm {
+        get {
             return this.attachFormField;
         }
-        set
-        {
+        set {
             this.attachFormField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string AttachType
-    {
-        get
-        {
+    public string AttachType {
+        get {
             return this.attachTypeField;
         }
-        set
-        {
+        set {
             this.attachTypeField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bCountPerUnit
-    {
-        get
-        {
+    public byte bCountPerUnit {
+        get {
             return this.bCountPerUnitField;
         }
-        set
-        {
+        set {
             this.bCountPerUnitField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte CountScale
-    {
-        get
-        {
+    public byte CountScale {
+        get {
             return this.countScaleField;
         }
-        set
-        {
+        set {
             this.countScaleField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bPrime
-    {
-        get
-        {
+    public byte bPrime {
+        get {
             return this.bPrimeField;
         }
-        set
-        {
+        set {
             this.bPrimeField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte Scale
-    {
-        get
-        {
+    public byte Scale {
+        get {
             return this.scaleField;
         }
-        set
-        {
+        set {
             this.scaleField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bSizePerUnit
-    {
-        get
-        {
+    public byte bSizePerUnit {
+        get {
             return this.bSizePerUnitField;
         }
-        set
-        {
+        set {
             this.bSizePerUnitField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte SpawnPeriod
-    {
-        get
-        {
+    public byte SpawnPeriod {
+        get {
             return this.spawnPeriodField;
         }
-        set
-        {
+        set {
             this.spawnPeriodField = value;
         }
     }
@@ -2879,8 +2342,7 @@ public partial class PrefabsLibraryPrefabObjectPropertiesExplosionDelayEffectPar
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectPropertiesExplosionDelayEffectVOffset
-{
+public partial class PrefabsLibraryPrefabObjectPropertiesExplosionDelayEffectVOffset {
 
     private byte xField;
 
@@ -2890,42 +2352,33 @@ public partial class PrefabsLibraryPrefabObjectPropertiesExplosionDelayEffectVOf
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte x
-    {
-        get
-        {
+    public byte x {
+        get {
             return this.xField;
         }
-        set
-        {
+        set {
             this.xField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte y
-    {
-        get
-        {
+    public byte y {
+        get {
             return this.yField;
         }
-        set
-        {
+        set {
             this.yField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte z
-    {
-        get
-        {
+    public byte z {
+        get {
             return this.zField;
         }
-        set
-        {
+        set {
             this.zField = value;
         }
     }
@@ -2935,8 +2388,7 @@ public partial class PrefabsLibraryPrefabObjectPropertiesExplosionDelayEffectVOf
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectPropertiesExplosionDelayEffectVRotation
-{
+public partial class PrefabsLibraryPrefabObjectPropertiesExplosionDelayEffectVRotation {
 
     private byte xField;
 
@@ -2946,42 +2398,33 @@ public partial class PrefabsLibraryPrefabObjectPropertiesExplosionDelayEffectVRo
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte x
-    {
-        get
-        {
+    public byte x {
+        get {
             return this.xField;
         }
-        set
-        {
+        set {
             this.xField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte y
-    {
-        get
-        {
+    public byte y {
+        get {
             return this.yField;
         }
-        set
-        {
+        set {
             this.yField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte z
-    {
-        get
-        {
+    public byte z {
+        get {
             return this.zField;
         }
-        set
-        {
+        set {
             this.zField = value;
         }
     }
@@ -2991,8 +2434,7 @@ public partial class PrefabsLibraryPrefabObjectPropertiesExplosionDelayEffectVRo
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectPropertiesExplosionDirection
-{
+public partial class PrefabsLibraryPrefabObjectPropertiesExplosionDirection {
 
     private byte xField;
 
@@ -3002,42 +2444,33 @@ public partial class PrefabsLibraryPrefabObjectPropertiesExplosionDirection
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte x
-    {
-        get
-        {
+    public byte x {
+        get {
             return this.xField;
         }
-        set
-        {
+        set {
             this.xField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte y
-    {
-        get
-        {
+    public byte y {
+        get {
             return this.yField;
         }
-        set
-        {
+        set {
             this.yField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte z
-    {
-        get
-        {
+    public byte z {
+        get {
             return this.zField;
         }
-        set
-        {
+        set {
             this.zField = value;
         }
     }
@@ -3047,8 +2480,7 @@ public partial class PrefabsLibraryPrefabObjectPropertiesExplosionDirection
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectPropertiesExplosionVOffset
-{
+public partial class PrefabsLibraryPrefabObjectPropertiesExplosionVOffset {
 
     private byte xField;
 
@@ -3058,42 +2490,33 @@ public partial class PrefabsLibraryPrefabObjectPropertiesExplosionVOffset
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte x
-    {
-        get
-        {
+    public byte x {
+        get {
             return this.xField;
         }
-        set
-        {
+        set {
             this.xField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte y
-    {
-        get
-        {
+    public byte y {
+        get {
             return this.yField;
         }
-        set
-        {
+        set {
             this.yField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte z
-    {
-        get
-        {
+    public byte z {
+        get {
             return this.zField;
         }
-        set
-        {
+        set {
             this.zField = value;
         }
     }
@@ -3103,8 +2526,7 @@ public partial class PrefabsLibraryPrefabObjectPropertiesExplosionVOffset
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectPropertiesModel
-{
+public partial class PrefabsLibraryPrefabObjectPropertiesModel {
 
     private string object_ModelField;
 
@@ -3116,56 +2538,44 @@ public partial class PrefabsLibraryPrefabObjectPropertiesModel
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string object_Model
-    {
-        get
-        {
+    public string object_Model {
+        get {
             return this.object_ModelField;
         }
-        set
-        {
+        set {
             this.object_ModelField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string object_ModelDestroyed
-    {
-        get
-        {
+    public string object_ModelDestroyed {
+        get {
             return this.object_ModelDestroyedField;
         }
-        set
-        {
+        set {
             this.object_ModelDestroyedField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string SubObject_Name
-    {
-        get
-        {
+    public string SubObject_Name {
+        get {
             return this.subObject_NameField;
         }
-        set
-        {
+        set {
             this.subObject_NameField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string SubObject_NameDestroyed
-    {
-        get
-        {
+    public string SubObject_NameDestroyed {
+        get {
             return this.subObject_NameDestroyedField;
         }
-        set
-        {
+        set {
             this.subObject_NameDestroyedField = value;
         }
     }
@@ -3175,8 +2585,7 @@ public partial class PrefabsLibraryPrefabObjectPropertiesModel
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectPropertiesPhysics
-{
+public partial class PrefabsLibraryPrefabObjectPropertiesPhysics {
 
     private PrefabsLibraryPrefabObjectPropertiesPhysicsSimulation simulationField;
 
@@ -3197,126 +2606,99 @@ public partial class PrefabsLibraryPrefabObjectPropertiesPhysics
     private byte bRigidBodyAfterDeathField;
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectPropertiesPhysicsSimulation Simulation
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectPropertiesPhysicsSimulation Simulation {
+        get {
             return this.simulationField;
         }
-        set
-        {
+        set {
             this.simulationField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bActivateOnDamage
-    {
-        get
-        {
+    public byte bActivateOnDamage {
+        get {
             return this.bActivateOnDamageField;
         }
-        set
-        {
+        set {
             this.bActivateOnDamageField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bCanBreakOthers
-    {
-        get
-        {
+    public byte bCanBreakOthers {
+        get {
             return this.bCanBreakOthersField;
         }
-        set
-        {
+        set {
             this.bCanBreakOthersField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public sbyte Density
-    {
-        get
-        {
+    public sbyte Density {
+        get {
             return this.densityField;
         }
-        set
-        {
+        set {
             this.densityField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public sbyte Mass
-    {
-        get
-        {
+    public sbyte Mass {
+        get {
             return this.massField;
         }
-        set
-        {
+        set {
             this.massField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bPushableByPlayers
-    {
-        get
-        {
+    public byte bPushableByPlayers {
+        get {
             return this.bPushableByPlayersField;
         }
-        set
-        {
+        set {
             this.bPushableByPlayersField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bRigidBody
-    {
-        get
-        {
+    public byte bRigidBody {
+        get {
             return this.bRigidBodyField;
         }
-        set
-        {
+        set {
             this.bRigidBodyField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bRigidBodyActive
-    {
-        get
-        {
+    public byte bRigidBodyActive {
+        get {
             return this.bRigidBodyActiveField;
         }
-        set
-        {
+        set {
             this.bRigidBodyActiveField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bRigidBodyAfterDeath
-    {
-        get
-        {
+    public byte bRigidBodyAfterDeath {
+        get {
             return this.bRigidBodyAfterDeathField;
         }
-        set
-        {
+        set {
             this.bRigidBodyAfterDeathField = value;
         }
     }
@@ -3326,8 +2708,7 @@ public partial class PrefabsLibraryPrefabObjectPropertiesPhysics
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectPropertiesPhysicsSimulation
-{
+public partial class PrefabsLibraryPrefabObjectPropertiesPhysicsSimulation {
 
     private byte dampingField;
 
@@ -3337,42 +2718,33 @@ public partial class PrefabsLibraryPrefabObjectPropertiesPhysicsSimulation
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte damping
-    {
-        get
-        {
+    public byte damping {
+        get {
             return this.dampingField;
         }
-        set
-        {
+        set {
             this.dampingField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public decimal max_time_step
-    {
-        get
-        {
+    public decimal max_time_step {
+        get {
             return this.max_time_stepField;
         }
-        set
-        {
+        set {
             this.max_time_stepField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public decimal sleep_speed
-    {
-        get
-        {
+    public decimal sleep_speed {
+        get {
             return this.sleep_speedField;
         }
-        set
-        {
+        set {
             this.sleep_speedField = value;
         }
     }
@@ -3382,8 +2754,7 @@ public partial class PrefabsLibraryPrefabObjectPropertiesPhysicsSimulation
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectPropertiesSounds
-{
+public partial class PrefabsLibraryPrefabObjectPropertiesSounds {
 
     private byte fAISoundRadiusField;
 
@@ -3397,70 +2768,55 @@ public partial class PrefabsLibraryPrefabObjectPropertiesSounds
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte fAISoundRadius
-    {
-        get
-        {
+    public byte fAISoundRadius {
+        get {
             return this.fAISoundRadiusField;
         }
-        set
-        {
+        set {
             this.fAISoundRadiusField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string sound_Alive
-    {
-        get
-        {
+    public string sound_Alive {
+        get {
             return this.sound_AliveField;
         }
-        set
-        {
+        set {
             this.sound_AliveField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string sound_Dead
-    {
-        get
-        {
+    public string sound_Dead {
+        get {
             return this.sound_DeadField;
         }
-        set
-        {
+        set {
             this.sound_DeadField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string sound_Dying
-    {
-        get
-        {
+    public string sound_Dying {
+        get {
             return this.sound_DyingField;
         }
-        set
-        {
+        set {
             this.sound_DyingField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bStopSoundsOnDestroyed
-    {
-        get
-        {
+    public byte bStopSoundsOnDestroyed {
+        get {
             return this.bStopSoundsOnDestroyedField;
         }
-        set
-        {
+        set {
             this.bStopSoundsOnDestroyedField = value;
         }
     }
@@ -3470,8 +2826,7 @@ public partial class PrefabsLibraryPrefabObjectPropertiesSounds
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectPropertiesVulnerability
-{
+public partial class PrefabsLibraryPrefabObjectPropertiesVulnerability {
 
     private byte bBulletField;
 
@@ -3485,70 +2840,55 @@ public partial class PrefabsLibraryPrefabObjectPropertiesVulnerability
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bBullet
-    {
-        get
-        {
+    public byte bBullet {
+        get {
             return this.bBulletField;
         }
-        set
-        {
+        set {
             this.bBulletField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bCollision
-    {
-        get
-        {
+    public byte bCollision {
+        get {
             return this.bCollisionField;
         }
-        set
-        {
+        set {
             this.bCollisionField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bExplosion
-    {
-        get
-        {
+    public byte bExplosion {
+        get {
             return this.bExplosionField;
         }
-        set
-        {
+        set {
             this.bExplosionField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bMelee
-    {
-        get
-        {
+    public byte bMelee {
+        get {
             return this.bMeleeField;
         }
-        set
-        {
+        set {
             this.bMeleeField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bOther
-    {
-        get
-        {
+    public byte bOther {
+        get {
             return this.bOtherField;
         }
-        set
-        {
+        set {
             this.bOtherField = value;
         }
     }
@@ -3558,8 +2898,7 @@ public partial class PrefabsLibraryPrefabObjectPropertiesVulnerability
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectPropertiesColor
-{
+public partial class PrefabsLibraryPrefabObjectPropertiesColor {
 
     private string clrDiffuseField;
 
@@ -3571,56 +2910,44 @@ public partial class PrefabsLibraryPrefabObjectPropertiesColor
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string clrDiffuse
-    {
-        get
-        {
+    public string clrDiffuse {
+        get {
             return this.clrDiffuseField;
         }
-        set
-        {
+        set {
             this.clrDiffuseField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public decimal fDiffuseMultiplier
-    {
-        get
-        {
+    public decimal fDiffuseMultiplier {
+        get {
             return this.fDiffuseMultiplierField;
         }
-        set
-        {
+        set {
             this.fDiffuseMultiplierField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public decimal fHDRDynamic
-    {
-        get
-        {
+    public decimal fHDRDynamic {
+        get {
             return this.fHDRDynamicField;
         }
-        set
-        {
+        set {
             this.fHDRDynamicField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public decimal fSpecularMultiplier
-    {
-        get
-        {
+    public decimal fSpecularMultiplier {
+        get {
             return this.fSpecularMultiplierField;
         }
-        set
-        {
+        set {
             this.fSpecularMultiplierField = value;
         }
     }
@@ -3630,8 +2957,7 @@ public partial class PrefabsLibraryPrefabObjectPropertiesColor
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectPropertiesOptions
-{
+public partial class PrefabsLibraryPrefabObjectPropertiesOptions {
 
     private byte bAffectsThisAreaOnlyField;
 
@@ -3677,294 +3003,231 @@ public partial class PrefabsLibraryPrefabObjectPropertiesOptions
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bAffectsThisAreaOnly
-    {
-        get
-        {
+    public byte bAffectsThisAreaOnly {
+        get {
             return this.bAffectsThisAreaOnlyField;
         }
-        set
-        {
+        set {
             this.bAffectsThisAreaOnlyField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bAmbientLight
-    {
-        get
-        {
+    public byte bAmbientLight {
+        get {
             return this.bAmbientLightField;
         }
-        set
-        {
+        set {
             this.bAmbientLightField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool bAmbientLightSpecified
-    {
-        get
-        {
+    public bool bAmbientLightSpecified {
+        get {
             return this.bAmbientLightFieldSpecified;
         }
-        set
-        {
+        set {
             this.bAmbientLightFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bCastShadow
-    {
-        get
-        {
+    public byte bCastShadow {
+        get {
             return this.bCastShadowField;
         }
-        set
-        {
+        set {
             this.bCastShadowField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool bCastShadowSpecified
-    {
-        get
-        {
+    public bool bCastShadowSpecified {
+        get {
             return this.bCastShadowFieldSpecified;
         }
-        set
-        {
+        set {
             this.bCastShadowFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte nCastShadows
-    {
-        get
-        {
+    public byte nCastShadows {
+        get {
             return this.nCastShadowsField;
         }
-        set
-        {
+        set {
             this.nCastShadowsField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool nCastShadowsSpecified
-    {
-        get
-        {
+    public bool nCastShadowsSpecified {
+        get {
             return this.nCastShadowsFieldSpecified;
         }
-        set
-        {
+        set {
             this.nCastShadowsFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string file_deferred_clip_geom
-    {
-        get
-        {
+    public string file_deferred_clip_geom {
+        get {
             return this.file_deferred_clip_geomField;
         }
-        set
-        {
+        set {
             this.file_deferred_clip_geomField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string texture_deferred_cubemap
-    {
-        get
-        {
+    public string texture_deferred_cubemap {
+        get {
             return this.texture_deferred_cubemapField;
         }
-        set
-        {
+        set {
             this.texture_deferred_cubemapField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bDeferredClipBounds
-    {
-        get
-        {
+    public byte bDeferredClipBounds {
+        get {
             return this.bDeferredClipBoundsField;
         }
-        set
-        {
+        set {
             this.bDeferredClipBoundsField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bDeferredLight
-    {
-        get
-        {
+    public byte bDeferredLight {
+        get {
             return this.bDeferredLightField;
         }
-        set
-        {
+        set {
             this.bDeferredLightField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bFakeLight
-    {
-        get
-        {
+    public byte bFakeLight {
+        get {
             return this.bFakeLightField;
         }
-        set
-        {
+        set {
             this.bFakeLightField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool bFakeLightSpecified
-    {
-        get
-        {
+    public bool bFakeLightSpecified {
+        get {
             return this.bFakeLightFieldSpecified;
         }
-        set
-        {
+        set {
             this.bFakeLightFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bIgnoresVisAreas
-    {
-        get
-        {
+    public byte bIgnoresVisAreas {
+        get {
             return this.bIgnoresVisAreasField;
         }
-        set
-        {
+        set {
             this.bIgnoresVisAreasField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bIrradianceVolumes
-    {
-        get
-        {
+    public byte bIrradianceVolumes {
+        get {
             return this.bIrradianceVolumesField;
         }
-        set
-        {
+        set {
             this.bIrradianceVolumesField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool bIrradianceVolumesSpecified
-    {
-        get
-        {
+    public bool bIrradianceVolumesSpecified {
+        get {
             return this.bIrradianceVolumesFieldSpecified;
         }
-        set
-        {
+        set {
             this.bIrradianceVolumesFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bNegativeLight
-    {
-        get
-        {
+    public byte bNegativeLight {
+        get {
             return this.bNegativeLightField;
         }
-        set
-        {
+        set {
             this.bNegativeLightField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool bNegativeLightSpecified
-    {
-        get
-        {
+    public bool bNegativeLightSpecified {
+        get {
             return this.bNegativeLightFieldSpecified;
         }
-        set
-        {
+        set {
             this.bNegativeLightFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte nPostEffect
-    {
-        get
-        {
+    public byte nPostEffect {
+        get {
             return this.nPostEffectField;
         }
-        set
-        {
+        set {
             this.nPostEffectField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlIgnoreAttribute()]
-    public bool nPostEffectSpecified
-    {
-        get
-        {
+    public bool nPostEffectSpecified {
+        get {
             return this.nPostEffectFieldSpecified;
         }
-        set
-        {
+        set {
             this.nPostEffectFieldSpecified = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string _texture_deferred_cubemap
-    {
-        get
-        {
+    public string _texture_deferred_cubemap {
+        get {
             return this._texture_deferred_cubemapField;
         }
-        set
-        {
+        set {
             this._texture_deferred_cubemapField = value;
         }
     }
@@ -3974,21 +3237,17 @@ public partial class PrefabsLibraryPrefabObjectPropertiesOptions
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectPropertiesOptionsAdvanced
-{
+public partial class PrefabsLibraryPrefabObjectPropertiesOptionsAdvanced {
 
     private string texture_deferred_cubemapField;
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string texture_deferred_cubemap
-    {
-        get
-        {
+    public string texture_deferred_cubemap {
+        get {
             return this.texture_deferred_cubemapField;
         }
-        set
-        {
+        set {
             this.texture_deferred_cubemapField = value;
         }
     }
@@ -3998,8 +3257,7 @@ public partial class PrefabsLibraryPrefabObjectPropertiesOptionsAdvanced
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectPropertiesProjector
-{
+public partial class PrefabsLibraryPrefabObjectPropertiesProjector {
 
     private byte bProjectInAllDirsField;
 
@@ -4011,56 +3269,44 @@ public partial class PrefabsLibraryPrefabObjectPropertiesProjector
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bProjectInAllDirs
-    {
-        get
-        {
+    public byte bProjectInAllDirs {
+        get {
             return this.bProjectInAllDirsField;
         }
-        set
-        {
+        set {
             this.bProjectInAllDirsField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte fProjectorFov
-    {
-        get
-        {
+    public byte fProjectorFov {
+        get {
             return this.fProjectorFovField;
         }
-        set
-        {
+        set {
             this.fProjectorFovField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte fProjectorNearPlane
-    {
-        get
-        {
+    public byte fProjectorNearPlane {
+        get {
             return this.fProjectorNearPlaneField;
         }
-        set
-        {
+        set {
             this.fProjectorNearPlaneField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string texture_Texture
-    {
-        get
-        {
+    public string texture_Texture {
+        get {
             return this.texture_TextureField;
         }
-        set
-        {
+        set {
             this.texture_TextureField = value;
         }
     }
@@ -4070,8 +3316,7 @@ public partial class PrefabsLibraryPrefabObjectPropertiesProjector
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectPropertiesStyle
-{
+public partial class PrefabsLibraryPrefabObjectPropertiesStyle {
 
     private PrefabsLibraryPrefabObjectPropertiesStyleRotation rotationField;
 
@@ -4090,112 +3335,88 @@ public partial class PrefabsLibraryPrefabObjectPropertiesStyle
     private byte nLightStyleField;
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectPropertiesStyleRotation Rotation
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectPropertiesStyleRotation Rotation {
+        get {
             return this.rotationField;
         }
-        set
-        {
+        set {
             this.rotationField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte nAnimationPhase
-    {
-        get
-        {
+    public byte nAnimationPhase {
+        get {
             return this.nAnimationPhaseField;
         }
-        set
-        {
+        set {
             this.nAnimationPhaseField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public decimal fAnimationSpeed
-    {
-        get
-        {
+    public decimal fAnimationSpeed {
+        get {
             return this.fAnimationSpeedField;
         }
-        set
-        {
+        set {
             this.fAnimationSpeedField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string texture_AttenuationMap
-    {
-        get
-        {
+    public string texture_AttenuationMap {
+        get {
             return this.texture_AttenuationMapField;
         }
-        set
-        {
+        set {
             this.texture_AttenuationMapField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte fCoronaDistIntensityFactor
-    {
-        get
-        {
+    public byte fCoronaDistIntensityFactor {
+        get {
             return this.fCoronaDistIntensityFactorField;
         }
-        set
-        {
+        set {
             this.fCoronaDistIntensityFactorField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte fCoronaDistSizeFactor
-    {
-        get
-        {
+    public byte fCoronaDistSizeFactor {
+        get {
             return this.fCoronaDistSizeFactorField;
         }
-        set
-        {
+        set {
             this.fCoronaDistSizeFactorField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte fCoronaScale
-    {
-        get
-        {
+    public byte fCoronaScale {
+        get {
             return this.fCoronaScaleField;
         }
-        set
-        {
+        set {
             this.fCoronaScaleField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte nLightStyle
-    {
-        get
-        {
+    public byte nLightStyle {
+        get {
             return this.nLightStyleField;
         }
-        set
-        {
+        set {
             this.nLightStyleField = value;
         }
     }
@@ -4205,8 +3426,7 @@ public partial class PrefabsLibraryPrefabObjectPropertiesStyle
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectPropertiesStyleRotation
-{
+public partial class PrefabsLibraryPrefabObjectPropertiesStyleRotation {
 
     private byte xField;
 
@@ -4216,42 +3436,33 @@ public partial class PrefabsLibraryPrefabObjectPropertiesStyleRotation
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte x
-    {
-        get
-        {
+    public byte x {
+        get {
             return this.xField;
         }
-        set
-        {
+        set {
             this.xField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte y
-    {
-        get
-        {
+    public byte y {
+        get {
             return this.yField;
         }
-        set
-        {
+        set {
             this.yField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public decimal z
-    {
-        get
-        {
+    public decimal z {
+        get {
             return this.zField;
         }
-        set
-        {
+        set {
             this.zField = value;
         }
     }
@@ -4261,8 +3472,7 @@ public partial class PrefabsLibraryPrefabObjectPropertiesStyleRotation
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectPropertiesHealth
-{
+public partial class PrefabsLibraryPrefabObjectPropertiesHealth {
 
     private byte bInvulnerableField;
 
@@ -4272,42 +3482,33 @@ public partial class PrefabsLibraryPrefabObjectPropertiesHealth
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bInvulnerable
-    {
-        get
-        {
+    public byte bInvulnerable {
+        get {
             return this.bInvulnerableField;
         }
-        set
-        {
+        set {
             this.bInvulnerableField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public ushort MaxHealth
-    {
-        get
-        {
+    public ushort MaxHealth {
+        get {
             return this.maxHealthField;
         }
-        set
-        {
+        set {
             this.maxHealthField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bOnlyEnemyFire
-    {
-        get
-        {
+    public byte bOnlyEnemyFire {
+        get {
             return this.bOnlyEnemyFireField;
         }
-        set
-        {
+        set {
             this.bOnlyEnemyFireField = value;
         }
     }
@@ -4317,8 +3518,7 @@ public partial class PrefabsLibraryPrefabObjectPropertiesHealth
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectPropertiesInterest
-{
+public partial class PrefabsLibraryPrefabObjectPropertiesInterest {
 
     private PrefabsLibraryPrefabObjectPropertiesInterestVOffset vOffsetField;
 
@@ -4335,98 +3535,77 @@ public partial class PrefabsLibraryPrefabObjectPropertiesInterest
     private byte bSharedField;
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectPropertiesInterestVOffset vOffset
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectPropertiesInterestVOffset vOffset {
+        get {
             return this.vOffsetField;
         }
-        set
-        {
+        set {
             this.vOffsetField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string soaction_Action
-    {
-        get
-        {
+    public string soaction_Action {
+        get {
             return this.soaction_ActionField;
         }
-        set
-        {
+        set {
             this.soaction_ActionField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bInteresting
-    {
-        get
-        {
+    public byte bInteresting {
+        get {
             return this.bInterestingField;
         }
-        set
-        {
+        set {
             this.bInterestingField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte InterestLevel
-    {
-        get
-        {
+    public byte InterestLevel {
+        get {
             return this.interestLevelField;
         }
-        set
-        {
+        set {
             this.interestLevelField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte Pause
-    {
-        get
-        {
+    public byte Pause {
+        get {
             return this.pauseField;
         }
-        set
-        {
+        set {
             this.pauseField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte Radius
-    {
-        get
-        {
+    public byte Radius {
+        get {
             return this.radiusField;
         }
-        set
-        {
+        set {
             this.radiusField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bShared
-    {
-        get
-        {
+    public byte bShared {
+        get {
             return this.bSharedField;
         }
-        set
-        {
+        set {
             this.bSharedField = value;
         }
     }
@@ -4436,8 +3615,7 @@ public partial class PrefabsLibraryPrefabObjectPropertiesInterest
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectPropertiesInterestVOffset
-{
+public partial class PrefabsLibraryPrefabObjectPropertiesInterestVOffset {
 
     private byte xField;
 
@@ -4447,42 +3625,33 @@ public partial class PrefabsLibraryPrefabObjectPropertiesInterestVOffset
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte x
-    {
-        get
-        {
+    public byte x {
+        get {
             return this.xField;
         }
-        set
-        {
+        set {
             this.xField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte y
-    {
-        get
-        {
+    public byte y {
+        get {
             return this.yField;
         }
-        set
-        {
+        set {
             this.yField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte z
-    {
-        get
-        {
+    public byte z {
+        get {
             return this.zField;
         }
-        set
-        {
+        set {
             this.zField = value;
         }
     }
@@ -4492,8 +3661,7 @@ public partial class PrefabsLibraryPrefabObjectPropertiesInterestVOffset
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectProperties2
-{
+public partial class PrefabsLibraryPrefabObjectProperties2 {
 
     private PrefabsLibraryPrefabObjectProperties2LightProperties_Base lightProperties_BaseField;
 
@@ -4502,41 +3670,32 @@ public partial class PrefabsLibraryPrefabObjectProperties2
     private byte bTurnedOnField;
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectProperties2LightProperties_Base LightProperties_Base
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectProperties2LightProperties_Base LightProperties_Base {
+        get {
             return this.lightProperties_BaseField;
         }
-        set
-        {
+        set {
             this.lightProperties_BaseField = value;
         }
     }
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectProperties2LightProperties_Destroyed LightProperties_Destroyed
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectProperties2LightProperties_Destroyed LightProperties_Destroyed {
+        get {
             return this.lightProperties_DestroyedField;
         }
-        set
-        {
+        set {
             this.lightProperties_DestroyedField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bTurnedOn
-    {
-        get
-        {
+    public byte bTurnedOn {
+        get {
             return this.bTurnedOnField;
         }
-        set
-        {
+        set {
             this.bTurnedOnField = value;
         }
     }
@@ -4546,8 +3705,7 @@ public partial class PrefabsLibraryPrefabObjectProperties2
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_Base
-{
+public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_Base {
 
     private PrefabsLibraryPrefabObjectProperties2LightProperties_BaseColor colorField;
 
@@ -4568,120 +3726,93 @@ public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_Base
     private byte bUseThisLightField;
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectProperties2LightProperties_BaseColor Color
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectProperties2LightProperties_BaseColor Color {
+        get {
             return this.colorField;
         }
-        set
-        {
+        set {
             this.colorField = value;
         }
     }
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectProperties2LightProperties_BaseOptions Options
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectProperties2LightProperties_BaseOptions Options {
+        get {
             return this.optionsField;
         }
-        set
-        {
+        set {
             this.optionsField = value;
         }
     }
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectProperties2LightProperties_BaseProjector Projector
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectProperties2LightProperties_BaseProjector Projector {
+        get {
             return this.projectorField;
         }
-        set
-        {
+        set {
             this.projectorField = value;
         }
     }
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectProperties2LightProperties_BaseStyle Style
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectProperties2LightProperties_BaseStyle Style {
+        get {
             return this.styleField;
         }
-        set
-        {
+        set {
             this.styleField = value;
         }
     }
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectProperties2LightProperties_BaseTest Test
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectProperties2LightProperties_BaseTest Test {
+        get {
             return this.testField;
         }
-        set
-        {
+        set {
             this.testField = value;
         }
     }
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectProperties2LightProperties_BaseVDirection vDirection
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectProperties2LightProperties_BaseVDirection vDirection {
+        get {
             return this.vDirectionField;
         }
-        set
-        {
+        set {
             this.vDirectionField = value;
         }
     }
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectProperties2LightProperties_BaseVOffset vOffset
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectProperties2LightProperties_BaseVOffset vOffset {
+        get {
             return this.vOffsetField;
         }
-        set
-        {
+        set {
             this.vOffsetField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte Radius
-    {
-        get
-        {
+    public byte Radius {
+        get {
             return this.radiusField;
         }
-        set
-        {
+        set {
             this.radiusField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bUseThisLight
-    {
-        get
-        {
+    public byte bUseThisLight {
+        get {
             return this.bUseThisLightField;
         }
-        set
-        {
+        set {
             this.bUseThisLightField = value;
         }
     }
@@ -4691,8 +3822,7 @@ public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_Base
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_BaseColor
-{
+public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_BaseColor {
 
     private string clrDiffuseField;
 
@@ -4704,56 +3834,44 @@ public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_BaseCo
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string clrDiffuse
-    {
-        get
-        {
+    public string clrDiffuse {
+        get {
             return this.clrDiffuseField;
         }
-        set
-        {
+        set {
             this.clrDiffuseField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte fDiffuseMultiplier
-    {
-        get
-        {
+    public byte fDiffuseMultiplier {
+        get {
             return this.fDiffuseMultiplierField;
         }
-        set
-        {
+        set {
             this.fDiffuseMultiplierField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte fHDRDynamic
-    {
-        get
-        {
+    public byte fHDRDynamic {
+        get {
             return this.fHDRDynamicField;
         }
-        set
-        {
+        set {
             this.fHDRDynamicField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte fSpecularMultiplier
-    {
-        get
-        {
+    public byte fSpecularMultiplier {
+        get {
             return this.fSpecularMultiplierField;
         }
-        set
-        {
+        set {
             this.fSpecularMultiplierField = value;
         }
     }
@@ -4763,8 +3881,7 @@ public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_BaseCo
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_BaseOptions
-{
+public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_BaseOptions {
 
     private byte bAffectsThisAreaOnlyField;
 
@@ -4784,112 +3901,88 @@ public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_BaseOp
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bAffectsThisAreaOnly
-    {
-        get
-        {
+    public byte bAffectsThisAreaOnly {
+        get {
             return this.bAffectsThisAreaOnlyField;
         }
-        set
-        {
+        set {
             this.bAffectsThisAreaOnlyField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte nCastShadows
-    {
-        get
-        {
+    public byte nCastShadows {
+        get {
             return this.nCastShadowsField;
         }
-        set
-        {
+        set {
             this.nCastShadowsField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bDeferredLight
-    {
-        get
-        {
+    public byte bDeferredLight {
+        get {
             return this.bDeferredLightField;
         }
-        set
-        {
+        set {
             this.bDeferredLightField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bFakeLight
-    {
-        get
-        {
+    public byte bFakeLight {
+        get {
             return this.bFakeLightField;
         }
-        set
-        {
+        set {
             this.bFakeLightField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte nGlowSubmatId
-    {
-        get
-        {
+    public byte nGlowSubmatId {
+        get {
             return this.nGlowSubmatIdField;
         }
-        set
-        {
+        set {
             this.nGlowSubmatIdField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bIgnoreGeomCaster
-    {
-        get
-        {
+    public byte bIgnoreGeomCaster {
+        get {
             return this.bIgnoreGeomCasterField;
         }
-        set
-        {
+        set {
             this.bIgnoreGeomCasterField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bUsedInRealTime
-    {
-        get
-        {
+    public byte bUsedInRealTime {
+        get {
             return this.bUsedInRealTimeField;
         }
-        set
-        {
+        set {
             this.bUsedInRealTimeField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte nViewDistRatio
-    {
-        get
-        {
+    public byte nViewDistRatio {
+        get {
             return this.nViewDistRatioField;
         }
-        set
-        {
+        set {
             this.nViewDistRatioField = value;
         }
     }
@@ -4899,8 +3992,7 @@ public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_BaseOp
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_BaseProjector
-{
+public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_BaseProjector {
 
     private byte bProjectInAllDirsField;
 
@@ -4912,56 +4004,44 @@ public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_BasePr
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bProjectInAllDirs
-    {
-        get
-        {
+    public byte bProjectInAllDirs {
+        get {
             return this.bProjectInAllDirsField;
         }
-        set
-        {
+        set {
             this.bProjectInAllDirsField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte fProjectorFov
-    {
-        get
-        {
+    public byte fProjectorFov {
+        get {
             return this.fProjectorFovField;
         }
-        set
-        {
+        set {
             this.fProjectorFovField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte fProjectorNearPlane
-    {
-        get
-        {
+    public byte fProjectorNearPlane {
+        get {
             return this.fProjectorNearPlaneField;
         }
-        set
-        {
+        set {
             this.fProjectorNearPlaneField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string texture_Texture
-    {
-        get
-        {
+    public string texture_Texture {
+        get {
             return this.texture_TextureField;
         }
-        set
-        {
+        set {
             this.texture_TextureField = value;
         }
     }
@@ -4971,8 +4051,7 @@ public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_BasePr
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_BaseStyle
-{
+public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_BaseStyle {
 
     private PrefabsLibraryPrefabObjectProperties2LightProperties_BaseStyleRotation rotationField;
 
@@ -4989,98 +4068,77 @@ public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_BaseSt
     private byte nLightStyleField;
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectProperties2LightProperties_BaseStyleRotation Rotation
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectProperties2LightProperties_BaseStyleRotation Rotation {
+        get {
             return this.rotationField;
         }
-        set
-        {
+        set {
             this.rotationField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte nAnimationPhase
-    {
-        get
-        {
+    public byte nAnimationPhase {
+        get {
             return this.nAnimationPhaseField;
         }
-        set
-        {
+        set {
             this.nAnimationPhaseField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public decimal fAnimationSpeed
-    {
-        get
-        {
+    public decimal fAnimationSpeed {
+        get {
             return this.fAnimationSpeedField;
         }
-        set
-        {
+        set {
             this.fAnimationSpeedField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte fCoronaDistIntensityFactor
-    {
-        get
-        {
+    public byte fCoronaDistIntensityFactor {
+        get {
             return this.fCoronaDistIntensityFactorField;
         }
-        set
-        {
+        set {
             this.fCoronaDistIntensityFactorField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte fCoronaDistSizeFactor
-    {
-        get
-        {
+    public byte fCoronaDistSizeFactor {
+        get {
             return this.fCoronaDistSizeFactorField;
         }
-        set
-        {
+        set {
             this.fCoronaDistSizeFactorField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte fCoronaScale
-    {
-        get
-        {
+    public byte fCoronaScale {
+        get {
             return this.fCoronaScaleField;
         }
-        set
-        {
+        set {
             this.fCoronaScaleField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte nLightStyle
-    {
-        get
-        {
+    public byte nLightStyle {
+        get {
             return this.nLightStyleField;
         }
-        set
-        {
+        set {
             this.nLightStyleField = value;
         }
     }
@@ -5090,8 +4148,7 @@ public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_BaseSt
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_BaseStyleRotation
-{
+public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_BaseStyleRotation {
 
     private byte xField;
 
@@ -5101,42 +4158,33 @@ public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_BaseSt
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte x
-    {
-        get
-        {
+    public byte x {
+        get {
             return this.xField;
         }
-        set
-        {
+        set {
             this.xField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte y
-    {
-        get
-        {
+    public byte y {
+        get {
             return this.yField;
         }
-        set
-        {
+        set {
             this.yField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte z
-    {
-        get
-        {
+    public byte z {
+        get {
             return this.zField;
         }
-        set
-        {
+        set {
             this.zField = value;
         }
     }
@@ -5146,8 +4194,7 @@ public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_BaseSt
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_BaseTest
-{
+public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_BaseTest {
 
     private byte bFillLightField;
 
@@ -5155,28 +4202,22 @@ public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_BaseTe
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bFillLight
-    {
-        get
-        {
+    public byte bFillLight {
+        get {
             return this.bFillLightField;
         }
-        set
-        {
+        set {
             this.bFillLightField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bNegativeLight
-    {
-        get
-        {
+    public byte bNegativeLight {
+        get {
             return this.bNegativeLightField;
         }
-        set
-        {
+        set {
             this.bNegativeLightField = value;
         }
     }
@@ -5186,8 +4227,7 @@ public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_BaseTe
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_BaseVDirection
-{
+public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_BaseVDirection {
 
     private byte xField;
 
@@ -5197,42 +4237,33 @@ public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_BaseVD
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte x
-    {
-        get
-        {
+    public byte x {
+        get {
             return this.xField;
         }
-        set
-        {
+        set {
             this.xField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte y
-    {
-        get
-        {
+    public byte y {
+        get {
             return this.yField;
         }
-        set
-        {
+        set {
             this.yField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte z
-    {
-        get
-        {
+    public byte z {
+        get {
             return this.zField;
         }
-        set
-        {
+        set {
             this.zField = value;
         }
     }
@@ -5242,8 +4273,7 @@ public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_BaseVD
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_BaseVOffset
-{
+public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_BaseVOffset {
 
     private byte xField;
 
@@ -5253,42 +4283,33 @@ public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_BaseVO
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte x
-    {
-        get
-        {
+    public byte x {
+        get {
             return this.xField;
         }
-        set
-        {
+        set {
             this.xField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte y
-    {
-        get
-        {
+    public byte y {
+        get {
             return this.yField;
         }
-        set
-        {
+        set {
             this.yField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte z
-    {
-        get
-        {
+    public byte z {
+        get {
             return this.zField;
         }
-        set
-        {
+        set {
             this.zField = value;
         }
     }
@@ -5298,8 +4319,7 @@ public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_BaseVO
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_Destroyed
-{
+public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_Destroyed {
 
     private PrefabsLibraryPrefabObjectProperties2LightProperties_DestroyedColor colorField;
 
@@ -5320,120 +4340,93 @@ public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_Destro
     private byte bUseThisLightField;
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectProperties2LightProperties_DestroyedColor Color
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectProperties2LightProperties_DestroyedColor Color {
+        get {
             return this.colorField;
         }
-        set
-        {
+        set {
             this.colorField = value;
         }
     }
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectProperties2LightProperties_DestroyedOptions Options
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectProperties2LightProperties_DestroyedOptions Options {
+        get {
             return this.optionsField;
         }
-        set
-        {
+        set {
             this.optionsField = value;
         }
     }
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectProperties2LightProperties_DestroyedProjector Projector
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectProperties2LightProperties_DestroyedProjector Projector {
+        get {
             return this.projectorField;
         }
-        set
-        {
+        set {
             this.projectorField = value;
         }
     }
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectProperties2LightProperties_DestroyedStyle Style
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectProperties2LightProperties_DestroyedStyle Style {
+        get {
             return this.styleField;
         }
-        set
-        {
+        set {
             this.styleField = value;
         }
     }
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectProperties2LightProperties_DestroyedTest Test
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectProperties2LightProperties_DestroyedTest Test {
+        get {
             return this.testField;
         }
-        set
-        {
+        set {
             this.testField = value;
         }
     }
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectProperties2LightProperties_DestroyedVDirection vDirection
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectProperties2LightProperties_DestroyedVDirection vDirection {
+        get {
             return this.vDirectionField;
         }
-        set
-        {
+        set {
             this.vDirectionField = value;
         }
     }
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectProperties2LightProperties_DestroyedVOffset vOffset
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectProperties2LightProperties_DestroyedVOffset vOffset {
+        get {
             return this.vOffsetField;
         }
-        set
-        {
+        set {
             this.vOffsetField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte Radius
-    {
-        get
-        {
+    public byte Radius {
+        get {
             return this.radiusField;
         }
-        set
-        {
+        set {
             this.radiusField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bUseThisLight
-    {
-        get
-        {
+    public byte bUseThisLight {
+        get {
             return this.bUseThisLightField;
         }
-        set
-        {
+        set {
             this.bUseThisLightField = value;
         }
     }
@@ -5443,8 +4436,7 @@ public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_Destro
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_DestroyedColor
-{
+public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_DestroyedColor {
 
     private string clrDiffuseField;
 
@@ -5456,56 +4448,44 @@ public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_Destro
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string clrDiffuse
-    {
-        get
-        {
+    public string clrDiffuse {
+        get {
             return this.clrDiffuseField;
         }
-        set
-        {
+        set {
             this.clrDiffuseField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte fDiffuseMultiplier
-    {
-        get
-        {
+    public byte fDiffuseMultiplier {
+        get {
             return this.fDiffuseMultiplierField;
         }
-        set
-        {
+        set {
             this.fDiffuseMultiplierField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte fHDRDynamic
-    {
-        get
-        {
+    public byte fHDRDynamic {
+        get {
             return this.fHDRDynamicField;
         }
-        set
-        {
+        set {
             this.fHDRDynamicField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte fSpecularMultiplier
-    {
-        get
-        {
+    public byte fSpecularMultiplier {
+        get {
             return this.fSpecularMultiplierField;
         }
-        set
-        {
+        set {
             this.fSpecularMultiplierField = value;
         }
     }
@@ -5515,8 +4495,7 @@ public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_Destro
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_DestroyedOptions
-{
+public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_DestroyedOptions {
 
     private byte bAffectsThisAreaOnlyField;
 
@@ -5534,98 +4513,77 @@ public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_Destro
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bAffectsThisAreaOnly
-    {
-        get
-        {
+    public byte bAffectsThisAreaOnly {
+        get {
             return this.bAffectsThisAreaOnlyField;
         }
-        set
-        {
+        set {
             this.bAffectsThisAreaOnlyField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte nCastShadows
-    {
-        get
-        {
+    public byte nCastShadows {
+        get {
             return this.nCastShadowsField;
         }
-        set
-        {
+        set {
             this.nCastShadowsField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bDeferredLight
-    {
-        get
-        {
+    public byte bDeferredLight {
+        get {
             return this.bDeferredLightField;
         }
-        set
-        {
+        set {
             this.bDeferredLightField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bFakeLight
-    {
-        get
-        {
+    public byte bFakeLight {
+        get {
             return this.bFakeLightField;
         }
-        set
-        {
+        set {
             this.bFakeLightField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bIgnoreGeomCaster
-    {
-        get
-        {
+    public byte bIgnoreGeomCaster {
+        get {
             return this.bIgnoreGeomCasterField;
         }
-        set
-        {
+        set {
             this.bIgnoreGeomCasterField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bUsedInRealTime
-    {
-        get
-        {
+    public byte bUsedInRealTime {
+        get {
             return this.bUsedInRealTimeField;
         }
-        set
-        {
+        set {
             this.bUsedInRealTimeField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte nViewDistRatio
-    {
-        get
-        {
+    public byte nViewDistRatio {
+        get {
             return this.nViewDistRatioField;
         }
-        set
-        {
+        set {
             this.nViewDistRatioField = value;
         }
     }
@@ -5635,8 +4593,7 @@ public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_Destro
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_DestroyedProjector
-{
+public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_DestroyedProjector {
 
     private byte bProjectInAllDirsField;
 
@@ -5648,56 +4605,44 @@ public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_Destro
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bProjectInAllDirs
-    {
-        get
-        {
+    public byte bProjectInAllDirs {
+        get {
             return this.bProjectInAllDirsField;
         }
-        set
-        {
+        set {
             this.bProjectInAllDirsField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte fProjectorFov
-    {
-        get
-        {
+    public byte fProjectorFov {
+        get {
             return this.fProjectorFovField;
         }
-        set
-        {
+        set {
             this.fProjectorFovField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte fProjectorNearPlane
-    {
-        get
-        {
+    public byte fProjectorNearPlane {
+        get {
             return this.fProjectorNearPlaneField;
         }
-        set
-        {
+        set {
             this.fProjectorNearPlaneField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string texture_Texture
-    {
-        get
-        {
+    public string texture_Texture {
+        get {
             return this.texture_TextureField;
         }
-        set
-        {
+        set {
             this.texture_TextureField = value;
         }
     }
@@ -5707,8 +4652,7 @@ public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_Destro
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_DestroyedStyle
-{
+public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_DestroyedStyle {
 
     private PrefabsLibraryPrefabObjectProperties2LightProperties_DestroyedStyleRotation rotationField;
 
@@ -5725,98 +4669,77 @@ public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_Destro
     private byte nLightStyleField;
 
     /// <remarks/>
-    public PrefabsLibraryPrefabObjectProperties2LightProperties_DestroyedStyleRotation Rotation
-    {
-        get
-        {
+    public PrefabsLibraryPrefabObjectProperties2LightProperties_DestroyedStyleRotation Rotation {
+        get {
             return this.rotationField;
         }
-        set
-        {
+        set {
             this.rotationField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte nAnimationPhase
-    {
-        get
-        {
+    public byte nAnimationPhase {
+        get {
             return this.nAnimationPhaseField;
         }
-        set
-        {
+        set {
             this.nAnimationPhaseField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte fAnimationSpeed
-    {
-        get
-        {
+    public byte fAnimationSpeed {
+        get {
             return this.fAnimationSpeedField;
         }
-        set
-        {
+        set {
             this.fAnimationSpeedField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte fCoronaDistIntensityFactor
-    {
-        get
-        {
+    public byte fCoronaDistIntensityFactor {
+        get {
             return this.fCoronaDistIntensityFactorField;
         }
-        set
-        {
+        set {
             this.fCoronaDistIntensityFactorField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte fCoronaDistSizeFactor
-    {
-        get
-        {
+    public byte fCoronaDistSizeFactor {
+        get {
             return this.fCoronaDistSizeFactorField;
         }
-        set
-        {
+        set {
             this.fCoronaDistSizeFactorField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte fCoronaScale
-    {
-        get
-        {
+    public byte fCoronaScale {
+        get {
             return this.fCoronaScaleField;
         }
-        set
-        {
+        set {
             this.fCoronaScaleField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte nLightStyle
-    {
-        get
-        {
+    public byte nLightStyle {
+        get {
             return this.nLightStyleField;
         }
-        set
-        {
+        set {
             this.nLightStyleField = value;
         }
     }
@@ -5826,8 +4749,7 @@ public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_Destro
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_DestroyedStyleRotation
-{
+public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_DestroyedStyleRotation {
 
     private byte xField;
 
@@ -5837,42 +4759,33 @@ public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_Destro
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte x
-    {
-        get
-        {
+    public byte x {
+        get {
             return this.xField;
         }
-        set
-        {
+        set {
             this.xField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte y
-    {
-        get
-        {
+    public byte y {
+        get {
             return this.yField;
         }
-        set
-        {
+        set {
             this.yField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte z
-    {
-        get
-        {
+    public byte z {
+        get {
             return this.zField;
         }
-        set
-        {
+        set {
             this.zField = value;
         }
     }
@@ -5882,8 +4795,7 @@ public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_Destro
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_DestroyedTest
-{
+public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_DestroyedTest {
 
     private byte bFillLightField;
 
@@ -5891,28 +4803,22 @@ public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_Destro
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bFillLight
-    {
-        get
-        {
+    public byte bFillLight {
+        get {
             return this.bFillLightField;
         }
-        set
-        {
+        set {
             this.bFillLightField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte bNegativeLight
-    {
-        get
-        {
+    public byte bNegativeLight {
+        get {
             return this.bNegativeLightField;
         }
-        set
-        {
+        set {
             this.bNegativeLightField = value;
         }
     }
@@ -5922,8 +4828,7 @@ public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_Destro
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_DestroyedVDirection
-{
+public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_DestroyedVDirection {
 
     private byte xField;
 
@@ -5933,42 +4838,33 @@ public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_Destro
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte x
-    {
-        get
-        {
+    public byte x {
+        get {
             return this.xField;
         }
-        set
-        {
+        set {
             this.xField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte y
-    {
-        get
-        {
+    public byte y {
+        get {
             return this.yField;
         }
-        set
-        {
+        set {
             this.yField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte z
-    {
-        get
-        {
+    public byte z {
+        get {
             return this.zField;
         }
-        set
-        {
+        set {
             this.zField = value;
         }
     }
@@ -5978,8 +4874,7 @@ public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_Destro
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_DestroyedVOffset
-{
+public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_DestroyedVOffset {
 
     private byte xField;
 
@@ -5989,42 +4884,33 @@ public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_Destro
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte x
-    {
-        get
-        {
+    public byte x {
+        get {
             return this.xField;
         }
-        set
-        {
+        set {
             this.xField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte y
-    {
-        get
-        {
+    public byte y {
+        get {
             return this.yField;
         }
-        set
-        {
+        set {
             this.yField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte z
-    {
-        get
-        {
+    public byte z {
+        get {
             return this.zField;
         }
-        set
-        {
+        set {
             this.zField = value;
         }
     }
@@ -6034,8 +4920,7 @@ public partial class PrefabsLibraryPrefabObjectProperties2LightProperties_Destro
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectLink
-{
+public partial class PrefabsLibraryPrefabObjectLink {
 
     private string targetIdField;
 
@@ -6047,56 +4932,44 @@ public partial class PrefabsLibraryPrefabObjectLink
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string TargetId
-    {
-        get
-        {
+    public string TargetId {
+        get {
             return this.targetIdField;
         }
-        set
-        {
+        set {
             this.targetIdField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string Name
-    {
-        get
-        {
+    public string Name {
+        get {
             return this.nameField;
         }
-        set
-        {
+        set {
             this.nameField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string RelRot
-    {
-        get
-        {
+    public string RelRot {
+        get {
             return this.relRotField;
         }
-        set
-        {
+        set {
             this.relRotField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string RelPos
-    {
-        get
-        {
+    public string RelPos {
+        get {
             return this.relPosField;
         }
-        set
-        {
+        set {
             this.relPosField = value;
         }
     }
@@ -6106,8 +4979,7 @@ public partial class PrefabsLibraryPrefabObjectLink
 [System.SerializableAttribute()]
 [System.ComponentModel.DesignerCategoryAttribute("code")]
 [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-public partial class PrefabsLibraryPrefabObjectObject
-{
+public partial class PrefabsLibraryPrefabObjectObject {
 
     private string typeField;
 
@@ -6165,378 +5037,297 @@ public partial class PrefabsLibraryPrefabObjectObject
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string Type
-    {
-        get
-        {
+    public string Type {
+        get {
             return this.typeField;
         }
-        set
-        {
+        set {
             this.typeField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string Layer
-    {
-        get
-        {
+    public string Layer {
+        get {
             return this.layerField;
         }
-        set
-        {
+        set {
             this.layerField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string LayerGUID
-    {
-        get
-        {
+    public string LayerGUID {
+        get {
             return this.layerGUIDField;
         }
-        set
-        {
+        set {
             this.layerGUIDField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string Id
-    {
-        get
-        {
+    public string Id {
+        get {
             return this.idField;
         }
-        set
-        {
+        set {
             this.idField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string Name
-    {
-        get
-        {
+    public string Name {
+        get {
             return this.nameField;
         }
-        set
-        {
+        set {
             this.nameField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string Parent
-    {
-        get
-        {
+    public string Parent {
+        get {
             return this.parentField;
         }
-        set
-        {
+        set {
             this.parentField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string Pos
-    {
-        get
-        {
+    public string Pos {
+        get {
             return this.posField;
         }
-        set
-        {
+        set {
             this.posField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public sbyte FloorNumber
-    {
-        get
-        {
+    public sbyte FloorNumber {
+        get {
             return this.floorNumberField;
         }
-        set
-        {
+        set {
             this.floorNumberField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string Rotate
-    {
-        get
-        {
+    public string Rotate {
+        get {
             return this.rotateField;
         }
-        set
-        {
+        set {
             this.rotateField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public uint ColorRGB
-    {
-        get
-        {
+    public uint ColorRGB {
+        get {
             return this.colorRGBField;
         }
-        set
-        {
+        set {
             this.colorRGBField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte MatLayersMask
-    {
-        get
-        {
+    public byte MatLayersMask {
+        get {
             return this.matLayersMaskField;
         }
-        set
-        {
+        set {
             this.matLayersMaskField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public string Prefab
-    {
-        get
-        {
+    public string Prefab {
+        get {
             return this.prefabField;
         }
-        set
-        {
+        set {
             this.prefabField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte NoCollision
-    {
-        get
-        {
+    public byte NoCollision {
+        get {
             return this.noCollisionField;
         }
-        set
-        {
+        set {
             this.noCollisionField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte OutdoorOnly
-    {
-        get
-        {
+    public byte OutdoorOnly {
+        get {
             return this.outdoorOnlyField;
         }
-        set
-        {
+        set {
             this.outdoorOnlyField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte CastShadowMaps
-    {
-        get
-        {
+    public byte CastShadowMaps {
+        get {
             return this.castShadowMapsField;
         }
-        set
-        {
+        set {
             this.castShadowMapsField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte RainOccluder
-    {
-        get
-        {
+    public byte RainOccluder {
+        get {
             return this.rainOccluderField;
         }
-        set
-        {
+        set {
             this.rainOccluderField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte SupportSecondVisarea
-    {
-        get
-        {
+    public byte SupportSecondVisarea {
+        get {
             return this.supportSecondVisareaField;
         }
-        set
-        {
+        set {
             this.supportSecondVisareaField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte Hideable
-    {
-        get
-        {
+    public byte Hideable {
+        get {
             return this.hideableField;
         }
-        set
-        {
+        set {
             this.hideableField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte LodRatio
-    {
-        get
-        {
+    public byte LodRatio {
+        get {
             return this.lodRatioField;
         }
-        set
-        {
+        set {
             this.lodRatioField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte ViewDistRatio
-    {
-        get
-        {
+    public byte ViewDistRatio {
+        get {
             return this.viewDistRatioField;
         }
-        set
-        {
+        set {
             this.viewDistRatioField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte MeshIntegrationType
-    {
-        get
-        {
+    public byte MeshIntegrationType {
+        get {
             return this.meshIntegrationTypeField;
         }
-        set
-        {
+        set {
             this.meshIntegrationTypeField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte NotTriangulate
-    {
-        get
-        {
+    public byte NotTriangulate {
+        get {
             return this.notTriangulateField;
         }
-        set
-        {
+        set {
             this.notTriangulateField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public sbyte AIRadius
-    {
-        get
-        {
+    public sbyte AIRadius {
+        get {
             return this.aIRadiusField;
         }
-        set
-        {
+        set {
             this.aIRadiusField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte NoStaticDecals
-    {
-        get
-        {
+    public byte NoStaticDecals {
+        get {
             return this.noStaticDecalsField;
         }
-        set
-        {
+        set {
             this.noStaticDecalsField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte NoAmnbShadowCaster
-    {
-        get
-        {
+    public byte NoAmnbShadowCaster {
+        get {
             return this.noAmnbShadowCasterField;
         }
-        set
-        {
+        set {
             this.noAmnbShadowCasterField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public byte RecvWind
-    {
-        get
-        {
+    public byte RecvWind {
+        get {
             return this.recvWindField;
         }
-        set
-        {
+        set {
             this.recvWindField = value;
         }
     }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlAttributeAttribute()]
-    public uint RndFlags
-    {
-        get
-        {
+    public uint RndFlags {
+        get {
             return this.rndFlagsField;
         }
-        set
-        {
+        set {
             this.rndFlagsField = value;
         }
     }

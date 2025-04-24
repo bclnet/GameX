@@ -7,8 +7,7 @@ using static OpenStack.Debug;
 namespace GameX.Crytek.Formats.Models;
 
 [XmlRoot(ElementName = "PublicParams")]
-public class PublicParams
-{
+public class PublicParams {
     [XmlAttribute(AttributeName = "FresnelPower")] public string FresnelPower { get; set; }
     [XmlAttribute(AttributeName = "GlossFromDiffuseContrast")] public string GlossFromDiffuseContrast { get; set; }
     [XmlAttribute(AttributeName = "FresnelScale")] public string FresnelScale { get; set; }
@@ -33,8 +32,7 @@ public class PublicParams
 }
 
 [XmlRoot(ElementName = "Material")]
-public class Material
-{
+public class Material {
     [XmlElement(ElementName = "PublicParams")] public PublicParams PublicParams { get; set; }
     [XmlAttribute(AttributeName = "Name")] public string Name { get; set; }
     [XmlAttribute(AttributeName = "MtlFlags")] public string MtlFlags { get; set; }
@@ -51,11 +49,9 @@ public class Material
     [XmlElement(ElementName = "Textures")] public Textures Textures { get; set; }
     [XmlAttribute(AttributeName = "AlphaTest")] public string AlphaTest { get; set; }
 
-    public static Material FromFile(FileInfo materialfile)
-    {
+    public static Material FromFile(FileInfo materialfile) {
         if (!materialfile.Exists) return null;
-        try
-        {
+        try {
             using Stream fileStream = materialfile.OpenRead();
             //return HoloXPLOR.DataForge.CryXmlSerializer.Deserialize<Material>(fileStream);
             throw new NotImplementedException();
@@ -66,27 +62,23 @@ public class Material
 }
 
 [XmlRoot(ElementName = "Texture")]
-public class Texture
-{
+public class Texture {
     [XmlAttribute(AttributeName = "Map")] public string Map { get; set; }
     [XmlAttribute(AttributeName = "File")] public string File { get; set; }
 }
 
 [XmlRoot(ElementName = "Textures")]
-public class Textures
-{
+public class Textures {
     [XmlElement(ElementName = "Texture")] public List<Texture> Texture { get; set; }
 }
 
 [XmlRoot(ElementName = "SubMaterials")]
-public class SubMaterials
-{
+public class SubMaterials {
     [XmlElement(ElementName = "Material")] public List<Material> Material { get; set; }
 }
 
 [XmlRoot(ElementName = "xml")]
-public class Xml
-{
+public class Xml {
     [XmlElement(ElementName = "Material")] public Material Material { get; set; }
 }
 

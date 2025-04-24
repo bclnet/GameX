@@ -6,8 +6,7 @@ using System.Text.Json;
 
 namespace GameX;
 
-public static class Util
-{
+public static class Util {
     // value
     public static T _valueF<T>(JsonElement elem, string key, Func<JsonElement, T> func, T default_ = default)
         => elem.TryGetProperty(key, out var z) ? func(z) : default_;
@@ -16,8 +15,7 @@ public static class Util
     public static bool _valueBool(JsonElement elem, string key, bool default_ = default)
         => elem.TryGetProperty(key, out var z) ? z.GetBoolean() : default_;
     public static object _valueV(JsonElement elem)
-        => elem.ValueKind switch
-        {
+        => elem.ValueKind switch {
             JsonValueKind.Number => elem.GetInt32(),
             JsonValueKind.String => elem.GetString(),
             JsonValueKind.Array => elem.EnumerateArray().Select(s => s.GetString()).ToArray(),
@@ -31,16 +29,14 @@ public static class Util
     public static string[] _list(JsonElement elem, string key, string[] default_ = default)
         => elem.TryGetProperty(key, out var z) ? _listV(z, s => s) : default_;
     public static T[] _listV<T>(JsonElement elem, Func<string, T> func)
-        => elem.ValueKind switch
-        {
+        => elem.ValueKind switch {
             JsonValueKind.Number => [func(elem.GetInt32().ToString())],
             JsonValueKind.String => [func(elem.GetString())],
             JsonValueKind.Array => elem.EnumerateArray().Select(s => func(s.GetString())).ToArray(),
             _ => throw new ArgumentOutOfRangeException($"{elem}"),
         };
     public static string[] _listV(JsonElement elem)
-        => elem.ValueKind switch
-        {
+        => elem.ValueKind switch {
             JsonValueKind.Number => [elem.GetInt32().ToString()],
             JsonValueKind.String => [elem.GetString()],
             JsonValueKind.Array => elem.EnumerateArray().Select(s => s.GetString()).ToArray(),
@@ -62,8 +58,7 @@ public static class Util
         => source.Where(x => x.Value != null).ToDictionary(x => x.Key, x => x.Value);
 
     static Random _random;
-    public static int _randomValue(int low, int high)
-    {
+    public static int _randomValue(int low, int high) {
         _random ??= new Random();
         return _random.Next(low, high + 1);
     }
@@ -71,13 +66,11 @@ public static class Util
     // _guessExtension
     public static string _guessExtension(byte[] buf, bool fast = true)
         => buf.Length < 4 ? string.Empty
-        : fast ? BitConverter.ToUInt32(buf, 0) switch
-        {
+        : fast ? BitConverter.ToUInt32(buf, 0) switch {
             0x75B22630 => ".asf",
             _ => $".{Encoding.ASCII.GetString(buf.AsSpan(0, 3)).ToLowerInvariant()}",
         }
-        : BitConverter.ToUInt32(buf, 0) switch
-        {
+        : BitConverter.ToUInt32(buf, 0) switch {
             0x000001D8 => ".motlist",
             0x00424956 => ".vib",
             0x00444957 => ".wid",
@@ -155,8 +148,7 @@ public static class Util
             0x4F4C4347 => ".gclo",
             0x44525453 => ".srtd",
             0x544C4946 => ".filt",
-            _ => (buf.Length < 8 ? 0U : BitConverter.ToUInt32(buf, 4)) switch
-            {
+            _ => (buf.Length < 8 ? 0U : BitConverter.ToUInt32(buf, 4)) switch {
                 0x00766544 => ".dev",
                 0x6E616863 => ".chain",
                 0x6E6C6B73 => ".fbxskel",

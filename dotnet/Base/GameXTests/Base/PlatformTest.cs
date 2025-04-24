@@ -3,8 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace GameX.Base;
 
 [TestClass]
-public class PlatformTest
-{
+public class PlatformTest {
     //[TestMethod]
     //public void Bootstrap_CanRegisterAnotherStartup()
     //{

@@ -15,22 +15,19 @@ namespace GameX.Cig;
 /// CigPakFile
 /// </summary>
 /// <seealso cref="GameEstate.Formats.BinaryPakFile" />
-public class CigPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel>
-{
+public class CigPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="CigPakFile" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public CigPakFile(PakState state) : base(state, PakBinary_P4k.Current)
-    {
+    public CigPakFile(PakState state) : base(state, PakBinary_P4k.Current) {
         ObjectFactoryFunc = ObjectFactory;
     }
 
     #region Factories
 
     internal static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
-        => Path.GetExtension(source.Path).ToLowerInvariant() switch
-        {
+        => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             //".cfg" => (0, BinaryDcb.Factory),
             ".mtl" or ".xml" => (0, CryXmlFile.Factory),
             ".a" => (0, Binary_DdsA.Factory),

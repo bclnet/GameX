@@ -16,26 +16,23 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace GameX.Cig.Apps.DataForge.Views
-{
-    /// <summary>
-    /// Interaction logic for MainPage.xaml
-    /// </summary>
-    public partial class MainPage : Window, INotifyPropertyChanged
-    {
-        public static MainPage Instance;
-        public DataForgeApp App;
+namespace GameX.Cig.Apps.DataForge.Views;
 
-        public MainPage(DataForgeApp app)
-        {
-            InitializeComponent();
-            Instance = this;
-            DataContext = this;
-            App = app;
-            Navigator.Nodes = new ObservableCollection<Node>(app.Db.Nodes);
-        }
+/// <summary>
+/// Interaction logic for MainPage.xaml
+/// </summary>
+public partial class MainPage : Window, INotifyPropertyChanged {
+    public static MainPage Instance;
+    public DataForgeApp App;
 
-        public event PropertyChangedEventHandler PropertyChanged;
-        void OnPropertyChanged([CallerMemberName] string propertyName = "") => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    public MainPage(DataForgeApp app) {
+        InitializeComponent();
+        Instance = this;
+        DataContext = this;
+        App = app;
+        Navigator.Nodes = new ObservableCollection<Node>(app.Db.Nodes);
     }
+
+    public event PropertyChangedEventHandler PropertyChanged;
+    void OnPropertyChanged([CallerMemberName] string propertyName = "") => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 }

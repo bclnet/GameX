@@ -91,23 +91,20 @@ namespace GameX.Arkane.Formats.Danae;
 //    D3DVALUE _41, _42, _43, _44;
 //}
 
-public unsafe struct E_CYLINDER
-{
+public unsafe struct E_CYLINDER {
     public static (string, int) Struct = ("<5f", sizeof(E_CYLINDER));
     public Vector3 origin;
     public float radius;
     public float height;
 }
 
-public unsafe struct E_SPHERE
-{
+public unsafe struct E_SPHERE {
     public static (string, int) Struct = ("<4f", sizeof(E_SPHERE));
     public Vector3 Origin;
     public float Radius;
 }
 
-public unsafe struct E_POLY
-{
+public unsafe struct E_POLY {
     public POLY Type;  // at least 16 bits
     public Vector3 Min;
     public Vector3 Max;
@@ -124,22 +121,19 @@ public unsafe struct E_POLY
     public short Misc;
     //public float DistBump;
     //public ushort[] UslInd;// new ushort[4];
-    internal void memset()
-    {
+    internal void memset() {
         Misc = 0;
     }
 }
 
-public unsafe struct E_VERTEX
-{
+public unsafe struct E_VERTEX {
     public TLVERTEX Vert;
     public Vector3 V;
     public Vector3 Norm;
     public Vector3 VWorld;
 }
 
-public enum MATERIAL
-{
+public enum MATERIAL {
     NONE = 0,
     WEAPON = 1,
     FLESH = 2,
@@ -160,8 +154,7 @@ public enum MATERIAL
 }
 
 [Flags]
-public enum POLY
-{
+public enum POLY {
     NO_SHADOW = 1,
     DOUBLESIDED = 1 << 1,
     TRANS = 1 << 2,
@@ -195,8 +188,7 @@ public enum POLY
 }
 
 [DebuggerDisplay("FACE: {FaceType}")]
-public struct E_FACE
-{
+public struct E_FACE {
     public int FaceType;  // 0 = flat, 1 = text, 2 = Double-Side
     public short TexId;
     public Vector3<ushort> Vid;
@@ -228,8 +220,7 @@ public struct E_FACE
 //}
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct TLVERTEX
-{
+public unsafe struct TLVERTEX {
     public static (string, int) Struct = ("4f2I3f", sizeof(TLVERTEX));
     public Vector3 S;           // Screen coordinates
     public float Rhw;           // Reciprocal of homogeneous w
@@ -263,8 +254,7 @@ public struct PROGRESSIVE_DATA // Aligned 1 2 4
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct E_SPRINGS
-{
+public struct E_SPRINGS {
     public short startidx;
     public short endidx;
     public float restlength;
@@ -278,8 +268,7 @@ public struct E_SPRINGS
 //#define CLOTHES_FLAG_NOCOL	2
 
 [StructLayout(LayoutKind.Sequential)]
-public struct CLOTHESVERTEX
-{
+public struct CLOTHESVERTEX {
     public short idx;
     public byte flags;
     public byte coll;
@@ -295,8 +284,7 @@ public struct CLOTHESVERTEX
     public Vector3 lastpos;
 }
 
-public struct CLOTHES_DATA
-{
+public struct CLOTHES_DATA {
     public CLOTHESVERTEX[] Cvert;
     //public CLOTHESVERTEX[] backup;
     public short NumCvert;
@@ -304,15 +292,13 @@ public struct CLOTHES_DATA
     public E_SPRINGS[] Springs;
 }
 
-public struct COLLISION_SPHERE
-{
+public struct COLLISION_SPHERE {
     public short idx;
     public short flags;
     public float radius;
 }
 
-public struct COLLISION_SPHERES_DATA
-{
+public struct COLLISION_SPHERES_DATA {
     public int NumSpheres;
     public COLLISION_SPHERE[] Spheres;
 }
@@ -352,8 +338,7 @@ public struct COLLISION_SPHERES_DATA
 
 
 [DebuggerDisplay("Group: {Name}")]
-public struct E_GROUPLIST
-{
+public struct E_GROUPLIST {
     public string Name;
     public int Origin;
     public int NumIndex;
@@ -362,8 +347,7 @@ public struct E_GROUPLIST
 }
 
 [DebuggerDisplay("Action: {Name}")]
-public struct E_ACTIONLIST
-{
+public struct E_ACTIONLIST {
     public string Name;
     public int Idx; //index vertex;
     public int Act; //action
@@ -404,8 +388,7 @@ public struct E_ACTIONLIST
 
 
 [DebuggerDisplay("Selection: {Name}")]
-public unsafe struct E_SELECTIONS
-{
+public unsafe struct E_SELECTIONS {
     public string Name;
     public int NumSelected;
     public int[] Selected;
@@ -481,16 +464,14 @@ public unsafe struct E_SELECTIONS
 //} EERIE_3DPAD;
 
 [DebuggerDisplay("Texture: {Path}")]
-public class E_TEXTURE
-{
+public class E_TEXTURE {
     public int Id;
     public string Path;
     public POLY Poly;
 }
 
 [DebuggerDisplay("Obj: {File}")]
-public class E_3DOBJ
-{
+public class E_3DOBJ {
     //public string Name;
     public string File;
     //public Vector3 Pos;
@@ -615,8 +596,7 @@ public class E_3DOBJ
 //Portal Data;
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct SAVE_EERIEPOLY
-{
+public unsafe struct SAVE_EERIEPOLY {
     public static (string, int) Struct = ("<?", sizeof(SAVE_EERIEPOLY));
     public POLY Type;  // at least 16 bits
     public Vector3 Min;
@@ -635,8 +615,7 @@ public unsafe struct SAVE_EERIEPOLY
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct E_SAVE_PORTALS
-{
+public unsafe struct E_SAVE_PORTALS {
     public static (string, int) Struct = ("<?", sizeof(E_SAVE_PORTALS));
     public SAVE_EERIEPOLY Poly;
     public int Room1; // facing normal
@@ -645,8 +624,7 @@ public unsafe struct E_SAVE_PORTALS
     public short Paddy;
 }
 
-public unsafe struct E_PORTALS
-{
+public unsafe struct E_PORTALS {
     public static (string, int) Struct = ("<?", sizeof(E_PORTALS));
     public E_POLY Poly;
     public int Room1; // facing normal
@@ -654,21 +632,18 @@ public unsafe struct E_PORTALS
     public short UsePortal;
     public short Paddy;
 
-    internal void memset()
-    {
+    internal void memset() {
     }
 }
 
-public struct EP_DATA
-{
+public struct EP_DATA {
     public short Px;
     public short Py;
     public short Idx;
     public short Padd;
 }
 
-public class E_ROOM_DATA
-{
+public class E_ROOM_DATA {
     public int NumPortals;
     public int[] Portals;
     public int NumPolys;
@@ -682,16 +657,14 @@ public class E_ROOM_DATA
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct E_SAVE_ROOM_DATA
-{
+public unsafe struct E_SAVE_ROOM_DATA {
     public static (string, int) Struct = ("<2i6i", sizeof(E_SAVE_ROOM_DATA));
     public int NumPortals;
     public int NumPolys;
     public fixed int Padd[6];
 }
 
-public class E_PORTAL_DATA
-{
+public class E_PORTAL_DATA {
     public int NumRooms;
     public E_ROOM_DATA[] Room;
     public int NumTotal;  // of portals

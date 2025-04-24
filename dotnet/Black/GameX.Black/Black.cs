@@ -13,14 +13,12 @@ namespace GameX.Black;
 /// BlackPakFile
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class BlackPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel>
-{
+public class BlackPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="BlackPakFile" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public BlackPakFile(PakState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant()))
-    {
+    public BlackPakFile(PakState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         ObjectFactoryFunc = ObjectFactory;
     }
 
@@ -38,8 +36,7 @@ public class BlackPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMode
     //};
 
     static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
-        => Path.GetExtension(source.Path).ToLowerInvariant() switch
-        {
+        => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             var x when x.StartsWith(".fr") => (0, Binary_Frm.Factory),
             ".pal" => (0, Binary_Pal2.Factory),
             ".rix" => (0, Binary_Rix.Factory),

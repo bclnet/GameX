@@ -31,13 +31,11 @@
 
 namespace GameX;
 
-public partial class FamilyManager
-{
+public partial class FamilyManager {
     /// <summary>
     /// Options.
     /// </summary>
-    public class GlobalOption
-    {
+    public class GlobalOption {
         public string Platform;
         public string FindKey;
         public string Family;
@@ -71,9 +69,8 @@ public partial class FamilyManager
 #elif Bethesda
     static readonly string[] FamilyKeys = ["Bethesda", "Unknown"];
 
-    public static GlobalOption Option = new()
-    {
-        Platform = "UN",
+    public static GlobalOption Option = new() {
+        Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:2",
         Family = "Bethesda",

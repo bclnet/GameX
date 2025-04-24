@@ -4,13 +4,11 @@ using System.Threading.Tasks;
 
 namespace GameX.Base;
 
-internal class SomePlatform
-{
+internal class SomePlatform {
     public static bool Startup() => true;
 }
 
-internal static class Some
-{
+internal static class Some {
     public const string FamilyJson =
 @"{
     'id': 'Some',
@@ -33,8 +31,7 @@ internal static class Some
 }";
     public static readonly Family Family = FamilyManager.CreateFamily(FamilyJson.Replace("'", "\""));
 
-    public class SomePakFile : PakFile
-    {
+    public class SomePakFile : PakFile {
         public SomePakFile(PakState state) : base(state) { Name = "Some Name"; }
         public override int Count => 0;
         public override void Closing() { }

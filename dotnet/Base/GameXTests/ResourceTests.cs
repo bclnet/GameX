@@ -7,8 +7,7 @@ using static GameX.FamilyManager;
 namespace GameX;
 
 [TestClass]
-public class ResourceTests
-{
+public class ResourceTests {
     const string GAME = "game:";
     const string FILE_Oblivion = "file:///G:/SteamLibrary/steamapps/common/Oblivion";
     const string DIR_Oblivion = "file:////192.168.1.3/User/_SERVE/Assets/Oblivion";
@@ -34,15 +33,13 @@ public class ResourceTests
     [DataRow("Tes", $"{HTTP_Oblivion}/Oblivion*.bsa/#Oblivion", "Oblivion", PakOption.Stream, 6, "Oblivion - Meshes.bsa", "trees/treeginkgo.spt", 6865)]
     [DataRow("Tes", $"{HTTP_Oblivion}/Oblivion%20-%20Meshes.bsa/#Oblivion", "Oblivion", PakOption.Stream, 1, "Oblivion - Meshes.bsa", "trees/treeginkgo.spt", 6865)]
 #endif
-    public void Resource(string familyName, string uri, string game, int pathsFound, string firstPak, string sampleFile, int sampleFileSize)
-    {
+    public void Resource(string familyName, string uri, string game, int pathsFound, string firstPak, string sampleFile, int sampleFileSize) {
         var family = GetFamily(familyName);
         var resource = family.ParseResource(new Uri(uri));
         Assert.AreEqual(game, resource.Game.Id);
         //Assert.AreEqual(pathsFound, resource.Paths.Length);
         var pakFile = family.OpenPakFile(new Uri(uri));
-        if (pakFile is MultiPakFile multiPakFile)
-        {
+        if (pakFile is MultiPakFile multiPakFile) {
             Assert.AreEqual(pathsFound, multiPakFile.PakFiles.Count);
             pakFile = multiPakFile.PakFiles[0];
         }

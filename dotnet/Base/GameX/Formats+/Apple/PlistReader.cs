@@ -9,10 +9,8 @@ namespace GameX.Formats.Apple;
 /// <summary>
 /// Performs de-serialization of binary plists.
 /// </summary>
-public class PlistReader
-{
-    public interface ISerializable
-    {
+public class PlistReader {
+    public interface ISerializable {
         /// <summary>
         /// Populates this instance from the given plist <see cref="IDictionary"/> representation.
         /// Note that nested <see cref="IPlistSerializable"/> objects found in the graph during
@@ -36,8 +34,7 @@ public class PlistReader
     /// Initializes a new instance of the BinaryPlistItem class.
     /// </remarks>
     /// <param name="value">The value of the object the item represents.</param>
-    class PlistItem(object value)
-    {
+    class PlistItem(object value) {
         /// <summary>
         /// Gets the item's byte value collection.
         /// </summary>
@@ -72,8 +69,7 @@ public class PlistReader
         /// Sets the <see cref="ByteValue"/> to the given collection.
         /// </summary>
         /// <param name="buffer">The collection to set.</param>
-        public void SetByteValue(IEnumerable<byte> buffer)
-        {
+        public void SetByteValue(IEnumerable<byte> buffer) {
             ByteValue.Clear();
             if (buffer != null) ByteValue.AddRange(buffer);
         }
@@ -93,8 +89,7 @@ public class PlistReader
     /// </remarks>
     /// <param name="objectTable">A reference to the binary plist's object table.</param>
     /// <param name="size">The size of the array.</param>
-    class PlistArray(IList<PlistItem> objectTable, int size)
-    {
+    class PlistArray(IList<PlistItem> objectTable, int size) {
         /// <summary>
         /// Initializes a new instance of the BinaryPlistArray class.
         /// </summary>
@@ -115,23 +110,19 @@ public class PlistReader
         /// Converts this instance into an <see cref="T:object[]"/> array.
         /// </summary>
         /// <returns>The <see cref="T:object[]"/> array representation of this instance.</returns>
-        public object[] ToArray()
-        {
+        public object[] ToArray() {
             var array = new object[ObjectReference.Count];
             int objectRef;
             object objectValue;
             PlistArray innerArray;
             PlistDictionary innerDict;
-            for (var i = 0; i < array.Length; i++)
-            {
+            for (var i = 0; i < array.Length; i++) {
                 objectRef = ObjectReference[i];
-                if (objectRef >= 0 && objectRef < ObjectTable.Count && (ObjectTable[objectRef] == null || ObjectTable[objectRef].Value != this))
-                {
+                if (objectRef >= 0 && objectRef < ObjectTable.Count && (ObjectTable[objectRef] == null || ObjectTable[objectRef].Value != this)) {
                     objectValue = ObjectTable[objectRef]?.Value;
                     innerDict = objectValue as PlistDictionary;
                     if (innerDict != null) objectValue = innerDict.ToDictionary();
-                    else
-                    {
+                    else {
                         innerArray = objectValue as PlistArray;
                         if (innerArray != null) objectValue = innerArray.ToArray();
                     }
@@ -145,12 +136,10 @@ public class PlistReader
         /// Returns the string representation of this instance.
         /// </summary>
         /// <returns>This instance's string representation.</returns>
-        public override string ToString()
-        {
+        public override string ToString() {
             var b = new StringBuilder("[");
             int objectRef;
-            for (var i = 0; i < ObjectReference.Count; i++)
-            {
+            for (var i = 0; i < ObjectReference.Count; i++) {
                 if (i > 0) b.Append(",");
                 objectRef = ObjectReference[i];
                 if (ObjectTable.Count > objectRef && (ObjectTable[objectRef] == null || ObjectTable[objectRef].Value != this)) b.Append(ObjectReference[objectRef]);
@@ -168,8 +157,7 @@ public class PlistReader
     /// </remarks>
     /// <param name="objectTable">A reference to the binary plist's object table.</param>
     /// <param name="size">The size of the dictionary.</param>
-    class PlistDictionary(IList<PlistItem> objectTable, int size)
-    {
+    class PlistDictionary(IList<PlistItem> objectTable, int size) {
         /// <summary>
         /// Gets the dictionary's key reference collection.
         /// </summary>
@@ -189,26 +177,22 @@ public class PlistReader
         /// Converts this instance into a <see cref="Dictionary{Object, Object}"/>.
         /// </summary>
         /// <returns>A <see cref="Dictionary{Object, Object}"/> representation this instance.</returns>
-        public Dictionary<object, object> ToDictionary()
-        {
+        public Dictionary<object, object> ToDictionary() {
             var dictionary = new Dictionary<object, object>();
             int keyRef, objectRef;
             object keyValue, objectValue;
             PlistArray innerArray;
             PlistDictionary innerDict;
-            for (var i = 0; i < KeyReference.Count; i++)
-            {
+            for (var i = 0; i < KeyReference.Count; i++) {
                 keyRef = KeyReference[i];
                 objectRef = ObjectReference[i];
                 if (keyRef >= 0 && keyRef < ObjectTable.Count && (ObjectTable[keyRef] == null || ObjectTable[keyRef].Value != this) &&
-                    objectRef >= 0 && objectRef < ObjectTable.Count && (ObjectTable[objectRef] == null || ObjectTable[objectRef].Value != this))
-                {
+                    objectRef >= 0 && objectRef < ObjectTable.Count && (ObjectTable[objectRef] == null || ObjectTable[objectRef].Value != this)) {
                     keyValue = ObjectTable[keyRef]?.Value;
                     objectValue = ObjectTable[objectRef]?.Value;
                     innerDict = objectValue as PlistDictionary;
                     if (innerDict != null) objectValue = innerDict.ToDictionary();
-                    else
-                    {
+                    else {
                         innerArray = objectValue as PlistArray;
                         if (innerArray != null) objectValue = innerArray.ToArray();
                     }
@@ -222,12 +206,10 @@ public class PlistReader
         /// Returns the string representation of this instance.
         /// </summary>
         /// <returns>This instance's string representation.</returns>
-        public override string ToString()
-        {
+        public override string ToString() {
             var b = new StringBuilder("{");
             int keyRef, objectRef;
-            for (var i = 0; i < KeyReference.Count; i++)
-            {
+            for (var i = 0; i < KeyReference.Count; i++) {
                 if (i > 0) b.Append(",");
 
                 keyRef = KeyReference[i];
@@ -270,8 +252,7 @@ public class PlistReader
     /// </summary>
     /// <param name="path">The path of the file to read.</param>
     /// <returns>The result plist <see cref="IDictionary"/>.</returns>
-    public IDictionary ReadObject(string path)
-    {
+    public IDictionary ReadObject(string path) {
         using var s = File.OpenRead(path);
         return ReadObject(s);
     }
@@ -281,16 +262,14 @@ public class PlistReader
     /// </summary>
     /// <param name="s">The <see cref="Stream"/> to read.</param>
     /// <returns>The result plist <see cref="IDictionary"/>.</returns>
-    public IDictionary ReadObject(Stream s)
-    {
+    public IDictionary ReadObject(Stream s) {
         if (s == null) throw new ArgumentNullException(nameof(s), "stream cannot be null.");
         if (!s.CanRead) throw new ArgumentException("The stream must be readable.", nameof(s));
 
         var concreteStream = s;
         var disposeConcreteStream = false;
 
-        if (!s.CanSeek)
-        {
+        if (!s.CanSeek) {
             concreteStream = new MemoryStream();
             var buffer = new byte[4096];
             int count;
@@ -300,14 +279,12 @@ public class PlistReader
             disposeConcreteStream = true;
         }
 
-        try
-        {
+        try {
             Dictionary<object, object> dictionary = null;
             Reset();
 
             // Header + trailer = 40.
-            if (s.Length > 40)
-            {
+            if (s.Length > 40) {
                 using var r = new BinaryReader(concreteStream);
                 // Read the header.
                 s.Position = 0;
@@ -347,8 +324,7 @@ public class PlistReader
             else throw new InvalidOperationException($"Unsupported root plist object: {objectTable[^1].GetType()}. A dictionary must be the root plist object.");
             return dictionary ?? [];
         }
-        finally
-        {
+        finally {
             if (disposeConcreteStream && concreteStream != null) concreteStream.Dispose();
         }
     }
@@ -359,8 +335,7 @@ public class PlistReader
     /// <typeparam name="T">The concrete <see cref="IPlistSerializable"/> type to create.</typeparam>
     /// <param name="path">The path of the file to read.</param>
     /// <returns>The result <see cref="IPlistSerializable"/> object instance.</returns>
-    public T ReadObject<T>(string path) where T : ISerializable, new()
-    {
+    public T ReadObject<T>(string path) where T : ISerializable, new() {
         using var s = File.OpenRead(path);
         return ReadObject<T>(path);
     }
@@ -371,8 +346,7 @@ public class PlistReader
     /// <typeparam name="T">The concrete <see cref="IPlistSerializable"/> type to create.</typeparam>
     /// <param name="s">The <see cref="Stream"/> to read.</param>
     /// <returns>The result <see cref="IPlistSerializable"/> object instance.</returns>
-    public T ReadObject<T>(Stream s) where T : ISerializable, new()
-    {
+    public T ReadObject<T>(Stream s) where T : ISerializable, new() {
         var obj = new T();
         obj.FromDictionary(ReadObject(s));
         return obj;
@@ -385,8 +359,7 @@ public class PlistReader
     /// <param name="index">The index in the stream the string value starts at.</param>
     /// <param name="size">The number of bytes that make up the string value.</param>
     /// <returns>A string value.</returns>
-    static string ReadAsciiString(BinaryReader reader, long index, int size)
-    {
+    static string ReadAsciiString(BinaryReader reader, long index, int size) {
         var buffer = ReadData(reader, index, size);
         return buffer.Length > 0 ? Encoding.ASCII.GetString(buffer) : string.Empty;
     }
@@ -398,8 +371,7 @@ public class PlistReader
     /// <param name="index">The index in the stream the data value starts at.</param>
     /// <param name="size">The number of bytes that make up the data value.</param>
     /// <returns>A data value.</returns>
-    static byte[] ReadData(BinaryReader r, long index, int size)
-    {
+    static byte[] ReadData(BinaryReader r, long index, int size) {
         r.BaseStream.Position = index;
         var buffer = new byte[size];
         int bufferIndex = 0, count;
@@ -425,12 +397,10 @@ public class PlistReader
     /// <param name="index">The index in the stream the integer value starts at.</param>
     /// <param name="size">The number of bytes that make up the integer value.</param>
     /// <returns>An integer value.</returns>
-    static long ReadInteger(BinaryReader r, long index, int size)
-    {
+    static long ReadInteger(BinaryReader r, long index, int size) {
         var buffer = ReadData(r, index, size);
         if (buffer.Length > 1 && BitConverter.IsLittleEndian) Array.Reverse(buffer);
-        return size switch
-        {
+        return size switch {
             1 => buffer[0],
             2 => BitConverter.ToUInt16(buffer, 0),
             4 => BitConverter.ToUInt32(buffer, 0),
@@ -446,12 +416,10 @@ public class PlistReader
     /// <param name="index">The index in the stream the value starts at.</param>
     /// <param name="primitive">Contains the read primitive value upon completion.</param>
     /// <returns>True if a value was read, false if the value was a fill byte.</returns>
-    static bool ReadPrimitive(BinaryReader r, long index, out bool? primitive)
-    {
+    static bool ReadPrimitive(BinaryReader r, long index, out bool? primitive) {
         r.BaseStream.Position = index;
         var value = r.ReadByte();
-        switch (value & 0xf)
-        {
+        switch (value & 0xf) {
             case 0: primitive = null; return true;
             case 8: primitive = false; return true;
             case 9: primitive = true; return true;
@@ -467,12 +435,10 @@ public class PlistReader
     /// <param name="index">The index in the stream the floating-point value starts at.</param>
     /// <param name="size">The number of bytes that make up the floating-point value.</param>
     /// <returns>A floating-point value.</returns>
-    static double ReadReal(BinaryReader reader, long index, int size)
-    {
+    static double ReadReal(BinaryReader reader, long index, int size) {
         var buffer = ReadData(reader, index, size);
         if (BitConverter.IsLittleEndian) Array.Reverse(buffer);
-        return size switch
-        {
+        return size switch {
             4 => (double)BitConverter.ToSingle(buffer, 0),
             8 => BitConverter.ToDouble(buffer, 0),
             _ => throw new InvalidOperationException($"Unsupported floating point number size: {size}"),
@@ -486,14 +452,12 @@ public class PlistReader
     /// <param name="index">The index in the stream the string value starts at.</param>
     /// <param name="size">The number of characters that make up the string value.</param>
     /// <returns>A string value.</returns>
-    static string ReadUnicodeString(BinaryReader r, long index, int size)
-    {
+    static string ReadUnicodeString(BinaryReader r, long index, int size) {
         r.BaseStream.Position = index;
         size *= 2;
         var buffer = new byte[size];
         byte one, two;
-        for (var i = 0; i < size; i++)
-        {
+        for (var i = 0; i < size; i++) {
             one = r.ReadByte(); two = r.ReadByte();
             if (BitConverter.IsLittleEndian) { buffer[i++] = two; buffer[i] = one; }
             else { buffer[i++] = one; buffer[i] = two; }
@@ -511,8 +475,7 @@ public class PlistReader
     static IDictionary ReadUniqueId(BinaryReader r, long index, int size)
         // Unique IDs in XML plists are <dict><key>CF$UID</key><integer>value</integer></dict>.
         // They're used by Cocoa's key-value coder. 
-        => new Dictionary<string, ulong>
-        {
+        => new Dictionary<string, ulong> {
             ["CF$UID"] = (ulong)ReadInteger(r, index, size)
         };
 
@@ -523,8 +486,7 @@ public class PlistReader
     /// <param name="index">The index in the stream the array value starts at.</param>
     /// <param name="size">The number of items in the array.</param>
     /// <returns>An array value.</returns>
-    PlistArray ReadArray(BinaryReader r, long index, int size)
-    {
+    PlistArray ReadArray(BinaryReader r, long index, int size) {
         var array = new PlistArray(objectTable, size);
         for (var i = 0; i < size; i++)
             array.ObjectReference.Add((int)ReadInteger(r, index + (i * objectRefSize), objectRefSize));
@@ -538,12 +500,10 @@ public class PlistReader
     /// <param name="index">The index in the stream the dictionary value starts at.</param>
     /// <param name="size">The number of items in the dictionary.</param>
     /// <returns>A dictionary value.</returns>
-    PlistDictionary ReadDictionary(BinaryReader r, long index, int size)
-    {
+    PlistDictionary ReadDictionary(BinaryReader r, long index, int size) {
         PlistDictionary dictionary = new(objectTable, size);
         var skip = size * objectRefSize;
-        for (var i = 0; i < size; i++)
-        {
+        for (var i = 0; i < size; i++) {
             dictionary.KeyReference.Add((int)ReadInteger(r, index + (i * objectRefSize), objectRefSize));
             dictionary.ObjectReference.Add((int)ReadInteger(r, skip + index + (i * objectRefSize), objectRefSize));
         }
@@ -554,18 +514,15 @@ public class PlistReader
     /// Reads the object table from the given reader.
     /// </summary>
     /// <param name="r">The reader to read the object table from.</param>
-    void ReadObjectTable(BinaryReader r)
-    {
+    void ReadObjectTable(BinaryReader r) {
         byte marker;
         int size, intSize;
         long parsedInt;
-        for (var i = 0; i < objectCount; i++)
-        {
+        for (var i = 0; i < objectCount; i++) {
             r.BaseStream.Position = offsetTable[i];
             marker = r.ReadByte();
             // The first half of the byte is the base marker.
-            switch ((marker & 0xf0) >> 4)
-            {
+            switch ((marker & 0xf0) >> 4) {
                 case 0:
                     if (ReadPrimitive(r, r.BaseStream.Position - 1, out var primitive))
                         objectTable.Add(new PlistItem(primitive));
@@ -589,8 +546,7 @@ public class PlistReader
                     break;
                 case 4:
                     size = marker & 0xf;
-                    if (size == 15)
-                    {
+                    if (size == 15) {
                         intSize = 1 << (r.ReadByte() & 0xf);
                         size = (int)ReadInteger(r, r.BaseStream.Position, intSize);
                     }
@@ -598,8 +554,7 @@ public class PlistReader
                     break;
                 case 5:
                     size = marker & 0xf;
-                    if (size == 15)
-                    {
+                    if (size == 15) {
                         intSize = 1 << (r.ReadByte() & 0xf);
                         size = (int)ReadInteger(r, r.BaseStream.Position, intSize);
                     }
@@ -607,8 +562,7 @@ public class PlistReader
                     break;
                 case 6:
                     size = marker & 0xf;
-                    if (size == 15)
-                    {
+                    if (size == 15) {
                         intSize = 1 << (r.ReadByte() & 0xf);
                         size = (int)ReadInteger(r, r.BaseStream.Position, intSize);
                     }
@@ -621,8 +575,7 @@ public class PlistReader
                 case 10:
                 case 12:
                     size = marker & 0xf;
-                    if (size == 15)
-                    {
+                    if (size == 15) {
                         intSize = 1 << (r.ReadByte() & 0xf);
                         size = (int)ReadInteger(r, r.BaseStream.Position, intSize);
                     }
@@ -630,8 +583,7 @@ public class PlistReader
                     break;
                 case 13:
                     size = marker & 0xf;
-                    if (size == 15)
-                    {
+                    if (size == 15) {
                         intSize = 1 << (r.ReadByte() & 0xf);
                         size = (int)ReadInteger(r, r.BaseStream.Position, intSize);
                     }
@@ -646,8 +598,7 @@ public class PlistReader
     /// Reads the offset table from the given reader.
     /// </summary>
     /// <param name="reader">The reader to read the offset table from.</param>
-    void ReadOffsetTable(BinaryReader reader)
-    {
+    void ReadOffsetTable(BinaryReader reader) {
         for (var i = 0; i < objectCount; i++)
             offsetTable.Add((int)ReadInteger(reader, offsetTableOffset + (i * offsetIntSize), offsetIntSize));
     }
@@ -655,8 +606,7 @@ public class PlistReader
     /// <summary>
     /// Resets this instance's state.
     /// </summary>
-    void Reset()
-    {
+    void Reset() {
         objectRefSize = objectCount = offsetIntSize = offsetTableOffset = topLevelObjectOffset = 0;
         objectTable = [];
         offsetTable = [];

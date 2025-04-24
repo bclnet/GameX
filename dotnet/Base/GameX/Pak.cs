@@ -18,8 +18,7 @@ namespace GameX;
 #region FileOption
 
 [Flags]
-public enum FileOption
-{
+public enum FileOption {
     Hosting = Raw | Marker,
     None = 0x0,
     Raw = 0x1,
@@ -36,8 +35,7 @@ public enum FileOption
 /// <summary>
 /// ITransformFileObject
 /// </summary>
-public interface ITransformFileObject<T>
-{
+public interface ITransformFileObject<T> {
     /// <summary>
     /// Determines whether this instance [can transform file object] the specified transform to.
     /// </summary>
@@ -68,8 +66,7 @@ public interface ITransformFileObject<T>
 /// <param name="edition">The edition.</param>
 /// <param name="path">The path.</param>
 /// <param name="tag">The tag.</param>
-public class PakState(IFileSystem fileSystem, FamilyGame game, FamilyGame.Edition edition = null, string path = null, object tag = null)
-{
+public class PakState(IFileSystem fileSystem, FamilyGame game, FamilyGame.Edition edition = null, string path = null, object tag = null) {
     /// <summary>
     /// Gets the filesystem.
     /// </summary>
@@ -104,8 +101,7 @@ public class PakState(IFileSystem fileSystem, FamilyGame game, FamilyGame.Editio
 /// PakFile
 /// </summary>
 /// <seealso cref="System.IDisposable" />
-public abstract class PakFile : ISource, IDisposable
-{
+public abstract class PakFile : ISource, IDisposable {
     public delegate (object option, Func<BinaryReader, FileSource, PakFile, Task<object>> factory) FuncObjectFactory(FileSource source, FamilyGame game);
 
     /// <summary>
@@ -170,8 +166,7 @@ public abstract class PakFile : ISource, IDisposable
     /// </summary>
     /// <param name="state">The state.</param>
     /// <param name="name">The name.</param>
-    public PakFile(PakState state)
-    {
+    public PakFile(PakState state) {
         string z;
         Status = PakStatus.Closed;
         FileSystem = state.FileSystem ?? throw new ArgumentNullException(nameof(state.FileSystem));
@@ -194,8 +189,7 @@ public abstract class PakFile : ISource, IDisposable
     /// <summary>
     /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
     /// </summary>
-    public void Dispose()
-    {
+    public void Dispose() {
         Close();
         GC.SuppressFinalize(this);
     }
@@ -204,8 +198,7 @@ public abstract class PakFile : ISource, IDisposable
     /// <summary>
     /// Closes this instance.
     /// </summary>
-    public PakFile Close()
-    {
+    public PakFile Close() {
         Status = PakStatus.Closing;
         Closing();
         if (Tag is IDisposable s) s.Dispose();
@@ -221,8 +214,7 @@ public abstract class PakFile : ISource, IDisposable
     /// <summary>
     /// Opens this instance.
     /// </summary>
-    public virtual PakFile Open(List<MetaItem> items = null, MetaManager manager = null)
-    {
+    public virtual PakFile Open(List<MetaItem> items = null, MetaManager manager = null) {
         if (Status != PakStatus.Closed) return this;
         Status = PakStatus.Opening;
         var watch = new Stopwatch();
@@ -262,8 +254,7 @@ public abstract class PakFile : ISource, IDisposable
     /// </summary>
     /// <param name="path">The path.</param>
     /// <returns></returns>
-    public object FindPath<T>(object path)
-    {
+    public object FindPath<T>(object path) {
         if (PathFinders.Count != 1) return PathFinders.TryGetValue(typeof(T), out var z) ? z(path) : path;
         var first = PathFinders.First();
         return first.Key == typeof(T) || first.Key == typeof(object) ? first.Value(path) : path;
@@ -274,8 +265,7 @@ public abstract class PakFile : ISource, IDisposable
     /// </summary>
     /// <param name="pakFile">The pak file.</param>
     /// <returns></returns>
-    public PakFile SetPlatform(Platform platform)
-    {
+    public PakFile SetPlatform(Platform platform) {
         Gfx = platform?.GfxFactory?.Invoke(this);
         Sfx = platform?.SfxFactory?.Invoke(this);
         return this;
@@ -332,8 +322,7 @@ public abstract class PakFile : ISource, IDisposable
     /// <param name="throwOnError">Throws on error.</param>
     /// <returns></returns>
     public PakFile OpenPakFile(object res, bool throwOnError = true)
-        => res switch
-        {
+        => res switch {
             string s => Game.CreatePakFile(FileSystem, Edition, s, throwOnError)?.Open(),
             _ => throw new ArgumentOutOfRangeException(nameof(res)),
         };
@@ -356,8 +345,7 @@ public abstract class PakFile : ISource, IDisposable
     /// <param name="transformTo">The transformTo.</param>
     /// <param name="source">The source.</param>
     /// <returns></returns>
-    Task<T> TransformFileObject<T>(PakFile transformTo, object source)
-    {
+    Task<T> TransformFileObject<T>(PakFile transformTo, object source) {
         if (this is ITransformFileObject<T> left && left.CanTransformFileObject(transformTo, source)) return left.TransformFileObject(transformTo, source);
         else if (transformTo is ITransformFileObject<T> right && right.CanTransformFileObject(transformTo, source)) return right.TransformFileObject(transformTo, source);
         else throw new ArgumentOutOfRangeException(nameof(transformTo));
@@ -404,8 +392,7 @@ public abstract class PakFile : ISource, IDisposable
 /// <param name="pakBinary">The pak binary.</param>
 /// <exception cref="ArgumentNullException">pakBinary</exception>
 [DebuggerDisplay("{Name}")]
-public abstract class BinaryPakFile(PakState state, PakBinary pakBinary) : PakFile(state)
-{
+public abstract class BinaryPakFile(PakState state, PakBinary pakBinary) : PakFile(state) {
     public readonly PakBinary PakBinary = pakBinary;
     // options
     public int RetainInPool = 10;
@@ -511,8 +498,7 @@ public abstract class BinaryPakFile(PakState state, PakBinary pakBinary) : PakFi
     /// <summary>
     /// Opens this instance.
     /// </summary>
-    public async override void Opening()
-    {
+    public async override void Opening() {
         await Read();
         await Process();
     }
@@ -520,8 +506,7 @@ public abstract class BinaryPakFile(PakState state, PakBinary pakBinary) : PakFi
     /// <summary>
     /// Closes this instance.
     /// </summary>
-    public override void Closing()
-    {
+    public override void Closing() {
         Files = null;
         FilesRawSet = null;
         FilesById = null;
@@ -537,13 +522,10 @@ public abstract class BinaryPakFile(PakState state, PakBinary pakBinary) : PakFi
     /// <returns>
     ///   <c>true</c> if the specified file path contains file; otherwise, <c>false</c>.
     /// </returns>
-    public override bool Contains(object path)
-    {
-        switch (path)
-        {
+    public override bool Contains(object path) {
+        switch (path) {
             case null: throw new ArgumentNullException(nameof(path));
-            case string s:
-                {
+            case string s: {
                     var (pak, s2) = FindPath(s);
                     return pak != null
                     ? pak.Contains(s2)
@@ -574,14 +556,11 @@ public abstract class BinaryPakFile(PakState state, PakBinary pakBinary) : PakFi
     /// <returns></returns>
     /// <exception cref="FileNotFoundException"></exception>
     /// <exception cref="InvalidOperationException"></exception>
-    public override (PakFile, FileSource) GetFileSource(object path, bool throwOnError = true)
-    {
-        switch (path)
-        {
+    public override (PakFile, FileSource) GetFileSource(object path, bool throwOnError = true) {
+        switch (path) {
             case null: throw new ArgumentNullException(nameof(path));
             case FileSource f: return (this, f);
-            case string s:
-                {
+            case string s: {
                     var (pak, s2) = FindPath(s);
                     if (pak != null) return pak.GetFileSource(s2);
                     var files = FilesByPath[s.Replace('\\', '/')].ToArray();
@@ -590,8 +569,7 @@ public abstract class BinaryPakFile(PakState state, PakBinary pakBinary) : PakFi
                     if (throwOnError) throw new FileNotFoundException(files.Length == 0 ? $"File not found: {s}" : $"More then one file found: {s}");
                     return (null, null);
                 }
-            case int i:
-                {
+            case int i: {
                     var files = FilesById[i].ToArray();
                     if (files.Length == 1) return (this, files[0]);
                     Log($"ERROR.LoadFileData: {i} @ {files.Length}");
@@ -611,11 +589,9 @@ public abstract class BinaryPakFile(PakState state, PakBinary pakBinary) : PakFi
     /// <returns></returns>
     /// <exception cref="FileNotFoundException"></exception>
     /// <exception cref="InvalidOperationException"></exception>
-    public override Task<Stream> LoadFileData(object path, object option = default, bool throwOnError = true)
-    {
+    public override Task<Stream> LoadFileData(object path, object option = default, bool throwOnError = true) {
         if (path == null) return default;
-        else if (path is not FileSource)
-        {
+        else if (path is not FileSource) {
             var (p, f2) = GetFileSource(path, throwOnError);
             return p?.LoadFileData(f2, option, throwOnError);
         }
@@ -631,11 +607,9 @@ public abstract class BinaryPakFile(PakState state, PakBinary pakBinary) : PakFi
     /// <param name="option">The option.</param>
     /// <param name="throwOnError">Throws on error.</param>
     /// <returns></returns>
-    public override async Task<T> LoadFileObject<T>(object path, object option = default, bool throwOnError = true)
-    {
+    public override async Task<T> LoadFileObject<T>(object path, object option = default, bool throwOnError = true) {
         if (path == null) return default;
-        else if (path is not FileSource)
-        {
+        else if (path is not FileSource) {
             var (p, f2) = GetFileSource(path, throwOnError);
             return await p.LoadFileObject<T>(f2, option, throwOnError);
         }
@@ -645,16 +619,13 @@ public abstract class BinaryPakFile(PakState state, PakBinary pakBinary) : PakFi
         var data = await LoadFileData(f, option, throwOnError);
         if (data == null) return default;
         var objectFactory = EnsureCachedObjectFactory(f);
-        if (objectFactory != FileSource.EmptyObjectFactory)
-        {
+        if (objectFactory != FileSource.EmptyObjectFactory) {
             var r = new BinaryReader(data);
             object value = null;
             Task<object> task = null;
-            try
-            {
+            try {
                 task = objectFactory(r, f, this);
-                if (task != null)
-                {
+                if (task != null) {
                     value = await task;
                     return value is T z ? z
                         : value is IRedirected<T> y ? y.Value
@@ -674,8 +645,7 @@ public abstract class BinaryPakFile(PakState state, PakBinary pakBinary) : PakFi
     /// </summary>
     /// <param name="file">The file.</param>
     /// <returns></returns>
-    public Func<BinaryReader, FileSource, PakFile, Task<object>> EnsureCachedObjectFactory(FileSource file)
-    {
+    public Func<BinaryReader, FileSource, PakFile, Task<object>> EnsureCachedObjectFactory(FileSource file) {
         if (ObjectFactoryFunc == null) return FileSource.EmptyObjectFactory;
         if (file.CachedObjectFactory != null) return file.CachedObjectFactory;
         var factory = ObjectFactoryFunc(file, Game);
@@ -687,8 +657,7 @@ public abstract class BinaryPakFile(PakState state, PakBinary pakBinary) : PakFi
     /// <summary>
     /// Processes this instance.
     /// </summary>
-    public async virtual Task Process()
-    {
+    public async virtual Task Process() {
         if (UseFileId) FilesById = Files.Where(x => x != null).ToLookup(x => x.Id);
         FilesByPath = Files.Where(x => x != null).ToLookup(x => x.Path, StringComparer.OrdinalIgnoreCase);
         if (PakBinary != null) await PakBinary.Process(this);
@@ -698,8 +667,7 @@ public abstract class BinaryPakFile(PakState state, PakBinary pakBinary) : PakFi
     /// FindPath.
     /// </summary>
     /// <param name="path">The path.</param>
-    (PakFile pak, string next) FindPath(string path)
-    {
+    (PakFile pak, string next) FindPath(string path) {
         var paths = path.Split([':'], 2);
         var p = paths[0].Replace('\\', '/');
         var pak = FilesByPath[p]?.FirstOrDefault()?.Pak?.Open();
@@ -779,8 +747,7 @@ public abstract class BinaryPakFile(PakState state, PakBinary pakBinary) : PakFi
 
 #region ManyPakFile
 
-public class ManyPakFile : BinaryPakFile
-{
+public class ManyPakFile : BinaryPakFile {
     /// <summary>
     /// The paths
     /// </summary>
@@ -794,8 +761,7 @@ public class ManyPakFile : BinaryPakFile
     /// <param name="name">The name.</param>
     /// <param name="paths">The paths.</param>
     /// <param name="pathSkip">The pathSkip.</param>
-    public ManyPakFile(PakFile basis, PakState state, string name, string[] paths, int pathSkip = 0) : base(state, null)
-    {
+    public ManyPakFile(PakFile basis, PakState state, string name, string[] paths, int pathSkip = 0) : base(state, null) {
         ObjectFactoryFunc = basis.ObjectFactoryFunc;
         Name = name;
         Paths = paths;
@@ -810,10 +776,8 @@ public class ManyPakFile : BinaryPakFile
     /// </summary>
     /// <param name="tag">The tag.</param>
     /// <returns></returns>
-    public override Task Read(object tag = default)
-    {
-        Files = Paths.Select(s => new FileSource
-        {
+    public override Task Read(object tag = default) {
+        Files = Paths.Select(s => new FileSource {
             Path = s.Replace('\\', '/'),
             Pak = Game.IsPakFile(s) ? (BinaryPakFile)Game.CreatePakFileType(new PakState(FileSystem, Game, Edition, s)) : default,
             FileSize = FileSystem.FileInfo(s).length,
@@ -834,8 +798,7 @@ public class ManyPakFile : BinaryPakFile
 #region MultiPakFile
 
 [DebuggerDisplay("Paks: {Paks.Count}")]
-public class MultiPakFile : PakFile
-{
+public class MultiPakFile : PakFile {
     /// <summary>
     /// The paks
     /// </summary>
@@ -848,8 +811,7 @@ public class MultiPakFile : PakFile
     /// <param name="name">The name.</param>
     /// <param name="pakFiles">The packs.</param>
     /// <param name="tag">The tag.</param>
-    public MultiPakFile(PakState state, string name, IList<PakFile> pakFiles) : base(state)
-    {
+    public MultiPakFile(PakState state, string name, IList<PakFile> pakFiles) : base(state) {
         Name = name;
         PakFiles = pakFiles ?? throw new ArgumentNullException(nameof(pakFiles));
     }
@@ -857,16 +819,14 @@ public class MultiPakFile : PakFile
     /// <summary>
     /// Closes this instance.
     /// </summary>
-    public override void Closing()
-    {
+    public override void Closing() {
         foreach (var pakFile in PakFiles) pakFile.Close();
     }
 
     /// <summary>
     /// Opens this instance.
     /// </summary>
-    public override void Opening()
-    {
+    public override void Opening() {
         foreach (var pakFile in PakFiles) pakFile.Open();
     }
 
@@ -878,8 +838,7 @@ public class MultiPakFile : PakFile
     ///   <c>true</c> if the specified file path contains file; otherwise, <c>false</c>.
     /// </returns>
     public override bool Contains(object path)
-        => path switch
-        {
+        => path switch {
             null => throw new ArgumentNullException(nameof(path)),
             string s => FindPakFiles(s, out var next).Any(x => x.Valid && x.Contains(next)),
             int i => PakFiles.Any(x => x.Valid && x.Contains(i)),
@@ -892,13 +851,11 @@ public class MultiPakFile : PakFile
     /// <value>
     /// The count.
     /// </value>
-    public override int Count
-    {
+    public override int Count {
         get { var count = 0; foreach (var pakFile in PakFiles) count += pakFile.Count; return count; }
     }
 
-    IList<PakFile> FindPakFiles(string path, out string next)
-    {
+    IList<PakFile> FindPakFiles(string path, out string next) {
         var paths = path.Split(['\\', '/', ':'], 2);
         if (paths.Length == 1) { next = path; return PakFiles; }
         path = paths[0]; next = paths[1];
@@ -915,8 +872,7 @@ public class MultiPakFile : PakFile
     /// <returns></returns>
     /// <exception cref="System.IO.FileNotFoundException">Could not find file \"{path}\".</exception>
     public override (PakFile, FileSource) GetFileSource(object path, bool throwOnError = true)
-        => path switch
-        {
+        => path switch {
             null => throw new ArgumentNullException(nameof(path)),
             string s => (FindPakFiles(s, out var s2).FirstOrDefault(x => x.Valid && x.Contains(s2)) ?? throw new FileNotFoundException($"Could not find file \"{s}\"."))
                 .GetFileSource(s2, throwOnError),
@@ -934,8 +890,7 @@ public class MultiPakFile : PakFile
     /// <returns></returns>
     /// <exception cref="System.IO.FileNotFoundException">Could not find file \"{path}\".</exception>
     public override Task<Stream> LoadFileData(object path, object option = default, bool throwOnError = true)
-        => path switch
-        {
+        => path switch {
             null => throw new ArgumentNullException(nameof(path)),
             string s => (FindPakFiles(s, out var s2).FirstOrDefault(x => x.Valid && x.Contains(s2)) ?? throw new FileNotFoundException($"Could not find file \"{s}\"."))
                 .LoadFileData(s2, option, throwOnError),
@@ -953,8 +908,7 @@ public class MultiPakFile : PakFile
     /// <returns></returns>
     /// <exception cref="System.IO.FileNotFoundException">Could not find file \"{path}\".</exception>
     public override Task<T> LoadFileObject<T>(object path, object option = default, bool throwOnError = true)
-        => path switch
-        {
+        => path switch {
             null => throw new ArgumentNullException(nameof(path)),
             string s => (FindPakFiles(s, out var s2).FirstOrDefault(x => x.Valid && x.Contains(s2)) ?? throw new FileNotFoundException($"Could not find file \"{s}\"."))
                 .LoadFileObject<T>(s2, option, throwOnError),
@@ -971,8 +925,7 @@ public class MultiPakFile : PakFile
     /// <param name="manager">The resource.</param>
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
-    public override List<MetaItem> GetMetaItems(MetaManager manager)
-    {
+    public override List<MetaItem> GetMetaItems(MetaManager manager) {
         var root = new List<MetaItem>();
         foreach (var pakFile in PakFiles.Where(x => x.Valid))
             root.Add(new MetaItem(pakFile, pakFile.Name, manager.PackageIcon, pakFile: pakFile, items: pakFile.GetMetaItems(manager)));
@@ -986,8 +939,7 @@ public class MultiPakFile : PakFile
 
 #region PakBinary
 
-public class PakBinary
-{
+public class PakBinary {
     /// <summary>
     /// The file
     /// </summary>
@@ -1050,8 +1002,7 @@ public class PakBinary
     /// <param name="option">The option.</param>
     /// <param name="message">The message.</param>
     /// <exception cref="NotSupportedException"></exception>
-    public static void HandleException(object source, object option, string message)
-    {
+    public static void HandleException(object source, object option, string message) {
         Log(message);
         // if ((option & FileOption.Supress) != 0) throw new Exception(message);
     }
@@ -1061,19 +1012,16 @@ public class PakBinary
 
 #region PakBinaryT
 
-public class PakBinary<Self> : PakBinary where Self : PakBinary, new()
-{
+public class PakBinary<Self> : PakBinary where Self : PakBinary, new() {
     public static readonly PakBinary Current = new Self();
 
-    protected class SubPakFile : BinaryPakFile
-    {
+    protected class SubPakFile : BinaryPakFile {
         readonly FileSource File;
         readonly BinaryPakFile Source;
         StaticPool<BinaryReader> Pool;
         BinaryReader R;
 
-        public SubPakFile(BinaryPakFile source, FileSource file, string path, object tag = null, PakBinary instance = null) : base(new PakState(source.FileSystem, source.Game, source.Edition, path, tag), instance ?? Current)
-        {
+        public SubPakFile(BinaryPakFile source, FileSource file, string path, object tag = null, PakBinary instance = null) : base(new PakState(source.FileSystem, source.Game, source.Edition, path, tag), instance ?? Current) {
             File = file;
             Source = source;
             ObjectFactoryFunc = source.ObjectFactoryFunc;

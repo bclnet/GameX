@@ -5,8 +5,7 @@ using System;
 namespace GameX.Valve;
 
 [TestClass]
-public class FormatTest
-{
+public class FormatTest {
     static readonly Family family = FamilyManager.GetFamily("Valve");
     static readonly PakFile dota2 = family.OpenPakFile(new Uri("game:/dota/pak01_dir.vpk#Dota2"));
 
@@ -27,8 +26,7 @@ public class FormatTest
     [DataRow("materials/vgui/800corner.vmat_c")]
     public void DATAMaterial(string sampleFile) => LoadObject<Binary_Src>(dota2, sampleFile);
 
-    static void LoadObject<T>(PakFile source, string sampleFile)
-    {
+    static void LoadObject<T>(PakFile source, string sampleFile) {
         Assert.IsTrue(source.Contains(sampleFile));
         var result = source.LoadFileObject<T>(sampleFile).Result;
     }

@@ -1,7 +1,6 @@
 ﻿namespace GameX.Formats.Collada;
 
-partial class ColladaFileWriter
-{
+partial class ColladaFileWriter {
 
 #if false
     Collada_Node CreateNode(ChunkNode nodeChunk)

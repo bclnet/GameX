@@ -21,8 +21,7 @@ namespace GameX.Formats;
 
 #region Binary_Bik
 
-public class Binary_Bik(BinaryReader r, int fileSize) : IHaveMetaInfo
-{
+public class Binary_Bik(BinaryReader r, int fileSize) : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Bik(r, (int)f.FileSize));
 
     public readonly byte[] Data = r.ReadBytes(fileSize);
@@ -37,19 +36,16 @@ public class Binary_Bik(BinaryReader r, int fileSize) : IHaveMetaInfo
 #region Binary_Dds
 
 // https://github.com/paroj/nv_dds/blob/master/nv_dds.cpp
-public class Binary_Dds : IHaveMetaInfo, ITexture
-{
+public class Binary_Dds : IHaveMetaInfo, ITexture {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Dds(r));
 
-    public Binary_Dds(BinaryReader r, bool readMagic = true)
-    {
+    public Binary_Dds(BinaryReader r, bool readMagic = true) {
         (Header, HeaderDXT10, Format, Bytes) = DDS_HEADER.Read(r, readMagic);
         var mipMaps = Math.Max(1, (int)Header.dwMipMapCount);
         var offset = 0;
         Spans = new Range[mipMaps];
         int width = (int)Header.dwWidth, height = (int)Header.dwHeight;
-        for (var i = 0; i < mipMaps; i++)
-        {
+        for (var i = 0; i < mipMaps; i++) {
             int w = width >> i, h = height >> i;
             if (w == 0 || h == 0) { Spans[i] = -1..; continue; }
             var size = ((w + 3) / 4) * ((h + 3) / 4) * Format.blockSize;
@@ -94,8 +90,7 @@ public class Binary_Dds : IHaveMetaInfo, ITexture
 
 #region Binary_Fsb
 
-public class Binary_Fsb(BinaryReader r, int fileSize) : IHaveMetaInfo
-{
+public class Binary_Fsb(BinaryReader r, int fileSize) : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Fsb(r, (int)f.FileSize));
 
     public readonly byte[] Data = r.ReadBytes(fileSize);
@@ -110,15 +105,13 @@ public class Binary_Fsb(BinaryReader r, int fileSize) : IHaveMetaInfo
 #region Binary_Iif
 
 // https://en.wikipedia.org/wiki/Interchange_File_Format
-public unsafe class Binary_Iif : IHaveMetaInfo
-{
+public unsafe class Binary_Iif : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Iif(r, (int)f.FileSize));
 
     #region Headers
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct Chunk
-    {
+    public struct Chunk {
         public const uint FORM = 0x4d524f46;
         public const uint CAT_ = 0x20544143;
         public const uint XDIR = 0x52494458;
@@ -133,15 +126,13 @@ public unsafe class Binary_Iif : IHaveMetaInfo
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct TIMB
-    {
+    public struct TIMB {
         public static (string, int) Struct = ("<2x", sizeof(TIMB));
         public byte PatchNumber;
         public byte TimbreBank;
     }
 
-    public class MidiEvent
-    {
+    public class MidiEvent {
         public int Time;
         public byte Status;
         public byte Data0;
@@ -152,8 +143,7 @@ public unsafe class Binary_Iif : IHaveMetaInfo
         public MidiEvent(int time) => Time = time;
     }
 
-    public enum EV : byte
-    {
+    public enum EV : byte {
         NOTE_OFF = 0x80,
         NOTE_ON = 0x90,
         POLY_PRESS = 0xa0,
@@ -166,8 +156,7 @@ public unsafe class Binary_Iif : IHaveMetaInfo
         META = 0xff  // MetaEvent
     }
 
-    enum EVT : byte
-    {
+    enum EVT : byte {
         OUTPUT_CABLE = 0x21,
         EOT = 0x2f, TRACK_END = EOT,
         TEMPO = 0x51, SET_TEMPO = TEMPO,
@@ -194,8 +183,7 @@ public unsafe class Binary_Iif : IHaveMetaInfo
 
     #region Read
 
-    void AllocData()
-    {
+    void AllocData() {
         if (Events != null) return;
         Events = new MidiEvent[Tracks];
         Timing = new short[Tracks];
@@ -206,17 +194,14 @@ public unsafe class Binary_Iif : IHaveMetaInfo
     //FileStream F2;
     //static string Str(uint v) => Encoding.ASCII.GetString(BitConverter.GetBytes(v));
 
-    bool Read(BinaryReader r, int fileSize)
-    {
+    bool Read(BinaryReader r, int fileSize) {
         //F = File.CreateText("C:\\T_\\FROG\\Proj2.txt");
         Tracks = 1; // default to 1 track, in case there is no XDIR chunk
-        do
-        {
+        do {
             var chunk = r.ReadS<Chunk>();
             var position = r.BaseStream.Position;
             //F.Write($"\nCHUNK: {Str(chunk.Id)}\n");
-            var result = chunk.Id switch
-            {
+            var result = chunk.Id switch {
                 Chunk.FORM => HandleChunkFORM(r, chunk.Size),
                 Chunk.CAT_ => HandleChunkCAT(r, chunk.Size),
                 _ => false,
@@ -234,33 +219,27 @@ public unsafe class Binary_Iif : IHaveMetaInfo
         return true;
     }
 
-    bool HandleChunkFORM(BinaryReader r, int chunkSize)
-    {
+    bool HandleChunkFORM(BinaryReader r, int chunkSize) {
         //F.Write($" FORM: {r.Peek(_ => Str(_.ReadUInt32()))}\n");
-        return r.ReadUInt32() switch
-        {
+        return r.ReadUInt32() switch {
             Chunk.XDIR => HandleChunkXDIR(r, chunkSize - 4),
             Chunk.XMID => HandleChunkXMID(r, chunkSize - 4),
             _ => false,
         };
     }
 
-    bool HandleChunkCAT(BinaryReader r, int chunkSize)
-    {
+    bool HandleChunkCAT(BinaryReader r, int chunkSize) {
         var basePosition = r.BaseStream.Position;
         var endPosition = r.BaseStream.Position + chunkSize;
-        do
-        {
+        do {
             var chunk = r.ReadS<Chunk>();
             var position = r.BaseStream.Position;
-            if (chunk.Id == Chunk.XMID)
-            {
+            if (chunk.Id == Chunk.XMID) {
                 r.Skip(-4); position -= 4;
                 chunk.Size = (int)(chunkSize - (position - basePosition));
             }
             //F.Write($" CAT_: {Str(chunk.Id)}\n");
-            var result = chunk.Id switch
-            {
+            var result = chunk.Id switch {
                 Chunk.FORM => HandleChunkFORM(r, chunk.Size),
                 Chunk.XMID => HandleChunkXMID(r, chunk.Size),
                 _ => false,
@@ -274,8 +253,7 @@ public unsafe class Binary_Iif : IHaveMetaInfo
         return true;
     }
 
-    bool HandleChunkXDIR(BinaryReader r, int chunkSize)
-    {
+    bool HandleChunkXDIR(BinaryReader r, int chunkSize) {
         if (chunkSize != 10) return false;
         var chunk = r.ReadS<Chunk>();
         //F.Write($" XDIR: {Str(chunk.Id)}\n");
@@ -285,16 +263,13 @@ public unsafe class Binary_Iif : IHaveMetaInfo
         return true;
     }
 
-    bool HandleChunkXMID(BinaryReader r, int chunkSize)
-    {
+    bool HandleChunkXMID(BinaryReader r, int chunkSize) {
         var endPosition = r.BaseStream.Position + chunkSize;
-        do
-        {
+        do {
             var chunk = r.ReadS<Chunk>();
             var position = r.BaseStream.Position;
             //F.Write($" XMID: {Str(chunk.Id)}\n");
-            var result = chunk.Id switch
-            {
+            var result = chunk.Id switch {
                 Chunk.FORM => HandleChunkFORM(r, chunk.Size),
                 Chunk.TIMB => HandleChunkTIMB(r, chunk.Size),
                 Chunk.EVNT => HandleChunkEVNT(r, chunk.Size),
@@ -309,16 +284,14 @@ public unsafe class Binary_Iif : IHaveMetaInfo
         return true;
     }
 
-    bool HandleChunkTIMB(BinaryReader r, int chunkSize)
-    {
+    bool HandleChunkTIMB(BinaryReader r, int chunkSize) {
         var numTimbres = r.ReadUInt16();
         if ((numTimbres << 1) + 2 != chunkSize) return false;
         Timbres[CurTrack] = r.ReadSArray<TIMB>(numTimbres);
         return true;
     }
 
-    bool HandleChunkEVNT(BinaryReader r, int chunkSize)
-    {
+    bool HandleChunkEVNT(BinaryReader r, int chunkSize) {
         AllocData(); // precaution, in case XDIR wasn't found
         CurEventList = null;
         var timing = ReadEventList(r);
@@ -329,12 +302,10 @@ public unsafe class Binary_Iif : IHaveMetaInfo
         return true; // Return how many tracks were converted
     }
 
-    MidiEvent CreateNewEvent(int time)
-    {
+    MidiEvent CreateNewEvent(int time) {
         if (CurEventList == null) return CurEvent = CurEventList = new MidiEvent(time);
         if (CurEvent.Time > time) CurEvent = CurEventList;
-        while (CurEvent.Next != null)
-        {
+        while (CurEvent.Next != null) {
             if (CurEvent.Next.Time > time) return CurEvent = CurEvent.Next = new MidiEvent(time) { Next = CurEvent.Next };
             CurEvent = CurEvent.Next;
         }
@@ -342,8 +313,7 @@ public unsafe class Binary_Iif : IHaveMetaInfo
         return CurEvent = CurEvent.Next;
     }
 
-    void ConvertEvent(BinaryReader r, int time, byte status, int size)
-    {
+    void ConvertEvent(BinaryReader r, int time, byte status, int size) {
         var current = CreateNewEvent(time);
         current.Status = status;
         current.Data0 = r.ReadByte(); if (size == 1) return;
@@ -358,8 +328,7 @@ public unsafe class Binary_Iif : IHaveMetaInfo
         CurEvent = prev; // restore old
     }
 
-    void ConvertSystemMessage(BinaryReader r, int time, byte status)
-    {
+    void ConvertSystemMessage(BinaryReader r, int time, byte status) {
         var current = CreateNewEvent(time);
         current.Status = status;
         // handling of Meta events
@@ -369,17 +338,14 @@ public unsafe class Binary_Iif : IHaveMetaInfo
         CurEvent.Stream = r.ReadBytes(CurEvent.Length);
     }
 
-    short ReadEventList(BinaryReader r)
-    {
+    short ReadEventList(BinaryReader r) {
         var time = 0;
         var tempo = 500000;
         var tempoSet = false;
-        while (true)
-        {
+        while (true) {
             var status = r.ReadByte();
             //F.Write($"  {status:x}\n");
-            switch ((EV)(status & 0xF0))
-            {
+            switch ((EV)(status & 0xF0)) {
                 // Note On/Off
                 case EV.NOTE_OFF: Log("ERROR: Note off not valid in XMidiFile\n"); return 0;
                 case EV.NOTE_ON: ConvertEvent(r, time, status, 3); break;
@@ -392,11 +358,9 @@ public unsafe class Binary_Iif : IHaveMetaInfo
                 case EV.CHAN_PRESS: ConvertEvent(r, time, status, 1); break;
                 // SysEx
                 case EV.SYSEX:
-                    if ((EV)status == EV.META)
-                    {
+                    if ((EV)status == EV.META) {
                         var evt = (EVT)r.ReadByte();
-                        switch (evt)
-                        {
+                        switch (evt) {
                             case EVT.OUTPUT_CABLE: break;
                             case EVT.TRACK_END: return (short)((tempo * 9) / 25000); ; // End Of Track
                             case EVT.SET_TEMPO: if (!tempoSet) { tempoSet = true; r.Skip(1); tempo = r.ReadByte() << 16 | r.ReadByte() << 8 | r.ReadByte(); r.Skip(-4); } break; // Tempo. Need it for PPQN
@@ -421,10 +385,8 @@ public unsafe class Binary_Iif : IHaveMetaInfo
 
     #region Write
 
-    public void WriteAll()
-    {
-        for (var i = 0; i < Tracks; i++)
-        {
+    public void WriteAll() {
+        for (var i = 0; i < Tracks; i++) {
             //F2 = File.Create($"C:\\T_\\FROG\\SYNGAME2-{i}.mid");
             //var w = new BinaryWriter(F2);
             //WriteMidi(w, i);
@@ -432,8 +394,7 @@ public unsafe class Binary_Iif : IHaveMetaInfo
         }
     }
 
-    bool WriteMidi(BinaryWriter w, int track)
-    {
+    bool WriteMidi(BinaryWriter w, int track) {
         const uint MIDI_MThd = 0x6468544d;
         if (Events == null || track > Tracks) return false;
 
@@ -448,8 +409,7 @@ public unsafe class Binary_Iif : IHaveMetaInfo
         return WriteMidiMTrk(w, Events[track]);
     }
 
-    bool WriteMidiMTrk(BinaryWriter w, MidiEvent evnts)
-    {
+    bool WriteMidiMTrk(BinaryWriter w, MidiEvent evnts) {
         const uint MIDI_MTrk = 0x6b72544d;
         const byte XMIDI_CONTROLLER_NEXT_BREAK = 117;
 
@@ -461,8 +421,7 @@ public unsafe class Binary_Iif : IHaveMetaInfo
         w.Write(MIDI_MTrk);
         var sizePosition = w.BaseStream.Position;
         w.Write(0);
-        for (var evnt = evnts; evnt != null; evnt = evnt.Next)
-        {
+        for (var evnt = evnts; evnt != null; evnt = evnt.Next) {
             // If sshock_break is set, the delta is only 0
             delta = sshockBreak ? 0 : evnt.Time - time;
             time = evnt.Time;
@@ -475,8 +434,7 @@ public unsafe class Binary_Iif : IHaveMetaInfo
 
             // write event
             lastStatus = evnt.Status;
-            switch ((EV)(evnt.Status & 0xF0))
-            {
+            switch ((EV)(evnt.Status & 0xF0)) {
                 // 2 bytes data, Note off, Note on, Aftertouch and Pitch Wheel
                 case EV.NOTE_OFF: // invalid in XMID
                 case EV.NOTE_ON:
@@ -515,12 +473,10 @@ public unsafe class Binary_Iif : IHaveMetaInfo
     #region Utils
 
     // Get the MIDI variable-length quantity. A string of 7-bits/byte, terminated by a byte not having MSB set
-    static void GetVariableLengthQuantity(BinaryReader r, out int value)
-    {
+    static void GetVariableLengthQuantity(BinaryReader r, out int value) {
         value = 0;
         byte b;
-        for (var i = 0; i < 4; i++)
-        {
+        for (var i = 0; i < 4; i++) {
             value <<= 7;
             value |= (b = r.ReadByte()) & 0x7F;
             if ((b & 0x80) == 0) break;
@@ -528,8 +484,7 @@ public unsafe class Binary_Iif : IHaveMetaInfo
     }
 
     // Instead of treating consecutive delta/interval counts as separate counts, just sum them up until we hit a MIDI event.
-    static void GetVariableLengthQuantity2(BinaryReader r, out int value)
-    {
+    static void GetVariableLengthQuantity2(BinaryReader r, out int value) {
         value = 0;
         byte b;
         for (var i = 0; i < 4 && ((b = r.ReadByte()) & 0x80) == 0; i++) value += b;
@@ -539,16 +494,13 @@ public unsafe class Binary_Iif : IHaveMetaInfo
     // Write a MIDI variable-length quantity (see getVlc) into 'stream'.
     // Returns # of bytes used to store 'value'.
     // Note: stream can be NULL (useful to count how much space a value would need)
-    static void PutVariableLengthQuantity(BinaryWriter w, int value)
-    {
+    static void PutVariableLengthQuantity(BinaryWriter w, int value) {
         var buffer = value & 0x7F;
-        while ((value >>= 7) != 0)
-        {
+        while ((value >>= 7) != 0) {
             buffer <<= 8;
             buffer |= (value & 0x7F) | 0x80;
         }
-        while (true)
-        {
+        while (true) {
             w.Write((byte)(buffer & 0xFF));
             if ((buffer & 0x80) != 0) buffer >>= 8;
             else break;
@@ -562,15 +514,13 @@ public unsafe class Binary_Iif : IHaveMetaInfo
 
 #region Binary_Img
 
-public unsafe class Binary_Img : IHaveMetaInfo, ITexture
-{
+public unsafe class Binary_Img : IHaveMetaInfo, ITexture {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Img(r, f));
 
     #region Headers
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct BmpHeader
-    {
+    public struct BmpHeader {
         public static (string, int) Struct = ("<H3i", sizeof(BmpHeader));
         public ushort Type;             // 'BM'
         public uint Size;               // File size in bytes
@@ -580,8 +530,7 @@ public unsafe class Binary_Img : IHaveMetaInfo, ITexture
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct BmpInfoHeader
-    {
+    public struct BmpInfoHeader {
         public static (string, int) Struct = ("<3I2H6I", sizeof(BmpInfoHeader));
         public uint Size;               // Size of InfoHeader =40 
         public uint Width;              // Horizontal width of bitmap in pixels
@@ -603,8 +552,7 @@ public unsafe class Binary_Img : IHaveMetaInfo, ITexture
     readonly byte[] Bytes;
     readonly Bitmap Image;
 
-    public Binary_Img(BinaryReader r, FileSource f)
-    {
+    public Binary_Img(BinaryReader r, FileSource f) {
         Image = new Bitmap(new MemoryStream(r.ReadBytes((int)f.FileSize)));
         Width = Image.Width; Height = Image.Height;
         var data = Image.LockBits(new Rectangle(0, 0, Image.Width, Image.Height), ImageLockMode.ReadOnly, Image.PixelFormat);
@@ -612,8 +560,7 @@ public unsafe class Binary_Img : IHaveMetaInfo, ITexture
         Marshal.Copy(data.Scan0, bytes, 0, bytes.Length);
         Image.UnlockBits(data);
         var palette = Image.Palette?.Entries;
-        Format = Image.PixelFormat switch
-        {
+        Format = Image.PixelFormat switch {
             PixelFormat.Format16bppGrayScale => ((string type, object value))(Image.RawFormat.ToString(), (TextureFormat.L8, TexturePixel.Unknown)),
             PixelFormat.Format8bppIndexed => ((string type, object value))(Image.RawFormat.ToString(), (TextureFormat.RGB24, TexturePixel.Unknown)),
             PixelFormat.Format24bppRgb => ((string type, object value))(Image.RawFormat.ToString(), (TextureFormat.RGB24, TexturePixel.Unknown)),
@@ -623,8 +570,7 @@ public unsafe class Binary_Img : IHaveMetaInfo, ITexture
 
         // decode
         if (palette == null || palette.Length == 0) Bytes = bytes;
-        else
-        {
+        else {
             var pal = palette.SelectMany<Color, byte>(x => [x.R, x.G, x.B]).ToArray();
             Bytes = new byte[Width * Height * 3];
             Raster.BlitByPalette(Bytes, 3, bytes, pal, 3);
@@ -657,8 +603,7 @@ public unsafe class Binary_Img : IHaveMetaInfo, ITexture
 
 #region Binary_Msg
 
-public class Binary_Msg(string message) : IHaveMetaInfo
-{
+public class Binary_Msg(string message) : IHaveMetaInfo {
     public static Func<BinaryReader, FileSource, PakFile, Task<object>> Factory(string message) => (BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Msg(message));
 
     public readonly string Message = message;
@@ -672,8 +617,7 @@ public class Binary_Msg(string message) : IHaveMetaInfo
 
 #region Binary_Pal
 
-public unsafe class Binary_Pal(BinaryReader r, byte bpp) : IHaveMetaInfo
-{
+public unsafe class Binary_Pal(BinaryReader r, byte bpp) : IHaveMetaInfo {
     public static Task<object> Factory_3(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Pal(r, 3));
     public static Task<object> Factory_4(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Pal(r, 4));
 
@@ -685,20 +629,16 @@ public unsafe class Binary_Pal(BinaryReader r, byte bpp) : IHaveMetaInfo
     #endregion
 
     public readonly byte Bpp = bpp;
-    public readonly byte[][] Records = bpp switch
-    {
+    public readonly byte[][] Records = bpp switch {
         3 => r.ReadPArray<RGB>("3B", 256).Select(s => new[] { s.R, s.G, s.B, (byte)255 }).ToArray(),
         4 => r.ReadPArray<uint>("I", 256).Select(BitConverter.GetBytes).ToArray(),
         _ => throw new ArgumentOutOfRangeException(nameof(bpp), $"{bpp}"),
     };
 
-    public Binary_Pal ConvertVgaPalette()
-    {
-        switch (Bpp)
-        {
+    public Binary_Pal ConvertVgaPalette() {
+        switch (Bpp) {
             case 3:
-                for (var i = 0; i < 256; i++)
-                {
+                for (var i = 0; i < 256; i++) {
                     var p = Records[i];
                     p[0] = (byte)((p[0] << 2) | (p[0] >> 4));
                     p[1] = (byte)((p[1] << 2) | (p[1] >> 4));
@@ -725,15 +665,13 @@ public unsafe class Binary_Pal(BinaryReader r, byte bpp) : IHaveMetaInfo
 // https://en.wikipedia.org/wiki/PCX
 // https://github.com/warpdesign/pcx-js/blob/master/js/pcx.js
 
-public unsafe class Binary_Pcx : IHaveMetaInfo, ITexture
-{
+public unsafe class Binary_Pcx : IHaveMetaInfo, ITexture {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Pcx(r));
 
     #region Headers
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct X_Header
-    {
+    struct X_Header {
         public static (string, int) Struct = ("<4B6H48s2B4H54s", sizeof(X_Header));
         public byte Manufacturer;       // Fixed header field valued at a hexadecimal
         public byte Version;            // Version number referring to the Paintbrush software release
@@ -757,8 +695,7 @@ public unsafe class Binary_Pcx : IHaveMetaInfo, ITexture
 
     #endregion
 
-    public Binary_Pcx(BinaryReader r)
-    {
+    public Binary_Pcx(BinaryReader r) {
         Header = r.ReadS<X_Header>();
         if (Header.Manufacturer != 0x0a) throw new FormatException("BAD MAGIC");
         else if (Header.Encoding == 0) throw new FormatException("NO COMPRESSION");
@@ -787,8 +724,7 @@ public unsafe class Binary_Pcx : IHaveMetaInfo, ITexture
     /// </summary>
     /// <returns></returns>
     /// <exception cref="FormatException"></exception>
-    public Span<byte> GetPalette()
-    {
+    public Span<byte> GetPalette() {
         if (Header.Bpp == 8 && Body[^769] == 12) return Body.AsSpan(Body.Length - 768);
         else if (Header.Bpp == 1) fixed (byte* _ = Header.Palette) return new Span<byte>(_, 48);
         else throw new FormatException("Could not find 256 color palette.");
@@ -802,8 +738,7 @@ public unsafe class Binary_Pcx : IHaveMetaInfo, ITexture
     /// <param name="pos"></param>
     /// <param name="index"></param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    static void SetPixel(Span<byte> palette, byte[] pixels, int pos, int index)
-    {
+    static void SetPixel(Span<byte> palette, byte[] pixels, int pos, int index) {
         var start = index * 3;
         pixels[pos + 0] = palette[start];
         pixels[pos + 1] = palette[start + 1];
@@ -827,11 +762,9 @@ public unsafe class Binary_Pcx : IHaveMetaInfo, ITexture
     /// <returns></returns>
     static int RleLength(byte[] body, int offset) => body[offset] & 63;
 
-    public T Create<T>(string platform, Func<object, T> func)
-    {
+    public T Create<T>(string platform, Func<object, T> func) {
         // decodes 4bpp pixel data
-        byte[] Decode4bpp()
-        {
+        byte[] Decode4bpp() {
             var palette = GetPalette();
             var temp = new byte[Width * Height];
             var pixels = new byte[Width * Height * 4];
@@ -840,22 +773,18 @@ public unsafe class Binary_Pcx : IHaveMetaInfo, ITexture
             // Simple RLE decoding: if 2 msb == 1 then we have to mask out count and repeat following byte count times
             var b = Body;
             for (var y = 0; y < Height; y++)
-                for (p = 0; p < Planes; p++)
-                {
+                for (p = 0; p < Planes; p++) {
                     // bpr holds the number of bytes needed to decode a row of plane: we keep on decoding until the buffer is full
                     pos = Width * y;
-                    for (var _ = 0; _ < Header.Bpl; _++)
-                    {
+                    for (var _ = 0; _ < Header.Bpl; _++) {
                         if (length == 0)
                             if (Rle(b, offset)) { length = RleLength(b, offset); val = b[offset + 1]; offset += 2; }
                             else { length = 1; val = b[offset++]; }
                         length--;
 
                         // Since there may, or may not be blank data at the end of each scanline, we simply check we're not out of bounds
-                        if ((_ * 8) < Width)
-                        {
-                            for (var i = 0; i < 8; i++)
-                            {
+                        if ((_ * 8) < Width) {
+                            for (var i = 0; i < 8; i++) {
                                 var bit = (val >> (7 - i)) & 1;
                                 temp[pos + i] |= (byte)(bit << p);
                                 // we have all planes: we may set color using the palette
@@ -869,8 +798,7 @@ public unsafe class Binary_Pcx : IHaveMetaInfo, ITexture
         }
 
         // decodes 8bpp (depth = 8/24bit) data
-        byte[] Decode8bpp()
-        {
+        byte[] Decode8bpp() {
             var palette = Planes == 1 ? GetPalette() : null;
             var pixels = new byte[Width * Height * 4];
             int offset = 0, p, pos, length = 0, val = 0;
@@ -878,22 +806,18 @@ public unsafe class Binary_Pcx : IHaveMetaInfo, ITexture
             // Simple RLE decoding: if 2 msb == 1 then we have to mask out count and repeat following byte count times
             var b = Body;
             for (var y = 0; y < Height; y++)
-                for (p = 0; p < Planes; p++)
-                {
+                for (p = 0; p < Planes; p++) {
                     // bpr holds the number of bytes needed to decode a row of plane: we keep on decoding until the buffer is full
                     pos = 4 * Width * y + p;
-                    for (var _ = 0; _ < Header.Bpl; _++)
-                    {
+                    for (var _ = 0; _ < Header.Bpl; _++) {
                         if (length == 0)
                             if (Rle(b, offset)) { length = RleLength(b, offset); val = b[offset + 1]; offset += 2; }
                             else { length = 1; val = b[offset++]; }
                         length--;
 
                         // Since there may, or may not be blank data at the end of each scanline, we simply check we're not out of bounds
-                        if (_ < Width)
-                        {
-                            if (Planes == 3)
-                            {
+                        if (_ < Width) {
+                            if (Planes == 3) {
                                 pixels[pos] = (byte)val;
                                 if (p == Planes - 1) pixels[pos + 1] = 255; // add alpha channel
                             }
@@ -905,8 +829,7 @@ public unsafe class Binary_Pcx : IHaveMetaInfo, ITexture
             return pixels;
         }
 
-        var bytes = Header.Bpp switch
-        {
+        var bytes = Header.Bpp switch {
             8 => Decode8bpp(),
             1 => Decode4bpp(),
             _ => throw new FormatException($"Unsupported bpp: {Header.Bpp}"),
@@ -929,12 +852,9 @@ public unsafe class Binary_Pcx : IHaveMetaInfo, ITexture
 
 #region Binary_Plist
 
-public unsafe class Binary_Plist : PakBinary<Binary_Plist>
-{
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
-        source.Files = ((Dictionary<object, object>)new PlistReader().ReadObject(r.BaseStream)).Select(x => new FileSource
-        {
+public unsafe class Binary_Plist : PakBinary<Binary_Plist> {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+        source.Files = ((Dictionary<object, object>)new PlistReader().ReadObject(r.BaseStream)).Select(x => new FileSource {
             Path = (string)x.Key,
             FileSize = ((byte[])x.Value).Length,
             Tag = x.Value,
@@ -950,25 +870,21 @@ public unsafe class Binary_Plist : PakBinary<Binary_Plist>
 
 #region Binary_Raw
 
-public class Binary_Raw : IHaveMetaInfo, ITexture
-{
+public class Binary_Raw : IHaveMetaInfo, ITexture {
     public static Func<BinaryReader, FileSource, PakFile, Task<object>> FactoryMethod(Action<Binary_Raw, BinaryReader, FileSource> action, Func<string, string, Binary_Pal> palleteFunc)
         => (BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Raw(r, s.Game, f, action, palleteFunc));
 
-    public struct Tag
-    {
+    public struct Tag {
         public string Palette;
         public int Width;
         public int Height;
     }
 
-    public Binary_Raw(BinaryReader r, FamilyGame game, FileSource source, Action<Binary_Raw, BinaryReader, FileSource> action, Func<string, string, Binary_Pal> palleteFunc)
-    {
+    public Binary_Raw(BinaryReader r, FamilyGame game, FileSource source, Action<Binary_Raw, BinaryReader, FileSource> action, Func<string, string, Binary_Pal> palleteFunc) {
         game.Ensure();
         action(this, r, source);
         Body ??= r.ReadToEnd();
-        if (source.Tag is Tag c)
-        {
+        if (source.Tag is Tag c) {
             Palette = c.Palette;
             Width = c.Width;
             Height = c.Height;
@@ -1028,16 +944,14 @@ public class Binary_Raw : IHaveMetaInfo, ITexture
 
 #region Binary_Snd
 
-public unsafe class Binary_Snd(BinaryReader r, int fileSize, object tag) : IHaveMetaInfo
-{
+public unsafe class Binary_Snd(BinaryReader r, int fileSize, object tag) : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Snd(r, (int)f.FileSize, null));
     public static Task<object> Factory_Wav(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Snd(r, (int)f.FileSize, ".wav"));
 
     #region Headers
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct WavHeader
-    {
+    public struct WavHeader {
         public const int RIFF = 0x46464952;
         public const int WAVE = 0x45564157;
         public static (string, int) Struct = ("<3I", sizeof(WavHeader));
@@ -1047,8 +961,7 @@ public unsafe class Binary_Snd(BinaryReader r, int fileSize, object tag) : IHave
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct WavFmt
-    {
+    public struct WavFmt {
         public const int FMT_ = 0x20746d66;
         public static (string, int) Struct = ("<2I2H2I2H", sizeof(WavFmt));
         public uint ChunkId;                // 'fmt '
@@ -1062,8 +975,7 @@ public unsafe class Binary_Snd(BinaryReader r, int fileSize, object tag) : IHave
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct WavData
-    {
+    public struct WavData {
         public const int DATA = 0x61746164;
         public static (string, int) Struct = ("<3I2H6I", sizeof(WavData));
         public uint ChunkId;                // 'data'
@@ -1088,16 +1000,14 @@ public unsafe class Binary_Snd(BinaryReader r, int fileSize, object tag) : IHave
 // https://www.dca.fee.unicamp.br/~martino/disciplinas/ea978/tgaffs.pdf
 // https://www.conholdate.app/viewer/view/rVqTeZPLAL/tga-file-format-specifications.pdf?default=view&preview=
 
-public unsafe class Binary_Tga : IHaveMetaInfo, ITexture
-{
+public unsafe class Binary_Tga : IHaveMetaInfo, ITexture {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Tga(r, f));
 
     #region Headers
 
     // Image pixel format
     // The pixel data are all in little-endian. E.g. a PIXEL_ARGB32 format image, a single pixel is stored in the memory in the order of BBBBBBBB GGGGGGGG RRRRRRRR AAAAAAAA.
-    enum PIXEL
-    {
+    enum PIXEL {
         BW8,    // Single channel format represents grayscale, 8-bit integer.
         BW16,   // Single channel format represents grayscale, 16-bit integer.
         RGB555, // A 16-bit pixel format. The topmost bit is assumed to an attribute bit, usually ignored. Because of little-endian, this format pixel is stored in the memory in the order of GGGBBBBB ARRRRRGG.
@@ -1105,8 +1015,7 @@ public unsafe class Binary_Tga : IHaveMetaInfo, ITexture
         ARGB32  // RGB color with alpha format, 8-bit per channel.
     };
 
-    enum TYPE : byte
-    {
+    enum TYPE : byte {
         NO_DATA = 0,
         COLOR_MAPPED = 1,
         TRUE_COLOR = 2,
@@ -1119,8 +1028,7 @@ public unsafe class Binary_Tga : IHaveMetaInfo, ITexture
     // Gets the bytes per pixel by pixel format
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     static int PixelFormatToPixelSize(PIXEL format)
-        => format switch
-        {
+        => format switch {
             PIXEL.BW8 => 1,
             PIXEL.BW16 => 2,
             PIXEL.RGB555 => 2,
@@ -1132,8 +1040,7 @@ public unsafe class Binary_Tga : IHaveMetaInfo, ITexture
     // Convert bits to integer bytes. E.g. 8 bits to 1 byte, 9 bits to 2 bytes.
     [MethodImpl(MethodImplOptions.AggressiveInlining)] static byte BitsToBytes(byte bits) => (byte)((bits - 1) / 8 + 1);
 
-    class ColorMap
-    {
+    class ColorMap {
         public ushort FirstIndex;
         public ushort EntryCount;
         public byte BytesPerEntry;
@@ -1141,8 +1048,7 @@ public unsafe class Binary_Tga : IHaveMetaInfo, ITexture
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct X_Header
-    {
+    struct X_Header {
         public static (string, int) Struct = ("<3b2Hb4H2b", sizeof(X_Header));
         public byte IdLength;
         public byte MapType;
@@ -1180,8 +1086,7 @@ public unsafe class Binary_Tga : IHaveMetaInfo, ITexture
             ImageType == TYPE.RLE_TRUE_COLOR ||
             ImageType == TYPE.RLE_GRAYSCALE;
 
-        public void Check()
-        {
+        public void Check() {
             const int MAX_IMAGE_DIMENSIONS = 65535;
             if (MapType > 1) throw new FormatException("UNSUPPORTED_COLOR_MAP_TYPE");
             else if (ImageType == TYPE.NO_DATA) throw new FormatException("NO_DATA");
@@ -1189,12 +1094,10 @@ public unsafe class Binary_Tga : IHaveMetaInfo, ITexture
             else if (ImageWidth <= 0 || ImageWidth > MAX_IMAGE_DIMENSIONS || ImageHeight <= 0 || ImageHeight > MAX_IMAGE_DIMENSIONS) throw new FormatException("INVALID_IMAGE_DIMENSIONS");
         }
 
-        public ColorMap GetColorMap(BinaryReader r)
-        {
+        public ColorMap GetColorMap(BinaryReader r) {
             var mapSize = MapLength * BitsToBytes(MapEntrySize);
             var s = new ColorMap();
-            if (IS_COLOR_MAPPED)
-            {
+            if (IS_COLOR_MAPPED) {
                 s.FirstIndex = MapFirstEntry;
                 s.EntryCount = MapLength;
                 s.BytesPerEntry = BitsToBytes(MapEntrySize);
@@ -1204,28 +1107,23 @@ public unsafe class Binary_Tga : IHaveMetaInfo, ITexture
             return s;
         }
 
-        public PIXEL GetPixelFormat()
-        {
-            if (IS_COLOR_MAPPED)
-            {
+        public PIXEL GetPixelFormat() {
+            if (IS_COLOR_MAPPED) {
                 if (PixelDepth == 8)
-                    switch (MapEntrySize)
-                    {
+                    switch (MapEntrySize) {
                         case 15: case 16: return PIXEL.RGB555;
                         case 24: return PIXEL.RGB24;
                         case 32: return PIXEL.ARGB32;
                     }
             }
             else if (IS_TRUE_COLOR)
-                switch (PixelDepth)
-                {
+                switch (PixelDepth) {
                     case 16: return PIXEL.RGB555;
                     case 24: return PIXEL.RGB24;
                     case 32: return PIXEL.ARGB32;
                 }
             else if (IS_GRAYSCALE)
-                switch (PixelDepth)
-                {
+                switch (PixelDepth) {
                     case 8: return PIXEL.BW8;
                     case 16: return PIXEL.BW16;
                 }
@@ -1241,8 +1139,7 @@ public unsafe class Binary_Tga : IHaveMetaInfo, ITexture
     readonly int PixelSize;
     readonly MemoryStream Body;
 
-    public Binary_Tga(BinaryReader r, FileSource f)
-    {
+    public Binary_Tga(BinaryReader r, FileSource f) {
         Header = r.ReadS<X_Header>();
         Header.Check();
         r.Skip(Header.IdLength);
@@ -1252,8 +1149,7 @@ public unsafe class Binary_Tga : IHaveMetaInfo, ITexture
         Body = new MemoryStream(r.ReadToEnd());
         PixelFormat = Header.GetPixelFormat();
         PixelSize = PixelFormatToPixelSize(PixelFormat);
-        Format = PixelFormat switch
-        {
+        Format = PixelFormat switch {
             PIXEL.BW8 => throw new NotSupportedException(),
             PIXEL.BW16 => throw new NotSupportedException(),
             PIXEL.RGB555 => (TextureFormat.RGB565, TexturePixel.Unknown),
@@ -1288,18 +1184,15 @@ public unsafe class Binary_Tga : IHaveMetaInfo, ITexture
     static ushort PixelToMapIndex(byte[] pixelPtr, int offset) => pixelPtr[offset];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    static void GetColorFromMap(byte[] dest, int offset, ushort index, ColorMap map)
-    {
+    static void GetColorFromMap(byte[] dest, int offset, ushort index, ColorMap map) {
         index -= map.FirstIndex;
         if (index < 0 && index >= map.EntryCount) throw new FormatException("COLOR_MAP_INDEX_FAILED");
         Buffer.BlockCopy(map.Pixels, map.BytesPerEntry * index, dest, offset, map.BytesPerEntry);
     }
 
-    public T Create<T>(string platform, Func<object, T> func)
-    {
+    public T Create<T>(string platform, Func<object, T> func) {
         // decodeRle
-        void decodeRle(byte[] data)
-        {
+        void decodeRle(byte[] data) {
             var isColorMapped = Header.IS_COLOR_MAPPED;
             var pixelSize = PixelSize;
             var s = Body; var o = 0;
@@ -1309,15 +1202,12 @@ public unsafe class Binary_Tga : IHaveMetaInfo, ITexture
             var packetCount = 0;
             var pixelBuffer = new byte[isColorMapped ? Map.BytesPerEntry : pixelSize];
 
-            for (; pixelCount > 0; --pixelCount)
-            {
-                if (packetCount == 0)
-                {
+            for (; pixelCount > 0; --pixelCount) {
+                if (packetCount == 0) {
                     var repetitionCountField = s.ReadByte();
                     isRunLengthPacket = (repetitionCountField & 0x80) != 0;
                     packetCount = (repetitionCountField & 0x7F) + 1;
-                    if (isRunLengthPacket)
-                    {
+                    if (isRunLengthPacket) {
                         s.Read(pixelBuffer, 0, pixelSize);
                         // in color mapped image, the pixel as the index value of the color map. The actual pixel value is found from the color map.
                         if (isColorMapped) GetColorFromMap(pixelBuffer, 0, PixelToMapIndex(pixelBuffer, o), Map);
@@ -1325,8 +1215,7 @@ public unsafe class Binary_Tga : IHaveMetaInfo, ITexture
                 }
 
                 if (isRunLengthPacket) Buffer.BlockCopy(pixelBuffer, 0, data, o, pixelSize);
-                else
-                {
+                else {
                     s.Read(data, o, pixelSize);
                     // In color mapped image, the pixel as the index value of the color map. The actual pixel value is found from the color map.
                     if (isColorMapped) GetColorFromMap(data, o, PixelToMapIndex(data, o), Map);
@@ -1338,18 +1227,15 @@ public unsafe class Binary_Tga : IHaveMetaInfo, ITexture
         }
 
         // decode
-        void decode(byte[] data)
-        {
+        void decode(byte[] data) {
             var isColorMapped = Header.IS_COLOR_MAPPED;
             var pixelSize = PixelSize;
             var s = Body; var o = 0;
             var pixelCount = Width * Height;
 
             // in color mapped image, the pixel as the index value of the color map. The actual pixel value is found from the color map.
-            if (isColorMapped)
-            {
-                for (; pixelCount > 0; --pixelCount)
-                {
+            if (isColorMapped) {
+                for (; pixelCount > 0; --pixelCount) {
                     s.Read(data, o, pixelSize);
                     GetColorFromMap(data, o, PixelToMapIndex(data, o), Map);
                     o += Map.BytesPerEntry;
@@ -1375,8 +1261,7 @@ public unsafe class Binary_Tga : IHaveMetaInfo, ITexture
     // Returns the pixel at coordinates (x,y) for reading or writing.
     // If the pixel coordinates are out of bounds (larger than width/height or small than 0), they will be clamped.
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    int GetPixel(int x, int y)
-    {
+    int GetPixel(int x, int y) {
         if (x < 0) x = 0;
         else if (x >= Width) x = Width - 1;
         if (y < 0) y = 0;
@@ -1384,14 +1269,12 @@ public unsafe class Binary_Tga : IHaveMetaInfo, ITexture
         return (y * Width + x) * PixelSize;
     }
 
-    void FlipH(byte[] data)
-    {
+    void FlipH(byte[] data) {
         var pixelSize = PixelSize;
         var temp = new byte[pixelSize];
         var flipNum = Width / 2;
         for (var i = 0; i < flipNum; ++i)
-            for (var j = 0; j < Height; ++j)
-            {
+            for (var j = 0; j < Height; ++j) {
                 var p1 = GetPixel(i, j);
                 var p2 = GetPixel(Width - 1 - i, j);
                 // swap two pixels
@@ -1401,14 +1284,12 @@ public unsafe class Binary_Tga : IHaveMetaInfo, ITexture
             }
     }
 
-    void FlipV(byte[] data)
-    {
+    void FlipV(byte[] data) {
         var pixelSize = PixelSize;
         var temp = new byte[pixelSize];
         var flipNum = Height / 2;
         for (var i = 0; i < flipNum; ++i)
-            for (var j = 0; j < Width; ++j)
-            {
+            for (var j = 0; j < Width; ++j) {
                 var p1 = GetPixel(j, i);
                 var p2 = GetPixel(j, Height - 1 - i);
                 // swap two pixels
@@ -1434,8 +1315,7 @@ public unsafe class Binary_Tga : IHaveMetaInfo, ITexture
 
 #region Binary_Txt
 
-public class Binary_Txt(BinaryReader r, int fileSize) : IHaveMetaInfo
-{
+public class Binary_Txt(BinaryReader r, int fileSize) : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Txt(r, (int)f.FileSize));
 
     public readonly string Data = r.ReadEncoding(fileSize);
@@ -1449,8 +1329,7 @@ public class Binary_Txt(BinaryReader r, int fileSize) : IHaveMetaInfo
 
 #region Binary_Xga
 
-public unsafe class Binary_Xga(BinaryReader r, object tag) : IHaveMetaInfo, ITexture
-{
+public unsafe class Binary_Xga(BinaryReader r, object tag) : IHaveMetaInfo, ITexture {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Xga(r, s.Tag));
 
     readonly int Type;
@@ -1468,11 +1347,9 @@ public unsafe class Binary_Xga(BinaryReader r, object tag) : IHaveMetaInfo, ITex
     public int Depth { get; } = 0;
     public int MipMaps { get; } = 1;
     public TextureFlags TexFlags { get; } = 0;
-    public T Create<T>(string platform, Func<object, T> func)
-    {
+    public T Create<T>(string platform, Func<object, T> func) {
         static byte[] Decode1() => null;
-        return func(new Texture_Bytes(Type switch
-        {
+        return func(new Texture_Bytes(Type switch {
             1 => Decode1(),
             _ => throw new FormatException($"Unsupported type: {Type}"),
         }, Format, null));
@@ -1498,8 +1375,7 @@ public unsafe class Binary_Xga(BinaryReader r, object tag) : IHaveMetaInfo, ITex
 /// Binary_Zip
 /// </summary>
 /// <seealso cref="GameEstate.Formats.PakBinary" />
-public class Binary_Zip(object key = null) : PakBinary
-{
+public class Binary_Zip(object key = null) : PakBinary {
     static readonly PropertyInfo ZipFile_KeyProperty = typeof(ZipFile).GetProperty("Key", BindingFlags.NonPublic | BindingFlags.Instance);
 
     static readonly PakBinary Instance = new Binary_Zip();
@@ -1509,30 +1385,25 @@ public class Binary_Zip(object key = null) : PakBinary
     readonly object Key = key;
     bool UseSystem => Key == null;
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
-    {
+    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         source.UseReader = false;
-        if (UseSystem)
-        {
+        if (UseSystem) {
             ZipArchive pak;
             source.Tag = pak = new ZipArchive(r.BaseStream, ZipArchiveMode.Read);
-            source.Files = pak.Entries.Cast<ZipArchiveEntry>().Where(s => !s.FullName.EndsWith('/')).Select(s => new FileSource
-            {
+            source.Files = pak.Entries.Cast<ZipArchiveEntry>().Where(s => !s.FullName.EndsWith('/')).Select(s => new FileSource {
                 Path = s.FullName.Replace('\\', '/'),
                 PackedSize = s.CompressedLength,
                 FileSize = s.Length,
                 Tag = s
             }).ToArray();
         }
-        else
-        {
+        else {
             ZipFile pak;
             source.Tag = pak = new ZipFile(r.BaseStream);
             if (Key == null) { }
             else if (Key is string s) pak.Password = s;
             else if (Key is byte[] z) ZipFile_KeyProperty.SetValue(pak, z);
-            source.Files = pak.Cast<ZipEntry>().Where(s => s.IsFile).Select(s => new FileSource
-            {
+            source.Files = pak.Cast<ZipEntry>().Where(s => s.IsFile).Select(s => new FileSource {
                 Path = s.Name.Replace('\\', '/'),
                 Flags = s.IsCrypted ? 1 : 0,
                 PackedSize = s.CompressedSize,
@@ -1543,8 +1414,7 @@ public class Binary_Zip(object key = null) : PakBinary
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
-    {
+    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         //try
         //{
         using var input = UseSystem

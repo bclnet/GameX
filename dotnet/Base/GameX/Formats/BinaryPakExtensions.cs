@@ -5,22 +5,19 @@ using System.Threading.Tasks;
 
 namespace GameX.Formats;
 
-public static class BinaryPakExtensions
-{
+public static class BinaryPakExtensions {
     const int MaxDegreeOfParallelism = 8; //1;
 
     #region Export
 
-    public static async Task ExportAsync(this BinaryPakFile source, string filePath, int from = 0, object option = default, Action<FileSource, int> advance = null, Action<FileSource, string> exception = null)
-    {
+    public static async Task ExportAsync(this BinaryPakFile source, string filePath, int from = 0, object option = default, Action<FileSource, int> advance = null, Action<FileSource, string> exception = null) {
         var fo = option as FileOption?;
 
         // write pak
         if (!string.IsNullOrEmpty(filePath) && !Directory.Exists(filePath)) Directory.CreateDirectory(filePath);
 
         // write files
-        Parallel.For(from, source.Files.Count, new ParallelOptions { MaxDegreeOfParallelism = MaxDegreeOfParallelism }, async index =>
-        {
+        Parallel.For(from, source.Files.Count, new ParallelOptions { MaxDegreeOfParallelism = MaxDegreeOfParallelism }, async index => {
             var file = source.Files[index];
             var newPath = filePath != null ? Path.Combine(filePath, file.Path) : null;
 
@@ -35,8 +32,7 @@ public static class BinaryPakExtensions
             if ((fo & (FileOption.Stream | FileOption.Model)) != 0) source.EnsureCachedObjectFactory(file);
 
             // extract file
-            try
-            {
+            try {
                 await ExportFileAsync(file, source, newPath, option);
                 if (file.Parts != null && (fo & FileOption.Raw) != 0)
                     foreach (var part in file.Parts) await ExportFileAsync(part, source, Path.Combine(filePath, part.Path), option);
@@ -49,24 +45,19 @@ public static class BinaryPakExtensions
         if ((fo & FileOption.Marker) != 0) await new StreamPakFile(source, new PakState(source.FileSystem, source.Game, source.Edition, filePath)).Write(null);
     }
 
-    static async Task ExportFileAsync(FileSource file, BinaryPakFile source, string newPath, object option = default)
-    {
+    static async Task ExportFileAsync(FileSource file, BinaryPakFile source, string newPath, object option = default) {
         var fo = option as FileOption?;
 
         if (file.FileSize == 0 && file.PackedSize == 0) return;
         var fileOption = file.CachedObjectOption as FileOption?;
-        if ((fo & fileOption) != 0)
-        {
-            if ((fo & FileOption.Model) != 0)
-            {
+        if ((fo & fileOption) != 0) {
+            if ((fo & FileOption.Model) != 0) {
                 var model = await source.LoadFileObject<IUnknownFileModel>(file, FamilyManager.UnknownPakFile);
                 UnknownFileWriter.Factory("default", model).Write(newPath, false);
                 return;
             }
-            else if ((fo & FileOption.Stream) != 0)
-            {
-                if (!(await source.LoadFileObject<object>(file) is IHaveStream haveStream))
-                {
+            else if ((fo & FileOption.Stream) != 0) {
+                if (!(await source.LoadFileObject<object>(file) is IHaveStream haveStream)) {
                     PakBinary.HandleException(null, option, $"ExportFileAsync: {file.Path} @ {file.FileSize}");
                     throw new InvalidOperationException();
                 }
@@ -84,8 +75,7 @@ public static class BinaryPakExtensions
             : (Stream)new MemoryStream();
         b.CopyTo(s);
         if (file.Parts != null && (fo & FileOption.Raw) == 0)
-            foreach (var part in file.Parts)
-            {
+            foreach (var part in file.Parts) {
                 using var b2 = await source.LoadFileData(part, option);
                 b2.CopyTo(s);
             }
@@ -95,8 +85,7 @@ public static class BinaryPakExtensions
 
     #region Import
 
-    public static async Task ImportAsync(this BinaryPakFile source, BinaryWriter w, string filePath, int from = 0, object option = default, Action<FileSource, int> advance = null, Action<FileSource, string> exception = null)
-    {
+    public static async Task ImportAsync(this BinaryPakFile source, BinaryWriter w, string filePath, int from = 0, object option = default, Action<FileSource, int> advance = null, Action<FileSource, string> exception = null) {
         // read pak
         if (string.IsNullOrEmpty(filePath) || !Directory.Exists(filePath)) { exception?.Invoke(null, $"Directory Missing: {filePath}"); return; }
         var setPath = Path.Combine(filePath, ".set");
@@ -110,8 +99,7 @@ public static class BinaryPakExtensions
         if (from == 0) await source.PakBinary.Write(source, w, "Header");
 
         // write files
-        Parallel.For(0, source.Files.Count, new ParallelOptions { MaxDegreeOfParallelism = MaxDegreeOfParallelism }, async index =>
-        {
+        Parallel.For(0, source.Files.Count, new ParallelOptions { MaxDegreeOfParallelism = MaxDegreeOfParallelism }, async index => {
             var file = source.Files[index];
             var newPath = Path.Combine(filePath, file.Path);
 
@@ -120,8 +108,7 @@ public static class BinaryPakExtensions
             if (string.IsNullOrEmpty(directory) || !Directory.Exists(directory)) { exception?.Invoke(file, $"Directory Missing: {directory}"); return; }
 
             // insert file
-            try
-            {
+            try {
                 await source.PakBinary.Write(source, w);
                 using (var s = File.Open(newPath, FileMode.Open, FileAccess.Read, FileShare.Read)) await source.WriteData(file, s, option);
                 advance?.Invoke(file, index);

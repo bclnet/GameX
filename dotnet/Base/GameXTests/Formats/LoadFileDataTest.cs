@@ -6,8 +6,7 @@ using System.Threading.Tasks;
 namespace GameX.Formats;
 
 [TestClass]
-public class LoadFileDataTest
-{
+public class LoadFileDataTest {
     [DataTestMethod]
     [DataRow("AC:AC")]
     [DataRow("Arkane:D2", 10000000)]
@@ -30,25 +29,21 @@ public class LoadFileDataTest
     [DataRow("Tes:Fallout4VR")]
     [DataRow("Tes:Fallout76", 15000000)]
     [DataRow("Valve:Dota2", 15000000)]
-    public async Task LoadAllFileData(string pak, long maxFileSize = 0)
-    {
+    public async Task LoadAllFileData(string pak, long maxFileSize = 0) {
         var source = TestHelper.Paks[pak].Value;
         if (source is MultiPakFile multiPak)
-            foreach (var p in multiPak.PakFiles)
-            {
+            foreach (var p in multiPak.PakFiles) {
                 if (p is not BinaryPakFile z) throw new InvalidOperationException("multiPak not a BinaryPakFile");
                 await ExportAsync(z, maxFileSize);
             }
         else await ExportAsync(source, maxFileSize);
     }
 
-    static Task ExportAsync(PakFile source, long maxSize)
-    {
+    static Task ExportAsync(PakFile source, long maxSize) {
         if (source is not BinaryPakFile pak) throw new NotSupportedException();
 
         // write files
-        Parallel.For(0, pak.Files.Count, new ParallelOptions { /*MaxDegreeOfParallelism = 1*/ }, async index =>
-        {
+        Parallel.For(0, pak.Files.Count, new ParallelOptions { /*MaxDegreeOfParallelism = 1*/ }, async index => {
             var file = pak.Files[index];
 
             // extract pak

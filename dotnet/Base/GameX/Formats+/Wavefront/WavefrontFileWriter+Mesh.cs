@@ -6,33 +6,27 @@ using static OpenStack.Debug;
 
 namespace GameX.Formats.Wavefront;
 
-partial class WavefrontFileWriter
-{
+partial class WavefrontFileWriter {
     // Pass a node to this to have it write to the Stream
-    void WriteMesh(StreamWriter w, UnknownMesh mesh)
-    {
+    void WriteMesh(StreamWriter w, UnknownMesh mesh) {
         w.WriteLine($"o {mesh.Name}");
 
         // We only use 3 things in obj files: vertices, normals and UVs. No need to process the Tangents.
         int tempVertexPosition = CurrentVertexPosition, tempIndicesPosition = CurrentIndicesPosition;
-        foreach (var subset in mesh.Subsets)
-        {
+        foreach (var subset in mesh.Subsets) {
             // Write vertices data for each MeshSubSet (v)
             w.WriteLine($"g {GroupOverride ?? mesh.Name}");
 
             // WRITE VERTICES OUT (V, VT)
-            if ((mesh.Effects & UnknownMesh.Effect.ScaleOffset) != 0)
-            {
+            if ((mesh.Effects & UnknownMesh.Effect.ScaleOffset) != 0) {
                 var (scale, offset) = mesh.ScaleOffset3;
-                foreach (var v in mesh[subset].Vertexs)
-                {
+                foreach (var v in mesh[subset].Vertexs) {
                     var vertex = mesh.GetTransform(v * scale + offset); // Rotate/translate the vertex
                     w.WriteLine($"v {MathX.Safe(vertex.X):F7} {MathX.Safe(vertex.Y):F7} {MathX.Safe(vertex.Z):F7}");
                 }
             }
             else
-                foreach (var v in mesh[subset].Vertexs)
-                {
+                foreach (var v in mesh[subset].Vertexs) {
                     var vertex = mesh.GetTransform(v); // Rotate/translate the vertex
                     w.WriteLine($"v {MathX.Safe(vertex.X):F7} {MathX.Safe(vertex.Y):F7} {MathX.Safe(vertex.Z):F7}");
                 }
@@ -55,8 +49,7 @@ partial class WavefrontFileWriter
             // WRITE MATERIAL BLOCK (USEMTL)
             var materials = File.Materials.ToArray();
             if (materials.Length > subset.MatId) w.WriteLine("usemtl {0}", materials[subset.MatId].Name);
-            else
-            {
+            else {
                 if (materials.Length > 0) Log($"Missing Material {subset.MatId}");
                 // The material file doesn't have any elements with the Name of the material.  Use the object name.
                 w.WriteLine($"usemtl {File.Name}_{subset.MatId}");

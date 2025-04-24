@@ -9,8 +9,7 @@ namespace GameX.Crytek.Formats.Models;
 /// < summary >
 /// This is the same as BoneDescData
 /// </ summary >
-public class CompiledBone
-{
+public class CompiledBone {
     public uint ControllerID { get; set; }
     public PhysicsGeometry[] physicsGeometry;   // 2 of these. One for live objects, other for dead (ragdoll?)
     public float mass;                          // 0xD8 ?
@@ -40,8 +39,7 @@ public class CompiledBone
     /// </summary>
     /// <param name="r">The r.</param>
     /// <returns></returns>
-    public void ReadCompiledBone_800(BinaryReader r)
-    {
+    public void ReadCompiledBone_800(BinaryReader r) {
         ControllerID = r.ReadUInt32();          // unique id of bone (generated from bone name)
         physicsGeometry = new PhysicsGeometry[2];
         physicsGeometry[0].ReadPhysicsGeometry(r); // lod 0 is the physics of alive body, 
@@ -62,8 +60,7 @@ public class CompiledBone
     /// </summary>
     /// <param name="b">The b.</param>
     /// <returns></returns>
-    public void ReadCompiledBone_801(BinaryReader r)
-    {
+    public void ReadCompiledBone_801(BinaryReader r) {
         ControllerID = r.ReadUInt32();                 // unique id of bone (generated from bone name)
         limbID = r.ReadInt32();
         r.Skip(208);
@@ -77,8 +74,7 @@ public class CompiledBone
         BoneToWorld = new Matrix3x4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0);
     }
 
-    public void ReadCompiledBone_900(BinaryReader r)
-    {
+    public void ReadCompiledBone_900(BinaryReader r) {
         ControllerID = r.ReadUInt32();                 // unique id of bone (generated from bone name)
         limbID = r.ReadInt32();
         offsetParent = r.ReadInt32();
@@ -99,8 +95,7 @@ public class CompiledBone
 
     #region Log
 #if LOG
-    public void LogCompiledBone()
-    {
+    public void LogCompiledBone() {
         // Output the bone to the console
         Log($"*** Compiled bone {boneName}");
         Log($"    Parent Name: {parentID}");

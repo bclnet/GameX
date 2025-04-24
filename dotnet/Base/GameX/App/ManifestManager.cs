@@ -1,5 +1,4 @@
 ﻿namespace GameX.App;
 
-public static class ManifestManager
-{
+public static class ManifestManager {
 }

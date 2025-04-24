@@ -6,8 +6,7 @@ using Environment = GameX.WB.Formats.AC.FileTypes.Environment;
 namespace GameX.WB;
 
 [TestClass]
-public class FormatTests2
-{
+public class FormatTests2 {
     static readonly Family family = FamilyManager.GetFamily("WB");
     static readonly PakFile portal = family.OpenPakFile(new Uri("game:/client_portal.dat#AC"));
     static readonly PakFile cell = family.OpenPakFile(new Uri("game:/client_cell_1.dat#AC"));
@@ -239,8 +238,7 @@ public class FormatTests2
     [DataRow("78000001.dbpc")]
     public void DbProperties(string sampleFile) => LoadObject<object>(portal, sampleFile);
 
-    static void LoadObject<T>(PakFile source, string sampleFile)
-    {
+    static void LoadObject<T>(PakFile source, string sampleFile) {
         Assert.IsTrue(source.Contains(sampleFile));
         var result = source.LoadFileObject<T>(sampleFile).Result;
     }

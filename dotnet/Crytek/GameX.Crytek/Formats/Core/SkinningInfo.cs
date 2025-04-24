@@ -3,8 +3,7 @@ using System.Collections.Generic;
 
 namespace GameX.Crytek.Formats.Core;
 
-public class SkinningInfo
-{
+public class SkinningInfo {
     /// <summary>
     /// If there is skinning info in the model, set to true.
     /// </summary>
@@ -36,8 +35,7 @@ public class SkinningInfo
     /// </summary>
     /// <param name="jointName">Bone name</param>
     /// <returns>Controller ID of the bone.</returns>
-    public int GetJointIDByName(string jointName)
-    {
+    public int GetJointIDByName(string jointName) {
         for (var i = 0; i < CompiledBones.Count; i++)
             if (string.Equals(CompiledBones[i].boneName, jointName)) return i;
         return -1;

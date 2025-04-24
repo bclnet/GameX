@@ -10,8 +10,7 @@ namespace GameX.Crytek.Formats;
 /// <summary>
 /// String32 Name, int Start, int End
 /// </summary>
-public struct RangeEntity
-{
+public struct RangeEntity {
     public string Name;         // String32! 32 byte char array.
     public int Start;
     public int End;
@@ -20,8 +19,7 @@ public struct RangeEntity
 /// <summary>
 /// Vertex with position p(Vector3) and normal n(Vector3)
 /// </summary>
-public struct Vertex
-{
+public struct Vertex {
     public Vector3 p;           // position
     public Vector3 n;           // normal
 }
@@ -29,8 +27,7 @@ public struct Vertex
 /// <summary>
 /// mesh face (3 vertex, Material index, smoothing group.  All ints)
 /// </summary>
-public struct Face
-{
+public struct Face {
     public int v0;              // first vertex
     public int v1;              // second vertex
     public int v2;              // third vertex
@@ -41,8 +38,7 @@ public struct Face
 /// <summary>
 /// Contains data about the parts of a mesh, such as vertices, radius and center.
 /// </summary>
-public struct MeshSubset
-{
+public struct MeshSubset {
     public int FirstIndex;
     public int NumIndices;
     public int FirstVertex;
@@ -53,8 +49,7 @@ public struct MeshSubset
 
     #region Log
 #if LOG
-    public void LogMeshSubset()
-    {
+    public void LogMeshSubset() {
         Log($"*** Mesh Subset ***");
         Log($"    First Index:  {FirstIndex}");
         Log($"    Num Indices:  {NumIndices}");
@@ -69,8 +64,7 @@ public struct MeshSubset
     #endregion
 }
 
-public struct Key
-{
+public struct Key {
     public int Time;            // Time in ticks
     public Vector3 AbsPos;      // absolute position
     public Vector3 RelPos;      // relative position
@@ -79,15 +73,13 @@ public struct Key
     public float[] Unknown2;    // If ARG==9?  array length = 2
 }
 
-public struct UVFace
-{
+public struct UVFace {
     public int T0;              // first vertex index
     public int T1;              // second vertex index
     public int T2;              // third vertex index
 }
 
-public struct ControllerInfo
-{
+public struct ControllerInfo {
     public uint ControllerID;
     public uint PosKeyTimeTrack;
     public uint PosTrack;
@@ -99,8 +91,7 @@ public struct ControllerInfo
 /// May also be known as ColorB.
 /// </summary>
 [StructLayout(LayoutKind.Explicit)]
-public struct IRGBA
-{
+public struct IRGBA {
     public const int SizeOf = sizeof(byte) * 4;
     public IRGBA(byte r, byte g, byte b, byte a) { value = 0; this.r = r; this.g = g; this.b = b; this.a = a; }
     [FieldOffset(0)] public byte r;              // red
@@ -123,8 +114,7 @@ public struct IRGBA
 //    Vector3 max;
 //}
 
-public struct Tangent
-{
+public struct Tangent {
     public const int SizeOf = sizeof(float) * 4;
     // Tangents. Divide each component by 32767 to get the actual value
     public float X;
@@ -133,16 +123,14 @@ public struct Tangent
     public float W;             // Handness?  Either 32767 (+1.0) or -32767 (-1.0)
 }
 
-public struct SkinVertex
-{
+public struct SkinVertex {
     public int Volumetric;
     public int[] Index;         // Array of 4 ints
     public float[] W;           // Array of 4 floats
     public Matrix3x3 M;
 }
 
-public struct PhysicsGeometry
-{
+public struct PhysicsGeometry {
     public uint physicsGeom;
     public uint flags;          // 0x0C ?
     public Vector3 min;
@@ -156,8 +144,7 @@ public struct PhysicsGeometry
     /// Read a PhysicsGeometry structure
     /// </summary>
     /// <param name="r">The b.</param>
-    public void ReadPhysicsGeometry(BinaryReader r)
-    {
+    public void ReadPhysicsGeometry(BinaryReader r) {
         physicsGeom = r.ReadUInt32();
         flags = r.ReadUInt32();
         min = r.ReadVector3();
@@ -177,8 +164,7 @@ public struct PhysicsGeometry
     #endregion
 }
 
-public class CompiledPhysicalBone
-{
+public class CompiledPhysicalBone {
     public uint BoneIndex;
     public uint ParentOffset;
     public int NumChildren;
@@ -191,8 +177,7 @@ public class CompiledPhysicalBone
     public uint parentID;                           // ControllerID of parent
     public List<uint> childIDs = new List<uint>();  // Not part of read struct.  Contains the controllerIDs of the children to this bone.
 
-    public void ReadCompiledPhysicalBone(BinaryReader r)
-    {
+    public void ReadCompiledPhysicalBone(BinaryReader r) {
         // Reads just a single 584 byte entry of a bone. At the end the seek position will be advanced, so keep that in mind.
         BoneIndex = r.ReadUInt32();                 // unique id of bone (generated from bone name)
         ParentOffset = r.ReadUInt32();
@@ -204,8 +189,7 @@ public class CompiledPhysicalBone
 
     #region Log
 #if LOG
-    public void LogCompiledPhysicalBone()
-    {
+    public void LogCompiledPhysicalBone() {
         // Output the bone to the console
         Log($"*** Compiled bone ID {BoneIndex}");
         Log($"    Parent Offset: {ParentOffset}");
@@ -219,21 +203,18 @@ public class CompiledPhysicalBone
 /// <summary>
 /// A bone initial position matrix.
 /// </summary>
-public struct InitialPosMatrix
-{
+public struct InitialPosMatrix {
     Matrix3x3 Rotation;         // type="Matrix33">
     Vector3 Position;           // type="Vector3">
 }
 
-public struct BoneLink
-{
+public struct BoneLink {
     public int BoneID;
     public Vector3 offset;
     public float Blending;
 }
 
-public class DirectionalBlends
-{
+public class DirectionalBlends {
     public string AnimToken = string.Empty;
     public uint AnimTokenCRC32 = 0;
     public string ParaJointName = string.Empty;
@@ -248,8 +229,7 @@ public class DirectionalBlends
 
 #region Skinning Structures
 
-public struct BoneEntity
-{
+public struct BoneEntity {
     int Bone_Id;                //" type="int">Bone identifier.</add>
     int Parent_Id;              //" type="int">Parent identifier.</add>
     int Num_Children;           //" type="uint" />
@@ -273,22 +253,19 @@ public struct BonePhysics       // 26 total words = 104 total bytes
 /// <summary>
 /// 4 bones, 4 weights for each vertex mapping.
 /// </summary>
-public struct MeshBoneMapping
-{
+public struct MeshBoneMapping {
     public int[] BoneIndex;
     public int[] Weight;        // Byte / 256?
 }
 
-public struct MeshPhysicalStreamHeader
-{
+public struct MeshPhysicalStreamHeader {
     public uint ChunkID;
     public int NumPoints;
     public int NumIndices;
     public int NumMaterials;
 }
 
-public struct MeshMorphTargetHeader
-{
+public struct MeshMorphTargetHeader {
     public uint MeshID;
     public int NameLength;
     public int NumIntVertices;
@@ -296,15 +273,13 @@ public struct MeshMorphTargetHeader
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct MeshMorphTargetVertex
-{
+public struct MeshMorphTargetVertex {
     //public const int SizeOf = sizeof(uint) + MathX.SizeOfVector3;
     public uint VertexID;
     public Vector3 Vertex;
 }
 
-public struct MorphTargets
-{
+public struct MorphTargets {
     readonly uint MeshID;
     readonly string Name;
     readonly List<MeshMorphTargetVertex> IntMorph;
@@ -312,8 +287,7 @@ public struct MorphTargets
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct TFace
-{
+public struct TFace {
     //public const int SizeOf = sizeof(ushort) * 3;
     public ushort I0;
     public ushort I1;
@@ -326,8 +300,7 @@ public struct TFace
     //}
 }
 
-public class MeshCollisionInfo
-{
+public class MeshCollisionInfo {
     // AABB AABB;               // Bounding box structures?
     // OBB OBB;                 // Has an M44, h and c value.
     public Vector3 Position;
@@ -335,8 +308,7 @@ public class MeshCollisionInfo
     public int BoneID;
 }
 
-public struct IntSkinVertex
-{
+public struct IntSkinVertex {
     public Vector3 Obsolete0;
     public Vector3 Position;
     public Vector3 Obsolete2;
@@ -345,8 +317,7 @@ public struct IntSkinVertex
     public IRGBA Color;
 }
 
-public struct SpeedChunk
-{
+public struct SpeedChunk {
     public float Speed;
     public float Distance;
     public float Slope;
@@ -355,8 +326,7 @@ public struct SpeedChunk
     public Quaternion StartPosition;
 }
 
-public struct PhysicalProxy
-{
+public struct PhysicalProxy {
     public uint ID;             // Chunk ID (although not technically a chunk
     public uint FirstIndex;
     public int NumIndices;
@@ -368,8 +338,7 @@ public struct PhysicalProxy
 
     #region Log
 #if LOG
-    public void LogHitBox()
-    {
+    public void LogHitBox() {
         Log($"     ** Hitbox **");
         Log($"        ID: {ID:X}");
         Log($"        Num Vertices: {NumVertices:X}");
@@ -380,8 +349,7 @@ public struct PhysicalProxy
     #endregion
 }
 
-public struct PhysicalProxyStub
-{
+public struct PhysicalProxyStub {
     uint ChunkID;
     List<Vector3> Points;
     List<short> Indices;
@@ -412,15 +380,13 @@ public struct PhysicalProxyStub
 //    public PhysicsShape6 UnknownShape6;  // Primitive Type 6
 //}
 
-public struct PhysicsCube
-{
+public struct PhysicsCube {
     public PhysicsStruct1 Unknown14;
     public PhysicsStruct1 Unknown15;
     public int Unknown16;
 }
 
-public struct PhysicsPolyhedron
-{
+public struct PhysicsPolyhedron {
     public uint NumVertices;
     public uint NumTriangles;
     public int Unknown17;
@@ -441,30 +407,26 @@ public struct PhysicsPolyhedron
     // There is more. See cgf.xml for the rest, but probably not really needed
 }
 
-public struct PhysicsCylinder
-{
+public struct PhysicsCylinder {
     public float[] Unknown1;    // array length 8
     public int Unknown2;
     public PhysicsDataType2 Unknown3;
 }
 
-public struct PhysicsShape6
-{
+public struct PhysicsShape6 {
     public float[] Unknown1;    // array length 8
     public int Unknown2;
     public PhysicsDataType2 Unknown3;
 }
 
-public struct PhysicsDataType0
-{
+public struct PhysicsDataType0 {
     public int NumData;
     public PhysicsStruct2[] Data; // Array length NumData
     public int[] Unknown33;     // array length 3
     public float Unknown80;
 }
 
-public struct PhysicsDataType1
-{
+public struct PhysicsDataType1 {
     public uint NumData1;       // usually 4294967295
     public PhysicsStruct50[] Data1; // Array length NumData1
     public int NumData2;
@@ -475,30 +437,26 @@ public struct PhysicsDataType1
     public float Unknown80;
 }
 
-public struct PhysicsDataType2
-{
+public struct PhysicsDataType2 {
     public Matrix3x3 Unknown1;
     public int Unknown;
     public float[] Unknown3;    // array length 6
     public int Unknown4;
 }
 
-public struct PhysicsStruct1
-{
+public struct PhysicsStruct1 {
     public Matrix3x3 Unknown1;
     public int Unknown2;
     public float[] Unknown3;    // array length 6
 }
 
-public struct PhysicsStruct2
-{
+public struct PhysicsStruct2 {
     public Matrix3x3 Unknown1;
     public float[] Unknown2;    // array length 6
     public int[] Unknown3;      // array length 3
 }
 
-public struct PhysicsStruct50
-{
+public struct PhysicsStruct50 {
     public short Unknown11;
     public short Unknown12;
     public short Unknown21;

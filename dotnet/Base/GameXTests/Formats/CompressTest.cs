@@ -14,8 +14,7 @@ namespace GameX.Formats;
 // Zstd.Net - not used
 
 [TestClass]
-public class CompressTests
-{
+public class CompressTests {
     [DataTestMethod]
     [DataRow("Tes:Morrowind", "meshes/lavasteam.nif", 17725)]
     [DataRow("Red:Witcher", "main.key:2da00.bif", 887368)]
@@ -68,8 +67,7 @@ public class CompressTests
     [DataRow("Tes:Fallout76", "SeventySix - 00UpdateMain.ba2:meshes/actors/moleminer/treasurehunter/treasurehunter.ztl", 17725)]
     public async Task Errors(string pak, string sampleFile, int sampleFileSize) => await LoadDataAync(TestHelper.Paks[pak].Value, sampleFile, sampleFileSize);
 
-    static async Task LoadDataAync(PakFile source, string sampleFile, int sampleFileSize)
-    {
+    static async Task LoadDataAync(PakFile source, string sampleFile, int sampleFileSize) {
         Assert.IsTrue(source.Contains(sampleFile));
         Assert.AreEqual(sampleFileSize, (await source.LoadFileData(sampleFile)).Length);
     }

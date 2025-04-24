@@ -23,10 +23,8 @@
 using System;
 using System.Diagnostics;
 
-namespace Compression.Doboz
-{
-    internal unsafe class Dictionary
-    {
+namespace Compression.Doboz {
+    internal unsafe class Dictionary {
         const int DICTIONARY_SIZE = DobozCodec.DICTIONARY_SIZE;
         const int TAIL_LENGTH = DobozDecoder.TAIL_LENGTH;
         const int MIN_MATCH_LENGTH = DobozDecoder.MIN_MATCH_LENGTH;
@@ -56,8 +54,7 @@ namespace Compression.Doboz
 #endif
         int _base;
 
-        Dictionary()
-        {
+        Dictionary() {
             Debug.Assert(INVALID_POSITION < 0);
             Debug.Assert(REBASE_THRESHOLD % DICTIONARY_SIZE == 0);
             Debug.Assert(REBASE_DELTA % DICTIONARY_SIZE == 0);
@@ -82,12 +79,10 @@ namespace Compression.Doboz
             Position = 0;
 
             // Compute the matchable buffer length
-            if (_bufferLength > TAIL_LENGTH + MIN_MATCH_LENGTH)
-            {
+            if (_bufferLength > TAIL_LENGTH + MIN_MATCH_LENGTH) {
                 _matchableBufferLength = _bufferLength - (TAIL_LENGTH + MIN_MATCH_LENGTH);
             }
-            else
-            {
+            else {
                 _matchableBufferLength = 0;
             }
 
@@ -135,8 +130,7 @@ namespace Compression.Doboz
 #endif
             {
                 // Check whether we can find matches at this position
-                if (Position >= _matchableBufferLength)
-                {
+                if (Position >= _matchableBufferLength) {
                     // Slide the matching window with one character
                     ++Position;
 
@@ -188,11 +182,9 @@ namespace Compression.Doboz
                 // Match candidates are matches which are longer than any previously encountered ones
                 var matchCandidateCount = 0;
 
-                while (true)
-                {
+                while (true) {
                     // Check whether the current match position is valid
-                    if (matchPosition < minMatchPosition || matchCount == MAX_MATCH_CANDIDATE_COUNT)
-                    {
+                    if (matchPosition < minMatchPosition || matchCount == MAX_MATCH_CANDIDATE_COUNT) {
                         // We have checked all valid matches, so finish the new tree and exit
                         ct[leftSubtreeLeaf] = INVALID_POSITION;
                         ct[rightSubtreeLeaf] = INVALID_POSITION;
@@ -210,29 +202,25 @@ namespace Compression.Doboz
                     // Determine the match length
                     while (
                         matchLength < maxMatchLength &&
-                        buffer[_base + position + matchLength] == buffer[_base + matchPosition + matchLength])
-                    {
+                        buffer[_base + position + matchLength] == buffer[_base + matchPosition + matchLength]) {
                         ++matchLength;
                     }
 
                     // Check whether this match is the longest so far
                     var matchOffset = position - matchPosition;
 
-                    if (matchLength > longestMatchLength && matchLength >= MIN_MATCH_LENGTH)
-                    {
+                    if (matchLength > longestMatchLength && matchLength >= MIN_MATCH_LENGTH) {
                         longestMatchLength = matchLength;
 
                         // Add the current best match to the list of good match candidates
-                        if (matchCandidates != null)
-                        {
+                        if (matchCandidates != null) {
                             matchCandidates[matchCandidateCount].length = matchLength;
                             matchCandidates[matchCandidateCount].offset = matchOffset;
                             ++matchCandidateCount;
                         }
 
                         // If the match length is the maximum allowed value, the current string is already inserted into the tree: the current node
-                        if (matchLength == maxMatchLength)
-                        {
+                        if (matchLength == maxMatchLength) {
                             // Since the current string is also the root of the tree, delete the current node
                             ct[leftSubtreeLeaf] = ct[cyclicMatchPosition * 2];
                             ct[rightSubtreeLeaf] = ct[cyclicMatchPosition * 2 + 1];
@@ -241,8 +229,7 @@ namespace Compression.Doboz
                     }
 
                     // Compare the two strings
-                    if (buffer[_base + position + matchLength] < buffer[_base + matchPosition + matchLength])
-                    {
+                    if (buffer[_base + position + matchLength] < buffer[_base + matchPosition + matchLength]) {
                         // Insert the matched string into the right subtree
                         ct[rightSubtreeLeaf] = matchPosition;
 
@@ -253,8 +240,7 @@ namespace Compression.Doboz
                         // Update the match length of the high bound
                         highMatchLength = matchLength;
                     }
-                    else
-                    {
+                    else {
                         // Insert the matched string into the left subtree
                         ct[leftSubtreeLeaf] = matchPosition;
 
@@ -275,8 +261,7 @@ namespace Compression.Doboz
         }
 
         // Increments the match window position with one character
-        int ComputeRelativePosition()
-        {
+        int ComputeRelativePosition() {
 #if DOBOZ_SAFE
             var ht = _hashTable;
             var ct = _children;
@@ -288,20 +273,17 @@ namespace Compression.Doboz
                 var position = Position - _base;
 
                 // Check whether the current position has reached the rebase threshold
-                if (position == REBASE_THRESHOLD)
-                {
+                if (position == REBASE_THRESHOLD) {
                     _base += REBASE_DELTA;
                     position -= REBASE_DELTA;
 
                     // Rebase the hash entries
-                    for (var i = 0; i < HASH_TABLE_SIZE; ++i)
-                    {
+                    for (var i = 0; i < HASH_TABLE_SIZE; ++i) {
                         ht[i] = (ht[i] >= REBASE_DELTA) ? (ht[i] - REBASE_DELTA) : INVALID_POSITION;
                     }
 
                     // Rebase the binary tree nodes
-                    for (var i = 0; i < CHILD_COUNT; ++i)
-                    {
+                    for (var i = 0; i < CHILD_COUNT; ++i) {
                         ct[i] = (ct[i] >= REBASE_DELTA) ? (ct[i] - REBASE_DELTA) : INVALID_POSITION;
                     }
                 }
@@ -314,8 +296,7 @@ namespace Compression.Doboz
         static uint Hash(byte[] data, int index)
         {
 #else
-        static uint Hash(byte* data, int index)
-        {
+        static uint Hash(byte* data, int index) {
 #endif
             // FNV-1a hash
             const uint prime = 16777619;

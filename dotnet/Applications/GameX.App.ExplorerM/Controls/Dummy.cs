@@ -1,4 +1,3 @@
-namespace GameX.App.Explorer.Controls
-{
-    public class Dummy { }
-}
+namespace GameX.App.Explorer.Controls;
+
+public class Dummy { }

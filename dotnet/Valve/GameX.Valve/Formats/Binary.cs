@@ -1546,8 +1546,7 @@ public unsafe class Binary_Wad3X : ITexture, IHaveMetaInfo {
         for (int index = 0, offset = 0; index < pixels.Length; index++, offset += size) {
             var p = pixels[index];
             size = p.Length * bbp; var span = spans[index] = new Range(offset, offset + size);
-            if (transparent) Raster.BlitByPalette(buf.AsSpan(span), bbp, p, palette, 3, 0xFF);
-            else Raster.BlitByPalette(buf.AsSpan(span), bbp, p, palette, 3);
+            Raster.BlitByPalette(buf.AsSpan(span), bbp, p, palette, 3, transparent ? 0xFF : null);
         }
         return func(new Texture_Bytes(buf, Format.value, spans));
     }

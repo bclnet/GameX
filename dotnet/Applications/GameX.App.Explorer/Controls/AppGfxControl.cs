@@ -8,7 +8,6 @@ using GameX.Platforms.Unity;
 using GameX.Platforms.Unreal;
 using OpenStack.Gfx;
 using OpenStack.Wpf.Control;
-using static OpenStack.Gfx.GfX;
 
 namespace GameX.App.Explorer.Controls {
     public class AppOpenGLControl : OpenGLControl {

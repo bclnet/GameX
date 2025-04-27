@@ -175,6 +175,7 @@ class Binary_Fli(IHaveMetaInfo, ITextureFrames):
     def dispose(self) -> None: self.r.close()
 
     #region ITexture
+
     format: tuple = (TextureFormat.RGB24, TexturePixel.Unknown)
     width: int = 0
     height: int = 0
@@ -182,9 +183,7 @@ class Binary_Fli(IHaveMetaInfo, ITextureFrames):
     mipMaps: int = 1
     texFlags: TextureFlags = 0
     fps: int = 1
-
-    def begin(self, platform: str) -> (bytes, object, list[object]): return self.bytes, self.format, None
-    def end(self): pass
+    def create(self, platform: str, func: callable): return func(Texture_Bytes(self.bytes, self.format, None))
 
     def hasFrames(self) -> bool: return self.numFrames > 0
 
@@ -208,7 +207,7 @@ class Binary_Fli(IHaveMetaInfo, ITextureFrames):
             if header.type != self.ChunkType.FRAME and r.tell() != nextPosition: r.seek(nextPosition)
             header = r.readS(self.X_ChunkHeader)
             if not header.isValid or header.type == self.ChunkType.FRAME: break
-        Rasterize.copyPixelsByPalette(self.bytes, 3, self.pixels, self.palette, 3)
+        Raster.blitByPalette(self.bytes, 3, self.pixels, self.palette, 3)
         if header.type == self.ChunkType.FRAME: r.skip(-self.X_ChunkHeader.struct[1])
         return header.isValid
 
@@ -283,6 +282,8 @@ class Binary_Fli(IHaveMetaInfo, ITextureFrames):
         #         count = r.readSByte()
         #         if count > 0: _ += count #Unsafe.InitBlock(ref *ptr, r.ReadByte(), (uint)count); _ += count
         #         else: count = -count; pixels[_:_+count] = r.readBytes(count); _ += count
+    
+    #endregion
 
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
         MetaInfo(None, MetaContent(type = 'VideoTexture', name = os.path.basename(file.path), value = self)),
@@ -292,8 +293,6 @@ class Binary_Fli(IHaveMetaInfo, ITextureFrames):
             MetaInfo(f'Frames: {self.frames}')
             ])
         ]
-
-#endregion
 
 #endregion
 

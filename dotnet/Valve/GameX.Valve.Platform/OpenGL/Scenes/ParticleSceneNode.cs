@@ -8,9 +8,8 @@ namespace GameX.Valve.OpenGL.Scenes;
 
 //was:Renderer/ParticleSceneNode
 public class ParticleSceneNode : SceneNode {
-    class ParticleSystemWrapper : IParticleSystem {
-        readonly D_ParticleSystem _source;
-        public ParticleSystemWrapper(D_ParticleSystem source) => _source = source;
+    class ParticleSystemWrapper(D_ParticleSystem source) : IParticleSystem {
+        readonly D_ParticleSystem _source = source;
         IDictionary<string, object> IParticleSystem.Data => _source.Data;
         IEnumerable<IDictionary<string, object>> IParticleSystem.Renderers => _source.Renderers;
         IEnumerable<IDictionary<string, object>> IParticleSystem.Operators => _source.Operators;
@@ -19,21 +18,20 @@ public class ParticleSceneNode : SceneNode {
         IEnumerable<string> IParticleSystem.GetChildParticleNames(bool enabledOnly) => _source.GetChildParticleNames(enabledOnly);
     }
 
-    OpenGLParticleRenderer ParticleRenderer;
+    OpenGLParticleRenderer.ParticleRenderer ParticleRenderer;
 
     public ParticleSceneNode(Scene scene, D_ParticleSystem particleSystem) : base(scene) {
-        ParticleRenderer = new OpenGLParticleRenderer(Scene.Gfx as OpenGLGfxModel, new ParticleSystemWrapper(particleSystem));
+        ParticleRenderer = new OpenGLParticleRenderer.ParticleRenderer(Scene.Gfx as OpenGLGfxModel, new ParticleSystemWrapper(particleSystem));
         LocalBoundingBox = ParticleRenderer.BoundingBox;
     }
 
     public override void Update(Scene.UpdateContext context) {
         ParticleRenderer.Position = Transform.Translation;
         ParticleRenderer.Update(context.Timestep);
-
         LocalBoundingBox = ParticleRenderer.BoundingBox.Translate(-ParticleRenderer.Position);
     }
 
-    public override void Render(Scene.RenderContext context) => ParticleRenderer.Render(context.Camera, context.RenderPass);
+    public override void Render(Scene.RenderContext context) => ParticleRenderer.Render(context.Camera, context.Pass);
 
     public override IEnumerable<string> GetSupportedRenderModes() => ParticleRenderer.GetSupportedRenderModes();
 }

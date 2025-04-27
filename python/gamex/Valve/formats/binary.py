@@ -2,7 +2,7 @@ from __future__ import annotations
 import os, numpy as np
 from io import BytesIO
 from enum import Enum, Flag
-from openstk.gfx import Raster, ITexture, ITextureFrames, TextureFlags, TextureFormat, TexturePixel
+from openstk.gfx import Raster, Texture_Bytes, ITexture, ITextureFrames, TextureFlags, TextureFormat, TexturePixel
 from openstk.poly import Reader, unsafe, X_LumpON, X_LumpNO, X_LumpNO2, X_Lump2NO
 from gamex import PakFile, BinaryPakFile, PakBinary, PakBinaryT, FileSource, MetaInfo, MetaManager, MetaContent, IHaveMetaInfo
 from gamex.compression import decompressBlast
@@ -217,15 +217,13 @@ class Binary_Spr(IHaveMetaInfo, ITextureFrames):
     mipMaps: int = 1
     texFlags: TextureFlags = 0
     fps: int = 60
-
-    def begin(self, platform: str) -> (bytes, object, list[object]): return self.bytes, format, None
-    def end(self): pass
+    def create(self, platform: str, func: callable): return func(Texture_Bytes(self.bytes, format, None))
 
     def hasFrames(self) -> bool: return self.frame < len(self.frames)
 
     def decodeFrame(self) -> bool:
         p = self.pixels[self.frame]
-        Rasterize.copyPixelsByPalette(self.bytes, 4, p, self.palette, 3)
+        Raster.blitByPalette(self.bytes, 4, p, self.palette, 3)
         self.frame += 1
         return True
 
@@ -788,14 +786,13 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
     depth: int = 0
     mipMaps: int = 1
     texFlags: TextureFlags = 0
-
-    def begin(self, platform: str) -> (bytes, object, list[object]):
+    def lambdaX(self) -> Texture_Bytes:
         tex = self.textures[0]
         self.width = tex.width; self.height = tex.height
         buf = bytearray(self.width * self.height * 3); mv = memoryview(buf)
-        Rasterize.copyPixelsByPalette(mv, 3, tex.pixels, tex.palette, 3)
-        return buf, self.format, None
-    def end(self): pass
+        Raster.blitByPalette(mv, 3, tex.pixels, tex.palette, 3)
+        return Texture_Bytes(buf, self.format, None)
+    def create(self, platform: str, func: callable): return func(lambdaX)
 
     #endregion
 
@@ -1337,16 +1334,15 @@ class Binary_Wad3X(IHaveMetaInfo, ITexture):
     mipMaps: int = 1
     texFlags: TextureFlags = 0
 
-    def begin(self, platform: str) -> (bytes, object, list[object]):
+    def lambdaX(self) -> Texture_Bytes:
         bbp = 4 if self.transparent else 3
         buf = bytearray(sum([len(x) for x in self.pixels]) * bbp); mv = memoryview(buf)
         spans = [range(0, 0)] * len(self.pixels); offset = 0
         for i, p in enumerate(self.pixels):
             size = len(p) * bbp; span = spans[i] = range(offset, offset + size); offset += size
-            if self.transparent: Rasterize.copyPixelsByPaletteWithAlpha(mv[span.start:span.stop], bbp, p, self.palette, 3, 0xFF)
-            else: Rasterize.copyPixelsByPalette(mv[span.start:span.stop], bbp, p, self.palette, 3)
-        return buf, self.format[1], spans
-    def end(self): pass
+            Raster.blitByPalette(mv[span.start:span.stop], bbp, p, self.palette, 3, 0xFF if self.transparent else None)
+        return Texture_Bytes(buf, self.format[1], spans)
+    def create(self, platform: str, func: callable): return func(lambdaX)
 
     #endregion
 

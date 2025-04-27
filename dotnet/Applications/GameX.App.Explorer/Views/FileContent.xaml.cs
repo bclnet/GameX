@@ -40,6 +40,12 @@ namespace GameX.App.Explorer.Views {
             set { _sfx = value; OnPropertyChanged(); }
         }
 
+        object _path;
+        public object Path {
+            get => _path;
+            set { _path = value; OnPropertyChanged(); }
+        }
+
         IList<MetaContent> _contentTabs;
         public IList<MetaContent> ContentTabs {
             get => _contentTabs;
@@ -50,6 +56,7 @@ namespace GameX.App.Explorer.Views {
             if (ContentTabs != null) foreach (var dispose in ContentTabs.Where(x => x.Dispose != null).Select(x => x.Dispose)) dispose.Dispose();
             Gfx = pakFile.Gfx;
             Sfx = pakFile.Sfx;
+            Path = "PATH";
             ContentTabs = infos?.Select(x => x.Tag as MetaContent).Where(x => x != null).ToList();
             ContentTab.SelectedIndex = ContentTabs != null ? 0 : -1;
         }

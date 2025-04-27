@@ -1,6 +1,6 @@
 import os, re, struct, numpy as np
 from io import BytesIO
-from openstk.gfx_texture import ITexture, TextureFormat, TexturePixel
+from openstk.gfx_texture import Texture_Bytes, ITexture, TextureFormat, TexturePixel
 from gamex.pak import PakBinary
 from gamex.meta import FileSource, MetaInfo, MetaContent, IHaveMetaInfo
 
@@ -457,15 +457,15 @@ class Binary_Gump(IHaveMetaInfo, ITexture):
                     while cur < next: bd[cur2:cur2+1] = color.tobytes(); cur += 1
 
     #region ITexture
+
     format: tuple = (TextureFormat.BGRA1555, TexturePixel.Unknown)
     width: int = 0
     height: int = 0
     depth: int = 0
     mipMaps: int = 1
     texFlags: TextureFlags = 0
+    def create(self, platform: str, func: callable): return func(Texture_Bytes(self.pixels, self.format, None))
 
-    def begin(self, platform: str) -> (bytes, object, list[object]): return self.pixels, self.format, None
-    def end(self): pass
     #endregion
 
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [

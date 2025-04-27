@@ -51,9 +51,9 @@ public partial class FamilyManager {
 
     public static GlobalOption Option = new()
     {
-        Platform = "UN",
+        Platform = "UK",
         ForceOpen = true,
-        ForcePath = "sample:1",
+        ForcePath = "sample:4",
         Family = "Arkane",
         Game = "AF", // Arx Fatalis
         //Game = "DOM", // Dark Messiah of Might and Magic [source]
@@ -72,9 +72,9 @@ public partial class FamilyManager {
     public static GlobalOption Option = new() {
         Platform = "GL",
         ForceOpen = true,
-        ForcePath = "sample:2",
+        ForcePath = "sample:0",
         Family = "Bethesda",
-        Game = "Morrowind", // The Elder Scrolls III: Morrowind
+        //Game = "Morrowind", // The Elder Scrolls III: Morrowind
         //Game = "Oblivion", // The Elder Scrolls IV: Oblivion
         //Game = "Fallout3", // Fallout 3
         //Game = "FalloutNV", // Fallout New Vegas
@@ -86,6 +86,7 @@ public partial class FamilyManager {
         //Game = "SkyrimVR", // The Elder Scrolls V: Skyrim VR
         //Game = "Fallout76", // Fallout 76
         //Game = "Starfield", // Starfield
+        Game = "Oblivion:R", // The Elder Scrolls IV: Oblivion Remastered
     };
 #elif Bioware
     static readonly string[] FamilyKeys = ["Bioware", "Unknown"];
@@ -246,9 +247,6 @@ public partial class FamilyManager {
         //Game = "Disney:AC", // The Disney Afternoon Collection
         //Game = "TGAA:C", // The Great Ace Attorney Chronicles
         //Game = "USF4", // Ultra Street Fighter IV
-
-
-
     };
 #elif Cig
     static readonly string[] FamilyKeys = ["Cig", "Unknown"];
@@ -726,10 +724,10 @@ public partial class FamilyManager {
         ForceOpen = true,
         ForcePath = "sample:0",
         Family = "X2K",
-        Game = "AC", // Asheron's Call [open, read, texture:GL]
+        Game = "XX", // XX
     };
 #else
-    static readonly string[] FamilyKeys = ["Arkane", "Bethesda", "Bioware", "Black", "Blizzard",  "Bohemia", "Bullfrog", "Capcom", "Cig", "Cryptic", "Crytek", "Cyanide", "EA", "Epic", "Frictional", "Frontier", "ID", "IW", "Lucas", "Monolith", "Origin", "Red", "Rockstar", "Ubisoft", "Unity", "Unknown", "Valve", "Volition", "WB", "X2K"];
+    static readonly string[] FamilyKeys = ["Arkane", "Bethesda", "Bioware", "Black", "Blizzard", "Bohemia", "Bullfrog", "Capcom", "Cig", "Cryptic", "Crytek", "Cyanide", "EA", "Epic", "Frictional", "Frontier", "ID", "IW", "Lucas", "Monolith", "Origin", "Red", "Rockstar", "Ubisoft", "Unity", "Unknown", "Valve", "Volition", "WB", "X2K"];
 
     public static GlobalOption Option = new() { };
 #endif

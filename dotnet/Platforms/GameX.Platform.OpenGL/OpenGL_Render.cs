@@ -1,7 +1,6 @@
 ﻿using OpenStack;
 using OpenStack.Gfx;
 using OpenStack.Gfx.OpenGL;
-using System;
 using System.Collections.Generic;
 using static OpenStack.Gfx.GfX;
 
@@ -21,12 +20,7 @@ public static class OpenGLRenderer {
         };
 }
 
-//public class OpenGLTestTriRenderer(OpenGLGfxModel gfx, object obj) : TestTriRenderer(gfx, obj) { }
-public class OpenGLCellRenderer(OpenGLGfxModel gfx, object obj) : Renderer { }
-public class OpenGLParticleRenderer(OpenGLGfxModel gfx, object obj) : Renderer { }
-public class OpenGLWorldRenderer(OpenGLGfxModel gfx, object obj) : Renderer { }
-public class OpenGLObjectRenderer(OpenGLGfxModel gfx, object obj) : Renderer { }
-//public class OpenGLMaterialRenderer(OpenGLGfxModel gfx, object obj) : MaterialRenderer(gfx, obj) { }
+
 //public class OpenGLTextureRenderer(OpenGLGfxModel gfx, object obj) : TextureRenderer(gfx, obj, Level, Value0)
 //{
 //    static Range Level = 0..;

@@ -14,7 +14,7 @@ from .FileContent import FileContent
 from .FileExplorer import FileExplorer
 from .resourcemgr import ResourceManager
 
-platformValues = sorted(PlatformX.platforms, key=lambda s: s.name)
+platformValues = sorted([x for x in PlatformX.platforms if x and x.enabled], key=lambda s: s.name)
 platformIndex = max(_find([x.id for x in platformValues], option.Platform), 0)
 
 # ExplorerMainTab
@@ -106,9 +106,9 @@ class MainPage(QMainWindow):
         logBar.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         logBar.setStyleSheet('background-color: lightgray;')
         platformInput = self.platformInput = QComboBox(logBar)
-        platformInput.addItems([x.name for x in platformValues])
+        for x in platformValues: platformInput.addItem(x.name, x)
         platformInput.currentIndexChanged.connect(self.platform_change)
-        platformInput.setCurrentIndex(platformIndex)
+        platformInput.setCurrentIndex(platformIndex); self.setPlatform(platformInput.itemData(platformInput.currentIndex()))
         p = QPoint(300, 0)
         platformInput.move(p)
 

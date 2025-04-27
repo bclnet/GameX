@@ -14,7 +14,7 @@ namespace GameX.Arkane.Formats;
 public unsafe class Binary_Danae : PakBinary<Binary_Danae> {
     public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         var files = source.Files = [];
-        var key = Encoding.ASCII.GetBytes((string)source.Game.Key); int keyLength = key.Length, keyIndex = 0;
+        var key = (byte[])source.Game.Key; int keyLength = key.Length, keyIndex = 0;
 
         // move to fat table
         r.Seek(r.ReadUInt32());

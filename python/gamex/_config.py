@@ -22,20 +22,20 @@ match __current__:
         familyKeys = [ "Arkane", "Unknown" ]
 
         option = GlobalOption(
-            Platform = "PD",
+            Platform = "GL",
             ForceOpen = True,
-            ForcePath = "sample:1",
+            ForcePath = "sample:4",
             Family = "Arkane",
-            Game = "AF", # Arx Fatalis [open, read, texture:GL]
-            # Game = "DOM", # Dark Messiah of Might and Magic [open, read]
+            Game = "AF", # Arx Fatalis
+            # Game = "DOM", # Dark Messiah of Might and Magic [source]
             # Game = "D", # Dishonored [unreal]
-            # Game = "D2", # Dishonored 2 [open, read]
-            # Game = "P", # Prey [open, read]
+            # Game = "D2", # Dishonored 2
+            # Game = "P", # Prey [cryengine]
             # Game = "D:DOTO", # Dishonored: Death of the Outsider
-            # Game = "W:YB", # Wolfenstein: Youngblood
-            # Game = "W:CP", # Wolfenstein: Cyberpilot
+            # Game = "W:YB", # Wolfenstein: Youngblood [idTech:6]
+            # Game = "W:CP", # Wolfenstein: Cyberpilot [idTech:6]
             # Game = "DL", # Deathloop
-            #Missing: Game = "RF", # Redfall (future)
+            # Missing: Game = "RF", # Redfall (future)
         )
     case 'Bethesda':
         familyKeys = [ "Bethesda", "Unknown" ]
@@ -116,6 +116,16 @@ match __current__:
             # Game = "DI", # Diablo Immortal
             # Game = "OW2", # Overwatch 2
             # Game = "D4", # Diablo IV
+        )
+    case 'Bohemia':
+        familyKeys = [ "Bohemia", "Unknown" ]
+
+        option = GlobalOption(
+            Platform = "GL",
+            ForceOpen = True,
+            ForcePath = "sample:*",
+            Family = "Bohemia",
+            # Game = "XX", # XX
         )
     case 'Bullfrog':
         familyKeys = [ "Bullfrog", "Unknown" ]
@@ -459,6 +469,63 @@ match __current__:
             # Game = "CP77", # Cyberpunk 2077
             # Game = "Witcher4", # The Witcher 4 Polaris (future)
         )
+    case 'Rockstar':
+        familyKeys = [ "Rockstar", "Unknown" ]
+
+        option = GlobalOption(
+            Platform = "GL",
+            ForceOpen = True,
+            ForcePath = "sample:*",
+            Family = "Rockstar",
+            # Game = "GTA", # Grand Theft Auto
+            # Game = "MTM64", # Monster Truck Madness 64
+            # Game = "GTA2", # Grand Theft Auto 2
+            # Game = "CP77", # Cyberpunk 2077
+            # Game = "EWJ3D", # Earthworm Jim 3D
+            # Game = "TSaD", # Thrasher: Skate and Destroy
+            # Game = "EK", # Evel Knievel
+            # Game = "AP:OB", # Austin Powers: Oh, Behave!
+            # Game = "AP:WtMUL", # Austin Powers: Welcome to My Underground Lair!
+            # Game = "MC:SR", # Midnight Club: Street Racing
+            # Game = "SR", # Smuggler's Run
+            # Game = "SH", # Surfing H3O
+            # Game = "ON", # Oni
+            # Game = "YDKJ", # You Don't Know Jack
+            # Game = "GTA3", # Grand Theft Auto III
+            # Game = "SR2", # Smuggler's Run 2: Hostile Territory
+            # Game = "MP", # Max Payne
+            # Game = "TIJ", # The Italian Job
+            # Game = "SoE", # State of Emergency
+            # Game = "SR:W", # Smuggler's Run: Warzones
+            # Game = "GTA:VC", # Grand Theft Auto: Vice City
+            # Game = "MC2", # Midnight Club II
+            # Game = "MP2", # Max Payne 2: The Fall of Max Payne
+            # Game = "MH", # Manhunt
+            # Game = "RDV", # Red Dead Revolver
+            # Game = "GTA:A", # Grand Theft Auto Advance
+            # Game = "GTA:SA", # Grand Theft Auto: San Andreas
+            # Game = "MC3:DE", # Midnight Club 3: DUB Edition
+            # Game = "TW", # The Warriors
+            # Game = "GTA:LCS", # Grand Theft Auto: Liberty City Stories
+            # Game = "MC3:DER", # Midnight Club 3: DUB Edition Remix
+            # Game = "RTT", # Rockstar Games Presents Table Tennis
+            # Game = "B", # Bully
+            # Game = "GTA:VCS", # Grand Theft Auto: Vice City Stories
+            # Game = "MH2", # Manhunt 2
+            # Game = "B:SE", # Bully: Scholarship Edition
+            # Game = "GTA4", # Grand Theft Auto IV
+            # Game = "MC:LA", # Midnight Club: Los Angeles
+            # Game = "GTA:CW", # Grand Theft Auto: Chinatown Wars
+            # Game = "BTR", # Beaterator
+            # Game = "RDR", # Red Dead Redemption
+            # Game = "LAN", # L.A. Noire
+            # Game = "MP3", # Max Payne 3
+            # Game = "GTA5", # Grand Theft Auto V
+            # Game = "GTAO", # Grand Theft Auto Online
+            # Game = "LAN:VR", # L.A. Noire: The VR Case Files
+            # Game = "RDR2", # Red Dead Redemption 2
+            # Game = "RDO", # Red Dead Online
+        )
     case 'Ubisoft':
         familyKeys = [ "Ubisoft", "Unknown" ]
 
@@ -571,7 +638,17 @@ match __current__:
             Family = "WB",
             Game = "AC", # Asheron's Call [open, read, texture:GL]
         )
+    case 'X2K':
+        familyKeys = [ "X2K", "Unknown" ]
+
+        option = GlobalOption(
+            Platform = "GL",
+            ForceOpen = True,
+            ForcePath = "sample:*",
+            Family = "X2K",
+            # Game = "XX", # XX
+        )
     case _:
-        familyKeys = [ "Arkane", "Bethesda", "Bioware", "Black", "Blizzard", "Bullfrog", "Capcom", "Cig", "Cryptic", "Crytek", "Cyanide", "EA", "Epic", "Frictional", "Frontier", "Id", "IW", "Lucas", "Monolith", "Origin", "Red", "Ubisoft", "Unity", "Unknown", "Valve", "Volition", "WbB" ]
+        familyKeys = [ "Arkane", "Bethesda", "Bioware", "Black", "Blizzard", "Bohemia", "Bullfrog", "Capcom", "Cig", "Cryptic", "Crytek", "Cyanide", "EA", "Epic", "Frictional", "Frontier", "Id", "IW", "Lucas", "Monolith", "Origin", "Red", "Rockstar", "Ubisoft", "Unity", "Unknown", "Valve", "Volition", "WB", "X2K" ]
 
         option = GlobalOption()

@@ -43,7 +43,7 @@ def parseKey(value: str) -> object:
     elif value.startswith('b64:'): return base64.b64decode(value[4:].encode('ascii'))
     elif value.startswith('hex:'): return bytes.fromhex(value[4:].replace('/x', ''))
     elif value.startswith('asc:'): return value[4:].encode('ascii')
-    else: value
+    else: return value
 # end::parseKey[]
 
 # tag::parseEngine[]

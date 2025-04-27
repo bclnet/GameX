@@ -28,8 +28,7 @@ class AppTextWidget(QWidget):
 
 # AppNullWidget
 class AppNullWidget(QWidget):
-    def __init__(self, parent, tab):
-        super().__init__()
+    def __init__(self, parent, tab): super().__init__()
 
 # FileContent
 class FileContent(QTabWidget):
@@ -37,6 +36,8 @@ class FileContent(QTabWidget):
         super().__init__()
         self.parent = parent
         self._gfx = []
+        self._sfx = []
+        self._path = None
         self._contentTabs = []
         self.initUI()
     
@@ -97,6 +98,16 @@ class FileContent(QTabWidget):
     def gfx(self, value): self._gfx = value
 
     @property
+    def sfx(self): return self._sfx
+    @sfx.setter
+    def sfx(self, value): self._sfx = value
+
+    @property
+    def path(self): return self._path
+    @sfx.setter
+    def path(self, value): self._path = value
+
+    @property
     def contentTabs(self) -> list[MetaContent]: return self._contentTabs
     @contentTabs.setter
     def contentTabs(self, value: list[MetaContent]):
@@ -104,6 +115,10 @@ class FileContent(QTabWidget):
         self.updateTabs()
 
     def onInfo(self, pakFile: PakFile, infos: list[MetaInfo] = None):
+        # dispose?
+        # if (ContentTabs != null) foreach (var dispose in ContentTabs.Where(x => x.Dispose != null).Select(x => x.Dispose)) dispose.Dispose();
         self.gfx = pakFile.gfx
+        self.sfx = pakFile.sfx
+        self.path = 'PATH'
         self.contentTabs = [x.tag for x in infos if isinstance(x.tag, MetaContent)] if infos else None
         self.contentTab.selectedIndex = 0 if infos else -1

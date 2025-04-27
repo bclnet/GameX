@@ -32,12 +32,12 @@ public static class TestHelper {
         { "Arkane:AF", new Lazy<PakFile>(() => familyArkane.OpenPakFile(new Uri("game:/*.pak#AF"))) },
         { "Arkane:DOM", new Lazy<PakFile>(() => familyArkane.OpenPakFile(new Uri("game:/*_dir.vpk#DOM"))) },
         { "Arkane:D", new Lazy<PakFile>(() => familyArkane.OpenPakFile(new Uri("game:/*TOC.txt#D"))) },
-        { "Arkane:D2", new Lazy<PakFile>(() => familyArkane.OpenPakFile(new Uri("game:/*.index#D2"))) },
+        { "Arkane:D2", new Lazy<PakFile>(() => familyArkane.OpenPakFile(new Uri("game:/*.Index#D2"))) },
         { "Arkane:P", new Lazy<PakFile>(() => familyArkane.OpenPakFile(new Uri("game:/*.pak#P"))) },
-        { "Arkane:D:DOTO", new Lazy<PakFile>(() => familyArkane.OpenPakFile(new Uri("game:/*.index#D:DOTO"))) },
+        { "Arkane:D:DOTO", new Lazy<PakFile>(() => familyArkane.OpenPakFile(new Uri("game:/*.Index#D:DOTO"))) },
         { "Arkane:W:YB", new Lazy<PakFile>(() => familyArkane.OpenPakFile(new Uri("game:/*#W:YB"))) },
         { "Arkane:W:CP", new Lazy<PakFile>(() => familyArkane.OpenPakFile(new Uri("game:/*#W:CP"))) },
-        { "Arkane:DL", new Lazy<PakFile>(() => familyArkane.OpenPakFile(new Uri("game:/*.index#DL"))) },
+        { "Arkane:DL", new Lazy<PakFile>(() => familyArkane.OpenPakFile(new Uri("game:/*.Index#DL"))) },
         //{ "Arkane:RF", new Lazy<PakFile>(() => familyArkane.OpenPakFile(new Uri("game:/*#RF"))) }, //: future
 
         { "Cry:MWO", new Lazy<PakFile>(() => familyCry.OpenPakFile(new Uri("game:/*.pak#MWO"))) },

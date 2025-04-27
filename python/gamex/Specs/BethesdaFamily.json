@@ -271,7 +271,7 @@
           "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 2623190",
           "Local:Oblivion Remastered"
         ],
-        "path": "OblivionRemastered"
+        "path": "OblivionRemastered/Content"
       }
     },
     "Tes6": {

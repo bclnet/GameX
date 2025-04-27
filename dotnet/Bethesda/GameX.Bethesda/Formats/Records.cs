@@ -620,7 +620,7 @@ public struct STRVField { public override readonly string ToString() => Value; p
 public struct FILEField { public override readonly string ToString() => Value; public string Value; }
 public struct DATVField { public override readonly string ToString() => "DATV"; public bool B; public int I; public float F; public string S; }
 public struct FLTVField { public override readonly string ToString() => $"{Value}"; public static (string, int) Struct = ("<f", 4); public float Value; }
-public struct BYTEField { public override readonly string ToString() => $"{Value}"; public static (string, int) Struct = ("<c", 1); public byte Value; }
+public struct BYTEField { public override readonly string ToString() => $"{Value}"; public static (string, int) Struct = ("<C", 1); public byte Value; }
 public struct IN16Field { public override readonly string ToString() => $"{Value}"; public static (string, int) Struct = ("<h", 2); public short Value; }
 public struct UI16Field { public override readonly string ToString() => $"{Value}"; public static (string, int) Struct = ("<H", 2); public ushort Value; }
 public struct IN32Field { public override readonly string ToString() => $"{Value}"; public static (string, int) Struct = ("<i", 4); public int Value; }

@@ -52,7 +52,7 @@ public class UnknownPakFile : PakFile {
     public static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             ".txt" or ".ini" or ".cfg" or ".csv" or ".xml" => (0, Binary_Txt.Factory),
-            ".wav" => (0, Binary_Snd.Factory),
+            ".wav" or ".mp3" => (0, Binary_Snd.Factory),
             ".bmp" or ".jpg" or ".png" or ".gif" or ".tiff" => (0, Binary_Img.Factory), // Exif
             ".pcx" => (0, Binary_Pcx.Factory),
             ".tga" => (0, Binary_Tga.Factory),

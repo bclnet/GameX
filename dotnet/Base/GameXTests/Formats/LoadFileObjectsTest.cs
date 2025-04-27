@@ -33,7 +33,7 @@ public class LoadFileObjectsTest {
         var source = TestHelper.Paks[pak].Value;
         if (source is MultiPakFile multiPak)
             foreach (var p in multiPak.PakFiles) {
-                if (p is not BinaryPakFile z) throw new InvalidOperationException("multiPak not a BinaryPakFile");
+                if (p is not BinaryPakFile z) throw new InvalidOperationException("multiPak not A BinaryPakFile");
                 await ExportAsync(z);
             }
         else await ExportAsync(source);

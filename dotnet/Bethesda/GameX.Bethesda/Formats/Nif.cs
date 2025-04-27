@@ -3,6 +3,7 @@ using System.Drawing;
 using System.IO;
 using System.Numerics;
 using static OpenStack.Debug;
+#pragma warning disable CS9113 // Parameter is unread.
 
 namespace GameX.Bethesda.Formats.Nif;
 
@@ -104,7 +105,7 @@ public enum DecayType : uint {
 
 #endregion
 
-#region Structs
+#region Records
 
 // Refers to an object before the current one in the hierarchy.
 public struct Ptr<T>(BinaryReader r) {
@@ -118,35 +119,31 @@ public struct Ref<T>(BinaryReader r) {
     public bool IsNull => Value < 0;
 }
 
-#endregion
-
-#region Misc Classes
-
 public class BoundingBox(BinaryReader r) {
-    public uint unknownInt = r.ReadUInt32();
-    public Vector3 translation = r.ReadVector3();
-    public Matrix4x4 rotation = r.ReadRowMajorMatrix3x3();
-    public Vector3 radius = r.ReadVector3();
+    public uint UnknownInt = r.ReadUInt32();
+    public Vector3 Translation = r.ReadVector3();
+    public Matrix4x4 Rotation = r.ReadRowMajorMatrix3x3();
+    public Vector3 Radius = r.ReadVector3();
 }
 
 public struct Color3(BinaryReader r) {
-    public float r = r.ReadSingle();
-    public float g = r.ReadSingle();
-    public float b = r.ReadSingle();
-    public Color ToColor() => Color.FromArgb((int)(r * 255f), (int)(g * 255f), (int)(b * 255f));
+    public float R = r.ReadSingle();
+    public float G = r.ReadSingle();
+    public float B = r.ReadSingle();
+    public Color ToColor() => Color.FromArgb((int)(R * 255f), (int)(G * 255f), (int)(B * 255f));
 }
 
 public struct Color4(BinaryReader r) {
-    public float r = r.ReadSingle();
-    public float g = r.ReadSingle();
-    public float b = r.ReadSingle();
-    public float a = r.ReadSingle();
+    public float R = r.ReadSingle();
+    public float G = r.ReadSingle();
+    public float B = r.ReadSingle();
+    public float A = r.ReadSingle();
 }
 
 public class TexDesc(BinaryReader r) {
-    public Ref<NiSourceTexture> source = new Ref<NiSourceTexture>(r);
-    public TexClampMode clampMode = (TexClampMode)r.ReadUInt32();
-    public TexFilterMode filterMode = (TexFilterMode)r.ReadUInt32();
+    public Ref<NiSourceTexture> Source = new Ref<NiSourceTexture>(r);
+    public TexClampMode ClampMode = (TexClampMode)r.ReadUInt32();
+    public TexFilterMode FilterMode = (TexFilterMode)r.ReadUInt32();
     public uint UVSet = r.ReadUInt32();
     public short PS2L = r.ReadInt16();
     public short PS2K = r.ReadInt16();
@@ -154,110 +151,112 @@ public class TexDesc(BinaryReader r) {
 }
 
 public class TexCoord(BinaryReader r) {
-    public float u = r.ReadSingle();
-    public float v = r.ReadSingle();
+    public float U = r.ReadSingle();
+    public float V = r.ReadSingle();
 }
 
 public class Triangle(BinaryReader r) {
-    public ushort v1 = r.ReadUInt16();
-    public ushort v2 = r.ReadUInt16();
-    public ushort v3 = r.ReadUInt16();
+    public ushort V1 = r.ReadUInt16();
+    public ushort V2 = r.ReadUInt16();
+    public ushort V3 = r.ReadUInt16();
 }
 
 public class MatchGroup(BinaryReader r) {
     //public ushort numVertices;
-    public ushort[] vertexIndices = r.ReadL16PArray<ushort>("h");
+    public ushort[] VertexIndices = r.ReadL16PArray<ushort>("h");
 }
 
 public class TBC(BinaryReader r) {
-    public float t = r.ReadSingle();
-    public float b = r.ReadSingle();
-    public float c = r.ReadSingle();
+    public float T = r.ReadSingle();
+    public float B = r.ReadSingle();
+    public float C = r.ReadSingle();
 }
 
 public class Key<T> {
-    public float time;
-    public T value;
-    public T forward;
-    public T backward;
+    public float Time;
+    public T Value;
+    public T Forward;
+    public T Backward;
     public TBC TBC;
 
     public Key(BinaryReader r, KeyType keyType) {
-        time = r.ReadSingle();
-        value = NiReaderUtils.Read<T>(r);
-        if (keyType == KeyType.QUADRATIC_KEY) { forward = NiReaderUtils.Read<T>(r); backward = NiReaderUtils.Read<T>(r); }
+        Time = r.ReadSingle();
+        Value = NiReaderUtils.Read<T>(r);
+        if (keyType == KeyType.QUADRATIC_KEY) { Forward = NiReaderUtils.Read<T>(r); Backward = NiReaderUtils.Read<T>(r); }
         else if (keyType == KeyType.TBC_KEY) TBC = new TBC(r);
     }
 }
 
 public class KeyGroup<T> {
-    public uint numKeys;
-    public KeyType interpolation;
-    public Key<T>[] keys;
+    public uint NumKeys;
+    public KeyType Interpolation;
+    public Key<T>[] Keys;
 
     public KeyGroup(BinaryReader r) {
-        numKeys = r.ReadUInt32();
-        if (numKeys != 0) interpolation = (KeyType)r.ReadUInt32();
-        keys = r.ReadFArray(r => new Key<T>(r, interpolation), (int)numKeys);
+        NumKeys = r.ReadUInt32();
+        if (NumKeys != 0) Interpolation = (KeyType)r.ReadUInt32();
+        Keys = r.ReadFArray(r => new Key<T>(r, Interpolation), (int)NumKeys);
     }
 }
 
 public class QuatKey<T> {
-    public float time;
-    public T value;
+    public float Time;
+    public T Value;
     public TBC TBC;
 
     public QuatKey(BinaryReader r, KeyType keyType) {
-        time = r.ReadSingle();
-        if (keyType != KeyType.XYZ_ROTATION_KEY) value = NiReaderUtils.Read<T>(r);
+        Time = r.ReadSingle();
+        if (keyType != KeyType.XYZ_ROTATION_KEY) Value = NiReaderUtils.Read<T>(r);
         if (keyType == KeyType.TBC_KEY) { TBC = new TBC(r); }
     }
 }
 
 public class SkinData(BinaryReader r) {
-    public SkinTransform skinTransform = new SkinTransform(r);
-    public Vector3 boundingSphereOffset = r.ReadVector3();
-    public float boundingSphereRadius = r.ReadSingle();
+    public SkinTransform SkinTransform = new SkinTransform(r);
+    public Vector3 BoundingSphereOffset = r.ReadVector3();
+    public float BoundingSphereRadius = r.ReadSingle();
     //public ushort numVertices;
-    public SkinWeight[] vertexWeights = r.ReadL16FArray(r => new SkinWeight(r));
+    public SkinWeight[] VertexWeights = r.ReadL16FArray(r => new SkinWeight(r));
 }
 
 public class SkinWeight(BinaryReader r) {
-    public ushort index = r.ReadUInt16();
-    public float weight = r.ReadSingle();
+    public ushort Index = r.ReadUInt16();
+    public float Weight = r.ReadSingle();
 }
 
 public class SkinTransform(BinaryReader r) {
-    public Matrix4x4 rotation = r.ReadRowMajorMatrix3x3();
-    public Vector3 translation = r.ReadVector3();
-    public float scale = r.ReadSingle();
+    public Matrix4x4 Rotation = r.ReadRowMajorMatrix3x3();
+    public Vector3 Translation = r.ReadVector3();
+    public float Scale = r.ReadSingle();
 }
 
 public class Particle(BinaryReader r) {
-    public Vector3 velocity = r.ReadVector3();
-    public Vector3 unknownVector = r.ReadVector3();
-    public float lifetime = r.ReadSingle();
-    public float lifespan = r.ReadSingle();
-    public float timestamp = r.ReadSingle();
-    public ushort unknownShort = r.ReadUInt16();
-    public ushort vertexID = r.ReadUInt16();
+    public Vector3 Velocity = r.ReadVector3();
+    public Vector3 UnknownVector = r.ReadVector3();
+    public float Lifetime = r.ReadSingle();
+    public float Lifespan = r.ReadSingle();
+    public float Timestamp = r.ReadSingle();
+    public ushort UnknownShort = r.ReadUInt16();
+    public ushort VertexId = r.ReadUInt16();
 }
 
 public class Morph {
-    public uint numKeys;
-    public KeyType interpolation;
-    public Key<float>[] keys;
-    public Vector3[] vectors;
+    public uint NumKeys;
+    public KeyType Interpolation;
+    public Key<float>[] Keys;
+    public Vector3[] Vectors;
 
     public Morph(BinaryReader r, uint numVertices) {
-        numKeys = r.ReadUInt32();
-        interpolation = (KeyType)r.ReadUInt32();
-        keys = r.ReadFArray(r => new Key<float>(r, interpolation), (int)numKeys);
-        vectors = r.ReadFArray(r => r.ReadVector3(), (int)numVertices);
+        NumKeys = r.ReadUInt32();
+        Interpolation = (KeyType)r.ReadUInt32();
+        Keys = r.ReadFArray(r => new Key<float>(r, Interpolation), (int)NumKeys);
+        Vectors = r.ReadFArray(r => r.ReadVector3(), (int)numVertices);
     }
 }
 
 #endregion
+
+#region Headers
 
 public class NiHeader(BinaryReader r) {
     public byte[] Str = r.ReadBytes(40); // 40 bytes (including \n)
@@ -273,9 +272,7 @@ public class NiFooter(BinaryReader r) {
 /// <summary>
 /// These are the main units of data that NIF files are arranged in.
 /// </summary>
-#pragma warning disable CS9113 // Parameter is unread.
 public abstract class NiObject(BinaryReader r) { }
-#pragma warning restore CS9113 // Parameter is unread.
 
 /// <summary>
 /// An object that can be controlled by a controller.
@@ -353,7 +350,7 @@ public abstract class NiGeometryData : NiObject {
     public bool HasNormals;
     public Vector3[] Normals;
     public Vector3 Center;
-    public float Radius;
+    public float Radius;    
     public bool HasVertexColors;
     public Color4[] VertexColors;
     public ushort NumUVSets;
@@ -374,7 +371,8 @@ public abstract class NiGeometryData : NiObject {
         HasUV = r.ReadBool32();
         if (HasUV) {
             UVSets = new TexCoord[NumUVSets, NumVertices];
-            for (var i = 0; i < NumUVSets; i++) for (var j = 0; j < NumVertices; j++) UVSets[i, j] = new TexCoord(r);
+            for (var i = 0; i < NumUVSets; i++)
+                for (var j = 0; j < NumVertices; j++) UVSets[i, j] = new TexCoord(r);
         }
     }
 }
@@ -611,6 +609,79 @@ public class NiVertWeightsExtraData : NiExtraData {
     }
 }
 
+// Controllers
+public abstract class NiTimeController : NiObject {
+    public Ref<NiTimeController> NextController;
+    public ushort Flags;
+    public float Frequency;
+    public float Phase;
+    public float StartTime;
+    public float StopTime;
+    public Ptr<NiObjectNET> Target;
+
+    public NiTimeController(BinaryReader r) : base(r) {
+        NextController = new Ref<NiTimeController>(r);
+        Flags = r.ReadUInt16();
+        Frequency = r.ReadSingle();
+        Phase = r.ReadSingle();
+        StartTime = r.ReadSingle();
+        StopTime = r.ReadSingle();
+        Target = new Ptr<NiObjectNET>(r);
+    }
+}
+
+public class NiUVController : NiTimeController {
+    public ushort UnknownShort;
+    public Ref<NiUVData> Data;
+
+    public NiUVController(BinaryReader r) : base(r) {
+        UnknownShort = r.ReadUInt16();
+        Data = new Ref<NiUVData>(r);
+    }
+}
+
+public abstract class NiInterpController(BinaryReader r) : NiTimeController(r) { }
+
+public abstract class NiSingleInterpController(BinaryReader r) : NiInterpController(r) { }
+
+public class NiKeyframeController : NiSingleInterpController {
+    public Ref<NiKeyframeData> Data;
+
+    public NiKeyframeController(BinaryReader r) : base(r) {
+        Data = new Ref<NiKeyframeData>(r);
+    }
+}
+
+public class NiGeomMorpherController : NiInterpController {
+    public Ref<NiMorphData> Data;
+    public byte AlwaysUpdate;
+
+    public NiGeomMorpherController(BinaryReader r) : base(r) {
+        Data = new Ref<NiMorphData>(r);
+        AlwaysUpdate = r.ReadByte();
+    }
+}
+
+public abstract class NiBoolInterpController(BinaryReader r) : NiSingleInterpController(r) { }
+
+public class NiVisController : NiBoolInterpController {
+    public Ref<NiVisData> Data;
+
+    public NiVisController(BinaryReader r) : base(r) {
+        Data = new Ref<NiVisData>(r);
+    }
+}
+
+public abstract class NiFloatInterpController(BinaryReader r) : NiSingleInterpController(r) { }
+
+public class NiAlphaController : NiFloatInterpController {
+    public Ref<NiFloatData> Data;
+
+    public NiAlphaController(BinaryReader r) : base(r) {
+        Data = new Ref<NiFloatData>(r);
+    }
+}
+
 // Particles
 public class NiParticles(BinaryReader r) : NiGeometry(r) { }
 public class NiParticlesData : NiGeometryData {
@@ -797,79 +868,6 @@ public class NiParticleRotation : NiParticleModifier {
     }
 }
 
-// Controllers
-public abstract class NiTimeController : NiObject {
-    public Ref<NiTimeController> NextController;
-    public ushort Flags;
-    public float Frequency;
-    public float Phase;
-    public float StartTime;
-    public float StopTime;
-    public Ptr<NiObjectNET> Target;
-
-    public NiTimeController(BinaryReader r) : base(r) {
-        NextController = new Ref<NiTimeController>(r);
-        Flags = r.ReadUInt16();
-        Frequency = r.ReadSingle();
-        Phase = r.ReadSingle();
-        StartTime = r.ReadSingle();
-        StopTime = r.ReadSingle();
-        Target = new Ptr<NiObjectNET>(r);
-    }
-}
-
-public class NiUVController : NiTimeController {
-    public ushort UnknownShort;
-    public Ref<NiUVData> Data;
-
-    public NiUVController(BinaryReader r) : base(r) {
-        UnknownShort = r.ReadUInt16();
-        Data = new Ref<NiUVData>(r);
-    }
-}
-
-public abstract class NiInterpController(BinaryReader r) : NiTimeController(r) { }
-
-public abstract class NiSingleInterpController(BinaryReader r) : NiInterpController(r) { }
-
-public class NiKeyframeController : NiSingleInterpController {
-    public Ref<NiKeyframeData> Data;
-
-    public NiKeyframeController(BinaryReader r) : base(r) {
-        Data = new Ref<NiKeyframeData>(r);
-    }
-}
-
-public class NiGeomMorpherController : NiInterpController {
-    public Ref<NiMorphData> Data;
-    public byte AlwaysUpdate;
-
-    public NiGeomMorpherController(BinaryReader r) : base(r) {
-        Data = new Ref<NiMorphData>(r);
-        AlwaysUpdate = r.ReadByte();
-    }
-}
-
-public abstract class NiBoolInterpController(BinaryReader r) : NiSingleInterpController(r) { }
-
-public class NiVisController : NiBoolInterpController {
-    public Ref<NiVisData> Data;
-
-    public NiVisController(BinaryReader r) : base(r) {
-        Data = new Ref<NiVisData>(r);
-    }
-}
-
-public abstract class NiFloatInterpController(BinaryReader r) : NiSingleInterpController(r) { }
-
-public class NiAlphaController : NiFloatInterpController {
-    public Ref<NiFloatData> Data;
-
-    public NiAlphaController(BinaryReader r) : base(r) {
-        Data = new Ref<NiFloatData>(r);
-    }
-}
-
 // Skin Stuff
 public class NiSkinInstance : NiObject {
     public Ref<NiSkinData> Data;
@@ -992,6 +990,8 @@ public class NiTextureEffect : NiDynamicEffect {
         UnknownShort = r.ReadUInt16();
     }
 }
+
+#endregion
 
 public class NiReaderUtils {
     public static NiAVObject.NiFlags ReadFlags(BinaryReader r) => (NiAVObject.NiFlags)r.ReadUInt16();

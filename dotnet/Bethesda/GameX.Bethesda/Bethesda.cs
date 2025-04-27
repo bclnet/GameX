@@ -67,7 +67,7 @@ public class BethesdaPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileM
         else if (Contains(p = $"{texturePathWithoutExtension}.dds")) return p;
         else if (Contains(p = $"{textureNameInTexturesDir}.tga")) return p;
         else if (Contains(p = $"{texturePathWithoutExtension}.tga")) return p;
-        else { Log($"Could not find file '{p}' in a PAK file."); return null; }
+        else { Log($"Could not find file '{p}' in A PAK file."); return null; }
     }
 
     #endregion

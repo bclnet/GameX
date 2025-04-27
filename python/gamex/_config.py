@@ -1,8 +1,8 @@
 __title__ = "gamex"
 __version__ = "0.0.1"
 # __current__ = "Unknown"
-__current__ = "Arkane"
-# __current__ = "Bethesda"
+# __current__ = "Arkane"
+__current__ = "Bethesda"
 # __current__ = "Bullfrog"
 # __current__ = "ID"
 # __current__ = "Valve"
@@ -43,7 +43,7 @@ match __current__:
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
-            ForcePath = "sample:0",
+            ForcePath = "sample:2",
             Family = "Bethesda",
             Game = "Morrowind", # The Elder Scrolls III: Morrowind
             # Game = "Oblivion", # The Elder Scrolls IV: Oblivion

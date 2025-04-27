@@ -72,10 +72,10 @@ public partial class FamilyManager {
     public static GlobalOption Option = new() {
         Platform = "GL",
         ForceOpen = true,
-        ForcePath = "sample:0",
+        ForcePath = "sample:1",
         Family = "Bethesda",
         //Game = "Morrowind", // The Elder Scrolls III: Morrowind
-        //Game = "Oblivion", // The Elder Scrolls IV: Oblivion
+        Game = "Oblivion", // The Elder Scrolls IV: Oblivion
         //Game = "Fallout3", // Fallout 3
         //Game = "FalloutNV", // Fallout New Vegas
         //Game = "Skyrim", // The Elder Scrolls V: Skyrim
@@ -86,7 +86,7 @@ public partial class FamilyManager {
         //Game = "SkyrimVR", // The Elder Scrolls V: Skyrim VR
         //Game = "Fallout76", // Fallout 76
         //Game = "Starfield", // Starfield
-        Game = "Oblivion:R", // The Elder Scrolls IV: Oblivion Remastered
+        //Game = "Oblivion:R", // The Elder Scrolls IV: Oblivion Remastered
     };
 #elif Bioware
     static readonly string[] FamilyKeys = ["Bioware", "Unknown"];

@@ -45,11 +45,11 @@ namespace GameX.App.Cli {
             else {
                 Console.WriteLine($"{family.Name} - {args.Uri}\n");
                 //if (estate.OpenPakFile(estate.ParseResource(opts.Uri)) is not MultiPakFile multiPak) throw new InvalidOperationException("multiPak not a MultiPakFile");
-                using var multiPak = family.OpenPakFile(args.Uri) as MultiPakFile ?? throw new InvalidOperationException("multiPak not a MultiPakFile");
+                using var multiPak = family.OpenPakFile(args.Uri) as MultiPakFile ?? throw new InvalidOperationException("multiPak not A MultiPakFile");
                 if (multiPak.PakFiles.Count == 0) { Console.WriteLine("No paks found."); return Task.FromResult(0); }
                 Console.WriteLine("Paks found:");
                 foreach (var p in multiPak.PakFiles) {
-                    if (p is not BinaryPakFile pak) throw new InvalidOperationException("multiPak not a BinaryPakFile");
+                    if (p is not BinaryPakFile pak) throw new InvalidOperationException("multiPak not A BinaryPakFile");
                     Console.WriteLine($"\n{pak.Name}");
                     foreach (var exts in pak.Files.Select(x => Path.GetExtension(x.Path)).GroupBy(x => x)) Console.WriteLine($"  files{exts.Key}: {exts.Count()}");
                 }

@@ -680,7 +680,7 @@ public class Binary_Nif : IHaveMetaInfo, IModel {
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new(null, new MetaContent { Type = "Object", Name = Name, Value = this }),
-        new("Nif", items: [
+        new("NIF", items: [
             new($"NumBlocks: {Header.NumBlocks}"),
         ]),
     ];

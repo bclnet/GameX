@@ -1,5 +1,5 @@
 ﻿//#define Arkane
-#define Bethesda
+//#define Bethesda
 //#define Bioware
 //#define Black
 //#define Blizzard
@@ -18,6 +18,7 @@
 //#define IW
 //#define Lucas
 //#define Monolith
+#define Nintendo
 //#define Origin
 //#define Red
 //#define Rockstar
@@ -510,6 +511,33 @@ public partial class FamilyManager {
         //Game = "FEAR2", // F.E.A.R. 2: Project Origin
         //Game = "FEAR3", // F.E.A.R. 3
     };
+#elif Nintendo
+    static readonly string[] FamilyKeys = ["Nintendo", "Unknown"];
+
+    public static GlobalOption Option = new()
+    {
+        Platform = "GL",
+        ForceOpen = true,
+        ForcePath = "sample:0",
+        Family = "Nintendo",
+        Game = "Z:TFH", // The Legend of Zelda: Tri Force Heroes
+        //Game = "AC:AF", // Animal Crossing: Amiibo Festival
+        //Game = "SFZ", // Star Fox Zero
+        //Game = "SFG", // Star Fox Guard
+        //Game = "Z:BotW", // The Legend of Zelda: Breath of the Wild
+        //Game = "MK8D", // Mario Kart 8 Deluxe
+        //Game = "CaptainToad:TT", // Captain Toad: Treasure Tracker
+        //Game = "NSMB:UD", // New Super Mario Bros. U Deluxe
+        //Game = "Pikmin3D", // Pikmin 3 Deluxe
+        //Game = "XX", // XX
+        //Game = "XX", // XX
+        //Game = "XX", // XX
+        //Game = "XX", // XX
+        //Game = "XX", // XX
+        //Game = "XX", // XX
+        //Game = "XX", // XX
+        //Game = "XX", // XX
+    };
 #elif Origin
     static readonly string[] FamilyKeys = ["Origin", "Unknown"];
 
@@ -727,7 +755,7 @@ public partial class FamilyManager {
         Game = "XX", // XX
     };
 #else
-    static readonly string[] FamilyKeys = ["Arkane", "Bethesda", "Bioware", "Black", "Blizzard", "Bohemia", "Bullfrog", "Capcom", "Cig", "Cryptic", "Crytek", "Cyanide", "EA", "Epic", "Frictional", "Frontier", "ID", "IW", "Lucas", "Monolith", "Origin", "Red", "Rockstar", "Ubisoft", "Unity", "Unknown", "Valve", "Volition", "WB", "X2K"];
+    static readonly string[] FamilyKeys = ["Arkane", "Bethesda", "Bioware", "Black", "Blizzard", "Bohemia", "Bullfrog", "Capcom", "Cig", "Cryptic", "Crytek", "Cyanide", "EA", "Epic", "Frictional", "Frontier", "ID", "IW", "Lucas", "Monolith", "Nintendo", "Origin", "Red", "Rockstar", "Ubisoft", "Unity", "Unknown", "Valve", "Volition", "WB", "X2K"];
 
     public static GlobalOption Option = new() { };
 #endif

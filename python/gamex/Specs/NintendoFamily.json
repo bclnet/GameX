@@ -1,0 +1,13 @@
+﻿{
+  "id": "Nintendo",
+  "name": "Nintendo",
+  "studio": "Nintendo",
+  "description": "",
+  "url": "https://en.wikipedia.org/wiki/Nintendo",
+  "samples": [
+    "NintendoFamily.Sample.json"
+  ],
+  "specs": [
+    "NintendoFamily+EPD.json"
+  ]
+}

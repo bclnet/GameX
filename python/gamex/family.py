@@ -4,7 +4,7 @@ from enum import Enum
 from urllib.parse import urlparse
 from importlib import resources
 from openstk.poly import findType
-from openstk.platform import PlatformX, HostFileSystem, StandardFileSystem, VirtualFileSystem
+from openstk.platform import PlatformX, AggreateFileSystem, HostFileSystem, IsoFileSystem, StandardFileSystem, VirtualFileSystem, ZipFileSystem
 from gamex import option, familyKeys
 from gamex.pak import PakState, ManyPakFile, MultiPakFile
 from gamex.store import getPathByKey as Store_getPathByKey
@@ -104,19 +104,30 @@ def createFamilyApp(family: Family, id: str, elem: dict[str, object]) -> FamilyA
 
 # create FileSystem
 @staticmethod
-def createFileSystem(fileSystemType: str, path: FileManager.PathItem, subPath: str, virtuals: dict[str, object], host: str = None) -> IFileSystem:
-    system = HostFileSystem(host) if host else \
+def createFileSystem(fileSystemType: str, path: SystemPath, subPath: str, host: str = None) -> IFileSystem:
+    fileSystem = HostFileSystem(host) if host else \
         findType(fileSystemType)(path) if fileSystemType else \
         None
-    if not system:
-        firstPath = next(iter(path.paths), None) if path else None
-        root = path.root if not subPath else os.path.join(path.root, subPath)
-        match path.type:
-            case None: system = StandardFileSystem(root if not firstPath else os.path.join(root, firstPath))
-            case 'zip': system = ZipFileSystem(root, firstPath)
-            case 'zip:iso': system = ZipIsoFileSystem(root, firstPath)
-            case _: raise Exception(f'Unknown {path.type}')
-    return system if not virtuals else VirtualFileSystem(system, virtuals)
+    if fileSystem: return fileSystem
+    firstPath = next(iter(path.paths), None) if path else None
+    root = path.root if not subPath else os.path.join(path.root, subPath)
+    match path.type:
+        case None: fileSystem = StandardFileSystem(root if not firstPath else os.path.join(root, firstPath))
+        case 'zip': fileSystem = ZipFileSystem(root, firstPath)
+        case 'iso': fileSystem = IsoFileSystem(root, firstPath)
+        case _: raise Exception(f'Unknown {path.type}')
+    return fileSystem
+
+# process FileSystem
+@staticmethod
+def processFileSystem(fileSystemType: str, path: SystemPath, subPath: str, virtuals: dict[str, object]) -> IFileSystem:
+    firstPath = next(iter(path.paths), None) if path else None
+    root = path.root if not subPath else os.path.join(path.root, subPath)
+    match path.type:
+        case None: fileSystem
+        case '3ds': fileSystem = X3dsFileSystem(root, firstPath)
+        case _: raise Exception(f'Unknown {path.type}')
+    return fileSystem if not virtuals else AggregateFileSystem([fileSystem, VirtualFileSystem(virtuals)])
 
 #endregion
 
@@ -228,14 +239,14 @@ games: {[x for x in self.games.values()]}'''
         subPath = edition.path if edition else None
         fileSystemType = game.fileSystemType
         fileSystem = \
-            (createFileSystem(fileSystemType, found, subPath, virtuals) if found else None) if uri.scheme == 'game' else \
-            (createFileSystem(fileSystemType, FileManager.PathItem(uri.path, None), subPath, virtuals) if uri.path else None) if uri.scheme == 'file' else \
-            (createFileSystem(fileSystemType, None, subPath, virtuals, uri) if uri.netloc else None) if uri.scheme.startswith('http') else None
+            (createFileSystem(fileSystemType, found, subPath) if found else None) if uri.scheme == 'game' else \
+            (createFileSystem(fileSystemType, FileManager.PathItem(uri.path, None), subPath) if uri.path else None) if uri.scheme == 'file' else \
+            (createFileSystem(fileSystemType, found, subPath, uri) if uri.netloc else None) if uri.scheme.startswith('http') else None
         if not fileSystem:
-            if throwOnError: raise Exception(f'Not located: {game.id}')
+            if throwOnError: raise Exception(f'{game.id}: unable to find game')
             else: return None
         return Resource(
-            fileSystem = fileSystem,
+            fileSystem = processFileSystem(fileSystemType, found, subPath, virtuals),
             game = game,
             edition = edition,
             searchPattern = searchPattern
@@ -436,9 +447,9 @@ class FamilyGame:
     def getSystemPath(self, startsWith: str, family: str, elem: map[str, object]) -> SystemPath:
         if not self.files or not self.files.keys: return None
         for key in [x for x in self.files.keys if x.startsWith(startsWith)] if startsWith else self.files.keys:
-            p = key.split(':', 1)
+            p = key.split('#', 1)
             k = p[0]; v = None if len(p) < 2 else p[1]
-            path = Store_getPathByKey(key, family, elem)
+            path = Store_getPathByKey(k, family, elem)
             if not path: continue
             path = os.path.abspath(PlatformX.decodePath(path))
             if not os.path.exists(path): continue

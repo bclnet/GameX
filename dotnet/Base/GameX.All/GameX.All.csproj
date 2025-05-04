@@ -35,6 +35,7 @@
     <ProjectReference Include="..\..\IW\GameX.IW\GameX.IW.csproj" />
     <ProjectReference Include="..\..\Lucas\GameX.Lucas\GameX.Lucas.csproj" />
     <ProjectReference Include="..\..\Monolith\GameX.Monolith\GameX.Monolith.csproj" />
+    <ProjectReference Include="..\..\Nintendo\GameX.Nintendo\GameX.Nintendo.csproj" />
     <ProjectReference Include="..\..\Origin\GameX.Origin\GameX.Origin.csproj" />
     <ProjectReference Include="..\..\Red\GameX.Red\GameX.Red.csproj" />
     <ProjectReference Include="..\..\Rockstar\GameX.Rockstar\GameX.Rockstar.csproj" />

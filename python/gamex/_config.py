@@ -442,6 +442,16 @@ match __current__:
             # Game = "FEAR2", # F.E.A.R. 2: Project Origin
             # Game = "FEAR3", # F.E.A.R. 3
         )
+    case 'Nintendo':
+        familyKeys = [ "Nintendo", "Unknown" ]
+
+        option = GlobalOption(
+            Platform = "GL",
+            ForceOpen = True,
+            ForcePath = "sample:*",
+            Family = "Nintendo",
+            # Game = "XX", # XX
+        )
     case 'Origin':
         familyKeys = [ "Origin", "Unknown" ]
 
@@ -649,6 +659,6 @@ match __current__:
             # Game = "XX", # XX
         )
     case _:
-        familyKeys = [ "Arkane", "Bethesda", "Bioware", "Black", "Blizzard", "Bohemia", "Bullfrog", "Capcom", "Cig", "Cryptic", "Crytek", "Cyanide", "EA", "Epic", "Frictional", "Frontier", "Id", "IW", "Lucas", "Monolith", "Origin", "Red", "Rockstar", "Ubisoft", "Unity", "Unknown", "Valve", "Volition", "WB", "X2K" ]
+        familyKeys = [ "Arkane", "Bethesda", "Bioware", "Black", "Blizzard", "Bohemia", "Bullfrog", "Capcom", "Cig", "Cryptic", "Crytek", "Cyanide", "EA", "Epic", "Frictional", "Frontier", "ID", "IW", "Lucas", "Monolith", "Nintendo", "Origin", "Red", "Rockstar", "Ubisoft", "Unity", "Unknown", "Valve", "Volition", "WB", "X2K" ]
 
         option = GlobalOption()

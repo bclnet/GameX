@@ -1,6 +1,7 @@
 ﻿using GameX.Formats;
 using GameX.Unknown;
 using OpenStack;
+using OpenStack.Nintendo;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -189,22 +190,36 @@ public partial class FamilyManager {
     /// <param name="virtuals">The virtuals.</param>
     /// <param name="host">The host.</param>
     /// <returns></returns>
-    internal static IFileSystem CreateFileSystem(Type fileSystemType, SystemPath path, string subPath, Dictionary<string, byte[]> virtuals, Uri host = null) {
-        var system = host != null ? new HostFileSystem(host)
+    internal static IFileSystem CreateFileSystem(Type fileSystemType, SystemPath path, string subPath, Uri host = null) {
+        var fileSystem = host != null ? new HostFileSystem(host)
             : fileSystemType != null ? (IFileSystem)Activator.CreateInstance(fileSystemType, path)
             : null;
-        if (system == null) {
-            var firstPath = path?.Paths.FirstOrDefault();
-            var root = string.IsNullOrEmpty(subPath) ? path.Root : Path.Combine(path.Root, subPath);
-            system = path.Type switch {
-                null => new StandardFileSystem(string.IsNullOrEmpty(firstPath) ? root : Path.Combine(root, firstPath)),
-                "zip" => new ZipFileSystem(root, firstPath),
-                "zip:iso" => new ZipIsoFileSystem(root, firstPath),
+        if (fileSystem != null) return fileSystem;
+        var firstPath = path?.Paths.FirstOrDefault();
+        var root = string.IsNullOrEmpty(subPath) ? path.Root : Path.Combine(path.Root, subPath);
+        var reprocess = false;
+        do {
+            fileSystem = Path.GetExtension(root).ToLowerInvariant() switch {
+                "" => new StandardFileSystem(string.IsNullOrEmpty(firstPath) ? root : Path.Combine(root, firstPath)),
+                ".zip" => new ZipFileSystem(root, firstPath).Advance(ref root),
+                ".iso" => new IsoFileSystem(root, firstPath).Advance(ref root),
+                ".3ds" => new X3dsFileSystem(root, firstPath),
                 _ => throw new ArgumentOutOfRangeException(nameof(path.Type), $"Unknown {path.Type}")
             };
-        }
-        return virtuals == null ? system : new VirtualFileSystem(system, virtuals);
+        } while (reprocess);
+        return fileSystem;
     }
+
+    /// <summary>
+    /// Process the file system.
+    /// </summary>
+    /// <param name="fileSystem">The fileSystem.</param>
+    /// <param name="virtuals">The virtuals.</param>
+    /// <returns></returns>
+    internal static IFileSystem ProcessFileSystem(IFileSystem fileSystem, Dictionary<string, byte[]> virtuals) {
+        return virtuals == null ? fileSystem : new AggregateFileSystem([fileSystem, new VirtualFileSystem(virtuals)]);
+    }
+
 }
 #endregion
 
@@ -539,13 +554,14 @@ public class Family {
         var subPath = edition?.Path;
         var fileSystemType = game.FileSystemType;
         var fileSystem =
-            string.Equals(uri.Scheme, "game", StringComparison.OrdinalIgnoreCase) ? found != null ? CreateFileSystem(fileSystemType, found, subPath, virtuals) : default
-            : uri.IsFile ? !string.IsNullOrEmpty(uri.LocalPath) ? CreateFileSystem(fileSystemType, new SystemPath { Root = uri.LocalPath }, subPath, virtuals) : default
-            : uri.Scheme.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? !string.IsNullOrEmpty(uri.Host) ? CreateFileSystem(fileSystemType, null, subPath, virtuals, uri) : default
+            string.Equals(uri.Scheme, "game", StringComparison.OrdinalIgnoreCase) ? found != null ? CreateFileSystem(fileSystemType, found, subPath) : default
+            : uri.IsFile ? !string.IsNullOrEmpty(uri.LocalPath) ? CreateFileSystem(fileSystemType, new SystemPath { Root = uri.LocalPath }, subPath) : default
+            : uri.Scheme.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? !string.IsNullOrEmpty(uri.Host) ? CreateFileSystem(fileSystemType, found, subPath, uri) : default
             : default;
         if (fileSystem == null)
-            if (throwOnError) throw new ArgumentOutOfRangeException(nameof(uri), $"{game.Id}: unable to resources");
+            if (throwOnError) throw new ArgumentOutOfRangeException(nameof(uri), $"{game.Id}: unable to find game");
             else return default;
+        fileSystem = ProcessFileSystem(fileSystem, virtuals);
         return new Resource {
             FileSystem = fileSystem,
             Game = game,
@@ -1096,11 +1112,11 @@ public class FamilyGame {
         foreach (var key in startsWith != null ? Files.Keys.Where(startsWith.StartsWith) : Files.Keys) {
             var p = key.Split('#', 2);
             string k = p[0], v = p.Length > 1 ? p[1] : default;
-            var path = Store.GetPathByKey(key, family, elem);
+            var path = Store.GetPathByKey(k, family, elem);
             if (string.IsNullOrEmpty(path)) continue;
             path = Path.GetFullPath(PlatformX.DecodePath(path));
             if (!Directory.Exists(path) && !File.Exists(path)) continue;
-            return new SystemPath { Root = path, Type = null, Paths = Files.Paths };
+            return new SystemPath { Root = path, Type = v, Paths = Files.Paths };
         }
         return default;
     }

@@ -1,0 +1,325 @@
+﻿{
+  "id": "Nintendo+EPD",
+  "url": "https://en.wikipedia.org/wiki/Nintendo_Entertainment_Planning_%26_Development",
+  "games": {
+    "*": {
+      "pakFileType": "GameX.Nintendo.NintendoPakFile, GameX.Nintendo"
+    },
+    "Z:TFH": {
+      "name": "The Legend of Zelda: Tri Force Heroes",
+      "url": "https://en.wikipedia.org/wiki/The_Legend_of_Zelda:_Tri_Force_Heroes",
+      "dls": "https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%203DS%20(Decrypted)/Legend%20of%20Zelda%2C%20The%20-%20Tri%20Force%20Heroes%20%28USA%29%20%28En%2CFr%2CEs%29.zip",
+      "date": "2015-10-22",
+      "form": "Console",
+      "files": {
+        "key": [
+          "Archive:Legend of Zelda, The - Tri Force Heroes (USA) (En,Fr,Es).3ds#3ds",
+          "Archive:Legend of Zelda, The - Tri Force Heroes (USA) (En,Fr,Es).zip#3ds"
+        ]
+      }
+    },
+    "AC:AF": {
+      "name": "Animal Crossing: Amiibo Festival",
+      "url": "https://en.wikipedia.org/wiki/Animal_Crossing:_Amiibo_Festival",
+      "dls": "https://myrient.erista.me/files/Internet%20Archive/teamgt19/nintendo-wii-u-usa-full-set-wua-format-embedded-dlc-updates/Animal%20Crossing%20-%20amiibo%20Festival%20%28USA%29.wua",
+      "date": "2015-11-13",
+      "form": "Console",
+      "files": {
+        "key": [
+          "Archive:Animal Crossing - amiibo Festival (USA).wua#xxx"
+        ]
+      }
+    },
+    "SFZ": {
+      "name": "Star Fox Zero",
+      "url": "https://en.wikipedia.org/wiki/Star_Fox_Zero",
+      "dls": [
+        "https://myrient.erista.me/files/Internet%20Archive/teamgt19/nintendo-wii-u-usa-full-set-wua-format-embedded-dlc-updates/Star%20Fox%20Zero%20%28USA%29%20%28v16%29.wua",
+        "https://myrient.erista.me/files/Internet%20Archive/archiver_2020/wii-u-retail-nus-usa/Star%20Fox%20Zero%20%5B00050000101B0400%5D.7z"
+      ],
+      "date": "2016-04-21",
+      "form": "Console",
+      "files": {
+        "key": [
+          "Archive:Star Fox Zero (USA) (v16).wua#xxx"
+        ]
+      }
+    },
+    "SFG": {
+      "name": "Star Fox Guard",
+      "url": "https://en.wikipedia.org/wiki/Star_Fox_Guard",
+      "dls": [
+        "https://myrient.erista.me/files/Internet%20Archive/teamgt19/nintendo-wii-u-usa-full-set-wua-format-embedded-dlc-updates/Star%20Fox%20Guard%20%28USA%29%20%28v16%29.wua",
+        "https://myrient.erista.me/files/Internet%20Archive/archiver_2020/wii-u-retail-nus-usa/Star%20Fox%20Guard%20%5B00050000101BEC00%5D.7z"
+      ],
+      "date": "2016-04-21",
+      "form": "Console",
+      "files": {
+        "key": [
+          "Archive:Star Fox Guard (USA) (v16).wua#xxx"
+        ]
+      }
+    },
+    "AC:NLWA": {
+      "name": "Animal Crossing: New Leaf - Welcome Amiibo",
+      "url": "https://en.wikipedia.org/wiki/Animal_Crossing:_New_Leaf_-_Welcome_Amiibo",
+      "date": "2016-11-23",
+      "form": "Console"
+    },
+    "Miitopia": {
+      "name": "Miitopia",
+      "url": "https://en.wikipedia.org/wiki/Miitopia",
+      "date": "2016-12-08",
+      "form": "Console"
+    },
+    "SMR": {
+      "name": "Super Mario Run",
+      "url": "https://en.wikipedia.org/wiki/Super_Mario_Run",
+      "date": "2016-12-15",
+      "form": "Mobile"
+    },
+    "Miitomo": {
+      "name": "Miitomo",
+      "url": "https://en.wikipedia.org/wiki/Miitomo",
+      "date": "2016-03-17",
+      "form": "Mobile"
+    },
+    "AC:PC": {
+      "name": "Animal Crossing: Pocket Camp",
+      "url": "https://en.wikipedia.org/wiki/Animal_Crossing:_Pocket_Camp",
+      "date": "2017-10-25",
+      "form": "Mobile"
+    },
+    "M:SR": {
+      "name": "Metroid: Samus Returns",
+      "url": "https://en.wikipedia.org/wiki/Metroid:_Samus_Returns",
+      "date": "2017-09-15",
+      "form": "Console"
+    },
+    "Z:BotW": {
+      "name": "The Legend of Zelda: Breath of the Wild",
+      "url": "https://en.wikipedia.org/wiki/The_Legend_of_Zelda:_Breath_of_the_Wild",
+      "dls": [
+        "https://myrient.erista.me/files/Internet%20Archive/teamgt19/nintendo-wii-u-usa-full-set-wua-format-embedded-dlc-updates/The%20Legend%20of%20Zelda%20-%20Breath%20of%20the%20Wild%20%28USA%29%20%28DLC%29%20%28v208%29.wua",
+        "https://myrient.erista.me/files/Internet%20Archive/archiver_2020/wii-u-retail-nus-usa/The%20Legend%20of%20Zelda%20Breath%20of%20the%20Wild%20%5B00050000101C9400%5D.7z"
+      ],
+      "date": "2017-03-03",
+      "form": "Console",
+      "files": {
+        "key": [
+          "Archive:The Legend of Zelda - Breath of the Wild (USA) (DLC) (v208).wua#xxx",
+          "Archive:The Legend of Zelda Breath of the Wild [00050000101C9400].7z#xxx"
+        ]
+      }
+    },
+    "MK8D": {
+      "name": "Mario Kart 8 Deluxe",
+      "url": "https://en.wikipedia.org/wiki/Mario_Kart_8#Mario_Kart_8_Deluxe",
+      "dls": [
+        "https://myrient.erista.me/files/Internet%20Archive/teamgt19/nintendo-wii-u-usa-full-set-wua-format-embedded-dlc-updates/MARIO%20KART%208%20%28USA%29%20%28DLC%29%20%28v81%29.wua",
+        "https://myrient.erista.me/files/Internet%20Archive/archiver_2020/wii-u-retail-nus-usa/MARIO%20KART%208%20%5B000500001010EC00%5D.7z"
+      ],
+      "date": "2017-04-28",
+      "form": "Console",
+      "files": {
+        "key": [
+          "Archive:MARIO KART 8 (USA) (DLC) (v81).wua#xxx"
+        ]
+      }
+    },
+    "12Switch": {
+      "name": "1-2-Switch",
+      "url": "https://en.wikipedia.org/wiki/1-2-Switch",
+      "date": "2017-03-03",
+      "form": "Console"
+    },
+    "Arms": {
+      "name": "Arms",
+      "url": "https://en.wikipedia.org/wiki/Arms_(video_game)",
+      "date": "2017-06-16",
+      "form": "Console"
+    },
+    "Splatoon2": {
+      "name": "Splatoon 2",
+      "url": "https://en.wikipedia.org/wiki/Splatoon_2",
+      "date": "2017-07-21",
+      "form": "Console"
+    },
+    "SMO": {
+      "name": "Super Mario Odyssey",
+      "url": "https://en.wikipedia.org/wiki/Super_Mario_Odyssey",
+      "date": "2017-10-27",
+      "form": "Console"
+    },
+    "NintendoLabo": {
+      "name": "Nintendo Labo",
+      "url": "https://en.wikipedia.org/wiki/Nintendo_Labo",
+      "date": "2018-04-20",
+      "form": "Hardware"
+    },
+    "CaptainToad:TT": {
+      "name": "Captain Toad: Treasure Tracker",
+      "url": "https://en.wikipedia.org/wiki/Captain_Toad:_Treasure_Tracker",
+      "dls": [
+        "https://myrient.erista.me/files/Internet%20Archive/teamgt19/nintendo-wii-u-usa-full-set-wua-format-embedded-dlc-updates/Captain%20Toad%20Treasure%20Tracker%20%28USA%29%20%28v16%29.wua",
+        "https://myrient.erista.me/files/Internet%20Archive/archiver_2020/wii-u-retail-nus-usa/Captain%20Toad%20Treasure%20Tracker%20%5B0005000010180600%5D.7z"
+      ],
+      "date": "2018-07-13",
+      "form": "Console",
+      "files": {
+        "key": [
+          "Archive:Captain Toad Treasure Tracker (USA) (v16).wua#xxx"
+        ]
+      }
+    },
+    "DrMarioWorld": {
+      "name": "Dr. Mario World",
+      "url": "https://en.wikipedia.org/wiki/Dr._Mario_World",
+      "date": "2019-07-10",
+      "form": "Mobile"
+    },
+    "MKT": {
+      "name": "Mario Kart Tour",
+      "url": "https://en.wikipedia.org/wiki/Mario_Kart_Tour",
+      "date": "2019-09-25",
+      "form": "Mobile"
+    },
+    "NSMB:UD": {
+      "name": "New Super Mario Bros. U Deluxe",
+      "url": "https://en.wikipedia.org/wiki/New_Super_Mario_Bros._U_Deluxe",
+      "dls": [
+        "https://myrient.erista.me/files/Internet%20Archive/archiver_2020/wii-u-retail-nus-usa/New%20SUPER%20MARIO%20BROS.%20U%20%5B0005000010101D00%5D.7z",
+        "https://myrient.erista.me/files/Internet%20Archive/archiver_2020/wii-u-retail-nus-usa/New%20SUPER%20MARIO%20BROS.%20U%20%2B%20New%20SUPER%20LUIGI%20U%20%5B000500001014B700%5D.7z"
+      ],
+      "date": "2018-09-13",
+      "form": "Console",
+      "files": {
+        "key": [
+          "Archive:New SUPER MARIO BROS. U [0005000010101D00].7z#xxx"
+        ]
+      }
+    },
+    "SMM2": {
+      "name": "Super Mario Maker 2",
+      "url": "https://en.wikipedia.org/wiki/Super_Mario_Maker_2",
+      "date": "2019-06-28",
+      "form": "Console"
+    },
+    "RingFitAdventure": {
+      "name": "Ring Fit Adventure",
+      "url": "https://en.wikipedia.org/wiki/Ring_Fit_Adventure",
+      "date": "2019-10-18",
+      "form": "Console"
+    },
+    "DKBTfNS": {
+      "name": "Dr Kawashima's Brain Training for Nintendo Switch",
+      "url": "https://en.wikipedia.org/wiki/Dr_Kawashima%27s_Brain_Training_for_Nintendo_Switch",
+      "date": "2019-12-27",
+      "form": "Console"
+    },
+    "AC:NH": {
+      "name": "Animal Crossing: New Horizons",
+      "url": "https://en.wikipedia.org/wiki/Animal_Crossing:_New_Horizons",
+      "date": "2020-03-20",
+      "form": "Console"
+    },
+    "SM3D:AS": {
+      "name": "Super Mario 3D All-Stars",
+      "url": "https://en.wikipedia.org/wiki/Super_Mario_3D_All-Stars",
+      "date": "2020-09-18",
+      "form": "Console"
+    },
+    "Pikmin3D": {
+      "name": "Pikmin 3 Deluxe",
+      "url": "https://en.wikipedia.org/wiki/Pikmin_3_Deluxe",
+      "dls": [
+        "https://myrient.erista.me/files/Internet%20Archive/teamgt19/nintendo-wii-u-usa-full-set-wua-format-embedded-dlc-updates/PIKMIN%203%20%28USA%29%20%28DLC%29%20%28v96%29.wua",
+        "https://myrient.erista.me/files/Internet%20Archive/archiver_2020/wii-u-retail-nus-usa/PIKMIN%203%20%5B000500001012BD00%5D.7z"
+      ],
+      "date": "2020-10-30",
+      "form": "Console",
+      "files": {
+        "key": [
+          "Archive:PIKMIN 3 (USA) (DLC) (v96).wua#xxx"
+        ]
+      }
+    },
+    "BowsersFury": {
+      "name": "Bowser's Fury",
+      "url": "https://en.wikipedia.org/wiki/Bowser%27s_Fury",
+      "date": "2021-02-12",
+      "form": "Console"
+    },
+    "GameBuilderGarage": {
+      "name": "Game Builder Garage",
+      "url": "https://en.wikipedia.org/wiki/Unreal_(1990_video_game)",
+      "date": "2021-10-08",
+      "form": "Console"
+    },
+    "M:D": {
+      "name": "Metroid Dread",
+      "url": "https://en.wikipedia.org/wiki/Metroid_Dread",
+      "date": "2021-01-01",
+      "form": "Console"
+    },
+    "BBA:BvB": {
+      "name": "Big Brain Academy: Brain vs. Brain",
+      "url": "https://en.wikipedia.org/wiki/Big_Brain_Academy:_Brain_vs._Brain",
+      "date": "2021-12-03",
+      "form": "Console"
+    },
+    "NintendoSwitchSports": {
+      "name": "Nintendo Switch Sports",
+      "url": "https://en.wikipedia.org/wiki/Nintendo_Switch_Sports",
+      "date": "2022-04-22",
+      "form": "Console"
+    },
+    "Splatoon3": {
+      "name": "Splatoon 3",
+      "url": "https://en.wikipedia.org/wiki/Splatoon_3",
+      "date": "2022-09-09",
+      "form": "Console"
+    },
+    "Z:TotK": {
+      "name": "The Legend of Zelda: Tears of the Kingdom",
+      "url": "https://en.wikipedia.org/wiki/The_Legend_of_Zelda:_Tears_of_the_Kingdom",
+      "date": "2023-05-12",
+      "form": "Console"
+    },
+    "12Switch2": {
+      "name": "Everybody 1-2-Switch!",
+      "url": "https://en.wikipedia.org/wiki/Everybody_1-2-Switch!",
+      "date": "2023-06-30",
+      "form": "Console"
+    },
+    "Pikmin4": {
+      "name": "Pikmin 4",
+      "url": "https://en.wikipedia.org/wiki/Pikmin_4",
+      "date": "2023-07-21",
+      "form": "Console"
+    },
+    "SMBW": {
+      "name": "Super Mario Bros. Wonder",
+      "url": "https://en.wikipedia.org/wiki/Super_Mario_Bros._Wonder",
+      "date": "2023-10-20",
+      "form": "Console"
+    },
+    "ETSM:FDC": {
+      "name": "Emio - The Smiling Man: Famicom Detective Club",
+      "url": "https://en.wikipedia.org/wiki/Emio_%E2%80%93_The_Smiling_Man:_Famicom_Detective_Club",
+      "date": "2024-08-24",
+      "form": "Console"
+    },
+    "MKW": {
+      "name": "Mario Kart World",
+      "url": "https://en.wikipedia.org/wiki/Mario_Kart_World",
+      "date": "2025-06-05",
+      "form": "Console"
+    },
+    "DKB": {
+      "name": "Donkey Kong Bananza",
+      "url": "https://en.wikipedia.org/wiki/Donkey_Kong_Bananza",
+      "date": "2025-07-17"
+    }
+  }
+}

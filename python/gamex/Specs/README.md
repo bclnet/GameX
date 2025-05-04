@@ -64,3 +64,6 @@ https://archive.org/download/PS3_NOINTRO_USA_10
 # GameCube
 https://archive.org/download/rvz-gc-usa-redump/RVZ-GC-USA-REDUMP/
 
+
+# Wii U (eShop)
+https://myrient.erista.me/files/Internet%20Archive/teamgt19/nintendo-wii-u-eshop-usa-full-set-wua-format-embedded-dlc-updates/

@@ -8,18 +8,18 @@ using System.Threading.Tasks;
 
 namespace GameX.Rockstar;
 
-#region MODELPakFile
+#region RockstarPakFile
 
 /// <summary>
-/// MODELPakFile
+/// RockstarPakFile
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class MODELPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> {
+public class RockstarPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> {
     /// <summary>
-    /// Initializes a new instance of the <see cref="MODELPakFile" /> class.
+    /// Initializes a new instance of the <see cref="RockstarPakFile" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public MODELPakFile(PakState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+    public RockstarPakFile(PakState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         ObjectFactoryFunc = ObjectFactory;
     }
 
@@ -27,6 +27,7 @@ public class MODELPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMode
 
     static PakBinary GetPakBinary(FamilyGame game, string extension)
         => extension switch {
+            "" => null,
             ".xxx" => Binary_XXX.Current,
             _ => throw new ArgumentOutOfRangeException(nameof(extension)),
         };

@@ -44,6 +44,9 @@ public static class Store {
             "WinReg" => Store_WinReg.GetPathByKey(v, elem),
             "Local" => Store_Local.Paths.TryGetValue(v, out var z) ? z : null,
             "Direct" => Store_Direct.GetPathByKey(v),
+            "Droid" => null,
+            "XBox" => null,
+            "Sony" => null,
             "Unknown" => null,
             _ => throw new ArgumentOutOfRangeException(nameof(key), key),
         };
@@ -84,9 +87,12 @@ static class Store_Archive {
         var root = GetPath();
         if (root == null || !Directory.Exists(root)) return;
         // # query games
-        foreach (var s in Directory.EnumerateDirectories(root))
+        foreach (var s in Directory.EnumerateDirectories(root)) {
             foreach (var t in Directory.EnumerateFiles(s))
                 paths.Add($"{Path.GetFileName(s)}/{Path.GetFileName(t)}", t);
+            foreach (var t in Directory.EnumerateDirectories(s))
+                if (!Path.GetFileName(t).StartsWith(".")) paths.Add($"{Path.GetFileName(s)}/{Path.GetFileName(t)}", t);
+        }
     }
 }
 

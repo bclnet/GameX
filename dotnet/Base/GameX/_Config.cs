@@ -18,10 +18,10 @@
 //#define IW
 //#define Lucas
 //#define Monolith
-#define Nintendo
+//#define Nintendo
 //#define Origin
 //#define Red
-//#define Rockstar
+#define Rockstar
 //#define Ubisoft
 //#define Unity
 //#define Unknown
@@ -75,8 +75,8 @@ public partial class FamilyManager {
         ForceOpen = true,
         ForcePath = "sample:1",
         Family = "Bethesda",
-        //Game = "Morrowind", // The Elder Scrolls III: Morrowind
-        Game = "Oblivion", // The Elder Scrolls IV: Oblivion
+        Game = "Morrowind", // The Elder Scrolls III: Morrowind
+        //Game = "Oblivion", // The Elder Scrolls IV: Oblivion
         //Game = "Fallout3", // Fallout 3
         //Game = "FalloutNV", // Fallout New Vegas
         //Game = "Skyrim", // The Elder Scrolls V: Skyrim
@@ -576,7 +576,7 @@ public partial class FamilyManager {
         ForceOpen = true,
         ForcePath = "sample:0",
         Family = "Rockstar",
-        //Game = "GTA", // Grand Theft Auto
+        Game = "GTA", // Grand Theft Auto
         //Game = "MTM64", // Monster Truck Madness 64
         //Game = "GTA2", // Grand Theft Auto 2
         //Game = "CP77", // Cyberpunk 2077

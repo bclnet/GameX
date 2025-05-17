@@ -3,6 +3,7 @@ using GameX.Unknown;
 using OpenStack;
 using OpenStack.Gfx;
 using OpenStack.Sfx;
+using OpenStack.Vfx;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -66,11 +67,11 @@ public interface ITransformFileObject<T> {
 /// <param name="edition">The edition.</param>
 /// <param name="path">The path.</param>
 /// <param name="tag">The tag.</param>
-public class PakState(IFileSystem fileSystem, FamilyGame game, FamilyGame.Edition edition = null, string path = null, object tag = null) {
+public class PakState(FileSystem fileSystem, FamilyGame game, FamilyGame.Edition edition = null, string path = null, object tag = null) {
     /// <summary>
     /// Gets the filesystem.
     /// </summary>
-    public readonly IFileSystem FileSystem = fileSystem;
+    public readonly FileSystem FileSystem = fileSystem;
 
     /// <summary>
     /// Gets the pak family game.
@@ -107,7 +108,7 @@ public abstract class PakFile : ISource, IDisposable {
     /// <summary>
     /// An empty family.
     /// </summary>
-    public static PakFile Empty = new UnknownPakFile(new PakState(new StandardFileSystem(""), FamilyGame.Empty)) { Name = "Empty" };
+    public static PakFile Empty = new UnknownPakFile(new PakState(new DirectoryFileSystem("", null), FamilyGame.Empty)) { Name = "Empty" };
 
     public enum PakStatus { Opening, Opened, Closing, Closed }
 
@@ -119,7 +120,7 @@ public abstract class PakFile : ISource, IDisposable {
     /// <summary>
     /// The filesystem.
     /// </summary>
-    public readonly IFileSystem FileSystem;
+    public readonly FileSystem FileSystem;
 
     /// <summary>
     /// The pak family.
@@ -430,8 +431,8 @@ public abstract class BinaryPakFile(PakState state, PakBinary pakBinary) : PakFi
     /// <param name="path">The path.</param>
     /// <returns></returns>
     public virtual IGenericPool<BinaryReader> GetReader(string path = default, bool pooled = true) => pooled
-        ? Readers.GetOrAdd(path ?? PakPath, path => FileSystem.FileExists(path) ? new GenericPoolX<BinaryReader>(() => FileSystem.OpenReader(path), r => r.Seek(0), RetainInPool) : null)
-        : new SinglePool<BinaryReader>(FileSystem.FileExists(path ??= PakPath) ? FileSystem.OpenReader(path) : null);
+        ? Readers.GetOrAdd(path ?? PakPath, path => FileSystem.FileExists(path) ? new GenericPoolX<BinaryReader>(() => new(FileSystem.Open(path, null)), r => r.Seek(0), RetainInPool) : null)
+        : new SinglePool<BinaryReader>(FileSystem.FileExists(path ??= PakPath) ? new(FileSystem.Open(path, null)) : null);
 
     /// <summary>
     /// Reader
@@ -475,7 +476,7 @@ public abstract class BinaryPakFile(PakState state, PakBinary pakBinary) : PakFi
     /// <param name="path">The path.</param>
     /// <returns></returns>
     public GenericPoolX<BinaryWriter> GetWriter(string path = default)
-        => Writers.GetOrAdd(path ?? PakPath, path => FileSystem.FileExists(path) ? new GenericPoolX<BinaryWriter>(() => FileSystem.OpenWriter(path), r => r.Seek(0), RetainInPool) : null);
+        => Writers.GetOrAdd(path ?? PakPath, path => FileSystem.FileExists(path) ? new GenericPoolX<BinaryWriter>(() => new(FileSystem.Open(path, "w")), r => r.Seek(0), RetainInPool) : null);
 
     /// <summary>
     /// Writer
@@ -788,7 +789,7 @@ public class ManyPakFile : BinaryPakFile {
     public override Task<Stream> ReadData(FileSource file, object option = default)
         => file.Pak != null
             ? file.Pak.ReadData(file, option)
-            : Task.FromResult<Stream>(new MemoryStream(FileSystem.OpenReader(file.Path).ReadBytes((int)file.FileSize)));
+            : Task.FromResult<Stream>(new MemoryStream(new BinaryReader(FileSystem.Open(file.Path, null)).ReadBytes((int)file.FileSize)));
 
     #endregion
 }

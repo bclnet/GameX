@@ -4,6 +4,7 @@ using GameX.Formats.Unknown;
 using GameX.Unknown;
 using Microsoft.Extensions.FileSystemGlobbing;
 using OpenStack;
+using OpenStack.Vfx;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -17,26 +18,22 @@ namespace GameX.Blizzard;
 /// BlizzardFileSystem
 /// </summary>
 /// <seealso cref="GameX.Family" />
-public class BlizzardFileSystem : IFileSystem {
-    public IEnumerable<string> Glob(string path, string searchPattern) {
+public class BlizzardFileSystem : FileSystem {
+    public override IEnumerable<string> Glob(string path, string searchPattern) {
         var matcher = new Matcher();
         matcher.AddIncludePatterns([searchPattern]);
         return matcher.GetResultsInFullPath(searchPattern);
     }
 
-    public (string path, long length) FileInfo(string path) {
+    public override (string path, long length) FileInfo(string path) {
         throw new System.NotImplementedException();
     }
 
-    public BinaryReader OpenReader(string path) {
+    public override Stream Open(string path, string mode) {
         throw new System.NotImplementedException();
     }
 
-    public BinaryWriter OpenWriter(string path) {
-        throw new System.NotImplementedException();
-    }
-
-    public bool FileExists(string path) {
+    public override bool FileExists(string path) {
         throw new System.NotImplementedException();
     }
 }

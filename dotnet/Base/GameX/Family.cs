@@ -1,7 +1,7 @@
 ﻿using GameX.Formats;
 using GameX.Unknown;
 using OpenStack;
-using OpenStack.Nintendo;
+using OpenStack.Vfx;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -190,24 +190,15 @@ public partial class FamilyManager {
     /// <param name="virtuals">The virtuals.</param>
     /// <param name="host">The host.</param>
     /// <returns></returns>
-    internal static IFileSystem CreateFileSystem(Type fileSystemType, SystemPath path, string subPath, Uri host = null) {
+    internal static FileSystem CreateFileSystem(Type fileSystemType, SystemPath path, string subPath, Uri host = null) {
         var fileSystem = host != null ? new HostFileSystem(host)
-            : fileSystemType != null ? (IFileSystem)Activator.CreateInstance(fileSystemType, path)
+            : fileSystemType != null ? (FileSystem)Activator.CreateInstance(fileSystemType, path)
             : null;
-        if (fileSystem != null) return fileSystem;
-        var firstPath = path?.Paths.FirstOrDefault();
+        if (fileSystem != null) return fileSystem.Next();
+        var path1 = path?.Paths.FirstOrDefault();
         var root = string.IsNullOrEmpty(subPath) ? path.Root : Path.Combine(path.Root, subPath);
-        var reprocess = false;
-        do {
-            fileSystem = Path.GetExtension(root).ToLowerInvariant() switch {
-                "" => new StandardFileSystem(string.IsNullOrEmpty(firstPath) ? root : Path.Combine(root, firstPath)),
-                ".zip" => new ZipFileSystem(root, firstPath).Advance(ref root),
-                ".iso" => new IsoFileSystem(root, firstPath).Advance(ref root),
-                ".3ds" => new X3dsFileSystem(root, firstPath),
-                _ => throw new ArgumentOutOfRangeException(nameof(path.Type), $"Unknown {path.Type}")
-            };
-        } while (reprocess);
-        return fileSystem;
+        fileSystem = new DirectoryFileSystem(root, path1);
+        return fileSystem.Next();
     }
 
     /// <summary>
@@ -216,7 +207,7 @@ public partial class FamilyManager {
     /// <param name="fileSystem">The fileSystem.</param>
     /// <param name="virtuals">The virtuals.</param>
     /// <returns></returns>
-    internal static IFileSystem ProcessFileSystem(IFileSystem fileSystem, Dictionary<string, byte[]> virtuals) {
+    internal static FileSystem ProcessFileSystem(FileSystem fileSystem, Dictionary<string, byte[]> virtuals) {
         return virtuals == null ? fileSystem : new AggregateFileSystem([fileSystem, new VirtualFileSystem(virtuals)]);
     }
 
@@ -337,7 +328,7 @@ public struct Resource {
     /// <summary>
     /// The filesystem.
     /// </summary>
-    public IFileSystem FileSystem;
+    public FileSystem FileSystem;
     /// <summary>
     /// The game.
     /// </summary>
@@ -1163,7 +1154,7 @@ public class FamilyGame {
     /// <param name="searchPattern">The search pattern.</param>
     /// <param name="throwOnError">Throws on error.</param>
     /// <returns></returns>
-    internal PakFile CreatePakFile(IFileSystem fileSystem, Edition edition, string searchPattern, bool throwOnError) {
+    internal PakFile CreatePakFile(FileSystem fileSystem, Edition edition, string searchPattern, bool throwOnError) {
         if (fileSystem is HostFileSystem k) throw new NotImplementedException($"{k}"); //return new StreamPakFile(family.FileManager.HostFactory, game, path, fileSystem),
         searchPattern = CreateSearchPatterns(searchPattern);
         var pakFiles = new List<PakFile>();
@@ -1194,7 +1185,7 @@ public class FamilyGame {
     /// <param name="value">The value.</param>
     /// <param name="tag">The tag.</param>
     /// <returns></returns>
-    public PakFile CreatePakFileObj(IFileSystem fileSystem, Edition edition, object value, object tag = null) {
+    public PakFile CreatePakFileObj(FileSystem fileSystem, Edition edition, object value, object tag = null) {
         var pakState = new PakState(fileSystem, this, edition, value as string, tag);
         return value switch {
             string s => IsPakFile(s) ? CreatePakFileType(pakState) : throw new InvalidOperationException($"{Id} missing {s}"),
@@ -1232,7 +1223,7 @@ public class FamilyGame {
     /// <param name="edition">The edition.</param>
     /// <param name="searchPattern">The search pattern.</param>
     /// <returns></returns>
-    public IEnumerable<(string root, string[] paths)> FindPaths(IFileSystem fileSystem, Edition edition, DownloadableContent dlc, string searchPattern) {
+    public IEnumerable<(string root, string[] paths)> FindPaths(FileSystem fileSystem, Edition edition, DownloadableContent dlc, string searchPattern) {
         var ignores = Ignores;
         foreach (var path in Paths ?? [""]) {
             var searchPath = dlc != null && dlc.Path != null ? Path.Join(path, dlc.Path) : path;

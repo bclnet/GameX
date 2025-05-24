@@ -86,7 +86,7 @@ public unsafe class ServerBinary_Container : IHaveMetaInfo {
                         var ids = split[3].Split(',');
                         for (var i = 0; i < ids.Length; i++) {
                             var id = ConvertX.ToInt32(ids[i]);
-                            if (Records.ContainsKey(id)) Console.WriteLine(@"Warning: double ItemID entry in Data\containers.cfg");
+                            if (Records.ContainsKey(id)) Console.WriteLine(@"Warning: double ItemID entry in Sbi\containers.cfg");
                             else Records[id] = data;
                         }
                     }

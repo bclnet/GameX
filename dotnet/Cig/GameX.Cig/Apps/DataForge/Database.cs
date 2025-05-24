@@ -54,7 +54,7 @@ public class Database {
     public async Task OpenAsync(MetaManager manager) {
         family = FamilyManager.GetFamily("Cig");
         pakFile = family.OpenPakFile(new Uri("game:/#StarCitizen"));
-        var obj = await pakFile.LoadFileObject<Binary_Dcb>($"Data/Game.dcb");
+        var obj = await pakFile.LoadFileObject<Binary_Dcb>($"Sbi/Game.dcb");
         foreach (var value in obj.RecordTable)
             Node.CreateNode(manager, Nodes, value);
     }

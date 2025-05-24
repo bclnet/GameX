@@ -328,7 +328,7 @@ public class XKV3 : DATA, IHaveMetaInfo {
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new(null, new MetaContent { Type = "Text", Name = "BinaryKV3", Value = ToString() }),
         new("BinaryKV3", items: [
-            new($"Data: {Data.Count}"),
+            new($"Sbi: {Data.Count}"),
             new($"Encoding: {Encoding}"),
             new($"Format: {Format}"),
         ]),
@@ -9574,7 +9574,7 @@ public class D_Texture : DATA, ITexture {
         w.WriteLine($"{"Format",-12} = {(int)Format} (VTEX_FORMAT_{Format})");
         w.WriteLine($"{"Flags",-12} = 0x{(int)Flags:X8}");
         foreach (Enum value in Enum.GetValues(Flags.GetType())) if (Flags.HasFlag(value)) w.WriteLine($"{"",-12} | 0x{(Convert.ToInt32(value)):X8} = VTEX_FLAG_{value}");
-        w.WriteLine($"{"Data Data",-12} = {ExtraData.Count} entries:");
+        w.WriteLine($"{"Sbi Sbi",-12} = {ExtraData.Count} entries:");
         var entry = 0;
         foreach (var b in ExtraData) {
             w.WriteLine($"{"",-12}   [ Entry {entry++}: VTEX_EXTRA_DATA_{b.Key} - {b.Value.Length} bytes ]");

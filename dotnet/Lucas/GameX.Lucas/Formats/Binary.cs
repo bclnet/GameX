@@ -22,7 +22,7 @@ public class Binary_Abc : IHaveMetaInfo {
     public byte[] Data;
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new(null, new MetaContent { Type = "Data", Name = Path.GetFileName(file.Path), Value = new MemoryStream(Data), Tag = Path.GetExtension(file.Path) }),
+        new(null, new MetaContent { Type = "Sbi", Name = Path.GetFileName(file.Path), Value = new MemoryStream(Data), Tag = Path.GetExtension(file.Path) }),
     ];
 }
 
@@ -417,7 +417,7 @@ public class Binary_San : IHaveMetaInfo {
     }
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new(null, new MetaContent { Type = "Data", Name = Path.GetFileName(file.Path), Value = null, Tag = Path.GetExtension(file.Path) }),
+        new(null, new MetaContent { Type = "Sbi", Name = Path.GetFileName(file.Path), Value = null, Tag = Path.GetExtension(file.Path) }),
     ];
 }
 

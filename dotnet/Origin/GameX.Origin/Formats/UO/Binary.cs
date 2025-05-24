@@ -1856,7 +1856,7 @@ public unsafe class Binary_TileData : IHaveMetaInfo {
     // IHaveMetaInfo
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
         var nodes = new List<MetaInfo> {
-            new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "Tile Data File" }),
+            new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "Tile Sbi File" }),
             new MetaInfo("TileData", items: new List<MetaInfo> {
                 new MetaInfo($"LandDatas: {LandDatas.Length}"),
                 new MetaInfo($"ItemDatas: {ItemDatas.Length}"),
@@ -1966,7 +1966,7 @@ public unsafe class Binary_Verdata : IHaveMetaInfo {
     // IHaveMetaInfo
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
         var nodes = new List<MetaInfo> {
-            new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "Version Data" }),
+            new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "Version Sbi" }),
             new MetaInfo("Verdata", items: new List<MetaInfo> {
                 new MetaInfo($"Patches: {Patches.Count}"),
             })

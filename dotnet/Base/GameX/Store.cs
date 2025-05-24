@@ -177,20 +177,20 @@ static class Store_Epic {
             // windows paths
             var home = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
             string[] search = [@"Epic\EpicGamesLauncher"];
-            paths = search.Select(path => Path.Join(home, path, "Data"));
+            paths = search.Select(path => Path.Join(home, path, "Sbi"));
         }
         else if (RuntimeInformation.OSDescription.StartsWith("android-")) return null;
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
             // linux paths
             var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             string[] search = ["Epic/EpicGamesLauncher"];
-            paths = search.Select(path => Path.Join(home, path, "Data"));
+            paths = search.Select(path => Path.Join(home, path, "Sbi"));
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) {
             // mac paths
             var home = "/Users/Shared";
             string[] search = ["Epic/EpicGamesLauncher"];
-            paths = search.Select(path => Path.Join(home, path, "Data"));
+            paths = search.Select(path => Path.Join(home, path, "Sbi"));
         }
         else throw new PlatformNotSupportedException();
         return paths.FirstOrDefault(Directory.Exists);

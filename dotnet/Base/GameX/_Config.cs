@@ -576,9 +576,9 @@ public partial class FamilyManager {
         ForceOpen = true,
         ForcePath = "sample:0",
         Family = "Rockstar",
-        Game = "GTA", // Grand Theft Auto
+        //Game = "GTA", // Grand Theft Auto
         //Game = "MTM64", // Monster Truck Madness 64
-        //Game = "GTA2", // Grand Theft Auto 2
+        Game = "GTA2", // Grand Theft Auto 2
         //Game = "CP77", // Cyberpunk 2077
         //Game = "EWJ3D", // Earthworm Jim 3D
         //Game = "TSaD", // Thrasher: Skate and Destroy

@@ -15,7 +15,7 @@ namespace GameX.App.Cli {
             [Option("path", Default = @".\out", HelpText = "Output folder")]
             public string Path { get; set; }
 
-            [Option("option", Default = FileOption.Stream | FileOption.Model, HelpText = "Data option")]
+            [Option("option", Default = FileOption.Stream | FileOption.Model, HelpText = "Sbi option")]
             public object Option { get; set; }
         }
 

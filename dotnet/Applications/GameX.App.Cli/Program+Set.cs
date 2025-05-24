@@ -15,7 +15,7 @@ namespace GameX.App.Cli {
             [Option("path", Default = @".\out", HelpText = "Insert folder")]
             public string Path { get; set; }
 
-            [Option("option", Default = 0, HelpText = "Data option")]
+            [Option("option", Default = 0, HelpText = "Sbi option")]
             public object Option { get; set; }
         }
 

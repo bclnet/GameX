@@ -26,7 +26,7 @@ namespace GameX.WB.Data {
         public readonly static Dictionary<string, Row> Table = new Dictionary<string, Row>();
 
         public static void Load() {
-            var data = new StreamReader(typeof(DIDTable).Assembly.GetManifestResourceStream($"GameX.WB.Data.LocationTable.txt")).ReadToEnd();
+            var data = new StreamReader(typeof(DIDTable).Assembly.GetManifestResourceStream($"GameX.WB.Sbi.LocationTable.txt")).ReadToEnd();
             foreach (var line in File.ReadAllLines(data)) {
                 if (line.StartsWith("#")) continue; // comment
                 var pieces = line.Split(new string[] { " | " }, StringSplitOptions.None);

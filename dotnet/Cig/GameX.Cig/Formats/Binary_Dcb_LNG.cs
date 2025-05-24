@@ -457,8 +457,8 @@ public partial class Binary_Dcb_LNG : IHaveMetaInfo {
 
         public string Export(string assemblyName = "DataForge") {
             var b = new StringBuilder();
-            b.AppendLine(@"using System;");
-            b.AppendLine(@"using System.Xml.Serialization;");
+            b.AppendLine(@"using Vfx;");
+            b.AppendLine(@"using Vfx.Xml.Serialization;");
             b.AppendLine(@"");
             b.AppendFormat(@"namespace {0}\n", assemblyName);
             b.AppendLine(@"{");

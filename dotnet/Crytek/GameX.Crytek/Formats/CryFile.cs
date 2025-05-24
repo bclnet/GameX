@@ -62,7 +62,7 @@ public partial class CryFile {
         if (!File.Exists(materialPath)) materialPath = Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileName(cleanName));
         if (Path.GetExtension(materialPath) != ".mtl") materialPath = Path.ChangeExtension(materialPath, "mtl");
         // Then try relative to the ObjectDir
-        if (!File.Exists(materialPath)) materialPath = Path.Combine("Data", cleanName);
+        if (!File.Exists(materialPath)) materialPath = Path.Combine("Sbi", cleanName);
         if (Path.GetExtension(materialPath) != ".mtl") materialPath = Path.ChangeExtension(materialPath, "mtl");
         // Then try just the fileName.mtl
         if (!File.Exists(materialPath)) materialPath = fileName;
@@ -78,7 +78,7 @@ public partial class CryFile {
         if (!pak.Contains(materialPath)) materialPath = Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileName(cleanName));
         if (Path.GetExtension(materialPath) != ".mtl") materialPath = Path.ChangeExtension(materialPath, "mtl");
         // Then try relative to the ObjectDir
-        if (!pak.Contains(materialPath)) materialPath = Path.Combine("Data", cleanName);
+        if (!pak.Contains(materialPath)) materialPath = Path.Combine("Sbi", cleanName);
         if (Path.GetExtension(materialPath) != ".mtl") materialPath = Path.ChangeExtension(materialPath, "mtl");
         // Then try just the fileName.mtl
         if (!pak.Contains(materialPath)) materialPath = fileName;
@@ -122,7 +122,7 @@ public partial class CryFile {
                     // The mtlname has a path.  Most likely starts at the Objects directory.
                     var stringSeparators = new[] { "/", "\\" };
                     // if objectdir is provided, check objectdir + mtlchunk.name
-                    materialFilePath = Path.Combine("Data", mtlChunk.Name);
+                    materialFilePath = Path.Combine("Sbi", mtlChunk.Name);
                     //else // object dir not provided, but we have a path.  Just grab the last part of the name and check the dir of the cga file
                     //{
                     //    var r = mtlChunk.Name.Split(stringSeparators, StringSplitOptions.None);
@@ -241,6 +241,6 @@ public partial class CryFile {
     public IEnumerable<string> GetTexturePaths() {
         foreach (var texture in Materials.SelectMany(x => x.Textures))
             if (!string.IsNullOrEmpty(texture.File))
-                yield return $@"Data\{texture.File}";
+                yield return $@"Sbi\{texture.File}";
     }
 }

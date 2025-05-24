@@ -73,7 +73,7 @@ public class BadData : FileType, IHaveMetaInfo
     }
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new(null, new MetaContent { Type = "Text", Name = "Bad Data", Value = string.Join(", ", Bad.Keys.OrderBy(x => x)) }),
+        new(null, new MetaContent { Type = "Text", Name = "Bad Sbi", Value = string.Join(", ", Bad.Keys.OrderBy(x => x)) }),
         new($"{nameof(TabooTable)}: {Id:X8}")
     ];
 }
@@ -2448,7 +2448,7 @@ public class Wave : FileType, IHaveMetaInfo
             new($"{nameof(Wave)}: {Id:X8}", items: [
                 new($"Type: {type}"),
                 new($"Header Size: {Header.Length}"),
-                new($"Data Size: {Data.Length}"),
+                new($"Sbi Size: {Data.Length}"),
             ])
         ];
     }

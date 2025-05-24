@@ -134,7 +134,7 @@ namespace GameX.Origin.Formats.UO {
                 new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "Hue File" }),
                 new MetaInfo("Hue", items: new List<MetaInfo> {
                     new MetaInfo($"Hues: {Hues.Length}"),
-                    new MetaInfo($"Data: {Pixels.Length}"),
+                    new MetaInfo($"Sbi: {Pixels.Length}"),
                 })
             };
             return nodes;

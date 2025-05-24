@@ -82,8 +82,8 @@
       "form": "Console;Windows",
       "files": {
         "key": [
-          "Archive:Grand Theft Auto 2 - PC.zip#iso",
-          "Archive:Grand Theft Auto 2 (USA).zip#cue.psx"
+          "Archive:Grand Theft Auto 2 - PC.zip:Grand Theft Auto 2 - PC/Grand Theft Auto 2.iso",
+          "Archive:Grand Theft Auto 2 (USA).zip#psx"
         ]
       }
     },

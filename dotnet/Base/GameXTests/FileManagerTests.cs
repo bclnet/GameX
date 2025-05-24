@@ -66,7 +66,7 @@ public class FileManagerTests {
     [DataRow("Red", "Witcher", "*.bif", 0)]
     [DataRow("Red", "Witcher2", "*.dzip", 0)]
     [DataRow("Red", "Witcher3", "*.store", 0)]
-    [DataRow("Rsi", "StarCitizen", "Data.p4k", 0)]
+    [DataRow("Rsi", "StarCitizen", "Sbi.p4k", 0)]
     [DataRow("Tes", "Fallout4VR", "Fallout4 - *.ba2", 0)]
     [DataRow("Origin", "UltimaOnline", "*.idx", 0)]
     [DataRow("Origin", "UltimaIX", "static/*.flx", 0)]

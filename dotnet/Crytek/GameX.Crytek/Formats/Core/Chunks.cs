@@ -1955,7 +1955,7 @@ public abstract partial class ChunkMesh : Chunk      //  cccc0000:  Object that 
         Log($"    UVs Datastream:      {UVsData:X}");
         Log($"    Indices Datastream:  {IndicesData:X}");
         Log($"    Tangents Datastream: {TangentsData:X}");
-        Log($"    Mesh Physics Data:   {MeshPhysicsData:X}");
+        Log($"    Mesh Physics Sbi:   {MeshPhysicsData:X}");
         Log($"    VertUVs:             {VertsUVsData:X}");
         Log($"    MinBound:            {MinBound.X:F7}, {MinBound.Y:F7}, {MinBound.Z:F7}");
         Log($"    MaxBound:            {MaxBound.X:F7}, {MaxBound.Y:F7}, {MaxBound.Z:F7}");

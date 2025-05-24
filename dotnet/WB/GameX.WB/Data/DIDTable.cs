@@ -17,7 +17,7 @@ namespace GameX.WB.Data {
         public readonly static Dictionary<uint, Row> Table = new Dictionary<uint, Row>();
 
         public static void Load() {
-            var data = new StreamReader(typeof(DIDTable).Assembly.GetManifestResourceStream($"GameX.WB.Data.DIDTable.txt")).ReadToEnd();
+            var data = new StreamReader(typeof(DIDTable).Assembly.GetManifestResourceStream($"GameX.WB.Sbi.DIDTable.txt")).ReadToEnd();
             foreach (var line in File.ReadAllLines(data)) {
                 if (line.StartsWith("#")) continue; // comment
                 var pieces = line.Split(',');

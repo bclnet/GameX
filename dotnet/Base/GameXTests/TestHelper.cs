@@ -48,7 +48,7 @@ public static class TestHelper {
         { "Red:Witcher2", new Lazy<PakFile>(() => familyRed.OpenPakFile(new Uri("game:/*#Witcher2"))) },
         { "Red:Witcher3", new Lazy<PakFile>(() => familyRed.OpenPakFile(new Uri("game:/content0/*#Witcher3"))) },
         { "Red:CP77", new Lazy<PakFile>(() => familyRed.OpenPakFile(new Uri("game:/*.archive#CP77"))) },
-        { "Rsi:StarCitizen", new Lazy<PakFile>(() => familyRsi.OpenPakFile(new Uri("game:/Data.p4k#StarCitizen"))) },
+        { "Rsi:StarCitizen", new Lazy<PakFile>(() => familyRsi.OpenPakFile(new Uri("game:/Sbi.p4k#StarCitizen"))) },
         { "Tes:Morrowind", new Lazy<PakFile>(() => familyTes.OpenPakFile(new Uri("game:/Morrowind.bsa#Morrowind"))) },
         { "Tes:Oblivion", new Lazy<PakFile>(() => familyTes.OpenPakFile(new Uri("game:/Oblivion*.bsa#Oblivion"))) },
         { "Tes:Skyrim", new Lazy<PakFile>(() => familyTes.OpenPakFile(new Uri("game:/Skyrim*.bsa#Skyrim"))) },

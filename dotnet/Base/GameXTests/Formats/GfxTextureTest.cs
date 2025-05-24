@@ -8,8 +8,8 @@ public class GfxTextureTest {
     [DataTestMethod]
     [DataRow("AC:AC", "client_highres.dat:Texture/060043BE.tex")]
     [DataRow("Cry:MWO", "GameData.pak:GameModeObjects.xml")]
-    [DataRow("Rsi:StarCitizen", "Data/Textures/references/color.dds")] //: Single
-    [DataRow("Rsi:StarCitizen", "Data/Textures/asteroids/asteroid_dmg_brown_organic_01_ddn.dds")] //: Multiple
+    [DataRow("Rsi:StarCitizen", "Sbi/Textures/references/color.dds")] //: Single
+    [DataRow("Rsi:StarCitizen", "Sbi/Textures/asteroids/asteroid_dmg_brown_organic_01_ddn.dds")] //: Multiple
     //[DataRow("Rsi:StarCitizen", "Data/Textures/colors/224x.dds")] //: "Engine/default_cch.dds"
     //[DataRow("Rsi:StarCitizen", "Data/Textures/colors/224x.dds")] //: "Engine/default_cch.dds"
     [DataRow("Origin:UltimaIX", "static/activity.flx:Engine/default_cch.dds")]

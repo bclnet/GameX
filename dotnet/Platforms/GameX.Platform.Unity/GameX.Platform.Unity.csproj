@@ -26,16 +26,16 @@
 
   <ItemGroup>
     <Reference Include="UnityEngine">
-      <HintPath>..\..\..\OpenStack\dotnet\Platform\Unity\6000.0.38f1\UnityEngine.dll</HintPath>
+      <HintPath>..\..\..\OpenStack\dotnet\Platform\Unity\6000.1.5f1\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>..\..\..\OpenStack\dotnet\Platform\Unity\6000.0.38f1\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>..\..\..\OpenStack\dotnet\Platform\Unity\6000.1.5f1\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.PhysicsModule">
-      <HintPath>..\..\..\OpenStack\dotnet\Platform\Unity\6000.0.38f1\UnityEngine.PhysicsModule.dll</HintPath>
+      <HintPath>..\..\..\OpenStack\dotnet\Platform\Unity\6000.1.5f1\UnityEngine.PhysicsModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UIElementsModule">
-      <HintPath>..\..\..\OpenStack\dotnet\Platform\Unity\6000.0.38f1\UnityEngine.UIElementsModule.dll</HintPath>
+      <HintPath>..\..\..\OpenStack\dotnet\Platform\Unity\6000.1.5f1\UnityEngine.UIElementsModule.dll</HintPath>
     </Reference>
   </ItemGroup>
 

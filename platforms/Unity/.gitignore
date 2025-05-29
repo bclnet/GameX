@@ -5,6 +5,7 @@ Logs/
 UserSettings/
 Screenshots/
 Exports/
+Assembly-CSharp*
 
 # Unity3D
 UnityGenerated/

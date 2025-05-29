@@ -18,7 +18,7 @@ class ITransformFileObject:
 
 # PakState
 class PakState:
-    def __init__(self, fileSystem: IFileSystem, game: FamilyGame, edition: Edition = None, path: str = None, tag: object = None):
+    def __init__(self, fileSystem: FileSystem, game: FamilyGame, edition: Edition = None, path: str = None, tag: object = None):
         self.fileSystem = fileSystem
         self.game = game
         self.edition = edition
@@ -122,8 +122,8 @@ class BinaryPakFile(PakFile):
     
     def getReader(self, path: str = None, pooled: bool = True) -> Reader:
         path = path or self.pakPath
-        return self.readers.get(path) or self.readers.setdefault(path, GenericPool[Reader](lambda: self.fileSystem.openReader(path), lambda r: r.seek(0)) if self.fileSystem.fileExists(path) else None) if pooled else \
-            SinglePool[Reader](self.fileSystem.openReader(path) if self.fileSystem.fileExists(path) else None) 
+        return self.readers.get(path) or self.readers.setdefault(path, GenericPool[Reader](lambda: Reader(self.fileSystem.open(path)), lambda r: r.seek(0)) if self.fileSystem.fileExists(path) else None) if pooled else \
+            SinglePool[Reader](Reader(self.fileSystem.open(path)) if self.fileSystem.fileExists(path) else None)
     
     def reader(self, func: callable, path: str = None, pooled: bool = False): self.getReader(path, pooled).action(func)
 

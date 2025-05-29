@@ -1,5 +1,5 @@
 ﻿//#define Arkane
-//#define Bethesda
+#define Bethesda
 //#define Bioware
 //#define Black
 //#define Blizzard
@@ -21,7 +21,7 @@
 //#define Nintendo
 //#define Origin
 //#define Red
-#define Rockstar
+//#define Rockstar
 //#define Ubisoft
 //#define Unity
 //#define Unknown
@@ -73,7 +73,7 @@ public partial class FamilyManager {
     public static GlobalOption Option = new() {
         Platform = "GL",
         ForceOpen = true,
-        ForcePath = "sample:1",
+        ForcePath = "sample:2",
         Family = "Bethesda",
         Game = "Morrowind", // The Elder Scrolls III: Morrowind
         //Game = "Oblivion", // The Elder Scrolls IV: Oblivion

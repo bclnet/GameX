@@ -122,7 +122,7 @@ public struct Ref<T>(BinaryReader r) {
 public class BoundingBox(BinaryReader r) {
     public uint UnknownInt = r.ReadUInt32();
     public Vector3 Translation = r.ReadVector3();
-    public Matrix4x4 Rotation = r.ReadRowMajorMatrix3x3();
+    public Matrix4x4 Rotation = r.ReadMatrix3x3As4x4();
     public Vector3 Radius = r.ReadVector3();
 }
 
@@ -225,7 +225,7 @@ public class SkinWeight(BinaryReader r) {
 }
 
 public class SkinTransform(BinaryReader r) {
-    public Matrix4x4 Rotation = r.ReadRowMajorMatrix3x3();
+    public Matrix4x4 Rotation = r.ReadMatrix3x3As4x4();
     public Vector3 Translation = r.ReadVector3();
     public float Scale = r.ReadSingle();
 }
@@ -305,7 +305,7 @@ public abstract class NiAVObject : NiObjectNET {
     public NiAVObject(BinaryReader r) : base(r) {
         Flags = NiReaderUtils.ReadFlags(r);
         Translation = r.ReadVector3();
-        Rotation = r.ReadRowMajorMatrix3x3();
+        Rotation = r.ReadMatrix3x3As4x4();
         Scale = r.ReadSingle();
         Velocity = r.ReadVector3();
         Properties = r.ReadL32FArray(r => new Ref<NiProperty>(r));
@@ -975,7 +975,7 @@ public class NiTextureEffect : NiDynamicEffect {
     public ushort UnknownShort;
 
     public NiTextureEffect(BinaryReader r) : base(r) {
-        ModelProjectionMatrix = r.ReadRowMajorMatrix3x3();
+        ModelProjectionMatrix = r.ReadMatrix3x3As4x4();
         ModelProjectionTransform = r.ReadVector3();
         TextureFiltering = (TexFilterMode)r.ReadUInt32();
         TextureClamping = (TexClampMode)r.ReadUInt32();

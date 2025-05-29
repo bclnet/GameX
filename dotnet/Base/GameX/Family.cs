@@ -191,27 +191,17 @@ public partial class FamilyManager {
     /// <param name="host">The host.</param>
     /// <returns></returns>
     internal static FileSystem CreateFileSystem(Type fileSystemType, SystemPath path, string subPath, Uri host = null) {
-        var fileSystem = host != null ? new HostFileSystem(host)
+        var vfx = host != null ? new HostFileSystem(host)
             : fileSystemType != null ? (FileSystem)Activator.CreateInstance(fileSystemType, path)
             : null;
-        if (fileSystem != null) return fileSystem.Next();
-        var path1 = path?.Paths.FirstOrDefault();
-        var root = string.IsNullOrEmpty(subPath) ? path.Root : Path.Combine(path.Root, subPath);
-        fileSystem = new DirectoryFileSystem(root, path1);
-        return fileSystem.Next();
+        if (vfx != null) return vfx.Next();
+        var baseRoot = string.IsNullOrEmpty(subPath) ? path.Root : Path.Combine(path.Root, subPath);
+        var basePath = path?.Paths.FirstOrDefault();
+        vfx = new DirectoryFileSystem(baseRoot, basePath);
+        return vfx.Next();
     }
-
-    /// <summary>
-    /// Process the file system.
-    /// </summary>
-    /// <param name="fileSystem">The fileSystem.</param>
-    /// <param name="virtuals">The virtuals.</param>
-    /// <returns></returns>
-    internal static FileSystem ProcessFileSystem(FileSystem fileSystem, Dictionary<string, byte[]> virtuals) {
-        return virtuals == null ? fileSystem : new AggregateFileSystem([fileSystem, new VirtualFileSystem(virtuals)]);
-    }
-
 }
+
 #endregion
 
 #region Detector
@@ -544,17 +534,17 @@ public class Family {
         var found = game.Found;
         var subPath = edition?.Path;
         var fileSystemType = game.FileSystemType;
-        var fileSystem =
+        var vfx =
             string.Equals(uri.Scheme, "game", StringComparison.OrdinalIgnoreCase) ? found != null ? CreateFileSystem(fileSystemType, found, subPath) : default
             : uri.IsFile ? !string.IsNullOrEmpty(uri.LocalPath) ? CreateFileSystem(fileSystemType, new SystemPath { Root = uri.LocalPath }, subPath) : default
             : uri.Scheme.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? !string.IsNullOrEmpty(uri.Host) ? CreateFileSystem(fileSystemType, found, subPath, uri) : default
             : default;
-        if (fileSystem == null)
+        if (vfx == null)
             if (throwOnError) throw new ArgumentOutOfRangeException(nameof(uri), $"{game.Id}: unable to find game");
             else return default;
-        fileSystem = ProcessFileSystem(fileSystem, virtuals);
+        if (virtuals != null) vfx = new AggregateFileSystem([vfx, new VirtualFileSystem(virtuals)]);
         return new Resource {
-            FileSystem = fileSystem,
+            FileSystem = vfx,
             Game = game,
             Edition = edition,
             SearchPattern = searchPattern

@@ -253,7 +253,7 @@ class NiAVObject(NiObjectNET):
         super().__init__(r)
         self.flags: NiFlags = NiReaderUtils.readFlags(r)
         self.translation: np.ndarray = r.readVector3()  #Vector3
-        self.rotation: np.ndarray = r.readRowMajorMatrix3x3() #Matrix4x4
+        self.rotation: np.ndarray = r.readMatrix3x3As4x4() #Matrix4x4
         self.scale: float = r.readSingle()
         self.velocity: np.ndarray = r.readVector3() #Vector3
         #self.numProperties: int

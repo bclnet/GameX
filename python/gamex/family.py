@@ -4,7 +4,8 @@ from enum import Enum
 from urllib.parse import urlparse
 from importlib import resources
 from openstk.poly import findType
-from openstk.platform import PlatformX, AggreateFileSystem, HostFileSystem, IsoFileSystem, StandardFileSystem, VirtualFileSystem, ZipFileSystem
+from openstk.vfx import FileSystem, AggregateFileSystem, HostFileSystem, DirectoryFileSystem, VirtualFileSystem
+from openstk.platform import PlatformX
 from gamex import option, familyKeys
 from gamex.pak import PakState, ManyPakFile, MultiPakFile
 from gamex.store import getPathByKey as Store_getPathByKey
@@ -104,30 +105,15 @@ def createFamilyApp(family: Family, id: str, elem: dict[str, object]) -> FamilyA
 
 # create FileSystem
 @staticmethod
-def createFileSystem(fileSystemType: str, path: SystemPath, subPath: str, host: str = None) -> IFileSystem:
-    fileSystem = HostFileSystem(host) if host else \
+def createFileSystem(fileSystemType: str, path: SystemPath, subPath: str, host: str = None) -> FileSystem:
+    vfx = HostFileSystem(host) if host else \
         findType(fileSystemType)(path) if fileSystemType else \
         None
-    if fileSystem: return fileSystem
-    firstPath = next(iter(path.paths), None) if path else None
-    root = path.root if not subPath else os.path.join(path.root, subPath)
-    match path.type:
-        case None: fileSystem = StandardFileSystem(root if not firstPath else os.path.join(root, firstPath))
-        case 'zip': fileSystem = ZipFileSystem(root, firstPath)
-        case 'iso': fileSystem = IsoFileSystem(root, firstPath)
-        case _: raise Exception(f'Unknown {path.type}')
-    return fileSystem
-
-# process FileSystem
-@staticmethod
-def processFileSystem(fileSystemType: str, path: SystemPath, subPath: str, virtuals: dict[str, object]) -> IFileSystem:
-    firstPath = next(iter(path.paths), None) if path else None
-    root = path.root if not subPath else os.path.join(path.root, subPath)
-    match path.type:
-        case None: fileSystem
-        case '3ds': fileSystem = X3dsFileSystem(root, firstPath)
-        case _: raise Exception(f'Unknown {path.type}')
-    return fileSystem if not virtuals else AggregateFileSystem([fileSystem, VirtualFileSystem(virtuals)])
+    if vfx: return vfx.next()
+    baseRoot = path.root if not subPath else os.path.join(path.root, subPath)
+    basePath = next(iter(path.paths), None) if path else None
+    vfx = DirectoryFileSystem(baseRoot, basePath)
+    return vfx.next()
 
 #endregion
 
@@ -238,15 +224,16 @@ games: {[x for x in self.games.values()]}'''
         found = game.found
         subPath = edition.path if edition else None
         fileSystemType = game.fileSystemType
-        fileSystem = \
+        vfx = \
             (createFileSystem(fileSystemType, found, subPath) if found else None) if uri.scheme == 'game' else \
-            (createFileSystem(fileSystemType, FileManager.PathItem(uri.path, None), subPath) if uri.path else None) if uri.scheme == 'file' else \
+            (createFileSystem(fileSystemType, SystemPath(uri.path, None), subPath) if uri.path else None) if uri.scheme == 'file' else \
             (createFileSystem(fileSystemType, found, subPath, uri) if uri.netloc else None) if uri.scheme.startswith('http') else None
-        if not fileSystem:
+        if not vfx:
             if throwOnError: raise Exception(f'{game.id}: unable to find game')
             else: return None
+        if virtuals: vfx = AggregateFileSystem([vfx, VirtualFileSystem(virtuals)])
         return Resource(
-            fileSystem = processFileSystem(fileSystemType, found, subPath, virtuals),
+            fileSystem = vfx,
             game = game,
             edition = edition,
             searchPattern = searchPattern

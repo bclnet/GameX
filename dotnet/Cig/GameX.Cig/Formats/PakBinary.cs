@@ -17,7 +17,7 @@ public class PakBinary_P4k : PakBinary<PakBinary_P4k> {
     protected class SubPakFileP4k : BinaryPakFile {
         P4kFile Pak;
 
-        public SubPakFileP4k(BinaryPakFile source, P4kFile pak, string path, object tag) : base(new PakState(source.FileSystem, source.Game, source.Edition, path, tag), Current) {
+        public SubPakFileP4k(BinaryPakFile source, P4kFile pak, string path, object tag) : base(new PakState(source.Vfx, source.Game, source.Edition, path, tag), Current) {
             Pak = pak;
             ObjectFactoryFunc = source.ObjectFactoryFunc;
             UseReader = false;

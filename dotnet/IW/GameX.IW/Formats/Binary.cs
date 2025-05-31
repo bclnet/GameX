@@ -35,7 +35,7 @@ public class Binary_Abc : IHaveMetaInfo {
 
 public class Binary_D3dBsp : IHaveMetaInfo {
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new(null, new MetaContent { Type = "Model", Name = Path.GetFileName(file.Path), Value = this })
+        new(null, new MetaContent { Type = "UnknownFileModel", Name = Path.GetFileName(file.Path), Value = this })
     ];
 }
 

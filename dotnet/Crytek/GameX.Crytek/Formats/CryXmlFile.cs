@@ -25,9 +25,9 @@ public class CryXmlFile : XmlDocument, IHaveStream, IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource m, PakFile s)
         => Task.FromResult((object)new CryXmlFile(r, false));
 
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => new List<MetaInfo> {
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = this }),
-    };
+    ];
 
     public CryXmlFile(string inFile, bool writeLog = false) : this(new BinaryReader(File.OpenRead(inFile)), writeLog) { }
     public CryXmlFile(byte[] bytes, bool writeLog = false) : this(new BinaryReader(new MemoryStream(bytes)), writeLog) { }

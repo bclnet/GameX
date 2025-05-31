@@ -1,6 +1,6 @@
 from __future__ import annotations
 import os
-from gamex import Family, FamilyGame, BinaryPakFile
+from gamex import Family, FamilyGame, BinaryPakFile, FileOption
 from gamex.Base.formats.binary import Binary_Dds
 from gamex.Bethesda.formats.binary import Binary_Ba2, Binary_Bsa, Binary_Esm, Binary_Nif
 from gamex.GameX import UnknownPakFile
@@ -48,7 +48,7 @@ class BethesdaPakFile(BinaryPakFile):
     @staticmethod
     def objectFactory(source: FileSource, game: FamilyGame) -> (object, callable):
         match _pathExtension(source.path).lower():
-            case '.nif': return (0, Binary_Nif.factory)
+            case '.nif': return (FileOption.StringObject, Binary_Nif.factory)
             case _: return UnknownPakFile.objectFactory(source, game)
 
     #endregion

@@ -1,5 +1,6 @@
 ﻿using GameX.Bethesda.Formats.Nif;
 using GameX.Bethesda.Formats.Records;
+using GameX.DesSer;
 using GameX.Formats;
 using OpenStack.Gfx;
 using System;
@@ -684,6 +685,8 @@ public class Binary_Nif : IHaveMetaInfo, IModel {
             new($"NumBlocks: {Header.NumBlocks}"),
         ]),
     ];
+
+    public override string ToString() => this.Serialize();
 }
 
 #endregion

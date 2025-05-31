@@ -374,7 +374,7 @@ public unsafe class Binary_MSet : IHaveMetaInfo {
 
     // IHaveMetaInfo
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new("Model", items: [
+        new("UnknownFileModel", items: [
             //new($"Type: {Type}"),
         ])
     ];

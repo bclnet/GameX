@@ -20,13 +20,14 @@ namespace GameX;
 
 [Flags]
 public enum FileOption {
-    Hosting = Raw | Marker,
-    None = 0x0,
+    Default = 0x0,
     Raw = 0x1,
     Marker = 0x2,
-    Stream = 0x4,
-    Model = 0x8,
-    Supress = 0x10,
+    Object = 0x4,
+    StreamObject = Object | 0x8,
+    StringObject = Object | 0x10,
+    UnknownFileModel = 0x100,
+    Hosting = Raw | Marker,
 }
 
 #endregion
@@ -62,16 +63,16 @@ public interface ITransformFileObject<T> {
 /// <summary>
 /// PakState
 /// </summary>
-/// <param name="fileSystem">The file system.</param>
+/// <param name="vfx">The file system.</param>
 /// <param name="game">The game.</param>
 /// <param name="edition">The edition.</param>
 /// <param name="path">The path.</param>
 /// <param name="tag">The tag.</param>
-public class PakState(FileSystem fileSystem, FamilyGame game, FamilyGame.Edition edition = null, string path = null, object tag = null) {
+public class PakState(FileSystem vfx, FamilyGame game, FamilyGame.Edition edition = null, string path = null, object tag = null) {
     /// <summary>
     /// Gets the filesystem.
     /// </summary>
-    public readonly FileSystem FileSystem = fileSystem;
+    public readonly FileSystem Vfx = vfx;
 
     /// <summary>
     /// Gets the pak family game.
@@ -120,7 +121,7 @@ public abstract class PakFile : ISource, IDisposable {
     /// <summary>
     /// The filesystem.
     /// </summary>
-    public readonly FileSystem FileSystem;
+    public readonly FileSystem Vfx;
 
     /// <summary>
     /// The pak family.
@@ -170,7 +171,7 @@ public abstract class PakFile : ISource, IDisposable {
     public PakFile(PakState state) {
         string z;
         Status = PakStatus.Closed;
-        FileSystem = state.FileSystem ?? throw new ArgumentNullException(nameof(state.FileSystem));
+        Vfx = state.Vfx ?? throw new ArgumentNullException(nameof(state.Vfx));
         Family = state.Game.Family ?? throw new ArgumentNullException(nameof(state.Game.Family));
         Game = state.Game ?? throw new ArgumentNullException(nameof(state.Game));
         Edition = state.Edition;
@@ -180,6 +181,7 @@ public abstract class PakFile : ISource, IDisposable {
         Tag = state.Tag;
         ObjectFactoryFunc = null;
         Gfx = null;
+        Sfx = null;
     }
 
     /// <summary>
@@ -224,7 +226,7 @@ public abstract class PakFile : ISource, IDisposable {
         watch.Stop();
         Status = PakStatus.Opened;
         items?.AddRange(GetMetaItems(manager));
-        Log($"Opened: {Name} @ {watch.ElapsedMilliseconds}ms");
+        Log($"Opened[{Game.Id}]: {Name} @ {watch.ElapsedMilliseconds}ms");
         return this;
     }
 
@@ -324,7 +326,7 @@ public abstract class PakFile : ISource, IDisposable {
     /// <returns></returns>
     public PakFile OpenPakFile(object res, bool throwOnError = true)
         => res switch {
-            string s => Game.CreatePakFile(FileSystem, Edition, s, throwOnError)?.Open(),
+            string s => Game.CreatePakFile(Vfx, Edition, s, throwOnError)?.Open(),
             _ => throw new ArgumentOutOfRangeException(nameof(res)),
         };
 
@@ -431,8 +433,8 @@ public abstract class BinaryPakFile(PakState state, PakBinary pakBinary) : PakFi
     /// <param name="path">The path.</param>
     /// <returns></returns>
     public virtual IGenericPool<BinaryReader> GetReader(string path = default, bool pooled = true) => pooled
-        ? Readers.GetOrAdd(path ?? PakPath, path => FileSystem.FileExists(path) ? new GenericPoolX<BinaryReader>(() => new(FileSystem.Open(path, null)), r => r.Seek(0), RetainInPool) : null)
-        : new SinglePool<BinaryReader>(FileSystem.FileExists(path ??= PakPath) ? new(FileSystem.Open(path, null)) : null);
+        ? Readers.GetOrAdd(path ?? PakPath, path => Vfx.FileExists(path) ? new GenericPoolX<BinaryReader>(() => new(Vfx.Open(path, null)), r => r.Seek(0), RetainInPool) : null)
+        : new SinglePool<BinaryReader>(Vfx.FileExists(path ??= PakPath) ? new(Vfx.Open(path, null)) : null);
 
     /// <summary>
     /// Reader
@@ -476,7 +478,7 @@ public abstract class BinaryPakFile(PakState state, PakBinary pakBinary) : PakFi
     /// <param name="path">The path.</param>
     /// <returns></returns>
     public GenericPoolX<BinaryWriter> GetWriter(string path = default)
-        => Writers.GetOrAdd(path ?? PakPath, path => FileSystem.FileExists(path) ? new GenericPoolX<BinaryWriter>(() => new(FileSystem.Open(path, "w")), r => r.Seek(0), RetainInPool) : null);
+        => Writers.GetOrAdd(path ?? PakPath, path => Vfx.FileExists(path) ? new GenericPoolX<BinaryWriter>(() => new(Vfx.Open(path, "w")), r => r.Seek(0), RetainInPool) : null);
 
     /// <summary>
     /// Writer
@@ -780,8 +782,8 @@ public class ManyPakFile : BinaryPakFile {
     public override Task Read(object tag = default) {
         Files = Paths.Select(s => new FileSource {
             Path = s.Replace('\\', '/'),
-            Pak = Game.IsPakFile(s) ? (BinaryPakFile)Game.CreatePakFileType(new PakState(FileSystem, Game, Edition, s)) : default,
-            FileSize = FileSystem.FileInfo(s).length,
+            Pak = Game.IsPakFile(s) ? (BinaryPakFile)Game.CreatePakFileType(new PakState(Vfx, Game, Edition, s)) : default,
+            FileSize = Vfx.FileInfo(s).length,
         }).ToArray();
         return Task.CompletedTask;
     }
@@ -789,7 +791,7 @@ public class ManyPakFile : BinaryPakFile {
     public override Task<Stream> ReadData(FileSource file, object option = default)
         => file.Pak != null
             ? file.Pak.ReadData(file, option)
-            : Task.FromResult<Stream>(new MemoryStream(new BinaryReader(FileSystem.Open(file.Path, null)).ReadBytes((int)file.FileSize)));
+            : Task.FromResult<Stream>(new MemoryStream(new BinaryReader(Vfx.Open(file.Path, null)).ReadBytes((int)file.FileSize)));
 
     #endregion
 }
@@ -1022,7 +1024,7 @@ public class PakBinary<Self> : PakBinary where Self : PakBinary, new() {
         StaticPool<BinaryReader> Pool;
         BinaryReader R;
 
-        public SubPakFile(BinaryPakFile source, FileSource file, string path, object tag = null, PakBinary instance = null) : base(new PakState(source.FileSystem, source.Game, source.Edition, path, tag), instance ?? Current) {
+        public SubPakFile(BinaryPakFile source, FileSource file, string path, object tag = null, PakBinary instance = null) : base(new PakState(source.Vfx, source.Game, source.Edition, path, tag), instance ?? Current) {
             File = file;
             Source = source;
             ObjectFactoryFunc = source.ObjectFactoryFunc;

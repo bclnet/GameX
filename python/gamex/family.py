@@ -4,7 +4,7 @@ from enum import Enum
 from urllib.parse import urlparse
 from importlib import resources
 from openstk.poly import findType
-from openstk.vfx import FileSystem, AggregateFileSystem, HostFileSystem, DirectoryFileSystem, VirtualFileSystem
+from openstk.vfx import FileSystem, AggregateFileSystem, NetworkFileSystem, DirectoryFileSystem, VirtualFileSystem
 from openstk.platform import PlatformX
 from gamex import option, familyKeys
 from gamex.pak import PakState, ManyPakFile, MultiPakFile
@@ -105,9 +105,9 @@ def createFamilyApp(family: Family, id: str, elem: dict[str, object]) -> FamilyA
 
 # create FileSystem
 @staticmethod
-def createFileSystem(fileSystemType: str, path: SystemPath, subPath: str, host: str = None) -> FileSystem:
-    vfx = HostFileSystem(host) if host else \
-        findType(fileSystemType)(path) if fileSystemType else \
+def createFileSystem(vfxType: str, path: SystemPath, subPath: str, host: str = None) -> FileSystem:
+    vfx = NetworkFileSystem(host) if host else \
+        findType(vfxType)(path) if vfxType else \
         None
     if vfx: return vfx.next()
     baseRoot = path.root if not subPath else os.path.join(path.root, subPath)
@@ -151,8 +151,8 @@ class Detector:
 
 # tag::Resource[]
 class Resource:
-    def __init__(self, fileSystem: IFileSystem, game: FamilyGame, edition: Edition, searchPattern: str):
-        self.fileSystem = fileSystem
+    def __init__(self, vfx: FileSystem, game: FamilyGame, edition: Edition, searchPattern: str):
+        self.vfx = vfx
         self.game = game
         self.edition = edition
         self.searchPattern = searchPattern
@@ -223,17 +223,17 @@ games: {[x for x in self.games.values()]}'''
         virtuals = game.virtuals
         found = game.found
         subPath = edition.path if edition else None
-        fileSystemType = game.fileSystemType
+        vfxType = game.vfxType
         vfx = \
-            (createFileSystem(fileSystemType, found, subPath) if found else None) if uri.scheme == 'game' else \
-            (createFileSystem(fileSystemType, SystemPath(uri.path, None), subPath) if uri.path else None) if uri.scheme == 'file' else \
-            (createFileSystem(fileSystemType, found, subPath, uri) if uri.netloc else None) if uri.scheme.startswith('http') else None
+            (createFileSystem(vfxType, found, subPath) if found else None) if uri.scheme == 'game' else \
+            (createFileSystem(vfxType, SystemPath(uri.path, None), subPath) if uri.path else None) if uri.scheme == 'file' else \
+            (createFileSystem(vfxType, found, subPath, uri) if uri.netloc else None) if uri.scheme.startswith('http') else None
         if not vfx:
             if throwOnError: raise Exception(f'{game.id}: unable to find game')
             else: return None
         if virtuals: vfx = AggregateFileSystem([vfx, VirtualFileSystem(virtuals)])
         return Resource(
-            fileSystem = vfx,
+            vfx = vfx,
             game = game,
             edition = edition,
             searchPattern = searchPattern
@@ -251,7 +251,7 @@ games: {[x for x in self.games.values()]}'''
             case s if isinstance(res, Resource): r = s
             case u if isinstance(res, str): r = self.parseResource(u)
             case _: raise Exception(f'Unknown: {res}')
-        return (pak := r.game.createPakFile(r.fileSystem, r.edition, r.searchPattern, throwOnError)) and pak.open() if r.game else \
+        return (pak := r.game.createPakFile(r.vfx, r.edition, r.searchPattern, throwOnError)) and pak.open() if r.game else \
             _throw(f'Undefined Game')
 # end::Family[]
 
@@ -376,7 +376,7 @@ class FamilyGame:
         if not dgame:
             self.searchBy = SearchBy.Default; self.paks = ['game:/']
             self.gameType = self.engine = self.resource = \
-            self.paths = self.key = self.detector = self.fileSystemType = \
+            self.paths = self.key = self.detector = self.vfxType = \
             self.pakFileType = self.pakExts = None
             return
         self.name = _value(elem, 'name')
@@ -391,7 +391,7 @@ class FamilyGame:
         # self.status = _value(elem, 'status')
         self.tags = _value(elem, 'tags', '').split(' ')
         # interface
-        self.fileSystemType = _value(elem, 'fileSystemType', dgame.fileSystemType)
+        self.vfxType = _value(elem, 'vfxType', dgame.vfxType)
         self.searchBy = _value(elem, 'searchBy', dgame.searchBy)
         self.pakFileType = _value(elem, 'pakFileType', dgame.pakFileType)
         self.pakExts = _list(elem, 'pakExt', dgame.pakExts) 
@@ -456,30 +456,30 @@ class FamilyGame:
         else: raise Exception(f'Unknown searchBy: {self.searchBy}')
 
     # create PakFile
-    def createPakFile(self, fileSystem: IFileSystem, edition: Edition, searchPattern: str, throwOnError: bool) -> PakFile:
-        if isinstance(fileSystem, HostFileSystem): raise Exception('HostFileSystem not supported')
+    def createPakFile(self, vfx: FileSystem, edition: Edition, searchPattern: str, throwOnError: bool) -> PakFile:
+        if isinstance(vfx, NetworkFileSystem): raise Exception('NetworkFileSystem not supported')
         searchPattern = self.createSearchPatterns(searchPattern)
         pakFiles = []
         dlcKeys = [x[0] for x in self.dlcs.items() if x[1].path]
         slash = '\\'
         for key in [None] + dlcKeys:
-            for p in self.findPaths(fileSystem, edition, self.dlcs[key] if key else None, searchPattern):
+            for p in self.findPaths(vfx, edition, self.dlcs[key] if key else None, searchPattern):
                 if self.searchBy == SearchBy.Pak:
                     for path in p[1]:
                         if self.isPakFile(path):
-                            pakFiles.append(self.createPakFileObj(fileSystem, edition, path))
+                            pakFiles.append(self.createPakFileObj(vfx, edition, path))
                 else:
-                    pakFiles.append(self.createPakFileObj(fileSystem, edition,
+                    pakFiles.append(self.createPakFileObj(vfx, edition,
                         (p[0], [x for x in p[1] if x.find(slash) >= 0]) if self.searchBy == SearchBy.DirDown else p))
-        return (pakFiles[0] if len(pakFiles) == 1 else self.createPakFileObj(fileSystem, edition, pakFiles)).setPlatform(PlatformX.current)
+        return (pakFiles[0] if len(pakFiles) == 1 else self.createPakFileObj(vfx, edition, pakFiles)).setPlatform(PlatformX.current)
 
     # create createPakFileObj
-    def createPakFileObj(self, fileSystem: IFileSystem, edition: Edition, value: object, tag: object = None) -> PakFile:
-        pakState = PakState(fileSystem, self, edition, value if isinstance(value, str) else None, tag)
+    def createPakFileObj(self, vfx: FileSystem, edition: Edition, value: object, tag: object = None) -> PakFile:
+        pakState = PakState(vfx, self, edition, value if isinstance(value, str) else None, tag)
         match value:
             case s if isinstance(value, str): return self.createPakFileType(pakState) if self.isPakFile(s) else _throw(f'{self.id} missing {s}')
             case p, l if isinstance(value, tuple):
-                return self.createPakFileObj(fileSystem, edition, l[0], tag) if len(l) == 1 and self.isPakFile(l[0]) \
+                return self.createPakFileObj(vfx, edition, l[0], tag) if len(l) == 1 and self.isPakFile(l[0]) \
                     else ManyPakFile(
                         self.createPakFileType(pakState), pakState,
                         p if len(p) > 0 else 'Many', l,
@@ -494,11 +494,11 @@ class FamilyGame:
         return findType(self.pakFileType)(state)
 
     # find Paths
-    def findPaths(self, fileSystem: IFileSystem, edition: Edition, dlc: DownloadableContent, searchPattern: str):
+    def findPaths(self, vfx: FileSystem, edition: Edition, dlc: DownloadableContent, searchPattern: str):
         ignores = self.ignores
         for path in self.paths or ['']:
             searchPath = os.path.join(path, dlc.path) if dlc and dlc.path else path
-            fileSearch = fileSystem.findPaths(searchPath, searchPattern)
+            fileSearch = vfx.findPaths(searchPath, searchPattern)
             if ignores: fileSearch = [x for x in fileSearch if not os.path.basename(x) in ignores]
             yield (path, list(fileSearch))
 

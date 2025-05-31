@@ -767,5 +767,5 @@ class NiReaderUtils:
             case 'NiShadeProperty': return NiShadeProperty(r)
             case 'NiWireframeProperty': return NiWireframeProperty(r)
             case 'NiCamera': return NiCamera(r)
-            case _: Log(f'Tried to read an unsupported NiObject type ({nodeType}).'); return None
+            case _: print(f'Tried to read an unsupported NiObject type ({nodeType}).'); return None
 

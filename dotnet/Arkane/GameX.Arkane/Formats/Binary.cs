@@ -132,15 +132,15 @@ public unsafe class Binary_Void : PakBinary<Binary_Void> {
         }
 
         // find files
-        var fileSystem = source.FileSystem;
+        var vfx = source.Vfx;
         var resourcePath = $"{source.PakPath[0..^6]}.resources";
-        if (!fileSystem.FileExists(resourcePath)) throw new FormatException("Unable to find resources extension");
+        if (!vfx.FileExists(resourcePath)) throw new FormatException("Unable to find resources extension");
         var sharedResourcePath = new[] {
             "shared_2_3.sharedrsc",
             "shared_2_3_4.sharedrsc",
             "shared_1_2_3.sharedrsc",
             "shared_1_2_3_4.sharedrsc" }
-            .FirstOrDefault(fileSystem.FileExists);
+            .FirstOrDefault(vfx.FileExists);
 
         // read
         r.Seek(4);

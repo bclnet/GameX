@@ -7,13 +7,10 @@ using System.Threading.Tasks;
 
 namespace GameX.App.Cli {
     partial class Program {
-        [Verb("list", HelpText = "List files contents.")]
+        [Verb("list", HelpText = "List files contents")]
         class ListOptions {
-            [Option('f', "family", HelpText = "Family")]
-            public string Family { get; set; }
-
-            [Option('u', "uri", HelpText = "Pak file to be list")]
-            public Uri Uri { get; set; }
+            [Option('f', "family", HelpText = "Family")] public string Family { get; set; }
+            [Option('u', "uri", HelpText = "Uri to list")] public Uri Uri { get; set; }
         }
 
         static Task<int> RunListAsync(ListOptions args) {
@@ -30,28 +27,32 @@ namespace GameX.App.Cli {
 
             // list found paths in family
             if (args.Uri == null) {
-                //Console.WriteLine($"{family.Name}\nDescription: {family.Description}\nStudio: {family.Studio}");
-                //Console.WriteLine($"\nGames:");
-                //foreach (var game in family.Games.Values)
-                //    Console.WriteLine($"{game.Name}{(game.Found ? $" -> {string.Join(',', (IEnumerable<Uri>)game.Paks)}" : null)}");
-                //var paths = family.FileManager.Paths;
-                //Console.WriteLine("\nPaths:");
-                //if (paths.Count == 0) { Console.WriteLine($"No paths found for family \"{args.Family}\"."); return Task.FromResult(0); }
-                //foreach (var path in paths) Console.WriteLine($"{family.GetGame(path.Key, out var _)} - {string.Join(", ", path.Value)}");
+                Console.WriteLine($"{family.Id}");
+                Console.WriteLine($"  name: {family.Name}");
+                Console.WriteLine($"  description: {family.Description}");
+                Console.WriteLine($"  studio: {family.Studio}");
+                Console.WriteLine($"\nGames:");
+                foreach (var game in family.Games.Values) {
+                    Console.WriteLine($"{game.Name}");
+                    if (game.Found == null) continue;
+                    Console.WriteLine($"  urls: {string.Join(',', (IEnumerable<Uri>)game.Paks)}");
+                    Console.WriteLine($"  root: {game.Found.Root}");
+                }
                 return Task.FromResult(0);
             }
 
             // list files in pack for family
             else {
                 Console.WriteLine($"{family.Name} - {args.Uri}\n");
-                //if (estate.OpenPakFile(estate.ParseResource(opts.Uri)) is not MultiPakFile multiPak) throw new InvalidOperationException("multiPak not a MultiPakFile");
-                using var multiPak = family.OpenPakFile(args.Uri) as MultiPakFile ?? throw new InvalidOperationException("multiPak not A MultiPakFile");
-                if (multiPak.PakFiles.Count == 0) { Console.WriteLine("No paks found."); return Task.FromResult(0); }
-                Console.WriteLine("Paks found:");
-                foreach (var p in multiPak.PakFiles) {
-                    if (p is not BinaryPakFile pak) throw new InvalidOperationException("multiPak not A BinaryPakFile");
-                    Console.WriteLine($"\n{pak.Name}");
-                    foreach (var exts in pak.Files.Select(x => Path.GetExtension(x.Path)).GroupBy(x => x)) Console.WriteLine($"  files{exts.Key}: {exts.Count()}");
+                using var s = family.OpenPakFile(args.Uri) as BinaryPakFile ?? throw new InvalidOperationException("s not BinaryPakFile");
+                if (s.Count == 0) { Console.WriteLine("Nothing found."); return Task.FromResult(0); }
+                Console.WriteLine("files:");
+                foreach (var p in s.Files.OrderBy(x => x.Path)) {
+                    Console.WriteLine($"{p.Path}");
+                    var pak = p.Pak;
+                    if (pak == null) continue;
+                    pak.Open();
+                    foreach (var x in pak.Files.Select(x => Path.GetExtension(x.Path)).GroupBy(x => x)) Console.WriteLine($"  {x.Key}: {x.Count()}");
                 }
             }
             return Task.FromResult(0);

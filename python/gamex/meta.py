@@ -21,7 +21,7 @@ class FileSource:
         self.tag = tag
         # cache
         self.cachedObjectFactory = None
-        self.cachedOption = None
+        self.cachedObjectOption = None
     def __repr__(self): return f'{self.path}:{self.fileSize}'
 
 # MetaContent

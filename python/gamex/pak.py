@@ -9,7 +9,13 @@ from gamex.util import _throw
 # FileOption
 class FileOption(Flag):
     Default = 0x0
-    Supress = 0x10
+    Raw = 0x1
+    Marker = 0x2
+    Object = 0x4
+    StringObject = Object | 0x8
+    StreamObject = Object | 0x10
+    # Supress = 0x10
+    UnknownFileModel = 0x100
 
 # ITransformFileObject
 class ITransformFileObject:
@@ -18,8 +24,8 @@ class ITransformFileObject:
 
 # PakState
 class PakState:
-    def __init__(self, fileSystem: FileSystem, game: FamilyGame, edition: Edition = None, path: str = None, tag: object = None):
-        self.fileSystem = fileSystem
+    def __init__(self, vfx: FileSystem, game: FamilyGame, edition: Edition = None, path: str = None, tag: object = None):
+        self.vfx = vfx
         self.game = game
         self.edition = edition
         self.path = path or ''
@@ -37,7 +43,7 @@ class PakFile:
     def __init__(self, state: PakState):
         z = None
         self.status = self.PakStatus.Closed
-        self.fileSystem = state.fileSystem
+        self.vfx = state.vfx
         self.family = state.game.family
         self.game = state.game
         self.edition = state.edition
@@ -45,8 +51,7 @@ class PakFile:
         self.name = z if not state.path or (z := os.path.basename(state.path)) else os.path.basename(os.path.dirname(state.path))
         self.tag = state.tag
         self.objectFactoryFunc = None
-        self.gfx2d = None
-        self.gfx3d = None
+        self.gfx = None
         self.sfx = None
     def __enter__(self): return self
     def __exit__(self, type, value, traceback): self.close()
@@ -68,7 +73,7 @@ class PakFile:
         elapsed = round(end - start, 4)
         if items != None:
             for item in self.getMetaItems(manager): items.append(item)
-        print(f'Opened: {self.name} @ {elapsed}ms')
+        print(f'Opened[{self.game.id}]: {self.name} @ {elapsed}ms')
         return self
     def opening(self) -> None: pass
     def setPlatform(self, platform: Platform) -> PakFile:
@@ -122,8 +127,8 @@ class BinaryPakFile(PakFile):
     
     def getReader(self, path: str = None, pooled: bool = True) -> Reader:
         path = path or self.pakPath
-        return self.readers.get(path) or self.readers.setdefault(path, GenericPool[Reader](lambda: Reader(self.fileSystem.open(path)), lambda r: r.seek(0)) if self.fileSystem.fileExists(path) else None) if pooled else \
-            SinglePool[Reader](Reader(self.fileSystem.open(path)) if self.fileSystem.fileExists(path) else None)
+        return self.readers.get(path) or self.readers.setdefault(path, GenericPool[Reader](lambda: Reader(self.vfx.open(path)), lambda r: r.seek(0)) if self.vfx.fileExists(path) else None) if pooled else \
+            SinglePool[Reader](Reader(self.vfx.open(path)) if self.vfx.fileExists(path) else None)
     
     def reader(self, func: callable, path: str = None, pooled: bool = False): self.getReader(path, pooled).action(func)
 
@@ -182,7 +187,7 @@ class BinaryPakFile(PakFile):
         if self.game.isPakFile(f.path): return None
         data = self.loadFileData(f, option, throwOnError)
         if not data: return None
-        objectFactory = self._ensureCachedObjectFactory(f)
+        objectFactory = self.ensureCachedObjectFactory(f)
         if objectFactory != FileSource.emptyObjectFactory:
             r = Reader(data)
             try:
@@ -194,7 +199,7 @@ class BinaryPakFile(PakFile):
         return data if type == BytesIO or type == object else \
             _throw(f'Stream not returned for {f.path} with {type}')
 
-    def _ensureCachedObjectFactory(self, file: FileSource) -> callable:
+    def ensureCachedObjectFactory(self, file: FileSource) -> callable:
         if not self.objectFactoryFunc: return FileSource.emptyObjectFactory
         if file.cachedObjectFactory: return file.cachedObjectFactory
         option, factory = self.objectFactoryFunc(file, self.game)
@@ -247,13 +252,13 @@ class ManyPakFile(BinaryPakFile):
     def read(self, tag: object = None) -> None:
         self.files = [FileSource(
             path = s.replace('\\', '/'),
-            pak = self.game.createPakFileType(PakState(self.fileSystem, self.game, self.edition, s)) if self.game.isPakFile(s) else None,
-            fileSize = self.fileSystem.fileInfo(s)[1])
+            pak = self.game.createPakFileType(PakState(self.vfx, self.game, self.edition, s)) if self.game.isPakFile(s) else None,
+            fileSize = self.vfx.fileInfo(s)[1])
             for s in self.paths]
 
     def readData(self, file: FileSource, option: object = None) -> BytesIO:
         return file.pak.readData(file, option) if file.pak else \
-            BytesIO(self.fileSystem.openReader(file.path).readBytes(file.fileSize))
+            BytesIO(Reader(self.vfx.open(file.path)).readBytes(file.fileSize))
     #endregion
 
 # MultiPakFile

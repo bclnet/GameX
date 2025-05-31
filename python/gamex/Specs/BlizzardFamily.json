@@ -12,7 +12,7 @@
   ],
   "games": {
     "*": {
-      "fileSystemType": "GameX.Blizzard.BlizzardFileSystem, GameX.Blizzard"
+      "vfxType": "GameX.Blizzard.BlizzardFileSystem, GameX.Blizzard"
     },
     "TDAROS": {
       "name": "The Death and Return of Superman",

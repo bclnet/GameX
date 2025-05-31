@@ -4,7 +4,7 @@ from argparse import ArgumentParser, _SubParsersAction
 from pydantic import BaseModel
 
 def register(subparser: _SubParsersAction[ArgumentParser]) -> None:
-    sub = subparser.add_parser("test", help="commands")
+    sub = subparser.add_parser("test", help="test")
     # required
     sub.add_argument("-f", "--family", type=str, default="Bethesda", help="Family")
     sub.add_argument("-u", "--uri", type=str, default="game:/Morrowind.bsa#Morrowind", help="Pak file to be extracted")

@@ -22,7 +22,7 @@ namespace GameX.App.Explorer.Views {
         public void SetPlatform(Platform platform) {
             var res = ((Grid)Content).Resources;
             var plat = platform?.Id ?? "UK";
-            res["TViewGfx"] = res[$"TViewGfx:{plat}"] ?? res["THex"];
+            res["TViewGfx"] = res[$"TViewGfx:{plat}"] ?? res[true ? "TText" : "THex"];
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

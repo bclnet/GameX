@@ -71,7 +71,7 @@ public partial class FamilyManager {
     static readonly string[] FamilyKeys = ["Bethesda", "Unknown"];
 
     public static GlobalOption Option = new() {
-        Platform = "GL",
+        Platform = "UK",
         ForceOpen = true,
         ForcePath = "sample:2",
         Family = "Bethesda",

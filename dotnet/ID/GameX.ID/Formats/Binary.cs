@@ -861,8 +861,8 @@ public unsafe class Binary_Mdl : IHaveMetaInfo {
 
     // IHaveMetaInfo
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "Model File" }),
-        new("Model", items: [
+        new(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "UnknownFileModel File" }),
+        new("UnknownFileModel", items: [
             new($"Records: {1}"),
         ])
     ];

@@ -440,7 +440,7 @@ public class BuildInfo(BinaryReader r) : IHaveMetaInfo
     public CBldPortal[] Portals = r.ReadL32FArray(x => new CBldPortal(x));
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new($"Model ID: {ModelId:X8}", clickable: true),
+        new($"UnknownFileModel ID: {ModelId:X8}", clickable: true),
         new($"Frame: {Frame}"),
         new($"NumLeaves: {NumLeaves}"),
         new($"Portals", items: Portals.Select((x, i) => new MetaInfo($"{i}", items: (x as IHaveMetaInfo).GetInfoNodes()))),
@@ -557,7 +557,7 @@ public class CloObjectEffect(BinaryReader r) : IHaveMetaInfo
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new($"Index: {Index}"),
-        new($"Model ID: {ModelId:X8}", clickable: true),
+        new($"UnknownFileModel ID: {ModelId:X8}", clickable: true),
         new($"Texture Effects", items: CloTextureEffects.Select(x=> new MetaInfo($"{x}", clickable: true))),
     ];
 }

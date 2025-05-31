@@ -694,7 +694,7 @@ public class GfxObj : FileType, IHaveMetaInfo
     }
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new(null, new MetaContent { Type = "Model", Name = "Model", Value = this }),
+        new(null, new MetaContent { Type = "UnknownFileModel", Name = "UnknownFileModel", Value = this }),
         new($"{nameof(GfxObj)}: {Id:X8}", items: [
             new($"Surfaces", items: Surfaces.Select(x => new MetaInfo($"{x:X8}", clickable: true))),
             new($"VertexArray", items: (VertexArray as IHaveMetaInfo).GetInfoNodes(resource, file)),

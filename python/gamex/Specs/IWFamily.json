@@ -267,7 +267,7 @@
       }
     },
     "BO4": {
-      "fileSystemType": "GameX.Blizzard.BlizzardFileSystem, GameX.Blizzard",
+      "vfxType": "GameX.Blizzard.BlizzardFileSystem, GameX.Blizzard",
       "name": "Call of Duty: Black Ops 4",
       "url": "https://us.shop.battle.net/en-us/product/call-of-duty-black-ops-4",
       "date": "2018-10-12",
@@ -304,7 +304,7 @@
       }
     },
     "BOCW": {
-      "fileSystemType": "GameX.Blizzard.BlizzardFileSystem, GameX.Blizzard",
+      "vfxType": "GameX.Blizzard.BlizzardFileSystem, GameX.Blizzard",
       "name": "Call of Duty: Black Ops Cold War",
       "url": "https://us.shop.battle.net/en-us/product/call-of-duty-black-ops-cold-war",
       "date": "2020-11-13",
@@ -323,7 +323,7 @@
       }
     },
     "Vanguard": {
-      "fileSystemType": "GameX.Blizzard.BlizzardFileSystem, GameX.Blizzard",
+      "vfxType": "GameX.Blizzard.BlizzardFileSystem, GameX.Blizzard",
       "name": "Call of Duty: Vanguard",
       "url": "https://us.shop.battle.net/en-us/product/call-of-duty-vanguard",
       "date": "2021-11-05",

@@ -51,7 +51,7 @@ public partial class FamilyManager {
     /// <value>
     /// The host factory.
     /// </value>
-    public virtual Func<Uri, string, AbstractHost> HostFactory { get; } = HttpHost.Factory;
+    public virtual Func<Uri, string, NetworkHost> HostFactory { get; } = NetworkHost.Factory;
 
     /// <summary>
     /// Parse Key.
@@ -184,19 +184,19 @@ public partial class FamilyManager {
     /// <summary>
     /// Creates the file system.
     /// </summary>
-    /// <param name="fileSystemType">The fileSystemType.</param>
+    /// <param name="vfxType">The vfxType.</param>
     /// <param name="path">The path.</param>
     /// <param name="subPath">The subPath.</param>
     /// <param name="virtuals">The virtuals.</param>
     /// <param name="host">The host.</param>
     /// <returns></returns>
-    internal static FileSystem CreateFileSystem(Type fileSystemType, SystemPath path, string subPath, Uri host = null) {
-        var vfx = host != null ? new HostFileSystem(host)
-            : fileSystemType != null ? (FileSystem)Activator.CreateInstance(fileSystemType, path)
+    internal static FileSystem CreateFileSystem(Type vfxType, SystemPath path, string subPath, Uri host = null) {
+        var vfx = host != null ? new NetworkFileSystem(host)
+            : vfxType != null ? (FileSystem)Activator.CreateInstance(vfxType, path)
             : null;
         if (vfx != null) return vfx.Next();
         var baseRoot = string.IsNullOrEmpty(subPath) ? path.Root : Path.Combine(path.Root, subPath);
-        var basePath = path?.Paths.FirstOrDefault();
+        var basePath = path?.Paths?.FirstOrDefault();
         vfx = new DirectoryFileSystem(baseRoot, basePath);
         return vfx.Next();
     }
@@ -318,7 +318,7 @@ public struct Resource {
     /// <summary>
     /// The filesystem.
     /// </summary>
-    public FileSystem FileSystem;
+    public FileSystem Vfx;
     /// <summary>
     /// The game.
     /// </summary>
@@ -533,18 +533,18 @@ public class Family {
         var virtuals = game.Virtuals;
         var found = game.Found;
         var subPath = edition?.Path;
-        var fileSystemType = game.FileSystemType;
+        var vfxType = game.VfxType;
         var vfx =
-            string.Equals(uri.Scheme, "game", StringComparison.OrdinalIgnoreCase) ? found != null ? CreateFileSystem(fileSystemType, found, subPath) : default
-            : uri.IsFile ? !string.IsNullOrEmpty(uri.LocalPath) ? CreateFileSystem(fileSystemType, new SystemPath { Root = uri.LocalPath }, subPath) : default
-            : uri.Scheme.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? !string.IsNullOrEmpty(uri.Host) ? CreateFileSystem(fileSystemType, found, subPath, uri) : default
+            string.Equals(uri.Scheme, "game", StringComparison.OrdinalIgnoreCase) ? found != null ? CreateFileSystem(vfxType, found, subPath) : default
+            : uri.IsFile ? !string.IsNullOrEmpty(uri.LocalPath) ? CreateFileSystem(vfxType, new SystemPath { Root = uri.LocalPath }, subPath) : default
+            : uri.Scheme.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? !string.IsNullOrEmpty(uri.Host) ? CreateFileSystem(vfxType, found, subPath, uri) : default
             : default;
         if (vfx == null)
             if (throwOnError) throw new ArgumentOutOfRangeException(nameof(uri), $"{game.Id}: unable to find game");
             else return default;
         if (virtuals != null) vfx = new AggregateFileSystem([vfx, new VirtualFileSystem(virtuals)]);
         return new Resource {
-            FileSystem = vfx,
+            Vfx = vfx,
             Game = game,
             Edition = edition,
             SearchPattern = searchPattern
@@ -574,7 +574,7 @@ public class Family {
             _ => throw new ArgumentOutOfRangeException(nameof(res)),
         };
         return r.Game != null
-            ? r.Game.CreatePakFile(r.FileSystem, r.Edition, r.SearchPattern, throwOnError)?.Open()
+            ? r.Game.CreatePakFile(r.Vfx, r.Edition, r.SearchPattern, throwOnError)?.Open()
             : throw new ArgumentNullException(nameof(r.Game));
     }
 }
@@ -963,7 +963,7 @@ public class FamilyGame {
     /// <value>
     /// Gets or sets the file system type.
     /// </value>
-    public Type FileSystemType { get; set; }
+    public Type VfxType { get; set; }
     /// <summary>
     /// Gets or sets the game editions.
     /// </summary>
@@ -1035,7 +1035,7 @@ public class FamilyGame {
         //Status = _value(elem, "status");
         Tags = _value(elem, "tags", string.Empty).Split(' ');
         // interface
-        FileSystemType = _valueF(elem, "fileSystemType", z => Type.GetType(z.GetString(), false) ?? throw new ArgumentOutOfRangeException("fileSystemType", $"Unknown type: {z}"), dgame.FileSystemType);
+        VfxType = _valueF(elem, "vfxType", z => Type.GetType(z.GetString(), false) ?? throw new ArgumentOutOfRangeException("vfxType", $"Unknown type: {z}"), dgame.VfxType);
         SearchBy = _valueF(elem, "searchBy", z => Enum.TryParse<SearchBy>(z.GetString(), true, out var zS) ? zS : throw new ArgumentOutOfRangeException("searchBy", $"Unknown option: {z}"), dgame.SearchBy);
         PakFileType = _valueF(elem, "pakFileType", z => Type.GetType(z.GetString(), false) ?? throw new ArgumentOutOfRangeException("pakFileType", $"Unknown type: {z}"), dgame.PakFileType);
         PakExts = _list(elem, "pakExt", dgame.PakExts);
@@ -1139,48 +1139,48 @@ public class FamilyGame {
     /// <summary>
     /// Create pak file.
     /// </summary>
-    /// <param name="fileSystem">The fileSystem.</param>
+    /// <param name="vfx">The vfx.</param>
     /// <param name="edition">The edition.</param>
     /// <param name="searchPattern">The search pattern.</param>
     /// <param name="throwOnError">Throws on error.</param>
     /// <returns></returns>
-    internal PakFile CreatePakFile(FileSystem fileSystem, Edition edition, string searchPattern, bool throwOnError) {
-        if (fileSystem is HostFileSystem k) throw new NotImplementedException($"{k}"); //return new StreamPakFile(family.FileManager.HostFactory, game, path, fileSystem),
+    internal PakFile CreatePakFile(FileSystem vfx, Edition edition, string searchPattern, bool throwOnError) {
+        if (vfx is NetworkFileSystem k) throw new NotImplementedException($"{k}"); //return new StreamPakFile(family.FileManager.HostFactory, game, path, vfx),
         searchPattern = CreateSearchPatterns(searchPattern);
         var pakFiles = new List<PakFile>();
         var dlcKeys = Dlcs.Where(x => !string.IsNullOrEmpty(x.Value.Path)).Select(x => x.Key).ToArray();
         var slash = '\\';
         foreach (var key in (new string[] { null }).Concat(dlcKeys))
-            foreach (var p in FindPaths(fileSystem, edition, key != null ? Dlcs[key] : null, searchPattern))
+            foreach (var p in FindPaths(vfx, edition, key != null ? Dlcs[key] : null, searchPattern))
                 switch (SearchBy) {
                     case SearchBy.Pak:
                         foreach (var path in p.paths)
                             if (IsPakFile(path))
-                                pakFiles.Add(CreatePakFileObj(fileSystem, edition, path));
+                                pakFiles.Add(CreatePakFileObj(vfx, edition, path));
                         break;
                     default:
-                        pakFiles.Add(CreatePakFileObj(fileSystem, edition,
+                        pakFiles.Add(CreatePakFileObj(vfx, edition,
                             SearchBy == SearchBy.DirDown ? (p.root, p.paths.Where(x => x.Contains(slash)).ToArray())
                             : p));
                         break;
                 }
-        return (pakFiles.Count == 1 ? pakFiles[0] : CreatePakFileObj(fileSystem, edition, pakFiles))?.SetPlatform(PlatformX.Current);
+        return (pakFiles.Count == 1 ? pakFiles[0] : CreatePakFileObj(vfx, edition, pakFiles))?.SetPlatform(PlatformX.Current);
     }
 
     /// <summary>
     /// Create pak file.
     /// </summary>
-    /// <param name="fileSystem">The fileSystem.</param>
+    /// <param name="vfx">The vfx.</param>
     /// <param name="edition">The edition.</param>
     /// <param name="value">The value.</param>
     /// <param name="tag">The tag.</param>
     /// <returns></returns>
-    public PakFile CreatePakFileObj(FileSystem fileSystem, Edition edition, object value, object tag = null) {
-        var pakState = new PakState(fileSystem, this, edition, value as string, tag);
+    public PakFile CreatePakFileObj(FileSystem vfx, Edition edition, object value, object tag = null) {
+        var pakState = new PakState(vfx, this, edition, value as string, tag);
         return value switch {
             string s => IsPakFile(s) ? CreatePakFileType(pakState) : throw new InvalidOperationException($"{Id} missing {s}"),
             ValueTuple<string, string[]> s => s.Item2.Length == 1 && IsPakFile(s.Item2[0])
-                ? CreatePakFileObj(fileSystem, edition, s.Item2[0], tag)
+                ? CreatePakFileObj(vfx, edition, s.Item2[0], tag)
                 : new ManyPakFile(
                     CreatePakFileType(pakState), pakState,
                     s.Item1.Length > 0 ? s.Item1 : "Many", s.Item2,
@@ -1209,15 +1209,15 @@ public class FamilyGame {
     /// <summary>
     /// Find the games paths.
     /// </summary>
-    /// <param name="fileSystem">The fileSystem.</param>
+    /// <param name="vfx">The vfx.</param>
     /// <param name="edition">The edition.</param>
     /// <param name="searchPattern">The search pattern.</param>
     /// <returns></returns>
-    public IEnumerable<(string root, string[] paths)> FindPaths(FileSystem fileSystem, Edition edition, DownloadableContent dlc, string searchPattern) {
+    public IEnumerable<(string root, string[] paths)> FindPaths(FileSystem vfx, Edition edition, DownloadableContent dlc, string searchPattern) {
         var ignores = Ignores;
         foreach (var path in Paths ?? [""]) {
             var searchPath = dlc != null && dlc.Path != null ? Path.Join(path, dlc.Path) : path;
-            var fileSearch = fileSystem.FindPaths(searchPath, searchPattern);
+            var fileSearch = vfx.FindPaths(searchPath, searchPattern);
             if (ignores != null) fileSearch = fileSearch.Where(x => !ignores.Contains(Path.GetFileName(x)));
             yield return (path, fileSearch.ToArray());
         }

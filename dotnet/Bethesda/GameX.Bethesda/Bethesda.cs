@@ -85,7 +85,7 @@ public class BethesdaPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileM
 
     static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch {
-            ".nif" => (0, Binary_Nif.Factory),
+            ".nif" => (FileOption.StringObject, Binary_Nif.Factory),
             _ => UnknownPakFile.ObjectFactory(source, game),
         };
 

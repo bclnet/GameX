@@ -292,8 +292,8 @@ public class Binary_Src : IDisposable, IHaveMetaInfo, IRedirected<ITexture>, IRe
                 break;
             case ResourceType.World: nodes.Add(new(null, new MetaContent { Type = "World", Name = "World", Value = (D_World)DATA, Dispose = this })); break;
             case ResourceType.WorldNode: nodes.Add(new(null, new MetaContent { Type = "World", Name = "World Node", Value = (D_WorldNode)DATA, Dispose = this })); break;
-            case ResourceType.Model: nodes.Add(new(null, new MetaContent { Type = "Model", Name = "Model", Value = this, Dispose = this })); break;
-            case ResourceType.Mesh: nodes.Add(new(null, new MetaContent { Type = "Model", Name = "Mesh", Value = this, Dispose = this })); break;
+            case ResourceType.Model: nodes.Add(new(null, new MetaContent { Type = "UnknownFileModel", Name = "UnknownFileModel", Value = this, Dispose = this })); break;
+            case ResourceType.Mesh: nodes.Add(new(null, new MetaContent { Type = "UnknownFileModel", Name = "Mesh", Value = this, Dispose = this })); break;
             case ResourceType.Material: nodes.Add(new(null, new MetaContent { Type = "Material", Name = "Material", Value = this, Dispose = this })); break;
         }
         foreach (var block in Blocks) {
@@ -968,7 +968,7 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo {
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new(null, new MetaContent { Type = "Texture", Name = Path.GetFileName(file.Path), Value = this }),
-        new("Model", items: [
+        new("UnknownFileModel", items: [
             new($"Name: {Name}"),
         ]),
     ];
@@ -1179,7 +1179,7 @@ public unsafe class Binary_Mdl40 : IHaveMetaInfo {
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = this }),
-        new("Model", items: [
+        new("UnknownFileModel", items: [
             new($"Name: {Name}"),
         ]),
     ];

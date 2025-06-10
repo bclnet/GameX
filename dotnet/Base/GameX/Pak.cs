@@ -24,8 +24,8 @@ public enum FileOption {
     Raw = 0x1,
     Marker = 0x2,
     Object = 0x4,
-    StreamObject = Object | 0x8,
-    StringObject = Object | 0x10,
+    BinaryObject = Object | 0x8,
+    StreamObject = Object | 0x10,
     UnknownFileModel = 0x100,
     Hosting = Raw | Marker,
 }

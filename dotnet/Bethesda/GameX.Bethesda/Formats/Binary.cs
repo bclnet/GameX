@@ -1,6 +1,5 @@
 ﻿using GameX.Bethesda.Formats.Nif;
 using GameX.Bethesda.Formats.Records;
-using GameX.DesSer;
 using GameX.Formats;
 using OpenStack.Gfx;
 using System;
@@ -578,7 +577,7 @@ public unsafe class Binary_Esm : PakBinary<Binary_Esm> {
         var recordLevel = 1;
         var filePath = source.PakPath;
         var poolAction = (GenericPoolAction<BinaryReader>)source.GetReader().Action; //: Leak
-        var rootHeader = new Header(r, Format, null);
+        var rootHeader = new Records.Header(r, Format, null);
         //if ((Format == FormFormat.TES3 && rootHeader.Type != FormType.TES3) || (Format != FormFormat.TES3 && rootHeader.Type != FormType.TES4)) throw new FormatException($"{filePath} record header {rootHeader.Type} is not valid for this {Format}");
         var rootRecord = rootHeader.CreateRecord(rootHeader.Position, recordLevel);
         rootRecord.Read(r, filePath, Format);
@@ -586,7 +585,7 @@ public unsafe class Binary_Esm : PakBinary<Binary_Esm> {
         // morrowind hack
         if (Format == FormType.TES3) {
             var group = new RecordGroup(poolAction, filePath, Format, recordLevel);
-            group.AddHeader(new Header { Label = 0, DataSize = (uint)(r.BaseStream.Length - r.Tell()), Position = r.Tell() });
+            group.AddHeader(new Records.Header { Label = 0, DataSize = (uint)(r.BaseStream.Length - r.Tell()), Position = r.Tell() });
             group.Load();
             Groups = group.Records.GroupBy(x => x.Header.Type).ToDictionary(x => x.Key, x => {
                 var s = new RecordGroup(null, filePath, Format, recordLevel) { Records = [.. x] };
@@ -600,7 +599,7 @@ public unsafe class Binary_Esm : PakBinary<Binary_Esm> {
         Groups = [];
         var endPosition = r.BaseStream.Length;
         while (r.BaseStream.Position < endPosition) {
-            var header = new Header(r, Format, null);
+            var header = new Records.Header(r, Format, null);
             if (header.Type != FormType.GRUP) throw new InvalidOperationException($"{header.Type} not GRUP");
             var nextPosition = r.Tell() + header.DataSize;
             if (!Groups.TryGetValue(header.Label, out var group)) { group = new RecordGroup(poolAction, filePath, Format, recordLevel); Groups.Add(header.Label, group); }
@@ -646,19 +645,19 @@ public unsafe class Binary_Esm : PakBinary<Binary_Esm> {
 
 #region Binary_Nif
 
-public class Binary_Nif : IHaveMetaInfo, IModel {
+public class Binary_Nif : IHaveMetaInfo, IModel, IWriteToStream {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Nif(r, f));
 
     public string Name;
-    public NiHeader Header;
+    public Nif.Header Header;
     public NiObject[] Blocks;
-    public NiFooter Footer;
+    public Footer Footer;
 
     public Binary_Nif(BinaryReader r, FileSource f) {
         Name = Path.GetFileNameWithoutExtension(f.Path);
-        Header = new NiHeader(r);
-        Blocks = r.ReadFArray(NiReaderUtils.ReadNiObject, (int)Header.NumBlocks);
-        Footer = new NiFooter(r);
+        Header = new Nif.Header(r);
+        Blocks = r.ReadFArray(r => NiObject.Read(r, Header), (int)Header.NumBlocks);
+        Footer = new Footer(r, Header);
     }
 
     #region IModel
@@ -685,6 +684,8 @@ public class Binary_Nif : IHaveMetaInfo, IModel {
             new($"NumBlocks: {Header.NumBlocks}"),
         ]),
     ];
+
+    public void WriteToStream(Stream stream) => this.Serialize(stream);
 
     public override string ToString() => this.Serialize();
 }

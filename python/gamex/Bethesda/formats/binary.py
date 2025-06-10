@@ -1,10 +1,11 @@
 import os
 from io import BytesIO
 from enum import Enum
-from gamex import FileSource, PakBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
+from openstk.poly import IWriteToStream
+from gamex import FileSource, PakBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo, DesSer
 from gamex.compression import decompressLz4, decompressZlib
 from gamex.Bethesda.formats.records import FormType, Header
-from gamex.Bethesda.formats.nif import NiHeader, NiFooter, NiReaderUtils
+from gamex.Bethesda.formats.nif import Header, Footer, NiObject
 
 # typedefs
 class Reader: pass
@@ -414,15 +415,19 @@ class Binary_Esm(PakBinaryT):
 #region Binary_Nif
 
 # Binary_Nif
-class Binary_Nif(IHaveMetaInfo):
+class Binary_Nif(IHaveMetaInfo, IWriteToStream):
     @staticmethod
     def factory(r: Reader, f: FileSource, s: PakFile): return Binary_Nif(r, f)
 
     def __init__(self, r: Reader, f: FileSource):
         self.name = os.path.splitext(os.path.basename(f.path))[0]
-        self.header = NiHeader(r)
-        self.blocks = r.readFArray(NiReaderUtils.readNiObject, self.header.numBlocks)
-        self.footer = NiFooter(r)
+        self.header = Header(r)
+        self.blocks = r.readFArray(lambda r: NiObject.read(r, self.header), self.header.numBlocks)
+        self.footer = Footer(r)
+
+    def writeToStream(self, stream: object): return DesSer.serialize(self, stream)
+
+    def __repr__(self): return DesSer.serialize(self)
 
     #region IModel
 

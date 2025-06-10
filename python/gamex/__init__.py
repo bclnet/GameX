@@ -1,4 +1,5 @@
 from ._config import __title__, __version__, option, familyKeys
+from .desser import *
 from .family import *
 from .meta import *
 from .pak import *

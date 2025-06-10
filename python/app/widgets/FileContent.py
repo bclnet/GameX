@@ -16,7 +16,8 @@ class AppTextWidget(QWidget):
         super().__init__()
         self.parent = parent
         self.initUI(tab.value)
-    def initUI(self, value: str):
+    def initUI(self, value: object):
+        if not isinstance(value, str): value = repr(value)
         self.text = QPlainTextEdit(self)
         self.text.setPlainText(value)
         self.text.setFont(QFont('Courier New', 10))
@@ -61,7 +62,7 @@ class FileContent(QTabWidget):
             AppOpenGLWidget if plat == 'GL' else \
             AppPanda3dWidget if plat == 'PD' else \
             AppPygameWidget if plat == 'PG' else \
-            AppNullWidget
+            None #AppNullWidget
         if len(self.contentTab) > 0: self.updateTabs()
 
     def updateTabs(self):
@@ -87,7 +88,7 @@ class FileContent(QTabWidget):
                 AppTextWidget(self, tab) if key == 'TText' else \
                 AppTextWidget(self, tab) if key == 'TDataGrid' else \
                 AppTextWidget(self, tab) if key == 'TAudioPlayer' else \
-                self.gfxWidget(self, tab) if key == 'TViewGfx' else \
+                (self.gfxWidget(self, tab) if self.gfxWidget else AppTextWidget(self, tab)) if key == 'TViewGfx' else \
                 AppNullWidget(self, tab) if key == 'TNull' else \
                 None
             self.contentTab.addTab(control, tab.name)

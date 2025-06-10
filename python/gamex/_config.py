@@ -41,7 +41,7 @@ match __current__:
         familyKeys = [ "Bethesda", "Unknown" ]
 
         option = GlobalOption(
-            Platform = "GL",
+            Platform = "UK",
             ForceOpen = True,
             ForcePath = "sample:2",
             Family = "Bethesda",

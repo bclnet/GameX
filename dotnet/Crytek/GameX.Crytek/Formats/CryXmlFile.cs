@@ -9,7 +9,7 @@ using System.Xml.Serialization;
 
 namespace GameX.Crytek.Formats;
 
-public class CryXmlFile : XmlDocument, IHaveStream, IHaveMetaInfo {
+public class CryXmlFile : XmlDocument, IHaveMetaInfo, IStream  {
     class Node {
         public int NodeId { get; set; }
         public int NodeNameOffset { get; set; }

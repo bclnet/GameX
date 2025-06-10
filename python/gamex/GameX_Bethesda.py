@@ -48,7 +48,7 @@ class BethesdaPakFile(BinaryPakFile):
     @staticmethod
     def objectFactory(source: FileSource, game: FamilyGame) -> (object, callable):
         match _pathExtension(source.path).lower():
-            case '.nif': return (FileOption.StringObject, Binary_Nif.factory)
+            case '.nif': return (FileOption.StreamObject, Binary_Nif.factory)
             case _: return UnknownPakFile.objectFactory(source, game)
 
     #endregion

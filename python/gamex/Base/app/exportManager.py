@@ -1,5 +1,6 @@
 from __future__ import annotations
 import os, io, asyncio, shutil
+from openstk.poly import parallelFor, IStream, IWriteToStream
 from gamex import FileOption, PakFile, MultiPakFile, BinaryPakFile
 
 # ExportManager
@@ -41,6 +42,7 @@ class ExportManager:
         # write files
         async def lambdaX(index: int):
             file = source.files[index]
+            # print(match(file.path))
             if match and not match(file.path): return
             newPath = os.path.join(filePath, file.path) if filePath else None
             # create directory
@@ -56,9 +58,8 @@ class ExportManager:
                 if file.parts != None and FileOption.Raw in fo:
                     for part in file.parts: await ExportManager.exportFileAsync(part, source, os.path.join(filePath, part.path), option)
                 if next: next(file, index)
-            except Exception as e: error(file, f'Exception: {str(e)}') if error else None
+            except Exception as e: error(file, repr(e)) if error else None # f'Exception: {str(e)}'
         await parallelFor(from_, len(source.files), { 'max': ExportManager.MaxDegreeOfParallelism }, lambdaX)
-        # await parallelForTask(from_, len(source.files), 1, lambdaX)
         # write pak-raw
         # if FileOption.Marker in fo: await StreamPakFile(source, new PakState(source.Vfx, source.Game, source.Edition, filePath)).Write(null)
 
@@ -67,34 +68,30 @@ class ExportManager:
         fo = option if isinstance(option, FileOption) else FileOption.Default
         if file.fileSize == 0 and file.packedSize == 0: return
         oo = file.cachedObjectOption if isinstance(file.cachedObjectOption, FileOption) else FileOption.Default
-        if bool(fo & oo):
+        if file.cachedObjectOption and bool(fo & oo):
             if FileOption.UnknownFileModel in oo:
-                model = await source.loadFileObject(IUnknownFileModel, file, FamilyManager.UnknownPakFile)
+                model = source.loadFileObject(IUnknownFileModel, file, FamilyManager.UnknownPakFile)
                 # UnknownFileWriter.Factory('default', model).Write(newPath, false)
                 return
-            elif FileOption.StringObject in oo:
-                if not isinstance(haveStream := await source.loadFileObject(object, file), IHaveStream):
-                    PakBinary.handleException(None, option, f'StringObject: {file.Path} @ {file.FileSize}')
-                    raise Exception()
-                with haveStream.getStream() as b2, open(newPath, 'wb') if newPath else io.BytesIO() as s2:
-                    shutil.copyfileobj(b2, s2)
-                return
+            elif FileOption.BinaryObject in oo:
+                obj = source.loadFileObject(object, file)
+                if isinstance(obj, IStream):
+                    with obj.getStream() as b2, open(newPath, 'wb') if newPath else io.BytesIO() as s2:
+                        shutil.copyfileobj(b2, s2)
+                    return
+                PakBinary.handleException(None, option, f'BinaryObject: {file.Path} @ {file.FileSize}')
+                raise Exception()
             elif FileOption.StreamObject in oo:
-                if not isinstance(haveStream := await source.loadFileObject(object, file), IHaveStream):
-                    PakBinary.handleException(None, option, f'StreamObject: {file.Path} @ {file.FileSize}')
-                    raise Exception()
-                with haveStream.getStream() as b2, open(newPath, 'wb') if newPath else io.BytesIO() as s2:
-                    shutil.copyfileobj(b2, s2)
-                return
+                obj = source.loadFileObject(object, file)
+                if isinstance(obj, IWriteToStream):
+                    with open(newPath, 'w') if newPath else io.BytesIO() as s2:
+                        obj.writeToStream(s2)
+                    return
+                PakBinary.handleException(None, option, f'StreamObject: {file.Path} @ {file.FileSize}')
+                raise Exception()
         with source.loadFileData(file, option) as b, open(newPath, 'wb') if newPath else io.BytesIO() as s:
             shutil.copyfileobj(b, s)
             if file.parts and FileOption.Raw not in fo:
                 for part in file.parts:
                     with await source.loadFileData(part, option) as b2:
                         shutil.copyfileobj(b2, s)
-
-@staticmethod
-async def parallelForTask(f: int, t: int, s: int, c: callable) -> list[object]: [await c(i) for i in range(f, t, s)]
-
-@staticmethod
-async def parallelFor(f: int, t: int, o: set, c: callable) -> list[object]: await asyncio.gather(*[parallelForTask(f, t, i + 1, c) for i in range(o['max'] or 1)])

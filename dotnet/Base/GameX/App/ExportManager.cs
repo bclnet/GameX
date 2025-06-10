@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace GameX.App;
 
 public static class ExportManager {
-    const int MaxDegreeOfParallelism = 4;
+    const int MaxDegreeOfParallelism = 1; //4;
 
     public static async Task ExportAsync(Family family, Resource res, string filePath, Func<string, bool> match, int from, object option) {
         var fo = option as FileOption? ?? FileOption.Default;
@@ -75,36 +75,37 @@ public static class ExportManager {
     static async Task ExportFileAsync(FileSource file, BinaryPakFile source, string newPath, object option) {
         var fo = option as FileOption? ?? FileOption.Default;
         if (file.FileSize == 0 && file.PackedSize == 0) return;
-        var oo = file.CachedObjectOption as FileOption?;
-        if ((fo & oo) != 0) {
-            if ((fo & FileOption.UnknownFileModel) != 0) {
+        var oo = (file.CachedObjectOption as FileOption?) ?? FileOption.Default;
+        if (file.CachedObjectOption != null && (fo & oo) != 0) {
+            if (oo.HasFlag(FileOption.UnknownFileModel)) {
                 var model = await source.LoadFileObject<IUnknownFileModel>(file, FamilyManager.UnknownPakFile);
                 UnknownFileWriter.Factory("default", model).Write(newPath, false);
                 return;
             }
-            else if ((oo & FileOption.StringObject) != 0) {
-                if (await source.LoadFileObject<object>(file) is not IHaveStream haveStream) {
-                    PakBinary.HandleException(null, option, $"ExportFileAsync: {file.Path} @ {file.FileSize}");
-                    throw new InvalidOperationException();
+            else if (oo.HasFlag(FileOption.BinaryObject)) {
+                var obj = await source.LoadFileObject<object>(file);
+                if (obj is IStream src) {
+                    using var b2 = src.GetStream();
+                    using var s2 = newPath != null
+                        ? new FileStream(newPath, FileMode.Create, FileAccess.Write)
+                        : (Stream)new MemoryStream();
+                    b2.CopyTo(s2);
+                    return;
                 }
-                using var b2 = haveStream.GetStream();
-                using var s2 = newPath != null
-                    ? new FileStream(newPath, FileMode.Create, FileAccess.Write)
-                    : (Stream)new MemoryStream();
-                b2.CopyTo(s2);
-                return;
+                PakBinary.HandleException(null, option, $"BinaryObject: {file.Path} @ {file.FileSize}");
+                throw new InvalidOperationException();
             }
-            else if ((fo & FileOption.StreamObject) != 0) {
-                if (await source.LoadFileObject<object>(file) is not IHaveStream haveStream) {
-                    PakBinary.HandleException(null, option, $"ExportFileAsync: {file.Path} @ {file.FileSize}");
-                    throw new InvalidOperationException();
+            else if (oo.HasFlag(FileOption.StreamObject)) {
+                var obj = await source.LoadFileObject<object>(file);
+                if (obj is IWriteToStream src) {
+                    using var s2 = newPath != null
+                        ? new FileStream(newPath, FileMode.Create, FileAccess.Write)
+                        : (Stream)new MemoryStream();
+                    src.WriteToStream(s2);
+                    return;
                 }
-                using var b2 = haveStream.GetStream();
-                using var s2 = newPath != null
-                    ? new FileStream(newPath, FileMode.Create, FileAccess.Write)
-                    : (Stream)new MemoryStream();
-                b2.CopyTo(s2);
-                return;
+                PakBinary.HandleException(null, option, $"StreamObject: {file.Path} @ {file.FileSize}");
+                throw new InvalidOperationException();
             }
         }
         using var b = await source.LoadFileData(file, option);

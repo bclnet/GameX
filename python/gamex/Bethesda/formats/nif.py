@@ -11,7 +11,7 @@ T = TypeVar('T')
 # types
 type Vector3 = np.ndarray
 type Vector4 = np.ndarray
-type Vector4x4 = np.ndarray
+type Matrix4x4 = np.ndarray
 
 # typedefs
 class Reader: pass
@@ -39,23 +39,28 @@ class X(Generic[T]):
 class Y:
     @staticmethod
     def string(r: Reader) -> str: return r.readL32Encoding()
+    @staticmethod
+    def stringRef(r: Reader, p: int) -> str: return None
+
+class Flags(Flag):
+    pass
 
 #endregion
 
 #region Enums
 
 # Describes the options for the accum root on NiControllerSequence.
-class AccumFlags(Enum): #:X
+class AccumFlags(Flag): #:X
     ACCUM_X_TRANS = 0,              # X Translation will be accumulated.
-    ACCUM_Y_TRANS = 1,              # Y Translation will be accumulated.
-    ACCUM_Z_TRANS = 2,              # Z Translation will be accumulated.
-    ACCUM_X_ROT = 3,                # X Rotation will be accumulated.
-    ACCUM_Y_ROT = 4,                # Y Rotation will be accumulated.
-    ACCUM_Z_ROT = 5,                # Z Rotation will be accumulated.
-    ACCUM_X_FRONT = 6,              # +X is front facing. (Default)
-    ACCUM_Y_FRONT = 7,              # +Y is front facing.
-    ACCUM_Z_FRONT = 8,              # +Z is front facing.
-    ACCUM_NEG_FRONT = 9             # -X is front facing.
+    ACCUM_Y_TRANS = 1 << 1,         # Y Translation will be accumulated.
+    ACCUM_Z_TRANS = 1 << 2,         # Z Translation will be accumulated.
+    ACCUM_X_ROT = 1 << 3,           # X Rotation will be accumulated.
+    ACCUM_Y_ROT = 1 << 4,           # Y Rotation will be accumulated.
+    ACCUM_Z_ROT = 1 << 5,           # Z Rotation will be accumulated.
+    ACCUM_X_FRONT = 1 << 6,         # +X is front facing. (Default)
+    ACCUM_Y_FRONT = 1 << 7,         # +Y is front facing.
+    ACCUM_Z_FRONT = 1 << 8,         # +Z is front facing.
+    ACCUM_NEG_FRONT = 1 << 9        # -X is front facing.
 
 # texture enums
 # Describes how the vertex colors are blended with the filtered texture color.
@@ -556,7 +561,7 @@ class PixelComponent(Enum): #:X
     COMP_EMPTY = 19
 
 # Describes how each pixel should be accessed on NiPixelFormat.
-class XXXX(Enum): #:X
+class PixelRepresentation(Enum): #:X
     REP_NORM_INT = 0,
     REP_HALF = 1,
     REP_FLOAT = 2,
@@ -1025,7 +1030,7 @@ class hkConstraintType(Enum): #:X
 
 # use:SizedString -> L32AString
 # use:string -> string
-# use:ByteArray -> L32ReadBytes
+# use:ByteArray -> ReadL8Bytes
 # skip:ByteMatrix
 # use:Color3 -> Color3
 # use:ByteColor3 -> Color3Byte
@@ -1076,15 +1081,62 @@ class BoneVertData: #:M #Marshal
         self.weight = r.readSingle() if full else r.readHalf()
 # use:BoneVertDataHalf -> BoneVertData
 
-# skip:AVObject
+# Used in NiDefaultAVObjectPalette.
+class AVObject: #:X
+    def __init__(self, r: Reader):
+        self.name: str = r.readL32AString()         # TObject name.
+        self.avObject: int = X[NiAVObject].ref(r)   # TObject name.
 
 # In a .kf file, this links to a controllable object, via its name (or for version 10.2.0.0 and up, a link and offset to a NiStringPalette that contains the name), and a sequence of interpolators that apply to this controllable object, via links.
 # For Controller ID, NiInterpController::GetCtlrID() virtual function returns a string formatted specifically for the derived type.
 # For Interpolator ID, NiInterpController::GetInterpolatorID() virtual function returns a string formatted specifically for the derived type.
 # The string formats are documented on the relevant niobject blocks.
 class ControlledBlock: #:X
-    #TODO
-    pass
+    targetName: str        # Name of a controllable object in another NIF file.
+    # NiControllerSequence::InterpArrayItem
+    interpolator: int
+    controller: int
+    blendInterpolator: int
+    blendIndex: int 
+    # Bethesda-only
+    priority: int                   # Idle animations tend to have low values for this, and high values tend to correspond with the important parts of the animations.
+    # NiControllerSequence::IDTag, post-10.1.0.104 only
+    nodeName: str           # The name of the animated NiAVObject.
+    propertyType: str      # The RTTI type of the NiProperty the controller is attached to, if applicable.
+    controllerType: str    # The RTTI type of the NiTimeController.
+    controllerID: str      # An ID that can uniquely identify the controller among others of the same type on the same NiObjectNET.
+    interpolatorID: str    # An ID that can uniquely identify the interpolator among others of the same type on the same NiObjectNET.
+
+    def __init__(self, r: Reader, h: Header):
+        if h.v <= 0x0A010067: self.targetName = Y.string(r)
+        if h.v <= 0x14050000: self.interpolator = X[NiInterpolator].ref(r)
+        self.controller = X[NiTimeController].ref(r)
+        if h.v >= 0x0A010068 and h.v <= 0x0A01006E:
+            self.blendInterpolator = X[NiBlendInterpolator].ref(r)
+            self.blendIndex = r.readUInt16()
+        if h.v <= 0x0A01006A and h.userVersion2 > 0: self.priority = r.readByte()
+        # Until 10.2
+        if h.v >= 0x0A010068 and h.v <= 0x0A010071:
+            self.nodeName = Y.string(r)
+            self.propertyType = Y.string(r)
+            self.controllerType = Y.string(r)
+            self.controllerID = Y.string(r)
+            self.interpolatorID = Y.string(r)
+        # From 10.2 to 20.1
+        elif h.v >= 0x0A020000 and h.v <= 0x14010000:
+            stringPalette = X[NiStringPalette].ref(r)
+            self.nodeName = Y.stringRef(r, stringPalette)
+            self.propertyType = Y.stringRef(r, stringPalette)
+            self.controllerType = Y.stringRef(r, stringPalette)
+            self.controllerID = Y.stringRef(r, stringPalette)
+            self.interpolatorID = Y.stringRef(r, stringPalette)
+        # After 20.1
+        elif h.v >= 0x14010001:
+            self.nodeName = Y.string(r)
+            self.propertyType = Y.string(r)
+            self.controllerType = Y.string(r)
+            self.controllerID = Y.string(r)
+            self.interpolatorID = Y.string(r)
 
 # use:ExportInfo -> []
 
@@ -1133,7 +1185,7 @@ class Header: #:M
         if v >= 0x05000006: self.groups = r.readL32PArray(None, 'I')
 
     @staticmethod
-    def isVersionSupported(v: int) -> bool: return true
+    def isVersionSupported(v: int) -> bool: return True
 
     @staticmethod
     def parseHeaderStr(s: str) -> tuple:
@@ -1142,7 +1194,7 @@ class Header: #:M
             v = s
             v = v[(p + 8):]
             for i in range(len(v)):
-                if char.IsDigit(v[i]) or v[i] == '.': continue
+                if v[i].isdigit() or v[i] == '.': continue
                 else: v = v[:i]
             ver = Header.ver2Num(v)
             if not Header.isVersionSupported(ver): raise Exception(f'Version {Header.ver2Str(ver)} ({ver}) is not supported.')
@@ -1182,7 +1234,10 @@ class Header: #:M
             return v
         return int(s)
 
-# skip:StringPalette
+class StringPalette: #:X
+    def __init__(self, r: Reader):
+        self.palette: list[str] = r.readL32AString().split('0x00') # A bunch of 0x00 seperated strings.
+        self.length: int = r.readUInt32()       # Length of the palette string is repeated here.
 
 # Tension, bias, continuity.
 class TBC: #:M
@@ -1216,7 +1271,7 @@ class KeyGroup: #:M
     def __init__(self, T: type, r: Reader):
         self.numKeys = r.readUInt32()
         if self.numKeys != 0: self.interpolation = KeyType(r.readUInt32())
-        self.keys = r.readFArray(lambda r: Key(r, interpolation), self.numKeys)
+        self.keys = r.readFArray(lambda r: Key(r, self.interpolation), self.numKeys)
 
 # A special version of the key type used for quaternions.  Never has tangents.
 class QuatKey: #:M
@@ -1224,7 +1279,7 @@ class QuatKey: #:M
     value: object               # Value of the key.
     tbc: TBC                    # The TBC of the key.
 
-    def __init__(self, T: type, r: Reader):
+    def __init__(self, T: type, r: Reader, keyType: KeyType):
         self.time = r.readSingle()
         if keyType != KeyType.XYZ_ROTATION_KEY: self.value = X[T].read(r)
         if keyType == KeyType.TBC_KEY: self.tbc = TBC(r)
@@ -1305,17 +1360,18 @@ class Triangle: #:M
 
 class VertexFlags(Flag): #:X
     # First 4 bits are unused
-    Vertex = 4,                     # & 16
-    UVs = 5,                        # & 32
-    UVs_2 = 6,                      # & 64
-    Normals = 7,                    # & 128
-    Tangents = 8,                   # & 256
-    Vertex_Colors = 9,              # & 512
-    Skinned = 10,                   # & 1024
-    Land_Data = 11,                 # & 2048
-    Eye_Data = 12,                  # & 4096
-    Instance = 13,                  # & 8192
-    Full_Precision = 14             # & 16384
+    Vertex = 1 << 4,                    # & 16
+    UVs = 1 << 5,                       # & 32
+    UVs_2 = 1 << 6,                     # & 64
+    Normals = 1 << 7,                   # & 128
+    Tangents = 1 << 8,                  # & 256
+    Vertex_Colors = 1 << 9,             # & 512
+    Skinned = 1 << 10,                  # & 1024
+    Land_Data = 1 << 11,                # & 2048
+    Eye_Data = 1 << 12,                 # & 4096
+    Instance = 1 << 13,                 # & 8192
+    Full_Precision = 1 << 14            # & 16384
+    # FLast bit unused
 
 # NiTexturingProperty::Map. Texture description.
 class BSVertexData: #:M
@@ -1437,10 +1493,10 @@ class NiTransform: #:M #Marshal
 # Bethesda Animation. Furniture entry points. It specifies the direction(s) from where the actor is able to enter (and leave) the position.
 class FurnitureEntryPoints(Flag): #:X
     Front = 0,                      # front entry point
-    Behind = 1,                     # behind entry point
-    Right = 2,                      # right entry point
-    Left = 4,                       # left entry point
-    Up = 8                          # up entry point - unknown function. Used on some beds in Skyrim, probably for blocking of sleeping position.
+    Behind = 1 << 1,                # behind entry point
+    Right = 1 << 2,                 # right entry point
+    Left = 1 << 3,                  # left entry point
+    Up = 1 << 4                     # up entry point - unknown function. Used on some beds in Skyrim, probably for blocking of sleeping position.
     
 # Bethesda Animation. Animation type used on this position. This specifies the function of this position.
 class AnimationType(Enum): #:X
@@ -1840,7 +1896,7 @@ class DecalVectorArray: #:X
 # Editor flags for the Body Partitions.
 class BSPartFlag(Flag): #:X
     PF_EDITOR_VISIBLE = 0,                      # Visible in Editor
-    PF_START_NET_BONESET = 256                  # Start a new shared boneset.  It is expected this BoneSet and the following sets in the Skin Partition will have the same bones.
+    PF_START_NET_BONESET = 1 << 8               # Start a new shared boneset.  It is expected this BoneSet and the following sets in the Skin Partition will have the same bones.
 
 # Body part list for DismemberSkinInstance
 class BodyPartList: #:X
@@ -2131,10 +2187,10 @@ class hkWorldObjCinfoProperty: #:X
         self.capacityAndFlags: int = r.readUInt32()
 
 class bhkRefObject(NiObject):
-    def __init__(self, r: Reader): super().__init__(r)
+    def __init__(self, r: Reader): super().__init__(r, h)
 
 class bhkSerializable(bhkRefObject):
-    def __init__(self, r: Reader): super().__init__(r)
+    def __init__(self, r: Reader): super().__init__(r, h)
 
 # Havok objects that have a position in the world?
 class bhkWorldObject(bhkSerializable): #:X
@@ -2158,11 +2214,11 @@ class bhkWorldObject(bhkSerializable): #:X
 
 # Havok object that do not react with other objects when they collide (causing deflection, etc.) but still trigger collision notifications to the game.  Possible uses are traps, portals, AI fields, etc.
 class bhkPhantom(bhkWorldObject):
-    def __init__(self, r: Reader): super().__init__(r)
+    def __init__(self, r: Reader): super().__init__(r, h)
 
 # A Havok phantom that uses a Havok shape object for its collision volume instead of just a bounding box.
 class bhkShapePhantom(bhkPhantom):
-    def __init__(self, r: Reader): super().__init__(r)
+    def __init__(self, r: Reader): super().__init__(r, h)
 
 # Unknown shape.
 class bhkSimpleShapePhantom(bhkShapePhantom): #:X
@@ -2173,6 +2229,712 @@ class bhkSimpleShapePhantom(bhkShapePhantom): #:X
         super().__init__(r, h)
         self.unused2 = r.readBytes(8)
         self.transform = r.readMatrix4x4()
+
+# A havok node, describes physical properties.
+class bhkEntity(bhkWorldObject):
+    def __init__(self, r: Reader): super().__init__(r, h)
+
+# This is the default body type for all "normal" usable and static world objects. The "T" suffix marks this body as active for translation and rotation, a normal bhkRigidBody ignores those
+# properties. Because the properties are equal, a bhkRigidBody may be renamed into a bhkRigidBodyT and vice-versa.
+class bhkRigidBody(bhkEntity): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# The "T" suffix marks this body as active for translation and rotation.
+class bhkRigidBodyT(bhkRigidBody):
+    def __init__(self, r: Reader): super().__init__(r, h)
+
+# Describes a physical constraint.
+class bhkConstraint(bhkSerializable): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# Hinge constraint.
+class bhkLimitedHingeConstraint(bhkConstraint): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# A malleable constraint.
+class bhkMalleableConstraint(bhkConstraint): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# A spring constraint.
+class bhkStiffSpringConstraint(bhkConstraint): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# Ragdoll constraint.
+class bhkRagdollConstraint(bhkConstraint): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# A prismatic constraint.
+class bhkPrismaticConstraint(bhkConstraint): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# A hinge constraint.
+class bhkHingeConstraint(bhkConstraint): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# A Ball and Socket Constraint.
+class bhkBallAndSocketConstraint(bhkConstraint): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# Two Vector4 for pivot in A and B.
+class ConstraintInfo: #:X
+    def __init__(self, r: Reader, h: Header):
+        self.pivotInA: Vector4 = r.readVector4()
+        self.pivotInB: Vector4 = r.readVector4()
+
+# A Ball and Socket Constraint chain.
+class bhkBallSocketConstraintChain(bhkSerializable): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# A Havok Shape?
+class bhkShape(bhkSerializable): #:X
+    def __init__(self, r: Reader, h: Header): super().__init__(r, h)
+
+# Transforms a shape.
+class bhkTransformShape(bhkShape): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# A havok shape, perhaps with a bounding sphere for quick rejection in addition to more detailed shape data?
+class bhkSphereRepShape(bhkShape): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# A havok shape.
+class bhkConvexShape(bhkSphereRepShape): #:X
+    def __init__(self, r: Reader, h: Header): super().__init__(r, h)
+
+# A sphere.
+class bhkSphereShape(bhkConvexShape): #:X
+    def __init__(self, r: Reader, h: Header): super().__init__(r, h)
+
+# A capsule.
+class bhkCapsuleShape(bhkConvexShape): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# A box.
+class bhkBoxShape(bhkConvexShape): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# A convex shape built from vertices. Note that if the shape is used in a non-static object (such as clutter), then they will simply fall through ground when they are under a bhkListShape.
+class bhkConvexVerticesShape(bhkConvexShape): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# A convex transformed shape?
+# Should inherit from bhkConvexShape according to hierarchy, but seems to be exactly the same as bhkTransformShape.
+class bhkConvexTransformShape(bhkTransformShape): #:X
+    def __init__(self, r: Reader, h: Header): super().__init__(r, h)
+
+class bhkConvexSweepShape(bhkShape): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# Unknown.
+class bhkMultiSphereShape(bhkSphereRepShape): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# A tree-like Havok data structure stored in an assembly-like binary code?
+class bhkBvTreeShape(bhkShape): #:X
+    def __init__(self, r: Reader, h: Header): super().__init__(r, h)
+
+# Memory optimized partial polytope bounding volume tree shape (not an entity).
+class bhkMoppBvTreeShape(bhkBvTreeShape): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# Havok collision object that uses multiple shapes?
+class bhkShapeCollection(bhkShape): #:X
+    def __init__(self, r: Reader, h: Header): super().__init__(r, h)
+
+# A list of shapes.
+# Do not put a bhkPackedNiTriStripsShape in the Sub Shapes. Use a separate collision nodes without a list shape for those.
+# Also, shapes collected in a bhkListShape may not have the correct walking noise, so only use it for non-walkable objects.
+class bhkListShape(bhkShapeCollection): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# bhkMeshShape appears in some old Oblivion nifs, for instance meshes/architecture/basementsections/ungrdltraphingedoor.nif but only in some distributions of Oblivion
+# XXX not completely decoded, also the 4 dummy separator bytes seem to be missing from nifs that have this block
+class bhkMeshShape(bhkShape): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# A shape constructed from strips data.
+class bhkPackedNiTriStripsShape(bhkShapeCollection): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# A shape constructed from a bunch of strips.
+class bhkNiTriStripsShape(bhkShapeCollection): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# A generic extra data object.
+class NiExtraData(NiObject): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# Abstract base class for all interpolators of bool, float, NiQuaternion, NiPoint3, NiColorA, and NiQuatTransform data.
+class NiInterpolator(NiObject): #:X
+    def __init__(self, r: Reader, h: Header): super().__init__(r, h)
+
+# Abstract base class for interpolators that use NiAnimationKeys (Key, KeyGrp) for interpolation.
+class NiKeyBasedInterpolator(NiInterpolator): #:X
+    def __init__(self, r: Reader, h: Header): super().__init__(r, h)
+
+# Uses NiFloatKeys to animate a float value over time.
+class NiFloatInterpolator(NiKeyBasedInterpolator): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# An interpolator for transform keyframes.
+class NiTransformInterpolator(NiKeyBasedInterpolator): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# Uses NiPosKeys to animate an NiPoint3 value over time.
+class NiPoint3Interpolator(NiKeyBasedInterpolator): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+class PathFlags(Enum): #:X
+    CVDataNeedsUpdate = 0
+    CurveTypeOpen = 1 << 1
+    AllowFlip = 1 << 2
+    Bank = 1 << 3
+    ConstantVelocity = 1 << 4
+    Follow = 1 << 5
+    Flip = 1 << 6
+
+# Used to make an object follow a predefined spline path.
+class NiPathInterpolator(NiKeyBasedInterpolator): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# Uses NiBoolKeys to animate a bool value over time.
+class NiBoolInterpolator(NiKeyBasedInterpolator): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# Uses NiBoolKeys to animate a bool value over time.
+# Unlike NiBoolInterpolator, it ensures that keys have not been missed between two updates.
+class NiBoolTimelineInterpolator(NiBoolInterpolator): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+class InterpBlendFlags(Enum): #:X
+    MANAGER_CONTROLLED = 1      # MANAGER_CONTROLLED
+
+# Interpolator item for array in NiBlendInterpolator.
+class InterpBlendItem: #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# Abstract base class for all NiInterpolators that blend the results of sub-interpolators together to compute a final weighted value.
+class NiBlendInterpolator(NiInterpolator): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# Abstract base class for interpolators storing data via a B-spline.
+class NiBSplineInterpolator(NiInterpolator): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# Abstract base class for NiObjects that support names, extra data, and time controllers.
+class NiObjectNET(NiObject): #:X
+    skyrimShaderType: BSLightingShaderPropertyShaderType # Configures the main shader path
+    name: str                                   # Name of this controllable object, used to refer to the object in .kf files.
+    oldExtraData: tuple                         # Extra data for pre-3.0 versions.
+    extraData: int                              # Extra data object index. (The first in a chain)
+    extraDataList: list[int]                    # List of extra data indices.
+    controller: int                             # Controller object index. (The first in a chain)
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        if h.UserVersion2 >= 83: self.skyrimShaderType = BSLightingShaderPropertyShaderType(r.readUInt32())
+        self.name = Y.string(r)
+        if h.v <= 0x02030000:
+            if r.readBool32(): self.oldExtra = (Y.string(r), r.readUInt32(), Y.string(r))
+            r.skip(1) # Unknown Byte, Always 0.
+        if h.v >= 0x03000000 and h.v <= 0x04020200: self.extraData = X[NiExtraData].ref(r)
+        if h.v >= 0x0A000100: self.extraDataList = r.readL16FArray(lambda r: X[NiExtraData].ref(r))
+        if h.v >= 0x03000000: self.controller = X[NiTimeController].ref(r)
+
+# This is the most common collision object found in NIF files. It acts as a real object that is visible and possibly (if the body allows for it) interactive. The node itself
+# is simple, it only has three properties. For this type of collision object, bhkRigidBody or bhkRigidBodyT is generally used.
+class NiCollisionObject(NiObject): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# Collision box.
+class NiCollisionData(NiCollisionObject): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# bhkNiCollisionObject flags. The flags 0x2, 0x100, and 0x200 are not seen in any NIF nor get/set by the engine.
+class bhkCOFlags(Enum): #:X
+    ACTIVE = 0
+    #UNK1 = 1 << 1
+    NOTIFY = 1 << 2
+    SET_LOCAL = 1 << 3
+    DBG_DISPLAY = 1 << 4
+    USE_VEL = 1 << 5
+    RESET = 1 << 6
+    SYNC_ON_UPDATE = 1 << 7
+    #UNK2 = 1 << 8
+    #UNK3 = 1 << 9
+    ANIM_TARGETED = 1 << 10
+    DISMEMBERED_LIMB = 1 << 11
+
+# Havok related collision object?
+class bhkNiCollisionObject(NiCollisionObject): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# Havok related collision object?
+class bhkCollisionObject(bhkNiCollisionObject): #:X
+    def __init__(self, r: Reader, h: Header): super().__init__(r, h)
+
+# Unknown.
+class bhkBlendCollisionObject(bhkCollisionObject): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# Unknown.
+class bhkPCollisionObject(bhkNiCollisionObject): #:X
+    def __init__(self, r: Reader, h: Header): super().__init__(r, h)
+
+# Unknown.
+class bhkSPCollisionObject(bhkPCollisionObject): #:X
+    def __init__(self, r: Reader, h: Header): super().__init__(r, h)
+
+
+# Abstract audio-visual base class from which all of Gamebryo's scene graph objects inherit.
+class NiAVObject(NiObjectNET): #:M
+    class F(Flag):
+        Hidden = 0x1
+
+    flags: Flags    # Basic flags for AV objects.
+    translation: Vector3
+    rotation: Matrix4x4
+    scale: float
+    velocity: Vector3
+    properties: list[int]
+    boundingVolume: BoundingVolume
+    collisionObject: NiCollisionObject
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        self.flags = Flags(r.readUInt16()) if h.v >= 0x03000000 and h.userVersion2 <= 26 else \
+            Flags(r.readUInt16()) if h.userVersion2 > 26 else \
+            Flags(14)
+        self.translation = r.readVector3()
+        self.rotation = r.readMatrix3x3As4x4()
+        self.scale = r.readSingle()
+        if h.v <= 0x04020200: self.velocity = r.readVector3()
+        if h.userVersion2 <= 34: self.properties = r.readL32FArray(lambda r: X[NiProperty].ref(r))
+        if h.v <= 0x02030000:
+            self.unknown1 = r.readPArray(None, 'I', 4)
+            self.unknown2 = r.readByte()
+        if h.v >= 0x03000000 and h.v <= 0x04020200 and r.readBool32(): self.boundingVolume = BoundingVolume(r)
+        if h.v >= 0x0A000100: self.collisionObject = NiCollisionObject(r, h)
+
+# Abstract base class for dynamic effects such as NiLights or projected texture effects.
+class NiDynamicEffect(NiAVObject): #:X
+    def __init__(self, r: Reader, h: Header): super().__init__(r, h)
+
+# Abstract base class that represents light sources in a scene graph.
+# For Bethesda Stream 130 (FO4), NiLight now directly inherits from NiAVObject.
+class NiLight(NiDynamicEffect): #:X
+    def __init__(self, r: Reader, h: Header): super().__init__(r, h)
+
+# Abstract base class representing all rendering properties. Subclasses are attached to NiAVObjects to control their rendering.
+class NiProperty(NiObjectNET):
+    def __init__(self, r: Reader, h: Header): super().__init__(r, h)
+
+# Unknown
+class NiTransparentProperty(NiProperty): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# Abstract base class for all particle system modifiers.
+class NiPSysModifier(NiObject): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# Abstract base class for all particle system emitters.
+class NiPSysEmitter(NiPSysModifier): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# Abstract base class for particle emitters that emit particles from a volume.
+class NiPSysVolumeEmitter(NiPSysEmitter): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+class NiTimeController(NiObject): #:M
+    nextController: int             # Index of the next controller.
+    flags: Flags                    # Controller flags.
+    frequency: float                # Frequency (is usually 1.0).
+    phase: float                    # Phase (usually 0.0).
+    startTime: float                # Controller start time.
+    stopTime: float                 # Controller stop time.
+    target: int                     # Controller target (object index of the first controllable ancestor of this object).
+    unknownInt: int                 # Unknown integer.
+    
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        self.nextController = X[NiTimeController].ref(r)
+        self.flags = r.readUInt16() 
+        self.frequency = r.readSingle()
+        self.phase = r.readSingle() 
+        self.startTime = r.readSingle()
+        self.stopTime = r.readSingle()
+        if h.v >= 0x0303000D: self.target = X[NiObjectNET].ptr(r)
+        elif h.v <= 0x03010000: self.unknownInt = r.readUInt32()
+
+# DEPRECATED (20.6)
+class NiMultiTargetTransformController(NiInterpController): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# DEPRECATED (20.5), replaced by NiMorphMeshModifier.
+# Time controller for geometry morphing.
+class NiGeomMorpherController(NiInterpController): #:M
+    extraFlags: Flags               # 1 = UPDATE NORMALS
+    data: int
+    alwaysUpdate: int
+    interpolators: list[int]
+    interpolatorWeights: list[MorphWeight]
+    unknownInts: list[int]          # Unknown.
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        if h.v >= 0x0A000102: self.extraFlags = Flags(r.readUInt16())
+        self.data = X[NiMorphData].ref(r) 
+        if h.v >= 0x04000001: self.alwaysUpdate = r.readByte()
+        if h.v >= 0x0A01006A:
+            if h.v <= 0x14000005: self.interpolators = r.readL32FArray(X[NiInterpolator].ref)
+            elif h.v >= 0x14010003: self.interpolatorWeights = r.readL32FArray(lambda r: MorphWeight(r))
+            else: r.readUInt32()
+        if h.v >= 0x0A020000 and h.v <= 0x14000005 and h.userVersion2 < 9: self.unknownInts = r.readL32PArray(None, 'I')
+
+# Unknown! Used by Daoc->'healing.nif'.
+class NiMorphController(NiInterpController): #:X
+    def __init__(self, r: Reader, h: Header): super().__init__(r, h)
+
+# Unknown! Used by Daoc.
+class NiMorpherController(NiInterpController): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# Uses a single NiInterpolator to animate its target value.
+class NiSingleInterpController(NiInterpController): #:M
+    interpolator: int
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        if h.v >= 0x0A010068: self.interpolator = X[NiInterpolator].ref(r)
+
+# DEPRECATED (10.2), RENAMED (10.2) to NiTransformController
+# A time controller object for animation key frames.
+class NiKeyframeController(NiSingleInterpController):
+    data: int
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        if h.v <= 0x0A010067: self.data = X[NiKeyframeData].ref(r) #:M
+
+
+
+
+
+# xx
+class xx(xx): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# xx
+class xx(xx): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# xx
+class xx(xx): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# xx
+class xx(xx): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# xx
+class xx(xx): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# xx
+class xx(xx): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# xx
+class xx(xx): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# xx
+class xx(xx): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# xx
+class xx(xx): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# xx
+class xx(xx): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# xx
+class xx(xx): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# xx
+class xx(xx): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# xx
+class xx(xx): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# xx
+class xx(xx): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# xx
+class xx(xx): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# xx
+class xx(xx): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2187,59 +2949,38 @@ class xx: #:X
         xx
 
 
-# An object that can be controlled by a controller.
-class NiObjectNET(NiObject):
-    name: str
-    extraData: int
-    controller: int
-    def __init__(self, r: Reader):
-        super().__init__(r)
-        self.name = Y.string(r)
-        self.extraData = X[NiExtraData].ref(r)
-        self.controller = X[NiTimeController].ref(r)
 
-class NiAVObject(NiObjectNET):
-    class NiFlags(Flag):
-        Hidden = 0x1
-    def __init__(self, r: Reader):
-        super().__init__(r)
-        self.flags: NiFlags = NiReaderUtils.readFlags(r) #:M
-        self.translation: np.ndarray = r.readVector3() #:M :Vector3
-        self.rotation: np.ndarray = r.readMatrix3x3As4x4() #:M :Matrix4x4
-        self.scale: float = r.readSingle() #:M
-        self.velocity: np.ndarray = r.readVector3() #:M :Vector3
-        self.properties: list[int] = r.readL32FArray(lambda r: X[NiProperty].ref(r)) #:M
-        self.boundingBox: BoundingBox = BoundingBox(r) if r.readBool32() else None #:M
+
 
 # Nodes
 class NiNode(NiAVObject):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         # self.numChildren: int
         self.children: list[int] = r.readL32FArray(lambda r: X[NiAVObject].ref(r)) #:M
         #self.numEffects: int
         self.effects: list[int] = r.readL32FArray(lambda r: X[NiDynamicEffect].ref(r)) #:M
 class RootCollisionNode(NiNode):
-    def __init__(self, r: Reader): super().__init__(r)
+    def __init__(self, r: Reader): super().__init__(r, h)
 class NiBSAnimationNode(NiNode):
-    def __init__(self, r: Reader): super().__init__(r)
+    def __init__(self, r: Reader): super().__init__(r, h)
 class NiBSParticleNode(NiNode):
-    def __init__(self, r: Reader): super().__init__(r)
+    def __init__(self, r: Reader): super().__init__(r, h)
 class NiBillboardNode(NiNode):
-    def __init__(self, r: Reader): super().__init__(r)
+    def __init__(self, r: Reader): super().__init__(r, h)
 class AvoidNode(NiNode):
-    def __init__(self, r: Reader): super().__init__(r)
+    def __init__(self, r: Reader): super().__init__(r, h)
 
 # Geometry
 class NiGeometry(NiAVObject):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.data: int = X[NiGeometryData].ref(r) #:M
         self.skinInstance: int = X[NiSkinInstance].ref(r) #:M
 
 class NiGeometryData(NiObject):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.numVertices: int = r.readUInt16() #:M
         self.hasVertices: bool = r.readBool32() #:M
         if self.hasVertices: self.vertices: list[np.ndarray] = r.readFArray(lambda r: r.readVector3(), self.numVertices) #:M :Vector3
@@ -2257,30 +2998,29 @@ class NiGeometryData(NiObject):
                 for j in range(self.numVertices): self.uvSets[i][j] = TexCoord(r)
 
 class NiTriBasedGeom(NiGeometry):
-    def __init__(self, r: Reader): super().__init__(r)
+    def __init__(self, r: Reader): super().__init__(r, h)
 
 class NiTriBasedGeomData(NiGeometryData):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.numTriangles: int = r.readUInt16() #:M
 
 class NiTriShape(NiTriBasedGeom):
-    def __init__(self, r: Reader): super().__init__(r)
+    def __init__(self, r: Reader): super().__init__(r, h)
 
 class NiTriShapeData(NiTriBasedGeomData):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.numTrianglePoints: int = r.readUInt32() #:M
         self.triangles: list[Triangle] = r.readFArray(lambda r: Triangle(r), self.numTriangles) #:M
         self.matchGroups: list[MatchGroup] = r.readL16FArray(lambda r: MatchGroup(r)) #:M
 
 # Properties
-class NiProperty(NiObjectNET):
-    def __init__(self, r: Reader): super().__init__(r)
+
 
 class NiTexturingProperty(NiProperty):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.flags: NiAVObject.NiFlags = NiReaderUtils.readFlags(r) #:M
         self.applyMode: ApplyMode = r.readUInt32() #:M
         self.textureCount: int = r.readUInt32() #:M
@@ -2294,44 +3034,44 @@ class NiTexturingProperty(NiProperty):
 
 class NiAlphaProperty(NiProperty):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.flags: int = r.readUInt16() #:M
         self.threshold: byte = r.readByte() #:M
 
 class NiZBufferProperty(NiProperty):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.flags: int = r.readUInt16() #:M
 
 class NiVertexColorProperty(NiProperty):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.flags: NiAVObject.NiFlags = NiReaderUtils.readFlags(r) #:M
         self.vertexMode: VertMode = r.readUInt32() #:M
         self.lightingMode: LightMode = r.readUInt32() #:M
 
 class NiShadeProperty(NiProperty):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.flags: NiAVObject.NiFlags = NiReaderUtils.readFlags(r) #:M
 
 class NiWireframeProperty(NiProperty):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.flags: NiAVObject.NiFlags = NiReaderUtils.readFlags(r) #:M
 
 class NiCamera(NiAVObject):
-    def __init__(self, r: Reader): super().__init__(r)
+    def __init__(self, r: Reader): super().__init__(r, h)
 
 # Data
 class NiUVData(NiObject):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.uvGroups: KeyGroup = r.readFArray(lambda r: KeyGroup(float, r), 4) #:M
 
 class NiKeyframeData(NiObject):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.numRotationKeys: int = r.readUInt32() #:M
         if self.numRotationKeys != 0:
             self.rotationType: KeyType = r.readUInt32() #:M
@@ -2345,12 +3085,12 @@ class NiKeyframeData(NiObject):
 
 class NiColorData(NiObject):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.data: KeyGroup = KeyGroup(Color4, r) #:M
 
 class NiMorphData(NiObject):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.numMorphs: int = r.readUInt32() #:M
         self.numVertices: int = r.readUInt32() #:M
         self.relativeTargets: byte = r.readByte() #:M
@@ -2358,120 +3098,100 @@ class NiMorphData(NiObject):
 
 class NiVisData(NiObject):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.keys: list[Key] = r.readL32FArray(lambda r: Key(byte, r, KeyType.LINEAR_KEY)) #:M
 
 class NiFloatData(NiObject):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.data: KeyGroup = KeyGroup(float, r) #:M
 
 class NiPosData(NiObject): 
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.data: KeyGroup = KeyGroup(np.ndarray, r) #:M
 
 class NiExtraData(NiObject):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.nextExtraData: int = X[NiExtraData].ref(r) #:M
 
 class NiStringExtraData(NiExtraData):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.bytesRemaining: int = r.readUInt32() #:M
         self.str: str = r.readL32Encoding() #:M
 
 class NiTextKeyExtraData(NiExtraData):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.unknownInt1: int = r.readUInt32()
         self.textKeys: list[Key] = r.readL32FArray(lambda r: Key(string, r, KeyType.LINEAR_KEY)) #:M
 
 class NiVertWeightsExtraData(NiExtraData):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.numBytes: int = r.readUInt32() #:M
         self.numVertices: int = r.readUInt16() #:M
         self.weights: list[float] = r.readPArray('f', self.numVertices) #:M
 
 # Controllers
-class NiTimeController(NiObject):
-    def __init__(self, r: Reader):
-        super().__init__(r)
-        self.nextController: int = X[NiTimeController].ref(r) #:M
-        self.flags: int = r.readUInt16() #:M
-        self.frequency: float = r.readSingle() #:M
-        self.phase: float = r.readSingle() #:M
-        self.startTime: float = r.readSingle() #:M
-        self.stopTime: float = r.readSingle() #:M
-        self.target: int = X[NiObjectNET].ptr(r) #:M
+
 
 class NiUVController(NiTimeController):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.unknownShort: int = r.readUInt16()
         self.data: int = X[NiUVData].ref(r)
 
 class NiInterpController(NiTimeController):
-    def __init__(self, r: Reader): super().__init__(r)
+    def __init__(self, r: Reader): super().__init__(r, h)
 
-class NiSingleInterpController(NiInterpController):
-    def __init__(self, r: Reader): super().__init__(r)
 
-class NiKeyframeController(NiSingleInterpController):
-    def __init__(self, r: Reader):
-        super().__init__(r)
-        self.data: int = X[NiKeyframeData].ref(r) #:M
 
-class NiGeomMorpherController(NiInterpController):
-    def __init__(self, r: Reader):
-        super().__init__(r)
-        self.data: int = X[NiMorphData].ref(r) #:M
-        self.alwaysUpdate: byte = r.readByte() #:M
 
 class NiBoolInterpController(NiSingleInterpController):
-    def __init__(self, r: Reader): super().__init__(r)
+    def __init__(self, r: Reader): super().__init__(r, h)
 
 class NiVisController(NiBoolInterpController):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.data: int = X[NiVisData].ref(r) #:M
 
 class NiFloatInterpController(NiSingleInterpController):
-    def __init__(self, r: Reader): super().__init__(r)
+    def __init__(self, r: Reader): super().__init__(r, h)
 
 class NiAlphaController(NiFloatInterpController):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.data: int = X[NiFloatData].ref(r) #:M
 
 # Particles
 class NiParticles(NiGeometry):
-    def __init__(self, r: Reader): super().__init__(r)
+    def __init__(self, r: Reader): super().__init__(r, h)
 class NiParticlesData(NiGeometryData):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.numParticles: int = r.readUInt16() #:M
         self.particleRadius: float = r.readSingle() #:M
         self.numActive: int = r.readUInt16() #:M
         self.sizes: list[float] = r.readPArray('f', self.numVertices) if r.readBool32() else None #:M
 
 class NiRotatingParticles(NiParticles):
-    def __init__(self, r: Reader): super().__init__(r)
+    def __init__(self, r: Reader): super().__init__(r, h)
 class NiRotatingParticlesData(NiParticlesData):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.rotations: list[Quaternion] = r.readFArray(lambda r: r.readQuaternionWFirst(), self.numVertices) if r.readBool32() else [] #:M
 
 class NiAutoNormalParticles(NiParticles):
-    def __init__(self, r: Reader): super().__init__(r)
+    def __init__(self, r: Reader): super().__init__(r, h)
 class NiAutoNormalParticlesData(NiParticlesData):
-    def __init__(self, r: Reader): super().__init__(r)
+    def __init__(self, r: Reader): super().__init__(r, h)
 
 class NiParticleSystemController(NiTimeController):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.speed: float = r.readSingle() #:M
         self.speedRandom: float = r.readSingle() #:M
         self.verticalDirection: float = r.readSingle() #:M
@@ -2504,18 +3224,18 @@ class NiParticleSystemController(NiTimeController):
         self.trailer: byte = r.readByte() #:M
 
 class NiBSPArrayController(NiParticleSystemController):
-    def __init__(self, r: Reader): super().__init__(r)
+    def __init__(self, r: Reader): super().__init__(r, h)
 
 # Particle Modifiers
 class NiParticleModifier(NiObject):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.nextModifier: int = X[NiParticleModifier].ref(r) #:M
         self.controller: int = X[NiParticleSystemController].ptr(r) #:M
 
 class NiGravity(NiParticleModifier):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.unknownFloat1: float = r.readSingle() #:M
         self.force: float = r.readSingle() #:M
         self.type: FieldType = r.readUInt32() #:M
@@ -2524,7 +3244,7 @@ class NiGravity(NiParticleModifier):
 
 class NiParticleBomb(NiParticleModifier):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.decay: float = r.readSingle() #:M
         self.duration: float = r.readSingle() #:M
         self.deltaV: float = r.readSingle() #:M
@@ -2535,23 +3255,23 @@ class NiParticleBomb(NiParticleModifier):
 
 class NiParticleColorModifier(NiParticleModifier):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.colorData: int = X[NiColorData].ref(r) #:M
 
 class NiParticleGrowFade(NiParticleModifier):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.grow: float = r.readSingle() #:M
         self.fade: float = r.readSingle() #:M
 
 class NiParticleMeshModifier(NiParticleModifier):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.particleMeshes: list[int] = r.readL32FArray(lambda r: X[NiAVObject].ref(r)) #:M
 
 class NiParticleRotation(NiParticleModifier):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.randomInitialAxis: byte = r.readByte() #:M
         self.initialAxis: np.ndarray = r.readVector3() #:M :Vector3
         self.rotationSpeed: float = r.readSingle() #:M
@@ -2560,7 +3280,7 @@ class NiParticleRotation(NiParticleModifier):
 # Skin Stuff
 class NiSkinInstance(NiObject):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.data: int = X[NiSkinData].ref(r) #:M
         self.skeletonRoot: int = X[NiNode].ptr(r) #:M
         self.numBones: int = r.readUInt32() #:M
@@ -2568,22 +3288,22 @@ class NiSkinInstance(NiObject):
 
 class NiSkinData(NiObject):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.skinTransform: NiTransform = NiTransform(r) #:M
         self.numBones: int = r.readUInt32() #:M
         self.skinPartition: int = X[NiSkinPartition].ref(r) #:M
         self.boneList: list[BoneData] = r.readFArray(lambda r: BoneData(r), self.numBones) #:M
 
 class NiSkinPartition(NiObject):
-    def __init__(self, r: Reader): super().__init__(r)
+    def __init__(self, r: Reader): super().__init__(r, h)
 
 # Miscellaneous
 class NiTexture(NiObjectNET):
-    def __init__(self, r: Reader): super().__init__(r)
+    def __init__(self, r: Reader): super().__init__(r, h)
 
 class NiSourceTexture(NiTexture):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.useExternal: byte = r.readByte() #:M
         self.fileName: str = r.readL32Encoding() #:M
         self.pixelLayout: PixelLayout = r.readUInt32() #:M
@@ -2593,12 +3313,12 @@ class NiSourceTexture(NiTexture):
 
 class NiPoint3InterpController(NiSingleInterpController):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.data: int = X[NiPosData].ref(r)
 
 class NiMaterialProperty(NiProperty):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.flags: NiAVObject.NiFlags = NiReaderUtils.readFlags(r) #:M
         self.ambientColor: Color3 = Color3(r) #:M
         self.diffuseColor: Color3 = Color3(r) #:M
@@ -2608,16 +3328,16 @@ class NiMaterialProperty(NiProperty):
         self.alpha: float = r.readSingle() #:M
 
 class NiMaterialColorController(NiPoint3InterpController):
-    def __init__(self, r: Reader): super().__init__(r)
+    def __init__(self, r: Reader): super().__init__(r, h)
 
 class NiDynamicEffect(NiAVObject):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.affectedNodeListPointers: list[int] = r.readL32PArray(None, 'I') #:M
 
 class NiTextureEffect(NiDynamicEffect):
     def __init__(self, r: Reader):
-        super().__init__(r)
+        super().__init__(r, h)
         self.modelProjectionMatrix: np.ndarray = r.readMatrix3x3As4x4() #:M :Matrix4x4
         self.modelProjectionTransform: np.ndarray = r.readVector3() #:M :Vector3
         self.textureFiltering: TexFilterMode = r.ReadUInt32() #:M

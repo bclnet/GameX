@@ -1,23 +1,10 @@
-﻿using Google.Protobuf.WellKnownTypes;
-using MathNet.Numerics;
-using MathNet.Numerics.Distributions;
-using MathNet.Numerics.LinearAlgebra;
-using Org.BouncyCastle.Math.EC.Multiplier;
+﻿using MathNet.Numerics;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Drawing;
 using System.IO;
-using System.Net.NetworkInformation;
-using System.Net.Sockets;
 using System.Numerics;
-using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Text.Json.Serialization;
-using YamlDotNet.Core.Tokens;
-using static GameX.Formats.Unknown.IUnknownTexture;
 using static OpenStack.Debug;
-using static System.UnsafeX;
 #pragma warning disable CS9113 // Parameter is unread.
 
 namespace GameX.Bethesda.Formats.Nif;
@@ -43,7 +30,10 @@ static class X<T> {
 
 static class Y {
     public static string String(BinaryReader r) => r.ReadL32Encoding();
+    public static string StringRef(BinaryReader r, int? p) => default;
 }
+
+public enum Flags : ushort { }
 
 #endregion
 
@@ -52,17 +42,18 @@ static class Y {
 /// <summary>
 /// Describes the options for the accum root on NiControllerSequence.
 /// </summary>
+[Flags]
 public enum AccumFlags : uint { //:X
     ACCUM_X_TRANS = 0,              // X Translation will be accumulated.
-    ACCUM_Y_TRANS = 1,              // Y Translation will be accumulated.
-    ACCUM_Z_TRANS = 2,              // Z Translation will be accumulated.
-    ACCUM_X_ROT = 3,                // X Rotation will be accumulated.
-    ACCUM_Y_ROT = 4,                // Y Rotation will be accumulated.
-    ACCUM_Z_ROT = 5,                // Z Rotation will be accumulated.
-    ACCUM_X_FRONT = 6,              // +X is front facing. (Default)
-    ACCUM_Y_FRONT = 7,              // +Y is front facing.
-    ACCUM_Z_FRONT = 8,              // +Z is front facing.
-    ACCUM_NEG_FRONT = 9             // -X is front facing.
+    ACCUM_Y_TRANS = 1 << 1,         // Y Translation will be accumulated.
+    ACCUM_Z_TRANS = 1 << 2,         // Z Translation will be accumulated.
+    ACCUM_X_ROT = 1 << 3,           // X Rotation will be accumulated.
+    ACCUM_Y_ROT = 1 << 4,           // Y Rotation will be accumulated.
+    ACCUM_Z_ROT = 1 << 5,           // Z Rotation will be accumulated.
+    ACCUM_X_FRONT = 1 << 6,         // +X is front facing. (Default)
+    ACCUM_Y_FRONT = 1 << 7,         // +Y is front facing.
+    ACCUM_Z_FRONT = 1 << 8,         // +Z is front facing.
+    ACCUM_NEG_FRONT = 1 << 9        // -X is front facing.
 }
 
 /// <summary>
@@ -1193,7 +1184,7 @@ public enum hkConstraintType : uint { //:X
     Prismatic = 6,                  // A prismatic constraint.
     Ragdoll = 7,                    // A ragdoll constraint.
     StiffSpring = 8,                // A stiff spring constraint.
-    /*Generic = 10,*/               // A generic constraint.
+    //Generic = 10,                 // A generic constraint.
     Malleable = 13                  // A malleable constraint.
 }
 
@@ -1203,7 +1194,7 @@ public enum hkConstraintType : uint { //:X
 
 // use:SizedString -> L32AString
 // use:string -> string
-// use:ByteArray -> L32ReadBytes
+// use:ByteArray -> ReadL8Bytes
 // skip:ByteMatrix
 // use:Color3 -> Color3
 // use:ByteColor3 -> Color3Byte
@@ -1257,8 +1248,8 @@ public class MatchGroup(BinaryReader r) { //:M
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public unsafe struct BoneVertData { //:M #Marshal
     public static (string, int) Struct = ("<Hf", sizeof(BoneVertData));
-    public ushort Index;       // The vertex index, in the mesh.
-    public float Weight;       // The vertex weight - between 0.0 and 1.0
+    public ushort Index;            // The vertex index, in the mesh.
+    public float Weight;            // The vertex weight - between 0.0 and 1.0
 
     public BoneVertData(BinaryReader r, bool full) {
         Index = r.ReadUInt16();
@@ -1267,7 +1258,13 @@ public unsafe struct BoneVertData { //:M #Marshal
 }
 // use:BoneVertDataHalf -> BoneVertData
 
-// skip:AVObject
+/// <summary>
+/// Used in NiDefaultAVObjectPalette.
+/// </summary>
+public class AVObject(BinaryReader r) { //:X
+    public string Name = r.ReadL32AString();            // Object name.
+    public int? AVObject_ = X<NiAVObject>.Ref(r);       // Object reference.
+}
 
 /// <summary>
 /// In a .kf file, this links to a controllable object, via its name (or for version 10.2.0.0 and up, a link and offset to a NiStringPalette that contains the name), and a sequence of interpolators that apply to this controllable object, via links.
@@ -1276,7 +1273,56 @@ public unsafe struct BoneVertData { //:M #Marshal
 /// The string formats are documented on the relevant niobject blocks.
 /// </summary>
 public class ControlledBlock {
-    //TODO
+    public string TargetName;       // Name of a controllable object in another NIF file.
+    // NiControllerSequence::InterpArrayItem
+    public int? Interpolator;
+    public int? Controller;
+    public int? BlendInterpolator;
+    public ushort BlendIndex;
+    // Bethesda-only
+    public byte Priority;           // Idle animations tend to have low values for this, and high values tend to correspond with the important parts of the animations.
+    // NiControllerSequence::IDTag, post-10.1.0.104 only
+    public string NodeName;         // The name of the animated NiAVObject.
+    public string PropertyType;     // The RTTI type of the NiProperty the controller is attached to, if applicable.
+    public string ControllerType;   // The RTTI type of the NiTimeController.
+    public string ControllerID;     // An ID that can uniquely identify the controller among others of the same type on the same NiObjectNET.
+    public string InterpolatorID;   // An ID that can uniquely identify the interpolator among others of the same type on the same NiObjectNET.
+
+    public ControlledBlock(BinaryReader r, Header h) {
+        if (h.V <= 0x0A010067) TargetName = Y.String(r);
+        if (h.V <= 0x14050000) Interpolator = X<NiInterpolator>.Ref(r);
+        Controller = X<NiTimeController>.Ref(r);
+        if (h.V >= 0x0A010068 && h.V <= 0x0A01006E) {
+            BlendInterpolator = X<NiBlendInterpolator>.Ref(r);
+            BlendIndex = r.ReadUInt16();
+        }
+        if (h.V <= 0x0A01006A && h.UserVersion2 > 0) Priority = r.ReadByte();
+        // Until 10.2
+        if (h.V >= 0x0A010068 && h.V <= 0x0A010071) {
+            NodeName = Y.String(r);
+            PropertyType = Y.String(r);
+            ControllerType = Y.String(r);
+            ControllerID = Y.String(r);
+            InterpolatorID = Y.String(r);
+        }
+        // From 10.2 to 20.1
+        else if (h.V >= 0x0A020000 && h.V <= 0x14010000) {
+            var stringPalette = X<NiStringPalette>.Ref(r);
+            NodeName = Y.StringRef(r, stringPalette);
+            PropertyType = Y.StringRef(r, stringPalette);
+            ControllerType = Y.StringRef(r, stringPalette);
+            ControllerID = Y.StringRef(r, stringPalette);
+            InterpolatorID = Y.StringRef(r, stringPalette);
+        }
+        // After 20.1
+        else if (h.V >= 0x14010001) {
+            NodeName = Y.String(r);
+            PropertyType = Y.String(r);
+            ControllerType = Y.String(r);
+            ControllerID = Y.String(r);
+            InterpolatorID = Y.String(r);
+        }
+    }
 }
 
 // use:ExportInfo -> []
@@ -1307,7 +1353,7 @@ public class Header {
         (HeaderString, V) = ParseHeaderStr(r.ReadVAString(0x80, 0xA)); var v = V;
         if (v < 0x03010000) Copyright = [r.ReadL8AString(), r.ReadL8AString(), r.ReadL8AString()];
         Version = v >= 0x03010001 ? r.ReadUInt32() : 0x04000002;
-        EndianType = v >= 0x14000003 ? (EndianType)r.ReadByte() : 0;
+        EndianType = v >= 0x14000003 ? (EndianType)r.ReadByte() : EndianType.ENDIAN_LITTLE;
         if (v >= 0x0A000108) UserVersion = r.ReadUInt32();
         if (v >= 0x03010001) NumBlocks = r.ReadUInt32();
         if ((v == 0x14020007 || v == 0x14000005 || (v >= 0x0A000102 && v <= 0x14000004 && UserVersion <= 11)) && UserVersion >= 3) {
@@ -1385,7 +1431,10 @@ public class Header {
     }
 }
 
-// skip:StringPalette
+public class StringPalette(BinaryReader r) { //:X
+    public string[] Palette = r.ReadL32AString().Split((char)0); // A bunch of 0x00 seperated strings.
+    public uint Length = r.ReadUInt32();       // Length of the palette string is repeated here.
+}
 
 /// <summary>
 /// Tension, bias, continuity.
@@ -1456,6 +1505,7 @@ public class QuatKey<T> { //:M
 public struct TexCoord { //:M
     public float U; // First coordinate.
     public float V; // Second coordinate.
+
     public TexCoord(float u, float v) { U = u; V = v; }
     public TexCoord(BinaryReader r) { U = r.ReadSingle(); V = r.ReadSingle(); }
     public TexCoord(BinaryReader r, bool full) { U = full ? r.ReadSingle() : r.ReadHalf(); V = full ? r.ReadSingle() : r.ReadHalf(); }
@@ -1541,17 +1591,18 @@ public struct Triangle(BinaryReader r) { //:M
 [Flags]
 public enum VertexFlags : ushort { //:X
     // First 4 bits are unused
-    Vertex = 4,                     // & 16
-    UVs = 5,                        // & 32
-    UVs_2 = 6,                      // & 64
-    Normals = 7,                    // & 128
-    Tangents = 8,                   // & 256
-    Vertex_Colors = 9,              // & 512
-    Skinned = 10,                   // & 1024
-    Land_Data = 11,                 // & 2048
-    Eye_Data = 12,                  // & 4096
-    Instance = 13,                  // & 8192
-    Full_Precision = 14            // & 16384
+    Vertex = 1 << 4,                // & 16
+    UVs = 1 << 5,                   // & 32
+    UVs_2 = 1 << 6,                 // & 64
+    Normals = 1 << 7,               // & 128
+    Tangents = 1 << 8,              // & 256
+    Vertex_Colors = 1 << 9,         // & 512
+    Skinned = 1 << 10,              // & 1024
+    Land_Data = 1 << 11,            // & 2048
+    Eye_Data = 1 << 12,             // & 4096
+    Instance = 1 << 13,             // & 8192
+    Full_Precision = 1 << 14        // & 16384
+    // Last bit unused
 }
 
 public class BSVertexData { //:X
@@ -1693,10 +1744,10 @@ public struct NiTransform(BinaryReader r) { //:M #Marshal
 [Flags]
 public enum FurnitureEntryPoints : ushort { //:X
     Front = 0,                      // front entry point
-    Behind = 1,                     // behind entry point
-    Right = 2,                      // right entry point
-    Left = 4,                       // left entry point
-    Up = 8                          // up entry point - unknown function. Used on some beds in Skyrim, probably for blocking of sleeping position.
+    Behind = 1 << 1,                // behind entry point
+    Right = 1 << 2,                 // right entry point
+    Left = 1 << 3,                  // left entry point
+    Up = 1 << 4                     // up entry point - unknown function. Used on some beds in Skyrim, probably for blocking of sleeping position.
 }
 
 /// <summary>
@@ -2172,7 +2223,7 @@ public class DecalVectorArray { //:X
 [Flags]
 public enum BSPartFlag : ushort { //:X
     PF_EDITOR_VISIBLE = 0,                      // Visible in Editor
-    PF_START_NET_BONESET = 256                  // Start a new shared boneset.  It is expected this BoneSet and the following sets in the Skin Partition will have the same bones.
+    PF_START_NET_BONESET = 1 << 8               // Start a new shared boneset.  It is expected this BoneSet and the following sets in the Skin Partition will have the same bones.
 }
 
 /// <summary>
@@ -2989,14 +3040,22 @@ public class bhkMoppBvTreeShape : bhkBvTreeShape {
     public int? Shape;                      // The shape.
     public uint[] Unused;                   // Garbage data from memory. Referred to as User Data, Shape Collection, and Code.
     public float ShapeScale;                // Scale.
-    public uint MOPPDataSize;               // Number of bytes for MOPP data.
+    public Vector3 Origin;                  // Origin of the object in mopp coordinates. This is the minimum of all vertices in the packed shape along each axis, minus 0.1.
+    public float Scale;                     // The scaling factor to quantize the MOPP: the quantization factor is equal to 256*256 divided by this number. In Oblivion files, scale is taken equal to 256*256*254 / (size + 0.2) where size is the largest dimension of the bounding box of the packed shape.
+    public MoppDataBuildType BuildType;     // Tells if MOPP Data was organized into smaller chunks (PS3) or not (PC)
+    public byte[] MOPPData;                 // The tree of bounding volume data.
 
     public bhkMoppBvTreeShape(BinaryReader r, Header h) : base(r, h) {
         Shape = X<bhkShape>.Ref(r);
         Unused = r.ReadPArray<uint>("I", 3);
         ShapeScale = r.ReadSingle();
-        MOPPDataSize = r.ReadUInt32();
-        // HERE
+        var moppDataSize = 0; // #calculated
+        if (h.V >= 0x0A000102) {
+            Origin = r.ReadVector3();
+            Scale = r.ReadSingle();
+        }
+        if (h.UserVersion2 > 34) BuildType = (MoppDataBuildType)r.ReadByte();
+        MOPPData = r.ReadBytes((int)moppDataSize);
     }
 }
 
@@ -3011,7 +3070,19 @@ public abstract class bhkShapeCollection(BinaryReader r, Header h) : bhkShape(r,
 /// Also, shapes collected in a bhkListShape may not have the correct walking noise, so only use it for non-walkable objects.
 /// </summary>
 public class bhkListShape : bhkShapeCollection {
+    public int?[] SubShapes;                        // List of shapes.
+    public HavokMaterial Material;                  // The material of the shape.
+    public hkWorldObjCinfoProperty ChildShapeProperty;
+    public hkWorldObjCinfoProperty ChildFilterProperty;
+    public uint[] UnknownInts;                     // Unknown.
 
+    public bhkListShape(BinaryReader r, Header h) : base(r, h) {
+        SubShapes = r.ReadL32FArray(X<bhkShape>.Ref);
+        Material = new HavokMaterial(r, h);
+        ChildShapeProperty = new hkWorldObjCinfoProperty(r);
+        ChildFilterProperty = new hkWorldObjCinfoProperty(r);
+        UnknownInts = r.ReadL32PArray<uint>("I");
+    }
 }
 
 /// <summary>
@@ -3019,21 +3090,72 @@ public class bhkListShape : bhkShapeCollection {
 /// XXX not completely decoded, also the 4 dummy separator bytes seem to be missing from nifs that have this block
 /// </summary>
 public class bhkMeshShape : bhkShape {
+    public uint[] Unknowns;
+    public float Radius;
+    public byte[] Unused2;
+    public Vector4 Scale;
+    public hkWorldObjCinfoProperty[] ShapeProperties;
+    public int[] Unknown2;
+    public int?[] StripsData;       // Refers to a bunch of NiTriStripsData objects that make up this shape.
 
+    public bhkMeshShape(BinaryReader r, Header h) : base(r, h) {
+        Unknowns = r.ReadPArray<uint>("I", 2);
+        Radius = r.ReadSingle();
+        Unused2 = r.ReadBytes(8);
+        Scale = r.ReadVector4();
+        ShapeProperties = r.ReadL32FArray(r => new hkWorldObjCinfoProperty(r));
+        Unknown2 = r.ReadPArray<int>("i", 3);
+        if (h.V <= 0x0A000100) StripsData = r.ReadL32FArray(X<NiTriStripsData>.Ref);
+    }
 }
 
 /// <summary>
 /// A shape constructed from strips data.
 /// </summary>
 public class bhkPackedNiTriStripsShape : bhkShapeCollection {
+    public OblivionSubShape[] SubShapes;
+    public uint UserData;
+    public uint Unused1;                // Looks like a memory pointer and may be garbage.
+    public float Radius;
+    public uint Unused2;                // Looks like a memory pointer and may be garbage.
+    public Vector4 Scale;
+    public float RadiusCopy;            // Same as radius
+    public Vector4 ScaleCopy;           // Same as scale.
+    public int? Data;
 
+    public bhkPackedNiTriStripsShape(BinaryReader r, Header h) : base(r, h) {
+        SubShapes = r.ReadL16FArray(r => new OblivionSubShape(r, h));
+        UserData = r.ReadUInt32();
+        Unused1 = r.ReadUInt32();
+        Radius = r.ReadSingle();
+        Scale = r.ReadVector4();
+        RadiusCopy = r.ReadSingle();
+        ScaleCopy = r.ReadVector4();
+        Data = X<hkPackedNiTriStripsData>.Ref(r);
+    }
 }
 
 /// <summary>
 /// A shape constructed from a bunch of strips.
 /// </summary>
 public class bhkNiTriStripsShape : bhkShapeCollection {
+    public HavokMaterial Material;      // The material of the shape.
+    public float Radius;
+    public uint[] Unused;               // Garbage data from memory though the last 3 are referred to as maxSize, size, and eSize.
+    public uint GrowBy;
+    public Vector4 Scale;               // Scale. Usually (1.0, 1.0, 1.0, 0.0).
+    public int?[] StripsData;           // Refers to a bunch of NiTriStripsData objects that make up this shape.
+    public HavokFilter[] DataLayers;    // Havok Layers for each strip data.
 
+    public bhkNiTriStripsShape(BinaryReader r, Header h) : base(r, h) {
+        Material = new HavokMaterial(r, h);
+        Radius = r.ReadSingle();
+        Unused = r.ReadPArray<uint>("I", 5);
+        GrowBy = r.ReadUInt32();
+        if (h.V >= 0x0A010000) Scale = r.ReadVector4();
+        StripsData = r.ReadL32FArray(X<NiTriStripsData>.Ref);
+        DataLayers = r.ReadL32FArray(r => new HavokFilter(r, h));
+    }
 }
 
 /// <summary>
@@ -3049,85 +3171,711 @@ public class NiExtraData : NiObject {
     }
 }
 
-
-
-
+/// <summary>
+/// Abstract base class for all interpolators of bool, float, NiQuaternion, NiPoint3, NiColorA, and NiQuatTransform data.
+/// </summary>
+public abstract class NiInterpolator(BinaryReader r, Header h) : NiObject(r, h) { } //:X
 
 /// <summary>
-/// yyy
+/// Abstract base class for interpolators that use NiAnimationKeys (Key, KeyGrp) for interpolation.
 /// </summary>
-public class yyy(BinaryReader r, Header h) { //:X
-    //public Vector4 Translation = r.ReadVector4();           // xx
-}
+public abstract class NiKeyBasedInterpolator(BinaryReader r, Header h) : NiInterpolator(r, h) { } //:X
 
 /// <summary>
-/// xxx
+/// Uses NiFloatKeys to animate a float value over time.
 /// </summary>
-public class xxx { //:X
-    public short NumVectors;
+public class NiFloatInterpolator : NiKeyBasedInterpolator { //:X
+    public float Value;     // Pose value if lacking NiFloatData.
+    public int? Data;
 
-    public xxx(BinaryReader r) {
-        //NumVectors = r.ReadInt16();
+    public NiFloatInterpolator(BinaryReader r, Header h) : base(r, h) {
+        Value = r.ReadSingle();
+        Data = X<NiFloatData>.Ref(r);
     }
 }
 
+/// <summary>
+/// An interpolator for transform keyframes.
+/// </summary>
+public class NiTransformInterpolator : NiKeyBasedInterpolator { //:X
+    public NiQuatTransform Transform;
+    public int? Data;
 
-
-
-
-
+    public NiTransformInterpolator(BinaryReader r, Header h) : base(r, h) {
+        Transform = new NiQuatTransform(r, h);
+        Data = X<NiTransformData>.Ref(r);
+    }
+}
 
 /// <summary>
-/// An object that can be controlled by a controller.
+/// Uses NiPosKeys to animate an NiPoint3 value over time.
 /// </summary>
-public abstract class NiObjectNET : NiObject {
-    [JsonPropertyOrder(1)] public BSLightingShaderPropertyShaderType SkyrimShaderType;
-    [JsonPropertyOrder(1)] public string Name; //:M
-    [JsonPropertyOrder(1)] public (string, uint, string) OldExtra; //: ?
-    [JsonPropertyOrder(1)] public int? ExtraData; //:M
-    [JsonPropertyOrder(1)] public int?[] ExtraDataList; //:M
-    [JsonPropertyOrder(1)] public int? Controller; //:M
+public class NiPoint3Interpolator : NiKeyBasedInterpolator { //:X
+    public Vector3 Value;     // Pose value if lacking NiPosData.
+    public int? Data;
+
+    public NiPoint3Interpolator(BinaryReader r, Header h) : base(r, h) {
+        Value = r.ReadVector3();
+        Data = X<NiPosData>.Ref(r);
+    }
+}
+
+[Flags]
+public enum PathFlags : ushort { //:X
+    CVDataNeedsUpdate = 0,
+    CurveTypeOpen = 1 << 1,
+    AllowFlip = 1 << 2,
+    Bank = 1 << 3,
+    ConstantVelocity = 1 << 4,
+    Follow = 1 << 5,
+    Flip = 1 << 6
+}
+
+/// <summary>
+/// Used to make an object follow a predefined spline path.
+/// </summary>
+public class NiPathInterpolator : NiKeyBasedInterpolator { //:X
+    public PathFlags Flags;
+    public int BankDir;             // -1 = Negative, 1 = Positive
+    public float MaxBankAngle;      // Max angle in radians.
+    public float Smoothing;
+    public short FollowAxis;        // 0, 1, or 2 representing X, Y, or Z.
+    public int? PathData;
+    public int? PercentData;
+
+    public NiPathInterpolator(BinaryReader r, Header h) : base(r, h) {
+        Flags = (PathFlags)r.ReadUInt16();
+        BankDir = r.ReadInt32();
+        MaxBankAngle = r.ReadSingle();
+        Smoothing = r.ReadSingle();
+        FollowAxis = r.ReadInt16();
+        PathData = X<NiPosData>.Ref(r);
+        PercentData = X<NiFloatData>.Ref(r);
+    }
+}
+
+/// <summary>
+/// Uses NiBoolKeys to animate a bool value over time.
+/// </summary>
+public class NiBoolInterpolator : NiKeyBasedInterpolator { //:X
+    public bool Value;          // Pose value if lacking NiBoolData.
+    public int? Data;
+
+    public NiBoolInterpolator(BinaryReader r, Header h) : base(r, h) {
+        Value = r.ReadBool32();
+        Data = X<NiBoolData>.Ref(r);
+    }
+}
+
+/// <summary>
+/// Uses NiBoolKeys to animate a bool value over time.
+/// Unlike NiBoolInterpolator, it ensures that keys have not been missed between two updates.
+/// </summary>
+public class NiBoolTimelineInterpolator(BinaryReader r, Header h) : NiBoolInterpolator(r, h) { } //:X
+
+public enum InterpBlendFlags : byte { //:X
+    MANAGER_CONTROLLED = 1      // MANAGER_CONTROLLED
+}
+
+/// <summary>
+/// Interpolator item for array in NiBlendInterpolator.
+/// </summary>
+public class InterpBlendItem { //:X
+    public int? Interpolator;           // Reference to an interpolator.
+    public float Weight;
+    public float NormalizedWeight;
+    public int Priority;
+    public float EaseSpinner;
+
+    public InterpBlendItem(BinaryReader r, Header h) {
+        Interpolator = X<NiInterpolator>.Ref(r);
+        Weight = r.ReadSingle();
+        NormalizedWeight = r.ReadSingle();
+        Priority = h.V <= 0x0A01006D ? r.ReadInt32()
+            : h.V >= 0x0A01006E ? r.ReadByte()
+            : 0;
+        EaseSpinner = r.ReadSingle();
+    }
+}
+
+/// <summary>
+/// Abstract base class for all NiInterpolators that blend the results of sub-interpolators together to compute a final weighted value.
+/// </summary>
+public abstract class NiBlendInterpolator : NiInterpolator { //:X
+    public InterpBlendFlags Flags;
+    public ushort ArraySize;
+    public ushort ArrayGrowBy;
+    public float WeightThreshold;
+    // Flags conds
+    public ushort InterpCount;
+    public ushort SingleIndex = 255;
+    public int HighPriority = -128;
+    public int NextHighPriority = -128;
+    public float SingleTime = -3.402823466e+38f;
+    public float HighWeightsSum = -3.402823466e+38f;
+    public float NextHighWeightsSum = -3.402823466e+38f;
+    public float HighEaseSpinner = -3.402823466e+38f;
+    public InterpBlendItem[] InterpArrayItems;
+    // end
+    public bool ManagedControlled;
+    public bool OnlyUseHighestWeight;
+    public int? SingleInterpolator;
+
+    public NiBlendInterpolator(BinaryReader r, Header h) : base(r, h) {
+        if (h.V <= 0x0A010070) Flags = (InterpBlendFlags)r.ReadByte();
+        ArraySize = h.V <= 0x0A01006D ? r.ReadUInt16() : r.ReadByte();
+        if (h.V >= 0x0A01006D) ArrayGrowBy = r.ReadUInt16();
+        if (h.V >= 0x0A010070) {
+            WeightThreshold = r.ReadSingle();
+            // Flags conds
+            if (Flags.HasFlag(InterpBlendFlags.MANAGER_CONTROLLED)) {
+                InterpCount = r.ReadByte();
+                SingleIndex = r.ReadByte();
+                HighPriority = r.ReadSByte();
+                NextHighPriority = r.ReadSByte();
+                SingleTime = r.ReadSingle();
+                HighWeightsSum = r.ReadByte();
+                NextHighWeightsSum = r.ReadByte();
+                HighEaseSpinner = r.ReadByte();
+                InterpArrayItems = r.ReadFArray(r => new InterpBlendItem(r, h), ArraySize);
+            }
+        }
+        else {
+            InterpArrayItems = r.ReadFArray(r => new InterpBlendItem(r, h), ArraySize);
+            ManagedControlled = r.ReadBool32();
+            WeightThreshold = r.ReadSingle();
+            OnlyUseHighestWeight = r.ReadBool32();
+            InterpCount = h.V <= 0x0A01006D ? r.ReadUInt16() : r.ReadByte();
+            SingleIndex = h.V <= 0x0A01006D ? r.ReadUInt16() : r.ReadByte();
+            if (h.V >= 0x0A01006C) {
+                SingleInterpolator = X<NiInterpolator>.Ref(r);
+                SingleTime = r.ReadSingle();
+            }
+            HighPriority = h.V <= 0x0A01006D ? r.ReadInt32() : r.ReadByte();
+            NextHighPriority = h.V <= 0x0A01006D ? r.ReadInt32() : r.ReadByte();
+        }
+    }
+}
+
+/// <summary>
+/// Abstract base class for interpolators storing data via a B-spline.
+/// </summary>
+public abstract class NiBSplineInterpolator : NiInterpolator { //:X
+    public float StartTime;     // Animation start time.
+    public float StopTime;      // Animation stop time.
+    public int? SplineData;
+    public int? BasisData;
+
+    public NiBSplineInterpolator(BinaryReader r, Header h) : base(r, h) {
+        StartTime = r.ReadSingle();
+        StopTime = r.ReadSingle();
+        SplineData = X<NiBSplineData>.Ref(r);
+        BasisData = X<NiBSplineBasisData>.Ref(r);
+    }
+}
+
+/// <summary>
+/// Abstract base class for NiObjects that support names, extra data, and time controllers.
+/// </summary>
+public abstract class NiObjectNET : NiObject { //:M
+    [JsonPropertyOrder(1)] public BSLightingShaderPropertyShaderType SkyrimShaderType; // Configures the main shader path
+    [JsonPropertyOrder(1)] public string Name;                  // Name of this controllable object, used to refer to the object in .kf files.
+    [JsonPropertyOrder(1)] public (string, uint, string) OldExtra; // Extra data for pre-3.0 versions.
+    [JsonPropertyOrder(1)] public int? ExtraData;               // Extra data object index. (The first in a chain)
+    [JsonPropertyOrder(1)] public int?[] ExtraDataList;         // List of extra data indices.
+    [JsonPropertyOrder(1)] public int? Controller;              // Controller object index. (The first in a chain)
 
     public NiObjectNET(BinaryReader r, Header h) : base(r, h) {
-        SkyrimShaderType = (BSLightingShaderPropertyShaderType)r.ReadUInt32();
+        if (h.UserVersion2 >= 83) SkyrimShaderType = (BSLightingShaderPropertyShaderType)r.ReadUInt32();
         Name = Y.String(r);
         if (h.V <= 0x02030000) {
             if (r.ReadBool32()) OldExtra = (Y.String(r), r.ReadUInt32(), Y.String(r));
-            r.Skip(1); // Unknown Byte
+            r.Skip(1); // Unknown Byte, Always 0.
         }
-        if (h.V >= 0x03000000 && h.V <= 04020200) ExtraData = X<NiExtraData>.Ref(r);
+        if (h.V >= 0x03000000 && h.V <= 0x04020200) ExtraData = X<NiExtraData>.Ref(r);
         if (h.V >= 0x0A000100) ExtraDataList = r.ReadL16FArray(r => X<NiExtraData>.Ref(r));
         if (h.V >= 0x03000000) Controller = X<NiTimeController>.Ref(r);
     }
 }
 
 /// <summary>
+/// This is the most common collision object found in NIF files. It acts as a real object that is visible and possibly (if the body allows for it) interactive. The node itself
+/// is simple, it only has three properties. For this type of collision object, bhkRigidBody or bhkRigidBodyT is generally used.
+/// </summary>
+public class NiCollisionObject : NiObject {
+    public int? Target;             // Index of the AV object referring to this collision object.
+
+    public NiCollisionObject(BinaryReader r, Header h) : base(r, h) {
+        Target = X<NiAVObject>.Ptr(r);
+    }
+}
+
+/// <summary>
+/// Collision box.
+/// </summary>
+public class NiCollisionData : NiCollisionObject {
+    public PropagationMode PropagationMode;
+    public CollisionMode CollisionMode;
+    public BoundingVolume BoundingVolume;
+
+    public NiCollisionData(BinaryReader r, Header h) : base(r, h) {
+        PropagationMode = (PropagationMode)r.ReadUInt32();
+        if (h.V >= 0x0A010000) CollisionMode = (CollisionMode)r.ReadUInt32();
+        BoundingVolume = r.ReadUInt32() == 1 ? new BoundingVolume(r) : default;
+    }
+}
+
+/// <summary>
+/// bhkNiCollisionObject flags. The flags 0x2, 0x100, and 0x200 are not seen in any NIF nor get/set by the engine.
+/// </summary>
+[Flags]
+public enum bhkCOFlags : ushort { //:X
+    ACTIVE = 0,
+    //UNK1 = 1 << 1,
+    NOTIFY = 1 << 2,
+    SET_LOCAL = 1 << 3,
+    DBG_DISPLAY = 1 << 4,
+    USE_VEL = 1 << 5,
+    RESET = 1 << 6,
+    SYNC_ON_UPDATE = 1 << 7,
+    //UNK2 = 1 << 8,
+    //UNK3 = 1 << 9,
+    ANIM_TARGETED = 1 << 10,
+    DISMEMBERED_LIMB = 1 << 11
+}
+
+/// <summary>
+/// Havok related collision object?
+/// </summary>
+public abstract class bhkNiCollisionObject : NiCollisionObject {
+    public bhkCOFlags Flags;       // Set to 1 for most objects, and to 41 for animated objects (ANIM_STATIC). Bits: 0=Active 2=Notify 3=Set Local 6=Reset.
+    public int? Body;
+
+    public bhkNiCollisionObject(BinaryReader r, Header h) : base(r, h) {
+        Flags = (bhkCOFlags)r.ReadUInt16();
+        Body = X<bhkWorldObject>.Ref(r);
+    }
+}
+
+/// <summary>
+/// Havok related collision object?
+/// </summary>
+public class bhkCollisionObject(BinaryReader r, Header h) : bhkNiCollisionObject(r, h) { }
+
+/// <summary>
+/// Unknown.
+/// </summary>
+public abstract class bhkBlendCollisionObject : bhkCollisionObject {
+    public float HeirGain;
+    public float VelGain;
+    public float UnkFloat1;
+    public float UnkFloat2;
+
+    public bhkBlendCollisionObject(BinaryReader r, Header h) : base(r, h) {
+        HeirGain = r.ReadSingle();
+        VelGain = r.ReadSingle();
+        if (h.UserVersion2 < 9) {
+            UnkFloat1 = r.ReadSingle();
+            UnkFloat2 = r.ReadSingle();
+        }
+    }
+}
+
+/// <summary>
+/// Unknown.
+/// </summary>
+public abstract class bhkPCollisionObject(BinaryReader r, Header h) : bhkNiCollisionObject(r, h) { }
+
+/// <summary>
+/// Unknown.
+/// </summary>
+public abstract class bhkSPCollisionObject(BinaryReader r, Header h) : bhkPCollisionObject(r, h) { }
+
+/// <summary>
 /// Abstract audio-visual base class from which all of Gamebryo's scene graph objects inherit.
 /// </summary>
 public abstract class NiAVObject : NiObjectNET {
-    [Flags] public enum NiFlags : ushort { Hidden = 0x1 }
+    public enum F {
+        NiFlagsHidden = 0x1
+    }
 
-    [JsonPropertyOrder(4)] public NiFlags Flags; //: ushort
-    [JsonPropertyOrder(5)] public Vector3 Translation;
-    [JsonPropertyOrder(6)] public Matrix4x4 Rotation;
-    [JsonPropertyOrder(7)] public float Scale;
-    [JsonPropertyOrder(8)] public Vector3 Velocity;
-    //public uint NumProperties;
-    [JsonPropertyOrder(9)] public int?[] Properties;
+    [JsonPropertyOrder(4)] public Flags Flags;              // Basic flags for AV objects.
+    [JsonPropertyOrder(5)] public Vector3 Translation;      // The translation vector.
+    [JsonPropertyOrder(6)] public Matrix4x4 Rotation;       // The rotation part of the transformation matrix.
+    [JsonPropertyOrder(7)] public float Scale;              // Scaling part (only uniform scaling is supported).
+    [JsonPropertyOrder(8)] public Vector3 Velocity;         // Unknown function. Always seems to be (0, 0, 0)
+    [JsonPropertyOrder(9)] public int?[] Properties;        // All rendering properties attached to this object.
+    [JsonPropertyOrder(10)] public uint[] Unknown1;         // Always 2,0,2,0.
+    [JsonPropertyOrder(10)] public byte Unknown2;           // 0 or 1.
     [JsonPropertyOrder(10)] public BoundingVolume BoundingVolume;
     [JsonPropertyOrder(11)] public NiCollisionObject CollisionObject;
 
     public NiAVObject(BinaryReader r, Header h) : base(r, h) {
-        Flags = h.V >= 0x03000000 && h.UserVersion2 <= 26 ? NiReaderUtils.ReadFlags(r) : h.UserVersion2 > 26 ? NiReaderUtils.ReadFlags(r) : (NiFlags)14;
+        Flags = h.V >= 0x03000000 && h.UserVersion2 <= 26 ? (Flags)r.ReadUInt16()
+            : h.UserVersion2 > 26 ? (Flags)r.ReadUInt16()
+            : (Flags)14;
         Translation = r.ReadVector3();
         Rotation = r.ReadMatrix3x3As4x4();
         Scale = r.ReadSingle();
         if (h.V <= 0x04020200) Velocity = r.ReadVector3();
-        if (h.UserVersion2 <= 34) Properties = r.ReadL32FArray(r => X<NiProperty>.Ref(r));
+        if (h.UserVersion2 <= 34) Properties = r.ReadL32FArray(X<NiProperty>.Ref);
+        if (h.V <= 0x02030000) {
+            Unknown1 = r.ReadPArray<uint>("I", 4);
+            Unknown2 = r.ReadByte();
+        }
         if (h.V >= 0x03000000 && h.V <= 0x04020200 && r.ReadBool32()) BoundingVolume = new BoundingVolume(r);
-        if (h.V >= 0x0A000100) NiCollisionObject = new BoundingVolume(r);
+        if (h.V >= 0x0A000100) CollisionObject = new NiCollisionObject(r, h);
     }
 }
+
+/// <summary>
+/// Abstract base class for dynamic effects such as NiLights or projected texture effects.
+/// </summary>
+public abstract class NiDynamicEffect : NiAVObject {
+    public bool SwitchState;               // If true, then the dynamic effect is applied to affected nodes during rendering.
+    public int?[] AffectedNodes;            // If a node appears in this list, then its entire subtree will be affected by the effect.
+    public uint[] AffectedNodeListPointers;
+
+    public NiDynamicEffect(BinaryReader r, Header h) : base(r, h) {
+        SwitchState = h.V >= 0x0A01006A && h.UserVersion2 < 130 ? r.ReadBool32() : true;
+        if (h.V <= 0x04000002) {
+            var numAffectedNodes = r.ReadUInt32();
+            if (h.V <= 0x0303000D) AffectedNodes = r.ReadFArray(X<NiNode>.Ptr, (int)numAffectedNodes);
+            else if (h.V >= 0x04000000) AffectedNodeListPointers = r.ReadPArray<uint>("I", (int)numAffectedNodes);
+        }
+        else if (h.V >= 0x0A010000 && h.UserVersion2 < 130) AffectedNodes = r.ReadL32FArray(X<NiNode>.Ptr);
+    }
+}
+
+/// <summary>
+/// Abstract base class that represents light sources in a scene graph.
+/// For Bethesda Stream 130 (FO4), NiLight now directly inherits from NiAVObject.
+/// </summary>
+public abstract class NiLight : NiDynamicEffect {
+    public float Dimmer;             // Scales the overall brightness of all light components.
+    public Color3 AmbientColor;
+    public Color3 DiffuseColor;
+    public Color3 SpecularColor;
+
+    public NiLight(BinaryReader r, Header h) : base(r, h) {
+        Dimmer = r.ReadSingle();
+        AmbientColor = new Color3(r);
+        DiffuseColor = new Color3(r);
+        SpecularColor = new Color3(r);
+    }
+}
+
+/// <summary>
+/// Abstract base class representing all rendering properties. Subclasses are attached to NiAVObjects to control their rendering.
+/// </summary>
+public abstract class NiProperty(BinaryReader r, Header h) : NiObjectNET(r, h) { }
+
+/// <summary>
+/// Unknown
+/// </summary>
+public class NiTransparentProperty : NiProperty {
+    public byte[] Unknown;             // Unknown.
+
+    public NiTransparentProperty(BinaryReader r, Header h) : base(r, h) {
+        Unknown = r.ReadBytes(6);
+    }
+}
+
+/// <summary>
+/// Abstract base class for all particle system modifiers.
+/// </summary>
+public abstract class NiPSysModifier : NiObject {
+    public string Name;             // Used to locate the modifier.
+    public uint Order;              // Modifier ID in the particle modifier chain (always a multiple of 1000)?
+    public int? Target;             // NiParticleSystem parent of this modifier.
+    public bool Active;             // Whether or not the modifier is active.
+
+    public NiPSysModifier(BinaryReader r, Header h) : base(r, h) {
+        Name = Y.String(r);
+        Order = r.ReadUInt32();
+        Target = X<NiParticleSystem>.Ptr(r);
+        Active = r.ReadBool32();
+    }
+}
+
+/// <summary>
+/// Abstract base class for all particle system emitters.
+/// </summary>
+public abstract class NiPSysEmitter : NiPSysModifier {
+    public float Speed;             // Speed / Inertia of particle movement.
+    public float SpeedVariation;    // Adds an amount of randomness to Speed.
+    public float Declination;       // Declination / First axis.
+    public float DeclinationVariation; // Declination randomness / First axis.
+    public float PlanarAngle;       // Planar Angle / Second axis.
+    public float PlanarAngleVariation; // Planar Angle randomness / Second axis.
+    public Color4 InitialColor;      // Defines color of a birthed particle.
+    public float InitialRadius;     // Size of a birthed particle.
+    public float RadiusVariation;   // Particle Radius randomness.
+    public float LifeSpan;          // Duration until a particle dies.
+    public float LifeSpanVariation; // Adds randomness to Life Span.
+
+    public NiPSysEmitter(BinaryReader r, Header h) : base(r, h) {
+        Speed = r.ReadSingle();
+        SpeedVariation = r.ReadSingle();
+        Declination = r.ReadSingle();
+        DeclinationVariation = r.ReadSingle();
+        PlanarAngle = r.ReadSingle();
+        PlanarAngleVariation = r.ReadSingle();
+        InitialColor = new Color4(r);
+        InitialRadius = r.ReadSingle();
+        if (h.V >= 0x0A040001) RadiusVariation = r.ReadSingle();
+        LifeSpan = r.ReadSingle();
+        LifeSpanVariation = r.ReadSingle();
+    }
+}
+
+
+/// <summary>
+/// Abstract base class for particle emitters that emit particles from a volume.
+/// </summary>
+public abstract class NiPSysVolumeEmitter : NiPSysEmitter {
+    public int? EmitterObject;             // Node parent of this modifier?
+
+    public NiPSysVolumeEmitter(BinaryReader r, Header h) : base(r, h) {
+        if (h.V >= 0x0A010000) EmitterObject = X<NiNode>.Ptr(r);
+    }
+}
+
+/// <summary>
+/// Abstract base class that provides the base timing and update functionality for all the Gamebryo animation controllers.
+/// </summary>
+public abstract class NiTimeController : NiObject {
+    public int? NextController;             // Index of the next controller.
+    public Flags Flags;                     // Controller flags.
+    public float Frequency;                 // Frequency (is usually 1.0).
+    public float Phase;                     // Phase (usually 0.0).
+    public float StartTime;                 // Controller start time.
+    public float StopTime;                  // Controller stop time.
+    public int? Target;                     // Controller target (object index of the first controllable ancestor of this object).
+    public int UnknownInt;                  // Unknown integer.
+
+    public NiTimeController(BinaryReader r, Header h) : base(r, h) {
+        NextController = X<NiTimeController>.Ref(r);
+        Flags = (Flags)r.ReadUInt16();
+        Frequency = r.ReadSingle();
+        Phase = r.ReadSingle();
+        StartTime = r.ReadSingle();
+        StopTime = r.ReadSingle();
+        if (h.V >= 0x0303000D) Target = X<NiObjectNET>.Ptr(r);
+        else if (h.V <= 0x03010000) UnknownInt = r.ReadInt32();
+    }
+}
+
+/// <summary>
+/// DEPRECATED (20.6)
+/// </summary>
+public class NiMultiTargetTransformController : NiInterpController {
+    public int?[] ExtraTargets;         // NiNode Targets to be controlled.
+
+    public NiMultiTargetTransformController(BinaryReader r, Header h) : base(r, h) {
+        ExtraTargets = r.ReadL32FArray(X<NiAVObject>.Ptr);
+    }
+}
+
+/// <summary>
+/// DEPRECATED (20.5), replaced by NiMorphMeshModifier.
+/// Time controller for geometry morphing.
+/// </summary>
+public class NiGeomMorpherController : NiInterpController {
+    public Flags ExtraFlags;        // 1 = UPDATE NORMALS
+    public int? Data;               // Geometry morphing data index.
+    public byte AlwaysUpdate;
+    public int?[] Interpolators;
+    public MorphWeight[] InterpolatorWeights;
+    public uint[] UnknownInts;      // Unknown.
+
+    public NiGeomMorpherController(BinaryReader r, Header h) : base(r, h) {
+        if (h.V >= 0x0A000102) ExtraFlags = (Flags)r.ReadUInt16();
+        Data = X<NiMorphData>.Ref(r);
+        if (h.V >= 0x04000001) AlwaysUpdate = r.ReadByte();
+        if (h.V >= 0x0A01006A) {
+            if (h.V <= 0x14000005) Interpolators = r.ReadL32FArray(X<NiInterpolator>.Ref);
+            else if (h.V >= 0x14010003) InterpolatorWeights = r.ReadL32FArray(r => new MorphWeight(r));
+            else r.ReadUInt32();
+        }
+        if (h.V >= 0x0A020000 && h.V <= 0x14000005 && h.UserVersion2 < 9) UnknownInts = r.ReadL32PArray<uint>("I");
+    }
+}
+
+/// <summary>
+/// Unknown! Used by Daoc->'healing.nif'.
+/// </summary>
+public class NiMorphController(BinaryReader r, Header h) : NiInterpController(r, h) { }
+
+/// <summary>
+/// Unknown! Used by Daoc.
+/// </summary>
+public class NiMorpherController : NiInterpController {
+    public int? Data;         // This controller's data.
+
+    public NiMorpherController(BinaryReader r, Header h) : base(r, h) {
+        Data = X<NiMorphData>.Ptr(r);
+    }
+}
+
+/// <summary>
+/// Uses a single NiInterpolator to animate its target value.
+/// </summary>
+public abstract class NiSingleInterpController : NiInterpController {
+    public int? Interpolator;
+
+    public NiSingleInterpController(BinaryReader r, Header h) : base(r, h) {
+        if (h.V >= 0x0A010068) Interpolator = X<NiInterpolator>.Ref(r);
+    }
+}
+
+/// <summary>
+/// DEPRECATED (10.2), RENAMED (10.2) to NiTransformController
+/// A time controller object for animation key frames.
+/// </summary>
+public class NiKeyframeController : NiSingleInterpController {
+    public int? Data;
+
+    public NiKeyframeController(BinaryReader r, Header h) : base(r, h) {
+        if (h.V <= 0x0A010067) Data = X<NiKeyframeData>.Ref(r);
+    }
+}
+
+/// <summary>
+/// NiTransformController replaces NiKeyframeController.
+/// </summary>
+public class NiTransformController(BinaryReader r, Header h) : NiKeyframeController(r, h) { }
+
+/// <summary>
+/// A particle system modifier controller.
+/// NiInterpController::GetCtlrID() string format:
+/// '%s' Where %s = Value of "Modifier Name"
+/// </summary>
+public class NiPSysModifierCtlr : NiSingleInterpController {
+    public string ModifierName;
+
+    public NiPSysModifierCtlr(BinaryReader r, Header h) : base(r, h) {
+        ModifierName = Y.String(r);         // Used to find the modifier pointer.
+    }
+}
+
+/// <summary>
+/// Particle system emitter controller.
+/// NiInterpController::GetInterpolatorID() string format:
+/// ['BirthRate', 'EmitterActive'] (for "Interpolator" and "Visibility Interpolator" respectively)
+/// </summary>
+public class NiPSysEmitterCtlr : NiPSysModifierCtlr {
+    public int? VisibilityInterpolator;
+    public int? Data;
+
+    public NiPSysEmitterCtlr(BinaryReader r, Header h) : base(r, h) {
+        if (h.V >= 0x0A010000) VisibilityInterpolator = X<NiInterpolator>.Ref(r);
+        if (h.V >= 0x0A010067) Data = X<NiPSysEmitterCtlrData>.Ref(r);
+    }
+}
+
+/// <summary>
+/// A particle system modifier controller that animates a boolean value for particles.
+/// </summary>
+public abstract class NiPSysModifierBoolCtlr(BinaryReader r, Header h) : NiPSysModifierCtlr(r, h) { }
+
+/// <summary>
+/// A particle system modifier controller that animates active/inactive state for particles.
+/// </summary>
+public class NiPSysModifierActiveCtlr : NiPSysModifierBoolCtlr {
+    public int? Data;
+
+    public NiPSysModifierActiveCtlr(BinaryReader r, Header h) : base(r, h) {
+        if (h.V >= 0x0A010067) Data = X<NiVisData>.Ref(r);
+    }
+}
+
+/// <summary>
+/// A particle system modifier controller that animates a floating point value for particles.
+/// </summary>
+public abstract class NiPSysModifierFloatCtlr : NiPSysModifierCtlr {
+    public int? Data;
+
+    public NiPSysModifierFloatCtlr(BinaryReader r, Header h) : base(r, h) {
+        if (h.V >= 0x0A010067) Data = X<NiFloatData>.Ref(r);
+    }
+}
+
+/// <summary>
+/// Animates the declination value on an NiPSysEmitter object.
+/// </summary>
+public class NiPSysEmitterDeclinationCtlr(BinaryReader r, Header h) : NiPSysModifierFloatCtlr(r, h) { }
+
+/// <summary>
+/// Animates the declination variation value on an NiPSysEmitter object.
+/// </summary>
+public class NiPSysEmitterDeclinationVarCtlr(BinaryReader r, Header h) : NiPSysModifierFloatCtlr(r, h) { }
+
+/// <summary>
+/// Animates the size value on an NiPSysEmitter object.
+/// </summary>
+public class NiPSysEmitterInitialRadiusCtlr(BinaryReader r, Header h) : NiPSysModifierFloatCtlr(r, h) { }
+
+/// <summary>
+/// Animates the lifespan value on an NiPSysEmitter object.
+/// </summary>
+public class NiPSysEmitterLifeSpanCtlr(BinaryReader r, Header h) : NiPSysModifierFloatCtlr(r, h) { }
+
+/// <summary>
+/// Animates the speed value on an NiPSysEmitter object.
+/// </summary>
+public class NiPSysEmitterSpeedCtlr(BinaryReader r, Header h) : NiPSysModifierFloatCtlr(r, h) { }
+
+/// <summary>
+/// Animates the strength value of an NiPSysGravityModifier.
+/// </summary>
+public class NiPSysGravityStrengthCtlr(BinaryReader r, Header h) : NiPSysModifierFloatCtlr(r, h) { }
+
+/// <summary>
+/// Abstract base class for all NiInterpControllers that use an NiInterpolator to animate their target float value.
+/// </summary>
+public abstract class NiFloatInterpController(BinaryReader r, Header h) : NiSingleInterpController(r, h) { }
+
+/// <summary>
+/// Changes the image a Map (TexDesc) will use. Uses a float interpolator to animate the texture index.
+/// Often used for performing flipbook animation.
+/// </summary>
+public class NiFlipController : NiFloatInterpController {
+    public TexType TextureSlot;     // Target texture slot (0=base, 4=glow).
+    //public float StartTime;
+    public float Delta;             // Time between two flips. delta = (start_time - stop_time) / sources.num_indices
+    public int?[] Sources;          // The texture sources.
+    public int?[] Images;           // The image sources
+
+    public NiFlipController(BinaryReader r, Header h) : base(r, h) {
+        TextureSlot = (TexType)r.ReadUInt32();
+        if (h.V >= 0x0303000D && h.V <= 0x14010067) StartTime = r.ReadSingle();
+        if (h.V <= 0x14010067) Delta = r.ReadSingle();
+        if (h.V >= 0x04000000) Sources = r.ReadL32FArray(X<NiSourceTexture>.Ref);
+        else if (h.V <= 0x03010000) Images = r.ReadL32FArray(X<NiImage>.Ref);
+        else r.ReadUInt32();
+    }
+}
+
+/// <summary>
+/// Animates the alpha value of a property using an interpolator.
+/// </summary>
+public class NiAlphaController : NiFloatInterpController {
+    public int? Data;
+
+    public NiAlphaController(BinaryReader r, Header h) : base(r, h) {
+        if (h.V <= 0x0A020067) Data = X<NiFloatData>.Ref(r);
+    }
+}
+
+
+
+
+
+
+
+
+
 
 // Nodes
 public class NiNode : NiAVObject {
@@ -3155,6 +3903,51 @@ public abstract class NiGeometry : NiAVObject {
         SkinInstance = X<NiSkinInstance>.Ref(r);
     }
 }
+
+/// <summary>
+/// Abstract base class for all NiTimeController objects using NiInterpolator objects to animate their target objects.
+/// </summary>
+public abstract class NiInterpController : NiTimeController {
+    public bool ManagerControlled;
+
+    public NiInterpController(BinaryReader r, Header h) : base(r, h) {
+        if (h.V >= 0x0A010068 && h.V <= 0x0A01006C) ManagerControlled = r.ReadBool32();
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+/// <summary>
+/// xxx
+/// </summary>
+public class xxx : xxx { //:X
+    public short NumVectors;
+
+    public xxx(BinaryReader r, Header h) : base(r, h) {
+        //NumVectors = r.ReadUInt32();
+    }
+}
+/// <summary>
+/// xxx
+/// </summary>
+public class xxx : xxx { //:X
+    public short NumVectors;
+
+    public xxx(BinaryReader r, Header h) : base(r, h) {
+        //NumVectors = r.ReadUInt32();
+    }
+}
+
+
+
 
 public abstract class NiGeometryData : NiObject {
     public ushort NumVertices;
@@ -3215,10 +4008,8 @@ public class NiTriShapeData : NiTriBasedGeomData {
 }
 
 // Properties
-public abstract class NiProperty(BinaryReader r, Header h) : NiObjectNET(r, h) { }
 
 public class NiTexturingProperty : NiProperty {
-    public NiAVObject.NiFlags Flags;
     public ApplyMode ApplyMode;
     public uint TextureCount;
     public TexDesc BaseTexture;
@@ -3403,25 +4194,6 @@ public class NiVertWeightsExtraData : NiExtraData {
 }
 
 // Controllers
-public abstract class NiTimeController : NiObject {
-    public int? NextController;
-    public ushort Flags;
-    public float Frequency;
-    public float Phase;
-    public float StartTime;
-    public float StopTime;
-    public int? Target;
-
-    public NiTimeController(BinaryReader r, Header h) : base(r, h) {
-        NextController = X<NiTimeController>.Ref(r);
-        Flags = r.ReadUInt16();
-        Frequency = r.ReadSingle();
-        Phase = r.ReadSingle();
-        StartTime = r.ReadSingle();
-        StopTime = r.ReadSingle();
-        Target = X<NiObjectNET>.Ptr(r);
-    }
-}
 
 public class NiUVController : NiTimeController {
     public ushort UnknownShort;
@@ -3433,27 +4205,11 @@ public class NiUVController : NiTimeController {
     }
 }
 
-public abstract class NiInterpController(BinaryReader r, Header h) : NiTimeController(r, h) { }
 
-public abstract class NiSingleInterpController(BinaryReader r, Header h) : NiInterpController(r, h) { }
 
-public class NiKeyframeController : NiSingleInterpController {
-    public int? Data;
 
-    public NiKeyframeController(BinaryReader r, Header h) : base(r, h) {
-        Data = X<NiKeyframeData>.Ref(r);
-    }
-}
 
-public class NiGeomMorpherController : NiInterpController {
-    public int? Data;
-    public byte AlwaysUpdate;
 
-    public NiGeomMorpherController(BinaryReader r, Header h) : base(r, h) {
-        Data = X<NiMorphData>.Ref(r);
-        AlwaysUpdate = r.ReadByte();
-    }
-}
 
 public abstract class NiBoolInterpController(BinaryReader r, Header h) : NiSingleInterpController(r, h) { }
 
@@ -3467,13 +4223,7 @@ public class NiVisController : NiBoolInterpController {
 
 public abstract class NiFloatInterpController(BinaryReader r, Header h) : NiSingleInterpController(r, h) { }
 
-public class NiAlphaController : NiFloatInterpController {
-    public int? Data;
 
-    public NiAlphaController(BinaryReader r, Header h) : base(r, h) {
-        Data = X<NiFloatData>.Ref(r);
-    }
-}
 
 // Particles
 public class NiParticles(BinaryReader r, Header h) : NiGeometry(r, h) { }
@@ -3749,14 +4499,6 @@ public class NiMaterialProperty : NiProperty {
 
 public class NiMaterialColorController(BinaryReader r, Header h) : NiPoint3InterpController(r, h) { }
 
-public abstract class NiDynamicEffect : NiAVObject {
-    //uint NumAffectedNodeListPointers;
-    uint[] AffectedNodeListPointers;
-
-    public NiDynamicEffect(BinaryReader r, Header h) : base(r, h) {
-        AffectedNodeListPointers = r.ReadL32PArray<uint>("I");
-    }
-}
 
 public class NiTextureEffect : NiDynamicEffect {
     public Matrix4x4 ModelProjectionMatrix;
@@ -3792,7 +4534,7 @@ public class NiTextureEffect : NiDynamicEffect {
 
 #endregion
 
-public class NiReaderUtils {
-    public static NiAVObject.NiFlags ReadFlags(BinaryReader r) => (NiAVObject.NiFlags)r.ReadUInt16();
-}
+//public class NiReaderUtils {
+//    public static NiAVObject.NiFlags ReadFlags(BinaryReader r) => (NiAVObject.NiFlags)r.ReadUInt16();
+//}
 

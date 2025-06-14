@@ -2785,8 +2785,123 @@ class NiKeyframeController(NiSingleInterpController):
         if h.v <= 0x0A010067: self.data = X[NiKeyframeData].ref(r) #:M
 
 
+# Unknown! Used by Daoc->'healing.nif'.
+class NiTransformController(NiKeyframeController): #:X
+    def __init__(self, r: Reader, h: Header): super().__init__(r, h)
 
 
+# A particle system modifier controller.
+# NiInterpController::GetCtlrID() string format:
+# '%s' Where %s = Value of "Modifier Name"
+class NiPSysModifierCtlr(NiSingleInterpController): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# Particle system emitter controller.
+# NiInterpController::GetInterpolatorID() string format:
+# ['BirthRate', 'EmitterActive'] (for "Interpolator" and "Visibility Interpolator" respectively)
+class NiPSysEmitterCtlr(NiPSysModifierCtlr): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# A particle system modifier controller that animates a boolean value for particles.
+class NiPSysModifierBoolCtlr(NiPSysModifierCtlr): #:X
+    def __init__(self, r: Reader, h: Header): super().__init__(r, h)
+
+# A particle system modifier controller that animates active/inactive state for particles.
+class NiPSysModifierActiveCtlr(NiPSysModifierBoolCtlr): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# A particle system modifier controller that animates a floating point value for particles.
+class NiPSysModifierFloatCtlr(NiPSysModifierCtlr): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# Animates the declination value on an NiPSysEmitter object.
+class NiPSysEmitterDeclinationCtlr(NiPSysModifierFloatCtlr): #:X
+    def __init__(self, r: Reader, h: Header): super().__init__(r, h)
+
+# Animates the declination variation value on an NiPSysEmitter object.
+class NiPSysEmitterDeclinationVarCtlr(NiPSysModifierFloatCtlr): #:X
+    def __init__(self, r: Reader, h: Header): super().__init__(r, h)
+
+# Animates the size value on an NiPSysEmitter object.
+class NiPSysEmitterInitialRadiusCtlr(NiPSysModifierFloatCtlr): #:X
+    def __init__(self, r: Reader, h: Header): super().__init__(r, h)
+
+# Animates the lifespan value on an NiPSysEmitter object.
+class NiPSysEmitterLifeSpanCtlr(NiPSysModifierFloatCtlr): #:X
+    def __init__(self, r: Reader, h: Header): super().__init__(r, h)
+
+# Animates the speed value on an NiPSysEmitter object.
+class NiPSysEmitterSpeedCtlr(NiPSysModifierFloatCtlr): #:X
+    def __init__(self, r: Reader, h: Header): super().__init__(r, h)
+
+# Animates the strength value of an NiPSysGravityModifier.
+class NiPSysGravityStrengthCtlr(NiPSysModifierFloatCtlr): #:X
+    def __init__(self, r: Reader, h: Header): super().__init__(r, h)
+
+# Abstract base class for all NiInterpControllers that use an NiInterpolator to animate their target float value.
+class NiFloatInterpController(NiSingleInterpController): #:X
+    def __init__(self, r: Reader, h: Header): super().__init__(r, h)
+
+# Changes the image a Map (TexDesc) will use. Uses a float interpolator to animate the texture index.
+# Often used for performing flipbook animation.
+class NiFlipController(NiFloatInterpController): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# Animates the alpha value of a property using an interpolator.
+class NiAlphaController(NiFloatInterpController): #:M
+    data: int
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        if h.v <= 0x0A020067: self.data = X[NiFloatData].ref(r)
+
+# Used to animate a single member of an NiTextureTransform.
+# NiInterpController::GetCtlrID() string formats:
+# ['%1-%2-TT_TRANSLATE_U', '%1-%2-TT_TRANSLATE_V', '%1-%2-TT_ROTATE', '%1-%2-TT_SCALE_U', '%1-%2-TT_SCALE_V']
+# (Depending on "Operation" enumeration, %1 = Value of "Shader Map", %2 = Value of "Texture Slot")
+class NiTextureTransformController(NiFloatInterpController): #:X
+    ###
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        ###
+
+# Unknown controller.
+class NiLightDimmerController(NiFloatInterpController): #:X
+    def __init__(self, r: Reader, h: Header): super().__init__(r, h)
+
+
+# Abstract base class for all NiInterpControllers that use a NiInterpolator to animate their target boolean value.
+class NiBoolInterpController(NiSingleInterpController):
+    def __init__(self, r: Reader): super().__init__(r, h)
+
+# Animates the visibility of an NiAVObject.
+class NiVisController(NiBoolInterpController): #:M
+    data: int
+
+    def __init__(self, r: Reader, h: Header):
+        super().__init__(r, h)
+        if h.v <= 0x0A010067: self.data: int = X[NiVisData].ref(r)
 
 # xx
 class xx(xx): #:X
@@ -2796,53 +2911,9 @@ class xx(xx): #:X
         super().__init__(r, h)
         ###
 
-# xx
-class xx(xx): #:X
-    ###
 
-    def __init__(self, r: Reader, h: Header):
-        super().__init__(r, h)
-        ###
-
-# xx
-class xx(xx): #:X
-    ###
-
-    def __init__(self, r: Reader, h: Header):
-        super().__init__(r, h)
-        ###
-
-# xx
-class xx(xx): #:X
-    ###
-
-    def __init__(self, r: Reader, h: Header):
-        super().__init__(r, h)
-        ###
-
-# xx
-class xx(xx): #:X
-    ###
-
-    def __init__(self, r: Reader, h: Header):
-        super().__init__(r, h)
-        ###
-
-# xx
-class xx(xx): #:X
-    ###
-
-    def __init__(self, r: Reader, h: Header):
-        super().__init__(r, h)
-        ###
-
-# xx
-class xx(xx): #:X
-    ###
-
-    def __init__(self, r: Reader, h: Header):
-        super().__init__(r, h)
-        ###
+class NiMaterialColorController(NiPoint3InterpController):
+    def __init__(self, r: Reader): super().__init__(r, h)
 
 # xx
 class xx(xx): #:X
@@ -3148,24 +3219,6 @@ class NiInterpController(NiTimeController):
     def __init__(self, r: Reader): super().__init__(r, h)
 
 
-
-
-class NiBoolInterpController(NiSingleInterpController):
-    def __init__(self, r: Reader): super().__init__(r, h)
-
-class NiVisController(NiBoolInterpController):
-    def __init__(self, r: Reader):
-        super().__init__(r, h)
-        self.data: int = X[NiVisData].ref(r) #:M
-
-class NiFloatInterpController(NiSingleInterpController):
-    def __init__(self, r: Reader): super().__init__(r, h)
-
-class NiAlphaController(NiFloatInterpController):
-    def __init__(self, r: Reader):
-        super().__init__(r, h)
-        self.data: int = X[NiFloatData].ref(r) #:M
-
 # Particles
 class NiParticles(NiGeometry):
     def __init__(self, r: Reader): super().__init__(r, h)
@@ -3327,8 +3380,7 @@ class NiMaterialProperty(NiProperty):
         self.glossiness: float = r.readSingle() #:M
         self.alpha: float = r.readSingle() #:M
 
-class NiMaterialColorController(NiPoint3InterpController):
-    def __init__(self, r: Reader): super().__init__(r, h)
+
 
 class NiDynamicEffect(NiAVObject):
     def __init__(self, r: Reader):

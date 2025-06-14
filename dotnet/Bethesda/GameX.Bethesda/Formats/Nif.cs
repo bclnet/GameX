@@ -1,4 +1,5 @@
 ﻿using MathNet.Numerics;
+using SharpCompress.Common;
 using System;
 using System.IO;
 using System.Numerics;
@@ -3860,7 +3861,7 @@ public class NiFlipController : NiFloatInterpController {
 /// <summary>
 /// Animates the alpha value of a property using an interpolator.
 /// </summary>
-public class NiAlphaController : NiFloatInterpController {
+public class NiAlphaController : NiFloatInterpController { //:M
     public int? Data;
 
     public NiAlphaController(BinaryReader r, Header h) : base(r, h) {
@@ -3868,32 +3869,166 @@ public class NiAlphaController : NiFloatInterpController {
     }
 }
 
+// HERE
 
 
+/// <summary>
+/// Used to animate a single member of an NiTextureTransform.
+/// NiInterpController::GetCtlrID() string formats:
+/// ['%1-%2-TT_TRANSLATE_U', '%1-%2-TT_TRANSLATE_V', '%1-%2-TT_ROTATE', '%1-%2-TT_SCALE_U', '%1-%2-TT_SCALE_V']
+/// (Depending on "Operation" enumeration, %1 = Value of "Shader Map", %2 = Value of "Texture Slot")
+/// </summary>
+public class NiTextureTransformController : NiFloatInterpController { //:X
 
-
-
-
-
-
-
-// Nodes
-public class NiNode : NiAVObject {
-    [JsonPropertyOrder(12)] public int?[] Children;
-    [JsonPropertyOrder(13)] public int?[] Effects;
-
-    public NiNode(BinaryReader r, Header h) : base(r, h) {
-        Children = r.ReadL32FArray(X<NiAVObject>.Ref);
-        if (h.UserVersion2 < 130) Effects = r.ReadL32FArray(X<NiDynamicEffect>.Ref);
+    public NiTextureTransformController(BinaryReader r, Header h) : base(r, h) {
     }
 }
-public class RootCollisionNode(BinaryReader r, Header h) : NiNode(r, h) { }
-public class NiBSAnimationNode(BinaryReader r, Header h) : NiNode(r, h) { }
-public class NiBSParticleNode(BinaryReader r, Header h) : NiNode(r, h) { }
-public class NiBillboardNode(BinaryReader r, Header h) : NiNode(r, h) { }
-public class AvoidNode(BinaryReader r, Header h) : NiNode(r, h) { }
 
-// Geometry
+/// <summary>
+/// Unknown controller.
+/// </summary>
+public class NiLightDimmerController(BinaryReader r, Header h) : NiFloatInterpController(r, h) { } //:X
+
+/// <summary>
+/// Abstract base class for all NiInterpControllers that use a NiInterpolator to animate their target boolean value.
+/// </summary>
+/// <param name="r"></param>
+/// <param name="h"></param>
+public abstract class NiBoolInterpController(BinaryReader r, Header h) : NiSingleInterpController(r, h) { } //:X
+
+/// <summary>
+/// Animates the visibility of an NiAVObject.
+/// </summary>
+public class NiVisController : NiBoolInterpController { //:M
+    public int? Data;
+
+    public NiVisController(BinaryReader r, Header h) : base(r, h) {
+        if (h.V <= 0x0A010067) Data = X<NiVisData>.Ref(r);
+    }
+}
+
+
+/// <summary>
+/// Abstract base class for all NiInterpControllers that use an NiInterpolator to animate their target NiPoint3 value.
+/// </summary>
+public abstract class NiPoint3InterpController : NiSingleInterpController { //:M
+    //public int? Data;
+
+    public NiPoint3InterpController(BinaryReader r, Header h) : base(r, h) {
+        //Data = X<NiPosData>.Ref(r);
+    }
+}
+
+/// <summary>
+/// Time controller for material color. Flags are used for color selection in versions below 10.1.0.0.
+/// Bits 4-5: Target Color (00 = Ambient, 01 = Diffuse, 10 = Specular, 11 = Emissive)
+/// NiInterpController::GetCtlrID() string formats:
+/// ['AMB', 'DIFF', 'SPEC', 'SELF_ILLUM'] (Depending on "Target Color")
+/// </summary>
+public class NiMaterialColorController : NiPoint3InterpController { //:M
+    public MaterialColor TargetColor;       // Selects which color to control.
+    public int? Data;
+
+    public NiMaterialColorController(BinaryReader r, Header h) : base(r, h) {
+        if (h.V >= 0x0A010000) TargetColor = (MaterialColor)r.ReadUInt16();
+        if (h.V <= 0x0A010067) Data = X<NiPosData>.Ref(r);
+    }
+}
+
+/// <summary>
+/// Animates the ambient, diffuse and specular colors of an NiLight.
+/// NiInterpController::GetCtlrID() string formats:
+/// ['Diffuse', 'Ambient'] (Depending on "Target Color")
+/// </summary>
+public class NiLightColorController : NiPoint3InterpController { //:X
+    public LightColor TargetColor;
+    public int? Data;
+
+    public NiLightColorController(BinaryReader r, Header h) : base(r, h) {
+        if (h.V >= 0x0A010000) TargetColor = (LightColor)r.ReadUInt16();
+        if (h.V <= 0x0A010067) Data = X<NiPosData>.Ref(r);
+    }
+}
+
+/// <summary>
+/// Abstract base class for all extra data controllers.
+/// NiInterpController::GetCtlrID() string format:
+/// '%s' Where %s = Value of "Extra Data Name"
+/// </summary>
+public abstract class NiExtraDataController : NiSingleInterpController { //:X
+    public string ExtraDataName;
+
+    public NiExtraDataController(BinaryReader r, Header h) : base(r, h) {
+        if (h.V >= 0x0A020000) ExtraDataName = Y.String(r);
+    }
+}
+
+/// <summary>
+/// Animates an NiFloatExtraData object attached to an NiAVObject.
+/// NiInterpController::GetCtlrID() string format is same as parent.
+/// </summary>
+public class NiFloatExtraDataController : NiExtraDataController { //:X
+    public byte NumExtraBytes;              // Number of extra bytes.
+    public byte[] UnknownBytes;             // Unknown.
+    public byte[] UnknownExtraBytes;        // Unknown.
+    public int? Data;
+
+    public NiFloatExtraDataController(BinaryReader r, Header h) : base(r, h) {
+        if (h.V <= 0x0A010000) {
+            NumExtraBytes = r.ReadByte();
+            UnknownBytes = r.ReadBytes(7);
+            UnknownExtraBytes = r.ReadBytes(NumExtraBytes);
+        }
+        if (h.V <= 0x0A010067) Data = X<NiFloatData>.Ref(r);
+    }
+}
+
+/// <summary>
+/// Animates an NiFloatsExtraData object attached to an NiAVObject.
+/// NiInterpController::GetCtlrID() string format:
+/// '%s[%d]' Where %s = Value of "Extra Data Name", %d = Value of "Floats Extra Data Index"
+/// </summary>
+public class NiFloatsExtraDataController : NiExtraDataController { //:X
+
+    public NiFloatsExtraDataController(BinaryReader r, Header h) : base(r, h) {
+    }
+}
+
+/// <summary>
+/// Animates an NiFloatsExtraData object attached to an NiAVObject.
+/// NiInterpController::GetCtlrID() string format:
+/// '%s[%d]' Where %s = Value of "Extra Data Name", %d = Value of "Floats Extra Data Index"
+/// </summary>
+public class NiFloatsExtraDataPoint3Controller : NiExtraDataController { //:X
+
+    public NiFloatsExtraDataPoint3Controller(BinaryReader r, Header h) : base(r, h) {
+    }
+}
+
+/// <summary>
+/// DEPRECATED (20.5), Replaced by NiSkinningLODController.
+/// Level of detail controller for bones.  Priority is arranged from low to high.
+/// </summary>
+public class NiBoneLODController : NiTimeController { //:X
+
+    public NiBoneLODController(BinaryReader r, Header h) : base(r, h) {
+    }
+}
+
+/// <summary>
+/// A simple LOD controller for bones.
+/// </summary>
+public class NiBSBoneLODController(BinaryReader r, Header h) : NiBoneLODController(r, h) { } //:X
+
+public class MaterialData { //:X
+
+    public MaterialData(BinaryReader r, Header h) {
+    }
+}
+
+/// <summary>
+/// Describes a visible scene element with vertices like a mesh, a particle system, lines, etc.
+/// </summary>
 public abstract class NiGeometry : NiAVObject {
     public int? Data;
     public int? SkinInstance;
@@ -3905,14 +4040,16 @@ public abstract class NiGeometry : NiAVObject {
 }
 
 /// <summary>
-/// Abstract base class for all NiTimeController objects using NiInterpolator objects to animate their target objects.
+/// Describes a mesh, built from triangles.
 /// </summary>
-public abstract class NiInterpController : NiTimeController {
-    public bool ManagerControlled;
+public abstract class NiTriBasedGeom(BinaryReader r, Header h) : NiGeometry(r, h) { }
 
-    public NiInterpController(BinaryReader r, Header h) : base(r, h) {
-        if (h.V >= 0x0A010068 && h.V <= 0x0A01006C) ManagerControlled = r.ReadBool32();
-    }
+public enum VectorFlags : ushort { //:X
+
+}
+
+public enum BSVectorFlags : ushort { //:X
+
 }
 
 
@@ -3925,26 +4062,10 @@ public abstract class NiInterpController : NiTimeController {
 
 
 
-/// <summary>
-/// xxx
-/// </summary>
-public class xxx : xxx { //:X
-    public short NumVectors;
 
-    public xxx(BinaryReader r, Header h) : base(r, h) {
-        //NumVectors = r.ReadUInt32();
-    }
-}
-/// <summary>
-/// xxx
-/// </summary>
-public class xxx : xxx { //:X
-    public short NumVectors;
 
-    public xxx(BinaryReader r, Header h) : base(r, h) {
-        //NumVectors = r.ReadUInt32();
-    }
-}
+
+
 
 
 
@@ -3983,7 +4104,7 @@ public abstract class NiGeometryData : NiObject {
     }
 }
 
-public abstract class NiTriBasedGeom(BinaryReader r, Header h) : NiGeometry(r, h) { }
+
 
 public abstract class NiTriBasedGeomData : NiGeometryData {
     public ushort NumTriangles;
@@ -4004,6 +4125,38 @@ public class NiTriShapeData : NiTriBasedGeomData {
         NumTrianglePoints = r.ReadUInt32();
         Triangles = r.ReadFArray(r => new Triangle(r), NumTriangles);
         MatchGroups = r.ReadL16FArray(r => new MatchGroup(r));
+    }
+}
+
+
+
+
+// Nodes
+public class NiNode : NiAVObject {
+    [JsonPropertyOrder(12)] public int?[] Children;
+    [JsonPropertyOrder(13)] public int?[] Effects;
+
+    public NiNode(BinaryReader r, Header h) : base(r, h) {
+        Children = r.ReadL32FArray(X<NiAVObject>.Ref);
+        if (h.UserVersion2 < 130) Effects = r.ReadL32FArray(X<NiDynamicEffect>.Ref);
+    }
+}
+public class RootCollisionNode(BinaryReader r, Header h) : NiNode(r, h) { }
+public class NiBSAnimationNode(BinaryReader r, Header h) : NiNode(r, h) { }
+public class NiBSParticleNode(BinaryReader r, Header h) : NiNode(r, h) { }
+public class NiBillboardNode(BinaryReader r, Header h) : NiNode(r, h) { }
+public class AvoidNode(BinaryReader r, Header h) : NiNode(r, h) { }
+
+// Geometry
+
+/// <summary>
+/// Abstract base class for all NiTimeController objects using NiInterpolator objects to animate their target objects.
+/// </summary>
+public abstract class NiInterpController : NiTimeController {
+    public bool ManagerControlled;
+
+    public NiInterpController(BinaryReader r, Header h) : base(r, h) {
+        if (h.V >= 0x0A010068 && h.V <= 0x0A01006C) ManagerControlled = r.ReadBool32();
     }
 }
 
@@ -4204,25 +4357,6 @@ public class NiUVController : NiTimeController {
         Data = X<NiUVData>.Ref(r);
     }
 }
-
-
-
-
-
-
-
-public abstract class NiBoolInterpController(BinaryReader r, Header h) : NiSingleInterpController(r, h) { }
-
-public class NiVisController : NiBoolInterpController {
-    public int? Data;
-
-    public NiVisController(BinaryReader r, Header h) : base(r, h) {
-        Data = X<NiVisData>.Ref(r);
-    }
-}
-
-public abstract class NiFloatInterpController(BinaryReader r, Header h) : NiSingleInterpController(r, h) { }
-
 
 
 // Particles
@@ -4469,13 +4603,7 @@ public class NiSourceTexture : NiTexture {
     }
 }
 
-public abstract class NiPoint3InterpController : NiSingleInterpController {
-    public int? Data;
 
-    public NiPoint3InterpController(BinaryReader r, Header h) : base(r, h) {
-        Data = X<NiPosData>.Ref(r);
-    }
-}
 
 public class NiMaterialProperty : NiProperty {
     public NiAVObject.NiFlags Flags;
@@ -4497,7 +4625,6 @@ public class NiMaterialProperty : NiProperty {
     }
 }
 
-public class NiMaterialColorController(BinaryReader r, Header h) : NiPoint3InterpController(r, h) { }
 
 
 public class NiTextureEffect : NiDynamicEffect {
@@ -4533,8 +4660,3 @@ public class NiTextureEffect : NiDynamicEffect {
 }
 
 #endregion
-
-//public class NiReaderUtils {
-//    public static NiAVObject.NiFlags ReadFlags(BinaryReader r) => (NiAVObject.NiFlags)r.ReadUInt16();
-//}
-

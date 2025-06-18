@@ -1201,14 +1201,14 @@ public enum hkConstraintType : uint {
 /// <summary>
 /// The NIF file footer.
 /// </summary>
-public class Footer(BinaryReader r, Header h) { //:M
-    public int?[] Roots = h.V >= 0x0303000D ? r.ReadL32FArray(X<NiNode>.Ref) : []; // List of root NIF objects. If there is a camera, for 1st person view, then this NIF object is referred to as well in this list, even if it is not a root object (usually we want the camera to be attached to the Bip Head node).
+public class Footer(BinaryReader r, Header h) {
+    public int?[] Roots = h.V >= 0x0303000D ? r.ReadL32FArray(X<NiObject>.Ref) : default; // List of root NIF objects. If there is a camera, for 1st person view, then this NIF object is referred to as well in this list, even if it is not a root object (usually we want the camera to be attached to the Bip Head node).
 }
 
 /// <summary>
 /// The distance range where a specific level of detail applies.
 /// </summary>
-public class LODRange(BinaryReader r, Header h) { //:X
+public class LODRange(BinaryReader r, Header h) {
     public float NearExtent = r.ReadSingle();   // Begining of range.
     public float FarExtent = r.ReadSingle();    // End of Range.
     public uint[] UnknownInts = h.V <= 0x03010000 ? r.ReadPArray<uint>("I", 3) : default; // Unknown (0,0,0).
@@ -1217,7 +1217,7 @@ public class LODRange(BinaryReader r, Header h) { //:X
 /// <summary>
 /// Group of vertex indices of vertices that match.
 /// </summary>
-public class MatchGroup(BinaryReader r) { //:M
+public class MatchGroup(BinaryReader r) {
     public ushort[] VertexIndices = r.ReadL16PArray<ushort>("h"); // The vertex indices.
 }
 
@@ -1240,15 +1240,15 @@ public class MatchGroup(BinaryReader r) { //:M
 /// NiBoneLODController::SkinInfo. Reference to shape and skin instance.
 /// </summary>
 public class SkinInfo(BinaryReader r) {
-    public int? Shape;
-    public int? SkinInstance;
+    public int? Shape = X<NiTriBasedGeom>.Ptr(r);
+    public int? SkinInstance = X<NiSkinInstance>.Ref(r);
 }
 
 /// <summary>
 /// A set of NiBoneLODController::SkinInfo.
 /// </summary>
 public class SkinInfoSet(BinaryReader r) {
-    public SkinInfo[] SkinInfo;
+    public SkinInfo[] SkinInfo = r.ReadL32FArray(r => new SkinInfo(r));
 }
 
 /// <summary>
@@ -1272,7 +1272,7 @@ public unsafe struct BoneVertData { //:M #Marshal
 /// </summary>
 public class AVObject(BinaryReader r) { //:X
     public string Name = r.ReadL32AString();            // Object name.
-    public int? AVObject_ = X<NiAVObject>.Ref(r);       // Object reference.
+    public int? AVObject_ = X<NiAVObject>.Ptr(r);       // Object reference.
 }
 
 /// <summary>

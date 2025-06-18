@@ -1202,23 +1202,23 @@ public enum hkConstraintType : uint {
 /// The NIF file footer.
 /// </summary>
 public class Footer(BinaryReader r, Header h) {
-    public int?[] Roots;                                // List of root NIF objects. If there is a camera, for 1st person view, then this NIF object is referred to as well in this list, even if it is not a root object (usually we want the camera to be attached to the Bip Head node).
+    public int?[] Roots = h.V >= 0x0303000D ? r.ReadL32FArray(X<NiObject>.Ref) : default; // List of root NIF objects. If there is a camera, for 1st person view, then this NIF object is referred to as well in this list, even if it is not a root object (usually we want the camera to be attached to the Bip Head node).
 }
 
 /// <summary>
 /// The distance range where a specific level of detail applies.
 /// </summary>
 public class LODRange(BinaryReader r, Header h) {
-    public float NearExtent;                            // Begining of range.
-    public float FarExtent;                             // End of Range.
-    public uint[] UnknownInts;                          // Unknown (0,0,0).
+    public float NearExtent = r.ReadSingle();           // Begining of range.
+    public float FarExtent = r.ReadSingle();            // End of Range.
+    public uint[] UnknownInts = h.V <= 50397184 ? r.ReadUInt32() : default; // Unknown (0,0,0).
 }
 
 /// <summary>
 /// Group of vertex indices of vertices that match.
 /// </summary>
 public class MatchGroup(BinaryReader r) {
-    public ushort[] VertexIndices;                      // The vertex indices.
+    public ushort[] VertexIndices = r.ReadL16FArray(r => r.ReadUInt16()); // The vertex indices.
 }
 
 // ByteVector3 -> new Vector3(r.ReadByte(), r.ReadByte(), r.ReadByte())
@@ -1239,39 +1239,39 @@ public class MatchGroup(BinaryReader r) {
 /// NiBoneLODController::SkinInfo. Reference to shape and skin instance.
 /// </summary>
 public class SkinInfo(BinaryReader r) {
-    public int? Shape;
-    public int? SkinInstance;
+    public int? Shape = X<NiTriBasedGeom>.Ptr(r);
+    public int? SkinInstance = X<NiSkinInstance>.Ref(r);
 }
 
 /// <summary>
 /// A set of NiBoneLODController::SkinInfo.
 /// </summary>
 public class SkinInfoSet(BinaryReader r) {
-    public SkinInfo[] SkinInfo;
+    public SkinInfo[] SkinInfo = r.ReadL32FArray(r => new SkinInfo(r));
 }
 
 /// <summary>
 /// NiSkinData::BoneVertData. A vertex and its weight.
 /// </summary>
 public class BoneVertData(BinaryReader r) {
-    public ushort Index;                                // The vertex index, in the mesh.
-    public float Weight;                                // The vertex weight - between 0.0 and 1.0
+    public ushort Index = r.ReadUInt16();               // The vertex index, in the mesh.
+    public float Weight = r.ReadSingle();               // The vertex weight - between 0.0 and 1.0
 }
 
 /// <summary>
 /// NiSkinData::BoneVertData. A vertex and its weight.
 /// </summary>
 public class BoneVertDataHalf(BinaryReader r) {
-    public ushort Index;                                // The vertex index, in the mesh.
-    public float Weight;                                // The vertex weight - between 0.0 and 1.0
+    public ushort Index = r.ReadUInt16();               // The vertex index, in the mesh.
+    public float Weight = r.ReadHalf();                 // The vertex weight - between 0.0 and 1.0
 }
 
 /// <summary>
 /// Used in NiDefaultAVObjectPalette.
 /// </summary>
 public class AVObject(BinaryReader r) {
-    public string Name;                                 // Object name.
-    public int? AVObject;                               // Object reference.
+    public string Name = r.ReadL32AString();            // Object name.
+    public int? AVObject = X<NiAVObject>.Ptr(r);        // Object reference.
 }
 
 /// <summary>
@@ -1281,119 +1281,119 @@ public class AVObject(BinaryReader r) {
 /// The string formats are documented on the relevant niobject blocks.
 /// </summary>
 public class ControlledBlock(BinaryReader r, Header h) {
-    public string TargetName;                           // Name of a controllable object in another NIF file.
-    public int? Interpolator;
-    public int? Controller;
-    public int? BlendInterpolator;
-    public ushort BlendIndex;
-    public byte Priority;                               // Idle animations tend to have low values for this, and high values tend to correspond with the important parts of the animations.
-    public string NodeName;                             // The name of the animated NiAVObject.
-    public string PropertyType;                         // The RTTI type of the NiProperty the controller is attached to, if applicable.
-    public string ControllerType;                       // The RTTI type of the NiTimeController.
-    public string ControllerID;                         // An ID that can uniquely identify the controller among others of the same type on the same NiObjectNET.
-    public string InterpolatorID;                       // An ID that can uniquely identify the interpolator among others of the same type on the same NiObjectNET.
-    public int? StringPalette;                          // Refers to the NiStringPalette which contains the name of the controlled NIF object.
-    public uint NodeNameOffset;                         // Offset in NiStringPalette to the name of the animated NiAVObject.
-    public uint PropertyTypeOffset;                     // Offset in NiStringPalette to the RTTI type of the NiProperty the controller is attached to, if applicable.
-    public uint ControllerTypeOffset;                   // Offset in NiStringPalette to the RTTI type of the NiTimeController.
-    public uint ControllerIDOffset;                     // Offset in NiStringPalette to an ID that can uniquely identify the controller among others of the same type on the same NiObjectNET.
-    public uint InterpolatorIDOffset;                   // Offset in NiStringPalette to an ID that can uniquely identify the interpolator among others of the same type on the same NiObjectNET.
+    public string TargetName = h.V <= 0x0A010067 ? Y.String(r) : default; // Name of a controllable object in another NIF file.
+    public int? Interpolator = h.V >= 0x0A01006A ? X<NiInterpolator>.Ref(r) : default;
+    public int? Controller = h.V <= 0x14050000 ? X<NiTimeController>.Ref(r) : default;
+    public int? BlendInterpolator = h.V >= 0x0A010068 && h.V <= 0x0A01006E ? X<NiBlendInterpolator>.Ref(r) : default;
+    public ushort BlendIndex = h.V >= 0x0A010068 && h.V <= 0x0A01006E ? r.ReadUInt16() : default;
+    public byte Priority = h.V >= 0x0A01006A &&  ? r.ReadByte() : default; // Idle animations tend to have low values for this, and high values tend to correspond with the important parts of the animations.
+    public string NodeName = h.V >= 0x14010001 ? Y.String(r) : default; // The name of the animated NiAVObject.
+    public string PropertyType = h.V >= 0x14010001 ? Y.String(r) : default; // The RTTI type of the NiProperty the controller is attached to, if applicable.
+    public string ControllerType = h.V >= 0x14010001 ? Y.String(r) : default; // The RTTI type of the NiTimeController.
+    public string ControllerID = h.V >= 0x14010001 ? Y.String(r) : default; // An ID that can uniquely identify the controller among others of the same type on the same NiObjectNET.
+    public string InterpolatorID = h.V >= 0x14010001 ? Y.String(r) : default; // An ID that can uniquely identify the interpolator among others of the same type on the same NiObjectNET.
+    public int? StringPalette = h.V >= 0x0A020000 && h.V <= 0x14010000 ? X<NiStringPalette>.Ref(r) : default; // Refers to the NiStringPalette which contains the name of the controlled NIF object.
+    public uint NodeNameOffset = h.V >= 0x0A020000 && h.V <= 0x14010000 ? r.ReadUInt32() : default; // Offset in NiStringPalette to the name of the animated NiAVObject.
+    public uint PropertyTypeOffset = h.V >= 0x0A020000 && h.V <= 0x14010000 ? r.ReadUInt32() : default; // Offset in NiStringPalette to the RTTI type of the NiProperty the controller is attached to, if applicable.
+    public uint ControllerTypeOffset = h.V >= 0x0A020000 && h.V <= 0x14010000 ? r.ReadUInt32() : default; // Offset in NiStringPalette to the RTTI type of the NiTimeController.
+    public uint ControllerIDOffset = h.V >= 0x0A020000 && h.V <= 0x14010000 ? r.ReadUInt32() : default; // Offset in NiStringPalette to an ID that can uniquely identify the controller among others of the same type on the same NiObjectNET.
+    public uint InterpolatorIDOffset = h.V >= 0x0A020000 && h.V <= 0x14010000 ? r.ReadUInt32() : default; // Offset in NiStringPalette to an ID that can uniquely identify the interpolator among others of the same type on the same NiObjectNET.
 }
 
 /// <summary>
 /// Information about how the file was exported
 /// </summary>
 public class ExportInfo(BinaryReader r) {
-    public string Author;
-    public string ProcessScript;
-    public string ExportScript;
+    public string Author = r.ReadL8AString();
+    public string ProcessScript = r.ReadL8AString();
+    public string ExportScript = r.ReadL8AString();
 }
 
 /// <summary>
 /// The NIF file header.
 /// </summary>
 public class Header(BinaryReader r, Header h) {
-    public string HeaderString;                         // 'NetImmerse File Format x.x.x.x' (versions <= 10.0.1.2) or 'Gamebryo File Format x.x.x.x' (versions >= 10.1.0.0), with x.x.x.x the version written out. Ends with a newline character (0x0A).
-    public string[] Copyright;
-    public uint Version;                                // The NIF version, in hexadecimal notation: 0x04000002, 0x0401000C, 0x04020002, 0x04020100, 0x04020200, 0x0A000100, 0x0A010000, 0x0A020000, 0x14000004, ...
-    public EndianType EndianType;                       // Determines the endianness of the data in the file.
-    public uint UserVersion;                            // An extra version number, for companies that decide to modify the file format.
-    public uint NumBlocks;                              // Number of file objects.
-    public uint UserVersion2;
-    public ExportInfo ExportInfo;
-    public string MaxFilepath;
-    public byte[] Metadata;
-    public ushort NumBlockTypes;                        // Number of object types in this NIF file.
-    public string[] BlockTypes;                         // List of all object types used in this NIF file.
-    public uint[] BlockTypeHashes;                      // List of all object types used in this NIF file.
-    public ushort[] BlockTypeIndex;                     // Maps file objects on their corresponding type: first file object is of type object_types[object_type_index[0]], the second of object_types[object_type_index[1]], etc.
-    public uint[] BlockSize;                            // Array of block sizes?
-    public uint NumStrings;                             // Number of strings.
-    public uint MaxStringLength;                        // Maximum string length.
-    public string[] Strings;                            // Strings.
-    public uint[] Groups;
+    public string HeaderString = ??;                    // 'NetImmerse File Format x.x.x.x' (versions <= 10.0.1.2) or 'Gamebryo File Format x.x.x.x' (versions >= 10.1.0.0), with x.x.x.x the version written out. Ends with a newline character (0x0A).
+    public string[] Copyright = h.V <= 0x03010000 ? ?? : default;
+    public uint Version = h.V >= 0x03010001 ? r.ReadUInt32() : default; // The NIF version, in hexadecimal notation: 0x04000002, 0x0401000C, 0x04020002, 0x04020100, 0x04020200, 0x0A000100, 0x0A010000, 0x0A020000, 0x14000004, ...
+    public EndianType EndianType = h.V >= 0x14000003 ? (EndianType)r.ReadByte() : default; // Determines the endianness of the data in the file.
+    public uint UserVersion = h.V >= 0x0A000108 ? r.ReadUInt32() : default; // An extra version number, for companies that decide to modify the file format.
+    public uint NumBlocks = h.V >= 0x03010001 ? r.ReadUInt32() : default; // Number of file objects.
+    public uint UserVersion2 = ((Version == 20.2.0.7) || (Version == 20.0.0.5) || ((Version >= 10.0.1.2) && (Version <= 20.0.0.4) && (h.UserVersion <= 11))) && (h.UserVersion >= 3) ? r.ReadUInt32() : default;
+    public ExportInfo ExportInfo =               ((Version == 20.2.0.7) || (Version == 20.0.0.5) || ((Version >= 10.0.1.2) && (Version <= 20.0.0.4) && (h.UserVersion <= 11))) && (h.UserVersion >= 3) ? new ExportInfo(r) : default;
+    public string MaxFilepath = (h.UserVersion2 == 130) ? r.ReadL8AString() : default;
+    public byte[] Metadata = h.V >= 0x1E000000 ? r.ReadL8Bytes() : default;
+    public ushort NumBlockTypes = h.V >= 0x05000001 ? r.ReadUInt16() : default; // Number of object types in this NIF file.
+    public string[] BlockTypes = Version != 20.3.1.2 && h.V >= 0x05000001 ? r.ReadL32AString() : default; // List of all object types used in this NIF file.
+    public uint[] BlockTypeHashes = h.V >= 0x14030102 && h.V <= 0x14030102 ? r.ReadUInt32() : default; // List of all object types used in this NIF file.
+    public ushort[] BlockTypeIndex = h.V >= 0x05000001 ? r.ReadUInt16() : default; // Maps file objects on their corresponding type: first file object is of type object_types[object_type_index[0]], the second of object_types[object_type_index[1]], etc.
+    public uint[] BlockSize = h.V >= 0x14020005 ? r.ReadUInt32() : default; // Array of block sizes?
+    public uint NumStrings = h.V >= 0x14010001 ? r.ReadUInt32() : default; // Number of strings.
+    public uint MaxStringLength = h.V >= 0x14010001 ? r.ReadUInt32() : default; // Maximum string length.
+    public string[] Strings = h.V >= 0x14010001 ? r.ReadL32AString() : default; // Strings.
+    public uint[] Groups = h.V >= 0x05000006 ? r.ReadL32FArray(r => r.ReadUInt32()) : default;
 }
 
 /// <summary>
 /// A list of \\0 terminated strings.
 /// </summary>
 public class StringPalette(BinaryReader r) {
-    public string Palette;                              // A bunch of 0x00 seperated strings.
-    public uint Length;                                 // Length of the palette string is repeated here.
+    public string Palette = r.ReadL32AString();         // A bunch of 0x00 seperated strings.
+    public uint Length = r.ReadUInt32();                // Length of the palette string is repeated here.
 }
 
 /// <summary>
 /// Tension, bias, continuity.
 /// </summary>
 public class TBC(BinaryReader r) {
-    public float t;                                     // Tension.
-    public float b;                                     // Bias.
-    public float c;                                     // Continuity.
+    public float t = r.ReadSingle();                    // Tension.
+    public float b = r.ReadSingle();                    // Bias.
+    public float c = r.ReadSingle();                    // Continuity.
 }
 
 /// <summary>
 /// A generic key with support for interpolation. Type 1 is normal linear interpolation, type 2 has forward and backward tangents, and type 3 has tension, bias and continuity arguments. Note that color4 and byte always seem to be of type 1.
 /// </summary>
 public class Key(BinaryReader r, Header h) {
-    public float Time;                                  // Time of the key.
-    public T Value;                                     // The key value.
-    public T Forward;                                   // Key forward tangent.
-    public T Backward;                                  // The key backward tangent.
-    public TBC TBC;                                     // The TBC of the key.
+    public float Time = r.ReadSingle();                 // Time of the key.
+    public T Value = ??;                                // The key value.
+    public T Forward = ARG == 2 ? ?? : default;         // Key forward tangent.
+    public T Backward = ARG == 2 ? ?? : default;        // The key backward tangent.
+    public TBC TBC = ARG == 3 ? new TBC(r) : default;   // The TBC of the key.
 }
 
 /// <summary>
 /// Array of vector keys (anything that can be interpolated, except rotations).
 /// </summary>
 public class KeyGroup(BinaryReader r, Header h) {
-    public uint NumKeys;                                // Number of keys in the array.
-    public KeyType Interpolation;                       // The key type.
-    public Key[] Keys;                                  // The keys.
+    public uint NumKeys = r.ReadUInt32();               // Number of keys in the array.
+    public KeyType Interpolation = Num Keys != 0 ? (KeyType)r.ReadUInt32() : default; // The key type.
+    public Key[] Keys = new Key(r, h);                  // The keys.
 }
 
 /// <summary>
 /// A special version of the key type used for quaternions.  Never has tangents.
 /// </summary>
 public class QuatKey(BinaryReader r, Header h) {
-    public float Time;                                  // Time the key applies.
-    public T Value;                                     // Value of the key.
-    public TBC TBC;                                     // The TBC of the key.
+    public float Time = ARG != 4 && h.V >= 0x0A01006A ? r.ReadSingle() : default; // Time the key applies.
+    public T Value = ARG != 4 ? ?? : default;           // Value of the key.
+    public TBC TBC = ARG == 3 ? new TBC(r) : default;   // The TBC of the key.
 }
 
 /// <summary>
 /// Texture coordinates (u,v). As in OpenGL; image origin is in the lower left corner.
 /// </summary>
 public class TexCoord(BinaryReader r) {
-    public float u;                                     // First coordinate.
-    public float v;                                     // Second coordinate.
+    public float u = r.ReadSingle();                    // First coordinate.
+    public float v = r.ReadSingle();                    // Second coordinate.
 }
 
 /// <summary>
 /// Texture coordinates (u,v).
 /// </summary>
 public class HalfTexCoord(BinaryReader r) {
-    public float u;                                     // First coordinate.
-    public float v;                                     // Second coordinate.
+    public float u = r.ReadHalf();                      // First coordinate.
+    public float v = r.ReadHalf();                      // Second coordinate.
 }
 
 /// <summary>
@@ -1410,40 +1410,40 @@ public enum TransformMethod : uint {
 /// NiTexturingProperty::Map. Texture description.
 /// </summary>
 public class TexDesc(BinaryReader r, Header h) {
-    public int? Image;                                  // Link to the texture image.
-    public int? Source;                                 // NiSourceTexture object index.
-    public TexClampMode ClampMode;                      // 0=clamp S clamp T, 1=clamp S wrap T, 2=wrap S clamp T, 3=wrap S wrap T
-    public TexFilterMode FilterMode;                    // 0=nearest, 1=bilinear, 2=trilinear, 3=..., 4=..., 5=...
-    public Flags Flags;                                 // Texture mode flags; clamp and filter mode stored in upper byte with 0xYZ00 = clamp mode Y, filter mode Z.
-    public ushort MaxAnisotropy;
-    public uint UVSet;                                  // The texture coordinate set in NiGeometryData that this texture slot will use.
-    public short PS2L;                                  // L can range from 0 to 3 and are used to specify how fast a texture gets blurry.
-    public short PS2K;                                  // K is used as an offset into the mipmap levels and can range from -2047 to 2047. Positive values push the mipmap towards being blurry and negative values make the mipmap sharper.
-    public ushort Unknown1;                             // Unknown, 0 or 0x0101?
-    public bool HasTextureTransform;                    // Whether or not the texture coordinates are transformed.
-    public TexCoord Translation;                        // The UV translation.
-    public TexCoord Scale;                              // The UV scale.
-    public float Rotation;                              // The W axis rotation in texture space.
-    public TransformMethod TransformMethod;             // Depending on the source, scaling can occur before or after rotation.
-    public TexCoord Center;                             // The origin around which the texture rotates.
+    public int? Image = h.V <= 50397184 ? X<NiImage>.Ref(r) : default; // Link to the texture image.
+    public int? Source = h.V >= 0x0303000D ? X<NiSourceTexture>.Ref(r) : default; // NiSourceTexture object index.
+    public TexClampMode ClampMode = h.V <= 0x14000005 ? (TexClampMode)r.ReadUInt32() : default; // 0=clamp S clamp T, 1=clamp S wrap T, 2=wrap S clamp T, 3=wrap S wrap T
+    public TexFilterMode FilterMode = h.V <= 0x14000005 ? (TexFilterMode)r.ReadUInt32() : default; // 0=nearest, 1=bilinear, 2=trilinear, 3=..., 4=..., 5=...
+    public Flags Flags = h.V >= 0x14010003 ? (Flags)r.ReadUInt16() : default; // Texture mode flags; clamp and filter mode stored in upper byte with 0xYZ00 = clamp mode Y, filter mode Z.
+    public ushort MaxAnisotropy = h.V >= 0x14050004 ? r.ReadUInt16() : default;
+    public uint UVSet = h.V <= 0x14000005 ? r.ReadUInt32() : default; // The texture coordinate set in NiGeometryData that this texture slot will use.
+    public short PS2L = h.V <= 0x0A040001 ? r.ReadInt16() : default; // L can range from 0 to 3 and are used to specify how fast a texture gets blurry.
+    public short PS2K = h.V <= 0x0A040001 ? r.ReadInt16() : default; // K is used as an offset into the mipmap levels and can range from -2047 to 2047. Positive values push the mipmap towards being blurry and negative values make the mipmap sharper.
+    public ushort Unknown1 = h.V <= 0x0401000C ? r.ReadUInt16() : default; // Unknown, 0 or 0x0101?
+    public bool HasTextureTransform = h.V >= 0x0A010000 ? r.ReadBool32() : default; // Whether or not the texture coordinates are transformed.
+    public TexCoord Translation = Has Texture Transform && h.V >= 0x0A010000 ? new TexCoord(r) : default; // The UV translation.
+    public TexCoord Scale = Has Texture Transform && h.V >= 0x0A010000 ? new TexCoord(r) : default; // The UV scale.
+    public float Rotation = Has Texture Transform && h.V >= 0x0A010000 ? r.ReadSingle() : default; // The W axis rotation in texture space.
+    public TransformMethod TransformMethod = Has Texture Transform && h.V >= 0x0A010000 ? (TransformMethod)r.ReadUInt32() : default; // Depending on the source, scaling can occur before or after rotation.
+    public TexCoord Center = Has Texture Transform && h.V >= 0x0A010000 ? new TexCoord(r) : default; // The origin around which the texture rotates.
 }
 
 /// <summary>
 /// NiTexturingProperty::ShaderMap. Shader texture description.
 /// </summary>
 public class ShaderTexDesc(BinaryReader r, Header h) {
-    public bool HasMap;
-    public TexDesc Map;
-    public uint MapID;                                  // Unique identifier for the Gamebryo shader system.
+    public bool HasMap = r.ReadBool32();
+    public TexDesc Map = Has Map ? new TexDesc(r, h) : default;
+    public uint MapID = Has Map ? r.ReadUInt32() : default; // Unique identifier for the Gamebryo shader system.
 }
 
 /// <summary>
 /// List of three vertex indices.
 /// </summary>
 public class Triangle(BinaryReader r) {
-    public ushort v1;                                   // First vertex index.
-    public ushort v2;                                   // Second vertex index.
-    public ushort v3;                                   // Third vertex index.
+    public ushort v1 = r.ReadUInt16();                  // First vertex index.
+    public ushort v2 = r.ReadUInt16();                  // Second vertex index.
+    public ushort v3 = r.ReadUInt16();                  // Third vertex index.
 }
 
 [Flags]
@@ -1462,98 +1462,98 @@ public enum VertexFlags : ushort {
 }
 
 public class BSVertexData(BinaryReader r, Header h) {
-    public Vector3 Vertex;
-    public float BitangentX;
-    public ushort UnknownShort;
-    public uint UnknownInt;
-    public HalfTexCoord UV;
-    public Vector3<false> Normal;
-    public byte BitangentY;
-    public Vector3<false> Tangent;
-    public byte BitangentZ;
-    public ByteColor4 VertexColors;
-    public float[] BoneWeights;
-    public byte[] BoneIndices;
-    public float EyeData;
+    public Vector3 Vertex = ((ARG & 16) != 0) && ((ARG & 16384) != 0) ? r.ReadVector3() : default;
+    public float BitangentX = ((ARG & 16) != 0) && ((ARG & 256) != 0) && ((ARG & 16384) != 0) ? r.ReadSingle() : default;
+    public ushort UnknownShort = ((ARG & 16) != 0) && ((ARG & 256) == 0) && ((ARG & 16384) == 0) ? r.ReadUInt16() : default;
+    public uint UnknownInt = ((ARG & 16) != 0) && ((ARG & 256) == 0) && ((ARG & 16384) != 0) ? r.ReadUInt32() : default;
+    public HalfTexCoord UV = ((ARG & 32) != 0) ? new HalfTexCoord(r) : default;
+    public Vector3<false> Normal = (ARG & 128) != 0 ? new Vector3(r.ReadByte(), r.ReadByte(), r.ReadByte()) : default;
+    public byte BitangentY = (ARG & 128) != 0 ? r.ReadByte() : default;
+    public Vector3<false> Tangent = ((ARG & 128) != 0) && ((ARG & 256) != 0) ? new Vector3(r.ReadByte(), r.ReadByte(), r.ReadByte()) : default;
+    public byte BitangentZ = ((ARG & 128) != 0) && ((ARG & 256) != 0) ? r.ReadByte() : default;
+    public ByteColor4 VertexColors = (ARG & 512) != 0 ? new Color4Byte(r) : default;
+    public float[] BoneWeights = (ARG & 1024) != 0 ? r.ReadHalf() : default;
+    public byte[] BoneIndices = (ARG & 1024) != 0 ? r.ReadByte() : default;
+    public float EyeData = (ARG & 4096) != 0 ? r.ReadSingle() : default;
 }
 
 public class BSVertexDataSSE(BinaryReader r, Header h) {
-    public Vector3 Vertex;
-    public float BitangentX;
-    public int UnknownInt;
-    public HalfTexCoord UV;
-    public Vector3<false> Normal;
-    public byte BitangentY;
-    public Vector3<false> Tangent;
-    public byte BitangentZ;
-    public ByteColor4 VertexColors;
-    public float[] BoneWeights;
-    public byte[] BoneIndices;
-    public float EyeData;
+    public Vector3 Vertex = ((ARG & 16) != 0) ? r.ReadVector3() : default;
+    public float BitangentX = ((ARG & 16) != 0) && ((ARG & 256) != 0) ? r.ReadSingle() : default;
+    public int UnknownInt = ((ARG & 16) != 0) && (ARG & 256) == 0 ? r.ReadInt32() : default;
+    public HalfTexCoord UV = ((ARG & 32) != 0) ? new HalfTexCoord(r) : default;
+    public Vector3<false> Normal = (ARG & 128) != 0 ? new Vector3(r.ReadByte(), r.ReadByte(), r.ReadByte()) : default;
+    public byte BitangentY = (ARG & 128) != 0 ? r.ReadByte() : default;
+    public Vector3<false> Tangent = ((ARG & 128) != 0) && ((ARG & 256) != 0) ? new Vector3(r.ReadByte(), r.ReadByte(), r.ReadByte()) : default;
+    public byte BitangentZ = ((ARG & 128) != 0) && ((ARG & 256) != 0) ? r.ReadByte() : default;
+    public ByteColor4 VertexColors = (ARG & 512) != 0 ? new Color4Byte(r) : default;
+    public float[] BoneWeights = (ARG & 1024) != 0 ? r.ReadHalf() : default;
+    public byte[] BoneIndices = (ARG & 1024) != 0 ? r.ReadByte() : default;
+    public float EyeData = (ARG & 4096) != 0 ? r.ReadSingle() : default;
 }
 
 public class BSVertexDesc(BinaryReader r) {
-    public byte VF1;
-    public byte VF2;
-    public byte VF3;
-    public byte VF4;
-    public byte VF5;
-    public VertexFlags VertexAttributes;
-    public byte VF8;
+    public byte VF1 = r.ReadByte();
+    public byte VF2 = r.ReadByte();
+    public byte VF3 = r.ReadByte();
+    public byte VF4 = r.ReadByte();
+    public byte VF5 = r.ReadByte();
+    public VertexFlags VertexAttributes = (VertexFlags)r.ReadUInt16();
+    public byte VF8 = r.ReadByte();
 }
 
 /// <summary>
 /// Skinning data for a submesh, optimized for hardware skinning. Part of NiSkinPartition.
 /// </summary>
 public class SkinPartition(BinaryReader r, Header h) {
-    public ushort NumVertices;                          // Number of vertices in this submesh.
-    public ushort NumTriangles;                         // Number of triangles in this submesh.
-    public ushort NumBones;                             // Number of bones influencing this submesh.
-    public ushort NumStrips;                            // Number of strips in this submesh (zero if not stripped).
-    public ushort NumWeightsPerVertex;                  // Number of weight coefficients per vertex. The Gamebryo engine seems to work well only if this number is equal to 4, even if there are less than 4 influences per vertex.
-    public ushort[] Bones;                              // List of bones.
-    public bool HasVertexMap;                           // Do we have a vertex map?
-    public ushort[] VertexMap;                          // Maps the weight/influence lists in this submesh to the vertices in the shape being skinned.
-    public bool HasVertexWeights;                       // Do we have vertex weights?
-    public float[][] VertexWeights;                     // The vertex weights.
-    public ushort[] StripLengths;                       // The strip lengths.
-    public bool HasFaces;                               // Do we have triangle or strip data?
-    public ushort[][] Strips;                           // The strips.
-    public Triangle[] Triangles;                        // The triangles.
-    public bool HasBoneIndices;                         // Do we have bone indices?
-    public byte[][] BoneIndices;                        // Bone indices, they index into 'Bones'.
-    public ushort UnknownShort;                         // Unknown
-    public BSVertexDesc VertexDesc;
-    public Triangle[] TrianglesCopy;
+    public ushort NumVertices = r.ReadUInt16();         // Number of vertices in this submesh.
+    public ushort NumTriangles = r.ReadUInt16();        // Number of triangles in this submesh.
+    public ushort NumBones = r.ReadUInt16();            // Number of bones influencing this submesh.
+    public ushort NumStrips = r.ReadUInt16();           // Number of strips in this submesh (zero if not stripped).
+    public ushort NumWeightsPerVertex = r.ReadUInt16(); // Number of weight coefficients per vertex. The Gamebryo engine seems to work well only if this number is equal to 4, even if there are less than 4 influences per vertex.
+    public ushort[] Bones = r.ReadUInt16();             // List of bones.
+    public bool HasVertexMap = h.V >= 0x0A010000 ? r.ReadBool32() : default; // Do we have a vertex map?
+    public ushort[] VertexMap = Has Vertex Map && h.V >= 0x0A010000 ? r.ReadUInt16() : default; // Maps the weight/influence lists in this submesh to the vertices in the shape being skinned.
+    public bool HasVertexWeights = h.V >= 0x0A010000 ? r.ReadBool32() : default; // Do we have vertex weights?
+    public float[][] VertexWeights = Has Vertex Weights == 15 && h.V >= 0x14030101 ? r.ReadHalf() : default; // The vertex weights.
+    public ushort[] StripLengths = r.ReadUInt16();      // The strip lengths.
+    public bool HasFaces = h.V >= 0x0A010000 ? r.ReadBool32() : default; // Do we have triangle or strip data?
+    public ushort[][] Strips = (Has Faces) && (Num Strips != 0) && h.V >= 0x0A010000 ? r.ReadUInt16() : default; // The strips.
+    public Triangle[] Triangles = (Has Faces) && (Num Strips == 0) && h.V >= 0x0A010000 ? new Triangle(r) : default; // The triangles.
+    public bool HasBoneIndices = r.ReadBool32();        // Do we have bone indices?
+    public byte[][] BoneIndices = Has Bone Indices ? r.ReadByte() : default; // Bone indices, they index into 'Bones'.
+    public ushort UnknownShort = r.ReadUInt16();        // Unknown
+    public BSVertexDesc VertexDesc = (h.UserVersion2 == 100) ? new BSVertexDesc(r) : default;
+    public Triangle[] TrianglesCopy = (h.UserVersion2 == 100) ? new Triangle(r) : default;
 }
 
 /// <summary>
 /// A plane.
 /// </summary>
 public class NiPlane(BinaryReader r) {
-    public Vector3 Normal;                              // The plane normal.
-    public float Constant;                              // The plane constant.
+    public Vector3 Normal = r.ReadVector3();            // The plane normal.
+    public float Constant = r.ReadSingle();             // The plane constant.
 }
 
 /// <summary>
 /// A sphere.
 /// </summary>
 public class NiBound(BinaryReader r) {
-    public Vector3 Center;                              // The sphere's center.
-    public float Radius;                                // The sphere's radius.
+    public Vector3 Center = r.ReadVector3();            // The sphere's center.
+    public float Radius = r.ReadSingle();               // The sphere's radius.
 }
 
 public class NiQuatTransform(BinaryReader r, Header h) {
-    public Vector3 Translation;
-    public Quaternion Rotation;
-    public float Scale;
-    public bool[] TRSValid;                             // Whether each transform component is valid.
+    public Vector3 Translation = r.ReadVector3();
+    public Quaternion Rotation = r.ReadQuaternion();
+    public float Scale = r.ReadSingle();
+    public bool[] TRSValid = h.V <= 0x0A01006D ? r.ReadBool32() : default; // Whether each transform component is valid.
 }
 
 public class NiTransform(BinaryReader r) {
-    public Matrix3x3 Rotation;                          // The rotation part of the transformation matrix.
-    public Vector3 Translation;                         // The translation vector.
-    public float Scale;                                 // Scaling part (only uniform scaling is supported).
+    public Matrix3x3 Rotation = r.ReadMatrix3x3();      // The rotation part of the transformation matrix.
+    public Vector3 Translation = r.ReadVector3();       // The translation vector.
+    public float Scale = r.ReadSingle();                // Scaling part (only uniform scaling is supported).
 }
 
 /// <summary>
@@ -1580,68 +1580,68 @@ public enum AnimationType : ushort {
 /// <summary>
 /// Bethesda Animation. Describes a furniture position?
 /// </summary>
-public class FurniturePosition(BinaryReader r, Header h) {
-    public Vector3 Offset;                              // Offset of furniture marker.
-    public ushort Orientation;                          // Furniture marker orientation.
-    public byte PositionRef1;                           // Refers to a furnituremarkerxx.nif file. Always seems to be the same as Position Ref 2.
-    public byte PositionRef2;                           // Refers to a furnituremarkerxx.nif file. Always seems to be the same as Position Ref 1.
-    public float Heading;                               // Similar to Orientation, in float form.
-    public AnimationType AnimationType;                 // Unknown
-    public FurnitureEntryPoints EntryProperties;        // Unknown/unused in nif?
+public class FurniturePosition(BinaryReader r) {
+    public Vector3 Offset = r.ReadVector3();            // Offset of furniture marker.
+    public ushort Orientation = r.ReadUInt16();         // Furniture marker orientation.
+    public byte PositionRef1 = r.ReadByte();            // Refers to a furnituremarkerxx.nif file. Always seems to be the same as Position Ref 2.
+    public byte PositionRef2 = r.ReadByte();            // Refers to a furnituremarkerxx.nif file. Always seems to be the same as Position Ref 1.
+    public float Heading = r.ReadSingle();              // Similar to Orientation, in float form.
+    public AnimationType AnimationType = (AnimationType)r.ReadUInt16(); // Unknown
+    public FurnitureEntryPoints EntryProperties = (FurnitureEntryPoints)r.ReadUInt16(); // Unknown/unused in nif?
 }
 
 /// <summary>
 /// Bethesda Havok. A triangle with extra data used for physics.
 /// </summary>
 public class TriangleData(BinaryReader r, Header h) {
-    public Triangle Triangle;                           // The triangle.
-    public ushort WeldingInfo;                          // Additional havok information on how triangles are welded.
-    public Vector3 Normal;                              // This is the triangle's normal.
+    public Triangle Triangle = new Triangle(r);         // The triangle.
+    public ushort WeldingInfo = r.ReadUInt16();         // Additional havok information on how triangles are welded.
+    public Vector3 Normal = h.V <= 0x14000005 ? r.ReadVector3() : default; // This is the triangle's normal.
 }
 
 /// <summary>
 /// Geometry morphing data component.
 /// </summary>
 public class Morph(BinaryReader r, Header h) {
-    public string FrameName;                            // Name of the frame.
-    public uint NumKeys;                                // The number of morph keys that follow.
-    public KeyType Interpolation;                       // Unlike most objects, the presense of this value is not conditional on there being keys.
-    public Key[] Keys;                                  // The morph key frames.
-    public float LegacyWeight;
-    public Vector3[] Vectors;                           // Morph vectors.
+    public string FrameName = h.V >= 0x0A01006A ? Y.String(r) : default; // Name of the frame.
+    public uint NumKeys = h.V <= 0x0A010000 ? r.ReadUInt32() : default; // The number of morph keys that follow.
+    public KeyType Interpolation = h.V <= 0x0A010000 ? (KeyType)r.ReadUInt32() : default; // Unlike most objects, the presense of this value is not conditional on there being keys.
+    public Key[] Keys = h.V <= 0x0A010000 ? new Key(r, h) : default; // The morph key frames.
+    public float LegacyWeight = h.V >= 0x0A010068 && h.V <= 0x14010002 &&  ? r.ReadSingle() : default;
+    public Vector3[] Vectors = r.ReadVector3();         // Morph vectors.
 }
 
 /// <summary>
 /// particle array entry
 /// </summary>
 public class Particle(BinaryReader r) {
-    public Vector3 Velocity;                            // Particle velocity
-    public Vector3 UnknownVector;                       // Unknown
-    public float Lifetime;                              // The particle age.
-    public float Lifespan;                              // Maximum age of the particle.
-    public float Timestamp;                             // Timestamp of the last update.
-    public ushort UnknownShort;                         // Unknown short
-    public ushort VertexID;                             // Particle/vertex index matches array index
+    public Vector3 Velocity = r.ReadVector3();          // Particle velocity
+    public Vector3 UnknownVector = r.ReadVector3();     // Unknown
+    public float Lifetime = r.ReadSingle();             // The particle age.
+    public float Lifespan = r.ReadSingle();             // Maximum age of the particle.
+    public float Timestamp = r.ReadSingle();            // Timestamp of the last update.
+    public ushort UnknownShort = r.ReadUInt16();        // Unknown short
+    public ushort VertexID = r.ReadUInt16();            // Particle/vertex index matches array index
 }
 
 /// <summary>
 /// NiSkinData::BoneData. Skinning data component.
 /// </summary>
 public class BoneData(BinaryReader r, Header h) {
-    public NiTransform SkinTransform;                   // Offset of the skin from this bone in bind position.
-    public Vector3 BoundingSphereOffset;                // Translation offset of a bounding sphere holding all vertices. (Note that its a Sphere Containing Axis Aligned Box not a minimum volume Sphere)
-    public float BoundingSphereRadius;                  // Radius for bounding sphere holding all vertices.
-    public short[] Unknown13Shorts;                     // Unknown, always 0?
-    public ushort NumVertices;                          // Number of weighted vertices.
-    public BoneVertDataHalf[] VertexWeights;            // The vertex weights.
+    public NiTransform SkinTransform = new NiTransform(r); // Offset of the skin from this bone in bind position.
+    public Vector3 BoundingSphereOffset = r.ReadVector3(); // Translation offset of a bounding sphere holding all vertices. (Note that its a Sphere Containing Axis Aligned Box not a minimum volume Sphere)
+    public float BoundingSphereRadius = r.ReadSingle(); // Radius for bounding sphere holding all vertices.
+    public short[] Unknown13Shorts = h.V >= 0x14030009 && h.V <= 0x14030009 &&  ? r.ReadInt16() : default; // Unknown, always 0?
+    public ushort NumVertices = r.ReadUInt16();         // Number of weighted vertices.
+    public BoneVertDataHalf[] VertexWeights = ARG == 15 && h.V >= 0x14030101 ? new BoneVertDataHalf(r) : default; // The vertex weights.
 }
 
 /// <summary>
 /// Bethesda Havok. Collision filter info representing Layer, Flags, Part Number, and Group all combined into one uint.
 /// </summary>
 public class HavokFilter(BinaryReader r, Header h) {
-    public SkyrimLayer Layer;                           // The layer the collision belongs to.
-    public byte FlagsandPartNumber;                     // FLAGS are stored in highest 3 bits:
+    public SkyrimLayer Layer = (SkyrimLayer)r.ReadByte(); // The layer the collision belongs to.
+    public byte FlagsandPartNumber = r.ReadByte();      // FLAGS are stored in highest 3 bits:
                                                         // 	Bit 7: sets the LINK property and controls whether this body is physically linked to others.
                                                         // 	Bit 6: turns collision off (not used for Layer BIPED).
                                                         // 	Bit 5: sets the SCALED property.
@@ -1679,51 +1679,51 @@ public class HavokFilter(BinaryReader r, Header h) {
                                                         // 	27 - ADDONARM
                                                         // 	28 - ADDONLEG
                                                         // 	29-31 - NULL
-    public ushort Group;
+    public ushort Group = r.ReadUInt16();
 }
 
 /// <summary>
 /// Bethesda Havok. Material wrapper for varying material enums by game.
 /// </summary>
 public class HavokMaterial(BinaryReader r, Header h) {
-    public uint UnknownInt;
-    public SkyrimHavokMaterial Material;                // The material of the shape.
+    public uint UnknownInt = h.V <= 0x0A000102 ? r.ReadUInt32() : default;
+    public SkyrimHavokMaterial Material = (SkyrimHavokMaterial)r.ReadUInt32(); // The material of the shape.
 }
 
 /// <summary>
 /// Bethesda Havok. Havok Information for packed TriStrip shapes.
 /// </summary>
 public class OblivionSubShape(BinaryReader r) {
-    public HavokFilter HavokFilter;
-    public uint NumVertices;                            // The number of vertices that form this sub shape.
-    public HavokMaterial Material;                      // The material of the subshape.
+    public HavokFilter HavokFilter = new HavokFilter(r, h);
+    public uint NumVertices = r.ReadUInt32();           // The number of vertices that form this sub shape.
+    public HavokMaterial Material = new HavokMaterial(r, h); // The material of the subshape.
 }
 
 public class bhkPositionConstraintMotor(BinaryReader r) {
-    public float MinForce;                              // Minimum motor force
-    public float MaxForce;                              // Maximum motor force
-    public float Tau;                                   // Relative stiffness
-    public float Damping;                               // Motor damping value
-    public float ProportionalRecoveryVelocity;          // A factor of the current error to calculate the recovery velocity
-    public float ConstantRecoveryVelocity;              // A constant velocity which is used to recover from errors
-    public bool MotorEnabled;                           // Is Motor enabled
+    public float MinForce = r.ReadSingle();             // Minimum motor force
+    public float MaxForce = r.ReadSingle();             // Maximum motor force
+    public float Tau = r.ReadSingle();                  // Relative stiffness
+    public float Damping = r.ReadSingle();              // Motor damping value
+    public float ProportionalRecoveryVelocity = r.ReadSingle(); // A factor of the current error to calculate the recovery velocity
+    public float ConstantRecoveryVelocity = r.ReadSingle(); // A constant velocity which is used to recover from errors
+    public bool MotorEnabled = r.ReadBool32();          // Is Motor enabled
 }
 
 public class bhkVelocityConstraintMotor(BinaryReader r) {
-    public float MinForce;                              // Minimum motor force
-    public float MaxForce;                              // Maximum motor force
-    public float Tau;                                   // Relative stiffness
-    public float TargetVelocity;
-    public bool UseVelocityTarget;
-    public bool MotorEnabled;                           // Is Motor enabled
+    public float MinForce = r.ReadSingle();             // Minimum motor force
+    public float MaxForce = r.ReadSingle();             // Maximum motor force
+    public float Tau = r.ReadSingle();                  // Relative stiffness
+    public float TargetVelocity = r.ReadSingle();
+    public bool UseVelocityTarget = r.ReadBool32();
+    public bool MotorEnabled = r.ReadBool32();          // Is Motor enabled
 }
 
 public class bhkSpringDamperConstraintMotor(BinaryReader r) {
-    public float MinForce;                              // Minimum motor force
-    public float MaxForce;                              // Maximum motor force
-    public float SpringConstant;                        // The spring constant in N/m
-    public float SpringDamping;                         // The spring damping in Nsec/m
-    public bool MotorEnabled;                           // Is Motor enabled
+    public float MinForce = r.ReadSingle();             // Minimum motor force
+    public float MaxForce = r.ReadSingle();             // Maximum motor force
+    public float SpringConstant = r.ReadSingle();       // The spring constant in N/m
+    public float SpringDamping = r.ReadSingle();        // The spring damping in Nsec/m
+    public bool MotorEnabled = r.ReadBool32();          // Is Motor enabled
 }
 
 public enum MotorType : byte {
@@ -1734,98 +1734,98 @@ public enum MotorType : byte {
 }
 
 public class MotorDescriptor(BinaryReader r, Header h) {
-    public MotorType Type;
-    public bhkPositionConstraintMotor PositionMotor;
-    public bhkVelocityConstraintMotor VelocityMotor;
-    public bhkSpringDamperConstraintMotor SpringDamperMotor;
+    public MotorType Type = (MotorType)r.ReadByte();
+    public bhkPositionConstraintMotor PositionMotor = Type == 1 ? new bhkPositionConstraintMotor(r) : default;
+    public bhkVelocityConstraintMotor VelocityMotor = Type == 2 ? new bhkVelocityConstraintMotor(r) : default;
+    public bhkSpringDamperConstraintMotor SpringDamperMotor = Type == 3 ? new bhkSpringDamperConstraintMotor(r) : default;
 }
 
 /// <summary>
 /// This constraint defines a cone in which an object can rotate. The shape of the cone can be controlled in two (orthogonal) directions.
 /// </summary>
 public class RagdollDescriptor(BinaryReader r, Header h) {
-    public Vector4 PivotA;                              // Point around which the object will rotate. Defines the orthogonal directions in which the shape can be controlled (namely in this direction, and in the direction orthogonal on this one and Twist A).
-    public Vector4 PlaneA;                              // Defines the orthogonal plane in which the body can move, the orthogonal directions in which the shape can be controlled (the direction orthogonal on this one and Twist A).
-    public Vector4 TwistA;                              // Central directed axis of the cone in which the object can rotate. Orthogonal on Plane A.
-    public Vector4 PivotB;                              // Defines the orthogonal directions in which the shape can be controlled (namely in this direction, and in the direction orthogonal on this one and Twist A).
-    public Vector4 PlaneB;                              // Defines the orthogonal plane in which the body can move, the orthogonal directions in which the shape can be controlled (the direction orthogonal on this one and Twist A).
-    public Vector4 TwistB;                              // Central directed axis of the cone in which the object can rotate. Orthogonal on Plane B.
-    public Vector4 MotorA;                              // Defines the orthogonal directions in which the shape can be controlled (namely in this direction, and in the direction orthogonal on this one and Twist A).
-    public Vector4 MotorB;                              // Defines the orthogonal directions in which the shape can be controlled (namely in this direction, and in the direction orthogonal on this one and Twist A).
-    public float ConeMaxAngle;                          // Maximum angle the object can rotate around the vector orthogonal on Plane A and Twist A relative to the Twist A vector. Note that Cone Min Angle is not stored, but is simply minus this angle.
-    public float PlaneMinAngle;                         // Minimum angle the object can rotate around Plane A, relative to Twist A.
-    public float PlaneMaxAngle;                         // Maximum angle the object can rotate around Plane A, relative to Twist A.
-    public float TwistMinAngle;                         // Minimum angle the object can rotate around Twist A, relative to Plane A.
-    public float TwistMaxAngle;                         // Maximum angle the object can rotate around Twist A, relative to Plane A.
-    public float MaxFriction;                           // Maximum friction, typically 0 or 10. In Fallout 3, typically 100.
-    public MotorDescriptor Motor;
+    public Vector4 PivotA = r.ReadVector4();            // Point around which the object will rotate. Defines the orthogonal directions in which the shape can be controlled (namely in this direction, and in the direction orthogonal on this one and Twist A).
+    public Vector4 PlaneA = r.ReadVector4();            // Defines the orthogonal plane in which the body can move, the orthogonal directions in which the shape can be controlled (the direction orthogonal on this one and Twist A).
+    public Vector4 TwistA = r.ReadVector4();            // Central directed axis of the cone in which the object can rotate. Orthogonal on Plane A.
+    public Vector4 PivotB = r.ReadVector4();            // Defines the orthogonal directions in which the shape can be controlled (namely in this direction, and in the direction orthogonal on this one and Twist A).
+    public Vector4 PlaneB = r.ReadVector4();            // Defines the orthogonal plane in which the body can move, the orthogonal directions in which the shape can be controlled (the direction orthogonal on this one and Twist A).
+    public Vector4 TwistB = r.ReadVector4();            // Central directed axis of the cone in which the object can rotate. Orthogonal on Plane B.
+    public Vector4 MotorA = r.ReadVector4();            // Defines the orthogonal directions in which the shape can be controlled (namely in this direction, and in the direction orthogonal on this one and Twist A).
+    public Vector4 MotorB = r.ReadVector4();            // Defines the orthogonal directions in which the shape can be controlled (namely in this direction, and in the direction orthogonal on this one and Twist A).
+    public float ConeMaxAngle = r.ReadSingle();         // Maximum angle the object can rotate around the vector orthogonal on Plane A and Twist A relative to the Twist A vector. Note that Cone Min Angle is not stored, but is simply minus this angle.
+    public float PlaneMinAngle = r.ReadSingle();        // Minimum angle the object can rotate around Plane A, relative to Twist A.
+    public float PlaneMaxAngle = r.ReadSingle();        // Maximum angle the object can rotate around Plane A, relative to Twist A.
+    public float TwistMinAngle = r.ReadSingle();        // Minimum angle the object can rotate around Twist A, relative to Plane A.
+    public float TwistMaxAngle = r.ReadSingle();        // Maximum angle the object can rotate around Twist A, relative to Plane A.
+    public float MaxFriction = r.ReadSingle();          // Maximum friction, typically 0 or 10. In Fallout 3, typically 100.
+    public MotorDescriptor Motor = h.V >= 0x14020007 &&  ? new MotorDescriptor(r, h) : default;
 }
 
 /// <summary>
 /// This constraint allows rotation about a specified axis, limited by specified boundaries.
 /// </summary>
 public class LimitedHingeDescriptor(BinaryReader r, Header h) {
-    public Vector4 PivotA;                              // Pivot point around which the object will rotate.
-    public Vector4 AxleA;                               // Axis of rotation.
-    public Vector4 Perp2AxleInA1;                       // Vector in the rotation plane which defines the zero angle.
-    public Vector4 Perp2AxleInA2;                       // Vector in the rotation plane, orthogonal on the previous one, which defines the positive direction of rotation. This is always the vector product of Axle A and Perp2 Axle In A1.
-    public Vector4 PivotB;                              // Pivot A in second entity coordinate system.
-    public Vector4 AxleB;                               // Axle A in second entity coordinate system.
-    public Vector4 Perp2AxleInB2;                       // Perp2 Axle In A2 in second entity coordinate system.
-    public Vector4 Perp2AxleInB1;                       // Perp2 Axle In A1 in second entity coordinate system.
-    public float MinAngle;                              // Minimum rotation angle.
-    public float MaxAngle;                              // Maximum rotation angle.
-    public float MaxFriction;                           // Maximum friction, typically either 0 or 10. In Fallout 3, typically 100.
-    public MotorDescriptor Motor;
+    public Vector4 PivotA = r.ReadVector4();            // Pivot point around which the object will rotate.
+    public Vector4 AxleA = r.ReadVector4();             // Axis of rotation.
+    public Vector4 Perp2AxleInA1 = r.ReadVector4();     // Vector in the rotation plane which defines the zero angle.
+    public Vector4 Perp2AxleInA2 = r.ReadVector4();     // Vector in the rotation plane, orthogonal on the previous one, which defines the positive direction of rotation. This is always the vector product of Axle A and Perp2 Axle In A1.
+    public Vector4 PivotB = r.ReadVector4();            // Pivot A in second entity coordinate system.
+    public Vector4 AxleB = r.ReadVector4();             // Axle A in second entity coordinate system.
+    public Vector4 Perp2AxleInB2 = r.ReadVector4();     // Perp2 Axle In A2 in second entity coordinate system.
+    public Vector4 Perp2AxleInB1 = r.ReadVector4();     // Perp2 Axle In A1 in second entity coordinate system.
+    public float MinAngle = r.ReadSingle();             // Minimum rotation angle.
+    public float MaxAngle = r.ReadSingle();             // Maximum rotation angle.
+    public float MaxFriction = r.ReadSingle();          // Maximum friction, typically either 0 or 10. In Fallout 3, typically 100.
+    public MotorDescriptor Motor = h.V >= 0x14020007 &&  ? new MotorDescriptor(r, h) : default;
 }
 
 /// <summary>
 /// This constraint allows rotation about a specified axis.
 /// </summary>
 public class HingeDescriptor(BinaryReader r, Header h) {
-    public Vector4 PivotA;                              // Pivot point around which the object will rotate.
-    public Vector4 Perp2AxleInA1;                       // Vector in the rotation plane which defines the zero angle.
-    public Vector4 Perp2AxleInA2;                       // Vector in the rotation plane, orthogonal on the previous one, which defines the positive direction of rotation. This is always the vector product of Axle A and Perp2 Axle In A1.
-    public Vector4 PivotB;                              // Pivot A in second entity coordinate system.
-    public Vector4 AxleB;                               // Axle A in second entity coordinate system.
-    public Vector4 AxleA;                               // Axis of rotation.
-    public Vector4 Perp2AxleInB1;                       // Perp2 Axle In A1 in second entity coordinate system.
-    public Vector4 Perp2AxleInB2;                       // Perp2 Axle In A2 in second entity coordinate system.
+    public Vector4 PivotA = h.V >= 0x14020007 ? r.ReadVector4() : default; // Pivot point around which the object will rotate.
+    public Vector4 Perp2AxleInA1 = h.V >= 0x14020007 ? r.ReadVector4() : default; // Vector in the rotation plane which defines the zero angle.
+    public Vector4 Perp2AxleInA2 = h.V >= 0x14020007 ? r.ReadVector4() : default; // Vector in the rotation plane, orthogonal on the previous one, which defines the positive direction of rotation. This is always the vector product of Axle A and Perp2 Axle In A1.
+    public Vector4 PivotB = h.V >= 0x14020007 ? r.ReadVector4() : default; // Pivot A in second entity coordinate system.
+    public Vector4 AxleB = h.V >= 0x14020007 ? r.ReadVector4() : default; // Axle A in second entity coordinate system.
+    public Vector4 AxleA = h.V >= 0x14020007 ? r.ReadVector4() : default; // Axis of rotation.
+    public Vector4 Perp2AxleInB1 = h.V >= 0x14020007 ? r.ReadVector4() : default; // Perp2 Axle In A1 in second entity coordinate system.
+    public Vector4 Perp2AxleInB2 = h.V >= 0x14020007 ? r.ReadVector4() : default; // Perp2 Axle In A2 in second entity coordinate system.
 }
 
 public class BallAndSocketDescriptor(BinaryReader r) {
-    public Vector4 PivotA;                              // Pivot point in the local space of entity A.
-    public Vector4 PivotB;                              // Pivot point in the local space of entity B.
+    public Vector4 PivotA = r.ReadVector4();            // Pivot point in the local space of entity A.
+    public Vector4 PivotB = r.ReadVector4();            // Pivot point in the local space of entity B.
 }
 
 public class PrismaticDescriptor(BinaryReader r, Header h) {
-    public Vector4 PivotA;                              // Pivot.
-    public Vector4 RotationA;                           // Rotation axis.
-    public Vector4 PlaneA;                              // Plane normal. Describes the plane the object is able to move on.
-    public Vector4 SlidingA;                            // Describes the axis the object is able to travel along. Unit vector.
-    public Vector4 PivotB;                              // Pivot in B coordinates.
-    public Vector4 RotationB;                           // Rotation axis.
-    public Vector4 PlaneB;                              // Plane normal. Describes the plane the object is able to move on in B coordinates.
-    public Vector4 SlidingB;                            // Describes the axis the object is able to travel along in B coordinates. Unit vector.
-    public float MinDistance;                           // Describe the min distance the object is able to travel.
-    public float MaxDistance;                           // Describe the max distance the object is able to travel.
-    public float Friction;                              // Friction.
-    public MotorDescriptor Motor;
+    public Vector4 PivotA = h.V >= 0x14020007 ? r.ReadVector4() : default; // Pivot.
+    public Vector4 RotationA = h.V >= 0x14020007 ? r.ReadVector4() : default; // Rotation axis.
+    public Vector4 PlaneA = h.V >= 0x14020007 ? r.ReadVector4() : default; // Plane normal. Describes the plane the object is able to move on.
+    public Vector4 SlidingA = h.V >= 0x14020007 ? r.ReadVector4() : default; // Describes the axis the object is able to travel along. Unit vector.
+    public Vector4 PivotB = h.V >= 0x14020007 ? r.ReadVector4() : default; // Pivot in B coordinates.
+    public Vector4 RotationB = h.V >= 0x14020007 ? r.ReadVector4() : default; // Rotation axis.
+    public Vector4 PlaneB = h.V >= 0x14020007 ? r.ReadVector4() : default; // Plane normal. Describes the plane the object is able to move on in B coordinates.
+    public Vector4 SlidingB = h.V >= 0x14020007 ? r.ReadVector4() : default; // Describes the axis the object is able to travel along in B coordinates. Unit vector.
+    public float MinDistance = r.ReadSingle();          // Describe the min distance the object is able to travel.
+    public float MaxDistance = r.ReadSingle();          // Describe the max distance the object is able to travel.
+    public float Friction = r.ReadSingle();             // Friction.
+    public MotorDescriptor Motor = h.V >= 0x14020007 &&  ? new MotorDescriptor(r, h) : default;
 }
 
 public class StiffSpringDescriptor(BinaryReader r) {
-    public Vector4 PivotA;
-    public Vector4 PivotB;
-    public float Length;
+    public Vector4 PivotA = r.ReadVector4();
+    public Vector4 PivotB = r.ReadVector4();
+    public float Length = r.ReadSingle();
 }
 
 /// <summary>
 /// Used to store skin weights in NiTriShapeSkinController.
 /// </summary>
 public class OldSkinData(BinaryReader r) {
-    public float VertexWeight;                          // The amount that this bone affects the vertex.
-    public ushort VertexIndex;                          // The index of the vertex that this weight applies to.
-    public Vector3 UnknownVector;                       // Unknown.  Perhaps some sort of offset?
+    public float VertexWeight = r.ReadSingle();         // The amount that this bone affects the vertex.
+    public ushort VertexIndex = r.ReadUInt16();         // The index of the vertex that this weight applies to.
+    public Vector3 UnknownVector = r.ReadVector3();     // Unknown.  Perhaps some sort of offset?
 }
 
 /// <summary>
@@ -1840,67 +1840,67 @@ public enum ImageType : uint {
 /// Box Bounding Volume
 /// </summary>
 public class BoxBV(BinaryReader r) {
-    public Vector3 Center;
-    public Vector3[] Axis;
-    public Vector3 Extent;
+    public Vector3 Center = r.ReadVector3();
+    public Vector3[] Axis = r.ReadVector3();
+    public Vector3 Extent = r.ReadVector3();
 }
 
 /// <summary>
 /// Capsule Bounding Volume
 /// </summary>
 public class CapsuleBV(BinaryReader r) {
-    public Vector3 Center;
-    public Vector3 Origin;
-    public float Extent;
-    public float Radius;
+    public Vector3 Center = r.ReadVector3();
+    public Vector3 Origin = r.ReadVector3();
+    public float Extent = r.ReadSingle();
+    public float Radius = r.ReadSingle();
 }
 
 public class HalfSpaceBV(BinaryReader r) {
-    public NiPlane Plane;
-    public Vector3 Center;
+    public NiPlane Plane = new NiPlane(r);
+    public Vector3 Center = r.ReadVector3();
 }
 
 public class BoundingVolume(BinaryReader r, Header h) {
-    public BoundVolumeType CollisionType;               // Type of collision data.
-    public NiBound Sphere;
-    public BoxBV Box;
-    public CapsuleBV Capsule;
-    public UnionBV Union;
-    public HalfSpaceBV HalfSpace;
+    public BoundVolumeType CollisionType = (BoundVolumeType)r.ReadUInt32(); // Type of collision data.
+    public NiBound Sphere = Collision Type == 0 ? new NiBound(r) : default;
+    public BoxBV Box = Collision Type == 1 ? new BoxBV(r) : default;
+    public CapsuleBV Capsule = Collision Type == 2 ? new CapsuleBV(r) : default;
+    public UnionBV Union = Collision Type == 4 ? new UnionBV(r) : default;
+    public HalfSpaceBV HalfSpace = Collision Type == 5 ? new HalfSpaceBV(r) : default;
 }
 
 public class UnionBV(BinaryReader r) {
-    public BoundingVolume[] BoundingVolumes;
+    public BoundingVolume[] BoundingVolumes = r.ReadL32FArray(r => new BoundingVolume(r, h));
 }
 
 public class MorphWeight(BinaryReader r) {
-    public int? Interpolator;
-    public float Weight;
+    public int? Interpolator = X<NiInterpolator>.Ref(r);
+    public float Weight = r.ReadSingle();
 }
 
 /// <summary>
 /// Transformation data for the bone at this index in bhkPoseArray.
 /// </summary>
 public class BoneTransform(BinaryReader r) {
-    public Vector3 Translation;
-    public Quaternion Rotation;
-    public Vector3 Scale;
+    public Vector3 Translation = r.ReadVector3();
+    public Quaternion Rotation = r.ReadQuaternionWFirst();
+    public Vector3 Scale = r.ReadVector3();
 }
 
 /// <summary>
 /// A list of transforms for each bone in bhkPoseArray.
 /// </summary>
 public class BonePose(BinaryReader r) {
-    public BoneTransform[] Transforms;
+    public BoneTransform[] Transforms = r.ReadL32FArray(r => new BoneTransform(r));
 }
 
 /// <summary>
 /// Array of Vectors for Decal placement in BSDecalPlacementVectorExtraData.
 /// </summary>
 public class DecalVectorArray(BinaryReader r) {
-    public short NumVectors;
-    public Vector3[] Points;                            // Vector XYZ coords
-    public Vector3[] Normals;                           // Vector Normals
+    public short NumVectors = r.ReadInt16();
+    public Vector3[] Points = r.ReadVector3();          // Vector XYZ coords
+    public Vector3[] Normals = r.ReadVector3();         // Vector Normals
 }
 
 /// <summary>
@@ -1916,89 +1916,89 @@ public enum BSPartFlag : ushort {
 /// Body part list for DismemberSkinInstance
 /// </summary>
 public class BodyPartList(BinaryReader r) {
-    public BSPartFlag PartFlag;                         // Flags related to the Body Partition
-    public BSDismemberBodyPartType BodyPart;            // Body Part Index
+    public BSPartFlag PartFlag = (BSPartFlag)r.ReadUInt16(); // Flags related to the Body Partition
+    public BSDismemberBodyPartType BodyPart = (BSDismemberBodyPartType)r.ReadUInt16(); // Body Part Index
 }
 
 /// <summary>
 /// Stores Bone Level of Detail info in a BSBoneLODExtraData
 /// </summary>
 public class BoneLOD(BinaryReader r) {
-    public uint Distance;
-    public string BoneName;
+    public uint Distance = r.ReadUInt32();
+    public string BoneName = Y.String(r);
 }
 
 /// <summary>
 /// Per-chunk material, used in bhkCompressedMeshShapeData
 /// </summary>
 public class bhkCMSDMaterial(BinaryReader r) {
-    public SkyrimHavokMaterial Material;
-    public HavokFilter Filter;
+    public SkyrimHavokMaterial Material = (SkyrimHavokMaterial)r.ReadUInt32();
+    public HavokFilter Filter = new HavokFilter(r, h);
 }
 
 /// <summary>
 /// Triangle indices used in pair with "Big Verts" in a bhkCompressedMeshShapeData.
 /// </summary>
 public class bhkCMSDBigTris(BinaryReader r) {
-    public ushort Triangle1;
-    public ushort Triangle2;
-    public ushort Triangle3;
-    public uint Material;                               // Always 0?
-    public ushort WeldingInfo;
+    public ushort Triangle1 = r.ReadUInt16();
+    public ushort Triangle2 = r.ReadUInt16();
+    public ushort Triangle3 = r.ReadUInt16();
+    public uint Material = r.ReadUInt32();              // Always 0?
+    public ushort WeldingInfo = r.ReadUInt16();
 }
 
 /// <summary>
 /// A set of transformation data: translation and rotation
 /// </summary>
 public class bhkCMSDTransform(BinaryReader r) {
-    public Vector4 Translation;                         // A vector that moves the chunk by the specified amount. W is not used.
-    public Quaternion Rotation;                         // Rotation. Reference point for rotation is bhkRigidBody translation.
+    public Vector4 Translation = r.ReadVector4();       // A vector that moves the chunk by the specified amount. W is not used.
+    public Quaternion Rotation = r.ReadQuaternionWFirst(); // Rotation. Reference point for rotation is bhkRigidBody translation.
 }
 
 /// <summary>
 /// Defines subshape chunks in bhkCompressedMeshShapeData
 /// </summary>
 public class bhkCMSDChunk(BinaryReader r) {
-    public Vector4 Translation;
-    public uint MaterialIndex;                          // Index of material in bhkCompressedMeshShapeData::Chunk Materials
-    public ushort Reference;                            // Always 65535?
-    public ushort TransformIndex;                       // Index of transformation in bhkCompressedMeshShapeData::Chunk Transforms
-    public ushort[] Vertices;
-    public ushort[] Indices;
-    public ushort[] Strips;
-    public ushort[] WeldingInfo;
+    public Vector4 Translation = r.ReadVector4();
+    public uint MaterialIndex = r.ReadUInt32();         // Index of material in bhkCompressedMeshShapeData::Chunk Materials
+    public ushort Reference = r.ReadUInt16();           // Always 65535?
+    public ushort TransformIndex = r.ReadUInt16();      // Index of transformation in bhkCompressedMeshShapeData::Chunk Transforms
+    public ushort[] Vertices = r.ReadL32FArray(r => r.ReadUInt16());
+    public ushort[] Indices = r.ReadL32FArray(r => r.ReadUInt16());
+    public ushort[] Strips = r.ReadL32FArray(r => r.ReadUInt16());
+    public ushort[] WeldingInfo = r.ReadL32FArray(r => r.ReadUInt16());
 }
 
 public class MalleableDescriptor(BinaryReader r, Header h) {
-    public hkConstraintType Type;                       // Type of constraint.
-    public uint NumEntities;                            // Always 2 (Hardcoded). Number of bodies affected by this constraint.
-    public int? EntityA;                                // Usually NONE. The entity affected by this constraint.
-    public int? EntityB;                                // Usually NONE. The entity affected by this constraint.
-    public uint Priority;                               // Usually 1. Higher values indicate higher priority of this constraint?
-    public BallAndSocketDescriptor BallandSocket;
-    public HingeDescriptor Hinge;
-    public LimitedHingeDescriptor LimitedHinge;
-    public PrismaticDescriptor Prismatic;
-    public RagdollDescriptor Ragdoll;
-    public StiffSpringDescriptor StiffSpring;
-    public float Tau;
-    public float Damping;
-    public float Strength;
+    public hkConstraintType Type = (hkConstraintType)r.ReadUInt32(); // Type of constraint.
+    public uint NumEntities = r.ReadUInt32();           // Always 2 (Hardcoded). Number of bodies affected by this constraint.
+    public int? EntityA = X<bhkEntity>.Ptr(r);          // Usually NONE. The entity affected by this constraint.
+    public int? EntityB = X<bhkEntity>.Ptr(r);          // Usually NONE. The entity affected by this constraint.
+    public uint Priority = r.ReadUInt32();              // Usually 1. Higher values indicate higher priority of this constraint?
+    public BallAndSocketDescriptor BallandSocket = Type == 0 ? new BallAndSocketDescriptor(r) : default;
+    public HingeDescriptor Hinge = Type == 1 ? new HingeDescriptor(r, h) : default;
+    public LimitedHingeDescriptor LimitedHinge = Type == 2 ? new LimitedHingeDescriptor(r, h) : default;
+    public PrismaticDescriptor Prismatic = Type == 6 ? new PrismaticDescriptor(r, h) : default;
+    public RagdollDescriptor Ragdoll = Type == 7 ? new RagdollDescriptor(r, h) : default;
+    public StiffSpringDescriptor StiffSpring = Type == 8 ? new StiffSpringDescriptor(r) : default;
+    public float Tau = h.V <= 0x14000005 ? r.ReadSingle() : default;
+    public float Damping = h.V <= 0x14000005 ? r.ReadSingle() : default;
+    public float Strength = h.V >= 0x14020007 ? r.ReadSingle() : default;
 }
 
 public class ConstraintData(BinaryReader r, Header h) {
-    public hkConstraintType Type;                       // Type of constraint.
-    public uint NumEntities2;                           // Always 2 (Hardcoded). Number of bodies affected by this constraint.
-    public int? EntityA;                                // Usually NONE. The entity affected by this constraint.
-    public int? EntityB;                                // Usually NONE. The entity affected by this constraint.
-    public uint Priority;                               // Usually 1. Higher values indicate higher priority of this constraint?
-    public BallAndSocketDescriptor BallandSocket;
-    public HingeDescriptor Hinge;
-    public LimitedHingeDescriptor LimitedHinge;
-    public PrismaticDescriptor Prismatic;
-    public RagdollDescriptor Ragdoll;
-    public StiffSpringDescriptor StiffSpring;
-    public MalleableDescriptor Malleable;
+    public hkConstraintType Type = (hkConstraintType)r.ReadUInt32(); // Type of constraint.
+    public uint NumEntities2 = r.ReadUInt32();          // Always 2 (Hardcoded). Number of bodies affected by this constraint.
+    public int? EntityA = X<bhkEntity>.Ptr(r);          // Usually NONE. The entity affected by this constraint.
+    public int? EntityB = X<bhkEntity>.Ptr(r);          // Usually NONE. The entity affected by this constraint.
+    public uint Priority = r.ReadUInt32();              // Usually 1. Higher values indicate higher priority of this constraint?
+    public BallAndSocketDescriptor BallandSocket = Type == 0 ? new BallAndSocketDescriptor(r) : default;
+    public HingeDescriptor Hinge = Type == 1 ? new HingeDescriptor(r, h) : default;
+    public LimitedHingeDescriptor LimitedHinge = Type == 2 ? new LimitedHingeDescriptor(r, h) : default;
+    public PrismaticDescriptor Prismatic = Type == 6 ? new PrismaticDescriptor(r, h) : default;
+    public RagdollDescriptor Ragdoll = Type == 7 ? new RagdollDescriptor(r, h) : default;
+    public StiffSpringDescriptor StiffSpring = Type == 8 ? new StiffSpringDescriptor(r) : default;
+    public MalleableDescriptor Malleable = Type == 13 ? new MalleableDescriptor(r, h) : default;
 }
 
 #endregion
@@ -2093,9 +2093,9 @@ public enum BroadPhaseType : byte {
 }
 
 public class hkWorldObjCinfoProperty(BinaryReader r) {
-    public uint Data;
-    public uint Size;
-    public uint CapacityandFlags;
+    public uint Data = r.ReadUInt32();
+    public uint Size = r.ReadUInt32();
+    public uint CapacityandFlags = r.ReadUInt32();
 }
 
 /// <summary>
@@ -2264,8 +2264,8 @@ public class bhkBallAndSocketConstraint : bhkConstraint {
 /// Two Vector4 for pivot in A and B.
 /// </summary>
 public class ConstraintInfo(BinaryReader r) {
-    public Vector4 PivotInA;
-    public Vector4 PivotInB;
+    public Vector4 PivotInA = r.ReadVector4();
+    public Vector4 PivotInB = r.ReadVector4();
 }
 
 /// <summary>
@@ -2548,11 +2548,11 @@ public enum InterpBlendFlags : byte {
 /// Interpolator item for array in NiBlendInterpolator.
 /// </summary>
 public class InterpBlendItem(BinaryReader r, Header h) {
-    public int? Interpolator;                           // Reference to an interpolator.
-    public float Weight;
-    public float NormalizedWeight;
-    public byte Priority;
-    public float EaseSpinner;
+    public int? Interpolator = X<NiInterpolator>.Ref(r); // Reference to an interpolator.
+    public float Weight = r.ReadSingle();
+    public float NormalizedWeight = r.ReadSingle();
+    public byte Priority = h.V >= 0x0A01006E ? r.ReadByte() : default;
+    public float EaseSpinner = r.ReadSingle();
 }
 
 /// <summary>
@@ -3070,16 +3070,16 @@ public class NiBSBoneLODController : NiBoneLODController {
 }
 
 public class MaterialData(BinaryReader r, Header h) {
-    public bool HasShader;                              // Shader.
-    public string ShaderName;                           // The shader name.
-    public int ShaderExtraData;                         // Extra data associated with the shader. A value of -1 means the shader is the default implementation.
-    public uint NumMaterials;
-    public string[] MaterialName;                       // The name of the material.
-    public int[] MaterialExtraData;                     // Extra data associated with the material. A value of -1 means the material is the default implementation.
-    public int ActiveMaterial;                          // The index of the currently active material.
-    public byte UnknownByte;                            // Cyanide extension (only in version 10.2.0.0?).
-    public int UnknownInteger2;                         // Unknown.
-    public bool MaterialNeedsUpdate;                    // Whether the materials for this object always needs to be updated before rendering with them.
+    public bool HasShader = h.V >= 0x0A000100 && h.V <= 0x14010003 ? r.ReadBool32() : default; // Shader.
+    public string ShaderName = Has Shader && h.V >= 0x0A000100 && h.V <= 0x14010003 ? Y.String(r) : default; // The shader name.
+    public int ShaderExtraData = Has Shader && h.V >= 0x0A000100 && h.V <= 0x14010003 ? r.ReadInt32() : default; // Extra data associated with the shader. A value of -1 means the shader is the default implementation.
+    public uint NumMaterials = h.V >= 0x14020005 ? r.ReadUInt32() : default;
+    public string[] MaterialName = h.V >= 0x14020005 ? Y.String(r) : default; // The name of the material.
+    public int[] MaterialExtraData = h.V >= 0x14020005 ? r.ReadInt32() : default; // Extra data associated with the material. A value of -1 means the material is the default implementation.
+    public int ActiveMaterial = h.V >= 0x14020005 ? r.ReadInt32() : default; // The index of the currently active material.
+    public byte UnknownByte = h.V >= 0x0A020000 && h.V <= 0x0A020000 && (h.UserVersion == 1) ? r.ReadByte() : default; // Cyanide extension (only in version 10.2.0.0?).
+    public int UnknownInteger2 = h.V >= 0x0A040001 && h.V <= 0x0A040001 ? r.ReadInt32() : default; // Unknown.
+    public bool MaterialNeedsUpdate = h.V >= 0x14020007 ? r.ReadBool32() : default; // Whether the materials for this object always needs to be updated before rendering with them.
 }
 
 /// <summary>
@@ -3330,12 +3330,12 @@ public class NiAutoNormalParticlesData : NiParticlesData {
 /// Particle Description.
 /// </summary>
 public class ParticleDesc(BinaryReader r, Header h) {
-    public Vector3 Translation;                         // Unknown.
-    public float[] UnknownFloats1;                      // Unknown.
-    public float UnknownFloat1;                         // Unknown.
-    public float UnknownFloat2;                         // Unknown.
-    public float UnknownFloat3;                         // Unknown.
-    public int UnknownInt1;                             // Unknown.
+    public Vector3 Translation = r.ReadVector3();       // Unknown.
+    public float[] UnknownFloats1 = h.V <= 0x0A040001 ? r.ReadSingle() : default; // Unknown.
+    public float UnknownFloat1 = r.ReadSingle();        // Unknown.
+    public float UnknownFloat2 = r.ReadSingle();        // Unknown.
+    public float UnknownFloat3 = r.ReadSingle();        // Unknown.
+    public int UnknownInt1 = r.ReadInt32();             // Unknown.
 }
 
 /// <summary>
@@ -4049,10 +4049,10 @@ public class NiPathController : NiTimeController {
 }
 
 public class PixelFormatComponent(BinaryReader r) {
-    public PixelComponent Type;                         // Component Type
-    public PixelRepresentation Convention;              // Data Storage Convention
-    public byte BitsPerChannel;                         // Bits per component
-    public bool IsSigned;
+    public PixelComponent Type = (PixelComponent)r.ReadUInt32(); // Component Type
+    public PixelRepresentation Convention = (PixelRepresentation)r.ReadUInt32(); // Data Storage Convention
+    public byte BitsPerChannel = r.ReadByte();          // Bits per component
+    public bool IsSigned = r.ReadBool32();
 }
 
 public abstract class NiPixelFormat : NiObject {
@@ -4666,9 +4666,9 @@ public abstract class NiTexture : NiObjectNET {
 /// NiTexture::FormatPrefs. These preferences are a request to the renderer to use a format the most closely matches the settings and may be ignored.
 /// </summary>
 public class FormatPrefs(BinaryReader r) {
-    public PixelLayout PixelLayout;                     // Requests the way the image will be stored.
-    public MipMapFormat UseMipmaps;                     // Requests if mipmaps are used or not.
-    public AlphaFormat AlphaFormat;                     // Requests no alpha, 1-bit alpha, or
+    public PixelLayout PixelLayout = (PixelLayout)r.ReadUInt32(); // Requests the way the image will be stored.
+    public MipMapFormat UseMipmaps = (MipMapFormat)r.ReadUInt32(); // Requests if mipmaps are used or not.
+    public AlphaFormat AlphaFormat = (AlphaFormat)r.ReadUInt32(); // Requests no alpha, 1-bit alpha, or
 }
 
 /// <summary>
@@ -5093,13 +5093,13 @@ public class NiPhysXProp : NiObjectNET {
 }
 
 public class PhysXMaterialRef(BinaryReader r) {
-    public ushort Key;
-    public int? MaterialDesc;
+    public ushort Key = r.ReadUInt16();
+    public int? MaterialDesc = X<NiPhysXMaterialDesc>.Ref(r);
 }
 
 public class PhysXStateName(BinaryReader r) {
-    public string Name;
-    public uint Index;
+    public string Name = Y.String(r);
+    public uint Index = r.ReadUInt32();
 }
 
 /// <summary>
@@ -5136,9 +5136,9 @@ public class NiPhysXActorDesc : NiObject {
 }
 
 public class PhysXBodyStoredVels(BinaryReader r, Header h) {
-    public Vector3 LinearVelocity;
-    public Vector3 AngularVelocity;
-    public bool Sleep;
+    public Vector3 LinearVelocity = r.ReadVector3();
+    public Vector3 AngularVelocity = r.ReadVector3();
+    public bool Sleep = h.V >= 0x1E020003 ? r.ReadBool32() : default;
 }
 
 /// <summary>
@@ -5194,30 +5194,30 @@ public enum NxJointProjectionMode : uint {
 }
 
 public class NiPhysXJointActor(BinaryReader r) {
-    public int? Actor;
-    public Vector3 LocalNormal;
-    public Vector3 LocalAxis;
-    public Vector3 LocalAnchor;
+    public int? Actor = X<NiPhysXActorDesc>.Ref(r);
+    public Vector3 LocalNormal = r.ReadVector3();
+    public Vector3 LocalAxis = r.ReadVector3();
+    public Vector3 LocalAnchor = r.ReadVector3();
 }
 
 public class NxJointLimitSoftDesc(BinaryReader r) {
-    public float Value;
-    public float Restitution;
-    public float Spring;
-    public float Damping;
+    public float Value = r.ReadSingle();
+    public float Restitution = r.ReadSingle();
+    public float Spring = r.ReadSingle();
+    public float Damping = r.ReadSingle();
 }
 
 public class NxJointDriveDesc(BinaryReader r) {
-    public NxD6JointDriveType DriveType;
-    public float Restitution;
-    public float Spring;
-    public float Damping;
+    public NxD6JointDriveType DriveType = (NxD6JointDriveType)r.ReadUInt32();
+    public float Restitution = r.ReadSingle();
+    public float Spring = r.ReadSingle();
+    public float Damping = r.ReadSingle();
 }
 
 public class NiPhysXJointLimit(BinaryReader r, Header h) {
-    public Vector3 LimitPlaneNormal;
-    public float LimitPlaneD;
-    public float LimitPlaneR;
+    public Vector3 LimitPlaneNormal = r.ReadVector3();
+    public float LimitPlaneD = r.ReadSingle();
+    public float LimitPlaneR = h.V >= 0x14040000 ? r.ReadSingle() : default;
 }
 
 /// <summary>
@@ -5282,14 +5282,14 @@ public enum NxShapeType : uint {
 }
 
 public class NxPlane(BinaryReader r) {
-    public float Val1;
-    public Vector3 Point1;
+    public float Val1 = r.ReadSingle();
+    public Vector3 Point1 = r.ReadVector3();
 }
 
 public class NxCapsule(BinaryReader r) {
-    public float Val1;
-    public float Val2;
-    public uint CapsuleFlags;
+    public float Val1 = r.ReadSingle();
+    public float Val2 = r.ReadSingle();
+    public uint CapsuleFlags = r.ReadUInt32();
 }
 
 /// <summary>
@@ -5339,9 +5339,9 @@ public enum NxMaterialFlag : uint {
 }
 
 public class NxSpringDesc(BinaryReader r) {
-    public float Spring;
-    public float Damper;
-    public float TargetValue;
+    public float Spring = r.ReadSingle();
+    public float Damper = r.ReadSingle();
+    public float TargetValue = r.ReadSingle();
 }
 
 public enum NxCombineMode : uint {
@@ -5352,17 +5352,17 @@ public enum NxCombineMode : uint {
 }
 
 public class NxMaterialDesc(BinaryReader r, Header h) {
-    public float DynamicFriction;
-    public float StaticFriction;
-    public float Restitution;
-    public float DynamicFrictionV;
-    public float StaticFrictionV;
-    public Vector3 DirectionofAnisotropy;
-    public NxMaterialFlag Flags;
-    public NxCombineMode FrictionCombineMode;
-    public NxCombineMode RestitutionCombineMode;
-    public bool HasSpring;
-    public NxSpringDesc Spring;
+    public float DynamicFriction = r.ReadSingle();
+    public float StaticFriction = r.ReadSingle();
+    public float Restitution = r.ReadSingle();
+    public float DynamicFrictionV = r.ReadSingle();
+    public float StaticFrictionV = r.ReadSingle();
+    public Vector3 DirectionofAnisotropy = r.ReadVector3();
+    public NxMaterialFlag Flags = (NxMaterialFlag)r.ReadUInt32();
+    public NxCombineMode FrictionCombineMode = (NxCombineMode)r.ReadUInt32();
+    public NxCombineMode RestitutionCombineMode = (NxCombineMode)r.ReadUInt32();
+    public bool HasSpring = h.V <= 0x14020300 ? r.ReadBool32() : default;
+    public NxSpringDesc Spring = Has Spring && h.V <= 0x14020300 ? new NxSpringDesc(r) : default;
 }
 
 /// <summary>
@@ -5438,10 +5438,10 @@ public class NiLinesData : NiGeometryData {
 /// Two dimensional screen elements.
 /// </summary>
 public class Polygon(BinaryReader r) {
-    public ushort NumVertices;
-    public ushort VertexOffset;                         // Offset in vertex array.
-    public ushort NumTriangles;
-    public ushort TriangleOffset;                       // Offset in indices array.
+    public ushort NumVertices = r.ReadUInt16();
+    public ushort VertexOffset = r.ReadUInt16();        // Offset in vertex array.
+    public ushort NumTriangles = r.ReadUInt16();
+    public ushort TriangleOffset = r.ReadUInt16();      // Offset in indices array.
 }
 
 /// <summary>
@@ -6206,9 +6206,9 @@ public class bhkConvexListShape : bhkShape {
 /// Bethesda-specific compound.
 /// </summary>
 public class BSTreadTransform(BinaryReader r) {
-    public string Name;
-    public NiQuatTransform Transform1;
-    public NiQuatTransform Transform2;
+    public string Name = Y.String(r);
+    public NiQuatTransform Transform1 = new NiQuatTransform(r, h);
+    public NiQuatTransform Transform2 = new NiQuatTransform(r, h);
 }
 
 /// <summary>
@@ -6312,23 +6312,23 @@ public class BSMultiBoundSphere : BSMultiBoundData {
 /// This is only defined because of recursion issues.
 /// </summary>
 public class BSGeometrySubSegment(BinaryReader r) {
-    public uint StartIndex;
-    public uint NumPrimitives;
-    public uint ParentArrayIndex;
-    public uint Unused;
+    public uint StartIndex = r.ReadUInt32();
+    public uint NumPrimitives = r.ReadUInt32();
+    public uint ParentArrayIndex = r.ReadUInt32();
+    public uint Unused = r.ReadUInt32();
 }
 
 /// <summary>
 /// Bethesda-specific. Describes groups of triangles either segmented in a grid (for LOD) or by body part for skinned FO4 meshes.
 /// </summary>
 public class BSGeometrySegmentData(BinaryReader r, Header h) {
-    public byte Flags;
-    public uint Index;                                  // Index = previous Index + previous Num Tris in Segment * 3
-    public uint NumTrisinSegment;                       // The number of triangles belonging to this segment
-    public uint StartIndex;
-    public uint NumPrimitives;
-    public uint ParentArrayIndex;
-    public BSGeometrySubSegment[] SubSegment;
+    public byte Flags = r.ReadByte();
+    public uint Index = r.ReadUInt32();                 // Index = previous Index + previous Num Tris in Segment * 3
+    public uint NumTrisinSegment = r.ReadUInt32();      // The number of triangles belonging to this segment
+    public uint StartIndex = (h.UserVersion2 == 130) ? r.ReadUInt32() : default;
+    public uint NumPrimitives = (h.UserVersion2 == 130) ? r.ReadUInt32() : default;
+    public uint ParentArrayIndex = (h.UserVersion2 == 130) ? r.ReadUInt32() : default;
+    public BSGeometrySubSegment[] SubSegment = (h.UserVersion2 == 130) ? r.ReadL32FArray(r => new BSGeometrySubSegment(r)) : default;
 }
 
 /// <summary>
@@ -6347,32 +6347,32 @@ public class BSMultiBoundAABB : BSMultiBoundData {
 }
 
 public class AdditionalDataInfo(BinaryReader r) {
-    public int DataType;                                // Type of data in this channel
-    public int NumChannelBytesPerElement;               // Number of bytes per element of this channel
-    public int NumChannelBytes;                         // Total number of bytes of this channel (num vertices times num bytes per element)
-    public int NumTotalBytesPerElement;                 // Number of bytes per element in all channels together. Sum of num channel bytes per element over all block infos.
-    public int BlockIndex;                              // Unsure. The block in which this channel is stored? Usually there is only one block, and so this is zero.
-    public int ChannelOffset;                           // Offset (in bytes) of this channel. Sum of all num channel bytes per element of all preceeding block infos.
-    public byte UnknownByte1;                           // Unknown, usually equal to 2.
+    public int DataType = r.ReadInt32();                // Type of data in this channel
+    public int NumChannelBytesPerElement = r.ReadInt32(); // Number of bytes per element of this channel
+    public int NumChannelBytes = r.ReadInt32();         // Total number of bytes of this channel (num vertices times num bytes per element)
+    public int NumTotalBytesPerElement = r.ReadInt32(); // Number of bytes per element in all channels together. Sum of num channel bytes per element over all block infos.
+    public int BlockIndex = r.ReadInt32();              // Unsure. The block in which this channel is stored? Usually there is only one block, and so this is zero.
+    public int ChannelOffset = r.ReadInt32();           // Offset (in bytes) of this channel. Sum of all num channel bytes per element of all preceeding block infos.
+    public byte UnknownByte1 = r.ReadByte();            // Unknown, usually equal to 2.
 }
 
 public class AdditionalDataBlock(BinaryReader r, Header h) {
-    public bool HasData;                                // Has data
-    public int BlockSize;                               // Size of Block
-    public int[] BlockOffsets;
-    public int NumData;
-    public int[] DataSizes;
-    public byte[][] Data;
+    public bool HasData = r.ReadBool32();               // Has data
+    public int BlockSize = Has Data ? r.ReadInt32() : default; // Size of Block
+    public int[] BlockOffsets = Has Data ? r.ReadL32FArray(r => r.ReadInt32()) : default;
+    public int NumData = Has Data ? r.ReadInt32() : default;
+    public int[] DataSizes = Has Data ? r.ReadInt32() : default;
+    public byte[][] Data = Has Data ? r.ReadByte() : default;
 }
 
 public class BSPackedAdditionalDataBlock(BinaryReader r, Header h) {
-    public bool HasData;                                // Has data
-    public int NumTotalBytes;                           // Total number of bytes (over all channels and all elements, equals num total bytes per element times num vertices).
-    public int[] BlockOffsets;                          // Block offsets in the data? Usually equal to zero.
-    public int[] AtomSizes;                             // The sum of all of these equal num total bytes per element, so this probably describes how each data element breaks down into smaller chunks (i.e. atoms).
-    public byte[] Data;
-    public int UnknownInt1;
-    public int NumTotalBytesPerElement;                 // Unsure, but this seems to correspond again to the number of total bytes per element.
+    public bool HasData = r.ReadBool32();               // Has data
+    public int NumTotalBytes = Has Data ? r.ReadInt32() : default; // Total number of bytes (over all channels and all elements, equals num total bytes per element times num vertices).
+    public int[] BlockOffsets = Has Data ? r.ReadL32FArray(r => r.ReadInt32()) : default; // Block offsets in the data? Usually equal to zero.
+    public int[] AtomSizes = Has Data ? r.ReadL32FArray(r => r.ReadInt32()) : default; // The sum of all of these equal num total bytes per element, so this probably describes how each data element breaks down into smaller chunks (i.e. atoms).
+    public byte[] Data = Has Data ? r.ReadByte() : default;
+    public int UnknownInt1 = r.ReadInt32();
+    public int NumTotalBytesPerElement = r.ReadInt32(); // Unsure, but this seems to correspond again to the number of total bytes per element.
 }
 
 public class NiAdditionalGeometryData : AbstractAdditionalGeometryData {
@@ -6473,8 +6473,8 @@ public class bhkRagdollTemplateData : NiObject {
 /// A range of indices, which make up a region (such as a submesh).
 /// </summary>
 public class Region(BinaryReader r) {
-    public uint StartIndex;
-    public uint NumIndices;
+    public uint StartIndex = r.ReadUInt32();
+    public uint NumIndices = r.ReadUInt32();
 }
 
 /// <summary>
@@ -6591,21 +6591,21 @@ public class NiDataStream : NiObject {
 }
 
 public class SemanticData(BinaryReader r) {
-    public string Name;                                 // Type of data (POSITION, POSITION_BP, INDEX, NORMAL, NORMAL_BP,
+    public string Name = Y.String(r);                   // Type of data (POSITION, POSITION_BP, INDEX, NORMAL, NORMAL_BP,
                                                         //     TEXCOORD, BLENDINDICES, BLENDWEIGHT, BONE_PALETTE, COLOR, DISPLAYLIST,
                                                         //     MORPH_POSITION, BINORMAL_BP, TANGENT_BP).
-    public uint Index;                                  // An extra index of the data. For example, if there are 3 uv maps,
+    public uint Index = r.ReadUInt32();                 // An extra index of the data. For example, if there are 3 uv maps,
                                                         //     then the corresponding TEXCOORD data components would have indices
                                                         //     0, 1, and 2, respectively.
 }
 
 public class DataStreamRef(BinaryReader r) {
-    public int? Stream;                                 // Reference to a data stream object which holds the data used by
+    public int? Stream = X<NiDataStream>.Ref(r);        // Reference to a data stream object which holds the data used by
                                                         //     this reference.
-    public bool IsPerInstance;                          // Sets whether this stream data is per-instance data for use in
+    public bool IsPerInstance = r.ReadBool32();         // Sets whether this stream data is per-instance data for use in
                                                         //     hardware instancing.
-    public ushort[] SubmeshToRegionMap;                 // A lookup table that maps submeshes to regions.
-    public SemanticData[] ComponentSemantics;           // Describes the semantic of each component.
+    public ushort[] SubmeshToRegionMap = r.ReadL16FArray(r => r.ReadUInt16()); // A lookup table that maps submeshes to regions.
+    public SemanticData[] ComponentSemantics = r.ReadL32FArray(r => new SemanticData(r)); // Describes the semantic of each component.
 }
 
 /// <summary>
@@ -6650,18 +6650,18 @@ public abstract class NiMeshModifier : NiObject {
 }
 
 public class ExtraMeshDataEpicMickey(BinaryReader r) {
-    public int UnknownInt1;
-    public int UnknownInt2;
-    public int UnknownInt3;
-    public float UnknownInt4;
-    public float UnknownInt5;
-    public float UnknownInt6;
+    public int UnknownInt1 = r.ReadInt32();
+    public int UnknownInt2 = r.ReadInt32();
+    public int UnknownInt3 = r.ReadInt32();
+    public float UnknownInt4 = r.ReadSingle();
+    public float UnknownInt5 = r.ReadSingle();
+    public float UnknownInt6 = r.ReadSingle();
 }
 
 public class ExtraMeshDataEpicMickey2(BinaryReader r) {
-    public int Start;
-    public int End;
-    public short[] UnknownShorts;
+    public int Start = r.ReadInt32();
+    public int End = r.ReadInt32();
+    public short[] UnknownShorts = r.ReadInt16();
 }
 
 public class NiMesh : NiRenderObject {
@@ -6704,8 +6704,8 @@ public class NiMorphWeightsController : NiInterpController {
 }
 
 public class ElementReference(BinaryReader r) {
-    public SemanticData Semantic;                       // The element semantic.
-    public uint NormalizeFlag;                          // Whether or not to normalize the data.
+    public SemanticData Semantic = new SemanticData(r); // The element semantic.
+    public uint NormalizeFlag = r.ReadUInt32();         // Whether or not to normalize the data.
 }
 
 /// <summary>
@@ -6755,8 +6755,8 @@ public class NiInstancingMeshModifier : NiMeshModifier {
 }
 
 public class LODInfo(BinaryReader r) {
-    public uint NumBones;
-    public uint[] SkinIndices;
+    public uint NumBones = r.ReadUInt32();
+    public uint[] SkinIndices = r.ReadL32FArray(r => r.ReadUInt32());
 }
 
 /// <summary>
@@ -6770,8 +6770,8 @@ public class NiSkinningLODController : NiTimeController {
 }
 
 public class PSSpawnRateKey(BinaryReader r) {
-    public float Value;
-    public float Time;
+    public float Value = r.ReadSingle();
+    public float Time = r.ReadSingle();
 }
 
 /// <summary>
@@ -7551,18 +7551,18 @@ public class BSMeshLODTriShape : BSTriShape {
 }
 
 public class BSGeometryPerSegmentSharedData(BinaryReader r) {
-    public uint UserIndex;                              // If Bone ID is 0xffffffff, this value refers to the Segment at the listed index. Otherwise this is the "Biped Object", which is like the body part types in Skyrim and earlier.
-    public uint BoneID;                                 // A hash of the bone name string.
-    public float[] CutOffsets;
+    public uint UserIndex = r.ReadUInt32();             // If Bone ID is 0xffffffff, this value refers to the Segment at the listed index. Otherwise this is the "Biped Object", which is like the body part types in Skyrim and earlier.
+    public uint BoneID = r.ReadUInt32();                // A hash of the bone name string.
+    public float[] CutOffsets = r.ReadL32FArray(r => r.ReadSingle());
 }
 
 public class BSGeometrySegmentSharedData(BinaryReader r) {
-    public uint NumSegments;
-    public uint TotalSegments;
-    public uint[] SegmentStarts;
-    public BSGeometryPerSegmentSharedData[] PerSegmentData;
-    public ushort SSFLength;
-    public byte[] SSFFile;
+    public uint NumSegments = r.ReadUInt32();
+    public uint TotalSegments = r.ReadUInt32();
+    public uint[] SegmentStarts = r.ReadUInt32();
+    public BSGeometryPerSegmentSharedData[] PerSegmentData = new BSGeometryPerSegmentSharedData(r);
+    public ushort SSFLength = r.ReadUInt16();
+    public byte[] SSFFile = r.ReadByte();
 }
 
 /// <summary>
@@ -7623,10 +7623,10 @@ public class BSClothExtraData : BSExtraData {
 /// Fallout 4 Bone Transform
 /// </summary>
 public class BSSkinBoneTrans(BinaryReader r) {
-    public NiBound BoundingSphere;
-    public Matrix3x3 Rotation;
-    public Vector3 Translation;
-    public float Scale;
+    public NiBound BoundingSphere = new NiBound(r);
+    public Matrix3x3 Rotation = r.ReadMatrix3x3();
+    public Vector3 Translation = r.ReadVector3();
+    public float Scale = r.ReadSingle();
 }
 
 /// <summary>
@@ -7654,11 +7654,11 @@ public class BSPositionData : NiExtraData {
 }
 
 public class BSConnectPoint(BinaryReader r) {
-    public string Parent;
-    public string Name;
-    public Quaternion Rotation;
-    public Vector3 Translation;
-    public float Scale;
+    public string Parent = r.ReadL32AString();
+    public string Name = r.ReadL32AString();
+    public Quaternion Rotation = r.ReadQuaternion();
+    public Vector3 Translation = r.ReadVector3();
+    public float Scale = r.ReadSingle();
 }
 
 /// <summary>
@@ -7684,32 +7684,32 @@ public class BSEyeCenterExtraData : NiExtraData {
 }
 
 public class BSPackedGeomDataCombined(BinaryReader r) {
-    public float GrayscaletoPaletteScale;
-    public NiTransform Transform;
-    public NiBound BoundingSphere;
+    public float GrayscaletoPaletteScale = r.ReadSingle();
+    public NiTransform Transform = new NiTransform(r);
+    public NiBound BoundingSphere = new NiBound(r);
 }
 
 public class BSPackedGeomData(BinaryReader r, Header h) {
-    public uint NumVerts;
-    public uint LODLevels;
-    public uint TriCountLOD0;
-    public uint TriOffsetLOD0;
-    public uint TriCountLOD1;
-    public uint TriOffsetLOD1;
-    public uint TriCountLOD2;
-    public uint TriOffsetLOD2;
-    public BSPackedGeomDataCombined[] Combined;
-    public BSVertexDesc VertexDesc;
-    public BSVertexData[] VertexData;
-    public Triangle[] Triangles;
+    public uint NumVerts = r.ReadUInt32();
+    public uint LODLevels = r.ReadUInt32();
+    public uint TriCountLOD0 = r.ReadUInt32();
+    public uint TriOffsetLOD0 = r.ReadUInt32();
+    public uint TriCountLOD1 = r.ReadUInt32();
+    public uint TriOffsetLOD1 = r.ReadUInt32();
+    public uint TriCountLOD2 = r.ReadUInt32();
+    public uint TriOffsetLOD2 = r.ReadUInt32();
+    public BSPackedGeomDataCombined[] Combined = r.ReadL32FArray(r => new BSPackedGeomDataCombined(r));
+    public BSVertexDesc VertexDesc = new BSVertexDesc(r);
+    public BSVertexData[] VertexData = !BSPackedCombinedSharedGeomDataExtra ? new BSVertexData(r, h) : default;
+    public Triangle[] Triangles = !BSPackedCombinedSharedGeomDataExtra ? new Triangle(r) : default;
 }
 
 /// <summary>
 /// This appears to be a 64-bit hash but nif.xml does not have a 64-bit type.
 /// </summary>
 public class BSPackedGeomObject(BinaryReader r) {
-    public uint ShapeID1;
-    public uint ShapeID2;
+    public uint ShapeID1 = r.ReadUInt32();
+    public uint ShapeID2 = r.ReadUInt32();
 }
 
 /// <summary>

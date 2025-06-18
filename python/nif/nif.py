@@ -1035,17 +1035,17 @@ class hkConstraintType(Enum):
 
 # The NIF file footer.
 class Footer:
-    roots: list[int]                                    # List of root NIF objects. If there is a camera, for 1st person view, then this NIF object is referred to as well in this list, even if it is not a root object (usually we want the camera to be attached to the Bip Head node).
+    roots: list[int] = r.readL32FArray(X[NiObject].ref) if h.v >= 0x0303000D else None # List of root NIF objects. If there is a camera, for 1st person view, then this NIF object is referred to as well in this list, even if it is not a root object (usually we want the camera to be attached to the Bip Head node).
 
 # The distance range where a specific level of detail applies.
 class LODRange:
-    nearExtent: float                                   # Begining of range.
-    farExtent: float                                    # End of Range.
-    unknownInts: list[int]                              # Unknown (0,0,0).
+    nearExtent: float = r.readSingle()                  # Begining of range.
+    farExtent: float = r.readSingle()                   # End of Range.
+    unknownInts: list[int] = r.readUInt32() if h.v <= 50397184 else None # Unknown (0,0,0).
 
 # Group of vertex indices of vertices that match.
 class MatchGroup:
-    vertexIndices: list[int]                            # The vertex indices.
+    vertexIndices: list[int] = r.readL16FArray(lambda r: r.readUInt16()) # The vertex indices.
 
 # ByteVector3 -> Vector3(r.readByte(), r.readByte(), r.readByte())
 # HalfVector3 -> r.readHalf()
@@ -1063,119 +1063,119 @@ class MatchGroup:
 # ShortString -> r.readL8AString()
 # NiBoneLODController::SkinInfo. Reference to shape and skin instance.
 class SkinInfo:
-    shape: int
-    skinInstance: int
+    shape: int = X[NiTriBasedGeom].ptr(r)
+    skinInstance: int = X[NiSkinInstance].ref(r)
 
 # A set of NiBoneLODController::SkinInfo.
 class SkinInfoSet:
-    skinInfo: list[SkinInfo]
+    skinInfo: list[SkinInfo] = r.readL32FArray(lambda r: SkinInfo(r))
 
 # NiSkinData::BoneVertData. A vertex and its weight.
 class BoneVertData:
-    index: int                                          # The vertex index, in the mesh.
-    weight: float                                       # The vertex weight - between 0.0 and 1.0
+    index: int = r.readUInt16()                         # The vertex index, in the mesh.
+    weight: float = r.readSingle()                      # The vertex weight - between 0.0 and 1.0
 
 # NiSkinData::BoneVertData. A vertex and its weight.
 class BoneVertDataHalf:
-    index: int                                          # The vertex index, in the mesh.
-    weight: float                                       # The vertex weight - between 0.0 and 1.0
+    index: int = r.readUInt16()                         # The vertex index, in the mesh.
+    weight: float = r.readHalf()                        # The vertex weight - between 0.0 and 1.0
 
 # Used in NiDefaultAVObjectPalette.
 class AVObject:
-    name: str                                           # Object name.
-    avObject: int                                       # Object reference.
+    name: str = r.readL32AString()                      # Object name.
+    avObject: int = X[NiAVObject].ptr(r)                # Object reference.
 
 # In a .kf file, this links to a controllable object, via its name (or for version 10.2.0.0 and up, a link and offset to a NiStringPalette that contains the name), and a sequence of interpolators that apply to this controllable object, via links.
 # For Controller ID, NiInterpController::GetCtlrID() virtual function returns a string formatted specifically for the derived type.
 # For Interpolator ID, NiInterpController::GetInterpolatorID() virtual function returns a string formatted specifically for the derived type.
 # The string formats are documented on the relevant niobject blocks.
 class ControlledBlock:
-    targetName: str                                     # Name of a controllable object in another NIF file.
-    interpolator: int
-    controller: int
-    blendInterpolator: int
-    blendIndex: int
-    priority: int                                       # Idle animations tend to have low values for this, and high values tend to correspond with the important parts of the animations.
-    nodeName: str                                       # The name of the animated NiAVObject.
-    propertyType: str                                   # The RTTI type of the NiProperty the controller is attached to, if applicable.
-    controllerType: str                                 # The RTTI type of the NiTimeController.
-    controllerId: str                                   # An ID that can uniquely identify the controller among others of the same type on the same NiObjectNET.
-    interpolatorId: str                                 # An ID that can uniquely identify the interpolator among others of the same type on the same NiObjectNET.
-    stringPalette: int                                  # Refers to the NiStringPalette which contains the name of the controlled NIF object.
-    nodeNameOffset: int                                 # Offset in NiStringPalette to the name of the animated NiAVObject.
-    propertyTypeOffset: int                             # Offset in NiStringPalette to the RTTI type of the NiProperty the controller is attached to, if applicable.
-    controllerTypeOffset: int                           # Offset in NiStringPalette to the RTTI type of the NiTimeController.
-    controllerIdOffset: int                             # Offset in NiStringPalette to an ID that can uniquely identify the controller among others of the same type on the same NiObjectNET.
-    interpolatorIdOffset: int                           # Offset in NiStringPalette to an ID that can uniquely identify the interpolator among others of the same type on the same NiObjectNET.
+    targetName: str = Y.string(r) if h.v <= 0x0A010067 else None # Name of a controllable object in another NIF file.
+    interpolator: int = X[NiInterpolator].ref(r) if h.v >= 0x0A01006A else None
+    controller: int = X[NiTimeController].ref(r) if h.v <= 0x14050000 else None
+    blendInterpolator: int = X[NiBlendInterpolator].ref(r) if h.v >= 0x0A010068 and h.v <= 0x0A01006E else None
+    blendIndex: int = r.readUInt16() if h.v >= 0x0A010068 and h.v <= 0x0A01006E else None
+    priority: int = r.readByte() if h.v >= 0x0A01006A and  else None # Idle animations tend to have low values for this, and high values tend to correspond with the important parts of the animations.
+    nodeName: str = Y.string(r) if h.v >= 0x14010001 else None # The name of the animated NiAVObject.
+    propertyType: str = Y.string(r) if h.v >= 0x14010001 else None # The RTTI type of the NiProperty the controller is attached to, if applicable.
+    controllerType: str = Y.string(r) if h.v >= 0x14010001 else None # The RTTI type of the NiTimeController.
+    controllerId: str = Y.string(r) if h.v >= 0x14010001 else None # An ID that can uniquely identify the controller among others of the same type on the same NiObjectNET.
+    interpolatorId: str = Y.string(r) if h.v >= 0x14010001 else None # An ID that can uniquely identify the interpolator among others of the same type on the same NiObjectNET.
+    stringPalette: int = X[NiStringPalette].ref(r) if h.v >= 0x0A020000 and h.v <= 0x14010000 else None # Refers to the NiStringPalette which contains the name of the controlled NIF object.
+    nodeNameOffset: int = r.readUInt32() if h.v >= 0x0A020000 and h.v <= 0x14010000 else None # Offset in NiStringPalette to the name of the animated NiAVObject.
+    propertyTypeOffset: int = r.readUInt32() if h.v >= 0x0A020000 and h.v <= 0x14010000 else None # Offset in NiStringPalette to the RTTI type of the NiProperty the controller is attached to, if applicable.
+    controllerTypeOffset: int = r.readUInt32() if h.v >= 0x0A020000 and h.v <= 0x14010000 else None # Offset in NiStringPalette to the RTTI type of the NiTimeController.
+    controllerIdOffset: int = r.readUInt32() if h.v >= 0x0A020000 and h.v <= 0x14010000 else None # Offset in NiStringPalette to an ID that can uniquely identify the controller among others of the same type on the same NiObjectNET.
+    interpolatorIdOffset: int = r.readUInt32() if h.v >= 0x0A020000 and h.v <= 0x14010000 else None # Offset in NiStringPalette to an ID that can uniquely identify the interpolator among others of the same type on the same NiObjectNET.
 
 # Information about how the file was exported
 class ExportInfo:
-    author: str
-    processScript: str
-    exportScript: str
+    author: str = r.readL8AString()
+    processScript: str = r.readL8AString()
+    exportScript: str = r.readL8AString()
 
 # The NIF file header.
 class Header:
-    headerString: str                                   # 'NetImmerse File Format x.x.x.x' (versions <= 10.0.1.2) or 'Gamebryo File Format x.x.x.x' (versions >= 10.1.0.0), with x.x.x.x the version written out. Ends with a newline character (0x0A).
-    copyright: list[str]
-    version: int                                        # The NIF version, in hexadecimal notation: 0x04000002, 0x0401000C, 0x04020002, 0x04020100, 0x04020200, 0x0A000100, 0x0A010000, 0x0A020000, 0x14000004, ...
-    endianType: EndianType                              # Determines the endianness of the data in the file.
-    userVersion: int                                    # An extra version number, for companies that decide to modify the file format.
-    numBlocks: int                                      # Number of file objects.
-    userVersion2: int
-    exportInfo: ExportInfo
-    maxFilepath: str
-    metadata: bytearray
-    numBlockTypes: int                                  # Number of object types in this NIF file.
-    blockTypes: list[str]                               # List of all object types used in this NIF file.
-    blockTypeHashes: list[int]                          # List of all object types used in this NIF file.
-    blockTypeIndex: list[int]                           # Maps file objects on their corresponding type: first file object is of type object_types[object_type_index[0]], the second of object_types[object_type_index[1]], etc.
-    blockSize: list[int]                                # Array of block sizes?
-    numStrings: int                                     # Number of strings.
-    maxStringLength: int                                # Maximum string length.
-    strings: list[str]                                  # Strings.
-    groups: list[int]
+    headerString: str = ??                              # 'NetImmerse File Format x.x.x.x' (versions <= 10.0.1.2) or 'Gamebryo File Format x.x.x.x' (versions >= 10.1.0.0), with x.x.x.x the version written out. Ends with a newline character (0x0A).
+    copyright: list[str] = ?? if h.v <= 0x03010000 else None
+    version: int = r.readUInt32() if h.v >= 0x03010001 else None # The NIF version, in hexadecimal notation: 0x04000002, 0x0401000C, 0x04020002, 0x04020100, 0x04020200, 0x0A000100, 0x0A010000, 0x0A020000, 0x14000004, ...
+    endianType: EndianType = EndianType(r.readByte()) if h.v >= 0x14000003 else None # Determines the endianness of the data in the file.
+    userVersion: int = r.readUInt32() if h.v >= 0x0A000108 else None # An extra version number, for companies that decide to modify the file format.
+    numBlocks: int = r.readUInt32() if h.v >= 0x03010001 else None # Number of file objects.
+    userVersion2: int = r.readUInt32() if ((Version == 20.2.0.7) or (Version == 20.0.0.5) or ((Version >= 10.0.1.2) and (Version <= 20.0.0.4) and (h.userVersion <= 11))) and (h.userVersion >= 3) else None
+    exportInfo: ExportInfo = ExportInfo(r) if               ((Version == 20.2.0.7) or (Version == 20.0.0.5) or ((Version >= 10.0.1.2) and (Version <= 20.0.0.4) and (h.userVersion <= 11))) and (h.userVersion >= 3) else None
+    maxFilepath: str = r.readL8AString() if (h.userVersion2 == 130) else None
+    metadata: bytearray = r.readL8Bytes() if h.v >= 0x1E000000 else None
+    numBlockTypes: int = r.readUInt16() if h.v >= 0x05000001 else None # Number of object types in this NIF file.
+    blockTypes: list[str] = r.readL32AString() if Version != 20.3.1.2 and h.v >= 0x05000001 else None # List of all object types used in this NIF file.
+    blockTypeHashes: list[int] = r.readUInt32() if h.v >= 0x14030102 and h.v <= 0x14030102 else None # List of all object types used in this NIF file.
+    blockTypeIndex: list[int] = r.readUInt16() if h.v >= 0x05000001 else None # Maps file objects on their corresponding type: first file object is of type object_types[object_type_index[0]], the second of object_types[object_type_index[1]], etc.
+    blockSize: list[int] = r.readUInt32() if h.v >= 0x14020005 else None # Array of block sizes?
+    numStrings: int = r.readUInt32() if h.v >= 0x14010001 else None # Number of strings.
+    maxStringLength: int = r.readUInt32() if h.v >= 0x14010001 else None # Maximum string length.
+    strings: list[str] = r.readL32AString() if h.v >= 0x14010001 else None # Strings.
+    groups: list[int] = r.readL32FArray(lambda r: r.readUInt32()) if h.v >= 0x05000006 else None
 
 # A list of \\0 terminated strings.
 class StringPalette:
-    palette: str                                        # A bunch of 0x00 seperated strings.
-    length: int                                         # Length of the palette string is repeated here.
+    palette: str = r.readL32AString()                   # A bunch of 0x00 seperated strings.
+    length: int = r.readUInt32()                        # Length of the palette string is repeated here.
 
 # Tension, bias, continuity.
 class TBC:
-    t: float                                            # Tension.
-    b: float                                            # Bias.
-    c: float                                            # Continuity.
+    t: float = r.readSingle()                           # Tension.
+    b: float = r.readSingle()                           # Bias.
+    c: float = r.readSingle()                           # Continuity.
 
 # A generic key with support for interpolation. Type 1 is normal linear interpolation, type 2 has forward and backward tangents, and type 3 has tension, bias and continuity arguments. Note that color4 and byte always seem to be of type 1.
 class Key:
-    time: float                                         # Time of the key.
-    value: T                                            # The key value.
-    forward: T                                          # Key forward tangent.
-    backward: T                                         # The key backward tangent.
-    tbc: TBC                                            # The TBC of the key.
+    time: float = r.readSingle()                        # Time of the key.
+    value: T = ??                                       # The key value.
+    forward: T = ?? if ARG == 2 else None               # Key forward tangent.
+    backward: T = ?? if ARG == 2 else None              # The key backward tangent.
+    tbc: TBC = TBC(r) if ARG == 3 else None             # The TBC of the key.
 
 # Array of vector keys (anything that can be interpolated, except rotations).
 class KeyGroup:
-    numKeys: int                                        # Number of keys in the array.
-    interpolation: KeyType                              # The key type.
-    keys: list[Key]                                     # The keys.
+    numKeys: int = r.readUInt32()                       # Number of keys in the array.
+    interpolation: KeyType = KeyType(r.readUInt32()) if Num Keys != 0 else None # The key type.
+    keys: list[Key] = Key(r, h)                         # The keys.
 
 # A special version of the key type used for quaternions.  Never has tangents.
 class QuatKey:
-    time: float                                         # Time the key applies.
-    value: T                                            # Value of the key.
-    tbc: TBC                                            # The TBC of the key.
+    time: float = r.readSingle() if ARG != 4 and h.v >= 0x0A01006A else None # Time the key applies.
+    value: T = ?? if ARG != 4 else None                 # Value of the key.
+    tbc: TBC = TBC(r) if ARG == 3 else None             # The TBC of the key.
 
 # Texture coordinates (u,v). As in OpenGL; image origin is in the lower left corner.
 class TexCoord:
-    u: float                                            # First coordinate.
-    v: float                                            # Second coordinate.
+    u: float = r.readSingle()                           # First coordinate.
+    v: float = r.readSingle()                           # Second coordinate.
 
 # Texture coordinates (u,v).
 class HalfTexCoord:
-    u: float                                            # First coordinate.
-    v: float                                            # Second coordinate.
+    u: float = r.readHalf()                             # First coordinate.
+    v: float = r.readHalf()                             # Second coordinate.
 
 # Describes the order of scaling and rotation matrices. Translate, Scale, Rotation, Center are from TexDesc.
 # Back = inverse of Center. FromMaya = inverse of the V axis with a positive translation along V of 1 unit.
@@ -1186,34 +1186,34 @@ class TransformMethod(Enum):
 
 # NiTexturingProperty::Map. Texture description.
 class TexDesc:
-    image: int                                          # Link to the texture image.
-    source: int                                         # NiSourceTexture object index.
-    clampMode: TexClampMode                             # 0=clamp S clamp T, 1=clamp S wrap T, 2=wrap S clamp T, 3=wrap S wrap T
-    filterMode: TexFilterMode                           # 0=nearest, 1=bilinear, 2=trilinear, 3=..., 4=..., 5=...
-    flags: Flags                                        # Texture mode flags; clamp and filter mode stored in upper byte with 0xYZ00 = clamp mode Y, filter mode Z.
-    maxAnisotropy: int
-    uvSet: int                                          # The texture coordinate set in NiGeometryData that this texture slot will use.
-    pS2L: int                                           # L can range from 0 to 3 and are used to specify how fast a texture gets blurry.
-    pS2K: int                                           # K is used as an offset into the mipmap levels and can range from -2047 to 2047. Positive values push the mipmap towards being blurry and negative values make the mipmap sharper.
-    unknown1: int                                       # Unknown, 0 or 0x0101?
-    hasTextureTransform: bool                           # Whether or not the texture coordinates are transformed.
-    translation: TexCoord                               # The UV translation.
-    scale: TexCoord                                     # The UV scale.
-    rotation: float                                     # The W axis rotation in texture space.
-    transformMethod: TransformMethod                    # Depending on the source, scaling can occur before or after rotation.
-    center: TexCoord                                    # The origin around which the texture rotates.
+    image: int = X[NiImage].ref(r) if h.v <= 50397184 else None # Link to the texture image.
+    source: int = X[NiSourceTexture].ref(r) if h.v >= 0x0303000D else None # NiSourceTexture object index.
+    clampMode: TexClampMode = TexClampMode(r.readUInt32()) if h.v <= 0x14000005 else None # 0=clamp S clamp T, 1=clamp S wrap T, 2=wrap S clamp T, 3=wrap S wrap T
+    filterMode: TexFilterMode = TexFilterMode(r.readUInt32()) if h.v <= 0x14000005 else None # 0=nearest, 1=bilinear, 2=trilinear, 3=..., 4=..., 5=...
+    flags: Flags = Flags(r.readUInt16()) if h.v >= 0x14010003 else None # Texture mode flags; clamp and filter mode stored in upper byte with 0xYZ00 = clamp mode Y, filter mode Z.
+    maxAnisotropy: int = r.readUInt16() if h.v >= 0x14050004 else None
+    uvSet: int = r.readUInt32() if h.v <= 0x14000005 else None # The texture coordinate set in NiGeometryData that this texture slot will use.
+    pS2L: int = r.readInt16() if h.v <= 0x0A040001 else None # L can range from 0 to 3 and are used to specify how fast a texture gets blurry.
+    pS2K: int = r.readInt16() if h.v <= 0x0A040001 else None # K is used as an offset into the mipmap levels and can range from -2047 to 2047. Positive values push the mipmap towards being blurry and negative values make the mipmap sharper.
+    unknown1: int = r.readUInt16() if h.v <= 0x0401000C else None # Unknown, 0 or 0x0101?
+    hasTextureTransform: bool = r.readBool32() if h.v >= 0x0A010000 else None # Whether or not the texture coordinates are transformed.
+    translation: TexCoord = TexCoord(r) if Has Texture Transform and h.v >= 0x0A010000 else None # The UV translation.
+    scale: TexCoord = TexCoord(r) if Has Texture Transform and h.v >= 0x0A010000 else None # The UV scale.
+    rotation: float = r.readSingle() if Has Texture Transform and h.v >= 0x0A010000 else None # The W axis rotation in texture space.
+    transformMethod: TransformMethod = TransformMethod(r.readUInt32()) if Has Texture Transform and h.v >= 0x0A010000 else None # Depending on the source, scaling can occur before or after rotation.
+    center: TexCoord = TexCoord(r) if Has Texture Transform and h.v >= 0x0A010000 else None # The origin around which the texture rotates.
 
 # NiTexturingProperty::ShaderMap. Shader texture description.
 class ShaderTexDesc:
-    hasMap: bool
-    map: TexDesc
-    mapId: int                                          # Unique identifier for the Gamebryo shader system.
+    hasMap: bool = r.readBool32()
+    map: TexDesc = TexDesc(r, h) if Has Map else None
+    mapId: int = r.readUInt32() if Has Map else None    # Unique identifier for the Gamebryo shader system.
 
 # List of three vertex indices.
 class Triangle:
-    v1: int                                             # First vertex index.
-    v2: int                                             # Second vertex index.
-    v3: int                                             # Third vertex index.
+    v1: int = r.readUInt16()                            # First vertex index.
+    v2: int = r.readUInt16()                            # Second vertex index.
+    v3: int = r.readUInt16()                            # Third vertex index.
 
 class VertexFlags(Flag):
     Vertex = 1 << 4,
@@ -1229,85 +1229,85 @@ class VertexFlags(Flag):
     Full_Precision = 1 << 14
 
 class BSVertexData:
-    vertex: Vector3
-    bitangentX: float
-    unknownShort: int
-    unknownInt: int
-    uv: HalfTexCoord
-    normal: Vector3
-    bitangentY: int
-    tangent: Vector3
-    bitangentZ: int
-    vertexColors: ByteColor4
-    boneWeights: list[float]
-    boneIndices: list[int]
-    eyeData: float
+    vertex: Vector3 = r.readVector3() if ((ARG & 16) != 0) and ((ARG & 16384) != 0) else None
+    bitangentX: float = r.readSingle() if ((ARG & 16) != 0) and ((ARG & 256) != 0) and ((ARG & 16384) != 0) else None
+    unknownShort: int = r.readUInt16() if ((ARG & 16) != 0) and ((ARG & 256) == 0) and ((ARG & 16384) == 0) else None
+    unknownInt: int = r.readUInt32() if ((ARG & 16) != 0) and ((ARG & 256) == 0) and ((ARG & 16384) != 0) else None
+    uv: HalfTexCoord = HalfTexCoord(r) if ((ARG & 32) != 0) else None
+    normal: Vector3 = Vector3(r.readByte(), r.readByte(), r.readByte()) if (ARG & 128) != 0 else None
+    bitangentY: int = r.readByte() if (ARG & 128) != 0 else None
+    tangent: Vector3 = Vector3(r.readByte(), r.readByte(), r.readByte()) if ((ARG & 128) != 0) and ((ARG & 256) != 0) else None
+    bitangentZ: int = r.readByte() if ((ARG & 128) != 0) and ((ARG & 256) != 0) else None
+    vertexColors: ByteColor4 = Color4Byte(r) if (ARG & 512) != 0 else None
+    boneWeights: list[float] = r.readHalf() if (ARG & 1024) != 0 else None
+    boneIndices: list[int] = r.readByte() if (ARG & 1024) != 0 else None
+    eyeData: float = r.readSingle() if (ARG & 4096) != 0 else None
 
 class BSVertexDataSSE:
-    vertex: Vector3
-    bitangentX: float
-    unknownInt: int
-    uv: HalfTexCoord
-    normal: Vector3
-    bitangentY: int
-    tangent: Vector3
-    bitangentZ: int
-    vertexColors: ByteColor4
-    boneWeights: list[float]
-    boneIndices: list[int]
-    eyeData: float
+    vertex: Vector3 = r.readVector3() if ((ARG & 16) != 0) else None
+    bitangentX: float = r.readSingle() if ((ARG & 16) != 0) and ((ARG & 256) != 0) else None
+    unknownInt: int = r.readInt32() if ((ARG & 16) != 0) and (ARG & 256) == 0 else None
+    uv: HalfTexCoord = HalfTexCoord(r) if ((ARG & 32) != 0) else None
+    normal: Vector3 = Vector3(r.readByte(), r.readByte(), r.readByte()) if (ARG & 128) != 0 else None
+    bitangentY: int = r.readByte() if (ARG & 128) != 0 else None
+    tangent: Vector3 = Vector3(r.readByte(), r.readByte(), r.readByte()) if ((ARG & 128) != 0) and ((ARG & 256) != 0) else None
+    bitangentZ: int = r.readByte() if ((ARG & 128) != 0) and ((ARG & 256) != 0) else None
+    vertexColors: ByteColor4 = Color4Byte(r) if (ARG & 512) != 0 else None
+    boneWeights: list[float] = r.readHalf() if (ARG & 1024) != 0 else None
+    boneIndices: list[int] = r.readByte() if (ARG & 1024) != 0 else None
+    eyeData: float = r.readSingle() if (ARG & 4096) != 0 else None
 
 class BSVertexDesc:
-    vF1: int
-    vF2: int
-    vF3: int
-    vF4: int
-    vF5: int
-    vertexAttributes: VertexFlags
-    vF8: int
+    vF1: int = r.readByte()
+    vF2: int = r.readByte()
+    vF3: int = r.readByte()
+    vF4: int = r.readByte()
+    vF5: int = r.readByte()
+    vertexAttributes: VertexFlags = VertexFlags(r.readUInt16())
+    vF8: int = r.readByte()
 
 # Skinning data for a submesh, optimized for hardware skinning. Part of NiSkinPartition.
 class SkinPartition:
-    numVertices: int                                    # Number of vertices in this submesh.
-    numTriangles: int                                   # Number of triangles in this submesh.
-    numBones: int                                       # Number of bones influencing this submesh.
-    numStrips: int                                      # Number of strips in this submesh (zero if not stripped).
-    numWeightsPerVertex: int                            # Number of weight coefficients per vertex. The Gamebryo engine seems to work well only if this number is equal to 4, even if there are less than 4 influences per vertex.
-    bones: list[int]                                    # List of bones.
-    hasVertexMap: bool                                  # Do we have a vertex map?
-    vertexMap: list[int]                                # Maps the weight/influence lists in this submesh to the vertices in the shape being skinned.
-    hasVertexWeights: bool                              # Do we have vertex weights?
-    vertexWeights: list[list[float]]                    # The vertex weights.
-    stripLengths: list[int]                             # The strip lengths.
-    hasFaces: bool                                      # Do we have triangle or strip data?
-    strips: list[list[int]]                             # The strips.
-    triangles: list[Triangle]                           # The triangles.
-    hasBoneIndices: bool                                # Do we have bone indices?
-    boneIndices: list[list[int]]                        # Bone indices, they index into 'Bones'.
-    unknownShort: int                                   # Unknown
-    vertexDesc: BSVertexDesc
-    trianglesCopy: list[Triangle]
+    numVertices: int = r.readUInt16()                   # Number of vertices in this submesh.
+    numTriangles: int = r.readUInt16()                  # Number of triangles in this submesh.
+    numBones: int = r.readUInt16()                      # Number of bones influencing this submesh.
+    numStrips: int = r.readUInt16()                     # Number of strips in this submesh (zero if not stripped).
+    numWeightsPerVertex: int = r.readUInt16()           # Number of weight coefficients per vertex. The Gamebryo engine seems to work well only if this number is equal to 4, even if there are less than 4 influences per vertex.
+    bones: list[int] = r.readUInt16()                   # List of bones.
+    hasVertexMap: bool = r.readBool32() if h.v >= 0x0A010000 else None # Do we have a vertex map?
+    vertexMap: list[int] = r.readUInt16() if Has Vertex Map and h.v >= 0x0A010000 else None # Maps the weight/influence lists in this submesh to the vertices in the shape being skinned.
+    hasVertexWeights: bool = r.readBool32() if h.v >= 0x0A010000 else None # Do we have vertex weights?
+    vertexWeights: list[list[float]] = r.readHalf() if Has Vertex Weights == 15 and h.v >= 0x14030101 else None # The vertex weights.
+    stripLengths: list[int] = r.readUInt16()            # The strip lengths.
+    hasFaces: bool = r.readBool32() if h.v >= 0x0A010000 else None # Do we have triangle or strip data?
+    strips: list[list[int]] = r.readUInt16() if (Has Faces) and (Num Strips != 0) and h.v >= 0x0A010000 else None # The strips.
+    triangles: list[Triangle] = Triangle(r) if (Has Faces) and (Num Strips == 0) and h.v >= 0x0A010000 else None # The triangles.
+    hasBoneIndices: bool = r.readBool32()               # Do we have bone indices?
+    boneIndices: list[list[int]] = r.readByte() if Has Bone Indices else None # Bone indices, they index into 'Bones'.
+    unknownShort: int = r.readUInt16()                  # Unknown
+    vertexDesc: BSVertexDesc = BSVertexDesc(r) if (h.userVersion2 == 100) else None
+    trianglesCopy: list[Triangle] = Triangle(r) if (h.userVersion2 == 100) else None
 
 # A plane.
 class NiPlane:
-    normal: Vector3                                     # The plane normal.
-    constant: float                                     # The plane constant.
+    normal: Vector3 = r.readVector3()                   # The plane normal.
+    constant: float = r.readSingle()                    # The plane constant.
 
 # A sphere.
 class NiBound:
-    center: Vector3                                     # The sphere's center.
-    radius: float                                       # The sphere's radius.
+    center: Vector3 = r.readVector3()                   # The sphere's center.
+    radius: float = r.readSingle()                      # The sphere's radius.
 
 class NiQuatTransform:
-    translation: Vector3
-    rotation: Quaternion
-    scale: float
-    trsValid: list[bool]                                # Whether each transform component is valid.
+    translation: Vector3 = r.readVector3()
+    rotation: Quaternion = r.readQuaternion()
+    scale: float = r.readSingle()
+    trsValid: list[bool] = r.readBool32() if h.v <= 0x0A01006D else None # Whether each transform component is valid.
 
 class NiTransform:
-    rotation: Matrix3x3                                 # The rotation part of the transformation matrix.
-    translation: Vector3                                # The translation vector.
-    scale: float                                        # Scaling part (only uniform scaling is supported).
+    rotation: Matrix3x3 = r.readMatrix3x3()             # The rotation part of the transformation matrix.
+    translation: Vector3 = r.readVector3()              # The translation vector.
+    scale: float = r.readSingle()                       # Scaling part (only uniform scaling is supported).
 
 # Bethesda Animation. Furniture entry points. It specifies the direction(s) from where the actor is able to enter (and leave) the position.
 class FurnitureEntryPoints(Flag):
@@ -1325,52 +1325,52 @@ class AnimationType(Enum):
 
 # Bethesda Animation. Describes a furniture position?
 class FurniturePosition:
-    offset: Vector3                                     # Offset of furniture marker.
-    orientation: int                                    # Furniture marker orientation.
-    positionRef1: int                                   # Refers to a furnituremarkerxx.nif file. Always seems to be the same as Position Ref 2.
-    positionRef2: int                                   # Refers to a furnituremarkerxx.nif file. Always seems to be the same as Position Ref 1.
-    heading: float                                      # Similar to Orientation, in float form.
-    animationType: AnimationType                        # Unknown
-    entryProperties: FurnitureEntryPoints               # Unknown/unused in nif?
+    offset: Vector3 = r.readVector3()                   # Offset of furniture marker.
+    orientation: int = r.readUInt16()                   # Furniture marker orientation.
+    positionRef1: int = r.readByte()                    # Refers to a furnituremarkerxx.nif file. Always seems to be the same as Position Ref 2.
+    positionRef2: int = r.readByte()                    # Refers to a furnituremarkerxx.nif file. Always seems to be the same as Position Ref 1.
+    heading: float = r.readSingle()                     # Similar to Orientation, in float form.
+    animationType: AnimationType = AnimationType(r.readUInt16()) # Unknown
+    entryProperties: FurnitureEntryPoints = FurnitureEntryPoints(r.readUInt16()) # Unknown/unused in nif?
 
 # Bethesda Havok. A triangle with extra data used for physics.
 class TriangleData:
-    triangle: Triangle                                  # The triangle.
-    weldingInfo: int                                    # Additional havok information on how triangles are welded.
-    normal: Vector3                                     # This is the triangle's normal.
+    triangle: Triangle = Triangle(r)                    # The triangle.
+    weldingInfo: int = r.readUInt16()                   # Additional havok information on how triangles are welded.
+    normal: Vector3 = r.readVector3() if h.v <= 0x14000005 else None # This is the triangle's normal.
 
 # Geometry morphing data component.
 class Morph:
-    frameName: str                                      # Name of the frame.
-    numKeys: int                                        # The number of morph keys that follow.
-    interpolation: KeyType                              # Unlike most objects, the presense of this value is not conditional on there being keys.
-    keys: list[Key]                                     # The morph key frames.
-    legacyWeight: float
-    vectors: list[Vector3]                              # Morph vectors.
+    frameName: str = Y.string(r) if h.v >= 0x0A01006A else None # Name of the frame.
+    numKeys: int = r.readUInt32() if h.v <= 0x0A010000 else None # The number of morph keys that follow.
+    interpolation: KeyType = KeyType(r.readUInt32()) if h.v <= 0x0A010000 else None # Unlike most objects, the presense of this value is not conditional on there being keys.
+    keys: list[Key] = Key(r, h) if h.v <= 0x0A010000 else None # The morph key frames.
+    legacyWeight: float = r.readSingle() if h.v >= 0x0A010068 and h.v <= 0x14010002 and  else None
+    vectors: list[Vector3] = r.readVector3()            # Morph vectors.
 
 # particle array entry
 class Particle:
-    velocity: Vector3                                   # Particle velocity
-    unknownVector: Vector3                              # Unknown
-    lifetime: float                                     # The particle age.
-    lifespan: float                                     # Maximum age of the particle.
-    timestamp: float                                    # Timestamp of the last update.
-    unknownShort: int                                   # Unknown short
-    vertexId: int                                       # Particle/vertex index matches array index
+    velocity: Vector3 = r.readVector3()                 # Particle velocity
+    unknownVector: Vector3 = r.readVector3()            # Unknown
+    lifetime: float = r.readSingle()                    # The particle age.
+    lifespan: float = r.readSingle()                    # Maximum age of the particle.
+    timestamp: float = r.readSingle()                   # Timestamp of the last update.
+    unknownShort: int = r.readUInt16()                  # Unknown short
+    vertexId: int = r.readUInt16()                      # Particle/vertex index matches array index
 
 # NiSkinData::BoneData. Skinning data component.
 class BoneData:
-    skinTransform: NiTransform                          # Offset of the skin from this bone in bind position.
-    boundingSphereOffset: Vector3                       # Translation offset of a bounding sphere holding all vertices. (Note that its a Sphere Containing Axis Aligned Box not a minimum volume Sphere)
-    boundingSphereRadius: float                         # Radius for bounding sphere holding all vertices.
-    unknown13Shorts: list[int]                          # Unknown, always 0?
-    numVertices: int                                    # Number of weighted vertices.
-    vertexWeights: list[BoneVertDataHalf]               # The vertex weights.
+    skinTransform: NiTransform = NiTransform(r)         # Offset of the skin from this bone in bind position.
+    boundingSphereOffset: Vector3 = r.readVector3()     # Translation offset of a bounding sphere holding all vertices. (Note that its a Sphere Containing Axis Aligned Box not a minimum volume Sphere)
+    boundingSphereRadius: float = r.readSingle()        # Radius for bounding sphere holding all vertices.
+    unknown13Shorts: list[int] = r.readInt16() if h.v >= 0x14030009 and h.v <= 0x14030009 and  else None # Unknown, always 0?
+    numVertices: int = r.readUInt16()                   # Number of weighted vertices.
+    vertexWeights: list[BoneVertDataHalf] = BoneVertDataHalf(r) if ARG == 15 and h.v >= 0x14030101 else None # The vertex weights.
 
 # Bethesda Havok. Collision filter info representing Layer, Flags, Part Number, and Group all combined into one uint.
 class HavokFilter:
-    layer: SkyrimLayer                                  # The layer the collision belongs to.
-    flagsandPartNumber: int                             # FLAGS are stored in highest 3 bits:
+    layer: SkyrimLayer = SkyrimLayer(r.readByte())      # The layer the collision belongs to.
+    flagsandPartNumber: int = r.readByte()              # FLAGS are stored in highest 3 bits:
                                                         # 	Bit 7: sets the LINK property and controls whether this body is physically linked to others.
                                                         # 	Bit 6: turns collision off (not used for Layer BIPED).
                                                         # 	Bit 5: sets the SCALED property.
@@ -1408,42 +1408,42 @@ class HavokFilter:
                                                         # 	27 - ADDONARM
                                                         # 	28 - ADDONLEG
                                                         # 	29-31 - NULL
-    group: int
+    group: int = r.readUInt16()
 
 # Bethesda Havok. Material wrapper for varying material enums by game.
 class HavokMaterial:
-    unknownInt: int
-    material: SkyrimHavokMaterial                       # The material of the shape.
+    unknownInt: int = r.readUInt32() if h.v <= 0x0A000102 else None
+    material: SkyrimHavokMaterial = SkyrimHavokMaterial(r.readUInt32()) # The material of the shape.
 
 # Bethesda Havok. Havok Information for packed TriStrip shapes.
 class OblivionSubShape:
-    havokFilter: HavokFilter
-    numVertices: int                                    # The number of vertices that form this sub shape.
-    material: HavokMaterial                             # The material of the subshape.
+    havokFilter: HavokFilter = HavokFilter(r, h)
+    numVertices: int = r.readUInt32()                   # The number of vertices that form this sub shape.
+    material: HavokMaterial = HavokMaterial(r, h)       # The material of the subshape.
 
 class bhkPositionConstraintMotor:
-    minForce: float                                     # Minimum motor force
-    maxForce: float                                     # Maximum motor force
-    tau: float                                          # Relative stiffness
-    damping: float                                      # Motor damping value
-    proportionalRecoveryVelocity: float                 # A factor of the current error to calculate the recovery velocity
-    constantRecoveryVelocity: float                     # A constant velocity which is used to recover from errors
-    motorEnabled: bool                                  # Is Motor enabled
+    minForce: float = r.readSingle()                    # Minimum motor force
+    maxForce: float = r.readSingle()                    # Maximum motor force
+    tau: float = r.readSingle()                         # Relative stiffness
+    damping: float = r.readSingle()                     # Motor damping value
+    proportionalRecoveryVelocity: float = r.readSingle() # A factor of the current error to calculate the recovery velocity
+    constantRecoveryVelocity: float = r.readSingle()    # A constant velocity which is used to recover from errors
+    motorEnabled: bool = r.readBool32()                 # Is Motor enabled
 
 class bhkVelocityConstraintMotor:
-    minForce: float                                     # Minimum motor force
-    maxForce: float                                     # Maximum motor force
-    tau: float                                          # Relative stiffness
-    targetVelocity: float
-    useVelocityTarget: bool
-    motorEnabled: bool                                  # Is Motor enabled
+    minForce: float = r.readSingle()                    # Minimum motor force
+    maxForce: float = r.readSingle()                    # Maximum motor force
+    tau: float = r.readSingle()                         # Relative stiffness
+    targetVelocity: float = r.readSingle()
+    useVelocityTarget: bool = r.readBool32()
+    motorEnabled: bool = r.readBool32()                 # Is Motor enabled
 
 class bhkSpringDamperConstraintMotor:
-    minForce: float                                     # Minimum motor force
-    maxForce: float                                     # Maximum motor force
-    springConstant: float                               # The spring constant in N/m
-    springDamping: float                                # The spring damping in Nsec/m
-    motorEnabled: bool                                  # Is Motor enabled
+    minForce: float = r.readSingle()                    # Minimum motor force
+    maxForce: float = r.readSingle()                    # Maximum motor force
+    springConstant: float = r.readSingle()              # The spring constant in N/m
+    springDamping: float = r.readSingle()               # The spring damping in Nsec/m
+    motorEnabled: bool = r.readBool32()                 # Is Motor enabled
 
 class MotorType(Enum):
     MOTOR_NONE = 0,
@@ -1452,83 +1452,83 @@ class MotorType(Enum):
     MOTOR_SPRING = 3
 
 class MotorDescriptor:
-    type: MotorType
-    positionMotor: bhkPositionConstraintMotor
-    velocityMotor: bhkVelocityConstraintMotor
-    springDamperMotor: bhkSpringDamperConstraintMotor
+    type: MotorType = MotorType(r.readByte())
+    positionMotor: bhkPositionConstraintMotor = bhkPositionConstraintMotor(r) if Type == 1 else None
+    velocityMotor: bhkVelocityConstraintMotor = bhkVelocityConstraintMotor(r) if Type == 2 else None
+    springDamperMotor: bhkSpringDamperConstraintMotor = bhkSpringDamperConstraintMotor(r) if Type == 3 else None
 
 # This constraint defines a cone in which an object can rotate. The shape of the cone can be controlled in two (orthogonal) directions.
 class RagdollDescriptor:
-    pivotA: Vector4                                     # Point around which the object will rotate. Defines the orthogonal directions in which the shape can be controlled (namely in this direction, and in the direction orthogonal on this one and Twist A).
-    planeA: Vector4                                     # Defines the orthogonal plane in which the body can move, the orthogonal directions in which the shape can be controlled (the direction orthogonal on this one and Twist A).
-    twistA: Vector4                                     # Central directed axis of the cone in which the object can rotate. Orthogonal on Plane A.
-    pivotB: Vector4                                     # Defines the orthogonal directions in which the shape can be controlled (namely in this direction, and in the direction orthogonal on this one and Twist A).
-    planeB: Vector4                                     # Defines the orthogonal plane in which the body can move, the orthogonal directions in which the shape can be controlled (the direction orthogonal on this one and Twist A).
-    twistB: Vector4                                     # Central directed axis of the cone in which the object can rotate. Orthogonal on Plane B.
-    motorA: Vector4                                     # Defines the orthogonal directions in which the shape can be controlled (namely in this direction, and in the direction orthogonal on this one and Twist A).
-    motorB: Vector4                                     # Defines the orthogonal directions in which the shape can be controlled (namely in this direction, and in the direction orthogonal on this one and Twist A).
-    coneMaxAngle: float                                 # Maximum angle the object can rotate around the vector orthogonal on Plane A and Twist A relative to the Twist A vector. Note that Cone Min Angle is not stored, but is simply minus this angle.
-    planeMinAngle: float                                # Minimum angle the object can rotate around Plane A, relative to Twist A.
-    planeMaxAngle: float                                # Maximum angle the object can rotate around Plane A, relative to Twist A.
-    twistMinAngle: float                                # Minimum angle the object can rotate around Twist A, relative to Plane A.
-    twistMaxAngle: float                                # Maximum angle the object can rotate around Twist A, relative to Plane A.
-    maxFriction: float                                  # Maximum friction, typically 0 or 10. In Fallout 3, typically 100.
-    motor: MotorDescriptor
+    pivotA: Vector4 = r.readVector4()                   # Point around which the object will rotate. Defines the orthogonal directions in which the shape can be controlled (namely in this direction, and in the direction orthogonal on this one and Twist A).
+    planeA: Vector4 = r.readVector4()                   # Defines the orthogonal plane in which the body can move, the orthogonal directions in which the shape can be controlled (the direction orthogonal on this one and Twist A).
+    twistA: Vector4 = r.readVector4()                   # Central directed axis of the cone in which the object can rotate. Orthogonal on Plane A.
+    pivotB: Vector4 = r.readVector4()                   # Defines the orthogonal directions in which the shape can be controlled (namely in this direction, and in the direction orthogonal on this one and Twist A).
+    planeB: Vector4 = r.readVector4()                   # Defines the orthogonal plane in which the body can move, the orthogonal directions in which the shape can be controlled (the direction orthogonal on this one and Twist A).
+    twistB: Vector4 = r.readVector4()                   # Central directed axis of the cone in which the object can rotate. Orthogonal on Plane B.
+    motorA: Vector4 = r.readVector4()                   # Defines the orthogonal directions in which the shape can be controlled (namely in this direction, and in the direction orthogonal on this one and Twist A).
+    motorB: Vector4 = r.readVector4()                   # Defines the orthogonal directions in which the shape can be controlled (namely in this direction, and in the direction orthogonal on this one and Twist A).
+    coneMaxAngle: float = r.readSingle()                # Maximum angle the object can rotate around the vector orthogonal on Plane A and Twist A relative to the Twist A vector. Note that Cone Min Angle is not stored, but is simply minus this angle.
+    planeMinAngle: float = r.readSingle()               # Minimum angle the object can rotate around Plane A, relative to Twist A.
+    planeMaxAngle: float = r.readSingle()               # Maximum angle the object can rotate around Plane A, relative to Twist A.
+    twistMinAngle: float = r.readSingle()               # Minimum angle the object can rotate around Twist A, relative to Plane A.
+    twistMaxAngle: float = r.readSingle()               # Maximum angle the object can rotate around Twist A, relative to Plane A.
+    maxFriction: float = r.readSingle()                 # Maximum friction, typically 0 or 10. In Fallout 3, typically 100.
+    motor: MotorDescriptor = MotorDescriptor(r, h) if h.v >= 0x14020007 and  else None
 
 # This constraint allows rotation about a specified axis, limited by specified boundaries.
 class LimitedHingeDescriptor:
-    pivotA: Vector4                                     # Pivot point around which the object will rotate.
-    axleA: Vector4                                      # Axis of rotation.
-    perp2AxleInA1: Vector4                              # Vector in the rotation plane which defines the zero angle.
-    perp2AxleInA2: Vector4                              # Vector in the rotation plane, orthogonal on the previous one, which defines the positive direction of rotation. This is always the vector product of Axle A and Perp2 Axle In A1.
-    pivotB: Vector4                                     # Pivot A in second entity coordinate system.
-    axleB: Vector4                                      # Axle A in second entity coordinate system.
-    perp2AxleInB2: Vector4                              # Perp2 Axle In A2 in second entity coordinate system.
-    perp2AxleInB1: Vector4                              # Perp2 Axle In A1 in second entity coordinate system.
-    minAngle: float                                     # Minimum rotation angle.
-    maxAngle: float                                     # Maximum rotation angle.
-    maxFriction: float                                  # Maximum friction, typically either 0 or 10. In Fallout 3, typically 100.
-    motor: MotorDescriptor
+    pivotA: Vector4 = r.readVector4()                   # Pivot point around which the object will rotate.
+    axleA: Vector4 = r.readVector4()                    # Axis of rotation.
+    perp2AxleInA1: Vector4 = r.readVector4()            # Vector in the rotation plane which defines the zero angle.
+    perp2AxleInA2: Vector4 = r.readVector4()            # Vector in the rotation plane, orthogonal on the previous one, which defines the positive direction of rotation. This is always the vector product of Axle A and Perp2 Axle In A1.
+    pivotB: Vector4 = r.readVector4()                   # Pivot A in second entity coordinate system.
+    axleB: Vector4 = r.readVector4()                    # Axle A in second entity coordinate system.
+    perp2AxleInB2: Vector4 = r.readVector4()            # Perp2 Axle In A2 in second entity coordinate system.
+    perp2AxleInB1: Vector4 = r.readVector4()            # Perp2 Axle In A1 in second entity coordinate system.
+    minAngle: float = r.readSingle()                    # Minimum rotation angle.
+    maxAngle: float = r.readSingle()                    # Maximum rotation angle.
+    maxFriction: float = r.readSingle()                 # Maximum friction, typically either 0 or 10. In Fallout 3, typically 100.
+    motor: MotorDescriptor = MotorDescriptor(r, h) if h.v >= 0x14020007 and  else None
 
 # This constraint allows rotation about a specified axis.
 class HingeDescriptor:
-    pivotA: Vector4                                     # Pivot point around which the object will rotate.
-    perp2AxleInA1: Vector4                              # Vector in the rotation plane which defines the zero angle.
-    perp2AxleInA2: Vector4                              # Vector in the rotation plane, orthogonal on the previous one, which defines the positive direction of rotation. This is always the vector product of Axle A and Perp2 Axle In A1.
-    pivotB: Vector4                                     # Pivot A in second entity coordinate system.
-    axleB: Vector4                                      # Axle A in second entity coordinate system.
-    axleA: Vector4                                      # Axis of rotation.
-    perp2AxleInB1: Vector4                              # Perp2 Axle In A1 in second entity coordinate system.
-    perp2AxleInB2: Vector4                              # Perp2 Axle In A2 in second entity coordinate system.
+    pivotA: Vector4 = r.readVector4() if h.v >= 0x14020007 else None # Pivot point around which the object will rotate.
+    perp2AxleInA1: Vector4 = r.readVector4() if h.v >= 0x14020007 else None # Vector in the rotation plane which defines the zero angle.
+    perp2AxleInA2: Vector4 = r.readVector4() if h.v >= 0x14020007 else None # Vector in the rotation plane, orthogonal on the previous one, which defines the positive direction of rotation. This is always the vector product of Axle A and Perp2 Axle In A1.
+    pivotB: Vector4 = r.readVector4() if h.v >= 0x14020007 else None # Pivot A in second entity coordinate system.
+    axleB: Vector4 = r.readVector4() if h.v >= 0x14020007 else None # Axle A in second entity coordinate system.
+    axleA: Vector4 = r.readVector4() if h.v >= 0x14020007 else None # Axis of rotation.
+    perp2AxleInB1: Vector4 = r.readVector4() if h.v >= 0x14020007 else None # Perp2 Axle In A1 in second entity coordinate system.
+    perp2AxleInB2: Vector4 = r.readVector4() if h.v >= 0x14020007 else None # Perp2 Axle In A2 in second entity coordinate system.
 
 class BallAndSocketDescriptor:
-    pivotA: Vector4                                     # Pivot point in the local space of entity A.
-    pivotB: Vector4                                     # Pivot point in the local space of entity B.
+    pivotA: Vector4 = r.readVector4()                   # Pivot point in the local space of entity A.
+    pivotB: Vector4 = r.readVector4()                   # Pivot point in the local space of entity B.
 
 class PrismaticDescriptor:
-    pivotA: Vector4                                     # Pivot.
-    rotationA: Vector4                                  # Rotation axis.
-    planeA: Vector4                                     # Plane normal. Describes the plane the object is able to move on.
-    slidingA: Vector4                                   # Describes the axis the object is able to travel along. Unit vector.
-    pivotB: Vector4                                     # Pivot in B coordinates.
-    rotationB: Vector4                                  # Rotation axis.
-    planeB: Vector4                                     # Plane normal. Describes the plane the object is able to move on in B coordinates.
-    slidingB: Vector4                                   # Describes the axis the object is able to travel along in B coordinates. Unit vector.
-    minDistance: float                                  # Describe the min distance the object is able to travel.
-    maxDistance: float                                  # Describe the max distance the object is able to travel.
-    friction: float                                     # Friction.
-    motor: MotorDescriptor
+    pivotA: Vector4 = r.readVector4() if h.v >= 0x14020007 else None # Pivot.
+    rotationA: Vector4 = r.readVector4() if h.v >= 0x14020007 else None # Rotation axis.
+    planeA: Vector4 = r.readVector4() if h.v >= 0x14020007 else None # Plane normal. Describes the plane the object is able to move on.
+    slidingA: Vector4 = r.readVector4() if h.v >= 0x14020007 else None # Describes the axis the object is able to travel along. Unit vector.
+    pivotB: Vector4 = r.readVector4() if h.v >= 0x14020007 else None # Pivot in B coordinates.
+    rotationB: Vector4 = r.readVector4() if h.v >= 0x14020007 else None # Rotation axis.
+    planeB: Vector4 = r.readVector4() if h.v >= 0x14020007 else None # Plane normal. Describes the plane the object is able to move on in B coordinates.
+    slidingB: Vector4 = r.readVector4() if h.v >= 0x14020007 else None # Describes the axis the object is able to travel along in B coordinates. Unit vector.
+    minDistance: float = r.readSingle()                 # Describe the min distance the object is able to travel.
+    maxDistance: float = r.readSingle()                 # Describe the max distance the object is able to travel.
+    friction: float = r.readSingle()                    # Friction.
+    motor: MotorDescriptor = MotorDescriptor(r, h) if h.v >= 0x14020007 and  else None
 
 class StiffSpringDescriptor:
-    pivotA: Vector4
-    pivotB: Vector4
-    length: float
+    pivotA: Vector4 = r.readVector4()
+    pivotB: Vector4 = r.readVector4()
+    length: float = r.readSingle()
 
 # Used to store skin weights in NiTriShapeSkinController.
 class OldSkinData:
-    vertexWeight: float                                 # The amount that this bone affects the vertex.
-    vertexIndex: int                                    # The index of the vertex that this weight applies to.
-    unknownVector: Vector3                              # Unknown.  Perhaps some sort of offset?
+    vertexWeight: float = r.readSingle()                # The amount that this bone affects the vertex.
+    vertexIndex: int = r.readUInt16()                   # The index of the vertex that this weight applies to.
+    unknownVector: Vector3 = r.readVector3()            # Unknown.  Perhaps some sort of offset?
 
 # Determines how the raw image data is stored in NiRawImageData.
 class ImageType(Enum):
@@ -1537,51 +1537,51 @@ class ImageType(Enum):
 
 # Box Bounding Volume
 class BoxBV:
-    center: Vector3
-    axis: list[Vector3]
-    extent: Vector3
+    center: Vector3 = r.readVector3()
+    axis: list[Vector3] = r.readVector3()
+    extent: Vector3 = r.readVector3()
 
 # Capsule Bounding Volume
 class CapsuleBV:
-    center: Vector3
-    origin: Vector3
-    extent: float
-    radius: float
+    center: Vector3 = r.readVector3()
+    origin: Vector3 = r.readVector3()
+    extent: float = r.readSingle()
+    radius: float = r.readSingle()
 
 class HalfSpaceBV:
-    plane: NiPlane
-    center: Vector3
+    plane: NiPlane = NiPlane(r)
+    center: Vector3 = r.readVector3()
 
 class BoundingVolume:
-    collisionType: BoundVolumeType                      # Type of collision data.
-    sphere: NiBound
-    box: BoxBV
-    capsule: CapsuleBV
-    union: UnionBV
-    halfSpace: HalfSpaceBV
+    collisionType: BoundVolumeType = BoundVolumeType(r.readUInt32()) # Type of collision data.
+    sphere: NiBound = NiBound(r) if Collision Type == 0 else None
+    box: BoxBV = BoxBV(r) if Collision Type == 1 else None
+    capsule: CapsuleBV = CapsuleBV(r) if Collision Type == 2 else None
+    union: UnionBV = UnionBV(r) if Collision Type == 4 else None
+    halfSpace: HalfSpaceBV = HalfSpaceBV(r) if Collision Type == 5 else None
 
 class UnionBV:
-    boundingVolumes: list[BoundingVolume]
+    boundingVolumes: list[BoundingVolume] = r.readL32FArray(lambda r: BoundingVolume(r, h))
 
 class MorphWeight:
-    interpolator: int
-    weight: float
+    interpolator: int = X[NiInterpolator].ref(r)
+    weight: float = r.readSingle()
 
 # Transformation data for the bone at this index in bhkPoseArray.
 class BoneTransform:
-    translation: Vector3
-    rotation: Quaternion
-    scale: Vector3
+    translation: Vector3 = r.readVector3()
+    rotation: Quaternion = r.readQuaternionWFirst()
+    scale: Vector3 = r.readVector3()
 
 # A list of transforms for each bone in bhkPoseArray.
 class BonePose:
-    transforms: list[BoneTransform]
+    transforms: list[BoneTransform] = r.readL32FArray(lambda r: BoneTransform(r))
 
 # Array of Vectors for Decal placement in BSDecalPlacementVectorExtraData.
 class DecalVectorArray:
-    numVectors: int
-    points: list[Vector3]                               # Vector XYZ coords
-    normals: list[Vector3]                              # Vector Normals
+    numVectors: int = r.readInt16()
+    points: list[Vector3] = r.readVector3()             # Vector XYZ coords
+    normals: list[Vector3] = r.readVector3()            # Vector Normals
 
 # Editor flags for the Body Partitions.
 class BSPartFlag(Flag):
@@ -1590,72 +1590,72 @@ class BSPartFlag(Flag):
 
 # Body part list for DismemberSkinInstance
 class BodyPartList:
-    partFlag: BSPartFlag                                # Flags related to the Body Partition
-    bodyPart: BSDismemberBodyPartType                   # Body Part Index
+    partFlag: BSPartFlag = BSPartFlag(r.readUInt16())   # Flags related to the Body Partition
+    bodyPart: BSDismemberBodyPartType = BSDismemberBodyPartType(r.readUInt16()) # Body Part Index
 
 # Stores Bone Level of Detail info in a BSBoneLODExtraData
 class BoneLOD:
-    distance: int
-    boneName: str
+    distance: int = r.readUInt32()
+    boneName: str = Y.string(r)
 
 # Per-chunk material, used in bhkCompressedMeshShapeData
 class bhkCMSDMaterial:
-    material: SkyrimHavokMaterial
-    filter: HavokFilter
+    material: SkyrimHavokMaterial = SkyrimHavokMaterial(r.readUInt32())
+    filter: HavokFilter = HavokFilter(r, h)
 
 # Triangle indices used in pair with "Big Verts" in a bhkCompressedMeshShapeData.
 class bhkCMSDBigTris:
-    triangle1: int
-    triangle2: int
-    triangle3: int
-    material: int                                       # Always 0?
-    weldingInfo: int
+    triangle1: int = r.readUInt16()
+    triangle2: int = r.readUInt16()
+    triangle3: int = r.readUInt16()
+    material: int = r.readUInt32()                      # Always 0?
+    weldingInfo: int = r.readUInt16()
 
 # A set of transformation data: translation and rotation
 class bhkCMSDTransform:
-    translation: Vector4                                # A vector that moves the chunk by the specified amount. W is not used.
-    rotation: Quaternion                                # Rotation. Reference point for rotation is bhkRigidBody translation.
+    translation: Vector4 = r.readVector4()              # A vector that moves the chunk by the specified amount. W is not used.
+    rotation: Quaternion = r.readQuaternionWFirst()     # Rotation. Reference point for rotation is bhkRigidBody translation.
 
 # Defines subshape chunks in bhkCompressedMeshShapeData
 class bhkCMSDChunk:
-    translation: Vector4
-    materialIndex: int                                  # Index of material in bhkCompressedMeshShapeData::Chunk Materials
-    reference: int                                      # Always 65535?
-    transformIndex: int                                 # Index of transformation in bhkCompressedMeshShapeData::Chunk Transforms
-    vertices: list[int]
-    indices: list[int]
-    strips: list[int]
-    weldingInfo: list[int]
+    translation: Vector4 = r.readVector4()
+    materialIndex: int = r.readUInt32()                 # Index of material in bhkCompressedMeshShapeData::Chunk Materials
+    reference: int = r.readUInt16()                     # Always 65535?
+    transformIndex: int = r.readUInt16()                # Index of transformation in bhkCompressedMeshShapeData::Chunk Transforms
+    vertices: list[int] = r.readL32FArray(lambda r: r.readUInt16())
+    indices: list[int] = r.readL32FArray(lambda r: r.readUInt16())
+    strips: list[int] = r.readL32FArray(lambda r: r.readUInt16())
+    weldingInfo: list[int] = r.readL32FArray(lambda r: r.readUInt16())
 
 class MalleableDescriptor:
-    type: hkConstraintType                              # Type of constraint.
-    numEntities: int                                    # Always 2 (Hardcoded). Number of bodies affected by this constraint.
-    entityA: int                                        # Usually NONE. The entity affected by this constraint.
-    entityB: int                                        # Usually NONE. The entity affected by this constraint.
-    priority: int                                       # Usually 1. Higher values indicate higher priority of this constraint?
-    ballandSocket: BallAndSocketDescriptor
-    hinge: HingeDescriptor
-    limitedHinge: LimitedHingeDescriptor
-    prismatic: PrismaticDescriptor
-    ragdoll: RagdollDescriptor
-    stiffSpring: StiffSpringDescriptor
-    tau: float
-    damping: float
-    strength: float
+    type: hkConstraintType = hkConstraintType(r.readUInt32()) # Type of constraint.
+    numEntities: int = r.readUInt32()                   # Always 2 (Hardcoded). Number of bodies affected by this constraint.
+    entityA: int = X[bhkEntity].ptr(r)                  # Usually NONE. The entity affected by this constraint.
+    entityB: int = X[bhkEntity].ptr(r)                  # Usually NONE. The entity affected by this constraint.
+    priority: int = r.readUInt32()                      # Usually 1. Higher values indicate higher priority of this constraint?
+    ballandSocket: BallAndSocketDescriptor = BallAndSocketDescriptor(r) if Type == 0 else None
+    hinge: HingeDescriptor = HingeDescriptor(r, h) if Type == 1 else None
+    limitedHinge: LimitedHingeDescriptor = LimitedHingeDescriptor(r, h) if Type == 2 else None
+    prismatic: PrismaticDescriptor = PrismaticDescriptor(r, h) if Type == 6 else None
+    ragdoll: RagdollDescriptor = RagdollDescriptor(r, h) if Type == 7 else None
+    stiffSpring: StiffSpringDescriptor = StiffSpringDescriptor(r) if Type == 8 else None
+    tau: float = r.readSingle() if h.v <= 0x14000005 else None
+    damping: float = r.readSingle() if h.v <= 0x14000005 else None
+    strength: float = r.readSingle() if h.v >= 0x14020007 else None
 
 class ConstraintData:
-    type: hkConstraintType                              # Type of constraint.
-    numEntities2: int                                   # Always 2 (Hardcoded). Number of bodies affected by this constraint.
-    entityA: int                                        # Usually NONE. The entity affected by this constraint.
-    entityB: int                                        # Usually NONE. The entity affected by this constraint.
-    priority: int                                       # Usually 1. Higher values indicate higher priority of this constraint?
-    ballandSocket: BallAndSocketDescriptor
-    hinge: HingeDescriptor
-    limitedHinge: LimitedHingeDescriptor
-    prismatic: PrismaticDescriptor
-    ragdoll: RagdollDescriptor
-    stiffSpring: StiffSpringDescriptor
-    malleable: MalleableDescriptor
+    type: hkConstraintType = hkConstraintType(r.readUInt32()) # Type of constraint.
+    numEntities2: int = r.readUInt32()                  # Always 2 (Hardcoded). Number of bodies affected by this constraint.
+    entityA: int = X[bhkEntity].ptr(r)                  # Usually NONE. The entity affected by this constraint.
+    entityB: int = X[bhkEntity].ptr(r)                  # Usually NONE. The entity affected by this constraint.
+    priority: int = r.readUInt32()                      # Usually 1. Higher values indicate higher priority of this constraint?
+    ballandSocket: BallAndSocketDescriptor = BallAndSocketDescriptor(r) if Type == 0 else None
+    hinge: HingeDescriptor = HingeDescriptor(r, h) if Type == 1 else None
+    limitedHinge: LimitedHingeDescriptor = LimitedHingeDescriptor(r, h) if Type == 2 else None
+    prismatic: PrismaticDescriptor = PrismaticDescriptor(r, h) if Type == 6 else None
+    ragdoll: RagdollDescriptor = RagdollDescriptor(r, h) if Type == 7 else None
+    stiffSpring: StiffSpringDescriptor = StiffSpringDescriptor(r) if Type == 8 else None
+    malleable: MalleableDescriptor = MalleableDescriptor(r, h) if Type == 13 else None
 
 #endregion
 
@@ -1721,9 +1721,9 @@ class BroadPhaseType(Enum):
     BROAD_PHASE_BORDER = 3
 
 class hkWorldObjCinfoProperty:
-    data: int
-    size: int
-    capacityandFlags: int
+    data: int = r.readUInt32()
+    size: int = r.readUInt32()
+    capacityandFlags: int = r.readUInt32()
 
 # The base type of most Bethesda-specific Havok-related NIF objects.
 class bhkRefObject(NiObject):
@@ -1838,8 +1838,8 @@ class bhkBallAndSocketConstraint(bhkConstraint):
 
 # Two Vector4 for pivot in A and B.
 class ConstraintInfo:
-    pivotInA: Vector4
-    pivotInB: Vector4
+    pivotInA: Vector4 = r.readVector4()
+    pivotInB: Vector4 = r.readVector4()
 
 # A Ball and Socket Constraint chain.
 class bhkBallSocketConstraintChain(bhkSerializable):
@@ -2036,11 +2036,11 @@ class InterpBlendFlags(Enum):
 
 # Interpolator item for array in NiBlendInterpolator.
 class InterpBlendItem:
-    interpolator: int                                   # Reference to an interpolator.
-    weight: float
-    normalizedWeight: float
-    priority: int
-    easeSpinner: float
+    interpolator: int = X[NiInterpolator].ref(r)        # Reference to an interpolator.
+    weight: float = r.readSingle()
+    normalizedWeight: float = r.readSingle()
+    priority: int = r.readByte() if h.v >= 0x0A01006E else None
+    easeSpinner: float = r.readSingle()
 
 # Abstract base class for all NiInterpolators that blend the results of sub-interpolators together to compute a final weighted value.
 class NiBlendInterpolator(NiInterpolator):
@@ -2391,16 +2391,16 @@ class NiBoneLODController(NiTimeController):
 class NiBSBoneLODController(NiBoneLODController):
 
 class MaterialData:
-    hasShader: bool                                     # Shader.
-    shaderName: str                                     # The shader name.
-    shaderExtraData: int                                # Extra data associated with the shader. A value of -1 means the shader is the default implementation.
-    numMaterials: int
-    materialName: list[str]                             # The name of the material.
-    materialExtraData: list[int]                        # Extra data associated with the material. A value of -1 means the material is the default implementation.
-    activeMaterial: int                                 # The index of the currently active material.
-    unknownByte: int                                    # Cyanide extension (only in version 10.2.0.0?).
-    unknownInteger2: int                                # Unknown.
-    materialNeedsUpdate: bool                           # Whether the materials for this object always needs to be updated before rendering with them.
+    hasShader: bool = r.readBool32() if h.v >= 0x0A000100 and h.v <= 0x14010003 else None # Shader.
+    shaderName: str = Y.string(r) if Has Shader and h.v >= 0x0A000100 and h.v <= 0x14010003 else None # The shader name.
+    shaderExtraData: int = r.readInt32() if Has Shader and h.v >= 0x0A000100 and h.v <= 0x14010003 else None # Extra data associated with the shader. A value of -1 means the shader is the default implementation.
+    numMaterials: int = r.readUInt32() if h.v >= 0x14020005 else None
+    materialName: list[str] = Y.string(r) if h.v >= 0x14020005 else None # The name of the material.
+    materialExtraData: list[int] = r.readInt32() if h.v >= 0x14020005 else None # Extra data associated with the material. A value of -1 means the material is the default implementation.
+    activeMaterial: int = r.readInt32() if h.v >= 0x14020005 else None # The index of the currently active material.
+    unknownByte: int = r.readByte() if h.v >= 0x0A020000 and h.v <= 0x0A020000 and (h.userVersion == 1) else None # Cyanide extension (only in version 10.2.0.0?).
+    unknownInteger2: int = r.readInt32() if h.v >= 0x0A040001 and h.v <= 0x0A040001 else None # Unknown.
+    materialNeedsUpdate: bool = r.readBool32() if h.v >= 0x14020007 else None # Whether the materials for this object always needs to be updated before rendering with them.
 
 # Describes a visible scene element with vertices like a mesh, a particle system, lines, etc.
 class NiGeometry(NiAVObject):
@@ -2595,12 +2595,12 @@ class NiAutoNormalParticlesData(NiParticlesData):
 
 # Particle Description.
 class ParticleDesc:
-    translation: Vector3                                # Unknown.
-    unknownFloats1: list[float]                         # Unknown.
-    unknownFloat1: float                                # Unknown.
-    unknownFloat2: float                                # Unknown.
-    unknownFloat3: float                                # Unknown.
-    unknownInt1: int                                    # Unknown.
+    translation: Vector3 = r.readVector3()              # Unknown.
+    unknownFloats1: list[float] = r.readSingle() if h.v <= 0x0A040001 else None # Unknown.
+    unknownFloat1: float = r.readSingle()               # Unknown.
+    unknownFloat2: float = r.readSingle()               # Unknown.
+    unknownFloat3: float = r.readSingle()               # Unknown.
+    unknownInt1: int = r.readInt32()                    # Unknown.
 
 # Particle system data.
 class NiPSysData(NiParticlesData):
@@ -3096,10 +3096,10 @@ class NiPathController(NiTimeController):
     percentData: int
 
 class PixelFormatComponent:
-    type: PixelComponent                                # Component Type
-    convention: PixelRepresentation                     # Data Storage Convention
-    bitsPerChannel: int                                 # Bits per component
-    isSigned: bool
+    type: PixelComponent = PixelComponent(r.readUInt32()) # Component Type
+    convention: PixelRepresentation = PixelRepresentation(r.readUInt32()) # Data Storage Convention
+    bitsPerChannel: int = r.readByte()                  # Bits per component
+    isSigned: bool = r.readBool32()
 
 class NiPixelFormat(NiObject):
     pixelFormat: PixelFormat                            # The format of the pixels in this internally stored image.
@@ -3514,9 +3514,9 @@ class NiTexture(NiObjectNET):
 
 # NiTexture::FormatPrefs. These preferences are a request to the renderer to use a format the most closely matches the settings and may be ignored.
 class FormatPrefs:
-    pixelLayout: PixelLayout                            # Requests the way the image will be stored.
-    useMipmaps: MipMapFormat                            # Requests if mipmaps are used or not.
-    alphaFormat: AlphaFormat                            # Requests no alpha, 1-bit alpha, or
+    pixelLayout: PixelLayout = PixelLayout(r.readUInt32()) # Requests the way the image will be stored.
+    useMipmaps: MipMapFormat = MipMapFormat(r.readUInt32()) # Requests if mipmaps are used or not.
+    alphaFormat: AlphaFormat = AlphaFormat(r.readUInt32()) # Requests no alpha, 1-bit alpha, or
 
 # Describes texture source and properties.
 class NiSourceTexture(NiTexture):
@@ -3824,12 +3824,12 @@ class NiPhysXProp(NiObjectNET):
     propDescription: int
 
 class PhysXMaterialRef:
-    key: int
-    materialDesc: int
+    key: int = r.readUInt16()
+    materialDesc: int = X[NiPhysXMaterialDesc].ref(r)
 
 class PhysXStateName:
-    name: str
-    index: int
+    name: str = Y.string(r)
+    index: int = r.readUInt32()
 
 # For serialization of PhysX objects and to attach them to the scene.
 class NiPhysXPropDesc(NiObject):
@@ -3859,9 +3859,9 @@ class NiPhysXActorDesc(NiObject):
     dest: int
 
 class PhysXBodyStoredVels:
-    linearVelocity: Vector3
-    angularVelocity: Vector3
-    sleep: bool
+    linearVelocity: Vector3 = r.readVector3()
+    angularVelocity: Vector3 = r.readVector3()
+    sleep: bool = r.readBool32() if h.v >= 0x1E020003 else None
 
 # For serializing NxBodyDesc objects.
 class NiPhysXBodyDesc(NiObject):
@@ -3909,27 +3909,27 @@ class NxJointProjectionMode(Enum):
     NX_JPM_LINEAR_MINDIST = 2
 
 class NiPhysXJointActor:
-    actor: int
-    localNormal: Vector3
-    localAxis: Vector3
-    localAnchor: Vector3
+    actor: int = X[NiPhysXActorDesc].ref(r)
+    localNormal: Vector3 = r.readVector3()
+    localAxis: Vector3 = r.readVector3()
+    localAnchor: Vector3 = r.readVector3()
 
 class NxJointLimitSoftDesc:
-    value: float
-    restitution: float
-    spring: float
-    damping: float
+    value: float = r.readSingle()
+    restitution: float = r.readSingle()
+    spring: float = r.readSingle()
+    damping: float = r.readSingle()
 
 class NxJointDriveDesc:
-    driveType: NxD6JointDriveType
-    restitution: float
-    spring: float
-    damping: float
+    driveType: NxD6JointDriveType = NxD6JointDriveType(r.readUInt32())
+    restitution: float = r.readSingle()
+    spring: float = r.readSingle()
+    damping: float = r.readSingle()
 
 class NiPhysXJointLimit:
-    limitPlaneNormal: Vector3
-    limitPlaneD: float
-    limitPlaneR: float
+    limitPlaneNormal: Vector3 = r.readVector3()
+    limitPlaneD: float = r.readSingle()
+    limitPlaneR: float = r.readSingle() if h.v >= 0x14040000 else None
 
 # A PhysX Joint abstract base class.
 class NiPhysXJointDesc(NiObject):
@@ -3986,13 +3986,13 @@ class NxShapeType(Enum):
     NX_SHAPE_COMPOUND = 9
 
 class NxPlane:
-    val1: float
-    point1: Vector3
+    val1: float = r.readSingle()
+    point1: Vector3 = r.readVector3()
 
 class NxCapsule:
-    val1: float
-    val2: float
-    capsuleFlags: int
+    val1: float = r.readSingle()
+    val2: float = r.readSingle()
+    capsuleFlags: int = r.readUInt32()
 
 # For serializing NxShapeDesc objects
 class NiPhysXShapeDesc(NiObject):
@@ -4033,9 +4033,9 @@ class NxMaterialFlag(Flag):
     NX_MF_DISABLE_STRONG_FRICTION = 1 << 6
 
 class NxSpringDesc:
-    spring: float
-    damper: float
-    targetValue: float
+    spring: float = r.readSingle()
+    damper: float = r.readSingle()
+    targetValue: float = r.readSingle()
 
 class NxCombineMode(Enum):
     NX_CM_AVERAGE = 0,
@@ -4044,17 +4044,17 @@ class NxCombineMode(Enum):
     NX_CM_MAX = 3
 
 class NxMaterialDesc:
-    dynamicFriction: float
-    staticFriction: float
-    restitution: float
-    dynamicFrictionV: float
-    staticFrictionV: float
-    directionofAnisotropy: Vector3
-    flags: NxMaterialFlag
-    frictionCombineMode: NxCombineMode
-    restitutionCombineMode: NxCombineMode
-    hasSpring: bool
-    spring: NxSpringDesc
+    dynamicFriction: float = r.readSingle()
+    staticFriction: float = r.readSingle()
+    restitution: float = r.readSingle()
+    dynamicFrictionV: float = r.readSingle()
+    staticFrictionV: float = r.readSingle()
+    directionofAnisotropy: Vector3 = r.readVector3()
+    flags: NxMaterialFlag = NxMaterialFlag(r.readUInt32())
+    frictionCombineMode: NxCombineMode = NxCombineMode(r.readUInt32())
+    restitutionCombineMode: NxCombineMode = NxCombineMode(r.readUInt32())
+    hasSpring: bool = r.readBool32() if h.v <= 0x14020300 else None
+    spring: NxSpringDesc = NxSpringDesc(r) if Has Spring and h.v <= 0x14020300 else None
 
 # For serializing NxMaterialDesc objects.
 class NiPhysXMaterialDesc(NiObject):
@@ -4097,10 +4097,10 @@ class NiLinesData(NiGeometryData):
 
 # Two dimensional screen elements.
 class Polygon:
-    numVertices: int
-    vertexOffset: int                                   # Offset in vertex array.
-    numTriangles: int
-    triangleOffset: int                                 # Offset in indices array.
+    numVertices: int = r.readUInt16()
+    vertexOffset: int = r.readUInt16()                  # Offset in vertex array.
+    numTriangles: int = r.readUInt16()
+    triangleOffset: int = r.readUInt16()                # Offset in indices array.
 
 # DEPRECATED (20.5), functionality included in NiMeshScreenElements.
 # Two dimensional screen elements.
@@ -4685,9 +4685,9 @@ class bhkConvexListShape(bhkShape):
 
 # Bethesda-specific compound.
 class BSTreadTransform:
-    name: str
-    transform1: NiQuatTransform
-    transform2: NiQuatTransform
+    name: str = Y.string(r)
+    transform1: NiQuatTransform = NiQuatTransform(r, h)
+    transform2: NiQuatTransform = NiQuatTransform(r, h)
 
 # Bethesda-specific interpolator.
 class BSTreadTransfInterpolator(NiInterpolator):
@@ -4755,20 +4755,20 @@ class BSMultiBoundSphere(BSMultiBoundData):
 
 # This is only defined because of recursion issues.
 class BSGeometrySubSegment:
-    startIndex: int
-    numPrimitives: int
-    parentArrayIndex: int
-    unused: int
+    startIndex: int = r.readUInt32()
+    numPrimitives: int = r.readUInt32()
+    parentArrayIndex: int = r.readUInt32()
+    unused: int = r.readUInt32()
 
 # Bethesda-specific. Describes groups of triangles either segmented in a grid (for LOD) or by body part for skinned FO4 meshes.
 class BSGeometrySegmentData:
-    flags: int
-    index: int                                          # Index = previous Index + previous Num Tris in Segment * 3
-    numTrisinSegment: int                               # The number of triangles belonging to this segment
-    startIndex: int
-    numPrimitives: int
-    parentArrayIndex: int
-    subSegment: list[BSGeometrySubSegment]
+    flags: int = r.readByte()
+    index: int = r.readUInt32()                         # Index = previous Index + previous Num Tris in Segment * 3
+    numTrisinSegment: int = r.readUInt32()              # The number of triangles belonging to this segment
+    startIndex: int = r.readUInt32() if (h.userVersion2 == 130) else None
+    numPrimitives: int = r.readUInt32() if (h.userVersion2 == 130) else None
+    parentArrayIndex: int = r.readUInt32() if (h.userVersion2 == 130) else None
+    subSegment: list[BSGeometrySubSegment] = r.readL32FArray(lambda r: BSGeometrySubSegment(r)) if (h.userVersion2 == 130) else None
 
 # Bethesda-specific AV object.
 class BSSegmentedTriShape(NiTriShape):
@@ -4780,30 +4780,30 @@ class BSMultiBoundAABB(BSMultiBoundData):
     extent: Vector3                                     # Extent of the AABB in all directions
 
 class AdditionalDataInfo:
-    dataType: int                                       # Type of data in this channel
-    numChannelBytesPerElement: int                      # Number of bytes per element of this channel
-    numChannelBytes: int                                # Total number of bytes of this channel (num vertices times num bytes per element)
-    numTotalBytesPerElement: int                        # Number of bytes per element in all channels together. Sum of num channel bytes per element over all block infos.
-    blockIndex: int                                     # Unsure. The block in which this channel is stored? Usually there is only one block, and so this is zero.
-    channelOffset: int                                  # Offset (in bytes) of this channel. Sum of all num channel bytes per element of all preceeding block infos.
-    unknownByte1: int                                   # Unknown, usually equal to 2.
+    dataType: int = r.readInt32()                       # Type of data in this channel
+    numChannelBytesPerElement: int = r.readInt32()      # Number of bytes per element of this channel
+    numChannelBytes: int = r.readInt32()                # Total number of bytes of this channel (num vertices times num bytes per element)
+    numTotalBytesPerElement: int = r.readInt32()        # Number of bytes per element in all channels together. Sum of num channel bytes per element over all block infos.
+    blockIndex: int = r.readInt32()                     # Unsure. The block in which this channel is stored? Usually there is only one block, and so this is zero.
+    channelOffset: int = r.readInt32()                  # Offset (in bytes) of this channel. Sum of all num channel bytes per element of all preceeding block infos.
+    unknownByte1: int = r.readByte()                    # Unknown, usually equal to 2.
 
 class AdditionalDataBlock:
-    hasData: bool                                       # Has data
-    blockSize: int                                      # Size of Block
-    blockOffsets: list[int]
-    numData: int
-    dataSizes: list[int]
-    data: list[list[int]]
+    hasData: bool = r.readBool32()                      # Has data
+    blockSize: int = r.readInt32() if Has Data else None # Size of Block
+    blockOffsets: list[int] = r.readL32FArray(lambda r: r.readInt32()) if Has Data else None
+    numData: int = r.readInt32() if Has Data else None
+    dataSizes: list[int] = r.readInt32() if Has Data else None
+    data: list[list[int]] = r.readByte() if Has Data else None
 
 class BSPackedAdditionalDataBlock:
-    hasData: bool                                       # Has data
-    numTotalBytes: int                                  # Total number of bytes (over all channels and all elements, equals num total bytes per element times num vertices).
-    blockOffsets: list[int]                             # Block offsets in the data? Usually equal to zero.
-    atomSizes: list[int]                                # The sum of all of these equal num total bytes per element, so this probably describes how each data element breaks down into smaller chunks (i.e. atoms).
-    data: list[int]
-    unknownInt1: int
-    numTotalBytesPerElement: int                        # Unsure, but this seems to correspond again to the number of total bytes per element.
+    hasData: bool = r.readBool32()                      # Has data
+    numTotalBytes: int = r.readInt32() if Has Data else None # Total number of bytes (over all channels and all elements, equals num total bytes per element times num vertices).
+    blockOffsets: list[int] = r.readL32FArray(lambda r: r.readInt32()) if Has Data else None # Block offsets in the data? Usually equal to zero.
+    atomSizes: list[int] = r.readL32FArray(lambda r: r.readInt32()) if Has Data else None # The sum of all of these equal num total bytes per element, so this probably describes how each data element breaks down into smaller chunks (i.e. atoms).
+    data: list[int] = r.readByte() if Has Data else None
+    unknownInt1: int = r.readInt32()
+    numTotalBytesPerElement: int = r.readInt32()        # Unsure, but this seems to correspond again to the number of total bytes per element.
 
 class NiAdditionalGeometryData(AbstractAdditionalGeometryData):
     numVertices: int                                    # Number of vertices
@@ -4872,8 +4872,8 @@ class bhkRagdollTemplateData(NiObject):
 
 # A range of indices, which make up a region (such as a submesh).
 class Region:
-    startIndex: int
-    numIndices: int
+    startIndex: int = r.readUInt32()
+    numIndices: int = r.readUInt32()
 
 # Sets how objects are to be cloned.
 class CloningBehavior(Enum):
@@ -4975,20 +4975,20 @@ class NiDataStream(NiObject):
     streamable: bool
 
 class SemanticData:
-    name: str                                           # Type of data (POSITION, POSITION_BP, INDEX, NORMAL, NORMAL_BP,
+    name: str = Y.string(r)                             # Type of data (POSITION, POSITION_BP, INDEX, NORMAL, NORMAL_BP,
                                                         #     TEXCOORD, BLENDINDICES, BLENDWEIGHT, BONE_PALETTE, COLOR, DISPLAYLIST,
                                                         #     MORPH_POSITION, BINORMAL_BP, TANGENT_BP).
-    index: int                                          # An extra index of the data. For example, if there are 3 uv maps,
+    index: int = r.readUInt32()                         # An extra index of the data. For example, if there are 3 uv maps,
                                                         #     then the corresponding TEXCOORD data components would have indices
                                                         #     0, 1, and 2, respectively.
 
 class DataStreamRef:
-    stream: int                                         # Reference to a data stream object which holds the data used by
+    stream: int = X[NiDataStream].ref(r)                # Reference to a data stream object which holds the data used by
                                                         #     this reference.
-    isPerInstance: bool                                 # Sets whether this stream data is per-instance data for use in
+    isPerInstance: bool = r.readBool32()                # Sets whether this stream data is per-instance data for use in
                                                         #     hardware instancing.
-    submeshToRegionMap: list[int]                       # A lookup table that maps submeshes to regions.
-    componentSemantics: list[SemanticData]              # Describes the semantic of each component.
+    submeshToRegionMap: list[int] = r.readL16FArray(lambda r: r.readUInt16()) # A lookup table that maps submeshes to regions.
+    componentSemantics: list[SemanticData] = r.readL32FArray(lambda r: SemanticData(r)) # Describes the semantic of each component.
 
 # An object that can be rendered.
 class NiRenderObject(NiAVObject):
@@ -5020,17 +5020,17 @@ class NiMeshModifier(NiObject):
     completePoints: list[SyncPoint]                     # The sync points supported by this mesh modifier for CompleteTasks.
 
 class ExtraMeshDataEpicMickey:
-    unknownInt1: int
-    unknownInt2: int
-    unknownInt3: int
-    unknownInt4: float
-    unknownInt5: float
-    unknownInt6: float
+    unknownInt1: int = r.readInt32()
+    unknownInt2: int = r.readInt32()
+    unknownInt3: int = r.readInt32()
+    unknownInt4: float = r.readSingle()
+    unknownInt5: float = r.readSingle()
+    unknownInt6: float = r.readSingle()
 
 class ExtraMeshDataEpicMickey2:
-    start: int
-    end: int
-    unknownShorts: list[int]
+    start: int = r.readInt32()
+    end: int = r.readInt32()
+    unknownShorts: list[int] = r.readInt16()
 
 class NiMesh(NiRenderObject):
     primitiveType: MeshPrimitiveType                    # The primitive type of the mesh, such as triangles or lines.
@@ -5068,8 +5068,8 @@ class NiMorphWeightsController(NiInterpController):
     targetNames: list[str]
 
 class ElementReference:
-    semantic: SemanticData                              # The element semantic.
-    normalizeFlag: int                                  # Whether or not to normalize the data.
+    semantic: SemanticData = SemanticData(r)            # The element semantic.
+    normalizeFlag: int = r.readUInt32()                 # Whether or not to normalize the data.
 
 # Performs linear-weighted blending between a set of target data streams.
 class NiMorphMeshModifier(NiMeshModifier):
@@ -5108,8 +5108,8 @@ class NiInstancingMeshModifier(NiMeshModifier):
     instanceNodes: list[int]
 
 class LODInfo:
-    numBones: int
-    skinIndices: list[int]
+    numBones: int = r.readUInt32()
+    skinIndices: list[int] = r.readL32FArray(lambda r: r.readUInt32())
 
 # Defines the levels of detail for a given character and dictates the character's current LOD.
 class NiSkinningLODController(NiTimeController):
@@ -5119,8 +5119,8 @@ class NiSkinningLODController(NiTimeController):
     loDs: list[LODInfo]
 
 class PSSpawnRateKey:
-    value: float
-    time: float
+    value: float = r.readSingle()
+    time: float = r.readSingle()
 
 # Describes the various methods that may be used to specify the orientation of the particles.
 class AlignMethod(Enum):
@@ -5681,17 +5681,17 @@ class BSMeshLODTriShape(BSTriShape):
     loD2Size: int
 
 class BSGeometryPerSegmentSharedData:
-    userIndex: int                                      # If Bone ID is 0xffffffff, this value refers to the Segment at the listed index. Otherwise this is the "Biped Object", which is like the body part types in Skyrim and earlier.
-    boneId: int                                         # A hash of the bone name string.
-    cutOffsets: list[float]
+    userIndex: int = r.readUInt32()                     # If Bone ID is 0xffffffff, this value refers to the Segment at the listed index. Otherwise this is the "Biped Object", which is like the body part types in Skyrim and earlier.
+    boneId: int = r.readUInt32()                        # A hash of the bone name string.
+    cutOffsets: list[float] = r.readL32FArray(lambda r: r.readSingle())
 
 class BSGeometrySegmentSharedData:
-    numSegments: int
-    totalSegments: int
-    segmentStarts: list[int]
-    perSegmentData: list[BSGeometryPerSegmentSharedData]
-    ssfLength: int
-    ssfFile: list[int]
+    numSegments: int = r.readUInt32()
+    totalSegments: int = r.readUInt32()
+    segmentStarts: list[int] = r.readUInt32()
+    perSegmentData: list[BSGeometryPerSegmentSharedData] = BSGeometryPerSegmentSharedData(r)
+    ssfLength: int = r.readUInt16()
+    ssfFile: list[int] = r.readByte()
 
 # Fallout 4 Sub-Index Tri Shape
 class BSSubIndexTriShape(BSTriShape):
@@ -5728,10 +5728,10 @@ class BSClothExtraData(BSExtraData):
 
 # Fallout 4 Bone Transform
 class BSSkinBoneTrans:
-    boundingSphere: NiBound
-    rotation: Matrix3x3
-    translation: Vector3
-    scale: float
+    boundingSphere: NiBound = NiBound(r)
+    rotation: Matrix3x3 = r.readMatrix3x3()
+    translation: Vector3 = r.readVector3()
+    scale: float = r.readSingle()
 
 # Fallout 4 Skin Instance
 class BSSkin::Instance(NiObject):
@@ -5749,11 +5749,11 @@ class BSPositionData(NiExtraData):
     data: list[float]
 
 class BSConnectPoint:
-    parent: str
-    name: str
-    rotation: Quaternion
-    translation: Vector3
-    scale: float
+    parent: str = r.readL32AString()
+    name: str = r.readL32AString()
+    rotation: Quaternion = r.readQuaternion()
+    translation: Vector3 = r.readVector3()
+    scale: float = r.readSingle()
 
 # Fallout 4 Item Slot Parent
 class BSConnectPoint::Parents(NiExtraData):
@@ -5769,28 +5769,28 @@ class BSEyeCenterExtraData(NiExtraData):
     data: list[float]
 
 class BSPackedGeomDataCombined:
-    grayscaletoPaletteScale: float
-    transform: NiTransform
-    boundingSphere: NiBound
+    grayscaletoPaletteScale: float = r.readSingle()
+    transform: NiTransform = NiTransform(r)
+    boundingSphere: NiBound = NiBound(r)
 
 class BSPackedGeomData:
-    numVerts: int
-    lodLevels: int
-    triCountLoD0: int
-    triOffsetLoD0: int
-    triCountLoD1: int
-    triOffsetLoD1: int
-    triCountLoD2: int
-    triOffsetLoD2: int
-    combined: list[BSPackedGeomDataCombined]
-    vertexDesc: BSVertexDesc
-    vertexData: list[BSVertexData]
-    triangles: list[Triangle]
+    numVerts: int = r.readUInt32()
+    lodLevels: int = r.readUInt32()
+    triCountLoD0: int = r.readUInt32()
+    triOffsetLoD0: int = r.readUInt32()
+    triCountLoD1: int = r.readUInt32()
+    triOffsetLoD1: int = r.readUInt32()
+    triCountLoD2: int = r.readUInt32()
+    triOffsetLoD2: int = r.readUInt32()
+    combined: list[BSPackedGeomDataCombined] = r.readL32FArray(lambda r: BSPackedGeomDataCombined(r))
+    vertexDesc: BSVertexDesc = BSVertexDesc(r)
+    vertexData: list[BSVertexData] = BSVertexData(r, h) if !BSPackedCombinedSharedGeomDataExtra else None
+    triangles: list[Triangle] = Triangle(r) if !BSPackedCombinedSharedGeomDataExtra else None
 
 # This appears to be a 64-bit hash but nif.xml does not have a 64-bit type.
 class BSPackedGeomObject:
-    shapeID1: int
-    shapeID2: int
+    shapeID1: int = r.readUInt32()
+    shapeID2: int = r.readUInt32()
 
 # Fallout 4 Packed Combined Geometry Data.
 # Geometry is baked into the file and given a list of transforms to position each copy.

@@ -41,6 +41,52 @@ class Y:
     def string(r: Reader) -> str: return r.readL32Encoding()
     @staticmethod
     def stringRef(r: Reader, p: int) -> str: return None
+    @staticmethod
+    def isVersionSupported(v: int) -> bool: return True
+    @staticmethod
+    def parseHeaderStr(s: str) -> tuple:
+        p = s.indexOf('Version')
+        if p >= 0:
+            v = s
+            v = v[(p + 8):]
+            for i in range(len(v)):
+                if v[i].isdigit() or v[i] == '.': continue
+                else: v = v[:i]
+            ver = Header.ver2Num(v)
+            if not Header.isVersionSupported(ver): raise Exception(f'Version {Header.ver2Str(ver)} ({ver}) is not supported.')
+            return (s, ver)
+        elif s.startsWith('NS'): return (s, 0x0a010000); # Dodgy version for NeoSteam
+        raise Exception('Invalid header string')
+    @staticmethod
+    def ver2Str(v: int) -> str:
+        if v == 0: return ''
+        elif v < 0x0303000D:
+            # this is an old-style 2-number version with one period
+            s = f'{(v >> 24) & 0xff}.{(v >> 16) & 0xff}'
+            sub_num1 = (v >> 8) & 0xff; sub_num2 = v & 0xff
+            if sub_num1 > 0 or sub_num2 > 0: s += f'{sub_num1}'
+            if sub_num2 > 0: s += f'{sub_num2}'
+            return s
+        # this is a new-style 4-number version with 3 periods
+        else: return f'{(v >> 24) & 0xff}.{(v >> 16) & 0xff}.{(v >> 8) & 0xff}.{v & 0xff}'
+    @staticmethod
+    def ver2Num(s: str) -> int:
+        if not s: return 0
+        if '.' in s:
+            l = s.split('.')
+            v = 0
+            if len(l) > 4: return 0 # Version # has more than 3 dots in it.
+            elif len(l) == 2:
+                # this is an old style version number.
+                v += int(l[0]) << (3 * 8)
+                if len(l[1]) >= 1: v += int(l[1][0:1]) << (2 * 8)
+                if len(l[1]) >= 2: v += int(l[1][1:2]) << (1 * 8)
+                if len(l[1]) >= 3: v += int(l[1][2:])
+                return v
+            # this is a new style version number with dots separating the digits
+            for i in range(min(4, len(l))): v += int(l[i]) << ((3 - i) * 8)
+            return v
+        return int(s)
 
 class Flags(Flag):
     pass
@@ -149,7 +195,7 @@ class Fallout3HavokMaterial(Enum):
     FO_HAV_MAT_HOLLOW_METAL = 16,   # Hollow Metal
     FO_HAV_MAT_SHEET_METAL = 17,    # Sheet Metal
     FO_HAV_MAT_SAND = 18,           # Sand
-    FO_HAV_MAT_BROKEN_CONCRETE = 19, # Broken Concrete
+    FO_HAV_MAT_BROKEN_CONCRETE = 19,# Broken Concrete
     FO_HAV_MAT_VEHICLE_BODY = 20,   # Vehicle Body
     FO_HAV_MAT_VEHICLE_PART_SOLID = 21, # Vehicle Part Solid
     FO_HAV_MAT_VEHICLE_PART_HOLLOW = 22, # Vehicle Part Hollow
@@ -185,10 +231,10 @@ class Fallout3HavokMaterial(Enum):
     FO_HAV_MAT_VEHICLE_BODY_PLATFORM = 52, # Vehicle Body
     FO_HAV_MAT_VEHICLE_PART_SOLID_PLATFORM = 53, # Vehicle Part Solid
     FO_HAV_MAT_VEHICLE_PART_HOLLOW_PLATFORM = 54, # Vehicle Part Hollow
-    FO_HAV_MAT_BARREL_PLATFORM = 55, # Barrel
-    FO_HAV_MAT_BOTTLE_PLATFORM = 56, # Bottle
+    FO_HAV_MAT_BARREL_PLATFORM = 55,# Barrel
+    FO_HAV_MAT_BOTTLE_PLATFORM = 56,# Bottle
     FO_HAV_MAT_SODA_CAN_PLATFORM = 57, # Soda Can
-    FO_HAV_MAT_PISTOL_PLATFORM = 58, # Pistol
+    FO_HAV_MAT_PISTOL_PLATFORM = 58,# Pistol
     FO_HAV_MAT_RIFLE_PLATFORM = 59, # Rifle
     FO_HAV_MAT_SHOPPING_CART_PLATFORM = 60, # Shopping Cart
     FO_HAV_MAT_LUNCHBOX_PLATFORM = 61, # Lunchbox
@@ -209,7 +255,7 @@ class Fallout3HavokMaterial(Enum):
     FO_HAV_MAT_HEAVY_WOOD_STAIRS = 76, # Heavy Wood
     FO_HAV_MAT_CHAIN_STAIRS = 77,   # Chain
     FO_HAV_MAT_BOTTLECAP_STAIRS = 78, # Bottlecap
-    FO_HAV_MAT_ELEVATOR_STAIRS = 79, # Elevator
+    FO_HAV_MAT_ELEVATOR_STAIRS = 79,# Elevator
     FO_HAV_MAT_HOLLOW_METAL_STAIRS = 80, # Hollow Metal
     FO_HAV_MAT_SHEET_METAL_STAIRS = 81, # Sheet Metal
     FO_HAV_MAT_SAND_STAIRS = 82,    # Sand
@@ -219,11 +265,11 @@ class Fallout3HavokMaterial(Enum):
     FO_HAV_MAT_VEHICLE_PART_HOLLOW_STAIRS = 86, # Vehicle Part Hollow
     FO_HAV_MAT_BARREL_STAIRS = 87,  # Barrel
     FO_HAV_MAT_BOTTLE_STAIRS = 88,  # Bottle
-    FO_HAV_MAT_SODA_CAN_STAIRS = 89, # Soda Can
+    FO_HAV_MAT_SODA_CAN_STAIRS = 89,# Soda Can
     FO_HAV_MAT_PISTOL_STAIRS = 90,  # Pistol
     FO_HAV_MAT_RIFLE_STAIRS = 91,   # Rifle
     FO_HAV_MAT_SHOPPING_CART_STAIRS = 92, # Shopping Cart
-    FO_HAV_MAT_LUNCHBOX_STAIRS = 93, # Lunchbox
+    FO_HAV_MAT_LUNCHBOX_STAIRS = 93,# Lunchbox
     FO_HAV_MAT_BABY_RATTLE_STAIRS = 94, # Baby Rattle
     FO_HAV_MAT_RUBBER_BALL_STAIRS = 95, # Rubber Ball
     FO_HAV_MAT_STONE_STAIRS_PLATFORM = 96, # Stone
@@ -300,7 +346,7 @@ class SkyrimHavokMaterial(Enum):
     SKY_HAV_MAT_SAND = 2168343821,  # Sand
     SKY_HAV_MAT_HEAVY_METAL = 2229413539, # Heavy Metal
     SKY_HAV_MAT_UNKNOWN_2290050264 = 2290050264, # Unknown in Creation Kit v1.9.32.0. Found in Dawnguard DLC in meshes\dlc01\clutter\dlc01sabrecatpelt.nif.
-    SKY_HAV_MAT_DRAGON = 2518321175, # Dragon
+    SKY_HAV_MAT_DRAGON = 2518321175,# Dragon
     SKY_HAV_MAT_MATERIAL_BLADE_1HAND_SMALL = 2617944780, # Material Blade 1Hand Small
     SKY_HAV_MAT_MATERIAL_SKIN_SMALL = 2632367422, # Material Skin Small
     SKY_HAV_MAT_STAIRS_BROKEN_STONE = 2892392795, # Stairs Broken Stone
@@ -414,7 +460,7 @@ class Fallout3Layer(Enum):
     FOL_SHELLCASING = 25,           # ShellCasing (white)
     FOL_TRANSPARENT_SMALL = 26,     # TransparentSmall (white)
     FOL_INVISIBLE_WALL = 27,        # InvisibleWall (white)
-    FOL_TRANSPARENT_SMALL_ANIM = 28, # TransparentSmallAnim (white)
+    FOL_TRANSPARENT_SMALL_ANIM = 28,# TransparentSmallAnim (white)
     FOL_DEADBIP = 29,               # Dead Biped (green)
     FOL_CHARCONTROLLER = 30,        # CharController (yellow)
     FOL_AVOIDBOX = 31,              # Avoidbox (orange)
@@ -714,7 +760,7 @@ class hkDeactivatorType(Enum):
 # A list of possible solver deactivation settings. This value defines how aggressively the solver deactivates objects.
 # Note: Solver deactivation does not save CPU, but reduces creeping of movable objects in a pile quite dramatically.
 class hkSolverDeactivation(Enum):
-    SOLVER_DEACTIVATION_INVALID = 0, # Invalid
+    SOLVER_DEACTIVATION_INVALID = 0,# Invalid
     SOLVER_DEACTIVATION_OFF = 1,    # No solver deactivation.
     SOLVER_DEACTIVATION_LOW = 2,    # Very conservative deactivation, typically no visible artifacts.
     SOLVER_DEACTIVATION_MEDIUM = 3, # Normal deactivation, no serious visible artifacts in most cases.
@@ -897,7 +943,7 @@ class BSDismemberBodyPartType(Enum):
     SBP_53_MOD_LEG_RIGHT = 53,      # Leg primary or outergarment or right leg
     SBP_54_MOD_LEG_LEFT = 54,       # Leg secondary or undergarment or left leg
     SBP_55_MOD_FACE_JEWELRY = 55,   # Face alternate or jewelry
-    SBP_56_MOD_CHEST_SECONDARY = 56, # Chest secondary or undergarment
+    SBP_56_MOD_CHEST_SECONDARY = 56,# Chest secondary or undergarment
     SBP_57_MOD_SHOULDER = 57,       # Shoulder
     SBP_58_MOD_ARM_LEFT = 58,       # Arm secondary or undergarment or left arm
     SBP_59_MOD_ARM_RIGHT = 59,      # Arm primary or outergarment or right arm
@@ -939,12 +985,12 @@ class BSDismemberBodyPartType(Enum):
     BP_TORSOSECTION_HEAD = 1000,    # Torso Section | Head
     BP_TORSOSECTION_HEAD2 = 2000,   # Torso Section | Head 2
     BP_TORSOSECTION_LEFTARM = 3000, # Torso Section | Left Arm
-    BP_TORSOSECTION_LEFTARM2 = 4000, # Torso Section | Left Arm 2
-    BP_TORSOSECTION_RIGHTARM = 5000, # Torso Section | Right Arm
+    BP_TORSOSECTION_LEFTARM2 = 4000,# Torso Section | Left Arm 2
+    BP_TORSOSECTION_RIGHTARM = 5000,# Torso Section | Right Arm
     BP_TORSOSECTION_RIGHTARM2 = 6000, # Torso Section | Right Arm 2
     BP_TORSOSECTION_LEFTLEG = 7000, # Torso Section | Left Leg
-    BP_TORSOSECTION_LEFTLEG2 = 8000, # Torso Section | Left Leg 2
-    BP_TORSOSECTION_LEFTLEG3 = 9000, # Torso Section | Left Leg 3
+    BP_TORSOSECTION_LEFTLEG2 = 8000,# Torso Section | Left Leg 2
+    BP_TORSOSECTION_LEFTLEG3 = 9000,# Torso Section | Left Leg 3
     BP_TORSOSECTION_RIGHTLEG = 10000, # Torso Section | Right Leg
     BP_TORSOSECTION_RIGHTLEG2 = 11000, # Torso Section | Right Leg 2
     BP_TORSOSECTION_RIGHTLEG3 = 12000, # Torso Section | Right Leg 3
@@ -1023,78 +1069,94 @@ class hkConstraintType(Enum):
 
 #region Compounds
 
-# use:SizedString -> L32AString
-# use:string -> string
-# use:ByteArray -> ReadL8Bytes
-# skip:ByteMatrix
-# use:Color3 -> Color3
-# use:ByteColor3 -> Color3Byte
-# use:Color4 -> Color4
-# use:ByteColor4 -> Color4Byte
-# skip:FilePath
+# SizedString -> r.readL32AString()
+# string -> Y.string(r)
+# ByteArray -> r.readL8Bytes()
+# ByteMatrix -> ??
+# Color3 -> Color3(r)
+# ByteColor3 -> ByteColor3(r)
+# Color4 -> Color4(r)
+# ByteColor4 -> Color4Byte(r)
+# FilePath -> ??
 
 # The NIF file footer.
-class Footer: #:M
+class Footer:
     def __init__(self, r: Reader, h: Header):
-        self.roots: list[int] = r.readL32FArray(int, lambda r: X[NiNode].ref(r)) if h.v >= 0x0303000D else [] # List of root NIF objects. If there is a camera, for 1st person view, then this NIF object is referred to as well in this list, even if it is not a root object (usually we want the camera to be attached to the Bip Head node).
+        self.roots: list[int] = r.readL32FArray(X[NiObject].ref) if h.v >= 0x0303000D else None # List of root NIF objects. If there is a camera, for 1st person view, then this NIF object is referred to as well in this list, even if it is not a root object (usually we want the camera to be attached to the Bip Head node).
 
 # The distance range where a specific level of detail applies.
-class LODRange: #:M
+class LODRange:
     def __init__(self, r: Reader, h: Header):
         self.nearExtent: float = r.readSingle()         # Begining of range.
         self.farExtent: float = r.readSingle()          # End of Range.
-        self.unknownInts: float = r.readPArray(None, 'I', 3) if h.v <= 0x03010000 else None # Unknown (0,0,0).
+        self.unknownInts: list[int] = r.readPArray(None, 'I', 3) if h.v <= 0x03010000 else None # Unknown (0,0,0).
 
 # Group of vertex indices of vertices that match.
-class MatchGroup: #:M
+class MatchGroup:
     def __init__(self, r: Reader):
-        self.vertexIndices: list[int] = r.readL16PArray(None, 'h') # The vertex indices.
+        self.vertexIndices: list[int] = r.readL16PArray(None, 'H') # The vertex indices.
 
-# use:ByteVector3 -> Vector3<false>
-# use:HalfVector3 -> Vector3
-# use:Vector4 -> Vector4
-# use:Quaternion -> Quaternion
-# skip:hkQuaternion -> Quaternion (different read)
-# use:Matrix22 -> Matrix2x2
-# use:Matrix34 -> Matrix3x4
-# use:Matrix44 -> Matrix4x4
-# use:hkMatrix3 -> Matrix3x4
-# skip:MipMap
-# skip:NodeSet
-# use:ShortString -> L8AString
-# skip:SkinInfo
-# skip:SkinInfoSet
+# ByteVector3 -> Vector3(r.readByte(), r.readByte(), r.readByte())
+# HalfVector3 -> Vector3(r.readHalf(), r.readHalf(), r.readHalf())
+# Vector3 -> r.readVector3()
+# Vector4 -> r.readVector4()
+# Quaternion -> r.readQuaternion()
+# hkQuaternion -> r.readQuaternionWFirst()
+# Matrix22 -> r.readMatrix2x2()
+# Matrix33 -> r.readMatrix3x3()
+# Matrix34 -> r.readMatrix3x4()
+# Matrix44 -> r.readMatrix4x4()
+# hkMatrix3 -> r.readMatrix3x4()
+# MipMap -> MipMap(r)
+# NodeSet -> NodeSet(r)
+# ShortString -> r.readL8AString()
+
+# NiBoneLODController::SkinInfo. Reference to shape and skin instance.
+class SkinInfo:
+    def __init__(self, r: Reader):
+        self.shape: int = X[NiTriBasedGeom].ptr(r)
+        self.skinInstance: int = X[NiSkinInstance].ref(r)
+
+# A set of NiBoneLODController::SkinInfo.
+class SkinInfoSet:
+    def __init__(self, r: Reader):
+        self.skinInfo: list[SkinInfo] = r.readL32FArray(lambda r: SkinInfo(r))
 
 # NiSkinData::BoneVertData. A vertex and its weight.
-class BoneVertData: #:M #Marshal
+class BoneVertData:
     struct = ('<Hf', 7)
-    index: int          # The vertex index, in the mesh.
-    weight: float       # The vertex weight - between 0.0 and 1.0
+    index: int                                          # The vertex index, in the mesh.
+    weight: float                                       # The vertex weight - between 0.0 and 1.0
+
+    def __init__(self, r: Reader, full: bool):
+        self.index = r.readUInt16()
+        self.weight = r.readSingle()
 
     def __init__(self, r: Reader, full: bool):
         self.index = r.readUInt16()
         self.weight = r.readSingle() if full else r.readHalf()
-# use:BoneVertDataHalf -> BoneVertData
+        
+# BoneVertDataHalf -> BoneVertData(r, true)
 
 # Used in NiDefaultAVObjectPalette.
-class AVObject: #:X
+class AVObject:
     def __init__(self, r: Reader):
-        self.name: str = r.readL32AString()         # TObject name.
-        self.avObject: int = X[NiAVObject].ref(r)   # TObject name.
+        self.name: str = r.readL32AString()             # Object name.
+        self.avObject: int = X[NiAVObject].ptr(r)       # Object reference.
 
 # In a .kf file, this links to a controllable object, via its name (or for version 10.2.0.0 and up, a link and offset to a NiStringPalette that contains the name), and a sequence of interpolators that apply to this controllable object, via links.
 # For Controller ID, NiInterpController::GetCtlrID() virtual function returns a string formatted specifically for the derived type.
 # For Interpolator ID, NiInterpController::GetInterpolatorID() virtual function returns a string formatted specifically for the derived type.
 # The string formats are documented on the relevant niobject blocks.
-class ControlledBlock: #:X
-    targetName: str        # Name of a controllable object in another NIF file.
+class ControlledBlock:
+    targetName: str                                     # Name of a controllable object in another NIF file.
     # NiControllerSequence::InterpArrayItem
     interpolator: int
     controller: int
     blendInterpolator: int
-    blendIndex: int 
+    blendIndex: int
     # Bethesda-only
-    priority: int                   # Idle animations tend to have low values for this, and high values tend to correspond with the important parts of the animations.
+    priority: int                                       # Idle animations tend to have low values for this, and high values tend to correspond with the important parts of the animations.
     # NiControllerSequence::IDTag, post-10.1.0.104 only
     nodeName: str           # The name of the animated NiAVObject.
     propertyType: str      # The RTTI type of the NiProperty the controller is attached to, if applicable.
@@ -1133,10 +1195,15 @@ class ControlledBlock: #:X
             self.controllerID = Y.string(r)
             self.interpolatorID = Y.string(r)
 
-# use:ExportInfo -> []
+# Information about how the file was exported
+class ExportInfo:
+    def __init__(self, r: Reader):
+        self.author: str = r.readL8AString()
+        self.processScript: str = r.readL8AString()
+        self.exportScript: str = r.readL8AString()
 
 # The NIF file header.
-class Header: #:M
+class Header:
     v: int
     headerString: str
     copyright: list[str]
@@ -1179,67 +1246,22 @@ class Header: #:M
             self.strings = r.readFArray(lambda r: r.readL32AString(maxStringLength), numStrings)
         if v >= 0x05000006: self.groups = r.readL32PArray(None, 'I')
 
-    @staticmethod
-    def isVersionSupported(v: int) -> bool: return True
-
-    @staticmethod
-    def parseHeaderStr(s: str) -> tuple:
-        p = s.indexOf('Version')
-        if p >= 0:
-            v = s
-            v = v[(p + 8):]
-            for i in range(len(v)):
-                if v[i].isdigit() or v[i] == '.': continue
-                else: v = v[:i]
-            ver = Header.ver2Num(v)
-            if not Header.isVersionSupported(ver): raise Exception(f'Version {Header.ver2Str(ver)} ({ver}) is not supported.')
-            return (s, ver)
-        elif s.startsWith('NS'): return (s, 0x0a010000); # Dodgy version for NeoSteam
-        raise Exception('Invalid header string')
-
-    @staticmethod
-    def ver2Str(v: int) -> str:
-        if v == 0: return ''
-        elif v < 0x0303000D:
-            # this is an old-style 2-number version with one period
-            s = f'{(v >> 24) & 0xff}.{(v >> 16) & 0xff}'
-            sub_num1 = (v >> 8) & 0xff; sub_num2 = v & 0xff
-            if sub_num1 > 0 or sub_num2 > 0: s += f'{sub_num1}'
-            if sub_num2 > 0: s += f'{sub_num2}'
-            return s
-        # this is a new-style 4-number version with 3 periods
-        else: return f'{(v >> 24) & 0xff}.{(v >> 16) & 0xff}.{(v >> 8) & 0xff}.{v & 0xff}'
-
-    @staticmethod
-    def ver2Num(s: str) -> int:
-        if not s: return 0
-        if s.contains('.'):
-            l = s.split('.')
-            v = 0
-            if len(l) > 4: return 0 # Version # has more than 3 dots in it.
-            elif len(l) == 2:
-                # this is an old style version number.
-                v += int(l[0]) << (3 * 8)
-                if len(l[1]) >= 1: v += int(l[1][0:1]) << (2 * 8)
-                if len(l[1]) >= 2: v += int(l[1][1:2]) << (1 * 8)
-                if len(l[1]) >= 3: v += int(l[1][2:])
-                return v
-            # this is a new style version number with dots separating the digits
-            for i in range(min(4, len(l))): v += int(l[i]) << ((3 - i) * 8)
-            return v
-        return int(s)
-
 class StringPalette: #:X
     def __init__(self, r: Reader):
         self.palette: list[str] = r.readL32AString().split('0x00') # A bunch of 0x00 seperated strings.
         self.length: int = r.readUInt32()       # Length of the palette string is repeated here.
 
 # Tension, bias, continuity.
-class TBC: #:M
+class TBC:
+    struct = ('<3f', 12)
+    t: float                                            # Tension.
+    b: float                                            # Bias.
+    c: float                                            # Continuity.
+
     def __init__(self, r: Reader):
-        self.t: float = r.readSingle() # Tension.
-        self.b: float = r.readSingle() # Bias.
-        self.c: float = r.readSingle() # Continuity.
+        self.t = r.readSingle()
+        self.b = r.readSingle()
+        self.c = r.readSingle()
 
 # A generic key with support for interpolation. Type 1 is normal linear interpolation, type 2 has forward and backward tangents, and type 3 has tension, bias and continuity arguments. Note that color4 and byte always seem to be of type 1.
 class Key: #:M

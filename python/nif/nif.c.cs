@@ -32,6 +32,55 @@ static class X<T> {
 static class Y {
     public static string String(BinaryReader r) => r.ReadL32Encoding();
     public static string StringRef(BinaryReader r, int? p) => default;
+    public static bool IsVersionSupported(uint v) => true;
+    public static (string, uint) ParseHeaderStr(string s) {
+        var p = s.IndexOf("Version");
+        if (p >= 0) {
+            var v = s;
+            v = v[(p + 8)..];
+            for (var i = 0; i < v.Length; i++)
+                if (char.IsDigit(v[i]) || v[i] == '.') continue;
+                else v = v[..i];
+            var ver = Ver2Num(v);
+            if (!IsVersionSupported(ver)) throw new Exception($"Version {Ver2Str(ver)} ({ver}) is not supported.");
+            return (s, ver);
+        }
+        else if (s.StartsWith("NS")) return (s, 0x0a010000); // Dodgy version for NeoSteam
+        throw new Exception("Invalid header string");
+    }
+    public static string Ver2Str(uint v) {
+        if (v == 0) return "";
+        else if (v < 0x0303000D) {
+            // this is an old-style 2-number version with one period
+            var s = $"{(v >> 24) & 0xff}.{(v >> 16) & 0xff}";
+            uint sub_num1 = (v >> 8) & 0xff, sub_num2 = v & 0xff;
+            if (sub_num1 > 0 || sub_num2 > 0) s += $"{sub_num1}";
+            if (sub_num2 > 0) s += $"{sub_num2}";
+            return s;
+        }
+        // this is a new-style 4-number version with 3 periods
+        else return $"{(v >> 24) & 0xff}.{(v >> 16) & 0xff}.{(v >> 8) & 0xff}.{v & 0xff}";
+    }
+    public static uint Ver2Num(string s) {
+        if (string.IsNullOrEmpty(s)) return 0;
+        if (s.Contains('.')) {
+            var l = s.Split(".");
+            var v = 0U;
+            if (l.Length > 4) return 0; // Version # has more than 3 dots in it.
+            else if (l.Length == 2) {
+                // this is an old style version number.
+                v += uint.Parse(l[0]) << (3 * 8);
+                if (l[1].Length >= 1) v += uint.Parse(l[1][0..1]) << (2 * 8);
+                if (l[1].Length >= 2) v += uint.Parse(l[1][1..2]) << (1 * 8);
+                if (l[1].Length >= 3) v += uint.Parse(l[1][2..]);
+                return v;
+            }
+            // this is a new style version number with dots separating the digits
+            for (var i = 0; i < 4 && i < l.Length; i++) v += uint.Parse(l[i]) << ((3 - i) * 8);
+            return v;
+        }
+        return uint.Parse(s);
+    }
 }
 
 public enum Flags : ushort { }
@@ -1209,8 +1258,8 @@ public class Footer(BinaryReader r, Header h) {
 /// The distance range where a specific level of detail applies.
 /// </summary>
 public class LODRange(BinaryReader r, Header h) {
-    public float NearExtent = r.ReadSingle();   // Begining of range.
-    public float FarExtent = r.ReadSingle();    // End of Range.
+    public float NearExtent = r.ReadSingle();           // Begining of range.
+    public float FarExtent = r.ReadSingle();            // End of Range.
     public uint[] UnknownInts = h.V <= 0x03010000 ? r.ReadPArray<uint>("I", 3) : default; // Unknown (0,0,0).
 }
 
@@ -1218,11 +1267,11 @@ public class LODRange(BinaryReader r, Header h) {
 /// Group of vertex indices of vertices that match.
 /// </summary>
 public class MatchGroup(BinaryReader r) {
-    public ushort[] VertexIndices = r.ReadL16PArray<ushort>("h"); // The vertex indices.
+    public ushort[] VertexIndices = r.ReadL16PArray<ushort>("H"); // The vertex indices.
 }
 
 // ByteVector3 -> new Vector3(r.ReadByte(), r.ReadByte(), r.ReadByte())
-// HalfVector3 -> r.ReadHalf()
+// HalfVector3 -> new Vector3(r.ReadHalf(), r.ReadHalf(), r.ReadHalf())
 // Vector3 -> r.ReadVector3()
 // Vector4 -> r.ReadVector4()
 // Quaternion -> r.ReadQuaternion()
@@ -1232,8 +1281,8 @@ public class MatchGroup(BinaryReader r) {
 // Matrix34 -> r.ReadMatrix3x4()
 // Matrix44 -> r.ReadMatrix4x4()
 // hkMatrix3 -> r.ReadMatrix3x4()
-// MipMap -> ??
-// NodeSet -> ??
+// MipMap -> new MipMap(r)
+// NodeSet -> new NodeSet(r)
 // ShortString -> r.ReadL8AString()
 
 /// <summary>
@@ -1255,22 +1304,28 @@ public class SkinInfoSet(BinaryReader r) {
 /// NiSkinData::BoneVertData. A vertex and its weight.
 /// </summary>
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
-public unsafe struct BoneVertData { //:M #Marshal
-    public static (string, int) Struct = ("<Hf", sizeof(BoneVertData));
-    public ushort Index;            // The vertex index, in the mesh.
-    public float Weight;            // The vertex weight - between 0.0 and 1.0
+public struct BoneVertData {
+    public static (string, int) Struct = ("<Hf", 7);
+    public ushort Index;                                // The vertex index, in the mesh.
+    public float Weight;                                // The vertex weight - between 0.0 and 1.0
 
-    public BoneVertData(BinaryReader r, bool full) {
+    public BoneVertData() {}
+    public BoneVertData(BinaryReader r) {
         Index = r.ReadUInt16();
-        Weight = full ? r.ReadSingle() : r.ReadHalf();
+        Weight = r.ReadSingle();
+    }
+    public BoneVertData(BinaryReader r, bool half) {
+        Index = r.ReadUInt16();
+        Weight = r.ReadHalf();
     }
 }
-// use:BoneVertDataHalf -> BoneVertData
+
+// BoneVertDataHalf -> new BoneVertData(r, true)
 
 /// <summary>
 /// Used in NiDefaultAVObjectPalette.
 /// </summary>
-public class AVObject(BinaryReader r) { //:X
+public class AVObject(BinaryReader r) {
     public string Name = r.ReadL32AString();            // Object name.
     public int? AVObject_ = X<NiAVObject>.Ptr(r);       // Object reference.
 }
@@ -1282,20 +1337,20 @@ public class AVObject(BinaryReader r) { //:X
 /// The string formats are documented on the relevant niobject blocks.
 /// </summary>
 public class ControlledBlock {
-    public string TargetName;       // Name of a controllable object in another NIF file.
+    public string TargetName;                           // Name of a controllable object in another NIF file.
     // NiControllerSequence::InterpArrayItem
     public int? Interpolator;
     public int? Controller;
     public int? BlendInterpolator;
     public ushort BlendIndex;
     // Bethesda-only
-    public byte Priority;           // Idle animations tend to have low values for this, and high values tend to correspond with the important parts of the animations.
+    public byte Priority;                               // Idle animations tend to have low values for this, and high values tend to correspond with the important parts of the animations.
     // NiControllerSequence::IDTag, post-10.1.0.104 only
-    public string NodeName;         // The name of the animated NiAVObject.
-    public string PropertyType;     // The RTTI type of the NiProperty the controller is attached to, if applicable.
-    public string ControllerType;   // The RTTI type of the NiTimeController.
-    public string ControllerID;     // An ID that can uniquely identify the controller among others of the same type on the same NiObjectNET.
-    public string InterpolatorID;   // An ID that can uniquely identify the interpolator among others of the same type on the same NiObjectNET.
+    public string NodeName;                             // The name of the animated NiAVObject.
+    public string PropertyType;                         // The RTTI type of the NiProperty the controller is attached to, if applicable.
+    public string ControllerType;                       // The RTTI type of the NiTimeController.
+    public string ControllerID;                         // An ID that can uniquely identify the controller among others of the same type on the same NiObjectNET.
+    public string InterpolatorID;                       // An ID that can uniquely identify the interpolator among others of the same type on the same NiObjectNET.
 
     public ControlledBlock(BinaryReader r, Header h) {
         if (h.V <= 0x0A010067) TargetName = Y.String(r);
@@ -1334,7 +1389,14 @@ public class ControlledBlock {
     }
 }
 
-// use:ExportInfo -> []
+/// <summary>
+/// Information about how the file was exported
+/// </summary>
+public class ExportInfo(BinaryReader r) {
+    public string Author = r.ReadL8AString();
+    public string ProcessScript = r.ReadL8AString();
+    public string ExportScript = r.ReadL8AString();
+}
 
 /// <summary>
 /// The NIF file header.
@@ -1348,7 +1410,7 @@ public class Header {
     public uint UserVersion;        // An extra version number, for companies that decide to modify the file format.
     public uint NumBlocks;          // Number of file objects.
     public uint UserVersion2;
-    public string[] ExportInfo;
+    public ExportInfo ExportInfo;
     public string MaxFilePath;
     public byte[] Metadata;
     public string[] BlockTypes;     // List of all object types used in this NIF file.
@@ -1367,7 +1429,7 @@ public class Header {
         if (v >= 0x03010001) NumBlocks = r.ReadUInt32();
         if ((v == 0x14020007 || v == 0x14000005 || (v >= 0x0A000102 && v <= 0x14000004 && UserVersion <= 11)) && UserVersion >= 3) {
             UserVersion2 = r.ReadUInt32();
-            ExportInfo = [r.ReadL8AString(), r.ReadL8AString(), r.ReadL8AString()];
+            ExportInfo = new ExportInfo(r); //[r.ReadL8AString(), r.ReadL8AString(), r.ReadL8AString()];
         }
         if (UserVersion2 == 130) MaxFilePath = r.ReadL8AString(0x80);
         if (v >= 0x1E000000) Metadata = r.ReadL8Bytes();
@@ -1385,59 +1447,6 @@ public class Header {
         }
         if (v >= 0x05000006) Groups = r.ReadL32PArray<uint>("I");
     }
-
-    static bool IsVersionSupported(uint v) => true;
-
-    static (string, uint) ParseHeaderStr(string s) {
-        var p = s.IndexOf("Version");
-        if (p >= 0) {
-            var v = s;
-            v = v[(p + 8)..];
-            for (var i = 0; i < v.Length; i++)
-                if (char.IsDigit(v[i]) || v[i] == '.') continue;
-                else v = v[..i];
-            var ver = Ver2Num(v);
-            if (!IsVersionSupported(ver)) throw new Exception($"Version {Ver2Str(ver)} ({ver}) is not supported.");
-            return (s, ver);
-        }
-        else if (s.StartsWith("NS")) return (s, 0x0a010000); // Dodgy version for NeoSteam
-        throw new Exception("Invalid header string");
-    }
-
-    static string Ver2Str(uint v) {
-        if (v == 0) return "";
-        else if (v < 0x0303000D) {
-            // this is an old-style 2-number version with one period
-            var s = $"{(v >> 24) & 0xff}.{(v >> 16) & 0xff}";
-            uint sub_num1 = (v >> 8) & 0xff, sub_num2 = v & 0xff;
-            if (sub_num1 > 0 || sub_num2 > 0) s += $"{sub_num1}";
-            if (sub_num2 > 0) s += $"{sub_num2}";
-            return s;
-        }
-        // this is a new-style 4-number version with 3 periods
-        else return $"{(v >> 24) & 0xff}.{(v >> 16) & 0xff}.{(v >> 8) & 0xff}.{v & 0xff}";
-    }
-
-    static uint Ver2Num(string s) {
-        if (string.IsNullOrEmpty(s)) return 0;
-        if (s.Contains('.')) {
-            var l = s.Split(".");
-            var v = 0U;
-            if (l.Length > 4) return 0; // Version # has more than 3 dots in it.
-            else if (l.Length == 2) {
-                // this is an old style version number.
-                v += uint.Parse(l[0]) << (3 * 8);
-                if (l[1].Length >= 1) v += uint.Parse(l[1][0..1]) << (2 * 8);
-                if (l[1].Length >= 2) v += uint.Parse(l[1][1..2]) << (1 * 8);
-                if (l[1].Length >= 3) v += uint.Parse(l[1][2..]);
-                return v;
-            }
-            // this is a new style version number with dots separating the digits
-            for (var i = 0; i < 4 && i < l.Length; i++) v += uint.Parse(l[i]) << ((3 - i) * 8);
-            return v;
-        }
-        return uint.Parse(s);
-    }
 }
 
 public class StringPalette(BinaryReader r) { //:X
@@ -1448,16 +1457,23 @@ public class StringPalette(BinaryReader r) { //:X
 /// <summary>
 /// Tension, bias, continuity.
 /// </summary>
-public struct TBC(BinaryReader r) { //:M
-    public float T = r.ReadSingle(); // Tension.
-    public float B = r.ReadSingle(); // Bias.
-    public float C = r.ReadSingle(); // Continuity.
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public unsafe struct TBC {
+    public static (string, int) Struct = ("<3f", sizeof(TBC));
+    public float t;                                     // Tension.
+    public float b;                                     // Bias.
+    public float c;                                     // Continuity.
+
+    public TBC(BinaryReader r) {
+        t = r.ReadSingle();
+        b = r.ReadSingle();
+        c = r.ReadSingle();
+    }
 }
 
 /// <summary>
 /// A generic key with support for interpolation. Type 1 is normal linear interpolation, type 2 has forward and backward tangents, and type 3 has tension, bias and continuity arguments. Note that color4 and byte always seem to be of type 1.
 /// </summary>
-/// <typeparam name="T"></typeparam>
 public class Key<T> {
     public float Time;              // Time of the key.
     public T Value;                 // The key value.
@@ -1479,8 +1495,7 @@ public class Key<T> {
 /// <summary>
 /// Array of vector keys (anything that can be interpolated, except rotations).
 /// </summary>
-/// <typeparam name="T"></typeparam>
-public class KeyGroup<T> { //:M
+public class KeyGroup<T> {
     public uint NumKeys;            // Number of keys in the array.
     public KeyType Interpolation;   // The key type.
     public Key<T>[] Keys;           // The keys.
@@ -1495,8 +1510,7 @@ public class KeyGroup<T> { //:M
 /// <summary>
 /// A special version of the key type used for quaternions.  Never has tangents.
 /// </summary>
-/// <typeparam name="T"></typeparam>
-public class QuatKey<T> { //:M
+public class QuatKey<T> {
     public float Time;              // Time the key applies.
     public T Value;                 // Value of the key.
     public TBC TBC;                 // The TBC of the key.
@@ -1511,7 +1525,9 @@ public class QuatKey<T> { //:M
 /// <summary>
 /// Texture coordinates (u,v). As in OpenGL; image origin is in the lower left corner.
 /// </summary>
-public struct TexCoord { //:M
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct TexCoord {
+	public static (string, int) Struct = ("<2f", sizeof(TexCoord));
     public float U; // First coordinate.
     public float V; // Second coordinate.
 
@@ -1525,10 +1541,10 @@ public struct TexCoord { //:M
 /// Describes the order of scaling and rotation matrices. Translate, Scale, Rotation, Center are from TexDesc.
 /// Back = inverse of Center. FromMaya = inverse of the V axis with a positive translation along V of 1 unit.
 /// </summary>
-public enum TransformMethod : uint { //:X
-    MayaDeprecated = 0,             // Center * Rotation * Back * Translate * Scale
+public enum TransformMethod : uint {
+    Maya_Deprecated = 0,            // Center * Rotation * Back * Translate * Scale
     Max = 1,                        // Center * Scale * Rotation * Translate * Back
-    Maya = 2,                       // Center * Rotation * Back * FromMaya * Translate * Scale
+    Maya = 2                        // Center * Rotation * Back * FromMaya * Translate * Scale
 }
 
 /// <summary>
@@ -1576,7 +1592,7 @@ public class TexDesc { //:M
 /// <summary>
 /// NiTexturingProperty::ShaderMap. Shader texture description.
 /// </summary>
-public class ShaderTexDesc { //:X
+public class ShaderTexDesc {
     public TexDesc Map;
     public uint MapID;
 
@@ -1590,11 +1606,10 @@ public class ShaderTexDesc { //:X
 /// <summary>
 /// List of three vertex indices.
 /// </summary>
-/// <param name="r"></param>
-public struct Triangle(BinaryReader r) { //:M
-    public ushort V1 = r.ReadUInt16(); // First vertex index.
-    public ushort V2 = r.ReadUInt16(); // Second vertex index.
-    public ushort V3 = r.ReadUInt16(); // Third vertex index.
+public struct Triangle(BinaryReader r) {
+    public ushort v1 = r.ReadUInt16(); 			// First vertex index.
+    public ushort v2 = r.ReadUInt16(); 			// Second vertex index.
+    public ushort v3 = r.ReadUInt16(); 			// Third vertex index.
 }
 
 [Flags]

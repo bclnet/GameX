@@ -32,6 +32,55 @@ static class X<T> {
 static class Y {
     public static string String(BinaryReader r) => r.ReadL32Encoding();
     public static string StringRef(BinaryReader r, int? p) => default;
+    public static bool IsVersionSupported(uint v) => true;
+    public static (string, uint) ParseHeaderStr(string s) {
+        var p = s.IndexOf("Version");
+        if (p >= 0) {
+            var v = s;
+            v = v[(p + 8)..];
+            for (var i = 0; i < v.Length; i++)
+                if (char.IsDigit(v[i]) || v[i] == '.') continue;
+                else v = v[..i];
+            var ver = Ver2Num(v);
+            if (!IsVersionSupported(ver)) throw new Exception($"Version {Ver2Str(ver)} ({ver}) is not supported.");
+            return (s, ver);
+        }
+        else if (s.StartsWith("NS")) return (s, 0x0a010000); // Dodgy version for NeoSteam
+        throw new Exception("Invalid header string");
+    }
+    public static string Ver2Str(uint v) {
+        if (v == 0) return "";
+        else if (v < 0x0303000D) {
+            // this is an old-style 2-number version with one period
+            var s = $"{(v >> 24) & 0xff}.{(v >> 16) & 0xff}";
+            uint sub_num1 = (v >> 8) & 0xff, sub_num2 = v & 0xff;
+            if (sub_num1 > 0 || sub_num2 > 0) s += $"{sub_num1}";
+            if (sub_num2 > 0) s += $"{sub_num2}";
+            return s;
+        }
+        // this is a new-style 4-number version with 3 periods
+        else return $"{(v >> 24) & 0xff}.{(v >> 16) & 0xff}.{(v >> 8) & 0xff}.{v & 0xff}";
+    }
+    public static uint Ver2Num(string s) {
+        if (string.IsNullOrEmpty(s)) return 0;
+        if (s.Contains('.')) {
+            var l = s.Split(".");
+            var v = 0U;
+            if (l.Length > 4) return 0; // Version # has more than 3 dots in it.
+            else if (l.Length == 2) {
+                // this is an old style version number.
+                v += uint.Parse(l[0]) << (3 * 8);
+                if (l[1].Length >= 1) v += uint.Parse(l[1][0..1]) << (2 * 8);
+                if (l[1].Length >= 2) v += uint.Parse(l[1][1..2]) << (1 * 8);
+                if (l[1].Length >= 3) v += uint.Parse(l[1][2..]);
+                return v;
+            }
+            // this is a new style version number with dots separating the digits
+            for (var i = 0; i < 4 && i < l.Length; i++) v += uint.Parse(l[i]) << ((3 - i) * 8);
+            return v;
+        }
+        return uint.Parse(s);
+    }
 }
 
 public enum Flags : ushort { }
@@ -158,7 +207,7 @@ public enum Fallout3HavokMaterial : uint {
     FO_HAV_MAT_HOLLOW_METAL = 16,   // Hollow Metal
     FO_HAV_MAT_SHEET_METAL = 17,    // Sheet Metal
     FO_HAV_MAT_SAND = 18,           // Sand
-    FO_HAV_MAT_BROKEN_CONCRETE = 19, // Broken Concrete
+    FO_HAV_MAT_BROKEN_CONCRETE = 19,// Broken Concrete
     FO_HAV_MAT_VEHICLE_BODY = 20,   // Vehicle Body
     FO_HAV_MAT_VEHICLE_PART_SOLID = 21, // Vehicle Part Solid
     FO_HAV_MAT_VEHICLE_PART_HOLLOW = 22, // Vehicle Part Hollow
@@ -194,10 +243,10 @@ public enum Fallout3HavokMaterial : uint {
     FO_HAV_MAT_VEHICLE_BODY_PLATFORM = 52, // Vehicle Body
     FO_HAV_MAT_VEHICLE_PART_SOLID_PLATFORM = 53, // Vehicle Part Solid
     FO_HAV_MAT_VEHICLE_PART_HOLLOW_PLATFORM = 54, // Vehicle Part Hollow
-    FO_HAV_MAT_BARREL_PLATFORM = 55, // Barrel
-    FO_HAV_MAT_BOTTLE_PLATFORM = 56, // Bottle
+    FO_HAV_MAT_BARREL_PLATFORM = 55,// Barrel
+    FO_HAV_MAT_BOTTLE_PLATFORM = 56,// Bottle
     FO_HAV_MAT_SODA_CAN_PLATFORM = 57, // Soda Can
-    FO_HAV_MAT_PISTOL_PLATFORM = 58, // Pistol
+    FO_HAV_MAT_PISTOL_PLATFORM = 58,// Pistol
     FO_HAV_MAT_RIFLE_PLATFORM = 59, // Rifle
     FO_HAV_MAT_SHOPPING_CART_PLATFORM = 60, // Shopping Cart
     FO_HAV_MAT_LUNCHBOX_PLATFORM = 61, // Lunchbox
@@ -218,7 +267,7 @@ public enum Fallout3HavokMaterial : uint {
     FO_HAV_MAT_HEAVY_WOOD_STAIRS = 76, // Heavy Wood
     FO_HAV_MAT_CHAIN_STAIRS = 77,   // Chain
     FO_HAV_MAT_BOTTLECAP_STAIRS = 78, // Bottlecap
-    FO_HAV_MAT_ELEVATOR_STAIRS = 79, // Elevator
+    FO_HAV_MAT_ELEVATOR_STAIRS = 79,// Elevator
     FO_HAV_MAT_HOLLOW_METAL_STAIRS = 80, // Hollow Metal
     FO_HAV_MAT_SHEET_METAL_STAIRS = 81, // Sheet Metal
     FO_HAV_MAT_SAND_STAIRS = 82,    // Sand
@@ -228,11 +277,11 @@ public enum Fallout3HavokMaterial : uint {
     FO_HAV_MAT_VEHICLE_PART_HOLLOW_STAIRS = 86, // Vehicle Part Hollow
     FO_HAV_MAT_BARREL_STAIRS = 87,  // Barrel
     FO_HAV_MAT_BOTTLE_STAIRS = 88,  // Bottle
-    FO_HAV_MAT_SODA_CAN_STAIRS = 89, // Soda Can
+    FO_HAV_MAT_SODA_CAN_STAIRS = 89,// Soda Can
     FO_HAV_MAT_PISTOL_STAIRS = 90,  // Pistol
     FO_HAV_MAT_RIFLE_STAIRS = 91,   // Rifle
     FO_HAV_MAT_SHOPPING_CART_STAIRS = 92, // Shopping Cart
-    FO_HAV_MAT_LUNCHBOX_STAIRS = 93, // Lunchbox
+    FO_HAV_MAT_LUNCHBOX_STAIRS = 93,// Lunchbox
     FO_HAV_MAT_BABY_RATTLE_STAIRS = 94, // Baby Rattle
     FO_HAV_MAT_RUBBER_BALL_STAIRS = 95, // Rubber Ball
     FO_HAV_MAT_STONE_STAIRS_PLATFORM = 96, // Stone
@@ -312,7 +361,7 @@ public enum SkyrimHavokMaterial : uint {
     SKY_HAV_MAT_SAND = 2168343821,  // Sand
     SKY_HAV_MAT_HEAVY_METAL = 2229413539, // Heavy Metal
     SKY_HAV_MAT_UNKNOWN_2290050264 = 2290050264, // Unknown in Creation Kit v1.9.32.0. Found in Dawnguard DLC in meshes\dlc01\clutter\dlc01sabrecatpelt.nif.
-    SKY_HAV_MAT_DRAGON = 2518321175, // Dragon
+    SKY_HAV_MAT_DRAGON = 2518321175,// Dragon
     SKY_HAV_MAT_MATERIAL_BLADE_1HAND_SMALL = 2617944780, // Material Blade 1Hand Small
     SKY_HAV_MAT_MATERIAL_SKIN_SMALL = 2632367422, // Material Skin Small
     SKY_HAV_MAT_STAIRS_BROKEN_STONE = 2892392795, // Stairs Broken Stone
@@ -432,7 +481,7 @@ public enum Fallout3Layer : byte {
     FOL_SHELLCASING = 25,           // ShellCasing (white)
     FOL_TRANSPARENT_SMALL = 26,     // TransparentSmall (white)
     FOL_INVISIBLE_WALL = 27,        // InvisibleWall (white)
-    FOL_TRANSPARENT_SMALL_ANIM = 28, // TransparentSmallAnim (white)
+    FOL_TRANSPARENT_SMALL_ANIM = 28,// TransparentSmallAnim (white)
     FOL_DEADBIP = 29,               // Dead Biped (green)
     FOL_CHARCONTROLLER = 30,        // CharController (yellow)
     FOL_AVOIDBOX = 31,              // Avoidbox (orange)
@@ -807,7 +856,7 @@ public enum hkDeactivatorType : byte {
 /// Note: Solver deactivation does not save CPU, but reduces creeping of movable objects in a pile quite dramatically.
 /// </summary>
 public enum hkSolverDeactivation : byte {
-    SOLVER_DEACTIVATION_INVALID = 0, // Invalid
+    SOLVER_DEACTIVATION_INVALID = 0,// Invalid
     SOLVER_DEACTIVATION_OFF = 1,    // No solver deactivation.
     SOLVER_DEACTIVATION_LOW = 2,    // Very conservative deactivation, typically no visible artifacts.
     SOLVER_DEACTIVATION_MEDIUM = 3, // Normal deactivation, no serious visible artifacts in most cases.
@@ -1043,7 +1092,7 @@ public enum BSDismemberBodyPartType : ushort {
     SBP_53_MOD_LEG_RIGHT = 53,      // Leg primary or outergarment or right leg
     SBP_54_MOD_LEG_LEFT = 54,       // Leg secondary or undergarment or left leg
     SBP_55_MOD_FACE_JEWELRY = 55,   // Face alternate or jewelry
-    SBP_56_MOD_CHEST_SECONDARY = 56, // Chest secondary or undergarment
+    SBP_56_MOD_CHEST_SECONDARY = 56,// Chest secondary or undergarment
     SBP_57_MOD_SHOULDER = 57,       // Shoulder
     SBP_58_MOD_ARM_LEFT = 58,       // Arm secondary or undergarment or left arm
     SBP_59_MOD_ARM_RIGHT = 59,      // Arm primary or outergarment or right arm
@@ -1085,12 +1134,12 @@ public enum BSDismemberBodyPartType : ushort {
     BP_TORSOSECTION_HEAD = 1000,    // Torso Section | Head
     BP_TORSOSECTION_HEAD2 = 2000,   // Torso Section | Head 2
     BP_TORSOSECTION_LEFTARM = 3000, // Torso Section | Left Arm
-    BP_TORSOSECTION_LEFTARM2 = 4000, // Torso Section | Left Arm 2
-    BP_TORSOSECTION_RIGHTARM = 5000, // Torso Section | Right Arm
+    BP_TORSOSECTION_LEFTARM2 = 4000,// Torso Section | Left Arm 2
+    BP_TORSOSECTION_RIGHTARM = 5000,// Torso Section | Right Arm
     BP_TORSOSECTION_RIGHTARM2 = 6000, // Torso Section | Right Arm 2
     BP_TORSOSECTION_LEFTLEG = 7000, // Torso Section | Left Leg
-    BP_TORSOSECTION_LEFTLEG2 = 8000, // Torso Section | Left Leg 2
-    BP_TORSOSECTION_LEFTLEG3 = 9000, // Torso Section | Left Leg 3
+    BP_TORSOSECTION_LEFTLEG2 = 8000,// Torso Section | Left Leg 2
+    BP_TORSOSECTION_LEFTLEG3 = 9000,// Torso Section | Left Leg 3
     BP_TORSOSECTION_RIGHTLEG = 10000, // Torso Section | Right Leg
     BP_TORSOSECTION_RIGHTLEG2 = 11000, // Torso Section | Right Leg 2
     BP_TORSOSECTION_RIGHTLEG3 = 12000, // Torso Section | Right Leg 3
@@ -1211,18 +1260,18 @@ public class Footer(BinaryReader r, Header h) {
 public class LODRange(BinaryReader r, Header h) {
     public float NearExtent = r.ReadSingle();           // Begining of range.
     public float FarExtent = r.ReadSingle();            // End of Range.
-    public uint[] UnknownInts = h.V <= 50397184 ? r.ReadUInt32() : default; // Unknown (0,0,0).
+    public uint[] UnknownInts = h.V <= 0x03010000 ? r.ReadPArray<uint>("I", 3) : default; // Unknown (0,0,0).
 }
 
 /// <summary>
 /// Group of vertex indices of vertices that match.
 /// </summary>
 public class MatchGroup(BinaryReader r) {
-    public ushort[] VertexIndices = r.ReadL16FArray(r => r.ReadUInt16()); // The vertex indices.
+    public ushort[] VertexIndices = r.ReadL16PArray<ushort>("H"); // The vertex indices.
 }
 
 // ByteVector3 -> new Vector3(r.ReadByte(), r.ReadByte(), r.ReadByte())
-// HalfVector3 -> r.ReadHalf()
+// HalfVector3 -> new Vector3(r.ReadHalf(), r.ReadHalf(), r.ReadHalf())
 // Vector3 -> r.ReadVector3()
 // Vector4 -> r.ReadVector4()
 // Quaternion -> r.ReadQuaternion()
@@ -1232,9 +1281,10 @@ public class MatchGroup(BinaryReader r) {
 // Matrix34 -> r.ReadMatrix3x4()
 // Matrix44 -> r.ReadMatrix4x4()
 // hkMatrix3 -> r.ReadMatrix3x4()
-// MipMap -> ??
-// NodeSet -> ??
+// MipMap -> new MipMap(r)
+// NodeSet -> new NodeSet(r)
 // ShortString -> r.ReadL8AString()
+
 /// <summary>
 /// NiBoneLODController::SkinInfo. Reference to shape and skin instance.
 /// </summary>
@@ -1253,25 +1303,27 @@ public class SkinInfoSet(BinaryReader r) {
 /// <summary>
 /// NiSkinData::BoneVertData. A vertex and its weight.
 /// </summary>
-public class BoneVertData(BinaryReader r) {
-    public ushort Index = r.ReadUInt16();               // The vertex index, in the mesh.
-    public float Weight = r.ReadSingle();               // The vertex weight - between 0.0 and 1.0
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct BoneVertData {
+    public static (string, int) Struct = ("<Hf", 7);
+    public ushort Index;                                // The vertex index, in the mesh.
+    public float Weight;                                // The vertex weight - between 0.0 and 1.0
+
+    public BoneVertData() {}
+    public BoneVertData(BinaryReader r) {
+        Index = r.ReadUInt16();
+        Weight = r.ReadSingle();
+    }
 }
 
-/// <summary>
-/// NiSkinData::BoneVertData. A vertex and its weight.
-/// </summary>
-public class BoneVertDataHalf(BinaryReader r) {
-    public ushort Index = r.ReadUInt16();               // The vertex index, in the mesh.
-    public float Weight = r.ReadHalf();                 // The vertex weight - between 0.0 and 1.0
-}
+// BoneVertDataHalf -> new BoneVertData(r, true)
 
 /// <summary>
 /// Used in NiDefaultAVObjectPalette.
 /// </summary>
 public class AVObject(BinaryReader r) {
     public string Name = r.ReadL32AString();            // Object name.
-    public int? AVObject = X<NiAVObject>.Ptr(r);        // Object reference.
+    public int? AVObject_ = X<NiAVObject>.Ptr(r);       // Object reference.
 }
 
 /// <summary>
@@ -1280,24 +1332,52 @@ public class AVObject(BinaryReader r) {
 /// For Interpolator ID, NiInterpController::GetInterpolatorID() virtual function returns a string formatted specifically for the derived type.
 /// The string formats are documented on the relevant niobject blocks.
 /// </summary>
-public class ControlledBlock(BinaryReader r, Header h) {
-    public string TargetName = h.V <= 0x0A010067 ? Y.String(r) : default; // Name of a controllable object in another NIF file.
-    public int? Interpolator = h.V >= 0x0A01006A ? X<NiInterpolator>.Ref(r) : default;
-    public int? Controller = h.V <= 0x14050000 ? X<NiTimeController>.Ref(r) : default;
-    public int? BlendInterpolator = h.V >= 0x0A010068 && h.V <= 0x0A01006E ? X<NiBlendInterpolator>.Ref(r) : default;
-    public ushort BlendIndex = h.V >= 0x0A010068 && h.V <= 0x0A01006E ? r.ReadUInt16() : default;
-    public byte Priority = h.V >= 0x0A01006A &&  ? r.ReadByte() : default; // Idle animations tend to have low values for this, and high values tend to correspond with the important parts of the animations.
-    public string NodeName = h.V >= 0x14010001 ? Y.String(r) : default; // The name of the animated NiAVObject.
-    public string PropertyType = h.V >= 0x14010001 ? Y.String(r) : default; // The RTTI type of the NiProperty the controller is attached to, if applicable.
-    public string ControllerType = h.V >= 0x14010001 ? Y.String(r) : default; // The RTTI type of the NiTimeController.
-    public string ControllerID = h.V >= 0x14010001 ? Y.String(r) : default; // An ID that can uniquely identify the controller among others of the same type on the same NiObjectNET.
-    public string InterpolatorID = h.V >= 0x14010001 ? Y.String(r) : default; // An ID that can uniquely identify the interpolator among others of the same type on the same NiObjectNET.
-    public int? StringPalette = h.V >= 0x0A020000 && h.V <= 0x14010000 ? X<NiStringPalette>.Ref(r) : default; // Refers to the NiStringPalette which contains the name of the controlled NIF object.
-    public uint NodeNameOffset = h.V >= 0x0A020000 && h.V <= 0x14010000 ? r.ReadUInt32() : default; // Offset in NiStringPalette to the name of the animated NiAVObject.
-    public uint PropertyTypeOffset = h.V >= 0x0A020000 && h.V <= 0x14010000 ? r.ReadUInt32() : default; // Offset in NiStringPalette to the RTTI type of the NiProperty the controller is attached to, if applicable.
-    public uint ControllerTypeOffset = h.V >= 0x0A020000 && h.V <= 0x14010000 ? r.ReadUInt32() : default; // Offset in NiStringPalette to the RTTI type of the NiTimeController.
-    public uint ControllerIDOffset = h.V >= 0x0A020000 && h.V <= 0x14010000 ? r.ReadUInt32() : default; // Offset in NiStringPalette to an ID that can uniquely identify the controller among others of the same type on the same NiObjectNET.
-    public uint InterpolatorIDOffset = h.V >= 0x0A020000 && h.V <= 0x14010000 ? r.ReadUInt32() : default; // Offset in NiStringPalette to an ID that can uniquely identify the interpolator among others of the same type on the same NiObjectNET.
+public class ControlledBlock {
+    public string TargetName;                           // Name of a controllable object in another NIF file.
+    // NiControllerSequence::InterpArrayItem
+    public int? Interpolator;
+    public int? Controller;
+    public int? BlendInterpolator;
+    public ushort BlendIndex;
+    // Bethesda-only
+    public byte Priority;                               // Idle animations tend to have low values for this, and high values tend to correspond with the important parts of the animations.
+    // NiControllerSequence::IDTag, post-10.1.0.104 only
+    public string NodeName;                             // The name of the animated NiAVObject.
+    public string PropertyType;                         // The RTTI type of the NiProperty the controller is attached to, if applicable.
+    public string ControllerType;                       // The RTTI type of the NiTimeController.
+    public string ControllerID;                         // An ID that can uniquely identify the controller among others of the same type on the same NiObjectNET.
+    public string InterpolatorID;                       // An ID that can uniquely identify the interpolator among others of the same type on the same NiObjectNET.
+    public int? StringPalette;                          // Refers to the NiStringPalette which contains the name of the controlled NIF object.
+    public uint NodeNameOffset;                         // Offset in NiStringPalette to the name of the animated NiAVObject.
+    public uint PropertyTypeOffset;                     // Offset in NiStringPalette to the RTTI type of the NiProperty the controller is attached to, if applicable.
+    public uint ControllerTypeOffset;                   // Offset in NiStringPalette to the RTTI type of the NiTimeController.
+    public uint ControllerIDOffset;                     // Offset in NiStringPalette to an ID that can uniquely identify the controller among others of the same type on the same NiObjectNET.
+    public uint InterpolatorIDOffset;                   // Offset in NiStringPalette to an ID that can uniquely identify the interpolator among others of the same type on the same NiObjectNET.
+
+    public ControlledBlock(BinaryReader r, Header h) {
+        TargetName = if (h.V <= 0x0A010067) Y.String(r);
+        Interpolator = if (h.V >= 0x0A01006A) X<NiInterpolator>.Ref(r);
+        Controller = if (h.V <= 0x14050000) X<NiTimeController>.Ref(r);
+        BlendInterpolator = if (h.V >= 0x0A010068 && h.V <= 0x0A01006E) X<NiBlendInterpolator>.Ref(r);
+        BlendIndex = if (h.V >= 0x0A010068 && h.V <= 0x0A01006E) r.ReadUInt16();
+        Priority = if (h.V >= 0x0A01006A && ) r.ReadByte();
+        NodeName = if (h.V >= 0x0A010068 && h.V <= 0x0A010071) Y.String(r);
+        PropertyType = if (h.V >= 0x0A010068 && h.V <= 0x0A010071) Y.String(r);
+        ControllerType = if (h.V >= 0x0A010068 && h.V <= 0x0A010071) Y.String(r);
+        ControllerID = if (h.V >= 0x0A010068 && h.V <= 0x0A010071) Y.String(r);
+        InterpolatorID = if (h.V >= 0x0A010068 && h.V <= 0x0A010071) Y.String(r);
+        StringPalette = if (h.V >= 0x0A020000 && h.V <= 0x14010000) X<NiStringPalette>.Ref(r);
+        NodeNameOffset = if (h.V >= 0x0A020000 && h.V <= 0x14010000) r.ReadUInt32();
+        PropertyTypeOffset = if (h.V >= 0x0A020000 && h.V <= 0x14010000) r.ReadUInt32();
+        ControllerTypeOffset = if (h.V >= 0x0A020000 && h.V <= 0x14010000) r.ReadUInt32();
+        ControllerIDOffset = if (h.V >= 0x0A020000 && h.V <= 0x14010000) r.ReadUInt32();
+        InterpolatorIDOffset = if (h.V >= 0x0A020000 && h.V <= 0x14010000) r.ReadUInt32();
+        NodeName = if (h.V >= 0x14010001) Y.String(r);
+        PropertyType = if (h.V >= 0x14010001) Y.String(r);
+        ControllerType = if (h.V >= 0x14010001) Y.String(r);
+        ControllerID = if (h.V >= 0x14010001) Y.String(r);
+        InterpolatorID = if (h.V >= 0x14010001) Y.String(r);
+    }
 }
 
 /// <summary>
@@ -1312,26 +1392,48 @@ public class ExportInfo(BinaryReader r) {
 /// <summary>
 /// The NIF file header.
 /// </summary>
-public class Header(BinaryReader r, Header h) {
-    public string HeaderString = ??;                    // 'NetImmerse File Format x.x.x.x' (versions <= 10.0.1.2) or 'Gamebryo File Format x.x.x.x' (versions >= 10.1.0.0), with x.x.x.x the version written out. Ends with a newline character (0x0A).
-    public string[] Copyright = h.V <= 0x03010000 ? ?? : default;
-    public uint Version = h.V >= 0x03010001 ? r.ReadUInt32() : default; // The NIF version, in hexadecimal notation: 0x04000002, 0x0401000C, 0x04020002, 0x04020100, 0x04020200, 0x0A000100, 0x0A010000, 0x0A020000, 0x14000004, ...
-    public EndianType EndianType = h.V >= 0x14000003 ? (EndianType)r.ReadByte() : default; // Determines the endianness of the data in the file.
-    public uint UserVersion = h.V >= 0x0A000108 ? r.ReadUInt32() : default; // An extra version number, for companies that decide to modify the file format.
-    public uint NumBlocks = h.V >= 0x03010001 ? r.ReadUInt32() : default; // Number of file objects.
-    public uint UserVersion2 = ((Version == 20.2.0.7) || (Version == 20.0.0.5) || ((Version >= 10.0.1.2) && (Version <= 20.0.0.4) && (h.UserVersion <= 11))) && (h.UserVersion >= 3) ? r.ReadUInt32() : default;
-    public ExportInfo ExportInfo =               ((Version == 20.2.0.7) || (Version == 20.0.0.5) || ((Version >= 10.0.1.2) && (Version <= 20.0.0.4) && (h.UserVersion <= 11))) && (h.UserVersion >= 3) ? new ExportInfo(r) : default;
-    public string MaxFilepath = (h.UserVersion2 == 130) ? r.ReadL8AString() : default;
-    public byte[] Metadata = h.V >= 0x1E000000 ? r.ReadL8Bytes() : default;
-    public ushort NumBlockTypes = h.V >= 0x05000001 ? r.ReadUInt16() : default; // Number of object types in this NIF file.
-    public string[] BlockTypes = Version != 20.3.1.2 && h.V >= 0x05000001 ? r.ReadL32AString() : default; // List of all object types used in this NIF file.
-    public uint[] BlockTypeHashes = h.V >= 0x14030102 && h.V <= 0x14030102 ? r.ReadUInt32() : default; // List of all object types used in this NIF file.
-    public ushort[] BlockTypeIndex = h.V >= 0x05000001 ? r.ReadUInt16() : default; // Maps file objects on their corresponding type: first file object is of type object_types[object_type_index[0]], the second of object_types[object_type_index[1]], etc.
-    public uint[] BlockSize = h.V >= 0x14020005 ? r.ReadUInt32() : default; // Array of block sizes?
-    public uint NumStrings = h.V >= 0x14010001 ? r.ReadUInt32() : default; // Number of strings.
-    public uint MaxStringLength = h.V >= 0x14010001 ? r.ReadUInt32() : default; // Maximum string length.
-    public string[] Strings = h.V >= 0x14010001 ? r.ReadL32AString() : default; // Strings.
-    public uint[] Groups = h.V >= 0x05000006 ? r.ReadL32FArray(r => r.ReadUInt32()) : default;
+public class Header {
+    public string HeaderString;                         // 'NetImmerse File Format x.x.x.x' (versions <= 10.0.1.2) or 'Gamebryo File Format x.x.x.x' (versions >= 10.1.0.0), with x.x.x.x the version written out. Ends with a newline character (0x0A).
+    public string[] Copyright;
+    public uint Version;                                // The NIF version, in hexadecimal notation: 0x04000002, 0x0401000C, 0x04020002, 0x04020100, 0x04020200, 0x0A000100, 0x0A010000, 0x0A020000, 0x14000004, ...
+    public EndianType EndianType;                       // Determines the endianness of the data in the file.
+    public uint UserVersion;                            // An extra version number, for companies that decide to modify the file format.
+    public uint NumBlocks;                              // Number of file objects.
+    public uint UserVersion2;
+    public ExportInfo ExportInfo;
+    public string MaxFilepath;
+    public byte[] Metadata;
+    public ushort NumBlockTypes;                        // Number of object types in this NIF file.
+    public string[] BlockTypes;                         // List of all object types used in this NIF file.
+    public uint[] BlockTypeHashes;                      // List of all object types used in this NIF file.
+    public ushort[] BlockTypeIndex;                     // Maps file objects on their corresponding type: first file object is of type object_types[object_type_index[0]], the second of object_types[object_type_index[1]], etc.
+    public uint[] BlockSize;                            // Array of block sizes?
+    public uint NumStrings;                             // Number of strings.
+    public uint MaxStringLength;                        // Maximum string length.
+    public string[] Strings;                            // Strings.
+    public uint[] Groups;
+
+    public Header(BinaryReader r, Header h) {
+        HeaderString = ??;
+        Copyright = if (h.V <= 0x03010000) r.ReadFArray(r => new LineString(r), 3);
+        Version = if (h.V >= 0x03010001) r.ReadUInt32();
+        EndianType = if (h.V >= 0x14000003) (EndianType)r.ReadByte();
+        UserVersion = if (h.V >= 0x0A000108) r.ReadUInt32();
+        NumBlocks = if (h.V >= 0x03010001) r.ReadUInt32();
+        UserVersion2 = if (((h.V == 0x14020007) || (h.V == 0x14000005) || ((h.V >= 0x0A000102) && (h.V <= 0x14000004) && (Uh.V <= 11))) && (Uh.V >= 3)) r.ReadUInt32();
+        ExportInfo = if (((h.V == 0x14020007) || (h.V == 0x14000005) || ((h.V >= 0x0A000102) && (h.V <= 0x14000004) && (Uh.V <= 11))) && (Uh.V >= 3)) new ExportInfo(r);
+        MaxFilepath = if ((h.UV2 == 130)) r.ReadL8AString();
+        Metadata = if (h.V >= 0x1E000000) r.ReadL8Bytes();
+        NumBlockTypes = if (h.V >= 0x05000001) r.ReadUInt16();
+        BlockTypes = if (h.V != 0x14030102 && h.V >= 0x05000001) r.ReadFArray(r => new SizedString(r), NumBlockTypes);
+        BlockTypeHashes = if (h.V >= 0x14030102 && h.V <= 0x14030102) r.ReadPArray<uint>("I", NumBlockTypes);
+        BlockTypeIndex = if (h.V >= 0x05000001) r.ReadFArray(r => new BlockTypeIndex(r), NumBlocks);
+        BlockSize = if (h.V >= 0x14020005) r.ReadPArray<uint>("I", NumBlocks);
+        NumStrings = if (h.V >= 0x14010001) r.ReadUInt32();
+        MaxStringLength = if (h.V >= 0x14010001) r.ReadUInt32();
+        Strings = if (h.V >= 0x14010001) r.ReadFArray(r => new SizedString(r), NumStrings);
+        Groups = if (h.V >= 0x05000006) r.ReadL32PArray<uint>("I");
+    }
 }
 
 /// <summary>
@@ -1345,16 +1447,25 @@ public class StringPalette(BinaryReader r) {
 /// <summary>
 /// Tension, bias, continuity.
 /// </summary>
-public class TBC(BinaryReader r) {
-    public float t = r.ReadSingle();                    // Tension.
-    public float b = r.ReadSingle();                    // Bias.
-    public float c = r.ReadSingle();                    // Continuity.
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct TBC {
+    public static (string, int) Struct = ("<3f", 12);
+    public float t;                                     // Tension.
+    public float b;                                     // Bias.
+    public float c;                                     // Continuity.
+
+    public TBC() {}
+    public TBC(BinaryReader r) {
+        t = r.ReadSingle();
+        b = r.ReadSingle();
+        c = r.ReadSingle();
+    }
 }
 
 /// <summary>
 /// A generic key with support for interpolation. Type 1 is normal linear interpolation, type 2 has forward and backward tangents, and type 3 has tension, bias and continuity arguments. Note that color4 and byte always seem to be of type 1.
 /// </summary>
-public class Key(BinaryReader r, Header h) {
+public class Key<T>(BinaryReader r, Header h) {
     public float Time = r.ReadSingle();                 // Time of the key.
     public T Value = ??;                                // The key value.
     public T Forward = ARG == 2 ? ?? : default;         // Key forward tangent.
@@ -1365,16 +1476,16 @@ public class Key(BinaryReader r, Header h) {
 /// <summary>
 /// Array of vector keys (anything that can be interpolated, except rotations).
 /// </summary>
-public class KeyGroup(BinaryReader r, Header h) {
+public class KeyGroup<T>(BinaryReader r, Header h) {
     public uint NumKeys = r.ReadUInt32();               // Number of keys in the array.
     public KeyType Interpolation = Num Keys != 0 ? (KeyType)r.ReadUInt32() : default; // The key type.
-    public Key[] Keys = new Key(r, h);                  // The keys.
+    public Key<T>[] Keys = r.ReadFArray(r => new Key<T>(r, h), NumKeys); // The keys.
 }
 
 /// <summary>
 /// A special version of the key type used for quaternions.  Never has tangents.
 /// </summary>
-public class QuatKey(BinaryReader r, Header h) {
+public class QuatKey<T>(BinaryReader r, Header h) {
     public float Time = ARG != 4 && h.V >= 0x0A01006A ? r.ReadSingle() : default; // Time the key applies.
     public T Value = ARG != 4 ? ?? : default;           // Value of the key.
     public TBC TBC = ARG == 3 ? new TBC(r) : default;   // The TBC of the key.
@@ -1383,9 +1494,17 @@ public class QuatKey(BinaryReader r, Header h) {
 /// <summary>
 /// Texture coordinates (u,v). As in OpenGL; image origin is in the lower left corner.
 /// </summary>
-public class TexCoord(BinaryReader r) {
-    public float u = r.ReadSingle();                    // First coordinate.
-    public float v = r.ReadSingle();                    // Second coordinate.
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct TexCoord {
+    public static (string, int) Struct = ("<2f", 8);
+    public float u;                                     // First coordinate.
+    public float v;                                     // Second coordinate.
+
+    public TexCoord() {}
+    public TexCoord(BinaryReader r) {
+        u = r.ReadSingle();
+        v = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -1410,7 +1529,7 @@ public enum TransformMethod : uint {
 /// NiTexturingProperty::Map. Texture description.
 /// </summary>
 public class TexDesc(BinaryReader r, Header h) {
-    public int? Image = h.V <= 50397184 ? X<NiImage>.Ref(r) : default; // Link to the texture image.
+    public int? Image = h.V <= 0x03010000 ? X<NiImage>.Ref(r) : default; // Link to the texture image.
     public int? Source = h.V >= 0x0303000D ? X<NiSourceTexture>.Ref(r) : default; // NiSourceTexture object index.
     public TexClampMode ClampMode = h.V <= 0x14000005 ? (TexClampMode)r.ReadUInt32() : default; // 0=clamp S clamp T, 1=clamp S wrap T, 2=wrap S clamp T, 3=wrap S wrap T
     public TexFilterMode FilterMode = h.V <= 0x14000005 ? (TexFilterMode)r.ReadUInt32() : default; // 0=nearest, 1=bilinear, 2=trilinear, 3=..., 4=..., 5=...
@@ -1440,10 +1559,19 @@ public class ShaderTexDesc(BinaryReader r, Header h) {
 /// <summary>
 /// List of three vertex indices.
 /// </summary>
-public class Triangle(BinaryReader r) {
-    public ushort v1 = r.ReadUInt16();                  // First vertex index.
-    public ushort v2 = r.ReadUInt16();                  // Second vertex index.
-    public ushort v3 = r.ReadUInt16();                  // Third vertex index.
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct Triangle {
+    public static (string, int) Struct = ("<3H", 18);
+    public ushort v1;                                   // First vertex index.
+    public ushort v2;                                   // Second vertex index.
+    public ushort v3;                                   // Third vertex index.
+
+    public Triangle() {}
+    public Triangle(BinaryReader r) {
+        v1 = r.ReadUInt16();
+        v2 = r.ReadUInt16();
+        v3 = r.ReadUInt16();
+    }
 }
 
 [Flags]
@@ -1472,8 +1600,8 @@ public class BSVertexData(BinaryReader r, Header h) {
     public Vector3<false> Tangent = ((ARG & 128) != 0) && ((ARG & 256) != 0) ? new Vector3(r.ReadByte(), r.ReadByte(), r.ReadByte()) : default;
     public byte BitangentZ = ((ARG & 128) != 0) && ((ARG & 256) != 0) ? r.ReadByte() : default;
     public ByteColor4 VertexColors = (ARG & 512) != 0 ? new Color4Byte(r) : default;
-    public float[] BoneWeights = (ARG & 1024) != 0 ? r.ReadHalf() : default;
-    public byte[] BoneIndices = (ARG & 1024) != 0 ? r.ReadByte() : default;
+    public float[] BoneWeights = (ARG & 1024) != 0 ? r.ReadFArray(r => r.ReadHalf(), 4) : default;
+    public byte[] BoneIndices = (ARG & 1024) != 0 ? r.ReadBytes(4) : default;
     public float EyeData = (ARG & 4096) != 0 ? r.ReadSingle() : default;
 }
 
@@ -1487,19 +1615,32 @@ public class BSVertexDataSSE(BinaryReader r, Header h) {
     public Vector3<false> Tangent = ((ARG & 128) != 0) && ((ARG & 256) != 0) ? new Vector3(r.ReadByte(), r.ReadByte(), r.ReadByte()) : default;
     public byte BitangentZ = ((ARG & 128) != 0) && ((ARG & 256) != 0) ? r.ReadByte() : default;
     public ByteColor4 VertexColors = (ARG & 512) != 0 ? new Color4Byte(r) : default;
-    public float[] BoneWeights = (ARG & 1024) != 0 ? r.ReadHalf() : default;
-    public byte[] BoneIndices = (ARG & 1024) != 0 ? r.ReadByte() : default;
+    public float[] BoneWeights = (ARG & 1024) != 0 ? r.ReadFArray(r => r.ReadHalf(), 4) : default;
+    public byte[] BoneIndices = (ARG & 1024) != 0 ? r.ReadBytes(4) : default;
     public float EyeData = (ARG & 4096) != 0 ? r.ReadSingle() : default;
 }
 
-public class BSVertexDesc(BinaryReader r) {
-    public byte VF1 = r.ReadByte();
-    public byte VF2 = r.ReadByte();
-    public byte VF3 = r.ReadByte();
-    public byte VF4 = r.ReadByte();
-    public byte VF5 = r.ReadByte();
-    public VertexFlags VertexAttributes = (VertexFlags)r.ReadUInt16();
-    public byte VF8 = r.ReadByte();
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct BSVertexDesc {
+    public static (string, int) Struct = ("<5bHb", 8);
+    public byte VF1;
+    public byte VF2;
+    public byte VF3;
+    public byte VF4;
+    public byte VF5;
+    public VertexFlags VertexAttributes;
+    public byte VF8;
+
+    public BSVertexDesc() {}
+    public BSVertexDesc(BinaryReader r) {
+        VF1 = r.ReadByte();
+        VF2 = r.ReadByte();
+        VF3 = r.ReadByte();
+        VF4 = r.ReadByte();
+        VF5 = r.ReadByte();
+        VertexAttributes = (VertexFlags)r.ReadUInt16();
+        VF8 = r.ReadByte();
+    }
 }
 
 /// <summary>
@@ -1511,49 +1652,78 @@ public class SkinPartition(BinaryReader r, Header h) {
     public ushort NumBones = r.ReadUInt16();            // Number of bones influencing this submesh.
     public ushort NumStrips = r.ReadUInt16();           // Number of strips in this submesh (zero if not stripped).
     public ushort NumWeightsPerVertex = r.ReadUInt16(); // Number of weight coefficients per vertex. The Gamebryo engine seems to work well only if this number is equal to 4, even if there are less than 4 influences per vertex.
-    public ushort[] Bones = r.ReadUInt16();             // List of bones.
+    public ushort[] Bones = r.ReadPArray<ushort>("H", NumBones); // List of bones.
     public bool HasVertexMap = h.V >= 0x0A010000 ? r.ReadBool32() : default; // Do we have a vertex map?
-    public ushort[] VertexMap = Has Vertex Map && h.V >= 0x0A010000 ? r.ReadUInt16() : default; // Maps the weight/influence lists in this submesh to the vertices in the shape being skinned.
+    public ushort[] VertexMap = Has Vertex Map && h.V >= 0x0A010000 ? r.ReadPArray<ushort>("H", NumVertices) : default; // Maps the weight/influence lists in this submesh to the vertices in the shape being skinned.
     public bool HasVertexWeights = h.V >= 0x0A010000 ? r.ReadBool32() : default; // Do we have vertex weights?
-    public float[][] VertexWeights = Has Vertex Weights == 15 && h.V >= 0x14030101 ? r.ReadHalf() : default; // The vertex weights.
-    public ushort[] StripLengths = r.ReadUInt16();      // The strip lengths.
+    public float[][] VertexWeights = Has Vertex Weights == 15 && h.V >= 0x14030101 ? r.ReadFArray(k => r.ReadFArray(r => r.ReadHalf(), NumVertices), NumWeightsPerVertex) : default; // The vertex weights.
+    public ushort[] StripLengths = r.ReadPArray<ushort>("H", NumStrips); // The strip lengths.
     public bool HasFaces = h.V >= 0x0A010000 ? r.ReadBool32() : default; // Do we have triangle or strip data?
-    public ushort[][] Strips = (Has Faces) && (Num Strips != 0) && h.V >= 0x0A010000 ? r.ReadUInt16() : default; // The strips.
-    public Triangle[] Triangles = (Has Faces) && (Num Strips == 0) && h.V >= 0x0A010000 ? new Triangle(r) : default; // The triangles.
+    public ushort[][] Strips = (Has Faces) && (Num Strips != 0) && h.V >= 0x0A010000 ? r.ReadFArray(k => r.ReadPArray<ushort>("H", NumStrips), StripLengths) : default; // The strips.
+    public Triangle[] Triangles = (Has Faces) && (Num Strips == 0) && h.V >= 0x0A010000 ? r.ReadFArray(r => new Triangle(r), NumTriangles) : default; // The triangles.
     public bool HasBoneIndices = r.ReadBool32();        // Do we have bone indices?
-    public byte[][] BoneIndices = Has Bone Indices ? r.ReadByte() : default; // Bone indices, they index into 'Bones'.
+    public byte[][] BoneIndices = Has Bone Indices ? r.ReadFArray(k => r.ReadBytes(NumVertices), NumWeightsPerVertex) : default; // Bone indices, they index into 'Bones'.
     public ushort UnknownShort = r.ReadUInt16();        // Unknown
-    public BSVertexDesc VertexDesc = (h.UserVersion2 == 100) ? new BSVertexDesc(r) : default;
-    public Triangle[] TrianglesCopy = (h.UserVersion2 == 100) ? new Triangle(r) : default;
+    public BSVertexDesc VertexDesc = (h.UV2 == 100) ? new BSVertexDesc(r) : default;
+    public Triangle[] TrianglesCopy = (h.UV2 == 100) ? r.ReadFArray(r => new Triangle(r), NumTriangles) : default;
 }
 
 /// <summary>
 /// A plane.
 /// </summary>
-public class NiPlane(BinaryReader r) {
-    public Vector3 Normal = r.ReadVector3();            // The plane normal.
-    public float Constant = r.ReadSingle();             // The plane constant.
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct NiPlane {
+    public static (string, int) Struct = ("<4f", 24);
+    public Vector3 Normal;                              // The plane normal.
+    public float Constant;                              // The plane constant.
+
+    public NiPlane() {}
+    public NiPlane(BinaryReader r) {
+        Normal = r.ReadVector3();
+        Constant = r.ReadSingle();
+    }
 }
 
 /// <summary>
 /// A sphere.
 /// </summary>
-public class NiBound(BinaryReader r) {
-    public Vector3 Center = r.ReadVector3();            // The sphere's center.
-    public float Radius = r.ReadSingle();               // The sphere's radius.
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct NiBound {
+    public static (string, int) Struct = ("<4f", 24);
+    public Vector3 Center;                              // The sphere's center.
+    public float Radius;                                // The sphere's radius.
+
+    public NiBound() {}
+    public NiBound(BinaryReader r) {
+        Center = r.ReadVector3();
+        Radius = r.ReadSingle();
+    }
 }
 
-public class NiQuatTransform(BinaryReader r, Header h) {
-    public Vector3 Translation = r.ReadVector3();
-    public Quaternion Rotation = r.ReadQuaternion();
-    public float Scale = r.ReadSingle();
-    public bool[] TRSValid = h.V <= 0x0A01006D ? r.ReadBool32() : default; // Whether each transform component is valid.
+public struct NiQuatTransform {
+    public Vector3 Translation;
+    public Quaternion Rotation;
+    public float Scale;
+    public bool[] TRSValid;                             // Whether each transform component is valid.
+
+    public NiQuatTransform(BinaryReader r, Header h) {
+        Translation = r.ReadVector3();
+        Rotation = r.ReadQuaternion();
+        Scale = r.ReadSingle();
+        TRSValid = if (h.V <= 0x0A01006D) r.ReadBytes(3);
+    }
 }
 
-public class NiTransform(BinaryReader r) {
-    public Matrix3x3 Rotation = r.ReadMatrix3x3();      // The rotation part of the transformation matrix.
-    public Vector3 Translation = r.ReadVector3();       // The translation vector.
-    public float Scale = r.ReadSingle();                // Scaling part (only uniform scaling is supported).
+public struct NiTransform {
+    public Matrix3x3 Rotation;                          // The rotation part of the transformation matrix.
+    public Vector3 Translation;                         // The translation vector.
+    public float Scale;                                 // Scaling part (only uniform scaling is supported).
+
+    public NiTransform(BinaryReader r) {
+        Rotation = r.ReadMatrix3x3();
+        Translation = r.ReadVector3();
+        Scale = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -1606,22 +1776,35 @@ public class Morph(BinaryReader r, Header h) {
     public string FrameName = h.V >= 0x0A01006A ? Y.String(r) : default; // Name of the frame.
     public uint NumKeys = h.V <= 0x0A010000 ? r.ReadUInt32() : default; // The number of morph keys that follow.
     public KeyType Interpolation = h.V <= 0x0A010000 ? (KeyType)r.ReadUInt32() : default; // Unlike most objects, the presense of this value is not conditional on there being keys.
-    public Key[] Keys = h.V <= 0x0A010000 ? new Key(r, h) : default; // The morph key frames.
+    public Key<T>[] Keys = h.V <= 0x0A010000 ? r.ReadFArray(r => new Key<T>(r, h), NumKeys) : default; // The morph key frames.
     public float LegacyWeight = h.V >= 0x0A010068 && h.V <= 0x14010002 &&  ? r.ReadSingle() : default;
-    public Vector3[] Vectors = r.ReadVector3();         // Morph vectors.
+    public Vector3[] Vectors = r.ReadFArray(r => r.ReadVector3(), ARG); // Morph vectors.
 }
 
 /// <summary>
 /// particle array entry
 /// </summary>
-public class Particle(BinaryReader r) {
-    public Vector3 Velocity = r.ReadVector3();          // Particle velocity
-    public Vector3 UnknownVector = r.ReadVector3();     // Unknown
-    public float Lifetime = r.ReadSingle();             // The particle age.
-    public float Lifespan = r.ReadSingle();             // Maximum age of the particle.
-    public float Timestamp = r.ReadSingle();            // Timestamp of the last update.
-    public ushort UnknownShort = r.ReadUInt16();        // Unknown short
-    public ushort VertexID = r.ReadUInt16();            // Particle/vertex index matches array index
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct Particle {
+    public static (string, int) Struct = ("<9f2H", 40);
+    public Vector3 Velocity;                            // Particle velocity
+    public Vector3 UnknownVector;                       // Unknown
+    public float Lifetime;                              // The particle age.
+    public float Lifespan;                              // Maximum age of the particle.
+    public float Timestamp;                             // Timestamp of the last update.
+    public ushort UnknownShort;                         // Unknown short
+    public ushort VertexID;                             // Particle/vertex index matches array index
+
+    public Particle() {}
+    public Particle(BinaryReader r) {
+        Velocity = r.ReadVector3();
+        UnknownVector = r.ReadVector3();
+        Lifetime = r.ReadSingle();
+        Lifespan = r.ReadSingle();
+        Timestamp = r.ReadSingle();
+        UnknownShort = r.ReadUInt16();
+        VertexID = r.ReadUInt16();
+    }
 }
 
 /// <summary>
@@ -1631,9 +1814,9 @@ public class BoneData(BinaryReader r, Header h) {
     public NiTransform SkinTransform = new NiTransform(r); // Offset of the skin from this bone in bind position.
     public Vector3 BoundingSphereOffset = r.ReadVector3(); // Translation offset of a bounding sphere holding all vertices. (Note that its a Sphere Containing Axis Aligned Box not a minimum volume Sphere)
     public float BoundingSphereRadius = r.ReadSingle(); // Radius for bounding sphere holding all vertices.
-    public short[] Unknown13Shorts = h.V >= 0x14030009 && h.V <= 0x14030009 &&  ? r.ReadInt16() : default; // Unknown, always 0?
+    public short[] Unknown13Shorts = h.V >= 0x14030009 && h.V <= 0x14030009 &&  ? r.ReadPArray<short>("h", 13) : default; // Unknown, always 0?
     public ushort NumVertices = r.ReadUInt16();         // Number of weighted vertices.
-    public BoneVertDataHalf[] VertexWeights = ARG == 15 && h.V >= 0x14030101 ? new BoneVertDataHalf(r) : default; // The vertex weights.
+    public BoneVertData[] VertexWeights = ARG == 15 && h.V >= 0x14030101 ? r.ReadFArray(r => new BoneVertData(r, true), NumVertices) : default; // The vertex weights.
 }
 
 /// <summary>
@@ -1841,7 +2024,7 @@ public enum ImageType : uint {
 /// </summary>
 public class BoxBV(BinaryReader r) {
     public Vector3 Center = r.ReadVector3();
-    public Vector3[] Axis = r.ReadVector3();
+    public Vector3[] Axis = r.ReadFArray(r => r.ReadVector3(), 3);
     public Vector3 Extent = r.ReadVector3();
 }
 
@@ -1899,8 +2082,8 @@ public class BonePose(BinaryReader r) {
 /// </summary>
 public class DecalVectorArray(BinaryReader r) {
     public short NumVectors = r.ReadInt16();
-    public Vector3[] Points = r.ReadVector3();          // Vector XYZ coords
-    public Vector3[] Normals = r.ReadVector3();         // Vector Normals
+    public Vector3[] Points = r.ReadFArray(r => r.ReadVector3(), NumVectors); // Vector XYZ coords
+    public Vector3[] Normals = r.ReadFArray(r => r.ReadVector3(), NumVectors); // Vector Normals
 }
 
 /// <summary>
@@ -1963,10 +2146,10 @@ public class bhkCMSDChunk(BinaryReader r) {
     public uint MaterialIndex = r.ReadUInt32();         // Index of material in bhkCompressedMeshShapeData::Chunk Materials
     public ushort Reference = r.ReadUInt16();           // Always 65535?
     public ushort TransformIndex = r.ReadUInt16();      // Index of transformation in bhkCompressedMeshShapeData::Chunk Transforms
-    public ushort[] Vertices = r.ReadL32FArray(r => r.ReadUInt16());
-    public ushort[] Indices = r.ReadL32FArray(r => r.ReadUInt16());
-    public ushort[] Strips = r.ReadL32FArray(r => r.ReadUInt16());
-    public ushort[] WeldingInfo = r.ReadL32FArray(r => r.ReadUInt16());
+    public ushort[] Vertices = r.ReadL32PArray<ushort>("H");
+    public ushort[] Indices = r.ReadL32PArray<ushort>("H");
+    public ushort[] Strips = r.ReadL32PArray<ushort>("H");
+    public ushort[] WeldingInfo = r.ReadL32PArray<ushort>("H");
 }
 
 public class MalleableDescriptor(BinaryReader r, Header h) {
@@ -2009,6 +2192,9 @@ public class ConstraintData(BinaryReader r, Header h) {
 /// Abstract object type.
 /// </summary>
 public abstract class NiObject {
+
+    public NiObject(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -2020,6 +2206,14 @@ public class Ni3dsAlphaAnimator : NiObject {
     public uint Num1;                                   // Unknown.
     public uint Num2;                                   // Unknown.
     public uint[][] Unknown2;                           // Unknown.
+
+    public Ni3dsAlphaAnimator(BinaryReader r, Header h) {
+        Unknown1 = r.ReadBytes(40);
+        Parent = X<NiObject>.Ref(r);
+        Num1 = r.ReadUInt32();
+        Num2 = r.ReadUInt32();
+        Unknown2 = r.ReadFArray(k => r.ReadPArray<uint>("I", Num1), Num2);
+    }
 }
 
 /// <summary>
@@ -2034,6 +2228,17 @@ public class Ni3dsAnimationNode : NiObject {
     public float[] UnknownFloats2;                      // Unknown.
     public uint Count;                                  // A count.
     public byte[][] UnknownArray;                       // Unknown.
+
+    public Ni3dsAnimationNode(BinaryReader r, Header h) {
+        Name = Y.String(r);
+        HasData = r.ReadBool32();
+        UnknownFloats1 = if (Has Data) r.ReadPArray<float>("f", 21);
+        UnknownShort = if (Has Data) r.ReadUInt16();
+        Child = if (Has Data) X<NiObject>.Ref(r);
+        UnknownFloats2 = if (Has Data) r.ReadPArray<float>("f", 12);
+        Count = if (Has Data) r.ReadUInt32();
+        UnknownArray = if (Has Data) r.ReadFArray(k => r.ReadBytes(Count), 5);
+    }
 }
 
 /// <summary>
@@ -2041,6 +2246,10 @@ public class Ni3dsAnimationNode : NiObject {
 /// </summary>
 public class Ni3dsColorAnimator : NiObject {
     public byte[] Unknown1;                             // Unknown.
+
+    public Ni3dsColorAnimator(BinaryReader r, Header h) {
+        Unknown1 = r.ReadBytes(184);
+    }
 }
 
 /// <summary>
@@ -2048,6 +2257,10 @@ public class Ni3dsColorAnimator : NiObject {
 /// </summary>
 public class Ni3dsMorphShape : NiObject {
     public byte[] Unknown1;                             // Unknown.
+
+    public Ni3dsMorphShape(BinaryReader r, Header h) {
+        Unknown1 = r.ReadBytes(14);
+    }
 }
 
 /// <summary>
@@ -2055,6 +2268,10 @@ public class Ni3dsMorphShape : NiObject {
 /// </summary>
 public class Ni3dsParticleSystem : NiObject {
     public byte[] Unknown1;                             // Unknown.
+
+    public Ni3dsParticleSystem(BinaryReader r, Header h) {
+        Unknown1 = r.ReadBytes(14);
+    }
 }
 
 /// <summary>
@@ -2062,6 +2279,10 @@ public class Ni3dsParticleSystem : NiObject {
 /// </summary>
 public class Ni3dsPathController : NiObject {
     public byte[] Unknown1;                             // Unknown.
+
+    public Ni3dsPathController(BinaryReader r, Header h) {
+        Unknown1 = r.ReadBytes(20);
+    }
 }
 
 /// <summary>
@@ -2070,6 +2291,11 @@ public class Ni3dsPathController : NiObject {
 public abstract class NiParticleModifier : NiObject {
     public int? NextModifier;                           // Next particle modifier.
     public int? Controller;                             // Points to the particle system controller parent.
+
+    public NiParticleModifier(BinaryReader r, Header h) {
+        NextModifier = X<NiParticleModifier>.Ref(r);
+        Controller = if (h.V >= 0x04000002) X<NiParticleSystemController>.Ptr(r);
+    }
 }
 
 /// <summary>
@@ -2083,6 +2309,16 @@ public abstract class NiPSysCollider : NiObject {
     public int? Parent;                                 // Link to parent.
     public int? NextCollider;                           // The next collider.
     public int? ColliderObject;                         // The object whose position and orientation are the basis of the collider.
+
+    public NiPSysCollider(BinaryReader r, Header h) {
+        Bounce = r.ReadSingle();
+        SpawnonCollide = r.ReadBool32();
+        DieonCollide = r.ReadBool32();
+        SpawnModifier = X<NiPSysSpawnModifier>.Ref(r);
+        Parent = X<NiPSysColliderManager>.Ptr(r);
+        NextCollider = X<NiPSysCollider>.Ref(r);
+        ColliderObject = X<NiAVObject>.Ptr(r);
+    }
 }
 
 public enum BroadPhaseType : byte {
@@ -2102,12 +2338,18 @@ public class hkWorldObjCinfoProperty(BinaryReader r) {
 /// The base type of most Bethesda-specific Havok-related NIF objects.
 /// </summary>
 public abstract class bhkRefObject : NiObject {
+
+    public bhkRefObject(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Havok objects that can be saved and loaded from disk?
 /// </summary>
 public abstract class bhkSerializable : bhkRefObject {
+
+    public bhkSerializable(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -2121,18 +2363,34 @@ public abstract class bhkWorldObject : bhkSerializable {
     public BroadPhaseType BroadPhaseType;
     public byte[] UnusedBytes;
     public hkWorldObjCinfoProperty CinfoProperty;
+
+    public bhkWorldObject(BinaryReader r, Header h) {
+        Shape = X<bhkShape>.Ref(r);
+        UnknownInt = if (h.V <= 0x0A000100) r.ReadUInt32();
+        HavokFilter = new HavokFilter(r, h);
+        Unused = r.ReadBytes(4);
+        BroadPhaseType = (BroadPhaseType)r.ReadByte();
+        UnusedBytes = r.ReadBytes(3);
+        CinfoProperty = new hkWorldObjCinfoProperty(r);
+    }
 }
 
 /// <summary>
 /// Havok object that do not react with other objects when they collide (causing deflection, etc.) but still trigger collision notifications to the game.  Possible uses are traps, portals, AI fields, etc.
 /// </summary>
 public abstract class bhkPhantom : bhkWorldObject {
+
+    public bhkPhantom(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// A Havok phantom that uses a Havok shape object for its collision volume instead of just a bounding box.
 /// </summary>
 public abstract class bhkShapePhantom : bhkPhantom {
+
+    public bhkShapePhantom(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -2141,12 +2399,20 @@ public abstract class bhkShapePhantom : bhkPhantom {
 public class bhkSimpleShapePhantom : bhkShapePhantom {
     public byte[] Unused2;                              // Garbage data from memory.
     public Matrix4x4 Transform;
+
+    public bhkSimpleShapePhantom(BinaryReader r, Header h) {
+        Unused2 = r.ReadBytes(8);
+        Transform = r.ReadMatrix4x4();
+    }
 }
 
 /// <summary>
 /// A havok node, describes physical properties.
 /// </summary>
 public abstract class bhkEntity : bhkWorldObject {
+
+    public bhkEntity(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -2195,12 +2461,58 @@ public class bhkRigidBody : bhkEntity {
     public byte[] UnknownBytes2;                        // Unknown. Skyrim only.
     public int?[] Constraints;
     public ushort BodyFlags;                            // 1 = respond to wind
+
+    public bhkRigidBody(BinaryReader r, Header h) {
+        CollisionResponse = (hkResponseType)r.ReadByte();
+        UnusedByte1 = r.ReadByte();
+        ProcessContactCallbackDelay = r.ReadUInt16();
+        UnknownInt1 = if (h.V >= 0x0A010000) r.ReadUInt32();
+        HavokFilterCopy = if (h.V >= 0x0A010000) new HavokFilter(r, h);
+        Unused2 = if (h.V >= 0x0A010000) r.ReadBytes(4);
+        UnknownInt2 = if (h.V >= 0x0A010000 && ) r.ReadUInt32();
+        CollisionResponse2 = if (h.V >= 0x0A010000) (hkResponseType)r.ReadByte();
+        UnusedByte2 = if (h.V >= 0x0A010000) r.ReadByte();
+        ProcessContactCallbackDelay2 = if (h.V >= 0x0A010000) r.ReadUInt16();
+        UnknownInt2 = r.ReadUInt32();
+        Translation = r.ReadVector4();
+        Rotation = r.ReadQuaternionWFirst();
+        LinearVelocity = r.ReadVector4();
+        AngularVelocity = r.ReadVector4();
+        InertiaTensor = r.ReadMatrix3x4();
+        Center = r.ReadVector4();
+        Mass = r.ReadSingle();
+        LinearDamping = r.ReadSingle();
+        AngularDamping = r.ReadSingle();
+        TimeFactor = r.ReadSingle();
+        GravityFactor = r.ReadSingle();
+        Friction = r.ReadSingle();
+        RollingFrictionMultiplier = r.ReadSingle();
+        Restitution = r.ReadSingle();
+        MaxLinearVelocity = if (h.V >= 0x0A010000) r.ReadSingle();
+        MaxAngularVelocity = if (h.V >= 0x0A010000) r.ReadSingle();
+        PenetrationDepth = if (h.V >= 0x0A010000 && ) r.ReadSingle();
+        MotionSystem = (hkMotionType)r.ReadByte();
+        DeactivatorType = (hkDeactivatorType)r.ReadByte();
+        EnableDeactivation = r.ReadBool32();
+        SolverDeactivation = (hkSolverDeactivation)r.ReadByte();
+        QualityType = (hkQualityType)r.ReadByte();
+        PenetrationDepth = r.ReadSingle();
+        UnknownFloat1 = r.ReadSingle();
+        UnknownBytes1 = r.ReadBytes(12);
+        UnknownBytes2 = r.ReadBytes(4);
+        Constraints = r.ReadL32FArray(X<bhkSerializable>.Ref);
+        BodyFlags = r.ReadUInt32();
+        BodyFlags = r.ReadUInt16();
+    }
 }
 
 /// <summary>
 /// The "T" suffix marks this body as active for translation and rotation.
 /// </summary>
 public class bhkRigidBodyT : bhkRigidBody {
+
+    public bhkRigidBodyT(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -2209,6 +2521,11 @@ public class bhkRigidBodyT : bhkRigidBody {
 public abstract class bhkConstraint : bhkSerializable {
     public int?[] Entities;                             // The entities affected by this constraint.
     public uint Priority;                               // Usually 1. Higher values indicate higher priority of this constraint?
+
+    public bhkConstraint(BinaryReader r, Header h) {
+        Entities = r.ReadL32FArray(X<bhkEntity>.Ptr);
+        Priority = r.ReadUInt32();
+    }
 }
 
 /// <summary>
@@ -2216,6 +2533,10 @@ public abstract class bhkConstraint : bhkSerializable {
 /// </summary>
 public class bhkLimitedHingeConstraint : bhkConstraint {
     public LimitedHingeDescriptor LimitedHinge;         // Describes a limited hinge constraint
+
+    public bhkLimitedHingeConstraint(BinaryReader r, Header h) {
+        LimitedHinge = new LimitedHingeDescriptor(r, h);
+    }
 }
 
 /// <summary>
@@ -2223,6 +2544,10 @@ public class bhkLimitedHingeConstraint : bhkConstraint {
 /// </summary>
 public class bhkMalleableConstraint : bhkConstraint {
     public MalleableDescriptor Malleable;               // Constraint within constraint.
+
+    public bhkMalleableConstraint(BinaryReader r, Header h) {
+        Malleable = new MalleableDescriptor(r, h);
+    }
 }
 
 /// <summary>
@@ -2230,6 +2555,10 @@ public class bhkMalleableConstraint : bhkConstraint {
 /// </summary>
 public class bhkStiffSpringConstraint : bhkConstraint {
     public StiffSpringDescriptor StiffSpring;           // Stiff Spring constraint.
+
+    public bhkStiffSpringConstraint(BinaryReader r, Header h) {
+        StiffSpring = new StiffSpringDescriptor(r);
+    }
 }
 
 /// <summary>
@@ -2237,6 +2566,10 @@ public class bhkStiffSpringConstraint : bhkConstraint {
 /// </summary>
 public class bhkRagdollConstraint : bhkConstraint {
     public RagdollDescriptor Ragdoll;                   // Ragdoll constraint.
+
+    public bhkRagdollConstraint(BinaryReader r, Header h) {
+        Ragdoll = new RagdollDescriptor(r, h);
+    }
 }
 
 /// <summary>
@@ -2244,6 +2577,10 @@ public class bhkRagdollConstraint : bhkConstraint {
 /// </summary>
 public class bhkPrismaticConstraint : bhkConstraint {
     public PrismaticDescriptor Prismatic;               // Describes a prismatic constraint
+
+    public bhkPrismaticConstraint(BinaryReader r, Header h) {
+        Prismatic = new PrismaticDescriptor(r, h);
+    }
 }
 
 /// <summary>
@@ -2251,6 +2588,10 @@ public class bhkPrismaticConstraint : bhkConstraint {
 /// </summary>
 public class bhkHingeConstraint : bhkConstraint {
     public HingeDescriptor Hinge;                       // Hinge constraing.
+
+    public bhkHingeConstraint(BinaryReader r, Header h) {
+        Hinge = new HingeDescriptor(r, h);
+    }
 }
 
 /// <summary>
@@ -2258,6 +2599,10 @@ public class bhkHingeConstraint : bhkConstraint {
 /// </summary>
 public class bhkBallAndSocketConstraint : bhkConstraint {
     public BallAndSocketDescriptor BallandSocket;       // Describes a ball and socket constraint
+
+    public bhkBallAndSocketConstraint(BinaryReader r, Header h) {
+        BallandSocket = new BallAndSocketDescriptor(r);
+    }
 }
 
 /// <summary>
@@ -2283,12 +2628,29 @@ public class bhkBallSocketConstraintChain : bhkSerializable {
     public int? EntityA;
     public int? EntityB;
     public uint Priority;
+
+    public bhkBallSocketConstraintChain(BinaryReader r, Header h) {
+        NumPivots = r.ReadUInt32();
+        Pivots = r.ReadFArray(r => new ConstraintInfo(r), NumPivots/2);
+        Tau = r.ReadSingle();
+        Damping = r.ReadSingle();
+        ConstraintForceMixing = r.ReadSingle();
+        MaxErrorDistance = r.ReadSingle();
+        EntitiesA = r.ReadL32FArray(X<bhkRigidBody>.Ptr);
+        NumEntities = r.ReadUInt32();
+        EntityA = X<bhkRigidBody>.Ptr(r);
+        EntityB = X<bhkRigidBody>.Ptr(r);
+        Priority = r.ReadUInt32();
+    }
 }
 
 /// <summary>
 /// A Havok Shape?
 /// </summary>
 public abstract class bhkShape : bhkSerializable {
+
+    public bhkShape(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -2300,6 +2662,14 @@ public class bhkTransformShape : bhkShape {
     public float Radius;
     public byte[] Unused;                               // Garbage data from memory.
     public Matrix4x4 Transform;                         // A transform matrix.
+
+    public bhkTransformShape(BinaryReader r, Header h) {
+        Shape = X<bhkShape>.Ref(r);
+        Material = new HavokMaterial(r, h);
+        Radius = r.ReadSingle();
+        Unused = r.ReadBytes(8);
+        Transform = r.ReadMatrix4x4();
+    }
 }
 
 /// <summary>
@@ -2308,18 +2678,29 @@ public class bhkTransformShape : bhkShape {
 public abstract class bhkSphereRepShape : bhkShape {
     public HavokMaterial Material;                      // The material of the shape.
     public float Radius;                                // The radius of the sphere that encloses the shape.
+
+    public bhkSphereRepShape(BinaryReader r, Header h) {
+        Material = new HavokMaterial(r, h);
+        Radius = r.ReadSingle();
+    }
 }
 
 /// <summary>
 /// A havok shape.
 /// </summary>
 public abstract class bhkConvexShape : bhkSphereRepShape {
+
+    public bhkConvexShape(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// A sphere.
 /// </summary>
 public class bhkSphereShape : bhkConvexShape {
+
+    public bhkSphereShape(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -2331,6 +2712,14 @@ public class bhkCapsuleShape : bhkConvexShape {
     public float Radius1;                               // Matches first capsule radius.
     public Vector3 SecondPoint;                         // Second point on the capsule's axis.
     public float Radius2;                               // Matches second capsule radius.
+
+    public bhkCapsuleShape(BinaryReader r, Header h) {
+        Unused = r.ReadBytes(8);
+        FirstPoint = r.ReadVector3();
+        Radius1 = r.ReadSingle();
+        SecondPoint = r.ReadVector3();
+        Radius2 = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -2340,6 +2729,12 @@ public class bhkBoxShape : bhkConvexShape {
     public byte[] Unused;                               // Not used. The following wants to be aligned at 16 bytes.
     public Vector3 Dimensions;                          // A cube stored in Half Extents. A unit cube (1.0, 1.0, 1.0) would be stored as 0.5, 0.5, 0.5.
     public float UnusedFloat;                           // Unused as Havok stores the Half Extents as hkVector4 with the W component unused.
+
+    public bhkBoxShape(BinaryReader r, Header h) {
+        Unused = r.ReadBytes(8);
+        Dimensions = r.ReadVector3();
+        UnusedFloat = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -2352,12 +2747,22 @@ public class bhkConvexVerticesShape : bhkConvexShape {
     public hkWorldObjCinfoProperty NormalsProperty;
     public Vector4[] Vertices;                          // Vertices. Fourth component is 0. Lexicographically sorted.
     public Vector4[] Normals;                           // Half spaces as determined by the set of vertices above. First three components define the normal pointing to the exterior, fourth component is the signed distance of the separating plane to the origin: it is minus the dot product of v and n, where v is any vertex on the separating plane, and n is the normal. Lexicographically sorted.
+
+    public bhkConvexVerticesShape(BinaryReader r, Header h) {
+        VerticesProperty = new hkWorldObjCinfoProperty(r);
+        NormalsProperty = new hkWorldObjCinfoProperty(r);
+        Vertices = r.ReadL32FArray(r => r.ReadL32Vector4());
+        Normals = r.ReadL32FArray(r => r.ReadL32Vector4());
+    }
 }
 
 /// <summary>
 /// A convex transformed shape?
 /// </summary>
 public class bhkConvexTransformShape : bhkTransformShape {
+
+    public bhkConvexTransformShape(BinaryReader r, Header h) {
+    }
 }
 
 public class bhkConvexSweepShape : bhkShape {
@@ -2365,6 +2770,13 @@ public class bhkConvexSweepShape : bhkShape {
     public HavokMaterial Material;
     public float Radius;
     public Vector3 Unknown;
+
+    public bhkConvexSweepShape(BinaryReader r, Header h) {
+        Shape = X<bhkShape>.Ref(r);
+        Material = new HavokMaterial(r, h);
+        Radius = r.ReadSingle();
+        Unknown = r.ReadVector3();
+    }
 }
 
 /// <summary>
@@ -2374,12 +2786,21 @@ public class bhkMultiSphereShape : bhkSphereRepShape {
     public float UnknownFloat1;                         // Unknown.
     public float UnknownFloat2;                         // Unknown.
     public NiBound[] Spheres;                           // This array holds the spheres which make up the multi sphere shape.
+
+    public bhkMultiSphereShape(BinaryReader r, Header h) {
+        UnknownFloat1 = r.ReadSingle();
+        UnknownFloat2 = r.ReadSingle();
+        Spheres = r.ReadL32FArray(r => new NiBound(r));
+    }
 }
 
 /// <summary>
 /// A tree-like Havok data structure stored in an assembly-like binary code?
 /// </summary>
 public abstract class bhkBvTreeShape : bhkShape {
+
+    public bhkBvTreeShape(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -2394,12 +2815,26 @@ public class bhkMoppBvTreeShape : bhkBvTreeShape {
     public float Scale;                                 // The scaling factor to quantize the MOPP: the quantization factor is equal to 256*256 divided by this number. In Oblivion files, scale is taken equal to 256*256*254 / (size + 0.2) where size is the largest dimension of the bounding box of the packed shape.
     public MoppDataBuildType BuildType;                 // Tells if MOPP Data was organized into smaller chunks (PS3) or not (PC)
     public byte[] MOPPData;                             // The tree of bounding volume data.
+
+    public bhkMoppBvTreeShape(BinaryReader r, Header h) {
+        Shape = X<bhkShape>.Ref(r);
+        Unused = r.ReadPArray<uint>("I", 3);
+        ShapeScale = r.ReadSingle();
+        MOPPDataSize = r.ReadUInt32();
+        Origin = if (h.V >= 0x0A000102) r.ReadVector3();
+        Scale = if (h.V >= 0x0A000102) r.ReadSingle();
+        BuildType = (MoppDataBuildType)r.ReadByte();
+        MOPPData = r.ReadBytes(MOPPDataSize);
+    }
 }
 
 /// <summary>
 /// Havok collision object that uses multiple shapes?
 /// </summary>
 public abstract class bhkShapeCollection : bhkShape {
+
+    public bhkShapeCollection(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -2417,6 +2852,14 @@ public class bhkListShape : bhkShapeCollection {
     public hkWorldObjCinfoProperty ChildShapeProperty;
     public hkWorldObjCinfoProperty ChildFilterProperty;
     public uint[] UnknownInts;                          // Unknown.
+
+    public bhkListShape(BinaryReader r, Header h) {
+        SubShapes = r.ReadL32FArray(X<bhkShape>.Ref);
+        Material = new HavokMaterial(r, h);
+        ChildShapeProperty = new hkWorldObjCinfoProperty(r);
+        ChildFilterProperty = new hkWorldObjCinfoProperty(r);
+        UnknownInts = r.ReadL32PArray<uint>("I");
+    }
 }
 
 public class bhkMeshShape : bhkShape {
@@ -2427,6 +2870,16 @@ public class bhkMeshShape : bhkShape {
     public hkWorldObjCinfoProperty[] ShapeProperties;
     public int[] Unknown2;
     public int?[] StripsData;                           // Refers to a bunch of NiTriStripsData objects that make up this shape.
+
+    public bhkMeshShape(BinaryReader r, Header h) {
+        Unknowns = r.ReadPArray<uint>("I", 2);
+        Radius = r.ReadSingle();
+        Unused2 = r.ReadBytes(8);
+        Scale = r.ReadVector4();
+        ShapeProperties = r.ReadL32FArray(r => new hkWorldObjCinfoProperty(r));
+        Unknown2 = r.ReadPArray<uint>("i", 3);
+        StripsData = if (h.V <= 0x0A000100) r.ReadL32FArray(X<NiTriStripsData>.Ref);
+    }
 }
 
 /// <summary>
@@ -2442,6 +2895,18 @@ public class bhkPackedNiTriStripsShape : bhkShapeCollection {
     public float RadiusCopy;                            // Same as radius
     public Vector4 ScaleCopy;                           // Same as scale.
     public int? Data;
+
+    public bhkPackedNiTriStripsShape(BinaryReader r, Header h) {
+        SubShapes = if (h.V <= 0x14000005) r.ReadL16FArray(r => new OblivionSubShape(r));
+        UserData = r.ReadUInt32();
+        Unused1 = r.ReadUInt32();
+        Radius = r.ReadSingle();
+        Unused2 = r.ReadUInt32();
+        Scale = r.ReadVector4();
+        RadiusCopy = r.ReadSingle();
+        ScaleCopy = r.ReadVector4();
+        Data = X<hkPackedNiTriStripsData>.Ref(r);
+    }
 }
 
 /// <summary>
@@ -2455,6 +2920,16 @@ public class bhkNiTriStripsShape : bhkShapeCollection {
     public Vector4 Scale;                               // Scale. Usually (1.0, 1.0, 1.0, 0.0).
     public int?[] StripsData;                           // Refers to a bunch of NiTriStripsData objects that make up this shape.
     public HavokFilter[] DataLayers;                    // Havok Layers for each strip data.
+
+    public bhkNiTriStripsShape(BinaryReader r, Header h) {
+        Material = new HavokMaterial(r, h);
+        Radius = r.ReadSingle();
+        Unused = r.ReadPArray<uint>("I", 5);
+        GrowBy = r.ReadUInt32();
+        Scale = if (h.V >= 0x0A010000) r.ReadVector4();
+        StripsData = r.ReadL32FArray(X<NiTriStripsData>.Ref);
+        DataLayers = r.ReadL32FArray(r => new HavokFilter(r, h));
+    }
 }
 
 /// <summary>
@@ -2463,18 +2938,29 @@ public class bhkNiTriStripsShape : bhkShapeCollection {
 public class NiExtraData : NiObject {
     public string Name;                                 // Name of this object.
     public int? NextExtraData;                          // Block number of the next extra data object.
+
+    public NiExtraData(BinaryReader r, Header h) {
+        Name = if (!BSExtraData && h.V >= 0x0A000100) Y.String(r);
+        NextExtraData = if (h.V <= 0x04020200) X<NiExtraData>.Ref(r);
+    }
 }
 
 /// <summary>
 /// Abstract base class for all interpolators of bool, float, NiQuaternion, NiPoint3, NiColorA, and NiQuatTransform data.
 /// </summary>
 public abstract class NiInterpolator : NiObject {
+
+    public NiInterpolator(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Abstract base class for interpolators that use NiAnimationKeys (Key, KeyGrp) for interpolation.
 /// </summary>
 public abstract class NiKeyBasedInterpolator : NiInterpolator {
+
+    public NiKeyBasedInterpolator(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -2483,6 +2969,11 @@ public abstract class NiKeyBasedInterpolator : NiInterpolator {
 public class NiFloatInterpolator : NiKeyBasedInterpolator {
     public float Value;                                 // Pose value if lacking NiFloatData.
     public int? Data;
+
+    public NiFloatInterpolator(BinaryReader r, Header h) {
+        Value = r.ReadSingle();
+        Data = X<NiFloatData>.Ref(r);
+    }
 }
 
 /// <summary>
@@ -2491,6 +2982,11 @@ public class NiFloatInterpolator : NiKeyBasedInterpolator {
 public class NiTransformInterpolator : NiKeyBasedInterpolator {
     public NiQuatTransform Transform;
     public int? Data;
+
+    public NiTransformInterpolator(BinaryReader r, Header h) {
+        Transform = new NiQuatTransform(r, h);
+        Data = X<NiTransformData>.Ref(r);
+    }
 }
 
 /// <summary>
@@ -2499,6 +2995,11 @@ public class NiTransformInterpolator : NiKeyBasedInterpolator {
 public class NiPoint3Interpolator : NiKeyBasedInterpolator {
     public Vector3 Value;                               // Pose value if lacking NiPosData.
     public int? Data;
+
+    public NiPoint3Interpolator(BinaryReader r, Header h) {
+        Value = r.ReadVector3();
+        Data = X<NiPosData>.Ref(r);
+    }
 }
 
 [Flags]
@@ -2523,6 +3024,16 @@ public class NiPathInterpolator : NiKeyBasedInterpolator {
     public short FollowAxis;                            // 0, 1, or 2 representing X, Y, or Z.
     public int? PathData;
     public int? PercentData;
+
+    public NiPathInterpolator(BinaryReader r, Header h) {
+        Flags = (PathFlags)r.ReadUInt16();
+        BankDir = r.ReadInt32();
+        MaxBankAngle = r.ReadSingle();
+        Smoothing = r.ReadSingle();
+        FollowAxis = r.ReadInt16();
+        PathData = X<NiPosData>.Ref(r);
+        PercentData = X<NiFloatData>.Ref(r);
+    }
 }
 
 /// <summary>
@@ -2531,6 +3042,11 @@ public class NiPathInterpolator : NiKeyBasedInterpolator {
 public class NiBoolInterpolator : NiKeyBasedInterpolator {
     public bool Value;                                  // Pose value if lacking NiBoolData.
     public int? Data;
+
+    public NiBoolInterpolator(BinaryReader r, Header h) {
+        Value = r.ReadBool32();
+        Data = X<NiBoolData>.Ref(r);
+    }
 }
 
 /// <summary>
@@ -2538,6 +3054,9 @@ public class NiBoolInterpolator : NiKeyBasedInterpolator {
 /// Unlike NiBoolInterpolator, it ensures that keys have not been missed between two updates.
 /// </summary>
 public class NiBoolTimelineInterpolator : NiBoolInterpolator {
+
+    public NiBoolTimelineInterpolator(BinaryReader r, Header h) {
+    }
 }
 
 public enum InterpBlendFlags : byte {
@@ -2548,7 +3067,7 @@ public enum InterpBlendFlags : byte {
 /// Interpolator item for array in NiBlendInterpolator.
 /// </summary>
 public class InterpBlendItem(BinaryReader r, Header h) {
-    public int? Interpolator = X<NiInterpolator>.Ref(r); // Reference to an interpolator.
+    public int? Interpolator = X<NiInterpolator>.Ref(r);// Reference to an interpolator.
     public float Weight = r.ReadSingle();
     public float NormalizedWeight = r.ReadSingle();
     public byte Priority = h.V >= 0x0A01006E ? r.ReadByte() : default;
@@ -2575,6 +3094,37 @@ public abstract class NiBlendInterpolator : NiInterpolator {
     public bool ManagedControlled;
     public bool OnlyUseHighestWeight;
     public int? SingleInterpolator;
+
+    public NiBlendInterpolator(BinaryReader r, Header h) {
+        Flags = if (h.V >= 0x0A010070) (InterpBlendFlags)r.ReadByte();
+        ArraySize = if (h.V <= 0x0A01006D) r.ReadUInt16();
+        ArrayGrowBy = if (h.V <= 0x0A01006D) r.ReadUInt16();
+        ArraySize = if (h.V >= 0x0A01006E) r.ReadByte();
+        WeightThreshold = if (h.V >= 0x0A010070) r.ReadSingle();
+        InterpCount = if ((Flags & 1) == 0 && h.V >= 0x0A010070) r.ReadByte();
+        SingleIndex = if ((Flags & 1) == 0 && h.V >= 0x0A010070) r.ReadByte();
+        HighPriority = if ((Flags & 1) == 0 && h.V >= 0x0A010070) r.ReadSByte();
+        NextHighPriority = if ((Flags & 1) == 0 && h.V >= 0x0A010070) r.ReadSByte();
+        SingleTime = if ((Flags & 1) == 0 && h.V >= 0x0A010070) r.ReadSingle();
+        HighWeightsSum = if ((Flags & 1) == 0 && h.V >= 0x0A010070) r.ReadSingle();
+        NextHighWeightsSum = if ((Flags & 1) == 0 && h.V >= 0x0A010070) r.ReadSingle();
+        HighEaseSpinner = if ((Flags & 1) == 0 && h.V >= 0x0A010070) r.ReadSingle();
+        InterpArrayItems = if ((Flags & 1) == 0 && h.V >= 0x0A010070) r.ReadFArray(r => new InterpBlendItem(r, h), ArraySize);
+        InterpArrayItems = if (h.V <= 0x0A01006F) r.ReadFArray(r => new InterpBlendItem(r, h), ArraySize);
+        ManagedControlled = if (h.V <= 0x0A01006F) r.ReadBool32();
+        WeightThreshold = if (h.V <= 0x0A01006F) r.ReadSingle();
+        OnlyUseHighestWeight = if (h.V <= 0x0A01006F) r.ReadBool32();
+        InterpCount = if (h.V <= 0x0A01006D) r.ReadUInt16();
+        SingleIndex = if (h.V <= 0x0A01006D) r.ReadUInt16();
+        InterpCount = if (h.V >= 0x0A01006E && h.V <= 0x0A01006F) r.ReadByte();
+        SingleIndex = if (h.V >= 0x0A01006E && h.V <= 0x0A01006F) r.ReadByte();
+        SingleInterpolator = if (h.V >= 0x0A01006C && h.V <= 0x0A01006F) X<NiInterpolator>.Ref(r);
+        SingleTime = if (h.V >= 0x0A01006C && h.V <= 0x0A01006F) r.ReadSingle();
+        HighPriority = if (h.V <= 0x0A01006D) r.ReadInt32();
+        NextHighPriority = if (h.V <= 0x0A01006D) r.ReadInt32();
+        HighPriority = if (h.V >= 0x0A01006E && h.V <= 0x0A01006F) r.ReadByte();
+        NextHighPriority = if (h.V >= 0x0A01006E && h.V <= 0x0A01006F) r.ReadByte();
+    }
 }
 
 /// <summary>
@@ -2585,6 +3135,13 @@ public abstract class NiBSplineInterpolator : NiInterpolator {
     public float StopTime;                              // Animation stop time.
     public int? SplineData;
     public int? BasisData;
+
+    public NiBSplineInterpolator(BinaryReader r, Header h) {
+        StartTime = r.ReadSingle();
+        StopTime = r.ReadSingle();
+        SplineData = X<NiBSplineData>.Ref(r);
+        BasisData = X<NiBSplineBasisData>.Ref(r);
+    }
 }
 
 /// <summary>
@@ -2601,6 +3158,19 @@ public abstract class NiObjectNET : NiObject {
     public int? ExtraData;                              // Extra data object index. (The first in a chain)
     public int?[] ExtraDataList;                        // List of extra data indices.
     public int? Controller;                             // Controller object index. (The first in a chain)
+
+    public NiObjectNET(BinaryReader r, Header h) {
+        SkyrimShaderType = if (BSLightingShaderProperty) (BSLightingShaderPropertyShaderType)r.ReadUInt32();
+        Name = Y.String(r);
+        HasOldExtraData = if (h.V <= 0x02030000) r.ReadBool32();
+        OldExtraPropName = if (Has Old Extra Data && h.V <= 0x02030000) Y.String(r);
+        OldExtraInternalId = if (Has Old Extra Data && h.V <= 0x02030000) r.ReadUInt32();
+        OldExtraString = if (Has Old Extra Data && h.V <= 0x02030000) Y.String(r);
+        UnknownByte = if (h.V <= 0x02030000) r.ReadByte();
+        ExtraData = if (h.V >= 0x03000000 && h.V <= 0x04020200) X<NiExtraData>.Ref(r);
+        ExtraDataList = if (h.V >= 0x0A000100) r.ReadL32FArray(X<NiExtraData>.Ref);
+        Controller = if (h.V >= 0x03000000) X<NiTimeController>.Ref(r);
+    }
 }
 
 /// <summary>
@@ -2611,6 +3181,10 @@ public abstract class NiObjectNET : NiObject {
 /// </summary>
 public class NiCollisionObject : NiObject {
     public int? Target;                                 // Index of the AV object referring to this collision object.
+
+    public NiCollisionObject(BinaryReader r, Header h) {
+        Target = X<NiAVObject>.Ptr(r);
+    }
 }
 
 /// <summary>
@@ -2621,6 +3195,13 @@ public class NiCollisionData : NiCollisionObject {
     public CollisionMode CollisionMode;
     public byte UseABV;                                 // Use Alternate Bounding Volume.
     public BoundingVolume BoundingVolume;
+
+    public NiCollisionData(BinaryReader r, Header h) {
+        PropagationMode = (PropagationMode)r.ReadUInt32();
+        CollisionMode = if (h.V >= 0x0A010000) (CollisionMode)r.ReadUInt32();
+        UseABV = r.ReadByte();
+        BoundingVolume = if (Use ABh.V == 1) new BoundingVolume(r, h);
+    }
 }
 
 /// <summary>
@@ -2645,12 +3226,20 @@ public enum bhkCOFlags : ushort {
 public abstract class bhkNiCollisionObject : NiCollisionObject {
     public bhkCOFlags Flags;                            // Set to 1 for most objects, and to 41 for animated objects (ANIM_STATIC). Bits: 0=Active 2=Notify 3=Set Local 6=Reset.
     public int? Body;
+
+    public bhkNiCollisionObject(BinaryReader r, Header h) {
+        Flags = (bhkCOFlags)r.ReadUInt16();
+        Body = X<bhkWorldObject>.Ref(r);
+    }
 }
 
 /// <summary>
 /// Havok related collision object?
 /// </summary>
 public class bhkCollisionObject : bhkNiCollisionObject {
+
+    public bhkCollisionObject(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -2661,18 +3250,31 @@ public class bhkBlendCollisionObject : bhkCollisionObject {
     public float VelGain;
     public float UnkFloat1;
     public float UnkFloat2;
+
+    public bhkBlendCollisionObject(BinaryReader r, Header h) {
+        HeirGain = r.ReadSingle();
+        VelGain = r.ReadSingle();
+        UnkFloat1 = r.ReadSingle();
+        UnkFloat2 = r.ReadSingle();
+    }
 }
 
 /// <summary>
 /// Unknown.
 /// </summary>
 public class bhkPCollisionObject : bhkNiCollisionObject {
+
+    public bhkPCollisionObject(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Unknown.
 /// </summary>
 public class bhkSPCollisionObject : bhkPCollisionObject {
+
+    public bhkSPCollisionObject(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -2690,6 +3292,21 @@ public abstract class NiAVObject : NiObjectNET {
     public bool HasBoundingVolume;
     public BoundingVolume BoundingVolume;
     public int? CollisionObject;
+
+    public NiAVObject(BinaryReader r, Header h) {
+        Flags = r.ReadUInt32();
+        Flags = if (h.V >= 0x03000000 && ) (Flags)r.ReadUInt16();
+        Translation = r.ReadVector3();
+        Rotation = r.ReadMatrix3x3();
+        Scale = r.ReadSingle();
+        Velocity = if (h.V <= 0x04020200) r.ReadVector3();
+        Properties = r.ReadL32FArray(X<NiProperty>.Ref);
+        Unknown1 = if (h.V <= 0x02030000) r.ReadPArray<uint>("I", 4);
+        Unknown2 = if (h.V <= 0x02030000) r.ReadByte();
+        HasBoundingVolume = if (h.V >= 0x03000000 && h.V <= 0x04020200) r.ReadBool32();
+        BoundingVolume = if (Has Bounding Volume && h.V >= 0x03000000 && h.V <= 0x04020200) new BoundingVolume(r, h);
+        CollisionObject = if (h.V >= 0x0A000100) X<NiCollisionObject>.Ref(r);
+    }
 }
 
 /// <summary>
@@ -2700,6 +3317,15 @@ public abstract class NiDynamicEffect : NiAVObject {
     public uint NumAffectedNodes;
     public int?[] AffectedNodes;                        // If a node appears in this list, then its entire subtree will be affected by the effect.
     public uint[] AffectedNodePointers;                 // As of 4.0 the pointer hash is no longer stored alongside each NiObject on disk, yet this node list still refers to the pointer hashes. Cannot leave the type as Ptr because the link will be invalid.
+
+    public NiDynamicEffect(BinaryReader r, Header h) {
+        SwitchState = if (h.V >= 0x0A01006A && ) r.ReadBool32();
+        NumAffectedNodes = if (h.V <= 0x04000002) r.ReadUInt32();
+        AffectedNodes = if (h.V <= 0x0303000D) r.ReadFArray(X<NiNode>.Ptr, NumAffectedNodes);
+        AffectedNodePointers = if (h.V >= 0x04000000 && h.V <= 0x04000002) r.ReadPArray<uint>("I", NumAffectedNodes);
+        NumAffectedNodes = if (h.V >= 0x0A010000 && ) r.ReadUInt32();
+        AffectedNodes = if (h.V >= 0x0A010000 && ) r.ReadFArray(X<NiNode>.Ptr, NumAffectedNodes);
+    }
 }
 
 /// <summary>
@@ -2711,12 +3337,22 @@ public abstract class NiLight : NiDynamicEffect {
     public Color3 AmbientColor;
     public Color3 DiffuseColor;
     public Color3 SpecularColor;
+
+    public NiLight(BinaryReader r, Header h) {
+        Dimmer = r.ReadSingle();
+        AmbientColor = new Color3(r);
+        DiffuseColor = new Color3(r);
+        SpecularColor = new Color3(r);
+    }
 }
 
 /// <summary>
 /// Abstract base class representing all rendering properties. Subclasses are attached to NiAVObjects to control their rendering.
 /// </summary>
 public abstract class NiProperty : NiObjectNET {
+
+    public NiProperty(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -2724,6 +3360,10 @@ public abstract class NiProperty : NiObjectNET {
 /// </summary>
 public class NiTransparentProperty : NiProperty {
     public byte[] Unknown;                              // Unknown.
+
+    public NiTransparentProperty(BinaryReader r, Header h) {
+        Unknown = r.ReadBytes(6);
+    }
 }
 
 /// <summary>
@@ -2734,6 +3374,13 @@ public abstract class NiPSysModifier : NiObject {
     public uint Order;                                  // Modifier ID in the particle modifier chain (always a multiple of 1000)?
     public int? Target;                                 // NiParticleSystem parent of this modifier.
     public bool Active;                                 // Whether or not the modifier is active.
+
+    public NiPSysModifier(BinaryReader r, Header h) {
+        Name = Y.String(r);
+        Order = r.ReadUInt32();
+        Target = X<NiParticleSystem>.Ptr(r);
+        Active = r.ReadBool32();
+    }
 }
 
 /// <summary>
@@ -2751,6 +3398,20 @@ public abstract class NiPSysEmitter : NiPSysModifier {
     public float RadiusVariation;                       // Particle Radius randomness.
     public float LifeSpan;                              // Duration until a particle dies.
     public float LifeSpanVariation;                     // Adds randomness to Life Span.
+
+    public NiPSysEmitter(BinaryReader r, Header h) {
+        Speed = r.ReadSingle();
+        SpeedVariation = r.ReadSingle();
+        Declination = r.ReadSingle();
+        DeclinationVariation = r.ReadSingle();
+        PlanarAngle = r.ReadSingle();
+        PlanarAngleVariation = r.ReadSingle();
+        InitialColor = new Color4(r);
+        InitialRadius = r.ReadSingle();
+        RadiusVariation = if (h.V >= 0x0A040001) r.ReadSingle();
+        LifeSpan = r.ReadSingle();
+        LifeSpanVariation = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -2758,6 +3419,10 @@ public abstract class NiPSysEmitter : NiPSysModifier {
 /// </summary>
 public abstract class NiPSysVolumeEmitter : NiPSysEmitter {
     public int? EmitterObject;                          // Node parent of this modifier?
+
+    public NiPSysVolumeEmitter(BinaryReader r, Header h) {
+        EmitterObject = if (h.V >= 0x0A010000) X<NiNode>.Ptr(r);
+    }
 }
 
 /// <summary>
@@ -2778,6 +3443,17 @@ public abstract class NiTimeController : NiObject {
     public float StopTime;                              // Controller stop time.
     public int? Target;                                 // Controller target (object index of the first controllable ancestor of this object).
     public uint UnknownInteger;                         // Unknown integer.
+
+    public NiTimeController(BinaryReader r, Header h) {
+        NextController = X<NiTimeController>.Ref(r);
+        Flags = (Flags)r.ReadUInt16();
+        Frequency = r.ReadSingle();
+        Phase = r.ReadSingle();
+        StartTime = r.ReadSingle();
+        StopTime = r.ReadSingle();
+        Target = if (h.V >= 0x0303000D) X<NiObjectNET>.Ptr(r);
+        UnknownInteger = if (h.V <= 0x03010000) r.ReadUInt32();
+    }
 }
 
 /// <summary>
@@ -2785,6 +3461,10 @@ public abstract class NiTimeController : NiObject {
 /// </summary>
 public abstract class NiInterpController : NiTimeController {
     public bool ManagerControlled;
+
+    public NiInterpController(BinaryReader r, Header h) {
+        ManagerControlled = if (h.V >= 0x0A010068 && h.V <= 0x0A01006C) r.ReadBool32();
+    }
 }
 
 /// <summary>
@@ -2792,6 +3472,10 @@ public abstract class NiInterpController : NiTimeController {
 /// </summary>
 public class NiMultiTargetTransformController : NiInterpController {
     public int?[] ExtraTargets;                         // NiNode Targets to be controlled.
+
+    public NiMultiTargetTransformController(BinaryReader r, Header h) {
+        ExtraTargets = r.ReadL16FArray(X<NiAVObject>.Ptr);
+    }
 }
 
 /// <summary>
@@ -2806,12 +3490,25 @@ public class NiGeomMorpherController : NiInterpController {
     public int?[] Interpolators;
     public MorphWeight[] InterpolatorWeights;
     public uint[] UnknownInts;                          // Unknown.
+
+    public NiGeomMorpherController(BinaryReader r, Header h) {
+        ExtraFlags = if (h.V >= 0x0A000102) (Flags)r.ReadUInt16();
+        Data = X<NiMorphData>.Ref(r);
+        AlwaysUpdate = if (h.V >= 0x04000001) r.ReadByte();
+        NumInterpolators = if (h.V >= 0x0A01006A) r.ReadUInt32();
+        Interpolators = if (h.V >= 0x0A01006A && h.V <= 0x14000005) r.ReadFArray(X<NiInterpolator>.Ref, NumInterpolators);
+        InterpolatorWeights = if (h.V >= 0x14010003) r.ReadFArray(r => new MorphWeight(r), NumInterpolators);
+        UnknownInts = if (h.V >= 0x0A020000 && h.V <= 0x14000005 && ) r.ReadL32PArray<uint>("I");
+    }
 }
 
 /// <summary>
 /// Unknown! Used by Daoc->'healing.nif'.
 /// </summary>
 public class NiMorphController : NiInterpController {
+
+    public NiMorphController(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -2819,6 +3516,10 @@ public class NiMorphController : NiInterpController {
 /// </summary>
 public class NiMorpherController : NiInterpController {
     public int? Data;                                   // This controller's data.
+
+    public NiMorpherController(BinaryReader r, Header h) {
+        Data = X<NiMorphData>.Ref(r);
+    }
 }
 
 /// <summary>
@@ -2826,6 +3527,10 @@ public class NiMorpherController : NiInterpController {
 /// </summary>
 public abstract class NiSingleInterpController : NiInterpController {
     public int? Interpolator;
+
+    public NiSingleInterpController(BinaryReader r, Header h) {
+        Interpolator = if (h.V >= 0x0A010068) X<NiInterpolator>.Ref(r);
+    }
 }
 
 /// <summary>
@@ -2834,12 +3539,19 @@ public abstract class NiSingleInterpController : NiInterpController {
 /// </summary>
 public class NiKeyframeController : NiSingleInterpController {
     public int? Data;
+
+    public NiKeyframeController(BinaryReader r, Header h) {
+        Data = if (h.V <= 0x0A010067) X<NiKeyframeData>.Ref(r);
+    }
 }
 
 /// <summary>
 /// NiTransformController replaces NiKeyframeController.
 /// </summary>
 public class NiTransformController : NiKeyframeController {
+
+    public NiTransformController(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -2850,6 +3562,10 @@ public class NiTransformController : NiKeyframeController {
 /// </summary>
 public abstract class NiPSysModifierCtlr : NiSingleInterpController {
     public string ModifierName;                         // Used to find the modifier pointer.
+
+    public NiPSysModifierCtlr(BinaryReader r, Header h) {
+        ModifierName = Y.String(r);
+    }
 }
 
 /// <summary>
@@ -2860,12 +3576,20 @@ public abstract class NiPSysModifierCtlr : NiSingleInterpController {
 public class NiPSysEmitterCtlr : NiPSysModifierCtlr {
     public int? VisibilityInterpolator;
     public int? Data;
+
+    public NiPSysEmitterCtlr(BinaryReader r, Header h) {
+        VisibilityInterpolator = if (h.V >= 0x0A010000) X<NiInterpolator>.Ref(r);
+        Data = if (h.V <= 0x0A010067) X<NiPSysEmitterCtlrData>.Ref(r);
+    }
 }
 
 /// <summary>
 /// A particle system modifier controller that animates a boolean value for particles.
 /// </summary>
 public abstract class NiPSysModifierBoolCtlr : NiPSysModifierCtlr {
+
+    public NiPSysModifierBoolCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -2873,6 +3597,10 @@ public abstract class NiPSysModifierBoolCtlr : NiPSysModifierCtlr {
 /// </summary>
 public class NiPSysModifierActiveCtlr : NiPSysModifierBoolCtlr {
     public int? Data;
+
+    public NiPSysModifierActiveCtlr(BinaryReader r, Header h) {
+        Data = if (h.V <= 0x0A010067) X<NiVisData>.Ref(r);
+    }
 }
 
 /// <summary>
@@ -2880,48 +3608,73 @@ public class NiPSysModifierActiveCtlr : NiPSysModifierBoolCtlr {
 /// </summary>
 public abstract class NiPSysModifierFloatCtlr : NiPSysModifierCtlr {
     public int? Data;
+
+    public NiPSysModifierFloatCtlr(BinaryReader r, Header h) {
+        Data = if (h.V <= 0x0A010067) X<NiFloatData>.Ref(r);
+    }
 }
 
 /// <summary>
 /// Animates the declination value on an NiPSysEmitter object.
 /// </summary>
 public class NiPSysEmitterDeclinationCtlr : NiPSysModifierFloatCtlr {
+
+    public NiPSysEmitterDeclinationCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Animates the declination variation value on an NiPSysEmitter object.
 /// </summary>
 public class NiPSysEmitterDeclinationVarCtlr : NiPSysModifierFloatCtlr {
+
+    public NiPSysEmitterDeclinationVarCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Animates the size value on an NiPSysEmitter object.
 /// </summary>
 public class NiPSysEmitterInitialRadiusCtlr : NiPSysModifierFloatCtlr {
+
+    public NiPSysEmitterInitialRadiusCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Animates the lifespan value on an NiPSysEmitter object.
 /// </summary>
 public class NiPSysEmitterLifeSpanCtlr : NiPSysModifierFloatCtlr {
+
+    public NiPSysEmitterLifeSpanCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Animates the speed value on an NiPSysEmitter object.
 /// </summary>
 public class NiPSysEmitterSpeedCtlr : NiPSysModifierFloatCtlr {
+
+    public NiPSysEmitterSpeedCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Animates the strength value of an NiPSysGravityModifier.
 /// </summary>
 public class NiPSysGravityStrengthCtlr : NiPSysModifierFloatCtlr {
+
+    public NiPSysGravityStrengthCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Abstract base class for all NiInterpControllers that use an NiInterpolator to animate their target float value.
 /// </summary>
 public abstract class NiFloatInterpController : NiSingleInterpController {
+
+    public NiFloatInterpController(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -2936,6 +3689,15 @@ public class NiFlipController : NiFloatInterpController {
     public uint NumSources;
     public int?[] Sources;                              // The texture sources.
     public int?[] Images;                               // The image sources
+
+    public NiFlipController(BinaryReader r, Header h) {
+        TextureSlot = (TexType)r.ReadUInt32();
+        StartTime = if (h.V >= 0x0303000D && h.V <= 0x0A010067) r.ReadSingle();
+        Delta = if (h.V <= 0x0A010067) r.ReadSingle();
+        NumSources = r.ReadUInt32();
+        Sources = if (h.V >= 0x04000000) r.ReadFArray(X<NiSourceTexture>.Ref, NumSources);
+        Images = if (h.V <= 0x03010000) r.ReadFArray(X<NiImage>.Ref, NumSources);
+    }
 }
 
 /// <summary>
@@ -2943,6 +3705,10 @@ public class NiFlipController : NiFloatInterpController {
 /// </summary>
 public class NiAlphaController : NiFloatInterpController {
     public int? Data;
+
+    public NiAlphaController(BinaryReader r, Header h) {
+        Data = if (h.V <= 0x0A010067) X<NiFloatData>.Ref(r);
+    }
 }
 
 /// <summary>
@@ -2956,18 +3722,31 @@ public class NiTextureTransformController : NiFloatInterpController {
     public TexType TextureSlot;                         // The target texture slot.
     public TransformMember Operation;                   // Controls which aspect of the texture transform to modify.
     public int? Data;
+
+    public NiTextureTransformController(BinaryReader r, Header h) {
+        ShaderMap = r.ReadBool32();
+        TextureSlot = (TexType)r.ReadUInt32();
+        Operation = (TransformMember)r.ReadUInt32();
+        Data = if (h.V <= 0x0A010067) X<NiFloatData>.Ref(r);
+    }
 }
 
 /// <summary>
 /// Unknown controller.
 /// </summary>
 public class NiLightDimmerController : NiFloatInterpController {
+
+    public NiLightDimmerController(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Abstract base class for all NiInterpControllers that use a NiInterpolator to animate their target boolean value.
 /// </summary>
 public abstract class NiBoolInterpController : NiSingleInterpController {
+
+    public NiBoolInterpController(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -2975,12 +3754,19 @@ public abstract class NiBoolInterpController : NiSingleInterpController {
 /// </summary>
 public class NiVisController : NiBoolInterpController {
     public int? Data;
+
+    public NiVisController(BinaryReader r, Header h) {
+        Data = if (h.V <= 0x0A010067) X<NiVisData>.Ref(r);
+    }
 }
 
 /// <summary>
 /// Abstract base class for all NiInterpControllers that use an NiInterpolator to animate their target NiPoint3 value.
 /// </summary>
 public abstract class NiPoint3InterpController : NiSingleInterpController {
+
+    public NiPoint3InterpController(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -2992,6 +3778,11 @@ public abstract class NiPoint3InterpController : NiSingleInterpController {
 public class NiMaterialColorController : NiPoint3InterpController {
     public MaterialColor TargetColor;                   // Selects which color to control.
     public int? Data;
+
+    public NiMaterialColorController(BinaryReader r, Header h) {
+        TargetColor = if (h.V >= 0x0A010000) (MaterialColor)r.ReadUInt16();
+        Data = if (h.V <= 0x0A010067) X<NiPosData>.Ref(r);
+    }
 }
 
 /// <summary>
@@ -3002,6 +3793,11 @@ public class NiMaterialColorController : NiPoint3InterpController {
 public class NiLightColorController : NiPoint3InterpController {
     public LightColor TargetColor;
     public int? Data;
+
+    public NiLightColorController(BinaryReader r, Header h) {
+        TargetColor = if (h.V >= 0x0A010000) (LightColor)r.ReadUInt16();
+        Data = if (h.V <= 0x0A010067) X<NiPosData>.Ref(r);
+    }
 }
 
 /// <summary>
@@ -3012,6 +3808,10 @@ public class NiLightColorController : NiPoint3InterpController {
 /// </summary>
 public abstract class NiExtraDataController : NiSingleInterpController {
     public string ExtraDataName;
+
+    public NiExtraDataController(BinaryReader r, Header h) {
+        ExtraDataName = if (h.V >= 0x0A020000) Y.String(r);
+    }
 }
 
 /// <summary>
@@ -3023,6 +3823,13 @@ public class NiFloatExtraDataController : NiExtraDataController {
     public byte[] UnknownBytes;                         // Unknown.
     public byte[] UnknownExtraBytes;                    // Unknown.
     public int? Data;
+
+    public NiFloatExtraDataController(BinaryReader r, Header h) {
+        NumExtraBytes = if (h.V <= 0x0A010000) r.ReadByte();
+        UnknownBytes = if (h.V <= 0x0A010000) r.ReadBytes(7);
+        UnknownExtraBytes = if (h.V <= 0x0A010000) r.ReadBytes(NumExtraBytes);
+        Data = if (h.V <= 0x0A010067) X<NiFloatData>.Ref(r);
+    }
 }
 
 /// <summary>
@@ -3034,6 +3841,11 @@ public class NiFloatExtraDataController : NiExtraDataController {
 public class NiFloatsExtraDataController : NiExtraDataController {
     public int FloatsExtraDataIndex;
     public int? Data;
+
+    public NiFloatsExtraDataController(BinaryReader r, Header h) {
+        FloatsExtraDataIndex = r.ReadInt32();
+        Data = if (h.V <= 0x0A010067) X<NiFloatData>.Ref(r);
+    }
 }
 
 /// <summary>
@@ -3044,6 +3856,10 @@ public class NiFloatsExtraDataController : NiExtraDataController {
 /// </summary>
 public class NiFloatsExtraDataPoint3Controller : NiExtraDataController {
     public int FloatsExtraDataIndex;
+
+    public NiFloatsExtraDataPoint3Controller(BinaryReader r, Header h) {
+        FloatsExtraDataIndex = r.ReadInt32();
+    }
 }
 
 /// <summary>
@@ -3054,19 +3870,39 @@ public class NiBoneLODController : NiTimeController {
     public uint LOD;                                    // Unknown.
     public uint NumLODs;                                // Number of LODs.
     public uint NumNodeGroups;                          // Number of node arrays.
-    public ??[] NodeGroups;                             // A list of node sets (each set a sequence of bones).
+    public NodeSet[] NodeGroups;                        // A list of node sets (each set a sequence of bones).
     public uint NumShapeGroups;                         // Number of shape groups.
     public SkinInfoSet[] ShapeGroups1;                  // List of shape groups.
     public uint NumShapeGroups2;                        // The size of the second list of shape groups.
     public int?[] ShapeGroups2;                         // Group of NiTriShape indices.
     public int UnknownInt2;                             // Unknown.
     public int UnknownInt3;                             // Unknown.
+
+    public NiBoneLODController(BinaryReader r, Header h) {
+        LOD = r.ReadUInt32();
+        NumLODs = r.ReadUInt32();
+        NumNodeGroups = r.ReadUInt32();
+        NodeGroups = r.ReadFArray(r => new NodeSet(r), NumLODs);
+        NumShapeGroups = if (h.V >= 0x04020200 && (Uh.V == 0)) r.ReadUInt32();
+        NumShapeGroups = if (h.V >= 0x0A020000 && h.V <= 0x0A020000 && (Uh.V == 1)) r.ReadUInt32();
+        ShapeGroups1 = if (h.V >= 0x04020200 && (Uh.V == 0)) r.ReadFArray(r => new SkinInfoSet(r), NumShapeGroups);
+        ShapeGroups1 = if (h.V >= 0x0A020000 && h.V <= 0x0A020000 && (Uh.V == 1)) r.ReadFArray(r => new SkinInfoSet(r), NumShapeGroups);
+        NumShapeGroups2 = if (h.V >= 0x04020200 && (Uh.V == 0)) r.ReadUInt32();
+        NumShapeGroups2 = if (h.V >= 0x0A020000 && h.V <= 0x0A020000 && (Uh.V == 1)) r.ReadUInt32();
+        ShapeGroups2 = if (h.V >= 0x04020200 && (Uh.V == 0)) r.ReadFArray(X<NiTriBasedGeom>.Ref, NumShapeGroups2);
+        ShapeGroups2 = if (h.V >= 0x0A020000 && h.V <= 0x0A020000 && (Uh.V == 1)) r.ReadFArray(X<NiTriBasedGeom>.Ref, NumShapeGroups2);
+        UnknownInt2 = if (h.V >= 0x14030009 && h.V <= 0x14030009 && ) r.ReadInt32();
+        UnknownInt3 = if (h.V >= 0x14030009 && h.V <= 0x14030009 && ) r.ReadInt32();
+    }
 }
 
 /// <summary>
 /// A simple LOD controller for bones.
 /// </summary>
 public class NiBSBoneLODController : NiBoneLODController {
+
+    public NiBSBoneLODController(BinaryReader r, Header h) {
+    }
 }
 
 public class MaterialData(BinaryReader r, Header h) {
@@ -3074,10 +3910,10 @@ public class MaterialData(BinaryReader r, Header h) {
     public string ShaderName = Has Shader && h.V >= 0x0A000100 && h.V <= 0x14010003 ? Y.String(r) : default; // The shader name.
     public int ShaderExtraData = Has Shader && h.V >= 0x0A000100 && h.V <= 0x14010003 ? r.ReadInt32() : default; // Extra data associated with the shader. A value of -1 means the shader is the default implementation.
     public uint NumMaterials = h.V >= 0x14020005 ? r.ReadUInt32() : default;
-    public string[] MaterialName = h.V >= 0x14020005 ? Y.String(r) : default; // The name of the material.
-    public int[] MaterialExtraData = h.V >= 0x14020005 ? r.ReadInt32() : default; // Extra data associated with the material. A value of -1 means the material is the default implementation.
+    public string[] MaterialName = h.V >= 0x14020005 ? r.ReadFArray(r => Y.String(r), NumMaterials) : default; // The name of the material.
+    public int[] MaterialExtraData = h.V >= 0x14020005 ? r.ReadPArray<uint>("i", NumMaterials) : default; // Extra data associated with the material. A value of -1 means the material is the default implementation.
     public int ActiveMaterial = h.V >= 0x14020005 ? r.ReadInt32() : default; // The index of the currently active material.
-    public byte UnknownByte = h.V >= 0x0A020000 && h.V <= 0x0A020000 && (h.UserVersion == 1) ? r.ReadByte() : default; // Cyanide extension (only in version 10.2.0.0?).
+    public byte UnknownByte = h.V >= 0x0A020000 && h.V <= 0x0A020000 && (Uh.V == 1) ? r.ReadByte() : default; // Cyanide extension (only in version 10.2.0.0?).
     public int UnknownInteger2 = h.V >= 0x0A040001 && h.V <= 0x0A040001 ? r.ReadInt32() : default; // Unknown.
     public bool MaterialNeedsUpdate = h.V >= 0x14020007 ? r.ReadBool32() : default; // Whether the materials for this object always needs to be updated before rendering with them.
 }
@@ -3093,12 +3929,28 @@ public abstract class NiGeometry : NiAVObject {
     public MaterialData MaterialData;
     public int? ShaderProperty;
     public int? AlphaProperty;
+
+    public NiGeometry(BinaryReader r, Header h) {
+        Bound = if (NiParticleSystem) new NiBound(r);
+        Skin = if (NiParticleSystem) X<NiObject>.Ref(r);
+        Data = X<NiGeometryData>.Ref(r);
+        Data = if (!NiParticleSystem) X<NiGeometryData>.Ref(r);
+        SkinInstance = if (h.V >= 0x0303000D && ) X<NiSkinInstance>.Ref(r);
+        SkinInstance = if (!NiParticleSystem) X<NiSkinInstance>.Ref(r);
+        MaterialData = if (h.V >= 0x0A000100 && ) new MaterialData(r, h);
+        MaterialData = if (!NiParticleSystem && h.V >= 0x0A000100 && ) new MaterialData(r, h);
+        ShaderProperty = if (h.V >= 0x14020007 && (Uh.V == 12)) X<BSShaderProperty>.Ref(r);
+        AlphaProperty = if (h.V >= 0x14020007 && (Uh.V == 12)) X<NiAlphaProperty>.Ref(r);
+    }
 }
 
 /// <summary>
 /// Describes a mesh, built from triangles.
 /// </summary>
 public abstract class NiTriBasedGeom : NiGeometry {
+
+    public NiTriBasedGeom(BinaryReader r, Header h) {
+    }
 }
 
 [Flags]
@@ -3177,9 +4029,46 @@ public abstract class NiGeometryData : NiObject {
     public HalfTexCoord[][] UVSets;                     // The UV texture coordinates. They follow the OpenGL standard: some programs may require you to flip the second coordinate.
     public ConsistencyType ConsistencyFlags;            // Consistency Flags
     public int? AdditionalData;                         // Unknown.
+
+    public NiGeometryData(BinaryReader r, Header h) {
+        GroupID = if (h.V >= 0x0A010072) r.ReadInt32();
+        NumVertices = if (!NiPSysData) r.ReadUInt16();
+        NumVertices = if (NiPSysData) r.ReadUInt16();
+        BSMaxVertices = if (NiPSysData) r.ReadUInt16();
+        KeepFlags = if (h.V >= 0x0A010000) r.ReadByte();
+        CompressFlags = if (h.V >= 0x0A010000) r.ReadByte();
+        HasVertices = r.ReadBool32();
+        Vertices = if ((Has Vertices > 0) && (Has Vertices != 15)) r.ReadFArray(r => r.ReadVector3(), NumVertices);
+        Vertices = if (Has Vertices == 15 && h.V >= 0x14030101) r.ReadFArray(r => new Vector3(r.ReadHalf(), r.ReadHalf(), r.ReadHalf()), NumVertices);
+        VectorFlags = if (h.V >= 0x0A000100 && ) (VectorFlags)r.ReadUInt16();
+        BSVectorFlags = (BSVectorFlags)r.ReadUInt16();
+        MaterialCRC = if (h.V >= 0x14020007 && h.V <= 0x14020007 && (Uh.V == 12)) r.ReadUInt32();
+        HasNormals = r.ReadBool32();
+        Normals = if ((Has Normals > 0) && (Has Normals != 6)) r.ReadFArray(r => r.ReadVector3(), NumVertices);
+        Normals = if (Has Normals == 6 && h.V >= 0x14030101) r.ReadFArray(r => new Vector3(r.ReadByte(), r.ReadByte(), r.ReadByte()), NumVertices);
+        Tangents = if ((Has Normals) && ((Vector Flags | BS Vector Flags) & 4096) && h.V >= 0x0A010000) r.ReadFArray(r => r.ReadVector3(), NumVertices);
+        Bitangents = if ((Has Normals) && ((Vector Flags | BS Vector Flags) & 4096) && h.V >= 0x0A010000) r.ReadFArray(r => r.ReadVector3(), NumVertices);
+        HasUnkFloats = if (h.V >= 0x14030009 && h.V <= 0x14030009 && ) r.ReadBool32();
+        UnkFloats = if (Has Unk Floats && h.V >= 0x14030009 && h.V <= 0x14030009 && ) r.ReadPArray<float>("f", NumVertices);
+        Center = r.ReadVector3();
+        Radius = r.ReadSingle();
+        Unknown13shorts = if (h.V >= 0x14030009 && h.V <= 0x14030009 && ) r.ReadPArray<short>("h", 13);
+        HasVertexColors = r.ReadBool32();
+        VertexColors = if ((Has Vertex Colors > 0) && (Has Vertex Colors != 7)) r.ReadFArray(r => new Color4(r), NumVertices);
+        VertexColors = if (Has Vertex Colors == 7 && h.V >= 0x14030101) r.ReadFArray(r => new Color4Byte(r), NumVertices);
+        NumUVSets = if (h.V <= 0x04020200) r.ReadUInt16();
+        HasUV = if (h.V <= 0x04000002) r.ReadBool32();
+        UVSets = if ((Has Vertices > 0) && (Has Vertices != 15)) r.ReadFArray(k => r.ReadFArray(r => new TexCoord(r), ((NumUVSets&63)|(VectorFlags&63)|(BSVectorFlags&1))), NumVertices);
+        UVSets = if (Has Vertices == 15 && h.V >= 0x14030101) r.ReadFArray(k => r.ReadFArray(r => new HalfTexCoord(r), ((NumUVSets&63)|(VectorFlags&63)|(BSVectorFlags&1))), NumVertices);
+        ConsistencyFlags = if (h.V >= 0x0A000100) (ConsistencyType)r.ReadUInt16();
+        AdditionalData = if (h.V >= 0x14000004) X<AbstractAdditionalGeometryData>.Ref(r);
+    }
 }
 
 public abstract class AbstractAdditionalGeometryData : NiObject {
+
+    public AbstractAdditionalGeometryData(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -3187,6 +4076,10 @@ public abstract class AbstractAdditionalGeometryData : NiObject {
 /// </summary>
 public abstract class NiTriBasedGeomData : NiGeometryData {
     public ushort NumTriangles;                         // Number of triangles.
+
+    public NiTriBasedGeomData(BinaryReader r, Header h) {
+        NumTriangles = r.ReadUInt16();
+    }
 }
 
 /// <summary>
@@ -3194,6 +4087,10 @@ public abstract class NiTriBasedGeomData : NiGeometryData {
 /// </summary>
 public class bhkBlendController : NiTimeController {
     public uint Keys;                                   // Seems to be always zero.
+
+    public bhkBlendController(BinaryReader r, Header h) {
+        Keys = r.ReadUInt32();
+    }
 }
 
 /// <summary>
@@ -3202,6 +4099,11 @@ public class bhkBlendController : NiTimeController {
 public class BSBound : NiExtraData {
     public Vector3 Center;                              // Center of the bounding box.
     public Vector3 Dimensions;                          // Dimensions of the bounding box from center.
+
+    public BSBound(BinaryReader r, Header h) {
+        Center = r.ReadVector3();
+        Dimensions = r.ReadVector3();
+    }
 }
 
 /// <summary>
@@ -3209,6 +4111,10 @@ public class BSBound : NiExtraData {
 /// </summary>
 public class BSFurnitureMarker : NiExtraData {
     public FurniturePosition[] Positions;
+
+    public BSFurnitureMarker(BinaryReader r, Header h) {
+        Positions = r.ReadL32FArray(r => new FurniturePosition(r));
+    }
 }
 
 /// <summary>
@@ -3216,12 +4122,19 @@ public class BSFurnitureMarker : NiExtraData {
 /// </summary>
 public class BSParentVelocityModifier : NiPSysModifier {
     public float Damping;                               // Amount of blending?
+
+    public BSParentVelocityModifier(BinaryReader r, Header h) {
+        Damping = r.ReadSingle();
+    }
 }
 
 /// <summary>
 /// Particle emitter that uses a node, its children and subchildren to emit from.  Emission will be evenly spread along points from nodes leading to their direct parents/children only.
 /// </summary>
 public class BSPSysArrayEmitter : NiPSysVolumeEmitter {
+
+    public BSPSysArrayEmitter(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -3229,6 +4142,10 @@ public class BSPSysArrayEmitter : NiPSysVolumeEmitter {
 /// </summary>
 public class BSWindModifier : NiPSysModifier {
     public float Strength;                              // The amount of force wind will have on particles.
+
+    public BSWindModifier(BinaryReader r, Header h) {
+        Strength = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -3240,6 +4157,14 @@ public class hkPackedNiTriStripsData : bhkShapeCollection {
     public byte UnknownByte1;                           // Unknown.
     public Vector3[] Vertices;
     public OblivionSubShape[] SubShapes;                // The subparts.
+
+    public hkPackedNiTriStripsData(BinaryReader r, Header h) {
+        Triangles = r.ReadL32FArray(r => new TriangleData(r, h));
+        NumVertices = r.ReadUInt32();
+        UnknownByte1 = if (h.V >= 0x14020007) r.ReadByte();
+        Vertices = r.ReadFArray(r => r.ReadVector3(), NumVertices);
+        SubShapes = if (h.V >= 0x14020007) r.ReadL16FArray(r => new OblivionSubShape(r));
+    }
 }
 
 /// <summary>
@@ -3278,12 +4203,23 @@ public class NiAlphaProperty : NiProperty {
     public byte Threshold;                              // Threshold for alpha testing (see: glAlphaFunc)
     public ushort UnknownShort1;                        // Unknown
     public uint UnknownInt2;                            // Unknown
+
+    public NiAlphaProperty(BinaryReader r, Header h) {
+        Flags = (Flags)r.ReadUInt16();
+        Threshold = r.ReadByte();
+        UnknownShort1 = if (h.V <= 0x02030000) r.ReadUInt16();
+        UnknownShort1 = if (h.V >= 0x14030101 && h.V <= 0x14030102) r.ReadUInt16();
+        UnknownInt2 = if (h.V <= 0x02030000) r.ReadUInt32();
+    }
 }
 
 /// <summary>
 /// Ambient light source.
 /// </summary>
 public class NiAmbientLight : NiLight {
+
+    public NiAmbientLight(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -3304,12 +4240,37 @@ public class NiParticlesData : NiGeometryData {
     public bool HasRotationAxes;                        // Are axes of rotation present?
     public Vector3[] RotationAxes;                      // Axes of rotation.
     public bool HasTextureIndices;
+    public uint NumSubtextureOffsets;                   // How many quads to use in BSPSysSubTexModifier for texture atlasing
     public Vector4[] SubtextureOffsets;                 // Defines UV offsets
     public float AspectRatio;                           // Sets aspect ratio for Subtexture Offset UV quads
     public ushort AspectFlags;
     public float SpeedtoAspectAspect2;
     public float SpeedtoAspectSpeed1;
     public float SpeedtoAspectSpeed2;
+
+    public NiParticlesData(BinaryReader r, Header h) {
+        NumParticles = if (h.V <= 0x04000002) r.ReadUInt16();
+        ParticleRadius = if (h.V <= 0x0A000100) r.ReadSingle();
+        HasRadii = if (h.V >= 0x0A010000) r.ReadBool32();
+        Radii = if (Has Radii && h.V >= 0x0A010000 && ) r.ReadPArray<float>("f", NumVertices);
+        NumActive = r.ReadUInt16();
+        HasSizes = r.ReadBool32();
+        Sizes = if (Has Sizes) r.ReadPArray<float>("f", NumVertices);
+        HasRotations = if (h.V >= 0x0A000100) r.ReadBool32();
+        Rotations = if (Has Rotations && h.V >= 0x0A000100 && ) r.ReadFArray(r => r.ReadQuaternion(), NumVertices);
+        HasRotationAngles = if (h.V >= 0x14000004) r.ReadBool32();
+        RotationAngles = if (Has Rotation Angles) r.ReadPArray<float>("f", NumVertices);
+        HasRotationAxes = if (h.V >= 0x14000004) r.ReadBool32();
+        RotationAxes = if (Has Rotation Axes && h.V >= 0x14000004 && ) r.ReadFArray(r => r.ReadVector3(), NumVertices);
+        HasTextureIndices = r.ReadBool32();
+        NumSubtextureOffsets = r.ReadUInt32();
+        SubtextureOffsets = r.ReadL8FArray(r => r.ReadL8Vector4());
+        AspectRatio = r.ReadSingle();
+        AspectFlags = r.ReadUInt16();
+        SpeedtoAspectAspect2 = r.ReadSingle();
+        SpeedtoAspectSpeed1 = r.ReadSingle();
+        SpeedtoAspectSpeed2 = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -3318,12 +4279,20 @@ public class NiParticlesData : NiGeometryData {
 public class NiRotatingParticlesData : NiParticlesData {
     public bool HasRotations2;                          // Is the particle rotation array present?
     public Quaternion[] Rotations2;                     // The individual particle rotations.
+
+    public NiRotatingParticlesData(BinaryReader r, Header h) {
+        HasRotations2 = if (h.V <= 0x04020200) r.ReadBool32();
+        Rotations2 = if (Has Rotations 2 && h.V <= 0x04020200) r.ReadFArray(r => r.ReadQuaternion(), NumVertices);
+    }
 }
 
 /// <summary>
 /// Particle system data object (with automatic normals?).
 /// </summary>
 public class NiAutoNormalParticlesData : NiParticlesData {
+
+    public NiAutoNormalParticlesData(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -3331,7 +4300,7 @@ public class NiAutoNormalParticlesData : NiParticlesData {
 /// </summary>
 public class ParticleDesc(BinaryReader r, Header h) {
     public Vector3 Translation = r.ReadVector3();       // Unknown.
-    public float[] UnknownFloats1 = h.V <= 0x0A040001 ? r.ReadSingle() : default; // Unknown.
+    public float[] UnknownFloats1 = h.V <= 0x0A040001 ? r.ReadPArray<float>("f", 3) : default; // Unknown.
     public float UnknownFloat1 = r.ReadSingle();        // Unknown.
     public float UnknownFloat2 = r.ReadSingle();        // Unknown.
     public float UnknownFloat3 = r.ReadSingle();        // Unknown.
@@ -3347,6 +4316,14 @@ public class NiPSysData : NiParticlesData {
     public float[] RotationSpeeds;
     public ushort NumAddedParticles;
     public ushort AddedParticlesBase;
+
+    public NiPSysData(BinaryReader r, Header h) {
+        ParticleDescriptions = r.ReadFArray(r => new ParticleDesc(r, h), NumVertices);
+        HasRotationSpeeds = if (h.V >= 0x14000002) r.ReadBool32();
+        RotationSpeeds = if (Has Rotation Speeds && h.V >= 0x14000002 && ) r.ReadPArray<float>("f", NumVertices);
+        NumAddedParticles = r.ReadUInt16();
+        AddedParticlesBase = r.ReadUInt16();
+    }
 }
 
 /// <summary>
@@ -3357,6 +4334,13 @@ public class NiMeshPSysData : NiPSysData {
     public bool FillPoolsOnLoad;
     public uint[] Generations;
     public int? ParticleMeshes;
+
+    public NiMeshPSysData(BinaryReader r, Header h) {
+        DefaultPoolSize = if (h.V >= 0x0A020000) r.ReadUInt32();
+        FillPoolsOnLoad = if (h.V >= 0x0A020000) r.ReadBool32();
+        Generations = if (h.V >= 0x0A020000) r.ReadL32PArray<uint>("I");
+        ParticleMeshes = X<NiNode>.Ref(r);
+    }
 }
 
 /// <summary>
@@ -3364,6 +4348,10 @@ public class NiMeshPSysData : NiPSysData {
 /// </summary>
 public class NiBinaryExtraData : NiExtraData {
     public byte[] BinaryData;                           // The binary data.
+
+    public NiBinaryExtraData(BinaryReader r, Header h) {
+        BinaryData = r.ReadL8Bytes();
+    }
 }
 
 /// <summary>
@@ -3372,6 +4360,11 @@ public class NiBinaryExtraData : NiExtraData {
 public class NiBinaryVoxelExtraData : NiExtraData {
     public uint UnknownInt;                             // Unknown.  0?
     public int? Data;                                   // Link to binary voxel data.
+
+    public NiBinaryVoxelExtraData(BinaryReader r, Header h) {
+        UnknownInt = r.ReadUInt32();
+        Data = X<NiBinaryVoxelData>.Ref(r);
+    }
 }
 
 /// <summary>
@@ -3386,6 +4379,17 @@ public class NiBinaryVoxelData : NiObject {
     public Vector4[] UnknownVectors;                    // Vectors on the unit sphere.
     public byte[] UnknownBytes2;                        // Unknown.
     public uint[] Unknown5Ints;                         // Unknown.
+
+    public NiBinaryVoxelData(BinaryReader r, Header h) {
+        UnknownShort1 = r.ReadUInt16();
+        UnknownShort2 = r.ReadUInt16();
+        UnknownShort3 = r.ReadUInt16();
+        Unknown7Floats = r.ReadPArray<float>("f", 7);
+        UnknownBytes1 = r.ReadFArray(k => r.ReadBytes(7), 12);
+        UnknownVectors = r.ReadL32FArray(r => r.ReadL32Vector4());
+        UnknownBytes2 = r.ReadL32Bytes(L32);
+        Unknown5Ints = r.ReadPArray<uint>("I", 5);
+    }
 }
 
 /// <summary>
@@ -3393,6 +4397,10 @@ public class NiBinaryVoxelData : NiObject {
 /// </summary>
 public class NiBlendBoolInterpolator : NiBlendInterpolator {
     public byte Value;                                  // The pose value. Invalid if using data.
+
+    public NiBlendBoolInterpolator(BinaryReader r, Header h) {
+        Value = r.ReadByte();
+    }
 }
 
 /// <summary>
@@ -3400,6 +4408,10 @@ public class NiBlendBoolInterpolator : NiBlendInterpolator {
 /// </summary>
 public class NiBlendFloatInterpolator : NiBlendInterpolator {
     public float Value;                                 // The pose value. Invalid if using data.
+
+    public NiBlendFloatInterpolator(BinaryReader r, Header h) {
+        Value = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -3407,6 +4419,10 @@ public class NiBlendFloatInterpolator : NiBlendInterpolator {
 /// </summary>
 public class NiBlendPoint3Interpolator : NiBlendInterpolator {
     public Vector3 Value;                               // The pose value. Invalid if using data.
+
+    public NiBlendPoint3Interpolator(BinaryReader r, Header h) {
+        Value = r.ReadVector3();
+    }
 }
 
 /// <summary>
@@ -3414,13 +4430,21 @@ public class NiBlendPoint3Interpolator : NiBlendInterpolator {
 /// </summary>
 public class NiBlendTransformInterpolator : NiBlendInterpolator {
     public NiQuatTransform Value;
+
+    public NiBlendTransformInterpolator(BinaryReader r, Header h) {
+        Value = if (h.V <= 0x0A01006D) new NiQuatTransform(r, h);
+    }
 }
 
 /// <summary>
 /// Wrapper for boolean animation keys.
 /// </summary>
 public class NiBoolData : NiObject {
-    public KeyGroup Data;                               // The boolean keys.
+    public KeyGroup<T> Data;                            // The boolean keys.
+
+    public NiBoolData(BinaryReader r, Header h) {
+        Data = new KeyGroup<T>(r, h);
+    }
 }
 
 /// <summary>
@@ -3428,6 +4452,10 @@ public class NiBoolData : NiObject {
 /// </summary>
 public class NiBooleanExtraData : NiExtraData {
     public byte BooleanData;                            // The boolean extra data value.
+
+    public NiBooleanExtraData(BinaryReader r, Header h) {
+        BooleanData = r.ReadByte();
+    }
 }
 
 /// <summary>
@@ -3435,6 +4463,10 @@ public class NiBooleanExtraData : NiExtraData {
 /// </summary>
 public class NiBSplineBasisData : NiObject {
     public uint NumControlPoints;                       // The number of control points of the B-spline (number of frames of animation plus degree of B-spline minus one).
+
+    public NiBSplineBasisData(BinaryReader r, Header h) {
+        NumControlPoints = r.ReadUInt32();
+    }
 }
 
 /// <summary>
@@ -3443,6 +4475,11 @@ public class NiBSplineBasisData : NiObject {
 public abstract class NiBSplineFloatInterpolator : NiBSplineInterpolator {
     public float Value;                                 // Base value when curve not defined.
     public uint Handle;                                 // Handle into the data. (USHRT_MAX for invalid handle.)
+
+    public NiBSplineFloatInterpolator(BinaryReader r, Header h) {
+        Value = r.ReadSingle();
+        Handle = r.ReadUInt32();
+    }
 }
 
 /// <summary>
@@ -3451,6 +4488,11 @@ public abstract class NiBSplineFloatInterpolator : NiBSplineInterpolator {
 public class NiBSplineCompFloatInterpolator : NiBSplineFloatInterpolator {
     public float FloatOffset;
     public float FloatHalfRange;
+
+    public NiBSplineCompFloatInterpolator(BinaryReader r, Header h) {
+        FloatOffset = r.ReadSingle();
+        FloatHalfRange = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -3459,6 +4501,11 @@ public class NiBSplineCompFloatInterpolator : NiBSplineFloatInterpolator {
 public abstract class NiBSplinePoint3Interpolator : NiBSplineInterpolator {
     public Vector3 Value;                               // Base value when curve not defined.
     public uint Handle;                                 // Handle into the data. (USHRT_MAX for invalid handle.)
+
+    public NiBSplinePoint3Interpolator(BinaryReader r, Header h) {
+        Value = r.ReadVector3();
+        Handle = r.ReadUInt32();
+    }
 }
 
 /// <summary>
@@ -3467,6 +4514,11 @@ public abstract class NiBSplinePoint3Interpolator : NiBSplineInterpolator {
 public class NiBSplineCompPoint3Interpolator : NiBSplinePoint3Interpolator {
     public float PositionOffset;
     public float PositionHalfRange;
+
+    public NiBSplineCompPoint3Interpolator(BinaryReader r, Header h) {
+        PositionOffset = r.ReadSingle();
+        PositionHalfRange = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -3478,6 +4530,13 @@ public class NiBSplineTransformInterpolator : NiBSplineInterpolator {
     public uint TranslationHandle;                      // Handle into the translation data. (USHRT_MAX for invalid handle.)
     public uint RotationHandle;                         // Handle into the rotation data. (USHRT_MAX for invalid handle.)
     public uint ScaleHandle;                            // Handle into the scale data. (USHRT_MAX for invalid handle.)
+
+    public NiBSplineTransformInterpolator(BinaryReader r, Header h) {
+        Transform = new NiQuatTransform(r, h);
+        TranslationHandle = r.ReadUInt32();
+        RotationHandle = r.ReadUInt32();
+        ScaleHandle = r.ReadUInt32();
+    }
 }
 
 /// <summary>
@@ -3490,9 +4549,21 @@ public class NiBSplineCompTransformInterpolator : NiBSplineTransformInterpolator
     public float RotationHalfRange;
     public float ScaleOffset;
     public float ScaleHalfRange;
+
+    public NiBSplineCompTransformInterpolator(BinaryReader r, Header h) {
+        TranslationOffset = r.ReadSingle();
+        TranslationHalfRange = r.ReadSingle();
+        RotationOffset = r.ReadSingle();
+        RotationHalfRange = r.ReadSingle();
+        ScaleOffset = r.ReadSingle();
+        ScaleHalfRange = r.ReadSingle();
+    }
 }
 
 public class BSRotAccumTransfInterpolator : NiTransformInterpolator {
+
+    public BSRotAccumTransfInterpolator(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -3501,6 +4572,11 @@ public class BSRotAccumTransfInterpolator : NiTransformInterpolator {
 public class NiBSplineData : NiObject {
     public float[] FloatControlPoints;                  // Float values representing the control data.
     public short[] CompactControlPoints;                // Signed shorts representing the data from 0 to 1 (scaled by SHRT_MAX).
+
+    public NiBSplineData(BinaryReader r, Header h) {
+        FloatControlPoints = r.ReadL32PArray<float>("f");
+        CompactControlPoints = r.ReadL32PArray<short>("h");
+    }
 }
 
 /// <summary>
@@ -3524,13 +4600,37 @@ public class NiCamera : NiAVObject {
     public uint NumScreenPolygons;                      // Deprecated. Array is always zero length on disk write.
     public uint NumScreenTextures;                      // Deprecated. Array is always zero length on disk write.
     public uint UnknownInt3;                            // Unknown.
+
+    public NiCamera(BinaryReader r, Header h) {
+        CameraFlags = if (h.V >= 0x0A010000) r.ReadUInt16();
+        FrustumLeft = r.ReadSingle();
+        FrustumRight = r.ReadSingle();
+        FrustumTop = r.ReadSingle();
+        FrustumBottom = r.ReadSingle();
+        FrustumNear = r.ReadSingle();
+        FrustumFar = r.ReadSingle();
+        UseOrthographicProjection = if (h.V >= 0x0A010000) r.ReadBool32();
+        ViewportLeft = r.ReadSingle();
+        ViewportRight = r.ReadSingle();
+        ViewportTop = r.ReadSingle();
+        ViewportBottom = r.ReadSingle();
+        LODAdjust = r.ReadSingle();
+        Scene = X<NiAVObject>.Ref(r);
+        NumScreenPolygons = r.ReadUInt32();
+        NumScreenTextures = if (h.V >= 0x04020100) r.ReadUInt32();
+        UnknownInt3 = if (h.V <= 0x03010000) r.ReadUInt32();
+    }
 }
 
 /// <summary>
 /// Wrapper for color animation keys.
 /// </summary>
 public class NiColorData : NiObject {
-    public KeyGroup Data;                               // The color keys.
+    public KeyGroup<T> Data;                            // The color keys.
+
+    public NiColorData(BinaryReader r, Header h) {
+        Data = new KeyGroup<T>(r, h);
+    }
 }
 
 /// <summary>
@@ -3538,6 +4638,10 @@ public class NiColorData : NiObject {
 /// </summary>
 public class NiColorExtraData : NiExtraData {
     public Color4 Data;                                 // RGBA Color?
+
+    public NiColorExtraData(BinaryReader r, Header h) {
+        Data = new Color4(r);
+    }
 }
 
 /// <summary>
@@ -3547,6 +4651,12 @@ public class NiControllerManager : NiTimeController {
     public bool Cumulative;                             // Whether transformation accumulation is enabled. If accumulation is not enabled, the manager will treat all sequence data on the accumulation root as absolute data instead of relative delta values.
     public int?[] ControllerSequences;
     public int? ObjectPalette;
+
+    public NiControllerManager(BinaryReader r, Header h) {
+        Cumulative = r.ReadBool32();
+        ControllerSequences = r.ReadL32FArray(X<NiControllerSequence>.Ref);
+        ObjectPalette = X<NiDefaultAVObjectPalette>.Ref(r);
+    }
 }
 
 /// <summary>
@@ -3561,6 +4671,17 @@ public class NiSequence : NiObject {
     public uint NumControlledBlocks;
     public uint ArrayGrowBy;
     public ControlledBlock[] ControlledBlocks;
+
+    public NiSequence(BinaryReader r, Header h) {
+        Name = Y.String(r);
+        AccumRootName = if (h.V <= 0x0A010067) Y.String(r);
+        TextKeys = if (h.V <= 0x0A010067) X<NiTextKeyExtraData>.Ref(r);
+        UnknownInt4 = if (h.V >= 0x14030009 && h.V <= 0x14030009 && ) r.ReadInt32();
+        UnknownInt5 = if (h.V >= 0x14030009 && h.V <= 0x14030009 && ) r.ReadInt32();
+        NumControlledBlocks = r.ReadUInt32();
+        ArrayGrowBy = if (h.V >= 0x0A01006A) r.ReadUInt32();
+        ControlledBlocks = r.ReadFArray(r => new ControlledBlock(r, h), NumControlledBlocks);
+    }
 }
 
 /// <summary>
@@ -3581,12 +4702,32 @@ public class NiControllerSequence : NiSequence {
     public int? StringPalette;
     public int? AnimNotes;
     public int?[] AnimNoteArrays;
+
+    public NiControllerSequence(BinaryReader r, Header h) {
+        Weight = if (h.V >= 0x0A01006A) r.ReadSingle();
+        TextKeys = if (h.V >= 0x0A01006A) X<NiTextKeyExtraData>.Ref(r);
+        CycleType = if (h.V >= 0x0A01006A) (CycleType)r.ReadUInt32();
+        Frequency = if (h.V >= 0x0A01006A) r.ReadSingle();
+        Phase = if (h.V >= 0x0A01006A && h.V <= 0x0A040001) r.ReadSingle();
+        StartTime = if (h.V >= 0x0A01006A) r.ReadSingle();
+        StopTime = if (h.V >= 0x0A01006A) r.ReadSingle();
+        PlayBackwards = if (h.V >= 0x0A01006A && h.V <= 0x0A01006A) r.ReadBool32();
+        Manager = if (h.V >= 0x0A01006A) X<NiControllerManager>.Ptr(r);
+        AccumRootName = if (h.V >= 0x0A01006A) Y.String(r);
+        AccumFlags = if (h.V >= 0x14030008) (AccumFlags)r.ReadUInt32();
+        StringPalette = if (h.V >= 0x0A010071 && h.V <= 0x14010000) X<NiStringPalette>.Ref(r);
+        AnimNotes = if (h.V >= 0x14020007 && ) X<BSAnimNotes>.Ref(r);
+        AnimNoteArrays = if (h.V >= 0x14020007 && ) r.ReadL16FArray(X<BSAnimNotes>.Ref);
+    }
 }
 
 /// <summary>
 /// Abstract base class for indexing NiAVObject by name.
 /// </summary>
 public abstract class NiAVObjectPalette : NiObject {
+
+    public NiAVObjectPalette(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -3595,12 +4736,20 @@ public abstract class NiAVObjectPalette : NiObject {
 public class NiDefaultAVObjectPalette : NiAVObjectPalette {
     public int? Scene;                                  // Scene root of the object palette.
     public AVObject[] Objs;                             // The objects.
+
+    public NiDefaultAVObjectPalette(BinaryReader r, Header h) {
+        Scene = X<NiAVObject>.Ptr(r);
+        Objs = r.ReadL32FArray(r => new AVObject(r));
+    }
 }
 
 /// <summary>
 /// Directional light source.
 /// </summary>
 public class NiDirectionalLight : NiLight {
+
+    public NiDirectionalLight(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -3608,6 +4757,10 @@ public class NiDirectionalLight : NiLight {
 /// </summary>
 public class NiDitherProperty : NiProperty {
     public Flags Flags;                                 // 1 = Enable dithering
+
+    public NiDitherProperty(BinaryReader r, Header h) {
+        Flags = (Flags)r.ReadUInt16();
+    }
 }
 
 /// <summary>
@@ -3615,13 +4768,21 @@ public class NiDitherProperty : NiProperty {
 /// </summary>
 public class NiRollController : NiSingleInterpController {
     public int? Data;                                   // The data for the controller.
+
+    public NiRollController(BinaryReader r, Header h) {
+        Data = X<NiFloatData>.Ref(r);
+    }
 }
 
 /// <summary>
 /// Wrapper for 1D (one-dimensional) floating point animation keys.
 /// </summary>
 public class NiFloatData : NiObject {
-    public KeyGroup Data;                               // The keys.
+    public KeyGroup<T> Data;                            // The keys.
+
+    public NiFloatData(BinaryReader r, Header h) {
+        Data = new KeyGroup<T>(r, h);
+    }
 }
 
 /// <summary>
@@ -3629,6 +4790,10 @@ public class NiFloatData : NiObject {
 /// </summary>
 public class NiFloatExtraData : NiExtraData {
     public float FloatData;                             // The float data.
+
+    public NiFloatExtraData(BinaryReader r, Header h) {
+        FloatData = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -3636,6 +4801,10 @@ public class NiFloatExtraData : NiExtraData {
 /// </summary>
 public class NiFloatsExtraData : NiExtraData {
     public float[] Data;                                // Float data.
+
+    public NiFloatsExtraData(BinaryReader r, Header h) {
+        Data = r.ReadL32PArray<float>("f");
+    }
 }
 
 /// <summary>
@@ -3649,6 +4818,12 @@ public class NiFogProperty : NiProperty {
                                                         //     If Bit 1 and Bit 2 are not set, but fog is enabled, Fog function is FOG_Z_LINEAR.
     public float FogDepth;                              // Depth of the fog in normalized units. 1.0 = begins at near plane. 0.5 = begins halfway between the near and far planes.
     public Color3 FogColor;                             // The color of the fog.
+
+    public NiFogProperty(BinaryReader r, Header h) {
+        Flags = (Flags)r.ReadUInt16();
+        FogDepth = r.ReadSingle();
+        FogColor = new Color3(r);
+    }
 }
 
 /// <summary>
@@ -3660,6 +4835,14 @@ public class NiGravity : NiParticleModifier {
     public FieldType Type;                              // The force field type.
     public Vector3 Position;                            // The position of the mass point relative to the particle system.
     public Vector3 Direction;                           // The direction of the applied acceleration.
+
+    public NiGravity(BinaryReader r, Header h) {
+        UnknownFloat1 = if (h.V >= 0x0303000D) r.ReadSingle();
+        Force = r.ReadSingle();
+        Type = (FieldType)r.ReadUInt32();
+        Position = r.ReadVector3();
+        Direction = r.ReadVector3();
+    }
 }
 
 /// <summary>
@@ -3667,6 +4850,10 @@ public class NiGravity : NiParticleModifier {
 /// </summary>
 public class NiIntegerExtraData : NiExtraData {
     public uint IntegerData;                            // The value of the extra data.
+
+    public NiIntegerExtraData(BinaryReader r, Header h) {
+        IntegerData = r.ReadUInt32();
+    }
 }
 
 /// <summary>
@@ -3687,6 +4874,9 @@ public class NiIntegerExtraData : NiExtraData {
 /// Bit 13: bSearchedBreakable(Skyrim) .. Runtime only?
 /// </summary>
 public class BSXFlags : NiIntegerExtraData {
+
+    public BSXFlags(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -3694,6 +4884,10 @@ public class BSXFlags : NiIntegerExtraData {
 /// </summary>
 public class NiIntegersExtraData : NiExtraData {
     public uint[] Data;                                 // Integers.
+
+    public NiIntegersExtraData(BinaryReader r, Header h) {
+        Data = r.ReadL32PArray<uint>("I");
+    }
 }
 
 /// <summary>
@@ -3701,6 +4895,10 @@ public class NiIntegersExtraData : NiExtraData {
 /// </summary>
 public class BSKeyframeController : NiKeyframeController {
     public int? Data2;                                  // A link to more keyframe data.
+
+    public BSKeyframeController(BinaryReader r, Header h) {
+        Data2 = X<NiKeyframeData>.Ref(r);
+    }
 }
 
 /// <summary>
@@ -3710,11 +4908,21 @@ public class BSKeyframeController : NiKeyframeController {
 public class NiKeyframeData : NiObject {
     public uint NumRotationKeys;                        // The number of quaternion rotation keys. If the rotation type is XYZ (type 4) then this *must* be set to 1, and in this case the actual number of keys is stored in the XYZ Rotations field.
     public KeyType RotationType;                        // The type of interpolation to use for rotation.  Can also be 4 to indicate that separate X, Y, and Z values are used for the rotation instead of Quaternions.
-    public QuatKey[] QuaternionKeys;                    // The rotation keys if Quaternion rotation is used.
+    public QuatKey<T>[] QuaternionKeys;                 // The rotation keys if Quaternion rotation is used.
     public float Order;
-    public KeyGroup[] XYZRotations;                     // Individual arrays of keys for rotating X, Y, and Z individually.
-    public KeyGroup Translations;                       // Translation keys.
-    public KeyGroup Scales;                             // Scale keys.
+    public KeyGroup<T>[] XYZRotations;                  // Individual arrays of keys for rotating X, Y, and Z individually.
+    public KeyGroup<T> Translations;                    // Translation keys.
+    public KeyGroup<T> Scales;                          // Scale keys.
+
+    public NiKeyframeData(BinaryReader r, Header h) {
+        NumRotationKeys = r.ReadUInt32();
+        RotationType = if (Num Rotation Keys != 0) (KeyType)r.ReadUInt32();
+        QuaternionKeys = if (Rotation Type != 4) r.ReadFArray(r => new QuatKey<T>(r, h), NumRotationKeys);
+        Order = if (Rotation Type == 4 && h.V <= 0x0A010000) r.ReadSingle();
+        XYZRotations = if (Rotation Type == 4) r.ReadFArray(r => new KeyGroup<T>(r, h), 3);
+        Translations = new KeyGroup<T>(r, h);
+        Scales = new KeyGroup<T>(r, h);
+    }
 }
 
 [Flags]
@@ -3731,6 +4939,11 @@ public enum LookAtFlags : ushort {
 public class NiLookAtController : NiTimeController {
     public LookAtFlags Flags;
     public int? LookAt;
+
+    public NiLookAtController(BinaryReader r, Header h) {
+        Flags = if (h.V >= 0x0A010000) (LookAtFlags)r.ReadUInt16();
+        LookAt = X<NiNode>.Ptr(r);
+    }
 }
 
 /// <summary>
@@ -3744,6 +4957,16 @@ public class NiLookAtInterpolator : NiInterpolator {
     public int? Interpolator:Translation;
     public int? Interpolator:Roll;
     public int? Interpolator:Scale;
+
+    public NiLookAtInterpolator(BinaryReader r, Header h) {
+        Flags = (LookAtFlags)r.ReadUInt16();
+        LookAt = X<NiNode>.Ptr(r);
+        LookAtName = Y.String(r);
+        Transform = if (h.V <= 0x1404000C) new NiQuatTransform(r, h);
+        Interpolator:Translation = X<NiPoint3Interpolator>.Ref(r);
+        Interpolator:Roll = X<NiFloatInterpolator>.Ref(r);
+        Interpolator:Scale = X<NiFloatInterpolator>.Ref(r);
+    }
 }
 
 /// <summary>
@@ -3758,6 +4981,17 @@ public class NiMaterialProperty : NiProperty {
     public float Glossiness;                            // The material glossiness.
     public float Alpha;                                 // The material transparency (1=non-transparant). Refer to a NiAlphaProperty object in this material's parent NiTriShape object, when alpha is not 1.
     public float EmissiveMult;
+
+    public NiMaterialProperty(BinaryReader r, Header h) {
+        Flags = if (h.V >= 0x03000000 && h.V <= 0x0A000102) (Flags)r.ReadUInt16();
+        AmbientColor = new Color3(r);
+        DiffuseColor = new Color3(r);
+        SpecularColor = new Color3(r);
+        EmissiveColor = new Color3(r);
+        Glossiness = r.ReadSingle();
+        Alpha = r.ReadSingle();
+        EmissiveMult = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -3769,6 +5003,13 @@ public class NiMorphData : NiObject {
     public uint NumVertices;                            // Number of vertices.
     public byte RelativeTargets;                        // This byte is always 1 in all official files.
     public Morph[] Morphs;                              // The geometry morphing objects.
+
+    public NiMorphData(BinaryReader r, Header h) {
+        NumMorphs = r.ReadUInt32();
+        NumVertices = r.ReadUInt32();
+        RelativeTargets = r.ReadByte();
+        Morphs = r.ReadFArray(r => new Morph(r, h), NumMorphs);
+    }
 }
 
 /// <summary>
@@ -3777,18 +5018,29 @@ public class NiMorphData : NiObject {
 public class NiNode : NiAVObject {
     public int?[] Children;                             // List of child node object indices.
     public int?[] Effects;                              // List of node effects. ADynamicEffect?
+
+    public NiNode(BinaryReader r, Header h) {
+        Children = r.ReadL32FArray(X<NiAVObject>.Ref);
+        Effects = r.ReadL32FArray(X<NiDynamicEffect>.Ref);
+    }
 }
 
 /// <summary>
 /// A NiNode used as a skeleton bone?
 /// </summary>
 public class NiBone : NiNode {
+
+    public NiBone(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Morrowind specific.
 /// </summary>
 public class AvoidNode : NiNode {
+
+    public AvoidNode(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -3797,12 +5049,20 @@ public class AvoidNode : NiNode {
 public class FxWidget : NiNode {
     public byte Unknown3;                               // Unknown.
     public byte[] Unknown292Bytes;                      // Looks like 9 links and some string data.
+
+    public FxWidget(BinaryReader r, Header h) {
+        Unknown3 = r.ReadByte();
+        Unknown292Bytes = r.ReadBytes(292);
+    }
 }
 
 /// <summary>
 /// Unknown.
 /// </summary>
 public class FxButton : FxWidget {
+
+    public FxButton(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -3813,6 +5073,13 @@ public class FxRadioButton : FxWidget {
     public uint UnknownInt2;                            // Unknown.
     public uint UnknownInt3;                            // Unknown.
     public int?[] Buttons;                              // Unknown pointers to other buttons.  Maybe other buttons in a group so they can be switch off if this one is switched on?
+
+    public FxRadioButton(BinaryReader r, Header h) {
+        UnknownInt1 = r.ReadUInt32();
+        UnknownInt2 = r.ReadUInt32();
+        UnknownInt3 = r.ReadUInt32();
+        Buttons = r.ReadL32FArray(X<FxRadioButton>.Ptr);
+    }
 }
 
 /// <summary>
@@ -3838,18 +5105,28 @@ public class FxRadioButton : FxWidget {
 /// </summary>
 public class NiBillboardNode : NiNode {
     public BillboardMode BillboardMode;                 // The way the billboard will react to the camera.
+
+    public NiBillboardNode(BinaryReader r, Header h) {
+        BillboardMode = if (h.V >= 0x0A010000) (BillboardMode)r.ReadUInt16();
+    }
 }
 
 /// <summary>
 /// Bethesda-specific extension of Node with animation properties stored in the flags, often 42?
 /// </summary>
 public class NiBSAnimationNode : NiNode {
+
+    public NiBSAnimationNode(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Unknown.
 /// </summary>
 public class NiBSParticleNode : NiNode {
+
+    public NiBSParticleNode(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -3867,6 +5144,11 @@ public enum NiSwitchFlags : ushort {
 public class NiSwitchNode : NiNode {
     public NiSwitchFlags SwitchNodeFlags;
     public uint Index;
+
+    public NiSwitchNode(BinaryReader r, Header h) {
+        SwitchNodeFlags = if (h.V >= 0x0A010000) (NiSwitchFlags)r.ReadUInt16();
+        Index = r.ReadUInt32();
+    }
 }
 
 /// <summary>
@@ -3876,6 +5158,12 @@ public class NiLODNode : NiSwitchNode {
     public Vector3 LODCenter;
     public LODRange[] LODLevels;
     public int? LODLevelData;
+
+    public NiLODNode(BinaryReader r, Header h) {
+        LODCenter = if (h.V >= 0x04000002 && h.V <= 0x0A000100) r.ReadVector3();
+        LODLevels = if (h.V <= 0x0A000100) r.ReadL32FArray(r => new LODRange(r, h));
+        LODLevelData = if (h.V >= 0x0A010000) X<NiLODData>.Ref(r);
+    }
 }
 
 /// <summary>
@@ -3885,6 +5173,13 @@ public class NiPalette : NiObject {
     public byte HasAlpha;
     public uint NumEntries;                             // The number of palette entries. Always 256 but can also be 16.
     public ByteColor4[] Palette;                        // The color palette.
+
+    public NiPalette(BinaryReader r, Header h) {
+        HasAlpha = r.ReadByte();
+        NumEntries = r.ReadUInt32();
+        Palette = if (Num Entries == 16) r.ReadFArray(r => new Color4Byte(r), 16);
+        Palette = if (Num Entries != 16) r.ReadFArray(r => new Color4Byte(r), 256);
+    }
 }
 
 /// <summary>
@@ -3899,6 +5194,17 @@ public class NiParticleBomb : NiParticleModifier {
     public SymmetryType SymmetryType;
     public Vector3 Position;                            // The position of the mass point relative to the particle system?
     public Vector3 Direction;                           // The direction of the applied acceleration?
+
+    public NiParticleBomb(BinaryReader r, Header h) {
+        Decay = r.ReadSingle();
+        Duration = r.ReadSingle();
+        DeltaV = r.ReadSingle();
+        Start = r.ReadSingle();
+        DecayType = (DecayType)r.ReadUInt32();
+        SymmetryType = if (h.V >= 0x0401000C) (SymmetryType)r.ReadUInt32();
+        Position = r.ReadVector3();
+        Direction = r.ReadVector3();
+    }
 }
 
 /// <summary>
@@ -3906,6 +5212,10 @@ public class NiParticleBomb : NiParticleModifier {
 /// </summary>
 public class NiParticleColorModifier : NiParticleModifier {
     public int? ColorData;
+
+    public NiParticleColorModifier(BinaryReader r, Header h) {
+        ColorData = X<NiColorData>.Ref(r);
+    }
 }
 
 /// <summary>
@@ -3914,6 +5224,11 @@ public class NiParticleColorModifier : NiParticleModifier {
 public class NiParticleGrowFade : NiParticleModifier {
     public float Grow;                                  // The time from the beginning of the particle lifetime during which the particle grows.
     public float Fade;                                  // The time from the end of the particle lifetime during which the particle fades.
+
+    public NiParticleGrowFade(BinaryReader r, Header h) {
+        Grow = r.ReadSingle();
+        Fade = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -3921,6 +5236,10 @@ public class NiParticleGrowFade : NiParticleModifier {
 /// </summary>
 public class NiParticleMeshModifier : NiParticleModifier {
     public int?[] ParticleMeshes;
+
+    public NiParticleMeshModifier(BinaryReader r, Header h) {
+        ParticleMeshes = r.ReadL32FArray(X<NiAVObject>.Ref);
+    }
 }
 
 /// <summary>
@@ -3930,6 +5249,12 @@ public class NiParticleRotation : NiParticleModifier {
     public byte RandomInitialAxis;
     public Vector3 InitialAxis;
     public float RotationSpeed;
+
+    public NiParticleRotation(BinaryReader r, Header h) {
+        RandomInitialAxis = r.ReadByte();
+        InitialAxis = r.ReadVector3();
+        RotationSpeed = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -3937,18 +5262,28 @@ public class NiParticleRotation : NiParticleModifier {
 /// </summary>
 public class NiParticles : NiGeometry {
     public BSVertexDesc VertexDesc;
+
+    public NiParticles(BinaryReader r, Header h) {
+        VertexDesc = new BSVertexDesc(r);
+    }
 }
 
 /// <summary>
 /// LEGACY (pre-10.1). NiParticles which do not house normals and generate them at runtime.
 /// </summary>
 public class NiAutoNormalParticles : NiParticles {
+
+    public NiAutoNormalParticles(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// LEGACY (pre-10.1). Particle meshes.
 /// </summary>
 public class NiParticleMeshes : NiParticles {
+
+    public NiParticleMeshes(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -3956,6 +5291,10 @@ public class NiParticleMeshes : NiParticles {
 /// </summary>
 public class NiParticleMeshesData : NiRotatingParticlesData {
     public int? UnknownLink2;                           // Refers to the mesh that makes up a particle?
+
+    public NiParticleMeshesData(BinaryReader r, Header h) {
+        UnknownLink2 = X<NiAVObject>.Ref(r);
+    }
 }
 
 /// <summary>
@@ -3969,12 +5308,25 @@ public class NiParticleSystem : NiParticles {
     public int? Data;
     public bool WorldSpace;                             // If true, Particles are birthed into world space.  If false, Particles are birthed into object space.
     public int?[] Modifiers;                            // The list of particle modifiers.
+
+    public NiParticleSystem(BinaryReader r, Header h) {
+        FarBegin = r.ReadUInt16();
+        FarEnd = r.ReadUInt16();
+        NearBegin = r.ReadUInt16();
+        NearEnd = r.ReadUInt16();
+        Data = X<NiPSysData>.Ref(r);
+        WorldSpace = if (h.V >= 0x0A010000) r.ReadBool32();
+        Modifiers = if (h.V >= 0x0A010000) r.ReadL32FArray(X<NiPSysModifier>.Ref);
+    }
 }
 
 /// <summary>
 /// Particle system.
 /// </summary>
 public class NiMeshParticleSystem : NiParticleSystem {
+
+    public NiMeshParticleSystem(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -4026,12 +5378,60 @@ public class NiParticleSystemController : NiTimeController {
     public int? ColorData;
     public float UnknownFloat1;
     public float[] UnknownFloats2;
+
+    public NiParticleSystemController(BinaryReader r, Header h) {
+        OldSpeed = if (h.V <= 0x03010000) r.ReadUInt32();
+        Speed = if (h.V >= 0x0303000D) r.ReadSingle();
+        SpeedRandom = r.ReadSingle();
+        VerticalDirection = r.ReadSingle();
+        VerticalAngle = r.ReadSingle();
+        HorizontalDirection = r.ReadSingle();
+        HorizontalAngle = r.ReadSingle();
+        UnknownNormal? = r.ReadVector3();
+        UnknownColor? = new Color4(r);
+        Size = r.ReadSingle();
+        EmitStartTime = r.ReadSingle();
+        EmitStopTime = r.ReadSingle();
+        UnknownByte = if (h.V >= 0x04000002) r.ReadByte();
+        OldEmitRate = if (h.V <= 0x03010000) r.ReadUInt32();
+        EmitRate = if (h.V >= 0x0303000D) r.ReadSingle();
+        Lifetime = r.ReadSingle();
+        LifetimeRandom = r.ReadSingle();
+        EmitFlags = if (h.V >= 0x04000002) r.ReadUInt16();
+        StartRandom = r.ReadVector3();
+        Emitter = X<NiObject>.Ptr(r);
+        UnknownShort2? = if (h.V >= 0x04000002) r.ReadUInt16();
+        UnknownFloat13? = if (h.V >= 0x04000002) r.ReadSingle();
+        UnknownInt1? = if (h.V >= 0x04000002) r.ReadUInt32();
+        UnknownInt2? = if (h.V >= 0x04000002) r.ReadUInt32();
+        UnknownShort3? = if (h.V >= 0x04000002) r.ReadUInt16();
+        ParticleVelocity = if (h.V <= 0x03010000) r.ReadVector3();
+        ParticleUnknownVector = if (h.V <= 0x03010000) r.ReadVector3();
+        ParticleLifetime = if (h.V <= 0x03010000) r.ReadSingle();
+        ParticleLink = if (h.V <= 0x03010000) X<NiObject>.Ref(r);
+        ParticleTimestamp = if (h.V <= 0x03010000) r.ReadUInt32();
+        ParticleUnknownShort = if (h.V <= 0x03010000) r.ReadUInt16();
+        ParticleVertexId = if (h.V <= 0x03010000) r.ReadUInt16();
+        NumParticles = if (h.V >= 0x04000002) r.ReadUInt16();
+        NumValid = if (h.V >= 0x04000002) r.ReadUInt16();
+        Particles = if (h.V >= 0x04000002) r.ReadFArray(r => new Particle(r), NumParticles);
+        UnknownLink = if (h.V >= 0x04000002) X<NiObject>.Ref(r);
+        ParticleExtra = X<NiParticleModifier>.Ref(r);
+        UnknownLink2 = X<NiObject>.Ref(r);
+        Trailer = if (h.V >= 0x04000002) r.ReadByte();
+        ColorData = if (h.V <= 0x03010000) X<NiColorData>.Ref(r);
+        UnknownFloat1 = if (h.V <= 0x03010000) r.ReadSingle();
+        UnknownFloats2 = if (h.V <= 0x03010000) r.ReadPArray<float>("f", ParticleUnknownShort);
+    }
 }
 
 /// <summary>
 /// A particle system controller, used by BS in conjunction with NiBSParticleNode.
 /// </summary>
 public class NiBSPArrayController : NiParticleSystemController {
+
+    public NiBSPArrayController(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -4046,6 +5446,16 @@ public class NiPathController : NiTimeController {
     public short FollowAxis;                            // 0, 1, or 2 representing X, Y, or Z.
     public int? PathData;
     public int? PercentData;
+
+    public NiPathController(BinaryReader r, Header h) {
+        PathFlags = if (h.V >= 0x0A010000) (PathFlags)r.ReadUInt16();
+        BankDir = r.ReadInt32();
+        MaxBankAngle = r.ReadSingle();
+        Smoothing = r.ReadSingle();
+        FollowAxis = r.ReadInt16();
+        PathData = X<NiPosData>.Ref(r);
+        PercentData = X<NiFloatData>.Ref(r);
+    }
 }
 
 public class PixelFormatComponent(BinaryReader r) {
@@ -4072,19 +5482,50 @@ public abstract class NiPixelFormat : NiObject {
     public byte Flags;
     public bool sRGBSpace;
     public PixelFormatComponent[] Channels;             // Channel Data
+
+    public NiPixelFormat(BinaryReader r, Header h) {
+        PixelFormat = (PixelFormat)r.ReadUInt32();
+        RedMask = if (h.V <= 0x0A030002) r.ReadUInt32();
+        GreenMask = if (h.V <= 0x0A030002) r.ReadUInt32();
+        BlueMask = if (h.V <= 0x0A030002) r.ReadUInt32();
+        AlphaMask = if (h.V <= 0x0A030002) r.ReadUInt32();
+        BitsPerPixel = if (h.V <= 0x0A030002) r.ReadUInt32();
+        OldFastCompare = if (h.V <= 0x0A030002) r.ReadBytes(8);
+        Tiling = if (h.V >= 0x0A010000 && h.V <= 0x0A030002) (PixelTiling)r.ReadUInt32();
+        BitsPerPixel = if (h.V >= 0x0A030003) r.ReadByte();
+        RendererHint = if (h.V >= 0x0A030003) r.ReadUInt32();
+        ExtraData = if (h.V >= 0x0A030003) r.ReadUInt32();
+        Flags = if (h.V >= 0x0A030003) r.ReadByte();
+        Tiling = if (h.V >= 0x0A030003) (PixelTiling)r.ReadUInt32();
+        sRGBSpace = if (h.V >= 0x14030004) r.ReadBool32();
+        Channels = if (h.V >= 0x0A030003) r.ReadFArray(r => new PixelFormatComponent(r), 4);
+    }
 }
 
 public class NiPersistentSrcTextureRendererData : NiPixelFormat {
     public int? Palette;
     public uint NumMipmaps;
     public uint BytesPerPixel;
-    public ??[] Mipmaps;
+    public MipMap[] Mipmaps;
     public uint NumPixels;
     public uint PadNumPixels;
     public uint NumFaces;
     public PlatformID Platform;
     public RendererID Renderer;
     public byte[] PixelData;
+
+    public NiPersistentSrcTextureRendererData(BinaryReader r, Header h) {
+        Palette = X<NiPalette>.Ref(r);
+        NumMipmaps = r.ReadUInt32();
+        BytesPerPixel = r.ReadUInt32();
+        Mipmaps = r.ReadFArray(r => new MipMap(r), NumMipmaps);
+        NumPixels = r.ReadUInt32();
+        PadNumPixels = if (h.V >= 0x14020006) r.ReadUInt32();
+        NumFaces = r.ReadUInt32();
+        Platform = if (h.V <= 0x1E010000) (PlatformID)r.ReadUInt32();
+        Renderer = if (h.V >= 0x1E010001) (RendererID)r.ReadUInt32();
+        PixelData = r.ReadBytes(NumPixels*NumFaces);
+    }
 }
 
 /// <summary>
@@ -4094,10 +5535,21 @@ public class NiPixelData : NiPixelFormat {
     public int? Palette;
     public uint NumMipmaps;
     public uint BytesPerPixel;
-    public ??[] Mipmaps;
+    public MipMap[] Mipmaps;
     public uint NumPixels;
     public uint NumFaces;
     public byte[] PixelData;
+
+    public NiPixelData(BinaryReader r, Header h) {
+        Palette = X<NiPalette>.Ref(r);
+        NumMipmaps = r.ReadUInt32();
+        BytesPerPixel = r.ReadUInt32();
+        Mipmaps = r.ReadFArray(r => new MipMap(r), NumMipmaps);
+        NumPixels = r.ReadUInt32();
+        NumFaces = if (h.V >= 0x0A030006) r.ReadUInt32();
+        PixelData = if (h.V <= 0x0A030005) r.ReadBytes(NumPixels);
+        PixelData = if (h.V >= 0x0A030006) r.ReadBytes(NumPixels*NumFaces);
+    }
 }
 
 /// <summary>
@@ -4122,6 +5574,27 @@ public class NiPlanarCollider : NiParticleModifier {
     public float UnknownFloat14;                        // Unknown.
     public float UnknownFloat15;                        // Unknown.
     public float UnknownFloat16;                        // Unknown.
+
+    public NiPlanarCollider(BinaryReader r, Header h) {
+        UnknownShort = if (h.V >= 0x0A000100) r.ReadUInt16();
+        UnknownFloat1 = r.ReadSingle();
+        UnknownFloat2 = r.ReadSingle();
+        UnknownShort2 = if (h.V >= 0x04020200 && h.V <= 0x04020200) r.ReadUInt16();
+        UnknownFloat3 = r.ReadSingle();
+        UnknownFloat4 = r.ReadSingle();
+        UnknownFloat5 = r.ReadSingle();
+        UnknownFloat6 = r.ReadSingle();
+        UnknownFloat7 = r.ReadSingle();
+        UnknownFloat8 = r.ReadSingle();
+        UnknownFloat9 = r.ReadSingle();
+        UnknownFloat10 = r.ReadSingle();
+        UnknownFloat11 = r.ReadSingle();
+        UnknownFloat12 = r.ReadSingle();
+        UnknownFloat13 = r.ReadSingle();
+        UnknownFloat14 = r.ReadSingle();
+        UnknownFloat15 = r.ReadSingle();
+        UnknownFloat16 = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -4131,6 +5604,12 @@ public class NiPointLight : NiLight {
     public float ConstantAttenuation;
     public float LinearAttenuation;
     public float QuadraticAttenuation;
+
+    public NiPointLight(BinaryReader r, Header h) {
+        ConstantAttenuation = r.ReadSingle();
+        LinearAttenuation = r.ReadSingle();
+        QuadraticAttenuation = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -4138,6 +5617,10 @@ public class NiPointLight : NiLight {
 /// </summary>
 public abstract class NiDeferredDynamicEffect : NiAVObject {
     public bool SwitchState;                            // If true, then the dynamic effect is applied to affected nodes during rendering.
+
+    public NiDeferredDynamicEffect(BinaryReader r, Header h) {
+        SwitchState = if (h.V >= 0x0A01006A && ) r.ReadBool32();
+    }
 }
 
 /// <summary>
@@ -4149,6 +5632,13 @@ public abstract class NiDeferredLight : NiDeferredDynamicEffect {
     public Color3 AmbientColor;
     public Color3 DiffuseColor;
     public Color3 SpecularColor;
+
+    public NiDeferredLight(BinaryReader r, Header h) {
+        Dimmer = r.ReadSingle();
+        AmbientColor = new Color3(r);
+        DiffuseColor = new Color3(r);
+        SpecularColor = new Color3(r);
+    }
 }
 
 /// <summary>
@@ -4158,13 +5648,23 @@ public class NiDeferredPointLight : NiDeferredLight {
     public float ConstantAttenuation;
     public float LinearAttenuation;
     public float QuadraticAttenuation;
+
+    public NiDeferredPointLight(BinaryReader r, Header h) {
+        ConstantAttenuation = r.ReadSingle();
+        LinearAttenuation = r.ReadSingle();
+        QuadraticAttenuation = r.ReadSingle();
+    }
 }
 
 /// <summary>
 /// Wrapper for position animation keys.
 /// </summary>
 public class NiPosData : NiObject {
-    public KeyGroup Data;
+    public KeyGroup<T> Data;
+
+    public NiPosData(BinaryReader r, Header h) {
+        Data = new KeyGroup<T>(r, h);
+    }
 }
 
 /// <summary>
@@ -4173,8 +5673,15 @@ public class NiPosData : NiObject {
 public class NiRotData : NiObject {
     public uint NumRotationKeys;
     public KeyType RotationType;
-    public QuatKey[] QuaternionKeys;
-    public KeyGroup[] XYZRotations;
+    public QuatKey<T>[] QuaternionKeys;
+    public KeyGroup<T>[] XYZRotations;
+
+    public NiRotData(BinaryReader r, Header h) {
+        NumRotationKeys = r.ReadUInt32();
+        RotationType = if (Num Rotation Keys != 0) (KeyType)r.ReadUInt32();
+        QuaternionKeys = if (Rotation Type != 4) r.ReadFArray(r => new QuatKey<T>(r, h), NumRotationKeys);
+        XYZRotations = if (Rotation Type == 4) r.ReadFArray(r => new KeyGroup<T>(r, h), 3);
+    }
 }
 
 /// <summary>
@@ -4183,6 +5690,11 @@ public class NiRotData : NiObject {
 public class NiPSysAgeDeathModifier : NiPSysModifier {
     public bool SpawnonDeath;                           // Should the particles spawn on death?
     public int? SpawnModifier;                          // The spawner to use on death.
+
+    public NiPSysAgeDeathModifier(BinaryReader r, Header h) {
+        SpawnonDeath = r.ReadBool32();
+        SpawnModifier = X<NiPSysSpawnModifier>.Ref(r);
+    }
 }
 
 /// <summary>
@@ -4195,6 +5707,15 @@ public class NiPSysBombModifier : NiPSysModifier {
     public float DeltaV;                                // The acceleration the bomb will apply to particles.
     public DecayType DecayType;
     public SymmetryType SymmetryType;
+
+    public NiPSysBombModifier(BinaryReader r, Header h) {
+        BombObject = X<NiNode>.Ptr(r);
+        BombAxis = r.ReadVector3();
+        Decay = r.ReadSingle();
+        DeltaV = r.ReadSingle();
+        DecayType = (DecayType)r.ReadUInt32();
+        SymmetryType = (SymmetryType)r.ReadUInt32();
+    }
 }
 
 /// <summary>
@@ -4202,6 +5723,10 @@ public class NiPSysBombModifier : NiPSysModifier {
 /// </summary>
 public class NiPSysBoundUpdateModifier : NiPSysModifier {
     public ushort UpdateSkip;                           // Optimize by only computing the bound of (1 / Update Skip) of the total particles each frame.
+
+    public NiPSysBoundUpdateModifier(BinaryReader r, Header h) {
+        UpdateSkip = r.ReadUInt16();
+    }
 }
 
 /// <summary>
@@ -4211,6 +5736,12 @@ public class NiPSysBoxEmitter : NiPSysVolumeEmitter {
     public float Width;
     public float Height;
     public float Depth;
+
+    public NiPSysBoxEmitter(BinaryReader r, Header h) {
+        Width = r.ReadSingle();
+        Height = r.ReadSingle();
+        Depth = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -4218,6 +5749,10 @@ public class NiPSysBoxEmitter : NiPSysVolumeEmitter {
 /// </summary>
 public class NiPSysColliderManager : NiPSysModifier {
     public int? Collider;
+
+    public NiPSysColliderManager(BinaryReader r, Header h) {
+        Collider = X<NiPSysCollider>.Ref(r);
+    }
 }
 
 /// <summary>
@@ -4225,6 +5760,10 @@ public class NiPSysColliderManager : NiPSysModifier {
 /// </summary>
 public class NiPSysColorModifier : NiPSysModifier {
     public int? Data;
+
+    public NiPSysColorModifier(BinaryReader r, Header h) {
+        Data = X<NiColorData>.Ref(r);
+    }
 }
 
 /// <summary>
@@ -4233,6 +5772,11 @@ public class NiPSysColorModifier : NiPSysModifier {
 public class NiPSysCylinderEmitter : NiPSysVolumeEmitter {
     public float Radius;
     public float Height;
+
+    public NiPSysCylinderEmitter(BinaryReader r, Header h) {
+        Radius = r.ReadSingle();
+        Height = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -4244,14 +5788,27 @@ public class NiPSysDragModifier : NiPSysModifier {
     public float Percentage;                            // The amount of drag to apply to particles.
     public float Range;                                 // The distance up to which particles are fully affected.
     public float RangeFalloff;                          // The distance at which particles cease to be affected.
+
+    public NiPSysDragModifier(BinaryReader r, Header h) {
+        DragObject = X<NiAVObject>.Ptr(r);
+        DragAxis = r.ReadVector3();
+        Percentage = r.ReadSingle();
+        Range = r.ReadSingle();
+        RangeFalloff = r.ReadSingle();
+    }
 }
 
 /// <summary>
 /// DEPRECATED (10.2). Particle system emitter controller data.
 /// </summary>
 public class NiPSysEmitterCtlrData : NiObject {
-    public KeyGroup BirthRateKeys;
-    public Key[] ActiveKeys;
+    public KeyGroup<T> BirthRateKeys;
+    public Key<T>[] ActiveKeys;
+
+    public NiPSysEmitterCtlrData(BinaryReader r, Header h) {
+        BirthRateKeys = new KeyGroup<T>(r, h);
+        ActiveKeys = r.ReadL32FArray(r => new Key<T>(r, h));
+    }
 }
 
 /// <summary>
@@ -4266,6 +5823,17 @@ public class NiPSysGravityModifier : NiPSysModifier {
     public float Turbulence;                            // Adds a degree of randomness.
     public float TurbulenceScale;                       // Scale for turbulence.
     public bool WorldAligned;
+
+    public NiPSysGravityModifier(BinaryReader r, Header h) {
+        GravityObject = X<NiAVObject>.Ptr(r);
+        GravityAxis = r.ReadVector3();
+        Decay = r.ReadSingle();
+        Strength = r.ReadSingle();
+        ForceType = (ForceType)r.ReadUInt32();
+        Turbulence = r.ReadSingle();
+        TurbulenceScale = r.ReadSingle();
+        WorldAligned = r.ReadBool32();
+    }
 }
 
 /// <summary>
@@ -4277,6 +5845,14 @@ public class NiPSysGrowFadeModifier : NiPSysModifier {
     public float FadeTime;                              // The time taken to shrink from their specified size to 0.
     public ushort FadeGeneration;                       // Specifies the particle generation to which the shrink effect should be applied. This is usually the highest supported generation for the particle system.
     public float BaseScale;                             // A multiplier on the base particle scale.
+
+    public NiPSysGrowFadeModifier(BinaryReader r, Header h) {
+        GrowTime = r.ReadSingle();
+        GrowGeneration = r.ReadUInt16();
+        FadeTime = r.ReadSingle();
+        FadeGeneration = r.ReadUInt16();
+        BaseScale = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -4287,6 +5863,13 @@ public class NiPSysMeshEmitter : NiPSysEmitter {
     public VelocityType InitialVelocityType;            // The method by which the initial particle velocity will be computed.
     public EmitFrom EmissionType;                       // The manner in which particles are emitted from the Emitter Meshes.
     public Vector3 EmissionAxis;                        // The emission axis if VELOCITY_USE_DIRECTION.
+
+    public NiPSysMeshEmitter(BinaryReader r, Header h) {
+        EmitterMeshes = r.ReadL32FArray(X<NiAVObject>.Ptr);
+        InitialVelocityType = (VelocityType)r.ReadUInt32();
+        EmissionType = (EmitFrom)r.ReadUInt32();
+        EmissionAxis = r.ReadVector3();
+    }
 }
 
 /// <summary>
@@ -4294,6 +5877,10 @@ public class NiPSysMeshEmitter : NiPSysEmitter {
 /// </summary>
 public class NiPSysMeshUpdateModifier : NiPSysModifier {
     public int?[] Meshes;
+
+    public NiPSysMeshUpdateModifier(BinaryReader r, Header h) {
+        Meshes = r.ReadL32FArray(X<NiAVObject>.Ref);
+    }
 }
 
 public class BSPSysInheritVelocityModifier : NiPSysModifier {
@@ -4301,17 +5888,35 @@ public class BSPSysInheritVelocityModifier : NiPSysModifier {
     public float ChanceToInherit;
     public float VelocityMultiplier;
     public float VelocityVariation;
+
+    public BSPSysInheritVelocityModifier(BinaryReader r, Header h) {
+        Target = X<NiNode>.Ptr(r);
+        ChanceToInherit = r.ReadSingle();
+        VelocityMultiplier = r.ReadSingle();
+        VelocityVariation = r.ReadSingle();
+    }
 }
 
 public class BSPSysHavokUpdateModifier : NiPSysModifier {
     public int?[] Nodes;
     public int? Modifier;
+
+    public BSPSysHavokUpdateModifier(BinaryReader r, Header h) {
+        Nodes = r.ReadL32FArray(X<NiNode>.Ref);
+        Modifier = X<NiPSysModifier>.Ref(r);
+    }
 }
 
 public class BSPSysRecycleBoundModifier : NiPSysModifier {
     public Vector3 BoundOffset;
     public Vector3 BoundExtent;
     public int? Target;
+
+    public BSPSysRecycleBoundModifier(BinaryReader r, Header h) {
+        BoundOffset = r.ReadVector3();
+        BoundExtent = r.ReadVector3();
+        Target = X<NiNode>.Ptr(r);
+    }
 }
 
 /// <summary>
@@ -4325,6 +5930,16 @@ public class BSPSysSubTexModifier : NiPSysModifier {
     public float LoopStartFrameFudge;
     public float FrameCount;
     public float FrameCountFudge;
+
+    public BSPSysSubTexModifier(BinaryReader r, Header h) {
+        StartFrame = r.ReadUInt32();
+        StartFrameFudge = r.ReadSingle();
+        EndFrame = r.ReadSingle();
+        LoopStartFrame = r.ReadSingle();
+        LoopStartFrameFudge = r.ReadSingle();
+        FrameCount = r.ReadSingle();
+        FrameCountFudge = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -4335,6 +5950,13 @@ public class NiPSysPlanarCollider : NiPSysCollider {
     public float Height;                                // Height of the plane along the Y Axis.
     public Vector3 XAxis;                               // Axis defining a plane, relative to Collider Object.
     public Vector3 YAxis;                               // Axis defining a plane, relative to Collider Object.
+
+    public NiPSysPlanarCollider(BinaryReader r, Header h) {
+        Width = r.ReadSingle();
+        Height = r.ReadSingle();
+        XAxis = r.ReadVector3();
+        YAxis = r.ReadVector3();
+    }
 }
 
 /// <summary>
@@ -4342,18 +5964,28 @@ public class NiPSysPlanarCollider : NiPSysCollider {
 /// </summary>
 public class NiPSysSphericalCollider : NiPSysCollider {
     public float Radius;
+
+    public NiPSysSphericalCollider(BinaryReader r, Header h) {
+        Radius = r.ReadSingle();
+    }
 }
 
 /// <summary>
 /// Particle modifier that updates the particle positions based on velocity and last update time.
 /// </summary>
 public class NiPSysPositionModifier : NiPSysModifier {
+
+    public NiPSysPositionModifier(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Particle modifier that calls reset on a target upon looping.
 /// </summary>
 public class NiPSysResetOnLoopCtlr : NiTimeController {
+
+    public NiPSysResetOnLoopCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -4367,6 +5999,16 @@ public class NiPSysRotationModifier : NiPSysModifier {
     public bool RandomRotSpeedSign;                     // Randomly negate the initial rotation speed?
     public bool RandomAxis;                             // Assign a random axis to new particles?
     public Vector3 Axis;                                // Initial rotation axis.
+
+    public NiPSysRotationModifier(BinaryReader r, Header h) {
+        RotationSpeed = r.ReadSingle();
+        RotationSpeedVariation = if (h.V >= 0x14000002) r.ReadSingle();
+        RotationAngle = if (h.V >= 0x14000002) r.ReadSingle();
+        RotationAngleVariation = if (h.V >= 0x14000002) r.ReadSingle();
+        RandomRotSpeedSign = if (h.V >= 0x14000002) r.ReadBool32();
+        RandomAxis = r.ReadBool32();
+        Axis = r.ReadVector3();
+    }
 }
 
 /// <summary>
@@ -4382,6 +6024,18 @@ public class NiPSysSpawnModifier : NiPSysModifier {
     public float SpawnDirVariation;                     // How much the spawned particle direction can vary.
     public float LifeSpan;                              // Lifespan assigned to spawned particles.
     public float LifeSpanVariation;                     // The amount the lifespan can vary.
+
+    public NiPSysSpawnModifier(BinaryReader r, Header h) {
+        NumSpawnGenerations = r.ReadUInt16();
+        PercentageSpawned = r.ReadSingle();
+        MinNumtoSpawn = r.ReadUInt16();
+        MaxNumtoSpawn = r.ReadUInt16();
+        UnknownInt = if (h.V >= 0x0A040001 && h.V <= 0x0A040001) r.ReadInt32();
+        SpawnSpeedVariation = r.ReadSingle();
+        SpawnDirVariation = r.ReadSingle();
+        LifeSpan = r.ReadSingle();
+        LifeSpanVariation = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -4389,12 +6043,19 @@ public class NiPSysSpawnModifier : NiPSysModifier {
 /// </summary>
 public class NiPSysSphereEmitter : NiPSysVolumeEmitter {
     public float Radius;
+
+    public NiPSysSphereEmitter(BinaryReader r, Header h) {
+        Radius = r.ReadSingle();
+    }
 }
 
 /// <summary>
 /// Particle system controller, tells the system to update its simulation.
 /// </summary>
 public class NiPSysUpdateCtlr : NiTimeController {
+
+    public NiPSysUpdateCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -4406,6 +6067,14 @@ public abstract class NiPSysFieldModifier : NiPSysModifier {
     public float Attenuation;                           // How the magnitude diminishes with distance from the Field Object.
     public bool UseMaxDistance;                         // Whether or not to use a distance from the Field Object after which there is no effect.
     public float MaxDistance;                           // Maximum distance after which there is no effect.
+
+    public NiPSysFieldModifier(BinaryReader r, Header h) {
+        FieldObject = X<NiAVObject>.Ref(r);
+        Magnitude = r.ReadSingle();
+        Attenuation = r.ReadSingle();
+        UseMaxDistance = r.ReadBool32();
+        MaxDistance = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -4413,6 +6082,10 @@ public abstract class NiPSysFieldModifier : NiPSysModifier {
 /// </summary>
 public class NiPSysVortexFieldModifier : NiPSysFieldModifier {
     public Vector3 Direction;                           // Direction of the vortex field in Field Object's space.
+
+    public NiPSysVortexFieldModifier(BinaryReader r, Header h) {
+        Direction = r.ReadVector3();
+    }
 }
 
 /// <summary>
@@ -4420,6 +6093,10 @@ public class NiPSysVortexFieldModifier : NiPSysFieldModifier {
 /// </summary>
 public class NiPSysGravityFieldModifier : NiPSysFieldModifier {
     public Vector3 Direction;                           // Direction of the gravity field in Field Object's space.
+
+    public NiPSysGravityFieldModifier(BinaryReader r, Header h) {
+        Direction = r.ReadVector3();
+    }
 }
 
 /// <summary>
@@ -4428,6 +6105,11 @@ public class NiPSysGravityFieldModifier : NiPSysFieldModifier {
 public class NiPSysDragFieldModifier : NiPSysFieldModifier {
     public bool UseDirection;                           // Whether or not the drag force applies only in the direction specified.
     public Vector3 Direction;                           // Direction in which the force applies if Use Direction is true.
+
+    public NiPSysDragFieldModifier(BinaryReader r, Header h) {
+        UseDirection = r.ReadBool32();
+        Direction = r.ReadVector3();
+    }
 }
 
 /// <summary>
@@ -4435,6 +6117,10 @@ public class NiPSysDragFieldModifier : NiPSysFieldModifier {
 /// </summary>
 public class NiPSysTurbulenceFieldModifier : NiPSysFieldModifier {
     public float Frequency;                             // How many turbulence updates per second.
+
+    public NiPSysTurbulenceFieldModifier(BinaryReader r, Header h) {
+        Frequency = r.ReadSingle();
+    }
 }
 
 public class BSPSysLODModifier : NiPSysModifier {
@@ -4442,82 +6128,129 @@ public class BSPSysLODModifier : NiPSysModifier {
     public float LODEndDistance;
     public float EndEmitScale;
     public float EndSize;
+
+    public BSPSysLODModifier(BinaryReader r, Header h) {
+        LODBeginDistance = r.ReadSingle();
+        LODEndDistance = r.ReadSingle();
+        EndEmitScale = r.ReadSingle();
+        EndSize = r.ReadSingle();
+    }
 }
 
 public class BSPSysScaleModifier : NiPSysModifier {
     public float[] Scales;
+
+    public BSPSysScaleModifier(BinaryReader r, Header h) {
+        Scales = r.ReadL32PArray<float>("f");
+    }
 }
 
 /// <summary>
 /// Particle system controller for force field magnitude.
 /// </summary>
 public class NiPSysFieldMagnitudeCtlr : NiPSysModifierFloatCtlr {
+
+    public NiPSysFieldMagnitudeCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Particle system controller for force field attenuation.
 /// </summary>
 public class NiPSysFieldAttenuationCtlr : NiPSysModifierFloatCtlr {
+
+    public NiPSysFieldAttenuationCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Particle system controller for force field maximum distance.
 /// </summary>
 public class NiPSysFieldMaxDistanceCtlr : NiPSysModifierFloatCtlr {
+
+    public NiPSysFieldMaxDistanceCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Particle system controller for air field air friction.
 /// </summary>
 public class NiPSysAirFieldAirFrictionCtlr : NiPSysModifierFloatCtlr {
+
+    public NiPSysAirFieldAirFrictionCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Particle system controller for air field inherit velocity.
 /// </summary>
 public class NiPSysAirFieldInheritVelocityCtlr : NiPSysModifierFloatCtlr {
+
+    public NiPSysAirFieldInheritVelocityCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Particle system controller for air field spread.
 /// </summary>
 public class NiPSysAirFieldSpreadCtlr : NiPSysModifierFloatCtlr {
+
+    public NiPSysAirFieldSpreadCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Particle system controller for emitter initial rotation speed.
 /// </summary>
 public class NiPSysInitialRotSpeedCtlr : NiPSysModifierFloatCtlr {
+
+    public NiPSysInitialRotSpeedCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Particle system controller for emitter initial rotation speed variation.
 /// </summary>
 public class NiPSysInitialRotSpeedVarCtlr : NiPSysModifierFloatCtlr {
+
+    public NiPSysInitialRotSpeedVarCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Particle system controller for emitter initial rotation angle.
 /// </summary>
 public class NiPSysInitialRotAngleCtlr : NiPSysModifierFloatCtlr {
+
+    public NiPSysInitialRotAngleCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Particle system controller for emitter initial rotation angle variation.
 /// </summary>
 public class NiPSysInitialRotAngleVarCtlr : NiPSysModifierFloatCtlr {
+
+    public NiPSysInitialRotAngleVarCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Particle system controller for emitter planar angle.
 /// </summary>
 public class NiPSysEmitterPlanarAngleCtlr : NiPSysModifierFloatCtlr {
+
+    public NiPSysEmitterPlanarAngleCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Particle system controller for emitter planar angle variation.
 /// </summary>
 public class NiPSysEmitterPlanarAngleVarCtlr : NiPSysModifierFloatCtlr {
+
+    public NiPSysEmitterPlanarAngleVarCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -4531,6 +6264,16 @@ public class NiPSysAirFieldModifier : NiPSysFieldModifier {
     public bool ComponentOnly;
     public bool EnableSpread;
     public float Spread;                                // The angle of the air field cone if Enable Spread is true.
+
+    public NiPSysAirFieldModifier(BinaryReader r, Header h) {
+        Direction = r.ReadVector3();
+        AirFriction = r.ReadSingle();
+        InheritVelocity = r.ReadSingle();
+        InheritRotation = r.ReadBool32();
+        ComponentOnly = r.ReadBool32();
+        EnableSpread = r.ReadBool32();
+        Spread = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -4548,12 +6291,29 @@ public class NiPSysTrailEmitter : NiPSysEmitter {
     public int UnknownInt4;                             // Unknown
     public float UnknownFloat6;                         // Unknown
     public float UnknownFloat7;                         // Unknown
+
+    public NiPSysTrailEmitter(BinaryReader r, Header h) {
+        UnknownInt1 = r.ReadInt32();
+        UnknownFloat1 = r.ReadSingle();
+        UnknownFloat2 = r.ReadSingle();
+        UnknownFloat3 = r.ReadSingle();
+        UnknownInt2 = r.ReadInt32();
+        UnknownFloat4 = r.ReadSingle();
+        UnknownInt3 = r.ReadInt32();
+        UnknownFloat5 = r.ReadSingle();
+        UnknownInt4 = r.ReadInt32();
+        UnknownFloat6 = r.ReadSingle();
+        UnknownFloat7 = r.ReadSingle();
+    }
 }
 
 /// <summary>
 /// Unknown controller
 /// </summary>
 public class NiLightIntensityController : NiFloatInterpController {
+
+    public NiLightIntensityController(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -4561,12 +6321,19 @@ public class NiLightIntensityController : NiFloatInterpController {
 /// </summary>
 public class NiPSysRadialFieldModifier : NiPSysFieldModifier {
     public float RadialType;                            // If zero, no attenuation.
+
+    public NiPSysRadialFieldModifier(BinaryReader r, Header h) {
+        RadialType = r.ReadSingle();
+    }
 }
 
 /// <summary>
 /// Abstract class used for different types of LOD selections.
 /// </summary>
 public abstract class NiLODData : NiObject {
+
+    public NiLODData(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -4575,6 +6342,11 @@ public abstract class NiLODData : NiObject {
 public class NiRangeLODData : NiLODData {
     public Vector3 LODCenter;
     public LODRange[] LODLevels;
+
+    public NiRangeLODData(BinaryReader r, Header h) {
+        LODCenter = r.ReadVector3();
+        LODLevels = r.ReadL32FArray(r => new LODRange(r, h));
+    }
 }
 
 /// <summary>
@@ -4584,12 +6356,21 @@ public class NiScreenLODData : NiLODData {
     public NiBound Bound;
     public NiBound WorldBound;
     public float[] ProportionLevels;
+
+    public NiScreenLODData(BinaryReader r, Header h) {
+        Bound = new NiBound(r);
+        WorldBound = new NiBound(r);
+        ProportionLevels = r.ReadL32PArray<float>("f");
+    }
 }
 
 /// <summary>
 /// Unknown.
 /// </summary>
 public class NiRotatingParticles : NiParticles {
+
+    public NiRotatingParticles(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -4597,6 +6378,9 @@ public class NiRotatingParticles : NiParticles {
 /// Keyframe animation root node, in .kf files.
 /// </summary>
 public class NiSequenceStreamHelper : NiObjectNET {
+
+    public NiSequenceStreamHelper(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -4604,6 +6388,10 @@ public class NiSequenceStreamHelper : NiObjectNET {
 /// </summary>
 public class NiShadeProperty : NiProperty {
     public Flags Flags;                                 // Bit 0: Enable smooth phong shading on this shape. Otherwise, hard-edged flat shading will be used on this shape.
+
+    public NiShadeProperty(BinaryReader r, Header h) {
+        Flags = (Flags)r.ReadUInt16();
+    }
 }
 
 /// <summary>
@@ -4615,6 +6403,14 @@ public class NiSkinData : NiObject {
     public int? SkinPartition;                          // This optionally links a NiSkinPartition for hardware-acceleration information.
     public byte HasVertexWeights;                       // Enables Vertex Weights for this NiSkinData.
     public BoneData[] BoneList;                         // Contains offset data for each node that this skin is influenced by.
+
+    public NiSkinData(BinaryReader r, Header h) {
+        SkinTransform = new NiTransform(r);
+        NumBones = r.ReadUInt32();
+        SkinPartition = if (h.V >= 0x04000002 && h.V <= 0x0A010000) X<NiSkinPartition>.Ref(r);
+        HasVertexWeights = if (h.V >= 0x04020100) r.ReadByte();
+        BoneList = r.ReadFArray(r => new BoneData(r, h), NumBones);
+    }
 }
 
 /// <summary>
@@ -4625,6 +6421,13 @@ public class NiSkinInstance : NiObject {
     public int? SkinPartition;                          // Refers to a NiSkinPartition objects, which partitions the mesh such that every vertex is only influenced by a limited number of bones.
     public int? SkeletonRoot;                           // Armature root node.
     public int?[] Bones;                                // List of all armature bones.
+
+    public NiSkinInstance(BinaryReader r, Header h) {
+        Data = X<NiSkinData>.Ref(r);
+        SkinPartition = if (h.V >= 0x0A010065) X<NiSkinPartition>.Ref(r);
+        SkeletonRoot = X<NiNode>.Ptr(r);
+        Bones = r.ReadL32FArray(X<NiNode>.Ptr);
+    }
 }
 
 /// <summary>
@@ -4635,12 +6438,22 @@ public class NiTriShapeSkinController : NiTimeController {
     public uint[] VertexCounts;                         // The number of vertex weights stored for each bone.
     public int?[] Bones;                                // List of all armature bones.
     public OldSkinData[][] BoneData;                    // Contains skin weight data for each node that this skin is influenced by.
+
+    public NiTriShapeSkinController(BinaryReader r, Header h) {
+        NumBones = r.ReadUInt32();
+        VertexCounts = r.ReadPArray<uint>("I", NumBones);
+        Bones = r.ReadFArray(X<NiBone>.Ptr, NumBones);
+        BoneData = r.ReadFArray(k => r.ReadFArray(r => new OldSkinData(r), NumBones), VertexCounts);
+    }
 }
 
 /// <summary>
 /// A copy of NISkinInstance for use with NiClod meshes.
 /// </summary>
 public class NiClodSkinInstance : NiSkinInstance {
+
+    public NiClodSkinInstance(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -4654,12 +6467,25 @@ public class NiSkinPartition : NiObject {
     public BSVertexDesc VertexDesc;
     public BSVertexDataSSE[] VertexData;
     public SkinPartition[] Partition;
+
+    public NiSkinPartition(BinaryReader r, Header h) {
+        NumSkinPartitionBlocks = r.ReadUInt32();
+        SkinPartitionBlocks = r.ReadFArray(r => new SkinPartition(r, h), NumSkinPartitionBlocks);
+        DataSize = if ((h.UV2 == 100)) r.ReadUInt32();
+        VertexSize = if ((h.UV2 == 100)) r.ReadUInt32();
+        VertexDesc = if ((h.UV2 == 100)) new BSVertexDesc(r);
+        VertexData = if (Data Size > 0 && (h.UV2 == 100)) r.ReadFArray(r => new BSVertexDataSSE(r, h), DataSize/VertexSize);
+        Partition = if ((h.UV2 == 100)) r.ReadFArray(r => new SkinPartition(r, h), NumSkinPartitionBlocks);
+    }
 }
 
 /// <summary>
 /// A texture.
 /// </summary>
 public abstract class NiTexture : NiObjectNET {
+
+    public NiTexture(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -4684,6 +6510,19 @@ public class NiSourceTexture : NiTexture {
     public byte IsStatic;                               // If set, then the application cannot assume that any dynamic changes to the pixel data will show in the rendered image.
     public bool DirectRender;                           // A hint to the renderer that the texture can be loaded directly from a texture file into a renderer-specific resource, bypassing the NiPixelData object.
     public bool PersistRenderData;                      // Pixel Data is NiPersistentSrcTextureRendererData instead of NiPixelData.
+
+    public NiSourceTexture(BinaryReader r, Header h) {
+        UseExternal = r.ReadByte();
+        FileName = if (Use External == 1) ??;
+        UnknownLink = if (Use External == 1 && h.V >= 0x0A010000) X<NiObject>.Ref(r);
+        UnknownByte = if (Use External == 0 && h.V <= 0x0A000100) r.ReadByte();
+        FileName = if (Use External == 0 && h.V >= 0x0A010000) ??;
+        PixelData = if (Use External == 0) X<NiPixelFormat>.Ref(r);
+        FormatPrefs = new FormatPrefs(r);
+        IsStatic = r.ReadByte();
+        DirectRender = if (h.V >= 0x0A010067) r.ReadBool32();
+        PersistRenderData = if (h.V >= 0x14020004) r.ReadBool32();
+    }
 }
 
 /// <summary>
@@ -4691,6 +6530,10 @@ public class NiSourceTexture : NiTexture {
 /// </summary>
 public class NiSpecularProperty : NiProperty {
     public Flags Flags;                                 // Bit 0 = Enable specular lighting on this shape.
+
+    public NiSpecularProperty(BinaryReader r, Header h) {
+        Flags = (Flags)r.ReadUInt16();
+    }
 }
 
 /// <summary>
@@ -4704,6 +6547,16 @@ public class NiSphericalCollider : NiParticleModifier {
     public float UnknownFloat3;                         // Unknown.
     public float UnknownFloat4;                         // Unknown.
     public float UnknownFloat5;                         // Unknown.
+
+    public NiSphericalCollider(BinaryReader r, Header h) {
+        UnknownFloat1 = r.ReadSingle();
+        UnknownShort1 = r.ReadUInt16();
+        UnknownFloat2 = r.ReadSingle();
+        UnknownShort2 = if (h.V <= 0x04020002) r.ReadUInt16();
+        UnknownFloat3 = if (h.V >= 0x04020100) r.ReadSingle();
+        UnknownFloat4 = r.ReadSingle();
+        UnknownFloat5 = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -4713,6 +6566,12 @@ public class NiSpotLight : NiPointLight {
     public float OuterSpotAngle;
     public float InnerSpotAngle;
     public float Exponent;                              // Describes the distribution of light. (see: glLight)
+
+    public NiSpotLight(BinaryReader r, Header h) {
+        OuterSpotAngle = r.ReadSingle();
+        InnerSpotAngle = if (h.V >= 0x14020005) r.ReadSingle();
+        Exponent = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -4734,6 +6593,21 @@ public class NiStencilProperty : NiProperty {
     public StencilAction ZFailAction;
     public StencilAction PassAction;
     public StencilDrawMode DrawMode;                    // Used to enabled double sided faces. Default is 3 (DRAW_BOTH).
+
+    public NiStencilProperty(BinaryReader r, Header h) {
+        Flags = if (h.V <= 0x0A000102) (Flags)r.ReadUInt16();
+        StencilEnabled = if (h.V <= 0x14000005) r.ReadByte();
+        StencilFunction = if (h.V <= 0x14000005) (StencilCompareMode)r.ReadUInt32();
+        StencilRef = if (h.V <= 0x14000005) r.ReadUInt32();
+        StencilMask = if (h.V <= 0x14000005) r.ReadUInt32();
+        FailAction = if (h.V <= 0x14000005) (StencilAction)r.ReadUInt32();
+        ZFailAction = if (h.V <= 0x14000005) (StencilAction)r.ReadUInt32();
+        PassAction = if (h.V <= 0x14000005) (StencilAction)r.ReadUInt32();
+        DrawMode = if (h.V <= 0x14000005) (StencilDrawMode)r.ReadUInt32();
+        Flags = if (h.V >= 0x14010003) (Flags)r.ReadUInt16();
+        StencilRef = if (h.V >= 0x14010003) r.ReadUInt32();
+        StencilMask = if (h.V >= 0x14010003) r.ReadUInt32();
+    }
 }
 
 /// <summary>
@@ -4743,6 +6617,11 @@ public class NiStencilProperty : NiProperty {
 public class NiStringExtraData : NiExtraData {
     public uint BytesRemaining;                         // The number of bytes left in the record.  Equals the length of the following string + 4.
     public string StringData;                           // The string.
+
+    public NiStringExtraData(BinaryReader r, Header h) {
+        BytesRemaining = if (h.V <= 0x04020200) r.ReadUInt32();
+        StringData = Y.String(r);
+    }
 }
 
 /// <summary>
@@ -4750,6 +6629,10 @@ public class NiStringExtraData : NiExtraData {
 /// </summary>
 public class NiStringPalette : NiObject {
     public StringPalette Palette;                       // A bunch of 0x00 seperated strings.
+
+    public NiStringPalette(BinaryReader r, Header h) {
+        Palette = new StringPalette(r);
+    }
 }
 
 /// <summary>
@@ -4757,6 +6640,10 @@ public class NiStringPalette : NiObject {
 /// </summary>
 public class NiStringsExtraData : NiExtraData {
     public string[] Data;                               // The strings.
+
+    public NiStringsExtraData(BinaryReader r, Header h) {
+        Data = r.ReadL32FArray(r => new SizedString(r));
+    }
 }
 
 /// <summary>
@@ -4764,7 +6651,12 @@ public class NiStringsExtraData : NiExtraData {
 /// </summary>
 public class NiTextKeyExtraData : NiExtraData {
     public uint UnknownInt1;                            // Unknown.  Always equals zero in all official files.
-    public Key[] TextKeys;                              // List of textual notes and at which time they take effect. Used for designating the start and stop of animations and the triggering of sounds.
+    public Key<T>[] TextKeys;                           // List of textual notes and at which time they take effect. Used for designating the start and stop of animations and the triggering of sounds.
+
+    public NiTextKeyExtraData(BinaryReader r, Header h) {
+        UnknownInt1 = if (h.V <= 0x04020200) r.ReadUInt32();
+        TextKeys = r.ReadL32FArray(r => new Key<T>(r, h));
+    }
 }
 
 /// <summary>
@@ -4785,6 +6677,23 @@ public class NiTextureEffect : NiDynamicEffect {
     public short PS2L;
     public short PS2K;
     public ushort UnknownShort;                         // Unknown: 0.
+
+    public NiTextureEffect(BinaryReader r, Header h) {
+        ModelProjectionMatrix = r.ReadMatrix3x3();
+        ModelProjectionTransform = r.ReadVector3();
+        TextureFiltering = (TexFilterMode)r.ReadUInt32();
+        MaxAnisotropy = if (h.V >= 0x14050004) r.ReadUInt16();
+        TextureClamping = (TexClampMode)r.ReadUInt32();
+        TextureType = (TextureType)r.ReadUInt32();
+        CoordinateGenerationType = (CoordGenType)r.ReadUInt32();
+        Image = if (h.V <= 0x03010000) X<NiImage>.Ref(r);
+        SourceTexture = if (h.V >= 0x04000000) X<NiSourceTexture>.Ref(r);
+        EnablePlane = r.ReadByte();
+        Plane = new NiPlane(r);
+        PS2L = if (h.V <= 0x0A020000) r.ReadInt16();
+        PS2K = if (h.V <= 0x0A020000) r.ReadInt16();
+        UnknownShort = if (h.V <= 0x0401000C) r.ReadUInt16();
+    }
 }
 
 /// <summary>
@@ -4795,6 +6704,13 @@ public class NiTextureModeProperty : NiProperty {
     public short UnknownShort;                          // Unknown. Either 210 or 194.
     public short PS2L;                                  // 0?
     public short PS2K;                                  // -75?
+
+    public NiTextureModeProperty(BinaryReader r, Header h) {
+        UnknownInts = if (h.V <= 0x02030000) r.ReadPArray<uint>("I", 3);
+        UnknownShort = if (h.V >= 0x03000000) r.ReadInt16();
+        PS2L = if (h.V >= 0x03010000 && h.V <= 0x0A020000) r.ReadInt16();
+        PS2K = if (h.V >= 0x03010000 && h.V <= 0x0A020000) r.ReadInt16();
+    }
 }
 
 /// <summary>
@@ -4806,6 +6722,14 @@ public class NiImage : NiObject {
     public int? ImageData;                              // Link to the internally stored image data.
     public uint UnknownInt;                             // Unknown.  Often seems to be 7. Perhaps m_uiMipLevels?
     public float UnknownFloat;                          // Unknown.  Perhaps fImageScale?
+
+    public NiImage(BinaryReader r, Header h) {
+        UseExternal = r.ReadByte();
+        FileName = if (Use External != 0) ??;
+        ImageData = if (Use External == 0) X<NiRawImageData>.Ref(r);
+        UnknownInt = r.ReadUInt32();
+        UnknownFloat = if (h.V >= 0x03010000) r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -4816,6 +6740,13 @@ public class NiTextureProperty : NiProperty {
     public Flags Flags;                                 // Property flags.
     public int? Image;                                  // Link to the texture image.
     public uint[] UnknownInts2;                         // Unknown.  0?
+
+    public NiTextureProperty(BinaryReader r, Header h) {
+        UnknownInts1 = if (h.V <= 0x02030000) r.ReadPArray<uint>("I", 2);
+        Flags = if (h.V >= 0x03000000) (Flags)r.ReadUInt16();
+        Image = X<NiImage>.Ref(r);
+        UnknownInts2 = if (h.V >= 0x03000000 && h.V <= 0x03000300) r.ReadPArray<uint>("I", 2);
+    }
 }
 
 /// <summary>
@@ -4854,21 +6785,70 @@ public class NiTexturingProperty : NiProperty {
     public bool HasDecal3Texture;
     public TexDesc Decal3Texture;                       // Another decal texture.
     public ShaderTexDesc[] ShaderTextures;              // Shader textures.
+
+    public NiTexturingProperty(BinaryReader r, Header h) {
+        Flags = if (h.V <= 0x0A000102) (Flags)r.ReadUInt16();
+        Flags = if (h.V >= 0x14010002) (Flags)r.ReadUInt16();
+        ApplyMode = if (h.V >= 0x0303000D && h.V <= 0x14010001) (ApplyMode)r.ReadUInt32();
+        TextureCount = r.ReadUInt32();
+        HasBaseTexture = r.ReadBool32();
+        BaseTexture = if (Has Base Texture) new TexDesc(r, h);
+        HasDarkTexture = r.ReadBool32();
+        DarkTexture = if (Has Dark Texture) new TexDesc(r, h);
+        HasDetailTexture = r.ReadBool32();
+        DetailTexture = if (Has Detail Texture) new TexDesc(r, h);
+        HasGlossTexture = r.ReadBool32();
+        GlossTexture = if (Has Gloss Texture) new TexDesc(r, h);
+        HasGlowTexture = r.ReadBool32();
+        GlowTexture = if (Has Glow Texture) new TexDesc(r, h);
+        HasBumpMapTexture = if (Texture Count > 5 && h.V >= 0x0303000D) r.ReadBool32();
+        BumpMapTexture = if (Has Bump Map Texture) new TexDesc(r, h);
+        BumpMapLumaScale = if (Has Bump Map Texture) r.ReadSingle();
+        BumpMapLumaOffset = if (Has Bump Map Texture) r.ReadSingle();
+        BumpMapMatrix = if (Has Bump Map Texture) r.ReadMatrix2x2();
+        HasNormalTexture = if (Texture Count > 6 && h.V >= 0x14020005) r.ReadBool32();
+        NormalTexture = if (Has Normal Texture) new TexDesc(r, h);
+        HasParallaxTexture = if (Texture Count > 7 && h.V >= 0x14020005) r.ReadBool32();
+        ParallaxTexture = if (Has Parallax Texture) new TexDesc(r, h);
+        ParallaxOffset = if (Has Parallax Texture) r.ReadSingle();
+        HasDecal0Texture = if (Texture Count > 6 && h.V <= 0x14020004) r.ReadBool32();
+        HasDecal0Texture = if (Texture Count > 8 && h.V >= 0x14020005) r.ReadBool32();
+        Decal0Texture = if (Has Decal 0 Texture) new TexDesc(r, h);
+        HasDecal1Texture = if (Texture Count > 7 && h.V <= 0x14020004) r.ReadBool32();
+        HasDecal1Texture = if (Texture Count > 9 && h.V >= 0x14020005) r.ReadBool32();
+        Decal1Texture = if (Has Decal 1 Texture) new TexDesc(r, h);
+        HasDecal2Texture = if (Texture Count > 8 && h.V <= 0x14020004) r.ReadBool32();
+        HasDecal2Texture = if (Texture Count > 10 && h.V >= 0x14020005) r.ReadBool32();
+        Decal2Texture = if (Has Decal 2 Texture) new TexDesc(r, h);
+        HasDecal3Texture = if (Texture Count > 9 && h.V <= 0x14020004) r.ReadBool32();
+        HasDecal3Texture = if (Texture Count > 11 && h.V >= 0x14020005) r.ReadBool32();
+        Decal3Texture = if (Has Decal 3 Texture) new TexDesc(r, h);
+        ShaderTextures = if (h.V >= 0x0A000100) r.ReadL32FArray(r => new ShaderTexDesc(r, h));
+    }
 }
 
 public class NiMultiTextureProperty : NiTexturingProperty {
+
+    public NiMultiTextureProperty(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Wrapper for transformation animation keys.
 /// </summary>
 public class NiTransformData : NiKeyframeData {
+
+    public NiTransformData(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// A shape node that refers to singular triangle data.
 /// </summary>
 public class NiTriShape : NiTriBasedGeom {
+
+    public NiTriShape(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -4879,12 +6859,23 @@ public class NiTriShapeData : NiTriBasedGeomData {
     public bool HasTriangles;                           // Do we have triangle data?
     public Triangle[] Triangles;                        // Triangle face data.
     public MatchGroup[] MatchGroups;                    // The shared normals.
+
+    public NiTriShapeData(BinaryReader r, Header h) {
+        NumTrianglePoints = r.ReadUInt32();
+        HasTriangles = if (h.V >= 0x0A010000) r.ReadBool32();
+        Triangles = if (h.V <= 0x0A000102) r.ReadFArray(r => new Triangle(r), NumTriangles);
+        Triangles = if (Has Triangles && h.V >= 0x0A000103) r.ReadFArray(r => new Triangle(r), NumTriangles);
+        MatchGroups = if (h.V >= 0x03010000) r.ReadL16FArray(r => new MatchGroup(r));
+    }
 }
 
 /// <summary>
 /// A shape node that refers to data organized into strips of triangles
 /// </summary>
 public class NiTriStrips : NiTriBasedGeom {
+
+    public NiTriStrips(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -4895,6 +6886,14 @@ public class NiTriStripsData : NiTriBasedGeomData {
     public ushort[] StripLengths;                       // The number of points in each triangle strip.
     public bool HasPoints;                              // Do we have strip point data?
     public ushort[][] Points;                           // The points in the Triangle strips. Size is the sum of all entries in Strip Lengths.
+
+    public NiTriStripsData(BinaryReader r, Header h) {
+        NumStrips = r.ReadUInt16();
+        StripLengths = r.ReadPArray<ushort>("H", NumStrips);
+        HasPoints = if (h.V >= 0x0A000103) r.ReadBool32();
+        Points = if (h.V <= 0x0A000102) r.ReadFArray(k => r.ReadPArray<ushort>("H", NumStrips), StripLengths);
+        Points = if (Has Points && h.V >= 0x0A000103) r.ReadFArray(k => r.ReadPArray<ushort>("H", NumStrips), StripLengths);
+    }
 }
 
 /// <summary>
@@ -4906,12 +6905,23 @@ public class NiEnvMappedTriShape : NiObjectNET {
     public int?[] Children;                             // List of child node object indices.
     public int? Child2;                                 // unknown
     public int? Child3;                                 // unknown
+
+    public NiEnvMappedTriShape(BinaryReader r, Header h) {
+        Unknown1 = r.ReadUInt16();
+        UnknownMatrix = r.ReadMatrix4x4();
+        Children = r.ReadL32FArray(X<NiAVObject>.Ref);
+        Child2 = X<NiObject>.Ref(r);
+        Child3 = X<NiObject>.Ref(r);
+    }
 }
 
 /// <summary>
 /// Holds mesh data using a list of singular triangles.
 /// </summary>
 public class NiEnvMappedTriShapeData : NiTriShapeData {
+
+    public NiEnvMappedTriShapeData(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -4928,6 +6938,18 @@ public class NiBezierTriangle4 : NiObject {
     public byte Unknown4;                               // unknown
     public uint Unknown5;                               // unknown
     public short[] Unknown6;                            // unknown
+
+    public NiBezierTriangle4(BinaryReader r, Header h) {
+        Unknown1 = r.ReadPArray<uint>("I", 6);
+        Unknown2 = r.ReadUInt16();
+        Matrix = r.ReadMatrix3x3();
+        Vector1 = r.ReadVector3();
+        Vector2 = r.ReadVector3();
+        Unknown3 = r.ReadPArray<short>("h", 4);
+        Unknown4 = r.ReadByte();
+        Unknown5 = r.ReadUInt32();
+        Unknown6 = r.ReadPArray<short>("h", 24);
+    }
 }
 
 /// <summary>
@@ -4945,6 +6967,19 @@ public class NiBezierMesh : NiAVObject {
     public uint Unknown6;                               // unknown
     public ushort Count2;                               // data count 2.
     public ushort[][] Data2;                            // data count.
+
+    public NiBezierMesh(BinaryReader r, Header h) {
+        BezierTriangle = r.ReadL32FArray(X<NiBezierTriangle4>.Ref);
+        Unknown3 = r.ReadUInt32();
+        Count1 = r.ReadUInt16();
+        Unknown4 = r.ReadUInt16();
+        Points1 = r.ReadFArray(r => r.ReadVector3(), Count1);
+        Unknown5 = r.ReadUInt32();
+        Points2 = r.ReadFArray(k => r.ReadPArray<float>("f", Count1), 2);
+        Unknown6 = r.ReadUInt32();
+        Count2 = r.ReadUInt16();
+        Data2 = r.ReadFArray(k => r.ReadPArray<ushort>("H", Count2), 4);
+    }
 }
 
 /// <summary>
@@ -4952,6 +6987,9 @@ public class NiBezierMesh : NiAVObject {
 /// Seems to be specific to Freedom Force.
 /// </summary>
 public class NiClod : NiTriBasedGeom {
+
+    public NiClod(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -4970,6 +7008,18 @@ public class NiClodData : NiTriBasedGeomData {
     public ushort[][] UnknownClodShorts1;
     public ushort[] UnknownClodShorts2;
     public ushort[][] UnknownClodShorts3;
+
+    public NiClodData(BinaryReader r, Header h) {
+        UnknownShorts = r.ReadUInt16();
+        UnknownCount1 = r.ReadUInt16();
+        UnknownCount2 = r.ReadUInt16();
+        UnknownCount3 = r.ReadUInt16();
+        UnknownFloat = r.ReadSingle();
+        UnknownShort = r.ReadUInt16();
+        UnknownClodShorts1 = r.ReadFArray(k => r.ReadPArray<ushort>("H", UnknownCount1), 6);
+        UnknownClodShorts2 = r.ReadPArray<ushort>("H", UnknownCount2);
+        UnknownClodShorts3 = r.ReadFArray(k => r.ReadPArray<ushort>("H", UnknownCount3), 6);
+    }
 }
 
 /// <summary>
@@ -4979,6 +7029,11 @@ public class NiClodData : NiTriBasedGeomData {
 public class NiUVController : NiTimeController {
     public ushort UnknownShort;                         // Always 0?
     public int? Data;                                   // Texture coordinate controller data index.
+
+    public NiUVController(BinaryReader r, Header h) {
+        UnknownShort = r.ReadUInt16();
+        Data = X<NiUVData>.Ref(r);
+    }
 }
 
 /// <summary>
@@ -4986,7 +7041,11 @@ public class NiUVController : NiTimeController {
 /// Texture coordinate data.
 /// </summary>
 public class NiUVData : NiObject {
-    public KeyGroup[] UVGroups;                         // Four UV data groups. Appear to be U translation, V translation, U scaling/tiling, V scaling/tiling.
+    public KeyGroup<T>[] UVGroups;                      // Four UV data groups. Appear to be U translation, V translation, U scaling/tiling, V scaling/tiling.
+
+    public NiUVData(BinaryReader r, Header h) {
+        UVGroups = r.ReadFArray(r => new KeyGroup<T>(r, h), 4);
+    }
 }
 
 /// <summary>
@@ -4995,6 +7054,10 @@ public class NiUVData : NiObject {
 /// </summary>
 public class NiVectorExtraData : NiExtraData {
     public Vector4 VectorData;                          // The vector data.
+
+    public NiVectorExtraData(BinaryReader r, Header h) {
+        VectorData = r.ReadVector4();
+    }
 }
 
 /// <summary>
@@ -5006,6 +7069,12 @@ public class NiVertexColorProperty : NiProperty {
                                                         //     Bits 4-5: Vertex Mode
     public VertMode VertexMode;                         // In Flags from 20.1.0.3 on.
     public LightMode LightingMode;                      // In Flags from 20.1.0.3 on.
+
+    public NiVertexColorProperty(BinaryReader r, Header h) {
+        Flags = (Flags)r.ReadUInt16();
+        VertexMode = if (h.V <= 0x14000005) (VertMode)r.ReadUInt32();
+        LightingMode = if (h.V <= 0x14000005) (LightMode)r.ReadUInt32();
+    }
 }
 
 /// <summary>
@@ -5016,6 +7085,11 @@ public class NiVertexColorProperty : NiProperty {
 public class NiVertWeightsExtraData : NiExtraData {
     public uint NumBytes;                               // Number of bytes in this data object.
     public float[] Weight;                              // The vertex weights.
+
+    public NiVertWeightsExtraData(BinaryReader r, Header h) {
+        NumBytes = r.ReadUInt32();
+        Weight = r.ReadL16PArray<float>("f");
+    }
 }
 
 /// <summary>
@@ -5023,7 +7097,11 @@ public class NiVertWeightsExtraData : NiExtraData {
 /// Visibility data for a controller.
 /// </summary>
 public class NiVisData : NiObject {
-    public Key[] Keys;
+    public Key<T>[] Keys;
+
+    public NiVisData(BinaryReader r, Header h) {
+        Keys = r.ReadL32FArray(r => new Key<T>(r, h));
+    }
 }
 
 /// <summary>
@@ -5033,6 +7111,10 @@ public class NiWireframeProperty : NiProperty {
     public Flags Flags;                                 // Property flags.
                                                         //     0 - Wireframe Mode Disabled
                                                         //     1 - Wireframe Mode Enabled
+
+    public NiWireframeProperty(BinaryReader r, Header h) {
+        Flags = (Flags)r.ReadUInt16();
+    }
 }
 
 /// <summary>
@@ -5042,12 +7124,20 @@ public class NiZBufferProperty : NiProperty {
     public Flags Flags;                                 // Bit 0 enables the z test
                                                         //     Bit 1 controls wether the Z buffer is read only (0) or read/write (1)
     public ZCompareMode Function;                       // Z-Test function (see: glDepthFunc). In Flags from 20.1.0.3 on.
+
+    public NiZBufferProperty(BinaryReader r, Header h) {
+        Flags = (Flags)r.ReadUInt16();
+        Function = if (h.V >= 0x0401000C && h.V <= 0x14000005) (ZCompareMode)r.ReadUInt32();
+    }
 }
 
 /// <summary>
 /// Morrowind-specific node for collision mesh.
 /// </summary>
 public class RootCollisionNode : NiNode {
+
+    public RootCollisionNode(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -5060,9 +7150,20 @@ public class NiRawImageData : NiObject {
     public ImageType ImageType;                         // The format of the raw image data.
     public ByteColor3[][] RGBImageData;                 // Image pixel data.
     public ByteColor4[][] RGBAImageData;                // Image pixel data.
+
+    public NiRawImageData(BinaryReader r, Header h) {
+        Width = r.ReadUInt32();
+        Height = r.ReadUInt32();
+        ImageType = (ImageType)r.ReadUInt32();
+        RGBImageData = if (Image Type == 1) r.ReadFArray(k => r.ReadFArray(r => new ByteColor3(r), Width), Height);
+        RGBAImageData = if (Image Type == 2) r.ReadFArray(k => r.ReadFArray(r => new Color4Byte(r), Width), Height);
+    }
 }
 
 public abstract class NiAccumulator : NiObject {
+
+    public NiAccumulator(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -5071,12 +7172,20 @@ public abstract class NiAccumulator : NiObject {
 public class NiSortAdjustNode : NiNode {
     public SortingMode SortingMode;                     // Sorting
     public int? Accumulator;
+
+    public NiSortAdjustNode(BinaryReader r, Header h) {
+        SortingMode = (SortingMode)r.ReadUInt32();
+        Accumulator = if (h.V <= 0x14000003) X<NiAccumulator>.Ref(r);
+    }
 }
 
 /// <summary>
 /// Represents cube maps that are created from either a set of six image files, six blocks of pixel data, or a single pixel data with six faces.
 /// </summary>
 public class NiSourceCubeMap : NiSourceTexture {
+
+    public NiSourceCubeMap(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -5090,6 +7199,16 @@ public class NiPhysXProp : NiObjectNET {
     public string TempName;
     public bool KeepMeshes;
     public int? PropDescription;
+
+    public NiPhysXProp(BinaryReader r, Header h) {
+        PhysXtoWorldScale = r.ReadSingle();
+        Sources = r.ReadL32FArray(X<NiObject>.Ref);
+        Dests = r.ReadL32FArray(X<NiPhysXDest>.Ref);
+        ModifiedMeshes = if (h.V >= 0x14040000) r.ReadL32FArray(X<NiMesh>.Ref);
+        TempName = if (h.V >= 0x1E010002 && h.V <= 0x1E020002) Y.String(r);
+        KeepMeshes = r.ReadBool32();
+        PropDescription = X<NiPhysXPropDesc>.Ref(r);
+    }
 }
 
 public class PhysXMaterialRef(BinaryReader r) {
@@ -5113,6 +7232,16 @@ public class NiPhysXPropDesc : NiObject {
     public uint NumStates;
     public PhysXStateName[] StateNames;
     public byte Flags;
+
+    public NiPhysXPropDesc(BinaryReader r, Header h) {
+        Actors = r.ReadL32FArray(X<NiPhysXActorDesc>.Ref);
+        Joints = r.ReadL32FArray(X<NiPhysXJointDesc>.Ref);
+        Clothes = if (h.V >= 0x14030005) r.ReadL32FArray(X<NiObject>.Ref);
+        Materials = r.ReadL32FArray(r => new PhysXMaterialRef(r));
+        NumStates = r.ReadUInt32();
+        StateNames = if (h.V >= 0x14040000) r.ReadL32FArray(r => new PhysXStateName(r));
+        Flags = if (h.V >= 0x14040000) r.ReadByte();
+    }
 }
 
 /// <summary>
@@ -5133,6 +7262,23 @@ public class NiPhysXActorDesc : NiObject {
     public int? ActorParent;
     public int? Source;
     public int? Dest;
+
+    public NiPhysXActorDesc(BinaryReader r, Header h) {
+        ActorName = Y.String(r);
+        Poses = r.ReadL32FArray(r => r.ReadL32Matrix3x4());
+        BodyDesc = X<NiPhysXBodyDesc>.Ref(r);
+        Density = r.ReadSingle();
+        ActorFlags = r.ReadUInt32();
+        ActorGroup = r.ReadUInt16();
+        DominanceGroup = if (h.V >= 0x14040000) r.ReadUInt16();
+        ContactReportFlags = if (h.V >= 0x14040000) r.ReadUInt32();
+        ForceFieldMaterial = if (h.V >= 0x14040000) r.ReadUInt16();
+        Dummy = if (h.V >= 0x14030001 && h.V <= 0x14030005) r.ReadUInt32();
+        ShapeDescriptions = r.ReadL32FArray(X<NiPhysXShapeDesc>.Ref);
+        ActorParent = X<NiPhysXActorDesc>.Ref(r);
+        Source = X<NiPhysXRigidBodySrc>.Ref(r);
+        Dest = X<NiPhysXRigidBodyDest>.Ref(r);
+    }
 }
 
 public class PhysXBodyStoredVels(BinaryReader r, Header h) {
@@ -5161,6 +7307,25 @@ public class NiPhysXBodyDesc : NiObject {
     public float SleepEnergyThreshold;
     public float SleepDamping;
     public float ContactReportThreshold;
+
+    public NiPhysXBodyDesc(BinaryReader r, Header h) {
+        LocalPose = r.ReadMatrix3x4();
+        SpaceInertia = r.ReadVector3();
+        Mass = r.ReadSingle();
+        Vels = r.ReadL32FArray(r => new PhysXBodyStoredVels(r, h));
+        WakeUpCounter = r.ReadSingle();
+        LinearDamping = r.ReadSingle();
+        AngularDamping = r.ReadSingle();
+        MaxAngularVelocity = r.ReadSingle();
+        CCDMotionThreshold = r.ReadSingle();
+        Flags = r.ReadUInt32();
+        SleepLinearVelocity = r.ReadSingle();
+        SleepAngularVelocity = r.ReadSingle();
+        SolverIterationCount = r.ReadUInt32();
+        SleepEnergyThreshold = if (h.V >= 0x14030000) r.ReadSingle();
+        SleepDamping = if (h.V >= 0x14030000) r.ReadSingle();
+        ContactReportThreshold = if (h.V >= 0x14040000) r.ReadSingle();
+    }
 }
 
 public enum NxJointType : uint {
@@ -5234,6 +7399,19 @@ public abstract class NiPhysXJointDesc : NiObject {
     public uint JointFlags;
     public Vector3 LimitPoint;
     public NiPhysXJointLimit[] Limits;
+
+    public NiPhysXJointDesc(BinaryReader r, Header h) {
+        JointType = (NxJointType)r.ReadUInt32();
+        JointName = Y.String(r);
+        Actors = r.ReadFArray(r => new NiPhysXJointActor(r), 2);
+        MaxForce = r.ReadSingle();
+        MaxTorque = r.ReadSingle();
+        SolverExtrapolationFactor = if (h.V >= 0x14050003) r.ReadSingle();
+        UseAccelerationSpring = if (h.V >= 0x14050003) r.ReadUInt32();
+        JointFlags = r.ReadUInt32();
+        LimitPoint = r.ReadVector3();
+        Limits = r.ReadL32FArray(r => new NiPhysXJointLimit(r, h));
+    }
 }
 
 /// <summary>
@@ -5266,6 +7444,35 @@ public class NiPhysXD6JointDesc : NiPhysXJointDesc {
     public float ProjectionAngle;
     public float GearRatio;
     public uint Flags;
+
+    public NiPhysXD6JointDesc(BinaryReader r, Header h) {
+        XMotion = (NxD6JointMotion)r.ReadUInt32();
+        YMotion = (NxD6JointMotion)r.ReadUInt32();
+        ZMotion = (NxD6JointMotion)r.ReadUInt32();
+        Swing1Motion = (NxD6JointMotion)r.ReadUInt32();
+        Swing2Motion = (NxD6JointMotion)r.ReadUInt32();
+        TwistMotion = (NxD6JointMotion)r.ReadUInt32();
+        LinearLimit = new NxJointLimitSoftDesc(r);
+        Swing1Limit = new NxJointLimitSoftDesc(r);
+        Swing2Limit = new NxJointLimitSoftDesc(r);
+        TwistLowLimit = new NxJointLimitSoftDesc(r);
+        TwistHighLimit = new NxJointLimitSoftDesc(r);
+        XDrive = new NxJointDriveDesc(r);
+        YDrive = new NxJointDriveDesc(r);
+        ZDrive = new NxJointDriveDesc(r);
+        SwingDrive = new NxJointDriveDesc(r);
+        TwistDrive = new NxJointDriveDesc(r);
+        SlerpDrive = new NxJointDriveDesc(r);
+        DrivePosition = r.ReadVector3();
+        DriveOrientation = r.ReadQuaternion();
+        DriveLinearVelocity = r.ReadVector3();
+        DriveAngularVelocity = r.ReadVector3();
+        ProjectionMode = (NxJointProjectionMode)r.ReadUInt32();
+        ProjectionDistance = r.ReadSingle();
+        ProjectionAngle = r.ReadSingle();
+        GearRatio = r.ReadSingle();
+        Flags = r.ReadUInt32();
+    }
 }
 
 public enum NxShapeType : uint {
@@ -5312,6 +7519,25 @@ public class NiPhysXShapeDesc : NiObject {
     public Vector3 BoxHalfExtents;
     public NxCapsule Capsule;
     public int? Mesh;
+
+    public NiPhysXShapeDesc(BinaryReader r, Header h) {
+        ShapeType = (NxShapeType)r.ReadUInt32();
+        LocalPose = r.ReadMatrix3x4();
+        ShapeFlags = r.ReadUInt32();
+        CollisionGroup = r.ReadUInt16();
+        MaterialIndex = r.ReadUInt16();
+        Density = r.ReadSingle();
+        Mass = r.ReadSingle();
+        SkinWidth = r.ReadSingle();
+        ShapeName = Y.String(r);
+        Non-InteractingCompartmentTypes = if (h.V >= 0x14040000) r.ReadUInt32();
+        CollisionBits = r.ReadPArray<uint>("I", 4);
+        Plane = if (Shape Type == 0) new NxPlane(r);
+        SphereRadius = if (Shape Type == 1) r.ReadSingle();
+        BoxHalfExtents = if (Shape Type == 2) r.ReadVector3();
+        Capsule = if (Shape Type == 3) new NxCapsule(r);
+        Mesh = if ((Shape Type == 5) || (Shape Type == 6)) X<NiPhysXMeshDesc>.Ref(r);
+    }
 }
 
 /// <summary>
@@ -5326,6 +7552,18 @@ public class NiPhysXMeshDesc : NiObject {
     public uint MeshPagingMode;
     public bool IsHardware;
     public byte Flags;
+
+    public NiPhysXMeshDesc(BinaryReader r, Header h) {
+        IsConvex = if (h.V <= 0x14030004) r.ReadBool32();
+        MeshName = Y.String(r);
+        MeshData = r.ReadL8Bytes();
+        MeshSize = if (h.V >= 0x14030005 && h.V <= 0x1E020002) r.ReadUInt16();
+        MeshData = if (h.V >= 0x14030005 && h.V <= 0x1E020002) r.ReadPArray<ushort>("H", MeshSize);
+        MeshFlags = r.ReadUInt32();
+        MeshPagingMode = if (h.V >= 0x14030001) r.ReadUInt32();
+        IsHardware = if (h.V >= 0x14030002 && h.V <= 0x14030004) r.ReadBool32();
+        Flags = if (h.V >= 0x14030005) r.ReadByte();
+    }
 }
 
 [Flags]
@@ -5371,6 +7609,11 @@ public class NxMaterialDesc(BinaryReader r, Header h) {
 public class NiPhysXMaterialDesc : NiObject {
     public ushort Index;
     public NxMaterialDesc[] MaterialDescs;
+
+    public NiPhysXMaterialDesc(BinaryReader r, Header h) {
+        Index = r.ReadUInt16();
+        MaterialDescs = r.ReadL32FArray(r => new NxMaterialDesc(r, h));
+    }
 }
 
 /// <summary>
@@ -5379,12 +7622,20 @@ public class NiPhysXMaterialDesc : NiObject {
 public abstract class NiPhysXDest : NiObject {
     public bool Active;
     public bool Interpolate;
+
+    public NiPhysXDest(BinaryReader r, Header h) {
+        Active = r.ReadBool32();
+        Interpolate = r.ReadBool32();
+    }
 }
 
 /// <summary>
 /// Base for destinations that set a rigid body state.
 /// </summary>
 public abstract class NiPhysXRigidBodyDest : NiPhysXDest {
+
+    public NiPhysXRigidBodyDest(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -5392,6 +7643,10 @@ public abstract class NiPhysXRigidBodyDest : NiPhysXDest {
 /// </summary>
 public class NiPhysXTransformDest : NiPhysXRigidBodyDest {
     public int? Target;
+
+    public NiPhysXTransformDest(BinaryReader r, Header h) {
+        Target = X<NiAVObject>.Ptr(r);
+    }
 }
 
 /// <summary>
@@ -5400,6 +7655,11 @@ public class NiPhysXTransformDest : NiPhysXRigidBodyDest {
 public abstract class NiPhysXSrc : NiObject {
     public bool Active;
     public bool Interpolate;
+
+    public NiPhysXSrc(BinaryReader r, Header h) {
+        Active = r.ReadBool32();
+        Interpolate = r.ReadBool32();
+    }
 }
 
 /// <summary>
@@ -5407,24 +7667,37 @@ public abstract class NiPhysXSrc : NiObject {
 /// </summary>
 public abstract class NiPhysXRigidBodySrc : NiPhysXSrc {
     public int? Source;
+
+    public NiPhysXRigidBodySrc(BinaryReader r, Header h) {
+        Source = X<NiAVObject>.Ptr(r);
+    }
 }
 
 /// <summary>
 /// Sets state of kinematic PhysX actor.
 /// </summary>
 public class NiPhysXKinematicSrc : NiPhysXRigidBodySrc {
+
+    public NiPhysXKinematicSrc(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Sends Gamebryo scene state to a PhysX dynamic actor.
 /// </summary>
 public class NiPhysXDynamicSrc : NiPhysXRigidBodySrc {
+
+    public NiPhysXDynamicSrc(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Wireframe geometry.
 /// </summary>
 public class NiLines : NiTriBasedGeom {
+
+    public NiLines(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -5432,6 +7705,10 @@ public class NiLines : NiTriBasedGeom {
 /// </summary>
 public class NiLinesData : NiGeometryData {
     public bool[] Lines;                                // Is vertex connected to other (next?) vertex?
+
+    public NiLinesData(BinaryReader r, Header h) {
+        Lines = r.ReadBytes(NumVertices);
+    }
 }
 
 /// <summary>
@@ -5458,6 +7735,18 @@ public class NiScreenElementsData : NiTriShapeData {
     public ushort VerticesGrowBy;
     public ushort MaxIndices;
     public ushort IndicesGrowBy;
+
+    public NiScreenElementsData(BinaryReader r, Header h) {
+        MaxPolygons = r.ReadUInt16();
+        Polygons = r.ReadFArray(r => new Polygon(r), MaxPolygons);
+        PolygonIndices = r.ReadPArray<ushort>("H", MaxPolygons);
+        PolygonGrowBy = r.ReadUInt16();
+        NumPolygons = r.ReadUInt16();
+        MaxVertices = r.ReadUInt16();
+        VerticesGrowBy = r.ReadUInt16();
+        MaxIndices = r.ReadUInt16();
+        IndicesGrowBy = r.ReadUInt16();
+    }
 }
 
 /// <summary>
@@ -5465,6 +7754,9 @@ public class NiScreenElementsData : NiTriShapeData {
 /// Two dimensional screen elements.
 /// </summary>
 public class NiScreenElements : NiTriShape {
+
+    public NiScreenElements(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -5473,6 +7765,11 @@ public class NiScreenElements : NiTriShape {
 public class NiRoomGroup : NiNode {
     public int? Shell;                                  // Object that represents the room group as seen from the outside.
     public int?[] Rooms;
+
+    public NiRoomGroup(BinaryReader r, Header h) {
+        Shell = X<NiNode>.Ptr(r);
+        Rooms = r.ReadL32FArray(X<NiRoom>.Ptr);
+    }
 }
 
 /// <summary>
@@ -5483,6 +7780,13 @@ public class NiRoom : NiNode {
     public int?[] InPortals;                            // The portals which see into the room.
     public int?[] OutPortals;                           // The portals which see out of the room.
     public int?[] Fixtures;                             // All geometry associated with the room.
+
+    public NiRoom(BinaryReader r, Header h) {
+        WallPlanes = r.ReadL32FArray(r => new NiPlane(r));
+        InPortals = r.ReadL32FArray(X<NiPortal>.Ptr);
+        OutPortals = r.ReadL32FArray(X<NiPortal>.Ptr);
+        Fixtures = r.ReadL32FArray(X<NiAVObject>.Ptr);
+    }
 }
 
 /// <summary>
@@ -5494,12 +7798,22 @@ public class NiPortal : NiAVObject {
     public ushort PlaneCount;                           // Unused in 20.x, possibly also 10.x.
     public Vector3[] Vertices;
     public int? Adjoiner;                               // Root of the scenegraph which is to be seen through this portal.
+
+    public NiPortal(BinaryReader r, Header h) {
+        PortalFlags = r.ReadUInt16();
+        PlaneCount = r.ReadUInt16();
+        Vertices = r.ReadL16FArray(r => r.ReadL16Vector3());
+        Adjoiner = X<NiNode>.Ptr(r);
+    }
 }
 
 /// <summary>
 /// Bethesda-specific fade node.
 /// </summary>
 public class BSFadeNode : NiNode {
+
+    public BSFadeNode(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -5602,6 +7916,13 @@ public class BSShaderProperty : NiShadeProperty {
     public BSShaderFlags ShaderFlags;
     public BSShaderFlags2 ShaderFlags2;
     public float EnvironmentMapScale;                   // Scales the intensity of the environment/cube map.
+
+    public BSShaderProperty(BinaryReader r, Header h) {
+        ShaderType = (BSShaderType)r.ReadUInt32();
+        ShaderFlags = (BSShaderFlags)r.ReadUInt32();
+        ShaderFlags2 = (BSShaderFlags2)r.ReadUInt32();
+        EnvironmentMapScale = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -5609,6 +7930,10 @@ public class BSShaderProperty : NiShadeProperty {
 /// </summary>
 public abstract class BSShaderLightingProperty : BSShaderProperty {
     public TexClampMode TextureClampMode;               // How to handle texture borders.
+
+    public BSShaderLightingProperty(BinaryReader r, Header h) {
+        TextureClampMode = (TexClampMode)r.ReadUInt32();
+    }
 }
 
 /// <summary>
@@ -5620,6 +7945,14 @@ public class BSShaderNoLightingProperty : BSShaderLightingProperty {
     public float FalloffStopAngle;                      // At this cosine of angle falloff will be equal to Falloff Stop Opacity
     public float FalloffStartOpacity;                   // Alpha falloff multiplier at start angle
     public float FalloffStopOpacity;                    // Alpha falloff multiplier at end angle
+
+    public BSShaderNoLightingProperty(BinaryReader r, Header h) {
+        FileName = r.ReadL32AString();
+        FalloffStartAngle = r.ReadSingle();
+        FalloffStopAngle = r.ReadSingle();
+        FalloffStartOpacity = r.ReadSingle();
+        FalloffStopOpacity = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -5632,6 +7965,15 @@ public class BSShaderPPLightingProperty : BSShaderLightingProperty {
     public float ParallaxMaxPasses;                     // The number of passes the parallax shader can apply.
     public float ParallaxScale;                         // The strength of the parallax.
     public Color4 EmissiveColor;                        // Glow color and alpha
+
+    public BSShaderPPLightingProperty(BinaryReader r, Header h) {
+        TextureSet = X<BSShaderTextureSet>.Ref(r);
+        RefractionStrength = r.ReadSingle();
+        RefractionFirePeriod = r.ReadInt32();
+        ParallaxMaxPasses = r.ReadSingle();
+        ParallaxScale = r.ReadSingle();
+        EmissiveColor = new Color4(r);
+    }
 }
 
 /// <summary>
@@ -5639,6 +7981,10 @@ public class BSShaderPPLightingProperty : BSShaderLightingProperty {
 /// </summary>
 public class BSEffectShaderPropertyFloatController : NiFloatInterpController {
     public EffectShaderControlledVariable TypeofControlledVariable; // Which float variable in BSEffectShaderProperty to animate:
+
+    public BSEffectShaderPropertyFloatController(BinaryReader r, Header h) {
+        TypeofControlledVariable = (EffectShaderControlledVariable)r.ReadUInt32();
+    }
 }
 
 /// <summary>
@@ -5646,6 +7992,10 @@ public class BSEffectShaderPropertyFloatController : NiFloatInterpController {
 /// </summary>
 public class BSEffectShaderPropertyColorController : NiPoint3InterpController {
     public EffectShaderControlledColor TypeofControlledColor; // Which color in BSEffectShaderProperty to animate:
+
+    public BSEffectShaderPropertyColorController(BinaryReader r, Header h) {
+        TypeofControlledColor = (EffectShaderControlledColor)r.ReadUInt32();
+    }
 }
 
 /// <summary>
@@ -5653,6 +8003,10 @@ public class BSEffectShaderPropertyColorController : NiPoint3InterpController {
 /// </summary>
 public class BSLightingShaderPropertyFloatController : NiFloatInterpController {
     public LightingShaderControlledVariable TypeofControlledVariable; // Which float variable in BSLightingShaderProperty to animate:
+
+    public BSLightingShaderPropertyFloatController(BinaryReader r, Header h) {
+        TypeofControlledVariable = (LightingShaderControlledVariable)r.ReadUInt32();
+    }
 }
 
 /// <summary>
@@ -5660,9 +8014,16 @@ public class BSLightingShaderPropertyFloatController : NiFloatInterpController {
 /// </summary>
 public class BSLightingShaderPropertyColorController : NiPoint3InterpController {
     public LightingShaderControlledColor TypeofControlledColor; // Which color in BSLightingShaderProperty to animate:
+
+    public BSLightingShaderPropertyColorController(BinaryReader r, Header h) {
+        TypeofControlledColor = (LightingShaderControlledColor)r.ReadUInt32();
+    }
 }
 
 public class BSNiAlphaPropertyTestRefController : NiFloatInterpController {
+
+    public BSNiAlphaPropertyTestRefController(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -5691,6 +8052,30 @@ public class BSProceduralLightningController : NiTimeController {
     public bool FadeChildBolts;
     public bool AnimateArcOffset;
     public int? ShaderProperty;                         // Reference to a shader property.
+
+    public BSProceduralLightningController(BinaryReader r, Header h) {
+        Interpolator1:Generation = X<NiInterpolator>.Ref(r);
+        Interpolator2:Mutation = X<NiInterpolator>.Ref(r);
+        Interpolator3:Subdivision = X<NiInterpolator>.Ref(r);
+        Interpolator4:NumBranches = X<NiInterpolator>.Ref(r);
+        Interpolator5:NumBranchesVar = X<NiInterpolator>.Ref(r);
+        Interpolator6:Length = X<NiInterpolator>.Ref(r);
+        Interpolator7:LengthVar = X<NiInterpolator>.Ref(r);
+        Interpolator8:Width = X<NiInterpolator>.Ref(r);
+        Interpolator9:ArcOffset = X<NiInterpolator>.Ref(r);
+        Subdivisions = r.ReadUInt16();
+        NumBranches = r.ReadUInt16();
+        NumBranchesVariation = r.ReadUInt16();
+        Length = r.ReadSingle();
+        LengthVariation = r.ReadSingle();
+        Width = r.ReadSingle();
+        ChildWidthMult = r.ReadSingle();
+        ArcOffset = r.ReadSingle();
+        FadeMainBolt = r.ReadBool32();
+        FadeChildBolts = r.ReadBool32();
+        AnimateArcOffset = r.ReadBool32();
+        ShaderProperty = X<BSShaderProperty>.Ref(r);
+    }
 }
 
 /// <summary>
@@ -5706,12 +8091,19 @@ public class BSShaderTextureSet : NiObject {
                                                         //     5: Environment Mask
                                                         //     6: Subsurface for Multilayer Parallax
                                                         //     7: Back Lighting Map (SLSF2_Back_Lighting)
+
+    public BSShaderTextureSet(BinaryReader r, Header h) {
+        Textures = r.ReadL32FArray(r => new SizedString(r));
+    }
 }
 
 /// <summary>
 /// Bethesda-specific property. Found in Fallout3
 /// </summary>
 public class WaterShaderProperty : BSShaderProperty {
+
+    public WaterShaderProperty(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -5732,6 +8124,11 @@ public enum SkyObjectType : uint {
 public class SkyShaderProperty : BSShaderLightingProperty {
     public string FileName;                             // The texture.
     public SkyObjectType SkyObjectType;                 // Sky Object Type
+
+    public SkyShaderProperty(BinaryReader r, Header h) {
+        FileName = r.ReadL32AString();
+        SkyObjectType = (SkyObjectType)r.ReadUInt32();
+    }
 }
 
 /// <summary>
@@ -5739,18 +8136,28 @@ public class SkyShaderProperty : BSShaderLightingProperty {
 /// </summary>
 public class TileShaderProperty : BSShaderLightingProperty {
     public string FileName;                             // Texture file name
+
+    public TileShaderProperty(BinaryReader r, Header h) {
+        FileName = r.ReadL32AString();
+    }
 }
 
 /// <summary>
 /// Bethesda-specific property.
 /// </summary>
 public class DistantLODShaderProperty : BSShaderProperty {
+
+    public DistantLODShaderProperty(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Bethesda-specific property.
 /// </summary>
 public class BSDistantTreeShaderProperty : BSShaderProperty {
+
+    public BSDistantTreeShaderProperty(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -5758,24 +8165,37 @@ public class BSDistantTreeShaderProperty : BSShaderProperty {
 /// </summary>
 public class TallGrassShaderProperty : BSShaderProperty {
     public string FileName;                             // Texture file name
+
+    public TallGrassShaderProperty(BinaryReader r, Header h) {
+        FileName = r.ReadL32AString();
+    }
 }
 
 /// <summary>
 /// Bethesda-specific property.
 /// </summary>
 public class VolumetricFogShaderProperty : BSShaderProperty {
+
+    public VolumetricFogShaderProperty(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Bethesda-specific property.
 /// </summary>
 public class HairShaderProperty : BSShaderProperty {
+
+    public HairShaderProperty(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Bethesda-specific property.
 /// </summary>
 public class Lighting30ShaderProperty : BSShaderPPLightingProperty {
+
+    public Lighting30ShaderProperty(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -5981,6 +8401,54 @@ public class BSLightingShaderProperty : BSShaderProperty {
     public float EyeCubemapScale;                       // Eye cubemap scale
     public Vector3 LeftEyeReflectionCenter;             // Offset to set center for left eye cubemap
     public Vector3 RightEyeReflectionCenter;            // Offset to set center for right eye cubemap
+
+    public BSLightingShaderProperty(BinaryReader r, Header h) {
+        ShaderFlags1 = (SkyrimShaderPropertyFlags1)r.ReadUInt32();
+        ShaderFlags2 = (SkyrimShaderPropertyFlags2)r.ReadUInt32();
+        ShaderFlags1 = (Fallout4ShaderPropertyFlags1)r.ReadUInt32();
+        ShaderFlags2 = (Fallout4ShaderPropertyFlags2)r.ReadUInt32();
+        UVOffset = new TexCoord(r);
+        UVScale = new TexCoord(r);
+        TextureSet = X<BSShaderTextureSet>.Ref(r);
+        EmissiveColor = new Color3(r);
+        EmissiveMultiple = r.ReadSingle();
+        WetMaterial = Y.String(r);
+        TextureClampMode = (TexClampMode)r.ReadUInt32();
+        Alpha = r.ReadSingle();
+        RefractionStrength = r.ReadSingle();
+        Glossiness = r.ReadSingle();
+        Smoothness = r.ReadSingle();
+        SpecularColor = new Color3(r);
+        SpecularStrength = r.ReadSingle();
+        LightingEffect1 = r.ReadSingle();
+        LightingEffect2 = r.ReadSingle();
+        SubsurfaceRolloff = r.ReadSingle();
+        RimlightPower = r.ReadSingle();
+        BacklightPower = if (Rimlight Power == 0x7F7FFFFF) r.ReadSingle();
+        GrayscaletoPaletteScale = r.ReadSingle();
+        FresnelPower = r.ReadSingle();
+        WetnessSpecScale = r.ReadSingle();
+        WetnessSpecPower = r.ReadSingle();
+        WetnessMinVar = r.ReadSingle();
+        WetnessEnvMapScale = r.ReadSingle();
+        WetnessFresnelPower = r.ReadSingle();
+        WetnessMetalness = r.ReadSingle();
+        EnvironmentMapScale = if (Skyrim Shader Type == 1) r.ReadSingle();
+        UnknownEnvMapShort = if (Skyrim Shader Type == 1) r.ReadUInt16();
+        SkinTintColor = if (Skyrim Shader Type == 5) new Color3(r);
+        UnknownSkinTintInt = if (Skyrim Shader Type == 5) r.ReadUInt32();
+        HairTintColor = if (Skyrim Shader Type == 6) new Color3(r);
+        MaxPasses = if (Skyrim Shader Type == 7) r.ReadSingle();
+        Scale = if (Skyrim Shader Type == 7) r.ReadSingle();
+        ParallaxInnerLayerThickness = if (Skyrim Shader Type == 11) r.ReadSingle();
+        ParallaxRefractionScale = if (Skyrim Shader Type == 11) r.ReadSingle();
+        ParallaxInnerLayerTextureScale = if (Skyrim Shader Type == 11) new TexCoord(r);
+        ParallaxEnvmapStrength = if (Skyrim Shader Type == 11) r.ReadSingle();
+        SparkleParameters = if (Skyrim Shader Type == 14) r.ReadVector4();
+        EyeCubemapScale = if (Skyrim Shader Type == 16) r.ReadSingle();
+        LeftEyeReflectionCenter = if (Skyrim Shader Type == 16) r.ReadVector3();
+        RightEyeReflectionCenter = if (Skyrim Shader Type == 16) r.ReadVector3();
+    }
 }
 
 /// <summary>
@@ -6008,6 +8476,32 @@ public class BSEffectShaderProperty : BSShaderProperty {
     public string NormalTexture;
     public string EnvMaskTexture;
     public float EnvironmentMapScale;
+
+    public BSEffectShaderProperty(BinaryReader r, Header h) {
+        ShaderFlags1 = (SkyrimShaderPropertyFlags1)r.ReadUInt32();
+        ShaderFlags2 = (SkyrimShaderPropertyFlags2)r.ReadUInt32();
+        ShaderFlags1 = (Fallout4ShaderPropertyFlags1)r.ReadUInt32();
+        ShaderFlags2 = (Fallout4ShaderPropertyFlags2)r.ReadUInt32();
+        UVOffset = new TexCoord(r);
+        UVScale = new TexCoord(r);
+        SourceTexture = r.ReadL32AString();
+        TextureClampMode = r.ReadByte();
+        LightingInfluence = r.ReadByte();
+        EnvMapMinLOD = r.ReadByte();
+        UnknownByte = r.ReadByte();
+        FalloffStartAngle = r.ReadSingle();
+        FalloffStopAngle = r.ReadSingle();
+        FalloffStartOpacity = r.ReadSingle();
+        FalloffStopOpacity = r.ReadSingle();
+        EmissiveColor = new Color4(r);
+        EmissiveMultiple = r.ReadSingle();
+        SoftFalloffDepth = r.ReadSingle();
+        GreyscaleTexture = r.ReadL32AString();
+        EnvMapTexture = r.ReadL32AString();
+        NormalTexture = r.ReadL32AString();
+        EnvMaskTexture = r.ReadL32AString();
+        EnvironmentMapScale = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -6036,6 +8530,16 @@ public class BSWaterShaderProperty : BSShaderProperty {
     public SkyrimWaterShaderFlags WaterShaderFlags;     // Defines attributes for the water shader (will use SkyrimWaterShaderFlags)
     public byte WaterDirection;                         // A bitflag, only the first/second bit controls water flow positive or negative along UVs.
     public ushort UnknownShort3;                        // Unknown, flag?
+
+    public BSWaterShaderProperty(BinaryReader r, Header h) {
+        ShaderFlags1 = (SkyrimShaderPropertyFlags1)r.ReadUInt32();
+        ShaderFlags2 = (SkyrimShaderPropertyFlags2)r.ReadUInt32();
+        UVOffset = new TexCoord(r);
+        UVScale = new TexCoord(r);
+        WaterShaderFlags = (SkyrimWaterShaderFlags)r.ReadByte();
+        WaterDirection = r.ReadByte();
+        UnknownShort3 = r.ReadUInt16();
+    }
 }
 
 /// <summary>
@@ -6048,6 +8552,15 @@ public class BSSkyShaderProperty : BSShaderProperty {
     public TexCoord UVScale;                            // Offset UV Scale to repeat tiling textures, see above.
     public string SourceTexture;                        // points to an external texture.
     public SkyObjectType SkyObjectType;
+
+    public BSSkyShaderProperty(BinaryReader r, Header h) {
+        ShaderFlags1 = (SkyrimShaderPropertyFlags1)r.ReadUInt32();
+        ShaderFlags2 = (SkyrimShaderPropertyFlags2)r.ReadUInt32();
+        UVOffset = new TexCoord(r);
+        UVScale = new TexCoord(r);
+        SourceTexture = r.ReadL32AString();
+        SkyObjectType = (SkyObjectType)r.ReadUInt32();
+    }
 }
 
 /// <summary>
@@ -6055,6 +8568,10 @@ public class BSSkyShaderProperty : BSShaderProperty {
 /// </summary>
 public class BSDismemberSkinInstance : NiSkinInstance {
     public BodyPartList[] Partitions;
+
+    public BSDismemberSkinInstance(BinaryReader r, Header h) {
+        Partitions = r.ReadL32FArray(r => new BodyPartList(r));
+    }
 }
 
 /// <summary>
@@ -6062,6 +8579,10 @@ public class BSDismemberSkinInstance : NiSkinInstance {
 /// </summary>
 public class BSDecalPlacementVectorExtraData : NiFloatExtraData {
     public DecalVectorArray[] VectorBlocks;
+
+    public BSDecalPlacementVectorExtraData(BinaryReader r, Header h) {
+        VectorBlocks = r.ReadL16FArray(r => new DecalVectorArray(r));
+    }
 }
 
 /// <summary>
@@ -6075,6 +8596,16 @@ public class BSPSysSimpleColorModifier : NiPSysModifier {
     public float Color2EndPercent;
     public float Color2StartPercent;
     public Color4[] Colors;
+
+    public BSPSysSimpleColorModifier(BinaryReader r, Header h) {
+        FadeInPercent = r.ReadSingle();
+        FadeoutPercent = r.ReadSingle();
+        Color1EndPercent = r.ReadSingle();
+        Color1StartPercent = r.ReadSingle();
+        Color2EndPercent = r.ReadSingle();
+        Color2StartPercent = r.ReadSingle();
+        Colors = r.ReadFArray(r => new Color4(r), 3);
+    }
 }
 
 /// <summary>
@@ -6092,12 +8623,20 @@ public enum BSValueNodeFlags : byte {
 public class BSValueNode : NiNode {
     public uint Value;
     public BSValueNodeFlags ValueNodeFlags;
+
+    public BSValueNode(BinaryReader r, Header h) {
+        Value = r.ReadUInt32();
+        ValueNodeFlags = (BSValueNodeFlags)r.ReadByte();
+    }
 }
 
 /// <summary>
 /// Bethesda-Specific (mesh?) Particle System.
 /// </summary>
 public class BSStripParticleSystem : NiParticleSystem {
+
+    public BSStripParticleSystem(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -6108,6 +8647,13 @@ public class BSStripPSysData : NiPSysData {
     public float StartCapSize;
     public float EndCapSize;
     public bool DoZPrepass;
+
+    public BSStripPSysData(BinaryReader r, Header h) {
+        MaxPointCount = r.ReadUInt16();
+        StartCapSize = r.ReadSingle();
+        EndCapSize = r.ReadSingle();
+        DoZPrepass = r.ReadBool32();
+    }
 }
 
 /// <summary>
@@ -6115,12 +8661,19 @@ public class BSStripPSysData : NiPSysData {
 /// </summary>
 public class BSPSysStripUpdateModifier : NiPSysModifier {
     public float UpdateDeltaTime;
+
+    public BSPSysStripUpdateModifier(BinaryReader r, Header h) {
+        UpdateDeltaTime = r.ReadSingle();
+    }
 }
 
 /// <summary>
 /// Bethesda-Specific time controller.
 /// </summary>
 public class BSMaterialEmittanceMultController : NiFloatInterpController {
+
+    public BSMaterialEmittanceMultController(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -6129,6 +8682,11 @@ public class BSMaterialEmittanceMultController : NiFloatInterpController {
 public class BSMasterParticleSystem : NiNode {
     public ushort MaxEmitterObjects;
     public int?[] ParticleSystems;
+
+    public BSMasterParticleSystem(BinaryReader r, Header h) {
+        MaxEmitterObjects = r.ReadUInt16();
+        ParticleSystems = r.ReadL32FArray(X<NiAVObject>.Ref);
+    }
 }
 
 /// <summary>
@@ -6137,12 +8695,20 @@ public class BSMasterParticleSystem : NiNode {
 public class BSPSysMultiTargetEmitterCtlr : NiPSysEmitterCtlr {
     public ushort MaxEmitters;
     public int? MasterParticleSystem;
+
+    public BSPSysMultiTargetEmitterCtlr(BinaryReader r, Header h) {
+        MaxEmitters = r.ReadUInt16();
+        MasterParticleSystem = X<BSMasterParticleSystem>.Ptr(r);
+    }
 }
 
 /// <summary>
 /// Bethesda-Specific time controller.
 /// </summary>
 public class BSRefractionStrengthController : NiFloatInterpController {
+
+    public BSRefractionStrengthController(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -6151,6 +8717,11 @@ public class BSRefractionStrengthController : NiFloatInterpController {
 public class BSOrderedNode : NiNode {
     public Vector4 AlphaSortBound;
     public bool StaticBound;
+
+    public BSOrderedNode(BinaryReader r, Header h) {
+        AlphaSortBound = r.ReadVector4();
+        StaticBound = r.ReadBool32();
+    }
 }
 
 /// <summary>
@@ -6160,18 +8731,30 @@ public class BSRangeNode : NiNode {
     public byte Min;
     public byte Max;
     public byte Current;
+
+    public BSRangeNode(BinaryReader r, Header h) {
+        Min = r.ReadByte();
+        Max = r.ReadByte();
+        Current = r.ReadByte();
+    }
 }
 
 /// <summary>
 /// Bethesda-Specific node.
 /// </summary>
 public class BSBlastNode : BSRangeNode {
+
+    public BSBlastNode(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Bethesda-Specific node.
 /// </summary>
 public class BSDamageStage : BSBlastNode {
+
+    public BSDamageStage(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -6179,6 +8762,10 @@ public class BSDamageStage : BSBlastNode {
 /// </summary>
 public class BSRefractionFirePeriodController : NiTimeController {
     public int? Interpolator;
+
+    public BSRefractionFirePeriodController(BinaryReader r, Header h) {
+        Interpolator = if (h.V >= 0x14020007) X<NiInterpolator>.Ref(r);
+    }
 }
 
 /// <summary>
@@ -6200,6 +8787,17 @@ public class bhkConvexListShape : bhkShape {
     public hkWorldObjCinfoProperty ChildShapeProperty;
     public byte UnknownByte1;
     public float UnknownFloat2;
+
+    public bhkConvexListShape(BinaryReader r, Header h) {
+        SubShapes = r.ReadL32FArray(X<bhkConvexShape>.Ref);
+        Material = new HavokMaterial(r, h);
+        Radius = r.ReadSingle();
+        UnknownInt1 = r.ReadUInt32();
+        UnknownFloat1 = r.ReadSingle();
+        ChildShapeProperty = new hkWorldObjCinfoProperty(r);
+        UnknownByte1 = r.ReadByte();
+        UnknownFloat2 = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -6217,6 +8815,11 @@ public class BSTreadTransform(BinaryReader r) {
 public class BSTreadTransfInterpolator : NiInterpolator {
     public BSTreadTransform[] TreadTransforms;
     public int? Data;
+
+    public BSTreadTransfInterpolator(BinaryReader r, Header h) {
+        TreadTransforms = r.ReadL32FArray(r => new BSTreadTransform(r));
+        Data = X<NiFloatData>.Ref(r);
+    }
 }
 
 /// <summary>
@@ -6237,6 +8840,14 @@ public class BSAnimNote : NiObject {
     public uint Arm;                                    // Unknown.
     public float Gain;                                  // Unknown.
     public uint State;                                  // Unknown.
+
+    public BSAnimNote(BinaryReader r, Header h) {
+        Type = (AnimNoteType)r.ReadUInt32();
+        Time = r.ReadSingle();
+        Arm = if (Type == 1) r.ReadUInt32();
+        Gain = if (Type == 2) r.ReadSingle();
+        State = if (Type == 2) r.ReadUInt32();
+    }
 }
 
 /// <summary>
@@ -6244,6 +8855,10 @@ public class BSAnimNote : NiObject {
 /// </summary>
 public class BSAnimNotes : NiObject {
     public int?[] AnimNotes;                            // BSAnimNote objects.
+
+    public BSAnimNotes(BinaryReader r, Header h) {
+        AnimNotes = r.ReadL16FArray(X<BSAnimNote>.Ref);
+    }
 }
 
 /// <summary>
@@ -6257,6 +8872,16 @@ public class bhkLiquidAction : bhkSerializable {
     public float StickStrength;
     public float NeighborDistance;
     public float NeighborStrength;
+
+    public bhkLiquidAction(BinaryReader r, Header h) {
+        UserData = r.ReadUInt32();
+        UnknownInt2 = r.ReadInt32();
+        UnknownInt3 = r.ReadInt32();
+        InitialStickForce = r.ReadSingle();
+        StickStrength = r.ReadSingle();
+        NeighborDistance = r.ReadSingle();
+        NeighborStrength = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -6266,7 +8891,7 @@ public enum BSCPCullingType : uint {
     BSCP_CULL_NORMAL = 0,           // Normal
     BSCP_CULL_ALLPASS = 1,          // All Pass
     BSCP_CULL_ALLFAIL = 2,          // All Fail
-    BSCP_CULL_IGNOREMULTIBOUNDS = 3, // Ignore Multi Bounds
+    BSCP_CULL_IGNOREMULTIBOUNDS = 3,// Ignore Multi Bounds
     BSCP_CULL_FORCEMULTIBOUNDSNOUPDATE = 4 // Force Multi Bounds No Update
 }
 
@@ -6276,6 +8901,11 @@ public enum BSCPCullingType : uint {
 public class BSMultiBoundNode : NiNode {
     public int? MultiBound;
     public BSCPCullingType CullingMode;
+
+    public BSMultiBoundNode(BinaryReader r, Header h) {
+        MultiBound = X<BSMultiBound>.Ref(r);
+        CullingMode = (BSCPCullingType)r.ReadUInt32();
+    }
 }
 
 /// <summary>
@@ -6283,12 +8913,19 @@ public class BSMultiBoundNode : NiNode {
 /// </summary>
 public class BSMultiBound : NiObject {
     public int? Data;
+
+    public BSMultiBound(BinaryReader r, Header h) {
+        Data = X<BSMultiBoundData>.Ref(r);
+    }
 }
 
 /// <summary>
 /// Abstract base type for bounding data.
 /// </summary>
 public class BSMultiBoundData : NiObject {
+
+    public BSMultiBoundData(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -6298,6 +8935,12 @@ public class BSMultiBoundOBB : BSMultiBoundData {
     public Vector3 Center;                              // Center of the box.
     public Vector3 Size;                                // Size of the box along each axis.
     public Matrix3x3 Rotation;                          // Rotation of the bounding box.
+
+    public BSMultiBoundOBB(BinaryReader r, Header h) {
+        Center = r.ReadVector3();
+        Size = r.ReadVector3();
+        Rotation = r.ReadMatrix3x3();
+    }
 }
 
 /// <summary>
@@ -6306,6 +8949,11 @@ public class BSMultiBoundOBB : BSMultiBoundData {
 public class BSMultiBoundSphere : BSMultiBoundData {
     public Vector3 Center;
     public float Radius;
+
+    public BSMultiBoundSphere(BinaryReader r, Header h) {
+        Center = r.ReadVector3();
+        Radius = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -6325,10 +8973,10 @@ public class BSGeometrySegmentData(BinaryReader r, Header h) {
     public byte Flags = r.ReadByte();
     public uint Index = r.ReadUInt32();                 // Index = previous Index + previous Num Tris in Segment * 3
     public uint NumTrisinSegment = r.ReadUInt32();      // The number of triangles belonging to this segment
-    public uint StartIndex = (h.UserVersion2 == 130) ? r.ReadUInt32() : default;
-    public uint NumPrimitives = (h.UserVersion2 == 130) ? r.ReadUInt32() : default;
-    public uint ParentArrayIndex = (h.UserVersion2 == 130) ? r.ReadUInt32() : default;
-    public BSGeometrySubSegment[] SubSegment = (h.UserVersion2 == 130) ? r.ReadL32FArray(r => new BSGeometrySubSegment(r)) : default;
+    public uint StartIndex = (h.UV2 == 130) ? r.ReadUInt32() : default;
+    public uint NumPrimitives = (h.UV2 == 130) ? r.ReadUInt32() : default;
+    public uint ParentArrayIndex = (h.UV2 == 130) ? r.ReadUInt32() : default;
+    public BSGeometrySubSegment[] SubSegment = (h.UV2 == 130) ? r.ReadL32FArray(r => new BSGeometrySubSegment(r)) : default;
 }
 
 /// <summary>
@@ -6336,6 +8984,10 @@ public class BSGeometrySegmentData(BinaryReader r, Header h) {
 /// </summary>
 public class BSSegmentedTriShape : NiTriShape {
     public BSGeometrySegmentData[] Segment;             // Configuration of each segment
+
+    public BSSegmentedTriShape(BinaryReader r, Header h) {
+        Segment = r.ReadL32FArray(r => new BSGeometrySegmentData(r, h));
+    }
 }
 
 /// <summary>
@@ -6344,6 +8996,11 @@ public class BSSegmentedTriShape : NiTriShape {
 public class BSMultiBoundAABB : BSMultiBoundData {
     public Vector3 Position;                            // Position of the AABB's center
     public Vector3 Extent;                              // Extent of the AABB in all directions
+
+    public BSMultiBoundAABB(BinaryReader r, Header h) {
+        Position = r.ReadVector3();
+        Extent = r.ReadVector3();
+    }
 }
 
 public class AdditionalDataInfo(BinaryReader r) {
@@ -6359,18 +9016,18 @@ public class AdditionalDataInfo(BinaryReader r) {
 public class AdditionalDataBlock(BinaryReader r, Header h) {
     public bool HasData = r.ReadBool32();               // Has data
     public int BlockSize = Has Data ? r.ReadInt32() : default; // Size of Block
-    public int[] BlockOffsets = Has Data ? r.ReadL32FArray(r => r.ReadInt32()) : default;
+    public int[] BlockOffsets = Has Data ? r.ReadL32PArray<uint>("i") : default;
     public int NumData = Has Data ? r.ReadInt32() : default;
-    public int[] DataSizes = Has Data ? r.ReadInt32() : default;
-    public byte[][] Data = Has Data ? r.ReadByte() : default;
+    public int[] DataSizes = Has Data ? r.ReadPArray<uint>("i", NumData) : default;
+    public byte[][] Data = Has Data ? r.ReadFArray(k => r.ReadBytes(NumData), BlockSize) : default;
 }
 
 public class BSPackedAdditionalDataBlock(BinaryReader r, Header h) {
     public bool HasData = r.ReadBool32();               // Has data
     public int NumTotalBytes = Has Data ? r.ReadInt32() : default; // Total number of bytes (over all channels and all elements, equals num total bytes per element times num vertices).
-    public int[] BlockOffsets = Has Data ? r.ReadL32FArray(r => r.ReadInt32()) : default; // Block offsets in the data? Usually equal to zero.
-    public int[] AtomSizes = Has Data ? r.ReadL32FArray(r => r.ReadInt32()) : default; // The sum of all of these equal num total bytes per element, so this probably describes how each data element breaks down into smaller chunks (i.e. atoms).
-    public byte[] Data = Has Data ? r.ReadByte() : default;
+    public int[] BlockOffsets = Has Data ? r.ReadL32PArray<uint>("i") : default; // Block offsets in the data? Usually equal to zero.
+    public int[] AtomSizes = Has Data ? r.ReadL32PArray<uint>("i") : default; // The sum of all of these equal num total bytes per element, so this probably describes how each data element breaks down into smaller chunks (i.e. atoms).
+    public byte[] Data = Has Data ? r.ReadBytes(NumTotalBytes) : default;
     public int UnknownInt1 = r.ReadInt32();
     public int NumTotalBytesPerElement = r.ReadInt32(); // Unsure, but this seems to correspond again to the number of total bytes per element.
 }
@@ -6379,12 +9036,24 @@ public class NiAdditionalGeometryData : AbstractAdditionalGeometryData {
     public ushort NumVertices;                          // Number of vertices
     public AdditionalDataInfo[] BlockInfos;             // Number of additional data blocks
     public AdditionalDataBlock[] Blocks;                // Number of additional data blocks
+
+    public NiAdditionalGeometryData(BinaryReader r, Header h) {
+        NumVertices = r.ReadUInt16();
+        BlockInfos = r.ReadL32FArray(r => new AdditionalDataInfo(r));
+        Blocks = r.ReadL32FArray(r => new AdditionalDataBlock(r, h));
+    }
 }
 
 public class BSPackedAdditionalGeometryData : AbstractAdditionalGeometryData {
     public ushort NumVertices;
     public AdditionalDataInfo[] BlockInfos;             // Number of additional data blocks
     public BSPackedAdditionalDataBlock[] Blocks;        // Number of additional data blocks
+
+    public BSPackedAdditionalGeometryData(BinaryReader r, Header h) {
+        NumVertices = r.ReadUInt16();
+        BlockInfos = r.ReadL32FArray(r => new AdditionalDataInfo(r));
+        Blocks = r.ReadL32FArray(r => new BSPackedAdditionalDataBlock(r, h));
+    }
 }
 
 /// <summary>
@@ -6392,6 +9061,10 @@ public class BSPackedAdditionalGeometryData : AbstractAdditionalGeometryData {
 /// </summary>
 public class BSWArray : NiExtraData {
     public int[] Items;
+
+    public BSWArray(BinaryReader r, Header h) {
+        Items = r.ReadL32PArray<uint>("i");
+    }
 }
 
 /// <summary>
@@ -6401,18 +9074,30 @@ public class bhkAabbPhantom : bhkShapePhantom {
     public byte[] Unused;
     public Vector4 AABBMin;
     public Vector4 AABBMax;
+
+    public bhkAabbPhantom(BinaryReader r, Header h) {
+        Unused = r.ReadBytes(8);
+        AABBMin = r.ReadVector4();
+        AABBMax = r.ReadVector4();
+    }
 }
 
 /// <summary>
 /// Bethesda-specific time controller.
 /// </summary>
 public class BSFrustumFOVController : NiFloatInterpController {
+
+    public BSFrustumFOVController(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Bethesda-Specific node.
 /// </summary>
 public class BSDebrisNode : BSRangeNode {
+
+    public BSDebrisNode(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -6422,6 +9107,12 @@ public class bhkBreakableConstraint : bhkConstraint {
     public ConstraintData ConstraintData;               // Constraint within constraint.
     public float Threshold;                             // Amount of force to break the rigid bodies apart?
     public bool RemoveWhenBroken;                       // No: Constraint stays active. Yes: Constraint gets removed when breaking threshold is exceeded.
+
+    public bhkBreakableConstraint(BinaryReader r, Header h) {
+        ConstraintData = new ConstraintData(r, h);
+        Threshold = r.ReadSingle();
+        RemoveWhenBroken = r.ReadBool32();
+    }
 }
 
 /// <summary>
@@ -6437,6 +9128,18 @@ public class bhkOrientHingedBodyAction : bhkSerializable {
     public float Strength;
     public float Damping;
     public byte[] Unused2;
+
+    public bhkOrientHingedBodyAction(BinaryReader r, Header h) {
+        Body = X<bhkRigidBody>.Ptr(r);
+        UnknownInt1 = r.ReadUInt32();
+        UnknownInt2 = r.ReadUInt32();
+        Unused1 = r.ReadBytes(8);
+        HingeAxisLS = r.ReadVector4();
+        ForwardLS = r.ReadVector4();
+        Strength = r.ReadSingle();
+        Damping = r.ReadSingle();
+        Unused2 = r.ReadBytes(8);
+    }
 }
 
 /// <summary>
@@ -6447,6 +9150,11 @@ public class bhkOrientHingedBodyAction : bhkSerializable {
 public class bhkPoseArray : NiObject {
     public string[] Bones;
     public BonePose[] Poses;
+
+    public bhkPoseArray(BinaryReader r, Header h) {
+        Bones = r.ReadL32FArray(r => Y.String(r));
+        Poses = r.ReadL32FArray(r => new BonePose(r));
+    }
 }
 
 /// <summary>
@@ -6454,6 +9162,10 @@ public class bhkPoseArray : NiObject {
 /// </summary>
 public class bhkRagdollTemplate : NiExtraData {
     public int?[] Bones;
+
+    public bhkRagdollTemplate(BinaryReader r, Header h) {
+        Bones = r.ReadL32FArray(X<NiObject>.Ref);
+    }
 }
 
 /// <summary>
@@ -6467,6 +9179,16 @@ public class bhkRagdollTemplateData : NiObject {
     public float Radius;
     public HavokMaterial Material;
     public ConstraintData[] Constraint;
+
+    public bhkRagdollTemplateData(BinaryReader r, Header h) {
+        Name = Y.String(r);
+        Mass = r.ReadSingle();
+        Restitution = r.ReadSingle();
+        Friction = r.ReadSingle();
+        Radius = r.ReadSingle();
+        Material = new HavokMaterial(r, h);
+        Constraint = r.ReadL32FArray(r => new ConstraintData(r, h));
+    }
 }
 
 /// <summary>
@@ -6588,6 +9310,17 @@ public class NiDataStream : NiObject {
     public ComponentFormat[] ComponentFormats;          // The format of each component in this data stream.
     public byte[] Data;
     public bool Streamable;
+
+    public NiDataStream(BinaryReader r, Header h) {
+        Usage = (DataStreamUsage)r.ReadUInt32();
+        Access = (DataStreamAccess)r.ReadUInt32();
+        NumBytes = r.ReadUInt32();
+        CloningBehavior = (CloningBehavior)r.ReadUInt32();
+        Regions = r.ReadL32FArray(r => new Region(r));
+        ComponentFormats = r.ReadL32FArray(r => (ComponentFormat)r.ReadL32UInt32());
+        Data = r.ReadBytes(NumBytes);
+        Streamable = r.ReadBool32();
+    }
 }
 
 public class SemanticData(BinaryReader r) {
@@ -6604,7 +9337,7 @@ public class DataStreamRef(BinaryReader r) {
                                                         //     this reference.
     public bool IsPerInstance = r.ReadBool32();         // Sets whether this stream data is per-instance data for use in
                                                         //     hardware instancing.
-    public ushort[] SubmeshToRegionMap = r.ReadL16FArray(r => r.ReadUInt16()); // A lookup table that maps submeshes to regions.
+    public ushort[] SubmeshToRegionMap = r.ReadL16PArray<ushort>("H"); // A lookup table that maps submeshes to regions.
     public SemanticData[] ComponentSemantics = r.ReadL32FArray(r => new SemanticData(r)); // Describes the semantic of each component.
 }
 
@@ -6613,6 +9346,10 @@ public class DataStreamRef(BinaryReader r) {
 /// </summary>
 public abstract class NiRenderObject : NiAVObject {
     public MaterialData MaterialData;                   // Per-material data.
+
+    public NiRenderObject(BinaryReader r, Header h) {
+        MaterialData = new MaterialData(r, h);
+    }
 }
 
 /// <summary>
@@ -6637,7 +9374,7 @@ public enum SyncPoint : ushort {
     SYNC_VISIBLE = 0x8030,          // Synchronize when an object is determined to be potentially visible.
     SYNC_RENDER = 0x8040,           // Synchronize when an object is rendered.
     SYNC_PHYSICS_SIMULATE = 0x8050, // Synchronize when a physics simulation step is about to begin.
-    SYNC_PHYSICS_COMPLETED = 0x8060, // Synchronize when a physics simulation step has produced results.
+    SYNC_PHYSICS_COMPLETED = 0x8060,// Synchronize when a physics simulation step has produced results.
     SYNC_REFLECTIONS = 0x8070       // Synchronize after all data necessary to calculate reflections is ready.
 }
 
@@ -6647,6 +9384,11 @@ public enum SyncPoint : ushort {
 public abstract class NiMeshModifier : NiObject {
     public SyncPoint[] SubmitPoints;                    // The sync points supported by this mesh modifier for SubmitTasks.
     public SyncPoint[] CompletePoints;                  // The sync points supported by this mesh modifier for CompleteTasks.
+
+    public NiMeshModifier(BinaryReader r, Header h) {
+        SubmitPoints = r.ReadL32FArray(r => (SyncPoint)r.ReadL32UInt16());
+        CompletePoints = r.ReadL32FArray(r => (SyncPoint)r.ReadL32UInt16());
+    }
 }
 
 public class ExtraMeshDataEpicMickey(BinaryReader r) {
@@ -6661,7 +9403,7 @@ public class ExtraMeshDataEpicMickey(BinaryReader r) {
 public class ExtraMeshDataEpicMickey2(BinaryReader r) {
     public int Start = r.ReadInt32();
     public int End = r.ReadInt32();
-    public short[] UnknownShorts = r.ReadInt16();
+    public short[] UnknownShorts = r.ReadPArray<short>("h", 10);
 }
 
 public class NiMesh : NiRenderObject {
@@ -6692,6 +9434,36 @@ public class NiMesh : NiRenderObject {
     public int Unknown350;
     public ExtraMeshDataEpicMickey2[] Unknown351;
     public int Unknown400;
+
+    public NiMesh(BinaryReader r, Header h) {
+        PrimitiveType = (MeshPrimitiveType)r.ReadUInt32();
+        Unknown51 = if ((Uh.V == 15)) r.ReadInt32();
+        Unknown52 = if ((Uh.V == 15)) r.ReadInt32();
+        Unknown53 = if ((Uh.V == 15)) r.ReadInt32();
+        Unknown54 = if ((Uh.V == 15)) r.ReadInt32();
+        Unknown55 = if ((Uh.V == 15)) r.ReadSingle();
+        Unknown56 = if ((Uh.V == 15)) r.ReadInt32();
+        NumSubmeshes = r.ReadUInt16();
+        InstancingEnabled = r.ReadBool32();
+        Bound = new NiBound(r);
+        Datastreams = r.ReadL32FArray(r => new DataStreamRef(r));
+        Modifiers = r.ReadL32FArray(X<NiMeshModifier>.Ref);
+        Unknown100 = if ((Uh.V == 15)) r.ReadByte();
+        Unknown101 = if ((Uh.V == 15)) r.ReadInt32();
+        Unknown102 = if ((Uh.V == 15)) r.ReadUInt32();
+        Unknown103 = if ((Uh.V == 15)) r.ReadPArray<float>("f", Unknown102);
+        Unknown200 = if ((Uh.V == 15)) r.ReadInt32();
+        Unknown201 = if ((Uh.V == 15)) r.ReadFArray(r => new ExtraMeshDataEpicMickey(r), Unknown200);
+        Unknown250 = if ((Uh.V == 15)) r.ReadInt32();
+        Unknown251 = if ((Uh.V == 15)) r.ReadPArray<uint>("i", Unknown250);
+        Unknown300 = if ((Uh.V == 15)) r.ReadInt32();
+        Unknown301 = if ((Uh.V == 15)) r.ReadInt16();
+        Unknown302 = if ((Uh.V == 15)) r.ReadInt32();
+        Unknown303 = if ((Uh.V == 15)) r.ReadBytes(Unknown302);
+        Unknown350 = if ((Uh.V == 15)) r.ReadInt32();
+        Unknown351 = if ((Uh.V == 15)) r.ReadFArray(r => new ExtraMeshDataEpicMickey2(r), Unknown350);
+        Unknown400 = if ((Uh.V == 15)) r.ReadInt32();
+    }
 }
 
 /// <summary>
@@ -6701,6 +9473,12 @@ public class NiMorphWeightsController : NiInterpController {
     public uint Count;
     public int?[] Interpolators;
     public string[] TargetNames;
+
+    public NiMorphWeightsController(BinaryReader r, Header h) {
+        Count = r.ReadUInt32();
+        Interpolators = r.ReadL32FArray(X<NiInterpolator>.Ref);
+        TargetNames = r.ReadL32FArray(r => Y.String(r));
+    }
 }
 
 public class ElementReference(BinaryReader r) {
@@ -6721,6 +9499,12 @@ public class NiMorphMeshModifier : NiMeshModifier {
                                                         //     FLAG_SWSKINNED       = 0x40
     public ushort NumTargets;                           // The number of morph targets.
     public ElementReference[] Elements;                 // Semantics and normalization of the morphing data stream elements.
+
+    public NiMorphMeshModifier(BinaryReader r, Header h) {
+        Flags = r.ReadByte();
+        NumTargets = r.ReadUInt16();
+        Elements = r.ReadL32FArray(r => new ElementReference(r));
+    }
 }
 
 public class NiSkinningMeshModifier : NiMeshModifier {
@@ -6732,6 +9516,16 @@ public class NiSkinningMeshModifier : NiMeshModifier {
     public int?[] Bones;                                // Pointers to the bone nodes that affect this skin.
     public NiTransform[] BoneTransforms;                // The transforms that go from bind-pose space to bone space.
     public NiBound[] BoneBounds;                        // The bounds of the bones.  Only stored if the RECOMPUTE_BOUNDS bit is set.
+
+    public NiSkinningMeshModifier(BinaryReader r, Header h) {
+        Flags = r.ReadUInt16();
+        SkeletonRoot = X<NiAVObject>.Ptr(r);
+        SkeletonTransform = new NiTransform(r);
+        NumBones = r.ReadUInt32();
+        Bones = r.ReadFArray(X<NiAVObject>.Ptr, NumBones);
+        BoneTransforms = r.ReadFArray(r => new NiTransform(r), NumBones);
+        BoneBounds = if ((Flags & 2)!=0) r.ReadFArray(r => new NiBound(r), NumBones);
+    }
 }
 
 /// <summary>
@@ -6740,6 +9534,11 @@ public class NiSkinningMeshModifier : NiMeshModifier {
 public class NiMeshHWInstance : NiAVObject {
     public int? MasterMesh;                             // The instanced mesh this object represents.
     public int? MeshModifier;
+
+    public NiMeshHWInstance(BinaryReader r, Header h) {
+        MasterMesh = X<NiMesh>.Ref(r);
+        MeshModifier = X<NiInstancingMeshModifier>.Ref(r);
+    }
 }
 
 /// <summary>
@@ -6752,11 +9551,20 @@ public class NiInstancingMeshModifier : NiMeshModifier {
     public int? AffectedMesh;
     public NiBound Bound;
     public int?[] InstanceNodes;
+
+    public NiInstancingMeshModifier(BinaryReader r, Header h) {
+        HasInstanceNodes = r.ReadBool32();
+        PerInstanceCulling = r.ReadBool32();
+        HasStaticBounds = r.ReadBool32();
+        AffectedMesh = X<NiMesh>.Ref(r);
+        Bound = if (Has Static Bounds) new NiBound(r);
+        InstanceNodes = if (Has Instance Nodes) r.ReadL32FArray(X<NiMeshHWInstance>.Ref);
+    }
 }
 
 public class LODInfo(BinaryReader r) {
     public uint NumBones = r.ReadUInt32();
-    public uint[] SkinIndices = r.ReadL32FArray(r => r.ReadUInt32());
+    public uint[] SkinIndices = r.ReadL32PArray<uint>("I");
 }
 
 /// <summary>
@@ -6767,6 +9575,13 @@ public class NiSkinningLODController : NiTimeController {
     public int?[] Bones;
     public int?[] Skins;
     public LODInfo[] LODs;
+
+    public NiSkinningLODController(BinaryReader r, Header h) {
+        CurrentLOD = r.ReadUInt32();
+        Bones = r.ReadL32FArray(X<NiNode>.Ref);
+        Skins = r.ReadL32FArray(X<NiMesh>.Ref);
+        LODs = r.ReadL32FArray(r => new LODInfo(r));
+    }
 }
 
 public class PSSpawnRateKey(BinaryReader r) {
@@ -6808,6 +9623,27 @@ public class NiPSParticleSystem : NiMesh {
     public int? LivingSpawner;
     public PSSpawnRateKey[] SpawnRateKeys;
     public bool Pre-RPI;
+
+    public NiPSParticleSystem(BinaryReader r, Header h) {
+        Simulator = X<NiPSSimulator>.Ref(r);
+        Generator = X<NiPSBoundUpdater>.Ref(r);
+        Emitters = r.ReadL32FArray(X<NiPSEmitter>.Ref);
+        Spawners = r.ReadL32FArray(X<NiPSSpawner>.Ref);
+        DeathSpawner = X<NiPSSpawner>.Ref(r);
+        MaxNumParticles = r.ReadUInt32();
+        HasColors = r.ReadBool32();
+        HasRotations = r.ReadBool32();
+        HasRotationAxes = r.ReadBool32();
+        HasAnimatedTextures = if (h.V >= 0x14060100) r.ReadBool32();
+        WorldSpace = r.ReadBool32();
+        NormalMethod = if (h.V >= 0x14060100) (AlignMethod)r.ReadUInt32();
+        NormalDirection = if (h.V >= 0x14060100) r.ReadVector3();
+        UpMethod = if (h.V >= 0x14060100) (AlignMethod)r.ReadUInt32();
+        UpDirection = if (h.V >= 0x14060100) r.ReadVector3();
+        LivingSpawner = if (h.V >= 0x14060100) X<NiPSSpawner>.Ref(r);
+        SpawnRateKeys = if (h.V >= 0x14060100) r.ReadL8FArray(r => new PSSpawnRateKey(r));
+        Pre-RPI = if (h.V >= 0x14060100) r.ReadBool32();
+    }
 }
 
 /// <summary>
@@ -6817,12 +9653,21 @@ public class NiPSMeshParticleSystem : NiPSParticleSystem {
     public int?[] MasterParticles;
     public uint PoolSize;
     public bool Auto-FillPools;
+
+    public NiPSMeshParticleSystem(BinaryReader r, Header h) {
+        MasterParticles = r.ReadL32FArray(X<NiAVObject>.Ref);
+        PoolSize = r.ReadUInt32();
+        Auto-FillPools = r.ReadBool32();
+    }
 }
 
 /// <summary>
 /// A mesh modifier that uses particle system data to generate camera-facing quads.
 /// </summary>
 public class NiPSFacingQuadGenerator : NiMeshModifier {
+
+    public NiPSFacingQuadGenerator(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -6847,6 +9692,27 @@ public class NiPSAlignedQuadGenerator : NiMeshModifier {
     public float NumFramesVariation;
     public float InitialTime;
     public float FinalTime;
+
+    public NiPSAlignedQuadGenerator(BinaryReader r, Header h) {
+        ScaleAmountU = r.ReadSingle();
+        ScaleLimitU = r.ReadSingle();
+        ScaleRestU = r.ReadSingle();
+        ScaleAmountV = r.ReadSingle();
+        ScaleLimitV = r.ReadSingle();
+        ScaleRestV = r.ReadSingle();
+        CenterU = r.ReadSingle();
+        CenterV = r.ReadSingle();
+        UVScrolling = r.ReadBool32();
+        NumFramesAcross = r.ReadUInt16();
+        NumFramesDown = r.ReadUInt16();
+        PingPong = r.ReadBool32();
+        InitialFrame = r.ReadUInt16();
+        InitialFrameVariation = r.ReadSingle();
+        NumFrames = r.ReadUInt16();
+        NumFramesVariation = r.ReadSingle();
+        InitialTime = r.ReadSingle();
+        FinalTime = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -6854,12 +9720,19 @@ public class NiPSAlignedQuadGenerator : NiMeshModifier {
 /// </summary>
 public class NiPSSimulator : NiMeshModifier {
     public int?[] SimulationSteps;
+
+    public NiPSSimulator(BinaryReader r, Header h) {
+        SimulationSteps = r.ReadL32FArray(X<NiPSSimulatorStep>.Ref);
+    }
 }
 
 /// <summary>
 /// Abstract base class for a single step in the particle system simulation process.  It has no seralized data.
 /// </summary>
 public abstract class NiPSSimulatorStep : NiObject {
+
+    public NiPSSimulatorStep(BinaryReader r, Header h) {
+    }
 }
 
 public enum PSLoopBehavior : uint {
@@ -6874,16 +9747,29 @@ public enum PSLoopBehavior : uint {
 /// Encapsulates a floodgate kernel that updates particle size, colors, and rotations.
 /// </summary>
 public class NiPSSimulatorGeneralStep : NiPSSimulatorStep {
-    public Key[] SizeKeys;                              // The particle size keys.
+    public Key<T>[] SizeKeys;                           // The particle size keys.
     public PSLoopBehavior SizeLoopBehavior;             // The loop behavior for the size keys.
-    public Key[] ColorKeys;                             // The particle color keys.
+    public Key<T>[] ColorKeys;                          // The particle color keys.
     public PSLoopBehavior ColorLoopBehavior;            // The loop behavior for the color keys.
-    public QuatKey[] RotationKeys;                      // The particle rotation keys.
+    public QuatKey<T>[] RotationKeys;                   // The particle rotation keys.
     public PSLoopBehavior RotationLoopBehavior;         // The loop behavior for the rotation keys.
     public float GrowTime;                              // The the amount of time over which a particle's size is ramped from 0.0 to 1.0 in seconds
     public float ShrinkTime;                            // The the amount of time over which a particle's size is ramped from 1.0 to 0.0 in seconds
     public ushort GrowGeneration;                       // Specifies the particle generation to which the grow effect should be applied. This is usually generation 0, so that newly created particles will grow.
     public ushort ShrinkGeneration;                     // Specifies the particle generation to which the shrink effect should be applied. This is usually the highest supported generation for the particle system, so that particles will shrink immediately before getting killed.
+
+    public NiPSSimulatorGeneralStep(BinaryReader r, Header h) {
+        SizeKeys = if (h.V >= 0x14060100) r.ReadL8FArray(r => new Key<T>(r, h));
+        SizeLoopBehavior = if (h.V >= 0x14060100) (PSLoopBehavior)r.ReadUInt32();
+        ColorKeys = r.ReadL8FArray(r => new Key<T>(r, h));
+        ColorLoopBehavior = if (h.V >= 0x14060100) (PSLoopBehavior)r.ReadUInt32();
+        RotationKeys = if (h.V >= 0x14060100) r.ReadL8FArray(r => new QuatKey<T>(r, h));
+        RotationLoopBehavior = if (h.V >= 0x14060100) (PSLoopBehavior)r.ReadUInt32();
+        GrowTime = r.ReadSingle();
+        ShrinkTime = r.ReadSingle();
+        GrowGeneration = r.ReadUInt16();
+        ShrinkGeneration = r.ReadUInt16();
+    }
 }
 
 /// <summary>
@@ -6891,6 +9777,10 @@ public class NiPSSimulatorGeneralStep : NiPSSimulatorStep {
 /// </summary>
 public class NiPSSimulatorForcesStep : NiPSSimulatorStep {
     public int?[] Forces;                               // The forces affecting the particle system.
+
+    public NiPSSimulatorForcesStep(BinaryReader r, Header h) {
+        Forces = r.ReadL32FArray(X<NiPSForce>.Ref);
+    }
 }
 
 /// <summary>
@@ -6898,20 +9788,32 @@ public class NiPSSimulatorForcesStep : NiPSSimulatorStep {
 /// </summary>
 public class NiPSSimulatorCollidersStep : NiPSSimulatorStep {
     public int?[] Colliders;                            // The colliders affecting the particle system.
+
+    public NiPSSimulatorCollidersStep(BinaryReader r, Header h) {
+        Colliders = r.ReadL32FArray(X<NiPSCollider>.Ref);
+    }
 }
 
 /// <summary>
 /// Encapsulates a floodgate kernel that updates mesh particle alignment and transforms.
 /// </summary>
 public class NiPSSimulatorMeshAlignStep : NiPSSimulatorStep {
-    public QuatKey[] RotationKeys;                      // The particle rotation keys.
+    public QuatKey<T>[] RotationKeys;                   // The particle rotation keys.
     public PSLoopBehavior RotationLoopBehavior;         // The loop behavior for the rotation keys.
+
+    public NiPSSimulatorMeshAlignStep(BinaryReader r, Header h) {
+        RotationKeys = r.ReadL8FArray(r => new QuatKey<T>(r, h));
+        RotationLoopBehavior = (PSLoopBehavior)r.ReadUInt32();
+    }
 }
 
 /// <summary>
 /// Encapsulates a floodgate kernel that updates particle positions and ages. As indicated by its name, this step should be attached last in the NiPSSimulator mesh modifier.
 /// </summary>
 public class NiPSSimulatorFinalStep : NiPSSimulatorStep {
+
+    public NiPSSimulatorFinalStep(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -6919,6 +9821,10 @@ public class NiPSSimulatorFinalStep : NiPSSimulatorStep {
 /// </summary>
 public class NiPSBoundUpdater : NiObject {
     public ushort UpdateSkip;                           // Number of particle bounds to skip updating every frame. Higher = more updates each frame.
+
+    public NiPSBoundUpdater(BinaryReader r, Header h) {
+        UpdateSkip = r.ReadUInt16();
+    }
 }
 
 /// <summary>
@@ -6943,6 +9849,12 @@ public abstract class NiPSForce : NiObject {
     public string Name;
     public PSForceType Type;
     public bool Active;
+
+    public NiPSForce(BinaryReader r, Header h) {
+        Name = Y.String(r);
+        Type = (PSForceType)r.ReadUInt32();
+        Active = r.ReadBool32();
+    }
 }
 
 /// <summary>
@@ -6954,6 +9866,14 @@ public class NiPSDragForce : NiPSForce {
     public float Range;
     public float RangeFalloff;
     public int? DragObject;
+
+    public NiPSDragForce(BinaryReader r, Header h) {
+        DragAxis = r.ReadVector3();
+        Percentage = r.ReadSingle();
+        Range = r.ReadSingle();
+        RangeFalloff = r.ReadSingle();
+        DragObject = X<NiAVObject>.Ptr(r);
+    }
 }
 
 /// <summary>
@@ -6967,6 +9887,16 @@ public class NiPSGravityForce : NiPSForce {
     public float Turbulence;
     public float TurbulenceScale;
     public int? GravityObject;
+
+    public NiPSGravityForce(BinaryReader r, Header h) {
+        GravityAxis = r.ReadVector3();
+        Decay = r.ReadSingle();
+        Strength = r.ReadSingle();
+        ForceType = (ForceType)r.ReadUInt32();
+        Turbulence = r.ReadSingle();
+        TurbulenceScale = r.ReadSingle();
+        GravityObject = X<NiAVObject>.Ptr(r);
+    }
 }
 
 /// <summary>
@@ -6979,6 +9909,15 @@ public class NiPSBombForce : NiPSForce {
     public DecayType DecayType;
     public SymmetryType SymmetryType;
     public int? BombObject;
+
+    public NiPSBombForce(BinaryReader r, Header h) {
+        BombAxis = r.ReadVector3();
+        Decay = r.ReadSingle();
+        DeltaV = r.ReadSingle();
+        DecayType = (DecayType)r.ReadUInt32();
+        SymmetryType = (SymmetryType)r.ReadUInt32();
+        BombObject = X<NiAVObject>.Ptr(r);
+    }
 }
 
 /// <summary>
@@ -7006,6 +9945,30 @@ public abstract class NiPSEmitter : NiObject {
     public bool RandomRotSpeedSign;
     public bool RandomRotAxis;
     public bool Unknown;
+
+    public NiPSEmitter(BinaryReader r, Header h) {
+        Name = Y.String(r);
+        Speed = r.ReadSingle();
+        SpeedVar = r.ReadSingle();
+        SpeedFlipRatio = if (h.V >= 0x14060100) r.ReadSingle();
+        Declination = r.ReadSingle();
+        DeclinationVar = r.ReadSingle();
+        PlanarAngle = r.ReadSingle();
+        PlanarAngleVar = r.ReadSingle();
+        Color = if (h.V <= 0x14060000) new Color4Byte(r);
+        Size = r.ReadSingle();
+        SizeVar = r.ReadSingle();
+        Lifespan = r.ReadSingle();
+        LifespanVar = r.ReadSingle();
+        RotationAngle = r.ReadSingle();
+        RotationAngleVar = r.ReadSingle();
+        RotationSpeed = r.ReadSingle();
+        RotationSpeedVar = r.ReadSingle();
+        RotationAxis = r.ReadVector3();
+        RandomRotSpeedSign = r.ReadBool32();
+        RandomRotAxis = r.ReadBool32();
+        Unknown = if (h.V >= 0x1E000000 && h.V <= 0x1E000001) r.ReadBool32();
+    }
 }
 
 /// <summary>
@@ -7013,6 +9976,10 @@ public abstract class NiPSEmitter : NiObject {
 /// </summary>
 public abstract class NiPSVolumeEmitter : NiPSEmitter {
     public int? EmitterObject;
+
+    public NiPSVolumeEmitter(BinaryReader r, Header h) {
+        EmitterObject = X<NiAVObject>.Ptr(r);
+    }
 }
 
 /// <summary>
@@ -7022,6 +9989,12 @@ public class NiPSBoxEmitter : NiPSVolumeEmitter {
     public float EmitterWidth;
     public float EmitterHeight;
     public float EmitterDepth;
+
+    public NiPSBoxEmitter(BinaryReader r, Header h) {
+        EmitterWidth = r.ReadSingle();
+        EmitterHeight = r.ReadSingle();
+        EmitterDepth = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -7029,6 +10002,10 @@ public class NiPSBoxEmitter : NiPSVolumeEmitter {
 /// </summary>
 public class NiPSSphereEmitter : NiPSVolumeEmitter {
     public float EmitterRadius;
+
+    public NiPSSphereEmitter(BinaryReader r, Header h) {
+        EmitterRadius = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -7037,6 +10014,11 @@ public class NiPSSphereEmitter : NiPSVolumeEmitter {
 public class NiPSCylinderEmitter : NiPSVolumeEmitter {
     public float EmitterRadius;
     public float EmitterHeight;
+
+    public NiPSCylinderEmitter(BinaryReader r, Header h) {
+        EmitterRadius = r.ReadSingle();
+        EmitterHeight = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -7048,6 +10030,14 @@ public class NiPSMeshEmitter : NiPSEmitter {
     public int? EmitterObject;
     public EmitFrom MeshEmissionType;
     public VelocityType InitialVelocityType;
+
+    public NiPSMeshEmitter(BinaryReader r, Header h) {
+        MeshEmitters = r.ReadL32FArray(X<NiMesh>.Ptr);
+        EmitAxis = if (h.V <= 0x14060000) r.ReadVector3();
+        EmitterObject = if (h.V >= 0x14060100) X<NiAVObject>.Ptr(r);
+        MeshEmissionType = (EmitFrom)r.ReadUInt32();
+        InitialVelocityType = (VelocityType)r.ReadUInt32();
+    }
 }
 
 /// <summary>
@@ -7055,12 +10045,19 @@ public class NiPSMeshEmitter : NiPSEmitter {
 /// </summary>
 public abstract class NiPSEmitterCtlr : NiSingleInterpController {
     public string EmitterName;
+
+    public NiPSEmitterCtlr(BinaryReader r, Header h) {
+        EmitterName = Y.String(r);
+    }
 }
 
 /// <summary>
 /// Abstract base class for controllers that animate a floating point value on an NiPSEmitter object.
 /// </summary>
 public abstract class NiPSEmitterFloatCtlr : NiPSEmitterCtlr {
+
+    public NiPSEmitterFloatCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -7068,6 +10065,10 @@ public abstract class NiPSEmitterFloatCtlr : NiPSEmitterCtlr {
 /// </summary>
 public class NiPSEmitParticlesCtlr : NiPSEmitterCtlr {
     public int? EmitterActiveInterpolator;
+
+    public NiPSEmitParticlesCtlr(BinaryReader r, Header h) {
+        EmitterActiveInterpolator = X<NiInterpolator>.Ref(r);
+    }
 }
 
 /// <summary>
@@ -7075,102 +10076,154 @@ public class NiPSEmitParticlesCtlr : NiPSEmitterCtlr {
 /// </summary>
 public abstract class NiPSForceCtlr : NiSingleInterpController {
     public string ForceName;
+
+    public NiPSForceCtlr(BinaryReader r, Header h) {
+        ForceName = Y.String(r);
+    }
 }
 
 /// <summary>
 /// Abstract base class for controllers that animate a Boolean value on an NiPSForce object.
 /// </summary>
 public abstract class NiPSForceBoolCtlr : NiPSForceCtlr {
+
+    public NiPSForceBoolCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Abstract base class for controllers that animate a floating point value on an NiPSForce object.
 /// </summary>
 public abstract class NiPSForceFloatCtlr : NiPSForceCtlr {
+
+    public NiPSForceFloatCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Animates whether or not an NiPSForce object is active.
 /// </summary>
 public class NiPSForceActiveCtlr : NiPSForceBoolCtlr {
+
+    public NiPSForceActiveCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Animates the strength value of an NiPSGravityForce object.
 /// </summary>
 public class NiPSGravityStrengthCtlr : NiPSForceFloatCtlr {
+
+    public NiPSGravityStrengthCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Animates the speed value on an NiPSEmitter object.
 /// </summary>
 public class NiPSEmitterSpeedCtlr : NiPSEmitterFloatCtlr {
+
+    public NiPSEmitterSpeedCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Animates the size value on an NiPSEmitter object.
 /// </summary>
 public class NiPSEmitterRadiusCtlr : NiPSEmitterFloatCtlr {
+
+    public NiPSEmitterRadiusCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Animates the declination value on an NiPSEmitter object.
 /// </summary>
 public class NiPSEmitterDeclinationCtlr : NiPSEmitterFloatCtlr {
+
+    public NiPSEmitterDeclinationCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Animates the declination variation value on an NiPSEmitter object.
 /// </summary>
 public class NiPSEmitterDeclinationVarCtlr : NiPSEmitterFloatCtlr {
+
+    public NiPSEmitterDeclinationVarCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Animates the planar angle value on an NiPSEmitter object.
 /// </summary>
 public class NiPSEmitterPlanarAngleCtlr : NiPSEmitterFloatCtlr {
+
+    public NiPSEmitterPlanarAngleCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Animates the planar angle variation value on an NiPSEmitter object.
 /// </summary>
 public class NiPSEmitterPlanarAngleVarCtlr : NiPSEmitterFloatCtlr {
+
+    public NiPSEmitterPlanarAngleVarCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Animates the rotation angle value on an NiPSEmitter object.
 /// </summary>
 public class NiPSEmitterRotAngleCtlr : NiPSEmitterFloatCtlr {
+
+    public NiPSEmitterRotAngleCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Animates the rotation angle variation value on an NiPSEmitter object.
 /// </summary>
 public class NiPSEmitterRotAngleVarCtlr : NiPSEmitterFloatCtlr {
+
+    public NiPSEmitterRotAngleVarCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Animates the rotation speed value on an NiPSEmitter object.
 /// </summary>
 public class NiPSEmitterRotSpeedCtlr : NiPSEmitterFloatCtlr {
+
+    public NiPSEmitterRotSpeedCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Animates the rotation speed variation value on an NiPSEmitter object.
 /// </summary>
 public class NiPSEmitterRotSpeedVarCtlr : NiPSEmitterFloatCtlr {
+
+    public NiPSEmitterRotSpeedVarCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Animates the lifespan value on an NiPSEmitter object.
 /// </summary>
 public class NiPSEmitterLifeSpanCtlr : NiPSEmitterFloatCtlr {
+
+    public NiPSEmitterLifeSpanCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Calls ResetParticleSystem on an NiPSParticleSystem target upon looping.
 /// </summary>
 public class NiPSResetOnLoopCtlr : NiTimeController {
+
+    public NiPSResetOnLoopCtlr(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -7191,6 +10244,15 @@ public class NiPSCollider : NiObject {
     public float Bounce;
     public bool SpawnonCollide;
     public bool DieonCollide;
+
+    public NiPSCollider(BinaryReader r, Header h) {
+        Spawner = X<NiPSSpawner>.Ref(r);
+        Type = (ColliderType)r.ReadUInt32();
+        Active = r.ReadBool32();
+        Bounce = r.ReadSingle();
+        SpawnonCollide = r.ReadBool32();
+        DieonCollide = r.ReadBool32();
+    }
 }
 
 /// <summary>
@@ -7202,6 +10264,14 @@ public class NiPSPlanarCollider : NiPSCollider {
     public Vector3 XAxis;
     public Vector3 YAxis;
     public int? ColliderObject;
+
+    public NiPSPlanarCollider(BinaryReader r, Header h) {
+        Width = r.ReadSingle();
+        Height = r.ReadSingle();
+        XAxis = r.ReadVector3();
+        YAxis = r.ReadVector3();
+        ColliderObject = X<NiAVObject>.Ptr(r);
+    }
 }
 
 /// <summary>
@@ -7210,6 +10280,11 @@ public class NiPSPlanarCollider : NiPSCollider {
 public class NiPSSphericalCollider : NiPSCollider {
     public float Radius;
     public int? ColliderObject;
+
+    public NiPSSphericalCollider(BinaryReader r, Header h) {
+        Radius = r.ReadSingle();
+        ColliderObject = X<NiAVObject>.Ptr(r);
+    }
 }
 
 /// <summary>
@@ -7226,6 +10301,19 @@ public class NiPSSpawner : NiObject {
     public ushort NumSpawnGenerations;
     public uint MintoSpawn;
     public uint MaxtoSpawn;
+
+    public NiPSSpawner(BinaryReader r, Header h) {
+        MasterParticleSystem = if (h.V >= 0x14060100) X<NiPSParticleSystem>.Ptr(r);
+        PercentageSpawned = r.ReadSingle();
+        SpawnSpeedFactor = if (h.V >= 0x14060100) r.ReadSingle();
+        SpawnSpeedFactorVar = r.ReadSingle();
+        SpawnDirChaos = r.ReadSingle();
+        LifeSpan = r.ReadSingle();
+        LifeSpanVar = r.ReadSingle();
+        NumSpawnGenerations = r.ReadUInt16();
+        MintoSpawn = r.ReadUInt32();
+        MaxtoSpawn = r.ReadUInt32();
+    }
 }
 
 public abstract class NiEvaluator : NiObject {
@@ -7240,61 +10328,125 @@ public abstract class NiEvaluator : NiObject {
                                                         //     Any channel may be | 0x40 which means POSED
                                                         //     The FLAG (3) channel flags affects the whole evaluator:
                                                         //      REFERENCED = 0x1, TRANSFORM = 0x2, ALWAYSUPDATE = 0x4, SHUTDOWN = 0x8
+
+    public NiEvaluator(BinaryReader r, Header h) {
+        NodeName = Y.String(r);
+        PropertyType = Y.String(r);
+        ControllerType = Y.String(r);
+        ControllerID = Y.String(r);
+        InterpolatorID = Y.String(r);
+        ChannelTypes = r.ReadBytes(4);
+    }
 }
 
 public abstract class NiKeyBasedEvaluator : NiEvaluator {
+
+    public NiKeyBasedEvaluator(BinaryReader r, Header h) {
+    }
 }
 
 public class NiBoolEvaluator : NiKeyBasedEvaluator {
     public int? Data;
+
+    public NiBoolEvaluator(BinaryReader r, Header h) {
+        Data = X<NiBoolData>.Ref(r);
+    }
 }
 
 public class NiBoolTimelineEvaluator : NiBoolEvaluator {
+
+    public NiBoolTimelineEvaluator(BinaryReader r, Header h) {
+    }
 }
 
 public class NiColorEvaluator : NiKeyBasedEvaluator {
     public int? Data;
+
+    public NiColorEvaluator(BinaryReader r, Header h) {
+        Data = X<NiColorData>.Ref(r);
+    }
 }
 
 public class NiFloatEvaluator : NiKeyBasedEvaluator {
     public int? Data;
+
+    public NiFloatEvaluator(BinaryReader r, Header h) {
+        Data = X<NiFloatData>.Ref(r);
+    }
 }
 
 public class NiPoint3Evaluator : NiKeyBasedEvaluator {
     public int? Data;
+
+    public NiPoint3Evaluator(BinaryReader r, Header h) {
+        Data = X<NiPosData>.Ref(r);
+    }
 }
 
 public class NiQuaternionEvaluator : NiKeyBasedEvaluator {
     public int? Data;
+
+    public NiQuaternionEvaluator(BinaryReader r, Header h) {
+        Data = X<NiRotData>.Ref(r);
+    }
 }
 
 public class NiTransformEvaluator : NiKeyBasedEvaluator {
     public NiQuatTransform Value;
     public int? Data;
+
+    public NiTransformEvaluator(BinaryReader r, Header h) {
+        Value = new NiQuatTransform(r, h);
+        Data = X<NiTransformData>.Ref(r);
+    }
 }
 
 public class NiConstBoolEvaluator : NiEvaluator {
     public float Value;
+
+    public NiConstBoolEvaluator(BinaryReader r, Header h) {
+        Value = r.ReadSingle();
+    }
 }
 
 public class NiConstColorEvaluator : NiEvaluator {
     public Color4 Value;
+
+    public NiConstColorEvaluator(BinaryReader r, Header h) {
+        Value = new Color4(r);
+    }
 }
 
 public class NiConstFloatEvaluator : NiEvaluator {
     public float Value;
+
+    public NiConstFloatEvaluator(BinaryReader r, Header h) {
+        Value = r.ReadSingle();
+    }
 }
 
 public class NiConstPoint3Evaluator : NiEvaluator {
     public Vector3 Value;
+
+    public NiConstPoint3Evaluator(BinaryReader r, Header h) {
+        Value = r.ReadVector3();
+    }
 }
 
 public class NiConstQuaternionEvaluator : NiEvaluator {
     public Quaternion Value;
+
+    public NiConstQuaternionEvaluator(BinaryReader r, Header h) {
+        Value = r.ReadQuaternion();
+    }
 }
 
 public class NiConstTransformEvaluator : NiEvaluator {
     public NiQuatTransform Value;
+
+    public NiConstTransformEvaluator(BinaryReader r, Header h) {
+        Value = new NiQuatTransform(r, h);
+    }
 }
 
 public class NiBSplineEvaluator : NiEvaluator {
@@ -7302,33 +10454,67 @@ public class NiBSplineEvaluator : NiEvaluator {
     public float EndTime;
     public int? Data;
     public int? BasisData;
+
+    public NiBSplineEvaluator(BinaryReader r, Header h) {
+        StartTime = r.ReadSingle();
+        EndTime = r.ReadSingle();
+        Data = X<NiBSplineData>.Ref(r);
+        BasisData = X<NiBSplineBasisData>.Ref(r);
+    }
 }
 
 public class NiBSplineColorEvaluator : NiBSplineEvaluator {
     public uint Handle;                                 // Handle into the data. (USHRT_MAX for invalid handle.)
+
+    public NiBSplineColorEvaluator(BinaryReader r, Header h) {
+        Handle = r.ReadUInt32();
+    }
 }
 
 public class NiBSplineCompColorEvaluator : NiBSplineColorEvaluator {
     public float Offset;
     public float HalfRange;
+
+    public NiBSplineCompColorEvaluator(BinaryReader r, Header h) {
+        Offset = r.ReadSingle();
+        HalfRange = r.ReadSingle();
+    }
 }
 
 public class NiBSplineFloatEvaluator : NiBSplineEvaluator {
     public uint Handle;                                 // Handle into the data. (USHRT_MAX for invalid handle.)
+
+    public NiBSplineFloatEvaluator(BinaryReader r, Header h) {
+        Handle = r.ReadUInt32();
+    }
 }
 
 public class NiBSplineCompFloatEvaluator : NiBSplineFloatEvaluator {
     public float Offset;
     public float HalfRange;
+
+    public NiBSplineCompFloatEvaluator(BinaryReader r, Header h) {
+        Offset = r.ReadSingle();
+        HalfRange = r.ReadSingle();
+    }
 }
 
 public class NiBSplinePoint3Evaluator : NiBSplineEvaluator {
     public uint Handle;                                 // Handle into the data. (USHRT_MAX for invalid handle.)
+
+    public NiBSplinePoint3Evaluator(BinaryReader r, Header h) {
+        Handle = r.ReadUInt32();
+    }
 }
 
 public class NiBSplineCompPoint3Evaluator : NiBSplinePoint3Evaluator {
     public float Offset;
     public float HalfRange;
+
+    public NiBSplineCompPoint3Evaluator(BinaryReader r, Header h) {
+        Offset = r.ReadSingle();
+        HalfRange = r.ReadSingle();
+    }
 }
 
 public class NiBSplineTransformEvaluator : NiBSplineEvaluator {
@@ -7336,6 +10522,13 @@ public class NiBSplineTransformEvaluator : NiBSplineEvaluator {
     public uint TranslationHandle;                      // Handle into the translation data. (USHRT_MAX for invalid handle.)
     public uint RotationHandle;                         // Handle into the rotation data. (USHRT_MAX for invalid handle.)
     public uint ScaleHandle;                            // Handle into the scale data. (USHRT_MAX for invalid handle.)
+
+    public NiBSplineTransformEvaluator(BinaryReader r, Header h) {
+        Transform = new NiQuatTransform(r, h);
+        TranslationHandle = r.ReadUInt32();
+        RotationHandle = r.ReadUInt32();
+        ScaleHandle = r.ReadUInt32();
+    }
 }
 
 public class NiBSplineCompTransformEvaluator : NiBSplineTransformEvaluator {
@@ -7345,6 +10538,15 @@ public class NiBSplineCompTransformEvaluator : NiBSplineTransformEvaluator {
     public float RotationHalfRange;
     public float ScaleOffset;
     public float ScaleHalfRange;
+
+    public NiBSplineCompTransformEvaluator(BinaryReader r, Header h) {
+        TranslationOffset = r.ReadSingle();
+        TranslationHalfRange = r.ReadSingle();
+        RotationOffset = r.ReadSingle();
+        RotationHalfRange = r.ReadSingle();
+        ScaleOffset = r.ReadSingle();
+        ScaleHalfRange = r.ReadSingle();
+    }
 }
 
 public class NiLookAtEvaluator : NiEvaluator {
@@ -7354,6 +10556,15 @@ public class NiLookAtEvaluator : NiEvaluator {
     public int? Interpolator:Translation;
     public int? Interpolator:Roll;
     public int? Interpolator:Scale;
+
+    public NiLookAtEvaluator(BinaryReader r, Header h) {
+        Flags = (LookAtFlags)r.ReadUInt16();
+        LookAtName = Y.String(r);
+        DrivenName = Y.String(r);
+        Interpolator:Translation = X<NiPoint3Interpolator>.Ref(r);
+        Interpolator:Roll = X<NiFloatInterpolator>.Ref(r);
+        Interpolator:Scale = X<NiFloatInterpolator>.Ref(r);
+    }
 }
 
 public class NiPathEvaluator : NiKeyBasedEvaluator {
@@ -7364,6 +10575,16 @@ public class NiPathEvaluator : NiKeyBasedEvaluator {
     public short FollowAxis;                            // 0, 1, or 2 representing X, Y, or Z.
     public int? PathData;
     public int? PercentData;
+
+    public NiPathEvaluator(BinaryReader r, Header h) {
+        Flags = (PathFlags)r.ReadUInt16();
+        BankDir = r.ReadInt32();
+        MaxBankAngle = r.ReadSingle();
+        Smoothing = r.ReadSingle();
+        FollowAxis = r.ReadInt16();
+        PathData = X<NiPosData>.Ref(r);
+        PercentData = X<NiFloatData>.Ref(r);
+    }
 }
 
 /// <summary>
@@ -7383,6 +10604,20 @@ public class NiSequenceData : NiObject {
     public float Frequency;
     public string AccumRootName;                        // The name of the NiAVObject serving as the accumulation root. This is where all accumulated translations, scales, and rotations are applied.
     public AccumFlags AccumFlags;
+
+    public NiSequenceData(BinaryReader r, Header h) {
+        Name = Y.String(r);
+        NumControlledBlocks = if (h.V <= 0x14050001) r.ReadUInt32();
+        ArrayGrowBy = if (h.V <= 0x14050001) r.ReadUInt32();
+        ControlledBlocks = if (h.V <= 0x14050001) r.ReadFArray(r => new ControlledBlock(r, h), NumControlledBlocks);
+        Evaluators = if (h.V >= 0x14050002) r.ReadL32FArray(X<NiEvaluator>.Ref);
+        TextKeys = X<NiTextKeyExtraData>.Ref(r);
+        Duration = r.ReadSingle();
+        CycleType = (CycleType)r.ReadUInt32();
+        Frequency = r.ReadSingle();
+        AccumRootName = Y.String(r);
+        AccumFlags = (AccumFlags)r.ReadUInt32();
+    }
 }
 
 /// <summary>
@@ -7399,6 +10634,19 @@ public class NiShadowGenerator : NiObject {
     public float NearClippingDistance;
     public float FarClippingDistance;
     public float DirectionalLightFrustumWidth;
+
+    public NiShadowGenerator(BinaryReader r, Header h) {
+        Name = Y.String(r);
+        Flags = r.ReadUInt16();
+        ShadowCasters = r.ReadL32FArray(X<NiNode>.Ref);
+        ShadowReceivers = r.ReadL32FArray(X<NiNode>.Ref);
+        Target = X<NiDynamicEffect>.Ptr(r);
+        DepthBias = r.ReadSingle();
+        SizeHint = r.ReadUInt16();
+        NearClippingDistance = if (h.V >= 0x14030007) r.ReadSingle();
+        FarClippingDistance = if (h.V >= 0x14030007) r.ReadSingle();
+        DirectionalLightFrustumWidth = if (h.V >= 0x14030007) r.ReadSingle();
+    }
 }
 
 public class NiFurSpringController : NiTimeController {
@@ -7406,11 +10654,23 @@ public class NiFurSpringController : NiTimeController {
     public float UnknownFloat2;
     public int?[] Bones;                                // List of all armature bones.
     public int?[] Bones2;                               // List of all armature bones.
+
+    public NiFurSpringController(BinaryReader r, Header h) {
+        UnknownFloat = r.ReadSingle();
+        UnknownFloat2 = r.ReadSingle();
+        Bones = r.ReadL32FArray(X<NiNode>.Ptr);
+        Bones2 = r.ReadL32FArray(X<NiNode>.Ptr);
+    }
 }
 
 public class CStreamableAssetData : NiObject {
     public int? Root;
     public byte[] UnknownBytes;
+
+    public CStreamableAssetData(BinaryReader r, Header h) {
+        Root = X<NiNode>.Ref(r);
+        UnknownBytes = r.ReadBytes(5);
+    }
 }
 
 /// <summary>
@@ -7425,6 +10685,17 @@ public class bhkCompressedMeshShape : bhkShape {
     public float RadiusCopy;                            // A shell that is added around the shape.
     public Vector4 ScaleCopy;                           // Scale
     public int? Data;                                   // The collision mesh data.
+
+    public bhkCompressedMeshShape(BinaryReader r, Header h) {
+        Target = X<NiAVObject>.Ptr(r);
+        UserData = r.ReadUInt32();
+        Radius = r.ReadSingle();
+        UnknownFloat1 = r.ReadSingle();
+        Scale = r.ReadVector4();
+        RadiusCopy = r.ReadSingle();
+        ScaleCopy = r.ReadVector4();
+        Data = X<bhkCompressedMeshShapeData>.Ref(r);
+    }
 }
 
 /// <summary>
@@ -7450,6 +10721,28 @@ public class bhkCompressedMeshShapeData : bhkRefObject {
     public bhkCMSDBigTris[] BigTris;
     public bhkCMSDChunk[] Chunks;
     public uint NumConvexPieceA;                        // Does not appear to be used. Needs array.
+
+    public bhkCompressedMeshShapeData(BinaryReader r, Header h) {
+        BitsPerIndex = r.ReadUInt32();
+        BitsPerWIndex = r.ReadUInt32();
+        MaskWIndex = r.ReadUInt32();
+        MaskIndex = r.ReadUInt32();
+        Error = r.ReadSingle();
+        BoundsMin = r.ReadVector4();
+        BoundsMax = r.ReadVector4();
+        WeldingType = r.ReadByte();
+        MaterialType = r.ReadByte();
+        Materials32 = r.ReadL32PArray<uint>("I");
+        Materials16 = r.ReadL32PArray<uint>("I");
+        Materials8 = r.ReadL32PArray<uint>("I");
+        ChunkMaterials = r.ReadL32FArray(r => new bhkCMSDMaterial(r));
+        NumNamedMaterials = r.ReadUInt32();
+        ChunkTransforms = r.ReadL32FArray(r => new bhkCMSDTransform(r));
+        BigVerts = r.ReadL32FArray(r => r.ReadL32Vector4());
+        BigTris = r.ReadL32FArray(r => new bhkCMSDBigTris(r));
+        Chunks = r.ReadL32FArray(r => new bhkCMSDChunk(r));
+        NumConvexPieceA = r.ReadUInt32();
+    }
 }
 
 /// <summary>
@@ -7466,6 +10759,13 @@ public class BSInvMarker : NiExtraData {
     public ushort RotationY;
     public ushort RotationZ;
     public float Zoom;                                  // Zoom factor.
+
+    public BSInvMarker(BinaryReader r, Header h) {
+        RotationX = r.ReadUInt16();
+        RotationY = r.ReadUInt16();
+        RotationZ = r.ReadUInt16();
+        Zoom = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -7474,6 +10774,11 @@ public class BSInvMarker : NiExtraData {
 public class BSBoneLODExtraData : NiExtraData {
     public uint BoneLODCount;                           // Number of bone entries
     public BoneLOD[] BoneLODInfo;                       // Bone Entry
+
+    public BSBoneLODExtraData(BinaryReader r, Header h) {
+        BoneLODCount = r.ReadUInt32();
+        BoneLODInfo = r.ReadFArray(r => new BoneLOD(r), BoneLODCount);
+    }
 }
 
 /// <summary>
@@ -7482,6 +10787,11 @@ public class BSBoneLODExtraData : NiExtraData {
 public class BSBehaviorGraphExtraData : NiExtraData {
     public string BehaviourGraphFile;                   // Name of the hkx file.
     public bool ControlsBaseSkeleton;                   // Unknown, has to do with blending appended bones onto an actor.
+
+    public BSBehaviorGraphExtraData(BinaryReader r, Header h) {
+        BehaviourGraphFile = Y.String(r);
+        ControlsBaseSkeleton = r.ReadBool32();
+    }
 }
 
 /// <summary>
@@ -7491,6 +10801,12 @@ public class BSLagBoneController : NiTimeController {
     public float LinearVelocity;                        // How long it takes to rotate about an actor back to rest position.
     public float LinearRotation;                        // How the bone lags rotation
     public float MaximumDistance;                       // How far bone will tail an actor.
+
+    public BSLagBoneController(BinaryReader r, Header h) {
+        LinearVelocity = r.ReadSingle();
+        LinearRotation = r.ReadSingle();
+        MaximumDistance = r.ReadSingle();
+    }
 }
 
 /// <summary>
@@ -7500,18 +10816,30 @@ public class BSLODTriShape : NiTriBasedGeom {
     public uint LOD0Size;
     public uint LOD1Size;
     public uint LOD2Size;
+
+    public BSLODTriShape(BinaryReader r, Header h) {
+        LOD0Size = r.ReadUInt32();
+        LOD1Size = r.ReadUInt32();
+        LOD2Size = r.ReadUInt32();
+    }
 }
 
 /// <summary>
 /// Furniture Marker for actors
 /// </summary>
 public class BSFurnitureMarkerNode : BSFurnitureMarker {
+
+    public BSFurnitureMarkerNode(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
 /// Unknown, related to trees.
 /// </summary>
 public class BSLeafAnimNode : NiNode {
+
+    public BSLeafAnimNode(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -7520,6 +10848,11 @@ public class BSLeafAnimNode : NiNode {
 public class BSTreeNode : NiNode {
     public int?[] Bones1;                               // Unknown
     public int?[] Bones;                                // Unknown
+
+    public BSTreeNode(BinaryReader r, Header h) {
+        Bones1 = r.ReadL32FArray(X<NiNode>.Ref);
+        Bones = r.ReadL32FArray(X<NiNode>.Ref);
+    }
 }
 
 /// <summary>
@@ -7539,6 +10872,24 @@ public class BSTriShape : NiAVObject {
     public uint ParticleDataSize;
     public Vector3[] Vertices;
     public Triangle[] TrianglesCopy;
+
+    public BSTriShape(BinaryReader r, Header h) {
+        BoundingSphere = new NiBound(r);
+        Skin = X<NiObject>.Ref(r);
+        ShaderProperty = X<BSShaderProperty>.Ref(r);
+        AlphaProperty = X<NiAlphaProperty>.Ref(r);
+        VertexDesc = new BSVertexDesc(r);
+        NumTriangles = if ((h.UV2 == 130)) r.ReadUInt32();
+        NumTriangles = r.ReadUInt16();
+        NumVertices = r.ReadUInt16();
+        DataSize = r.ReadUInt32();
+        VertexData = if (Data Size > 0 && (h.UV2 == 130)) r.ReadFArray(r => new BSVertexData(r, h), NumVertices);
+        VertexData = if (Data Size > 0 && (h.UV2 == 100)) r.ReadFArray(r => new BSVertexDataSSE(r, h), NumVertices);
+        Triangles = if (Data Size > 0) r.ReadFArray(r => new Triangle(r), NumTriangles);
+        ParticleDataSize = if ((h.UV2 == 100)) r.ReadUInt32();
+        Vertices = if (Particle Data Size > 0 && (h.UV2 == 100)) r.ReadFArray(r => r.ReadVector3(), NumVertices);
+        TrianglesCopy = if (Particle Data Size > 0 && (h.UV2 == 100)) r.ReadFArray(r => new Triangle(r), NumTriangles);
+    }
 }
 
 /// <summary>
@@ -7548,21 +10899,27 @@ public class BSMeshLODTriShape : BSTriShape {
     public uint LOD0Size;
     public uint LOD1Size;
     public uint LOD2Size;
+
+    public BSMeshLODTriShape(BinaryReader r, Header h) {
+        LOD0Size = r.ReadUInt32();
+        LOD1Size = r.ReadUInt32();
+        LOD2Size = r.ReadUInt32();
+    }
 }
 
 public class BSGeometryPerSegmentSharedData(BinaryReader r) {
     public uint UserIndex = r.ReadUInt32();             // If Bone ID is 0xffffffff, this value refers to the Segment at the listed index. Otherwise this is the "Biped Object", which is like the body part types in Skyrim and earlier.
     public uint BoneID = r.ReadUInt32();                // A hash of the bone name string.
-    public float[] CutOffsets = r.ReadL32FArray(r => r.ReadSingle());
+    public float[] CutOffsets = r.ReadL32PArray<float>("f");
 }
 
 public class BSGeometrySegmentSharedData(BinaryReader r) {
     public uint NumSegments = r.ReadUInt32();
     public uint TotalSegments = r.ReadUInt32();
-    public uint[] SegmentStarts = r.ReadUInt32();
-    public BSGeometryPerSegmentSharedData[] PerSegmentData = new BSGeometryPerSegmentSharedData(r);
+    public uint[] SegmentStarts = r.ReadPArray<uint>("I", NumSegments);
+    public BSGeometryPerSegmentSharedData[] PerSegmentData = r.ReadFArray(r => new BSGeometryPerSegmentSharedData(r), TotalSegments);
     public ushort SSFLength = r.ReadUInt16();
-    public byte[] SSFFile = r.ReadByte();
+    public byte[] SSFFile = r.ReadBytes(SSFLength);
 }
 
 /// <summary>
@@ -7574,12 +10931,25 @@ public class BSSubIndexTriShape : BSTriShape {
     public uint TotalSegments;
     public BSGeometrySegmentData[] Segment;
     public BSGeometrySegmentSharedData SegmentData;
+
+    public BSSubIndexTriShape(BinaryReader r, Header h) {
+        NumPrimitives = if (Data Size > 0 && (h.UV2 == 130)) r.ReadUInt32();
+        NumSegments = if (Data Size > 0 && (h.UV2 == 130)) r.ReadUInt32();
+        TotalSegments = if (Data Size > 0 && (h.UV2 == 130)) r.ReadUInt32();
+        Segment = if (Data Size > 0 && (h.UV2 == 130)) r.ReadFArray(r => new BSGeometrySegmentData(r, h), NumSegments);
+        SegmentData = if ((Num Segments < Total Segments) && (Data Size > 0) && (h.UV2 == 130)) new BSGeometrySegmentSharedData(r);
+        NumSegments = if ((h.UV2 == 100)) r.ReadUInt32();
+        Segment = if ((h.UV2 == 100)) r.ReadFArray(r => new BSGeometrySegmentData(r, h), NumSegments);
+    }
 }
 
 /// <summary>
 /// Fallout 4 Physics System
 /// </summary>
 public abstract class bhkSystem : NiObject {
+
+    public bhkSystem(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -7590,6 +10960,12 @@ public class bhkNPCollisionObject : NiCollisionObject {
                                                         //     Bits: 0=Reset, 2=Notify, 3=SetLocal, 7=SyncOnUpdate, 10=AnimTargeted
     public int? Data;
     public uint BodyID;
+
+    public bhkNPCollisionObject(BinaryReader r, Header h) {
+        Flags = r.ReadUInt16();
+        Data = X<bhkSystem>.Ref(r);
+        BodyID = r.ReadUInt32();
+    }
 }
 
 /// <summary>
@@ -7597,6 +10973,10 @@ public class bhkNPCollisionObject : NiCollisionObject {
 /// </summary>
 public class bhkPhysicsSystem : bhkSystem {
     public byte[] BinaryData;
+
+    public bhkPhysicsSystem(BinaryReader r, Header h) {
+        BinaryData = r.ReadL8Bytes();
+    }
 }
 
 /// <summary>
@@ -7604,12 +10984,19 @@ public class bhkPhysicsSystem : bhkSystem {
 /// </summary>
 public class bhkRagdollSystem : bhkSystem {
     public byte[] BinaryData;
+
+    public bhkRagdollSystem(BinaryReader r, Header h) {
+        BinaryData = r.ReadL8Bytes();
+    }
 }
 
 /// <summary>
 /// Fallout 4 Extra Data
 /// </summary>
 public class BSExtraData : NiExtraData {
+
+    public BSExtraData(BinaryReader r, Header h) {
+    }
 }
 
 /// <summary>
@@ -7617,6 +11004,10 @@ public class BSExtraData : NiExtraData {
 /// </summary>
 public class BSClothExtraData : BSExtraData {
     public byte[] BinaryData;
+
+    public BSClothExtraData(BinaryReader r, Header h) {
+        BinaryData = r.ReadL8Bytes();
+    }
 }
 
 /// <summary>
@@ -7637,6 +11028,13 @@ public class BSSkin::Instance : NiObject {
     public int? Data;
     public int?[] Bones;
     public Vector3[] Unknown;
+
+    public BSSkin::Instance(BinaryReader r, Header h) {
+        SkeletonRoot = X<NiAVObject>.Ptr(r);
+        Data = X<BSSkin::BoneData>.Ref(r);
+        Bones = r.ReadL32FArray(X<NiNode>.Ptr);
+        Unknown = r.ReadL32FArray(r => r.ReadL32Vector3());
+    }
 }
 
 /// <summary>
@@ -7644,6 +11042,10 @@ public class BSSkin::Instance : NiObject {
 /// </summary>
 public class BSSkin::BoneData : NiObject {
     public BSSkinBoneTrans[] BoneList;
+
+    public BSSkin::BoneData(BinaryReader r, Header h) {
+        BoneList = r.ReadL32FArray(r => new BSSkinBoneTrans(r));
+    }
 }
 
 /// <summary>
@@ -7651,6 +11053,10 @@ public class BSSkin::BoneData : NiObject {
 /// </summary>
 public class BSPositionData : NiExtraData {
     public float[] Data;
+
+    public BSPositionData(BinaryReader r, Header h) {
+        Data = r.ReadL32FArray(r => r.ReadL32Half());
+    }
 }
 
 public class BSConnectPoint(BinaryReader r) {
@@ -7666,6 +11072,10 @@ public class BSConnectPoint(BinaryReader r) {
 /// </summary>
 public class BSConnectPoint::Parents : NiExtraData {
     public BSConnectPoint[] ConnectPoints;
+
+    public BSConnectPoint::Parents(BinaryReader r, Header h) {
+        ConnectPoints = r.ReadL32FArray(r => new BSConnectPoint(r));
+    }
 }
 
 /// <summary>
@@ -7674,6 +11084,11 @@ public class BSConnectPoint::Parents : NiExtraData {
 public class BSConnectPoint::Children : NiExtraData {
     public bool Skinned;
     public string[] Name;
+
+    public BSConnectPoint::Children(BinaryReader r, Header h) {
+        Skinned = r.ReadBool32();
+        Name = r.ReadL32FArray(r => new SizedString(r));
+    }
 }
 
 /// <summary>
@@ -7681,6 +11096,10 @@ public class BSConnectPoint::Children : NiExtraData {
 /// </summary>
 public class BSEyeCenterExtraData : NiExtraData {
     public float[] Data;
+
+    public BSEyeCenterExtraData(BinaryReader r, Header h) {
+        Data = r.ReadL32PArray<float>("f");
+    }
 }
 
 public class BSPackedGeomDataCombined(BinaryReader r) {
@@ -7700,8 +11119,8 @@ public class BSPackedGeomData(BinaryReader r, Header h) {
     public uint TriOffsetLOD2 = r.ReadUInt32();
     public BSPackedGeomDataCombined[] Combined = r.ReadL32FArray(r => new BSPackedGeomDataCombined(r));
     public BSVertexDesc VertexDesc = new BSVertexDesc(r);
-    public BSVertexData[] VertexData = !BSPackedCombinedSharedGeomDataExtra ? new BSVertexData(r, h) : default;
-    public Triangle[] Triangles = !BSPackedCombinedSharedGeomDataExtra ? new Triangle(r) : default;
+    public BSVertexData[] VertexData = !BSPackedCombinedSharedGeomDataExtra ? r.ReadFArray(r => new BSVertexData(r, h), NumVerts) : default;
+    public Triangle[] Triangles = !BSPackedCombinedSharedGeomDataExtra ? r.ReadFArray(r => new Triangle(r), TriCountLOD0+TriCountLOD1+TriCountLOD2) : default;
 }
 
 /// <summary>
@@ -7725,6 +11144,17 @@ public class BSPackedCombinedGeomDataExtra : NiExtraData {
     public uint NumData;
     public BSPackedGeomObject[] Object;
     public BSPackedGeomData[] ObjectData;
+
+    public BSPackedCombinedGeomDataExtra(BinaryReader r, Header h) {
+        VertexDesc = new BSVertexDesc(r);
+        NumVertices = r.ReadUInt32();
+        NumTriangles = r.ReadUInt32();
+        UnknownFlags1 = r.ReadUInt32();
+        UnknownFlags2 = r.ReadUInt32();
+        NumData = r.ReadUInt32();
+        Object = if (BSPackedCombinedSharedGeomDataExtra) r.ReadFArray(r => new BSPackedGeomObject(r), NumData);
+        ObjectData = r.ReadFArray(r => new BSPackedGeomData(r, h), NumData);
+    }
 }
 
 /// <summary>
@@ -7733,14 +11163,25 @@ public class BSPackedCombinedGeomDataExtra : NiExtraData {
 /// which loads the geometry via the STAT form for the NIF.
 /// </summary>
 public class BSPackedCombinedSharedGeomDataExtra : BSPackedCombinedGeomDataExtra {
+
+    public BSPackedCombinedSharedGeomDataExtra(BinaryReader r, Header h) {
+    }
 }
 
 public class NiLightRadiusController : NiFloatInterpController {
+
+    public NiLightRadiusController(BinaryReader r, Header h) {
+    }
 }
 
 public class BSDynamicTriShape : BSTriShape {
     public uint VertexDataSize;
     public Vector4[] Vertices;
+
+    public BSDynamicTriShape(BinaryReader r, Header h) {
+        VertexDataSize = r.ReadUInt32();
+        Vertices = if (Vertex Data Size > 0) r.ReadFArray(r => r.ReadVector4(), NumVertices);
+    }
 }
 
 #endregion
@@ -7750,5 +11191,9 @@ public class BSDynamicTriShape : BSTriShape {
 /// </summary>
 public class BSDistantObjectLargeRefExtraData : NiExtraData {
     public bool LargeRef;
+
+    public BSDistantObjectLargeRefExtraData(BinaryReader r, Header h) {
+        LargeRef = r.ReadBool32();
+    }
 }
 

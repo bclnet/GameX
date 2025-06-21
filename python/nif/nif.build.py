@@ -454,8 +454,9 @@ class ClassX:
             elif self.vercond: c = ClassX.Field.cond(self.vercond)
             elif self.cond: c = ClassX.Field.cond(self.cond)
             if c[0]:
-                if primary: cs = f'{c[CS]} ? {cs} : default'; py = f'{py} if {c[PY]} else None'
-                else: cs = f'if ({c[CS]}) {cs}'; py = f'if {c[PY]}: {py}'
+                if primary: cs = f'{self.nameCS} = {c[CS]} ? {cs} : default'; py = f'{self.namePY} = {py} if {c[PY]} else None'
+                else: cs = f'if ({c[CS]}) {self.nameCS} = {cs}'; py = f'if {c[PY]}: {self.namePY} = {py}'
+            else: cs = f'{self.nameCS} = {cs}'; py = f'{self.namePY} = {py}'
             self.initcw = [cs, py]
         @staticmethod
         def cond(s: str) -> list[str]:

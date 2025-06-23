@@ -2,12 +2,15 @@ import re
 import xml.etree.ElementTree as ET
 from code_writer import fmt_camel, CodeWriter
 
-#region Writer
-
+# type forward
 class EnumX: pass
 class ClassX: pass
 
+#region Helpers
+
 CS = 0; PY = 1
+
+def fmt_py(s: str) -> str: return fmt_camel(s) # s[0].lower() + s[1:]
 
 def ver2Num(s: str) -> str:
     if not s: return 0
@@ -32,6 +35,10 @@ def verReplace(s: str) -> str:
     for x in [x for x in re.findall(r'Version.[!<=>]+.([.0-9]+)', s) if '.' in x]:
         s = s.replace(x, f'0x{ver2Num(x):08X}')
     return s
+
+#endregion
+
+#region Writer
 
 class NifCodeWriter(CodeWriter):
     def __init__(self, ex: str):
@@ -283,12 +290,11 @@ class Flags(Flag):
             'NiTransform': 'x',
             'Particle': ('<9f2H', 40) }
         # redirects
+        self.customs = {}
         self.members['BoneVertDataHalf'] = ['', ('BoneVertData', 'BoneVertData'), ('new BoneVertData(r, true)', 'BoneVertData(r, true)'), lambda c: (f'r.ReadFArray(r => new BoneVertData(r, true), {c})', f'r.readFArray(lambda r: BoneVertData(r, true), {c})')]
-#         self.customs = {
-#             'BoneVertDataHalf': ([], ['''Index = r.ReadUInt16();
-# Weight = r.ReadHalf();''', '''Index = r.ReadUInt16();
-# Weight = r.ReadHalf();''']
-#         }
+        self.customs['BoneVertData'] = ['''public BoneVertData(BinaryReader r, bool half) { Index = r.ReadUInt16(); Weight = r.ReadHalf(); }''', '''TBD''']
+        self.members['HalfTexCoord'] = ['', ('TexCoord', 'TexCoord'), ('new TexCoord(r, true)', 'TexCoord(r, true)'), lambda c: (f'r.ReadFArray(r => new TexCoord(r, true), {c})', f'r.readFArray(lambda r: TexCoord(r, true), {c})')]
+        self.customs['TexCoord'] = ['''public TexCoord(BinaryReader r, bool full) { u = r.ReadHalf(); v = r.ReadHalf(); }''', '''TBD''']
 
     def region(self, name: str) -> None: self.emit(f'#region {name}'); self.emit()
     def endregion(self) -> None: self.trim_last_line_if_empty(); self.emit(); self.emit(f'#endregion'); self.emit()
@@ -338,7 +344,7 @@ class Flags(Flag):
         primary = 'P' in s.init[0]
         if self.ex == CS and s.struct and s.struct != 'x': self.emit(f'[StructLayout(LayoutKind.Sequential, Pack = 1)]')
         with self.block(before=
-            f'public{' abstract ' if s.abstract else ' '}{'struct' if s.struct else 'class'} {s.nameCS}{'(' + s.init[1][CS] + ')' if primary else ''}{' : ' + s.inherit + ('(' + s.init[2][CS] + ')' if primary else '') if s.inherit else ''}' if self.ex == CS else \
+            f'public{' abstract ' if s.abstract else ' '}{'struct' if s.struct else 'class'} {s.namecw[CS]}{'(' + s.init[1][CS] + ')' if primary else ''}{' : ' + s.inherit + ('(' + s.init[2][CS] + ')' if primary else '') if s.inherit else ''}' if self.ex == CS else \
             f'class {s.name}{'(' + s.inherit + ')' if s.inherit else ''}:' if self.ex == PY else \
             None):
             if s.struct and s.struct != 'x': self.emit(
@@ -347,29 +353,41 @@ class Flags(Flag):
                 None )
             if self.ex == CS:
                 for k, v in s.fields.items():
-                    self.emit_with_comment(f'public {v[0][CS]} {k}{' = ' + v[1][CS] if primary else ''};' if v[0] else '', v[2], pos if v[0] else 0)
+                    self.emit_with_comment(f'public {v[0][CS]} {v[1][CS] if primary else k[CS]};' if v[0] else '', v[2], pos if v[0] else 0)
                 if not primary:
                     self.emit('')
                     if s.struct and s.struct != 'x': self.emit(f'public {s.name}() {{}}')
-                    with self.block(before=f'public {s.name}({s.init[1][CS]})'):
-                        for x in s.values:
+                    def emitBlock(inits: list) -> None:
+                        for x in inits:
                             match x:
                                 case str(): self.emit(x)
-                                case ClassX.Field(): self.emit(f'{x.name} = {x.initcw[CS]};')
+                                case ClassX.Comment(): self.emit(f'// {x.comment}')
+                                case ClassX.If():
+                                    with self.block(before=f'{x.initcw[CS]}'): emitBlock(x.inits)
+                                case ClassX.Field(): self.emit(f'{x.initcw[CS]};')
+                    with self.block(before=f'public {s.name}({s.init[1][CS]})'): emitBlock(s.inits)
+                if s.name in cw.customs:
+                    self.emit(cw.customs[s.name][CS])
             elif self.ex == PY:
                 if not primary: 
                     for k, v in s.fields.items():
-                        self.emit_with_comment(f'{fmt_camel(k)}: {v[0][PY]}' if v[0] else '', v[2], pos if v[0] else 0)
+                        self.emit_with_comment(f'{k[PY]}: {v[0][PY]}' if v[0] else '', v[2], pos if v[0] else 0)
                     self.emit('')
+                def emitBlock(inits: list) -> None:
+                    for x in inits:
+                        match x:
+                            case str(): self.emit(x)
+                            case ClassX.Comment(): self.emit(f'# {x.comment}')
+                            case ClassX.If():
+                                with self.block(before=f'{x.initcw[PY]}:'): emitBlock(x.inits)
+                            case ClassX.Field(): self.emit(f'{x.initcw[PY]}')
                 with self.block(before=f'def __init__(self, {s.init[1][PY]}):'):
-                    if primary: 
+                    if primary:
                         for k, v in s.fields.items():
-                            self.emit_with_comment(f'self.{fmt_camel(k)}: {v[0][PY]} = {v[1][PY]}', v[2], pos)
-                    else:                            
-                        for x in s.values:
-                            match x:
-                                case str(): self.emit(x)
-                                case ClassX.Field(): self.emit(f'self.{fmt_camel(x.name)} = {x.initcw[PY]}')
+                            self.emit_with_comment(f'{v[1][PY]}', v[2], pos)
+                    else: emitBlock(s.inits)
+                if s.name in cw.customs:
+                    self.emit(cw.customs[s.name][PY])
         self.emit()
 
 #endregion
@@ -386,17 +404,18 @@ class EnumX:
         self.comment = e.text.strip().replace('        ', '') if e.text else None
         self.flag = e.tag == 'bitflags'
         self.name = e.attrib['name'].replace(' ', '_')
+        self.namecw = (self.name, self.name)
         self.storage = e.attrib['storage']
         self.values = [(e.attrib['name'].replace(' ', '_'), e.attrib['value'], e.text.strip() if e.text else None) for e in e]
         # members
         match self.storage:
-            case 'uint': self.init = [f'({self.name})r.ReadUInt32()', f'{self.name}(r.readUInt32())']
-            case 'ushort': self.init = [f'({self.name})r.ReadUInt16()', f'{self.name}(r.readUInt16())']
-            case 'byte': self.init = [f'({self.name})r.ReadByte()', f'{self.name}(r.readByte())']
+            case 'uint': self.init = [f'({self.namecw[CS]})r.ReadUInt32()', f'{self.namecw[PY]}(r.readUInt32())']
+            case 'ushort': self.init = [f'({self.namecw[CS]})r.ReadUInt16()', f'{self.namecw[PY]}(r.readUInt16())']
+            case 'byte': self.init = [f'({self.namecw[CS]})r.ReadByte()', f'{self.namecw[PY]}(r.readByte())']
         flags = 'E'
         if self.name not in cw.members: cw.members[self.name] = [
             flags,
-            (self.name, self.name),
+            self.namecw,
             (self.init[CS], self.init[PY]),
             lambda c: (f'r.ReadFArray(r => {self.init[CS]}, {c})', f'r.readFArray(lambda r: {self.init[PY]}, {c})')]
 
@@ -405,15 +424,35 @@ class ClassX:
         def __init__(self, parent: ClassX, s: str):
             self.comment: str = s
             self.name: str = s
+            self.namecw = (self.name, self.name)
         def code(self, parent: ClassX, cw: NifCodeWriter) -> None:
             self.typecw = None
             self.initcw = None
+    class If:
+        def __init__(self, parent: ClassX, comment: str, field: object, elseif: bool):
+            self.comment: str = comment
+            self.elseif = elseif
+            self.name: str = None
+            self.inits: str = []
+            self.vercond = field.vercond
+            self.cond = field.cond
+        def code(self, parent: ClassX, cw: NifCodeWriter) -> None:
+            for x in self.inits:
+                if not isinstance(x, str): x.code(parent, cw)
+            self.typecw = None
+            # init
+            if self.cond and self.vercond: c = ClassX.Field.cond(f'{self.cond} && {self.vercond}')
+            elif self.vercond: c = ClassX.Field.cond(self.vercond)
+            elif self.cond: c = ClassX.Field.cond(self.cond)
+            cs = f'{'else if' if self.elseif else 'if'} ({c[CS]})'; py = f'{'elif' if self.elseif else 'if'} {c[PY]}:'
+            self.initcw = [cs, py]
     class Field:
         def __init__(self, parent: ClassX, e: object):
             self.comment: str = e.text.strip().replace('        ', '') if e.text else None if e.text else None
             self.name: str = e.attrib['name'].replace(' ', '')
             if self.name == parent.name: self.name += '_'
             # self.suffix: str = e.attrib.get('suffix')
+            self.namecw = (self.name, fmt_py(self.name)[0].lower() + self.name[1:])
             self.type: str = e.attrib['type']
             self.template: str = e.attrib.get('template')
             self.default: str = e.attrib.get('default')
@@ -429,10 +468,11 @@ class ClassX:
             elif self.ver2: vercond = f'V <= 0x{self.ver2:08X}'
             elif self.ver1: vercond = f'V >= 0x{self.ver1:08X}'
             else: vercond = ''
-            vercond += f'{' && ' if vercond else ''}' if (z := e.attrib.get('vercond')) else ''
-            vercond += f'{' && ' if vercond else ''}(User Version == {z})' if (z := e.attrib.get('userver')) else ''
-            vercond += f'{' && ' if vercond else ''}(User Version 2 == {z})' if (z := e.attrib.get('userver2')) else ''
+            vercond += f'{' && ' if vercond else ''}{z}' if (z := e.attrib.get('vercond')) else ''
+            vercond += f'{' && ' if vercond else ''}(UV == {z})' if (z := e.attrib.get('userver')) else ''
+            vercond += f'{' && ' if vercond else ''}(UV2 == {z})' if (z := e.attrib.get('userver2')) else ''
             vercond = verReplace(vercond).replace('User Version 2 ', 'UV2 ').replace('User Version ', 'UV ').replace('Version ', 'V ')
+            # if parent.name == 'ControlledBlock': print(f'{self.name}: {vercond}')
             self.vercond: str = vercond
         def code(self, parent: ClassX, cw: NifCodeWriter) -> None:
             flags = parent.init[0]
@@ -449,21 +489,23 @@ class ClassX:
                 if self.arr1.startswith('L'): cs = cs.replace('Read', f'Read{self.arr1}').replace(f', {self.arr1})', ')'); py = py.replace('read', f'read{self.arr1}').replace(f', {self.arr1})', ')')
                 if self.arr2: cs = f'r.ReadFArray(k => {cs}, {self.arr2})'; py = f'r.readFArray(lambda k: {py}, {self.arr2})'
             if self.template: cs = cs.replace('{T}', self.template); py = py.replace('{T}', self.template)
+            # init
             c = ['', '']
             if self.cond and self.vercond: c = ClassX.Field.cond(f'{self.cond} && {self.vercond}')
             elif self.vercond: c = ClassX.Field.cond(self.vercond)
             elif self.cond: c = ClassX.Field.cond(self.cond)
             if c[0]:
-                if primary: cs = f'{self.nameCS} = {c[CS]} ? {cs} : default'; py = f'{self.namePY} = {py} if {c[PY]} else None'
-                else: cs = f'if ({c[CS]}) {self.nameCS} = {cs}'; py = f'if {c[PY]}: {self.namePY} = {py}'
-            else: cs = f'{self.nameCS} = {cs}'; py = f'{self.namePY} = {py}'
+                if primary: cs = f'{self.namecw[CS]} = {c[CS]} ? {cs} : default'; py = f'self.{self.namecw[PY]}: {self.typecw[PY]} = {py} if {c[PY]} else None'
+                else: cs = f'if ({c[CS]}) {self.namecw[CS]} = {cs}'; py = f'if {c[PY]}: self.{self.namecw[PY]} = {py}'
+            else:
+                if primary: cs = f'{self.namecw[CS]} = {cs}'; py = f'self.{self.namecw[PY]}: {self.typecw[PY]} = {py}'
+                else: cs = f'{self.namecw[CS]} = {cs}'; py = f'self.{self.namecw[PY]} = {py}'
             self.initcw = [cs, py]
         @staticmethod
         def cond(s: str) -> list[str]:
             return [
                 s.replace('V ', 'h.V ').replace('UV2 ', 'h.UV2 ').replace('UV ', 'h.UV '),
                 s.replace('V ', 'h.v ').replace('UV2 ', 'h.uv2 ').replace('UV ', 'h.uvs ').replace('||', 'or').replace('&&', 'and')]
-
     comment: str
     abstract: bool = False
     inherit: str = None
@@ -476,56 +518,85 @@ class ClassX:
         if niobject:
             self.abstract = e.attrib.get('abstract') == '1'
             self.inherit = e.attrib.get('inherit')
+        self.template = e.attrib.get('istemplate') == '1'
         self.name = e.attrib['name']
-        self.nameCS = f'{self.name}<T>' if e.attrib.get('istemplate') == '1' else self.name
-        self.namePY = f'{self.name}[T]' if e.attrib.get('istemplate') == '1' else self.name
+        self.namecw = (f'{self.name}<T>' if self.template else self.name, f'{self.name}[T]' if self.template else self.name)
         self.struct = cw.struct.get(self.name)
         self.custom = False
         self.values = [ClassX.Field(self, e) for e in e]
-        self.processValues()
+        self.process()
         # flags
-        hasVer = any(x.cond or x.vercond for x in self.values)
+        hasVer = any(x.cond or x.vercond for x in self.values if isinstance(x, ClassX.Field))
         flags = '' if self.name in [''] else \
-            'C' if niobject or self.struct or self.custom else \
+            'C' if niobject or self.struct or self.custom or self.template else \
             'P'
-        hasHeader = niobject or hasVer
+        hasHeader = self.name != 'Header' and (niobject or hasVer)
         # members
         self.init = (flags,
             ['BinaryReader r, Header h', 'r: Reader, h: Header'] if hasHeader else ['BinaryReader r', 'r: Reader'],
             ['r, h', 'r, h'] if hasHeader else ['r', 'r'],
-            [f'new {self.nameCS}(r, h)', f'{self.namePY}(r, h)'] if hasHeader else [f'new {self.nameCS}(r)', f'{self.namePY}(r)'])
+            [f'new {self.namecw[CS]}(r, h)', f'{self.namecw[PY]}(r, h)'] if hasHeader else [f'new {self.namecw[CS]}(r)', f'{self.namecw[PY]}(r)'])
         if self.name not in cw.members: cw.members[self.name] = [
             flags,
-            (self.nameCS, self.namePY),
+            self.namecw,
             (self.init[3][CS], self.init[3][PY]),
             lambda c: (f'r.ReadFArray(r => {self.init[3][CS]}, {c})', f'r.readFArray(lambda r: {self.init[3][PY]}, {c})')]
-    def code(self, cw: NifCodeWriter):
-        for x in self.values:
-            if not isinstance(x, str): x.code(self, cw)
-        self.fields = {x.name: (x.typecw, x.initcw, x.comment) for x in self.values if not isinstance(x, str)}
-    def processValues(self):
-        if not self.values: return
+
+    def process(self):
+        if not self.values: self.inits = list(self.values); return
+        # collapse num into next
         for i in range(len(self.values) - 1, 0, -1):
             name = self.values[i-1].name
             if name.startswith('Num'):
                 count = len([x for x in self.values if x.arr1 == name])
                 arrNext = self.values[i].arr1 == name
                 if arrNext and count == 1:
-                    # print(f'merged: {self.name}: {self.values[i].name}: {self.values[i-1].type}')
+                    # print(f'{self.name}: {self.values[i].name}: {self.values[i-1].type}')
                     match self.values[i-1].type:
                         case 'uint' | 'int': self.values[i].arr1 = 'L32'
                         case 'ushort' | 'short': self.values[i].arr1 = 'L16'
                         case 'byte': self.values[i].arr1 = 'L8'
                     del self.values[i-1]
+        # custom
         match self.name:
             case 'Header':
                 self.custom = True
+                self.values[2].namecw = ('V', 'v')
+                self.values[4].namecw = ('UV', 'uv')
+                self.values[6].namecw = ('UV2', 'uv2')
             case 'ControlledBlock':
                 self.custom = True
                 # del self.values[10:]
                 self.values.insert(1, ClassX.Comment(self, 'NiControllerSequence::InterpArrayItem'))
                 self.values.insert(6, ClassX.Comment(self, 'Bethesda-only'))
                 self.values.insert(8, ClassX.Comment(self, 'NiControllerSequence::IDTag, post-10.1.0.104 only'))
+        # inits
+        self.inits = self.values[:]
+        # collapse multi ver
+        newIf = None
+        elseif = False
+        for i in range(len(self.inits) - 1, 0, -1):
+            this = self.inits[i]; next = self.inits[i-1]
+            if isinstance(this, ClassX.Field) and isinstance(next, ClassX.Field) and this.vercond and this.vercond == next.vercond:
+                # if self.name == 'ControlledBlock': print(f'start: {self.name}[{i}]: {this.name}')
+                if not newIf: newIf = ClassX.If(self, None, this, elseif)
+                newIf.inits.insert(0, next)
+                next.vercond = None
+                del self.inits[i-1]
+            elif newIf:
+                # if self.name == 'ControlledBlock': print(f'roll: {self.name}[{i}]: {this.name}')
+                newIf.inits.append(this)
+                this.vercond = None
+                del self.inits[i]
+                self.inits.insert(i, newIf)
+                newIf = None
+                # elseif = True
+    def code(self, cw: NifCodeWriter):
+        for x in self.values:
+            if not isinstance(x, str): x.code(self, cw)
+        for x in self.inits:
+            if not isinstance(x, str): x.code(self, cw)
+        self.fields = {x.namecw: (x.typecw, x.initcw, x.comment) for x in self.values if x.name and not isinstance(x, str)}
 
 def parse(tree: object, cw: NifCodeWriter) -> None:
     root = tree.getroot()

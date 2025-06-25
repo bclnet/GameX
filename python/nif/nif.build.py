@@ -540,7 +540,6 @@ class ClassX:
             'C' if (self.condFlag & 2) or (self.condFlag & 4) or (niobject and self.values) or self.struct or self.template else \
             'P'
         hasHeader = self.name != 'Header' and (niobject or (self.condFlag & 1))
-        if self.name == '': print(hasHeader)
         # members
         constNew = cw.customs[self.name]['constNew'] if self.name in cw.customs and 'constNew' in cw.customs[self.name] else ['', '']
         self.init = (

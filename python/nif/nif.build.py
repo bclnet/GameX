@@ -457,7 +457,7 @@ class ClassX:
             if e == None: return
             self.comment: str = e.text.strip().replace('        ', '') if e.text else None if e.text else None
             self.elseif = False
-            self.name: str = e.attrib['name']
+            self.name: str = e.attrib['name'].replace('?', '')
             self.suffix: str = e.attrib.get('suffix') or ''
             if ' ' in self.name: parent.namers[self.name] = self.name = self.name.replace(' ', '')
             if self.name == parent.name or self.suffix: self.name += f'_{self.suffix}'

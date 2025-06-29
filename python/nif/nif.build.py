@@ -3,8 +3,8 @@ import xml.etree.ElementTree as ET
 from code_writer import fmt_camel, CodeWriter
 
 # type forward
-class EnumX: pass
-class ClassX: pass
+class Enum: pass
+class Class: pass
 
 #region Helpers
 
@@ -78,8 +78,8 @@ class NifCodeWriter(CodeWriter):
             # Compounds
             'ByteVector3': [None, ('Vector3<byte>', 'Vector3'), ('new Vector3<byte>(r.ReadByte(), r.ReadByte(), r.ReadByte())', 'Vector3(r.readByte(), r.readByte(), r.readByte())'), lambda c: (f'r.ReadFArray(r => new Vector3(r.ReadByte(), r.ReadByte(), r.ReadByte()), {c})', f'r.readFArray(lambda r: Vector3(r.readByte(), r.readByte(), r.readByte()), {c})')],
             'HalfVector3': [None, ('Vector3', 'Vector3'), ('new Vector3(r.ReadHalf(), r.ReadHalf(), r.ReadHalf())', 'Vector3(r.readHalf(), r.readHalf(), r.readHalf())'), lambda c: (f'r.ReadFArray(r => new Vector3(r.ReadHalf(), r.ReadHalf(), r.ReadHalf()), {c})', f'r.readFArray(lambda r: Vector3(r.readHalf(), r.readHalf(), r.readHalf()), {c})')],
-            'Vector3': [None, ('Vector3', 'Vector3'), ('r.ReadVector3()', 'r.readVector3()'), lambda c: (f'r.ReadFArray(r => r.ReadVector3(), {c})', f'r.readFArray(lambda r: r.readVector3(), {c})')],
-            'Vector4': [None, ('Vector4', 'Vector4'), ('r.ReadVector4()', 'r.readVector4()'), lambda c: (f'r.ReadFArray(r => r.ReadVector4(), {c})', f'r.readFArray(lambda r: r.readVector4(), {c})')],
+            'Vector3': [None, ('Vector3', 'Vector3'), ('r.ReadVector3()', 'r.readVector3()'), lambda c: (f'r.ReadPArray<Vector3>("3f", {c})', f'r.readPArray(None, \'3f\', {c})')],
+            'Vector4': [None, ('Vector4', 'Vector4'), ('r.ReadVector4()', 'r.readVector4()'), lambda c: (f'r.ReadPArray<Vector4>("4f", {c})', f'r.readPArray(None, \'4f\', {c})')],
             'Quaternion': [None, ('Quaternion', 'Quaternion'), ('r.ReadQuaternion()', 'r.readQuaternion()'), lambda c: (f'r.ReadFArray(r => r.ReadQuaternion(), {c})', f'r.readFArray(lambda r: r.readQuaternion(), {c})')],
             'hkQuaternion': [None, ('Quaternion', 'Quaternion'), ('r.ReadQuaternionWFirst()', 'r.readQuaternionWFirst()'), None],
             'Matrix22': [None, ('Matrix2x2', 'Matrix2x2'), ('r.ReadMatrix2x2()', 'r.readMatrix2x2()'), None],
@@ -91,6 +91,22 @@ class NifCodeWriter(CodeWriter):
             'NodeSet': [None, ('NodeSet', 'NodeSet'), ('new NodeSet(r)', 'NodeSet(r)'), lambda c: (f'r.ReadFArray(r => new NodeSet(r), {c})', f'r.readFArray(lambda r: NodeSet(r), {c})')],
             'ShortString': [None, ('string', 'str'), ('r.ReadL8AString()', 'r.readL8AString()'), None]
         }
+        self.struct = {
+            'BoneVertData': ('<Hf', 7),
+            'TBC': ('<3f', 12),
+            'TexCoord': ('<2f', 8),
+            'Triangle': ('<3H', 18),
+            'BSVertexDesc': ('<5bHb', 8),
+            'NiPlane': ('<4f', 24),
+            'NiBound': ('<4f', 24),
+            'NiQuatTransform': 'x',
+            'NiTransform': 'x',
+            'Particle': ('<9f2H', 40) }
+        # EffectType->TextureType, NiHeader->Header, NiFooter->Footer, SkinData->BoneData, SkinWeight->BoneVertData, BoundingBox->BoxBV, SkinTransform->NiTransform, NiCameraProperty->NiCamera
+        self.es3 = [
+            'ApplyMode', 'TexClampMode', 'TexFilterMode', 'PixelLayout', 'MipMapFormat', 'AlphaFormat', 'VertMode', 'LightMode', 'KeyType', 'TextureType', 'CoordGenType', 'FieldType', 'DecayType',
+            'Ptr', 'Ref', 'BoxBV', 'Color3', 'Color4', 'TexDesc', 'TexCoord', 'Triangle', 'MatchGroup', 'TBC', 'Key', 'KeyGroup', 'QuatKey', 'BoneData', 'BoneVertData', 'NiTransform', 'Particle', 'Morph', 'Header', 'Footer',
+            'NiObject', 'NiObjectNET', 'NiAVObject', 'NiNode', 'RootCollisionNode', 'NiBSAnimationNode', 'NiBSParticleNode', 'NiBillboardNode', 'AvoidNode', 'NiGeometry', 'NiGeometryData', 'NiTriBasedGeom', 'NiTriBasedGeomData', 'NiTriShape', 'NiTriShapeData', 'NiProperty', 'NiTexturingProperty', 'NiAlphaProperty', 'NiZBufferProperty', 'NiVertexColorProperty', 'NiShadeProperty', 'NiWireframeProperty', 'NiCamera', 'NiUVData', 'NiKeyframeData', 'NiColorData', 'NiMorphData', 'NiVisData', 'NiFloatData', 'NiPosData', 'NiExtraData', 'NiStringExtraData', 'NiTextKeyExtraData', 'NiVertWeightsExtraData', 'NiParticles', 'NiParticlesData', 'NiRotatingParticles', 'NiRotatingParticlesData', 'NiAutoNormalParticles', 'NiAutoNormalParticlesData', 'NiParticleSystemController', 'NiBSPArrayController', 'NiParticleModifier', 'NiGravity', 'NiParticleBomb', 'NiParticleColorModifier', 'NiParticleGrowFade', 'NiParticleMeshModifier', 'NiParticleRotation', 'NiTimeController', 'NiUVController', 'NiInterpController', 'NiSingleInterpController', 'NiKeyframeController', 'NiGeomMorpherController', 'NiBoolInterpController', 'NiVisController', 'NiFloatInterpController', 'NiAlphaController', 'NiSkinInstance', 'NiSkinData', 'NiSkinPartition', 'NiTexture', 'NiSourceTexture', 'NiPoint3InterpController', 'NiMaterialProperty', 'NiMaterialColorController', 'NiDynamicEffect', 'NiTextureEffect' ]
         if self.ex == CS:
             super().__init__(default_delim=('{', '}'))
             self.symbolComment = '//'
@@ -204,6 +220,10 @@ type Matrix4x4 = np.ndarray
 class Reader: pass
 class Color: pass
 
+#
+class UnionBV: pass
+class NiObject: pass
+
 ''',
 '''class X(Generic[T]):
     @staticmethod
@@ -278,17 +298,7 @@ class Flags(Flag):
     pass
 ''']
         #endregion
-        self.struct = {
-            'BoneVertData': ('<Hf', 7),
-            'TBC': ('<3f', 12),
-            'TexCoord': ('<2f', 8),
-            'Triangle': ('<3H', 18),
-            'BSVertexDesc': ('<5bHb', 8),
-            'NiPlane': ('<4f', 24),
-            'NiBound': ('<4f', 24),
-            'NiQuatTransform': 'x',
-            'NiTransform': 'x',
-            'Particle': ('<9f2H', 40) }
+
         # redirects
         self.customs = {}
         self.members['BoneVertDataHalf'] = ['', ('BoneVertData', 'BoneVertData'), ('new BoneVertData(r, true)', 'BoneVertData(r, true)'), lambda c: (f'r.ReadFArray(r => new BoneVertData(r, true), {c})', f'r.readFArray(lambda r: BoneVertData(r, true), {c})')]
@@ -320,7 +330,7 @@ class Flags(Flag):
         self.emit_raw(self.xbodys[0])
         self.region('X')
         self.emit_raw(self.xbodys[1])
-    def writeEnum(self, s: EnumX) -> None:
+    def writeEnum(self, s: Enum) -> None:
         pos = 37
         # write enum
         if s.comment: self.comment(s.comment)
@@ -328,12 +338,15 @@ class Flags(Flag):
         with self.block(before=
             f'public enum {s.name} : {s.storage}' if self.ex == CS else \
             f'class {s.name}({'Flag' if s.flag else 'Enum'}):' if self.ex == PY else \
+            None, delim=
+            ('{' + f' // {s.tags}', '}') if s.tags and self.ex == CS else \
+            (f'# {s.tags}', None) if s.tags and self.ex == PY else \
             None):
             vl = s.values[-1]
             for v in s.values:
                 self.emit_with_comment(f'{v[0]} = {'1 << ' if s.flag and v[1] != '0' else ''}{v[1]}{'' if v == vl else ','}', v[3], pos)
         self.emit()
-    def writeClass(self, s: ClassX) -> None:
+    def writeClass(self, s: Class) -> None:
         pos = 57
         # skip class
         if not self.members[s.name][0]:
@@ -350,12 +363,12 @@ class Flags(Flag):
         with self.block(before=
             f'public{' abstract ' if s.abstract else ' '}{'struct' if s.struct else 'class'} {s.namecw[CS]}{'(' + s.init[0][CS] + ')' if primary else ''}{' : ' + s.inherit + ('(' + s.init[1][CS] + ')' if primary else '') if s.inherit else ''}' if self.ex == CS else \
             f'class {s.name}{'(' + s.inherit + ')' if s.inherit else ''}:' if self.ex == PY else \
+            None, delim=
+            ('{' + f' // {s.tags}', '}') if s.tags and self.ex == CS else \
+            (f'# {s.tags}', None) if s.tags and self.ex == PY else \
             None):
-            if s.struct and s.struct != 'x': self.emit(
-                f'public static (string, int) Struct = ("{s.struct[0]}", {s.struct[1]});' if self.ex == CS else \
-                f'struct = (\'{s.struct[0]}\', {s.struct[1]})' if self.ex == PY else \
-                None )
             if self.ex == CS:
+                if s.struct and s.struct != 'x': self.emit(f'public static (string, int) Struct = ("{s.struct[0]}", {s.struct[1]});')
                 for k, v in s.fields.items():
                     self.emit_with_comment(f'public {v[0][CS]} {v[1][CS] if primary else k[CS] + (' = ' + v[2] if v[2] else '')};' if v[0] else '', v[3], pos if v[0] else 0)
                 if not primary:
@@ -365,14 +378,17 @@ class Flags(Flag):
                         for x in inits:
                             match x:
                                 case str(): self.emit(x)
-                                case ClassX.Comment(): self.emit(f'// {x.comment}')
-                                case ClassX.If():
+                                case Class.Comment(): self.emit(f'// {x.comment}')
+                                case Class.If():
                                     with self.block(before=f'{x.initcw[CS]}'): emitBlock(x.inits)
-                                case ClassX.Field(): self.emit(f'{x.initcw[CS]};')
+                                case Class.Switch():
+                                    with self.block(before=f'{x.initcw[CS]}:'): emitBlock(x.inits)
+                                case Class.Value(): self.emit(f'{x.initcw[CS]};')
                     constArg = cw.customs[s.name]['constArg'][CS] if s.name in cw.customs and 'constArg' in cw.customs[s.name] else ''
                     with self.block(before=f'public {s.name}({s.init[0][CS]}{constArg}){' : base(r, h)' if s.inherit else ''}'): emitBlock(s.inits)
                 if s.name in cw.customs and 'const' in cw.customs[s.name]: self.emit(cw.customs[s.name]['const'][CS])
             elif self.ex == PY:
+                if s.struct and s.struct != 'x': self.emit(f'struct = (\'{s.struct[0]}\', {s.struct[1]})')
                 if not primary: 
                     for k, v in s.fields.items():
                         self.emit_with_comment(f'{k[PY]}: {v[0][PY]}{' = ' + v[2] if v[2] else ''}' if v[0] else '', v[3], pos if v[0] else 0)
@@ -381,10 +397,12 @@ class Flags(Flag):
                     for x in inits:
                         match x:
                             case str(): self.emit(x)
-                            case ClassX.Comment(): self.emit(f'# {x.comment}')
-                            case ClassX.If():
+                            case Class.Comment(): self.emit(f'# {x.comment}')
+                            case Class.If():
                                 with self.block(before=f'{x.initcw[PY]}:'): emitBlock(x.inits)
-                            case ClassX.Field(): self.emit(f'{x.initcw[PY]}')
+                            case Class.Switch():
+                                with self.block(before=f'{x.initcw[PY]}:'): emitBlock(x.inits)
+                            case Class.Value(): self.emit(f'{x.initcw[PY]}')
                 constArg = cw.customs[s.name]['constArg'][PY] if s.name in cw.customs and 'constArg' in cw.customs[s.name] else ''
                 with self.block(before=f'def __init__(self, {s.init[0][PY]}{constArg}):'):
                     if s.inherit: self.emit('super().__init__(r, h)')
@@ -399,7 +417,7 @@ class Flags(Flag):
 
 #region Objects
 
-class EnumX:
+class Enum:
     comment: str
     flag: bool
     name: str
@@ -410,6 +428,7 @@ class EnumX:
         self.flag = e.tag == 'bitflags'
         self.name = e.attrib['name'].replace(' ', '_')
         self.namecw = (self.name, self.name)
+        self.tags = 'X' if self.name in cw.es3 else ''
         self.storage = e.attrib['storage']
         self.values = [(e.attrib['name'].replace(' ', '_'), e.attrib['value'], None, e.text.strip() if e.text else None) for e in e]
         self.flags = 'E'
@@ -424,25 +443,25 @@ class EnumX:
             (self.init[CS], self.init[PY]),
             lambda c: (f'r.ReadFArray(r => {self.init[CS]}, {c})', f'r.readFArray(lambda r: {self.init[PY]}, {c})')]
 
-class ClassX:
+class Class:
     class Comment:
-        def __init__(self, parent: ClassX, s: str):
+        def __init__(self, parent: Class, s: str):
             self.comment: str = s
             self.default: str = None
             self.name: str = s
             self.namecw = (self.name, self.name)
-        def code(self, parent: ClassX, cw: NifCodeWriter) -> None:
+        def code(self, parent: Class, cw: NifCodeWriter) -> None:
             self.typecw = None
             self.initcw = None
     class If:
-        def __init__(self, parent: ClassX, comment: str, field: object, elseif: bool):
+        def __init__(self, parent: Class, comment: str, field: object, elseif: bool):
             self.comment: str = comment
             self.elseif = elseif
             self.name: str = None
             self.inits: str = []
             self.vercond = field.vercond if field else None
             self.cond = field.cond if field else None
-        def code(self, parent: ClassX, cw: NifCodeWriter) -> None:
+        def code(self, parent: Class, cw: NifCodeWriter) -> None:
             for x in self.inits:
                 if not isinstance(x, str): x.code(parent, cw)
             self.typecw = None
@@ -452,8 +471,20 @@ class ClassX:
             elif self.cond: c = parent.cond(self.cond)
             cs = f'{'else if' if self.elseif else 'if'} ({c[CS]})'; py = f'{'elif' if self.elseif else 'if'} {c[PY]}'
             self.initcw = [cs, py]
-    class Field:
-        def __init__(self, parent: ClassX, e: object):
+    class Switch:
+        def __init__(self, parent: Class, comment: str, values: list[object]):
+            self.comment: str = comment
+            self.name: str = values[0].cond.split(' ')[0]
+            self.inits: str = values
+        def code(self, parent: Class, cw: NifCodeWriter) -> None:
+            for x in self.inits:
+                if not isinstance(x, str): x.code(parent, cw)
+            self.typecw = None
+            # init
+            cs = f'switch ({self.name})'; py = f'match {self.name}:'
+            self.initcw = [cs, py]
+    class Value:
+        def __init__(self, parent: Class, e: object):
             if e == None: return
             self.comment: str = e.text.strip().replace('        ', '') if e.text else None if e.text else None
             self.elseif = False
@@ -465,7 +496,7 @@ class ClassX:
             self.namecw = (self.name, fmt_py(self.name)[0].lower() + self.name[1:])
             self.typecw = None
             self.initcw = None
-            self.template: str = e.attrib.get('template')
+            self.template: str = z if (z := e.attrib.get('template')) != 'TEMPLATE' else None
             self.default: str = e.attrib.get('default')
             self.arg: str = e.attrib.get('arg')
             self.arr1: str = z.replace(' ', '') if (z := e.attrib.get('arr1')) else None
@@ -484,20 +515,20 @@ class ClassX:
             vercond += f'{' && ' if vercond else ''}(UV2 == {z})' if (z := e.attrib.get('userver2')) else ''
             vercond = verReplace(vercond).replace('User Version 2 ', 'UV2 ').replace('User Version ', 'UV ').replace('Version ', 'V ')
             self.vercond: str = vercond
-        def code(self, parent: ClassX, cw: NifCodeWriter) -> None:
+        def code(self, parent: Class, cw: NifCodeWriter) -> None:
             flags = parent.flags
             primary = 'P' in flags
             # totype
             if not self.typecw:
-                cs = cw.members[self.type][1][CS]; py = cw.members[self.type][1][PY]
+                cs = cw.members[self.type][1][CS].replace('<T>', f'<{self.template or 'T'}>'); py = cw.members[self.type][1][PY].replace('<T>', f'<{self.template or 'T'}>')
                 if self.arr1 and self.arr2: self.typecw = [f'byte[][]', f'list[bytearray]'] if self.type == 'byte' else [f'{cs}[][]', f'list[list[{py}]]']
                 elif self.arr1: self.typecw = [f'byte[]', f'bytearray'] if self.type == 'byte' else [f'{cs}[]', f'list[{py}]']
                 else: self.typecw = [cs, py]
             # toinit
             if not self.initcw:
-                cs = cw.members[self.type][2][CS]; py = cw.members[self.type][2][PY]
+                cs = cw.members[self.type][2][CS].replace('<T>', f'<{self.template or 'T'}>'); py = cw.members[self.type][2][PY].replace('<T>', f'<{self.template or 'T'}>')
                 if self.arr1:
-                    cs = cw.members[self.type][3](parent.cond(self.arr1)[CS])[CS]; py = cw.members[self.type][3](parent.cond(self.arr1)[PY])[PY]
+                    cs = cw.members[self.type][3](parent.cond(self.arr1)[CS])[CS].replace('<T>', f'<{self.template or 'T'}>'); py = cw.members[self.type][3](parent.cond(self.arr1)[PY])[PY].replace('<T>', f'<{self.template or 'T'}>')
                     if self.arr1.startswith('L'): cs = cs.replace('Read', f'Read{self.arr1}').replace(f', {self.arr1})', ')'); py = py.replace('read', f'read{self.arr1}').replace(f', {self.arr1})', ')')
                     if self.arr2: cs = f'r.ReadFArray(k => {cs}, {self.arr2})'; py = f'r.readFArray(lambda k: {py}, {self.arr2})'
                 if self.template: cs = cs.replace('{T}', self.template); py = py.replace('{T}', self.template)
@@ -517,9 +548,14 @@ class ClassX:
     comment: str
     abstract: bool = False
     inherit: str = None
+    template: str
     name: str
     namers: dict[str, str]
-    values: list[Field]
+    namecw: tuple[str]
+    tags: str
+    struct: str
+    values: list[Value]
+    condFlag: int
     fields: list[tuple]
     def __init__(self, e: object, cw: NifCodeWriter):
         niobject: bool = e.tag == 'niobject'
@@ -531,15 +567,17 @@ class ClassX:
         self.name = e.attrib['name']
         self.namers = {}
         self.namecw = (f'{self.name}<T>' if self.template else self.name, f'{self.name}[T]' if self.template else self.name)
+        self.tags = 'X' if self.name in cw.es3 else ''
         self.struct = cw.struct.get(self.name)
-        self.values = [ClassX.Field(self, e) for e in e]
+        self.values = [Class.Value(self, e) for e in e]
         self.condFlag = 0
         self.process()
         # flags
         self.flags = '' if self.name in [''] else \
             'C' if (self.condFlag & 2) or (self.condFlag & 4) or (niobject and self.values) or self.struct or self.template else \
             'P'
-        hasHeader = self.name != 'Header' and (niobject or (self.condFlag & 1))
+        headerExp = self.name in ['OblivionSubShape']
+        hasHeader = self.name != 'Header' and (niobject or (self.condFlag & 1) or headerExp)
         # members
         constNew = cw.customs[self.name]['constNew'] if self.name in cw.customs and 'constNew' in cw.customs[self.name] else ['', '']
         self.init = (
@@ -557,6 +595,7 @@ class ClassX:
             case 'Key': s = s.replace('ARG', 'keyType').replace('2', 'KeyType.QUADRATIC_KEY').replace('3', 'KeyType.TBC_KEY')
             case 'QuatKey': s = s.replace('ARG', 'keyType').replace('3', 'KeyType.TBC_KEY').replace('4', 'KeyType.XYZ_ROTATION_KEY')
             case 'Morph': s = s.replace('ARG', 'numVertices')
+            case 'BoundingVolume': s = s.replace('0', 'BoundVolumeType.SPHERE_BV').replace('1', 'BoundVolumeType.BOX_BV').replace('2', 'BoundVolumeType.CAPSULE_BV').replace('4', 'BoundVolumeType.UNION_BV').replace('5', 'BoundVolumeType.HALFSPACE_BV')
         cs = s; py = s.replace('||', 'or').replace('&&', 'and')
         match self.name:
             case 'BSVertexData':
@@ -587,6 +626,14 @@ class ClassX:
     def process(self):
         values = self.values
         if not values: self.inits = values[:]; return
+
+        # condFlag
+        for s in values:
+            if s.vercond or 'V ' in s.cond or 'UV ' in s.cond or 'UV2 ' in s.cond: self.condFlag |= 1
+            if 'ARG ' in s.cond: self.condFlag |= 2
+            for k,v in self.namers.items():
+                if k in s.vercond or k in s.cond: self.condFlag |= 2
+
         # collapse num into next
         for i in range(len(values) - 1, 0, -1):
             this = values[i]; next = values[i-1]
@@ -600,13 +647,14 @@ class ClassX:
                         case 'ushort' | 'short': this.arr1 = 'L16'
                         case 'byte': this.arr1 = 'L8'
                     del values[i-1]
+
         # custom
         match self.name:
             case 'ControlledBlock':
                 self.flags = 'C'
-                values.insert(1, ClassX.Comment(self, 'NiControllerSequence::InterpArrayItem'))
-                values.insert(6, ClassX.Comment(self, 'Bethesda-only'))
-                values.insert(8, ClassX.Comment(self, 'NiControllerSequence::IDTag, post-10.1.0.104 only'))
+                values.insert(1, Class.Comment(self, 'NiControllerSequence::InterpArrayItem'))
+                values.insert(6, Class.Comment(self, 'Bethesda-only'))
+                values.insert(8, Class.Comment(self, 'NiControllerSequence::IDTag, post-10.1.0.104 only'))
             case 'Header':
                 self.flags = 'C'
                 values[2].namecw = ('V', 'v')
@@ -615,23 +663,28 @@ class ClassX:
                 del values[10]
                 values[10].arr1 = values[11].arr1 = 'L16'
             case 'TexDesc':
-                values.insert(10, ClassX.Comment(self, 'NiTextureTransform'))
-        # inits
+                values.insert(10, Class.Comment(self, 'NiTextureTransform'))
         inits = self.inits = values[:]
+        match self.name:
+            case 'BoundingVolume':
+                self.flags = 'C'
+                inits.insert(1, Class.Switch(self, None, inits[1:6]))
+                # del inits[2:7]
+
         # collapse multi ver
         newIf = None
         elseif = False
         for i in range(len(inits) - 1, 0, -1):
             this = inits[i]; next = inits[i-1]
-            if isinstance(this, ClassX.Field) and isinstance(next, ClassX.Field):
+            if isinstance(this, Class.Value) and isinstance(next, Class.Value):
                 if this.vercond and this.vercond == next.vercond:
-                    if not newIf: newIf = ClassX.If(self, None, this, elseif)
+                    if not newIf: newIf = Class.If(self, None, this, elseif)
                     newIf.inits.insert(0, next)
                     next.vercond = None
                     del inits[i-1]
                     continue
                 if this.cond and this.cond == next.cond:
-                    if not newIf: newIf = ClassX.If(self, None, this, elseif)
+                    if not newIf: newIf = Class.If(self, None, this, elseif)
                     newIf.inits.insert(0, next)
                     next.cond = None
                     del inits[i-1]
@@ -660,13 +713,6 @@ class ClassX:
                     case 'FurniturePosition': inits[-1].elseif = True #more
                     case 'NiTimeController': inits[-1].elseif = True
             newIf = None
-        # condFlag
-        for s in inits:
-            if not isinstance(s, ClassX.Field) and not isinstance(s, ClassX.If): continue
-            if s.vercond or 'V ' in s.cond or 'UV ' in s.cond or 'UV2 ' in s.cond: self.condFlag |= 1
-            if 'ARG ' in s.cond: self.condFlag |= 2
-            for k,v in self.namers.items():
-                if k in s.vercond or k in s.cond: self.condFlag |= 2
 
     def code(self, cw: NifCodeWriter):
         for x in self.values:
@@ -684,14 +730,15 @@ def parse(tree: object, cw: NifCodeWriter) -> None:
     cs = ['X']
     # first pass
     for e in root:
+        name = e.attrib.get('name')
         match e.tag:
             case 'version' | 'basic': continue
-            case 'enum' | 'bitflags': cs.append(EnumX(e, cw))
-            case 'compound' | 'niobject': cs.append(ClassX(e, cw))
+            case 'enum' | 'bitflags': cs.append(Enum(e, cw))
+            case 'compound' | 'niobject': cs.append(Class(e, cw))
     # code pass
     for s in cs:
         match s:
-            case ClassX(): s.code(cw)
+            case Class(): s.code(cw)
     return cs
 
 def write(cs: list[object], cw: NifCodeWriter) -> None:
@@ -703,8 +750,8 @@ def write(cs: list[object], cw: NifCodeWriter) -> None:
             case 'NiObject': cw.endregion(); cw.region('NIF Objects')
             case 'BSDistantObjectLargeRefExtraData': cw.endregion()
         match s:
-            case EnumX(): cw.writeEnum(s)
-            case ClassX(): cw.writeClass(s)
+            case Enum(): cw.writeEnum(s)
+            case Class(): cw.writeClass(s)
 
 #endregion
 
@@ -723,3 +770,89 @@ cs = parse(tree, cw)
 write(cs, cw)
 with open('nif.py', 'w', encoding='utf-8') as f:
     f.write(cw.render())
+
+'''
+
+// Objects
+NiHeader
+NiFooter
+NiObject
+NiObjectNET : NiObject
+NiAVObject : NiObjectNET
+
+// Nodes
+NiNode : NiAVObject
+RootCollisionNode : NiNode
+NiBSAnimationNode : NiNode
+NiBSParticleNode : NiNode
+NiBillboardNode : NiNode
+AvoidNode : NiNode
+// Geometry
+NiGeometry : NiAVObject
+NiGeometryData : NiObject
+NiTriBasedGeom : NiGeometry
+NiTriBasedGeomData : NiGeometryData
+NiTriShape : NiTriBasedGeom
+NiTriShapeData : NiTriBasedGeomData
+// Properties
+NiProperty : NiObjectNET
+NiTexturingProperty : NiProperty
+NiAlphaProperty : NiProperty
+NiZBufferProperty : NiProperty
+NiVertexColorProperty : NiProperty
+NiShadeProperty : NiProperty
+NiWireframeProperty : NiProperty
+NiCameraProperty : NiAVObject
+// Data
+NiUVData : NiObject
+NiKeyframeData : NiObject
+NiColorData : NiObject
+NiMorphData : NiObject
+NiVisData : NiObject
+NiFloatData : NiObject
+NiPosData : NiObject
+NiExtraData : NiObject
+NiStringExtraData : NiExtraData
+NiTextKeyExtraData : NiExtraData
+NiVertWeightsExtraData : NiExtraData
+// Particles
+NiParticles : NiGeometry
+NiParticlesData : NiGeometryData
+NiRotatingParticles : NiParticles
+NiRotatingParticlesData : NiParticlesData
+NiAutoNormalParticles : NiParticles
+NiAutoNormalParticlesData : NiParticlesData
+NiParticleSystemController : NiTimeController
+NiBSPArrayController : NiParticleSystemController
+// Particle Modifiers
+NiParticleModifier : NiObject
+NiGravity : NiParticleModifier
+NiParticleBomb : NiParticleModifier
+NiParticleColorModifier : NiParticleModifier
+NiParticleGrowFade : NiParticleModifier
+NiParticleMeshModifier : NiParticleModifier
+NiParticleRotation : NiParticleModifier
+// Controllers
+NiTimeController : NiObject
+NiUVController : NiTimeController
+NiInterpController : NiTimeController
+NiSingleInterpController : NiInterpController
+NiKeyframeController : NiSingleInterpController
+NiGeomMorpherController : NiInterpController
+NiBoolInterpController : NiSingleInterpController
+NiVisController : NiBoolInterpController
+NiFloatInterpController : NiSingleInterpController
+NiAlphaController : NiFloatInterpController
+// Skin Stuff
+NiSkinInstance : NiObject
+NiSkinData : NiObject
+NiSkinPartition : NiObject
+// Miscellaneous
+NiTexture : NiObjectNET
+NiSourceTexture : NiTexture
+NiPoint3InterpController : NiSingleInterpController
+NiMaterialProperty : NiProperty
+NiMaterialColorController : NiPoint3InterpController
+NiDynamicEffect : NiAVObject
+NiTextureEffect : NiDynamicEffect
+'''

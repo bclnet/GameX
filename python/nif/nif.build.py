@@ -9,6 +9,7 @@ class Class: pass
 #region Helpers
 
 CS = 0; PY = 1
+MS = 0; MN = 1; MD = 2; MI = 3; MA = 4
 
 def fmt_py(s: str) -> str: return fmt_camel(s) # s[0].lower() + s[1:]
 
@@ -46,50 +47,50 @@ class NifCodeWriter(CodeWriter):
         #region Hide
         self.members = {
             'TEMPLATE': [None, ('T', 'T'), None, ('X<T>.Read(r)', 'X[T].read(r)'), None],
-            'bool': [None, ('bool', 'bool'), ('r.ReadBool32()', 'r.readBool32()'), lambda c: (f'[r.ReadBool32(), r.ReadBool32(), r.ReadBool32()]', f'[r.readBool32(), r.readBool32(), r.readBool32()]') if c == '3' else (f'r.ReadFArray(r => r.ReadBool32(), {c})', f'r.readFArray(lambda r: r.readBool32(), {c})')],
-            'byte': [None, ('byte', 'int'), ('r.ReadByte()', 'r.readByte()'), lambda c: (f'r.ReadBytes({c})', f'r.readBytes({c})')],
-            'uint': [None, ('uint', 'int'), ('r.ReadUInt32()', 'r.readUInt32()'), lambda c: (f'r.ReadPArray<uint>("I", {c})', f'r.readPArray(None, \'I\', {c})')],
-            'ulittle32': [None, ('uint', 'int'), ('r.ReadUInt32()', 'r.readUInt32()'), None],
-            'ushort': [None, ('ushort', 'int'), ('r.ReadUInt16()', 'r.readUInt16()'), lambda c: (f'r.ReadPArray<ushort>("H", {c})', f'r.readPArray(None, \'H\', {c})')],
-            'int': [None, ('int', 'int'), ('r.ReadInt32()', 'r.readInt32()'), lambda c: (f'r.ReadPArray<uint>("i", {c})', f'r.readPArray(None, \'i\', {c})')],
-            'short': [None, ('short', 'int'), ('r.ReadInt16()', 'r.readInt16()'), lambda c: (f'r.ReadPArray<short>("h", {c})', f'r.readPArray(None, \'h\', {c})')],
-            'BlockTypeIndex': [None, ('ushort', 'int'), ('r.ReadUInt16()', 'r.readUInt16()'), lambda c: (f'r.ReadPArray<ushort>("H", {c})', f'r.readPArray(\'H\', {c})')],
-            'char': [None, ('sbyte', 'int'), ('r.ReadSByte()', 'r.readSByte()'), lambda c: (f'r.ReadFAString({c})', f'r.readFAString({c})'), None],
-            'FileVersion': [None, ('uint', 'int'), ('r.ReadUInt32()', 'r.readUInt32()'), None],
-            'Flags': [None, ('Flags', 'Flags'), ('(Flags)r.ReadUInt16()', 'Flags(r.readUInt16())'), None],
-            'float': [None, ('float', 'float'), ('r.ReadSingle()', 'r.readSingle()'), lambda c: (f'r.ReadPArray<float>("f", {c})', f'r.readPArray(None, \'f\', {c})')],
-            'hfloat': [None, ('float', 'float'), ('r.ReadHalf()', 'r.readHalf()'), lambda c: (f'[r.ReadHalf(), r.ReadHalf(), r.ReadHalf(), r.ReadHalf()]', f'[r.readHalf(), r.readHalf(), r.readHalf(), r.readHalf()]') if c == '4' else (f'r.ReadFArray(r => r.ReadHalf(), {c})', f'r.readFArray(lambda r: r.readHalf(), {c})')],
-            'HeaderString': [None, ('string', 'str'), ('Y.ParseHeaderStr(r.ReadVAString(0x80, 0xA))', 'Y.parseHeaderStr(r.readVAString(128, b\'\\x0A\'))'), None],
-            'LineString': [None, ('string', 'str'), ('??', '??'), lambda c: (f'[r.ReadL8AString(), r.ReadL8AString(), r.ReadL8AString()]', f'[r.readL8AString(), r.readL8AString(), r.readL8AString()]') if c == '3' else (f'r.ReadFArray(r => r.ReadL8AString(), {c})', f'r.readFArray(lambda r: r.readL8AString(), {c})')],
-            'Ptr': [None, ('int?', 'int'), ('X<{T}>.Ptr(r)', 'X[{T}].ptr(r)'), lambda c: (f'r.ReadFArray(X<{{T}}>.Ptr, {c})', f'r.readFArray(X[{{T}}].ptr, {c})')],
-            'Ref': [None, ('int?', 'int'), ('X<{T}>.Ref(r)', 'X[{T}].ref(r)'), lambda c: (f'r.ReadFArray(X<{{T}}>.Ref, {c})', f'r.readFArray(X[{{T}}].ref, {c})')],
-            'StringOffset': [None, ('uint', 'int'), ('r.ReadUInt32()', 'r.readUInt32()'), None],
-            'StringIndex': [None, ('uint', 'int'), ('r.ReadUInt32()', 'r.readUInt32()'), None],
+            'bool': [None, ('bool', 'bool'), None, ('r.ReadBool32()', 'r.readBool32()'), lambda c: (f'[r.ReadBool32(), r.ReadBool32(), r.ReadBool32()]', f'[r.readBool32(), r.readBool32(), r.readBool32()]') if c == '3' else (f'r.ReadFArray(r => r.ReadBool32(), {c})', f'r.readFArray(lambda r: r.readBool32(), {c})')],
+            'byte': [None, ('byte', 'int'), None, ('r.ReadByte()', 'r.readByte()'), lambda c: (f'r.ReadBytes({c})', f'r.readBytes({c})')],
+            'uint': [None, ('uint', 'int'), None, ('r.ReadUInt32()', 'r.readUInt32()'), lambda c: (f'r.ReadPArray<uint>("I", {c})', f'r.readPArray(None, \'I\', {c})')],
+            'ulittle32': [None, ('uint', 'int'), None, ('r.ReadUInt32()', 'r.readUInt32()'), None],
+            'ushort': [None, ('ushort', 'int'), None, ('r.ReadUInt16()', 'r.readUInt16()'), lambda c: (f'r.ReadPArray<ushort>("H", {c})', f'r.readPArray(None, \'H\', {c})')],
+            'int': [None, ('int', 'int'), None, ('r.ReadInt32()', 'r.readInt32()'), lambda c: (f'r.ReadPArray<uint>("i", {c})', f'r.readPArray(None, \'i\', {c})')],
+            'short': [None, ('short', 'int'), None, ('r.ReadInt16()', 'r.readInt16()'), lambda c: (f'r.ReadPArray<short>("h", {c})', f'r.readPArray(None, \'h\', {c})')],
+            'BlockTypeIndex': [None, ('ushort', 'int'), None, ('r.ReadUInt16()', 'r.readUInt16()'), lambda c: (f'r.ReadPArray<ushort>("H", {c})', f'r.readPArray(\'H\', {c})')],
+            'char': [None, ('sbyte', 'int'), None, ('r.ReadSByte()', 'r.readSByte()'), lambda c: (f'r.ReadFAString({c})', f'r.readFAString({c})'), None],
+            'FileVersion': [None, ('uint', 'int'), None, ('r.ReadUInt32()', 'r.readUInt32()'), None],
+            'Flags': [None, ('Flags', 'Flags'), None, ('(Flags)r.ReadUInt16()', 'Flags(r.readUInt16())'), None],
+            'float': [None, ('float', 'float'), None, ('r.ReadSingle()', 'r.readSingle()'), lambda c: (f'r.ReadPArray<float>("f", {c})', f'r.readPArray(None, \'f\', {c})')],
+            'hfloat': [None, ('float', 'float'), None, ('r.ReadHalf()', 'r.readHalf()'), lambda c: (f'[r.ReadHalf(), r.ReadHalf(), r.ReadHalf(), r.ReadHalf()]', f'[r.readHalf(), r.readHalf(), r.readHalf(), r.readHalf()]') if c == '4' else (f'r.ReadFArray(r => r.ReadHalf(), {c})', f'r.readFArray(lambda r: r.readHalf(), {c})')],
+            'HeaderString': [None, ('string', 'str'), None, ('Y.ParseHeaderStr(r.ReadVAString(0x80, 0xA))', 'Y.parseHeaderStr(r.readVAString(128, b\'\\x0A\'))'), None],
+            'LineString': [None, ('string', 'str'), None, ('??', '??'), lambda c: (f'[r.ReadL8AString(), r.ReadL8AString(), r.ReadL8AString()]', f'[r.readL8AString(), r.readL8AString(), r.readL8AString()]') if c == '3' else (f'r.ReadFArray(r => r.ReadL8AString(), {c})', f'r.readFArray(lambda r: r.readL8AString(), {c})')],
+            'Ptr': [None, ('int?', 'int'), None, ('X<{T}>.Ptr(r)', 'X[{T}].ptr(r)'), lambda c: (f'r.ReadFArray(X<{{T}}>.Ptr, {c})', f'r.readFArray(X[{{T}}].ptr, {c})')],
+            'Ref': [None, ('int?', 'int'), None, ('X<{T}>.Ref(r)', 'X[{T}].ref(r)'), lambda c: (f'r.ReadFArray(X<{{T}}>.Ref, {c})', f'r.readFArray(X[{{T}}].ref, {c})')],
+            'StringOffset': [None, ('uint', 'int'), None, ('r.ReadUInt32()', 'r.readUInt32()'), None],
+            'StringIndex': [None, ('uint', 'int'), None, ('r.ReadUInt32()', 'r.readUInt32()'), None],
             # Compounds
-            'SizedString': [None, ('string', 'str'), ('r.ReadL32AString()', 'r.readL32AString()'), lambda c: (f'r.ReadFArray(r => r.ReadL32AString(), {c})', f'r.readFArray(lambda r: r.readL32AString(), {c})')],
-            'string': [None, ('string', 'str'), ('Y.String(r)', 'Y.string(r)'), lambda c: (f'r.ReadFArray(r => Y.String(r), {c})', f'r.readFArray(lambda r: Y.string(r), {c})')],
-            'ByteArray': [None, ('byte[]', 'bytearray'), ('r.ReadL8Bytes()', 'r.readL8Bytes()'), None],
-            'ByteMatrix': [None, ('??', '??'), ('??', '??'), None],
-            'Color3': [None, ('Color3', 'Color3'), ('new Color3(r)', 'Color3(r)'), None],
-            'ByteColor3': [None, ('ByteColor3', 'ByteColor3'), ('new ByteColor3(r)', 'ByteColor3(r)'), lambda c: (f'r.ReadFArray(r => new ByteColor3(r), {c})', f'r.readFArray(lambda r: ByteColor3(r), {c})')],
-            'Color4': [None, ('Color4', 'Color4'), ('new Color4(r)', 'Color4(r)'), lambda c: (f'r.ReadFArray(r => new Color4(r), {c})', f'r.readFArray(lambda r: Color4(r), {c})')],
-            'ByteColor4': [None, ('ByteColor4', 'ByteColor4'), ('new Color4Byte(r)', 'Color4Byte(r)'), lambda c: (f'r.ReadFArray(r => new Color4Byte(r), {c})', f'r.readFArray(lambda r: Color4Byte(r), {c})')],
-            'FilePath': [None, ('??', '??'), ('??', '??'), None],
+            'SizedString': [None, ('string', 'str'), None, ('r.ReadL32AString()', 'r.readL32AString()'), lambda c: (f'r.ReadFArray(r => r.ReadL32AString(), {c})', f'r.readFArray(lambda r: r.readL32AString(), {c})')],
+            'string': [None, ('string', 'str'), None, ('Y.String(r)', 'Y.string(r)'), lambda c: (f'r.ReadFArray(r => Y.String(r), {c})', f'r.readFArray(lambda r: Y.string(r), {c})')],
+            'ByteArray': [None, ('byte[]', 'bytearray'), None, ('r.ReadL8Bytes()', 'r.readL8Bytes()'), None],
+            'ByteMatrix': [None, ('??', '??'), None, ('??', '??'), None],
+            'Color3': [None, ('Color3', 'Color3'), None, ('new Color3(r)', 'Color3(r)'), None],
+            'ByteColor3': [None, ('ByteColor3', 'ByteColor3'), None, ('new ByteColor3(r)', 'ByteColor3(r)'), lambda c: (f'r.ReadFArray(r => new ByteColor3(r), {c})', f'r.readFArray(lambda r: ByteColor3(r), {c})')],
+            'Color4': [None, ('Color4', 'Color4'), None, ('new Color4(r)', 'Color4(r)'), lambda c: (f'r.ReadFArray(r => new Color4(r), {c})', f'r.readFArray(lambda r: Color4(r), {c})')],
+            'ByteColor4': [None, ('ByteColor4', 'ByteColor4'), None, ('new Color4Byte(r)', 'Color4Byte(r)'), lambda c: (f'r.ReadFArray(r => new Color4Byte(r), {c})', f'r.readFArray(lambda r: Color4Byte(r), {c})')],
+            'FilePath': [None, ('??', '??'), None, ('??', '??'), None],
             # Compounds
-            'ByteVector3': [None, ('Vector3<byte>', 'Vector3'), ('new Vector3<byte>(r.ReadByte(), r.ReadByte(), r.ReadByte())', 'Vector3(r.readByte(), r.readByte(), r.readByte())'), lambda c: (f'r.ReadFArray(r => new Vector3(r.ReadByte(), r.ReadByte(), r.ReadByte()), {c})', f'r.readFArray(lambda r: Vector3(r.readByte(), r.readByte(), r.readByte()), {c})')],
-            'HalfVector3': [None, ('Vector3', 'Vector3'), ('new Vector3(r.ReadHalf(), r.ReadHalf(), r.ReadHalf())', 'Vector3(r.readHalf(), r.readHalf(), r.readHalf())'), lambda c: (f'r.ReadFArray(r => new Vector3(r.ReadHalf(), r.ReadHalf(), r.ReadHalf()), {c})', f'r.readFArray(lambda r: Vector3(r.readHalf(), r.readHalf(), r.readHalf()), {c})')],
-            'Vector3': [None, ('Vector3', 'Vector3'), ('r.ReadVector3()', 'r.readVector3()'), lambda c: (f'r.ReadPArray<Vector3>("3f", {c})', f'r.readPArray(None, \'3f\', {c})')],
-            'Vector4': [None, ('Vector4', 'Vector4'), ('r.ReadVector4()', 'r.readVector4()'), lambda c: (f'r.ReadPArray<Vector4>("4f", {c})', f'r.readPArray(None, \'4f\', {c})')],
-            'Quaternion': [None, ('Quaternion', 'Quaternion'), ('r.ReadQuaternion()', 'r.readQuaternion()'), lambda c: (f'r.ReadFArray(r => r.ReadQuaternion(), {c})', f'r.readFArray(lambda r: r.readQuaternion(), {c})')],
-            'hkQuaternion': [None, ('Quaternion', 'Quaternion'), ('r.ReadQuaternionWFirst()', 'r.readQuaternionWFirst()'), None],
-            'Matrix22': [None, ('Matrix2x2', 'Matrix2x2'), ('r.ReadMatrix2x2()', 'r.readMatrix2x2()'), None],
-            'Matrix33': [None, ('Matrix3x3', 'Matrix3x3'), ('r.ReadMatrix3x3()', 'r.readMatrix3x3()'), None],
-            'Matrix34': [None, ('Matrix3x4', 'Matrix3x4'), ('r.ReadMatrix3x4()', 'r.readMatrix3x4()'), lambda c: (f'r.ReadFArray(r => r.ReadMatrix3x4(), {c})', f'r.readFArray(lambda r: r.readMatrix3x4(), {c})')],
-            'Matrix44': [None, ('Matrix4x4', 'Matrix4x4'), ('r.ReadMatrix4x4()', 'r.readMatrix4x4()'), None],
-            'hkMatrix3': [None, ('Matrix3x4', 'Matrix3x4'), ('r.ReadMatrix3x4()', 'r.readMatrix3x4()'), None],
-            'MipMap': [None, ('MipMap', 'MipMap'), ('new MipMap(r)', 'MipMap(r)'), lambda c: (f'r.ReadFArray(r => new MipMap(r), {c})', f'r.readFArray(lambda r: MipMap(r), {c})')],
-            'NodeSet': [None, ('NodeSet', 'NodeSet'), ('new NodeSet(r)', 'NodeSet(r)'), lambda c: (f'r.ReadFArray(r => new NodeSet(r), {c})', f'r.readFArray(lambda r: NodeSet(r), {c})')],
-            'ShortString': [None, ('string', 'str'), ('r.ReadL8AString()', 'r.readL8AString()'), None]
+            'ByteVector3': [None, ('Vector3<byte>', 'Vector3'), None, ('new Vector3<byte>(r.ReadByte(), r.ReadByte(), r.ReadByte())', 'Vector3(r.readByte(), r.readByte(), r.readByte())'), lambda c: (f'r.ReadFArray(r => new Vector3(r.ReadByte(), r.ReadByte(), r.ReadByte()), {c})', f'r.readFArray(lambda r: Vector3(r.readByte(), r.readByte(), r.readByte()), {c})')],
+            'HalfVector3': [None, ('Vector3', 'Vector3'), None, ('new Vector3(r.ReadHalf(), r.ReadHalf(), r.ReadHalf())', 'Vector3(r.readHalf(), r.readHalf(), r.readHalf())'), lambda c: (f'r.ReadFArray(r => new Vector3(r.ReadHalf(), r.ReadHalf(), r.ReadHalf()), {c})', f'r.readFArray(lambda r: Vector3(r.readHalf(), r.readHalf(), r.readHalf()), {c})')],
+            'Vector3': [None, ('Vector3', 'Vector3'), None, ('r.ReadVector3()', 'r.readVector3()'), lambda c: (f'r.ReadPArray<Vector3>("3f", {c})', f'r.readPArray(None, \'3f\', {c})')],
+            'Vector4': [None, ('Vector4', 'Vector4'), None, ('r.ReadVector4()', 'r.readVector4()'), lambda c: (f'r.ReadPArray<Vector4>("4f", {c})', f'r.readPArray(None, \'4f\', {c})')],
+            'Quaternion': [None, ('Quaternion', 'Quaternion'), None, ('r.ReadQuaternion()', 'r.readQuaternion()'), lambda c: (f'r.ReadFArray(r => r.ReadQuaternion(), {c})', f'r.readFArray(lambda r: r.readQuaternion(), {c})')],
+            'hkQuaternion': [None, ('Quaternion', 'Quaternion'), None, ('r.ReadQuaternionWFirst()', 'r.readQuaternionWFirst()'), None],
+            'Matrix22': [None, ('Matrix2x2', 'Matrix2x2'), None, ('r.ReadMatrix2x2()', 'r.readMatrix2x2()'), None],
+            'Matrix33': [None, ('Matrix3x3', 'Matrix3x3'), None, ('r.ReadMatrix3x3()', 'r.readMatrix3x3()'), None],
+            'Matrix34': [None, ('Matrix3x4', 'Matrix3x4'), None, ('r.ReadMatrix3x4()', 'r.readMatrix3x4()'), lambda c: (f'r.ReadFArray(r => r.ReadMatrix3x4(), {c})', f'r.readFArray(lambda r: r.readMatrix3x4(), {c})')],
+            'Matrix44': [None, ('Matrix4x4', 'Matrix4x4'), None, ('r.ReadMatrix4x4()', 'r.readMatrix4x4()'), None],
+            'hkMatrix3': [None, ('Matrix3x4', 'Matrix3x4'), None, ('r.ReadMatrix3x4()', 'r.readMatrix3x4()'), None],
+            'MipMap': [None, ('MipMap', 'MipMap'), None, ('new MipMap(r)', 'MipMap(r)'), lambda c: (f'r.ReadFArray(r => new MipMap(r), {c})', f'r.readFArray(lambda r: MipMap(r), {c})')],
+            'NodeSet': [None, ('NodeSet', 'NodeSet'), None, ('new NodeSet(r)', 'NodeSet(r)'), lambda c: (f'r.ReadFArray(r => new NodeSet(r), {c})', f'r.readFArray(lambda r: NodeSet(r), {c})')],
+            'ShortString': [None, ('string', 'str'), None, ('r.ReadL8AString()', 'r.readL8AString()'), None]
         }
         self.struct = {
             'BoneVertData': ('<Hf', 7),
@@ -301,13 +302,13 @@ class Flags(Flag):
 
         # redirects
         self.customs = {}
-        self.members['BoneVertDataHalf'] = ['', ('BoneVertData', 'BoneVertData'), ('new BoneVertData(r, true)', 'BoneVertData(r, true)'), lambda c: (f'r.ReadFArray(r => new BoneVertData(r, true), {c})', f'r.readFArray(lambda r: BoneVertData(r, true), {c})')]
+        self.members['BoneVertDataHalf'] = ['', ('BoneVertData', 'BoneVertData'), None, ('new BoneVertData(r, true)', 'BoneVertData(r, true)'), lambda c: (f'r.ReadFArray(r => new BoneVertData(r, true), {c})', f'r.readFArray(lambda r: BoneVertData(r, true), {c})')]
         self.customs['BoneVertData'] = { 'constArg': ('', ', half: bool'), 'const': ('public BoneVertData(BinaryReader r, bool half) { Index = r.ReadUInt16(); Weight = r.ReadHalf(); }', 'if half: self.index = r.readUInt16(); self.weight = r.readHalf(); return') }
-        self.members['HalfTexCoord'] = ['', ('TexCoord', 'TexCoord'), ('new TexCoord(r, true)', 'TexCoord(r, true)'), lambda c: (f'r.ReadFArray(r => new TexCoord(r, true), {c})', f'r.readFArray(lambda r: TexCoord(r, true), {c})')]
+        self.members['HalfTexCoord'] = ['', ('TexCoord', 'TexCoord'), None, ('new TexCoord(r, true)', 'TexCoord(r, true)'), lambda c: (f'r.ReadFArray(r => new TexCoord(r, true), {c})', f'r.readFArray(lambda r: TexCoord(r, true), {c})')]
         self.customs['TexCoord'] = { 'constArg': ('', ', half: bool'), 'const': ('public TexCoord(BinaryReader r, bool half) { u = r.ReadHalf(); v = r.ReadHalf(); }', 'if half: self.u = r.readHalf(); self.v = r.readHalf(); return') }
         self.customs['Key'] = { 'constArg': (', KeyType keyType', ', keyType: KeyType'), 'constNew': (', Interpolation', ', self.interpolation') }
         self.customs['QuatKey'] = { 'constArg': (', KeyType keyType', ', keyType: KeyType') }
-        self.members['BSVertexDataSSE'] = ['', ('BSVertexData', 'BSVertexData'), ('new BSVertexData(r, true)', 'BSVertexData(r, true)'), lambda c: (f'r.ReadFArray(r => new BSVertexData(r, true), {c})', f'r.readFArray(lambda r: BSVertexData(r, true), {c})')]
+        self.members['BSVertexDataSSE'] = ['', ('BSVertexData', 'BSVertexData'), None, ('new BSVertexData(r, true)', 'BSVertexData(r, true)'), lambda c: (f'r.ReadFArray(r => new BSVertexData(r, true), {c})', f'r.readFArray(lambda r: BSVertexData(r, true), {c})')]
         self.customs['Morph'] = { 'constArg': (', uint numVertices', ', numVertices: int') }
 
     def region(self, name: str) -> None: self.emit(f'#region {name}'); self.emit()
@@ -349,10 +350,10 @@ class Flags(Flag):
     def writeClass(self, s: Class) -> None:
         pos = 57
         # skip class
-        if not self.members[s.name][0]:
+        if not self.members[s.name][MS]:
             self.emit(
-                f'// {s.name} -> {self.members[s.name][3][CS]}' if self.ex == CS else \
-                f'# {s.name} -> {self.members[s.name][3][PY]}' if self.ex == PY else \
+                f'// {s.name} -> {self.members[s.name][MI][CS]}' if self.ex == CS else \
+                f'# {s.name} -> {self.members[s.name][MI][PY]}' if self.ex == PY else \
                 None)
             if s.name in ['FilePath', 'ShortString', 'BoneVertDataHalf', 'BoneVertDataHalf', 'BSVertexDataSSE']: self.emit()
             return
@@ -440,6 +441,7 @@ class Enum:
         if self.name not in cw.members: cw.members[self.name] = [
             self,
             self.namecw,
+            None,
             (self.init[CS], self.init[PY]),
             lambda c: (f'r.ReadFArray(r => {self.init[CS]}, {c})', f'r.readFArray(lambda r: {self.init[PY]}, {c})')]
 
@@ -521,15 +523,15 @@ class Class:
             primary = 'P' in flags
             # totype
             if not self.typecw:
-                cs = cw.members[self.type][1][CS].replace('<T>', f'<{self.template or 'T'}>'); py = cw.members[self.type][1][PY].replace('<T>', f'<{self.template or 'T'}>')
+                cs = cw.members[self.type][MN][CS].replace('<T>', f'<{self.template or 'T'}>'); py = cw.members[self.type][MN][PY].replace('<T>', f'<{self.template or 'T'}>')
                 if self.arr1 and self.arr2: self.typecw = [f'byte[][]', f'list[bytearray]'] if self.type == 'byte' else [f'{cs}[][]', f'list[list[{py}]]']
                 elif self.arr1: self.typecw = [f'byte[]', f'bytearray'] if self.type == 'byte' else [f'{cs}[]', f'list[{py}]']
                 else: self.typecw = [cs, py]
             # toinit
             if not self.initcw:
-                cs = cw.members[self.type][2][CS].replace('<T>', f'<{self.template or 'T'}>'); py = cw.members[self.type][2][PY].replace('<T>', f'<{self.template or 'T'}>')
+                cs = cw.members[self.type][MI][CS].replace('<T>', f'<{self.template or 'T'}>'); py = cw.members[self.type][MI][PY].replace('<T>', f'<{self.template or 'T'}>')
                 if self.arr1:
-                    cs = cw.members[self.type][3](parent.cond(self.arr1)[CS])[CS].replace('<T>', f'<{self.template or 'T'}>'); py = cw.members[self.type][3](parent.cond(self.arr1)[PY])[PY].replace('<T>', f'<{self.template or 'T'}>')
+                    cs = cw.members[self.type][MA](parent.cond(self.arr1)[CS])[CS].replace('<T>', f'<{self.template or 'T'}>'); py = cw.members[self.type][MA](parent.cond(self.arr1)[PY])[PY].replace('<T>', f'<{self.template or 'T'}>')
                     if self.arr1.startswith('L'): cs = cs.replace('Read', f'Read{self.arr1}').replace(f', {self.arr1})', ')'); py = py.replace('read', f'read{self.arr1}').replace(f', {self.arr1})', ')')
                     if self.arr2: cs = f'r.ReadFArray(k => {cs}, {self.arr2})'; py = f'r.readFArray(lambda k: {py}, {self.arr2})'
                 if self.template: cs = cs.replace('{T}', self.template); py = py.replace('{T}', self.template)
@@ -588,6 +590,7 @@ class Class:
         if self.name not in cw.members: cw.members[self.name] = [
             self,
             self.namecw,
+            None,
             (self.init[2][CS], self.init[2][PY]),
             lambda c: (f'r.ReadFArray(r => {self.init[2][CS]}, {c})', f'r.readFArray(lambda r: {self.init[2][PY]}, {c})')]
     def cond(self, s: str) -> list[str]:

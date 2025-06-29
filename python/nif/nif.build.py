@@ -45,7 +45,7 @@ class NifCodeWriter(CodeWriter):
         self.ex = ex
         #region Hide
         self.members = {
-            'TEMPLATE': [None, ('T', 'T'), ('X<T>.Read(r)', 'X[T].read(r)')],
+            'TEMPLATE': [None, ('T', 'T'), None, ('X<T>.Read(r)', 'X[T].read(r)'), None],
             'bool': [None, ('bool', 'bool'), ('r.ReadBool32()', 'r.readBool32()'), lambda c: (f'[r.ReadBool32(), r.ReadBool32(), r.ReadBool32()]', f'[r.readBool32(), r.readBool32(), r.readBool32()]') if c == '3' else (f'r.ReadFArray(r => r.ReadBool32(), {c})', f'r.readFArray(lambda r: r.readBool32(), {c})')],
             'byte': [None, ('byte', 'int'), ('r.ReadByte()', 'r.readByte()'), lambda c: (f'r.ReadBytes({c})', f'r.readBytes({c})')],
             'uint': [None, ('uint', 'int'), ('r.ReadUInt32()', 'r.readUInt32()'), lambda c: (f'r.ReadPArray<uint>("I", {c})', f'r.readPArray(None, \'I\', {c})')],
@@ -351,8 +351,8 @@ class Flags(Flag):
         # skip class
         if not self.members[s.name][0]:
             self.emit(
-                f'// {s.name} -> {self.members[s.name][2][CS]}' if self.ex == CS else \
-                f'# {s.name} -> {self.members[s.name][2][PY]}' if self.ex == PY else \
+                f'// {s.name} -> {self.members[s.name][3][CS]}' if self.ex == CS else \
+                f'# {s.name} -> {self.members[s.name][3][PY]}' if self.ex == PY else \
                 None)
             if s.name in ['FilePath', 'ShortString', 'BoneVertDataHalf', 'BoneVertDataHalf', 'BSVertexDataSSE']: self.emit()
             return
@@ -382,7 +382,7 @@ class Flags(Flag):
                                 case Class.If():
                                     with self.block(before=f'{x.initcw[CS]}'): emitBlock(x.inits)
                                 case Class.Switch():
-                                    with self.block(before=f'{x.initcw[CS]}:'): emitBlock(x.inits)
+                                    with self.block(before=f'{x.initcw[CS]}'): emitBlock(x.inits)
                                 case Class.Value(): self.emit(f'{x.initcw[CS]};')
                     constArg = cw.customs[s.name]['constArg'][CS] if s.name in cw.customs and 'constArg' in cw.customs[s.name] else ''
                     with self.block(before=f'public {s.name}({s.init[0][CS]}{constArg}){' : base(r, h)' if s.inherit else ''}'): emitBlock(s.inits)
@@ -474,11 +474,12 @@ class Class:
     class Switch:
         def __init__(self, parent: Class, comment: str, values: list[object]):
             self.comment: str = comment
-            self.name: str = values[0].cond.split(' ')[0]
+            self.name: str = values[0].cond.split('==')[0].replace(' ', '')
             self.inits: str = values
         def code(self, parent: Class, cw: NifCodeWriter) -> None:
             for x in self.inits:
-                if not isinstance(x, str): x.code(parent, cw)
+                x.cond = None
+                # x.code(parent, cw)
             self.typecw = None
             # init
             cs = f'switch ({self.name})'; py = f'match {self.name}:'
@@ -634,19 +635,23 @@ class Class:
             for k,v in self.namers.items():
                 if k in s.vercond or k in s.cond: self.condFlag |= 2
 
-        # collapse num into next
+        # collapse
         for i in range(len(values) - 1, 0, -1):
-            this = values[i]; next = values[i-1]
-            name = next.name
+            this = values[i]; prev = values[i-1]
+            name = prev.name
             if name.startswith('Num') or name.startswith('Count'):
                 count = len([x for x in values if x.arr1 == name])
-                arrNext = this.arr1 == name
-                if arrNext and count == 1:
-                    match next.type:
+                arr = this.arr1 == name
+                if arr and count == 1:
+                    match prev.type:
                         case 'uint' | 'int': this.arr1 = 'L32'
                         case 'ushort' | 'short': this.arr1 = 'L16'
                         case 'byte': this.arr1 = 'L8'
                     del values[i-1]
+            if name.startswith('Has'):
+                for j in range(i, len(values)):
+                    if self.name == 'TexDesc': print(f'{self.name}: {values[j].cond}')
+
 
         # custom
         match self.name:
@@ -668,29 +673,27 @@ class Class:
         match self.name:
             case 'BoundingVolume':
                 self.flags = 'C'
-                inits.insert(1, Class.Switch(self, None, inits[1:6]))
-                # del inits[2:7]
+                inits.insert(1, Class.Switch(self, None, inits[1:6])); del inits[2:7]
             case 'MotorDescriptor':
                 self.flags = 'C'
                 inits.insert(1, Class.Switch(self, None, inits[1:3]))
-                # del inits[2:7]
 
-        # collapse multi ver
+        # collapse multi
         newIf = None
         elseif = False
         for i in range(len(inits) - 1, 0, -1):
-            this = inits[i]; next = inits[i-1]
-            if isinstance(this, Class.Value) and isinstance(next, Class.Value):
-                if this.vercond and this.vercond == next.vercond:
+            this = inits[i]; prev = inits[i-1]
+            if isinstance(this, Class.Value) and isinstance(prev, Class.Value):
+                if this.vercond and this.vercond == prev.vercond:
                     if not newIf: newIf = Class.If(self, None, this, elseif)
-                    newIf.inits.insert(0, next)
-                    next.vercond = None
+                    newIf.inits.insert(0, prev)
+                    prev.vercond = None
                     del inits[i-1]
                     continue
-                if this.cond and this.cond == next.cond:
+                if this.cond and this.cond == prev.cond:
                     if not newIf: newIf = Class.If(self, None, this, elseif)
-                    newIf.inits.insert(0, next)
-                    next.cond = None
+                    newIf.inits.insert(0, prev)
+                    prev.cond = None
                     del inits[i-1]
                     continue
             if newIf:

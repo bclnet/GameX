@@ -670,6 +670,10 @@ class Class:
                 self.flags = 'C'
                 inits.insert(1, Class.Switch(self, None, inits[1:6]))
                 # del inits[2:7]
+            case 'MotorDescriptor':
+                self.flags = 'C'
+                inits.insert(1, Class.Switch(self, None, inits[1:3]))
+                # del inits[2:7]
 
         # collapse multi ver
         newIf = None

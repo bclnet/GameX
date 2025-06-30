@@ -46,51 +46,51 @@ class NifCodeWriter(CodeWriter):
         self.ex = ex
         #region Hide
         self.members = {
-            'TEMPLATE': [None, ('T', 'T'), None, ('X<T>.Read(r)', 'X[T].read(r)'), None],
-            'bool': [None, ('bool', 'bool'), None, ('r.ReadBool32()', 'r.readBool32()'), lambda c: (f'[r.ReadBool32(), r.ReadBool32(), r.ReadBool32()]', f'[r.readBool32(), r.readBool32(), r.readBool32()]') if c == '3' else (f'r.ReadFArray(r => r.ReadBool32(), {c})', f'r.readFArray(lambda r: r.readBool32(), {c})')],
-            'byte': [None, ('byte', 'int'), None, ('r.ReadByte()', 'r.readByte()'), lambda c: (f'r.ReadBytes({c})', f'r.readBytes({c})')],
-            'uint': [None, ('uint', 'int'), None, ('r.ReadUInt32()', 'r.readUInt32()'), lambda c: (f'r.ReadPArray<uint>("I", {c})', f'r.readPArray(None, \'I\', {c})')],
-            'ulittle32': [None, ('uint', 'int'), None, ('r.ReadUInt32()', 'r.readUInt32()'), None],
-            'ushort': [None, ('ushort', 'int'), None, ('r.ReadUInt16()', 'r.readUInt16()'), lambda c: (f'r.ReadPArray<ushort>("H", {c})', f'r.readPArray(None, \'H\', {c})')],
-            'int': [None, ('int', 'int'), None, ('r.ReadInt32()', 'r.readInt32()'), lambda c: (f'r.ReadPArray<uint>("i", {c})', f'r.readPArray(None, \'i\', {c})')],
-            'short': [None, ('short', 'int'), None, ('r.ReadInt16()', 'r.readInt16()'), lambda c: (f'r.ReadPArray<short>("h", {c})', f'r.readPArray(None, \'h\', {c})')],
-            'BlockTypeIndex': [None, ('ushort', 'int'), None, ('r.ReadUInt16()', 'r.readUInt16()'), lambda c: (f'r.ReadPArray<ushort>("H", {c})', f'r.readPArray(\'H\', {c})')],
-            'char': [None, ('sbyte', 'int'), None, ('r.ReadSByte()', 'r.readSByte()'), lambda c: (f'r.ReadFAString({c})', f'r.readFAString({c})'), None],
-            'FileVersion': [None, ('uint', 'int'), None, ('r.ReadUInt32()', 'r.readUInt32()'), None],
-            'Flags': [None, ('Flags', 'Flags'), None, ('(Flags)r.ReadUInt16()', 'Flags(r.readUInt16())'), None],
-            'float': [None, ('float', 'float'), None, ('r.ReadSingle()', 'r.readSingle()'), lambda c: (f'r.ReadPArray<float>("f", {c})', f'r.readPArray(None, \'f\', {c})')],
-            'hfloat': [None, ('float', 'float'), None, ('r.ReadHalf()', 'r.readHalf()'), lambda c: (f'[r.ReadHalf(), r.ReadHalf(), r.ReadHalf(), r.ReadHalf()]', f'[r.readHalf(), r.readHalf(), r.readHalf(), r.readHalf()]') if c == '4' else (f'r.ReadFArray(r => r.ReadHalf(), {c})', f'r.readFArray(lambda r: r.readHalf(), {c})')],
-            'HeaderString': [None, ('string', 'str'), None, ('Y.ParseHeaderStr(r.ReadVAString(0x80, 0xA))', 'Y.parseHeaderStr(r.readVAString(128, b\'\\x0A\'))'), None],
-            'LineString': [None, ('string', 'str'), None, ('??', '??'), lambda c: (f'[r.ReadL8AString(), r.ReadL8AString(), r.ReadL8AString()]', f'[r.readL8AString(), r.readL8AString(), r.readL8AString()]') if c == '3' else (f'r.ReadFArray(r => r.ReadL8AString(), {c})', f'r.readFArray(lambda r: r.readL8AString(), {c})')],
-            'Ptr': [None, ('int?', 'int'), None, ('X<{T}>.Ptr(r)', 'X[{T}].ptr(r)'), lambda c: (f'r.ReadFArray(X<{{T}}>.Ptr, {c})', f'r.readFArray(X[{{T}}].ptr, {c})')],
-            'Ref': [None, ('int?', 'int'), None, ('X<{T}>.Ref(r)', 'X[{T}].ref(r)'), lambda c: (f'r.ReadFArray(X<{{T}}>.Ref, {c})', f'r.readFArray(X[{{T}}].ref, {c})')],
-            'StringOffset': [None, ('uint', 'int'), None, ('r.ReadUInt32()', 'r.readUInt32()'), None],
-            'StringIndex': [None, ('uint', 'int'), None, ('r.ReadUInt32()', 'r.readUInt32()'), None],
+            'TEMPLATE': [None, ('T', 'T'), ('X', 'X'), ('X<T>.Read(r)', 'X[T].read(r)'), None],
+            'bool': [None, ('bool', 'bool'), ('X', 'X'), ('r.ReadBool32()', 'r.readBool32()'), lambda c: (f'[r.ReadBool32(), r.ReadBool32(), r.ReadBool32()]', f'[r.readBool32(), r.readBool32(), r.readBool32()]') if c == '3' else (f'r.ReadFArray(r => r.ReadBool32(), {c})', f'r.readFArray(lambda r: r.readBool32(), {c})')],
+            'byte': [None, ('byte', 'int'), ('X', 'X'), ('r.ReadByte()', 'r.readByte()'), lambda c: (f'r.ReadBytes({c})', f'r.readBytes({c})')],
+            'uint': [None, ('uint', 'int'), ('X', 'X'), ('r.ReadUInt32()', 'r.readUInt32()'), lambda c: (f'r.ReadPArray<uint>("I", {c})', f'r.readPArray(None, \'I\', {c})')],
+            'ulittle32': [None, ('uint', 'int'), ('X', 'X'), ('r.ReadUInt32()', 'r.readUInt32()'), None],
+            'ushort': [None, ('ushort', 'int'), ('X', 'X'), ('r.ReadUInt16()', 'r.readUInt16()'), lambda c: (f'r.ReadPArray<ushort>("H", {c})', f'r.readPArray(None, \'H\', {c})')],
+            'int': [None, ('int', 'int'), ('X', 'X'), ('r.ReadInt32()', 'r.readInt32()'), lambda c: (f'r.ReadPArray<uint>("i", {c})', f'r.readPArray(None, \'i\', {c})')],
+            'short': [None, ('short', 'int'), ('X', 'X'), ('r.ReadInt16()', 'r.readInt16()'), lambda c: (f'r.ReadPArray<short>("h", {c})', f'r.readPArray(None, \'h\', {c})')],
+            'BlockTypeIndex': [None, ('ushort', 'int'), ('X', 'X'), ('r.ReadUInt16()', 'r.readUInt16()'), lambda c: (f'r.ReadPArray<ushort>("H", {c})', f'r.readPArray(\'H\', {c})')],
+            'char': [None, ('sbyte', 'int'), ('X', 'X'), ('r.ReadSByte()', 'r.readSByte()'), lambda c: (f'r.ReadFAString({c})', f'r.readFAString({c})'), None],
+            'FileVersion': [None, ('uint', 'int'), ('X', 'X'), ('r.ReadUInt32()', 'r.readUInt32()'), None],
+            'Flags': [None, ('Flags', 'Flags'), ('X', 'X'), ('(Flags)r.ReadUInt16()', 'Flags(r.readUInt16())'), None],
+            'float': [None, ('float', 'float'), ('Xf', 'Xf'), ('r.ReadSingle()', 'r.readSingle()'), lambda c: (f'r.ReadPArray<float>("f", {c})', f'r.readPArray(None, \'f\', {c})')],
+            'hfloat': [None, ('float', 'float'), ('Xf', 'Xf'), ('r.ReadHalf()', 'r.readHalf()'), lambda c: (f'[r.ReadHalf(), r.ReadHalf(), r.ReadHalf(), r.ReadHalf()]', f'[r.readHalf(), r.readHalf(), r.readHalf(), r.readHalf()]') if c == '4' else (f'r.ReadFArray(r => r.ReadHalf(), {c})', f'r.readFArray(lambda r: r.readHalf(), {c})')],
+            'HeaderString': [None, ('string', 'str'), ('X', 'X'), ('Y.ParseHeaderStr(r.ReadVAString(0x80, 0xA))', 'Y.parseHeaderStr(r.readVAString(128, b\'\\x0A\'))'), None],
+            'LineString': [None, ('string', 'str'), ('X', 'X'), ('??', '??'), lambda c: (f'[r.ReadL8AString(), r.ReadL8AString(), r.ReadL8AString()]', f'[r.readL8AString(), r.readL8AString(), r.readL8AString()]') if c == '3' else (f'r.ReadFArray(r => r.ReadL8AString(), {c})', f'r.readFArray(lambda r: r.readL8AString(), {c})')],
+            'Ptr': [None, ('int?', 'int'), ('X', 'X'), ('X<{T}>.Ptr(r)', 'X[{T}].ptr(r)'), lambda c: (f'r.ReadFArray(X<{{T}}>.Ptr, {c})', f'r.readFArray(X[{{T}}].ptr, {c})')],
+            'Ref': [None, ('int?', 'int'), ('X', 'X'), ('X<{T}>.Ref(r)', 'X[{T}].ref(r)'), lambda c: (f'r.ReadFArray(X<{{T}}>.Ref, {c})', f'r.readFArray(X[{{T}}].ref, {c})')],
+            'StringOffset': [None, ('uint', 'int'), ('X', 'X'), ('r.ReadUInt32()', 'r.readUInt32()'), None],
+            'StringIndex': [None, ('uint', 'int'), ('X', 'X'), ('r.ReadUInt32()', 'r.readUInt32()'), None],
             # Compounds
-            'SizedString': [None, ('string', 'str'), None, ('r.ReadL32AString()', 'r.readL32AString()'), lambda c: (f'r.ReadFArray(r => r.ReadL32AString(), {c})', f'r.readFArray(lambda r: r.readL32AString(), {c})')],
-            'string': [None, ('string', 'str'), None, ('Y.String(r)', 'Y.string(r)'), lambda c: (f'r.ReadFArray(r => Y.String(r), {c})', f'r.readFArray(lambda r: Y.string(r), {c})')],
-            'ByteArray': [None, ('byte[]', 'bytearray'), None, ('r.ReadL8Bytes()', 'r.readL8Bytes()'), None],
-            'ByteMatrix': [None, ('??', '??'), None, ('??', '??'), None],
-            'Color3': [None, ('Color3', 'Color3'), None, ('new Color3(r)', 'Color3(r)'), None],
-            'ByteColor3': [None, ('ByteColor3', 'ByteColor3'), None, ('new ByteColor3(r)', 'ByteColor3(r)'), lambda c: (f'r.ReadFArray(r => new ByteColor3(r), {c})', f'r.readFArray(lambda r: ByteColor3(r), {c})')],
-            'Color4': [None, ('Color4', 'Color4'), None, ('new Color4(r)', 'Color4(r)'), lambda c: (f'r.ReadFArray(r => new Color4(r), {c})', f'r.readFArray(lambda r: Color4(r), {c})')],
-            'ByteColor4': [None, ('ByteColor4', 'ByteColor4'), None, ('new Color4Byte(r)', 'Color4Byte(r)'), lambda c: (f'r.ReadFArray(r => new Color4Byte(r), {c})', f'r.readFArray(lambda r: Color4Byte(r), {c})')],
-            'FilePath': [None, ('??', '??'), None, ('??', '??'), None],
+            'SizedString': [None, ('string', 'str'), ('X', 'X'), ('r.ReadL32AString()', 'r.readL32AString()'), lambda c: (f'r.ReadFArray(r => r.ReadL32AString(), {c})', f'r.readFArray(lambda r: r.readL32AString(), {c})')],
+            'string': [None, ('string', 'str'), ('X', 'X'), ('Y.String(r)', 'Y.string(r)'), lambda c: (f'r.ReadFArray(r => Y.String(r), {c})', f'r.readFArray(lambda r: Y.string(r), {c})')],
+            'ByteArray': [None, ('byte[]', 'bytearray'), ('X', 'X'), ('r.ReadL8Bytes()', 'r.readL8Bytes()'), None],
+            'ByteMatrix': [None, ('??', '??'), ('X', 'X'), ('??', '??'), None],
+            'Color3': [None, ('Color3', 'Color3'), ('X', 'X'), ('new Color3(r)', 'Color3(r)'), None],
+            'ByteColor3': [None, ('ByteColor3', 'ByteColor3'), ('X', 'X'), ('new ByteColor3(r)', 'ByteColor3(r)'), lambda c: (f'r.ReadFArray(r => new ByteColor3(r), {c})', f'r.readFArray(lambda r: ByteColor3(r), {c})')],
+            'Color4': [None, ('Color4', 'Color4'), ('new Color3(X)', 'Color3(X)'), ('new Color4(r)', 'Color4(r)'), lambda c: (f'r.ReadFArray(r => new Color4(r), {c})', f'r.readFArray(lambda r: Color4(r), {c})')],
+            'ByteColor4': [None, ('ByteColor4', 'ByteColor4'), ('X', 'X'), ('new Color4Byte(r)', 'Color4Byte(r)'), lambda c: (f'r.ReadFArray(r => new Color4Byte(r), {c})', f'r.readFArray(lambda r: Color4Byte(r), {c})')],
+            'FilePath': [None, ('??', '??'), ('X', 'X'), ('??', '??'), None],
             # Compounds
-            'ByteVector3': [None, ('Vector3<byte>', 'Vector3'), None, ('new Vector3<byte>(r.ReadByte(), r.ReadByte(), r.ReadByte())', 'Vector3(r.readByte(), r.readByte(), r.readByte())'), lambda c: (f'r.ReadFArray(r => new Vector3(r.ReadByte(), r.ReadByte(), r.ReadByte()), {c})', f'r.readFArray(lambda r: Vector3(r.readByte(), r.readByte(), r.readByte()), {c})')],
-            'HalfVector3': [None, ('Vector3', 'Vector3'), None, ('new Vector3(r.ReadHalf(), r.ReadHalf(), r.ReadHalf())', 'Vector3(r.readHalf(), r.readHalf(), r.readHalf())'), lambda c: (f'r.ReadFArray(r => new Vector3(r.ReadHalf(), r.ReadHalf(), r.ReadHalf()), {c})', f'r.readFArray(lambda r: Vector3(r.readHalf(), r.readHalf(), r.readHalf()), {c})')],
-            'Vector3': [None, ('Vector3', 'Vector3'), None, ('r.ReadVector3()', 'r.readVector3()'), lambda c: (f'r.ReadPArray<Vector3>("3f", {c})', f'r.readPArray(None, \'3f\', {c})')],
-            'Vector4': [None, ('Vector4', 'Vector4'), None, ('r.ReadVector4()', 'r.readVector4()'), lambda c: (f'r.ReadPArray<Vector4>("4f", {c})', f'r.readPArray(None, \'4f\', {c})')],
-            'Quaternion': [None, ('Quaternion', 'Quaternion'), None, ('r.ReadQuaternion()', 'r.readQuaternion()'), lambda c: (f'r.ReadFArray(r => r.ReadQuaternion(), {c})', f'r.readFArray(lambda r: r.readQuaternion(), {c})')],
-            'hkQuaternion': [None, ('Quaternion', 'Quaternion'), None, ('r.ReadQuaternionWFirst()', 'r.readQuaternionWFirst()'), None],
-            'Matrix22': [None, ('Matrix2x2', 'Matrix2x2'), None, ('r.ReadMatrix2x2()', 'r.readMatrix2x2()'), None],
-            'Matrix33': [None, ('Matrix3x3', 'Matrix3x3'), None, ('r.ReadMatrix3x3()', 'r.readMatrix3x3()'), None],
-            'Matrix34': [None, ('Matrix3x4', 'Matrix3x4'), None, ('r.ReadMatrix3x4()', 'r.readMatrix3x4()'), lambda c: (f'r.ReadFArray(r => r.ReadMatrix3x4(), {c})', f'r.readFArray(lambda r: r.readMatrix3x4(), {c})')],
-            'Matrix44': [None, ('Matrix4x4', 'Matrix4x4'), None, ('r.ReadMatrix4x4()', 'r.readMatrix4x4()'), None],
-            'hkMatrix3': [None, ('Matrix3x4', 'Matrix3x4'), None, ('r.ReadMatrix3x4()', 'r.readMatrix3x4()'), None],
-            'MipMap': [None, ('MipMap', 'MipMap'), None, ('new MipMap(r)', 'MipMap(r)'), lambda c: (f'r.ReadFArray(r => new MipMap(r), {c})', f'r.readFArray(lambda r: MipMap(r), {c})')],
-            'NodeSet': [None, ('NodeSet', 'NodeSet'), None, ('new NodeSet(r)', 'NodeSet(r)'), lambda c: (f'r.ReadFArray(r => new NodeSet(r), {c})', f'r.readFArray(lambda r: NodeSet(r), {c})')],
-            'ShortString': [None, ('string', 'str'), None, ('r.ReadL8AString()', 'r.readL8AString()'), None]
+            'ByteVector3': [None, ('Vector3<byte>', 'Vector3'), ('X', 'X'), ('new Vector3<byte>(r.ReadByte(), r.ReadByte(), r.ReadByte())', 'Vector3(r.readByte(), r.readByte(), r.readByte())'), lambda c: (f'r.ReadFArray(r => new Vector3(r.ReadByte(), r.ReadByte(), r.ReadByte()), {c})', f'r.readFArray(lambda r: Vector3(r.readByte(), r.readByte(), r.readByte()), {c})')],
+            'HalfVector3': [None, ('Vector3', 'Vector3'), ('X', 'X'), ('new Vector3(r.ReadHalf(), r.ReadHalf(), r.ReadHalf())', 'Vector3(r.readHalf(), r.readHalf(), r.readHalf())'), lambda c: (f'r.ReadFArray(r => new Vector3(r.ReadHalf(), r.ReadHalf(), r.ReadHalf()), {c})', f'r.readFArray(lambda r: Vector3(r.readHalf(), r.readHalf(), r.readHalf()), {c})')],
+            'Vector3': [None, ('Vector3', 'Vector3'), ('new Vector3(X)', 'Vector3(X)'), ('r.ReadVector3()', 'r.readVector3()'), lambda c: (f'r.ReadPArray<Vector3>("3f", {c})', f'r.readPArray(None, \'3f\', {c})')],
+            'Vector4': [None, ('Vector4', 'Vector4'), ('new Vector4(X)', 'Vector4(X)'), ('r.ReadVector4()', 'r.readVector4()'), lambda c: (f'r.ReadPArray<Vector4>("4f", {c})', f'r.readPArray(None, \'4f\', {c})')],
+            'Quaternion': [None, ('Quaternion', 'Quaternion'), ('X', 'X'), ('r.ReadQuaternion()', 'r.readQuaternion()'), lambda c: (f'r.ReadFArray(r => r.ReadQuaternion(), {c})', f'r.readFArray(lambda r: r.readQuaternion(), {c})')],
+            'hkQuaternion': [None, ('Quaternion', 'Quaternion'), ('X', 'X'), ('r.ReadQuaternionWFirst()', 'r.readQuaternionWFirst()'), None],
+            'Matrix22': [None, ('Matrix2x2', 'Matrix2x2'), ('X', 'X'), ('r.ReadMatrix2x2()', 'r.readMatrix2x2()'), None],
+            'Matrix33': [None, ('Matrix3x3', 'Matrix3x3'), ('X', 'X'), ('r.ReadMatrix3x3()', 'r.readMatrix3x3()'), None],
+            'Matrix34': [None, ('Matrix3x4', 'Matrix3x4'), ('X', 'X'), ('r.ReadMatrix3x4()', 'r.readMatrix3x4()'), lambda c: (f'r.ReadFArray(r => r.ReadMatrix3x4(), {c})', f'r.readFArray(lambda r: r.readMatrix3x4(), {c})')],
+            'Matrix44': [None, ('Matrix4x4', 'Matrix4x4'), ('X', 'X'), ('r.ReadMatrix4x4()', 'r.readMatrix4x4()'), None],
+            'hkMatrix3': [None, ('Matrix3x4', 'Matrix3x4'), ('X', 'X'), ('r.ReadMatrix3x4()', 'r.readMatrix3x4()'), None],
+            'MipMap': [None, ('MipMap', 'MipMap'), ('X', 'X'), ('new MipMap(r)', 'MipMap(r)'), lambda c: (f'r.ReadFArray(r => new MipMap(r), {c})', f'r.readFArray(lambda r: MipMap(r), {c})')],
+            'NodeSet': [None, ('NodeSet', 'NodeSet'), ('X', 'X'), ('new NodeSet(r)', 'NodeSet(r)'), lambda c: (f'r.ReadFArray(r => new NodeSet(r), {c})', f'r.readFArray(lambda r: NodeSet(r), {c})')],
+            'ShortString': [None, ('string', 'str'), ('X', 'X'), ('r.ReadL8AString()', 'r.readL8AString()'), None]
         }
         self.struct = {
             'BoneVertData': ('<Hf', 7),
@@ -302,13 +302,13 @@ class Flags(Flag):
 
         # redirects
         self.customs = {}
-        self.members['BoneVertDataHalf'] = ['', ('BoneVertData', 'BoneVertData'), None, ('new BoneVertData(r, true)', 'BoneVertData(r, true)'), lambda c: (f'r.ReadFArray(r => new BoneVertData(r, true), {c})', f'r.readFArray(lambda r: BoneVertData(r, true), {c})')]
+        self.members['BoneVertDataHalf'] = ['', ('BoneVertData', 'BoneVertData'), ('X', 'X'), ('new BoneVertData(r, true)', 'BoneVertData(r, true)'), lambda c: (f'r.ReadFArray(r => new BoneVertData(r, true), {c})', f'r.readFArray(lambda r: BoneVertData(r, true), {c})')]
         self.customs['BoneVertData'] = { 'constArg': ('', ', half: bool'), 'const': ('public BoneVertData(BinaryReader r, bool half) { Index = r.ReadUInt16(); Weight = r.ReadHalf(); }', 'if half: self.index = r.readUInt16(); self.weight = r.readHalf(); return') }
-        self.members['HalfTexCoord'] = ['', ('TexCoord', 'TexCoord'), None, ('new TexCoord(r, true)', 'TexCoord(r, true)'), lambda c: (f'r.ReadFArray(r => new TexCoord(r, true), {c})', f'r.readFArray(lambda r: TexCoord(r, true), {c})')]
+        self.members['HalfTexCoord'] = ['', ('TexCoord', 'TexCoord'), ('X', 'X'), ('new TexCoord(r, true)', 'TexCoord(r, true)'), lambda c: (f'r.ReadFArray(r => new TexCoord(r, true), {c})', f'r.readFArray(lambda r: TexCoord(r, true), {c})')]
         self.customs['TexCoord'] = { 'constArg': ('', ', half: bool'), 'const': ('public TexCoord(BinaryReader r, bool half) { u = r.ReadHalf(); v = r.ReadHalf(); }', 'if half: self.u = r.readHalf(); self.v = r.readHalf(); return') }
         self.customs['Key'] = { 'constArg': (', KeyType keyType', ', keyType: KeyType'), 'constNew': (', Interpolation', ', self.interpolation') }
         self.customs['QuatKey'] = { 'constArg': (', KeyType keyType', ', keyType: KeyType') }
-        self.members['BSVertexDataSSE'] = ['', ('BSVertexData', 'BSVertexData'), None, ('new BSVertexData(r, true)', 'BSVertexData(r, true)'), lambda c: (f'r.ReadFArray(r => new BSVertexData(r, true), {c})', f'r.readFArray(lambda r: BSVertexData(r, true), {c})')]
+        self.members['BSVertexDataSSE'] = ['', ('BSVertexData', 'BSVertexData'), ('X', 'X'), ('new BSVertexData(r, true)', 'BSVertexData(r, true)'), lambda c: (f'r.ReadFArray(r => new BSVertexData(r, true), {c})', f'r.readFArray(lambda r: BSVertexData(r, true), {c})')]
         self.customs['Morph'] = { 'constArg': (', uint numVertices', ', numVertices: int') }
 
     def region(self, name: str) -> None: self.emit(f'#region {name}'); self.emit()
@@ -371,7 +371,7 @@ class Flags(Flag):
             if self.ex == CS:
                 if s.struct and s.struct != 'x': self.emit(f'public static (string, int) Struct = ("{s.struct[0]}", {s.struct[1]});')
                 for k, v in s.fields.items():
-                    self.emit_with_comment(f'public {v[0][CS]} {v[1][CS] if primary else k[CS] + (' = ' + v[2] if v[2] else '')};' if v[0] else '', v[3], pos if v[0] else 0)
+                    self.emit_with_comment(f'public {v[0][CS]} {v[1][CS] if primary else k[CS] + (' = ' + v[2][CS] if v[2] else '')};' if v[0] else '', v[3], pos if v[0] else 0)
                 if not primary:
                     self.emit('')
                     if s.struct and s.struct != 'x' and s.name in ['BoneVertData']: self.emit(f'public {s.name}() {{}}')
@@ -382,8 +382,6 @@ class Flags(Flag):
                                 case Class.Comment(): self.emit(f'// {x.comment}')
                                 case Class.If():
                                     with self.block(before=f'{x.initcw[CS]}'): emitBlock(x.inits)
-                                case Class.Switch():
-                                    with self.block(before=f'{x.initcw[CS]}'): emitBlock(x.inits)
                                 case Class.Value(): self.emit(f'{x.initcw[CS]};')
                     constArg = cw.customs[s.name]['constArg'][CS] if s.name in cw.customs and 'constArg' in cw.customs[s.name] else ''
                     with self.block(before=f'public {s.name}({s.init[0][CS]}{constArg}){' : base(r, h)' if s.inherit else ''}'): emitBlock(s.inits)
@@ -392,7 +390,7 @@ class Flags(Flag):
                 if s.struct and s.struct != 'x': self.emit(f'struct = (\'{s.struct[0]}\', {s.struct[1]})')
                 if not primary: 
                     for k, v in s.fields.items():
-                        self.emit_with_comment(f'{k[PY]}: {v[0][PY]}{' = ' + v[2] if v[2] else ''}' if v[0] else '', v[3], pos if v[0] else 0)
+                        self.emit_with_comment(f'{k[PY]}: {v[0][PY]}{' = ' + v[2][PY] if v[2] else ''}' if v[0] else '', v[3], pos if v[0] else 0)
                     self.emit('')
                 def emitBlock(inits: list) -> None:
                     for x in inits:
@@ -400,8 +398,6 @@ class Flags(Flag):
                             case str(): self.emit(x)
                             case Class.Comment(): self.emit(f'# {x.comment}')
                             case Class.If():
-                                with self.block(before=f'{x.initcw[PY]}:'): emitBlock(x.inits)
-                            case Class.Switch():
                                 with self.block(before=f'{x.initcw[PY]}:'): emitBlock(x.inits)
                             case Class.Value(): self.emit(f'{x.initcw[PY]}')
                 constArg = cw.customs[s.name]['constArg'][PY] if s.name in cw.customs and 'constArg' in cw.customs[s.name] else ''
@@ -441,7 +437,7 @@ class Enum:
         if self.name not in cw.members: cw.members[self.name] = [
             self,
             self.namecw,
-            None,
+            ('X', 'X'),
             (self.init[CS], self.init[PY]),
             lambda c: (f'r.ReadFArray(r => {self.init[CS]}, {c})', f'r.readFArray(lambda r: {self.init[PY]}, {c})')]
 
@@ -449,20 +445,20 @@ class Class:
     class Comment:
         def __init__(self, parent: Class, s: str):
             self.comment: str = s
-            self.default: str = None
+            self.defaultcw: tuple = None
             self.name: str = s
-            self.namecw = (self.name, self.name)
+            self.namecw: tuple = (self.name, self.name)
         def code(self, parent: Class, cw: NifCodeWriter) -> None:
             self.typecw = None
             self.initcw = None
     class If:
-        def __init__(self, parent: Class, comment: str, field: object, elseif: bool):
+        def __init__(self, parent: Class, comment: str, field: object, inits: list[object], kind: str):
             self.comment: str = comment
-            self.elseif = elseif
+            self.kind: str = kind
             self.name: str = None
-            self.inits: str = []
-            self.vercond = field.vercond if field else None
-            self.cond = field.cond if field else None
+            self.inits: list[object] = inits or []
+            self.vercond: str = field.vercond if field else None
+            self.cond: str = field.cond if field else None
         def code(self, parent: Class, cw: NifCodeWriter) -> None:
             for x in self.inits:
                 if not isinstance(x, str): x.code(parent, cw)
@@ -471,26 +467,19 @@ class Class:
             if self.cond and self.vercond: c = parent.cond(f'{self.cond} && {self.vercond}')
             elif self.vercond: c = parent.cond(self.vercond)
             elif self.cond: c = parent.cond(self.cond)
-            cs = f'{'else if' if self.elseif else 'if'} ({c[CS]})'; py = f'{'elif' if self.elseif else 'if'} {c[PY]}'
-            self.initcw = [cs, py]
-    class Switch:
-        def __init__(self, parent: Class, comment: str, values: list[object]):
-            self.comment: str = comment
-            self.name: str = values[0].cond.split('==')[0].replace(' ', '')
-            self.inits: str = values
-        def code(self, parent: Class, cw: NifCodeWriter) -> None:
-            for x in self.inits:
-                x.cond = None
-                # x.code(parent, cw)
-            self.typecw = None
-            # init
-            cs = f'switch ({self.name})'; py = f'match {self.name}:'
-            self.initcw = [cs, py]
+            elif self.kind == 'switch': c = parent.cond(self.inits[0].cond)
+            else: c = None
+            match self.kind:
+                case 'if': self.initcw = [f'if ({c[CS]})', f'if {c[PY]}']
+                case 'elseif': self.initcw = [f'else if ({c[CS]})', f'elif {c[PY]}']
+                case 'switch': self.initcw = [f'switch ({c[CS].split('==')[0]})', f'match {c[PY].split('==')[0]}:']
+                case _: raise Exception(f'Unknown {self.kind}')
+    
     class Value:
         def __init__(self, parent: Class, e: object):
             if e == None: return
             self.comment: str = e.text.strip().replace('        ', '') if e.text else None if e.text else None
-            self.elseif = False
+            self.kind = None
             self.name: str = e.attrib['name'].replace('?', '')
             self.suffix: str = e.attrib.get('suffix') or ''
             if ' ' in self.name: parent.namers[self.name] = self.name = self.name.replace(' ', '')
@@ -509,7 +498,7 @@ class Class:
             self.cond: str = cond
             self.ver1: int = ver2Num(z) if (z := e.attrib.get('ver1')) else None
             self.ver2: int = ver2Num(z) if (z := e.attrib.get('ver2')) else None
-            if self.ver1 and self.ver2: vercond = f'V >= 0x{self.ver1:08X} && V <= 0x{self.ver2:08X}'
+            if self.ver1 and self.ver2: vercond = f'V == 0x{self.ver1:08X}' if self.ver1 == self.ver2 else f'V >= 0x{self.ver1:08X} && V <= 0x{self.ver2:08X}'
             elif self.ver2: vercond = f'V <= 0x{self.ver2:08X}'
             elif self.ver1: vercond = f'V >= 0x{self.ver1:08X}'
             else: vercond = ''
@@ -535,18 +524,21 @@ class Class:
                     if self.arr1.startswith('L'): cs = cs.replace('Read', f'Read{self.arr1}').replace(f', {self.arr1})', ')'); py = py.replace('read', f'read{self.arr1}').replace(f', {self.arr1})', ')')
                     if self.arr2: cs = f'r.ReadFArray(k => {cs}, {self.arr2})'; py = f'r.readFArray(lambda k: {py}, {self.arr2})'
                 if self.template: cs = cs.replace('{T}', self.template); py = py.replace('{T}', self.template)
+                # default
+                self.defaultcw = [cw.members[self.type][MD][CS].replace('X', self.default), cw.members[self.type][MD][PY].replace('X', self.default)] if self.default else None
                 # if
-                c = ['', '']
                 if self.cond and self.vercond: c = parent.cond(f'{self.cond} && {self.vercond}')
                 elif self.vercond: c = parent.cond(self.vercond)
                 elif self.cond: c = parent.cond(self.cond)
-                if c[0]:
-                    if primary: cs = f'{self.namecw[CS]} = {c[CS]} ? {cs} : {self.default if self.default else 'default'}'; py = f'self.{self.namecw[PY]}: {self.typecw[PY]} = {py} if {c[PY]} else {self.default if self.default else 'None'}'
-                    else: cs = f'{'else if' if self.elseif else 'if'} ({c[CS]}) {self.namecw[CS]} = {cs}'; py = f'{'elif' if self.elseif else 'if'} {c[PY]}: self.{self.namecw[PY]} = {py}'
-                else:
-                    if primary: cs = f'{self.namecw[CS]} = {cs}'; py = f'self.{self.namecw[PY]}: {self.typecw[PY]} = {py}'
-                    else: cs = f'{self.namecw[CS]} = {cs}'; py = f'self.{self.namecw[PY]} = {py}'
-                self.initcw = [cs, py]
+                else: c = None; self.kind = None
+                if c and not self.kind: self.kind = '?:' if primary else 'if'
+                defaultcw = self.defaultcw or ['default', 'None']
+                match self.kind:
+                    case '?:': self.initcw = [f'{self.namecw[CS]} = {c[CS]} ? {cs} : {defaultcw[CS]}', f'self.{self.namecw[PY]}{': ' + self.typecw[PY] if primary else ''} = {py} if {c[PY]} else {defaultcw[PY]}']
+                    case 'if': self.initcw = [f'if ({c[CS]}) {self.namecw[CS]} = {cs}', f'if {c[PY]}: self.{self.namecw[PY]} = {py}']
+                    case 'elseif': self.initcw = [f'else if ({c[CS]}) {self.namecw[CS]} = {cs}', f'elif {c[PY]}: self.{self.namecw[PY]} = {py}']
+                    case 'case': self.initcw = [f'case {c[CS]}: {self.namecw[CS]} = {cs}; break', f'case {c[PY]}: self.{self.namecw[PY]} = {py}']
+                    case _: self.initcw = [f'{self.namecw[CS]} = {cs}', f'self.{self.namecw[PY]}{': ' + self.typecw[PY] if primary else ''} = {py}']
 
     comment: str
     abstract: bool = False
@@ -590,7 +582,7 @@ class Class:
         if self.name not in cw.members: cw.members[self.name] = [
             self,
             self.namecw,
-            None,
+            ('X', 'X'),
             (self.init[2][CS], self.init[2][PY]),
             lambda c: (f'r.ReadFArray(r => {self.init[2][CS]}, {c})', f'r.readFArray(lambda r: {self.init[2][PY]}, {c})')]
     def cond(self, s: str) -> list[str]:
@@ -627,6 +619,7 @@ class Class:
         cs = cs.replace('V ', 'ZZ ').replace('UV2 ', 'h.UV2 ').replace('UV ', 'h.UV ').replace('ZZ ', 'h.V ')
         py = py.replace('V ', 'ZZ ').replace('UV2 ', 'h.uv2 ').replace('UV ', 'h.uv ').replace('ZZ ', 'h.v ')
         return [cs, py]
+
     def process(self):
         values = self.values
         if not values: self.inits = values[:]; return
@@ -634,14 +627,14 @@ class Class:
         # condFlag
         for s in values:
             if s.vercond or 'V ' in s.cond or 'UV ' in s.cond or 'UV2 ' in s.cond: self.condFlag |= 1
-            if 'ARG ' in s.cond: self.condFlag |= 2
+            if 'arg ' in s.cond or 'ARG ' in s.cond: self.condFlag |= 2
             for k,v in self.namers.items():
                 if k in s.vercond or k in s.cond: self.condFlag |= 2
 
-        # collapse
+        # value-collapse
         for i in range(len(values) - 1, 0, -1):
             this = values[i]; prev = values[i-1]
-            name = prev.name
+            name = prev.name; type = prev.type
             if name.startswith('Num') or name.startswith('Count'):
                 count = len([x for x in values if x.arr1 == name])
                 arr = this.arr1 == name
@@ -651,10 +644,23 @@ class Class:
                         case 'ushort' | 'short': this.arr1 = 'L16'
                         case 'byte': this.arr1 = 'L8'
                     del values[i-1]
-            if name.startswith('Has'):
+            elif name.startswith('Has') and type == 'bool':
+                # print(f'{self.name}.{name}: {values[0].cond}')
+                found = False
                 for j in range(i, len(values)):
-                    if self.name == 'TexDesc': print(f'{self.name}: {values[j].cond}')
-
+                    if name == values[j].cond.replace(' ', ''): found = True
+                    else: break
+                if not found: continue
+                for s in values[i:j+1]:
+                    if self.name == 'NiTexturingProperty': print(s.cond)
+                    s.cond = s.cond.replace(s.name, f'B32:{s.name}')
+                del values[i-1]
+                # if self.name == 'ShaderTexDesc':
+                #     for k in values: print(f'{self.name}.{k.name}: {k.cond} - {k.vercond}')
+                # if self.name == 'NiTexturingProperty':
+                #     for k in values: print(f'{self.name}.{k.name}: {k.cond} - {k.vercond}')
+                    
+                
 
         # custom
         match self.name:
@@ -676,25 +682,41 @@ class Class:
         match self.name:
             case 'BoundingVolume':
                 self.flags = 'C'
-                inits.insert(1, Class.Switch(self, None, inits[1:6])); del inits[2:7]
+                inits.insert(1, Class.If(self, None, None, inits[1:6], 'switch')); del inits[2:7]
             case 'MotorDescriptor':
                 self.flags = 'C'
-                inits.insert(1, Class.Switch(self, None, inits[1:3]))
+                inits.insert(1, Class.If(self, None, None, inits[1:3], 'switch'))
+
+        # collapse
+        # for i in range(len(values) - 1, 0, -1):
+        #     this = values[i]; prev = values[i-1]
+        #     if prev.name.startswith('Has') and prev.type == 'bool':
+        #         # print(f'{self.name}.{name}: {values[0].cond}')
+        #         found = False
+        #         for j in range(i, len(values)):
+        #             if prev.name == values[j].cond.replace(' ', ''): found = True
+        #             else: break
+        #         if not found: continue
+        #         # print(f'{self.name}[{j}]: {rng}')
+        #         # inits.insert(i, Class.If(self, None, None, inits[i:k], 'if'))
+        #         del inits[i:j]
+        #         # print(f'{self.name}[{j}]: {name} = {values[j].cond.replace(' ', '')}')
+        #         # if self.name == 'TexDesc': k = j; print(f'{self.name}[{j}]: {name} = {values[j].cond.replace(' ', '')}')
 
         # collapse multi
         newIf = None
-        elseif = False
+        kind = 'if'
         for i in range(len(inits) - 1, 0, -1):
             this = inits[i]; prev = inits[i-1]
             if isinstance(this, Class.Value) and isinstance(prev, Class.Value):
                 if this.vercond and this.vercond == prev.vercond:
-                    if not newIf: newIf = Class.If(self, None, this, elseif)
+                    if not newIf: newIf = Class.If(self, None, this, None, kind)
                     newIf.inits.insert(0, prev)
                     prev.vercond = None
                     del inits[i-1]
                     continue
                 if this.cond and this.cond == prev.cond:
-                    if not newIf: newIf = Class.If(self, None, this, elseif)
+                    if not newIf: newIf = Class.If(self, None, this, None, kind)
                     newIf.inits.insert(0, prev)
                     prev.cond = None
                     del inits[i-1]
@@ -710,18 +732,18 @@ class Class:
                 match self.name:
                     case 'ControlledBlock':
                         if this.name == 'InterpolatorIDOffset':
-                            newIf.elseif = True
+                            newIf.kind = 'elseif'
                             newIf.inits[0].name = ''; newIf.inits[0].initcw = ('var stringPalette = X<NiStringPalette>.Ref(r)', 'stringPalette = X[NiStringPalette].ref(r)')
                             newIf.inits[1].name = ''; newIf.inits[1].initcw = ('NodeName = Y.StringRef(r, stringPalette)', 'self.nodeName = Y.stringRef(r, stringPalette)')
                             newIf.inits[2].name = ''; newIf.inits[2].initcw = ('PropertyType = Y.StringRef(r, stringPalette)', 'self.propertyType = Y.stringRef(r, stringPalette)')
                             newIf.inits[3].name = ''; newIf.inits[3].initcw = ('ControllerType = Y.StringRef(r, stringPalette)', 'self.controllerType = Y.stringRef(r, stringPalette)')
                             newIf.inits[4].name = ''; newIf.inits[4].initcw = ('ControllerID = Y.StringRef(r, stringPalette)', 'self.controllerID = Y.stringRef(r, stringPalette)')
                             newIf.inits[5].name = ''; newIf.inits[5].initcw = ('InterpolatorID = Y.StringRef(r, stringPalette)', 'self.interpolatorID = Y.stringRef(r, stringPalette)')
-                        elif this.name == 'InterpolatorID' and '&&' not in newIf.vercond: newIf.elseif = True
-                    case 'Key': inits[-1].elseif = True
-                    case 'QuatKey': inits[-1].elseif = True
-                    case 'FurniturePosition': inits[-1].elseif = True #more
-                    case 'NiTimeController': inits[-1].elseif = True
+                        elif this.name == 'InterpolatorID' and '&&' not in newIf.vercond: newIf.kind = 'elseif'
+                    case 'Key': inits[-1].kind = 'elseif'
+                    case 'QuatKey': inits[-1].kind = 'elseif'
+                    case 'FurniturePosition': inits[-1].kind = 'elseif'
+                    case 'NiTimeController': inits[-1].kind = 'elseif'
             newIf = None
 
     def code(self, cw: NifCodeWriter):
@@ -733,7 +755,7 @@ class Class:
         match self.name:
             case 'Header': self.values[0].initcw = ('(HeaderString, V) = Y.ParseHeaderStr(r.ReadVAString(0x80, 0xA)); var h = this', '(self.headerString, self.v) = Y.parseHeaderStr(r.readVAString(128, b\'\\x0A\')); h = self')
             case 'StringPalette': self.values[0].typecw = ('string[]', 'list[str]'); self.values[0].initcw = ('Palette = r.ReadL32AString().Split((char)0)', 'self.palette: list[str] = r.readL32AString().split(\'0x00\')')
-        self.fields = {x.namecw: (x.typecw, x.initcw, x.default, x.comment) for x in self.values if x.name and not isinstance(x, str)}
+        self.fields = {x.namecw: (x.typecw, x.initcw, x.defaultcw, x.comment) for x in self.values if x.name and not isinstance(x, str)}
 
 def parse(tree: object, cw: NifCodeWriter) -> None:
     root = tree.getroot()
@@ -746,6 +768,7 @@ def parse(tree: object, cw: NifCodeWriter) -> None:
             case 'enum' | 'bitflags': cs.append(Enum(e, cw))
             case 'compound' | 'niobject': cs.append(Class(e, cw))
     # code pass
+    cw.members['TexCoord'][MD] = ('new TexCord(X)', 'TexCord(X)')
     for s in cs:
         match s:
             case Class(): s.code(cw)
@@ -773,6 +796,9 @@ cs = parse(tree, cw)
 write(cs, cw)
 with open('nif.cs', 'w', encoding='utf-8') as f:
     f.write(cw.render())
+
+exit(1)
+
 # build nif.py
 print('build nif.py')
 cw = NifCodeWriter(PY)

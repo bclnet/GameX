@@ -1,5 +1,5 @@
 import re
-import xml.etree.ElementTree as ET
+
 from code_writer import fmt_camel, CodeWriter
 
 # type forward
@@ -41,7 +41,7 @@ def verReplace(s: str) -> str:
 
 #region Writer
 
-class BaseCodeWriter(CodeWriter):
+class XmlCodeWriter(CodeWriter):
     def __init__(self, ex: str):
         self.ex = ex
         self.types = {
@@ -91,17 +91,7 @@ class BaseCodeWriter(CodeWriter):
             'NodeSet': [None, ('NodeSet', 'NodeSet'), ('X', 'X'), ('new NodeSet(r)', 'NodeSet(r)'), lambda c: (f'r.ReadFArray(r => new NodeSet(r), {c})', f'r.readFArray(lambda r: NodeSet(r), {c})')],
             'ShortString': [None, ('string', 'str'), ('X', 'X'), ('r.ReadL8AString()', 'r.readL8AString()'), None]
         }
-        self.struct = {
-            'BoneVertData': ('<Hf', 7),
-            'TBC': ('<3f', 12),
-            'TexCoord': ('<2f', 8),
-            'Triangle': ('<3H', 18),
-            'BSVertexDesc': ('<5bHb', 8),
-            'NiPlane': ('<4f', 24),
-            'NiBound': ('<4f', 24),
-            'NiQuatTransform': 'x',
-            'NiTransform': 'x',
-            'Particle': ('<9f2H', 40) }
+        self.struct = {}
         # EffectType->TextureType, NiHeader->Header, NiFooter->Footer, SkinData->BoneData, SkinWeight->BoneVertData, BoundingBox->BoxBV, SkinTransform->NiTransform, NiCameraProperty->NiCamera
         self.es3 = [
             'ApplyMode', 'TexClampMode', 'TexFilterMode', 'PixelLayout', 'MipMapFormat', 'AlphaFormat', 'VertMode', 'LightMode', 'KeyType', 'TextureType', 'CoordGenType', 'FieldType', 'DecayType',
@@ -114,6 +104,9 @@ class BaseCodeWriter(CodeWriter):
             super().__init__()
             self.symbolComment = '#'
         self.customs = {}
+    def init(self) -> None:
+        for k,v in self.customs.items():
+            if 'type' in v: self.types[k] = v['type']
     def typeReplace(self, type: str, s: str) -> str:
         for x in self.types[type][0].values: s = s.replace(f' {x[1]}', f' {type}.{x[0]}')
         return s
@@ -133,7 +126,7 @@ class BaseCodeWriter(CodeWriter):
             npos = pos - (len(body) + cur_indent) if pos > 0 else 0
             self.emit(f'{body}{' ' * npos if npos >= 0 else ' '}{self.symbolComment} {v}')
             body = ''
-    def write(self, s: str) -> None:
+    def writeCustom(self, s: str) -> None:
         if s in self.customs: self.emit_raw(self.customs[s][self.ex])
     def writeEnum(self, s: Enum) -> None:
         pos = 37
@@ -184,12 +177,13 @@ class BaseCodeWriter(CodeWriter):
                             match x:
                                 case str(): self.emit(x)
                                 case Class.Comment(): self.emit(f'// {x.comment}')
+                                case Class.Code(): self.emit(x.initcw[CS])
                                 case Class.If():
                                     with self.block(before=f'{x.initcw[CS]}'): emitBlock(x.inits)
-                                case Class.Value(): self.emit(f'{x.initcw[CS]};')
-                    constArg = cw.customs[s.name]['constArg'][CS] if s.name in cw.customs and 'constArg' in cw.customs[s.name] else ''
+                                case Class.Value(): self.emit(f'{x.initcw[CS]};{' // ' + x.tags if x.tags else ''}')
+                    constArg = s.custom['constArg'][CS] if 'constArg' in s.custom else ''
                     with self.block(before=f'public {s.name}({s.init[0][CS]}{constArg}){' : base(r, h)' if s.inherit else ''}'): emitBlock(s.inits)
-                if s.name in cw.customs and 'const' in cw.customs[s.name]: self.emit(cw.customs[s.name]['const'][CS])
+                if 'const' in s.custom: self.emit(s.custom['const'][CS])
             elif self.ex == PY:
                 if s.struct and s.struct != 'x': self.emit(f'struct = (\'{s.struct[0]}\', {s.struct[1]})')
                 if not primary: 
@@ -201,18 +195,53 @@ class BaseCodeWriter(CodeWriter):
                         match x:
                             case str(): self.emit(x)
                             case Class.Comment(): self.emit(f'# {x.comment}')
+                            case Class.Code(): self.emit(x.initcw[PY])
                             case Class.If():
                                 with self.block(before=f'{x.initcw[PY]}:'): emitBlock(x.inits)
-                            case Class.Value(): self.emit(f'{x.initcw[PY]}')
-                constArg = cw.customs[s.name]['constArg'][PY] if s.name in cw.customs and 'constArg' in cw.customs[s.name] else ''
+                            case Class.Value(): self.emit(f'{x.initcw[PY]}{' # ' + x.tags if x.tags else ''}')
+                constArg = s.custom['constArg'][PY] if 'constArg' in s.custom else ''
                 with self.block(before=f'def __init__(self, {s.init[0][PY]}{constArg}):'):
                     if s.inherit: self.emit('super().__init__(r, h)')
-                    if s.name in cw.customs and 'const' in cw.customs[s.name]: self.emit(cw.customs[s.name]['const'][PY])
+                    if 'const' in s.custom: self.emit(s.custom['const'][PY])
                     if primary:
                         for k, v in s.fields.items():
                             self.emit_with_comment(f'{v[1][PY]}' if v[1] else '', v[3], pos)
                     else: emitBlock(s.inits)
         self.emit()
+    def writeBlocks(self, blocks: list[object]) -> None:
+        self.writeCustom('_header')
+        for s in blocks:
+            if s == 'X': self.region('X'); self.writeCustom('X'); continue
+            match s.name:
+                case 'AccumFlags': self.endregion(); self.region('Enums')
+                case 'SizedString': self.endregion(); self.region('Compounds')
+                case 'NiObject': self.endregion(); self.region('NIF Objects')
+                case 'BSDistantObjectLargeRefExtraData': self.endregion()
+            match s:
+                case Enum(): self.writeEnum(s)
+                case Class(): self.writeClass(s)
+        self.writeCustom('_footer')
+    def write(self, xml: object, path: str):
+        print(f'build {path}')
+        self.writeBlocks(self.parse(xml))
+        with open(path, 'w', encoding='utf-8') as f:
+            f.write(self.render())
+    def parse(self, xml: object) -> None:
+        root = xml.getroot()
+        blocks = ['X']
+        # first pass
+        for e in root:
+            name = e.attrib.get('name')
+            match e.tag:
+                case 'version' | 'basic': continue
+                case 'enum' | 'bitflags': blocks.append(Enum(e, self))
+                case 'compound' | 'niobject': blocks.append(Class(e, self))
+        # code pass
+        self.types['TexCoord'][MD] = ('new TexCord(X)', 'TexCord(X)')
+        for s in blocks:
+            match s:
+                case Class(): s.code(self)
+        return blocks
 
 #endregion
 
@@ -224,7 +253,7 @@ class Enum:
     name: str
     storage: str
     values: list[tuple[str, str, str]]
-    def __init__(self, e: object, cw: BaseCodeWriter):
+    def __init__(self, e: object, cw: XmlCodeWriter):
         self.comment = e.text.strip().replace('        ', '') if e.text else None
         self.flag = e.tag == 'bitflags'
         self.name = e.attrib['name']
@@ -234,6 +263,7 @@ class Enum:
         self.storage = e.attrib['storage']
         self.values = [(e.attrib['name'].replace(' ', '_'), e.attrib['value'], None, e.text.strip() if e.text else None) for e in e]
         self.flags = 'E'
+        self.custom = cw.customs[self.name] if self.name in cw.customs else {}
         # types
         match self.storage:
             case 'uint': self.init = [f'({self.namecw[CS]})r.ReadUInt32()', f'{self.namecw[PY]}(r.readUInt32())']
@@ -242,27 +272,39 @@ class Enum:
         if self.name not in cw.types: cw.types[self.name] = [
             self, self.namecw, ('X', 'X'), (self.init[CS], self.init[PY]),
             lambda c: (f'r.ReadFArray(r => {self.init[CS]}, {c})', f'r.readFArray(lambda r: {self.init[PY]}, {c})')]
-
+    def __repr__(self): return f'enum: {self.name}'
 class Class:
     class Comment:
         def __init__(self, parent: Class, s: str):
             self.comment: str = s
+            self.vercond = None
+            self.cond = None
+            self.typecw = None
+            self.initcw = None
             self.defaultcw: tuple = None
             self.name: str = s
             self.namecw: tuple = (self.name, self.name)
-        def code(self, parent: Class, cw: BaseCodeWriter) -> None:
-            self.typecw = None
-            self.initcw = None
+        def __repr__(self): return f'#: {self.comment}'
+        def code(self, parent: Class, cw: XmlCodeWriter) -> None: pass
+    class Code:
+        def __init__(self, parent: Class, initcw: tuple):
+            self.name: str = ':code:'
+            self.vercond = None
+            self.cond = None
+            self.initcw: tuple = initcw
+        def __repr__(self): return f'Code'
+        def code(self, parent: Class, cw: XmlCodeWriter) -> None: pass
     class If:
         def __init__(self, parent: Class, comment: str, field: object, inits: list[list[object]], kind: str):
             self.comment: str = comment
             self.kind: str = kind
-            self.name: str = None
-            self.inits: list[object] = inits[0][inits[1]:inits[2]] if inits else []
-            if inits: del inits[0][inits[1]:inits[2]]
+            self.name: str = ':if:'
             self.vercond: str = field.vercond if field else None
             self.cond: str = field.cond if field else None
-        def code(self, parent: Class, cw: BaseCodeWriter) -> None:
+            self.inits: list[object] = inits[0][inits[1]:inits[2]] if inits else []
+            if inits: del inits[0][inits[1]:inits[2]]
+        def __repr__(self): return f'{self.kind};{self.vercond};{self.cond}'
+        def code(self, parent: Class, cw: XmlCodeWriter) -> None:
             for x in self.inits:
                 if not isinstance(x, str): x.code(parent, cw)
             self.typecw = None
@@ -271,18 +313,17 @@ class Class:
             elif self.vercond: c = parent.cond(self.vercond, cw)
             elif self.cond: c = parent.cond(self.cond, cw)
             elif self.kind == 'switch': c = parent.cond(self.inits[0].cond, cw)
-            else: c = None
+            else: c = ['true', 'true']
             match self.kind:
                 case 'if': self.initcw = [f'if ({c[CS]})', f'if {c[PY]}']
                 case 'elseif': self.initcw = [f'else if ({c[CS]})', f'elif {c[PY]}']
+                case 'else': self.initcw = [f'else', f'else']
                 case 'switch': self.initcw = [f'switch ({c[CS].split('==')[0]})', f'match {c[PY].split('==')[0]}:']
                 case _: raise Exception(f'Unknown {self.kind}')
-    
     class Value:
         def __init__(self, parent: Class, e: object):
             if e == None: return
             self.comment: str = e.text.strip().replace('        ', '') if e.text else None if e.text else None
-            self.kind = None
             self.name: str = e.attrib['name'].replace('?', '')
             self.suffix: str = e.attrib.get('suffix') or ''
             cwname = self.name.replace('?', '').replace(' ', '')
@@ -292,6 +333,9 @@ class Class:
             self.namecw = (cwname, fmt_py(cwname))
             self.typecw = None
             self.initcw = None
+            self.elsecw = None
+            self.defaultcw = None
+            self.calculated = e.attrib.get('calculated') == '1'
             self.template: str = z if (z := e.attrib.get('template')) != 'TEMPLATE' else None
             self.default: str = e.attrib.get('default')
             self.arg: str = e.attrib.get('arg')
@@ -311,7 +355,10 @@ class Class:
             vercond += f'{' && ' if vercond else ''}(ZUV2 == {z})' if (z := e.attrib.get('userver2')) else ''
             vercond = verReplace(vercond).replace('User Version 2 ', 'ZUV2 ').replace('User Version ', 'ZUV ').replace('Version ', 'ZV ')
             self.vercond: str = vercond
-        def code(self, parent: Class, cw: BaseCodeWriter) -> None:
+            self.kind = None
+            self.tags = 'calculated' if self.calculated else ''
+        def __repr__(self): return f'{self.kind};{self.vercond};{self.cond}[{self.name}]'
+        def code(self, parent: Class, cw: XmlCodeWriter) -> None:
             flags = parent.flags
             primary = 'P' in flags
             # totype
@@ -322,25 +369,35 @@ class Class:
                 else: self.typecw = [cs, py]
             # toinit
             if not self.initcw:
-                cs = cw.types[self.type][MI][CS].replace('<T>', f'<{self.template or 'T'}>'); py = cw.types[self.type][MI][PY].replace('<T>', f'<{self.template or 'T'}>')
-                if self.arr1:
-                    cs = cw.types[self.type][MA](parent.cond(self.arr1, cw)[CS])[CS].replace('<T>', f'<{self.template or 'T'}>'); py = cw.types[self.type][MA](parent.cond(self.arr1, cw)[PY])[PY].replace('<T>', f'<{self.template or 'T'}>')
-                    if self.arr1.startswith('L'): cs = cs.replace('Read', f'Read{self.arr1}').replace(f', {self.arr1})', ')'); py = py.replace('read', f'read{self.arr1}').replace(f', {self.arr1})', ')')
-                    if self.arr2: cs = f'r.ReadFArray(k => {cs}, {self.arr2})'; py = f'r.readFArray(lambda k: {py}, {self.arr2})'
-                if self.template: cs = cs.replace('{T}', self.template); py = py.replace('{T}', self.template)
+                # type
+                if not self.calculated:
+                    cs = cw.types[self.type][MI][CS].replace('<T>', f'<{self.template or 'T'}>'); py = cw.types[self.type][MI][PY].replace('<T>', f'<{self.template or 'T'}>')
+                    if self.arr1:
+                        cs = cw.types[self.type][MA](parent.cond(self.arr1, cw)[CS])[CS].replace('<T>', f'<{self.template or 'T'}>'); py = cw.types[self.type][MA](parent.cond(self.arr1, cw)[PY])[PY].replace('<T>', f'<{self.template or 'T'}>')
+                        if self.arr1.startswith('L'): cs = cs.replace('Read', f'Read{self.arr1}').replace(f', {self.arr1})', ')'); py = py.replace('read', f'read{self.arr1}').replace(f', {self.arr1})', ')')
+                        if self.arr2: cs = f'r.ReadFArray(k => {cs}, {self.arr2})'; py = f'r.readFArray(lambda k: {py}, {self.arr2})'
+                    if self.template: cs = cs.replace('{T}', self.template); py = py.replace('{T}', self.template)
+                elif 'calculated' in parent.custom: (cs, py) = parent.custom['calculated'](self.name)
+                else: raise Exception(f'calculated? {parent.name}')
+
                 # default
-                self.defaultcw = [cw.types[self.type][MD][CS].replace('X', self.default), cw.types[self.type][MD][PY].replace('X', self.default)] if self.default else None
+                if not self.defaultcw: self.defaultcw = [cw.types[self.type][MD][CS].replace('X', self.default), cw.types[self.type][MD][PY].replace('X', self.default)] if self.default else None
                 # if
                 if self.cond and self.vercond: c = parent.cond(f'{self.cond} && {self.vercond}', cw)
                 elif self.vercond: c = parent.cond(self.vercond, cw)
                 elif self.cond: c = parent.cond(self.cond, cw)
-                else: c = None; self.kind = None
-                if c and not self.kind: self.kind = '?:' if primary else 'if'
-                defaultcw = self.defaultcw or ['default', 'None']
+                else: c = ['true', 'true']
+                # kind
+                if not self.kind:
+                    self.kind = 'if' if self.cond or self.vercond else ''
+                    if primary and self.kind == 'if': self.kind = '?:'
+                # else
+                elsecw = self.elsecw or self.defaultcw or ['default', 'None']
                 match self.kind:
-                    case '?:': self.initcw = [f'{self.namecw[CS]} = {c[CS]} ? {cs} : {defaultcw[CS]}', f'self.{self.namecw[PY]}{': ' + self.typecw[PY] if primary else ''} = {py} if {c[PY]} else {defaultcw[PY]}']
+                    case '?:': self.initcw = [f'{self.namecw[CS]} = {c[CS]} ? {cs} : {elsecw[CS]}', f'self.{self.namecw[PY]}{': ' + self.typecw[PY] if primary else ''} = {py} if {c[PY]} else {elsecw[PY]}']
                     case 'if': self.initcw = [f'if ({c[CS]}) {self.namecw[CS]} = {cs}', f'if {c[PY]}: self.{self.namecw[PY]} = {py}']
                     case 'elseif': self.initcw = [f'else if ({c[CS]}) {self.namecw[CS]} = {cs}', f'elif {c[PY]}: self.{self.namecw[PY]} = {py}']
+                    case 'else': self.initcw = [f'else {self.namecw[CS]} = {cs}', f'else: self.{self.namecw[PY]} = {py}']
                     case 'case': self.initcw = [f'case {c[CS]}: {self.namecw[CS]} = {cs}; break', f'case {c[PY]}: self.{self.namecw[PY]} = {py}']
                     case _: self.initcw = [f'{self.namecw[CS]} = {cs}', f'self.{self.namecw[PY]}{': ' + self.typecw[PY] if primary else ''} = {py}']
 
@@ -357,7 +414,7 @@ class Class:
     condFlag: int
     flags: str
     fields: list[tuple]
-    def __init__(self, e: object, cw: BaseCodeWriter):
+    def __init__(self, e: object, cw: XmlCodeWriter):
         niobject: bool = e.tag == 'niobject'
         self.comment = e.text.strip().replace('        ', '') if e.text else None
         if niobject:
@@ -373,13 +430,14 @@ class Class:
         self.values = [Class.Value(self, e) for e in e]
         self.condFlag = 0
         self.flags = ''
+        self.custom = cw.customs[self.name] if self.name in cw.customs else {}
         self.process()
         # flags
         if not self.flags: self.flags = 'C' if (self.condFlag & 2) or (self.condFlag & 4) or (niobject and self.values) or self.struct or self.template else 'P'
         headerExp = self.name in ['OblivionSubShape']
         hasHeader = self.name != 'Header' and (niobject or (self.condFlag & 1) or headerExp)
         # types
-        constNew = cw.customs[self.name]['constNew'] if self.name in cw.customs and 'constNew' in cw.customs[self.name] else ['', '']
+        constNew = self.custom['constNew'] if 'constNew' in self.custom else ['', '']
         self.init = (
             ['BinaryReader r, Header h', 'r: Reader, h: Header'] if hasHeader else ['BinaryReader r', 'r: Reader'],
             ['r, h', 'r, h'] if hasHeader else ['r', 'r'],
@@ -387,36 +445,13 @@ class Class:
         if self.name not in cw.types: cw.types[self.name] = [
             self, self.namecw, ('X', 'X'), (self.init[2][CS], self.init[2][PY]),
             lambda c: (f'r.ReadFArray(r => {self.init[2][CS]}, {c})', f'r.readFArray(lambda r: {self.init[2][PY]}, {c})')]
-    def cond(self, s: str, cw: BaseCodeWriter) -> list[str]:
-        # custom
-        match self.name:
-            case 'Key': s = cw.typeReplace('KeyType', s).replace('ARG', 'keyType')
-            case 'QuatKey': s = cw.typeReplace('KeyType', s).replace('ARG', 'keyType')
-            case 'Morph': s = s.replace('ARG', 'numVertices')
-            case 'MotorDescriptor': s = cw.typeReplace('MotorType', s)
-            case 'BoundingVolume': s = cw.typeReplace('BoundVolumeType', s)
+    def __repr__(self): return f'class: {self.name}'
+    def cond(self, s: str, cw: XmlCodeWriter) -> list[str]:
+        if 'cond' in self.custom: s = self.custom['cond'](s, cw)
         cs = s; py = s.replace('||', 'or').replace('&&', 'and')
+        if 'condcs' in self.custom: cs = self.custom['condcs'](cs, cw)
+        if 'condpy' in self.custom: py = self.custom['condpy'](py, cw)
         if s.startswith('B32:'): z = cs.split(' &&')[0]; cs = cs.replace(z, 'r.ReadBool32()'); py = py.replace(z, 'r.readBool32()')
-        match self.name:
-            case 'BSVertexData':
-                cs = cs \
-                    .replace('(ARG & 16) != 0', 'arg.HasFlag(VertexFlags.Vertex)') \
-                    .replace('(ARG & 32) != 0', 'arg.HasFlag(VertexFlags.UVs)') \
-                    .replace('(ARG & 128) != 0', 'arg.HasFlag(VertexFlags.Normals)') \
-                    .replace('(ARG & 256) != 0', 'tangents').replace('(ARG & 256) == 0', '!tangents') \
-                    .replace('(ARG & 512) != 0', 'arg.HasFlag(VertexFlags.Vertex_Colors)') \
-                    .replace('(ARG & 1024) != 0', 'arg.HasFlag(VertexFlags.Skinned)') \
-                    .replace('(ARG & 4096) != 0', 'arg.HasFlag(VertexFlags.Eye_Data)') \
-                    .replace('(ARG & 16384) != 0', 'full').replace('(ARG & 16384) == 0', '!full')
-                py = py \
-                    .replace('(ARG & 16) != 0', 'arg.HasFlag(VertexFlags.Vertex)') \
-                    .replace('(ARG & 32) != 0', 'arg.HasFlag(VertexFlags.UVs)') \
-                    .replace('(ARG & 128) != 0', 'arg.HasFlag(VertexFlags.Normals)') \
-                    .replace('(ARG & 256) != 0', 'tangents').replace('(ARG & 256) == 0', '!tangents') \
-                    .replace('(ARG & 512) != 0', 'arg.HasFlag(VertexFlags.Vertex_Colors)') \
-                    .replace('(ARG & 1024) != 0', 'arg.HasFlag(VertexFlags.Skinned)') \
-                    .replace('(ARG & 4096) != 0', 'arg.HasFlag(VertexFlags.Eye_Data)') \
-                    .replace('(ARG & 16384) != 0', 'full').replace('(ARG & 16384) == 0', '!full')
         for k,v in self.namers.items():
             cs = cs.replace(k, v)
             py = py.replace(k, f'self.{fmt_py(v)}')
@@ -449,7 +484,6 @@ class Class:
                         case 'byte': this.arr1 = 'L8'
                     del values[i-1]
             elif name.startswith('Has') and type == 'bool':
-                # print(f'{self.name}.{name}: {values[0].cond}')
                 found = False
                 for j in range(i, len(values)):
                     if name == values[j].cond: found = True
@@ -457,151 +491,70 @@ class Class:
                 if not found: continue
                 for s in values[i:j+1]:
                     s.cond = s.cond.replace(name, f'B32:{name}')
-                    # if self.name == 'ShaderTexDesc': print(f'{name}.{s.name}: {s.cond}')
                 del values[i-1]
-                # if self.name == 'ShaderTexDesc':
-                #     for k in values: print(f'{self.name}.{k.name}: {k.cond} - {k.vercond}')
-                # if self.name == 'NiTexturingProperty':
-                #     for k in values: print(f'{self.name}.{k.name}: {k.cond} - {k.vercond}')
                     
         # custom
-        match self.name:
-            case 'ControlledBlock':
-                self.flags = 'C'
-                values.insert(1, Class.Comment(self, 'NiControllerSequence::InterpArrayItem'))
-                values.insert(6, Class.Comment(self, 'Bethesda-only'))
-                values.insert(8, Class.Comment(self, 'NiControllerSequence::IDTag, post-10.1.0.104 only'))
-            case 'Header':
-                self.flags = 'C'
-                values[2].namecw = ('V', 'v')
-                values[4].namecw = ('UV', 'uv')
-                values[6].namecw = ('UV2', 'uv2')
-                del values[10]
-                values[10].arr1 = values[11].arr1 = 'L16'
-            case 'TexDesc':
-                values.insert(10, Class.Comment(self, 'NiTextureTransform'))
+        if 'values' in self.custom: self.custom['values'](self, values)
         inits = self.inits = values[:]
-        match self.name:
-            case 'MotorDescriptor':
-                self.flags = 'C'
-                inits.insert(1, Class.If(self, None, None, (inits, 1, 3), 'switch'))
-            case 'BoundingVolume':
-                self.flags = 'C'
-                inits.insert(1, Class.If(self, None, None, (inits, 1, 6), 'switch'))
+        if 'inits' in self.custom: self.custom['inits'](self, inits)
+
+        for i in range(len(inits) - 1, 0, -1):
+            this = inits[i]
+            # if self.name == 'BSVertexData': print(f'{this.name};{this.cond};{this.vercond}')
 
         # collapse multi
-        newIf = None
-        kind = 'if'
-        def addNewIf(i):
-            if self.name == 'ShaderTexDesc': print(f'z {this.name}: {this.cond}|{this.vercond}')
+        ifx = None
+        def newIf(i, ifs):
+            # if self.name == 'BSVertexData': print(f'z: {this.name};{this.cond};{this.vercond}')
             self.condFlag |= 4
-            newIf.inits.append(this)
+            ifx.inits.append(this)
             this.vercond = None
             this.cond = None
             del inits[i]
-            inits.insert(i, newIf)
-            # custom
+            inits.insert(i, ifx)
+            if 'if' in self.custom: py = self.custom['if'](this, ifx)
             match self.name:
-                case 'ControlledBlock':
-                    if this.name == 'Interpolator ID Offset':
-                        newIf.kind = 'elseif'
-                        newIf.inits[0].name = ''; newIf.inits[0].initcw = ('var stringPalette = X<NiStringPalette>.Ref(r)', 'stringPalette = X[NiStringPalette].ref(r)')
-                        newIf.inits[1].name = ''; newIf.inits[1].initcw = ('NodeName = Y.StringRef(r, stringPalette)', 'self.nodeName = Y.stringRef(r, stringPalette)')
-                        newIf.inits[2].name = ''; newIf.inits[2].initcw = ('PropertyType = Y.StringRef(r, stringPalette)', 'self.propertyType = Y.stringRef(r, stringPalette)')
-                        newIf.inits[3].name = ''; newIf.inits[3].initcw = ('ControllerType = Y.StringRef(r, stringPalette)', 'self.controllerType = Y.stringRef(r, stringPalette)')
-                        newIf.inits[4].name = ''; newIf.inits[4].initcw = ('ControllerID = Y.StringRef(r, stringPalette)', 'self.controllerID = Y.stringRef(r, stringPalette)')
-                        newIf.inits[5].name = ''; newIf.inits[5].initcw = ('InterpolatorID = Y.StringRef(r, stringPalette)', 'self.interpolatorID = Y.stringRef(r, stringPalette)')
-                    elif this.name == 'Interpolator ID' and '&&' not in newIf.vercond: newIf.kind = 'elseif'
                 case 'Key': inits[-1].kind = 'elseif'
                 case 'QuatKey': inits[-1].kind = 'elseif'
                 case 'FurniturePosition': inits[-1].kind = 'elseif'
                 case 'NiTimeController': inits[-1].kind = 'elseif'
+            return ifx
         ifs = []
         for i in range(len(inits) - 1, 0, -1):
             this = inits[i]; prev = inits[i-1]
-            if isinstance(this, Class.Value) and isinstance(prev, Class.Value):
-                if this.vercond and this.vercond == prev.vercond and this.cond and this.cond == prev.cond:
-                    if self.name == 'ShaderTexDesc': print(f'a {name}.{prev.name}: {prev.cond}|{prev.vercond}')
-                    if not newIf: newIf = Class.If(self, None, this, None, kind)
-                    newIf.inits.insert(0, prev)
-                    prev.cond = None
-                    prev.vercond = None
-                    del inits[i-1]
-                    continue
-                elif this.vercond and this.vercond == prev.vercond:
-                    if self.name == 'ShaderTexDesc': print(f'b {name}.{prev.name}: {prev.cond}|{this.vercond}')
-                    if not newIf: newIf = Class.If(self, None, this, None, kind)
-                    newIf.inits.insert(0, prev)
-                    prev.vercond = None
-                    del inits[i-1]
-                    continue
-                elif this.cond and this.cond == prev.cond:
-                    if self.name == 'ShaderTexDesc': print(f'c {name}.{prev.name}: {prev.cond}|{this.vercond}')
-                    if not newIf: newIf = Class.If(self, None, this, None, kind)
-                    newIf.inits.insert(0, prev)
-                    prev.cond = None
-                    del inits[i-1]
-                    continue
-            if newIf:   ifs.append(addNewIf(i)); newIf = None
-        if newIf: addNewIf(len(inits) - 1); newIf = None
+            if this.vercond and this.vercond == prev.vercond and this.cond and this.cond == prev.cond:
+                # if self.name == 'BSVertexData': print(f'a: {name}.{prev.name};{prev.cond};{prev.vercond}')
+                if not ifx: ifx = Class.If(self, None, this, None, 'if')
+                ifx.inits.insert(0, prev)
+                prev.cond = None
+                prev.vercond = None
+                del inits[i-1]
+                continue
+            elif this.vercond and this.vercond == prev.vercond:
+                # if self.name == 'BSVertexData': print(f'b: {name}.{prev.name};{prev.cond};{this.vercond}')
+                if not ifx: ifx = Class.If(self, None, this, None, 'if')
+                ifx.inits.insert(0, prev)
+                prev.vercond = None
+                del inits[i-1]
+                continue
+            elif this.cond and this.cond == prev.cond:
+                # if self.name == 'BSVertexData': print(f'c: {name}.{prev.name};{prev.cond};{this.vercond}')
+                if not ifx: ifx = Class.If(self, None, this, None, 'if')
+                ifx.inits.insert(0, prev)
+                prev.cond = None
+                del inits[i-1]
+                continue
+            if ifx: ifs.append(newIf(i, ifs)); ifx = None
+            else: ifs.clear()
+        if ifx: ifs.append(newIf(len(inits) - 1, ifs)); ifx = None
+        if 'inits2' in self.custom: self.custom['inits2'](self, inits)
                 
-    def code(self, cw: BaseCodeWriter):
+    def code(self, cw: XmlCodeWriter):
         for x in self.values:
             if not isinstance(x, str): x.code(self, cw)
         for x in self.inits:
             if not isinstance(x, str): x.code(self, cw)
-        # custom
-        match self.name:
-            case 'Header': self.values[0].initcw = ('(HeaderString, V) = Y.ParseHeaderStr(r.ReadVAString(0x80, 0xA)); var h = this', '(self.headerString, self.v) = Y.parseHeaderStr(r.readVAString(128, b\'\\x0A\')); h = self')
-            case 'StringPalette': self.values[0].typecw = ('string[]', 'list[str]'); self.values[0].initcw = ('Palette = r.ReadL32AString().Split((char)0)', 'self.palette: list[str] = r.readL32AString().split(\'0x00\')')
+        if 'code' in self.custom: py = self.custom['code'](self)
         self.fields = {x.namecw: (x.typecw, x.initcw, x.defaultcw, x.comment) for x in self.values if x.name and not isinstance(x, str)}
 
-def parse(tree: object, cw: BaseCodeWriter) -> None:
-    root = tree.getroot()
-    blocks = ['X']
-    # first pass
-    for e in root:
-        name = e.attrib.get('name')
-        match e.tag:
-            case 'version' | 'basic': continue
-            case 'enum' | 'bitflags': blocks.append(Enum(e, cw))
-            case 'compound' | 'niobject': blocks.append(Class(e, cw))
-    # code pass
-    cw.types['TexCoord'][MD] = ('new TexCord(X)', 'TexCord(X)')
-    for s in blocks:
-        match s:
-            case Class(): s.code(cw)
-    return blocks
-
-def write(blocks: list[object], cw: BaseCodeWriter) -> None:
-    cw.write('_header')
-    for s in blocks:
-        if s == 'X': cw.region('X'); cw.write('X'); continue
-        match s.name:
-            case 'AccumFlags': cw.endregion(); cw.region('Enums')
-            case 'SizedString': cw.endregion(); cw.region('Compounds')
-            case 'NiObject': cw.endregion(); cw.region('NIF Objects')
-            case 'BSDistantObjectLargeRefExtraData': cw.endregion()
-        match s:
-            case Enum(): cw.writeEnum(s)
-            case Class(): cw.writeClass(s)
-    cw.write('_footer')
-
 #endregion
-
-def build(xmlPath: str, csPath: str, pyPath: str):
-    tree = ET.parse(xmlPath)
-    if csPath:
-        print(f'build {csPath}')
-        cw = BaseCodeWriter(CS)
-        cs = parse(tree, cw)
-        write(cs, cw)
-        with open(csPath, 'w', encoding='utf-8') as f:
-            f.write(cw.render())
-    if pyPath:
-        print(f'build {pyPath}')
-        cw = BaseCodeWriter(PY)
-        cs = parse(tree, cw)
-        write(cs, cw)
-        with open(pyPath, 'w', encoding='utf-8') as f:
-            f.write(cw.render())

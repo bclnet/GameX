@@ -5,7 +5,6 @@ class NifCodeWriter(XmlCodeWriter):
     def __init__(self, ex: str):
         super().__init__(ex)
         def ControlledBlock_values(s, values):
-            s.flags = 'C'
             values.insert(1, Class.Comment(s, 'NiControllerSequence::InterpArrayItem'))
             values.insert(6, Class.Comment(s, 'Bethesda-only'))
             values.insert(8, Class.Comment(s, 'NiControllerSequence::IDTag, post-10.1.0.104 only'))
@@ -22,7 +21,6 @@ class NifCodeWriter(XmlCodeWriter):
         def Header_code(s):
             s.values[0].initcw = ('(HeaderString, V) = Y.ParseHeaderStr(r.ReadVAString(0x80, 0xA)); var h = this', '(self.headerString, self.v) = Y.parseHeaderStr(r.readVAString(128, b\'\\x0A\')); h = self')
         def Header_values(s, values):
-            s.flags = 'C'
             values[2].namecw = ('V', 'v')
             values[4].namecw = ('UV', 'uv')
             values[6].namecw = ('UV2', 'uv2')
@@ -32,12 +30,6 @@ class NifCodeWriter(XmlCodeWriter):
             s.values[0].typecw = ('string[]', 'list[str]'); s.values[0].initcw = ('Palette = r.ReadL32AString().Split((char)0)', 'self.palette: list[str] = r.readL32AString().split(\'0x00\')')
         def TexDesc_values(s, values):
             values.insert(10, Class.Comment(s, 'NiTextureTransform'))
-        def MotorDescriptor_inits(s, inits):
-            s.flags = 'C'
-            inits.insert(1, Class.If(s, None, None, (inits, 1, 3), 'switch'))
-        def BoundingVolume_inits(s, inits):
-            s.flags = 'C'
-            inits.insert(1, Class.If(s, None, None, (inits, 1, 6), 'switch'))
         def BSVertexData_values(s, values):
             del values[0:3]
         def BSVertexData_inits(s, inits):
@@ -47,43 +39,86 @@ class NifCodeWriter(XmlCodeWriter):
             inits.insert(2, ifx := Class.If(s, None, inits[2], (inits, 2, 5), 'if'))
             ifx.cond = ifx.cond[1:16]
             ifx.inits[0].kind = '?:'; ifx.inits[0].cond = ifx.inits[0].cond[22:-1]; ifx.inits[0].elsecw = ('r.ReadHalfVector3()', 'r.readHalfVector3()')
+            ifx.inits.insert(1, ifx0 := Class.If(s, None, ifx.inits[1], (ifx.inits, 1, 2), 'if'))
+            ifx.inits.insert(2, ifx1 := Class.If(s, None, ifx.inits[1], (ifx.inits, 2, 3), 'if'))
+            ifx0.cond = ifx0.cond[22:38]
+            ifx0.inits[0].kind = '?:'; ifx0.inits[0].cond = ifx0.inits[0].cond[44:-1]; ifx0.inits[0].elsecw = ('r.ReadHalf()', 'r.readHalf()')
+            ifx1.cond = ifx1.cond[22:38]; ifx1.kind = 'else'
+            ifx1.inits[0].kind = '?:'; ifx1.inits[0].cond = ifx1.inits[0].cond[44:-1]; ifx1.inits[0].elsecw = ('r.ReadUInt16()', 'r.readUInt16()')
+            #
             inits.insert(6, ifx := Class.If(s, None, inits[6], (inits, 6, 8), 'if'))
             ifx.cond = ifx.cond[1:17]
             ifx.inits[0].cond = ifx.inits[0].cond[23:-1]
             ifx.inits[1].cond = ifx.inits[1].cond[23:-1]
+        def SkinPartition_values(s, values):
+            for i in [14, 9, 6]: del values[i]
         def SkinPartition_inits(s, inits):
-            newInits = []
-            {18:}
-            {18}
+            inits.insert(0, Class.Code(s, ('uint u0;', 'u0: int = 0')))
+            #
+            inits.insert(7, ifx := Class.If(s, None, inits[0], (inits, 7, 17), 'elseif'))
+            ifx.vercond = 'ZV >= 0x0A010000'
+            in0 = []
+            for i in [8, 6, 2, 0]: ifx.inits[i].vercond = None; in0.insert(0, ifx.inits[i]); del ifx.inits[i]
+            in0.insert(2, ifx.inits[3])
+            ifx.inits[0].vercond = None; ifx.inits[0].cond = 'B32:' + ifx.inits[0].cond
+            ifx.inits[1].vercond = None; ifx.inits[1].cond = 'U32:' + ifx.inits[1].cond
+            ifx.inits[2].vercond = None; ifx.inits[2].cond = ifx.inits[2].cond.replace('Has Vertex Weights', 'u0')
+            ifx.inits[4].vercond = None; ifx.inits[4].cond = ifx.inits[4].cond[16:-1]
+            ifx.inits[5].vercond = None; ifx.inits[5].cond = ifx.inits[5].cond[16:-1]
+            ifx.inits.insert(4, ifx := Class.If(s, None, None, (ifx.inits, 4, 7), 'if'))
+            ifx.vercond = 'B32:HasFaces'
+            #
+            inits.insert(7, ifx := Class.If(s, None, None, in0, 'if'))
+            ifx.vercond = 'ZV <= 0x0A000102'
+        def BoneData_values(s, values):
+            values[7].namecw = ('VertexWeights', 'vertexWeights')
+            values[7].arr1 = values[6].arr1 = values[5].arr1 = 'L16'
+            del values[4]
+        def MotorDescriptor_inits(s, inits):
+            s.flags = 'C'
+            inits.insert(1, Class.If(s, None, None, (inits, 1, 4), 'switch'))
+        def RagdollDescriptor_inits(s, inits):
+            inits.insert(0, Class.Comment(s, 'Oblivion and Fallout 3, Havok 550'))
+            inits.insert(7, Class.Comment(s, 'Fallout 3 and later, Havok 660 and 2010'))
+        def LimitedHingeDescriptor_inits(s, inits):
+            inits.insert(0, Class.Comment(s, 'Oblivion and Fallout 3, Havok 550'))
+            inits.insert(8, Class.Comment(s, 'Fallout 3 and later, Havok 660 and 2010'))
+        def HingeDescriptor_inits(s, inits):
+            inits.insert(0, Class.Comment(s, 'Oblivion'))
+            inits.insert(6, Class.Comment(s, 'Fallout 3'))
+        def PrismaticDescriptor_inits(s, inits):
+            inits.insert(0, Class.Comment(s, 'In reality Havok loads these as Transform A and Transform B using hkTransform'))
+            inits.insert(1, Class.Comment(s, 'Oblivion (Order is a guess)'))
+            inits.insert(10, Class.Comment(s, 'Fallout 3'))
+        def BoxBV_inits(s, inits):
+            inits[0].comment = 'was:Translation'
+            inits[1].type = 'Matrix33'; inits[1].arr1 = None; inits[1].comment = 'was:Rotation #ReadMatrix3x3As4x4'
+            inits[2].comment = 'was:Radius'
+        def BoundingVolume_inits(s, inits):
+            s.flags = 'C'
+            inits.insert(1, Class.If(s, None, None, (inits, 1, 6), 'switch'))
+        def MalleableDescriptor_inits(s, inits):
+            inits.insert(5, Class.If(s, None, None, (inits, 5, 11), 'switch'))
+            inits[6].comment = 'not in Fallout 3 or Skyrim'
+            inits[7].comment = 'In TES CS described as Damping'
+            inits[8].comment = 'In GECK and Creation Kit described as Strength'
+        def ConstraintData_inits(s, inits):
+            s.flags = 'C'
+            inits.insert(5, Class.If(s, None, None, (inits, 5, 12), 'switch'))
+        def NiObject_code(s):
+            nodes = ['NiNode', 'NiTriShape', 'NiTexturingProperty', 'NiSourceTexture', 'NiMaterialProperty', 'NiMaterialColorController', 'NiTriShapeData', 'RootCollisionNode', 'NiStringExtraData', 'NiSkinInstance', 'NiSkinData', 'NiAlphaProperty', 'NiZBufferProperty', 'NiVertexColorProperty', 'NiBSAnimationNode', 'NiBSParticleNode', 'NiParticles', 'NiParticlesData', 'NiRotatingParticles', 'NiRotatingParticlesData', 'NiAutoNormalParticles', 'NiAutoNormalParticlesData', 'NiUVController', 'NiUVData', 'NiTextureEffect', 'NiTextKeyExtraData', 'NiVertWeightsExtraData', 'NiParticleSystemController', 'NiBSPArrayController', 'NiGravity', 'NiParticleBomb', 'NiParticleColorModifier', 'NiParticleGrowFade', 'NiParticleMeshModifier', 'NiParticleRotation', 'NiKeyframeController', 'NiKeyframeData', 'NiColorData', 'NiGeomMorpherController', 'NiMorphData', 'AvoidNode', 'NiVisController', 'NiVisData', 'NiAlphaController', 'NiFloatData', 'NiPosData', 'NiBillboardNode', 'NiShadeProperty', 'NiWireframeProperty', 'NiCamera', 'NiExtraData', 'NiSkinPartition']
+            for x in nodes: s.attribs.append(Class.Attrib(f'JsonDerivedType(typeof({x}), typeDiscriminator: nameof({x}))'))
+            body = '\n'.join([f'            case "{x}": return new {x}(r, h);' for x in nodes])
+            s.methods.append(Class.Method('''
+    public static NiObject Read(BinaryReader r, Header h) {
+        var nodeType = r.ReadL32AString(0x40);
+        switch (nodeType) {
+BODY
+            default: { Log($"Tried to read an unsupported NiObject type ({nodeType})."); return null; }
+        }
+    }
+'''.replace('BODY', body)))
 
-
-6 a
-# 7 b
-8 a
-9 a
-# 10 b
-11 a
-12 20.3.1.1
-13
-14 a
-# 15 b
-16 a
-# 17 b
-18 a
-18, 15, 10, 7
-
-            ifb = Class.If(s, None, inits[6], (inits, 6, 8), 'if'))
-            for x in [18, 15, 10, 7]
-            newInits.append(inits[7]); del inits[7]
-
-            # inits.insert(10, inits[7]); del inits[7]
-            print(inits[6:12])
-            # print(inits.remove(inits[7]))
-            # print(inits.remove(inits[9]))
-            # print(inits[15])
-
-            # print(inits[12])
-            # (inits[2], inits[2]) = (inits[2], inits[2])
         self.customs = {
             #region Header
             '_header': (
@@ -285,11 +320,12 @@ class Flags(Flag):
             'StringPalette': { 'x': 1508,
                 'code': StringPalette_code },
             'Key': { 'x': 1521,
+                'kind': {-1: 'elseif'},
                 'constArg': (', KeyType keyType', ', keyType: KeyType'), 'constNew': (', Interpolation', ', self.interpolation'),
-                'cond': lambda s, cw: cw.typeReplace('KeyType', s).replace('ARG', 'keyType') },
+                'cond': lambda p, s, cw: cw.typeReplace('KeyType', s).replace('ARG', 'keyType') },
             'QuatKey': { 'x': 1537,
                 'constArg': (', KeyType keyType', ', keyType: KeyType'),
-                'cond': lambda s, cw: cw.typeReplace('KeyType', s).replace('ARG', 'keyType') },
+                'cond': lambda p, s, cw: cw.typeReplace('KeyType', s).replace('ARG', 'keyType') },
             'TexCoord': { 'x': 1545,
                 'constArg': ('', ', half: bool'), 'constNew': ('', ', false'),
                 'const': ('public TexCoord(BinaryReader r, bool half) { u = r.ReadHalf(); v = r.ReadHalf(); }', 'if half: self.u = r.readHalf(); self.v = r.readHalf(); return') },
@@ -299,7 +335,7 @@ class Flags(Flag):
                 'values': TexDesc_values },
             'BSVertexData': { 'x': 1616,
                 'constArg': (', VertexFlags arg, bool sse', ', arg: VertexFlags, sse: bool'), #'constNew': (', false', ', false'),
-                'condcs': lambda s, cw: s \
+                'condcs': lambda p, s, cw: s \
                     .replace('(ARG & 16) != 0', 'arg.HasFlag(VertexFlags.Vertex)') \
                     .replace('(ARG & 32) != 0', 'arg.HasFlag(VertexFlags.UVs)') \
                     .replace('(ARG & 128) != 0', 'arg.HasFlag(VertexFlags.Normals)') \
@@ -308,7 +344,7 @@ class Flags(Flag):
                     .replace('(ARG & 1024) != 0', 'arg.HasFlag(VertexFlags.Skinned)') \
                     .replace('(ARG & 4096) != 0', 'arg.HasFlag(VertexFlags.Eye_Data)') \
                     .replace('(ARG & 16384) != 0', 'full').replace('(ARG & 16384) == 0', '!full'),
-                'condpy': lambda s, cw: s \
+                'condpy': lambda p, s, cw: s \
                     .replace('(ARG & 16) != 0', 'arg.HasFlag(VertexFlags.Vertex)') \
                     .replace('(ARG & 32) != 0', 'arg.HasFlag(VertexFlags.UVs)') \
                     .replace('(ARG & 128) != 0', 'arg.HasFlag(VertexFlags.Normals)') \
@@ -322,18 +358,48 @@ class Flags(Flag):
                 'type': ['', ('BSVertexData', 'BSVertexData'), ('X', 'X'), ('new BSVertexData(r, true)', 'BSVertexData(r, true)'), lambda c: (f'r.ReadFArray(r => new BSVertexData(r, true), {c})', f'r.readFArray(lambda r: BSVertexData(r, true), {c})')] },
             'SkinPartition': { 'x': 1661,
                 'calculated': lambda s: ('(ushort)(NumVertices / 3)', '(self.numVertices / 3)'),
-                'inits': SkinPartition_inits },
+                'values': SkinPartition_values, 'inits': SkinPartition_inits },
+            'FurniturePosition': { 'x': 1750,
+                'kind': {-1: 'else'} }, # should auto
             'Morph': { 'x': 1768,
                 'constArg': (', uint numVertices', ', numVertices: int'),
-                'cond': lambda s, cw: s.replace('ARG', 'numVertices') },
+                'cond': lambda p, s, cw: s.replace('ARG', 'numVertices') },
+            'BoneData': { 'x': 1789,
+                'constArg': (', int ARG', ', ARG: int'),
+                'values': BoneData_values },
             'MotorDescriptor': { 'x': 1898,
-                'cond': lambda s, cw: cw.typeReplace('MotorType', s),
+                'cond': lambda p, s, cw: cw.typeReplace('MotorType', s),
                 'inits': MotorDescriptor_inits },
+            'RagdollDescriptor': { 'x': 1905,
+                'kind': {3: 'else'},
+                'inits': RagdollDescriptor_inits },
+            'LimitedHingeDescriptor': { 'x': 1935,
+                'kind': {3: 'else'},
+                'inits': LimitedHingeDescriptor_inits },
+            'HingeDescriptor': { 'x': 1964,
+                'kind': {3: 'elseif'},
+                'inits': HingeDescriptor_inits },
+            'PrismaticDescriptor': { 'x': 1992,
+                'kind': {4: 'elseif'},
+                'inits': PrismaticDescriptor_inits },
+            'BoxBV': { 'x': 2040,
+                'inits': BoxBV_inits },
             'BoundingVolume': { 'x': 2060,
-                'cond': lambda s, cw: cw.typeReplace('BoundVolumeType', s),
+                'cond': lambda p, s, cw: cw.typeReplace('BoundVolumeType', s),
                 'inits': BoundingVolume_inits },
+            'MalleableDescriptor': { 'x': 2154,
+                'kind': {7: 'elseif'},
+                'cond': lambda p, s, cw: cw.typeReplace('hkConstraintType', s) if p and p.kind == 'switch' else s,
+                'inits': MalleableDescriptor_inits },
+            'ConstraintData': { 'x': 2171,
+                'cond': lambda p, s, cw: cw.typeReplace('hkConstraintType', s) if p and p.kind == 'switch' else s,
+                'inits': ConstraintData_inits },
+            'NiObject': { 'x': 2193,
+                'code': NiObject_code },
             'bhkMoppBvTreeShape': { 'x': 2511,
                 'calculated': lambda s: ('0', '0') },
+            'NiTimeController': { 'x': 2860,
+                'kind': {-1: 'elseif'} },
             'NiTriShapeData': { 'x': 4673,
                 'calculated': lambda s: ('0', '0') },
         }
@@ -345,11 +411,15 @@ class Flags(Flag):
             'BSVertexDesc': ('<5bHb', 8),
             'NiPlane': ('<4f', 24),
             'NiBound': ('<4f', 24),
-            'NiQuatTransform': 'x',
-            'NiTransform': 'x',
-            'Particle': ('<9f2H', 40) }
+            'zNiQuatTransform': 'x',
+            'NiTransform': ('<x', 0),
+            'Particle': ('<9f2H', 40),
+            'zBoxBV': ('<x', 40),
+            'zCapsuleBV': ('<x', 40),
+            'zHalfSpaceBV': ('<x', 40),
+            }
         self.init()
 
 xml = ET.parse('nif.xml')
 NifCodeWriter(CS).write(xml, 'nif.cs')
-# NifCodeWriter(PY).write(xml, 'nif.py')
+NifCodeWriter(PY).write(xml, 'nif.py')

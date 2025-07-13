@@ -1208,7 +1208,7 @@ class Header: # X
     headerString: str                                   # 'NetImmerse File Format x.x.x.x' (versions <= 10.0.1.2) or 'Gamebryo File Format x.x.x.x' (versions >= 10.1.0.0), with x.x.x.x the version written out. Ends with a newline character (0x0A).
     copyright: list[str]
     v: int = 0x04000002                                 # The NIF version, in hexadecimal notation: 0x04000002, 0x0401000C, 0x04020002, 0x04020100, 0x04020200, 0x0A000100, 0x0A010000, 0x0A020000, 0x14000004, ...
-    endianType: EndianType = ENDIAN_LITTLE              # Determines the endianness of the data in the file.
+    endianType: EndianType = EndianType.ENDIAN_LITTLE   # Determines the endianness of the data in the file.
     uv: int                                             # An extra version number, for companies that decide to modify the file format.
     numBlocks: int                                      # Number of file objects.
     uv2: int = 0
@@ -1278,7 +1278,7 @@ class Key: # X
         if keyType == KeyType.QUADRATIC_KEY:
             self.forward = X[T].read(r)
             self.backward = X[T].read(r)
-        elif keyType == KeyType.TBC_KEY: self.tbc = TBC(r)
+        elif keyType == KeyType.TBC_KEY: self.tbc = r.readS(TBC)
 
 # Array of vector keys (anything that can be interpolated, except rotations).
 class KeyGroup: # X
@@ -1302,7 +1302,7 @@ class QuatKey: # X
         if keyType != KeyType.XYZ_ROTATION_KEY:
             if h.v >= 0x0A01006A: self.time = r.readSingle()
             self.value = X[T].read(r)
-        elif keyType == KeyType.TBC_KEY: self.tbc = TBC(r)
+        if keyType == KeyType.TBC_KEY: self.tbc = r.readS(TBC)
 
 # Texture coordinates (u,v). As in OpenGL; image origin is in the lower left corner.
 class TexCoord: # X
@@ -1327,8 +1327,8 @@ class TransformMethod(Enum):
 class TexDesc: # X
     image: int                                          # Link to the texture image.
     source: int                                         # NiSourceTexture object index.
-    clampMode: TexClampMode = WRAP_S_WRAP_T             # 0=clamp S clamp T, 1=clamp S wrap T, 2=wrap S clamp T, 3=wrap S wrap T
-    filterMode: TexFilterMode = FILTER_TRILERP          # 0=nearest, 1=bilinear, 2=trilinear, 3=..., 4=..., 5=...
+    clampMode: TexClampMode = TexClampMode.WRAP_S_WRAP_T# 0=clamp S clamp T, 1=clamp S wrap T, 2=wrap S clamp T, 3=wrap S wrap T
+    filterMode: TexFilterMode = TexFilterMode.FILTER_TRILERP # 0=nearest, 1=bilinear, 2=trilinear, 3=..., 4=..., 5=...
     flags: Flags                                        # Texture mode flags; clamp and filter mode stored in upper byte with 0xYZ00 = clamp mode Y, filter mode Z.
     maxAnisotropy: int
     uvSet: int = 0                                      # The texture coordinate set in NiGeometryData that this texture slot will use.
@@ -1339,7 +1339,7 @@ class TexDesc: # X
     translation: TexCoord                               # The UV translation.
     scale: TexCoord = TexCord(1.0, 1.0)                 # The UV scale.
     rotation: float = 0.0f                              # The W axis rotation in texture space.
-    transformMethod: TransformMethod = 0                # Depending on the source, scaling can occur before or after rotation.
+    transformMethod: TransformMethod = TransformMethod.0# Depending on the source, scaling can occur before or after rotation.
     center: TexCoord                                    # The origin around which the texture rotates.
 
     def __init__(self, r: Reader, h: Header):
@@ -1357,11 +1357,11 @@ class TexDesc: # X
         if h.v <= 0x0401000C: self.unknown1 = r.readUInt16()
         # NiTextureTransform
         if r.readBool32() and h.v >= 0x0A010000:
-            self.translation = TexCoord(r)
-            self.scale = TexCoord(r)
+            self.translation = r.readS(TexCoord)
+            self.scale = r.readS(TexCoord)
             self.rotation = r.readSingle()
             self.transformMethod = TransformMethod(r.readUInt32())
-            self.center = TexCoord(r)
+            self.center = r.readS(TexCoord)
 
 # NiTexturingProperty::ShaderMap. Shader texture description.
 class ShaderTexDesc:
@@ -1401,7 +1401,7 @@ class VertexFlags(Flag):
 class BSVertexData:
     vertex: Vector3
     bitangentX: float
-    uknownInt: int
+    unknownInt: int
     uv: TexCoord
     normal: Vector3
     bitangentY: int
@@ -1412,7 +1412,7 @@ class BSVertexData:
     boneIndices: bytearray
     eyeData: float
 
-    def __init__(self, r: Reader, h: Header, arg: VertexFlags, sse: bool):
+    def __init__(self, r: Reader, arg: VertexFlags, sse: bool):
         full = sse or VertexFlags.Full_Precision in arg
         tangents = VertexFlags.Tangents in arg
         if VertexFlags.Vertex in arg:
@@ -1454,47 +1454,46 @@ class BSVertexDesc:
 
 # Skinning data for a submesh, optimized for hardware skinning. Part of NiSkinPartition.
 class SkinPartition:
-    numVertices: int                # Number of vertices in this submesh.
-    numTriangles: int               # Number of triangles in this submesh.
-    numBones: int                   # Number of bones influencing this submesh.
-    numStrips: int                  # Number of strips in this submesh (zero if not stripped).
-    numWeightsPerVertex: int        # Number of weight coefficients per vertex. The Gamebryo engine seems to work well only if this number is equal to 4, even if there are less than 4 influences per vertex.
-    bones: list[int]                # List of bones.
-    vertexMap: list[int]            # Maps the weight/influence lists in this submesh to the vertices in the shape being skinned.
-    vertexWeights: list[list[float]] # The vertex weights.
-    stripLengths: int               # The strip lengths.
-    strips: list[list[int]]         # The strips.
-    triangles: list[Triangle]       # The triangles.
-    boneIndices: list[bytearray]    # Bone indices, they index into 'Bones'.
-    unknownShort: int               # Unknown
+    numVertices: int                                    # Number of vertices in this submesh.
+    numTriangles: int                                   # Number of triangles in this submesh.
+    numBones: int                                       # Number of bones influencing this submesh.
+    numStrips: int                                      # Number of strips in this submesh (zero if not stripped).
+    numWeightsPerVertex: int                            # Number of weight coefficients per vertex. The Gamebryo engine seems to work well only if this number is equal to 4, even if there are less than 4 influences per vertex.
+    bones: list[int]                                    # List of bones.
+    vertexMap: list[int]                                # Maps the weight/influence lists in this submesh to the vertices in the shape being skinned.
+    vertexWeights: list[list[float]]                    # The vertex weights.
+    stripLengths: list[int]                             # The strip lengths.
+    strips: list[list[int]]                             # The strips.
+    triangles: list[Triangle]                           # The triangles.
+    boneIndices: list[bytearray]                        # Bone indices, they index into 'Bones'.
+    unknownShort: int                                   # Unknown
     vertexDesc: BSVertexDesc
     trianglesCopy: list[Triangle]
 
     def __init__(self, r: Reader, h: Header):
+        u0: int = 0
         self.numVertices = r.readUInt16()
-        self.numTriangles = self.numVertices / 3 # #calculated?
+        self.numTriangles = (self.numVertices / 3) # calculated
         self.numBones = r.readUInt16()
         self.numStrips = r.readUInt16()
         self.numWeightsPerVertex = r.readUInt16()
         self.bones = r.readPArray(None, 'H', self.numBones)
         if h.v <= 0x0A000102:
             self.vertexMap = r.readPArray(None, 'H', self.numVertices)
-            self.vertexWeights = r.readFArray(lambda r: r.readPArray(None, 'f', self.numWeightsPerVertex), self.numVertices)
-            self.stripLengths = r.readUInt16()
-            if self.numStrips != 0: self.strips = r.readFArray(lambda r: r.readPArray(None, 'H', self.stripLengths), self.numStrips)
-            else: self.triangles = r.readFArray(lambda r: Triangle(r), self.numTriangles)
+            self.vertexWeights = r.readFArray(lambda k: r.readPArray(None, 'f', self.numWeightsPerVertex), self.numVertices)
+            self.stripLengths = r.readPArray(None, 'H', self.numStrips)
+            if self.numStrips != 0: self.strips = r.readFArray(lambda k: r.readPArray(None, 'H', self.stripLengths), self.numStrips)
+            else: self.triangles = r.readSArray<Triangle>(self.numTriangles)
         elif h.v >= 0x0A010000:
             if r.readBool32(): self.vertexMap = r.readPArray(None, 'H', self.numVertices)
-            if (hasVertexWeights := r.ReadUInt32()) != 0:
-                self.vertexWeights = r.readFArray(lambda r: r.readPArray(None, 'f', self.numWeightsPerVertex), self.numVertices) if hasVertexWeights == 1 else \
-                r.readFArray(lambda r: r.readFArray(lambda k: k.readHalf(), self.numWeightsPerVertex), self.numVertices) if hasVertexWeights == 15 else \
-                None
-            self.stripLengths = r.readUInt16()
+            if (u0 := r.readUInt32()) == 1: self.vertexWeights = r.readFArray(lambda k: r.readPArray(None, 'f', self.numWeightsPerVertex), self.numVertices)
+            if u0 == 15: self.vertexWeights = r.readFArray(lambda k: r.readFArray(lambda r: r.readHalf(), self.numWeightsPerVertex), self.numVertices)
+            self.stripLengths = r.readPArray(None, 'H', self.numStrips)
             if r.readBool32():
-                if self.numStrips != 0: self.strips = r.readFArray(lambda r: r.readPArray(None, 'H', self.stripLengths), self.numStrips)
-                else: self.triangles = r.readFArray(lambda r: Triangle(r), self.numTriangles)
-        if r.readBool32(): self.boneIndices = r.readFArray(lambda r: r.readBytes(self.numWeightsPerVertex), self.numVertices)
-        if h.userVersion2 > 34: self.unknownShort = r.readUInt16()
+                if self.numStrips != 0: self.strips = r.readFArray(lambda k: r.readPArray(None, 'H', self.stripLengths), self.numStrips)
+                else: self.triangles = r.readSArray<Triangle>(self.numTriangles)
+        if r.readBool32(): self.boneIndices = r.readFArray(lambda k: r.readBytes(self.numWeightsPerVertex), self.numVertices)
+        if h.uv2 > 34: self.unknownShort = r.readUInt16()
         if h.v >= 0x14020007 and h.userVersion <= 100:
             self.vertexDesc = BSVertexDesc(r)
             self.trianglesCopy = r.readFArray(lambda r: Triangle(r), self.numTriangles)
@@ -1520,18 +1519,14 @@ class NiBound:
         self.radius = r.readSingle()
 
 class NiQuatTransform:
-    translation: Vector3
-    rotation: Quaternion
-    scale: float = 1.0f
-    trsValid: list[bool]                                # Whether each transform component is valid.
-
     def __init__(self, r: Reader, h: Header):
-        self.translation = r.readVector3()
-        self.rotation = r.readQuaternion()
-        self.scale = r.readSingle()
-        if h.v <= 0x0A01006D: self.trsValid = [r.readBool32(), r.readBool32(), r.readBool32()]
+        self.translation: Vector3 = r.readVector3()
+        self.rotation: Quaternion = r.readQuaternion()
+        self.scale: float = r.readSingle()
+        self.trsValid: list[bool] = [r.readBool32(), r.readBool32(), r.readBool32()] if h.v <= 0x0A01006D else None # Whether each transform component is valid.
 
 class NiTransform: # X
+    struct = ('<x', 0)
     rotation: Matrix3x3                                 # The rotation part of the transformation matrix.
     translation: Vector3                                # The translation vector.
     scale: float = 1.0f                                 # Scaling part (only uniform scaling is supported).
@@ -1571,7 +1566,7 @@ class FurniturePosition:
             self.orientation = r.readUInt16()
             self.positionRef1 = r.readByte()
             self.positionRef2 = r.readByte()
-        elif h.uv2 > 34:
+        else:
             self.heading = r.readSingle()
             self.animationType = AnimationType(r.readUInt16())
             self.entryProperties = FurnitureEntryPoints(r.readUInt16())
@@ -1579,26 +1574,27 @@ class FurniturePosition:
 # Bethesda Havok. A triangle with extra data used for physics.
 class TriangleData:
     def __init__(self, r: Reader, h: Header):
-        self.triangle: Triangle = Triangle(r)           # The triangle.
+        self.triangle: Triangle = r.readS(Triangle)     # The triangle.
         self.weldingInfo: int = r.readUInt16()          # Additional havok information on how triangles are welded.
         self.normal: Vector3 = r.readVector3() if h.v <= 0x14000005 else None # This is the triangle's normal.
 
 # Geometry morphing data component.
-class Morph:
-    frameName: str                  # Name of the frame.
-    interpolation: KeyType          # Unlike most objects, the presense of this value is not conditional on there being keys.
-    keys: list[Key]                 # The morph key frames.
+class Morph: # X
+    frameName: str                                      # Name of the frame.
+    numKeys: int                                        # The number of morph keys that follow.
+    interpolation: KeyType                              # Unlike most objects, the presense of this value is not conditional on there being keys.
+    keys: list[Key[T]]                                  # The morph key frames.
     legacyWeight: float
-    vectors: list[Vector3]          # Morph vectors.
+    vectors: list[Vector3]                              # Morph vectors.
 
-    def __init__(self, r: Reader, numVertices: int):
+    def __init__(self, r: Reader, h: Header, numVertices: int):
         if h.v >= 0x0A01006A: self.frameName = Y.string(r)
         if h.v <= 0x0A010000:
-            numKeys = r.readUInt32()
+            self.numKeys = r.readUInt32()
             self.interpolation = KeyType(r.readUInt32())
-            self.keys = r.readFArray(lambda r: Key(r, self.interpolation), numKeys)
-        if h.v >= 0x0A010068 and h.v <= 0x14010002: self.legacyWeight = r.readSingle()
-        self.vectors = r.readFArray(lambda r: r.readVector3(), numVertices)
+            self.keys = r.readFArray(lambda r: Key[T](r, self.interpolation), self.numKeys)
+        if h.v >= 0x0A010068 and h.v <= 0x14010002 and h.uv2 < 10: self.legacyWeight = r.readSingle()
+        self.vectors = r.readPArray(None, '3f', numVertices)
 
 # particle array entry
 class Particle: # X
@@ -1621,29 +1617,28 @@ class Particle: # X
         self.vertexId = r.readUInt16()
 
 # NiSkinData::BoneData. Skinning data component.
-class BoneData: #:M
-    skinTransform: NiTransform                              # Offset of the skin from this bone in bind position.
-    boundingSphereOffset: Vector3                           # Translation offset of a bounding sphere holding all vertices. (Note that its a Sphere Containing Axis Aligned Box not a minimum volume Sphere)
-    boundingSphereRadius: float                             # Radius for bounding sphere holding all vertices.
-    unknown13Shorts: list[int]                              # Unknown, always 0?
-    vertexWeights: list[BoneVertData]                       # The vertex weights.
+class BoneData: # X
+    skinTransform: NiTransform                          # Offset of the skin from this bone in bind position.
+    boundingSphereOffset: Vector3                       # Translation offset of a bounding sphere holding all vertices. (Note that its a Sphere Containing Axis Aligned Box not a minimum volume Sphere)
+    boundingSphereRadius: float                         # Radius for bounding sphere holding all vertices.
+    unknown13Shorts: list[int]                          # Unknown, always 0?
+    vertexWeights: list[BoneVertData]                   # The vertex weights.
 
-    def __init__(self, r: Reader):
-        self.skinTransform = NiTransform(r) 
+    def __init__(self, r: Reader, h: Header, ARG: int):
+        self.skinTransform = r.readS(NiTransform)
         self.boundingSphereOffset = r.readVector3()
         self.boundingSphereRadius = r.readSingle()
-        if h.v == 0x14030009 and (h.userVersion == 0x20000 or h.userVersion == 0x30000): self.unknown13Shorts = r.readPArray(None, 'H', 13)
-        self.vertexWeights = r.readL16SArray(BoneVertData) if h.v <= 0x04020100 else \
-            r.readL16SArray(BoneVertData) if h.v <= 0x04020200 and arg == 1 else \
-            r.readL16FArray(lambda r: BoneVertData(r, false)) if h.v <= 0x14030101 and arg == 15 else \
-            None
-            
+        if h.v == 0x14030009 and (h.uv == 0x20000) or (h.uv == 0x30000): self.unknown13Shorts = r.readPArray(None, 'h', 13)
+        if h.v <= 0x04020100: self.vertexWeights = r.readL16SArray<BoneVertData>()
+        if ARG == 1 and h.v >= 0x04020200: self.vertexWeights = r.readL16SArray<BoneVertData>()
+        if ARG == 15 and h.v >= 0x14030101: self.vertexWeights = r.readL16FArray(lambda r: BoneVertData(r, true))
+
 # Bethesda Havok. Collision filter info representing Layer, Flags, Part Number, and Group all combined into one uint.
 class HavokFilter:
     def __init__(self, r: Reader, h: Header):
-        self.layerOb: OblivionLayer = OblivionLayer(r.readByte()) if h.v <= 0x14000005 and (h.uv2 < 16) else OL_STATIC # The layer the collision belongs to.
-        self.layerFo: Fallout3Layer = Fallout3Layer(r.readByte()) if (h.v == 0x14020007) and (h.uv2 <= 34) else FOL_STATIC # The layer the collision belongs to.
-        self.layerSk: SkyrimLayer = SkyrimLayer(r.readByte()) if (h.v == 0x14020007) and (h.uv2 > 34) else SKYL_STATIC # The layer the collision belongs to.
+        self.layerOb: OblivionLayer = OblivionLayer(r.readByte()) if h.v <= 0x14000005 and (h.uv2 < 16) else OblivionLayer.OL_STATIC # The layer the collision belongs to.
+        self.layerFo: Fallout3Layer = Fallout3Layer(r.readByte()) if (h.v == 0x14020007) and (h.uv2 <= 34) else Fallout3Layer.FOL_STATIC # The layer the collision belongs to.
+        self.layerSk: SkyrimLayer = SkyrimLayer(r.readByte()) if (h.v == 0x14020007) and (h.uv2 > 34) else SkyrimLayer.SKYL_STATIC # The layer the collision belongs to.
         self.flagsandPartNumber: int = r.readByte()     # FLAGS are stored in highest 3 bits:
                                                         # 	Bit 7: sets the LINK property and controls whether this body is physically linked to others.
                                                         # 	Bit 6: turns collision off (not used for Layer BIPED).
@@ -1733,7 +1728,7 @@ class MotorType(Enum):
     MOTOR_SPRING = 3
 
 class MotorDescriptor:
-    type: MotorType = MOTOR_NONE
+    type: MotorType = MotorType.MOTOR_NONE
     positionMotor: bhkPositionConstraintMotor
     velocityMotor: bhkVelocityConstraintMotor
     springDamperMotor: bhkSpringDamperConstraintMotor
@@ -1747,25 +1742,25 @@ class MotorDescriptor:
 
 # This constraint defines a cone in which an object can rotate. The shape of the cone can be controlled in two (orthogonal) directions.
 class RagdollDescriptor:
-    twistA: Vector4                 # Central directed axis of the cone in which the object can rotate. Orthogonal on Plane A.
-    planeA: Vector4                 # Defines the orthogonal plane in which the body can move, the orthogonal directions in which the shape can be controlled (the direction orthogonal on this one and Twist A).
-    motorA: Vector4                 # Defines the orthogonal directions in which the shape can be controlled (namely in this direction, and in the direction orthogonal on this one and Twist A).
-    pivotA: Vector4                 # Point around which the object will rotate. Defines the orthogonal directions in which the shape can be controlled (namely in this direction, and in the direction orthogonal on this one and Twist A).
-    twistB: Vector4                 # Central directed axis of the cone in which the object can rotate. Orthogonal on Plane B.
-    planeB: Vector4                 # Defines the orthogonal plane in which the body can move, the orthogonal directions in which the shape can be controlled (the direction orthogonal on this one and Twist A).
-    motorB: Vector4                 # Defines the orthogonal directions in which the shape can be controlled (namely in this direction, and in the direction orthogonal on this one and Twist A).
-    pivotB: Vector4                 # Defines the orthogonal directions in which the shape can be controlled (namely in this direction, and in the direction orthogonal on this one and Twist A).
-    coneMaxAngle: float             # Maximum angle the object can rotate around the vector orthogonal on Plane A and Twist A relative to the Twist A vector. Note that Cone Min Angle is not stored, but is simply minus this angle.
-    planeMinAngle: float            # Minimum angle the object can rotate around Plane A, relative to Twist A.
-    planeMaxAngle: float            # Maximum angle the object can rotate around Plane A, relative to Twist A.
-    twistMinAngle: float            # Minimum angle the object can rotate around Twist A, relative to Plane A.
-    twistMaxAngle: float            # Maximum angle the object can rotate around Twist A, relative to Plane A.
-    maxFriction: float              # Maximum friction, typically 0 or 10. In Fallout 3, typically 100.
+    pivotA: Vector4                                     # Point around which the object will rotate. Defines the orthogonal directions in which the shape can be controlled (namely in this direction, and in the direction orthogonal on this one and Twist A).
+    planeA: Vector4                                     # Defines the orthogonal plane in which the body can move, the orthogonal directions in which the shape can be controlled (the direction orthogonal on this one and Twist A).
+    twistA: Vector4                                     # Central directed axis of the cone in which the object can rotate. Orthogonal on Plane A.
+    pivotB: Vector4                                     # Defines the orthogonal directions in which the shape can be controlled (namely in this direction, and in the direction orthogonal on this one and Twist A).
+    planeB: Vector4                                     # Defines the orthogonal plane in which the body can move, the orthogonal directions in which the shape can be controlled (the direction orthogonal on this one and Twist A).
+    twistB: Vector4                                     # Central directed axis of the cone in which the object can rotate. Orthogonal on Plane B.
+    motorA: Vector4                                     # Defines the orthogonal directions in which the shape can be controlled (namely in this direction, and in the direction orthogonal on this one and Twist A).
+    motorB: Vector4                                     # Defines the orthogonal directions in which the shape can be controlled (namely in this direction, and in the direction orthogonal on this one and Twist A).
+    coneMaxAngle: float                                 # Maximum angle the object can rotate around the vector orthogonal on Plane A and Twist A relative to the Twist A vector. Note that Cone Min Angle is not stored, but is simply minus this angle.
+    planeMinAngle: float                                # Minimum angle the object can rotate around Plane A, relative to Twist A.
+    planeMaxAngle: float                                # Maximum angle the object can rotate around Plane A, relative to Twist A.
+    twistMinAngle: float                                # Minimum angle the object can rotate around Twist A, relative to Plane A.
+    twistMaxAngle: float                                # Maximum angle the object can rotate around Twist A, relative to Plane A.
+    maxFriction: float                                  # Maximum friction, typically 0 or 10. In Fallout 3, typically 100.
     motor: MotorDescriptor
 
     def __init__(self, r: Reader, h: Header):
         # Oblivion and Fallout 3, Havok 550
-        if h.userVersion2 <= 16:
+        if h.uv2 <= 16:
             self.pivotA = r.readVector4()
             self.planeA = r.readVector4()
             self.twistA = r.readVector4()
@@ -1788,33 +1783,32 @@ class RagdollDescriptor:
         self.twistMinAngle = r.readSingle()
         self.twistMaxAngle = r.readSingle()
         self.maxFriction = r.readSingle()
-        if h.v >= 0x14020007 and h.userVersion2 > 16: self.motor = MotorDescriptor(r)
+        if h.v >= 0x14020007 and h.uv2 > 16: self.motor = MotorDescriptor(r)
 
 # This constraint allows rotation about a specified axis, limited by specified boundaries.
-class LimitedHingeDescriptor: #:X
-    axleA: Vector4                          # Axis of rotation.
-    perp2AxleInA1: Vector4                  # Vector in the rotation plane which defines the zero angle.
-    perp2AxleInA2: Vector4                  # Vector in the rotation plane, orthogonal on the previous one, which defines the positive direction of rotation. This is always the vector product of Axle A and Perp2 Axle In A1.
-    pivotA: Vector4                         # Pivot point around which the object will rotate.
-    axleB: Vector4                          # Axle A in second entity coordinate system.
-    perp2AxleInB1: Vector4                  # Perp2 Axle In A1 in second entity coordinate system.
-    perp2AxleInB2: Vector4                  # Perp2 Axle In A2 in second entity coordinate system.
-    pivotB: Vector4                         # Pivot A in second entity coordinate system.
-    minAngle: float                         # Minimum rotation angle.
-    maxAngle: float                         # Maximum rotation angle.
-    maxFriction: float                      # Maximum friction, typically either 0 or 10. In Fallout 3, typically 100.
+class LimitedHingeDescriptor:
+    pivotA: Vector4                                     # Pivot point around which the object will rotate.
+    axleA: Vector4                                      # Axis of rotation.
+    perp2AxleInA1: Vector4                              # Vector in the rotation plane which defines the zero angle.
+    perp2AxleInA2: Vector4                              # Vector in the rotation plane, orthogonal on the previous one, which defines the positive direction of rotation. This is always the vector product of Axle A and Perp2 Axle In A1.
+    pivotB: Vector4                                     # Pivot A in second entity coordinate system.
+    axleB: Vector4                                      # Axle A in second entity coordinate system.
+    perp2AxleInB2: Vector4                              # Perp2 Axle In A2 in second entity coordinate system.
+    perp2AxleInB1: Vector4                              # Perp2 Axle In A1 in second entity coordinate system.
+    minAngle: float                                     # Minimum rotation angle.
+    maxAngle: float                                     # Maximum rotation angle.
+    maxFriction: float                                  # Maximum friction, typically either 0 or 10. In Fallout 3, typically 100.
     motor: MotorDescriptor
 
     def __init__(self, r: Reader, h: Header):
         # Oblivion and Fallout 3, Havok 550
-        if h.userVersion2 <= 16:
+        if h.uv2 <= 16:
             self.pivotA = r.readVector4()
             self.axleA = r.readVector4()
             self.perp2AxleInA1 = r.readVector4()
             self.perp2AxleInA2 = r.readVector4()
             self.pivotB = r.readVector4()
             self.axleB = r.readVector4()
-            self.perp2AxleInB1 = r.readVector4()
             self.perp2AxleInB2 = r.readVector4()
         # Fallout 3 and later, Havok 660 and 2010
         else:
@@ -1829,19 +1823,18 @@ class LimitedHingeDescriptor: #:X
         self.minAngle = r.readSingle()
         self.maxAngle = r.readSingle()
         self.maxFriction = r.readSingle()
-        if h.v >= 0x14020007 and h.userVersion2 > 16: self.motor = MotorDescriptor(r)
-
+        if h.v >= 0x14020007 and h.uv2 > 16: self.motor = MotorDescriptor(r)
 
 # This constraint allows rotation about a specified axis.
-class HingeDescriptor: #:X
-    axleA: Vector4                          # Axis of rotation.
-    perp2AxleInA1: Vector4                  # Vector in the rotation plane which defines the zero angle.
-    perp2AxleInA2: Vector4                  # Vector in the rotation plane, orthogonal on the previous one, which defines the positive direction of rotation. This is always the vector product of Axle A and Perp2 Axle In A1.
-    pivotA: Vector4                         # Pivot point around which the object will rotate.
-    axleB: Vector4                          # Axle A in second entity coordinate system.
-    perp2AxleInB1: Vector4                  # Perp2 Axle In A1 in second entity coordinate system.
-    perp2AxleInB2: Vector4                  # Perp2 Axle In A2 in second entity coordinate system.
-    pivotB: Vector4                         # Pivot A in second entity coordinate system.
+class HingeDescriptor:
+    pivotA: Vector4                                     # Pivot point around which the object will rotate.
+    perp2AxleInA1: Vector4                              # Vector in the rotation plane which defines the zero angle.
+    perp2AxleInA2: Vector4                              # Vector in the rotation plane, orthogonal on the previous one, which defines the positive direction of rotation. This is always the vector product of Axle A and Perp2 Axle In A1.
+    pivotB: Vector4                                     # Pivot A in second entity coordinate system.
+    axleB: Vector4                                      # Axle A in second entity coordinate system.
+    axleA: Vector4                                      # Axis of rotation.
+    perp2AxleInB1: Vector4                              # Perp2 Axle In A1 in second entity coordinate system.
+    perp2AxleInB2: Vector4                              # Perp2 Axle In A2 in second entity coordinate system.
 
     def __init__(self, r: Reader, h: Header):
         # Oblivion
@@ -1862,27 +1855,27 @@ class HingeDescriptor: #:X
             self.perp2AxleInB2 = r.readVector4()
             self.pivotB = r.readVector4()
 
-class BallAndSocketDescriptor: #:X
+class BallAndSocketDescriptor:
     def __init__(self, r: Reader):
-        self.pivotA: Vector4 = r.readVector4() # Pivot point in the local space of entity A.
-        self.pivotB: Vector4 = r.readVector4() # Pivot point in the local space of entity B.
+        self.pivotA: Vector4 = r.readVector4()          # Pivot point in the local space of entity A.
+        self.pivotB: Vector4 = r.readVector4()          # Pivot point in the local space of entity B.
 
-# In reality Havok loads these as Transform A and Transform B using hkTransform
-class PrismaticDescriptor: #:X
-    slidingA: Vector4                       # Describes the axis the object is able to travel along. Unit vector.
-    rotationA: Vector4                      # Rotation axis.
-    planeA: Vector4                         # Plane normal. Describes the plane the object is able to move on.
-    pivotA: Vector4                         # Pivot.
-    slidingB: Vector4                       # Describes the axis the object is able to travel along in B coordinates. Unit vector.
-    rotationB: Vector4                      # Rotation axis.
-    planeB: Vector4                         # Plane normal. Describes the plane the object is able to move on in B coordinates.
-    pivotB: Vector4                         # Pivot in B coordinates.
-    minDistance: float                      # Describe the min distance the object is able to travel.
-    maxDistance: float                      # Describe the max distance the object is able to travel.
-    friction: float                         # Friction.
+class PrismaticDescriptor:
+    pivotA: Vector4                                     # Pivot.
+    rotationA: Vector4                                  # Rotation axis.
+    planeA: Vector4                                     # Plane normal. Describes the plane the object is able to move on.
+    slidingA: Vector4                                   # Describes the axis the object is able to travel along. Unit vector.
+    pivotB: Vector4                                     # Pivot in B coordinates.
+    rotationB: Vector4                                  # Rotation axis.
+    planeB: Vector4                                     # Plane normal. Describes the plane the object is able to move on in B coordinates.
+    slidingB: Vector4                                   # Describes the axis the object is able to travel along in B coordinates. Unit vector.
+    minDistance: float                                  # Describe the min distance the object is able to travel.
+    maxDistance: float                                  # Describe the max distance the object is able to travel.
+    friction: float                                     # Friction.
     motor: MotorDescriptor
 
     def __init__(self, r: Reader, h: Header):
+        # In reality Havok loads these as Transform A and Transform B using hkTransform
         # Oblivion (Order is a guess)
         if h.v <= 0x14000005:
             self.pivotA = r.readVector4()
@@ -1929,9 +1922,9 @@ class ImageType(Enum):
 # Box Bounding Volume
 class BoxBV: # X
     def __init__(self, r: Reader):
-        self.center: Vector3 = r.readVector3()        #was:Translation
-        self.axis: Matrix4x4 = r.readMatrix3x3As4x4() #was:Rotation
-        self.extent: Vector3 = r.readVector3()        #was:Radius
+        self.center: Vector3 = r.readVector3()          # was:Translation
+        self.axis: Matrix3x3 = r.readMatrix3x3()        # was:Rotation #ReadMatrix3x3As4x4
+        self.extent: Vector3 = r.readVector3()          # was:Radius
 
 # Capsule Bounding Volume
 class CapsuleBV:
@@ -1943,7 +1936,7 @@ class CapsuleBV:
 
 class HalfSpaceBV:
     def __init__(self, r: Reader):
-        self.plane: NiPlane = NiPlane(r)
+        self.plane: NiPlane = r.readS(NiPlane)
         self.center: Vector3 = r.readVector3()
 
 class BoundingVolume:
@@ -1956,8 +1949,8 @@ class BoundingVolume:
 
     def __init__(self, r: Reader):
         self.collisionType = BoundVolumeType(r.readUInt32())
-        match self.collisionType:
-            case BoundVolumeType.SPHERE_BV: self.sphere = NiBound(r)
+        match self.collisionType::
+            case BoundVolumeType.SPHERE_BV: self.sphere = r.readS(NiBound)
             case BoundVolumeType.BOX_BV: self.box = BoxBV(r)
             case BoundVolumeType.CAPSULE_BV: self.capsule = CapsuleBV(r)
             case BoundVolumeType.UNION_BV: self.union = UnionBV(r)
@@ -1987,13 +1980,13 @@ class BonePose:
 # Array of Vectors for Decal placement in BSDecalPlacementVectorExtraData.
 class DecalVectorArray:
     numVectors: int
-    points: list[Vector3]         # Vector XYZ coords
-    normals: list[Vector3]        # Vector Normals
+    points: list[Vector3]                               # Vector XYZ coords
+    normals: list[Vector3]                              # Vector Normals
 
     def __init__(self, r: Reader, h: Header):
         self.numVectors = r.readInt16()
-        self.points = r.readPArray(Vector3, '3f', self.numVectors)
-        self.normals = r.readPArray(Vector3, '3f', self.numVectors)
+        self.points = r.readPArray(None, '3f', self.numVectors)
+        self.normals = r.readPArray(None, '3f', self.numVectors)
 
 # Editor flags for the Body Partitions.
 class BSPartFlag(Flag):
@@ -2057,9 +2050,9 @@ class MalleableDescriptor:
     prismatic: PrismaticDescriptor
     ragdoll: RagdollDescriptor
     stiffSpring: StiffSpringDescriptor
-    tau: float
-    damping: float
-    strength: float
+    tau: float                                          # not in Fallout 3 or Skyrim
+    damping: float                                      # In TES CS described as Damping
+    strength: float                                     # In GECK and Creation Kit described as Strength
 
     def __init__(self, r: Reader, h: Header):
         self.type = hkConstraintType(r.readUInt32())
@@ -2070,23 +2063,22 @@ class MalleableDescriptor:
         match self.type:
             case hkConstraintType.BallAndSocket: self.ballAndSocket = BallAndSocketDescriptor(r)
             case hkConstraintType.Hinge: self.hinge = HingeDescriptor(r, h)
-            case hkConstraintType.LimitedHinge: self.limitedHinge = LimitedHingeDescriptor(r, h)
+            case hkConstraintType.Limited_Hinge: self.limitedHinge = LimitedHingeDescriptor(r, h)
             case hkConstraintType.Prismatic: self.prismatic = PrismaticDescriptor(r, h)
             case hkConstraintType.Ragdoll: self.ragdoll = RagdollDescriptor(r, h)
             case hkConstraintType.StiffSpring: self.stiffSpring = StiffSpringDescriptor(r)
         if h.v <= 0x14000005:
             self.tau = r.readSingle()
             self.damping = r.readSingle()
-        elif h.v >= 0x14020007:
-            self.strength = r.readSingle()
+        elif h.v >= 0x14020007: self.strength = r.readSingle()
 
 class ConstraintData:
-    type: hkConstraintType      # Type of constraint
-    numEntities: int            # Always 2 (Hardcoded). Number of bodies affected by this constraint.
-    entityA: int                # Usually NONE. The entity affected by this constraint.
-    entityB: int                # Usually NONE. The entity affected by this constraint
-    priority: int               # Usually 1. Higher values indicate higher priority of this constraint?
-    ballAndSocket: BallAndSocketDescriptor
+    type: hkConstraintType                              # Type of constraint.
+    numEntities2: int = 2                               # Always 2 (Hardcoded). Number of bodies affected by this constraint.
+    entityA: int                                        # Usually NONE. The entity affected by this constraint.
+    entityB: int                                        # Usually NONE. The entity affected by this constraint.
+    priority: int = 1                                   # Usually 1. Higher values indicate higher priority of this constraint?
+    ballandSocket: BallAndSocketDescriptor
     hinge: HingeDescriptor
     limitedHinge: LimitedHingeDescriptor
     prismatic: PrismaticDescriptor
@@ -2094,16 +2086,16 @@ class ConstraintData:
     stiffSpring: StiffSpringDescriptor
     malleable: MalleableDescriptor
 
-    def __init__(self, r: Reader, h: Header):
+    def __init__(self, r: Reader):
         self.type = hkConstraintType(r.readUInt32())
-        self.numEntities = r.readUInt32()
-        self.entityA = X[bhkEntity].ref(r)
-        self.entityB = X[bhkEntity].ref(r)
+        self.numEntities2 = r.readUInt32()
+        self.entityA = X[bhkEntity].ptr(r)
+        self.entityB = X[bhkEntity].ptr(r)
         self.priority = r.readUInt32()
-        match self.type:
-            case hkConstraintType.BallAndSocket: self.ballAndSocket = BallAndSocketDescriptor(r)
+        match Type::
+            case hkConstraintType.BallAndSocket: self.ballandSocket = BallAndSocketDescriptor(r)
             case hkConstraintType.Hinge: self.hinge = HingeDescriptor(r, h)
-            case hkConstraintType.LimitedHinge: self.limitedHinge = LimitedHingeDescriptor(r, h)
+            case hkConstraintType.Limited_Hinge: self.limitedHinge = LimitedHingeDescriptor(r, h)
             case hkConstraintType.Prismatic: self.prismatic = PrismaticDescriptor(r, h)
             case hkConstraintType.Ragdoll: self.ragdoll = RagdollDescriptor(r, h)
             case hkConstraintType.StiffSpring: self.stiffSpring = StiffSpringDescriptor(r)
@@ -2112,6 +2104,10 @@ class ConstraintData:
 #endregion
 
 #region NIF Objects
+
+# These are the main units of data that NIF files are arranged in.
+# They are like C classes and can contain many pieces of data.
+# The only differences between these and compounds is that these are treated as object types by the NIF format and can inherit from other classes.
 
 # Abstract object type.
 class NiObject: # X
@@ -2300,7 +2296,7 @@ class bhkWorldObject(bhkSerializable):
     unknownInt: int
     havokFilter: HavokFilter
     unused: bytearray                                   # Garbage data from memory.
-    broadPhaseType: BroadPhaseType = 1
+    broadPhaseType: BroadPhaseType = BroadPhaseType.1
     unusedBytes: bytearray
     cinfoProperty: hkWorldObjCinfoProperty
 
@@ -2343,14 +2339,14 @@ class bhkEntity(bhkWorldObject):
 # marks this body as active for translation and rotation, a normal bhkRigidBody ignores those
 # properties. Because the properties are equal, a bhkRigidBody may be renamed into a bhkRigidBodyT and vice-versa.
 class bhkRigidBody(bhkEntity):
-    collisionResponse: hkResponseType = RESPONSE_SIMPLE_CONTACT # How the body reacts to collisions. See hkResponseType for hkpWorld default implementations.
+    collisionResponse: hkResponseType = hkResponseType.RESPONSE_SIMPLE_CONTACT # How the body reacts to collisions. See hkResponseType for hkpWorld default implementations.
     unusedByte1: int                                    # Skipped over when writing Collision Response and Callback Delay.
     processContactCallbackDelay: int = 0xffff           # Lowers the frequency for processContactCallbacks. A value of 5 means that a callback is raised every 5th frame. The default is once every 65535 frames.
     unknownInt1: int                                    # Unknown.
     havokFilterCopy: HavokFilter                        # Copy of Havok Filter
     unused2: bytearray                                  # Garbage data from memory. Matches previous Unused value.
     unknownInt2: int
-    collisionResponse2: hkResponseType = RESPONSE_SIMPLE_CONTACT
+    collisionResponse2: hkResponseType = hkResponseType.RESPONSE_SIMPLE_CONTACT
     unusedByte2: int                                    # Skipped over when writing Collision Response and Callback Delay.
     processContactCallbackDelay2: int = 0xffff
     translation: Vector4                                # A vector that moves the body by the specified amount. Only enabled in bhkRigidBodyT objects.
@@ -2373,11 +2369,11 @@ class bhkRigidBody(bhkEntity):
     penetrationDepth: float = 0.15f                     # The maximum allowed penetration for this object.
                                                         #     This is a hint to the engine to see how much CPU the engine should invest to keep this object from penetrating.
                                                         #     A good choice is 5% - 20% of the smallest diameter of the object.
-    motionSystem: hkMotionType = MO_SYS_DYNAMIC         # Motion system? Overrides Quality when on Keyframed?
-    deactivatorType: hkDeactivatorType = DEACTIVATOR_NEVER # The initial deactivator type of the body.
+    motionSystem: hkMotionType = hkMotionType.MO_SYS_DYNAMIC # Motion system? Overrides Quality when on Keyframed?
+    deactivatorType: hkDeactivatorType = hkDeactivatorType.DEACTIVATOR_NEVER # The initial deactivator type of the body.
     enableDeactivation: bool = 1
-    solverDeactivation: hkSolverDeactivation = SOLVER_DEACTIVATION_OFF # How aggressively the engine will try to zero the velocity for slow objects. This does not save CPU.
-    qualityType: hkQualityType = MO_QUAL_FIXED          # The type of interaction with other objects.
+    solverDeactivation: hkSolverDeactivation = hkSolverDeactivation.SOLVER_DEACTIVATION_OFF # How aggressively the engine will try to zero the velocity for slow objects. This does not save CPU.
+    qualityType: hkQualityType = hkQualityType.MO_QUAL_FIXED # The type of interaction with other objects.
     unknownFloat1: float
     unknownBytes1: bytearray                            # Unknown.
     unknownBytes2: bytearray                            # Unknown. Skyrim only.
@@ -2672,7 +2668,7 @@ class bhkMoppBvTreeShape(bhkBvTreeShape):
         self.shape = X[bhkShape].ref(r)
         self.unused = r.readPArray(None, 'I', 3)
         self.shapeScale = r.readSingle()
-        self.moppDataSize = r.readUInt32()
+        self.moppDataSize = 0 # calculated
         if h.v >= 0x0A000102:
             self.origin = r.readVector3()
             self.scale = r.readSingle()
@@ -2830,7 +2826,7 @@ class PathFlags(Flag):
 
 # Used to make an object follow a predefined spline path.
 class NiPathInterpolator(NiKeyBasedInterpolator):
-    flags: PathFlags = 3
+    flags: PathFlags = PathFlags.3
     bankDir: int = 1                                    # -1 = Negative, 1 = Positive
     maxBankAngle: float                                 # Max angle in radians.
     smoothing: float
@@ -2904,15 +2900,15 @@ class NiBlendInterpolator(NiInterpolator):
         if h.v >= 0x0A01006E: self.arraySize = r.readByte()
         if (Flags & 1) == 0 and h.v >= 0x0A010070:
             self.weightThreshold = r.readSingle()
-            if (Flags & 1) == 0: self.interpCount = r.readByte()
-            if (Flags & 1) == 0: self.singleIndex = r.readByte()
-            if (Flags & 1) == 0: self.highPriority = r.readSByte()
-            if (Flags & 1) == 0: self.nextHighPriority = r.readSByte()
-            if (Flags & 1) == 0: self.singleTime = r.readSingle()
-            if (Flags & 1) == 0: self.highWeightsSum = r.readSingle()
-            if (Flags & 1) == 0: self.nextHighWeightsSum = r.readSingle()
-            if (Flags & 1) == 0: self.highEaseSpinner = r.readSingle()
-            self.interpArrayItems = r.readFArray(lambda r: InterpBlendItem(r, h), ArraySize)
+            self.interpCount = r.readByte()
+            self.singleIndex = r.readByte()
+            self.highPriority = r.readSByte()
+            self.nextHighPriority = r.readSByte()
+            self.singleTime = r.readSingle()
+            self.highWeightsSum = r.readSingle()
+            self.nextHighWeightsSum = r.readSingle()
+            self.highEaseSpinner = r.readSingle()
+            self.interpArrayItems = r.readFArray(lambda r: InterpBlendItem(r, h), self.arraySize)
         if h.v <= 0x0A01006F:
             self.interpArrayItems = r.readFArray(lambda r: InterpBlendItem(r, h), self.arraySize)
             self.managedControlled = r.readBool32()
@@ -3007,7 +3003,7 @@ class bhkCOFlags(Flag):
 
 # Havok related collision object?
 class bhkNiCollisionObject(NiCollisionObject):
-    flags: bhkCOFlags = 1                               # Set to 1 for most objects, and to 41 for animated objects (ANIM_STATIC). Bits: 0=Active 2=Notify 3=Set Local 6=Reset.
+    flags: bhkCOFlags = bhkCOFlags.1                    # Set to 1 for most objects, and to 41 for animated objects (ANIM_STATIC). Bits: 0=Active 2=Notify 3=Set Local 6=Reset.
     body: int
 
     def __init__(self, r: Reader, h: Header):
@@ -3064,7 +3060,7 @@ class NiAVObject(NiObjectNET): #:M
         if (h.uv2 > 26): self.flags = r.readUInt32()
         if h.v >= 0x03000000 and (h.uv2 <= 26): self.flags = Flags(r.readUInt16())
         self.translation = r.readVector3()
-        self.rotation = r.readMatrix3x3As4x4()
+        self.rotation = r.readMatrix3x3()
         self.scale = r.readSingle()
         if h.v <= 0x04020200: self.velocity = r.readVector3()
         if (h.uv2 <= 34): self.properties = r.readL32FArray(X[NiProperty].ref)
@@ -3195,7 +3191,7 @@ class NiTimeController(NiObject): # X
         self.startTime = r.readSingle()
         self.stopTime = r.readSingle()
         if h.v >= 0x0303000D: self.target = X[NiObjectNET].ptr(r)
-        if h.v <= 0x03010000: self.unknownInteger = r.readUInt32()
+        elif h.v <= 0x03010000: self.unknownInteger = r.readUInt32()
 
 # Abstract base class for all NiTimeController objects using NiInterpolator objects to animate their target objects.
 class NiInterpController(NiTimeController): # X
@@ -3933,9 +3929,9 @@ class NiBinaryVoxelData(NiObject):
         self.unknownShort2 = r.readUInt16()
         self.unknownShort3 = r.readUInt16()
         self.unknown7Floats = r.readPArray(None, 'f', 7)
-        self.unknownBytes1 = r.readFArray(lambda k: r.readBytes(7), 12)
+        self.unknownBytes1 = r.readFArray(lambda k: r.readBytes(12), 7)
         self.unknownVectors = r.readL32PArray(None, '4f')
-        self.unknownBytes2 = r.readL32Bytes(L32)
+        self.unknownBytes2 = r.readL32Bytes()
         self.unknown5Ints = r.readPArray(None, 'I', 5)
 
 # Blends bool values together.
@@ -4185,7 +4181,7 @@ class NiControllerSequence(NiSequence):
     playBackwards: bool
     manager: int                                        # The owner of this sequence.
     accumRootName: str                                  # The name of the NiAVObject serving as the accumulation root. This is where all accumulated translations, scales, and rotations are applied.
-    accumFlags: AccumFlags = ACCUM_X_FRONT
+    accumFlags: AccumFlags = AccumFlags.ACCUM_X_FRONT
     stringPalette: int
     animNotes: int
     animNoteArrays: list[int]
@@ -7182,17 +7178,17 @@ class Fallout4ShaderPropertyFlags2(Flag):
 
 # Bethesda shader property for Skyrim and later.
 class BSLightingShaderProperty(BSShaderProperty):
-    shaderFlags1Sk: SkyrimShaderPropertyFlags1 = 2185233153 # Skyrim Shader Flags for setting render/shader options.
-    shaderFlags2Sk: SkyrimShaderPropertyFlags2 = 32801  # Skyrim Shader Flags for setting render/shader options.
-    shaderFlags1FO4: Fallout4ShaderPropertyFlags1 = 2151678465 # Fallout 4 Shader Flags. Mostly overridden if "Name" is a path to a BGSM/BGEM file.
-    shaderFlags2FO4: Fallout4ShaderPropertyFlags2 = 1   # Fallout 4 Shader Flags. Mostly overridden if "Name" is a path to a BGSM/BGEM file.
+    shaderFlags1Sk: SkyrimShaderPropertyFlags1 = SkyrimShaderPropertyFlags1.2185233153 # Skyrim Shader Flags for setting render/shader options.
+    shaderFlags2Sk: SkyrimShaderPropertyFlags2 = SkyrimShaderPropertyFlags2.32801 # Skyrim Shader Flags for setting render/shader options.
+    shaderFlags1FO4: Fallout4ShaderPropertyFlags1 = Fallout4ShaderPropertyFlags1.2151678465 # Fallout 4 Shader Flags. Mostly overridden if "Name" is a path to a BGSM/BGEM file.
+    shaderFlags2FO4: Fallout4ShaderPropertyFlags2 = Fallout4ShaderPropertyFlags2.1 # Fallout 4 Shader Flags. Mostly overridden if "Name" is a path to a BGSM/BGEM file.
     uvOffset: TexCoord                                  # Offset UVs
     uvScale: TexCoord = TexCord(1.0, 1.0)               # Offset UV Scale to repeat tiling textures, see above.
     textureSet: int                                     # Texture Set, can have override in an esm/esp
     emissiveColor: Color3 = 0.0, 0.0, 0.0               # Glow color and alpha
     emissiveMultiple: float                             # Multiplied emissive colors
     wetMaterial: str
-    textureClampMode: TexClampMode = 3                  # How to handle texture borders.
+    textureClampMode: TexClampMode = TexClampMode.3     # How to handle texture borders.
     alpha: float = 1.0f                                 # The material opacity (1=non-transparent).
     refractionStrength: float                           # The amount of distortion. **Not based on physically accurate refractive index** (0=none) (0-1)
     glossiness: float = 80f                             # The material specular power, or glossiness (0-999).
@@ -7274,7 +7270,7 @@ class BSLightingShaderProperty(BSShaderProperty):
         if Skyrim Shader Type == 11:
             self.parallaxInnerLayerThickness = r.readSingle()
             self.parallaxRefractionScale = r.readSingle()
-            self.parallaxInnerLayerTextureScale = TexCoord(r)
+            self.parallaxInnerLayerTextureScale = r.readS(TexCoord)
             self.parallaxEnvmapStrength = r.readSingle()
         if Skyrim Shader Type == 14: self.sparkleParameters = r.readVector4()
         if Skyrim Shader Type == 16:
@@ -7284,10 +7280,10 @@ class BSLightingShaderProperty(BSShaderProperty):
 
 # Bethesda effect shader property for Skyrim and later.
 class BSEffectShaderProperty(BSShaderProperty):
-    shaderFlags1Sk: SkyrimShaderPropertyFlags1 = 2147483648
-    shaderFlags2Sk: SkyrimShaderPropertyFlags2 = 32
-    shaderFlags1FO4: Fallout4ShaderPropertyFlags1 = 2147483648
-    shaderFlags2FO4: Fallout4ShaderPropertyFlags2 = 32
+    shaderFlags1Sk: SkyrimShaderPropertyFlags1 = SkyrimShaderPropertyFlags1.2147483648
+    shaderFlags2Sk: SkyrimShaderPropertyFlags2 = SkyrimShaderPropertyFlags2.32
+    shaderFlags1FO4: Fallout4ShaderPropertyFlags1 = Fallout4ShaderPropertyFlags1.2147483648
+    shaderFlags2FO4: Fallout4ShaderPropertyFlags2 = Fallout4ShaderPropertyFlags2.32
     uvOffset: TexCoord                                  # Offset UVs
     uvScale: TexCoord = TexCord(1.0, 1.0)               # Offset UV Scale to repeat tiling textures
     sourceTexture: str                                  # points to an external texture.
@@ -7314,8 +7310,8 @@ class BSEffectShaderProperty(BSShaderProperty):
         if (h.uv2 == 130):
             self.shaderFlags1FO4 = Fallout4ShaderPropertyFlags1(r.readUInt32())
             self.shaderFlags2FO4 = Fallout4ShaderPropertyFlags2(r.readUInt32())
-        self.uvOffset = TexCoord(r)
-        self.uvScale = TexCoord(r)
+        self.uvOffset = r.readS(TexCoord)
+        self.uvScale = r.readS(TexCoord)
         self.sourceTexture = r.readL32AString()
         self.textureClampMode = r.readByte()
         self.lightingInfluence = r.readByte()
@@ -7350,8 +7346,8 @@ class SkyrimWaterShaderFlags(Flag):
 class BSWaterShaderProperty(BSShaderProperty):
     shaderFlags1: SkyrimShaderPropertyFlags1
     shaderFlags2: SkyrimShaderPropertyFlags2
-    uVOffset: TexCoord                                  # Offset UVs. Seems to be unused, but it fits with the other Skyrim shader properties.
-    uVScale: TexCoord = 1.0, 1.0                        # Offset UV Scale to repeat tiling textures, see above.
+    uvOffset: TexCoord                                  # Offset UVs. Seems to be unused, but it fits with the other Skyrim shader properties.
+    uvScale: TexCoord = TexCord(1.0, 1.0)               # Offset UV Scale to repeat tiling textures, see above.
     waterShaderFlags: SkyrimWaterShaderFlags            # Defines attributes for the water shader (will use SkyrimWaterShaderFlags)
     waterDirection: int = 3                             # A bitflag, only the first/second bit controls water flow positive or negative along UVs.
     unknownShort3: int                                  # Unknown, flag?
@@ -7360,8 +7356,8 @@ class BSWaterShaderProperty(BSShaderProperty):
         super().__init__(r, h)
         self.shaderFlags1 = SkyrimShaderPropertyFlags1(r.readUInt32())
         self.shaderFlags2 = SkyrimShaderPropertyFlags2(r.readUInt32())
-        self.uvOffset = TexCoord(r)
-        self.uvScale = TexCoord(r)
+        self.uvOffset = r.readS(TexCoord)
+        self.uvScale = r.readS(TexCoord)
         self.waterShaderFlags = SkyrimWaterShaderFlags(r.readByte())
         self.waterDirection = r.readByte()
         self.unknownShort3 = r.readUInt16()
@@ -9042,7 +9038,7 @@ class NiLookAtEvaluator(NiEvaluator):
         self.interpolatorScale = X[NiFloatInterpolator].ref(r)
 
 class NiPathEvaluator(NiKeyBasedEvaluator):
-    flags: PathFlags = 3
+    flags: PathFlags = PathFlags.3
     bankDir: int = 1                                    # -1 = Negative, 1 = Positive
     maxBankAngle: float                                 # Max angle in radians.
     smoothing: float
@@ -9308,11 +9304,11 @@ class BSTriShape(NiAVObject):
 
     def __init__(self, r: Reader, h: Header):
         super().__init__(r, h)
-        self.boundingSphere = NiBound(r)
+        self.boundingSphere = r.readS(NiBound)
         self.skin = X[NiObject].ref(r)
         self.shaderProperty = X[BSShaderProperty].ref(r)
         self.alphaProperty = X[NiAlphaProperty].ref(r)
-        self.vertexDesc = BSVertexDesc(r)
+        self.vertexDesc = r.readS(BSVertexDesc)
         if (h.uv2 == 130): self.numTriangles = r.readUInt32()
         if h.uv2 < 130: self.numTriangles = r.readUInt16()
         self.numVertices = r.readUInt16()
@@ -9320,11 +9316,11 @@ class BSTriShape(NiAVObject):
         if self.dataSize > 0:
             if (h.uv2 == 130): self.vertexData = r.readFArray(lambda r: BSVertexData(r), self.numVertices)
             if (h.uv2 == 100): self.vertexData = r.readFArray(lambda r: BSVertexData(r, true), self.numVertices)
-            self.triangles = r.readFArray(lambda r: Triangle(r), self.numTriangles)
+            self.triangles = r.readSArray<Triangle>(self.numTriangles)
         if Particle self.dataSize > 0 and (h.uv2 == 100):
             self.particleDataSize = r.readUInt32()
             self.vertices = r.readPArray(None, '3f', self.numVertices)
-            self.trianglesCopy = r.readFArray(lambda r: Triangle(r), self.numTriangles)
+            self.trianglesCopy = r.readSArray<Triangle>(self.numTriangles)
 
 # Fallout 4 LOD Tri Shape
 class BSMeshLODTriShape(BSTriShape):
@@ -9418,7 +9414,7 @@ class BSClothExtraData(BSExtraData):
 # Fallout 4 Bone Transform
 class BSSkinBoneTrans:
     def __init__(self, r: Reader):
-        self.boundingSphere: NiBound = NiBound(r)
+        self.boundingSphere: NiBound = r.readS(NiBound)
         self.rotation: Matrix3x3 = r.readMatrix3x3()
         self.translation: Vector3 = r.readVector3()
         self.scale: float = r.readSingle()
@@ -9490,8 +9486,8 @@ class BSEyeCenterExtraData(NiExtraData):
 class BSPackedGeomDataCombined:
     def __init__(self, r: Reader):
         self.grayscaletoPaletteScale: float = r.readSingle()
-        self.transform: NiTransform = NiTransform(r)
-        self.boundingSphere: NiBound = NiBound(r)
+        self.transform: NiTransform = r.readS(NiTransform)
+        self.boundingSphere: NiBound = r.readS(NiBound)
 
 class BSPackedGeomData:
     numVerts: int
@@ -9517,10 +9513,10 @@ class BSPackedGeomData:
         self.triCountLoD2 = r.readUInt32()
         self.triOffsetLoD2 = r.readUInt32()
         self.combined = r.readL32FArray(lambda r: BSPackedGeomDataCombined(r))
-        self.vertexDesc = BSVertexDesc(r)
+        self.vertexDesc = r.readS(BSVertexDesc)
         if !BSPackedCombinedSharedGeomDataExtra:
             self.vertexData = r.readFArray(lambda r: BSVertexData(r), self.numVerts)
-            self.triangles = r.readFArray(lambda r: Triangle(r), self.triCountLoD0 + self.triCountLoD1 + self.triCountLoD2)
+            self.triangles = r.readSArray<Triangle>(self.triCountLoD0 + self.triCountLoD1 + self.triCountLoD2)
 
 # This appears to be a 64-bit hash but nif.xml does not have a 64-bit type.
 class BSPackedGeomObject:

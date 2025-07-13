@@ -12,6 +12,23 @@ CS = 0; PY = 1
 MS = 0; MN = 1; MD = 2; MI = 3; MA = 4
 
 def fmt_py(s: str) -> str: return fmt_camel(s)
+def op_flip(s: str) -> str: return s \
+    .replace(' == ', ' Z!= ') \
+    .replace(' != ', ' Z== ') \
+    .replace(' >= ', ' Z< ') \
+    .replace(' <= ', ' Z> ') \
+    .replace(' > ', ' Z<= ') \
+    .replace(' < ', ' Z>= ') \
+    .replace(' && ', ' Z|| ') \
+    .replace(' || ', ' Z&& ') \
+    .replace(' Z== ', ' == ') \
+    .replace(' Z!= ', ' != ') \
+    .replace(' Z>= ', ' >= ') \
+    .replace(' Z<= ', ' <= ') \
+    .replace(' Z> ', ' > ') \
+    .replace(' Z< ', ' < ') \
+    .replace(' Z&& ', ' && ') \
+    .replace(' Z|| ', ' || ') if '=' in s or '>' in s or '<' in s else None \
 
 def ver2Num(s: str) -> str:
     if not s: return 0
@@ -157,7 +174,9 @@ class XmlCodeWriter(CodeWriter):
         # write class
         if s.comment: self.comment(s.comment)
         primary = 'P' in s.flags
-        if self.ex == CS and s.struct and s.struct != 'x': self.emit(f'[StructLayout(LayoutKind.Sequential, Pack = 1)]')
+        if self.ex == CS:
+            if s.struct and s.struct != 'x': self.emit(f'[StructLayout(LayoutKind.Sequential, Pack = 1)]')
+            for x in s.attribs: self.emit(f'[{x.body}]')
         with self.block(before=
             f'public{' abstract ' if s.abstract else ' '}{'struct' if s.struct else 'class'} {s.namecw[CS]}{'(' + s.init[0][CS] + ')' if primary else ''}{' : ' + s.inherit + ('(' + s.init[1][CS] + ')' if primary else '') if s.inherit else ''}' if self.ex == CS else \
             f'class {s.name}{'(' + s.inherit + ')' if s.inherit else ''}:' if self.ex == PY else \
@@ -179,11 +198,14 @@ class XmlCodeWriter(CodeWriter):
                                 case Class.Comment(): self.emit(f'// {x.comment}')
                                 case Class.Code(): self.emit(x.initcw[CS])
                                 case Class.If():
-                                    with self.block(before=f'{x.initcw[CS]}'): emitBlock(x.inits)
+                                    if not x.initcw[CS]: emitBlock(x.inits)
+                                    else:
+                                        with self.block(before=f'{x.initcw[CS]}'): emitBlock(x.inits)
                                 case Class.Value(): self.emit(f'{x.initcw[CS]};{' // ' + x.tags if x.tags else ''}')
                     constArg = s.custom['constArg'][CS] if 'constArg' in s.custom else ''
                     with self.block(before=f'public {s.name}({s.init[0][CS]}{constArg}){' : base(r, h)' if s.inherit else ''}'): emitBlock(s.inits)
                 if 'const' in s.custom: self.emit(s.custom['const'][CS])
+                for x in s.methods: self.emit_raw(x.body)
             elif self.ex == PY:
                 if s.struct and s.struct != 'x': self.emit(f'struct = (\'{s.struct[0]}\', {s.struct[1]})')
                 if not primary: 
@@ -197,7 +219,9 @@ class XmlCodeWriter(CodeWriter):
                             case Class.Comment(): self.emit(f'# {x.comment}')
                             case Class.Code(): self.emit(x.initcw[PY])
                             case Class.If():
-                                with self.block(before=f'{x.initcw[PY]}:'): emitBlock(x.inits)
+                                if not x.initcw[PY]: emitBlock(x.inits)
+                                else:
+                                    with self.block(before=f'{x.initcw[PY]}:'): emitBlock(x.inits)
                             case Class.Value(): self.emit(f'{x.initcw[PY]}{' # ' + x.tags if x.tags else ''}')
                 constArg = s.custom['constArg'][PY] if 'constArg' in s.custom else ''
                 with self.block(before=f'def __init__(self, {s.init[0][PY]}{constArg}):'):
@@ -215,7 +239,12 @@ class XmlCodeWriter(CodeWriter):
             match s.name:
                 case 'AccumFlags': self.endregion(); self.region('Enums')
                 case 'SizedString': self.endregion(); self.region('Compounds')
-                case 'NiObject': self.endregion(); self.region('NIF Objects')
+                case 'NiObject':
+                    self.endregion(); self.region('NIF Objects')
+                    self.emit(f'{self.symbolComment} These are the main units of data that NIF files are arranged in.')
+                    self.emit(f'{self.symbolComment} They are like C classes and can contain many pieces of data.')
+                    self.emit(f'{self.symbolComment} The only differences between these and compounds is that these are treated as object types by the NIF format and can inherit from other classes.')
+                    self.emit()
                 case 'BSDistantObjectLargeRefExtraData': self.endregion()
             match s:
                 case Enum(): self.writeEnum(s)
@@ -270,12 +299,12 @@ class Enum:
             case 'ushort': self.init = [f'({self.namecw[CS]})r.ReadUInt16()', f'{self.namecw[PY]}(r.readUInt16())']
             case 'byte': self.init = [f'({self.namecw[CS]})r.ReadByte()', f'{self.namecw[PY]}(r.readByte())']
         if self.name not in cw.types: cw.types[self.name] = [
-            self, self.namecw, ('X', 'X'), (self.init[CS], self.init[PY]),
+            self, self.namecw, (f'{self.name}.X', f'{self.name}.X'), (self.init[CS], self.init[PY]),
             lambda c: (f'r.ReadFArray(r => {self.init[CS]}, {c})', f'r.readFArray(lambda r: {self.init[PY]}, {c})')]
     def __repr__(self): return f'enum: {self.name}'
 class Class:
     class Comment:
-        def __init__(self, parent: Class, s: str):
+        def __init__(self, root: Class, s: str):
             self.comment: str = s
             self.vercond = None
             self.cond = None
@@ -285,50 +314,57 @@ class Class:
             self.name: str = s
             self.namecw: tuple = (self.name, self.name)
         def __repr__(self): return f'#: {self.comment}'
-        def code(self, parent: Class, cw: XmlCodeWriter) -> None: pass
+        def code(self, lx: object, root: Class, parent: object, cw: XmlCodeWriter) -> None: pass
+    class Attrib:
+        def __init__(self, body: str):
+            self.body: str = body
+        def __repr__(self): return f'Attrib'
     class Code:
-        def __init__(self, parent: Class, initcw: tuple):
+        def __init__(self, root: Class, initcw: tuple):
             self.name: str = ':code:'
             self.vercond = None
             self.cond = None
             self.initcw: tuple = initcw
         def __repr__(self): return f'Code'
-        def code(self, parent: Class, cw: XmlCodeWriter) -> None: pass
+        def code(self, lx: object, root: Class, parent: object, cw: XmlCodeWriter) -> None: pass
     class If:
-        def __init__(self, parent: Class, comment: str, field: object, inits: list[list[object]], kind: str):
+        def __init__(self, root: Class, comment: str, field: object, inits: list[list[object]], kind: str):
             self.comment: str = comment
             self.kind: str = kind
             self.name: str = ':if:'
             self.vercond: str = field.vercond if field else None
             self.cond: str = field.cond if field else None
-            self.inits: list[object] = inits[0][inits[1]:inits[2]] if inits else []
-            if inits: del inits[0][inits[1]:inits[2]]
-        def __repr__(self): return f'{self.kind};{self.vercond};{self.cond}'
-        def code(self, parent: Class, cw: XmlCodeWriter) -> None:
+            self.inits: list[object] = (inits[0][inits[1]:inits[2]] if len(inits) == 3 else inits) if inits else []
+            if inits and len(inits) == 3: del inits[0][inits[1]:inits[2]]
+        def __repr__(self): return f'{self.name}{' {' + (self.vercond or '') + (self.cond or '') + '}' if self.vercond or self.cond else ''}{';' + self.kind if self.kind else ''}'
+        def code(self, lx: object, root: Class, parent: object, cw: XmlCodeWriter) -> None:
+            lx2 = None
             for x in self.inits:
-                if not isinstance(x, str): x.code(parent, cw)
+                if not isinstance(x, str): x.code(lx2, root, self, cw); lx2 = x
             self.typecw = None
             # init
-            if self.cond and self.vercond: c = parent.cond(f'{self.cond} && {self.vercond}', cw)
-            elif self.vercond: c = parent.cond(self.vercond, cw)
-            elif self.cond: c = parent.cond(self.cond, cw)
-            elif self.kind == 'switch': c = parent.cond(self.inits[0].cond, cw)
-            else: c = ['true', 'true']
+            if self.cond and self.vercond: c = root.cond(parent, f'{self.cond} && {self.vercond}', cw)
+            elif self.vercond: c = root.cond(parent, self.vercond, cw)
+            elif self.cond: c = root.cond(parent, self.cond, cw)
+            elif self.kind == 'switch': c = root.cond(parent, self.inits[0].cond, cw)
+            else: c = [None, None]
+            if not c[0]: self.initcw = [None, None]; return
             match self.kind:
                 case 'if': self.initcw = [f'if ({c[CS]})', f'if {c[PY]}']
                 case 'elseif': self.initcw = [f'else if ({c[CS]})', f'elif {c[PY]}']
                 case 'else': self.initcw = [f'else', f'else']
-                case 'switch': self.initcw = [f'switch ({c[CS].split('==')[0]})', f'match {c[PY].split('==')[0]}:']
+                case 'switch': self.initcw = [f'switch ({c[CS].split(' == ')[0]})', f'match {c[PY].split(' == ')[0]}:']
                 case _: raise Exception(f'Unknown {self.kind}')
+            self.initcw = root.rename(self.initcw, cw)
     class Value:
-        def __init__(self, parent: Class, e: object):
+        def __init__(self, root: Class, e: object):
             if e == None: return
             self.comment: str = e.text.strip().replace('        ', '') if e.text else None if e.text else None
             self.name: str = e.attrib['name'].replace('?', '')
             self.suffix: str = e.attrib.get('suffix') or ''
             cwname = self.name.replace('?', '').replace(' ', '')
-            if self.name.replace(' ', '') == parent.name or self.suffix: cwname += f'_{self.suffix}'
-            if ' ' in self.name: parent.namers[self.name] = cwname
+            if self.name.replace(' ', '') == root.name or self.suffix: cwname += f'_{self.suffix}'
+            if ' ' in self.name: root.namers[self.name] = cwname
             self.type: str = e.attrib['type']
             self.namecw = (cwname, fmt_py(cwname))
             self.typecw = None
@@ -357,9 +393,9 @@ class Class:
             self.vercond: str = vercond
             self.kind = None
             self.tags = 'calculated' if self.calculated else ''
-        def __repr__(self): return f'{self.kind};{self.vercond};{self.cond}[{self.name}]'
-        def code(self, parent: Class, cw: XmlCodeWriter) -> None:
-            flags = parent.flags
+        def __repr__(self): return f'{self.name}{' {' + (self.vercond or '') + (self.cond or '') + '}' if self.vercond or self.cond else ''}{';' + self.kind if self.kind else ''}\n'
+        def code(self, lx: object, root: Class, parent: object, cw: XmlCodeWriter) -> None:
+            flags = root.flags
             primary = 'P' in flags
             # totype
             if not self.typecw:
@@ -373,24 +409,31 @@ class Class:
                 if not self.calculated:
                     cs = cw.types[self.type][MI][CS].replace('<T>', f'<{self.template or 'T'}>'); py = cw.types[self.type][MI][PY].replace('<T>', f'<{self.template or 'T'}>')
                     if self.arr1:
-                        cs = cw.types[self.type][MA](parent.cond(self.arr1, cw)[CS])[CS].replace('<T>', f'<{self.template or 'T'}>'); py = cw.types[self.type][MA](parent.cond(self.arr1, cw)[PY])[PY].replace('<T>', f'<{self.template or 'T'}>')
-                        if self.arr1.startswith('L'): cs = cs.replace('Read', f'Read{self.arr1}').replace(f', {self.arr1})', ')'); py = py.replace('read', f'read{self.arr1}').replace(f', {self.arr1})', ')')
-                        if self.arr2: cs = f'r.ReadFArray(k => {cs}, {self.arr2})'; py = f'r.readFArray(lambda k: {py}, {self.arr2})'
+                        arr1 = self.arr2 or self.arr1
+                        cs = cw.types[self.type][MA](root.cond(parent, arr1, cw)[CS])[CS].replace('<T>', f'<{self.template or 'T'}>'); py = cw.types[self.type][MA](root.cond(parent, arr1, cw)[PY])[PY].replace('<T>', f'<{self.template or 'T'}>')
+                        if arr1.startswith('L'): cs = cs.replace('Read', f'Read{arr1}').replace(f'{arr1})', ')').replace(', )', ')'); py = py.replace('read', f'read{arr1}').replace(f'{arr1})', ')').replace(', )', ')')
+                        if self.arr2: cs = f'r.ReadFArray(k => {cs}, {self.arr1})'; py = f'r.readFArray(lambda k: {py}, {self.arr1})'
                     if self.template: cs = cs.replace('{T}', self.template); py = py.replace('{T}', self.template)
-                elif 'calculated' in parent.custom: (cs, py) = parent.custom['calculated'](self.name)
-                else: raise Exception(f'calculated? {parent.name}')
+                elif 'calculated' in root.custom: (cs, py) = root.custom['calculated'](self.name)
+                else: raise Exception(f'calculated? {root.name}')
 
                 # default
                 if not self.defaultcw: self.defaultcw = [cw.types[self.type][MD][CS].replace('X', self.default), cw.types[self.type][MD][PY].replace('X', self.default)] if self.default else None
                 # if
-                if self.cond and self.vercond: c = parent.cond(f'{self.cond} && {self.vercond}', cw)
-                elif self.vercond: c = parent.cond(self.vercond, cw)
-                elif self.cond: c = parent.cond(self.cond, cw)
-                else: c = ['true', 'true']
+                if self.cond and self.vercond: c = root.cond(parent, f'{self.cond} && {self.vercond}', cw)
+                elif self.vercond: c = root.cond(parent, self.vercond, cw)
+                elif self.cond: c = root.cond(parent, self.cond, cw)
+                else: c = [None, None]
                 # kind
                 if not self.kind:
-                    self.kind = 'if' if self.cond or self.vercond else ''
+                    self.kind = 'case' if parent and parent.kind == 'switch' else \
+                        'if' if self.cond or self.vercond else \
+                        ''
                     if primary and self.kind == 'if': self.kind = '?:'
+                # if root.name == 'MotorDescriptor': print(f'{self.name} {self.kind}')
+                # x
+                if self.cond and lx and lx.cond and op_flip(self.cond) == lx.cond: self.kind = 'else' #;print(f'{root.name}.{self.name}')
+
                 # else
                 elsecw = self.elsecw or self.defaultcw or ['default', 'None']
                 match self.kind:
@@ -398,8 +441,13 @@ class Class:
                     case 'if': self.initcw = [f'if ({c[CS]}) {self.namecw[CS]} = {cs}', f'if {c[PY]}: self.{self.namecw[PY]} = {py}']
                     case 'elseif': self.initcw = [f'else if ({c[CS]}) {self.namecw[CS]} = {cs}', f'elif {c[PY]}: self.{self.namecw[PY]} = {py}']
                     case 'else': self.initcw = [f'else {self.namecw[CS]} = {cs}', f'else: self.{self.namecw[PY]} = {py}']
-                    case 'case': self.initcw = [f'case {c[CS]}: {self.namecw[CS]} = {cs}; break', f'case {c[PY]}: self.{self.namecw[PY]} = {py}']
+                    case 'case': self.initcw = [f'case {c[CS].split(' == ')[1]}: {self.namecw[CS]} = {cs}; break', f'case {c[PY].split(' == ')[1]}: self.{self.namecw[PY]} = {py}']
                     case _: self.initcw = [f'{self.namecw[CS]} = {cs}', f'self.{self.namecw[PY]}{': ' + self.typecw[PY] if primary else ''} = {py}']
+                self.initcw = root.rename(self.initcw, cw)
+    class Method:
+        def __init__(self, body: str):
+            self.body: str = body
+        def __repr__(self): return f'Attrib'
 
     comment: str
     abstract: bool = False
@@ -414,6 +462,8 @@ class Class:
     condFlag: int
     flags: str
     fields: list[tuple]
+    attribs: list[object]
+    methods: list[object]
     def __init__(self, e: object, cw: XmlCodeWriter):
         niobject: bool = e.tag == 'niobject'
         self.comment = e.text.strip().replace('        ', '') if e.text else None
@@ -431,6 +481,8 @@ class Class:
         self.condFlag = 0
         self.flags = ''
         self.custom = cw.customs[self.name] if self.name in cw.customs else {}
+        self.attribs = []
+        self.methods = []
         self.process()
         # flags
         if not self.flags: self.flags = 'C' if (self.condFlag & 2) or (self.condFlag & 4) or (niobject and self.values) or self.struct or self.template else 'P'
@@ -442,16 +494,24 @@ class Class:
             ['BinaryReader r, Header h', 'r: Reader, h: Header'] if hasHeader else ['BinaryReader r', 'r: Reader'],
             ['r, h', 'r, h'] if hasHeader else ['r', 'r'],
             [f'new {self.namecw[CS]}(r, h{constNew[CS]})', f'{self.namecw[PY]}(r, h{constNew[PY]})'] if hasHeader else [f'new {self.namecw[CS]}(r{constNew[CS]})', f'{self.namecw[PY]}(r{constNew[PY]})'])
+        manyLambda = lambda c: (f'r.ReadFArray(r => {self.init[2][CS]}, {c})', f'r.readFArray(lambda r: {self.init[2][PY]}, {c})')
+        if self.name in cw.struct:
+            self.init = (self.init[0], self.init[1], [f'r.ReadS<{self.namecw[CS]}>()', f'r.readS({self.namecw[PY]})'])
+            manyLambda = lambda c: (f'r.ReadSArray<{self.namecw[CS]}>({c})', f'r.readSArray<{self.namecw[CS]}>({c})')
         if self.name not in cw.types: cw.types[self.name] = [
             self, self.namecw, ('X', 'X'), (self.init[2][CS], self.init[2][PY]),
-            lambda c: (f'r.ReadFArray(r => {self.init[2][CS]}, {c})', f'r.readFArray(lambda r: {self.init[2][PY]}, {c})')]
+            manyLambda]
     def __repr__(self): return f'class: {self.name}'
-    def cond(self, s: str, cw: XmlCodeWriter) -> list[str]:
-        if 'cond' in self.custom: s = self.custom['cond'](s, cw)
+    def cond(self, parent: object, s: str, cw: XmlCodeWriter) -> list[str]:
+        if 'cond' in self.custom: s = self.custom['cond'](parent, s, cw)
         cs = s; py = s.replace('||', 'or').replace('&&', 'and')
-        if 'condcs' in self.custom: cs = self.custom['condcs'](cs, cw)
-        if 'condpy' in self.custom: py = self.custom['condpy'](py, cw)
+        if 'condcs' in self.custom: cs = self.custom['condcs'](parent, cs, cw)
+        if 'condpy' in self.custom: py = self.custom['condpy'](parent, py, cw)
         if s.startswith('B32:'): z = cs.split(' &&')[0]; cs = cs.replace(z, 'r.ReadBool32()'); py = py.replace(z, 'r.readBool32()')
+        if s.startswith('U32:'): z = cs.split(' ==')[0]; cs = cs.replace(z, '(u0 = r.ReadUInt32())'); py = py.replace(z, '(u0 := r.readUInt32())')
+        return [cs, py]
+    def rename(self, s: list[str], cw: XmlCodeWriter) -> list[str]:
+        cs = s[CS]; py = s[PY]
         for k,v in self.namers.items():
             cs = cs.replace(k, v)
             py = py.replace(k, f'self.{fmt_py(v)}')
@@ -462,13 +522,6 @@ class Class:
     def process(self):
         values = self.values
         if not values: self.inits = values[:]; return
-
-        # condFlag
-        for s in values:
-            if s.vercond or 'ZV ' in s.cond or 'ZUV ' in s.cond or 'ZUV2 ' in s.cond: self.condFlag |= 1
-            if 'arg ' in s.cond or 'ARG ' in s.cond: self.condFlag |= 2
-            for k,v in self.namers.items():
-                if k in s.vercond or k in s.cond: self.condFlag |= 2
 
         # value-collapse
         for i in range(len(values) - 1, 0, -1):
@@ -493,19 +546,21 @@ class Class:
                     s.cond = s.cond.replace(name, f'B32:{name}')
                 del values[i-1]
                     
+        # condFlag
+        for s in values:
+            if s.vercond or 'ZV ' in s.cond or 'ZUV ' in s.cond or 'ZUV2 ' in s.cond: self.condFlag |= 1
+            if 'arg ' in s.cond or 'ARG ' in s.cond: self.condFlag |= 2
+            for k,v in self.namers.items():
+                if k in s.vercond or k in s.cond or (s.arr1 and k in s.arr1): self.condFlag |= 2
+
         # custom
         if 'values' in self.custom: self.custom['values'](self, values)
         inits = self.inits = values[:]
         if 'inits' in self.custom: self.custom['inits'](self, inits)
 
-        for i in range(len(inits) - 1, 0, -1):
-            this = inits[i]
-            # if self.name == 'BSVertexData': print(f'{this.name};{this.cond};{this.vercond}')
-
         # collapse multi
         ifx = None
         def newIf(i, ifs):
-            # if self.name == 'BSVertexData': print(f'z: {this.name};{this.cond};{this.vercond}')
             self.condFlag |= 4
             ifx.inits.append(this)
             this.vercond = None
@@ -513,17 +568,11 @@ class Class:
             del inits[i]
             inits.insert(i, ifx)
             if 'if' in self.custom: py = self.custom['if'](this, ifx)
-            match self.name:
-                case 'Key': inits[-1].kind = 'elseif'
-                case 'QuatKey': inits[-1].kind = 'elseif'
-                case 'FurniturePosition': inits[-1].kind = 'elseif'
-                case 'NiTimeController': inits[-1].kind = 'elseif'
             return ifx
         ifs = []
         for i in range(len(inits) - 1, 0, -1):
             this = inits[i]; prev = inits[i-1]
             if this.vercond and this.vercond == prev.vercond and this.cond and this.cond == prev.cond:
-                # if self.name == 'BSVertexData': print(f'a: {name}.{prev.name};{prev.cond};{prev.vercond}')
                 if not ifx: ifx = Class.If(self, None, this, None, 'if')
                 ifx.inits.insert(0, prev)
                 prev.cond = None
@@ -531,14 +580,12 @@ class Class:
                 del inits[i-1]
                 continue
             elif this.vercond and this.vercond == prev.vercond:
-                # if self.name == 'BSVertexData': print(f'b: {name}.{prev.name};{prev.cond};{this.vercond}')
                 if not ifx: ifx = Class.If(self, None, this, None, 'if')
                 ifx.inits.insert(0, prev)
                 prev.vercond = None
                 del inits[i-1]
                 continue
             elif this.cond and this.cond == prev.cond:
-                # if self.name == 'BSVertexData': print(f'c: {name}.{prev.name};{prev.cond};{this.vercond}')
                 if not ifx: ifx = Class.If(self, None, this, None, 'if')
                 ifx.inits.insert(0, prev)
                 prev.cond = None
@@ -547,13 +594,17 @@ class Class:
             if ifx: ifs.append(newIf(i, ifs)); ifx = None
             else: ifs.clear()
         if ifx: ifs.append(newIf(len(inits) - 1, ifs)); ifx = None
+        #
+        if 'kind' in self.custom:
+            for k,v in self.custom['kind'].items(): inits[k].kind = v
+        # if self.name == 'RagdollDescriptor': print(inits[3])
+
         if 'inits2' in self.custom: self.custom['inits2'](self, inits)
                 
     def code(self, cw: XmlCodeWriter):
-        for x in self.values:
-            if not isinstance(x, str): x.code(self, cw)
+        lx = None
         for x in self.inits:
-            if not isinstance(x, str): x.code(self, cw)
+            if not isinstance(x, str): x.code(lx, self, None, cw); lx = x
         if 'code' in self.custom: py = self.custom['code'](self)
         self.fields = {x.namecw: (x.typecw, x.initcw, x.defaultcw, x.comment) for x in self.values if x.name and not isinstance(x, str)}
 

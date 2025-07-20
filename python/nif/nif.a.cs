@@ -1429,7 +1429,7 @@ public class Header { // X
             UV2 = r.ReadUInt32();
             ExportInfo = new ExportInfo(r);
         }
-        if ((h.UV2 == 130)) MaxFilepath = r.ReadL8AString();
+        if (h.UV2 == 130) MaxFilepath = r.ReadL8AString();
         if (h.V >= 0x1E000000) Metadata = r.ReadL8Bytes();
         if (h.V != 0x14030102 && h.V >= 0x05000001) BlockTypes = r.ReadL16FArray(r => r.ReadL16L32AString());
         if (h.V == 0x14030102) BlockTypeHashes = r.ReadL16PArray<uint>("I");
@@ -1757,7 +1757,7 @@ public class SkinPartition {
         }
         if (r.ReadBool32()) BoneIndices = r.ReadFArray(k => r.ReadBytes(NumWeightsPerVertex), NumVertices);
         if (h.UV2 > 34) UnknownShort = r.ReadUInt16();
-        if ((h.UV2 == 100)) {
+        if (h.UV2 == 100) {
             VertexDesc = r.ReadS<BSVertexDesc>();
             TrianglesCopy = r.ReadSArray<Triangle>(NumTriangles);
         }
@@ -2855,7 +2855,7 @@ public class bhkRigidBody : bhkEntity {
     public byte[] UnknownBytes1;                        // Unknown.
     public byte[] UnknownBytes2;                        // Unknown. Skyrim only.
     public int?[] Constraints;
-    public ushort BodyFlags;                            // 1 = respond to wind
+    public uint BodyFlags;                              // 1 = respond to wind
 
     public bhkRigidBody(BinaryReader r, Header h) : base(r, h) {
         CollisionResponse = (hkResponseType)r.ReadByte();
@@ -2869,12 +2869,8 @@ public class bhkRigidBody : bhkEntity {
             CollisionResponse2 = (hkResponseType)r.ReadByte();
             UnusedByte2 = r.ReadByte();
             ProcessContactCallbackDelay2 = r.ReadUInt16();
-            if (h.UV2 <= 34) UnknownInt2 = r.ReadUInt32();
         }
-        else {
-            CollisionResponse2 = hkResponseType.RESPONSE_SIMPLE_CONTACT;
-            ProcessContactCallbackDelay2 = 0xffff;
-        }
+        if (h.UV2 <= 34) UnknownInt2 = r.ReadUInt32();
         Translation = r.ReadVector4();
         Rotation = r.ReadQuaternionWFirst();
         LinearVelocity = r.ReadVector4();
@@ -2897,18 +2893,18 @@ public class bhkRigidBody : bhkEntity {
             if (h.UV2 != 130) PenetrationDepth = r.ReadSingle();
         }
         MotionSystem = (hkMotionType)r.ReadByte();
-        if ((h.UV2 <= 34)) DeactivatorType = (hkDeactivatorType)r.ReadByte();
-        if ((h.UV2 > 34)) EnableDeactivation = r.ReadBool32();
+        if (h.UV2 <= 34) DeactivatorType = (hkDeactivatorType)r.ReadByte();
+        else EnableDeactivation = r.ReadBool32();
         SolverDeactivation = (hkSolverDeactivation)r.ReadByte();
         QualityType = (hkQualityType)r.ReadByte();
-        if ((h.UV2 == 130)) {
+        if (h.UV2 == 130) {
             PenetrationDepth = r.ReadSingle();
             UnknownFloat1 = r.ReadSingle();
         }
         UnknownBytes1 = r.ReadBytes(12);
-        if ((h.UV2 > 34)) UnknownBytes2 = r.ReadBytes(4);
+        if (h.UV2 > 34) UnknownBytes2 = r.ReadBytes(4);
         Constraints = r.ReadL32FArray(X<bhkSerializable>.Ref);
-        BodyFlags = h.UserVersion2 < 76 ? r.ReadUInt32() : r.ReadUInt16();
+        BodyFlags = h.UV2 < 76 ? r.ReadUInt32() : r.ReadUInt16();
     }
 }
 
@@ -3444,8 +3440,8 @@ public enum InterpBlendFlags : byte {
 /// <summary>
 /// Interpolator item for array in NiBlendInterpolator.
 /// </summary>
-public class InterpBlendItem { //:X
-    public int? Interpolator;           // Reference to an interpolator.
+public class InterpBlendItem {
+    public int? Interpolator;                           // Reference to an interpolator.
     public float Weight;
     public float NormalizedWeight;
     public int Priority;
@@ -3455,9 +3451,8 @@ public class InterpBlendItem { //:X
         Interpolator = X<NiInterpolator>.Ref(r);
         Weight = r.ReadSingle();
         NormalizedWeight = r.ReadSingle();
-        Priority = h.V <= 0x0A01006D ? r.ReadInt32()
-            : h.V >= 0x0A01006E ? r.ReadByte()
-            : 0;
+        if (h.V <= 0x0A01006D) Priority = r.ReadInt32();
+        else if (h.V >= 0x0A01006E) Priority = r.ReadByte();
         EaseSpinner = r.ReadSingle();
     }
 }

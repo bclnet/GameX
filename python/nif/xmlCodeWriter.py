@@ -308,6 +308,7 @@ class Class:
             self.comment: str = s
             self.vercond = None
             self.cond = None
+            self.condcw = [None, None]
             self.typecw = None
             self.initcw = None
             self.defaultcw: tuple = None
@@ -319,11 +320,16 @@ class Class:
         def __init__(self, body: str):
             self.body: str = body
         def __repr__(self): return f'Attrib'
+    class Method:
+        def __init__(self, body: str):
+            self.body: str = body
+        def __repr__(self): return f'Method'
     class Code:
         def __init__(self, root: Class, initcw: tuple):
             self.name: str = ':code:'
             self.vercond = None
             self.cond = None
+            # self.condcw = [None, None]
             self.initcw: tuple = initcw
         def __repr__(self): return f'Code'
         def code(self, lx: object, root: Class, parent: object, cw: XmlCodeWriter) -> None: pass
@@ -334,6 +340,7 @@ class Class:
             self.name: str = ':if:'
             self.vercond: str = field.vercond if field else None
             self.cond: str = field.cond if field else None
+            self.extcond: str = None
             self.inits: list[object] = (inits[0][inits[1]:inits[2]] if len(inits) == 3 else inits) if inits else []
             if inits and len(inits) == 3: del inits[0][inits[1]:inits[2]]
         def __repr__(self): return f'{self.name}{' {' + (self.vercond or '') + (self.cond or '') + '}' if self.vercond or self.cond else ''}{';' + self.kind if self.kind else ''}'
@@ -343,11 +350,7 @@ class Class:
                 if not isinstance(x, str): x.code(lx2, root, self, cw); lx2 = x
             self.typecw = None
             # init
-            if self.cond and self.vercond: c = root.cond(parent, f'{self.cond} && {self.vercond}', cw)
-            elif self.vercond: c = root.cond(parent, self.vercond, cw)
-            elif self.cond: c = root.cond(parent, self.cond, cw)
-            elif self.kind == 'switch': c = root.cond(parent, self.inits[0].cond, cw)
-            else: c = [None, None]
+            c = self.condcw = root.addcond(parent, self, cw)
             if not c[0]: self.initcw = [None, None]; return
             match self.kind:
                 case 'if': self.initcw = [f'if ({c[CS]})', f'if {c[PY]}']
@@ -391,9 +394,10 @@ class Class:
             vercond += f'{' && ' if vercond else ''}(ZUV2 == {z})' if (z := e.attrib.get('userver2')) else ''
             vercond = verReplace(vercond).replace('User Version 2 ', 'ZUV2 ').replace('User Version ', 'ZUV ').replace('Version ', 'ZV ')
             self.vercond: str = vercond
+            self.extcond: str = None
             self.kind = None
             self.tags = 'calculated' if self.calculated else ''
-        def __repr__(self): return f'{self.name}{' {' + (self.vercond or '') + (self.cond or '') + '}' if self.vercond or self.cond else ''}{';' + self.kind if self.kind else ''}\n'
+        def __repr__(self): return f'{self.name}{' {' + (self.cond or '') + (self.vercond or '') + (self.extcond or '') + '}' if self.cond or self.vercond or self.extcond else ''}{';' + self.kind if self.kind else ''}\n'
         def code(self, lx: object, root: Class, parent: object, cw: XmlCodeWriter) -> None:
             flags = root.flags
             primary = 'P' in flags
@@ -420,19 +424,17 @@ class Class:
                 # default
                 if not self.defaultcw: self.defaultcw = [cw.types[self.type][MD][CS].replace('X', self.default), cw.types[self.type][MD][PY].replace('X', self.default)] if self.default else None
                 # if
-                if self.cond and self.vercond: c = root.cond(parent, f'{self.cond} && {self.vercond}', cw)
-                elif self.vercond: c = root.cond(parent, self.vercond, cw)
-                elif self.cond: c = root.cond(parent, self.cond, cw)
-                else: c = [None, None]
+                c = self.condcw = root.addcond(parent, self, cw)
+                # if root.name == 'bhkRigidBody' and self.name == 'Unknown Int 2': print(c)
                 # kind
                 if not self.kind:
                     self.kind = 'case' if parent and parent.kind == 'switch' else \
-                        'if' if self.cond or self.vercond else \
+                        'if' if self.condcw[0] else \
                         ''
                     if primary and self.kind == 'if': self.kind = '?:'
                 # if root.name == 'MotorDescriptor': print(f'{self.name} {self.kind}')
                 # x
-                if self.cond and lx and lx.cond and op_flip(self.cond) == lx.cond: self.kind = 'else' #;print(f'{root.name}.{self.name}')
+                if self.condcw[0] and lx and lx.condcw[0] and op_flip(self.condcw[0]) == lx.condcw[0]: self.kind = 'else' #;print(f'{root.name}.{self.name}')
 
                 # else
                 elsecw = self.elsecw or self.defaultcw or ['default', 'None']
@@ -444,10 +446,6 @@ class Class:
                     case 'case': self.initcw = [f'case {c[CS].split(' == ')[1]}: {self.namecw[CS]} = {cs}; break', f'case {c[PY].split(' == ')[1]}: self.{self.namecw[PY]} = {py}']
                     case _: self.initcw = [f'{self.namecw[CS]} = {cs}', f'self.{self.namecw[PY]}{': ' + self.typecw[PY] if primary else ''} = {py}']
                 self.initcw = root.rename(self.initcw, cw)
-    class Method:
-        def __init__(self, body: str):
-            self.body: str = body
-        def __repr__(self): return f'Attrib'
 
     comment: str
     abstract: bool = False
@@ -485,7 +483,9 @@ class Class:
         self.methods = []
         self.process()
         # flags
-        if not self.flags: self.flags = 'C' if (self.condFlag & 2) or (self.condFlag & 4) or (niobject and self.values) or self.struct or self.template else 'P'
+        if not self.flags: self.flags = self.custom['flags'] if 'flags' in self.custom else \
+            'C' if (self.condFlag & 2) or (self.condFlag & 4) or (niobject and self.values) or self.struct or self.template else \
+            'P'
         headerExp = self.name in ['OblivionSubShape']
         hasHeader = self.name != 'Header' and (niobject or (self.condFlag & 1) or headerExp)
         # types
@@ -502,8 +502,20 @@ class Class:
             self, self.namecw, ('X', 'X'), (self.init[2][CS], self.init[2][PY]),
             manyLambda]
     def __repr__(self): return f'class: {self.name}'
+    def addcond(self, parent: object, s: object, cw: XmlCodeWriter) -> list[str]:
+        # if self.name == 'bhkRigidBody' and s.name == 'Unknown Int 2': print(s.extcond)
+        if s.cond and s.vercond and s.extcond: return self.cond(parent, f'{s.cond} && {s.vercond} && {s.extcond}', cw)
+        elif s.cond and s.vercond: return self.cond(parent, f'{s.cond} && {s.vercond}', cw)
+        elif s.cond and s.extcond: return self.cond(parent, f'{s.cond} && {s.extcond}', cw)
+        elif s.vercond and s.extcond: return self.cond(parent, f'{s.vercond} && {s.extcond}', cw)
+        elif s.cond: return self.cond(parent, s.cond, cw)
+        elif s.vercond: return self.cond(parent, s.vercond, cw)
+        elif s.extcond: return self.cond(parent, s.extcond, cw)
+        elif s.kind == 'switch': return self.cond(parent, s.inits[0].cond, cw)
+        else: return [None, None]
     def cond(self, parent: object, s: str, cw: XmlCodeWriter) -> list[str]:
         if 'cond' in self.custom: s = self.custom['cond'](parent, s, cw)
+        if s.startswith('(') and s.endswith(')') and '(' not in s[1:]: s = s[1:-1]
         cs = s; py = s.replace('||', 'or').replace('&&', 'and')
         if 'condcs' in self.custom: cs = self.custom['condcs'](parent, cs, cw)
         if 'condpy' in self.custom: py = self.custom['condpy'](parent, py, cw)

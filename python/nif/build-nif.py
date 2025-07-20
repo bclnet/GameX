@@ -75,7 +75,6 @@ class NifCodeWriter(XmlCodeWriter):
             values[7].arr1 = values[6].arr1 = values[5].arr1 = 'L16'
             del values[4]
         def MotorDescriptor_inits(s, inits):
-            s.flags = 'C'
             inits.insert(1, Class.If(s, None, None, (inits, 1, 4), 'switch'))
         def RagdollDescriptor_inits(s, inits):
             inits.insert(0, Class.Comment(s, 'Oblivion and Fallout 3, Havok 550'))
@@ -95,7 +94,6 @@ class NifCodeWriter(XmlCodeWriter):
             inits[1].type = 'Matrix33'; inits[1].arr1 = None; inits[1].comment = 'was:Rotation #ReadMatrix3x3As4x4'
             inits[2].comment = 'was:Radius'
         def BoundingVolume_inits(s, inits):
-            s.flags = 'C'
             inits.insert(1, Class.If(s, None, None, (inits, 1, 6), 'switch'))
         def MalleableDescriptor_inits(s, inits):
             inits.insert(5, Class.If(s, None, None, (inits, 5, 11), 'switch'))
@@ -103,7 +101,6 @@ class NifCodeWriter(XmlCodeWriter):
             inits[7].comment = 'In TES CS described as Damping'
             inits[8].comment = 'In GECK and Creation Kit described as Strength'
         def ConstraintData_inits(s, inits):
-            s.flags = 'C'
             inits.insert(5, Class.If(s, None, None, (inits, 5, 12), 'switch'))
         def NiObject_code(s):
             nodes = ['NiNode', 'NiTriShape', 'NiTexturingProperty', 'NiSourceTexture', 'NiMaterialProperty', 'NiMaterialColorController', 'NiTriShapeData', 'RootCollisionNode', 'NiStringExtraData', 'NiSkinInstance', 'NiSkinData', 'NiAlphaProperty', 'NiZBufferProperty', 'NiVertexColorProperty', 'NiBSAnimationNode', 'NiBSParticleNode', 'NiParticles', 'NiParticlesData', 'NiRotatingParticles', 'NiRotatingParticlesData', 'NiAutoNormalParticles', 'NiAutoNormalParticlesData', 'NiUVController', 'NiUVData', 'NiTextureEffect', 'NiTextKeyExtraData', 'NiVertWeightsExtraData', 'NiParticleSystemController', 'NiBSPArrayController', 'NiGravity', 'NiParticleBomb', 'NiParticleColorModifier', 'NiParticleGrowFade', 'NiParticleMeshModifier', 'NiParticleRotation', 'NiKeyframeController', 'NiKeyframeData', 'NiColorData', 'NiGeomMorpherController', 'NiMorphData', 'AvoidNode', 'NiVisController', 'NiVisData', 'NiAlphaController', 'NiFloatData', 'NiPosData', 'NiBillboardNode', 'NiShadeProperty', 'NiWireframeProperty', 'NiCamera', 'NiExtraData', 'NiSkinPartition']
@@ -118,7 +115,31 @@ BODY
         }
     }
 '''.replace('BODY', body)))
-
+        def bhkRigidBody_values(s, values):
+            values[6].extcond = values[6].vercond[20:]
+            values[6].vercond = values[6].vercond[:16]
+            values[21].extcond = values[21].vercond[15:]
+            values[21].vercond = values[21].vercond[:11]
+            values[27].extcond = values[27].vercond[20:]
+            values[27].vercond = values[27].vercond[:16]
+            values[38].kind = '?:'; values[38].elsecw = ('r.ReadUInt16()', 'r.readUInt16()')
+            del values[39]
+        def InterpBlendItem_inits(s, inits):
+            pass
+        def NiBlendInterpolator_inits(s, inits):
+            pass
+        def NiObjectNET_inits(s, inits):
+            pass
+        def NiCollisionData_inits(s, inits):
+            pass
+        def NiAVObject_inits(s, inits):
+            pass
+        def NiDynamicEffect_inits(s, inits):
+            pass
+        def NiGeomMorpherController_inits(s, inits):
+            pass
+        def NiFlipController_values(s, values):
+            pass
         self.customs = {
             #region Header
             '_header': (
@@ -368,6 +389,7 @@ class Flags(Flag):
                 'constArg': (', int ARG', ', ARG: int'),
                 'values': BoneData_values },
             'MotorDescriptor': { 'x': 1898,
+                'flags': 'C',
                 'cond': lambda p, s, cw: cw.typeReplace('MotorType', s),
                 'inits': MotorDescriptor_inits },
             'RagdollDescriptor': { 'x': 1905,
@@ -385,6 +407,7 @@ class Flags(Flag):
             'BoxBV': { 'x': 2040,
                 'inits': BoxBV_inits },
             'BoundingVolume': { 'x': 2060,
+                'flags': 'C',
                 'cond': lambda p, s, cw: cw.typeReplace('BoundVolumeType', s),
                 'inits': BoundingVolume_inits },
             'MalleableDescriptor': { 'x': 2154,
@@ -392,14 +415,34 @@ class Flags(Flag):
                 'cond': lambda p, s, cw: cw.typeReplace('hkConstraintType', s) if p and p.kind == 'switch' else s,
                 'inits': MalleableDescriptor_inits },
             'ConstraintData': { 'x': 2171,
+                'flags': 'C',
                 'cond': lambda p, s, cw: cw.typeReplace('hkConstraintType', s) if p and p.kind == 'switch' else s,
                 'inits': ConstraintData_inits },
             'NiObject': { 'x': 2193,
                 'code': NiObject_code },
+            'bhkRigidBody': { 'x': 2306,
+                'values': bhkRigidBody_values },
             'bhkMoppBvTreeShape': { 'x': 2511,
                 'calculated': lambda s: ('0', '0') },
+            'InterpBlendItem': { 'x': 2660,
+                'kind': {-2: 'elseif'}, 'flags': 'C',
+                'inits': InterpBlendItem_inits },
+            'NiBlendInterpolator': { 'x': 2670,
+                'inits': NiBlendInterpolator_inits },
+            'NiObjectNET': { 'x': 2712,
+                'inits': NiObjectNET_inits },
+            'NiCollisionData': { 'x': 2735,
+                'inits': NiCollisionData_inits },
+            'NiAVObject': { 'x': 2787,
+                'inits': NiAVObject_inits },
+            'NiDynamicEffect': { 'x': 2804,
+                'inits': NiDynamicEffect_inits },
             'NiTimeController': { 'x': 2860,
                 'kind': {-1: 'elseif'} },
+            'NiGeomMorpherController': { 'x': 2892,
+                'inits': NiGeomMorpherController_inits },
+            'NiFlipController': { 'x': 2988,
+                'values': NiFlipController_values },
             'NiTriShapeData': { 'x': 4673,
                 'calculated': lambda s: ('0', '0') },
         }
@@ -422,4 +465,4 @@ class Flags(Flag):
 
 xml = ET.parse('nif.xml')
 NifCodeWriter(CS).write(xml, 'nif.cs')
-NifCodeWriter(PY).write(xml, 'nif.py')
+# NifCodeWriter(PY).write(xml, 'nif.py')

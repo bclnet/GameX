@@ -645,20 +645,10 @@ public unsafe class Binary_Esm : PakBinary<Binary_Esm> {
 
 #region Binary_Nif
 
-public class Binary_Nif : IHaveMetaInfo, IModel, IWriteToStream {
+public class Binary_Nif(BinaryReader r, FileSource f) : NifReader(r), IHaveMetaInfo, IModel, IWriteToStream {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Nif(r, f));
 
-    public string Name;
-    public Nif.Header Header;
-    public NiObject[] Blocks;
-    public Footer Footer;
-
-    public Binary_Nif(BinaryReader r, FileSource f) {
-        Name = Path.GetFileNameWithoutExtension(f.Path);
-        Header = new Nif.Header(r);
-        Blocks = r.ReadFArray(r => NiObject.Read(r, Header), (int)Header.NumBlocks);
-        Footer = new Footer(r, Header);
-    }
+    public string Name = Path.GetFileNameWithoutExtension(f.Path);
 
     #region IModel
 
@@ -681,7 +671,7 @@ public class Binary_Nif : IHaveMetaInfo, IModel, IWriteToStream {
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new(null, new MetaContent { Type = "Object", Name = Name, Value = this }),
         new("NIF", items: [
-            new($"NumBlocks: {Header.NumBlocks}"),
+            new($"NumBlocks: {NumBlocks}"),
         ]),
     ];
 

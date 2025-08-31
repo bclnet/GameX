@@ -4,6 +4,7 @@ using System.Numerics;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 
 namespace GameX;
 
@@ -17,18 +18,21 @@ public static class DesSer {
         IndentSize = 2,
         NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        TypeInfoResolver = new TypeInfoResolver(),
     };
     static DesSer() {
-        Options.Converters.Add(new Color3JsonConverter());
-        Options.Converters.Add(new ByteColor3JsonConverter());
-        Options.Converters.Add(new Color4JsonConverter());
-        Options.Converters.Add(new ByteColor4JsonConverter());
-        Options.Converters.Add(new Vector2JsonConverter());
-        Options.Converters.Add(new Vector3JsonConverter());
-        Options.Converters.Add(new Vector4JsonConverter());
-        Options.Converters.Add(new Matrix3x3JsonConverter());
-        Options.Converters.Add(new Matrix4x4JsonConverter());
+        Add(new Color3JsonConverter(),
+            new ByteColor3JsonConverter(),
+            new Color4JsonConverter(),
+            new ByteColor4JsonConverter(),
+            new Vector2JsonConverter(),
+            new Vector3JsonConverter(),
+            new Vector4JsonConverter(),
+            new Matrix3x3JsonConverter(),
+            new Matrix4x4JsonConverter());
     }
+
+    public static void Add(params JsonConverter[] converters) { foreach (var s in converters) Options.Converters.Add(s); }
 
     public static string Serialize<T>(this T source) => JsonSerializer.Serialize(source, Options);
     public static void Serialize<T>(this T source, Stream stream) {
@@ -43,6 +47,16 @@ public static class DesSer {
         var buf = new byte[stream.Length];
         stream.Read(buf, 0, buf.Length);
         return JsonSerializer.Deserialize<T>(buf, Options);
+    }
+}
+
+public class TypeInfoResolver : DefaultJsonTypeInfoResolver {
+    public override JsonTypeInfo GetTypeInfo(Type type, JsonSerializerOptions options) {
+        var typeInfo = base.GetTypeInfo(type, options);
+        if (typeInfo.Kind == JsonTypeInfoKind.Object)
+            foreach (var i in typeInfo.Properties)
+                if (i.Name == "baseStream") i.ShouldSerialize = (instance, value) => false;
+        return typeInfo;
     }
 }
 

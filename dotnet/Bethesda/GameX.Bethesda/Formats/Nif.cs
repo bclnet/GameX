@@ -123,12 +123,12 @@ public class RefJsonConverter<T> : JsonConverter<Ref<T>> where T : NiObject {
 
 public class TexCoordJsonConverter : JsonConverter<TexCoord> {
     public override TexCoord Read(ref Utf8JsonReader r, Type s, JsonSerializerOptions options) => throw new NotImplementedException();
-    public override void Write(Utf8JsonWriter w, TexCoord s, JsonSerializerOptions options) => w.WriteStringValue($"{s.U} {s.V}");
+    public override void Write(Utf8JsonWriter w, TexCoord s, JsonSerializerOptions options) => w.WriteStringValue($"{s.u} {s.v}");
 }
 
 public class TriangleJsonConverter : JsonConverter<Triangle> {
     public override Triangle Read(ref Utf8JsonReader r, Type s, JsonSerializerOptions options) => throw new NotImplementedException();
-    public override void Write(Utf8JsonWriter w, Triangle s, JsonSerializerOptions options) => w.WriteStringValue($"{s.V1} {s.V2} {s.V3}");
+    public override void Write(Utf8JsonWriter w, Triangle s, JsonSerializerOptions options) => w.WriteStringValue($"{s.v1} {s.v2} {s.v3}");
 }
 
 #endregion
@@ -316,7 +316,7 @@ public class MatchGroup(NifReader r) { // X
 /// </summary>
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct BoneVertData(NifReader r, bool full) { // X
-    public static (string, int) Struct = ("<Hf", 7);
+    public static (string, int) Struct = ("<Hf", 6);
     public ushort Index = r.ReadUInt16();               // The vertex index, in the mesh.
     public float Weight = full ? r.ReadSingle() : r.ReadHalf(); // The vertex weight - between 0.0 and 1.0
 }
@@ -466,7 +466,7 @@ public struct TexCoord { // X
         u = r.ReadSingle();
         v = r.ReadSingle();
     }
-    public TexCoord(float u, float v) { this.u = u; this.v = v; }
+    public TexCoord(double u, double v) { this.u = (float)u; this.v = (float)v; }
     public TexCoord(NifReader r, bool half) { u = half ? r.ReadHalf() : r.ReadSingle(); v = half ? r.ReadHalf() : r.ReadSingle(); }
 }
 
@@ -484,81 +484,95 @@ public enum TransformMethod : uint { // X
 /// NiTexturingProperty::Map. Texture description.
 /// </summary>
 public class TexDesc { // X
-    public Ref<NiImage> Image;              // Link to the texture image.
-    public Ref<NiSourceTexture> Source;     // NiSourceTexture object index.
-    public TexClampMode ClampMode;          // 0=clamp S clamp T, 1=clamp S wrap T, 2=wrap S clamp T, 3=wrap S wrap T
-    public TexFilterMode FilterMode;        // 0=nearest, 1=bilinear, 2=trilinear, 3=..., 4=..., 5=...
+    public Ref<NiImage> Image;                          // Link to the texture image.
+    public Ref<NiSourceTexture> Source;                 // NiSourceTexture object index.
+    public TexClampMode ClampMode = TexClampMode.WRAP_S_WRAP_T; // 0=clamp S clamp T, 1=clamp S wrap T, 2=wrap S clamp T, 3=wrap S wrap T
+    public TexFilterMode FilterMode = TexFilterMode.FILTER_TRILERP; // 0=nearest, 1=bilinear, 2=trilinear, 3=..., 4=..., 5=...
+    public Flags Flags;                                 // Texture mode flags; clamp and filter mode stored in upper byte with 0xYZ00 = clamp mode Y, filter mode Z.
     public ushort MaxAnisotropy;
-    public uint UVSet;                      // The texture coordinate set in NiGeometryData that this texture slot will use.
-    public short PS2L;                      // L can range from 0 to 3 and are used to specify how fast a texture gets blurry.
-    public short PS2K;                      // K is used as an offset into the mipmap levels and can range from -2047 to 2047. Positive values push the mipmap towards being blurry and negative values make the mipmap sharper.
-    public ushort Unknown1;                 // Unknown, 0 or 0x0101?
+    public uint UVSet = 0;                              // The texture coordinate set in NiGeometryData that this texture slot will use.
+    public short PS2L = 0;                              // L can range from 0 to 3 and are used to specify how fast a texture gets blurry.
+    public short PS2K = -75;                            // K is used as an offset into the mipmap levels and can range from -2047 to 2047. Positive values push the mipmap towards being blurry and negative values make the mipmap sharper.
+    public ushort Unknown1;                             // Unknown, 0 or 0x0101?
     // NiTextureTransform
-    public bool HasTextureTransform;        // Whether or not the texture coordinates are transformed.
-    public TexCoord Translation;            // The UV translation.
-    public TexCoord Scale;                  // The UV scale.
-    public float Rotation;                  // The W axis rotation in texture space.
-    public TransformMethod TransformMethod; // Depending on the source, scaling can occur before or after rotation.
-    public TexCoord Center;                 // The origin around which the texture rotates.
+    public TexCoord Translation;                        // The UV translation.
+    public TexCoord Scale = new(1.0, 1.0);              // The UV scale.
+    public float Rotation = 0.0f;                       // The W axis rotation in texture space.
+    public TransformMethod TransformMethod = (TransformMethod)0; // Depending on the source, scaling can occur before or after rotation.
+    public TexCoord Center;                             // The origin around which the texture rotates.
 
     public TexDesc(NifReader r) {
         if (r.V <= 0x03010000) Image = X<NiImage>.Ref(r);
         if (r.V >= 0x0303000D) Source = X<NiSourceTexture>.Ref(r);
-        ClampMode = r.V <= 0x14000005 ? (TexClampMode)r.ReadUInt32() : TexClampMode.WRAP_S_WRAP_T;
-        FilterMode = r.V <= 0x14000005 ? (TexFilterMode)r.ReadUInt32() : TexFilterMode.FILTER_TRILERP;
-        MaxAnisotropy = r.V <= 0x14050004 ? r.ReadUInt16() : (ushort)0;
-        UVSet = r.V <= 0x14000005 ? r.ReadUInt32() : 0;
-        PS2L = r.V <= 0x0A040001 ? r.ReadInt16() : (short)0;
-        PS2K = r.V <= 0x0A040001 ? r.ReadInt16() : (short)-75;
-        if (r.V >= 0x0401010C) Unknown1 = r.ReadUInt16();
+        if (r.V <= 0x14000005) {
+            ClampMode = (TexClampMode)r.ReadUInt32();
+            FilterMode = (TexFilterMode)r.ReadUInt32();
+        }
+        if (r.V >= 0x14010003) Flags = (Flags)r.ReadUInt16();
+        if (r.V >= 0x14050004) MaxAnisotropy = r.ReadUInt16();
+        if (r.V <= 0x14000005) UVSet = r.ReadUInt32();
+        if (r.V <= 0x0A040001) {
+            PS2L = r.ReadInt16();
+            PS2K = r.ReadInt16();
+        }
+        if (r.V <= 0x0401000C) Unknown1 = r.ReadUInt16();
         // NiTextureTransform
-        HasTextureTransform = r.V >= 0x0A010000 && r.ReadBool32();
-        if (!HasTextureTransform) { Scale = new TexCoord(1f, 1f); return; }
-        Translation = new TexCoord(r);
-        Scale = new TexCoord(r);
-        Rotation = r.ReadSingle();
-        TransformMethod = (TransformMethod)r.ReadUInt32();
-        Center = new TexCoord(r);
+        if (r.ReadBool32() && r.V >= 0x0A010000) {
+            Translation = r.ReadS<TexCoord>();
+            Scale = r.ReadS<TexCoord>();
+            Rotation = r.ReadSingle();
+            TransformMethod = (TransformMethod)r.ReadUInt32();
+            Center = r.ReadS<TexCoord>();
+        }
     }
 }
 
 /// <summary>
 /// List of three vertex indices.
 /// </summary>
-/// <param name="r"></param>
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct Triangle(NifReader r) { // X
-    public ushort V1 = r.ReadUInt16(); // First vertex index.
-    public ushort V2 = r.ReadUInt16(); // Second vertex index.
-    public ushort V3 = r.ReadUInt16(); // Third vertex index.
+    public static (string, int) Struct = ("<3H", 6);
+    public ushort v1 = r.ReadUInt16();                  // First vertex index.
+    public ushort v2 = r.ReadUInt16();                  // Second vertex index.
+    public ushort v3 = r.ReadUInt16();                  // Third vertex index.
 }
 
 /// <summary>
 /// A plane.
 /// </summary>
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
-public struct NiPlane(NifReader r) {
-    public static (string, int) Struct = ("<4f", 24);
-    public Vector3 Normal = r.ReadVector3();                              // The plane normal.
-    public float Constant = r.ReadSingle();                              // The plane constant.
+public struct NiPlane(NifReader r) { // Y
+    public static (string, int) Struct = ("<4f", 16);
+    public Vector3 Normal = r.ReadVector3();            // The plane normal.
+    public float Constant = r.ReadSingle();             // The plane constant.
 }
 
+/// <summary>
+/// A sphere.
+/// </summary>
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
-public struct NiTransform(NifReader r) { //: SkinTransform
-    public static (string, int) Struct = ("<x", 0);
-    public Matrix4x4 Rotation = r.ReadMatrix3x3As4x4();  // The rotation part of the transformation matrix. #Modified
-    public Vector3 Translation = r.ReadVector3();   // The translation vector.
-    public float Scale = r.ReadSingle();            // Scaling part (only uniform scaling is supported).
+public struct NiBound(NifReader r) { // Y
+    public static (string, int) Struct = ("<4f", 16);
+    public Vector3 Center = r.ReadVector3();            // The sphere's center.
+    public float Radius = r.ReadSingle();               // The sphere's radius.
+}
+
+public struct NiTransform(NifReader r) { // X
+    public Matrix4x4 Rotation = r.ReadMatrix3x3As4x4(); // The rotation part of the transformation matrix.
+    public Vector3 Translation = r.ReadVector3();       // The translation vector.
+    public float Scale = r.ReadSingle();                // Scaling part (only uniform scaling is supported).
 }
 
 /// <summary>
 /// Geometry morphing data component.
 /// </summary>
 public class Morph { // X
-    public string FrameName;                // Name of the frame.
-    public KeyType Interpolation;           // Unlike most objects, the presense of this value is not conditional on there being keys.
-    public Key<float>[] Keys;               // The morph key frames.
+    public string FrameName;                            // Name of the frame.
+    public KeyType Interpolation;                       // Unlike most objects, the presense of this value is not conditional on there being keys.
+    public Key<float>[] Keys;                           // The morph key frames.
     public float LegacyWeight;
-    public Vector3[] Vectors;               // Morph vectors.
+    public Vector3[] Vectors;                           // Morph vectors.
 
     public Morph(NifReader r, uint numVertices) {
         if (r.V >= 0x0A01006A) FrameName = X.String(r);
@@ -567,71 +581,106 @@ public class Morph { // X
             Interpolation = (KeyType)r.ReadUInt32();
             Keys = r.ReadFArray(z => new Key<float>(r, Interpolation), NumKeys);
         }
-        if (r.V >= 0x0A010068 && r.V <= 0x14010002) LegacyWeight = r.ReadSingle();
-        Vectors = r.ReadFArray(z => r.ReadVector3(), (int)numVertices);
+        if (r.V >= 0x0A010068 && r.V <= 0x14010002 && r.UV2 < 10) LegacyWeight = r.ReadSingle();
+        Vectors = r.ReadPArray<Vector3>("3f", numVertices);
     }
 }
 
 /// <summary>
 /// particle array entry
 /// </summary>
-/// <param name="r"></param>
-public struct Particle(NifReader r) { // X #Marshal
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct Particle(NifReader r) { // X
+    public static (string, int) Struct = ("<9f2H", 40);
     public Vector3 Velocity = r.ReadVector3();          // Particle velocity
     public Vector3 UnknownVector = r.ReadVector3();     // Unknown
     public float Lifetime = r.ReadSingle();             // The particle age.
     public float Lifespan = r.ReadSingle();             // Maximum age of the particle.
     public float Timestamp = r.ReadSingle();            // Timestamp of the last update.
     public ushort UnknownShort = r.ReadUInt16();        // Unknown short
-    public ushort VertexId = r.ReadUInt16();            // Particle/vertex index matches array index
+    public ushort VertexID = r.ReadUInt16();            // Particle/vertex index matches array index
 }
 
 /// <summary>
 /// NiSkinData::BoneData. Skinning data component.
 /// </summary>
-public class BoneData { //: SkinData
+public class BoneData { // X
     public NiTransform SkinTransform;                   // Offset of the skin from this bone in bind position.
     public Vector3 BoundingSphereOffset;                // Translation offset of a bounding sphere holding all vertices. (Note that its a Sphere Containing Axis Aligned Box not a minimum volume Sphere)
     public float BoundingSphereRadius;                  // Radius for bounding sphere holding all vertices.
-    public ushort[] Unknown13Shorts;                    // Unknown, always 0?
+    public short[] Unknown13Shorts;                     // Unknown, always 0?
     public BoneVertData[] VertexWeights;                // The vertex weights.
 
     public BoneData(NifReader r, int arg) {
-        SkinTransform = new NiTransform(r);
+        SkinTransform = r.ReadS<NiTransform>();
         BoundingSphereOffset = r.ReadVector3();
         BoundingSphereRadius = r.ReadSingle();
-        if (r.V == 0x14030009 && (r.UV == 0x20000 || r.UV == 0x30000)) Unknown13Shorts = r.ReadPArray<ushort>("H", 13);
-        VertexWeights = r.V <= 0x04020100 ? r.ReadL16SArray<BoneVertData>()
-            : r.V >= 0x04020200 && arg == 1 ? r.ReadL16SArray<BoneVertData>()
-            : r.V >= 0x14030101 && arg == 15 ? r.ReadL16FArray(z => new BoneVertData(r, false))
-            : default;
+        if (r.V == 0x14030009 && (r.UV == 0x20000) || (r.UV == 0x30000)) Unknown13Shorts = r.ReadPArray<short>("h", 13);
+        if (r.V <= 0x04020100) VertexWeights = r.ReadL16SArray<BoneVertData>();
+        else if (arg == 1 && r.V >= 0x04020200) VertexWeights = r.ReadL16SArray<BoneVertData>();
+        else if (arg == 15 && r.V >= 0x14030101) VertexWeights = r.ReadL16SArray<BoneVertData>();
     }
 }
 
 /// <summary>
 /// Box Bounding Volume
 /// </summary>
-public class BoxBV(NifReader r) { //:X
-    public Vector3 Center = r.ReadVector3();        //was:Translation
-    public Matrix4x4 Axis = r.ReadMatrix3x3As4x4(); //was:Rotation
-    public Vector3 Extent = r.ReadVector3();        //was:Radius
+public struct BoxBV(NifReader r) { // X
+    public Vector3 Center = r.ReadVector3();
+    public Matrix4x4 Axis = r.ReadMatrix3x3As4x4();
+    public Vector3 Extent = r.ReadVector3();
 }
 
-public class BoundingVolume { // X BoundingVolume.BoxBV was:BoundingBox 
-    public BoundVolumeType CollisionType;
+/// <summary>
+/// Capsule Bounding Volume
+/// </summary>
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct CapsuleBV(NifReader r) { // Y
+    public static (string, int) Struct = ("<8f", 32);
+    public Vector3 Center = r.ReadVector3();
+    public Vector3 Origin = r.ReadVector3();
+    public float Extent = r.ReadSingle();
+    public float Radius = r.ReadSingle();
+}
+
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct HalfSpaceBV(NifReader r) { // Y
+    public static (string, int) Struct = ("<7f", 28);
+    public NiPlane Plane = r.ReadS<NiPlane>();
+    public Vector3 Center = r.ReadVector3();
+}
+
+public class BoundingVolume { // X
+    public BoundVolumeType CollisionType;               // Type of collision data.
+    public NiBound Sphere;
     public BoxBV Box;
+    public CapsuleBV Capsule;
+    public UnionBV Union;
+    public HalfSpaceBV HalfSpace;
 
     public BoundingVolume(NifReader r) {
         CollisionType = (BoundVolumeType)r.ReadUInt32();
         switch (CollisionType) {
-            case BoundVolumeType.BOX_BV: Box = new BoxBV(r); break;
+            case BoundVolumeType.SPHERE_BV: Sphere = r.ReadS<NiBound>(); break;
+            case BoundVolumeType.BOX_BV: Box = r.ReadS<BoxBV>(); break;
+            case BoundVolumeType.CAPSULE_BV: Capsule = r.ReadS<CapsuleBV>(); break;
+            case BoundVolumeType.UNION_BV: Union = new UnionBV(r); break;
+            case BoundVolumeType.HALFSPACE_BV: HalfSpace = r.ReadS<HalfSpaceBV>(); break;
         }
     }
+}
+
+public class UnionBV(NifReader r) { // Y
+    public BoundingVolume[] BoundingVolumes = r.ReadL32FArray(z => new BoundingVolume(r));
 }
 
 #endregion
 
 #region NIF Objects
+
+// These are the main units of data that NIF files are arranged in.
+// They are like C classes and can contain many pieces of data.
+// The only differences between these and compounds is that these are treated as object types by the NIF format and can inherit from other classes.
 
 /// <summary>
 /// Abstract object type.

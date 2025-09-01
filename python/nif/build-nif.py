@@ -2,8 +2,21 @@ import xml.etree.ElementTree as ET
 from xmlCodeWriter import CS, PY, Class, Elem, XmlCodeWriter
 
 class NifCodeWriter(XmlCodeWriter):
+    def export(self, name: str): return name in self.es3 or name in self.es3x
+    def tags(self, name: str): return 'X' if name in self.es3 else 'Y' if name in self.es3x else ''
     def __init__(self, ex: str):
         super().__init__(ex)
+        # EffectType->TextureType, NiHeader->Header, NiFooter->Footer, SkinData->BoneData, SkinWeight->BoneVertData, BoundingBox->BoxBV, SkinTransform->NiTransform, NiCameraProperty->NiCamera
+        self.es3 = [
+            'ApplyMode', 'TexClampMode', 'TexFilterMode', 'PixelLayout', 'MipMapFormat', 'AlphaFormat', 'VertMode', 'LightMode', 'KeyType', 'TextureType', 'CoordGenType', 'FieldType', 'DecayType', 'BoundVolumeType', 'TransformMethod', 'EndianType',
+            'BoxBV', 'BoundingVolume', 'Color3', 'Color4', 'TexDesc', 'TexCoord', 'Triangle', 'MatchGroup', 'TBC', 'Key', 'KeyGroup', 'QuatKey', 'BoneData', 'BoneVertData', 'NiTransform', 'Particle', 'Morph', 'ExportInfo', 'Header', 'Footer',
+            'NiObject', 'NiObjectNET', 'NiAVObject', 'NiNode', 'RootCollisionNode', 'NiBSAnimationNode', 'NiBSParticleNode', 'NiBillboardNode', 'AvoidNode', 'NiGeometry', 'NiGeometryData', 'NiTriBasedGeom', 'NiTriBasedGeomData', 'NiTriShape', 'NiTriShapeData',
+            'NiProperty', 'NiTexturingProperty', 'NiAlphaProperty', 'NiZBufferProperty', 'NiVertexColorProperty', 'NiShadeProperty', 'NiWireframeProperty', 'NiCamera', 'NiUVData', 'NiKeyframeData', 'NiColorData', 'NiMorphData', 'NiVisData', 'NiFloatData', 'NiPosData',
+            'NiExtraData', 'NiStringExtraData', 'NiTextKeyExtraData', 'NiVertWeightsExtraData', 'NiParticles', 'NiParticlesData', 'NiRotatingParticles', 'NiRotatingParticlesData', 'NiAutoNormalParticles', 'NiAutoNormalParticlesData', 'NiParticleSystemController', 'NiBSPArrayController',
+            'NiParticleModifier', 'NiGravity', 'NiParticleBomb', 'NiParticleColorModifier', 'NiParticleGrowFade', 'NiParticleMeshModifier', 'NiParticleRotation', 'NiTimeController', 'NiUVController', 'NiInterpController', 'NiSingleInterpController', 'NiKeyframeController', 'NiGeomMorpherController', 'NiBoolInterpController', 'NiVisController', 'NiFloatInterpController', 'NiAlphaController',
+            'NiSkinInstance', 'NiSkinData', 'NiSkinPartition', 'NiTexture', 'NiSourceTexture', 'NiPoint3InterpController', 'NiMaterialProperty', 'NiMaterialColorController', 'NiDynamicEffect', 'NiTextureEffect' ]
+        self.es3x = [
+            'NiPlane', 'NiImage', 'NiBound', 'CapsuleBV', 'UnionBV', 'HalfSpaceBV' ]
         def BoneVertData_values(s, values):
             values[1].kind = '?:'; values[1].cond = 'full'; values[1].elsecw = ('r.ReadHalf()', 'r.readHalf()')
         def ControlledBlock_values(s, values):
@@ -26,9 +39,15 @@ class NifCodeWriter(XmlCodeWriter):
             values[6].namecw = ('UV2', 'uv2')
             del values[10]
             values[10].arr1 = values[11].arr1 = 'L16'
+            # read blocks
             values.insert(18, Class.Comment(s, 'read blocks'))
             values.insert(19, vx0 := Class.Value(s, Elem({ 'name': 'Blocks', 'type': 'NiObject', 'arr1': 'x' })))
+            vx0.initcw = ('Blocks = new NiObject[NumBlocks]', 'Blocks = new NiObject[NumBlocks]')
             values.insert(20, vx1 := Class.Value(s, Elem({ 'name': 'Roots', 'type': 'Ref', 'template': 'NiObject', 'arr1': 'x' })))
+            vx1.initcw = ('Roots = new Footer(r).Roots', 'Roots = new Footer(r).Roots')
+        def Header_inits(s, inits):
+            inits.insert(20, Class.Code(s, ('if (r.V >= 0x05000001) for (var i = 0; i < NumBlocks; i++) Blocks[i] = NiObject.Read(r, BlockTypes[BlockTypeIndex[i]]);', 'if (r.V >= 0x05000001) for (var i = 0; i < NumBlocks; i++) Blocks[i] = NiObject.Read(r, BlockTypes[BlockTypeIndex[i]])')))
+            inits.insert(21, Class.Code(s, ('else for (var i = 0; i < NumBlocks; i++) Blocks[i] = NiObject.Read(r, X.String(r));', 'else for (var i = 0; i < NumBlocks; i++) Blocks[i] = NiObject.Read(r, X.String(r))')))
         def Header_code(s):
             s.init = (
                 ['BinaryReader b', 'b: Reader'],
@@ -80,10 +99,17 @@ class NifCodeWriter(XmlCodeWriter):
             #
             inits.insert(7, ifx := Class.If(s, None, None, in0, 'if'))
             ifx.vercond = 'ZV <= 0x0A000102'
+        def Morph_if(s, ifx):
+            if s.name == 'Keys': ifx.inits[0].name = ''; ifx.inits[0].initcw = ('var NumKeys = r.ReadUInt32()', 'NumKeys = r.readUInt32()')
         def BoneData_values(s, values):
-            values[7].namecw = ('VertexWeights', 'vertexWeights')
-            values[7].arr1 = values[6].arr1 = values[5].arr1 = 'L16'
             del values[4]
+            values[6].type = 'BoneVertData'; values[6].namecw = ('VertexWeights', 'vertexWeights')
+            values[6].arr1 = values[5].arr1 = values[4].arr1 = 'L16'
+            values[4].kind = '?+'
+            values[5].kind = ':+'
+            values[6].kind = ':'
+            # ifx.kind = '?:'; ifx.arr1 = 'L16'; ifx.vercond = 'r.V <= 0x04020100'; ifx.elsecw = ('\nr.V >= 0x04020200 && arg == 1 ? r.ReadL16SArray<BoneVertData>()', 'r.V >= 0x04020200 && arg == 1 ? r.ReadL16SArray<BoneVertData>()')
+            # if s.name == 'Keys': ifx.inits[0].name = ''; ifx.inits[0].initcw = ('var NumKeys = r.ReadUInt32()', 'NumKeys = r.readUInt32()')
         def MotorDescriptor_inits(s, inits):
             inits.insert(1, Class.If(s, None, None, (inits, 1, 4), 'switch'))
         def RagdollDescriptor_inits(s, inits):
@@ -99,6 +125,8 @@ class NifCodeWriter(XmlCodeWriter):
             inits.insert(0, Class.Comment(s, 'In reality Havok loads these as Transform A and Transform B using hkTransform'))
             inits.insert(1, Class.Comment(s, 'Oblivion (Order is a guess)'))
             inits.insert(10, Class.Comment(s, 'Fallout 3'))
+        def BoxBV_values(s, values):
+            values[1].type = 'Matrix33R'; values[1].arr1 = None
         def BoundingVolume_inits(s, inits):
             inits.insert(1, Class.If(s, None, None, (inits, 1, 6), 'switch'))
         def MalleableDescriptor_inits(s, inits):
@@ -298,12 +326,12 @@ public class RefJsonConverter<T> : JsonConverter<Ref<T>> where T : NiObject {
 
 public class TexCoordJsonConverter : JsonConverter<TexCoord> {
     public override TexCoord Read(ref Utf8JsonReader r, Type s, JsonSerializerOptions options) => throw new NotImplementedException();
-    public override void Write(Utf8JsonWriter w, TexCoord s, JsonSerializerOptions options) => w.WriteStringValue($"{s.U} {s.V}");
+    public override void Write(Utf8JsonWriter w, TexCoord s, JsonSerializerOptions options) => w.WriteStringValue($"{s.u} {s.v}");
 }
 
 public class TriangleJsonConverter : JsonConverter<Triangle> {
     public override Triangle Read(ref Utf8JsonReader r, Type s, JsonSerializerOptions options) => throw new NotImplementedException();
-    public override void Write(Utf8JsonWriter w, Triangle s, JsonSerializerOptions options) => w.WriteStringValue($"{s.V1} {s.V2} {s.V3}");
+    public override void Write(Utf8JsonWriter w, Triangle s, JsonSerializerOptions options) => w.WriteStringValue($"{s.v1} {s.v2} {s.v3}");
 }
 ''',
 '''class Y(Generic[T]):
@@ -390,6 +418,7 @@ class Flags(Flag):
                 'constBase': ('b.BaseStream', ''),
                 'consts': [('static NifReader() => X.Register();', None)],
                 'values': Header_values,
+                'inits': Header_inits,
                 'code': Header_code },
             'StringPalette': { 'x': 1508,
                 'code': StringPalette_code },
@@ -404,7 +433,7 @@ class Flags(Flag):
                 'flags': 'C',
                 'constArg': ('', ', half: bool'), 'constNew': ('', ', false'),
                 'consts': [
-                    ('public TexCoord(float u, float v) { this.u = u; this.v = v; }', None),
+                    ('public TexCoord(double u, double v) { this.u = (float)u; this.v = (float)v; }', None),
                     ('public TexCoord(NifReader r, bool half) { u = half ? r.ReadHalf() : r.ReadSingle(); v = half ? r.ReadHalf() : r.ReadSingle(); }', 'if half: self.u = r.readHalf(); self.v = r.readHalf(); return')] },
             'HalfTexCoord': { 'x': 1551,
                 'type': ['', ('TexCoord', 'TexCoord'), ('X', 'X'), ('new TexCoord(r, true)', 'TexCoord(r, true)'), lambda c: (f'r.ReadFArray(r => new TexCoord(r, true), {c})', f'r.readFArray(lambda r: TexCoord(r, true), {c})')] },
@@ -442,9 +471,11 @@ class Flags(Flag):
                 'kind': {-1: 'else'} }, # should auto
             'Morph': { 'x': 1768,
                 'constArg': (', uint numVertices', ', numVertices: int'),
-                'cond': lambda p, s, cw: s.replace('ARG', 'numVertices') },
+                'cond': lambda p, s, cw: s.replace('ARG', 'numVertices'),
+                'if': Morph_if },
             'BoneData': { 'x': 1789,
-                'constArg': (', int ARG', ', ARG: int'),
+                'constArg': (', int arg', ', arg: int'),
+                'cond': lambda p, s, cw: s.replace('ARG', 'arg'),
                 'values': BoneData_values },
             'MotorDescriptor': { 'x': 1898,
                 'flags': 'C',
@@ -463,7 +494,7 @@ class Flags(Flag):
                 'kind': {4: 'elseif'},
                 'inits': PrismaticDescriptor_inits },
             'BoxBV': { 'x': 2040,
-                'type': {'Axis': 'Matrix33R'} },
+                'values': BoxBV_values },
             'BoundingVolume': { 'x': 2060,
                 'flags': 'C',
                 'cond': lambda p, s, cw: cw.typeReplace('BoundVolumeType', s),
@@ -505,19 +536,19 @@ class Flags(Flag):
                 'calculated': lambda s: ('0', '0') },
         }
         self.struct = {
-            'BoneVertData': ('<Hf', 7),
+            'BoneVertData': ('<Hf', 6),
             'TBC': ('<3f', 12),
             'TexCoord': ('<2f', 8),
-            'Triangle': ('<3H', 18),
+            'Triangle': ('<3H', 6),
             'BSVertexDesc': ('<5bHb', 8),
-            'NiPlane': ('<4f', 24),
-            'NiBound': ('<4f', 24),
+            'NiPlane': ('<4f', 16),
+            'NiBound': ('<4f', 16),
+            'CapsuleBV': ('<8f', 32),
             'zNiQuatTransform': 'x',
-            'NiTransform': ('<x', 0),
+            'NiTransform': 'x',
+            'BoxBV': 'x',
+            'HalfSpaceBV': ('<7f', 28),
             'Particle': ('<9f2H', 40),
-            'zBoxBV': ('<x', 40),
-            'zCapsuleBV': ('<x', 40),
-            'zHalfSpaceBV': ('<x', 40),
             }
         self.init()
 

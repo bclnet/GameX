@@ -12,6 +12,7 @@ public struct Color3 { //:M
     public float B; // Blue color component.
 
     public Color3() { }
+    public Color3(double r, double g, double b) { R = (float)r; G = (float)g; B = (float)b; }
     public Color3(BinaryReader r) {
         R = r.ReadSingle();
         G = r.ReadSingle();
@@ -30,6 +31,7 @@ public struct ByteColor3 { //:X
     public byte B;   // Blue color component.
 
     public ByteColor3() { }
+    public ByteColor3(byte r, byte g, byte b) { R = r; G = g; B = b; }
     public ByteColor3(BinaryReader r) {
         R = r.ReadByte();
         G = r.ReadByte();
@@ -49,6 +51,7 @@ public struct Color4 { //:M
     public float A; // Alpha.
 
     public Color4() { }
+    public Color4(double r, double g, double b, double a) { R = (float)r; G = (float)g; B = (float)b; A = (float)a; }
     public Color4(BinaryReader r) {
         R = r.ReadSingle();
         G = r.ReadSingle();
@@ -67,6 +70,7 @@ public struct ByteColor4 { //:X
     public byte A; // Alpha.
 
     public ByteColor4() { }
+    public ByteColor4(byte r, byte g, byte b, byte a) { R = r; G = g; B = b; A = a; }
     public ByteColor4(BinaryReader r) {
         R = r.ReadByte();
         G = r.ReadByte();

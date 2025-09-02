@@ -248,12 +248,50 @@ public enum FieldType : uint { // X
 }
 
 /// <summary>
+/// Determines the way the billboard will react to the camera.
+/// Billboard mode is stored in lowest 3 bits although Oblivion vanilla nifs uses values higher than 7.
+/// </summary>
+public enum BillboardMode : ushort { // Y
+    ALWAYS_FACE_CAMERA = 0,         // Align billboard and camera forward vector. Minimized rotation.
+    ROTATE_ABOUT_UP = 1,            // Align billboard and camera forward vector while allowing rotation around the up axis.
+    RIGID_FACE_CAMERA = 2,          // Align billboard and camera forward vector. Non-minimized rotation.
+    ALWAYS_FACE_CENTER = 3,         // Billboard forward vector always faces camera ceneter. Minimized rotation.
+    RIGID_FACE_CENTER = 4,          // Billboard forward vector always faces camera ceneter. Non-minimized rotation.
+    BSROTATE_ABOUT_UP = 5,          // The billboard will only rotate around its local Z axis (it always stays in its local X-Y plane).
+    ROTATE_ABOUT_UP2 = 9            // The billboard will only rotate around the up axis (same as ROTATE_ABOUT_UP?).
+}
+
+/// <summary>
+/// Describes Z-buffer test modes for NiZBufferProperty.
+/// "Less than" = closer to camera, "Greater than" = further from camera.
+/// </summary>
+public enum ZCompareMode : uint { // Y
+    ZCOMP_ALWAYS = 0,               // Always true. Buffer is ignored.
+    ZCOMP_LESS = 1,                 // VRef ‹ VBuf
+    ZCOMP_EQUAL = 2,                // VRef = VBuf
+    ZCOMP_LESS_EQUAL = 3,           // VRef ≤ VBuf
+    ZCOMP_GREATER = 4,              // VRef › VBuf
+    ZCOMP_NOT_EQUAL = 5,            // VRef ≠ VBuf
+    ZCOMP_GREATER_EQUAL = 6,        // VRef ≥ VBuf
+    ZCOMP_NEVER = 7                 // Always false. Ref value is ignored.
+}
+
+/// <summary>
 /// Describes the decay function of bomb forces.
 /// </summary>
 public enum DecayType : uint { // X
     DECAY_NONE = 0,                 // No decay.
     DECAY_LINEAR = 1,               // Linear decay.
     DECAY_EXPONENTIAL = 2           // Exponential decay.
+}
+
+/// <summary>
+/// Describes the symmetry type of bomb forces.
+/// </summary>
+public enum SymmetryType : uint { // Y
+    SPHERICAL_SYMMETRY = 0,         // Spherical Symmetry.
+    CYLINDRICAL_SYMMETRY = 1,       // Cylindrical Symmetry.
+    PLANAR_SYMMETRY = 2             // Planar Symmetry.
 }
 
 /// <summary>
@@ -282,6 +320,16 @@ public enum EndianType : byte { // X
     ENDIAN_LITTLE = 1               // The numbers are stored in little endian format, such as those used by Intel and AMD x86 processors.
 }
 
+/// <summary>
+/// Used by NiMaterialColorControllers to select which type of color in the controlled object that will be animated.
+/// </summary>
+public enum MaterialColor : ushort { // Y
+    TC_AMBIENT = 0,                 // Control the ambient color.
+    TC_DIFFUSE = 1,                 // Control the diffuse color.
+    TC_SPECULAR = 2,                // Control the specular color.
+    TC_SELF_ILLUM = 3               // Control the self illumination color.
+}
+
 public enum BoundVolumeType : uint { // X
     BASE_BV = 0xffffffff,           // Default
     SPHERE_BV = 0,                  // Sphere
@@ -289,6 +337,33 @@ public enum BoundVolumeType : uint { // X
     CAPSULE_BV = 2,                 // Capsule
     UNION_BV = 4,                   // Union
     HALFSPACE_BV = 5                // Half Space
+}
+
+/// <summary>
+/// Values for configuring the shader type in a BSLightingShaderProperty
+/// </summary>
+public enum BSLightingShaderPropertyShaderType : uint { // Y
+    Default = 0,
+    Environment_Map = 1,            // Enables EnvMap Mask(TS6), EnvMap Scale
+    Glow_Shader = 2,                // Enables Glow(TS3)
+    Parallax = 3,                   // Enables Height(TS4)
+    Face_Tint = 4,                  // Enables Detail(TS4), Tint(TS7)
+    Skin_Tint = 5,                  // Enables Skin Tint Color
+    Hair_Tint = 6,                  // Enables Hair Tint Color
+    Parallax_Occ = 7,               // Enables Height(TS4), Max Passes, Scale. Unimplemented.
+    Multitexture_Landscape = 8,
+    LOD_Landscape = 9,
+    Snow = 10,
+    MultiLayer_Parallax = 11,       // Enables EnvMap Mask(TS6), Layer(TS7), Parallax Layer Thickness, Parallax Refraction Scale, Parallax Inner Layer U Scale, Parallax Inner Layer V Scale, EnvMap Scale
+    Tree_Anim = 12,
+    LOD_Objects = 13,
+    Sparkle_Snow = 14,              // Enables SparkleParams
+    LOD_Objects_HD = 15,
+    Eye_Envmap = 16,                // Enables EnvMap Mask(TS6), Eye EnvMap Scale
+    Cloud = 17,
+    LOD_Landscape_Noise = 18,
+    Multitexture_Landscape_LOD_Blend = 19,
+    FO4_Dismemberment = 20
 }
 
 #endregion
@@ -369,7 +444,7 @@ public class NifReader : BinaryReader { // X
         }
         if (r.UV2 == 130) MaxFilepath = r.ReadL8AString();
         if (r.V >= 0x1E000000) Metadata = r.ReadL8Bytes();
-        if (r.V != 0x14030102 && r.V >= 0x05000001) BlockTypes = r.ReadL16FArray(z => r.ReadL32AString());
+        if (r.V >= 0x05000001 && r.V != 0x14030102) BlockTypes = r.ReadL16FArray(z => r.ReadL32AString());
         if (r.V == 0x14030102) BlockTypeHashes = r.ReadL16PArray<uint>("I");
         if (r.V >= 0x05000001) BlockTypeIndex = r.ReadPArray<ushort>("H", NumBlocks);
         if (r.V >= 0x14020005) BlockSize = r.ReadPArray<uint>("I", NumBlocks);
@@ -517,7 +592,7 @@ public class TexDesc { // X
         }
         if (r.V <= 0x0401000C) Unknown1 = r.ReadUInt16();
         // NiTextureTransform
-        if (r.ReadBool32() && r.V >= 0x0A010000) {
+        if (r.V >= 0x0A010000 && r.ReadBool32()) {
             Translation = r.ReadS<TexCoord>();
             Scale = r.ReadS<TexCoord>();
             Rotation = r.ReadSingle();
@@ -536,6 +611,33 @@ public struct Triangle(NifReader r) { // X
     public ushort v1 = r.ReadUInt16();                  // First vertex index.
     public ushort v2 = r.ReadUInt16();                  // Second vertex index.
     public ushort v3 = r.ReadUInt16();                  // Third vertex index.
+}
+
+[Flags]
+public enum VertexFlags : ushort { // Y
+    Vertex = 1 << 4,
+    UVs = 1 << 5,
+    UVs_2 = 1 << 6,
+    Normals = 1 << 7,
+    Tangents = 1 << 8,
+    Vertex_Colors = 1 << 9,
+    Skinned = 1 << 10,
+    Land_Data = 1 << 11,
+    Eye_Data = 1 << 12,
+    Instance = 1 << 13,
+    Full_Precision = 1 << 14
+}
+
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct BSVertexDesc(NifReader r) { // Y
+    public static (string, int) Struct = ("<5bHb", 8);
+    public byte VF1 = r.ReadByte();
+    public byte VF2 = r.ReadByte();
+    public byte VF3 = r.ReadByte();
+    public byte VF4 = r.ReadByte();
+    public byte VF5 = r.ReadByte();
+    public VertexFlags VertexAttributes = (VertexFlags)r.ReadUInt16();
+    public byte VF8 = r.ReadByte();
 }
 
 /// <summary>
@@ -616,9 +718,9 @@ public class BoneData { // X
         BoundingSphereOffset = r.ReadVector3();
         BoundingSphereRadius = r.ReadSingle();
         if (r.V == 0x14030009 && (r.UV == 0x20000) || (r.UV == 0x30000)) Unknown13Shorts = r.ReadPArray<short>("h", 13);
-        if (r.V <= 0x04020100) VertexWeights = r.ReadL16SArray<BoneVertData>();
-        else if (arg == 1 && r.V >= 0x04020200) VertexWeights = r.ReadL16SArray<BoneVertData>();
-        else if (arg == 15 && r.V >= 0x14030101) VertexWeights = r.ReadL16SArray<BoneVertData>();
+        VertexWeights = r.V <= 0x04020100 ? r.ReadL16SArray<BoneVertData>()
+            : r.V >= 0x04020200 && arg == 1 ? r.ReadL16SArray<BoneVertData>()
+            : r.V >= 0x14030101 && arg == 15 ? r.ReadL16FArray(z => new BoneVertData(r, false)) : default;
     }
 }
 
@@ -672,6 +774,11 @@ public class BoundingVolume { // X
 
 public class UnionBV(NifReader r) { // Y
     public BoundingVolume[] BoundingVolumes = r.ReadL32FArray(z => new BoundingVolume(r));
+}
+
+public class MorphWeight(NifReader r) { // Y
+    public Ref<NiInterpolator> Interpolator = X<NiInterpolator>.Ref(r);
+    public float Weight = r.ReadSingle();
 }
 
 #endregion
@@ -735,9 +842,8 @@ public class UnionBV(NifReader r) { // Y
 [JsonDerivedType(typeof(NiShadeProperty), typeDiscriminator: nameof(NiShadeProperty))]
 [JsonDerivedType(typeof(NiWireframeProperty), typeDiscriminator: nameof(NiWireframeProperty))]
 [JsonDerivedType(typeof(NiCamera), typeDiscriminator: nameof(NiCamera))]
-[JsonDerivedType(typeof(NiExtraData), typeDiscriminator: nameof(NiExtraData))]
-[JsonDerivedType(typeof(NiSkinPartition), typeDiscriminator: nameof(NiSkinPartition))]
-public abstract class NiObject(NifReader r) {
+public abstract class NiObject(NifReader r) { // X
+
     public static NiObject Read(NifReader r, string nodeType) {
         switch (nodeType) {
             case "NiNode": return new NiNode(r);
@@ -793,51 +899,56 @@ public abstract class NiObject(NifReader r) {
             default: { Log($"Tried to read an unsupported NiObject type ({nodeType})."); return null; }
         }
     }
-} // X
+}
 
 /// <summary>
 /// LEGACY (pre-10.1). Abstract base class for particle system modifiers.
 /// </summary>
-public abstract class NiParticleModifier : NiObject {
-    public Ref<NiParticleModifier> NextModifier;   // Next particle modifier.
-    public Ref<NiParticleSystemController> Controller;     // Points to the particle system controller parent.
+public abstract class NiParticleModifier : NiObject { // X
+    public Ref<NiParticleModifier> NextModifier;        // Next particle modifier.
+    public Ref<NiParticleSystemController> Controller;  // Points to the particle system controller parent.
 
     public NiParticleModifier(NifReader r) : base(r) {
         NextModifier = X<NiParticleModifier>.Ref(r);
-        Controller = r.V >= 0x04000002 ? X<NiParticleSystemController>.Ptr(r) : default;
+        if (r.V >= 0x04000002) Controller = X<NiParticleSystemController>.Ptr(r);
     }
 }
 
 /// <summary>
 /// A generic extra data object.
 /// </summary>
-public class NiExtraData : NiObject {
-    public string Name;             // Name of this object.
-    public Ref<NiExtraData> NextExtraData;      // Block number of the next extra data object.
+public class NiExtraData : NiObject { // X
+    public string Name;                                 // Name of this object.
+    public Ref<NiExtraData> NextExtraData;              // Block number of the next extra data object.
 
     public NiExtraData(NifReader r) : base(r) {
-        var BSExtraData = false;
-        if (r.V <= 0x0A000100 && !BSExtraData) Name = X.String(r);
+        if (r.V >= 0x0A000100 && true) Name = X.String(r);
         if (r.V <= 0x04020200) NextExtraData = X<NiExtraData>.Ref(r);
     }
+}
+
+/// <summary>
+/// Abstract base class for all interpolators of bool, float, NiQuaternion, NiPoint3, NiColorA, and NiQuatTransform data.
+/// </summary>
+public abstract class NiInterpolator(NifReader r) : NiObject(r) { // Y
 }
 
 /// <summary>
 /// Abstract base class for NiObjects that support names, extra data, and time controllers.
 /// </summary>
 public abstract class NiObjectNET : NiObject { // X
-    //public BSLightingShaderPropertyShaderType SkyrimShaderType; // Configures the main shader path
+    public BSLightingShaderPropertyShaderType SkyrimShaderType; // Configures the main shader path
     public string Name;                                 // Name of this controllable object, used to refer to the object in .kf files.
     public string OldExtraPropName;                     // (=NiStringExtraData)
     public uint OldExtraInternalId;                     // ref
     public string OldExtraString;                       // Extra string data.
     public byte UnknownByte;                            // Always 0.
-    public Ref<NiExtraData> ExtraData;                              // Extra data object index. (The first in a chain)
-    public Ref<NiExtraData>[] ExtraDataList;                        // List of extra data indices.
-    public Ref<NiTimeController> Controller;                             // Controller object index. (The first in a chain)
+    public Ref<NiExtraData> ExtraData;                  // Extra data object index. (The first in a chain)
+    public Ref<NiExtraData>[] ExtraDataList;            // List of extra data indices.
+    public Ref<NiTimeController> Controller;            // Controller object index. (The first in a chain)
 
     public NiObjectNET(NifReader r) : base(r) {
-        //if (BSLightingShaderProperty && r.UV2 >= 83) SkyrimShaderType = (BSLightingShaderPropertyShaderType)r.ReadUInt32();
+        if (r.UV2 >= 83 && false) SkyrimShaderType = (BSLightingShaderPropertyShaderType)r.ReadUInt32();
         Name = X.String(r);
         if (r.V <= 0x02030000) {
             if (r.ReadBool32()) OldExtraPropName = X.String(r);
@@ -852,26 +963,37 @@ public abstract class NiObjectNET : NiObject { // X
 }
 
 /// <summary>
+/// This is the most common collision object found in NIF files. It acts as a real object that
+/// is visible and possibly (if the body allows for it) interactive. The node itself
+/// is simple, it only has three properties.
+/// For this type of collision object, bhkRigidBody or bhkRigidBodyT is generally used.
+/// </summary>
+public class NiCollisionObject : NiObject { // Y
+    public Ref<NiAVObject> Target;                      // Index of the AV object referring to this collision object.
+
+    public NiCollisionObject(NifReader r) : base(r) {
+        Target = X<NiAVObject>.Ptr(r);
+    }
+}
+
+/// <summary>
 /// Abstract audio-visual base class from which all of Gamebryo's scene graph objects inherit.
 /// </summary>
-public abstract class NiAVObject : NiObjectNET {
-    public Flags Flags;              // Basic flags for AV objects.
-    public Vector3 Translation;      // The translation vector.
-    public Matrix4x4 Rotation;       // The rotation part of the transformation matrix.
-    public float Scale;              // Scaling part (only uniform scaling is supported).
-    public Vector3 Velocity;         // Unknown function. Always seems to be (0, 0, 0)
-    public Ref<NiProperty>[] Properties;        // All rendering properties attached to this object.
-    public uint[] Unknown1;         // Always 2,0,2,0.
-    public byte Unknown2;           // 0 or 1.
+public abstract class NiAVObject : NiObjectNET { // X
+    public Flags Flags = (Flags)14;                     // Basic flags for AV objects; commonly 0x000C or 0x000A.
+    public Vector3 Translation;                         // The translation vector.
+    public Matrix4x4 Rotation;                          // The rotation part of the transformation matrix.
+    public float Scale = 1.0f;                          // Scaling part (only uniform scaling is supported).
+    public Vector3 Velocity;                            // Unknown function. Always seems to be (0, 0, 0)
+    public Ref<NiProperty>[] Properties;                // All rendering properties attached to this object.
+    public uint[] Unknown1;                             // Always 2,0,2,0.
+    public byte Unknown2;                               // 0 or 1.
     public BoundingVolume BoundingVolume;
-    //public Ref<NiCollisionObject> CollisionObject;
+    public Ref<NiCollisionObject> CollisionObject;
 
     public NiAVObject(NifReader r) : base(r) {
-        //if (r.UV2 > 26) Flags = (Flags)r.ReadUInt32();
-        //if (r.V >= 0x03000000 && (r.UV2 <= 26)) Flags = (Flags)r.ReadUInt16();
-        Flags = r.V >= 0x03000000 && r.UV2 <= 26 ? (Flags)r.ReadUInt16()
-            : r.UV2 > 26 ? (Flags)r.ReadUInt16()
-            : (Flags)14;
+        Flags = r.UV2 > 26 ? (Flags)r.ReadUInt16()
+            : r.V >= 0x03000000 && (r.UV2 <= 26) ? (Flags)r.ReadUInt16() : (Flags)14;
         Translation = r.ReadVector3();
         Rotation = r.ReadMatrix3x3As4x4();
         Scale = r.ReadSingle();
@@ -882,25 +1004,22 @@ public abstract class NiAVObject : NiObjectNET {
             Unknown2 = r.ReadByte();
         }
         if (r.V >= 0x03000000 && r.V <= 0x04020200 && r.ReadBool32()) BoundingVolume = new BoundingVolume(r);
-        //if (r.V >= 0x0A000100) CollisionObject = new NiCollisionObject(r);
+        if (r.V >= 0x0A000100) CollisionObject = X<NiCollisionObject>.Ref(r);
     }
 }
 
 /// <summary>
 /// Abstract base class for dynamic effects such as NiLights or projected texture effects.
 /// </summary>
-public abstract class NiDynamicEffect : NiAVObject {
-    public bool SwitchState;               // If true, then the dynamic effect is applied to affected nodes during rendering.
-    public Ref<NiNode>[] AffectedNodes;    // If a node appears in this list, then its entire subtree will be affected by the effect.
-    public uint[] AffectedNodeListPointers;
+public abstract class NiDynamicEffect : NiAVObject { // X
+    public bool SwitchState = true;                     // If true, then the dynamic effect is applied to affected nodes during rendering.
+    public Ref<NiNode>[] AffectedNodes;                 // If a node appears in this list, then its entire subtree will be affected by the effect.
+    public uint[] AffectedNodePointers;                 // As of 4.0 the pointer hash is no longer stored alongside each NiObject on disk, yet this node list still refers to the pointer hashes. Cannot leave the type as Ptr because the link will be invalid.
 
     public NiDynamicEffect(NifReader r) : base(r) {
-        SwitchState = r.V >= 0x0A01006A && r.UV2 < 130 ? r.ReadBool32() : true;
-        if (r.V <= 0x04000002) {
-            var numAffectedNodes = r.ReadUInt32();
-            if (r.V <= 0x0303000D) AffectedNodes = r.ReadFArray(X<NiNode>.Ptr, numAffectedNodes);
-            else if (r.V >= 0x04000000) AffectedNodeListPointers = r.ReadPArray<uint>("I", numAffectedNodes);
-        }
+        if (r.V >= 0x0A01006A && r.UV2 < 130) SwitchState = r.ReadBool32();
+        if (r.V <= 0x0303000D) AffectedNodes = r.ReadL32FArray(X<NiNode>.Ptr);
+        else if (r.V >= 0x04000000 && r.V <= 0x04000002) AffectedNodePointers = r.ReadL32PArray<uint>("I");
         else if (r.V >= 0x0A010000 && r.UV2 < 130) AffectedNodes = r.ReadL32FArray(X<NiNode>.Ptr);
     }
 }
@@ -908,20 +1027,27 @@ public abstract class NiDynamicEffect : NiAVObject {
 /// <summary>
 /// Abstract base class representing all rendering properties. Subclasses are attached to NiAVObjects to control their rendering.
 /// </summary>
-public abstract class NiProperty(NifReader r) : NiObjectNET(r) { }
+public abstract class NiProperty(NifReader r) : NiObjectNET(r) { // X
+}
 
 /// <summary>
 /// Abstract base class that provides the base timing and update functionality for all the Gamebryo animation controllers.
 /// </summary>
-public abstract class NiTimeController : NiObject {
-    public Ref<NiTimeController> NextController;             // Index of the next controller.
-    public Flags Flags;                     // Controller flags.
-    public float Frequency;                 // Frequency (is usually 1.0).
-    public float Phase;                     // Phase (usually 0.0).
-    public float StartTime;                 // Controller start time.
-    public float StopTime;                  // Controller stop time.
-    public Ref<NiObjectNET> Target;         // Controller target (object index of the first controllable ancestor of this object).
-    public int UnknownInt;                  // Unknown integer.
+public abstract class NiTimeController : NiObject { // X
+    public Ref<NiTimeController> NextController;        // Index of the next controller.
+    public Flags Flags;                                 // Controller flags.
+                                                        //     Bit 0 : Anim type, 0=APP_TIME 1=APP_INIT
+                                                        //     Bit 1-2 : Cycle type, 00=Loop 01=Reverse 10=Clamp
+                                                        //     Bit 3 : Active
+                                                        //     Bit 4 : Play backwards
+                                                        //     Bit 5 : Is manager controlled
+                                                        //     Bit 6 : Always seems to be set in Skyrim and Fallout NIFs, unknown function
+    public float Frequency = 1.0f;                      // Frequency (is usually 1.0).
+    public float Phase;                                 // Phase (usually 0.0).
+    public float StartTime = 3.402823466e+38f;          // Controller start time.
+    public float StopTime = -3.402823466e+38f;          // Controller stop time.
+    public Ref<NiObjectNET> Target;                     // Controller target (object index of the first controllable ancestor of this object).
+    public uint UnknownInteger;                         // Unknown integer.
 
     public NiTimeController(NifReader r) : base(r) {
         NextController = X<NiTimeController>.Ref(r);
@@ -931,14 +1057,14 @@ public abstract class NiTimeController : NiObject {
         StartTime = r.ReadSingle();
         StopTime = r.ReadSingle();
         if (r.V >= 0x0303000D) Target = X<NiObjectNET>.Ptr(r);
-        else if (r.V <= 0x03010000) UnknownInt = r.ReadInt32();
+        else if (r.V <= 0x03010000) UnknownInteger = r.ReadUInt32();
     }
 }
 
 /// <summary>
 /// Abstract base class for all NiTimeController objects using NiInterpolator objects to animate their target objects.
 /// </summary>
-public abstract class NiInterpController : NiTimeController {
+public abstract class NiInterpController : NiTimeController { // X
     public bool ManagerControlled;
 
     public NiInterpController(NifReader r) : base(r) {
@@ -950,36 +1076,32 @@ public abstract class NiInterpController : NiTimeController {
 /// DEPRECATED (20.5), replaced by NiMorphMeshModifier.
 /// Time controller for geometry morphing.
 /// </summary>
-public class NiGeomMorpherController : NiInterpController {
-    public Flags ExtraFlags;        // 1 = UPDATE NORMALS
-    public Ref<NiMorphData> Data;               // Geometry morphing data index.
+public class NiGeomMorpherController : NiInterpController { // X
+    public Flags ExtraFlags;                            // 1 = UPDATE NORMALS
+    public Ref<NiMorphData> Data;                       // Geometry morphing data index.
     public byte AlwaysUpdate;
-    public int?[] Interpolators;
-    //public MorphWeight[] InterpolatorWeights;
-    public uint[] UnknownInts;      // Unknown.
+    public Ref<NiInterpolator>[] Interpolators;
+    public MorphWeight[] InterpolatorWeights;
+    public uint[] UnknownInts;                          // Unknown.
 
     public NiGeomMorpherController(NifReader r) : base(r) {
         if (r.V >= 0x0A000102) ExtraFlags = (Flags)r.ReadUInt16();
         Data = X<NiMorphData>.Ref(r);
         if (r.V >= 0x04000001) AlwaysUpdate = r.ReadByte();
-        //if (r.V >= 0x0A01006A) {
-        //    if (r.V <= 0x14000005) Interpolators = r.ReadL32FArray(Y<NiInterpolator>.Ref);
-        //    else if (r.V >= 0x14010003) InterpolatorWeights = r.ReadL32FArray(z => new MorphWeight(r));
-        //    else r.ReadUInt32();
-        //}
-        if (r.V >= 0x0A020000 && r.V <= 0x14000005 && r.UV2 < 9) UnknownInts = r.ReadL32PArray<uint>("I");
+        if (r.V >= 0x0A01006A && r.V <= 0x14000005) Interpolators = r.ReadL32FArray(X<NiInterpolator>.Ref);
+        else if (r.V >= 0x14010003) InterpolatorWeights = r.ReadL32FArray(z => new MorphWeight(r));
+        if (r.V >= 0x0A020000 && r.V <= 0x14000005 && (r.UV2 > 9)) UnknownInts = r.ReadL32PArray<uint>("I");
     }
 }
-
 
 /// <summary>
 /// Uses a single NiInterpolator to animate its target value.
 /// </summary>
-public abstract class NiSingleInterpController : NiInterpController {
-    //public Ref<NiInterpolator> Interpolator;
+public abstract class NiSingleInterpController : NiInterpController { // X
+    public Ref<NiInterpolator> Interpolator;
 
     public NiSingleInterpController(NifReader r) : base(r) {
-        //if (r.V >= 0x0A010068) Interpolator = Y<NiInterpolator>.Ref(r);
+        if (r.V >= 0x0A010068) Interpolator = X<NiInterpolator>.Ref(r);
     }
 }
 
@@ -987,7 +1109,7 @@ public abstract class NiSingleInterpController : NiInterpController {
 /// DEPRECATED (10.2), RENAMED (10.2) to NiTransformController
 /// A time controller object for animation key frames.
 /// </summary>
-public class NiKeyframeController : NiSingleInterpController {
+public class NiKeyframeController : NiSingleInterpController { // X
     public Ref<NiKeyframeData> Data;
 
     public NiKeyframeController(NifReader r) : base(r) {
@@ -998,7 +1120,8 @@ public class NiKeyframeController : NiSingleInterpController {
 /// <summary>
 /// Abstract base class for all NiInterpControllers that use an NiInterpolator to animate their target float value.
 /// </summary>
-public abstract class NiFloatInterpController(NifReader r) : NiSingleInterpController(r) { }
+public abstract class NiFloatInterpController(NifReader r) : NiSingleInterpController(r) { // X
+}
 
 /// <summary>
 /// Animates the alpha value of a property using an interpolator.
@@ -1007,16 +1130,15 @@ public class NiAlphaController : NiFloatInterpController { // X
     public Ref<NiFloatData> Data;
 
     public NiAlphaController(NifReader r) : base(r) {
-        if (r.V <= 0x0A020067) Data = X<NiFloatData>.Ref(r);
+        if (r.V <= 0x0A010067) Data = X<NiFloatData>.Ref(r);
     }
 }
 
 /// <summary>
 /// Abstract base class for all NiInterpControllers that use a NiInterpolator to animate their target boolean value.
 /// </summary>
-/// <param name="r"></param>
-/// <param name="h"></param>
-public abstract class NiBoolInterpController(NifReader r) : NiSingleInterpController(r) { } //:X
+public abstract class NiBoolInterpController(NifReader r) : NiSingleInterpController(r) { // X
+}
 
 /// <summary>
 /// Animates the visibility of an NiAVObject.
@@ -1032,54 +1154,94 @@ public class NiVisController : NiBoolInterpController { // X
 /// <summary>
 /// Abstract base class for all NiInterpControllers that use an NiInterpolator to animate their target NiPoint3 value.
 /// </summary>
-public abstract class NiPoint3InterpController : NiSingleInterpController { // X
-    public Ref<NiPosData> Data;
-
-    public NiPoint3InterpController(NifReader r) : base(r) {
-        Data = X<NiPosData>.Ref(r);
-    }
+public abstract class NiPoint3InterpController(NifReader r) : NiSingleInterpController(r) { // X
 }
 
 /// <summary>
 /// Time controller for material color. Flags are used for color selection in versions below 10.1.0.0.
 /// Bits 4-5: Target Color (00 = Ambient, 01 = Diffuse, 10 = Specular, 11 = Emissive)
 /// NiInterpController::GetCtlrID() string formats:
-/// ['AMB', 'DIFF', 'SPEC', 'SELF_ILLUM'] (Depending on "Target Color")
+///     ['AMB', 'DIFF', 'SPEC', 'SELF_ILLUM'] (Depending on "Target Color")
 /// </summary>
 public class NiMaterialColorController : NiPoint3InterpController { // X
-    //public MaterialColor TargetColor;       // Selects which color to control.
+    public MaterialColor TargetColor;                   // Selects which color to control.
     public Ref<NiPosData> Data;
 
     public NiMaterialColorController(NifReader r) : base(r) {
-        //if (r.V >= 0x0A010000) TargetColor = (MaterialColor)r.ReadUInt16();
+        if (r.V >= 0x0A010000) TargetColor = (MaterialColor)r.ReadUInt16();
         if (r.V <= 0x0A010067) Data = X<NiPosData>.Ref(r);
     }
 }
 
-// Geometry
+public class MaterialData { // Y
+    public string ShaderName;                           // The shader name.
+    public int ShaderExtraData;                         // Extra data associated with the shader. A value of -1 means the shader is the default implementation.
+    public uint NumMaterials;
+    public string[] MaterialName;                       // The name of the material.
+    public int[] MaterialExtraData;                     // Extra data associated with the material. A value of -1 means the material is the default implementation.
+    public int ActiveMaterial = -1;                     // The index of the currently active material.
+    public byte UnknownByte = 255;                      // Cyanide extension (only in version 10.2.0.0?).
+    public int UnknownInteger2;                         // Unknown.
+    // Whether the materials for this object always needs to be updated before rendering with them.
+
+    public MaterialData(NifReader r) {
+        ShaderExtraData = r.ReadInt32();
+        if (r.V >= 0x14020005) {
+            NumMaterials = r.ReadUInt32();
+            MaterialName = r.ReadFArray(z => X.String(r), NumMaterials);
+            MaterialExtraData = r.ReadPArray<int>("i", NumMaterials);
+            ActiveMaterial = r.ReadInt32();
+        }
+        if (r.V == 0x0A020000 && (r.UV == 1)) UnknownByte = r.ReadByte();
+        if (r.V == 0x0A040001) UnknownInteger2 = r.ReadInt32();
+        if (r.V >= 0x0A000100 && r.V <= 0x14010003 && r.ReadBool32()) {
+            ShaderName = X.String(r);
+            ShaderExtraData = r.ReadInt32();
+        }
+    }
+}
+
 /// <summary>
 /// Describes a visible scene element with vertices like a mesh, a particle system, lines, etc.
 /// </summary>
-public abstract class NiGeometry : NiAVObject {
-    public Ref<NiGeometryData> Data;
+public abstract class NiGeometry : NiAVObject { // X
+    public NiBound Bound;
+    public Ref<NiObject> Skin;
+    public Ref<NiGeometryData> Data;                    // Data index (NiTriShapeData/NiTriStripData).
     public Ref<NiSkinInstance> SkinInstance;
+    public MaterialData MaterialData;
+    public Ref<BSShaderProperty> ShaderProperty;
+    public Ref<NiAlphaProperty> AlphaProperty;
 
     public NiGeometry(NifReader r) : base(r) {
-        Data = X<NiGeometryData>.Ref(r);
-        SkinInstance = X<NiSkinInstance>.Ref(r);
+        var NiParticleSystem = false;
+        if ((r.UV2 >= 100) && NiParticleSystem) {
+            Bound = r.ReadS<NiBound>();
+            Skin = X<NiObject>.Ref(r);
+        }
+        if (r.UV2 < 100) Data = X<NiGeometryData>.Ref(r);
+        if ((r.UV2 >= 100) && !NiParticleSystem) Data = X<NiGeometryData>.Ref(r);
+        if (r.V >= 0x0303000D && (r.UV2 < 100)) SkinInstance = X<NiSkinInstance>.Ref(r);
+        if ((r.UV2 >= 100) && !NiParticleSystem) SkinInstance = X<NiSkinInstance>.Ref(r);
+        if (r.V >= 0x0A000100 && (r.UV2 < 100)) MaterialData = new MaterialData(r);
+        if (r.V >= 0x0A000100 && (r.UV2 >= 100) && !NiParticleSystem) MaterialData = new MaterialData(r);
+        if (r.V >= 0x14020007 && (r.UV == 12)) {
+            ShaderProperty = X<BSShaderProperty>.Ref(r);
+            AlphaProperty = X<NiAlphaProperty>.Ref(r);
+        }
     }
 }
 
 /// <summary>
 /// Describes a mesh, built from triangles.
 /// </summary>
-public abstract class NiTriBasedGeom(NifReader r) : NiGeometry(r) {
+public abstract class NiTriBasedGeom(NifReader r) : NiGeometry(r) { // X
 }
 
 /// <summary>
 /// Mesh data: vertices, vertex normals, etc.
 /// </summary>
-public abstract class NiGeometryData : NiObject {
+public abstract class NiGeometryData : NiObject { // X
     public ushort NumVertices;
     public bool HasVertices;
     public Vector3[] Vertices;
@@ -1116,8 +1278,8 @@ public abstract class NiGeometryData : NiObject {
 /// <summary>
 /// Describes a mesh, built from triangles.
 /// </summary>
-public abstract class NiTriBasedGeomData : NiGeometryData {
-    public ushort NumTriangles;
+public abstract class NiTriBasedGeomData : NiGeometryData { // X
+    public ushort NumTriangles;                         // Number of triangles.
 
     public NiTriBasedGeomData(NifReader r) : base(r) {
         NumTriangles = r.ReadUInt16();
@@ -1127,7 +1289,7 @@ public abstract class NiTriBasedGeomData : NiGeometryData {
 /// <summary>
 /// Transparency. Flags 0x00ED.
 /// </summary>
-public class NiAlphaProperty : NiProperty {
+public class NiAlphaProperty : NiProperty { // X
     public Flags Flags = (Flags)4844;                   // Bit 0 : alpha blending enable
                                                         //     Bits 1-4 : source blend mode
                                                         //     Bits 5-8 : destination blend mode
@@ -1173,7 +1335,7 @@ public class NiAlphaProperty : NiProperty {
 /// <summary>
 /// Generic rotating particles data object.
 /// </summary>
-public class NiParticlesData : NiGeometryData {
+public class NiParticlesData : NiGeometryData { // X
     public ushort NumParticles;
     public float ParticleRadius;
     public ushort NumActive;
@@ -1190,7 +1352,7 @@ public class NiParticlesData : NiGeometryData {
 /// <summary>
 /// Rotating particles data object.
 /// </summary>
-public class NiRotatingParticlesData : NiParticlesData {
+public class NiRotatingParticlesData : NiParticlesData { // X
     public Quaternion[] Rotations;
 
     public NiRotatingParticlesData(NifReader r) : base(r) {
@@ -1201,19 +1363,57 @@ public class NiRotatingParticlesData : NiParticlesData {
 /// <summary>
 /// Particle system data object (with automatic normals?).
 /// </summary>
-public class NiAutoNormalParticlesData(NifReader r) : NiParticlesData(r) {
+public class NiAutoNormalParticlesData(NifReader r) : NiParticlesData(r) { // X
 }
 
 /// <summary>
 /// Camera object.
 /// </summary>
-public class NiCamera(NifReader r) : NiAVObject(r) { }
+public class NiCamera : NiAVObject { // X
+    public ushort CameraFlags;                          // Obsolete flags.
+    public float FrustumLeft;                           // Frustrum left.
+    public float FrustumRight;                          // Frustrum right.
+    public float FrustumTop;                            // Frustrum top.
+    public float FrustumBottom;                         // Frustrum bottom.
+    public float FrustumNear;                           // Frustrum near.
+    public float FrustumFar;                            // Frustrum far.
+    public bool UseOrthographicProjection;              // Determines whether perspective is used.  Orthographic means no perspective.
+    public float ViewportLeft;                          // Viewport left.
+    public float ViewportRight;                         // Viewport right.
+    public float ViewportTop;                           // Viewport top.
+    public float ViewportBottom;                        // Viewport bottom.
+    public float LODAdjust;                             // Level of detail adjust.
+    public Ref<NiAVObject> Scene;
+    public uint NumScreenPolygons = 0;                  // Deprecated. Array is always zero length on disk write.
+    public uint NumScreenTextures = 0;                  // Deprecated. Array is always zero length on disk write.
+    public uint UnknownInt3;                            // Unknown.
+
+    public NiCamera(NifReader r) : base(r) {
+        if (r.V >= 0x0A010000) CameraFlags = r.ReadUInt16();
+        FrustumLeft = r.ReadSingle();
+        FrustumRight = r.ReadSingle();
+        FrustumTop = r.ReadSingle();
+        FrustumBottom = r.ReadSingle();
+        FrustumNear = r.ReadSingle();
+        FrustumFar = r.ReadSingle();
+        if (r.V >= 0x0A010000) UseOrthographicProjection = r.ReadBool32();
+        ViewportLeft = r.ReadSingle();
+        ViewportRight = r.ReadSingle();
+        ViewportTop = r.ReadSingle();
+        ViewportBottom = r.ReadSingle();
+        LODAdjust = r.ReadSingle();
+        Scene = X<NiAVObject>.Ref(r);
+        NumScreenPolygons = r.ReadUInt32();
+        if (r.V >= 0x04020100) NumScreenTextures = r.ReadUInt32();
+        if (r.V <= 0x03010000) UnknownInt3 = r.ReadUInt32();
+    }
+}
 
 /// <summary>
 /// Wrapper for color animation keys.
 /// </summary>
-public class NiColorData : NiObject {
-    public KeyGroup<Color4> Data;
+public class NiColorData : NiObject { // X
+    public KeyGroup<Color4> Data;                       // The color keys.
 
     public NiColorData(NifReader r) : base(r) {
         Data = new KeyGroup<Color4>(r);
@@ -1223,8 +1423,8 @@ public class NiColorData : NiObject {
 /// <summary>
 /// Wrapper for 1D (one-dimensional) floating point animation keys.
 /// </summary>
-public class NiFloatData : NiObject {
-    public KeyGroup<float> Data;
+public class NiFloatData : NiObject { // X
+    public KeyGroup<float> Data;                        // The keys.
 
     public NiFloatData(NifReader r) : base(r) {
         Data = new KeyGroup<float>(r);
@@ -1234,15 +1434,15 @@ public class NiFloatData : NiObject {
 /// <summary>
 /// LEGACY (pre-10.1) particle modifier. Applies a gravitational field on the particles.
 /// </summary>
-public class NiGravity : NiParticleModifier {
-    public float UnknownFloat1;
-    public float Force;
-    public FieldType Type;
-    public Vector3 Position;
-    public Vector3 Direction;
+public class NiGravity : NiParticleModifier { // X
+    public float UnknownFloat1;                         // Unknown.
+    public float Force;                                 // The strength/force of this gravity.
+    public FieldType Type;                              // The force field type.
+    public Vector3 Position;                            // The position of the mass point relative to the particle system.
+    public Vector3 Direction;                           // The direction of the applied acceleration.
 
     public NiGravity(NifReader r) : base(r) {
-        UnknownFloat1 = r.ReadSingle();
+        if (r.V >= 0x0303000D) UnknownFloat1 = r.ReadSingle();
         Force = r.ReadSingle();
         Type = (FieldType)r.ReadUInt32();
         Position = r.ReadVector3();
@@ -1254,7 +1454,7 @@ public class NiGravity : NiParticleModifier {
 /// DEPRECATED (10.2), RENAMED (10.2) to NiTransformData.
 /// Wrapper for transformation animation keys.
 /// </summary>
-public class NiKeyframeData : NiObject {
+public class NiKeyframeData : NiObject { // X
     public uint NumRotationKeys;
     public KeyType RotationType;
     public QuatKey<Quaternion>[] QuaternionKeys;
@@ -1263,7 +1463,7 @@ public class NiKeyframeData : NiObject {
     public KeyGroup<Vector3> Translations;
     public KeyGroup<float> Scales;
 
-    public NiKeyframeData(NifReader r) : base(r) {
+    public NiKeyframeData(NifReader r) : base(r) { // X
         NumRotationKeys = r.ReadUInt32();
         if (NumRotationKeys != 0) {
             RotationType = (KeyType)r.ReadUInt32();
@@ -1282,23 +1482,27 @@ public class NiKeyframeData : NiObject {
 /// <summary>
 /// Describes the surface properties of an object e.g. translucency, ambient color, diffuse color, emissive color, and specular color.
 /// </summary>
-public class NiMaterialProperty : NiProperty {
-    public Flags Flags;
-    public Color3 AmbientColor;
-    public Color3 DiffuseColor;
-    public Color3 SpecularColor;
-    public Color3 EmissiveColor;
-    public float Glossiness;
-    public float Alpha;
+public class NiMaterialProperty : NiProperty { // X
+    public Flags Flags;                                 // Property flags.
+    public Color3 AmbientColor = new(1.0, 1.0, 1.0);    // How much the material reflects ambient light.
+    public Color3 DiffuseColor = new(1.0, 1.0, 1.0);    // How much the material reflects diffuse light.
+    public Color3 SpecularColor = new(1.0, 1.0, 1.0);   // How much light the material reflects in a specular manner.
+    public Color3 EmissiveColor = new(0.0, 0.0, 0.0);   // How much light the material emits.
+    public float Glossiness = 10.0f;                    // The material glossiness.
+    public float Alpha = 1.0f;                          // The material transparency (1=non-transparant). Refer to a NiAlphaProperty object in this material's parent NiTriShape object, when alpha is not 1.
+    public float EmissiveMult = 1.0f;
 
     public NiMaterialProperty(NifReader r) : base(r) {
-        Flags = (Flags)r.ReadUInt16();
-        AmbientColor = new Color3(r);
-        DiffuseColor = new Color3(r);
+        if (r.V >= 0x03000000 && r.V <= 0x0A000102) Flags = (Flags)r.ReadUInt16();
+        if (r.UV2 < 26) {
+            AmbientColor = new Color3(r);
+            DiffuseColor = new Color3(r);
+        }
         SpecularColor = new Color3(r);
         EmissiveColor = new Color3(r);
         Glossiness = r.ReadSingle();
         Alpha = r.ReadSingle();
+        if (r.UV2 > 21) EmissiveMult = r.ReadSingle();
     }
 }
 
@@ -1306,7 +1510,7 @@ public class NiMaterialProperty : NiProperty {
 /// DEPRECATED (20.5), replaced by NiMorphMeshModifier.
 /// Geometry morphing data.
 /// </summary>
-public class NiMorphData : NiObject {
+public class NiMorphData : NiObject { // X
     public uint NumMorphs;
     public uint NumVertices;
     public byte RelativeTargets;
@@ -1323,9 +1527,9 @@ public class NiMorphData : NiObject {
 /// <summary>
 /// Generic node object for grouping.
 /// </summary>
-public class NiNode : NiAVObject {
-    public Ref<NiAVObject>[] Children;
-    public Ref<NiDynamicEffect>[] Effects;
+public class NiNode : NiAVObject { // X
+    public Ref<NiAVObject>[] Children;                  // List of child node object indices.
+    public Ref<NiDynamicEffect>[] Effects;              // List of node effects. ADynamicEffect?
 
     public NiNode(NifReader r) : base(r) {
         Children = r.ReadL32FArray(X<NiAVObject>.Ref);
@@ -1336,7 +1540,7 @@ public class NiNode : NiAVObject {
 /// <summary>
 /// Morrowind specific.
 /// </summary>
-public class AvoidNode(NifReader r) : NiNode(r) {
+public class AvoidNode(NifReader r) : NiNode(r) { // X
 }
 
 /// <summary>
@@ -1360,31 +1564,38 @@ public class AvoidNode(NifReader r) : NiNode(r) {
 /// 10 RIGID_FACE_CAMERA
 /// 11 ALWAYS_FACE_CENTER
 /// </summary>
-public class NiBillboardNode(NifReader r) : NiNode(r) { }
+public class NiBillboardNode : NiNode { // X
+    public BillboardMode BillboardMode;                 // The way the billboard will react to the camera.
+
+    public NiBillboardNode(NifReader r) : base(r) {
+        if (r.V >= 0x0A010000) BillboardMode = (BillboardMode)r.ReadUInt16();
+    }
+}
 
 /// <summary>
 /// Bethesda-specific extension of Node with animation properties stored in the flags, often 42?
 /// </summary>
-public class NiBSAnimationNode(NifReader r) : NiNode(r) {
+public class NiBSAnimationNode(NifReader r) : NiNode(r) { // X
 }
 
 /// <summary>
 /// Unknown.
 /// </summary>
-public class NiBSParticleNode(NifReader r) : NiNode(r) {
+public class NiBSParticleNode(NifReader r) : NiNode(r) { // X
 }
 
 /// <summary>
 /// LEGACY (pre-10.1) particle modifier.
 /// </summary>
-public class NiParticleBomb : NiParticleModifier {
+public class NiParticleBomb : NiParticleModifier { // X
     public float Decay;
     public float Duration;
     public float DeltaV;
     public float Start;
     public DecayType DecayType;
-    public Vector3 Position;
-    public Vector3 Direction;
+    public SymmetryType SymmetryType;
+    public Vector3 Position;                            // The position of the mass point relative to the particle system?
+    public Vector3 Direction;                           // The direction of the applied acceleration?
 
     public NiParticleBomb(NifReader r) : base(r) {
         Decay = r.ReadSingle();
@@ -1392,6 +1603,7 @@ public class NiParticleBomb : NiParticleModifier {
         DeltaV = r.ReadSingle();
         Start = r.ReadSingle();
         DecayType = (DecayType)r.ReadUInt32();
+        if (r.V >= 0x0401000C) SymmetryType = (SymmetryType)r.ReadUInt32();
         Position = r.ReadVector3();
         Direction = r.ReadVector3();
     }
@@ -1400,7 +1612,7 @@ public class NiParticleBomb : NiParticleModifier {
 /// <summary>
 /// LEGACY (pre-10.1) particle modifier.
 /// </summary>
-public class NiParticleColorModifier : NiParticleModifier {
+public class NiParticleColorModifier : NiParticleModifier { // X
     public Ref<NiColorData> ColorData;
 
     public NiParticleColorModifier(NifReader r) : base(r) {
@@ -1411,9 +1623,9 @@ public class NiParticleColorModifier : NiParticleModifier {
 /// <summary>
 /// LEGACY (pre-10.1) particle modifier.
 /// </summary>
-public class NiParticleGrowFade : NiParticleModifier {
-    public float Grow;
-    public float Fade;
+public class NiParticleGrowFade : NiParticleModifier { // X
+    public float Grow;                                  // The time from the beginning of the particle lifetime during which the particle grows.
+    public float Fade;                                  // The time from the end of the particle lifetime during which the particle fades.
 
     public NiParticleGrowFade(NifReader r) : base(r) {
         Grow = r.ReadSingle();
@@ -1424,18 +1636,18 @@ public class NiParticleGrowFade : NiParticleModifier {
 /// <summary>
 /// LEGACY (pre-10.1) particle modifier.
 /// </summary>
-public class NiParticleMeshModifier : NiParticleModifier {
+public class NiParticleMeshModifier : NiParticleModifier { // X
     public Ref<NiAVObject>[] ParticleMeshes;
 
     public NiParticleMeshModifier(NifReader r) : base(r) {
-        ParticleMeshes = r.ReadL32FArray(z => X<NiAVObject>.Ref(r));
+        ParticleMeshes = r.ReadL32FArray(X<NiAVObject>.Ref);
     }
 }
 
 /// <summary>
 /// LEGACY (pre-10.1) particle modifier.
 /// </summary>
-public class NiParticleRotation : NiParticleModifier {
+public class NiParticleRotation : NiParticleModifier { // X
     public byte RandomInitialAxis;
     public Vector3 InitialAxis;
     public float RotationSpeed;
@@ -1450,19 +1662,24 @@ public class NiParticleRotation : NiParticleModifier {
 /// <summary>
 /// Generic particle system node.
 /// </summary>
-public class NiParticles(NifReader r) : NiGeometry(r) {
+public class NiParticles : NiGeometry { // X
+    public BSVertexDesc VertexDesc;
+
+    public NiParticles(NifReader r) : base(r) {
+        if (r.UV2 >= 100) VertexDesc = r.ReadS<BSVertexDesc>();
+    }
 }
 
 /// <summary>
 /// LEGACY (pre-10.1). NiParticles which do not house normals and generate them at runtime.
 /// </summary>
-public class NiAutoNormalParticles(NifReader r) : NiParticles(r) {
+public class NiAutoNormalParticles(NifReader r) : NiParticles(r) { // X
 }
 
 /// <summary>
 /// A generic particle system time controller object.
 /// </summary>
-public class NiParticleSystemController : NiTimeController {
+public class NiParticleSystemController : NiTimeController { // X
     public float Speed;
     public float SpeedRandom;
     public float VerticalDirection;
@@ -1531,13 +1748,13 @@ public class NiParticleSystemController : NiTimeController {
 /// <summary>
 /// A particle system controller, used by BS in conjunction with NiBSParticleNode.
 /// </summary>
-public class NiBSPArrayController(NifReader r) : NiParticleSystemController(r) {
+public class NiBSPArrayController(NifReader r) : NiParticleSystemController(r) { // X
 }
 
 /// <summary>
 /// Wrapper for position animation keys.
 /// </summary>
-public class NiPosData : NiObject {
+public class NiPosData : NiObject { // X
     public KeyGroup<Vector3> Data;
 
     public NiPosData(NifReader r) : base(r) {
@@ -1548,19 +1765,24 @@ public class NiPosData : NiObject {
 /// <summary>
 /// Unknown.
 /// </summary>
-public class NiRotatingParticles(NifReader r) : NiParticles(r) { }
+public class NiRotatingParticles(NifReader r) : NiParticles(r) { // X
+}
 
 /// <summary>
 /// Determines whether flat shading or smooth shading is used on a shape.
 /// </summary>
-public class NiShadeProperty(NifReader r) : NiProperty(r) {
-    public Flags Flags = (Flags)(r.UV2 >= 32 ? r.ReadUInt16() : 1); // Bit 0: Enable smooth phong shading on this shape. Otherwise, hard-edged flat shading will be used on this shape.
+public class NiShadeProperty : NiProperty { // X
+    public Flags Flags = (Flags)1;                      // Bit 0: Enable smooth phong shading on this shape. Otherwise, hard-edged flat shading will be used on this shape.
+
+    public NiShadeProperty(NifReader r) : base(r) {
+        if (r.UV2 <= 34) Flags = (Flags)r.ReadUInt16();
+    }
 }
 
 /// <summary>
 /// Skinning data.
 /// </summary>
-public class NiSkinData : NiObject {
+public class NiSkinData : NiObject { // X
     public NiTransform SkinTransform;       // Offset of the skin from this bone in bind position.
     public uint NumBones;                   // Number of bones.
     public Ref<NiSkinPartition> SkinPartition;              // This optionally links a NiSkinPartition for hardware-acceleration information.
@@ -1574,19 +1796,18 @@ public class NiSkinData : NiObject {
     }
 }
 
-// Skin Stuff
 /// <summary>
 /// Skinning instance.
 /// </summary>
-public class NiSkinInstance : NiObject {
-    public Ref<NiSkinData> Data;                       // Skinning data reference.
-    public Ref<NiSkinPartition> SkinPartition;              // Refers to a NiSkinPartition objects, which partitions the mesh such that every vertex is only influenced by a limited number of bones.
-    public Ref<NiNode> SkeletonRoot;               // Armature root node.
-    public Ref<NiNode>[] Bones;                    // List of all armature bones.
+public class NiSkinInstance : NiObject { // X
+    public Ref<NiSkinData> Data;                        // Skinning data reference.
+    public Ref<NiSkinPartition> SkinPartition;          // Refers to a NiSkinPartition objects, which partitions the mesh such that every vertex is only influenced by a limited number of bones.
+    public Ref<NiNode> SkeletonRoot;                    // Armature root node.
+    public Ref<NiNode>[] Bones;                         // List of all armature bones.
 
     public NiSkinInstance(NifReader r) : base(r) {
         Data = X<NiSkinData>.Ref(r);
-        if (r.V >= 0x0A010165) SkinPartition = X<NiSkinPartition>.Ptr(r);
+        if (r.V >= 0x0A010065) SkinPartition = X<NiSkinPartition>.Ref(r);
         SkeletonRoot = X<NiNode>.Ptr(r);
         Bones = r.ReadL32FArray(X<NiNode>.Ptr);
     }
@@ -1595,12 +1816,14 @@ public class NiSkinInstance : NiObject {
 /// <summary>
 /// Skinning data, optimized for hardware skinning. The mesh is partitioned in submeshes such that each vertex of a submesh is influenced only by a limited and fixed number of bones.
 /// </summary>
-public class NiSkinPartition(NifReader r) : NiObject(r) { }
+public class NiSkinPartition(NifReader r) : NiObject(r) { // X
+}
 
 /// <summary>
 /// A texture.
 /// </summary>
-public abstract class NiTexture(NifReader r) : NiObjectNET(r) { }
+public abstract class NiTexture(NifReader r) : NiObjectNET(r) { // X
+}
 
 /// <summary>
 /// Describes texture source and properties.
@@ -1627,7 +1850,7 @@ public class NiSourceTexture : NiTexture {
 /// Apparently commands for an optimizer instructing it to keep things it would normally discard.
 /// Also refers to NiNode objects (through their name) in animation .kf files.
 /// </summary>
-public class NiStringExtraData : NiExtraData {
+public class NiStringExtraData : NiExtraData { // X
     public uint BytesRemaining;                         // The number of bytes left in the record.  Equals the length of the following string + 4.
     public string StringData;                           // The string.
 
@@ -1640,7 +1863,7 @@ public class NiStringExtraData : NiExtraData {
 /// <summary>
 /// Extra data, used to name different animation sequences.
 /// </summary>
-public class NiTextKeyExtraData : NiExtraData {
+public class NiTextKeyExtraData : NiExtraData { // X
     public uint UnknownInt1;                            // Unknown.  Always equals zero in all official files.
     public Key<string>[] TextKeys;                      // List of textual notes and at which time they take effect. Used for designating the start and stop of animations and the triggering of sounds.
 
@@ -1653,7 +1876,7 @@ public class NiTextKeyExtraData : NiExtraData {
 /// <summary>
 /// Represents an effect that uses projected textures such as projected lights (gobos), environment maps, and fog maps.
 /// </summary>
-public class NiTextureEffect : NiDynamicEffect {
+public class NiTextureEffect : NiDynamicEffect { // X
     public Matrix4x4 ModelProjectionMatrix;             // Model projection matrix.  Always identity?
     public Vector3 ModelProjectionTransform;            // Model projection transform.  Always (0,0,0)?
     public TexFilterMode TextureFiltering = TexFilterMode.FILTER_TRILERP; // Texture Filtering mode.
@@ -1692,7 +1915,7 @@ public class NiTextureEffect : NiDynamicEffect {
 /// <summary>
 /// LEGACY (pre-10.1)
 /// </summary>
-public class NiImage : NiObject {
+public class NiImage : NiObject { // X
     //public byte UseExternal;                            // 0 if the texture is internal to the NIF file.
     //public ?? FileName;                                 // The filepath to the texture.
     //public int? ImageData;                              // Link to the internally stored image data.
@@ -1711,7 +1934,7 @@ public class NiImage : NiObject {
 /// <summary>
 /// Describes how a fragment shader should be configured for a given piece of geometry.
 /// </summary>
-public class NiTexturingProperty : NiProperty {
+public class NiTexturingProperty : NiProperty { // X
     public Flags Flags;                                 // Property flags.
     public ApplyMode ApplyMode = ApplyMode.APPLY_MODULATE; // Determines how the texture will be applied.  Seems to have special functions in Oblivion.
     public uint TextureCount = 7;                       // Number of textures.
@@ -1740,12 +1963,13 @@ public class NiTexturingProperty : NiProperty {
 /// <summary>
 /// A shape node that refers to singular triangle data.
 /// </summary>
-public class NiTriShape(NifReader r) : NiTriBasedGeom(r) { }
+public class NiTriShape(NifReader r) : NiTriBasedGeom(r) { // X
+}
 
 /// <summary>
 /// Holds mesh data using a list of singular triangles.
 /// </summary>
-public class NiTriShapeData : NiTriBasedGeomData {
+public class NiTriShapeData : NiTriBasedGeomData { // X
     public uint NumTrianglePoints;
     public Triangle[] Triangles;
     public MatchGroup[] MatchGroups;
@@ -1753,7 +1977,7 @@ public class NiTriShapeData : NiTriBasedGeomData {
     public NiTriShapeData(NifReader r) : base(r) {
         NumTrianglePoints = r.ReadUInt32();
         Triangles = r.ReadFArray(z => new Triangle(r), NumTriangles);
-        MatchGroups = r.ReadL16FArray(z => new MatchGroup(r));
+        if (r.V >= 0x03010000) MatchGroups = r.ReadL16FArray(z => new MatchGroup(r));
     }
 }
 
@@ -1761,9 +1985,9 @@ public class NiTriShapeData : NiTriBasedGeomData {
 /// DEPRECATED (pre-10.1), REMOVED (20.3).
 /// Time controller for texture coordinates.
 /// </summary>
-public class NiUVController : NiTimeController {
-    public ushort UnknownShort;
-    public Ref<NiUVData> Data;
+public class NiUVController : NiTimeController { // X
+    public ushort UnknownShort;                         // Always 0?
+    public Ref<NiUVData> Data;                          // Texture coordinate controller data index.
 
     public NiUVController(NifReader r) : base(r) {
         UnknownShort = r.ReadUInt16();
@@ -1775,8 +1999,8 @@ public class NiUVController : NiTimeController {
 /// DEPRECATED (pre-10.1), REMOVED (20.3)
 /// Texture coordinate data.
 /// </summary>
-public class NiUVData : NiObject {
-    public KeyGroup<float>[] UVGroups;
+public class NiUVData : NiObject { // X
+    public KeyGroup<float>[] UVGroups;                  // Four UV data groups. Appear to be U translation, V translation, U scaling/tiling, V scaling/tiling.
 
     public NiUVData(NifReader r) : base(r) {
         UVGroups = r.ReadFArray(z => new KeyGroup<float>(r), 4);
@@ -1786,15 +2010,19 @@ public class NiUVData : NiObject {
 /// <summary>
 /// Property of vertex colors. This object is referred to by the root object of the NIF file whenever some NiTriShapeData object has vertex colors with non-default settings; if not present, vertex colors have vertex_mode=2 and lighting_mode=1.
 /// </summary>
-public class NiVertexColorProperty : NiProperty {
-    public Flags Flags;
-    public VertMode VertexMode;
-    public LightMode LightingMode;
+public class NiVertexColorProperty : NiProperty { // X
+    public Flags Flags;                                 // Bits 0-2: Unknown
+                                                        //     Bit 3: Lighting Mode
+                                                        //     Bits 4-5: Vertex Mode
+    public VertMode VertexMode;                         // In Flags from 20.1.0.3 on.
+    public LightMode LightingMode;                      // In Flags from 20.1.0.3 on.
 
     public NiVertexColorProperty(NifReader r) : base(r) {
         Flags = (Flags)r.ReadUInt16();
-        VertexMode = (VertMode)r.ReadUInt32();
-        LightingMode = (LightMode)r.ReadUInt32();
+        if (r.V <= 0x14000005) {
+            VertexMode = (VertMode)r.ReadUInt32();
+            LightingMode = (LightMode)r.ReadUInt32();
+        }
     }
 }
 
@@ -1803,23 +2031,21 @@ public class NiVertexColorProperty : NiProperty {
 /// Not used in skinning.
 /// Unsure of use - perhaps for morphing animation or gravity.
 /// </summary>
-public class NiVertWeightsExtraData : NiExtraData {
-    public uint NumBytes;
-    public ushort NumVertices;
-    public float[] Weights;
+public class NiVertWeightsExtraData : NiExtraData { // X
+    public uint NumBytes;                               // Number of bytes in this data object.
+    public float[] Weight;                              // The vertex weights.
 
     public NiVertWeightsExtraData(NifReader r) : base(r) {
         NumBytes = r.ReadUInt32();
-        NumVertices = r.ReadUInt16();
-        Weights = r.ReadPArray<float>("f", NumVertices);
+        Weight = r.ReadL16PArray<float>("f");
     }
 }
 
-// <summary>
+/// <summary>
 /// DEPRECATED (10.2), REMOVED (?), Replaced by NiBoolData.
 /// Visibility data for a controller.
 /// </summary>
-public class NiVisData : NiObject {
+public class NiVisData : NiObject { // X
     public Key<byte>[] Keys;
 
     public NiVisData(NifReader r) : base(r) {
@@ -1830,8 +2056,10 @@ public class NiVisData : NiObject {
 /// <summary>
 /// Allows applications to switch between drawing solid geometry or wireframe outlines.
 /// </summary>
-public class NiWireframeProperty : NiProperty {
-    public Flags Flags;
+public class NiWireframeProperty : NiProperty { // X
+    public Flags Flags;                                 // Property flags.
+                                                        //     0 - Wireframe Mode Disabled
+                                                        //     1 - Wireframe Mode Enabled
 
     public NiWireframeProperty(NifReader r) : base(r) {
         Flags = (Flags)r.ReadUInt16();
@@ -1841,18 +2069,132 @@ public class NiWireframeProperty : NiProperty {
 /// <summary>
 /// Allows applications to set the test and write modes of the renderer's Z-buffer and to set the comparison function used for the Z-buffer test.
 /// </summary>
-public class NiZBufferProperty : NiProperty {
-    public ushort Flags;
+public class NiZBufferProperty : NiProperty { // X
+    public Flags Flags = (Flags)3;                      // Bit 0 enables the z test
+                                                        //     Bit 1 controls wether the Z buffer is read only (0) or read/write (1)
+    public ZCompareMode Function = ZCompareMode.ZCOMP_LESS_EQUAL; // Z-Test function (see: glDepthFunc). In Flags from 20.1.0.3 on.
 
     public NiZBufferProperty(NifReader r) : base(r) {
-        Flags = r.ReadUInt16();
+        Flags = (Flags)r.ReadUInt16();
+        if (r.V >= 0x0401000C && r.V <= 0x14000005) Function = (ZCompareMode)r.ReadUInt32();
     }
 }
 
 /// <summary>
 /// Morrowind-specific node for collision mesh.
 /// </summary>
-public class RootCollisionNode(NifReader r) : NiNode(r) {
+public class RootCollisionNode(NifReader r) : NiNode(r) { // X
+}
+
+/// <summary>
+/// The type of animation interpolation (blending) that will be used on the associated key frames.
+/// </summary>
+public enum BSShaderType : uint { // Y
+    SHADER_TALL_GRASS = 0,          // Tall Grass Shader
+    SHADER_DEFAULT = 1,             // Standard Lighting Shader
+    SHADER_SKY = 10,                // Sky Shader
+    SHADER_SKIN = 14,               // Skin Shader
+    SHADER_WATER = 17,              // Water Shader
+    SHADER_LIGHTING30 = 29,         // Lighting 3.0 Shader
+    SHADER_TILE = 32,               // Tiled Shader
+    SHADER_NOLIGHTING = 33          // No Lighting Shader
+}
+
+/// <summary>
+/// Shader Property Flags
+/// </summary>
+[Flags]
+public enum BSShaderFlags : uint { // Y
+    Specular = 0,                   // Enables Specularity
+    Skinned = 1U << 1,              // Required For Skinned Meshes
+    LowDetail = 1U << 2,            // Lowddetail (seems to use standard diff/norm/spec shader)
+    Vertex_Alpha = 1U << 3,         // Vertex Alpha
+    Unknown_1 = 1U << 4,            // Unknown
+    Single_Pass = 1U << 5,          // Single Pass
+    Empty = 1U << 6,                // Unknown
+    Environment_Mapping = 1U << 7,  // Environment mapping (uses Envmap Scale)
+    Alpha_Texture = 1U << 8,        // Alpha Texture Requires NiAlphaProperty to Enable
+    Unknown_2 = 1U << 9,            // Unknown
+    FaceGen = 1U << 10,             // FaceGen
+    Parallax_Shader_Index_15 = 1U << 11, // Parallax
+    Unknown_3 = 1U << 12,           // Unknown/Crash
+    Non_Projective_Shadows = 1U << 13, // Non-Projective Shadows
+    Unknown_4 = 1U << 14,           // Unknown/Crash
+    Refraction = 1U << 15,          // Refraction (switches on refraction power)
+    Fire_Refraction = 1U << 16,     // Fire Refraction (switches on refraction power/period)
+    Eye_Environment_Mapping = 1U << 17, // Eye Environment Mapping (does not use envmap light fade or envmap scale)
+    Hair = 1U << 18,                // Hair
+    Dynamic_Alpha = 1U << 19,       // Dynamic Alpha
+    Localmap_Hide_Secret = 1U << 20,// Localmap Hide Secret
+    Window_Environment_Mapping = 1U << 21, // Window Environment Mapping
+    Tree_Billboard = 1U << 22,      // Tree Billboard
+    Shadow_Frustum = 1U << 23,      // Shadow Frustum
+    Multiple_Textures = 1U << 24,   // Multiple Textures (base diff/norm become null)
+    Remappable_Textures = 1U << 25, // usually seen w/texture animation
+    Decal_Single_Pass = 1U << 26,   // Decal
+    Dynamic_Decal_Single_Pass = 1U << 27, // Dynamic Decal
+    Parallax_Occulsion = 1U << 28,  // Parallax Occlusion
+    External_Emittance = 1U << 29,  // External Emittance
+    Shadow_Map = 1U << 30,          // Shadow Map
+    ZBuffer_Test = 1U << 31         // ZBuffer Test (1=on)
+}
+
+/// <summary>
+/// Shader Property Flags 2
+/// </summary>
+[Flags]
+public enum BSShaderFlags2 : uint { // Y
+    ZBuffer_Write = 0,              // ZBuffer Write
+    LOD_Landscape = 1U << 1,        // LOD Landscape
+    LOD_Building = 1U << 2,         // LOD Building
+    No_Fade = 1U << 3,              // No Fade
+    Refraction_Tint = 1U << 4,      // Refraction Tint
+    Vertex_Colors = 1U << 5,        // Has Vertex Colors
+    Unknown1 = 1U << 6,             // Unknown
+    X1st_Light_is_Point_Light = 1U << 7, // 1st Light is Point Light
+    X2nd_Light = 1U << 8,           // 2nd Light
+    X3rd_Light = 1U << 9,           // 3rd Light
+    Vertex_Lighting = 1U << 10,     // Vertex Lighting
+    Uniform_Scale = 1U << 11,       // Uniform Scale
+    Fit_Slope = 1U << 12,           // Fit Slope
+    Billboard_and_Envmap_Light_Fade = 1U << 13, // Billboard and Envmap Light Fade
+    No_LOD_Land_Blend = 1U << 14,   // No LOD Land Blend
+    Envmap_Light_Fade = 1U << 15,   // Envmap Light Fade
+    Wireframe = 1U << 16,           // Wireframe
+    VATS_Selection = 1U << 17,      // VATS Selection
+    Show_in_Local_Map = 1U << 18,   // Show in Local Map
+    Premult_Alpha = 1U << 19,       // Premult Alpha
+    Skip_Normal_Maps = 1U << 20,    // Skip Normal Maps
+    Alpha_Decal = 1U << 21,         // Alpha Decal
+    No_Transparecny_Multisampling = 1U << 22, // No Transparency MultiSampling
+    Unknown2 = 1U << 23,            // Unknown
+    Unknown3 = 1U << 24,            // Unknown
+    Unknown4 = 1U << 25,            // Unknown
+    Unknown5 = 1U << 26,            // Unknown
+    Unknown6 = 1U << 27,            // Unknown
+    Unknown7 = 1U << 28,            // Unknown
+    Unknown8 = 1U << 29,            // Unknown
+    Unknown9 = 1U << 30,            // Unknown
+    Unknown10 = 1U << 31            // Unknown
+}
+
+/// <summary>
+/// Bethesda-specific property.
+/// </summary>
+public class BSShaderProperty : NiShadeProperty { // Y
+    public BSShaderType ShaderType = BSShaderType.SHADER_DEFAULT;
+    public BSShaderFlags ShaderFlags = (BSShaderFlags)0x82000000;
+    public BSShaderFlags2 ShaderFlags2 = (BSShaderFlags2)1;
+    public float EnvironmentMapScale = 1.0f;            // Scales the intensity of the environment/cube map.
+
+    public BSShaderProperty(NifReader r) : base(r) {
+        if (r.UV2 <= 34) {
+            ShaderType = (BSShaderType)r.ReadUInt32();
+            ShaderFlags = (BSShaderFlags)r.ReadUInt32();
+            ShaderFlags2 = (BSShaderFlags2)r.ReadUInt32();
+            EnvironmentMapScale = r.ReadSingle();
+        }
+    }
 }
 
 #endregion

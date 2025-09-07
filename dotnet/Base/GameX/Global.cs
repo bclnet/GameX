@@ -52,6 +52,7 @@ public struct Color4 { //:M
 
     public Color4() { }
     public Color4(double r, double g, double b, double a) { R = (float)r; G = (float)g; B = (float)b; A = (float)a; }
+    public Color4(byte[] s) { R = s[0]; G = s[1]; B = s[2]; A = s[3]; }
     public Color4(BinaryReader r) {
         R = r.ReadSingle();
         G = r.ReadSingle();

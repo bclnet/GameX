@@ -18,7 +18,7 @@ class NifCodeWriter(XmlCodeWriter):
             'NiSkinInstance', 'NiSkinData', 'NiSkinPartition', 'NiTexture', 'NiSourceTexture', 'NiPoint3InterpController', 'NiMaterialProperty', 'NiMaterialColorController', 'NiDynamicEffect', 'NiTextureEffect' ]
         self.es3x = [
             'MaterialColor', 'BSLightingShaderPropertyShaderType', 'BSShaderType', 'BSShaderFlags', 'BSShaderFlags2', 'BillboardMode', 'SymmetryType', 'VertexFlags', 'ZCompareMode',
-            'MaterialData', 'BSVertexDesc', 'MorphWeight', 'BSShaderProperty', 'NiPlane', 'NiImage', 'NiBound', 'CapsuleBV', 'UnionBV', 'HalfSpaceBV',
+            'MaterialData', 'BSVertexDesc', 'MorphWeight', 'BSShaderProperty', 'VectorFlags', 'BSVectorFlags', 'ConsistencyType', 'AbstractAdditionalGeometryData', 'NiPlane', 'NiImage', 'NiBound', 'CapsuleBV', 'UnionBV', 'HalfSpaceBV',
             'NiCollisionObject', 'NiInterpolator' ]
         self.customs = {
             '_header': (
@@ -534,7 +534,12 @@ BODY
             pass
         def NiGeometry_values(s, values): #fix
             values.insert(0, Class.Code(s, ('var NiParticleSystem = false;', 'NiParticleSystem: bool = false'))) #TODO Fix
-            pass
+        def NiGeometryData_values(s, values):
+            values[1].cond = '!false || r.UV2 >= 34' #fix !NiPSysData
+            del values[2]
+            values[2].cond = 'false' #fix NiPSysData
+            values[14].cond = values[15].cond = '(HasNormals != 0) && (((int)VectorFlags | (int)BSVectorFlags) & 4096) != 0'
+            values[20].kind = values[11].kind = values[5].kind = 'var'
         self.customs = self.customs | {
             'NiObject': { 'x': 2193,
                 'code': NiObject_code },
@@ -569,6 +574,9 @@ BODY
                 'values': NiFlipController_values },
             'NiGeometry': { 'x': 3125,
                 'values': NiGeometry_values },
+            'NiGeometryData': { 'x': 3188,
+                'type': {'Has Vertices': 'uint', 'Has Normals': 'uint', 'Has Vertex Colors': 'uint' }, #'Normalsx': 'Vector3', 'Vertex Colors': 'Color4',
+                'values': NiGeometryData_values },
             'NiTextureEffect': { 'x': 4577,
                 'type': {'Model Projection Matrix': 'Matrix33R'} },
             'NiTriShapeData': { 'x': 4673,

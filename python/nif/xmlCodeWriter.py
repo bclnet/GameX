@@ -89,9 +89,9 @@ class XmlCodeWriter(CodeWriter):
             'ByteArray': [None, ('byte[]', 'bytearray'), lambda x: (x, x), ('r.ReadL8Bytes()', 'r.readL8Bytes()'), None],
             'ByteMatrix': [None, ('??', '??'), lambda x: (x, x), ('??', '??'), None],
             'Color3': [None, ('Color3', 'Color3'), lambda x: (f'new({x})', f'Color3({x})'), ('new Color3(r)', 'Color3(r)'), None],
-            'ByteColor3': [None, ('ByteColor3', 'ByteColor3'), lambda x: (x, x), ('new ByteColor3(r)', 'ByteColor3(r)'), lambda c: (f'r.ReadFArray(z => new ByteColor3(r), {c})', f'r.readFArray(lambda r: ByteColor3(r), {c})')],
+            'ByteColor3': [None, ('Color3', 'Color3'), lambda x: (x, x), ('new Color3(r.ReadBytes(3))', 'Color3(r.readBytes(3))'), lambda c: (f'r.ReadFArray(z => new Color3(r.ReadBytes(3)), {c})', f'r.readFArray(lambda r: Color3(r.readBytes(3)), {c})')],
             'Color4': [None, ('Color4', 'Color4'), lambda x: (f'new({x})', f'Color4({x})'), ('new Color4(r)', 'Color4(r)'), lambda c: (f'r.ReadFArray(z => new Color4(r), {c})', f'r.readFArray(lambda r: Color4(r), {c})')],
-            'ByteColor4': [None, ('ByteColor4', 'ByteColor4'), lambda x: (x, x), ('new Color4Byte(r)', 'Color4Byte(r)'), lambda c: (f'r.ReadFArray(z => new Color4Byte(r), {c})', f'r.readFArray(lambda r: Color4Byte(r), {c})')],
+            'ByteColor4': [None, ('Color4', 'Color4'), lambda x: (x, x), ('new Color4(r.ReadBytes(4))', 'Color4(r.readBytes(4))'), lambda c: (f'r.ReadFArray(z => new Color4(r.ReadBytes(4)), {c})', f'r.readFArray(lambda r: Color4(r.readBytes(4)), {c})')],
             'FilePath': [None, ('??', '??'), lambda x: (x, x), ('??', '??'), None],
             # Compounds
             'ByteVector3': [None, ('Vector3<byte>', 'Vector3'), lambda x: (x, x), ('new Vector3<byte>(r.ReadByte(), r.ReadByte(), r.ReadByte())', 'Vector3(r.readByte(), r.readByte(), r.readByte())'), lambda c: (f'r.ReadFArray(z => new Vector3(r.ReadByte(), r.ReadByte(), r.ReadByte()), {c})', f'r.readFArray(lambda r: Vector3(r.readByte(), r.readByte(), r.readByte()), {c})')],
@@ -187,7 +187,7 @@ class XmlCodeWriter(CodeWriter):
             if self.ex == CS:
                 if s.struct and s.struct != 'x': self.emit(f'public static (string, int) Struct = ("{s.struct[0]}", {s.struct[1]});')
                 for k, v in s.fields.items():
-                    self.emit_with_comment(f'public {v[0][CS]} {v[1][CS] if primary else k[CS] + (' = ' + v[2][CS] + ';' if v[2] else ';')}' if v[0] else '', v[3], pos if v[0] else 0)
+                    if v[0] or v[3]: self.emit_with_comment(f'public {v[0][CS]} {v[1][CS] if primary else k[CS] + (' = ' + v[2][CS] + ';' if v[2] else ';')}' if v[0] else '', v[3], pos if v[0] else 0)
                 if not primary:
                     self.emit('')
                     if s.struct and s.struct != 'x' and s.name in ['BoneVertData']: self.emit(f'public {s.name}() {{}}')
@@ -212,7 +212,7 @@ class XmlCodeWriter(CodeWriter):
                 if s.struct and s.struct != 'x': self.emit(f'struct = (\'{s.struct[0]}\', {s.struct[1]})')
                 if not primary: 
                     for k, v in s.fields.items():
-                        self.emit_with_comment(f'{k[PY]}: {v[0][PY]}{' = ' + v[2][PY] if v[2] else ''}' if v[0] else '', v[3], pos if v[0] else 0)
+                        if v[0] or v[3]: self.emit_with_comment(f'{k[PY]}: {v[0][PY]}{' = ' + v[2][PY] if v[2] else ''}' if v[0] else '', v[3], pos if v[0] else 0)
                     self.emit('')
                 def emitBlock(inits: list) -> None:
                     for x in inits:
@@ -313,6 +313,7 @@ class Class:
     class Comment:
         def __init__(self, root: Class, s: str):
             self.comment: str = s
+            self.kind = None
             self.vercond = None
             self.cond = None
             self.condcw = [None, None]
@@ -334,6 +335,7 @@ class Class:
     class Code:
         def __init__(self, root: Class, initcw: tuple):
             self.name: str = ':code:'
+            self.kind = None
             self.vercond = None
             self.cond = None
             # self.condcw = [None, None]
@@ -454,6 +456,7 @@ class Class:
                 # else
                 elsecw = self.elsecw or self.defaultcw or ['default', 'None']
                 match self.kind:
+                    case 'var': self.initcw = [f'var {self.namecw[CS]} = {cs};', f'{self.namecw[PY]}{': ' + self.typecw[PY] if primary else ''} = {py}']
                     case '?:': self.initcw = [f'{self.namecw[CS]} = {c[CS]} ? {cs} : {elsecw[CS]};', f'self.{self.namecw[PY]}{': ' + self.typecw[PY] if primary else ''} = {py} if {c[PY]} else {elsecw[PY]}']
                     case '?+': self.initcw = [f'{self.namecw[CS]} = {c[CS]} ? {cs}', f'self.{self.namecw[PY]}{': ' + self.typecw[PY] if primary else ''} = {py} if {c[PY]}']
                     case ':+': self.initcw = [f'    : {c[CS]} ? {cs}', f'else {py} if {c[PY]}']
@@ -547,7 +550,6 @@ class Class:
         cs = cs.replace('ZV ', 'r.V ').replace('ZUV2 ', 'r.UV2 ').replace('ZUV ', 'r.UV ')
         py = py.replace('ZV ', 'r.v ').replace('ZUV2 ', 'r.uv2 ').replace('ZUV ', 'r.uv ')
         return [cs, py]
-
     def process(self):
         values = self.values
         if not values: self.inits = values[:]; return
@@ -629,12 +631,13 @@ class Class:
         # if self.name == 'RagdollDescriptor': print(inits[3])
 
         if 'inits2' in self.custom: self.custom['inits2'](self, inits)
-                
     def code(self, cw: XmlCodeWriter):
         lx = None
         for x in self.inits:
             if not isinstance(x, str): x.code(lx, self, None, cw); lx = x
         if 'code' in self.custom: py = self.custom['code'](self)
-        self.fields = {x.namecw: (x.typecw, x.initcw, x.defaultcw, x.comment) for x in self.values if x.name and not isinstance(x, str)}
+        values = [x for x in self.values if x.name and not isinstance(x, str) and x.kind != 'var']
+        fields = {x.namecw: (x.typecw, x.initcw, x.defaultcw, x.comment) for x in reversed(values)}
+        self.fields = {x.namecw: fields[x.namecw] for x in values}
 
 #endregion

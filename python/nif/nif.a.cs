@@ -330,6 +330,16 @@ public enum MaterialColor : ushort { // Y
     TC_SELF_ILLUM = 3               // Control the self illumination color.
 }
 
+/// <summary>
+/// Used by NiGeometryData to control the volatility of the mesh.
+/// Consistency Type is masked to only the upper 4 bits (0xF000). Dirty mask is the lower 12 (0x0FFF) but only used at runtime.
+/// </summary>
+public enum ConsistencyType : ushort { // Y
+    CT_MUTABLE = 0x0000,            // Mutable Mesh
+    CT_STATIC = 0x4000,             // Static Mesh
+    CT_VOLATILE = 0x8000            // Volatile Mesh
+}
+
 public enum BoundVolumeType : uint { // X
     BASE_BV = 0xffffffff,           // Default
     SPHERE_BV = 0,                  // Sphere
@@ -980,7 +990,7 @@ public class NiCollisionObject : NiObject { // Y
 /// Abstract audio-visual base class from which all of Gamebryo's scene graph objects inherit.
 /// </summary>
 public abstract class NiAVObject : NiObjectNET { // X
-    public Flags Flags = (Flags)14;                     // Basic flags for AV objects; commonly 0x000C or 0x000A.
+    public Flags Flags = (Flags)14;                     // Basic flags for AV objects. For Bethesda streams above 26 only.
     public Vector3 Translation;                         // The translation vector.
     public Matrix4x4 Rotation;                          // The rotation part of the transformation matrix.
     public float Scale = 1.0f;                          // Scaling part (only uniform scaling is supported).
@@ -1238,41 +1248,113 @@ public abstract class NiGeometry : NiAVObject { // X
 public abstract class NiTriBasedGeom(NifReader r) : NiGeometry(r) { // X
 }
 
+[Flags]
+public enum VectorFlags : ushort { // Y
+    UV_1 = 0,
+    UV_2 = 1 << 1,
+    UV_4 = 1 << 2,
+    UV_8 = 1 << 3,
+    UV_16 = 1 << 4,
+    UV_32 = 1 << 5,
+    Unk64 = 1 << 6,
+    Unk128 = 1 << 7,
+    Unk256 = 1 << 8,
+    Unk512 = 1 << 9,
+    Unk1024 = 1 << 10,
+    Unk2048 = 1 << 11,
+    Has_Tangents = 1 << 12,
+    Unk8192 = 1 << 13,
+    Unk16384 = 1 << 14,
+    Unk32768 = 1 << 15
+}
+
+[Flags]
+public enum BSVectorFlags : ushort { // Y
+    Has_UV = 0,
+    Unk2 = 1 << 1,
+    Unk4 = 1 << 2,
+    Unk8 = 1 << 3,
+    Unk16 = 1 << 4,
+    Unk32 = 1 << 5,
+    Unk64 = 1 << 6,
+    Unk128 = 1 << 7,
+    Unk256 = 1 << 8,
+    Unk512 = 1 << 9,
+    Unk1024 = 1 << 10,
+    Unk2048 = 1 << 11,
+    Has_Tangents = 1 << 12,
+    Unk8192 = 1 << 13,
+    Unk16384 = 1 << 14,
+    Unk32768 = 1 << 15
+}
+
 /// <summary>
 /// Mesh data: vertices, vertex normals, etc.
 /// </summary>
 public abstract class NiGeometryData : NiObject { // X
-    public ushort NumVertices;
-    public bool HasVertices;
-    public Vector3[] Vertices;
-    public bool HasNormals;
-    public Vector3[] Normals;
-    public Vector3 Center;
-    public float Radius;
-    public bool HasVertexColors;
-    public Color4[] VertexColors;
-    public ushort NumUVSets;
-    public bool HasUV;
-    [JsonIgnore] public TexCoord[,] UVSets;
+    public int GroupID;                                 // Always zero.
+    public ushort NumVertices;                          // Number of vertices.
+    public ushort BSMaxVertices;                        // Bethesda uses this for max number of particles in NiPSysData.
+    public byte KeepFlags;                              // Used with NiCollision objects when OBB or TRI is set.
+    public byte CompressFlags;                          // Unknown.
+    public Vector3[] Vertices;                          // The mesh vertices.
+    public VectorFlags VectorFlags;
+    public BSVectorFlags BSVectorFlags;
+    public uint MaterialCRC;
+    public Vector3[] Normals;                           // The lighting normals.
+    public Vector3[] Tangents;                          // Tangent vectors.
+    public Vector3[] Bitangents;                        // Bitangent vectors.
+    public float[] UnkFloats;
+    public Vector3 Center;                              // Center of the bounding box (smallest box that contains all vertices) of the mesh.
+    public float Radius;                                // Radius of the mesh: maximal Euclidean distance between the center and all vertices.
+    public short[] Unknown13shorts;                     // Unknown, always 0?
+    public Color4[] VertexColors;                       // The vertex colors.
+    public ushort NumUVSets;                            // The lower 6 (or less?) bits of this field represent the number of UV texture sets. The other bits are probably flag bits. For versions 10.1.0.0 and up, if bit 12 is set then extra vectors are present after the normals.
+    public bool HasUV;                                  // Do we have UV coordinates?
+                                                        // 
+                                                        //     Note: for compatibility with NifTexture, set this value to either 0x00000000 or 0xFFFFFFFF.
+    public TexCoord[][] UVSets;                         // The UV texture coordinates. They follow the OpenGL standard: some programs may require you to flip the second coordinate.
+    public ConsistencyType ConsistencyFlags = ConsistencyType.CT_MUTABLE; // Consistency Flags
+    public Ref<AbstractAdditionalGeometryData> AdditionalData; // Unknown.
 
     public NiGeometryData(NifReader r) : base(r) {
-        NumVertices = r.ReadUInt16();
-        HasVertices = r.ReadBool32();
-        if (HasVertices) Vertices = r.ReadFArray(z => r.ReadVector3(), NumVertices);
-        HasNormals = r.ReadBool32();
-        if (HasNormals) Normals = r.ReadFArray(z => r.ReadVector3(), NumVertices);
+        if (r.V >= 0x0A010072) GroupID = r.ReadInt32();
+        if (!false || r.UV2 >= 34) NumVertices = r.ReadUInt16();
+        if ((r.UV2 >= 34) && false) BSMaxVertices = r.ReadUInt16();
+        if (r.V >= 0x0A010000) {
+            KeepFlags = r.ReadByte();
+            CompressFlags = r.ReadByte();
+        }
+        var HasVertices = r.ReadUInt32();
+        if ((HasVertices > 0) && (HasVertices != 15)) Vertices = r.ReadPArray<Vector3>("3f", NumVertices);
+        if (r.V >= 0x14030101 && HasVertices == 15) Vertices = r.ReadFArray(z => new Vector3(r.ReadHalf(), r.ReadHalf(), r.ReadHalf()), NumVertices);
+        if (r.V >= 0x0A000100 && !((r.V == 0x14020007) && (r.UV2 > 0))) VectorFlags = (VectorFlags)r.ReadUInt16();
+        if (((r.V == 0x14020007) && (r.UV2 > 0))) BSVectorFlags = (BSVectorFlags)r.ReadUInt16();
+        if (r.V == 0x14020007 && (r.UV == 12)) MaterialCRC = r.ReadUInt32();
+        var HasNormals = r.ReadUInt32();
+        if ((HasNormals > 0) && (HasNormals != 6)) Normals = r.ReadPArray<Vector3>("3f", NumVertices);
+        if (r.V >= 0x14030101 && HasNormals == 6) Normals = r.ReadFArray(z => new Vector3(r.ReadByte(), r.ReadByte(), r.ReadByte()), NumVertices);
+        if (r.V >= 0x0A010000 && (HasNormals != 0) && (((int)VectorFlags | (int)BSVectorFlags) & 4096) != 0) {
+            Tangents = r.ReadPArray<Vector3>("3f", NumVertices);
+            Bitangents = r.ReadPArray<Vector3>("3f", NumVertices);
+        }
+        if (r.V == 0x14030009 && (r.UV == 0x20000) || (r.UV == 0x30000) && r.ReadBool32()) UnkFloats = r.ReadPArray<float>("f", NumVertices);
         Center = r.ReadVector3();
         Radius = r.ReadSingle();
-        HasVertexColors = r.ReadBool32();
-        if (HasVertexColors) VertexColors = r.ReadFArray(z => new Color4(r), NumVertices);
-        NumUVSets = r.ReadUInt16();
-        HasUV = r.ReadBool32();
-        if (HasUV) {
-            UVSets = new TexCoord[NumUVSets, NumVertices];
-            for (var i = 0; i < NumUVSets; i++)
-                for (var j = 0; j < NumVertices; j++) UVSets[i, j] = new TexCoord(r);
-        }
+        if (r.V == 0x14030009 && (r.UV == 0x20000) || (r.UV == 0x30000)) Unknown13shorts = r.ReadPArray<short>("h", 13);
+        var HasVertexColors = r.ReadUInt32();
+        if ((HasVertexColors > 0) && (HasVertexColors != 7)) VertexColors = r.ReadFArray(z => new Color4(r), NumVertices);
+        if (r.V >= 0x14030101 && HasVertexColors == 7) VertexColors = r.ReadFArray(z => new Color4(r.ReadBytes(4)), NumVertices);
+        if (r.V <= 0x04020200) NumUVSets = r.ReadUInt16();
+        if (r.V <= 0x04000002) HasUV = r.ReadBool32();
+        if ((HasVertices > 0) && (HasVertices != 15)) UVSets = r.ReadFArray(k => r.ReadSArray<TexCoord>(NumVertices), ((NumUVSets & 63) | ((int)VectorFlags & 63) | ((int)BSVectorFlags & 1)));
+        if (r.V >= 0x14030101 && HasVertices == 15) UVSets = r.ReadFArray(k => r.ReadFArray(z => new TexCoord(r, true), NumVertices), ((NumUVSets & 63) | ((int)VectorFlags & 63) | ((int)BSVectorFlags & 1)));
+        if (r.V >= 0x0A000100) ConsistencyFlags = (ConsistencyType)r.ReadUInt16();
+        if (r.V >= 0x14000004) AdditionalData = X<AbstractAdditionalGeometryData>.Ref(r);
     }
+}
+
+public abstract class AbstractAdditionalGeometryData(NifReader r) : NiObject(r) { // Y
 }
 
 /// <summary>

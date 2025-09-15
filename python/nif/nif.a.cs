@@ -158,6 +158,78 @@ public enum KeyType : uint { // X
 }
 
 /// <summary>
+/// Describes the pixel format used by the NiPixelData object to store a texture.
+/// </summary>
+public enum PixelFormat : uint { // Y
+    FMT_RGB = 0,                    // 24-bit RGB. 8 bits per red, blue, and green component.
+    FMT_RGBA = 1,                   // 32-bit RGB with alpha. 8 bits per red, blue, green, and alpha component.
+    FMT_PAL = 2,                    // 8-bit palette index.
+    FMT_PALA = 3,                   // 8-bit palette index with alpha.
+    FMT_DXT1 = 4,                   // DXT1 compressed texture.
+    FMT_DXT3 = 5,                   // DXT3 compressed texture.
+    FMT_DXT5 = 6,                   // DXT5 compressed texture.
+    FMT_RGB24NONINT = 7,            // (Deprecated) 24-bit noninterleaved texture, an old PS2 format.
+    FMT_BUMP = 8,                   // Uncompressed dU/dV gradient bump map.
+    FMT_BUMPLUMA = 9,               // Uncompressed dU/dV gradient bump map with luma channel representing shininess.
+    FMT_RENDERSPEC = 10,            // Generic descriptor for any renderer-specific format not described by other formats.
+    FMT_1CH = 11,                   // Generic descriptor for formats with 1 component.
+    FMT_2CH = 12,                   // Generic descriptor for formats with 2 components.
+    FMT_3CH = 13,                   // Generic descriptor for formats with 3 components.
+    FMT_4CH = 14,                   // Generic descriptor for formats with 4 components.
+    FMT_DEPTH_STENCIL = 15,         // Indicates the NiPixelFormat is meant to be used on a depth/stencil surface.
+    FMT_UNKNOWN = 16
+}
+
+/// <summary>
+/// Describes whether pixels have been tiled from their standard row-major format to a format optimized for a particular platform.
+/// </summary>
+public enum PixelTiling : uint { // Y
+    TILE_NONE = 0,
+    TILE_XENON = 1,
+    TILE_WII = 2,
+    TILE_NV_SWIZZLED = 3
+}
+
+/// <summary>
+/// Describes the pixel format used by the NiPixelData object to store a texture.
+/// </summary>
+public enum PixelComponent : uint { // Y
+    COMP_RED = 0,
+    COMP_GREEN = 1,
+    COMP_BLUE = 2,
+    COMP_ALPHA = 3,
+    COMP_COMPRESSED = 4,
+    COMP_OFFSET_U = 5,
+    COMP_OFFSET_V = 6,
+    COMP_OFFSET_W = 7,
+    COMP_OFFSET_Q = 8,
+    COMP_LUMA = 9,
+    COMP_HEIGHT = 10,
+    COMP_VECTOR_X = 11,
+    COMP_VECTOR_Y = 12,
+    COMP_VECTOR_Z = 13,
+    COMP_PADDING = 14,
+    COMP_INTENSITY = 15,
+    COMP_INDEX = 16,
+    COMP_DEPTH = 17,
+    COMP_STENCIL = 18,
+    COMP_EMPTY = 19
+}
+
+/// <summary>
+/// Describes how each pixel should be accessed on NiPixelFormat.
+/// </summary>
+public enum PixelRepresentation : uint { // Y
+    REP_NORM_INT = 0,
+    REP_HALF = 1,
+    REP_FLOAT = 2,
+    REP_INDEX = 3,
+    REP_COMPRESSED = 4,
+    REP_UNKNOWN = 5,
+    REP_INT = 6
+}
+
+/// <summary>
 /// Describes the color depth in an NiTexture.
 /// </summary>
 public enum PixelLayout : uint { // X
@@ -613,6 +685,21 @@ public class TexDesc { // X
 }
 
 /// <summary>
+/// NiTexturingProperty::ShaderMap. Shader texture description.
+/// </summary>
+public class ShaderTexDesc { // Y
+    public TexDesc Map;
+    public uint MapID;                                  // Unique identifier for the Gamebryo shader system.
+
+    public ShaderTexDesc(NifReader r) {
+        if (r.ReadBool32()) {
+            Map = new TexDesc(r);
+            MapID = r.ReadUInt32();
+        }
+    }
+}
+
+/// <summary>
 /// List of three vertex indices.
 /// </summary>
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -638,6 +725,42 @@ public enum VertexFlags : ushort { // Y
     Full_Precision = 1 << 14
 }
 
+public class BSVertexDataSSE { // Y
+    public Vector3 Vertex;
+    public float BitangentX;
+    public int UnknownInt;
+    public TexCoord UV;
+    public Vector3<byte> Normal;
+    public byte BitangentY;
+    public Vector3<byte> Tangent;
+    public byte BitangentZ;
+    public Color4 VertexColors;
+    public float[] BoneWeights;
+    public byte[] BoneIndices;
+    public float EyeData;
+
+    public BSVertexDataSSE(NifReader r, uint ARG) {
+        if (((ARG & 16) != 0)) Vertex = r.ReadVector3();
+        if (((ARG & 16) != 0) && ((ARG & 256) != 0)) BitangentX = r.ReadSingle();
+        if (((ARG & 16) != 0) && (ARG & 256) == 0) UnknownInt = r.ReadInt32();
+        if (((ARG & 32) != 0)) UV = new TexCoord(r, true);
+        if ((ARG & 128) != 0) {
+            Normal = new Vector3<byte>(r.ReadByte(), r.ReadByte(), r.ReadByte());
+            BitangentY = r.ReadByte();
+        }
+        if (((ARG & 128) != 0) && ((ARG & 256) != 0)) {
+            Tangent = new Vector3<byte>(r.ReadByte(), r.ReadByte(), r.ReadByte());
+            BitangentZ = r.ReadByte();
+        }
+        if ((ARG & 512) != 0) VertexColors = new Color4(r.ReadBytes(4));
+        if ((ARG & 1024) != 0) {
+            BoneWeights = [r.ReadHalf(), r.ReadHalf(), r.ReadHalf(), r.ReadHalf()];
+            BoneIndices = r.ReadBytes(4);
+        }
+        if ((ARG & 4096) != 0) EyeData = r.ReadSingle();
+    }
+}
+
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct BSVertexDesc(NifReader r) { // Y
     public static (string, int) Struct = ("<5bHb", 8);
@@ -648,6 +771,60 @@ public struct BSVertexDesc(NifReader r) { // Y
     public byte VF5 = r.ReadByte();
     public VertexFlags VertexAttributes = (VertexFlags)r.ReadUInt16();
     public byte VF8 = r.ReadByte();
+}
+
+/// <summary>
+/// Skinning data for a submesh, optimized for hardware skinning. Part of NiSkinPartition.
+/// </summary>
+public class SkinPartition { // Y
+    public ushort NumVertices;                          // Number of vertices in this submesh.
+    public ushort NumTriangles;                         // Number of triangles in this submesh.
+    public ushort NumBones;                             // Number of bones influencing this submesh.
+    public ushort NumStrips;                            // Number of strips in this submesh (zero if not stripped).
+    public ushort NumWeightsPerVertex;                  // Number of weight coefficients per vertex. The Gamebryo engine seems to work well only if this number is equal to 4, even if there are less than 4 influences per vertex.
+    public ushort[] Bones;                              // List of bones.
+    public ushort[] VertexMap;                          // Maps the weight/influence lists in this submesh to the vertices in the shape being skinned.
+    public float[][] VertexWeights;                     // The vertex weights.
+    public ushort[] StripLengths;                       // The strip lengths.
+    public ushort[][] Strips;                           // The strips.
+    public Triangle[] Triangles;                        // The triangles.
+    public byte[][] BoneIndices;                        // Bone indices, they index into 'Bones'.
+    public ushort UnknownShort;                         // Unknown
+    public BSVertexDesc VertexDesc;
+    public Triangle[] TrianglesCopy;
+
+    public SkinPartition(NifReader r) {
+        NumVertices = r.ReadUInt16();
+        NumTriangles = (ushort)(NumVertices / 3); // calculated
+        NumBones = r.ReadUInt16();
+        NumStrips = r.ReadUInt16();
+        NumWeightsPerVertex = r.ReadUInt16();
+        Bones = r.ReadPArray<ushort>("H", NumBones);
+        if (r.V <= 0x0A000102) {
+            VertexMap = r.ReadPArray<ushort>("H", NumVertices);
+            VertexWeights = r.ReadFArray(k => r.ReadPArray<float>("f", NumWeightsPerVertex), NumVertices);
+            StripLengths = r.ReadPArray<ushort>("H", NumStrips);
+            if (NumStrips != 0) Strips = r.ReadFArray((k, i) => r.ReadPArray<ushort>("H", StripLengths[i]), NumStrips);
+            else Triangles = r.ReadSArray<Triangle>(NumTriangles);
+        }
+        else if (r.V >= 0x0A010000) {
+            if (r.ReadBool32()) VertexMap = r.ReadPArray<ushort>("H", NumVertices);
+            var HasVertexWeights = r.ReadUInt32();
+            if (HasVertexWeights == 1) VertexWeights = r.ReadFArray(k => r.ReadPArray<float>("f", NumWeightsPerVertex), NumVertices);
+            if (HasVertexWeights == 15) VertexWeights = r.ReadFArray(k => r.ReadFArray(z => r.ReadHalf(), NumWeightsPerVertex), NumVertices);
+            StripLengths = r.ReadPArray<ushort>("H", NumStrips);
+            if (r.ReadBool32()) {
+                if (NumStrips != 0) Strips = r.ReadFArray((k, i) => r.ReadPArray<ushort>("H", StripLengths[i]), NumStrips);
+                else Triangles = r.ReadSArray<Triangle>(NumTriangles);
+            }
+        }
+        if (r.ReadBool32()) BoneIndices = r.ReadFArray(k => r.ReadBytes(NumWeightsPerVertex), NumVertices);
+        if (r.UV2 > 34) UnknownShort = r.ReadUInt16();
+        if (r.UV2 == 100) {
+            VertexDesc = r.ReadS<BSVertexDesc>();
+            TrianglesCopy = r.ReadSArray<Triangle>(NumTriangles);
+        }
+    }
 }
 
 /// <summary>
@@ -732,6 +909,14 @@ public class BoneData { // X
             : r.V >= 0x04020200 && arg == 1 ? r.ReadL16SArray<BoneVertData>()
             : r.V >= 0x14030101 && arg == 15 ? r.ReadL16FArray(z => new BoneVertData(r, false)) : default;
     }
+}
+
+/// <summary>
+/// Determines how the raw image data is stored in NiRawImageData.
+/// </summary>
+public enum ImageType : uint { // Y
+    RGB = 1,                        // Colors store red, blue, and green components.
+    RGBA = 2                        // Colors store red, blue, green, and alpha components.
 }
 
 /// <summary>
@@ -1418,16 +1603,42 @@ public class NiAlphaProperty : NiProperty { // X
 /// Generic rotating particles data object.
 /// </summary>
 public class NiParticlesData : NiGeometryData { // X
-    public ushort NumParticles;
-    public float ParticleRadius;
-    public ushort NumActive;
-    public float[] Sizes;
+    public ushort NumParticles;                         // The maximum number of particles (matches the number of vertices).
+    public float ParticleRadius;                        // The particles' size.
+    public float[] Radii;                               // The individual particle sizes.
+    public ushort NumActive;                            // The number of active particles at the time the system was saved. This is also the number of valid entries in the following arrays.
+    public float[] Sizes;                               // The individual particle sizes.
+    public Quaternion[] Rotations;                      // The individual particle rotations.
+    public float[] RotationAngles;                      // Angles of rotation
+    public Vector3[] RotationAxes;                      // Axes of rotation.
+    public bool HasTextureIndices;
+    public uint NumSubtextureOffsets;                   // How many quads to use in BSPSysSubTexModifier for texture atlasing
+    public Vector4[] SubtextureOffsets;                 // Defines UV offsets
+    public float AspectRatio;                           // Sets aspect ratio for Subtexture Offset UV quads
+    public ushort AspectFlags;
+    public float SpeedtoAspectAspect2;
+    public float SpeedtoAspectSpeed1;
+    public float SpeedtoAspectSpeed2;
 
     public NiParticlesData(NifReader r) : base(r) {
-        NumParticles = r.ReadUInt16();
-        ParticleRadius = r.ReadSingle();
+        if (r.V <= 0x04000002) NumParticles = r.ReadUInt16();
+        if (r.V <= 0x0A000100) ParticleRadius = r.ReadSingle();
+        if (r.V >= 0x0A010000 && !((r.V == 0x14020007) && (r.UV2 > 0)) && r.ReadBool32()) Radii = r.ReadPArray<float>("f", NumVertices);
         NumActive = r.ReadUInt16();
-        Sizes = r.ReadBool32() ? r.ReadPArray<float>("f", NumVertices) : null;
+        if (!((r.V == 0x14020007) && (r.UV2 > 0)) && r.ReadBool32()) Sizes = r.ReadPArray<float>("f", NumVertices);
+        if (r.V >= 0x0A000100 && !((r.V == 0x14020007) && (r.UV2 > 0)) && r.ReadBool32()) Rotations = r.ReadFArray(z => r.ReadQuaternionWFirst(), NumVertices);
+        if (!((r.V == 0x14020007) && (r.UV2 > 0)) && r.ReadBool32()) RotationAngles = r.ReadPArray<float>("f", NumVertices);
+        if (r.V >= 0x14000004 && !((r.V == 0x14020007) && (r.UV2 > 0)) && r.ReadBool32()) RotationAxes = r.ReadPArray<Vector3>("3f", NumVertices);
+        if (((r.V == 0x14020007) && (r.UV2 > 0))) HasTextureIndices = r.ReadBool32();
+        if (r.UV2 > 34) NumSubtextureOffsets = r.ReadUInt32();
+        if (((r.V == 0x14020007) && (r.UV2 > 0))) SubtextureOffsets = r.ReadL8PArray<Vector4>("4f");
+        if (r.UV2 > 34) {
+            AspectRatio = r.ReadSingle();
+            AspectFlags = r.ReadUInt16();
+            SpeedtoAspectAspect2 = r.ReadSingle();
+            SpeedtoAspectSpeed1 = r.ReadSingle();
+            SpeedtoAspectSpeed2 = r.ReadSingle();
+        }
     }
 }
 
@@ -1435,10 +1646,10 @@ public class NiParticlesData : NiGeometryData { // X
 /// Rotating particles data object.
 /// </summary>
 public class NiRotatingParticlesData : NiParticlesData { // X
-    public Quaternion[] Rotations;
+    public Quaternion[] Rotations2;                     // The individual particle rotations.
 
     public NiRotatingParticlesData(NifReader r) : base(r) {
-        Rotations = r.ReadBool32() ? r.ReadFArray(z => r.ReadQuaternionWFirst(), NumVertices) : [];
+        if (r.V <= 0x04020200 && r.ReadBool32()) Rotations2 = r.ReadFArray(z => r.ReadQuaternionWFirst(), NumVertices);
     }
 }
 
@@ -1537,24 +1748,21 @@ public class NiGravity : NiParticleModifier { // X
 /// Wrapper for transformation animation keys.
 /// </summary>
 public class NiKeyframeData : NiObject { // X
-    public uint NumRotationKeys;
-    public KeyType RotationType;
-    public QuatKey<Quaternion>[] QuaternionKeys;
-    public float UnknownFloat;
-    public KeyGroup<float>[] XYZRotations;
-    public KeyGroup<Vector3> Translations;
-    public KeyGroup<float> Scales;
+    public uint NumRotationKeys;                        // The number of quaternion rotation keys. If the rotation type is XYZ (type 4) then this *must* be set to 1, and in this case the actual number of keys is stored in the XYZ Rotations field.
+    public KeyType RotationType;                        // The type of interpolation to use for rotation.  Can also be 4 to indicate that separate X, Y, and Z values are used for the rotation instead of Quaternions.
+    public QuatKey<Quaternion>[] QuaternionKeys;        // The rotation keys if Quaternion rotation is used.
+    public float Order;
+    public KeyGroup<float>[] XYZRotations;              // Individual arrays of keys for rotating X, Y, and Z individually.
+    public KeyGroup<Vector3> Translations;              // Translation keys.
+    public KeyGroup<float> Scales;                      // Scale keys.
 
-    public NiKeyframeData(NifReader r) : base(r) { // X
+    public NiKeyframeData(NifReader r) : base(r) {
         NumRotationKeys = r.ReadUInt32();
-        if (NumRotationKeys != 0) {
-            RotationType = (KeyType)r.ReadUInt32();
-            if (RotationType != KeyType.XYZ_ROTATION_KEY)
-                QuaternionKeys = r.ReadFArray(z => new QuatKey<Quaternion>(r, RotationType), (int)NumRotationKeys);
-            else {
-                UnknownFloat = r.ReadSingle();
-                XYZRotations = r.ReadFArray(z => new KeyGroup<float>(r), 3);
-            }
+        if (NumRotationKeys != 0) RotationType = (KeyType)r.ReadUInt32();
+        if (RotationType != KeyType.XYZ_ROTATION_KEY) QuaternionKeys = r.ReadFArray(z => new QuatKey<Quaternion>(r, RotationType), NumRotationKeys);
+        else {
+            if (r.V <= 0x0A010000) Order = r.ReadSingle();
+            XYZRotations = r.ReadFArray(z => new KeyGroup<float>(r), 3);
         }
         Translations = new KeyGroup<Vector3>(r);
         Scales = new KeyGroup<float>(r);
@@ -1593,16 +1801,16 @@ public class NiMaterialProperty : NiProperty { // X
 /// Geometry morphing data.
 /// </summary>
 public class NiMorphData : NiObject { // X
-    public uint NumMorphs;
-    public uint NumVertices;
-    public byte RelativeTargets;
-    public Morph[] Morphs;
+    public uint NumMorphs;                              // Number of morphing object.
+    public uint NumVertices;                            // Number of vertices.
+    public byte RelativeTargets = 1;                    // This byte is always 1 in all official files.
+    public Morph[] Morphs;                              // The geometry morphing objects.
 
     public NiMorphData(NifReader r) : base(r) {
         NumMorphs = r.ReadUInt32();
         NumVertices = r.ReadUInt32();
         RelativeTargets = r.ReadByte();
-        Morphs = r.ReadFArray(z => new Morph(r, NumVertices), (int)NumMorphs);
+        Morphs = r.ReadFArray(z => new Morph(r, NumVertices), NumMorphs);
     }
 }
 
@@ -1762,39 +1970,55 @@ public class NiAutoNormalParticles(NifReader r) : NiParticles(r) { // X
 /// A generic particle system time controller object.
 /// </summary>
 public class NiParticleSystemController : NiTimeController { // X
-    public float Speed;
-    public float SpeedRandom;
-    public float VerticalDirection;
-    public float VerticalAngle;
-    public float HorizontalDirection;
-    public float HorizontalAngle;
-    public Vector3 UnknownNormal;
-    public Color4 UnknownColor;
-    public float Size;
-    public float EmitStartTime;
-    public float EmitStopTime;
-    public byte UnknownByte;
-    public float EmitRate;
-    public float Lifetime;
-    public float LifetimeRandom;
-    public ushort EmitFlags;
-    public Vector3 StartRandom;
-    public Ref<NiObject> Emitter;
-    public ushort UnknownShort2;
-    public float UnknownFloat13;
-    public uint UnknownInt1;
-    public uint UnknownInt2;
-    public ushort UnknownShort3;
-    public ushort NumParticles;
-    public ushort NumValid;
-    public Particle[] Particles;
-    public Ref<NiObject> UnknownLink;
-    public Ref<NiParticleModifier> ParticleExtra;
-    public Ref<NiObject> UnknownLink2;
-    public byte Trailer;
+    public uint OldSpeed;                               // Particle speed in old files
+    public float Speed;                                 // Particle speed
+    public float SpeedRandom;                           // Particle random speed modifier
+    public float VerticalDirection;                     // vertical emit direction [radians]
+                                                        //     0.0 : up
+                                                        //     1.6 : horizontal
+                                                        //     3.1416 : down
+    public float VerticalAngle;                         // emitter's vertical opening angle [radians]
+    public float HorizontalDirection;                   // horizontal emit direction
+    public float HorizontalAngle;                       // emitter's horizontal opening angle
+    public Vector3 UnknownNormal;                       // Unknown.
+    public Color4 UnknownColor;                         // Unknown.
+    public float Size;                                  // Particle size
+    public float EmitStartTime;                         // Particle emit start time
+    public float EmitStopTime;                          // Particle emit stop time
+    public byte UnknownByte;                            // Unknown byte, (=0)
+    public uint OldEmitRate;                            // Particle emission rate in old files
+    public float EmitRate;                              // Particle emission rate (particles per second)
+    public float Lifetime;                              // Particle lifetime
+    public float LifetimeRandom;                        // Particle lifetime random modifier
+    public ushort EmitFlags;                            // Bit 0: Emit Rate toggle bit (0 = auto adjust, 1 = use Emit Rate value)
+    public Vector3 StartRandom;                         // Particle random start translation vector
+    public Ref<NiObject> Emitter;                       // This index targets the particle emitter object (TODO: find out what type of object this refers to).
+    public ushort UnknownShort2;                        // ? short=0 ?
+    public float UnknownFloat13;                        // ? float=1.0 ?
+    public uint UnknownInt1;                            // ? int=1 ?
+    public uint UnknownInt2;                            // ? int=0 ?
+    public ushort UnknownShort3;                        // ? short=0 ?
+    public Vector3 ParticleVelocity;                    // Particle velocity
+    public Vector3 ParticleUnknownVector;               // Unknown
+    public float ParticleLifetime;                      // The particle's age.
+    public Ref<NiObject> ParticleLink;
+    public uint ParticleTimestamp;                      // Timestamp of the last update.
+    public ushort ParticleUnknownShort;                 // Unknown short
+    public ushort ParticleVertexId;                     // Particle/vertex index matches array index
+    public ushort NumParticles;                         // Size of the following array. (Maximum number of simultaneous active particles)
+    public ushort NumValid;                             // Number of valid entries in the following array. (Number of active particles at the time the system was saved)
+    public Particle[] Particles;                        // Individual particle modifiers?
+    public Ref<NiObject> UnknownLink;                   // unknown int (=0xffffffff)
+    public Ref<NiParticleModifier> ParticleExtra;       // Link to some optional particle modifiers (NiGravity, NiParticleGrowFade, NiParticleBomb, ...)
+    public Ref<NiObject> UnknownLink2;                  // Unknown int (=0xffffffff)
+    public byte Trailer;                                // Trailing null byte
+    public Ref<NiColorData> ColorData;
+    public float UnknownFloat1;
+    public float[] UnknownFloats2;
 
     public NiParticleSystemController(NifReader r) : base(r) {
-        Speed = r.ReadSingle();
+        if (r.V <= 0x03010000) OldSpeed = r.ReadUInt32();
+        if (r.V >= 0x0303000D) Speed = r.ReadSingle();
         SpeedRandom = r.ReadSingle();
         VerticalDirection = r.ReadSingle();
         VerticalAngle = r.ReadSingle();
@@ -1805,25 +2029,44 @@ public class NiParticleSystemController : NiTimeController { // X
         Size = r.ReadSingle();
         EmitStartTime = r.ReadSingle();
         EmitStopTime = r.ReadSingle();
-        UnknownByte = r.ReadByte();
-        EmitRate = r.ReadSingle();
+        if (r.V >= 0x04000002) UnknownByte = r.ReadByte();
+        if (r.V <= 0x03010000) OldEmitRate = r.ReadUInt32();
+        if (r.V >= 0x0303000D) EmitRate = r.ReadSingle();
         Lifetime = r.ReadSingle();
         LifetimeRandom = r.ReadSingle();
-        EmitFlags = r.ReadUInt16();
+        if (r.V >= 0x04000002) EmitFlags = r.ReadUInt16();
         StartRandom = r.ReadVector3();
         Emitter = X<NiObject>.Ptr(r);
-        UnknownShort2 = r.ReadUInt16();
-        UnknownFloat13 = r.ReadSingle();
-        UnknownInt1 = r.ReadUInt32();
-        UnknownInt2 = r.ReadUInt32();
-        UnknownShort3 = r.ReadUInt16();
-        NumParticles = r.ReadUInt16();
-        NumValid = r.ReadUInt16();
-        Particles = r.ReadFArray(z => new Particle(r), NumParticles);
-        UnknownLink = X<NiObject>.Ref(r);
+        if (r.V >= 0x04000002) {
+            UnknownShort2 = r.ReadUInt16();
+            UnknownFloat13 = r.ReadSingle();
+            UnknownInt1 = r.ReadUInt32();
+            UnknownInt2 = r.ReadUInt32();
+            UnknownShort3 = r.ReadUInt16();
+        }
+        if (r.V <= 0x03010000) {
+            ParticleVelocity = r.ReadVector3();
+            ParticleUnknownVector = r.ReadVector3();
+            ParticleLifetime = r.ReadSingle();
+            ParticleLink = X<NiObject>.Ref(r);
+            ParticleTimestamp = r.ReadUInt32();
+            ParticleUnknownShort = r.ReadUInt16();
+            ParticleVertexId = r.ReadUInt16();
+        }
+        if (r.V >= 0x04000002) {
+            NumParticles = r.ReadUInt16();
+            NumValid = r.ReadUInt16();
+            Particles = r.ReadSArray<Particle>(NumParticles);
+            UnknownLink = X<NiObject>.Ref(r);
+        }
         ParticleExtra = X<NiParticleModifier>.Ref(r);
         UnknownLink2 = X<NiObject>.Ref(r);
-        Trailer = r.ReadByte();
+        if (r.V >= 0x04000002) Trailer = r.ReadByte();
+        if (r.V <= 0x03010000) {
+            ColorData = X<NiColorData>.Ref(r);
+            UnknownFloat1 = r.ReadSingle();
+            UnknownFloats2 = r.ReadPArray<float>("f", ParticleUnknownShort);
+        }
     }
 }
 
@@ -1831,6 +2074,54 @@ public class NiParticleSystemController : NiTimeController { // X
 /// A particle system controller, used by BS in conjunction with NiBSParticleNode.
 /// </summary>
 public class NiBSPArrayController(NifReader r) : NiParticleSystemController(r) { // X
+}
+
+public class PixelFormatComponent(NifReader r) { // Y
+    public PixelComponent Type = (PixelComponent)r.ReadUInt32(); // Component Type
+    public PixelRepresentation Convention = (PixelRepresentation)r.ReadUInt32(); // Data Storage Convention
+    public byte BitsPerChannel = r.ReadByte();          // Bits per component
+    public bool IsSigned = r.ReadBool32();
+}
+
+public abstract class NiPixelFormat : NiObject { // Y
+    public PixelFormat PixelFormat;                     // The format of the pixels in this internally stored image.
+    public uint RedMask;                                // 0x000000ff (for 24bpp and 32bpp) or 0x00000000 (for 8bpp)
+    public uint GreenMask;                              // 0x0000ff00 (for 24bpp and 32bpp) or 0x00000000 (for 8bpp)
+    public uint BlueMask;                               // 0x00ff0000 (for 24bpp and 32bpp) or 0x00000000 (for 8bpp)
+    public uint AlphaMask;                              // 0xff000000 (for 32bpp) or 0x00000000 (for 24bpp and 8bpp)
+    public uint BitsPerPixel;                           // Bits per pixel, 0 (Compressed), 8, 24 or 32.
+    public byte[] OldFastCompare;                       // [96,8,130,0,0,65,0,0] if 24 bits per pixel
+                                                        //     [129,8,130,32,0,65,12,0] if 32 bits per pixel
+                                                        //     [34,0,0,0,0,0,0,0] if 8 bits per pixel
+                                                        //     [X,0,0,0,0,0,0,0] if 0 (Compressed) bits per pixel where X = PixelFormat
+    public PixelTiling Tiling;                          // Seems to always be zero.
+    public uint RendererHint;
+    public uint ExtraData;
+    public byte Flags;
+    public bool sRGBSpace;
+    public PixelFormatComponent[] Channels;             // Channel Data
+
+    public NiPixelFormat(NifReader r) : base(r) {
+        PixelFormat = (PixelFormat)r.ReadUInt32();
+        if (r.V <= 0x0A030002) {
+            RedMask = r.ReadUInt32();
+            GreenMask = r.ReadUInt32();
+            BlueMask = r.ReadUInt32();
+            AlphaMask = r.ReadUInt32();
+            BitsPerPixel = r.ReadUInt32();
+            OldFastCompare = r.ReadBytes(8);
+        }
+        if (r.V >= 0x0A010000 && r.V <= 0x0A030002) Tiling = (PixelTiling)r.ReadUInt32();
+        if (r.V >= 0x0A030003) {
+            BitsPerPixel = r.ReadByte();
+            RendererHint = r.ReadUInt32();
+            ExtraData = r.ReadUInt32();
+            Flags = r.ReadByte();
+            Tiling = (PixelTiling)r.ReadUInt32();
+        }
+        if (r.V >= 0x14030004) sRGBSpace = r.ReadBool32();
+        if (r.V >= 0x0A030003) Channels = r.ReadFArray(z => new PixelFormatComponent(r), 4);
+    }
 }
 
 /// <summary>
@@ -1865,16 +2156,18 @@ public class NiShadeProperty : NiProperty { // X
 /// Skinning data.
 /// </summary>
 public class NiSkinData : NiObject { // X
-    public NiTransform SkinTransform;       // Offset of the skin from this bone in bind position.
-    public uint NumBones;                   // Number of bones.
-    public Ref<NiSkinPartition> SkinPartition;              // This optionally links a NiSkinPartition for hardware-acceleration information.
-    public BoneData[] BoneList;             // Contains offset data for each node that this skin is influenced by.
+    public NiTransform SkinTransform;                   // Offset of the skin from this bone in bind position.
+    public uint NumBones;                               // Number of bones.
+    public Ref<NiSkinPartition> SkinPartition;          // This optionally links a NiSkinPartition for hardware-acceleration information.
+    public byte HasVertexWeights = 1;                   // Enables Vertex Weights for this NiSkinData.
+    public BoneData[] BoneList;                         // Contains offset data for each node that this skin is influenced by.
 
     public NiSkinData(NifReader r) : base(r) {
-        SkinTransform = new NiTransform(r);
+        SkinTransform = r.ReadS<NiTransform>();
         NumBones = r.ReadUInt32();
         if (r.V >= 0x04000002 && r.V <= 0x0A010000) SkinPartition = X<NiSkinPartition>.Ref(r);
-        if (r.V < 0x04020100 || r.ReadBool32()) BoneList = r.ReadFArray(z => new BoneData(r, 1), (int)NumBones);
+        if (r.V >= 0x04020100) HasVertexWeights = r.ReadByte();
+        BoneList = r.ReadFArray(z => new BoneData(r, HasVertexWeights), NumBones);
     }
 }
 
@@ -1898,7 +2191,26 @@ public class NiSkinInstance : NiObject { // X
 /// <summary>
 /// Skinning data, optimized for hardware skinning. The mesh is partitioned in submeshes such that each vertex of a submesh is influenced only by a limited and fixed number of bones.
 /// </summary>
-public class NiSkinPartition(NifReader r) : NiObject(r) { // X
+public class NiSkinPartition : NiObject { // X
+    public uint NumSkinPartitionBlocks;
+    public SkinPartition[] SkinPartitionBlocks;         // Skin partition objects.
+    public uint DataSize;
+    public uint VertexSize;
+    public BSVertexDesc VertexDesc;
+    public BSVertexDataSSE[] VertexData;
+    public SkinPartition[] Partition;
+
+    public NiSkinPartition(NifReader r) : base(r) {
+        NumSkinPartitionBlocks = r.ReadUInt32();
+        if (!((r.V == 0x14020007) && (r.UV2 == 100))) SkinPartitionBlocks = r.ReadFArray(z => new SkinPartition(r), NumSkinPartitionBlocks);
+        if (r.UV2 == 100) {
+            DataSize = r.ReadUInt32();
+            VertexSize = r.ReadUInt32();
+            VertexDesc = r.ReadS<BSVertexDesc>();
+            if (DataSize > 0) VertexData = r.ReadFArray(z => new BSVertexDataSSE(r, (uint)VertexDesc.VertexAttributes), DataSize / VertexSize);
+            Partition = r.ReadFArray(z => new SkinPartition(r), NumSkinPartitionBlocks);
+        }
+    }
 }
 
 /// <summary>
@@ -1908,23 +2220,43 @@ public abstract class NiTexture(NifReader r) : NiObjectNET(r) { // X
 }
 
 /// <summary>
+/// NiTexture::FormatPrefs. These preferences are a request to the renderer to use a format the most closely matches the settings and may be ignored.
+/// </summary>
+public class FormatPrefs(NifReader r) { // Y
+    public PixelLayout PixelLayout = (PixelLayout)r.ReadUInt32(); // Requests the way the image will be stored.
+    public MipMapFormat UseMipmaps = (MipMapFormat)r.ReadUInt32(); // Requests if mipmaps are used or not.
+    public AlphaFormat AlphaFormat = (AlphaFormat)r.ReadUInt32(); // Requests no alpha, 1-bit alpha, or
+}
+
+/// <summary>
 /// Describes texture source and properties.
 /// </summary>
-public class NiSourceTexture : NiTexture {
-    public byte UseExternal;
-    public string FileName;
-    public PixelLayout PixelLayout;
-    public MipMapFormat UseMipMaps;
-    public AlphaFormat AlphaFormat;
-    public byte IsStatic;
+public class NiSourceTexture : NiTexture { // X
+    public byte UseExternal = 1;                        // Is the texture external?
+    public string FileName;                             // The external texture file name.
+    public Ref<NiObject> UnknownLink;                   // Unknown.
+    public byte UnknownByte = 1;                        // Unknown. Seems to be set if Pixel Data is present?
+    public Ref<NiPixelFormat> PixelData;                // NiPixelData or NiPersistentSrcTextureRendererData
+    public FormatPrefs FormatPrefs;                     // A set of preferences for the texture format. They are a request only and the renderer may ignore them.
+    public byte IsStatic = 1;                           // If set, then the application cannot assume that any dynamic changes to the pixel data will show in the rendered image.
+    public bool DirectRender = true;                    // A hint to the renderer that the texture can be loaded directly from a texture file into a renderer-specific resource, bypassing the NiPixelData object.
+    public bool PersistRenderData = false;              // Pixel Data is NiPersistentSrcTextureRendererData instead of NiPixelData.
 
     public NiSourceTexture(NifReader r) : base(r) {
         UseExternal = r.ReadByte();
-        FileName = r.ReadL32Encoding();
-        PixelLayout = (PixelLayout)r.ReadUInt32();
-        UseMipMaps = (MipMapFormat)r.ReadUInt32();
-        AlphaFormat = (AlphaFormat)r.ReadUInt32();
+        if (r.V >= 0x0A010000 && UseExternal == 1) {
+            FileName = r.ReadL32Encoding();
+            UnknownLink = X<NiObject>.Ref(r);
+        }
+        if (UseExternal == 0) {
+            if (r.V <= 0x0A000100) UnknownByte = r.ReadByte();
+            if (r.V >= 0x0A010000) FileName = r.ReadL32Encoding();
+            PixelData = X<NiPixelFormat>.Ref(r);
+        }
+        FormatPrefs = new FormatPrefs(r);
         IsStatic = r.ReadByte();
+        if (r.V >= 0x0A010067) DirectRender = r.ReadBool32();
+        if (r.V >= 0x14020004) PersistRenderData = r.ReadBool32();
     }
 }
 
@@ -1997,19 +2329,19 @@ public class NiTextureEffect : NiDynamicEffect { // X
 /// <summary>
 /// LEGACY (pre-10.1)
 /// </summary>
-public class NiImage : NiObject { // X
-    //public byte UseExternal;                            // 0 if the texture is internal to the NIF file.
-    //public ?? FileName;                                 // The filepath to the texture.
-    //public int? ImageData;                              // Link to the internally stored image data.
-    //public uint UnknownInt = 7;                         // Unknown.  Often seems to be 7. Perhaps m_uiMipLevels?
-    //public float UnknownFloat = 128.5f;                 // Unknown.  Perhaps fImageScale?
+public class NiImage : NiObject { // Y
+    public byte UseExternal;                            // 0 if the texture is internal to the NIF file.
+    public string FileName;                             // The filepath to the texture.
+    public Ref<NiRawImageData> ImageData;               // Link to the internally stored image data.
+    public uint UnknownInt = 7;                         // Unknown.  Often seems to be 7. Perhaps m_uiMipLevels?
+    public float UnknownFloat = 128.5f;                 // Unknown.  Perhaps fImageScale?
 
     public NiImage(NifReader r) : base(r) {
-        //    UseExternal = r.ReadByte();
-        //    if (UseExternal != 0) FileName = ??;
-        //    else ImageData = Y<NiRawImageData>.Ref(r);
-        //    UnknownInt = r.ReadUInt32();
-        //    if (r.V >= 0x03010000) UnknownFloat = r.ReadSingle();
+        UseExternal = r.ReadByte();
+        if (UseExternal != 0) FileName = r.ReadL32Encoding();
+        else ImageData = X<NiRawImageData>.Ref(r);
+        UnknownInt = r.ReadUInt32();
+        if (r.V >= 0x03010000) UnknownFloat = r.ReadSingle();
     }
 }
 
@@ -2026,19 +2358,59 @@ public class NiTexturingProperty : NiProperty { // X
     public TexDesc GlossTexture;                        // The gloss texture.
     public TexDesc GlowTexture;                         // The glowing texture.
     public TexDesc BumpMapTexture;                      // The bump map texture.
-    public TexDesc Decal0Texture;
+    public float BumpMapLumaScale;
+    public float BumpMapLumaOffset;
+    public Matrix2x2 BumpMapMatrix;
+    public TexDesc NormalTexture;                       // Normal texture.
+    public TexDesc ParallaxTexture;
+    public float ParallaxOffset;
+    public bool HasDecal0Texture;
+    public TexDesc Decal0Texture;                       // The decal texture.
+    public bool HasDecal1Texture;
+    public TexDesc Decal1Texture;                       // Another decal texture.
+    public bool HasDecal2Texture;
+    public TexDesc Decal2Texture;                       // Another decal texture.
+    public bool HasDecal3Texture;
+    public TexDesc Decal3Texture;                       // Another decal texture.
+    public ShaderTexDesc[] ShaderTextures;              // Shader textures.
 
     public NiTexturingProperty(NifReader r) : base(r) {
-        Flags = (Flags)r.ReadUInt16();
-        ApplyMode = (ApplyMode)r.ReadUInt32();
+        if (r.V <= 0x0A000102) Flags = (Flags)r.ReadUInt16();
+        if (r.V >= 0x14010002) Flags = (Flags)r.ReadUInt16();
+        if (r.V >= 0x0303000D && r.V <= 0x14010001) ApplyMode = (ApplyMode)r.ReadUInt32();
         TextureCount = r.ReadUInt32();
-        BaseTexture = r.ReadBool32() ? new TexDesc(r) : default;
-        DarkTexture = r.ReadBool32() ? new TexDesc(r) : default;
-        DetailTexture = r.ReadBool32() ? new TexDesc(r) : default;
-        GlossTexture = r.ReadBool32() ? new TexDesc(r) : default;
-        GlowTexture = r.ReadBool32() ? new TexDesc(r) : default;
-        BumpMapTexture = r.ReadBool32() ? new TexDesc(r) : default;
-        Decal0Texture = r.ReadBool32() ? new TexDesc(r) : default;
+        if (r.ReadBool32()) BaseTexture = new TexDesc(r);
+        if (r.ReadBool32()) DarkTexture = new TexDesc(r);
+        if (r.ReadBool32()) DetailTexture = new TexDesc(r);
+        if (r.ReadBool32()) GlossTexture = new TexDesc(r);
+        if (r.ReadBool32()) GlowTexture = new TexDesc(r);
+        var HasBumpMapTexture = r.V >= 0x0303000D && TextureCount > 5 ? r.ReadBool32() : default;
+        if (HasBumpMapTexture) {
+            BumpMapTexture = new TexDesc(r);
+            BumpMapLumaScale = r.ReadSingle();
+            BumpMapLumaOffset = r.ReadSingle();
+            BumpMapMatrix = r.ReadMatrix2x2();
+        }
+        var HasNormalTexture = r.V >= 0x14020005 && TextureCount > 6 ? r.ReadBool32() : default;
+        if (HasNormalTexture) NormalTexture = new TexDesc(r);
+        var HasParallaxTexture = r.V >= 0x14020005 && TextureCount > 7 ? r.ReadBool32() : default;
+        if (HasParallaxTexture) {
+            ParallaxTexture = new TexDesc(r);
+            ParallaxOffset = r.ReadSingle();
+        }
+        if (r.V <= 0x14020004 && TextureCount > 6) HasDecal0Texture = r.ReadBool32();
+        if (r.V >= 0x14020005 && TextureCount > 8) HasDecal0Texture = r.ReadBool32();
+        if (HasDecal0Texture) Decal0Texture = new TexDesc(r);
+        if (r.V <= 0x14020004 && TextureCount > 7) HasDecal1Texture = r.ReadBool32();
+        if (r.V >= 0x14020005 && TextureCount > 9) HasDecal1Texture = r.ReadBool32();
+        if (HasDecal1Texture) Decal1Texture = new TexDesc(r);
+        if (r.V <= 0x14020004 && TextureCount > 8) HasDecal2Texture = r.ReadBool32();
+        if (r.V >= 0x14020005 && TextureCount > 10) HasDecal2Texture = r.ReadBool32();
+        if (HasDecal2Texture) Decal2Texture = new TexDesc(r);
+        if (r.V <= 0x14020004 && TextureCount > 9) HasDecal3Texture = r.ReadBool32();
+        if (r.V >= 0x14020005 && TextureCount > 11) HasDecal3Texture = r.ReadBool32();
+        if (HasDecal3Texture) Decal3Texture = new TexDesc(r);
+        if (r.V >= 0x0A000100) ShaderTextures = r.ReadL32FArray(z => new ShaderTexDesc(r));
     }
 }
 
@@ -2052,13 +2424,16 @@ public class NiTriShape(NifReader r) : NiTriBasedGeom(r) { // X
 /// Holds mesh data using a list of singular triangles.
 /// </summary>
 public class NiTriShapeData : NiTriBasedGeomData { // X
-    public uint NumTrianglePoints;
-    public Triangle[] Triangles;
-    public MatchGroup[] MatchGroups;
+    public uint NumTrianglePoints;                      // Num Triangles times 3.
+    public bool HasTriangles;                           // Do we have triangle data?
+    public Triangle[] Triangles;                        // Triangle data.
+    public MatchGroup[] MatchGroups;                    // The shared normals.
 
     public NiTriShapeData(NifReader r) : base(r) {
         NumTrianglePoints = r.ReadUInt32();
-        Triangles = r.ReadFArray(z => new Triangle(r), NumTriangles);
+        if (r.V >= 0x0A010000) HasTriangles = false; // calculated
+        if (r.V <= 0x0A000102) Triangles = r.ReadSArray<Triangle>(NumTriangles);
+        if (r.V >= 0x0A000103 && HasTriangles) Triangles = r.ReadSArray<Triangle>(NumTriangles);
         if (r.V >= 0x03010000) MatchGroups = r.ReadL16FArray(z => new MatchGroup(r));
     }
 }
@@ -2166,6 +2541,26 @@ public class NiZBufferProperty : NiProperty { // X
 /// Morrowind-specific node for collision mesh.
 /// </summary>
 public class RootCollisionNode(NifReader r) : NiNode(r) { // X
+}
+
+/// <summary>
+/// LEGACY (pre-10.1)
+/// Raw image data.
+/// </summary>
+public class NiRawImageData : NiObject { // Y
+    public uint Width;                                  // Image width
+    public uint Height;                                 // Image height
+    public ImageType ImageType;                         // The format of the raw image data.
+    public Color3[][] RGBImageData;                     // Image pixel data.
+    public Color4[][] RGBAImageData;                    // Image pixel data.
+
+    public NiRawImageData(NifReader r) : base(r) {
+        Width = r.ReadUInt32();
+        Height = r.ReadUInt32();
+        ImageType = (ImageType)r.ReadUInt32();
+        if (ImageType == ImageType.RGB) RGBImageData = r.ReadFArray(k => r.ReadFArray(z => new Color3(r.ReadBytes(3)), Height), Width);
+        if (ImageType == ImageType.RGBA) RGBAImageData = r.ReadFArray(k => r.ReadFArray(z => new Color4(r.ReadBytes(4)), Height), Width);
+    }
 }
 
 /// <summary>

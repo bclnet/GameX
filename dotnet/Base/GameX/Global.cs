@@ -13,6 +13,7 @@ public struct Color3 { //:M
 
     public Color3() { }
     public Color3(double r, double g, double b) { R = (float)r; G = (float)g; B = (float)b; }
+    public Color3(byte[] s) { R = s[0]; G = s[1]; B = s[2]; }
     public Color3(BinaryReader r) {
         R = r.ReadSingle();
         G = r.ReadSingle();

@@ -17,8 +17,9 @@ class NifCodeWriter(XmlCodeWriter):
             'NiParticleModifier', 'NiGravity', 'NiParticleBomb', 'NiParticleColorModifier', 'NiParticleGrowFade', 'NiParticleMeshModifier', 'NiParticleRotation', 'NiTimeController', 'NiUVController', 'NiInterpController', 'NiSingleInterpController', 'NiKeyframeController', 'NiGeomMorpherController', 'NiBoolInterpController', 'NiVisController', 'NiFloatInterpController', 'NiAlphaController',
             'NiSkinInstance', 'NiSkinData', 'NiSkinPartition', 'NiTexture', 'NiSourceTexture', 'NiPoint3InterpController', 'NiMaterialProperty', 'NiMaterialColorController', 'NiDynamicEffect', 'NiTextureEffect' ]
         self.es3x = [
-            'MaterialColor', 'BSLightingShaderPropertyShaderType', 'BSShaderType', 'BSShaderFlags', 'BSShaderFlags2', 'BillboardMode', 'SymmetryType', 'VertexFlags', 'ZCompareMode',
-            'MaterialData', 'BSVertexDesc', 'MorphWeight', 'BSShaderProperty', 'VectorFlags', 'BSVectorFlags', 'ConsistencyType', 'AbstractAdditionalGeometryData', 'NiPlane', 'NiImage', 'NiBound', 'CapsuleBV', 'UnionBV', 'HalfSpaceBV',
+            'MaterialColor', 'BSLightingShaderPropertyShaderType', 'BSShaderType', 'BSShaderFlags', 'BSShaderFlags2', 'BillboardMode', 'SymmetryType', 'VertexFlags', 'ZCompareMode', 'ImageType', 'NiPixelFormat', 'PixelFormat', 'PixelComponent', 'PixelRepresentation', 'PixelTiling', 'PixelFormatComponent',
+            'MaterialData', 'BSVertexDesc', 'MorphWeight', 'BSShaderProperty', 'VectorFlags', 'BSVectorFlags', 'ConsistencyType', 'AbstractAdditionalGeometryData', 'FormatPrefs', 'NiRawImageData', 'SkinPartition', 'BSVertexDataSSE',
+            'NiPlane', 'NiImage', 'NiBound', 'CapsuleBV', 'UnionBV', 'HalfSpaceBV', 'ShaderTexDesc',
             'NiCollisionObject', 'NiInterpolator' ]
         self.customs = {
             '_header': (
@@ -328,24 +329,24 @@ class Flags(Flag):
             ifx.inits[0].cond = ifx.inits[0].cond[23:-1]
             ifx.inits[1].cond = ifx.inits[1].cond[23:-1]
         def SkinPartition_values(s, values):
-            for i in [14, 9, 6]: del values[i]
+            for i in [14, 6]: del values[i]
         def SkinPartition_inits(s, inits):
-            inits.insert(0, Class.Code(s, ('uint u0;', 'u0: int = 0')))
-            #
-            inits.insert(7, ifx := Class.If(s, None, inits[0], (inits, 7, 17), 'elseif'))
+            inits.insert(6, ifx := Class.If(s, None, inits[0], (inits, 6, 17), 'elseif'))
             ifx.vercond = 'ZV >= 0x0A010000'
             in0 = []
-            for i in [8, 6, 2, 0]: ifx.inits[i].vercond = None; in0.insert(0, ifx.inits[i]); del ifx.inits[i]
-            in0.insert(2, ifx.inits[3])
+            for i in [9, 7, 3, 0]: ifx.inits[i].vercond = None; in0.insert(0, ifx.inits[i]); del ifx.inits[i]
+            in0.insert(2, ifx.inits[4])
             ifx.inits[0].vercond = None; ifx.inits[0].cond = 'B32:' + ifx.inits[0].cond
-            ifx.inits[1].vercond = None; ifx.inits[1].cond = 'U32:' + ifx.inits[1].cond
-            ifx.inits[2].vercond = None; ifx.inits[2].cond = ifx.inits[2].cond.replace('Has Vertex Weights', 'u0')
-            ifx.inits[4].vercond = None; ifx.inits[4].cond = ifx.inits[4].cond[16:-1]
-            ifx.inits[5].vercond = None; ifx.inits[5].cond = ifx.inits[5].cond[16:-1]
-            ifx.inits.insert(4, ifx := Class.If(s, None, None, (ifx.inits, 4, 7), 'if'))
+            ifx.inits[1].vercond = None; ifx.inits[1].type = 'uint'; ifx.inits[1].kind = 'var'
+            ifx.inits[2].vercond = None
+            ifx.inits[3].vercond = None
+            ifx.inits[5].vercond = None; ifx.inits[5].cond = ifx.inits[5].cond[16:-1]; ifx.inits[5].arr2x = 'i'
+            ifx.inits[6].vercond = None; ifx.inits[6].cond = ifx.inits[6].cond[16:-1]
+            ifx.inits.insert(5, ifx := Class.If(s, None, None, (ifx.inits, 5, 7), 'if'))
             ifx.vercond = 'B32:HasFaces'
             #
-            inits.insert(7, ifx := Class.If(s, None, None, in0, 'if'))
+            inits.insert(6, ifx := Class.If(s, None, None, in0, 'if'))
+            ifx.inits[3].arr2x = 'i'
             ifx.vercond = 'ZV <= 0x0A000102'
         def Morph_if(s, ifx):
             if s.name == 'Keys': ifx.inits[0].name = ''; ifx.inits[0].initcw = ('var NumKeys = r.ReadUInt32();', 'NumKeys = r.readUInt32()')
@@ -354,7 +355,7 @@ class Flags(Flag):
             values[6].kind = ':'; values[5].kind = ':+'; values[4].kind = '?+'
             values[6].arr1 = values[5].arr1 = values[4].arr1 = 'L16'
             values[6].type = 'BoneVertData'; values[6].namecw = ('VertexWeights', 'vertexWeights')
-            values[6].initcw = ('    : r.V >= 0x14030101 && arg == 15 ? r.ReadL16FArray(z => new BoneVertData(r, false)) : default;', 'r.V >= 0x14030101 && arg == 15 ? r.readL16FArray(z => BoneVertData(r, false)) : None')
+            values[6].initcw = ('    : r.V >= 0x14030101 && arg == 15 ? r.ReadL16FArray(z => new BoneVertData(r, false)) : default;', 'r.V >= 0x14030101 && arg == 15 ? r.readL16FArray(lambda z: BoneVertData(r, false)) : None')
         def MotorDescriptor_inits(s, inits):
             inits.insert(1, Class.If(s, None, None, (inits, 1, 4), 'switch'))
         def RagdollDescriptor_inits(s, inits):
@@ -387,7 +388,7 @@ class Flags(Flag):
                 # 'consts': ('public BoneVertData(NifReader r, bool half) { Index = r.ReadUInt16(); Weight = r.ReadHalf(); }', 'if half: self.index = r.readUInt16(); self.weight = r.readHalf(); return') },
                 'values': BoneVertData_values },
             'BoneVertDataHalf': { 'x': 1427,
-                '_': ['', ('BoneVertData', 'BoneVertData'), lambda x: (x, x), ('new BoneVertData(r, true)', 'BoneVertData(r, true)'), lambda c: (f'r.ReadFArray(r => new BoneVertData(r, true), {c})', f'r.readFArray(lambda r: BoneVertData(r, true), {c})')] },
+                '_': ['', ('BoneVertData', 'BoneVertData'), lambda x: (x, x), ('new BoneVertData(r, true)', 'BoneVertData(r, true)'), lambda c: (f'r.ReadFArray(z => new BoneVertData(r, true), {c})', f'r.readFArray(lambda z: BoneVertData(r, true), {c})')] },
             'ControlledBlock': { 'x': 1439,
                 'values': ControlledBlock_values,
                 'if': ControlledBlock_if },
@@ -401,10 +402,10 @@ class Flags(Flag):
                 'code': StringPalette_code },
             'Key': { 'x': 1521,
                 'kind': {-1: 'elseif'},
-                'constArg': (', KeyType keyType', ', keyType: KeyType'), 'constNew': (', Interpolation', ', self.interpolation'),
+                'constArg': (', KeyType keyType', ', keyType: KeyType'), 'constNew': (', ARG', ', self.ARG'),
                 'cond': lambda p, s, cw: cw.typeReplace('KeyType', s).replace('ARG', 'keyType') },
             'QuatKey': { 'x': 1537,
-                'constArg': (', KeyType keyType', ', keyType: KeyType'),
+                'constArg': (', KeyType keyType', ', keyType: KeyType'), 'constNew': (', ARG', ', self.ARG'),
                 'cond': lambda p, s, cw: cw.typeReplace('KeyType', s).replace('ARG', 'keyType') },
             'TexCoord': { 'x': 1545,
                 'flags': 'C',
@@ -413,7 +414,7 @@ class Flags(Flag):
                     ('public TexCoord(double u, double v) { this.u = (float)u; this.v = (float)v; }', None),
                     ('public TexCoord(NifReader r, bool half) { u = half ? r.ReadHalf() : r.ReadSingle(); v = half ? r.ReadHalf() : r.ReadSingle(); }', 'if half: self.u = r.readHalf(); self.v = r.readHalf(); return')] },
             'HalfTexCoord': { 'x': 1551,
-                '_': ['', ('TexCoord', 'TexCoord'), lambda x: (x, x), ('new TexCoord(r, true)', 'TexCoord(r, true)'), lambda c: (f'r.ReadFArray(r => new TexCoord(r, true), {c})', f'r.readFArray(lambda r: TexCoord(r, true), {c})')] },
+                '_': ['', ('TexCoord', 'TexCoord'), lambda x: (x, x), ('new TexCoord(r, true)', 'TexCoord(r, true)'), lambda c: (f'r.ReadFArray(z => new TexCoord(r, true), {c})', f'r.readFArray(lambda z: TexCoord(r, true), {c})')] },
             'TexDesc': { 'x': 1565,
                 'values': TexDesc_values },
             'BSVertexData': { 'x': 1616,
@@ -438,6 +439,7 @@ class Flags(Flag):
                     .replace('(ARG & 16384) != 0', 'full').replace('(ARG & 16384) == 0', '!full'),
                 'values': BSVertexData_values, 'inits': BSVertexData_inits },
             'BSVertexDataSSE': { 'x': 1636,
+                'constArg': (', uint ARG', ', ARG: int'), 'constNew': (', ARG', ', ARG'),
                 'type': ['', ('BSVertexData', 'BSVertexData'), lambda x: (x, x), ('new BSVertexData(r, true)', 'BSVertexData(r, true)'), lambda c: (f'r.ReadFArray(r => new BSVertexData(r, true), {c})', f'r.readFArray(lambda r: BSVertexData(r, true), {c})')] },
             'SkinPartition': { 'x': 1661,
                 'calculated': lambda s: ('(ushort)(NumVertices / 3)', '(self.numVertices / 3)'),
@@ -447,11 +449,11 @@ class Flags(Flag):
             'FurniturePosition': { 'x': 1750,
                 'kind': {-1: 'else'} }, # should auto
             'Morph': { 'x': 1768,
-                'constArg': (', uint numVertices', ', numVertices: int'),
+                'constArg': (', uint numVertices', ', numVertices: int'), 'constNew': (', ARG', ', ARG'),
                 'cond': lambda p, s, cw: s.replace('ARG', 'numVertices'),
                 'if': Morph_if },
             'BoneData': { 'x': 1789,
-                'constArg': (', int arg', ', arg: int'),
+                'constArg': (', int arg', ', arg: int'), 'constNew': (', ARG', ', ARG'),
                 'cond': lambda p, s, cw: s.replace('ARG', 'arg'),
                 'values': BoneData_values },
             'MotorDescriptor': { 'x': 1898,
@@ -533,13 +535,26 @@ BODY
         def NiFlipController_values(s, values):
             pass
         def NiGeometry_values(s, values): #fix
-            values.insert(0, Class.Code(s, ('var NiParticleSystem = false;', 'NiParticleSystem: bool = false'))) #TODO Fix
+            pass
         def NiGeometryData_values(s, values):
             values[1].cond = '!false || r.UV2 >= 34' #fix !NiPSysData
             del values[2]
             values[2].cond = 'false' #fix NiPSysData
             values[14].cond = values[15].cond = '(HasNormals != 0) && (((int)VectorFlags | (int)BSVectorFlags) & 4096) != 0'
+            values[25].arr1 = values[26].arr1 = '((NumUVSets & 63) | ((int)VectorFlags & 63) | ((int)BSVectorFlags & 1))'
             values[20].kind = values[11].kind = values[5].kind = 'var'
+        def NiKeyframeData_values(s, values):
+            values[2].cond = 'RotationType != KeyType.XYZ_ROTATION_KEY'
+            values[4].cond = values[3].cond = 'RotationType == KeyType.XYZ_ROTATION_KEY'
+        def NiSourceTexture_values(s, values):
+            values[8].default = 'true'
+            values[9].default = 'false'
+        def NiTexturingProperty_values(s, values):
+            values[16].kind = values[14].kind = values[9].kind = 'var?'
+            pass
+        def NiRawImageData_values(s, values):
+            values[3].cond = 'Image Type == ImageType.RGB'
+            values[4].cond = 'Image Type == ImageType.RGBA'
         self.customs = self.customs | {
             'NiObject': { 'x': 2193,
                 'code': NiObject_code },
@@ -573,14 +588,32 @@ BODY
             'NiFlipController': { 'x': 2988,
                 'values': NiFlipController_values },
             'NiGeometry': { 'x': 3125,
+                'conds': ['NiParticleSystem'],
                 'values': NiGeometry_values },
             'NiGeometryData': { 'x': 3188,
                 'type': {'Has Vertices': 'uint', 'Has Normals': 'uint', 'Has Vertex Colors': 'uint' }, #'Normalsx': 'Vector3', 'Vertex Colors': 'Color4',
                 'values': NiGeometryData_values },
+            'NiKeyframeData': { 'x': 3683,
+                'kind': {-3: 'else'}, 
+                'values': NiKeyframeData_values },
+            'NiSkinData': { 'x': 4439,
+                'type': {'x': 'Matrix33R'} },
+            'NiSkinPartition': { 'x': 4469,
+                'arg': '(uint)VertexDesc.VertexAttributes' },
+            'NiSourceTexture': { 'x': 4491,
+                'values': NiSourceTexture_values },
+            'NiTextKeyExtraData': { 'x': 4570,
+                'arg': 'KeyType.LINEAR_KEY' },
             'NiTextureEffect': { 'x': 4577,
                 'type': {'Model Projection Matrix': 'Matrix33R'} },
+            'NiTexturingProperty': { 'x': 4620,
+                'values': NiTexturingProperty_values },
             'NiTriShapeData': { 'x': 4673,
-                'calculated': lambda s: ('0', '0') },
+                'calculated': lambda s: ('false', 'false') },
+            'NiVisData': { 'x': 4804,
+                'arg': 'KeyType.LINEAR_KEY' },
+            'NiRawImageData': { 'x': 4835,
+                'values': NiRawImageData_values },
         }
         #endregion
         self.init()

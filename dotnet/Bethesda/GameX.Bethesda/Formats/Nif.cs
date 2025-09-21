@@ -602,7 +602,7 @@ public class QuatKey<T> { // X
 
     public QuatKey(NifReader r, KeyType keyType) {
         if (r.V <= 0x0A010000) Time = r.ReadSingle();
-        if (r.V >= 0x0A01006A && keyType != KeyType.XYZ_ROTATION_KEY) {
+        if (keyType != KeyType.XYZ_ROTATION_KEY) {
             if (r.V >= 0x0A01006A) Time = r.ReadSingle();
             Value = Y<T>.Read(r);
         }
@@ -1377,10 +1377,13 @@ public class MaterialData { // Y
     public int ActiveMaterial = -1;                     // The index of the currently active material.
     public byte UnknownByte = 255;                      // Cyanide extension (only in version 10.2.0.0?).
     public int UnknownInteger2;                         // Unknown.
-    // Whether the materials for this object always needs to be updated before rendering with them.
+    public bool MaterialNeedsUpdate;                    // Whether the materials for this object always needs to be updated before rendering with them.
 
     public MaterialData(NifReader r) {
-        ShaderExtraData = r.ReadInt32();
+        if (r.V >= 0x0A000100 && r.V <= 0x14010003 && r.ReadBool32()) {
+            ShaderName = X.String(r);
+            ShaderExtraData = r.ReadInt32();
+        }
         if (r.V >= 0x14020005) {
             NumMaterials = r.ReadUInt32();
             MaterialName = r.ReadFArray(z => X.String(r), NumMaterials);
@@ -1389,10 +1392,7 @@ public class MaterialData { // Y
         }
         if (r.V == 0x0A020000 && (r.UV == 1)) UnknownByte = r.ReadByte();
         if (r.V == 0x0A040001) UnknownInteger2 = r.ReadInt32();
-        if (r.V >= 0x0A000100 && r.V <= 0x14010003 && r.ReadBool32()) {
-            ShaderName = X.String(r);
-            ShaderExtraData = r.ReadInt32();
-        }
+        if (r.V >= 0x14020007) MaterialNeedsUpdate = r.ReadBool32();
     }
 }
 
@@ -2244,7 +2244,7 @@ public class NiSourceTexture : NiTexture { // X
 
     public NiSourceTexture(NifReader r) : base(r) {
         UseExternal = r.ReadByte();
-        if (r.V >= 0x0A010000 && UseExternal == 1) {
+        if (UseExternal == 1) {
             FileName = r.ReadL32Encoding();
             UnknownLink = X<NiObject>.Ref(r);
         }

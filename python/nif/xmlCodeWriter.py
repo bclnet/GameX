@@ -604,29 +604,29 @@ class Class:
             ifx.inits.append(this); this.vercond = None; this.cond = None
             del inits[i]; inits.insert(i, ifx)
             if 'if' in self.custom: py = self.custom['if'](this, ifx)
-        ifx = None
-        ifn = 0
+        ifx = None; ifn = 0
         for i in range(len(inits) - 1, 0, -1):
             this = inits[i]; prev = inits[i-1]
-            if self.name == 'QuatKey': print(prev)
+            # if self.name == 'NiSourceTexture': print(f'3: {this.name}')
             if this.vercond and this.vercond == prev.vercond and this.cond and this.cond == prev.cond:
                 if ifx and ifn != 3: newIf(i, ifx); ifx = None
-                ifn = 3
-                if not ifx: ifx = Class.If(self, None, prev, None, 'if')
-                ifx.inits.insert(0, prev); prev.cond = None; prev.vercond = None; del inits[i-1]
+                if not ifx: ifx = Class.If(self, None, None, None, 'if'); ifx.vercond = this.vercond; ifx.cond = this.cond
+                ifx.inits.insert(0, prev); prev.cond = None; prev.vercond = None; del inits[i-1]; ifn = 3
+                if self.name == 'NiSourceTexture': print(f'3: {ifn}.{this.name} = {this.vercond}')
             elif this.vercond and this.vercond == prev.vercond:
-                if ifx and ifn != 2: print(f'- {self.name} {ifn}'); newIf(i, ifx); ifx = None
-                ifn = 2
-                if not ifx: ifx = Class.If(self, None, prev, None, 'if')
-                ifx.inits.insert(0, prev); prev.vercond = None; del inits[i-1]
+                if ifx and ifn != 2: newIf(i, ifx); ifx = None #;print(f'2- {self.name} {ifn}')
+                if not ifx: ifx = Class.If(self, None, None, None, 'if'); ifx.vercond = this.vercond
+                ifx.inits.insert(0, prev); prev.vercond = None; del inits[i-1]; ifn = 2
+                if self.name == 'NiSourceTexture': print(f'2: {ifn}.{this.name} = {this.vercond}')
             elif this.cond and this.cond == prev.cond:
                 if ifx and ifn != 1: newIf(i, ifx); ifx = None
-                ifn = 1
-                if not ifx: ifx = Class.If(self, None, prev, None, 'if')
-                ifx.inits.insert(0, prev); prev.cond = None; del inits[i-1]
+                if not ifx: ifx = Class.If(self, None, None, None, 'if'); ifx.cond = this.cond
+                ifx.inits.insert(0, prev); prev.cond = None; del inits[i-1]; ifn = 1
+                if self.name == 'NiSourceTexture': print(f'1: {ifn}.{this.name} = {this.vercond}')
             else:
                 if ifx: newIf(i, ifx); ifx = None
-                ifn = 0
+                ifn = 3 if this.vercond and this.cond else 2 if this.vercond else 1 if this.cond else 0
+                if self.name == 'NiSourceTexture': print(f'0: {ifn}.{this.name} = {this.vercond}')
         if ifx: newIf(0, ifx); ifx = None
 
         #

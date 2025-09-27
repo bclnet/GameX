@@ -607,11 +607,11 @@ class Class:
             if ifc == 'X' or ifc == 'V': t.vercond = None
             ifx.inits.insert(0, t); del inits[i]
             inits.insert(i, ifx)
-            # if 'if' in self.custom: py = self.custom['if'](t, ifx)
+            if 'if' in self.custom: py = self.custom['if'](t, ifx)
         def chkIf(i, t, p, ifx, ifc, ifn):
             # if self.name == 'NiObjectNET': print(f'{ifn}: {ifc}.{t.name} = {t.cond}|{t.vercond}')
             # if ifx and ifc != ifn and self.name == 'NiObjectNET': print(p)
-            if ifx and ifc != ifn: addIf(0, t, ifx, ifc); ifx = None
+            if ifx and ifc != ifn: addIf(i, t, ifx, ifc); ifx = None
             if ifn == 'Z': return ifx
             if not ifx: ifx = Class.If(self, None, None, None, 'if')
             if ifn == 'X' or ifn == 'C': ifx.cond = t.cond; t.cond = None
@@ -619,12 +619,12 @@ class Class:
             ifx.inits.insert(0, t); del inits[i]
             return ifx
         for i in range(len(inits) - 1, 0, -1):
-            this = inits[i]; prev = inits[i-1]
-            if this.cond and this.cond == prev.cond and this.vercond and this.vercond == prev.vercond: ifx = chkIf(i, this, prev, ifx, ifc, 'X'); ifc = 'X'
-            elif this.cond and this.cond == prev.cond: ifx = chkIf(i, this, prev, ifx, ifc, 'C'); ifc = 'C'
-            elif this.vercond and this.vercond == prev.vercond: ifx = chkIf(i, this, prev, ifx, ifc, 'V'); ifc = 'V'
-            else: ifx = chkIf(i, this, prev, ifx, ifc, 'Z'); ifc = 'A'
-        if ifx: addIf(0, prev, ifx, ifc); ifx = None
+            t = inits[i]; p = inits[i-1]
+            if t.cond and t.cond == p.cond and t.vercond and t.vercond == p.vercond: ifx = chkIf(i, t, p, ifx, ifc, 'X'); ifc = 'X'
+            elif t.cond and t.cond == p.cond: ifx = chkIf(i, t, p, ifx, ifc, 'C'); ifc = 'C'
+            elif t.vercond and t.vercond == p.vercond: ifx = chkIf(i, t, p, ifx, ifc, 'V'); ifc = 'V'
+            else: ifx = chkIf(i, t, p, ifx, ifc, 'Z'); ifc = 'A'
+        if ifx: addIf(0, p, ifx, ifc); ifx = None
 
         # if self.name == 'NiObjectNET': print(inits[2].inits)
 

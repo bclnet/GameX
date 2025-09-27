@@ -1117,7 +1117,8 @@ public class NiExtraData : NiObject { // X
     public Ref<NiExtraData> NextExtraData;              // Block number of the next extra data object.
 
     public NiExtraData(NifReader r) : base(r) {
-        if (r.V >= 0x0A000100 && true) Name = X.String(r);
+        var BSExtraData = false;
+        if (r.V >= 0x0A000100 && !BSExtraData) Name = X.String(r);
         if (r.V <= 0x04020200) NextExtraData = X<NiExtraData>.Ref(r);
     }
 }
@@ -1143,14 +1144,15 @@ public abstract class NiObjectNET : NiObject { // X
     public Ref<NiTimeController> Controller;            // Controller object index. (The first in a chain)
 
     public NiObjectNET(NifReader r) : base(r) {
-        if (r.UV2 >= 83 && false) SkyrimShaderType = (BSLightingShaderPropertyShaderType)r.ReadUInt32();
+        var BSLightingShaderProperty = false;
+        if (r.UV2 >= 83 && BSLightingShaderProperty) SkyrimShaderType = (BSLightingShaderPropertyShaderType)r.ReadUInt32();
         Name = X.String(r);
-        if (r.V <= 0x02030000) {
-            if (r.ReadBool32()) OldExtraPropName = X.String(r);
-            if (r.ReadBool32()) OldExtraInternalId = r.ReadUInt32();
-            if (r.ReadBool32()) OldExtraString = X.String(r);
-            UnknownByte = r.ReadByte();
+        if (r.V <= 0x02030000 && r.ReadBool32()) {
+            OldExtraPropName = X.String(r);
+            OldExtraInternalId = r.ReadUInt32();
+            OldExtraString = X.String(r);
         }
+        if (r.V <= 0x02030000) UnknownByte = r.ReadByte();
         if (r.V >= 0x03000000 && r.V <= 0x04020200) ExtraData = X<NiExtraData>.Ref(r);
         if (r.V >= 0x0A000100) ExtraDataList = r.ReadL32FArray(X<NiExtraData>.Ref);
         if (r.V >= 0x03000000) Controller = X<NiTimeController>.Ref(r);
@@ -1503,9 +1505,10 @@ public abstract class NiGeometryData : NiObject { // X
     public Ref<AbstractAdditionalGeometryData> AdditionalData; // Unknown.
 
     public NiGeometryData(NifReader r) : base(r) {
+        var NiPSysData = false;
         if (r.V >= 0x0A010072) GroupID = r.ReadInt32();
-        if (!false || r.UV2 >= 34) NumVertices = r.ReadUInt16();
-        if ((r.UV2 >= 34) && false) BSMaxVertices = r.ReadUInt16();
+        if (!NiPSysData || r.UV2 >= 34) NumVertices = r.ReadUInt16();
+        if ((r.UV2 >= 34) && NiPSysData) BSMaxVertices = r.ReadUInt16();
         if (r.V >= 0x0A010000) {
             KeepFlags = r.ReadByte();
             CompressFlags = r.ReadByte();
@@ -2244,9 +2247,9 @@ public class NiSourceTexture : NiTexture { // X
 
     public NiSourceTexture(NifReader r) : base(r) {
         UseExternal = r.ReadByte();
-        if (r.V >= 0x0A010000 && UseExternal == 1) {
+        if (UseExternal == 1) {
             FileName = r.ReadL32Encoding();
-            UnknownLink = X<NiObject>.Ref(r);
+            if (r.V >= 0x0A010000) UnknownLink = X<NiObject>.Ref(r);
         }
         if (UseExternal == 0) {
             if (r.V <= 0x0A000100) UnknownByte = r.ReadByte();

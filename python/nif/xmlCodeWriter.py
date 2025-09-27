@@ -585,6 +585,7 @@ class Class:
                 if not found: continue
                 for s in values[i:j+1]: s.cond = s.cond.replace(name, f'B32:{name}')
                 del values[i-1]
+        # if self.name == 'NiObjectNET': print(values)
                     
         # condFlag
         for s in values:
@@ -599,37 +600,34 @@ class Class:
         if 'inits' in self.custom: self.custom['inits'](self, inits)
 
         # collapse multi
-        def newIf(i, ifx):
+        ifx = None; ifc = 'A'
+        def addIf(i, t, ifx, ifc):
             self.condFlag |= 4
-            ifx.inits.append(this); this.vercond = None; this.cond = None
-            del inits[i]; inits.insert(i, ifx)
-            if 'if' in self.custom: py = self.custom['if'](this, ifx)
-        ifx = None; ifn = 0
+            if ifc == 'X' or ifc == 'C': t.cond = None
+            if ifc == 'X' or ifc == 'V': t.vercond = None
+            ifx.inits.insert(0, t); del inits[i]
+            inits.insert(i, ifx)
+            # if 'if' in self.custom: py = self.custom['if'](t, ifx)
+        def chkIf(i, t, p, ifx, ifc, ifn):
+            # if self.name == 'NiObjectNET': print(f'{ifn}: {ifc}.{t.name} = {t.cond}|{t.vercond}')
+            # if ifx and ifc != ifn and self.name == 'NiObjectNET': print(p)
+            if ifx and ifc != ifn: addIf(0, t, ifx, ifc); ifx = None
+            if ifn == 'Z': return ifx
+            if not ifx: ifx = Class.If(self, None, None, None, 'if')
+            if ifn == 'X' or ifn == 'C': ifx.cond = t.cond; t.cond = None
+            if ifn == 'X' or ifn == 'V': ifx.vercond = t.vercond; t.vercond = None
+            ifx.inits.insert(0, t); del inits[i]
+            return ifx
         for i in range(len(inits) - 1, 0, -1):
             this = inits[i]; prev = inits[i-1]
-            # if self.name == 'NiSourceTexture': print(f'3: {this.name}')
-            if this.vercond and this.vercond == prev.vercond and this.cond and this.cond == prev.cond:
-                if ifx and ifn != 3: newIf(i, ifx); ifx = None
-                if not ifx: ifx = Class.If(self, None, None, None, 'if'); ifx.vercond = this.vercond; ifx.cond = this.cond
-                ifx.inits.insert(0, prev); prev.cond = None; prev.vercond = None; del inits[i-1]; ifn = 3
-                if self.name == 'NiSourceTexture': print(f'3: {ifn}.{this.name} = {this.vercond}')
-            elif this.vercond and this.vercond == prev.vercond:
-                if ifx and ifn != 2: newIf(i, ifx); ifx = None #;print(f'2- {self.name} {ifn}')
-                if not ifx: ifx = Class.If(self, None, None, None, 'if'); ifx.vercond = this.vercond
-                ifx.inits.insert(0, prev); prev.vercond = None; del inits[i-1]; ifn = 2
-                if self.name == 'NiSourceTexture': print(f'2: {ifn}.{this.name} = {this.vercond}')
-            elif this.cond and this.cond == prev.cond:
-                if ifx and ifn != 1: newIf(i, ifx); ifx = None
-                if not ifx: ifx = Class.If(self, None, None, None, 'if'); ifx.cond = this.cond
-                ifx.inits.insert(0, prev); prev.cond = None; del inits[i-1]; ifn = 1
-                if self.name == 'NiSourceTexture': print(f'1: {ifn}.{this.name} = {this.vercond}')
-            else:
-                if ifx: newIf(i, ifx); ifx = None
-                ifn = 3 if this.vercond and this.cond else 2 if this.vercond else 1 if this.cond else 0
-                if self.name == 'NiSourceTexture': print(f'0: {ifn}.{this.name} = {this.vercond}')
-        if ifx: newIf(0, ifx); ifx = None
+            if this.cond and this.cond == prev.cond and this.vercond and this.vercond == prev.vercond: ifx = chkIf(i, this, prev, ifx, ifc, 'X'); ifc = 'X'
+            elif this.cond and this.cond == prev.cond: ifx = chkIf(i, this, prev, ifx, ifc, 'C'); ifc = 'C'
+            elif this.vercond and this.vercond == prev.vercond: ifx = chkIf(i, this, prev, ifx, ifc, 'V'); ifc = 'V'
+            else: ifx = chkIf(i, this, prev, ifx, ifc, 'Z'); ifc = 'A'
+        if ifx: addIf(0, prev, ifx, ifc); ifx = None
 
-        #
+        # if self.name == 'NiObjectNET': print(inits[2].inits)
+
         if 'kind' in self.custom:
             for k,v in self.custom['kind'].items(): inits[k].kind = v
         if 'inits2' in self.custom: self.custom['inits2'](self, inits)

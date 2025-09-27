@@ -348,8 +348,8 @@ class Flags(Flag):
             inits.insert(6, ifx := Class.If(s, None, None, in0, 'if'))
             ifx.inits[3].arr2x = 'i'
             ifx.vercond = 'ZV <= 0x0A000102'
-        def Morph_if(s, ifx):
-            if s.name == 'Keys': ifx.inits[0].name = ''; ifx.inits[0].initcw = ('var NumKeys = r.ReadUInt32();', 'NumKeys = r.readUInt32()')
+        def Morph_values(s, values):
+            values[1].kind = 'var'
         def BoneData_values(s, values):
             del values[4]
             values[6].kind = ':'; values[5].kind = ':+'; values[4].kind = '?+'
@@ -451,7 +451,7 @@ class Flags(Flag):
             'Morph': { 'x': 1768,
                 'constArg': (', uint numVertices', ', numVertices: int'), 'constNew': (', ARG', ', ARG'),
                 'cond': lambda p, s, cw: s.replace('ARG', 'numVertices'),
-                'if': Morph_if },
+                'values': Morph_values },
             'BoneData': { 'x': 1789,
                 'constArg': (', int arg', ', arg: int'), 'constNew': (', ARG', ', ARG'),
                 'cond': lambda p, s, cw: s.replace('ARG', 'arg'),
@@ -510,21 +510,17 @@ BODY
             values[27].vercond = values[27].vercond[:16]
             values[38].kind = '?:'; values[38].elsecw = ('r.ReadUInt16()', 'r.readUInt16()')
             del values[39]
-        def NiExtraData_values(s, values):
-            values[0].cond = 'true' #TODO 'this is not BSExtraData'
         def InterpBlendItem_values(s, values):
             pass
         def NiBlendInterpolator_values(s, values):
             pass
         def NiObjectNET_values(s, values):
-            values[0].cond = 'false' #TODO 'this is BSLightingShaderProperty'
+            pass
         def NiCollisionData_values(s, values):
             pass
         def NiAVObject_values(s, values):
-            values[0].type = 'Flags'
-            values[0].kind = '?+'
-            values[1].kind = ':'
-            values[1].default = '14'
+            values[0].type = 'Flags'; values[0].kind = '?+'
+            values[1].kind = ':'; values[1].default = '14'
         def NiDynamicEffect_values(s, values):
             del values[4]; del values[1]
             values[0].default = 'true'
@@ -534,12 +530,11 @@ BODY
             values[4].arr1 = values[3].arr1 = 'L32'
         def NiFlipController_values(s, values):
             pass
-        def NiGeometry_values(s, values): #fix
+        def NiGeometry_values(s, values):
             pass
         def NiGeometryData_values(s, values):
-            values[1].cond = '!false || r.UV2 >= 34' #fix !NiPSysData
+            values[1].cond = '!NiPSysData || r.UV2 >= 34'
             del values[2]
-            values[2].cond = 'false' #fix NiPSysData
             values[14].cond = values[15].cond = '(HasNormals != 0) && (((int)VectorFlags | (int)BSVectorFlags) & 4096) != 0'
             values[25].arr1 = values[26].arr1 = '((NumUVSets & 63) | ((int)VectorFlags & 63) | ((int)BSVectorFlags & 1))'
             values[20].kind = values[11].kind = values[5].kind = 'var'
@@ -563,15 +558,16 @@ BODY
             'bhkMoppBvTreeShape': { 'x': 2511,
                 'calculated': lambda s: ('0', '0') },
             'NiExtraData': { 'x': 2592,
-                'values': NiExtraData_values },
+                'conds': ['BSExtraData'] },
             'InterpBlendItem': { 'x': 2660,
-                'kind': {-2: 'elseif'}, 
+                'kind': {-2: 'elseif'},
                 'flags': 'C',
                 'values': InterpBlendItem_values },
             'NiBlendInterpolator': { 'x': 2670,
                 'values': NiBlendInterpolator_values },
             'NiObjectNET': { 'x': 2712,
-                'values': NiObjectNET_values },
+                'conds': ['BSLightingShaderProperty'],
+                'xvalues': NiObjectNET_values },
             'NiCollisionData': { 'x': 2735,
                 'values': NiCollisionData_values },
             'NiAVObject': { 'x': 2787,
@@ -591,6 +587,7 @@ BODY
                 'conds': ['NiParticleSystem'],
                 'values': NiGeometry_values },
             'NiGeometryData': { 'x': 3188,
+                'conds': ['NiPSysData'],
                 'type': {'Has Vertices': 'uint', 'Has Normals': 'uint', 'Has Vertex Colors': 'uint' }, #'Normalsx': 'Vector3', 'Vertex Colors': 'Color4',
                 'values': NiGeometryData_values },
             'NiKeyframeData': { 'x': 3683,

@@ -286,7 +286,6 @@ class Elem:
     def __init__(self, attrib: dict):
         self.text = None
         self.attrib = attrib
-
 class Enum:
     comment: str
     flag: bool
@@ -361,7 +360,7 @@ class Class:
             self.namecw = self.typecw = self.defaultcw = self.comment = None
             self.inits: list[object] = (inits[0][inits[1]:inits[2]] if len(inits) == 3 else inits) if inits else []
             if inits and len(inits) == 3: del inits[0][inits[1]:inits[2]]
-        def __repr__(self): return f'{self.name}{' {' + (self.vercond or '') + (self.cond or '') + '}' if self.vercond or self.cond else ''}{';' + self.kind if self.kind else ''}'
+        def __repr__(self): return f'{self.name} {self.kind or ''}{'{' + (self.vercond or '') + (self.cond or '') + '}' if self.vercond or self.cond else ''}\n'
         def code(self, lx: object, root: Class, parent: object, cw: XmlCodeWriter) -> None:
             lx2 = None
             for x in self.inits:
@@ -579,13 +578,15 @@ class Class:
                     del values[i-1]
             elif name.startswith('Has') and type == 'bool' and not prev.cond:
                 found = False
+                vercond = prev.vercond
+                prev.kind = 'var?' if vercond else 'var'
                 for j in range(i, len(values)):
-                    if name == values[j].cond: found = True
+                    k = values[j]
+                    if name == k.cond and k.vercond.startswith(vercond): found = True
                     else: break
                 if not found: continue
                 for s in values[i:j+1]: s.cond = s.cond.replace(name, f'B32:{name}')
                 del values[i-1]
-        # if self.name == 'NiObjectNET': print(values)
                     
         # condFlag
         for s in values:
@@ -603,34 +604,31 @@ class Class:
         ifx = None; ifc = 'A'
         def addIf(i, t, ifx, ifc):
             self.condFlag |= 4
+            if i > 0 and len(ifx.inits) == 1 and self.name == 'NiObjectNET':
+                k = ifx.inits[0]
+                if ifc == 'X' or ifc == 'C': k.cond = t.cond
+                if ifc == 'X' or ifc == 'V': k.vercond = t.vercond
+                inits.insert(i+1, k)
+                return
             if ifc == 'X' or ifc == 'C': t.cond = None
             if ifc == 'X' or ifc == 'V': t.vercond = None
             ifx.inits.insert(0, t); del inits[i]
             inits.insert(i, ifx)
-            if 'if' in self.custom: py = self.custom['if'](t, ifx)
-        def chkIf(i, t, p, ifx, ifc, ifn):
-            # if self.name == 'NiObjectNET': print(f'{ifn}: {ifc}.{t.name} = {t.cond}|{t.vercond}')
-            # if ifx and ifc != ifn and self.name == 'NiObjectNET': print(p)
-            if ifx and ifc != ifn: addIf(i, t, ifx, ifc); ifx = None
-            if ifn == 'Z': return ifx
-            if not ifx: ifx = Class.If(self, None, None, None, 'if')
-            if ifn == 'X' or ifn == 'C': ifx.cond = t.cond; t.cond = None
-            if ifn == 'X' or ifn == 'V': ifx.vercond = t.vercond; t.vercond = None
-            ifx.inits.insert(0, t); del inits[i]
-            return ifx
+            # if 'if' in self.custom: py = self.custom['if'](t, ifx)
         for i in range(len(inits) - 1, 0, -1):
-            t = inits[i]; p = inits[i-1]
-            if t.cond and t.cond == p.cond and t.vercond and t.vercond == p.vercond: ifx = chkIf(i, t, p, ifx, ifc, 'X'); ifc = 'X'
-            elif t.cond and t.cond == p.cond: ifx = chkIf(i, t, p, ifx, ifc, 'C'); ifc = 'C'
-            elif t.vercond and t.vercond == p.vercond: ifx = chkIf(i, t, p, ifx, ifc, 'V'); ifc = 'V'
-            else: ifx = chkIf(i, t, p, ifx, ifc, 'Z'); ifc = 'A'
+            t = inits[i]; p = inits[i-1]; j = i
+            ifn = 'X' if t.cond and t.cond == p.cond and t.vercond and t.vercond == p.vercond else 'C' if t.cond and t.cond == p.cond else 'V' if t.vercond and t.vercond == p.vercond else 'A'
+            if ifx and ifc != ifn: addIf(i, t, ifx, ifc); ifx = None
+            if ifn != 'A':
+                if not ifx: ifx = Class.If(self, None, None, None, 'if')
+                if ifn == 'X' or ifn == 'C': ifx.cond = t.cond; t.cond = None
+                if ifn == 'X' or ifn == 'V': ifx.vercond = t.vercond; t.vercond = None
+                ifx.inits.insert(0, t); del inits[i]
+            ifc = ifn
         if ifx: addIf(0, p, ifx, ifc); ifx = None
-
-        # if self.name == 'NiObjectNET': print(inits[2].inits)
-
         if 'kind' in self.custom:
             for k,v in self.custom['kind'].items(): inits[k].kind = v
-        if 'inits2' in self.custom: self.custom['inits2'](self, inits)
+        # if 'inits2' in self.custom: self.custom['inits2'](self, inits)
     def code(self, cw: XmlCodeWriter):
         lx = None
         for x in self.inits:

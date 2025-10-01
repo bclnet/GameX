@@ -1489,7 +1489,7 @@
         <add name="Num Blocks" type="ulittle32" ver1="3.1.0.1">Number of file objects.</add>
         <!-- BSStreamHeader -->
         <add name="User Version 2" type="ulittle32" default="0" cond="((Version == 20.2.0.7) || (Version == 20.0.0.5) || ((Version &gt;= 10.0.1.2) &amp;&amp; (Version &lt;= 20.0.0.4) &amp;&amp; (User Version &lt;= 11))) &amp;&amp; (User Version &gt;= 3)" />
-        <add name="Export Info" type="ExportInfo" cond="              ((Version == 20.2.0.7) || (Version == 20.0.0.5) || ((Version &gt;= 10.0.1.2) &amp;&amp; (Version &lt;= 20.0.0.4) &amp;&amp; (User Version &lt;= 11))) &amp;&amp; (User Version &gt;= 3)" />
+        <add name="Export Info" type="ExportInfo" cond="((Version == 20.2.0.7) || (Version == 20.0.0.5) || ((Version &gt;= 10.0.1.2) &amp;&amp; (Version &lt;= 20.0.0.4) &amp;&amp; (User Version &lt;= 11))) &amp;&amp; (User Version &gt;= 3)" />
         <add name="Max Filepath" type="ShortString" cond="(User Version 2 == 130)" />
         <!-- / BSStreamHeader -->
         <add name="Metadata" type="ByteArray" ver1="30.0.0.0" />

@@ -262,8 +262,8 @@ class Flags(Flag):
             'NiBound': ('<4f', 16),
             'CapsuleBV': ('<8f', 32),
             'zNiQuatTransform': 'x',
-            'NiTransform': 'x',
-            'BoxBV': 'x',
+            # 'NiTransform': 'x',
+            # 'BoxBV': 'x',
             'HalfSpaceBV': ('<7f', 28),
             'Particle': ('<9f2H', 40) }
         def BoneVertData_values(s, values):
@@ -514,8 +514,6 @@ BODY
             pass
         def NiBlendInterpolator_values(s, values):
             pass
-        def NiObjectNET_values(s, values):
-            pass
         def NiCollisionData_values(s, values):
             pass
         def NiAVObject_values(s, values):
@@ -566,8 +564,7 @@ BODY
             'NiBlendInterpolator': { 'x': 2670,
                 'values': NiBlendInterpolator_values },
             'NiObjectNET': { 'x': 2712,
-                'conds': ['BSLightingShaderProperty'],
-                'xvalues': NiObjectNET_values },
+                'conds': ['BSLightingShaderProperty'] },
             'NiCollisionData': { 'x': 2735,
                 'values': NiCollisionData_values },
             'NiAVObject': { 'x': 2787,

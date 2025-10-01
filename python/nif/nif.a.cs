@@ -847,7 +847,7 @@ public struct NiBound(NifReader r) { // Y
     public float Radius = r.ReadSingle();               // The sphere's radius.
 }
 
-public struct NiTransform(NifReader r) { // X
+public class NiTransform(NifReader r) { // X
     public Matrix4x4 Rotation = r.ReadMatrix3x3As4x4(); // The rotation part of the transformation matrix.
     public Vector3 Translation = r.ReadVector3();       // The translation vector.
     public float Scale = r.ReadSingle();                // Scaling part (only uniform scaling is supported).
@@ -901,7 +901,7 @@ public class BoneData { // X
     public BoneVertData[] VertexWeights;                // The vertex weights.
 
     public BoneData(NifReader r, int arg) {
-        SkinTransform = r.ReadS<NiTransform>();
+        SkinTransform = new NiTransform(r);
         BoundingSphereOffset = r.ReadVector3();
         BoundingSphereRadius = r.ReadSingle();
         if (r.V == 0x14030009 && (r.UV == 0x20000) || (r.UV == 0x30000)) Unknown13Shorts = r.ReadPArray<short>("h", 13);
@@ -922,7 +922,7 @@ public enum ImageType : uint { // Y
 /// <summary>
 /// Box Bounding Volume
 /// </summary>
-public struct BoxBV(NifReader r) { // X
+public class BoxBV(NifReader r) { // X
     public Vector3 Center = r.ReadVector3();
     public Matrix4x4 Axis = r.ReadMatrix3x3As4x4();
     public Vector3 Extent = r.ReadVector3();
@@ -959,7 +959,7 @@ public class BoundingVolume { // X
         CollisionType = (BoundVolumeType)r.ReadUInt32();
         switch (CollisionType) {
             case BoundVolumeType.SPHERE_BV: Sphere = r.ReadS<NiBound>(); break;
-            case BoundVolumeType.BOX_BV: Box = r.ReadS<BoxBV>(); break;
+            case BoundVolumeType.BOX_BV: Box = new BoxBV(r); break;
             case BoundVolumeType.CAPSULE_BV: Capsule = r.ReadS<CapsuleBV>(); break;
             case BoundVolumeType.UNION_BV: Union = new UnionBV(r); break;
             case BoundVolumeType.HALFSPACE_BV: HalfSpace = r.ReadS<HalfSpaceBV>(); break;
@@ -2166,7 +2166,7 @@ public class NiSkinData : NiObject { // X
     public BoneData[] BoneList;                         // Contains offset data for each node that this skin is influenced by.
 
     public NiSkinData(NifReader r) : base(r) {
-        SkinTransform = r.ReadS<NiTransform>();
+        SkinTransform = new NiTransform(r);
         NumBones = r.ReadUInt32();
         if (r.V >= 0x04000002 && r.V <= 0x0A010000) SkinPartition = X<NiSkinPartition>.Ref(r);
         if (r.V >= 0x04020100) HasVertexWeights = r.ReadByte();

@@ -79,7 +79,9 @@ namespace GameX.App.Cli {
             //args = ["list", "-f", "Lith", "-u", @"game:/FEAR_1.Arch00#FEAR"];
 
             // GET
-            args = ["get", "-f", "Bethesda", "-u", "game:/Morrowind.bsa#Morrowind", "-m", "*.nif", "-o", "StreamObject", "-p", @"D:\T_\MorrowindC"];
+            //args = ["get", "-f", "Bethesda", "-u", "game:/Morrowind.bsa#Morrowind", "-m", "*.nif", "-o", "StreamObject", "-p", @"D:\T_\MorrowindC"];
+            args = ["get", "-f", "Bethesda", "-u", "game:/Morrowind.bsa#Morrowind", "-m", "meshes/l/light_com_candle_04.nif", "-o", "StreamObject", "-p", @"D:\T_\MorrowindC"];
+
             //args = ["get", "-f", "Bethesda", "-u", "game:/Oblivion - Meshes.bsa#Oblivion", "-m", "*/bearskinrug01.nif", "-o", "StreamObject", "-p", @"D:\T_\OblivionC"];
             //args = ["get", "-f", "Bethesda", "-u", "game:/#Oblivion", "-m", "*.nif", "--path", @"D:\T_\Oblivion"];
             //args = ["get", "-f", "Rsi", "-u", "game:/Data.p4k#StarCitizen", "--path", @"D:\T_\StarCitizen"];

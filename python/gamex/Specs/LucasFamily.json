@@ -2756,7 +2756,7 @@
       "files": {
         "key": [
           "Steam:32460",
-          "Microsoft/Windows/CurrentVersion/Uninstall/Steam App 32460",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 32460",
           "Local:."
         ]
       }

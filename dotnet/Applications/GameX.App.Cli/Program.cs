@@ -80,7 +80,7 @@ namespace GameX.App.Cli {
 
             // GET
             //args = ["get", "-f", "Bethesda", "-u", "game:/Morrowind.bsa#Morrowind", "-m", "*.nif", "-o", "StreamObject", "-p", @"D:\T_\MorrowindC"];
-            args = ["get", "-f", "Bethesda", "-u", "game:/Morrowind.bsa#Morrowind", "-m", "meshes/l/light_com_candle_04.nif", "-o", "StreamObject", "-p", @"D:\T_\MorrowindC"];
+            // args = ["get", "-f", "Bethesda", "-u", "game:/Morrowind.bsa#Morrowind", "-m", "meshes/l/light_com_candle_04.nif", "-o", "StreamObject", "-p", @"D:\T_\MorrowindC"];
 
             //args = ["get", "-f", "Bethesda", "-u", "game:/Oblivion - Meshes.bsa#Oblivion", "-m", "*/bearskinrug01.nif", "-o", "StreamObject", "-p", @"D:\T_\OblivionC"];
             //args = ["get", "-f", "Bethesda", "-u", "game:/#Oblivion", "-m", "*.nif", "--path", @"D:\T_\Oblivion"];
@@ -88,6 +88,8 @@ namespace GameX.App.Cli {
             //args = ["get", "-f", "Tes", "-u", "game:/Oblivion*.bsa#Oblivion", "--path", @"D:\T_\Oblivion"];
             //args = ["get", "-f", "Red", "-u", "game:/main.key#Witcher", "--path", @"D:\T_\Witcher"];
             //args = ["get", "-f", "Red", "-u", "game:/krbr.dzip#Witcher2", "--path", @"D:\T_\Witcher2"];
+
+            args = ["get", "-f", "Red", "-u", "game:/main.key#Witcher", "--path", @"~/T_/Witcher"];
 
             //args = ["list", "-f", "Arkane"];
             //args = ["get", "-f", "Arkane", "-u", "game:/*.pak#AF", "--path", @"C:\T_\AF"];

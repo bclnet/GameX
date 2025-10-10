@@ -2142,7 +2142,7 @@ class Ni3dsPathController(NiObject): #:X
 
     def __init__(self, r: Reader, h: Header):
         super().__init__(r, h)
-        self. = r.readBytes(20)
+        self.unknown1 = r.readBytes(20)
 
 # LEGACY (pre-10.1). Abstract base class for particle system modifiers.
 class NiParticleModifier(NiObject): #:X

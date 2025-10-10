@@ -1,6 +1,6 @@
 
-pip install PyQt6
-pip install OpenGL
+pip3 install PyQt6
+# pip install OpenGL ? pip3 install PyOpenGL
 
 
 

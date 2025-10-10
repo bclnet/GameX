@@ -25,6 +25,7 @@
       //"pak": "game:/dialog_3.tlk",
       "files": {
         "key": [
+          "Steam:20900",
           "Gog:1207658924",
           "WinReg:CD Projekt RED/The Witcher",
           "WinReg:GOG.com/Games/1207658924",
@@ -67,7 +68,7 @@
           "WinReg:GOG.com/Games/1207664643",
           //"WinReg:GOG.com/Games/1430742867",
           "WinReg:GOG.com/Games/1495134320",
-          "Local:The Witcher 3 Wild Hunt",
+          "Local:The Witcher 3 Wild Hunt"
         ],
         "path": "content"
       }

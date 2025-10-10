@@ -5,7 +5,7 @@ from openstk.poly import IWriteToStream
 from gamex import FileSource, PakBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo, DesSer
 from gamex.compression import decompressLz4, decompressZlib
 from gamex.Bethesda.formats.records import FormType, Header
-from gamex.Bethesda.formats.nif import Header, Footer, NiObject
+# from gamex.Bethesda.formats.nif import Header, Footer, NiObject
 
 # typedefs
 class Reader: pass
@@ -421,9 +421,9 @@ class Binary_Nif(IHaveMetaInfo, IWriteToStream):
 
     def __init__(self, r: Reader, f: FileSource):
         self.name = os.path.splitext(os.path.basename(f.path))[0]
-        self.header = Header(r)
-        self.blocks = r.readFArray(lambda r: NiObject.read(r, self.header), self.header.numBlocks)
-        self.footer = Footer(r)
+        # self.header = Header(r)
+        # self.blocks = r.readFArray(lambda r: NiObject.read(r, self.header), self.header.numBlocks)
+        # self.footer = Footer(r)
 
     def writeToStream(self, stream: object): return DesSer.serialize(self, stream)
 

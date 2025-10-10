@@ -20,5 +20,5 @@ print(family)
 https://stackoverflow.com/questions/13689628/is-there-a-python-equivalent-to-memcpy
 
 
-pip install --editable ../OpenStack/python
-pip install --editable .
+pip3 install --editable ../OpenStack/python
+pip3 install --editable .

@@ -64,7 +64,7 @@ class XmlCodeWriter(CodeWriter):
         self.ex = ex
         self.types = {
             'TEMPLATE': [None, ('T', 'T'), lambda x: (x, x), ('Y<T>.Read(r)', 'Y[T].read(r)'), None],
-            'bool': [None, ('bool', 'bool'), lambda x: (x, x), ('r.ReadBool32()', 'r.readBool32()'), lambda c: (f'[r.ReadBool32(), r.ReadBool32(), r.ReadBool32()]', f'[r.readBool32(), r.readBool32(), r.readBool32()]') if c == '3' else (f'r.ReadFArray(z => r.ReadBool32(), {c})', f'r.readFArray(lambda z: r.readBool32(), {c})')],
+            'bool': [None, ('bool', 'bool'), lambda x: (x, x.replace('true', 'True').replace('false', 'False')), ('r.ReadBool32()', 'r.readBool32()'), lambda c: (f'[r.ReadBool32(), r.ReadBool32(), r.ReadBool32()]', f'[r.readBool32(), r.readBool32(), r.readBool32()]') if c == '3' else (f'r.ReadFArray(z => r.ReadBool32(), {c})', f'r.readFArray(lambda z: r.readBool32(), {c})')],
             'byte': [None, ('byte', 'int'), lambda x: (x, x), ('r.ReadByte()', 'r.readByte()'), lambda c: (f'r.ReadBytes({c})', f'r.readBytes({c})')],
             'uint': [None, ('uint', 'int'), lambda x: (x, x), ('r.ReadUInt32()', 'r.readUInt32()'), lambda c: (f'r.ReadPArray<uint>("I", {c})', f'r.readPArray(None, \'I\', {c})')],
             'ulittle32': [None, ('uint', 'int'), lambda x: (x, x), ('r.ReadUInt32()', 'r.readUInt32()'), None],
@@ -77,15 +77,15 @@ class XmlCodeWriter(CodeWriter):
             'Flags': [None, ('Flags', 'Flags'), lambda x: (f'(Flags){x}', f'{x}'), ('(Flags)r.ReadUInt16()', 'Flags(r.readUInt16())'), None],
             'float': [None, ('float', 'float'), lambda x: (f'{x}f', f'{x}'), ('r.ReadSingle()', 'r.readSingle()'), lambda c: (f'r.ReadPArray<float>("f", {c})', f'r.readPArray(None, \'f\', {c})')],
             'hfloat': [None, ('float', 'float'), lambda x: (f'{x}f', f'{x}'), ('r.ReadHalf()', 'r.readHalf()'), lambda c: (f'[r.ReadHalf(), r.ReadHalf(), r.ReadHalf(), r.ReadHalf()]', f'[r.readHalf(), r.readHalf(), r.readHalf(), r.readHalf()]') if c == '4' else (f'r.ReadFArray(z => r.ReadHalf(), {c})', f'r.readFArray(lambda z: r.readHalf(), {c})')],
-            'HeaderString': [None, ('string', 'str'), lambda x: (x, x), ('X.ParseHeaderStr(r.ReadVAString(0x80, 0xA))', 'X.parseHeaderStr(r.readVAString(128, b\'\\x0A\'))'), None],
+            'HeaderString': [None, ('string', 'str'), lambda x: (x, x), ('Z.ParseHeaderStr(r.ReadVAString(0x80, 0xA))', 'Z.parseHeaderStr(r.readVAString(128, b\'\\x0A\'))'), None],
             'LineString': [None, ('string', 'str'), lambda x: (x, x), ('??', '??'), lambda c: (f'[r.ReadL8AString(), r.ReadL8AString(), r.ReadL8AString()]', f'[r.readL8AString(), r.readL8AString(), r.readL8AString()]') if c == '3' else (f'r.ReadFArray(z => r.ReadL8AString(), {c})', f'r.readFArray(lambda z: r.readL8AString(), {c})')],
-            'Ptr': [None, ('Ref<{T}>', 'Ref[{T}]'), lambda x: (x, x), ('X<{T}>.Ptr(r)', 'X[{T}].ptr(r)'), lambda c: (f'r.ReadFArray(X<{{T}}>.Ptr, {c})', f'r.readFArray(X[{{T}}].ptr, {c})')],
-            'Ref': [None, ('Ref<{T}>', 'Ref[{T}]'), lambda x: (x, x), ('X<{T}>.Ref(r)', 'X[{T}].ref(r)'), lambda c: (f'r.ReadFArray(X<{{T}}>.Ref, {c})', f'r.readFArray(X[{{T}}].ref, {c})')],
+            'Ptr': [None, ('Ref<{T}>', 'Ref[NiObject]'), lambda x: (x, x), ('X<{T}>.Ptr(r)', 'X[{T}].ptr(r)'), lambda c: (f'r.ReadFArray(X<{{T}}>.Ptr, {c})', f'r.readFArray(X[{{T}}].ptr, {c})')],
+            'Ref': [None, ('Ref<{T}>', 'Ref[NiObject]'), lambda x: (x, x), ('X<{T}>.Ref(r)', 'X[{T}].ref(r)'), lambda c: (f'r.ReadFArray(X<{{T}}>.Ref, {c})', f'r.readFArray(X[{{T}}].ref, {c})')],
             'StringOffset': [None, ('uint', 'int'), lambda x: (x, x), ('r.ReadUInt32()', 'r.readUInt32()'), None],
             'StringIndex': [None, ('uint', 'int'), lambda x: (x, x), ('r.ReadUInt32()', 'r.readUInt32()'), None],
             # Compounds
             'SizedString': [None, ('string', 'str'), lambda x: (x, x), ('r.ReadL32AString()', 'r.readL32AString()'), lambda c: (f'r.ReadFArray(z => r.ReadL32AString(), {c})', f'r.readFArray(lambda z: r.readL32AString(), {c})')],
-            'string': [None, ('string', 'str'), lambda x: (x, x), ('X.String(r)', 'X.string(r)'), lambda c: (f'r.ReadFArray(z => X.String(r), {c})', f'r.readFArray(lambda z: X.string(r), {c})')],
+            'string': [None, ('string', 'str'), lambda x: (x, x), ('Z.String(r)', 'Z.string(r)'), lambda c: (f'r.ReadFArray(z => Z.String(r), {c})', f'r.readFArray(lambda z: Z.string(r), {c})')],
             'ByteArray': [None, ('byte[]', 'bytearray'), lambda x: (x, x), ('r.ReadL8Bytes()', 'r.readL8Bytes()'), None],
             'ByteMatrix': [None, ('??', '??'), lambda x: (x, x), ('??', '??'), None],
             'Color3': [None, ('Color3', 'Color3'), lambda x: (f'new({x})', f'Color3({x})'), ('new Color3(r)', 'Color3(r)'), None],
@@ -156,7 +156,7 @@ class XmlCodeWriter(CodeWriter):
             None):
             vl = s.values[-1]
             for v in s.values:
-                self.emit_with_comment(f'{v[0]} = {('1U' if self.ex == CS and s.storage == 'uint' else '1') + ' << ' if s.flag and v[1] != '0' else ''}{v[1]}{'' if v == vl else ','}', v[3], pos)
+                self.emit_with_comment(f'{v[0]} = {('1U' if self.ex == CS and s.storage == 'uint' else '1') + ' << ' if s.flag and v[1] != '0' else ''}{v[1]}{'' if self.ex == PY or v == vl else ','}', v[3], pos)
         self.emit()
     def writeClass(self, s: Class) -> None:
         if not s.export: return
@@ -219,7 +219,7 @@ class XmlCodeWriter(CodeWriter):
                     self.emit('')
                 def emitHeader() -> None:
                     if 'conds' in s.custom:
-                        for k in s.custom['conds']: self.emit(f'{k}: bool = false')
+                        for k in s.custom['conds']: self.emit(f'{k}: bool = False')
                 def emitBlock(inits: list) -> None:
                     # if not inits: print('HERE'); return
                     for x in inits:
@@ -234,7 +234,8 @@ class XmlCodeWriter(CodeWriter):
                             case Class.Value(): self.emit(f'{x.initcw[PY]}{' # ' + x.tags if x.tags else ''}')
                 constArg = s.custom['constArg'][PY] if 'constArg' in s.custom else ''
                 with self.block(before=f'def __init__(self, {s.init[0][PY]}{constArg}):'):
-                    if s.inherit: self.emit('super().__init__(r)')
+                    inheritArgs = 'b.f' if s.name == 'Header' else 'r'
+                    if s.inherit: self.emit(f'super().__init__({inheritArgs})')
                     if 'consts' in s.custom:
                         for x in s.custom['consts']:
                             if x[PY]: self.emit(x[PY])
@@ -244,6 +245,7 @@ class XmlCodeWriter(CodeWriter):
                                 self.emit_with_comment(f'{v[1][PY]}' if v[1] else '', v[3], pos)
                         else: self.emit('pass')
                     else: emitHeader(); emitBlock(s.inits)
+                    for x in s.methods: self.emit_raw(x.body)
         self.emit()
     def writeBlocks(self, blocks: list[object]) -> None:
         self.writeCustom('_header')
@@ -529,7 +531,7 @@ class Class:
         # types
         constNew = self.custom['constNew'] if 'constNew' in self.custom else ('', '')
         self.init = (
-            ['NifReader r', 'r: NifReader'],
+            ['NiReader r', 'r: NiReader'],
             ['r', 'r'],
             [f'new {self.namecw[CS]}(r{constNew[CS]})', f'{self.namecw[PY]}(r{constNew[PY]})'])
         manyLambda = lambda c: (f'r.ReadFArray(z => {self.init[2][CS]}, {c})', f'r.readFArray(lambda z: {self.init[2][PY]}, {c})')
@@ -583,7 +585,7 @@ class Class:
                         case 'ushort' | 'short': this.arr1 = 'L16'
                         case 'byte': this.arr1 = 'L8'
                     del values[i-1]
-            elif name.startswith('Has') and type == 'bool' and not prev.cond:
+            elif name.startswith('Has') and type == 'bool': # and not prev.cond:
                 found = False
                 vercond = prev.vercond
                 prev.kind = 'var'

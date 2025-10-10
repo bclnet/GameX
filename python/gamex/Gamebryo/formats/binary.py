@@ -13,13 +13,13 @@ class BinaryPakFile: pass
 #region Binary_Nif
 
 # Binary_Nif
-class Binary_Nif(IHaveMetaInfo, IWriteToStream):
+class Binary_Nif(NiReader, IHaveMetaInfo, IWriteToStream):
     @staticmethod
     def factory(r: Reader, f: FileSource, s: PakFile): return Binary_Nif(r, f)
 
     def __init__(self, r: Reader, f: FileSource):
+        super().__init__(r)
         self.name = os.path.splitext(os.path.basename(f.path))[0]
-        self.reader = NiReader(r)
 
     def writeToStream(self, stream: object): return DesSer.serialize(self, stream)
 

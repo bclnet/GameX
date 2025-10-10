@@ -26,6 +26,6 @@ class CustomEncoder(json.JSONEncoder):
 
 class DesSer:
     @staticmethod
-    def serialize(obj: object) -> str: return json.dumps(obj, cls=CustomEncoder, indent=2)
-    @staticmethod
-    def serialize(obj: object, w: io.BufferedWriter) -> str: json.dump(obj, w, cls=CustomEncoder, indent=2)
+    def serialize(obj: object, w: io.BufferedWriter=None) -> str:
+        if w: return json.dump(obj, w, cls=CustomEncoder, indent=2)
+        else: return json.dumps(obj, cls=CustomEncoder, indent=2)

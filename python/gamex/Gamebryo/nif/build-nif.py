@@ -7,7 +7,7 @@ class NifCodeWriter(XmlCodeWriter):
     def __init__(self, ex: str):
         super().__init__(ex)
         #region Header
-        # EffectType->TextureType, NiHeader->Header, NiFooter->Footer, SkinData->BoneData, SkinWeight->BoneVertData, BoundingBox->BoxBV, SkinTransform->NiTransform, NiCameraProperty->NiCamera
+        # EffectType->TextureType, NiHeader->NiReader, NiFooter->NiReader, SkinData->BoneData, SkinWeight->BoneVertData, BoundingBox->BoxBV, SkinTransform->NiTransform, NiCameraProperty->NiCamera
         self.es3 = [
             'ApplyMode', 'TexClampMode', 'TexFilterMode', 'PixelLayout', 'MipMapFormat', 'AlphaFormat', 'VertMode', 'LightMode', 'KeyType', 'TextureType', 'CoordGenType', 'FieldType', 'DecayType', 'BoundVolumeType', 'TransformMethod', 'EndianType',
             'BoxBV', 'BoundingVolume', 'Color3', 'Color4', 'TexDesc', 'TexCoord', 'Triangle', 'MatchGroup', 'TBC', 'Key', 'KeyGroup', 'QuatKey', 'BoneData', 'BoneVertData', 'NiTransform', 'Particle', 'Morph', 'ExportInfo', 'Header', 'Footer',
@@ -39,26 +39,33 @@ namespace GameX.Gamebryo.Formats.Nif;
 from io import BytesIO
 from enum import Enum, Flag
 from typing import TypeVar, Generic
+from openstk.poly import Reader
 from gamex import FileSource, PakBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
+from gamex.globalx import Color3, Color4
 
 T = TypeVar('T')
 
 # types
 type Vector3 = np.ndarray
 type Vector4 = np.ndarray
+type Matrix2x2 = np.ndarray
 type Matrix4x4 = np.ndarray
+type Quaternion = np.ndarray
 
 # typedefs
 class Color: pass
-class Reader: pass
-class NifReader: pass
+class UnionBV: pass
+class NiReader: pass
 class NiObject: pass
-class NiImage: pass
-class NiSourceTexture: pass
 
 '''),
             'X': (
-'''public class Ref<T>(NifReader r, int v) where T : NiObject { public int v = v; T val; [JsonIgnore] public T Value => val ??= (T)r.Blocks[v]; }
+'''public class Ref<T>(NiReader r, int v) where T : NiObject { public int v = v; T val; [JsonIgnore] public T Value => val ??= (T)r.Blocks[v]; }
+
+static class X<T> where T : NiObject {
+    public static Ref<T> Ptr(BinaryReader r) { int v; return (v = r.ReadInt32()) < 0 ? null : new Ref<T>((NiReader)r, v); }
+    public static Ref<T> Ref(BinaryReader r) { int v; return (v = r.ReadInt32()) < 0 ? null : new Ref<T>((NiReader)r, v); }
+}
 
 static class Y<T> {
     public static T Read(BinaryReader r) {
@@ -72,12 +79,7 @@ static class Y<T> {
     }
 }
 
-static class X<T> where T : NiObject {
-    public static Ref<T> Ptr(BinaryReader r) { int v; return (v = r.ReadInt32()) < 0 ? null : new Ref<T>((NifReader)r, v); }
-    public static Ref<T> Ref(BinaryReader r) { int v; return (v = r.ReadInt32()) < 0 ? null : new Ref<T>((NifReader)r, v); }
-}
-
-static class X {
+static class Z {
     public static string String(BinaryReader r) => r.ReadL32Encoding();
     public static string StringRef(BinaryReader r, int? p) => default;
     public static bool IsVersionSupported(uint v) => true;
@@ -160,7 +162,9 @@ static class X {
 }
 
 public enum Flags : ushort {
-    Hidden = 0x1
+    Hidden = 0x1,
+    Other10 = 10,
+    Other34 = 34
 }
 
 public class RefJsonConverter<T> : JsonConverter<Ref<T>> where T : NiObject {
@@ -179,10 +183,15 @@ public class TriangleJsonConverter : JsonConverter<Triangle> {
 }
 ''',
 '''class Ref(Generic[T]):
-    def __init__(self, r: NifReader, v: int):
+    def __init__(self, r: NiReader, v: int):
         self.v: int = v
         self.val: T
     def value() -> T: return None
+class X(Generic[T]):
+    @staticmethod # Refers to an object before the current one in the hierarchy.
+    def ptr(r: Reader): return None if (v := r.readInt32()) < 0 else Ref(r, v)
+    @staticmethod # Refers to an object after the current one in the hierarchy.
+    def ref(r: Reader): return None if (v := r.readInt32()) < 0 else Ref(r, v)
 class Y(Generic[T]):
     @staticmethod
     def read(type: type, r: Reader) -> object:
@@ -193,12 +202,7 @@ class Y(Generic[T]):
         elif type == Quaternion: return r.readQuaternionWFirst()
         elif type == Color4: return Color4(r)
         else: raise NotImplementedError('Tried to read an unsupported type.')
-class X(Generic[T]):
-    @staticmethod # Refers to an object before the current one in the hierarchy.
-    def ptr(r: Reader): return None if (v := r.readInt32()) < 0 else Ref(r, v)
-    @staticmethod # Refers to an object after the current one in the hierarchy.
-    def ref(r: Reader): return None if (v := r.readInt32()) < 0 else Ref(r, v)
-class X:
+class Z:
     @staticmethod
     def string(r: Reader) -> str: return r.readL32Encoding()
     @staticmethod
@@ -207,15 +211,15 @@ class X:
     def isVersionSupported(v: int) -> bool: return True
     @staticmethod
     def parseHeaderStr(s: str) -> tuple:
-        p = s.indexOf('Version')
+        p = s.index('Version')
         if p >= 0:
             v = s
             v = v[(p + 8):]
             for i in range(len(v)):
                 if v[i].isdigit() or v[i] == '.': continue
                 else: v = v[:i]
-            ver = Header.ver2Num(v)
-            if not Header.isVersionSupported(ver): raise Exception(f'Version {Header.ver2Str(ver)} ({ver}) is not supported.')
+            ver = Z.ver2Num(v)
+            if not Z.isVersionSupported(ver): raise Exception(f'Version {Z.ver2Str(ver)} ({ver}) is not supported.')
             return (s, ver)
         elif s.startsWith('NS'): return (s, 0x0a010000); # Dodgy version for NeoSteam
         raise Exception('Invalid header string')
@@ -252,6 +256,8 @@ class X:
 
 class Flags(Flag):
     Hidden = 0x1
+    Other10 = 10
+    Other34 = 34
 ''') }
         #endregion
         #region Compounds
@@ -296,22 +302,22 @@ class Flags(Flag):
             # read blocks
             values.insert(18, Class.Comment(s, 'read blocks'))
             values.insert(19, vx0 := Class.Value(s, Elem({ 'name': 'Blocks', 'type': 'NiObject', 'arr1': 'x' })))
-            vx0.initcw = ('Blocks = new NiObject[NumBlocks];', 'Blocks = NiObject[NumBlocks]')
+            vx0.initcw = ('Blocks = new NiObject[NumBlocks];', 'self.blocks: list[NiObject] = [None]*self.numBlocks')
             values.insert(20, vx1 := Class.Value(s, Elem({ 'name': 'Roots', 'type': 'Ref', 'template': 'NiObject', 'arr1': 'x' })))
-            vx1.initcw = ('Roots = new Footer(r).Roots;', 'Roots = Footer(r).Roots')
+            vx1.initcw = ('Roots = new Footer(r).Roots;', 'self.roots = Footer(r).Roots')
         def Header_inits(s, inits):
             inits.insert(20, if0 := Class.If(s, None, None, None, 'if'))
             inits.insert(21, if1 := Class.If(s, None, None, None, 'else'))
             if0.vercond = 'ZV >= 0x05000001'
-            if0.inits.insert(0, Class.Code(s, ('for (var i = 0; i < NumBlocks; i++) Blocks[i] = NiObject.Read(r, BlockTypes[BlockTypeIndex[i]]);', 'for i in range(NumBlocks): Blocks[i] = NiObject.Read(r, BlockTypes[BlockTypeIndex[i]])')))
-            if1.inits.insert(0, Class.Code(s, ('for (var i = 0; i < NumBlocks; i++) Blocks[i] = NiObject.Read(r, X.String(r));', 'for i in range(NumBlocks): Blocks[i] = NiObject.Read(r, X.String(r))')))
+            if0.inits.insert(0, Class.Code(s, ('for (var i = 0; i < NumBlocks; i++) Blocks[i] = NiObject.Read(r, BlockTypes[BlockTypeIndex[i]]);', 'for i in range(self.numBlocks): self.blocks[i] = NiObject.read(r, BlockTypes[BlockTypeIndex[i]])')))
+            if1.inits.insert(0, Class.Code(s, ('for (var i = 0; i < NumBlocks; i++) Blocks[i] = NiObject.Read(r, Z.String(r));', 'for i in range(self.numBlocks): self.blocks[i] = NiObject.read(r, Z.string(r))')))
         def Header_code(s):
             s.init = (
                 ['BinaryReader b', 'b: Reader'],
                 ['rx', 'rx'],
-                [f'new NifReader(r)', f'NifReader(r)'])
-            s.namecw = ('NifReader', 'NifReader'); s.inherit = 'BinaryReader' if self.ex == CS else 'Reader'
-            s.values[0].initcw = ('(HeaderString, V) = X.ParseHeaderStr(b.ReadVAString(0x80, 0xA)); var r = this;', '(self.headerString, self.v) = X.parseHeaderStr(b.readVAString(128, b\'\\x0A\')); r = self')
+                [f'new NiReader(r)', f'NiReader(r)'])
+            s.namecw = ('NiReader', 'NiReader'); s.inherit = 'BinaryReader' if self.ex == CS else 'Reader'
+            s.values[0].initcw = ('(HeaderString, V) = Z.ParseHeaderStr(b.ReadVAString(0x80, 0xA)); var r = this;', '(self.headerString, self.v) = Z.parseHeaderStr(b.readVAString(128, b\'\\x0A\')); r = self')
         def StringPalette_code(s):
             s.values[0].typecw = ('string[]', 'list[str]'); s.values[0].initcw = ('Palette = r.ReadL32AString().Split((char)0)', 'self.palette: list[str] = r.readL32AString().split(\'0x00\')')
         def TexDesc_values(s, values):
@@ -364,7 +370,7 @@ class Flags(Flag):
             values[6].kind = ':'; values[5].kind = ':+'; values[4].kind = '?+'
             values[6].arr1 = values[5].arr1 = values[4].arr1 = 'L16'
             values[6].type = 'BoneVertData'; values[6].namecw = ('VertexWeights', 'vertexWeights')
-            values[6].initcw = ('    : r.V >= 0x14030101 && arg == 15 ? r.ReadL16FArray(z => new BoneVertData(r, false)) : default;', '    r.readL16FArray(lambda z: BoneVertData(r, false)) if r.V >= 0x14030101 and arg == 15 else None')
+            values[6].initcw = ('    : r.V >= 0x14030101 && arg == 15 ? r.ReadL16FArray(z => new BoneVertData(r, false)) : default;', '    r.readL16FArray(lambda z: BoneVertData(r, False)) if r.V >= 0x14030101 and arg == 15 else None')
         def MotorDescriptor_inits(s, inits):
             inits.insert(1, Class.If(s, None, None, (inits, 1, 4), 'switch'))
         def RagdollDescriptor_inits(s, inits):
@@ -394,7 +400,7 @@ class Flags(Flag):
         self.customs = self.customs | {
             'BoneVertData': { 'x': 1421,
                 'constPre': (', bool full', ''), 'constArg': ('', ', half: bool'),
-                # 'consts': ('public BoneVertData(NifReader r, bool half) { Index = r.ReadUInt16(); Weight = r.ReadHalf(); }', 'if half: self.index = r.readUInt16(); self.weight = r.readHalf(); return') },
+                # 'consts': ('public BoneVertData(NiReader r, bool half) { Index = r.ReadUInt16(); Weight = r.ReadHalf(); }', 'if half: self.index = r.readUInt16(); self.weight = r.readHalf(); return') },
                 'values': BoneVertData_values },
             'BoneVertDataHalf': { 'x': 1427,
                 '_': ['', ('BoneVertData', 'BoneVertData'), lambda x: (x, x), ('new BoneVertData(r, true)', 'BoneVertData(r, true)'), lambda c: (f'r.ReadFArray(z => new BoneVertData(r, true), {c})', f'r.readFArray(lambda z: BoneVertData(r, true), {c})')] },
@@ -403,7 +409,7 @@ class Flags(Flag):
                 'if': ControlledBlock_if },
             'Header': { 'x': 1482,
                 'constBase': ('b.BaseStream', ''),
-                'consts': [('static NifReader() => X.Register();', None)],
+                'consts': [('static NiReader() => Z.Register();', None)],
                 'values': Header_values,
                 'inits': Header_inits,
                 'code': Header_code },
@@ -418,10 +424,10 @@ class Flags(Flag):
                 'cond': lambda p, s, cw: cw.typeReplace('KeyType', s).replace('ARG', 'keyType') },
             'TexCoord': { 'x': 1545,
                 'flags': 'C',
-                'constArg': ('', ', half: bool'), 'constNew': ('', ', false'),
+                'constArg': ('', ', half: bool'), 'constNew': ('', ', False'),
                 'consts': [
-                    ('public TexCoord(double u, double v) { this.u = (float)u; this.v = (float)v; }', None),
-                    ('public TexCoord(NifReader r, bool half) { u = half ? r.ReadHalf() : r.ReadSingle(); v = half ? r.ReadHalf() : r.ReadSingle(); }', 'if half: self.u = r.readHalf(); self.v = r.readHalf(); return')] },
+                    ('public TexCoord(double u, double v) { this.u = (float)u; this.v = (float)v; }', 'if isinstance(r, float): self.u = r; self.v = half; return'),
+                    ('public TexCoord(NiReader r, bool half) { u = half ? r.ReadHalf() : r.ReadSingle(); v = half ? r.ReadHalf() : r.ReadSingle(); }', 'if half: self.u = r.readHalf(); self.v = r.readHalf(); return')] },
             'HalfTexCoord': { 'x': 1551,
                 '_': ['', ('TexCoord', 'TexCoord'), lambda x: (x, x), ('new TexCoord(r, true)', 'TexCoord(r, true)'), lambda c: (f'r.ReadFArray(z => new TexCoord(r, true), {c})', f'r.readFArray(lambda z: TexCoord(r, true), {c})')] },
             'TexDesc': { 'x': 1565,
@@ -500,15 +506,25 @@ class Flags(Flag):
         #region NIF Objects
         def NiObject_code(s):
             nodes = ['NiNode', 'NiTriShape', 'NiTexturingProperty', 'NiSourceTexture', 'NiMaterialProperty', 'NiMaterialColorController', 'NiTriShapeData', 'RootCollisionNode', 'NiStringExtraData', 'NiSkinInstance', 'NiSkinData', 'NiAlphaProperty', 'NiZBufferProperty', 'NiVertexColorProperty', 'NiBSAnimationNode', 'NiBSParticleNode', 'NiParticles', 'NiParticlesData', 'NiRotatingParticles', 'NiRotatingParticlesData', 'NiAutoNormalParticles', 'NiAutoNormalParticlesData', 'NiUVController', 'NiUVData', 'NiTextureEffect', 'NiTextKeyExtraData', 'NiVertWeightsExtraData', 'NiParticleSystemController', 'NiBSPArrayController', 'NiGravity', 'NiParticleBomb', 'NiParticleColorModifier', 'NiParticleGrowFade', 'NiParticleMeshModifier', 'NiParticleRotation', 'NiKeyframeController', 'NiKeyframeData', 'NiColorData', 'NiGeomMorpherController', 'NiMorphData', 'AvoidNode', 'NiVisController', 'NiVisData', 'NiAlphaController', 'NiFloatData', 'NiPosData', 'NiBillboardNode', 'NiShadeProperty', 'NiWireframeProperty', 'NiCamera', 'NiPathController', 'NiPixelData'] #, 'NiExtraData', 'NiSkinPartition']
-            for x in nodes: s.attribs.append(Class.Attrib(f'JsonDerivedType(typeof({x}), typeDiscriminator: nameof({x}))'))
-            body = '\n'.join([f'            case "{x}": return new {x}(r);' for x in nodes])
-            s.methods.append(Class.Method('''
-    public static NiObject Read(NifReader r, string nodeType) {
+            if self.ex == CS:
+                for x in nodes: s.attribs.append(Class.Attrib(f'JsonDerivedType(typeof({x}), typeDiscriminator: nameof({x}))'))
+                body = '\n'.join([f'            case "{x}": return new {x}(r);' for x in nodes])
+                s.methods.append(Class.Method('''
+    public static NiObject Read(NiReader r, string nodeType) {
         switch (nodeType) {
 BODY
             default: { Log($"Tried to read an unsupported NiObject type ({nodeType})."); return null; }
         }
     }
+'''.replace('BODY', body)))
+            elif self.ex == PY:
+                body = '\n'.join([f'            case \'{x}\': return {x}(r)' for x in nodes])
+                s.methods.append(Class.Method('''
+    @staticmethod
+    def read(r: NiReader, nodeType: str) -> NiObject:
+        match nodeType:
+BODY
+            case _: Log(f'Tried to read an unsupported NiObject type ({nodeType}).'); return null
 '''.replace('BODY', body)))
         def bhkRigidBody_values(s, values):
             values[6].extcond = values[6].vercond[20:]
@@ -614,7 +630,7 @@ BODY
             'NiTexturingProperty': { 'x': 4620,
                 'values': NiTexturingProperty_values },
             'NiTriShapeData': { 'x': 4673,
-                'calculated': lambda s: ('false', 'false') },
+                'calculated': lambda s: ('false', 'False') },
             'NiVisData': { 'x': 4804,
                 'arg': 'KeyType.LINEAR_KEY' },
             'NiRawImageData': { 'x': 4835,

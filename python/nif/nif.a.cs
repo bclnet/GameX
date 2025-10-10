@@ -469,6 +469,17 @@ public class MatchGroup(NifReader r) { // X
 }
 
 /// <summary>
+/// Description of a mipmap within an NiPixelData object.
+/// </summary>
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct MipMap(NifReader r) { // X
+    public static (string, int) Struct = ("<3i", 12);
+    public uint Width = r.ReadUInt32();                 // Width of the mipmap image.
+    public uint Height = r.ReadUInt32();                // Height of the mipmap image.
+    public uint Offset = r.ReadUInt32();                // Offset into the pixel data array where this mipmap starts.
+}
+
+/// <summary>
 /// NiSkinData::BoneVertData. A vertex and its weight.
 /// </summary>
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -538,8 +549,12 @@ public class NifReader : BinaryReader { // X
         if (r.V >= 0x05000006) Groups = r.ReadL32PArray<uint>("I");
         // read blocks
         Blocks = new NiObject[NumBlocks];
-        if (r.V >= 0x05000001) for (var i = 0; i < NumBlocks; i++) Blocks[i] = NiObject.Read(r, BlockTypes[BlockTypeIndex[i]]);
-        else for (var i = 0; i < NumBlocks; i++) Blocks[i] = NiObject.Read(r, X.String(r));
+        if (r.V >= 0x05000001) {
+            for (var i = 0; i < NumBlocks; i++) Blocks[i] = NiObject.Read(r, BlockTypes[BlockTypeIndex[i]]);
+        }
+        else {
+            for (var i = 0; i < NumBlocks; i++) Blocks[i] = NiObject.Read(r, X.String(r));
+        }
         Roots = new Footer(r).Roots;
     }
     static NifReader() => X.Register();
@@ -1037,6 +1052,8 @@ public class MorphWeight(NifReader r) { // Y
 [JsonDerivedType(typeof(NiShadeProperty), typeDiscriminator: nameof(NiShadeProperty))]
 [JsonDerivedType(typeof(NiWireframeProperty), typeDiscriminator: nameof(NiWireframeProperty))]
 [JsonDerivedType(typeof(NiCamera), typeDiscriminator: nameof(NiCamera))]
+[JsonDerivedType(typeof(NiPathController), typeDiscriminator: nameof(NiPathController))]
+[JsonDerivedType(typeof(NiPixelData), typeDiscriminator: nameof(NiPixelData))]
 public abstract class NiObject(NifReader r) { // X
 
     public static NiObject Read(NifReader r, string nodeType) {
@@ -1091,6 +1108,8 @@ public abstract class NiObject(NifReader r) { // X
             case "NiShadeProperty": return new NiShadeProperty(r);
             case "NiWireframeProperty": return new NiWireframeProperty(r);
             case "NiCamera": return new NiCamera(r);
+            case "NiPathController": return new NiPathController(r);
+            case "NiPixelData": return new NiPixelData(r);
             default: { Log($"Tried to read an unsupported NiObject type ({nodeType})."); return null; }
         }
     }
@@ -1127,6 +1146,17 @@ public class NiExtraData : NiObject { // X
 /// Abstract base class for all interpolators of bool, float, NiQuaternion, NiPoint3, NiColorA, and NiQuatTransform data.
 /// </summary>
 public abstract class NiInterpolator(NifReader r) : NiObject(r) { // Y
+}
+
+[Flags]
+public enum PathFlags : ushort { // X
+    CVDataNeedsUpdate = 0,
+    CurveTypeOpen = 1 << 1,
+    AllowFlip = 1 << 2,
+    Bank = 1 << 3,
+    ConstantVelocity = 1 << 4,
+    Follow = 1 << 5,
+    Flip = 1 << 6
 }
 
 /// <summary>
@@ -1189,8 +1219,8 @@ public abstract class NiAVObject : NiObjectNET { // X
     public Ref<NiCollisionObject> CollisionObject;
 
     public NiAVObject(NifReader r) : base(r) {
-        Flags = r.UV2 > 26 ? (Flags)r.ReadUInt16()
-            : r.V >= 0x03000000 && (r.UV2 <= 26) ? (Flags)r.ReadUInt16() : (Flags)14;
+        if (r.UV2 > 26) Flags = (Flags)r.ReadUInt16();
+        if (r.V >= 0x03000000 && (r.UV2 <= 26)) Flags = (Flags)r.ReadUInt16();
         Translation = r.ReadVector3();
         Rotation = r.ReadMatrix3x3As4x4();
         Scale = r.ReadSingle();
@@ -1497,9 +1527,6 @@ public abstract class NiGeometryData : NiObject { // X
     public short[] Unknown13shorts;                     // Unknown, always 0?
     public Color4[] VertexColors;                       // The vertex colors.
     public ushort NumUVSets;                            // The lower 6 (or less?) bits of this field represent the number of UV texture sets. The other bits are probably flag bits. For versions 10.1.0.0 and up, if bit 12 is set then extra vectors are present after the normals.
-    public bool HasUV;                                  // Do we have UV coordinates?
-                                                        // 
-                                                        //     Note: for compatibility with NifTexture, set this value to either 0x00000000 or 0xFFFFFFFF.
     public TexCoord[][] UVSets;                         // The UV texture coordinates. They follow the OpenGL standard: some programs may require you to flip the second coordinate.
     public ConsistencyType ConsistencyFlags = ConsistencyType.CT_MUTABLE; // Consistency Flags
     public Ref<AbstractAdditionalGeometryData> AdditionalData; // Unknown.
@@ -1534,7 +1561,7 @@ public abstract class NiGeometryData : NiObject { // X
         if ((HasVertexColors > 0) && (HasVertexColors != 7)) VertexColors = r.ReadFArray(z => new Color4(r), NumVertices);
         if (r.V >= 0x14030101 && HasVertexColors == 7) VertexColors = r.ReadFArray(z => new Color4(r.ReadBytes(4)), NumVertices);
         if (r.V <= 0x04020200) NumUVSets = r.ReadUInt16();
-        if (r.V <= 0x04000002) HasUV = r.ReadBool32();
+        var HasUV = r.V <= 0x04000002 ? r.ReadBool32() : default;
         if ((HasVertices > 0) && (HasVertices != 15)) UVSets = r.ReadFArray(k => r.ReadSArray<TexCoord>(NumVertices), ((NumUVSets & 63) | ((int)VectorFlags & 63) | ((int)BSVectorFlags & 1)));
         if (r.V >= 0x14030101 && HasVertices == 15) UVSets = r.ReadFArray(k => r.ReadFArray(z => new TexCoord(r, true), NumVertices), ((NumUVSets & 63) | ((int)VectorFlags & 63) | ((int)BSVectorFlags & 1)));
         if (r.V >= 0x0A000100) ConsistencyFlags = (ConsistencyType)r.ReadUInt16();
@@ -1614,7 +1641,6 @@ public class NiParticlesData : NiGeometryData { // X
     public Quaternion[] Rotations;                      // The individual particle rotations.
     public float[] RotationAngles;                      // Angles of rotation
     public Vector3[] RotationAxes;                      // Axes of rotation.
-    public bool HasTextureIndices;
     public uint NumSubtextureOffsets;                   // How many quads to use in BSPSysSubTexModifier for texture atlasing
     public Vector4[] SubtextureOffsets;                 // Defines UV offsets
     public float AspectRatio;                           // Sets aspect ratio for Subtexture Offset UV quads
@@ -1630,9 +1656,10 @@ public class NiParticlesData : NiGeometryData { // X
         NumActive = r.ReadUInt16();
         if (!((r.V == 0x14020007) && (r.UV2 > 0)) && r.ReadBool32()) Sizes = r.ReadPArray<float>("f", NumVertices);
         if (r.V >= 0x0A000100 && !((r.V == 0x14020007) && (r.UV2 > 0)) && r.ReadBool32()) Rotations = r.ReadFArray(z => r.ReadQuaternionWFirst(), NumVertices);
-        if (!((r.V == 0x14020007) && (r.UV2 > 0)) && r.ReadBool32()) RotationAngles = r.ReadPArray<float>("f", NumVertices);
+        var HasRotationAngles = r.V >= 0x14000004 ? r.ReadBool32() : default;
+        if (!((r.V == 0x14020007) && (r.UV2 > 0)) && HasRotationAngles) RotationAngles = r.ReadPArray<float>("f", NumVertices);
         if (r.V >= 0x14000004 && !((r.V == 0x14020007) && (r.UV2 > 0)) && r.ReadBool32()) RotationAxes = r.ReadPArray<Vector3>("3f", NumVertices);
-        if (((r.V == 0x14020007) && (r.UV2 > 0))) HasTextureIndices = r.ReadBool32();
+        var HasTextureIndices = ((r.V == 0x14020007) && (r.UV2 > 0)) ? r.ReadBool32() : default;
         if (r.UV2 > 34) NumSubtextureOffsets = r.ReadUInt32();
         if (((r.V == 0x14020007) && (r.UV2 > 0))) SubtextureOffsets = r.ReadL8PArray<Vector4>("4f");
         if (r.UV2 > 34) {
@@ -1878,6 +1905,22 @@ public class NiBSParticleNode(NifReader r) : NiNode(r) { // X
 }
 
 /// <summary>
+/// NiPalette objects represent mappings from 8-bit indices to 24-bit RGB or 32-bit RGBA colors.
+/// </summary>
+public class NiPalette : NiObject { // X
+    public byte HasAlpha;
+    public uint NumEntries = 256;                       // The number of palette entries. Always 256 but can also be 16.
+    public Color4[] Palette;                            // The color palette.
+
+    public NiPalette(NifReader r) : base(r) {
+        HasAlpha = r.ReadByte();
+        NumEntries = r.ReadUInt32();
+        if (NumEntries == 16) Palette = r.ReadFArray(z => new Color4(r.ReadBytes(4)), 16);
+        else Palette = r.ReadFArray(z => new Color4(r.ReadBytes(4)), 256);
+    }
+}
+
+/// <summary>
 /// LEGACY (pre-10.1) particle modifier.
 /// </summary>
 public class NiParticleBomb : NiParticleModifier { // X
@@ -2079,6 +2122,30 @@ public class NiParticleSystemController : NiTimeController { // X
 public class NiBSPArrayController(NifReader r) : NiParticleSystemController(r) { // X
 }
 
+/// <summary>
+/// DEPRECATED (10.2), REMOVED (20.5). Replaced by NiTransformController and NiPathInterpolator.
+/// Time controller for a path.
+/// </summary>
+public class NiPathController : NiTimeController { // X
+    public PathFlags PathFlags;
+    public int BankDir = 1;                             // -1 = Negative, 1 = Positive
+    public float MaxBankAngle;                          // Max angle in radians.
+    public float Smoothing;
+    public short FollowAxis;                            // 0, 1, or 2 representing X, Y, or Z.
+    public Ref<NiPosData> PathData;
+    public Ref<NiFloatData> PercentData;
+
+    public NiPathController(NifReader r) : base(r) {
+        if (r.V >= 0x0A010000) PathFlags = (PathFlags)r.ReadUInt16();
+        BankDir = r.ReadInt32();
+        MaxBankAngle = r.ReadSingle();
+        Smoothing = r.ReadSingle();
+        FollowAxis = r.ReadInt16();
+        PathData = X<NiPosData>.Ref(r);
+        PercentData = X<NiFloatData>.Ref(r);
+    }
+}
+
 public class PixelFormatComponent(NifReader r) { // Y
     public PixelComponent Type = (PixelComponent)r.ReadUInt32(); // Component Type
     public PixelRepresentation Convention = (PixelRepresentation)r.ReadUInt32(); // Data Storage Convention
@@ -2124,6 +2191,30 @@ public abstract class NiPixelFormat : NiObject { // Y
         }
         if (r.V >= 0x14030004) sRGBSpace = r.ReadBool32();
         if (r.V >= 0x0A030003) Channels = r.ReadFArray(z => new PixelFormatComponent(r), 4);
+    }
+}
+
+/// <summary>
+/// A texture.
+/// </summary>
+public class NiPixelData : NiPixelFormat { // X
+    public Ref<NiPalette> Palette;
+    public uint NumMipmaps;
+    public uint BytesPerPixel;
+    public MipMap[] Mipmaps;
+    public uint NumPixels;
+    public uint NumFaces = 1;
+    public byte[] PixelData;
+
+    public NiPixelData(NifReader r) : base(r) {
+        Palette = X<NiPalette>.Ref(r);
+        NumMipmaps = r.ReadUInt32();
+        BytesPerPixel = r.ReadUInt32();
+        Mipmaps = r.ReadSArray<MipMap>(NumMipmaps);
+        NumPixels = r.ReadUInt32();
+        if (r.V >= 0x0A030006) NumFaces = r.ReadUInt32();
+        if (r.V <= 0x0A030005) PixelData = r.ReadBytes(NumPixels);
+        if (r.V >= 0x0A030006) PixelData = r.ReadBytes(NumPixels * NumFaces);
     }
 }
 
@@ -2428,13 +2519,12 @@ public class NiTriShape(NifReader r) : NiTriBasedGeom(r) { // X
 /// </summary>
 public class NiTriShapeData : NiTriBasedGeomData { // X
     public uint NumTrianglePoints;                      // Num Triangles times 3.
-    public bool HasTriangles;                           // Do we have triangle data?
     public Triangle[] Triangles;                        // Triangle data.
     public MatchGroup[] MatchGroups;                    // The shared normals.
 
     public NiTriShapeData(NifReader r) : base(r) {
         NumTrianglePoints = r.ReadUInt32();
-        if (r.V >= 0x0A010000) HasTriangles = false; // calculated
+        var HasTriangles = r.V >= 0x0A010000 ? false : default; // calculated
         if (r.V <= 0x0A000102) Triangles = r.ReadSArray<Triangle>(NumTriangles);
         if (r.V >= 0x0A000103 && HasTriangles) Triangles = r.ReadSArray<Triangle>(NumTriangles);
         if (r.V >= 0x03010000) MatchGroups = r.ReadL16FArray(z => new MatchGroup(r));

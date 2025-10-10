@@ -15,7 +15,7 @@ class NifCodeWriter(XmlCodeWriter):
             'NiProperty', 'NiTexturingProperty', 'NiAlphaProperty', 'NiZBufferProperty', 'NiVertexColorProperty', 'NiShadeProperty', 'NiWireframeProperty', 'NiCamera', 'NiUVData', 'NiKeyframeData', 'NiColorData', 'NiMorphData', 'NiVisData', 'NiFloatData', 'NiPosData',
             'NiExtraData', 'NiStringExtraData', 'NiTextKeyExtraData', 'NiVertWeightsExtraData', 'NiParticles', 'NiParticlesData', 'NiRotatingParticles', 'NiRotatingParticlesData', 'NiAutoNormalParticles', 'NiAutoNormalParticlesData', 'NiParticleSystemController', 'NiBSPArrayController',
             'NiParticleModifier', 'NiGravity', 'NiParticleBomb', 'NiParticleColorModifier', 'NiParticleGrowFade', 'NiParticleMeshModifier', 'NiParticleRotation', 'NiTimeController', 'NiUVController', 'NiInterpController', 'NiSingleInterpController', 'NiKeyframeController', 'NiGeomMorpherController', 'NiBoolInterpController', 'NiVisController', 'NiFloatInterpController', 'NiAlphaController',
-            'NiSkinInstance', 'NiSkinData', 'NiSkinPartition', 'NiTexture', 'NiSourceTexture', 'NiPoint3InterpController', 'NiMaterialProperty', 'NiMaterialColorController', 'NiDynamicEffect', 'NiTextureEffect' ]
+            'NiSkinInstance', 'NiSkinData', 'NiSkinPartition', 'NiTexture', 'NiSourceTexture', 'NiPoint3InterpController', 'NiMaterialProperty', 'NiMaterialColorController', 'NiDynamicEffect', 'NiTextureEffect', 'NiPathController', 'PathFlags', 'NiPixelData', 'NiPalette', 'MipMap' ]
         self.es3x = [
             'MaterialColor', 'BSLightingShaderPropertyShaderType', 'BSShaderType', 'BSShaderFlags', 'BSShaderFlags2', 'BillboardMode', 'SymmetryType', 'VertexFlags', 'ZCompareMode', 'ImageType', 'NiPixelFormat', 'PixelFormat', 'PixelComponent', 'PixelRepresentation', 'PixelTiling', 'PixelFormatComponent',
             'MaterialData', 'BSVertexDesc', 'MorphWeight', 'BSShaderProperty', 'VectorFlags', 'BSVectorFlags', 'ConsistencyType', 'AbstractAdditionalGeometryData', 'FormatPrefs', 'NiRawImageData', 'SkinPartition', 'BSVertexDataSSE',
@@ -51,12 +51,12 @@ type Vector4 = np.ndarray
 type Matrix4x4 = np.ndarray
 
 # typedefs
-class Reader: pass
 class Color: pass
-
-#
-class UnionBV: pass
+class Reader: pass
+class NifReader: pass
 class NiObject: pass
+class NiImage: pass
+class NiSourceTexture: pass
 
 '''),
             'X': (
@@ -180,7 +180,12 @@ public class TriangleJsonConverter : JsonConverter<Triangle> {
     public override void Write(Utf8JsonWriter w, Triangle s, JsonSerializerOptions options) => w.WriteStringValue($"{s.v1} {s.v2} {s.v3}");
 }
 ''',
-'''class Y(Generic[T]):
+'''class Ref(Generic[T]):
+    def __init__(self, r: NifReader, v: int):
+        self.v: int = v
+        self.val: T
+    def value() -> T: return None
+class Y(Generic[T]):
     @staticmethod
     def read(type: type, r: Reader) -> object:
         if type == float: return r.readSingle()
@@ -261,6 +266,7 @@ class Flags(Flag):
             'NiPlane': ('<4f', 16),
             'NiBound': ('<4f', 16),
             'CapsuleBV': ('<8f', 32),
+            'MipMap': ('<3i', 12),
             'zNiQuatTransform': 'x',
             # 'NiTransform': 'x',
             # 'BoxBV': 'x',
@@ -291,18 +297,21 @@ class Flags(Flag):
             # read blocks
             values.insert(18, Class.Comment(s, 'read blocks'))
             values.insert(19, vx0 := Class.Value(s, Elem({ 'name': 'Blocks', 'type': 'NiObject', 'arr1': 'x' })))
-            vx0.initcw = ('Blocks = new NiObject[NumBlocks];', 'Blocks = new NiObject[NumBlocks]')
+            vx0.initcw = ('Blocks = new NiObject[NumBlocks];', 'Blocks = NiObject[NumBlocks]')
             values.insert(20, vx1 := Class.Value(s, Elem({ 'name': 'Roots', 'type': 'Ref', 'template': 'NiObject', 'arr1': 'x' })))
-            vx1.initcw = ('Roots = new Footer(r).Roots;', 'Roots = new Footer(r).Roots')
+            vx1.initcw = ('Roots = new Footer(r).Roots;', 'Roots = Footer(r).Roots')
         def Header_inits(s, inits):
-            inits.insert(20, Class.Code(s, ('if (r.V >= 0x05000001) for (var i = 0; i < NumBlocks; i++) Blocks[i] = NiObject.Read(r, BlockTypes[BlockTypeIndex[i]]);', 'if (r.V >= 0x05000001) for (var i = 0; i < NumBlocks; i++) Blocks[i] = NiObject.Read(r, BlockTypes[BlockTypeIndex[i]])')))
-            inits.insert(21, Class.Code(s, ('else for (var i = 0; i < NumBlocks; i++) Blocks[i] = NiObject.Read(r, X.String(r));', 'else for (var i = 0; i < NumBlocks; i++) Blocks[i] = NiObject.Read(r, X.String(r))')))
+            inits.insert(20, if0 := Class.If(s, None, None, None, 'if'))
+            inits.insert(21, if1 := Class.If(s, None, None, None, 'else'))
+            if0.vercond = 'ZV >= 0x05000001'
+            if0.inits.insert(0, Class.Code(s, ('for (var i = 0; i < NumBlocks; i++) Blocks[i] = NiObject.Read(r, BlockTypes[BlockTypeIndex[i]]);', 'for i in range(NumBlocks): Blocks[i] = NiObject.Read(r, BlockTypes[BlockTypeIndex[i]])')))
+            if1.inits.insert(0, Class.Code(s, ('for (var i = 0; i < NumBlocks; i++) Blocks[i] = NiObject.Read(r, X.String(r));', 'for i in range(NumBlocks): Blocks[i] = NiObject.Read(r, X.String(r))')))
         def Header_code(s):
             s.init = (
                 ['BinaryReader b', 'b: Reader'],
                 ['rx', 'rx'],
                 [f'new NifReader(r)', f'NifReader(r)'])
-            s.namecw = ('NifReader', 'NifReader'); s.inherit = 'BinaryReader'
+            s.namecw = ('NifReader', 'NifReader'); s.inherit = 'BinaryReader' if self.ex == CS else 'Reader'
             s.values[0].initcw = ('(HeaderString, V) = X.ParseHeaderStr(b.ReadVAString(0x80, 0xA)); var r = this;', '(self.headerString, self.v) = X.parseHeaderStr(b.readVAString(128, b\'\\x0A\')); r = self')
         def StringPalette_code(s):
             s.values[0].typecw = ('string[]', 'list[str]'); s.values[0].initcw = ('Palette = r.ReadL32AString().Split((char)0)', 'self.palette: list[str] = r.readL32AString().split(\'0x00\')')
@@ -490,7 +499,7 @@ class Flags(Flag):
         #endregion
         #region NIF Objects
         def NiObject_code(s):
-            nodes = ['NiNode', 'NiTriShape', 'NiTexturingProperty', 'NiSourceTexture', 'NiMaterialProperty', 'NiMaterialColorController', 'NiTriShapeData', 'RootCollisionNode', 'NiStringExtraData', 'NiSkinInstance', 'NiSkinData', 'NiAlphaProperty', 'NiZBufferProperty', 'NiVertexColorProperty', 'NiBSAnimationNode', 'NiBSParticleNode', 'NiParticles', 'NiParticlesData', 'NiRotatingParticles', 'NiRotatingParticlesData', 'NiAutoNormalParticles', 'NiAutoNormalParticlesData', 'NiUVController', 'NiUVData', 'NiTextureEffect', 'NiTextKeyExtraData', 'NiVertWeightsExtraData', 'NiParticleSystemController', 'NiBSPArrayController', 'NiGravity', 'NiParticleBomb', 'NiParticleColorModifier', 'NiParticleGrowFade', 'NiParticleMeshModifier', 'NiParticleRotation', 'NiKeyframeController', 'NiKeyframeData', 'NiColorData', 'NiGeomMorpherController', 'NiMorphData', 'AvoidNode', 'NiVisController', 'NiVisData', 'NiAlphaController', 'NiFloatData', 'NiPosData', 'NiBillboardNode', 'NiShadeProperty', 'NiWireframeProperty', 'NiCamera'] #, 'NiExtraData', 'NiSkinPartition']
+            nodes = ['NiNode', 'NiTriShape', 'NiTexturingProperty', 'NiSourceTexture', 'NiMaterialProperty', 'NiMaterialColorController', 'NiTriShapeData', 'RootCollisionNode', 'NiStringExtraData', 'NiSkinInstance', 'NiSkinData', 'NiAlphaProperty', 'NiZBufferProperty', 'NiVertexColorProperty', 'NiBSAnimationNode', 'NiBSParticleNode', 'NiParticles', 'NiParticlesData', 'NiRotatingParticles', 'NiRotatingParticlesData', 'NiAutoNormalParticles', 'NiAutoNormalParticlesData', 'NiUVController', 'NiUVData', 'NiTextureEffect', 'NiTextKeyExtraData', 'NiVertWeightsExtraData', 'NiParticleSystemController', 'NiBSPArrayController', 'NiGravity', 'NiParticleBomb', 'NiParticleColorModifier', 'NiParticleGrowFade', 'NiParticleMeshModifier', 'NiParticleRotation', 'NiKeyframeController', 'NiKeyframeData', 'NiColorData', 'NiGeomMorpherController', 'NiMorphData', 'AvoidNode', 'NiVisController', 'NiVisData', 'NiAlphaController', 'NiFloatData', 'NiPosData', 'NiBillboardNode', 'NiShadeProperty', 'NiWireframeProperty', 'NiCamera', 'NiPathController', 'NiPixelData'] #, 'NiExtraData', 'NiSkinPartition']
             for x in nodes: s.attribs.append(Class.Attrib(f'JsonDerivedType(typeof({x}), typeDiscriminator: nameof({x}))'))
             body = '\n'.join([f'            case "{x}": return new {x}(r);' for x in nodes])
             s.methods.append(Class.Method('''
@@ -517,8 +526,11 @@ BODY
         def NiCollisionData_values(s, values):
             pass
         def NiAVObject_values(s, values):
-            values[0].type = 'Flags'; values[0].kind = '?+'
-            values[1].kind = ':'; values[1].default = '14'
+            values[0].type = 'Flags'
+            # del values[0]
+            # values[0].cond = None; values[0].default = '14'; values[0].kind = '?:'
+             #; values[0].kind = '?:'
+            # values[1].kind = ':'; values[1].default = '14'
         def NiDynamicEffect_values(s, values):
             del values[4]; del values[1]
             values[0].default = 'true'
@@ -533,8 +545,8 @@ BODY
         def NiGeometryData_values(s, values):
             values[1].cond = '!NiPSysData || r.UV2 >= 34'
             del values[2]
-            values[14].cond = values[15].cond = '(HasNormals != 0) && (((int)VectorFlags | (int)BSVectorFlags) & 4096) != 0'
-            values[25].arr1 = values[26].arr1 = '((NumUVSets & 63) | ((int)VectorFlags & 63) | ((int)BSVectorFlags & 1))'
+            values[14].cond = values[15].cond = '(HasNormals != 0) && (((int)VectorFlags | (int)BSVectorFlags) & 4096) != 0' if self.ex == CS else '(HasNormals != 0) && ((VectorFlags | BSVectorFlags) & 4096) != 0'
+            values[25].arr1 = values[26].arr1 = '((NumUVSets & 63) | ((int)VectorFlags & 63) | ((int)BSVectorFlags & 1))' if self.ex == CS else '((NumUVSets & 63) | (VectorFlags & 63) | (BSVectorFlags & 1))'
             values[20].kind = values[11].kind = values[5].kind = 'var'
         def NiKeyframeData_values(s, values):
             values[2].cond = 'RotationType != KeyType.XYZ_ROTATION_KEY'
@@ -543,8 +555,7 @@ BODY
             values[8].default = 'true'
             values[9].default = 'false'
         def NiTexturingProperty_values(s, values):
-            values[16].kind = values[14].kind = values[9].kind = 'var?'
-            pass
+            values[16].kind = values[14].kind = values[9].kind = 'var'
         def NiRawImageData_values(s, values):
             values[3].cond = 'Image Type == ImageType.RGB'
             values[4].cond = 'Image Type == ImageType.RGBA'
@@ -585,7 +596,7 @@ BODY
                 'values': NiGeometry_values },
             'NiGeometryData': { 'x': 3188,
                 'conds': ['NiPSysData'],
-                'type': {'Has Vertices': 'uint', 'Has Normals': 'uint', 'Has Vertex Colors': 'uint' }, #'Normalsx': 'Vector3', 'Vertex Colors': 'Color4',
+                'type': {'Has Vertices': 'uint', 'Has Normals': 'uint', 'Has Vertex Colors': 'uint' },
                 'values': NiGeometryData_values },
             'NiKeyframeData': { 'x': 3683,
                 'kind': {-3: 'else'}, 
@@ -593,7 +604,7 @@ BODY
             'NiSkinData': { 'x': 4439,
                 'type': {'x': 'Matrix33R'} },
             'NiSkinPartition': { 'x': 4469,
-                'arg': '(uint)VertexDesc.VertexAttributes' },
+                'arg': '(uint)VertexDesc.VertexAttributes' if self.ex == CS else 'VertexDesc.VertexAttributes' },
             'NiSourceTexture': { 'x': 4491,
                 'values': NiSourceTexture_values },
             'NiTextKeyExtraData': { 'x': 4570,
@@ -614,4 +625,4 @@ BODY
 
 xml = ET.parse('nif.xml')
 NifCodeWriter(CS).write(xml, 'nif.cs')
-# NifCodeWriter(PY).write(xml, 'nif.py')
+NifCodeWriter(PY).write(xml, 'nif.py')

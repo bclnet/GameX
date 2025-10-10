@@ -208,7 +208,8 @@ class XmlCodeWriter(CodeWriter):
                     constBase = s.custom['constBase'][CS] if 'constBase' in s.custom else 'r'
                     with self.block(before=f'public {s.namecw[CS].replace('<T>', '')}({s.init[0][CS]}{constArg}){' : base(' + constBase + ')' if s.inherit else ''}'): emitHeader(); emitBlock(s.inits)
                 if 'consts' in s.custom:
-                    for x in s.custom['consts']: self.emit(x[CS])
+                    for x in s.custom['consts']:
+                        if x[CS]: self.emit(x[CS])
                 for x in s.methods: self.emit_raw(x.body)
             elif self.ex == PY:
                 if s.struct and s.struct != 'x': self.emit(f'struct = (\'{s.struct[0]}\', {s.struct[1]})')
@@ -234,7 +235,9 @@ class XmlCodeWriter(CodeWriter):
                 constArg = s.custom['constArg'][PY] if 'constArg' in s.custom else ''
                 with self.block(before=f'def __init__(self, {s.init[0][PY]}{constArg}):'):
                     if s.inherit: self.emit('super().__init__(r)')
-                    if 'const' in s.custom: self.emit(s.custom['const'][PY])
+                    if 'consts' in s.custom:
+                        for x in s.custom['consts']:
+                            if x[PY]: self.emit(x[PY])
                     if primary:
                         if fieldItems or s.inherit:
                             for k, v in fieldItems:

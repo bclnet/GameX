@@ -3,8 +3,6 @@ from io import BytesIO
 from enum import Enum, Flag
 from typing import TypeVar, Generic
 from gamex import FileSource, PakBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
-from gamex.compression import decompressLz4, decompressZlib
-from gamex.Bethesda.formats.records import FormType, Header
 
 T = TypeVar('T')
 
@@ -491,6 +489,7 @@ class TexCoord: # X
     v: float                                            # Second coordinate.
 
     def __init__(self, r: NifReader, half: bool):
+        if half: self.u = r.readHalf(); self.v = r.readHalf(); return
         self.u = r.readSingle()
         self.v = r.readSingle()
 

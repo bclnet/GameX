@@ -71,8 +71,8 @@ def _parse_args(parser: argparse.ArgumentParser) -> tuple[argparse.Namespace, Ar
 
 def _main() -> None:
     
-    # sys.argv = ['gamex', 'get', '-f', 'Bethesda', '-u', 'game:/Morrowind.bsa#Morrowind', '-m', '*.nif', '-o', 'StreamObject', '-p', 'D:/T_/MorrowindP']
-    sys.argv = ['gamex', 'get', '-f', 'Bethesda', '-u', 'game:/Oblivion - Meshes.bsa#Oblivion', '-m', '*/bearskinrug01.nif', '-o', 'StreamObject', '-p', 'D:/T_/OblivionP']
+    sys.argv = ['gamex', 'get', '-f', 'Bethesda', '-u', 'game:/Morrowind.bsa#Morrowind', '-m', '*.nif', '-o', 'StreamObject', '-p', 'D:/T_/MorrowindP']
+    # sys.argv = ['gamex', 'get', '-f', 'Bethesda', '-u', 'game:/Oblivion - Meshes.bsa#Oblivion', '-m', '*/bearskinrug01.nif', '-o', 'StreamObject', '-p', 'D:/T_/OblivionP']
 
     parser = _build_parser()
     parsed, args, unknown = _parse_args(parser)

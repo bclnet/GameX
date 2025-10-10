@@ -32,7 +32,7 @@ using System.Text.Json.Serialization;
 using static OpenStack.Debug;
 #pragma warning disable CS9113 // Parameter is unread.
 
-namespace GameX.Bethesda.Formats.Nif;
+namespace GameX.Gamebryo.Formats.Nif;
 
 ''',
 '''import os
@@ -40,8 +40,6 @@ from io import BytesIO
 from enum import Enum, Flag
 from typing import TypeVar, Generic
 from gamex import FileSource, PakBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
-from gamex.compression import decompressLz4, decompressZlib
-from gamex.Bethesda.formats.records import FormType, Header
 
 T = TypeVar('T')
 
@@ -626,5 +624,5 @@ BODY
         self.init()
 
 xml = ET.parse('nif.xml')
-NifCodeWriter(CS).write(xml, 'nif.cs')
-NifCodeWriter(PY).write(xml, 'nif.py')
+NifCodeWriter(CS).write(xml, '../../../../dotnet/Gamebryo/GameX.Gamebryo/Formats/Nif.cs')
+NifCodeWriter(PY).write(xml, '../formats/nif.py')

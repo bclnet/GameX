@@ -16,7 +16,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Base\GameX\GameX.csproj" />
-    <ProjectReference Include="..\..\Gamebryo\GameX.Gamebryo\GameX.Gamebryo.csproj" />
   </ItemGroup>
 
 </Project>

@@ -473,9 +473,9 @@ class Class:
                         [f'var {self.namecw[CS]} = {c[CS]} ? {cs} : {elsecw[CS]};', f'{self.namecw[PY]} = {py} if {c[PY]} else {elsecw[PY]}'] if c[0] else \
                         [f'var {self.namecw[CS]} = {cs};', f'{self.namecw[PY]}{': ' + self.typecw[PY] if primary else ''} = {py}']
                     case '?:': self.initcw = [f'{self.namecw[CS]} = {c[CS]} ? {cs} : {elsecw[CS]};', f'self.{self.namecw[PY]}{': ' + self.typecw[PY] if primary else ''} = {py} if {c[PY]} else {elsecw[PY]}']
-                    case '?+': self.initcw = [f'{self.namecw[CS]} = {c[CS]} ? {cs}', f'self.{self.namecw[PY]}{': ' + self.typecw[PY] if primary else ''} = {py} if {c[PY]}']
-                    case ':+': self.initcw = [f'    : {c[CS]} ? {cs}', f'else {py} if {c[PY]}']
-                    case ':': self.initcw = [f'    : {c[CS]} ? {cs} : {elsecw[CS]};', f'else {elsecw[PY]}']
+                    case '?+': self.initcw = [f'{self.namecw[CS]} = {c[CS]} ? {cs}', f'self.{self.namecw[PY]}{': ' + self.typecw[PY] if primary else ''} = {py} if {c[PY]} else \\']
+                    case ':+': self.initcw = [f'    : {c[CS]} ? {cs}', f'    {py} if {c[PY]} else \\']
+                    case ':': self.initcw = [f'    : {c[CS]} ? {cs} : {elsecw[CS]};', f'    {elsecw[PY]}']
                     case 'if': self.initcw = [f'if ({c[CS]}) {self.namecw[CS]} = {cs};', f'if {c[PY]}: self.{self.namecw[PY]} = {py}']
                     case 'elseif': self.initcw = [f'else if ({c[CS]}) {self.namecw[CS]} = {cs};', f'elif {c[PY]}: self.{self.namecw[PY]} = {py}']
                     case 'else': self.initcw = [f'else {self.namecw[CS]} = {cs};', f'else: self.{self.namecw[PY]} = {py}']

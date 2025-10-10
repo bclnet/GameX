@@ -31,6 +31,7 @@
     <ProjectReference Include="..\..\Epic\GameX.Epic\GameX.Epic.csproj" />
     <ProjectReference Include="..\..\Frictional\GameX.Frictional\GameX.Frictional.csproj" />
     <ProjectReference Include="..\..\Frontier\GameX.Frontier\GameX.Frontier.csproj" />
+    <ProjectReference Include="..\..\Gamebryo\GameX.Gamebryo\GameX.Gamebryo.csproj" />
     <ProjectReference Include="..\..\Id\GameX.Id\GameX.ID.csproj" />
     <ProjectReference Include="..\..\IW\GameX.IW\GameX.IW.csproj" />
     <ProjectReference Include="..\..\Lucas\GameX.Lucas\GameX.Lucas.csproj" />

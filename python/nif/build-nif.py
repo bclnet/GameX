@@ -267,13 +267,14 @@ class Flags(Flag):
             'NiBound': ('<4f', 16),
             'CapsuleBV': ('<8f', 32),
             'MipMap': ('<3i', 12),
-            'zNiQuatTransform': 'x',
+            # 'zNiQuatTransform': 'x',
             # 'NiTransform': 'x',
             # 'BoxBV': 'x',
             'HalfSpaceBV': ('<7f', 28),
             'Particle': ('<9f2H', 40) }
         def BoneVertData_values(s, values):
             values[1].kind = '?:'; values[1].cond = 'full'; values[1].elsecw = ('r.ReadHalf()', 'r.readHalf()')
+            pass
         def ControlledBlock_values(s, values):
             values.insert(1, Class.Comment(s, 'NiControllerSequence::InterpArrayItem'))
             values.insert(6, Class.Comment(s, 'Bethesda-only'))
@@ -360,11 +361,12 @@ class Flags(Flag):
         def Morph_values(s, values):
             values[1].kind = 'var'
         def BoneData_values(s, values):
+            pass
             del values[4]
             values[6].kind = ':'; values[5].kind = ':+'; values[4].kind = '?+'
             values[6].arr1 = values[5].arr1 = values[4].arr1 = 'L16'
             values[6].type = 'BoneVertData'; values[6].namecw = ('VertexWeights', 'vertexWeights')
-            values[6].initcw = ('    : r.V >= 0x14030101 && arg == 15 ? r.ReadL16FArray(z => new BoneVertData(r, false)) : default;', 'r.V >= 0x14030101 && arg == 15 ? r.readL16FArray(lambda z: BoneVertData(r, false)) : None')
+            values[6].initcw = ('    : r.V >= 0x14030101 && arg == 15 ? r.ReadL16FArray(z => new BoneVertData(r, false)) : default;', '    r.readL16FArray(lambda z: BoneVertData(r, false)) if r.V >= 0x14030101 and arg == 15 else None')
         def MotorDescriptor_inits(s, inits):
             inits.insert(1, Class.If(s, None, None, (inits, 1, 4), 'switch'))
         def RagdollDescriptor_inits(s, inits):

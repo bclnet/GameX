@@ -9,9 +9,10 @@
   ],
   "engines": {
     "Infinity": {},
-    "HeroEngine": {},
+    "Hero": {},
     "Aurora": {},
-    "Omen": {}
+    "Omen": {},
+    "Odyssey": {}
   },
   "games": {
     "*": {
@@ -100,6 +101,7 @@
         "https://www.gog.com/en/game/star_wars_knights_of_the_old_republic"
       ],
       "date": "2003-11-19",
+      "engine": "Odyssey",
       "pakExt": ".key",
       "files": {
         "key": [
@@ -218,7 +220,7 @@
     },
     "SWTOR": {
       "name": "Star Wars: The Old Republic",
-      "engine": "HeroEngine",
+      "engine": "Hero",
       "url": "https://store.steampowered.com/app/1286830",
       "date": "2011-12-20",
       "tags": "StarWars",

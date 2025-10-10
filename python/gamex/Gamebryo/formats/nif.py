@@ -724,8 +724,7 @@ class BoneData: # X
         if r.v == 0x14030009 and (r.uv == 0x20000) or (r.uv == 0x30000): self.unknown13Shorts = r.readPArray(None, 'h', 13)
         self.vertexWeights = r.readL16SArray<BoneVertData>() if r.v <= 0x04020100 else \
             r.readL16SArray<BoneVertData>() if r.v >= 0x04020200 and arg == 1 else \
-            r.readL16FArray(lambda z: BoneVertData(r, false)) if r.V >= 0x14030101 and arg == 15 else \
-            None
+            r.readL16FArray(lambda z: BoneVertData(r, false)) if r.V >= 0x14030101 and arg == 15 else None
 
 # Determines how the raw image data is stored in NiRawImageData.
 class ImageType(Enum): # Y

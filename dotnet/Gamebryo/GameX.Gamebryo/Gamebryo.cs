@@ -1,55 +1,27 @@
-﻿using GameX.Bethesda.Formats;
-using GameX.Bethesda.Transforms;
-using GameX.Formats.Unknown;
+﻿using GameX.Formats.Unknown;
 using GameX.Gamebryo.Formats;
+using GameX.Gamebryo.Transforms;
 using GameX.Unknown;
 using OpenStack.Gfx;
 using System;
 using System.IO;
-using System.Text.Json;
 using System.Threading.Tasks;
 using static OpenStack.Debug;
 
-namespace GameX.Bethesda;
+namespace GameX.Gamebryo;
 
-#region BethesdaFamily
-
-/// <summary>
-/// BethesdaFamily
-/// </summary>
-/// <seealso cref="GameX.Family" />
-public class BethesdaFamily(JsonElement elem) : Family(elem) { }
-
-#endregion
-
-#region BethesdaGame
+#region GamebryoPakFile
 
 /// <summary>
-/// BethesdaGame
-/// </summary>
-/// <seealso cref="GameX.FamilyGame" />
-public class BethesdaGame(Family family, string id, JsonElement elem, FamilyGame dgame) : FamilyGame(family, id, elem, dgame) {
-    /// <summary>
-    /// Ensures this instance.
-    /// </summary>
-    /// <returns></returns>
-    public override FamilyGame Ensure() => DatabaseManager.Ensure(this);
-}
-
-#endregion
-
-#region BethesdaPakFile
-
-/// <summary>
-/// BethesdaPakFile
+/// GamebryoPakFile
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class BethesdaPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> {
+public class GamebryoPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> {
     /// <summary>
-    /// Initializes a new instance of the <see cref="BethesdaPakFile" /> class.
+    /// Initializes a new instance of the <see cref="GamebryoPakFile" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public BethesdaPakFile(PakState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+    public GamebryoPakFile(PakState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         ObjectFactoryFunc = ObjectFactory;
         PathFinders.Add(typeof(ITexture), FindTexture);
     }
@@ -77,10 +49,6 @@ public class BethesdaPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileM
 
     static PakBinary GetPakBinary(FamilyGame game, string extension)
         => extension switch {
-            "" => Binary_Bsa.Current,
-            ".bsa" => Binary_Bsa.Current,
-            ".ba2" => Binary_Ba2.Current,
-            ".esm" => Binary_Esm.Current,
             _ => throw new ArgumentOutOfRangeException(nameof(extension)),
         };
 

@@ -16,7 +16,7 @@
 //#define Frontier
 //#define ID
 //#define IW
-//#define Lucas
+// #define Lucas
 //#define Monolith
 //#define Nintendo
 //#define Origin
@@ -419,11 +419,11 @@ public partial class FamilyManager {
         ForcePath = "sample:0",
         Family = "Lucas",
         //Game = "PP", // PHM Pegasus
-        //Game = "MM", // Maniac Mansion - Scumm
+        Game = "MM", // Maniac Mansion - Scumm
         //Game = "SF", // Strike Fleet
         //Game = "B1942", // Battlehawks 1942
         //Game = "ZMatAM", // Zak McKracken and the Alien Mindbenders - Scumm
-        Game = "IJatLC:TAG", // Indiana Jones and the Last Crusade: The Action Game
+        // Game = "IJatLC:TAG", // Indiana Jones and the Last Crusade: The Action Game
         //Game = "IJatLC", // Indiana Jones and the Last Crusade: The Graphic Adventure
         //Game = "TFH", // Their Finest Hour
         //Game = "TFM:V1", // Their Finest Missions: Volume One
@@ -561,7 +561,7 @@ public partial class FamilyManager {
         ForceOpen = true,
         ForcePath = "sample:*",
         Family = "Red",
-        //Game = "Witcher", // The Witcher Enhanced Edition
+        Game = "Witcher", // The Witcher Enhanced Edition
         //Game = "Witcher2", // The Witcher 2
         //Game = "Witcher3", // The Witcher 3: Wild Hunt
         //Game = "CP77", // Cyberpunk 2077

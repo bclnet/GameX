@@ -7,7 +7,7 @@ using System.Text.Json.Serialization;
 using static OpenStack.Debug;
 #pragma warning disable CS9113 // Parameter is unread.
 
-namespace GameX.Bethesda.Formats.Nif;
+namespace GameX.Gamebryo.Formats.Nif;
 
 #region X
 
@@ -2768,3 +2768,4 @@ public class BSShaderProperty : NiShadeProperty { // Y
 }
 
 #endregion
+

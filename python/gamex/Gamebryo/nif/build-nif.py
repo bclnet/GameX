@@ -285,17 +285,17 @@ class Flags(Flag):
             values.insert(8, Class.Comment(s, 'NiControllerSequence::IDTag, post-10.1.0.104 only'))
         def ControlledBlock_if(s, ifx):
             if s.name == 'Interpolator ID Offset':
-                ifx.kind = 'elseif'
+                ifx.kind = 'elif'
                 ifx.inits[0].name = ''; ifx.inits[0].initcw = ('var stringPalette = X<NiStringPalette>.Ref(r)', 'stringPalette = X[NiStringPalette].ref(r)')
                 ifx.inits[1].name = ''; ifx.inits[1].initcw = ('NodeName = Y.StringRef(r, stringPalette)', 'self.nodeName = Y.stringRef(r, stringPalette)')
                 ifx.inits[2].name = ''; ifx.inits[2].initcw = ('PropertyType = Y.StringRef(r, stringPalette)', 'self.propertyType = Y.stringRef(r, stringPalette)')
                 ifx.inits[3].name = ''; ifx.inits[3].initcw = ('ControllerType = Y.StringRef(r, stringPalette)', 'self.controllerType = Y.stringRef(r, stringPalette)')
                 ifx.inits[4].name = ''; ifx.inits[4].initcw = ('ControllerID = Y.StringRef(r, stringPalette)', 'self.controllerID = Y.stringRef(r, stringPalette)')
                 ifx.inits[5].name = ''; ifx.inits[5].initcw = ('InterpolatorID = Y.StringRef(r, stringPalette)', 'self.interpolatorID = Y.stringRef(r, stringPalette)')
-            elif s.name == 'Interpolator ID' and '&&' not in ifx.vercond: ifx.kind = 'elseif'
+            elif s.name == 'Interpolator ID' and '&&' not in ifx.vercond: ifx.kind = 'elif'
         def Header_values(s, values):
             values[2].namecw = ('V', 'v')
-            values[4].namecw = ('UV', 'uv')
+            values[4].namecw = ('UV', 'uv'); values[4].default = '0' if self.ex == PY else None
             values[6].namecw = ('UV2', 'uv2')
             del values[10]
             values[10].arr1 = values[11].arr1 = 'L16'
@@ -345,13 +345,13 @@ class Flags(Flag):
         def SkinPartition_values(s, values):
             for i in [14, 6]: del values[i]
         def SkinPartition_inits(s, inits):
-            inits.insert(6, ifx := Class.If(s, None, inits[0], (inits, 6, 17), 'elseif'))
+            inits.insert(6, ifx := Class.If(s, None, inits[0], (inits, 6, 17), 'elif'))
             ifx.vercond = 'ZV >= 0x0A010000'
             in0 = []
             for i in [9, 7, 3, 0]: ifx.inits[i].vercond = None; in0.insert(0, ifx.inits[i]); del ifx.inits[i]
             in0.insert(2, ifx.inits[4])
             ifx.inits[0].vercond = None; ifx.inits[0].cond = 'B32:' + ifx.inits[0].cond
-            ifx.inits[1].vercond = None; ifx.inits[1].type = 'uint'; ifx.inits[1].kind = 'var'
+            ifx.inits[1].vercond = None; ifx.inits[1].type = 'uint'; ifx.inits[1].kind = 'var?'
             ifx.inits[2].vercond = None
             ifx.inits[3].vercond = None
             ifx.inits[5].vercond = None; ifx.inits[5].cond = ifx.inits[5].cond[16:-1]; ifx.inits[5].arr2x = 'i'
@@ -363,9 +363,8 @@ class Flags(Flag):
             ifx.inits[3].arr2x = 'i'
             ifx.vercond = 'ZV <= 0x0A000102'
         def Morph_values(s, values):
-            values[1].kind = 'var'
+            values[1].kind = 'var?'
         def BoneData_values(s, values):
-            pass
             del values[4]
             values[6].kind = ':'; values[5].kind = ':+'; values[4].kind = '?+'
             values[6].arr1 = values[5].arr1 = values[4].arr1 = 'L16'
@@ -400,7 +399,7 @@ class Flags(Flag):
         self.customs = self.customs | {
             'BoneVertData': { 'x': 1421,
                 'constPre': (', bool full', ''), 'constArg': ('', ', half: bool'),
-                # 'consts': ('public BoneVertData(NiReader r, bool half) { Index = r.ReadUInt16(); Weight = r.ReadHalf(); }', 'if half: self.index = r.readUInt16(); self.weight = r.readHalf(); return') },
+                'consts': [(None, 'if half: self.index = r.readUInt16(); self.weight = r.readHalf(); return')],
                 'values': BoneVertData_values },
             'BoneVertDataHalf': { 'x': 1427,
                 '_': ['', ('BoneVertData', 'BoneVertData'), lambda x: (x, x), ('new BoneVertData(r, true)', 'BoneVertData(r, true)'), lambda c: (f'r.ReadFArray(z => new BoneVertData(r, true), {c})', f'r.readFArray(lambda z: BoneVertData(r, true), {c})')] },
@@ -416,7 +415,7 @@ class Flags(Flag):
             'StringPalette': { 'x': 1508,
                 'code': StringPalette_code },
             'Key': { 'x': 1521,
-                'kind': {-1: 'elseif'},
+                'kind': {-1: 'elif'},
                 'constArg': (', KeyType keyType', ', keyType: KeyType'), 'constNew': (', ARG', ', self.ARG'),
                 'cond': lambda p, s, cw: cw.typeReplace('KeyType', s).replace('ARG', 'keyType') },
             'QuatKey': { 'x': 1537,
@@ -424,10 +423,11 @@ class Flags(Flag):
                 'cond': lambda p, s, cw: cw.typeReplace('KeyType', s).replace('ARG', 'keyType') },
             'TexCoord': { 'x': 1545,
                 'flags': 'C',
-                'constArg': ('', ', half: bool'), 'constNew': ('', ', False'),
+                'constArg': ('', ', half: bool=None'), 'constNew': ('', ', False'),
                 'consts': [
                     ('public TexCoord(double u, double v) { this.u = (float)u; this.v = (float)v; }', 'if isinstance(r, float): self.u = r; self.v = half; return'),
-                    ('public TexCoord(NiReader r, bool half) { u = half ? r.ReadHalf() : r.ReadSingle(); v = half ? r.ReadHalf() : r.ReadSingle(); }', 'if half: self.u = r.readHalf(); self.v = r.readHalf(); return')] },
+                    (None, 'elif isinstance(r, tuple): self.u = r[0]; self.v = r[1]; return'),
+                    ('public TexCoord(NiReader r, bool half) { u = half ? r.ReadHalf() : r.ReadSingle(); v = half ? r.ReadHalf() : r.ReadSingle(); }', 'elif half: self.u = r.readHalf(); self.v = r.readHalf(); return')] },
             'HalfTexCoord': { 'x': 1551,
                 '_': ['', ('TexCoord', 'TexCoord'), lambda x: (x, x), ('new TexCoord(r, true)', 'TexCoord(r, true)'), lambda c: (f'r.ReadFArray(z => new TexCoord(r, true), {c})', f'r.readFArray(lambda z: TexCoord(r, true), {c})')] },
             'TexDesc': { 'x': 1565,
@@ -482,10 +482,10 @@ class Flags(Flag):
                 'kind': {3: 'else'},
                 'inits': LimitedHingeDescriptor_inits },
             'HingeDescriptor': { 'x': 1964,
-                'kind': {3: 'elseif'},
+                'kind': {3: 'elif'},
                 'inits': HingeDescriptor_inits },
             'PrismaticDescriptor': { 'x': 1992,
-                'kind': {4: 'elseif'},
+                'kind': {4: 'elif'},
                 'inits': PrismaticDescriptor_inits },
             'BoxBV': { 'x': 2040,
                 'values': BoxBV_values },
@@ -494,7 +494,7 @@ class Flags(Flag):
                 'cond': lambda p, s, cw: cw.typeReplace('BoundVolumeType', s),
                 'inits': BoundingVolume_inits },
             'MalleableDescriptor': { 'x': 2154,
-                'kind': {7: 'elseif'},
+                'kind': {7: 'elif'},
                 'cond': lambda p, s, cw: cw.typeReplace('hkConstraintType', s) if p and p.kind == 'switch' else s,
                 'inits': MalleableDescriptor_inits },
             'ConstraintData': { 'x': 2171,
@@ -511,6 +511,7 @@ class Flags(Flag):
                 body = '\n'.join([f'            case "{x}": return new {x}(r);' for x in nodes])
                 s.methods.append(Class.Method('''
     public static NiObject Read(NiReader r, string nodeType) {
+        Console.WriteLine(nodeType);
         switch (nodeType) {
 BODY
             default: { Log($"Tried to read an unsupported NiObject type ({nodeType})."); return null; }
@@ -522,6 +523,7 @@ BODY
                 s.methods.append(Class.Method('''
     @staticmethod
     def read(r: NiReader, nodeType: str) -> NiObject:
+        print(nodeType)
         match nodeType:
 BODY
             case _: Log(f'Tried to read an unsupported NiObject type ({nodeType}).'); return null
@@ -561,9 +563,10 @@ BODY
         def NiGeometryData_values(s, values):
             values[1].cond = '!NiPSysData || r.UV2 >= 34'
             del values[2]
-            values[14].cond = values[15].cond = '(HasNormals != 0) && (((int)VectorFlags | (int)BSVectorFlags) & 4096) != 0' if self.ex == CS else '(HasNormals != 0) && ((VectorFlags | BSVectorFlags) & 4096) != 0'
-            values[25].arr1 = values[26].arr1 = '((NumUVSets & 63) | ((int)VectorFlags & 63) | ((int)BSVectorFlags & 1))' if self.ex == CS else '((NumUVSets & 63) | (VectorFlags & 63) | (BSVectorFlags & 1))'
-            values[20].kind = values[11].kind = values[5].kind = 'var'
+            if self.ex == PY: values[8].default = values[9].default = '0'
+            values[14].cond = values[15].cond = '(HasNormals != 0) && (((int)VectorFlags | (int)BSVectorFlags) & 4096) != 0' if self.ex == CS else '(hasNormals != 0) && ((self.vectorFlags | self.bsVectorFlags) & 4096) != 0'
+            values[25].arr1 = values[26].arr1 = '((NumUVSets & 63) | ((int)VectorFlags & 63) | ((int)BSVectorFlags & 1))' if self.ex == CS else '((self.numUvSets & 63) | (self.vectorFlags & 63) | (self.bsVectorFlags & 1))'
+            values[20].kind = values[11].kind = values[5].kind = 'var?'
         def NiKeyframeData_values(s, values):
             values[2].cond = 'RotationType != KeyType.XYZ_ROTATION_KEY'
             values[4].cond = values[3].cond = 'RotationType == KeyType.XYZ_ROTATION_KEY'
@@ -571,7 +574,11 @@ BODY
             values[8].default = 'true'
             values[9].default = 'false'
         def NiTexturingProperty_values(s, values):
-            values[16].kind = values[14].kind = values[9].kind = 'var'
+            values[19].kind = 'var?+'; values[20].kind = 'var:'
+            values[22].kind = 'var?+'; values[23].kind = 'var:'
+            values[25].kind = 'var?+'; values[26].kind = 'var:'
+            values[28].kind = 'var?+'; values[29].kind = 'var:'
+            pass
         def NiRawImageData_values(s, values):
             values[3].cond = 'Image Type == ImageType.RGB'
             values[4].cond = 'Image Type == ImageType.RGBA'
@@ -585,7 +592,7 @@ BODY
             'NiExtraData': { 'x': 2592,
                 'conds': ['BSExtraData'] },
             'InterpBlendItem': { 'x': 2660,
-                'kind': {-2: 'elseif'},
+                'kind': {-2: 'elif'},
                 'flags': 'C',
                 'values': InterpBlendItem_values },
             'NiBlendInterpolator': { 'x': 2670,
@@ -598,12 +605,12 @@ BODY
                 'type': {'Rotation': 'Matrix33R'},
                 'values': NiAVObject_values },
             'NiDynamicEffect': { 'x': 2804,
-                'kind': {-1: 'elseif', -2: 'elseif'},
+                'kind': {-1: 'elif', -2: 'elif'},
                 'values': NiDynamicEffect_values },
             'NiTimeController': { 'x': 2860,
-                'kind': {-1: 'elseif'} },
+                'kind': {-1: 'elif'} },
             'NiGeomMorpherController': { 'x': 2892,
-                'kind': {-2: 'elseif'}, 
+                'kind': {-2: 'elif'},
                 'values': NiGeomMorpherController_values },
             'NiFlipController': { 'x': 2988,
                 'values': NiFlipController_values },

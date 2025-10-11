@@ -184,8 +184,9 @@ class XmlCodeWriter(CodeWriter):
             (f'# {s.tags}', None) if s.tags and self.ex == PY else \
             None):
             fieldItems = s.fields.items()
+            struct = s.struct and s.struct != 'x'
             if self.ex == CS:
-                if s.struct and s.struct != 'x': self.emit(f'public static (string, int) Struct = ("{s.struct[0]}", {s.struct[1]});')
+                if struct: self.emit(f'public static (string, int) Struct = ("{s.struct[0]}", {s.struct[1]});')
                 for k, v in fieldItems:
                     if v[0] or v[3]: self.emit_with_comment(f'public {v[0][CS]} {v[1][CS] if primary else k[CS] + (' = ' + v[2][CS] + ';' if v[2] else ';')}' if v[0] else '', v[3], pos if v[0] else 0)
                 if not primary:
@@ -212,7 +213,7 @@ class XmlCodeWriter(CodeWriter):
                         if x[CS]: self.emit(x[CS])
                 for x in s.methods: self.emit_raw(x.body)
             elif self.ex == PY:
-                if s.struct and s.struct != 'x': self.emit(f'struct = (\'{s.struct[0]}\', {s.struct[1]})')
+                if struct: self.emit(f'struct = (\'{s.struct[0]}\', {s.struct[1]})')
                 if not primary: 
                     for k, v in fieldItems:
                         if v[0] or v[3]: self.emit_with_comment(f'{k[PY]}: {v[0][PY]}{' = ' + v[2][PY] if v[2] else ''}' if v[0] else '', v[3], pos if v[0] else 0)
@@ -236,6 +237,9 @@ class XmlCodeWriter(CodeWriter):
                 with self.block(before=f'def __init__(self, {s.init[0][PY]}{constArg}):'):
                     inheritArgs = 'b.f' if s.name == 'Header' else 'r'
                     if s.inherit: self.emit(f'super().__init__({inheritArgs})')
+                    if struct:
+                        # self.emit('here')
+                        pass
                     if 'consts' in s.custom:
                         for x in s.custom['consts']:
                             if x[PY]: self.emit(x[PY])
@@ -352,7 +356,6 @@ class Class:
             self.kind = None
             self.vercond = None
             self.cond = None
-            # self.condcw = [None, None]
             self.initcw: tuple = initcw
             self.namecw = self.typecw = self.defaultcw = self.comment = None
         def __repr__(self): return f'Code'
@@ -379,7 +382,7 @@ class Class:
             if self.kind != 'else' and not c[0]: self.initcw = [None, None]; return
             match self.kind:
                 case 'if': self.initcw = [f'if ({c[CS]})', f'if {c[PY]}']
-                case 'elseif': self.initcw = [f'else if ({c[CS]})', f'elif {c[PY]}']
+                case 'elif': self.initcw = [f'else if ({c[CS]})', f'elif {c[PY]}']
                 case 'else': self.initcw = [f'else', f'else']
                 case 'switch': self.initcw = [f'switch ({c[CS].split(' == ')[0]})', f'match {c[PY].split(' == ')[0]}']
                 case _: raise Exception(f'Unknown {self.kind}')
@@ -424,7 +427,6 @@ class Class:
             self.extcond: str = None
             self.kind = None
             self.tags = 'calculated' if self.calculated else ''
-            # if root.name == 'Footer': print(self.template)
         def __repr__(self): return f'{self.name}{' {' + (self.cond or '') + (self.vercond or '') + (self.extcond or '') + '}' if self.cond or self.vercond or self.extcond else ''}{';' + self.kind if self.kind else ''}\n'
         def code(self, lx: object, root: Class, parent: object, cw: XmlCodeWriter) -> None:
             flags = root.flags
@@ -436,7 +438,6 @@ class Class:
                 if self.arr1 and self.arr2: self.typecw = [f'byte[][]', f'list[bytearray]'] if self.type == 'byte' else [f'{cs}[][]', f'list[list[{py}]]']
                 elif self.arr1: self.typecw = [f'byte[]', f'bytearray'] if self.type == 'byte' else [f'{cs}[]', f'list[{py}]']
                 else: self.typecw = [cs, py]
-                # if root.name == 'Footer': print(self.typecw)
             # toinit
             if not self.initcw:
                 # type
@@ -456,7 +457,6 @@ class Class:
                         cs = cs.replace('ARG', arg); py = py.replace('ARG', arg)
                 elif 'calculated' in root.custom: (cs, py) = root.custom['calculated'](self.name)
                 else: raise Exception(f'calculated? {root.name}')
-                # if root.name == 'Footer': print(cs)
 
                 # default
                 if not self.defaultcw: self.defaultcw = cw.types[self.type][MD](self.default) if self.default else None
@@ -473,19 +473,19 @@ class Class:
 
                 # else
                 elsecw = self.elsecw or self.defaultcw or ['default', 'None']
-                match self.kind:
-                    case 'var': self.initcw = \
-                        [f'var {self.namecw[CS]} = {c[CS]} ? {cs} : {elsecw[CS]};', f'{self.namecw[PY]} = {py} if {c[PY]} else {elsecw[PY]}'] if c[0] else \
-                        [f'var {self.namecw[CS]} = {cs};', f'{self.namecw[PY]}{': ' + self.typecw[PY] if primary else ''} = {py}']
-                    case '?:': self.initcw = [f'{self.namecw[CS]} = {c[CS]} ? {cs} : {elsecw[CS]};', f'self.{self.namecw[PY]}{': ' + self.typecw[PY] if primary else ''} = {py} if {c[PY]} else {elsecw[PY]}']
-                    case '?+': self.initcw = [f'{self.namecw[CS]} = {c[CS]} ? {cs}', f'self.{self.namecw[PY]}{': ' + self.typecw[PY] if primary else ''} = {py} if {c[PY]} else \\']
+                var = self.kind.startswith('var')
+                if self.kind == 'var?': self.kind = 'var?:' if c[0] else 'var'
+                precw = ('var ', '') if var else ('', 'self.')
+                match self.kind[3:] if var else self.kind:
+                    case '?:': self.initcw = [f'{precw[CS]}{self.namecw[CS]} = {c[CS]} ? {cs} : {elsecw[CS]};', f'{precw[PY]}{self.namecw[PY]}{': ' + self.typecw[PY] if primary else ''} = {py} if {c[PY]} else {elsecw[PY]}']
+                    case '?+': self.initcw = [f'{precw[CS]}{self.namecw[CS]} = {c[CS]} ? {cs}', f'{precw[PY]}{self.namecw[PY]}{': ' + self.typecw[PY] if primary else ''} = {py} if {c[PY]} else \\']
                     case ':+': self.initcw = [f'    : {c[CS]} ? {cs}', f'    {py} if {c[PY]} else \\']
-                    case ':': self.initcw = [f'    : {c[CS]} ? {cs} : {elsecw[CS]};', f'    {elsecw[PY]}']
-                    case 'if': self.initcw = [f'if ({c[CS]}) {self.namecw[CS]} = {cs};', f'if {c[PY]}: self.{self.namecw[PY]} = {py}']
-                    case 'elseif': self.initcw = [f'else if ({c[CS]}) {self.namecw[CS]} = {cs};', f'elif {c[PY]}: self.{self.namecw[PY]} = {py}']
-                    case 'else': self.initcw = [f'else {self.namecw[CS]} = {cs};', f'else: self.{self.namecw[PY]} = {py}']
-                    case 'case': self.initcw = [f'case {c[CS].split(' == ')[1]}: {self.namecw[CS]} = {cs}; break;', f'case {c[PY].split(' == ')[1]}: self.{self.namecw[PY]} = {py}']
-                    case _: self.initcw = [f'{self.namecw[CS]} = {cs};', f'self.{self.namecw[PY]}{': ' + self.typecw[PY] if primary else ''} = {py}']
+                    case ':': self.initcw = [f'    : {c[CS]} ? {cs} : {elsecw[CS]};', f'    {py} if {c[PY]} else {elsecw[PY]}']
+                    case 'if': self.initcw = [f'if ({c[CS]}) {precw[CS]}{self.namecw[CS]} = {cs};', f'if {c[PY]}: {precw[PY]}{self.namecw[PY]} = {py}']
+                    case 'elif': self.initcw = [f'else if ({c[CS]}) {precw[CS]}{self.namecw[CS]} = {cs};', f'elif {c[PY]}: {precw[PY]}{self.namecw[PY]} = {py}']
+                    case 'else': self.initcw = [f'else {precw[CS]}{self.namecw[CS]} = {cs};', f'else: {precw[PY]}{self.namecw[PY]} = {py}']
+                    case 'case': self.initcw = [f'case {c[CS].split(' == ')[1]}: {precw[CS]}{self.namecw[CS]} = {cs}; break;', f'case {c[PY].split(' == ')[1]}: {precw[PY]}{self.namecw[PY]} = {py}']
+                    case _: self.initcw = [f'{precw[CS]}{self.namecw[CS]} = {cs};', f'{precw[PY]}{self.namecw[PY]}{': ' + self.typecw[PY] if primary else ''} = {py}']
                 self.initcw = root.rename(self.initcw, cw)
 
     comment: str
@@ -526,24 +526,19 @@ class Class:
         self.process()
         # flags
         if not self.flags: self.flags = self.custom['flags'] if 'flags' in self.custom else \
-            'C' if (self.condFlag & 2) or (self.condFlag & 4) or (niobject and self.values) or self.template else \
-            'P'
+            'C' if (self.condFlag & 2) or (self.condFlag & 4) or (niobject and self.values) or self.template else 'P'
         # types
         constNew = self.custom['constNew'] if 'constNew' in self.custom else ('', '')
-        self.init = (
-            ['NiReader r', 'r: NiReader'],
-            ['r', 'r'],
-            [f'new {self.namecw[CS]}(r{constNew[CS]})', f'{self.namecw[PY]}(r{constNew[PY]})'])
+        self.init = (['NiReader r', 'r: NiReader'], ['r', 'r'], [f'new {self.namecw[CS]}(r{constNew[CS]})', f'{self.namecw[PY]}(r{constNew[PY]})'])
         manyLambda = lambda c: (f'r.ReadFArray(z => {self.init[2][CS]}, {c})', f'r.readFArray(lambda z: {self.init[2][PY]}, {c})')
         if self.name in cw.struct:
             self.init = (self.init[0], self.init[1], [f'r.ReadS<{self.namecw[CS]}>()', f'r.readS({self.namecw[PY]})'])
-            manyLambda = lambda c: (f'r.ReadSArray<{self.namecw[CS]}>({c})', f'r.readSArray<{self.namecw[CS]}>({c})')
+            manyLambda = lambda c: (f'r.ReadSArray<{self.namecw[CS]}>({c})', f'r.readSArray({self.namecw[PY]}, {c})')
         if self.name not in cw.types: cw.types[self.name] = [
             self, self.namecw, lambda x: (x, x), (self.init[2][CS], self.init[2][PY]),
             manyLambda]
     def __repr__(self): return f'class: {self.name}'
     def addcond(self, parent: object, s: object, cw: XmlCodeWriter) -> list[str]:
-        # if self.name == 'bhkRigidBody' and s.name == 'Unknown Int 2': print(s.extcond)
         if s.cond and s.vercond and s.extcond: return self.cond(parent, f'{s.vercond} && {s.cond} && {s.extcond}', cw)
         elif s.cond and s.vercond: return self.cond(parent, f'{s.vercond} && {s.cond}', cw)
         elif s.cond and s.extcond: return self.cond(parent, f'{s.cond} && {s.extcond}', cw)
@@ -564,7 +559,7 @@ class Class:
         return [cs, py]
     def rename(self, s: list[str], cw: XmlCodeWriter) -> list[str]:
         cs = s[CS]; py = s[PY]
-        for k,v in self.namers.items(): cs = cs.replace(k, v); py = py.replace(k, f'self.{fmt_py(v)}')
+        for k,v in self.namers.items(): cs = cs.replace(k, v); py = py.replace(k, f'{fmt_py(v)}') if k.startswith('Has') else py.replace(k, f'self.{fmt_py(v)}')
         cs = cs.replace('ZV ', 'r.V ').replace('ZUV2 ', 'r.UV2 ').replace('ZUV ', 'r.UV ')
         py = py.replace('ZV ', 'r.v ').replace('ZUV2 ', 'r.uv2 ').replace('ZUV ', 'r.uv ')
         return [cs, py]
@@ -588,7 +583,7 @@ class Class:
             elif name.startswith('Has') and type == 'bool': # and not prev.cond:
                 found = False
                 vercond = prev.vercond
-                prev.kind = 'var'
+                prev.kind = 'var?'
                 for j in range(i, len(values)):
                     k = values[j]
                     if name == k.cond and k.vercond.startswith(vercond): found = True
@@ -637,7 +632,6 @@ class Class:
         if ifx: addIf(0, p, ifx, ifc); ifx = None
         if 'kind' in self.custom:
             for k,v in self.custom['kind'].items(): inits[k].kind = v
-        # if 'inits2' in self.custom: self.custom['inits2'](self, inits)
     def code(self, cw: XmlCodeWriter):
         lx = None
         for x in self.inits:

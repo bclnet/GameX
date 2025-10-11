@@ -374,6 +374,7 @@ class MipMap: # X
 class BoneVertData: # X
     struct = ('<Hf', 6)
     def __init__(self, r: NiReader, half: bool):
+        if half: self.index = r.readUInt16(); self.weight = r.readHalf(); return
         self.index: int = r.readUInt16()                # The vertex index, in the mesh.
         self.weight: float = r.readSingle() if full else r.readHalf() # The vertex weight - between 0.0 and 1.0
 
@@ -390,7 +391,7 @@ class NiReader(Reader): # X
     copyright: list[str]
     v: int = 0x04000002                                 # The NIF version, in hexadecimal notation: 0x04000002, 0x0401000C, 0x04020002, 0x04020100, 0x04020200, 0x0A000100, 0x0A010000, 0x0A020000, 0x14000004, ...
     endianType: EndianType = EndianType.ENDIAN_LITTLE   # Determines the endianness of the data in the file.
-    uv: int                                             # An extra version number, for companies that decide to modify the file format.
+    uv: int = 0                                         # An extra version number, for companies that decide to modify the file format.
     numBlocks: int                                      # Number of file objects.
     uv2: int = 0
     exportInfo: ExportInfo
@@ -492,9 +493,10 @@ class TexCoord: # X
     u: float                                            # First coordinate.
     v: float                                            # Second coordinate.
 
-    def __init__(self, r: NiReader, half: bool):
+    def __init__(self, r: NiReader, half: bool=None):
         if isinstance(r, float): self.u = r; self.v = half; return
-        if half: self.u = r.readHalf(); self.v = r.readHalf(); return
+        elif isinstance(r, tuple): self.u = r[0]; self.v = r[1]; return
+        elif half: self.u = r.readHalf(); self.v = r.readHalf(); return
         self.u = r.readSingle()
         self.v = r.readSingle()
 
@@ -648,21 +650,21 @@ class SkinPartition: # Y
             self.vertexWeights = r.readFArray(lambda k: r.readPArray(None, 'f', self.numWeightsPerVertex), self.numVertices)
             self.stripLengths = r.readPArray(None, 'H', self.numStrips)
             if self.numStrips != 0: self.strips = r.readFArray(lambda k, i: r.readPArray(None, 'H', self.stripLengths), self.numStrips)
-            else: self.triangles = r.readSArray<Triangle>(self.numTriangles)
+            else: self.triangles = r.readSArray(Triangle, self.numTriangles)
         elif r.v >= 0x0A010000:
             if r.readBool32(): self.vertexMap = r.readPArray(None, 'H', self.numVertices)
             hasVertexWeights = r.readUInt32()
-            if self.hasVertexWeights == 1: self.vertexWeights = r.readFArray(lambda k: r.readPArray(None, 'f', self.numWeightsPerVertex), self.numVertices)
-            if self.hasVertexWeights == 15: self.vertexWeights = r.readFArray(lambda k: r.readFArray(lambda z: r.readHalf(), self.numWeightsPerVertex), self.numVertices)
+            if hasVertexWeights == 1: self.vertexWeights = r.readFArray(lambda k: r.readPArray(None, 'f', self.numWeightsPerVertex), self.numVertices)
+            if hasVertexWeights == 15: self.vertexWeights = r.readFArray(lambda k: r.readFArray(lambda z: r.readHalf(), self.numWeightsPerVertex), self.numVertices)
             self.stripLengths = r.readPArray(None, 'H', self.numStrips)
             if r.readBool32():
                 if self.numStrips != 0: self.strips = r.readFArray(lambda k, i: r.readPArray(None, 'H', self.stripLengths), self.numStrips)
-                else: self.triangles = r.readSArray<Triangle>(self.numTriangles)
+                else: self.triangles = r.readSArray(Triangle, self.numTriangles)
         if r.readBool32(): self.boneIndices = r.readFArray(lambda k: r.readBytes(self.numWeightsPerVertex), self.numVertices)
         if r.uv2 > 34: self.unknownShort = r.readUInt16()
         if r.uv2 == 100:
             self.vertexDesc = r.readS(BSVertexDesc)
-            self.trianglesCopy = r.readSArray<Triangle>(self.numTriangles)
+            self.trianglesCopy = r.readSArray(Triangle, self.numTriangles)
 
 # A plane.
 class NiPlane: # Y
@@ -726,8 +728,8 @@ class BoneData: # X
         self.boundingSphereOffset = r.readVector3()
         self.boundingSphereRadius = r.readSingle()
         if r.v == 0x14030009 and (r.uv == 0x20000) or (r.uv == 0x30000): self.unknown13Shorts = r.readPArray(None, 'h', 13)
-        self.vertexWeights = r.readL16SArray<BoneVertData>() if r.v <= 0x04020100 else \
-            r.readL16SArray<BoneVertData>() if r.v >= 0x04020200 and arg == 1 else \
+        self.vertexWeights = r.readL16SArray(BoneVertData) if r.v <= 0x04020100 else \
+            r.readL16SArray(BoneVertData) if r.v >= 0x04020200 and arg == 1 else \
             r.readL16FArray(lambda z: BoneVertData(r, False)) if r.V >= 0x14030101 and arg == 15 else None
 
 # Determines how the raw image data is stored in NiRawImageData.
@@ -798,6 +800,7 @@ class NiObject: # X
 
     @staticmethod
     def read(r: NiReader, nodeType: str) -> NiObject:
+        print(nodeType)
         match nodeType:
             case 'NiNode': return NiNode(r)
             case 'NiTriShape': return NiTriShape(r)
@@ -1186,8 +1189,8 @@ class NiGeometryData(NiObject): # X
     keepFlags: int                                      # Used with NiCollision objects when OBB or TRI is set.
     compressFlags: int                                  # Unknown.
     vertices: list[Vector3]                             # The mesh vertices.
-    vectorFlags: VectorFlags
-    bsVectorFlags: BSVectorFlags
+    vectorFlags: VectorFlags = 0
+    bsVectorFlags: BSVectorFlags = 0
     materialCrc: int
     normals: list[Vector3]                              # The lighting normals.
     tangents: list[Vector3]                             # Tangent vectors.
@@ -1212,15 +1215,15 @@ class NiGeometryData(NiObject): # X
             self.keepFlags = r.readByte()
             self.compressFlags = r.readByte()
         hasVertices = r.readUInt32()
-        if (self.hasVertices > 0) and (self.hasVertices != 15): self.vertices = r.readPArray(None, '3f', self.numVertices)
-        if r.v >= 0x14030101 and self.hasVertices == 15: self.vertices = r.readFArray(lambda z: Vector3(r.readHalf(), r.readHalf(), r.readHalf()), self.numVertices)
+        if (hasVertices > 0) and (hasVertices != 15): self.vertices = r.readPArray(None, '3f', self.numVertices)
+        if r.v >= 0x14030101 and hasVertices == 15: self.vertices = r.readFArray(lambda z: Vector3(r.readHalf(), r.readHalf(), r.readHalf()), self.numVertices)
         if r.v >= 0x0A000100 and not ((r.v == 0x14020007) and (r.uv2 > 0)): self.vectorFlags = VectorFlags(r.readUInt16())
         if ((r.v == 0x14020007) and (r.uv2 > 0)): self.bsVectorFlags = BSVectorFlags(r.readUInt16())
         if r.v == 0x14020007 and (r.uv == 12): self.materialCrc = r.readUInt32()
         hasNormals = r.readUInt32()
-        if (self.hasNormals > 0) and (self.hasNormals != 6): self.normals = r.readPArray(None, '3f', self.numVertices)
-        if r.v >= 0x14030101 and self.hasNormals == 6: self.normals = r.readFArray(lambda z: Vector3(r.readByte(), r.readByte(), r.readByte()), self.numVertices)
-        if r.v >= 0x0A010000 and (HasNormals != 0) and ((VectorFlags | BSVectorFlags) & 4096) != 0:
+        if (hasNormals > 0) and (hasNormals != 6): self.normals = r.readPArray(None, '3f', self.numVertices)
+        if r.v >= 0x14030101 and hasNormals == 6: self.normals = r.readFArray(lambda z: Vector3(r.readByte(), r.readByte(), r.readByte()), self.numVertices)
+        if r.v >= 0x0A010000 and (hasNormals != 0) and ((self.vectorFlags | self.bsVectorFlags) & 4096) != 0:
             self.tangents = r.readPArray(None, '3f', self.numVertices)
             self.bitangents = r.readPArray(None, '3f', self.numVertices)
         if r.v == 0x14030009 and (r.uv == 0x20000) or (r.uv == 0x30000) and r.readBool32(): self.unkFloats = r.readPArray(None, 'f', self.numVertices)
@@ -1228,12 +1231,12 @@ class NiGeometryData(NiObject): # X
         self.radius = r.readSingle()
         if r.v == 0x14030009 and (r.uv == 0x20000) or (r.uv == 0x30000): self.unknown13shorts = r.readPArray(None, 'h', 13)
         hasVertexColors = r.readUInt32()
-        if (self.hasVertexColors > 0) and (self.hasVertexColors != 7): self.vertexColors = r.readFArray(lambda z: Color4(r), self.numVertices)
-        if r.v >= 0x14030101 and self.hasVertexColors == 7: self.vertexColors = r.readFArray(lambda z: Color4(r.readBytes(4)), self.numVertices)
+        if (hasVertexColors > 0) and (hasVertexColors != 7): self.vertexColors = r.readFArray(lambda z: Color4(r), self.numVertices)
+        if r.v >= 0x14030101 and hasVertexColors == 7: self.vertexColors = r.readFArray(lambda z: Color4(r.readBytes(4)), self.numVertices)
         if r.v <= 0x04020200: self.numUvSets = r.readUInt16()
         hasUv = r.readBool32() if r.v <= 0x04000002 else None
-        if (self.hasVertices > 0) and (self.hasVertices != 15): self.uvSets = r.readFArray(lambda k: r.readSArray<TexCoord>(self.numVertices), ((NumUVSets & 63) | (VectorFlags & 63) | (BSVectorFlags & 1)))
-        if r.v >= 0x14030101 and self.hasVertices == 15: self.uvSets = r.readFArray(lambda k: r.readFArray(lambda z: TexCoord(r, true), self.numVertices), ((NumUVSets & 63) | (VectorFlags & 63) | (BSVectorFlags & 1)))
+        if (hasVertices > 0) and (hasVertices != 15): self.uvSets = r.readFArray(lambda k: r.readSArray(TexCoord, self.numVertices), ((self.numUvSets & 63) | (self.vectorFlags & 63) | (self.bsVectorFlags & 1)))
+        if r.v >= 0x14030101 and hasVertices == 15: self.uvSets = r.readFArray(lambda k: r.readFArray(lambda z: TexCoord(r, true), self.numVertices), ((self.numUvSets & 63) | (self.vectorFlags & 63) | (self.bsVectorFlags & 1)))
         if r.v >= 0x0A000100: self.consistencyFlags = ConsistencyType(r.readUInt16())
         if r.v >= 0x14000004: self.additionalData = X[AbstractAdditionalGeometryData].ref(r)
 
@@ -1319,7 +1322,7 @@ class NiParticlesData(NiGeometryData): # X
         if not ((r.v == 0x14020007) and (r.uv2 > 0)) and r.readBool32(): self.sizes = r.readPArray(None, 'f', self.numVertices)
         if r.v >= 0x0A000100 and not ((r.v == 0x14020007) and (r.uv2 > 0)) and r.readBool32(): self.rotations = r.readFArray(lambda z: r.readQuaternionWFirst(), self.numVertices)
         hasRotationAngles = r.readBool32() if r.v >= 0x14000004 else None
-        if not ((r.v == 0x14020007) and (r.uv2 > 0)) and self.hasRotationAngles: self.rotationAngles = r.readPArray(None, 'f', self.numVertices)
+        if not ((r.v == 0x14020007) and (r.uv2 > 0)) and hasRotationAngles: self.rotationAngles = r.readPArray(None, 'f', self.numVertices)
         if r.v >= 0x14000004 and not ((r.v == 0x14020007) and (r.uv2 > 0)) and r.readBool32(): self.rotationAxes = r.readPArray(None, '3f', self.numVertices)
         hasTextureIndices = r.readBool32() if ((r.v == 0x14020007) and (r.uv2 > 0)) else None
         if r.uv2 > 34: self.numSubtextureOffsets = r.readUInt32()
@@ -1700,7 +1703,7 @@ class NiParticleSystemController(NiTimeController): # X
         if r.v >= 0x04000002:
             self.numParticles = r.readUInt16()
             self.numValid = r.readUInt16()
-            self.particles = r.readSArray<Particle>(self.numParticles)
+            self.particles = r.readSArray(Particle, self.numParticles)
             self.unknownLink = X[NiObject].ref(r)
         self.particleExtra = X[NiParticleModifier].ref(r)
         self.unknownLink2 = X[NiObject].ref(r)
@@ -1796,7 +1799,7 @@ class NiPixelData(NiPixelFormat): # X
         self.palette = X[NiPalette].ref(r)
         self.numMipmaps = r.readUInt32()
         self.bytesPerPixel = r.readUInt32()
-        self.mipmaps = r.readSArray<MipMap>(self.numMipmaps)
+        self.mipmaps = r.readSArray(MipMap, self.numMipmaps)
         self.numPixels = r.readUInt32()
         if r.v >= 0x0A030006: self.numFaces = r.readUInt32()
         if r.v <= 0x0A030005: self.pixelData = r.readBytes(self.numPixels)
@@ -2020,29 +2023,29 @@ class NiTexturingProperty(NiProperty): # X
         if r.readBool32(): self.glossTexture = TexDesc(r)
         if r.readBool32(): self.glowTexture = TexDesc(r)
         hasBumpMapTexture = r.readBool32() if r.v >= 0x0303000D and self.textureCount > 5 else None
-        if self.hasBumpMapTexture:
+        if hasBumpMapTexture:
             self.bumpMapTexture = TexDesc(r)
             self.bumpMapLumaScale = r.readSingle()
             self.bumpMapLumaOffset = r.readSingle()
             self.bumpMapMatrix = r.readMatrix2x2()
         hasNormalTexture = r.readBool32() if r.v >= 0x14020005 and self.textureCount > 6 else None
-        if self.hasNormalTexture: self.normalTexture = TexDesc(r)
+        if hasNormalTexture: self.normalTexture = TexDesc(r)
         hasParallaxTexture = r.readBool32() if r.v >= 0x14020005 and self.textureCount > 7 else None
-        if self.hasParallaxTexture:
+        if hasParallaxTexture:
             self.parallaxTexture = TexDesc(r)
             self.parallaxOffset = r.readSingle()
-        hasDecal0Texture = r.readBool32() if r.v <= 0x14020004 and self.textureCount > 6 else None
-        hasDecal0Texture = r.readBool32() if r.v >= 0x14020005 and self.textureCount > 8 else None
-        if self.hasDecal0Texture: self.decal0Texture = TexDesc(r)
-        hasDecal1Texture = r.readBool32() if r.v <= 0x14020004 and self.textureCount > 7 else None
-        hasDecal1Texture = r.readBool32() if r.v >= 0x14020005 and self.textureCount > 9 else None
-        if self.hasDecal1Texture: self.decal1Texture = TexDesc(r)
-        hasDecal2Texture = r.readBool32() if r.v <= 0x14020004 and self.textureCount > 8 else None
-        hasDecal2Texture = r.readBool32() if r.v >= 0x14020005 and self.textureCount > 10 else None
-        if self.hasDecal2Texture: self.decal2Texture = TexDesc(r)
-        hasDecal3Texture = r.readBool32() if r.v <= 0x14020004 and self.textureCount > 9 else None
-        hasDecal3Texture = r.readBool32() if r.v >= 0x14020005 and self.textureCount > 11 else None
-        if self.hasDecal3Texture: self.decal3Texture = TexDesc(r)
+        hasDecal0Texture = r.readBool32() if r.v <= 0x14020004 and self.textureCount > 6 else \
+            r.readBool32() if r.v >= 0x14020005 and self.textureCount > 8 else None
+        if hasDecal0Texture: self.decal0Texture = TexDesc(r)
+        hasDecal1Texture = r.readBool32() if r.v <= 0x14020004 and self.textureCount > 7 else \
+            r.readBool32() if r.v >= 0x14020005 and self.textureCount > 9 else None
+        if hasDecal1Texture: self.decal1Texture = TexDesc(r)
+        hasDecal2Texture = r.readBool32() if r.v <= 0x14020004 and self.textureCount > 8 else \
+            r.readBool32() if r.v >= 0x14020005 and self.textureCount > 10 else None
+        if hasDecal2Texture: self.decal2Texture = TexDesc(r)
+        hasDecal3Texture = r.readBool32() if r.v <= 0x14020004 and self.textureCount > 9 else \
+            r.readBool32() if r.v >= 0x14020005 and self.textureCount > 11 else None
+        if hasDecal3Texture: self.decal3Texture = TexDesc(r)
         if r.v >= 0x0A000100: self.shaderTextures = r.readL32FArray(lambda z: ShaderTexDesc(r))
 
 # A shape node that refers to singular triangle data.
@@ -2060,8 +2063,8 @@ class NiTriShapeData(NiTriBasedGeomData): # X
         super().__init__(r)
         self.numTrianglePoints = r.readUInt32()
         hasTriangles = False if r.v >= 0x0A010000 else None # calculated
-        if r.v <= 0x0A000102: self.triangles = r.readSArray<Triangle>(self.numTriangles)
-        if r.v >= 0x0A000103 and self.hasTriangles: self.triangles = r.readSArray<Triangle>(self.numTriangles)
+        if r.v <= 0x0A000102: self.triangles = r.readSArray(Triangle, self.numTriangles)
+        if r.v >= 0x0A000103 and hasTriangles: self.triangles = r.readSArray(Triangle, self.numTriangles)
         if r.v >= 0x03010000: self.matchGroups = r.readL16FArray(lambda z: MatchGroup(r))
 
 # DEPRECATED (pre-10.1), REMOVED (20.3).

@@ -1059,6 +1059,7 @@ public class MorphWeight(NiReader r) { // Y
 public abstract class NiObject(NiReader r) { // X
 
     public static NiObject Read(NiReader r, string nodeType) {
+        Console.WriteLine(nodeType);
         switch (nodeType) {
             case "NiNode": return new NiNode(r);
             case "NiTriShape": return new NiTriShape(r);
@@ -2490,17 +2491,17 @@ public class NiTexturingProperty : NiProperty { // X
             ParallaxTexture = new TexDesc(r);
             ParallaxOffset = r.ReadSingle();
         }
-        var HasDecal0Texture = r.V <= 0x14020004 && TextureCount > 6 ? r.ReadBool32() : default;
-        var HasDecal0Texture = r.V >= 0x14020005 && TextureCount > 8 ? r.ReadBool32() : default;
+        var HasDecal0Texture = r.V <= 0x14020004 && TextureCount > 6 ? r.ReadBool32()
+            : r.V >= 0x14020005 && TextureCount > 8 ? r.ReadBool32() : default;
         if (HasDecal0Texture) Decal0Texture = new TexDesc(r);
-        var HasDecal1Texture = r.V <= 0x14020004 && TextureCount > 7 ? r.ReadBool32() : default;
-        var HasDecal1Texture = r.V >= 0x14020005 && TextureCount > 9 ? r.ReadBool32() : default;
+        var HasDecal1Texture = r.V <= 0x14020004 && TextureCount > 7 ? r.ReadBool32()
+            : r.V >= 0x14020005 && TextureCount > 9 ? r.ReadBool32() : default;
         if (HasDecal1Texture) Decal1Texture = new TexDesc(r);
-        var HasDecal2Texture = r.V <= 0x14020004 && TextureCount > 8 ? r.ReadBool32() : default;
-        var HasDecal2Texture = r.V >= 0x14020005 && TextureCount > 10 ? r.ReadBool32() : default;
+        var HasDecal2Texture = r.V <= 0x14020004 && TextureCount > 8 ? r.ReadBool32()
+            : r.V >= 0x14020005 && TextureCount > 10 ? r.ReadBool32() : default;
         if (HasDecal2Texture) Decal2Texture = new TexDesc(r);
-        var HasDecal3Texture = r.V <= 0x14020004 && TextureCount > 9 ? r.ReadBool32() : default;
-        var HasDecal3Texture = r.V >= 0x14020005 && TextureCount > 11 ? r.ReadBool32() : default;
+        var HasDecal3Texture = r.V <= 0x14020004 && TextureCount > 9 ? r.ReadBool32()
+            : r.V >= 0x14020005 && TextureCount > 11 ? r.ReadBool32() : default;
         if (HasDecal3Texture) Decal3Texture = new TexDesc(r);
         if (r.V >= 0x0A000100) ShaderTextures = r.ReadL32FArray(z => new ShaderTexDesc(r));
     }

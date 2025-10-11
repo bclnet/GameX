@@ -222,7 +222,6 @@ class XmlCodeWriter(CodeWriter):
                     if 'conds' in s.custom:
                         for k in s.custom['conds']: self.emit(f'{k}: bool = False')
                 def emitBlock(inits: list) -> None:
-                    # if not inits: print('HERE'); return
                     for x in inits:
                         match x:
                             case str(): self.emit(x)
@@ -238,8 +237,8 @@ class XmlCodeWriter(CodeWriter):
                     inheritArgs = 'b.f' if s.name == 'Header' else 'r'
                     if s.inherit: self.emit(f'super().__init__({inheritArgs})')
                     if struct:
-                        # self.emit('here')
-                        pass
+                        body = ','.join([f'self.{fmt_py(x.name)}' for x in s.values])
+                        self.emit(f'if isinstance(r, tuple): {body}={s.struct[2]}; return')
                     if 'consts' in s.custom:
                         for x in s.custom['consts']:
                             if x[PY]: self.emit(x[PY])

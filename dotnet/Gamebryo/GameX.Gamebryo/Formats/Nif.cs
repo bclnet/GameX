@@ -113,9 +113,7 @@ static class Z {
 }
 
 public enum Flags : ushort {
-    Hidden = 0x1,
-    Other10 = 10,
-    Other34 = 34
+    Hidden = 0x1
 }
 
 public class RefJsonConverter<T> : JsonConverter<Ref<T>> where T : NiObject {
@@ -1059,7 +1057,7 @@ public class MorphWeight(NiReader r) { // Y
 public abstract class NiObject(NiReader r) { // X
 
     public static NiObject Read(NiReader r, string nodeType) {
-        Console.WriteLine(nodeType);
+        // Console.WriteLine(nodeType);
         switch (nodeType) {
             case "NiNode": return new NiNode(r);
             case "NiTriShape": return new NiTriShape(r);

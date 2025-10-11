@@ -1,7 +1,8 @@
 import os
 from io import BytesIO
-from enum import Enum, Flag
+from enum import Enum, Flag, IntFlag
 from typing import TypeVar, Generic
+from numpy import ndarray, array
 from openstk.poly import Reader
 from gamex import FileSource, PakBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
 from gamex.globalx import Color3, Color4
@@ -9,11 +10,11 @@ from gamex.globalx import Color3, Color4
 T = TypeVar('T')
 
 # types
-type Vector3 = np.ndarray
-type Vector4 = np.ndarray
-type Matrix2x2 = np.ndarray
-type Matrix4x4 = np.ndarray
-type Quaternion = np.ndarray
+type Vector3 = ndarray
+type Vector4 = ndarray
+type Matrix2x2 = ndarray
+type Matrix4x4 = ndarray
+type Quaternion = ndarray
 
 # typedefs
 class Color: pass
@@ -95,10 +96,8 @@ class Z:
             return v
         return int(s)
 
-class Flags(Flag):
+class Flags(IntFlag):
     Hidden = 0x1
-    Other10 = 10
-    Other34 = 34
 
 #endregion
 
@@ -366,6 +365,7 @@ class MatchGroup: # X
 class MipMap: # X
     struct = ('<3i', 12)
     def __init__(self, r: NiReader):
+        if isinstance(r, tuple): self.width,self.height,self.offset=r; return
         self.width: int = r.readUInt32()                # Width of the mipmap image.
         self.height: int = r.readUInt32()               # Height of the mipmap image.
         self.offset: int = r.readUInt32()               # Offset into the pixel data array where this mipmap starts.
@@ -374,6 +374,7 @@ class MipMap: # X
 class BoneVertData: # X
     struct = ('<Hf', 6)
     def __init__(self, r: NiReader, half: bool):
+        if isinstance(r, tuple): self.index,self.weight=r; return
         if half: self.index = r.readUInt16(); self.weight = r.readHalf(); return
         self.index: int = r.readUInt16()                # The vertex index, in the mesh.
         self.weight: float = r.readSingle() if full else r.readHalf() # The vertex weight - between 0.0 and 1.0
@@ -437,12 +438,13 @@ class NiReader(Reader): # X
             for i in range(self.numBlocks): self.blocks[i] = NiObject.read(r, BlockTypes[BlockTypeIndex[i]])
         else:
             for i in range(self.numBlocks): self.blocks[i] = NiObject.read(r, Z.string(r))
-        self.roots = Footer(r).Roots
+        self.roots = Footer(r).roots
 
 # Tension, bias, continuity.
 class TBC: # X
     struct = ('<3f', 12)
     def __init__(self, r: NiReader):
+        if isinstance(r, tuple): self.t,self.b,self.c=r; return
         self.t: float = r.readSingle()                  # Tension.
         self.b: float = r.readSingle()                  # Bias.
         self.c: float = r.readSingle()                  # Continuity.
@@ -494,6 +496,7 @@ class TexCoord: # X
     v: float                                            # Second coordinate.
 
     def __init__(self, r: NiReader, half: bool=None):
+        if isinstance(r, tuple): self.u,self.v=r; return
         if isinstance(r, float): self.u = r; self.v = half; return
         elif isinstance(r, tuple): self.u = r[0]; self.v = r[1]; return
         elif half: self.u = r.readHalf(); self.v = r.readHalf(); return
@@ -561,6 +564,7 @@ class ShaderTexDesc: # Y
 class Triangle: # X
     struct = ('<3H', 6)
     def __init__(self, r: NiReader):
+        if isinstance(r, tuple): self.v1,self.v2,self.v3=r; return
         self.v1: int = r.readUInt16()                   # First vertex index.
         self.v2: int = r.readUInt16()                   # Second vertex index.
         self.v3: int = r.readUInt16()                   # Third vertex index.
@@ -612,6 +616,7 @@ class BSVertexDataSSE: # Y
 class BSVertexDesc: # Y
     struct = ('<5bHb', 8)
     def __init__(self, r: NiReader):
+        if isinstance(r, tuple): self.vF1,self.vF2,self.vF3,self.vF4,self.vF5,self.vertexAttributes,self.vF8=(r[0],r[1],r[2],r[3],r[4],VertexFlags(r[5]),r[6]); return
         self.vF1: int = r.readByte()
         self.vF2: int = r.readByte()
         self.vF3: int = r.readByte()
@@ -670,6 +675,7 @@ class SkinPartition: # Y
 class NiPlane: # Y
     struct = ('<4f', 16)
     def __init__(self, r: NiReader):
+        if isinstance(r, tuple): self.normal,self.constant=(array(r[0:3]),r[3]); return
         self.normal: Vector3 = r.readVector3()          # The plane normal.
         self.constant: float = r.readSingle()           # The plane constant.
 
@@ -677,6 +683,7 @@ class NiPlane: # Y
 class NiBound: # Y
     struct = ('<4f', 16)
     def __init__(self, r: NiReader):
+        if isinstance(r, tuple): self.center,self.radius=(array(r[0:3]),r[3]); return
         self.center: Vector3 = r.readVector3()          # The sphere's center.
         self.radius: float = r.readSingle()             # The sphere's radius.
 
@@ -707,6 +714,7 @@ class Morph: # X
 class Particle: # X
     struct = ('<9f2H', 40)
     def __init__(self, r: NiReader):
+        if isinstance(r, tuple): self.velocity,self.unknownVector,self.lifetime,self.lifespan,self.timestamp,self.unknownShort,self.vertexId=(array(r[0:3]),array(r[3:6]),r[6],r[7],r[8],r[9],r[10]); return
         self.velocity: Vector3 = r.readVector3()        # Particle velocity
         self.unknownVector: Vector3 = r.readVector3()   # Unknown
         self.lifetime: float = r.readSingle()           # The particle age.
@@ -748,6 +756,7 @@ class BoxBV: # X
 class CapsuleBV: # Y
     struct = ('<8f', 32)
     def __init__(self, r: NiReader):
+        if isinstance(r, tuple): self.center,self.origin,self.extent,self.radius=(array(r[0:3]),array(r[3:6]),r[6],r[7]); return
         self.center: Vector3 = r.readVector3()
         self.origin: Vector3 = r.readVector3()
         self.extent: float = r.readSingle()
@@ -756,6 +765,7 @@ class CapsuleBV: # Y
 class HalfSpaceBV: # Y
     struct = ('<7f', 28)
     def __init__(self, r: NiReader):
+        if isinstance(r, tuple): self.plane,self.center=(NiPlane(r[0:4]),array(r[4:7])); return
         self.plane: NiPlane = r.readS(NiPlane)
         self.center: Vector3 = r.readVector3()
 
@@ -800,7 +810,7 @@ class NiObject: # X
 
     @staticmethod
     def read(r: NiReader, nodeType: str) -> NiObject:
-        print(nodeType)
+        # print(nodeType)
         match nodeType:
             case 'NiNode': return NiNode(r)
             case 'NiTriShape': return NiTriShape(r)

@@ -37,8 +37,9 @@ namespace GameX.Gamebryo.Formats.Nif;
 ''',
 '''import os
 from io import BytesIO
-from enum import Enum, Flag
+from enum import Enum, Flag, IntFlag
 from typing import TypeVar, Generic
+from numpy import ndarray, array
 from openstk.poly import Reader
 from gamex import FileSource, PakBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
 from gamex.globalx import Color3, Color4
@@ -46,11 +47,11 @@ from gamex.globalx import Color3, Color4
 T = TypeVar('T')
 
 # types
-type Vector3 = np.ndarray
-type Vector4 = np.ndarray
-type Matrix2x2 = np.ndarray
-type Matrix4x4 = np.ndarray
-type Quaternion = np.ndarray
+type Vector3 = ndarray
+type Vector4 = ndarray
+type Matrix2x2 = ndarray
+type Matrix4x4 = ndarray
+type Quaternion = ndarray
 
 # typedefs
 class Color: pass
@@ -162,9 +163,7 @@ static class Z {
 }
 
 public enum Flags : ushort {
-    Hidden = 0x1,
-    Other10 = 10,
-    Other34 = 34
+    Hidden = 0x1
 }
 
 public class RefJsonConverter<T> : JsonConverter<Ref<T>> where T : NiObject {
@@ -254,31 +253,28 @@ class Z:
             return v
         return int(s)
 
-class Flags(Flag):
+class Flags(IntFlag):
     Hidden = 0x1
-    Other10 = 10
-    Other34 = 34
 ''') }
         #endregion
         #region Compounds
         self.struct = {
-            'BoneVertData': ('<Hf', 6),
-            'TBC': ('<3f', 12),
-            'TexCoord': ('<2f', 8),
-            'Triangle': ('<3H', 6),
-            'BSVertexDesc': ('<5bHb', 8),
-            'NiPlane': ('<4f', 16),
-            'NiBound': ('<4f', 16),
-            'CapsuleBV': ('<8f', 32),
-            'MipMap': ('<3i', 12),
-            # 'zNiQuatTransform': 'x',
+            'BoneVertData': ('<Hf', 6, 'r'),
+            'TBC': ('<3f', 12, 'r'),
+            'TexCoord': ('<2f', 8, 'r'),
+            'Triangle': ('<3H', 6, 'r'),
+            'BSVertexDesc': ('<5bHb', 8, '(r[0],r[1],r[2],r[3],r[4],VertexFlags(r[5]),r[6])'),
+            'NiPlane': ('<4f', 16, '(array(r[0:3]),r[3])'),
+            'NiBound': ('<4f', 16, '(array(r[0:3]),r[3])'),
+            'CapsuleBV': ('<8f', 32, '(array(r[0:3]),array(r[3:6]),r[6],r[7])'),
+            'MipMap': ('<3i', 12, 'r'),
+            # 'NiQuatTransform': 'x',
             # 'NiTransform': 'x',
             # 'BoxBV': 'x',
-            'HalfSpaceBV': ('<7f', 28),
-            'Particle': ('<9f2H', 40) }
+            'HalfSpaceBV': ('<7f', 28, '(NiPlane(r[0:4]),array(r[4:7]))'),
+            'Particle': ('<9f2H', 40, '(array(r[0:3]),array(r[3:6]),r[6],r[7],r[8],r[9],r[10])') }
         def BoneVertData_values(s, values):
             values[1].kind = '?:'; values[1].cond = 'full'; values[1].elsecw = ('r.ReadHalf()', 'r.readHalf()')
-            pass
         def ControlledBlock_values(s, values):
             values.insert(1, Class.Comment(s, 'NiControllerSequence::InterpArrayItem'))
             values.insert(6, Class.Comment(s, 'Bethesda-only'))
@@ -304,7 +300,7 @@ class Flags(Flag):
             values.insert(19, vx0 := Class.Value(s, Elem({ 'name': 'Blocks', 'type': 'NiObject', 'arr1': 'x' })))
             vx0.initcw = ('Blocks = new NiObject[NumBlocks];', 'self.blocks: list[NiObject] = [None]*self.numBlocks')
             values.insert(20, vx1 := Class.Value(s, Elem({ 'name': 'Roots', 'type': 'Ref', 'template': 'NiObject', 'arr1': 'x' })))
-            vx1.initcw = ('Roots = new Footer(r).Roots;', 'self.roots = Footer(r).Roots')
+            vx1.initcw = ('Roots = new Footer(r).Roots;', 'self.roots = Footer(r).roots')
         def Header_inits(s, inits):
             inits.insert(20, if0 := Class.If(s, None, None, None, 'if'))
             inits.insert(21, if1 := Class.If(s, None, None, None, 'else'))
@@ -312,10 +308,7 @@ class Flags(Flag):
             if0.inits.insert(0, Class.Code(s, ('for (var i = 0; i < NumBlocks; i++) Blocks[i] = NiObject.Read(r, BlockTypes[BlockTypeIndex[i]]);', 'for i in range(self.numBlocks): self.blocks[i] = NiObject.read(r, BlockTypes[BlockTypeIndex[i]])')))
             if1.inits.insert(0, Class.Code(s, ('for (var i = 0; i < NumBlocks; i++) Blocks[i] = NiObject.Read(r, Z.String(r));', 'for i in range(self.numBlocks): self.blocks[i] = NiObject.read(r, Z.string(r))')))
         def Header_code(s):
-            s.init = (
-                ['BinaryReader b', 'b: Reader'],
-                ['rx', 'rx'],
-                [f'new NiReader(r)', f'NiReader(r)'])
+            s.init = (['BinaryReader b', 'b: Reader'], ['rx', 'rx'], [f'new NiReader(r)', f'NiReader(r)'])
             s.namecw = ('NiReader', 'NiReader'); s.inherit = 'BinaryReader' if self.ex == CS else 'Reader'
             s.values[0].initcw = ('(HeaderString, V) = Z.ParseHeaderStr(b.ReadVAString(0x80, 0xA)); var r = this;', '(self.headerString, self.v) = Z.parseHeaderStr(b.readVAString(128, b\'\\x0A\')); r = self')
         def StringPalette_code(s):
@@ -511,7 +504,7 @@ class Flags(Flag):
                 body = '\n'.join([f'            case "{x}": return new {x}(r);' for x in nodes])
                 s.methods.append(Class.Method('''
     public static NiObject Read(NiReader r, string nodeType) {
-        Console.WriteLine(nodeType);
+        // Console.WriteLine(nodeType);
         switch (nodeType) {
 BODY
             default: { Log($"Tried to read an unsupported NiObject type ({nodeType})."); return null; }
@@ -523,7 +516,7 @@ BODY
                 s.methods.append(Class.Method('''
     @staticmethod
     def read(r: NiReader, nodeType: str) -> NiObject:
-        print(nodeType)
+        # print(nodeType)
         match nodeType:
 BODY
             case _: Log(f'Tried to read an unsupported NiObject type ({nodeType}).'); return null
@@ -558,8 +551,6 @@ BODY
             values[4].arr1 = values[3].arr1 = 'L32'
         def NiFlipController_values(s, values):
             pass
-        def NiGeometry_values(s, values):
-            pass
         def NiGeometryData_values(s, values):
             values[1].cond = '!NiPSysData || r.UV2 >= 34'
             del values[2]
@@ -571,14 +562,12 @@ BODY
             values[2].cond = 'RotationType != KeyType.XYZ_ROTATION_KEY'
             values[4].cond = values[3].cond = 'RotationType == KeyType.XYZ_ROTATION_KEY'
         def NiSourceTexture_values(s, values):
-            values[8].default = 'true'
-            values[9].default = 'false'
+            values[8].default = 'true'; values[9].default = 'false'
         def NiTexturingProperty_values(s, values):
             values[19].kind = 'var?+'; values[20].kind = 'var:'
             values[22].kind = 'var?+'; values[23].kind = 'var:'
             values[25].kind = 'var?+'; values[26].kind = 'var:'
             values[28].kind = 'var?+'; values[29].kind = 'var:'
-            pass
         def NiRawImageData_values(s, values):
             values[3].cond = 'Image Type == ImageType.RGB'
             values[4].cond = 'Image Type == ImageType.RGBA'
@@ -615,8 +604,7 @@ BODY
             'NiFlipController': { 'x': 2988,
                 'values': NiFlipController_values },
             'NiGeometry': { 'x': 3125,
-                'conds': ['NiParticleSystem'],
-                'values': NiGeometry_values },
+                'conds': ['NiParticleSystem'] },
             'NiGeometryData': { 'x': 3188,
                 'conds': ['NiPSysData'],
                 'type': {'Has Vertices': 'uint', 'Has Normals': 'uint', 'Has Vertex Colors': 'uint' },

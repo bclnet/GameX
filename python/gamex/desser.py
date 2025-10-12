@@ -6,38 +6,38 @@ from quaternion import quaternion
 from gamex.globalx import Color3, Color4
 
 class FloatEncoder(float):
-    def __repr__(self): return format(self, '.4f')
+    def __repr__(self): return format(self, '.9g')
 
 class CustomEncoder(json.JSONEncoder):
     def default(self, s):
         match s:
-            # case float(): return f'{s:.4f}' #float
+            # case float(): return f'{s:.9g}' #float
             case Enum(): return s.value #enum
-            case quaternion(): return f'{s.x:.4f} {s.y:.4f} {s.z:.4f} {s.w:.4f}' #quaternion
+            case quaternion(): return f'{s.x:.9g} {s.y:.9g} {s.z:.9g} {s.w:.9g}' #quaternion
             case ndarray():
                 match (len(s.shape), s.shape[0]):
-                    case (1, 2): return f'{s[0]:.4f} {s[1]:.4f}' #vector2
-                    case (1, 3): return f'{s[0]:.4f} {s[1]:.4f} {s[2]:.4f}' #vector3
-                    case (1, 4): return f'{s[0]:.4f} {s[1]:.4f} {s[2]:.4f} {s[3]:.4f}' #vector4
+                    case (1, 2): return f'{s[0]:.9g} {s[1]:.9g}' #vector2
+                    case (1, 3): return f'{s[0]:.9g} {s[1]:.9g} {s[2]:.9g}' #vector3
+                    case (1, 4): return f'{s[0]:.9g} {s[1]:.9g} {s[2]:.9g} {s[3]:.9g}' #vector4
                     case (2, 2): return [
-                        f'{s[0][0]:.4f} {s[0][1]:.4f}',
-                        f'{s[1][0]:.4f} {s[1][1]:.4f}']  #matrix2x2
+                        f'{s[0][0]:.9g} {s[0][1]:.9g}',
+                        f'{s[1][0]:.9g} {s[1][1]:.9g}']  #matrix2x2
                     case (2, 3): return [
-                        f'{s[0][0]:.4f} {s[0][1]:.4f} {s[0][2]:.4f}',
-                        f'{s[1][0]:.4f} {s[1][1]:.4f} {s[1][2]:.4f}',
-                        f'{s[2][0]:.4f} {s[2][1]:.4f} {s[2][2]:.4f}']  #matrix3x3
+                        f'{s[0][0]:.9g} {s[0][1]:.9g} {s[0][2]:.9g}',
+                        f'{s[1][0]:.9g} {s[1][1]:.9g} {s[1][2]:.9g}',
+                        f'{s[2][0]:.9g} {s[2][1]:.9g} {s[2][2]:.9g}']  #matrix3x3
                     # case (2, 3): return [
-                    #     f'{s[0][0]:.4f} {s[0][1]:.4f} {s[0][2]:.4f}',
-                    #     f'{s[1][0]:.4f} {s[1][1]:.4f} {s[1][2]:.4f}',
-                    #     f'{s[2][0]:.4f} {s[2][1]:.4f} {s[2][2]:.4f}']  #matrix3x4
+                    #     f'{s[0][0]:.9g} {s[0][1]:.9g} {s[0][2]:.9g}',
+                    #     f'{s[1][0]:.9g} {s[1][1]:.9g} {s[1][2]:.9g}',
+                    #     f'{s[2][0]:.9g} {s[2][1]:.9g} {s[2][2]:.9g}']  #matrix3x4
                     case (2, 4): return [
-                        f'{s[0][0]:.4f} {s[0][1]:.4f} {s[0][2]:.4f} {s[0][3]:.4f}',
-                        f'{s[1][0]:.4f} {s[1][1]:.4f} {s[1][2]:.4f} {s[1][3]:.4f}',
-                        f'{s[2][0]:.4f} {s[2][1]:.4f} {s[2][2]:.4f} {s[2][3]:.4f}',
-                        f'{s[3][0]:.4f} {s[3][1]:.4f} {s[3][2]:.4f} {s[3][3]:.4f}']  #matrix4x4
+                        f'{s[0][0]:.9g} {s[0][1]:.9g} {s[0][2]:.9g} {s[0][3]:.9g}',
+                        f'{s[1][0]:.9g} {s[1][1]:.9g} {s[1][2]:.9g} {s[1][3]:.9g}',
+                        f'{s[2][0]:.9g} {s[2][1]:.9g} {s[2][2]:.9g} {s[2][3]:.9g}',
+                        f'{s[3][0]:.9g} {s[3][1]:.9g} {s[3][2]:.9g} {s[3][3]:.9g}']  #matrix4x4
                     case _: raise Exception('Unknown mapping')
-            case Color3(): return f'{s.r:.4f} {s.g:.4f} {s.b:.4f}' #color3
-            case Color4(): return f'{s.r:.4f} {s.g:.4f} {s.b:.4f} {s.a:.4f}' #color4
+            case Color3(): return f'{s.r:.9g} {s.g:.9g} {s.b:.9g}' #color3
+            case Color4(): return f'{s.r:.9g} {s.g:.9g} {s.b:.9g} {s.a:.9g}' #color4
         n = type(s).__name__; c = {k:getattr(s, k) for k in dir(s) if not k.startswith('_')}; d = {k:v for k,v in c.items() if not callable(v)}
         match n:
             case 'mappingproxy': return None

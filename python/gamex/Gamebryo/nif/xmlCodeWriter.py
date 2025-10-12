@@ -64,8 +64,9 @@ class XmlCodeWriter(CodeWriter):
     def __init__(self, ex: str):
         self.ex = ex
         self.types = {
-            'TEMPLATE': [None, ('T', 'T'), lambda x: (x, x), ('Y<T>.Read(r)', 'Y[T].read(r)'), None],
-            'bool': [None, ('bool', 'bool'), lambda x: (x, x.replace('true', 'True').replace('false', 'False')), ('r.ReadBool32()', 'r.readBool32()'), lambda c: (f'[r.ReadBool32(), r.ReadBool32(), r.ReadBool32()]', f'[r.readBool32(), r.readBool32(), r.readBool32()]') if c == '3' else (f'r.ReadFArray(z => r.ReadBool32(), {c})', f'r.readFArray(lambda z: r.readBool32(), {c})')],
+            'TEMPLATE': [None, ('T', 'T'), lambda x: (x, x), ('Z.Read<T>(r)', 'Z.read(self, r)'), None],
+            'bool': [None, ('bool', 'bool'), lambda x: (x.replace('1', 'true'), x.replace('true', 'True').replace('false', 'False')), ('Z.ReadBool(r)', 'Z.readBool()'), lambda c: (f'[Z.ReadBool(r), Z.ReadBool(r), Z.ReadBool(r)]', f'[Z.readBool(r), Z.readBool(r), Z.readBool(r)]') if c == '3' else (f'r.ReadFArray(z => Z.ReadBool(r), {c})', f'r.readFArray(lambda z: Z.readBool(r), {c})')],
+            'bool8': [None, ('byte', 'int'), lambda x: (x, x), ('Z.ReadBool8(r)', 'Z.readBool8()'), lambda c: (f'r.ReadFArray(z => Z.ReadBool8(r), {c})', f'r.readFArray(lambda z: Z.readBool8(r), {c})')],
             'byte': [None, ('byte', 'int'), lambda x: (x, x), ('r.ReadByte()', 'r.readByte()'), lambda c: (f'r.ReadBytes({c})', f'r.readBytes({c})')],
             'uint': [None, ('uint', 'int'), lambda x: (x, x), ('r.ReadUInt32()', 'r.readUInt32()'), lambda c: (f'r.ReadPArray<uint>("I", {c})', f'r.readPArray(None, \'I\', {c})')],
             'ulittle32': [None, ('uint', 'int'), lambda x: (x, x), ('r.ReadUInt32()', 'r.readUInt32()'), None],
@@ -87,18 +88,18 @@ class XmlCodeWriter(CodeWriter):
             # Compounds
             'SizedString': [None, ('string', 'str'), lambda x: (x, x), ('r.ReadL32AString()', 'r.readL32AString()'), lambda c: (f'r.ReadFArray(z => r.ReadL32AString(), {c})', f'r.readFArray(lambda z: r.readL32AString(), {c})')],
             'string': [None, ('string', 'str'), lambda x: (x, x), ('Z.String(r)', 'Z.string(r)'), lambda c: (f'r.ReadFArray(z => Z.String(r), {c})', f'r.readFArray(lambda z: Z.string(r), {c})')],
-            'ByteArray': [None, ('byte[]', 'bytearray'), lambda x: (x, x), ('r.ReadL8Bytes()', 'r.readL8Bytes()'), None],
+            'ByteArray': [None, ('byte[]', 'bytearray'), lambda x: (x, x), ('r.ReadL32Bytes()', 'r.readL32Bytes()'), None],
             'ByteMatrix': [None, ('??', '??'), lambda x: (x, x), ('??', '??'), None],
             'Color3': [None, ('Color3', 'Color3'), lambda x: (f'new({x})', f'Color3({x})'), ('new Color3(r)', 'Color3(r)'), None],
             'ByteColor3': [None, ('Color3', 'Color3'), lambda x: (x, x), ('new Color3(r.ReadBytes(3))', 'Color3(r.readBytes(3))'), lambda c: (f'r.ReadFArray(z => new Color3(r.ReadBytes(3)), {c})', f'r.readFArray(lambda z: Color3(r.readBytes(3)), {c})')],
             'Color4': [None, ('Color4', 'Color4'), lambda x: (f'new({x})', f'Color4({x})'), ('new Color4(r)', 'Color4(r)'), lambda c: (f'r.ReadFArray(z => new Color4(r), {c})', f'r.readFArray(lambda z: Color4(r), {c})')],
             'ByteColor4': [None, ('Color4', 'Color4'), lambda x: (x, x), ('new Color4(r.ReadBytes(4))', 'Color4(r.readBytes(4))'), lambda c: (f'r.ReadFArray(z => new Color4(r.ReadBytes(4)), {c})', f'r.readFArray(lambda z: Color4(r.readBytes(4)), {c})')],
-            'FilePath': [None, ('string', 'str'), lambda x: (x, x), ('r.ReadL32Encoding()', 'r.readL32Encoding()'), None],
+            'FilePath': [None, ('string', 'str'), lambda x: (x, x), ('r.ReadL32AString()', 'r.readL32AString()'), None],
             # Compounds
             'ByteVector3': [None, ('Vector3<byte>', 'Vector3'), lambda x: (x, x), ('new Vector3<byte>(r.ReadByte(), r.ReadByte(), r.ReadByte())', 'Vector3(r.readByte(), r.readByte(), r.readByte())'), lambda c: (f'r.ReadFArray(z => new Vector3(r.ReadByte(), r.ReadByte(), r.ReadByte()), {c})', f'r.readFArray(lambda z: Vector3(r.readByte(), r.readByte(), r.readByte()), {c})')],
             'HalfVector3': [None, ('Vector3', 'Vector3'), lambda x: (x, x), ('new Vector3(r.ReadHalf(), r.ReadHalf(), r.ReadHalf())', 'Vector3(r.readHalf(), r.readHalf(), r.readHalf())'), lambda c: (f'r.ReadFArray(z => new Vector3(r.ReadHalf(), r.ReadHalf(), r.ReadHalf()), {c})', f'r.readFArray(lambda z: Vector3(r.readHalf(), r.readHalf(), r.readHalf()), {c})')],
             'Vector3': [None, ('Vector3', 'Vector3'), lambda x: (f'new({x})', f'Vector3({x})'), ('r.ReadVector3()', 'r.readVector3()'), lambda c: (f'r.ReadPArray<Vector3>("3f", {c})', f'r.readPArray(array, \'3f\', {c})')],
-            'Vector4': [None, ('Vector4', 'Vector4'), lambda x: (f'new({x})', f'Vector4({x})'), ('r.ReadVector4()', 'r.readVector4()'), lambda c: (f'r.ReadPArray<Vector4>("4f", {c})', f'r.readPArray(array, \'4f\', {c})')],
+            'Vector4': [None, ('Vector4', 'Vector4'), lambda x: (f'new({x.replace(',','f,')}f)', f'Vector4({x})'), ('r.ReadVector4()', 'r.readVector4()'), lambda c: (f'r.ReadPArray<Vector4>("4f", {c})', f'r.readPArray(array, \'4f\', {c})')],
             'Quaternion': [None, ('Quaternion', 'Quaternion'), lambda x: (x, x), ('r.ReadQuaternionWFirst()', 'r.readQuaternionWFirst()'), lambda c: (f'r.ReadFArray(z => r.ReadQuaternionWFirst(), {c})', f'r.readFArray(lambda z: r.readQuaternionWFirst(), {c})')],
             'hkQuaternion': [None, ('Quaternion', 'Quaternion'), lambda x: (x, x), ('r.ReadQuaternion()', 'r.readQuaternion()'), None],
             'Matrix22': [None, ('Matrix2x2', 'Matrix2x2'), lambda x: (x, x), ('r.ReadMatrix2x2()', 'r.readMatrix2x2()'), None],
@@ -194,7 +195,7 @@ class XmlCodeWriter(CodeWriter):
                     self.emit('')
                     def emitHeader() -> None:
                         if 'conds' in s.custom:
-                            for k in s.custom['conds']: self.emit(f'var {k} = false;')
+                            for k in s.custom['conds']: self.emit(f'var {k} = false;') # this is NiMaterialProperty
                     def emitBlock(inits: list) -> None:
                         for x in inits:
                             match x:
@@ -234,12 +235,11 @@ class XmlCodeWriter(CodeWriter):
                                     with self.block(before=f'{x.initcw[PY]}:'): emitBlock(x.inits)
                             case Class.Value(): self.emit(f'{x.initcw[PY]}{' # ' + x.tags if x.tags else ''}')
                 constArg = s.custom['constArg'][PY] if 'constArg' in s.custom else ''
-                with self.block(before=f'def __init__(self, {s.init[0][PY]}{constArg}):'):
+                with self.block(before=f'def __init__(self, {'t: str, ' if s.template else ''}{s.init[0][PY]}{constArg}):'):
                     inheritArgs = 'b.f' if s.name == 'Header' else 'r'
                     if s.inherit: self.emit(f'super().__init__({inheritArgs})')
-                    if struct:
-                        body = ','.join([f'self.{fmt_py(x.name)}' for x in s.values])
-                        self.emit(f'if isinstance(r, tuple): {body}={s.struct[2]}; return')
+                    if s.template: self.emit('self.t = t')
+                    if struct: self.emit(f'if isinstance(r, tuple): {','.join([f'self.{fmt_py(x.name)}' for x in s.values])}={s.struct[2]}; return')
                     if 'consts' in s.custom:
                         for x in s.custom['consts']:
                             if x[PY]: self.emit(x[PY])
@@ -386,7 +386,7 @@ class Class:
                 case 'else': self.initcw = [f'else', f'else']
                 case 'switch': self.initcw = [f'switch ({c[CS].split(' == ')[0]})', f'match {c[PY].split(' == ')[0]}']
                 case _: raise Exception(f'Unknown {self.kind}')
-            self.initcw = root.rename(self.initcw, cw)
+            self.initcw = root.rename(self.initcw, None, cw)
     class Value:
         def __init__(self, root: Class, e: object):
             if e == None: return
@@ -396,6 +396,7 @@ class Class:
             cwname = self.name.replace('?', '').replace(' ', '')
             if self.name.replace(' ', '') == root.name or self.suffix: cwname += f'_{self.suffix}'
             if ' ' in self.name: root.namers[self.name] = cwname
+            # root.namers[self.name] = cwname
             self.type: str = e.attrib['type']
             if 'type' in root.custom and self.name in root.custom['type']: self.type = root.custom['type'][self.name]
             self.namecw = (cwname, fmt_py(cwname))
@@ -405,11 +406,12 @@ class Class:
             self.defaultcw = None
             self.calculated = e.attrib.get('calculated') == '1'
             self.template: str = z if (z := e.attrib.get('template')) != 'TEMPLATE' else None
+            self.templatecs = self.template
+            self.templatepy = self.template.replace('string', 'str') if self.template else None
             self.default: str = e.attrib.get('default')
             self.arg: str = e.attrib.get('arg')
             self.arr1: str = z if (z := e.attrib.get('arr1')) else None
             self.arr2: str = z if (z := e.attrib.get('arr2')) else None
-            self.arr2x: str = None
             cond = z if (z := e.attrib.get('cond')) else ''
             cond = verReplace(cond.strip()).replace('User Version 2 ', 'ZUV2 ').replace('User Version ', 'ZUV ').replace('Version ', 'ZV ')
             self.cond: str = cond
@@ -433,8 +435,8 @@ class Class:
             primary = 'P' in flags
             # totype
             if not self.typecw:
-                cs = cw.types[self.type][MN][CS].replace('<T>', f'<{self.template or 'T'}>'); py = cw.types[self.type][MN][PY].replace('<T>', f'<{self.template or 'T'}>')
-                if self.template: cs = cs.replace('{T}', self.template); py = py.replace('{T}', self.template)
+                cs = cw.types[self.type][MN][CS].replace('<T>', f'<{self.templatecs or 'T'}>'); py = cw.types[self.type][MN][PY].replace('[T]', f'[{self.templatepy or 'T'}]')
+                if self.template: cs = cs.replace('{T}', self.templatecs); py = py.replace('{T}', self.templatepy)
                 if self.arr1 and self.arr2: self.typecw = [f'byte[][]', f'list[bytearray]'] if self.type == 'byte' else [f'{cs}[][]', f'list[list[{py}]]']
                 elif self.arr1: self.typecw = [f'byte[]', f'bytearray'] if self.type == 'byte' else [f'{cs}[]', f'list[{py}]']
                 else: self.typecw = [cs, py]
@@ -442,19 +444,16 @@ class Class:
             if not self.initcw:
                 # type
                 if not self.calculated:
-                    cs = cw.types[self.type][MI][CS].replace('<T>', f'<{self.template or 'T'}>'); py = cw.types[self.type][MI][PY].replace('<T>', f'<{self.template or 'T'}>')
+                    cs = cw.types[self.type][MI][CS].replace('<T>', f'<{self.templatecs or 'T'}>'); py = cw.types[self.type][MI][PY].replace('[T]', f'[{self.templatepy or 'T'}]')
                     if self.arr1:
                         arr1 = self.arr2 or self.arr1
                         if not cw.types[self.type][MA]: print(f'{self.type}: missing array func')
-                        cs = cw.types[self.type][MA](root.cond(parent, arr1, cw)[CS])[CS].replace('<T>', f'<{self.template or 'T'}>'); py = cw.types[self.type][MA](root.cond(parent, arr1, cw)[PY])[PY].replace('<T>', f'<{self.template or 'T'}>')
+                        cs = cw.types[self.type][MA](root.cond(parent, arr1, cw)[CS])[CS].replace('<T>', f'<{self.templatecs or 'T'}>'); py = cw.types[self.type][MA](root.cond(parent, arr1, cw)[PY])[PY].replace('[T]', f'[{self.templatepy or 'T'}]')
                         if arr1.startswith('L'): cs = cs.replace('Read', f'Read{arr1}', 1).replace(f'{arr1})', ')').replace(', )', ')'); py = py.replace('read', f'read{arr1}', 1).replace(f'{arr1})', ')').replace(', )', ')')
                         if self.arr2:
-                            if self.arr2x == 'i': cs = f'r.ReadFArray((k, i) => {cs[:-1]}[i]), {self.arr1})'; py = f'r.readFArray(lambda k, i: {py}, {self.arr1})'
+                            if self.arr2.endswith('[i]'): cs = f'r.ReadFArray((k, i) => {cs}, {self.arr1})'; py = f'r.readFArray(lambda k, i: {py}, {self.arr1})'
                             else: cs = f'r.ReadFArray(k => {cs}, {self.arr1})'; py = f'r.readFArray(lambda k: {py}, {self.arr1})'
-                    if self.template: cs = cs.replace('{T}', self.template); py = py.replace('{T}', self.template)
-                    if self.arg:
-                        arg = root.custom['arg'] if 'arg' in root.custom else root.namers[self.arg] if self.arg in root.namers else self.arg
-                        cs = cs.replace('ARG', arg); py = py.replace('ARG', arg)
+                    if self.template: cs = cs.replace('{T}', self.templatecs); py = py.replace('{T}', self.templatepy)
                 elif 'calculated' in root.custom: (cs, py) = root.custom['calculated'](self.name)
                 else: raise Exception(f'calculated? {root.name}')
 
@@ -489,7 +488,7 @@ class Class:
                     case 'else': self.initcw = [f'else {precw[CS]}{self.namecw[CS]} = {cs};', f'else: {precw[PY]}{self.namecw[PY]} = {py}']
                     case 'case': self.initcw = [f'case {c[CS].split(' == ')[1]}: {precw[CS]}{self.namecw[CS]} = {cs}; break;', f'case {c[PY].split(' == ')[1]}: {precw[PY]}{self.namecw[PY]} = {py}']
                     case _: self.initcw = [f'{precw[CS]}{self.namecw[CS]} = {cs};', f'{precw[PY]}{self.namecw[PY]}{': ' + self.typecw[PY] if primary else ''} = {py}']
-                self.initcw = root.rename(self.initcw, cw)
+                self.initcw = root.rename(self.initcw, self.arg, cw)
 
     comment: str
     abstract: bool = False
@@ -532,7 +531,7 @@ class Class:
             'C' if (self.condFlag & 2) or (self.condFlag & 4) or (niobject and self.values) or self.template else 'P'
         # types
         constNew = self.custom['constNew'] if 'constNew' in self.custom else ('', '')
-        self.init = (['NiReader r', 'r: NiReader'], ['r', 'r'], [f'new {self.namecw[CS]}(r{constNew[CS]})', f'{self.namecw[PY]}(r{constNew[PY]})'])
+        self.init = (['NiReader r', 'r: NiReader'], ['r', 'r'], [f'new {self.namecw[CS]}(r{constNew[CS]})', f'{self.namecw[PY]}({f'\'[T]\', ' if self.template else ''}r{constNew[PY]})'])
         manyLambda = lambda c: (f'r.ReadFArray(z => {self.init[2][CS]}, {c})', f'r.readFArray(lambda z: {self.init[2][PY]}, {c})')
         if self.name in cw.struct:
             self.init = (self.init[0], self.init[1], [f'r.ReadS<{self.namecw[CS]}>()', f'r.readS({self.namecw[PY]})'])
@@ -557,14 +556,19 @@ class Class:
         cs = s; py = s.replace('||', 'or').replace('&&', 'and').replace('!=', 'Z=').replace('!', 'not ').replace('Z=', '!=')
         if 'condcs' in self.custom: cs = self.custom['condcs'](parent, cs, cw)
         if 'condpy' in self.custom: py = self.custom['condpy'](parent, py, cw)
-        if 'B32:' in s: z = cs[cs.index('B32:'):].split(' &&')[0]; cs = cs.replace(z, 'r.ReadBool32()'); py = py.replace(z, 'r.readBool32()')
+        if 'B32:' in s: z = cs[cs.index('B32:'):].split(' &&')[0]; cs = cs.replace(z, 'Z.ReadBool(r)'); py = py.replace(z, 'Z.readBool(r)')
         # if 'U32:' in s: z = cs.split(' ==')[0]; cs = cs.replace(z, '(u0 = r.ReadUInt32())'); py = py.replace(z, '(u0 := r.readUInt32())')
         return [cs, py]
-    def rename(self, s: list[str], cw: XmlCodeWriter) -> list[str]:
+    def rename(self, s: list[str], arg: str, cw: XmlCodeWriter) -> list[str]:
         cs = s[CS]; py = s[PY]
-        for k,v in self.namers.items(): cs = cs.replace(k, v); py = py.replace(k, f'{fmt_py(v)}') if k.startswith('Has') else py.replace(k, f'self.{fmt_py(v)}')
+        for k,v in self.namers.items(): cs = cs.replace(k, v); py = py.replace(k, f'{fmt_py(v)}' if k.startswith('Has') else f'self.{fmt_py(v)}')
         cs = cs.replace('ZV ', 'r.V ').replace('ZUV2 ', 'r.UV2 ').replace('ZUV ', 'r.UV ')
         py = py.replace('ZV ', 'r.v ').replace('ZUV2 ', 'r.uv2 ').replace('ZUV ', 'r.uv ')
+        if arg:
+            # if self.name == 'Morph': print(self.namers)
+            argcs = self.custom['arg'] if 'arg' in self.custom else self.namers[arg] if arg in self.namers else arg
+            argpy = self.custom['arg'] if 'arg' in self.custom else f'self.{fmt_py(self.namers[arg])}' if arg in self.namers else arg
+            cs = cs.replace('ARG', argcs); py = py.replace('ARG', argpy)
         return [cs, py]
     def process(self):
         values = self.values

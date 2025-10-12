@@ -2,8 +2,8 @@ import xml.etree.ElementTree as ET
 from xmlCodeWriter import CS, PY, Class, Elem, XmlCodeWriter
 
 class NifCodeWriter(XmlCodeWriter):
-    def export(self, name: str): return name in self.es3 or name in self.es3x
-    def tags(self, name: str): return 'X' if name in self.es3 else 'Y' if name in self.es3x else ''
+    def export(self, name: str): return name in self.es3 or name in self.es3x or name in self.es4
+    def tags(self, name: str): return 'X' if name in self.es3 else 'Y' if name in self.es3x else 'Z' if name in self.es4 else ''
     def __init__(self, ex: str):
         super().__init__(ex)
         #region Header
@@ -21,6 +21,16 @@ class NifCodeWriter(XmlCodeWriter):
             'MaterialData', 'BSVertexDesc', 'MorphWeight', 'BSShaderProperty', 'VectorFlags', 'BSVectorFlags', 'ConsistencyType', 'AbstractAdditionalGeometryData', 'FormatPrefs', 'NiRawImageData', 'SkinPartition', 'BSVertexDataSSE',
             'NiPlane', 'NiImage', 'NiBound', 'CapsuleBV', 'UnionBV', 'HalfSpaceBV', 'ShaderTexDesc',
             'NiCollisionObject', 'NiInterpolator' ]
+        self.es4 = [
+            'NiBinaryExtraData', 'NiTriStrips', 'NiTriStripsData', 'NiIntegerExtraData', 'BSXFlags',
+            'OblivionLayer', 'OblivionHavokMaterial', 'Fallout3Layer', 'Fallout3HavokMaterial', 'SkyrimLayer', 'SkyrimHavokMaterial', 'HavokMaterial', 'HavokFilter', 'MoppDataBuildType',
+            'bhkRefObject', 'bhkSerializable', 'bhkShape', 'bhkShapeCollection', 'bhkNiTriStripsShape', 'bhkBvTreeShape', 'bhkMoppBvTreeShape',
+            'hkResponseType', 'hkMotionType', 'hkDeactivatorType', 'hkSolverDeactivation', 'hkQualityType', 'BroadPhaseType', 'hkWorldObjCinfoProperty', 'bhkWorldObject', 'bhkEntity', 'bhkRigidBody' ]
+        # nodes
+        self.nodes = ['NiNode', 'NiTriShape', 'NiTexturingProperty', 'NiSourceTexture', 'NiMaterialProperty', 'NiMaterialColorController', 'NiTriShapeData', 'RootCollisionNode', 'NiStringExtraData', 'NiSkinInstance', 'NiSkinData', 'NiAlphaProperty', 'NiZBufferProperty', 'NiVertexColorProperty', 'NiBSAnimationNode', 'NiBSParticleNode', 'NiParticles', 'NiParticlesData', 'NiRotatingParticles', 'NiRotatingParticlesData', 'NiAutoNormalParticles', 'NiAutoNormalParticlesData', 'NiUVController', 'NiUVData', 'NiTextureEffect', 'NiTextKeyExtraData', 'NiVertWeightsExtraData', 'NiParticleSystemController', 'NiBSPArrayController', 'NiGravity', 'NiParticleBomb', 'NiParticleColorModifier', 'NiParticleGrowFade', 'NiParticleMeshModifier', 'NiParticleRotation', 'NiKeyframeController', 'NiKeyframeData', 'NiColorData', 'NiGeomMorpherController', 'NiMorphData', 'AvoidNode', 'NiVisController', 'NiVisData', 'NiAlphaController', 'NiFloatData', 'NiPosData', 'NiBillboardNode', 'NiShadeProperty', 'NiWireframeProperty', 'NiCamera', 'NiPathController', 'NiPixelData',
+            #, 'NiExtraData', 'NiSkinPartition']
+            #es4
+            'NiBinaryExtraData', 'NiTriStrips', 'NiTriStripsData', 'BSXFlags', 'bhkNiTriStripsShape', 'bhkMoppBvTreeShape', 'bhkRigidBody' ]
         self.customs = {
             '_header': (
 '''using System;
@@ -48,6 +58,7 @@ from gamex.desser import DesSer
 T = TypeVar('T')
 
 # types
+type byte = int
 type Vector3 = ndarray
 type Vector4 = ndarray
 type Matrix2x2 = ndarray
@@ -69,21 +80,20 @@ static class X<T> where T : NiObject {
     public static Ref<T> Ref(BinaryReader r) { int v; return (v = r.ReadInt32()) < 0 ? null : new Ref<T>((NiReader)r, v); }
 }
 
-static class Y<T> {
-    public static T Read(BinaryReader r) {
+static class Z {
+    public static T Read<T>(NiReader r) {
         if (typeof(T) == typeof(float)) { return (T)(object)r.ReadSingle(); }
         else if (typeof(T) == typeof(byte)) { return (T)(object)r.ReadByte(); }
-        else if (typeof(T) == typeof(string)) { return (T)(object)r.ReadL32Encoding(); }
+        else if (typeof(T) == typeof(string)) { return (T)(object)r.ReadL32AString(); }
         else if (typeof(T) == typeof(Vector3)) { return (T)(object)r.ReadVector3(); }
         else if (typeof(T) == typeof(Quaternion)) { return (T)(object)r.ReadQuaternionWFirst(); }
         else if (typeof(T) == typeof(Color4)) { return (T)(object)new Color4(r); }
-        else throw new NotImplementedException("Tried to read an unsupported type.");
+        else throw new NotImplementedException($"Tried to read an unsupported type: {typeof(T)}");
     }
-}
-
-static class Z {
-    public static string String(BinaryReader r) => r.ReadL32Encoding();
-    public static string StringRef(BinaryReader r, int? p) => default;
+    public static byte ReadBool8(NiReader r) => r.V >= 0x14000000 ? r.ReadByte() : (byte)r.ReadUInt32();
+    public static bool ReadBool(NiReader r) => r.V >= 0x14000000 ? r.ReadByte() != 0 : r.ReadUInt32() != 0;
+    public static string String(NiReader r) => r.ReadL32AString();
+    public static string StringRef(NiReader r, int? p) => default;
     public static bool IsVersionSupported(uint v) => true;
     public static (string, uint) ParseHeaderStr(string s) {
         var p = s.IndexOf("Version");
@@ -174,7 +184,7 @@ public class RefJsonConverter<T> : JsonConverter<Ref<T>> where T : NiObject {
 
 public class TexCoordJsonConverter : JsonConverter<TexCoord> {
     public override TexCoord Read(ref Utf8JsonReader r, Type s, JsonSerializerOptions options) => throw new NotImplementedException();
-    public override void Write(Utf8JsonWriter w, TexCoord s, JsonSerializerOptions options) => w.WriteStringValue($"{s.u:f4} {s.v:f4}");
+    public override void Write(Utf8JsonWriter w, TexCoord s, JsonSerializerOptions options) => w.WriteStringValue($"{s.u:g9} {s.v:g9}");
 }
 
 public class TriangleJsonConverter : JsonConverter<Triangle> {
@@ -183,30 +193,32 @@ public class TriangleJsonConverter : JsonConverter<Triangle> {
 }
 ''',
 '''class Ref(Generic[T]):
-    def __init__(self, r: NiReader, v: int):
-        self.v: int = v
-        self.val: T
-    def value() -> T: return None
+    def __init__(self, r: NiReader, v: int): self.v: int = v; self.val: T = None
+    def value() -> T: return self.val
 class X(Generic[T]):
     @staticmethod # Refers to an object before the current one in the hierarchy.
     def ptr(r: Reader): return None if (v := r.readInt32()) < 0 else Ref(r, v)
     @staticmethod # Refers to an object after the current one in the hierarchy.
     def ref(r: Reader): return None if (v := r.readInt32()) < 0 else Ref(r, v)
-class Y(Generic[T]):
-    @staticmethod
-    def read(type: type, r: Reader) -> object:
-        if type == float: return r.readSingle()
-        elif type == byte: return r.readByte()
-        elif type == str: return r.readL32Encoding()
-        elif type == Vector3: return r.readVector3()
-        elif type == Quaternion: return r.readQuaternionWFirst()
-        elif type == Color4: return Color4(r)
-        else: raise NotImplementedError('Tried to read an unsupported type.')
 class Z:
     @staticmethod
-    def string(r: Reader) -> str: return r.readL32Encoding()
+    def read(s, r: NiReader) -> object:
+        match s.t:
+            case '[float]': return r.readSingle()
+            case '[byte]': return r.readByte()
+            case '[str]': return r.readL32AString()
+            case '[Vector3]': return r.readVector3()
+            case '[Quaternion]': return r.readQuaternionWFirst()
+            case '[Color4]': return Color4(r)
+            case _: raise NotImplementedError(f'Tried to read an unsupported type: {s.t}')
     @staticmethod
-    def stringRef(r: Reader, p: int) -> str: return None
+    def readBool8(r: NiReader) -> int: r.readByte() if r.v >= 0x14000000 else r.readUInt32()
+    @staticmethod
+    def readBool(r: NiReader) -> bool: r.readByte() != 0 if r.v >= 0x14000000 else r.readUInt32() != 0
+    @staticmethod
+    def string(r: NiReader) -> str: return r.readL32AString()
+    @staticmethod
+    def stringRef(r: NiReader, p: int) -> str: return None
     @staticmethod
     def isVersionSupported(v: int) -> bool: return True
     @staticmethod
@@ -258,7 +270,7 @@ class Flags(IntFlag):
     Hidden = 0x1
 
 def RefJsonConverter(s): return f'{s.v}'
-def TexCoordJsonConverter(s): return f'{s.u:.4f} {s.v:.4f}'
+def TexCoordJsonConverter(s): return f'{s.u:.9g} {s.v:.9g}'
 def TriangleJsonConverter(s): return f'{s.v1} {s.v2} {s.v3}'
 DesSer.add({'Ref':RefJsonConverter, 'TexCoord':TexCoordJsonConverter, 'Triangle':TriangleJsonConverter})
 ''') }
@@ -350,16 +362,16 @@ DesSer.add({'Ref':RefJsonConverter, 'TexCoord':TexCoordJsonConverter, 'Triangle'
             for i in [9, 7, 3, 0]: ifx.inits[i].vercond = None; in0.insert(0, ifx.inits[i]); del ifx.inits[i]
             in0.insert(2, ifx.inits[4])
             ifx.inits[0].vercond = None; ifx.inits[0].cond = 'B32:' + ifx.inits[0].cond
-            ifx.inits[1].vercond = None; ifx.inits[1].type = 'uint'; ifx.inits[1].kind = 'var?'
+            ifx.inits[1].vercond = None; ifx.inits[1].type = 'bool8'; ifx.inits[1].kind = 'var?'
             ifx.inits[2].vercond = None
             ifx.inits[3].vercond = None
-            ifx.inits[5].vercond = None; ifx.inits[5].cond = ifx.inits[5].cond[16:-1]; ifx.inits[5].arr2x = 'i'
+            ifx.inits[5].vercond = None; ifx.inits[5].cond = ifx.inits[5].cond[16:-1]; ifx.inits[5].arr2 += '[i]'
             ifx.inits[6].vercond = None; ifx.inits[6].cond = ifx.inits[6].cond[16:-1]
             ifx.inits.insert(5, ifx := Class.If(s, None, None, (ifx.inits, 5, 7), 'if'))
             ifx.vercond = 'B32:HasFaces'
             #
             inits.insert(6, ifx := Class.If(s, None, None, in0, 'if'))
-            ifx.inits[3].arr2x = 'i'
+            ifx.inits[3].arr2 += '[i]'
             ifx.vercond = 'ZV <= 0x0A000102'
         def Morph_values(s, values):
             values[1].kind = 'var?'
@@ -397,7 +409,7 @@ DesSer.add({'Ref':RefJsonConverter, 'TexCoord':TexCoordJsonConverter, 'Triangle'
             inits.insert(5, Class.If(s, None, None, (inits, 5, 12), 'switch'))
         self.customs = self.customs | {
             'BoneVertData': { 'x': 1421,
-                'constPre': (', bool full', ''), 'constArg': ('', ', half: bool'),
+                'constPre': (', bool full', ''), 'constArg': ('', ', half: bool = None'),
                 'consts': [(None, 'if half: self.index = r.readUInt16(); self.weight = r.readHalf(); return')],
                 'values': BoneVertData_values },
             'BoneVertDataHalf': { 'x': 1427,
@@ -415,17 +427,16 @@ DesSer.add({'Ref':RefJsonConverter, 'TexCoord':TexCoordJsonConverter, 'Triangle'
                 'code': StringPalette_code },
             'Key': { 'x': 1521,
                 'kind': {-1: 'elif'},
-                'constArg': (', KeyType keyType', ', keyType: KeyType'), 'constNew': (', ARG', ', self.ARG'),
+                'constArg': (', KeyType keyType', ', keyType: KeyType'), 'constNew': (', ARG', ', ARG'),
                 'cond': lambda p, s, cw: cw.typeReplace('KeyType', s).replace('ARG', 'keyType') },
             'QuatKey': { 'x': 1537,
-                'constArg': (', KeyType keyType', ', keyType: KeyType'), 'constNew': (', ARG', ', self.ARG'),
+                'constArg': (', KeyType keyType', ', keyType: KeyType'), 'constNew': (', ARG', ', ARG'),
                 'cond': lambda p, s, cw: cw.typeReplace('KeyType', s).replace('ARG', 'keyType') },
             'TexCoord': { 'x': 1545,
                 'flags': 'C',
-                'constArg': ('', ', half: bool=None'), 'constNew': ('', ', False'),
+                'constArg': ('', ', half: bool = None'), 'constNew': ('', ', False'),
                 'consts': [
                     ('public TexCoord(double u, double v) { this.u = (float)u; this.v = (float)v; }', 'if isinstance(r, float): self.u = r; self.v = half; return'),
-                    (None, 'elif isinstance(r, tuple): self.u = r[0]; self.v = r[1]; return'),
                     ('public TexCoord(NiReader r, bool half) { u = half ? r.ReadHalf() : r.ReadSingle(); v = half ? r.ReadHalf() : r.ReadSingle(); }', 'elif half: self.u = r.readHalf(); self.v = r.readHalf(); return')] },
             'HalfTexCoord': { 'x': 1551,
                 '_': ['', ('TexCoord', 'TexCoord'), lambda x: (x, x), ('new TexCoord(r, true)', 'TexCoord(r, true)'), lambda c: (f'r.ReadFArray(z => new TexCoord(r, true), {c})', f'r.readFArray(lambda z: TexCoord(r, true), {c})')] },
@@ -504,13 +515,12 @@ DesSer.add({'Ref':RefJsonConverter, 'TexCoord':TexCoordJsonConverter, 'Triangle'
         #endregion
         #region NIF Objects
         def NiObject_code(s):
-            nodes = ['NiNode', 'NiTriShape', 'NiTexturingProperty', 'NiSourceTexture', 'NiMaterialProperty', 'NiMaterialColorController', 'NiTriShapeData', 'RootCollisionNode', 'NiStringExtraData', 'NiSkinInstance', 'NiSkinData', 'NiAlphaProperty', 'NiZBufferProperty', 'NiVertexColorProperty', 'NiBSAnimationNode', 'NiBSParticleNode', 'NiParticles', 'NiParticlesData', 'NiRotatingParticles', 'NiRotatingParticlesData', 'NiAutoNormalParticles', 'NiAutoNormalParticlesData', 'NiUVController', 'NiUVData', 'NiTextureEffect', 'NiTextKeyExtraData', 'NiVertWeightsExtraData', 'NiParticleSystemController', 'NiBSPArrayController', 'NiGravity', 'NiParticleBomb', 'NiParticleColorModifier', 'NiParticleGrowFade', 'NiParticleMeshModifier', 'NiParticleRotation', 'NiKeyframeController', 'NiKeyframeData', 'NiColorData', 'NiGeomMorpherController', 'NiMorphData', 'AvoidNode', 'NiVisController', 'NiVisData', 'NiAlphaController', 'NiFloatData', 'NiPosData', 'NiBillboardNode', 'NiShadeProperty', 'NiWireframeProperty', 'NiCamera', 'NiPathController', 'NiPixelData'] #, 'NiExtraData', 'NiSkinPartition']
             if self.ex == CS:
-                for x in nodes: s.attribs.append(Class.Attrib(f'JsonDerivedType(typeof({x}), typeDiscriminator: nameof({x}))'))
-                body = '\n'.join([f'            case "{x}": return new {x}(r);' for x in nodes])
+                for x in self.nodes: s.attribs.append(Class.Attrib(f'JsonDerivedType(typeof({x}), typeDiscriminator: nameof({x}))'))
+                body = '\n'.join([f'            case "{x}": return new {x}(r);' for x in self.nodes])
                 s.methods.append(Class.Method('''
     public static NiObject Read(NiReader r, string nodeType) {
-        // Console.WriteLine(nodeType);
+        Console.WriteLine($"{nodeType}: {r.Tell()}");
         switch (nodeType) {
 BODY
             default: { Log($"Tried to read an unsupported NiObject type ({nodeType})."); return null; }
@@ -518,11 +528,11 @@ BODY
     }
 '''.replace('BODY', body)))
             elif self.ex == PY:
-                body = '\n'.join([f'            case \'{x}\': n = {x}(r)' for x in nodes])
+                body = '\n'.join([f'            case \'{x}\': n = {x}(r)' for x in self.nodes])
                 s.methods.append(Class.Method('''
     @staticmethod
     def read(r: NiReader, nodeType: str) -> NiObject:
-        # print(nodeType)
+        # print(f'{nodeType}: {r.tell()}')
         match nodeType:
 BODY
             case _: Log(f'Tried to read an unsupported NiObject type ({nodeType}).'); n = None
@@ -576,6 +586,8 @@ BODY
             values[22].kind = 'var?+'; values[23].kind = 'var:'
             values[25].kind = 'var?+'; values[26].kind = 'var:'
             values[28].kind = 'var?+'; values[29].kind = 'var:'
+        def NiTriStripsData_values(s, values):
+            values[3].arr2 += '[i]'; values[4].arr2 += '[i]'
         def NiRawImageData_values(s, values):
             values[3].cond = 'Image Type == ImageType.RGB'
             values[4].cond = 'Image Type == ImageType.RGBA'
@@ -615,7 +627,7 @@ BODY
                 'conds': ['NiParticleSystem'] },
             'NiGeometryData': { 'x': 3188,
                 'conds': ['NiPSysData'],
-                'type': {'Has Vertices': 'uint', 'Has Normals': 'uint', 'Has Vertex Colors': 'uint' },
+                'type': {'Has Vertices': 'bool8', 'Has Normals': 'bool8', 'Has Vertex Colors': 'bool8' },
                 'values': NiGeometryData_values },
             'NiKeyframeData': { 'x': 3683,
                 'kind': {-3: 'else'}, 
@@ -634,6 +646,8 @@ BODY
                 'values': NiTexturingProperty_values },
             'NiTriShapeData': { 'x': 4673,
                 'calculated': lambda s: ('false', 'False') },
+            'NiTriStripsData': { 'x': 4683,
+                'values': NiTriStripsData_values },
             'NiVisData': { 'x': 4804,
                 'arg': 'KeyType.LINEAR_KEY' },
             'NiRawImageData': { 'x': 4835,

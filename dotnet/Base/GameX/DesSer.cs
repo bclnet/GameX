@@ -47,7 +47,8 @@ public static class DesSer {
             new Matrix2x2JsonConverter(),
             new Matrix3x3JsonConverter(),
             new Matrix3x4JsonConverter(),
-            new Matrix4x4JsonConverter());
+            new Matrix4x4JsonConverter(),
+            new QuaternionJsonConverter());
     }
 
     public static void Add(params JsonConverter[] converters) { foreach (var s in converters) Options.Converters.Add(s); }
@@ -80,7 +81,7 @@ public class TypeInfoResolver : DefaultJsonTypeInfoResolver {
 
 public class Color3JsonConverter : JsonConverter<Color3> {
     public override Color3 Read(ref Utf8JsonReader r, Type s, JsonSerializerOptions options) => throw new NotImplementedException();
-    public override void Write(Utf8JsonWriter w, Color3 s, JsonSerializerOptions options) => w.WriteStringValue($"{s.R:f4} {s.G:f4} {s.B:f4}");
+    public override void Write(Utf8JsonWriter w, Color3 s, JsonSerializerOptions options) => w.WriteStringValue($"{s.R:g9} {s.G:g9} {s.B:g9}");
 }
 
 public class ByteColor3JsonConverter : JsonConverter<ByteColor3> {
@@ -90,7 +91,7 @@ public class ByteColor3JsonConverter : JsonConverter<ByteColor3> {
 
 public class Color4JsonConverter : JsonConverter<Color4> {
     public override Color4 Read(ref Utf8JsonReader r, Type s, JsonSerializerOptions options) => throw new NotImplementedException();
-    public override void Write(Utf8JsonWriter w, Color4 s, JsonSerializerOptions options) => w.WriteStringValue($"{s.R:f4} {s.G:f4} {s.B:f4} {s.A:f4}");
+    public override void Write(Utf8JsonWriter w, Color4 s, JsonSerializerOptions options) => w.WriteStringValue($"{s.R:g9} {s.G:g9} {s.B:g9} {s.A:g9}");
 }
 
 public class ByteColor4JsonConverter : JsonConverter<ByteColor4> {
@@ -100,30 +101,30 @@ public class ByteColor4JsonConverter : JsonConverter<ByteColor4> {
 
 class FloatJsonConverter : JsonConverter<float> {
     public override float Read(ref Utf8JsonReader r, Type s, JsonSerializerOptions options) => throw new NotImplementedException();
-    public override void Write(Utf8JsonWriter w, float s, JsonSerializerOptions options) => w.WriteRawValue($"{s:f4}");
+    public override void Write(Utf8JsonWriter w, float s, JsonSerializerOptions options) => w.WriteRawValue($"{s:g9}", true);
 }
 
 class Vector2JsonConverter : JsonConverter<Vector2> {
     public override Vector2 Read(ref Utf8JsonReader r, Type s, JsonSerializerOptions options) => throw new NotImplementedException();
-    public override void Write(Utf8JsonWriter w, Vector2 s, JsonSerializerOptions options) => w.WriteStringValue($"{s.X:f4} {s.Y:f4}");
+    public override void Write(Utf8JsonWriter w, Vector2 s, JsonSerializerOptions options) => w.WriteStringValue($"{s.X:g9} {s.Y:g9}");
 }
 
 class Vector3JsonConverter : JsonConverter<Vector3> {
     public override Vector3 Read(ref Utf8JsonReader r, Type s, JsonSerializerOptions options) => throw new NotImplementedException();
-    public override void Write(Utf8JsonWriter w, Vector3 s, JsonSerializerOptions options) => w.WriteStringValue($"{s.X:f4} {s.Y:f4} {s.Z:f4}");
+    public override void Write(Utf8JsonWriter w, Vector3 s, JsonSerializerOptions options) => w.WriteStringValue($"{s.X:g9} {s.Y:g9} {s.Z:g9}");
 }
 
 class Vector4JsonConverter : JsonConverter<Vector4> {
     public override Vector4 Read(ref Utf8JsonReader r, Type s, JsonSerializerOptions options) => throw new NotImplementedException();
-    public override void Write(Utf8JsonWriter w, Vector4 s, JsonSerializerOptions options) => w.WriteStringValue($"{s.X:f4} {s.Y:f4} {s.Z:f4} {s.W:f4}");
+    public override void Write(Utf8JsonWriter w, Vector4 s, JsonSerializerOptions options) => w.WriteStringValue($"{s.X:g9} {s.Y:g9} {s.Z:g9} {s.W:g9}");
 }
 
 class Matrix2x2JsonConverter : JsonConverter<Matrix2x2> {
     public override Matrix2x2 Read(ref Utf8JsonReader r, Type s, JsonSerializerOptions options) => throw new NotImplementedException();
     public override void Write(Utf8JsonWriter w, Matrix2x2 s, JsonSerializerOptions options) {
         w.WriteStartArray();
-        w.WriteStringValue($"{s.M11:f4} {s.M12:f4}");
-        w.WriteStringValue($"{s.M21:f4} {s.M22:f4}");
+        w.WriteStringValue($"{s.M11:g9} {s.M12:g9}");
+        w.WriteStringValue($"{s.M21:g9} {s.M22:g9}");
         w.WriteEndArray();
     }
 }
@@ -132,9 +133,9 @@ class Matrix3x3JsonConverter : JsonConverter<Matrix3x3> {
     public override Matrix3x3 Read(ref Utf8JsonReader r, Type s, JsonSerializerOptions options) => throw new NotImplementedException();
     public override void Write(Utf8JsonWriter w, Matrix3x3 s, JsonSerializerOptions options) {
         w.WriteStartArray();
-        w.WriteStringValue($"{s.M11:f4} {s.M12:f4} {s.M13:f4}");
-        w.WriteStringValue($"{s.M21:f4} {s.M22:f4} {s.M23:f4}");
-        w.WriteStringValue($"{s.M31:f4} {s.M32:f4} {s.M33:f4}");
+        w.WriteStringValue($"{s.M11:g9} {s.M12:g9} {s.M13:g9}");
+        w.WriteStringValue($"{s.M21:g9} {s.M22:g9} {s.M23:g9}");
+        w.WriteStringValue($"{s.M31:g9} {s.M32:g9} {s.M33:g9}");
         w.WriteEndArray();
     }
 }
@@ -143,9 +144,9 @@ class Matrix3x4JsonConverter : JsonConverter<Matrix3x4> {
     public override Matrix3x4 Read(ref Utf8JsonReader r, Type s, JsonSerializerOptions options) => throw new NotImplementedException();
     public override void Write(Utf8JsonWriter w, Matrix3x4 s, JsonSerializerOptions options) {
         w.WriteStartArray();
-        w.WriteStringValue($"{s.M11:f4} {s.M12:f4} {s.M13:f4} {s.M14:f4}");
-        w.WriteStringValue($"{s.M21:f4} {s.M22:f4} {s.M23:f4} {s.M24:f4}");
-        w.WriteStringValue($"{s.M31:f4} {s.M32:f4} {s.M33:f4} {s.M34:f4}");
+        w.WriteStringValue($"{s.M11:g9} {s.M12:g9} {s.M13:g9} {s.M14:g9}");
+        w.WriteStringValue($"{s.M21:g9} {s.M22:g9} {s.M23:g9} {s.M24:g9}");
+        w.WriteStringValue($"{s.M31:g9} {s.M32:g9} {s.M33:g9} {s.M34:g9}");
         w.WriteEndArray();
     }
 }
@@ -154,12 +155,17 @@ class Matrix4x4JsonConverter : JsonConverter<Matrix4x4> {
     public override Matrix4x4 Read(ref Utf8JsonReader r, Type s, JsonSerializerOptions options) => throw new NotImplementedException();
     public override void Write(Utf8JsonWriter w, Matrix4x4 s, JsonSerializerOptions options) {
         w.WriteStartArray();
-        w.WriteStringValue($"{s.M11:f4} {s.M12:f4} {s.M13:f4} {s.M14:f4}");
-        w.WriteStringValue($"{s.M21:f4} {s.M22:f4} {s.M23:f4} {s.M24:f4}");
-        w.WriteStringValue($"{s.M31:f4} {s.M32:f4} {s.M33:f4} {s.M34:f4}");
-        w.WriteStringValue($"{s.M41:f4} {s.M42:f4} {s.M43:f4} {s.M44:f4}");
+        w.WriteStringValue($"{s.M11:g9} {s.M12:g9} {s.M13:g9} {s.M14:g9}");
+        w.WriteStringValue($"{s.M21:g9} {s.M22:g9} {s.M23:g9} {s.M24:g9}");
+        w.WriteStringValue($"{s.M31:g9} {s.M32:g9} {s.M33:g9} {s.M34:g9}");
+        w.WriteStringValue($"{s.M41:g9} {s.M42:g9} {s.M43:g9} {s.M44:g9}");
         w.WriteEndArray();
     }
+}
+
+class QuaternionJsonConverter : JsonConverter<Quaternion> {
+    public override Quaternion Read(ref Utf8JsonReader r, Type s, JsonSerializerOptions options) => throw new NotImplementedException();
+    public override void Write(Utf8JsonWriter w, Quaternion s, JsonSerializerOptions options) => w.WriteStringValue($"{s.X:g9} {s.Y:g9} {s.Z:g9} {s.W:g9}");
 }
 
 #endregion

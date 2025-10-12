@@ -20,7 +20,7 @@ public struct Color3 { //:M
         B = r.ReadSingle();
     }
     public Color ToColor() => Color.FromArgb((int)(R * 255f), (int)(G * 255f), (int)(B * 255f));
-    public override string ToString() => $"{R} {G} {B}";
+    public override string ToString() => $"{R:g9} {G:g9} {B:g9}";
 }
 
 /// <summary>
@@ -60,7 +60,7 @@ public struct Color4 { //:M
         B = r.ReadSingle();
         A = r.ReadSingle();
     }
-    public override string ToString() => $"{R} {G} {B} {A}";
+    public override string ToString() => $"{R:g9} {G:g9} {B:g9} {A:g9}";
 }
 
 /// <summary>

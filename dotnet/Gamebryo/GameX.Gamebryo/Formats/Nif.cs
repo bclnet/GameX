@@ -18,21 +18,20 @@ static class X<T> where T : NiObject {
     public static Ref<T> Ref(BinaryReader r) { int v; return (v = r.ReadInt32()) < 0 ? null : new Ref<T>((NiReader)r, v); }
 }
 
-static class Y<T> {
-    public static T Read(BinaryReader r) {
+static class Z {
+    public static T Read<T>(NiReader r) {
         if (typeof(T) == typeof(float)) { return (T)(object)r.ReadSingle(); }
         else if (typeof(T) == typeof(byte)) { return (T)(object)r.ReadByte(); }
-        else if (typeof(T) == typeof(string)) { return (T)(object)r.ReadL32Encoding(); }
+        else if (typeof(T) == typeof(string)) { return (T)(object)r.ReadL32AString(); }
         else if (typeof(T) == typeof(Vector3)) { return (T)(object)r.ReadVector3(); }
         else if (typeof(T) == typeof(Quaternion)) { return (T)(object)r.ReadQuaternionWFirst(); }
         else if (typeof(T) == typeof(Color4)) { return (T)(object)new Color4(r); }
-        else throw new NotImplementedException("Tried to read an unsupported type.");
+        else throw new NotImplementedException($"Tried to read an unsupported type: {typeof(T)}");
     }
-}
-
-static class Z {
-    public static string String(BinaryReader r) => r.ReadL32Encoding();
-    public static string StringRef(BinaryReader r, int? p) => default;
+    public static byte ReadBool8(NiReader r) => r.V >= 0x14000000 ? r.ReadByte() : (byte)r.ReadUInt32();
+    public static bool ReadBool(NiReader r) => r.V >= 0x14000000 ? r.ReadByte() != 0 : r.ReadUInt32() != 0;
+    public static string String(NiReader r) => r.ReadL32AString();
+    public static string StringRef(NiReader r, int? p) => default;
     public static bool IsVersionSupported(uint v) => true;
     public static (string, uint) ParseHeaderStr(string s) {
         var p = s.IndexOf("Version");
@@ -123,7 +122,7 @@ public class RefJsonConverter<T> : JsonConverter<Ref<T>> where T : NiObject {
 
 public class TexCoordJsonConverter : JsonConverter<TexCoord> {
     public override TexCoord Read(ref Utf8JsonReader r, Type s, JsonSerializerOptions options) => throw new NotImplementedException();
-    public override void Write(Utf8JsonWriter w, TexCoord s, JsonSerializerOptions options) => w.WriteStringValue($"{s.u:f4} {s.v:f4}");
+    public override void Write(Utf8JsonWriter w, TexCoord s, JsonSerializerOptions options) => w.WriteStringValue($"{s.u:g9} {s.v:g9}");
 }
 
 public class TriangleJsonConverter : JsonConverter<Triangle> {
@@ -155,6 +154,423 @@ public enum KeyType : uint { // X
     TBC_KEY = 3,                    // Use Tension Bias Continuity interpolation.  Tension, bias, and continuity will be stored.
     XYZ_ROTATION_KEY = 4,           // For use only with rotation data.  Separate X, Y, and Z keys will be stored instead of using quaternions.
     CONST_KEY = 5                   // Step function. Used for visibility keys in NiBoolData.
+}
+
+/// <summary>
+/// Bethesda Havok. Material descriptor for a Havok shape in Oblivion.
+/// </summary>
+public enum OblivionHavokMaterial : uint { // Z
+    OB_HAV_MAT_STONE = 0,           // Stone
+    OB_HAV_MAT_CLOTH = 1,           // Cloth
+    OB_HAV_MAT_DIRT = 2,            // Dirt
+    OB_HAV_MAT_GLASS = 3,           // Glass
+    OB_HAV_MAT_GRASS = 4,           // Grass
+    OB_HAV_MAT_METAL = 5,           // Metal
+    OB_HAV_MAT_ORGANIC = 6,         // Organic
+    OB_HAV_MAT_SKIN = 7,            // Skin
+    OB_HAV_MAT_WATER = 8,           // Water
+    OB_HAV_MAT_WOOD = 9,            // Wood
+    OB_HAV_MAT_HEAVY_STONE = 10,    // Heavy Stone
+    OB_HAV_MAT_HEAVY_METAL = 11,    // Heavy Metal
+    OB_HAV_MAT_HEAVY_WOOD = 12,     // Heavy Wood
+    OB_HAV_MAT_CHAIN = 13,          // Chain
+    OB_HAV_MAT_SNOW = 14,           // Snow
+    OB_HAV_MAT_STONE_STAIRS = 15,   // Stone Stairs
+    OB_HAV_MAT_CLOTH_STAIRS = 16,   // Cloth Stairs
+    OB_HAV_MAT_DIRT_STAIRS = 17,    // Dirt Stairs
+    OB_HAV_MAT_GLASS_STAIRS = 18,   // Glass Stairs
+    OB_HAV_MAT_GRASS_STAIRS = 19,   // Grass Stairs
+    OB_HAV_MAT_METAL_STAIRS = 20,   // Metal Stairs
+    OB_HAV_MAT_ORGANIC_STAIRS = 21, // Organic Stairs
+    OB_HAV_MAT_SKIN_STAIRS = 22,    // Skin Stairs
+    OB_HAV_MAT_WATER_STAIRS = 23,   // Water Stairs
+    OB_HAV_MAT_WOOD_STAIRS = 24,    // Wood Stairs
+    OB_HAV_MAT_HEAVY_STONE_STAIRS = 25, // Heavy Stone Stairs
+    OB_HAV_MAT_HEAVY_METAL_STAIRS = 26, // Heavy Metal Stairs
+    OB_HAV_MAT_HEAVY_WOOD_STAIRS = 27, // Heavy Wood Stairs
+    OB_HAV_MAT_CHAIN_STAIRS = 28,   // Chain Stairs
+    OB_HAV_MAT_SNOW_STAIRS = 29,    // Snow Stairs
+    OB_HAV_MAT_ELEVATOR = 30,       // Elevator
+    OB_HAV_MAT_RUBBER = 31          // Rubber
+}
+
+/// <summary>
+/// Bethesda Havok. Material descriptor for a Havok shape in Fallout 3 and Fallout NV.
+/// </summary>
+public enum Fallout3HavokMaterial : uint { // Z
+    FO_HAV_MAT_STONE = 0,           // Stone
+    FO_HAV_MAT_CLOTH = 1,           // Cloth
+    FO_HAV_MAT_DIRT = 2,            // Dirt
+    FO_HAV_MAT_GLASS = 3,           // Glass
+    FO_HAV_MAT_GRASS = 4,           // Grass
+    FO_HAV_MAT_METAL = 5,           // Metal
+    FO_HAV_MAT_ORGANIC = 6,         // Organic
+    FO_HAV_MAT_SKIN = 7,            // Skin
+    FO_HAV_MAT_WATER = 8,           // Water
+    FO_HAV_MAT_WOOD = 9,            // Wood
+    FO_HAV_MAT_HEAVY_STONE = 10,    // Heavy Stone
+    FO_HAV_MAT_HEAVY_METAL = 11,    // Heavy Metal
+    FO_HAV_MAT_HEAVY_WOOD = 12,     // Heavy Wood
+    FO_HAV_MAT_CHAIN = 13,          // Chain
+    FO_HAV_MAT_BOTTLECAP = 14,      // Bottlecap
+    FO_HAV_MAT_ELEVATOR = 15,       // Elevator
+    FO_HAV_MAT_HOLLOW_METAL = 16,   // Hollow Metal
+    FO_HAV_MAT_SHEET_METAL = 17,    // Sheet Metal
+    FO_HAV_MAT_SAND = 18,           // Sand
+    FO_HAV_MAT_BROKEN_CONCRETE = 19,// Broken Concrete
+    FO_HAV_MAT_VEHICLE_BODY = 20,   // Vehicle Body
+    FO_HAV_MAT_VEHICLE_PART_SOLID = 21, // Vehicle Part Solid
+    FO_HAV_MAT_VEHICLE_PART_HOLLOW = 22, // Vehicle Part Hollow
+    FO_HAV_MAT_BARREL = 23,         // Barrel
+    FO_HAV_MAT_BOTTLE = 24,         // Bottle
+    FO_HAV_MAT_SODA_CAN = 25,       // Soda Can
+    FO_HAV_MAT_PISTOL = 26,         // Pistol
+    FO_HAV_MAT_RIFLE = 27,          // Rifle
+    FO_HAV_MAT_SHOPPING_CART = 28,  // Shopping Cart
+    FO_HAV_MAT_LUNCHBOX = 29,       // Lunchbox
+    FO_HAV_MAT_BABY_RATTLE = 30,    // Baby Rattle
+    FO_HAV_MAT_RUBBER_BALL = 31,    // Rubber Ball
+    FO_HAV_MAT_STONE_PLATFORM = 32, // Stone
+    FO_HAV_MAT_CLOTH_PLATFORM = 33, // Cloth
+    FO_HAV_MAT_DIRT_PLATFORM = 34,  // Dirt
+    FO_HAV_MAT_GLASS_PLATFORM = 35, // Glass
+    FO_HAV_MAT_GRASS_PLATFORM = 36, // Grass
+    FO_HAV_MAT_METAL_PLATFORM = 37, // Metal
+    FO_HAV_MAT_ORGANIC_PLATFORM = 38, // Organic
+    FO_HAV_MAT_SKIN_PLATFORM = 39,  // Skin
+    FO_HAV_MAT_WATER_PLATFORM = 40, // Water
+    FO_HAV_MAT_WOOD_PLATFORM = 41,  // Wood
+    FO_HAV_MAT_HEAVY_STONE_PLATFORM = 42, // Heavy Stone
+    FO_HAV_MAT_HEAVY_METAL_PLATFORM = 43, // Heavy Metal
+    FO_HAV_MAT_HEAVY_WOOD_PLATFORM = 44, // Heavy Wood
+    FO_HAV_MAT_CHAIN_PLATFORM = 45, // Chain
+    FO_HAV_MAT_BOTTLECAP_PLATFORM = 46, // Bottlecap
+    FO_HAV_MAT_ELEVATOR_PLATFORM = 47, // Elevator
+    FO_HAV_MAT_HOLLOW_METAL_PLATFORM = 48, // Hollow Metal
+    FO_HAV_MAT_SHEET_METAL_PLATFORM = 49, // Sheet Metal
+    FO_HAV_MAT_SAND_PLATFORM = 50,  // Sand
+    FO_HAV_MAT_BROKEN_CONCRETE_PLATFORM = 51, // Broken Concrete
+    FO_HAV_MAT_VEHICLE_BODY_PLATFORM = 52, // Vehicle Body
+    FO_HAV_MAT_VEHICLE_PART_SOLID_PLATFORM = 53, // Vehicle Part Solid
+    FO_HAV_MAT_VEHICLE_PART_HOLLOW_PLATFORM = 54, // Vehicle Part Hollow
+    FO_HAV_MAT_BARREL_PLATFORM = 55,// Barrel
+    FO_HAV_MAT_BOTTLE_PLATFORM = 56,// Bottle
+    FO_HAV_MAT_SODA_CAN_PLATFORM = 57, // Soda Can
+    FO_HAV_MAT_PISTOL_PLATFORM = 58,// Pistol
+    FO_HAV_MAT_RIFLE_PLATFORM = 59, // Rifle
+    FO_HAV_MAT_SHOPPING_CART_PLATFORM = 60, // Shopping Cart
+    FO_HAV_MAT_LUNCHBOX_PLATFORM = 61, // Lunchbox
+    FO_HAV_MAT_BABY_RATTLE_PLATFORM = 62, // Baby Rattle
+    FO_HAV_MAT_RUBBER_BALL_PLATFORM = 63, // Rubber Ball
+    FO_HAV_MAT_STONE_STAIRS = 64,   // Stone
+    FO_HAV_MAT_CLOTH_STAIRS = 65,   // Cloth
+    FO_HAV_MAT_DIRT_STAIRS = 66,    // Dirt
+    FO_HAV_MAT_GLASS_STAIRS = 67,   // Glass
+    FO_HAV_MAT_GRASS_STAIRS = 68,   // Grass
+    FO_HAV_MAT_METAL_STAIRS = 69,   // Metal
+    FO_HAV_MAT_ORGANIC_STAIRS = 70, // Organic
+    FO_HAV_MAT_SKIN_STAIRS = 71,    // Skin
+    FO_HAV_MAT_WATER_STAIRS = 72,   // Water
+    FO_HAV_MAT_WOOD_STAIRS = 73,    // Wood
+    FO_HAV_MAT_HEAVY_STONE_STAIRS = 74, // Heavy Stone
+    FO_HAV_MAT_HEAVY_METAL_STAIRS = 75, // Heavy Metal
+    FO_HAV_MAT_HEAVY_WOOD_STAIRS = 76, // Heavy Wood
+    FO_HAV_MAT_CHAIN_STAIRS = 77,   // Chain
+    FO_HAV_MAT_BOTTLECAP_STAIRS = 78, // Bottlecap
+    FO_HAV_MAT_ELEVATOR_STAIRS = 79,// Elevator
+    FO_HAV_MAT_HOLLOW_METAL_STAIRS = 80, // Hollow Metal
+    FO_HAV_MAT_SHEET_METAL_STAIRS = 81, // Sheet Metal
+    FO_HAV_MAT_SAND_STAIRS = 82,    // Sand
+    FO_HAV_MAT_BROKEN_CONCRETE_STAIRS = 83, // Broken Concrete
+    FO_HAV_MAT_VEHICLE_BODY_STAIRS = 84, // Vehicle Body
+    FO_HAV_MAT_VEHICLE_PART_SOLID_STAIRS = 85, // Vehicle Part Solid
+    FO_HAV_MAT_VEHICLE_PART_HOLLOW_STAIRS = 86, // Vehicle Part Hollow
+    FO_HAV_MAT_BARREL_STAIRS = 87,  // Barrel
+    FO_HAV_MAT_BOTTLE_STAIRS = 88,  // Bottle
+    FO_HAV_MAT_SODA_CAN_STAIRS = 89,// Soda Can
+    FO_HAV_MAT_PISTOL_STAIRS = 90,  // Pistol
+    FO_HAV_MAT_RIFLE_STAIRS = 91,   // Rifle
+    FO_HAV_MAT_SHOPPING_CART_STAIRS = 92, // Shopping Cart
+    FO_HAV_MAT_LUNCHBOX_STAIRS = 93,// Lunchbox
+    FO_HAV_MAT_BABY_RATTLE_STAIRS = 94, // Baby Rattle
+    FO_HAV_MAT_RUBBER_BALL_STAIRS = 95, // Rubber Ball
+    FO_HAV_MAT_STONE_STAIRS_PLATFORM = 96, // Stone
+    FO_HAV_MAT_CLOTH_STAIRS_PLATFORM = 97, // Cloth
+    FO_HAV_MAT_DIRT_STAIRS_PLATFORM = 98, // Dirt
+    FO_HAV_MAT_GLASS_STAIRS_PLATFORM = 99, // Glass
+    FO_HAV_MAT_GRASS_STAIRS_PLATFORM = 100, // Grass
+    FO_HAV_MAT_METAL_STAIRS_PLATFORM = 101, // Metal
+    FO_HAV_MAT_ORGANIC_STAIRS_PLATFORM = 102, // Organic
+    FO_HAV_MAT_SKIN_STAIRS_PLATFORM = 103, // Skin
+    FO_HAV_MAT_WATER_STAIRS_PLATFORM = 104, // Water
+    FO_HAV_MAT_WOOD_STAIRS_PLATFORM = 105, // Wood
+    FO_HAV_MAT_HEAVY_STONE_STAIRS_PLATFORM = 106, // Heavy Stone
+    FO_HAV_MAT_HEAVY_METAL_STAIRS_PLATFORM = 107, // Heavy Metal
+    FO_HAV_MAT_HEAVY_WOOD_STAIRS_PLATFORM = 108, // Heavy Wood
+    FO_HAV_MAT_CHAIN_STAIRS_PLATFORM = 109, // Chain
+    FO_HAV_MAT_BOTTLECAP_STAIRS_PLATFORM = 110, // Bottlecap
+    FO_HAV_MAT_ELEVATOR_STAIRS_PLATFORM = 111, // Elevator
+    FO_HAV_MAT_HOLLOW_METAL_STAIRS_PLATFORM = 112, // Hollow Metal
+    FO_HAV_MAT_SHEET_METAL_STAIRS_PLATFORM = 113, // Sheet Metal
+    FO_HAV_MAT_SAND_STAIRS_PLATFORM = 114, // Sand
+    FO_HAV_MAT_BROKEN_CONCRETE_STAIRS_PLATFORM = 115, // Broken Concrete
+    FO_HAV_MAT_VEHICLE_BODY_STAIRS_PLATFORM = 116, // Vehicle Body
+    FO_HAV_MAT_VEHICLE_PART_SOLID_STAIRS_PLATFORM = 117, // Vehicle Part Solid
+    FO_HAV_MAT_VEHICLE_PART_HOLLOW_STAIRS_PLATFORM = 118, // Vehicle Part Hollow
+    FO_HAV_MAT_BARREL_STAIRS_PLATFORM = 119, // Barrel
+    FO_HAV_MAT_BOTTLE_STAIRS_PLATFORM = 120, // Bottle
+    FO_HAV_MAT_SODA_CAN_STAIRS_PLATFORM = 121, // Soda Can
+    FO_HAV_MAT_PISTOL_STAIRS_PLATFORM = 122, // Pistol
+    FO_HAV_MAT_RIFLE_STAIRS_PLATFORM = 123, // Rifle
+    FO_HAV_MAT_SHOPPING_CART_STAIRS_PLATFORM = 124, // Shopping Cart
+    FO_HAV_MAT_LUNCHBOX_STAIRS_PLATFORM = 125, // Lunchbox
+    FO_HAV_MAT_BABY_RATTLE_STAIRS_PLATFORM = 126, // Baby Rattle
+    FO_HAV_MAT_RUBBER_BALL_STAIRS_PLATFORM = 127 // Rubber Ball
+}
+
+/// <summary>
+/// Bethesda Havok. Material descriptor for a Havok shape in Skyrim.
+/// </summary>
+public enum SkyrimHavokMaterial : uint { // Z
+    SKY_HAV_MAT_BROKEN_STONE = 131151687, // Broken Stone
+    SKY_HAV_MAT_LIGHT_WOOD = 365420259, // Light Wood
+    SKY_HAV_MAT_SNOW = 398949039,   // Snow
+    SKY_HAV_MAT_GRAVEL = 428587608, // Gravel
+    SKY_HAV_MAT_MATERIAL_CHAIN_METAL = 438912228, // Material Chain Metal
+    SKY_HAV_MAT_BOTTLE = 493553910, // Bottle
+    SKY_HAV_MAT_WOOD = 500811281,   // Wood
+    SKY_HAV_MAT_SKIN = 591247106,   // Skin
+    SKY_HAV_MAT_UNKNOWN_617099282 = 617099282, // Unknown in Creation Kit v1.9.32.0. Found in Dawnguard DLC in meshes\dlc01\clutter\dlc01deerskin.nif.
+    SKY_HAV_MAT_BARREL = 732141076, // Barrel
+    SKY_HAV_MAT_MATERIAL_CERAMIC_MEDIUM = 781661019, // Material Ceramic Medium
+    SKY_HAV_MAT_MATERIAL_BASKET = 790784366, // Material Basket
+    SKY_HAV_MAT_ICE = 873356572,    // Ice
+    SKY_HAV_MAT_STAIRS_STONE = 899511101, // Stairs Stone
+    SKY_HAV_MAT_WATER = 1024582599, // Water
+    SKY_HAV_MAT_UNKNOWN_1028101969 = 1028101969, // Unknown in Creation Kit v1.6.89.0. Found in actors\draugr\character assets\skeletons.nif.
+    SKY_HAV_MAT_MATERIAL_BLADE_1HAND = 1060167844, // Material Blade 1 Hand
+    SKY_HAV_MAT_MATERIAL_BOOK = 1264672850, // Material Book
+    SKY_HAV_MAT_MATERIAL_CARPET = 1286705471, // Material Carpet
+    SKY_HAV_MAT_SOLID_METAL = 1288358971, // Solid Metal
+    SKY_HAV_MAT_MATERIAL_AXE_1HAND = 1305674443, // Material Axe 1Hand
+    SKY_HAV_MAT_UNKNOWN_1440721808 = 1440721808, // Unknown in Creation Kit v1.6.89.0. Found in armor\draugr\draugrbootsfemale_go.nif or armor\amuletsandrings\amuletgnd.nif.
+    SKY_HAV_MAT_STAIRS_WOOD = 1461712277, // Stairs Wood
+    SKY_HAV_MAT_MUD = 1486385281,   // Mud
+    SKY_HAV_MAT_MATERIAL_BOULDER_SMALL = 1550912982, // Material Boulder Small
+    SKY_HAV_MAT_STAIRS_SNOW = 1560365355, // Stairs Snow
+    SKY_HAV_MAT_HEAVY_STONE = 1570821952, // Heavy Stone
+    SKY_HAV_MAT_UNKNOWN_1574477864 = 1574477864, // Unknown in Creation Kit v1.6.89.0. Found in actors\dragon\character assets\skeleton.nif.
+    SKY_HAV_MAT_UNKNOWN_1591009235 = 1591009235, // Unknown in Creation Kit v1.6.89.0. Found in trap objects or clutter\displaycases\displaycaselgangled01.nif or actors\deer\character assets\skeleton.nif.
+    SKY_HAV_MAT_MATERIAL_BOWS_STAVES = 1607128641, // Material Bows Staves
+    SKY_HAV_MAT_MATERIAL_WOOD_AS_STAIRS = 1803571212, // Material Wood As Stairs
+    SKY_HAV_MAT_GRASS = 1848600814, // Grass
+    SKY_HAV_MAT_MATERIAL_BOULDER_LARGE = 1885326971, // Material Boulder Large
+    SKY_HAV_MAT_MATERIAL_STONE_AS_STAIRS = 1886078335, // Material Stone As Stairs
+    SKY_HAV_MAT_MATERIAL_BLADE_2HAND = 2022742644, // Material Blade 2Hand
+    SKY_HAV_MAT_MATERIAL_BOTTLE_SMALL = 2025794648, // Material Bottle Small
+    SKY_HAV_MAT_SAND = 2168343821,  // Sand
+    SKY_HAV_MAT_HEAVY_METAL = 2229413539, // Heavy Metal
+    SKY_HAV_MAT_UNKNOWN_2290050264 = 2290050264, // Unknown in Creation Kit v1.9.32.0. Found in Dawnguard DLC in meshes\dlc01\clutter\dlc01sabrecatpelt.nif.
+    SKY_HAV_MAT_DRAGON = 2518321175,// Dragon
+    SKY_HAV_MAT_MATERIAL_BLADE_1HAND_SMALL = 2617944780, // Material Blade 1Hand Small
+    SKY_HAV_MAT_MATERIAL_SKIN_SMALL = 2632367422, // Material Skin Small
+    SKY_HAV_MAT_STAIRS_BROKEN_STONE = 2892392795, // Stairs Broken Stone
+    SKY_HAV_MAT_MATERIAL_SKIN_LARGE = 2965929619, // Material Skin Large
+    SKY_HAV_MAT_ORGANIC = 2974920155, // Organic
+    SKY_HAV_MAT_MATERIAL_BONE = 3049421844, // Material Bone
+    SKY_HAV_MAT_HEAVY_WOOD = 3070783559, // Heavy Wood
+    SKY_HAV_MAT_MATERIAL_CHAIN = 3074114406, // Material Chain
+    SKY_HAV_MAT_DIRT = 3106094762,  // Dirt
+    SKY_HAV_MAT_MATERIAL_ARMOR_LIGHT = 3424720541, // Material Armor Light
+    SKY_HAV_MAT_MATERIAL_SHIELD_LIGHT = 3448167928, // Material Shield Light
+    SKY_HAV_MAT_MATERIAL_COIN = 3589100606, // Material Coin
+    SKY_HAV_MAT_MATERIAL_SHIELD_HEAVY = 3702389584, // Material Shield Heavy
+    SKY_HAV_MAT_MATERIAL_ARMOR_HEAVY = 3708432437, // Material Armor Heavy
+    SKY_HAV_MAT_MATERIAL_ARROW = 3725505938, // Material Arrow
+    SKY_HAV_MAT_GLASS = 3739830338, // Glass
+    SKY_HAV_MAT_STONE = 3741512247, // Stone
+    SKY_HAV_MAT_CLOTH = 3839073443, // Cloth
+    SKY_HAV_MAT_MATERIAL_BLUNT_2HAND = 3969592277, // Material Blunt 2Hand
+    SKY_HAV_MAT_UNKNOWN_4239621792 = 4239621792, // Unknown in Creation Kit v1.9.32.0. Found in Dawnguard DLC in meshes\dlc01\prototype\dlc1protoswingingbridge.nif.
+    SKY_HAV_MAT_MATERIAL_BOULDER_MEDIUM = 4283869410 // Material Boulder Medium
+}
+
+/// <summary>
+/// Bethesda Havok. Describes the collision layer a body belongs to in Oblivion.
+/// </summary>
+public enum OblivionLayer : byte { // Z
+    OL_UNIDENTIFIED = 0,            // Unidentified (white)
+    OL_STATIC = 1,                  // Static (red)
+    OL_ANIM_STATIC = 2,             // AnimStatic (magenta)
+    OL_TRANSPARENT = 3,             // Transparent (light pink)
+    OL_CLUTTER = 4,                 // Clutter (light blue)
+    OL_WEAPON = 5,                  // Weapon (orange)
+    OL_PROJECTILE = 6,              // Projectile (light orange)
+    OL_SPELL = 7,                   // Spell (cyan)
+    OL_BIPED = 8,                   // Biped (green) Seems to apply to all creatures/NPCs
+    OL_TREES = 9,                   // Trees (light brown)
+    OL_PROPS = 10,                  // Props (magenta)
+    OL_WATER = 11,                  // Water (cyan)
+    OL_TRIGGER = 12,                // Trigger (light grey)
+    OL_TERRAIN = 13,                // Terrain (light yellow)
+    OL_TRAP = 14,                   // Trap (light grey)
+    OL_NONCOLLIDABLE = 15,          // NonCollidable (white)
+    OL_CLOUD_TRAP = 16,             // CloudTrap (greenish grey)
+    OL_GROUND = 17,                 // Ground (none)
+    OL_PORTAL = 18,                 // Portal (green)
+    OL_STAIRS = 19,                 // Stairs (white)
+    OL_CHAR_CONTROLLER = 20,        // CharController (yellow)
+    OL_AVOID_BOX = 21,              // AvoidBox (dark yellow)
+    OL_UNKNOWN1 = 22,               // ? (white)
+    OL_UNKNOWN2 = 23,               // ? (white)
+    OL_CAMERA_PICK = 24,            // CameraPick (white)
+    OL_ITEM_PICK = 25,              // ItemPick (white)
+    OL_LINE_OF_SIGHT = 26,          // LineOfSight (white)
+    OL_PATH_PICK = 27,              // PathPick (white)
+    OL_CUSTOM_PICK_1 = 28,          // CustomPick1 (white)
+    OL_CUSTOM_PICK_2 = 29,          // CustomPick2 (white)
+    OL_SPELL_EXPLOSION = 30,        // SpellExplosion (white)
+    OL_DROPPING_PICK = 31,          // DroppingPick (white)
+    OL_OTHER = 32,                  // Other (white)
+    OL_HEAD = 33,                   // Head
+    OL_BODY = 34,                   // Body
+    OL_SPINE1 = 35,                 // Spine1
+    OL_SPINE2 = 36,                 // Spine2
+    OL_L_UPPER_ARM = 37,            // LUpperArm
+    OL_L_FOREARM = 38,              // LForeArm
+    OL_L_HAND = 39,                 // LHand
+    OL_L_THIGH = 40,                // LThigh
+    OL_L_CALF = 41,                 // LCalf
+    OL_L_FOOT = 42,                 // LFoot
+    OL_R_UPPER_ARM = 43,            // RUpperArm
+    OL_R_FOREARM = 44,              // RForeArm
+    OL_R_HAND = 45,                 // RHand
+    OL_R_THIGH = 46,                // RThigh
+    OL_R_CALF = 47,                 // RCalf
+    OL_R_FOOT = 48,                 // RFoot
+    OL_TAIL = 49,                   // Tail
+    OL_SIDE_WEAPON = 50,            // SideWeapon
+    OL_SHIELD = 51,                 // Shield
+    OL_QUIVER = 52,                 // Quiver
+    OL_BACK_WEAPON = 53,            // BackWeapon
+    OL_BACK_WEAPON2 = 54,           // BackWeapon (?)
+    OL_PONYTAIL = 55,               // PonyTail
+    OL_WING = 56,                   // Wing
+    OL_NULL = 57                    // Null
+}
+
+/// <summary>
+/// Bethesda Havok. Describes the collision layer a body belongs to in Fallout 3 and Fallout NV.
+/// </summary>
+public enum Fallout3Layer : byte { // Z
+    FOL_UNIDENTIFIED = 0,           // Unidentified (white)
+    FOL_STATIC = 1,                 // Static (red)
+    FOL_ANIM_STATIC = 2,            // AnimStatic (magenta)
+    FOL_TRANSPARENT = 3,            // Transparent (light pink)
+    FOL_CLUTTER = 4,                // Clutter (light blue)
+    FOL_WEAPON = 5,                 // Weapon (orange)
+    FOL_PROJECTILE = 6,             // Projectile (light orange)
+    FOL_SPELL = 7,                  // Spell (cyan)
+    FOL_BIPED = 8,                  // Biped (green) Seems to apply to all creatures/NPCs
+    FOL_TREES = 9,                  // Trees (light brown)
+    FOL_PROPS = 10,                 // Props (magenta)
+    FOL_WATER = 11,                 // Water (cyan)
+    FOL_TRIGGER = 12,               // Trigger (light grey)
+    FOL_TERRAIN = 13,               // Terrain (light yellow)
+    FOL_TRAP = 14,                  // Trap (light grey)
+    FOL_NONCOLLIDABLE = 15,         // NonCollidable (white)
+    FOL_CLOUD_TRAP = 16,            // CloudTrap (greenish grey)
+    FOL_GROUND = 17,                // Ground (none)
+    FOL_PORTAL = 18,                // Portal (green)
+    FOL_DEBRIS_SMALL = 19,          // DebrisSmall (white)
+    FOL_DEBRIS_LARGE = 20,          // DebrisLarge (white)
+    FOL_ACOUSTIC_SPACE = 21,        // AcousticSpace (white)
+    FOL_ACTORZONE = 22,             // Actorzone (white)
+    FOL_PROJECTILEZONE = 23,        // Projectilezone (white)
+    FOL_GASTRAP = 24,               // GasTrap (yellowish green)
+    FOL_SHELLCASING = 25,           // ShellCasing (white)
+    FOL_TRANSPARENT_SMALL = 26,     // TransparentSmall (white)
+    FOL_INVISIBLE_WALL = 27,        // InvisibleWall (white)
+    FOL_TRANSPARENT_SMALL_ANIM = 28,// TransparentSmallAnim (white)
+    FOL_DEADBIP = 29,               // Dead Biped (green)
+    FOL_CHARCONTROLLER = 30,        // CharController (yellow)
+    FOL_AVOIDBOX = 31,              // Avoidbox (orange)
+    FOL_COLLISIONBOX = 32,          // Collisionbox (white)
+    FOL_CAMERASPHERE = 33,          // Camerasphere (white)
+    FOL_DOORDETECTION = 34,         // Doordetection (white)
+    FOL_CAMERAPICK = 35,            // Camerapick (white)
+    FOL_ITEMPICK = 36,              // Itempick (white)
+    FOL_LINEOFSIGHT = 37,           // LineOfSight (white)
+    FOL_PATHPICK = 38,              // Pathpick (white)
+    FOL_CUSTOMPICK1 = 39,           // Custompick1 (white)
+    FOL_CUSTOMPICK2 = 40,           // Custompick2 (white)
+    FOL_SPELLEXPLOSION = 41,        // SpellExplosion (white)
+    FOL_DROPPINGPICK = 42,          // Droppingpick (white)
+    FOL_NULL = 43                   // Null (white)
+}
+
+/// <summary>
+/// Bethesda Havok. Describes the collision layer a body belongs to in Skyrim.
+/// </summary>
+public enum SkyrimLayer : byte { // Z
+    SKYL_UNIDENTIFIED = 0,          // Unidentified
+    SKYL_STATIC = 1,                // Static
+    SKYL_ANIMSTATIC = 2,            // Anim Static
+    SKYL_TRANSPARENT = 3,           // Transparent
+    SKYL_CLUTTER = 4,               // Clutter. Object with this layer will float on water surface.
+    SKYL_WEAPON = 5,                // Weapon
+    SKYL_PROJECTILE = 6,            // Projectile
+    SKYL_SPELL = 7,                 // Spell
+    SKYL_BIPED = 8,                 // Biped. Seems to apply to all creatures/NPCs
+    SKYL_TREES = 9,                 // Trees
+    SKYL_PROPS = 10,                // Props
+    SKYL_WATER = 11,                // Water
+    SKYL_TRIGGER = 12,              // Trigger
+    SKYL_TERRAIN = 13,              // Terrain
+    SKYL_TRAP = 14,                 // Trap
+    SKYL_NONCOLLIDABLE = 15,        // NonCollidable
+    SKYL_CLOUD_TRAP = 16,           // CloudTrap
+    SKYL_GROUND = 17,               // Ground. It seems that produces no sound when collide.
+    SKYL_PORTAL = 18,               // Portal
+    SKYL_DEBRIS_SMALL = 19,         // Debris Small
+    SKYL_DEBRIS_LARGE = 20,         // Debris Large
+    SKYL_ACOUSTIC_SPACE = 21,       // Acoustic Space
+    SKYL_ACTORZONE = 22,            // Actor Zone
+    SKYL_PROJECTILEZONE = 23,       // Projectile Zone
+    SKYL_GASTRAP = 24,              // Gas Trap
+    SKYL_SHELLCASING = 25,          // Shell Casing
+    SKYL_TRANSPARENT_SMALL = 26,    // Transparent Small
+    SKYL_INVISIBLE_WALL = 27,       // Invisible Wall
+    SKYL_TRANSPARENT_SMALL_ANIM = 28, // Transparent Small Anim
+    SKYL_WARD = 29,                 // Ward
+    SKYL_CHARCONTROLLER = 30,       // Char Controller
+    SKYL_STAIRHELPER = 31,          // Stair Helper
+    SKYL_DEADBIP = 32,              // Dead Bip
+    SKYL_BIPED_NO_CC = 33,          // Biped No CC
+    SKYL_AVOIDBOX = 34,             // Avoid Box
+    SKYL_COLLISIONBOX = 35,         // Collision Box
+    SKYL_CAMERASHPERE = 36,         // Camera Sphere
+    SKYL_DOORDETECTION = 37,        // Door Detection
+    SKYL_CONEPROJECTILE = 38,       // Cone Projectile
+    SKYL_CAMERAPICK = 39,           // Camera Pick
+    SKYL_ITEMPICK = 40,             // Item Pick
+    SKYL_LINEOFSIGHT = 41,          // Line of Sight
+    SKYL_PATHPICK = 42,             // Path Pick
+    SKYL_CUSTOMPICK1 = 43,          // Custom Pick 1
+    SKYL_CUSTOMPICK2 = 44,          // Custom Pick 2
+    SKYL_SPELLEXPLOSION = 45,       // Spell Explosion
+    SKYL_DROPPINGPICK = 46,         // Dropping Pick
+    SKYL_NULL = 47                  // Null
+}
+
+/// <summary>
+/// Bethesda Havok.
+/// A byte describing if MOPP Data is organized into chunks (PS3) or not (PC)
+/// </summary>
+public enum MoppDataBuildType : byte { // Z
+    BUILT_WITH_CHUNK_SUBDIVISION = 0, // Organized in chunks for PS3.
+    BUILT_WITHOUT_CHUNK_SUBDIVISION = 1, // Not organized in chunks for PC. (Default)
+    BUILD_NOT_SET = 2               // Build type not set yet.
 }
 
 /// <summary>
@@ -349,6 +765,69 @@ public enum ZCompareMode : uint { // Y
 }
 
 /// <summary>
+/// Bethesda Havok, based on hkpMotion::MotionType. Motion type of a rigid body determines what happens when it is simulated.
+/// </summary>
+public enum hkMotionType : byte { // Z
+    MO_SYS_INVALID = 0,             // Invalid
+    MO_SYS_DYNAMIC = 1,             // A fully-simulated, movable rigid body. At construction time the engine checks the input inertia and selects MO_SYS_SPHERE_INERTIA or MO_SYS_BOX_INERTIA as appropriate.
+    MO_SYS_SPHERE_INERTIA = 2,      // Simulation is performed using a sphere inertia tensor.
+    MO_SYS_SPHERE_STABILIZED = 3,   // This is the same as MO_SYS_SPHERE_INERTIA, except that simulation of the rigid body is "softened".
+    MO_SYS_BOX_INERTIA = 4,         // Simulation is performed using a box inertia tensor.
+    MO_SYS_BOX_STABILIZED = 5,      // This is the same as MO_SYS_BOX_INERTIA, except that simulation of the rigid body is "softened".
+    MO_SYS_KEYFRAMED = 6,           // Simulation is not performed as a normal rigid body. The keyframed rigid body has an infinite mass when viewed by the rest of the system. (used for creatures)
+    MO_SYS_FIXED = 7,               // This motion type is used for the static elements of a game scene, e.g. the landscape. Faster than MO_SYS_KEYFRAMED at velocity 0. (used for weapons)
+    MO_SYS_THIN_BOX = 8,            // A box inertia motion which is optimized for thin boxes and has less stability problems
+    MO_SYS_CHARACTER = 9            // A specialized motion used for character controllers
+}
+
+/// <summary>
+/// Bethesda Havok, based on hkpRigidBodyDeactivator::DeactivatorType.
+/// Deactivator Type determines which mechanism Havok will use to classify the body as deactivated.
+/// </summary>
+public enum hkDeactivatorType : byte { // Z
+    DEACTIVATOR_INVALID = 0,        // Invalid
+    DEACTIVATOR_NEVER = 1,          // This will force the rigid body to never deactivate.
+    DEACTIVATOR_SPATIAL = 2         // Tells Havok to use a spatial deactivation scheme. This makes use of high and low frequencies of positional motion to determine when deactivation should occur.
+}
+
+/// <summary>
+/// Bethesda Havok, based on hkpRigidBodyCinfo::SolverDeactivation.
+/// A list of possible solver deactivation settings. This value defines how aggressively the solver deactivates objects.
+/// Note: Solver deactivation does not save CPU, but reduces creeping of movable objects in a pile quite dramatically.
+/// </summary>
+public enum hkSolverDeactivation : byte { // Z
+    SOLVER_DEACTIVATION_INVALID = 0,// Invalid
+    SOLVER_DEACTIVATION_OFF = 1,    // No solver deactivation.
+    SOLVER_DEACTIVATION_LOW = 2,    // Very conservative deactivation, typically no visible artifacts.
+    SOLVER_DEACTIVATION_MEDIUM = 3, // Normal deactivation, no serious visible artifacts in most cases.
+    SOLVER_DEACTIVATION_HIGH = 4,   // Fast deactivation, visible artifacts.
+    SOLVER_DEACTIVATION_MAX = 5     // Very fast deactivation, visible artifacts.
+}
+
+/// <summary>
+/// Bethesda Havok, based on hkpCollidableQualityType. Describes the priority and quality of collisions for a body,
+///     e.g. you may expect critical game play objects to have solid high-priority collisions so that they never sink into ground,
+///     or may allow penetrations for visual debris objects.
+/// Notes:
+///     - Fixed and keyframed objects cannot interact with each other.
+///     - Debris can interpenetrate but still responds to Bullet hits.
+///     - Critical objects are forced to not interpenetrate.
+///     - Moving objects can interpenetrate slightly with other Moving or Debris objects but nothing else.
+/// </summary>
+public enum hkQualityType : byte { // Z
+    MO_QUAL_INVALID = 0,            // Automatically assigned to MO_QUAL_FIXED, MO_QUAL_KEYFRAMED or MO_QUAL_DEBRIS
+    MO_QUAL_FIXED = 1,              // Static body.
+    MO_QUAL_KEYFRAMED = 2,          // Animated body with infinite mass.
+    MO_QUAL_DEBRIS = 3,             // Low importance bodies adding visual detail.
+    MO_QUAL_MOVING = 4,             // Moving bodies which should not penetrate or leave the world, but can.
+    MO_QUAL_CRITICAL = 5,           // Gameplay critical bodies which cannot penetrate or leave the world under any circumstance.
+    MO_QUAL_BULLET = 6,             // Fast-moving bodies, such as projectiles.
+    MO_QUAL_USER = 7,               // For user.
+    MO_QUAL_CHARACTER = 8,          // For use with rigid body character controllers.
+    MO_QUAL_KEYFRAMED_REPORT = 9    // Moving bodies with infinite mass which should report contact points and TOI collisions against all other bodies.
+}
+
+/// <summary>
 /// Describes the decay function of bomb forces.
 /// </summary>
 public enum DecayType : uint { // X
@@ -419,6 +898,16 @@ public enum BoundVolumeType : uint { // X
     CAPSULE_BV = 2,                 // Capsule
     UNION_BV = 4,                   // Union
     HALFSPACE_BV = 5                // Half Space
+}
+
+/// <summary>
+/// Bethesda Havok.
+/// </summary>
+public enum hkResponseType : byte { // Z
+    RESPONSE_INVALID = 0,           // Invalid Response
+    RESPONSE_SIMPLE_CONTACT = 1,    // Do normal collision resolution
+    RESPONSE_REPORTING = 2,         // No collision resolution is performed but listeners are called
+    RESPONSE_NONE = 3               // Do nothing, ignore all the results.
 }
 
 /// <summary>
@@ -536,7 +1025,7 @@ public class NiReader : BinaryReader { // X
             ExportInfo = new ExportInfo(r);
         }
         if (r.UV2 == 130) MaxFilepath = r.ReadL8AString();
-        if (r.V >= 0x1E000000) Metadata = r.ReadL8Bytes();
+        if (r.V >= 0x1E000000) Metadata = r.ReadL32Bytes();
         if (r.V >= 0x05000001 && r.V != 0x14030102) BlockTypes = r.ReadL16FArray(z => r.ReadL32AString());
         if (r.V == 0x14030102) BlockTypeHashes = r.ReadL16PArray<uint>("I");
         if (r.V >= 0x05000001) BlockTypeIndex = r.ReadPArray<ushort>("H", NumBlocks);
@@ -583,10 +1072,10 @@ public class Key<T> { // X
 
     public Key(NiReader r, KeyType keyType) {
         Time = r.ReadSingle();
-        Value = Y<T>.Read(r);
+        Value = Z.Read<T>(r);
         if (keyType == KeyType.QUADRATIC_KEY) {
-            Forward = Y<T>.Read(r);
-            Backward = Y<T>.Read(r);
+            Forward = Z.Read<T>(r);
+            Backward = Z.Read<T>(r);
         }
         else if (keyType == KeyType.TBC_KEY) TBC = r.ReadS<TBC>();
     }
@@ -619,7 +1108,7 @@ public class QuatKey<T> { // X
         if (r.V <= 0x0A010000) Time = r.ReadSingle();
         if (keyType != KeyType.XYZ_ROTATION_KEY) {
             if (r.V >= 0x0A01006A) Time = r.ReadSingle();
-            Value = Y<T>.Read(r);
+            Value = Z.Read<T>(r);
         }
         if (keyType == KeyType.TBC_KEY) TBC = r.ReadS<TBC>();
     }
@@ -689,7 +1178,7 @@ public class TexDesc { // X
         }
         if (r.V <= 0x0401000C) Unknown1 = r.ReadUInt16();
         // NiTextureTransform
-        if (r.V >= 0x0A010000 && r.ReadBool32()) {
+        if (r.V >= 0x0A010000 && Z.ReadBool(r)) {
             Translation = r.ReadS<TexCoord>();
             Scale = r.ReadS<TexCoord>();
             Rotation = r.ReadSingle();
@@ -707,7 +1196,7 @@ public class ShaderTexDesc { // Y
     public uint MapID;                                  // Unique identifier for the Gamebryo shader system.
 
     public ShaderTexDesc(NiReader r) {
-        if (r.ReadBool32()) {
+        if (Z.ReadBool(r)) {
             Map = new TexDesc(r);
             MapID = r.ReadUInt32();
         }
@@ -823,17 +1312,17 @@ public class SkinPartition { // Y
             else Triangles = r.ReadSArray<Triangle>(NumTriangles);
         }
         else if (r.V >= 0x0A010000) {
-            if (r.ReadBool32()) VertexMap = r.ReadPArray<ushort>("H", NumVertices);
-            var HasVertexWeights = r.ReadUInt32();
+            if (Z.ReadBool(r)) VertexMap = r.ReadPArray<ushort>("H", NumVertices);
+            var HasVertexWeights = Z.ReadBool8(r);
             if (HasVertexWeights == 1) VertexWeights = r.ReadFArray(k => r.ReadPArray<float>("f", NumWeightsPerVertex), NumVertices);
             if (HasVertexWeights == 15) VertexWeights = r.ReadFArray(k => r.ReadFArray(z => r.ReadHalf(), NumWeightsPerVertex), NumVertices);
             StripLengths = r.ReadPArray<ushort>("H", NumStrips);
-            if (r.ReadBool32()) {
+            if (Z.ReadBool(r)) {
                 if (NumStrips != 0) Strips = r.ReadFArray((k, i) => r.ReadPArray<ushort>("H", StripLengths[i]), NumStrips);
                 else Triangles = r.ReadSArray<Triangle>(NumTriangles);
             }
         }
-        if (r.ReadBool32()) BoneIndices = r.ReadFArray(k => r.ReadBytes(NumWeightsPerVertex), NumVertices);
+        if (Z.ReadBool(r)) BoneIndices = r.ReadFArray(k => r.ReadBytes(NumWeightsPerVertex), NumVertices);
         if (r.UV2 > 34) UnknownShort = r.ReadUInt16();
         if (r.UV2 == 100) {
             VertexDesc = r.ReadS<BSVertexDesc>();
@@ -924,6 +1413,64 @@ public class BoneData { // X
             : r.V >= 0x04020200 && arg == 1 ? r.ReadL16SArray<BoneVertData>()
             : r.V >= 0x14030101 && arg == 15 ? r.ReadL16FArray(z => new BoneVertData(r, false)) : default;
     }
+}
+
+/// <summary>
+/// Bethesda Havok. Collision filter info representing Layer, Flags, Part Number, and Group all combined into one uint.
+/// </summary>
+public class HavokFilter(NiReader r) { // Z
+    public OblivionLayer Layer_OB = r.V <= 0x14000005 && (r.UV2 < 16) ? (OblivionLayer)r.ReadByte() : OblivionLayer.OL_STATIC; // The layer the collision belongs to.
+    public Fallout3Layer Layer_FO = (r.V == 0x14020007) && (r.UV2 <= 34) ? (Fallout3Layer)r.ReadByte() : Fallout3Layer.FOL_STATIC; // The layer the collision belongs to.
+    public SkyrimLayer Layer_SK = (r.V == 0x14020007) && (r.UV2 > 34) ? (SkyrimLayer)r.ReadByte() : SkyrimLayer.SKYL_STATIC; // The layer the collision belongs to.
+    public byte FlagsandPartNumber = r.ReadByte();      // FLAGS are stored in highest 3 bits:
+                                                        // 	Bit 7: sets the LINK property and controls whether this body is physically linked to others.
+                                                        // 	Bit 6: turns collision off (not used for Layer BIPED).
+                                                        // 	Bit 5: sets the SCALED property.
+                                                        // 
+                                                        // 	PART NUMBER is stored in bits 0-4. Used only when Layer is set to BIPED.
+                                                        // 
+                                                        // 	Part Numbers for Oblivion, Fallout 3, Skyrim:
+                                                        // 	0 - OTHER
+                                                        // 	1 - HEAD
+                                                        // 	2 - BODY
+                                                        // 	3 - SPINE1
+                                                        // 	4 - SPINE2
+                                                        // 	5 - LUPPERARM
+                                                        // 	6 - LFOREARM
+                                                        // 	7 - LHAND
+                                                        // 	8 - LTHIGH
+                                                        // 	9 - LCALF
+                                                        // 	10 - LFOOT
+                                                        // 	11 - RUPPERARM
+                                                        // 	12 - RFOREARM
+                                                        // 	13 - RHAND
+                                                        // 	14 - RTHIGH
+                                                        // 	15 - RCALF
+                                                        // 	16 - RFOOT
+                                                        // 	17 - TAIL
+                                                        // 	18 - SHIELD
+                                                        // 	19 - QUIVER
+                                                        // 	20 - WEAPON
+                                                        // 	21 - PONYTAIL
+                                                        // 	22 - WING
+                                                        // 	23 - PACK
+                                                        // 	24 - CHAIN
+                                                        // 	25 - ADDONHEAD
+                                                        // 	26 - ADDONCHEST
+                                                        // 	27 - ADDONARM
+                                                        // 	28 - ADDONLEG
+                                                        // 	29-31 - NULL
+    public ushort Group = r.ReadUInt16();
+}
+
+/// <summary>
+/// Bethesda Havok. Material wrapper for varying material enums by game.
+/// </summary>
+public class HavokMaterial(NiReader r) { // Z
+    public uint UnknownInt = r.V <= 0x0A000102 ? r.ReadUInt32() : default;
+    public OblivionHavokMaterial Material_OB = r.V <= 0x14000005 && (r.UV2 < 16) ? (OblivionHavokMaterial)r.ReadUInt32() : default; // The material of the shape.
+    public Fallout3HavokMaterial Material_FO = (r.V == 0x14020007) && (r.UV2 <= 34) ? (Fallout3HavokMaterial)r.ReadUInt32() : default; // The material of the shape.
+    public SkyrimHavokMaterial Material_SK = (r.V == 0x14020007) && (r.UV2 > 34) ? (SkyrimHavokMaterial)r.ReadUInt32() : default; // The material of the shape.
 }
 
 /// <summary>
@@ -1054,10 +1601,17 @@ public class MorphWeight(NiReader r) { // Y
 [JsonDerivedType(typeof(NiCamera), typeDiscriminator: nameof(NiCamera))]
 [JsonDerivedType(typeof(NiPathController), typeDiscriminator: nameof(NiPathController))]
 [JsonDerivedType(typeof(NiPixelData), typeDiscriminator: nameof(NiPixelData))]
+[JsonDerivedType(typeof(NiBinaryExtraData), typeDiscriminator: nameof(NiBinaryExtraData))]
+[JsonDerivedType(typeof(NiTriStrips), typeDiscriminator: nameof(NiTriStrips))]
+[JsonDerivedType(typeof(NiTriStripsData), typeDiscriminator: nameof(NiTriStripsData))]
+[JsonDerivedType(typeof(BSXFlags), typeDiscriminator: nameof(BSXFlags))]
+[JsonDerivedType(typeof(bhkNiTriStripsShape), typeDiscriminator: nameof(bhkNiTriStripsShape))]
+[JsonDerivedType(typeof(bhkMoppBvTreeShape), typeDiscriminator: nameof(bhkMoppBvTreeShape))]
+[JsonDerivedType(typeof(bhkRigidBody), typeDiscriminator: nameof(bhkRigidBody))]
 public abstract class NiObject(NiReader r) { // X
 
     public static NiObject Read(NiReader r, string nodeType) {
-        // Console.WriteLine(nodeType);
+        Console.WriteLine($"{nodeType}: {r.Tell()}");
         switch (nodeType) {
             case "NiNode": return new NiNode(r);
             case "NiTriShape": return new NiTriShape(r);
@@ -1111,6 +1665,13 @@ public abstract class NiObject(NiReader r) { // X
             case "NiCamera": return new NiCamera(r);
             case "NiPathController": return new NiPathController(r);
             case "NiPixelData": return new NiPixelData(r);
+            case "NiBinaryExtraData": return new NiBinaryExtraData(r);
+            case "NiTriStrips": return new NiTriStrips(r);
+            case "NiTriStripsData": return new NiTriStripsData(r);
+            case "BSXFlags": return new BSXFlags(r);
+            case "bhkNiTriStripsShape": return new bhkNiTriStripsShape(r);
+            case "bhkMoppBvTreeShape": return new bhkMoppBvTreeShape(r);
+            case "bhkRigidBody": return new bhkRigidBody(r);
             default: { Log($"Tried to read an unsupported NiObject type ({nodeType})."); return null; }
         }
     }
@@ -1126,6 +1687,226 @@ public abstract class NiParticleModifier : NiObject { // X
     public NiParticleModifier(NiReader r) : base(r) {
         NextModifier = X<NiParticleModifier>.Ref(r);
         if (r.V >= 0x04000002) Controller = X<NiParticleSystemController>.Ptr(r);
+    }
+}
+
+public enum BroadPhaseType : byte { // Z
+    BROAD_PHASE_INVALID = 0,
+    BROAD_PHASE_ENTITY = 1,
+    BROAD_PHASE_PHANTOM = 2,
+    BROAD_PHASE_BORDER = 3
+}
+
+public class hkWorldObjCinfoProperty(NiReader r) { // Z
+    public uint Data = r.ReadUInt32();
+    public uint Size = r.ReadUInt32();
+    public uint CapacityandFlags = r.ReadUInt32();
+}
+
+/// <summary>
+/// The base type of most Bethesda-specific Havok-related NIF objects.
+/// </summary>
+public abstract class bhkRefObject(NiReader r) : NiObject(r) { // Z
+}
+
+/// <summary>
+/// Havok objects that can be saved and loaded from disk?
+/// </summary>
+public abstract class bhkSerializable(NiReader r) : bhkRefObject(r) { // Z
+}
+
+/// <summary>
+/// Havok objects that have a position in the world?
+/// </summary>
+public abstract class bhkWorldObject : bhkSerializable { // Z
+    public Ref<bhkShape> Shape;                         // Link to the body for this collision object.
+    public uint UnknownInt;
+    public HavokFilter HavokFilter;
+    public byte[] Unused;                               // Garbage data from memory.
+    public BroadPhaseType BroadPhaseType = (BroadPhaseType)1;
+    public byte[] UnusedBytes;
+    public hkWorldObjCinfoProperty CinfoProperty;
+
+    public bhkWorldObject(NiReader r) : base(r) {
+        Shape = X<bhkShape>.Ref(r);
+        if (r.V <= 0x0A000100) UnknownInt = r.ReadUInt32();
+        HavokFilter = new HavokFilter(r);
+        Unused = r.ReadBytes(4);
+        BroadPhaseType = (BroadPhaseType)r.ReadByte();
+        UnusedBytes = r.ReadBytes(3);
+        CinfoProperty = new hkWorldObjCinfoProperty(r);
+    }
+}
+
+/// <summary>
+/// A havok node, describes physical properties.
+/// </summary>
+public abstract class bhkEntity(NiReader r) : bhkWorldObject(r) { // Z
+}
+
+/// <summary>
+/// This is the default body type for all "normal" usable and static world objects. The "T" suffix
+/// marks this body as active for translation and rotation, a normal bhkRigidBody ignores those
+/// properties. Because the properties are equal, a bhkRigidBody may be renamed into a bhkRigidBodyT and vice-versa.
+/// </summary>
+public class bhkRigidBody : bhkEntity { // Z
+    public hkResponseType CollisionResponse = hkResponseType.RESPONSE_SIMPLE_CONTACT; // How the body reacts to collisions. See hkResponseType for hkpWorld default implementations.
+    public byte UnusedByte1;                            // Skipped over when writing Collision Response and Callback Delay.
+    public ushort ProcessContactCallbackDelay = 0xffff; // Lowers the frequency for processContactCallbacks. A value of 5 means that a callback is raised every 5th frame. The default is once every 65535 frames.
+    public uint UnknownInt1;                            // Unknown.
+    public HavokFilter HavokFilterCopy;                 // Copy of Havok Filter
+    public byte[] Unused2;                              // Garbage data from memory. Matches previous Unused value.
+    public uint UnknownInt2;
+    public hkResponseType CollisionResponse2 = hkResponseType.RESPONSE_SIMPLE_CONTACT;
+    public byte UnusedByte2;                            // Skipped over when writing Collision Response and Callback Delay.
+    public ushort ProcessContactCallbackDelay2 = 0xffff;
+    public Vector4 Translation;                         // A vector that moves the body by the specified amount. Only enabled in bhkRigidBodyT objects.
+    public Quaternion Rotation;                         // The rotation Yaw/Pitch/Roll to apply to the body. Only enabled in bhkRigidBodyT objects.
+    public Vector4 LinearVelocity;                      // Linear velocity.
+    public Vector4 AngularVelocity;                     // Angular velocity.
+    public Matrix3x4 InertiaTensor;                     // Defines how the mass is distributed among the body, i.e. how difficult it is to rotate around any given axis.
+    public Vector4 Center;                              // The body's center of mass.
+    public float Mass = 1.0f;                           // The body's mass in kg. A mass of zero represents an immovable object.
+    public float LinearDamping = 0.1f;                  // Reduces the movement of the body over time. A value of 0.1 will remove 10% of the linear velocity every second.
+    public float AngularDamping = 0.05f;                // Reduces the movement of the body over time. A value of 0.05 will remove 5% of the angular velocity every second.
+    public float TimeFactor = 1.0f;
+    public float GravityFactor = 1.0f;
+    public float Friction = 0.5f;                       // How smooth its surfaces is and how easily it will slide along other bodies.
+    public float RollingFrictionMultiplier;
+    public float Restitution = 0.4f;                    // How "bouncy" the body is, i.e. how much energy it has after colliding. Less than 1.0 loses energy, greater than 1.0 gains energy.
+                                                        //     If the restitution is not 0.0 the object will need extra CPU for all new collisions.
+    public float MaxLinearVelocity = 104.4f;            // Maximal linear velocity.
+    public float MaxAngularVelocity = 31.57f;           // Maximal angular velocity.
+    public float PenetrationDepth = 0.15f;              // The maximum allowed penetration for this object.
+                                                        //     This is a hint to the engine to see how much CPU the engine should invest to keep this object from penetrating.
+                                                        //     A good choice is 5% - 20% of the smallest diameter of the object.
+    public hkMotionType MotionSystem = hkMotionType.MO_SYS_DYNAMIC; // Motion system? Overrides Quality when on Keyframed?
+    public hkDeactivatorType DeactivatorType = hkDeactivatorType.DEACTIVATOR_NEVER; // The initial deactivator type of the body.
+    public bool EnableDeactivation = true;
+    public hkSolverDeactivation SolverDeactivation = hkSolverDeactivation.SOLVER_DEACTIVATION_OFF; // How aggressively the engine will try to zero the velocity for slow objects. This does not save CPU.
+    public hkQualityType QualityType = hkQualityType.MO_QUAL_FIXED; // The type of interaction with other objects.
+    public float UnknownFloat1;
+    public byte[] UnknownBytes1;                        // Unknown.
+    public byte[] UnknownBytes2;                        // Unknown. Skyrim only.
+    public Ref<bhkSerializable>[] Constraints;
+    public uint BodyFlags;                              // 1 = respond to wind
+
+    public bhkRigidBody(NiReader r) : base(r) {
+        CollisionResponse = (hkResponseType)r.ReadByte();
+        UnusedByte1 = r.ReadByte();
+        ProcessContactCallbackDelay = r.ReadUInt16();
+        if (r.V >= 0x0A010000) {
+            UnknownInt1 = r.ReadUInt32();
+            HavokFilterCopy = new HavokFilter(r);
+            Unused2 = r.ReadBytes(4);
+            if (r.UV2 > 34) UnknownInt2 = r.ReadUInt32();
+            CollisionResponse2 = (hkResponseType)r.ReadByte();
+            UnusedByte2 = r.ReadByte();
+            ProcessContactCallbackDelay2 = r.ReadUInt16();
+        }
+        if (r.UV2 <= 34) UnknownInt2 = r.ReadUInt32();
+        Translation = r.ReadVector4();
+        Rotation = r.ReadQuaternion();
+        LinearVelocity = r.ReadVector4();
+        AngularVelocity = r.ReadVector4();
+        InertiaTensor = r.ReadMatrix3x4();
+        Center = r.ReadVector4();
+        Mass = r.ReadSingle();
+        LinearDamping = r.ReadSingle();
+        AngularDamping = r.ReadSingle();
+        if (r.UV2 > 34) {
+            TimeFactor = r.ReadSingle();
+            if (r.UV2 != 130) GravityFactor = r.ReadSingle();
+        }
+        Friction = r.ReadSingle();
+        if (r.UV2 > 34) RollingFrictionMultiplier = r.ReadSingle();
+        Restitution = r.ReadSingle();
+        if (r.V >= 0x0A010000) {
+            MaxLinearVelocity = r.ReadSingle();
+            MaxAngularVelocity = r.ReadSingle();
+            if (r.UV2 != 130) PenetrationDepth = r.ReadSingle();
+        }
+        MotionSystem = (hkMotionType)r.ReadByte();
+        if (r.UV2 <= 34) DeactivatorType = (hkDeactivatorType)r.ReadByte();
+        else EnableDeactivation = Z.ReadBool(r);
+        SolverDeactivation = (hkSolverDeactivation)r.ReadByte();
+        QualityType = (hkQualityType)r.ReadByte();
+        if (r.UV2 == 130) {
+            PenetrationDepth = r.ReadSingle();
+            UnknownFloat1 = r.ReadSingle();
+        }
+        UnknownBytes1 = r.ReadBytes(12);
+        if (r.UV2 > 34) UnknownBytes2 = r.ReadBytes(4);
+        Constraints = r.ReadL32FArray(X<bhkSerializable>.Ref);
+        BodyFlags = r.UV2 < 76 ? r.ReadUInt32() : r.ReadUInt16();
+    }
+}
+
+/// <summary>
+/// A Havok Shape?
+/// </summary>
+public abstract class bhkShape(NiReader r) : bhkSerializable(r) { // Z
+}
+
+/// <summary>
+/// A tree-like Havok data structure stored in an assembly-like binary code?
+/// </summary>
+public abstract class bhkBvTreeShape(NiReader r) : bhkShape(r) { // Z
+}
+
+/// <summary>
+/// Memory optimized partial polytope bounding volume tree shape (not an entity).
+/// </summary>
+public class bhkMoppBvTreeShape : bhkBvTreeShape { // Z
+    public Ref<bhkShape> Shape;                         // The shape.
+    public uint[] Unused;                               // Garbage data from memory. Referred to as User Data, Shape Collection, and Code.
+    public float ShapeScale = 1.0f;                     // Scale.
+    public uint MOPPDataSize;                           // Number of bytes for MOPP data.
+    public Vector3 Origin;                              // Origin of the object in mopp coordinates. This is the minimum of all vertices in the packed shape along each axis, minus 0.1.
+    public float Scale;                                 // The scaling factor to quantize the MOPP: the quantization factor is equal to 256*256 divided by this number. In Oblivion files, scale is taken equal to 256*256*254 / (size + 0.2) where size is the largest dimension of the bounding box of the packed shape.
+    public MoppDataBuildType BuildType;                 // Tells if MOPP Data was organized into smaller chunks (PS3) or not (PC)
+    public byte[] MOPPData;                             // The tree of bounding volume data.
+
+    public bhkMoppBvTreeShape(NiReader r) : base(r) {
+        Shape = X<bhkShape>.Ref(r);
+        Unused = r.ReadPArray<uint>("I", 3);
+        ShapeScale = r.ReadSingle();
+        MOPPDataSize = 0; // calculated
+        if (r.V >= 0x0A000102) {
+            Origin = r.ReadVector3();
+            Scale = r.ReadSingle();
+        }
+        if (r.UV2 > 34) BuildType = (MoppDataBuildType)r.ReadByte();
+        MOPPData = r.ReadBytes(MOPPDataSize);
+    }
+}
+
+/// <summary>
+/// Havok collision object that uses multiple shapes?
+/// </summary>
+public abstract class bhkShapeCollection(NiReader r) : bhkShape(r) { // Z
+}
+
+/// <summary>
+/// A shape constructed from a bunch of strips.
+/// </summary>
+public class bhkNiTriStripsShape : bhkShapeCollection { // Z
+    public HavokMaterial Material;                      // The material of the shape.
+    public float Radius = 0.1f;
+    public uint[] Unused;                               // Garbage data from memory though the last 3 are referred to as maxSize, size, and eSize.
+    public uint GrowBy = 1;
+    public Vector4 Scale = new(1.0f, 1.0f, 1.0f, 0.0f); // Scale. Usually (1.0, 1.0, 1.0, 0.0).
+    public Ref<NiTriStripsData>[] StripsData;           // Refers to a bunch of NiTriStripsData objects that make up this shape.
+    public HavokFilter[] DataLayers;                    // Havok Layers for each strip data.
+
+    public bhkNiTriStripsShape(NiReader r) : base(r) {
+        Material = new HavokMaterial(r);
+        Radius = r.ReadSingle();
+        Unused = r.ReadPArray<uint>("I", 5);
+        GrowBy = r.ReadUInt32();
+        if (r.V >= 0x0A010000) Scale = r.ReadVector4();
+        StripsData = r.ReadL32FArray(X<NiTriStripsData>.Ref);
+        DataLayers = r.ReadL32FArray(z => new HavokFilter(r));
     }
 }
 
@@ -1178,7 +1959,7 @@ public abstract class NiObjectNET : NiObject { // X
         var BSLightingShaderProperty = false;
         if (r.UV2 >= 83 && BSLightingShaderProperty) SkyrimShaderType = (BSLightingShaderPropertyShaderType)r.ReadUInt32();
         Name = Z.String(r);
-        if (r.V <= 0x02030000 && r.ReadBool32()) {
+        if (r.V <= 0x02030000 && Z.ReadBool(r)) {
             OldExtraPropName = Z.String(r);
             OldExtraInternalId = r.ReadUInt32();
             OldExtraString = Z.String(r);
@@ -1231,7 +2012,7 @@ public abstract class NiAVObject : NiObjectNET { // X
             Unknown1 = r.ReadPArray<uint>("I", 4);
             Unknown2 = r.ReadByte();
         }
-        if (r.V >= 0x03000000 && r.V <= 0x04020200 && r.ReadBool32()) BoundingVolume = new BoundingVolume(r);
+        if (r.V >= 0x03000000 && r.V <= 0x04020200 && Z.ReadBool(r)) BoundingVolume = new BoundingVolume(r);
         if (r.V >= 0x0A000100) CollisionObject = X<NiCollisionObject>.Ref(r);
     }
 }
@@ -1245,7 +2026,7 @@ public abstract class NiDynamicEffect : NiAVObject { // X
     public uint[] AffectedNodePointers;                 // As of 4.0 the pointer hash is no longer stored alongside each NiObject on disk, yet this node list still refers to the pointer hashes. Cannot leave the type as Ptr because the link will be invalid.
 
     public NiDynamicEffect(NiReader r) : base(r) {
-        if (r.V >= 0x0A01006A && r.UV2 < 130) SwitchState = r.ReadBool32();
+        if (r.V >= 0x0A01006A && r.UV2 < 130) SwitchState = Z.ReadBool(r);
         if (r.V <= 0x0303000D) AffectedNodes = r.ReadL32FArray(X<NiNode>.Ptr);
         else if (r.V >= 0x04000000 && r.V <= 0x04000002) AffectedNodePointers = r.ReadL32PArray<uint>("I");
         else if (r.V >= 0x0A010000 && r.UV2 < 130) AffectedNodes = r.ReadL32FArray(X<NiNode>.Ptr);
@@ -1296,7 +2077,7 @@ public abstract class NiInterpController : NiTimeController { // X
     public bool ManagerControlled;
 
     public NiInterpController(NiReader r) : base(r) {
-        if (r.V >= 0x0A010068 && r.V <= 0x0A01006C) ManagerControlled = r.ReadBool32();
+        if (r.V >= 0x0A010068 && r.V <= 0x0A01006C) ManagerControlled = Z.ReadBool(r);
     }
 }
 
@@ -1413,7 +2194,7 @@ public class MaterialData { // Y
     public bool MaterialNeedsUpdate;                    // Whether the materials for this object always needs to be updated before rendering with them.
 
     public MaterialData(NiReader r) {
-        if (r.V >= 0x0A000100 && r.V <= 0x14010003 && r.ReadBool32()) {
+        if (r.V >= 0x0A000100 && r.V <= 0x14010003 && Z.ReadBool(r)) {
             ShaderName = Z.String(r);
             ShaderExtraData = r.ReadInt32();
         }
@@ -1425,7 +2206,7 @@ public class MaterialData { // Y
         }
         if (r.V == 0x0A020000 && (r.UV == 1)) UnknownByte = r.ReadByte();
         if (r.V == 0x0A040001) UnknownInteger2 = r.ReadInt32();
-        if (r.V >= 0x14020007) MaterialNeedsUpdate = r.ReadBool32();
+        if (r.V >= 0x14020007) MaterialNeedsUpdate = Z.ReadBool(r);
     }
 }
 
@@ -1541,28 +2322,28 @@ public abstract class NiGeometryData : NiObject { // X
             KeepFlags = r.ReadByte();
             CompressFlags = r.ReadByte();
         }
-        var HasVertices = r.ReadUInt32();
+        var HasVertices = Z.ReadBool8(r);
         if ((HasVertices > 0) && (HasVertices != 15)) Vertices = r.ReadPArray<Vector3>("3f", NumVertices);
         if (r.V >= 0x14030101 && HasVertices == 15) Vertices = r.ReadFArray(z => new Vector3(r.ReadHalf(), r.ReadHalf(), r.ReadHalf()), NumVertices);
         if (r.V >= 0x0A000100 && !((r.V == 0x14020007) && (r.UV2 > 0))) VectorFlags = (VectorFlags)r.ReadUInt16();
         if (((r.V == 0x14020007) && (r.UV2 > 0))) BSVectorFlags = (BSVectorFlags)r.ReadUInt16();
         if (r.V == 0x14020007 && (r.UV == 12)) MaterialCRC = r.ReadUInt32();
-        var HasNormals = r.ReadUInt32();
+        var HasNormals = Z.ReadBool8(r);
         if ((HasNormals > 0) && (HasNormals != 6)) Normals = r.ReadPArray<Vector3>("3f", NumVertices);
         if (r.V >= 0x14030101 && HasNormals == 6) Normals = r.ReadFArray(z => new Vector3(r.ReadByte(), r.ReadByte(), r.ReadByte()), NumVertices);
         if (r.V >= 0x0A010000 && (HasNormals != 0) && (((int)VectorFlags | (int)BSVectorFlags) & 4096) != 0) {
             Tangents = r.ReadPArray<Vector3>("3f", NumVertices);
             Bitangents = r.ReadPArray<Vector3>("3f", NumVertices);
         }
-        if (r.V == 0x14030009 && (r.UV == 0x20000) || (r.UV == 0x30000) && r.ReadBool32()) UnkFloats = r.ReadPArray<float>("f", NumVertices);
+        if (r.V == 0x14030009 && (r.UV == 0x20000) || (r.UV == 0x30000) && Z.ReadBool(r)) UnkFloats = r.ReadPArray<float>("f", NumVertices);
         Center = r.ReadVector3();
         Radius = r.ReadSingle();
         if (r.V == 0x14030009 && (r.UV == 0x20000) || (r.UV == 0x30000)) Unknown13shorts = r.ReadPArray<short>("h", 13);
-        var HasVertexColors = r.ReadUInt32();
+        var HasVertexColors = Z.ReadBool8(r);
         if ((HasVertexColors > 0) && (HasVertexColors != 7)) VertexColors = r.ReadFArray(z => new Color4(r), NumVertices);
         if (r.V >= 0x14030101 && HasVertexColors == 7) VertexColors = r.ReadFArray(z => new Color4(r.ReadBytes(4)), NumVertices);
         if (r.V <= 0x04020200) NumUVSets = r.ReadUInt16();
-        var HasUV = r.V <= 0x04000002 ? r.ReadBool32() : default;
+        var HasUV = r.V <= 0x04000002 ? Z.ReadBool(r) : default;
         if ((HasVertices > 0) && (HasVertices != 15)) UVSets = r.ReadFArray(k => r.ReadSArray<TexCoord>(NumVertices), ((NumUVSets & 63) | ((int)VectorFlags & 63) | ((int)BSVectorFlags & 1)));
         if (r.V >= 0x14030101 && HasVertices == 15) UVSets = r.ReadFArray(k => r.ReadFArray(z => new TexCoord(r, true), NumVertices), ((NumUVSets & 63) | ((int)VectorFlags & 63) | ((int)BSVectorFlags & 1)));
         if (r.V >= 0x0A000100) ConsistencyFlags = (ConsistencyType)r.ReadUInt16();
@@ -1653,14 +2434,14 @@ public class NiParticlesData : NiGeometryData { // X
     public NiParticlesData(NiReader r) : base(r) {
         if (r.V <= 0x04000002) NumParticles = r.ReadUInt16();
         if (r.V <= 0x0A000100) ParticleRadius = r.ReadSingle();
-        if (r.V >= 0x0A010000 && !((r.V == 0x14020007) && (r.UV2 > 0)) && r.ReadBool32()) Radii = r.ReadPArray<float>("f", NumVertices);
+        if (r.V >= 0x0A010000 && !((r.V == 0x14020007) && (r.UV2 > 0)) && Z.ReadBool(r)) Radii = r.ReadPArray<float>("f", NumVertices);
         NumActive = r.ReadUInt16();
-        if (!((r.V == 0x14020007) && (r.UV2 > 0)) && r.ReadBool32()) Sizes = r.ReadPArray<float>("f", NumVertices);
-        if (r.V >= 0x0A000100 && !((r.V == 0x14020007) && (r.UV2 > 0)) && r.ReadBool32()) Rotations = r.ReadFArray(z => r.ReadQuaternionWFirst(), NumVertices);
-        var HasRotationAngles = r.V >= 0x14000004 ? r.ReadBool32() : default;
+        if (!((r.V == 0x14020007) && (r.UV2 > 0)) && Z.ReadBool(r)) Sizes = r.ReadPArray<float>("f", NumVertices);
+        if (r.V >= 0x0A000100 && !((r.V == 0x14020007) && (r.UV2 > 0)) && Z.ReadBool(r)) Rotations = r.ReadFArray(z => r.ReadQuaternionWFirst(), NumVertices);
+        var HasRotationAngles = r.V >= 0x14000004 ? Z.ReadBool(r) : default;
         if (!((r.V == 0x14020007) && (r.UV2 > 0)) && HasRotationAngles) RotationAngles = r.ReadPArray<float>("f", NumVertices);
-        if (r.V >= 0x14000004 && !((r.V == 0x14020007) && (r.UV2 > 0)) && r.ReadBool32()) RotationAxes = r.ReadPArray<Vector3>("3f", NumVertices);
-        var HasTextureIndices = ((r.V == 0x14020007) && (r.UV2 > 0)) ? r.ReadBool32() : default;
+        if (r.V >= 0x14000004 && !((r.V == 0x14020007) && (r.UV2 > 0)) && Z.ReadBool(r)) RotationAxes = r.ReadPArray<Vector3>("3f", NumVertices);
+        var HasTextureIndices = ((r.V == 0x14020007) && (r.UV2 > 0)) ? Z.ReadBool(r) : default;
         if (r.UV2 > 34) NumSubtextureOffsets = r.ReadUInt32();
         if (((r.V == 0x14020007) && (r.UV2 > 0))) SubtextureOffsets = r.ReadL8PArray<Vector4>("4f");
         if (r.UV2 > 34) {
@@ -1680,7 +2461,7 @@ public class NiRotatingParticlesData : NiParticlesData { // X
     public Quaternion[] Rotations2;                     // The individual particle rotations.
 
     public NiRotatingParticlesData(NiReader r) : base(r) {
-        if (r.V <= 0x04020200 && r.ReadBool32()) Rotations2 = r.ReadFArray(z => r.ReadQuaternionWFirst(), NumVertices);
+        if (r.V <= 0x04020200 && Z.ReadBool(r)) Rotations2 = r.ReadFArray(z => r.ReadQuaternionWFirst(), NumVertices);
     }
 }
 
@@ -1688,6 +2469,17 @@ public class NiRotatingParticlesData : NiParticlesData { // X
 /// Particle system data object (with automatic normals?).
 /// </summary>
 public class NiAutoNormalParticlesData(NiReader r) : NiParticlesData(r) { // X
+}
+
+/// <summary>
+/// Binary extra data object. Used to store tangents and bitangents in Oblivion.
+/// </summary>
+public class NiBinaryExtraData : NiExtraData { // Z
+    public byte[] BinaryData;                           // The binary data.
+
+    public NiBinaryExtraData(NiReader r) : base(r) {
+        BinaryData = r.ReadL32Bytes();
+    }
 }
 
 /// <summary>
@@ -1720,7 +2512,7 @@ public class NiCamera : NiAVObject { // X
         FrustumBottom = r.ReadSingle();
         FrustumNear = r.ReadSingle();
         FrustumFar = r.ReadSingle();
-        if (r.V >= 0x0A010000) UseOrthographicProjection = r.ReadBool32();
+        if (r.V >= 0x0A010000) UseOrthographicProjection = Z.ReadBool(r);
         ViewportLeft = r.ReadSingle();
         ViewportRight = r.ReadSingle();
         ViewportTop = r.ReadSingle();
@@ -1772,6 +2564,37 @@ public class NiGravity : NiParticleModifier { // X
         Position = r.ReadVector3();
         Direction = r.ReadVector3();
     }
+}
+
+/// <summary>
+/// Extra integer data.
+/// </summary>
+public class NiIntegerExtraData : NiExtraData { // Z
+    public uint IntegerData;                            // The value of the extra data.
+
+    public NiIntegerExtraData(NiReader r) : base(r) {
+        IntegerData = r.ReadUInt32();
+    }
+}
+
+/// <summary>
+/// Controls animation and collision.  Integer holds flags:
+/// Bit 0 : enable havok, bAnimated(Skyrim)
+/// Bit 1 : enable collision, bHavok(Skyrim)
+/// Bit 2 : is skeleton nif?, bRagdoll(Skyrim)
+/// Bit 3 : enable animation, bComplex(Skyrim)
+/// Bit 4 : FlameNodes present, bAddon(Skyrim)
+/// Bit 5 : EditorMarkers present, bEditorMarker(Skyrim)
+/// Bit 6 : bDynamic(Skyrim)
+/// Bit 7 : bArticulated(Skyrim)
+/// Bit 8 : bIKTarget(Skyrim)/needsTransformUpdates
+/// Bit 9 : bExternalEmit(Skyrim)
+/// Bit 10: bMagicShaderParticles(Skyrim)
+/// Bit 11: bLights(Skyrim)
+/// Bit 12: bBreakable(Skyrim)
+/// Bit 13: bSearchedBreakable(Skyrim) .. Runtime only?
+/// </summary>
+public class BSXFlags(NiReader r) : NiIntegerExtraData(r) { // Z
 }
 
 /// <summary>
@@ -2151,7 +2974,7 @@ public class PixelFormatComponent(NiReader r) { // Y
     public PixelComponent Type = (PixelComponent)r.ReadUInt32(); // Component Type
     public PixelRepresentation Convention = (PixelRepresentation)r.ReadUInt32(); // Data Storage Convention
     public byte BitsPerChannel = r.ReadByte();          // Bits per component
-    public bool IsSigned = r.ReadBool32();
+    public bool IsSigned = Z.ReadBool(r);
 }
 
 public abstract class NiPixelFormat : NiObject { // Y
@@ -2190,7 +3013,7 @@ public abstract class NiPixelFormat : NiObject { // Y
             Flags = r.ReadByte();
             Tiling = (PixelTiling)r.ReadUInt32();
         }
-        if (r.V >= 0x14030004) sRGBSpace = r.ReadBool32();
+        if (r.V >= 0x14030004) sRGBSpace = Z.ReadBool(r);
         if (r.V >= 0x0A030003) Channels = r.ReadFArray(z => new PixelFormatComponent(r), 4);
     }
 }
@@ -2340,18 +3163,18 @@ public class NiSourceTexture : NiTexture { // X
     public NiSourceTexture(NiReader r) : base(r) {
         UseExternal = r.ReadByte();
         if (UseExternal == 1) {
-            FileName = r.ReadL32Encoding();
+            FileName = r.ReadL32AString();
             if (r.V >= 0x0A010000) UnknownLink = X<NiObject>.Ref(r);
         }
         if (UseExternal == 0) {
             if (r.V <= 0x0A000100) UnknownByte = r.ReadByte();
-            if (r.V >= 0x0A010000) FileName = r.ReadL32Encoding();
+            if (r.V >= 0x0A010000) FileName = r.ReadL32AString();
             PixelData = X<NiPixelFormat>.Ref(r);
         }
         FormatPrefs = new FormatPrefs(r);
         IsStatic = r.ReadByte();
-        if (r.V >= 0x0A010067) DirectRender = r.ReadBool32();
-        if (r.V >= 0x14020004) PersistRenderData = r.ReadBool32();
+        if (r.V >= 0x0A010067) DirectRender = Z.ReadBool(r);
+        if (r.V >= 0x14020004) PersistRenderData = Z.ReadBool(r);
     }
 }
 
@@ -2433,7 +3256,7 @@ public class NiImage : NiObject { // Y
 
     public NiImage(NiReader r) : base(r) {
         UseExternal = r.ReadByte();
-        if (UseExternal != 0) FileName = r.ReadL32Encoding();
+        if (UseExternal != 0) FileName = r.ReadL32AString();
         else ImageData = X<NiRawImageData>.Ref(r);
         UnknownInt = r.ReadUInt32();
         if (r.V >= 0x03010000) UnknownFloat = r.ReadSingle();
@@ -2470,36 +3293,36 @@ public class NiTexturingProperty : NiProperty { // X
         if (r.V >= 0x14010002) Flags = (Flags)r.ReadUInt16();
         if (r.V >= 0x0303000D && r.V <= 0x14010001) ApplyMode = (ApplyMode)r.ReadUInt32();
         TextureCount = r.ReadUInt32();
-        if (r.ReadBool32()) BaseTexture = new TexDesc(r);
-        if (r.ReadBool32()) DarkTexture = new TexDesc(r);
-        if (r.ReadBool32()) DetailTexture = new TexDesc(r);
-        if (r.ReadBool32()) GlossTexture = new TexDesc(r);
-        if (r.ReadBool32()) GlowTexture = new TexDesc(r);
-        var HasBumpMapTexture = r.V >= 0x0303000D && TextureCount > 5 ? r.ReadBool32() : default;
+        if (Z.ReadBool(r)) BaseTexture = new TexDesc(r);
+        if (Z.ReadBool(r)) DarkTexture = new TexDesc(r);
+        if (Z.ReadBool(r)) DetailTexture = new TexDesc(r);
+        if (Z.ReadBool(r)) GlossTexture = new TexDesc(r);
+        if (Z.ReadBool(r)) GlowTexture = new TexDesc(r);
+        var HasBumpMapTexture = r.V >= 0x0303000D && TextureCount > 5 ? Z.ReadBool(r) : default;
         if (HasBumpMapTexture) {
             BumpMapTexture = new TexDesc(r);
             BumpMapLumaScale = r.ReadSingle();
             BumpMapLumaOffset = r.ReadSingle();
             BumpMapMatrix = r.ReadMatrix2x2();
         }
-        var HasNormalTexture = r.V >= 0x14020005 && TextureCount > 6 ? r.ReadBool32() : default;
+        var HasNormalTexture = r.V >= 0x14020005 && TextureCount > 6 ? Z.ReadBool(r) : default;
         if (HasNormalTexture) NormalTexture = new TexDesc(r);
-        var HasParallaxTexture = r.V >= 0x14020005 && TextureCount > 7 ? r.ReadBool32() : default;
+        var HasParallaxTexture = r.V >= 0x14020005 && TextureCount > 7 ? Z.ReadBool(r) : default;
         if (HasParallaxTexture) {
             ParallaxTexture = new TexDesc(r);
             ParallaxOffset = r.ReadSingle();
         }
-        var HasDecal0Texture = r.V <= 0x14020004 && TextureCount > 6 ? r.ReadBool32()
-            : r.V >= 0x14020005 && TextureCount > 8 ? r.ReadBool32() : default;
+        var HasDecal0Texture = r.V <= 0x14020004 && TextureCount > 6 ? Z.ReadBool(r)
+            : r.V >= 0x14020005 && TextureCount > 8 ? Z.ReadBool(r) : default;
         if (HasDecal0Texture) Decal0Texture = new TexDesc(r);
-        var HasDecal1Texture = r.V <= 0x14020004 && TextureCount > 7 ? r.ReadBool32()
-            : r.V >= 0x14020005 && TextureCount > 9 ? r.ReadBool32() : default;
+        var HasDecal1Texture = r.V <= 0x14020004 && TextureCount > 7 ? Z.ReadBool(r)
+            : r.V >= 0x14020005 && TextureCount > 9 ? Z.ReadBool(r) : default;
         if (HasDecal1Texture) Decal1Texture = new TexDesc(r);
-        var HasDecal2Texture = r.V <= 0x14020004 && TextureCount > 8 ? r.ReadBool32()
-            : r.V >= 0x14020005 && TextureCount > 10 ? r.ReadBool32() : default;
+        var HasDecal2Texture = r.V <= 0x14020004 && TextureCount > 8 ? Z.ReadBool(r)
+            : r.V >= 0x14020005 && TextureCount > 10 ? Z.ReadBool(r) : default;
         if (HasDecal2Texture) Decal2Texture = new TexDesc(r);
-        var HasDecal3Texture = r.V <= 0x14020004 && TextureCount > 9 ? r.ReadBool32()
-            : r.V >= 0x14020005 && TextureCount > 11 ? r.ReadBool32() : default;
+        var HasDecal3Texture = r.V <= 0x14020004 && TextureCount > 9 ? Z.ReadBool(r)
+            : r.V >= 0x14020005 && TextureCount > 11 ? Z.ReadBool(r) : default;
         if (HasDecal3Texture) Decal3Texture = new TexDesc(r);
         if (r.V >= 0x0A000100) ShaderTextures = r.ReadL32FArray(z => new ShaderTexDesc(r));
     }
@@ -2525,6 +3348,29 @@ public class NiTriShapeData : NiTriBasedGeomData { // X
         if (r.V <= 0x0A000102) Triangles = r.ReadSArray<Triangle>(NumTriangles);
         if (r.V >= 0x0A000103 && HasTriangles) Triangles = r.ReadSArray<Triangle>(NumTriangles);
         if (r.V >= 0x03010000) MatchGroups = r.ReadL16FArray(z => new MatchGroup(r));
+    }
+}
+
+/// <summary>
+/// A shape node that refers to data organized into strips of triangles
+/// </summary>
+public class NiTriStrips(NiReader r) : NiTriBasedGeom(r) { // Z
+}
+
+/// <summary>
+/// Holds mesh data using strips of triangles.
+/// </summary>
+public class NiTriStripsData : NiTriBasedGeomData { // Z
+    public ushort NumStrips;                            // Number of OpenGL triangle strips that are present.
+    public ushort[] StripLengths;                       // The number of points in each triangle strip.
+    public ushort[][] Points;                           // The points in the Triangle strips.  Size is the sum of all entries in Strip Lengths.
+
+    public NiTriStripsData(NiReader r) : base(r) {
+        NumStrips = r.ReadUInt16();
+        StripLengths = r.ReadPArray<ushort>("H", NumStrips);
+        var HasPoints = r.V >= 0x0A000103 ? Z.ReadBool(r) : default;
+        if (r.V <= 0x0A000102) Points = r.ReadFArray((k, i) => r.ReadPArray<ushort>("H", StripLengths[i]), NumStrips);
+        if (r.V >= 0x0A000103 && HasPoints) Points = r.ReadFArray((k, i) => r.ReadPArray<ushort>("H", StripLengths[i]), NumStrips);
     }
 }
 

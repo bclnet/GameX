@@ -72,7 +72,8 @@ def _parse_args(parser: argparse.ArgumentParser) -> tuple[argparse.Namespace, Ar
 def _main() -> None:
     
     # sys.argv = ['gamex', 'get', '-f', 'Bethesda', '-u', 'game:/Morrowind.bsa#Morrowind', '-m', '*.nif', '-o', 'StreamObject', '-p', 'D:/T_/MorrowindP']
-    sys.argv = ['gamex', 'get', '-f', 'Bethesda', '-u', 'game:/Morrowind.bsa#Morrowind', '-m', 'meshes/l/light_com_candle_04.nif', '-o', 'StreamObject', '-p', 'D:/T_/MorrowindP']
+    # sys.argv = ['gamex', 'get', '-f', 'Bethesda', '-u', 'game:/Morrowind.bsa#Morrowind', '-m', 'meshes/l/light_com_candle_04.nif', '-o', 'StreamObject', '-p', 'D:/T_/MorrowindP']
+    sys.argv = ['gamex', 'get', '-f', 'Bethesda', '-u', 'game:/Morrowind.bsa#Morrowind', '-m', 'meshes/b/b_n_breton_f_head_02.nif', '-o', 'StreamObject', '-p', 'D:/T_/MorrowindP']
     # sys.argv = ['gamex', 'get', '-f', 'Bethesda', '-u', 'game:/Oblivion - Meshes.bsa#Oblivion', '-m', '*/bearskinrug01.nif', '-o', 'StreamObject', '-p', 'D:/T_/OblivionP']
 
     parser = _build_parser()

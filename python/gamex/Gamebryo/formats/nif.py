@@ -11,6 +11,7 @@ from gamex.desser import DesSer
 T = TypeVar('T')
 
 # types
+type byte = int
 type Vector3 = ndarray
 type Vector4 = ndarray
 type Matrix2x2 = ndarray
@@ -26,30 +27,32 @@ class NiObject: pass
 #region X
 
 class Ref(Generic[T]):
-    def __init__(self, r: NiReader, v: int):
-        self.v: int = v
-        self.val: T
-    def value() -> T: return None
+    def __init__(self, r: NiReader, v: int): self.v: int = v; self.val: T = None
+    def value() -> T: return self.val
 class X(Generic[T]):
     @staticmethod # Refers to an object before the current one in the hierarchy.
     def ptr(r: Reader): return None if (v := r.readInt32()) < 0 else Ref(r, v)
     @staticmethod # Refers to an object after the current one in the hierarchy.
     def ref(r: Reader): return None if (v := r.readInt32()) < 0 else Ref(r, v)
-class Y(Generic[T]):
-    @staticmethod
-    def read(type: type, r: Reader) -> object:
-        if type == float: return r.readSingle()
-        elif type == byte: return r.readByte()
-        elif type == str: return r.readL32Encoding()
-        elif type == Vector3: return r.readVector3()
-        elif type == Quaternion: return r.readQuaternionWFirst()
-        elif type == Color4: return Color4(r)
-        else: raise NotImplementedError('Tried to read an unsupported type.')
 class Z:
     @staticmethod
-    def string(r: Reader) -> str: return r.readL32Encoding()
+    def read(s, r: NiReader) -> object:
+        match s.t:
+            case '[float]': return r.readSingle()
+            case '[byte]': return r.readByte()
+            case '[str]': return r.readL32AString()
+            case '[Vector3]': return r.readVector3()
+            case '[Quaternion]': return r.readQuaternionWFirst()
+            case '[Color4]': return Color4(r)
+            case _: raise NotImplementedError(f'Tried to read an unsupported type: {s.t}')
     @staticmethod
-    def stringRef(r: Reader, p: int) -> str: return None
+    def readBool8(r: NiReader) -> int: r.readByte() if r.v >= 0x14000000 else r.readUInt32()
+    @staticmethod
+    def readBool(r: NiReader) -> bool: r.readByte() != 0 if r.v >= 0x14000000 else r.readUInt32() != 0
+    @staticmethod
+    def string(r: NiReader) -> str: return r.readL32AString()
+    @staticmethod
+    def stringRef(r: NiReader, p: int) -> str: return None
     @staticmethod
     def isVersionSupported(v: int) -> bool: return True
     @staticmethod
@@ -101,7 +104,7 @@ class Flags(IntFlag):
     Hidden = 0x1
 
 def RefJsonConverter(s): return f'{s.v}'
-def TexCoordJsonConverter(s): return f'{s.u:.4f} {s.v:.4f}'
+def TexCoordJsonConverter(s): return f'{s.u:.9g} {s.v:.9g}'
 def TriangleJsonConverter(s): return f'{s.v1} {s.v2} {s.v3}'
 DesSer.add({'Ref':RefJsonConverter, 'TexCoord':TexCoordJsonConverter, 'Triangle':TriangleJsonConverter})
 
@@ -124,6 +127,402 @@ class KeyType(Enum): # X
     TBC_KEY = 3                     # Use Tension Bias Continuity interpolation.  Tension, bias, and continuity will be stored.
     XYZ_ROTATION_KEY = 4            # For use only with rotation data.  Separate X, Y, and Z keys will be stored instead of using quaternions.
     CONST_KEY = 5                   # Step function. Used for visibility keys in NiBoolData.
+
+# Bethesda Havok. Material descriptor for a Havok shape in Oblivion.
+class OblivionHavokMaterial(Enum): # Z
+    OB_HAV_MAT_STONE = 0            # Stone
+    OB_HAV_MAT_CLOTH = 1            # Cloth
+    OB_HAV_MAT_DIRT = 2             # Dirt
+    OB_HAV_MAT_GLASS = 3            # Glass
+    OB_HAV_MAT_GRASS = 4            # Grass
+    OB_HAV_MAT_METAL = 5            # Metal
+    OB_HAV_MAT_ORGANIC = 6          # Organic
+    OB_HAV_MAT_SKIN = 7             # Skin
+    OB_HAV_MAT_WATER = 8            # Water
+    OB_HAV_MAT_WOOD = 9             # Wood
+    OB_HAV_MAT_HEAVY_STONE = 10     # Heavy Stone
+    OB_HAV_MAT_HEAVY_METAL = 11     # Heavy Metal
+    OB_HAV_MAT_HEAVY_WOOD = 12      # Heavy Wood
+    OB_HAV_MAT_CHAIN = 13           # Chain
+    OB_HAV_MAT_SNOW = 14            # Snow
+    OB_HAV_MAT_STONE_STAIRS = 15    # Stone Stairs
+    OB_HAV_MAT_CLOTH_STAIRS = 16    # Cloth Stairs
+    OB_HAV_MAT_DIRT_STAIRS = 17     # Dirt Stairs
+    OB_HAV_MAT_GLASS_STAIRS = 18    # Glass Stairs
+    OB_HAV_MAT_GRASS_STAIRS = 19    # Grass Stairs
+    OB_HAV_MAT_METAL_STAIRS = 20    # Metal Stairs
+    OB_HAV_MAT_ORGANIC_STAIRS = 21  # Organic Stairs
+    OB_HAV_MAT_SKIN_STAIRS = 22     # Skin Stairs
+    OB_HAV_MAT_WATER_STAIRS = 23    # Water Stairs
+    OB_HAV_MAT_WOOD_STAIRS = 24     # Wood Stairs
+    OB_HAV_MAT_HEAVY_STONE_STAIRS = 25 # Heavy Stone Stairs
+    OB_HAV_MAT_HEAVY_METAL_STAIRS = 26 # Heavy Metal Stairs
+    OB_HAV_MAT_HEAVY_WOOD_STAIRS = 27 # Heavy Wood Stairs
+    OB_HAV_MAT_CHAIN_STAIRS = 28    # Chain Stairs
+    OB_HAV_MAT_SNOW_STAIRS = 29     # Snow Stairs
+    OB_HAV_MAT_ELEVATOR = 30        # Elevator
+    OB_HAV_MAT_RUBBER = 31          # Rubber
+
+# Bethesda Havok. Material descriptor for a Havok shape in Fallout 3 and Fallout NV.
+class Fallout3HavokMaterial(Enum): # Z
+    FO_HAV_MAT_STONE = 0            # Stone
+    FO_HAV_MAT_CLOTH = 1            # Cloth
+    FO_HAV_MAT_DIRT = 2             # Dirt
+    FO_HAV_MAT_GLASS = 3            # Glass
+    FO_HAV_MAT_GRASS = 4            # Grass
+    FO_HAV_MAT_METAL = 5            # Metal
+    FO_HAV_MAT_ORGANIC = 6          # Organic
+    FO_HAV_MAT_SKIN = 7             # Skin
+    FO_HAV_MAT_WATER = 8            # Water
+    FO_HAV_MAT_WOOD = 9             # Wood
+    FO_HAV_MAT_HEAVY_STONE = 10     # Heavy Stone
+    FO_HAV_MAT_HEAVY_METAL = 11     # Heavy Metal
+    FO_HAV_MAT_HEAVY_WOOD = 12      # Heavy Wood
+    FO_HAV_MAT_CHAIN = 13           # Chain
+    FO_HAV_MAT_BOTTLECAP = 14       # Bottlecap
+    FO_HAV_MAT_ELEVATOR = 15        # Elevator
+    FO_HAV_MAT_HOLLOW_METAL = 16    # Hollow Metal
+    FO_HAV_MAT_SHEET_METAL = 17     # Sheet Metal
+    FO_HAV_MAT_SAND = 18            # Sand
+    FO_HAV_MAT_BROKEN_CONCRETE = 19 # Broken Concrete
+    FO_HAV_MAT_VEHICLE_BODY = 20    # Vehicle Body
+    FO_HAV_MAT_VEHICLE_PART_SOLID = 21 # Vehicle Part Solid
+    FO_HAV_MAT_VEHICLE_PART_HOLLOW = 22 # Vehicle Part Hollow
+    FO_HAV_MAT_BARREL = 23          # Barrel
+    FO_HAV_MAT_BOTTLE = 24          # Bottle
+    FO_HAV_MAT_SODA_CAN = 25        # Soda Can
+    FO_HAV_MAT_PISTOL = 26          # Pistol
+    FO_HAV_MAT_RIFLE = 27           # Rifle
+    FO_HAV_MAT_SHOPPING_CART = 28   # Shopping Cart
+    FO_HAV_MAT_LUNCHBOX = 29        # Lunchbox
+    FO_HAV_MAT_BABY_RATTLE = 30     # Baby Rattle
+    FO_HAV_MAT_RUBBER_BALL = 31     # Rubber Ball
+    FO_HAV_MAT_STONE_PLATFORM = 32  # Stone
+    FO_HAV_MAT_CLOTH_PLATFORM = 33  # Cloth
+    FO_HAV_MAT_DIRT_PLATFORM = 34   # Dirt
+    FO_HAV_MAT_GLASS_PLATFORM = 35  # Glass
+    FO_HAV_MAT_GRASS_PLATFORM = 36  # Grass
+    FO_HAV_MAT_METAL_PLATFORM = 37  # Metal
+    FO_HAV_MAT_ORGANIC_PLATFORM = 38# Organic
+    FO_HAV_MAT_SKIN_PLATFORM = 39   # Skin
+    FO_HAV_MAT_WATER_PLATFORM = 40  # Water
+    FO_HAV_MAT_WOOD_PLATFORM = 41   # Wood
+    FO_HAV_MAT_HEAVY_STONE_PLATFORM = 42 # Heavy Stone
+    FO_HAV_MAT_HEAVY_METAL_PLATFORM = 43 # Heavy Metal
+    FO_HAV_MAT_HEAVY_WOOD_PLATFORM = 44 # Heavy Wood
+    FO_HAV_MAT_CHAIN_PLATFORM = 45  # Chain
+    FO_HAV_MAT_BOTTLECAP_PLATFORM = 46 # Bottlecap
+    FO_HAV_MAT_ELEVATOR_PLATFORM = 47 # Elevator
+    FO_HAV_MAT_HOLLOW_METAL_PLATFORM = 48 # Hollow Metal
+    FO_HAV_MAT_SHEET_METAL_PLATFORM = 49 # Sheet Metal
+    FO_HAV_MAT_SAND_PLATFORM = 50   # Sand
+    FO_HAV_MAT_BROKEN_CONCRETE_PLATFORM = 51 # Broken Concrete
+    FO_HAV_MAT_VEHICLE_BODY_PLATFORM = 52 # Vehicle Body
+    FO_HAV_MAT_VEHICLE_PART_SOLID_PLATFORM = 53 # Vehicle Part Solid
+    FO_HAV_MAT_VEHICLE_PART_HOLLOW_PLATFORM = 54 # Vehicle Part Hollow
+    FO_HAV_MAT_BARREL_PLATFORM = 55 # Barrel
+    FO_HAV_MAT_BOTTLE_PLATFORM = 56 # Bottle
+    FO_HAV_MAT_SODA_CAN_PLATFORM = 57 # Soda Can
+    FO_HAV_MAT_PISTOL_PLATFORM = 58 # Pistol
+    FO_HAV_MAT_RIFLE_PLATFORM = 59  # Rifle
+    FO_HAV_MAT_SHOPPING_CART_PLATFORM = 60 # Shopping Cart
+    FO_HAV_MAT_LUNCHBOX_PLATFORM = 61 # Lunchbox
+    FO_HAV_MAT_BABY_RATTLE_PLATFORM = 62 # Baby Rattle
+    FO_HAV_MAT_RUBBER_BALL_PLATFORM = 63 # Rubber Ball
+    FO_HAV_MAT_STONE_STAIRS = 64    # Stone
+    FO_HAV_MAT_CLOTH_STAIRS = 65    # Cloth
+    FO_HAV_MAT_DIRT_STAIRS = 66     # Dirt
+    FO_HAV_MAT_GLASS_STAIRS = 67    # Glass
+    FO_HAV_MAT_GRASS_STAIRS = 68    # Grass
+    FO_HAV_MAT_METAL_STAIRS = 69    # Metal
+    FO_HAV_MAT_ORGANIC_STAIRS = 70  # Organic
+    FO_HAV_MAT_SKIN_STAIRS = 71     # Skin
+    FO_HAV_MAT_WATER_STAIRS = 72    # Water
+    FO_HAV_MAT_WOOD_STAIRS = 73     # Wood
+    FO_HAV_MAT_HEAVY_STONE_STAIRS = 74 # Heavy Stone
+    FO_HAV_MAT_HEAVY_METAL_STAIRS = 75 # Heavy Metal
+    FO_HAV_MAT_HEAVY_WOOD_STAIRS = 76 # Heavy Wood
+    FO_HAV_MAT_CHAIN_STAIRS = 77    # Chain
+    FO_HAV_MAT_BOTTLECAP_STAIRS = 78# Bottlecap
+    FO_HAV_MAT_ELEVATOR_STAIRS = 79 # Elevator
+    FO_HAV_MAT_HOLLOW_METAL_STAIRS = 80 # Hollow Metal
+    FO_HAV_MAT_SHEET_METAL_STAIRS = 81 # Sheet Metal
+    FO_HAV_MAT_SAND_STAIRS = 82     # Sand
+    FO_HAV_MAT_BROKEN_CONCRETE_STAIRS = 83 # Broken Concrete
+    FO_HAV_MAT_VEHICLE_BODY_STAIRS = 84 # Vehicle Body
+    FO_HAV_MAT_VEHICLE_PART_SOLID_STAIRS = 85 # Vehicle Part Solid
+    FO_HAV_MAT_VEHICLE_PART_HOLLOW_STAIRS = 86 # Vehicle Part Hollow
+    FO_HAV_MAT_BARREL_STAIRS = 87   # Barrel
+    FO_HAV_MAT_BOTTLE_STAIRS = 88   # Bottle
+    FO_HAV_MAT_SODA_CAN_STAIRS = 89 # Soda Can
+    FO_HAV_MAT_PISTOL_STAIRS = 90   # Pistol
+    FO_HAV_MAT_RIFLE_STAIRS = 91    # Rifle
+    FO_HAV_MAT_SHOPPING_CART_STAIRS = 92 # Shopping Cart
+    FO_HAV_MAT_LUNCHBOX_STAIRS = 93 # Lunchbox
+    FO_HAV_MAT_BABY_RATTLE_STAIRS = 94 # Baby Rattle
+    FO_HAV_MAT_RUBBER_BALL_STAIRS = 95 # Rubber Ball
+    FO_HAV_MAT_STONE_STAIRS_PLATFORM = 96 # Stone
+    FO_HAV_MAT_CLOTH_STAIRS_PLATFORM = 97 # Cloth
+    FO_HAV_MAT_DIRT_STAIRS_PLATFORM = 98 # Dirt
+    FO_HAV_MAT_GLASS_STAIRS_PLATFORM = 99 # Glass
+    FO_HAV_MAT_GRASS_STAIRS_PLATFORM = 100 # Grass
+    FO_HAV_MAT_METAL_STAIRS_PLATFORM = 101 # Metal
+    FO_HAV_MAT_ORGANIC_STAIRS_PLATFORM = 102 # Organic
+    FO_HAV_MAT_SKIN_STAIRS_PLATFORM = 103 # Skin
+    FO_HAV_MAT_WATER_STAIRS_PLATFORM = 104 # Water
+    FO_HAV_MAT_WOOD_STAIRS_PLATFORM = 105 # Wood
+    FO_HAV_MAT_HEAVY_STONE_STAIRS_PLATFORM = 106 # Heavy Stone
+    FO_HAV_MAT_HEAVY_METAL_STAIRS_PLATFORM = 107 # Heavy Metal
+    FO_HAV_MAT_HEAVY_WOOD_STAIRS_PLATFORM = 108 # Heavy Wood
+    FO_HAV_MAT_CHAIN_STAIRS_PLATFORM = 109 # Chain
+    FO_HAV_MAT_BOTTLECAP_STAIRS_PLATFORM = 110 # Bottlecap
+    FO_HAV_MAT_ELEVATOR_STAIRS_PLATFORM = 111 # Elevator
+    FO_HAV_MAT_HOLLOW_METAL_STAIRS_PLATFORM = 112 # Hollow Metal
+    FO_HAV_MAT_SHEET_METAL_STAIRS_PLATFORM = 113 # Sheet Metal
+    FO_HAV_MAT_SAND_STAIRS_PLATFORM = 114 # Sand
+    FO_HAV_MAT_BROKEN_CONCRETE_STAIRS_PLATFORM = 115 # Broken Concrete
+    FO_HAV_MAT_VEHICLE_BODY_STAIRS_PLATFORM = 116 # Vehicle Body
+    FO_HAV_MAT_VEHICLE_PART_SOLID_STAIRS_PLATFORM = 117 # Vehicle Part Solid
+    FO_HAV_MAT_VEHICLE_PART_HOLLOW_STAIRS_PLATFORM = 118 # Vehicle Part Hollow
+    FO_HAV_MAT_BARREL_STAIRS_PLATFORM = 119 # Barrel
+    FO_HAV_MAT_BOTTLE_STAIRS_PLATFORM = 120 # Bottle
+    FO_HAV_MAT_SODA_CAN_STAIRS_PLATFORM = 121 # Soda Can
+    FO_HAV_MAT_PISTOL_STAIRS_PLATFORM = 122 # Pistol
+    FO_HAV_MAT_RIFLE_STAIRS_PLATFORM = 123 # Rifle
+    FO_HAV_MAT_SHOPPING_CART_STAIRS_PLATFORM = 124 # Shopping Cart
+    FO_HAV_MAT_LUNCHBOX_STAIRS_PLATFORM = 125 # Lunchbox
+    FO_HAV_MAT_BABY_RATTLE_STAIRS_PLATFORM = 126 # Baby Rattle
+    FO_HAV_MAT_RUBBER_BALL_STAIRS_PLATFORM = 127 # Rubber Ball
+
+# Bethesda Havok. Material descriptor for a Havok shape in Skyrim.
+class SkyrimHavokMaterial(Enum): # Z
+    SKY_HAV_MAT_BROKEN_STONE = 131151687 # Broken Stone
+    SKY_HAV_MAT_LIGHT_WOOD = 365420259 # Light Wood
+    SKY_HAV_MAT_SNOW = 398949039    # Snow
+    SKY_HAV_MAT_GRAVEL = 428587608  # Gravel
+    SKY_HAV_MAT_MATERIAL_CHAIN_METAL = 438912228 # Material Chain Metal
+    SKY_HAV_MAT_BOTTLE = 493553910  # Bottle
+    SKY_HAV_MAT_WOOD = 500811281    # Wood
+    SKY_HAV_MAT_SKIN = 591247106    # Skin
+    SKY_HAV_MAT_UNKNOWN_617099282 = 617099282 # Unknown in Creation Kit v1.9.32.0. Found in Dawnguard DLC in meshes\dlc01\clutter\dlc01deerskin.nif.
+    SKY_HAV_MAT_BARREL = 732141076  # Barrel
+    SKY_HAV_MAT_MATERIAL_CERAMIC_MEDIUM = 781661019 # Material Ceramic Medium
+    SKY_HAV_MAT_MATERIAL_BASKET = 790784366 # Material Basket
+    SKY_HAV_MAT_ICE = 873356572     # Ice
+    SKY_HAV_MAT_STAIRS_STONE = 899511101 # Stairs Stone
+    SKY_HAV_MAT_WATER = 1024582599  # Water
+    SKY_HAV_MAT_UNKNOWN_1028101969 = 1028101969 # Unknown in Creation Kit v1.6.89.0. Found in actors\draugr\character assets\skeletons.nif.
+    SKY_HAV_MAT_MATERIAL_BLADE_1HAND = 1060167844 # Material Blade 1 Hand
+    SKY_HAV_MAT_MATERIAL_BOOK = 1264672850 # Material Book
+    SKY_HAV_MAT_MATERIAL_CARPET = 1286705471 # Material Carpet
+    SKY_HAV_MAT_SOLID_METAL = 1288358971 # Solid Metal
+    SKY_HAV_MAT_MATERIAL_AXE_1HAND = 1305674443 # Material Axe 1Hand
+    SKY_HAV_MAT_UNKNOWN_1440721808 = 1440721808 # Unknown in Creation Kit v1.6.89.0. Found in armor\draugr\draugrbootsfemale_go.nif or armor\amuletsandrings\amuletgnd.nif.
+    SKY_HAV_MAT_STAIRS_WOOD = 1461712277 # Stairs Wood
+    SKY_HAV_MAT_MUD = 1486385281    # Mud
+    SKY_HAV_MAT_MATERIAL_BOULDER_SMALL = 1550912982 # Material Boulder Small
+    SKY_HAV_MAT_STAIRS_SNOW = 1560365355 # Stairs Snow
+    SKY_HAV_MAT_HEAVY_STONE = 1570821952 # Heavy Stone
+    SKY_HAV_MAT_UNKNOWN_1574477864 = 1574477864 # Unknown in Creation Kit v1.6.89.0. Found in actors\dragon\character assets\skeleton.nif.
+    SKY_HAV_MAT_UNKNOWN_1591009235 = 1591009235 # Unknown in Creation Kit v1.6.89.0. Found in trap objects or clutter\displaycases\displaycaselgangled01.nif or actors\deer\character assets\skeleton.nif.
+    SKY_HAV_MAT_MATERIAL_BOWS_STAVES = 1607128641 # Material Bows Staves
+    SKY_HAV_MAT_MATERIAL_WOOD_AS_STAIRS = 1803571212 # Material Wood As Stairs
+    SKY_HAV_MAT_GRASS = 1848600814  # Grass
+    SKY_HAV_MAT_MATERIAL_BOULDER_LARGE = 1885326971 # Material Boulder Large
+    SKY_HAV_MAT_MATERIAL_STONE_AS_STAIRS = 1886078335 # Material Stone As Stairs
+    SKY_HAV_MAT_MATERIAL_BLADE_2HAND = 2022742644 # Material Blade 2Hand
+    SKY_HAV_MAT_MATERIAL_BOTTLE_SMALL = 2025794648 # Material Bottle Small
+    SKY_HAV_MAT_SAND = 2168343821   # Sand
+    SKY_HAV_MAT_HEAVY_METAL = 2229413539 # Heavy Metal
+    SKY_HAV_MAT_UNKNOWN_2290050264 = 2290050264 # Unknown in Creation Kit v1.9.32.0. Found in Dawnguard DLC in meshes\dlc01\clutter\dlc01sabrecatpelt.nif.
+    SKY_HAV_MAT_DRAGON = 2518321175 # Dragon
+    SKY_HAV_MAT_MATERIAL_BLADE_1HAND_SMALL = 2617944780 # Material Blade 1Hand Small
+    SKY_HAV_MAT_MATERIAL_SKIN_SMALL = 2632367422 # Material Skin Small
+    SKY_HAV_MAT_STAIRS_BROKEN_STONE = 2892392795 # Stairs Broken Stone
+    SKY_HAV_MAT_MATERIAL_SKIN_LARGE = 2965929619 # Material Skin Large
+    SKY_HAV_MAT_ORGANIC = 2974920155# Organic
+    SKY_HAV_MAT_MATERIAL_BONE = 3049421844 # Material Bone
+    SKY_HAV_MAT_HEAVY_WOOD = 3070783559 # Heavy Wood
+    SKY_HAV_MAT_MATERIAL_CHAIN = 3074114406 # Material Chain
+    SKY_HAV_MAT_DIRT = 3106094762   # Dirt
+    SKY_HAV_MAT_MATERIAL_ARMOR_LIGHT = 3424720541 # Material Armor Light
+    SKY_HAV_MAT_MATERIAL_SHIELD_LIGHT = 3448167928 # Material Shield Light
+    SKY_HAV_MAT_MATERIAL_COIN = 3589100606 # Material Coin
+    SKY_HAV_MAT_MATERIAL_SHIELD_HEAVY = 3702389584 # Material Shield Heavy
+    SKY_HAV_MAT_MATERIAL_ARMOR_HEAVY = 3708432437 # Material Armor Heavy
+    SKY_HAV_MAT_MATERIAL_ARROW = 3725505938 # Material Arrow
+    SKY_HAV_MAT_GLASS = 3739830338  # Glass
+    SKY_HAV_MAT_STONE = 3741512247  # Stone
+    SKY_HAV_MAT_CLOTH = 3839073443  # Cloth
+    SKY_HAV_MAT_MATERIAL_BLUNT_2HAND = 3969592277 # Material Blunt 2Hand
+    SKY_HAV_MAT_UNKNOWN_4239621792 = 4239621792 # Unknown in Creation Kit v1.9.32.0. Found in Dawnguard DLC in meshes\dlc01\prototype\dlc1protoswingingbridge.nif.
+    SKY_HAV_MAT_MATERIAL_BOULDER_MEDIUM = 4283869410 # Material Boulder Medium
+
+# Bethesda Havok. Describes the collision layer a body belongs to in Oblivion.
+class OblivionLayer(Enum): # Z
+    OL_UNIDENTIFIED = 0             # Unidentified (white)
+    OL_STATIC = 1                   # Static (red)
+    OL_ANIM_STATIC = 2              # AnimStatic (magenta)
+    OL_TRANSPARENT = 3              # Transparent (light pink)
+    OL_CLUTTER = 4                  # Clutter (light blue)
+    OL_WEAPON = 5                   # Weapon (orange)
+    OL_PROJECTILE = 6               # Projectile (light orange)
+    OL_SPELL = 7                    # Spell (cyan)
+    OL_BIPED = 8                    # Biped (green) Seems to apply to all creatures/NPCs
+    OL_TREES = 9                    # Trees (light brown)
+    OL_PROPS = 10                   # Props (magenta)
+    OL_WATER = 11                   # Water (cyan)
+    OL_TRIGGER = 12                 # Trigger (light grey)
+    OL_TERRAIN = 13                 # Terrain (light yellow)
+    OL_TRAP = 14                    # Trap (light grey)
+    OL_NONCOLLIDABLE = 15           # NonCollidable (white)
+    OL_CLOUD_TRAP = 16              # CloudTrap (greenish grey)
+    OL_GROUND = 17                  # Ground (none)
+    OL_PORTAL = 18                  # Portal (green)
+    OL_STAIRS = 19                  # Stairs (white)
+    OL_CHAR_CONTROLLER = 20         # CharController (yellow)
+    OL_AVOID_BOX = 21               # AvoidBox (dark yellow)
+    OL_UNKNOWN1 = 22                # ? (white)
+    OL_UNKNOWN2 = 23                # ? (white)
+    OL_CAMERA_PICK = 24             # CameraPick (white)
+    OL_ITEM_PICK = 25               # ItemPick (white)
+    OL_LINE_OF_SIGHT = 26           # LineOfSight (white)
+    OL_PATH_PICK = 27               # PathPick (white)
+    OL_CUSTOM_PICK_1 = 28           # CustomPick1 (white)
+    OL_CUSTOM_PICK_2 = 29           # CustomPick2 (white)
+    OL_SPELL_EXPLOSION = 30         # SpellExplosion (white)
+    OL_DROPPING_PICK = 31           # DroppingPick (white)
+    OL_OTHER = 32                   # Other (white)
+    OL_HEAD = 33                    # Head
+    OL_BODY = 34                    # Body
+    OL_SPINE1 = 35                  # Spine1
+    OL_SPINE2 = 36                  # Spine2
+    OL_L_UPPER_ARM = 37             # LUpperArm
+    OL_L_FOREARM = 38               # LForeArm
+    OL_L_HAND = 39                  # LHand
+    OL_L_THIGH = 40                 # LThigh
+    OL_L_CALF = 41                  # LCalf
+    OL_L_FOOT = 42                  # LFoot
+    OL_R_UPPER_ARM = 43             # RUpperArm
+    OL_R_FOREARM = 44               # RForeArm
+    OL_R_HAND = 45                  # RHand
+    OL_R_THIGH = 46                 # RThigh
+    OL_R_CALF = 47                  # RCalf
+    OL_R_FOOT = 48                  # RFoot
+    OL_TAIL = 49                    # Tail
+    OL_SIDE_WEAPON = 50             # SideWeapon
+    OL_SHIELD = 51                  # Shield
+    OL_QUIVER = 52                  # Quiver
+    OL_BACK_WEAPON = 53             # BackWeapon
+    OL_BACK_WEAPON2 = 54            # BackWeapon (?)
+    OL_PONYTAIL = 55                # PonyTail
+    OL_WING = 56                    # Wing
+    OL_NULL = 57                    # Null
+
+# Bethesda Havok. Describes the collision layer a body belongs to in Fallout 3 and Fallout NV.
+class Fallout3Layer(Enum): # Z
+    FOL_UNIDENTIFIED = 0            # Unidentified (white)
+    FOL_STATIC = 1                  # Static (red)
+    FOL_ANIM_STATIC = 2             # AnimStatic (magenta)
+    FOL_TRANSPARENT = 3             # Transparent (light pink)
+    FOL_CLUTTER = 4                 # Clutter (light blue)
+    FOL_WEAPON = 5                  # Weapon (orange)
+    FOL_PROJECTILE = 6              # Projectile (light orange)
+    FOL_SPELL = 7                   # Spell (cyan)
+    FOL_BIPED = 8                   # Biped (green) Seems to apply to all creatures/NPCs
+    FOL_TREES = 9                   # Trees (light brown)
+    FOL_PROPS = 10                  # Props (magenta)
+    FOL_WATER = 11                  # Water (cyan)
+    FOL_TRIGGER = 12                # Trigger (light grey)
+    FOL_TERRAIN = 13                # Terrain (light yellow)
+    FOL_TRAP = 14                   # Trap (light grey)
+    FOL_NONCOLLIDABLE = 15          # NonCollidable (white)
+    FOL_CLOUD_TRAP = 16             # CloudTrap (greenish grey)
+    FOL_GROUND = 17                 # Ground (none)
+    FOL_PORTAL = 18                 # Portal (green)
+    FOL_DEBRIS_SMALL = 19           # DebrisSmall (white)
+    FOL_DEBRIS_LARGE = 20           # DebrisLarge (white)
+    FOL_ACOUSTIC_SPACE = 21         # AcousticSpace (white)
+    FOL_ACTORZONE = 22              # Actorzone (white)
+    FOL_PROJECTILEZONE = 23         # Projectilezone (white)
+    FOL_GASTRAP = 24                # GasTrap (yellowish green)
+    FOL_SHELLCASING = 25            # ShellCasing (white)
+    FOL_TRANSPARENT_SMALL = 26      # TransparentSmall (white)
+    FOL_INVISIBLE_WALL = 27         # InvisibleWall (white)
+    FOL_TRANSPARENT_SMALL_ANIM = 28 # TransparentSmallAnim (white)
+    FOL_DEADBIP = 29                # Dead Biped (green)
+    FOL_CHARCONTROLLER = 30         # CharController (yellow)
+    FOL_AVOIDBOX = 31               # Avoidbox (orange)
+    FOL_COLLISIONBOX = 32           # Collisionbox (white)
+    FOL_CAMERASPHERE = 33           # Camerasphere (white)
+    FOL_DOORDETECTION = 34          # Doordetection (white)
+    FOL_CAMERAPICK = 35             # Camerapick (white)
+    FOL_ITEMPICK = 36               # Itempick (white)
+    FOL_LINEOFSIGHT = 37            # LineOfSight (white)
+    FOL_PATHPICK = 38               # Pathpick (white)
+    FOL_CUSTOMPICK1 = 39            # Custompick1 (white)
+    FOL_CUSTOMPICK2 = 40            # Custompick2 (white)
+    FOL_SPELLEXPLOSION = 41         # SpellExplosion (white)
+    FOL_DROPPINGPICK = 42           # Droppingpick (white)
+    FOL_NULL = 43                   # Null (white)
+
+# Bethesda Havok. Describes the collision layer a body belongs to in Skyrim.
+class SkyrimLayer(Enum): # Z
+    SKYL_UNIDENTIFIED = 0           # Unidentified
+    SKYL_STATIC = 1                 # Static
+    SKYL_ANIMSTATIC = 2             # Anim Static
+    SKYL_TRANSPARENT = 3            # Transparent
+    SKYL_CLUTTER = 4                # Clutter. Object with this layer will float on water surface.
+    SKYL_WEAPON = 5                 # Weapon
+    SKYL_PROJECTILE = 6             # Projectile
+    SKYL_SPELL = 7                  # Spell
+    SKYL_BIPED = 8                  # Biped. Seems to apply to all creatures/NPCs
+    SKYL_TREES = 9                  # Trees
+    SKYL_PROPS = 10                 # Props
+    SKYL_WATER = 11                 # Water
+    SKYL_TRIGGER = 12               # Trigger
+    SKYL_TERRAIN = 13               # Terrain
+    SKYL_TRAP = 14                  # Trap
+    SKYL_NONCOLLIDABLE = 15         # NonCollidable
+    SKYL_CLOUD_TRAP = 16            # CloudTrap
+    SKYL_GROUND = 17                # Ground. It seems that produces no sound when collide.
+    SKYL_PORTAL = 18                # Portal
+    SKYL_DEBRIS_SMALL = 19          # Debris Small
+    SKYL_DEBRIS_LARGE = 20          # Debris Large
+    SKYL_ACOUSTIC_SPACE = 21        # Acoustic Space
+    SKYL_ACTORZONE = 22             # Actor Zone
+    SKYL_PROJECTILEZONE = 23        # Projectile Zone
+    SKYL_GASTRAP = 24               # Gas Trap
+    SKYL_SHELLCASING = 25           # Shell Casing
+    SKYL_TRANSPARENT_SMALL = 26     # Transparent Small
+    SKYL_INVISIBLE_WALL = 27        # Invisible Wall
+    SKYL_TRANSPARENT_SMALL_ANIM = 28# Transparent Small Anim
+    SKYL_WARD = 29                  # Ward
+    SKYL_CHARCONTROLLER = 30        # Char Controller
+    SKYL_STAIRHELPER = 31           # Stair Helper
+    SKYL_DEADBIP = 32               # Dead Bip
+    SKYL_BIPED_NO_CC = 33           # Biped No CC
+    SKYL_AVOIDBOX = 34              # Avoid Box
+    SKYL_COLLISIONBOX = 35          # Collision Box
+    SKYL_CAMERASHPERE = 36          # Camera Sphere
+    SKYL_DOORDETECTION = 37         # Door Detection
+    SKYL_CONEPROJECTILE = 38        # Cone Projectile
+    SKYL_CAMERAPICK = 39            # Camera Pick
+    SKYL_ITEMPICK = 40              # Item Pick
+    SKYL_LINEOFSIGHT = 41           # Line of Sight
+    SKYL_PATHPICK = 42              # Path Pick
+    SKYL_CUSTOMPICK1 = 43           # Custom Pick 1
+    SKYL_CUSTOMPICK2 = 44           # Custom Pick 2
+    SKYL_SPELLEXPLOSION = 45        # Spell Explosion
+    SKYL_DROPPINGPICK = 46          # Dropping Pick
+    SKYL_NULL = 47                  # Null
+
+# Bethesda Havok.
+# A byte describing if MOPP Data is organized into chunks (PS3) or not (PC)
+class MoppDataBuildType(Enum): # Z
+    BUILT_WITH_CHUNK_SUBDIVISION = 0# Organized in chunks for PS3.
+    BUILT_WITHOUT_CHUNK_SUBDIVISION = 1 # Not organized in chunks for PC. (Default)
+    BUILD_NOT_SET = 2               # Build type not set yet.
 
 # Describes the pixel format used by the NiPixelData object to store a texture.
 class PixelFormat(Enum): # Y
@@ -274,6 +673,57 @@ class ZCompareMode(Enum): # Y
     ZCOMP_GREATER_EQUAL = 6         # VRef ≥ VBuf
     ZCOMP_NEVER = 7                 # Always false. Ref value is ignored.
 
+# Bethesda Havok, based on hkpMotion::MotionType. Motion type of a rigid body determines what happens when it is simulated.
+class hkMotionType(Enum): # Z
+    MO_SYS_INVALID = 0              # Invalid
+    MO_SYS_DYNAMIC = 1              # A fully-simulated, movable rigid body. At construction time the engine checks the input inertia and selects MO_SYS_SPHERE_INERTIA or MO_SYS_BOX_INERTIA as appropriate.
+    MO_SYS_SPHERE_INERTIA = 2       # Simulation is performed using a sphere inertia tensor.
+    MO_SYS_SPHERE_STABILIZED = 3    # This is the same as MO_SYS_SPHERE_INERTIA, except that simulation of the rigid body is "softened".
+    MO_SYS_BOX_INERTIA = 4          # Simulation is performed using a box inertia tensor.
+    MO_SYS_BOX_STABILIZED = 5       # This is the same as MO_SYS_BOX_INERTIA, except that simulation of the rigid body is "softened".
+    MO_SYS_KEYFRAMED = 6            # Simulation is not performed as a normal rigid body. The keyframed rigid body has an infinite mass when viewed by the rest of the system. (used for creatures)
+    MO_SYS_FIXED = 7                # This motion type is used for the static elements of a game scene, e.g. the landscape. Faster than MO_SYS_KEYFRAMED at velocity 0. (used for weapons)
+    MO_SYS_THIN_BOX = 8             # A box inertia motion which is optimized for thin boxes and has less stability problems
+    MO_SYS_CHARACTER = 9            # A specialized motion used for character controllers
+
+# Bethesda Havok, based on hkpRigidBodyDeactivator::DeactivatorType.
+# Deactivator Type determines which mechanism Havok will use to classify the body as deactivated.
+class hkDeactivatorType(Enum): # Z
+    DEACTIVATOR_INVALID = 0         # Invalid
+    DEACTIVATOR_NEVER = 1           # This will force the rigid body to never deactivate.
+    DEACTIVATOR_SPATIAL = 2         # Tells Havok to use a spatial deactivation scheme. This makes use of high and low frequencies of positional motion to determine when deactivation should occur.
+
+# Bethesda Havok, based on hkpRigidBodyCinfo::SolverDeactivation.
+# A list of possible solver deactivation settings. This value defines how aggressively the solver deactivates objects.
+# Note: Solver deactivation does not save CPU, but reduces creeping of movable objects in a pile quite dramatically.
+class hkSolverDeactivation(Enum): # Z
+    SOLVER_DEACTIVATION_INVALID = 0 # Invalid
+    SOLVER_DEACTIVATION_OFF = 1     # No solver deactivation.
+    SOLVER_DEACTIVATION_LOW = 2     # Very conservative deactivation, typically no visible artifacts.
+    SOLVER_DEACTIVATION_MEDIUM = 3  # Normal deactivation, no serious visible artifacts in most cases.
+    SOLVER_DEACTIVATION_HIGH = 4    # Fast deactivation, visible artifacts.
+    SOLVER_DEACTIVATION_MAX = 5     # Very fast deactivation, visible artifacts.
+
+# Bethesda Havok, based on hkpCollidableQualityType. Describes the priority and quality of collisions for a body,
+#     e.g. you may expect critical game play objects to have solid high-priority collisions so that they never sink into ground,
+#     or may allow penetrations for visual debris objects.
+# Notes:
+#     - Fixed and keyframed objects cannot interact with each other.
+#     - Debris can interpenetrate but still responds to Bullet hits.
+#     - Critical objects are forced to not interpenetrate.
+#     - Moving objects can interpenetrate slightly with other Moving or Debris objects but nothing else.
+class hkQualityType(Enum): # Z
+    MO_QUAL_INVALID = 0             # Automatically assigned to MO_QUAL_FIXED, MO_QUAL_KEYFRAMED or MO_QUAL_DEBRIS
+    MO_QUAL_FIXED = 1               # Static body.
+    MO_QUAL_KEYFRAMED = 2           # Animated body with infinite mass.
+    MO_QUAL_DEBRIS = 3              # Low importance bodies adding visual detail.
+    MO_QUAL_MOVING = 4              # Moving bodies which should not penetrate or leave the world, but can.
+    MO_QUAL_CRITICAL = 5            # Gameplay critical bodies which cannot penetrate or leave the world under any circumstance.
+    MO_QUAL_BULLET = 6              # Fast-moving bodies, such as projectiles.
+    MO_QUAL_USER = 7                # For user.
+    MO_QUAL_CHARACTER = 8           # For use with rigid body character controllers.
+    MO_QUAL_KEYFRAMED_REPORT = 9    # Moving bodies with infinite mass which should report contact points and TOI collisions against all other bodies.
+
 # Describes the decay function of bomb forces.
 class DecayType(Enum): # X
     DECAY_NONE = 0                  # No decay.
@@ -327,6 +777,13 @@ class BoundVolumeType(Enum): # X
     UNION_BV = 4                    # Union
     HALFSPACE_BV = 5                # Half Space
 
+# Bethesda Havok.
+class hkResponseType(Enum): # Z
+    RESPONSE_INVALID = 0            # Invalid Response
+    RESPONSE_SIMPLE_CONTACT = 1     # Do normal collision resolution
+    RESPONSE_REPORTING = 2          # No collision resolution is performed but listeners are called
+    RESPONSE_NONE = 3               # Do nothing, ignore all the results.
+
 # Values for configuring the shader type in a BSLightingShaderProperty
 class BSLightingShaderPropertyShaderType(Enum): # Y
     Default = 0
@@ -379,7 +836,7 @@ class MipMap: # X
 # NiSkinData::BoneVertData. A vertex and its weight.
 class BoneVertData: # X
     _struct = ('<Hf', 6)
-    def __init__(self, r: NiReader, half: bool):
+    def __init__(self, r: NiReader, half: bool = None):
         if isinstance(r, tuple): self.index,self.weight=r; return
         if half: self.index = r.readUInt16(); self.weight = r.readHalf(); return
         self.index: int = r.readUInt16()                # The vertex index, in the mesh.
@@ -428,7 +885,7 @@ class NiReader(Reader): # X
             self.uv2 = r.readUInt32()
             self.exportInfo = ExportInfo(r)
         if r.uv2 == 130: self.maxFilepath = r.readL8AString()
-        if r.v >= 0x1E000000: self.metadata = r.readL8Bytes()
+        if r.v >= 0x1E000000: self.metadata = r.readL32Bytes()
         if r.v >= 0x05000001 and r.v != 0x14030102: self.blockTypes = r.readL16FArray(lambda z: r.readL32AString())
         if r.v == 0x14030102: self.blockTypeHashes = r.readL16PArray(None, 'I')
         if r.v >= 0x05000001: self.blockTypeIndex = r.readPArray(None, 'H', self.numBlocks)
@@ -463,12 +920,13 @@ class Key[T]: # X
     backward: T = None                                  # The key backward tangent.
     tbc: TBC = None                                     # The TBC of the key.
 
-    def __init__(self, r: NiReader, keyType: KeyType):
+    def __init__(self, t: str, r: NiReader, keyType: KeyType):
+        self.t = t
         self.time = r.readSingle()
-        self.value = Y[T].read(r)
+        self.value = Z.read(self, r)
         if keyType == KeyType.QUADRATIC_KEY:
-            self.forward = Y[T].read(r)
-            self.backward = Y[T].read(r)
+            self.forward = Z.read(self, r)
+            self.backward = Z.read(self, r)
         elif keyType == KeyType.TBC_KEY: self.tbc = r.readS(TBC)
 
 # Array of vector keys (anything that can be interpolated, except rotations).
@@ -477,10 +935,11 @@ class KeyGroup[T]: # X
     interpolation: KeyType = 0                          # The key type.
     keys: list[Key[T]] = None                           # The keys.
 
-    def __init__(self, r: NiReader):
+    def __init__(self, t: str, r: NiReader):
+        self.t = t
         self.numKeys = r.readUInt32()
         if self.numKeys != 0: self.interpolation = KeyType(r.readUInt32())
-        self.keys = r.readFArray(lambda z: Key[T](r, self.Interpolation), self.numKeys)
+        self.keys = r.readFArray(lambda z: Key[T]('[T]', r, Interpolation), self.numKeys)
 
 # A special version of the key type used for quaternions.  Never has tangents.
 class QuatKey[T]: # X
@@ -488,11 +947,12 @@ class QuatKey[T]: # X
     value: T = None                                     # Value of the key.
     tbc: TBC = None                                     # The TBC of the key.
 
-    def __init__(self, r: NiReader, keyType: KeyType):
+    def __init__(self, t: str, r: NiReader, keyType: KeyType):
+        self.t = t
         if r.v <= 0x0A010000: self.time = r.readSingle()
         if keyType != KeyType.XYZ_ROTATION_KEY:
             if r.v >= 0x0A01006A: self.time = r.readSingle()
-            self.value = Y[T].read(r)
+            self.value = Z.read(self, r)
         if keyType == KeyType.TBC_KEY: self.tbc = r.readS(TBC)
 
 # Texture coordinates (u,v). As in OpenGL; image origin is in the lower left corner.
@@ -501,10 +961,9 @@ class TexCoord: # X
     u: float = None                                     # First coordinate.
     v: float = None                                     # Second coordinate.
 
-    def __init__(self, r: NiReader, half: bool=None):
+    def __init__(self, r: NiReader, half: bool = None):
         if isinstance(r, tuple): self.u,self.v=r; return
         if isinstance(r, float): self.u = r; self.v = half; return
-        elif isinstance(r, tuple): self.u = r[0]; self.v = r[1]; return
         elif half: self.u = r.readHalf(); self.v = r.readHalf(); return
         self.u = r.readSingle()
         self.v = r.readSingle()
@@ -549,7 +1008,7 @@ class TexDesc: # X
             self.pS2K = r.readInt16()
         if r.v <= 0x0401000C: self.unknown1 = r.readUInt16()
         # NiTextureTransform
-        if r.v >= 0x0A010000 and r.readBool32():
+        if r.v >= 0x0A010000 and Z.readBool(r):
             self.translation = r.readS(TexCoord)
             self.scale = r.readS(TexCoord)
             self.rotation = r.readSingle()
@@ -562,7 +1021,7 @@ class ShaderTexDesc: # Y
     mapId: int = 0                                      # Unique identifier for the Gamebryo shader system.
 
     def __init__(self, r: NiReader):
-        if r.readBool32():
+        if Z.readBool(r):
             self.map = TexDesc(r)
             self.mapId = r.readUInt32()
 
@@ -660,18 +1119,18 @@ class SkinPartition: # Y
             self.vertexMap = r.readPArray(None, 'H', self.numVertices)
             self.vertexWeights = r.readFArray(lambda k: r.readPArray(None, 'f', self.numWeightsPerVertex), self.numVertices)
             self.stripLengths = r.readPArray(None, 'H', self.numStrips)
-            if self.numStrips != 0: self.strips = r.readFArray(lambda k, i: r.readPArray(None, 'H', self.stripLengths), self.numStrips)
+            if self.numStrips != 0: self.strips = r.readFArray(lambda k, i: r.readPArray(None, 'H', self.stripLengths[i]), self.numStrips)
             else: self.triangles = r.readSArray(Triangle, self.numTriangles)
         elif r.v >= 0x0A010000:
-            if r.readBool32(): self.vertexMap = r.readPArray(None, 'H', self.numVertices)
-            hasVertexWeights = r.readUInt32()
+            if Z.readBool(r): self.vertexMap = r.readPArray(None, 'H', self.numVertices)
+            hasVertexWeights = Z.readBool8()
             if hasVertexWeights == 1: self.vertexWeights = r.readFArray(lambda k: r.readPArray(None, 'f', self.numWeightsPerVertex), self.numVertices)
             if hasVertexWeights == 15: self.vertexWeights = r.readFArray(lambda k: r.readFArray(lambda z: r.readHalf(), self.numWeightsPerVertex), self.numVertices)
             self.stripLengths = r.readPArray(None, 'H', self.numStrips)
-            if r.readBool32():
-                if self.numStrips != 0: self.strips = r.readFArray(lambda k, i: r.readPArray(None, 'H', self.stripLengths), self.numStrips)
+            if Z.readBool(r):
+                if self.numStrips != 0: self.strips = r.readFArray(lambda k, i: r.readPArray(None, 'H', self.stripLengths[i]), self.numStrips)
                 else: self.triangles = r.readSArray(Triangle, self.numTriangles)
-        if r.readBool32(): self.boneIndices = r.readFArray(lambda k: r.readBytes(self.numWeightsPerVertex), self.numVertices)
+        if Z.readBool(r): self.boneIndices = r.readFArray(lambda k: r.readBytes(self.numWeightsPerVertex), self.numVertices)
         if r.uv2 > 34: self.unknownShort = r.readUInt16()
         if r.uv2 == 100:
             self.vertexDesc = r.readS(BSVertexDesc)
@@ -703,7 +1162,7 @@ class NiTransform: # X
 class Morph: # X
     frameName: str = None                               # Name of the frame.
     interpolation: KeyType = 0                          # Unlike most objects, the presense of this value is not conditional on there being keys.
-    keys: list[Key[T]] = None                           # The morph key frames.
+    keys: list[Key[float]] = None                       # The morph key frames.
     legacyWeight: float = None
     vectors: list[Vector3] = None                       # Morph vectors.
 
@@ -712,7 +1171,7 @@ class Morph: # X
         if r.v <= 0x0A010000:
             numKeys = r.readUInt32()
             self.interpolation = KeyType(r.readUInt32())
-            self.keys = r.readFArray(lambda z: Key[T](r, self.Interpolation), self.numKeys)
+            self.keys = r.readFArray(lambda z: Key[float]('[float]', r, Interpolation), self.numKeys)
         if r.v >= 0x0A010068 and r.v <= 0x14010002 and r.uv2 < 10: self.legacyWeight = r.readSingle()
         self.vectors = r.readPArray(array, '3f', numVertices)
 
@@ -745,6 +1204,60 @@ class BoneData: # X
         self.vertexWeights = r.readL16SArray(BoneVertData) if r.v <= 0x04020100 else \
             r.readL16SArray(BoneVertData) if r.v >= 0x04020200 and arg == 1 else \
             r.readL16FArray(lambda z: BoneVertData(r, False)) if r.V >= 0x14030101 and arg == 15 else None
+
+# Bethesda Havok. Collision filter info representing Layer, Flags, Part Number, and Group all combined into one uint.
+class HavokFilter: # Z
+    def __init__(self, r: NiReader):
+        self.layerOb: OblivionLayer = OblivionLayer(r.readByte()) if r.v <= 0x14000005 and (r.uv2 < 16) else OblivionLayer.OL_STATIC # The layer the collision belongs to.
+        self.layerFo: Fallout3Layer = Fallout3Layer(r.readByte()) if (r.v == 0x14020007) and (r.uv2 <= 34) else Fallout3Layer.FOL_STATIC # The layer the collision belongs to.
+        self.layerSk: SkyrimLayer = SkyrimLayer(r.readByte()) if (r.v == 0x14020007) and (r.uv2 > 34) else SkyrimLayer.SKYL_STATIC # The layer the collision belongs to.
+        self.flagsandPartNumber: int = r.readByte()     # FLAGS are stored in highest 3 bits:
+                                                        # 	Bit 7: sets the LINK property and controls whether this body is physically linked to others.
+                                                        # 	Bit 6: turns collision off (not used for Layer BIPED).
+                                                        # 	Bit 5: sets the SCALED property.
+                                                        # 
+                                                        # 	PART NUMBER is stored in bits 0-4. Used only when Layer is set to BIPED.
+                                                        # 
+                                                        # 	Part Numbers for Oblivion, Fallout 3, Skyrim:
+                                                        # 	0 - OTHER
+                                                        # 	1 - HEAD
+                                                        # 	2 - BODY
+                                                        # 	3 - SPINE1
+                                                        # 	4 - SPINE2
+                                                        # 	5 - LUPPERARM
+                                                        # 	6 - LFOREARM
+                                                        # 	7 - LHAND
+                                                        # 	8 - LTHIGH
+                                                        # 	9 - LCALF
+                                                        # 	10 - LFOOT
+                                                        # 	11 - RUPPERARM
+                                                        # 	12 - RFOREARM
+                                                        # 	13 - RHAND
+                                                        # 	14 - RTHIGH
+                                                        # 	15 - RCALF
+                                                        # 	16 - RFOOT
+                                                        # 	17 - TAIL
+                                                        # 	18 - SHIELD
+                                                        # 	19 - QUIVER
+                                                        # 	20 - WEAPON
+                                                        # 	21 - PONYTAIL
+                                                        # 	22 - WING
+                                                        # 	23 - PACK
+                                                        # 	24 - CHAIN
+                                                        # 	25 - ADDONHEAD
+                                                        # 	26 - ADDONCHEST
+                                                        # 	27 - ADDONARM
+                                                        # 	28 - ADDONLEG
+                                                        # 	29-31 - NULL
+        self.group: int = r.readUInt16()
+
+# Bethesda Havok. Material wrapper for varying material enums by game.
+class HavokMaterial: # Z
+    def __init__(self, r: NiReader):
+        self.unknownInt: int = r.readUInt32() if r.v <= 0x0A000102 else 0
+        self.materialOb: OblivionHavokMaterial = OblivionHavokMaterial(r.readUInt32()) if r.v <= 0x14000005 and (r.uv2 < 16) else 0 # The material of the shape.
+        self.materialFo: Fallout3HavokMaterial = Fallout3HavokMaterial(r.readUInt32()) if (r.v == 0x14020007) and (r.uv2 <= 34) else 0 # The material of the shape.
+        self.materialSk: SkyrimHavokMaterial = SkyrimHavokMaterial(r.readUInt32()) if (r.v == 0x14020007) and (r.uv2 > 34) else 0 # The material of the shape.
 
 # Determines how the raw image data is stored in NiRawImageData.
 class ImageType(Enum): # Y
@@ -816,7 +1329,7 @@ class NiObject: # X
 
     @staticmethod
     def read(r: NiReader, nodeType: str) -> NiObject:
-        # print(nodeType)
+        # print(f'{nodeType}: {r.tell()}')
         match nodeType:
             case 'NiNode': n = NiNode(r)
             case 'NiTriShape': n = NiTriShape(r)
@@ -870,6 +1383,13 @@ class NiObject: # X
             case 'NiCamera': n = NiCamera(r)
             case 'NiPathController': n = NiPathController(r)
             case 'NiPixelData': n = NiPixelData(r)
+            case 'NiBinaryExtraData': n = NiBinaryExtraData(r)
+            case 'NiTriStrips': n = NiTriStrips(r)
+            case 'NiTriStripsData': n = NiTriStripsData(r)
+            case 'BSXFlags': n = BSXFlags(r)
+            case 'bhkNiTriStripsShape': n = bhkNiTriStripsShape(r)
+            case 'bhkMoppBvTreeShape': n = bhkMoppBvTreeShape(r)
+            case 'bhkRigidBody': n = bhkRigidBody(r)
             case _: Log(f'Tried to read an unsupported NiObject type ({nodeType}).'); n = None
         setattr(n, '$type', nodeType)
         return n
@@ -883,6 +1403,202 @@ class NiParticleModifier(NiObject): # X
         super().__init__(r)
         self.nextModifier = X[NiParticleModifier].ref(r)
         if r.v >= 0x04000002: self.controller = X[NiParticleSystemController].ptr(r)
+
+class BroadPhaseType(Enum): # Z
+    BROAD_PHASE_INVALID = 0
+    BROAD_PHASE_ENTITY = 1
+    BROAD_PHASE_PHANTOM = 2
+    BROAD_PHASE_BORDER = 3
+
+class hkWorldObjCinfoProperty: # Z
+    def __init__(self, r: NiReader):
+        self.data: int = r.readUInt32()
+        self.size: int = r.readUInt32()
+        self.capacityandFlags: int = r.readUInt32()
+
+# The base type of most Bethesda-specific Havok-related NIF objects.
+class bhkRefObject(NiObject): # Z
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+
+# Havok objects that can be saved and loaded from disk?
+class bhkSerializable(bhkRefObject): # Z
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+
+# Havok objects that have a position in the world?
+class bhkWorldObject(bhkSerializable): # Z
+    shape: Ref[NiObject] = None                         # Link to the body for this collision object.
+    unknownInt: int = 0
+    havokFilter: HavokFilter = None
+    unused: bytearray = None                            # Garbage data from memory.
+    broadPhaseType: BroadPhaseType = 1
+    unusedBytes: bytearray = None
+    cinfoProperty: hkWorldObjCinfoProperty = None
+
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+        self.shape = X[bhkShape].ref(r)
+        if r.v <= 0x0A000100: self.unknownInt = r.readUInt32()
+        self.havokFilter = HavokFilter(r)
+        self.unused = r.readBytes(4)
+        self.broadPhaseType = BroadPhaseType(r.readByte())
+        self.unusedBytes = r.readBytes(3)
+        self.cinfoProperty = hkWorldObjCinfoProperty(r)
+
+# A havok node, describes physical properties.
+class bhkEntity(bhkWorldObject): # Z
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+
+# This is the default body type for all "normal" usable and static world objects. The "T" suffix
+# marks this body as active for translation and rotation, a normal bhkRigidBody ignores those
+# properties. Because the properties are equal, a bhkRigidBody may be renamed into a bhkRigidBodyT and vice-versa.
+class bhkRigidBody(bhkEntity): # Z
+    collisionResponse: hkResponseType = hkResponseType.RESPONSE_SIMPLE_CONTACT # How the body reacts to collisions. See hkResponseType for hkpWorld default implementations.
+    unusedByte1: int = 0                                # Skipped over when writing Collision Response and Callback Delay.
+    processContactCallbackDelay: int = 0xffff           # Lowers the frequency for processContactCallbacks. A value of 5 means that a callback is raised every 5th frame. The default is once every 65535 frames.
+    unknownInt1: int = 0                                # Unknown.
+    havokFilterCopy: HavokFilter = None                 # Copy of Havok Filter
+    unused2: bytearray = None                           # Garbage data from memory. Matches previous Unused value.
+    unknownInt2: int = 0
+    collisionResponse2: hkResponseType = hkResponseType.RESPONSE_SIMPLE_CONTACT
+    unusedByte2: int = 0                                # Skipped over when writing Collision Response and Callback Delay.
+    processContactCallbackDelay2: int = 0xffff
+    translation: Vector4 = None                         # A vector that moves the body by the specified amount. Only enabled in bhkRigidBodyT objects.
+    rotation: Quaternion = None                         # The rotation Yaw/Pitch/Roll to apply to the body. Only enabled in bhkRigidBodyT objects.
+    linearVelocity: Vector4 = None                      # Linear velocity.
+    angularVelocity: Vector4 = None                     # Angular velocity.
+    inertiaTensor: Matrix3x4 = None                     # Defines how the mass is distributed among the body, i.e. how difficult it is to rotate around any given axis.
+    center: Vector4 = None                              # The body's center of mass.
+    mass: float = 1.0                                   # The body's mass in kg. A mass of zero represents an immovable object.
+    linearDamping: float = 0.1                          # Reduces the movement of the body over time. A value of 0.1 will remove 10% of the linear velocity every second.
+    angularDamping: float = 0.05                        # Reduces the movement of the body over time. A value of 0.05 will remove 5% of the angular velocity every second.
+    timeFactor: float = 1.0
+    gravityFactor: float = 1.0
+    friction: float = 0.5                               # How smooth its surfaces is and how easily it will slide along other bodies.
+    rollingFrictionMultiplier: float = None
+    restitution: float = 0.4                            # How "bouncy" the body is, i.e. how much energy it has after colliding. Less than 1.0 loses energy, greater than 1.0 gains energy.
+                                                        #     If the restitution is not 0.0 the object will need extra CPU for all new collisions.
+    maxLinearVelocity: float = 104.4                    # Maximal linear velocity.
+    maxAngularVelocity: float = 31.57                   # Maximal angular velocity.
+    penetrationDepth: float = 0.15                      # The maximum allowed penetration for this object.
+                                                        #     This is a hint to the engine to see how much CPU the engine should invest to keep this object from penetrating.
+                                                        #     A good choice is 5% - 20% of the smallest diameter of the object.
+    motionSystem: hkMotionType = hkMotionType.MO_SYS_DYNAMIC # Motion system? Overrides Quality when on Keyframed?
+    deactivatorType: hkDeactivatorType = hkDeactivatorType.DEACTIVATOR_NEVER # The initial deactivator type of the body.
+    enableDeactivation: bool = 1
+    solverDeactivation: hkSolverDeactivation = hkSolverDeactivation.SOLVER_DEACTIVATION_OFF # How aggressively the engine will try to zero the velocity for slow objects. This does not save CPU.
+    qualityType: hkQualityType = hkQualityType.MO_QUAL_FIXED # The type of interaction with other objects.
+    unknownFloat1: float = None
+    unknownBytes1: bytearray = None                     # Unknown.
+    unknownBytes2: bytearray = None                     # Unknown. Skyrim only.
+    constraints: list[Ref[NiObject]] = None
+    bodyFlags: int = 0                                  # 1 = respond to wind
+
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+        self.collisionResponse = hkResponseType(r.readByte())
+        self.unusedByte1 = r.readByte()
+        self.processContactCallbackDelay = r.readUInt16()
+        if r.v >= 0x0A010000:
+            self.unknownInt1 = r.readUInt32()
+            self.havokFilterCopy = HavokFilter(r)
+            self.unused2 = r.readBytes(4)
+            if r.uv2 > 34: self.unknownInt2 = r.readUInt32()
+            self.collisionResponse2 = hkResponseType(r.readByte())
+            self.unusedByte2 = r.readByte()
+            self.processContactCallbackDelay2 = r.readUInt16()
+        if r.uv2 <= 34: self.unknownInt2 = r.readUInt32()
+        self.translation = r.readVector4()
+        self.rotation = r.readQuaternion()
+        self.linearVelocity = r.readVector4()
+        self.angularVelocity = r.readVector4()
+        self.inertiaTensor = r.readMatrix3x4()
+        self.center = r.readVector4()
+        self.mass = r.readSingle()
+        self.linearDamping = r.readSingle()
+        self.angularDamping = r.readSingle()
+        if r.uv2 > 34:
+            self.timeFactor = r.readSingle()
+            if r.uv2 != 130: self.gravityFactor = r.readSingle()
+        self.friction = r.readSingle()
+        if r.uv2 > 34: self.rollingFrictionMultiplier = r.readSingle()
+        self.restitution = r.readSingle()
+        if r.v >= 0x0A010000:
+            self.maxLinearVelocity = r.readSingle()
+            self.maxAngularVelocity = r.readSingle()
+            if r.uv2 != 130: self.penetrationDepth = r.readSingle()
+        self.motionSystem = hkMotionType(r.readByte())
+        if r.uv2 <= 34: self.deactivatorType = hkDeactivatorType(r.readByte())
+        else: self.enableDeactivation = Z.readBool()
+        self.solverDeactivation = hkSolverDeactivation(r.readByte())
+        self.qualityType = hkQualityType(r.readByte())
+        if r.uv2 == 130:
+            self.penetrationDepth = r.readSingle()
+            self.unknownFloat1 = r.readSingle()
+        self.unknownBytes1 = r.readBytes(12)
+        if r.uv2 > 34: self.unknownBytes2 = r.readBytes(4)
+        self.constraints = r.readL32FArray(X[bhkSerializable].ref)
+        self.bodyFlags = r.readUInt32() if r.uv2 < 76 else r.readUInt16()
+
+# A Havok Shape?
+class bhkShape(bhkSerializable): # Z
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+
+# A tree-like Havok data structure stored in an assembly-like binary code?
+class bhkBvTreeShape(bhkShape): # Z
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+
+# Memory optimized partial polytope bounding volume tree shape (not an entity).
+class bhkMoppBvTreeShape(bhkBvTreeShape): # Z
+    shape: Ref[NiObject] = None                         # The shape.
+    unused: list[int] = None                            # Garbage data from memory. Referred to as User Data, Shape Collection, and Code.
+    shapeScale: float = 1.0                             # Scale.
+    moppDataSize: int = 0                               # Number of bytes for MOPP data.
+    origin: Vector3 = None                              # Origin of the object in mopp coordinates. This is the minimum of all vertices in the packed shape along each axis, minus 0.1.
+    scale: float = None                                 # The scaling factor to quantize the MOPP: the quantization factor is equal to 256*256 divided by this number. In Oblivion files, scale is taken equal to 256*256*254 / (size + 0.2) where size is the largest dimension of the bounding box of the packed shape.
+    buildType: MoppDataBuildType = 0                    # Tells if MOPP Data was organized into smaller chunks (PS3) or not (PC)
+    moppData: bytearray = None                          # The tree of bounding volume data.
+
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+        self.shape = X[bhkShape].ref(r)
+        self.unused = r.readPArray(None, 'I', 3)
+        self.shapeScale = r.readSingle()
+        self.moppDataSize = 0 # calculated
+        if r.v >= 0x0A000102:
+            self.origin = r.readVector3()
+            self.scale = r.readSingle()
+        if r.uv2 > 34: self.buildType = MoppDataBuildType(r.readByte())
+        self.moppData = r.readBytes(self.moppDataSize)
+
+# Havok collision object that uses multiple shapes?
+class bhkShapeCollection(bhkShape): # Z
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+
+# A shape constructed from a bunch of strips.
+class bhkNiTriStripsShape(bhkShapeCollection): # Z
+    material: HavokMaterial = None                      # The material of the shape.
+    radius: float = 0.1
+    unused: list[int] = None                            # Garbage data from memory though the last 3 are referred to as maxSize, size, and eSize.
+    growBy: int = 1
+    scale: Vector4 = Vector4(1.0, 1.0, 1.0, 0.0)        # Scale. Usually (1.0, 1.0, 1.0, 0.0).
+    stripsData: list[Ref[NiObject]] = None              # Refers to a bunch of NiTriStripsData objects that make up this shape.
+    dataLayers: list[HavokFilter] = None                # Havok Layers for each strip data.
+
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+        self.material = HavokMaterial(r)
+        self.radius = r.readSingle()
+        self.unused = r.readPArray(None, 'I', 5)
+        self.growBy = r.readUInt32()
+        if r.v >= 0x0A010000: self.scale = r.readVector4()
+        self.stripsData = r.readL32FArray(X[NiTriStripsData].ref)
+        self.dataLayers = r.readL32FArray(lambda z: HavokFilter(r))
 
 # A generic extra data object.
 class NiExtraData(NiObject): # X
@@ -926,7 +1642,7 @@ class NiObjectNET(NiObject): # X
         BSLightingShaderProperty: bool = False
         if r.uv2 >= 83 and BSLightingShaderProperty: self.skyrimShaderType = BSLightingShaderPropertyShaderType(r.readUInt32())
         self.name = Z.string(r)
-        if r.v <= 0x02030000 and r.readBool32():
+        if r.v <= 0x02030000 and Z.readBool(r):
             self.oldExtraPropName = Z.string(r)
             self.oldExtraInternalId = r.readUInt32()
             self.oldExtraString = Z.string(r)
@@ -971,7 +1687,7 @@ class NiAVObject(NiObjectNET): # X
         if r.v <= 0x02030000:
             self.unknown1 = r.readPArray(None, 'I', 4)
             self.unknown2 = r.readByte()
-        if r.v >= 0x03000000 and r.v <= 0x04020200 and r.readBool32(): self.boundingVolume = BoundingVolume(r)
+        if r.v >= 0x03000000 and r.v <= 0x04020200 and Z.readBool(r): self.boundingVolume = BoundingVolume(r)
         if r.v >= 0x0A000100: self.collisionObject = X[NiCollisionObject].ref(r)
 
 # Abstract base class for dynamic effects such as NiLights or projected texture effects.
@@ -982,7 +1698,7 @@ class NiDynamicEffect(NiAVObject): # X
 
     def __init__(self, r: NiReader):
         super().__init__(r)
-        if r.v >= 0x0A01006A and r.uv2 < 130: self.switchState = r.readBool32()
+        if r.v >= 0x0A01006A and r.uv2 < 130: self.switchState = Z.readBool()
         if r.v <= 0x0303000D: self.affectedNodes = r.readL32FArray(X[NiNode].ptr)
         elif r.v >= 0x04000000 and r.v <= 0x04000002: self.affectedNodePointers = r.readL32PArray(None, 'I')
         elif r.v >= 0x0A010000 and r.uv2 < 130: self.affectedNodes = r.readL32FArray(X[NiNode].ptr)
@@ -1026,7 +1742,7 @@ class NiInterpController(NiTimeController): # X
 
     def __init__(self, r: NiReader):
         super().__init__(r)
-        if r.v >= 0x0A010068 and r.v <= 0x0A01006C: self.managerControlled = r.readBool32()
+        if r.v >= 0x0A010068 and r.v <= 0x0A01006C: self.managerControlled = Z.readBool()
 
 # DEPRECATED (20.5), replaced by NiMorphMeshModifier.
 # Time controller for geometry morphing.
@@ -1120,7 +1836,7 @@ class MaterialData: # Y
     materialNeedsUpdate: bool = None                    # Whether the materials for this object always needs to be updated before rendering with them.
 
     def __init__(self, r: NiReader):
-        if r.v >= 0x0A000100 and r.v <= 0x14010003 and r.readBool32():
+        if r.v >= 0x0A000100 and r.v <= 0x14010003 and Z.readBool(r):
             self.shaderName = Z.string(r)
             self.shaderExtraData = r.readInt32()
         if r.v >= 0x14020005:
@@ -1130,7 +1846,7 @@ class MaterialData: # Y
             self.activeMaterial = r.readInt32()
         if r.v == 0x0A020000 and (r.uv == 1): self.unknownByte = r.readByte()
         if r.v == 0x0A040001: self.unknownInteger2 = r.readInt32()
-        if r.v >= 0x14020007: self.materialNeedsUpdate = r.readBool32()
+        if r.v >= 0x14020007: self.materialNeedsUpdate = Z.readBool()
 
 # Describes a visible scene element with vertices like a mesh, a particle system, lines, etc.
 class NiGeometry(NiAVObject): # X
@@ -1232,27 +1948,27 @@ class NiGeometryData(NiObject): # X
         if r.v >= 0x0A010000:
             self.keepFlags = r.readByte()
             self.compressFlags = r.readByte()
-        hasVertices = r.readUInt32()
+        hasVertices = Z.readBool8()
         if (hasVertices > 0) and (hasVertices != 15): self.vertices = r.readPArray(array, '3f', self.numVertices)
         if r.v >= 0x14030101 and hasVertices == 15: self.vertices = r.readFArray(lambda z: Vector3(r.readHalf(), r.readHalf(), r.readHalf()), self.numVertices)
         if r.v >= 0x0A000100 and not ((r.v == 0x14020007) and (r.uv2 > 0)): self.vectorFlags = VectorFlags(r.readUInt16())
         if ((r.v == 0x14020007) and (r.uv2 > 0)): self.bsVectorFlags = BSVectorFlags(r.readUInt16())
         if r.v == 0x14020007 and (r.uv == 12): self.materialCrc = r.readUInt32()
-        hasNormals = r.readUInt32()
+        hasNormals = Z.readBool8()
         if (hasNormals > 0) and (hasNormals != 6): self.normals = r.readPArray(array, '3f', self.numVertices)
         if r.v >= 0x14030101 and hasNormals == 6: self.normals = r.readFArray(lambda z: Vector3(r.readByte(), r.readByte(), r.readByte()), self.numVertices)
         if r.v >= 0x0A010000 and (hasNormals != 0) and ((self.vectorFlags | self.bsVectorFlags) & 4096) != 0:
             self.tangents = r.readPArray(array, '3f', self.numVertices)
             self.bitangents = r.readPArray(array, '3f', self.numVertices)
-        if r.v == 0x14030009 and (r.uv == 0x20000) or (r.uv == 0x30000) and r.readBool32(): self.unkFloats = r.readPArray(None, 'f', self.numVertices)
+        if r.v == 0x14030009 and (r.uv == 0x20000) or (r.uv == 0x30000) and Z.readBool(r): self.unkFloats = r.readPArray(None, 'f', self.numVertices)
         self.center = r.readVector3()
         self.radius = r.readSingle()
         if r.v == 0x14030009 and (r.uv == 0x20000) or (r.uv == 0x30000): self.unknown13shorts = r.readPArray(None, 'h', 13)
-        hasVertexColors = r.readUInt32()
+        hasVertexColors = Z.readBool8()
         if (hasVertexColors > 0) and (hasVertexColors != 7): self.vertexColors = r.readFArray(lambda z: Color4(r), self.numVertices)
         if r.v >= 0x14030101 and hasVertexColors == 7: self.vertexColors = r.readFArray(lambda z: Color4(r.readBytes(4)), self.numVertices)
         if r.v <= 0x04020200: self.numUvSets = r.readUInt16()
-        hasUv = r.readBool32() if r.v <= 0x04000002 else None
+        hasUv = Z.readBool() if r.v <= 0x04000002 else None
         if (hasVertices > 0) and (hasVertices != 15): self.uvSets = r.readFArray(lambda k: r.readSArray(TexCoord, self.numVertices), ((self.numUvSets & 63) | (self.vectorFlags & 63) | (self.bsVectorFlags & 1)))
         if r.v >= 0x14030101 and hasVertices == 15: self.uvSets = r.readFArray(lambda k: r.readFArray(lambda z: TexCoord(r, true), self.numVertices), ((self.numUvSets & 63) | (self.vectorFlags & 63) | (self.bsVectorFlags & 1)))
         if r.v >= 0x0A000100: self.consistencyFlags = ConsistencyType(r.readUInt16())
@@ -1335,14 +2051,14 @@ class NiParticlesData(NiGeometryData): # X
         super().__init__(r)
         if r.v <= 0x04000002: self.numParticles = r.readUInt16()
         if r.v <= 0x0A000100: self.particleRadius = r.readSingle()
-        if r.v >= 0x0A010000 and not ((r.v == 0x14020007) and (r.uv2 > 0)) and r.readBool32(): self.radii = r.readPArray(None, 'f', self.numVertices)
+        if r.v >= 0x0A010000 and not ((r.v == 0x14020007) and (r.uv2 > 0)) and Z.readBool(r): self.radii = r.readPArray(None, 'f', self.numVertices)
         self.numActive = r.readUInt16()
-        if not ((r.v == 0x14020007) and (r.uv2 > 0)) and r.readBool32(): self.sizes = r.readPArray(None, 'f', self.numVertices)
-        if r.v >= 0x0A000100 and not ((r.v == 0x14020007) and (r.uv2 > 0)) and r.readBool32(): self.rotations = r.readFArray(lambda z: r.readQuaternionWFirst(), self.numVertices)
-        hasRotationAngles = r.readBool32() if r.v >= 0x14000004 else None
+        if not ((r.v == 0x14020007) and (r.uv2 > 0)) and Z.readBool(r): self.sizes = r.readPArray(None, 'f', self.numVertices)
+        if r.v >= 0x0A000100 and not ((r.v == 0x14020007) and (r.uv2 > 0)) and Z.readBool(r): self.rotations = r.readFArray(lambda z: r.readQuaternionWFirst(), self.numVertices)
+        hasRotationAngles = Z.readBool() if r.v >= 0x14000004 else None
         if not ((r.v == 0x14020007) and (r.uv2 > 0)) and hasRotationAngles: self.rotationAngles = r.readPArray(None, 'f', self.numVertices)
-        if r.v >= 0x14000004 and not ((r.v == 0x14020007) and (r.uv2 > 0)) and r.readBool32(): self.rotationAxes = r.readPArray(array, '3f', self.numVertices)
-        hasTextureIndices = r.readBool32() if ((r.v == 0x14020007) and (r.uv2 > 0)) else None
+        if r.v >= 0x14000004 and not ((r.v == 0x14020007) and (r.uv2 > 0)) and Z.readBool(r): self.rotationAxes = r.readPArray(array, '3f', self.numVertices)
+        hasTextureIndices = Z.readBool() if ((r.v == 0x14020007) and (r.uv2 > 0)) else None
         if r.uv2 > 34: self.numSubtextureOffsets = r.readUInt32()
         if ((r.v == 0x14020007) and (r.uv2 > 0)): self.subtextureOffsets = r.readL8PArray(array, '4f')
         if r.uv2 > 34:
@@ -1358,12 +2074,20 @@ class NiRotatingParticlesData(NiParticlesData): # X
 
     def __init__(self, r: NiReader):
         super().__init__(r)
-        if r.v <= 0x04020200 and r.readBool32(): self.rotations2 = r.readFArray(lambda z: r.readQuaternionWFirst(), self.numVertices)
+        if r.v <= 0x04020200 and Z.readBool(r): self.rotations2 = r.readFArray(lambda z: r.readQuaternionWFirst(), self.numVertices)
 
 # Particle system data object (with automatic normals?).
 class NiAutoNormalParticlesData(NiParticlesData): # X
     def __init__(self, r: NiReader):
         super().__init__(r)
+
+# Binary extra data object. Used to store tangents and bitangents in Oblivion.
+class NiBinaryExtraData(NiExtraData): # Z
+    binaryData: bytearray = None                        # The binary data.
+
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+        self.binaryData = r.readL32Bytes()
 
 # Camera object.
 class NiCamera(NiAVObject): # X
@@ -1394,7 +2118,7 @@ class NiCamera(NiAVObject): # X
         self.frustumBottom = r.readSingle()
         self.frustumNear = r.readSingle()
         self.frustumFar = r.readSingle()
-        if r.v >= 0x0A010000: self.useOrthographicProjection = r.readBool32()
+        if r.v >= 0x0A010000: self.useOrthographicProjection = Z.readBool()
         self.viewportLeft = r.readSingle()
         self.viewportRight = r.readSingle()
         self.viewportTop = r.readSingle()
@@ -1407,19 +2131,19 @@ class NiCamera(NiAVObject): # X
 
 # Wrapper for color animation keys.
 class NiColorData(NiObject): # X
-    data: KeyGroup[T] = None                            # The color keys.
+    data: KeyGroup[Color4] = None                       # The color keys.
 
     def __init__(self, r: NiReader):
         super().__init__(r)
-        self.data = KeyGroup[T](r)
+        self.data = KeyGroup[Color4]('[Color4]', r)
 
 # Wrapper for 1D (one-dimensional) floating point animation keys.
 class NiFloatData(NiObject): # X
-    data: KeyGroup[T] = None                            # The keys.
+    data: KeyGroup[float] = None                        # The keys.
 
     def __init__(self, r: NiReader):
         super().__init__(r)
-        self.data = KeyGroup[T](r)
+        self.data = KeyGroup[float]('[float]', r)
 
 # LEGACY (pre-10.1) particle modifier. Applies a gravitational field on the particles.
 class NiGravity(NiParticleModifier): # X
@@ -1437,27 +2161,54 @@ class NiGravity(NiParticleModifier): # X
         self.position = r.readVector3()
         self.direction = r.readVector3()
 
+# Extra integer data.
+class NiIntegerExtraData(NiExtraData): # Z
+    integerData: int = 0                                # The value of the extra data.
+
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+        self.integerData = r.readUInt32()
+
+# Controls animation and collision.  Integer holds flags:
+# Bit 0 : enable havok, bAnimated(Skyrim)
+# Bit 1 : enable collision, bHavok(Skyrim)
+# Bit 2 : is skeleton nif?, bRagdoll(Skyrim)
+# Bit 3 : enable animation, bComplex(Skyrim)
+# Bit 4 : FlameNodes present, bAddon(Skyrim)
+# Bit 5 : EditorMarkers present, bEditorMarker(Skyrim)
+# Bit 6 : bDynamic(Skyrim)
+# Bit 7 : bArticulated(Skyrim)
+# Bit 8 : bIKTarget(Skyrim)/needsTransformUpdates
+# Bit 9 : bExternalEmit(Skyrim)
+# Bit 10: bMagicShaderParticles(Skyrim)
+# Bit 11: bLights(Skyrim)
+# Bit 12: bBreakable(Skyrim)
+# Bit 13: bSearchedBreakable(Skyrim) .. Runtime only?
+class BSXFlags(NiIntegerExtraData): # Z
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+
 # DEPRECATED (10.2), RENAMED (10.2) to NiTransformData.
 # Wrapper for transformation animation keys.
 class NiKeyframeData(NiObject): # X
     numRotationKeys: int = 0                            # The number of quaternion rotation keys. If the rotation type is XYZ (type 4) then this *must* be set to 1, and in this case the actual number of keys is stored in the XYZ Rotations field.
     rotationType: KeyType = 0                           # The type of interpolation to use for rotation.  Can also be 4 to indicate that separate X, Y, and Z values are used for the rotation instead of Quaternions.
-    quaternionKeys: list[QuatKey[T]] = None             # The rotation keys if Quaternion rotation is used.
+    quaternionKeys: list[QuatKey[Quaternion]] = None    # The rotation keys if Quaternion rotation is used.
     order: float = None
-    xyzRotations: list[KeyGroup[T]] = None              # Individual arrays of keys for rotating X, Y, and Z individually.
-    translations: KeyGroup[T] = None                    # Translation keys.
-    scales: KeyGroup[T] = None                          # Scale keys.
+    xyzRotations: list[KeyGroup[float]] = None          # Individual arrays of keys for rotating X, Y, and Z individually.
+    translations: KeyGroup[Vector3] = None              # Translation keys.
+    scales: KeyGroup[float] = None                      # Scale keys.
 
     def __init__(self, r: NiReader):
         super().__init__(r)
         self.numRotationKeys = r.readUInt32()
         if self.numRotationKeys != 0: self.rotationType = KeyType(r.readUInt32())
-        if RotationType != KeyType.XYZ_ROTATION_KEY: self.quaternionKeys = r.readFArray(lambda z: QuatKey[T](r, self.RotationType), self.numRotationKeys)
+        if RotationType != KeyType.XYZ_ROTATION_KEY: self.quaternionKeys = r.readFArray(lambda z: QuatKey[Quaternion]('[Quaternion]', r, self.rotationType), self.numRotationKeys)
         else:
             if r.v <= 0x0A010000: self.order = r.readSingle()
-            self.xyzRotations = r.readFArray(lambda z: KeyGroup[T](r), 3)
-        self.translations = KeyGroup[T](r)
-        self.scales = KeyGroup[T](r)
+            self.xyzRotations = r.readFArray(lambda z: KeyGroup[float]('[float]', r), 3)
+        self.translations = KeyGroup[Vector3]('[Vector3]', r)
+        self.scales = KeyGroup[float]('[float]', r)
 
 # Describes the surface properties of an object e.g. translucency, ambient color, diffuse color, emissive color, and specular color.
 class NiMaterialProperty(NiProperty): # X
@@ -1495,7 +2246,7 @@ class NiMorphData(NiObject): # X
         self.numMorphs = r.readUInt32()
         self.numVertices = r.readUInt32()
         self.relativeTargets = r.readByte()
-        self.morphs = r.readFArray(lambda z: Morph(r, NumVertices), self.numMorphs)
+        self.morphs = r.readFArray(lambda z: Morph(r, self.numVertices), self.numMorphs)
 
 # Generic node object for grouping.
 class NiNode(NiAVObject): # X
@@ -1762,7 +2513,7 @@ class PixelFormatComponent: # Y
         self.type: PixelComponent = PixelComponent(r.readUInt32()) # Component Type
         self.convention: PixelRepresentation = PixelRepresentation(r.readUInt32()) # Data Storage Convention
         self.bitsPerChannel: int = r.readByte()         # Bits per component
-        self.isSigned: bool = r.readBool32()
+        self.isSigned: bool = Z.readBool()
 
 class NiPixelFormat(NiObject): # Y
     pixelFormat: PixelFormat = 0                        # The format of the pixels in this internally stored image.
@@ -1799,7 +2550,7 @@ class NiPixelFormat(NiObject): # Y
             self.extraData = r.readUInt32()
             self.flags = r.readByte()
             self.tiling = PixelTiling(r.readUInt32())
-        if r.v >= 0x14030004: self.sRgbSpace = r.readBool32()
+        if r.v >= 0x14030004: self.sRgbSpace = Z.readBool()
         if r.v >= 0x0A030003: self.channels = r.readFArray(lambda z: PixelFormatComponent(r), 4)
 
 # A texture.
@@ -1825,11 +2576,11 @@ class NiPixelData(NiPixelFormat): # X
 
 # Wrapper for position animation keys.
 class NiPosData(NiObject): # X
-    data: KeyGroup[T] = None
+    data: KeyGroup[Vector3] = None
 
     def __init__(self, r: NiReader):
         super().__init__(r)
-        self.data = KeyGroup[T](r)
+        self.data = KeyGroup[Vector3]('[Vector3]', r)
 
 # Unknown.
 class NiRotatingParticles(NiParticles): # X
@@ -1858,7 +2609,7 @@ class NiSkinData(NiObject): # X
         self.numBones = r.readUInt32()
         if r.v >= 0x04000002 and r.v <= 0x0A010000: self.skinPartition = X[NiSkinPartition].ref(r)
         if r.v >= 0x04020100: self.hasVertexWeights = r.readByte()
-        self.boneList = r.readFArray(lambda z: BoneData(r, HasVertexWeights), self.numBones)
+        self.boneList = r.readFArray(lambda z: BoneData(r, self.hasVertexWeights), self.numBones)
 
 # Skinning instance.
 class NiSkinInstance(NiObject): # X
@@ -1923,16 +2674,16 @@ class NiSourceTexture(NiTexture): # X
         super().__init__(r)
         self.useExternal = r.readByte()
         if self.useExternal == 1:
-            self.fileName = r.readL32Encoding()
+            self.fileName = r.readL32AString()
             if r.v >= 0x0A010000: self.unknownLink = X[NiObject].ref(r)
         if self.useExternal == 0:
             if r.v <= 0x0A000100: self.unknownByte = r.readByte()
-            if r.v >= 0x0A010000: self.fileName = r.readL32Encoding()
+            if r.v >= 0x0A010000: self.fileName = r.readL32AString()
             self.pixelData = X[NiPixelFormat].ref(r)
         self.formatPrefs = FormatPrefs(r)
         self.isStatic = r.readByte()
-        if r.v >= 0x0A010067: self.directRender = r.readBool32()
-        if r.v >= 0x14020004: self.persistRenderData = r.readBool32()
+        if r.v >= 0x0A010067: self.directRender = Z.readBool()
+        if r.v >= 0x14020004: self.persistRenderData = Z.readBool()
 
 # Apparently commands for an optimizer instructing it to keep things it would normally discard.
 # Also refers to NiNode objects (through their name) in animation .kf files.
@@ -1948,12 +2699,12 @@ class NiStringExtraData(NiExtraData): # X
 # Extra data, used to name different animation sequences.
 class NiTextKeyExtraData(NiExtraData): # X
     unknownInt1: int = 0                                # Unknown.  Always equals zero in all official files.
-    textKeys: list[Key[T]] = None                       # List of textual notes and at which time they take effect. Used for designating the start and stop of animations and the triggering of sounds.
+    textKeys: list[Key[str]] = None                     # List of textual notes and at which time they take effect. Used for designating the start and stop of animations and the triggering of sounds.
 
     def __init__(self, r: NiReader):
         super().__init__(r)
         if r.v <= 0x04020200: self.unknownInt1 = r.readUInt32()
-        self.textKeys = r.readL32FArray(lambda z: Key[T](r, self.KeyType.LINEAR_KEY))
+        self.textKeys = r.readL32FArray(lambda z: Key[str]('[str]', r, KeyType.LINEAR_KEY))
 
 # Represents an effect that uses projected textures such as projected lights (gobos), environment maps, and fog maps.
 class NiTextureEffect(NiDynamicEffect): # X
@@ -2001,7 +2752,7 @@ class NiImage(NiObject): # Y
     def __init__(self, r: NiReader):
         super().__init__(r)
         self.useExternal = r.readByte()
-        if self.useExternal != 0: self.fileName = r.readL32Encoding()
+        if self.useExternal != 0: self.fileName = r.readL32AString()
         else: self.imageData = X[NiRawImageData].ref(r)
         self.unknownInt = r.readUInt32()
         if r.v >= 0x03010000: self.unknownFloat = r.readSingle()
@@ -2035,34 +2786,34 @@ class NiTexturingProperty(NiProperty): # X
         if r.v >= 0x14010002: self.flags = Flags(r.readUInt16())
         if r.v >= 0x0303000D and r.v <= 0x14010001: self.applyMode = ApplyMode(r.readUInt32())
         self.textureCount = r.readUInt32()
-        if r.readBool32(): self.baseTexture = TexDesc(r)
-        if r.readBool32(): self.darkTexture = TexDesc(r)
-        if r.readBool32(): self.detailTexture = TexDesc(r)
-        if r.readBool32(): self.glossTexture = TexDesc(r)
-        if r.readBool32(): self.glowTexture = TexDesc(r)
-        hasBumpMapTexture = r.readBool32() if r.v >= 0x0303000D and self.textureCount > 5 else None
+        if Z.readBool(r): self.baseTexture = TexDesc(r)
+        if Z.readBool(r): self.darkTexture = TexDesc(r)
+        if Z.readBool(r): self.detailTexture = TexDesc(r)
+        if Z.readBool(r): self.glossTexture = TexDesc(r)
+        if Z.readBool(r): self.glowTexture = TexDesc(r)
+        hasBumpMapTexture = Z.readBool() if r.v >= 0x0303000D and self.textureCount > 5 else None
         if hasBumpMapTexture:
             self.bumpMapTexture = TexDesc(r)
             self.bumpMapLumaScale = r.readSingle()
             self.bumpMapLumaOffset = r.readSingle()
             self.bumpMapMatrix = r.readMatrix2x2()
-        hasNormalTexture = r.readBool32() if r.v >= 0x14020005 and self.textureCount > 6 else None
+        hasNormalTexture = Z.readBool() if r.v >= 0x14020005 and self.textureCount > 6 else None
         if hasNormalTexture: self.normalTexture = TexDesc(r)
-        hasParallaxTexture = r.readBool32() if r.v >= 0x14020005 and self.textureCount > 7 else None
+        hasParallaxTexture = Z.readBool() if r.v >= 0x14020005 and self.textureCount > 7 else None
         if hasParallaxTexture:
             self.parallaxTexture = TexDesc(r)
             self.parallaxOffset = r.readSingle()
-        hasDecal0Texture = r.readBool32() if r.v <= 0x14020004 and self.textureCount > 6 else \
-            r.readBool32() if r.v >= 0x14020005 and self.textureCount > 8 else None
+        hasDecal0Texture = Z.readBool() if r.v <= 0x14020004 and self.textureCount > 6 else \
+            Z.readBool() if r.v >= 0x14020005 and self.textureCount > 8 else None
         if hasDecal0Texture: self.decal0Texture = TexDesc(r)
-        hasDecal1Texture = r.readBool32() if r.v <= 0x14020004 and self.textureCount > 7 else \
-            r.readBool32() if r.v >= 0x14020005 and self.textureCount > 9 else None
+        hasDecal1Texture = Z.readBool() if r.v <= 0x14020004 and self.textureCount > 7 else \
+            Z.readBool() if r.v >= 0x14020005 and self.textureCount > 9 else None
         if hasDecal1Texture: self.decal1Texture = TexDesc(r)
-        hasDecal2Texture = r.readBool32() if r.v <= 0x14020004 and self.textureCount > 8 else \
-            r.readBool32() if r.v >= 0x14020005 and self.textureCount > 10 else None
+        hasDecal2Texture = Z.readBool() if r.v <= 0x14020004 and self.textureCount > 8 else \
+            Z.readBool() if r.v >= 0x14020005 and self.textureCount > 10 else None
         if hasDecal2Texture: self.decal2Texture = TexDesc(r)
-        hasDecal3Texture = r.readBool32() if r.v <= 0x14020004 and self.textureCount > 9 else \
-            r.readBool32() if r.v >= 0x14020005 and self.textureCount > 11 else None
+        hasDecal3Texture = Z.readBool() if r.v <= 0x14020004 and self.textureCount > 9 else \
+            Z.readBool() if r.v >= 0x14020005 and self.textureCount > 11 else None
         if hasDecal3Texture: self.decal3Texture = TexDesc(r)
         if r.v >= 0x0A000100: self.shaderTextures = r.readL32FArray(lambda z: ShaderTexDesc(r))
 
@@ -2085,6 +2836,25 @@ class NiTriShapeData(NiTriBasedGeomData): # X
         if r.v >= 0x0A000103 and hasTriangles: self.triangles = r.readSArray(Triangle, self.numTriangles)
         if r.v >= 0x03010000: self.matchGroups = r.readL16FArray(lambda z: MatchGroup(r))
 
+# A shape node that refers to data organized into strips of triangles
+class NiTriStrips(NiTriBasedGeom): # Z
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+
+# Holds mesh data using strips of triangles.
+class NiTriStripsData(NiTriBasedGeomData): # Z
+    numStrips: int = None                               # Number of OpenGL triangle strips that are present.
+    stripLengths: list[int] = None                      # The number of points in each triangle strip.
+    points: list[list[int]] = None                      # The points in the Triangle strips.  Size is the sum of all entries in Strip Lengths.
+
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+        self.numStrips = r.readUInt16()
+        self.stripLengths = r.readPArray(None, 'H', self.numStrips)
+        hasPoints = Z.readBool() if r.v >= 0x0A000103 else None
+        if r.v <= 0x0A000102: self.points = r.readFArray(lambda k, i: r.readPArray(None, 'H', self.stripLengths[i]), self.numStrips)
+        if r.v >= 0x0A000103 and hasPoints: self.points = r.readFArray(lambda k, i: r.readPArray(None, 'H', self.stripLengths[i]), self.numStrips)
+
 # DEPRECATED (pre-10.1), REMOVED (20.3).
 # Time controller for texture coordinates.
 class NiUVController(NiTimeController): # X
@@ -2099,11 +2869,11 @@ class NiUVController(NiTimeController): # X
 # DEPRECATED (pre-10.1), REMOVED (20.3)
 # Texture coordinate data.
 class NiUVData(NiObject): # X
-    uvGroups: list[KeyGroup[T]] = None                  # Four UV data groups. Appear to be U translation, V translation, U scaling/tiling, V scaling/tiling.
+    uvGroups: list[KeyGroup[float]] = None              # Four UV data groups. Appear to be U translation, V translation, U scaling/tiling, V scaling/tiling.
 
     def __init__(self, r: NiReader):
         super().__init__(r)
-        self.uvGroups = r.readFArray(lambda z: KeyGroup[T](r), 4)
+        self.uvGroups = r.readFArray(lambda z: KeyGroup[float]('[float]', r), 4)
 
 # Property of vertex colors. This object is referred to by the root object of the NIF file whenever some NiTriShapeData object has vertex colors with non-default settings; if not present, vertex colors have vertex_mode=2 and lighting_mode=1.
 class NiVertexColorProperty(NiProperty): # X
@@ -2135,11 +2905,11 @@ class NiVertWeightsExtraData(NiExtraData): # X
 # DEPRECATED (10.2), REMOVED (?), Replaced by NiBoolData.
 # Visibility data for a controller.
 class NiVisData(NiObject): # X
-    keys: list[Key[T]] = None
+    keys: list[Key[byte]] = None
 
     def __init__(self, r: NiReader):
         super().__init__(r)
-        self.keys = r.readL32FArray(lambda z: Key[T](r, self.KeyType.LINEAR_KEY))
+        self.keys = r.readL32FArray(lambda z: Key[byte]('[byte]', r, KeyType.LINEAR_KEY))
 
 # Allows applications to switch between drawing solid geometry or wireframe outlines.
 class NiWireframeProperty(NiProperty): # X

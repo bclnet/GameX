@@ -1158,6 +1158,41 @@ class NiTransform: # X
         self.translation: Vector3 = r.readVector3()     # The translation vector.
         self.scale: float = r.readSingle()              # Scaling part (only uniform scaling is supported).
 
+# Bethesda Animation. Furniture entry points. It specifies the direction(s) from where the actor is able to enter (and leave) the position.
+class FurnitureEntryPoints(Flag): # Z
+    Front = 0                       # front entry point
+    Behind = 1 << 1                 # behind entry point
+    Right = 1 << 2                  # right entry point
+    Left = 1 << 3                   # left entry point
+    Up = 1 << 4                     # up entry point - unknown function. Used on some beds in Skyrim, probably for blocking of sleeping position.
+
+# Bethesda Animation. Animation type used on this position. This specifies the function of this position.
+class AnimationType(Enum): # Z
+    Sit = 1                         # Actor use sit animation.
+    Sleep = 2                       # Actor use sleep animation.
+    Lean = 4                        # Used for lean animations?
+
+# Bethesda Animation. Describes a furniture position?
+class FurniturePosition: # Z
+    offset: Vector3 = None                              # Offset of furniture marker.
+    orientation: int = None                             # Furniture marker orientation.
+    positionRef1: int = 0                               # Refers to a furnituremarkerxx.nif file. Always seems to be the same as Position Ref 2.
+    positionRef2: int = 0                               # Refers to a furnituremarkerxx.nif file. Always seems to be the same as Position Ref 1.
+    heading: float = None                               # Similar to Orientation, in float form.
+    animationType: AnimationType = 0                    # Unknown
+    entryProperties: FurnitureEntryPoints = 0           # Unknown/unused in nif?
+
+    def __init__(self, r: NiReader):
+        self.offset = r.readVector3()
+        if r.uv2 <= 34:
+            self.orientation = r.readUInt16()
+            self.positionRef1 = r.readByte()
+            self.positionRef2 = r.readByte()
+        else:
+            self.heading = r.readSingle()
+            self.animationType = AnimationType(r.readUInt16())
+            self.entryProperties = FurnitureEntryPoints(r.readUInt16())
+
 # Geometry morphing data component.
 class Morph: # X
     frameName: str = None                               # Name of the frame.
@@ -1331,68 +1366,75 @@ class NiObject: # X
     def read(r: NiReader, nodeType: str) -> NiObject:
         # print(f'{nodeType}: {r.tell()}')
         match nodeType:
-            case 'NiNode': n = NiNode(r)
-            case 'NiTriShape': n = NiTriShape(r)
-            case 'NiTexturingProperty': n = NiTexturingProperty(r)
-            case 'NiSourceTexture': n = NiSourceTexture(r)
-            case 'NiMaterialProperty': n = NiMaterialProperty(r)
-            case 'NiMaterialColorController': n = NiMaterialColorController(r)
-            case 'NiTriShapeData': n = NiTriShapeData(r)
-            case 'RootCollisionNode': n = RootCollisionNode(r)
-            case 'NiStringExtraData': n = NiStringExtraData(r)
-            case 'NiSkinInstance': n = NiSkinInstance(r)
-            case 'NiSkinData': n = NiSkinData(r)
-            case 'NiAlphaProperty': n = NiAlphaProperty(r)
-            case 'NiZBufferProperty': n = NiZBufferProperty(r)
-            case 'NiVertexColorProperty': n = NiVertexColorProperty(r)
-            case 'NiBSAnimationNode': n = NiBSAnimationNode(r)
-            case 'NiBSParticleNode': n = NiBSParticleNode(r)
-            case 'NiParticles': n = NiParticles(r)
-            case 'NiParticlesData': n = NiParticlesData(r)
-            case 'NiRotatingParticles': n = NiRotatingParticles(r)
-            case 'NiRotatingParticlesData': n = NiRotatingParticlesData(r)
-            case 'NiAutoNormalParticles': n = NiAutoNormalParticles(r)
-            case 'NiAutoNormalParticlesData': n = NiAutoNormalParticlesData(r)
-            case 'NiUVController': n = NiUVController(r)
-            case 'NiUVData': n = NiUVData(r)
-            case 'NiTextureEffect': n = NiTextureEffect(r)
-            case 'NiTextKeyExtraData': n = NiTextKeyExtraData(r)
-            case 'NiVertWeightsExtraData': n = NiVertWeightsExtraData(r)
-            case 'NiParticleSystemController': n = NiParticleSystemController(r)
-            case 'NiBSPArrayController': n = NiBSPArrayController(r)
-            case 'NiGravity': n = NiGravity(r)
-            case 'NiParticleBomb': n = NiParticleBomb(r)
-            case 'NiParticleColorModifier': n = NiParticleColorModifier(r)
-            case 'NiParticleGrowFade': n = NiParticleGrowFade(r)
-            case 'NiParticleMeshModifier': n = NiParticleMeshModifier(r)
-            case 'NiParticleRotation': n = NiParticleRotation(r)
-            case 'NiKeyframeController': n = NiKeyframeController(r)
-            case 'NiKeyframeData': n = NiKeyframeData(r)
-            case 'NiColorData': n = NiColorData(r)
-            case 'NiGeomMorpherController': n = NiGeomMorpherController(r)
-            case 'NiMorphData': n = NiMorphData(r)
-            case 'AvoidNode': n = AvoidNode(r)
-            case 'NiVisController': n = NiVisController(r)
-            case 'NiVisData': n = NiVisData(r)
-            case 'NiAlphaController': n = NiAlphaController(r)
-            case 'NiFloatData': n = NiFloatData(r)
-            case 'NiPosData': n = NiPosData(r)
-            case 'NiBillboardNode': n = NiBillboardNode(r)
-            case 'NiShadeProperty': n = NiShadeProperty(r)
-            case 'NiWireframeProperty': n = NiWireframeProperty(r)
-            case 'NiCamera': n = NiCamera(r)
-            case 'NiPathController': n = NiPathController(r)
-            case 'NiPixelData': n = NiPixelData(r)
-            case 'NiBinaryExtraData': n = NiBinaryExtraData(r)
-            case 'NiTriStrips': n = NiTriStrips(r)
-            case 'NiTriStripsData': n = NiTriStripsData(r)
-            case 'BSXFlags': n = BSXFlags(r)
-            case 'bhkNiTriStripsShape': n = bhkNiTriStripsShape(r)
-            case 'bhkMoppBvTreeShape': n = bhkMoppBvTreeShape(r)
-            case 'bhkRigidBody': n = bhkRigidBody(r)
-            case _: Log(f'Tried to read an unsupported NiObject type ({nodeType}).'); n = None
-        setattr(n, '$type', nodeType)
-        return n
+            case 'NiNode': node = NiNode(r)
+            case 'NiTriShape': node = NiTriShape(r)
+            case 'NiTexturingProperty': node = NiTexturingProperty(r)
+            case 'NiSourceTexture': node = NiSourceTexture(r)
+            case 'NiMaterialProperty': node = NiMaterialProperty(r)
+            case 'NiMaterialColorController': node = NiMaterialColorController(r)
+            case 'NiTriShapeData': node = NiTriShapeData(r)
+            case 'RootCollisionNode': node = RootCollisionNode(r)
+            case 'NiStringExtraData': node = NiStringExtraData(r)
+            case 'NiSkinInstance': node = NiSkinInstance(r)
+            case 'NiSkinData': node = NiSkinData(r)
+            case 'NiAlphaProperty': node = NiAlphaProperty(r)
+            case 'NiZBufferProperty': node = NiZBufferProperty(r)
+            case 'NiVertexColorProperty': node = NiVertexColorProperty(r)
+            case 'NiBSAnimationNode': node = NiBSAnimationNode(r)
+            case 'NiBSParticleNode': node = NiBSParticleNode(r)
+            case 'NiParticles': node = NiParticles(r)
+            case 'NiParticlesData': node = NiParticlesData(r)
+            case 'NiRotatingParticles': node = NiRotatingParticles(r)
+            case 'NiRotatingParticlesData': node = NiRotatingParticlesData(r)
+            case 'NiAutoNormalParticles': node = NiAutoNormalParticles(r)
+            case 'NiAutoNormalParticlesData': node = NiAutoNormalParticlesData(r)
+            case 'NiUVController': node = NiUVController(r)
+            case 'NiUVData': node = NiUVData(r)
+            case 'NiTextureEffect': node = NiTextureEffect(r)
+            case 'NiTextKeyExtraData': node = NiTextKeyExtraData(r)
+            case 'NiVertWeightsExtraData': node = NiVertWeightsExtraData(r)
+            case 'NiParticleSystemController': node = NiParticleSystemController(r)
+            case 'NiBSPArrayController': node = NiBSPArrayController(r)
+            case 'NiGravity': node = NiGravity(r)
+            case 'NiParticleBomb': node = NiParticleBomb(r)
+            case 'NiParticleColorModifier': node = NiParticleColorModifier(r)
+            case 'NiParticleGrowFade': node = NiParticleGrowFade(r)
+            case 'NiParticleMeshModifier': node = NiParticleMeshModifier(r)
+            case 'NiParticleRotation': node = NiParticleRotation(r)
+            case 'NiKeyframeController': node = NiKeyframeController(r)
+            case 'NiKeyframeData': node = NiKeyframeData(r)
+            case 'NiColorData': node = NiColorData(r)
+            case 'NiGeomMorpherController': node = NiGeomMorpherController(r)
+            case 'NiMorphData': node = NiMorphData(r)
+            case 'AvoidNode': node = AvoidNode(r)
+            case 'NiVisController': node = NiVisController(r)
+            case 'NiVisData': node = NiVisData(r)
+            case 'NiAlphaController': node = NiAlphaController(r)
+            case 'NiFloatData': node = NiFloatData(r)
+            case 'NiPosData': node = NiPosData(r)
+            case 'NiBillboardNode': node = NiBillboardNode(r)
+            case 'NiShadeProperty': node = NiShadeProperty(r)
+            case 'NiWireframeProperty': node = NiWireframeProperty(r)
+            case 'NiCamera': node = NiCamera(r)
+            case 'NiPathController': node = NiPathController(r)
+            case 'NiPixelData': node = NiPixelData(r)
+            case 'NiBinaryExtraData': node = NiBinaryExtraData(r)
+            case 'NiTriStrips': node = NiTriStrips(r)
+            case 'NiTriStripsData': node = NiTriStripsData(r)
+            case 'BSXFlags': node = BSXFlags(r)
+            case 'bhkNiTriStripsShape': node = bhkNiTriStripsShape(r)
+            case 'bhkMoppBvTreeShape': node = bhkMoppBvTreeShape(r)
+            case 'bhkRigidBody': node = bhkRigidBody(r)
+            case 'bhkCollisionObject': node = bhkCollisionObject(r)
+            case 'bhkRigidBodyT': node = bhkRigidBodyT(r)
+            case 'bhkConvexVerticesShape': node = bhkConvexVerticesShape(r)
+            case 'bhkListShape': node = bhkListShape(r)
+            case 'BSFurnitureMarker': node = BSFurnitureMarker(r)
+            case 'bhkBoxShape': node = bhkBoxShape(r)
+            case 'bhkConvexTransformShape': node = bhkConvexTransformShape(r)
+            case _: Log(f'Tried to read an unsupported NiObject type ({nodeType}).'); node = None
+        setattr(node, '$type', nodeType)
+        return node
 
 # LEGACY (pre-10.1). Abstract base class for particle system modifiers.
 class NiParticleModifier(NiObject): # X
@@ -1542,8 +1584,77 @@ class bhkRigidBody(bhkEntity): # Z
         self.constraints = r.readL32FArray(X[bhkSerializable].ref)
         self.bodyFlags = r.readUInt32() if r.uv2 < 76 else r.readUInt16()
 
+# The "T" suffix marks this body as active for translation and rotation.
+class bhkRigidBodyT(bhkRigidBody): # Z
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+
 # A Havok Shape?
 class bhkShape(bhkSerializable): # Z
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+
+# Transforms a shape.
+class bhkTransformShape(bhkShape): # Z
+    shape: Ref[NiObject] = None                         # The shape that this object transforms.
+    material: HavokMaterial = None                      # The material of the shape.
+    radius: float = None
+    unused: bytearray = None                            # Garbage data from memory.
+    transform: Matrix4x4 = None                         # A transform matrix.
+
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+        self.shape = X[bhkShape].ref(r)
+        self.material = HavokMaterial(r)
+        self.radius = r.readSingle()
+        self.unused = r.readBytes(8)
+        self.transform = r.readMatrix4x4()
+
+# A havok shape, perhaps with a bounding sphere for quick rejection in addition to more detailed shape data?
+class bhkSphereRepShape(bhkShape): # Z
+    material: HavokMaterial = None                      # The material of the shape.
+    radius: float = None                                # The radius of the sphere that encloses the shape.
+
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+        self.material = HavokMaterial(r)
+        self.radius = r.readSingle()
+
+# A havok shape.
+class bhkConvexShape(bhkSphereRepShape): # Z
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+
+# A box.
+class bhkBoxShape(bhkConvexShape): # Z
+    unused: bytearray = None                            # Not used. The following wants to be aligned at 16 bytes.
+    dimensions: Vector3 = None                          # A cube stored in Half Extents. A unit cube (1.0, 1.0, 1.0) would be stored as 0.5, 0.5, 0.5.
+    unusedFloat: float = None                           # Unused as Havok stores the Half Extents as hkVector4 with the W component unused.
+
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+        self.unused = r.readBytes(8)
+        self.dimensions = r.readVector3()
+        self.unusedFloat = r.readSingle()
+
+# A convex shape built from vertices. Note that if the shape is used in
+# a non-static object (such as clutter), then they will simply fall
+# through ground when they are under a bhkListShape.
+class bhkConvexVerticesShape(bhkConvexShape): # Z
+    verticesProperty: hkWorldObjCinfoProperty = None
+    normalsProperty: hkWorldObjCinfoProperty = None
+    vertices: list[Vector4] = None                      # Vertices. Fourth component is 0. Lexicographically sorted.
+    normals: list[Vector4] = None                       # Half spaces as determined by the set of vertices above. First three components define the normal pointing to the exterior, fourth component is the signed distance of the separating plane to the origin: it is minus the dot product of v and n, where v is any vertex on the separating plane, and n is the normal. Lexicographically sorted.
+
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+        self.verticesProperty = hkWorldObjCinfoProperty(r)
+        self.normalsProperty = hkWorldObjCinfoProperty(r)
+        self.vertices = r.readL32PArray(array, '4f')
+        self.normals = r.readL32PArray(array, '4f')
+
+# A convex transformed shape?
+class bhkConvexTransformShape(bhkTransformShape): # Z
     def __init__(self, r: NiReader):
         super().__init__(r)
 
@@ -1568,7 +1679,7 @@ class bhkMoppBvTreeShape(bhkBvTreeShape): # Z
         self.shape = X[bhkShape].ref(r)
         self.unused = r.readPArray(None, 'I', 3)
         self.shapeScale = r.readSingle()
-        self.moppDataSize = 0 # calculated
+        self.moppDataSize = r.readUInt32() # calculated
         if r.v >= 0x0A000102:
             self.origin = r.readVector3()
             self.scale = r.readSingle()
@@ -1579,6 +1690,28 @@ class bhkMoppBvTreeShape(bhkBvTreeShape): # Z
 class bhkShapeCollection(bhkShape): # Z
     def __init__(self, r: NiReader):
         super().__init__(r)
+
+# A list of shapes.
+# 
+# Do not put a bhkPackedNiTriStripsShape in the Sub Shapes. Use a
+# separate collision nodes without a list shape for those.
+# 
+# Also, shapes collected in a bhkListShape may not have the correct
+# walking noise, so only use it for non-walkable objects.
+class bhkListShape(bhkShapeCollection): # Z
+    subShapes: list[Ref[NiObject]] = None               # List of shapes.
+    material: HavokMaterial = None                      # The material of the shape.
+    childShapeProperty: hkWorldObjCinfoProperty = None
+    childFilterProperty: hkWorldObjCinfoProperty = None
+    unknownInts: list[int] = None                       # Unknown.
+
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+        self.subShapes = r.readL32FArray(X[bhkShape].ref)
+        self.material = HavokMaterial(r)
+        self.childShapeProperty = hkWorldObjCinfoProperty(r)
+        self.childFilterProperty = hkWorldObjCinfoProperty(r)
+        self.unknownInts = r.readL32PArray(None, 'I')
 
 # A shape constructed from a bunch of strips.
 class bhkNiTriStripsShape(bhkShapeCollection): # Z
@@ -1661,6 +1794,33 @@ class NiCollisionObject(NiObject): # Y
     def __init__(self, r: NiReader):
         super().__init__(r)
         self.target = X[NiAVObject].ptr(r)
+
+# bhkNiCollisionObject flags. The flags 0x2, 0x100, and 0x200 are not seen in any NIF nor get/set by the engine.
+class bhkCOFlags(Flag): # Z
+    ACTIVE = 0
+    NOTIFY = 1 << 2
+    SET_LOCAL = 1 << 3
+    DBG_DISPLAY = 1 << 4
+    USE_VEL = 1 << 5
+    RESET = 1 << 6
+    SYNC_ON_UPDATE = 1 << 7
+    ANIM_TARGETED = 1 << 10
+    DISMEMBERED_LIMB = 1 << 11
+
+# Havok related collision object?
+class bhkNiCollisionObject(NiCollisionObject): # Z
+    flags: bhkCOFlags = 1                               # Set to 1 for most objects, and to 41 for animated objects (ANIM_STATIC). Bits: 0=Active 2=Notify 3=Set Local 6=Reset.
+    body: Ref[NiObject] = None
+
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+        self.flags = bhkCOFlags(r.readUInt16())
+        self.body = X[bhkWorldObject].ref(r)
+
+# Havok related collision object?
+class bhkCollisionObject(bhkNiCollisionObject): # Z
+    def __init__(self, r: NiReader):
+        super().__init__(r)
 
 # Abstract audio-visual base class from which all of Gamebryo's scene graph objects inherit.
 class NiAVObject(NiObjectNET): # X
@@ -1985,6 +2145,14 @@ class NiTriBasedGeomData(NiGeometryData): # X
     def __init__(self, r: NiReader):
         super().__init__(r)
         self.numTriangles = r.readUInt16()
+
+# Unknown. Marks furniture sitting positions?
+class BSFurnitureMarker(NiExtraData): # Z
+    positions: list[FurniturePosition] = None
+
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+        self.positions = r.readL32FArray(lambda z: FurniturePosition(r))
 
 # Transparency. Flags 0x00ED.
 class NiAlphaProperty(NiProperty): # X

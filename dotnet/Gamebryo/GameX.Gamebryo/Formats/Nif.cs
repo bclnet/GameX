@@ -1358,6 +1358,54 @@ public class NiTransform(NiReader r) { // X
 }
 
 /// <summary>
+/// Bethesda Animation. Furniture entry points. It specifies the direction(s) from where the actor is able to enter (and leave) the position.
+/// </summary>
+[Flags]
+public enum FurnitureEntryPoints : ushort { // Z
+    Front = 0,                      // front entry point
+    Behind = 1 << 1,                // behind entry point
+    Right = 1 << 2,                 // right entry point
+    Left = 1 << 3,                  // left entry point
+    Up = 1 << 4                     // up entry point - unknown function. Used on some beds in Skyrim, probably for blocking of sleeping position.
+}
+
+/// <summary>
+/// Bethesda Animation. Animation type used on this position. This specifies the function of this position.
+/// </summary>
+public enum AnimationType : ushort { // Z
+    Sit = 1,                        // Actor use sit animation.
+    Sleep = 2,                      // Actor use sleep animation.
+    Lean = 4                        // Used for lean animations?
+}
+
+/// <summary>
+/// Bethesda Animation. Describes a furniture position?
+/// </summary>
+public class FurniturePosition { // Z
+    public Vector3 Offset;                              // Offset of furniture marker.
+    public ushort Orientation;                          // Furniture marker orientation.
+    public byte PositionRef1;                           // Refers to a furnituremarkerxx.nif file. Always seems to be the same as Position Ref 2.
+    public byte PositionRef2;                           // Refers to a furnituremarkerxx.nif file. Always seems to be the same as Position Ref 1.
+    public float Heading;                               // Similar to Orientation, in float form.
+    public AnimationType AnimationType;                 // Unknown
+    public FurnitureEntryPoints EntryProperties;        // Unknown/unused in nif?
+
+    public FurniturePosition(NiReader r) {
+        Offset = r.ReadVector3();
+        if (r.UV2 <= 34) {
+            Orientation = r.ReadUInt16();
+            PositionRef1 = r.ReadByte();
+            PositionRef2 = r.ReadByte();
+        }
+        else {
+            Heading = r.ReadSingle();
+            AnimationType = (AnimationType)r.ReadUInt16();
+            EntryProperties = (FurnitureEntryPoints)r.ReadUInt16();
+        }
+    }
+}
+
+/// <summary>
 /// Geometry morphing data component.
 /// </summary>
 public class Morph { // X
@@ -1608,6 +1656,13 @@ public class MorphWeight(NiReader r) { // Y
 [JsonDerivedType(typeof(bhkNiTriStripsShape), typeDiscriminator: nameof(bhkNiTriStripsShape))]
 [JsonDerivedType(typeof(bhkMoppBvTreeShape), typeDiscriminator: nameof(bhkMoppBvTreeShape))]
 [JsonDerivedType(typeof(bhkRigidBody), typeDiscriminator: nameof(bhkRigidBody))]
+[JsonDerivedType(typeof(bhkCollisionObject), typeDiscriminator: nameof(bhkCollisionObject))]
+[JsonDerivedType(typeof(bhkRigidBodyT), typeDiscriminator: nameof(bhkRigidBodyT))]
+[JsonDerivedType(typeof(bhkConvexVerticesShape), typeDiscriminator: nameof(bhkConvexVerticesShape))]
+[JsonDerivedType(typeof(bhkListShape), typeDiscriminator: nameof(bhkListShape))]
+[JsonDerivedType(typeof(BSFurnitureMarker), typeDiscriminator: nameof(BSFurnitureMarker))]
+[JsonDerivedType(typeof(bhkBoxShape), typeDiscriminator: nameof(bhkBoxShape))]
+[JsonDerivedType(typeof(bhkConvexTransformShape), typeDiscriminator: nameof(bhkConvexTransformShape))]
 public abstract class NiObject(NiReader r) { // X
 
     public static NiObject Read(NiReader r, string nodeType) {
@@ -1672,6 +1727,13 @@ public abstract class NiObject(NiReader r) { // X
             case "bhkNiTriStripsShape": return new bhkNiTriStripsShape(r);
             case "bhkMoppBvTreeShape": return new bhkMoppBvTreeShape(r);
             case "bhkRigidBody": return new bhkRigidBody(r);
+            case "bhkCollisionObject": return new bhkCollisionObject(r);
+            case "bhkRigidBodyT": return new bhkRigidBodyT(r);
+            case "bhkConvexVerticesShape": return new bhkConvexVerticesShape(r);
+            case "bhkListShape": return new bhkListShape(r);
+            case "BSFurnitureMarker": return new BSFurnitureMarker(r);
+            case "bhkBoxShape": return new bhkBoxShape(r);
+            case "bhkConvexTransformShape": return new bhkConvexTransformShape(r);
             default: { Log($"Tried to read an unsupported NiObject type ({nodeType})."); return null; }
         }
     }
@@ -1843,9 +1905,93 @@ public class bhkRigidBody : bhkEntity { // Z
 }
 
 /// <summary>
+/// The "T" suffix marks this body as active for translation and rotation.
+/// </summary>
+public class bhkRigidBodyT(NiReader r) : bhkRigidBody(r) { // Z
+}
+
+/// <summary>
 /// A Havok Shape?
 /// </summary>
 public abstract class bhkShape(NiReader r) : bhkSerializable(r) { // Z
+}
+
+/// <summary>
+/// Transforms a shape.
+/// </summary>
+public class bhkTransformShape : bhkShape { // Z
+    public Ref<bhkShape> Shape;                         // The shape that this object transforms.
+    public HavokMaterial Material;                      // The material of the shape.
+    public float Radius;
+    public byte[] Unused;                               // Garbage data from memory.
+    public Matrix4x4 Transform;                         // A transform matrix.
+
+    public bhkTransformShape(NiReader r) : base(r) {
+        Shape = X<bhkShape>.Ref(r);
+        Material = new HavokMaterial(r);
+        Radius = r.ReadSingle();
+        Unused = r.ReadBytes(8);
+        Transform = r.ReadMatrix4x4();
+    }
+}
+
+/// <summary>
+/// A havok shape, perhaps with a bounding sphere for quick rejection in addition to more detailed shape data?
+/// </summary>
+public abstract class bhkSphereRepShape : bhkShape { // Z
+    public HavokMaterial Material;                      // The material of the shape.
+    public float Radius;                                // The radius of the sphere that encloses the shape.
+
+    public bhkSphereRepShape(NiReader r) : base(r) {
+        Material = new HavokMaterial(r);
+        Radius = r.ReadSingle();
+    }
+}
+
+/// <summary>
+/// A havok shape.
+/// </summary>
+public abstract class bhkConvexShape(NiReader r) : bhkSphereRepShape(r) { // Z
+}
+
+/// <summary>
+/// A box.
+/// </summary>
+public class bhkBoxShape : bhkConvexShape { // Z
+    public byte[] Unused;                               // Not used. The following wants to be aligned at 16 bytes.
+    public Vector3 Dimensions;                          // A cube stored in Half Extents. A unit cube (1.0, 1.0, 1.0) would be stored as 0.5, 0.5, 0.5.
+    public float UnusedFloat;                           // Unused as Havok stores the Half Extents as hkVector4 with the W component unused.
+
+    public bhkBoxShape(NiReader r) : base(r) {
+        Unused = r.ReadBytes(8);
+        Dimensions = r.ReadVector3();
+        UnusedFloat = r.ReadSingle();
+    }
+}
+
+/// <summary>
+/// A convex shape built from vertices. Note that if the shape is used in
+/// a non-static object (such as clutter), then they will simply fall
+/// through ground when they are under a bhkListShape.
+/// </summary>
+public class bhkConvexVerticesShape : bhkConvexShape { // Z
+    public hkWorldObjCinfoProperty VerticesProperty;
+    public hkWorldObjCinfoProperty NormalsProperty;
+    public Vector4[] Vertices;                          // Vertices. Fourth component is 0. Lexicographically sorted.
+    public Vector4[] Normals;                           // Half spaces as determined by the set of vertices above. First three components define the normal pointing to the exterior, fourth component is the signed distance of the separating plane to the origin: it is minus the dot product of v and n, where v is any vertex on the separating plane, and n is the normal. Lexicographically sorted.
+
+    public bhkConvexVerticesShape(NiReader r) : base(r) {
+        VerticesProperty = new hkWorldObjCinfoProperty(r);
+        NormalsProperty = new hkWorldObjCinfoProperty(r);
+        Vertices = r.ReadL32PArray<Vector4>("4f");
+        Normals = r.ReadL32PArray<Vector4>("4f");
+    }
+}
+
+/// <summary>
+/// A convex transformed shape?
+/// </summary>
+public class bhkConvexTransformShape(NiReader r) : bhkTransformShape(r) { // Z
 }
 
 /// <summary>
@@ -1871,7 +2017,7 @@ public class bhkMoppBvTreeShape : bhkBvTreeShape { // Z
         Shape = X<bhkShape>.Ref(r);
         Unused = r.ReadPArray<uint>("I", 3);
         ShapeScale = r.ReadSingle();
-        MOPPDataSize = 0; // calculated
+        MOPPDataSize = r.ReadUInt32(); // calculated
         if (r.V >= 0x0A000102) {
             Origin = r.ReadVector3();
             Scale = r.ReadSingle();
@@ -1885,6 +2031,31 @@ public class bhkMoppBvTreeShape : bhkBvTreeShape { // Z
 /// Havok collision object that uses multiple shapes?
 /// </summary>
 public abstract class bhkShapeCollection(NiReader r) : bhkShape(r) { // Z
+}
+
+/// <summary>
+/// A list of shapes.
+/// 
+/// Do not put a bhkPackedNiTriStripsShape in the Sub Shapes. Use a
+/// separate collision nodes without a list shape for those.
+/// 
+/// Also, shapes collected in a bhkListShape may not have the correct
+/// walking noise, so only use it for non-walkable objects.
+/// </summary>
+public class bhkListShape : bhkShapeCollection { // Z
+    public Ref<bhkShape>[] SubShapes;                   // List of shapes.
+    public HavokMaterial Material;                      // The material of the shape.
+    public hkWorldObjCinfoProperty ChildShapeProperty;
+    public hkWorldObjCinfoProperty ChildFilterProperty;
+    public uint[] UnknownInts;                          // Unknown.
+
+    public bhkListShape(NiReader r) : base(r) {
+        SubShapes = r.ReadL32FArray(X<bhkShape>.Ref);
+        Material = new HavokMaterial(r);
+        ChildShapeProperty = new hkWorldObjCinfoProperty(r);
+        ChildFilterProperty = new hkWorldObjCinfoProperty(r);
+        UnknownInts = r.ReadL32PArray<uint>("I");
+    }
 }
 
 /// <summary>
@@ -1983,6 +2154,41 @@ public class NiCollisionObject : NiObject { // Y
     public NiCollisionObject(NiReader r) : base(r) {
         Target = X<NiAVObject>.Ptr(r);
     }
+}
+
+/// <summary>
+/// bhkNiCollisionObject flags. The flags 0x2, 0x100, and 0x200 are not seen in any NIF nor get/set by the engine.
+/// </summary>
+[Flags]
+public enum bhkCOFlags : ushort { // Z
+    ACTIVE = 0,
+    NOTIFY = 1 << 2,
+    SET_LOCAL = 1 << 3,
+    DBG_DISPLAY = 1 << 4,
+    USE_VEL = 1 << 5,
+    RESET = 1 << 6,
+    SYNC_ON_UPDATE = 1 << 7,
+    ANIM_TARGETED = 1 << 10,
+    DISMEMBERED_LIMB = 1 << 11
+}
+
+/// <summary>
+/// Havok related collision object?
+/// </summary>
+public abstract class bhkNiCollisionObject : NiCollisionObject { // Z
+    public bhkCOFlags Flags = (bhkCOFlags)1;            // Set to 1 for most objects, and to 41 for animated objects (ANIM_STATIC). Bits: 0=Active 2=Notify 3=Set Local 6=Reset.
+    public Ref<bhkWorldObject> Body;
+
+    public bhkNiCollisionObject(NiReader r) : base(r) {
+        Flags = (bhkCOFlags)r.ReadUInt16();
+        Body = X<bhkWorldObject>.Ref(r);
+    }
+}
+
+/// <summary>
+/// Havok related collision object?
+/// </summary>
+public class bhkCollisionObject(NiReader r) : bhkNiCollisionObject(r) { // Z
 }
 
 /// <summary>
@@ -2362,6 +2568,17 @@ public abstract class NiTriBasedGeomData : NiGeometryData { // X
 
     public NiTriBasedGeomData(NiReader r) : base(r) {
         NumTriangles = r.ReadUInt16();
+    }
+}
+
+/// <summary>
+/// Unknown. Marks furniture sitting positions?
+/// </summary>
+public class BSFurnitureMarker : NiExtraData { // Z
+    public FurniturePosition[] Positions;
+
+    public BSFurnitureMarker(NiReader r) : base(r) {
+        Positions = r.ReadL32FArray(z => new FurniturePosition(r));
     }
 }
 

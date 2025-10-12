@@ -25,12 +25,13 @@ class NifCodeWriter(XmlCodeWriter):
             'NiBinaryExtraData', 'NiTriStrips', 'NiTriStripsData', 'NiIntegerExtraData', 'BSXFlags',
             'OblivionLayer', 'OblivionHavokMaterial', 'Fallout3Layer', 'Fallout3HavokMaterial', 'SkyrimLayer', 'SkyrimHavokMaterial', 'HavokMaterial', 'HavokFilter', 'MoppDataBuildType',
             'bhkRefObject', 'bhkSerializable', 'bhkShape', 'bhkShapeCollection', 'bhkNiTriStripsShape', 'bhkBvTreeShape', 'bhkMoppBvTreeShape',
-            'hkResponseType', 'hkMotionType', 'hkDeactivatorType', 'hkSolverDeactivation', 'hkQualityType', 'BroadPhaseType', 'hkWorldObjCinfoProperty', 'bhkWorldObject', 'bhkEntity', 'bhkRigidBody' ]
+            'hkResponseType', 'hkMotionType', 'hkDeactivatorType', 'hkSolverDeactivation', 'hkQualityType', 'BroadPhaseType', 'hkWorldObjCinfoProperty', 'bhkWorldObject', 'bhkEntity', 'bhkRigidBody', 'bhkCOFlags', 'bhkNiCollisionObject', 'bhkCollisionObject',
+            'bhkRigidBodyT', 'bhkSphereRepShape', 'bhkConvexShape', 'bhkConvexVerticesShape', 'bhkListShape', 'AnimationType', 'FurnitureEntryPoints', 'FurniturePosition', 'BSFurnitureMarker', 'bhkBoxShape', 'bhkTransformShape', 'bhkConvexTransformShape' ]
         # nodes
         self.nodes = ['NiNode', 'NiTriShape', 'NiTexturingProperty', 'NiSourceTexture', 'NiMaterialProperty', 'NiMaterialColorController', 'NiTriShapeData', 'RootCollisionNode', 'NiStringExtraData', 'NiSkinInstance', 'NiSkinData', 'NiAlphaProperty', 'NiZBufferProperty', 'NiVertexColorProperty', 'NiBSAnimationNode', 'NiBSParticleNode', 'NiParticles', 'NiParticlesData', 'NiRotatingParticles', 'NiRotatingParticlesData', 'NiAutoNormalParticles', 'NiAutoNormalParticlesData', 'NiUVController', 'NiUVData', 'NiTextureEffect', 'NiTextKeyExtraData', 'NiVertWeightsExtraData', 'NiParticleSystemController', 'NiBSPArrayController', 'NiGravity', 'NiParticleBomb', 'NiParticleColorModifier', 'NiParticleGrowFade', 'NiParticleMeshModifier', 'NiParticleRotation', 'NiKeyframeController', 'NiKeyframeData', 'NiColorData', 'NiGeomMorpherController', 'NiMorphData', 'AvoidNode', 'NiVisController', 'NiVisData', 'NiAlphaController', 'NiFloatData', 'NiPosData', 'NiBillboardNode', 'NiShadeProperty', 'NiWireframeProperty', 'NiCamera', 'NiPathController', 'NiPixelData',
             #, 'NiExtraData', 'NiSkinPartition']
             #es4
-            'NiBinaryExtraData', 'NiTriStrips', 'NiTriStripsData', 'BSXFlags', 'bhkNiTriStripsShape', 'bhkMoppBvTreeShape', 'bhkRigidBody' ]
+            'NiBinaryExtraData', 'NiTriStrips', 'NiTriStripsData', 'BSXFlags', 'bhkNiTriStripsShape', 'bhkMoppBvTreeShape', 'bhkRigidBody', 'bhkCollisionObject', 'bhkRigidBodyT', 'bhkConvexVerticesShape', 'bhkListShape', 'BSFurnitureMarker', 'bhkBoxShape', 'bhkConvexTransformShape' ]
         self.customs = {
             '_header': (
 '''using System;
@@ -528,16 +529,16 @@ BODY
     }
 '''.replace('BODY', body)))
             elif self.ex == PY:
-                body = '\n'.join([f'            case \'{x}\': n = {x}(r)' for x in self.nodes])
+                body = '\n'.join([f'            case \'{x}\': node = {x}(r)' for x in self.nodes])
                 s.methods.append(Class.Method('''
     @staticmethod
     def read(r: NiReader, nodeType: str) -> NiObject:
         # print(f'{nodeType}: {r.tell()}')
         match nodeType:
 BODY
-            case _: Log(f'Tried to read an unsupported NiObject type ({nodeType}).'); n = None
-        setattr(n, '$type', nodeType)
-        return n
+            case _: Log(f'Tried to read an unsupported NiObject type ({nodeType}).'); node = None
+        setattr(node, '$type', nodeType)
+        return node
 '''.replace('BODY', body)))
         def bhkRigidBody_values(s, values):
             values[6].extcond = values[6].vercond[20:]
@@ -597,7 +598,7 @@ BODY
             'bhkRigidBody': { 'x': 2306,
                 'values': bhkRigidBody_values },
             'bhkMoppBvTreeShape': { 'x': 2511,
-                'calculated': lambda s: ('0', '0') },
+                'calculated': lambda s: ('r.ReadUInt32()', 'r.readUInt32()') },
             'NiExtraData': { 'x': 2592,
                 'conds': ['BSExtraData'] },
             'InterpBlendItem': { 'x': 2660,

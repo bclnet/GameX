@@ -37,7 +37,7 @@ class Binary_Animdata(IHaveMetaInfo):
     #region Headers
 
     class AnimRecord:
-        struct = ('<64s4B', 68)
+        _struct = ('<64s4B', 68)
         def __init__(self, tuple):
             self.frames, \
             self.unknown, \

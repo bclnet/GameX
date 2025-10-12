@@ -19,12 +19,12 @@ class Binary_Arc(PakBinaryT):
 
     K_MAGIC = 0x00435241
     class K_Header:
-        struct = ('<HH', 4)
+        _struct = ('<HH', 4)
         def __init__(self, tuple):
             self.version, \
             self.numFiles = tuple
     class K_File:
-        struct = ('<64sIIII', 80)
+        _struct = ('<64sIIII', 80)
         def __init__(self, tuple):
             self.path, \
             self.compress, \
@@ -115,7 +115,7 @@ class Binary_Kpka(PakBinaryT):
 
     K_MAGIC = 0x414b504b
     class K_Header:
-        struct = ('<BBhiI', 12)
+        _struct = ('<BBhiI', 12)
         def __init__(self, tuple):
             self.majorVersion, \
             self.minorVersion, \
@@ -123,13 +123,13 @@ class Binary_Kpka(PakBinaryT):
             self.numFiles, \
             self.hash = tuple
     class K_FileV2:
-        struct = ('<qqQ', 24)
+        _struct = ('<qqQ', 24)
         def __init__(self, tuple):
             self.offset, \
             self.fileSize, \
             self.hashName = tuple
     class K_FileV4:
-        struct = ('<QqqqqQ', 48)
+        _struct = ('<QqqqqQ', 48)
         def __init__(self, tuple):
             self.hashName, \
             self.offset, \

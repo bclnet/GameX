@@ -18,7 +18,7 @@ class Binary_Hogg(PakBinaryT):
     MAGIC = 0xDEADF00D
 
     class Header:
-        struct = ('<IHHIIII', 24)
+        _struct = ('<IHHIIII', 24)
         def __init__(self, tuple):
             self.magic, \
             self.version, \
@@ -29,14 +29,14 @@ class Binary_Hogg(PakBinaryT):
             self.fileJournalSection = tuple
 
     class FileJournalHeader:
-        struct = ('<III', 12)
+        _struct = ('<III', 12)
         def __init__(self, tuple):
             self.unknown1, \
             self.size, \
             self.size2 = tuple
 
     class FileEntry:
-        struct = ('<qiIIIHHi', 32)
+        _struct = ('<qiIIIHHi', 32)
         def __init__(self, tuple):
             self.offset, \
             self.fileSize, \
@@ -48,7 +48,7 @@ class Binary_Hogg(PakBinaryT):
             self.id = tuple
 
     class AttributeEntry:
-        struct = ('<iiII', 16)
+        _struct = ('<iiII', 16)
         def __init__(self, tuple):
             self.pathId, \
             self.excerptId, \

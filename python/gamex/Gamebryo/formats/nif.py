@@ -6,6 +6,7 @@ from numpy import ndarray, array
 from openstk.poly import Reader
 from gamex import FileSource, PakBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
 from gamex.globalx import Color3, Color4
+from gamex.desser import DesSer
 
 T = TypeVar('T')
 
@@ -98,6 +99,11 @@ class Z:
 
 class Flags(IntFlag):
     Hidden = 0x1
+
+def RefJsonConverter(s): return f'{s.v}'
+def TexCoordJsonConverter(s): return f'{s.u:.4f} {s.v:.4f}'
+def TriangleJsonConverter(s): return f'{s.v1} {s.v2} {s.v3}'
+DesSer.add({'Ref':RefJsonConverter, 'TexCoord':TexCoordJsonConverter, 'Triangle':TriangleJsonConverter})
 
 #endregion
 
@@ -363,7 +369,7 @@ class MatchGroup: # X
 
 # Description of a mipmap within an NiPixelData object.
 class MipMap: # X
-    struct = ('<3i', 12)
+    _struct = ('<3i', 12)
     def __init__(self, r: NiReader):
         if isinstance(r, tuple): self.width,self.height,self.offset=r; return
         self.width: int = r.readUInt32()                # Width of the mipmap image.
@@ -372,7 +378,7 @@ class MipMap: # X
 
 # NiSkinData::BoneVertData. A vertex and its weight.
 class BoneVertData: # X
-    struct = ('<Hf', 6)
+    _struct = ('<Hf', 6)
     def __init__(self, r: NiReader, half: bool):
         if isinstance(r, tuple): self.index,self.weight=r; return
         if half: self.index = r.readUInt16(); self.weight = r.readHalf(); return
@@ -388,24 +394,24 @@ class ExportInfo: # X
 
 # The NIF file header.
 class NiReader(Reader): # X
-    headerString: str                                   # 'NetImmerse File Format x.x.x.x' (versions <= 10.0.1.2) or 'Gamebryo File Format x.x.x.x' (versions >= 10.1.0.0), with x.x.x.x the version written out. Ends with a newline character (0x0A).
-    copyright: list[str]
+    headerString: str = None                            # 'NetImmerse File Format x.x.x.x' (versions <= 10.0.1.2) or 'Gamebryo File Format x.x.x.x' (versions >= 10.1.0.0), with x.x.x.x the version written out. Ends with a newline character (0x0A).
+    copyright: list[str] = None
     v: int = 0x04000002                                 # The NIF version, in hexadecimal notation: 0x04000002, 0x0401000C, 0x04020002, 0x04020100, 0x04020200, 0x0A000100, 0x0A010000, 0x0A020000, 0x14000004, ...
     endianType: EndianType = EndianType.ENDIAN_LITTLE   # Determines the endianness of the data in the file.
     uv: int = 0                                         # An extra version number, for companies that decide to modify the file format.
-    numBlocks: int                                      # Number of file objects.
+    numBlocks: int = None                               # Number of file objects.
     uv2: int = 0
-    exportInfo: ExportInfo
-    maxFilepath: str
-    metadata: bytearray
-    blockTypes: list[str]                               # List of all object types used in this NIF file.
-    blockTypeHashes: list[int]                          # List of all object types used in this NIF file.
-    blockTypeIndex: list[int]                           # Maps file objects on their corresponding type: first file object is of type object_types[object_type_index[0]], the second of object_types[object_type_index[1]], etc.
-    blockSize: list[int]                                # Array of block sizes?
-    numStrings: int                                     # Number of strings.
-    maxStringLength: int                                # Maximum string length.
-    strings: list[str]                                  # Strings.
-    groups: list[int]
+    exportInfo: ExportInfo = None
+    maxFilepath: str = None
+    metadata: bytearray = None
+    blockTypes: list[str] = None                        # List of all object types used in this NIF file.
+    blockTypeHashes: list[int] = None                   # List of all object types used in this NIF file.
+    blockTypeIndex: list[int] = None                    # Maps file objects on their corresponding type: first file object is of type object_types[object_type_index[0]], the second of object_types[object_type_index[1]], etc.
+    blockSize: list[int] = None                         # Array of block sizes?
+    numStrings: int = 0                                 # Number of strings.
+    maxStringLength: int = 0                            # Maximum string length.
+    strings: list[str] = None                           # Strings.
+    groups: list[int] = None
     # read blocks
     blocks: list[NiObject]
     roots: list[Ref[NiObject]]
@@ -425,7 +431,7 @@ class NiReader(Reader): # X
         if r.v >= 0x1E000000: self.metadata = r.readL8Bytes()
         if r.v >= 0x05000001 and r.v != 0x14030102: self.blockTypes = r.readL16FArray(lambda z: r.readL32AString())
         if r.v == 0x14030102: self.blockTypeHashes = r.readL16PArray(None, 'I')
-        if r.v >= 0x05000001: self.blockTypeIndex = r.readPArray('H', self.numBlocks)
+        if r.v >= 0x05000001: self.blockTypeIndex = r.readPArray(None, 'H', self.numBlocks)
         if r.v >= 0x14020005: self.blockSize = r.readPArray(None, 'I', self.numBlocks)
         if r.v >= 0x14010001:
             self.numStrings = r.readUInt32()
@@ -442,7 +448,7 @@ class NiReader(Reader): # X
 
 # Tension, bias, continuity.
 class TBC: # X
-    struct = ('<3f', 12)
+    _struct = ('<3f', 12)
     def __init__(self, r: NiReader):
         if isinstance(r, tuple): self.t,self.b,self.c=r; return
         self.t: float = r.readSingle()                  # Tension.
@@ -451,11 +457,11 @@ class TBC: # X
 
 # A generic key with support for interpolation. Type 1 is normal linear interpolation, type 2 has forward and backward tangents, and type 3 has tension, bias and continuity arguments. Note that color4 and byte always seem to be of type 1.
 class Key[T]: # X
-    time: float                                         # Time of the key.
-    value: T                                            # The key value.
-    forward: T                                          # Key forward tangent.
-    backward: T                                         # The key backward tangent.
-    tbc: TBC                                            # The TBC of the key.
+    time: float = None                                  # Time of the key.
+    value: T = None                                     # The key value.
+    forward: T = None                                   # Key forward tangent.
+    backward: T = None                                  # The key backward tangent.
+    tbc: TBC = None                                     # The TBC of the key.
 
     def __init__(self, r: NiReader, keyType: KeyType):
         self.time = r.readSingle()
@@ -467,9 +473,9 @@ class Key[T]: # X
 
 # Array of vector keys (anything that can be interpolated, except rotations).
 class KeyGroup[T]: # X
-    numKeys: int                                        # Number of keys in the array.
-    interpolation: KeyType                              # The key type.
-    keys: list[Key[T]]                                  # The keys.
+    numKeys: int = 0                                    # Number of keys in the array.
+    interpolation: KeyType = 0                          # The key type.
+    keys: list[Key[T]] = None                           # The keys.
 
     def __init__(self, r: NiReader):
         self.numKeys = r.readUInt32()
@@ -478,9 +484,9 @@ class KeyGroup[T]: # X
 
 # A special version of the key type used for quaternions.  Never has tangents.
 class QuatKey[T]: # X
-    time: float                                         # Time the key applies.
-    value: T                                            # Value of the key.
-    tbc: TBC                                            # The TBC of the key.
+    time: float = None                                  # Time the key applies.
+    value: T = None                                     # Value of the key.
+    tbc: TBC = None                                     # The TBC of the key.
 
     def __init__(self, r: NiReader, keyType: KeyType):
         if r.v <= 0x0A010000: self.time = r.readSingle()
@@ -491,9 +497,9 @@ class QuatKey[T]: # X
 
 # Texture coordinates (u,v). As in OpenGL; image origin is in the lower left corner.
 class TexCoord: # X
-    struct = ('<2f', 8)
-    u: float                                            # First coordinate.
-    v: float                                            # Second coordinate.
+    _struct = ('<2f', 8)
+    u: float = None                                     # First coordinate.
+    v: float = None                                     # Second coordinate.
 
     def __init__(self, r: NiReader, half: bool=None):
         if isinstance(r, tuple): self.u,self.v=r; return
@@ -512,22 +518,22 @@ class TransformMethod(Enum): # X
 
 # NiTexturingProperty::Map. Texture description.
 class TexDesc: # X
-    image: Ref[NiObject]                                # Link to the texture image.
-    source: Ref[NiObject]                               # NiSourceTexture object index.
+    image: Ref[NiObject] = None                         # Link to the texture image.
+    source: Ref[NiObject] = None                        # NiSourceTexture object index.
     clampMode: TexClampMode = TexClampMode.WRAP_S_WRAP_T# 0=clamp S clamp T, 1=clamp S wrap T, 2=wrap S clamp T, 3=wrap S wrap T
     filterMode: TexFilterMode = TexFilterMode.FILTER_TRILERP # 0=nearest, 1=bilinear, 2=trilinear, 3=..., 4=..., 5=...
-    flags: Flags                                        # Texture mode flags; clamp and filter mode stored in upper byte with 0xYZ00 = clamp mode Y, filter mode Z.
-    maxAnisotropy: int
+    flags: Flags = None                                 # Texture mode flags; clamp and filter mode stored in upper byte with 0xYZ00 = clamp mode Y, filter mode Z.
+    maxAnisotropy: int = None
     uvSet: int = 0                                      # The texture coordinate set in NiGeometryData that this texture slot will use.
     pS2L: int = 0                                       # L can range from 0 to 3 and are used to specify how fast a texture gets blurry.
     pS2K: int = -75                                     # K is used as an offset into the mipmap levels and can range from -2047 to 2047. Positive values push the mipmap towards being blurry and negative values make the mipmap sharper.
-    unknown1: int                                       # Unknown, 0 or 0x0101?
+    unknown1: int = None                                # Unknown, 0 or 0x0101?
     # NiTextureTransform
-    translation: TexCoord                               # The UV translation.
+    translation: TexCoord = None                        # The UV translation.
     scale: TexCoord = TexCoord(1.0, 1.0)                # The UV scale.
     rotation: float = 0.0                               # The W axis rotation in texture space.
     transformMethod: TransformMethod = 0                # Depending on the source, scaling can occur before or after rotation.
-    center: TexCoord                                    # The origin around which the texture rotates.
+    center: TexCoord = None                             # The origin around which the texture rotates.
 
     def __init__(self, r: NiReader):
         if r.v <= 0x03010000: self.image = X[NiImage].ref(r)
@@ -552,8 +558,8 @@ class TexDesc: # X
 
 # NiTexturingProperty::ShaderMap. Shader texture description.
 class ShaderTexDesc: # Y
-    map: TexDesc
-    mapId: int                                          # Unique identifier for the Gamebryo shader system.
+    map: TexDesc = None
+    mapId: int = 0                                      # Unique identifier for the Gamebryo shader system.
 
     def __init__(self, r: NiReader):
         if r.readBool32():
@@ -562,7 +568,7 @@ class ShaderTexDesc: # Y
 
 # List of three vertex indices.
 class Triangle: # X
-    struct = ('<3H', 6)
+    _struct = ('<3H', 6)
     def __init__(self, r: NiReader):
         if isinstance(r, tuple): self.v1,self.v2,self.v3=r; return
         self.v1: int = r.readUInt16()                   # First vertex index.
@@ -583,18 +589,18 @@ class VertexFlags(Flag): # Y
     Full_Precision = 1 << 14
 
 class BSVertexDataSSE: # Y
-    vertex: Vector3
-    bitangentX: float
-    unknownInt: int
-    uv: TexCoord
-    normal: Vector3
-    bitangentY: int
-    tangent: Vector3
-    bitangentZ: int
-    vertexColors: Color4
-    boneWeights: list[float]
-    boneIndices: bytearray
-    eyeData: float
+    vertex: Vector3 = None
+    bitangentX: float = None
+    unknownInt: int = 0
+    uv: TexCoord = None
+    normal: Vector3 = None
+    bitangentY: int = 0
+    tangent: Vector3 = None
+    bitangentZ: int = 0
+    vertexColors: Color4 = None
+    boneWeights: list[float] = None
+    boneIndices: bytearray = None
+    eyeData: float = None
 
     def __init__(self, r: NiReader, ARG: int):
         if ((ARG & 16) != 0): self.vertex = r.readVector3()
@@ -614,7 +620,7 @@ class BSVertexDataSSE: # Y
         if (ARG & 4096) != 0: self.eyeData = r.readSingle()
 
 class BSVertexDesc: # Y
-    struct = ('<5bHb', 8)
+    _struct = ('<5bHb', 8)
     def __init__(self, r: NiReader):
         if isinstance(r, tuple): self.vF1,self.vF2,self.vF3,self.vF4,self.vF5,self.vertexAttributes,self.vF8=(r[0],r[1],r[2],r[3],r[4],VertexFlags(r[5]),r[6]); return
         self.vF1: int = r.readByte()
@@ -627,21 +633,21 @@ class BSVertexDesc: # Y
 
 # Skinning data for a submesh, optimized for hardware skinning. Part of NiSkinPartition.
 class SkinPartition: # Y
-    numVertices: int                                    # Number of vertices in this submesh.
-    numTriangles: int                                   # Number of triangles in this submesh.
-    numBones: int                                       # Number of bones influencing this submesh.
-    numStrips: int                                      # Number of strips in this submesh (zero if not stripped).
-    numWeightsPerVertex: int                            # Number of weight coefficients per vertex. The Gamebryo engine seems to work well only if this number is equal to 4, even if there are less than 4 influences per vertex.
-    bones: list[int]                                    # List of bones.
-    vertexMap: list[int]                                # Maps the weight/influence lists in this submesh to the vertices in the shape being skinned.
-    vertexWeights: list[list[float]]                    # The vertex weights.
-    stripLengths: list[int]                             # The strip lengths.
-    strips: list[list[int]]                             # The strips.
-    triangles: list[Triangle]                           # The triangles.
-    boneIndices: list[bytearray]                        # Bone indices, they index into 'Bones'.
-    unknownShort: int                                   # Unknown
-    vertexDesc: BSVertexDesc
-    trianglesCopy: list[Triangle]
+    numVertices: int = None                             # Number of vertices in this submesh.
+    numTriangles: int = None                            # Number of triangles in this submesh.
+    numBones: int = None                                # Number of bones influencing this submesh.
+    numStrips: int = None                               # Number of strips in this submesh (zero if not stripped).
+    numWeightsPerVertex: int = None                     # Number of weight coefficients per vertex. The Gamebryo engine seems to work well only if this number is equal to 4, even if there are less than 4 influences per vertex.
+    bones: list[int] = None                             # List of bones.
+    vertexMap: list[int] = None                         # Maps the weight/influence lists in this submesh to the vertices in the shape being skinned.
+    vertexWeights: list[list[float]] = None             # The vertex weights.
+    stripLengths: list[int] = None                      # The strip lengths.
+    strips: list[list[int]] = None                      # The strips.
+    triangles: list[Triangle] = None                    # The triangles.
+    boneIndices: list[bytearray] = None                 # Bone indices, they index into 'Bones'.
+    unknownShort: int = None                            # Unknown
+    vertexDesc: BSVertexDesc = None
+    trianglesCopy: list[Triangle] = None
 
     def __init__(self, r: NiReader):
         self.numVertices = r.readUInt16()
@@ -673,7 +679,7 @@ class SkinPartition: # Y
 
 # A plane.
 class NiPlane: # Y
-    struct = ('<4f', 16)
+    _struct = ('<4f', 16)
     def __init__(self, r: NiReader):
         if isinstance(r, tuple): self.normal,self.constant=(array(r[0:3]),r[3]); return
         self.normal: Vector3 = r.readVector3()          # The plane normal.
@@ -681,7 +687,7 @@ class NiPlane: # Y
 
 # A sphere.
 class NiBound: # Y
-    struct = ('<4f', 16)
+    _struct = ('<4f', 16)
     def __init__(self, r: NiReader):
         if isinstance(r, tuple): self.center,self.radius=(array(r[0:3]),r[3]); return
         self.center: Vector3 = r.readVector3()          # The sphere's center.
@@ -695,11 +701,11 @@ class NiTransform: # X
 
 # Geometry morphing data component.
 class Morph: # X
-    frameName: str                                      # Name of the frame.
-    interpolation: KeyType                              # Unlike most objects, the presense of this value is not conditional on there being keys.
-    keys: list[Key[T]]                                  # The morph key frames.
-    legacyWeight: float
-    vectors: list[Vector3]                              # Morph vectors.
+    frameName: str = None                               # Name of the frame.
+    interpolation: KeyType = 0                          # Unlike most objects, the presense of this value is not conditional on there being keys.
+    keys: list[Key[T]] = None                           # The morph key frames.
+    legacyWeight: float = None
+    vectors: list[Vector3] = None                       # Morph vectors.
 
     def __init__(self, r: NiReader, numVertices: int):
         if r.v >= 0x0A01006A: self.frameName = Z.string(r)
@@ -708,11 +714,11 @@ class Morph: # X
             self.interpolation = KeyType(r.readUInt32())
             self.keys = r.readFArray(lambda z: Key[T](r, self.Interpolation), self.numKeys)
         if r.v >= 0x0A010068 and r.v <= 0x14010002 and r.uv2 < 10: self.legacyWeight = r.readSingle()
-        self.vectors = r.readPArray(None, '3f', numVertices)
+        self.vectors = r.readPArray(array, '3f', numVertices)
 
 # particle array entry
 class Particle: # X
-    struct = ('<9f2H', 40)
+    _struct = ('<9f2H', 40)
     def __init__(self, r: NiReader):
         if isinstance(r, tuple): self.velocity,self.unknownVector,self.lifetime,self.lifespan,self.timestamp,self.unknownShort,self.vertexId=(array(r[0:3]),array(r[3:6]),r[6],r[7],r[8],r[9],r[10]); return
         self.velocity: Vector3 = r.readVector3()        # Particle velocity
@@ -725,11 +731,11 @@ class Particle: # X
 
 # NiSkinData::BoneData. Skinning data component.
 class BoneData: # X
-    skinTransform: NiTransform                          # Offset of the skin from this bone in bind position.
-    boundingSphereOffset: Vector3                       # Translation offset of a bounding sphere holding all vertices. (Note that its a Sphere Containing Axis Aligned Box not a minimum volume Sphere)
-    boundingSphereRadius: float                         # Radius for bounding sphere holding all vertices.
-    unknown13Shorts: list[int]                          # Unknown, always 0?
-    vertexWeights: list[BoneVertData]                   # The vertex weights.
+    skinTransform: NiTransform = None                   # Offset of the skin from this bone in bind position.
+    boundingSphereOffset: Vector3 = None                # Translation offset of a bounding sphere holding all vertices. (Note that its a Sphere Containing Axis Aligned Box not a minimum volume Sphere)
+    boundingSphereRadius: float = None                  # Radius for bounding sphere holding all vertices.
+    unknown13Shorts: list[int] = None                   # Unknown, always 0?
+    vertexWeights: list[BoneVertData] = None            # The vertex weights.
 
     def __init__(self, r: NiReader, arg: int):
         self.skinTransform = NiTransform(r)
@@ -754,7 +760,7 @@ class BoxBV: # X
 
 # Capsule Bounding Volume
 class CapsuleBV: # Y
-    struct = ('<8f', 32)
+    _struct = ('<8f', 32)
     def __init__(self, r: NiReader):
         if isinstance(r, tuple): self.center,self.origin,self.extent,self.radius=(array(r[0:3]),array(r[3:6]),r[6],r[7]); return
         self.center: Vector3 = r.readVector3()
@@ -763,19 +769,19 @@ class CapsuleBV: # Y
         self.radius: float = r.readSingle()
 
 class HalfSpaceBV: # Y
-    struct = ('<7f', 28)
+    _struct = ('<7f', 28)
     def __init__(self, r: NiReader):
         if isinstance(r, tuple): self.plane,self.center=(NiPlane(r[0:4]),array(r[4:7])); return
         self.plane: NiPlane = r.readS(NiPlane)
         self.center: Vector3 = r.readVector3()
 
 class BoundingVolume: # X
-    collisionType: BoundVolumeType                      # Type of collision data.
-    sphere: NiBound
-    box: BoxBV
-    capsule: CapsuleBV
-    union: UnionBV
-    halfSpace: HalfSpaceBV
+    collisionType: BoundVolumeType = 0                  # Type of collision data.
+    sphere: NiBound = None
+    box: BoxBV = None
+    capsule: CapsuleBV = None
+    union: UnionBV = None
+    halfSpace: HalfSpaceBV = None
 
     def __init__(self, r: NiReader):
         self.collisionType = BoundVolumeType(r.readUInt32())
@@ -812,64 +818,66 @@ class NiObject: # X
     def read(r: NiReader, nodeType: str) -> NiObject:
         # print(nodeType)
         match nodeType:
-            case 'NiNode': return NiNode(r)
-            case 'NiTriShape': return NiTriShape(r)
-            case 'NiTexturingProperty': return NiTexturingProperty(r)
-            case 'NiSourceTexture': return NiSourceTexture(r)
-            case 'NiMaterialProperty': return NiMaterialProperty(r)
-            case 'NiMaterialColorController': return NiMaterialColorController(r)
-            case 'NiTriShapeData': return NiTriShapeData(r)
-            case 'RootCollisionNode': return RootCollisionNode(r)
-            case 'NiStringExtraData': return NiStringExtraData(r)
-            case 'NiSkinInstance': return NiSkinInstance(r)
-            case 'NiSkinData': return NiSkinData(r)
-            case 'NiAlphaProperty': return NiAlphaProperty(r)
-            case 'NiZBufferProperty': return NiZBufferProperty(r)
-            case 'NiVertexColorProperty': return NiVertexColorProperty(r)
-            case 'NiBSAnimationNode': return NiBSAnimationNode(r)
-            case 'NiBSParticleNode': return NiBSParticleNode(r)
-            case 'NiParticles': return NiParticles(r)
-            case 'NiParticlesData': return NiParticlesData(r)
-            case 'NiRotatingParticles': return NiRotatingParticles(r)
-            case 'NiRotatingParticlesData': return NiRotatingParticlesData(r)
-            case 'NiAutoNormalParticles': return NiAutoNormalParticles(r)
-            case 'NiAutoNormalParticlesData': return NiAutoNormalParticlesData(r)
-            case 'NiUVController': return NiUVController(r)
-            case 'NiUVData': return NiUVData(r)
-            case 'NiTextureEffect': return NiTextureEffect(r)
-            case 'NiTextKeyExtraData': return NiTextKeyExtraData(r)
-            case 'NiVertWeightsExtraData': return NiVertWeightsExtraData(r)
-            case 'NiParticleSystemController': return NiParticleSystemController(r)
-            case 'NiBSPArrayController': return NiBSPArrayController(r)
-            case 'NiGravity': return NiGravity(r)
-            case 'NiParticleBomb': return NiParticleBomb(r)
-            case 'NiParticleColorModifier': return NiParticleColorModifier(r)
-            case 'NiParticleGrowFade': return NiParticleGrowFade(r)
-            case 'NiParticleMeshModifier': return NiParticleMeshModifier(r)
-            case 'NiParticleRotation': return NiParticleRotation(r)
-            case 'NiKeyframeController': return NiKeyframeController(r)
-            case 'NiKeyframeData': return NiKeyframeData(r)
-            case 'NiColorData': return NiColorData(r)
-            case 'NiGeomMorpherController': return NiGeomMorpherController(r)
-            case 'NiMorphData': return NiMorphData(r)
-            case 'AvoidNode': return AvoidNode(r)
-            case 'NiVisController': return NiVisController(r)
-            case 'NiVisData': return NiVisData(r)
-            case 'NiAlphaController': return NiAlphaController(r)
-            case 'NiFloatData': return NiFloatData(r)
-            case 'NiPosData': return NiPosData(r)
-            case 'NiBillboardNode': return NiBillboardNode(r)
-            case 'NiShadeProperty': return NiShadeProperty(r)
-            case 'NiWireframeProperty': return NiWireframeProperty(r)
-            case 'NiCamera': return NiCamera(r)
-            case 'NiPathController': return NiPathController(r)
-            case 'NiPixelData': return NiPixelData(r)
-            case _: Log(f'Tried to read an unsupported NiObject type ({nodeType}).'); return null
+            case 'NiNode': n = NiNode(r)
+            case 'NiTriShape': n = NiTriShape(r)
+            case 'NiTexturingProperty': n = NiTexturingProperty(r)
+            case 'NiSourceTexture': n = NiSourceTexture(r)
+            case 'NiMaterialProperty': n = NiMaterialProperty(r)
+            case 'NiMaterialColorController': n = NiMaterialColorController(r)
+            case 'NiTriShapeData': n = NiTriShapeData(r)
+            case 'RootCollisionNode': n = RootCollisionNode(r)
+            case 'NiStringExtraData': n = NiStringExtraData(r)
+            case 'NiSkinInstance': n = NiSkinInstance(r)
+            case 'NiSkinData': n = NiSkinData(r)
+            case 'NiAlphaProperty': n = NiAlphaProperty(r)
+            case 'NiZBufferProperty': n = NiZBufferProperty(r)
+            case 'NiVertexColorProperty': n = NiVertexColorProperty(r)
+            case 'NiBSAnimationNode': n = NiBSAnimationNode(r)
+            case 'NiBSParticleNode': n = NiBSParticleNode(r)
+            case 'NiParticles': n = NiParticles(r)
+            case 'NiParticlesData': n = NiParticlesData(r)
+            case 'NiRotatingParticles': n = NiRotatingParticles(r)
+            case 'NiRotatingParticlesData': n = NiRotatingParticlesData(r)
+            case 'NiAutoNormalParticles': n = NiAutoNormalParticles(r)
+            case 'NiAutoNormalParticlesData': n = NiAutoNormalParticlesData(r)
+            case 'NiUVController': n = NiUVController(r)
+            case 'NiUVData': n = NiUVData(r)
+            case 'NiTextureEffect': n = NiTextureEffect(r)
+            case 'NiTextKeyExtraData': n = NiTextKeyExtraData(r)
+            case 'NiVertWeightsExtraData': n = NiVertWeightsExtraData(r)
+            case 'NiParticleSystemController': n = NiParticleSystemController(r)
+            case 'NiBSPArrayController': n = NiBSPArrayController(r)
+            case 'NiGravity': n = NiGravity(r)
+            case 'NiParticleBomb': n = NiParticleBomb(r)
+            case 'NiParticleColorModifier': n = NiParticleColorModifier(r)
+            case 'NiParticleGrowFade': n = NiParticleGrowFade(r)
+            case 'NiParticleMeshModifier': n = NiParticleMeshModifier(r)
+            case 'NiParticleRotation': n = NiParticleRotation(r)
+            case 'NiKeyframeController': n = NiKeyframeController(r)
+            case 'NiKeyframeData': n = NiKeyframeData(r)
+            case 'NiColorData': n = NiColorData(r)
+            case 'NiGeomMorpherController': n = NiGeomMorpherController(r)
+            case 'NiMorphData': n = NiMorphData(r)
+            case 'AvoidNode': n = AvoidNode(r)
+            case 'NiVisController': n = NiVisController(r)
+            case 'NiVisData': n = NiVisData(r)
+            case 'NiAlphaController': n = NiAlphaController(r)
+            case 'NiFloatData': n = NiFloatData(r)
+            case 'NiPosData': n = NiPosData(r)
+            case 'NiBillboardNode': n = NiBillboardNode(r)
+            case 'NiShadeProperty': n = NiShadeProperty(r)
+            case 'NiWireframeProperty': n = NiWireframeProperty(r)
+            case 'NiCamera': n = NiCamera(r)
+            case 'NiPathController': n = NiPathController(r)
+            case 'NiPixelData': n = NiPixelData(r)
+            case _: Log(f'Tried to read an unsupported NiObject type ({nodeType}).'); n = None
+        setattr(n, '$type', nodeType)
+        return n
 
 # LEGACY (pre-10.1). Abstract base class for particle system modifiers.
 class NiParticleModifier(NiObject): # X
-    nextModifier: Ref[NiObject]                         # Next particle modifier.
-    controller: Ref[NiObject]                           # Points to the particle system controller parent.
+    nextModifier: Ref[NiObject] = None                  # Next particle modifier.
+    controller: Ref[NiObject] = None                    # Points to the particle system controller parent.
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -878,8 +886,8 @@ class NiParticleModifier(NiObject): # X
 
 # A generic extra data object.
 class NiExtraData(NiObject): # X
-    name: str                                           # Name of this object.
-    nextExtraData: Ref[NiObject]                        # Block number of the next extra data object.
+    name: str = None                                    # Name of this object.
+    nextExtraData: Ref[NiObject] = None                 # Block number of the next extra data object.
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -903,15 +911,15 @@ class PathFlags(Flag): # X
 
 # Abstract base class for NiObjects that support names, extra data, and time controllers.
 class NiObjectNET(NiObject): # X
-    skyrimShaderType: BSLightingShaderPropertyShaderType# Configures the main shader path
-    name: str                                           # Name of this controllable object, used to refer to the object in .kf files.
-    oldExtraPropName: str                               # (=NiStringExtraData)
-    oldExtraInternalId: int                             # ref
-    oldExtraString: str                                 # Extra string data.
-    unknownByte: int                                    # Always 0.
-    extraData: Ref[NiObject]                            # Extra data object index. (The first in a chain)
-    extraDataList: list[Ref[NiObject]]                  # List of extra data indices.
-    controller: Ref[NiObject]                           # Controller object index. (The first in a chain)
+    skyrimShaderType: BSLightingShaderPropertyShaderType = 0 # Configures the main shader path
+    name: str = None                                    # Name of this controllable object, used to refer to the object in .kf files.
+    oldExtraPropName: str = None                        # (=NiStringExtraData)
+    oldExtraInternalId: int = 0                         # ref
+    oldExtraString: str = None                          # Extra string data.
+    unknownByte: int = 0                                # Always 0.
+    extraData: Ref[NiObject] = None                     # Extra data object index. (The first in a chain)
+    extraDataList: list[Ref[NiObject]] = None           # List of extra data indices.
+    controller: Ref[NiObject] = None                    # Controller object index. (The first in a chain)
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -932,7 +940,7 @@ class NiObjectNET(NiObject): # X
 # is simple, it only has three properties.
 # For this type of collision object, bhkRigidBody or bhkRigidBodyT is generally used.
 class NiCollisionObject(NiObject): # Y
-    target: Ref[NiObject]                               # Index of the AV object referring to this collision object.
+    target: Ref[NiObject] = None                        # Index of the AV object referring to this collision object.
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -941,15 +949,15 @@ class NiCollisionObject(NiObject): # Y
 # Abstract audio-visual base class from which all of Gamebryo's scene graph objects inherit.
 class NiAVObject(NiObjectNET): # X
     flags: Flags = 14                                   # Basic flags for AV objects. For Bethesda streams above 26 only.
-    translation: Vector3                                # The translation vector.
-    rotation: Matrix4x4                                 # The rotation part of the transformation matrix.
+    translation: Vector3 = None                         # The translation vector.
+    rotation: Matrix4x4 = None                          # The rotation part of the transformation matrix.
     scale: float = 1.0                                  # Scaling part (only uniform scaling is supported).
-    velocity: Vector3                                   # Unknown function. Always seems to be (0, 0, 0)
-    properties: list[Ref[NiObject]]                     # All rendering properties attached to this object.
-    unknown1: list[int]                                 # Always 2,0,2,0.
-    unknown2: int                                       # 0 or 1.
-    boundingVolume: BoundingVolume
-    collisionObject: Ref[NiObject]
+    velocity: Vector3 = None                            # Unknown function. Always seems to be (0, 0, 0)
+    properties: list[Ref[NiObject]] = None              # All rendering properties attached to this object.
+    unknown1: list[int] = None                          # Always 2,0,2,0.
+    unknown2: int = 0                                   # 0 or 1.
+    boundingVolume: BoundingVolume = None
+    collisionObject: Ref[NiObject] = None
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -969,8 +977,8 @@ class NiAVObject(NiObjectNET): # X
 # Abstract base class for dynamic effects such as NiLights or projected texture effects.
 class NiDynamicEffect(NiAVObject): # X
     switchState: bool = True                            # If true, then the dynamic effect is applied to affected nodes during rendering.
-    affectedNodes: list[Ref[NiObject]]                  # If a node appears in this list, then its entire subtree will be affected by the effect.
-    affectedNodePointers: list[int]                     # As of 4.0 the pointer hash is no longer stored alongside each NiObject on disk, yet this node list still refers to the pointer hashes. Cannot leave the type as Ptr because the link will be invalid.
+    affectedNodes: list[Ref[NiObject]] = None           # If a node appears in this list, then its entire subtree will be affected by the effect.
+    affectedNodePointers: list[int] = None              # As of 4.0 the pointer hash is no longer stored alongside each NiObject on disk, yet this node list still refers to the pointer hashes. Cannot leave the type as Ptr because the link will be invalid.
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -986,8 +994,8 @@ class NiProperty(NiObjectNET): # X
 
 # Abstract base class that provides the base timing and update functionality for all the Gamebryo animation controllers.
 class NiTimeController(NiObject): # X
-    nextController: Ref[NiObject]                       # Index of the next controller.
-    flags: Flags                                        # Controller flags.
+    nextController: Ref[NiObject] = None                # Index of the next controller.
+    flags: Flags = None                                 # Controller flags.
                                                         #     Bit 0 : Anim type, 0=APP_TIME 1=APP_INIT
                                                         #     Bit 1-2 : Cycle type, 00=Loop 01=Reverse 10=Clamp
                                                         #     Bit 3 : Active
@@ -995,11 +1003,11 @@ class NiTimeController(NiObject): # X
                                                         #     Bit 5 : Is manager controlled
                                                         #     Bit 6 : Always seems to be set in Skyrim and Fallout NIFs, unknown function
     frequency: float = 1.0                              # Frequency (is usually 1.0).
-    phase: float                                        # Phase (usually 0.0).
+    phase: float = None                                 # Phase (usually 0.0).
     startTime: float = 3.402823466e+38                  # Controller start time.
     stopTime: float = -3.402823466e+38                  # Controller stop time.
-    target: Ref[NiObject]                               # Controller target (object index of the first controllable ancestor of this object).
-    unknownInteger: int                                 # Unknown integer.
+    target: Ref[NiObject] = None                        # Controller target (object index of the first controllable ancestor of this object).
+    unknownInteger: int = 0                             # Unknown integer.
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1014,7 +1022,7 @@ class NiTimeController(NiObject): # X
 
 # Abstract base class for all NiTimeController objects using NiInterpolator objects to animate their target objects.
 class NiInterpController(NiTimeController): # X
-    managerControlled: bool
+    managerControlled: bool = None
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1023,12 +1031,12 @@ class NiInterpController(NiTimeController): # X
 # DEPRECATED (20.5), replaced by NiMorphMeshModifier.
 # Time controller for geometry morphing.
 class NiGeomMorpherController(NiInterpController): # X
-    extraFlags: Flags                                   # 1 = UPDATE NORMALS
-    data: Ref[NiObject]                                 # Geometry morphing data index.
-    alwaysUpdate: int
-    interpolators: list[Ref[NiObject]]
-    interpolatorWeights: list[MorphWeight]
-    unknownInts: list[int]                              # Unknown.
+    extraFlags: Flags = None                            # 1 = UPDATE NORMALS
+    data: Ref[NiObject] = None                          # Geometry morphing data index.
+    alwaysUpdate: int = 0
+    interpolators: list[Ref[NiObject]] = None
+    interpolatorWeights: list[MorphWeight] = None
+    unknownInts: list[int] = None                       # Unknown.
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1041,7 +1049,7 @@ class NiGeomMorpherController(NiInterpController): # X
 
 # Uses a single NiInterpolator to animate its target value.
 class NiSingleInterpController(NiInterpController): # X
-    interpolator: Ref[NiObject]
+    interpolator: Ref[NiObject] = None
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1050,7 +1058,7 @@ class NiSingleInterpController(NiInterpController): # X
 # DEPRECATED (10.2), RENAMED (10.2) to NiTransformController
 # A time controller object for animation key frames.
 class NiKeyframeController(NiSingleInterpController): # X
-    data: Ref[NiObject]
+    data: Ref[NiObject] = None
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1063,7 +1071,7 @@ class NiFloatInterpController(NiSingleInterpController): # X
 
 # Animates the alpha value of a property using an interpolator.
 class NiAlphaController(NiFloatInterpController): # X
-    data: Ref[NiObject]
+    data: Ref[NiObject] = None
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1076,7 +1084,7 @@ class NiBoolInterpController(NiSingleInterpController): # X
 
 # Animates the visibility of an NiAVObject.
 class NiVisController(NiBoolInterpController): # X
-    data: Ref[NiObject]
+    data: Ref[NiObject] = None
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1092,8 +1100,8 @@ class NiPoint3InterpController(NiSingleInterpController): # X
 # NiInterpController::GetCtlrID() string formats:
 #     ['AMB', 'DIFF', 'SPEC', 'SELF_ILLUM'] (Depending on "Target Color")
 class NiMaterialColorController(NiPoint3InterpController): # X
-    targetColor: MaterialColor                          # Selects which color to control.
-    data: Ref[NiObject]
+    targetColor: MaterialColor = 0                      # Selects which color to control.
+    data: Ref[NiObject] = None
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1101,15 +1109,15 @@ class NiMaterialColorController(NiPoint3InterpController): # X
         if r.v <= 0x0A010067: self.data = X[NiPosData].ref(r)
 
 class MaterialData: # Y
-    shaderName: str                                     # The shader name.
-    shaderExtraData: int                                # Extra data associated with the shader. A value of -1 means the shader is the default implementation.
-    numMaterials: int
-    materialName: list[str]                             # The name of the material.
-    materialExtraData: list[int]                        # Extra data associated with the material. A value of -1 means the material is the default implementation.
+    shaderName: str = None                              # The shader name.
+    shaderExtraData: int = 0                            # Extra data associated with the shader. A value of -1 means the shader is the default implementation.
+    numMaterials: int = 0
+    materialName: list[str] = None                      # The name of the material.
+    materialExtraData: list[int] = None                 # Extra data associated with the material. A value of -1 means the material is the default implementation.
     activeMaterial: int = -1                            # The index of the currently active material.
     unknownByte: int = 255                              # Cyanide extension (only in version 10.2.0.0?).
-    unknownInteger2: int                                # Unknown.
-    materialNeedsUpdate: bool                           # Whether the materials for this object always needs to be updated before rendering with them.
+    unknownInteger2: int = 0                            # Unknown.
+    materialNeedsUpdate: bool = None                    # Whether the materials for this object always needs to be updated before rendering with them.
 
     def __init__(self, r: NiReader):
         if r.v >= 0x0A000100 and r.v <= 0x14010003 and r.readBool32():
@@ -1126,13 +1134,13 @@ class MaterialData: # Y
 
 # Describes a visible scene element with vertices like a mesh, a particle system, lines, etc.
 class NiGeometry(NiAVObject): # X
-    bound: NiBound
-    skin: Ref[NiObject]
-    data: Ref[NiObject]                                 # Data index (NiTriShapeData/NiTriStripData).
-    skinInstance: Ref[NiObject]
-    materialData: MaterialData
-    shaderProperty: Ref[NiObject]
-    alphaProperty: Ref[NiObject]
+    bound: NiBound = None
+    skin: Ref[NiObject] = None
+    data: Ref[NiObject] = None                          # Data index (NiTriShapeData/NiTriStripData).
+    skinInstance: Ref[NiObject] = None
+    materialData: MaterialData = None
+    shaderProperty: Ref[NiObject] = None
+    alphaProperty: Ref[NiObject] = None
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1193,27 +1201,27 @@ class BSVectorFlags(Flag): # Y
 
 # Mesh data: vertices, vertex normals, etc.
 class NiGeometryData(NiObject): # X
-    groupId: int                                        # Always zero.
-    numVertices: int                                    # Number of vertices.
-    bsMaxVertices: int                                  # Bethesda uses this for max number of particles in NiPSysData.
-    keepFlags: int                                      # Used with NiCollision objects when OBB or TRI is set.
-    compressFlags: int                                  # Unknown.
-    vertices: list[Vector3]                             # The mesh vertices.
+    groupId: int = 0                                    # Always zero.
+    numVertices: int = None                             # Number of vertices.
+    bsMaxVertices: int = None                           # Bethesda uses this for max number of particles in NiPSysData.
+    keepFlags: int = 0                                  # Used with NiCollision objects when OBB or TRI is set.
+    compressFlags: int = 0                              # Unknown.
+    vertices: list[Vector3] = None                      # The mesh vertices.
     vectorFlags: VectorFlags = 0
     bsVectorFlags: BSVectorFlags = 0
-    materialCrc: int
-    normals: list[Vector3]                              # The lighting normals.
-    tangents: list[Vector3]                             # Tangent vectors.
-    bitangents: list[Vector3]                           # Bitangent vectors.
-    unkFloats: list[float]
-    center: Vector3                                     # Center of the bounding box (smallest box that contains all vertices) of the mesh.
-    radius: float                                       # Radius of the mesh: maximal Euclidean distance between the center and all vertices.
-    unknown13shorts: list[int]                          # Unknown, always 0?
-    vertexColors: list[Color4]                          # The vertex colors.
-    numUvSets: int                                      # The lower 6 (or less?) bits of this field represent the number of UV texture sets. The other bits are probably flag bits. For versions 10.1.0.0 and up, if bit 12 is set then extra vectors are present after the normals.
-    uvSets: list[list[TexCoord]]                        # The UV texture coordinates. They follow the OpenGL standard: some programs may require you to flip the second coordinate.
+    materialCrc: int = 0
+    normals: list[Vector3] = None                       # The lighting normals.
+    tangents: list[Vector3] = None                      # Tangent vectors.
+    bitangents: list[Vector3] = None                    # Bitangent vectors.
+    unkFloats: list[float] = None
+    center: Vector3 = None                              # Center of the bounding box (smallest box that contains all vertices) of the mesh.
+    radius: float = None                                # Radius of the mesh: maximal Euclidean distance between the center and all vertices.
+    unknown13shorts: list[int] = None                   # Unknown, always 0?
+    vertexColors: list[Color4] = None                   # The vertex colors.
+    numUvSets: int = None                               # The lower 6 (or less?) bits of this field represent the number of UV texture sets. The other bits are probably flag bits. For versions 10.1.0.0 and up, if bit 12 is set then extra vectors are present after the normals.
+    uvSets: list[list[TexCoord]] = None                 # The UV texture coordinates. They follow the OpenGL standard: some programs may require you to flip the second coordinate.
     consistencyFlags: ConsistencyType = ConsistencyType.CT_MUTABLE # Consistency Flags
-    additionalData: Ref[NiObject]                       # Unknown.
+    additionalData: Ref[NiObject] = None                # Unknown.
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1225,17 +1233,17 @@ class NiGeometryData(NiObject): # X
             self.keepFlags = r.readByte()
             self.compressFlags = r.readByte()
         hasVertices = r.readUInt32()
-        if (hasVertices > 0) and (hasVertices != 15): self.vertices = r.readPArray(None, '3f', self.numVertices)
+        if (hasVertices > 0) and (hasVertices != 15): self.vertices = r.readPArray(array, '3f', self.numVertices)
         if r.v >= 0x14030101 and hasVertices == 15: self.vertices = r.readFArray(lambda z: Vector3(r.readHalf(), r.readHalf(), r.readHalf()), self.numVertices)
         if r.v >= 0x0A000100 and not ((r.v == 0x14020007) and (r.uv2 > 0)): self.vectorFlags = VectorFlags(r.readUInt16())
         if ((r.v == 0x14020007) and (r.uv2 > 0)): self.bsVectorFlags = BSVectorFlags(r.readUInt16())
         if r.v == 0x14020007 and (r.uv == 12): self.materialCrc = r.readUInt32()
         hasNormals = r.readUInt32()
-        if (hasNormals > 0) and (hasNormals != 6): self.normals = r.readPArray(None, '3f', self.numVertices)
+        if (hasNormals > 0) and (hasNormals != 6): self.normals = r.readPArray(array, '3f', self.numVertices)
         if r.v >= 0x14030101 and hasNormals == 6: self.normals = r.readFArray(lambda z: Vector3(r.readByte(), r.readByte(), r.readByte()), self.numVertices)
         if r.v >= 0x0A010000 and (hasNormals != 0) and ((self.vectorFlags | self.bsVectorFlags) & 4096) != 0:
-            self.tangents = r.readPArray(None, '3f', self.numVertices)
-            self.bitangents = r.readPArray(None, '3f', self.numVertices)
+            self.tangents = r.readPArray(array, '3f', self.numVertices)
+            self.bitangents = r.readPArray(array, '3f', self.numVertices)
         if r.v == 0x14030009 and (r.uv == 0x20000) or (r.uv == 0x30000) and r.readBool32(): self.unkFloats = r.readPArray(None, 'f', self.numVertices)
         self.center = r.readVector3()
         self.radius = r.readSingle()
@@ -1256,7 +1264,7 @@ class AbstractAdditionalGeometryData(NiObject): # Y
 
 # Describes a mesh, built from triangles.
 class NiTriBasedGeomData(NiGeometryData): # X
-    numTriangles: int                                   # Number of triangles.
+    numTriangles: int = None                            # Number of triangles.
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1294,8 +1302,8 @@ class NiAlphaProperty(NiProperty): # X
                                                         #     110 GL_GEQUAL
                                                         #     111 GL_NEVER
     threshold: int = 128                                # Threshold for alpha testing (see: glAlphaFunc)
-    unknownShort1: int                                  # Unknown
-    unknownInt2: int                                    # Unknown
+    unknownShort1: int = None                           # Unknown
+    unknownInt2: int = 0                                # Unknown
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1307,21 +1315,21 @@ class NiAlphaProperty(NiProperty): # X
 
 # Generic rotating particles data object.
 class NiParticlesData(NiGeometryData): # X
-    numParticles: int                                   # The maximum number of particles (matches the number of vertices).
-    particleRadius: float                               # The particles' size.
-    radii: list[float]                                  # The individual particle sizes.
-    numActive: int                                      # The number of active particles at the time the system was saved. This is also the number of valid entries in the following arrays.
-    sizes: list[float]                                  # The individual particle sizes.
-    rotations: list[Quaternion]                         # The individual particle rotations.
-    rotationAngles: list[float]                         # Angles of rotation
-    rotationAxes: list[Vector3]                         # Axes of rotation.
-    numSubtextureOffsets: int                           # How many quads to use in BSPSysSubTexModifier for texture atlasing
-    subtextureOffsets: list[Vector4]                    # Defines UV offsets
-    aspectRatio: float                                  # Sets aspect ratio for Subtexture Offset UV quads
-    aspectFlags: int
-    speedtoAspectAspect2: float
-    speedtoAspectSpeed1: float
-    speedtoAspectSpeed2: float
+    numParticles: int = None                            # The maximum number of particles (matches the number of vertices).
+    particleRadius: float = None                        # The particles' size.
+    radii: list[float] = None                           # The individual particle sizes.
+    numActive: int = None                               # The number of active particles at the time the system was saved. This is also the number of valid entries in the following arrays.
+    sizes: list[float] = None                           # The individual particle sizes.
+    rotations: list[Quaternion] = None                  # The individual particle rotations.
+    rotationAngles: list[float] = None                  # Angles of rotation
+    rotationAxes: list[Vector3] = None                  # Axes of rotation.
+    numSubtextureOffsets: int = 0                       # How many quads to use in BSPSysSubTexModifier for texture atlasing
+    subtextureOffsets: list[Vector4] = None             # Defines UV offsets
+    aspectRatio: float = None                           # Sets aspect ratio for Subtexture Offset UV quads
+    aspectFlags: int = None
+    speedtoAspectAspect2: float = None
+    speedtoAspectSpeed1: float = None
+    speedtoAspectSpeed2: float = None
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1333,10 +1341,10 @@ class NiParticlesData(NiGeometryData): # X
         if r.v >= 0x0A000100 and not ((r.v == 0x14020007) and (r.uv2 > 0)) and r.readBool32(): self.rotations = r.readFArray(lambda z: r.readQuaternionWFirst(), self.numVertices)
         hasRotationAngles = r.readBool32() if r.v >= 0x14000004 else None
         if not ((r.v == 0x14020007) and (r.uv2 > 0)) and hasRotationAngles: self.rotationAngles = r.readPArray(None, 'f', self.numVertices)
-        if r.v >= 0x14000004 and not ((r.v == 0x14020007) and (r.uv2 > 0)) and r.readBool32(): self.rotationAxes = r.readPArray(None, '3f', self.numVertices)
+        if r.v >= 0x14000004 and not ((r.v == 0x14020007) and (r.uv2 > 0)) and r.readBool32(): self.rotationAxes = r.readPArray(array, '3f', self.numVertices)
         hasTextureIndices = r.readBool32() if ((r.v == 0x14020007) and (r.uv2 > 0)) else None
         if r.uv2 > 34: self.numSubtextureOffsets = r.readUInt32()
-        if ((r.v == 0x14020007) and (r.uv2 > 0)): self.subtextureOffsets = r.readL8PArray(None, '4f')
+        if ((r.v == 0x14020007) and (r.uv2 > 0)): self.subtextureOffsets = r.readL8PArray(array, '4f')
         if r.uv2 > 34:
             self.aspectRatio = r.readSingle()
             self.aspectFlags = r.readUInt16()
@@ -1346,7 +1354,7 @@ class NiParticlesData(NiGeometryData): # X
 
 # Rotating particles data object.
 class NiRotatingParticlesData(NiParticlesData): # X
-    rotations2: list[Quaternion]                        # The individual particle rotations.
+    rotations2: list[Quaternion] = None                 # The individual particle rotations.
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1359,23 +1367,23 @@ class NiAutoNormalParticlesData(NiParticlesData): # X
 
 # Camera object.
 class NiCamera(NiAVObject): # X
-    cameraFlags: int                                    # Obsolete flags.
-    frustumLeft: float                                  # Frustrum left.
-    frustumRight: float                                 # Frustrum right.
-    frustumTop: float                                   # Frustrum top.
-    frustumBottom: float                                # Frustrum bottom.
-    frustumNear: float                                  # Frustrum near.
-    frustumFar: float                                   # Frustrum far.
-    useOrthographicProjection: bool                     # Determines whether perspective is used.  Orthographic means no perspective.
-    viewportLeft: float                                 # Viewport left.
-    viewportRight: float                                # Viewport right.
-    viewportTop: float                                  # Viewport top.
-    viewportBottom: float                               # Viewport bottom.
-    lodAdjust: float                                    # Level of detail adjust.
-    scene: Ref[NiObject]
+    cameraFlags: int = None                             # Obsolete flags.
+    frustumLeft: float = None                           # Frustrum left.
+    frustumRight: float = None                          # Frustrum right.
+    frustumTop: float = None                            # Frustrum top.
+    frustumBottom: float = None                         # Frustrum bottom.
+    frustumNear: float = None                           # Frustrum near.
+    frustumFar: float = None                            # Frustrum far.
+    useOrthographicProjection: bool = None              # Determines whether perspective is used.  Orthographic means no perspective.
+    viewportLeft: float = None                          # Viewport left.
+    viewportRight: float = None                         # Viewport right.
+    viewportTop: float = None                           # Viewport top.
+    viewportBottom: float = None                        # Viewport bottom.
+    lodAdjust: float = None                             # Level of detail adjust.
+    scene: Ref[NiObject] = None
     numScreenPolygons: int = 0                          # Deprecated. Array is always zero length on disk write.
     numScreenTextures: int = 0                          # Deprecated. Array is always zero length on disk write.
-    unknownInt3: int                                    # Unknown.
+    unknownInt3: int = 0                                # Unknown.
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1399,7 +1407,7 @@ class NiCamera(NiAVObject): # X
 
 # Wrapper for color animation keys.
 class NiColorData(NiObject): # X
-    data: KeyGroup[T]                                   # The color keys.
+    data: KeyGroup[T] = None                            # The color keys.
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1407,7 +1415,7 @@ class NiColorData(NiObject): # X
 
 # Wrapper for 1D (one-dimensional) floating point animation keys.
 class NiFloatData(NiObject): # X
-    data: KeyGroup[T]                                   # The keys.
+    data: KeyGroup[T] = None                            # The keys.
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1415,11 +1423,11 @@ class NiFloatData(NiObject): # X
 
 # LEGACY (pre-10.1) particle modifier. Applies a gravitational field on the particles.
 class NiGravity(NiParticleModifier): # X
-    unknownFloat1: float                                # Unknown.
-    force: float                                        # The strength/force of this gravity.
-    type: FieldType                                     # The force field type.
-    position: Vector3                                   # The position of the mass point relative to the particle system.
-    direction: Vector3                                  # The direction of the applied acceleration.
+    unknownFloat1: float = None                         # Unknown.
+    force: float = None                                 # The strength/force of this gravity.
+    type: FieldType = 0                                 # The force field type.
+    position: Vector3 = None                            # The position of the mass point relative to the particle system.
+    direction: Vector3 = None                           # The direction of the applied acceleration.
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1432,13 +1440,13 @@ class NiGravity(NiParticleModifier): # X
 # DEPRECATED (10.2), RENAMED (10.2) to NiTransformData.
 # Wrapper for transformation animation keys.
 class NiKeyframeData(NiObject): # X
-    numRotationKeys: int                                # The number of quaternion rotation keys. If the rotation type is XYZ (type 4) then this *must* be set to 1, and in this case the actual number of keys is stored in the XYZ Rotations field.
-    rotationType: KeyType                               # The type of interpolation to use for rotation.  Can also be 4 to indicate that separate X, Y, and Z values are used for the rotation instead of Quaternions.
-    quaternionKeys: list[QuatKey[T]]                    # The rotation keys if Quaternion rotation is used.
-    order: float
-    xyzRotations: list[KeyGroup[T]]                     # Individual arrays of keys for rotating X, Y, and Z individually.
-    translations: KeyGroup[T]                           # Translation keys.
-    scales: KeyGroup[T]                                 # Scale keys.
+    numRotationKeys: int = 0                            # The number of quaternion rotation keys. If the rotation type is XYZ (type 4) then this *must* be set to 1, and in this case the actual number of keys is stored in the XYZ Rotations field.
+    rotationType: KeyType = 0                           # The type of interpolation to use for rotation.  Can also be 4 to indicate that separate X, Y, and Z values are used for the rotation instead of Quaternions.
+    quaternionKeys: list[QuatKey[T]] = None             # The rotation keys if Quaternion rotation is used.
+    order: float = None
+    xyzRotations: list[KeyGroup[T]] = None              # Individual arrays of keys for rotating X, Y, and Z individually.
+    translations: KeyGroup[T] = None                    # Translation keys.
+    scales: KeyGroup[T] = None                          # Scale keys.
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1453,7 +1461,7 @@ class NiKeyframeData(NiObject): # X
 
 # Describes the surface properties of an object e.g. translucency, ambient color, diffuse color, emissive color, and specular color.
 class NiMaterialProperty(NiProperty): # X
-    flags: Flags                                        # Property flags.
+    flags: Flags = None                                 # Property flags.
     ambientColor: Color3 = Color3(1.0, 1.0, 1.0)        # How much the material reflects ambient light.
     diffuseColor: Color3 = Color3(1.0, 1.0, 1.0)        # How much the material reflects diffuse light.
     specularColor: Color3 = Color3(1.0, 1.0, 1.0)       # How much light the material reflects in a specular manner.
@@ -1477,10 +1485,10 @@ class NiMaterialProperty(NiProperty): # X
 # DEPRECATED (20.5), replaced by NiMorphMeshModifier.
 # Geometry morphing data.
 class NiMorphData(NiObject): # X
-    numMorphs: int                                      # Number of morphing object.
-    numVertices: int                                    # Number of vertices.
+    numMorphs: int = 0                                  # Number of morphing object.
+    numVertices: int = 0                                # Number of vertices.
     relativeTargets: int = 1                            # This byte is always 1 in all official files.
-    morphs: list[Morph]                                 # The geometry morphing objects.
+    morphs: list[Morph] = None                          # The geometry morphing objects.
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1491,8 +1499,8 @@ class NiMorphData(NiObject): # X
 
 # Generic node object for grouping.
 class NiNode(NiAVObject): # X
-    children: list[Ref[NiObject]]                       # List of child node object indices.
-    effects: list[Ref[NiObject]]                        # List of node effects. ADynamicEffect?
+    children: list[Ref[NiObject]] = None                # List of child node object indices.
+    effects: list[Ref[NiObject]] = None                 # List of node effects. ADynamicEffect?
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1524,7 +1532,7 @@ class AvoidNode(NiNode): # X
 # 10 RIGID_FACE_CAMERA
 # 11 ALWAYS_FACE_CENTER
 class NiBillboardNode(NiNode): # X
-    billboardMode: BillboardMode                        # The way the billboard will react to the camera.
+    billboardMode: BillboardMode = 0                    # The way the billboard will react to the camera.
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1542,9 +1550,9 @@ class NiBSParticleNode(NiNode): # X
 
 # NiPalette objects represent mappings from 8-bit indices to 24-bit RGB or 32-bit RGBA colors.
 class NiPalette(NiObject): # X
-    hasAlpha: int
+    hasAlpha: int = 0
     numEntries: int = 256                               # The number of palette entries. Always 256 but can also be 16.
-    palette: list[Color4]                               # The color palette.
+    palette: list[Color4] = None                        # The color palette.
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1555,14 +1563,14 @@ class NiPalette(NiObject): # X
 
 # LEGACY (pre-10.1) particle modifier.
 class NiParticleBomb(NiParticleModifier): # X
-    decay: float
-    duration: float
-    deltaV: float
-    start: float
-    decayType: DecayType
-    symmetryType: SymmetryType
-    position: Vector3                                   # The position of the mass point relative to the particle system?
-    direction: Vector3                                  # The direction of the applied acceleration?
+    decay: float = None
+    duration: float = None
+    deltaV: float = None
+    start: float = None
+    decayType: DecayType = 0
+    symmetryType: SymmetryType = 0
+    position: Vector3 = None                            # The position of the mass point relative to the particle system?
+    direction: Vector3 = None                           # The direction of the applied acceleration?
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1577,7 +1585,7 @@ class NiParticleBomb(NiParticleModifier): # X
 
 # LEGACY (pre-10.1) particle modifier.
 class NiParticleColorModifier(NiParticleModifier): # X
-    colorData: Ref[NiObject]
+    colorData: Ref[NiObject] = None
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1585,8 +1593,8 @@ class NiParticleColorModifier(NiParticleModifier): # X
 
 # LEGACY (pre-10.1) particle modifier.
 class NiParticleGrowFade(NiParticleModifier): # X
-    grow: float                                         # The time from the beginning of the particle lifetime during which the particle grows.
-    fade: float                                         # The time from the end of the particle lifetime during which the particle fades.
+    grow: float = None                                  # The time from the beginning of the particle lifetime during which the particle grows.
+    fade: float = None                                  # The time from the end of the particle lifetime during which the particle fades.
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1595,7 +1603,7 @@ class NiParticleGrowFade(NiParticleModifier): # X
 
 # LEGACY (pre-10.1) particle modifier.
 class NiParticleMeshModifier(NiParticleModifier): # X
-    particleMeshes: list[Ref[NiObject]]
+    particleMeshes: list[Ref[NiObject]] = None
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1603,9 +1611,9 @@ class NiParticleMeshModifier(NiParticleModifier): # X
 
 # LEGACY (pre-10.1) particle modifier.
 class NiParticleRotation(NiParticleModifier): # X
-    randomInitialAxis: int
-    initialAxis: Vector3
-    rotationSpeed: float
+    randomInitialAxis: int = 0
+    initialAxis: Vector3 = None
+    rotationSpeed: float = None
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1615,7 +1623,7 @@ class NiParticleRotation(NiParticleModifier): # X
 
 # Generic particle system node.
 class NiParticles(NiGeometry): # X
-    vertexDesc: BSVertexDesc
+    vertexDesc: BSVertexDesc = None
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1628,51 +1636,51 @@ class NiAutoNormalParticles(NiParticles): # X
 
 # A generic particle system time controller object.
 class NiParticleSystemController(NiTimeController): # X
-    oldSpeed: int                                       # Particle speed in old files
-    speed: float                                        # Particle speed
-    speedRandom: float                                  # Particle random speed modifier
-    verticalDirection: float                            # vertical emit direction [radians]
+    oldSpeed: int = 0                                   # Particle speed in old files
+    speed: float = None                                 # Particle speed
+    speedRandom: float = None                           # Particle random speed modifier
+    verticalDirection: float = None                     # vertical emit direction [radians]
                                                         #     0.0 : up
                                                         #     1.6 : horizontal
                                                         #     3.1416 : down
-    verticalAngle: float                                # emitter's vertical opening angle [radians]
-    horizontalDirection: float                          # horizontal emit direction
-    horizontalAngle: float                              # emitter's horizontal opening angle
-    unknownNormal: Vector3                              # Unknown.
-    unknownColor: Color4                                # Unknown.
-    size: float                                         # Particle size
-    emitStartTime: float                                # Particle emit start time
-    emitStopTime: float                                 # Particle emit stop time
-    unknownByte: int                                    # Unknown byte, (=0)
-    oldEmitRate: int                                    # Particle emission rate in old files
-    emitRate: float                                     # Particle emission rate (particles per second)
-    lifetime: float                                     # Particle lifetime
-    lifetimeRandom: float                               # Particle lifetime random modifier
-    emitFlags: int                                      # Bit 0: Emit Rate toggle bit (0 = auto adjust, 1 = use Emit Rate value)
-    startRandom: Vector3                                # Particle random start translation vector
-    emitter: Ref[NiObject]                              # This index targets the particle emitter object (TODO: find out what type of object this refers to).
-    unknownShort2: int                                  # ? short=0 ?
-    unknownFloat13: float                               # ? float=1.0 ?
-    unknownInt1: int                                    # ? int=1 ?
-    unknownInt2: int                                    # ? int=0 ?
-    unknownShort3: int                                  # ? short=0 ?
-    particleVelocity: Vector3                           # Particle velocity
-    particleUnknownVector: Vector3                      # Unknown
-    particleLifetime: float                             # The particle's age.
-    particleLink: Ref[NiObject]
-    particleTimestamp: int                              # Timestamp of the last update.
-    particleUnknownShort: int                           # Unknown short
-    particleVertexId: int                               # Particle/vertex index matches array index
-    numParticles: int                                   # Size of the following array. (Maximum number of simultaneous active particles)
-    numValid: int                                       # Number of valid entries in the following array. (Number of active particles at the time the system was saved)
-    particles: list[Particle]                           # Individual particle modifiers?
-    unknownLink: Ref[NiObject]                          # unknown int (=0xffffffff)
-    particleExtra: Ref[NiObject]                        # Link to some optional particle modifiers (NiGravity, NiParticleGrowFade, NiParticleBomb, ...)
-    unknownLink2: Ref[NiObject]                         # Unknown int (=0xffffffff)
-    trailer: int                                        # Trailing null byte
-    colorData: Ref[NiObject]
-    unknownFloat1: float
-    unknownFloats2: list[float]
+    verticalAngle: float = None                         # emitter's vertical opening angle [radians]
+    horizontalDirection: float = None                   # horizontal emit direction
+    horizontalAngle: float = None                       # emitter's horizontal opening angle
+    unknownNormal: Vector3 = None                       # Unknown.
+    unknownColor: Color4 = None                         # Unknown.
+    size: float = None                                  # Particle size
+    emitStartTime: float = None                         # Particle emit start time
+    emitStopTime: float = None                          # Particle emit stop time
+    unknownByte: int = 0                                # Unknown byte, (=0)
+    oldEmitRate: int = 0                                # Particle emission rate in old files
+    emitRate: float = None                              # Particle emission rate (particles per second)
+    lifetime: float = None                              # Particle lifetime
+    lifetimeRandom: float = None                        # Particle lifetime random modifier
+    emitFlags: int = None                               # Bit 0: Emit Rate toggle bit (0 = auto adjust, 1 = use Emit Rate value)
+    startRandom: Vector3 = None                         # Particle random start translation vector
+    emitter: Ref[NiObject] = None                       # This index targets the particle emitter object (TODO: find out what type of object this refers to).
+    unknownShort2: int = None                           # ? short=0 ?
+    unknownFloat13: float = None                        # ? float=1.0 ?
+    unknownInt1: int = 0                                # ? int=1 ?
+    unknownInt2: int = 0                                # ? int=0 ?
+    unknownShort3: int = None                           # ? short=0 ?
+    particleVelocity: Vector3 = None                    # Particle velocity
+    particleUnknownVector: Vector3 = None               # Unknown
+    particleLifetime: float = None                      # The particle's age.
+    particleLink: Ref[NiObject] = None
+    particleTimestamp: int = 0                          # Timestamp of the last update.
+    particleUnknownShort: int = None                    # Unknown short
+    particleVertexId: int = None                        # Particle/vertex index matches array index
+    numParticles: int = None                            # Size of the following array. (Maximum number of simultaneous active particles)
+    numValid: int = None                                # Number of valid entries in the following array. (Number of active particles at the time the system was saved)
+    particles: list[Particle] = None                    # Individual particle modifiers?
+    unknownLink: Ref[NiObject] = None                   # unknown int (=0xffffffff)
+    particleExtra: Ref[NiObject] = None                 # Link to some optional particle modifiers (NiGravity, NiParticleGrowFade, NiParticleBomb, ...)
+    unknownLink2: Ref[NiObject] = None                  # Unknown int (=0xffffffff)
+    trailer: int = 0                                    # Trailing null byte
+    colorData: Ref[NiObject] = None
+    unknownFloat1: float = None
+    unknownFloats2: list[float] = None
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1731,13 +1739,13 @@ class NiBSPArrayController(NiParticleSystemController): # X
 # DEPRECATED (10.2), REMOVED (20.5). Replaced by NiTransformController and NiPathInterpolator.
 # Time controller for a path.
 class NiPathController(NiTimeController): # X
-    pathFlags: PathFlags
+    pathFlags: PathFlags = 0
     bankDir: int = 1                                    # -1 = Negative, 1 = Positive
-    maxBankAngle: float                                 # Max angle in radians.
-    smoothing: float
-    followAxis: int                                     # 0, 1, or 2 representing X, Y, or Z.
-    pathData: Ref[NiObject]
-    percentData: Ref[NiObject]
+    maxBankAngle: float = None                          # Max angle in radians.
+    smoothing: float = None
+    followAxis: int = None                              # 0, 1, or 2 representing X, Y, or Z.
+    pathData: Ref[NiObject] = None
+    percentData: Ref[NiObject] = None
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1757,22 +1765,22 @@ class PixelFormatComponent: # Y
         self.isSigned: bool = r.readBool32()
 
 class NiPixelFormat(NiObject): # Y
-    pixelFormat: PixelFormat                            # The format of the pixels in this internally stored image.
-    redMask: int                                        # 0x000000ff (for 24bpp and 32bpp) or 0x00000000 (for 8bpp)
-    greenMask: int                                      # 0x0000ff00 (for 24bpp and 32bpp) or 0x00000000 (for 8bpp)
-    blueMask: int                                       # 0x00ff0000 (for 24bpp and 32bpp) or 0x00000000 (for 8bpp)
-    alphaMask: int                                      # 0xff000000 (for 32bpp) or 0x00000000 (for 24bpp and 8bpp)
-    bitsPerPixel: int                                   # Bits per pixel, 0 (Compressed), 8, 24 or 32.
-    oldFastCompare: bytearray                           # [96,8,130,0,0,65,0,0] if 24 bits per pixel
+    pixelFormat: PixelFormat = 0                        # The format of the pixels in this internally stored image.
+    redMask: int = 0                                    # 0x000000ff (for 24bpp and 32bpp) or 0x00000000 (for 8bpp)
+    greenMask: int = 0                                  # 0x0000ff00 (for 24bpp and 32bpp) or 0x00000000 (for 8bpp)
+    blueMask: int = 0                                   # 0x00ff0000 (for 24bpp and 32bpp) or 0x00000000 (for 8bpp)
+    alphaMask: int = 0                                  # 0xff000000 (for 32bpp) or 0x00000000 (for 24bpp and 8bpp)
+    bitsPerPixel: int = 0                               # Bits per pixel, 0 (Compressed), 8, 24 or 32.
+    oldFastCompare: bytearray = None                    # [96,8,130,0,0,65,0,0] if 24 bits per pixel
                                                         #     [129,8,130,32,0,65,12,0] if 32 bits per pixel
                                                         #     [34,0,0,0,0,0,0,0] if 8 bits per pixel
                                                         #     [X,0,0,0,0,0,0,0] if 0 (Compressed) bits per pixel where X = PixelFormat
-    tiling: PixelTiling                                 # Seems to always be zero.
-    rendererHint: int
-    extraData: int
-    flags: int
-    sRgbSpace: bool
-    channels: list[PixelFormatComponent]                # Channel Data
+    tiling: PixelTiling = 0                             # Seems to always be zero.
+    rendererHint: int = 0
+    extraData: int = 0
+    flags: int = 0
+    sRgbSpace: bool = None
+    channels: list[PixelFormatComponent] = None         # Channel Data
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1796,13 +1804,13 @@ class NiPixelFormat(NiObject): # Y
 
 # A texture.
 class NiPixelData(NiPixelFormat): # X
-    palette: Ref[NiObject]
-    numMipmaps: int
-    bytesPerPixel: int
-    mipmaps: list[MipMap]
-    numPixels: int
+    palette: Ref[NiObject] = None
+    numMipmaps: int = 0
+    bytesPerPixel: int = 0
+    mipmaps: list[MipMap] = None
+    numPixels: int = 0
     numFaces: int = 1
-    pixelData: bytearray
+    pixelData: bytearray = None
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1817,7 +1825,7 @@ class NiPixelData(NiPixelFormat): # X
 
 # Wrapper for position animation keys.
 class NiPosData(NiObject): # X
-    data: KeyGroup[T]
+    data: KeyGroup[T] = None
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1838,11 +1846,11 @@ class NiShadeProperty(NiProperty): # X
 
 # Skinning data.
 class NiSkinData(NiObject): # X
-    skinTransform: NiTransform                          # Offset of the skin from this bone in bind position.
-    numBones: int                                       # Number of bones.
-    skinPartition: Ref[NiObject]                        # This optionally links a NiSkinPartition for hardware-acceleration information.
+    skinTransform: NiTransform = None                   # Offset of the skin from this bone in bind position.
+    numBones: int = 0                                   # Number of bones.
+    skinPartition: Ref[NiObject] = None                 # This optionally links a NiSkinPartition for hardware-acceleration information.
     hasVertexWeights: int = 1                           # Enables Vertex Weights for this NiSkinData.
-    boneList: list[BoneData]                            # Contains offset data for each node that this skin is influenced by.
+    boneList: list[BoneData] = None                     # Contains offset data for each node that this skin is influenced by.
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1854,10 +1862,10 @@ class NiSkinData(NiObject): # X
 
 # Skinning instance.
 class NiSkinInstance(NiObject): # X
-    data: Ref[NiObject]                                 # Skinning data reference.
-    skinPartition: Ref[NiObject]                        # Refers to a NiSkinPartition objects, which partitions the mesh such that every vertex is only influenced by a limited number of bones.
-    skeletonRoot: Ref[NiObject]                         # Armature root node.
-    bones: list[Ref[NiObject]]                          # List of all armature bones.
+    data: Ref[NiObject] = None                          # Skinning data reference.
+    skinPartition: Ref[NiObject] = None                 # Refers to a NiSkinPartition objects, which partitions the mesh such that every vertex is only influenced by a limited number of bones.
+    skeletonRoot: Ref[NiObject] = None                  # Armature root node.
+    bones: list[Ref[NiObject]] = None                   # List of all armature bones.
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1868,13 +1876,13 @@ class NiSkinInstance(NiObject): # X
 
 # Skinning data, optimized for hardware skinning. The mesh is partitioned in submeshes such that each vertex of a submesh is influenced only by a limited and fixed number of bones.
 class NiSkinPartition(NiObject): # X
-    numSkinPartitionBlocks: int
-    skinPartitionBlocks: list[SkinPartition]            # Skin partition objects.
-    dataSize: int
-    vertexSize: int
-    vertexDesc: BSVertexDesc
-    vertexData: list[BSVertexDataSSE]
-    partition: list[SkinPartition]
+    numSkinPartitionBlocks: int = 0
+    skinPartitionBlocks: list[SkinPartition] = None     # Skin partition objects.
+    dataSize: int = 0
+    vertexSize: int = 0
+    vertexDesc: BSVertexDesc = None
+    vertexData: list[BSVertexDataSSE] = None
+    partition: list[SkinPartition] = None
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1902,11 +1910,11 @@ class FormatPrefs: # Y
 # Describes texture source and properties.
 class NiSourceTexture(NiTexture): # X
     useExternal: int = 1                                # Is the texture external?
-    fileName: str                                       # The external texture file name.
-    unknownLink: Ref[NiObject]                          # Unknown.
+    fileName: str = None                                # The external texture file name.
+    unknownLink: Ref[NiObject] = None                   # Unknown.
     unknownByte: int = 1                                # Unknown. Seems to be set if Pixel Data is present?
-    pixelData: Ref[NiObject]                            # NiPixelData or NiPersistentSrcTextureRendererData
-    formatPrefs: FormatPrefs                            # A set of preferences for the texture format. They are a request only and the renderer may ignore them.
+    pixelData: Ref[NiObject] = None                     # NiPixelData or NiPersistentSrcTextureRendererData
+    formatPrefs: FormatPrefs = None                     # A set of preferences for the texture format. They are a request only and the renderer may ignore them.
     isStatic: int = 1                                   # If set, then the application cannot assume that any dynamic changes to the pixel data will show in the rendered image.
     directRender: bool = True                           # A hint to the renderer that the texture can be loaded directly from a texture file into a renderer-specific resource, bypassing the NiPixelData object.
     persistRenderData: bool = False                     # Pixel Data is NiPersistentSrcTextureRendererData instead of NiPixelData.
@@ -1929,8 +1937,8 @@ class NiSourceTexture(NiTexture): # X
 # Apparently commands for an optimizer instructing it to keep things it would normally discard.
 # Also refers to NiNode objects (through their name) in animation .kf files.
 class NiStringExtraData(NiExtraData): # X
-    bytesRemaining: int                                 # The number of bytes left in the record.  Equals the length of the following string + 4.
-    stringData: str                                     # The string.
+    bytesRemaining: int = 0                             # The number of bytes left in the record.  Equals the length of the following string + 4.
+    stringData: str = None                              # The string.
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1939,8 +1947,8 @@ class NiStringExtraData(NiExtraData): # X
 
 # Extra data, used to name different animation sequences.
 class NiTextKeyExtraData(NiExtraData): # X
-    unknownInt1: int                                    # Unknown.  Always equals zero in all official files.
-    textKeys: list[Key[T]]                              # List of textual notes and at which time they take effect. Used for designating the start and stop of animations and the triggering of sounds.
+    unknownInt1: int = 0                                # Unknown.  Always equals zero in all official files.
+    textKeys: list[Key[T]] = None                       # List of textual notes and at which time they take effect. Used for designating the start and stop of animations and the triggering of sounds.
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1949,20 +1957,20 @@ class NiTextKeyExtraData(NiExtraData): # X
 
 # Represents an effect that uses projected textures such as projected lights (gobos), environment maps, and fog maps.
 class NiTextureEffect(NiDynamicEffect): # X
-    modelProjectionMatrix: Matrix4x4                    # Model projection matrix.  Always identity?
-    modelProjectionTransform: Vector3                   # Model projection transform.  Always (0,0,0)?
+    modelProjectionMatrix: Matrix4x4 = None             # Model projection matrix.  Always identity?
+    modelProjectionTransform: Vector3 = None            # Model projection transform.  Always (0,0,0)?
     textureFiltering: TexFilterMode = TexFilterMode.FILTER_TRILERP # Texture Filtering mode.
-    maxAnisotropy: int
+    maxAnisotropy: int = None
     textureClamping: TexClampMode = TexClampMode.WRAP_S_WRAP_T # Texture Clamp mode.
     textureType: TextureType = TextureType.TEX_ENVIRONMENT_MAP # The type of effect that the texture is used for.
     coordinateGenerationType: CoordGenType = CoordGenType.CG_SPHERE_MAP # The method that will be used to generate UV coordinates for the texture effect.
-    image: Ref[NiObject]                                # Image index.
-    sourceTexture: Ref[NiObject]                        # Source texture index.
+    image: Ref[NiObject] = None                         # Image index.
+    sourceTexture: Ref[NiObject] = None                 # Source texture index.
     enablePlane: int = 0                                # Determines whether a clipping plane is used.
-    plane: NiPlane
+    plane: NiPlane = None
     pS2L: int = 0
     pS2K: int = -75
-    unknownShort: int                                   # Unknown: 0.
+    unknownShort: int = None                            # Unknown: 0.
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -1984,9 +1992,9 @@ class NiTextureEffect(NiDynamicEffect): # X
 
 # LEGACY (pre-10.1)
 class NiImage(NiObject): # Y
-    useExternal: int                                    # 0 if the texture is internal to the NIF file.
-    fileName: str                                       # The filepath to the texture.
-    imageData: Ref[NiObject]                            # Link to the internally stored image data.
+    useExternal: int = 0                                # 0 if the texture is internal to the NIF file.
+    fileName: str = None                                # The filepath to the texture.
+    imageData: Ref[NiObject] = None                     # Link to the internally stored image data.
     unknownInt: int = 7                                 # Unknown.  Often seems to be 7. Perhaps m_uiMipLevels?
     unknownFloat: float = 128.5                         # Unknown.  Perhaps fImageScale?
 
@@ -2000,26 +2008,26 @@ class NiImage(NiObject): # Y
 
 # Describes how a fragment shader should be configured for a given piece of geometry.
 class NiTexturingProperty(NiProperty): # X
-    flags: Flags                                        # Property flags.
+    flags: Flags = None                                 # Property flags.
     applyMode: ApplyMode = ApplyMode.APPLY_MODULATE     # Determines how the texture will be applied.  Seems to have special functions in Oblivion.
     textureCount: int = 7                               # Number of textures.
-    baseTexture: TexDesc                                # The base texture.
-    darkTexture: TexDesc                                # The dark texture.
-    detailTexture: TexDesc                              # The detail texture.
-    glossTexture: TexDesc                               # The gloss texture.
-    glowTexture: TexDesc                                # The glowing texture.
-    bumpMapTexture: TexDesc                             # The bump map texture.
-    bumpMapLumaScale: float
-    bumpMapLumaOffset: float
-    bumpMapMatrix: Matrix2x2
-    normalTexture: TexDesc                              # Normal texture.
-    parallaxTexture: TexDesc
-    parallaxOffset: float
-    decal0Texture: TexDesc                              # The decal texture.
-    decal1Texture: TexDesc                              # Another decal texture.
-    decal2Texture: TexDesc                              # Another decal texture.
-    decal3Texture: TexDesc                              # Another decal texture.
-    shaderTextures: list[ShaderTexDesc]                 # Shader textures.
+    baseTexture: TexDesc = None                         # The base texture.
+    darkTexture: TexDesc = None                         # The dark texture.
+    detailTexture: TexDesc = None                       # The detail texture.
+    glossTexture: TexDesc = None                        # The gloss texture.
+    glowTexture: TexDesc = None                         # The glowing texture.
+    bumpMapTexture: TexDesc = None                      # The bump map texture.
+    bumpMapLumaScale: float = None
+    bumpMapLumaOffset: float = None
+    bumpMapMatrix: Matrix2x2 = None
+    normalTexture: TexDesc = None                       # Normal texture.
+    parallaxTexture: TexDesc = None
+    parallaxOffset: float = None
+    decal0Texture: TexDesc = None                       # The decal texture.
+    decal1Texture: TexDesc = None                       # Another decal texture.
+    decal2Texture: TexDesc = None                       # Another decal texture.
+    decal3Texture: TexDesc = None                       # Another decal texture.
+    shaderTextures: list[ShaderTexDesc] = None          # Shader textures.
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -2065,9 +2073,9 @@ class NiTriShape(NiTriBasedGeom): # X
 
 # Holds mesh data using a list of singular triangles.
 class NiTriShapeData(NiTriBasedGeomData): # X
-    numTrianglePoints: int                              # Num Triangles times 3.
-    triangles: list[Triangle]                           # Triangle data.
-    matchGroups: list[MatchGroup]                       # The shared normals.
+    numTrianglePoints: int = 0                          # Num Triangles times 3.
+    triangles: list[Triangle] = None                    # Triangle data.
+    matchGroups: list[MatchGroup] = None                # The shared normals.
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -2080,8 +2088,8 @@ class NiTriShapeData(NiTriBasedGeomData): # X
 # DEPRECATED (pre-10.1), REMOVED (20.3).
 # Time controller for texture coordinates.
 class NiUVController(NiTimeController): # X
-    unknownShort: int                                   # Always 0?
-    data: Ref[NiObject]                                 # Texture coordinate controller data index.
+    unknownShort: int = None                            # Always 0?
+    data: Ref[NiObject] = None                          # Texture coordinate controller data index.
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -2091,7 +2099,7 @@ class NiUVController(NiTimeController): # X
 # DEPRECATED (pre-10.1), REMOVED (20.3)
 # Texture coordinate data.
 class NiUVData(NiObject): # X
-    uvGroups: list[KeyGroup[T]]                         # Four UV data groups. Appear to be U translation, V translation, U scaling/tiling, V scaling/tiling.
+    uvGroups: list[KeyGroup[T]] = None                  # Four UV data groups. Appear to be U translation, V translation, U scaling/tiling, V scaling/tiling.
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -2099,11 +2107,11 @@ class NiUVData(NiObject): # X
 
 # Property of vertex colors. This object is referred to by the root object of the NIF file whenever some NiTriShapeData object has vertex colors with non-default settings; if not present, vertex colors have vertex_mode=2 and lighting_mode=1.
 class NiVertexColorProperty(NiProperty): # X
-    flags: Flags                                        # Bits 0-2: Unknown
+    flags: Flags = None                                 # Bits 0-2: Unknown
                                                         #     Bit 3: Lighting Mode
                                                         #     Bits 4-5: Vertex Mode
-    vertexMode: VertMode                                # In Flags from 20.1.0.3 on.
-    lightingMode: LightMode                             # In Flags from 20.1.0.3 on.
+    vertexMode: VertMode = 0                            # In Flags from 20.1.0.3 on.
+    lightingMode: LightMode = 0                         # In Flags from 20.1.0.3 on.
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -2116,8 +2124,8 @@ class NiVertexColorProperty(NiProperty): # X
 # Not used in skinning.
 # Unsure of use - perhaps for morphing animation or gravity.
 class NiVertWeightsExtraData(NiExtraData): # X
-    numBytes: int                                       # Number of bytes in this data object.
-    weight: list[float]                                 # The vertex weights.
+    numBytes: int = 0                                   # Number of bytes in this data object.
+    weight: list[float] = None                          # The vertex weights.
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -2127,7 +2135,7 @@ class NiVertWeightsExtraData(NiExtraData): # X
 # DEPRECATED (10.2), REMOVED (?), Replaced by NiBoolData.
 # Visibility data for a controller.
 class NiVisData(NiObject): # X
-    keys: list[Key[T]]
+    keys: list[Key[T]] = None
 
     def __init__(self, r: NiReader):
         super().__init__(r)
@@ -2135,7 +2143,7 @@ class NiVisData(NiObject): # X
 
 # Allows applications to switch between drawing solid geometry or wireframe outlines.
 class NiWireframeProperty(NiProperty): # X
-    flags: Flags                                        # Property flags.
+    flags: Flags = None                                 # Property flags.
                                                         #     0 - Wireframe Mode Disabled
                                                         #     1 - Wireframe Mode Enabled
 
@@ -2162,11 +2170,11 @@ class RootCollisionNode(NiNode): # X
 # LEGACY (pre-10.1)
 # Raw image data.
 class NiRawImageData(NiObject): # Y
-    width: int                                          # Image width
-    height: int                                         # Image height
-    imageType: ImageType                                # The format of the raw image data.
-    rgbImageData: list[list[Color3]]                    # Image pixel data.
-    rgbaImageData: list[list[Color4]]                   # Image pixel data.
+    width: int = 0                                      # Image width
+    height: int = 0                                     # Image height
+    imageType: ImageType = 0                            # The format of the raw image data.
+    rgbImageData: list[list[Color3]] = None             # Image pixel data.
+    rgbaImageData: list[list[Color4]] = None            # Image pixel data.
 
     def __init__(self, r: NiReader):
         super().__init__(r)

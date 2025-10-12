@@ -608,11 +608,11 @@ class FieldHeader:
 
 class ColorRef3:
     def __repr__(self) -> str: return f'{self.red}:{self.green}:{self.blue}'
-    struct = ('<3c', 3)
+    _struct = ('<3c', 3)
     def __init__(self, tuple): self.red, self.green, self.blue = tuple
 class ColorRef4:
     def __repr__(self) -> str: return f'{self.red}:{self.green}:{self.blue}'
-    struct = ('<4c', 4)
+    _struct = ('<4c', 4)
     def __init__(self, tuple): self.red, self.green, self.blue, self.null = tuple
     # def asColor32(self) -> GXColor32: return GXColor32(self.red, self.green, self.blue, 255)
 class STRVField:
@@ -626,36 +626,36 @@ class DATVField:
     b: bool; i: int; f: float; s: str
 class FLTVField: 
     def __repr__(self) -> str: return f'{self.value}'
-    struct = ('<f', 4)
+    _struct = ('<f', 4)
     def __init__(self, tuple): self.value = tuple
 class BYTEField: 
     def __repr__(self) -> str: return f'{self.value}'
-    struct = ('<c', 1)
+    _struct = ('<c', 1)
     def __init__(self, tuple): self.value = tuple
 class IN16Field: 
     def __repr__(self) -> str: return f'{self.value}'
-    struct = ('<h', 2)
+    _struct = ('<h', 2)
     def __init__(self, tuple): self.value = tuple
 class UI16Field: 
     def __repr__(self) -> str: return f'{self.value}'
-    struct = ('<H', 2)
+    _struct = ('<H', 2)
     def __init__(self, tuple): self.value = tuple
 class IN32Field: 
     def __repr__(self) -> str: return f'{self.value}'
-    struct = ('<i', 4)
+    _struct = ('<i', 4)
     def __init__(self, tuple): self.value = tuple
 class UI32Field: 
     def __repr__(self) -> str: return f'{self.value}'
-    struct = ('<I', 4)
+    _struct = ('<I', 4)
     def __init__(self, tuple): self.value = tuple
 class INTVField:
     def __repr__(self) -> str: return f'{self.value}'
-    struct = ('<q', 8)
+    _struct = ('<q', 8)
     def __init__(self, tuple): self.value = tuple
     def asUI16Field(self) -> UI16Field: return UI16Field(self.value)
 class CREFField:
     def __repr__(self) -> str: return f'{self.color}'
-    struct = ('<4c', 4)
+    _struct = ('<4c', 4)
     def __init__(self, tuple): self.color = ColorRef4(tuple)
 class CNTOField:
     def __repr__(self) -> str: return f'{self.item}'

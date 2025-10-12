@@ -29,7 +29,7 @@ class Binary_Ba2(PakBinaryT):
         GNMF = 0x464d4e47
 
     class F4_Header:
-        struct = ('<3IQ', 20)
+        _struct = ('<3IQ', 20)
         def __init__(self, tuple):
             self.version, \
             self.type, \
@@ -38,7 +38,7 @@ class Binary_Ba2(PakBinaryT):
             self.type = Binary_Ba2.F4_HeaderType(self.type)
 
     class F4_File:
-        struct = ('<4IQ3I', 36)
+        _struct = ('<4IQ3I', 36)
         def __init__(self, tuple):
             self.nameHash, \
             self.ext, \
@@ -50,7 +50,7 @@ class Binary_Ba2(PakBinaryT):
             self.align = tuple
 
     class F4_Texture:
-        struct = ('<3I2B3H4B', 24)
+        _struct = ('<3I2B3H4B', 24)
         def __init__(self, tuple):
             self.nameHash, \
             self.ext, \
@@ -66,7 +66,7 @@ class Binary_Ba2(PakBinaryT):
             self.tileMode = tuple
 
     class F4_TextureChunk:
-        struct = ('<Q2I2HI', 24)
+        _struct = ('<Q2I2HI', 24)
         def __init__(self, tuple):
             self.offset, \
             self.packedSize, \
@@ -76,7 +76,7 @@ class Binary_Ba2(PakBinaryT):
             self.align = tuple
 
     class F4_GNMF:
-        struct = ('<3I2BH32sQ4I', 72)
+        _struct = ('<3I2BH32sQ4I', 72)
         def __init__(self, tuple):
             self.nameHash, \
             self.ext, \
@@ -199,7 +199,7 @@ class Binary_Bsa(PakBinaryT):
     OB_BSAFILE_SIZECOMPRESS = 0xC0000000 # Bit mask with OB_HeaderFile:SizeFlags to get the compression status
 
     class OB_Header:
-        struct = ('<8I', 32)
+        _struct = ('<8I', 32)
         def __init__(self, tuple):
             self.version, \
             self.folderRecordOffset, \
@@ -211,14 +211,14 @@ class Binary_Bsa(PakBinaryT):
             self.fileFlags = tuple
 
     class OB_Folder:
-        struct = ('<Q2I', 16)
+        _struct = ('<Q2I', 16)
         def __init__(self, tuple):
             self.hash, \
             self.fileCount, \
             self.offset = tuple
 
     class OB_FolderSSE:
-        struct = ('<Q2IQ', 24)
+        _struct = ('<Q2IQ', 24)
         def __init__(self, tuple):
             self.hash, \
             self.fileCount, \
@@ -226,7 +226,7 @@ class Binary_Bsa(PakBinaryT):
             self.offset = tuple
 
     class OB_File:
-        struct = ('<Q2I', 16)
+        _struct = ('<Q2I', 16)
         def __init__(self, tuple):
             self.hash, \
             self.size, \
@@ -239,13 +239,13 @@ class Binary_Bsa(PakBinaryT):
     MW_BSAHEADER_FILEID = 0x00000100    # Magic for Morrowind BSA
 
     class MW_Header:
-        struct = ('<2I', 8)
+        _struct = ('<2I', 8)
         def __init__(self, tuple):
             self.hashOffset, \
             self.fileCount = tuple
 
     class MW_File:
-        struct = ('<2I', 8)
+        _struct = ('<2I', 8)
         def __init__(self, tuple):
             self.fileSize, \
             self.fileOffset = tuple

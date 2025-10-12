@@ -167,7 +167,7 @@ class Binary_Pcx(IHaveMetaInfo, ITexture):
     #region Headers
 
     class X_Header:
-        struct = ('<4B6H48s2B4H54s', 18)
+        _struct = ('<4B6H48s2B4H54s', 18)
         def __init__(self, tuple):
             self.manufacturer, \
             self.version, \
@@ -317,7 +317,7 @@ class Binary_Tga(IHaveMetaInfo, ITexture):
         pixels: bytearray = 0
 
     class X_Header:
-        struct = ('<3b2Hb4H2b', 18)
+        _struct = ('<3b2Hb4H2b', 18)
         def __init__(self, tuple):
             self.idLength, \
             self.mapType, \

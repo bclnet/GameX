@@ -118,14 +118,14 @@ class Binary_UO(PakBinaryT):
     #region Headers
 
     class IdxFile:
-        struct = ('<3i', 26)
+        _struct = ('<3i', 26)
         def __init__(self, tuple):
             self.offset, \
             self.fileSize, \
             self.extra = tuple
 
     class UopHeader:
-        struct = ('<i2q2i', 28)
+        _struct = ('<i2q2i', 28)
         def __init__(self, tuple):
             self.magic, \
             self.versionSignature, \
@@ -134,7 +134,7 @@ class Binary_UO(PakBinaryT):
             self.count = tuple
 
     class UopRecord:
-        struct = ('<q3iQIh', 34)
+        _struct = ('<q3iQIh', 34)
         def __init__(self, tuple):
             self.offset, \
             self.headerLength, \

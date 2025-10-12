@@ -43,6 +43,7 @@ from numpy import ndarray, array
 from openstk.poly import Reader
 from gamex import FileSource, PakBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
 from gamex.globalx import Color3, Color4
+from gamex.desser import DesSer
 
 T = TypeVar('T')
 
@@ -173,7 +174,7 @@ public class RefJsonConverter<T> : JsonConverter<Ref<T>> where T : NiObject {
 
 public class TexCoordJsonConverter : JsonConverter<TexCoord> {
     public override TexCoord Read(ref Utf8JsonReader r, Type s, JsonSerializerOptions options) => throw new NotImplementedException();
-    public override void Write(Utf8JsonWriter w, TexCoord s, JsonSerializerOptions options) => w.WriteStringValue($"{s.u} {s.v}");
+    public override void Write(Utf8JsonWriter w, TexCoord s, JsonSerializerOptions options) => w.WriteStringValue($"{s.u:f4} {s.v:f4}");
 }
 
 public class TriangleJsonConverter : JsonConverter<Triangle> {
@@ -255,6 +256,11 @@ class Z:
 
 class Flags(IntFlag):
     Hidden = 0x1
+
+def RefJsonConverter(s): return f'{s.v}'
+def TexCoordJsonConverter(s): return f'{s.u:.4f} {s.v:.4f}'
+def TriangleJsonConverter(s): return f'{s.v1} {s.v2} {s.v3}'
+DesSer.add({'Ref':RefJsonConverter, 'TexCoord':TexCoordJsonConverter, 'Triangle':TriangleJsonConverter})
 ''') }
         #endregion
         #region Compounds
@@ -512,14 +518,16 @@ BODY
     }
 '''.replace('BODY', body)))
             elif self.ex == PY:
-                body = '\n'.join([f'            case \'{x}\': return {x}(r)' for x in nodes])
+                body = '\n'.join([f'            case \'{x}\': n = {x}(r)' for x in nodes])
                 s.methods.append(Class.Method('''
     @staticmethod
     def read(r: NiReader, nodeType: str) -> NiObject:
         # print(nodeType)
         match nodeType:
 BODY
-            case _: Log(f'Tried to read an unsupported NiObject type ({nodeType}).'); return null
+            case _: Log(f'Tried to read an unsupported NiObject type ({nodeType}).'); n = None
+        setattr(n, '$type', nodeType)
+        return n
 '''.replace('BODY', body)))
         def bhkRigidBody_values(s, values):
             values[6].extcond = values[6].vercond[20:]

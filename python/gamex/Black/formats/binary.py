@@ -15,21 +15,21 @@ class Binary_Dat(PakBinaryT):
 
     F1_HEADER_FILEID = 0x000000001
     class F1_Header:
-        struct = ('>4I', 16)
+        _struct = ('>4I', 16)
         def __init__(self, tuple):
             self.directoryCount, \
             self.unknown1, \
             self.unknown2, \
             self.unknown3 = tuple
     class F1_Directory:
-        struct = ('>4I', 16)
+        _struct = ('>4I', 16)
         def __init__(self, tuple):
             self.fileCount, \
             self.unknown1, \
             self.unknown2, \
             self.unknown3 = tuple
     class F1_File:
-        struct = ('>4I', 16)
+        _struct = ('>4I', 16)
         def __init__(self, tuple):
             self.attributes, \
             self.offset, \
@@ -38,12 +38,12 @@ class Binary_Dat(PakBinaryT):
 
     F2_HEADER_FILEID = 0x000000011
     class F2_Header:
-        struct = ('<2I', 8)
+        _struct = ('<2I', 8)
         def __init__(self, tuple):
             self.treeSize, \
             self.dataSize = tuple
     class F2_File:
-        struct = ('<B3I', 13)
+        _struct = ('<B3I', 13)
         def __init__(self, tuple):
             self.type, \
             self.realSize, \

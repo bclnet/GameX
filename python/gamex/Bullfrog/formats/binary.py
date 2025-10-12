@@ -18,7 +18,7 @@ class Binary_Bullfrog(PakBinaryT):
     #region Headers
 
     class V_File:
-        struct = ('>QIIIIH', 26)
+        _struct = ('>QIIIIH', 26)
         def __init__(self, tuple):
             self.offset, \
             self.fileSize, \
@@ -112,7 +112,7 @@ class Binary_Fli(IHaveMetaInfo, ITextureFrames):
     MAGIC = 0xAF12
 
     class X_Header:
-        struct = ('<I4H', 12)
+        _struct = ('<I4H', 12)
         def __init__(self, tuple):
             self.size, \
             self.type, \
@@ -127,7 +127,7 @@ class Binary_Fli(IHaveMetaInfo, ITextureFrames):
         FRAME = 0xF1FA      # FRAME_TYPE
 
     class X_ChunkHeader:
-        struct = ('<IH', 6)
+        _struct = ('<IH', 6)
         def __init__(self, tuple):
             self.size, \
             self.type = tuple
@@ -136,7 +136,7 @@ class Binary_Fli(IHaveMetaInfo, ITextureFrames):
         def isValid(self) -> bool: return self.type == ChunkType.COLOR_256 or self.Type == ChunkType.DELTA_FLC or self.Type == ChunkType.BYTE_RUN
 
     class X_FrameHeader:
-        struct = ('<5H', 10)
+        _struct = ('<5H', 10)
         def __init__(self, tuple):
             self.numChunks, \
             self.delay, \
@@ -310,14 +310,14 @@ class Binary_Populus(PakBinaryT):
     MAGIC_SPR = 0x42465350
 
     class SPR_Record:
-        struct = ('<2HI', 12)
+        _struct = ('<2HI', 12)
         def __init__(self, tuple):
             self.width, \
             self.height, \
             self.offset = tuple
 
     class DAT_Sprite:
-        struct = ('<2bI', 10)
+        _struct = ('<2bI', 10)
         def __init__(self, tuple):
             self.width, \
             self.height, \

@@ -19,8 +19,8 @@ public struct Color3 { //:M
         G = r.ReadSingle();
         B = r.ReadSingle();
     }
-
     public Color ToColor() => Color.FromArgb((int)(R * 255f), (int)(G * 255f), (int)(B * 255f));
+    public override string ToString() => $"{R} {G} {B}";
 }
 
 /// <summary>
@@ -38,8 +38,8 @@ public struct ByteColor3 { //:X
         G = r.ReadByte();
         B = r.ReadByte();
     }
-
     public Color ToColor() => Color.FromArgb(R, G, B);
+    public override string ToString() => $"{R} {G} {B}";
 }
 
 /// <summary>
@@ -60,6 +60,7 @@ public struct Color4 { //:M
         B = r.ReadSingle();
         A = r.ReadSingle();
     }
+    public override string ToString() => $"{R} {G} {B} {A}";
 }
 
 /// <summary>
@@ -79,4 +80,5 @@ public struct ByteColor4 { //:X
         B = r.ReadByte();
         A = r.ReadByte();
     }
+    public override string ToString() => $"{R} {G} {B} {A}";
 }

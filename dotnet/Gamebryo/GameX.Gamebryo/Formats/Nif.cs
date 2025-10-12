@@ -123,7 +123,7 @@ public class RefJsonConverter<T> : JsonConverter<Ref<T>> where T : NiObject {
 
 public class TexCoordJsonConverter : JsonConverter<TexCoord> {
     public override TexCoord Read(ref Utf8JsonReader r, Type s, JsonSerializerOptions options) => throw new NotImplementedException();
-    public override void Write(Utf8JsonWriter w, TexCoord s, JsonSerializerOptions options) => w.WriteStringValue($"{s.u} {s.v}");
+    public override void Write(Utf8JsonWriter w, TexCoord s, JsonSerializerOptions options) => w.WriteStringValue($"{s.u:f4} {s.v:f4}");
 }
 
 public class TriangleJsonConverter : JsonConverter<Triangle> {

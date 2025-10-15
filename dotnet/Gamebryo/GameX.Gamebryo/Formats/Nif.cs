@@ -28,9 +28,9 @@ static class Z {
         else if (typeof(T) == typeof(Color4)) { return (T)(object)new Color4(r); }
         else throw new NotImplementedException($"Tried to read an unsupported type: {typeof(T)}");
     }
-    public static byte ReadBool8(NiReader r) => r.V >= 0x14000000 ? r.ReadByte() : (byte)r.ReadUInt32();
-    public static bool ReadBool(NiReader r) => r.V >= 0x14000000 ? r.ReadByte() != 0 : r.ReadUInt32() != 0;
-    public static string String(NiReader r) => r.ReadL32AString();
+    public static byte ReadBool8(NiReader r) => r.V > 0x04000002 ? r.ReadByte() : (byte)r.ReadUInt32();
+    public static bool ReadBool(NiReader r) => r.V > 0x04000002 ? r.ReadByte() != 0 : r.ReadUInt32() != 0;
+    public static string String(NiReader r) => r.V < 0x14010003 ? r.ReadL32AString() : throw new Exception("HERE");
     public static string StringRef(NiReader r, int? p) => default;
     public static bool IsVersionSupported(uint v) => true;
     public static (string, uint) ParseHeaderStr(string s) {

@@ -46,11 +46,11 @@ class Z:
             case '[Color4]': return Color4(r)
             case _: raise NotImplementedError(f'Tried to read an unsupported type: {s.t}')
     @staticmethod
-    def readBool8(r: NiReader) -> int: r.readByte() if r.v >= 0x14000000 else r.readUInt32()
+    def readBool8(r: NiReader) -> int: r.readByte() if r.v > 0x04000002 else r.readUInt32()
     @staticmethod
-    def readBool(r: NiReader) -> bool: r.readByte() != 0 if r.v >= 0x14000000 else r.readUInt32() != 0
+    def readBool(r: NiReader) -> bool: r.readByte() != 0 if r.v > 0x04000002 else r.readUInt32() != 0
     @staticmethod
-    def string(r: NiReader) -> str: return r.readL32AString()
+    def string(r: NiReader) -> str: return r.readL32AString() r.v < 0x14010003 else None
     @staticmethod
     def stringRef(r: NiReader, p: int) -> str: return None
     @staticmethod

@@ -91,9 +91,9 @@ static class Z {
         else if (typeof(T) == typeof(Color4)) { return (T)(object)new Color4(r); }
         else throw new NotImplementedException($"Tried to read an unsupported type: {typeof(T)}");
     }
-    public static byte ReadBool8(NiReader r) => r.V >= 0x14000000 ? r.ReadByte() : (byte)r.ReadUInt32();
-    public static bool ReadBool(NiReader r) => r.V >= 0x14000000 ? r.ReadByte() != 0 : r.ReadUInt32() != 0;
-    public static string String(NiReader r) => r.ReadL32AString();
+    public static byte ReadBool8(NiReader r) => r.V > 0x04000002 ? r.ReadByte() : (byte)r.ReadUInt32();
+    public static bool ReadBool(NiReader r) => r.V > 0x04000002 ? r.ReadByte() != 0 : r.ReadUInt32() != 0;
+    public static string String(NiReader r) => r.V < 0x14010003 ? r.ReadL32AString() : throw new Exception("HERE");
     public static string StringRef(NiReader r, int? p) => default;
     public static bool IsVersionSupported(uint v) => true;
     public static (string, uint) ParseHeaderStr(string s) {
@@ -213,11 +213,11 @@ class Z:
             case '[Color4]': return Color4(r)
             case _: raise NotImplementedError(f'Tried to read an unsupported type: {s.t}')
     @staticmethod
-    def readBool8(r: NiReader) -> int: r.readByte() if r.v >= 0x14000000 else r.readUInt32()
+    def readBool8(r: NiReader) -> int: r.readByte() if r.v > 0x04000002 else r.readUInt32()
     @staticmethod
-    def readBool(r: NiReader) -> bool: r.readByte() != 0 if r.v >= 0x14000000 else r.readUInt32() != 0
+    def readBool(r: NiReader) -> bool: r.readByte() != 0 if r.v > 0x04000002 else r.readUInt32() != 0
     @staticmethod
-    def string(r: NiReader) -> str: return r.readL32AString()
+    def string(r: NiReader) -> str: return r.readL32AString() r.v < 0x14010003 else None
     @staticmethod
     def stringRef(r: NiReader, p: int) -> str: return None
     @staticmethod

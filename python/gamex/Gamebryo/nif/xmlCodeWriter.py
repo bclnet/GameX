@@ -64,9 +64,8 @@ class XmlCodeWriter(CodeWriter):
     def __init__(self, ex: str):
         self.ex = ex
         self.types = {
-            'TEMPLATE': [None, ('T', 'T'), lambda x: (x, x), ('Z.Read<T>(r)', 'Z.read(self, r)'), None],
-            'bool': [None, ('bool', 'bool'), lambda x: (x.replace('1', 'true'), x.replace('true', 'True').replace('false', 'False')), ('Z.ReadBool(r)', 'Z.readBool()'), lambda c: (f'[Z.ReadBool(r), Z.ReadBool(r), Z.ReadBool(r)]', f'[Z.readBool(r), Z.readBool(r), Z.readBool(r)]') if c == '3' else (f'r.ReadFArray(z => Z.ReadBool(r), {c})', f'r.readFArray(lambda z: Z.readBool(r), {c})')],
             'bool8': [None, ('byte', 'int'), lambda x: (x, x), ('Z.ReadBool8(r)', 'Z.readBool8()'), lambda c: (f'r.ReadFArray(z => Z.ReadBool8(r), {c})', f'r.readFArray(lambda z: Z.readBool8(r), {c})')],
+            'bool': [None, ('bool', 'bool'), lambda x: (x.replace('1', 'true'), x.replace('true', 'True').replace('false', 'False')), ('Z.ReadBool(r)', 'Z.readBool()'), lambda c: (f'[Z.ReadBool(r), Z.ReadBool(r), Z.ReadBool(r)]', f'[Z.readBool(r), Z.readBool(r), Z.readBool(r)]') if c == '3' else (f'r.ReadFArray(z => Z.ReadBool(r), {c})', f'r.readFArray(lambda z: Z.readBool(r), {c})')],
             'byte': [None, ('byte', 'int'), lambda x: (x, x), ('r.ReadByte()', 'r.readByte()'), lambda c: (f'r.ReadBytes({c})', f'r.readBytes({c})')],
             'uint': [None, ('uint', 'int'), lambda x: (x, x), ('r.ReadUInt32()', 'r.readUInt32()'), lambda c: (f'r.ReadPArray<uint>("I", {c})', f'r.readPArray(None, \'I\', {c})')],
             'ulittle32': [None, ('uint', 'int'), lambda x: (x, x), ('r.ReadUInt32()', 'r.readUInt32()'), None],
@@ -109,7 +108,13 @@ class XmlCodeWriter(CodeWriter):
             'hkMatrix3': [None, ('Matrix3x4', 'Matrix3x4'), lambda x: (x, x), ('r.ReadMatrix3x4()', 'r.readMatrix3x4()'), None],
             'Matrix33R': [None, ('Matrix4x4', 'Matrix4x4'), lambda x: (x, x), ('r.ReadMatrix3x3As4x4()', 'r.readMatrix3x3As4x4()'), lambda c: (f'r.ReadFArray(z => r.ReadMatrix3x3As4x4(), {c})', f'r.readFArray(lambda z: r.readMatrix3x3As4x4(), {c})')],
             # 'NodeSet': [None, ('NodeSet', 'NodeSet'), lambda x: (x, x), ('new NodeSet(r)', 'NodeSet(r)'), lambda c: (f'r.ReadFArray(z => new NodeSet(r), {c})', f'r.readFArray(lambda z: NodeSet(r), {c})')],
-            'ShortString': [None, ('string', 'str'), lambda x: (x, x), ('r.ReadL8AString()', 'r.readL8AString()'), None]
+            'ShortString': [None, ('string', 'str'), lambda x: (x, x), ('r.ReadL8AString()', 'r.readL8AString()'), None],
+            'TEMPLATE': [None, ('T', 'T'), lambda x: (x, x), ('Z.Read<T>(r)', 'Z.read(self, r)'), None]
+            # other
+            # TBC -> tVector3
+            # TexCoord -> tVector2
+            # Triangle -> Triangle
+            # BSVertexDesc
         }
         self.struct = {}
         if self.ex == CS:

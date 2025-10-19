@@ -445,6 +445,16 @@ match __current__:
             # Game = "FEAR2", # F.E.A.R. 2: Project Origin
             # Game = "FEAR3", # F.E.A.R. 3
         )
+    case 'Mythic':
+        familyKeys = [ "Mythic", "Unknown" ]
+
+        option = GlobalOption(
+            Platform = "GL",
+            ForceOpen = True,
+            ForcePath = "sample:*",
+            Family = "Mythic",
+            # Game = "XX", # XX
+        )
     case 'Nintendo':
         familyKeys = [ "Nintendo", "Unknown" ]
 

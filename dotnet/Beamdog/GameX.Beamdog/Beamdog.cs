@@ -1,26 +1,26 @@
 ﻿using GameX.Formats;
 using GameX.Formats.Unknown;
-using GameX.MODEL.Formats;
-using GameX.MODEL.Transforms;
+using GameX.Beamdog.Formats;
+using GameX.Beamdog.Transforms;
 using System;
 using System.IO;
 using System.Threading.Tasks;
 using GameX.Unknown;
 
-namespace GameX.MODEL;
+namespace GameX.Beamdog;
 
-#region MODELPakFile
+#region BeamdogPakFile
 
 /// <summary>
-/// MODELPakFile
+/// BeamdogPakFile
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class MODELPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> {
+public class BeamdogPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> {
     /// <summary>
-    /// Initializes a new instance of the <see cref="MODELPakFile" /> class.
+    /// Initializes a new instance of the <see cref="BeamdogPakFile" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public MODELPakFile(PakState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+    public BeamdogPakFile(PakState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         ObjectFactoryFunc = ObjectFactory;
     }
 

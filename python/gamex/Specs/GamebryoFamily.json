@@ -12,36 +12,82 @@
       "pakFileType": "GameX.Arkane.GamebryoPakFile, GameX.Gamebryo",
       "engine": "Gamebryo"
     },
+    "PoP": {
+      "name": "Prince of Persia 3D",
+      "url": "https://en.wikipedia.org/wiki/Prince_of_Persia_3D",
+      "dev": "Mindscape",
+      "date": "September 17, 1999",
+      "files": {
+        "key": [
+          "x:x"
+        ]
+      }
+    },
+    "WWW:TSA": {
+      "name": "Wild Wild West: The Steel Assassin",
+      "url": "https://en.wikipedia.org/wiki/Wild_Wild_West:_The_Steel_Assassin",
+      "dev": "SouthPeak Interactive",
+      "date": "December 7, 1999",
+      "files": {
+        "key": [
+          "x:x"
+        ]
+      }
+    },
     "DAoC": {
       "name": "Dark Age of Camelot",
-      "url": "https://en.wikipedia.org/wiki/Dark_Age_of_Camelot",
+      "url": [
+        "https://en.wikipedia.org/wiki/Dark_Age_of_Camelot",
+        "https://www.darkageofcamelot.com"
+      ],
       "dev": "Mythic Entertainment",
       "date": "October 9, 2001",
       "files": {
         "key": [
-          "x:x"
+          "WinReg:Electronic Arts/EA Games/Dark Age of Camelot"
         ]
       }
     },
     "Oddworld:MO": {
       "name": "Oddworld: Munch's Oddysee",
-      "url": "https://en.wikipedia.org/wiki/Oddworld:_Munch%27s_Oddysee",
+      "url": [
+        "https://en.wikipedia.org/wiki/Oddworld:_Munch%27s_Oddysee",
+        "https://www.gog.com/en/game/oddworld_munchs_oddysee"
+      ],
       "dev": "Oddworld Inhabitants",
       "date": "November 15, 2001",
+      "files": {
+        "key": [
+          "Gog:x"
+        ]
+      }
+    },
+    "TetrisWorlds": {
+      "name": "Tetris Worlds",
+      "url": "https://en.wikipedia.org/wiki/Tetris_Worlds",
+      "dev": "Blue Planet Software",
+      "date": "September 24, 2001",
       "files": {
         "key": [
           "x:x"
         ]
       }
     },
-    "TES3": {
+    "Morrowind": {
       "name": "The Elder Scrolls III: Morrowind",
       "url": "https://en.wikipedia.org/wiki/The_Elder_Scrolls_III:_Morrowind",
       "dev": "Bethesda Game Studios",
       "date": "May 2, 2002",
+      "pakFileType": "GameX.Bethesda.BethesdaPakFile, GameX.Bethesda",
+      "pakExt": [
+        ".bsa",
+        ".esm"
+      ],
       "files": {
         "key": [
-          "x:x"
+          "Steam:22320",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 22320",
+          "Local:Morrowind"
         ]
       }
     },
@@ -52,29 +98,7 @@
       "date": "March 26, 2002",
       "files": {
         "key": [
-          "x:x"
-        ]
-      }
-    },
-    "Futurama": {
-      "name": "Futurama",
-      "url": "https://en.wikipedia.org/wiki/Futurama_(video_game)",
-      "dev": "Unique Development Studios Sweden",
-      "date": "August 1, 2003",
-      "files": {
-        "key": [
-          "x:x"
-        ]
-      }
-    },
-    "PoP": {
-      "name": "Prince of Persia 3D",
-      "url": "https://en.wikipedia.org/wiki/Prince_of_Persia_3D",
-      "dev": "Mindscape",
-      "date": "September 17, 1999",
-      "files": {
-        "key": [
-          "x:x"
+          "Steam:8880"
         ]
       }
     },
@@ -100,22 +124,11 @@
         ]
       }
     },
-    "TetrisWorlds": {
-      "name": "Tetris Worlds",
-      "url": "https://en.wikipedia.org/wiki/Tetris_Worlds",
-      "dev": "Blue Planet Software",
-      "date": "September 24, 2001",
-      "files": {
-        "key": [
-          "x:x"
-        ]
-      }
-    },
-    "WWW:TSA": {
-      "name": "Wild Wild West: The Steel Assassin",
-      "url": "https://en.wikipedia.org/wiki/Wild_Wild_West:_The_Steel_Assassin",
-      "dev": "SouthPeak Interactive",
-      "date": "December 7, 1999",
+    "Futurama": {
+      "name": "Futurama",
+      "url": "https://en.wikipedia.org/wiki/Futurama_(video_game)",
+      "dev": "Unique Development Studios Sweden",
+      "date": "August 1, 2003",
       "files": {
         "key": [
           "x:x"
@@ -127,6 +140,111 @@
       "url": "https://en.wikipedia.org/wiki/Zoo_Tycoon_2",
       "dev": "Microsoft Game Studios",
       "date": "November 9, 2004",
+      "files": {
+        "key": [
+          "x:x"
+        ]
+      }
+    },
+    "GrandChase": {
+      "name": "Grand Chase",
+      "url": "https://en.wikipedia.org/wiki/Grand_Chase",
+      "dev": "KOG Studios",
+      "date": "August 1, 2003",
+      "files": {
+        "key": [
+          "x:x"
+        ]
+      }
+    },
+    "IHRA": {
+      "name": "IHRA Professional Drag Racing 2005",
+      "url": "https://en.wikipedia.org/wiki/IHRA_Professional_Drag_Racing_2005",
+      "dev": "Bethesda Game Studios",
+      "date": "November 10, 2004",
+      "files": {
+        "key": [
+          "x:x"
+        ]
+      }
+    },
+    "SidMeiersPirates": {
+      "name": "Sid Meier's Pirates!",
+      "url": "https://en.wikipedia.org/wiki/Sid_Meier%27s_Pirates!_(2004_video_game)",
+      "dev": "Firaxis Games",
+      "date": "November 22, 2004",
+      "files": {
+        "key": [
+          "x:x"
+        ]
+      }
+    },
+    "Civ4": {
+      "name": "Civilization IV",
+      "url": "https://en.wikipedia.org/wiki/Civilization_IV",
+      "dev": "Firaxis Games",
+      "date": "October 25, 2005",
+      "files": {
+        "key": [
+          "x:x"
+        ]
+      }
+    },
+    "IHRA:SE": {
+      "name": "IHRA Drag Racing: Sportsman Edition",
+      "url": "https://en.wikipedia.org/wiki/IHRA_Drag_Racing:_Sportsman_Edition",
+      "dev": "Bethesda Game Studios",
+      "date": "June 12, 2006",
+      "files": {
+        "key": [
+          "x:x"
+        ]
+      }
+    },
+    "Oblivion": {
+      "name": "The Elder Scrolls IV: Oblivion",
+      "url": "https://en.wikipedia.org/wiki/The_Elder_Scrolls_IV:_Oblivion",
+      "dev": "Bethesda Game Studios",
+      "date": "March 20, 2006",
+      "pakFileType": "GameX.Bethesda.BethesdaPakFile, GameX.Bethesda",
+      "pakExt": ".bsa",
+      "files": {
+        "key": [
+          "Steam:22330",
+          "WinReg:Bethesda Softworks/Oblivion",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 22330",
+          "Local:Oblivion"
+        ],
+        "path": "Data"
+      }
+    },
+    "SidMeiersRailroads": {
+      "name": "Sid Meier's Railroads!",
+      "url": "https://en.wikipedia.org/wiki/Sid_Meier%27s_Railroads!",
+      "dev": "Firaxis Games",
+      "date": "October 17, 2006",
+      "files": {
+        "key": [
+          "x:x"
+        ]
+      }
+    },
+    "DriftCity": {
+      "name": "Drift City",
+      "url": "https://en.wikipedia.org/wiki/Drift_City",
+      "dev": "NPLUTO",
+      "date": "September 5, 2007",
+      "files": {
+        "key": [
+          "x:x"
+        ]
+      }
+    },
+    "ShinMegamiTensei:I": {
+      "name": "Shin Megami Tensei: Imagine",
+      "url": "https://en.wikipedia.org/wiki/Shin_Megami_Tensei:_Imagine",
+      "dev": "CAVE",
+      "date": "April 4, 2007",
       "files": {
         "key": [
           "x:x"
@@ -166,28 +284,6 @@
         ]
       }
     },
-    "Catherine": {
-      "name": "Catherine",
-      "url": "https://en.wikipedia.org/wiki/Catherine_(video_game)",
-      "dev": "Atlus",
-      "date": "February 17, 2011",
-      "files": {
-        "key": [
-          "x:x"
-        ]
-      }
-    },
-    "Civ4": {
-      "name": "Civilization IV",
-      "url": "https://en.wikipedia.org/wiki/Civilization_IV",
-      "dev": "Firaxis Games",
-      "date": "October 25, 2005",
-      "files": {
-        "key": [
-          "x:x"
-        ]
-      }
-    },
     "CivR": {
       "name": "Civilization Revolution",
       "url": "https://en.wikipedia.org/wiki/Civilization_Revolution",
@@ -198,23 +294,6 @@
           "x:x"
         ]
       }
-    },
-    "DoB": {
-      "name": "Dance on Broadway",
-      "url": "https://en.wikipedia.org/wiki/Dance_on_Broadway",
-      "dev": "Longtail Studios",
-      "date": "June 15, 2010",
-      "files": {
-        "key": [
-          "x:x"
-        ]
-      }
-    },
-    "Dawntide": {
-      "name": "Dawntide (Cancelled)",
-      "url": "https://en.wikipedia.org/wiki/Dawntide",
-      "dev": "Working As Intended",
-      "date": "October 1, 2011"
     },
     "DefenseGrid:TA": {
       "name": "Defense Grid: The Awakening",
@@ -227,11 +306,72 @@
         ]
       }
     },
-    "Divinity2": {
-      "name": "Divinity II",
-      "url": "https://en.wikipedia.org/wiki/Divinity_II",
-      "dev": "Larian Studios",
-      "date": "November 20, 2009",
+    "Fallout3": {
+      "name": "Fallout 3",
+      "url": "https://en.wikipedia.org/wiki/Fallout_3",
+      "dev": "Bethesda Game Studios",
+      "date": "October 28, 2008",
+      "pakExt": ".bsa",
+      "pak": "game:/Fallout*.bsa",
+      "files": {
+        "key": [
+          "Steam:22370",
+          "WinReg:Bethesda Softworks/Fallout3",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 22370",
+          "Local:Fallout 3 goty"
+        ],
+        "path": "Data"
+      }
+    },
+    "SpeedRacer:TV": {
+      "name": "Speed Racer: The Videogame",
+      "url": "https://en.wikipedia.org/wiki/Speed_Racer:_The_Videogame",
+      "dev": "Sidhe Interactive",
+      "date": "April 29, 2008",
+      "files": {
+        "key": [
+          "x:x"
+        ]
+      }
+    },
+    "Tenchu:SA": {
+      "name": "Tenchu: Shadow Assassins",
+      "url": "https://en.wikipedia.org/wiki/Tenchu:_Shadow_Assassins",
+      "dev": "Acquire",
+      "date": "October 23, 2008",
+      "files": {
+        "key": [
+          "x:x"
+        ]
+      }
+    },
+    "WO:AoR": {
+      "name": "Warhammer Online: Age of Reckoning",
+      "url": "https://en.wikipedia.org/wiki/Warhammer_Online:_Age_of_Reckoning",
+      "dev": "Mythic Entertainment",
+      "date": "September 18, 2008",
+      "files": {
+        "key": [
+          "x:x"
+        ]
+      }
+    },
+    "WotS3": {
+      "name": "Way of the Samurai 3",
+      "url": "https://en.wikipedia.org/wiki/Way_of_the_Samurai_3",
+      "dev": "Acquire",
+      "date": "November 13, 2008",
+      "files": {
+        "key": [
+          "x:x"
+        ]
+      }
+    },
+    "Wizard101": {
+      "name": "Wizard101",
+      "url": "https://en.wikipedia.org/wiki/Wizard101",
+      "dev": "KingsIsle Entertainment",
+      "date": "September 2, 2008",
       "files": {
         "key": [
           "x:x"
@@ -249,55 +389,44 @@
         ]
       }
     },
-    "DriftCity": {
-      "name": "Drift City",
-      "url": "https://en.wikipedia.org/wiki/Drift_City",
-      "dev": "NPLUTO",
-      "date": "September 5, 2007",
+    "Jeopardy": {
+      "name": "Jeopardy!",
+      "url": "https://en.wikipedia.org/wiki/Jeopardy!_(video_game)",
+      "dev": "Sony Computer Entertainment",
+      "date": "2009-01-01",
       "files": {
         "key": [
           "x:x"
         ]
       }
     },
-    "Defiance": {
-      "name": "Defiance",
-      "url": "https://en.wikipedia.org/wiki/Defiance_(video_game)",
-      "dev": "Trion Worlds",
-      "date": "April 2, 2013",
+    "WoF": {
+      "name": "Wheel of Fortune",
+      "url": "https://en.wikipedia.org/wiki/Wheel_of_Fortune_video_games",
+      "dev": "Sony Computer Entertainment",
+      "date": "October 30, 2018",
       "files": {
         "key": [
           "x:x"
         ]
       }
     },
-    "EdenEternal": {
-      "name": "Eden Eternal",
-      "url": "https://en.wikipedia.org/wiki/Eden_Eternal",
-      "dev": "X-Legend",
-      "date": "October 28, 2010",
+    "DoB": {
+      "name": "Dance on Broadway",
+      "url": "https://en.wikipedia.org/wiki/Dance_on_Broadway",
+      "dev": "Longtail Studios",
+      "date": "June 15, 2010",
       "files": {
         "key": [
           "x:x"
         ]
       }
     },
-    "TES4": {
-      "name": "The Elder Scrolls IV: Oblivion",
-      "url": "https://en.wikipedia.org/wiki/The_Elder_Scrolls_IV:_Oblivion",
-      "dev": "Bethesda Game Studios",
-      "date": "March 20, 2006",
-      "files": {
-        "key": [
-          "x:x"
-        ]
-      }
-    },
-    "ElShaddai:AotM": {
-      "name": "El Shaddai: Ascension of the Metatron",
-      "url": "https://en.wikipedia.org/wiki/El_Shaddai:_Ascension_of_the_Metatron",
-      "dev": "Ignition Entertainment",
-      "date": "April 28, 2011",
+    "Divinity2": {
+      "name": "Divinity II",
+      "url": "https://en.wikipedia.org/wiki/Divinity_II",
+      "dev": "Larian Studios",
+      "date": "November 20, 2009",
       "files": {
         "key": [
           "x:x"
@@ -315,59 +444,23 @@
         ]
       }
     },
-    "Epic Mickey 2: The Power of Two": {
-      "name": "Epic Mickey 2: The Power of Two",
-      "url": "XXX",
-      "dev": "Junction Point Studios",
-      "date": "November 18, 2012",
-      "files": {
-        "key": [
-          "x:x"
-        ]
-      }
-    },
-    "Fallout3": {
-      "name": "Fallout 3",
-      "url": "https://en.wikipedia.org/wiki/Fallout_3",
-      "dev": "Bethesda Game Studios",
-      "date": "October 28, 2008",
-      "files": {
-        "key": [
-          "x:x"
-        ]
-      }
-    },
     "Fallout:NV": {
       "name": "Fallout: New Vegas",
       "url": "https://en.wikipedia.org/wiki/Fallout:_New_Vegas",
       "dev": "Obsidian Entertainment",
       "date": "October 19, 2010",
+      "pakExt": ".bsa",
+      "datExt": ".esm",
+      "pak": "game:/Fallout*.bsa",
+      "dat": "game:/FalloutNV.esm",
       "files": {
         "key": [
-          "x:x"
-        ]
-      }
-    },
-    "GitS:SAC": {
-      "name": "Ghost in the Shell: Stand Alone Complex - First Assault Online",
-      "url": "https://en.wikipedia.org/wiki/Ghost_in_the_Shell:_Stand_Alone_Complex_-_First_Assault_Online",
-      "dev": "Nexon Inc.",
-      "date": "XXX",
-      "files": {
-        "key": [
-          "x:x"
-        ]
-      }
-    },
-    "GrandChase": {
-      "name": "Grand Chase",
-      "url": "https://en.wikipedia.org/wiki/Grand_Chase",
-      "dev": "KOG Studios",
-      "date": "August 1, 2003",
-      "files": {
-        "key": [
-          "x:x"
-        ]
+          "Steam:22380",
+          "WinReg:Bethesda Softworks/falloutnv",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 22380",
+          "Local:Fallout New Vegas"
+        ],
+        "path": "Data"
       }
     },
     "GujianQitan": {
@@ -375,39 +468,6 @@
       "url": "https://en.wikipedia.org/wiki/Gujian_Qitan",
       "dev": "Shanghai Aurogon",
       "date": "July 10, 2010",
-      "files": {
-        "key": [
-          "x:x"
-        ]
-      }
-    },
-    "IHRA": {
-      "name": "IHRA Professional Drag Racing 2005",
-      "url": "https://en.wikipedia.org/wiki/IHRA_Professional_Drag_Racing_2005",
-      "dev": "Bethesda Game Studios",
-      "date": "November 10, 2004",
-      "files": {
-        "key": [
-          "x:x"
-        ]
-      }
-    },
-    "IHRA:SE": {
-      "name": "IHRA Drag Racing: Sportsman Edition",
-      "url": "https://en.wikipedia.org/wiki/IHRA_Drag_Racing:_Sportsman_Edition",
-      "dev": "Bethesda Game Studios",
-      "date": "June 12, 2006",
-      "files": {
-        "key": [
-          "x:x"
-        ]
-      }
-    },
-    "Jeopardy": {
-      "name": "Jeopardy!",
-      "url": "https://en.wikipedia.org/wiki/Jeopardy!_(video_game)",
-      "dev": "Sony Computer Entertainment",
-      "date": "2009-01-01",
       "files": {
         "key": [
           "x:x"
@@ -425,17 +485,6 @@
         ]
       }
     },
-    "MapleStory2": {
-      "name": "MapleStory 2",
-      "url": "https://en.wikipedia.org/wiki/MapleStory_2",
-      "dev": "Nexon Inc.",
-      "date": "July 7, 2015",
-      "files": {
-        "key": [
-          "x:x"
-        ]
-      }
-    },
     "MicroVolts": {
       "name": "MicroVolts",
       "url": "https://en.wikipedia.org/wiki/MicroVolts",
@@ -447,11 +496,50 @@
         ]
       }
     },
-    "Pirate101": {
-      "name": "Pirate101",
-      "url": "https://en.wikipedia.org/wiki/Pirate101",
-      "dev": "KingsIsle Entertainment",
-      "date": "October 15, 2012",
+    "Splatterhouse": {
+      "name": "Splatterhouse",
+      "url": "https://en.wikipedia.org/wiki/Splatterhouse_(2010_video_game)",
+      "dev": "Namco Bandai Games",
+      "date": "November 23, 2010",
+      "files": {
+        "key": [
+          "x:x"
+        ]
+      }
+    },
+    "Catherine": {
+      "name": "Catherine",
+      "url": "https://en.wikipedia.org/wiki/Catherine_(video_game)",
+      "dev": "Atlus",
+      "date": "February 17, 2011",
+      "files": {
+        "key": [
+          "x:x"
+        ]
+      }
+    },
+    "Dawntide": {
+      "name": "Dawntide (Cancelled)",
+      "url": "https://en.wikipedia.org/wiki/Dawntide",
+      "dev": "Working As Intended",
+      "date": "October 1, 2011"
+    },
+    "EdenEternal": {
+      "name": "Eden Eternal",
+      "url": "https://en.wikipedia.org/wiki/Eden_Eternal",
+      "dev": "X-Legend",
+      "date": "October 28, 2010",
+      "files": {
+        "key": [
+          "x:x"
+        ]
+      }
+    },
+    "ElShaddai:AotM": {
+      "name": "El Shaddai: Ascension of the Metatron",
+      "url": "https://en.wikipedia.org/wiki/El_Shaddai:_Ascension_of_the_Metatron",
+      "dev": "Ignition Entertainment",
+      "date": "April 28, 2011",
       "files": {
         "key": [
           "x:x"
@@ -502,88 +590,33 @@
         ]
       }
     },
-    "Rocksmith2014": {
-      "name": "Rocksmith 2014",
-      "url": "https://en.wikipedia.org/wiki/Rocksmith_2014",
-      "dev": "Ubisoft",
-      "date": "October 22, 2013",
+    "YarsRevenge": {
+      "name": "Yar's Revenge",
+      "url": "https://en.wikipedia.org/wiki/Yar%27s_Revenge",
+      "dev": "Killspace Entertainment",
+      "date": "April 13, 2011",
       "files": {
         "key": [
           "x:x"
         ]
       }
     },
-    "SidMeiersPirates": {
-      "name": "Sid Meier's Pirates!",
-      "url": "https://en.wikipedia.org/wiki/Sid_Meier%27s_Pirates!_(2004_video_game)",
-      "dev": "Firaxis Games",
-      "date": "November 22, 2004",
+    "Epic Mickey 2: The Power of Two": {
+      "name": "Epic Mickey 2: The Power of Two",
+      "url": "XXX",
+      "dev": "Junction Point Studios",
+      "date": "November 18, 2012",
       "files": {
         "key": [
           "x:x"
         ]
       }
     },
-    "SidMeiersRailroads": {
-      "name": "Sid Meier's Railroads!",
-      "url": "https://en.wikipedia.org/wiki/Sid_Meier%27s_Railroads!",
-      "dev": "Firaxis Games",
-      "date": "October 17, 2006",
-      "files": {
-        "key": [
-          "x:x"
-        ]
-      }
-    },
-    "ShinMegamiTensei:I": {
-      "name": "Shin Megami Tensei: Imagine",
-      "url": "https://en.wikipedia.org/wiki/Shin_Megami_Tensei:_Imagine",
-      "dev": "CAVE",
-      "date": "April 4, 2007",
-      "files": {
-        "key": [
-          "x:x"
-        ]
-      }
-    },
-    "SpeedRacer:TV": {
-      "name": "Speed Racer: The Videogame",
-      "url": "https://en.wikipedia.org/wiki/Speed_Racer:_The_Videogame",
-      "dev": "Sidhe Interactive",
-      "date": "April 29, 2008",
-      "files": {
-        "key": [
-          "x:x"
-        ]
-      }
-    },
-    "Splatterhouse": {
-      "name": "Splatterhouse",
-      "url": "https://en.wikipedia.org/wiki/Splatterhouse_(2010_video_game)",
-      "dev": "Namco Bandai Games",
-      "date": "November 23, 2010",
-      "files": {
-        "key": [
-          "x:x"
-        ]
-      }
-    },
-    "Tenchu:SA": {
-      "name": "Tenchu: Shadow Assassins",
-      "url": "https://en.wikipedia.org/wiki/Tenchu:_Shadow_Assassins",
-      "dev": "Acquire",
-      "date": "October 23, 2008",
-      "files": {
-        "key": [
-          "x:x"
-        ]
-      }
-    },
-    "WO:AoR": {
-      "name": "Warhammer Online: Age of Reckoning",
-      "url": "https://en.wikipedia.org/wiki/Warhammer_Online:_Age_of_Reckoning",
-      "dev": "Mythic Entertainment",
-      "date": "September 18, 2008",
+    "Pirate101": {
+      "name": "Pirate101",
+      "url": "https://en.wikipedia.org/wiki/Pirate101",
+      "dev": "KingsIsle Entertainment",
+      "date": "October 15, 2012",
       "files": {
         "key": [
           "x:x"
@@ -596,51 +629,51 @@
       "dev": "BioWare Mythic",
       "date": "April 10, 2012"
     },
-    "WotS3": {
-      "name": "Way of the Samurai 3",
-      "url": "https://en.wikipedia.org/wiki/Way_of_the_Samurai_3",
-      "dev": "Acquire",
-      "date": "November 13, 2008",
+    "Defiance": {
+      "name": "Defiance",
+      "url": "https://en.wikipedia.org/wiki/Defiance_(video_game)",
+      "dev": "Trion Worlds",
+      "date": "April 2, 2013",
       "files": {
         "key": [
           "x:x"
         ]
       }
     },
-    "WoF": {
-      "name": "Wheel of Fortune",
-      "url": "https://en.wikipedia.org/wiki/Wheel_of_Fortune_video_games",
-      "dev": "Sony Computer Entertainment",
-      "date": "October 30, 2018",
+    "Rocksmith2014": {
+      "name": "Rocksmith 2014",
+      "url": "https://en.wikipedia.org/wiki/Rocksmith_2014",
+      "dev": "Ubisoft",
+      "date": "October 22, 2013",
       "files": {
         "key": [
           "x:x"
         ]
       }
     },
-    "Wizard101": {
-      "name": "Wizard101",
-      "url": "https://en.wikipedia.org/wiki/Wizard101",
-      "dev": "KingsIsle Entertainment",
-      "date": "September 2, 2008",
+    "GitS:SAC": {
+      "name": "Ghost in the Shell: Stand Alone Complex - First Assault Online",
+      "url": "https://en.wikipedia.org/wiki/Ghost_in_the_Shell:_Stand_Alone_Complex_-_First_Assault_Online",
+      "dev": "Nexon Inc.",
+      "date": "XXX",
       "files": {
         "key": [
           "x:x"
         ]
       }
     },
-    "YarsRevenge": {
-      "name": "Yar's Revenge",
-      "url": "https://en.wikipedia.org/wiki/Yar%27s_Revenge",
-      "dev": "Killspace Entertainment",
-      "date": "April 13, 2011",
+    "MapleStory2": {
+      "name": "MapleStory 2",
+      "url": "https://en.wikipedia.org/wiki/MapleStory_2",
+      "dev": "Nexon Inc.",
+      "date": "July 7, 2015",
       "files": {
         "key": [
           "x:x"
         ]
       }
     },
-    "TES4R": {
+    "OblivionR": {
       "name": "The Elder Scrolls IV: Oblivion Remastered",
       "url": "https://en.wikipedia.org/wiki/The_Elder_Scrolls_IV:_Oblivion_Remastered",
       "dev": "Bethesda Game Studios",

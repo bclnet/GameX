@@ -337,6 +337,7 @@ class Class:
         def __init__(self, root: Class, s: str):
             self.comment: str = s
             self.kind = None
+            self.field = 'x'
             self.vercond = None
             self.cond = None
             self.condcw = [None, None]
@@ -402,8 +403,8 @@ class Class:
             if self.name.replace(' ', '') == root.name or self.suffix: cwname += f'_{self.suffix}'
             if ' ' in self.name: root.namers[self.name] = cwname
             # root.namers[self.name] = cwname
-            self.type: str = e.attrib['type']
-            if 'type' in root.custom and self.name in root.custom['type']: self.type = root.custom['type'][self.name]
+            self.type: str = root.custom['types'][self.name] if 'types' in root.custom and self.name in root.custom['types'] else e.attrib['type']
+            self.field: str = ('+' if self.type == root.custom['fields'][self.name] else None) if 'fields' in root.custom and self.name in root.custom['fields'] else 'x'
             self.namecw = (cwname, fmt_py(cwname))
             self.typecw = None
             self.initcw = None
@@ -649,7 +650,7 @@ class Class:
         for x in self.inits:
             if not isinstance(x, str): x.code(lx, self, None, cw); lx = x
         if 'code' in self.custom: py = self.custom['code'](self)
-        values = [x for x in self.values if x.name and not isinstance(x, str) and not (x.kind or '').startswith('var')]
+        values = [x for x in self.values if x.field and x.name and not isinstance(x, str) and not (x.kind or '').startswith('var')]
         fields = {x.namecw: (x.typecw, x.initcw, x.defaultcw, x.comment) for x in reversed(values)}
         self.fields = {x.namecw: fields[x.namecw] for x in values}
 

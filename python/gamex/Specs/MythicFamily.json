@@ -1,0 +1,107 @@
+﻿{
+  "id": "Mythic",
+  "name": "Mythic Entertainment",
+  "studio": "Mythic Entertainment",
+  "description": "an American video game developer based in Fairfax, Virginia that was most widely recognized for developing the 2001 massively multiplayer online role-playing.",
+  "url": "https://en.wikipedia.org/wiki/Mythic_Entertainment",
+  "samples": [
+    "MythicFamily.Sample.json"
+  ],
+  "games": {
+    "*": {
+      "pakFileType": "GameX.Mythic.MythicPakFile, GameX.Mythic"
+    },
+    "DG": {
+      "name": "Dragon's Gate",
+      "date": "1996-01-01",
+      "url": "https://en.wikipedia.org/wiki/Dragon%27s_Gate"
+    },
+    "RM": {
+      "name": "Rolemaster: Magestorm",
+      "date": "1996-01-01",
+      "url": "https://en.wikipedia.org/wiki/Magestorm"
+    },
+    "AO": {
+      "name": "Aliens Online",
+      "date": "1998-04-16",
+      "url": "https://en.wikipedia.org/wiki/Aliens_Online"
+    },
+    "GO": {
+      "name": "Godzilla Online",
+      "date": "1998-11-01",
+      "url": "https://en.wikipedia.org/wiki/Godzilla_Online"
+    },
+    "ST": {
+      "name": "Starship Troopers: Battlespace",
+      "date": "1998-01-01",
+      "url": "https://www.gog.com/dreamlist/game/starship-troopers-battlespace-1998"
+    },
+    "DF": {
+      "name": "Darkness Falls: The Crusade",
+      "date": "1999-01-01",
+      "url": "https://muds.fandom.com/wiki/Darkness_Falls:_The_Crusade"
+    },
+    "SB": {
+      "name": "Spellbinder: The Nexus Conflict",
+      "date": "1999-12-04",
+      "url": "https://en.wikipedia.org/wiki/Spellbinder:_The_Nexus_Conflict"
+    },
+    "ID4": {
+      "name": "ID4 Online",
+      "date": "2000-01-01",
+      "url": "https://en.wikipedia.org/wiki/ID4_Online"
+    },
+    "DAoC": {
+      "name": "Dark Age of Camelot",
+      "date": "2001-10-09",
+      "url": "https://en.wikipedia.org/wiki/Dark_Age_of_Camelot",
+      "dlcs": {
+        "toa": {
+          "name": "Trials of Atlantis",
+          "date": "2003-10-28",
+          "url": "https://en.wikipedia.org/wiki/Dark_Age_of_Camelot:_Trials_of_Atlantis"
+        },
+        "c": {
+          "name": "Catacombs",
+          "date": "2004-12-07",
+          "url": "https://en.wikipedia.org/wiki/Dark_Age_of_Camelot:_Catacombs"
+        },
+        "dr": {
+          "name": "Darkness Rising",
+          "date": "2005-10-11",
+          "url": "https://en.wikipedia.org/wiki/Dark_Age_of_Camelot:_Darkness_Rising"
+        }
+      },
+      "files": {
+        "key": [
+          "WinReg:Electronic Arts/EA Games/Dark Age of Camelot"
+        ]
+      }
+    },
+    "WO": {
+      "name": "Warhammer Online: Age of Reckoning",
+      "date": "2008-09-18",
+      "url": "https://en.wikipedia.org/wiki/Warhammer_Online:_Age_of_Reckoning"
+    },
+    "UO": {
+      "name": "Ultima Online: Stygian Abyss",
+      "date": "2009-09-08",
+      "url": "https://en.wikipedia.org/wiki/Ultima_Online_expansions#Stygian_Abyss"
+    },
+    "DA2": {
+      "name": "Dragon Age II",
+      "date": "2011-03-08",
+      "url": "https://en.wikipedia.org/wiki/Dragon_Age_II"
+    },
+    "UF:QftA": {
+      "name": "Ultima Forever: Quest for the Avatar",
+      "date": "2013-08-07",
+      "url": "https://en.wikipedia.org/wiki/Ultima_Forever:_Quest_for_the_Avatar"
+    },
+    "DK": {
+      "name": "Dungeon Keeper",
+      "date": "2014-01-30",
+      "url": "https://en.wikipedia.org/wiki/Dungeon_Keeper_(2014_video_game)"
+    }
+  }
+}

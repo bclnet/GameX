@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace GameX.MODEL.Formats;
+namespace GameX.Beamdog.Formats;
 
 #region Binary_Abc
 

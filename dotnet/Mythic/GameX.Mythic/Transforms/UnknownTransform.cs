@@ -2,7 +2,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace GameX.Nintendo.Transforms;
+namespace GameX.Mythic.Transforms;
 
 /// <summary>
 /// UnknownTransform

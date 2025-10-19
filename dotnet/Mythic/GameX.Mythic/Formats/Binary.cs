@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
-namespace GameX.MODEL.Formats;
+namespace GameX.Mythic.Formats;
 
 #region Binary_Abc
 
@@ -12,8 +13,8 @@ public class Binary_Abc : IHaveMetaInfo {
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new("BinaryPak", items: [
-            //new($"Type: {Type}"),
-        ])
+                //new($"Type: {Type}"),
+            ])
     ];
 }
 

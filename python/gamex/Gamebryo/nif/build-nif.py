@@ -26,15 +26,20 @@ class NifCodeWriter(XmlCodeWriter):
             'OblivionLayer', 'OblivionHavokMaterial', 'Fallout3Layer', 'Fallout3HavokMaterial', 'SkyrimLayer', 'SkyrimHavokMaterial', 'HavokMaterial', 'HavokFilter', 'MoppDataBuildType',
             'bhkRefObject', 'bhkSerializable', 'bhkShape', 'bhkShapeCollection', 'bhkNiTriStripsShape', 'bhkBvTreeShape', 'bhkMoppBvTreeShape',
             'hkResponseType', 'hkMotionType', 'hkDeactivatorType', 'hkSolverDeactivation', 'hkQualityType', 'BroadPhaseType', 'hkWorldObjCinfoProperty', 'bhkWorldObject', 'bhkEntity', 'bhkRigidBody', 'bhkCOFlags', 'bhkNiCollisionObject', 'bhkCollisionObject',
-            'bhkRigidBodyT', 'bhkSphereRepShape', 'bhkConvexShape', 'bhkConvexVerticesShape', 'bhkListShape', 'AnimationType', 'FurnitureEntryPoints', 'FurniturePosition', 'BSFurnitureMarker', 'bhkBoxShape', 'bhkTransformShape', 'bhkConvexTransformShape' ]
+            'bhkRigidBodyT', 'bhkSphereRepShape', 'bhkConvexShape', 'bhkConvexVerticesShape', 'bhkListShape', 'AnimationType', 'FurnitureEntryPoints', 'FurniturePosition', 'BSFurnitureMarker', 'bhkBoxShape', 'bhkTransformShape', 'bhkConvexTransformShape',
+            'NiSpecularProperty', 'AVObject', 'NiAVObjectPalette', 'NiDefaultAVObjectPalette', 'StringPalette', 'NiStringPalette', 'InterpBlendFlags', 'InterpBlendItem', 'NiBlendInterpolator', 'ControlledBlock', 'NiControllerManager',
+            'AnimNoteType', 'BSAnimNote', 'BSAnimNotes', 'CycleType', 'AccumFlags', 'NiSequence', 'NiControllerSequence', 'BSVertexData', 'NiMultiTargetTransformController', 'NiKeyBasedInterpolator', 'NiQuatTransform', 'NiTransformData', 'NiTransformInterpolator',
+            'NiStencilProperty', 'StencilCompareMode', 'StencilAction', 'StencilDrawMode' ]
         # nodes
         self.nodes = ['NiNode', 'NiTriShape', 'NiTexturingProperty', 'NiSourceTexture', 'NiMaterialProperty', 'NiMaterialColorController', 'NiTriShapeData', 'RootCollisionNode', 'NiStringExtraData', 'NiSkinInstance', 'NiSkinData', 'NiAlphaProperty', 'NiZBufferProperty', 'NiVertexColorProperty', 'NiBSAnimationNode', 'NiBSParticleNode', 'NiParticles', 'NiParticlesData', 'NiRotatingParticles', 'NiRotatingParticlesData', 'NiAutoNormalParticles', 'NiAutoNormalParticlesData', 'NiUVController', 'NiUVData', 'NiTextureEffect', 'NiTextKeyExtraData', 'NiVertWeightsExtraData', 'NiParticleSystemController', 'NiBSPArrayController', 'NiGravity', 'NiParticleBomb', 'NiParticleColorModifier', 'NiParticleGrowFade', 'NiParticleMeshModifier', 'NiParticleRotation', 'NiKeyframeController', 'NiKeyframeData', 'NiColorData', 'NiGeomMorpherController', 'NiMorphData', 'AvoidNode', 'NiVisController', 'NiVisData', 'NiAlphaController', 'NiFloatData', 'NiPosData', 'NiBillboardNode', 'NiShadeProperty', 'NiWireframeProperty', 'NiCamera', 'NiPathController', 'NiPixelData',
             #, 'NiExtraData', 'NiSkinPartition']
             #es4
-            'NiBinaryExtraData', 'NiTriStrips', 'NiTriStripsData', 'BSXFlags', 'bhkNiTriStripsShape', 'bhkMoppBvTreeShape', 'bhkRigidBody', 'bhkCollisionObject', 'bhkRigidBodyT', 'bhkConvexVerticesShape', 'bhkListShape', 'BSFurnitureMarker', 'bhkBoxShape', 'bhkConvexTransformShape' ]
+            'NiBinaryExtraData', 'NiTriStrips', 'NiTriStripsData', 'BSXFlags', 'bhkNiTriStripsShape', 'bhkMoppBvTreeShape', 'bhkRigidBody', 'bhkCollisionObject', 'bhkRigidBodyT', 'bhkConvexVerticesShape', 'bhkListShape', 'BSFurnitureMarker', 'bhkBoxShape', 'bhkConvexTransformShape',
+            'NiSpecularProperty', 'NiControllerSequence', 'NiControllerManager', 'NiMultiTargetTransformController', 'NiTransformInterpolator', 'NiTransformData', 'NiStringPalette', 'NiDefaultAVObjectPalette', 'NiStencilProperty' ]
         self.customs = {
             '_header': (
 '''using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using System.Runtime.InteropServices;
@@ -82,6 +87,68 @@ static class X<T> where T : NiObject {
 }
 
 static class Z {
+    static Dictionary<uint, string> BlockHashes = new();
+    public static NiObject[] ReadBlocks(NiReader r) {
+        var v = r.V; var pos = r.Tell();
+        var Blocks = new NiObject[r.NumBlocks];
+        if (v >= 0x0303000d) {
+            // block types are stored in the header for versions above 10.x.x.x
+            if (v >= 0x0a000000) {
+                var hasSize = v >= 0x14020000 && true; //ignoreSize
+                for (var i = 0; i < r.NumBlocks; i++) {
+                    if (r.AtEnd()) throw new Exception("unexpected EOF during load");
+                    var size = uint.MaxValue;
+                    var index = r.BlockTypeIndex[i] & 0x7FFF; // the upper bit or the blocktypeindex seems to be related to PhysX
+                    var type = r.BlockTypes[index];
+                    // 20.3.1.2 Custom Version
+                    if (v == 0x14030102) {
+                        var hash = r.BlockTypeHashes[index];
+                        if (BlockHashes.ContainsKey(hash)) type = BlockHashes[hash];
+                        else throw new Exception("Block Hash not found.");
+                    }
+                    // note: some 10.0.1.0 version nifs from Oblivion in certain distributions seem to be missing
+                    // these four bytes on the havok blocks (see for instance meshes/architecture/basementsections/ungrdltraphingedoor.nif)
+                    if (v < 0x0a020000 && !type.StartsWith("bhk")) {
+                        var dummy = r.ReadUInt32();
+                        if (dummy != 0) { var msg = $"non-zero block separator ({dummy}) preceeding block {type}"; Console.WriteLine(msg); }
+                    }
+                    // for version 20.2.0.? and above the block size is stored in the header
+                    if (hasSize) size = r.BlockSize[index];
+                    Blocks[i] = NiObject.Read(r, type);
+                }
+                return Blocks;
+            }
+            // < 0x05000001
+            for (var i = 0; i < r.NumBlocks; i++) Blocks[i] = NiObject.Read(r, r.ReadL32AString());
+            return Blocks;
+        }
+        // < 0x0303000d
+        for (var i = 0; ; i++) {
+            if (r.AtEnd()) throw new Exception("unexpected EOF during load");
+            var type = r.ReadL32AString(80);
+            if (type == "End Of File") break;
+            else if (type == "Top Level Object") {
+                type = r.ReadL32AString(80);
+                var p = r.ReadInt32() - 1;
+                //if (p != i) linkMap.insert(p, i);
+                //if (isNiBlock(blockType)) {
+                //    //qDebug() << "loading block" << c << ":" << blockType );
+                //    insertNiBlock(blockType, -1);
+                //    if (!loadItem(root->child(c + 1), stream)) throw Exception($"failed to load block number {i} ({blockType}) previous block was {root->child(c)->name()}");
+                //}
+                //else throw Exception($"encountered unknown block ({blockType})");
+            }
+        }
+        return Blocks;
+    }
+    public static string ExtractRTTIArgs(NiReader r, string nodeType) {
+        var nameAndArgs = nodeType.Split("\x01");
+        //if (nameAndArgs[0] == "NiDataStream") {
+        //    metadata.usage = NiMesh::DataStreamUsage(nameAndArgs[1].toInt());
+        //    metadata.access = NiMesh::DataStreamAccess(nameAndArgs[2].toInt());
+        //}
+        return nameAndArgs[0];
+    }
     public static T Read<T>(NiReader r) {
         if (typeof(T) == typeof(float)) { return (T)(object)r.ReadSingle(); }
         else if (typeof(T) == typeof(byte)) { return (T)(object)r.ReadByte(); }
@@ -203,6 +270,9 @@ class X(Generic[T]):
     def ref(r: Reader): return None if (v := r.readInt32()) < 0 else Ref(r, v)
 class Z:
     @staticmethod
+    def readBlocks(s, r: NiReader) -> list[NiBlock]:
+        pass
+    @staticmethod
     def read(s, r: NiReader) -> object:
         match s.t:
             case '[float]': return r.readSingle()
@@ -317,21 +387,15 @@ DesSer.add({'Ref':RefJsonConverter, 'TexCoord':TexCoordJsonConverter, 'Triangle'
             # read blocks
             values.insert(18, Class.Comment(s, 'read blocks'))
             values.insert(19, vx0 := Class.Value(s, Elem({ 'name': 'Blocks', 'type': 'NiObject', 'arr1': 'x' })))
-            vx0.initcw = ('Blocks = new NiObject[NumBlocks];', 'self.blocks: list[NiObject] = [None]*self.numBlocks')
+            vx0.initcw = ('Blocks = Z.ReadBlocks(r);', 'self.blocks: list[NiObject] = [None]*self.numBlocks')
             values.insert(20, vx1 := Class.Value(s, Elem({ 'name': 'Roots', 'type': 'Ref', 'template': 'NiObject', 'arr1': 'x' })))
             vx1.initcw = ('Roots = new Footer(r).Roots;', 'self.roots = Footer(r).roots')
-        def Header_inits(s, inits):
-            inits.insert(20, if0 := Class.If(s, None, None, None, 'if'))
-            inits.insert(21, if1 := Class.If(s, None, None, None, 'else'))
-            if0.vercond = 'ZV >= 0x05000001'
-            if0.inits.insert(0, Class.Code(s, ('for (var i = 0; i < NumBlocks; i++) Blocks[i] = NiObject.Read(r, BlockTypes[BlockTypeIndex[i]]);', 'for i in range(self.numBlocks): self.blocks[i] = NiObject.read(r, BlockTypes[BlockTypeIndex[i]])')))
-            if1.inits.insert(0, Class.Code(s, ('for (var i = 0; i < NumBlocks; i++) Blocks[i] = NiObject.Read(r, Z.String(r));', 'for i in range(self.numBlocks): self.blocks[i] = NiObject.read(r, Z.string(r))')))
         def Header_code(s):
             s.init = (['BinaryReader b', 'b: Reader'], ['rx', 'rx'], [f'new NiReader(r)', f'NiReader(r)'])
             s.namecw = ('NiReader', 'NiReader'); s.inherit = 'BinaryReader' if self.ex == CS else 'Reader'
             s.values[0].initcw = ('(HeaderString, V) = Z.ParseHeaderStr(b.ReadVAString(0x80, 0xA)); var r = this;', '(self.headerString, self.v) = Z.parseHeaderStr(b.readVAString(128, b\'\\x0A\')); r = self')
         def StringPalette_code(s):
-            s.values[0].typecw = ('string[]', 'list[str]'); s.values[0].initcw = ('Palette = r.ReadL32AString().Split((char)0)', 'self.palette: list[str] = r.readL32AString().split(\'0x00\')')
+            s.values[0].typecw = ('string[]', 'list[str]'); s.values[0].initcw = ('Palette = r.ReadL32AString().Split(\'\x00\');', 'self.palette: list[str] = r.readL32AString().split(\'0x00\')')
         def TexDesc_values(s, values):
             values.insert(10, Class.Comment(s, 'NiTextureTransform'))
         def BSVertexData_values(s, values):
@@ -422,7 +486,6 @@ DesSer.add({'Ref':RefJsonConverter, 'TexCoord':TexCoordJsonConverter, 'Triangle'
                 'constBase': ('b.BaseStream', ''),
                 'consts': [('static NiReader() => Z.Register();', None)],
                 'values': Header_values,
-                'inits': Header_inits,
                 'code': Header_code },
             'StringPalette': { 'x': 1508,
                 'code': StringPalette_code },
@@ -466,12 +529,12 @@ DesSer.add({'Ref':RefJsonConverter, 'TexCoord':TexCoordJsonConverter, 'Triangle'
                 'values': BSVertexData_values, 'inits': BSVertexData_inits },
             'BSVertexDataSSE': { 'x': 1636,
                 'constArg': (', uint ARG', ', ARG: int'), 'constNew': (', ARG', ', ARG'),
-                'type': ['', ('BSVertexData', 'BSVertexData'), lambda x: (x, x), ('new BSVertexData(r, true)', 'BSVertexData(r, true)'), lambda c: (f'r.ReadFArray(r => new BSVertexData(r, true), {c})', f'r.readFArray(lambda r: BSVertexData(r, true), {c})')] },
+                '_': ['', ('BSVertexData', 'BSVertexData'), lambda x: (x, x), ('new BSVertexData(r, ARG, true)', 'BSVertexData(r, ARG, true)'), lambda c: (f'r.ReadFArray(z => new BSVertexData(r, ARG, true), {c})', f'r.readFArray(lambda z: BSVertexData(r, ARG, true), {c})')] },
             'SkinPartition': { 'x': 1661,
                 'calculated': lambda s: ('(ushort)(NumVertices / 3)', '(self.numVertices / 3)'),
                 'values': SkinPartition_values, 'inits': SkinPartition_inits },
             'NiTransform': { 'x': 1728,
-                'type': {'Rotation': 'Matrix33R'} },
+                'types': {'Rotation': 'Matrix33R'} },
             'FurniturePosition': { 'x': 1750,
                 'kind': {-1: 'else'} }, # should auto
             'Morph': { 'x': 1768,
@@ -521,7 +584,8 @@ DesSer.add({'Ref':RefJsonConverter, 'TexCoord':TexCoordJsonConverter, 'Triangle'
                 body = '\n'.join([f'            case "{x}": return new {x}(r);' for x in self.nodes])
                 s.methods.append(Class.Method('''
     public static NiObject Read(NiReader r, string nodeType) {
-        Console.WriteLine($"{nodeType}: {r.Tell()}");
+        // Console.WriteLine($"{nodeType}: {r.Tell()}");
+        if (nodeType.StartsWith("NiDataStream\x01")) nodeType = Z.ExtractRTTIArgs(r, nodeType);
         switch (nodeType) {
 BODY
             default: { Log($"Tried to read an unsupported NiObject type ({nodeType})."); return null; }
@@ -549,10 +613,10 @@ BODY
             values[27].vercond = values[27].vercond[:16]
             values[38].kind = '?:'; values[38].elsecw = ('r.ReadUInt16()', 'r.readUInt16()')
             del values[39]
-        def InterpBlendItem_values(s, values):
-            pass
         def NiBlendInterpolator_values(s, values):
-            pass
+            values.insert(5, Class.Comment(s, 'Flags conds'))
+            values.insert(15, Class.Comment(s, 'end Flags 1 conds'))
+            for i in range(6, 15): values[i].cond = '((int)Flags & 1) == 0'
         def NiCollisionData_values(s, values):
             pass
         def NiAVObject_values(s, values):
@@ -592,6 +656,9 @@ BODY
         def NiRawImageData_values(s, values):
             values[3].cond = 'Image Type == ImageType.RGB'
             values[4].cond = 'Image Type == ImageType.RGBA'
+        def BSAnimNote_values(s, values):
+            values[2].cond = 'Type == AnimNoteType.ANT_GRABIK'
+            values[3].cond = values[4].cond = 'Type == AnimNoteType.ANT_LOOKIK'
         self.customs = self.customs | {
             'NiObject': { 'x': 2193,
                 'code': NiObject_code },
@@ -603,16 +670,16 @@ BODY
                 'conds': ['BSExtraData'] },
             'InterpBlendItem': { 'x': 2660,
                 'kind': {-2: 'elif'},
-                'flags': 'C',
-                'values': InterpBlendItem_values },
+                'flags': 'C' },
             'NiBlendInterpolator': { 'x': 2670,
+                'fields': {'Interp Count': 'ushort', 'Single Index': 'ushort', 'High Priority': 'int', 'Next High Priority': 'int' },
                 'values': NiBlendInterpolator_values },
             'NiObjectNET': { 'x': 2712,
                 'conds': ['BSLightingShaderProperty'] },
             'NiCollisionData': { 'x': 2735,
                 'values': NiCollisionData_values },
             'NiAVObject': { 'x': 2787,
-                'type': {'Rotation': 'Matrix33R'},
+                'types': {'Rotation': 'Matrix33R'},
                 'values': NiAVObject_values },
             'NiDynamicEffect': { 'x': 2804,
                 'kind': {-1: 'elif', -2: 'elif'},
@@ -628,21 +695,21 @@ BODY
                 'conds': ['NiParticleSystem'] },
             'NiGeometryData': { 'x': 3188,
                 'conds': ['NiPSysData'],
-                'type': {'Has Vertices': 'bool8', 'Has Normals': 'bool8', 'Has Vertex Colors': 'bool8' },
+                'types': {'Has Vertices': 'bool8', 'Has Normals': 'bool8', 'Has Vertex Colors': 'bool8' },
                 'values': NiGeometryData_values },
             'NiKeyframeData': { 'x': 3683,
                 'kind': {-3: 'else'}, 
                 'values': NiKeyframeData_values },
             'NiSkinData': { 'x': 4439,
-                'type': {'x': 'Matrix33R'} },
+                'types': {'x': 'Matrix33R'} },
             'NiSkinPartition': { 'x': 4469,
-                'arg': '(uint)VertexDesc.VertexAttributes' if self.ex == CS else 'VertexDesc.VertexAttributes' },
+                'arg': 'VertexDesc.VertexAttributes' if self.ex == CS else 'VertexDesc.VertexAttributes' },
             'NiSourceTexture': { 'x': 4491,
                 'values': NiSourceTexture_values },
             'NiTextKeyExtraData': { 'x': 4570,
                 'arg': 'KeyType.LINEAR_KEY' },
             'NiTextureEffect': { 'x': 4577,
-                'type': {'Model Projection Matrix': 'Matrix33R'} },
+                'types': {'Model Projection Matrix': 'Matrix33R'} },
             'NiTexturingProperty': { 'x': 4620,
                 'values': NiTexturingProperty_values },
             'NiTriShapeData': { 'x': 4673,
@@ -653,6 +720,8 @@ BODY
                 'arg': 'KeyType.LINEAR_KEY' },
             'NiRawImageData': { 'x': 4835,
                 'values': NiRawImageData_values },
+            'BSAnimNote': { 'x': 5915,
+                'values': BSAnimNote_values },
         }
         #endregion
         self.init()
@@ -660,3 +729,6 @@ BODY
 xml = ET.parse('nif.xml')
 NifCodeWriter(CS).write(xml, '../../../../dotnet/Gamebryo/GameX.Gamebryo/Formats/Nif.cs')
 NifCodeWriter(PY).write(xml, '../formats/nif.py')
+
+
+# NiSkinPartition is a problem - ver lost

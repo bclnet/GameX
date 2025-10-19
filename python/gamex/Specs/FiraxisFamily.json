@@ -1,0 +1,140 @@
+﻿{
+  "id": "Firaxis",
+  "name": "Firaxis Games",
+  "studio": "Firaxis Games",
+  "description": "Firaxis Games is an American video game developer based in Sparks, Maryland.",
+  "url": "https://en.wikipedia.org/wiki/List_of_games_by_Firaxis_Games",
+  "samples": [
+    "FiraxisFamily.Sample.json"
+  ],
+  "games": {
+    "*": {
+      "pakFileType": "GameX.Firaxis.FiraxisPakFile, GameX.Firaxis"
+    },
+    "Gettysburg": {
+      "name": "Sid Meier's Gettysburg!",
+      "url": "https://en.wikipedia.org/wiki/Sid_Meier%27s_Gettysburg!",
+      "date": "October 16, 1997"
+    },
+    "AlphaCentauri": {
+      "name": "Sid Meier's Alpha Centauri",
+      "url": "https://en.wikipedia.org/wiki/Sid_Meier%27s_Alpha_Centauri",
+      "date": "February 12, 1999"
+    },
+    "Antietam": {
+      "name": "Sid Meier's Antietam!",
+      "url": "https://en.wikipedia.org/wiki/Sid_Meier%27s_Antietam!",
+      "date": "December 10, 1999"
+    },
+    "Civ3": {
+      "name": "Civilization III",
+      "url": "https://en.wikipedia.org/wiki/Civilization_III",
+      "date": "xxxx-01-01"
+    },
+    "SimGolf": {
+      "name": "Sid Meier's SimGolf",
+      "url": "https://en.wikipedia.org/wiki/Sid_Meier%27s_SimGolf",
+      "date": "January 24, 2002"
+    },
+    "Pirates": {
+      "name": "Sid Meier's Pirates!",
+      "url": "https://en.wikipedia.org/wiki/Sid_Meier%27s_Pirates!_(2004_video_game)",
+      "date": "November 23, 2004"
+    },
+    "Civ4": {
+      "name": "Civilization IV",
+      "url": "https://en.wikipedia.org/wiki/Civilization_IV",
+      "date": "October 25, 2005"
+    },
+    "CivCity:R": {
+      "name": "CivCity: Rome",
+      "url": "https://en.wikipedia.org/wiki/CivCity:_Rome",
+      "date": "July 25, 2006"
+    },
+    "Railroads": {
+      "name": "Sid Meier's Railroads!",
+      "url": "https://en.wikipedia.org/wiki/Sid_Meier%27s_Railroads!",
+      "date": "October 17, 2006"
+    },
+    "CivR": {
+      "name": "Civilization Revolution",
+      "url": "https://en.wikipedia.org/wiki/Civilization_Revolution",
+      "date": "June 6, 2008"
+    },
+    "Civ4:C": {
+      "name": "Civilization IV: Colonization",
+      "url": "https://en.wikipedia.org/wiki/Civilization_IV:_Colonization",
+      "date": "September 21, 2008"
+    },
+    "Civ5": {
+      "name": "Civilization V",
+      "url": "https://en.wikipedia.org/wiki/Civilization_V",
+      "date": "September 21, 2010"
+    },
+    "CivW": {
+      "name": "Civilization World",
+      "url": "https://en.wikipedia.org/wiki/Civilization_World",
+      "date": "July 7, 2011"
+    },
+    "XCOM": {
+      "name": "XCOM: Enemy Unknown",
+      "url": "https://en.wikipedia.org/wiki/XCOM:_Enemy_Unknown",
+      "date": "October 9, 2012"
+    },
+    "HauntedHollow": {
+      "name": "Haunted Hollow",
+      "url": "https://en.wikipedia.org/wiki/Haunted_Hollow",
+      "date": "May 2, 2013"
+    },
+    "AcePatrol": {
+      "name": "Sid Meier's Ace Patrol",
+      "url": "https://en.wikipedia.org/wiki/Sid_Meier%27s_Ace_Patrol",
+      "date": "May 9, 2013"
+    },
+    "AcePatrol2": {
+      "name": "Sid Meier's Ace Patrol: Pacific Skies",
+      "url": "https://en.wikipedia.org/wiki/Sid_Meier%27s_Ace_Patrol:_Pacific_Skies",
+      "date": "November 7, 2013"
+    },
+    "CivR2": {
+      "name": "Civilization Revolution 2",
+      "url": "https://en.wikipedia.org/wiki/Civilization_Revolution_2",
+      "date": "July 2, 2014"
+    },
+    "CivBE": {
+      "name": "Civilization: Beyond Earth",
+      "url": "https://en.wikipedia.org/wiki/Civilization:_Beyond_Earth",
+      "date": "October 24, 2014"
+    },
+    "Starships": {
+      "name": "Sid Meier's Starships",
+      "url": "https://en.wikipedia.org/wiki/Sid_Meier%27s_Starships",
+      "date": "March 12, 2015"
+    },
+    "XCOM2": {
+      "name": "XCOM 2",
+      "url": "https://en.wikipedia.org/wiki/XCOM_2",
+      "date": "February 5, 2016"
+    },
+    "Civ6": {
+      "name": "Civilization VI",
+      "url": "https://en.wikipedia.org/wiki/Civilization_VI",
+      "date": "October 21, 2016"
+    },
+    "XCOM:CS": {
+      "name": "XCOM: Chimera Squad",
+      "url": "https://en.wikipedia.org/wiki/XCOM:_Chimera_Squad",
+      "date": "April 24, 2020"
+    },
+    "MidnightSuns": {
+      "name": "Marvel's Midnight Suns",
+      "url": "https://en.wikipedia.org/wiki/Marvel%27s_Midnight_Suns",
+      "date": "December 2, 2022"
+    },
+    "Civ7": {
+      "name": "Sid Meier's Civilization VII",
+      "url": "https://en.wikipedia.org/wiki/Civilization_VII",
+      "date": "February 11, 2025"
+    }
+  }
+}

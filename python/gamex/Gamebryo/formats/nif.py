@@ -36,6 +36,9 @@ class X(Generic[T]):
     def ref(r: Reader): return None if (v := r.readInt32()) < 0 else Ref(r, v)
 class Z:
     @staticmethod
+    def readBlocks(s, r: NiReader) -> list[NiBlock]:
+        pass
+    @staticmethod
     def read(s, r: NiReader) -> object:
         match s.t:
             case '[float]': return r.readSingle()
@@ -111,6 +114,19 @@ DesSer.add({'Ref':RefJsonConverter, 'TexCoord':TexCoordJsonConverter, 'Triangle'
 #endregion
 
 #region Enums
+
+# Describes the options for the accum root on NiControllerSequence.
+class AccumFlags(Flag): # Z
+    ACCUM_X_TRANS = 0               # X Translation will be accumulated.
+    ACCUM_Y_TRANS = 1 << 1          # Y Translation will be accumulated.
+    ACCUM_Z_TRANS = 1 << 2          # Z Translation will be accumulated.
+    ACCUM_X_ROT = 1 << 3            # X Rotation will be accumulated.
+    ACCUM_Y_ROT = 1 << 4            # Y Rotation will be accumulated.
+    ACCUM_Z_ROT = 1 << 5            # Z Rotation will be accumulated.
+    ACCUM_X_FRONT = 1 << 6          # +X is front facing. (Default)
+    ACCUM_Y_FRONT = 1 << 7          # +Y is front facing.
+    ACCUM_Z_FRONT = 1 << 8          # +Z is front facing.
+    ACCUM_NEG_FRONT = 1 << 9        # -X is front facing.
 
 # Describes how the vertex colors are blended with the filtered texture color.
 class ApplyMode(Enum): # X
@@ -645,6 +661,12 @@ class LightMode(Enum): # X
     LIGHT_MODE_EMISSIVE = 0         # Emissive.
     LIGHT_MODE_EMI_AMB_DIF = 1      # Emissive + Ambient + Diffuse. (Default)
 
+# The animation cyle behavior.
+class CycleType(Enum): # Z
+    CYCLE_LOOP = 0                  # Loop
+    CYCLE_REVERSE = 1               # Reverse
+    CYCLE_CLAMP = 2                 # Clamp
+
 # The force field type.
 class FieldType(Enum): # X
     FIELD_WIND = 0                  # Wind (fixed direction)
@@ -660,6 +682,33 @@ class BillboardMode(Enum): # Y
     RIGID_FACE_CENTER = 4           # Billboard forward vector always faces camera ceneter. Non-minimized rotation.
     BSROTATE_ABOUT_UP = 5           # The billboard will only rotate around its local Z axis (it always stays in its local X-Y plane).
     ROTATE_ABOUT_UP2 = 9            # The billboard will only rotate around the up axis (same as ROTATE_ABOUT_UP?).
+
+# Describes stencil buffer test modes for NiStencilProperty.
+class StencilCompareMode(Enum): # Z
+    TEST_NEVER = 0                  # Always false. Ref value is ignored.
+    TEST_LESS = 1                   # VRef ‹ VBuf
+    TEST_EQUAL = 2                  # VRef = VBuf
+    TEST_LESS_EQUAL = 3             # VRef ≤ VBuf
+    TEST_GREATER = 4                # VRef › VBuf
+    TEST_NOT_EQUAL = 5              # VRef ≠ VBuf
+    TEST_GREATER_EQUAL = 6          # VRef ≥ VBuf
+    TEST_ALWAYS = 7                 # Always true. Buffer is ignored.
+
+# Describes the actions which can occur as a result of tests for NiStencilProperty.
+class StencilAction(Enum): # Z
+    ACTION_KEEP = 0                 # Keep the current value in the stencil buffer.
+    ACTION_ZERO = 1                 # Write zero to the stencil buffer.
+    ACTION_REPLACE = 2              # Write the reference value to the stencil buffer.
+    ACTION_INCREMENT = 3            # Increment the value in the stencil buffer.
+    ACTION_DECREMENT = 4            # Decrement the value in the stencil buffer.
+    ACTION_INVERT = 5               # Bitwise invert the value in the stencil buffer.
+
+# Describes the face culling options for NiStencilProperty.
+class StencilDrawMode(Enum): # Z
+    DRAW_CCW_OR_BOTH = 0            # Application default, chooses between DRAW_CCW or DRAW_BOTH.
+    DRAW_CCW = 1                    # Draw only the triangles whose vertices are ordered CCW with respect to the viewer. (Standard behavior)
+    DRAW_CW = 2                     # Draw only the triangles whose vertices are ordered CW with respect to the viewer. (Effectively flips faces)
+    DRAW_BOTH = 3                   # Draw all triangles, regardless of orientation. (Effectively force double-sided)
 
 # Describes Z-buffer test modes for NiZBufferProperty.
 # "Less than" = closer to camera, "Greater than" = further from camera.
@@ -842,6 +891,69 @@ class BoneVertData: # X
         self.index: int = r.readUInt16()                # The vertex index, in the mesh.
         self.weight: float = r.readSingle() if full else r.readHalf() # The vertex weight - between 0.0 and 1.0
 
+# Used in NiDefaultAVObjectPalette.
+class AVObject: # Z
+    def __init__(self, r: NiReader):
+        self.name: str = r.readL32AString()             # Object name.
+        self.avObject: Ref[NiObject] = X[NiAVObject].ptr(r) # Object reference.
+
+# In a .kf file, this links to a controllable object, via its name (or for version 10.2.0.0 and up, a link and offset to a NiStringPalette that contains the name), and a sequence of interpolators that apply to this controllable object, via links.
+# For Controller ID, NiInterpController::GetCtlrID() virtual function returns a string formatted specifically for the derived type.
+# For Interpolator ID, NiInterpController::GetInterpolatorID() virtual function returns a string formatted specifically for the derived type.
+# The string formats are documented on the relevant niobject blocks.
+class ControlledBlock: # Z
+    targetName: str = None                              # Name of a controllable object in another NIF file.
+    # NiControllerSequence::InterpArrayItem
+    interpolator: Ref[NiObject] = None
+    controller: Ref[NiObject] = None
+    blendInterpolator: Ref[NiObject] = None
+    blendIndex: int = None
+    # Bethesda-only
+    priority: int = 0                                   # Idle animations tend to have low values for this, and high values tend to correspond with the important parts of the animations.
+    # NiControllerSequence::IDTag, post-10.1.0.104 only
+    nodeName: str = None                                # The name of the animated NiAVObject.
+    propertyType: str = None                            # The RTTI type of the NiProperty the controller is attached to, if applicable.
+    controllerType: str = None                          # The RTTI type of the NiTimeController.
+    controllerId: str = None                            # An ID that can uniquely identify the controller among others of the same type on the same NiObjectNET.
+    interpolatorId: str = None                          # An ID that can uniquely identify the interpolator among others of the same type on the same NiObjectNET.
+    stringPalette: Ref[NiObject] = None                 # Refers to the NiStringPalette which contains the name of the controlled NIF object.
+    nodeNameOffset: int = None                          # Offset in NiStringPalette to the name of the animated NiAVObject.
+    propertyTypeOffset: int = None                      # Offset in NiStringPalette to the RTTI type of the NiProperty the controller is attached to, if applicable.
+    controllerTypeOffset: int = None                    # Offset in NiStringPalette to the RTTI type of the NiTimeController.
+    controllerIdOffset: int = None                      # Offset in NiStringPalette to an ID that can uniquely identify the controller among others of the same type on the same NiObjectNET.
+    interpolatorIdOffset: int = None                    # Offset in NiStringPalette to an ID that can uniquely identify the interpolator among others of the same type on the same NiObjectNET.
+
+    def __init__(self, r: NiReader):
+        if r.v <= 0x0A010067: self.targetName = Z.string(r)
+        # NiControllerSequence::InterpArrayItem
+        if r.v >= 0x0A01006A: self.interpolator = X[NiInterpolator].ref(r)
+        if r.v <= 0x14050000: self.controller = X[NiTimeController].ref(r)
+        if r.v >= 0x0A010068 and r.v <= 0x0A01006E:
+            self.blendInterpolator = X[NiBlendInterpolator].ref(r)
+            self.blendIndex = r.readUInt16()
+        # Bethesda-only
+        if r.v >= 0x0A01006A and (r.uv2 > 0): self.priority = r.readByte()
+        # NiControllerSequence::IDTag, post-10.1.0.104 only
+        if r.v >= 0x0A010068 and r.v <= 0x0A010071:
+            self.nodeName = Z.string(r)
+            self.propertyType = Z.string(r)
+            self.controllerType = Z.string(r)
+            self.controllerId = Z.string(r)
+            self.interpolatorId = Z.string(r)
+        if r.v >= 0x0A020000 and r.v <= 0x14010000:
+            self.stringPalette = X[NiStringPalette].ref(r)
+            self.nodeNameOffset = r.readUInt32()
+            self.propertyTypeOffset = r.readUInt32()
+            self.controllerTypeOffset = r.readUInt32()
+            self.controllerIdOffset = r.readUInt32()
+            self.interpolatorIdOffset = r.readUInt32()
+        if r.v >= 0x14010001:
+            self.nodeName = Z.string(r)
+            self.propertyType = Z.string(r)
+            self.controllerType = Z.string(r)
+            self.controllerId = Z.string(r)
+            self.interpolatorId = Z.string(r)
+
 # Information about how the file was exported
 class ExportInfo: # X
     def __init__(self, r: NiReader):
@@ -897,11 +1009,13 @@ class NiReader(Reader): # X
         if r.v >= 0x05000006: self.groups = r.readL32PArray(None, 'I')
         # read blocks
         self.blocks: list[NiObject] = [None]*self.numBlocks
-        if r.v >= 0x05000001:
-            for i in range(self.numBlocks): self.blocks[i] = NiObject.read(r, BlockTypes[BlockTypeIndex[i]])
-        else:
-            for i in range(self.numBlocks): self.blocks[i] = NiObject.read(r, Z.string(r))
         self.roots = Footer(r).roots
+
+# A list of \\0 terminated strings.
+class StringPalette: # Z
+    def __init__(self, r: NiReader):
+        self.palette: list[str] = r.readL32AString().split('0x00') # A bunch of 0x00 seperated strings.
+        self.length: int = r.readUInt32()               # Length of the palette string is repeated here.
 
 # Tension, bias, continuity.
 class TBC: # X
@@ -1047,7 +1161,7 @@ class VertexFlags(Flag): # Y
     Instance = 1 << 13
     Full_Precision = 1 << 14
 
-class BSVertexDataSSE: # Y
+class BSVertexData: # Z
     vertex: Vector3 = None
     bitangentX: float = None
     unknownInt: int = 0
@@ -1061,22 +1175,28 @@ class BSVertexDataSSE: # Y
     boneIndices: bytearray = None
     eyeData: float = None
 
-    def __init__(self, r: NiReader, ARG: int):
-        if ((ARG & 16) != 0): self.vertex = r.readVector3()
-        if ((ARG & 16) != 0) and ((ARG & 256) != 0): self.bitangentX = r.readSingle()
-        if ((ARG & 16) != 0) and (ARG & 256) == 0: self.unknownInt = r.readInt32()
-        if ((ARG & 32) != 0): self.uv = TexCoord(r, true)
-        if (ARG & 128) != 0:
+    def __init__(self, r: NiReader, arg: VertexFlags, sse: bool):
+        full = sse or VertexFlags.Full_Precision in arg
+        tangents = VertexFlags.Tangents in arg
+        if arg.HasFlag(VertexFlags.Vertex):
+            self.vertex = r.readVector3() if full else r.readHalfVector3()
+            if tangents:
+                self.bitangentX = r.readSingle() if full else r.readHalf()
+            else:
+                self.unknownInt = r.readUInt32() if full else r.readUInt16()
+        if (arg.HasFlag(VertexFlags.UVs)): self.uv = TexCoord(r, true)
+        if arg.HasFlag(VertexFlags.Normals):
             self.normal = Vector3(r.readByte(), r.readByte(), r.readByte())
             self.bitangentY = r.readByte()
-        if ((ARG & 128) != 0) and ((ARG & 256) != 0):
-            self.tangent = Vector3(r.readByte(), r.readByte(), r.readByte())
-            self.bitangentZ = r.readByte()
-        if (ARG & 512) != 0: self.vertexColors = Color4(r.readBytes(4))
-        if (ARG & 1024) != 0:
+            if tangents: self.tangent = Vector3(r.readByte(), r.readByte(), r.readByte())
+            if tangents: self.bitangentZ = r.readByte()
+        if arg.HasFlag(VertexFlags.Vertex_Colors): self.vertexColors = Color4(r.readBytes(4))
+        if arg.HasFlag(VertexFlags.Skinned):
             self.boneWeights = [r.readHalf(), r.readHalf(), r.readHalf(), r.readHalf()]
             self.boneIndices = r.readBytes(4)
-        if (ARG & 4096) != 0: self.eyeData = r.readSingle()
+        if arg.HasFlag(VertexFlags.Eye_Data): self.eyeData = r.readSingle()
+
+# BSVertexDataSSE -> BSVertexData(r, ARG, true)
 
 class BSVertexDesc: # Y
     _struct = ('<5bHb', 8)
@@ -1151,6 +1271,13 @@ class NiBound: # Y
         if isinstance(r, tuple): self.center,self.radius=(array(r[0:3]),r[3]); return
         self.center: Vector3 = r.readVector3()          # The sphere's center.
         self.radius: float = r.readSingle()             # The sphere's radius.
+
+class NiQuatTransform: # Z
+    def __init__(self, r: NiReader):
+        self.translation: Vector3 = r.readVector3()
+        self.rotation: Quaternion = r.readQuaternionWFirst()
+        self.scale: float = r.readSingle()
+        self.trsValid: list[bool] = [Z.readBool(r), Z.readBool(r), Z.readBool(r)] if r.v <= 0x0A01006D else None # Whether each transform component is valid.
 
 class NiTransform: # X
     def __init__(self, r: NiReader):
@@ -1432,6 +1559,15 @@ class NiObject: # X
             case 'BSFurnitureMarker': node = BSFurnitureMarker(r)
             case 'bhkBoxShape': node = bhkBoxShape(r)
             case 'bhkConvexTransformShape': node = bhkConvexTransformShape(r)
+            case 'NiSpecularProperty': node = NiSpecularProperty(r)
+            case 'NiControllerSequence': node = NiControllerSequence(r)
+            case 'NiControllerManager': node = NiControllerManager(r)
+            case 'NiMultiTargetTransformController': node = NiMultiTargetTransformController(r)
+            case 'NiTransformInterpolator': node = NiTransformInterpolator(r)
+            case 'NiTransformData': node = NiTransformData(r)
+            case 'NiStringPalette': node = NiStringPalette(r)
+            case 'NiDefaultAVObjectPalette': node = NiDefaultAVObjectPalette(r)
+            case 'NiStencilProperty': node = NiStencilProperty(r)
             case _: Log(f'Tried to read an unsupported NiObject type ({nodeType}).'); node = None
         setattr(node, '$type', nodeType)
         return node
@@ -1749,6 +1885,21 @@ class NiInterpolator(NiObject): # Y
     def __init__(self, r: NiReader):
         super().__init__(r)
 
+# Abstract base class for interpolators that use NiAnimationKeys (Key, KeyGrp) for interpolation.
+class NiKeyBasedInterpolator(NiInterpolator): # Z
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+
+# An interpolator for transform keyframes.
+class NiTransformInterpolator(NiKeyBasedInterpolator): # Z
+    transform: NiQuatTransform = None
+    data: Ref[NiObject] = None
+
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+        self.transform = NiQuatTransform(r)
+        self.data = X[NiTransformData].ref(r)
+
 class PathFlags(Flag): # X
     CVDataNeedsUpdate = 0
     CurveTypeOpen = 1 << 1
@@ -1757,6 +1908,87 @@ class PathFlags(Flag): # X
     ConstantVelocity = 1 << 4
     Follow = 1 << 5
     Flip = 1 << 6
+
+class InterpBlendFlags(Enum): # Z
+    MANAGER_CONTROLLED = 1          # MANAGER_CONTROLLED
+
+# Interpolator item for array in NiBlendInterpolator.
+class InterpBlendItem: # Z
+    interpolator: Ref[NiObject] = None                  # Reference to an interpolator.
+    weight: float = None
+    normalizedWeight: float = None
+    priority: int = 0
+    easeSpinner: float = None
+
+    def __init__(self, r: NiReader):
+        self.interpolator = X[NiInterpolator].ref(r)
+        self.weight = r.readSingle()
+        self.normalizedWeight = r.readSingle()
+        if r.v <= 0x0A01006D: self.priority = r.readInt32()
+        elif r.v >= 0x0A01006E: self.priority = r.readByte()
+        self.easeSpinner = r.readSingle()
+
+# Abstract base class for all NiInterpolators that blend the results of sub-interpolators together to compute a final weighted value.
+class NiBlendInterpolator(NiInterpolator): # Z
+    flags: InterpBlendFlags = 0
+    arraySize: int = None
+    arrayGrowBy: int = None
+    weightThreshold: float = None
+    # Flags conds
+    singleTime: float = -3.402823466e+38
+    highWeightsSum: float = -3.402823466e+38
+    nextHighWeightsSum: float = -3.402823466e+38
+    highEaseSpinner: float = -3.402823466e+38
+    interpArrayItems: list[InterpBlendItem] = None
+    # end Flags 1 conds
+    managedControlled: bool = None
+    onlyUseHighestWeight: bool = None
+    interpCount: int = None
+    singleIndex: int = None
+    singleInterpolator: Ref[NiObject] = None
+    highPriority: int = 0
+    nextHighPriority: int = 0
+
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+        if r.v >= 0x0A010070: self.flags = InterpBlendFlags(r.readByte())
+        if r.v <= 0x0A01006D:
+            self.arraySize = r.readUInt16()
+            self.arrayGrowBy = r.readUInt16()
+        if r.v >= 0x0A01006E: self.arraySize = r.readByte()
+        if r.v >= 0x0A010070: self.weightThreshold = r.readSingle()
+        # Flags conds
+        if r.v >= 0x0A010070 and ((int)Flags & 1) == 0:
+            self.interpCount = r.readByte()
+            self.singleIndex = r.readByte()
+            self.highPriority = r.readSByte()
+            self.nextHighPriority = r.readSByte()
+            self.singleTime = r.readSingle()
+            self.highWeightsSum = r.readSingle()
+            self.nextHighWeightsSum = r.readSingle()
+            self.highEaseSpinner = r.readSingle()
+            self.interpArrayItems = r.readFArray(lambda z: InterpBlendItem(r), self.arraySize)
+        # end Flags 1 conds
+        if r.v <= 0x0A01006F:
+            self.interpArrayItems = r.readFArray(lambda z: InterpBlendItem(r), self.arraySize)
+            self.managedControlled = Z.readBool()
+            self.weightThreshold = r.readSingle()
+            self.onlyUseHighestWeight = Z.readBool()
+        if r.v <= 0x0A01006D:
+            self.interpCount = r.readUInt16()
+            self.singleIndex = r.readUInt16()
+        if r.v >= 0x0A01006E and r.v <= 0x0A01006F:
+            self.interpCount = r.readByte()
+            self.singleIndex = r.readByte()
+        if r.v >= 0x0A01006C and r.v <= 0x0A01006F:
+            self.singleInterpolator = X[NiInterpolator].ref(r)
+            self.singleTime = r.readSingle()
+        if r.v <= 0x0A01006D:
+            self.highPriority = r.readInt32()
+            self.nextHighPriority = r.readInt32()
+        if r.v >= 0x0A01006E and r.v <= 0x0A01006F:
+            self.highPriority = r.readByte()
+            self.nextHighPriority = r.readByte()
 
 # Abstract base class for NiObjects that support names, extra data, and time controllers.
 class NiObjectNET(NiObject): # X
@@ -1903,6 +2135,14 @@ class NiInterpController(NiTimeController): # X
     def __init__(self, r: NiReader):
         super().__init__(r)
         if r.v >= 0x0A010068 and r.v <= 0x0A01006C: self.managerControlled = Z.readBool()
+
+# DEPRECATED (20.6)
+class NiMultiTargetTransformController(NiInterpController): # Z
+    extraTargets: list[Ref[NiObject]] = None            # NiNode Targets to be controlled.
+
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+        self.extraTargets = r.readL16FArray(X[NiAVObject].ptr)
 
 # DEPRECATED (20.5), replaced by NiMorphMeshModifier.
 # Time controller for geometry morphing.
@@ -2304,6 +2544,94 @@ class NiColorData(NiObject): # X
     def __init__(self, r: NiReader):
         super().__init__(r)
         self.data = KeyGroup[Color4]('[Color4]', r)
+
+# Controls animation sequences on a specific branch of the scene graph.
+class NiControllerManager(NiTimeController): # Z
+    cumulative: bool = None                             # Whether transformation accumulation is enabled. If accumulation is not enabled, the manager will treat all sequence data on the accumulation root as absolute data instead of relative delta values.
+    controllerSequences: list[Ref[NiObject]] = None
+    objectPalette: Ref[NiObject] = None
+
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+        self.cumulative = Z.readBool()
+        self.controllerSequences = r.readL32FArray(X[NiControllerSequence].ref)
+        self.objectPalette = X[NiDefaultAVObjectPalette].ref(r)
+
+# Root node in NetImmerse .kf files (until version 10.0).
+class NiSequence(NiObject): # Z
+    name: str = None                                    # The sequence name by which the animation system finds and manages this sequence.
+    accumRootName: str = None                           # The name of the NiAVObject serving as the accumulation root. This is where all accumulated translations, scales, and rotations are applied.
+    textKeys: Ref[NiObject] = None
+    unknownInt4: int = 0                                # Divinity 2
+    unknownInt5: int = 0                                # Divinity 2
+    numControlledBlocks: int = 0
+    arrayGrowBy: int = 0
+    controlledBlocks: list[ControlledBlock] = None
+
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+        self.name = Z.string(r)
+        if r.v <= 0x0A010067:
+            self.accumRootName = Z.string(r)
+            self.textKeys = X[NiTextKeyExtraData].ref(r)
+        if r.v == 0x14030009 and (r.uv == 0x20000) or (r.uv == 0x30000):
+            self.unknownInt4 = r.readInt32()
+            self.unknownInt5 = r.readInt32()
+        self.numControlledBlocks = r.readUInt32()
+        if r.v >= 0x0A01006A: self.arrayGrowBy = r.readUInt32()
+        self.controlledBlocks = r.readFArray(lambda z: ControlledBlock(r), self.numControlledBlocks)
+
+# Root node in Gamebryo .kf files (version 10.0.1.0 and up).
+class NiControllerSequence(NiSequence): # Z
+    weight: float = 1.0                                 # The weight of a sequence describes how it blends with other sequences at the same priority.
+    textKeys: Ref[NiObject] = None
+    cycleType: CycleType = 0
+    frequency: float = 1.0
+    phase: float = None
+    startTime: float = 3.402823466e+38
+    stopTime: float = -3.402823466e+38
+    playBackwards: bool = None
+    manager: Ref[NiObject] = None                       # The owner of this sequence.
+    accumRootName: str = None                           # The name of the NiAVObject serving as the accumulation root. This is where all accumulated translations, scales, and rotations are applied.
+    accumFlags: AccumFlags = AccumFlags.ACCUM_X_FRONT
+    stringPalette: Ref[NiObject] = None
+    animNotes: Ref[NiObject] = None
+    animNoteArrays: list[Ref[NiObject]] = None
+
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+        if r.v >= 0x0A01006A:
+            self.weight = r.readSingle()
+            self.textKeys = X[NiTextKeyExtraData].ref(r)
+            self.cycleType = CycleType(r.readUInt32())
+            self.frequency = r.readSingle()
+        if r.v >= 0x0A01006A and r.v <= 0x0A040001: self.phase = r.readSingle()
+        if r.v >= 0x0A01006A:
+            self.startTime = r.readSingle()
+            self.stopTime = r.readSingle()
+        if r.v == 0x0A01006A: self.playBackwards = Z.readBool()
+        if r.v >= 0x0A01006A:
+            self.manager = X[NiControllerManager].ptr(r)
+            self.accumRootName = Z.string(r)
+        if r.v >= 0x14030008: self.accumFlags = AccumFlags(r.readUInt32())
+        if r.v >= 0x0A010071 and r.v <= 0x14010000: self.stringPalette = X[NiStringPalette].ref(r)
+        if r.v >= 0x14020007 and (r.uv2 >= 24) and (r.uv2 <= 28): self.animNotes = X[BSAnimNotes].ref(r)
+        if r.v >= 0x14020007 and (r.uv2 > 28): self.animNoteArrays = r.readL16FArray(X[BSAnimNotes].ref)
+
+# Abstract base class for indexing NiAVObject by name.
+class NiAVObjectPalette(NiObject): # Z
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+
+# NiAVObjectPalette implementation. Used to quickly look up objects by name.
+class NiDefaultAVObjectPalette(NiAVObjectPalette): # Z
+    scene: Ref[NiObject] = None                         # Scene root of the object palette.
+    objs: list[AVObject] = None                         # The objects.
+
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+        self.scene = X[NiAVObject].ptr(r)
+        self.objs = r.readL32FArray(lambda z: AVObject(r))
 
 # Wrapper for 1D (one-dimensional) floating point animation keys.
 class NiFloatData(NiObject): # X
@@ -2800,7 +3128,7 @@ class NiSkinPartition(NiObject): # X
     dataSize: int = 0
     vertexSize: int = 0
     vertexDesc: BSVertexDesc = None
-    vertexData: list[BSVertexDataSSE] = None
+    vertexData: list[BSVertexData] = None
     partition: list[SkinPartition] = None
 
     def __init__(self, r: NiReader):
@@ -2811,7 +3139,7 @@ class NiSkinPartition(NiObject): # X
             self.dataSize = r.readUInt32()
             self.vertexSize = r.readUInt32()
             self.vertexDesc = r.readS(BSVertexDesc)
-            if self.dataSize > 0: self.vertexData = r.readFArray(lambda z: BSVertexDataSSE(r, VertexDesc.VertexAttributes), self.dataSize / self.vertexSize)
+            if self.dataSize > 0: self.vertexData = r.readFArray(lambda z: BSVertexData(r, VertexDesc.VertexAttributes, true), self.dataSize / self.vertexSize)
             self.partition = r.readFArray(lambda z: SkinPartition(r), self.numSkinPartitionBlocks)
 
 # A texture.
@@ -2853,6 +3181,43 @@ class NiSourceTexture(NiTexture): # X
         if r.v >= 0x0A010067: self.directRender = Z.readBool()
         if r.v >= 0x14020004: self.persistRenderData = Z.readBool()
 
+# Gives specularity to a shape. Flags 0x0001.
+class NiSpecularProperty(NiProperty): # Z
+    flags: Flags = None                                 # Bit 0 = Enable specular lighting on this shape.
+
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+        self.flags = Flags(r.readUInt16())
+
+# Allows control of stencil testing.
+class NiStencilProperty(NiProperty): # Z
+    flags: Flags = None                                 # Property flags.
+    stencilEnabled: int = 0                             # Enables or disables the stencil test.
+    stencilFunction: StencilCompareMode = 0             # Selects the compare mode function (see: glStencilFunc).
+    stencilRef: int = 0
+    stencilMask: int = 4294967295                       # A bit mask. The default is 0xffffffff.
+    failAction: StencilAction = 0
+    zFailAction: StencilAction = 0
+    passAction: StencilAction = 0
+    drawMode: StencilDrawMode = StencilDrawMode.DRAW_BOTH # Used to enabled double sided faces. Default is 3 (DRAW_BOTH).
+
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+        if r.v <= 0x0A000102: self.flags = Flags(r.readUInt16())
+        if r.v <= 0x14000005:
+            self.stencilEnabled = r.readByte()
+            self.stencilFunction = StencilCompareMode(r.readUInt32())
+            self.stencilRef = r.readUInt32()
+            self.stencilMask = r.readUInt32()
+            self.failAction = StencilAction(r.readUInt32())
+            self.zFailAction = StencilAction(r.readUInt32())
+            self.passAction = StencilAction(r.readUInt32())
+            self.drawMode = StencilDrawMode(r.readUInt32())
+        if r.v >= 0x14010003:
+            self.flags = Flags(r.readUInt16())
+            self.stencilRef = r.readUInt32()
+            self.stencilMask = r.readUInt32()
+
 # Apparently commands for an optimizer instructing it to keep things it would normally discard.
 # Also refers to NiNode objects (through their name) in animation .kf files.
 class NiStringExtraData(NiExtraData): # X
@@ -2863,6 +3228,14 @@ class NiStringExtraData(NiExtraData): # X
         super().__init__(r)
         if r.v <= 0x04020200: self.bytesRemaining = r.readUInt32()
         self.stringData = Z.string(r)
+
+# List of 0x00-seperated strings, which are names of controlled objects and controller types. Used in .kf files in conjunction with NiControllerSequence.
+class NiStringPalette(NiObject): # Z
+    palette: StringPalette = None                       # A bunch of 0x00 seperated strings.
+
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+        self.palette = StringPalette(r)
 
 # Extra data, used to name different animation sequences.
 class NiTextKeyExtraData(NiExtraData): # X
@@ -2984,6 +3357,11 @@ class NiTexturingProperty(NiProperty): # X
             Z.readBool() if r.v >= 0x14020005 and self.textureCount > 11 else None
         if hasDecal3Texture: self.decal3Texture = TexDesc(r)
         if r.v >= 0x0A000100: self.shaderTextures = r.readL32FArray(lambda z: ShaderTexDesc(r))
+
+# Wrapper for transformation animation keys.
+class NiTransformData(NiKeyframeData): # Z
+    def __init__(self, r: NiReader):
+        super().__init__(r)
 
 # A shape node that refers to singular triangle data.
 class NiTriShape(NiTriBasedGeom): # X
@@ -3217,6 +3595,37 @@ class BSShaderProperty(NiShadeProperty): # Y
             self.shaderFlags = BSShaderFlags(r.readUInt32())
             self.shaderFlags2 = BSShaderFlags2(r.readUInt32())
             self.environmentMapScale = r.readSingle()
+
+# Anim note types.
+class AnimNoteType(Enum): # Z
+    ANT_INVALID = 0                 # ANT_INVALID
+    ANT_GRABIK = 1                  # ANT_GRABIK
+    ANT_LOOKIK = 2                  # ANT_LOOKIK
+
+# Bethesda-specific object.
+class BSAnimNote(NiObject): # Z
+    type: AnimNoteType = 0                              # Type of this note.
+    time: float = None                                  # Location in time.
+    arm: int = 0                                        # Unknown.
+    gain: float = None                                  # Unknown.
+    state: int = 0                                      # Unknown.
+
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+        self.type = AnimNoteType(r.readUInt32())
+        self.time = r.readSingle()
+        if Type == AnimNoteType.ANT_GRABIK: self.arm = r.readUInt32()
+        if Type == AnimNoteType.ANT_LOOKIK:
+            self.gain = r.readSingle()
+            self.state = r.readUInt32()
+
+# Bethesda-specific object.
+class BSAnimNotes(NiObject): # Z
+    animNotes: list[Ref[NiObject]] = None               # BSAnimNote objects.
+
+    def __init__(self, r: NiReader):
+        super().__init__(r)
+        self.animNotes = r.readL16FArray(X[BSAnimNote].ref)
 
 #endregion
 

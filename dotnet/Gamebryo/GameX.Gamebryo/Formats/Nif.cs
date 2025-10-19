@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using System.Runtime.InteropServices;
@@ -19,6 +20,68 @@ static class X<T> where T : NiObject {
 }
 
 static class Z {
+    static Dictionary<uint, string> BlockHashes = new();
+    public static NiObject[] ReadBlocks(NiReader r) {
+        var v = r.V; var pos = r.Tell();
+        var Blocks = new NiObject[r.NumBlocks];
+        if (v >= 0x0303000d) {
+            // block types are stored in the header for versions above 10.x.x.x
+            if (v >= 0x0a000000) {
+                var hasSize = v >= 0x14020000 && true; //ignoreSize
+                for (var i = 0; i < r.NumBlocks; i++) {
+                    if (r.AtEnd()) throw new Exception("unexpected EOF during load");
+                    var size = uint.MaxValue;
+                    var index = r.BlockTypeIndex[i] & 0x7FFF; // the upper bit or the blocktypeindex seems to be related to PhysX
+                    var type = r.BlockTypes[index];
+                    // 20.3.1.2 Custom Version
+                    if (v == 0x14030102) {
+                        var hash = r.BlockTypeHashes[index];
+                        if (BlockHashes.ContainsKey(hash)) type = BlockHashes[hash];
+                        else throw new Exception("Block Hash not found.");
+                    }
+                    // note: some 10.0.1.0 version nifs from Oblivion in certain distributions seem to be missing
+                    // these four bytes on the havok blocks (see for instance meshes/architecture/basementsections/ungrdltraphingedoor.nif)
+                    if (v < 0x0a020000 && !type.StartsWith("bhk")) {
+                        var dummy = r.ReadUInt32();
+                        if (dummy != 0) { var msg = $"non-zero block separator ({dummy}) preceeding block {type}"; Console.WriteLine(msg); }
+                    }
+                    // for version 20.2.0.? and above the block size is stored in the header
+                    if (hasSize) size = r.BlockSize[index];
+                    Blocks[i] = NiObject.Read(r, type);
+                }
+                return Blocks;
+            }
+            // < 0x05000001
+            for (var i = 0; i < r.NumBlocks; i++) Blocks[i] = NiObject.Read(r, r.ReadL32AString());
+            return Blocks;
+        }
+        // < 0x0303000d
+        for (var i = 0; ; i++) {
+            if (r.AtEnd()) throw new Exception("unexpected EOF during load");
+            var type = r.ReadL32AString(80);
+            if (type == "End Of File") break;
+            else if (type == "Top Level Object") {
+                type = r.ReadL32AString(80);
+                var p = r.ReadInt32() - 1;
+                //if (p != i) linkMap.insert(p, i);
+                //if (isNiBlock(blockType)) {
+                //    //qDebug() << "loading block" << c << ":" << blockType );
+                //    insertNiBlock(blockType, -1);
+                //    if (!loadItem(root->child(c + 1), stream)) throw Exception($"failed to load block number {i} ({blockType}) previous block was {root->child(c)->name()}");
+                //}
+                //else throw Exception($"encountered unknown block ({blockType})");
+            }
+        }
+        return Blocks;
+    }
+    public static string ExtractRTTIArgs(NiReader r, string nodeType) {
+        var nameAndArgs = nodeType.Split("");
+        //if (nameAndArgs[0] == "NiDataStream") {
+        //    metadata.usage = NiMesh::DataStreamUsage(nameAndArgs[1].toInt());
+        //    metadata.access = NiMesh::DataStreamAccess(nameAndArgs[2].toInt());
+        //}
+        return nameAndArgs[0];
+    }
     public static T Read<T>(NiReader r) {
         if (typeof(T) == typeof(float)) { return (T)(object)r.ReadSingle(); }
         else if (typeof(T) == typeof(byte)) { return (T)(object)r.ReadByte(); }
@@ -133,6 +196,23 @@ public class TriangleJsonConverter : JsonConverter<Triangle> {
 #endregion
 
 #region Enums
+
+/// <summary>
+/// Describes the options for the accum root on NiControllerSequence.
+/// </summary>
+[Flags]
+public enum AccumFlags : uint { // Z
+    ACCUM_X_TRANS = 0,              // X Translation will be accumulated.
+    ACCUM_Y_TRANS = 1U << 1,        // Y Translation will be accumulated.
+    ACCUM_Z_TRANS = 1U << 2,        // Z Translation will be accumulated.
+    ACCUM_X_ROT = 1U << 3,          // X Rotation will be accumulated.
+    ACCUM_Y_ROT = 1U << 4,          // Y Rotation will be accumulated.
+    ACCUM_Z_ROT = 1U << 5,          // Z Rotation will be accumulated.
+    ACCUM_X_FRONT = 1U << 6,        // +X is front facing. (Default)
+    ACCUM_Y_FRONT = 1U << 7,        // +Y is front facing.
+    ACCUM_Z_FRONT = 1U << 8,        // +Z is front facing.
+    ACCUM_NEG_FRONT = 1U << 9       // -X is front facing.
+}
 
 /// <summary>
 /// Describes how the vertex colors are blended with the filtered texture color.
@@ -728,6 +808,15 @@ public enum LightMode : uint { // X
 }
 
 /// <summary>
+/// The animation cyle behavior.
+/// </summary>
+public enum CycleType : uint { // Z
+    CYCLE_LOOP = 0,                 // Loop
+    CYCLE_REVERSE = 1,              // Reverse
+    CYCLE_CLAMP = 2                 // Clamp
+}
+
+/// <summary>
 /// The force field type.
 /// </summary>
 public enum FieldType : uint { // X
@@ -747,6 +836,42 @@ public enum BillboardMode : ushort { // Y
     RIGID_FACE_CENTER = 4,          // Billboard forward vector always faces camera ceneter. Non-minimized rotation.
     BSROTATE_ABOUT_UP = 5,          // The billboard will only rotate around its local Z axis (it always stays in its local X-Y plane).
     ROTATE_ABOUT_UP2 = 9            // The billboard will only rotate around the up axis (same as ROTATE_ABOUT_UP?).
+}
+
+/// <summary>
+/// Describes stencil buffer test modes for NiStencilProperty.
+/// </summary>
+public enum StencilCompareMode : uint { // Z
+    TEST_NEVER = 0,                 // Always false. Ref value is ignored.
+    TEST_LESS = 1,                  // VRef ‹ VBuf
+    TEST_EQUAL = 2,                 // VRef = VBuf
+    TEST_LESS_EQUAL = 3,            // VRef ≤ VBuf
+    TEST_GREATER = 4,               // VRef › VBuf
+    TEST_NOT_EQUAL = 5,             // VRef ≠ VBuf
+    TEST_GREATER_EQUAL = 6,         // VRef ≥ VBuf
+    TEST_ALWAYS = 7                 // Always true. Buffer is ignored.
+}
+
+/// <summary>
+/// Describes the actions which can occur as a result of tests for NiStencilProperty.
+/// </summary>
+public enum StencilAction : uint { // Z
+    ACTION_KEEP = 0,                // Keep the current value in the stencil buffer.
+    ACTION_ZERO = 1,                // Write zero to the stencil buffer.
+    ACTION_REPLACE = 2,             // Write the reference value to the stencil buffer.
+    ACTION_INCREMENT = 3,           // Increment the value in the stencil buffer.
+    ACTION_DECREMENT = 4,           // Decrement the value in the stencil buffer.
+    ACTION_INVERT = 5               // Bitwise invert the value in the stencil buffer.
+}
+
+/// <summary>
+/// Describes the face culling options for NiStencilProperty.
+/// </summary>
+public enum StencilDrawMode : uint { // Z
+    DRAW_CCW_OR_BOTH = 0,           // Application default, chooses between DRAW_CCW or DRAW_BOTH.
+    DRAW_CCW = 1,                   // Draw only the triangles whose vertices are ordered CCW with respect to the viewer. (Standard behavior)
+    DRAW_CW = 2,                    // Draw only the triangles whose vertices are ordered CW with respect to the viewer. (Effectively flips faces)
+    DRAW_BOTH = 3                   // Draw all triangles, regardless of orientation. (Effectively force double-sided)
 }
 
 /// <summary>
@@ -979,6 +1104,79 @@ public struct BoneVertData(NiReader r, bool full) { // X
 }
 
 /// <summary>
+/// Used in NiDefaultAVObjectPalette.
+/// </summary>
+public class AVObject(NiReader r) { // Z
+    public string Name = r.ReadL32AString();            // Object name.
+    public Ref<NiAVObject> AVObject_ = X<NiAVObject>.Ptr(r); // Object reference.
+}
+
+/// <summary>
+/// In a .kf file, this links to a controllable object, via its name (or for version 10.2.0.0 and up, a link and offset to a NiStringPalette that contains the name), and a sequence of interpolators that apply to this controllable object, via links.
+/// For Controller ID, NiInterpController::GetCtlrID() virtual function returns a string formatted specifically for the derived type.
+/// For Interpolator ID, NiInterpController::GetInterpolatorID() virtual function returns a string formatted specifically for the derived type.
+/// The string formats are documented on the relevant niobject blocks.
+/// </summary>
+public class ControlledBlock { // Z
+    public string TargetName;                           // Name of a controllable object in another NIF file.
+    // NiControllerSequence::InterpArrayItem
+    public Ref<NiInterpolator> Interpolator;
+    public Ref<NiTimeController> Controller;
+    public Ref<NiBlendInterpolator> BlendInterpolator;
+    public ushort BlendIndex;
+    // Bethesda-only
+    public byte Priority;                               // Idle animations tend to have low values for this, and high values tend to correspond with the important parts of the animations.
+    // NiControllerSequence::IDTag, post-10.1.0.104 only
+    public string NodeName;                             // The name of the animated NiAVObject.
+    public string PropertyType;                         // The RTTI type of the NiProperty the controller is attached to, if applicable.
+    public string ControllerType;                       // The RTTI type of the NiTimeController.
+    public string ControllerID;                         // An ID that can uniquely identify the controller among others of the same type on the same NiObjectNET.
+    public string InterpolatorID;                       // An ID that can uniquely identify the interpolator among others of the same type on the same NiObjectNET.
+    public Ref<NiStringPalette> StringPalette;          // Refers to the NiStringPalette which contains the name of the controlled NIF object.
+    public uint NodeNameOffset;                         // Offset in NiStringPalette to the name of the animated NiAVObject.
+    public uint PropertyTypeOffset;                     // Offset in NiStringPalette to the RTTI type of the NiProperty the controller is attached to, if applicable.
+    public uint ControllerTypeOffset;                   // Offset in NiStringPalette to the RTTI type of the NiTimeController.
+    public uint ControllerIDOffset;                     // Offset in NiStringPalette to an ID that can uniquely identify the controller among others of the same type on the same NiObjectNET.
+    public uint InterpolatorIDOffset;                   // Offset in NiStringPalette to an ID that can uniquely identify the interpolator among others of the same type on the same NiObjectNET.
+
+    public ControlledBlock(NiReader r) {
+        if (r.V <= 0x0A010067) TargetName = Z.String(r);
+        // NiControllerSequence::InterpArrayItem
+        if (r.V >= 0x0A01006A) Interpolator = X<NiInterpolator>.Ref(r);
+        if (r.V <= 0x14050000) Controller = X<NiTimeController>.Ref(r);
+        if (r.V >= 0x0A010068 && r.V <= 0x0A01006E) {
+            BlendInterpolator = X<NiBlendInterpolator>.Ref(r);
+            BlendIndex = r.ReadUInt16();
+        }
+        // Bethesda-only
+        if (r.V >= 0x0A01006A && (r.UV2 > 0)) Priority = r.ReadByte();
+        // NiControllerSequence::IDTag, post-10.1.0.104 only
+        if (r.V >= 0x0A010068 && r.V <= 0x0A010071) {
+            NodeName = Z.String(r);
+            PropertyType = Z.String(r);
+            ControllerType = Z.String(r);
+            ControllerID = Z.String(r);
+            InterpolatorID = Z.String(r);
+        }
+        if (r.V >= 0x0A020000 && r.V <= 0x14010000) {
+            StringPalette = X<NiStringPalette>.Ref(r);
+            NodeNameOffset = r.ReadUInt32();
+            PropertyTypeOffset = r.ReadUInt32();
+            ControllerTypeOffset = r.ReadUInt32();
+            ControllerIDOffset = r.ReadUInt32();
+            InterpolatorIDOffset = r.ReadUInt32();
+        }
+        if (r.V >= 0x14010001) {
+            NodeName = Z.String(r);
+            PropertyType = Z.String(r);
+            ControllerType = Z.String(r);
+            ControllerID = Z.String(r);
+            InterpolatorID = Z.String(r);
+        }
+    }
+}
+
+/// <summary>
 /// Information about how the file was exported
 /// </summary>
 public class ExportInfo(NiReader r) { // X
@@ -1037,16 +1235,18 @@ public class NiReader : BinaryReader { // X
         }
         if (r.V >= 0x05000006) Groups = r.ReadL32PArray<uint>("I");
         // read blocks
-        Blocks = new NiObject[NumBlocks];
-        if (r.V >= 0x05000001) {
-            for (var i = 0; i < NumBlocks; i++) Blocks[i] = NiObject.Read(r, BlockTypes[BlockTypeIndex[i]]);
-        }
-        else {
-            for (var i = 0; i < NumBlocks; i++) Blocks[i] = NiObject.Read(r, Z.String(r));
-        }
+        Blocks = Z.ReadBlocks(r);
         Roots = new Footer(r).Roots;
     }
     static NiReader() => Z.Register();
+}
+
+/// <summary>
+/// A list of \\0 terminated strings.
+/// </summary>
+public class StringPalette(NiReader r) { // Z
+    public string[] Palette = r.ReadL32AString().Split(' '); // A bunch of 0x00 seperated strings.
+    public uint Length = r.ReadUInt32();                // Length of the palette string is repeated here.
 }
 
 /// <summary>
@@ -1229,10 +1429,10 @@ public enum VertexFlags : ushort { // Y
     Full_Precision = 1 << 14
 }
 
-public class BSVertexDataSSE { // Y
+public class BSVertexData { // Z
     public Vector3 Vertex;
     public float BitangentX;
-    public int UnknownInt;
+    public uint UnknownInt;
     public TexCoord UV;
     public Vector3<byte> Normal;
     public byte BitangentY;
@@ -1243,27 +1443,35 @@ public class BSVertexDataSSE { // Y
     public byte[] BoneIndices;
     public float EyeData;
 
-    public BSVertexDataSSE(NiReader r, uint ARG) {
-        if (((ARG & 16) != 0)) Vertex = r.ReadVector3();
-        if (((ARG & 16) != 0) && ((ARG & 256) != 0)) BitangentX = r.ReadSingle();
-        if (((ARG & 16) != 0) && (ARG & 256) == 0) UnknownInt = r.ReadInt32();
-        if (((ARG & 32) != 0)) UV = new TexCoord(r, true);
-        if ((ARG & 128) != 0) {
+    public BSVertexData(NiReader r, VertexFlags arg, bool sse) {
+        var full = sse || arg.HasFlag(VertexFlags.Full_Precision);
+        var tangents = arg.HasFlag(VertexFlags.Tangents);
+        if (arg.HasFlag(VertexFlags.Vertex)) {
+            Vertex = full ? r.ReadVector3() : r.ReadHalfVector3();
+            if (tangents) {
+                BitangentX = full ? r.ReadSingle() : r.ReadHalf();
+            }
+            else {
+                UnknownInt = full ? r.ReadUInt32() : r.ReadUInt16();
+            }
+        }
+        if ((arg.HasFlag(VertexFlags.UVs))) UV = new TexCoord(r, true);
+        if (arg.HasFlag(VertexFlags.Normals)) {
             Normal = new Vector3<byte>(r.ReadByte(), r.ReadByte(), r.ReadByte());
             BitangentY = r.ReadByte();
+            if (tangents) Tangent = new Vector3<byte>(r.ReadByte(), r.ReadByte(), r.ReadByte());
+            if (tangents) BitangentZ = r.ReadByte();
         }
-        if (((ARG & 128) != 0) && ((ARG & 256) != 0)) {
-            Tangent = new Vector3<byte>(r.ReadByte(), r.ReadByte(), r.ReadByte());
-            BitangentZ = r.ReadByte();
-        }
-        if ((ARG & 512) != 0) VertexColors = new Color4(r.ReadBytes(4));
-        if ((ARG & 1024) != 0) {
+        if (arg.HasFlag(VertexFlags.Vertex_Colors)) VertexColors = new Color4(r.ReadBytes(4));
+        if (arg.HasFlag(VertexFlags.Skinned)) {
             BoneWeights = [r.ReadHalf(), r.ReadHalf(), r.ReadHalf(), r.ReadHalf()];
             BoneIndices = r.ReadBytes(4);
         }
-        if ((ARG & 4096) != 0) EyeData = r.ReadSingle();
+        if (arg.HasFlag(VertexFlags.Eye_Data)) EyeData = r.ReadSingle();
     }
 }
+
+// BSVertexDataSSE -> new BSVertexData(r, ARG, true)
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct BSVertexDesc(NiReader r) { // Y
@@ -1349,6 +1557,13 @@ public struct NiBound(NiReader r) { // Y
     public static (string, int) Struct = ("<4f", 16);
     public Vector3 Center = r.ReadVector3();            // The sphere's center.
     public float Radius = r.ReadSingle();               // The sphere's radius.
+}
+
+public class NiQuatTransform(NiReader r) { // Z
+    public Vector3 Translation = r.ReadVector3();
+    public Quaternion Rotation = r.ReadQuaternionWFirst();
+    public float Scale = r.ReadSingle();
+    public bool[] TRSValid = r.V <= 0x0A01006D ? [Z.ReadBool(r), Z.ReadBool(r), Z.ReadBool(r)] : default; // Whether each transform component is valid.
 }
 
 public class NiTransform(NiReader r) { // X
@@ -1663,10 +1878,20 @@ public class MorphWeight(NiReader r) { // Y
 [JsonDerivedType(typeof(BSFurnitureMarker), typeDiscriminator: nameof(BSFurnitureMarker))]
 [JsonDerivedType(typeof(bhkBoxShape), typeDiscriminator: nameof(bhkBoxShape))]
 [JsonDerivedType(typeof(bhkConvexTransformShape), typeDiscriminator: nameof(bhkConvexTransformShape))]
+[JsonDerivedType(typeof(NiSpecularProperty), typeDiscriminator: nameof(NiSpecularProperty))]
+[JsonDerivedType(typeof(NiControllerSequence), typeDiscriminator: nameof(NiControllerSequence))]
+[JsonDerivedType(typeof(NiControllerManager), typeDiscriminator: nameof(NiControllerManager))]
+[JsonDerivedType(typeof(NiMultiTargetTransformController), typeDiscriminator: nameof(NiMultiTargetTransformController))]
+[JsonDerivedType(typeof(NiTransformInterpolator), typeDiscriminator: nameof(NiTransformInterpolator))]
+[JsonDerivedType(typeof(NiTransformData), typeDiscriminator: nameof(NiTransformData))]
+[JsonDerivedType(typeof(NiStringPalette), typeDiscriminator: nameof(NiStringPalette))]
+[JsonDerivedType(typeof(NiDefaultAVObjectPalette), typeDiscriminator: nameof(NiDefaultAVObjectPalette))]
+[JsonDerivedType(typeof(NiStencilProperty), typeDiscriminator: nameof(NiStencilProperty))]
 public abstract class NiObject(NiReader r) { // X
 
     public static NiObject Read(NiReader r, string nodeType) {
-        Console.WriteLine($"{nodeType}: {r.Tell()}");
+        // Console.WriteLine($"{nodeType}: {r.Tell()}");
+        if (nodeType.StartsWith("NiDataStream")) nodeType = Z.ExtractRTTIArgs(r, nodeType);
         switch (nodeType) {
             case "NiNode": return new NiNode(r);
             case "NiTriShape": return new NiTriShape(r);
@@ -1734,6 +1959,15 @@ public abstract class NiObject(NiReader r) { // X
             case "BSFurnitureMarker": return new BSFurnitureMarker(r);
             case "bhkBoxShape": return new bhkBoxShape(r);
             case "bhkConvexTransformShape": return new bhkConvexTransformShape(r);
+            case "NiSpecularProperty": return new NiSpecularProperty(r);
+            case "NiControllerSequence": return new NiControllerSequence(r);
+            case "NiControllerManager": return new NiControllerManager(r);
+            case "NiMultiTargetTransformController": return new NiMultiTargetTransformController(r);
+            case "NiTransformInterpolator": return new NiTransformInterpolator(r);
+            case "NiTransformData": return new NiTransformData(r);
+            case "NiStringPalette": return new NiStringPalette(r);
+            case "NiDefaultAVObjectPalette": return new NiDefaultAVObjectPalette(r);
+            case "NiStencilProperty": return new NiStencilProperty(r);
             default: { Log($"Tried to read an unsupported NiObject type ({nodeType})."); return null; }
         }
     }
@@ -2101,6 +2335,25 @@ public class NiExtraData : NiObject { // X
 public abstract class NiInterpolator(NiReader r) : NiObject(r) { // Y
 }
 
+/// <summary>
+/// Abstract base class for interpolators that use NiAnimationKeys (Key, KeyGrp) for interpolation.
+/// </summary>
+public abstract class NiKeyBasedInterpolator(NiReader r) : NiInterpolator(r) { // Z
+}
+
+/// <summary>
+/// An interpolator for transform keyframes.
+/// </summary>
+public class NiTransformInterpolator : NiKeyBasedInterpolator { // Z
+    public NiQuatTransform Transform;
+    public Ref<NiTransformData> Data;
+
+    public NiTransformInterpolator(NiReader r) : base(r) {
+        Transform = new NiQuatTransform(r);
+        Data = X<NiTransformData>.Ref(r);
+    }
+}
+
 [Flags]
 public enum PathFlags : ushort { // X
     CVDataNeedsUpdate = 0,
@@ -2110,6 +2363,103 @@ public enum PathFlags : ushort { // X
     ConstantVelocity = 1 << 4,
     Follow = 1 << 5,
     Flip = 1 << 6
+}
+
+public enum InterpBlendFlags : byte { // Z
+    MANAGER_CONTROLLED = 1          // MANAGER_CONTROLLED
+}
+
+/// <summary>
+/// Interpolator item for array in NiBlendInterpolator.
+/// </summary>
+public class InterpBlendItem { // Z
+    public Ref<NiInterpolator> Interpolator;            // Reference to an interpolator.
+    public float Weight;
+    public float NormalizedWeight;
+    public int Priority;
+    public float EaseSpinner;
+
+    public InterpBlendItem(NiReader r) {
+        Interpolator = X<NiInterpolator>.Ref(r);
+        Weight = r.ReadSingle();
+        NormalizedWeight = r.ReadSingle();
+        if (r.V <= 0x0A01006D) Priority = r.ReadInt32();
+        else if (r.V >= 0x0A01006E) Priority = r.ReadByte();
+        EaseSpinner = r.ReadSingle();
+    }
+}
+
+/// <summary>
+/// Abstract base class for all NiInterpolators that blend the results of sub-interpolators together to compute a final weighted value.
+/// </summary>
+public abstract class NiBlendInterpolator : NiInterpolator { // Z
+    public InterpBlendFlags Flags;
+    public ushort ArraySize;
+    public ushort ArrayGrowBy;
+    public float WeightThreshold;
+    // Flags conds
+    public float SingleTime = -3.402823466e+38f;
+    public float HighWeightsSum = -3.402823466e+38f;
+    public float NextHighWeightsSum = -3.402823466e+38f;
+    public float HighEaseSpinner = -3.402823466e+38f;
+    public InterpBlendItem[] InterpArrayItems;
+    // end Flags 1 conds
+    public bool ManagedControlled;
+    public bool OnlyUseHighestWeight;
+    public ushort InterpCount;
+    public ushort SingleIndex;
+    public Ref<NiInterpolator> SingleInterpolator;
+    public int HighPriority;
+    public int NextHighPriority;
+
+    public NiBlendInterpolator(NiReader r) : base(r) {
+        if (r.V >= 0x0A010070) Flags = (InterpBlendFlags)r.ReadByte();
+        if (r.V <= 0x0A01006D) {
+            ArraySize = r.ReadUInt16();
+            ArrayGrowBy = r.ReadUInt16();
+        }
+        if (r.V >= 0x0A01006E) ArraySize = r.ReadByte();
+        if (r.V >= 0x0A010070) WeightThreshold = r.ReadSingle();
+        // Flags conds
+        if (r.V >= 0x0A010070 && ((int)Flags & 1) == 0) {
+            InterpCount = r.ReadByte();
+            SingleIndex = r.ReadByte();
+            HighPriority = r.ReadSByte();
+            NextHighPriority = r.ReadSByte();
+            SingleTime = r.ReadSingle();
+            HighWeightsSum = r.ReadSingle();
+            NextHighWeightsSum = r.ReadSingle();
+            HighEaseSpinner = r.ReadSingle();
+            InterpArrayItems = r.ReadFArray(z => new InterpBlendItem(r), ArraySize);
+        }
+        // end Flags 1 conds
+        if (r.V <= 0x0A01006F) {
+            InterpArrayItems = r.ReadFArray(z => new InterpBlendItem(r), ArraySize);
+            ManagedControlled = Z.ReadBool(r);
+            WeightThreshold = r.ReadSingle();
+            OnlyUseHighestWeight = Z.ReadBool(r);
+        }
+        if (r.V <= 0x0A01006D) {
+            InterpCount = r.ReadUInt16();
+            SingleIndex = r.ReadUInt16();
+        }
+        if (r.V >= 0x0A01006E && r.V <= 0x0A01006F) {
+            InterpCount = r.ReadByte();
+            SingleIndex = r.ReadByte();
+        }
+        if (r.V >= 0x0A01006C && r.V <= 0x0A01006F) {
+            SingleInterpolator = X<NiInterpolator>.Ref(r);
+            SingleTime = r.ReadSingle();
+        }
+        if (r.V <= 0x0A01006D) {
+            HighPriority = r.ReadInt32();
+            NextHighPriority = r.ReadInt32();
+        }
+        if (r.V >= 0x0A01006E && r.V <= 0x0A01006F) {
+            HighPriority = r.ReadByte();
+            NextHighPriority = r.ReadByte();
+        }
+    }
 }
 
 /// <summary>
@@ -2284,6 +2634,17 @@ public abstract class NiInterpController : NiTimeController { // X
 
     public NiInterpController(NiReader r) : base(r) {
         if (r.V >= 0x0A010068 && r.V <= 0x0A01006C) ManagerControlled = Z.ReadBool(r);
+    }
+}
+
+/// <summary>
+/// DEPRECATED (20.6)
+/// </summary>
+public class NiMultiTargetTransformController : NiInterpController { // Z
+    public Ref<NiAVObject>[] ExtraTargets;              // NiNode Targets to be controlled.
+
+    public NiMultiTargetTransformController(NiReader r) : base(r) {
+        ExtraTargets = r.ReadL16FArray(X<NiAVObject>.Ptr);
     }
 }
 
@@ -2750,6 +3111,112 @@ public class NiColorData : NiObject { // X
 
     public NiColorData(NiReader r) : base(r) {
         Data = new KeyGroup<Color4>(r);
+    }
+}
+
+/// <summary>
+/// Controls animation sequences on a specific branch of the scene graph.
+/// </summary>
+public class NiControllerManager : NiTimeController { // Z
+    public bool Cumulative;                             // Whether transformation accumulation is enabled. If accumulation is not enabled, the manager will treat all sequence data on the accumulation root as absolute data instead of relative delta values.
+    public Ref<NiControllerSequence>[] ControllerSequences;
+    public Ref<NiDefaultAVObjectPalette> ObjectPalette;
+
+    public NiControllerManager(NiReader r) : base(r) {
+        Cumulative = Z.ReadBool(r);
+        ControllerSequences = r.ReadL32FArray(X<NiControllerSequence>.Ref);
+        ObjectPalette = X<NiDefaultAVObjectPalette>.Ref(r);
+    }
+}
+
+/// <summary>
+/// Root node in NetImmerse .kf files (until version 10.0).
+/// </summary>
+public class NiSequence : NiObject { // Z
+    public string Name;                                 // The sequence name by which the animation system finds and manages this sequence.
+    public string AccumRootName;                        // The name of the NiAVObject serving as the accumulation root. This is where all accumulated translations, scales, and rotations are applied.
+    public Ref<NiTextKeyExtraData> TextKeys;
+    public int UnknownInt4;                             // Divinity 2
+    public int UnknownInt5;                             // Divinity 2
+    public uint NumControlledBlocks;
+    public uint ArrayGrowBy;
+    public ControlledBlock[] ControlledBlocks;
+
+    public NiSequence(NiReader r) : base(r) {
+        Name = Z.String(r);
+        if (r.V <= 0x0A010067) {
+            AccumRootName = Z.String(r);
+            TextKeys = X<NiTextKeyExtraData>.Ref(r);
+        }
+        if (r.V == 0x14030009 && (r.UV == 0x20000) || (r.UV == 0x30000)) {
+            UnknownInt4 = r.ReadInt32();
+            UnknownInt5 = r.ReadInt32();
+        }
+        NumControlledBlocks = r.ReadUInt32();
+        if (r.V >= 0x0A01006A) ArrayGrowBy = r.ReadUInt32();
+        ControlledBlocks = r.ReadFArray(z => new ControlledBlock(r), NumControlledBlocks);
+    }
+}
+
+/// <summary>
+/// Root node in Gamebryo .kf files (version 10.0.1.0 and up).
+/// </summary>
+public class NiControllerSequence : NiSequence { // Z
+    public float Weight = 1.0f;                         // The weight of a sequence describes how it blends with other sequences at the same priority.
+    public Ref<NiTextKeyExtraData> TextKeys;
+    public CycleType CycleType;
+    public float Frequency = 1.0f;
+    public float Phase;
+    public float StartTime = 3.402823466e+38f;
+    public float StopTime = -3.402823466e+38f;
+    public bool PlayBackwards;
+    public Ref<NiControllerManager> Manager;            // The owner of this sequence.
+    public string AccumRootName;                        // The name of the NiAVObject serving as the accumulation root. This is where all accumulated translations, scales, and rotations are applied.
+    public AccumFlags AccumFlags = AccumFlags.ACCUM_X_FRONT;
+    public Ref<NiStringPalette> StringPalette;
+    public Ref<BSAnimNotes> AnimNotes;
+    public Ref<BSAnimNotes>[] AnimNoteArrays;
+
+    public NiControllerSequence(NiReader r) : base(r) {
+        if (r.V >= 0x0A01006A) {
+            Weight = r.ReadSingle();
+            TextKeys = X<NiTextKeyExtraData>.Ref(r);
+            CycleType = (CycleType)r.ReadUInt32();
+            Frequency = r.ReadSingle();
+        }
+        if (r.V >= 0x0A01006A && r.V <= 0x0A040001) Phase = r.ReadSingle();
+        if (r.V >= 0x0A01006A) {
+            StartTime = r.ReadSingle();
+            StopTime = r.ReadSingle();
+        }
+        if (r.V == 0x0A01006A) PlayBackwards = Z.ReadBool(r);
+        if (r.V >= 0x0A01006A) {
+            Manager = X<NiControllerManager>.Ptr(r);
+            AccumRootName = Z.String(r);
+        }
+        if (r.V >= 0x14030008) AccumFlags = (AccumFlags)r.ReadUInt32();
+        if (r.V >= 0x0A010071 && r.V <= 0x14010000) StringPalette = X<NiStringPalette>.Ref(r);
+        if (r.V >= 0x14020007 && (r.UV2 >= 24) && (r.UV2 <= 28)) AnimNotes = X<BSAnimNotes>.Ref(r);
+        if (r.V >= 0x14020007 && (r.UV2 > 28)) AnimNoteArrays = r.ReadL16FArray(X<BSAnimNotes>.Ref);
+    }
+}
+
+/// <summary>
+/// Abstract base class for indexing NiAVObject by name.
+/// </summary>
+public abstract class NiAVObjectPalette(NiReader r) : NiObject(r) { // Z
+}
+
+/// <summary>
+/// NiAVObjectPalette implementation. Used to quickly look up objects by name.
+/// </summary>
+public class NiDefaultAVObjectPalette : NiAVObjectPalette { // Z
+    public Ref<NiAVObject> Scene;                       // Scene root of the object palette.
+    public AVObject[] Objs;                             // The objects.
+
+    public NiDefaultAVObjectPalette(NiReader r) : base(r) {
+        Scene = X<NiAVObject>.Ptr(r);
+        Objs = r.ReadL32FArray(z => new AVObject(r));
     }
 }
 
@@ -3332,7 +3799,7 @@ public class NiSkinPartition : NiObject { // X
     public uint DataSize;
     public uint VertexSize;
     public BSVertexDesc VertexDesc;
-    public BSVertexDataSSE[] VertexData;
+    public BSVertexData[] VertexData;
     public SkinPartition[] Partition;
 
     public NiSkinPartition(NiReader r) : base(r) {
@@ -3342,7 +3809,7 @@ public class NiSkinPartition : NiObject { // X
             DataSize = r.ReadUInt32();
             VertexSize = r.ReadUInt32();
             VertexDesc = r.ReadS<BSVertexDesc>();
-            if (DataSize > 0) VertexData = r.ReadFArray(z => new BSVertexDataSSE(r, (uint)VertexDesc.VertexAttributes), DataSize / VertexSize);
+            if (DataSize > 0) VertexData = r.ReadFArray(z => new BSVertexData(r, VertexDesc.VertexAttributes, true), DataSize / VertexSize);
             Partition = r.ReadFArray(z => new SkinPartition(r), NumSkinPartitionBlocks);
         }
     }
@@ -3396,6 +3863,51 @@ public class NiSourceTexture : NiTexture { // X
 }
 
 /// <summary>
+/// Gives specularity to a shape. Flags 0x0001.
+/// </summary>
+public class NiSpecularProperty : NiProperty { // Z
+    public Flags Flags;                                 // Bit 0 = Enable specular lighting on this shape.
+
+    public NiSpecularProperty(NiReader r) : base(r) {
+        Flags = (Flags)r.ReadUInt16();
+    }
+}
+
+/// <summary>
+/// Allows control of stencil testing.
+/// </summary>
+public class NiStencilProperty : NiProperty { // Z
+    public Flags Flags;                                 // Property flags.
+    public byte StencilEnabled;                         // Enables or disables the stencil test.
+    public StencilCompareMode StencilFunction;          // Selects the compare mode function (see: glStencilFunc).
+    public uint StencilRef;
+    public uint StencilMask = 4294967295;               // A bit mask. The default is 0xffffffff.
+    public StencilAction FailAction;
+    public StencilAction ZFailAction;
+    public StencilAction PassAction;
+    public StencilDrawMode DrawMode = StencilDrawMode.DRAW_BOTH; // Used to enabled double sided faces. Default is 3 (DRAW_BOTH).
+
+    public NiStencilProperty(NiReader r) : base(r) {
+        if (r.V <= 0x0A000102) Flags = (Flags)r.ReadUInt16();
+        if (r.V <= 0x14000005) {
+            StencilEnabled = r.ReadByte();
+            StencilFunction = (StencilCompareMode)r.ReadUInt32();
+            StencilRef = r.ReadUInt32();
+            StencilMask = r.ReadUInt32();
+            FailAction = (StencilAction)r.ReadUInt32();
+            ZFailAction = (StencilAction)r.ReadUInt32();
+            PassAction = (StencilAction)r.ReadUInt32();
+            DrawMode = (StencilDrawMode)r.ReadUInt32();
+        }
+        if (r.V >= 0x14010003) {
+            Flags = (Flags)r.ReadUInt16();
+            StencilRef = r.ReadUInt32();
+            StencilMask = r.ReadUInt32();
+        }
+    }
+}
+
+/// <summary>
 /// Apparently commands for an optimizer instructing it to keep things it would normally discard.
 /// Also refers to NiNode objects (through their name) in animation .kf files.
 /// </summary>
@@ -3406,6 +3918,17 @@ public class NiStringExtraData : NiExtraData { // X
     public NiStringExtraData(NiReader r) : base(r) {
         if (r.V <= 0x04020200) BytesRemaining = r.ReadUInt32();
         StringData = Z.String(r);
+    }
+}
+
+/// <summary>
+/// List of 0x00-seperated strings, which are names of controlled objects and controller types. Used in .kf files in conjunction with NiControllerSequence.
+/// </summary>
+public class NiStringPalette : NiObject { // Z
+    public StringPalette Palette;                       // A bunch of 0x00 seperated strings.
+
+    public NiStringPalette(NiReader r) : base(r) {
+        Palette = new StringPalette(r);
     }
 }
 
@@ -3543,6 +4066,12 @@ public class NiTexturingProperty : NiProperty { // X
         if (HasDecal3Texture) Decal3Texture = new TexDesc(r);
         if (r.V >= 0x0A000100) ShaderTextures = r.ReadL32FArray(z => new ShaderTexDesc(r));
     }
+}
+
+/// <summary>
+/// Wrapper for transformation animation keys.
+/// </summary>
+public class NiTransformData(NiReader r) : NiKeyframeData(r) { // Z
 }
 
 /// <summary>
@@ -3824,6 +4353,47 @@ public class BSShaderProperty : NiShadeProperty { // Y
             ShaderFlags2 = (BSShaderFlags2)r.ReadUInt32();
             EnvironmentMapScale = r.ReadSingle();
         }
+    }
+}
+
+/// <summary>
+/// Anim note types.
+/// </summary>
+public enum AnimNoteType : uint { // Z
+    ANT_INVALID = 0,                // ANT_INVALID
+    ANT_GRABIK = 1,                 // ANT_GRABIK
+    ANT_LOOKIK = 2                  // ANT_LOOKIK
+}
+
+/// <summary>
+/// Bethesda-specific object.
+/// </summary>
+public class BSAnimNote : NiObject { // Z
+    public AnimNoteType Type;                           // Type of this note.
+    public float Time;                                  // Location in time.
+    public uint Arm;                                    // Unknown.
+    public float Gain;                                  // Unknown.
+    public uint State;                                  // Unknown.
+
+    public BSAnimNote(NiReader r) : base(r) {
+        Type = (AnimNoteType)r.ReadUInt32();
+        Time = r.ReadSingle();
+        if (Type == AnimNoteType.ANT_GRABIK) Arm = r.ReadUInt32();
+        if (Type == AnimNoteType.ANT_LOOKIK) {
+            Gain = r.ReadSingle();
+            State = r.ReadUInt32();
+        }
+    }
+}
+
+/// <summary>
+/// Bethesda-specific object.
+/// </summary>
+public class BSAnimNotes : NiObject { // Z
+    public Ref<BSAnimNote>[] AnimNotes;                 // BSAnimNote objects.
+
+    public BSAnimNotes(NiReader r) : base(r) {
+        AnimNotes = r.ReadL16FArray(X<BSAnimNote>.Ref);
     }
 }
 

@@ -61,6 +61,8 @@
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\IWFamily.Sample.json" Link="Specs\IWFamily.Sample.json" />
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\LucasFamily.json" Link="Specs\LucasFamily.json" />
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\LucasFamily.Sample.json" Link="Specs\LucasFamily.Sample.json" />
+    <EmbeddedResource Include="..\..\..\python\gamex\Specs\MythicFamily.json" Link="Specs\MythicFamily.json" />
+    <EmbeddedResource Include="..\..\..\python\gamex\Specs\MythicFamily.Sample.json" Link="Specs\MythicFamily.Sample.json" />
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\MonolithFamily.json" Link="Specs\MonolithFamily.json" />
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\MonolithFamily.Sample.json" Link="Specs\MonolithFamily.Sample.json" />
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\NintendoFamily.json" Link="Specs\NintendoFamily.json" />

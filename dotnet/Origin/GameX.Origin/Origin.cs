@@ -1,6 +1,6 @@
 ﻿using GameX.Formats.Unknown;
 using GameX.Origin.Formats;
-using GameX.Origin.Transforms;
+using GameX.Transforms;
 using System;
 using System.IO;
 using System.Text.Json;

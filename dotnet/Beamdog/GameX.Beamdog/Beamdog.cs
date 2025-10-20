@@ -1,11 +1,10 @@
-﻿using GameX.Formats;
+﻿using GameX.Beamdog.Formats;
 using GameX.Formats.Unknown;
-using GameX.Beamdog.Formats;
-using GameX.Beamdog.Transforms;
+using GameX.Transforms;
+using GameX.Unknown;
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using GameX.Unknown;
 
 namespace GameX.Beamdog;
 

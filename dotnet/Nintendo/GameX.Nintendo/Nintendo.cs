@@ -1,6 +1,6 @@
 ﻿using GameX.Formats.Unknown;
 using GameX.Nintendo.Formats;
-using GameX.Nintendo.Transforms;
+using GameX.Transforms;
 using GameX.Unknown;
 using System;
 using System.IO;

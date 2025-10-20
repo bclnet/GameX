@@ -426,6 +426,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Beamdog", "Beamdog", "{704D
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Beamdog", "Beamdog\GameX.Beamdog\GameX.Beamdog.csproj", "{2B3C7E51-B6B8-20DB-F9A4-E567B47088C3}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Families", "Families", "{1B87B12B-21F4-497B-AA06-C0423BD1C76B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

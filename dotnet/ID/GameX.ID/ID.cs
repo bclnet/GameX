@@ -1,7 +1,7 @@
 ﻿using GameX.Formats;
 using GameX.Formats.Unknown;
 using GameX.ID.Formats;
-using GameX.ID.Transforms;
+using GameX.Transforms;
 using GameX.Unknown;
 using System;
 using System.IO;

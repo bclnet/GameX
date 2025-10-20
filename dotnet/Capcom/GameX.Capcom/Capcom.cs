@@ -1,7 +1,7 @@
 ﻿using GameX.Capcom.Formats;
-using GameX.Capcom.Transforms;
 using GameX.Formats;
 using GameX.Formats.Unknown;
+using GameX.Transforms;
 using GameX.Unknown;
 using System;
 using System.Collections.Concurrent;

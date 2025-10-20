@@ -1,6 +1,6 @@
 ﻿using GameX.Formats.Unknown;
 using GameX.Mythic.Formats;
-using GameX.Mythic.Transforms;
+using GameX.Transforms;
 using GameX.Unknown;
 using System;
 using System.IO;

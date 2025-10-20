@@ -1,7 +1,7 @@
 ﻿using GameX.Bioware.Formats;
-using GameX.Bioware.Transforms;
 using GameX.Formats;
 using GameX.Formats.Unknown;
+using GameX.Transforms;
 using GameX.Unknown;
 using System;
 using System.Collections.Concurrent;

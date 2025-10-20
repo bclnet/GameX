@@ -1,7 +1,7 @@
 ﻿using GameX.Bethesda.Formats;
-using GameX.Bethesda.Transforms;
 using GameX.Formats.Unknown;
 using GameX.Gamebryo.Formats;
+using GameX.Transforms;
 using GameX.Unknown;
 using OpenStack.Gfx;
 using System;

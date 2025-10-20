@@ -1,6 +1,6 @@
 ﻿using GameX.Formats.Unknown;
 using GameX.Gamebryo.Formats;
-using GameX.Gamebryo.Transforms;
+using GameX.Transforms;
 using GameX.Unknown;
 using OpenStack.Gfx;
 using System;

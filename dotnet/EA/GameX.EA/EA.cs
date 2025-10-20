@@ -1,6 +1,6 @@
 ﻿using GameX.EA.Formats;
-using GameX.EA.Transforms;
 using GameX.Formats.Unknown;
+using GameX.Transforms;
 using GameX.Unknown;
 using System;
 using System.IO;

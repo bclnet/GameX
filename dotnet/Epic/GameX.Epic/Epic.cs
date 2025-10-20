@@ -1,6 +1,6 @@
 ﻿using GameX.Epic.Formats;
-using GameX.Epic.Transforms;
 using GameX.Formats.Unknown;
+using GameX.Transforms;
 using GameX.Unknown;
 using System;
 using System.IO;

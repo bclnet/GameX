@@ -1,9 +1,8 @@
 ﻿using GameX.Blizzard.Formats;
-using GameX.Blizzard.Transforms;
 using GameX.Formats.Unknown;
+using GameX.Transforms;
 using GameX.Unknown;
 using Microsoft.Extensions.FileSystemGlobbing;
-using OpenStack;
 using OpenStack.Vfx;
 using System;
 using System.Collections.Generic;

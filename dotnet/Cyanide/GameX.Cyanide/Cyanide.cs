@@ -1,7 +1,7 @@
 ﻿using GameX.Cyanide.Formats;
-using GameX.Cyanide.Transforms;
 using GameX.Formats;
 using GameX.Formats.Unknown;
+using GameX.Transforms;
 using System;
 using System.IO;
 using System.Threading.Tasks;

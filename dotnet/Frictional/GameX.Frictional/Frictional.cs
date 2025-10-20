@@ -1,6 +1,6 @@
 ﻿using GameX.Formats.Unknown;
 using GameX.Frictional.Formats;
-using GameX.Frictional.Transforms;
+using GameX.Transforms;
 using GameX.Unknown;
 using System;
 using System.IO;

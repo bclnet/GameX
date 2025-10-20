@@ -1,7 +1,7 @@
 ﻿using GameX.Bioware.Formats;
 using GameX.Formats.Unknown;
 using GameX.Red.Formats;
-using GameX.Red.Transforms;
+using GameX.Transforms;
 using GameX.Unknown;
 using System;
 using System.IO;

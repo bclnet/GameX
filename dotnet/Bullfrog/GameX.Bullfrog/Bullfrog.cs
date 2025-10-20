@@ -1,6 +1,6 @@
 ﻿using GameX.Bullfrog.Formats;
-using GameX.Bullfrog.Transforms;
 using GameX.Formats.Unknown;
+using GameX.Transforms;
 using System;
 using System.IO;
 using System.Text.Json;

@@ -1,6 +1,6 @@
 ﻿using GameX.Formats.Unknown;
 using GameX.Rockstar.Formats;
-using GameX.Rockstar.Transforms;
+using GameX.Transforms;
 using GameX.Unknown;
 using System;
 using System.IO;

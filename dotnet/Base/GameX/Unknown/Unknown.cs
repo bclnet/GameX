@@ -1,4 +1,5 @@
 ﻿using GameX.Formats;
+using GameX.Formats.Unknown;
 using System;
 using System.Collections.Generic;
 using System.IO;

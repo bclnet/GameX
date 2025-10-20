@@ -1,7 +1,7 @@
 ﻿using GameX.Formats;
 using GameX.Formats.Unknown;
+using GameX.Transforms;
 using GameX.Ubisoft.Formats;
-using GameX.Ubisoft.Transforms;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -14,14 +14,12 @@ namespace GameX.Ubisoft;
 /// UbisoftPakFile
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class UbisoftPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel>
-{
+public class UbisoftPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="UbisoftPakFile" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public UbisoftPakFile(PakState state) : base(state, GetPakBinary(state.Game, state.Path))
-    {
+    public UbisoftPakFile(PakState state) : base(state, GetPakBinary(state.Game, state.Path)) {
         ObjectFactoryFunc = ObjectFactory;
     }
 
@@ -33,8 +31,7 @@ public class UbisoftPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMo
             : Binary_Zip.GetPakBinary(game);
 
     static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
-       => Path.GetExtension(source.Path).ToLowerInvariant() switch
-       {
+       => Path.GetExtension(source.Path).ToLowerInvariant() switch {
            ".dds" => (0, Binary_Dds.Factory),
            _ => (0, null),
        };

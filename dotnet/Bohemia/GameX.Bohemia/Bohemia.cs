@@ -1,6 +1,6 @@
 ﻿using GameX.Bohemia.Formats;
-using GameX.Bohemia.Transforms;
 using GameX.Formats.Unknown;
+using GameX.Transforms;
 using GameX.Unknown;
 using System;
 using System.IO;

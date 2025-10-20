@@ -80,7 +80,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\Base\GameX.All\GameX.All.csproj" />
+	  <ProjectReference Include="..\..\Core\GameX.All\GameX.All.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -511,7 +511,7 @@ class FamilyGame:
 
 #region Loader
 
-families = {}
+Families = {}
 # unknown = None
 # unknownPakFile = None
 
@@ -525,10 +525,10 @@ def init(loadSamples: bool = True):
         body = resources.files().joinpath('Specs', path).read_text(encoding='utf-8')
         return json.loads(commentRemover(body).encode().decode('utf-8-sig'))
 
-    # load families
+    # load Families
     for path in [f'{x}Family.json' for x in familyKeys]:
         family = createFamily(path, familyJsonLoader, loadSamples)
-        families[family.id] = family
+        Families[family.id] = family
 
     # load unknown
     # unknown = getFamily('Unknown')
@@ -536,7 +536,7 @@ def init(loadSamples: bool = True):
 
 @staticmethod
 def getFamily(id: str, throwOnError: bool = True) -> Family:
-    family = _value(families, id)
+    family = _value(Families, id)
     if not family and throwOnError: raise Exception(f'Unknown family: {id}')
     return family
 

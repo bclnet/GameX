@@ -15,194 +15,33 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Platform.OpenGL", "Pl
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Platform.Unity", "Platforms\GameX.Platform.Unity\GameX.Platform.Unity.csproj", "{5FA4394C-FC95-4985-AC57-945F74DFB546}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.All", "Base\GameX.All\GameX.All.csproj", "{7A2A2C87-7854-472F-9F5E-97CB5AE7F4E4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.All", "Core\GameX.All\GameX.All.csproj", "{7A2A2C87-7854-472F-9F5E-97CB5AE7F4E4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameXTests", "Base\GameXTests\GameXTests.csproj", "{E7557448-1A46-42B9-B57C-F3491E67FF59}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameXTests", "Core\GameXTests\GameXTests.csproj", "{E7557448-1A46-42B9-B57C-F3491E67FF59}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Bethesda", "Bethesda", "{7F78A794-57C6-4BC7-9267-1E68E4CEC9DE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.WB", "Families\GameX.WB\GameX.WB.csproj", "{A5A1B037-867C-4EB9-B4C1-AA87FD81220B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{6D2DEF34-0211-49A7-B0CE-8AF7AE738D8A}"
 	ProjectSection(SolutionItems) = preProject
-		..\python\gamex\Specs\BethesdaFamily.json = ..\python\gamex\Specs\BethesdaFamily.json
-		..\python\gamex\Specs\BethesdaFamily.Sample.json = ..\python\gamex\Specs\BethesdaFamily.Sample.json
-		..\docs\Families\Bethesda\Readme.md = ..\docs\Families\Bethesda\Readme.md
+		Core\GameX\_Config.cs = Core\GameX\_Config.cs
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "WB", "WB", "{BDE29250-8EA7-47E0-8D67-A58A176B2D30}"
-	ProjectSection(SolutionItems) = preProject
-		..\docs\Families\WB\Readme.md = ..\docs\Families\WB\Readme.md
-		..\python\gamex\Specs\WBFamily.json = ..\python\gamex\Specs\WBFamily.json
-		..\python\gamex\Specs\WBFamily.Sample.json = ..\python\gamex\Specs\WBFamily.Sample.json
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Arkane", "Arkane", "{793BECC6-9830-4CB9-B65C-DBC4C14ADCA4}"
-	ProjectSection(SolutionItems) = preProject
-		..\python\gamex\Specs\ArkaneFamily.json = ..\python\gamex\Specs\ArkaneFamily.json
-		..\python\gamex\Specs\ArkaneFamily.Sample.json = ..\python\gamex\Specs\ArkaneFamily.Sample.json
-		..\docs\Families\Arkane\Readme.md = ..\docs\Families\Arkane\Readme.md
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Bioware", "Bioware", "{0BE39DA4-4D1C-4FBE-87F5-C6C87F039DF0}"
-	ProjectSection(SolutionItems) = preProject
-		..\python\gamex\Specs\BiowareFamily.json = ..\python\gamex\Specs\BiowareFamily.json
-		..\python\gamex\Specs\BiowareFamily.Sample.json = ..\python\gamex\Specs\BiowareFamily.Sample.json
-		..\docs\Families\Bioware\Readme.md = ..\docs\Families\Bioware\Readme.md
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Crytek", "Crytek", "{D78C77D6-2696-446A-9D13-7FAE6F3255EE}"
-	ProjectSection(SolutionItems) = preProject
-		..\python\gamex\Specs\CrytekFamily.json = ..\python\gamex\Specs\CrytekFamily.json
-		..\python\gamex\Specs\CrytekFamily.Sample.json = ..\python\gamex\Specs\CrytekFamily.Sample.json
-		..\docs\Families\Crytek\Readme.md = ..\docs\Families\Crytek\Readme.md
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Cyanide", "Cyanide", "{AFEFEEB6-4CAB-4CA3-8FDF-C2C2BDE8C415}"
-	ProjectSection(SolutionItems) = preProject
-		..\python\gamex\Specs\CyanideFamily.json = ..\python\gamex\Specs\CyanideFamily.json
-		..\python\gamex\Specs\CyanideFamily.Sample.json = ..\python\gamex\Specs\CyanideFamily.Sample.json
-		..\docs\Families\Cyanide\Readme.md = ..\docs\Families\Cyanide\Readme.md
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Origin", "Origin", "{8BAFFF0D-E0B5-495F-84D5-7FF2A4314DA4}"
-	ProjectSection(SolutionItems) = preProject
-		..\python\gamex\Specs\OriginFamily.json = ..\python\gamex\Specs\OriginFamily.json
-		..\python\gamex\Specs\OriginFamily.Sample.json = ..\python\gamex\Specs\OriginFamily.Sample.json
-		..\docs\Families\Origin\Readme.md = ..\docs\Families\Origin\Readme.md
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Red", "Red", "{6E7BB6E0-0506-46AB-A740-D6168BC46D3F}"
-	ProjectSection(SolutionItems) = preProject
-		..\docs\Families\Red\Readme.md = ..\docs\Families\Red\Readme.md
-		..\python\gamex\Specs\RedFamily.json = ..\python\gamex\Specs\RedFamily.json
-		..\python\gamex\Specs\RedFamily.Sample.json = ..\python\gamex\Specs\RedFamily.Sample.json
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Cig", "Cig", "{228CD927-3DD3-45AA-9529-B703AC15A1AA}"
-	ProjectSection(SolutionItems) = preProject
-		..\python\gamex\Specs\CigFamily.json = ..\python\gamex\Specs\CigFamily.json
-		..\python\gamex\Specs\CigFamily.Sample.json = ..\python\gamex\Specs\CigFamily.Sample.json
-		..\docs\Families\Cig\Readme.md = ..\docs\Families\Cig\Readme.md
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unity", "Unity", "{D13E28F2-5471-49F4-BE39-E7920D84D918}"
-	ProjectSection(SolutionItems) = preProject
-		..\docs\Families\Unity\Readme.md = ..\docs\Families\Unity\Readme.md
-		..\python\gamex\Specs\UnityFamily.json = ..\python\gamex\Specs\UnityFamily.json
-		..\python\gamex\Specs\UnityFamily.Sample.json = ..\python\gamex\Specs\UnityFamily.Sample.json
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Epic", "Epic", "{9123F171-1DB1-4AB3-95F3-D4BF658998D7}"
-	ProjectSection(SolutionItems) = preProject
-		..\python\gamex\Specs\EpicFamily.json = ..\python\gamex\Specs\EpicFamily.json
-		..\python\gamex\Specs\EpicFamily.Sample.json = ..\python\gamex\Specs\EpicFamily.Sample.json
-		..\docs\Families\Epic\Readme.md = ..\docs\Families\Epic\Readme.md
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Valve", "Valve", "{B9CFB3F1-EFD8-4107-8E96-343726BBC9DC}"
-	ProjectSection(SolutionItems) = preProject
-		..\docs\Families\Valve\Readme.md = ..\docs\Families\Valve\Readme.md
-		..\python\gamex\Specs\ValveFamily.json = ..\python\gamex\Specs\ValveFamily.json
-		..\python\gamex\Specs\ValveFamily.Sample.json = ..\python\gamex\Specs\ValveFamily.Sample.json
-	EndProjectSection
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.WB", "WB\GameX.WB\GameX.WB.csproj", "{A5A1B037-867C-4EB9-B4C1-AA87FD81220B}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Base", "Base", "{6D2DEF34-0211-49A7-B0CE-8AF7AE738D8A}"
-	ProjectSection(SolutionItems) = preProject
-		..\docs\Context\Readme.md = ..\docs\Context\Readme.md
-		Base\GameX\_Config.cs = Base\GameX\_Config.cs
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unknown", "Unknown", "{991C1B68-70C3-4A86-8906-98914C9CE114}"
-	ProjectSection(SolutionItems) = preProject
-		..\docs\Families\Unknown\Readme.md = ..\docs\Families\Unknown\Readme.md
-		..\python\gamex\Specs\UnknownFamily.json = ..\python\gamex\Specs\UnknownFamily.json
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Monolith", "Monolith", "{126CF77A-F7E7-40D8-B91E-826AFBE7C971}"
-	ProjectSection(SolutionItems) = preProject
-		..\python\gamex\Specs\MonolithFamily.json = ..\python\gamex\Specs\MonolithFamily.json
-		..\python\gamex\Specs\MonolithFamily.Sample.json = ..\python\gamex\Specs\MonolithFamily.Sample.json
-		..\docs\Families\Monolith\Readme.md = ..\docs\Families\Monolith\Readme.md
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "IW", "IW", "{557FA17D-0D46-42AE-95E1-8B486EA8822A}"
-	ProjectSection(SolutionItems) = preProject
-		..\python\gamex\Specs\IWFamily.json = ..\python\gamex\Specs\IWFamily.json
-		..\python\gamex\Specs\IWFamily.Sample.json = ..\python\gamex\Specs\IWFamily.Sample.json
-		..\docs\Families\IW\Readme.md = ..\docs\Families\IW\Readme.md
-	EndProjectSection
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GameX.Unknown", "GameX.Unknown", "{991C1B68-70C3-4A86-8906-98914C9CE114}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "catalogs", "catalogs", "{60770ABF-0554-4393-8722-B3C138127B87}"
 	ProjectSection(SolutionItems) = preProject
-		Unknown\catalogs\main.yaml = Unknown\catalogs\main.yaml
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Frictional", "Frictional", "{18D5BB74-F0F3-4BBE-941B-D2C91D085C6D}"
-	ProjectSection(SolutionItems) = preProject
-		..\python\gamex\Specs\FrictionalFamily.json = ..\python\gamex\Specs\FrictionalFamily.json
-		..\python\gamex\Specs\FrictionalFamily.Sample.json = ..\python\gamex\Specs\FrictionalFamily.Sample.json
-		..\docs\Families\Frictional\Readme.md = ..\docs\Families\Frictional\Readme.md
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Blizzard", "Blizzard", "{389FCD8C-F4E7-4B16-BF62-11B3E075BC4E}"
-	ProjectSection(SolutionItems) = preProject
-		..\python\gamex\Specs\BlizzardFamily.json = ..\python\gamex\Specs\BlizzardFamily.json
-		..\python\gamex\Specs\BlizzardFamily.Sample.json = ..\python\gamex\Specs\BlizzardFamily.Sample.json
-		..\docs\Families\Blizzard\Readme.md = ..\docs\Families\Blizzard\Readme.md
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ID", "ID", "{ADDD9C65-49FA-4981-BFA6-545759D762F7}"
-	ProjectSection(SolutionItems) = preProject
-		..\python\gamex\Specs\IDFamily.json = ..\python\gamex\Specs\IDFamily.json
-		..\python\gamex\Specs\IDFamily.Sample.json = ..\python\gamex\Specs\IDFamily.Sample.json
-		..\docs\Families\ID\Readme.md = ..\docs\Families\ID\Readme.md
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Cryptic", "Cryptic", "{CB2D9FBD-6D37-4B95-BC2D-65D172F89CEE}"
-	ProjectSection(SolutionItems) = preProject
-		..\python\gamex\Specs\CrypticFamily.json = ..\python\gamex\Specs\CrypticFamily.json
-		..\python\gamex\Specs\CrypticFamily.Sample.json = ..\python\gamex\Specs\CrypticFamily.Sample.json
-		..\docs\Families\Cryptic\Readme.md = ..\docs\Families\Cryptic\Readme.md
+		Families\GameX.Unknown\catalogs\main.yaml = Families\GameX.Unknown\catalogs\main.yaml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Platforms", "Platforms", "{6EC2027E-D509-415E-8939-62A2A3C2CE1F}"
-	ProjectSection(SolutionItems) = preProject
-		..\docs\Platforms\Readme.md = ..\docs\Platforms\Readme.md
-	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Frontier", "Frontier", "{8A31F24F-EB07-4578-866C-FA2C1E4DFA5A}"
-	ProjectSection(SolutionItems) = preProject
-		..\python\gamex\Specs\FrontierFamily.json = ..\python\gamex\Specs\FrontierFamily.json
-		..\python\gamex\Specs\FrontierFamily.Sample.json = ..\python\gamex\Specs\FrontierFamily.Sample.json
-		..\docs\Families\Frontier\Readme.md = ..\docs\Families\Frontier\Readme.md
-	EndProjectSection
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX", "Core\GameX\GameX.csproj", "{8AA7AF15-6733-430E-AFB6-FFE80598EFDF}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Capcom", "Capcom", "{6F41E78D-790E-461B-8B66-94569F6E4291}"
-	ProjectSection(SolutionItems) = preProject
-		..\python\gamex\Specs\CapcomFamily+0-D.json = ..\python\gamex\Specs\CapcomFamily+0-D.json
-		..\python\gamex\Specs\CapcomFamily+E-L.json = ..\python\gamex\Specs\CapcomFamily+E-L.json
-		..\python\gamex\Specs\CapcomFamily+M.json = ..\python\gamex\Specs\CapcomFamily+M.json
-		..\python\gamex\Specs\CapcomFamily+N-R.json = ..\python\gamex\Specs\CapcomFamily+N-R.json
-		..\python\gamex\Specs\CapcomFamily+S.json = ..\python\gamex\Specs\CapcomFamily+S.json
-		..\python\gamex\Specs\CapcomFamily+T-Z.json = ..\python\gamex\Specs\CapcomFamily+T-Z.json
-		..\python\gamex\Specs\CapcomFamily.json = ..\python\gamex\Specs\CapcomFamily.json
-		..\python\gamex\Specs\CapcomFamily.Sample.json = ..\python\gamex\Specs\CapcomFamily.Sample.json
-		..\docs\Families\Capcom\Readme.md = ..\docs\Families\Capcom\Readme.md
-	EndProjectSection
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Arkane", "Families\GameX.Arkane\GameX.Arkane.csproj", "{F2D4E3F8-7EC0-4BDC-AD85-B442653362DC}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Black", "Black", "{231779E5-20EB-435B-BAAF-48A1D0BF6E1C}"
-	ProjectSection(SolutionItems) = preProject
-		..\python\gamex\Specs\BlackFamily.json = ..\python\gamex\Specs\BlackFamily.json
-		..\python\gamex\Specs\BlackFamily.Sample.json = ..\python\gamex\Specs\BlackFamily.Sample.json
-		..\docs\Families\Black\Readme.md = ..\docs\Families\Black\Readme.md
-	EndProjectSection
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Bioware", "Families\GameX.Bioware\GameX.Bioware.csproj", "{0073A5EA-A7A8-4A9C-BBA7-0731B37695FD}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX", "Base\GameX\GameX.csproj", "{8AA7AF15-6733-430E-AFB6-FFE80598EFDF}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Arkane", "Arkane\GameX.Arkane\GameX.Arkane.csproj", "{F2D4E3F8-7EC0-4BDC-AD85-B442653362DC}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Bioware", "Bioware\GameX.Bioware\GameX.Bioware.csproj", "{0073A5EA-A7A8-4A9C-BBA7-0731B37695FD}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Crytek", "Crytek\GameX.Crytek\GameX.Crytek.csproj", "{2C3C4F52-8899-47E2-B0F4-72C926B9FB1D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Crytek", "Families\GameX.Crytek\GameX.Crytek.csproj", "{2C3C4F52-8899-47E2-B0F4-72C926B9FB1D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Phy", "Phy", "{CFD8D658-BE5E-43FF-A6A8-C5282FB494F0}"
 EndProject
@@ -214,100 +53,65 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStack.OpenGL", "..\Open
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStack.GfxTests", "..\OpenStack\dotnet\Gfx\OpenStack.GfxTests\OpenStack.GfxTests.csproj", "{408C5AA0-004B-4237-9D5D-D9ECC35EE35F}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Base", "Base", "{D2430DDB-CF76-4570-8F9F-D8EAC21C9D95}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{D2430DDB-CF76-4570-8F9F-D8EAC21C9D95}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStack.Polyfills", "..\OpenStack\dotnet\Base\OpenStack.Polyfills\OpenStack.Polyfills.csproj", "{88DCAFE5-1E2F-4F05-BDC9-F92CD0E8B67C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStack.Polyfills", "..\OpenStack\dotnet\Core\OpenStack.Polyfills\OpenStack.Polyfills.csproj", "{88DCAFE5-1E2F-4F05-BDC9-F92CD0E8B67C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Cyanide", "Cyanide\GameX.Cyanide\GameX.Cyanide.csproj", "{3043A7F6-2E15-48F5-BC05-436E82D644D4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Cyanide", "Families\GameX.Cyanide\GameX.Cyanide.csproj", "{3043A7F6-2E15-48F5-BC05-436E82D644D4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Origin", "Origin\GameX.Origin\GameX.Origin.csproj", "{A88A4ECA-E3A0-4FE5-BAB8-65FDAA420E47}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Origin", "Families\GameX.Origin\GameX.Origin.csproj", "{A88A4ECA-E3A0-4FE5-BAB8-65FDAA420E47}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Red", "Red\GameX.Red\GameX.Red.csproj", "{562D7A0E-76A3-49F6-8E64-2900CDEC2495}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Red", "Families\GameX.Red\GameX.Red.csproj", "{562D7A0E-76A3-49F6-8E64-2900CDEC2495}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Cig", "Cig\GameX.Cig\GameX.Cig.csproj", "{7C0806B6-63F0-4A4B-83C1-A53457BB15D8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Cig", "Families\GameX.Cig\GameX.Cig.csproj", "{7C0806B6-63F0-4A4B-83C1-A53457BB15D8}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Bethesda", "Bethesda\GameX.Bethesda\GameX.Bethesda.csproj", "{E8025E1F-381B-4626-8F2A-86C35C938FE1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Bethesda", "Families\GameX.Bethesda\GameX.Bethesda.csproj", "{E8025E1F-381B-4626-8F2A-86C35C938FE1}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Unity", "Unity\GameX.Unity\GameX.Unity.csproj", "{70A7FA64-1CCB-42AC-875C-E4D258FC0ED5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Unity", "Families\GameX.Unity\GameX.Unity.csproj", "{70A7FA64-1CCB-42AC-875C-E4D258FC0ED5}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Epic", "Epic\GameX.Epic\GameX.Epic.csproj", "{85F5B722-204B-4554-9F7C-7EF7646B163A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Epic", "Families\GameX.Epic\GameX.Epic.csproj", "{85F5B722-204B-4554-9F7C-7EF7646B163A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Valve", "Valve\GameX.Valve\GameX.Valve.csproj", "{A3A79249-0820-4E28-ABDE-5DF97F23BCF1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Valve", "Families\GameX.Valve\GameX.Valve.csproj", "{A3A79249-0820-4E28-ABDE-5DF97F23BCF1}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Valve.Platform", "Valve\GameX.Valve.Platform\GameX.Valve.Platform.csproj", "{D2AF35FE-B250-4E5E-BC86-7EC7ECDE0432}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Valve.Platform", "Families\GameX.Valve.Platform\GameX.Valve.Platform.csproj", "{D2AF35FE-B250-4E5E-BC86-7EC7ECDE0432}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Monolith", "Monolith\GameX.Monolith\GameX.Monolith.csproj", "{E7BCDDDF-CACE-4D9D-87E3-A455449FD19D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Monolith", "Families\GameX.Monolith\GameX.Monolith.csproj", "{E7BCDDDF-CACE-4D9D-87E3-A455449FD19D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStack.PolyIO", "..\OpenStack\dotnet\Base\OpenStack.PolyIO\OpenStack.PolyIO.csproj", "{C9E0A904-D76C-45C9-B1B2-D2DCE789177A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStack.PolyIO", "..\OpenStack\dotnet\Core\OpenStack.PolyIO\OpenStack.PolyIO.csproj", "{C9E0A904-D76C-45C9-B1B2-D2DCE789177A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Frictional", "Frictional\GameX.Frictional\GameX.Frictional.csproj", "{986869A8-BA1E-4301-94AE-DDFD614E2547}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Frictional", "Families\GameX.Frictional\GameX.Frictional.csproj", "{986869A8-BA1E-4301-94AE-DDFD614E2547}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Blizzard", "Blizzard\GameX.Blizzard\GameX.Blizzard.csproj", "{C9F07003-E1F4-4D45-9C62-183AAA632AD3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Blizzard", "Families\GameX.Blizzard\GameX.Blizzard.csproj", "{C9F07003-E1F4-4D45-9C62-183AAA632AD3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.IW", "IW\GameX.IW\GameX.IW.csproj", "{5E4C2496-86FF-4E78-AC49-8D75CB16671F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.IW", "Families\GameX.IW\GameX.IW.csproj", "{5E4C2496-86FF-4E78-AC49-8D75CB16671F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.ID", "Id\GameX.Id\GameX.ID.csproj", "{893AE238-7783-40D7-BC8F-7B86B27FFCBD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.ID", "Families\GameX.ID\GameX.ID.csproj", "{893AE238-7783-40D7-BC8F-7B86B27FFCBD}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Cryptic", "Cryptic\GameX.Cryptic\GameX.Cryptic.csproj", "{4EB47393-4083-4C1E-997C-00F5775EB126}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Cryptic", "Families\GameX.Cryptic\GameX.Cryptic.csproj", "{4EB47393-4083-4C1E-997C-00F5775EB126}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.App.ExplorerM", "Applications\GameX.App.ExplorerM\GameX.App.ExplorerM.csproj", "{0EC68FDD-F2AF-4A41-A7AE-EB194E3DFC8D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Frontier", "Frontier\GameX.Frontier\GameX.Frontier.csproj", "{3DBBC1EF-1817-4A75-84AB-291B8444D925}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Frontier", "Families\GameX.Frontier\GameX.Frontier.csproj", "{3DBBC1EF-1817-4A75-84AB-291B8444D925}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Capcom", "Capcom\GameX.Capcom\GameX.Capcom.csproj", "{BD8BD213-5556-4A94-B00B-5BBD936A973C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Capcom", "Families\GameX.Capcom\GameX.Capcom.csproj", "{BD8BD213-5556-4A94-B00B-5BBD936A973C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Cig.Explorer", "Cig\GameX.Cig.Explorer\GameX.Cig.Explorer.csproj", "{ED929375-9174-4087-8BB0-86350999FA57}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Cig.Explorer", "Families\GameX.Cig.Explorer\GameX.Cig.Explorer.csproj", "{ED929375-9174-4087-8BB0-86350999FA57}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Black", "Black\GameX.Black\GameX.Black.csproj", "{CDA9519E-93E6-4F7C-8399-6C33B18C5FE6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Black", "Families\GameX.Black\GameX.Black.csproj", "{CDA9519E-93E6-4F7C-8399-6C33B18C5FE6}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Ubisoft", "Ubisoft", "{C26368F1-6CE3-4692-84F3-3E936E6FCCD1}"
-	ProjectSection(SolutionItems) = preProject
-		..\docs\Families\Ubisoft\Readme.md = ..\docs\Families\Ubisoft\Readme.md
-		..\python\gamex\Specs\UbisoftFamily.json = ..\python\gamex\Specs\UbisoftFamily.json
-		..\python\gamex\Specs\UbisoftFamily.Sample.json = ..\python\gamex\Specs\UbisoftFamily.Sample.json
-	EndProjectSection
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Ubisoft", "Families\GameX.Ubisoft\GameX.Ubisoft.csproj", "{FC227CD2-4DE2-4400-8A10-00CDC2B591CF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Ubisoft", "Ubisoft\GameX.Ubisoft\GameX.Ubisoft.csproj", "{FC227CD2-4DE2-4400-8A10-00CDC2B591CF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Resource", "Core\GameX.Resource\GameX.Resource.csproj", "{9F942D13-67C4-447F-BF8C-8B245AE5F1D4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Resource", "Base\GameX.Resource\GameX.Resource.csproj", "{9F942D13-67C4-447F-BF8C-8B245AE5F1D4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Lucas", "Families\GameX.Lucas\GameX.Lucas.csproj", "{D36AB841-A08A-403A-8930-F143BA7D86B8}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Lucas", "Lucas", "{233F86E3-D4A5-4F18-B422-6D81F342A46C}"
-	ProjectSection(SolutionItems) = preProject
-		..\python\gamex\Specs\LucasFamily.json = ..\python\gamex\Specs\LucasFamily.json
-		..\python\gamex\Specs\LucasFamily.Sample.json = ..\python\gamex\Specs\LucasFamily.Sample.json
-		..\docs\Families\Lucas\Readme.md = ..\docs\Families\Lucas\Readme.md
-	EndProjectSection
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Volition", "Families\GameX.Volition\GameX.Volition.csproj", "{2DE28B37-CD0A-4135-9B14-2BD41F6BB95B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Lucas", "Lucas\GameX.Lucas\GameX.Lucas.csproj", "{D36AB841-A08A-403A-8930-F143BA7D86B8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Bullfrog", "Families\GameX.Bullfrog\GameX.Bullfrog.csproj", "{F9A180BB-AB55-4558-903C-95D72E2BAB57}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Bullfrog", "Bullfrog", "{5AF9DE0E-F59A-49A8-B406-06C8718D5988}"
-	ProjectSection(SolutionItems) = preProject
-		..\python\gamex\Specs\BullfrogFamily.json = ..\python\gamex\Specs\BullfrogFamily.json
-		..\python\gamex\Specs\BullfrogFamily.Sample.json = ..\python\gamex\Specs\BullfrogFamily.Sample.json
-		..\docs\Families\Bullfrog\Readme.md = ..\docs\Families\Bullfrog\Readme.md
-	EndProjectSection
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.EA", "Families\GameX.EA\GameX.EA.csproj", "{5A8575B1-59D2-4809-A5F4-92662CB4C652}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Volition", "Volition", "{2CDC86F9-BF29-4329-BB90-D7CC1026BE25}"
-	ProjectSection(SolutionItems) = preProject
-		..\docs\Families\Volition\Readme.md = ..\docs\Families\Volition\Readme.md
-		..\python\gamex\Specs\VolitionFamily.json = ..\python\gamex\Specs\VolitionFamily.json
-		..\python\gamex\Specs\VolitionFamily.Sample.json = ..\python\gamex\Specs\VolitionFamily.Sample.json
-	EndProjectSection
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Volition", "Volition\GameX.Volition\GameX.Volition.csproj", "{2DE28B37-CD0A-4135-9B14-2BD41F6BB95B}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Bullfrog", "Bullfrog\GameX.Bullfrog\GameX.Bullfrog.csproj", "{F9A180BB-AB55-4558-903C-95D72E2BAB57}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "EA", "EA", "{3BF732F3-7B66-471C-9E99-8D65CA029546}"
-	ProjectSection(SolutionItems) = preProject
-		..\python\gamex\Specs\EAFamily.json = ..\python\gamex\Specs\EAFamily.json
-		..\python\gamex\Specs\EAFamily.Sample.json = ..\python\gamex\Specs\EAFamily.Sample.json
-		..\docs\Families\EA\Readme.md = ..\docs\Families\EA\Readme.md
-	EndProjectSection
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.EA", "EA\GameX.EA\GameX.EA.csproj", "{5A8575B1-59D2-4809-A5F4-92662CB4C652}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Bullfrog.Game", "Bullfrog\GameX.Bullfrog.Game\GameX.Bullfrog.Game.csproj", "{70925A24-D761-4E38-8C9E-611C09EBB209}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Bullfrog.Game", "Families\GameX.Bullfrog.Game\GameX.Bullfrog.Game.csproj", "{70925A24-D761-4E38-8C9E-611C09EBB209}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sfx", "Sfx", "{4050146F-FAF9-4C0A-9FFA-E63FA38FA2A0}"
 EndProject
@@ -329,36 +133,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStack.PhyTests", "..\Op
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStack.Sfx.Ogg", "..\OpenStack\dotnet\Sfx\OpenStack.Sfx.Ogg\OpenStack.Sfx.Ogg.csproj", "{FEA4F71F-C354-4123-AF7E-1AC16A79F35A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.FileSystems", "Base\GameX.FileSystems\GameX.FileSystems.csproj", "{C5DE810E-A11C-4C99-85A8-24D3EB4175B3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.FileSystems", "Core\GameX.FileSystems\GameX.FileSystems.csproj", "{C5DE810E-A11C-4C99-85A8-24D3EB4175B3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Platform.Stride", "Platforms\GameX.Platform.Stride\GameX.Platform.Stride.csproj", "{81FF1CE5-5F70-D1F8-256C-FF2C92863C57}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Bohemia", "Bohemia", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
-	ProjectSection(SolutionItems) = preProject
-		..\python\gamex\Specs\BohemiaFamily.json = ..\python\gamex\Specs\BohemiaFamily.json
-		..\python\gamex\Specs\BohemiaFamily.Sample.json = ..\python\gamex\Specs\BohemiaFamily.Sample.json
-		..\docs\Families\Bohemia\Readme.md = ..\docs\Families\Bohemia\Readme.md
-	EndProjectSection
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Bohemia", "Families\GameX.Bohemia\GameX.Bohemia.csproj", "{49EF9340-A39B-01FC-DE4E-3BF7960D9432}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Bohemia", "Bohemia\GameX.Bohemia\GameX.Bohemia.csproj", "{49EF9340-A39B-01FC-DE4E-3BF7960D9432}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Rockstar", "Families\GameX.Rockstar\GameX.Rockstar.csproj", "{954BA137-DC7C-B185-4228-0CB2BE1EE6DE}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Rockstar", "Rockstar", "{C1A9FB99-6AAE-4162-8647-979ABBDA5EBF}"
-	ProjectSection(SolutionItems) = preProject
-		..\docs\Families\Rockstar\Readme.md = ..\docs\Families\Rockstar\Readme.md
-		..\python\gamex\Specs\RockstarFamily.json = ..\python\gamex\Specs\RockstarFamily.json
-		..\python\gamex\Specs\RockstarFamily.Sample.json = ..\python\gamex\Specs\RockstarFamily.Sample.json
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "X2K", "X2K", "{50042B9E-D19F-47DE-8D30-293DCD2DBF52}"
-	ProjectSection(SolutionItems) = preProject
-		..\docs\Families\X2K\Readme.md = ..\docs\Families\X2K\Readme.md
-		..\python\gamex\Specs\X2KFamily.json = ..\python\gamex\Specs\X2KFamily.json
-		..\python\gamex\Specs\X2KFamily.Sample.json = ..\python\gamex\Specs\X2KFamily.Sample.json
-	EndProjectSection
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Rockstar", "Rockstar\GameX.Rockstar\GameX.Rockstar.csproj", "{954BA137-DC7C-B185-4228-0CB2BE1EE6DE}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.X2K", "X2K\GameX.X2K\GameX.X2K.csproj", "{3674D896-35DE-C346-D97B-8F76D754BB93}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.X2K", "Families\GameX.X2K\GameX.X2K.csproj", "{3674D896-35DE-C346-D97B-8F76D754BB93}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Platform.Godot", "Platforms\GameX.Platform.Godot\GameX.Platform.Godot.csproj", "{80194B0B-B444-CECE-EC5B-D0BE8DBA2B5D}"
 EndProject
@@ -374,7 +157,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStack.Unity", "..\OpenS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStack.Ogre", "..\OpenStack\dotnet\Platform\OpenStack.Ogre\OpenStack.Ogre.csproj", "{5ED70967-F410-E759-B6F2-59132F41128D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStack", "..\OpenStack\dotnet\Base\OpenStack\OpenStack.csproj", "{31DBD16D-8F69-1380-88B6-7BAE1A404898}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStack", "..\OpenStack\dotnet\Core\OpenStack\OpenStack.csproj", "{31DBD16D-8F69-1380-88B6-7BAE1A404898}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Platform", "Platform", "{67806ED7-050A-43D3-BED6-B00B5621C6D6}"
 EndProject
@@ -398,15 +181,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Platform.O3de", "Plat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Platform.Unreal", "Platforms\GameX.Platform.Unreal\GameX.Platform.Unreal.csproj", "{2823DD8A-2DF7-949A-93B8-7A0637B286D9}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Nintendo", "Nintendo", "{10491622-08A2-4844-9063-A85604D1DFC0}"
-	ProjectSection(SolutionItems) = preProject
-		..\python\gamex\Specs\NintendoFamily+EPD.json = ..\python\gamex\Specs\NintendoFamily+EPD.json
-		..\python\gamex\Specs\NintendoFamily.json = ..\python\gamex\Specs\NintendoFamily.json
-		..\python\gamex\Specs\NintendoFamily.Sample.json = ..\python\gamex\Specs\NintendoFamily.Sample.json
-		..\docs\Families\Nintendo\Readme.md = ..\docs\Families\Nintendo\Readme.md
-	EndProjectSection
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Nintendo", "Nintendo\GameX.Nintendo\GameX.Nintendo.csproj", "{8C6554B1-AE71-D739-AE2B-4603622E0293}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Nintendo", "Families\GameX.Nintendo\GameX.Nintendo.csproj", "{8C6554B1-AE71-D739-AE2B-4603622E0293}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Vfx", "Vfx", "{CA697A85-C9AB-4493-8590-D0849ACE887C}"
 EndProject
@@ -414,19 +189,15 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStack.Vfx", "..\OpenSta
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStack.Vfx.Program", "..\OpenStack\dotnet\Vfx\OpenStack.Vfx.Program\OpenStack.Vfx.Program.csproj", "{48B311BE-1704-A130-F490-59244FEBDD5C}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Gamebryo", "Gamebryo", "{5B268048-EA39-4F88-9E2D-D9CD5653E323}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Gamebryo", "Families\GameX.Gamebryo\GameX.Gamebryo.csproj", "{25F2365B-DAD9-8113-BA7E-F5218C651884}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Gamebryo", "Gamebryo\GameX.Gamebryo\GameX.Gamebryo.csproj", "{25F2365B-DAD9-8113-BA7E-F5218C651884}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Mythic", "Families\GameX.Mythic\GameX.Mythic.csproj", "{B10805EC-AB4A-F997-A22C-4E07426A98BF}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Mythic", "Mythic", "{BC723A6A-BD58-4403-A342-548CE7A79773}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Mythic", "Mythic\GameX.Mythic\GameX.Mythic.csproj", "{B10805EC-AB4A-F997-A22C-4E07426A98BF}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Beamdog", "Beamdog", "{704D9AF9-7083-41A6-8BE1-4E4972DB8971}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Beamdog", "Beamdog\GameX.Beamdog\GameX.Beamdog.csproj", "{2B3C7E51-B6B8-20DB-F9A4-E567B47088C3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Beamdog", "Families\GameX.Beamdog\GameX.Beamdog.csproj", "{2B3C7E51-B6B8-20DB-F9A4-E567B47088C3}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Families", "Families", "{1B87B12B-21F4-497B-AA06-C0423BD1C76B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX._MODEL", "Families\GameX._MODEL\GameX._MODEL.csproj", "{B62AF6AA-4B5D-D44A-2A6F-E6280C06E04D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -1400,6 +1171,18 @@ Global
 		{2B3C7E51-B6B8-20DB-F9A4-E567B47088C3}.Release|x64.Build.0 = Release|Any CPU
 		{2B3C7E51-B6B8-20DB-F9A4-E567B47088C3}.Release|x86.ActiveCfg = Release|Any CPU
 		{2B3C7E51-B6B8-20DB-F9A4-E567B47088C3}.Release|x86.Build.0 = Release|Any CPU
+		{B62AF6AA-4B5D-D44A-2A6F-E6280C06E04D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B62AF6AA-4B5D-D44A-2A6F-E6280C06E04D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B62AF6AA-4B5D-D44A-2A6F-E6280C06E04D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B62AF6AA-4B5D-D44A-2A6F-E6280C06E04D}.Debug|x64.Build.0 = Debug|Any CPU
+		{B62AF6AA-4B5D-D44A-2A6F-E6280C06E04D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B62AF6AA-4B5D-D44A-2A6F-E6280C06E04D}.Debug|x86.Build.0 = Debug|Any CPU
+		{B62AF6AA-4B5D-D44A-2A6F-E6280C06E04D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B62AF6AA-4B5D-D44A-2A6F-E6280C06E04D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B62AF6AA-4B5D-D44A-2A6F-E6280C06E04D}.Release|x64.ActiveCfg = Release|Any CPU
+		{B62AF6AA-4B5D-D44A-2A6F-E6280C06E04D}.Release|x64.Build.0 = Release|Any CPU
+		{B62AF6AA-4B5D-D44A-2A6F-E6280C06E04D}.Release|x86.ActiveCfg = Release|Any CPU
+		{B62AF6AA-4B5D-D44A-2A6F-E6280C06E04D}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1411,12 +1194,13 @@ Global
 		{5FA4394C-FC95-4985-AC57-945F74DFB546} = {6EC2027E-D509-415E-8939-62A2A3C2CE1F}
 		{7A2A2C87-7854-472F-9F5E-97CB5AE7F4E4} = {6D2DEF34-0211-49A7-B0CE-8AF7AE738D8A}
 		{E7557448-1A46-42B9-B57C-F3491E67FF59} = {6D2DEF34-0211-49A7-B0CE-8AF7AE738D8A}
-		{A5A1B037-867C-4EB9-B4C1-AA87FD81220B} = {BDE29250-8EA7-47E0-8D67-A58A176B2D30}
+		{A5A1B037-867C-4EB9-B4C1-AA87FD81220B} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
+		{991C1B68-70C3-4A86-8906-98914C9CE114} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
 		{60770ABF-0554-4393-8722-B3C138127B87} = {991C1B68-70C3-4A86-8906-98914C9CE114}
 		{8AA7AF15-6733-430E-AFB6-FFE80598EFDF} = {6D2DEF34-0211-49A7-B0CE-8AF7AE738D8A}
-		{F2D4E3F8-7EC0-4BDC-AD85-B442653362DC} = {793BECC6-9830-4CB9-B65C-DBC4C14ADCA4}
-		{0073A5EA-A7A8-4A9C-BBA7-0731B37695FD} = {0BE39DA4-4D1C-4FBE-87F5-C6C87F039DF0}
-		{2C3C4F52-8899-47E2-B0F4-72C926B9FB1D} = {D78C77D6-2696-446A-9D13-7FAE6F3255EE}
+		{F2D4E3F8-7EC0-4BDC-AD85-B442653362DC} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
+		{0073A5EA-A7A8-4A9C-BBA7-0731B37695FD} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
+		{2C3C4F52-8899-47E2-B0F4-72C926B9FB1D} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
 		{CFD8D658-BE5E-43FF-A6A8-C5282FB494F0} = {4EC06189-D9CE-42F3-BFA0-F70810EF617B}
 		{8AFD3AEA-A28F-43C7-8D42-0CF8388BE7D2} = {4EC06189-D9CE-42F3-BFA0-F70810EF617B}
 		{5D3D4FC2-C888-4462-96CD-72B6030C9E26} = {8AFD3AEA-A28F-43C7-8D42-0CF8388BE7D2}
@@ -1424,34 +1208,34 @@ Global
 		{408C5AA0-004B-4237-9D5D-D9ECC35EE35F} = {8AFD3AEA-A28F-43C7-8D42-0CF8388BE7D2}
 		{D2430DDB-CF76-4570-8F9F-D8EAC21C9D95} = {4EC06189-D9CE-42F3-BFA0-F70810EF617B}
 		{88DCAFE5-1E2F-4F05-BDC9-F92CD0E8B67C} = {D2430DDB-CF76-4570-8F9F-D8EAC21C9D95}
-		{3043A7F6-2E15-48F5-BC05-436E82D644D4} = {AFEFEEB6-4CAB-4CA3-8FDF-C2C2BDE8C415}
-		{A88A4ECA-E3A0-4FE5-BAB8-65FDAA420E47} = {8BAFFF0D-E0B5-495F-84D5-7FF2A4314DA4}
-		{562D7A0E-76A3-49F6-8E64-2900CDEC2495} = {6E7BB6E0-0506-46AB-A740-D6168BC46D3F}
-		{7C0806B6-63F0-4A4B-83C1-A53457BB15D8} = {228CD927-3DD3-45AA-9529-B703AC15A1AA}
-		{E8025E1F-381B-4626-8F2A-86C35C938FE1} = {7F78A794-57C6-4BC7-9267-1E68E4CEC9DE}
-		{70A7FA64-1CCB-42AC-875C-E4D258FC0ED5} = {D13E28F2-5471-49F4-BE39-E7920D84D918}
-		{85F5B722-204B-4554-9F7C-7EF7646B163A} = {9123F171-1DB1-4AB3-95F3-D4BF658998D7}
-		{A3A79249-0820-4E28-ABDE-5DF97F23BCF1} = {B9CFB3F1-EFD8-4107-8E96-343726BBC9DC}
-		{D2AF35FE-B250-4E5E-BC86-7EC7ECDE0432} = {B9CFB3F1-EFD8-4107-8E96-343726BBC9DC}
-		{E7BCDDDF-CACE-4D9D-87E3-A455449FD19D} = {126CF77A-F7E7-40D8-B91E-826AFBE7C971}
+		{3043A7F6-2E15-48F5-BC05-436E82D644D4} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
+		{A88A4ECA-E3A0-4FE5-BAB8-65FDAA420E47} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
+		{562D7A0E-76A3-49F6-8E64-2900CDEC2495} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
+		{7C0806B6-63F0-4A4B-83C1-A53457BB15D8} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
+		{E8025E1F-381B-4626-8F2A-86C35C938FE1} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
+		{70A7FA64-1CCB-42AC-875C-E4D258FC0ED5} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
+		{85F5B722-204B-4554-9F7C-7EF7646B163A} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
+		{A3A79249-0820-4E28-ABDE-5DF97F23BCF1} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
+		{D2AF35FE-B250-4E5E-BC86-7EC7ECDE0432} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
+		{E7BCDDDF-CACE-4D9D-87E3-A455449FD19D} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
 		{C9E0A904-D76C-45C9-B1B2-D2DCE789177A} = {D2430DDB-CF76-4570-8F9F-D8EAC21C9D95}
-		{986869A8-BA1E-4301-94AE-DDFD614E2547} = {18D5BB74-F0F3-4BBE-941B-D2C91D085C6D}
-		{C9F07003-E1F4-4D45-9C62-183AAA632AD3} = {389FCD8C-F4E7-4B16-BF62-11B3E075BC4E}
-		{5E4C2496-86FF-4E78-AC49-8D75CB16671F} = {557FA17D-0D46-42AE-95E1-8B486EA8822A}
-		{893AE238-7783-40D7-BC8F-7B86B27FFCBD} = {ADDD9C65-49FA-4981-BFA6-545759D762F7}
-		{4EB47393-4083-4C1E-997C-00F5775EB126} = {CB2D9FBD-6D37-4B95-BC2D-65D172F89CEE}
+		{986869A8-BA1E-4301-94AE-DDFD614E2547} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
+		{C9F07003-E1F4-4D45-9C62-183AAA632AD3} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
+		{5E4C2496-86FF-4E78-AC49-8D75CB16671F} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
+		{893AE238-7783-40D7-BC8F-7B86B27FFCBD} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
+		{4EB47393-4083-4C1E-997C-00F5775EB126} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
 		{0EC68FDD-F2AF-4A41-A7AE-EB194E3DFC8D} = {0911DDF1-E514-4BCF-915A-49999D5D168C}
-		{3DBBC1EF-1817-4A75-84AB-291B8444D925} = {8A31F24F-EB07-4578-866C-FA2C1E4DFA5A}
-		{BD8BD213-5556-4A94-B00B-5BBD936A973C} = {6F41E78D-790E-461B-8B66-94569F6E4291}
-		{ED929375-9174-4087-8BB0-86350999FA57} = {228CD927-3DD3-45AA-9529-B703AC15A1AA}
-		{CDA9519E-93E6-4F7C-8399-6C33B18C5FE6} = {231779E5-20EB-435B-BAAF-48A1D0BF6E1C}
-		{FC227CD2-4DE2-4400-8A10-00CDC2B591CF} = {C26368F1-6CE3-4692-84F3-3E936E6FCCD1}
+		{3DBBC1EF-1817-4A75-84AB-291B8444D925} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
+		{BD8BD213-5556-4A94-B00B-5BBD936A973C} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
+		{ED929375-9174-4087-8BB0-86350999FA57} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
+		{CDA9519E-93E6-4F7C-8399-6C33B18C5FE6} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
+		{FC227CD2-4DE2-4400-8A10-00CDC2B591CF} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
 		{9F942D13-67C4-447F-BF8C-8B245AE5F1D4} = {6D2DEF34-0211-49A7-B0CE-8AF7AE738D8A}
-		{D36AB841-A08A-403A-8930-F143BA7D86B8} = {233F86E3-D4A5-4F18-B422-6D81F342A46C}
-		{2DE28B37-CD0A-4135-9B14-2BD41F6BB95B} = {2CDC86F9-BF29-4329-BB90-D7CC1026BE25}
-		{F9A180BB-AB55-4558-903C-95D72E2BAB57} = {5AF9DE0E-F59A-49A8-B406-06C8718D5988}
-		{5A8575B1-59D2-4809-A5F4-92662CB4C652} = {3BF732F3-7B66-471C-9E99-8D65CA029546}
-		{70925A24-D761-4E38-8C9E-611C09EBB209} = {5AF9DE0E-F59A-49A8-B406-06C8718D5988}
+		{D36AB841-A08A-403A-8930-F143BA7D86B8} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
+		{2DE28B37-CD0A-4135-9B14-2BD41F6BB95B} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
+		{F9A180BB-AB55-4558-903C-95D72E2BAB57} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
+		{5A8575B1-59D2-4809-A5F4-92662CB4C652} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
+		{70925A24-D761-4E38-8C9E-611C09EBB209} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
 		{4050146F-FAF9-4C0A-9FFA-E63FA38FA2A0} = {4EC06189-D9CE-42F3-BFA0-F70810EF617B}
 		{9E8E19DE-2002-4110-B82C-8833AD31EEE3} = {4050146F-FAF9-4C0A-9FFA-E63FA38FA2A0}
 		{8DCEC046-8A5D-46D6-8C97-47C3199C951A} = {4050146F-FAF9-4C0A-9FFA-E63FA38FA2A0}
@@ -1464,9 +1248,9 @@ Global
 		{FEA4F71F-C354-4123-AF7E-1AC16A79F35A} = {4050146F-FAF9-4C0A-9FFA-E63FA38FA2A0}
 		{C5DE810E-A11C-4C99-85A8-24D3EB4175B3} = {6D2DEF34-0211-49A7-B0CE-8AF7AE738D8A}
 		{81FF1CE5-5F70-D1F8-256C-FF2C92863C57} = {6EC2027E-D509-415E-8939-62A2A3C2CE1F}
-		{49EF9340-A39B-01FC-DE4E-3BF7960D9432} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
-		{954BA137-DC7C-B185-4228-0CB2BE1EE6DE} = {C1A9FB99-6AAE-4162-8647-979ABBDA5EBF}
-		{3674D896-35DE-C346-D97B-8F76D754BB93} = {50042B9E-D19F-47DE-8D30-293DCD2DBF52}
+		{49EF9340-A39B-01FC-DE4E-3BF7960D9432} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
+		{954BA137-DC7C-B185-4228-0CB2BE1EE6DE} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
+		{3674D896-35DE-C346-D97B-8F76D754BB93} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
 		{80194B0B-B444-CECE-EC5B-D0BE8DBA2B5D} = {6EC2027E-D509-415E-8939-62A2A3C2CE1F}
 		{79E5E91A-426D-4A56-2C48-502EC85CE5F2} = {6EC2027E-D509-415E-8939-62A2A3C2CE1F}
 		{CD5AC3FB-55BE-9983-56B8-62D61F29B2B3} = {67806ED7-050A-43D3-BED6-B00B5621C6D6}
@@ -1486,13 +1270,14 @@ Global
 		{35EB7B34-7A6C-D94B-1540-B9BBC8D51C03} = {8AFD3AEA-A28F-43C7-8D42-0CF8388BE7D2}
 		{D15015C2-7AB7-0BA5-54B2-4DD29AFC71BE} = {6EC2027E-D509-415E-8939-62A2A3C2CE1F}
 		{2823DD8A-2DF7-949A-93B8-7A0637B286D9} = {6EC2027E-D509-415E-8939-62A2A3C2CE1F}
-		{8C6554B1-AE71-D739-AE2B-4603622E0293} = {10491622-08A2-4844-9063-A85604D1DFC0}
+		{8C6554B1-AE71-D739-AE2B-4603622E0293} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
 		{CA697A85-C9AB-4493-8590-D0849ACE887C} = {4EC06189-D9CE-42F3-BFA0-F70810EF617B}
 		{9651769D-906D-4A63-E886-8872137E5DEB} = {CA697A85-C9AB-4493-8590-D0849ACE887C}
 		{48B311BE-1704-A130-F490-59244FEBDD5C} = {CA697A85-C9AB-4493-8590-D0849ACE887C}
-		{25F2365B-DAD9-8113-BA7E-F5218C651884} = {5B268048-EA39-4F88-9E2D-D9CD5653E323}
-		{B10805EC-AB4A-F997-A22C-4E07426A98BF} = {BC723A6A-BD58-4403-A342-548CE7A79773}
-		{2B3C7E51-B6B8-20DB-F9A4-E567B47088C3} = {704D9AF9-7083-41A6-8BE1-4E4972DB8971}
+		{25F2365B-DAD9-8113-BA7E-F5218C651884} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
+		{B10805EC-AB4A-F997-A22C-4E07426A98BF} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
+		{2B3C7E51-B6B8-20DB-F9A4-E567B47088C3} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
+		{B62AF6AA-4B5D-D44A-2A6F-E6280C06E04D} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A9F1BB93-CFBC-4E41-A865-325B22465054}

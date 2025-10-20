@@ -80,8 +80,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\OpenStack\dotnet\Platform\OpenStack.Wpf.Control\OpenStack.Wpf.Control.csproj" />
     <ProjectReference Include="..\..\..\OpenStack\dotnet\Platform\OpenStack.Wpf.Stride\OpenStack.Wpf.Stride.csproj" />
-    <ProjectReference Include="..\..\Cig\GameX.Cig.Explorer\GameX.Cig.Explorer.csproj" />
-    <ProjectReference Include="..\..\Base\GameX.All\GameX.All.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.Cig.Explorer\GameX.Cig.Explorer.csproj" />
+    <ProjectReference Include="..\..\Core\GameX.All\GameX.All.csproj" />
     <ProjectReference Include="..\..\Platforms\GameX.Platform.Godot\GameX.Platform.Godot.csproj" />
     <ProjectReference Include="..\..\Platforms\GameX.Platform.O3de\GameX.Platform.O3de.csproj" />
     <ProjectReference Include="..\..\Platforms\GameX.Platform.Ogre\GameX.Platform.Ogre.csproj" />

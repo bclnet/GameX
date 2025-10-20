@@ -21,7 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\OpenStack\dotnet\Platform\OpenStack.Stride\OpenStack.Stride.csproj" />
     <ProjectReference Include="..\..\..\OpenStack\dotnet\Sfx\OpenStack.Sfx\OpenStack.Sfx.csproj" />
-    <ProjectReference Include="..\..\Base\GameX\GameX.csproj" />
+    <ProjectReference Include="..\..\Core\GameX\GameX.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,69 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <Optimize>False</Optimize>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <Optimize>True</Optimize>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Families\GameX.Arkane\GameX.Arkane.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.Beamdog\GameX.Beamdog.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.Bethesda\GameX.Bethesda.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.Bioware\GameX.Bioware.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.Black\GameX.Black.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.Blizzard\GameX.Blizzard.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.Bohemia\GameX.Bohemia.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.Bullfrog\GameX.Bullfrog.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.Capcom\GameX.Capcom.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.Cig\GameX.Cig.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.Cryptic\GameX.Cryptic.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.Crytek\GameX.Crytek.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.Cyanide\GameX.Cyanide.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.EA\GameX.EA.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.Epic\GameX.Epic.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.Frictional\GameX.Frictional.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.Frontier\GameX.Frontier.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.Gamebryo\GameX.Gamebryo.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.ID\GameX.ID.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.IW\GameX.IW.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.Lucas\GameX.Lucas.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.Monolith\GameX.Monolith.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.Mythic\GameX.Mythic.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.Nintendo\GameX.Nintendo.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.Origin\GameX.Origin.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.Red\GameX.Red.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.Rockstar\GameX.Rockstar.csproj" />
+	<ProjectReference Include="..\..\Families\GameX.Ubisoft\GameX.Ubisoft.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.Unity\GameX.Unity.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.Valve.Platform\GameX.Valve.Platform.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.Valve\GameX.Valve.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.Volition\GameX.Volition.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.WB\GameX.WB.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.X2K\GameX.X2K.csproj" />
+    <ProjectReference Include="..\GameX.Resource\GameX.Resource.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="catalogs\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\Families\GameX.Unknown\catalogs\main.yaml" Link="catalogs\main.yaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' == 'Windows_NT'">
+    <Exec Command="xcopy /Y &quot;$(TargetDir)GameX*.dll&quot; &quot;$(SolutionDir)..\platforms\Plugins\GameX\$(Configuration)\&quot; /EXCLUDE:$(SolutionDir)excludex.txt&#xD;&#xA;xcopy /Y &quot;$(TargetDir)OpenStack*.dll&quot; &quot;$(SolutionDir)..\platforms\Plugins\GameX\$(Configuration)\&quot; /EXCLUDE:$(SolutionDir)excludes.txt" />
+  </Target>
+
+</Project>

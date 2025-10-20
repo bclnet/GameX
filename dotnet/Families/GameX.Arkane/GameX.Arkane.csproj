@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <Optimize>False</Optimize>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <Optimize>True</Optimize>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\GameX\GameX.csproj" />
+    <ProjectReference Include="..\GameX.Crytek\GameX.Crytek.csproj" />
+    <ProjectReference Include="..\GameX.ID\GameX.ID.csproj" />
+    <ProjectReference Include="..\GameX.Epic\GameX.Epic.csproj" />
+    <ProjectReference Include="..\GameX.Valve\GameX.Valve.csproj" />
+  </ItemGroup>
+
+</Project>

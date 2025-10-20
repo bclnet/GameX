@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Optional, cast
 from argparse import ArgumentParser, _SubParsersAction
 from pydantic import BaseModel
 from .. import getFamily, PlatformX, FileSystem, FileOption
-from ..Base.app import ExportManager
+from ..core.app import ExportManager
 
 class ProgramState:
     @staticmethod

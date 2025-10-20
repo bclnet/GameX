@@ -64,8 +64,8 @@ class XmlCodeWriter(CodeWriter):
     def __init__(self, ex: str):
         self.ex = ex
         self.types = {
-            'bool8': [None, ('byte', 'int'), lambda x: (x, x), ('Z.ReadBool8(r)', 'Z.readBool8()'), lambda c: (f'r.ReadFArray(z => Z.ReadBool8(r), {c})', f'r.readFArray(lambda z: Z.readBool8(r), {c})')],
-            'bool': [None, ('bool', 'bool'), lambda x: (x.replace('1', 'true'), x.replace('true', 'True').replace('false', 'False')), ('Z.ReadBool(r)', 'Z.readBool()'), lambda c: (f'[Z.ReadBool(r), Z.ReadBool(r), Z.ReadBool(r)]', f'[Z.readBool(r), Z.readBool(r), Z.readBool(r)]') if c == '3' else (f'r.ReadFArray(z => Z.ReadBool(r), {c})', f'r.readFArray(lambda z: Z.readBool(r), {c})')],
+            'bool8': [None, ('byte', 'int'), lambda x: (x, x), ('Z.ReadBool8(r)', 'Z.readBool8(r)'), lambda c: (f'r.ReadFArray(z => Z.ReadBool8(r), {c})', f'r.readFArray(lambda z: Z.readBool8(r), {c})')],
+            'bool': [None, ('bool', 'bool'), lambda x: (x.replace('1', 'true'), x.replace('true', 'True').replace('false', 'False')), ('Z.ReadBool(r)', 'Z.readBool(r)'), lambda c: (f'[Z.ReadBool(r), Z.ReadBool(r), Z.ReadBool(r)]', f'[Z.readBool(r), Z.readBool(r), Z.readBool(r)]') if c == '3' else (f'r.ReadFArray(z => Z.ReadBool(r), {c})', f'r.readFArray(lambda z: Z.readBool(r), {c})')],
             'byte': [None, ('byte', 'int'), lambda x: (x, x), ('r.ReadByte()', 'r.readByte()'), lambda c: (f'r.ReadBytes({c})', f'r.readBytes({c})')],
             'uint': [None, ('uint', 'int'), lambda x: (x, x), ('r.ReadUInt32()', 'r.readUInt32()'), lambda c: (f'r.ReadPArray<uint>("I", {c})', f'r.readPArray(None, \'I\', {c})')],
             'ulittle32': [None, ('uint', 'int'), lambda x: (x, x), ('r.ReadUInt32()', 'r.readUInt32()'), None],
@@ -98,7 +98,7 @@ class XmlCodeWriter(CodeWriter):
             'ByteVector3': [None, ('Vector3<byte>', 'Vector3'), lambda x: (x, x), ('new Vector3<byte>(r.ReadByte(), r.ReadByte(), r.ReadByte())', 'Vector3(r.readByte(), r.readByte(), r.readByte())'), lambda c: (f'r.ReadFArray(z => new Vector3(r.ReadByte(), r.ReadByte(), r.ReadByte()), {c})', f'r.readFArray(lambda z: Vector3(r.readByte(), r.readByte(), r.readByte()), {c})')],
             'HalfVector3': [None, ('Vector3', 'Vector3'), lambda x: (x, x), ('new Vector3(r.ReadHalf(), r.ReadHalf(), r.ReadHalf())', 'Vector3(r.readHalf(), r.readHalf(), r.readHalf())'), lambda c: (f'r.ReadFArray(z => new Vector3(r.ReadHalf(), r.ReadHalf(), r.ReadHalf()), {c})', f'r.readFArray(lambda z: Vector3(r.readHalf(), r.readHalf(), r.readHalf()), {c})')],
             'Vector3': [None, ('Vector3', 'Vector3'), lambda x: (f'new({x})', f'Vector3({x})'), ('r.ReadVector3()', 'r.readVector3()'), lambda c: (f'r.ReadPArray<Vector3>("3f", {c})', f'r.readPArray(array, \'3f\', {c})')],
-            'Vector4': [None, ('Vector4', 'Vector4'), lambda x: (f'new({x.replace(',','f,')}f)', f'Vector4({x})'), ('r.ReadVector4()', 'r.readVector4()'), lambda c: (f'r.ReadPArray<Vector4>("4f", {c})', f'r.readPArray(array, \'4f\', {c})')],
+            'Vector4': [None, ('Vector4', 'Vector4'), lambda x: (f'new({x.replace(',','f,')}f)', f'array(({x}))'), ('r.ReadVector4()', 'r.readVector4()'), lambda c: (f'r.ReadPArray<Vector4>("4f", {c})', f'r.readPArray(array, \'4f\', {c})')],
             'Quaternion': [None, ('Quaternion', 'Quaternion'), lambda x: (x, x), ('r.ReadQuaternionWFirst()', 'r.readQuaternionWFirst()'), lambda c: (f'r.ReadFArray(z => r.ReadQuaternionWFirst(), {c})', f'r.readFArray(lambda z: r.readQuaternionWFirst(), {c})')],
             'hkQuaternion': [None, ('Quaternion', 'Quaternion'), lambda x: (x, x), ('r.ReadQuaternion()', 'r.readQuaternion()'), None],
             'Matrix22': [None, ('Matrix2x2', 'Matrix2x2'), lambda x: (x, x), ('r.ReadMatrix2x2()', 'r.readMatrix2x2()'), None],

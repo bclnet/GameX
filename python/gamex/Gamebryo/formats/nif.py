@@ -3,7 +3,7 @@ from io import BytesIO
 from enum import Enum, Flag, IntFlag
 from typing import TypeVar, Generic
 from numpy import ndarray, array
-from openstk.poly import Reader
+from openstk.poly import Reader, log
 from gamex import FileSource, PakBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
 from gamex.globalx import Color3, Color4
 from gamex.desser import DesSer
@@ -15,6 +15,7 @@ type byte = int
 type Vector3 = ndarray
 type Vector4 = ndarray
 type Matrix2x2 = ndarray
+type Matrix3x4 = ndarray
 type Matrix4x4 = ndarray
 type Quaternion = ndarray
 
@@ -50,7 +51,7 @@ class Z:
     @staticmethod
     def readBool(r: NiReader) -> bool: r.readByte() != 0 if r.v > 0x04000002 else r.readUInt32() != 0
     @staticmethod
-    def string(r: NiReader) -> str: return r.readL32AString() r.v < 0x14010003 else None
+    def string(r: NiReader) -> str: return r.readL32AString() if r.v < 0x14010003 else None
     @staticmethod
     def stringRef(r: NiReader, p: int) -> str: return None
     @staticmethod
@@ -1123,7 +1124,7 @@ class SkinPartition: # Y
             else: self.triangles = r.readSArray(Triangle, self.numTriangles)
         elif r.v >= 0x0A010000:
             if Z.readBool(r): self.vertexMap = r.readPArray(None, 'H', self.numVertices)
-            hasVertexWeights = Z.readBool8()
+            hasVertexWeights = Z.readBool8(r)
             if hasVertexWeights == 1: self.vertexWeights = r.readFArray(lambda k: r.readPArray(None, 'f', self.numWeightsPerVertex), self.numVertices)
             if hasVertexWeights == 15: self.vertexWeights = r.readFArray(lambda k: r.readFArray(lambda z: r.readHalf(), self.numWeightsPerVertex), self.numVertices)
             self.stripLengths = r.readPArray(None, 'H', self.numStrips)
@@ -1365,75 +1366,75 @@ class NiObject: # X
     @staticmethod
     def read(r: NiReader, nodeType: str) -> NiObject:
         # print(f'{nodeType}: {r.tell()}')
+        def type(o: NiObject) -> NiObject: setattr(o, '$type', nodeType); return o;
         match nodeType:
-            case 'NiNode': node = NiNode(r)
-            case 'NiTriShape': node = NiTriShape(r)
-            case 'NiTexturingProperty': node = NiTexturingProperty(r)
-            case 'NiSourceTexture': node = NiSourceTexture(r)
-            case 'NiMaterialProperty': node = NiMaterialProperty(r)
-            case 'NiMaterialColorController': node = NiMaterialColorController(r)
-            case 'NiTriShapeData': node = NiTriShapeData(r)
-            case 'RootCollisionNode': node = RootCollisionNode(r)
-            case 'NiStringExtraData': node = NiStringExtraData(r)
-            case 'NiSkinInstance': node = NiSkinInstance(r)
-            case 'NiSkinData': node = NiSkinData(r)
-            case 'NiAlphaProperty': node = NiAlphaProperty(r)
-            case 'NiZBufferProperty': node = NiZBufferProperty(r)
-            case 'NiVertexColorProperty': node = NiVertexColorProperty(r)
-            case 'NiBSAnimationNode': node = NiBSAnimationNode(r)
-            case 'NiBSParticleNode': node = NiBSParticleNode(r)
-            case 'NiParticles': node = NiParticles(r)
-            case 'NiParticlesData': node = NiParticlesData(r)
-            case 'NiRotatingParticles': node = NiRotatingParticles(r)
-            case 'NiRotatingParticlesData': node = NiRotatingParticlesData(r)
-            case 'NiAutoNormalParticles': node = NiAutoNormalParticles(r)
-            case 'NiAutoNormalParticlesData': node = NiAutoNormalParticlesData(r)
-            case 'NiUVController': node = NiUVController(r)
-            case 'NiUVData': node = NiUVData(r)
-            case 'NiTextureEffect': node = NiTextureEffect(r)
-            case 'NiTextKeyExtraData': node = NiTextKeyExtraData(r)
-            case 'NiVertWeightsExtraData': node = NiVertWeightsExtraData(r)
-            case 'NiParticleSystemController': node = NiParticleSystemController(r)
-            case 'NiBSPArrayController': node = NiBSPArrayController(r)
-            case 'NiGravity': node = NiGravity(r)
-            case 'NiParticleBomb': node = NiParticleBomb(r)
-            case 'NiParticleColorModifier': node = NiParticleColorModifier(r)
-            case 'NiParticleGrowFade': node = NiParticleGrowFade(r)
-            case 'NiParticleMeshModifier': node = NiParticleMeshModifier(r)
-            case 'NiParticleRotation': node = NiParticleRotation(r)
-            case 'NiKeyframeController': node = NiKeyframeController(r)
-            case 'NiKeyframeData': node = NiKeyframeData(r)
-            case 'NiColorData': node = NiColorData(r)
-            case 'NiGeomMorpherController': node = NiGeomMorpherController(r)
-            case 'NiMorphData': node = NiMorphData(r)
-            case 'AvoidNode': node = AvoidNode(r)
-            case 'NiVisController': node = NiVisController(r)
-            case 'NiVisData': node = NiVisData(r)
-            case 'NiAlphaController': node = NiAlphaController(r)
-            case 'NiFloatData': node = NiFloatData(r)
-            case 'NiPosData': node = NiPosData(r)
-            case 'NiBillboardNode': node = NiBillboardNode(r)
-            case 'NiShadeProperty': node = NiShadeProperty(r)
-            case 'NiWireframeProperty': node = NiWireframeProperty(r)
-            case 'NiCamera': node = NiCamera(r)
-            case 'NiPathController': node = NiPathController(r)
-            case 'NiPixelData': node = NiPixelData(r)
-            case 'NiBinaryExtraData': node = NiBinaryExtraData(r)
-            case 'NiTriStrips': node = NiTriStrips(r)
-            case 'NiTriStripsData': node = NiTriStripsData(r)
-            case 'BSXFlags': node = BSXFlags(r)
-            case 'bhkNiTriStripsShape': node = bhkNiTriStripsShape(r)
-            case 'bhkMoppBvTreeShape': node = bhkMoppBvTreeShape(r)
-            case 'bhkRigidBody': node = bhkRigidBody(r)
-            case 'bhkCollisionObject': node = bhkCollisionObject(r)
-            case 'bhkRigidBodyT': node = bhkRigidBodyT(r)
-            case 'bhkConvexVerticesShape': node = bhkConvexVerticesShape(r)
-            case 'bhkListShape': node = bhkListShape(r)
-            case 'BSFurnitureMarker': node = BSFurnitureMarker(r)
-            case 'bhkBoxShape': node = bhkBoxShape(r)
-            case 'bhkConvexTransformShape': node = bhkConvexTransformShape(r)
-            case _: Log(f'Tried to read an unsupported NiObject type ({nodeType}).'); node = None
-        setattr(node, '$type', nodeType)
+            case 'NiNode': return type(NiNode(r))
+            case 'NiTriShape': return type(NiTriShape(r))
+            case 'NiTexturingProperty': return type(NiTexturingProperty(r))
+            case 'NiSourceTexture': return type(NiSourceTexture(r))
+            case 'NiMaterialProperty': return type(NiMaterialProperty(r))
+            case 'NiMaterialColorController': return type(NiMaterialColorController(r))
+            case 'NiTriShapeData': return type(NiTriShapeData(r))
+            case 'RootCollisionNode': return type(RootCollisionNode(r))
+            case 'NiStringExtraData': return type(NiStringExtraData(r))
+            case 'NiSkinInstance': return type(NiSkinInstance(r))
+            case 'NiSkinData': return type(NiSkinData(r))
+            case 'NiAlphaProperty': return type(NiAlphaProperty(r))
+            case 'NiZBufferProperty': return type(NiZBufferProperty(r))
+            case 'NiVertexColorProperty': return type(NiVertexColorProperty(r))
+            case 'NiBSAnimationNode': return type(NiBSAnimationNode(r))
+            case 'NiBSParticleNode': return type(NiBSParticleNode(r))
+            case 'NiParticles': return type(NiParticles(r))
+            case 'NiParticlesData': return type(NiParticlesData(r))
+            case 'NiRotatingParticles': return type(NiRotatingParticles(r))
+            case 'NiRotatingParticlesData': return type(NiRotatingParticlesData(r))
+            case 'NiAutoNormalParticles': return type(NiAutoNormalParticles(r))
+            case 'NiAutoNormalParticlesData': return type(NiAutoNormalParticlesData(r))
+            case 'NiUVController': return type(NiUVController(r))
+            case 'NiUVData': return type(NiUVData(r))
+            case 'NiTextureEffect': return type(NiTextureEffect(r))
+            case 'NiTextKeyExtraData': return type(NiTextKeyExtraData(r))
+            case 'NiVertWeightsExtraData': return type(NiVertWeightsExtraData(r))
+            case 'NiParticleSystemController': return type(NiParticleSystemController(r))
+            case 'NiBSPArrayController': return type(NiBSPArrayController(r))
+            case 'NiGravity': return type(NiGravity(r))
+            case 'NiParticleBomb': return type(NiParticleBomb(r))
+            case 'NiParticleColorModifier': return type(NiParticleColorModifier(r))
+            case 'NiParticleGrowFade': return type(NiParticleGrowFade(r))
+            case 'NiParticleMeshModifier': return type(NiParticleMeshModifier(r))
+            case 'NiParticleRotation': return type(NiParticleRotation(r))
+            case 'NiKeyframeController': return type(NiKeyframeController(r))
+            case 'NiKeyframeData': return type(NiKeyframeData(r))
+            case 'NiColorData': return type(NiColorData(r))
+            case 'NiGeomMorpherController': return type(NiGeomMorpherController(r))
+            case 'NiMorphData': return type(NiMorphData(r))
+            case 'AvoidNode': return type(AvoidNode(r))
+            case 'NiVisController': return type(NiVisController(r))
+            case 'NiVisData': return type(NiVisData(r))
+            case 'NiAlphaController': return type(NiAlphaController(r))
+            case 'NiFloatData': return type(NiFloatData(r))
+            case 'NiPosData': return type(NiPosData(r))
+            case 'NiBillboardNode': return type(NiBillboardNode(r))
+            case 'NiShadeProperty': return type(NiShadeProperty(r))
+            case 'NiWireframeProperty': return type(NiWireframeProperty(r))
+            case 'NiCamera': return type(NiCamera(r))
+            case 'NiPathController': return type(NiPathController(r))
+            case 'NiPixelData': return type(NiPixelData(r))
+            case 'NiBinaryExtraData': return type(NiBinaryExtraData(r))
+            case 'NiTriStrips': return type(NiTriStrips(r))
+            case 'NiTriStripsData': return type(NiTriStripsData(r))
+            case 'BSXFlags': return type(BSXFlags(r))
+            case 'bhkNiTriStripsShape': return type(bhkNiTriStripsShape(r))
+            case 'bhkMoppBvTreeShape': return type(bhkMoppBvTreeShape(r))
+            case 'bhkRigidBody': return type(bhkRigidBody(r))
+            case 'bhkCollisionObject': return type(bhkCollisionObject(r))
+            case 'bhkRigidBodyT': return type(bhkRigidBodyT(r))
+            case 'bhkConvexVerticesShape': return type(bhkConvexVerticesShape(r))
+            case 'bhkListShape': return type(bhkListShape(r))
+            case 'BSFurnitureMarker': return type(BSFurnitureMarker(r))
+            case 'bhkBoxShape': return type(bhkBoxShape(r))
+            case 'bhkConvexTransformShape': return type(bhkConvexTransformShape(r))
+            case _: log(f'Tried to read an unsupported NiObject type ({nodeType}).'); node = None
         return node
 
 # LEGACY (pre-10.1). Abstract base class for particle system modifiers.
@@ -1573,7 +1574,7 @@ class bhkRigidBody(bhkEntity): # Z
             if r.uv2 != 130: self.penetrationDepth = r.readSingle()
         self.motionSystem = hkMotionType(r.readByte())
         if r.uv2 <= 34: self.deactivatorType = hkDeactivatorType(r.readByte())
-        else: self.enableDeactivation = Z.readBool()
+        else: self.enableDeactivation = Z.readBool(r)
         self.solverDeactivation = hkSolverDeactivation(r.readByte())
         self.qualityType = hkQualityType(r.readByte())
         if r.uv2 == 130:
@@ -1719,7 +1720,7 @@ class bhkNiTriStripsShape(bhkShapeCollection): # Z
     radius: float = 0.1
     unused: list[int] = None                            # Garbage data from memory though the last 3 are referred to as maxSize, size, and eSize.
     growBy: int = 1
-    scale: Vector4 = Vector4(1.0, 1.0, 1.0, 0.0)        # Scale. Usually (1.0, 1.0, 1.0, 0.0).
+    scale: Vector4 = array((1.0, 1.0, 1.0, 0.0))        # Scale. Usually (1.0, 1.0, 1.0, 0.0).
     stripsData: list[Ref[NiObject]] = None              # Refers to a bunch of NiTriStripsData objects that make up this shape.
     dataLayers: list[HavokFilter] = None                # Havok Layers for each strip data.
 
@@ -1858,7 +1859,7 @@ class NiDynamicEffect(NiAVObject): # X
 
     def __init__(self, r: NiReader):
         super().__init__(r)
-        if r.v >= 0x0A01006A and r.uv2 < 130: self.switchState = Z.readBool()
+        if r.v >= 0x0A01006A and r.uv2 < 130: self.switchState = Z.readBool(r)
         if r.v <= 0x0303000D: self.affectedNodes = r.readL32FArray(X[NiNode].ptr)
         elif r.v >= 0x04000000 and r.v <= 0x04000002: self.affectedNodePointers = r.readL32PArray(None, 'I')
         elif r.v >= 0x0A010000 and r.uv2 < 130: self.affectedNodes = r.readL32FArray(X[NiNode].ptr)
@@ -1902,7 +1903,7 @@ class NiInterpController(NiTimeController): # X
 
     def __init__(self, r: NiReader):
         super().__init__(r)
-        if r.v >= 0x0A010068 and r.v <= 0x0A01006C: self.managerControlled = Z.readBool()
+        if r.v >= 0x0A010068 and r.v <= 0x0A01006C: self.managerControlled = Z.readBool(r)
 
 # DEPRECATED (20.5), replaced by NiMorphMeshModifier.
 # Time controller for geometry morphing.
@@ -2006,7 +2007,7 @@ class MaterialData: # Y
             self.activeMaterial = r.readInt32()
         if r.v == 0x0A020000 and (r.uv == 1): self.unknownByte = r.readByte()
         if r.v == 0x0A040001: self.unknownInteger2 = r.readInt32()
-        if r.v >= 0x14020007: self.materialNeedsUpdate = Z.readBool()
+        if r.v >= 0x14020007: self.materialNeedsUpdate = Z.readBool(r)
 
 # Describes a visible scene element with vertices like a mesh, a particle system, lines, etc.
 class NiGeometry(NiAVObject): # X
@@ -2108,13 +2109,13 @@ class NiGeometryData(NiObject): # X
         if r.v >= 0x0A010000:
             self.keepFlags = r.readByte()
             self.compressFlags = r.readByte()
-        hasVertices = Z.readBool8()
+        hasVertices = Z.readBool8(r)
         if (hasVertices > 0) and (hasVertices != 15): self.vertices = r.readPArray(array, '3f', self.numVertices)
         if r.v >= 0x14030101 and hasVertices == 15: self.vertices = r.readFArray(lambda z: Vector3(r.readHalf(), r.readHalf(), r.readHalf()), self.numVertices)
         if r.v >= 0x0A000100 and not ((r.v == 0x14020007) and (r.uv2 > 0)): self.vectorFlags = VectorFlags(r.readUInt16())
         if ((r.v == 0x14020007) and (r.uv2 > 0)): self.bsVectorFlags = BSVectorFlags(r.readUInt16())
         if r.v == 0x14020007 and (r.uv == 12): self.materialCrc = r.readUInt32()
-        hasNormals = Z.readBool8()
+        hasNormals = Z.readBool8(r)
         if (hasNormals > 0) and (hasNormals != 6): self.normals = r.readPArray(array, '3f', self.numVertices)
         if r.v >= 0x14030101 and hasNormals == 6: self.normals = r.readFArray(lambda z: Vector3(r.readByte(), r.readByte(), r.readByte()), self.numVertices)
         if r.v >= 0x0A010000 and (hasNormals != 0) and ((self.vectorFlags | self.bsVectorFlags) & 4096) != 0:
@@ -2124,11 +2125,11 @@ class NiGeometryData(NiObject): # X
         self.center = r.readVector3()
         self.radius = r.readSingle()
         if r.v == 0x14030009 and (r.uv == 0x20000) or (r.uv == 0x30000): self.unknown13shorts = r.readPArray(None, 'h', 13)
-        hasVertexColors = Z.readBool8()
+        hasVertexColors = Z.readBool8(r)
         if (hasVertexColors > 0) and (hasVertexColors != 7): self.vertexColors = r.readFArray(lambda z: Color4(r), self.numVertices)
         if r.v >= 0x14030101 and hasVertexColors == 7: self.vertexColors = r.readFArray(lambda z: Color4(r.readBytes(4)), self.numVertices)
         if r.v <= 0x04020200: self.numUvSets = r.readUInt16()
-        hasUv = Z.readBool() if r.v <= 0x04000002 else None
+        hasUv = Z.readBool(r) if r.v <= 0x04000002 else None
         if (hasVertices > 0) and (hasVertices != 15): self.uvSets = r.readFArray(lambda k: r.readSArray(TexCoord, self.numVertices), ((self.numUvSets & 63) | (self.vectorFlags & 63) | (self.bsVectorFlags & 1)))
         if r.v >= 0x14030101 and hasVertices == 15: self.uvSets = r.readFArray(lambda k: r.readFArray(lambda z: TexCoord(r, true), self.numVertices), ((self.numUvSets & 63) | (self.vectorFlags & 63) | (self.bsVectorFlags & 1)))
         if r.v >= 0x0A000100: self.consistencyFlags = ConsistencyType(r.readUInt16())
@@ -2223,10 +2224,10 @@ class NiParticlesData(NiGeometryData): # X
         self.numActive = r.readUInt16()
         if not ((r.v == 0x14020007) and (r.uv2 > 0)) and Z.readBool(r): self.sizes = r.readPArray(None, 'f', self.numVertices)
         if r.v >= 0x0A000100 and not ((r.v == 0x14020007) and (r.uv2 > 0)) and Z.readBool(r): self.rotations = r.readFArray(lambda z: r.readQuaternionWFirst(), self.numVertices)
-        hasRotationAngles = Z.readBool() if r.v >= 0x14000004 else None
+        hasRotationAngles = Z.readBool(r) if r.v >= 0x14000004 else None
         if not ((r.v == 0x14020007) and (r.uv2 > 0)) and hasRotationAngles: self.rotationAngles = r.readPArray(None, 'f', self.numVertices)
         if r.v >= 0x14000004 and not ((r.v == 0x14020007) and (r.uv2 > 0)) and Z.readBool(r): self.rotationAxes = r.readPArray(array, '3f', self.numVertices)
-        hasTextureIndices = Z.readBool() if ((r.v == 0x14020007) and (r.uv2 > 0)) else None
+        hasTextureIndices = Z.readBool(r) if ((r.v == 0x14020007) and (r.uv2 > 0)) else None
         if r.uv2 > 34: self.numSubtextureOffsets = r.readUInt32()
         if ((r.v == 0x14020007) and (r.uv2 > 0)): self.subtextureOffsets = r.readL8PArray(array, '4f')
         if r.uv2 > 34:
@@ -2286,7 +2287,7 @@ class NiCamera(NiAVObject): # X
         self.frustumBottom = r.readSingle()
         self.frustumNear = r.readSingle()
         self.frustumFar = r.readSingle()
-        if r.v >= 0x0A010000: self.useOrthographicProjection = Z.readBool()
+        if r.v >= 0x0A010000: self.useOrthographicProjection = Z.readBool(r)
         self.viewportLeft = r.readSingle()
         self.viewportRight = r.readSingle()
         self.viewportTop = r.readSingle()
@@ -2681,7 +2682,7 @@ class PixelFormatComponent: # Y
         self.type: PixelComponent = PixelComponent(r.readUInt32()) # Component Type
         self.convention: PixelRepresentation = PixelRepresentation(r.readUInt32()) # Data Storage Convention
         self.bitsPerChannel: int = r.readByte()         # Bits per component
-        self.isSigned: bool = Z.readBool()
+        self.isSigned: bool = Z.readBool(r)
 
 class NiPixelFormat(NiObject): # Y
     pixelFormat: PixelFormat = 0                        # The format of the pixels in this internally stored image.
@@ -2718,7 +2719,7 @@ class NiPixelFormat(NiObject): # Y
             self.extraData = r.readUInt32()
             self.flags = r.readByte()
             self.tiling = PixelTiling(r.readUInt32())
-        if r.v >= 0x14030004: self.sRgbSpace = Z.readBool()
+        if r.v >= 0x14030004: self.sRgbSpace = Z.readBool(r)
         if r.v >= 0x0A030003: self.channels = r.readFArray(lambda z: PixelFormatComponent(r), 4)
 
 # A texture.
@@ -2850,8 +2851,8 @@ class NiSourceTexture(NiTexture): # X
             self.pixelData = X[NiPixelFormat].ref(r)
         self.formatPrefs = FormatPrefs(r)
         self.isStatic = r.readByte()
-        if r.v >= 0x0A010067: self.directRender = Z.readBool()
-        if r.v >= 0x14020004: self.persistRenderData = Z.readBool()
+        if r.v >= 0x0A010067: self.directRender = Z.readBool(r)
+        if r.v >= 0x14020004: self.persistRenderData = Z.readBool(r)
 
 # Apparently commands for an optimizer instructing it to keep things it would normally discard.
 # Also refers to NiNode objects (through their name) in animation .kf files.
@@ -2959,29 +2960,29 @@ class NiTexturingProperty(NiProperty): # X
         if Z.readBool(r): self.detailTexture = TexDesc(r)
         if Z.readBool(r): self.glossTexture = TexDesc(r)
         if Z.readBool(r): self.glowTexture = TexDesc(r)
-        hasBumpMapTexture = Z.readBool() if r.v >= 0x0303000D and self.textureCount > 5 else None
+        hasBumpMapTexture = Z.readBool(r) if r.v >= 0x0303000D and self.textureCount > 5 else None
         if hasBumpMapTexture:
             self.bumpMapTexture = TexDesc(r)
             self.bumpMapLumaScale = r.readSingle()
             self.bumpMapLumaOffset = r.readSingle()
             self.bumpMapMatrix = r.readMatrix2x2()
-        hasNormalTexture = Z.readBool() if r.v >= 0x14020005 and self.textureCount > 6 else None
+        hasNormalTexture = Z.readBool(r) if r.v >= 0x14020005 and self.textureCount > 6 else None
         if hasNormalTexture: self.normalTexture = TexDesc(r)
-        hasParallaxTexture = Z.readBool() if r.v >= 0x14020005 and self.textureCount > 7 else None
+        hasParallaxTexture = Z.readBool(r) if r.v >= 0x14020005 and self.textureCount > 7 else None
         if hasParallaxTexture:
             self.parallaxTexture = TexDesc(r)
             self.parallaxOffset = r.readSingle()
-        hasDecal0Texture = Z.readBool() if r.v <= 0x14020004 and self.textureCount > 6 else \
-            Z.readBool() if r.v >= 0x14020005 and self.textureCount > 8 else None
+        hasDecal0Texture = Z.readBool(r) if r.v <= 0x14020004 and self.textureCount > 6 else \
+            Z.readBool(r) if r.v >= 0x14020005 and self.textureCount > 8 else None
         if hasDecal0Texture: self.decal0Texture = TexDesc(r)
-        hasDecal1Texture = Z.readBool() if r.v <= 0x14020004 and self.textureCount > 7 else \
-            Z.readBool() if r.v >= 0x14020005 and self.textureCount > 9 else None
+        hasDecal1Texture = Z.readBool(r) if r.v <= 0x14020004 and self.textureCount > 7 else \
+            Z.readBool(r) if r.v >= 0x14020005 and self.textureCount > 9 else None
         if hasDecal1Texture: self.decal1Texture = TexDesc(r)
-        hasDecal2Texture = Z.readBool() if r.v <= 0x14020004 and self.textureCount > 8 else \
-            Z.readBool() if r.v >= 0x14020005 and self.textureCount > 10 else None
+        hasDecal2Texture = Z.readBool(r) if r.v <= 0x14020004 and self.textureCount > 8 else \
+            Z.readBool(r) if r.v >= 0x14020005 and self.textureCount > 10 else None
         if hasDecal2Texture: self.decal2Texture = TexDesc(r)
-        hasDecal3Texture = Z.readBool() if r.v <= 0x14020004 and self.textureCount > 9 else \
-            Z.readBool() if r.v >= 0x14020005 and self.textureCount > 11 else None
+        hasDecal3Texture = Z.readBool(r) if r.v <= 0x14020004 and self.textureCount > 9 else \
+            Z.readBool(r) if r.v >= 0x14020005 and self.textureCount > 11 else None
         if hasDecal3Texture: self.decal3Texture = TexDesc(r)
         if r.v >= 0x0A000100: self.shaderTextures = r.readL32FArray(lambda z: ShaderTexDesc(r))
 
@@ -3019,7 +3020,7 @@ class NiTriStripsData(NiTriBasedGeomData): # Z
         super().__init__(r)
         self.numStrips = r.readUInt16()
         self.stripLengths = r.readPArray(None, 'H', self.numStrips)
-        hasPoints = Z.readBool() if r.v >= 0x0A000103 else None
+        hasPoints = Z.readBool(r) if r.v >= 0x0A000103 else None
         if r.v <= 0x0A000102: self.points = r.readFArray(lambda k, i: r.readPArray(None, 'H', self.stripLengths[i]), self.numStrips)
         if r.v >= 0x0A000103 and hasPoints: self.points = r.readFArray(lambda k, i: r.readPArray(None, 'H', self.stripLengths[i]), self.numStrips)
 

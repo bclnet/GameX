@@ -56,7 +56,7 @@ from io import BytesIO
 from enum import Enum, Flag, IntFlag
 from typing import TypeVar, Generic
 from numpy import ndarray, array
-from openstk.poly import Reader
+from openstk.poly import Reader, log
 from gamex import FileSource, PakBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
 from gamex.globalx import Color3, Color4
 from gamex.desser import DesSer
@@ -68,6 +68,7 @@ type byte = int
 type Vector3 = ndarray
 type Vector4 = ndarray
 type Matrix2x2 = ndarray
+type Matrix3x4 = ndarray
 type Matrix4x4 = ndarray
 type Quaternion = ndarray
 
@@ -287,7 +288,7 @@ class Z:
     @staticmethod
     def readBool(r: NiReader) -> bool: r.readByte() != 0 if r.v > 0x04000002 else r.readUInt32() != 0
     @staticmethod
-    def string(r: NiReader) -> str: return r.readL32AString() r.v < 0x14010003 else None
+    def string(r: NiReader) -> str: return r.readL32AString() if r.v < 0x14010003 else None
     @staticmethod
     def stringRef(r: NiReader, p: int) -> str: return None
     @staticmethod
@@ -593,15 +594,15 @@ BODY
     }
 '''.replace('BODY', body)))
             elif self.ex == PY:
-                body = '\n'.join([f'            case \'{x}\': node = {x}(r)' for x in self.nodes])
+                body = '\n'.join([f'            case \'{x}\': return type({x}(r))' for x in self.nodes])
                 s.methods.append(Class.Method('''
     @staticmethod
     def read(r: NiReader, nodeType: str) -> NiObject:
         # print(f'{nodeType}: {r.tell()}')
+        def type(o: NiObject) -> NiObject: setattr(o, '$type', nodeType); return o;
         match nodeType:
 BODY
-            case _: Log(f'Tried to read an unsupported NiObject type ({nodeType}).'); node = None
-        setattr(node, '$type', nodeType)
+            case _: log(f'Tried to read an unsupported NiObject type ({nodeType}).'); node = None
         return node
 '''.replace('BODY', body)))
         def bhkRigidBody_values(s, values):

@@ -216,9 +216,12 @@ class store_local:
 
     @classmethod
     def init(cls):
+        system = platform.system()
         cls.init = lambda *args: None
         gameRoots = [os.path.join(x.mountpoint, cls.GAMESPATH) for x in psutil.disk_partitions()]
-        if platform.system() == 'Android': gameRoots.append(os.path.join('/sdcard', cls.GAMESPATH))
+        gameRoots.append(os.path.join(os.path.expanduser('~'), cls.GAMESPATH))
+        gameRoots.append(os.path.join('/Users/Shared', cls.GAMESPATH))
+        if system == 'Android': gameRoots.append(os.path.join('/sdcard', cls.GAMESPATH))
         paths = cls.paths = {x:os.path.join(r,x) for r in gameRoots if os.path.isdir(r) for x in os.listdir(r)}
         # print(f'Local:{paths}')
 

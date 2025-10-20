@@ -44,9 +44,9 @@ match __current__:
         familyKeys = [ "Bethesda", "Unknown" ]
 
         option = GlobalOption(
-            Platform = "UK",
+            Platform = "GL",
             ForceOpen = True,
-            ForcePath = "sample:2",
+            ForcePath = "sample:0",
             Family = "Bethesda",
             Game = "Morrowind", # The Elder Scrolls III: Morrowind
             # Game = "Oblivion", # The Elder Scrolls IV: Oblivion

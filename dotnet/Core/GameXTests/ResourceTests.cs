@@ -21,7 +21,7 @@ public class ResourceTests {
     [DataRow("Tes", $"{HTTP_Oblivion}/Oblivion*.bsa#Oblivion")]
 #endif
     public void ShouldThrow(string familyName, string uri)
-        => Assert.ThrowsException<ArgumentOutOfRangeException>(() => GetFamily(familyName).ParseResource(new Uri(uri)));
+        => Assert.Throws<ArgumentOutOfRangeException>(() => GetFamily(familyName).ParseResource(new Uri(uri)));
 
     [DataTestMethod]
     [DataRow("Tes", $"{GAME}/Oblivion*.bsa#Oblivion", "Oblivion", 0, 6, "Oblivion - Meshes.bsa", "trees/treeginkgo.spt", 6865)]

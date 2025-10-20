@@ -8,7 +8,7 @@ public class FamilyTest {
     [TestMethod]
     public void ShouldGetGame() {
         var family = Some.Family;
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() => family.GetGame("Wrong", out var _));
+        Assert.Throws<ArgumentOutOfRangeException>(() => family.GetGame("Wrong", out var _));
         Assert.IsNotNull(family.GetGame("Missing", out var _));
         Assert.IsNotNull(family.GetGame("Found", out var _));
     }
@@ -23,9 +23,9 @@ public class FamilyTest {
     //public void ShouldOpenPakFile_Paths()
     //{
     //    var family = Some.Family;
-    //    Assert.ThrowsException<ArgumentNullException>(() => family.OpenPakFile_DEL(null, null, null, null));
-    //    Assert.ThrowsException<ArgumentOutOfRangeException>(() => family.OpenPakFile_DEL(family.GetGame("Missing", out var edition), edition, null, null));
-    //    Assert.ThrowsException<ArgumentOutOfRangeException>(() => family.OpenPakFile_DEL(family.GetGame("Found", out var edition), edition, null, null));
+    //    Assert.Throws<ArgumentNullException>(() => family.OpenPakFile_DEL(null, null, null, null));
+    //    Assert.Throws<ArgumentOutOfRangeException>(() => family.OpenPakFile_DEL(family.GetGame("Missing", out var edition), edition, null, null));
+    //    Assert.Throws<ArgumentOutOfRangeException>(() => family.OpenPakFile_DEL(family.GetGame("Found", out var edition), edition, null, null));
     //    Assert.IsNull(family.OpenPakFile_DEL(family.GetGame("Missing", out var edition), edition, null, null, throwOnError: false));
     //    Assert.IsNotNull(family.OpenPakFile_DEL(family.GetGame("Found", out edition), edition, "path", null));
     //}
@@ -33,7 +33,7 @@ public class FamilyTest {
     [TestMethod]
     public void ShouldOpenPakFile_Resource() {
         var family = Some.Family;
-        Assert.ThrowsException<ArgumentNullException>(() => family.OpenPakFile(new Resource { }));
+        Assert.Throws<ArgumentNullException>(() => family.OpenPakFile(new Resource { }));
         //Assert.IsNull(family.OpenPakFile(new Resource { Paths = null, Game = FamilyGame.Empty }, throwOnError: false));
         //Assert.IsNotNull(family.OpenPakFile(new Resource { Paths = new[] { "path" }, Game = family.GetGame("Found") }));
     }

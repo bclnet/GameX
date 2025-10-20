@@ -7,18 +7,18 @@ namespace GameX.Base;
 public class FamilyManagerTest {
     [TestMethod]
     public void ShouldFamily() {
-        Assert.AreEqual(1, FamilyManager.Families.Count);
+        Assert.HasCount(1, FamilyManager.Families);
     }
 
     [TestMethod]
     public void ShouldGetFamily() {
-        Assert.ThrowsException<ArgumentNullException>(() => FamilyManager.GetFamily(null));
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() => FamilyManager.GetFamily("Missing"));
+        Assert.Throws<ArgumentNullException>(() => FamilyManager.GetFamily(null));
+        Assert.Throws<ArgumentOutOfRangeException>(() => FamilyManager.GetFamily("Missing"));
     }
 
     [TestMethod]
     public void ShouldParseFamily() {
-        //Assert.ThrowsException<ArgumentNullException>(() => FamilyManager.ParseFamily(null));
+        //Assert.Throws<ArgumentNullException>(() => FamilyManager.ParseFamily(null));
         //Assert.IsNotNull(FamilyManager.ParseFamily(Some.FamilyJson.Replace("'", "\"")));
     }
 }

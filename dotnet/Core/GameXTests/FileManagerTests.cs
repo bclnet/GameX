@@ -7,7 +7,7 @@ namespace GameX;
 public class FileManagerTests {
     [TestMethod]
     public void MissingEstate_ShouldThrow()
-        => Assert.ThrowsException<ArgumentOutOfRangeException>(() => FamilyManager.GetFamily("Missing"));
+        => Assert.Throws<ArgumentOutOfRangeException>(() => FamilyManager.GetFamily("Missing"));
 
     [DataTestMethod]
     [DataRow("AC", "AC", "*.dat", 4)]

@@ -7,7 +7,7 @@ from PyQt6.QtMultimedia import QMediaPlayer
 from PyQt6.QtMultimediaWidgets import QVideoWidget
 from PyQt6 import QtCore, QtMultimedia
 from gamex import PlatformX, Family, option
-from gamex.util import _find
+from gamex.core.util import _find
 from .SaveFileWidget import SaveFileWidget
 from .OpenWidget import OpenWidget
 from .FileContent import FileContent

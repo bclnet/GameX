@@ -2,7 +2,7 @@ from __future__ import annotations
 import os
 from gamex import FamilyGame, BinaryPakFile
 from gamex.families.GameX import UnknownPakFile
-from gamex.util import _pathExtension
+from gamex.core.util import _pathExtension
 
 # WBGame
 class WBGame(FamilyGame):

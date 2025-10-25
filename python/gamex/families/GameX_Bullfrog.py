@@ -3,7 +3,7 @@ import os
 from gamex import Family, FamilyGame, BinaryPakFile
 from gamex.families.Bullfrog.formats.binary import Binary_Bullfrog, Binary_Populus, Binary_Syndicate
 from gamex.families.GameX import UnknownPakFile
-from gamex.util import _pathExtension
+from gamex.core.util import _pathExtension
 
 # BullfrogGame
 class BullfrogGame(FamilyGame):

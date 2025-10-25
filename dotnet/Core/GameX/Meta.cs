@@ -13,7 +13,6 @@ namespace GameX;
 [DebuggerDisplay("{Path}")]
 public class FileSource {
     internal static readonly Func<BinaryReader, FileSource, PakFile, Task<object>> EmptyObjectFactory = (a, b, c) => null;
-
     // common
     public int Id;
     public string Path;
@@ -23,11 +22,15 @@ public class FileSource {
     public int Compressed;
     public int Flags;
     public ulong Hash;
+    public DateTime Date;
     public BinaryPakFile Pak;
     public IList<FileSource> Parts;
     public byte[] Data;
     public object Tag;
     public object Tag2;
+    // lazy
+    public Action<FileSource> Lazy;
+    public FileSource Fix() { Lazy?.Invoke(this); return this; }
     // cached
     internal Func<BinaryReader, FileSource, PakFile, Task<object>> CachedObjectFactory;
     internal object CachedObjectOption;

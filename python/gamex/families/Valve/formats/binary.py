@@ -5,8 +5,8 @@ from enum import Enum, Flag
 from openstk.gfx import Raster, Texture_Bytes, ITexture, ITextureFrames, TextureFlags, TextureFormat, TexturePixel
 from openstk.poly import Reader, unsafe, X_LumpON, X_LumpNO, X_LumpNO2, X_Lump2NO
 from gamex import PakFile, BinaryPakFile, PakBinary, PakBinaryT, FileSource, MetaInfo, MetaManager, MetaContent, IHaveMetaInfo
-from gamex.compression import decompressBlast
-from gamex.util import _throw, _pathExtension
+from gamex.core.formats.compression import decompressBlast
+from gamex.core.util import _throw, _pathExtension
 from hashlib import md5
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend

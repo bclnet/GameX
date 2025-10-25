@@ -3,7 +3,7 @@ import os
 from gamex import BinaryPakFile
 from gamex.families.Cryptic.formats.binary import Binary_Hogg
 from gamex.families.GameX import UnknownPakFile
-from gamex.util import _pathExtension
+from gamex.core.util import _pathExtension
 
 # CrypticPakFile
 class CrypticPakFile(BinaryPakFile):

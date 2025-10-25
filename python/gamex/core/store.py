@@ -13,7 +13,7 @@ def getPathByKey(key: str, family: str, elem: dict[str, object]):
     # store_steam.init()
     # store_ubisoft.init()
     # store_winreg.init()
-    k,v = key.split(':', 2)
+    k,v = key.split(':', 1)
     match k:
         case 'Steam': store_steam.init(); return store_steam.paths[v] if v in store_steam.paths else None
         case 'Gog': store_gog.init(); return store_gog.paths[v] if v in store_gog.paths else None

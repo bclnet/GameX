@@ -1,5 +1,7 @@
 ﻿using CommandLine;
+using GameX.App.Explorer.Controls;
 using OpenStack;
+using OpenTK;
 using System.Windows;
 [assembly: ThemeInfo(ResourceDictionaryLocation.None, ResourceDictionaryLocation.SourceAssembly)]
 
@@ -38,7 +40,8 @@ namespace GameX.App.Explorer {
 
         void Application_Startup(object sender, StartupEventArgs e) {
             //PlatformX.Activate(OpenGLPlatform.This);
-            //GLViewerControl.ShowConsole = true;
+            //OpenStack.Wpf.Control.GLControl.ShowConsole = true;
+            //ConsoleManager.Show();
             _ = new AppShell();
             Parser.Default.ParseArguments<DefaultOptions, TestOptions, OpenOptions>(args ?? e.Args)
             .MapResult(

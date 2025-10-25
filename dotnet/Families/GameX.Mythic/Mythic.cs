@@ -1,4 +1,5 @@
 ﻿using GameX.Formats.Unknown;
+using GameX.Gamebryo.Formats;
 using GameX.Mythic.Formats;
 using GameX.Transforms;
 using GameX.Unknown;
@@ -27,12 +28,15 @@ public class MythicPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMod
 
     static PakBinary GetPakBinary(FamilyGame game, string extension)
         => extension switch {
-            ".xxx" => Binary_XXX.Current,
+            "" => null,
+            ".mpk" or ".npk" => Binary_Mpk.Current,
             _ => throw new ArgumentOutOfRangeException(nameof(extension)),
         };
 
     static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch {
+            ".nif" => (FileOption.StreamObject, Binary_Nif.Factory),
+            ".crf" => (FileOption.StreamObject, Binary_Crf.Factory),
             _ => UnknownPakFile.ObjectFactory(source, game),
         };
 

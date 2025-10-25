@@ -1,8 +1,8 @@
 import os
 from io import BytesIO
-from gamex.pak import PakBinaryT
-from gamex.meta import FileSource
-from gamex.compression import decompressLzss, decompressZlib
+from gamex.core.pak import PakBinaryT
+from gamex.core.meta import FileSource
+from gamex.core.formats.compression import decompressLzss, decompressZlib
 
 # typedefs
 class Reader: pass

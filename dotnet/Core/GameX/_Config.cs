@@ -1,5 +1,6 @@
 ﻿//#define Arkane
-#define Bethesda
+//#define Beamdog
+//#define Bethesda
 //#define Bioware
 //#define Black
 //#define Blizzard
@@ -14,10 +15,12 @@
 //#define Epic
 //#define Frictional
 //#define Frontier
+//#define Gamebryo
 //#define ID
 //#define IW
-// #define Lucas
+//#define Lucas
 //#define Monolith
+#define Mythic
 //#define Nintendo
 //#define Origin
 //#define Red
@@ -44,7 +47,6 @@ public partial class FamilyManager {
         public string Edition;
         public string ForcePath;
         public bool ForceOpen;
-        //public bool UseMapBuilder = false;
     }
 
 #if Arkane
@@ -66,6 +68,22 @@ public partial class FamilyManager {
         //Game = "W:CP", // Wolfenstein: Cyberpilot [idTech:6]
         //Game = "DL", // Deathloop
         //Missing: Game = "RF", // Redfall (future)
+    };
+#elif Beamdog
+    static readonly string[] FamilyKeys = ["Beamdog", "Unknown"];
+
+    public static GlobalOption Option = new()
+    {
+        Platform = "UK",
+        ForceOpen = true,
+        ForcePath = "sample:0",
+        Family = "Beamdog",
+        Game = "MDK2:HD", // MDK2 HD
+        //Game = "P:T", // Baldur's Gate: Enhanced Edition
+        //Game = "ID", // Baldur's Gate II: Enhanced Edition
+        //Game = "ID:HoW", // Icewind Dale: Heart of Winter
+        //Game = "ID2", // Icewind Dale II
+        //Game = "BG:DA2", // Baldur's Gate: Dark Alliance II
     };
 #elif Bethesda
     static readonly string[] FamilyKeys = ["Bethesda", "Unknown"];
@@ -160,7 +178,23 @@ public partial class FamilyManager {
         ForceOpen = true,
         ForcePath = "sample:*",
         Family = "Bohemia",
-        //Game = "XX", // XX
+        //Game = "FTaFFIaN", // Fairy Tale about Father Frost, Ivan and Nastya
+        //Game = "OF", // Operation Flashpoint: Cold War Crisis
+        //Game = "A", // Arma: Armed Assault
+        //Game = "A2", // Arma 2
+        //Game = "A2:OA", // Arma 2: Operation Arrowhead
+        //Game = "TOH", // Take On Helicopters
+        //Game = "MM2", // Memento Mori 2: Guardians of Immortality
+        //Game = "CC:GM", // Carrier Command: Gaea Mission
+        //Game = "AT", // Arma Tactics [unity]
+        //Game = "A3", // Arma 3
+        //Game = "TOM", // Take On Mars
+        //Game = "DZ", // DayZ
+        //Game = "V", // Vigor
+        //Game = "YL", // Ylands [unity]
+        //Game = "AR", // Arma Reforger
+        //Game = "SYR", // Someday You'll Return [unreal]
+        //Game = "SL", // Silica
     };
 #elif Bullfrog
     static readonly string[] FamilyKeys = ["Bullfrog", "Unknown"];
@@ -362,6 +396,17 @@ public partial class FamilyManager {
         Family = "Frontier",
         Game = "ED"
     };
+#elif Gamebryo
+    static readonly string[] FamilyKeys = ["Gamebryo", "Unknown"];
+
+    public static GlobalOption Option = new()
+    {
+        Platform = "GL",
+        ForceOpen = true,
+        ForcePath = "sample:*",
+        Family = "Gamebryo",
+        Game = "XX"
+    };
 #elif ID
     static readonly string[] FamilyKeys = ["ID", "Unknown"];
 
@@ -510,6 +555,17 @@ public partial class FamilyManager {
         //Game = "FEAR:PM", // F.E.A.R.: Perseus Mandate
         //Game = "FEAR2", // F.E.A.R. 2: Project Origin
         //Game = "FEAR3", // F.E.A.R. 3
+    };
+#elif Mythic
+    static readonly string[] FamilyKeys = ["Mythic", "Unknown"];
+
+    public static GlobalOption Option = new()
+    {
+        Platform = "GL",
+        ForceOpen = true,
+        ForcePath = "sample:0",
+        Family = "Mythic",
+        Game = "DAoC", // Dark Age of Camelot
     };
 #elif Nintendo
     static readonly string[] FamilyKeys = ["Nintendo", "Unknown"];
@@ -755,7 +811,7 @@ public partial class FamilyManager {
         Game = "XX", // XX
     };
 #else
-    static readonly string[] FamilyKeys = ["Arkane", "Bethesda", "Bioware", "Black", "Blizzard", "Bohemia", "Bullfrog", "Capcom", "Cig", "Cryptic", "Crytek", "Cyanide", "EA", "Epic", "Frictional", "Frontier", "ID", "IW", "Lucas", "Monolith", "Nintendo", "Origin", "Red", "Rockstar", "Ubisoft", "Unity", "Unknown", "Valve", "Volition", "WB", "X2K"];
+    static readonly string[] FamilyKeys = ["Arkane", "Beamdog", "Bethesda", "Bioware", "Black", "Blizzard", "Bohemia", "Bullfrog", "Capcom", "Cig", "Cryptic", "Crytek", "Cyanide", "EA", "Epic", "Frictional", "Frontier", "Gamebryo", "ID", "IW", "Lucas", "Monolith", "Mythic", "Nintendo", "Origin", "Red", "Rockstar", "Ubisoft", "Unity", "Unknown", "Valve", "Volition", "WB", "X2K"];
 
     public static GlobalOption Option = new() { };
 #endif

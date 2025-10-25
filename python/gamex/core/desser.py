@@ -3,7 +3,7 @@ import os, io, json
 from enum import Enum, Flag, IntFlag
 from numpy import ndarray, array
 from quaternion import quaternion
-from gamex.globalx import Color3, Color4
+from gamex.core.globalx import Color3, Color4
 
 class FloatEncoder(float):
     def __repr__(self): return format(self, '.9g')

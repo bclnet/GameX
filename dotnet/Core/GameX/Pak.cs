@@ -780,11 +780,11 @@ public class ManyPakFile : BinaryPakFile {
     /// <param name="tag">The tag.</param>
     /// <returns></returns>
     public override Task Read(object tag = default) {
-        Files = Paths.Select(s => new FileSource {
+        Files = [.. Paths.Select(s => new FileSource {
             Path = s.Replace('\\', '/'),
             Pak = Game.IsPakFile(s) ? (BinaryPakFile)Game.CreatePakFileType(new PakState(Vfx, Game, Edition, s)) : default,
-            FileSize = Vfx.FileInfo(s).length,
-        }).ToArray();
+            Lazy = x => { x.FileSize = Vfx.FileInfo(s).length; x.Lazy = null; }
+        })];
         return Task.CompletedTask;
     }
 

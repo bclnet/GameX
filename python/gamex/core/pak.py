@@ -3,8 +3,8 @@ import sys, os, re, time, itertools
 from enum import Enum, Flag
 from io import BytesIO
 from openstk.poly import Reader, GenericPool, SinglePool, StaticPool
-from gamex.meta import FileSource, MetaManager, MetaItem, MetaInfo
-from gamex.util import _throw
+from gamex.core.meta import FileSource, MetaManager, MetaItem, MetaInfo
+from gamex.core.util import _throw
 
 # FileOption
 class FileOption(Flag):
@@ -213,7 +213,7 @@ class BinaryPakFile(PakFile):
         if self.pakBinary: self.pakBinary.process(self)
 
     def _findPath(self, path: str) -> (object, str):
-        paths = path.split(':', 2)
+        paths = path.split(':', 1)
         p = paths[0].replace('\\', '/')
         first = next(iter(self.filesByPath[p]), None) if self.filesByPath and p in self.filesByPath else None
         pak = first.pak if first else None
@@ -250,10 +250,12 @@ class ManyPakFile(BinaryPakFile):
 
     #region PakBinary
     def read(self, tag: object = None) -> None:
+        def lambdax(s): s.fileSize = self.vfx.fileInfo(s)[1]; s.lazy = None
         self.files = [FileSource(
             path = s.replace('\\', '/'),
             pak = self.game.createPakFileType(PakState(self.vfx, self.game, self.edition, s)) if self.game.isPakFile(s) else None,
-            fileSize = self.vfx.fileInfo(s)[1])
+            fileSize = 0,
+            lazy = lambdax) #self.vfx.fileInfo(s)[1])
             for s in self.paths]
 
     def readData(self, file: FileSource, option: object = None) -> BytesIO:

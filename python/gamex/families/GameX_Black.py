@@ -3,7 +3,7 @@ import os
 from gamex import BinaryPakFile
 from gamex.families.Black.formats.binary import Binary_Dat
 from gamex.families.GameX import UnknownPakFile
-from gamex.util import _pathExtension
+from gamex.core.util import _pathExtension
 
 # BlackPakFile
 class BlackPakFile(BinaryPakFile):

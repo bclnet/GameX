@@ -105,20 +105,37 @@ public static class Compression {
     #endregion
 
     #region Zlib
+    public static byte[] DecompressZlibStream(this BinaryReader r, bool noHeader = false) {
+        byte[] buf = new byte[1024], output = new byte[1024]; int outputUsed = 0, count;
+        var z = new Inflater(noHeader);
+        while (!z.IsFinished) {
+            while (z.IsNeedingInput) { if ((count = r.Read(buf, 0, 1024)) <= 0) throw new EndOfStreamException("Unexpected End Of File"); z.SetInput(buf, 0, count); }
+            if (outputUsed == output.Length) { var _ = new byte[output.Length * 2]; Array.Copy(output, _, output.Length); output = _; }
+            try { outputUsed += z.Inflate(output, outputUsed, output.Length - outputUsed); }
+            catch (FormatException e) { throw new IOException(e.ToString()); }
+        }
+        // Adjust reader to point to the next stream correctly.
+        r.BaseStream.Seek(r.BaseStream.Position - z.RemainingInput, SeekOrigin.Begin);
+        z.Reset();
+        // rebuild output
+        var realOutput = new byte[outputUsed];
+        Array.Copy(output, realOutput, outputUsed);
+        return realOutput;
+    }
     public static byte[] DecompressZlib(this BinaryReader r, int length, int newLength, bool noHeader = false) {
         var fileData = r.ReadBytes(length);
-        var inflater = new Inflater(noHeader);
-        inflater.SetInput(fileData, 0, fileData.Length);
+        var z = new Inflater(noHeader);
+        z.SetInput(fileData, 0, fileData.Length);
         int count;
         var buffer = new byte[BufferSize];
         using var s = new MemoryStream();
-        while ((count = inflater.Inflate(buffer)) > 0) s.Write(buffer, 0, count);
+        while ((count = z.Inflate(buffer)) > 0) s.Write(buffer, 0, count);
         return s.ToArray();
     }
     public static int DecompressZlib(byte[] source, byte[] target) {
-        var inflater = new Inflater(false);
-        inflater.SetInput(source, 0, source.Length);
-        return inflater.Inflate(target, 0, target.Length);
+        var z = new Inflater(false);
+        z.SetInput(source, 0, source.Length);
+        return z.Inflate(target, 0, target.Length);
     }
     public static byte[] DecompressZlib2(this BinaryReader r, int length, int newLength) {
         var fileData = r.ReadBytes(length);
@@ -128,12 +145,12 @@ public static class Compression {
         return newFileData;
     }
     public static byte[] CompressZlib(byte[] source, int length) {
-        var deflater = new Deflater(Deflater.BEST_COMPRESSION);
-        deflater.SetInput(source, 0, length);
+        var z = new Deflater(Deflater.BEST_COMPRESSION);
+        z.SetInput(source, 0, length);
         int count;
         var buffer = new byte[BufferSize];
         using var s = new MemoryStream();
-        while ((count = deflater.Deflate(buffer)) > 0) s.Write(buffer, 0, count);
+        while ((count = z.Deflate(buffer)) > 0) s.Write(buffer, 0, count);
         return s.ToArray();
     }
     #endregion
@@ -156,12 +173,12 @@ public static class Compression {
 
     #region Lzma
     public static byte[] DecompressLzma(this BinaryReader r, int length, int newLength) {
-        var decoder = new Decoder();
-        decoder.SetDecoderProperties(r.ReadBytes(5));
+        var z = new Decoder();
+        z.SetDecoderProperties(r.ReadBytes(5));
         var fileData = r.ReadBytes(length);
         using var s = new MemoryStream(fileData);
         using var os = new MemoryStream(newLength);
-        decoder.Code(s, os, fileData.Length, newLength, null);
+        z.Code(s, os, fileData.Length, newLength, null);
         return os.ToArray();
     }
     public static int DecompressLzma(byte[] source, byte[] target) => throw new NotImplementedException();
@@ -169,11 +186,11 @@ public static class Compression {
 
     #region Blast
     public static byte[] DecompressBlast(this BinaryReader r, int length, int newLength) {
-        var decoder = new Blast();
+        var z = new Blast();
         var fs = r.ReadBytes(length);
         //var os = new byte[newLength];
         using var os = new MemoryStream(newLength);
-        decoder.Decompress(fs, os);
+        z.Decompress(fs, os);
         return os.ToArray();
     }
     public static int DecompressBlast(byte[] source, byte[] target) => throw new NotImplementedException();

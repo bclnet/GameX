@@ -27,6 +27,7 @@ public class MODELPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMode
 
     static PakBinary GetPakBinary(FamilyGame game, string extension)
         => extension switch {
+            "" => null,
             ".xxx" => Binary_XXX.Current,
             _ => throw new ArgumentOutOfRangeException(nameof(extension)),
         };

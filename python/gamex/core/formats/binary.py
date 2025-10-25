@@ -5,7 +5,7 @@ from PIL import Image
 from enum import Enum
 from openstk.gfx import Raster, DDS_HEADER, Texture_Bytes, ITexture, TextureFormat, TexturePixel
 from gamex import PakBinary, PakBinaryT, FileSource, BinaryPakFile, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
-from gamex.util import _pathExtension
+from gamex.core.util import _pathExtension
 from zipfile import ZipFile
 
 #region Binary_Bik
@@ -111,6 +111,7 @@ class Binary_Img(IHaveMetaInfo, ITexture):
             case 'RGB': self.format = (self.image.format, (TextureFormat.RGB24, TexturePixel.Unknown))
             # 4×8-bit pixels, true color with transparency mask
             case 'RGBA': self.format = (self.image.format, (TextureFormat.RGBA32, TexturePixel.Unknown))
+            case _: raise Exception(f'Unknown format: {self.image.mode}')
 
         # decode
         if not palette: self.bytes = bytes

@@ -202,7 +202,10 @@
     },
     "DA2": {
       "name": "Dragon Age II",
-      "url": "https://store.steampowered.com/app/1238040",
+      "url": [
+        "https://en.wikipedia.org/wiki/Dragon_Age_II",
+        "https://store.steampowered.com/app/1238040"
+      ],
       "date": "2011-03-08",
       "files": {
         "key": [

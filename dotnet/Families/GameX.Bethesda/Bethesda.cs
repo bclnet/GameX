@@ -77,7 +77,7 @@ public class BethesdaPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileM
 
     static PakBinary GetPakBinary(FamilyGame game, string extension)
         => extension switch {
-            "" => Binary_Bsa.Current,
+            "" => null,
             ".bsa" => Binary_Bsa.Current,
             ".ba2" => Binary_Ba2.Current,
             ".esm" => Binary_Esm.Current,

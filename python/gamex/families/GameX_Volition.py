@@ -2,7 +2,7 @@ from __future__ import annotations
 import os
 from gamex import BinaryPakFile
 from gamex.families.GameX import UnknownPakFile
-from gamex.util import _pathExtension
+from gamex.core.util import _pathExtension
 
 # VolitionPakFile
 class VolitionPakFile(BinaryPakFile):

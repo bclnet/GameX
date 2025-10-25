@@ -44,7 +44,7 @@ public class LoadFileObjectsTest {
 
         // write files
         Parallel.For(0, pak.Files.Count, new ParallelOptions { MaxDegreeOfParallelism = 1 }, async index => {
-            var file = pak.Files[index];
+            var file = pak.Files[index].Fix();
 
             // extract pak
             if (file.Pak != null) await ExportAsync(file.Pak);

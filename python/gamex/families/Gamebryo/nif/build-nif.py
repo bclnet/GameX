@@ -58,8 +58,8 @@ from typing import TypeVar, Generic
 from numpy import ndarray, array
 from openstk.poly import Reader, log
 from gamex import FileSource, PakBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
-from gamex.globalx import Color3, Color4
-from gamex.desser import DesSer
+from gamex.core.globalx import Color3, Color4
+from gamex.core.desser import DesSer
 
 T = TypeVar('T')
 
@@ -143,7 +143,7 @@ static class Z {
         return Blocks;
     }
     public static string ExtractRTTIArgs(NiReader r, string nodeType) {
-        var nameAndArgs = nodeType.Split("\x01");
+        var nameAndArgs = nodeType.Split("\\x01");
         //if (nameAndArgs[0] == "NiDataStream") {
         //    metadata.usage = NiMesh::DataStreamUsage(nameAndArgs[1].toInt());
         //    metadata.access = NiMesh::DataStreamAccess(nameAndArgs[2].toInt());
@@ -396,7 +396,7 @@ DesSer.add({'Ref':RefJsonConverter, 'TexCoord':TexCoordJsonConverter, 'Triangle'
             s.namecw = ('NiReader', 'NiReader'); s.inherit = 'BinaryReader' if self.ex == CS else 'Reader'
             s.values[0].initcw = ('(HeaderString, V) = Z.ParseHeaderStr(b.ReadVAString(0x80, 0xA)); var r = this;', '(self.headerString, self.v) = Z.parseHeaderStr(b.readVAString(128, b\'\\x0A\')); r = self')
         def StringPalette_code(s):
-            s.values[0].typecw = ('string[]', 'list[str]'); s.values[0].initcw = ('Palette = r.ReadL32AString().Split(\'\x00\');', 'self.palette: list[str] = r.readL32AString().split(\'0x00\')')
+            s.values[0].typecw = ('string[]', 'list[str]'); s.values[0].initcw = ('Palette = r.ReadL32AString().Split(\'\\x00\');', 'self.palette: list[str] = r.readL32AString().split(\'0x00\')')
         def TexDesc_values(s, values):
             values.insert(10, Class.Comment(s, 'NiTextureTransform'))
         def BSVertexData_values(s, values):
@@ -586,7 +586,7 @@ DesSer.add({'Ref':RefJsonConverter, 'TexCoord':TexCoordJsonConverter, 'Triangle'
                 s.methods.append(Class.Method('''
     public static NiObject Read(NiReader r, string nodeType) {
         // Console.WriteLine($"{nodeType}: {r.Tell()}");
-        if (nodeType.StartsWith("NiDataStream\x01")) nodeType = Z.ExtractRTTIArgs(r, nodeType);
+        if (nodeType.StartsWith("NiDataStream\\x01")) nodeType = Z.ExtractRTTIArgs(r, nodeType);
         switch (nodeType) {
 BODY
             default: { Log($"Tried to read an unsupported NiObject type ({nodeType})."); return null; }

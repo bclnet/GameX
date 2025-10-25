@@ -2,7 +2,7 @@ from __future__ import annotations
 import os
 from gamex import Family, PakFile, FileSource, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
 from gamex.core.formats.binary import Binary_Dds, Binary_Img, Binary_Pcx, Binary_Snd, Binary_Tga, Binary_Txt
-from gamex.util import _pathExtension
+from gamex.core.util import _pathExtension
 
 # UnknownFamily
 class UnknownFamily(Family):

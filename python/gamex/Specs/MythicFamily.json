@@ -72,6 +72,10 @@
           "url": "https://en.wikipedia.org/wiki/Dark_Age_of_Camelot:_Darkness_Rising"
         }
       },
+      "pakExt": [
+        ".mpk",
+        ".npk"
+      ],
       "files": {
         "key": [
           "WinReg:Electronic Arts/EA Games/Dark Age of Camelot"
@@ -81,17 +85,58 @@
     "WO": {
       "name": "Warhammer Online: Age of Reckoning",
       "date": "2008-09-18",
-      "url": "https://en.wikipedia.org/wiki/Warhammer_Online:_Age_of_Reckoning"
+      "url": "https://en.wikipedia.org/wiki/Warhammer_Online:_Age_of_Reckoning",
+      "dnl": "https://www.returnofreckoning.com/forum/install",
+      "files": {
+        "key": [
+          "WinReg:Electronic Arts/EA Games/xxx"
+        ]
+      }
     },
     "UO": {
       "name": "Ultima Online: Stygian Abyss",
       "date": "2009-09-08",
-      "url": "https://en.wikipedia.org/wiki/Ultima_Online_expansions#Stygian_Abyss"
+      "url": "https://en.wikipedia.org/wiki/Ultima_Online_expansions#Stygian_Abyss",
+      "dnl": "https://uo.com/client-download/",
+      "files": {
+        "key": [
+          "WinReg:Origin Worlds Online/Ultima Online/KR Legacy Beta",
+          "WinReg:EA Games/Ultima Online: Mondain's Legacy/1.00.0000",
+          "WinReg:Origin Worlds Online/Ultima Online/1.0",
+          "WinReg:Origin Worlds Online/Ultima Online Third Dawn/1.0",
+          "WinReg:EA GAMES/Ultima Online Samurai Empire",
+          "WinReg:EA Games/Ultima Online: Mondain's Legacy",
+          "WinReg:EA GAMES/Ultima Online Samurai Empire/1.0",
+          "WinReg:EA GAMES/Ultima Online Samurai Empire/1.00.0000",
+          "WinReg:EA GAMES/Ultima Online: Samurai Empire/1.0",
+          "WinReg:EA GAMES/Ultima Online: Samurai Empire/1.00.0000",
+          "WinReg:EA Games/Ultima Online: Mondain's Legacy/1.0",
+          "WinReg:EA Games/Ultima Online: Mondain's Legacy/1.00.0000",
+          "WinReg:Origin Worlds Online/Ultima Online Samurai Empire BETA/2d/1.0",
+          "WinReg:Origin Worlds Online/Ultima Online Samurai Empire BETA/3d/1.0",
+          "WinReg:Origin Worlds Online/Ultima Online Samurai Empire/2d/1.0",
+          "WinReg:Origin Worlds Online/Ultima Online Samurai Empire/3d/1.0",
+          "WinReg:Electronic Arts/EA Games/Ultima Online Stygian Abyss Classic",
+          "WinReg:Electronic Arts/EA Games/Ultima Online Classic",
+          "Local:Ultima Online Classic",
+          "Local:Ultima Online Enhanced"
+        ]
+      }
     },
     "DA2": {
       "name": "Dragon Age II",
       "date": "2011-03-08",
-      "url": "https://en.wikipedia.org/wiki/Dragon_Age_II"
+      "url": [
+        "https://en.wikipedia.org/wiki/Dragon_Age_II",
+        "https://store.steampowered.com/app/1238040"
+      ],
+      "files": {
+        "key": [
+          "Steam:1238040",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 1238040",
+          "Local:Dragon Age II"
+        ]
+      }
     },
     "UF:QftA": {
       "name": "Ultima Forever: Quest for the Avatar",
@@ -101,7 +146,11 @@
     "DK": {
       "name": "Dungeon Keeper",
       "date": "2014-01-30",
-      "url": "https://en.wikipedia.org/wiki/Dungeon_Keeper_(2014_video_game)"
+      "url": "https://en.wikipedia.org/wiki/Dungeon_Keeper_(2014_video_game)",
+      "dnl": [
+        "https://dungeon-keeper.en.uptodown.com/android/download",
+        "https://dungeon-keeper-ue3.en.softonic.com/android/download"
+      ]
     }
   }
 }

@@ -7,8 +7,8 @@ from openstk.poly import findType
 from openstk.vfx import FileSystem, AggregateFileSystem, NetworkFileSystem, DirectoryFileSystem, VirtualFileSystem
 from openstk.platform import PlatformX
 from gamex import option, familyKeys
-from gamex.pak import PakState, ManyPakFile, MultiPakFile
-from gamex.store import getPathByKey as Store_getPathByKey
+from gamex.core.pak import PakState, ManyPakFile, MultiPakFile
+from gamex.core.store import getPathByKey as Store_getPathByKey
 from .util import _throw, _valueF, _value, _list, _related, _dictTrim
 
 #region Factory
@@ -522,7 +522,7 @@ def init(loadSamples: bool = True):
         pattern = re.compile(r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"', re.DOTALL | re.MULTILINE)
         return re.sub(pattern, replacer, text)
     def familyJsonLoader(path: str) -> dict[str, object]:
-        body = resources.files().joinpath('Specs', path).read_text(encoding='utf-8')
+        body = resources.files().joinpath('../specs', path).read_text(encoding='utf-8')
         return json.loads(commentRemover(body).encode().decode('utf-8-sig'))
 
     # load Families

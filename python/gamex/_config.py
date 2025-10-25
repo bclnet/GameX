@@ -2,13 +2,14 @@ __title__ = "gamex"
 __version__ = "0.0.1"
 # __current__ = "Unknown"
 # __current__ = "Arkane"
-__current__ = "Bethesda"
+# __current__ = "Bethesda"
+# __current__ = "Bioware"
 # __current__ = "Bullfrog"
 # __current__ = "ID"
-# __current__ = "Valve"
-# __current__ = "Red"
-# __current__ = "Bioware"
 # __current__ = "Lucas"
+__current__ = "Mythic"
+# __current__ = "Red"
+# __current__ = "Valve"
 
 class GlobalOption:
     def __init__(self, Platform:str=None, FindKey:str=None, Family:str=None, Game:str=None, Edition:str=None, ForcePath:str=None, ForceOpen:bool=False):
@@ -39,6 +40,21 @@ match __current__:
             # Game = "W:CP", # Wolfenstein: Cyberpilot [idTech:6]
             # Game = "DL", # Deathloop
             # Missing: Game = "RF", # Redfall (future)
+        )
+    case 'Beamdog':
+        familyKeys = [ "Beamdog", "Unknown" ]
+
+        option = GlobalOption(
+            Platform = "GL",
+            ForceOpen = True,
+            ForcePath = "sample:0",
+            Family = "Beamdog",
+            Game = "MDK2:HD", # MDK2 HD
+            #Game = "P:T", # Baldur's Gate: Enhanced Edition
+            #Game = "ID", # Baldur's Gate II: Enhanced Edition
+            #Game = "ID:HoW", # Icewind Dale: Heart of Winter
+            #Game = "ID2", # Icewind Dale II
+            #Game = "BG:DA2", # Baldur's Gate: Dark Alliance II
         )
     case 'Bethesda':
         familyKeys = [ "Bethesda", "Unknown" ]
@@ -128,7 +144,23 @@ match __current__:
             ForceOpen = True,
             ForcePath = "sample:*",
             Family = "Bohemia",
-            # Game = "XX", # XX
+            #Game = "FTaFFIaN", # Fairy Tale about Father Frost, Ivan and Nastya
+            #Game = "OF", # Operation Flashpoint: Cold War Crisis
+            #Game = "A", # Arma: Armed Assault
+            #Game = "A2", # Arma 2
+            #Game = "A2:OA", # Arma 2: Operation Arrowhead
+            #Game = "TOH", # Take On Helicopters
+            #Game = "MM2", # Memento Mori 2: Guardians of Immortality
+            #Game = "CC:GM", # Carrier Command: Gaea Mission
+            #Game = "AT", # Arma Tactics [unity]
+            #Game = "A3", # Arma 3
+            #Game = "TOM", # Take On Mars
+            #Game = "DZ", # DayZ
+            #Game = "V", # Vigor
+            #Game = "YL", # Ylands [unity]
+            #Game = "AR", # Arma Reforger
+            #Game = "SYR", # Someday You'll Return [unreal]
+            #Game = "SL", # Silica
         )
     case 'Bullfrog':
         familyKeys = [ "Bullfrog", "Unknown" ]
@@ -301,6 +333,16 @@ match __current__:
             Family = "Frontier",
             Game = "ED"
         )
+    case 'Gamebryo':
+        familyKeys = [ "Gamebryo", "Unknown" ]
+
+        option = GlobalOption(
+            Platform = "GL",
+            ForceOpen = True,
+            ForcePath = "sample:*",
+            Family = "Gamebryo",
+            Game = "XX"
+        )
     case 'ID':
         familyKeys = [ "ID", "Unknown" ]
 
@@ -451,9 +493,9 @@ match __current__:
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
-            ForcePath = "sample:*",
+            ForcePath = "sample:0",
             Family = "Mythic",
-            # Game = "XX", # XX
+            Game = "DAoC", # Dark Age of Camelot
         )
     case 'Nintendo':
         familyKeys = [ "Nintendo", "Unknown" ]
@@ -672,6 +714,6 @@ match __current__:
             # Game = "XX", # XX
         )
     case _:
-        familyKeys = [ "Arkane", "Bethesda", "Bioware", "Black", "Blizzard", "Bohemia", "Bullfrog", "Capcom", "Cig", "Cryptic", "Crytek", "Cyanide", "EA", "Epic", "Frictional", "Frontier", "ID", "IW", "Lucas", "Monolith", "Nintendo", "Origin", "Red", "Rockstar", "Ubisoft", "Unity", "Unknown", "Valve", "Volition", "WB", "X2K" ]
+        familyKeys = [ "Arkane", "Beamdog", "Bethesda", "Bioware", "Black", "Blizzard", "Bohemia", "Bullfrog", "Capcom", "Cig", "Cryptic", "Crytek", "Cyanide", "EA", "Epic", "Frictional", "Frontier", "Gamebryo", "ID", "IW", "Lucas", "Monolith", "Mythic", "Nintendo", "Origin", "Red", "Rockstar", "Ubisoft", "Unity", "Unknown", "Valve", "Volition", "WB", "X2K" ]
 
         option = GlobalOption()

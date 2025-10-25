@@ -2,9 +2,9 @@ import os, numpy as np
 from pathlib import Path
 from ctypes import c_ulong, c_ulonglong
 from io import BytesIO
-from gamex.pak import PakBinaryT
-from gamex.meta import FileSource
-from gamex.util import _pathExtension
+from gamex.core.pak import PakBinaryT
+from gamex.core.meta import FileSource
+from gamex.core.util import _pathExtension
 
 # typedefs
 class Reader: pass

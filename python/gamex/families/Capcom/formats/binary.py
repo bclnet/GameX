@@ -1,9 +1,9 @@
 import os
 from io import BytesIO
-from gamex.pak import PakBinaryT
-from gamex.meta import FileSource
-from gamex.compression import decompressZlib, decompressZstd
-from gamex.util import _guessExtension
+from gamex.core.pak import PakBinaryT
+from gamex.core.meta import FileSource
+from gamex.core.formats.compression import decompressZlib, decompressZstd
+from gamex.core.util import _guessExtension
 from ..resources.Capcom import RE
 
 # typedefs

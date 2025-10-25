@@ -75,7 +75,7 @@ static class Z {
         return Blocks;
     }
     public static string ExtractRTTIArgs(NiReader r, string nodeType) {
-        var nameAndArgs = nodeType.Split("");
+        var nameAndArgs = nodeType.Split("\x01");
         //if (nameAndArgs[0] == "NiDataStream") {
         //    metadata.usage = NiMesh::DataStreamUsage(nameAndArgs[1].toInt());
         //    metadata.access = NiMesh::DataStreamAccess(nameAndArgs[2].toInt());
@@ -1245,7 +1245,7 @@ public class NiReader : BinaryReader { // X
 /// A list of \\0 terminated strings.
 /// </summary>
 public class StringPalette(NiReader r) { // Z
-    public string[] Palette = r.ReadL32AString().Split(' '); // A bunch of 0x00 seperated strings.
+    public string[] Palette = r.ReadL32AString().Split('\x00'); // A bunch of 0x00 seperated strings.
     public uint Length = r.ReadUInt32();                // Length of the palette string is repeated here.
 }
 
@@ -1891,7 +1891,7 @@ public abstract class NiObject(NiReader r) { // X
 
     public static NiObject Read(NiReader r, string nodeType) {
         // Console.WriteLine($"{nodeType}: {r.Tell()}");
-        if (nodeType.StartsWith("NiDataStream")) nodeType = Z.ExtractRTTIArgs(r, nodeType);
+        if (nodeType.StartsWith("NiDataStream\x01")) nodeType = Z.ExtractRTTIArgs(r, nodeType);
         switch (nodeType) {
             case "NiNode": return new NiNode(r);
             case "NiTriShape": return new NiTriShape(r);

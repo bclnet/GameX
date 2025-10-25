@@ -45,7 +45,7 @@ public static class ImportManager {
 
         // write files
         Parallel.For(0, source.Files.Count, new ParallelOptions { MaxDegreeOfParallelism = MaxDegreeOfParallelism }, async index => {
-            var file = source.Files[index];
+            var file = source.Files[index].Fix();
             var newPath = Path.Combine(filePath, file.Path);
 
             // check directory

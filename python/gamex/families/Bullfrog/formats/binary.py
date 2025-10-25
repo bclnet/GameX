@@ -4,7 +4,7 @@ from enum import Enum
 from io import BytesIO
 from openstk.gfx import Raster, ITextureFrames, TextureFormat, TexturePixel
 from gamex import PakBinary, PakBinaryT, FileSource, MetaInfo, MetaContent, IHaveMetaInfo
-from gamex.util import _pathExtension
+from gamex.core.util import _pathExtension
 
 #region Binary_Bullfrog
 
@@ -201,9 +201,7 @@ class Binary_Fli(IHaveMetaInfo, ITextureFrames):
                     frameHeader = r.readS(self.X_FrameHeader)
                     self.numFrames -= 1
                     # print(f'Frames Remaining: {self.numFrames}, Chunks: {frameHeader.numChunks}')
-                case _:
-                    print(f'Unknown Type: {header.type}')
-                    r.skip(header.size)
+                case _: print(f'Unknown Type: {header.type}'); r.skip(header.size)
             if header.type != self.ChunkType.FRAME and r.tell() != nextPosition: r.seek(nextPosition)
             header = r.readS(self.X_ChunkHeader)
             if not header.isValid or header.type == self.ChunkType.FRAME: break

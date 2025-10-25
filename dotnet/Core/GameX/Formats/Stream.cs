@@ -15,7 +15,7 @@ public class PakBinaryCanStream : PakBinary {
         switch ((string)tag) {
             case null: return Task.CompletedTask;
             case "Set": {
-                    var files = source.Files = new List<FileSource>();
+                    var files = source.Files = [];
                     var data = r.ReadToEnd();
                     // dir /s/b/a-d > .set
                     var lines = Encoding.ASCII.GetString(data)?.Split('\n');

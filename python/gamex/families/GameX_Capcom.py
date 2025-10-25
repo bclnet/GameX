@@ -4,7 +4,7 @@ from gamex import BinaryPakFile
 from gamex.core.formats.binary import Binary_Zip
 from gamex.families.Capcom.formats.binary import Binary_Arc, Binary_Big, Binary_Bundle, Binary_Kpka, Binary_Plist
 from gamex.families.Unity.formats.binary import Binary_Unity
-from gamex.util import _pathExtension
+from gamex.core.util import _pathExtension
 
 # CapcomPakFile
 class CapcomPakFile(BinaryPakFile):

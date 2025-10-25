@@ -1,12 +1,12 @@
 from __future__ import annotations
 import sys, os, re, pathlib
 from io import BytesIO
-from gamex.util import _throw
+from gamex.core.util import _throw
 
 # FileSource
 class FileSource:
     emptyObjectFactory = lambda a, b, c: None
-    def __init__(self, id = None, path = None, offset = None, fileSize = None, packedSize = None, compressed = None, flags = None, hash = None, pak = None, parts = None, data = None, tag = None):
+    def __init__(self, id = None, path = None, offset = None, fileSize = None, packedSize = None, compressed = None, flags = None, hash = None, date = None, pak = None, parts = None, data = None, tag = None, lazy = None):
         self.id = id
         self.path = path
         self.offset = offset
@@ -15,13 +15,20 @@ class FileSource:
         self.compressed = compressed
         self.flags = flags
         self.hash = hash
+        self.date = date
         self.pak = pak
         self.parts = parts
         self.data = data
         self.tag = tag
+        # lazy
+        self.lazy = lazy
         # cache
         self.cachedObjectFactory = None
         self.cachedObjectOption = None
+    def fix(self):
+        print('fix')
+        if self.lazy: self.lazy(self)
+        return self
     def __repr__(self): return f'{self.path}:{self.fileSize}'
 
 # MetaContent

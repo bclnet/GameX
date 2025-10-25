@@ -5,8 +5,8 @@ from typing import TypeVar, Generic
 from numpy import ndarray, array
 from openstk.poly import Reader, log
 from gamex import FileSource, PakBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
-from gamex.globalx import Color3, Color4
-from gamex.desser import DesSer
+from gamex.core.globalx import Color3, Color4
+from gamex.core.desser import DesSer
 
 T = TypeVar('T')
 

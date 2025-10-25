@@ -5,8 +5,8 @@ from PyQt6.QtCore import Qt, QBuffer, QByteArray, QUrl, QMimeData, pyqtSignal
 from PyQt6.QtMultimedia import QMediaPlayer
 from PyQt6.QtMultimediaWidgets import QVideoWidget
 from PyQt6 import QtCore, QtMultimedia
-from gamex.pak import PakFile
-from gamex.meta import MetaContent, MetaInfo
+from gamex.core.pak import PakFile
+from gamex.core.meta import MetaContent, MetaInfo
 from .AppHexWidget import AppHexWidget
 from .AppGfxWidget import AppOpenGLWidget, AppPanda3dWidget, AppPygameWidget
 

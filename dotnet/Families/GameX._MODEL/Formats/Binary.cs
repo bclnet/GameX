@@ -8,6 +8,8 @@ namespace GameX.MODEL.Formats;
 #region Binary_Abc
 
 public class Binary_Abc : IHaveMetaInfo {
+    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Abc(r));
+
     public Binary_Abc(BinaryReader r) {
     }
 

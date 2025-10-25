@@ -314,10 +314,8 @@
     },
     "UO": {
       "name": "Ultima Online",
-      "url": [
-        "https://en.wikipedia.org/wiki/Ultima_Online",
-        "https://uo.com/client-download/"
-      ],
+      "url": "https://en.wikipedia.org/wiki/Ultima_Online",
+      "dnl": "https://uo.com/client-download/",
       "date": "September 24, 1997",
       "searchBy": "AllDir",
       "pakExt": [
@@ -379,7 +377,6 @@
       },
       "files": {
         "key": [
-          "Unknown:UltimaOnline",
           "WinReg:Origin Worlds Online/Ultima Online/KR Legacy Beta",
           "WinReg:EA Games/Ultima Online: Mondain's Legacy/1.00.0000",
           "WinReg:Origin Worlds Online/Ultima Online/1.0",

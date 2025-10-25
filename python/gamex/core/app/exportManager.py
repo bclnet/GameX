@@ -41,7 +41,7 @@ class ExportManager:
         if filePath and not os.path.isdir(filePath): os.makedirs(filePath)
         # write files
         async def lambdaX(index: int):
-            file = source.files[index]
+            file = source.files[index].fix()
             # print(match(file.path))
             if match and not match(file.path): return
             newPath = os.path.join(filePath, file.path) if filePath else None

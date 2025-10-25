@@ -564,8 +564,9 @@ public unsafe class Binary_Img : IHaveMetaInfo, ITexture {
             PixelFormat.Format16bppGrayScale => ((string type, object value))(Image.RawFormat.ToString(), (TextureFormat.L8, TexturePixel.Unknown)),
             PixelFormat.Format8bppIndexed => ((string type, object value))(Image.RawFormat.ToString(), (TextureFormat.RGB24, TexturePixel.Unknown)),
             PixelFormat.Format24bppRgb => ((string type, object value))(Image.RawFormat.ToString(), (TextureFormat.RGB24, TexturePixel.Unknown)),
-            PixelFormat.Format32bppArgb => ((string type, object value))(Image.RawFormat.ToString(), (TextureFormat.RGBA32, TexturePixel.Unknown)),
-            _ => throw new ArgumentOutOfRangeException(),
+            PixelFormat.Format32bppRgb => ((string type, object value))(Image.RawFormat.ToString(), (TextureFormat.RGBA32, TexturePixel.Unknown)),
+            PixelFormat.Format32bppArgb => ((string type, object value))(Image.RawFormat.ToString(), (TextureFormat.ARGB32, TexturePixel.Unknown)),
+            _ => throw new ArgumentOutOfRangeException($"Unknown format: {Image.PixelFormat}"),
         };
 
         // decode
@@ -854,11 +855,11 @@ public unsafe class Binary_Pcx : IHaveMetaInfo, ITexture {
 
 public unsafe class Binary_Plist : PakBinary<Binary_Plist> {
     public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
-        source.Files = ((Dictionary<object, object>)new PlistReader().ReadObject(r.BaseStream)).Select(x => new FileSource {
+        source.Files = [.. ((Dictionary<object, object>)new PlistReader().ReadObject(r.BaseStream)).Select(x => new FileSource {
             Path = (string)x.Key,
             FileSize = ((byte[])x.Value).Length,
             Tag = x.Value,
-        }).ToArray();
+        })];
         return Task.CompletedTask;
     }
 
@@ -1390,12 +1391,12 @@ public class Binary_Zip(object key = null) : PakBinary {
         if (UseSystem) {
             ZipArchive pak;
             source.Tag = pak = new ZipArchive(r.BaseStream, ZipArchiveMode.Read);
-            source.Files = pak.Entries.Cast<ZipArchiveEntry>().Where(s => !s.FullName.EndsWith('/')).Select(s => new FileSource {
+            source.Files = [.. pak.Entries.Cast<ZipArchiveEntry>().Where(s => !s.FullName.EndsWith('/')).Select(s => new FileSource {
                 Path = s.FullName.Replace('\\', '/'),
                 PackedSize = s.CompressedLength,
                 FileSize = s.Length,
                 Tag = s
-            }).ToArray();
+            })];
         }
         else {
             ZipFile pak;
@@ -1403,13 +1404,13 @@ public class Binary_Zip(object key = null) : PakBinary {
             if (Key == null) { }
             else if (Key is string s) pak.Password = s;
             else if (Key is byte[] z) ZipFile_KeyProperty.SetValue(pak, z);
-            source.Files = pak.Cast<ZipEntry>().Where(s => s.IsFile).Select(s => new FileSource {
+            source.Files = [.. pak.Cast<ZipEntry>().Where(s => s.IsFile).Select(s => new FileSource {
                 Path = s.Name.Replace('\\', '/'),
                 Flags = s.IsCrypted ? 1 : 0,
                 PackedSize = s.CompressedSize,
                 FileSize = s.Size,
                 Tag = s,
-            }).ToArray();
+            })];
         }
         return Task.CompletedTask;
     }

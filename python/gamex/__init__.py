@@ -1,10 +1,10 @@
 from ._config import __title__, __version__, option, familyKeys
-from .desser import *
-from .family import *
-from .meta import *
-from .pak import *
-# from .platform import PlatformX
-# from .util import _value
+from .core.desser import *
+from .core.family import *
+from .core.meta import *
+from .core.pak import *
+# from .core.platform import PlatformX
+# from .core.util import _value
 
 init()
 

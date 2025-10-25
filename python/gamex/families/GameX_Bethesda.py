@@ -5,7 +5,7 @@ from gamex.core.formats.binary import Binary_Dds
 from gamex.families.Bethesda.formats.binary import Binary_Ba2, Binary_Bsa, Binary_Esm
 from gamex.families.Gamebryo.formats.binary import Binary_Nif
 from gamex.families.GameX import UnknownPakFile
-from gamex.util import _pathExtension
+from gamex.core.util import _pathExtension
 
 #region BethesdaFamily
 
@@ -38,7 +38,7 @@ class BethesdaPakFile(BinaryPakFile):
     @staticmethod
     def getPakBinary(game: FamilyGame, extension: str) -> PakBinary:
         match extension:
-            case '': return Binary_Bsa()
+            case '': return None
             case '.bsa': return Binary_Bsa()
             case '.ba2': return Binary_Ba2()
             case '.esm': return Binary_Esm()

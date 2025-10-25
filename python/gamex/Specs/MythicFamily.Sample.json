@@ -1,2 +1,19 @@
 ﻿{
+    "DAoC": {
+        "name": "Dark Age of Camelot",
+        "files": [
+            {
+                "path": "charman/startlocs.mpk:startlocs.txt",
+                "type": "Pack"
+            },
+            {
+                "path": "data/idf.mpk:tdl.crf",
+                "type": "Craft"
+            },
+            {
+                "path": "figures/2HDragon.NIF",
+                "type": "Model"
+            }
+        ]
+    }
 }

@@ -6,7 +6,7 @@ from gamex.families.Arkane.formats.binary import Binary_Danae, Binary_Void
 from gamex.families.Valve.formats.binary import Binary_Vpk
 from gamex.families.GameX_Valve import ValvePakFile
 from gamex.families.GameX import UnknownPakFile
-from gamex.util import _pathExtension
+from gamex.core.util import _pathExtension
 
 #region ArkanePakFile
 

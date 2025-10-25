@@ -3,7 +3,7 @@ import os
 from gamex import BinaryPakFile
 from gamex.families.Cig.formats.binary import Binary_P4k
 from gamex.families.GameX import UnknownPakFile
-from gamex.util import _pathExtension
+from gamex.core.util import _pathExtension
 
 # CigPakFile
 class CigPakFile(BinaryPakFile):

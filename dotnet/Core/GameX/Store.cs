@@ -470,15 +470,15 @@ static class Store_WinReg {
         var currentUser64 = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry64);
         foreach (var p in paths)
             try {
-                var keyPath = p.Replace('/', '\\');
+                var keyPath = p.StartsWith("@") ? p[1..].Replace('/', '\\') : $"SOFTWARE\\{p.Replace('/', '\\')}";
                 var key = new Func<RegistryKey>[] {
-                    () => localMachine64.OpenSubKey($"SOFTWARE\\{keyPath}"),
-                    () => currentUser64.OpenSubKey($"SOFTWARE\\{keyPath}"),
-                    () => Registry.ClassesRoot.OpenSubKey($"VirtualStore\\MACHINE\\SOFTWARE\\{keyPath}") }
+                    () => localMachine64.OpenSubKey(keyPath),
+                    () => currentUser64.OpenSubKey(keyPath),
+                    () => Registry.ClassesRoot.OpenSubKey($"VirtualStore\\MACHINE\\{keyPath}") }
                     .Select(x => x()).FirstOrDefault(x => x != null);
                 if (key == null) continue;
                 // search directories
-                var path = new[] { "Path", "Install Dir", "InstallDir", "InstallLocation" }
+                var path = new[] { "Path", "Install Dir", "InstallDir", "InstallLocation", "" }
                     .Select(x => key.GetValue(x) as string)
                     .FirstOrDefault(x => !string.IsNullOrEmpty(x) && Directory.Exists(x));
                 if (path == null) {

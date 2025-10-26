@@ -192,9 +192,7 @@ class BinaryPakFile(PakFile):
             r = Reader(data)
             try:
                 task = objectFactory(r, f, self)
-                if task:
-                    value = task
-                    return value
+                if task: return (value := task)
             except: print(sys.exc_info()[1]); raise
         return data if type == BytesIO or type == object else \
             _throw(f'Stream not returned for {f.path} with {type}')
@@ -250,12 +248,12 @@ class ManyPakFile(BinaryPakFile):
 
     #region PakBinary
     def read(self, tag: object = None) -> None:
-        def lambdax(s): s.fileSize = self.vfx.fileInfo(s)[1]; s.lazy = None
+        def lambdax(x, s): x.fileSize = self.vfx.fileInfo(s)[1]; x.lazy = None
         self.files = [FileSource(
             path = s.replace('\\', '/'),
             pak = self.game.createPakFileType(PakState(self.vfx, self.game, self.edition, s)) if self.game.isPakFile(s) else None,
             fileSize = 0,
-            lazy = lambdax) #self.vfx.fileInfo(s)[1])
+            lazy = lambda x, _s=s: lambdax(x, _s))
             for s in self.paths]
 
     def readData(self, file: FileSource, option: object = None) -> BytesIO:

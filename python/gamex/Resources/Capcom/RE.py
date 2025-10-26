@@ -37,7 +37,7 @@ class MurmurHash3:
         h ^= h >> 16
         return h
 
-file = resources.files().joinpath('RE.zip').open('rb')
+file = resources.files().joinpath('resources', 'Capcom/RE.zip').open('rb')
 pak: ZipFile = ZipFile(file, 'r')
 hashEntries: dict[str, object] = { x.filename:x for x in pak.infolist() }
 hashLookup: dict[str, dict[int, str]] = {}

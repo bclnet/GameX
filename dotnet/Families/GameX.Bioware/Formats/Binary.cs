@@ -23,6 +23,7 @@ public unsafe class Binary_Aurora : PakBinary<Binary_Aurora> {
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     struct KEY_Header {
+        public static (string, int) Struct = ("<7I32s", 60);
         public uint Version;            // Version ("V1  ")
         public uint NumFiles;           // Number of entries in FILETABLE
         public uint NumKeys;            // Number of entries in KEYTABLE.
@@ -35,6 +36,7 @@ public unsafe class Binary_Aurora : PakBinary<Binary_Aurora> {
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     struct KEY_HeaderFile {
+        public static (string, int) Struct = ("<2I2H", 12);
         public uint FileSize;           // BIF Filesize
         public uint FileNameOffset;     // Offset To BIF name
         public ushort FileNameSize;     // Size of BIF name
@@ -43,11 +45,13 @@ public unsafe class Binary_Aurora : PakBinary<Binary_Aurora> {
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     struct KEY_HeaderFileName {
+        public static (string, int) Struct = ("<16s", 16);
         public fixed byte Name[0x10];   // Null-padded string Resource Name (sans extension).
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     struct KEY_HeaderKey {
+        public static (string, int) Struct = ("<16sHI", 22);
         public fixed byte Name[0x10];   // Null-padded string Resource Name (sans extension).
         public ushort ResourceType;     // Resource Type
         public uint Id;                 // Resource ID
@@ -55,6 +59,7 @@ public unsafe class Binary_Aurora : PakBinary<Binary_Aurora> {
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     struct BIFF_Header {
+        public static (string, int) Struct = ("<4I", 16);
         public uint Version;            // Version ("V1  ")
         public uint NumFiles;           // File Count
         public uint NotUsed01;          // Not used
@@ -63,6 +68,7 @@ public unsafe class Binary_Aurora : PakBinary<Binary_Aurora> {
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     struct BIFF_HeaderFile {
+        public static (string, int) Struct = ("<4I", 16);
         public uint FileId;             // File ID
         public uint Offset;             // Offset to File Data.
         public uint FileSize;           // Size of File Data.
@@ -279,12 +285,13 @@ public unsafe class Binary_Aurora : PakBinary<Binary_Aurora> {
 #region Binary_Myp
 
 public unsafe class Binary_Myp : PakBinary<Binary_Myp> {
-    #region Headers : KEY/BIF
+    #region Headers
 
     const uint MYP_MAGIC = 0x0050594d;
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     struct MYP_Header {
+        public static (string, int) Struct = ("<3IQ4I", 36);
         public uint Magic;              // "MYP\0"
         public uint Version;            // Version
         public uint Bom;                // Byte order marker
@@ -304,6 +311,7 @@ public unsafe class Binary_Myp : PakBinary<Binary_Myp> {
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     struct MYP_HeaderFile {
+        public static (string, int) Struct = ("<Q3IQIH", 34);
         public ulong Offset;            //
         public uint HeaderSize;         //
         public uint PackedSize;         //
@@ -317,7 +325,11 @@ public unsafe class Binary_Myp : PakBinary<Binary_Myp> {
 
     public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
         var files = source.Files = [];
-        var hashLookup = TOR.HashLookup;
+        var hashLookup = source.Game.Id switch {
+            "SWTOR" => TOR.HashLookup,
+            "WAR" => WAR.HashLookup,
+            _ => []
+        };
 
         var header = r.ReadS<MYP_Header>();
         header.Verify();

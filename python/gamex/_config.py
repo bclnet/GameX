@@ -3,11 +3,11 @@ __version__ = "0.0.1"
 # __current__ = "Unknown"
 # __current__ = "Arkane"
 # __current__ = "Bethesda"
-# __current__ = "Bioware"
+__current__ = "Bioware"
 # __current__ = "Bullfrog"
 # __current__ = "ID"
 # __current__ = "Lucas"
-__current__ = "Mythic"
+# __current__ = "Mythic"
 # __current__ = "Red"
 # __current__ = "Valve"
 
@@ -90,14 +90,14 @@ match __current__:
             # Game = "MDK2", # MDK2
             # Game = "BG2", # Baldur's Gate II: Shadows of Amn
             # Game = "NWN", # Neverwinter Nights
-            Game = "KotOR", # Star Wars: Knights of the Old Republic
+            # Game = "KotOR", # Star Wars: Knights of the Old Republic
             # Game = "JE", # Jade Empire
             # Game = "ME", # Mass Effect
             # Game = "NWN2", # Neverwinter Nights 2
             # Game = "DA:O", # Dragon Age: Origins
             # Game = "ME2", # Mass Effect 2
             # Game = "DA2", # Dragon Age II
-            # Game = "SWTOR", # Star Wars: The Old Republic
+            Game = "SWTOR", # Star Wars: The Old Republic
             # Game = "ME3", # Mass Effect 3
             # Game = "DA:I", # Dragon Age: Inquisition
             # Game = "ME:A", # Mass Effect: Andromeda
@@ -493,9 +493,12 @@ match __current__:
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
-            ForcePath = "sample:0",
+            ForcePath = "sample:1",
             Family = "Mythic",
-            Game = "DAoC", # Dark Age of Camelot
+            #Game = "DAoC", # Dark Age of Camelot
+            Game = "WAR", # Warhammer Online: Age of Reckoning
+            # Game = "UO", # Ultima Online: Stygian Abyss
+            # Game = "DA2", # Dragon Age II
         )
     case 'Nintendo':
         familyKeys = [ "Nintendo", "Unknown" ]

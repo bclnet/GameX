@@ -15,10 +15,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="..\..\..\python\gamex\Resources\Bioware\TOR.zst" Link="Bioware\TOR.zst" />
-    <EmbeddedResource Include="..\..\..\python\gamex\Resources\Bullfrog\S.zip" Link="Bullfrog\S.zip" />
-    <EmbeddedResource Include="..\..\..\python\gamex\Resources\Capcom\RE.zip" Link="Capcom\RE.zip" />
-    <EmbeddedResource Include="..\..\..\python\gamex\Resources\Red\CP77.zip" Link="Red\CP77.zip" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Bioware\TOR.zst" Link="Bioware\TOR.zst" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Bioware\WAR.zst" Link="Bioware\WAR.zst" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Bullfrog\S.zip" Link="Bullfrog\S.zip" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Capcom\RE.zip" Link="Capcom\RE.zip" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Red\CP77.zip" Link="Red\CP77.zip" />
   </ItemGroup>
 
   <ItemGroup>

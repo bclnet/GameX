@@ -378,17 +378,17 @@ class store_winreg:
     @staticmethod
     def findRegistryPath(paths: list[str]) -> str:
         for p in paths:
-            keyPath = p.replace('/', '\\')
-            try: key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, f'SOFTWARE\\{keyPath}', 0, winreg.KEY_READ)
+            keyPath = p[1:].replace('/', '\\') if p.startswith('@') else f'SOFTWARE\\{p.replace('/', '\\')}'
+            try: key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, keyPath, 0, winreg.KEY_READ)
             except FileNotFoundError:
-                try: key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, f'SOFTWARE\\{keyPath}', 0, winreg.KEY_READ)
+                try: key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, keyPath, 0, winreg.KEY_READ)
                 except FileNotFoundError:
-                    try: key = winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, f'VirtualStore\\MACHINE\\SOFTWARE\\{keyPath}', 0, winreg.KEY_READ)
+                    try: key = winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, f'VirtualStore\\MACHINE\\{keyPath}', 0, winreg.KEY_READ)
                     except FileNotFoundError: key = None
             if key is None: continue
             # search directories
             path = None
-            for search in ['Path', 'Install Dir', 'InstallDir', 'InstallLocation']:
+            for search in ['Path', 'Install Dir', 'InstallDir', 'InstallLocation', '']:
                 try:
                     val = winreg.QueryValueEx(key, search)[0]
                     if os.path.isdir(val): path = val; break

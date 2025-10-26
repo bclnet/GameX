@@ -18,7 +18,7 @@ class BiowarePakFile(BinaryPakFile):
         # print(game.engine)
         match game.engine[0]:
             case 'Aurora': return Binary_Aurora()
-            case 'HeroEngine': return Binary_Myp()
+            case 'Hero': return Binary_Myp()
             case 'Odyssey': return Binary_Myp()
             case _: raise Exception(f'Unknown: {game.engine[0]}')
 

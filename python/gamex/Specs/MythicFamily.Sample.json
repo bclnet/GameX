@@ -7,12 +7,34 @@
                 "type": "Pack"
             },
             {
-                "path": "data/idf.mpk:tdl.crf",
+                "path": "mft.myp",
+                "type": "X"
+            },
+            {
+                "path": "data/ifd.mpk:tdl.crf",
                 "type": "Craft"
             },
             {
                 "path": "figures/2HDragon.NIF",
                 "type": "Model"
+            }
+        ]
+    },
+    "WAR": {
+        "name": "Warhammer Online: Age of Reckoning",
+        "files": [
+            {
+                "path": "data.myp",
+                "type": "Pack"
+            }
+        ]
+    },
+    "UO": {
+        "name": "Ultima Online: Stygian Abyss",
+        "files": [
+            {
+                "path": "xx",
+                "type": "xx"
             }
         ]
     }

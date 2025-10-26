@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Core\GameX\GameX.csproj" />
+    <ProjectReference Include="..\GameX.Bioware\GameX.Bioware.csproj" />
     <ProjectReference Include="..\GameX.Gamebryo\GameX.Gamebryo.csproj" />
   </ItemGroup>
 

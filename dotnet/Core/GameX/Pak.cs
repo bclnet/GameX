@@ -502,7 +502,7 @@ public abstract class BinaryPakFile(PakState state, PakBinary pakBinary) : PakFi
     /// Opens this instance.
     /// </summary>
     public async override void Opening() {
-        await Read();
+        await Read(Tag);
         await Process();
     }
 
@@ -628,12 +628,7 @@ public abstract class BinaryPakFile(PakState state, PakBinary pakBinary) : PakFi
             Task<object> task = null;
             try {
                 task = objectFactory(r, f, this);
-                if (task != null) {
-                    value = await task;
-                    return value is T z ? z
-                        : value is IRedirected<T> y ? y.Value
-                        : throw new InvalidCastException();
-                }
+                if (task != null) return (value = await task) is T z ? z : value is IRedirected<T> y ? y.Value : throw new InvalidCastException();
             }
             catch (Exception e) { Log(e.Message); throw e; }
             finally { if (task != null && !(value != null && value is IDisposable)) r.Dispose(); }

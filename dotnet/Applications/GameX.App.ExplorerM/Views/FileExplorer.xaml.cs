@@ -81,8 +81,9 @@ namespace GameX.App.Explorer.Views {
                 if (_selectedItem == value) return;
                 _selectedItem = value;
                 if (value == null) { OnInfo(); return; }
+                var src = (value.Source as FileSource)?.Fix();
+                var pak = src?.Pak;
                 try {
-                    var pak = (value.Source as FileSource)?.Pak;
                     if (pak != null) {
                         if (pak.Status == PakFile.PakStatus.Opened) return;
                         pak.Open(value.Items, Resource);

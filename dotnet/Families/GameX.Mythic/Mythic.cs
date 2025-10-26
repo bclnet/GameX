@@ -1,4 +1,5 @@
-﻿using GameX.Formats.Unknown;
+﻿using GameX.Bioware.Formats;
+using GameX.Formats.Unknown;
 using GameX.Gamebryo.Formats;
 using GameX.Mythic.Formats;
 using GameX.Transforms;
@@ -30,6 +31,7 @@ public class MythicPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMod
         => extension switch {
             "" => null,
             ".mpk" or ".npk" => Binary_Mpk.Current,
+            ".myp" => Binary_Myp.Current,
             _ => throw new ArgumentOutOfRangeException(nameof(extension)),
         };
 

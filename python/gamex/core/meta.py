@@ -26,7 +26,6 @@ class FileSource:
         self.cachedObjectFactory = None
         self.cachedObjectOption = None
     def fix(self):
-        print('fix')
         if self.lazy: self.lazy(self)
         return self
     def __repr__(self): return f'{self.path}:{self.fileSize}'

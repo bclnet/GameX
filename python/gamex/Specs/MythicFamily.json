@@ -29,7 +29,16 @@
     "GO": {
       "name": "Godzilla Online",
       "date": "1998-11-01",
-      "url": "https://en.wikipedia.org/wiki/Godzilla_Online"
+      "url": [
+        "https://en.wikipedia.org/wiki/Godzilla_Online",
+        "https://www.reddit.com/r/lostmedia/comments/zzdz8a/partially_lost_godzilla_online_a_1998_godzilla/"
+      ],
+      "dnl": "https://archive.org/details/godzilla_202212",
+      "files": {
+        "key": [
+          "Archive:Godzilla_X"
+        ]
+      }
     },
     "ST": {
       "name": "Starship Troopers: Battlespace",
@@ -44,7 +53,11 @@
     "SB": {
       "name": "Spellbinder: The Nexus Conflict",
       "date": "1999-12-04",
-      "url": "https://en.wikipedia.org/wiki/Spellbinder:_The_Nexus_Conflict"
+      "url": "https://en.wikipedia.org/wiki/Spellbinder:_The_Nexus_Conflict",
+      "dnl": "https://archive.org/details/SpellbinderTheNexusConflictDemo",
+      "files": {
+        "key": []
+      }
     },
     "ID4": {
       "name": "ID4 Online",
@@ -74,22 +87,26 @@
       },
       "pakExt": [
         ".mpk",
-        ".npk"
+        ".npk",
+        ".myp"
       ],
       "files": {
         "key": [
-          "WinReg:Electronic Arts/EA Games/Dark Age of Camelot"
+          "WinReg:Electronic Arts/EA Games/Dark Age of Camelot",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Dark Age of Camelot"
         ]
       }
     },
-    "WO": {
+    "WAR": {
       "name": "Warhammer Online: Age of Reckoning",
       "date": "2008-09-18",
       "url": "https://en.wikipedia.org/wiki/Warhammer_Online:_Age_of_Reckoning",
       "dnl": "https://www.returnofreckoning.com/forum/install",
+      "engine": "Gamebryo",
+      "pakExt": ".myp",
       "files": {
         "key": [
-          "WinReg:Electronic Arts/EA Games/xxx"
+          "WinReg:@Return of Reckoning/Return of Reckoning"
         ]
       }
     },

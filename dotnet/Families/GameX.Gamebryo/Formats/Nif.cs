@@ -1890,7 +1890,7 @@ public class MorphWeight(NiReader r) { // Y
 public abstract class NiObject(NiReader r) { // X
 
     public static NiObject Read(NiReader r, string nodeType) {
-        // Console.WriteLine($"{nodeType}: {r.Tell()}");
+        Console.WriteLine($"{nodeType}: {r.Tell()}");
         if (nodeType.StartsWith("NiDataStream\x01")) nodeType = Z.ExtractRTTIArgs(r, nodeType);
         switch (nodeType) {
             case "NiNode": return new NiNode(r);

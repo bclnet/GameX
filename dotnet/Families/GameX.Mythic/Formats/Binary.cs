@@ -1,4 +1,3 @@
-using SharpCompress.Common;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -21,7 +20,7 @@ public unsafe class Binary_Crf : IHaveMetaInfo {
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     struct RealmInfo {
-        public static (string, int) Struct = ("<5I", sizeof(RealmInfo));
+        public static (string, int) Struct = ("<5I", 20);
         public uint RecipeCount;
         public uint CategoryCount;
         public uint RecipeListOffset;
@@ -31,7 +30,7 @@ public unsafe class Binary_Crf : IHaveMetaInfo {
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     struct Header {
-        public static (string, int) Struct = ("<4I15I", sizeof(Header));
+        public static (string, int) Struct = ("<19I", 76);
         public uint Version;
         public uint StringsBlockSize;
         public uint StringsCount;
@@ -47,7 +46,14 @@ public unsafe class Binary_Crf : IHaveMetaInfo {
         var magic = r.ReadUInt32();
         if (magic != 0x66 && magic != 0x67) throw new FormatException("BAD MAGIC");
         var header = r.ReadS<Header>();
-        if (header.Version != 0x66 && header.Version != 0x67) throw new FormatException("BAD MAGIC");
+        //if (header.Version != magic) throw new FormatException("BAD MAGIC");
+        r.Seek(header.StringsOffset);
+        var stringsData = r.ReadFAString((int)header.StringsBlockSize);
+        var stringsIndexTable = r.ReadPArray<uint>("I", header.StringsCount);
+        var strings = new List<string>();
+        for (var x = 1; x < header.StringsCount; x++)
+            strings.Add(stringsData[(int)stringsIndexTable[x - 1]..(int)(stringsIndexTable[x] - stringsIndexTable[x - 1] - 1)]);
+        strings.Add(stringsData[(int)stringsIndexTable[^0]..(int)(header.StringsBlockSize - 3 - stringsIndexTable[^1])]);
     }
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [

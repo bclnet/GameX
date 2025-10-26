@@ -122,8 +122,9 @@ class FileExplorer(QWidget):
         if self._selectedItem == value: return
         self._selectedItem = value
         if not value: self.onInfo(); return
+        src = value.source.fix() if isinstance(value.source, FileSource) else None
+        pak = src.pak if src else None
         try:
-            pak = value.source.pak if isinstance(value.source, FileSource) else None
             if pak:
                 if pak.status == PakFile.PakStatus.Opened: return
                 pak.open(value.items, self.resource)

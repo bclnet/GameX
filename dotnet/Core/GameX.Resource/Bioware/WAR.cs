@@ -8,7 +8,7 @@ using ZstdNet;
 
 namespace GameX.Bioware;
 
-public static class TOR {
+public static class WAR {
     class HashRecord {
         public string Hash1 { get; set; }
         public string Hash2 { get; set; }
@@ -23,9 +23,9 @@ public static class TOR {
         }
     }
 
-    static TOR() {
-        var assembly = typeof(TOR).Assembly;
-        using var s = assembly.GetManifestResourceStream("GameX.Resource.Bioware.TOR.zst");
+    static WAR() {
+        var assembly = typeof(WAR).Assembly;
+        using var s = assembly.GetManifestResourceStream("GameX.Resource.Bioware.WAR.zst");
         using var r = new StreamReader(new DecompressionStream(s));
         using var csv = new CsvReader(r, new CsvConfiguration(CultureInfo.InvariantCulture) { HasHeaderRecord = false, Delimiter = "#" });
         csv.Context.RegisterClassMap<HashRecordMap>();

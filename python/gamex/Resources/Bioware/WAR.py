@@ -3,8 +3,8 @@ from zipfile import ZipFile
 from io import BytesIO
 from importlib import resources
 
-with resources.files().joinpath('C977.zip').open('rb') as f:
-    pak: ZipFile = ZipFile(f, 'r')
+file = resources.files().joinpath('resources', 'Bioware/WAR.zst').open('rb')
+pak: ZipFile = ZipFile(file, 'r')
 hashEntries: dict[str, object] = { x.filename:x for x in pak.infolist() }
 
 hashLookup: dict[str, dict[int, str]] = {}

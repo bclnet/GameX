@@ -38,7 +38,8 @@ public class BiowarePakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMo
         => game.Engine.n switch {
             //"Infinity" => PakBinary_Infinity.Instance,
             "Aurora" => Binary_Aurora.Current,
-            "HeroEngine" => Binary_Myp.Current,
+            "Hero" => Binary_Myp.Current,
+            "Odyssey" => Binary_Myp.Current,
             _ => throw new ArgumentOutOfRangeException(nameof(game.Engine))
         };
 

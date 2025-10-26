@@ -1,7 +1,7 @@
 ﻿//#define Arkane
 //#define Beamdog
 //#define Bethesda
-//#define Bioware
+#define Bioware
 //#define Black
 //#define Blizzard
 //#define Bohemia
@@ -20,7 +20,7 @@
 //#define IW
 //#define Lucas
 //#define Monolith
-#define Mythic
+//#define Mythic
 //#define Nintendo
 //#define Origin
 //#define Red
@@ -116,7 +116,7 @@ public partial class FamilyManager {
         ForceOpen = true,
         ForcePath = "sample:0",
         Family = "Bioware",
-        Game = "SS", // Shattered Steel
+        //Game = "SS", // Shattered Steel
         //Game = "BG", // Baldur's Gate
         //Game = "MDK2", // MDK2
         //Game = "BG2", // Baldur's Gate II: Shadows of Amn
@@ -128,7 +128,7 @@ public partial class FamilyManager {
         //Game = "DA:O", // Dragon Age: Origins
         //Game = "ME2", // Mass Effect 2
         //Game = "DA2", // Dragon Age II
-        //Game = "SWTOR", // Star Wars: The Old Republic
+        Game = "SWTOR", // Star Wars: The Old Republic
         //Game = "ME3", // Mass Effect 3
         //Game = "DA:I", // Dragon Age: Inquisition
         //Game = "ME:A", // Mass Effect: Andromeda
@@ -565,7 +565,10 @@ public partial class FamilyManager {
         ForceOpen = true,
         ForcePath = "sample:0",
         Family = "Mythic",
-        Game = "DAoC", // Dark Age of Camelot
+        //Game = "DAoC", // Dark Age of Camelot
+        Game = "WAR", // Warhammer Online: Age of Reckoning
+        //Game = "UO", // Ultima Online: Stygian Abyss
+        //Game = "DA2", // Dragon Age II
     };
 #elif Nintendo
     static readonly string[] FamilyKeys = ["Nintendo", "Unknown"];

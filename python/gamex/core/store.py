@@ -43,7 +43,7 @@ class store_abandon:
         # query games
         for s in [s for s in os.listdir(root)]:
             for t in [os.path.join(s, t) for t in os.listdir(os.path.join(root, s))]:
-                paths[t] = os.path.join(root, t)
+                paths[t.replace('\\', '/')] = os.path.join(root, t)
         # print(f'Abandon:{paths}')
 
 #endregion
@@ -63,7 +63,7 @@ class store_archive:
         # query games
         for s in [s for s in os.listdir(root)]:
             for t in [os.path.join(s, t) for t in os.listdir(os.path.join(root, s))]:
-                paths[t] = os.path.join(root, t)
+                paths[t.replace('\\', '/')] = os.path.join(root, t)
         # print(f'Archive:{paths}')
 
 #endregion

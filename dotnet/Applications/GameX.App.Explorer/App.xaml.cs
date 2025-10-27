@@ -41,7 +41,8 @@ namespace GameX.App.Explorer {
         void Application_Startup(object sender, StartupEventArgs e) {
             //PlatformX.Activate(OpenGLPlatform.This);
             //OpenStack.Wpf.Control.GLControl.ShowConsole = true;
-            //ConsoleManager.Show();
+
+            ConsoleManager.Show();
             _ = new AppShell();
             Parser.Default.ParseArguments<DefaultOptions, TestOptions, OpenOptions>(args ?? e.Args)
             .MapResult(

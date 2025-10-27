@@ -196,6 +196,7 @@ public partial class FamilyManager {
             : null;
         if (vfx != null) return vfx.Next();
         var baseRoot = string.IsNullOrEmpty(subPath) ? path.Root : Path.Combine(path.Root, subPath);
+        if (baseRoot.EndsWith("/") || baseRoot.EndsWith("\\")) baseRoot = baseRoot[..^1];
         var basePath = path?.Paths?.FirstOrDefault();
         vfx = new DirectoryFileSystem(baseRoot, basePath);
         return vfx.Next();

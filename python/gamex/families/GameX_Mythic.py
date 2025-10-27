@@ -3,6 +3,7 @@ import os
 from gamex import BinaryPakFile
 from gamex.families.GameX import UnknownPakFile
 from gamex.families.Mythic.formats.binary import Binary_Mpk, Binary_Crf
+from gamex.families.Bioware.formats.binary import Binary_Myp
 from gamex.families.Gamebryo.formats.binary import Binary_Nif
 from gamex.core.util import _pathExtension
 
@@ -17,6 +18,7 @@ class MythicPakFile(BinaryPakFile):
         match extension:
             case '': return None
             case '.mpk' | '.npk': return Binary_Mpk()
+            case '.myp' | '.npk': return Binary_Myp()
             case _: raise Exception(f'Unknown: {extension}')
 
     @staticmethod

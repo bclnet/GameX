@@ -1,13 +1,8 @@
-import os, pathlib
-from zipfile import ZipFile
-from io import BytesIO
+import io, csv
 from importlib import resources
+from zstandard import ZstdDecompressor
 
-file = resources.files().joinpath('resources', 'Bioware/WAR.zst').open('rb')
-pak: ZipFile = ZipFile(file, 'r')
-hashEntries: dict[str, object] = { x.filename:x for x in pak.infolist() }
-
-hashLookup: dict[str, dict[int, str]] = {}
-@staticmethod
-def getHashLookup(path: str) -> dict[int, str]:
-    pass
+with resources.files().joinpath('WAR.zst').open('rb') as f:
+    file = io.StringIO(ZstdDecompressor().decompress(f.read()).decode('utf-8'))
+    reader = csv.reader(file, delimiter='#')
+    hashLookup: dict[int, str] = { int(f'0x{x[0]}{x[1]}', 16):x[2] for x in reader }

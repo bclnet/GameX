@@ -91,7 +91,7 @@ def _main() -> None:
             proxies[key] = proxy
 
     http_client = httpx.Client(
-        proxies=proxies or None,
+        # proxies=proxies or None,
         http2=can_use_http2(),
     )
     # openai.http_client = http_client

@@ -8,5 +8,5 @@ from .core.pak import *
 
 init()
 
-unknown = getFamily('Unknown')
-unknownPakFile = unknown.openPakFile('game:/#APP', False)
+# unknown = getFamily('Unknown')
+# unknownPakFile = unknown.openPakFile('game:/#APP', False)

@@ -161,8 +161,7 @@ class Binary_Ba2(PakBinaryT):
         if file.fileInfo == None:
             return BytesIO(
                 decompressZlib(r, file.packedSize, file.fileSize) if file.compressed != 0 else \
-                r.readBytes(file.fileSize)
-                )
+                r.readBytes(file.fileSize))
 
         # Texture BA2 Format
         elif file.fileInfo is self.F4_Texture:

@@ -786,13 +786,13 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
     depth: int = 0
     mipMaps: int = 1
     texFlags: TextureFlags = 0
-    def lambdaX(self) -> Texture_Bytes:
+    def _lambdax(self) -> Texture_Bytes:
         tex = self.textures[0]
         self.width = tex.width; self.height = tex.height
         buf = bytearray(self.width * self.height * 3); mv = memoryview(buf)
         Raster.blitByPalette(mv, 3, tex.pixels, tex.palette, 3)
         return Texture_Bytes(buf, self.format, None)
-    def create(self, platform: str, func: callable): return func(lambdaX)
+    def create(self, platform: str, func: callable): return func(_lambdax)
 
     #endregion
 
@@ -1253,8 +1253,7 @@ class Binary_Wad3(PakBinaryT):
         r.seek(file.offset)
         return BytesIO(
             r.readBytes(file.fileSize) if file.compressed == 0 else \
-            _throw('NotSupportedException')
-            )
+            _throw('NotSupportedException'))
 
 #endregion
 
@@ -1334,7 +1333,7 @@ class Binary_Wad3X(IHaveMetaInfo, ITexture):
     mipMaps: int = 1
     texFlags: TextureFlags = 0
 
-    def lambdaX(self) -> Texture_Bytes:
+    def _lambdax(self) -> Texture_Bytes:
         bbp = 4 if self.transparent else 3
         buf = bytearray(sum([len(x) for x in self.pixels]) * bbp); mv = memoryview(buf)
         spans = [range(0, 0)] * len(self.pixels); offset = 0
@@ -1342,7 +1341,7 @@ class Binary_Wad3X(IHaveMetaInfo, ITexture):
             size = len(p) * bbp; span = spans[i] = range(offset, offset + size); offset += size
             Raster.blitByPalette(mv[span.start:span.stop], bbp, p, self.palette, 3, 0xFF if self.transparent else None)
         return Texture_Bytes(buf, self.format[1], spans)
-    def create(self, platform: str, func: callable): return func(lambdaX)
+    def create(self, platform: str, func: callable): return func(_lambdax)
 
     #endregion
 

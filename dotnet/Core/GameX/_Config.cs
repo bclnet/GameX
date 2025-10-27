@@ -1,7 +1,7 @@
 ﻿//#define Arkane
 //#define Beamdog
 //#define Bethesda
-#define Bioware
+//#define Bioware
 //#define Black
 //#define Blizzard
 //#define Bohemia
@@ -20,7 +20,7 @@
 //#define IW
 //#define Lucas
 //#define Monolith
-//#define Mythic
+#define Mythic
 //#define Nintendo
 //#define Origin
 //#define Red
@@ -565,8 +565,11 @@ public partial class FamilyManager {
         ForceOpen = true,
         ForcePath = "sample:0",
         Family = "Mythic",
+        //Game = "RM", // Rolemaster: Magestorm
+        Game = "AO", // Aliens Online
+        //Game = "GO", // Godzilla Online
         //Game = "DAoC", // Dark Age of Camelot
-        Game = "WAR", // Warhammer Online: Age of Reckoning
+        //Game = "WAR", // Warhammer Online: Age of Reckoning
         //Game = "UO", // Ultima Online: Stygian Abyss
         //Game = "DA2", // Dragon Age II
     };

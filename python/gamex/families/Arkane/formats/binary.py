@@ -75,8 +75,7 @@ class Binary_Danae(PakBinaryT):
         r.seek(file.offset)
         return BytesIO(
             decompressBlast(r, file.packedSize, file.fileSize) if (file.compressed & 1) != 0 else \
-            r.readBytes(file.packedSize)
-            )
+            r.readBytes(file.packedSize))
 
 #endregion
 

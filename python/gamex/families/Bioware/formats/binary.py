@@ -2,7 +2,8 @@ import os
 from io import BytesIO
 from gamex.core.pak import PakBinaryT
 from gamex.core.meta import FileSource
-from ....resources.Bioware import TOR #, WAR
+from gamex.core.formats.compression import decompressZstd, decompressZlib
+from ....resources.Bioware import TOR, WAR
 
 # typedefs
 class Reader: pass
@@ -35,7 +36,7 @@ class Binary_Myp(PakBinaryT):
             self.unk1, \
             self.unk2 = tuple
         def verify(self):
-            if self.magic != self.MYP_MAGIC: raise Exception('Not a .tor file (Wrong file header)')
+            if self.magic != Binary_Myp.MYP_MAGIC: raise Exception('Not a .tor file (Wrong file header)')
             if self.version != 5 and self.version != 6: raise Exception(f'Only versions 5 and 6 are supported, file has {self.version}')
             if self.bom != 0xfd23ec43: raise Exception('Unexpected byte order')
             if self.tableOffset == 0: raise Exception('File is empty')
@@ -59,10 +60,42 @@ class Binary_Myp(PakBinaryT):
         match source.game.id:
             case 'SWTOR': hashLookup = TOR.hashLookup
             case 'WAR': hashLookup = WAR.hashLookup
-            case _: hashLookup = []
+            case _: hashLookup = {}
 
-        header = r.readS(MYP_Header)
+        header = r.readS(self.MYP_Header)
         header.verify()
         source.version = header.version
 
-        hashLookup = RE.getHashLookup(f'{source.game.resource}.list') if source.game.resource else None
+        tableOffset = header.tableOffset
+        while tableOffset != 0:
+            r.seek(tableOffset)
+
+            numFiles = r.readInt32()
+            if numFiles == 0: break
+            tableOffset = r.readInt64()
+
+            headerFiles = r.readSArray(self.MYP_HeaderFile, numFiles)
+            for i in range(numFiles):
+                headerFile = headerFiles[i]
+                if headerFile.offset == 0: continue
+                hash = headerFile.digest
+                print(hash)
+                exit(0)
+                path = hashLookup[hash].replace('\\', '/') if hash in hashLookup else f'{hash:02X}.bin'
+                files.append(FileSource(
+                    id = i,
+                    path = path[1:] if path.startswith('/') else path,
+                    fileSize = headerFile.fileSize,
+                    packedSize = headerFile.packedSize,
+                    offset = headerFile.offset + headerFile.headerSize,
+                    hash = hash,
+                    compressed = headerFile.compressed))
+
+    # readData
+    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+        if file.fileSize == 0: return BytesIO()
+        r.seek(file.offset)
+        return BytesIO(
+                r.readBytes(file.fileSize) if file.compressed == 0 else \
+                decompressZstd(r, file.packedSize, file.fileSize) if source.version == 6 else \
+                decompressZlib(r, file.packedSize, file.fileSize))

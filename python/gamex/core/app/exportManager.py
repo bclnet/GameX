@@ -40,7 +40,7 @@ class ExportManager:
         # create directory
         if filePath and not os.path.isdir(filePath): os.makedirs(filePath)
         # write files
-        async def lambdaX(index: int):
+        async def _lambdax(index: int):
             file = source.files[index].fix()
             # print(match(file.path))
             if match and not match(file.path): return
@@ -59,7 +59,7 @@ class ExportManager:
                     for part in file.parts: await ExportManager.exportFileAsync(part, source, os.path.join(filePath, part.path), option)
                 if next: next(file, index)
             except Exception as e: error(file, repr(e)) if error else None # f'Exception: {str(e)}'
-        await parallelFor(from_, len(source.files), { 'max': ExportManager.MaxDegreeOfParallelism }, lambdaX)
+        await parallelFor(from_, len(source.files), { 'max': ExportManager.MaxDegreeOfParallelism }, _lambdax)
         # write pak-raw
         # if FileOption.Marker in fo: await StreamPakFile(source, new PakState(source.Vfx, source.Game, source.Edition, filePath)).Write(null)
 

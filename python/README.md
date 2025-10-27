@@ -17,6 +17,6 @@ print(family)
 ```
 https://stackoverflow.com/questions/13689628/is-there-a-python-equivalent-to-memcpy
 
-pip3 install numba --pre
+## pip3 install numba --pre
 pip3 install --editable ../OpenStack/python
 pip3 install --editable .

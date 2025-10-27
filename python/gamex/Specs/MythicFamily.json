@@ -19,12 +19,27 @@
     "RM": {
       "name": "Rolemaster: Magestorm",
       "date": "1996-01-01",
-      "url": "https://en.wikipedia.org/wiki/Magestorm"
+      "url": "https://en.wikipedia.org/wiki/Magestorm",
+      "dnl": "https://www.gamemodi.net/#magestorm",
+      "engine": "Magestorm",
+      "files": {
+        "key": [
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/{894833F2-25F6-4F87-9EF6-04998E436B8E}_is1"
+        ]
+      }
     },
     "AO": {
       "name": "Aliens Online",
       "date": "1998-04-16",
-      "url": "https://en.wikipedia.org/wiki/Aliens_Online"
+      "url": "https://en.wikipedia.org/wiki/Aliens_Online",
+      "dnl": "https://oldgamesdownload.com/aliens-online",
+      "engine": "Magestorm",
+      "files": {
+        "key": [
+          "Abandon:Aliens_Online_Win_Preinstalled_EN.zip"
+        ],
+        "pathx": "Game Files"
+      }
     },
     "GO": {
       "name": "Godzilla Online",
@@ -34,10 +49,12 @@
         "https://www.reddit.com/r/lostmedia/comments/zzdz8a/partially_lost_godzilla_online_a_1998_godzilla/"
       ],
       "dnl": "https://archive.org/details/godzilla_202212",
+      "engine": "Magestorm",
       "files": {
         "key": [
-          "Archive:Godzilla_X"
-        ]
+          "Archive:godzilla_202212"
+        ],
+        "path": "GODZILLA"
       }
     },
     "ST": {
@@ -54,10 +71,7 @@
       "name": "Spellbinder: The Nexus Conflict",
       "date": "1999-12-04",
       "url": "https://en.wikipedia.org/wiki/Spellbinder:_The_Nexus_Conflict",
-      "dnl": "https://archive.org/details/SpellbinderTheNexusConflictDemo",
-      "files": {
-        "key": []
-      }
+      "dnl": "https://archive.org/details/SpellbinderTheNexusConflictDemo"
     },
     "ID4": {
       "name": "ID4 Online",

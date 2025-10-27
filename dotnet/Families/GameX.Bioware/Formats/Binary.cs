@@ -366,13 +366,12 @@ public unsafe class Binary_Myp : PakBinary<Binary_Myp> {
     public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         if (file.FileSize == 0) return Task.FromResult(System.IO.Stream.Null);
         r.Seek(file.Offset);
-        return Task.FromResult((Stream)new MemoryStream(file.Compressed switch {
-            0 => r.ReadBytes((int)file.PackedSize),
-            _ => source.Version switch {
+        return Task.FromResult((Stream)new MemoryStream(file.Compressed == 0
+            ? r.ReadBytes((int)file.PackedSize)
+            : source.Version switch {
                 6 => r.DecompressZstd((int)file.PackedSize, (int)file.FileSize),
                 _ => r.DecompressZlib((int)file.PackedSize, (int)file.FileSize),
-            }
-        }));
+            }));
     }
 }
 

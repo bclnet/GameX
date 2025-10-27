@@ -111,6 +111,7 @@ def createFileSystem(vfxType: str, path: SystemPath, subPath: str, host: str = N
         None
     if vfx: return vfx.next()
     baseRoot = path.root if not subPath else os.path.join(path.root, subPath)
+    if baseRoot.endswith('/') or baseRoot.endswith('\\'): baseRoot = baseRoot[:-1]
     basePath = next(iter(path.paths), None) if path else None
     vfx = DirectoryFileSystem(baseRoot, basePath)
     return vfx.next()
@@ -512,8 +513,8 @@ class FamilyGame:
 #region Loader
 
 Families = {}
-# unknown = None
-# unknownPakFile = None
+unknown = None
+unknownPakFile = None
 
 @staticmethod
 def init(loadSamples: bool = True):
@@ -531,8 +532,8 @@ def init(loadSamples: bool = True):
         Families[family.id] = family
 
     # load unknown
-    # unknown = getFamily('Unknown')
-    # unknownPakFile = unknown.openPakFile('game:/#APP', False)
+    unknown = getFamily('Unknown')
+    unknownPakFile = unknown.openPakFile('game:/#APP', False)
 
 @staticmethod
 def getFamily(id: str, throwOnError: bool = True) -> Family:

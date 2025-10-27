@@ -121,7 +121,6 @@ class Binary_Hogg(PakBinaryT):
         r.seek(file.offset)
         return BytesIO(
             decompressZlib(r, file.packedSize, file.fileSize) if file.compressed != 0 else \
-            r.readBytes(file.fileSize)
-            )
+            r.readBytes(file.fileSize))
             
 #endregion

@@ -1,5 +1,6 @@
 from __future__ import annotations
 from io import BytesIO
+from zstandard import ZstdDecompressor
 
 def decompressUnknown(r: Reader, length: int, newLength: int) -> bytes: raise NotImplementedError()
 def decompressZlibStream(r: Reader, noHeader: bool = False) -> bytes: 
@@ -18,7 +19,8 @@ def decompressZlib(r: Reader, length: int, newLength: int, noHeader: bool = Fals
     return \
         zlib.decompress(r.readBytes(length), wbits = (-15 if noHeader else 0)) if full else \
         zlib.decompressobj(wbits = (-15 if noHeader else 0)).decompress(r.readBytes(length))
-def decompressZstd(r: Reader, length: int, newLength: int) -> bytes: raise NotImplementedError()
+def decompressZstd(r: Reader, length: int, newLength: int) -> bytes:
+    return ZstdDecompressor().decompress(r.readBytes(length))
 def decompressLzss(r: Reader, length: int, newLength: int) -> bytes:
     from ._LIB.compression.lzss import Lzss
     return Lzss(BytesIO(r.readBytes(length)), newLength).decompress()

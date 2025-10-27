@@ -1,6 +1,8 @@
+import io, csv
 from importlib import resources
 from zstandard import ZstdDecompressor
 
 with resources.files().joinpath('TOR.zst').open('rb') as f:
-    decompressed_data = ZstdDecompressor().decompress(f.read())
-hashEntries: dict[int, str] = { }
+    file = io.StringIO(ZstdDecompressor().decompress(f.read()).decode('utf-8'))
+    reader = csv.reader(file, delimiter='#')
+    hashLookup: dict[int, str] = { int(f'0x{x[0]}{x[1]}', 16):x[2] for x in reader }

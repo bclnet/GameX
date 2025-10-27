@@ -215,7 +215,7 @@ class Binary_Pcx(IHaveMetaInfo, ITexture):
     @staticmethod
     def rleLength(body: bytearray, offset: int) -> int: return body[offset] & 63
 
-    def lambdaX(self, platform: str) -> Texture_Bytes:
+    def _lambdax(self, platform: str) -> Texture_Bytes:
         # decodes 4bpp pixel data
         def decode4bbp(): pass
 
@@ -227,7 +227,7 @@ class Binary_Pcx(IHaveMetaInfo, ITexture):
             case 1: bytes = decode4bpp()
             case _: raise Exception(f'Unknown bpp: {header.bpp}')
         return bytes, self.format, None
-    def create(self, platform: str, func: callable): return func(lambdaX)
+    def create(self, platform: str, func: callable): return func(_lambdax)
 
     #endregion
 
@@ -434,7 +434,7 @@ class Binary_Tga(IHaveMetaInfo, ITexture):
         if index < 0 and index >= map.entryCount: raise Exception('COLOR_MAP_INDEX_FAILED')
         # Buffer.BlockCopy(map.pixels, map.bytesPerEntry * index, dest, offset, map.bytesPerEntry)
 
-    def lambdaX(self) -> Texture_Bytes:
+    def _lambdax(self) -> Texture_Bytes:
         # decodeRle
         def decodeRle(data: bytearray):
             isColorMapped = self.header.IS_COLOR_MAPPED
@@ -491,7 +491,7 @@ class Binary_Tga(IHaveMetaInfo, ITexture):
         if flipV: self.flipV(bytes)
         
         return Texture_Bytes(bytes, self.format, None)
-    def create(self, platform: str, func: callable): return func(lambdaX)
+    def create(self, platform: str, func: callable): return func(_lambdax)
 
     # returns the pixel at coordinates (x,y) for reading or writing.
     # if the pixel coordinates are out of bounds (larger than width/height or small than 0), they will be clamped.

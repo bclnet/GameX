@@ -168,7 +168,7 @@ class Binary_Pcx(IHaveMetaInfo, ITexture):
     #region Headers
 
     class X_Header:
-        _struct = ('<4B6H48s2B4H54s', 18)
+        _struct = ('<4B6H48s2B4H54s', 128)
         def __init__(self, tuple):
             self.manufacturer, \
             self.version, \
@@ -209,30 +209,67 @@ class Binary_Pcx(IHaveMetaInfo, ITexture):
     mipMaps: int = 1
     texFlags: TextureFlags = 0
 
+    def getPalette(self) -> bytes:
+        if self.header.bpp == 8 and self.body[-769] == 12: return self.body[len(self.body) - 768:]
+        elif self.hHeader.bpp == 1: return self.header.palette[:48]
+        else: raise Exception('Could not find 256 color palette.')
+
     @staticmethod
     def rle(body: bytearray, offset: int) -> bool: return (body[offset] >> 6) == 3
 
     @staticmethod
     def rleLength(body: bytearray, offset: int) -> int: return body[offset] & 63
 
-    def _lambdax(self, platform: str) -> Texture_Bytes:
+    def create(self, platform: str, func: callable):
         # decodes 4bpp pixel data
-        def decode4bbp(): pass
+        @staticmethod
+        def decode4bpp():
+            return b''
 
         # decodes 8bpp (depth = 8/24bit) data
-        def decode8bbp(): pass
+        @staticmethod
+        def decode8bpp():
+            palette = self.getPalette() if self.planes == 1 else None
+            pixels = [byte] * (self.width * self.height * 4)
+            offset = 0; p = 0; pos = 0; length = 0; val = 0
 
-        match header.bpp:
+            # # Simple RLE decoding: if 2 msb == 1 then we have to mask out count and repeat following byte count times
+            # b = self.body
+            # for (var y = 0; y < Height; y++)
+            #     for (p = 0; p < Planes; p++) {
+            #         // bpr holds the number of bytes needed to decode a row of plane: we keep on decoding until the buffer is full
+            #         pos = 4 * Width * y + p;
+            #         for (var _ = 0; _ < Header.Bpl; _++) {
+            #             if (length == 0)
+            #                 if (Rle(b, offset)) { length = RleLength(b, offset); val = b[offset + 1]; offset += 2; }
+            #                 else { length = 1; val = b[offset++]; }
+            #             length--;
+
+            #             // Since there may, or may not be blank data at the end of each scanline, we simply check we're not out of bounds
+            #             if (_ < Width) {
+            #                 if (Planes == 3) {
+            #                     pixels[pos] = (byte)val;
+            #                     if (p == Planes - 1) pixels[pos + 1] = 255; // add alpha channel
+            #                 }
+            #                 else SetPixel(palette, pixels, pos, val);
+            #                 pos += 4;
+            #             }
+            #         }
+            #     }
+            # return pixels;
+
+            return b''
+
+        match self.header.bpp:
             case 8: bytes = decode8bpp()
             case 1: bytes = decode4bpp()
             case _: raise Exception(f'Unknown bpp: {header.bpp}')
-        return bytes, self.format, None
-    def create(self, platform: str, func: callable): return func(_lambdax)
+        return func(Texture_Bytes(bytes, self.format, None))
 
     #endregion
 
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        MetaInfo(None, MetaContent(type = 'Texture', name = os.path.basename(file.path), value = self.data)),
+        MetaInfo(None, MetaContent(type = 'Texture', name = os.path.basename(file.path), value = self)),
         MetaInfo('Binary_Pcx', items = [
             MetaInfo(f'Width: {self.width}'),
             MetaInfo(f'Height: {self.height}')

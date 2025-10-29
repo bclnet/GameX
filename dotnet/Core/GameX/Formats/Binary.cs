@@ -673,7 +673,7 @@ public unsafe class Binary_Pcx : IHaveMetaInfo, ITexture {
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     struct X_Header {
-        public static (string, int) Struct = ("<4B6H48s2B4H54s", sizeof(X_Header));
+        public static (string, int) Struct = ("<4B6H48s2B4H54s", 128);
         public byte Manufacturer;       // Fixed header field valued at a hexadecimal
         public byte Version;            // Version number referring to the Paintbrush software release
         public byte Encoding;           // Method used for encoding the image data
@@ -833,7 +833,7 @@ public unsafe class Binary_Pcx : IHaveMetaInfo, ITexture {
         var bytes = Header.Bpp switch {
             8 => Decode8bpp(),
             1 => Decode4bpp(),
-            _ => throw new FormatException($"Unsupported bpp: {Header.Bpp}"),
+            _ => throw new FormatException($"Unknown bpp: {Header.Bpp}"),
         };
         return func(new Texture_Bytes(bytes, Format, null));
     }

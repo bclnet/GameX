@@ -8,6 +8,7 @@ from gamex.core.util import _pathExtension
 class WBGame(FamilyGame):
     def __init__(self, family: Family, id: str, elem: dict[str, object], dgame: FamilyGame):
         super().__init__(family, id, elem, dgame)
+        self.objectFactoryFunc = self.objectFactory
 
 # WBPakFile
 class WBPakFile(BinaryPakFile):

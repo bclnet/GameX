@@ -39,6 +39,7 @@
     <EmbeddedResource Include="..\..\..\python\app\resources\icons\morf.png" Link="Resources\Icons\morf.png" />
     <EmbeddedResource Include="..\..\..\python\app\resources\icons\mp3.png" Link="Resources\Icons\mp3.png" />
     <EmbeddedResource Include="..\..\..\python\app\resources\icons\pcf.png" Link="Resources\Icons\pcf.png" />
+    <EmbeddedResource Include="..\..\..\python\app\resources\icons\pcx.png" Link="Resources\Icons\pcx.png" />
     <EmbeddedResource Include="..\..\..\python\app\resources\icons\pdf.png" Link="Resources\Icons\pdf.png" />
     <EmbeddedResource Include="..\..\..\python\app\resources\icons\pdi.png" Link="Resources\Icons\pdi.png" />
     <EmbeddedResource Include="..\..\..\python\app\resources\icons\phy.png" Link="Resources\Icons\phy.png" />

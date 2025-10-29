@@ -9,6 +9,7 @@ from gamex.core.util import _pathExtension
 class CigPakFile(BinaryPakFile):
     def __init__(self, state: PakState):
         super().__init__(state, Binary_P4k())
+        self.objectFactoryFunc = self.objectFactory
 
     #region Factories
     @staticmethod

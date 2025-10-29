@@ -8,6 +8,7 @@ from gamex.core.util import _pathExtension
 class IWPakFile(BinaryPakFile):
     def __init__(self, state: PakState):
         super().__init__(state, self.getPakBinary(state.game, _pathExtension(state.path).lower()))
+        self.objectFactoryFunc = self.objectFactory
 
     #region Factories
     @staticmethod

@@ -566,11 +566,11 @@ public partial class FamilyManager {
         ForcePath = "sample:0",
         Family = "Mythic",
         //Game = "RM", // Rolemaster: Magestorm
-        Game = "AO", // Aliens Online
+        //Game = "AO", // Aliens Online
         //Game = "GO", // Godzilla Online
         //Game = "DAoC", // Dark Age of Camelot
         //Game = "WAR", // Warhammer Online: Age of Reckoning
-        //Game = "UO", // Ultima Online: Stygian Abyss
+        Game = "UO", // Ultima Online: Stygian Abyss
         //Game = "DA2", // Dragon Age II
     };
 #elif Nintendo

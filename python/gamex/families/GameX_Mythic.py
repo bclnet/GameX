@@ -11,6 +11,7 @@ from gamex.core.util import _pathExtension
 class MythicPakFile(BinaryPakFile):
     def __init__(self, state: PakState):
         super().__init__(state, self.getPakBinary(state.game, _pathExtension(state.path).lower()))
+        self.objectFactoryFunc = self.objectFactory
 
     #region Factories
     @staticmethod
@@ -23,6 +24,7 @@ class MythicPakFile(BinaryPakFile):
 
     @staticmethod
     def objectFactory(source: FileSource, game: FamilyGame) -> (object, callable):
+        print(f'HERE: {source.path}')
         match _pathExtension(source.path).lower():
             case '.crf': return (FileOption.StreamObject, Binary_Crf.factory)
             case '.nif': return (FileOption.StreamObject, Binary_Nif.factory)

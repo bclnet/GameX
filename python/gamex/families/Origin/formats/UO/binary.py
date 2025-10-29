@@ -1,6 +1,8 @@
 import os, re, struct, numpy as np
 from io import BytesIO
-from openstk.gfx_texture import Texture_Bytes, ITexture, TextureFormat, TexturePixel
+from itertools import groupby
+from operator import itemgetter
+from openstk.gfx import Texture_Bytes, ITexture, TextureFormat, TexturePixel
 from gamex.core.pak import PakBinary
 from gamex.core.meta import FileSource, MetaInfo, MetaContent, IHaveMetaInfo
 
@@ -439,22 +441,21 @@ class Binary_Gump(IHaveMetaInfo, ITexture):
         self.load(r.readBytes(length), width, height)
 
     def load(self, data: bytes, width: int, height: int) -> None:
+        lookup = np.frombuffer(data, dtype = np.int32); dat = np.frombuffer(data, dtype = np.uint16); lookup_ = 0; 
         bd = self.pixels = bytearray(width * height << 1)
-        lookup = np.frombuffer(data, dtype = np.int32); lookup_ = 0; 
-        dat = np.frombuffer(data, dtype = np.uint16)
         line = 0
-        for y in range(0, height):
+        for y in range(height):
             count = lookup[lookup_] << 1; lookup_ += 1
             cur = line; end = line + width
             while cur < end:
                 color = dat[count]; count += 1
                 next = cur + dat[count]; count += 1
-
                 if color == 0: cur = next
                 else:
                     color ^= 0x8000
                     cur2 = cur << 1
                     while cur < next: bd[cur2:cur2+1] = color.tobytes(); cur += 1
+            line += width
 
     #region ITexture
 
@@ -802,18 +803,33 @@ class Binary_UnicodeFont(IHaveMetaInfo):
 # Binary_Verdata
 class Binary_Verdata(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_Verdata(r)
+    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_Verdata(r, s)
+    instance: object = None
 
     #region Headers
 
+    class Patch:
+        _struct = ('<5i ', 20)
+        def __init__(self, tuple):
+            self.file, \
+            self.index, \
+            self.offset, \
+            self.fileSize, \
+            self.extra = tuple
+
     #endregion
 
-    def __init__(self, r: Reader):
-        pass
+    def __init__(self, r: Reader, s: BinaryPakFile):
+        self.pakFile = s
+        patches = r.readL32SArray(self.Patch); print(patches); patches.sort()
+        self.patches = { k: list(g) for k, g in groupby(patches) }
+        Binary_Verdata.instance = self
+
+    def readData(self, offset: int, fileSize: int): return PakFile.ReaderT(lambda r: BytesIO(r.seek(offset).readBytes(fileSize)))
 
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = 'XX File')),
-        MetaInfo('XX', items = [
-            # MetaInfo(f'Fonts: {len(self.fonts)}')
+        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = 'Version Sbi')),
+        MetaInfo('Verdata', items = [
+                MetaInfo(f'Patches: {len(self.patches)}')
             ])
         ]

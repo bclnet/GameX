@@ -213,7 +213,7 @@
       "url": "https://en.wikipedia.org/wiki/Metal_Morph",
       "date": "December 1, 1994"
     },
-    "Pacific Strike": {
+    "PacificStrike": {
       "name": "Pacific Strike",
       "url": "https://en.wikipedia.org/wiki/Pacific_Strike",
       "date": "1994-01-01"
@@ -317,7 +317,7 @@
       "url": "https://en.wikipedia.org/wiki/Ultima_Online",
       "dnl": "https://uo.com/client-download/",
       "date": "September 24, 1997",
-      "searchBy": "AllDir",
+      "searchByx": "AllDir",
       "pakExt": [
         ".idx",
         "idx.mul",

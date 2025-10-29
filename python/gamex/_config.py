@@ -7,7 +7,8 @@ __version__ = "0.0.1"
 # __current__ = "Bullfrog"
 # __current__ = "ID"
 # __current__ = "Lucas"
-__current__ = "Mythic"
+# __current__ = "Mythic"
+__current__ = "Origin"
 # __current__ = "Red"
 # __current__ = "Valve"
 
@@ -496,11 +497,11 @@ match __current__:
             ForcePath = "sample:0",
             Family = "Mythic",
             # Game = "RM", # Rolemaster: Magestorm
-            Game = "AO", # Aliens Online
+            # Game = "AO", # Aliens Online
             # Game = "GO", # Godzilla Online
             # Game = "DAoC", # Dark Age of Camelot
             # Game = "WAR", # Warhammer Online: Age of Reckoning
-            # Game = "UO", # Ultima Online: Stygian Abyss
+            Game = "UO", # Ultima Online: Stygian Abyss
             # Game = "DA2", # Dragon Age II
         )
     case 'Nintendo':
@@ -519,12 +520,11 @@ match __current__:
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
-            # ForcePath = "sample:6",
-            ForcePath = "sample:0",
+            ForcePath = "sample:6",
             Family = "Origin",
             # Game = "U8", # Ultima 8
-            # Game = "UO", # Ultima Online
-            Game = "U9", # Ultima IX
+            Game = "UO", # Ultima Online
+            # Game = "U9", # Ultima IX
         )
     case 'Red':
         familyKeys = [ "Red", "Unknown" ]

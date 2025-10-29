@@ -8,8 +8,6 @@ from gamex.families.GameX_Valve import ValvePakFile
 from gamex.families.GameX import UnknownPakFile
 from gamex.core.util import _pathExtension
 
-#region ArkanePakFile
-
 # ArkanePakFile
 class ArkanePakFile(BinaryPakFile):
     def __init__(self, state: PakState):
@@ -49,5 +47,3 @@ class ArkanePakFile(BinaryPakFile):
             case _: return UnknownPakFile.objectFactory(source, game)
 
     #endregion
-
-#endregion

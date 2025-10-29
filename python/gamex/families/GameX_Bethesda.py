@@ -7,25 +7,15 @@ from gamex.families.Gamebryo.formats.binary import Binary_Nif
 from gamex.families.GameX import UnknownPakFile
 from gamex.core.util import _pathExtension
 
-#region BethesdaFamily
-
 # BethesdaFamily
 class BethesdaFamily(Family):
     def __init__(self, elem: dict[str, object]):
         super().__init__(elem)
 
-#endregion
-
-#region BethesdaGame
-
 # BethesdaGame
 class BethesdaGame(FamilyGame):
     def __init__(self, family: Family, id: str, elem: dict[str, object], dgame: FamilyGame):
         super().__init__(family, id, elem, dgame)
-
-#endregion
-
-#region BethesdaPakFile
 
 # BethesdaPakFile
 class BethesdaPakFile(BinaryPakFile):
@@ -51,5 +41,3 @@ class BethesdaPakFile(BinaryPakFile):
             case _: return UnknownPakFile.objectFactory(source, game)
 
     #endregion
-
-#endregion

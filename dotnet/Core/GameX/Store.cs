@@ -174,20 +174,17 @@ static class Store_Epic {
     static string GetPath() {
         IEnumerable<string> paths;
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
-            // windows paths
             var home = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
             string[] search = [@"Epic\EpicGamesLauncher"];
             paths = search.Select(path => Path.Join(home, path, "Sbi"));
         }
         else if (RuntimeInformation.OSDescription.StartsWith("android-")) return null;
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
-            // linux paths
             var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             string[] search = ["Epic/EpicGamesLauncher"];
             paths = search.Select(path => Path.Join(home, path, "Sbi"));
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) {
-            // mac paths
             string[] home = [Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "/Users/Shared"];
             string[] search = ["Epic/EpicGamesLauncher"];
             paths = search.SelectMany(x => search, (s, h) => Path.Join(h, s, "Sbi"));
@@ -221,20 +218,17 @@ static class Store_Gog {
     static string GetPath() {
         IEnumerable<string> paths;
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
-            // windows paths
             var home = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
             string[] search = [@"GOG.com\Galaxy"];
             paths = search.Select(path => Path.Join(home, path, "storage"));
         }
         else if (RuntimeInformation.OSDescription.StartsWith("android-")) return null;
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
-            // linux paths
             var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             string[] search = ["??"];
             paths = search.Select(path => Path.Join(home, path, "Storage"));
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) {
-            // mac paths
             string[] home = [Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "/Users/Shared"];
             string[] search = ["GOG.com/Galaxy"];
             paths = search.SelectMany(x => search, (s, h) => Path.Join(h, s, "Storage"));
@@ -412,20 +406,17 @@ static class Store_Ubisoft {
     static string GetPath() {
         IEnumerable<string> paths;
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
-            // windows paths
             var home = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             string[] search = ["Ubisoft Game Launcher"];
             paths = search.Select(path => Path.Join(home, path));
         }
         else if (RuntimeInformation.OSDescription.StartsWith("android-")) return null;
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
-            // linux paths
             string[] home = [Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "/Users/Shared"];
             string[] search = ["??"];
             paths = search.SelectMany(x => search, (s, h) => Path.Join(h, s));
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) {
-            // mac paths
             var home = "/Users/Shared";
             string[] search = ["??"];
             paths = search.Select(path => Path.Join(home, path));

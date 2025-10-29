@@ -1,4 +1,13 @@
 ﻿{
+    "AO": {
+        "name": "Aliens Online",
+        "files": [
+            {
+                "path": "ADROP.PCX",
+                "type": "Image"
+            }
+        ]
+    },
     "DAoC": {
         "name": "Dark Age of Camelot",
         "files": [

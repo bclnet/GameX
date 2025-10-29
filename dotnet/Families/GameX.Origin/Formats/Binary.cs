@@ -228,7 +228,7 @@ public unsafe class Binary_UO : PakBinary<Binary_UO> {
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     struct IdxFile {
-        public static (string, int) Struct = ("<3i", sizeof(IdxFile));
+        public static (string, int) Struct = ("<3i", 12);
         public int Offset;
         public int FileSize;
         public int Extra;
@@ -236,7 +236,7 @@ public unsafe class Binary_UO : PakBinary<Binary_UO> {
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     struct UopHeader {
-        public static (string, int) Struct = ("<i2q2i", sizeof(UopHeader));
+        public static (string, int) Struct = ("<i2q2i", 28);
         public int Magic;
         public long VersionSignature;
         public long NextBlock;
@@ -443,8 +443,7 @@ public unsafe class Binary_UO : PakBinary<Binary_UO> {
             Path = pathFunc(id++),
             Offset = s.Offset,
             FileSize = s.FileSize,
-            Compressed = s.Extra,
-        }).ToList();
+            Compressed = s.Extra }).ToList();
 
         // fill with empty
         for (var i = Count; i < length; ++i)
@@ -453,8 +452,7 @@ public unsafe class Binary_UO : PakBinary<Binary_UO> {
                 Path = pathFunc(i),
                 Offset = -1,
                 FileSize = -1,
-                Compressed = -1,
-            });
+                Compressed = -1 });
 
         // apply patch
         var verdata = Binary_Verdata.Instance;
@@ -484,8 +482,7 @@ public unsafe class Binary_UO : PakBinary<Binary_UO> {
     public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         if (file.Offset < 0) return Task.FromResult<Stream>(null);
         var fileSize = (int)(file.FileSize & 0x7FFFFFFF);
-        if ((file.FileSize & (1 << 31)) != 0)
-            return Task.FromResult<Stream>(Binary_Verdata.Instance.ReadData(file.Offset, fileSize));
+        if ((file.FileSize & (1 << 31)) != 0) return Task.FromResult<Stream>(Binary_Verdata.Instance.ReadData(file.Offset, fileSize));
         r.Seek(file.Offset);
         return Task.FromResult<Stream>(new MemoryStream(r.ReadBytes(fileSize)));
     }

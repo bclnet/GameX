@@ -42,7 +42,7 @@ public unsafe class Binary_Animdata : IHaveMetaInfo {
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct AnimRecord {
-        public static (string, int) Struct = ("<64b4B", sizeof(AnimRecord));
+        public static (string, int) Struct = ("<64b4B", 68);
         public fixed sbyte Frames[64];
         public byte Unknown;
         public byte FrameCount;
@@ -658,20 +658,16 @@ public unsafe class Binary_Gump : IHaveMetaInfo, ITexture {
 
     void Load(byte[] data, int width, int height) {
         fixed (byte* _ = data) {
+            var lookup = (int*)_; var dat = (ushort*)_;
             var bd = Pixels = new byte[width * height << 1];
-            var delta = width;
-            fixed (byte* bd_Scan0 = bd) {
-                var lookup = (int*)_;
-                var dat = (ushort*)_;
-                var line = (ushort*)bd_Scan0;
-
-                for (var y = 0; y < height; ++y, line += delta) {
+            fixed (byte* bd_ = bd) {
+                var line = (ushort*)bd_;
+                for (var y = 0; y < height; ++y, line += width) {
                     var count = *lookup++ << 1;
                     ushort* cur = line, end = line + width;
                     while (cur < end) {
                         var color = dat[count++];
                         var next = cur + dat[count++];
-
                         if (color == 0) cur = next;
                         else {
                             color ^= 0x8000;
@@ -1941,7 +1937,7 @@ public unsafe class Binary_Verdata : IHaveMetaInfo {
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct Patch {
-        public static (string, int) Struct = ("<5i", sizeof(Patch));
+        public static (string, int) Struct = ("<5i", 20);
         public int File;
         public int Index;
         public int Offset;
@@ -1949,12 +1945,10 @@ public unsafe class Binary_Verdata : IHaveMetaInfo {
         public int Extra;
     }
 
-    public Stream ReadData(long offset, int fileSize) => PakFile.ReaderT(r => new MemoryStream(r.Seek(offset).ReadBytes(fileSize)));
+    #endregion
 
     public BinaryPakFile PakFile;
     public IDictionary<int, Patch[]> Patches = new Dictionary<int, Patch[]>();
-
-    #endregion
 
     // file: verdata.mul
     public Binary_Verdata(BinaryReader r, BinaryPakFile s) {
@@ -1962,6 +1956,8 @@ public unsafe class Binary_Verdata : IHaveMetaInfo {
         Patches = r.ReadL32SArray<Patch>().GroupBy(x => x.File).ToDictionary(x => x.Key, x => x.ToArray());
         Instance = this;
     }
+
+    public Stream ReadData(long offset, int fileSize) => PakFile.ReaderT(r => new MemoryStream(r.Seek(offset).ReadBytes(fileSize)));
 
     // IHaveMetaInfo
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {

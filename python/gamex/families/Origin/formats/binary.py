@@ -5,6 +5,7 @@ from io import BytesIO
 from gamex.core.pak import PakBinaryT
 from gamex.core.meta import FileSource
 from gamex.core.util import _pathExtension
+from gamex.families.Origin.formats.UO.binary import *
 
 # typedefs
 class Reader: pass
@@ -118,7 +119,7 @@ class Binary_UO(PakBinaryT):
     #region Headers
 
     class IdxFile:
-        _struct = ('<3i', 26)
+        _struct = ('<3i', 12)
         def __init__(self, tuple):
             self.offset, \
             self.fileSize, \
@@ -187,8 +188,7 @@ class Binary_UO(PakBinaryT):
                 path = pathFunc(i),
                 offset = -1,
                 fileSize = -1,
-                compressed = -1
-                )
+                compressed = -1)
         
         # load files
         nextBlock = header.nextBlock
@@ -325,7 +325,7 @@ class Binary_UO(PakBinaryT):
         source.pakPath = mulPath
 
         # record count
-        self.count = r.length / 12
+        self.count = r.length // 12
 
         # load files
         id = 0
@@ -336,9 +336,8 @@ class Binary_UO(PakBinaryT):
             offset = s.offset,
             fileSize = s.fileSize,
             compressed = s.extra,
-            tag = (id := id + 1),
-            ) for s in r.readSArray(self.IdxFile, self.count)]
-
+            tag = (id := id + 1)) for s in r.readSArray(self.IdxFile, self.count)]
+        
         # fill with empty
         for i in range(self.count, length):
             files.append(FileSource(
@@ -346,14 +345,12 @@ class Binary_UO(PakBinaryT):
                 path = pathFunc(i),
                 offset = -1,
                 fileSize = -1,
-                compressed = -1,
-                ))
+                compressed = -1))
 
         # apply patch
         verdata = Binary_Verdata.instance
         if verdata and fileId in verdata.patches:
-            patches = [patch for patch in verdata.patches[fileId] if patch.index > 0 and patch.index < len(files)]
-            for patch in patches:
+            for patch in [patch for patch in verdata.patches[fileId] if patch.index > 0 and patch.index < len(files)]:
                 file = files[patch.index]
                 file.offset = patch.offset
                 file.fileSize = patch.fileSize | (1 << 31)
@@ -376,8 +373,7 @@ class Binary_UO(PakBinaryT):
     def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None) -> BytesIO:
         if file.offset < 0: return None
         fileSize = file.fileSize & 0x7FFFFFFF
-        if (file.fileSize & (1 << 31)) != 0:
-            return Binary_Verdata.instance.readData(file.offset, fileSize)
+        if (file.fileSize & (1 << 31)) != 0: return Binary_Verdata.instance.readData(file.offset, fileSize)
         r.seek(file.offset)
         return BytesIO(r.readBytes(fileSize))
 

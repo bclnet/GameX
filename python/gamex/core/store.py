@@ -1,5 +1,6 @@
 import os, platform, json, psutil
-if platform.system() == 'Windows': import winreg
+system = platform.system()
+if system == 'Windows': import winreg
 
 @staticmethod
 def getPathByKey(key: str, family: str, elem: dict[str, object]):
@@ -32,7 +33,16 @@ def getPathByKey(key: str, family: str, elem: dict[str, object]):
 
 class store_abandon:
     @staticmethod
-    def getPath(): return 'E:\\AbandonLibrary'
+    def getPath():
+        if system == 'Windows':
+            home = ['E:\\']
+        elif system == 'Linux':
+            home = [os.path.expanduser('~')]
+        elif system == 'Darwin':
+            home = [os.path.expanduser('~'), '/Users/Shared']
+        else: raise Exception(f'Unknown platform: {system}')
+        paths = [os.path.join(h, 'AbandonLibrary') for h in home]
+        return next(iter(x for x in paths if os.path.isdir(x)), None)
 
     @classmethod
     def init(cls):
@@ -41,7 +51,7 @@ class store_abandon:
         root = cls.getPath()
         if not root or not os.path.exists(root): return
         # query games
-        for s in [s for s in os.listdir(root)]:
+        for s in [s for s in os.listdir(root) if os.path.isdir(os.path.join(root, s))]:
             for t in [os.path.join(s, t) for t in os.listdir(os.path.join(root, s))]:
                 paths[t.replace('\\', '/')] = os.path.join(root, t)
         # print(f'Abandon:{paths}')
@@ -52,7 +62,16 @@ class store_abandon:
 
 class store_archive:
     @staticmethod
-    def getPath(): return 'E:\\ArchiveLibrary'
+    def getPath():
+        if system == 'Windows':
+            home = ['E:\\']
+        elif system == 'Linux':
+            home = [os.path.expanduser('~')]
+        elif system == 'Darwin':
+            home = [os.path.expanduser('~'), '/Users/Shared']
+        else: raise Exception(f'Unknown platform: {system}')
+        paths = [os.path.join(h, 'ArchiveLibrary') for h in home]
+        return next(iter(x for x in paths if os.path.isdir(x)), None)
 
     @classmethod
     def init(cls):
@@ -61,7 +80,7 @@ class store_archive:
         root = cls.getPath()
         if not root or not os.path.exists(root): return
         # query games
-        for s in [s for s in os.listdir(root)]:
+        for s in [s for s in os.listdir(root) if os.path.isdir(os.path.join(root, s))]:
             for t in [os.path.join(s, t) for t in os.listdir(os.path.join(root, s))]:
                 paths[t.replace('\\', '/')] = os.path.join(root, t)
         # print(f'Archive:{paths}')
@@ -73,18 +92,14 @@ class store_archive:
 class store_blizzard:
     @staticmethod
     def getPath():
-        system = platform.system()
         if system == 'Windows':
-            # windows paths
             home = os.getenv('ALLUSERSPROFILE')
             paths = [os.path.join(home, 'Battle.net', 'Agent')]
         elif system == 'Linux':
-            # linux paths
             home = os.path.expanduser('~')
             search = ['.steam', '.steam/steam', '.steam/root', '.local/share/Steam']
             paths = [os.path.join(home, path, 'appcache') for path in search]
         elif system == 'Darwin':
-            # mac paths
             home = [os.path.expanduser('~'), '/Users/Shared']
             search = ['Battle.net/Agent']
             paths = [os.path.join(h, s, 'data') for s in search for h in home]
@@ -131,20 +146,16 @@ class store_direct:
 class store_epic:
     @staticmethod
     def getPath():
-        system = platform.system()
         if system == 'Windows':
-            # windows paths
             home = os.getenv('ALLUSERSPROFILE')
             search = ['Epic/EpicGamesLauncher']
             paths = [os.path.join(home, path, 'Data') for path in search]
         elif system == 'Linux':
-            # linux paths
             home = os.path.expanduser('~')
             search = ['?GOG?']
             paths = [os.path.join(home, path, 'Data') for path in search]
         elif system == 'Darwin':
-            # mac paths
-            hhome = [os.path.expanduser('~'), '/Users/Shared']
+            home = [os.path.expanduser('~'), '/Users/Shared']
             search = ['Epic/EpicGamesLauncher']
             paths = [os.path.join(h, s, 'Data') for s in search for h in home]
         else: raise Exception(f'Unknown platform: {system}')
@@ -171,19 +182,15 @@ class store_epic:
 class store_gog:
     @staticmethod
     def getPath():
-        system = platform.system()
         if system == 'Windows':
-            # windows paths
             home = os.getenv('ALLUSERSPROFILE')
             search = ['GOG.com/Galaxy']
             paths = [os.path.join(home, path, 'storage') for path in search]
         elif system == 'Linux':
-            # linux paths
             home = os.path.expanduser('~')
             search = ['??']
             paths = [os.path.join(home, path, 'Storage') for path in search]
         elif system == 'Darwin':
-            # mac paths
             home = [os.path.expanduser('~'), '/Users/Shared']
             search = ['GOG.com/Galaxy']
             paths = [os.path.join(h, s, 'Storage') for s in search for h in home]
@@ -216,7 +223,6 @@ class store_local:
 
     @classmethod
     def init(cls):
-        system = platform.system()
         cls.init = lambda *args: None
         gameRoots = [os.path.join(x.mountpoint, cls.GAMESPATH) for x in psutil.disk_partitions()]
         gameRoots.append(os.path.join(os.path.expanduser('~'), cls.GAMESPATH))
@@ -282,21 +288,17 @@ class store_steam:
 
     @staticmethod
     def getPath():
-        system = platform.system()
         if system == 'Windows':
-            # windows paths
             try: key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, 'SOFTWARE\\Valve\\Steam', 0, winreg.KEY_READ)
             except FileNotFoundError:
                 try: key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, 'SOFTWARE\\Valve\\Steam', 0, winreg.KEY_READ | winreg.KEY_WOW64_32KEY)
                 except FileNotFoundError: return None
             return winreg.QueryValueEx(key, 'SteamPath')[0]
         elif system == 'Linux':
-            # linux paths
             home = os.path.expanduser('~')
             search = ['.steam', '.steam/steam', '.steam/root', '.local/share/Steam']
             paths = [os.path.join(home, path, 'appcache') for path in search]
         elif system == 'Darwin':
-            # mac paths
             home = [os.path.expanduser('~'), '/Users/Shared']
             search = ['Library/Application Support/Steam']
             paths = [os.path.join(h, s) for s in search for h in home]
@@ -329,19 +331,15 @@ class store_steam:
 class store_ubisoft:
     @staticmethod
     def getPath():
-        system = platform.system()
         if system == 'Windows':
-            # windows paths
             home = os.getenv('LOCALAPPDATA')
             search = ['Ubisoft Game Launcher']
             paths = [os.path.join(home, path) for path in search]
         elif system == 'Linux':
-            # linux paths
             home = os.path.expanduser('~')
             search = ['??']
             paths = [os.path.join(home, path) for path in search]
         elif system == 'Darwin':
-            # mac paths
             home = [os.path.expanduser('~'), '/Users/Shared']
             search = ['??']
             paths = [os.path.join(h, s) for s in search for h in home]

@@ -220,45 +220,72 @@ class Binary_Pcx(IHaveMetaInfo, ITexture):
     @staticmethod
     def rleLength(body: bytearray, offset: int) -> int: return body[offset] & 63
 
+    @staticmethod
+    def setPixel(palette: bytearray, pixels: bytearray, pos: int, index: int) -> None:
+        start = index * 3
+        pixels[pos + 0] = palette[start]
+        pixels[pos + 1] = palette[start + 1]
+        pixels[pos + 2] = palette[start + 2]
+        pixels[pos + 3] = 255 # alpha channel
+
     def create(self, platform: str, func: callable):
         # decodes 4bpp pixel data
         @staticmethod
         def decode4bpp():
-            return b''
+            palette = self.getPalette()
+            temp = bytearray(self.width * self.height)
+            pixels = bytearray(self.width * self.height * 4)
+            offset = 0; p = 0; pos = 0; length = 0; val = 0
+
+            # Simple RLE decoding: if 2 msb == 1 then we have to mask out count and repeat following byte count times
+            b = self.body
+            for y in range(self.height):
+                for p in range(self.planes):
+                    # bpr holds the number of bytes needed to decode a row of plane: we keep on decoding until the buffer is full
+                    pos = self.width * y
+                    for _ in range(self.header.bpl):
+                        if length == 0:
+                             if self.rle(b, offset): length = self.rleLength(b, offset); val = b[offset + 1]; offset += 2
+                             else: length = 1; val = b[offset]; offset += 1
+                        length -= 1
+
+                        # Since there may, or may not be blank data at the end of each scanline, we simply check we're not out of bounds
+                        if (_ * 8) < self.width:
+                            for i in range(8):
+                                bit = (val >> (7 - i)) & 1
+                                temp[pos + i] |= (bit << p) & 0xff
+                                # we have all planes: we may set color using the palette
+                                if p == self.planes - 1: self.setPixel(palette, pixels, (pos + i) * 4, temp[pos + i])
+                            pos += 8
+            return pixels
 
         # decodes 8bpp (depth = 8/24bit) data
         @staticmethod
         def decode8bpp():
             palette = self.getPalette() if self.planes == 1 else None
-            pixels = [byte] * (self.width * self.height * 4)
+            pixels = bytearray(self.width * self.height * 4)
             offset = 0; p = 0; pos = 0; length = 0; val = 0
 
-            # # Simple RLE decoding: if 2 msb == 1 then we have to mask out count and repeat following byte count times
-            # b = self.body
-            # for (var y = 0; y < Height; y++)
-            #     for (p = 0; p < Planes; p++) {
-            #         // bpr holds the number of bytes needed to decode a row of plane: we keep on decoding until the buffer is full
-            #         pos = 4 * Width * y + p;
-            #         for (var _ = 0; _ < Header.Bpl; _++) {
-            #             if (length == 0)
-            #                 if (Rle(b, offset)) { length = RleLength(b, offset); val = b[offset + 1]; offset += 2; }
-            #                 else { length = 1; val = b[offset++]; }
-            #             length--;
+            # Simple RLE decoding: if 2 msb == 1 then we have to mask out count and repeat following byte count times
+            b = self.body
+            for y in range(self.height):
+                for p in range(self.planes):
+                    # bpr holds the number of bytes needed to decode a row of plane: we keep on decoding until the buffer is full
+                    pos = 4 * self.width * y + p
+                    for _ in range(self.header.bpl):
+                        if length == 0:
+                             if self.rle(b, offset): length = self.rleLength(b, offset); val = b[offset + 1]; offset += 2
+                             else: length = 1; val = b[offset]; offset += 1
+                        length -= 1
 
-            #             // Since there may, or may not be blank data at the end of each scanline, we simply check we're not out of bounds
-            #             if (_ < Width) {
-            #                 if (Planes == 3) {
-            #                     pixels[pos] = (byte)val;
-            #                     if (p == Planes - 1) pixels[pos + 1] = 255; // add alpha channel
-            #                 }
-            #                 else SetPixel(palette, pixels, pos, val);
-            #                 pos += 4;
-            #             }
-            #         }
-            #     }
-            # return pixels;
-
-            return b''
+                        # Since there may, or may not be blank data at the end of each scanline, we simply check we're not out of bounds
+                        if _ < self.width:
+                            if self.planes == 3:
+                                pixels[pos] = val & 0xff
+                                if p == self.planes - 1: pixels[pos + 1] = 255 # add alpha channel
+                            else: self.setPixel(palette, pixels, pos, val)
+                            pos += 4
+            return pixels
 
         match self.header.bpp:
             case 8: bytes = decode8bpp()

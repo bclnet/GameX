@@ -58,9 +58,9 @@ public class UOGame(Family family, string id, JsonElement elem, FamilyGame dgame
         Trace($"Ultima Online installation folder: {clientPath}");
 
         Trace("Loading files...");
-        var options = PlatformX.Options;
+        var options = Options;
 
-        //var clientVersionText = "";
+        var clientVersionText = options["clientVersionx"] ?? "";
 
         //if (options.TryGetValue("clientVersion", out var clientVersionObj) && (clientVersionText = clientVersionObj as string) != null && !string.IsNullOrWhiteSpace(clientVersionText)) {
         //    clientVersionText = clientVersionText.Replace(",", ".").Replace(" ", "").ToLowerInvariant();

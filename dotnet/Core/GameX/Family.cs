@@ -1080,7 +1080,7 @@ public class FamilyGame {
     /// Ensures this instance.
     /// </summary>
     public virtual void Loaded() {
-        Options = new YamlDict($".gamex.{Family.Id}_{Id}.yaml");
+        Options = new YamlDict($"~/.gamex.{Family.Id}_{Id}.yaml");
     }
 
     /// <summary>

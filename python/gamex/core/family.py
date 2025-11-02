@@ -426,7 +426,7 @@ class FamilyGame:
 
     # Ensures this instance.
     def loaded(self) -> None:
-        self.options = YamlDict(f'.gamex.{self.family.id}_{self.id}.yaml')
+        self.options = YamlDict(f'~/.gamex.{self.family.id}_{self.id}.yaml')
 
     # converts the Paks to Application Paks
     def toPaks(self, edition: str) -> list[str]:

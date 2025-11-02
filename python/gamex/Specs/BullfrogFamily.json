@@ -13,7 +13,6 @@
   },
   "games": {
     "*": {
-      "gameType": "GameX.Bullfrog.BullfrogGame, GameX.Bullfrog",
       "pakFileType": "GameX.Bullfrog.BullfrogPakFile, GameX.Bullfrog"
     },
     "Fusion": {
@@ -53,6 +52,7 @@
       "tag": "Amiga"
     },
     "P2": {
+      "gameType": "GameX.Bullfrog.P2Game, GameX.Bullfrog",
       "name": "Populous II: Trials of the Olympian Gods",
       "url": "https://en.wikipedia.org/wiki/Populous_II:_Trials_of_the_Olympian_Gods",
       "date": "November 1, 1991",
@@ -76,6 +76,7 @@
       "tag": "Amiga"
     },
     "S": {
+      "gameType": "GameX.Bullfrog.SGame, GameX.Bullfrog",
       "name": "Syndicate",
       "url": "https://en.wikipedia.org/wiki/Syndicate_(1993_video_game)",
       "date": "June 6, 1993",
@@ -184,6 +185,7 @@
       }
     },
     "DK": {
+      "gameType": "GameX.Bullfrog.DKGame, GameX.Bullfrog",
       "name": "Dungeon Keeper",
       "url": "https://en.wikipedia.org/wiki/Dungeon_Keeper",
       "date": "26 June 1997",
@@ -223,6 +225,7 @@
       "date": "December 17, 1998"
     },
     "DK2": {
+      "gameType": "GameX.Bullfrog.DK2Game, GameX.Bullfrog",
       "name": "Dungeon Keeper 2",
       "url": "https://en.wikipedia.org/wiki/Dungeon_Keeper_2",
       "date": "July 7, 1999",

@@ -1,5 +1,6 @@
 from __future__ import annotations
 import os
+from openstk import _pathExtension
 from gamex import BinaryPakFile
 from gamex.families.GameX import UnknownPakFile
 from gamex.families.Mythic.formats.binary import Binary_Mpk, Binary_Crf
@@ -7,7 +8,6 @@ from gamex.families.Bioware.formats.binary import Binary_Myp
 from gamex.families.Gamebryo.formats.binary import Binary_Nif
 from gamex.families.GameX_Bioware import BiowarePakFile
 from gamex.families.GameX_Origin import OriginPakFile
-from gamex.core.util import _pathExtension
 
 # MythicPakFile
 class MythicPakFile(BinaryPakFile):
@@ -19,6 +19,7 @@ class MythicPakFile(BinaryPakFile):
             case _: self.objectFactoryFunc = self.objectFactory
 
     #region Factories
+
     @staticmethod
     def getPakBinary(game: FamilyGame, extension: str) -> PakBinary:
         match game.id:

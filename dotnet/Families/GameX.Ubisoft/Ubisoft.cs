@@ -8,8 +8,6 @@ using System.Threading.Tasks;
 
 namespace GameX.Ubisoft;
 
-#region UbisoftPakFile
-
 /// <summary>
 /// UbisoftPakFile
 /// </summary>
@@ -45,5 +43,3 @@ public class UbisoftPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMo
 
     #endregion
 }
-
-#endregion

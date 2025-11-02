@@ -11,7 +11,6 @@ public static class DatabaseManager {
     const int ITERATION_HIRES = 497;
     const int ITERATION_LANGUAGE = 994;
     static int count;
-    internal static bool loaded;
 
     public static DatabaseCell Cell { get; private set; }
     public static DatabasePortal Portal { get; private set; }
@@ -19,10 +18,7 @@ public static class DatabaseManager {
     public static DatabaseLanguage Language { get; private set; }
 
 #if true
-    internal static FamilyGame Ensure(FamilyGame game, bool loadCell = true) {
-        if (loaded) return game;
-        loaded = true;
-
+    internal static void Loaded(FamilyGame game, bool loadCell = true) {
         var family = game.Family;
         if (loadCell)
             try {
@@ -64,8 +60,6 @@ public static class DatabaseManager {
             Log($"An exception occured while attempting to open {Language} file.");
             Log($"Exception: {ex.Message}");
         }
-
-        return game;
     }
 #endif
 }

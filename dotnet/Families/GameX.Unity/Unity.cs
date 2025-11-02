@@ -8,8 +8,6 @@ using System.Threading.Tasks;
 
 namespace GameX.Unity;
 
-#region UnityPakFile
-
 /// <summary>
 /// UnityPakFile
 /// </summary>
@@ -39,5 +37,3 @@ public class UnityPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMode
 
     #endregion
 }
-
-#endregion

@@ -18,8 +18,8 @@ namespace GameX.App.Explorer {
         }
 
         void LoadIcons() {
-            var assembly = typeof(ResourceManager).Assembly;
-            var names = assembly.GetManifestResourceNames().Where(n => n.StartsWith("GameX.App.Explorer.Resources.Icons.", StringComparison.Ordinal));
+            var assembly = typeof(Core.Icons).Assembly;
+            var names = assembly.GetManifestResourceNames().Where(n => n.StartsWith("GameX.Resource.Core.Icons.", StringComparison.Ordinal));
             foreach (var name in names) {
                 var res = name.Split('.');
                 using var stream = assembly.GetManifestResourceStream(name);
@@ -29,7 +29,7 @@ namespace GameX.App.Explorer {
                 image.CacheOption = BitmapCacheOption.OnLoad;
                 image.EndInit();
                 image.Freeze();
-                Icons.Add(res[5], image);
+                Icons.Add(res[4], image);
             }
         }
 

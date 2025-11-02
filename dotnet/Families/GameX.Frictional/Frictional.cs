@@ -8,8 +8,6 @@ using System.Threading.Tasks;
 
 namespace GameX.Frictional;
 
-#region FrictionalPakFile
-
 /// <summary>
 /// FrictionalPakFile
 /// </summary>
@@ -39,5 +37,3 @@ public class FrictionalPakFile : BinaryPakFile, ITransformFileObject<IUnknownFil
 
     #endregion
 }
-
-#endregion

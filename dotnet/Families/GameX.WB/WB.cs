@@ -11,23 +11,20 @@ using Environment = GameX.WB.Formats.AC.FileTypes.Environment;
 
 namespace GameX.WB;
 
-#region WBGame
-
 /// <summary>
-/// WBGame
+/// ACGame
 /// </summary>
 /// <seealso cref="GameX.FamilyGame" />
-public class WBGame(Family family, string id, JsonElement elem, FamilyGame dgame) : FamilyGame(family, id, elem, dgame) {
+public class ACGame(Family family, string id, JsonElement elem, FamilyGame dgame) : FamilyGame(family, id, elem, dgame) {
     /// <summary>
     /// Ensures this instance.
     /// </summary>
     /// <returns></returns>
-    public override FamilyGame Ensure() => DatabaseManager.Ensure(this);
+    public override void Loaded() {
+        base.Loaded();
+        DatabaseManager.Loaded(this);
+    }
 }
-
-#endregion
-
-#region WBPakFile
 
 /// <summary>
 /// WBPakFile
@@ -221,5 +218,3 @@ public class WBPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> 
 
     #endregion
 }
-
-#endregion

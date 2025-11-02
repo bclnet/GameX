@@ -8,8 +8,6 @@ using System.Threading.Tasks;
 
 namespace GameX.Epic;
 
-#region EpicPakFile
-
 /// <summary>
 /// EpicPakFile
 /// </summary>
@@ -40,5 +38,3 @@ public class EpicPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel
 
     #endregion
 }
-
-#endregion

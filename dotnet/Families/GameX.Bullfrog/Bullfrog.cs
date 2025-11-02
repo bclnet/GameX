@@ -8,29 +8,65 @@ using System.Threading.Tasks;
 
 namespace GameX.Bullfrog;
 
-#region BullfrogGame
-
 /// <summary>
-/// BullfrogGame
+/// DKGame
 /// </summary>
 /// <seealso cref="GameX.FamilyGame" />
-public class BullfrogGame(Family family, string id, JsonElement elem, FamilyGame dgame) : FamilyGame(family, id, elem, dgame) {
+public class DKGame(Family family, string id, JsonElement elem, FamilyGame dgame) : FamilyGame(family, id, elem, dgame) {
     /// <summary>
     /// Ensures this instance.
     /// </summary>
     /// <returns></returns>
-    public override FamilyGame Ensure() => Id switch {
-        "DK" => Games.DK.Database.Ensure(this),
-        "DK2" => Games.DK2.Database.Ensure(this),
-        "P2" => Games.P2.Database.Ensure(this),
-        "S" => Games.S.Database.Ensure(this),
-        _ => this,
-    };
+    public override void Loaded() {
+        base.Loaded();
+        Games.DK.Database.Loaded(this);
+    }
 }
 
-#endregion
+/// <summary>
+/// DK2Game
+/// </summary>
+/// <seealso cref="GameX.FamilyGame" />
+public class DK2Game(Family family, string id, JsonElement elem, FamilyGame dgame) : FamilyGame(family, id, elem, dgame) {
+    /// <summary>
+    /// Ensures this instance.
+    /// </summary>
+    /// <returns></returns>
+    public override void Loaded() {
+        base.Loaded();
+        Games.DK2.Database.Loaded(this);
+    }
+}
 
-#region BullfrogPakFile
+/// <summary>
+/// P2Game
+/// </summary>
+/// <seealso cref="GameX.FamilyGame" />
+public class P2Game(Family family, string id, JsonElement elem, FamilyGame dgame) : FamilyGame(family, id, elem, dgame) {
+    /// <summary>
+    /// Ensures this instance.
+    /// </summary>
+    /// <returns></returns>
+    public override void Loaded() {
+        base.Loaded();
+        Games.P2.Database.Loaded(this);
+    }
+}
+
+/// <summary>
+/// SGame
+/// </summary>
+/// <seealso cref="GameX.FamilyGame" />
+public class SGame(Family family, string id, JsonElement elem, FamilyGame dgame) : FamilyGame(family, id, elem, dgame) {
+    /// <summary>
+    /// Ensures this instance.
+    /// </summary>
+    /// <returns></returns>
+    public override void Loaded() {
+        base.Loaded();
+        Games.S.Database.Loaded(this);
+    }
+}
 
 /// <summary>
 /// BullfrogPakFile
@@ -73,5 +109,3 @@ public class BullfrogPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileM
 
     #endregion
 }
-
-#endregion

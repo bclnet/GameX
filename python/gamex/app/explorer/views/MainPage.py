@@ -12,7 +12,7 @@ from .SaveFileWidget import SaveFileWidget
 from .OpenWidget import OpenWidget
 from .FileContent import FileContent
 from .FileExplorer import FileExplorer
-from .resourcemgr import ResourceManager
+from ..resourcemgr import ResourceManager
 
 platformValues = sorted([x for x in PlatformX.platforms if x and x.enabled], key=lambda s: s.name)
 platformIndex = max(_find([x.id for x in platformValues], option.Platform), 0)

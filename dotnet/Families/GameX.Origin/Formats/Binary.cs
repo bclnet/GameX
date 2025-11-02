@@ -272,7 +272,6 @@ public unsafe class Binary_UO : PakBinary<Binary_UO> {
     const int UOP_MAGIC = 0x50594D;
 
     Task ReadUop(BinaryPakFile source, BinaryReader r) {
-        FileSource[] files;
         (string extension, int length, int idxLength, bool extra, Func<int, string> pathFunc) pair = source.PakPath switch {
             "artLegacyMUL.uop" => (".tga", 0x14000, 0x13FDC, false, i => i < 0x4000 ? $"land/file{i:x5}.land" : $"static/file{i:x5}.art"),
             "gumpartLegacyMUL.uop" => (".tga", 0xFFFF, 0, true, i => $"file{i:x5}.tex"),
@@ -295,21 +294,10 @@ public unsafe class Binary_UO : PakBinary<Binary_UO> {
 
         // find hashes
         var hashes = new Dictionary<ulong, int>();
-        for (var i = 0; i < length; i++)
-            hashes.TryAdd(CreateUopHash($"build/{uopPattern}/{i:D8}{extension}"), i);
-
-        // load empties
-        source.Files = files = new FileSource[length];
-        for (var i = 0; i < files.Length; i++)
-            files[i] = new FileSource {
-                Id = i,
-                Path = pathFunc(i),
-                Offset = -1,
-                FileSize = -1,
-                Compressed = -1,
-            };
+        for (var i = 0; i < length; i++) hashes.TryAdd(CreateUopHash($"build/{uopPattern}/{i:D8}{extension}"), i);
 
         // load files
+        var files = new FileSource[length];
         var nextBlock = header.NextBlock;
         r.Seek(nextBlock);
         do {
@@ -318,13 +306,13 @@ public unsafe class Binary_UO : PakBinary<Binary_UO> {
             for (var i = 0; i < filesCount; i++) {
                 var record = r.ReadS<UopRecord>();
                 if (record.Offset == 0 || !hashes.TryGetValue(record.Hash, out var idx)) continue;
-                if (idx < 0 || idx > files.Length)
-                    throw new IndexOutOfRangeException("hashes dictionary and files collection have different count of entries!");
-
-                var file = files[idx];
-                file.Offset = (int)(record.Offset + record.HeaderLength);
-                file.FileSize = record.FileSize;
-
+                if (idx < 0 || idx > files.Length) throw new IndexOutOfRangeException("hashes dictionary and files collection have different count of entries!");
+                var file = files[idx] = new FileSource {
+                    Id = idx,
+                    Path = pathFunc(idx),
+                    Offset = (int)(record.Offset + record.HeaderLength),
+                    FileSize = record.FileSize
+                };
                 // load extra
                 if (!extra) continue;
                 r.Peek(x => {
@@ -337,6 +325,7 @@ public unsafe class Binary_UO : PakBinary<Binary_UO> {
                 });
             }
         } while (r.BaseStream.Seek(nextBlock, SeekOrigin.Begin) != 0);
+        source.Files = [.. files.Where(x => x != null)];
         return Task.CompletedTask;
     }
 
@@ -437,22 +426,20 @@ public unsafe class Binary_UO : PakBinary<Binary_UO> {
 
         // load files
         var id = 0;
-        List<FileSource> files;
-        source.Files = files = r.ReadSArray<IdxFile>(Count).Select(s => new FileSource {
+        List<FileSource> files = [.. r.ReadSArray<IdxFile>(Count).Select(s => new FileSource {
             Id = id,
             Path = pathFunc(id++),
             Offset = s.Offset,
             FileSize = s.FileSize,
-            Compressed = s.Extra }).ToList();
+            Compressed = s.Extra
+        })];
+        source.Files = files;
 
         // fill with empty
-        for (var i = Count; i < length; ++i)
-            files.Add(new FileSource {
-                Id = i,
-                Path = pathFunc(i),
-                Offset = -1,
-                FileSize = -1,
-                Compressed = -1 });
+        //for (var i = Count; i < length; ++i)
+        //    files.Add(new FileSource {
+        //        Id = i,
+        //        Path = pathFunc(i) });
 
         // apply patch
         var verdata = Binary_Verdata.Instance;

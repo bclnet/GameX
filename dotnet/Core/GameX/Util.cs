@@ -6,6 +6,7 @@ using System.Text.Json;
 
 namespace GameX;
 
+// #util
 public static class Util {
     // value
     public static T _valueF<T>(JsonElement elem, string key, Func<JsonElement, T> func, T default_ = default)

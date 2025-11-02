@@ -9,10 +9,10 @@
   ],
   "games": {
     "*": {
-      "gameType": "GameX.WB.WBGame, GameX.WB",
       "pakFileType": "GameX.WB.WBPakFile, GameX.WB"
     },
     "AC": {
+      "gameType": "GameX.WB.ACGame, GameX.WB",
       "name": "Asheron's Call",
       "url": [
         "https://en.wikipedia.org/wiki/Asheron%27s_Call",

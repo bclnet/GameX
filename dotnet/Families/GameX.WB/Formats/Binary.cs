@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace GameX.WB.Formats;
 
-#region PakBinary_AC
+#region Binary_AC
 
 public unsafe class Binary_AC : PakBinary<Binary_AC> {
     #region Headers

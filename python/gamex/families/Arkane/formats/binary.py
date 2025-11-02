@@ -1,8 +1,8 @@
 import os
 from io import BytesIO
+from openstk import _pathExtension
 from gamex import FileSource, PakBinaryT
 from gamex.core.formats.compression import decompressBlast
-from gamex.core.util import _pathExtension
 
 # typedefs
 class Reader: pass

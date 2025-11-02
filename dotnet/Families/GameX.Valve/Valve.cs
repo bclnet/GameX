@@ -11,8 +11,6 @@ using static OpenStack.Debug;
 
 namespace GameX.Valve;
 
-#region ValvePakFile
-
 /// <summary>
 /// ValvePakFile
 /// </summary>
@@ -81,5 +79,3 @@ public class ValvePakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMode
 
     #endregion
 }
-
-#endregion

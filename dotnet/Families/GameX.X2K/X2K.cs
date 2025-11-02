@@ -8,8 +8,6 @@ using System.Threading.Tasks;
 
 namespace GameX.X2K;
 
-#region X2KPakFile
-
 /// <summary>
 /// X2KPakFile
 /// </summary>
@@ -45,5 +43,3 @@ public class X2KPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel>
 
     #endregion
 }
-
-#endregion

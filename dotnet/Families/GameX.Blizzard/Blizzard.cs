@@ -11,8 +11,6 @@ using System.Threading.Tasks;
 
 namespace GameX.Blizzard;
 
-#region BlizzardFileSystem
-
 /// <summary>
 /// BlizzardFileSystem
 /// </summary>
@@ -36,10 +34,6 @@ public class BlizzardFileSystem : FileSystem {
         throw new System.NotImplementedException();
     }
 }
-
-#endregion
-
-#region BlizzardPakFile
 
 /// <summary>
 /// BlizzardPakFile
@@ -74,5 +68,3 @@ public class BlizzardPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileM
 
     #endregion
 }
-
-#endregion

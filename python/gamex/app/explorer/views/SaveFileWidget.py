@@ -1,7 +1,7 @@
 import os
+from time import time
 from PyQt6.QtWidgets import QWidget, QProgressBar, QGridLayout, QFileDialog, QLabel
 from PyQt6.QtCore import pyqtSlot, pyqtSignal, Qt
-from time import time
 
 # SaveFileWidget
 class SaveFileWidget(QWidget):

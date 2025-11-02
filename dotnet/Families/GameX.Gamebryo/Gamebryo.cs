@@ -10,8 +10,6 @@ using static OpenStack.Debug;
 
 namespace GameX.Gamebryo;
 
-#region GamebryoPakFile
-
 /// <summary>
 /// GamebryoPakFile
 /// </summary>
@@ -67,5 +65,3 @@ public class GamebryoPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileM
 
     #endregion
 }
-
-#endregion

@@ -11,29 +11,35 @@ using System.Threading.Tasks;
 
 namespace GameX.Volition;
 
-#region VolitionGame
-
 /// <summary>
-/// VolitionGame
+/// DGame
 /// </summary>
 /// <seealso cref="GameX.FamilyGame" />
-public class VolitionGame(Family family, string id, JsonElement elem, FamilyGame dgame) : FamilyGame(family, id, elem, dgame) {
+public class DGame(Family family, string id, JsonElement elem, FamilyGame dgame) : FamilyGame(family, id, elem, dgame) {
     /// <summary>
     /// Ensures this instance.
     /// </summary>
     /// <returns></returns>
-    public override FamilyGame Ensure() {
-        switch (Id) {
-            case "D": Games.D.Database.Ensure(this); return this;
-            case "D2": Games.D2.Database.Ensure(this); return this;
-            default: return this;
-        }
+    public override void Loaded() {
+        base.Loaded();
+        Games.D.Database.Loaded(this);
     }
 }
 
-#endregion
-
-#region VolitionPakFile
+/// <summary>
+/// D2Game
+/// </summary>
+/// <seealso cref="GameX.FamilyGame" />
+public class D2Game(Family family, string id, JsonElement elem, FamilyGame dgame) : FamilyGame(family, id, elem, dgame) {
+    /// <summary>
+    /// Ensures this instance.
+    /// </summary>
+    /// <returns></returns>
+    public override void Loaded() {
+        base.Loaded();
+        Games.D2.Database.Loaded(this);
+    }
+}
 
 /// <summary>
 /// VolitionPakFile
@@ -77,5 +83,3 @@ public class VolitionPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileM
 
     #endregion
 }
-
-#endregion

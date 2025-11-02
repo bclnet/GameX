@@ -2,9 +2,8 @@ from __future__ import annotations
 import sys, os, re, time, itertools
 from enum import Enum, Flag
 from io import BytesIO
-from openstk.poly import Reader, GenericPool, SinglePool, StaticPool
+from openstk import _throw, Reader, GenericPool, SinglePool, StaticPool
 from gamex.core.meta import FileSource, MetaManager, MetaItem, MetaInfo
-from gamex.core.util import _throw
 
 # FileOption
 class FileOption(Flag):

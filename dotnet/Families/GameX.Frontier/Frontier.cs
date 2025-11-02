@@ -8,8 +8,6 @@ using System.Threading.Tasks;
 
 namespace GameX.Frontier;
 
-#region FrontierPakFile
-
 /// <summary>
 /// FrontierPakFile
 /// </summary>
@@ -39,5 +37,3 @@ public class FrontierPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileM
 
     #endregion
 }
-
-#endregion

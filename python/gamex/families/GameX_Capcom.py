@@ -1,10 +1,10 @@
 from __future__ import annotations
 import os
+from openstk import _pathExtension
 from gamex import BinaryPakFile
 from gamex.core.formats.binary import Binary_Zip
 from gamex.families.Capcom.formats.binary import Binary_Arc, Binary_Big, Binary_Bundle, Binary_Kpka, Binary_Plist
 from gamex.families.Unity.formats.binary import Binary_Unity
-from gamex.core.util import _pathExtension
 
 # CapcomPakFile
 class CapcomPakFile(BinaryPakFile):
@@ -13,6 +13,7 @@ class CapcomPakFile(BinaryPakFile):
         self.objectFactoryFunc = self.objectFactory
 
     #region Factories
+
     @staticmethod
     def getPakBinary(game: FamilyGame, extension: str) -> PakBinary:
         if not extension: return None

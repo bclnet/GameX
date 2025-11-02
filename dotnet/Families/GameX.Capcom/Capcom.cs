@@ -10,8 +10,6 @@ using System.Threading.Tasks;
 
 namespace GameX.Capcom;
 
-#region CapcomPakFile
-
 /// <summary>
 /// CapcomPakFile
 /// </summary>
@@ -62,5 +60,3 @@ public class CapcomPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMod
 
     #endregion
 }
-
-#endregion

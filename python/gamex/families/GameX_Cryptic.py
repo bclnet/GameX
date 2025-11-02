@@ -1,9 +1,9 @@
 from __future__ import annotations
 import os
+from openstk import _pathExtension
 from gamex import BinaryPakFile
 from gamex.families.Cryptic.formats.binary import Binary_Hogg
 from gamex.families.GameX import UnknownPakFile
-from gamex.core.util import _pathExtension
 
 # CrypticPakFile
 class CrypticPakFile(BinaryPakFile):
@@ -12,6 +12,7 @@ class CrypticPakFile(BinaryPakFile):
         self.objectFactoryFunc = self.objectFactory
 
     #region Factories
+
     @staticmethod
     def getPakBinary(game: FamilyGame, extension: str) -> PakBinary:
         return Binary_Hogg()

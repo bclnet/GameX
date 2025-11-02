@@ -10,28 +10,20 @@ using System.Threading.Tasks;
 
 namespace GameX.ID;
 
-#region IDGame
-
 /// <summary>
-/// IDGame
+/// QGame
 /// </summary>
 /// <seealso cref="GameX.FamilyGame" />
-public class IDGame(Family family, string id, JsonElement elem, FamilyGame dgame) : FamilyGame(family, id, elem, dgame) {
+public class QGame(Family family, string id, JsonElement elem, FamilyGame dgame) : FamilyGame(family, id, elem, dgame) {
     /// <summary>
     /// Ensures this instance.
     /// </summary>
     /// <returns></returns>
-    public override FamilyGame Ensure() {
-        switch (Id) {
-            case "Q": Games.Q.Database.Ensure(this); return this;
-            default: return this;
-        }
+    public override void Loaded() {
+        base.Loaded();
+        Games.Q.Database.Loaded(this);
     }
 }
-
-#endregion
-
-#region IDPakFile
 
 /// <summary>
 /// IDPakFile
@@ -78,5 +70,3 @@ public class IDPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> 
 
     #endregion
 }
-
-#endregion

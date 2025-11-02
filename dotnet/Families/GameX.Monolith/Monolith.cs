@@ -8,8 +8,6 @@ using System.Threading.Tasks;
 
 namespace GameX.Monolith;
 
-#region MonolithPakFile
-
 /// <summary>
 /// MonolithPakFile
 /// </summary>
@@ -45,5 +43,3 @@ public class MonolithPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileM
 
     #endregion
 }
-
-#endregion

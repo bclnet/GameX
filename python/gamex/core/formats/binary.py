@@ -3,9 +3,9 @@ import os, numpy as np
 from io import BytesIO
 from PIL import Image
 from enum import Enum
+from openstk import _pathExtension
 from openstk.gfx import Raster, DDS_HEADER, Texture_Bytes, ITexture, TextureFormat, TexturePixel
 from gamex import PakBinary, PakBinaryT, FileSource, BinaryPakFile, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
-from gamex.core.util import _pathExtension
 from zipfile import ZipFile
 
 #region Binary_Bik

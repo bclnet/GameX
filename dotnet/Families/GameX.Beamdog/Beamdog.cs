@@ -8,8 +8,6 @@ using System.Threading.Tasks;
 
 namespace GameX.Beamdog;
 
-#region BeamdogPakFile
-
 /// <summary>
 /// BeamdogPakFile
 /// </summary>
@@ -45,5 +43,3 @@ public class BeamdogPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMo
 
     #endregion
 }
-
-#endregion

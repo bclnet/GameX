@@ -3,13 +3,13 @@ import os, json, re, random, platform
 from enum import Enum
 from urllib.parse import urlparse
 from importlib import resources
-from openstk.poly import findType
+from openstk import findType, _throw, YamlDict
 from openstk.vfx import FileSystem, AggregateFileSystem, NetworkFileSystem, DirectoryFileSystem, VirtualFileSystem
 from openstk.platform import PlatformX
-from gamex import option, familyKeys
+from gamex import option, familyKeys 
 from gamex.core.pak import PakState, ManyPakFile, MultiPakFile
 from gamex.core.store import getPathByKey as Store_getPathByKey
-from .util import _throw, _valueF, _value, _list, _related, _dictTrim
+from .util import _valueF, _value, _list, _related, _dictTrim
 
 #region Factory
 
@@ -252,6 +252,7 @@ games: {[x for x in self.games.values()]}'''
             case s if isinstance(res, Resource): r = s
             case u if isinstance(res, str): r = self.parseResource(u)
             case _: raise Exception(f'Unknown: {res}')
+        if not r.game.hasLoaded: r.game.hasLoaded = True; r.game.loaded()
         return (pak := r.game.createPakFile(r.vfx, r.edition, r.searchPattern, throwOnError)) and pak.open() if r.game else \
             _throw(f'Undefined Game')
 # end::Family[]
@@ -372,6 +373,7 @@ class FamilyGame:
             self.paths = _list(elem, 'path', [])
 
     def __init__(self, family: Family, id: str, elem: dict[str, object], dgame: FamilyGame):
+        self.hasLoaded = False
         self.family = family
         self.id = id
         if not dgame:
@@ -408,6 +410,8 @@ class FamilyGame:
         self.filters = _related(elem, 'filters', lambda k,v: v) #filters: dict[str, object] = {}
         # find
         self.found = self.getSystemPath(option.FindKey, family.id, elem)
+        self.options = None
+        
     def __repr__(self): return f'''
    {self.id}: {self.name} - {self.found}'''
 #     def __repr__(self): return f'''
@@ -419,6 +423,10 @@ class FamilyGame:
     # detect
     def detect(self, id: str, key: str, value: object, func: callable) -> object:
         return self.detectors[id].get(key, value, func) if id in self.detectors else None
+
+    # Ensures this instance.
+    def loaded(self) -> None:
+        self.options = YamlDict(f'.gamex.{self.family.id}_{self.id}.yaml')
 
     # converts the Paks to Application Paks
     def toPaks(self, edition: str) -> list[str]:

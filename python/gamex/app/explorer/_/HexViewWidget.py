@@ -1,7 +1,7 @@
 import sys, os
 from PyQt6.QtWidgets import QWidget, QTextEdit, QHBoxLayout
 from PyQt6.QtGui import QFont
-from .util import _pathExtension
+from openstk import _pathExtension
 # import webbrowser
 
 # HexViewWidget

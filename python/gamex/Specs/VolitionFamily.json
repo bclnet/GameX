@@ -14,10 +14,10 @@
   },
   "games": {
     "*": {
-      "gameType": "GameX.Volition.VolitionGame, GameX.Volition",
       "pakFileType": "GameX.Volition.VolitionPakFile, GameX.Volition"
     },
     "D": {
+      "gameType": "GameX.Volition.DGame, GameX.Volition",
       "name": "Descent",
       "engine": "Descent",
       "url": "https://en.wikipedia.org/wiki/Descent_(video_game)",
@@ -36,6 +36,7 @@
       }
     },
     "D2": {
+      "gameType": "GameX.Volition.D2Game, GameX.Volition",
       "name": "Descent II",
       "engine": "Descent",
       "url": "https://en.wikipedia.org/wiki/Descent_II",

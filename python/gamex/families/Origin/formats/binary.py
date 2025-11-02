@@ -2,9 +2,9 @@ import os, numpy as np
 from pathlib import Path
 from ctypes import c_ulong, c_ulonglong
 from io import BytesIO
+from openstk import _pathExtension
 from gamex.core.pak import PakBinaryT
 from gamex.core.meta import FileSource
-from gamex.core.util import _pathExtension
 from gamex.families.Origin.formats.UO.binary import *
 
 # typedefs
@@ -177,20 +177,10 @@ class Binary_UO(PakBinaryT):
 
         # find hashes
         hashes = {}
-        for i in range(length):
-            hashes[self.createUopHash(f'build/{uopPattern}/{i:08}{extension}'.encode('ascii'))] = i
+        for i in range(length): hashes[self.createUopHash(f'build/{uopPattern}/{i:08}{extension}'.encode('ascii'))] = i
 
-        # load empties
-        source.files = files = [None]*length
-        for i in range(length):
-            files[i] = FileSource(
-                id = i,
-                path = pathFunc(i),
-                offset = -1,
-                fileSize = -1,
-                compressed = -1)
-        
         # load files
+        files = [None]*length
         nextBlock = header.nextBlock
         r.seek(nextBlock)
         while True:
@@ -200,13 +190,12 @@ class Binary_UO(PakBinaryT):
                 record = r.readS(self.UopRecord)
                 if record.offset == 0 or record.hash not in hashes: continue
                 idx = hashes[record.hash]
-                if idx < 0 or idx > length:
-                    raise Exception('hashes dictionary and files collection have different count of entries!')
-
-                file = files[idx]
-                file.offset = record.offset + record.headerLength
-                file.fileSize = record.fileSize
-
+                if idx < 0 or idx > length: raise Exception('hashes dictionary and files collection have different count of entries!')
+                file = files[idx] = FileSource(
+                    id = idx,
+                    path = pathFunc(idx),
+                    offset = record.offset + record.headerLength,
+                    fileSize = record.fileSize)
                 # load extra
                 if not extra: continue
                 def peekLambda(x):
@@ -218,6 +207,7 @@ class Binary_UO(PakBinaryT):
                     file.compressed = extra1 << 16 | extra2
                 r.peek(peekLambda)
             if r.f.seek(nextBlock, os.SEEK_SET) == 0: break
+        source.files = [x for x in files if x]
 
     @staticmethod
     def createUopHash2(s: str) -> int:
@@ -329,23 +319,22 @@ class Binary_UO(PakBinaryT):
 
         # load files
         id = 0
-        files: list[FileSource] = []
-        source.files = files = [FileSource(
+        files: list[FileSource] = [FileSource(
             id = id,
             path = pathFunc(id),
             offset = s.offset,
             fileSize = s.fileSize,
             compressed = s.extra,
             tag = (id := id + 1)) for s in r.readSArray(self.IdxFile, self.count)]
-        
+        source.files = files
         # fill with empty
-        for i in range(self.count, length):
-            files.append(FileSource(
-                id = i,
-                path = pathFunc(i),
-                offset = -1,
-                fileSize = -1,
-                compressed = -1))
+        # for i in range(self.count, length):
+        #     files.append(FileSource(
+        #         id = i,
+        #         path = pathFunc(i),
+        #         offset = -1,
+        #         fileSize = -1,
+        #         compressed = -1))
 
         # apply patch
         verdata = Binary_Verdata.instance

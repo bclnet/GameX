@@ -882,7 +882,6 @@ public class Binary_Raw : IHaveMetaInfo, ITexture {
     }
 
     public Binary_Raw(BinaryReader r, FamilyGame game, FileSource source, Action<Binary_Raw, BinaryReader, FileSource> action, Func<string, string, Binary_Pal> palleteFunc) {
-        game.Ensure();
         action(this, r, source);
         Body ??= r.ReadToEnd();
         if (source.Tag is Tag c) {

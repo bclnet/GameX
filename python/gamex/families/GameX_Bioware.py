@@ -1,10 +1,10 @@
 from __future__ import annotations
 import os
+from openstk import _pathExtension
 from gamex import BinaryPakFile
 from gamex.core.formats.binary import Binary_Zip
 from gamex.families.Bioware.formats.binary import Binary_Aurora, Binary_Myp
 from gamex.families.GameX import UnknownPakFile
-from gamex.core.util import _pathExtension
 
 # BiowarePakFile
 class BiowarePakFile(BinaryPakFile):
@@ -13,6 +13,7 @@ class BiowarePakFile(BinaryPakFile):
         self.objectFactoryFunc = self.objectFactory
 
     #region Factories
+
     @staticmethod
     def getPakBinary(game: FamilyGame, extension: str) -> PakBinary:
         if extension == '.zip': return Binary_Zip()

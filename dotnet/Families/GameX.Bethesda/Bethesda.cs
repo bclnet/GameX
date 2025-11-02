@@ -12,33 +12,26 @@ using static OpenStack.Debug;
 
 namespace GameX.Bethesda;
 
-#region BethesdaFamily
-
 /// <summary>
 /// BethesdaFamily
 /// </summary>
 /// <seealso cref="GameX.Family" />
 public class BethesdaFamily(JsonElement elem) : Family(elem) { }
 
-#endregion
-
-#region BethesdaGame
-
 /// <summary>
-/// BethesdaGame
+/// MorrowindGame
 /// </summary>
 /// <seealso cref="GameX.FamilyGame" />
-public class BethesdaGame(Family family, string id, JsonElement elem, FamilyGame dgame) : FamilyGame(family, id, elem, dgame) {
+public class MorrowindGame(Family family, string id, JsonElement elem, FamilyGame dgame) : FamilyGame(family, id, elem, dgame) {
     /// <summary>
     /// Ensures this instance.
     /// </summary>
     /// <returns></returns>
-    public override FamilyGame Ensure() => DatabaseManager.Ensure(this);
+    public override void Loaded() {
+        base.Loaded();
+        DatabaseManager.Loaded(this);
+    }
 }
-
-#endregion
-
-#region BethesdaPakFile
 
 /// <summary>
 /// BethesdaPakFile
@@ -99,5 +92,3 @@ public class BethesdaPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileM
 
     #endregion
 }
-
-#endregion

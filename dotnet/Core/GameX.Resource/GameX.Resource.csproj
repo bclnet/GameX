@@ -23,6 +23,56 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\agrp.png" Link="Core\Icons\agrp.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\anim.png" Link="Core\Icons\anim.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\bsp.png" Link="Core\Icons\bsp.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\css.png" Link="Core\Icons\css.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\dds.png" Link="Core\Icons\dds.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\dmx.png" Link="Core\Icons\dmx.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\ents.png" Link="Core\Icons\ents.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\fbx.png" Link="Core\Icons\fbx.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\gnv.png" Link="Core\Icons\gnv.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\grass.png" Link="Core\Icons\grass.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\hcg.png" Link="Core\Icons\hcg.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\html.png" Link="Core\Icons\html.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\jpg.png" Link="Core\Icons\jpg.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\map.png" Link="Core\Icons\map.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\mat.png" Link="Core\Icons\mat.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\mdl.png" Link="Core\Icons\mdl.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\mesh.png" Link="Core\Icons\mesh.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\morf.png" Link="Core\Icons\morf.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\mp3.png" Link="Core\Icons\mp3.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\pcf.png" Link="Core\Icons\pcf.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\pcx.png" Link="Core\Icons\pcx.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\pdf.png" Link="Core\Icons\pdf.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\pdi.png" Link="Core\Icons\pdi.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\phy.png" Link="Core\Icons\phy.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\phys.png" Link="Core\Icons\phys.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\png.png" Link="Core\Icons\png.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\post.png" Link="Core\Icons\post.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\psd.png" Link="Core\Icons\psd.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\rman.png" Link="Core\Icons\rman.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\snd.png" Link="Core\Icons\snd.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\surf.png" Link="Core\Icons\surf.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\tex.png" Link="Core\Icons\tex.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\ttf.png" Link="Core\Icons\ttf.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\txt.png" Link="Core\Icons\txt.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\vis.png" Link="Core\Icons\vis.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\vmt.png" Link="Core\Icons\vmt.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\vtf.png" Link="Core\Icons\vtf.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\vtx.png" Link="Core\Icons\vtx.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\vvd.png" Link="Core\Icons\vvd.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\wav.png" Link="Core\Icons\wav.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\wnod.png" Link="Core\Icons\wnod.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\wrld.png" Link="Core\Icons\wrld.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\xml.png" Link="Core\Icons\xml.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\_default.png" Link="Core\Icons\_default.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\_folder.png" Link="Core\Icons\_folder.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\_openFile.png" Link="Core\Icons\_openFile.png" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Icons\_package.png" Link="Core\Icons\_package.png" />
+  </ItemGroup>
+	
+  <ItemGroup>
     <PackageReference Include="CsvHelper" Version="33.1.0" />
     <PackageReference Include="ZstdNet" Version="1.4.5" />
   </ItemGroup>

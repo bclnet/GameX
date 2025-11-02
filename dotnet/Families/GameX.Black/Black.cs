@@ -7,8 +7,6 @@ using System.Threading.Tasks;
 
 namespace GameX.Black;
 
-#region BlackPakFile
-
 /// <summary>
 /// BlackPakFile
 /// </summary>
@@ -52,5 +50,3 @@ public class BlackPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMode
 
     #endregion
 }
-
-#endregion

@@ -17,7 +17,6 @@ public class Binary_Bmp : IHaveMetaInfo, ITexture {
 
     public Binary_Bmp(BinaryReader r, FamilyGame game, object tag) {
         // get body
-        game.Ensure();
         Body = r.ReadToEnd();
 
         // parse tag

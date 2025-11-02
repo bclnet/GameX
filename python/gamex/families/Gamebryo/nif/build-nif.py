@@ -56,7 +56,7 @@ from io import BytesIO
 from enum import Enum, Flag, IntFlag
 from typing import TypeVar, Generic
 from numpy import ndarray, array
-from openstk.poly import Reader, log
+from openstk import Reader, debug
 from gamex import FileSource, PakBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
 from gamex.core.globalx import Color3, Color4
 from gamex.core.desser import DesSer
@@ -602,7 +602,7 @@ BODY
         def type(o: NiObject) -> NiObject: setattr(o, '$type', nodeType); return o;
         match nodeType:
 BODY
-            case _: log(f'Tried to read an unsupported NiObject type ({nodeType}).'); node = None
+            case _: debug.log(f'Tried to read an unsupported NiObject type ({nodeType}).'); node = None
         return node
 '''.replace('BODY', body)))
         def bhkRigidBody_values(s, values):

@@ -8,8 +8,6 @@ using System.Threading.Tasks;
 
 namespace GameX.MODEL;
 
-#region MODELPakFile
-
 /// <summary>
 /// MODELPakFile
 /// </summary>
@@ -46,5 +44,3 @@ public class MODELPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMode
 
     #endregion
 }
-
-#endregion

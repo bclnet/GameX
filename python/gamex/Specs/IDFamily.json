@@ -13,7 +13,6 @@
   },
   "games": {
     "*": {
-      "gameType": "GameX.ID.IDGame, GameX.ID",
       "pakFileType": "GameX.ID.IDPakFile, GameX.ID",
       "pakExt": ".pak"
     },
@@ -104,6 +103,7 @@
       "tag": "DOS"
     },
     "Q": {
+      "gameType": "GameX.ID.QGame, GameX.ID",
       "name": "Quake",
       "engine": "idTech:2",
       "url": [

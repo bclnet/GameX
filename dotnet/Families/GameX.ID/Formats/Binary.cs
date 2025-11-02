@@ -812,7 +812,6 @@ public unsafe class Binary_Lmp : IHaveMetaInfo, ITexture {
                 Colormap = this;
                 return;
             default:
-                s.Game.Ensure();
                 var palette = Palette?.PaletteRecords ?? throw new NotImplementedException();
                 var width = Width = r.ReadInt32();
                 var height = Height = r.ReadInt32();

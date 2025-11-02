@@ -9,8 +9,6 @@ using System.Threading.Tasks;
 
 namespace GameX.Cryptic;
 
-#region CrypticPakFile
-
 /// <summary>
 /// CrypticPakFile
 /// </summary>
@@ -49,5 +47,3 @@ public class CrypticPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMo
 
     #endregion
 }
-
-#endregion

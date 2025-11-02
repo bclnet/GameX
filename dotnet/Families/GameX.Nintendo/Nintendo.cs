@@ -8,8 +8,6 @@ using System.Threading.Tasks;
 
 namespace GameX.Nintendo;
 
-#region NintendoPakFile
-
 /// <summary>
 /// NintendoPakFile
 /// </summary>
@@ -49,5 +47,3 @@ public class NintendoPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileM
 
     #endregion
 }
-
-#endregion

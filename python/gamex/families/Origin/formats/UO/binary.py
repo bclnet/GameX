@@ -441,20 +441,20 @@ class Binary_Gump(IHaveMetaInfo, ITexture):
         self.load(r.readBytes(length), width, height)
 
     def load(self, data: bytes, width: int, height: int) -> None:
-        lookup = np.frombuffer(data, dtype = np.int32); dat = np.frombuffer(data, dtype = np.uint16); lookup_ = 0; 
+        lookup = np.frombuffer(data, dtype = np.int32); dat = np.frombuffer(data, dtype = np.uint16); lookup_ = 0; datLen = len(dat)
         bd = self.pixels = bytearray(width * height << 1)
+        mv = memoryview(np.frombuffer(bd, dtype = np.uint16))
         line = 0
         for y in range(height):
             count = lookup[lookup_] << 1; lookup_ += 1
             cur = line; end = line + width
             while cur < end:
-                color = dat[count]; count += 1
-                next = cur + dat[count]; count += 1
+                if count < datLen: color = dat[count + 0]; next = cur + int(dat[count + 1]); count += 2
+                else: color = 0
                 if color == 0: cur = next
                 else:
                     color ^= 0x8000
-                    cur2 = cur << 1
-                    while cur < next: bd[cur2:cur2+1] = color.tobytes(); cur += 1
+                    while cur < next: mv[cur] = color; cur += 1
             line += width
 
     #region ITexture

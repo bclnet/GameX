@@ -1,19 +1,19 @@
 from __future__ import annotations
 import os
+from openstk import _pathExtension
 from gamex import Family, FamilyGame, BinaryPakFile, FileOption
 from gamex.core.formats.binary import Binary_Dds
 from gamex.families.Bethesda.formats.binary import Binary_Ba2, Binary_Bsa, Binary_Esm
 from gamex.families.Gamebryo.formats.binary import Binary_Nif
 from gamex.families.GameX import UnknownPakFile
-from gamex.core.util import _pathExtension
 
 # BethesdaFamily
-class BethesdaFamily(Family):
-    def __init__(self, elem: dict[str, object]):
-        super().__init__(elem)
+# class BethesdaFamily(Family):
+#     def __init__(self, elem: dict[str, object]):
+#         super().__init__(elem)
 
-# BethesdaGame
-class BethesdaGame(FamilyGame):
+# MorrowindGame
+class MorrowindGame(FamilyGame):
     def __init__(self, family: Family, id: str, elem: dict[str, object], dgame: FamilyGame):
         super().__init__(family, id, elem, dgame)
 

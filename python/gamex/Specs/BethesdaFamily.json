@@ -7,16 +7,16 @@
   "samples": [
     "BethesdaFamily.Sample.json"
   ],
-  "familyType": "GameX.Bethesda.BethesdaFamily, GameX.Bethesda",
+  "familyType_": "GameX.Bethesda.BethesdaFamily, GameX.Bethesda",
   "engines": {
     "TES3": {}
   },
   "games": {
     "*": {
-      "gameType": "GameX.Bethesda.BethesdaGame, GameX.Bethesda",
       "pakFileType": "GameX.Bethesda.BethesdaPakFile, GameX.Bethesda"
     },
     "Morrowind": {
+      "gameType": "GameX.Bethesda.MorrowindGame, GameX.Bethesda",
       "name": "The Elder Scrolls III: Morrowind",
       "url": "https://store.steampowered.com/app/22320/The_Elder_Scrolls_III_Morrowind_Game_of_the_Year_Edition/",
       "date": "2002-04-29",

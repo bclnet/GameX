@@ -8,8 +8,6 @@ using System.Threading.Tasks;
 
 namespace GameX.Rockstar;
 
-#region RockstarPakFile
-
 /// <summary>
 /// RockstarPakFile
 /// </summary>
@@ -46,5 +44,3 @@ public class RockstarPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileM
 
     #endregion
 }
-
-#endregion

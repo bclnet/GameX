@@ -2,13 +2,13 @@ __title__ = "gamex"
 __version__ = "0.0.1"
 # __current__ = "Unknown"
 # __current__ = "Arkane"
-# __current__ = "Bethesda"
+__current__ = "Bethesda"
 # __current__ = "Bioware"
 # __current__ = "Bullfrog"
 # __current__ = "ID"
 # __current__ = "Lucas"
 # __current__ = "Mythic"
-__current__ = "Origin"
+# __current__ = "Origin"
 # __current__ = "Red"
 # __current__ = "Valve"
 
@@ -520,7 +520,7 @@ match __current__:
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
-            ForcePath = "sample:6",
+            ForcePath = "sample:1",
             Family = "Origin",
             # Game = "U8", # Ultima 8
             Game = "UO", # Ultima Online

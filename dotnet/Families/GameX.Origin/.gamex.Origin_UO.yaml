@@ -1,0 +1,26 @@
+﻿username: 
+password: 
+ip: login.uolostlands.com
+port: 2593
+ignoreRelayIp: false
+profilespath: 
+clientversion: 7.0.113.0
+lang: IVL
+lastserverNum: 1
+lastserverName: Lost Lands
+fps: 60
+windowPosition: 632 245
+windowSize: null
+iswinMaximized: true
+saveaccount: false
+autologin: false
+reconnect: false
+reconnectTime: 1
+loginMusic: true
+loginMusicVolume: 70
+fixedTimeStep: true
+forceDriver: 0
+useVerdata: false
+mapsLayouts: null
+encryption: 0
+plugins: null

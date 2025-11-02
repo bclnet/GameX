@@ -15,9 +15,7 @@ public static class DatabaseManager {
 
     public static DatabaseCell Cell { get; private set; }
 
-    internal static FamilyGame Ensure(FamilyGame game, bool loadCell = true) {
-        if (loaded) return game;
-        loaded = true;
+    internal static void Loaded(FamilyGame game, bool loadCell = true) {
 
         //try
         //{
@@ -31,7 +29,5 @@ public static class DatabaseManager {
         //    Log($"An exception occured while attempting to open {Cell} file. This needs to be corrected in order for Landblocks to load.");
         //    Log($"Exception: {ex.Message}");
         //}
-
-        return game;
     }
 }

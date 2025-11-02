@@ -1,6 +1,6 @@
 from __future__ import annotations
 import os, io, asyncio, shutil
-from openstk.poly import parallelFor, IStream, IWriteToStream
+from openstk import parallelFor, IStream, IWriteToStream
 from gamex import FileOption, PakFile, MultiPakFile, BinaryPakFile
 
 # ExportManager

@@ -1,12 +1,10 @@
 from __future__ import annotations
 import os
+from openstk import _pathExtension
 from gamex import Family, FamilyGame, BinaryPakFile, FileOption
 from gamex.core.formats.binary import Binary_Dds
 from gamex.families.Gamebryo.formats.binary import Binary_Nif
 from gamex.families.GameX import UnknownPakFile
-from gamex.core.util import _pathExtension
-
-#region GamebryoPakFile
 
 # GamebryoPakFile
 class GamebryoPakFile(BinaryPakFile):
@@ -28,5 +26,3 @@ class GamebryoPakFile(BinaryPakFile):
             case _: return UnknownPakFile.objectFactory(source, game)
 
     #endregion
-
-#endregion

@@ -666,8 +666,7 @@ public unsafe class Binary_Gump : IHaveMetaInfo, ITexture {
                     var count = *lookup++ << 1;
                     ushort* cur = line, end = line + width;
                     while (cur < end) {
-                        var color = dat[count++];
-                        var next = cur + dat[count++];
+                        var color = dat[count + 0]; var next = cur + dat[count + 1]; count += 2;
                         if (color == 0) cur = next;
                         else {
                             color ^= 0x8000;

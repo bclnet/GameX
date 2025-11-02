@@ -20,9 +20,9 @@
 //#define IW
 //#define Lucas
 //#define Monolith
-#define Mythic
+//#define Mythic
 //#define Nintendo
-//#define Origin
+#define Origin
 //#define Red
 //#define Rockstar
 //#define Ubisoft
@@ -607,7 +607,7 @@ public partial class FamilyManager {
     {
         Platform = "GL",
         ForceOpen = true,
-        ForcePath = "sample:6",
+        ForcePath = "sample:0",
         //ForcePath = "sample:13",
         Family = "Origin",
         //Game = "U8", // Ultima 8

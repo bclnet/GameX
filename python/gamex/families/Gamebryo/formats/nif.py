@@ -3,7 +3,7 @@ from io import BytesIO
 from enum import Enum, Flag, IntFlag
 from typing import TypeVar, Generic
 from numpy import ndarray, array
-from openstk.poly import Reader, log
+from openstk import Reader, debug
 from gamex import FileSource, PakBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
 from gamex.core.globalx import Color3, Color4
 from gamex.core.desser import DesSer
@@ -1570,7 +1570,7 @@ class NiObject: # X
             case 'NiStringPalette': return type(NiStringPalette(r))
             case 'NiDefaultAVObjectPalette': return type(NiDefaultAVObjectPalette(r))
             case 'NiStencilProperty': return type(NiStencilProperty(r))
-            case _: log(f'Tried to read an unsupported NiObject type ({nodeType}).'); node = None
+            case _: debug.log(f'Tried to read an unsupported NiObject type ({nodeType}).'); node = None
         return node
 
 # LEGACY (pre-10.1). Abstract base class for particle system modifiers.

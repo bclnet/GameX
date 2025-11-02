@@ -8,8 +8,6 @@ using System.Threading.Tasks;
 
 namespace GameX.EA;
 
-#region EAPakFile
-
 /// <summary>
 /// EAPakFile
 /// </summary>
@@ -39,5 +37,3 @@ public class EAPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> 
 
     #endregion
 }
-
-#endregion

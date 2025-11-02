@@ -1,7 +1,7 @@
 import os
 from io import BytesIO
 from enum import Enum
-from openstk.poly import IWriteToStream
+from openstk import IWriteToStream
 from gamex import FileSource, PakBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo, DesSer
 from gamex.families.Gamebryo.formats.nif import NiReader
 

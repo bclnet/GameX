@@ -10,8 +10,6 @@ using System.Threading.Tasks;
 
 namespace GameX.Mythic;
 
-#region MythicPakFile
-
 /// <summary>
 /// MythicPakFile
 /// </summary>
@@ -51,5 +49,3 @@ public class MythicPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMod
 
     #endregion
 }
-
-#endregion

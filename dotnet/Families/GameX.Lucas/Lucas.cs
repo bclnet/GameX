@@ -8,8 +8,6 @@ using System.Threading.Tasks;
 
 namespace GameX.Lucas;
 
-#region LucasPakFile
-
 /// <summary>
 /// LucasPakFile
 /// </summary>
@@ -48,5 +46,3 @@ public class LucasPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMode
 
     #endregion
 }
-
-#endregion

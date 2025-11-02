@@ -1,12 +1,12 @@
 from __future__ import annotations
 import os
+from openstk import _pathExtension
 from gamex import BinaryPakFile
 from gamex.families.Arkane.formats.danae.binary import Binary_Ftl, Binary_Fts, Binary_Tea
 from gamex.families.Arkane.formats.binary import Binary_Danae, Binary_Void
 from gamex.families.Valve.formats.binary import Binary_Vpk
 from gamex.families.GameX_Valve import ValvePakFile
 from gamex.families.GameX import UnknownPakFile
-from gamex.core.util import _pathExtension
 
 # ArkanePakFile
 class ArkanePakFile(BinaryPakFile):

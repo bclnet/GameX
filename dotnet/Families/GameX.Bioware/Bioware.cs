@@ -10,8 +10,6 @@ using System.Threading.Tasks;
 
 namespace GameX.Bioware;
 
-#region BiowarePakFile
-
 /// <summary>
 /// BiowarePakFile
 /// </summary>
@@ -58,5 +56,3 @@ public class BiowarePakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMo
 
     #endregion
 }
-
-#endregion

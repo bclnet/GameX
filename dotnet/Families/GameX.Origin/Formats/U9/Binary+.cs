@@ -216,10 +216,7 @@ public unsafe class Binary_Bitmap : IHaveMetaInfo, ITexture {
 
         // get palette
         byte[][] palette = null;
-        if (BytesPerPixel == 1) {
-            s.Game.Ensure();
-            palette = Database.Palette?.Records ?? throw new NotImplementedException();
-        }
+        if (BytesPerPixel == 1) palette = Database.Palette?.Records ?? throw new NotImplementedException();
 
         // read header
         var header = r.ReadS<BmpHeader>();
@@ -383,10 +380,7 @@ public unsafe class Binary_Texture : IHaveMetaInfo, ITexture {
 
         // get palette
         byte[][] palette = null;
-        if (BytesPerPixel == 1) {
-            s.Game.Ensure();
-            palette = Database.Palette?.Records ?? throw new NotImplementedException();
-        }
+        if (BytesPerPixel == 1) palette = Database.Palette?.Records ?? throw new NotImplementedException();
 
         // read header
         var width = Width = r.ReadInt32();

@@ -12,8 +12,6 @@ using System.Threading.Tasks;
 
 namespace GameX.Crytek;
 
-#region CrytekPakFile
-
 /// <summary>
 /// CrytekPakFile
 /// </summary>
@@ -56,5 +54,3 @@ public class CrytekPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMod
 
     #endregion
 }
-
-#endregion

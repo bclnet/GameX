@@ -1,9 +1,6 @@
 import os
 from typing import Any
 
-def _throw(message: str) -> None:
-    raise Exception(message)
-
 def _find(list, item):
     return list.index(item) if item in list else -1
 
@@ -29,9 +26,6 @@ def _related(elem: dict[str, Any], key: str, method: callable, default: Any = No
 
 def _dictTrim(source: dict[str, Any]) -> Any:
     return { k:v for k,v in source.items() if v }
-
-def _pathExtension(path: str) -> str:
-    return os.path.splitext(path)[1]
 
 def _guessExtension(buf):
     if len(buf) < 4: return ''

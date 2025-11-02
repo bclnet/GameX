@@ -2,9 +2,9 @@ from __future__ import annotations
 import os, ctypes
 from enum import Enum
 from io import BytesIO
+from openstk import _pathExtension
 from openstk.gfx import Raster, ITextureFrames, TextureFormat, TexturePixel
 from gamex import PakBinary, PakBinaryT, FileSource, MetaInfo, MetaContent, IHaveMetaInfo
-from gamex.core.util import _pathExtension
 
 #region Binary_Bullfrog
 

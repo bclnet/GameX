@@ -1,23 +1,49 @@
 from __future__ import annotations
 import os
+from openstk import _pathExtension
 from gamex import Family, FamilyGame, BinaryPakFile
 from gamex.families.Bullfrog.formats.binary import Binary_Bullfrog, Binary_Populus, Binary_Syndicate
 from gamex.families.GameX import UnknownPakFile
-from gamex.core.util import _pathExtension
 
-# BullfrogGame
-class BullfrogGame(FamilyGame):
+# DKGame
+class DKGame(FamilyGame):
     def __init__(self, family: Family, id: str, elem: dict[str, object], dgame: FamilyGame):
         super().__init__(family, id, elem, dgame)
         self.objectFactoryFunc = self.objectFactory
 
-    def ensure(self):
-        match self.id:
-            case 'DK': return self #DK_Database.ensure(self)
-            case 'DK2': return self #DK2_Database.ensure(self)
-            case 'P2': return self #PK_Database.ensure(self)
-            case 'S': return self #S_Database.ensure(self)
-            case _: return self
+    def loaded(self):
+        super().loaded()
+        #DK_Database.loaded(self)
+
+# DK2Game
+class DK2Game(FamilyGame):
+    def __init__(self, family: Family, id: str, elem: dict[str, object], dgame: FamilyGame):
+        super().__init__(family, id, elem, dgame)
+        self.objectFactoryFunc = self.objectFactory
+
+    def loaded(self):
+        super().loaded()
+        #DK2_Database.loaded(self)
+
+# P2Game
+class P2Game(FamilyGame):
+    def __init__(self, family: Family, id: str, elem: dict[str, object], dgame: FamilyGame):
+        super().__init__(family, id, elem, dgame)
+        self.objectFactoryFunc = self.objectFactory
+
+    def loaded(self):
+        super().loaded()
+        #PK_Database.loaded(self)
+
+# SGame
+class SGame(FamilyGame):
+    def __init__(self, family: Family, id: str, elem: dict[str, object], dgame: FamilyGame):
+        super().__init__(family, id, elem, dgame)
+        self.objectFactoryFunc = self.objectFactory
+
+    def loaded(self):
+        super().loaded()
+        #S_Database.loaded(self)
 
 # BullfrogPakFile
 class BullfrogPakFile(BinaryPakFile):
@@ -26,6 +52,7 @@ class BullfrogPakFile(BinaryPakFile):
         self.objectFactoryFunc = self.objectFactory
 
     #region Factories
+
     @staticmethod
     def getPakBinary(game: FamilyGame, filePath: str) -> PakBinary:
         match game.id:

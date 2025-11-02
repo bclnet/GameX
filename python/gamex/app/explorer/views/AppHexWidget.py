@@ -2,7 +2,7 @@ import sys, os, io
 from PyQt6.QtWidgets import QWidget, QTextEdit, QHBoxLayout
 from PyQt6.QtGui import QFont
 from PyQt6.QtCore import Qt
-from .util import _pathExtension, _pathTempFile
+from openstk import _pathExtension, _pathTempFile
 
 # AppHexWidget
 class AppHexWidget(QWidget):

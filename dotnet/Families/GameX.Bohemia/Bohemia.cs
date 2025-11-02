@@ -8,8 +8,6 @@ using System.Threading.Tasks;
 
 namespace GameX.Bohemia;
 
-#region BohemiaPakFile
-
 /// <summary>
 /// BohemiaPakFile
 /// </summary>
@@ -45,5 +43,3 @@ public class BohemiaPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMo
 
     #endregion
 }
-
-#endregion

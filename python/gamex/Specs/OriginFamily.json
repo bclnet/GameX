@@ -9,7 +9,6 @@
   ],
   "games": {
     "*": {
-      "gameType": "GameX.Origin.OriginGame, GameX.Origin",
       "pakFileType": "GameX.Origin.OriginPakFile, GameX.Origin"
     },
     "CoC": {
@@ -219,6 +218,7 @@
       "date": "1994-01-01"
     },
     "U8": {
+      "gameType": "GameX.Origin.U8Game, GameX.Origin",
       "name": "Pagan: Ultima VIII",
       "url": [
         "https://en.wikipedia.org/wiki/Ultima_VIII:_Pagan",
@@ -313,6 +313,7 @@
       "date": "1997-01-01"
     },
     "UO": {
+      "gameType": "GameX.Origin.U8Game, GameX.Origin",
       "name": "Ultima Online",
       "url": "https://en.wikipedia.org/wiki/Ultima_Online",
       "dnl": "https://uo.com/client-download/",
@@ -425,6 +426,7 @@
       }
     },
     "U9": {
+      "gameType": "GameX.Origin.U9Game, GameX.Origin",
       "name": "Ultima IX: Ascension",
       "url": [
         "https://en.wikipedia.org/wiki/Ultima_IX:_Ascension",

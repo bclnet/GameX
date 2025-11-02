@@ -1,5 +1,4 @@
-﻿using GameX.Formats;
-using GameX.Unknown;
+﻿using GameX.Unknown;
 using OpenStack;
 using OpenStack.Vfx;
 using System;
@@ -574,6 +573,7 @@ public class Family {
             Uri u => ParseResource(u),
             _ => throw new ArgumentOutOfRangeException(nameof(res)),
         };
+        if (!r.Game.HasLoaded) { r.Game.HasLoaded = true; r.Game.Loaded(); }
         return r.Game != null
             ? r.Game.CreatePakFile(r.Vfx, r.Edition, r.SearchPattern, throwOnError)?.Open()
             : throw new ArgumentNullException(nameof(r.Game));
@@ -895,6 +895,11 @@ public class FamilyGame {
         public string[] Paths = _list(elem, "path", []);
     }
 
+    /// <summary>
+    /// Has loaded
+    /// </summary>
+    public bool HasLoaded;
+    /// <summary>
     /// Gets or sets the game type.
     /// </summary>
     public Type GameType { get; set; }
@@ -1009,6 +1014,8 @@ public class FamilyGame {
     /// Gets or sets the filters.
     /// </summary>
     public Dictionary<string, string> Filters = [];
+    // Options
+    public YamlDict Options;
 
     /// <summary>
     /// FamilyGame
@@ -1022,6 +1029,7 @@ public class FamilyGame {
     /// <param name="elem"></param>
     /// <param name="dgame"></param>
     public FamilyGame(Family family, string id, JsonElement elem, FamilyGame dgame) {
+        HasLoaded = false;
         Family = family;
         Id = id;
         Name = _value(elem, "name"); //System.Diagnostics.Debugger.Log(0, null, $"Game: {Name}\n");
@@ -1052,6 +1060,7 @@ public class FamilyGame {
         Filters = _related(elem, "filters", (k, v) => _valueV(v).ToString());
         // find
         Found = GetSystemPath(Option.FindKey, family.Id, elem);
+        Options = null;
     }
 
     /// <summary>
@@ -1070,7 +1079,9 @@ public class FamilyGame {
     /// <summary>
     /// Ensures this instance.
     /// </summary>
-    public virtual FamilyGame Ensure() => this;
+    public virtual void Loaded() {
+        Options = new YamlDict($".gamex.{Family.Id}_{Id}.yaml");
+    }
 
     /// <summary>
     /// Converts the Paks to Application Paks.

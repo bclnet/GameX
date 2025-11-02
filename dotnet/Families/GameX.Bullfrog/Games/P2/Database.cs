@@ -8,9 +8,8 @@ public static class Database {
     public static PakFile PakFile;
     static ConcurrentDictionary<string, Binary_Pal> Palettes = new();
 
-    internal static FamilyGame Ensure(FamilyGame game) {
+    internal static void Loaded(FamilyGame game) {
         PakFile = game.Family.OpenPakFile(new Uri("game:/#P2"));
-        return game;
     }
 
     public static Binary_Pal GetPalette(string path, string defaultValue)

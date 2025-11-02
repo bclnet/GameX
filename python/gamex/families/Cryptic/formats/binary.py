@@ -1,6 +1,6 @@
 import os
 from io import BytesIO
-from openstk.poly import Reader
+from openstk import Reader
 from gamex.core.pak import PakBinaryT
 from gamex.core.meta import FileSource
 from gamex.core.formats.compression import decompressLzss, decompressZlib

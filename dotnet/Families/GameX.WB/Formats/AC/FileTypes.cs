@@ -2264,7 +2264,6 @@ public unsafe class Texture : FileType, IHaveMetaInfo, ITexture
         Length = r.ReadInt32();
         SourceData = r.ReadBytes(Length);
         var hasPalette = PixFormat == PFID_INDEX16 || PixFormat == PFID_P8;
-        if (hasPalette) game.Ensure();
         Palette = hasPalette ? DatabaseManager.Portal.GetFile<Palette>(r.ReadUInt32()).Colors : null;
         if (PixFormat == PFID_CUSTOM_RAW_JPEG)
         {

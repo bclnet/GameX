@@ -2,7 +2,7 @@ import os
 from io import BytesIO
 from enum import Enum
 from datetime import datetime
-from openstk.poly import Reader, unsafe
+from openstk import Reader, unsafe
 from gamex import FileSource, PakBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo, DesSer
 from gamex.core.formats.compression import decompressZlibStream, decompressZlib
 

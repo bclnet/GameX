@@ -1,8 +1,8 @@
 from __future__ import annotations
 import os
+from openstk import _pathExtension
 from gamex import BinaryPakFile
 from gamex.families.GameX import UnknownPakFile
-from gamex.core.util import _pathExtension
 
 # RockstarPakFile
 class RockstarPakFile(BinaryPakFile):
@@ -11,6 +11,7 @@ class RockstarPakFile(BinaryPakFile):
         self.objectFactoryFunc = self.objectFactory
 
     #region Factories
+
     @staticmethod
     def getPakBinary(game: FamilyGame, extension: str) -> PakBinary:
         pass

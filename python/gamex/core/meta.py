@@ -1,7 +1,7 @@
 from __future__ import annotations
 import sys, os, re, pathlib
 from io import BytesIO
-from gamex.core.util import _throw
+from openstk import _throw
 
 # FileSource
 class FileSource:

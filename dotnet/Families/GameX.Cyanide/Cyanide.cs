@@ -8,8 +8,6 @@ using System.Threading.Tasks;
 
 namespace GameX.Cyanide;
 
-#region CyanidePakFile
-
 /// <summary>
 /// CyanidePakFile
 /// </summary>
@@ -40,5 +38,3 @@ public class CyanidePakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMo
 
     #endregion
 }
-
-#endregion

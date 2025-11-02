@@ -9,8 +9,6 @@ using System.Threading.Tasks;
 
 namespace GameX.Cig;
 
-#region CigPakFile
-
 /// <summary>
 /// CigPakFile
 /// </summary>
@@ -45,5 +43,3 @@ public class CigPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel>
 
     #endregion
 }
-
-#endregion

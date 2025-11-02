@@ -11,8 +11,6 @@ using System.Threading.Tasks;
 
 namespace GameX.Arkane;
 
-#region ArkanePakFile
-
 /// <summary>
 /// ArkanePakFile
 /// </summary>
@@ -70,5 +68,3 @@ public class ArkanePakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMod
 
     #endregion
 }
-
-#endregion

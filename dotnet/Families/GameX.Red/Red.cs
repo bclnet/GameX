@@ -9,8 +9,6 @@ using System.Threading.Tasks;
 
 namespace GameX.Red;
 
-#region RedPakFile
-
 /// <summary>
 /// RedPakFile
 /// </summary>
@@ -42,5 +40,3 @@ public class RedPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel>
 
     #endregion
 }
-
-#endregion

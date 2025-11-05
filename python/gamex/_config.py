@@ -372,7 +372,7 @@ match __current__:
             ForceOpen = True,
             ForcePath = "sample:*",
             Family = "IW",
-            # Game = "COD2", # Call of Duty 2 - IWD 
+            # Game = "COD2", # Call of Duty 2 - IWD
             # Game = "COD3", # Call of Duty 3 - XBOX only
             # Game = "COD4", # Call of Duty 4: Modern Warfare - IWD, FF
             # Game = "COD:WaW", # Call of Duty: World at War - IWD, FF

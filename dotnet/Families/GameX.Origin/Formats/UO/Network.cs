@@ -3,8 +3,7 @@ using OpenStack;
 namespace GameX.Origin.Formats.UO.Network;
 
 class PacketsTable {
-    readonly short[] _packetsTable =
-    {
+    readonly short[] _packetsTable = {
             0x0068, // 0x00
             0x0005, // 0x01
             0x0007, // 0x02
@@ -273,7 +272,6 @@ class PacketsTable {
             _packetsTable[0x16] = 0x01;
             _packetsTable[0x31] = 0x01;
         }
-
         if (version >= ClientVersion.CV_5090) {
             _packetsTable[0xE1] = -1;
         }

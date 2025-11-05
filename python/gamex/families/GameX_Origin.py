@@ -35,7 +35,6 @@ class UOGame(FamilyGame):
             self.options['clientVersion'] = clientVersionText
             self.options.dirty = True
         self.version = clientVersion
-        exit(0)
         self.protocol = ClientFlags.CF_T2A
         if self.version >= ClientVersion.CV_200: self.protocol |= ClientFlags.CF_RE
         if self.version >= ClientVersion.CV_300: self.protocol |= ClientFlags.CF_TD
@@ -44,7 +43,7 @@ class UOGame(FamilyGame):
         if self.version >= ClientVersion.CV_405A: self.protocol |= ClientFlags.CF_SE
         if self.version >= ClientVersion.CV_60144: self.protocol |= ClientFlags.CF_SA
         debug.trace(f'Client version: {clientVersion}')
-        debug.trace(f'Protocol: {Protocol}')
+        debug.trace(f'Protocol: {self.protocol}')
 
 # OriginPakFile
 class OriginPakFile(BinaryPakFile):

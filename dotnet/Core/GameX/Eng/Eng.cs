@@ -19,6 +19,8 @@ public interface IGameObject {
 }
 
 public class Game : IDisposable {
+    protected static readonly TimeSpan MaxElapsedTime = TimeSpan.FromMilliseconds(500);
+    
     List<IGameObject> Components = new();
     GraphicsDeviceManager DeviceManager;
     bool IsDisposed;
@@ -26,7 +28,6 @@ public class Game : IDisposable {
     bool Running;
     bool SuppressDraw;
     // tick
-    protected static readonly TimeSpan MaxElapsedTime = TimeSpan.FromMilliseconds(500);
     public TimeSpan TotalGameTime;
     public TimeSpan ElapsedGameTime;
     public bool IsRunningSlowly;
@@ -93,10 +94,7 @@ public class Game : IDisposable {
 
     public void Run() {
         AssertNotDisposed();
-        if (!Initialized) {
-            Initialize();
-            Initialized = true;
-        }
+        if (!Initialized) { Initialize(); Initialized = true; }
         BeginRun();
         IsActive = true;
         GameTimer = Stopwatch.StartNew();
@@ -120,9 +118,6 @@ public class Game : IDisposable {
         AccumulatedElapsedTime = TimeSpan.Zero;
         AssertNotDisposed();
         Update();
-        // Draw unless suppressed
-        if (SuppressDraw) SuppressDraw = false;
-        else if (BeginDraw()) { Draw(); EndDraw(); }
     }
 
     TimeSpan AdvanceElapsedTime() {

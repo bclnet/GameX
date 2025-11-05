@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from openstk import debug
 from gamex import getFamily
 from gamex.core.client import GameController
+from gamex.families.Origin.games.UO.game import UOGameController
 
 @dataclass
 class RunArgs:
@@ -27,7 +28,7 @@ def run(args: RunArgs) -> int:
     if not game: print(f'No game found named "{args.Uri}".'); return 0
 
     debug.trace('Running game...')
-    with GameController(pluginHost) as g:
+    with UOGameController(pluginHost) as g:
         game = g
         game.run()
     debug.trace('Exiting game...')

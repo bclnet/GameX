@@ -1,10 +1,12 @@
 ﻿using GameX.Eng;
 using OpenStack;
 using System;
+using System.IO;
 using System.Text;
 
 namespace GameX.Formats.Network;
 
+// PacketLogger
 public class PacketLogger {
     public static PacketLogger Default { get; set; } = new PacketLogger();
 
@@ -14,7 +16,7 @@ public class PacketLogger {
 
     public LogFile CreateFile() {
         _logFile?.Dispose();
-        return _logFile = null; // new LogFile(FileSystemHelper.CreateFolderIfNotExists(CUOEnviroment.ExecutablePath, "Logs", "Network"), "packets.log");
+        return _logFile = new LogFile(Path.Join("Logs", "Network"), "packets.log");
     }
 
     public void Log(Span<byte> message, bool toServer) {
@@ -24,7 +26,7 @@ public class PacketLogger {
         {
             var off = sizeof(ulong) + 2;
             b.Append(' ', off);
-            b.Append($"Ticks: {Time.Ticks} | {(toServer ? "Client -> Server" : "Server -> Client")} |  ID: {message[0]:X2}   Length: {message.Length}\n");
+            b.Append($"Ticks: 0 | {(toServer ? "Client -> Server" : "Server -> Client")} |  ID: {message[0]:X2}   Length: {message.Length}\n");
             if (message[0] == 0x80 || message[0] == 0x91) {
                 b.Append(' ', off);
                 b.Append("[ACCOUNT CREDENTIALS HIDDEN]\n");

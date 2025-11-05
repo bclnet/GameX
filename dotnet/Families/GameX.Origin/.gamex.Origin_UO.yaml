@@ -4,7 +4,7 @@ ip: login.uolostlands.com
 port: 2593
 ignoreRelayIp: false
 profilespath: 
-clientversion: 7.0.113.0
+clientVersion: 7.0.113.0
 lang: IVL
 lastserverNum: 1
 lastserverName: Lost Lands

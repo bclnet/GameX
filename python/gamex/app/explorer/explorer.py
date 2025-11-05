@@ -8,7 +8,7 @@ from openstk.platform.platform_panda3d import Panda3dPlatform
 from openstk.platform.platform_pygame import PygamePlatform
 
 PlatformX.platforms = PlatformX.platforms.union({OpenGLPlatform.This, Panda3dPlatform.This, PygamePlatform.This})
-from explorer.views.MainPage import MainPage
+from gamex.app.explorer.views.MainPage import MainPage
 
 if __name__ == '__main__':
     # QApplication.setAttribute(Qt.ApplicationAttribute.AA_UseDesktopOpenGL)

@@ -1103,8 +1103,7 @@ class Binary_Vpk(PakBinaryT):
                 self.signature[1],
                 data,
                 padding.PKCS1v15(),
-                hashes.SHA256()
-            )
+                hashes.SHA256())
 
     #endregion
 
@@ -1152,8 +1151,7 @@ class Binary_Vpk(PakBinaryT):
                         data = bytearray(r.readUInt16()),
                         id = r.readUInt16(),
                         offset = r.readUInt32(),
-                        fileSize = r.readUInt32()
-                        )
+                        fileSize = r.readUInt32())
                     terminator = r.readUInt16()
                     if terminator != 0xFFFF: raise Exception(f'Invalid terminator, was 0x{terminator:X} but expected 0x{0xFFFF:X}')
                     if len(file.data) > 0: r.read(file.data, 0, len(file.data))
@@ -1244,8 +1242,7 @@ class Binary_Wad3(PakBinaryT):
                 offset = lump.offset,
                 compressed = lump.compression,
                 fileSize = lump.diskSize,
-                packedSize = lump.size,
-                ))
+                packedSize = lump.size))
 
     # readData
     def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None) -> BytesIO:

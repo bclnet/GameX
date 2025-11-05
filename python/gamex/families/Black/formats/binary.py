@@ -75,8 +75,7 @@ class Binary_Dat(PakBinaryT):
                         compressed = file.attributes & 0x40,
                         offset = file.offset,
                         fileSize = file.size,
-                        packedSize = file.packedSize
-                        ))
+                        packedSize = file.packedSize))
         
         # Fallout2
         elif gameId == 'Fallout2':
@@ -96,8 +95,7 @@ class Binary_Dat(PakBinaryT):
                     compressed = file.type,
                     fileSize = file.realSize,
                     packedSize = file.packedSize,
-                    offset = file.offset
-                    ))
+                    offset = file.offset))
 
     # readData
     def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None) -> BytesIO:

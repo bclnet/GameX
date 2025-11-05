@@ -62,8 +62,7 @@ class Binary_Danae(PakBinaryT):
                     offset = readInt32(),
                     compressed = readInt32(),
                     fileSize = readInt32(),
-                    packedSize = readInt32()
-                    )
+                    packedSize = readInt32())
                 # special case
                 if file.path.endswith('.FTL'): file.compressed = 1
                 elif file.compressed == 0: file.fileSize = file.packedSize
@@ -124,8 +123,7 @@ class Binary_Void(PakBinaryT):
                 if not path.endswith('.index'): continue
                 files.append(FileSource(
                     path = path,
-                    pak = self.SubPakFile(self, None, source, source.game, source.fileSystem, path)
-                    ))
+                    pak = self.SubPakFile(self, None, source, source.game, source.fileSystem, path)))
             return
 
         # find files
@@ -159,8 +157,7 @@ class Binary_Void(PakBinaryT):
                 fileSize = file.fileSize,
                 packedSize = file.packedSize,
                 offset = file.offset,
-                tag = (newPath, tag1, tag2)
-                ))
+                tag = (newPath, tag1, tag2)))
 
     # readData
     def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None) -> BytesIO:

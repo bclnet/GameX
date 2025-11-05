@@ -1,17 +1,39 @@
-﻿using CommandLine;
+﻿using GameX.Origin.Games.UO;
+using System;
+using static OpenStack.Debug;
 
 namespace GameX.App.Client;
 
+record RunArgs {
+    public string Family;
+    public Uri Uri;
+}
+
 // test
 partial class Program {
-    static void Main(string[] args) {
-        // TEST
-        args = ["game", "-f", "Origin", "-u", @"game:/#UO"];
+    static int Main(string[] args2) {
+        RunArgs args = new() { Family = "Origin", Uri = new Uri(@"game:/#UO") };
+        return Run(args);
+    }
 
-        Parser.Default.ParseArguments<GameOptions, TestOptions>(args)
-        .MapResult(
-            (GameOptions opts) => RunGame(opts),
-            (TestOptions opts) => RunTestAsync(opts).GetAwaiter().GetResult(),
-            errs => 1);
+    public static GameController Game;
+
+    static int Run(RunArgs args) {
+        IPluginHost pluginHost = null;
+
+        // get family
+        var family = FamilyManager.GetFamily(args.Family);
+        if (family == null) { Console.WriteLine($"No family found named '{args.Family}'."); return 0; }
+
+        // get game
+        var game = family.OpenPakFile(args.Uri);
+        if (game == null) { Console.WriteLine($"No game found named '{args.Uri}'."); return 0; }
+
+        Trace("Running game...");
+        using (Game = new UOGameController(pluginHost)) {
+            Game.Run();
+        }
+        Trace("Exiting game...");
+        return 0;
     }
 }

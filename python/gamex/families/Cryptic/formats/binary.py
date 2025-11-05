@@ -84,8 +84,7 @@ class Binary_Hogg(PakBinaryT):
                 offset = s.offset,
                 fileSize = s.fileSize,
                 packedSize = a.uncompressedSize,
-                compressed = 1 if a.uncompressedSize > 0 else 0
-                )
+                compressed = 1 if a.uncompressedSize > 0 else 0)
 
         # read "Datalist" file
         dataListFile = files[0]

@@ -313,7 +313,7 @@
       "date": "1997-01-01"
     },
     "UO": {
-      "gameType": "GameX.Origin.U8Game, GameX.Origin",
+      "gameType": "GameX.Origin.UOGame, GameX.Origin",
       "name": "Ultima Online",
       "url": "https://en.wikipedia.org/wiki/Ultima_Online",
       "dnl": "https://uo.com/client-download/",

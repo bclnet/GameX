@@ -118,8 +118,7 @@ class Binary_Ba2(PakBinaryT):
                             compressed = 1 if headerFile.packedSize != 0 else 0,
                             packedSize = headerFile.packedSize,
                             fileSize = headerFile.fileSize,
-                            offset = headerFile.offset
-                            )
+                            offset = headerFile.offset)
                 # Texture BA2 Format
                 case self.F4_HeaderType.DX10:
                     for i in range(header.numFiles):
@@ -131,8 +130,7 @@ class Binary_Ba2(PakBinaryT):
                             packedSize = firstChunk.packedSize,
                             fileSize = firstChunk.fileSize,
                             offset = firstChunk.offset,
-                            tag = headerTextureChunks
-                            )
+                            tag = headerTextureChunks)
                 # GNMF BA2 Format
                 case self.F4_HeaderType.GNMF:
                     for i in range(header.numFiles):
@@ -143,8 +141,7 @@ class Binary_Ba2(PakBinaryT):
                             packedSize = headerGNMF.packedSize,
                             fileSize = headerGNMF.fileSize,
                             offset = headerGNMF.offset,
-                            tag = headerTextureChunks
-                            )
+                            tag = headerTextureChunks)
                 case _: raise Exception(f'Unknown: {header.type}')
 
             # assign full names to each file

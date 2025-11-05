@@ -56,8 +56,7 @@ class Binary_Bullfrog(PakBinaryT):
                 if not path.endswith('.index'): continue
                 files.append(FileSource(
                     path = path,
-                    pak = self.SubPakFile(self, None, source, source.game, source.fileSystem, path)
-                    ))
+                    pak = self.SubPakFile(self, None, source, source.game, source.fileSystem, path)))
             return
 
         # find files
@@ -91,8 +90,7 @@ class Binary_Bullfrog(PakBinaryT):
                 fileSize = file.fileSize,
                 packedSize = file.packedSize,
                 offset = file.offset,
-                tag = (newPath, tag1, tag2)
-                ))
+                tag = (newPath, tag1, tag2)))
 
     # readData
     def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None) -> BytesIO:

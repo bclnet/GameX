@@ -237,8 +237,7 @@ games: {[x for x in self.games.values()]}'''
             vfx = vfx,
             game = game,
             edition = edition,
-            searchPattern = searchPattern
-            )
+            searchPattern = searchPattern)
     # end::Family.parseResource[]
 
     # to Game

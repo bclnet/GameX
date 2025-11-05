@@ -43,7 +43,7 @@ public enum ClientVersion {
     CV_70240 = (7 << 24) | (0 << 16) | (24 << 8) | 0,            // *.mul -> *.uop
     CV_70331 = (7 << 24) | (0 << 16) | (33 << 8) | 1,            //
     CV_704565 = (7 << 24) | (0 << 16) | (45 << 8) | 65,          //
-    CV_705301 = (7 << 24) | (0 << 16) | (53 << 8) | 01,          // Alternate backpack skins
+    CV_705301 = (7 << 24) | (0 << 16) | (53 << 8) | 1,           // Alternate backpack skins
     CV_706000 = (7 << 24) | (0 << 16) | (60 << 8) | 0,
     CV_706400 = (7 << 24) | (0 << 16) | (64 << 8) | 0,           // Endless Journey background
     CV_70796 = (7 << 24) | (0 << 16) | (79 << 8) | 6,            // Display houses content option
@@ -51,9 +51,8 @@ public enum ClientVersion {
 }
 
 public static class ClientVersionHelper {
-    public static bool TryParseFromFile(string clientpath, out string version) {
-        version = null;
-        if (!File.Exists(clientpath)) return false;
+    public static string ParseFromFile(string clientpath) {
+        if (!File.Exists(clientpath)) return null;
         var b = File.ReadAllBytes(clientpath);
         // VS_VERSION_INFO (unicode)
         Span<byte> vsVersionInfo = stackalloc byte[] {
@@ -62,52 +61,49 @@ public static class ClientVersionHelper {
             0x49, 0x00, 0x4F, 0x00, 0x4E, 0x00, 0x5F,
             0x00, 0x49, 0x00, 0x4E, 0x00, 0x46, 0x00,
             0x4F, 0x00 };
-        for (var i = 0; i < b.Length - vsVersionInfo.Length; i++)
-            if (vsVersionInfo.SequenceEqual(b.AsSpan(i, vsVersionInfo.Length))) {
+        const int vsVersionInfoLength = 30;
+        for (var i = 0; i < b.Length - vsVersionInfoLength; i++)
+            if (vsVersionInfo.SequenceEqual(b.AsSpan(i, vsVersionInfoLength))) {
                 var offset = i + 42; // 30 + 12
-                var minorPart = BinaryPrimitives.ReadUInt16LittleEndian(b.AsSpan(offset));
-                var majorPart = BinaryPrimitives.ReadUInt16LittleEndian(b.AsSpan(offset + 2));
-                var privatePart = BinaryPrimitives.ReadUInt16LittleEndian(b.AsSpan(offset + 4));
-                var buildPart = BinaryPrimitives.ReadUInt16LittleEndian(b.AsSpan(offset + 6));
-                version = $"{majorPart}.{minorPart}.{buildPart}.{privatePart}";
-                break;
+                var minor = BinaryPrimitives.ReadUInt16LittleEndian(b.AsSpan(offset + 0));
+                var major = BinaryPrimitives.ReadUInt16LittleEndian(b.AsSpan(offset + 2));
+                var privatex = BinaryPrimitives.ReadUInt16LittleEndian(b.AsSpan(offset + 4));
+                var build = BinaryPrimitives.ReadUInt16LittleEndian(b.AsSpan(offset + 6));
+                return $"{major}.{minor}.{build}.{privatex}";
             }
-        return !string.IsNullOrEmpty(version);
+        return null;
     }
 
-    public static bool IsClientVersionValid(string versionText, out ClientVersion version) {
-        version = 0;
-        if (!string.IsNullOrEmpty(versionText)) {
-            versionText = versionText.ToLower();
-            var b = versionText.ToLower().Split('.');
-            if (b.Length <= 2 || b.Length > 4) return false;
-            int extra = 0;
-            if (int.TryParse(b[0], out int major) && major >= byte.MinValue && major <= byte.MaxValue &&
-                int.TryParse(b[1], out int minor) && minor >= byte.MinValue && minor <= byte.MaxValue) {
-                int extraIndex = 2, build = 0;
-                if (b.Length == 4) {
-                    if (!(int.TryParse(b[extraIndex], out build) && build >= byte.MinValue && build <= byte.MaxValue)) return false;
-                    extraIndex++;
-                }
-                int i = 0;
-                for (; i < b[extraIndex].Length; i++) {
-                    char c = b[extraIndex][i];
-                    if (char.IsLetter(c)) { extra = (byte)c; break; }
-                }
-                if (extra != 0) { if (b[extraIndex].Length - i > 1) return false; }
-                else if (i <= 0) return false;
-                if (!(int.TryParse(b[extraIndex].Substring(0, i), out int num_extra) && num_extra >= byte.MinValue && num_extra <= byte.MaxValue)) return false;
-                if (extra != 0) {
-                    char start = 'a'; int index = 0;
-                    while (start != extra && start <= 'z') { start++; index++; }
-                    extra = index;
-                }
-                if (extraIndex == 2) { build = num_extra; num_extra = extra; }
-                version = (ClientVersion)(((major & 0xFF) << 24) | ((minor & 0xFF) << 16) | ((build & 0xFF) << 8) | (num_extra & 0xFF));
-                return true;
-            }
+    public static ClientVersion? ValidateClientVersion(string versionText) {
+        if (string.IsNullOrEmpty(versionText)) return null;
+        var b = versionText.ToLower().Split('.');
+        if (b.Length <= 2 || b.Length > 4) return null;
+        var extra = 0;
+        if (!int.TryParse(b[0], out int major) || major < 0 || major > 255 ||
+            !int.TryParse(b[1], out int minor) || minor < 0 || minor > 255) return null;
+        int extraIndex = 2, build = 0;
+        if (b.Length == 4) {
+            if (!int.TryParse(b[extraIndex], out build) || build < 0 || build > 255) return null;
+            extraIndex++;
         }
-        return false;
+        var i = 0;
+        for (; i < b[extraIndex].Length; i++) {
+            var c = b[extraIndex][i];
+            if (char.IsLetter(c)) { extra = (byte)c; break; }
+        }
+        if (extra != 0) {
+            if (b[extraIndex].Length - i > 1) return null;
+        }
+        else if (i <= 0) return null;
+        if (!int.TryParse(b[extraIndex][..i], out int numExtra) || numExtra < 0 || numExtra > 255) return null;
+        if (extra != 0) {
+            char start = 'a'; int index = 0;
+            while (start != extra && start <= 'z') { start++; index++; }
+            extra = index;
+        }
+        if (extraIndex == 2) { build = numExtra; numExtra = extra; }
+        return (ClientVersion)(((major & 0xFF) << 24) | ((minor & 0xFF) << 16) | ((build & 0xFF) << 8) | (numExtra & 0xFF));
     }
 }
+
 #endregion

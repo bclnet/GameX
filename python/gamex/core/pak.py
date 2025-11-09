@@ -175,7 +175,7 @@ class BinaryPakFile(PakFile):
             (p, f2) = self.getFileSource(path, throwOnError)
             return p.loadFileData(f2, option, throwOnError) if p else None
         f = path
-        return self.readData(f, option)
+        return self.readData(f.fix(), option)
 
     def loadFileObject(self, type: type, path: FileSource | str | int, option: object = None, throwOnError: bool = True) -> object:
         if not path: return None

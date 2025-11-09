@@ -49,6 +49,7 @@
     <ProjectReference Include="..\..\Families\GameX.Volition\GameX.Volition.csproj" />
     <ProjectReference Include="..\..\Families\GameX.WB\GameX.WB.csproj" />
     <ProjectReference Include="..\..\Families\GameX.X2K\GameX.X2K.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.Xbox\GameX.Xbox.csproj" />
     <ProjectReference Include="..\GameX.Resource\GameX.Resource.csproj" />
   </ItemGroup>
 

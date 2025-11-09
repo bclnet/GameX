@@ -1,6 +1,7 @@
 ﻿using GameX.Formats;
 using GameX.Origin.Formats.U9;
 using GameX.Origin.Formats.UO;
+using GameX.Xbox.Formats;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -185,7 +186,7 @@ public unsafe class Binary_U9 : PakBinary<Binary_U9> {
 #region Binary_UO
 
 public unsafe class Binary_UO : PakBinary<Binary_UO> {
-    public static PakFile Art_Instance = Games.UO.Database.PakFile?.GetFileSource("artLegacyMUL.uop").Item2.Pak;
+    public static PakFile Art_Instance = Clients.UO.Database.PakFile?.GetFileSource("artLegacyMUL.uop").Item2.Pak;
 
     #region Factories
 
@@ -211,6 +212,7 @@ public unsafe class Binary_UO : PakBinary<Binary_UO> {
             "data/containers.cfg" => (0, ServerBinary_Container.Factory),
             "data/bodytable.cfg" => (0, ServerBinary_BodyTable.Factory),
             _ => Path.GetExtension(source.Path).ToLowerInvariant() switch {
+                ".xnb" => (0, Binary_Xnb.Factory),
                 ".anim" => (0, Binary_AnimUO.Factory),
                 ".tex" => (0, Binary_Gump.Factory),
                 ".land" => (0, Binary_Land.Factory),

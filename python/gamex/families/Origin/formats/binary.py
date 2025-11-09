@@ -6,6 +6,7 @@ from openstk import _pathExtension
 from gamex.core.pak import PakBinaryT
 from gamex.core.meta import FileSource
 from gamex.families.Origin.formats.UO.binary import *
+from gamex.families.Xbox.formats.binary import Binary_Xnb
 
 # typedefs
 class Reader: pass
@@ -106,6 +107,7 @@ class Binary_UO(PakBinaryT):
             case 'data/bodytable.cfg': return (0, ServerBinary_BodyTable.factory)
             case _:
                 match _pathExtension(source.path).lower():
+                    case '.xnb': return (0, Binary_Xnb.factory)
                     case '.anim': return (0, Binary_Anim.factory)
                     case '.tex': return (0, Binary_Gump.factory)
                     case '.land': return (0, Binary_Land.factory)

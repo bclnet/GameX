@@ -1,7 +1,7 @@
 using System;
 using static OpenStack.Debug;
 
-namespace GameX.Origin.Games.UO.Data;
+namespace GameX.Origin.Clients.UO.Data;
 
 /// <summary>
 /// ClientFlags

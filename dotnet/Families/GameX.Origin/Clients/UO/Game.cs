@@ -1,18 +1,18 @@
 using GameX.Eng;
-using System;
-using OpenStack;
+using GameX.Origin.Renderers.UO;
+using System.Threading.Tasks;
 
-namespace GameX.Origin.Games.UO;
+namespace GameX.Origin.Clients.UO;
 
-public class UOGameController : GameController {
-    public UOGameController(IPluginHost pluginHost) : base(pluginHost) {
-
+public class UOGameController<Texture2D> : GameController {
+    public UOGameController(PakFile game, IPluginHost pluginHost) : base(game, pluginHost) {
+        DeviceManager = new GraphicsDeviceManager(this);
     }
 
-    protected override void LoadContent() {
-        base.LoadContent();
-        // Fonts.initialize(self.graphicsDevice);
-        //SolidColorTextureCache.Initialize(GraphicsDevice);
+    protected override async Task LoadContent() {
+        await base.LoadContent();
+        await Fonts<Texture2D>.Load(Game, Device);
+        //SolidColorTextureCache.Load(Game, Device);
         //Audio = new AudioManager();
         // var bytes = Loader.GetBackgroundImage().ToArray();
         // using var ms = new MemoryStream(bytes);
@@ -38,5 +38,5 @@ public class UOGameController : GameController {
         // SetWindowPositionBySettings();
     }
 
-    protected override void UnloadContent() { }
+    protected override Task UnloadContent() => Task.CompletedTask;
 }

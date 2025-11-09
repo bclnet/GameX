@@ -983,12 +983,12 @@ public class HeritageGroupCG(BinaryReader r) : IHaveMetaInfo
     public readonly uint EnvironmentSetupID = r.ReadUInt32(); // This is the background environment during Character Creation
     public readonly uint AttributeCredits = r.ReadUInt32();
     public readonly uint SkillCredits = r.ReadUInt32();
-    public readonly int[] PrimaryStartAreas = r.ReadC32PArray<int>("i");
-    public readonly int[] SecondaryStartAreas = r.ReadC32PArray<int>("i");
-    public readonly SkillCG[] Skills = r.ReadC32FArray(x => new SkillCG(x));
-    public readonly TemplateCG[] Templates = r.ReadC32FArray(x => new TemplateCG(x));
+    public readonly int[] PrimaryStartAreas = r.ReadLV8PArray<int>("i");
+    public readonly int[] SecondaryStartAreas = r.ReadLV8PArray<int>("i");
+    public readonly SkillCG[] Skills = r.ReadLV8FArray(x => new SkillCG(x));
+    public readonly TemplateCG[] Templates = r.ReadLV8FArray(x => new TemplateCG(x));
     public readonly byte Unknown = r.ReadByte();
-    public readonly IDictionary<int, SexCG> Genders = r.ReadC32PMany<int, SexCG>("i", x => new SexCG(x));
+    public readonly IDictionary<int, SexCG> Genders = r.ReadLV8PMany<int, SexCG>("i", x => new SexCG(x));
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new($"Name: {Name}"),
@@ -1139,7 +1139,7 @@ public class NameFilterLanguageData(BinaryReader r) : IHaveMetaInfo
     public readonly uint VowelContainingSubstringLength = r.ReadUInt32();
     public readonly uint ExtraAllowedCharacters = r.ReadUInt32();
     public readonly byte Unknown = r.ReadByte();
-    public readonly string[] CompoundLetterGroups = r.ReadL32FArray(x => x.ReadC32WString());
+    public readonly string[] CompoundLetterGroups = r.ReadL32FArray(x => x.ReadLV8WString());
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new($"MaximumVowelsInARow: {MaximumVowelsInARow}"),
@@ -1473,17 +1473,17 @@ public class SexCG(BinaryReader r) : IHaveMetaInfo
     public uint MotionTable = r.ReadUInt32();
     public uint CombatTable = r.ReadUInt32();
     public ObjDesc BaseObjDesc = new ObjDesc(r);
-    public uint[] HairColorList = r.ReadC32PArray<uint>("I");
-    public HairStyleCG[] HairStyleList = r.ReadC32FArray(x => new HairStyleCG(x));
-    public uint[] EyeColorList = r.ReadC32PArray<uint>("I");
-    public EyeStripCG[] EyeStripList = r.ReadC32FArray(x => new EyeStripCG(x));
-    public FaceStripCG[] NoseStripList = r.ReadC32FArray(x => new FaceStripCG(x));
-    public FaceStripCG[] MouthStripList = r.ReadC32FArray(x => new FaceStripCG(x));
-    public GearCG[] HeadgearList = r.ReadC32FArray(x => new GearCG(x));
-    public GearCG[] ShirtList = r.ReadC32FArray(x => new GearCG(x));
-    public GearCG[] PantsList = r.ReadC32FArray(x => new GearCG(x));
-    public GearCG[] FootwearList = r.ReadC32FArray(x => new GearCG(x));
-    public uint[] ClothingColorsList = r.ReadC32PArray<uint>("I");
+    public uint[] HairColorList = r.ReadLV8PArray<uint>("I");
+    public HairStyleCG[] HairStyleList = r.ReadLV8FArray(x => new HairStyleCG(x));
+    public uint[] EyeColorList = r.ReadLV8PArray<uint>("I");
+    public EyeStripCG[] EyeStripList = r.ReadLV8FArray(x => new EyeStripCG(x));
+    public FaceStripCG[] NoseStripList = r.ReadLV8FArray(x => new FaceStripCG(x));
+    public FaceStripCG[] MouthStripList = r.ReadLV8FArray(x => new FaceStripCG(x));
+    public GearCG[] HeadgearList = r.ReadLV8FArray(x => new GearCG(x));
+    public GearCG[] ShirtList = r.ReadLV8FArray(x => new GearCG(x));
+    public GearCG[] PantsList = r.ReadLV8FArray(x => new GearCG(x));
+    public GearCG[] FootwearList = r.ReadLV8FArray(x => new GearCG(x));
+    public uint[] ClothingColorsList = r.ReadLV8PArray<uint>("I");
 
     // Eyes
     public uint GetEyeTexture(uint eyesStrip, bool isBald) => (isBald ? EyeStripList[Convert.ToInt32(eyesStrip)].ObjDescBald : EyeStripList[Convert.ToInt32(eyesStrip)].ObjDesc).TextureChanges[0].NewTexture;
@@ -2121,7 +2121,7 @@ public class Stab(BinaryReader r) : IHaveMetaInfo
 public class StarterArea(BinaryReader r) : IHaveMetaInfo
 {
     public readonly string Name = r.ReadString();
-    public readonly Position[] Locations = r.ReadC32FArray(x => new Position(x));
+    public readonly Position[] Locations = r.ReadLV8FArray(x => new Position(x));
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new($"Name: {Name}"),
@@ -2140,9 +2140,9 @@ public class StarterArea(BinaryReader r) : IHaveMetaInfo
 public class StringTableData(BinaryReader r) : IHaveMetaInfo
 {
     public readonly uint Id = r.ReadUInt32();
-    public readonly string[] VarNames = r.ReadL16FArray(x => x.ReadC32WString());
-    public readonly string[] Vars = r.ReadL16FArray(x => x.ReadC32WString());
-    public readonly string[] Strings = r.ReadL32FArray(x => x.ReadC32WString());
+    public readonly string[] VarNames = r.ReadL16FArray(x => x.ReadLV8WString());
+    public readonly string[] Vars = r.ReadL16FArray(x => x.ReadLV8WString());
+    public readonly string[] Strings = r.ReadL32FArray(x => x.ReadLV8WString());
     public readonly uint[] Comments = r.ReadL32PArray<uint>("I");
     public readonly byte Unknown = r.ReadByte();
 
@@ -2258,8 +2258,8 @@ public class TemplateCG(BinaryReader r) : IHaveMetaInfo
     public uint Quickness = r.ReadUInt32();
     public uint Focus = r.ReadUInt32();
     public uint Self = r.ReadUInt32();
-    public Skill[] NormalSkillsList = r.ReadC32PArray<Skill>("I");
-    public Skill[] PrimarySkillsList = r.ReadC32PArray<Skill>("I");
+    public Skill[] NormalSkillsList = r.ReadLV8PArray<Skill>("I");
+    public Skill[] PrimarySkillsList = r.ReadLV8PArray<Skill>("I");
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new($"Name: {Name}"),

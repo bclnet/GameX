@@ -1,7 +1,7 @@
 using System;
 using static OpenStack.Debug;
 
-namespace GameX.Origin.Games.UO;
+namespace GameX.Origin.Clients.UO;
 
 public static class Database {
     public static PakFile PakFile = FamilyManager.GetFamily("Origin").OpenPakFile(new Uri("game:/#UO"));

@@ -15,13 +15,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="Formats\UO\_\Binary_Font_DEL.cs" />
-    <Content Include="Formats\UO\_\Binary_Hue_DEL.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\..\Core\GameX\GameX.csproj" />
-    <ProjectReference Include="..\GameX.Xbox\GameX.Xbox.csproj" />
   </ItemGroup>
 
 </Project>

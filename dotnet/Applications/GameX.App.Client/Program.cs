@@ -1,4 +1,4 @@
-﻿using GameX.Origin.Games.UO;
+﻿using GameX.Origin.Clients.UO;
 using System;
 using static OpenStack.Debug;
 
@@ -30,7 +30,7 @@ partial class Program {
         if (game == null) { Console.WriteLine($"No game found named '{args.Uri}'."); return 0; }
 
         Trace("Running game...");
-        using (Game = new UOGameController(pluginHost)) {
+        using (Game = new UOGameController<object>(game, pluginHost)) {
             Game.Run();
         }
         Trace("Exiting game...");

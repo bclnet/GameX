@@ -1,15 +1,18 @@
 from enum import IntFlag
+from gamex import PakFile
 from gamex.core.client import IPluginHost, GameController
-from gamex.core.formats.network import PacketLogger
+from gamex.core.eng.eng import GraphicsDeviceManager
+from gamex.families.Origin.renderers.UO.sprites import Fonts
+# from gamex.core.formats.network import PacketLogger
 
 # UOGameController
 class UOGameController(GameController):
-    def __init__(self, pluginHost: IPluginHost):
-        super().__init__(pluginHost)
+    def __init__(self, game: PakFile, pluginHost: IPluginHost):
+        super().__init__(game, pluginHost)
+        self.deviceManager = GraphicsDeviceManager(self)
     def loadContent(self) -> None:
         super().loadContent()
-        print('HERE')
-        # Fonts.Initialize(GraphicsDevice);
+        Fonts.load(self.game, self.device)
         # SolidColorTextureCache.Initialize(GraphicsDevice);
         # Audio = new AudioManager();
 

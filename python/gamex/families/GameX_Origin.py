@@ -5,7 +5,7 @@ from gamex import FamilyGame, BinaryPakFile
 from gamex.families.Origin.formats.UO.binary import Binary_Animdata, Binary_AsciiFont, Binary_BodyConverter, Binary_BodyTable, Binary_CalibrationInfo, Binary_Gump, Binary_GumpDef, Binary_Hues, Binary_Land, Binary_Light, Binary_MobType, Binary_MultiMap, Binary_MusicDef, Binary_Multi, Binary_RadarColor, Binary_SkillGroups, Binary_Skills, Binary_Sound, Binary_SpeechList, Binary_Static, Binary_StringTable, Binary_TileData, Binary_UnicodeFont, Binary_Verdata
 from gamex.families.Origin.formats.UO.utility import ClientVersion, ClientVersionHelper
 from gamex.families.Origin.formats.binary import Binary_U8, Binary_U9, Binary_UO
-from gamex.families.Origin.games.UO.data import ClientFlags
+from gamex.families.Origin.clients.UO.data import ClientFlags
 
 # U8Game
 class U8Game(FamilyGame):

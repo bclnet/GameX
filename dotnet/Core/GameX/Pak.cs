@@ -599,7 +599,7 @@ public abstract class BinaryPakFile(PakState state, PakBinary pakBinary) : PakFi
             return p?.LoadFileData(f2, option, throwOnError);
         }
         var f = (FileSource)path;
-        return ReadData(f, option);
+        return ReadData(f.Fix(), option);
     }
 
     /// <summary>

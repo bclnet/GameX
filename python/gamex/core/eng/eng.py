@@ -1,13 +1,24 @@
 from __future__ import annotations
 import os
 from datetime import timedelta
+from openstk import _throw
 from openstk.core.util import Stopwatch
+
+# GraphicsDevice
+class GraphicsDevice:
+    pass
 
 # GraphicsDeviceManager
 class GraphicsDeviceManager:
-    def beginDraw() -> bool: return True
-    def createDevice() -> None: pass
-    def endDraw() -> None: pass
+    def __init__(self, game: object):
+        self.game = game or _throw('The game cannot be null!')
+    
+    @property
+    def device(self) -> GraphicsDevice: return None
+
+    def beginDraw(self) -> bool: return True
+    def createDevice(self) -> None: pass
+    def endDraw(self) -> None: pass
 
 # IGameObject
 class IGameObject:
@@ -37,14 +48,25 @@ class Game:
         self.deactivated = None
         self.disposed = None
         self.exiting = None
+        # properties
+        self._isActive = False
 
     def __enter__(self): return self
     def __exit__(self, type, value, traceback): pass
 
-
     def assertNotDisposed(self): pass
 
-    # IsActive
+    @property
+    def device(self) -> GraphicsDevice: return self.deviceManager.device
+
+    @property
+    def isActive(self) -> bool: return self._isActive
+    @isActive.setter
+    def isActive(self, value) -> None:
+        if self._isActive == value: return
+        self._isActive = value
+        # if value: Activated?.Invoke(this, EventArgs.Empty);
+        # else: Deactivated?.Invoke(this, EventArgs.Empty);
 
     def run(self):
         self.assertNotDisposed()

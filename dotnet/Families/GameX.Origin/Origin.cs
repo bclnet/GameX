@@ -1,14 +1,10 @@
 ﻿using GameX.Formats.Unknown;
+using GameX.Origin.Clients.UO.Data;
 using GameX.Origin.Formats;
 using GameX.Origin.Formats.UO;
-using GameX.Origin.Games.UO.Data;
-using GameX.Origin.Structs.UO;
 using GameX.Transforms;
-using OpenStack;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using static OpenStack.Debug;

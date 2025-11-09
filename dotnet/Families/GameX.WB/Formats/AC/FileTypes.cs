@@ -93,10 +93,10 @@ public class CharGen : FileType, IHaveMetaInfo
     {
         Id = r.ReadUInt32();
         r.Skip(4);
-        StarterAreas = r.ReadC32FArray(x => new StarterArea(x));
+        StarterAreas = r.ReadLV8FArray(x => new StarterArea(x));
         // HERITAGE GROUPS -- 11 standard player races and 2 Olthoi.
         r.Skip(1); // Not sure what this byte 0x01 is indicating, but we'll skip it because we can.
-        HeritageGroups = r.ReadC32PMany<uint, HeritageGroupCG>("I", x => new HeritageGroupCG(x));
+        HeritageGroups = r.ReadLV8PMany<uint, HeritageGroupCG>("I", x => new HeritageGroupCG(x));
     }
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
@@ -385,13 +385,13 @@ public class DidMapper : FileType, IHaveMetaInfo
     {
         Id = r.ReadUInt32();
         ClientIDNumberingType = (NumberingType)r.ReadByte();
-        ClientEnumToID = r.ReadC32PMany<uint, uint>("I", x => x.ReadUInt32());
+        ClientEnumToID = r.ReadLV8PMany<uint, uint>("I", x => x.ReadUInt32());
         ClientNameNumberingType = (NumberingType)r.ReadByte();
-        ClientEnumToName = r.ReadC32PMany<uint, string>("I", x => x.ReadL8Encoding(Encoding.Default));
+        ClientEnumToName = r.ReadLV8PMany<uint, string>("I", x => x.ReadL8Encoding(Encoding.Default));
         ServerIDNumberingType = (NumberingType)r.ReadByte();
-        ServerEnumToID = r.ReadC32PMany<uint, uint>("I", x => x.ReadUInt32());
+        ServerEnumToID = r.ReadLV8PMany<uint, uint>("I", x => x.ReadUInt32());
         ServerNameNumberingType = (NumberingType)r.ReadByte();
-        ServerEnumToName = r.ReadC32PMany<uint, string>("I", x => x.ReadL8Encoding(Encoding.Default));
+        ServerEnumToName = r.ReadLV8PMany<uint, string>("I", x => x.ReadL8Encoding(Encoding.Default));
     }
 
     //: FileTypes.DidMapper
@@ -442,13 +442,13 @@ public class DualDidMapper : FileType, IHaveMetaInfo
     {
         Id = r.ReadUInt32();
         ClientIDNumberingType = (NumberingType)r.ReadByte();
-        ClientEnumToID = r.ReadC32PMany<uint, uint>("I", x => x.ReadUInt32());
+        ClientEnumToID = r.ReadLV8PMany<uint, uint>("I", x => x.ReadUInt32());
         ClientNameNumberingType = (NumberingType)r.ReadByte();
-        ClientEnumToName = r.ReadC32PMany<uint, string>("I", x => x.ReadL8Encoding(Encoding.Default));
+        ClientEnumToName = r.ReadLV8PMany<uint, string>("I", x => x.ReadL8Encoding(Encoding.Default));
         ServerIDNumberingType = (NumberingType)r.ReadByte();
-        ServerEnumToID = r.ReadC32PMany<uint, uint>("I", x => x.ReadUInt32());
+        ServerEnumToID = r.ReadLV8PMany<uint, uint>("I", x => x.ReadUInt32());
         ServerNameNumberingType = (NumberingType)r.ReadByte();
-        ServerEnumToName = r.ReadC32PMany<uint, string>("I", x => x.ReadL8Encoding(Encoding.Default));
+        ServerEnumToName = r.ReadLV8PMany<uint, string>("I", x => x.ReadL8Encoding(Encoding.Default));
     }
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
@@ -480,7 +480,7 @@ public class EnumMapper : FileType, IHaveMetaInfo
         Id = r.ReadUInt32();
         BaseEnumMap = r.ReadUInt32();
         NumberingType = (NumberingType)r.ReadByte();
-        IdToStringMap = r.ReadC32PMany<uint, string>("I", x => x.ReadL8Encoding(Encoding.Default));
+        IdToStringMap = r.ReadLV8PMany<uint, string>("I", x => x.ReadL8Encoding(Encoding.Default));
     }
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
@@ -675,19 +675,19 @@ public class GfxObj : FileType, IHaveMetaInfo
     {
         Id = r.ReadUInt32();
         Flags = (GfxObjFlags)r.ReadUInt32();
-        Surfaces = r.ReadC32PArray<uint>("I");
+        Surfaces = r.ReadLV8PArray<uint>("I");
         VertexArray = new CVertexArray(r);
         // Has Physics 
         if ((Flags & GfxObjFlags.HasPhysics) != 0)
         {
-            PhysicsPolygons = r.ReadC32PMany<ushort, Polygon>("H", x => new Polygon(x));
+            PhysicsPolygons = r.ReadLV8PMany<ushort, Polygon>("H", x => new Polygon(x));
             PhysicsBSP = new BspTree(r, BSPType.Physics);
         }
         SortCenter = r.ReadVector3();
         // Has Drawing 
         if ((Flags & GfxObjFlags.HasDrawing) != 0)
         {
-            Polygons = r.ReadC32PMany<ushort, Polygon>("H", x => new Polygon(x));
+            Polygons = r.ReadLV8PMany<ushort, Polygon>("H", x => new Polygon(x));
             DrawingBSP = new BspTree(r, BSPType.Drawing);
         }
         if ((Flags & GfxObjFlags.HasDIDDegrade) != 0) DIDDegrade = r.ReadUInt32();
@@ -1039,7 +1039,7 @@ public class LanguageString : FileType, IHaveMetaInfo
     public LanguageString(BinaryReader r)
     {
         Id = r.ReadUInt32();
-        CharBuffer = r.ReadC32Encoding(Encoding.Default); //:TODO ?FALLBACK
+        CharBuffer = r.ReadLV8UString(); //:TODO ?FALLBACK
     }
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
@@ -2100,7 +2100,7 @@ public class StringTable : FileType, IHaveMetaInfo
         Id = r.ReadUInt32();
         Language = r.ReadUInt32();
         Unknown = r.ReadByte();
-        StringTableData = r.ReadC32FArray(x => new StringTableData(x));
+        StringTableData = r.ReadLV8FArray(x => new StringTableData(x));
     }
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [

@@ -1,12 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing.Printing;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace GameX.Eng;
 
+public class GraphicsDevice {
+}
+
 public class GraphicsDeviceManager {
+    public Game Game;
+
+    public GraphicsDeviceManager(Game game) {
+        Game = game ?? throw new ArgumentNullException("The game cannot be null");
+    }
+
+    public GraphicsDevice Device => null;
+
     public virtual bool BeginDraw() => true;
     public virtual void CreateDevice() { }
     public virtual void EndDraw() { }
@@ -20,9 +31,9 @@ public interface IGameObject {
 
 public class Game : IDisposable {
     protected static readonly TimeSpan MaxElapsedTime = TimeSpan.FromMilliseconds(500);
-    
+
     List<IGameObject> Components = new();
-    GraphicsDeviceManager DeviceManager;
+    public GraphicsDeviceManager DeviceManager;
     bool IsDisposed;
     bool Initialized;
     bool Running;
@@ -80,6 +91,8 @@ public class Game : IDisposable {
     }
 
     #endregion
+
+    public GraphicsDevice Device => DeviceManager.Device;
 
     bool _isActive;
     public bool IsActive {
@@ -145,13 +158,13 @@ public class Game : IDisposable {
 
     protected virtual void EndRun() { }
 
-    protected virtual void LoadContent() { }
+    protected virtual Task LoadContent() => Task.CompletedTask;
 
-    protected virtual void UnloadContent() { }
+    protected virtual Task UnloadContent() => Task.CompletedTask;
 
     protected virtual void Initialize() {
         foreach (var s in Components) s.Initialize();
-        LoadContent();
+        LoadContent().Wait();
     }
 
     protected virtual void Draw() {

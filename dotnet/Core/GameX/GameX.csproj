@@ -92,6 +92,8 @@
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\WBFamily.Sample.json" Link="Specs\WBFamily.Sample.json" />
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\X2KFamily.json" Link="Specs\X2KFamily.json" />
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\X2KFamily.Sample.json" Link="Specs\X2KFamily.Sample.json" />
+    <EmbeddedResource Include="..\..\..\python\gamex\Specs\XboxFamily.json" Link="Specs\XboxFamily.json" />
+    <EmbeddedResource Include="..\..\..\python\gamex\Specs\XboxFamily.Sample.json" Link="Specs\XboxFamily.Sample.json" />
   </ItemGroup>
 
   <ItemGroup>

@@ -35,8 +35,8 @@ public static class TestHelper {
         { "Arkane:D2", new Lazy<PakFile>(() => familyArkane.OpenPakFile(new Uri("game:/*.Index#D2"))) },
         { "Arkane:P", new Lazy<PakFile>(() => familyArkane.OpenPakFile(new Uri("game:/*.pak#P"))) },
         { "Arkane:D:DOTO", new Lazy<PakFile>(() => familyArkane.OpenPakFile(new Uri("game:/*.Index#D:DOTO"))) },
-        { "Arkane:W:YB", new Lazy<PakFile>(() => familyArkane.OpenPakFile(new Uri("game:/*#W:YB"))) },
-        { "Arkane:W:CP", new Lazy<PakFile>(() => familyArkane.OpenPakFile(new Uri("game:/*#W:CP"))) },
+        { "Arkane:Height:YB", new Lazy<PakFile>(() => familyArkane.OpenPakFile(new Uri("game:/*#Height:YB"))) },
+        { "Arkane:Height:CP", new Lazy<PakFile>(() => familyArkane.OpenPakFile(new Uri("game:/*#Height:CP"))) },
         { "Arkane:DL", new Lazy<PakFile>(() => familyArkane.OpenPakFile(new Uri("game:/*.Index#DL"))) },
         //{ "Arkane:RF", new Lazy<PakFile>(() => familyArkane.OpenPakFile(new Uri("game:/*#RF"))) }, //: future
 

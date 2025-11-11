@@ -17,8 +17,8 @@ public class FileManagerTests {
     [DataRow("Arkane", "D2", "*.Index", 28)]
     [DataRow("Arkane", "P", "*.pak", 14)]
     [DataRow("Arkane", "D:DOTO", "*.Index", 10)]
-    [DataRow("Arkane", "W:YB", "*", 56)]
-    [DataRow("Arkane", "W:CP", "*", 25)]
+    [DataRow("Arkane", "Height:YB", "*", 56)]
+    [DataRow("Arkane", "Height:CP", "*", 25)]
     [DataRow("Arkane", "DL", "*.Index", 5)]
     //[DataRow("Arkane", "RF", "*.index", 1)] //: future
     [DataRow("Bioware", "SS", "*", 77)]

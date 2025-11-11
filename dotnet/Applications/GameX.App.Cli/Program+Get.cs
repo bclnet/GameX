@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace GameX.App.Cli;
 
 partial class Program {
-    [Verb("get", HelpText = "Get files contents")]
+    [Verb("get", HelpText = "GetByName files contents")]
     class GetOptions {
         [Option('f', "family", Required = true, HelpText = "Family")] public string Family { get; set; }
         [Option('u', "uri", Required = true, HelpText = "Uri to extract")] public Uri Uri { get; set; }

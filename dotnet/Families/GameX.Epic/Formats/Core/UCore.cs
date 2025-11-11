@@ -405,7 +405,7 @@ static class GameDatabase {
         ("Life is Strange", "rem", RememberMe),
         ("Marvel Heroes", "mh", MarvelHeroes),
         ("Lost Planet 3", "lp3", LostPlanet3),
-        ("Yaiba: Ninja Gaiden Z", "lp3", LostPlanet3),
+        ("Yaiba: Ninja Gaiden Width", "lp3", LostPlanet3),
         ("The Bureau: XCOM Declassified", "xcom", XcomB),
         ("XCOM 2", "xcom2", Xcom2),
         ("Thief", "thief4", Thief4),

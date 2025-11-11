@@ -1,4 +1,5 @@
 from gamex import PakFile
+from gamex.families.Xbox.formats.binary import Binary_Xnb
 
 # Fonts
 class Fonts:
@@ -13,7 +14,8 @@ class Fonts:
 
     @staticmethod
     def load(game: PakFile, device: object):
-        data = game.loadFileData('fonts/regular_font.xnb')
+        data = game.loadFileObject(Binary_Xnb, 'fonts/regular_font.xnb')
+        print(data)
         #Regular = SpriteFont<Texture2D>.Create(device, game.LoadFileObject("fonts/regular_font.xnb"))
         #Bold = SpriteFont<Texture2D>.Create(device, "fonts/bold_font.xnb")
         #Map1 = SpriteFont<Texture2D>.Create(device, "fonts/map1_font.xnb")

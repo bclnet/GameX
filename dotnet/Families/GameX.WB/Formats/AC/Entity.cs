@@ -1669,10 +1669,10 @@ public class SkillFormula : IHaveMetaInfo
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new($"Attr1: {(PropertyAttribute)Attr1}"),
         new($"Attr2: {(PropertyAttribute)Attr2}"),
-        new($"W: {W}"),
+        new($"Height: {W}"),
         new($"X: {X}"),
         new($"Y: {Y}"),
-        new($"Z (divisor): {Z}"),
+        new($"Width (divisor): {Z}"),
     ];
 }
 #endregion

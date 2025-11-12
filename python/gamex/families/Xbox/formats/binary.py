@@ -18,11 +18,17 @@ class Binary_Xnb(IHaveMetaInfo):
     #region Type Reader
 
     class TypeReader:
-        def __init__(self, name: str, target: str, read: callable, valueType: bool = False):
+        def __init__(self, type: type, name: str, target: str, valueType: bool = False):
+            self.type: type = type
             self.name: str = name
             self.target: str = target
-            self.read: callable = read
             self.valueType: bool = valueType
+            self.init: callable = None
+
+    class TypeReader(TypeReader)[T]:
+        def __init__(self, name: str, target: str, read: callable, valueType: bool = False):
+            super().__init__(None, name, target, valueType)
+            self.read: callable = read
 
     class GenericReader(TypeReader):
         def __init__(self, name: str, target: str, target2: callable, read: callable, init: callable = None, valueType: bool = False, args: list[str] = None):
@@ -52,16 +58,38 @@ class Binary_Xnb(IHaveMetaInfo):
         TypeReader('ObjectReader', 'System.Object', lambda r: _throw('NotSupportedException')),
 
         # System types
-        GenericReader('EnumReader', 'System.Enum', lambda r, s: r.readInt32(), targetType=lambda s: s.args[0]),
-        GenericReader('NullableReader', 'System.Nullable', lambda r, s: r.readByte(), valueType=True),
-        GenericReader('ArrayReader', 'System.Array', lambda r, s: r.readByte(), targetType=lambda s: s.args[0] + '[]'),
-        GenericReader('ListReader', 'System.Collections.Generic.List', lambda r, s: r.readByte()),
-        GenericReader('DictionaryReader', 'System.Collections.Generic.Dictionary', lambda r, s: r.readByte()),
+        def _EnumReader(s):
+            s.target2 = s.args[0]
+            s.read = lambda r: r.readInt32()
+        GenericReader('EnumReader', 'System.Enum', _EnumReader),
+        def _NullableReader(s):
+            s.target2 = s.args[0]
+            s.valueReader = getByTarget(s.args[0])
+            s.read = lambda r: r.read(s.valueReader) if r.readBoolean() else None
+        GenericReader('NullableReader', 'System.Nullable', _NullableReader, valueType=True),
+        def _ArrayReader(s):
+            s.target2 = s.args[0] + '[]'
+            s.valueReader = getByTarget(s.args[0])
+            s.read = lambda r: r.readL32FArray(z => r.readValueOrObject(s.valueReader))
+        GenericReader('ArrayReader', 'System.Array', _ArrayReader),
+        def _ListReader(s):
+            s.target2 = s.args[0]
+            s.valueReader = getByTarget(s.args[0])
+            s.read = lambda r: r.readL32FArray(z => r.readValueOrObject(s.valueReader))
+        GenericReader('ListReader', 'System.Collections.Generic.List', _ListReader),
+        def _DictionaryReader(s):
+            s.keyReader = getByTarget(s.args[0])
+            s.valueReader = getByTarget(s.args[1])
+            s.read = lambda r: r.readL32FMany(z => r.readValueOrObject(s.keyReader), z => r.readValueOrObject(s.valueReader));
+        GenericReader('DictionaryReader', 'System.Collections.Generic.Dictionary', _DictionaryReader),
         # TypeReader('TimeSpanReader', 'System.TimeSpan', lambda r: { var v = r.readInt64(); return new TimeSpan(v); }, valueType=True),
         # TypeReader('DateTimeReader', 'System.DateTime', lambda r: { var v = r.readInt64(); return new DateTime(v & ~(3L << 62), (DateTimeKind)(v >> 62)); }, valueType=True),
         # TypeReader('DecimalReader', 'System.Decimal', lambda r: { uint a = r.readUInt32(), b = r.ReadUInt32(), c = r.ReadUInt32(), d = r.ReadUInt32(); return 0; }, valueType=True),
         TypeReader('ExternalReferenceReader', 'ExternalReference', lambda r: r.readString()),
-        GenericReader('ReflectiveReader', 'System.Object', lambda r, s: _throw('NotSupportedException'), targetType=lambda s: s.args[0]),
+        def _ReflectiveReader(s):
+            s.target2 = s.args[0]
+            s.read = lambda r: _throw('NotSupportedException')
+        GenericReader('ReflectiveReader', 'System.Object', _ReflectiveReader),
 
         # Math types
         TypeReader('Vector2Reader', 'System.Numerics.Vector2', lambda r: r.readVector2(), valueType=True),
@@ -124,12 +152,9 @@ class Binary_Xnb(IHaveMetaInfo):
         def getByName(name: str, version: int) -> TypeReader:
             wanted = Binary_Xnb.stripAssemblyVersion(name).replace('Microsoft.Xna.Framework.Content.', '')
             if wanted in Binary_Xnb.typeReaderMap: return Binary_Xnb.typeReaderMap[wanted]
-            # could this be a specialization of a generic reader?
             genericName, args = Binary_Xnb.splitGenericTypeName(wanted)
             if not genericName: return (None, None)
-            # look for a generic reader factory with this name.
             if genericName in Binary_Xnb.typeReaderMap and (factory := Binary_Xnb.typeReaderMap[genericName]) != None:
-                # create a specialized generic reader instance.
                 reader = factory.create(args)
                 if reader.name != wanted: raise Exception('ERROR')
                 Binary_Xnb.typeReaders.append(reader)

@@ -89,44 +89,5 @@ public class SpriteFont<Texture2D>(Texture2D texture, List<Rectangle> glyph, Lis
         //}
     }
 
-    public Vector2 MeasureString(ReadOnlySpan<char> text) {
-        if (text == null) throw new ArgumentNullException("text");
-        if (text.Length == 0) return Vector2.Zero;
-        var result = Vector2.Zero;
-        float curLineWidth = 0.0f, finalLineHeight = LineSpacing;
-        var firstInLine = true;
-        foreach (char c in text) {
-            // Special characters
-            if (c == '\r') continue;
-            if (c == '\n') {
-                result.X = Math.Max(result.X, curLineWidth);
-                result.Y += LineSpacing;
-                curLineWidth = 0.0f;
-                finalLineHeight = LineSpacing;
-                firstInLine = true;
-                continue;
-            }
-
-            // Get the List index from the character map, defaulting to the DefaultCharacter if it's set.
-            var index = Characters.IndexOf(c);
-            if (index == -1) index = !DefaultCharacter.HasValue ? Characters.IndexOf('?') : Characters.IndexOf(DefaultCharacter.Value);
-
-            // For the first character in a line, always push the width rightward, even if the kerning pushes the character to the left.
-            var cKern = Kerning[index];
-            if (firstInLine) { curLineWidth += Math.Abs(cKern.X); firstInLine = false; }
-            else curLineWidth += Spacing + cKern.X;
-
-            // Add the character width and right-side bearing to the line width.
-            curLineWidth += cKern.Y + cKern.Z;
-
-            // If a character is taller than the default line height, increase the height to that of the line's tallest character.
-            var cCropHeight = CroppingData[index].Height;
-            if (cCropHeight > finalLineHeight) finalLineHeight = cCropHeight;
-        }
-
-        // Calculate the final width/height of the text box
-        result.X = Math.Max(result.X, curLineWidth);
-        result.Y += finalLineHeight;
-        return result;
-    }
+    
 }

@@ -30,16 +30,17 @@ public class Binary_Xnb : IHaveMetaInfo {
         public Func<ContentReader, T> Read = read;
     }
 
-    public class GenericReader(string name, string target, Action<GenericReader> action, bool valueType = false, List<string> args = null) : TypeReader<object>(name, target, null, valueType) {
-        public Action<GenericReader> Action = action;
+    public class GenericReader(string name, string target, Action<GenericReader> ginit, bool valueType = false, List<string> args = null) : TypeReader<object>(name, target, null, valueType) {
+        public Action<GenericReader> GInit = ginit;
         public List<string> Args = args;
-        public string Target2;
         public TypeReader KeyReader;
         public TypeReader ValueReader;
 
         public TypeReader Create(List<string> args) {
             var suffix = $"`{args.Count}[[{string.Join("],[", args)}]]";
-            return new GenericReader(Name + suffix, Target + suffix, Action, ValueType, args);
+            var reader = new GenericReader(Name + suffix, Target + suffix, GInit, ValueType, args);
+            reader.Init = () => GInit(reader);
+            return reader;
         }
     }
 
@@ -67,17 +68,15 @@ public class Binary_Xnb : IHaveMetaInfo {
 
             // System types
             new GenericReader("EnumReader", "System.Enum", s => {
-                s.Target2 = s.Args[0];
+                s.Target = s.Args[0];
                 s.Read = r => r.ReadInt32();
             }),
             new GenericReader("NullableReader", "System.Nullable", s => {
-                //typeof(GenericReader<>).MakeGenericType()
-                //var x = new GenericReader<int>(s.Name, s.Target, s.ValueType);
                 s.ValueReader = GetByTarget(s.Args[0]);
                 s.Read = r => r.ReadBoolean() ? r.Read(s.ValueReader) : null;
             }, valueType: true),
             new GenericReader("ArrayReader", "System.Array", s => {
-                s.Target2 = s.Args[0] + "[]";
+                s.Target = s.Args[0] + "[]";
                 s.ValueReader = GetByTarget(s.Args[0]);
                 s.Read = r => r.ReadL32FArray(z => r.ReadValueOrObject(s.ValueReader));
             }),
@@ -95,7 +94,7 @@ public class Binary_Xnb : IHaveMetaInfo {
             new TypeReader<decimal>("DecimalReader", "System.Decimal", r => { uint a = r.ReadUInt32(), b = r.ReadUInt32(), c = r.ReadUInt32(), d = r.ReadUInt32(); return 0; }, valueType: true),
             new TypeReader<string>("ExternalReferenceReader", "ExternalReference", r => r.ReadString()),
             new GenericReader("ReflectiveReader", "System.Object", s => {
-                s.Target2 = s.Args[0];
+                s.Target = s.Args[0];
                 s.Read = r => throw new NotSupportedException();
             }),
 
@@ -161,7 +160,7 @@ public class Binary_Xnb : IHaveMetaInfo {
         public T ReadValueOrObject<T>(TypeReader<T> reader) => reader.ValueType ? reader.Read(this) : ReadObject<T>();
 
         public TypeReader ReadTypeId() { var typeId = this.ReadVInt7() - 1; return typeId >= 0 ? typeId < Readers.Length ? Readers[typeId] : throw new Exception("Invalid XNB file: typeId is out of range.") : null; }
-        public ContentReader Validate(string type) { var reader = ReadTypeId(); return reader == null || reader.Target != type ? throw new Exception("Invalid XNB file: got an unexpected typeId.") : this; }
+        public ContentReader Validate(string type) { var reader = ReadTypeId(); return reader != null && reader.Target == type ? this : throw new Exception("Invalid XNB file: got an unexpected typeId."); }
 
         public static TypeReader GetByName(string name, uint version) {
             var wanted = StripAssemblyVersion(name).Replace("Microsoft.Xna.Framework.Content.", "");
@@ -403,10 +402,51 @@ public class Binary_Xnb : IHaveMetaInfo {
         public Vector4<int>[] Glyphs = r.ReadObject<Vector4<int>[]>();
         public object Cropping = r.ReadObject<object>();
         public object Characters = r.ReadObject<object>();
-        public int VerticalLinespacing = r.ReadInt32();
+        public int VerticalLineSpacing = r.ReadInt32();
         public float HorizontalSpacing = r.ReadSingle();
         public object Kerning = r.ReadObject<object>();
         public char DefaultCharacter = r.ReadBoolean() ? r.ReadChar() : (char)0;
+
+        public Vector2 MeasureString(ReadOnlySpan<char> text) {
+            if (text == null) throw new ArgumentNullException("text");
+            if (text.Length == 0) return Vector2.Zero;
+            var result = Vector2.Zero;
+            float curLineWidth = 0.0f, finalLineHeight = VerticalLineSpacing;
+            var firstInLine = true;
+            foreach (char c in text) {
+                // Special characters
+                if (c == '\r') continue;
+                if (c == '\n') {
+                    result.X = Math.Max(result.X, curLineWidth);
+                    result.Y += VerticalLineSpacing;
+                    curLineWidth = 0.0f;
+                    finalLineHeight = VerticalLineSpacing;
+                    firstInLine = true;
+                    continue;
+                }
+
+                // Get the List index from the character map, defaulting to the DefaultCharacter if it's set.
+                var index = Characters.IndexOf(c);
+                if (index == -1) index = !DefaultCharacter.HasValue ? Characters.IndexOf('?') : Characters.IndexOf(DefaultCharacter.Value);
+
+                // For the first character in a line, always push the width rightward, even if the kerning pushes the character to the left.
+                var cKern = Kerning[index];
+                if (firstInLine) { curLineWidth += Math.Abs(cKern.X); firstInLine = false; }
+                else curLineWidth += HorizontalSpacing + cKern.X;
+
+                // Add the character width and right-side bearing to the line width.
+                curLineWidth += cKern.Y + cKern.Z;
+
+                // If a character is taller than the default line height, increase the height to that of the line's tallest character.
+                var cCropHeight = CroppingData[index].Height;
+                if (cCropHeight > finalLineHeight) finalLineHeight = cCropHeight;
+            }
+
+            // Calculate the final width/height of the text box
+            result.X = Math.Max(result.X, curLineWidth);
+            result.Y += finalLineHeight;
+            return result;
+        }
     }
 
     public class Model(ContentReader r) {
@@ -432,16 +472,16 @@ public class Binary_Xnb : IHaveMetaInfo {
 
     public class Song(ContentReader r) {
         public string Filename = r.ReadLV7UString();
-        public int Duration = r.Validate<int>("System.Int32").ReadInt32();
+        public int Duration = r.Validate("System.Int32").ReadInt32();
     }
 
     public class Video(ContentReader r) {
-        public string Filename = r.Validate<string>("System.String").ReadLV7UString();
-        public int Duration = r.Validate<int>("System.Int32").ReadInt32();
-        public int Width = r.Validate<int>("System.Int32").ReadInt32();
-        public int Height = r.Validate<int>("System.Int32").ReadInt32();
-        public float FramesPerSecond = r.Validate<float>("System.Single").ReadSingle();
-        public SoundtrackType SoundtrackType = (SoundtrackType)r.Validate<int>("System.Int32").ReadInt32();
+        public string Filename = r.Validate("System.String").ReadLV7UString();
+        public int Duration = r.Validate("System.Int32").ReadInt32();
+        public int Width = r.Validate("System.Int32").ReadInt32();
+        public int Height = r.Validate("System.Int32").ReadInt32();
+        public float FramesPerSecond = r.Validate("System.Single").ReadSingle();
+        public SoundtrackType SoundtrackType = (SoundtrackType)r.Validate("System.Int32").ReadInt32();
     }
 
     #endregion
@@ -482,7 +522,7 @@ public class Binary_Xnb : IHaveMetaInfo {
         h.Validate(r);
         r.ReadTypeManifest();
         Objs = r.ReadFArray(z => r.ReadObject(), r.ReadVInt7() + 1);
-        r.EnsureAtEnd(h.SizeOnDisk);
+        //r.EnsureAtEnd(h.SizeOnDisk);
     }
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [

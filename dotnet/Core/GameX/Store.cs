@@ -274,6 +274,7 @@ static class Store_Local {
     static Store_Local() {
         // get locale games
         var gameRoots = DriveInfo.GetDrives().Select(x => Path.Combine(x.Name, GAMESPATH)).ToList();
+        gameRoots.Add(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), GAMESPATH));
         if (PlatformX.PlatformOS == PlatformX.OS.Android) gameRoots.Add(Path.Combine("/sdcard", GAMESPATH));
         Paths = gameRoots.Where(Directory.Exists).SelectMany(Directory.GetDirectories).ToDictionary(Path.GetFileName, x => x);
     }

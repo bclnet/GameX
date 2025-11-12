@@ -14,13 +14,11 @@ class Fonts:
 
     @staticmethod
     def load(game: PakFile, device: object):
-        data = game.loadFileObject(Binary_Xnb, 'fonts/regular_font.xnb')
-        print(data)
-        #Regular = SpriteFont<Texture2D>.Create(device, game.LoadFileObject("fonts/regular_font.xnb"))
-        #Bold = SpriteFont<Texture2D>.Create(device, "fonts/bold_font.xnb")
-        #Map1 = SpriteFont<Texture2D>.Create(device, "fonts/map1_font.xnb")
-        #Map2 = SpriteFont<Texture2D>.Create(device, "fonts/map2_font.xnb")
-        #Map3 = SpriteFont<Texture2D>.Create(device, "fonts/map3_font.xnb")
-        #Map4 = SpriteFont<Texture2D>.Create(device, "fonts/map4_font.xnb")
-        #Map5 = SpriteFont<Texture2D>.Create(device, "fonts/map5_font.xnb")
-        #Map6 = SpriteFont<Texture2D>.Create(device, "fonts/map6_font.xnb")
+        Fonts.regular = game.loadFileObject(Binary_Xnb, 'fonts/regular_font.xnb').objs[0]
+        Fonts.bold = game.loadFileObject(Binary_Xnb, 'fonts/bold_font.xnb').objs[0]
+        Fonts.map1 = game.loadFileObject(Binary_Xnb, 'fonts/map1_font.xnb').objs[0]
+        Fonts.map2 = game.loadFileObject(Binary_Xnb, 'fonts/map2_font.xnb').objs[0]
+        Fonts.map3 = game.loadFileObject(Binary_Xnb, 'fonts/map3_font.xnb').objs[0]
+        Fonts.map4 = game.loadFileObject(Binary_Xnb, 'fonts/map4_font.xnb').objs[0]
+        Fonts.map5 = game.loadFileObject(Binary_Xnb, 'fonts/map5_font.xnb').objs[0]
+        Fonts.map6 = game.loadFileObject(Binary_Xnb, 'fonts/map6_font.xnb').objs[0]

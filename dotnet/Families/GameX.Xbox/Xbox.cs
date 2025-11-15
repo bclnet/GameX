@@ -32,6 +32,7 @@ public class XboxPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel
 
     static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch {
+            ".xnb" => (0, Binary_Xnb.Factory),
             _ => UnknownPakFile.ObjectFactory(source, game),
         };
 

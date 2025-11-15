@@ -543,7 +543,7 @@ public class EnvCell : FileType, IHaveMetaInfo
             new("Surfaces", items: Surfaces.Select(x => new MetaInfo($"{x:X8}", clickable: true))),
             new($"Environment: {EnvironmentId:X8}", clickable: true),
             CellStructure != 0 ? new($"CellStructure: {CellStructure}") : null,
-            new($"Position: {Position}"),
+            new($"Center: {Position}"),
             CellPortals.Length > 0 ? new("CellPortals", items: CellPortals.Select((x, i) => new MetaInfo($"{i}", items: (x as IHaveMetaInfo).GetInfoNodes()))) : null,
             StaticObjects.Length > 0 ? new("StaticObjects", items: StaticObjects.Select((x, i) => new MetaInfo($"{i}", items: (x as IHaveMetaInfo).GetInfoNodes()))) : null,
             RestrictionObj != 0 ? new($"RestrictionObj: {RestrictionObj:X8}", clickable: true) : null,

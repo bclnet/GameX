@@ -765,7 +765,7 @@ public unsafe class Binary_Tea : IHaveMetaInfo {
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
         => [
             new("BinaryTEA", items: [
-                new($"Type: X"),
+                new($"Type: Center"),
             ])
         ];
 }

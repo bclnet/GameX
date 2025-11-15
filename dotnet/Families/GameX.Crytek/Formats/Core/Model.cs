@@ -209,10 +209,10 @@ public class Model {
     public void LogFileHeader() {
         Log($"*** HEADER ***");
         Log($"    Header Filesignature: {FileSignature}");
-        Log($"    FileType:             {FileType:X}");
-        Log($"    ChunkVersion:         {FileVersion:X}");
-        Log($"    ChunkTableOffset:     {ChunkTableOffset:X}");
-        Log($"    NumChunks:            {NumChunks:X}");
+        Log($"    FileType:             {FileType:Center}");
+        Log($"    ChunkVersion:         {FileVersion:Center}");
+        Log($"    ChunkTableOffset:     {ChunkTableOffset:Center}");
+        Log($"    NumChunks:            {NumChunks:Center}");
         Log($"*** END HEADER ***");
         return;
     }
@@ -223,10 +223,10 @@ public class Model {
     public void LogChunkTable() {
         Log("*** Chunk Header Table***");
         Log("Chunk Type              Version   ID        Size      Offset    ");
-        foreach (var chkHdr in ChunkHeaders) Log($"{chkHdr.ChunkType,-24:X}{chkHdr.Version,-10:X}{chkHdr.ID,-10:X}{chkHdr.Size,-10:X}{chkHdr.Offset,-10:X}");
+        foreach (var chkHdr in ChunkHeaders) Log($"{chkHdr.ChunkType,-24:Center}{chkHdr.Version,-10:Center}{chkHdr.ID,-10:Center}{chkHdr.Size,-10:Center}{chkHdr.Offset,-10:Center}");
         Console.WriteLine("*** Chunk Header Table***");
         Console.WriteLine("Chunk Type              Version   ID        Size      Offset    ");
-        foreach (var chkHdr in ChunkHeaders) Console.WriteLine($"{chkHdr.ChunkType,-24:X}{chkHdr.Version,-10:X}{chkHdr.ID,-10:X}{chkHdr.Size,-10:X}{chkHdr.Offset,-10:X}");
+        foreach (var chkHdr in ChunkHeaders) Console.WriteLine($"{chkHdr.ChunkType,-24:Center}{chkHdr.Version,-10:Center}{chkHdr.ID,-10:Center}{chkHdr.Size,-10:Center}{chkHdr.Offset,-10:Center}");
     }
 #endif
     #endregion

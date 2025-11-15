@@ -8,9 +8,10 @@ __version__ = "0.0.1"
 # __current__ = "ID"
 # __current__ = "Lucas"
 # __current__ = "Mythic"
-__current__ = "Origin"
+# __current__ = "Origin"
 # __current__ = "Red"
 # __current__ = "Valve"
+__current__ = "Xbox"
 
 class GlobalOption:
     def __init__(self, Platform:str=None, FindKey:str=None, Family:str=None, Game:str=None, Edition:str=None, ForcePath:str=None, ForceOpen:bool=False):
@@ -719,7 +720,17 @@ match __current__:
             Family = "X2K",
             # Game = "XX", # XX
         )
+    case 'Xbox':
+        familyKeys = [ "Xbox", "Unknown" ]
+
+        option = GlobalOption(
+            Platform = "GL",
+            ForceOpen = True,
+            ForcePath = "sample:3",
+            Family = "Xbox",
+            Game = "Stardew", # Stardew Valley
+        )
     case _:
-        familyKeys = [ "Arkane", "Beamdog", "Bethesda", "Bioware", "Black", "Blizzard", "Bohemia", "Bullfrog", "Capcom", "Cig", "Cryptic", "Crytek", "Cyanide", "EA", "Epic", "Frictional", "Frontier", "Gamebryo", "ID", "IW", "Lucas", "Monolith", "Mythic", "Nintendo", "Origin", "Red", "Rockstar", "Ubisoft", "Unity", "Unknown", "Valve", "Volition", "WB", "X2K" ]
+        familyKeys = [ "Arkane", "Beamdog", "Bethesda", "Bioware", "Black", "Blizzard", "Bohemia", "Bullfrog", "Capcom", "Cig", "Cryptic", "Crytek", "Cyanide", "EA", "Epic", "Frictional", "Frontier", "Gamebryo", "ID", "IW", "Lucas", "Monolith", "Mythic", "Nintendo", "Origin", "Red", "Rockstar", "Ubisoft", "Unity", "Unknown", "Valve", "Volition", "WB", "X2K", "Xbox" ]
 
         option = GlobalOption()

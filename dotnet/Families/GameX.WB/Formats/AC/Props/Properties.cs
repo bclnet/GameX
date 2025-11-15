@@ -1375,7 +1375,7 @@ public static partial class PropertyExtensions
     /// </summary>
     /// <param name="attribute2nd"></param>
     /// <returns>string with spaces infront of capital letters</returns>
-    public static string ToSentence(this Enum prop) => new string(prop.ToString().Replace("Max", "Maximum").ToCharArray().SelectMany((c, i) => i > 0 && char.IsUpper(c) ? new char[] { ' ', c } : new char[] { c }).ToArray());
+    public static string ToSentence(this Enum prop) => new string(prop.ToString().Replace("Radius", "Maximum").ToCharArray().SelectMany((c, i) => i > 0 && char.IsUpper(c) ? new char[] { ' ', c } : new char[] { c }).ToArray());
 }
 
 public class GenericPropertiesId<TAttribute> where TAttribute : Attribute

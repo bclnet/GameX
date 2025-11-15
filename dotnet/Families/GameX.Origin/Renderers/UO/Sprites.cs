@@ -15,13 +15,13 @@ public static class Fonts<Texture2D> {
     public static Binary_Xnb.SpriteFont Map6;
 
     public static async Task Load(PakFile game, GraphicsDevice device) {
-        Regular = (Binary_Xnb.SpriteFont)(await game.LoadFileObject<Binary_Xnb>("fonts/regular_font.xnb")).Objs[0];
-        Bold = (Binary_Xnb.SpriteFont)(await game.LoadFileObject<Binary_Xnb>("fonts/bold_font.xnb")).Objs[0];
-        Map1 = (Binary_Xnb.SpriteFont)(await game.LoadFileObject<Binary_Xnb>("fonts/map1_font.xnb")).Objs[0];
-        Map2 = (Binary_Xnb.SpriteFont)(await game.LoadFileObject<Binary_Xnb>("fonts/map2_font.xnb")).Objs[0];
-        Map3 = (Binary_Xnb.SpriteFont)(await game.LoadFileObject<Binary_Xnb>("fonts/map3_font.xnb")).Objs[0];
-        Map4 = (Binary_Xnb.SpriteFont)(await game.LoadFileObject<Binary_Xnb>("fonts/map4_font.xnb")).Objs[0];
-        Map5 = (Binary_Xnb.SpriteFont)(await game.LoadFileObject<Binary_Xnb>("fonts/map5_font.xnb")).Objs[0];
-        Map6 = (Binary_Xnb.SpriteFont)(await game.LoadFileObject<Binary_Xnb>("fonts/map6_font.xnb")).Objs[0];
+        Regular = (Binary_Xnb.SpriteFont)(await game.LoadFileObject<Binary_Xnb>("fonts/regular_font.xnb")).Obj;
+        Bold = (Binary_Xnb.SpriteFont)(await game.LoadFileObject<Binary_Xnb>("fonts/bold_font.xnb")).Obj;
+        Map1 = (Binary_Xnb.SpriteFont)(await game.LoadFileObject<Binary_Xnb>("fonts/map1_font.xnb")).Obj;
+        Map2 = (Binary_Xnb.SpriteFont)(await game.LoadFileObject<Binary_Xnb>("fonts/map2_font.xnb")).Obj;
+        Map3 = (Binary_Xnb.SpriteFont)(await game.LoadFileObject<Binary_Xnb>("fonts/map3_font.xnb")).Obj;
+        Map4 = (Binary_Xnb.SpriteFont)(await game.LoadFileObject<Binary_Xnb>("fonts/map4_font.xnb")).Obj;
+        Map5 = (Binary_Xnb.SpriteFont)(await game.LoadFileObject<Binary_Xnb>("fonts/map5_font.xnb")).Obj;
+        Map6 = (Binary_Xnb.SpriteFont)(await game.LoadFileObject<Binary_Xnb>("fonts/map6_font.xnb")).Obj;
     }
 }

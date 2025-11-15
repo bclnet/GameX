@@ -10,6 +10,23 @@
   "games": {
     "*": {
       "pakFileType": "GameX.Xbox.XboxPakFile, GameX.Xbox"
+    },
+    "Stardew": {
+      "name": "Stardew Valley",
+      "url": [
+        "https://store.steampowered.com/app/413150/Stardew_Valley/",
+        "https://en.wikipedia.org/wiki/Stardew_Valley"
+      ],
+      "dev": "ConcernedApe",
+      "date": "2016-02-26",
+      "form": "Console;Windows",
+      "files": {
+        "key": [
+          "Steam:413150",
+          "Local:Stardew Valley"
+        ],
+        "path": "Content"
+      }
     }
   }
 }

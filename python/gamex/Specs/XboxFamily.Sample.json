@@ -1,2 +1,31 @@
 ﻿{
+    "Stardew": {
+        "name": "Stardew Valley",
+        "files": [
+            {
+                "path": "Animals/BabyBlue Chicken.xnb",
+                "type": "Texture2D"
+            },
+            {
+                "path": "Fonts/tinyFont.xnb",
+                "type": "SpriteFont"
+            },
+            {
+                "path": "Characters/Dialogue/Alex.xnb",
+                "type": "Text"
+            },
+            {
+                "path": "Effects/ShadowRemove.xnb",
+                "type": "Effect"
+            },
+            {
+                "path": "Fonts/Chinese.xnb",
+                "type": "Data"
+            },
+            {
+                "path": "Maps/Barn.xnb",
+                "type": "Data"
+            }
+        ]
+    }
 }

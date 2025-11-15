@@ -22,14 +22,21 @@ def decompressZlib(r: Reader, length: int, newLength: int, noHeader: bool = Fals
 def decompressZstd(r: Reader, length: int, newLength: int) -> bytes:
     return ZstdDecompressor().decompress(r.readBytes(length))
 def decompressLzss(r: Reader, length: int, newLength: int) -> bytes:
-    from ._LIB.compression.lzss import Lzss
+    from ..._LIB.compression.lzss import Lzss
     return Lzss(BytesIO(r.readBytes(length)), newLength).decompress()
 def decompressBlast(r: Reader, length: int, newLength: int) -> bytes:
-    from ._LIB.compression.blast import Blast
+    from ..._LIB.compression.blast import Blast
     z = Blast()
-    fs = r.readBytes(length)
-    os = bytearray(newLength)
-    z.decompress(fs, os)
-    return os
+    data = r.readBytes(length)
+    res = bytearray(newLength)
+    z.decompress(data, res)
+    return res
 def decompressLz4(r: Reader, length: int, newLength: int) -> bytes: raise NotImplementedError()
 # def decompressZlib2(r: Reader, length: int, newLength: int) -> bytes: raise NotImplementedError()
+
+def decompressXbox(r: Reader, length: int, newLength: int, codec: int = 1) -> bytes:
+    from ..._LIB.compression.xcompress import XMEMCODEC, DecompressionContext
+    res = [bytearray(newLength)]
+    with DecompressionContext(XMEMCODEC(codec)) as ctx:
+        ctx.decompress(r.readBytes(length), res)
+    return res[0]

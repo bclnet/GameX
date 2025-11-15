@@ -3,11 +3,13 @@ import os
 from openstk import _pathExtension
 from gamex import FamilyGame, BinaryPakFile
 from gamex.families.GameX import UnknownPakFile
+from gamex.families.Xbox.formats.binary import Binary_Xnb
 
 # XboxPakFile
 class XboxPakFile(BinaryPakFile):
     def __init__(self, state: PakState):
         super().__init__(state, self.getPakBinary(state.game, _pathExtension(state.path).lower()))
+        self.objectFactoryFunc = self.objectFactory
 
     #region Factories
 
@@ -18,6 +20,7 @@ class XboxPakFile(BinaryPakFile):
     @staticmethod
     def objectFactory(source: FileSource, game: FamilyGame) -> (object, callable):
         match _pathExtension(source.path).lower():
+            case '.xnb': return (0, Binary_Xnb.factory)
             case _: return UnknownPakFile.objectFactory(source, game)
 
     #endregion

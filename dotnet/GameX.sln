@@ -196,6 +196,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Beamdog", "Families\GameX.Beamdog\GameX.Beamdog.csproj", "{2B3C7E51-B6B8-20DB-F9A4-E567B47088C3}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Families", "Families", "{1B87B12B-21F4-497B-AA06-C0423BD1C76B}"
+	ProjectSection(SolutionItems) = preProject
+		Core\GameX\_Config.cs = Core\GameX\_Config.cs
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX._MODEL", "Families\GameX._MODEL\GameX._MODEL.csproj", "{B62AF6AA-4B5D-D44A-2A6F-E6280C06E04D}"
 EndProject

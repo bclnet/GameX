@@ -82,7 +82,7 @@ namespace GameX.App.Cli {
             //args = ["get", "-f", "Bethesda", "-u", "game:/Morrowind.bsa#Morrowind", "-m", "*.nif", "-o", "StreamObject", "-p", @"D:\T_\MorrowindC"];
             //args = ["get", "-f", "Bethesda", "-u", "game:/Morrowind.bsa#Morrowind", "-m", "meshes/l/light_com_candle_04.nif", "-o", "StreamObject", "-p", @"D:\T_\MorrowindC"];
             //args = ["get", "-f", "Bethesda", "-u", "game:/Morrowind.bsa#Morrowind", "-m", "meshes/b/b_n_breton_f_head_02.nif", "-o", "StreamObject", "-p", @"D:\T_\MorrowindC"];
-            args = ["get", "-f", "Bethesda", "-u", "game:/Oblivion - Meshes.bsa#Oblivion", "-m", "*.nif", "-o", "StreamObject", "-p", @"D:\T_\OblivionC"];
+            args = ["get", "-f", "Bethesda", "-u", "game:/Oblivion - Meshes.bsa#Oblivion", "-m", "*.nif", "-o", "StreamObject", "-p", @"Radius:\T_\OblivionC"];
             //args = ["get", "-f", "Bethesda", "-u", "game:/Oblivion - Meshes.bsa#Oblivion", "-m", "meshes/furniture/middleclass/middlewolfrug01.nif", "-o", "StreamObject", "-p", @"D:\T_\OblivionC"];
             //args = ["get", "-f", "Bethesda", "-u", "game:/Oblivion - Meshes.bsa#Oblivion", "-m", "*/bearskinrug01.nif", "-o", "StreamObject", "-p", @"D:\T_\OblivionC"];
             //args = ["get", "-f", "Bethesda", "-u", "game:/#Oblivion", "-m", "*.nif", "--path", @"D:\T_\Oblivion"];

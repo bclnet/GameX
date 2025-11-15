@@ -22,7 +22,7 @@
 //#define Monolith
 //#define Mythic
 //#define Nintendo
-#define Origin
+//#define Origin
 //#define Red
 //#define Rockstar
 //#define Ubisoft
@@ -32,6 +32,7 @@
 //#define Volition
 //#define WB
 //#define X2K
+#define Xbox
 
 namespace GameX;
 
@@ -816,8 +817,19 @@ public partial class FamilyManager {
         Family = "X2K",
         Game = "XX", // XX
     };
+#elif Xbox
+    static readonly string[] FamilyKeys = ["Xbox", "Unknown"];
+
+    public static GlobalOption Option = new()
+    {
+        Platform = "GL",
+        ForceOpen = true,
+        ForcePath = "sample:3",
+        Family = "Xbox",
+        Game = "Stardew", // Stardew Valley
+    };
 #else
-    static readonly string[] FamilyKeys = ["Arkane", "Beamdog", "Bethesda", "Bioware", "Black", "Blizzard", "Bohemia", "Bullfrog", "Capcom", "Cig", "Cryptic", "Crytek", "Cyanide", "EA", "Epic", "Frictional", "Frontier", "Gamebryo", "ID", "IW", "Lucas", "Monolith", "Mythic", "Nintendo", "Origin", "Red", "Rockstar", "Ubisoft", "Unity", "Unknown", "Valve", "Volition", "WB", "X2K"];
+    static readonly string[] FamilyKeys = ["Arkane", "Beamdog", "Bethesda", "Bioware", "Black", "Blizzard", "Bohemia", "Bullfrog", "Capcom", "Cig", "Cryptic", "Crytek", "Cyanide", "EA", "Epic", "Frictional", "Frontier", "Gamebryo", "ID", "IW", "Lucas", "Monolith", "Mythic", "Nintendo", "Origin", "Red", "Rockstar", "Ubisoft", "Unity", "Unknown", "Valve", "Volition", "WB", "X2K", "Xbox"];
 
     public static GlobalOption Option = new() { };
 #endif

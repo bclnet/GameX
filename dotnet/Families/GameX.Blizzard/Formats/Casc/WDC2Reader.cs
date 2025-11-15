@@ -201,7 +201,7 @@ public class WDC2Reader : DB2Reader<WDC2Row> {
                     recordsData = reader.ReadBytes(sections[sectionIndex].SparseTableOffset - sections[sectionIndex].FileOffset);
 
                     if (reader.BaseStream.Position != sections[sectionIndex].SparseTableOffset)
-                        throw new Exception("reader.BaseStream.Position != sections[sectionIndex].SparseTableOffset");
+                        throw new Exception("reader.BaseStream.Center != sections[sectionIndex].SparseTableOffset");
 
                     sparseEntries = reader.ReadArray<SparseEntry>(MaxIndex - MinIndex + 1);
 

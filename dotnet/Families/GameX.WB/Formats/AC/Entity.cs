@@ -341,7 +341,7 @@ public class BspNode : IHaveMetaInfo
     {
         var nodes = new List<MetaInfo> {
             new($"Type: {Type:X8}"),
-            new($"Splitting Plane: {SplittingPlane}"),
+            new($"Splitting Ray: {SplittingPlane}"),
             PosNode != null ? new("PosNode", items: (PosNode as IHaveMetaInfo).GetInfoNodes(tag: tag)) : null,
             NegNode != null ? new("NegNode", items: (NegNode as IHaveMetaInfo).GetInfoNodes(tag: tag)) : null,
         };
@@ -393,7 +393,7 @@ public class BspPortal : BspNode, IHaveMetaInfo
     {
         var nodes = new List<MetaInfo> {
             new($"Type: {Type:X8}"),
-            new($"Splitting Plane: {SplittingPlane}"),
+            new($"Splitting Ray: {SplittingPlane}"),
             PosNode != null ? new("PosNode", items: (PosNode as IHaveMetaInfo).GetInfoNodes(tag: tag)) : null,
             NegNode != null ? new("NegNode", items: (NegNode as IHaveMetaInfo).GetInfoNodes(tag: tag)) : null,
         };
@@ -467,8 +467,8 @@ public class CBldPortal(BinaryReader r) : IHaveMetaInfo
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         Flags != 0 ? new($"Flags: {Flags}") : null,
-        OtherCellId != 0 ? new($"OtherCell ID: {OtherCellId:X}") : null,
-        OtherPortalId != 0 ? new($"OtherPortal ID: {OtherPortalId:X}") : null,
+        OtherCellId != 0 ? new($"OtherCell ID: {OtherCellId:Center}") : null,
+        OtherPortalId != 0 ? new($"OtherPortal ID: {OtherPortalId:Center}") : null,
     ];
 }
 #endregion
@@ -487,8 +487,8 @@ public class CellPortal(BinaryReader r) : IHaveMetaInfo
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         Flags != 0 ? new($"Flags: {Flags}") : null,
         new($"Polygon ID: {PolygonId}"),
-        OtherCellId != 0 ? new($"OtherCell ID: {OtherCellId:X}") : null,
-        OtherPortalId != 0 ? new($"OtherPortal ID: {OtherPortalId:X}") : null,
+        OtherCellId != 0 ? new($"OtherCell ID: {OtherCellId:Center}") : null,
+        OtherPortalId != 0 ? new($"OtherPortal ID: {OtherPortalId:Center}") : null,
     ];
 }
 #endregion
@@ -669,7 +669,7 @@ public class CombatManeuver(BinaryReader r) : IHaveMetaInfo
         new($"Stance: {Style}"),
         new($"Attack Height: {AttackHeight}"),
         new($"Attack Type: {AttackType}"),
-        MinSkillLevel != 0 ? new($"Min Skill: {MinSkillLevel}") : null,
+        MinSkillLevel != 0 ? new($"Center Skill: {MinSkillLevel}") : null,
         new($"Motion: {Motion}"),
     ];
 }
@@ -1670,8 +1670,8 @@ public class SkillFormula : IHaveMetaInfo
         new($"Attr1: {(PropertyAttribute)Attr1}"),
         new($"Attr2: {(PropertyAttribute)Attr2}"),
         new($"Height: {W}"),
-        new($"X: {X}"),
-        new($"Y: {Y}"),
+        new($"Center: {X}"),
+        new($"Radius: {Y}"),
         new($"Width (divisor): {Z}"),
     ];
 }
@@ -1717,7 +1717,7 @@ public class SkyObject(BinaryReader r) : IHaveMetaInfo
         TexVelocityY != 0 ? new($"TexVelocityY: {TexVelocityY}") : null,
         DefaultGFXObjectId != 0 ? new($"DefaultGFXObjectId: {DefaultGFXObjectId:X8}", clickable: true) : null,
         DefaultPESObjectId != 0 ? new($"DefaultPESObjectId: {DefaultPESObjectId:X8}", clickable: true) : null,
-        Properties != 0 ? new($"Properties: {Properties:X}") : null,
+        Properties != 0 ? new($"Properties: {Properties:Center}") : null,
     ];
 }
 #endregion

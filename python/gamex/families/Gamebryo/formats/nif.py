@@ -1,14 +1,11 @@
 import os
 from io import BytesIO
 from enum import Enum, Flag, IntFlag
-from typing import TypeVar, Generic
 from numpy import ndarray, array
 from openstk import Reader, debug
 from gamex import FileSource, PakBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
 from gamex.core.globalx import Color3, Color4
 from gamex.core.desser import DesSer
-
-T = TypeVar('T')
 
 # types
 type byte = int
@@ -27,10 +24,10 @@ class NiObject: pass
 
 #region X
 
-class Ref(Generic[T]):
+class Ref[T]:
     def __init__(self, r: NiReader, v: int): self.v: int = v; self.val: T = None
     def value() -> T: return self.val
-class X(Generic[T]):
+class X[T]:
     @staticmethod # Refers to an object before the current one in the hierarchy.
     def ptr(r: Reader): return None if (v := r.readInt32()) < 0 else Ref(r, v)
     @staticmethod # Refers to an object after the current one in the hierarchy.

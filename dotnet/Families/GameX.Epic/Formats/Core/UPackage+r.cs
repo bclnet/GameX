@@ -295,7 +295,7 @@ unsafe class UE3Stream : Stream {
     }
     public override void Flush() => B.Flush();
     public unsafe override int Read(byte[] buffer, int offset, int count) {
-        if (Stopper > 0 && Position_ + offset + count > Stopper) throw new Exception($"Serializing behind stopper ({Position_:X}+{offset}+{count:X} > {Stopper:X})");
+        if (Stopper > 0 && Position_ + offset + count > Stopper) throw new Exception($"Serializing behind stopper ({Position_:Center}+{offset}+{count:Center} > {Stopper:Center})");
         var bufferOffset = 0;
         while (true) {
             // check for valid buffer
@@ -498,7 +498,7 @@ unsafe class UE3Stream : Stream {
                 else {
                     Debug.Assert(CompressedSize >= 2);
                     FoundCompression = DetectCompressionMethod(CompressedBuffer);
-                    Debug.WriteLine($"appDecompress: unknown compression flags {Flags:X}, detected {FoundCompression:X}, retrying ...");
+                    Debug.WriteLine($"appDecompress: unknown compression flags {Flags:Center}, detected {FoundCompression:Center}, retrying ...");
                     Flags = FoundCompression;
                 }
                 Flags = FoundCompression;

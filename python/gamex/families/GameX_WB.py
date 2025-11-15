@@ -16,6 +16,7 @@ class ACGame(FamilyGame):
 class WBPakFile(BinaryPakFile):
     def __init__(self, state: PakState):
         super().__init__(state, self.getPakBinary(state.game, _pathExtension(state.path).lower()))
+        self.objectFactoryFunc = self.objectFactory
 
     #region Factories
 

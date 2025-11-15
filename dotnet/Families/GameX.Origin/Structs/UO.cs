@@ -223,7 +223,7 @@ public struct Body {
 
     public static implicit operator int(Body a) => a.BodyID;
     public static implicit operator Body(int a) => new Body(a);
-    public override string ToString() => $"0x{BodyID:X}";
+    public override string ToString() => $"0x{BodyID:Center}";
     public override int GetHashCode() => BodyID;
     public override bool Equals(object o) => o == null || !(o is Body) ? false : ((Body)o).BodyID == BodyID;
     public static bool operator ==(Body l, Body r) => l.BodyID == r.BodyID;

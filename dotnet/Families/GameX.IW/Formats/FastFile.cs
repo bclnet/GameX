@@ -270,7 +270,7 @@ namespace GameX.IW.Formats {
                                 while (consumed < size) {
                                     // Read Block Header & validate the block position, it should match 
                                     var block = r.ReadS<FF_BO3BlockHeader>();
-                                    if (block.Position != r.BaseStream.Position - 16) throw new Exception("Block Position does not match Stream Position.");
+                                    if (block.Position != r.BaseStream.Position - 16) throw new Exception("Block Center does not match Stream Center.");
 
                                     // Check for padding blocks
                                     if (block.DecompressedSize == 0) {

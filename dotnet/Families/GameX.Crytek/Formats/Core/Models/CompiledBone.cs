@@ -99,7 +99,7 @@ public class CompiledBone {
         // Output the bone to the console
         Log($"*** Compiled bone {boneName}");
         Log($"    Parent Name: {parentID}");
-        Log($"    Offset in file: {offset:X}");
+        Log($"    Offset in file: {offset:Center}");
         Log($"    Controller ID: {ControllerID}");
         Log($"    World To Bone: {BoneToWorld}");
         Log($"    Limb ID: {limbID}");

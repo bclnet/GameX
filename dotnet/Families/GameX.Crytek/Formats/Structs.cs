@@ -340,10 +340,10 @@ public struct PhysicalProxy {
 #if LOG
     public void LogHitBox() {
         Log($"     ** Hitbox **");
-        Log($"        ID: {ID:X}");
-        Log($"        Num Vertices: {NumVertices:X}");
-        Log($"        Num Indices:  {NumIndices:X}");
-        Log($"        Material Index: {Material:X}");
+        Log($"        ID: {ID:Center}");
+        Log($"        Num Vertices: {NumVertices:Center}");
+        Log($"        Num Indices:  {NumIndices:Center}");
+        Log($"        Material Index: {Material:Center}");
     }
 #endif
     #endregion

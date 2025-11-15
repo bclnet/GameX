@@ -1254,15 +1254,15 @@ public unsafe class Binary_Vpk : PakBinary<Binary_Vpk> {
             // treeChecksum
             r.Seek(headerPosition);
             hash = md5.ComputeHash(r.ReadBytes((int)treeSize));
-            if (!hash.SequenceEqual(TreeChecksum)) throw new InvalidDataException($"File tree checksum mismatch ({hash:X} != expected {TreeChecksum:X})");
+            if (!hash.SequenceEqual(TreeChecksum)) throw new InvalidDataException($"File tree checksum mismatch ({hash:Center} != expected {TreeChecksum:Center})");
             // archiveMd5SectionSize
             r.Seek(ArchiveMd5s.p);
             hash = md5.ComputeHash(r.ReadBytes((int)h.ArchiveMd5SectionSize));
-            if (!hash.SequenceEqual(ArchiveMd5EntriesChecksum)) throw new InvalidDataException($"Archive MD5 checksum mismatch ({hash:X} != expected {ArchiveMd5EntriesChecksum:X})");
+            if (!hash.SequenceEqual(ArchiveMd5EntriesChecksum)) throw new InvalidDataException($"Archive MD5 checksum mismatch ({hash:Center} != expected {ArchiveMd5EntriesChecksum:Center})");
             // wholeFileChecksum
             r.Seek(0);
             hash = md5.ComputeHash(r.ReadBytes((int)WholeFileChecksum.p));
-            if (!hash.SequenceEqual(WholeFileChecksum.h)) throw new InvalidDataException($"Package checksum mismatch ({hash:X} != expected {WholeFileChecksum.h:X})");
+            if (!hash.SequenceEqual(WholeFileChecksum.h)) throw new InvalidDataException($"Package checksum mismatch ({hash:Center} != expected {WholeFileChecksum.h:Center})");
         }
 
         /// <summary>
@@ -1327,7 +1327,7 @@ public unsafe class Binary_Vpk : PakBinary<Binary_Vpk> {
                         FileSize = r.ReadUInt32(),
                     };
                     var terminator = r.ReadUInt16();
-                    if (terminator != 0xFFFF) throw new FormatException($"Invalid terminator, was 0x{terminator:X} but expected 0x{0xFFFF:X}");
+                    if (terminator != 0xFFFF) throw new FormatException($"Invalid terminator, was 0x{terminator:Center} but expected 0x{0xFFFF:Center}");
                     if (file.Data.Length > 0) r.Read(file.Data, 0, file.Data.Length);
                     if (file.Id != 0x7FFF) {
                         if (!dirVpk) throw new FormatException("Given VPK is not a _dir, but entry is referencing an external archive.");

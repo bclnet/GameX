@@ -123,4 +123,10 @@
     <ProjectReference Include="..\..\..\OpenStack\dotnet\Core\OpenStack\OpenStack.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="x64\xcompress64.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

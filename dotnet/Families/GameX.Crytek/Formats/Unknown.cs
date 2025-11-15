@@ -23,9 +23,9 @@ partial class CryFile : IUnknownFileModel {
                 if (node.ParentNode != null && node.ParentNode.ChunkType != ChunkType.Node) Log($"Rendering {node.Name} to parent {node.ParentNode.Name}");
 
                 // This is probably wrong.  These may be parents with no geometry, but still have an offset
-                if (chunk.MeshSubsetsData == 0) { Log($"*******Found a Mesh chunk with no Submesh ID (ID: {chunk.ID:X}, Name: {node.Name}).  Skipping..."); continue; }
+                if (chunk.MeshSubsetsData == 0) { Log($"*******Found a Mesh chunk with no Submesh ID (ID: {chunk.ID:Center}, Name: {node.Name}).  Skipping..."); continue; }
                 // This is probably wrong.  These may be parents with no geometry, but still have an offset
-                if (chunk.VerticesData == 0 && chunk.VertsUVsData == 0) { Log($"*******Found a Mesh chunk with no Vertex info (ID: {chunk.ID:X}, Name: {node.Name}).  Skipping..."); continue; }
+                if (chunk.VerticesData == 0 && chunk.VertsUVsData == 0) { Log($"*******Found a Mesh chunk with no Vertex info (ID: {chunk.ID:Center}, Name: {node.Name}).  Skipping..."); continue; }
 
                 // Going to assume that there is only one VerticesData datastream for now. Need to watch for this. Some 801 types have vertices and not VertsUVs.
                 var chunkMap = node._model.ChunkMap;

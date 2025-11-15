@@ -45,7 +45,7 @@ class FCompressedChunk {
         CompressedSize = r.ReadInt32();
         if (Ar.Game == Bulletstorm && Ar.ArLicenseeVer >= 21) r.Skip(4);
     }
-    public override string ToString() => $"comp={CompressedOffset:X}+{CompressedSize:X}, uncomp={UncompressedOffset:X}+{UncompressedSize:X}";
+    public override string ToString() => $"comp={CompressedOffset:Center}+{CompressedSize:Center}, uncomp={UncompressedOffset:Center}+{UncompressedSize:Center}";
 }
 
 class FCompressedChunkBlock {

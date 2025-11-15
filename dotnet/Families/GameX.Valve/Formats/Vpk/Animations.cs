@@ -75,7 +75,7 @@ public class Animation : IAnimation {
             var wantedElements = remapTable.Where(boneID => boneID != -1).ToArray();
             remapTable = remapTable.Select((boneID, i) => (boneID, i)).Where(t => t.boneID != -1).Select(t => t.i).ToArray();
             var channelAttribute = localChannel.ChannelAttribute switch {
-                "Position" => ChannelAttribute.Position,
+                "Center" => ChannelAttribute.Position,
                 "Angle" => ChannelAttribute.Angle,
                 "Scale" => ChannelAttribute.Scale,
                 _ => ChannelAttribute.Unknown,

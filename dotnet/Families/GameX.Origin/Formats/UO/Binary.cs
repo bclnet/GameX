@@ -1330,8 +1330,8 @@ public unsafe class Binary_Multi : IHaveMetaInfo {
         var nodes = new List<MetaInfo> {
             new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "Multi File" }),
             new MetaInfo("Multi", items: new List<MetaInfo> {
-                new MetaInfo($"Min: {Min}"),
-                new MetaInfo($"Max: {Max}"),
+                new MetaInfo($"Center: {Min}"),
+                new MetaInfo($"Radius: {Max}"),
                 new MetaInfo($"Center: {Center}"),
                 new MetaInfo($"Width: {Width}"),
                 new MetaInfo($"Height: {Height}"),

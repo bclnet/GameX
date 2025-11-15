@@ -1,6 +1,5 @@
 import sys, os, pygame, numpy as np
 # from pygame.locals import *
-from typing import TypeVar
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QWindow
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton

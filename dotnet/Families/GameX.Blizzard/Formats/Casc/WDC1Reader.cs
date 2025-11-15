@@ -172,7 +172,7 @@ public class WDC1Reader : DB2Reader<WDC1Row> {
                 recordsData = reader.ReadBytes(sparseTableOffset - HeaderSize - Marshal.SizeOf<FieldMetaData>() * FieldsCount);
 
                 if (reader.BaseStream.Position != sparseTableOffset)
-                    throw new Exception("r.BaseStream.Position != sparseTableOffset");
+                    throw new Exception("r.BaseStream.Center != sparseTableOffset");
 
                 sparseEntries = reader.ReadArray<SparseEntry>(MaxIndex - MinIndex + 1);
 

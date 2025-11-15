@@ -23,57 +23,58 @@
 using System;
 using System.Diagnostics;
 
-namespace Compression.Doboz {
-    /// <summary>
-    /// Doboz decoder.
-    /// </summary>
-    public unsafe class DobozDecoder {
-        // Use a decoding lookup table in order to avoid expensive branches
-        struct LUTEntry {
-            public uint mask; // the mask for the entire encoded match
-            public byte offsetShift;
-            public byte lengthMask;
-            public byte lengthShift;
-            public sbyte size; // the size of the encoded match in bytes
-        }
+namespace Compression.Doboz;
 
-        internal enum Result {
-            RESULT_OK,
-            RESULT_ERROR_BUFFER_TOO_SMALL,
-            RESULT_ERROR_CORRUPTED_DATA,
-            RESULT_ERROR_UNSUPPORTED_VERSION,
-        }
+/// <summary>
+/// Doboz decoder.
+/// </summary>
+public unsafe class DobozDecoder {
+    // Use a decoding lookup table in order to avoid expensive branches
+    struct LUTEntry {
+        public uint mask; // the mask for the entire encoded match
+        public byte offsetShift;
+        public byte lengthMask;
+        public byte lengthShift;
+        public sbyte size; // the size of the encoded match in bytes
+    }
 
-        internal struct Match {
-            public int length;
-            public int offset;
-        }
+    internal enum Result {
+        RESULT_OK,
+        RESULT_ERROR_BUFFER_TOO_SMALL,
+        RESULT_ERROR_CORRUPTED_DATA,
+        RESULT_ERROR_UNSUPPORTED_VERSION,
+    }
 
-        /// <summary>HEader structure.</summary>
-        internal struct Header {
-            public int uncompressedSize;
-            public int compressedSize;
-            public int version;
-            public bool isStored;
-        }
+    internal struct Match {
+        public int length;
+        public int offset;
+    }
 
-        /// <summary>Compression info.</summary>
-        internal struct CompressionInfo {
-            public int uncompressedSize;
-            public int compressedSize;
-            public int version;
-        }
+    /// <summary>HEader structure.</summary>
+    internal struct Header {
+        public int uncompressedSize;
+        public int compressedSize;
+        public int version;
+        public bool isStored;
+    }
 
-        internal const int VERSION = 0; // encoding format
+    /// <summary>Compression info.</summary>
+    internal struct CompressionInfo {
+        public int uncompressedSize;
+        public int compressedSize;
+        public int version;
+    }
 
-        internal const int WORD_SIZE = 4; // uint32_t
-        internal const int MIN_MATCH_LENGTH = 3;
-        internal const int TAIL_LENGTH = 2 * WORD_SIZE; // prevents fast write operations from writing beyond the end of the buffer during decoding
+    internal const int VERSION = 0; // encoding format
 
-        static readonly sbyte[] LITERAL_RUN_LENGTH_TABLE
-            = new sbyte[] { 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0 };
+    internal const int WORD_SIZE = 4; // uint32_t
+    internal const int MIN_MATCH_LENGTH = 3;
+    internal const int TAIL_LENGTH = 2 * WORD_SIZE; // prevents fast write operations from writing beyond the end of the buffer during decoding
 
-        static readonly LUTEntry[] LUT = {
+    static readonly sbyte[] LITERAL_RUN_LENGTH_TABLE
+        = new sbyte[] { 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0 };
+
+    static readonly LUTEntry[] LUT = {
             new LUTEntry {mask = 0xff, offsetShift = 2, lengthMask = 0, lengthShift = 0, size = 1}, // (0)00
 			new LUTEntry {mask = 0xffff, offsetShift = 2, lengthMask = 0, lengthShift = 0, size = 2}, // (0)01
 			new LUTEntry {mask = 0xffff, offsetShift = 6, lengthMask = 15, lengthShift = 2, size = 2}, // (0)10
@@ -89,179 +90,179 @@ namespace Compression.Doboz {
         const int BLOCK_COPY_LIMIT = 16;
 #endif
 
-        /// <summary>Gets the maximum length of the output.</summary>
-        /// <param name="size">The uncompressed length.</param>
-        /// <returns>Maximum compressed length.</returns>
-        public static int MaximumOutputLength(int size) {
-            // The header + the original uncompressed data
-            return GetHeaderSize(size) + size;
-        }
+    /// <summary>Gets the maximum length of the output.</summary>
+    /// <param name="size">The uncompressed length.</param>
+    /// <returns>Maximum compressed length.</returns>
+    public static int MaximumOutputLength(int size) {
+        // The header + the original uncompressed data
+        return GetHeaderSize(size) + size;
+    }
 
-        /// <summary>Gets the uncompressed length.</summary>
-        /// <param name="input">The buffer.</param>
-        /// <param name="inputOffset">The buffer offset.</param>
-        /// <param name="inputLength">Length of the buffer.</param>
-        /// <returns>Length of uncompressed data.</returns>
-        public static int UncompressedLength(byte[] input, int inputOffset, int inputLength) {
-            CheckArguments(
-                input, inputOffset, ref inputLength);
-
-#if DOBOZ_SAFE
-            var src = input;
-#else
-            fixed (byte* src = input)
-#endif
-            {
-                var info = new CompressionInfo();
-                if (GetCompressionInfo(src, inputOffset, inputLength, ref info) != Result.RESULT_OK)
-                    throw new ArgumentException("Corrupted input data");
-
-                return info.uncompressedSize;
-            }
-        }
-
-        /// <summary>Decodes the specified input.</summary>
-        /// <param name="input">The input.</param>
-        /// <param name="inputOffset">The input offset.</param>
-        /// <param name="inputLength">Length of the input.</param>
-        /// <returns>Decoded buffer.</returns>
-        public static byte[] Decode(
-            byte[] input, int inputOffset, int inputLength) {
-            CheckArguments(
-                input, inputOffset, ref inputLength);
+    /// <summary>Gets the uncompressed length.</summary>
+    /// <param name="input">The buffer.</param>
+    /// <param name="inputOffset">The buffer offset.</param>
+    /// <param name="inputLength">Length of the buffer.</param>
+    /// <returns>Length of uncompressed data.</returns>
+    public static int UncompressedLength(byte[] input, int inputOffset, int inputLength) {
+        CheckArguments(
+            input, inputOffset, ref inputLength);
 
 #if DOBOZ_SAFE
             var src = input;
 #else
-            fixed (byte* src = input)
+        fixed (byte* src = input)
 #endif
-            {
-                var info = new CompressionInfo();
-                if (GetCompressionInfo(src, inputOffset, inputLength, ref info) != Result.RESULT_OK)
-                    throw new ArgumentException("Corrupted input data");
+        {
+            var info = new CompressionInfo();
+            if (GetCompressionInfo(src, inputOffset, inputLength, ref info) != Result.RESULT_OK)
+                throw new ArgumentException("Corrupted input data");
 
-                var outputLength = info.uncompressedSize;
-                var output = new byte[outputLength];
+            return info.uncompressedSize;
+        }
+    }
+
+    /// <summary>Decodes the specified input.</summary>
+    /// <param name="input">The input.</param>
+    /// <param name="inputOffset">The input offset.</param>
+    /// <param name="inputLength">Length of the input.</param>
+    /// <returns>Decoded buffer.</returns>
+    public static byte[] Decode(
+        byte[] input, int inputOffset, int inputLength) {
+        CheckArguments(
+            input, inputOffset, ref inputLength);
+
+#if DOBOZ_SAFE
+            var src = input;
+#else
+        fixed (byte* src = input)
+#endif
+        {
+            var info = new CompressionInfo();
+            if (GetCompressionInfo(src, inputOffset, inputLength, ref info) != Result.RESULT_OK)
+                throw new ArgumentException("Corrupted input data");
+
+            var outputLength = info.uncompressedSize;
+            var output = new byte[outputLength];
 
 #if DOBOZ_SAFE
                 var dst = output;
 #else
-                fixed (byte* dst = output)
+            fixed (byte* dst = output)
 #endif
-                {
-                    if (Decompress(src, inputOffset, inputLength, dst, 0, outputLength) != Result.RESULT_OK)
-                        throw new ArgumentException("Corrupted data");
+            {
+                if (Decompress(src, inputOffset, inputLength, dst, 0, outputLength) != Result.RESULT_OK)
+                    throw new ArgumentException("Corrupted data");
 
-                    return output;
-                }
+                return output;
             }
         }
+    }
 
-        /// <summary>Decodes the specified input.</summary>
-        /// <param name="input">The input.</param>
-        /// <param name="inputOffset">The input offset.</param>
-        /// <param name="inputLength">Length of the input.</param>
-        /// <param name="output">The output.</param>
-        /// <param name="outputOffset">The output offset.</param>
-        /// <param name="outputLength">Length of the output.</param>
-        /// <returns>Number of decoded bytes.</returns>
-        public static int Decode(
-            byte[] input, int inputOffset, int inputLength,
-            byte[] output, int outputOffset, int outputLength) {
-            CheckArguments(
-                input, inputOffset, ref inputLength,
-                output, outputOffset, ref outputLength);
+    /// <summary>Decodes the specified input.</summary>
+    /// <param name="input">The input.</param>
+    /// <param name="inputOffset">The input offset.</param>
+    /// <param name="inputLength">Length of the input.</param>
+    /// <param name="output">The output.</param>
+    /// <param name="outputOffset">The output offset.</param>
+    /// <param name="outputLength">Length of the output.</param>
+    /// <returns>Number of decoded bytes.</returns>
+    public static int Decode(
+        byte[] input, int inputOffset, int inputLength,
+        byte[] output, int outputOffset, int outputLength) {
+        CheckArguments(
+            input, inputOffset, ref inputLength,
+            output, outputOffset, ref outputLength);
 
 #if DOBOZ_SAFE
             var src = input;
 #else
-            fixed (byte* src = input)
+        fixed (byte* src = input)
 #endif
-            {
-                var info = new CompressionInfo();
-                if (GetCompressionInfo(src, inputOffset, inputLength, ref info) != Result.RESULT_OK)
-                    throw new ArgumentException("Corrupted input data");
+        {
+            var info = new CompressionInfo();
+            if (GetCompressionInfo(src, inputOffset, inputLength, ref info) != Result.RESULT_OK)
+                throw new ArgumentException("Corrupted input data");
 
-                if (outputLength < info.uncompressedSize)
-                    throw new ArgumentException("Output buffer is too small");
+            if (outputLength < info.uncompressedSize)
+                throw new ArgumentException("Output buffer is too small");
 
-                outputLength = info.uncompressedSize;
+            outputLength = info.uncompressedSize;
 
 #if DOBOZ_SAFE
                 var dst = output;
 #else
-                fixed (byte* dst = output)
+            fixed (byte* dst = output)
 #endif
-                {
-                    if (Decompress(src, inputOffset, inputLength, dst, outputOffset, outputLength) != Result.RESULT_OK)
-                        throw new ArgumentException("Corrupted data");
-                    return outputLength;
-                }
+            {
+                if (Decompress(src, inputOffset, inputLength, dst, outputOffset, outputLength) != Result.RESULT_OK)
+                    throw new ArgumentException("Corrupted data");
+                return outputLength;
             }
         }
+    }
 
-        /// <summary>Gets the size of size field (1, 2 or 4 bytes).</summary>
-        /// <param name="size">The size.</param>
-        /// <returns>Number of bytes needed to store size.</returns>
-        protected static int GetSizeCodedSize(int size) {
-            return
-                size <= byte.MaxValue ? sizeof(byte) :
-                    size <= ushort.MaxValue ? sizeof(ushort) :
-                        sizeof(uint);
-        }
+    /// <summary>Gets the size of size field (1, 2 or 4 bytes).</summary>
+    /// <param name="size">The size.</param>
+    /// <returns>Number of bytes needed to store size.</returns>
+    protected static int GetSizeCodedSize(int size) {
+        return
+            size <= byte.MaxValue ? sizeof(byte) :
+                size <= ushort.MaxValue ? sizeof(ushort) :
+                    sizeof(uint);
+    }
 
-        /// <summary>Gets the size of the header.</summary>
-        /// <param name="size">The size.</param>
-        /// <returns>Size of header.</returns>
-        protected static int GetHeaderSize(int size) {
-            return 1 + 2 * GetSizeCodedSize(size);
-        }
+    /// <summary>Gets the size of the header.</summary>
+    /// <param name="size">The size.</param>
+    /// <returns>Size of header.</returns>
+    protected static int GetHeaderSize(int size) {
+        return 1 + 2 * GetSizeCodedSize(size);
+    }
 
-        /// <summary>Checks the arguments.</summary>
-        /// <param name="input">The input.</param>
-        /// <param name="inputOffset">The input offset.</param>
-        /// <param name="inputLength">Length of the input.</param>
-        /// <exception cref="System.ArgumentNullException">input</exception>
-        /// <exception cref="System.ArgumentException">inputOffset and inputLength are invalid for given input</exception>
-        protected static void CheckArguments(
-            byte[] input, int inputOffset, ref int inputLength) {
-            if (input == null)
-                throw new ArgumentNullException("input");
-            if (inputLength < 0)
-                inputLength = input.Length - inputOffset;
-            if (inputOffset < 0 || inputOffset + inputLength > input.Length)
-                throw new ArgumentException("inputOffset and inputLength are invalid for given input");
-        }
+    /// <summary>Checks the arguments.</summary>
+    /// <param name="input">The input.</param>
+    /// <param name="inputOffset">The input offset.</param>
+    /// <param name="inputLength">Length of the input.</param>
+    /// <exception cref="System.ArgumentNullException">input</exception>
+    /// <exception cref="System.ArgumentException">inputOffset and inputLength are invalid for given input</exception>
+    protected static void CheckArguments(
+        byte[] input, int inputOffset, ref int inputLength) {
+        if (input == null)
+            throw new ArgumentNullException("input");
+        if (inputLength < 0)
+            inputLength = input.Length - inputOffset;
+        if (inputOffset < 0 || inputOffset + inputLength > input.Length)
+            throw new ArgumentException("inputOffset and inputLength are invalid for given input");
+    }
 
-        /// <summary>Checks the arguments.</summary>
-        /// <param name="input">The input.</param>
-        /// <param name="inputOffset">The input offset.</param>
-        /// <param name="inputLength">Length of the input.</param>
-        /// <param name="output">The output.</param>
-        /// <param name="outputOffset">The output offset.</param>
-        /// <param name="outputLength">Length of the output.</param>
-        /// <exception cref="System.ArgumentNullException">input or output</exception>
-        /// <exception cref="System.ArgumentException">
-        /// inputOffset and inputLength are invalid for given input or outputOffset and outputLength are invalid for given output
-        /// </exception>
-        protected static void CheckArguments(
-            byte[] input, int inputOffset, ref int inputLength,
-            byte[] output, int outputOffset, ref int outputLength) {
-            if (input == null)
-                throw new ArgumentNullException("input");
-            if (output == null)
-                throw new ArgumentNullException("output");
+    /// <summary>Checks the arguments.</summary>
+    /// <param name="input">The input.</param>
+    /// <param name="inputOffset">The input offset.</param>
+    /// <param name="inputLength">Length of the input.</param>
+    /// <param name="output">The output.</param>
+    /// <param name="outputOffset">The output offset.</param>
+    /// <param name="outputLength">Length of the output.</param>
+    /// <exception cref="System.ArgumentNullException">input or output</exception>
+    /// <exception cref="System.ArgumentException">
+    /// inputOffset and inputLength are invalid for given input or outputOffset and outputLength are invalid for given output
+    /// </exception>
+    protected static void CheckArguments(
+        byte[] input, int inputOffset, ref int inputLength,
+        byte[] output, int outputOffset, ref int outputLength) {
+        if (input == null)
+            throw new ArgumentNullException("input");
+        if (output == null)
+            throw new ArgumentNullException("output");
 
-            if (inputLength < 0)
-                inputLength = input.Length - inputOffset;
-            if (inputOffset < 0 || inputOffset + inputLength > input.Length)
-                throw new ArgumentException("inputOffset and inputLength are invalid for given input");
+        if (inputLength < 0)
+            inputLength = input.Length - inputOffset;
+        if (inputOffset < 0 || inputOffset + inputLength > input.Length)
+            throw new ArgumentException("inputOffset and inputLength are invalid for given input");
 
-            if (outputLength < 0)
-                outputLength = output.Length - outputOffset;
-            if (outputOffset < 0 || outputOffset + outputLength > output.Length)
-                throw new ArgumentException("outputOffset and outputLength are invalid for given output");
-        }
+        if (outputLength < 0)
+            outputLength = output.Length - outputOffset;
+        if (outputOffset < 0 || outputOffset + outputLength > output.Length)
+            throw new ArgumentException("outputOffset and outputLength are invalid for given output");
+    }
 
 #if DOBOZ_SAFE
         // ReSharper disable RedundantCast
@@ -342,96 +343,96 @@ namespace Compression.Doboz {
             }
         }
 #else
-        /// <summary>Copies block of memory.</summary>
-        /// <param name="src">The source.</param>
-        /// <param name="dst">The destination.</param>
-        /// <param name="len">The length (in bytes).</param>
-        internal static void BlockCopy(byte* src, byte* dst, int len) {
-            while (len >= 8) {
-                *(ulong*)dst = *(ulong*)src;
-                dst += 8;
-                src += 8;
-                len -= 8;
-            }
-            if (len >= 4) {
-                *(uint*)dst = *(uint*)src;
-                dst += 4;
-                src += 4;
-                len -= 4;
-            }
-            if (len >= 2) {
-                *(ushort*)dst = *(ushort*)src;
-                dst += 2;
-                src += 2;
-                len -= 2;
-            }
-            if (len >= 1) {
-                *dst = *src; /* d++; s++; l--; */
-            }
+    /// <summary>Copies block of memory.</summary>
+    /// <param name="src">The source.</param>
+    /// <param name="dst">The destination.</param>
+    /// <param name="len">The length (in bytes).</param>
+    internal static void BlockCopy(byte* src, byte* dst, int len) {
+        while (len >= 8) {
+            *(ulong*)dst = *(ulong*)src;
+            dst += 8;
+            src += 8;
+            len -= 8;
         }
+        if (len >= 4) {
+            *(uint*)dst = *(uint*)src;
+            dst += 4;
+            src += 4;
+            len -= 4;
+        }
+        if (len >= 2) {
+            *(ushort*)dst = *(ushort*)src;
+            dst += 2;
+            src += 2;
+            len -= 2;
+        }
+        if (len >= 1) {
+            *dst = *src; /* d++; s++; l--; */
+        }
+    }
 #endif
 
 #if DOBOZ_SAFE
         static Result GetCompressionInfo(byte[] source, int sourceOffset, int sourceSize, ref CompressionInfo compressionInfo)
 #else
-        static Result GetCompressionInfo(byte* source, int sourceOffset, int sourceSize, ref CompressionInfo compressionInfo)
+    static Result GetCompressionInfo(byte* source, int sourceOffset, int sourceSize, ref CompressionInfo compressionInfo)
 #endif
-        {
-            Debug.Assert(source != null);
+    {
+        Debug.Assert(source != null);
 
-            // Decode the header
-            var header = new Header();
-            var headerSize = 0;
-            var decodeHeaderResult = DecodeHeader(ref header, source, sourceOffset, sourceSize, ref headerSize);
+        // Decode the header
+        var header = new Header();
+        var headerSize = 0;
+        var decodeHeaderResult = DecodeHeader(ref header, source, sourceOffset, sourceSize, ref headerSize);
 
-            if (decodeHeaderResult != Result.RESULT_OK) {
-                return decodeHeaderResult;
-            }
-
-            // Return the requested info
-            compressionInfo.uncompressedSize = header.uncompressedSize;
-            compressionInfo.compressedSize = header.compressedSize;
-            compressionInfo.version = header.version;
-
-            return Result.RESULT_OK;
+        if (decodeHeaderResult != Result.RESULT_OK) {
+            return decodeHeaderResult;
         }
 
-        // Decodes a header and returns its size in bytes
-        // If the header is not valid, the function returns 0
+        // Return the requested info
+        compressionInfo.uncompressedSize = header.uncompressedSize;
+        compressionInfo.compressedSize = header.compressedSize;
+        compressionInfo.version = header.version;
+
+        return Result.RESULT_OK;
+    }
+
+    // Decodes a header and returns its size in bytes
+    // If the header is not valid, the function returns 0
 #if DOBOZ_SAFE
         static Result DecodeHeader(ref Header header, byte[] source, int sourceOffset, int sourceSize, ref int headerSize)
         {
             var src_p = sourceOffset;
 #else
-        static Result DecodeHeader(ref Header header, byte* source, int sourceOffset, int sourceSize, ref int headerSize) {
-            var src_p = source + sourceOffset;
+    static Result DecodeHeader(ref Header header, byte* source, int sourceOffset, int sourceSize, ref int headerSize) {
+        var src_p = source + sourceOffset;
 #endif
 
-            // Decode the attribute bytes
-            if (sourceSize < 1) {
-                return Result.RESULT_ERROR_BUFFER_TOO_SMALL;
-            }
+        // Decode the attribute bytes
+        if (sourceSize < 1) {
+            return Result.RESULT_ERROR_BUFFER_TOO_SMALL;
+        }
 
 #if DOBOZ_SAFE
             uint attributes = source[src_p++];
 #else
-            uint attributes = *src_p++;
+        uint attributes = *src_p++;
 #endif
 
-            header.version = (int)(attributes & 7);
-            var sizeCodedSize = (int)(((attributes >> 3) & 7) + 1);
+        header.version = (int)(attributes & 7);
+        var sizeCodedSize = (int)(((attributes >> 3) & 7) + 1);
 
-            // Compute the size of the header
-            headerSize = 1 + 2 * sizeCodedSize;
+        // Compute the size of the header
+        headerSize = 1 + 2 * sizeCodedSize;
 
-            if (sourceSize < headerSize) {
-                return Result.RESULT_ERROR_BUFFER_TOO_SMALL;
-            }
+        if (sourceSize < headerSize) {
+            return Result.RESULT_ERROR_BUFFER_TOO_SMALL;
+        }
 
-            header.isStored = (attributes & 128) != 0;
+        header.isStored = (attributes & 128) != 0;
 
-            // Decode the uncompressed and compressed sizes
-            switch (sizeCodedSize) {
+        // Decode the uncompressed and compressed sizes
+        switch (sizeCodedSize) {
 #if DOBOZ_SAFE
                 case 1:
                     header.uncompressedSize = source[src_p];
@@ -448,37 +449,37 @@ namespace Compression.Doboz {
                     header.compressedSize = (int)Peek4(source, src_p + sizeCodedSize);
                     break;
 #else
-                case 1:
-                    header.uncompressedSize = *src_p;
-                    header.compressedSize = *(src_p + sizeCodedSize);
-                    break;
+            case 1:
+                header.uncompressedSize = *src_p;
+                header.compressedSize = *(src_p + sizeCodedSize);
+                break;
 
-                case 2:
-                    header.uncompressedSize = *((ushort*)(src_p));
-                    header.compressedSize = *((ushort*)(src_p + sizeCodedSize));
-                    break;
+            case 2:
+                header.uncompressedSize = *((ushort*)(src_p));
+                header.compressedSize = *((ushort*)(src_p + sizeCodedSize));
+                break;
 
-                case 4:
-                    header.uncompressedSize = *((int*)(src_p));
-                    header.compressedSize = *((int*)(src_p + sizeCodedSize));
-                    break;
+            case 4:
+                header.uncompressedSize = *((int*)(src_p));
+                header.compressedSize = *((int*)(src_p + sizeCodedSize));
+                break;
 #endif
 
-                default:
-                    return Result.RESULT_ERROR_CORRUPTED_DATA;
-            }
-
-            return Result.RESULT_OK;
+            default:
+                return Result.RESULT_ERROR_CORRUPTED_DATA;
         }
+
+        return Result.RESULT_OK;
+    }
 
 #if DOBOZ_SAFE
         static Result Decompress(byte[] source, int sourceOffset, int sourceSize, byte[] destination, int destrinationOffset, int destinationSize)
 #else
-        static Result Decompress(byte* source, int sourceOffset, int sourceSize, byte* destination, int destinationOffset, int destinationSize)
+    static Result Decompress(byte* source, int sourceOffset, int sourceSize, byte* destination, int destinationOffset, int destinationSize)
 #endif
-        {
-            Debug.Assert(source != null);
-            Debug.Assert(destination != null);
+    {
+        Debug.Assert(source != null);
+        Debug.Assert(destination != null);
 
 #if DOBOZ_SAFE
             var lut = LUT;
@@ -492,91 +493,91 @@ namespace Compression.Doboz {
                     "The source and destination buffers must not overlap.");
 
 #else
-            fixed (LUTEntry* lut = LUT) {
-                var src_0 = source + sourceOffset;
-                var dst_0 = destination + destinationOffset;
+        fixed (LUTEntry* lut = LUT) {
+            var src_0 = source + sourceOffset;
+            var dst_0 = destination + destinationOffset;
 
-                Debug.Assert(
-                    (src_0 + sourceSize <= dst_0 || src_0 >= dst_0 + destinationSize),
-                    "The source and destination buffers must not overlap.");
+            Debug.Assert(
+                (src_0 + sourceSize <= dst_0 || src_0 >= dst_0 + destinationSize),
+                "The source and destination buffers must not overlap.");
 #endif
 
-                var src_p = src_0;
-                var dst_p = dst_0;
+            var src_p = src_0;
+            var dst_p = dst_0;
 
-                // Decode the header
-                var header = new Header();
-                var headerSize = 0;
-                var decodeHeaderResult = DecodeHeader(ref header, source, sourceOffset, sourceSize, ref headerSize);
+            // Decode the header
+            var header = new Header();
+            var headerSize = 0;
+            var decodeHeaderResult = DecodeHeader(ref header, source, sourceOffset, sourceSize, ref headerSize);
 
-                if (decodeHeaderResult != Result.RESULT_OK) {
-                    return decodeHeaderResult;
-                }
+            if (decodeHeaderResult != Result.RESULT_OK) {
+                return decodeHeaderResult;
+            }
 
-                src_p += headerSize;
+            src_p += headerSize;
 
-                if (header.version != VERSION) {
-                    return Result.RESULT_ERROR_UNSUPPORTED_VERSION;
-                }
+            if (header.version != VERSION) {
+                return Result.RESULT_ERROR_UNSUPPORTED_VERSION;
+            }
 
-                // Check whether the supplied buffers are large enough
-                if (sourceSize < header.compressedSize || destinationSize < header.uncompressedSize) {
-                    return Result.RESULT_ERROR_BUFFER_TOO_SMALL;
-                }
+            // Check whether the supplied buffers are large enough
+            if (sourceSize < header.compressedSize || destinationSize < header.uncompressedSize) {
+                return Result.RESULT_ERROR_BUFFER_TOO_SMALL;
+            }
 
-                var uncompressedSize = header.uncompressedSize;
+            var uncompressedSize = header.uncompressedSize;
 
-                // If the data is simply stored, copy it to the destination buffer and we're done
-                if (header.isStored) {
+            // If the data is simply stored, copy it to the destination buffer and we're done
+            if (header.isStored) {
 #if DOBOZ_SAFE
                     BlockCopy(source, src_p, destination, dst_0, uncompressedSize);
 #else
-                    BlockCopy(src_p, dst_0, uncompressedSize);
+                BlockCopy(src_p, dst_0, uncompressedSize);
 #endif
-                    return Result.RESULT_OK;
+                return Result.RESULT_OK;
+            }
+
+            var src_end = src_0 + header.compressedSize;
+            var dst_end = dst_0 + uncompressedSize;
+
+            // Compute pointer to the first byte of the output 'tail'
+            // Fast write operations can be used only before the tail, because those may write beyond the end of the output buffer
+            var outputTail = (uncompressedSize > TAIL_LENGTH) ? (dst_end - TAIL_LENGTH) : dst_0;
+
+            // Initialize the control word to 'empty'
+            uint controlWord = 1;
+
+            // Decoding loop
+            while (true) {
+                // Check whether there is enough data left in the input buffer
+                // In order to decode the next literal/match, we have to read up to 8 bytes (2 words)
+                // Thanks to the trailing dummy, there must be at least 8 remaining input bytes
+                if (src_p + 2 * WORD_SIZE > src_end) {
+                    return Result.RESULT_ERROR_CORRUPTED_DATA;
                 }
 
-                var src_end = src_0 + header.compressedSize;
-                var dst_end = dst_0 + uncompressedSize;
-
-                // Compute pointer to the first byte of the output 'tail'
-                // Fast write operations can be used only before the tail, because those may write beyond the end of the output buffer
-                var outputTail = (uncompressedSize > TAIL_LENGTH) ? (dst_end - TAIL_LENGTH) : dst_0;
-
-                // Initialize the control word to 'empty'
-                uint controlWord = 1;
-
-                // Decoding loop
-                while (true) {
-                    // Check whether there is enough data left in the input buffer
-                    // In order to decode the next literal/match, we have to read up to 8 bytes (2 words)
-                    // Thanks to the trailing dummy, there must be at least 8 remaining input bytes
-                    if (src_p + 2 * WORD_SIZE > src_end) {
-                        return Result.RESULT_ERROR_CORRUPTED_DATA;
-                    }
-
-                    // Check whether we must read a control word
-                    if (controlWord == 1) {
-                        Debug.Assert(src_p + WORD_SIZE <= src_end);
+                // Check whether we must read a control word
+                if (controlWord == 1) {
+                    Debug.Assert(src_p + WORD_SIZE <= src_end);
 #if DOBOZ_SAFE
                         controlWord = Peek4(source, src_p);
 #else
-                        controlWord = *(uint*)src_p;
+                    controlWord = *(uint*)src_p;
 #endif
-                        src_p += WORD_SIZE;
-                    }
+                    src_p += WORD_SIZE;
+                }
 
-                    // Detect whether it's a literal or a match
-                    if ((controlWord & 1) == 0) {
-                        // It's a literal
+                // Detect whether it's a literal or a match
+                if ((controlWord & 1) == 0) {
+                    // It's a literal
 
-                        // If we are before the tail, we can safely use fast writing operations
-                        if (dst_p < outputTail) {
-                            // We copy literals in runs of up to 4 because it's faster than copying one by one
+                    // If we are before the tail, we can safely use fast writing operations
+                    if (dst_p < outputTail) {
+                        // We copy literals in runs of up to 4 because it's faster than copying one by one
 
-                            // Copy implicitly 4 literals regardless of the run length
-                            Debug.Assert(src_p + WORD_SIZE <= src_end);
-                            Debug.Assert(dst_p + WORD_SIZE <= dst_end);
+                        // Copy implicitly 4 literals regardless of the run length
+                        Debug.Assert(src_p + WORD_SIZE <= src_end);
+                        Debug.Assert(dst_p + WORD_SIZE <= dst_end);
 #if DOBOZ_SAFE
                             // Copy4(source, src_p, destination, dst_p);
                             destination[dst_p + 0] = source[src_p + 0];
@@ -584,122 +585,122 @@ namespace Compression.Doboz {
                             destination[dst_p + 2] = source[src_p + 2];
                             destination[dst_p + 3] = source[src_p + 3];
 #else
-                            *(uint*)dst_p = *(uint*)src_p;
+                        *(uint*)dst_p = *(uint*)src_p;
 #endif
 
-                            // Get the run length using a lookup table
-                            int runLength = LITERAL_RUN_LENGTH_TABLE[controlWord & 0xf];
+                        // Get the run length using a lookup table
+                        int runLength = LITERAL_RUN_LENGTH_TABLE[controlWord & 0xf];
 
-                            // Advance the src and dst pointers with the run length
-                            src_p += runLength;
-                            dst_p += runLength;
+                        // Advance the src and dst pointers with the run length
+                        src_p += runLength;
+                        dst_p += runLength;
 
-                            // Consume as much control word bits as the run length
-                            controlWord >>= runLength;
-                        }
-                        else {
-                            // We have reached the tail, we cannot output literals in runs anymore
-                            // Output all remaining literals
-                            while (dst_p < dst_end) {
-                                // Check whether there is enough data left in the input buffer
-                                // In order to decode the next literal, we have to read up to 5 bytes
-                                if (src_p + WORD_SIZE + 1 > src_end) {
-                                    return Result.RESULT_ERROR_CORRUPTED_DATA;
-                                }
+                        // Consume as much control word bits as the run length
+                        controlWord >>= runLength;
+                    }
+                    else {
+                        // We have reached the tail, we cannot output literals in runs anymore
+                        // Output all remaining literals
+                        while (dst_p < dst_end) {
+                            // Check whether there is enough data left in the input buffer
+                            // In order to decode the next literal, we have to read up to 5 bytes
+                            if (src_p + WORD_SIZE + 1 > src_end) {
+                                return Result.RESULT_ERROR_CORRUPTED_DATA;
+                            }
 
-                                // Check whether we must read a control word
-                                if (controlWord == 1) {
-                                    Debug.Assert(src_p + WORD_SIZE <= src_end);
+                            // Check whether we must read a control word
+                            if (controlWord == 1) {
+                                Debug.Assert(src_p + WORD_SIZE <= src_end);
 #if DOBOZ_SAFE
                                     controlWord = Peek4(source, src_p);
 #else
-                                    controlWord = *(uint*)src_p;
+                                controlWord = *(uint*)src_p;
 #endif
-                                    src_p += WORD_SIZE;
-                                }
+                                src_p += WORD_SIZE;
+                            }
 
-                                // Output one literal
-                                // We cannot use fast read/write functions
-                                Debug.Assert(src_p + 1 <= src_end);
-                                Debug.Assert(dst_p + 1 <= dst_end);
+                            // Output one literal
+                            // We cannot use fast read/write functions
+                            Debug.Assert(src_p + 1 <= src_end);
+                            Debug.Assert(dst_p + 1 <= dst_end);
 #if DOBOZ_SAFE
                                 destination[dst_p++] = source[src_p++];
 #else
-                                *dst_p++ = *src_p++;
+                            *dst_p++ = *src_p++;
 #endif
 
-                                // Next control word bit
-                                controlWord >>= 1;
-                            }
-
-                            // Done
-                            return Result.RESULT_OK;
+                            // Next control word bit
+                            controlWord >>= 1;
                         }
+
+                        // Done
+                        return Result.RESULT_OK;
                     }
-                    else {
-                        // It's a match
+                }
+                else {
+                    // It's a match
 
-                        // Decode the match
-                        Debug.Assert(src_p + WORD_SIZE <= src_end);
-                        Match match;
+                    // Decode the match
+                    Debug.Assert(src_p + WORD_SIZE <= src_end);
+                    Match match;
 
-                        // src_p += decodeMatch(ref match, src_p);
-                        {
-                            // Read the maximum number of bytes a match is coded in (4)
+                    // src_p += decodeMatch(ref match, src_p);
+                    {
+                        // Read the maximum number of bytes a match is coded in (4)
 #if DOBOZ_SAFE
                             var w = Peek4(source, src_p);
 #else
-                            var w = *(uint*)src_p;
+                        var w = *(uint*)src_p;
 #endif
 
-                            // Compute the decoding lookup table entry index: the lowest 3 bits of the encoded match
-                            var u = w & 7;
+                        // Compute the decoding lookup table entry index: the lowest 3 bits of the encoded match
+                        var u = w & 7;
 
-                            // Compute the match offset and length using the lookup table entry
-                            match.offset = (int)((w & lut[u].mask) >> lut[u].offsetShift);
-                            match.length = (int)(((w >> lut[u].lengthShift) & lut[u].lengthMask) + MIN_MATCH_LENGTH);
+                        // Compute the match offset and length using the lookup table entry
+                        match.offset = (int)((w & lut[u].mask) >> lut[u].offsetShift);
+                        match.length = (int)(((w >> lut[u].lengthShift) & lut[u].lengthMask) + MIN_MATCH_LENGTH);
 
-                            src_p += lut[u].size;
-                        }
+                        src_p += lut[u].size;
+                    }
 
-                        // Copy the matched string
-                        // In order to achieve high performance, we copy characters in groups of machine words
-                        // Overlapping matches require special care
-                        var matchString = dst_p - match.offset;
+                    // Copy the matched string
+                    // In order to achieve high performance, we copy characters in groups of machine words
+                    // Overlapping matches require special care
+                    var matchString = dst_p - match.offset;
 
-                        // Check whether the match is out of range
-                        if (matchString < dst_0 || dst_p + match.length > outputTail) {
-                            return Result.RESULT_ERROR_CORRUPTED_DATA;
-                        }
+                    // Check whether the match is out of range
+                    if (matchString < dst_0 || dst_p + match.length > outputTail) {
+                        return Result.RESULT_ERROR_CORRUPTED_DATA;
+                    }
 
-                        var i = 0;
+                    var i = 0;
 
-                        if (match.offset < WORD_SIZE) {
-                            // The match offset is less than the word size
-                            // In order to correctly handle the overlap, we have to copy the first three bytes one by one
-                            do {
-                                Debug.Assert(matchString + i >= dst_0);
-                                Debug.Assert(matchString + i + WORD_SIZE <= dst_end);
-                                Debug.Assert(dst_p + i + WORD_SIZE <= dst_end);
-#if DOBOZ_SAFE
-                                destination[dst_p + i] = destination[matchString + i];
-#else
-                                *(dst_p + i) = *(matchString + i);
-#endif
-                                ++i;
-                            } while (i < 3);
-
-                            // With this trick, we increase the distance between the source and destination pointers
-                            // This enables us to use fast copying for the rest of the match
-                            matchString -= 2 + (match.offset & 1);
-                        }
-
-                        // Fast copying
-                        // There must be no overlap between the source and destination words
+                    if (match.offset < WORD_SIZE) {
+                        // The match offset is less than the word size
+                        // In order to correctly handle the overlap, we have to copy the first three bytes one by one
                         do {
                             Debug.Assert(matchString + i >= dst_0);
                             Debug.Assert(matchString + i + WORD_SIZE <= dst_end);
                             Debug.Assert(dst_p + i + WORD_SIZE <= dst_end);
+#if DOBOZ_SAFE
+                                destination[dst_p + i] = destination[matchString + i];
+#else
+                            *(dst_p + i) = *(matchString + i);
+#endif
+                            ++i;
+                        } while (i < 3);
+
+                        // With this trick, we increase the distance between the source and destination pointers
+                        // This enables us to use fast copying for the rest of the match
+                        matchString -= 2 + (match.offset & 1);
+                    }
+
+                    // Fast copying
+                    // There must be no overlap between the source and destination words
+                    do {
+                        Debug.Assert(matchString + i >= dst_0);
+                        Debug.Assert(matchString + i + WORD_SIZE <= dst_end);
+                        Debug.Assert(dst_p + i + WORD_SIZE <= dst_end);
 #if DOBOZ_SAFE
                             // Copy4(destination, matchString + i, dst_p + i);
                             destination[dst_p + i + 0] = destination[matchString + i + 0];
@@ -707,16 +708,15 @@ namespace Compression.Doboz {
                             destination[dst_p + i + 2] = destination[matchString + i + 2];
                             destination[dst_p + i + 3] = destination[matchString + i + 3];
 #else
-                            *(uint*)(dst_p + i) = *(uint*)(matchString + i);
+                        *(uint*)(dst_p + i) = *(uint*)(matchString + i);
 #endif
-                            i += WORD_SIZE;
-                        } while (i < match.length);
+                        i += WORD_SIZE;
+                    } while (i < match.length);
 
-                        dst_p += match.length;
+                    dst_p += match.length;
 
-                        // Next control word bit
-                        controlWord >>= 1;
-                    }
+                    // Next control word bit
+                    controlWord >>= 1;
                 }
             }
         }

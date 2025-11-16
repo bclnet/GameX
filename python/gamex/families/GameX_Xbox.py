@@ -12,6 +12,12 @@ class StardewGame(FamilyGame):
     def loaded(self):
         super().loaded()
         Binary_Xnb.ContentReader.add(Binary_Xnb.TypeReader[str]('BmFont.XmlSourceReader', 'System.String', lambda r: r.readLV7UString()))
+        Binary_Xnb.ContentReader.add(Binary_Xnb.TypeReader[str]('StardewValley.GameData.BigCraftableData', 'System.String', lambda r: r.readLV7UString()))
+        Binary_Xnb.ContentReader.add(Binary_Xnb.TypeReader[str]('BmFont.XmlSourceReader', 'System.String', lambda r: r.readLV7UString()))
+        Binary_Xnb.ContentReader.add(Binary_Xnb.TypeReader[str]('BmFont.XmlSourceReader', 'System.String', lambda r: r.readLV7UString()))
+        Binary_Xnb.ContentReader.add(Binary_Xnb.TypeReader[str]('BmFont.XmlSourceReader', 'System.String', lambda r: r.readLV7UString()))
+        Binary_Xnb.ContentReader.add(Binary_Xnb.TypeReader[str]('BmFont.XmlSourceReader', 'System.String', lambda r: r.readLV7UString()))
+        Binary_Xnb.ContentReader.add(Binary_Xnb.TypeReader[str]('BmFont.XmlSourceReader', 'System.String', lambda r: r.readLV7UString()))
 
 # XboxPakFile
 class XboxPakFile(BinaryPakFile):

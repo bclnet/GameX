@@ -15,16 +15,76 @@
                 "type": "Text"
             },
             {
-                "path": "Characters/Dialogue/Alex.es-ES.xnb",
-                "type": "Text"
-            },
-            {
                 "path": "Fonts/Chinese.xnb",
                 "type": "Data"
             },
             {
                 "path": "Maps/Barn.xnb",
                 "type": "Data"
+            },
+            {
+                "path": "Fonts/Chinese_round/Chinese.xnb",
+                "type": "Custom"
+            },
+            {
+                "path": [
+                    "Data/AdditionalFarms.xnb",
+                    "Data/AdditionalLanguages.xnb",
+                    "Data/AdditionalWallpaperFlooring.xnb",
+                    "Data/AudioChanges.xnb",
+                    "Data/BigCraftables.xnb",
+                    "Data/Buffs.xnb",
+                    "Data/Buildings.xnb",
+                    "Data/Characters.xnb",
+                    "Data/Concessions.xnb",
+                    "Data/ConcessionTastes.xnb",
+                    "Data/Crops.xnb",
+                    "Data/FarmAnimals.xnb",
+                    "Data/Fences.xnb",
+                    "Data/FishPondData.xnb",
+                    "Data/FloorsAndPaths.xnb",
+                    "Data/FruitTrees.xnb",
+                    "Data/GarbageCans.xnb",
+                    "Data/GiantCrops.xnb",
+                    "Data/HomeRenovations.xnb",
+                    "Data/IncomingPhoneCalls.xnb",
+                    "Data/JukeboxTracks.xnb",
+                    "Data/LocationContexts.xnb",
+                    "Data/Locations.xnb",
+                    "Data/LostItemsShop.xnb",
+                    "Data/Machines.xnb",
+                    "Data/MakeoverOutfits.xnb",
+                    "Data/Mannequins.xnb",
+                    "Data/Minecarts.xnb",
+                    "Data/MonsterSlayerQuests.xnb",
+                    "Data/Movies.xnb",
+                    "Data/MoviesReactions.xnb",
+                    "Data/MuseumRewards.xnb",
+                    "Data/Objects.xnb",
+                    "Data/Pants.xnb",
+                    "Data/PassiveFestivals.xnb",
+                    "Data/Pets.xnb",
+                    "Data/Powers.xnb",
+                    "Data/RandomBundles.xnb",
+                    "Data/Shirts.xnb",
+                    "Data/Shops.xnb",
+                    "Data/SpecialOrders.xnb",
+                    "Data/TailoringRecipes.xnb",
+                    "Data/Tools.xnb",
+                    "Data/TriggerActions.xnb",
+                    "Data/Trinkets.xnb",
+                    "Data/Weapons.xnb",
+                    "Data/Weddings.xnb",
+                    "Data/WildTrees.xnb",
+                    "Data/WorldMap.xnb",
+                    "Data/xxx.xnb",
+                    "Data/xxx.xnb",
+                    "Data/xxx.xnb",
+                    "Data/xxx.xnb",
+                    "Data/xxx.xnb",
+                    "Data/xxx.xnb",
+                ],
+                "type": "Custom"
             }
         ]
     }

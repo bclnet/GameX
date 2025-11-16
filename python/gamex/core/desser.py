@@ -46,7 +46,7 @@ class CustomEncoder(json.JSONEncoder):
         return d #super().default(s)
 
 class DesSer:
-    adds: dict
+    adds: dict = {}
     @staticmethod
     def add(s: dict) -> None: DesSer.adds = s
     @staticmethod

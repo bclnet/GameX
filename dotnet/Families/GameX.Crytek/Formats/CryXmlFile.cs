@@ -37,8 +37,8 @@ public class CryXmlFile : XmlDocument, IHaveMetaInfo, IStream  {
         if (peek == '<') { Load(r.BaseStream); return; } // File is already XML, so return the XML.
         else if (peek != 'C') throw new Exception("Unknown File Format"); // Unknown file format
 
-        var header = r.ReadFUString(7);
-        if (header == "CryXml" || header == "CryXmlB") r.ReadVUString();
+        var header = r.ReadFWString(7);
+        if (header == "CryXml" || header == "CryXmlB") r.ReadVWString();
         else if (header == "CRY3SDK") r.ReadBytes(2);
         else throw new FormatException("Unknown File Format");
 
@@ -125,7 +125,7 @@ public class CryXmlFile : XmlDocument, IHaveMetaInfo, IStream  {
         r.BaseStream.Seek(stringTableOffset, SeekOrigin.Begin);
         while (r.BaseStream.Position < r.BaseStream.Length) {
             var position = r.BaseStream.Position;
-            var value = (Offset: (int)position - stringTableOffset, Value: r.ReadVUString());
+            var value = (Offset: (int)position - stringTableOffset, Value: r.ReadVWString());
             dataTable.Add(value);
             if (writeLog) Console.WriteLine($"0x{position:X6}: {value.Offset:X8} {value.Value}");
         }

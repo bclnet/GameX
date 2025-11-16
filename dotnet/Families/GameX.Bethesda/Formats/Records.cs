@@ -641,7 +641,7 @@ public struct UNKNField { public override readonly string ToString() => $"UNKN";
 
 public class MODLGroup(BinaryReader r, int dataSize) {
     public override string ToString() => $"{Value}";
-    public string Value = r.ReadYEncoding(dataSize);
+    public string Value = r.ReadFUString(dataSize);
     public float Bound;
     public byte[] Textures; // Texture Files Hashes
     public object MODBField(BinaryReader r, int dataSize) => Bound = r.ReadSingle();
@@ -856,12 +856,12 @@ public static class Extensions {
             'b' => new DATVField { B = r.ReadInt32() != 0 },
             'i' => new DATVField { I = r.ReadInt32() },
             'f' => new DATVField { F = r.ReadSingle() },
-            's' => new DATVField { S = r.ReadYEncoding(length) },
+            's' => new DATVField { S = r.ReadFUString(length) },
             _ => throw new InvalidOperationException($"{type}"),
         };
-    public static STRVField ReadSTRV(this BinaryReader r, int length) => new() { Value = r.ReadYEncoding(length) };
+    public static STRVField ReadSTRV(this BinaryReader r, int length) => new() { Value = r.ReadFUString(length) };
     public static STRVField ReadSTRV_ZPad(this BinaryReader r, int length) => new() { Value = r.ReadFAString(length) };
-    public static FILEField ReadFILE(this BinaryReader r, int length) => new() { Value = r.ReadYEncoding(length) };
+    public static FILEField ReadFILE(this BinaryReader r, int length) => new() { Value = r.ReadFUString(length) };
     public static BYTVField ReadBYTV(this BinaryReader r, int length) => new() { Value = r.ReadBytes(length) };
     public static UNKNField ReadUNKN(this BinaryReader r, int length) => new() { Value = r.ReadBytes(length) };
 }
@@ -2981,7 +2981,7 @@ public class SCPTRecord : Record {
                             // SCVRField
             VariableName = null;
         }
-        public object SCVRField(BinaryReader r, int dataSize) => VariableName = r.ReadYEncoding(dataSize);
+        public object SCVRField(BinaryReader r, int dataSize) => VariableName = r.ReadFUString(dataSize);
     }
 
     public override string ToString() => $"SCPT: {EDID.Value ?? SCHD.Name}";
@@ -3903,7 +3903,7 @@ public class ENCHRecord : Record {
             VisualEffect = r.ReadFAString(4);
             Flags = dataSize > 12 ? r.ReadUInt32() : 0;
         }
-        public object FULLField(BinaryReader r, int dataSize) => Name = r.ReadYEncoding(dataSize);
+        public object FULLField(BinaryReader r, int dataSize) => Name = r.ReadFUString(dataSize);
     }
 
     public STRVField FULL; // Enchant name
@@ -4078,8 +4078,8 @@ public class INFORecord : Record {
             ResponseNumber = r.ReadByte();
             r.Skip(3); // Unused
         }
-        public object NAM1Field(BinaryReader r, int dataSize) => ResponseText = r.ReadYEncoding(dataSize);
-        public object NAM2Field(BinaryReader r, int dataSize) => ActorNotes = r.ReadYEncoding(dataSize);
+        public object NAM1Field(BinaryReader r, int dataSize) => ResponseText = r.ReadFUString(dataSize);
+        public object NAM2Field(BinaryReader r, int dataSize) => ActorNotes = r.ReadFUString(dataSize);
     }
 
     public class TES4Group {

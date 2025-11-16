@@ -143,7 +143,7 @@ public class CompiledShader : IHaveMetaInfo {
         for (var i = 0; i < count; i++) {
             prevPos = r.BaseStream.Position;
 
-            name = r.ReadVUString();
+            name = r.ReadVWString();
             r.Seek(prevPos + 128);
 
             var type = r.ReadUInt32();
@@ -151,7 +151,7 @@ public class CompiledShader : IHaveMetaInfo {
 
             if (type == 1) {
                 prevPos = r.BaseStream.Position;
-                var subname = r.ReadVUString();
+                var subname = r.ReadVWString();
                 b_.AppendLine(subname);
                 r.BaseStream.Position = prevPos + 64;
                 r.ReadUInt32();
@@ -182,14 +182,14 @@ public class CompiledShader : IHaveMetaInfo {
         count = r.ReadUInt32();
         for (var i = 0; i < count; i++) {
             prevPos = r.BaseStream.Position;
-            name = r.ReadVUString();
+            name = r.ReadVWString();
             r.BaseStream.Position = prevPos + 64;
             prevPos = r.BaseStream.Position;
-            var desc = r.ReadVUString();
+            var desc = r.ReadVWString();
             r.BaseStream.Position = prevPos + 84;
             var subcount = r.ReadUInt32();
             b_.AppendLine($"Name: {name} - Desc: {desc} - Count: {subcount} - Offsets: {r.BaseStream.Position}");
-            for (var j = 0; j < subcount; j++) b_.AppendLine($"     {r.ReadVUString()}");
+            for (var j = 0; j < subcount; j++) b_.AppendLine($"     {r.ReadVWString()}");
         }
 
         count = r.ReadUInt32();
@@ -215,7 +215,7 @@ public class CompiledShader : IHaveMetaInfo {
 
         for (var i = 0; i < count; i++) {
             var previousPosition = r.BaseStream.Position;
-            var name = r.ReadVUString();
+            var name = r.ReadVWString();
             r.BaseStream.Position = previousPosition + 128;
 
             var unk1_a = r.ReadInt32();
@@ -255,7 +255,7 @@ public class CompiledShader : IHaveMetaInfo {
 
         for (var i = 0; i < count; i++) {
             var previousPosition = r.BaseStream.Position;
-            var name = r.ReadVUString();
+            var name = r.ReadVWString();
             r.BaseStream.Position = previousPosition + 128;
 
             var unk3_a = r.ReadInt32();
@@ -293,7 +293,7 @@ public class CompiledShader : IHaveMetaInfo {
 
         for (var i = 0; i < count; i++) {
             var previousPosition = r.BaseStream.Position;
-            var name = r.ReadVUString();
+            var name = r.ReadVWString();
             r.BaseStream.Position = previousPosition + 128; // ??
 
             var hasDesc = r.ReadInt32();
@@ -302,7 +302,7 @@ public class CompiledShader : IHaveMetaInfo {
             var desc = string.Empty;
 
             if (hasDesc > 0)
-                desc = r.ReadVUString();
+                desc = r.ReadVWString();
 
             r.BaseStream.Position = previousPosition + 200;
             var type = r.ReadInt32();
@@ -345,7 +345,7 @@ public class CompiledShader : IHaveMetaInfo {
             var unk6_d = r.ReadUInt32();
 
             var previousPosition = r.BaseStream.Position;
-            var name = r.ReadVUString();
+            var name = r.ReadVWString();
             r.BaseStream.Position = previousPosition + 256;
 
             b_.AppendLine($"{unk6_b} {unk6_d} {name}");
@@ -357,7 +357,7 @@ public class CompiledShader : IHaveMetaInfo {
 
         for (var i = 0; i < count; i++) {
             var prevPos = r.BaseStream.Position;
-            var name = r.ReadVUString(8);
+            var name = r.ReadVWString(8);
             r.BaseStream.Position = prevPos + 64;
 
             var a = r.ReadUInt32();
@@ -367,7 +367,7 @@ public class CompiledShader : IHaveMetaInfo {
 
             for (var j = 0; j < subCount; j++) {
                 var previousPosition = r.BaseStream.Position;
-                var subname = r.ReadVUString();
+                var subname = r.ReadVWString();
                 r.BaseStream.Position = previousPosition + 64;
 
                 var bufferOffset = r.ReadUInt32(); // Offset in the buffer
@@ -391,9 +391,9 @@ public class CompiledShader : IHaveMetaInfo {
                 b_.AppendLine($"Buffer #{h}, {count} attributes");
 
                 for (var i = 0; i < count; i++) {
-                    var name = r.ReadVUString();
-                    var type = r.ReadVUString();
-                    var option = r.ReadVUString();
+                    var name = r.ReadVWString();
+                    var type = r.ReadVWString();
+                    var option = r.ReadVWString();
                     var unk = r.ReadUInt32(); // 0, 1, 2, 13 or 14
                     b_.AppendLine($"     Name: {name}, Type: {type}, Option: {option}, Unknown uint: {unk}");
                 }
@@ -912,7 +912,7 @@ public class ToolsAssetInfo : IHaveMetaInfo {
 
     static void ReadStringsBlock(BinaryReader r, ICollection<string> output) {
         var count = r.ReadUInt32();
-        for (var i = 0U; i < count; i++) output.Add(r.ReadVUString());
+        for (var i = 0U; i < count; i++) output.Add(r.ReadVWString());
     }
 
     public override string ToString() {

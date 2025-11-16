@@ -157,7 +157,7 @@ public unsafe class Binary_Ba2 : PakBinary<Binary_Ba2> {
             // assign full names to each file
             if (header.NameTableOffset > 0) {
                 r.Seek((long)header.NameTableOffset);
-                var path = r.ReadL16Encoding().Replace('\\', '/');
+                var path = r.ReadL16UString().Replace('\\', '/');
                 foreach (var file in files) file.Path = path;
             }
         }
@@ -468,7 +468,7 @@ public unsafe class Binary_Bsa : PakBinary<Binary_Bsa> {
             }
 
             // read-all names
-            foreach (var file in files) file.Path = $"{file.Path}/{r.ReadVUString()}";
+            foreach (var file in files) file.Path = $"{file.Path}/{r.ReadVWString()}";
         }
         // Morrowind
         else if (magic == MW_BSAHEADER_FILEID) {

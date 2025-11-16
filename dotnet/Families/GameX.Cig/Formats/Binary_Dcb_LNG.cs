@@ -173,7 +173,7 @@ public partial class Binary_Dcb_LNG : IHaveMetaInfo {
 
     public class String_ : Serializable_ {
         public string Value { get; set; }
-        public String_(Binary_Dcb_LNG root) : base(root) => Value = r.ReadVUString();
+        public String_(Binary_Dcb_LNG root) : base(root) => Value = r.ReadVWString();
         public override string ToString() => Value;
         public XmlElement Read() => Root.CreateElement("String", Root.CreateAttribute("value", Value));
     }

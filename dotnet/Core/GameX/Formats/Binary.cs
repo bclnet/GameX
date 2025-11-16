@@ -1318,7 +1318,7 @@ public unsafe class Binary_Tga : IHaveMetaInfo, ITexture {
 public class Binary_Txt(BinaryReader r, int fileSize) : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Txt(r, (int)f.FileSize));
 
-    public readonly string Data = r.ReadEncoding(fileSize);
+    public readonly string Data = r.ReadFUString(fileSize);
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = Data }),

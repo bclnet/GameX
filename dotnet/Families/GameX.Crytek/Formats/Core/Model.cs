@@ -119,7 +119,7 @@ public class Model {
     void ReadFileHeader(BinaryReader r) {
         // FILESIGNATURE V3.6+ : Version 3.6 or later
         r.BaseStream.Seek(0, SeekOrigin.Begin);
-        FileSignature = r.ReadFUString(4);
+        FileSignature = r.ReadFWString(4);
         if (FileSignature == "CrCh") {
             FileVersion = (FileVersion)r.ReadUInt32(); // 0x746
             NumChunks = r.ReadUInt32(); // number of Chunks in the chunk table
@@ -136,7 +136,7 @@ public class Model {
 
         // FILESIGNATURE V3.5- : Version 3.5 or earlier
         r.BaseStream.Seek(0, SeekOrigin.Begin);
-        FileSignature = r.ReadFUString(8);
+        FileSignature = r.ReadFWString(8);
         if (FileSignature == "CryTek") {
             FileType = (FileType)r.ReadUInt32();
             FileVersion = (FileVersion)r.ReadUInt32(); // 0x744 | 0x745

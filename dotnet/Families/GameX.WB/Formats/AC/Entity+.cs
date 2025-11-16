@@ -150,7 +150,7 @@ public class CharacterCreateInfo
         CharacterSlot = r.ReadUInt32();
         ClassId = r.ReadUInt32();
         SkillAdvancementClasses = r.ReadL32FArray(x => (SkillAdvancementClass)x.ReadUInt32()).ToList();
-        Name = r.ReadL16Encoding();
+        Name = r.ReadL16UString();
         StartArea = r.ReadUInt32();
         IsAdmin = r.ReadUInt32() == 1;
         IsSentinel = r.ReadUInt32() == 1;

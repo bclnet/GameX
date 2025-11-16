@@ -445,7 +445,7 @@ public unsafe class Binary_Typename : IHaveMetaInfo {
     public Binary_Typename(BinaryReader r) {
         ScriptId = r.ReadUInt32();
         IconId = r.ReadUInt16();
-        ToolTip = r.ReadVUString();
+        ToolTip = r.ReadVWString();
     }
 
     // IHaveMetaInfo

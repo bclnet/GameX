@@ -15,8 +15,8 @@
                 "type": "Text"
             },
             {
-                "path": "Effects/ShadowRemove.xnb",
-                "type": "Effect"
+                "path": "Characters/Dialogue/Alex.es-ES.xnb",
+                "type": "Text"
             },
             {
                 "path": "Fonts/Chinese.xnb",

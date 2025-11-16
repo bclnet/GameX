@@ -273,7 +273,7 @@ public class ChunkBoneNameList_745 : ChunkBoneNameList {
     public override void Read(BinaryReader r) {
         base.Read(r);
 
-        BoneNames = r.ReadVUString().Split(' ').ToList();
+        BoneNames = r.ReadVWString().Split(' ').ToList();
     }
 }
 
@@ -1592,7 +1592,7 @@ public class ChunkExportFlags_1 : ChunkExportFlags {
         ID = r.ReadInt32();
         SkipBytes(r, 4);
         RCVersion = r.ReadPArray<uint>("I", 4);
-        RCVersionString = r.ReadFUString(16);
+        RCVersionString = r.ReadFWString(16);
         SkipBytesRemaining(r);
     }
 }
@@ -2416,7 +2416,7 @@ public class ChunkMtlName_744 : ChunkMtlName {
     public override void Read(BinaryReader r) {
         base.Read(r);
 
-        Name = r.ReadFUString(128);
+        Name = r.ReadFWString(128);
         NumChildren = (int)r.ReadUInt32();
         MatType = NumChildren == 0 ? MtlNameType.Single : MtlNameType.Library;
         PhysicsType = new MtlNamePhysicsType[NumChildren];
@@ -2435,7 +2435,7 @@ public class ChunkMtlName_800 : ChunkMtlName {
         MatType = (MtlNameType)r.ReadUInt32();
         // if 0x01, then material lib. If 0x12, mat name. This is actually a bitstruct.
         NFlags2 = r.ReadUInt32(); // NFlags2
-        Name = r.ReadFUString(128);
+        Name = r.ReadFWString(128);
         PhysicsType = [(MtlNamePhysicsType)r.ReadUInt32()];
         NumChildren = (int)r.ReadUInt32();
         // Now we need to read the Children references. 2 parts; the number of children, and then 66 - numchildren padding
@@ -2455,7 +2455,7 @@ public class ChunkMtlName_80000800 : ChunkMtlName {
         MatType = (MtlNameType)MathX.SwapEndian(r.ReadUInt32());
         // if 0x01, then material lib. If 0x12, mat name. This is actually a bitstruct.
         NFlags2 = MathX.SwapEndian(r.ReadUInt32()); // NFlags2
-        Name = r.ReadFUString(128);
+        Name = r.ReadFWString(128);
         PhysicsType = new[] { (MtlNamePhysicsType)MathX.SwapEndian(r.ReadUInt32()) };
         NumChildren = (int)MathX.SwapEndian(r.ReadUInt32());
         // Now we need to read the Children references. 2 parts; the number of children, and then 66 - numchildren padding
@@ -2474,7 +2474,7 @@ public class ChunkMtlName_802 : ChunkMtlName {
     public override void Read(BinaryReader r) {
         base.Read(r);
 
-        Name = r.ReadFUString(128);
+        Name = r.ReadFWString(128);
         NumChildren = (int)r.ReadUInt32();
         MatType = NumChildren == 0 ? MtlNameType.Single : MtlNameType.Library;
         PhysicsType = new MtlNamePhysicsType[NumChildren];
@@ -2490,7 +2490,7 @@ public class ChunkMtlName_900 : ChunkMtlName {
     public override void Read(BinaryReader r) {
         base.Read(r);
 
-        Name = r.ReadFUString(128);
+        Name = r.ReadFWString(128);
         NumChildren = 0;
     }
 }
@@ -2625,7 +2625,7 @@ public class ChunkNode_80000823 : ChunkNode {
     public override void Read(BinaryReader r) {
         base.Read(r);
 
-        Name = r.ReadFUString(64);
+        Name = r.ReadFWString(64);
         if (string.IsNullOrEmpty(Name)) Name = "unknown";
         ObjectNodeID = MathX.SwapEndian(r.ReadInt32()); // Object reference ID
         ParentNodeID = MathX.SwapEndian(r.ReadInt32());
@@ -2684,7 +2684,7 @@ public class ChunkNode_80000823 : ChunkNode {
         RotCtrlID = MathX.SwapEndian(r.ReadInt32());
         SclCtrlID = MathX.SwapEndian(r.ReadInt32());
 
-        Properties = r.ReadL32UString();
+        Properties = r.ReadL32WString();
     }
 }
 
@@ -2696,7 +2696,7 @@ public class ChunkNode_823 : ChunkNode {
     public override void Read(BinaryReader r) {
         base.Read(r);
 
-        Name = r.ReadFUString(64);
+        Name = r.ReadFWString(64);
         if (string.IsNullOrEmpty(Name)) Name = "unknown";
         ObjectNodeID = r.ReadInt32(); // Object reference ID
         ParentNodeID = r.ReadInt32();
@@ -2737,7 +2737,7 @@ public class ChunkNode_823 : ChunkNode {
         RotCtrlID = r.ReadInt32();
         SclCtrlID = r.ReadInt32();
 
-        Properties = r.ReadL32UString();
+        Properties = r.ReadL32WString();
     }
 }
 
@@ -2749,7 +2749,7 @@ public class ChunkNode_824 : ChunkNode {
     public override void Read(BinaryReader r) {
         base.Read(r);
 
-        Name = r.ReadFUString(64);
+        Name = r.ReadFWString(64);
         if (string.IsNullOrEmpty(Name)) Name = "unknown";
         ObjectNodeID = r.ReadInt32(); // Object reference ID
         ParentNodeID = r.ReadInt32();
@@ -2790,7 +2790,7 @@ public class ChunkNode_824 : ChunkNode {
         RotCtrlID = r.ReadInt32();
         SclCtrlID = r.ReadInt32();
 
-        Properties = r.ReadL32UString();
+        Properties = r.ReadL32WString();
     }
 }
 
@@ -2835,7 +2835,7 @@ public class ChunkSceneProp_744 : ChunkSceneProp {
         PropKey = new string[NumProps];
         PropValue = new string[NumProps];
         // Read the array of scene props and their associated values
-        for (var i = 0; i < NumProps; i++) { PropKey[i] = r.ReadFUString(32); PropValue[i] = r.ReadFUString(64); }
+        for (var i = 0; i < NumProps; i++) { PropKey[i] = r.ReadFWString(32); PropValue[i] = r.ReadFWString(64); }
     }
 }
 
@@ -2892,11 +2892,11 @@ public class ChunkSourceInfo_0 : ChunkSourceInfo {
         }
 
         ChunkType = ChunkType.SourceInfo; // this chunk doesn't actually have the chunktype header.
-        SourceFile = r.ReadVUString();
-        Date = r.ReadVUString().TrimEnd(); // Strip off last 2 Characters, because it contains a return
+        SourceFile = r.ReadVWString();
+        Date = r.ReadVWString().TrimEnd(); // Strip off last 2 Characters, because it contains a return
         // It is possible that Date has a newline in it instead of a null.  If so, split it based on newline.  Otherwise read Author.
         if (Date.Contains('\n')) { Author = Date.Split('\n')[1]; Date = Date.Split('\n')[0]; }
-        else Author = r.ReadVUString();
+        else Author = r.ReadVWString();
     }
 }
 
@@ -2942,7 +2942,7 @@ public class ChunkTimingFormat_918 : ChunkTimingFormat {
 
         SecsPerTick = r.ReadSingle();
         TicksPerFrame = r.ReadInt32();
-        GlobalRange.Name = r.ReadFUString(32); // Name is technically a String32, but F those structs
+        GlobalRange.Name = r.ReadFWString(32); // Name is technically a String32, but F those structs
         GlobalRange.Start = r.ReadInt32();
         GlobalRange.End = r.ReadInt32();
     }
@@ -2959,7 +2959,7 @@ public class ChunkTimingFormat_919 : ChunkTimingFormat {
         // TODO:  This is copied from 918 but may not be entirely accurate.  Not tested.
         SecsPerTick = r.ReadSingle();
         TicksPerFrame = r.ReadInt32();
-        GlobalRange.Name = r.ReadFUString(32); // Name is technically a String32, but F those structs
+        GlobalRange.Name = r.ReadFWString(32); // Name is technically a String32, but F those structs
         GlobalRange.Start = r.ReadInt32();
         GlobalRange.End = r.ReadInt32();
     }

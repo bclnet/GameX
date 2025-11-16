@@ -296,7 +296,7 @@ class Binary_Bsa(PakBinaryT):
                     fileX += 1
 
             # read-all names
-            for file in files: file.path = f'{file.path}/{r.readVUString()}'
+            for file in files: file.path = f'{file.path}/{r.readVWString()}'
 
         # Morrowind
         elif magic == self.MW_BSAHEADER_FILEID:

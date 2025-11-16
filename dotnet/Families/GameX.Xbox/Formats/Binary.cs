@@ -126,7 +126,7 @@ public class Binary_Xnb : IHaveMetaInfo, IWriteToStream, IRedirected<object> {
         }
 
         public void ReadTypeManifest() {
-            Readers = this.ReadLV7FArray(z => GetByName(this.ReadLV7UString(), this.ReadUInt32()));
+            Readers = this.ReadLV7FArray(z => GetByName(this.ReadLV7UString(), ReadUInt32()));
             //foreach (var s in Readers.Where(x => x.Init != null)) s.Init();
         }
 
@@ -156,8 +156,7 @@ public class Binary_Xnb : IHaveMetaInfo, IWriteToStream, IRedirected<object> {
             var wanted = StripAssemblyVersion(name).Replace("Microsoft.Xna.Framework.Content.", "");
             if (TypeReaderMap.TryGetValue(wanted, out var reader)) return reader;
             var (genericName, args) = SplitGenericTypeName(wanted);
-            if (genericName == null) return default;
-            if (TypeReaderMap.TryGetValue(genericName, out reader) && reader is GenericReader generic) {
+            if (genericName != null && TypeReaderMap.TryGetValue(genericName, out reader) && reader is GenericReader generic) {
                 reader = Create(generic, args);
                 if (reader.Name != wanted) throw new Exception("ERROR");
                 return Add(reader);

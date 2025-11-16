@@ -212,7 +212,7 @@ public unsafe partial class Binary_Dcb : IHaveMetaInfo {
         var startPosition = r.BaseStream.Position;
         while (r.BaseStream.Position < maxPosition) {
             var offset = r.BaseStream.Position - startPosition;
-            var str = r.ReadVUString();
+            var str = r.ReadVWString();
             b.Add(str);
             ValueMap[(uint)offset] = str;
         }

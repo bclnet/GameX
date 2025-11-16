@@ -83,14 +83,14 @@ public unsafe class Binary_Dat : PakBinary<Binary_Dat> {
             var header = r.ReadS<F1_Header>();
             var directoryPaths = new string[header.DirectoryCount];
             for (var i = 0; i < header.DirectoryCount; i++)
-                directoryPaths[i] = r.ReadL8Encoding().Replace('\\', '/');
+                directoryPaths[i] = r.ReadL8UString().Replace('\\', '/');
             // Create file metadatas
             var files = new List<FileSource>(); source.Files = files;
             for (var i = 0; i < header.DirectoryCount; i++) {
                 var directory = r.ReadS<F1_Directory>();
                 var directoryPath = directoryPaths[i] != "." ? directoryPaths[i] + "/" : string.Empty;
                 for (var j = 0; j < directory.FileCount; j++) {
-                    var path = directoryPath + r.ReadL8Encoding().Replace('\\', '/');
+                    var path = directoryPath + r.ReadL8UString().Replace('\\', '/');
                     var file = r.ReadS<F1_File>();
                     files.Add(new FileSource {
                         Path = path,
@@ -114,7 +114,7 @@ public unsafe class Binary_Dat : PakBinary<Binary_Dat> {
             // Create file metadatas
             var files = new FileSource[r.ReadInt32()]; source.Files = files;
             for (var i = 0; i < files.Length; i++) {
-                var path = r.ReadL32Encoding().Replace('\\', '/');
+                var path = r.ReadL32UString().Replace('\\', '/');
                 var file = r.ReadS<F2_File>();
                 files[i] = new FileSource {
                     Path = path,

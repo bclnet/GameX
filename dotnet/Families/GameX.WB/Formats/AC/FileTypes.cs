@@ -29,16 +29,14 @@ public abstract class FileType //(uint Id)
 /// </summary>
 //: FileTypes.Animation
 [PakFileType(PakFileType.Animation)]
-public class Animation : FileType, IHaveMetaInfo
-{
+public class Animation : FileType, IHaveMetaInfo {
     public readonly AnimationFlags Flags;
     public readonly uint NumParts;
     public readonly uint NumFrames;
     public readonly Frame[] PosFrames;
     public readonly AnimationFrame[] PartFrames;
 
-    public Animation(BinaryReader r)
-    {
+    public Animation(BinaryReader r) {
         Id = r.ReadUInt32();
         Flags = (AnimationFlags)r.ReadUInt32();
         NumParts = r.ReadUInt32();
@@ -59,15 +57,13 @@ public class Animation : FileType, IHaveMetaInfo
 #region BadData
 //: FileTypes.BadData
 [PakFileType(PakFileType.BadData)]
-public class BadData : FileType, IHaveMetaInfo
-{
+public class BadData : FileType, IHaveMetaInfo {
     public const uint FILE_ID = 0x0E00001A;
 
     // Key is a list of a WCIDs that are "bad" and should not exist. The value is always 1 (could be a bool?)
     public readonly IDictionary<uint, uint> Bad;
 
-    public BadData(BinaryReader r)
-    {
+    public BadData(BinaryReader r) {
         Id = r.ReadUInt32();
         Bad = r.Skip(2).ReadL16PMany<uint, uint>("I", x => x.ReadUInt32());
     }
@@ -82,15 +78,13 @@ public class BadData : FileType, IHaveMetaInfo
 #region CharGen
 //: FileTypes.CharGen
 [PakFileType(PakFileType.CharacterGenerator)]
-public class CharGen : FileType, IHaveMetaInfo
-{
+public class CharGen : FileType, IHaveMetaInfo {
     public const uint FILE_ID = 0x0E000002;
 
     public readonly StarterArea[] StarterAreas;
     public readonly IDictionary<uint, HeritageGroupCG> HeritageGroups;
 
-    public CharGen(BinaryReader r)
-    {
+    public CharGen(BinaryReader r) {
         Id = r.ReadUInt32();
         r.Skip(4);
         StarterAreas = r.ReadLV8FArray(x => new StarterArea(x));
@@ -121,8 +115,7 @@ public class CharGen : FileType, IHaveMetaInfo
 #region ChatPoseTable
 //: FileTypes.ChatPoseTable
 [PakFileType(PakFileType.ChatPoseTable)]
-public class ChatPoseTable : FileType, IHaveMetaInfo
-{
+public class ChatPoseTable : FileType, IHaveMetaInfo {
     public const uint FILE_ID = 0x0E000007;
 
     // Key is a emote command, value is the state you are enter into
@@ -130,11 +123,10 @@ public class ChatPoseTable : FileType, IHaveMetaInfo
     // Key is the state, value are the strings that players see during the emote
     public readonly IDictionary<string, ChatEmoteData> ChatEmoteHash;
 
-    public ChatPoseTable(BinaryReader r)
-    {
+    public ChatPoseTable(BinaryReader r) {
         Id = r.ReadUInt32();
-        ChatPoseHash = r.Skip(2).ReadL16FMany(x => (x.ReadL16Encoding(Encoding.Default), x.Align()).Item1, x => (x.ReadL16Encoding(Encoding.Default), x.Align()).Item1);
-        ChatEmoteHash = r.Skip(2).ReadL16FMany(x => (x.ReadL16Encoding(Encoding.Default), x.Align()).Item1, x => new ChatEmoteData(x));
+        ChatPoseHash = r.Skip(2).ReadL16FMany(x => (x.ReadL16UString(), x.Align()).Item1, x => (x.ReadL16UString(), x.Align()).Item1);
+        ChatEmoteHash = r.Skip(2).ReadL16FMany(x => (x.ReadL16UString(), x.Align()).Item1, x => new ChatEmoteData(x));
     }
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
@@ -156,8 +148,7 @@ public class ChatPoseTable : FileType, IHaveMetaInfo
 /// </remarks>
 //: FileTypes.ClothingTable
 [PakFileType(PakFileType.Clothing)]
-public class ClothingTable : FileType, IHaveMetaInfo
-{
+public class ClothingTable : FileType, IHaveMetaInfo {
     /// <summary>
     /// Key is the setup model id
     /// </summary>
@@ -167,8 +158,7 @@ public class ClothingTable : FileType, IHaveMetaInfo
     /// </summary>
     public readonly IDictionary<uint, CloSubPalEffect> ClothingSubPalEffects;
 
-    public ClothingTable(BinaryReader r)
-    {
+    public ClothingTable(BinaryReader r) {
         Id = r.ReadUInt32();
         ClothingBaseEffects = r.Skip(2).ReadL16PMany<uint, ClothingBaseEffect>("I", x => new ClothingBaseEffect(x));
         ClothingSubPalEffects = r.Skip(2).ReadL16PMany<uint, CloSubPalEffect>("I", x => new CloSubPalEffect(x));
@@ -188,13 +178,11 @@ public class ClothingTable : FileType, IHaveMetaInfo
     /// </summary>
     /// <param name="setupId">Defaults to HUMAN_MALE if not set, which is good enough</param>
     /// <returns></returns>
-    public CoverageMask? GetVisualPriority(uint setupId = 0x02000001)
-    {
+    public CoverageMask? GetVisualPriority(uint setupId = 0x02000001) {
         if (!ClothingBaseEffects.TryGetValue(setupId, out var clothingBaseEffect)) return null;
         CoverageMask visualPriority = 0;
         foreach (var t in clothingBaseEffect.CloObjectEffects)
-            switch (t.Index)
-            {
+            switch (t.Index) {
                 case 0: // HUMAN_ABDOMEN;
                     visualPriority |= CoverageMask.OuterwearAbdomen; break;
                 case 1: // HUMAN_LEFT_UPPER_LEG;
@@ -234,18 +222,15 @@ public class ClothingTable : FileType, IHaveMetaInfo
 /// </summary>
 //: FileTypes.CombatTable
 [PakFileType(PakFileType.CombatTable)]
-public class CombatManeuverTable : FileType, IHaveMetaInfo
-{
+public class CombatManeuverTable : FileType, IHaveMetaInfo {
     public readonly CombatManeuver[] CMT;
     public readonly Dictionary<MotionStance, AttackHeights> Stances;
 
-    public CombatManeuverTable(BinaryReader r)
-    {
+    public CombatManeuverTable(BinaryReader r) {
         Id = r.ReadUInt32(); // This should always equal the fileId
         CMT = r.ReadL32FArray(x => new CombatManeuver(x));
         Stances = [];
-        foreach (var maneuver in CMT)
-        {
+        foreach (var maneuver in CMT) {
             if (!Stances.TryGetValue(maneuver.Style, out var attackHeights)) Stances.Add(maneuver.Style, attackHeights = new AttackHeights());
             if (!attackHeights.Table.TryGetValue(maneuver.AttackHeight, out var attackTypes)) attackHeights.Table.Add(maneuver.AttackHeight, attackTypes = new AttackTypes());
             if (!attackTypes.Table.TryGetValue(maneuver.AttackType, out var motionCommands)) attackTypes.Table.Add(maneuver.AttackType, motionCommands = new List<MotionCommand>());
@@ -260,17 +245,13 @@ public class CombatManeuverTable : FileType, IHaveMetaInfo
     ];
 
     //: was:ShowCombatTable
-    public override string ToString()
-    {
+    public override string ToString() {
         var b = new StringBuilder();
-        foreach (var stance in Stances)
-        {
+        foreach (var stance in Stances) {
             b.AppendLine($"- {stance.Key}");
-            foreach (var attackHeight in stance.Value.Table)
-            {
+            foreach (var attackHeight in stance.Value.Table) {
                 b.AppendLine($"  - {attackHeight.Key}");
-                foreach (var attackType in attackHeight.Value.Table)
-                {
+                foreach (var attackType in attackHeight.Value.Table) {
                     b.AppendLine($"    - {attackType.Key}");
                     foreach (var motion in attackType.Value) b.AppendLine($"      - {motion}");
                 }
@@ -280,13 +261,11 @@ public class CombatManeuverTable : FileType, IHaveMetaInfo
     }
 
 
-    public class AttackHeights
-    {
+    public class AttackHeights {
         public readonly Dictionary<AttackHeight, AttackTypes> Table = new Dictionary<AttackHeight, AttackTypes>();
     }
 
-    public class AttackTypes
-    {
+    public class AttackTypes {
         // technically there is another MinSkillLevels here in the data,
         // but every MinSkillLevel in the client dats are always 0
         public readonly Dictionary<AttackType, List<MotionCommand>> Table = new Dictionary<AttackType, List<MotionCommand>>();
@@ -294,8 +273,7 @@ public class CombatManeuverTable : FileType, IHaveMetaInfo
 
     public static readonly List<MotionCommand> Invalid = new List<MotionCommand>() { MotionCommand.Invalid };
 
-    public List<MotionCommand> GetMotion(MotionStance stance, AttackHeight attackHeight, AttackType attackType, MotionCommand prevMotion)
-    {
+    public List<MotionCommand> GetMotion(MotionStance stance, AttackHeight attackHeight, AttackType attackType, MotionCommand prevMotion) {
         if (!Stances.TryGetValue(stance, out var attackHeights)) return Invalid;
         if (!attackHeights.Table.TryGetValue(attackHeight, out var attackTypes)) return Invalid;
         if (!attackTypes.Table.TryGetValue(attackType, out var maneuvers)) return Invalid;
@@ -340,14 +318,12 @@ public class CombatManeuverTable : FileType, IHaveMetaInfo
 /// </summary>
 //: FileTypes.ContractTable
 [PakFileType(PakFileType.ContractTable)]
-public class ContractTable : FileType, IHaveMetaInfo
-{
+public class ContractTable : FileType, IHaveMetaInfo {
     public const uint FILE_ID = 0x0E00001D;
 
     public readonly IDictionary<uint, Contract> Contracts;
 
-    public ContractTable(BinaryReader r)
-    {
+    public ContractTable(BinaryReader r) {
         Id = r.ReadUInt32();
         Contracts = r.Skip(2).ReadL16PMany<uint, Contract>("I", x => new Contract(x));
     }
@@ -367,8 +343,7 @@ public class ContractTable : FileType, IHaveMetaInfo
 /// A description of each DidMapper is in DidMapper entry 0x25000000
 /// </summary>
 [PakFileType(PakFileType.DidMapper)]
-public class DidMapper : FileType, IHaveMetaInfo
-{
+public class DidMapper : FileType, IHaveMetaInfo {
     // The client/server designation is guessed based on the content in each list.
     // The keys in these two Dictionaries are common. So ClientEnumToId[key] = ClientEnumToName[key].
     public readonly NumberingType ClientIDNumberingType; // bitfield designating how the numbering is organized. Not really needed for our usage.
@@ -381,17 +356,16 @@ public class DidMapper : FileType, IHaveMetaInfo
     public readonly NumberingType ServerNameNumberingType; // bitfield designating how the numbering is organized. Not really needed for our usage.
     public readonly IDictionary<uint, string> ServerEnumToName; // _EnumToName
 
-    public DidMapper(BinaryReader r)
-    {
+    public DidMapper(BinaryReader r) {
         Id = r.ReadUInt32();
         ClientIDNumberingType = (NumberingType)r.ReadByte();
         ClientEnumToID = r.ReadLV8PMany<uint, uint>("I", x => x.ReadUInt32());
         ClientNameNumberingType = (NumberingType)r.ReadByte();
-        ClientEnumToName = r.ReadLV8PMany<uint, string>("I", x => x.ReadL8Encoding(Encoding.Default));
+        ClientEnumToName = r.ReadLV8PMany<uint, string>("I", x => x.ReadL8UString());
         ServerIDNumberingType = (NumberingType)r.ReadByte();
         ServerEnumToID = r.ReadLV8PMany<uint, uint>("I", x => x.ReadUInt32());
         ServerNameNumberingType = (NumberingType)r.ReadByte();
-        ServerEnumToName = r.ReadLV8PMany<uint, string>("I", x => x.ReadL8Encoding(Encoding.Default));
+        ServerEnumToName = r.ReadLV8PMany<uint, string>("I", x => x.ReadL8UString());
     }
 
     //: FileTypes.DidMapper
@@ -424,8 +398,7 @@ public class DidMapper : FileType, IHaveMetaInfo
 /// </summary>
 //: FileTypes.DualDidMapper
 [PakFileType(PakFileType.DualDidMapper)]
-public class DualDidMapper : FileType, IHaveMetaInfo
-{
+public class DualDidMapper : FileType, IHaveMetaInfo {
     // The client/server designation is guessed based on the content in each list.
     // The keys in these two Dictionaries are common. So ClientEnumToId[key] = ClientEnumToName[key].
     public readonly NumberingType ClientIDNumberingType; // bitfield designating how the numbering is organized. Not really needed for our usage.
@@ -438,17 +411,16 @@ public class DualDidMapper : FileType, IHaveMetaInfo
     public readonly NumberingType ServerNameNumberingType; // bitfield designating how the numbering is organized. Not really needed for our usage.
     public readonly IDictionary<uint, string> ServerEnumToName; // _EnumToName
 
-    public DualDidMapper(BinaryReader r)
-    {
+    public DualDidMapper(BinaryReader r) {
         Id = r.ReadUInt32();
         ClientIDNumberingType = (NumberingType)r.ReadByte();
         ClientEnumToID = r.ReadLV8PMany<uint, uint>("I", x => x.ReadUInt32());
         ClientNameNumberingType = (NumberingType)r.ReadByte();
-        ClientEnumToName = r.ReadLV8PMany<uint, string>("I", x => x.ReadL8Encoding(Encoding.Default));
+        ClientEnumToName = r.ReadLV8PMany<uint, string>("I", x => x.ReadL8UString());
         ServerIDNumberingType = (NumberingType)r.ReadByte();
         ServerEnumToID = r.ReadLV8PMany<uint, uint>("I", x => x.ReadUInt32());
         ServerNameNumberingType = (NumberingType)r.ReadByte();
-        ServerEnumToName = r.ReadLV8PMany<uint, string>("I", x => x.ReadL8Encoding(Encoding.Default));
+        ServerEnumToName = r.ReadLV8PMany<uint, string>("I", x => x.ReadL8UString());
     }
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
@@ -469,18 +441,16 @@ public class DualDidMapper : FileType, IHaveMetaInfo
 #region EnumMapper
 //: FileTypes.EnumMapper
 [PakFileType(PakFileType.EnumMapper)]
-public class EnumMapper : FileType, IHaveMetaInfo
-{
+public class EnumMapper : FileType, IHaveMetaInfo {
     public readonly uint BaseEnumMap; // _base_emp_did
     public readonly NumberingType NumberingType;
     public readonly IDictionary<uint, string> IdToStringMap; // _id_to_string_map
 
-    public EnumMapper(BinaryReader r)
-    {
+    public EnumMapper(BinaryReader r) {
         Id = r.ReadUInt32();
         BaseEnumMap = r.ReadUInt32();
         NumberingType = (NumberingType)r.ReadByte();
-        IdToStringMap = r.ReadLV8PMany<uint, string>("I", x => x.ReadL8Encoding(Encoding.Default));
+        IdToStringMap = r.ReadLV8PMany<uint, string>("I", x => x.ReadL8UString());
     }
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
@@ -505,8 +475,7 @@ public class EnumMapper : FileType, IHaveMetaInfo
 /// </remarks>
 //: FileTypes.EnvCell
 [PakFileType(PakFileType.EnvCell)]
-public class EnvCell : FileType, IHaveMetaInfo
-{
+public class EnvCell : FileType, IHaveMetaInfo {
     public readonly EnvCellFlags Flags;
     public readonly uint[] Surfaces; // 0x08000000 surfaces (which contains degrade/quality info to reference the specific 0x06000000 graphics)
     public readonly uint EnvironmentId; // the 0x0D000000 model of the pre-fab dungeon block
@@ -518,8 +487,7 @@ public class EnvCell : FileType, IHaveMetaInfo
     public readonly uint RestrictionObj;
     public bool SeenOutside => Flags.HasFlag(EnvCellFlags.SeenOutside);
 
-    public EnvCell(BinaryReader r)
-    {
+    public EnvCell(BinaryReader r) {
         Id = r.ReadUInt32();
         Flags = (EnvCellFlags)r.ReadUInt32();
         r.Skip(4); // Skip ahead 4 bytes, because this is the CellId. Again. Twice.
@@ -558,12 +526,10 @@ public class EnvCell : FileType, IHaveMetaInfo
 /// These are basically pre-fab regions for things like the interior of a dungeon.
 /// </summary>
 [PakFileType(PakFileType.Environment)]
-public class Environment : FileType, IHaveMetaInfo
-{
+public class Environment : FileType, IHaveMetaInfo {
     public readonly IDictionary<uint, CellStruct> Cells;
 
-    public Environment(BinaryReader r)
-    {
+    public Environment(BinaryReader r) {
         Id = r.ReadUInt32(); // this will match fileId
         Cells = r.ReadL32PMany<uint, CellStruct>("I", x => new CellStruct(x));
     }
@@ -581,8 +547,7 @@ public class Environment : FileType, IHaveMetaInfo
 /// It is essentially a map to a specific texture file (spritemap) that contains all the characters in this font.
 /// </summary>
 [PakFileType(PakFileType.Font)]
-public class Font : FileType, IHaveMetaInfo
-{
+public class Font : FileType, IHaveMetaInfo {
     public readonly uint MaxCharHeight;
     public readonly uint MaxCharWidth;
     //public uint NumCharacters => (uint)CharDescs.Length;
@@ -593,8 +558,7 @@ public class Font : FileType, IHaveMetaInfo
     public readonly uint ForegroundSurfaceDataID; // This is a DataID to a Texture (0x06) type, if set
     public readonly uint BackgroundSurfaceDataID; // This is a DataID to a Texture (0x06) type, if set
 
-    public Font(BinaryReader r)
-    {
+    public Font(BinaryReader r) {
         Id = r.ReadUInt32();
         MaxCharHeight = r.ReadUInt32();
         MaxCharWidth = r.ReadUInt32();
@@ -619,8 +583,7 @@ public class Font : FileType, IHaveMetaInfo
 /// And thanks alot to Pea as well whos hard work surely helped in the creation of those Tools too.
 /// </summary>
 [PakFileType(PakFileType.ObjectHierarchy)]
-public class GeneratorTable : FileType, IHaveMetaInfo
-{
+public class GeneratorTable : FileType, IHaveMetaInfo {
     public const uint FILE_ID = 0x0E00000D;
 
     public readonly Generator Generators;
@@ -633,8 +596,7 @@ public class GeneratorTable : FileType, IHaveMetaInfo
     /// </summary>
     public readonly Generator[] WeenieObjectsItems;
 
-    public GeneratorTable(BinaryReader r)
-    {
+    public GeneratorTable(BinaryReader r) {
         Id = r.ReadUInt32();
         Generators = new Generator(r);
         PlayDayItems = Generators.Items[0].Items;
@@ -659,8 +621,7 @@ public class GeneratorTable : FileType, IHaveMetaInfo
 /// </summary>
 //: FileTypes.GfxObj
 [PakFileType(PakFileType.GfxObject)]
-public class GfxObj : FileType, IHaveMetaInfo
-{
+public class GfxObj : FileType, IHaveMetaInfo {
     public readonly GfxObjFlags Flags;
     public readonly uint[] Surfaces; // also referred to as m_rgSurfaces in the client
     public readonly CVertexArray VertexArray;
@@ -671,22 +632,19 @@ public class GfxObj : FileType, IHaveMetaInfo
     public readonly BspTree DrawingBSP;
     public readonly uint DIDDegrade;
 
-    public GfxObj(BinaryReader r)
-    {
+    public GfxObj(BinaryReader r) {
         Id = r.ReadUInt32();
         Flags = (GfxObjFlags)r.ReadUInt32();
         Surfaces = r.ReadLV8PArray<uint>("I");
         VertexArray = new CVertexArray(r);
         // Has Physics 
-        if ((Flags & GfxObjFlags.HasPhysics) != 0)
-        {
+        if ((Flags & GfxObjFlags.HasPhysics) != 0) {
             PhysicsPolygons = r.ReadLV8PMany<ushort, Polygon>("H", x => new Polygon(x));
             PhysicsBSP = new BspTree(r, BSPType.Physics);
         }
         SortCenter = r.ReadVector3();
         // Has Drawing 
-        if ((Flags & GfxObjFlags.HasDrawing) != 0)
-        {
+        if ((Flags & GfxObjFlags.HasDrawing) != 0) {
             Polygons = r.ReadLV8PMany<ushort, Polygon>("H", x => new Polygon(x));
             DrawingBSP = new BspTree(r, BSPType.Drawing);
         }
@@ -716,12 +674,10 @@ public class GfxObj : FileType, IHaveMetaInfo
 /// </summary>
 //: FileTypes.DegradeInfo
 [PakFileType(PakFileType.DegradeInfo)]
-public class GfxObjDegradeInfo : FileType, IHaveMetaInfo
-{
+public class GfxObjDegradeInfo : FileType, IHaveMetaInfo {
     public readonly GfxObjInfo[] Degrades;
 
-    public GfxObjDegradeInfo(BinaryReader r)
-    {
+    public GfxObjDegradeInfo(BinaryReader r) {
         Id = r.ReadUInt32();
         Degrades = r.ReadL32FArray(x => new GfxObjInfo(x));
     }
@@ -749,21 +705,18 @@ public class GfxObjDegradeInfo : FileType, IHaveMetaInfo
 /// Special thanks to the GDLE team for pointing me the right direction on how/where to find this info in the dat files- OptimShi
 /// </summary>
 //: New
-public class Iteration : FileType, IHaveMetaInfo
-{
+public class Iteration : FileType, IHaveMetaInfo {
     public const uint FILE_ID = 0xFFFF0001;
 
     public readonly int[] Ints;
     public readonly bool Sorted;
 
-    public Iteration(BinaryReader r)
-    {
+    public Iteration(BinaryReader r) {
         Ints = new[] { r.ReadInt32(), r.ReadInt32() };
         Sorted = r.ReadBoolean(); r.Align();
     }
 
-    public override string ToString()
-    {
+    public override string ToString() {
         var b = new StringBuilder();
         for (var i = 0; i < Ints.Length; i++) b.Append($"{Ints[i]},");
         b.Append(Sorted ? "1" : "0");
@@ -793,8 +746,7 @@ public class Iteration : FileType, IHaveMetaInfo
 /// </remarks>
 //: FileTypes.CellLandblock
 [PakFileType(PakFileType.LandBlock)]
-public class Landblock : FileType, IHaveMetaInfo
-{
+public class Landblock : FileType, IHaveMetaInfo {
     /// <summary>
     /// Places in the inland sea, for example, are false. Should denote presence of xxxxFFFE (where xxxx is the cell).
     /// </summary>
@@ -811,8 +763,7 @@ public class Landblock : FileType, IHaveMetaInfo
     /// </summary>
     public readonly byte[] Height;
 
-    public Landblock(BinaryReader r)
-    {
+    public Landblock(BinaryReader r) {
         Id = r.ReadUInt32();
         HasObjects = r.ReadUInt32() == 1;
         // Read in the terrain. 9x9 so 81 records.
@@ -826,8 +777,7 @@ public class Landblock : FileType, IHaveMetaInfo
     public static ushort GetScenery(ushort terrain) => GetTerrain(terrain, TerrainMask_Scenery, TerrainShift_Scenery);
     public static ushort GetTerrain(ushort terrain, ushort mask, byte shift) => (ushort)((terrain & mask) >> shift);
 
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
-    {
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
         var terrainTypes = DatabaseManager.Portal.RegionDesc.TerrainInfo.TerrainTypes;
         return [
             new($"{nameof(Landblock)}: {Id:X8}", items: [
@@ -852,8 +802,7 @@ public class Landblock : FileType, IHaveMetaInfo
 /// </remarks>
 //: FileTypes.LandblockInfo
 [PakFileType(PakFileType.LandBlockInfo)]
-public class LandblockInfo : FileType, IHaveMetaInfo
-{
+public class LandblockInfo : FileType, IHaveMetaInfo {
     /// <summary>
     /// number of EnvCells in the landblock. This should match up to the unique items in the building stab lists.
     /// </summary>
@@ -875,8 +824,7 @@ public class LandblockInfo : FileType, IHaveMetaInfo
     /// </summary>
     public readonly IDictionary<uint, uint> RestrictionTables;
 
-    public LandblockInfo(BinaryReader r)
-    {
+    public LandblockInfo(BinaryReader r) {
         Id = r.ReadUInt32();
         NumCells = r.ReadUInt32();
         Objects = r.ReadL32FArray(x => new Stab(x));
@@ -886,8 +834,7 @@ public class LandblockInfo : FileType, IHaveMetaInfo
         if ((PackMask & 1) == 1) RestrictionTables = r.Skip(2).ReadL16PMany<uint, uint>("I", x => x.ReadUInt32());
     }
 
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
-    {
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
         var landblock = Id & 0xFFFF0000;
         return [
             new MetaInfo($"{nameof(LandblockInfo)}: {Id:X8}", items: [
@@ -916,8 +863,7 @@ public class LandblockInfo : FileType, IHaveMetaInfo
 /// </summary>
 //: New
 [PakFileType(PakFileType.StringState)]
-public class LanguageInfo : FileType, IHaveMetaInfo
-{
+public class LanguageInfo : FileType, IHaveMetaInfo {
     public const uint FILE_ID = 0x41000000;
 
     public readonly int Version;
@@ -964,8 +910,7 @@ public class LanguageInfo : FileType, IHaveMetaInfo
     public readonly char[] AdditionalSettings;
     public readonly uint AdditionalFlags;
 
-    public LanguageInfo(BinaryReader r)
-    {
+    public LanguageInfo(BinaryReader r) {
         Version = r.ReadInt32();
         Base = r.ReadInt16();
         NumDecimalDigits = r.ReadInt16();
@@ -1015,8 +960,7 @@ public class LanguageInfo : FileType, IHaveMetaInfo
         new($"{nameof(LanguageInfo)}: {Id:X8}", items: [])
     ];
 
-    static char[] UnpackList(BinaryReader r)
-    {
+    static char[] UnpackList(BinaryReader r) {
         var l = new List<char>();
         var numElements = r.ReadByte();
         for (var i = 0; i < numElements; i++) l.Add((char)r.ReadUInt16());
@@ -1032,14 +976,12 @@ public class LanguageInfo : FileType, IHaveMetaInfo
 /// </summary>
 //: New
 [PakFileType(PakFileType.String)]
-public class LanguageString : FileType, IHaveMetaInfo
-{
+public class LanguageString : FileType, IHaveMetaInfo {
     public string CharBuffer;
 
-    public LanguageString(BinaryReader r)
-    {
+    public LanguageString(BinaryReader r) {
         Id = r.ReadUInt32();
-        CharBuffer = r.ReadLV8UString(); //:TODO ?FALLBACK
+        CharBuffer = r.ReadLV8WString(); //:TODO ?FALLBACK
     }
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
@@ -1050,8 +992,7 @@ public class LanguageString : FileType, IHaveMetaInfo
 
 #region MotionTable
 [PakFileType(PakFileType.MotionTable)]
-public class MotionTable : FileType, IHaveMetaInfo
-{
+public class MotionTable : FileType, IHaveMetaInfo {
     public static Dictionary<ushort, MotionCommand> RawToInterpreted = Enum.GetValues(typeof(MotionCommand)).Cast<object>().ToDictionary(x => (ushort)(uint)x, x => (MotionCommand)x);
     public readonly uint DefaultStyle;
     public readonly IDictionary<uint, uint> StyleDefaults;
@@ -1059,8 +1000,7 @@ public class MotionTable : FileType, IHaveMetaInfo
     public readonly IDictionary<uint, MotionData> Modifiers;
     public readonly IDictionary<uint, IDictionary<uint, MotionData>> Links;
 
-    public MotionTable(BinaryReader r)
-    {
+    public MotionTable(BinaryReader r) {
         Id = r.ReadUInt32();
         DefaultStyle = r.ReadUInt32();
         StyleDefaults = r.ReadL32PMany<uint, uint>("I", x => x.ReadUInt32());
@@ -1070,10 +1010,8 @@ public class MotionTable : FileType, IHaveMetaInfo
     }
 
     //: FileTypes.MotionTable
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
-    {
-        static string GetLabel(uint combined)
-        {
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
+        static string GetLabel(uint combined) {
             var stanceKey = (ushort)(combined >> 16);
             var motionKey = (ushort)combined;
             if (RawToInterpreted.TryGetValue(stanceKey, out var stance) && RawToInterpreted.TryGetValue(motionKey, out var motion)) return $"{stance} - {motion}";
@@ -1099,8 +1037,7 @@ public class MotionTable : FileType, IHaveMetaInfo
     public float GetAnimationLength(MotionCommand motion) => GetAnimationLength((MotionStance)DefaultStyle, motion, GetDefaultMotion((MotionStance)DefaultStyle));
     public float GetAnimationLength(MotionStance stance, MotionCommand motion, MotionCommand? currentMotion = null) => GetAnimationLength(stance, motion, currentMotion ?? GetDefaultMotion(stance));
 
-    public float GetCycleLength(MotionStance stance, MotionCommand motion)
-    {
+    public float GetCycleLength(MotionStance stance, MotionCommand motion) {
         var key = (uint)stance << 16 | (uint)motion & 0xFFFFF;
         if (!Cycles.TryGetValue(key, out var motionData) || motionData == null) return 0.0f;
 
@@ -1111,8 +1048,7 @@ public class MotionTable : FileType, IHaveMetaInfo
 
     static readonly ConcurrentDictionary<AttackFrameParams, List<(float time, AttackHook attackHook)>> attackFrameCache = new ConcurrentDictionary<AttackFrameParams, List<(float time, AttackHook attackHook)>>();
 
-    public List<(float time, AttackHook attackHook)> GetAttackFrames(uint motionTableId, MotionStance stance, MotionCommand motion)
-    {
+    public List<(float time, AttackHook attackHook)> GetAttackFrames(uint motionTableId, MotionStance stance, MotionCommand motion) {
         // could also do uint, and then a packed ulong, but would be more complicated maybe?
         var attackFrameParams = new AttackFrameParams(motionTableId, stance, motion);
         if (attackFrameCache.TryGetValue(attackFrameParams, out var attackFrames))
@@ -1125,11 +1061,9 @@ public class MotionTable : FileType, IHaveMetaInfo
         var frameNums = new List<int>();
         var attackHooks = new List<AttackHook>();
         var totalFrames = 0;
-        foreach (var anim in animData)
-        {
+        foreach (var anim in animData) {
             var animation = DatabaseManager.Portal.GetFile<Animation>(anim.AnimId);
-            foreach (var frame in animation.PartFrames)
-            {
+            foreach (var frame in animation.PartFrames) {
                 foreach (var hook in frame.Hooks) if (hook is AttackHook attackHook) { frameNums.Add(totalFrames); attackHooks.Add(attackHook); }
                 totalFrames++;
             }
@@ -1143,13 +1077,11 @@ public class MotionTable : FileType, IHaveMetaInfo
         return attackFrames;
     }
 
-    public AnimData[] GetAnimData(MotionStance stance, MotionCommand motion, MotionCommand currentMotion)
-    {
+    public AnimData[] GetAnimData(MotionStance stance, MotionCommand motion, MotionCommand currentMotion) {
         var animData = new AnimData[0];
         var motionKey = (uint)stance << 16 | (uint)currentMotion & 0xFFFFF;
         if (!Links.TryGetValue(motionKey, out var link) || link == null) return animData;
-        if (!link.TryGetValue((uint)motion, out var motionData) || motionData == null)
-        {
+        if (!link.TryGetValue((uint)motion, out var motionData) || motionData == null) {
             motionKey = (uint)stance << 16;
             if (!Links.TryGetValue(motionKey, out link) || link == null) return animData;
             if (!link.TryGetValue((uint)motion, out motionData) || motionData == null) return animData;
@@ -1157,22 +1089,19 @@ public class MotionTable : FileType, IHaveMetaInfo
         return motionData.Anims;
     }
 
-    public float GetAnimationLength(MotionStance stance, MotionCommand motion, MotionCommand currentMotion)
-    {
+    public float GetAnimationLength(MotionStance stance, MotionCommand motion, MotionCommand currentMotion) {
         var animData = GetAnimData(stance, motion, currentMotion);
         var length = 0.0f;
         foreach (var anim in animData) length += GetAnimationLength(anim);
         return length;
     }
 
-    public float GetAnimationLength(AnimData anim)
-    {
+    public float GetAnimationLength(AnimData anim) {
         var highFrame = anim.HighFrame;
         // get the maximum # of animation frames
         var animation = DatabaseManager.Portal.GetFile<Animation>(anim.AnimId);
         if (anim.HighFrame == -1) highFrame = (int)animation.NumFrames;
-        if (highFrame > animation.NumFrames)
-        {
+        if (highFrame > animation.NumFrames) {
             // magic windup for level 6 spells appears to be the only animation w/ bugged data
             //Console.WriteLine($"MotionTable.GetAnimationLength({anim}): highFrame({highFrame}) > animation.NumFrames({animation.NumFrames})");
             highFrame = (int)animation.NumFrames;
@@ -1181,41 +1110,33 @@ public class MotionTable : FileType, IHaveMetaInfo
         return numFrames / Math.Abs(anim.Framerate); // framerates can be negative, which tells the client to play in reverse
     }
 
-    public XPosition GetAnimationFinalPositionFromStart(XPosition position, float objScale, MotionCommand motion)
-    {
+    public XPosition GetAnimationFinalPositionFromStart(XPosition position, float objScale, MotionCommand motion) {
         var defaultStyle = (MotionStance)DefaultStyle;
         var defaultMotion = GetDefaultMotion(defaultStyle); // get the default motion for the default
         return GetAnimationFinalPositionFromStart(position, objScale, defaultMotion, defaultStyle, motion);
     }
 
-    public XPosition GetAnimationFinalPositionFromStart(XPosition position, float objScale, MotionCommand currentMotionState, MotionStance style, MotionCommand motion)
-    {
+    public XPosition GetAnimationFinalPositionFromStart(XPosition position, float objScale, MotionCommand currentMotionState, MotionStance style, MotionCommand motion) {
         var length = 0F; // init our length var...will return as 0 if not found
         var finalPosition = new XPosition();
         var motionHash = ((uint)currentMotionState & 0xFFFFFF) | ((uint)style << 16);
 
-        if (Links.ContainsKey(motionHash))
-        {
+        if (Links.ContainsKey(motionHash)) {
             var links = Links[motionHash];
-            if (links.ContainsKey((uint)motion))
-            {
+            if (links.ContainsKey((uint)motion)) {
                 // loop through all that animations to get our total count
-                for (var i = 0; i < links[(uint)motion].Anims.Length; i++)
-                {
+                for (var i = 0; i < links[(uint)motion].Anims.Length; i++) {
                     var anim = links[(uint)motion].Anims[i];
                     uint numFrames;
                     // check if the animation is set to play the whole thing, in which case we need to get the numbers of frames in the raw animation
-                    if ((anim.LowFrame == 0) && (anim.HighFrame == -1))
-                    {
+                    if ((anim.LowFrame == 0) && (anim.HighFrame == -1)) {
                         var animation = DatabaseManager.Portal.GetFile<Animation>(anim.AnimId);
                         numFrames = animation.NumFrames;
-                        if (animation.PosFrames.Length > 0)
-                        {
+                        if (animation.PosFrames.Length > 0) {
                             finalPosition = position;
                             var origin = new Vector3(position.PositionX, position.PositionY, position.PositionZ);
                             var orientation = new Quaternion(position.RotationX, position.RotationY, position.RotationZ, position.RotationW);
-                            foreach (var posFrame in animation.PosFrames)
-                            {
+                            foreach (var posFrame in animation.PosFrames) {
                                 origin += Vector3.Transform(posFrame.Origin, orientation) * objScale;
 
                                 orientation *= posFrame.Orientation;
@@ -1243,11 +1164,9 @@ public class MotionTable : FileType, IHaveMetaInfo
         return finalPosition;
     }
 
-    public MotionStance[] GetStances()
-    {
+    public MotionStance[] GetStances() {
         var stances = new HashSet<MotionStance>();
-        foreach (var cycle in Cycles.Keys)
-        {
+        foreach (var cycle in Cycles.Keys) {
             var stance = (MotionStance)(0x80000000 | cycle >> 16);
             if (!stances.Contains(stance)) stances.Add(stance);
         }
@@ -1255,23 +1174,19 @@ public class MotionTable : FileType, IHaveMetaInfo
         return stances.ToArray();
     }
 
-    public MotionCommand[] GetMotionCommands(MotionStance stance = MotionStance.Invalid)
-    {
+    public MotionCommand[] GetMotionCommands(MotionStance stance = MotionStance.Invalid) {
         var commands = new HashSet<MotionCommand>();
-        foreach (var cycle in Cycles.Keys)
-        {
+        foreach (var cycle in Cycles.Keys) {
             if ((cycle >> 16) != ((uint)stance & 0xFFFF)) continue;
             var rawCommand = (ushort)(cycle & 0xFFFF);
             var motionCommand = RawToInterpreted[rawCommand];
             if (!commands.Contains(motionCommand)) commands.Add(motionCommand);
         }
-        foreach (var kvp in Links)
-        {
+        foreach (var kvp in Links) {
             var stanceMotion = kvp.Key;
             var links = kvp.Value;
             if ((stanceMotion >> 16) != ((uint)stance & 0xFFFF)) continue;
-            foreach (var link in links.Keys)
-            {
+            foreach (var link in links.Keys) {
                 var rawCommand = (ushort)(link & 0xFFFF);
                 var motionCommand = RawToInterpreted[rawCommand];
                 if (!commands.Contains(motionCommand)) commands.Add(motionCommand);
@@ -1285,15 +1200,13 @@ public class MotionTable : FileType, IHaveMetaInfo
 #region NameFilterTable
 //: FileTypes.GeneratorTable
 [PakFileType(PakFileType.NameFilterTable)]
-public class NameFilterTable : FileType, IHaveMetaInfo
-{
+public class NameFilterTable : FileType, IHaveMetaInfo {
     public const uint FILE_ID = 0x0E000020;
 
     // Key is a list of a WCIDs that are "bad" and should not exist. The value is always 1 (could be a bool?)
     public readonly IDictionary<uint, NameFilterLanguageData> LanguageData;
 
-    public NameFilterTable(BinaryReader r)
-    {
+    public NameFilterTable(BinaryReader r) {
         Id = r.ReadUInt32();
         LanguageData = r.Skip(1).ReadL8PMany<uint, NameFilterLanguageData>("I", x => new NameFilterLanguageData(x));
     }
@@ -1312,15 +1225,13 @@ public class NameFilterTable : FileType, IHaveMetaInfo
 /// </summary>
 //: FileTypes.Palette
 [PakFileType(PakFileType.Palette)]
-public class Palette : FileType, IHaveMetaInfo
-{
+public class Palette : FileType, IHaveMetaInfo {
     /// <summary>
     /// Color data is stored in ARGB format
     /// </summary>
     public uint[] Colors;
 
-    public Palette(BinaryReader r)
-    {
+    public Palette(BinaryReader r) {
         Id = r.ReadUInt32();
         Colors = r.ReadL32PArray<uint>("I");
     }
@@ -1340,12 +1251,10 @@ public class Palette : FileType, IHaveMetaInfo
 /// </summary>
 //: FileTypes.Palette
 [PakFileType(PakFileType.PaletteSet)]
-public class PaletteSet : FileType, IHaveMetaInfo
-{
+public class PaletteSet : FileType, IHaveMetaInfo {
     public uint[] PaletteList;
 
-    public PaletteSet(BinaryReader r)
-    {
+    public PaletteSet(BinaryReader r) {
         Id = r.ReadUInt32();
         PaletteList = r.ReadL32PArray<uint>("I");
     }
@@ -1355,8 +1264,7 @@ public class PaletteSet : FileType, IHaveMetaInfo
     /// Hue is mostly (only?) used in Character Creation data.
     /// "Hue" referred to as "shade" in acclient.c
     /// </summary>
-    public uint GetPaletteID(double hue)
-    {
+    public uint GetPaletteID(double hue) {
         // Make sure the PaletteList has valid data and the hue is within valid ranges
         if (PaletteList.Length == 0 || hue < 0 || hue > 1) return 0;
         // This was the original function - had an issue specifically with Aerfalle's Pallium, WCID 8133
@@ -1383,8 +1291,7 @@ public class PaletteSet : FileType, IHaveMetaInfo
 /// </summary>
 //: FileTypes.ParticleEmitterInfo
 [PakFileType(PakFileType.ParticleEmitter)]
-public class ParticleEmitterInfo : FileType, IHaveMetaInfo
-{
+public class ParticleEmitterInfo : FileType, IHaveMetaInfo {
     public readonly uint Unknown;
     public readonly EmitterType EmitterType;
     public readonly ParticleType ParticleType;
@@ -1401,8 +1308,7 @@ public class ParticleEmitterInfo : FileType, IHaveMetaInfo
     public readonly float StartTrans; public readonly float FinalTrans; public readonly float TransRand;
     public readonly int IsParentLocal;
 
-    public ParticleEmitterInfo(BinaryReader r)
-    {
+    public ParticleEmitterInfo(BinaryReader r) {
         Id = r.ReadUInt32();
         Unknown = r.ReadUInt32();
         EmitterType = (EmitterType)r.ReadInt32();
@@ -1441,8 +1347,7 @@ public class ParticleEmitterInfo : FileType, IHaveMetaInfo
         ])
     ];
 
-    public override string ToString()
-    {
+    public override string ToString() {
         var b = new StringBuilder();
         b.AppendLine("------------------");
         b.AppendLine($"ID: {Id:X8}");
@@ -1471,12 +1376,10 @@ public class ParticleEmitterInfo : FileType, IHaveMetaInfo
 /// </summary>
 //: FileTypes.PhysicsScript
 [PakFileType(PakFileType.PhysicsScript)]
-public class PhysicsScript : FileType, IHaveMetaInfo
-{
+public class PhysicsScript : FileType, IHaveMetaInfo {
     public readonly PhysicsScriptData[] ScriptData;
 
-    public PhysicsScript(BinaryReader r)
-    {
+    public PhysicsScript(BinaryReader r) {
         Id = r.ReadUInt32();
         ScriptData = r.ReadL32FArray(x => new PhysicsScriptData(x));
     }
@@ -1495,12 +1398,10 @@ public class PhysicsScript : FileType, IHaveMetaInfo
 /// </summary>
 //: FileTypes.PhysicsScriptTable
 [PakFileType(PakFileType.PhysicsScriptTable)]
-public class PhysicsScriptTable : FileType, IHaveMetaInfo
-{
+public class PhysicsScriptTable : FileType, IHaveMetaInfo {
     public readonly IDictionary<uint, PhysicsScriptTableData> ScriptTable;
 
-    public PhysicsScriptTable(BinaryReader r)
-    {
+    public PhysicsScriptTable(BinaryReader r) {
         Id = r.ReadUInt32();
         ScriptTable = r.ReadL32PMany<uint, PhysicsScriptTableData>("I", x => new PhysicsScriptTableData(x));
     }
@@ -1516,8 +1417,7 @@ public class PhysicsScriptTable : FileType, IHaveMetaInfo
 #region QualityFilter
 //: New
 [PakFileType(PakFileType.QualityFilter)]
-public class QualityFilter : FileType, IHaveMetaInfo
-{
+public class QualityFilter : FileType, IHaveMetaInfo {
     public readonly uint[] IntStatFilter;
     public readonly uint[] Int64StatFilter;
     public readonly uint[] BoolStatFilter;
@@ -1530,8 +1430,7 @@ public class QualityFilter : FileType, IHaveMetaInfo
     public readonly uint[] Attribute2ndStatFilter;
     public readonly uint[] SkillStatFilter;
 
-    public QualityFilter(BinaryReader r)
-    {
+    public QualityFilter(BinaryReader r) {
         Id = r.ReadUInt32();
         var numInt = r.ReadUInt32();
         var numInt64 = r.ReadUInt32();
@@ -1569,8 +1468,7 @@ public class QualityFilter : FileType, IHaveMetaInfo
 /// </summary>
 //: FileTypes.Region
 [PakFileType(PakFileType.Region)]
-public class RegionDesc : FileType, IHaveMetaInfo
-{
+public class RegionDesc : FileType, IHaveMetaInfo {
     public const uint FILE_ID = 0x13000000;
 
     public readonly uint RegionNumber;
@@ -1585,12 +1483,11 @@ public class RegionDesc : FileType, IHaveMetaInfo
     public readonly TerrainDesc TerrainInfo;
     public readonly RegionMisc RegionMisc;
 
-    public RegionDesc(BinaryReader r)
-    {
+    public RegionDesc(BinaryReader r) {
         Id = r.ReadUInt32();
         RegionNumber = r.ReadUInt32();
         Version = r.ReadUInt32();
-        RegionName = r.ReadL16Encoding(Encoding.Default); r.Align(); // "Dereth"
+        RegionName = r.ReadL16UString(); r.Align(); // "Dereth"
 
         LandDefs = new LandDefs(r);
         GameTime = new GameTime(r);
@@ -1633,14 +1530,12 @@ public class RegionDesc : FileType, IHaveMetaInfo
 /// </summary>
 //: New
 [PakFileType(PakFileType.RenderTexture)]
-public class RenderTexture : FileType, IHaveMetaInfo
-{
+public class RenderTexture : FileType, IHaveMetaInfo {
     public readonly int Unknown;
     public readonly byte UnknownByte;
     public readonly uint[] Textures; // These values correspond to a Surface (0x06) entry
 
-    public RenderTexture(BinaryReader r)
-    {
+    public RenderTexture(BinaryReader r) {
         Id = r.ReadUInt32();
         Unknown = r.ReadInt32();
         UnknownByte = r.ReadByte();
@@ -1659,12 +1554,10 @@ public class RenderTexture : FileType, IHaveMetaInfo
 /// </summary>
 //: FileTypes.Scene
 [PakFileType(PakFileType.Scene)]
-public class Scene : FileType, IHaveMetaInfo
-{
+public class Scene : FileType, IHaveMetaInfo {
     public readonly ObjectDesc[] Objects;
 
-    public Scene(BinaryReader r)
-    {
+    public Scene(BinaryReader r) {
         Id = r.ReadUInt32();
         Objects = r.ReadL32FArray(x => new ObjectDesc(x));
     }
@@ -1685,16 +1578,14 @@ public class Scene : FileType, IHaveMetaInfo
 #region SecondaryAttributeTable
 //: FileTypes.SecondaryAttributeTable
 [PakFileType(PakFileType.SecondaryAttributeTable)]
-public class SecondaryAttributeTable : FileType, IHaveMetaInfo
-{
+public class SecondaryAttributeTable : FileType, IHaveMetaInfo {
     public const uint FILE_ID = 0x0E000003;
 
     public readonly Attribute2ndBase MaxHealth;
     public readonly Attribute2ndBase MaxStamina;
     public readonly Attribute2ndBase MaxMana;
 
-    public SecondaryAttributeTable(BinaryReader r)
-    {
+    public SecondaryAttributeTable(BinaryReader r) {
         Id = r.ReadUInt32();
         MaxHealth = new Attribute2ndBase(r);
         MaxStamina = new Attribute2ndBase(r);
@@ -1718,8 +1609,7 @@ public class SecondaryAttributeTable : FileType, IHaveMetaInfo
 /// </summary>
 //: FileTypes.Setup
 [PakFileType(PakFileType.Setup)]
-public class SetupModel : FileType, IHaveMetaInfo
-{
+public class SetupModel : FileType, IHaveMetaInfo {
     public static readonly SetupModel Empty = new SetupModel();
     public readonly SetupFlags Flags;
     public readonly bool AllowFreeHeading;
@@ -1747,14 +1637,12 @@ public class SetupModel : FileType, IHaveMetaInfo
 
     public bool HasMissileFlightPlacement => PlacementFrames.ContainsKey((int)Placement.MissileFlight);
 
-    SetupModel()
-    {
+    SetupModel() {
         SortingSphere = Sphere.Empty;
         SelectionSphere = Sphere.Empty;
         AllowFreeHeading = true;
     }
-    public SetupModel(BinaryReader r)
-    {
+    public SetupModel(BinaryReader r) {
         Id = r.ReadUInt32();
         Flags = (SetupFlags)r.ReadUInt32();
         AllowFreeHeading = (Flags & SetupFlags.AllowFreeHeading) != 0;
@@ -1815,15 +1703,13 @@ public class SetupModel : FileType, IHaveMetaInfo
 #region SkillTable
 //: FileTypes.SkillTable
 [PakFileType(PakFileType.SkillTable)]
-public class SkillTable : FileType, IHaveMetaInfo
-{
+public class SkillTable : FileType, IHaveMetaInfo {
     public const uint FILE_ID = 0x0E000004;
 
     // Key is the SkillId
     public IDictionary<uint, SkillBase> SkillBaseHash;
 
-    public SkillTable(BinaryReader r)
-    {
+    public SkillTable(BinaryReader r) {
         Id = r.ReadUInt32();
         SkillBaseHash = r.Skip(2).ReadL16PMany<uint, SkillBase>("I", x => new SkillBase(x));
     }
@@ -1834,8 +1720,7 @@ public class SkillTable : FileType, IHaveMetaInfo
         ))
     ];
 
-    public void AddRetiredSkills()
-    {
+    public void AddRetiredSkills() {
         SkillBaseHash.Add((int)Skill.Axe, new SkillBase(new SkillFormula(PropertyAttribute.Strength, PropertyAttribute.Coordination, 3)));
         SkillBaseHash.Add((int)Skill.Bow, new SkillBase(new SkillFormula(PropertyAttribute.Coordination, PropertyAttribute.Undef, 2)));
         SkillBaseHash.Add((int)Skill.Crossbow, new SkillBase(new SkillFormula(PropertyAttribute.Coordination, PropertyAttribute.Undef, 2)));
@@ -1857,16 +1742,14 @@ public class SkillTable : FileType, IHaveMetaInfo
 /// </summary>
 //: FileTypes.SoundTable
 [PakFileType(PakFileType.SoundTable)]
-public class SoundTable : FileType, IHaveMetaInfo
-{
+public class SoundTable : FileType, IHaveMetaInfo {
     public readonly uint Unknown; // As the name implies, not sure what this is
     // Not quite sure what this is for, but it's the same in every file.
     public readonly SoundTableData[] SoundHash;
     // The uint key corresponds to an Enum.Sound
     public readonly IDictionary<uint, SoundData> Data;
 
-    public SoundTable(BinaryReader r)
-    {
+    public SoundTable(BinaryReader r) {
         Id = r.ReadUInt32();
         Unknown = r.ReadUInt32();
         SoundHash = r.ReadL32FArray(x => new SoundTableData(x));
@@ -1890,10 +1773,8 @@ public class SoundTable : FileType, IHaveMetaInfo
 #region SpellComponentTable
 //: FileTypes.SpellComponentTable
 [PakFileType(PakFileType.SpellComponentTable)]
-public class SpellComponentTable : FileType, IHaveMetaInfo
-{
-    public enum Type
-    {
+public class SpellComponentTable : FileType, IHaveMetaInfo {
+    public enum Type {
         Scarab = 1,
         Herb = 2,
         Powder = 3,
@@ -1909,8 +1790,7 @@ public class SpellComponentTable : FileType, IHaveMetaInfo
 
     public readonly IDictionary<uint, SpellComponentBase> SpellComponents;
 
-    public SpellComponentTable(BinaryReader r)
-    {
+    public SpellComponentTable(BinaryReader r) {
         Id = r.ReadUInt32();
         var numComps = r.ReadUInt16(); r.Align(); // Should be 163 or 0xA3
         SpellComponents = r.ReadPMany<uint, SpellComponentBase>("I", x => new SpellComponentBase(r), numComps);
@@ -1922,8 +1802,7 @@ public class SpellComponentTable : FileType, IHaveMetaInfo
         ))
     ];
 
-    public static string GetSpellWords(SpellComponentTable comps, uint[] formula)
-    {
+    public static string GetSpellWords(SpellComponentTable comps, uint[] formula) {
         var firstSpellWord = string.Empty;
         var secondSpellWord = string.Empty;
         var thirdSpellWord = string.Empty;
@@ -1947,8 +1826,7 @@ public class SpellComponentTable : FileType, IHaveMetaInfo
 #region SpellTable
 //: FileTypes.SpellTable
 [PakFileType(PakFileType.SpellTable)]
-public class SpellTable : FileType, IHaveMetaInfo
-{
+public class SpellTable : FileType, IHaveMetaInfo {
     public const uint FILE_ID = 0x0E00000E;
 
     public readonly IDictionary<uint, SpellBase> Spells;
@@ -1957,8 +1835,7 @@ public class SpellTable : FileType, IHaveMetaInfo
     /// </summary>
     public readonly IDictionary<uint, SpellSet> SpellSet;
 
-    public SpellTable(BinaryReader r)
-    {
+    public SpellTable(BinaryReader r) {
         Id = r.ReadUInt32();
         Spells = r.Skip(2).ReadL16PMany<uint, SpellBase>("I", x => new SpellBase(x));
         SpellSet = r.Skip(2).ReadL16PMany<uint, SpellSet>("I", x => new SpellSet(x));
@@ -1974,15 +1851,12 @@ public class SpellTable : FileType, IHaveMetaInfo
     /// <summary>
     /// Generates a hash based on the string. Used to decrypt spell formulas and calculate taper rotation for players.
     /// </summary>
-    public static uint ComputeHash(string strToHash)
-    {
+    public static uint ComputeHash(string strToHash) {
         var result = 0L;
-        if (strToHash.Length > 0)
-        {
+        if (strToHash.Length > 0) {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             var str = Encoding.GetEncoding(1252).GetBytes(strToHash);
-            foreach (var c in str)
-            {
+            foreach (var c in str) {
                 result = c + (result << 4);
                 if ((result & 0xF0000000) != 0) result = (result ^ ((result & 0xF0000000) >> 24)) & 0x0FFFFFFF;
             }
@@ -1995,11 +1869,9 @@ public class SpellTable : FileType, IHaveMetaInfo
     /// <summary>
     /// Returns the correct spell formula, which is hashed from a player's account name
     /// </summary>
-    public static uint[] GetSpellFormula(SpellTable spellTable, uint spellId, string accountName)
-    {
+    public static uint[] GetSpellFormula(SpellTable spellTable, uint spellId, string accountName) {
         var spell = spellTable.Spells[spellId];
-        return spell.FormulaVersion switch
-        {
+        return spell.FormulaVersion switch {
             1 => RandomizeVersion1(spell, accountName),
             2 => RandomizeVersion2(spell, accountName),
             3 => RandomizeVersion3(spell, accountName),
@@ -2007,8 +1879,7 @@ public class SpellTable : FileType, IHaveMetaInfo
         };
     }
 
-    static uint[] RandomizeVersion1(SpellBase spell, string accountName)
-    {
+    static uint[] RandomizeVersion1(SpellBase spell, string accountName) {
         var comps = new List<uint>(spell.Formula);
         var hasTaper1 = false;
         var hasTaper2 = false;
@@ -2038,8 +1909,7 @@ public class SpellTable : FileType, IHaveMetaInfo
         return comps.ToArray();
     }
 
-    static uint[] RandomizeVersion2(SpellBase spell, string accountName)
-    {
+    static uint[] RandomizeVersion2(SpellBase spell, string accountName) {
         var comps = new List<uint>(spell.Formula);
 
         var key = ComputeHash(accountName);
@@ -2056,8 +1926,7 @@ public class SpellTable : FileType, IHaveMetaInfo
         return comps.ToArray();
     }
 
-    static uint[] RandomizeVersion3(SpellBase spell, string accountName)
-    {
+    static uint[] RandomizeVersion3(SpellBase spell, string accountName) {
         var comps = new List<uint>(spell.Formula);
 
         var key = ComputeHash(accountName);
@@ -2087,16 +1956,14 @@ public class SpellTable : FileType, IHaveMetaInfo
 #region StringTable
 //: FileTypes.StringTable
 [PakFileType(PakFileType.StringTable)]
-public class StringTable : FileType, IHaveMetaInfo
-{
+public class StringTable : FileType, IHaveMetaInfo {
     public static uint CharacterTitle_FileID = 0x2300000E;
 
     public readonly uint Language; // This should always be 1 for English
     public readonly byte Unknown;
     public readonly StringTableData[] StringTableData;
 
-    public StringTable(BinaryReader r)
-    {
+    public StringTable(BinaryReader r) {
         Id = r.ReadUInt32();
         Language = r.ReadUInt32();
         Unknown = r.ReadByte();
@@ -2125,8 +1992,7 @@ public class StringTable : FileType, IHaveMetaInfo
 /// </summary>
 //: FileTypes.Surface
 [PakFileType(PakFileType.Surface)]
-public class Surface : FileType, IHaveMetaInfo
-{
+public class Surface : FileType, IHaveMetaInfo {
     public readonly SurfaceType Type;
     public readonly uint OrigTextureId;
     public readonly uint OrigPaletteId;
@@ -2135,8 +2001,7 @@ public class Surface : FileType, IHaveMetaInfo
     public readonly float Luminosity;
     public readonly float Diffuse;
 
-    public Surface(BinaryReader r)
-    {
+    public Surface(BinaryReader r) {
         Type = (SurfaceType)r.ReadUInt32();
         if (Type.HasFlag(SurfaceType.Base1Image) || Type.HasFlag(SurfaceType.Base1ClipMap)) { OrigTextureId = r.ReadUInt32(); OrigPaletteId = r.ReadUInt32(); } // image or clipmap
         else ColorValue = r.ReadUInt32(); // solid color
@@ -2145,8 +2010,7 @@ public class Surface : FileType, IHaveMetaInfo
         Diffuse = r.ReadSingle();
     }
 
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
-    {
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
         var hasSurface = Type.HasFlag(SurfaceType.Base1Image) || Type.HasFlag(SurfaceType.Base1ClipMap);
         return [
             new($"{nameof(Surface)}: {Id:X8}", items: [
@@ -2166,14 +2030,12 @@ public class Surface : FileType, IHaveMetaInfo
 #region SurfaceTexture
 //: FileTypes.SurfaceTexture
 [PakFileType(PakFileType.SurfaceTexture)]
-public class SurfaceTexture : FileType, IHaveMetaInfo
-{
+public class SurfaceTexture : FileType, IHaveMetaInfo {
     public readonly int Unknown;
     public readonly byte UnknownByte;
     public readonly uint[] Textures; // These values correspond to a Surface (0x06) entry
 
-    public SurfaceTexture(BinaryReader r)
-    {
+    public SurfaceTexture(BinaryReader r) {
         Id = r.ReadUInt32();
         Unknown = r.ReadInt32();
         UnknownByte = r.ReadByte();
@@ -2193,8 +2055,7 @@ public class SurfaceTexture : FileType, IHaveMetaInfo
 #region TabooTable
 //: FileTypes.TabooTable
 [PakFileType(PakFileType.TabooTable)]
-public class TabooTable : FileType, IHaveMetaInfo
-{
+public class TabooTable : FileType, IHaveMetaInfo {
     public const uint FILE_ID = 0x0E00001E;
 
     /// <summary>
@@ -2204,8 +2065,7 @@ public class TabooTable : FileType, IHaveMetaInfo
     /// </summary>
     public readonly IDictionary<uint, TabooTableEntry> TabooTableEntries;
 
-    public TabooTable(BinaryReader r)
-    {
+    public TabooTable(BinaryReader r) {
         Id = r.ReadUInt32();
         // I don't actually know the structure of TabooTableEntries. It could be a Dictionary as I have it defined, or it could be a List where the key is just a variable in TabooTableEntry
         // I was unable to find the unpack code in the client. If someone can point me to it, I can make sure we match what the client is doing. - Mag
@@ -2214,10 +2074,8 @@ public class TabooTable : FileType, IHaveMetaInfo
         TabooTableEntries = r.ReadPMany<uint, TabooTableEntry>("I", x => new TabooTableEntry(x), length);
     }
 
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
-    {
-        var nodes = new List<MetaInfo>
-        {
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
+        var nodes = new List<MetaInfo> {
             //new($"{nameof(TabooTable)}: {Id:X8}", items: TabooTableEntries.OrderBy(i => i.Key).Select(
             //    x => new MetaInfo($"{x.Key:X8}", items: x.Value.BannedPatterns.Select(y => new MetaInfo($"{y}")))
             //))
@@ -2231,10 +2089,8 @@ public class TabooTable : FileType, IHaveMetaInfo
     /// This will search all the first entry to see if the input passes or fails.<para />
     /// Only the first entry is searched (for now) because they're all the same.
     /// </summary>
-    public bool ContainsBadWord(string input)
-    {
-        foreach (var kvp in TabooTableEntries)
-        {
+    public bool ContainsBadWord(string input) {
+        foreach (var kvp in TabooTableEntries) {
             if (kvp.Value.ContainsBadWord(input)) return true;
             // If in the future, the dat is changed so that each entry has unique patterns, remove this break.
             break;
@@ -2246,16 +2102,14 @@ public class TabooTable : FileType, IHaveMetaInfo
 
 #region Texture
 [PakFileType(PakFileType.Texture)]
-public unsafe class Texture : FileType, IHaveMetaInfo, ITexture
-{
+public unsafe class Texture : FileType, IHaveMetaInfo, ITexture {
     public readonly int Unknown;
     public readonly SurfacePixelFormat PixFormat;
     public readonly int Length;
     public readonly byte[] SourceData;
     public readonly uint[] Palette;
 
-    public Texture(BinaryReader r, FamilyGame game)
-    {
+    public Texture(BinaryReader r, FamilyGame game) {
         Id = r.ReadUInt32();
         Unknown = r.ReadInt32();
         Width = r.ReadInt32();
@@ -2265,14 +2119,12 @@ public unsafe class Texture : FileType, IHaveMetaInfo, ITexture
         SourceData = r.ReadBytes(Length);
         var hasPalette = PixFormat == PFID_INDEX16 || PixFormat == PFID_P8;
         Palette = hasPalette ? DatabaseManager.Portal.GetFile<Palette>(r.ReadUInt32()).Colors : null;
-        if (PixFormat == PFID_CUSTOM_RAW_JPEG)
-        {
+        if (PixFormat == PFID_CUSTOM_RAW_JPEG) {
             using var image = new Bitmap(new MemoryStream(SourceData));
             Width = image.Width;
             Height = image.Height;
         }
-        Format = PixFormat switch
-        {
+        Format = PixFormat switch {
             //PFID_DXT1 => (PixFormat, TextureGLFormat.CompressedRgbaS3tcDxt1Ext, TextureGLFormat.CompressedRgbaS3tcDxt1Ext, TextureUnityFormat.DXT1, TextureUnityFormat.DXT1),
             //PFID_DXT3 => (PixFormat, TextureGLFormat.CompressedRgbaS3tcDxt3Ext, TextureGLFormat.CompressedRgbaS3tcDxt3Ext, TextureUnityFormat.Unknown, TextureUnityFormat.Unknown),
             //PFID_DXT5 => (PixFormat, TextureGLFormat.CompressedRgbaS3tcDxt5Ext, TextureGLFormat.CompressedRgbaS3tcDxt5Ext, TextureUnityFormat.DXT5, TextureUnityFormat.DXT5),
@@ -2294,16 +2146,12 @@ public unsafe class Texture : FileType, IHaveMetaInfo, ITexture
     public int Depth => 0;
     public int MipMaps => 1;
     public TextureFlags TexFlags => 0;
-    public T Create<T>(string platform, Func<object, T> func)
-    {
-        byte[] Expand()
-        {
+    public T Create<T>(string platform, Func<object, T> func) {
+        byte[] Expand() {
             // https://www.hanselman.com/blog/how-do-you-use-systemdrawing-in-net-core
             // https://stackoverflow.com/questions/1563038/fast-work-with-bitmaps-in-c-sharp
-            switch (PixFormat)
-            {
-                case PFID_CUSTOM_RAW_JPEG:
-                    {
+            switch (PixFormat) {
+                case PFID_CUSTOM_RAW_JPEG: {
                         var d = new byte[Width * Height * 3];
                         using var image = new Bitmap(new MemoryStream(SourceData));
                         var data = image.LockBits(new Rectangle(0, 0, image.Width, image.Height), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
@@ -2332,8 +2180,7 @@ public unsafe class Texture : FileType, IHaveMetaInfo, ITexture
                         return d;
                     }
                 case PFID_A8: // Greyscale, also known as Cairo A8.
-                case PFID_CUSTOM_LSCAPE_ALPHA:
-                    {
+                case PFID_CUSTOM_LSCAPE_ALPHA: {
                         var d = new byte[Width * Height * 3];
                         var s = SourceData;
                         for (int i = 0, j = 0; i < d.Length; i += 3, j++) { d[i + 0] = s[j]; d[i + 1] = s[j]; d[i + 2] = s[j]; }
@@ -2342,11 +2189,9 @@ public unsafe class Texture : FileType, IHaveMetaInfo, ITexture
                 case PFID_R5G6B5: // 16-bit RGB
                     {
                         var d = new byte[Width * Height * 3];
-                        fixed (byte* _ = SourceData)
-                        {
+                        fixed (byte* _ = SourceData) {
                             var s = (ushort*)_;
-                            for (int i = 0, j = 0; i < d.Length; i += 4, j++)
-                            {
+                            for (int i = 0, j = 0; i < d.Length; i += 4, j++) {
                                 var val = s[j];
                                 d[i + 0] = (byte)((val >> 8 & 0xF) / 0xF * 255);
                                 d[i + 1] = (byte)((val >> 4 & 0xF) / 0xF * 255);
@@ -2355,14 +2200,11 @@ public unsafe class Texture : FileType, IHaveMetaInfo, ITexture
                         }
                         return d;
                     }
-                case PFID_A4R4G4B4:
-                    {
+                case PFID_A4R4G4B4: {
                         var d = new byte[Width * Height * 4];
-                        fixed (byte* s_ = SourceData)
-                        {
+                        fixed (byte* s_ = SourceData) {
                             var s = (ushort*)s_;
-                            for (int i = 0, j = 0; i < d.Length; i += 4, j++)
-                            {
+                            for (int i = 0, j = 0; i < d.Length; i += 4, j++) {
                                 var val = s[j];
                                 d[i + 0] = (byte)(((val & 0xF800) >> 11) << 3);
                                 d[i + 1] = (byte)(((val & 0x7E0) >> 5) << 2);
@@ -2376,8 +2218,7 @@ public unsafe class Texture : FileType, IHaveMetaInfo, ITexture
                         var p = Palette;
                         var d = new byte[Width * Height * 4];
                         fixed (byte* s_ = SourceData)
-                        fixed (byte* d_ = d)
-                        {
+                        fixed (byte* d_ = d) {
                             var s = (ushort*)s_;
                             var d2 = (uint*)d_;
                             for (var i = 0; i < d.Length >> 2; i++) d2[i] = p[s[i]];
@@ -2389,8 +2230,7 @@ public unsafe class Texture : FileType, IHaveMetaInfo, ITexture
                         var p = Palette;
                         var d = new byte[Width * Height * 4];
                         var s = SourceData;
-                        fixed (byte* d_ = d)
-                        {
+                        fixed (byte* d_ = d) {
                             var d2 = (uint*)d_;
                             for (var i = 0; i < d.Length >> 2; i++) d2[i] = p[s[i]];
                         }
@@ -2425,13 +2265,11 @@ public unsafe class Texture : FileType, IHaveMetaInfo, ITexture
 /// </summary>
 //: FileTypes.Sound
 [PakFileType(PakFileType.Wave)]
-public class Wave : FileType, IHaveMetaInfo
-{
+public class Wave : FileType, IHaveMetaInfo {
     public byte[] Header { get; private set; }
     public byte[] Data { get; private set; }
 
-    public Wave(BinaryReader r)
-    {
+    public Wave(BinaryReader r) {
         Id = r.ReadUInt32();
         var headerSize = r.ReadInt32();
         var dataSize = r.ReadInt32();
@@ -2439,8 +2277,7 @@ public class Wave : FileType, IHaveMetaInfo
         Data = r.ReadBytes(dataSize);
     }
 
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
-    {
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
         var type = Header[0] == 0x55 ? ".mp3" : ".wav";
         return [
             new(null, new MetaContent { Type = "AudioPlayer", Name = "Sound", Value = null, Tag = type }),
@@ -2455,8 +2292,7 @@ public class Wave : FileType, IHaveMetaInfo
     /// <summary>
     /// Exports Wave to a playable .wav file
     /// </summary>
-    public void ExportWave(string directory)
-    {
+    public void ExportWave(string directory) {
         var ext = Header[0] == 0x55 ? ".mp3" : ".wav";
         var filename = Path.Combine(directory, Id.ToString("X8") + ext);
         // Good summary of the header for a WAV file and what all this means
@@ -2466,8 +2302,7 @@ public class Wave : FileType, IHaveMetaInfo
         f.Close();
     }
 
-    public void WriteData(Stream stream)
-    {
+    public void WriteData(Stream stream) {
         var w = new BinaryWriter(stream);
         w.Write(Encoding.ASCII.GetBytes("RIFF"));
         var filesize = (uint)(Data.Length + 36); // 36 is added for all the extra we're adding for the WAV header format
@@ -2492,8 +2327,7 @@ public class Wave : FileType, IHaveMetaInfo
 /// </summary>
 //: FileTypes.XpTable
 [PakFileType(PakFileType.XpTable)]
-public class XpTable : FileType, IHaveMetaInfo
-{
+public class XpTable : FileType, IHaveMetaInfo {
     public const uint FILE_ID = 0x0E000018;
 
     public readonly uint[] AttributeXpList;
@@ -2509,8 +2343,7 @@ public class XpTable : FileType, IHaveMetaInfo
     /// </summary>
     public readonly uint[] CharacterLevelSkillCreditList;
 
-    public XpTable(BinaryReader r)
-    {
+    public XpTable(BinaryReader r) {
         Id = r.ReadUInt32();
         // The counts for each "Table" are at the top of the file.
         var attributeCount = r.ReadInt32() + 1;

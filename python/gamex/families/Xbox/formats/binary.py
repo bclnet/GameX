@@ -164,8 +164,7 @@ class Binary_Xnb(IHaveMetaInfo, IWriteToStream):
             wanted = Binary_Xnb.stripAssemblyVersion(name).replace('Microsoft.Xna.Framework.Content.', '')
             if wanted in Binary_Xnb.typeReaderMap: return Binary_Xnb.typeReaderMap[wanted]
             genericName, args = Binary_Xnb.splitGenericTypeName(wanted)
-            if not genericName: return (None, None)
-            if genericName in Binary_Xnb.typeReaderMap and (generic := Binary_Xnb.typeReaderMap[genericName]) != None:
+            if genericName and genericName in Binary_Xnb.typeReaderMap and (generic := Binary_Xnb.typeReaderMap[genericName]) != None:
                 reader = Binary_Xnb.ContentReader.create(generic, args)
                 if reader.name != wanted: raise Exception('ERROR')
                 return Binary_Xnb.ContentReader.add(reader)

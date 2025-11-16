@@ -390,7 +390,7 @@ public class XKV3 : DATA, IHaveMetaInfo {
         s.Seek(0, SeekOrigin.Begin);
 
         strings = new string[r2.ReadUInt32()];
-        for (var i = 0; i < strings.Length; i++) strings[i] = r2.ReadVUString();
+        for (var i = 0; i < strings.Length; i++) strings[i] = r2.ReadVWString();
 
         Data = (IDictionary<string, object>)ParseBinaryKV3(r2, null, true);
 
@@ -432,7 +432,7 @@ public class XKV3 : DATA, IHaveMetaInfo {
         r2.BaseStream.Position += countOfEightByteValues * 8;
 
         strings = new string[countOfStrings];
-        for (var i = 0; i < countOfStrings; i++) strings[i] = r2.ReadVUString();
+        for (var i = 0; i < countOfStrings; i++) strings[i] = r2.ReadVWString();
 
         // bytes after the string table is kv types, minus 4 static bytes at the end
         var typesLength = r2.BaseStream.Length - 4 - r2.BaseStream.Position;
@@ -531,7 +531,7 @@ public class XKV3 : DATA, IHaveMetaInfo {
         var stringArrayStartPosition = r2.BaseStream.Position;
 
         strings = new string[countOfStrings];
-        for (var i = 0; i < countOfStrings; i++) strings[i] = r2.ReadVUString();
+        for (var i = 0; i < countOfStrings; i++) strings[i] = r2.ReadVWString();
 
         var typesLength = stringAndTypesBufferSize - (r2.BaseStream.Position - stringArrayStartPosition);
         types = new byte[typesLength];
@@ -1290,7 +1290,7 @@ public class RERL : Block {
             var previousPosition = r.BaseStream.Position;
             // jump to string: offset is counted from current position, so we will need to add 8 to position later
             r.BaseStream.Position += r.ReadInt64();
-            RERLInfos.Add(new RERLInfo { Id = id, Name = r.ReadVUString() });
+            RERLInfos.Add(new RERLInfo { Id = id, Name = r.ReadVWString() });
             r.BaseStream.Position = previousPosition + 8; // 8 is to account for string offset
         }
     }
@@ -1405,7 +1405,7 @@ public class VBIB : Block, IVBIB {
             .Select(j => {
                 var attribute = default(OnDiskBufferData.Attribute);
                 var previousPosition = r.BaseStream.Position;
-                attribute.SemanticName = r.ReadVUString().ToUpperInvariant(); //32 bytes long null-terminated string
+                attribute.SemanticName = r.ReadVWString().ToUpperInvariant(); //32 bytes long null-terminated string
                 r.BaseStream.Position = previousPosition + 32; // Offset is always 40 bytes from the start
                 attribute.SemanticIndex = r.ReadInt32();
                 attribute.Format = (DXGI_FORMAT)r.ReadUInt32();
@@ -1722,14 +1722,14 @@ public class D_EntityLump : XKV3_NTRO {
                     EntityFieldType.UInt => r.ReadUInt32(),
                     EntityFieldType.Integer64 => r.ReadUInt64(),
                     EntityFieldType.Vector or EntityFieldType.QAngle => new Vector3(r.ReadSingle(), r.ReadSingle(), r.ReadSingle()),
-                    EntityFieldType.CString => r.ReadVUString(), // null term variable
+                    EntityFieldType.CString => r.ReadVWString(), // null term variable
                     _ => throw new ArgumentOutOfRangeException(nameof(type), $"Unknown type {type}"),
                 }
             };
             entity.Properties.Add(keyHash, entityProperty);
         }
         for (var i = 0; i < hashedFieldsCount; i++) ReadTypedValue(r.ReadUInt32(), null); // murmur2 hashed field name (see EntityLumpKeyLookup)
-        for (var i = 0; i < stringFieldsCount; i++) ReadTypedValue(r.ReadUInt32(), r.ReadVUString());
+        for (var i = 0; i < stringFieldsCount; i++) ReadTypedValue(r.ReadUInt32(), r.ReadVWString());
         if (connections.Length > 0) entity.Connections = connections.ToList();
         return entity;
     }
@@ -8574,7 +8574,7 @@ public class D_Panorama : DATA {
         var size = r.ReadUInt16();
         for (var i = 0; i < size; i++)
             Names.Add(new NameEntry {
-                Name = r.ReadVUString(),
+                Name = r.ReadVWString(),
                 Unknown1 = r.ReadUInt32(),
                 Unknown2 = r.ReadUInt32(),
             });
@@ -8925,7 +8925,7 @@ public class D_ResourceManifest : D_NTRO {
                 var returnOffset = r.BaseStream.Position;
                 var stringOffset = r.ReadInt32();
                 r.Seek(returnOffset + stringOffset);
-                strings.Add(r.ReadVUString());
+                strings.Add(r.ReadVWString());
                 r.Seek(returnOffset + 4);
             }
             r.Seek(originalOffset + 8);
@@ -9265,9 +9265,9 @@ public class D_SoundStackScript : DATA {
             var offsetToName = offset + r.ReadInt32(); offset += 4;
             var offsetToValue = offset + r.ReadInt32(); offset += 4;
             r.Seek(offsetToName);
-            var name = r.ReadVUString();
+            var name = r.ReadVWString();
             r.Seek(offsetToValue);
-            var value = r.ReadVUString();
+            var value = r.ReadVWString();
             r.Seek(offset);
             if (SoundStackScriptValue.ContainsKey(name)) SoundStackScriptValue.Remove(name); // duplicates last wins
             SoundStackScriptValue.Add(name, value);
@@ -9516,7 +9516,7 @@ public class D_Texture : DATA, ITexture {
             var floatParamsCount = r.ReadUInt32();
             r.Peek(z => {
                 z.Seek(nameOffset);
-                sequence.Name = z.ReadVUString();
+                sequence.Name = z.ReadVWString();
 
                 if (floatParamsCount > 0) {
                     r.Seek(floatParamsOffset);
@@ -9525,7 +9525,7 @@ public class D_Texture : DATA, ITexture {
                         var floatValue = r.ReadSingle();
                         var offsetNextParam = r.BaseStream.Position;
                         r.Seek(floatParamNameOffset);
-                        var floatName = r.ReadVUString();
+                        var floatName = r.ReadVWString();
                         r.Seek(offsetNextParam);
                         sequence.FloatParams.Add(floatName, floatValue);
                     }

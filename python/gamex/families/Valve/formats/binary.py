@@ -1136,13 +1136,13 @@ class Binary_Vpk(PakBinaryT):
         # read entires
         ms = BytesIO()
         while True:
-            typeName = r.readVUString(ms=ms)
+            typeName = r.readVWString(ms=ms)
             if not typeName: break
             while True:
-                directoryName = r.readVUString(ms=ms)
+                directoryName = r.readVWString(ms=ms)
                 if not directoryName: break
                 while True:
-                    fileName = r.readVUString(ms=ms)
+                    fileName = r.readVWString(ms=ms)
                     if not fileName: break
                     # get file
                     file = FileSource(
@@ -1287,7 +1287,7 @@ class Binary_Wad3X(IHaveMetaInfo, ITexture):
         self.transparent = os.path.basename(f.path).startswith('{')
         self.format = (type, (TextureFormat.RGBA32, TexturePixel.Unknown)) if self.transparent \
             else (type, (TextureFormat.RGB24, TexturePixel.Unknown))
-        self.name = r.readFUString(16) if type == self.Formats.Tex2 or type == self.Formats.Tex else None
+        self.name = r.readFWString(16) if type == self.Formats.Tex2 or type == self.Formats.Tex else None
         self.width = r.readUInt32()
         self.height = r.readUInt32()
 

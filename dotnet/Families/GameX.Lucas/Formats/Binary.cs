@@ -605,7 +605,7 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm> {
                     ObjectOwnerTable = new byte[count];
                     ClassData = new uint[count];
                     for (var i = 0; i < count; i++) {
-                        var name = r.ReadFUString(40);
+                        var name = r.ReadFWString(40);
                         ObjectIDMap[name] = i;
                         ObjectStateTable[i] = r.ReadByte();
                         ObjectRoomTable[i] = r.ReadByte();
@@ -637,7 +637,7 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm> {
         static string[] ReadNames(BinaryReader r) {
             var values = new string[r.ReadUInt16()];
             for (var i = 0; i < values.Length; i++)
-                values[i] = r.ReadFUString(9);
+                values[i] = r.ReadFWString(9);
             return values;
         }
 

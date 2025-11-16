@@ -3,7 +3,10 @@
   "name": "Xbox Game Studios",
   "studio": "Xbox Game Studios",
   "description": "Xbox Game Studios is the video game publishing division of Microsoft, responsible for developing and publishing games for Xbox consoles and PC",
-  "url": "https://en.wikipedia.org/wiki/List_of_Xbox_Game_Studios_video_games",
+  "url": [
+    "https://en.wikipedia.org/wiki/List_of_Xbox_Game_Studios_video_games",
+    "https://en.wikipedia.org/wiki/MonoGame"
+  ],
   "samples": [
     "XboxFamily.Sample.json"
   ],

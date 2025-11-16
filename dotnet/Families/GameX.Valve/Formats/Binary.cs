@@ -1309,13 +1309,13 @@ public unsafe class Binary_Vpk : PakBinary<Binary_Vpk> {
         // read entires
         var ms = new MemoryStream();
         while (true) {
-            var typeName = r.ReadVUString(ms: ms);
+            var typeName = r.ReadVWString(ms: ms);
             if (string.IsNullOrEmpty(typeName)) break;
             while (true) {
-                var directoryName = r.ReadVUString(ms: ms);
+                var directoryName = r.ReadVWString(ms: ms);
                 if (string.IsNullOrEmpty(directoryName)) break;
                 while (true) {
-                    var fileName = r.ReadVUString(ms: ms);
+                    var fileName = r.ReadVWString(ms: ms);
                     if (string.IsNullOrEmpty(fileName)) break;
                     // get file
                     var file = new FileSource {
@@ -1483,7 +1483,7 @@ public unsafe class Binary_Wad3X : ITexture, IHaveMetaInfo {
             : (type, (TextureFormat.RGB24, TexturePixel.Unknown));
         //? (type, (TextureGLFormat.Rgba8, TextureGLPixelFormat.Rgba, TextureGLPixelType.UnsignedByte), (TextureGLFormat.Rgba8, TextureGLPixelFormat.Rgba, TextureGLPixelType.UnsignedByte), TextureUnityFormat.RGBA32, TextureUnityFormat.RGBA32)
         //: (type, (TextureGLFormat.Rgb8, TextureGLPixelFormat.Rgb, TextureGLPixelType.UnsignedByte), (TextureGLFormat.Rgb8, TextureGLPixelFormat.Rgb, TextureGLPixelType.UnsignedByte), TextureUnityFormat.RGB24, TextureUnityFormat.RGB24);
-        if (type == Formats.Tex2 || type == Formats.Tex) name = r.ReadFUString(16);
+        if (type == Formats.Tex2 || type == Formats.Tex) name = r.ReadFWString(16);
         width = (int)r.ReadUInt32();
         height = (int)r.ReadUInt32();
 

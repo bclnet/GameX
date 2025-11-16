@@ -150,9 +150,9 @@ public unsafe class Binary_Void : PakBinary<Binary_Void> {
         files = source.Files = new FileSource[numFiles];
         for (var i = 0; i < numFiles; i++) {
             var id = r.ReadUInt32E();
-            var tag1 = r.ReadL32Encoding();
-            var tag2 = r.ReadL32Encoding();
-            var path = (r.ReadL32Encoding() ?? "").Replace('\\', '/');
+            var tag1 = r.ReadL32UString();
+            var tag2 = r.ReadL32UString();
+            var path = (r.ReadL32UString() ?? "").Replace('\\', '/');
             var file = r.ReadS<V_File>();
             //var position = r.ReadUInt64E();
             //var fileSize = r.ReadUInt32E();

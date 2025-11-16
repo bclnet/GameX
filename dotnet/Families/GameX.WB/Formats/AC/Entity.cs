@@ -537,8 +537,8 @@ public class CellStruct : IHaveMetaInfo
 //: Entity.ChatEmoteData
 public class ChatEmoteData(BinaryReader r) : IHaveMetaInfo
 {
-    public readonly string MyEmote = r.ReadL16Encoding(Encoding.Default); // What the emote string is to the character doing the emote
-    public readonly string OtherEmote = (r.Align().ReadL16Encoding(Encoding.Default), r.Align()).Item1; // What the emote string is to other characters
+    public readonly string MyEmote = r.ReadL16UString(); // What the emote string is to the character doing the emote
+    public readonly string OtherEmote = (r.Align().ReadL16UString(), r.Align()).Item1; // What the emote string is to other characters
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new($"MyEmote: {MyEmote}"),
@@ -681,20 +681,20 @@ public class Contract(BinaryReader r) : IHaveMetaInfo
 {
     public readonly uint Version = r.ReadUInt32();
     public readonly uint ContractId = r.ReadUInt32();
-    public readonly string ContractName = r.ReadL16Encoding(Encoding.Default);
+    public readonly string ContractName = r.ReadL16UString();
 
-    public readonly string Description = r.Align().ReadL16Encoding(Encoding.Default);
-    public readonly string DescriptionProgress = r.Align().ReadL16Encoding(Encoding.Default);
+    public readonly string Description = r.Align().ReadL16UString();
+    public readonly string DescriptionProgress = r.Align().ReadL16UString();
 
-    public readonly string NameNPCStart = r.Align().ReadL16Encoding(Encoding.Default);
-    public readonly string NameNPCEnd = r.Align().ReadL16Encoding(Encoding.Default);
+    public readonly string NameNPCStart = r.Align().ReadL16UString();
+    public readonly string NameNPCEnd = r.Align().ReadL16UString();
 
-    public readonly string QuestflagStamped = r.Align().ReadL16Encoding(Encoding.Default);
-    public readonly string QuestflagStarted = r.Align().ReadL16Encoding(Encoding.Default);
-    public readonly string QuestflagFinished = r.Align().ReadL16Encoding(Encoding.Default);
-    public readonly string QuestflagProgress = r.Align().ReadL16Encoding(Encoding.Default);
-    public readonly string QuestflagTimer = r.Align().ReadL16Encoding(Encoding.Default);
-    public readonly string QuestflagRepeatTime = r.Align().ReadL16Encoding(Encoding.Default);
+    public readonly string QuestflagStamped = r.Align().ReadL16UString();
+    public readonly string QuestflagStarted = r.Align().ReadL16UString();
+    public readonly string QuestflagFinished = r.Align().ReadL16UString();
+    public readonly string QuestflagProgress = r.Align().ReadL16UString();
+    public readonly string QuestflagTimer = r.Align().ReadL16UString();
+    public readonly string QuestflagRepeatTime = r.Align().ReadL16UString();
 
     public readonly Position LocationNPCStart = new(r.Align());
     public readonly Position LocationNPCEnd = new(r);
@@ -762,7 +762,7 @@ public class CylSphere(BinaryReader r)
 public class DayGroup(BinaryReader r) : IHaveMetaInfo
 {
     public readonly float ChanceOfOccur = r.ReadSingle();
-    public readonly string DayName = r.ReadL16Encoding(Encoding.Default);
+    public readonly string DayName = r.ReadL16UString();
     public readonly SkyObject[] SkyObjects = r.Align().ReadL32FArray(x => new SkyObject(x));
     public readonly SkyTimeOfDay[] SkyTime = r.ReadL32FArray(x => new SkyTimeOfDay(x));
 
@@ -871,9 +871,9 @@ public class GameTime(BinaryReader r) : IHaveMetaInfo
     public uint ZeroYear = r.ReadUInt32(); // Year "0" is really "P.Y. 10" in the calendar.
     public float DayLength = r.ReadSingle();
     public uint DaysPerYear = r.ReadUInt32(); // 360. Likely for easier math so each month is same length
-    public string YearSpec = r.ReadL16Encoding(Encoding.Default); // "P.Y."
+    public string YearSpec = r.ReadL16UString(); // "P.Y."
     public TimeOfDay[] TimesOfDay = r.Align().ReadL32FArray(x => new TimeOfDay(x));
-    public string[] DaysOfTheWeek = r.ReadL32FArray(x => { var weekDay = r.ReadL16Encoding(); r.Align(); return weekDay; });
+    public string[] DaysOfTheWeek = r.ReadL32FArray(x => { var weekDay = r.ReadL16UString(); r.Align(); return weekDay; });
     public Season[] Seasons = r.ReadL32FArray(x => new Season(x));
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
@@ -1139,7 +1139,7 @@ public class NameFilterLanguageData(BinaryReader r) : IHaveMetaInfo
     public readonly uint VowelContainingSubstringLength = r.ReadUInt32();
     public readonly uint ExtraAllowedCharacters = r.ReadUInt32();
     public readonly byte Unknown = r.ReadByte();
-    public readonly string[] CompoundLetterGroups = r.ReadL32FArray(x => x.ReadLV8WString());
+    public readonly string[] CompoundLetterGroups = r.ReadL32FArray(x => x.ReadLV8W2String());
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new($"MaximumVowelsInARow: {MaximumVowelsInARow}"),
@@ -1449,7 +1449,7 @@ public class ScriptAndModData(BinaryReader r) : IHaveMetaInfo
 public class Season(BinaryReader r) : IHaveMetaInfo
 {
     public readonly uint StartDate = r.ReadUInt32();
-    public readonly string Name = (r.ReadL16Encoding(Encoding.Default), r.Align()).Item1;
+    public readonly string Name = (r.ReadL16UString(), r.Align()).Item1;
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new($"StartDate: {StartDate}"),
@@ -1590,8 +1590,8 @@ public class SkillBase : IHaveMetaInfo
     public SkillBase(SkillFormula formula) => Formula = formula;
     public SkillBase(BinaryReader r)
     {
-        Description = r.ReadL16Encoding(Encoding.Default); r.Align();
-        Name = r.ReadL16Encoding(Encoding.Default); r.Align();
+        Description = r.ReadL16UString(); r.Align();
+        Name = r.ReadL16UString(); r.Align();
         IconId = r.ReadUInt32();
         TrainedCost = r.ReadInt32();
         SpecializedCost = r.ReadInt32();
@@ -2140,9 +2140,9 @@ public class StarterArea(BinaryReader r) : IHaveMetaInfo
 public class StringTableData(BinaryReader r) : IHaveMetaInfo
 {
     public readonly uint Id = r.ReadUInt32();
-    public readonly string[] VarNames = r.ReadL16FArray(x => x.ReadLV8WString());
-    public readonly string[] Vars = r.ReadL16FArray(x => x.ReadLV8WString());
-    public readonly string[] Strings = r.ReadL32FArray(x => x.ReadLV8WString());
+    public readonly string[] VarNames = r.ReadL16FArray(x => x.ReadLV8W2String());
+    public readonly string[] Vars = r.ReadL16FArray(x => x.ReadLV8W2String());
+    public readonly string[] Strings = r.ReadL32FArray(x => x.ReadLV8W2String());
     public readonly uint[] Comments = r.ReadL32PArray<uint>("I");
     public readonly byte Unknown = r.ReadByte();
 
@@ -2344,7 +2344,7 @@ public class TerrainTex(BinaryReader r) : IHaveMetaInfo
 #region TerrainType
 public class TerrainType(BinaryReader r) : IHaveMetaInfo
 {
-    public readonly string TerrainName = r.ReadL16Encoding(Encoding.Default);
+    public readonly string TerrainName = r.ReadL16UString();
     public readonly uint TerrainColor = r.Align().ReadUInt32();
     public readonly uint[] SceneTypes = r.ReadL32PArray<uint>("I");
 
@@ -2406,7 +2406,7 @@ public class TimeOfDay(BinaryReader r) : IHaveMetaInfo
 {
     public readonly float Start = r.ReadSingle();
     public readonly bool IsNight = r.ReadUInt32() == 1;
-    public readonly string Name = (r.ReadL16Encoding(Encoding.Default), r.Align()).Item1;
+    public readonly string Name = (r.ReadL16UString(), r.Align()).Item1;
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new($"Start: {Start}"),

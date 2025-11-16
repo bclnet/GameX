@@ -521,7 +521,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red> {
                     var hash = 0x00000000FFFFFFFFUL;
                     for (var i = 0; i < header.NumFiles; i++) {
                         string path;
-                        if (cryptKey == null) path = r.ReadL16YEncoding();
+                        if (cryptKey == null) path = r.ReadL16UString();
                         else {
                             var pathBytes = r.ReadBytes(r.ReadUInt16());
                             for (var j = 0; j < pathBytes.Length; j++) { pathBytes[j] ^= (byte)(cryptKey >> j % 8); cryptKey *= 0x00000100000001B3UL; }

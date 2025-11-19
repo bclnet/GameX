@@ -14,8 +14,8 @@
     "*": {
       "pakFileType": "GameX.Xbox.XboxPakFile, GameX.Xbox"
     },
-    "Stardew": {
-      "gameType": "GameX.Xbox.StardewGame, GameX.Xbox",
+    "StardewValley": {
+      "gameType": "GameX.Xbox.StardewValleyGame, GameX.Xbox",
       "name": "Stardew Valley",
       "url": [
         "https://store.steampowered.com/app/413150/Stardew_Valley/",

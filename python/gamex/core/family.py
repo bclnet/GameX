@@ -308,11 +308,11 @@ class FamilySample:
         def __init__(self, elem: dict[str, object]):
             def switch(k,v):
                 match k:
-                    case 'path': self.path = v; return v
+                    case 'path': v = (v if isinstance(v, list) else [v]); self.paths = v; return v
                     case 'size': return v
                     case _: return v
             self.data = { k:switch(k,v) for k,v in elem.items() }
-        def __repr__(self): return f'{self.path}'
+        def __repr__(self): return f'{self.paths}'
 
     def __init__(self, elem: dict[str, object]):
         for k,v in elem.items():

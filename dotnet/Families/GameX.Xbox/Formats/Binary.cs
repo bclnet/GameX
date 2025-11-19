@@ -1,4 +1,5 @@
 using GameX.Formats;
+using Khronos.Collada;
 using OpenStack.Gfx;
 using System;
 using System.Collections.Generic;
@@ -8,6 +9,7 @@ using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
 namespace GameX.Xbox.Formats;
@@ -20,15 +22,21 @@ public class Binary_Xnb : IHaveMetaInfo, IWriteToStream, IRedirected<object> {
 
     #region Type Reader
 
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
+    public class OptionalAttribute : Attribute { public bool Resource = false; }
+
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
+    public class IgnoreAttribute : Attribute { }
+
     public class TypeReader(Type type, Type typeRead, string name, string target, bool valueType = false) {
         public Type Type = type; public MethodInfo TypeRead = typeRead.GetMethod("Read_");
-        public string Name = name;
+        [OptionalField] public string Name = name;
         public string Target = target;
         public bool ValueType = valueType;
     }
 
     public class TypeReader<T>(string name, string target, Func<ContentReader, T> read, bool valueType = false) : TypeReader(typeof(T), typeof(TypeReader<T>), name, target, valueType) {
-        public Func<ContentReader, T> Read = read; public T Read_(ContentReader r) => Read(r);
+        public Func<ContentReader, T> Read = read; public T Read_(ContentReader r, T obj) => Read(r);
     }
 
     public class GenericReader(string name, string target, MethodInfo ginit, bool valueType = false) : TypeReader<object>(name, target, null, valueType) {
@@ -46,36 +54,83 @@ public class Binary_Xnb : IHaveMetaInfo, IWriteToStream, IRedirected<object> {
         public static TypeReader _ArrayReader<T>(TypeReader<T> value) => new TypeReader<T[]>(null, null, r => r.ReadL32FArray(z => r.ReadValueOrObject(value))); // target2: $"{t}[]"
         public static TypeReader _ListReader<T>(TypeReader<T> value) => new TypeReader<List<T>>(null, null, r => r.ReadL32FList(z => r.ReadValueOrObject(value)));
         public static TypeReader _DictionaryReader<TKey, TValue>(TypeReader<TKey> key, TypeReader<TValue> value) => new TypeReader<IDictionary<TKey, TValue>>(null, null, r => r.ReadL32FMany(z => r.ReadValueOrObject(key), z => r.ReadValueOrObject(value)));
-        public static TypeReader _ReflectiveReader<T>(TypeReader<T> value) => new TypeReader<T>(null, null, r => throw new NotSupportedException()); // target2: t
-        readonly static List<TypeReader> TypeReaders = [
+        public static TypeReader _ReflectiveReader<T>(TypeReader<T> value) {
+            var type = typeof(T);
+            var baseType = type.BaseType;
+            var baseTypeReader = baseType != null && baseType != typeof(object) ? GetByTarget(baseType) : null;
+            var constructor = Reflect.GetDefaultConstructor(type);
+            var (properties, fields) = Reflect.GetAllPropertiesFields(type);
+            var values = new List<Action<ContentReader, object>>(fields.Length + properties.Length);
+            foreach (var property in properties) { Action<ContentReader, object> v; if ((v = GetMemberValue(property)) != null) values.Add(v); }
+            foreach (var field in fields) { Action<ContentReader, object> v; if ((v = GetMemberValue(field)) != null) values.Add(v); }
+            return new TypeReader<T>(null, null, r => {
+                var obj = r.Read<T>(value);
+                //if (existingInstance != null)
+                //    obj = (T)existingInstance;
+                //else
+                //    obj = (_constructor == null ? (T)Activator.CreateInstance(typeof(T)) : (T)_constructor.Invoke(null));
+                if (baseTypeReader != null) r.ReadValueOrObject(baseTypeReader, obj);
+                var boxed = (object)obj; foreach (var v in values) v(r, boxed); obj = (T)boxed;
+                return obj;
+            }); // target2: t
+        }
+        public static Action<ContentReader, object> GetMemberValue(MemberInfo member) {
+            var (property, field) = (member as PropertyInfo, member as FieldInfo);
+            if (property != null && (!property.CanRead || property.GetIndexParameters().Any())) return null;
+            // ignore
+            if (Attribute.GetCustomAttribute(member, typeof(IgnoreAttribute)) != null) return null;
+            // optional
+            var optional = (OptionalAttribute)Attribute.GetCustomAttribute(member, typeof(OptionalAttribute));
+            if (optional == null) {
+                if (property != null) {
+                    if (!property.GetGetMethod().IsPublic) return null;
+                    if (!property.CanWrite) {
+                        var typeReader = GetByTarget(property.PropertyType);
+                        //if (typeReader == null || !typeReader.CanDeserializeIntoExistingObject) return null;
+                        throw new Exception($"CanWrite {typeReader}");
+                    }
+                }
+                else if (!field.IsPublic || field.IsInitOnly) return null;
+            }
+            // setter
+            Action<object, object> setter; Type elementType;
+            if (property != null) { elementType = property.PropertyType; setter = property.CanWrite ? (o, v) => property.SetValue(o, v, null) : (o, v) => { }; }
+            else { elementType = field.FieldType; setter = field.SetValue; }
+            // resources get special treatment.
+            if (optional != null && optional.Resource) return (r, parent) => setter(parent, r.ReadResource());
+            // we need to have a reader at this point.
+            var reader = GetByTarget(elementType) ?? GetByTarget("Array") ?? throw new Exception($"Content reader could not be found for {elementType.FullName} type.");
+            // we use the construct delegate to pick the correct existing object to be the target of deserialization.
+            Func<object, object> construct = property != null && !property.CanWrite ? parent => property.GetValue(parent, null) : parent => null;
+            return (r, parent) => setter(parent, r.ReadValueOrObject(reader, construct(parent)));
+        }
+        internal readonly static List<TypeReader> Readers = [
             // Primitive types
-            new TypeReader<byte>("ByteReader", "System.Byte", r => r.ReadByte(), valueType: true),
-            new TypeReader<sbyte>("SByteReader", "System.SByte", r => r.ReadSByte(), valueType: true),
-            new TypeReader<short>("Int16Reader", "System.Int16", r => r.ReadInt16(), valueType: true),
-            new TypeReader<ushort>("UInt16Reader", "System.UInt16", r => r.ReadUInt16(), valueType: true),
-            new TypeReader<int>("Int32Reader", "System.Int32", r => r.ReadInt32(), valueType: true),
-            new TypeReader<uint>("UInt32Reader", "System.UInt32", r => r.ReadUInt32(), valueType: true),
-            new TypeReader<long>("Int64Reader", "System.Int64", r => r.ReadInt64(), valueType: true),
-            new TypeReader<ulong>("UInt64Reader", "System.UInt64", r => r.ReadUInt64(), valueType: true),
-            new TypeReader<float>("SingleReader", "System.Single", r => r.ReadSingle(), valueType: true),
-            new TypeReader<double>("DoubleReader", "System.Double", r => r.ReadDouble(), valueType: true),
-            new TypeReader<bool>("BooleanReader", "System.Boolean", r => r.ReadBoolean(), valueType: true),
-            new TypeReader<char>("CharReader", "System.Char", r => r.ReadChar(), valueType: true),
-            new TypeReader<string>("StringReader", "System.String", r => r.ReadLV7UString()),
-            new TypeReader<object>("ObjectReader", "System.Object", r => throw new NotSupportedException()),
-
+            new TypeReader<byte>("ByteReader", "Byte", r => r.ReadByte(), valueType: true),
+            new TypeReader<sbyte>("SByteReader", "SByte", r => r.ReadSByte(), valueType: true),
+            new TypeReader<short>("Int16Reader", "Int16", r => r.ReadInt16(), valueType: true),
+            new TypeReader<ushort>("UInt16Reader", "UInt16", r => r.ReadUInt16(), valueType: true),
+            new TypeReader<int>("Int32Reader", "Int32", r => r.ReadInt32(), valueType: true),
+            new TypeReader<uint>("UInt32Reader", "UInt32", r => r.ReadUInt32(), valueType: true),
+            new TypeReader<long>("Int64Reader", "Int64", r => r.ReadInt64(), valueType: true),
+            new TypeReader<ulong>("UInt64Reader", "UInt64", r => r.ReadUInt64(), valueType: true),
+            new TypeReader<float>("SingleReader", "Single", r => r.ReadSingle(), valueType: true),
+            new TypeReader<double>("DoubleReader", "Double", r => r.ReadDouble(), valueType: true),
+            new TypeReader<bool>("BooleanReader", "Boolean", r => r.ReadBoolean(), valueType: true),
+            new TypeReader<char>("CharReader", "Char", r => r.ReadChar(), valueType: true),
+            new TypeReader<string>("StringReader", "String", r => r.ReadLV7UString()),
+            new TypeReader<object>("ObjectReader", "Object", r => throw new NotSupportedException()),
             // System types
-            new GenericReader("EnumReader", "System.Enum", typeof(ContentReader).GetMethod("_EnumReader")),
-            new GenericReader("NullableReader", "System.Nullable", typeof(ContentReader).GetMethod("_NullableReader"), valueType: true),
-            new GenericReader("ArrayReader", "System.Array", typeof(ContentReader).GetMethod("_ArrayReader")),
-            new GenericReader("ListReader", "System.Collections.Generic.List", typeof(ContentReader).GetMethod("_ListReader")),
-            new GenericReader("DictionaryReader", "System.Collections.Generic.Dictionary", typeof(ContentReader).GetMethod("_DictionaryReader")),
-            new TypeReader<TimeSpan>("TimeSpanReader", "System.TimeSpan", r => { var v = r.ReadInt64(); return new TimeSpan(v); }, valueType: true),
-            new TypeReader<DateTime>("DateTimeReader", "System.DateTime", r => { var v = r.ReadInt64(); return new DateTime(v & ~(3L << 62), (DateTimeKind)(v >> 62)); }, valueType: true),
-            new TypeReader<decimal>("DecimalReader", "System.Decimal", r => { uint a = r.ReadUInt32(), b = r.ReadUInt32(), c = r.ReadUInt32(), d = r.ReadUInt32(); return 0; }, valueType: true),
+            new GenericReader("EnumReader", "Enum", typeof(ContentReader).GetMethod("_EnumReader")),
+            new GenericReader("NullableReader", "Nullable", typeof(ContentReader).GetMethod("_NullableReader"), valueType: true),
+            new GenericReader("ArrayReader", "Array", typeof(ContentReader).GetMethod("_ArrayReader")),
+            new GenericReader("ListReader", "Collections.Generic.List", typeof(ContentReader).GetMethod("_ListReader")),
+            new GenericReader("DictionaryReader", "Collections.Generic.Dictionary", typeof(ContentReader).GetMethod("_DictionaryReader")),
+            new TypeReader<TimeSpan>("TimeSpanReader", "TimeSpan", r => { var v = r.ReadInt64(); return new TimeSpan(v); }, valueType: true),
+            new TypeReader<DateTime>("DateTimeReader", "DateTime", r => { var v = r.ReadInt64(); return new DateTime(v & ~(3L << 62), (DateTimeKind)(v >> 62)); }, valueType: true),
+            new TypeReader<decimal>("DecimalReader", "Decimal", r => { uint a = r.ReadUInt32(), b = r.ReadUInt32(), c = r.ReadUInt32(), d = r.ReadUInt32(); return 0; }, valueType: true),
             new TypeReader<string>("ExternalReferenceReader", "ExternalReference", r => r.ReadString()),
-            new GenericReader("ReflectiveReader", "System.Object", typeof(ContentReader).GetMethod("_ReflectiveReader")),
-
+            new GenericReader("ReflectiveReader", "Object", typeof(ContentReader).GetMethod("_ReflectiveReader")),
             // Math types
             new TypeReader<Vector2>("Vector2Reader", "Vector2", r => r.ReadVector2(), valueType: true),
             new TypeReader<Vector3>("Vector3Reader", "Vector3", r => r.ReadVector3(), valueType: true),
@@ -91,7 +146,6 @@ public class Binary_Xnb : IHaveMetaInfo, IWriteToStream, IRedirected<object> {
             new TypeReader<Matrix4x4>("BoundingFrustumReader", "BoundingFrustum", r => r.ReadMatrix4x4()),
             new TypeReader<Ray>("RayReader", "Ray", r => new Ray(r.ReadVector3(), r.ReadVector3()), valueType: true),
             new TypeReader<Curve>("CurveReader", "Curve", r=> new Curve(r.ReadInt32(), r.ReadInt32(), r.ReadL32FArray(z => new Curve.Loop(z.ReadSingle(), z.ReadSingle(), z.ReadSingle(), z.ReadSingle(), z.ReadInt32())))),
-
             // Graphics types
             new TypeReader<object>("TextureReader", "Graphics.Texture", r => throw new NotSupportedException()),
             new TypeReader<Texture2D>("Texture2DReader", "Graphics.Texture2D", r => new Texture2D(r)),
@@ -109,37 +163,29 @@ public class Binary_Xnb : IHaveMetaInfo, IWriteToStream, IRedirected<object> {
             new TypeReader<SkinnedEffect>("SkinnedEffectReader", "Graphics.SkinnedEffect", r => new SkinnedEffect(r)),
             new TypeReader<SpriteFont>("SpriteFontReader", "Graphics.SpriteFont", r => new SpriteFont(r)),
             new TypeReader<Model>("ModelReader", "Graphics.Model", r => new Model(r)),
-
             // Media types
             new TypeReader<SoundEffect>("SoundEffectReader", "Audio.SoundEffect", r => new SoundEffect(r)),
             new TypeReader<Song>("SongReader", "Media.Song", r => new Song(r)),
             new TypeReader<Video>("VideoReader", "Media.Video", r => new Video(r))
         ];
 
-        readonly static Dictionary<string, TypeReader> TypeReaderMap = TypeReaders.ToDictionary(s => s.Name);
-        TypeReader[] Readers;
-
-        public static TypeReader Add(TypeReader reader) {
-            TypeReaders.Add(reader);
-            TypeReaderMap[reader.Name] = reader;
-            return reader;
-        }
+        internal readonly static Dictionary<string, TypeReader> ReadersByName = Readers.ToDictionary(s => s.Name);
+        internal readonly static Dictionary<string, TypeReader> ReaderByTarget = Readers.GroupBy(s => s.Target).Select(s => (s.Key, s.First())).ToDictionary(s => s.Key, s => s.Item2);
+        TypeReader[] ObjReaders;
 
         public void ReadTypeManifest() {
-            Readers = this.ReadLV7FArray(z => GetByName(this.ReadLV7UString(), ReadUInt32()));
+            ObjReaders = this.ReadLV7FArray(z => GetByName(this.ReadLV7UString(), ReadUInt32()));
             //foreach (var s in Readers.Where(x => x.Init != null)) s.Init();
         }
-
-        public object Read(TypeReader reader) => reader != null ? reader.TypeRead.Invoke(reader, [this]) : default;
-        public object ReadObject() => Read(ReadTypeId());
-        public object ReadValueOrObject(TypeReader reader) => reader.ValueType ? Read(reader) : ReadObject();
-        public T Read<T>(TypeReader reader) => reader != null ? (T)reader.TypeRead.Invoke(reader, [this]) : default;
-        public T ReadObject<T>() => Read<T>(ReadTypeId());
-        public T ReadValueOrObject<T>(TypeReader<T> reader) => reader.ValueType ? reader.Read(this) : ReadObject<T>();
-        public TypeReader ReadTypeId() { var id = (int)this.ReadVInt7() - 1; return id >= 0 ? id < Readers.Length ? Readers[id] : throw new Exception("Invalid XNB file: id is out of range.") : null; }
+        public object Read(TypeReader reader, object obj = null) => reader != null ? reader.TypeRead.Invoke(reader, [this, obj]) : default;
+        public object ReadObject(object obj = null) => Read(ReadTypeId(), obj);
+        public object ReadValueOrObject(TypeReader reader, object obj = null) => reader.ValueType ? Read(reader) : ReadObject(obj);
+        public T Read<T>(TypeReader reader, T obj = default) => reader != null ? (T)reader.TypeRead.Invoke(reader, [this, obj]) : default;
+        public T ReadObject<T>(T obj = default) => Read(ReadTypeId(), obj);
+        public T ReadValueOrObject<T>(TypeReader<T> reader, T obj = default) => reader.ValueType ? reader.Read(this) : ReadObject(obj);
+        public TypeReader ReadTypeId() { var id = (int)this.ReadVInt7() - 1; return id >= 0 ? id < ObjReaders.Length ? ObjReaders[id] : throw new Exception("Invalid XNB file: id is out of range.") : null; }
         public ContentReader Validate(string type) { var reader = ReadTypeId(); return reader != null && reader.Target == type ? this : throw new Exception("Invalid XNB file: got an unexpected id."); }
         public ResourceRef ReadResource() => new(this);
-
         public static TypeReader Create(GenericReader s, List<string> args) {
             TypeReader r;
             if (args.Count == 1) { var value = GetByTarget(args[0]); r = (TypeReader)s.GInit.MakeGenericMethod([value.Type]).Invoke(null, [value]); }
@@ -151,70 +197,30 @@ public class Binary_Xnb : IHaveMetaInfo, IWriteToStream, IRedirected<object> {
             r.ValueType = s.ValueType;
             return r;
         }
-
         public static TypeReader GetByName(string name, uint version) {
-            var wanted = StripAssemblyVersion(name).Replace("Microsoft.Xna.Framework.Content.", "");
-            if (TypeReaderMap.TryGetValue(wanted, out var reader)) return reader;
-            var (genericName, args) = SplitGenericTypeName(wanted);
-            if (genericName != null && TypeReaderMap.TryGetValue(genericName, out reader) && reader is GenericReader generic) {
+            var wanted = Reflect.StripAssemblyVersion(name).Replace("Microsoft.Xna.Framework.Content.", "");
+            if (ReadersByName.TryGetValue(wanted, out var reader)) return reader;
+            var (genericName, args) = Reflect.SplitGenericTypeName(wanted);
+            if (genericName != null && ReadersByName.TryGetValue(genericName, out reader) && reader is GenericReader generic) {
                 reader = Create(generic, args);
                 if (reader.Name != wanted) throw new Exception("ERROR");
                 return Add(reader);
             }
             throw new Exception($"Cannot find codec value '{wanted}'.");
         }
-
+        public static TypeReader GetByTarget(Type target) => GetByTarget(target.FullName.Replace("System.Numerics.", "").Replace("System.Drawing.", ""));
         public static TypeReader GetByTarget(string target) {
-            var wanted = StripAssemblyVersion(target).Replace("Microsoft.Xna.Framework.", "");
-            var reader = TypeReaders.FirstOrDefault(x => x.Target == wanted);
+            var wanted = Reflect.StripAssemblyVersion(target).Replace("Microsoft.Xna.Framework.", "").Replace("System.", "").Replace("+", ".");
+            wanted = wanted.Replace("GameX.Xbox.Formats.", "");
+            if (ReaderByTarget.TryGetValue(wanted, out var reader)) return reader;
             if (reader != null) return reader;
+            var (genericName, args) = Reflect.SplitGenericTypeName(wanted);
+            if (genericName != null && ReaderByTarget.TryGetValue(genericName, out reader) && reader is GenericReader generic) {
+                reader = Create(generic, args);
+                if (reader.Target != wanted) throw new Exception("ERROR");
+                return Add(reader);
+            }
             throw new Exception($"Cannot find value for target codec '{wanted}'.");
-        }
-
-        static string StripAssemblyVersion(string name) {
-            var commaIndex = 0;
-            while ((commaIndex = name.IndexOf(',', commaIndex)) != -1) {
-                if (commaIndex + 1 < name.Length && name[commaIndex + 1] == '[') commaIndex++;
-                else {
-                    var closeBracket = name.IndexOf(']', commaIndex);
-                    if (closeBracket != -1) name = name.Remove(commaIndex, closeBracket - commaIndex);
-                    else name = name[..commaIndex];
-                }
-            }
-            return name;
-        }
-
-        static (string, List<string>) SplitGenericTypeName(string name) {
-            // look for the ` generic marker character.
-            var pos = name.IndexOf('`');
-            if (pos == -1) return default;
-            // everything to the left of ` is the generic type name.
-            var genericName = name[..pos]; var genericArguments = new List<string>();
-            // advance to the start of the generic argument list.
-            pos++;
-            while (pos < name.Length && char.IsDigit(name[pos])) pos++;
-            while (pos < name.Length && name[pos] == '[') pos++;
-            // split up the list of generic type arguments.
-            while (pos < name.Length && name[pos] != ']') {
-                // locate the end of the current type name argument.
-                int nesting = 0, end;
-                for (end = pos; end < name.Length; end++) {
-                    // handle nested types in case we have eg. "List`1[[List`1[[Int]]]]".
-                    if (name[end] == '[') nesting++;
-                    else if (name[end] == ']') {
-                        if (nesting > 0) nesting--;
-                        else break;
-                    }
-                }
-                // extract the type name argument.
-                genericArguments.Add(name[pos..end]);
-                // skip past the type name, plus any subsequent "],[" goo.
-                pos = end;
-                if (pos < name.Length && name[pos] == ']') pos++;
-                if (pos < name.Length && name[pos] == ',') pos++;
-                if (pos < name.Length && name[pos] == '[') pos++;
-            }
-            return (genericName, genericArguments);
         }
     }
 
@@ -406,7 +412,7 @@ public class Binary_Xnb : IHaveMetaInfo, IWriteToStream, IRedirected<object> {
 
     public class AlphaTestEffect(ContentReader r) {
         public readonly string TextureReference = r.ReadLV7UString();
-        public readonly CompareFunction CompareFunction = (CompareFunction)r.ReadInt32();
+        public readonly CompareFunction AlphaFunction = (CompareFunction)r.ReadInt32();
         public readonly uint ReferenceAlpha = r.ReadUInt32();
         public readonly Vector3 DiffuseColor = r.ReadVector3();
         public readonly float Alpha = r.ReadSingle();
@@ -575,7 +581,7 @@ public class Binary_Xnb : IHaveMetaInfo, IWriteToStream, IRedirected<object> {
 
     public class Song(ContentReader r) : IHaveMetaInfo {
         public readonly string Filename = r.ReadLV7UString();
-        public readonly int Duration = r.Validate("System.Int32").ReadInt32();
+        public readonly int Duration = r.Validate("Int32").ReadInt32();
         List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
             new(null, new MetaContent { Type = "Data", Name = Path.GetFileName(file.Path), Value = this }),
             new("Texture", items: [
@@ -585,12 +591,12 @@ public class Binary_Xnb : IHaveMetaInfo, IWriteToStream, IRedirected<object> {
     }
 
     public class Video(ContentReader r) : IHaveMetaInfo {
-        public readonly string Filename = r.Validate("System.String").ReadLV7UString();
-        public readonly int Duration = r.Validate("System.Int32").ReadInt32();
-        public readonly int Width = r.Validate("System.Int32").ReadInt32();
-        public readonly int Height = r.Validate("System.Int32").ReadInt32();
-        public readonly float FramesPerSecond = r.Validate("System.Single").ReadSingle();
-        public readonly SoundtrackType SoundtrackType = (SoundtrackType)r.Validate("System.Int32").ReadInt32();
+        public readonly string Filename = r.Validate("String").ReadLV7UString();
+        public readonly int Duration = r.Validate("Int32").ReadInt32();
+        public readonly int Width = r.Validate("Int32").ReadInt32();
+        public readonly int Height = r.Validate("Int32").ReadInt32();
+        public readonly float FramesPerSecond = r.Validate("Single").ReadSingle();
+        public readonly SoundtrackType SoundtrackType = (SoundtrackType)r.Validate("Int32").ReadInt32();
         List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
             new(null, new MetaContent { Type = "Data", Name = Path.GetFileName(file.Path), Value = this }),
             new("Video", items: [
@@ -634,6 +640,7 @@ public class Binary_Xnb : IHaveMetaInfo, IWriteToStream, IRedirected<object> {
 
     public object Obj;
     public object[] Resources;
+    public bool AtEnd;
 
     public Binary_Xnb(BinaryReader r2) {
         var h = r2.ReadS<Header>();
@@ -642,7 +649,15 @@ public class Binary_Xnb : IHaveMetaInfo, IWriteToStream, IRedirected<object> {
         var resourceCount = r.ReadVInt7();
         Obj = r.ReadObject();
         Resources = r.ReadFArray(z => r.ReadObject(), resourceCount);
+        AtEnd = r.AtEnd();
         //r.EnsureAtEnd(); // h.SizeOnDisk
+    }
+
+    public static TypeReader Add(TypeReader reader) {
+        ContentReader.Readers.Add(reader);
+        if (reader.Name != null) ContentReader.ReadersByName[reader.Name] = reader;
+        if (reader.Target != null && !ContentReader.ReaderByTarget.ContainsKey(reader.Target)) ContentReader.ReaderByTarget[reader.Target] = reader;
+        return reader;
     }
 
     public void WriteToStream(Stream stream) => Obj.Serialize(stream);
@@ -652,7 +667,8 @@ public class Binary_Xnb : IHaveMetaInfo, IWriteToStream, IRedirected<object> {
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => (Obj as IHaveMetaInfo)?.GetInfoNodes(resource, file, tag) ?? [
         new(null, new MetaContent { Type = "Data", Name = Path.GetFileName(file.Path), Value = this }),
         new("Xnb", items: [
-            new($"Obj: {Obj}")
+            new($"Obj: {Obj}"),
+            new($"AtEnd: {AtEnd}")
         ])];
 }
 

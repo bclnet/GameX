@@ -1,5 +1,5 @@
 ﻿{
-    "Stardew": {
+    "StardewValley": {
         "name": "Stardew Valley",
         "files": [
             {
@@ -7,7 +7,11 @@
                 "type": "Texture2D"
             },
             {
-                "path": "Fonts/tinyFont.xnb",
+                "path": [
+                    "Fonts/tinyFont.xnb",
+                    "Fonts/Chinese.xnb",
+                    "Fonts/Chinese_round/Chinese.xnb"
+                ],
                 "type": "SpriteFont"
             },
             {
@@ -15,16 +19,12 @@
                 "type": "Text"
             },
             {
-                "path": "Fonts/Chinese.xnb",
-                "type": "Data"
-            },
-            {
                 "path": "Maps/Barn.xnb",
                 "type": "Data"
             },
             {
-                "path": "Fonts/Chinese_round/Chinese.xnb",
-                "type": "Custom"
+                "path": "Data/AdditionalLanguages.xnb",
+                "type": "Data"
             },
             {
                 "path": [
@@ -76,13 +76,7 @@
                     "Data/Weapons.xnb",
                     "Data/Weddings.xnb",
                     "Data/WildTrees.xnb",
-                    "Data/WorldMap.xnb",
-                    "Data/xxx.xnb",
-                    "Data/xxx.xnb",
-                    "Data/xxx.xnb",
-                    "Data/xxx.xnb",
-                    "Data/xxx.xnb",
-                    "Data/xxx.xnb",
+                    "Data/WorldMap.xnb"
                 ],
                 "type": "Custom"
             }

@@ -726,9 +726,9 @@ match __current__:
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
-            ForcePath = "sample:3",
+            ForcePath = "sample:4",
             Family = "Xbox",
-            Game = "Stardew", # Stardew Valley
+            Game = "StardewValley", # Stardew Valley
         )
     case _:
         familyKeys = [ "Arkane", "Beamdog", "Bethesda", "Bioware", "Black", "Blizzard", "Bohemia", "Bullfrog", "Capcom", "Cig", "Cryptic", "Crytek", "Cyanide", "EA", "Epic", "Frictional", "Frontier", "Gamebryo", "ID", "IW", "Lucas", "Monolith", "Mythic", "Nintendo", "Origin", "Red", "Rockstar", "Ubisoft", "Unity", "Unknown", "Valve", "Volition", "WB", "X2K", "Xbox" ]

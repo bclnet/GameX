@@ -10,18 +10,17 @@ using System.Threading.Tasks;
 namespace GameX.Xbox;
 
 /// <summary>
-/// StardewGame
+/// StardewValleyGame
 /// </summary>
 /// <seealso cref="GameX.FamilyGame" />
-public class StardewGame(Family family, string id, JsonElement elem, FamilyGame dgame) : FamilyGame(family, id, elem, dgame) {
+public class StardewValleyGame(Family family, string id, JsonElement elem, FamilyGame dgame) : FamilyGame(family, id, elem, dgame) {
     /// <summary>
     /// Ensures this instance.
     /// </summary>
     /// <returns></returns>
     public override void Loaded() {
         base.Loaded();
-        Binary_Xnb.ContentReader.Add(new Binary_Xnb.TypeReader<string>("BmFont.XmlSourceReader", "System.String", r => r.ReadLV7UString()));
-        Binary_Xnb.ContentReader.Add(new Binary_Xnb.TypeReader<string>("BmFont.XmlSourceReader", "System.String", r => r.ReadLV7UString()));
+        Formats.StardewValley.X.Register();
     }
 }
 

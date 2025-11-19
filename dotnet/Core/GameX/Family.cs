@@ -728,7 +728,7 @@ public class FamilySample {
         /// <summary>
         /// The path
         /// </summary>
-        public string[] Path { get; protected set; }
+        public string[] Paths { get; protected set; }
         /// <summary>
         /// The Data
         /// </summary>
@@ -741,7 +741,7 @@ public class FamilySample {
         /// <exception cref="ArgumentNullException"></exception>
         public File(JsonElement elem)
             => Data = elem.EnumerateObject().ToDictionary(x => x.Name, x => x.Name switch {
-                "path" => Path = x.Value.ValueKind == JsonValueKind.String ? [x.Value.GetString()] : [.. x.Value.EnumerateArray().Select(s => s.GetString())],
+                "path" => Paths = x.Value.ValueKind == JsonValueKind.String ? [x.Value.GetString()] : [.. x.Value.EnumerateArray().Select(s => s.GetString())],
                 "size" => x.Value.GetInt64(),
                 _ => _valueV(x.Value)
             });

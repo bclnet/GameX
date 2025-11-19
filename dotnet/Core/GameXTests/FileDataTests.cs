@@ -15,7 +15,7 @@ public class FileDataTests {
 
         // get pak with game:/uri
         var pakFile = family.OpenPakFile(file0);
-        var sample = file1.StartsWith("sample") ? pakFile.Game.GetSample(file1[7..]).Path : file1;
+        var sample = file1.StartsWith("sample") ? pakFile.Game.GetSample(file1[7..]).Paths[0] : file1;
         Log($"pak: {pakFile}, {sample}");
 
         // get file

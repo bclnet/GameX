@@ -118,9 +118,9 @@ namespace GameX.App.Explorer.Views {
         void Ready(PakFile pakFile) {
             if (string.IsNullOrEmpty(Option.ForcePath) || Option.ForcePath.StartsWith("app:")) return;
             var sample = Option.ForcePath.StartsWith("sample:") ? pakFile.Game.GetSample(Option.ForcePath[7..]) : null;
-            var forcePath = sample != null ? sample.Path : Option.ForcePath;
-            if (forcePath == null) return;
-            SelectedItem = MetaItem.FindByPathForNodes(PakNodes, forcePath, Resource);
+            var paths = sample != null ? sample.Paths : [Option.ForcePath];
+            if (paths == null) return;
+            foreach (var path in paths) SelectedItem = MetaItem.FindByPathForNodes(PakNodes, path, Resource);
         }
     }
 }

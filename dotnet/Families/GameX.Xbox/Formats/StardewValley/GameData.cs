@@ -38,7 +38,7 @@ public interface ISpawnItemData {
     /// <summary>How multiple <see cref="P:StardewValley.GameData.ISpawnItemData.StackModifiers" /> should be combined.</summary>
     QuantityModifier.QuantityModifierMode StackModifierMode { get; set; }
     /// <summary>Changes to apply to the <see cref="P:StardewValley.GameData.ISpawnItemData.Quality" />.</summary>
-    /// <remarks>These operate on the numeric quality values (i.e. <c>0</c> = normal, <c>1</c> = silver, <c>2</c> = gold, and <c>4</c> = iridium). For example, silver × 2 is gold.</remarks>
+    /// <remarks>These operate on the numeric quality values (i.e. <c>0</c> = normal, <c>1</c> = silver, <c>2</c> = gold, and <c>4</c> = iridium). For example, silver ï¿½ 2 is gold.</remarks>
     List<QuantityModifier> QualityModifiers { get; set; }
     /// <summary>How multiple <see cref="P:StardewValley.GameData.ISpawnItemData.QualityModifiers" /> should be combined.</summary>
     QuantityModifier.QuantityModifierMode QualityModifierMode { get; set; }
@@ -475,7 +475,7 @@ public class TemporaryAnimatedSpriteDefinition {
     /// <summary>The tile Y position to use in the layer depth calculation, which affects which sprite is drawn on top if two sprites overlap.</summary>
     [Optional] public float SortOffset;
     [Optional] public float AlphaFade;
-    /// <summary>A multiplier applied to the sprite size (in addition to the normal 4× pixel zoom).</summary>
+    /// <summary>A multiplier applied to the sprite size (in addition to the normal 4ï¿½ pixel zoom).</summary>
     [Optional] public float Scale = 1f;
     [Optional] public float ScaleChange;
     /// <summary>The rotation to apply to the sprite when drawn, measured in radians.</summary>
@@ -1602,7 +1602,7 @@ public class Fences {
         /// <summary>The initial health points for a fence when it's first placed, which affects how quickly it degrades. A fence loses 1/1440 points per in-game minute (roughly 0.04 points per hour or 0.5 points for a 12-hour day).</summary>
         public int Health;
         /// <summary>The minimum amount added to the health when a fence is repaired by a player.</summary>
-        /// <remarks>Repairing a fence sets its health to <c>2 × (<see cref="F:StardewValley.GameData.Fences.FenceData.Health" /> + Random(<see cref="F:StardewValley.GameData.Fences.FenceData.RepairHealthAdjustmentMinimum" />, <see cref="F:StardewValley.GameData.Fences.FenceData.RepairHealthAdjustmentMaximum" />))</c>.</remarks>
+        /// <remarks>Repairing a fence sets its health to <c>2 ï¿½ (<see cref="F:StardewValley.GameData.Fences.FenceData.Health" /> + Random(<see cref="F:StardewValley.GameData.Fences.FenceData.RepairHealthAdjustmentMinimum" />, <see cref="F:StardewValley.GameData.Fences.FenceData.RepairHealthAdjustmentMaximum" />))</c>.</remarks>
         [Optional] public float RepairHealthAdjustmentMinimum;
         /// <summary>The maximum amount added to the health when a fence is repaired by a player.</summary>
         /// <remarks>See remarks on <see cref="F:StardewValley.GameData.Fences.FenceData.RepairHealthAdjustmentMinimum" />.</remarks>
@@ -1659,7 +1659,6 @@ public class FishPonds {
         /// <summary>Custom fields ignored by the base game, for use by mods.</summary>
         [Optional] public Dictionary<string, string> CustomFields;
     }
-
     /// <summary>As part of <see cref="T:StardewValley.GameData.FishPonds.FishPondData" />, an item that can be produced by the fish pond.</summary>
     public class FishPondReward : GameData.GenericSpawnItemDataWithCondition {
         /// <summary>The minimum population needed before this output becomes available.</summary>
@@ -1669,7 +1668,6 @@ public class FishPonds {
         /// <summary>The order in which this entry should be checked, where 0 is the default value used by most entries. Entries with the same precedence are checked in the order listed.</summary>
         [Optional] public int Precedence;
     }
-
     /// <summary>As part of <see cref="T:StardewValley.GameData.FishPonds.FishPondData" />, a color to apply to the water if its fields match.</summary>
     public class FishPondWaterColor {
         public string Id;
@@ -2590,7 +2588,7 @@ public class Movies {
         /// <inheritdoc cref="F:StardewValley.GameData.Movies.MovieData.YearModulus" />
         [Optional] public int? YearRemainder;
         /// <summary>The asset name for the movie poster and screen images, or <c>null</c> to use <c>LooseSprites\Movies</c>.</summary>
-        /// <remarks>This must be a spritesheet with one 490×128 pixel row per movie. A 13×19 area in the top-left corner of the row should contain the movie poster. With a 16-pixel offset from the left edge, there should be two rows of five 90×61 pixel movie screen images, with a six-pixel gap between each image. (The movie doesn't need to use all of the image slots.)</remarks>
+        /// <remarks>This must be a spritesheet with one 490ï¿½128 pixel row per movie. A 13ï¿½19 area in the top-left corner of the row should contain the movie poster. With a 16-pixel offset from the left edge, there should be two rows of five 90ï¿½61 pixel movie screen images, with a six-pixel gap between each image. (The movie doesn't need to use all of the image slots.)</remarks>
         [Optional] public string Texture;
         /// <summary>The sprite index within the <see cref="F:StardewValley.GameData.Movies.MovieData.Texture" /> for this movie poster and screen images.</summary>
         public int SheetIndex;
@@ -2750,7 +2748,7 @@ public class Objects {
         public int SpriteIndex;
         /// <summary>When drawn as a colored object, whether to apply the color to the next sprite in the spritesheet and draw that over the main sprite. If false, the color is applied to the main sprite instead.</summary>
         [Optional] public bool ColorOverlayFromNextIndex;
-        /// <summary>A numeric value that determines how much energy (edibility × 2.5) and health (edibility × 1.125) is restored when this item is eaten. An item with an edibility of -300 can't be eaten, values from -299 to -1 reduce health and energy, and zero can be eaten but doesn't change health/energy.</summary>
+        /// <summary>A numeric value that determines how much energy (edibility ï¿½ 2.5) and health (edibility ï¿½ 1.125) is restored when this item is eaten. An item with an edibility of -300 can't be eaten, values from -299 to -1 reduce health and energy, and zero can be eaten but doesn't change health/energy.</summary>
         /// <remarks>This is ignored for rings.</remarks>
         [Optional] public int Edibility = -300;
         /// <summary>Whether to drink the item instead of eating it.</summary>
@@ -2992,7 +2990,6 @@ public class Pets {
         public List<PetBreed> Breeds;
         /// <summary>Custom fields ignored by the base game, for use by mods.</summary>
         [Optional] public Dictionary<string, string> CustomFields;
-
         /// <summary>Get the breed from <see cref="F:StardewValley.GameData.Pets.PetData.Breeds" /> to use for a given ID.</summary>
         /// <param name="breedId">The preferred pet breed ID.</param>
         /// <param name="allowNull">Whether to return null if the ID isn't found. If false, default to the first breed in the list instead.</param>
@@ -3178,7 +3175,6 @@ public class Shops {
         /// <summary>The backing field for <see cref="P:StardewValley.GameData.Shops.ShopOwnerData.Id" />.</summary>
         string _idImpl;
         [Optional] public string Id { get => _idImpl ?? Name; set => _idImpl = value; }
-
         /// <summary>The backing field for <see cref="P:StardewValley.GameData.Shops.ShopOwnerData.Name" />.</summary>
         string _nameImpl;
         /// <summary>
@@ -3500,7 +3496,7 @@ public class Weapons {
         [Optional] public string BounceSound = "";
         /// <summary>The sound played when the projectile collides with something.</summary>
         [Optional] public string CollisionSound = "";
-        /// <summary>The minimum value for a random offset applied to the direction of the project each time it's fired. If both fields are zero, it's always shot at the 90° angle matching the player's facing direction.</summary>
+        /// <summary>The minimum value for a random offset applied to the direction of the project each time it's fired. If both fields are zero, it's always shot at the 90ï¿½ angle matching the player's facing direction.</summary>
         [Optional] public float MinAngleOffset;
         /// <summary>The maximum value for <see cref="F:StardewValley.GameData.Weapons.WeaponProjectile.MinAngleOffset" />.</summary>
         [Optional] public float MaxAngleOffset;
@@ -3704,7 +3700,6 @@ public class WorldMaps {
             }
             set => _idImpl = value;
         }
-
         /// <summary>If set, a game state query which checks whether this position should be applied. Defaults to always applied.</summary>
         [Optional] public string Condition;
         /// <summary>The location context in which this world position applies.</summary>

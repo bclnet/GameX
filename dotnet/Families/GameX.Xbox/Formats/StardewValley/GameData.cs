@@ -1026,6 +1026,57 @@ public class Characters {
         /// <summary>They never appear on the calendar.</summary>
         HiddenAlways,
     }
+    /// <summary>How an NPC appears in the end-game perfection slide show.</summary>
+    public enum EndSlideShowBehavior {
+        /// <summary>The NPC doesn't appear in the slide show.</summary>
+        Hidden,
+        /// <summary>The NPC is added to the main group of NPCs which walk across the screen.</summary>
+        MainGroup,
+        /// <summary>The NPC is added to the trailing group of NPCs which follow the main group.</summary>
+        TrailingGroup,
+    }
+    /// <summary>The general age of an NPC.</summary>
+    public enum NpcAge {
+        Adult,
+        Teen,
+        Child,
+    }
+    /// <summary>The language spoken by an NPC.</summary>
+    public enum NpcLanguage {
+        /// <summary>The default language understood by the player.</summary>
+        Default,
+        /// <summary>The Dwarvish language, which the player can only understand after finding the Dwarvish Translation Guide.</summary>
+        Dwarvish,
+    }
+    /// <summary>A measure of a character's general politeness.</summary>
+    public enum NpcManner {
+        Neutral,
+        Polite,
+        Rude,
+    }
+    /// <summary>A measure of a character's overall optimism.</summary>
+    public enum NpcOptimism {
+        Positive,
+        Negative,
+        Neutral,
+    }
+    /// <summary>A measure of a character's comfort with social situations.</summary>
+    public enum NpcSocialAnxiety {
+        Outgoing,
+        Shy,
+        Neutral,
+    }
+    /// <summary>How an NPC is shown on the social tab when unlocked.</summary>
+    public enum SocialTabBehavior {
+        /// <summary>Until the player meets them, their name on the social tab is replaced with "???".</summary>
+        UnknownUntilMet,
+        /// <summary>They always appear on the social tab (including their name).</summary>
+        AlwaysShown,
+        /// <summary>Until the player meets them, they don't appear on the social tab.</summary>
+        HiddenUntilMet,
+        /// <summary>They never appear on the social tab.</summary>
+        HiddenAlways,
+    }
     public class CharacterAppearanceData {
         /// <summary>An ID for this entry within the appearance list. This only needs to be unique within the current list.</summary>
         public string Id;
@@ -1240,57 +1291,6 @@ public class Characters {
         [Optional] public string MapAsset;
         /// <summary>The tile area within the <see cref="F:StardewValley.GameData.Characters.CharacterSpouseRoomData.MapAsset" /> containing the spouse's room.</summary>
         [Optional] public Rectangle MapSourceRect = CharacterSpouseRoomData.DefaultMapSourceRect;
-    }
-    /// <summary>How an NPC appears in the end-game perfection slide show.</summary>
-    public enum EndSlideShowBehavior {
-        /// <summary>The NPC doesn't appear in the slide show.</summary>
-        Hidden,
-        /// <summary>The NPC is added to the main group of NPCs which walk across the screen.</summary>
-        MainGroup,
-        /// <summary>The NPC is added to the trailing group of NPCs which follow the main group.</summary>
-        TrailingGroup,
-    }
-    /// <summary>The general age of an NPC.</summary>
-    public enum NpcAge {
-        Adult,
-        Teen,
-        Child,
-    }
-    /// <summary>The language spoken by an NPC.</summary>
-    public enum NpcLanguage {
-        /// <summary>The default language understood by the player.</summary>
-        Default,
-        /// <summary>The Dwarvish language, which the player can only understand after finding the Dwarvish Translation Guide.</summary>
-        Dwarvish,
-    }
-    /// <summary>A measure of a character's general politeness.</summary>
-    public enum NpcManner {
-        Neutral,
-        Polite,
-        Rude,
-    }
-    /// <summary>A measure of a character's overall optimism.</summary>
-    public enum NpcOptimism {
-        Positive,
-        Negative,
-        Neutral,
-    }
-    /// <summary>A measure of a character's comfort with social situations.</summary>
-    public enum NpcSocialAnxiety {
-        Outgoing,
-        Shy,
-        Neutral,
-    }
-    /// <summary>How an NPC is shown on the social tab when unlocked.</summary>
-    public enum SocialTabBehavior {
-        /// <summary>Until the player meets them, their name on the social tab is replaced with "???".</summary>
-        UnknownUntilMet,
-        /// <summary>They always appear on the social tab (including their name).</summary>
-        AlwaysShown,
-        /// <summary>Until the player meets them, they don't appear on the social tab.</summary>
-        HiddenUntilMet,
-        /// <summary>They never appear on the social tab.</summary>
-        HiddenAlways,
     }
 }
 
@@ -2200,8 +2200,7 @@ public class Locations {
             var num = Chance;
             if (hasCuriosityLure && (double)CuriosityLureBuff > 0.0) num += CuriosityLureBuff;
             if (ApplyDailyLuck) num += (float)dailyLuck;
-            List<GameData.QuantityModifier> chanceModifiers = ChanceModifiers;
-            if ((chanceModifiers != null ? (chanceModifiers.Count > 0 ? 1 : 0) : 0) != 0) num = applyModifiers(num, ChanceModifiers, ChanceModifierMode);
+            if ((ChanceModifiers != null ? (ChanceModifiers.Count > 0 ? 1 : 0) : 0) != 0) num = applyModifiers(num, ChanceModifiers, ChanceModifierMode);
             if (isTargetedWithBait) num = num * SpecificBaitMultiplier + SpecificBaitBuff;
             return num + ChanceBoostPerLuckLevel * luckLevel;
         }
@@ -3531,27 +3530,6 @@ public class Weddings {
 }
 
 public class WildTrees {
-    /// <summary>As part of <see cref="T:StardewValley.GameData.WildTrees.WildTreeData" />, a possible item to drop when the tree is chopped down.</summary>
-    public class WildTreeChopItemData : WildTreeItemData {
-        /// <summary>The minimum growth stage at which to produce this item.</summary>
-        [Optional] public WildTreeGrowthStage? MinSize { get; set; }
-        /// <summary>The maximum growth stage at which to produce this item.</summary>
-        [Optional] public WildTreeGrowthStage? MaxSize { get; set; }
-        /// <summary>Whether to drop this item if the item is a stump (true), not a stump (false), or both (null).</summary>
-        [Optional] public bool? ForStump { get; set; } = new bool?(false);
-        /// <summary>Get whether the given tree growth stage is valid for <see cref="P:StardewValley.GameData.WildTrees.WildTreeChopItemData.MinSize" /> and <see cref="P:StardewValley.GameData.WildTrees.WildTreeChopItemData.MaxSize" />.</summary>
-        /// <param name="size">The tree growth stage.</param>
-        /// <param name="isStump">Whether the tree is a stump.</param>
-        public bool IsValidForGrowthStage(int size, bool isStump) {
-            if (size == 4) size = 3;
-            var nullable2 = MinSize.HasValue ? new int?((int)MinSize.GetValueOrDefault()) : new int?();
-            if (size < nullable2.GetValueOrDefault() & nullable2.HasValue) return false;
-            nullable2 = MaxSize.HasValue ? new int?((int)MaxSize.GetValueOrDefault()) : new int?();
-            if (size > nullable2.GetValueOrDefault() & nullable2.HasValue) return false;
-            if (ForStump.HasValue) if (!(ForStump.GetValueOrDefault() == isStump & ForStump.HasValue)) return false;
-            return true;
-        }
-    }
     /// <summary>Metadata for a non-fruit tree type.</summary>
     public class WildTreeData {
         /// <summary>The tree textures to show in game. The first matching texture will be used.</summary>
@@ -3635,6 +3613,27 @@ public class WildTrees {
         [Optional] public Season? Season { get; set; }
         /// <summary>The probability that the item will be produced, as a value between 0 (never) and 1 (always).</summary>
         [Optional] public float Chance { get; set; } = 1f;
+    }
+    /// <summary>As part of <see cref="T:StardewValley.GameData.WildTrees.WildTreeData" />, a possible item to drop when the tree is chopped down.</summary>
+    public class WildTreeChopItemData : WildTreeItemData {
+        /// <summary>The minimum growth stage at which to produce this item.</summary>
+        [Optional] public WildTreeGrowthStage? MinSize { get; set; }
+        /// <summary>The maximum growth stage at which to produce this item.</summary>
+        [Optional] public WildTreeGrowthStage? MaxSize { get; set; }
+        /// <summary>Whether to drop this item if the item is a stump (true), not a stump (false), or both (null).</summary>
+        [Optional] public bool? ForStump { get; set; } = new bool?(false);
+        /// <summary>Get whether the given tree growth stage is valid for <see cref="P:StardewValley.GameData.WildTrees.WildTreeChopItemData.MinSize" /> and <see cref="P:StardewValley.GameData.WildTrees.WildTreeChopItemData.MaxSize" />.</summary>
+        /// <param name="size">The tree growth stage.</param>
+        /// <param name="isStump">Whether the tree is a stump.</param>
+        public bool IsValidForGrowthStage(int size, bool isStump) {
+            if (size == 4) size = 3;
+            var nullable2 = MinSize.HasValue ? new int?((int)MinSize.GetValueOrDefault()) : new int?();
+            if (size < nullable2.GetValueOrDefault() & nullable2.HasValue) return false;
+            nullable2 = MaxSize.HasValue ? new int?((int)MaxSize.GetValueOrDefault()) : new int?();
+            if (size > nullable2.GetValueOrDefault() & nullable2.HasValue) return false;
+            if (ForStump.HasValue) if (!(ForStump.GetValueOrDefault() == isStump & ForStump.HasValue)) return false;
+            return true;
+        }
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.WildTrees.WildTreeData" />, a possible item to produce when dropping the tree seed.</summary>
     public class WildTreeSeedDropItemData : WildTreeItemData {
@@ -3731,11 +3730,11 @@ public class WorldMaps {
     /// <summary>A large-scale part of the world like the Valley, containing all the areas drawn together as part of the combined map view.</summary>
     public class WorldMapRegionData {
         /// <summary>The base texture to draw as the base texture, if any. The first matching texture is applied.</summary>
-        public List<WorldMapTextureData> BaseTexture = new List<WorldMapTextureData>();
+        public List<WorldMapTextureData> BaseTexture = [];
         /// <summary>Maps neighbor IDs for controller support in fields like <see cref="F:StardewValley.GameData.WorldMaps.WorldMapTooltipData.LeftNeighbor" /> to the specific values to use. This allows using simplified IDs like <c>Beach/FishShop</c> instead of <c>Beach/FishShop_DefaultHours, Beach/FishShop_ExtendedHours</c>. Aliases cannot be recursive.</summary>
-        [Optional] public Dictionary<string, string> MapNeighborIdAliases = new Dictionary<string, string>((IEqualityComparer<string>)StringComparer.OrdinalIgnoreCase);
+        [Optional] public Dictionary<string, string> MapNeighborIdAliases = new(StringComparer.OrdinalIgnoreCase);
         /// <summary>The areas to draw on top of the <see cref="F:StardewValley.GameData.WorldMaps.WorldMapRegionData.BaseTexture" />. These can provide tooltips, scroll text, and character marker positioning data.</summary>
-        public List<WorldMapAreaData> MapAreas = new List<WorldMapAreaData>();
+        public List<WorldMapAreaData> MapAreas = [];
     }
     /// <summary>As part of a larger <see cref="T:StardewValley.GameData.WorldMaps.WorldMapAreaData" />, an image overlay to apply to the map.</summary>
     public class WorldMapTextureData {

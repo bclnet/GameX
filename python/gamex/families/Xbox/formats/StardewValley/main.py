@@ -56,18 +56,3 @@ def register() -> None:
     # Binary_Xnb.add(Binary_Xnb.TypeReader[WildTrees.WildTreeData]('WildTrees.WildTreeData', 'StardewValley.GameData.WildTrees.WildTreeData', lambda r: WildTrees.WildTreeData()))
     # Binary_Xnb.add(Binary_Xnb.TypeReader[WorldMaps.WorldMapRegionData]('WorldMaps.WorldMapRegion', 'StardewValley.GameData.WorldMaps.WorldMapRegionData', lambda r: WorldMaps.WorldMapRegionData()))
 
-# A character's gender identity.
-class Gender(Enum):
-    Male = 0
-    Female = 1
-    Undefined = 2
-# A season of the year.
-class Season(Enum):
-    # The spring season.
-    Spring = 0
-    # The summer season.
-    Summer = 1
-    # The fall season.
-    Fall = 2
-    # The winter season.
-    Winter = 3

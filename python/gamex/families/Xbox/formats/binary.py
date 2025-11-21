@@ -6,7 +6,7 @@ from numpy import ndarray, array
 from openstk import _throw, _pathExtension, Reader, IWriteToStream
 from openstk.gfx import Raster, Texture_Bytes, ITexture, TextureFormat, TexturePixel
 from openstk.core.drawing import Plane, Point, Rectangle, BoundingBox, BoundingSphere, Ray, Curve
-from openstk.core.reflect import Attribute, MemberInfo, PropertyInfo, FieldInfo, Reflect
+from openstk.core.reflect import *
 from gamex import PakFile, BinaryPakFile, PakBinary, PakBinaryT, FileSource, MetaInfo, MetaManager, MetaContent, IHaveMetaInfo, DesSer
 from gamex.core.globalx import ByteColor4
 from gamex.core.formats.compression import decompressXbox

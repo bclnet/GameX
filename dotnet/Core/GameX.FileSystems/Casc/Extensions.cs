@@ -104,7 +104,7 @@ namespace GameX.FileSystems.Casc
 
             //return result;
 
-            Span<T> result = MemoryMarshal.Cast<byte, T>(src);
+            var result = MemoryMarshal.Cast<byte, T>(src);
             return result.ToArray();
         }
 

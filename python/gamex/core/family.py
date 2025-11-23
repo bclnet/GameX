@@ -73,8 +73,7 @@ def createFamilySample(path: str, loader: callable) -> FamilySample:
 def createFamily(any: str, loader: callable = None, loadSamples: bool = False) -> Family:
     elem = loader(any) if loader else any
     familyType = _value(elem, 'familyType')
-    family = findType(familyType)(elem) if familyType else \
-        Family(elem)
+    family = findType(familyType)(elem) if familyType else Family(elem)
     if family.specSamples and loadSamples:
         for sample in family.specSamples:
             family.mergeSample(createFamilySample(sample, loader))

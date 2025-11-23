@@ -14,11 +14,13 @@ type Vector3 = ndarray
 # type Quaternion = ndarray
 
 # A character's gender identity.
+# @RType('StardewValley.Gender')
 class Gender(Enum):
     Male = 0
     Female = 1
     Undefined = 2
 # A season of the year.
+@RType('StardewValley.Season')
 class Season(Enum):
     # The spring season.
     Spring = 0
@@ -70,7 +72,8 @@ class ISpawnItemData:
     perItemCondition: str
 # An audio change to apply to the game's sound bank.
 # This describes an override applied to the sound bank. The override is applied permanently for the current game session, even if it's later removed from the data asset. Overriding a cue will reset all values to the ones specified.
-@cstype
+# @RType('StardewValley.GameData.AudioCueData')
+@RType()
 class AudioCueData:
     _fields_ = [
         # A unique cue ID, used when playing the sound in-game. The ID should only contain alphanumeric/underscore/dot characters. For custom audio cues, this should be prefixed with your mod ID like <c>Example.ModId_AudioName</c>.
@@ -94,6 +97,7 @@ class AudioCueData:
         ('[Optional] customFields', 'Dictionary<string, string>'),
     ]
 # The data for an item to create, used in data assets like <see cref='T:StardewValley.GameData.Machines.MachineData' /> or <see cref='T:StardewValley.GameData.Shops.ShopData' />.
+# @RType()
 class GenericSpawnItemData(ISpawnItemData):
     # The backing field for <see cref='P:StardewValley.GameData.GenericSpawnItemData.Id' />.
     _idImpl: str = None
@@ -145,8 +149,8 @@ class GenericSpawnItemData(ISpawnItemData):
         ('[Optional] perItemCondition', 'string'),
     ]
 # The data for an item to create with support for a game state query, used in data assets like <see cref='T:StardewValley.GameData.Machines.MachineData' /> or <see cref='T:StardewValley.GameData.Shops.ShopData' />.
+# @RType()
 class GenericSpawnItemDataWithCondition(GenericSpawnItemData):
-    _base_ = 'GenericSpawnItemData'
     _fields_ = [
         # A game state query which indicates whether the item should be added. Defaults to always added.
         ('[Optional] condition', 'string'),
@@ -224,6 +228,7 @@ class MannequinData:
         ('[Optional] customFields', 'Dictionary<string, string>'),
     ]
 # The metadata for a custom farm layout which can be selected by players.
+@RType()
 class ModFarmType:
     _fields_ = [
         # A key which uniquely identifies this farm type. The ID should only contain alphanumeric/underscore/dot characters. This should be prefixed with your mod ID like <c>Example.ModId_FarmType.</c>
@@ -244,6 +249,7 @@ class ModFarmType:
         ('[Optional] customFields', 'Dictionary<string, string>'),
     ]
 # The metadata for a custom language which can be selected by players.
+@RType()
 class ModLanguage:
     _fields_ = [
         # A key which uniquely identifies this language. The ID should only contain alphanumeric/underscore/dot characters. This should be prefixed with your mod ID like <c>Example.ModId_Language.</c>
@@ -290,6 +296,7 @@ class ModLanguage:
         ('[Optional] customFields', 'Dictionary<string, string>'),
     ]
 # The metadata for a custom floor or wallpaper item.
+@RType()
 class ModWallpaperOrFlooring:
     _fields_ = [
         # A key which uniquely identifies this wallpaper or flooring. This should only contain alphanumeric/underscore/dot characters. This should be prefixed with your mod ID like <c>Example.ModId_WallpaperName</c>.
@@ -354,7 +361,7 @@ class PassiveFestivalData:
         # Whether the festival appears on the calendar, using the same icon as the Night Market. Default true.
         ('[Optional] showOnCalendar', 'bool', True),
         # The season when the festival becomes active.
-        ('season', 'Season'),
+        ('season', '#Season'),
         # The day of month when the festival becomes active.
         ('startDay', 'int'),
         # The last day of month when the festival is active.
@@ -412,6 +419,7 @@ class PlantableRule:
     # <param name='isGardenPot'>Whether the seed or sapling is being planted in a garden pot (else the ground).</param>
     def shouldApplyWhen(self, isGardenPot: bool) -> bool: return PlantableRuleContext(2 if isGardenPot else 1) in self.plantedIn
 # As part of another entry like <see cref='T:StardewValley.GameData.Machines.MachineData' /> or <see cref='T:StardewValley.GameData.Shops.ShopData' />, a change to apply to a numeric quantity.
+@RType()
 class QuantityModifier:
     _fields_ = [
         # An ID for this modifier. This only needs to be unique within the current modifier list. For a custom entry, you should use a globally unique ID which includes your mod ID like <c>ExampleMod.Id_ModifierName</c>.
@@ -439,6 +447,7 @@ class QuantityModifier:
             case ModificationType.Set: return amount
             case _: return value,
     # The type of change to apply for a <see cref='T:StardewValley.GameData.QuantityModifier' />.
+    @RType()
     class ModificationType(Enum):
         # Add a number to the current value.
         Add = 0
@@ -451,6 +460,7 @@ class QuantityModifier:
         # Overwrite the current value with a number.
         Set = 4
     # Indicates how multiple quantity modifiers are combined.
+    @RType()
     class QuantityModifierMode(Enum):
         # Apply each modifier to the result of the previous one. For example, two modifiers which double a value will quadruple it.
         Stack = 0
@@ -459,6 +469,7 @@ class QuantityModifier:
         # Apply the modifier which results in the highest value.
         Maximum = 2
 # As part of <see cref='T:StardewValley.GameData.FarmAnimals.FarmAnimalData' /> or <see cref='T:StardewValley.GameData.Machines.MachineData' />, a game state counter to increment.
+@RType()
 class StatIncrement:
     # The backing field for <see cref='P:StardewValley.GameData.StatIncrement.Id' />.
     _idImpl: str = None
@@ -562,6 +573,7 @@ class TrinketData:
     ]
 
 class BigCraftables:
+    @RType()
     class BigCraftableData:
         _fields_ = [
             # The internal item name.
@@ -592,6 +604,7 @@ class BigCraftables:
 
 class Buffs:
     # As part of <see cref='T:StardewValley.GameData.Buffs.BuffData' /> or <see cref='T:StardewValley.GameData.Objects.ObjectBuffData' />, the attribute values to add to the player's stats.
+    @RType()
     class BuffAttributesData:
         _fields_ = [
             # The buff to the player's combat skill level.
@@ -632,6 +645,7 @@ class Buffs:
             ('[Optional] weaponPrecisionMultiplier', 'float'),
         ]
     # A predefined buff which can be applied in-game.
+    @RType()
     class BuffData:
         _fields_ = [
             # A tokenizable string for the translated buff name.
@@ -660,6 +674,7 @@ class Buffs:
 
 class Buildings:
     # As part of <see cref='T:StardewValley.GameData.Buildings.BuildingData' />, a tile which the player can click to trigger an <c>Action</c> map tile property.
+    @RType()
     class BuildingActionTile:
         _fields_ = [
             # A key which uniquely identifies this entry within the list. The ID should only contain alphanumeric/underscore/dot characters. For custom entries, this should be prefixed with your mod ID like <c>Example.ModId_Id</c>.
@@ -670,12 +685,13 @@ class Buildings:
             ('action', 'string'),
         ]
     # As part of <see cref='T:StardewValley.GameData.Buildings.BuildingData' />, an input/output inventory that can be accessed from a tile on the building exterior.
+    @RType()
     class BuildingChest:
         _fields_ = [
             # A key for this chest, referenced from the <see cref='F:StardewValley.GameData.Buildings.BuildingData.ItemConversions' /> field. Each chest must have a unique name within one building's chest list (but they don't need to be globally unique).
             ('id', 'string'),
             # The inventory type.
-            ('type', 'BuildingChestType'),
+            ('type', '#BuildingChestType'),
             # The sound to play once when the player clicks the chest.
             ('[Optional] sound', 'string'),
             # A tokenizable string to show when the player tries to add an item to the chest when it isn't a supported item.
@@ -692,6 +708,7 @@ class Buildings:
             ('[Optional] displayHeigh', 'float'),
         ]
     # The inventory type for a building chest.
+    @RType()
     class BuildingChestType(Enum):
         # A normal chest which can both provide output and accept input.
         Chest = 0
@@ -700,6 +717,7 @@ class Buildings:
         # Lets the player add items for the building to process.
         Load = 2
     # The data for a building which can be constructed by players.
+    @RType()
     class BuildingData:
         _fields_ = [
             # A tokenizable string for the display name (e.g. shown in the construction menu).
@@ -711,7 +729,7 @@ class Buildings:
             # The asset name for the texture under the game's <c>Content</c> folder.
             ('texture', 'string'),
             # The appearances which can be selected from the construction menu (like stone vs plank cabins), if any, in addition to the default appearance based on <see cref='F:StardewValley.GameData.Buildings.BuildingData.Texture' />.
-            ('[Optional] skins', 'List<BuildingSkin>', []),
+            ('[Optional] skins', 'List<#BuildingSkin>', []),
             # Whether to draw an automatic shadow along the bottom edge of the building's sprite.
             ('[Optional] drawShadow', 'bool',  True),
             # The tile position relative to the top-left corner of the building where the upgrade sign will be placed when Robin is building an upgrade. Defaults to approximately (5, 1) if the building interior type is a shed, else (0, 0).
@@ -737,7 +755,7 @@ class Buildings:
             #   </code>
             ('[Optional] collisionMap', 'string'),
             # The extra tiles to treat as part of the building when placing it through a construction menu, if any. For example, the farmhouse uses this to make sure the stairs are clear.
-            ('[Optional] additionalPlacementTiles', 'List<BuildingPlacementTile>'),
+            ('[Optional] additionalPlacementTiles', 'List<#BuildingPlacementTile>'),
             # If set, the full name of the C# type to instantiate for the building instance. Defaults to a generic <c>StardewValley.Building</c> instance. Note that using a non-vanilla building type will cause a crash when trying to write the building to the save file.
             ('[Optional] buildingType', 'string'),
             # The NPC from whom you can request construction. The vanilla values are <c>Robin</c> and <c>Wizard</c>, but you can specify a different name if a mod opens a construction menu for them. Defaults to <c>Robin</c>. If omitted, it won't appear in any menu.
@@ -749,7 +767,7 @@ class Buildings:
             # The gold cost to construct the building.
             ('[Optional] buildCost', 'int'),
             # The materials you must provide to start construction.
-            ('[Optional] buildMaterials', 'List<BuildingMaterial>'),
+            ('[Optional] buildMaterials', 'List<#BuildingMaterial>'),
             # The ID of the building for which this is an upgrade, or omit to allow constructing it as a new building. For example, the Big Coop sets this to 'Coop'. Any numbers of buildings can be an upgrade for the same building, in which case the player can choose one upgrade path.
             ('[Optional] buildingToUpgrade', 'string'),
             # Whether the building is magical. This changes the carpenter menu to a mystic theme while this building's blueprint is selected, and completes the construction instantly when placed.
@@ -783,9 +801,9 @@ class Buildings:
             # Whether animals can get pregnant and produce offspring in this building.
             ('[Optional] allowAnimalPregnancy', 'bool'),
             # When applied as an upgrade to an existing building, the placed items in its interior to move when transitioning to the new map.
-            ('[Optional] indoorItemMoves', 'List<IndoorItemMove>'),
+            ('[Optional] indoorItemMoves', 'List<#IndoorItemMove>'),
             # The items to place in the building interior when it's constructed or upgraded.
-            ('[Optional] indoorItems', 'List<IndoorItemAdd>'),
+            ('[Optional] indoorItems', 'List<#IndoorItemAdd>'),
             # A list of mail IDs to send to all players when the building is constructed for the first time.
             ('[Optional] addMailOnBuild', 'List<string>'),
             # A list of custom properties applied to the building, which can optionally be overridden per-skin in the <see cref='F:StardewValley.GameData.Buildings.BuildingData.Skins' /> field.
@@ -795,7 +813,7 @@ class Buildings:
             # The amount of hay that can be stored in this building. If built on the farm, this works just like silos and contributes to the farm's available hay.
             ('[Optional] hayCapacity', 'int'),
             # The input/output inventories that can be accessed from a tile on the building exterior. The allowed items are defined by the <see cref='F:StardewValley.GameData.Buildings.BuildingData.ItemConversions' /> field.
-            ('[Optional] chests', 'List<BuildingChest>'),
+            ('[Optional] chests', 'List<#BuildingChest>'),
             # The default tile action if the clicked tile isn't in <see cref='F:StardewValley.GameData.Buildings.BuildingData.ActionTiles' />.
             ('[Optional] defaultAction', 'string'),
             # The number of extra tiles around the building for which it may add tile properties via <see cref='F:StardewValley.GameData.Buildings.BuildingData.TileProperties' />, but without hiding tile properties from the underlying ground that aren't overwritten by the building data.
@@ -803,13 +821,13 @@ class Buildings:
             # If true, terrain feature flooring can be placed underneath, and when the building is placed, it will not destroy flooring beneath it.
             ('[Optional] allowsFlooringUnderneath', 'bool', True),
             # A list of tiles which the player can click to trigger an <c>Action</c> map tile property.
-            ('[Optional] actionTiles', 'List<BuildingActionTile>', []),
+            ('[Optional] actionTiles', 'List<#BuildingActionTile>', []),
             # The map tile properties to set.
-            ('[Optional] tileProperties', 'List<BuildingTileProperty>', []),
+            ('[Optional] tileProperties', 'List<#BuildingTileProperty>', []),
             # The output items produced when an input item is converted.
-            ('[Optional] itemConversions', 'List<BuildingItemConversion>'),
+            ('[Optional] itemConversions', 'List<#BuildingItemConversion>'),
             # A list of textures to draw over or behind the building, with support for conditions and animations.
-            ('[Optional] drawLayers', 'List<BuildingDrawLayer>'),
+            ('[Optional] drawLayers', 'List<#BuildingDrawLayer>'),
             # Custom fields ignored by the base game, for use by mods.
             ('[Optional] customFields', 'Dictionary<string, string>'),
             # A cached representation of <see cref='F:StardewValley.GameData.Buildings.BuildingData.ActionTiles' />.
@@ -870,6 +888,7 @@ class Buildings:
             # propertyValue = str', 'string'),
             return True
     # As part of <see cref='T:StardewValley.GameData.Buildings.BuildingData' />, a texture to draw over or behind the building.
+    @RType()
     class BuildingDrawLayer:
         _fields_ = [
             # A key which uniquely identifies this entry within the list. The ID should only contain alphanumeric/underscore/dot characters. For custom entries, this should be prefixed with your mod ID like <c>Example.ModId_DrawLayerId</c>.
@@ -911,6 +930,7 @@ class Buildings:
             else: sourceRect.x += sourceRect.width * (time % self.framesPerRow); sourceRect.y += sourceRect.height * (time / self.framesPerRow)
             return sourceRect
     # As part of <see cref='T:StardewValley.GameData.Buildings.BuildingData' />, an output item produced when an input item is converted.
+    @RType()
     class BuildingItemConversion:
         _fields_ = [
             # A unique identifier for this entry. This only needs to be unique within the current list. For a custom entry, you should use a globally unique ID which includes your mod ID like <c>ExampleMod.Id_ItemName</c>.
@@ -926,9 +946,10 @@ class Buildings:
             # The name of the inventory defined in <see cref='F:StardewValley.GameData.Buildings.BuildingData.Chests' /> in which to store output items.
             ('destinationChest', 'string'),
             # The output items produced when an input item is converted.
-            ('producedItems', 'List<GameData.GenericSpawnItemDataWithCondition>'),
+            ('producedItems', 'List<#GenericSpawnItemDataWithCondition>'),
         ]
     # As part of <see cref='T:StardewValley.GameData.Buildings.BuildingData' />, the materials needed to construct a building.
+    @RType()
     class BuildingMaterial:
         # A key which uniquely identifies the building material.
         @property
@@ -942,6 +963,7 @@ class Buildings:
             ('amount', 'int'),
         ]
     # As part of <see cref='T:StardewValley.GameData.Buildings.BuildingData' />, a tile to treat as part of the building when placing it through a construction menu.
+    @RType()
     class BuildingPlacementTile:
         _fields_ = [
             # The tile positions relative to the top-left corner of the building.
@@ -950,6 +972,7 @@ class Buildings:
             ('[Optional] onlyNeedsToBePassable', 'bool'),
         ]
     # As part of <see cref='T:StardewValley.GameData.Buildings.BuildingData' />, an appearance which can be selected from the construction menu (like stone vs plank cabins).
+    @RType()
     class BuildingSkin:
         _fields_ = [
             # A key which uniquely identifies the skin. The ID should only contain alphanumeric/underscore/dot characters. For custom skins, it should be prefixed with your mod ID like <c>Example.ModId_SkinName</c>.
@@ -969,13 +992,14 @@ class Buildings:
             # If set, overrides <see cref='F:StardewValley.GameData.Buildings.BuildingData.BuildCost' />.
             ('[Optional] buildCost', 'int?'),
             # If set, overrides <see cref='F:StardewValley.GameData.Buildings.BuildingData.BuildMaterials' />.
-            ('[Optional] buildMaterials', 'List<BuildingMaterial>'),
+            ('[Optional] buildMaterials', 'List<#BuildingMaterial>'),
             # Whether this skin should be shown as a separate building option in the construction menu.
             ('[Optional] showAsSeparateConstructionEntry', 'bool'),
             # Equivalent to the <see cref='F:StardewValley.GameData.Buildings.BuildingData.Metadata' /> field on the building. Properties defined in this field are added to the building's metadata when this skin is active, overwriting the previous property with the same name if applicable.
             ('[Optional] metadata', 'Dictionary<string, string>', []),
         ]
     # As part of <see cref='T:StardewValley.GameData.Buildings.BuildingData' />, a map tile property to set.
+    @RType()
     class BuildingTileProperty:
         _fields_ = [
             # A key which uniquely identifies this entry within the list. The ID should only contain alphanumeric/underscore/dot characters. For custom entries, this should be prefixed with your mod ID like <c>Example.ModId_Id</c>.
@@ -990,6 +1014,7 @@ class Buildings:
             ('tileArea', 'Rectangle'),
         ]
     # As part of <see cref='T:StardewValley.GameData.Buildings.BuildingData' />, an item to place in the building interior when it's constructed or upgraded.
+    @RType()
     class IndoorItemAdd:
         _fields_ = [
             # A key which uniquely identifies this entry within the list. The ID should only contain alphanumeric/underscore/dot characters. For custom entries, this should be prefixed with your mod ID like <c>Example.ModId_Id</c>.
@@ -1004,6 +1029,7 @@ class Buildings:
             ('[Optional] clearTile', 'bool', True),
         ]
     # As part of <see cref='T:StardewValley.GameData.Buildings.BuildingData' />, a placed item in its interior to move when transitioning to an upgraded map.
+    @RType()
     class IndoorItemMove:
         _fields_ = [
             # A key which uniquely identifies this entry within the list. The ID should only contain alphanumeric/underscore/dot characters. For custom entries, this should be prefixed with your mod ID like <c>Example.ModId_Id</c>.
@@ -1056,6 +1082,7 @@ class Buldles:
 
 class Characters:
     # How an NPC's birthday is shown on the calendar.
+    @RType()
     class CalendarBehavior(Enum):
         # They always appear on the calendar.
         AlwaysShown = 0
@@ -1063,7 +1090,8 @@ class Characters:
         HiddenUntilMet = 1
         # They never appear on the calendar.
         HiddenAlways = 2
- # How an NPC appears in the end-game perfection slide show.
+    # How an NPC appears in the end-game perfection slide show.
+    @RType()
     class EndSlideShowBehavior(Enum):
         # The NPC doesn't appear in the slide show.
         Hidden = 0
@@ -1072,32 +1100,38 @@ class Characters:
         # The NPC is added to the trailing group of NPCs which follow the main group.
         TrailingGroup = 2
     # The general age of an NPC.
+    @RType()
     class NpcAge(Enum):
         Adult = 0
         Teen = 1
         Child = 2
     # The language spoken by an NPC.
+    @RType()
     class NpcLanguage(Enum):
         # The default language understood by the player.
         Default = 0
         # The Dwarvish language, which the player can only understand after finding the Dwarvish Translation Guide.
         Dwarvish = 1
     # A measure of a character's general politeness.
+    @RType()
     class NpcManner(Enum):
         Neutral = 0
         Polite = 1
         Rude = 2
     # A measure of a character's overall optimism.
+    @RType()
     class NpcOptimism(Enum):
         Positive = 0
         Negative = 1
         Neutral = 2
     # A measure of a character's comfort with social situations.
+    @RType()
     class NpcSocialAnxiety(Enum):
         Outgoing = 0
         Shy = 1
         Neutral = 2
     # How an NPC is shown on the social tab when unlocked.
+    @RType()
     class SocialTabBehavior(Enum):
         # Until the player meets them, their name on the social tab is replaced with '???'.
         UnknownUntilMet = 0
@@ -1108,6 +1142,7 @@ class Characters:
         # They never appear on the social tab.
         HiddenAlways = 3
 class Characters:
+    @RType()
     class CharacterAppearanceData:
         _fields_ = [
             # An ID for this entry within the appearance list. This only needs to be unique within the current list.
@@ -1115,7 +1150,7 @@ class Characters:
             # A game state query which indicates whether this entry applies. Default true.
             ('[Optional] condition', 'string'),
             # The season when this appearance applies, or <c>null</c> for any season.
-            ('[Optional] season', 'Season?'),
+            ('[Optional] season', '#Season?'),
             # Whether the appearance can be used when the NPC is indoors.
             ('[Optional] indoors', 'bool', True),
             # Whether the appearance can be used when the NPC is outdoors.
@@ -1134,12 +1169,13 @@ class Characters:
             ('[Optional] weight', 'int', 1),
         ]
     # The content data for an NPC.
+    @RType()
     class CharacterData :
         _fields_ = [
             # A tokenizable string for the NPC's display name.
             ('displayName', 'string'),
             # The season when the NPC was born.
-            ('[Optional] birthSeason', 'Season?'),
+            ('[Optional] birthSeason', '#Season?'),
             # The day when the NPC was born.
             ('[Optional] birthDay', 'int'),
             # The region of the world in which the NPC lives (one of <c>Desert</c>, <c>Town</c>, or <c>Other</c>).
@@ -1219,7 +1255,7 @@ class Characters:
             ('[Optional] flowerDanceCanDance', 'bool?'),
             # At the Winter Star festival, the possible gifts this NPC can give to players.
             # If this doesn't return a match, a generic gift is selected based on <see cref='F:StardewValley.GameData.Characters.CharacterData.Age' />.
-            ('[Optional] winterStarGifts', 'List<GameData.GenericSpawnItemDataWithCondition>', []),
+            ('[Optional] winterStarGifts', 'List<#GenericSpawnItemDataWithCondition>', []),
             # A game state query which indicates whether this NPC can give and receive gifts at the Feast of the Winter Star, or <c>null</c> to allow it if their <see cref='F:StardewValley.GameData.Characters.CharacterData.HomeRegion' /> is <c>Town</c>.
             ('[Optional] winterStarParticipant', 'string'),
             # A game state query which indicates whether the NPC should be added to the world, checked when loading a save and when ending each day. This only affects whether the NPC is added when missing; returning false won't remove an NPC that's already been added.
@@ -1279,6 +1315,7 @@ class Characters:
             ('[Optional] customFields', 'Dictionary<string, string>'),
         ]
     # As part of <see cref='T:StardewValley.GameData.Characters.CharacterData' />, a possible location for the NPC's default map.
+    @RType()
     class CharacterHomeData:
         _fields_ = [
             # An ID for this entry within the home list. This only needs to be unique within the current list.
@@ -1293,6 +1330,7 @@ class Characters:
             ('[Optional] direction', 'string', 'up'),
         ]
     # As part of <see cref='T:StardewValley.GameData.Characters.CharacterData' />, configures how the NPC's shadow should be rendered.
+    @RType()
     class CharacterShadowData:
         _fields_ = [
             # Whether the shadow should be drawn.
@@ -1304,6 +1342,7 @@ class Characters:
             ('[Optional] scale', 'float', 1.),
         ]
     # As part of <see cref='T:StardewValley.GameData.Characters.CharacterData' />, the data about the NPC's patio area on the farm when the player marries them.
+    @RType()
     class CharacterSpousePatioData:
         # The default value for <see cref='F:StardewValley.GameData.Characters.CharacterSpousePatioData.MapSourceRect' />.
         defaultMapSourceRect: Rectangle = Rectangle(0, 0, 4, 4)
@@ -1318,6 +1357,7 @@ class Characters:
             ('[Optional] spriteAnimationPixelOffset', 'Point'),
         ]
     # As part of <see cref='T:StardewValley.GameData.Characters.CharacterData' />, the data about the NPC's spouse room in the farmhouse when the player marries them.
+    @RType()
     class CharacterSpouseRoomData:
         # The default value for <see cref='F:StardewValley.GameData.Characters.CharacterSpouseRoomData.MapSourceRect' />.
         defaultMapSourceRect: Rectangle = Rectangle(0, 0, 6, 9)
@@ -1364,7 +1404,7 @@ class Crops:
     class CropData:
         _fields_ = [
             # The seasons in which this crop can grow.
-            ('seasons', 'List<Season>', []),
+            ('seasons', 'List<#Season>', []),
             # The number of days in each visual step of growth before the crop is harvestable.
             ('daysInPhase', 'List<int>', []),
             # The number of days before the crop regrows after harvesting, or -1 if it can't regrow.
@@ -1376,7 +1416,7 @@ class Crops:
             # Whether this crop needs to be watered to grow.
             ('[Optional] needsWatering', 'bool', True),
             # The rules which override which locations the crop can be planted in, if applicable. These don't override more specific checks (e.g. crops needing to be planted in dirt).
-            ('[Optional] plantableLocationRules', 'List<GameData.PlantableRule>'),
+            ('[Optional] plantableLocationRules', 'List<#PlantableRule>'),
             # The unqualified item ID produced when this crop is harvested.
             ('[Optional] harvestItemId', 'string'),
             # The minimum number of <see cref='F:StardewValley.GameData.Crops.CropData.HarvestItemId' /> to harvest.
@@ -1564,7 +1604,7 @@ class FarmAnimials:
             # Overrides <see cref='F:StardewValley.GameData.FarmAnimals.FarmAnimalData.LeftRightPetHitboxTileSize' /> when the animal is a baby.
             ('[Optional] babyLeftRightPetHitboxTileSize', 'Vector2', array([1., 1.])),
             # The game stat counters to increment when the animal produces an item, if any.
-            ('[Optional] statToIncrementOnProduce', 'List<GameData.StatIncrement>'),
+            ('[Optional] statToIncrementOnProduce', 'List<#StatIncrement>'),
             # Whether to show the farm animal in the credit scene on the summit after the player achieves perfection.
             ('[Optional] showInSummitCredits', 'bool'),
             # Custom fields ignored by the base game, for use by mods.
@@ -1665,6 +1705,7 @@ class Fences:
 
 class FishPond:
     # The fish data for a Fish Pond building.
+    @RType()
     class FishPondData:
         _fields_ = [
             # A unique identifier for the entry. The ID should only contain alphanumeric/underscore/dot characters. For custom fish pond entries, this should be prefixed with your mod ID like <c>Example.ModId_Fish.</c>
@@ -1685,15 +1726,16 @@ class FishPond:
             # [inheritdoc cref='F:StardewValley.GameData.FishPonds.FishPondData.BaseMinProduceChance' path='/remarks' />
             ('[Optional] baseMaxProduceChance', 'float', 0.95),
             # The custom water color to set, if applicable.
-            ('[Optional] waterColor', 'List<FishPondWaterColor>'),
+            ('[Optional] waterColor', 'List<#FishPondWaterColor>'),
             # The items that can be produced by the fish pond. When a fish pond is ready to produce output, it will check each entry in the list and take the first one that matches. If no entry matches, no output is produced.
-            ('[Optional] producedItems', 'List<FishPondReward>'),
+            ('[Optional] producedItems', 'List<#FishPondReward>'),
             # The rules which determine when the fish pond population can grow, and the quests that must be completed to do so.
             ('[Optional] populationGates', 'Dictionary<int, List<string>>'),
             # Custom fields ignored by the base game, for use by mods.
             ('[Optional] customFields', 'Dictionary<string, string>'),
         ]
     # As part of <see cref='T:StardewValley.GameData.FishPonds.FishPondData' />, an item that can be produced by the fish pond.
+    @RType()
     class FishPondReward(GenericSpawnItemDataWithCondition):
         _fields_ = [
             # The minimum population needed before this output becomes available.
@@ -1704,6 +1746,7 @@ class FishPond:
             ('[Optional] precedence', 'int'),
         ]
     # As part of <see cref='T:StardewValley.GameData.FishPonds.FishPondData' />, a color to apply to the water if its fields match.
+    @RType()
     class FishPondWaterColor:
         _fields_ = [
             ('id', 'string'),
@@ -1774,12 +1817,12 @@ class FruitTrees:
     class FruitTreeData:
         _fields_ = [
             # The rules which override which locations the tree can be planted in, if applicable. These don't override more specific checks (e.g. not being plantable on stone).
-            ('[Optional] plantableLocationRules', 'List<GameData.PlantableRule>'),
+            ('[Optional] plantableLocationRules', 'List<#PlantableRule>'),
             # A tokenizable string for the fruit tree display name, like 'Cherry' for a cherry tree.
             # This shouldn't include 'tree', which will be added automatically as needed.
             ('displayName', 'string'),
             # The seasons in which this tree bears fruit.
-            ('seasons', 'List<Season>'),
+            ('seasons', 'List<#Season>'),
             # The fruit to produce. The first matching entry will be produced.
             ('fruit', 'List<FruitTreeFruitData>'),
             # The asset name for the texture for the tree's spritesheet.
@@ -1793,7 +1836,7 @@ class FruitTrees:
     class FruitTreeFruitData(GenericSpawnItemDataWithCondition):
         _fields_ = [
             # If set, the specific season when this fruit can be produced. For more complex conditions, see <see cref='P:StardewValley.GameData.GenericSpawnItemDataWithCondition.Condition' />.
-            ('[Optional] season', 'Season?'),
+            ('[Optional] season', '#Season?'),
             # The probability that the item will be produced, as a value between 0 (never) and 1 (always).
             ('[Optional] chance ', 'float', 1.),
         ]
@@ -1951,7 +1994,7 @@ class LocationContexts:
     class LocationContextData:
         _fields_ = [
             # The season which is always active for locations within this context. For example, setting <see cref='F:StardewValley.Season.Summer' /> will make it always summer there regardless of the calendar season. If not set, the calendar season applies.
-            ('[Optional] seasonOverride', 'Season?'),
+            ('[Optional] seasonOverride', '#Season?'),
             # The cue ID for the music to play when the player is in the location, unless overridden by a <c>Music</c> map property. Despite the name, this has a higher priority than the seasonal music fields like <see cref='!:SpringMusic' />. Ignored if omitted.
             ('[Optional] defaultMusic', 'string'),
             # A game state query which returns whether the <see cref='F:StardewValley.GameData.LocationContexts.LocationContextData.DefaultMusic' /> field should be applied (if more specific music isn't playing). Defaults to always true.
@@ -2180,7 +2223,7 @@ class Locations:
             # The probability that the fish will spawn, as a value between 0 (never) and 1 (always).
             ('[Optional] chance', 'float', 1.),
             # If set, the specific season when the fish should apply. For more complex conditions, see <see cref='P:StardewValley.GameData.GenericSpawnItemDataWithCondition.Condition' />.
-            ('[Optional] season', 'Season?'),
+            ('[Optional] season', '#Season?'),
             # If set, the fish area (as defined by <see cref='F:StardewValley.GameData.Locations.LocationData.FishAreas' /> in which the fish can be caught. If omitted, it can be caught in all areas.
             ('[Optional] fishAreaId', 'string'),
             # If set, the tile area within the location where the bobber must land to catch the fish.
@@ -2219,9 +2262,9 @@ class Locations:
             # Whether this fish can be spawned in another location via the <c>LOCATION_FISH</c> item query.
             ('[Optional] canBeInherited', 'bool', True),
             # Changes to apply to the <see cref='P:StardewValley.GameData.Locations.SpawnFishData.Chance' />.
-            ('[Optional] chanceModifiers', 'List<GameData.QuantityModifier>'),
+            ('[Optional] chanceModifiers', 'List<#QuantityModifier>'),
             # How multiple <see cref='P:StardewValley.GameData.Locations.SpawnFishData.ChanceModifiers' /> should be combined.
-            ('[Optional] chanceModifierMode', 'GameData.QuantityModifier.QuantityModifierMode'),
+            ('[Optional] chanceModifierMode', '#QuantityModifier.QuantityModifierMode'),
             # How much to increase the <see cref='P:StardewValley.GameData.Locations.SpawnFishData.Chance' /> per player's Luck level
             ('[Optional] chanceBoostPerLuckLevel', 'float'),
             # If true, the chance roll will use a seed value based on the number of fish caught.
@@ -2253,7 +2296,7 @@ class Locations:
             # The probability that the forage will spawn if it's selected, as a value between 0 (never) and 1 (always). If this check fails, that spawn opportunity will be skipped.
             ('[Optional] chance', 'double', 1.0),
             # If set, the specific season when the forage should apply. For more complex conditions, see <see cref='P:StardewValley.GameData.GenericSpawnItemDataWithCondition.Condition' />.
-            ('[Optional] season', 'Season?'),
+            ('[Optional] season', '#Season?'),
         ]
 
 class Machines:
@@ -2277,9 +2320,9 @@ class Machines:
             ('[Optional] preventTimePass', 'List<MachineTimeBlockers>'),
             # Changes to apply to the processing time before output is ready.
             # If multiple entries match, they'll be applied sequentially (e.g. two matching rules to double processing time will quadruple it).
-            ('[Optional] readyTimeModifiers', 'List<GameData.QuantityModifier>'),
+            ('[Optional] readyTimeModifiers', 'List<#QuantityModifier>'),
             # How multiple <see cref='F:StardewValley.GameData.Machines.MachineData.ReadyTimeModifiers' /> should be combined.
-            ('[Optional] readyTimeModifierMode', 'GameData.QuantityModifier.QuantityModifierMode'),
+            ('[Optional] readyTimeModifierMode', '#QuantityModifier.QuantityModifierMode'),
             # A tokenizable string for the message shown in a toaster notification if the player tries to input an item that isn't accepted by the machine.
             ('[Optional] invalidItemMessage', 'string'),
             # An extra condition that must be met before <see cref='F:StardewValley.GameData.Machines.MachineData.InvalidItemMessage' /> is shown.
@@ -2316,9 +2359,9 @@ class Machines:
             # A game state query which indicates whether the machine should be emptied overnight, so any current output will be lost. Defaults to always false.
             ('[Optional] clearContentsOvernightCondition', 'string'),
             # The game stat counters to increment when an item is placed in the machine.
-            ('[Optional] statsToIncrementWhenLoaded', 'List<GameData.StatIncrement>'),
+            ('[Optional] statsToIncrementWhenLoaded', 'List<#StatIncrement>'),
             # The game stat counters to increment when the processed output is collected.
-            ('[Optional] statsToIncrementWhenHarvested', 'List<GameData.StatIncrement>'),
+            ('[Optional] statsToIncrementWhenHarvested', 'List<#StatIncrement>'),
             # A list of (skillName) (amount), e.g. Farming 7 Fishing 5 
             ('[Optional] experienceGainOnHarvest', 'string'),
             # Custom fields ignored by the base game, for use by mods.
@@ -2340,7 +2383,7 @@ class Machines:
             # A duration in milliseconds during which the machine sprite should shake. Default none.
             ('[Optional] shakeDuration', 'int', -1),
             # The temporary animated sprites to show.
-            ('[Optional] temporarySprites', 'List<GameData.TemporaryAnimatedSpriteDefinition>'),
+            ('[Optional] temporarySprites', 'List<#TemporaryAnimatedSpriteDefinition>'),
         ]
     # As part of a <see cref='T:StardewValley.GameData.Machines.MachineData' />, an extra item required before the machine starts.
     class MachineItemAdditionalConsumedItems:
@@ -2376,9 +2419,9 @@ class Machines:
             # An amount by which to increment the machine's spritesheet index while it's processing this output. This stacks with <see cref='F:StardewValley.GameData.Machines.MachineData.ShowNextIndexWhileWorking' /> or <see cref='F:StardewValley.GameData.Machines.MachineData.ShowNextIndexWhenReady' />.
             ('[Optional] incrementMachineParentSheetIndex', 'int'),
             # Changes to apply to the item price. This is ignored if the output isn't object (<c>(O)</c>)-type.
-            ('[Optional] priceModifiers', 'List<GameData.QuantityModifier>'),
+            ('[Optional] priceModifiers', 'List<#QuantityModifier>'),
             # How multiple <see cref='P:StardewValley.GameData.Machines.MachineItemOutput.PriceModifiers' /> should be combined.
-            ('[Optional] priceModifierMode', 'GameData.QuantityModifier.QuantityModifierMode'),
+            ('[Optional] priceModifierMode', '#QuantityModifier.QuantityModifierMode'),
         ]
     # As part of <see cref='T:StardewValley.GameData.Machines.MachineData' />, a light effect shown around the machine.
     class MachineLight:
@@ -2627,7 +2670,7 @@ class Movies:
             # A key which uniquely identifies this movie. This should only contain alphanumeric/underscore/dot characters. For custom movies, this should be prefixed with your mod ID like <c>Example.ModId_MovieName</c>.
             ('[Optional] id', 'string'),
             # The seasons when the movie plays, or none to allow any season.
-            ('[Optional] seasons', 'List<Season>'),
+            ('[Optional] seasons', 'List<#Season>'),
             # If set, the movie is available when <c>{year} % <see cref='F:StardewValley.GameData.Movies.MovieData.YearModulus' /> == <see cref='F:StardewValley.GameData.Movies.MovieData.YearRemainder' /></c> (where <c>{year}</c> is the number of years since the movie theater was built and {remainder} defaults to zero). For example, a modulus of 2 with remainder 1 is shown in the second year and every other year thereafter.
             ('[Optional] yearModulus', 'int?'),
             # [inheritdoc cref='F:StardewValley.GameData.Movies.MovieData.YearModulus' />
@@ -3151,9 +3194,9 @@ class Shops:
             ('[Optional] applyProfitMargins', 'bool?'),
             # Changes to apply to the sell price for all items in the shop, unless <see cref='P:StardewValley.GameData.Shops.ShopItemData.IgnoreShopPriceModifiers' /> is <c>true</c>. These stack with <see cref='P:StardewValley.GameData.Shops.ShopItemData.PriceModifiers' />.
             # If multiple entries match, they'll be applied sequentially (e.g. two matching rules to double the price will quadruple it).
-            ('[Optional] priceModifiers', 'List<GameData.QuantityModifier>'),
+            ('[Optional] priceModifiers', 'List<#QuantityModifier>'),
             # How multiple <see cref='F:StardewValley.GameData.Shops.ShopData.PriceModifiers' /> should be combined. This only affects that specific field, it won't affect price modifiers under <see cref='F:StardewValley.GameData.Shops.ShopData.Items' />.
-            ('[Optional] priceModifierMode', 'GameData.QuantityModifier.QuantityModifierMode'),
+            ('[Optional] priceModifierMode', '#QuantityModifier.QuantityModifierMode'),
             # The NPCs who can run the shop. If the <c>Action OpenShop</c> property specifies the <c>[owner tile area]</c> argument, at least one of the listed NPCs must be within that area; else if the <c>[owner tile area]</c> argument was omitted, the first entry in the list is used. The selected NPC's portrait will be shown in the shop UI.
             ('[Optional] owners', 'List<ShopOwnerData>'),
             # The visual theme to apply to the shop UI, or <c>null</c> for the default theme.
@@ -3207,14 +3250,14 @@ class Shops:
             ('[Optional] ignoreShopPriceModifiers', 'bool'),
             # Changes to apply to the <see cref='P:StardewValley.GameData.Shops.ShopItemData.Price' />. These stack with <see cref='F:StardewValley.GameData.Shops.ShopData.PriceModifiers' />.
             # If multiple entries match, they'll be applied sequentially (e.g. two matching rules to double the price will quadruple it).
-            ('[Optional] priceModifiers', 'List<GameData.QuantityModifier>'),
+            ('[Optional] priceModifiers', 'List<#QuantityModifier>'),
             # How multiple <see cref='P:StardewValley.GameData.Shops.ShopItemData.PriceModifiers' /> should be combined.
-            ('[Optional] priceModifierMode', 'GameData.QuantityModifier.QuantityModifierMode'),
+            ('[Optional] priceModifierMode', '#QuantityModifier.QuantityModifierMode'),
             # Changes to apply to the <see cref='P:StardewValley.GameData.Shops.ShopItemData.AvailableStock' />.
             # If multiple entries match, they'll be applied sequentially (e.g. two matching rules to double the available stock will quadruple it).
-            ('[Optional] availableStockModifiers', 'List<GameData.QuantityModifier>'),
+            ('[Optional] availableStockModifiers', 'List<#QuantityModifier>'),
             # How multiple <see cref='P:StardewValley.GameData.Shops.ShopItemData.AvailableStockModifiers' /> should be combined.
-            ('[Optional] availableStockModifierMode', 'GameData.QuantityModifier.QuantityModifierMode'),
+            ('[Optional] availableStockModifierMode', '#QuantityModifier.QuantityModifierMode'),
         ]
     # As part of <see cref='T:StardewValley.GameData.Shops.ShopData' />, an NPC who can run the shop.
     class ShopOwnerData:
@@ -3627,7 +3670,7 @@ class WildTrees:
             # Whether <see cref='F:StardewValley.GameData.WildTrees.WildTreeData.IsLeafy' /> also applies in fall.
             ('[Optional] isLeafyInFall', 'bool', True),
             # The rules which override which locations the tree can be planted in, if applicable. These don't override more specific checks (e.g. not being plantable on stone).
-            ('[Optional] plantableLocationRules', 'List<GameData.PlantableRule>'),
+            ('[Optional] plantableLocationRules', 'List<#PlantableRule>'),
             # Whether the tree can grow in winter (subject to <see cref='F:StardewValley.GameData.WildTrees.WildTreeData.GrowthChance' /> or <see cref='F:StardewValley.GameData.WildTrees.WildTreeData.FertilizedGrowthChance' />).
             ('[Optional] growsInWinter', 'bool'),
             # Whether the tree is reduced to a stump in winter and regrows in spring, like the vanilla mushroom tree.
@@ -3676,7 +3719,7 @@ class WildTrees:
     class WildTreeItemData(GenericSpawnItemDataWithCondition):
         _fields_ = [
             # If set, the specific season when this data should apply. For more complex conditions, see <see cref='P:StardewValley.GameData.GenericSpawnItemDataWithCondition.Condition' />.
-            ('[Optional] season', 'Season?'),
+            ('[Optional] season', '#Season?'),
             # The probability that the item will be produced, as a value between 0 (never) and 1 (always).
             ('[Optional] chance', 'float', 1),
         ]
@@ -3715,9 +3758,9 @@ class WildTrees:
             # The number of days before the tapper is ready to empty.
             ('daysUntilReady', 'int'),
             # Changes to apply to the result of <see cref='P:StardewValley.GameData.WildTrees.WildTreeTapItemData.DaysUntilReady' />.
-            ('[Optional] daysUntilReadyModifiers', 'List<GameData.QuantityModifier>'),
+            ('[Optional] daysUntilReadyModifiers', 'List<#QuantityModifier>'),
             # How multiple <see cref='P:StardewValley.GameData.WildTrees.WildTreeTapItemData.DaysUntilReadyModifiers' /> should be combined.
-            ('[Optional] daysUntilReadyModifierMode', 'GameData.QuantityModifier.QuantityModifierMode'),
+            ('[Optional] daysUntilReadyModifierMode', '#QuantityModifier.QuantityModifierMode'),
         ]
     # As part of <see cref='T:StardewValley.GameData.WildTrees.WildTreeData' />, a possible spritesheet to use for the tree.
     class WildTreeTextureData:
@@ -3726,7 +3769,7 @@ class WildTrees:
             # This condition is checked when a tree's texture is loaded. Once it's loaded, the conditions won't be rechecked until the next day.
             ('[Optional] condition', 'string'),
             # If set, the specific season when this texture should apply. For more complex conditions, see <see cref='F:StardewValley.GameData.WildTrees.WildTreeTextureData.Condition' />.
-            ('[Optional] season', 'Season?'),
+            ('[Optional] season', '#Season?'),
             # The asset name for the tree's spritesheet.
             ('texture', 'string'),
         ]

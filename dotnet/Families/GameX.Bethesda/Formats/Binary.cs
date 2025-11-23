@@ -299,7 +299,8 @@ public unsafe class Binary_Ba2 : PakBinary<Binary_Ba2> {
             w.Write((byte)0x1); // Texture Count
             w.Write((byte)0x8); // Alignment
             w.Write((byte)0x0); // Unused
-            w.Write(BitConverter.GetBytes(gnmf.FileSize + 256).Reverse().ToArray()); // File size + header size
+            var z = BitConverter.GetBytes(gnmf.FileSize + 256); z.Reverse();
+            w.Write(z); // File size + header size
             w.Write(UnsafeX.FixedTArray(gnmf.Header, 32));
             for (var i = 0; i < 208; i++) w.Write((byte)0x0); // Padding
 

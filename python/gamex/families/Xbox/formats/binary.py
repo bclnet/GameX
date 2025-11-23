@@ -5,7 +5,7 @@ from enum import Enum
 from numpy import ndarray, array
 from openstk import _throw, _pathExtension, Reader, IWriteToStream
 from openstk.gfx import Raster, Texture_Bytes, ITexture, TextureFormat, TexturePixel
-from openstk.core.drawing import Plane, Point, Rectangle, BoundingBox, BoundingSphere, Ray, Curve
+from openstk.core.drawing import Plane, Point, Rectangle, BoundingBox, BoundingSphere, BoundingFrustum, Ray, Curve
 from openstk.core.reflect import *
 from gamex import PakFile, BinaryPakFile, PakBinary, PakBinaryT, FileSource, MetaInfo, MetaManager, MetaContent, IHaveMetaInfo, DesSer
 from gamex.core.globalx import ByteColor4
@@ -28,45 +28,47 @@ class Binary_Xnb(IHaveMetaInfo, IWriteToStream):
     #region Type Reader
 
     class TypeReader:
-        def __init__(self, type: type, name: str, target: str, valueType: bool = False):
-            self.type: type = type
+        def __init__(self, t: type, name: str, type: str, valueType: bool = False):
+            self.t: type = t
             self.name: str = name
-            self.target: str = target
+            self.type: str = type
             self.valueType: bool = valueType
-
     class TypeReader[T](TypeReader):
-        def __init__(self, name: str, target: str, read: callable, valueType: bool = False):
-            super().__init__(None, name, target, valueType)
-            self.read: callable = read
-
+        def __init__(self, name: str, type: str, read: callable, valueType: bool = False):
+            super().__init__(None, name, type, valueType)
+            self.readFunc: callable = read
+        def read(r: ContentReader, o: T) -> T: self.readFunc(r, o)
     class GenericReader(TypeReader):
-        def __init__(self, name: str, target: str, ginit: callable, valueType: bool = False, args: list[str] = None):
-            super().__init__(name, target, None, valueType)
+        def __init__(self, name: str, type: str, ginit: callable, valueType: bool = False, args: list[str] = None):
+            super().__init__(name, type, None, valueType)
             self.ginit: callable = ginit
 
-    class ResourceRef:
-        def __init__(self, r: ContentReader): self.id = r.readVInt7()
-        def obj(p: Binary_Xnb) -> object: return p.resources[self.id - 1] if self.id != 0 else None
+    # class ResourceRef:
+    #     def __init__(self, r: ContentReader): self.id = r.readVInt7()
+    #     def obj(p: Binary_Xnb) -> object: return p.resources[self.id - 1] if self.id != 0 else None
 
     # System types
-    def _EnumReader[T](value): return Binary_Xnb.TypeReader[T](None, None, lambda r: r.readInt32())
-    def _NullableReader[T](value): return Binary_Xnb.TypeReader[T](None, None, lambda r: r.read(value) if r.readBoolean() else None)
-    def _ArrayReader[T](value): return Binary_Xnb.TypeReader[list[T]](None, None, lambda r: r.readL32FArray(lambda z: r.readValueOrObject(value)))
-    def _ListReader[T](value): return Binary_Xnb.TypeReader[list[T]](None, None, lambda r: r.readL32FList(lambda z: r.readValueOrObject(value)))
-    def _DictionaryReader[TKey, TValue](key, value): return Binary_Xnb.TypeReader[dict[TKey, TValue]](None, None, lambda r: r.readL32FMany(None, lambda z: r.readValueOrObject(key), lambda z: r.readValueOrObject(value)))
-    def _ReflectiveReader[T](value):
-        cls = value.read(None)
-        baseType = cls._base_ if hasattr(cls, '_base_') else None
-        baseTypeReader = GetByTarget(baseType) if baseType else None
-        properties, fields = Reflect.getAllPropertiesFields(cls)
+    # def _MakeReader[T](type: t, type: str): return Binary_Xnb.TypeReader[T](None, type, lambda r: t.new())
+    def _EnumReader[T](elem): return Binary_Xnb.TypeReader[T](None, None, lambda r: r.readInt32())
+    def _NullableReader[T](elem): return Binary_Xnb.TypeReader[T](None, None, lambda r: elem.read(r, o) if r.readBoolean() else None)
+    def _ArrayReader[T](elem): return Binary_Xnb.TypeReader[list[T]](None, None, lambda r: r.readL32FArray(lambda z: r.read(elem), obj=o))
+    def _ListReader[T](elem): return Binary_Xnb.TypeReader[list[T]](None, None, lambda r: r.readL32FList(lambda z: r.read(elem), obj=o))
+    def _DictionaryReader[TKey, TValue](key, value): return Binary_Xnb.TypeReader[dict[TKey, TValue]](None, None, lambda r: r.readL32FMany(None, lambda z: r.readValueOrObject(key), lambda z: r.readValueOrObject(value), obj=o))
+    def _ReflectiveReader[T](elem):
+        type = Reflect.getTypeByName(elem.type)
+        baseType = type.__bases__[0] if hasattr(type, '__bases__') else None
+        # if baseType: print(baseType)
+        # constructor = Reflect.getDefaultConstructor(type)
+        baseReader = getByTarget(baseType) if baseType else None
+        properties, fields = Reflect.getAllPropertiesFields(type)
         values = []
         for property in properties:
             if (v := Binary_Xnb.ContentReader.getMemberValue(property)): values.append(v)
         for field in fields:
             if (v := Binary_Xnb.ContentReader.getMemberValue(field)): values.append(v)
-        def _Reader(r):
-            obj = r.read(value)
-            if baseTypeReader: r.readValueOrObject(baseTypeReader, obj)
+        def _Reader(r, o):
+            obj = o or r.read(value) #constructor
+            if baseReader: r.read(baseReader, obj)
             for v in values: v(r, obj)
             return obj
         return Binary_Xnb.TypeReader[T](None, None, lambda r: _Reader(r))
@@ -109,7 +111,7 @@ class Binary_Xnb(IHaveMetaInfo, IWriteToStream):
         TypeReader[Rectangle]('RectangleReader', 'Rectangle', lambda r: Rectangle(r.readInt32(), r.readInt32(), r.readInt32(), r.readInt32()), valueType=True),
         TypeReader[BoundingBox]('BoundingBoxReader', 'BoundingBox', lambda r: BoundingBox(r.readVector3(), r.readVector3()), valueType=True),
         TypeReader[BoundingSphere]('BoundingSphereReader', 'BoundingSphere', lambda r: BoundingSphere(r.readVector3(), r.readSingle()), valueType=True),
-        TypeReader[Matrix4x4]('BoundingFrustumReader', 'BoundingFrustum', lambda r: r.readMatrix4x4()),
+        TypeReader[BoundingFrustum]('BoundingFrustumReader', 'BoundingFrustum', lambda r: BoundingFrustum(r.readMatrix4x4())),
         TypeReader[Ray]('RayReader', 'Ray', lambda r: Ray(r.readVector3(), r.readVector3()), valueType=True),
         TypeReader[Curve]('CurveReader', 'Curve', lambda r: Curve(r.readInt32(), r.readInt32(), r.readL32FArray(lambda z: Curve.Loop(z.readSingle(), z.readSingle(), z.readSingle(), z.readSingle(), z.readInt32())))),
         # Graphics types
@@ -134,8 +136,8 @@ class Binary_Xnb(IHaveMetaInfo, IWriteToStream):
         TypeReader['Binary_Xnb.Song']('SongReader', 'Media.Song', lambda r: Binary_Xnb.Song(r)),
         TypeReader['Binary_Xnb.Video']('VideoReader', 'Media.Video', lambda r: Binary_Xnb.Video(r))]
     readersByName: dict[str, TypeReader] = { x.name:x for x in readers }
-    readersByTarget: dict[str, TypeReader] = {}
-    for k, g in itertools.groupby(sorted(readers, key=lambda x: x.target), key=lambda x: x.target): v = next(g); readersByTarget[v.target] = v
+    readersByType: dict[str, TypeReader] = {}
+    for k, g in itertools.groupby(sorted(readers, key=lambda x: x.type), key=lambda x: x.type): v = next(g); readersByType[v.type] = v
 
     # ContentReader
     class ContentReader(Reader):
@@ -168,11 +170,11 @@ class Binary_Xnb(IHaveMetaInfo, IWriteToStream):
         def readTypeManifest(self) -> None:
             self.objReaders: list[Binary_Xnb.TypeReader] = self.readLV7FArray(lambda z: Binary_Xnb.ContentReader.getByName(self.readLV7UString(), self.readUInt32()))
             # for s in [x for x in self.objReaders if x.init]: s.init()
-        def read[T](self, reader: Binary_Xnb.TypeReader, obj: T = None) -> T: return reader.read(self) if reader else None
+        # def read[T](self, reader: Binary_Xnb.TypeReader, obj: T = None) -> T: return reader.read(self) if reader else None
         def readObject[T](self, obj: T = None) -> T: return self.read(self.readTypeId(), obj)
         def readValueOrObject[T](self, reader: Binary_Xnb.TypeReader, obj: T = None) -> T: return self.read(reader, obj) if reader.valueType else self.readObject(obj)
         def readTypeId(self) -> Binary_Xnb.TypeReader: id = self.readVInt7() - 1; return (self.objReaders[id] if id < len(self.objReaders) else _throw('Invalid XNB file: id is out of range.')) if id >= 0 else None 
-        def validate(self, type: str) -> Binary_Xnb.ContentReader: reader = self.readTypeId(); return self if reader and reader.target == type else _throw('Invalid XNB file: got an unexpected id.')
+        def validate(self, type: str) -> Binary_Xnb.ContentReader: reader = self.readTypeId(); return self if reader and reader.type == type else _throw('Invalid XNB file: got an unexpected id.')
         def readResource(self) -> Binary_Xnb.ResourceRef: return ResourceRef(self)
         @staticmethod
         def create(s: Binary_Xnb.GenericReader, args: list[str]) -> Binary_Xnb.TypeReader:
@@ -187,29 +189,33 @@ class Binary_Xnb(IHaveMetaInfo, IWriteToStream):
             else: raise Exception()
             suffix = f'`{len(args)}[[{'],['.join(args)}]]'
             r.name = s.name + suffix
-            r.target = s.target + suffix
+            r.type = s.type + suffix
             r.valueType = s.valueType
             return r
         @staticmethod
         def getByName(name: str, version: int) -> Binary_Xnb.TypeReader:
-            wanted = Reflect.stripAssemblyVersion(name).replace('Microsoft.Xna.Framework.Content.', '')
-            if wanted in Binary_Xnb.readersByName: return Binary_Xnb.readersByName[wanted]
-            genericName, args = Reflect.splitGenericTypeName(wanted)
+            name = Reflect.stripAssemblyVersion(name).replace('Microsoft.Xna.Framework.Content.', '')
+            if name in Binary_Xnb.readersByName: return Binary_Xnb.readersByName[name]
+            genericName, args = Reflect.splitGenericTypeName(name)
             if genericName and genericName in Binary_Xnb.readersByName and (generic := Binary_Xnb.readersByName[genericName]) != None:
                 reader = Binary_Xnb.ContentReader.create(generic, args)
-                if reader.name != wanted: raise Exception('ERROR')
+                if reader.name != name: raise Exception('ERROR')
                 return Binary_Xnb.add(reader)
-            _throw(f'Cannot find type reader "{wanted}".')
+            _throw(f'Cannot find type reader "{name}".')
         @staticmethod
         def getByTarget(target: str) -> Binary_Xnb.TypeReader:
-            wanted = Reflect.stripAssemblyVersion(target).replace('Microsoft.Xna.Framework.', '').replace('System.', '')
-            if wanted in Binary_Xnb.readersByTarget: return Binary_Xnb.readersByTarget[wanted]
-            genericName, args = Reflect.splitGenericTypeName(wanted)
-            if genericName and genericName in Binary_Xnb.readersByTarget and (generic := Binary_Xnb.readersByTarget[genericName]) != None:
+            target = Reflect.stripAssemblyVersion(target).replace('Microsoft.Xna.Framework.', '').replace('System.', '')
+            if target in Binary_Xnb.readersByType: return Binary_Xnb.readersByType[target]
+            genericName, args = Reflect.splitGenericTypeName(target)
+            if genericName and genericName in Binary_Xnb.readersByType and (generic := Binary_Xnb.readersByType[genericName]) != None:
                 reader = Binary_Xnb.ContentReader.create(generic, args)
-                if reader.target != wanted: raise Exception('ERROR')
+                if reader.type != target: raise Exception('ERROR')
                 return Binary_Xnb.add(reader)
-            _throw(f'Cannot find type reader "{wanted}".')
+            type = Reflect.getTypeByName(target)
+            if type:
+                reader = Binary_Xnb._MakeReader(type, target)
+                return Binary_Xnb.add(reader)
+            _throw(f'Cannot find type reader "{target}".')
 
     #endregion
 
@@ -389,7 +395,7 @@ class Binary_Xnb(IHaveMetaInfo, IWriteToStream):
     class EffectMaterial:
         def __init__(self, r: Binary_Xnb.ContentReader):
             self.effectReference: str = r.readLV7UString()
-            self.Parameters: object = r.readObject()
+            self.parameters: dict[str, object] = r.readObject()
 
     class BasicEffect:
         def __init__(self, r: Binary_Xnb.ContentReader):
@@ -497,45 +503,45 @@ class Binary_Xnb(IHaveMetaInfo, IWriteToStream):
             return res
 
     class Model(IHaveMetaInfo):
-        class BoneRef:
-            def __init__(self, p: Model, r: Binary_Xnb.ContentReader):
-                self.id: int = r.readByte() if p.bones8 else r.readUInt32()
-            def done(self) -> Bone: return p.Bones[Id - 1] if self.id != 0 else None
+        @staticmethod
+        def readBoneIdx(p: Model, r: Binary_Xnb.ContentReader): id = r.readByte() if p.bones8 else r.readUInt32(); return p.bones[id - 1] if id != 0 else None
         class Bone:
             def __init__(self, r: Binary_Xnb.ContentReader):
-                self.name: str = r.readObject()
+                self.name: str = r.readObject[string]()
                 self.transform: Matrix4x4 = r.readMatrix4x4()
-                self.parent: BoneRef
-                self.children: list[BoneRef]
+                self.parent: Bone = None
+                self.children: list[Bone] = None
         class MeshPart:
             def __init__(self, p: Model, r: Binary_Xnb.ContentReader):
                 self.vertexOffset: int = r.readInt32()
                 self.numVertices: int = r.readInt32()
                 self.startIndex: int = r.readInt32()
                 self.primitiveCount: int = r.readInt32()
-                self.tag: object = r.readObject()
+                self.tag: object = r.readObject[object]()
                 self.resourceRef = r.readResource()
                 self.indexBuffer: ResourceRef = r.readResource()
                 self.effect: ResourceRef = r.readResource()
         class Mesh:
             def __init__(self, p: Model, r: Binary_Xnb.ContentReader):
-                self.name: str = r.readObject()
-                self.parent: BoneRef = BoneRef(p, r)
+                self.name: str = r.readObject[str]()
+                self.parent: Bone = readBoneIdx(p, r)
                 self.bounds: BoundingSphere = BoundingSphere(r.readVector3(), r.readSingle())
-                self.tag: object = r.readObject()
+                self.tag: object = r.readObject[object]()
                 self.parts: list[MeshPart] = r.readL32FArray(lambda z: MeshPart(r))
         def __init__(self, r: Binary_Xnb.ContentReader):
             self.bones: list[Bone] = r.readL32FArray(lambda z: Bone(r)); self.bones8: bool = len(self.bones) < 255
-            for s in self.bones: s.parent = BoneRef(self, r); s.children = r.readL32FArray(lambda z: BoneRef(self, r))
+            for s in self.bones:
+                s.parent = readBoneIdx(p, r)
+                s.children = r.readL32FArray(lambda z: readBoneIdx(p, r))
             self.meshs: list[Mesh] = r.readL32FArray(lambda z: Mesh(self, r))
-            self.root: BoneRef = BoneRef(self, r)
-            self.tag: object = r.readObject()
+            self.root: Bone = readBoneIdx(p, r)
+            self.tag: object = r.readObject[object]()
         def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
             MetaInfo(None, MetaContent(type = 'Data', name = os.path.basename(file.path), value = self)),
             MetaInfo('Model', items = [
                 MetaInfo(f'Bones: {len(self.bones)}'),
                 MetaInfo(f'Meshs: {len(self.meshs)}'),
-                MetaInfo(f'Root: {self.root.bone.name}'),
+                MetaInfo(f'Root: {self.root.name}'),
                 MetaInfo(f'Tag: {self.tag}')
                 ])
             ]
@@ -637,7 +643,7 @@ class Binary_Xnb(IHaveMetaInfo, IWriteToStream):
     def add(reader: Binary_Xnb.TypeReader) -> Binary_Xnb.TypeReader:
         Binary_Xnb.readers.append(reader)
         if reader.name: Binary_Xnb.readersByName[reader.name] = reader
-        if reader.target and reader.target not in Binary_Xnb.readersByTarget: Binary_Xnb.readersByTarget[reader.target] = reader
+        if reader.type and reader.type not in Binary_Xnb.readersByType: Binary_Xnb.readersByType[reader.type] = reader
         return reader
 
     def writeToStream(self, stream: object): return DesSer.serialize(self.obj, stream)

@@ -4,6 +4,7 @@ using GameX.Unknown;
 using GameX.Xbox.Formats;
 using System;
 using System.IO;
+using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -20,6 +21,7 @@ public class StardewValleyGame(Family family, string id, JsonElement elem, Famil
     /// <returns></returns>
     public override void Loaded() {
         base.Loaded();
+        Reflect.Scan(GetType());
         Formats.StardewValley.X.Register();
     }
 }

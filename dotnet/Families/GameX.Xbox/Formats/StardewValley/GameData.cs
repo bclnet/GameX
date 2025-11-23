@@ -3,9 +3,30 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Numerics;
+using System.Reflection;
 using static GameX.Xbox.Formats.Binary_Xnb;
 
 namespace GameX.Xbox.Formats.StardewValley.GameData;
+
+/// <summary>A character's gender identity.</summary>
+[RType("StardewValley.Gender")]
+public enum Gender {
+    Male,
+    Female,
+    Undefined,
+}
+/// <summary>A season of the year.</summary>
+[RType("StardewValley.Season")]
+public enum Season {
+    /// <summary>The spring season.</summary>
+    Spring,
+    /// <summary>The summer season.</summary>
+    Summer,
+    /// <summary>The fall season.</summary>
+    Fall,
+    /// <summary>The winter season.</summary>
+    Winter,
+}
 
 /// <summary>A data entry which specifies item data to create.</summary>
 public interface ISpawnItemData {
@@ -49,6 +70,7 @@ public interface ISpawnItemData {
 }
 /// <summary>An audio change to apply to the game's sound bank.</summary>
 /// <remarks>This describes an override applied to the sound bank. The override is applied permanently for the current game session, even if it's later removed from the data asset. Overriding a cue will reset all values to the ones specified.</remarks>
+[RType]
 public class AudioCueData {
     /// <summary>A unique cue ID, used when playing the sound in-game. The ID should only contain alphanumeric/underscore/dot characters. For custom audio cues, this should be prefixed with your mod ID like <c>Example.ModId_AudioName</c>.</summary>
     public string Id;
@@ -73,6 +95,7 @@ public class AudioCueData {
     [Optional] public Dictionary<string, string> CustomFields;
 }
 /// <summary>The data for an item to create, used in data assets like <see cref="T:StardewValley.GameData.Machines.MachineData" /> or <see cref="T:StardewValley.GameData.Shops.ShopData" />.</summary>
+[RType]
 public class GenericSpawnItemData : ISpawnItemData {
     /// <summary>The backing field for <see cref="P:StardewValley.GameData.GenericSpawnItemData.Id" />.</summary>
     string _IdImpl;
@@ -123,6 +146,7 @@ public class GenericSpawnItemData : ISpawnItemData {
     [Optional] public string PerItemCondition { get; set; }
 }
 /// <summary>The data for an item to create with support for a game state query, used in data assets like <see cref="T:StardewValley.GameData.Machines.MachineData" /> or <see cref="T:StardewValley.GameData.Shops.ShopData" />.</summary>
+[RType]
 public class GenericSpawnItemDataWithCondition : GenericSpawnItemData {
     /// <summary>A game state query which indicates whether the item should be added. Defaults to always added.</summary>
     [Optional] public string Condition { get; set; }
@@ -196,6 +220,7 @@ public class MannequinData {
     [Optional] public Dictionary<string, string> CustomFields;
 }
 /// <summary>The metadata for a custom farm layout which can be selected by players.</summary>
+[RType]
 public class ModFarmType {
     /// <summary>A key which uniquely identifies this farm type. The ID should only contain alphanumeric/underscore/dot characters. This should be prefixed with your mod ID like <c>Example.ModId_FarmType.</c></summary>
     public string Id;
@@ -215,6 +240,7 @@ public class ModFarmType {
     [Optional] public Dictionary<string, string> CustomFields;
 }
 /// <summary>The metadata for a custom language which can be selected by players.</summary>
+[RType]
 public class ModLanguage {
     /// <summary>A key which uniquely identifies this language. The ID should only contain alphanumeric/underscore/dot characters. This should be prefixed with your mod ID like <c>Example.ModId_Language.</c></summary>
     public string Id;
@@ -264,6 +290,7 @@ public class ModLanguage {
     [Optional] public Dictionary<string, string> CustomFields;
 }
 /// <summary>The metadata for a custom floor or wallpaper item.</summary>
+[RType]
 public class ModWallpaperOrFlooring {
     /// <summary>A key which uniquely identifies this wallpaper or flooring. This should only contain alphanumeric/underscore/dot characters. This should be prefixed with your mod ID like <c>Example.ModId_WallpaperName</c>.</summary>
     public string Id;
@@ -388,6 +415,7 @@ public class PlantableRule {
     public bool ShouldApplyWhen(bool isGardenPot) => PlantedIn.HasFlag((PlantableRuleContext)(isGardenPot ? 2 : 1));
 }
 /// <summary>As part of another entry like <see cref="T:StardewValley.GameData.Machines.MachineData" /> or <see cref="T:StardewValley.GameData.Shops.ShopData" />, a change to apply to a numeric quantity.</summary>
+[RType]
 public class QuantityModifier {
     /// <summary>An ID for this modifier. This only needs to be unique within the current modifier list. For a custom entry, you should use a globally unique ID which includes your mod ID like <c>ExampleMod.Id_ModifierName</c>.</summary>
     public string Id;
@@ -414,6 +442,7 @@ public class QuantityModifier {
         };
     }
     /// <summary>The type of change to apply for a <see cref="T:StardewValley.GameData.QuantityModifier" />.</summary>
+    [RType]
     public enum ModificationType {
         /// <summary>Add a number to the current value.</summary>
         Add,
@@ -427,6 +456,7 @@ public class QuantityModifier {
         Set,
     }
     /// <summary>Indicates how multiple quantity modifiers are combined.</summary>
+    [RType]
     public enum QuantityModifierMode {
         /// <summary>Apply each modifier to the result of the previous one. For example, two modifiers which double a value will quadruple it.</summary>
         Stack,
@@ -437,6 +467,7 @@ public class QuantityModifier {
     }
 }
 /// <summary>As part of <see cref="T:StardewValley.GameData.FarmAnimals.FarmAnimalData" /> or <see cref="T:StardewValley.GameData.Machines.MachineData" />, a game state counter to increment.</summary>
+[RType]
 public class StatIncrement {
     /// <summary>The backing field for <see cref="P:StardewValley.GameData.StatIncrement.Id" />.</summary>
     string _idImpl;
@@ -531,6 +562,7 @@ public class TrinketData {
 }
 
 public class BigCraftables {
+    [RType]
     public class BigCraftableData {
         /// <summary>The internal item name.</summary>
         public string Name;
@@ -561,6 +593,7 @@ public class BigCraftables {
 
 public class Buffs {
     /// <summary>As part of <see cref="T:StardewValley.GameData.Buffs.BuffData" /> or <see cref="T:StardewValley.GameData.Objects.ObjectBuffData" />, the attribute values to add to the player's stats.</summary>
+    [RType]
     public class BuffAttributesData {
         /// <summary>The buff to the player's combat skill level.</summary>
         [Optional] public float CombatLevel;
@@ -600,6 +633,7 @@ public class Buffs {
         [Optional] public float WeaponPrecisionMultiplier;
     }
     /// <summary>A predefined buff which can be applied in-game.</summary>
+    [RType]
     public class BuffData {
         /// <summary>A tokenizable string for the translated buff name.</summary>
         public string DisplayName;
@@ -628,6 +662,7 @@ public class Buffs {
 
 public class Buildings {
     /// <summary>As part of <see cref="T:StardewValley.GameData.Buildings.BuildingData" />, a tile which the player can click to trigger an <c>Action</c> map tile property.</summary>
+    [RType]
     public class BuildingActionTile {
         /// <summary>A key which uniquely identifies this entry within the list. The ID should only contain alphanumeric/underscore/dot characters. For custom entries, this should be prefixed with your mod ID like <c>Example.ModId_Id</c>.</summary>
         public string Id;
@@ -637,6 +672,7 @@ public class Buildings {
         public string Action;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.Buildings.BuildingData" />, an input/output inventory that can be accessed from a tile on the building exterior.</summary>
+    [RType]
     public class BuildingChest {
         /// <summary>A key for this chest, referenced from the <see cref="F:StardewValley.GameData.Buildings.BuildingData.ItemConversions" /> field. Each chest must have a unique name within one building's chest list (but they don't need to be globally unique).</summary>
         public string Id;
@@ -658,6 +694,7 @@ public class Buildings {
         [Optional] public float DisplayHeight;
     }
     /// <summary>The inventory type for a building chest.</summary>
+    [RType]
     public enum BuildingChestType {
         /// <summary>A normal chest which can both provide output and accept input.</summary>
         Chest,
@@ -667,6 +704,7 @@ public class Buildings {
         Load,
     }
     /// <summary>The data for a building which can be constructed by players.</summary>
+    [RType]
     public class BuildingData {
         /// <summary>A tokenizable string for the display name (e.g. shown in the construction menu).</summary>
         public string Name;
@@ -847,6 +885,7 @@ public class Buildings {
         }
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.Buildings.BuildingData" />, a texture to draw over or behind the building.</summary>
+    [RType]
     public class BuildingDrawLayer {
         /// <summary>A key which uniquely identifies this entry within the list. The ID should only contain alphanumeric/underscore/dot characters. For custom entries, this should be prefixed with your mod ID like <c>Example.ModId_DrawLayerId</c>.</summary>
         public string Id;
@@ -890,6 +929,7 @@ public class Buildings {
         }
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.Buildings.BuildingData" />, an output item produced when an input item is converted.</summary>
+    [RType]
     public class BuildingItemConversion {
         /// <summary>A unique identifier for this entry. This only needs to be unique within the current list. For a custom entry, you should use a globally unique ID which includes your mod ID like <c>ExampleMod.Id_ItemName</c>.</summary>
         public string Id;
@@ -904,9 +944,10 @@ public class Buildings {
         /// <summary>The name of the inventory defined in <see cref="F:StardewValley.GameData.Buildings.BuildingData.Chests" /> in which to store output items.</summary>
         public string DestinationChest;
         /// <summary>The output items produced when an input item is converted.</summary>
-        public List<GameData.GenericSpawnItemDataWithCondition> ProducedItems;
+        public List<GenericSpawnItemDataWithCondition> ProducedItems;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.Buildings.BuildingData" />, the materials needed to construct a building.</summary>
+    [RType]
     public class BuildingMaterial {
         /// <summary>A key which uniquely identifies the building material.</summary>
         [Ignore] public string Id => ItemId;
@@ -916,6 +957,7 @@ public class Buildings {
         public int Amount;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.Buildings.BuildingData" />, a tile to treat as part of the building when placing it through a construction menu.</summary>
+    [RType]
     public class BuildingPlacementTile {
         /// <summary>The tile positions relative to the top-left corner of the building.</summary>
         public Rectangle TileArea;
@@ -923,6 +965,7 @@ public class Buildings {
         [Optional] public bool OnlyNeedsToBePassable;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.Buildings.BuildingData" />, an appearance which can be selected from the construction menu (like stone vs plank cabins).</summary>
+    [RType]
     public class BuildingSkin {
         /// <summary>A key which uniquely identifies the skin. The ID should only contain alphanumeric/underscore/dot characters. For custom skins, it should be prefixed with your mod ID like <c>Example.ModId_SkinName</c>.</summary>
         public string Id;
@@ -948,6 +991,7 @@ public class Buildings {
         [Optional] public Dictionary<string, string> Metadata = [];
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.Buildings.BuildingData" />, a map tile property to set.</summary>
+    [RType]
     public class BuildingTileProperty {
         /// <summary>A key which uniquely identifies this entry within the list. The ID should only contain alphanumeric/underscore/dot characters. For custom entries, this should be prefixed with your mod ID like <c>Example.ModId_Id</c>.</summary>
         public string Id;
@@ -961,6 +1005,7 @@ public class Buildings {
         public Rectangle TileArea;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.Buildings.BuildingData" />, an item to place in the building interior when it's constructed or upgraded.</summary>
+    [RType]
     public class IndoorItemAdd {
         /// <summary>A key which uniquely identifies this entry within the list. The ID should only contain alphanumeric/underscore/dot characters. For custom entries, this should be prefixed with your mod ID like <c>Example.ModId_Id</c>.</summary>
         public string Id;
@@ -974,6 +1019,7 @@ public class Buildings {
         [Optional] public bool ClearTile = true;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.Buildings.BuildingData" />, a placed item in its interior to move when transitioning to an upgraded map.</summary>
+    [RType]
     public class IndoorItemMove {
         /// <summary>A key which uniquely identifies this entry within the list. The ID should only contain alphanumeric/underscore/dot characters. For custom entries, this should be prefixed with your mod ID like <c>Example.ModId_Id</c>.</summary>
         public string Id;
@@ -1018,6 +1064,7 @@ public class Bundles {
 
 public class Characters {
     /// <summary>How an NPC's birthday is shown on the calendar.</summary>
+    [RType]
     public enum CalendarBehavior {
         /// <summary>They always appear on the calendar.</summary>
         AlwaysShown,
@@ -1027,6 +1074,7 @@ public class Characters {
         HiddenAlways,
     }
     /// <summary>How an NPC appears in the end-game perfection slide show.</summary>
+    [RType]
     public enum EndSlideShowBehavior {
         /// <summary>The NPC doesn't appear in the slide show.</summary>
         Hidden,
@@ -1036,12 +1084,14 @@ public class Characters {
         TrailingGroup,
     }
     /// <summary>The general age of an NPC.</summary>
+    [RType]
     public enum NpcAge {
         Adult,
         Teen,
         Child,
     }
     /// <summary>The language spoken by an NPC.</summary>
+    [RType]
     public enum NpcLanguage {
         /// <summary>The default language understood by the player.</summary>
         Default,
@@ -1049,24 +1099,28 @@ public class Characters {
         Dwarvish,
     }
     /// <summary>A measure of a character's general politeness.</summary>
+    [RType]
     public enum NpcManner {
         Neutral,
         Polite,
         Rude,
     }
     /// <summary>A measure of a character's overall optimism.</summary>
+    [RType]
     public enum NpcOptimism {
         Positive,
         Negative,
         Neutral,
     }
     /// <summary>A measure of a character's comfort with social situations.</summary>
+    [RType]
     public enum NpcSocialAnxiety {
         Outgoing,
         Shy,
         Neutral,
     }
     /// <summary>How an NPC is shown on the social tab when unlocked.</summary>
+    [RType]
     public enum SocialTabBehavior {
         /// <summary>Until the player meets them, their name on the social tab is replaced with "???".</summary>
         UnknownUntilMet,
@@ -1077,6 +1131,7 @@ public class Characters {
         /// <summary>They never appear on the social tab.</summary>
         HiddenAlways,
     }
+    [RType]
     public class CharacterAppearanceData {
         /// <summary>An ID for this entry within the appearance list. This only needs to be unique within the current list.</summary>
         public string Id;
@@ -1102,6 +1157,7 @@ public class Characters {
         [Optional] public int Weight = 1;
     }
     /// <summary>The content data for an NPC.</summary>
+    [RType]
     public class CharacterData {
         /// <summary>A tokenizable string for the NPC's display name.</summary>
         public string DisplayName;
@@ -1186,7 +1242,7 @@ public class Characters {
         [Optional] public bool? FlowerDanceCanDance;
         /// <summary>At the Winter Star festival, the possible gifts this NPC can give to players.</summary>
         /// <remarks>If this doesn't return a match, a generic gift is selected based on <see cref="F:StardewValley.GameData.Characters.CharacterData.Age" />.</remarks>
-        [Optional] public List<GameData.GenericSpawnItemDataWithCondition> WinterStarGifts = [];
+        [Optional] public List<GenericSpawnItemDataWithCondition> WinterStarGifts = [];
         /// <summary>A game state query which indicates whether this NPC can give and receive gifts at the Feast of the Winter Star, or <c>null</c> to allow it if their <see cref="F:StardewValley.GameData.Characters.CharacterData.HomeRegion" /> is <c>Town</c>.</summary>
         [Optional] public string WinterStarParticipant;
         /// <summary>A game state query which indicates whether the NPC should be added to the world, checked when loading a save and when ending each day. This only affects whether the NPC is added when missing; returning false won't remove an NPC that's already been added.</summary>
@@ -1248,6 +1304,7 @@ public class Characters {
         [Optional] public Dictionary<string, string> CustomFields;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.Characters.CharacterData" />, a possible location for the NPC's default map.</summary>
+    [RType]
     public class CharacterHomeData {
         /// <summary>An ID for this entry within the home list. This only needs to be unique within the current list.</summary>
         public string Id;
@@ -1261,6 +1318,7 @@ public class Characters {
         [Optional] public string Direction = "up";
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.Characters.CharacterData" />, configures how the NPC's shadow should be rendered.</summary>
+    [RType]
     public class CharacterShadowData {
         /// <summary>Whether the shadow should be drawn.</summary>
         [Optional] public bool Visible = true;
@@ -1271,6 +1329,7 @@ public class Characters {
         [Optional] public float Scale = 1f;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.Characters.CharacterData" />, the data about the NPC's patio area on the farm when the player marries them.</summary>
+    [RType]
     public class CharacterSpousePatioData {
         /// <summary>The default value for <see cref="F:StardewValley.GameData.Characters.CharacterSpousePatioData.MapSourceRect" />.</summary>
         public static readonly Rectangle DefaultMapSourceRect = new Rectangle(0, 0, 4, 4);
@@ -1284,6 +1343,7 @@ public class Characters {
         [Optional] public Point SpriteAnimationPixelOffset;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.Characters.CharacterData" />, the data about the NPC's spouse room in the farmhouse when the player marries them.</summary>
+    [RType]
     public class CharacterSpouseRoomData {
         /// <summary>The default value for <see cref="F:StardewValley.GameData.Characters.CharacterSpouseRoomData.MapSourceRect" />.</summary>
         public static readonly Rectangle DefaultMapSourceRect = new Rectangle(0, 0, 6, 9);
@@ -1341,7 +1401,7 @@ public class Crops {
         /// <summary>Whether this crop needs to be watered to grow.</summary>
         [Optional] public bool NeedsWatering = true;
         /// <summary>The rules which override which locations the crop can be planted in, if applicable. These don't override more specific checks (e.g. crops needing to be planted in dirt).</summary>
-        [Optional] public List<GameData.PlantableRule> PlantableLocationRules;
+        [Optional] public List<PlantableRule> PlantableLocationRules;
         /// <summary>The unqualified item ID produced when this crop is harvested.</summary>
         [Optional] public string HarvestItemId;
         /// <summary>The minimum number of <see cref="F:StardewValley.GameData.Crops.CropData.HarvestItemId" /> to harvest.</summary>
@@ -1533,7 +1593,7 @@ public class FarmAnimals {
         /// <summary>Overrides <see cref="F:StardewValley.GameData.FarmAnimals.FarmAnimalData.LeftRightPetHitboxTileSize" /> when the animal is a baby.</summary>
         [Optional] public Vector2 BabyLeftRightPetHitboxTileSize = new(1f, 1f);
         /// <summary>The game stat counters to increment when the animal produces an item, if any.</summary>
-        [Optional] public List<GameData.StatIncrement> StatToIncrementOnProduce;
+        [Optional] public List<StatIncrement> StatToIncrementOnProduce;
         /// <summary>Whether to show the farm animal in the credit scene on the summit after the player achieves perfection.</summary>
         [Optional] public bool ShowInSummitCredits;
         /// <summary>Custom fields ignored by the base game, for use by mods.</summary>
@@ -1740,7 +1800,7 @@ public class FruitTrees {
     /// <summary>Metadata for a fruit tree type.</summary>
     public class FruitTreeData {
         /// <summary>The rules which override which locations the tree can be planted in, if applicable. These don't override more specific checks (e.g. not being plantable on stone).</summary>
-        [Optional] public List<GameData.PlantableRule> PlantableLocationRules;
+        [Optional] public List<PlantableRule> PlantableLocationRules;
         /// <summary>A tokenizable string for the fruit tree display name, like 'Cherry' for a cherry tree.</summary>
         /// <remarks>This shouldn't include 'tree', which will be added automatically as needed.</remarks>
         public string DisplayName;
@@ -2182,9 +2242,9 @@ public class Locations {
         /// <summary>Whether this fish can be spawned in another location via the <c>LOCATION_FISH</c> item query.</summary>
         [Optional] public bool CanBeInherited { get; set; } = true;
         /// <summary>Changes to apply to the <see cref="P:StardewValley.GameData.Locations.SpawnFishData.Chance" />.</summary>
-        [Optional] public List<GameData.QuantityModifier> ChanceModifiers { get; set; }
+        [Optional] public List<QuantityModifier> ChanceModifiers { get; set; }
         /// <summary>How multiple <see cref="P:StardewValley.GameData.Locations.SpawnFishData.ChanceModifiers" /> should be combined.</summary>
-        [Optional] public GameData.QuantityModifier.QuantityModifierMode ChanceModifierMode { get; set; }
+        [Optional] public QuantityModifier.QuantityModifierMode ChanceModifierMode { get; set; }
         /// <summary>How much to increase the <see cref="P:StardewValley.GameData.Locations.SpawnFishData.Chance" /> per player's Luck level</summary>
         [Optional] public float ChanceBoostPerLuckLevel { get; set; }
         /// <summary>If true, the chance roll will use a seed value based on the number of fish caught.</summary>
@@ -2242,9 +2302,9 @@ public class Machines {
         [Optional] public List<MachineTimeBlockers> PreventTimePass;
         /// <summary>Changes to apply to the processing time before output is ready.</summary>
         /// <remarks>If multiple entries match, they'll be applied sequentially (e.g. two matching rules to double processing time will quadruple it).</remarks>
-        [Optional] public List<GameData.QuantityModifier> ReadyTimeModifiers;
+        [Optional] public List<QuantityModifier> ReadyTimeModifiers;
         /// <summary>How multiple <see cref="F:StardewValley.GameData.Machines.MachineData.ReadyTimeModifiers" /> should be combined.</summary>
-        [Optional] public GameData.QuantityModifier.QuantityModifierMode ReadyTimeModifierMode;
+        [Optional] public QuantityModifier.QuantityModifierMode ReadyTimeModifierMode;
         /// <summary>A tokenizable string for the message shown in a toaster notification if the player tries to input an item that isn't accepted by the machine.</summary>
         [Optional] public string InvalidItemMessage;
         /// <summary>An extra condition that must be met before <see cref="F:StardewValley.GameData.Machines.MachineData.InvalidItemMessage" /> is shown.</summary>
@@ -2283,9 +2343,9 @@ public class Machines {
         /// <summary>A game state query which indicates whether the machine should be emptied overnight, so any current output will be lost. Defaults to always false.</summary>
         [Optional] public string ClearContentsOvernightCondition;
         /// <summary>The game stat counters to increment when an item is placed in the machine.</summary>
-        [Optional] public List<GameData.StatIncrement> StatsToIncrementWhenLoaded;
+        [Optional] public List<StatIncrement> StatsToIncrementWhenLoaded;
         /// <summary>The game stat counters to increment when the processed output is collected.</summary>
-        [Optional] public List<GameData.StatIncrement> StatsToIncrementWhenHarvested;
+        [Optional] public List<StatIncrement> StatsToIncrementWhenHarvested;
         /// <summary>A list of (skillName) (amount), e.g. Farming 7 Fishing 5 </summary>
         [Optional] public string ExperienceGainOnHarvest;
         /// <summary>Custom fields ignored by the base game, for use by mods.</summary>
@@ -2306,7 +2366,7 @@ public class Machines {
         /// <summary>A duration in milliseconds during which the machine sprite should shake. Default none.</summary>
         [Optional] public int ShakeDuration = -1;
         /// <summary>The temporary animated sprites to show.</summary>
-        [Optional] public List<GameData.TemporaryAnimatedSpriteDefinition> TemporarySprites;
+        [Optional] public List<TemporaryAnimatedSpriteDefinition> TemporarySprites;
     }
     /// <summary>As part of a <see cref="T:StardewValley.GameData.Machines.MachineData" />, an extra item required before the machine starts.</summary>
     public class MachineItemAdditionalConsumedItems {
@@ -2342,9 +2402,9 @@ public class Machines {
         /// <summary>An amount by which to increment the machine's spritesheet index while it's processing this output. This stacks with <see cref="F:StardewValley.GameData.Machines.MachineData.ShowNextIndexWhileWorking" /> or <see cref="F:StardewValley.GameData.Machines.MachineData.ShowNextIndexWhenReady" />.</summary>
         [Optional] public int IncrementMachineParentSheetIndex { get; set; }
         /// <summary>Changes to apply to the item price. This is ignored if the output isn't object (<c>(O)</c>)-type.</summary>
-        [Optional] public List<GameData.QuantityModifier> PriceModifiers { get; set; }
+        [Optional] public List<QuantityModifier> PriceModifiers { get; set; }
         /// <summary>How multiple <see cref="P:StardewValley.GameData.Machines.MachineItemOutput.PriceModifiers" /> should be combined.</summary>
-        [Optional] public GameData.QuantityModifier.QuantityModifierMode PriceModifierMode { get; set; }
+        [Optional] public QuantityModifier.QuantityModifierMode PriceModifierMode { get; set; }
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.Machines.MachineData" />, a light effect shown around the machine.</summary>
     public class MachineLight {
@@ -3095,9 +3155,9 @@ public class Shops {
         [Optional] public bool? ApplyProfitMargins;
         /// <summary>Changes to apply to the sell price for all items in the shop, unless <see cref="P:StardewValley.GameData.Shops.ShopItemData.IgnoreShopPriceModifiers" /> is <c>true</c>. These stack with <see cref="P:StardewValley.GameData.Shops.ShopItemData.PriceModifiers" />.</summary>
         /// <remarks>If multiple entries match, they'll be applied sequentially (e.g. two matching rules to double the price will quadruple it).</remarks>
-        [Optional] public List<GameData.QuantityModifier> PriceModifiers;
+        [Optional] public List<QuantityModifier> PriceModifiers;
         /// <summary>How multiple <see cref="F:StardewValley.GameData.Shops.ShopData.PriceModifiers" /> should be combined. This only affects that specific field, it won't affect price modifiers under <see cref="F:StardewValley.GameData.Shops.ShopData.Items" />.</summary>
-        [Optional] public GameData.QuantityModifier.QuantityModifierMode PriceModifierMode;
+        [Optional] public QuantityModifier.QuantityModifierMode PriceModifierMode;
         /// <summary>The NPCs who can run the shop. If the <c>Action OpenShop</c> property specifies the <c>[owner tile area]</c> argument, at least one of the listed NPCs must be within that area; else if the <c>[owner tile area]</c> argument was omitted, the first entry in the list is used. The selected NPC's portrait will be shown in the shop UI.</summary>
         [Optional] public List<ShopOwnerData> Owners;
         /// <summary>The visual theme to apply to the shop UI, or <c>null</c> for the default theme.</summary>
@@ -3149,14 +3209,14 @@ public class Shops {
         [Optional] public bool IgnoreShopPriceModifiers { get; set; }
         /// <summary>Changes to apply to the <see cref="P:StardewValley.GameData.Shops.ShopItemData.Price" />. These stack with <see cref="F:StardewValley.GameData.Shops.ShopData.PriceModifiers" />.</summary>
         /// <remarks>If multiple entries match, they'll be applied sequentially (e.g. two matching rules to double the price will quadruple it).</remarks>
-        [Optional] public List<GameData.QuantityModifier> PriceModifiers { get; set; }
+        [Optional] public List<QuantityModifier> PriceModifiers { get; set; }
         /// <summary>How multiple <see cref="P:StardewValley.GameData.Shops.ShopItemData.PriceModifiers" /> should be combined.</summary>
-        [Optional] public GameData.QuantityModifier.QuantityModifierMode PriceModifierMode { get; set; }
+        [Optional] public QuantityModifier.QuantityModifierMode PriceModifierMode { get; set; }
         /// <summary>Changes to apply to the <see cref="P:StardewValley.GameData.Shops.ShopItemData.AvailableStock" />.</summary>
         /// <remarks>If multiple entries match, they'll be applied sequentially (e.g. two matching rules to double the available stock will quadruple it).</remarks>
-        [Optional] public List<GameData.QuantityModifier> AvailableStockModifiers { get; set; }
+        [Optional] public List<QuantityModifier> AvailableStockModifiers { get; set; }
         /// <summary>How multiple <see cref="P:StardewValley.GameData.Shops.ShopItemData.AvailableStockModifiers" /> should be combined.</summary>
-        [Optional] public GameData.QuantityModifier.QuantityModifierMode AvailableStockModifierMode { get; set; }
+        [Optional] public QuantityModifier.QuantityModifierMode AvailableStockModifierMode { get; set; }
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.Shops.ShopData" />, an NPC who can run the shop.</summary>
     public class ShopOwnerData {
@@ -3559,7 +3619,7 @@ public class WildTrees {
         /// <summary>Whether <see cref="F:StardewValley.GameData.WildTrees.WildTreeData.IsLeafy" /> also applies in fall.</summary>
         [Optional] public bool IsLeafyInFall = true;
         /// <summary>The rules which override which locations the tree can be planted in, if applicable. These don't override more specific checks (e.g. not being plantable on stone).</summary>
-        [Optional] public List<GameData.PlantableRule> PlantableLocationRules;
+        [Optional] public List<PlantableRule> PlantableLocationRules;
         /// <summary>Whether the tree can grow in winter (subject to <see cref="F:StardewValley.GameData.WildTrees.WildTreeData.GrowthChance" /> or <see cref="F:StardewValley.GameData.WildTrees.WildTreeData.FertilizedGrowthChance" />).</summary>
         [Optional] public bool GrowsInWinter;
         /// <summary>Whether the tree is reduced to a stump in winter and regrows in spring, like the vanilla mushroom tree.</summary>
@@ -3647,9 +3707,9 @@ public class WildTrees {
         /// <summary>The number of days before the tapper is ready to empty.</summary>
         public int DaysUntilReady { get; set; }
         /// <summary>Changes to apply to the result of <see cref="P:StardewValley.GameData.WildTrees.WildTreeTapItemData.DaysUntilReady" />.</summary>
-        [Optional] public List<GameData.QuantityModifier> DaysUntilReadyModifiers { get; set; }
+        [Optional] public List<QuantityModifier> DaysUntilReadyModifiers { get; set; }
         /// <summary>How multiple <see cref="P:StardewValley.GameData.WildTrees.WildTreeTapItemData.DaysUntilReadyModifiers" /> should be combined.</summary>
-        [Optional] public GameData.QuantityModifier.QuantityModifierMode DaysUntilReadyModifierMode { get; set; }
+        [Optional] public QuantityModifier.QuantityModifierMode DaysUntilReadyModifierMode { get; set; }
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.WildTrees.WildTreeData" />, a possible spritesheet to use for the tree.</summary>
     public class WildTreeTextureData {

@@ -1,6 +1,6 @@
 from __future__ import annotations
 import os
-from openstk import _pathExtension
+from openstk import _pathExtension, Reflect
 from gamex import FamilyGame, BinaryPakFile
 from gamex.families.GameX import UnknownPakFile
 from gamex.families.Xbox.formats.StardewValley.main import register
@@ -12,6 +12,7 @@ class StardewValleyGame(FamilyGame):
         super().__init__(family, id, elem, dgame)
     def loaded(self):
         super().loaded()
+        Reflect.scan(self.__class__)
         register()
 
 # XboxPakFile

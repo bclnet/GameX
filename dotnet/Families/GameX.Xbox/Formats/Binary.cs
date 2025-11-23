@@ -1,6 +1,7 @@
 using GameX.Formats;
 using Khronos.Collada;
 using OpenStack.Gfx;
+using Org.BouncyCastle.Asn1.X509;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -8,9 +9,11 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
+using System.Resources;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
+using static GameX.Xbox.Formats.Binary_Xnb.Model;
 
 namespace GameX.Xbox.Formats;
 
@@ -23,56 +26,55 @@ public class Binary_Xnb : IHaveMetaInfo, IWriteToStream, IRedirected<object> {
     #region Type Reader
 
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-    public class OptionalAttribute : Attribute { public bool Resource = false; }
+    public class OptionalAttribute : Attribute { public bool SharedResource = false; }
 
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
     public class IgnoreAttribute : Attribute { }
 
-    public class TypeReader(Type type, Type typeRead, string name, string target, bool valueType = false) {
-        public Type Type = type; public MethodInfo TypeRead = typeRead.GetMethod("Read_");
-        [OptionalField] public string Name = name;
-        public string Target = target;
+    public abstract class TypeReader(Type t, string name, string type, bool valueType = false) {
+        public Type T = t;
+        public string Name = name;
+        public string Type = type;
         public bool ValueType = valueType;
+        public bool CanUseObj = false;
+        //public virtual void Initialize() { }
+        public abstract object Read(ContentReader r, object o);
+        public Action Init;
     }
 
-    public class TypeReader<T>(string name, string target, Func<ContentReader, T> read, bool valueType = false) : TypeReader(typeof(T), typeof(TypeReader<T>), name, target, valueType) {
-        public Func<ContentReader, T> Read = read; public T Read_(ContentReader r, T obj) => Read(r);
+    public class TypeReader<T>(string name, string type, Func<ContentReader, T, T> read, bool valueType = false) : TypeReader(typeof(T), name, type, valueType) {
+        public Func<ContentReader, T, T> ReadFunc = read;
+        public override object Read(ContentReader r, object o) => Read(r, (T)o ?? default);
+        public virtual T Read(ContentReader r, T o) => ReadFunc(r, o);
     }
 
-    public class GenericReader(string name, string target, MethodInfo ginit, bool valueType = false) : TypeReader<object>(name, target, null, valueType) {
+    public class GenericReader(string name, string type, MethodInfo ginit, bool valueType = false) : TypeReader<object>(name, type, null, valueType) {
         public MethodInfo GInit = ginit;
     }
 
-    public struct ResourceRef(ContentReader r) {
-        public readonly uint Id = r.ReadVInt7();
-        public readonly object Obj(Binary_Xnb p) => Id != 0 ? p.Resources[Id - 1] : null;
-    }
-
     public class ContentReader(Stream input) : BinaryReader(input) {
-        public static TypeReader _EnumReader<T>(TypeReader<T> value) => new TypeReader<int>(null, null, r => r.ReadInt32()); // target2: t
-        public static TypeReader _NullableReader<T>(TypeReader<T> value) where T : struct => new TypeReader<T?>(null, null, r => r.ReadBoolean() ? r.Read<T?>(value) : default);
-        public static TypeReader _ArrayReader<T>(TypeReader<T> value) => new TypeReader<T[]>(null, null, r => r.ReadL32FArray(z => r.ReadValueOrObject(value))); // target2: $"{t}[]"
-        public static TypeReader _ListReader<T>(TypeReader<T> value) => new TypeReader<List<T>>(null, null, r => r.ReadL32FList(z => r.ReadValueOrObject(value)));
-        public static TypeReader _DictionaryReader<TKey, TValue>(TypeReader<TKey> key, TypeReader<TValue> value) => new TypeReader<IDictionary<TKey, TValue>>(null, null, r => r.ReadL32FMany(z => r.ReadValueOrObject(key), z => r.ReadValueOrObject(value)));
-        public static TypeReader _ReflectiveReader<T>(TypeReader<T> value) {
+        // TypeReaderManager
+        //public static TypeReader _MakeReader<T>(string type) where T : new() => new TypeReader<T>(null, type, (r, o) => new());
+        public static TypeReader _EnumReader<T>(TypeReader<T> elem) => new TypeReader<int>(null, null, (r, o) => r.ReadInt32()); //#t
+        public static TypeReader _NullableReader<T>(TypeReader<T> elem) where T : struct => new TypeReader<T?>(null, null, (r, o) => r.ReadBoolean() ? (T)elem.Read(r, o) : default);
+        public static TypeReader _ArrayReader<T>(TypeReader<T> elem) => new TypeReader<T[]>(null, null, (r, o) => r.ReadL32FArray(z => r.Read(elem), obj: o)); //#$"{t}[]"
+        public static TypeReader _ListReader<T>(TypeReader<T> elem) => new TypeReader<List<T>>(null, null, (r, o) => r.ReadL32FList(z => r.Read(elem), obj: o));
+        public static TypeReader _DictionaryReader<TKey, TValue>(TypeReader<TKey> key, TypeReader<TValue> value) => new TypeReader<Dictionary<TKey, TValue>>(null, null, (r, o) => (Dictionary<TKey, TValue>)r.ReadL32FMany(z => r.Read(key), z => r.Read(value), obj: o));
+        public static TypeReader _ReflectiveReader<T>(TypeReader<T> elem) {
             var type = typeof(T);
             var baseType = type.BaseType;
-            var baseTypeReader = baseType != null && baseType != typeof(object) ? GetByTarget(baseType) : null;
+            var baseReader = baseType != null && baseType != typeof(object) ? GetByType(baseType) : null;
             var constructor = Reflect.GetDefaultConstructor(type);
             var (properties, fields) = Reflect.GetAllPropertiesFields(type);
             var values = new List<Action<ContentReader, object>>(fields.Length + properties.Length);
             foreach (var property in properties) { Action<ContentReader, object> v; if ((v = GetMemberValue(property)) != null) values.Add(v); }
             foreach (var field in fields) { Action<ContentReader, object> v; if ((v = GetMemberValue(field)) != null) values.Add(v); }
-            return new TypeReader<T>(null, null, r => {
-                var obj = r.Read<T>(value);
-                //if (existingInstance != null)
-                //    obj = (T)existingInstance;
-                //else
-                //    obj = (_constructor == null ? (T)Activator.CreateInstance(typeof(T)) : (T)_constructor.Invoke(null));
-                if (baseTypeReader != null) r.ReadValueOrObject(baseTypeReader, obj);
+            return new TypeReader<T>(null, null, (r, o) => {
+                var obj = o ?? (constructor == null ? (T)Activator.CreateInstance(typeof(T)) : (T)constructor.Invoke(null));
+                if (baseReader != null) r.Read(baseReader, obj);
                 var boxed = (object)obj; foreach (var v in values) v(r, boxed); obj = (T)boxed;
                 return obj;
-            }); // target2: t
+            });
         }
         public static Action<ContentReader, object> GetMemberValue(MemberInfo member) {
             var (property, field) = (member as PropertyInfo, member as FieldInfo);
@@ -85,7 +87,7 @@ public class Binary_Xnb : IHaveMetaInfo, IWriteToStream, IRedirected<object> {
                 if (property != null) {
                     if (!property.GetGetMethod().IsPublic) return null;
                     if (!property.CanWrite) {
-                        var typeReader = GetByTarget(property.PropertyType);
+                        var typeReader = GetByType(property.PropertyType);
                         //if (typeReader == null || !typeReader.CanDeserializeIntoExistingObject) return null;
                         throw new Exception($"CanWrite {typeReader}");
                     }
@@ -97,130 +99,178 @@ public class Binary_Xnb : IHaveMetaInfo, IWriteToStream, IRedirected<object> {
             if (property != null) { elementType = property.PropertyType; setter = property.CanWrite ? (o, v) => property.SetValue(o, v, null) : (o, v) => { }; }
             else { elementType = field.FieldType; setter = field.SetValue; }
             // resources get special treatment.
-            if (optional != null && optional.Resource) return (r, parent) => setter(parent, r.ReadResource());
+            if (optional != null && optional.SharedResource) return (r, o) => r.ReadSharedResource<object>(v => setter(o, v));
             // we need to have a reader at this point.
-            var reader = GetByTarget(elementType) ?? GetByTarget("Array") ?? throw new Exception($"Content reader could not be found for {elementType.FullName} type.");
+            var reader = GetByType(elementType) ?? GetByTarget("Array") ?? throw new Exception($"Content reader could not be found for {elementType.FullName} T.");
             // we use the construct delegate to pick the correct existing object to be the target of deserialization.
             Func<object, object> construct = property != null && !property.CanWrite ? parent => property.GetValue(parent, null) : parent => null;
-            return (r, parent) => setter(parent, r.ReadValueOrObject(reader, construct(parent)));
+            return (r, o) => setter(o, r.Read(reader, construct(o)));
         }
         internal readonly static List<TypeReader> Readers = [
             // Primitive types
-            new TypeReader<byte>("ByteReader", "Byte", r => r.ReadByte(), valueType: true),
-            new TypeReader<sbyte>("SByteReader", "SByte", r => r.ReadSByte(), valueType: true),
-            new TypeReader<short>("Int16Reader", "Int16", r => r.ReadInt16(), valueType: true),
-            new TypeReader<ushort>("UInt16Reader", "UInt16", r => r.ReadUInt16(), valueType: true),
-            new TypeReader<int>("Int32Reader", "Int32", r => r.ReadInt32(), valueType: true),
-            new TypeReader<uint>("UInt32Reader", "UInt32", r => r.ReadUInt32(), valueType: true),
-            new TypeReader<long>("Int64Reader", "Int64", r => r.ReadInt64(), valueType: true),
-            new TypeReader<ulong>("UInt64Reader", "UInt64", r => r.ReadUInt64(), valueType: true),
-            new TypeReader<float>("SingleReader", "Single", r => r.ReadSingle(), valueType: true),
-            new TypeReader<double>("DoubleReader", "Double", r => r.ReadDouble(), valueType: true),
-            new TypeReader<bool>("BooleanReader", "Boolean", r => r.ReadBoolean(), valueType: true),
-            new TypeReader<char>("CharReader", "Char", r => r.ReadChar(), valueType: true),
-            new TypeReader<string>("StringReader", "String", r => r.ReadLV7UString()),
-            new TypeReader<object>("ObjectReader", "Object", r => throw new NotSupportedException()),
+            new TypeReader<byte>("ByteReader", "Byte", (r, o) => r.ReadByte(), valueType: true),
+            new TypeReader<sbyte>("SByteReader", "SByte", (r, o) => r.ReadSByte(), valueType: true),
+            new TypeReader<short>("Int16Reader", "Int16", (r, o) => r.ReadInt16(), valueType: true),
+            new TypeReader<ushort>("UInt16Reader", "UInt16", (r, o) => r.ReadUInt16(), valueType: true),
+            new TypeReader<int>("Int32Reader", "Int32", (r, o) => r.ReadInt32(), valueType: true),
+            new TypeReader<uint>("UInt32Reader", "UInt32", (r, o) => r.ReadUInt32(), valueType: true),
+            new TypeReader<long>("Int64Reader", "Int64", (r, o) => r.ReadInt64(), valueType: true),
+            new TypeReader<ulong>("UInt64Reader", "UInt64", (r, o) => r.ReadUInt64(), valueType: true),
+            new TypeReader<float>("SingleReader", "Single", (r, o) => r.ReadSingle(), valueType: true),
+            new TypeReader<double>("DoubleReader", "Double", (r, o) => r.ReadDouble(), valueType: true),
+            new TypeReader<bool>("BooleanReader", "Boolean", (r, o) => r.ReadBoolean(), valueType: true),
+            new TypeReader<char>("CharReader", "Char", (r, o) => r.ReadChar(), valueType: true),
+            new TypeReader<string>("StringReader", "String", (r, o) => r.ReadLV7UString()),
+            new TypeReader<object>("ObjectReader", "Object", (r, o) => throw new NotSupportedException()),
             // System types
             new GenericReader("EnumReader", "Enum", typeof(ContentReader).GetMethod("_EnumReader")),
             new GenericReader("NullableReader", "Nullable", typeof(ContentReader).GetMethod("_NullableReader"), valueType: true),
             new GenericReader("ArrayReader", "Array", typeof(ContentReader).GetMethod("_ArrayReader")),
             new GenericReader("ListReader", "Collections.Generic.List", typeof(ContentReader).GetMethod("_ListReader")),
             new GenericReader("DictionaryReader", "Collections.Generic.Dictionary", typeof(ContentReader).GetMethod("_DictionaryReader")),
-            new TypeReader<TimeSpan>("TimeSpanReader", "TimeSpan", r => { var v = r.ReadInt64(); return new TimeSpan(v); }, valueType: true),
-            new TypeReader<DateTime>("DateTimeReader", "DateTime", r => { var v = r.ReadInt64(); return new DateTime(v & ~(3L << 62), (DateTimeKind)(v >> 62)); }, valueType: true),
-            new TypeReader<decimal>("DecimalReader", "Decimal", r => { uint a = r.ReadUInt32(), b = r.ReadUInt32(), c = r.ReadUInt32(), d = r.ReadUInt32(); return 0; }, valueType: true),
-            new TypeReader<string>("ExternalReferenceReader", "ExternalReference", r => r.ReadString()),
+            //new GenericReader("MultiArrayReader", null, typeof(ContentReader).GetMethod("_MultiArrayReader")),
+            new TypeReader<TimeSpan>("TimeSpanReader", "TimeSpan", (r, o) => new TimeSpan(r.ReadInt64()), valueType: true),
+            new TypeReader<DateTime>("DateTimeReader", "DateTime", (r, o) => { var v = r.ReadUInt64(); return new DateTime((long)(v & ~(3UL << 62)), (DateTimeKind)((v >> 62) & 3)); }, valueType: true),
+            new TypeReader<decimal>("DecimalReader", "Decimal", (r, o) => r.ReadDecimal(), valueType: true),
+            new TypeReader<string>("ExternalReferenceReader", "ExternalReference", (r, o) => r.ReadString()),
             new GenericReader("ReflectiveReader", "Object", typeof(ContentReader).GetMethod("_ReflectiveReader")),
             // Math types
-            new TypeReader<Vector2>("Vector2Reader", "Vector2", r => r.ReadVector2(), valueType: true),
-            new TypeReader<Vector3>("Vector3Reader", "Vector3", r => r.ReadVector3(), valueType: true),
-            new TypeReader<Vector4>("Vector4Reader", "Vector4", r => r.ReadVector4(), valueType: true),
-            new TypeReader<Matrix4x4>("MatrixReader", "Matrix", r => r.ReadMatrix4x4(), valueType: true),
-            new TypeReader<Quaternion>("QuaternionReader", "Quaternion", r => r.ReadQuaternion(), valueType: true),
-            new TypeReader<ByteColor4>("ColorReader", "Color", r => new ByteColor4(r.ReadByte(), r.ReadByte(), r.ReadByte(), r.ReadByte()), valueType: true),
-            new TypeReader<Plane>("PlaneReader", "Ray", r => new Plane(r.ReadVector3(), r.ReadSingle()), valueType: true),
-            new TypeReader<Point>("PointReader", "Point", r => new Point(r.ReadInt32(), r.ReadInt32()), valueType: true),
-            new TypeReader<Rectangle>("RectangleReader", "Rectangle", r => new Rectangle(r.ReadInt32(), r.ReadInt32(), r.ReadInt32(), r.ReadInt32()), valueType: true),
-            new TypeReader<BoundingBox>("BoundingBoxReader", "BoundingBox", r => new BoundingBox(r.ReadVector3(), r.ReadVector3()), valueType: true),
-            new TypeReader<BoundingSphere>("BoundingSphereReader", "BoundingSphere", r => new BoundingSphere(r.ReadVector3(), r.ReadSingle()), valueType: true),
-            new TypeReader<Matrix4x4>("BoundingFrustumReader", "BoundingFrustum", r => r.ReadMatrix4x4()),
-            new TypeReader<Ray>("RayReader", "Ray", r => new Ray(r.ReadVector3(), r.ReadVector3()), valueType: true),
-            new TypeReader<Curve>("CurveReader", "Curve", r=> new Curve(r.ReadInt32(), r.ReadInt32(), r.ReadL32FArray(z => new Curve.Loop(z.ReadSingle(), z.ReadSingle(), z.ReadSingle(), z.ReadSingle(), z.ReadInt32())))),
+            new TypeReader<Vector2>("Vector2Reader", "Vector2", (r, o) => r.ReadVector2(), valueType: true),
+            new TypeReader<Vector3>("Vector3Reader", "Vector3", (r, o) => r.ReadVector3(), valueType: true),
+            new TypeReader<Vector4>("Vector4Reader", "Vector4", (r, o) => r.ReadVector4(), valueType: true),
+            new TypeReader<Matrix4x4>("MatrixReader", "Matrix", (r, o) => r.ReadMatrix4x4(), valueType: true),
+            new TypeReader<Quaternion>("QuaternionReader", "Quaternion", (r, o) => r.ReadQuaternion(), valueType: true),
+            new TypeReader<ByteColor4>("ColorReader", "Color", (r, o) => new ByteColor4(r.ReadByte(), r.ReadByte(), r.ReadByte(), r.ReadByte()), valueType: true),
+            new TypeReader<Plane>("PlaneReader", "Ray", (r, o) => new Plane(r.ReadVector3(), r.ReadSingle()), valueType: true),
+            new TypeReader<Point>("PointReader", "Point", (r, o) => new Point(r.ReadInt32(), r.ReadInt32()), valueType: true),
+            new TypeReader<Rectangle>("RectangleReader", "Rectangle", (r, o) => new Rectangle(r.ReadInt32(), r.ReadInt32(), r.ReadInt32(), r.ReadInt32()), valueType: true),
+            new TypeReader<BoundingBox>("BoundingBoxReader", "BoundingBox", (r, o) => new BoundingBox(r.ReadVector3(), r.ReadVector3()), valueType: true),
+            new TypeReader<BoundingSphere>("BoundingSphereReader", "BoundingSphere", (r, o) => new BoundingSphere(r.ReadVector3(), r.ReadSingle()), valueType: true),
+            new TypeReader<BoundingFrustum>("BoundingFrustumReader", "BoundingFrustum", (r, o) => new BoundingFrustum(r.ReadMatrix4x4())),
+            new TypeReader<Ray>("RayReader", "Ray", (r, o) => new Ray(r.ReadVector3(), r.ReadVector3()), valueType: true),
+            new TypeReader<Curve>("CurveReader", "Curve", (r, o) => new Curve(r.ReadInt32(), r.ReadInt32(), r.ReadL32FArray(z => new Curve.Key(z.ReadSingle(), z.ReadSingle(), z.ReadSingle(), z.ReadSingle(), z.ReadInt32())))),
             // Graphics types
-            new TypeReader<object>("TextureReader", "Graphics.Texture", r => throw new NotSupportedException()),
-            new TypeReader<Texture2D>("Texture2DReader", "Graphics.Texture2D", r => new Texture2D(r)),
-            new TypeReader<Texture3D>("Texture3DReader", "Graphics.Texture3D", r => new Texture3D(r)),
-            new TypeReader<TextureCube>("TextureCubeReader", "Graphics.TextureCube", r => new TextureCube(r)),
-            new TypeReader<IndexBuffer>("IndexBufferReader", "Graphics.IndexBuffer", r => new IndexBuffer(r)),
-            new TypeReader<VertexBuffer>("VertexBufferReader", "Graphics.VertexBuffer", r => new VertexBuffer(r)),
-            new TypeReader<VertexDeclaration>("VertexDeclarationReader", "Graphics.VertexDeclaration", r => new VertexDeclaration(r)),
-            new TypeReader<Effect>("EffectReader", "Graphics.Effect", r => new Effect(r)),
-            new TypeReader<EffectMaterial>("EffectMaterialReader", "Graphics.EffectMaterial", r => new EffectMaterial(r)),
-            new TypeReader<BasicEffect>("BasicEffectReader", "Graphics.BasicEffect", r => new BasicEffect(r)),
-            new TypeReader<AlphaTestEffect>("AlphaTestEffectReader", "Graphics.AlphaTestEffect", r => new AlphaTestEffect(r)),
-            new TypeReader<DualTextureEffect>("DualTextureEffectReader", "Graphics.DualTextureEffect", r => new DualTextureEffect(r)),
-            new TypeReader<EnvironmentMapEffect>("EnvironmentMapEffectReader", "Graphics.EnvironmentMapEffect", r => new EnvironmentMapEffect(r)),
-            new TypeReader<SkinnedEffect>("SkinnedEffectReader", "Graphics.SkinnedEffect", r => new SkinnedEffect(r)),
-            new TypeReader<SpriteFont>("SpriteFontReader", "Graphics.SpriteFont", r => new SpriteFont(r)),
-            new TypeReader<Model>("ModelReader", "Graphics.Model", r => new Model(r)),
+            new TypeReader<object>("TextureReader", "Graphics.Texture", (r, o) => throw new NotSupportedException()),
+            new TypeReader<Texture2D>("Texture2DReader", "Graphics.Texture2D", (r, o) => new Texture2D(r)),
+            new TypeReader<Texture3D>("Texture3DReader", "Graphics.Texture3D", (r, o) => new Texture3D(r)),
+            new TypeReader<TextureCube>("TextureCubeReader", "Graphics.TextureCube", (r, o) => new TextureCube(r)),
+            new TypeReader<IndexBuffer>("IndexBufferReader", "Graphics.IndexBuffer", (r, o) => new IndexBuffer(r)),
+            new TypeReader<VertexBuffer>("VertexBufferReader", "Graphics.VertexBuffer", (r, o) => new VertexBuffer(r)),
+            new TypeReader<VertexDeclaration>("VertexDeclarationReader", "Graphics.VertexDeclaration", (r, o) => new VertexDeclaration(r)),
+            new TypeReader<Effect>("EffectReader", "Graphics.Effect", (r, o) => new Effect(r)),
+            new TypeReader<EffectMaterial>("EffectMaterialReader", "Graphics.EffectMaterial", (r, o) => new EffectMaterial(r)),
+            new TypeReader<BasicEffect>("BasicEffectReader", "Graphics.BasicEffect", (r, o) => new BasicEffect(r)),
+            new TypeReader<AlphaTestEffect>("AlphaTestEffectReader", "Graphics.AlphaTestEffect", (r, o) => new AlphaTestEffect(r)),
+            new TypeReader<DualTextureEffect>("DualTextureEffectReader", "Graphics.DualTextureEffect", (r, o) => new DualTextureEffect(r)),
+            new TypeReader<EnvironmentMapEffect>("EnvironmentMapEffectReader", "Graphics.EnvironmentMapEffect", (r, o) => new EnvironmentMapEffect(r)),
+            new TypeReader<SkinnedEffect>("SkinnedEffectReader", "Graphics.SkinnedEffect", (r, o) => new SkinnedEffect(r)),
+            new TypeReader<SpriteFont>("SpriteFontReader", "Graphics.SpriteFont", (r, o) => new SpriteFont(r)),
+            new TypeReader<Model>("ModelReader", "Graphics.Model", (r, o) => new Model(r)),
             // Media types
-            new TypeReader<SoundEffect>("SoundEffectReader", "Audio.SoundEffect", r => new SoundEffect(r)),
-            new TypeReader<Song>("SongReader", "Media.Song", r => new Song(r)),
-            new TypeReader<Video>("VideoReader", "Media.Video", r => new Video(r))
+            new TypeReader<SoundEffect>("SoundEffectReader", "Audio.SoundEffect", (r, o) => new SoundEffect(r)),
+            new TypeReader<Song>("SongReader", "Media.Song", (r, o) => new Song(r)),
+            new TypeReader<Video>("VideoReader", "Media.Video", (r, o) => new Video(r))
         ];
 
         internal readonly static Dictionary<string, TypeReader> ReadersByName = Readers.ToDictionary(s => s.Name);
-        internal readonly static Dictionary<string, TypeReader> ReaderByTarget = Readers.GroupBy(s => s.Target).Select(s => (s.Key, s.First())).ToDictionary(s => s.Key, s => s.Item2);
-        TypeReader[] ObjReaders;
+        internal readonly static Dictionary<string, TypeReader> ReadersByType = Readers.GroupBy(s => s.Type).Select(s => (s.Key, s.First())).ToDictionary(s => s.Key, s => s.Item2);
+        internal readonly static Dictionary<Type, TypeReader> ReadersByT = Readers.GroupBy(s => s.T).Select(s => (s.Key, s.First())).ToDictionary(s => s.Key, s => s.Item2);
+        TypeReader[] TypeReaders;
+        public int SharedResourceCount;
+        List<KeyValuePair<int, Action<object>>> SharedResourceFixups;
+        public object[] SharedResources;
 
-        public void ReadTypeManifest() {
-            ObjReaders = this.ReadLV7FArray(z => GetByName(this.ReadLV7UString(), ReadUInt32()));
-            //foreach (var s in Readers.Where(x => x.Init != null)) s.Init();
+        public T ReadAsset<T>() { ReadTypeReaders(); var r = ReadObject<T>(default); ReadSharedResources(); return r; }
+        public T ReadAsset<T>(T obj) { ReadTypeReaders(); var r = ReadObject<T>(obj); ReadSharedResources(); return r; }
+        public void ReadTypeReaders() {
+            TypeReaders = this.ReadLV7FArray(z => GetByName(this.ReadLV7UString(), ReadUInt32()));
+            foreach (var s in TypeReaders.Where(x => x.Init != null)) s.Init();
+            SharedResourceCount = this.ReadVInt7(); SharedResourceFixups = [];
         }
-        public object Read(TypeReader reader, object obj = null) => reader != null ? reader.TypeRead.Invoke(reader, [this, obj]) : default;
-        public object ReadObject(object obj = null) => Read(ReadTypeId(), obj);
-        public object ReadValueOrObject(TypeReader reader, object obj = null) => reader.ValueType ? Read(reader) : ReadObject(obj);
-        public T Read<T>(TypeReader reader, T obj = default) => reader != null ? (T)reader.TypeRead.Invoke(reader, [this, obj]) : default;
-        public T ReadObject<T>(T obj = default) => Read(ReadTypeId(), obj);
-        public T ReadValueOrObject<T>(TypeReader<T> reader, T obj = default) => reader.ValueType ? reader.Read(this) : ReadObject(obj);
-        public TypeReader ReadTypeId() { var id = (int)this.ReadVInt7() - 1; return id >= 0 ? id < ObjReaders.Length ? ObjReaders[id] : throw new Exception("Invalid XNB file: id is out of range.") : null; }
-        public ContentReader Validate(string type) { var reader = ReadTypeId(); return reader != null && reader.Target == type ? this : throw new Exception("Invalid XNB file: got an unexpected id."); }
-        public ResourceRef ReadResource() => new(this);
-        public static TypeReader Create(GenericReader s, List<string> args) {
+        public void ReadSharedResources() {
+            if (SharedResourceCount <= 0) return;
+            SharedResources = this.ReadFArray(z => ReadObject<object>(), SharedResourceCount);
+            foreach (var fixup in SharedResourceFixups) fixup.Value(SharedResourceFixups[fixup.Key]);
+        }
+        public T Read<T>(TypeReader reader, T obj = default) => reader.ValueType ? (T)reader.Read(this, obj) : ReadObject(obj);
+        public T Read<T>(TypeReader<T> reader, T obj = default) => reader.ValueType ? reader.Read(this, obj) : ReadObject(obj);
+        public T ReadObject<T>(T obj = default) { var reader = ReadTypeId(); return reader != null ? (T)reader.Read(this, obj) : default; }
+        public TypeReader ReadTypeId() { var idx = this.ReadVInt7() - 1; return idx >= 0 ? idx < TypeReaders.Length ? TypeReaders[idx] : throw new Exception("Invalid XNB file: idx is out of range.") : null; }
+        public ContentReader Validate(string type) { var reader = ReadTypeId(); return reader != null && reader.Type == type ? this : throw new Exception("Invalid XNB file: got an unexpected idx."); }
+        public void ReadSharedResource<T>(Action<T> fixup) {
+            var idx = this.ReadVInt7();
+            if (idx > 0)
+                SharedResourceFixups.Add(new KeyValuePair<int, Action<object>>(idx - 1, v => {
+                    if (v is not T) throw new Exception($"Error loading shared resource. Expected type {typeof(T).Name}, received type {v.GetType().Name}");
+                    fixup((T)v);
+                }));
+        }
+        public static TypeReader Create(GenericReader s, Type[] args) {
             TypeReader r;
-            if (args.Count == 1) { var value = GetByTarget(args[0]); r = (TypeReader)s.GInit.MakeGenericMethod([value.Type]).Invoke(null, [value]); }
-            else if (args.Count == 2) { var key = GetByTarget(args[0]); var value = GetByTarget(args[1]); r = (TypeReader)s.GInit.MakeGenericMethod([key.Type, value.Type]).Invoke(null, [key, value]); }
+            if (args.Length == 1) { var value = GetByType(args[0]); r = (TypeReader)s.GInit.MakeGenericMethod([value.T]).Invoke(null, [value]); }
+            else if (args.Length == 2) { var key = GetByType(args[0]); var value = GetByType(args[1]); r = (TypeReader)s.GInit.MakeGenericMethod([key.T, value.T]).Invoke(null, [key, value]); }
             else throw new Exception();
-            var suffix = $"`{args.Count}[[{string.Join("],[", args)}]]";
+            var suffix = $"`{args.Length}[[{string.Join("],[", args.Select(s => s.FullName))}]]";
             r.Name = s.Name + suffix;
-            r.Target = s.Target + suffix;
+            r.Type = s.Type + suffix;
+            r.ValueType = s.ValueType;
+            return r;
+        }
+        public static TypeReader Create(GenericReader s, string[] args) {
+            TypeReader r;
+            if (args.Length == 1) { var value = GetByTarget(args[0]); r = (TypeReader)s.GInit.MakeGenericMethod([value.T]).Invoke(null, [value]); }
+            else if (args.Length == 2) { var key = GetByTarget(args[0]); var value = GetByTarget(args[1]); r = (TypeReader)s.GInit.MakeGenericMethod([key.T, value.T]).Invoke(null, [key, value]); }
+            else throw new Exception();
+            var suffix = $"`{args.Length}[[{string.Join("],[", args)}]]";
+            r.Name = s.Name + suffix;
+            r.Type = s.Type + suffix;
             r.ValueType = s.ValueType;
             return r;
         }
         public static TypeReader GetByName(string name, uint version) {
-            var wanted = Reflect.StripAssemblyVersion(name).Replace("Microsoft.Xna.Framework.Content.", "");
-            if (ReadersByName.TryGetValue(wanted, out var reader)) return reader;
-            var (genericName, args) = Reflect.SplitGenericTypeName(wanted);
+            name = Reflect.StripAssemblyVersion(name).Replace("Microsoft.Xna.Framework.Content.", "");
+            if (ReadersByName.TryGetValue(name, out var reader)) return reader;
+            var (genericName, args) = Reflect.SplitGenericTypeName(name);
             if (genericName != null && ReadersByName.TryGetValue(genericName, out reader) && reader is GenericReader generic) {
                 reader = Create(generic, args);
-                if (reader.Name != wanted) throw new Exception("ERROR");
+                if (reader.Name != name) throw new Exception("ERROR");
                 return Add(reader);
             }
-            throw new Exception($"Cannot find codec value '{wanted}'.");
+            throw new Exception($"Cannot find codec elem '{name}'.");
         }
-        public static TypeReader GetByTarget(Type target) => GetByTarget(target.FullName.Replace("System.Numerics.", "").Replace("System.Drawing.", ""));
-        public static TypeReader GetByTarget(string target) {
-            var wanted = Reflect.StripAssemblyVersion(target).Replace("Microsoft.Xna.Framework.", "").Replace("System.", "").Replace("+", ".");
-            wanted = wanted.Replace("GameX.Xbox.Formats.", "");
-            if (ReaderByTarget.TryGetValue(wanted, out var reader)) return reader;
-            if (reader != null) return reader;
-            var (genericName, args) = Reflect.SplitGenericTypeName(wanted);
-            if (genericName != null && ReaderByTarget.TryGetValue(genericName, out reader) && reader is GenericReader generic) {
+        public static TypeReader GetByType(Type type) {
+            //return GetByTarget(Reflect.TryGetName(target, out var z) ? z : target.FullName.Replace("System.Numerics.", "").Replace("System.Drawing.", ""));
+            if (ReadersByT.TryGetValue(type, out var reader)) return reader;
+            var (genericName, args) = Reflect.SplitGenericType(type);
+            if (genericName != null && ReadersByType.TryGetValue(genericName.Replace("System.", ""), out reader) && reader is GenericReader generic) {
                 reader = Create(generic, args);
-                if (reader.Target != wanted) throw new Exception("ERROR");
+                if (reader.T != type) throw new Exception("ERROR");
                 return Add(reader);
             }
-            throw new Exception($"Cannot find value for target codec '{wanted}'.");
+            if (type.IsArray) {
+                reader = Create((GenericReader)ReadersByType["Array"], [type.GetElementType()]);
+                if (reader.T != type) throw new Exception("ERROR");
+                return Add(reader);
+            }
+            reader = (TypeReader)typeof(ContentReader).GetMethod("_MakeReader").MakeGenericMethod([type]).Invoke(null, [null]);
+            return Add(reader);
+        }
+        public static TypeReader GetByTarget(string target) {
+            Type type;
+            target = Reflect.StripAssemblyVersion(target).Replace("Microsoft.Xna.Framework.", "").Replace("System.", "").Replace("+", ".");
+            target = target.Replace("GameX.Xbox.Formats.", "");
+            if (ReadersByType.TryGetValue(target, out var reader)) return reader;
+            var (genericName, args) = Reflect.SplitGenericTypeName(target);
+            if (genericName != null && ReadersByType.TryGetValue(genericName, out reader) && reader is GenericReader generic) {
+                reader = Create(generic, args);
+                if (reader.Type != target) throw new Exception("ERROR");
+                return Add(reader);
+            }
+            if ((type = Reflect.GetTypeByName(target)) != null) {
+                reader = (TypeReader)typeof(ContentReader).GetMethod("_MakeReader").MakeGenericMethod([type]).Invoke(null, [target]);
+                return Add(reader);
+            }
+            throw new Exception($"Cannot find elem for T codec '{target}'.");
         }
     }
 
@@ -397,7 +447,7 @@ public class Binary_Xnb : IHaveMetaInfo, IWriteToStream, IRedirected<object> {
 
     public class EffectMaterial(ContentReader r) {
         public readonly string EffectReference = r.ReadLV7UString();
-        public readonly object Parameters = r.ReadObject<object>();
+        public readonly Dictionary<string, object> Parameters = r.ReadObject<Dictionary<string, object>>();
     }
 
     public class BasicEffect(ContentReader r) {
@@ -508,50 +558,56 @@ public class Binary_Xnb : IHaveMetaInfo, IWriteToStream, IRedirected<object> {
     }
 
     public class Model : IHaveMetaInfo {
-        public struct BoneRef(Model p, ContentReader r) {
-            public readonly uint Id = p.Bones8 ? r.ReadByte() : r.ReadUInt32();
-            public readonly Bone Bone => Id != 0 ? p.Bones[Id - 1] : null;
-        }
+        static Bone ReadBoneIdx(Model p, ContentReader r) { var id = p.Bones8 ? r.ReadByte() : r.ReadUInt32(); return id != 0 ? p.Bones[(int)(id - 1)] : null; }
         public class Bone(ContentReader r) {
             public readonly string Name = r.ReadObject<string>();
             public readonly Matrix4x4 Transform = r.ReadMatrix4x4();
-            public BoneRef Parent;
-            public BoneRef[] Children;
+            public Bone Parent;
+            public Bone[] Children;
         }
         public class MeshPart(ContentReader r) {
             public readonly int VertexOffset = r.ReadInt32();
             public readonly int NumVertices = r.ReadInt32();
             public readonly int StartIndex = r.ReadInt32();
             public readonly int PrimitiveCount = r.ReadInt32();
-            public readonly object Tag = r.ReadObject();
-            public readonly ResourceRef VertexBuffer = r.ReadResource();
-            public readonly ResourceRef IndexBuffer = r.ReadResource();
-            public readonly ResourceRef Effect = r.ReadResource();
+            public readonly object Tag = r.ReadObject<object>();
+            public VertexBuffer VertexBuffer;
+            public IndexBuffer IndexBuffer;
+            public Effect Effect;
+            public MeshPart Apply(ContentReader r) {
+                r.ReadSharedResource<VertexBuffer>(v => VertexBuffer = v);
+                r.ReadSharedResource<IndexBuffer>(v => IndexBuffer = v);
+                r.ReadSharedResource<Effect>(v => Effect = v);
+                return this;
+            }
         }
         public class Mesh(Model p, ContentReader r) {
             public readonly string Name = r.ReadObject<string>();
-            public readonly BoneRef Parent = new(p, r);
+            public readonly Bone Parent = ReadBoneIdx(p, r);
             public readonly BoundingSphere Bounds = new(r.ReadVector3(), r.ReadSingle());
-            public readonly object Tag = r.ReadObject();
-            public readonly MeshPart[] Parts = r.ReadL32FArray(z => new MeshPart(r));
+            public readonly object Tag = r.ReadObject<object>();
+            public readonly MeshPart[] Parts = r.ReadL32FArray(z => new MeshPart(r).Apply(r));
         }
         public readonly Bone[] Bones; readonly bool Bones8;
         public readonly Mesh[] Meshs;
-        public readonly BoneRef Root;
+        public readonly Bone Root;
         public readonly object Tag;
         public Model(ContentReader r) {
             Bones = r.ReadL32FArray(z => new Bone(r)); Bones8 = Bones.Length < 255;
-            foreach (var s in Bones) { s.Parent = new BoneRef(this, r); s.Children = r.ReadL32FArray(z => new BoneRef(this, r)); }
+            foreach (var s in Bones) {
+                s.Parent = ReadBoneIdx(this, r);
+                s.Children = r.ReadL32FArray(z => ReadBoneIdx(this, r));
+            }
             Meshs = r.ReadL32FArray(z => new Mesh(this, r));
-            Root = new BoneRef(this, r);
-            Tag = r.ReadObject();
+            Root = ReadBoneIdx(this, r);
+            Tag = r.ReadObject<object>();
         }
         List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
             new(null, new MetaContent { Type = "Data", Name = Path.GetFileName(file.Path), Value = this }),
             new("Model", items: [
                 new($"Bones: {Bones.Length}"),
                 new($"Meshs: {Meshs.Length}"),
-                new($"Root: {Root.Bone.Name}"),
+                new($"Root: {Root.Name}"),
                 new($"Tag: {Tag}")
             ])];
     }
@@ -639,16 +695,12 @@ public class Binary_Xnb : IHaveMetaInfo, IWriteToStream, IRedirected<object> {
     #endregion
 
     public object Obj;
-    public object[] Resources;
     public bool AtEnd;
 
     public Binary_Xnb(BinaryReader r2) {
         var h = r2.ReadS<Header>();
         var r = h.Validate(r2);
-        r.ReadTypeManifest();
-        var resourceCount = r.ReadVInt7();
-        Obj = r.ReadObject();
-        Resources = r.ReadFArray(z => r.ReadObject(), resourceCount);
+        Obj = r.ReadAsset<object>();
         AtEnd = r.AtEnd();
         //r.EnsureAtEnd(); // h.SizeOnDisk
     }
@@ -656,7 +708,8 @@ public class Binary_Xnb : IHaveMetaInfo, IWriteToStream, IRedirected<object> {
     public static TypeReader Add(TypeReader reader) {
         ContentReader.Readers.Add(reader);
         if (reader.Name != null) ContentReader.ReadersByName[reader.Name] = reader;
-        if (reader.Target != null && !ContentReader.ReaderByTarget.ContainsKey(reader.Target)) ContentReader.ReaderByTarget[reader.Target] = reader;
+        if (reader.Type != null && !ContentReader.ReadersByType.ContainsKey(reader.Type)) ContentReader.ReadersByType[reader.Type] = reader;
+        if (reader.T != null && !ContentReader.ReadersByT.ContainsKey(reader.T)) ContentReader.ReadersByT[reader.T] = reader;
         return reader;
     }
 

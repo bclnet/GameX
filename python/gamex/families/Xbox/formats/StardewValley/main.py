@@ -1,17 +1,19 @@
 from __future__ import annotations
 import os
 from gamex.families.Xbox.formats.binary import Binary_Xnb
-from .gamedata import *
+from .GameData import *
 
 def register() -> None:
     Binary_Xnb.add(Binary_Xnb.TypeReader[str]('BmFont.XmlSourceReader', 'String', lambda r: r.readLV7UString()))
-    Binary_Xnb.add(Binary_Xnb.TypeReader[ModFarmType]('ModFarmType', 'StardewValley.GameData.ModFarmType', lambda r: ModFarmType()))
-    Binary_Xnb.add(Binary_Xnb.TypeReader[ModLanguage]('ModLanguage', 'StardewValley.GameData.ModLanguage', lambda r: ModLanguage()))
-    Binary_Xnb.add(Binary_Xnb.TypeReader[ModWallpaperOrFlooring]('ModWallpaperOrFlooring', 'StardewValley.GameData.ModWallpaperOrFlooring', lambda r: ModWallpaperOrFlooring()))
-    Binary_Xnb.add(Binary_Xnb.TypeReader[AudioCueData]('AudioCueData', 'StardewValley.GameData.AudioCueData', lambda r: AudioCueData()))
-    Binary_Xnb.add(Binary_Xnb.TypeReader[BigCraftables.BigCraftableData]('ModLanguage', 'StardewValley.GameData.BigCraftables.BigCraftableData', lambda r: BigCraftables.BigCraftableData()))
-    Binary_Xnb.add(Binary_Xnb.TypeReader[Buffs.BuffData]('Buffs.BuffData', 'StardewValley.GameData.Buffs.BuffData', lambda r: Buffs.BuffData()))
-    Binary_Xnb.add(Binary_Xnb.TypeReader[Buffs.BuffAttributesData]('Buffs.BuffAttributesData', 'StardewValley.GameData.Buffs.BuffAttributesData', lambda r: Buffs.BuffAttributesData()))
+    
+    # Binary_Xnb.add(Binary_Xnb.TypeReader[ModFarmType]('ModFarmType', 'StardewValley.GameData.ModFarmType', lambda r: ModFarmType()))
+    # Binary_Xnb.add(Binary_Xnb.TypeReader[ModLanguage]('ModLanguage', 'StardewValley.GameData.ModLanguage', lambda r: ModLanguage()))
+    # Binary_Xnb.add(Binary_Xnb.TypeReader[ModWallpaperOrFlooring]('ModWallpaperOrFlooring', 'StardewValley.GameData.ModWallpaperOrFlooring', lambda r: ModWallpaperOrFlooring()))
+    # Binary_Xnb.add(Binary_Xnb.TypeReader[AudioCueData]('AudioCueData', 'StardewValley.GameData.AudioCueData', lambda r: AudioCueData()))
+    # Binary_Xnb.add(Binary_Xnb.TypeReader[BigCraftables.BigCraftableData]('ModLanguage', 'StardewValley.GameData.BigCraftables.BigCraftableData', lambda r: BigCraftables.BigCraftableData()))
+    # Binary_Xnb.add(Binary_Xnb.TypeReader[Buffs.BuffData]('Buffs.BuffData', 'StardewValley.GameData.Buffs.BuffData', lambda r: Buffs.BuffData()))
+    # Binary_Xnb.add(Binary_Xnb.TypeReader[Buffs.BuffAttributesData]('Buffs.BuffAttributesData', 'StardewValley.GameData.Buffs.BuffAttributesData', lambda r: Buffs.BuffAttributesData()))
+
     # Binary_Xnb.add(Binary_Xnb.TypeReader[Buildings.BuildingData]('Buildings.BuildingData', 'StardewValley.GameData.Buildings.BuildingData', lambda r: Buildings.BuildingData()))
     # Binary_Xnb.add(Binary_Xnb.TypeReader[Characters.CharacterData]('Characters.CharacterData', 'StardewValley.GameData.Characters.CharacterData', lambda r: Characters.CharacterData()))
     # Binary_Xnb.add(Binary_Xnb.TypeReader[Movies.ConcessionItemData]('Movies.ConcessionItemData', 'StardewValley.GameData.Movies.ConcessionItemData', lambda r: Movies.ConcessionItemData()))

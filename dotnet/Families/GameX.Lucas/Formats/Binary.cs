@@ -405,7 +405,8 @@ public class Binary_San : IHaveMetaInfo {
                     //case NPAL_MAGIC:
                     //case ZFOB_MAGIC:
                     default:
-                        Log($"{Encoding.ASCII.GetString(BitConverter.GetBytes(chunk.Magic).Reverse().ToArray())}");
+                        var z = BitConverter.GetBytes(chunk.Magic); z.Reverse();
+                        Log($"{Encoding.ASCII.GetString(z)}");
                         r.Skip(chunk.Size);
                         break;
                 }

@@ -1,10 +1,10 @@
+using GameX.Xbox.Formats.Xna;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
-using static GameX.Xbox.Formats.Binary_Xnb;
 
 namespace GameX.Xbox.Formats.StardewValley.GameData;
 

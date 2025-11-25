@@ -4,7 +4,8 @@ from gamex.families.Xbox.formats.binary import Binary_Xnb
 from .GameData import *
 
 def register() -> None:
-    Binary_Xnb.add(Binary_Xnb.TypeReader[str]('BmFont.XmlSourceReader', 'String', lambda r: r.readLV7UString()))
+    pass
+    # Binary_Xnb.add(Binary_Xnb.TypeReader[str]('BmFont.XmlSourceReader', 'String', lambda r: r.readLV7UString()))
     
     # Binary_Xnb.add(Binary_Xnb.TypeReader[ModFarmType]('ModFarmType', 'StardewValley.GameData.ModFarmType', lambda r: ModFarmType()))
     # Binary_Xnb.add(Binary_Xnb.TypeReader[ModLanguage]('ModLanguage', 'StardewValley.GameData.ModLanguage', lambda r: ModLanguage()))

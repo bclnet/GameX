@@ -1516,7 +1516,7 @@ public class SkinPartition { // Y
             VertexMap = r.ReadPArray<ushort>("H", NumVertices);
             VertexWeights = r.ReadFArray(k => r.ReadPArray<float>("f", NumWeightsPerVertex), NumVertices);
             StripLengths = r.ReadPArray<ushort>("H", NumStrips);
-            if (NumStrips != 0) Strips = r.ReadFArray((k, i) => r.ReadPArray<ushort>("H", StripLengths[i]), NumStrips);
+            if (NumStrips != 0) Strips = r.ReadFIArray((k, i) => r.ReadPArray<ushort>("H", StripLengths[i]), NumStrips);
             else Triangles = r.ReadSArray<Triangle>(NumTriangles);
         }
         else if (r.V >= 0x0A010000) {
@@ -1526,7 +1526,7 @@ public class SkinPartition { // Y
             if (HasVertexWeights == 15) VertexWeights = r.ReadFArray(k => r.ReadFArray(z => r.ReadHalf(), NumWeightsPerVertex), NumVertices);
             StripLengths = r.ReadPArray<ushort>("H", NumStrips);
             if (Z.ReadBool(r)) {
-                if (NumStrips != 0) Strips = r.ReadFArray((k, i) => r.ReadPArray<ushort>("H", StripLengths[i]), NumStrips);
+                if (NumStrips != 0) Strips = r.ReadFIArray((k, i) => r.ReadPArray<ushort>("H", StripLengths[i]), NumStrips);
                 else Triangles = r.ReadSArray<Triangle>(NumTriangles);
             }
         }
@@ -4115,8 +4115,8 @@ public class NiTriStripsData : NiTriBasedGeomData { // Z
         NumStrips = r.ReadUInt16();
         StripLengths = r.ReadPArray<ushort>("H", NumStrips);
         var HasPoints = r.V >= 0x0A000103 ? Z.ReadBool(r) : default;
-        if (r.V <= 0x0A000102) Points = r.ReadFArray((k, i) => r.ReadPArray<ushort>("H", StripLengths[i]), NumStrips);
-        if (r.V >= 0x0A000103 && HasPoints) Points = r.ReadFArray((k, i) => r.ReadPArray<ushort>("H", StripLengths[i]), NumStrips);
+        if (r.V <= 0x0A000102) Points = r.ReadFIArray((k, i) => r.ReadPArray<ushort>("H", StripLengths[i]), NumStrips);
+        if (r.V >= 0x0A000103 && HasPoints) Points = r.ReadFIArray((k, i) => r.ReadPArray<ushort>("H", StripLengths[i]), NumStrips);
     }
 }
 

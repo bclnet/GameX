@@ -53,130 +53,53 @@ public abstract class TypeReader<T>(bool valueType = false, bool canUseObj = fal
 [RType("ArrayReader")] class ArrayReader<T>() : TypeReader<T[]>() { TypeReader elem; public override void Init(TypeManager manager) => elem = manager.GetTypeReader(typeof(T)); public override T[] Read(ContentReader r, T[] o) => r.ReadL32FArray(z => r.ReadObject<T>(elem, default), obj: o); }
 [RType("ListReader")] class ListReader<T>() : TypeReader<List<T>>(canUseObj: false) { TypeReader elem; public override void Init(TypeManager manager) => elem = manager.GetTypeReader(typeof(T)); public override List<T> Read(ContentReader r, List<T> o) => r.ReadL32FList(z => r.ReadObject<T>(elem, default), obj: o); }
 [RType("DictionaryReader")] class DictionaryReader<TKey, TValue>() : TypeReader<Dictionary<TKey, TValue>>(canUseObj: true) { TypeReader key; TypeReader value; public override void Init(TypeManager manager) { key = manager.GetTypeReader(typeof(TKey)); value = manager.GetTypeReader(typeof(TValue)); } public override Dictionary<TKey, TValue> Read(ContentReader r, Dictionary<TKey, TValue> o) => (Dictionary<TKey, TValue>)r.ReadL32FMany(z => r.ReadObject<TKey>(key, default), z => r.ReadObject<TValue>(value, default), obj: o); }
-//new GenericReader("MultiArrayReader", null, typeof(TypeManager).GetMethod("_MultiArrayReader")),
+[RType("MultiArrayReader")] class MultiArrayReader<T>() : TypeReader<Array>() { TypeReader elem; public override void Init(TypeManager manager) => elem = manager.GetTypeReader(typeof(T)); public override T[] Read(ContentReader r, Array o) => default; }
 [RType("TimeSpanReader")] class TimeSpanReader() : TypeReader<TimeSpan>(valueType: true) { public override TimeSpan Read(ContentReader r, TimeSpan o) => new(r.ReadInt64()); }
 [RType("DateTimeReader")] class DateTimeReader() : TypeReader<DateTime>(valueType: true) { public override DateTime Read(ContentReader r, DateTime o) { var v = r.ReadUInt64(); return new DateTime((long)(v & ~(3UL << 62)), (DateTimeKind)((v >> 62) & 3)); } }
 [RType("DecimalReader")] class DecimalReader() : TypeReader<decimal>(valueType: true) { public override decimal Read(ContentReader r, decimal o) => r.ReadDecimal(); }
 [RType("ExternalReferenceReader")] class ExternalReferenceReader() : TypeReader<string>() { public override string Read(ContentReader r, string o) => r.ReadExternalReference(); }
-//new GenericReader("ReflectiveReader", "Object", typeof(TypeManager).GetMethod("_ReflectiveReader")),
+[RType("ReflectiveReader")]
+class ReflectiveReader<T>() : TypeReader(typeof(T)) {
+    delegate void ReadElement(ContentReader r, object p);
+    List<ReadElement> Readers;
+    ConstructorInfo Constructor;
+    TypeReader BaseTypeReader;
 
-[RType("ExternalReferenceReader")]
-class ReflectiveReader<T> : TypeReader {
-    delegate void ReadElement(ContentReader input, object parent);
-
-    private List<ReadElement> _readers;
-
-    private ConstructorInfo _constructor;
-
-    private ContentTypeReader _baseTypeReader;
-
-
-    public ReflectiveReader()
-        : base(typeof(T)) {
+    public override void Init(TypeManager manager) {
+        CanUseObj = Type.IsClass;
+        var baseType = Type.BaseType;
+        if (baseType != null && baseType != typeof(object)) BaseTypeReader = manager.GetTypeReader(baseType);
+        Constructor = Reflect.GetDefaultConstructor(Type);
+        var (properties, fields) = Reflect.GetAllPropertiesFields(Type);
+        Readers = new List<ReadElement>(fields.Length + properties.Length);
+        foreach (var property in properties) { var reader = GetElementReader(manager, property); if (reader != null) Readers.Add(reader); }
+        foreach (var field in fields) { var reader = GetElementReader(manager, field); if (reader != null) Readers.Add(reader); }
     }
 
-    public override bool CanDeserializeIntoExistingObject {
-        get { return TargetType.IsClass(); }
-    }
-
-    protected internal override void Initialize(ContentTypeReaderManager manager) {
-        base.Initialize(manager);
-
-        var baseType = ReflectionHelpers.GetBaseType(TargetType);
-        if (baseType != null && baseType != typeof(object))
-            _baseTypeReader = manager.GetTypeReader(baseType);
-
-        _constructor = TargetType.GetDefaultConstructor();
-
-        var properties = TargetType.GetAllProperties();
-        var fields = TargetType.GetAllFields();
-        _readers = new List<ReadElement>(fields.Length + properties.Length);
-
-        // Gather the properties.
-        foreach (var property in properties) {
-            var read = GetElementReader(manager, property);
-            if (read != null)
-                _readers.Add(read);
-        }
-
-        // Gather the fields.
-        foreach (var field in fields) {
-            var read = GetElementReader(manager, field);
-            if (read != null)
-                _readers.Add(read);
-        }
-    }
-
-    private static ReadElement GetElementReader(ContentTypeReaderManager manager, MemberInfo member) {
-        var property = member as PropertyInfo;
-        var field = member as FieldInfo;
-        Debug.Assert(field != null || property != null);
-
-        if (property != null) {
-            // Properties must have at least a getter.
-            if (property.CanRead == false)
-                return null;
-
-            // Skip over indexer properties.
-            if (property.GetIndexParameters().Any())
-                return null;
-        }
-
-        // Are we explicitly asked to ignore this item?
-        if (ReflectionHelpers.GetCustomAttribute<ContentSerializerIgnoreAttribute>(member) != null)
-            return null;
-
-        var contentSerializerAttribute = ReflectionHelpers.GetCustomAttribute<ContentSerializerAttribute>(member);
-        if (contentSerializerAttribute == null) {
+    static ReadElement GetElementReader(TypeManager manager, MemberInfo member) {
+        var (property, field) = (member as PropertyInfo, member as FieldInfo);
+        if (property != null && (!property.CanRead || property.GetIndexParameters().Any())) return null;
+        // ignore
+        if (Attribute.GetCustomAttribute(member, typeof(IgnoreAttribute)) != null) return null;
+        // optional
+        var optional = (OptionalAttribute)Attribute.GetCustomAttribute(member, typeof(OptionalAttribute));
+        if (optional == null) {
             if (property != null) {
-                // There is no ContentSerializerAttribute, so non-public
-                // properties cannot be deserialized.
-                if (!ReflectionHelpers.PropertyIsPublic(property))
-                    return null;
-
-                // If the read-only property has a type reader,
-                // and CanDeserializeIntoExistingObject is true,
-                // then it is safe to deserialize into the existing object.
+                if (!ReflectionHelpers.PropertyIsPublic(property)) return null;
                 if (!property.CanWrite) {
-                    var typeReader = manager.GetTypeReader(property.PropertyType);
-                    if (typeReader == null || !typeReader.CanDeserializeIntoExistingObject)
-                        return null;
+                    var reader2 = manager.GetTypeReader(property.PropertyType);
+                    if (reader2 == null || !reader2.CanUseObj) return null;
                 }
             }
-            else {
-                // There is no ContentSerializerAttribute, so non-public
-                // fields cannot be deserialized.
-                if (!field.IsPublic)
-                    return null;
-
-                // evolutional: Added check to skip initialise only fields
-                if (field.IsInitOnly)
-                    return null;
-            }
+            else if (!field.IsPublic || field.IsInitOnly) return null;
         }
-
-        Action<object, object> setter;
-        Type elementType;
-        if (property != null) {
-            elementType = property.PropertyType;
-            if (property.CanWrite)
-                setter = (o, v) => property.SetValue(o, v, null);
-            else
-                setter = (o, v) => { };
-        }
-        else {
-            elementType = field.FieldType;
-            setter = field.SetValue;
-        }
+        // setter
+        Action<object, object> setter; Type elementType;
+        if (property != null) { elementType = property.PropertyType; setter = property.CanWrite ? (o, v) => property.SetValue(o, v, null) : (o, v) => { }; }
+        else { elementType = field.FieldType; setter = field.SetValue; }
 
         // Shared resources get special treatment.
-        if (contentSerializerAttribute != null && contentSerializerAttribute.SharedResource) {
-            return (input, parent) =>
-            {
-                Action<object> action = value => setter(parent, value);
-                input.ReadSharedResource(action);
-            };
-        }
+        if (optional != null && optional.SharedResource) return (r, p) => r.ReadSharedResource(value => setter(p, value));
 
         // We need to have a reader at this point.
         var reader = manager.GetTypeReader(elementType);
@@ -184,7 +107,7 @@ class ReflectiveReader<T> : TypeReader {
             if (elementType == typeof(System.Array))
                 reader = new ArrayReader<Array>();
             else
-                throw new ContentLoadException(string.Format("Content reader could not be found for {0} type.", elementType.FullName));
+                throw new Exception(string.Format("Content reader could not be found for {0} type.", elementType.FullName));
 
         // We use the construct delegate to pick the correct existing 
         // object to be the target of deserialization.
@@ -200,25 +123,12 @@ class ReflectiveReader<T> : TypeReader {
         };
     }
 
-    protected internal override object Read(ContentReader input, object existingInstance) {
-        T obj;
-        if (existingInstance != null)
-            obj = (T)existingInstance;
-        else
-            obj = (_constructor == null ? (T)Activator.CreateInstance(typeof(T)) : (T)_constructor.Invoke(null));
-
-        if (_baseTypeReader != null)
-            _baseTypeReader.Read(input, obj);
-
-        // Box the type.
-        var boxed = (object)obj;
-
-        foreach (var reader in _readers)
-            reader(input, boxed);
-
-        // Unbox it... required for value types.
-        obj = (T)boxed;
-
+    public override object Read(ContentReader r, object o) {
+        var obj = o != null
+            ? (T)o
+            : (Constructor == null ? (T)Activator.CreateInstance(typeof(T)) : (T)Constructor.Invoke(null));
+        BaseTypeReader?.Read(r, o);
+        var b = (object)obj; foreach (var reader in Readers) reader(r, b); obj = (T)b;
         return obj;
     }
 }

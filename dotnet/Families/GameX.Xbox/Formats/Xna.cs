@@ -28,7 +28,7 @@ public abstract class TypeReader(Type type, bool valueType = false, bool canUseO
 }
 
 public abstract class TypeReader<T>(bool valueType = false, bool canUseObj = false) : TypeReader(typeof(T), valueType, canUseObj) {
-    public override object Read(ContentReader r, object o) => Read(r, (T)o);
+    public override object Read(ContentReader r, object o) => o == null ? Read(r, default) : Read(r, (T)o);
     public abstract T Read(ContentReader r, T o);
 }
 
@@ -79,13 +79,15 @@ class ReflectiveReader<T>() : TypeReader(typeof(T)) {
     static ReadElement GetElementReader(TypeManager manager, MemberInfo member) {
         var (property, field) = (member as PropertyInfo, member as FieldInfo);
         if (property != null && (!property.CanRead || property.GetIndexParameters().Any())) return null;
+
         // ignore
         if (Attribute.GetCustomAttribute(member, typeof(IgnoreAttribute)) != null) return null;
+
         // optional
         var optional = (OptionalAttribute)Attribute.GetCustomAttribute(member, typeof(OptionalAttribute));
         if (optional == null) {
             if (property != null) {
-                //if (!ReflectionHelpers.PropertyIsPublic(property)) return null;
+                if (property.GetGetMethod()?.IsPublic != true) return null;
                 if (!property.CanWrite) {
                     var reader2 = manager.GetTypeReader(property.PropertyType);
                     if (reader2 == null || !reader2.CanUseObj) return null;
@@ -93,34 +95,24 @@ class ReflectiveReader<T>() : TypeReader(typeof(T)) {
             }
             else if (!field.IsPublic || field.IsInitOnly) return null;
         }
-        // setter
-        Action<object, object> setter; Type elementType;
-        if (property != null) { elementType = property.PropertyType; setter = property.CanWrite ? (o, v) => property.SetValue(o, v, null) : (o, v) => { }; }
-        else { elementType = field.FieldType; setter = field.SetValue; }
 
-        // Shared resources get special treatment.
+        // setter
+        Action<object, object> setter; Type elem;
+        if (property != null) { elem = property.PropertyType; setter = property.CanWrite ? (o, v) => property.SetValue(o, v, null) : (o, v) => { }; }
+        else { elem = field.FieldType; setter = field.SetValue; }
+
+        // shared resources get special treatment.
         if (optional != null && optional.SharedResource) return (r, p) => r.ReadSharedResource<object>(value => setter(p, value));
 
         // We need to have a reader at this point.
-        var reader = manager.GetTypeReader(elementType);
+        var reader = manager.GetTypeReader(elem);
         if (reader == null)
-            if (elementType == typeof(System.Array))
-                reader = new ArrayReader<Array>();
-            else
-                throw new Exception(string.Format("Content reader could not be found for {0} type.", elementType.FullName));
+            if (elem == typeof(Array)) reader = new ArrayReader<Array>();
+            else throw new Exception($"Content reader could not be found for {elem.FullName} type.");
 
-        // We use the construct delegate to pick the correct existing 
-        // object to be the target of deserialization.
-        Func<object, object> construct = parent => null;
-        if (property != null && !property.CanWrite)
-            construct = parent => property.GetValue(parent, null);
-
-        return (input, parent) =>
-        {
-            var existing = construct(parent);
-            var obj2 = input.ReadObject(reader, existing);
-            setter(parent, obj2);
-        };
+        // We use the construct delegate to pick the correct existing object to be the target of deserialization.
+        Func<object, object> construct = property != null && !property.CanWrite ? parent => property.GetValue(parent, null) : parent => null;
+        return (r, p) => setter(p, r.ReadObject(reader, construct(p)));
     }
 
     public override object Read(ContentReader r, object o) {
@@ -151,26 +143,130 @@ class ReflectiveReader<T>() : TypeReader(typeof(T)) {
 
 // Graphics types
 [RType("TextureReader")] class TextureReader() : TypeReader<Texture>() { public override Texture Read(ContentReader r, Texture o) => o; }
-[RType("Texture2DReader")] class Texture2DReader() : TypeReader<Texture2D>() { public override Texture2D Read(ContentReader r, Texture2D o) => new(r); }
-[RType("Texture3DReader")] class Texture3DReader() : TypeReader<Texture3D>() { public override Texture3D Read(ContentReader r, Texture3D o) => new(r); }
-[RType("TextureCubeReader")] class TextureCubeReader() : TypeReader<TextureCube>() { public override TextureCube Read(ContentReader r, TextureCube o) => new(r); }
-[RType("IndexBufferReader")] class IndexBufferReader() : TypeReader<IndexBuffer>() { public override IndexBuffer Read(ContentReader r, IndexBuffer o) => new(r); }
-[RType("VertexBufferReader")] class VertexBufferReader() : TypeReader<VertexBuffer>() { public override VertexBuffer Read(ContentReader r, VertexBuffer o) => new(r); }
-[RType("VertexDeclarationReader")] class VertexDeclarationReader() : TypeReader<VertexDeclaration>() { public override VertexDeclaration Read(ContentReader r, VertexDeclaration o) => new(r); }
-[RType("EffectReader")] class EffectReader() : TypeReader<Effect>() { public override Effect Read(ContentReader r, Effect o) => new(r); }
-[RType("EffectMaterialReader")] class EffectMaterialReader() : TypeReader<EffectMaterial>() { public override EffectMaterial Read(ContentReader r, EffectMaterial o) => new(r); }
-[RType("BasicEffectReader")] class BasicEffectReader() : TypeReader<BasicEffect>() { public override BasicEffect Read(ContentReader r, BasicEffect o) => new(r); }
-[RType("AlphaTestEffectReader")] class AlphaTestEffectReader() : TypeReader<AlphaTestEffect>() { public override AlphaTestEffect Read(ContentReader r, AlphaTestEffect o) => new(r); }
-[RType("DualTextureEffectReader")] class DualTextureEffectReader() : TypeReader<DualTextureEffect>() { public override DualTextureEffect Read(ContentReader r, DualTextureEffect o) => new(r); }
-[RType("EnvironmentMapEffectReader")] class EnvironmentMapEffectReader() : TypeReader<EnvironmentMapEffect>() { public override EnvironmentMapEffect Read(ContentReader r, EnvironmentMapEffect o) => new(r); }
-[RType("SkinnedEffectReader")] class SkinnedEffectReader() : TypeReader<SkinnedEffect>() { public override SkinnedEffect Read(ContentReader r, SkinnedEffect o) => new(r); }
-[RType("SpriteFontReader")] class SpriteFontReader() : TypeReader<SpriteFont>() { public override SpriteFont Read(ContentReader r, SpriteFont o) => new(r); }
-[RType("ModelReader")] class ModelReader() : TypeReader<Model>() { public override Model Read(ContentReader r, Model o) => new(r); }
+[RType("Texture2DReader")]
+class Texture2DReader() : TypeReader<Texture2D>() {
+    public override Texture2D Read(ContentReader r, Texture2D o) => new() {
+        Format = (SurfaceFormat)r.ReadInt32(),
+        Width = r.ReadUInt32(),
+        Height = r.ReadUInt32(),
+        Mips = r.ReadL32FArray(z => r.ReadL32Bytes()),
+    };
+}
+[RType("Texture3DReader")]
+class Texture3DReader() : TypeReader<Texture3D>() {
+    public override Texture3D Read(ContentReader r, Texture3D o) => new() {
+        Format = (SurfaceFormat)r.ReadInt32(),
+        Width = r.ReadUInt32(),
+        Height = r.ReadUInt32(),
+        Depth = r.ReadUInt32(),
+        Mips = r.ReadL32FArray(z => r.ReadL32Bytes()),
+    };
+}
+[RType("TextureCubeReader")]
+class TextureCubeReader() : TypeReader<TextureCube>() {
+    public override TextureCube Read(ContentReader r, TextureCube o) => new() {
+        Format = (SurfaceFormat)r.ReadInt32(),
+        Size = r.ReadUInt32(),
+        Face1Mips = r.ReadL32FArray(z => r.ReadL32Bytes()),
+        Face2Mips = r.ReadL32FArray(z => r.ReadL32Bytes()),
+        Face3Mips = r.ReadL32FArray(z => r.ReadL32Bytes()),
+        Face4Mips = r.ReadL32FArray(z => r.ReadL32Bytes()),
+        Face5Mips = r.ReadL32FArray(z => r.ReadL32Bytes()),
+        Face6Mips = r.ReadL32FArray(z => r.ReadL32Bytes()),
+    };
+}
+[RType("IndexBufferReader")]
+class IndexBufferReader() : TypeReader<IndexBuffer>() {
+    public override IndexBuffer Read(ContentReader r, IndexBuffer o) => new() {
+        IndexFormat = r.ReadBoolean() ? 16 : 32,
+        IndexData = r.ReadL32Bytes(),
+    };
+}
+[RType("VertexBufferReader")]
+class VertexBufferReader() : TypeReader<VertexBuffer>() {
+    public override VertexBuffer Read(ContentReader r, VertexBuffer o) => new() {
+    };
+}
+[RType("VertexDeclarationReader")]
+class VertexDeclarationReader() : TypeReader<VertexDeclaration>() {
+    public override VertexDeclaration Read(ContentReader r, VertexDeclaration o) => new() {
+    };
+}
+[RType("EffectReader")]
+class EffectReader() : TypeReader<Effect>() {
+    public override Effect Read(ContentReader r, Effect o) => new() {
+    };
+}
+[RType("EffectMaterialReader")]
+class EffectMaterialReader() : TypeReader<EffectMaterial>() {
+    public override EffectMaterial Read(ContentReader r, EffectMaterial o) => new() {
+    };
+}
+[RType("BasicEffectReader")]
+class BasicEffectReader() : TypeReader<BasicEffect>() {
+    public override BasicEffect Read(ContentReader r, BasicEffect o) => new() {
+    };
+}
+[RType("AlphaTestEffectReader")]
+class AlphaTestEffectReader() : TypeReader<AlphaTestEffect>() {
+    public override AlphaTestEffect Read(ContentReader r, AlphaTestEffect o) => new() {
+    };
+}
+[RType("DualTextureEffectReader")]
+class DualTextureEffectReader() : TypeReader<DualTextureEffect>() {
+    public override DualTextureEffect Read(ContentReader r, DualTextureEffect o) => new() {
+    };
+}
+[RType("EnvironmentMapEffectReader")]
+class EnvironmentMapEffectReader() : TypeReader<EnvironmentMapEffect>() {
+    public override EnvironmentMapEffect Read(ContentReader r, EnvironmentMapEffect o) => new() {
+    };
+}
+[RType("SkinnedEffectReader")]
+class SkinnedEffectReader() : TypeReader<SkinnedEffect>() {
+    public override SkinnedEffect Read(ContentReader r, SkinnedEffect o) => new() {
+    };
+}
+[RType("SpriteFontReader")]
+class SpriteFontReader() : TypeReader<SpriteFont>() {
+    public override SpriteFont Read(ContentReader r, SpriteFont o) => new() {
+    };
+}
+[RType("ModelReader")]
+class ModelReader() : TypeReader<Model>() {
+    public override Model Read(ContentReader r, Model o) => new() {
+    };
+}
 
 // Media types
-[RType("SoundEffectReader")] class SoundEffectReader() : TypeReader<SoundEffect>() { public override SoundEffect Read(ContentReader r, SoundEffect o) => new(r); }
-[RType("SongReader")] class SongReader() : TypeReader<Song>() { public override Song Read(ContentReader r, Song o) => new(r); }
-[RType("VideoReader")] class VideoReader() : TypeReader<Video>() { public override Video Read(ContentReader r, Video o) => new(r); }
+[RType("SoundEffectReader")]
+class SoundEffectReader() : TypeReader<SoundEffect>() {
+    public override SoundEffect Read(ContentReader r, SoundEffect o) => new() {
+        Format = r.ReadL32Bytes(),
+        Data = r.ReadL32Bytes(),
+        LoopStart = r.ReadInt32(),
+        LoopLength = r.ReadInt32(),
+        Duration = r.ReadInt32(),
+    };
+}
+[RType("SongReader")]
+class SongReader() : TypeReader<Song>() {
+    public override Song Read(ContentReader r, Song o) => new() {
+        Filename = r.ReadLV7UString(),
+        Duration = r.ReadObject<int>(),
+    };
+}
+[RType("VideoReader")]
+class VideoReader() : TypeReader<Video>() {
+    public override Video Read(ContentReader r, Video o) => new() {
+        Filename = r.ReadObject<string>(),
+        Duration = r.ReadObject<int>(),
+        Width = r.ReadObject<int>(),
+        Height = r.ReadObject<int>(),
+        FramesPerSecond = r.ReadObject<float>(),
+        SoundtrackType = (SoundtrackType)r.ReadObject<int>(),
+    };
+}
 
 public class TypeManager {
     static readonly object Locker = new();
@@ -243,57 +339,55 @@ public class TypeManager {
         }
 #pragma warning restore 0219, 0649
 
-        // The first content byte i read tells me the number of content readers in this XNB file
+        // the first content byte i read tells me the number of content readers in this XNB file
         var readerCount = r.ReadVInt7();
         var readers = new TypeReader[readerCount];
-        var needsInitialize = new BitArray(readerCount);
+        var needsInit = new BitArray(readerCount);
         Readers = new(readerCount);
         lock (Locker) {
             for (var i = 0; i < readerCount; i++) {
-                var originalReaderTypeString = r.ReadString();
-                if (TypeFactories.TryGetValue(originalReaderTypeString, out var readerFunc)) {
+                var readerName = r.ReadString();
+                if (TypeFactories.TryGetValue(readerName, out var readerFunc)) {
                     readers[i] = readerFunc();
-                    needsInitialize[i] = true;
+                    needsInit[i] = true;
                 }
                 else {
-                    var readerTypeString = PrepareType(originalReaderTypeString);
-                    var readerType = Type.GetType(readerTypeString);
-                    if (readerType != null) {
-                        if (!ReadersCache.TryGetValue(readerType, out var reader)) {
-                            try {
-                                reader = Reflect.GetDefaultConstructor(readerType).Invoke(null) as TypeReader;
-                            }
-                            catch (TargetInvocationException ex) { throw new InvalidOperationException($"Failed to get default constructor for TypeReader. To work around, add a creation function to ContentTypeReaderManager.AddTypeFactory() with the following failed type string: {originalReaderTypeString}", ex); }
-                            needsInitialize[i] = true;
-                            ReadersCache.Add(readerType, reader);
+                    var readerType = GetType(readerName);
+                    if (!ReadersCache.TryGetValue(readerType, out var reader)) {
+                        try {
+                            reader = Reflect.GetDefaultConstructor(readerType).Invoke(null) as TypeReader;
                         }
-                        readers[i] = reader;
+                        catch (TargetInvocationException ex) { throw new InvalidOperationException($"Failed to get default constructor for TypeReader. To work around, add a creation function to ContentTypeReaderManager.AddTypeFactory() with the following failed type string: {readerName}", ex); }
+                        needsInit[i] = true;
+                        ReadersCache.Add(readerType, reader);
                     }
-                    else throw new Exception($"Could not find TypeReader Type. Please ensure the name of the Assembly that contains the Type matches the assembly in the full type name: {originalReaderTypeString} ({readerTypeString})");
+                    readers[i] = reader;
                 }
-
                 var type = readers[i].Type;
                 if (type != null && !Readers.ContainsKey(type)) Readers.Add(type, readers[i]);
                 r.ReadInt32();
             }
-            // Initialize any new readers.
-            for (var i = 0; i < readers.Length; i++) if (needsInitialize.Get(i)) readers[i].Init(this);
+            // initialize any new readers.
+            for (var i = 0; i < readers.Length; i++) if (needsInit.Get(i)) readers[i].Init(this);
         }
         return readers;
     }
 
-    public static string PrepareType(string type) {
+    public static Type GetType(string type) {
         // needed to support nested types
         var count = type.Split(["[["], StringSplitOptions.None).Length - 1;
-        var preparedType = type;
-        for (var i = 0; i < count; i++) preparedType = Regex.Replace(preparedType, @"\[(.+?), Version=.+?\]", "[$1]");
+        for (var i = 0; i < count; i++) type = Regex.Replace(type, @"\[(.+?), Version=.+?\]", "[$1]");
         // handle non generic types
-        if (preparedType.Contains("PublicKeyToken")) preparedType = Regex.Replace(preparedType, @"(.+?), Version=.+?$", "$1");
-        preparedType = preparedType.Replace(", Microsoft.Xna.Framework.Graphics", string.Format(", {0}", AssemblyName));
-        preparedType = preparedType.Replace(", Microsoft.Xna.Framework.Video", string.Format(", {0}", AssemblyName));
-        preparedType = preparedType.Replace(", Microsoft.Xna.Framework", string.Format(", {0}", AssemblyName));
-        preparedType = IsRunningOnNetCore ? preparedType.Replace("mscorlib", "System.Private.CoreLib") : preparedType.Replace("System.Private.CoreLib", "mscorlib");
-        return preparedType;
+        if (type.Contains("PublicKeyToken")) type = Regex.Replace(type, @"(.+?), Version=.+?$", "$1");
+        type = type.Replace(", Microsoft.Xna.Framework.Graphics", $", {AssemblyName}");
+        type = type.Replace(", Microsoft.Xna.Framework.Video", $", {AssemblyName}");
+        type = type.Replace(", Microsoft.Xna.Framework", $", {AssemblyName}");
+        type = IsRunningOnNetCore ? type.Replace("mscorlib", "System.Private.CoreLib") : type.Replace("System.Private.CoreLib", "mscorlib");
+        // handle gamex map
+        type = type.Replace("Microsoft.Xna.Framework.Content", "GameX.Xbox.Formats.Xna");
+        type = type.Replace(", StardewValley.GameData", ", GameX.Xbox");
+        type = type.Replace("StardewValley.GameData", "GameX.Xbox.Formats.StardewValley.GameData");
+        return Type.GetType(type) ?? throw new Exception($"Could not find TypeReader Type. Please ensure the name of the Assembly that contains the Type matches the assembly in the full type name: {type}");
     }
     public static void AddTypeFactory(string type, Func<TypeReader> factory) { if (!TypeFactories.ContainsKey(type)) TypeFactories.Add(type, factory); }
     public static void ClearTypeFactories() => TypeFactories.Clear();
@@ -423,14 +517,13 @@ public enum VertexElementUsage {
 
 public enum CompareFunction { Always, Never, Less, LessEqual, Equal, GreaterEqual, Greater, NotEqual }
 
-public class Texture {
-}
+public class Texture { }
 
-public class Texture2D(ContentReader r) : Texture, IHaveMetaInfo, ITexture {
-    public readonly SurfaceFormat Format = (SurfaceFormat)r.ReadInt32();
-    public uint Width = r.ReadUInt32();
-    public uint Height = r.ReadUInt32();
-    public readonly byte[][] Mips = r.ReadL32FArray(z => r.ReadL32Bytes());
+public class Texture2D : Texture, IHaveMetaInfo, ITexture {
+    public SurfaceFormat Format;
+    public uint Width;
+    public uint Height;
+    public byte[][] Mips;
     #region ITexture
     int ITexture.Width => (int)Width;
     int ITexture.Height => (int)Height;
@@ -476,12 +569,12 @@ public class Texture2D(ContentReader r) : Texture, IHaveMetaInfo, ITexture {
             ])];
 }
 
-public class Texture3D(ContentReader r) : Texture, IHaveMetaInfo {
-    public readonly SurfaceFormat Format = (SurfaceFormat)r.ReadInt32();
-    public readonly uint Width = r.ReadUInt32();
-    public readonly uint Height = r.ReadUInt32();
-    public readonly uint Depth = r.ReadUInt32();
-    public readonly byte[][] Mips = r.ReadL32FArray(z => r.ReadL32Bytes());
+public class Texture3D : Texture, IHaveMetaInfo {
+    public SurfaceFormat Format;
+    public uint Width;
+    public uint Height;
+    public uint Depth;
+    public byte[][] Mips;
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new(null, new MetaContent { Type = "Data", Name = Path.GetFileName(file.Path), Value = this }),
             new("Texture3D", items: [
@@ -493,15 +586,15 @@ public class Texture3D(ContentReader r) : Texture, IHaveMetaInfo {
             ])];
 }
 
-public class TextureCube(ContentReader r) : Texture, IHaveMetaInfo {
-    public readonly SurfaceFormat Format = (SurfaceFormat)r.ReadInt32();
-    public readonly uint Size = r.ReadUInt32();
-    public readonly byte[][] Face1Mips = r.ReadL32FArray(z => r.ReadL32Bytes());
-    public readonly byte[][] Face2Mips = r.ReadL32FArray(z => r.ReadL32Bytes());
-    public readonly byte[][] Face3Mips = r.ReadL32FArray(z => r.ReadL32Bytes());
-    public readonly byte[][] Face4Mips = r.ReadL32FArray(z => r.ReadL32Bytes());
-    public readonly byte[][] Face5Mips = r.ReadL32FArray(z => r.ReadL32Bytes());
-    public readonly byte[][] Face6Mips = r.ReadL32FArray(z => r.ReadL32Bytes());
+public class TextureCube : Texture, IHaveMetaInfo {
+    public SurfaceFormat Format;
+    public uint Size;
+    public byte[][] Face1Mips;
+    public byte[][] Face2Mips;
+    public byte[][] Face3Mips;
+    public byte[][] Face4Mips;
+    public byte[][] Face5Mips;
+    public byte[][] Face6Mips;
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new(null, new MetaContent { Type = "Data", Name = Path.GetFileName(file.Path), Value = this }),
             new("TextureCube", items: [
@@ -510,95 +603,95 @@ public class TextureCube(ContentReader r) : Texture, IHaveMetaInfo {
             ])];
 }
 
-public class IndexBuffer(ContentReader r) {
-    public readonly int IndexFormat = r.ReadBoolean() ? 16 : 32;
-    public readonly byte[] IndexData = r.ReadL32Bytes();
+public class IndexBuffer {
+    public int IndexFormat;
+    public byte[] IndexData;
 }
 
-public class VertexDeclaration(ContentReader r) {
-    public class Element(ContentReader r) {
-        public readonly uint Offset = r.ReadUInt32();
-        public readonly VertexElementFormat Format = (VertexElementFormat)r.ReadInt32();
-        public readonly VertexElementUsage Usage = (VertexElementUsage)r.ReadInt32();
-        public readonly uint UsageIndex = r.ReadUInt32();
+public class VertexDeclaration {
+    public class Element {
+        public uint Offset = r.ReadUInt32();
+        public VertexElementFormat Format = (VertexElementFormat)r.ReadInt32();
+        public VertexElementUsage Usage = (VertexElementUsage)r.ReadInt32();
+        public uint UsageIndex = r.ReadUInt32();
     }
     public readonly uint VertexStride = r.ReadUInt32();
     public readonly Element[] Elements = r.ReadL32FArray(z => new Element(r));
 }
 
 public class VertexBuffer : VertexDeclaration {
-    public readonly byte[][] Vertexs;
+    public byte[][] Vertexs;
     public VertexBuffer(ContentReader r) : base(r) {
         Vertexs = r.ReadL32FArray(z => r.ReadBytes(VertexStride));
     }
 }
 
-public class Effect(ContentReader r) {
-    public readonly byte[] EffectBytecode = r.ReadL32Bytes();
+public class Effect {
+    public byte[] EffectBytecode = r.ReadL32Bytes();
 }
 
-public class EffectMaterial(ContentReader r) {
-    public readonly string EffectReference = r.ReadLV7UString();
-    public readonly Dictionary<string, object> Parameters = r.ReadObject<Dictionary<string, object>>();
+public class EffectMaterial {
+    public string EffectReference = r.ReadLV7UString();
+    public Dictionary<string, object> Parameters = r.ReadObject<Dictionary<string, object>>();
 }
 
-public class BasicEffect(ContentReader r) {
-    public readonly string TextureReference = r.ReadLV7UString();
-    public readonly Vector3 DiffuseColor = r.ReadVector3();
-    public readonly Vector3 EmissiveColor = r.ReadVector3();
-    public readonly Vector3 SpecularColor = r.ReadVector3();
-    public readonly float SpecularPower = r.ReadSingle();
-    public readonly float Alpha = r.ReadSingle();
-    public readonly bool VertexColorEnabled = r.ReadBoolean();
+public class BasicEffect {
+    public string TextureReference = r.ReadLV7UString();
+    public Vector3 DiffuseColor = r.ReadVector3();
+    public Vector3 EmissiveColor = r.ReadVector3();
+    public Vector3 SpecularColor = r.ReadVector3();
+    public float SpecularPower = r.ReadSingle();
+    public float Alpha = r.ReadSingle();
+    public bool VertexColorEnabled = r.ReadBoolean();
 }
 
-public class AlphaTestEffect(ContentReader r) {
-    public readonly string TextureReference = r.ReadLV7UString();
-    public readonly CompareFunction AlphaFunction = (CompareFunction)r.ReadInt32();
-    public readonly uint ReferenceAlpha = r.ReadUInt32();
-    public readonly Vector3 DiffuseColor = r.ReadVector3();
-    public readonly float Alpha = r.ReadSingle();
-    public readonly bool VertexColorEnabled = r.ReadBoolean();
+public class AlphaTestEffect {
+    public string TextureReference = r.ReadLV7UString();
+    public CompareFunction AlphaFunction = (CompareFunction)r.ReadInt32();
+    public uint ReferenceAlpha = r.ReadUInt32();
+    public Vector3 DiffuseColor = r.ReadVector3();
+    public float Alpha = r.ReadSingle();
+    public bool VertexColorEnabled = r.ReadBoolean();
 }
 
-public class DualTextureEffect(ContentReader r) {
-    public readonly string Texture1Reference = r.ReadLV7UString();
-    public readonly string Texture2Reference = r.ReadLV7UString();
-    public readonly Vector3 DiffuseColor = r.ReadVector3();
-    public readonly float Alpha = r.ReadSingle();
-    public readonly bool VertexColorEnabled = r.ReadBoolean();
+public class DualTextureEffect {
+    public string Texture1Reference = r.ReadLV7UString();
+    public string Texture2Reference = r.ReadLV7UString();
+    public Vector3 DiffuseColor = r.ReadVector3();
+    public float Alpha = r.ReadSingle();
+    public bool VertexColorEnabled = r.ReadBoolean();
 }
 
-public class EnvironmentMapEffect(ContentReader r) {
-    public readonly string TextureReference = r.ReadLV7UString();
-    public readonly string EnvironmentMapReference = r.ReadLV7UString();
-    public readonly float EnvironmentMapAmount = r.ReadSingle();
-    public readonly Vector3 EnvironmentMapSpecular = r.ReadVector3();
-    public readonly float FresnelFactor = r.ReadSingle();
-    public readonly Vector3 DiffuseColor = r.ReadVector3();
-    public readonly Vector3 EmissiveColor = r.ReadVector3();
-    public readonly float Alpha = r.ReadSingle();
+public class EnvironmentMapEffect {
+    public string TextureReference = r.ReadLV7UString();
+    public string EnvironmentMapReference = r.ReadLV7UString();
+    public float EnvironmentMapAmount = r.ReadSingle();
+    public Vector3 EnvironmentMapSpecular = r.ReadVector3();
+    public float FresnelFactor = r.ReadSingle();
+    public Vector3 DiffuseColor = r.ReadVector3();
+    public Vector3 EmissiveColor = r.ReadVector3();
+    public float Alpha = r.ReadSingle();
 }
 
-public class SkinnedEffect(ContentReader r) {
-    public readonly string TextureReference = r.ReadLV7UString();
-    public readonly uint WeightsPerVertex = r.ReadUInt32();
-    public readonly Vector3 DiffuseColor = r.ReadVector3();
-    public readonly Vector3 EmissiveColor = r.ReadVector3();
-    public readonly Vector3 SpecularColor = r.ReadVector3();
-    public readonly float SpecularPower = r.ReadSingle();
-    public readonly float Alpha = r.ReadSingle();
+public class SkinnedEffect {
+    public string TextureReference = r.ReadLV7UString();
+    public uint WeightsPerVertex = r.ReadUInt32();
+    public Vector3 DiffuseColor = r.ReadVector3();
+    public Vector3 EmissiveColor = r.ReadVector3();
+    public Vector3 SpecularColor = r.ReadVector3();
+    public float SpecularPower = r.ReadSingle();
+    public float Alpha = r.ReadSingle();
 }
 
-public class SpriteFont(ContentReader r) : IHaveMetaInfo {
-    public readonly Texture2D Texture = r.ReadObject<Texture2D>();
-    public readonly List<Rectangle> Glyphs = r.ReadObject<List<Rectangle>>();
-    public readonly List<Rectangle> Cropping = r.ReadObject<List<Rectangle>>();
-    public readonly string Characters = new([.. r.ReadObject<List<char>>()]);
-    public readonly int VerticalLineSpacing = r.ReadInt32();
-    public readonly float HorizontalSpacing = r.ReadSingle();
-    public readonly List<Vector3> Kerning = r.ReadObject<List<Vector3>>();
-    public readonly char? DefaultCharacter = r.ReadBoolean() ? r.ReadChar() : null;
+public class SpriteFont : IHaveMetaInfo {
+    public Texture2D Texture = r.ReadObject<Texture2D>();
+    public List<Rectangle> Glyphs = r.ReadObject<List<Rectangle>>();
+    public List<Rectangle> Cropping = r.ReadObject<List<Rectangle>>();
+    public string Characters = new([.. r.ReadObject<List<char>>()]);
+    public int VerticalLineSpacing = r.ReadInt32();
+    public float HorizontalSpacing = r.ReadSingle();
+    public List<Vector3> Kerning = r.ReadObject<List<Vector3>>();
+    public char? DefaultCharacter = r.ReadBoolean() ? r.ReadChar() : null;
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new(null, new MetaContent { Type = "Texture", Name = Path.GetFileName(file.Path), Value = Texture }),
             new("SpriteFont", items: [
@@ -652,17 +745,17 @@ public class SpriteFont(ContentReader r) : IHaveMetaInfo {
 public class Model : IHaveMetaInfo {
     static Bone ReadBoneIdx(Model p, ContentReader r) { var id = p.Bones8 ? r.ReadByte() : r.ReadUInt32(); return id != 0 ? p.Bones[(int)(id - 1)] : null; }
     public class Bone(ContentReader r) {
-        public readonly string Name = r.ReadObject<string>();
-        public readonly Matrix4x4 Transform = r.ReadMatrix4x4();
+        public string Name = r.ReadObject<string>();
+        public Matrix4x4 Transform = r.ReadMatrix4x4();
         public Bone Parent;
         public Bone[] Children;
     }
     public class MeshPart(ContentReader r) {
-        public readonly int VertexOffset = r.ReadInt32();
-        public readonly int NumVertices = r.ReadInt32();
-        public readonly int StartIndex = r.ReadInt32();
-        public readonly int PrimitiveCount = r.ReadInt32();
-        public readonly object Tag = r.ReadObject<object>();
+        public int VertexOffset = r.ReadInt32();
+        public int NumVertices = r.ReadInt32();
+        public int StartIndex = r.ReadInt32();
+        public int PrimitiveCount = r.ReadInt32();
+        public object Tag = r.ReadObject<object>();
         public VertexBuffer VertexBuffer;
         public IndexBuffer IndexBuffer;
         public Effect Effect;
@@ -674,16 +767,16 @@ public class Model : IHaveMetaInfo {
         }
     }
     public class Mesh(Model p, ContentReader r) {
-        public readonly string Name = r.ReadObject<string>();
-        public readonly Bone Parent = ReadBoneIdx(p, r);
-        public readonly BoundingSphere Bounds = new(r.ReadVector3(), r.ReadSingle());
-        public readonly object Tag = r.ReadObject<object>();
-        public readonly MeshPart[] Parts = r.ReadL32FArray(z => new MeshPart(r).Apply(r));
+        public string Name = r.ReadObject<string>();
+        public Bone Parent = ReadBoneIdx(p, r);
+        public BoundingSphere Bounds = new(r.ReadVector3(), r.ReadSingle());
+        public object Tag = r.ReadObject<object>();
+        public MeshPart[] Parts = r.ReadL32FArray(z => new MeshPart(r).Apply(r));
     }
-    public readonly Bone[] Bones; readonly bool Bones8;
-    public readonly Mesh[] Meshs;
-    public readonly Bone Root;
-    public readonly object Tag;
+    public Bone[] Bones; readonly bool Bones8;
+    public Mesh[] Meshs;
+    public Bone Root;
+    public object Tag;
     public Model(ContentReader r) {
         Bones = r.ReadL32FArray(z => new Bone(r)); Bones8 = Bones.Length < 255;
         foreach (var s in Bones) {
@@ -714,12 +807,12 @@ public enum SoundtrackType {
     MusicDialog
 }
 
-public class SoundEffect(ContentReader r) : IHaveMetaInfo {
-    public readonly byte[] Format = r.ReadL32Bytes();
-    public readonly byte[] Data = r.ReadL32Bytes();
-    public readonly int LoopStart = r.ReadInt32();
-    public readonly int LoopLength = r.ReadInt32();
-    public readonly int Duration = r.ReadInt32();
+public class SoundEffect : IHaveMetaInfo {
+    public byte[] Format;
+    public byte[] Data;
+    public int LoopStart;
+    public int LoopLength;
+    public int Duration;
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new(null, new MetaContent { Type = "Data", Name = Path.GetFileName(file.Path), Value = this }),
             new("SoundEffect", items: [
@@ -727,9 +820,9 @@ public class SoundEffect(ContentReader r) : IHaveMetaInfo {
             ])];
 }
 
-public class Song(ContentReader r) : IHaveMetaInfo {
-    public readonly string Filename = r.ReadLV7UString();
-    public readonly int Duration = r.ReadObject<int>();
+public class Song : IHaveMetaInfo {
+    public string Filename;
+    public int Duration;
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new(null, new MetaContent { Type = "Data", Name = Path.GetFileName(file.Path), Value = this }),
             new("Texture", items: [
@@ -738,13 +831,13 @@ public class Song(ContentReader r) : IHaveMetaInfo {
             ])];
 }
 
-public class Video(ContentReader r) : IHaveMetaInfo {
-    public readonly string Filename = r.ReadObject<string>();
-    public readonly int Duration = r.ReadObject<int>();
-    public readonly int Width = r.ReadObject<int>();
-    public readonly int Height = r.ReadObject<int>();
-    public readonly float FramesPerSecond = r.ReadObject<float>();
-    public readonly SoundtrackType SoundtrackType = (SoundtrackType)r.ReadObject<int>();
+public class Video : IHaveMetaInfo {
+    public string Filename;
+    public int Duration;
+    public int Width;
+    public int Height;
+    public float FramesPerSecond;
+    public SoundtrackType SoundtrackType;
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new(null, new MetaContent { Type = "Data", Name = Path.GetFileName(file.Path), Value = this }),
             new("Video", items: [

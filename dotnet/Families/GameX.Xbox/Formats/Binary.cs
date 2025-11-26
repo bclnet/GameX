@@ -54,8 +54,6 @@ public class Binary_Xnb : IHaveMetaInfo, IWriteToStream, IRedirected<object> {
         //r.EnsureAtEnd(); // h.SizeOnDisk
     }
 
-    //public static TypeReader AddX(TypeReader reader) => TypeManager.Add(reader);
-
     public void WriteToStream(Stream stream) => Obj.Serialize(stream);
 
     public override string ToString() => Obj.Serialize();

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
-	  <LangVersion>latest</LangVersion>
+	<LangVersion>latest</LangVersion>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 
@@ -107,10 +107,10 @@
     <PackageReference Include="lzo.net" Version="0.0.6" />
     <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
     <PackageReference Include="SharpZipLib" Version="1.4.2" />
-    <PackageReference Include="System.Text.Json" Version="9.0.10" />
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="9.0.10" />
+    <PackageReference Include="System.Text.Json" Version="10.0.0" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="10.0.0" />
     <PackageReference Include="ZstdNet" Version="1.4.5" />
-    <PackageReference Include="Google.Protobuf" Version="3.33.0" />
+    <PackageReference Include="Google.Protobuf" Version="3.33.1" />
     <PackageReference Include="SQLitePCLRaw.core" Version="3.0.2" />
     <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.11" />
     <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3.osx" Version="1.1.14" />

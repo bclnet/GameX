@@ -53,7 +53,7 @@ public abstract class TypeReader<T>(bool valueType = false, bool canUseObj = fal
 [RType("ArrayReader")] class ArrayReader<T>() : TypeReader<T[]>() { TypeReader elem; public override void Init(TypeManager manager) => elem = manager.GetTypeReader(typeof(T)); public override T[] Read(ContentReader r, T[] o) => r.ReadL32FArray(z => r.ReadObject<T>(elem, default), obj: o); }
 [RType("ListReader")] class ListReader<T>() : TypeReader<List<T>>(canUseObj: false) { TypeReader elem; public override void Init(TypeManager manager) => elem = manager.GetTypeReader(typeof(T)); public override List<T> Read(ContentReader r, List<T> o) => r.ReadL32FList(z => r.ReadObject<T>(elem, default), obj: o); }
 [RType("DictionaryReader")] class DictionaryReader<TKey, TValue>() : TypeReader<Dictionary<TKey, TValue>>(canUseObj: true) { TypeReader key; TypeReader value; public override void Init(TypeManager manager) { key = manager.GetTypeReader(typeof(TKey)); value = manager.GetTypeReader(typeof(TValue)); } public override Dictionary<TKey, TValue> Read(ContentReader r, Dictionary<TKey, TValue> o) => (Dictionary<TKey, TValue>)r.ReadL32FMany(z => r.ReadObject<TKey>(key, default), z => r.ReadObject<TValue>(value, default), obj: o); }
-[RType("MultiArrayReader")] class MultiArrayReader<T>() : TypeReader<Array>() { TypeReader elem; public override void Init(TypeManager manager) => elem = manager.GetTypeReader(typeof(T)); public override T[] Read(ContentReader r, Array o) => default; }
+//[RType("MultiArrayReader")] class MultiArrayReader<T>() : TypeReader<T>() { TypeReader elem; public override void Init(TypeManager manager) => elem = manager.GetTypeReader(typeof(T)); public override T[] Read(ContentReader r, Array o) => default; }
 [RType("TimeSpanReader")] class TimeSpanReader() : TypeReader<TimeSpan>(valueType: true) { public override TimeSpan Read(ContentReader r, TimeSpan o) => new(r.ReadInt64()); }
 [RType("DateTimeReader")] class DateTimeReader() : TypeReader<DateTime>(valueType: true) { public override DateTime Read(ContentReader r, DateTime o) { var v = r.ReadUInt64(); return new DateTime((long)(v & ~(3UL << 62)), (DateTimeKind)((v >> 62) & 3)); } }
 [RType("DecimalReader")] class DecimalReader() : TypeReader<decimal>(valueType: true) { public override decimal Read(ContentReader r, decimal o) => r.ReadDecimal(); }
@@ -85,7 +85,7 @@ class ReflectiveReader<T>() : TypeReader(typeof(T)) {
         var optional = (OptionalAttribute)Attribute.GetCustomAttribute(member, typeof(OptionalAttribute));
         if (optional == null) {
             if (property != null) {
-                if (!ReflectionHelpers.PropertyIsPublic(property)) return null;
+                //if (!ReflectionHelpers.PropertyIsPublic(property)) return null;
                 if (!property.CanWrite) {
                     var reader2 = manager.GetTypeReader(property.PropertyType);
                     if (reader2 == null || !reader2.CanUseObj) return null;
@@ -99,7 +99,7 @@ class ReflectiveReader<T>() : TypeReader(typeof(T)) {
         else { elementType = field.FieldType; setter = field.SetValue; }
 
         // Shared resources get special treatment.
-        if (optional != null && optional.SharedResource) return (r, p) => r.ReadSharedResource(value => setter(p, value));
+        if (optional != null && optional.SharedResource) return (r, p) => r.ReadSharedResource<object>(value => setter(p, value));
 
         // We need to have a reader at this point.
         var reader = manager.GetTypeReader(elementType);

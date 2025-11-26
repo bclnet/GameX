@@ -23,8 +23,8 @@ namespace GameX.App.Explorer
 
         void LoadIcons()
         {
-            var assembly = typeof(ResourceManager).Assembly;
-            var names = assembly.GetManifestResourceNames().Where(n => n.StartsWith("GameX.App.ExplorerM.Resources.Icons.", StringComparison.Ordinal));
+            var assembly = typeof(Core.Icons).Assembly;
+            var names = assembly.GetManifestResourceNames().Where(n => n.StartsWith("GameX.SharedResource.Core.Icons.", StringComparison.Ordinal));
             foreach (var name in names)
             {
                 var res = name.Split('.');

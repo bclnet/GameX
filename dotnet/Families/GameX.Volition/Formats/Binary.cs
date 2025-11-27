@@ -1,3 +1,4 @@
+using OpenStack;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -5,7 +6,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using static GameX.Formats.Binary_Snd;
-using static OpenStack.Debug;
 
 namespace GameX.Volition.Formats;
 
@@ -335,7 +335,7 @@ public unsafe class Binary_Descent : PakBinary<Binary_Descent> {
     //        case D1_MAC_SHARE_PIGSIZE: r.Seek(r.ReadInt32()); return (false, true);
     //        case D1_PIGSIZE:
     //        case D1_OEM_PIGSIZE: r.Seek(r.ReadInt32()); return (false, false);
-    //        default: Log($"Unknown size for PIG"); return (false, false);
+    //        default: Log.Info($"Unknown size for PIG"); return (false, false);
     //    }
     //}
 }
@@ -441,122 +441,49 @@ public class Binary_Mvl : IHaveMetaInfo {
         while (chunkType != Chunk.END) {
             chunkSize = r.ReadUInt16();
             chunkType = (Chunk)r.ReadUInt16();
-            Log($"\nchunk type {chunkType}, {chunkSize} bytes: ");
+            Log.Info($"\nchunk type {chunkType}, {chunkSize} bytes: ");
             switch (chunkType) {
-                case Chunk.INIT_AUDIO:
-                    Log("initialize audio");
-                    break;
-
-                case Chunk.AUDIO_ONLY:
-                    Log("audio only");
-                    break;
-
-                case Chunk.INIT_VIDEO:
-                    Log("initialize video");
-                    break;
-
-                case Chunk.VIDEO:
-                    Log("video (and audio)");
-                    break;
-
-                case Chunk.SHUTDOWN:
-                    Log("shutdown");
-                    break;
-
-                case Chunk.END:
-                    Log("end");
-                    break;
-
-                default:
-                    Log(" *** unknown chunk type");
-                    break;
+                case Chunk.INIT_AUDIO: Log.Info("initialize audio"); break;
+                case Chunk.AUDIO_ONLY: Log.Info("audio only"); break;
+                case Chunk.INIT_VIDEO: Log.Info("initialize video"); break;
+                case Chunk.VIDEO: Log.Info("video (and audio)"); break;
+                case Chunk.SHUTDOWN: Log.Info("shutdown"); break;
+                case Chunk.END: Log.Info("end"); break;
+                default: Log.Info(" *** unknown chunk type"); break;
             }
-
-            Log("------------------------------------------------------\n");
-
+            Log.Info("------------------------------------------------------\n");
             // iterate through individual opcodes
             while (chunkSize > 0) {
                 opcodeSize = r.ReadUInt16();
                 opcodeType = (Opcode)r.ReadByte();
                 opcodeVersion = r.ReadByte();
                 chunkSize -= 4 - opcodeSize;
-                Log($"  opcode type {opcodeType}, version {opcodeVersion}, {opcodeSize} bytes: ");
+                Log.Info($"  opcode type {opcodeType}, version {opcodeVersion}, {opcodeSize} bytes: ");
                 switch (opcodeType) {
-                    case Opcode.END_OF_STREAM:
-                        Log("end of stream");
-                        break;
-
-                    case Opcode.END_OF_CHUNK:
-                        Log("end of chunk");
-                        break;
-
-                    case Opcode.CREATE_TIMER:
-                        Log("create timer");
-                        break;
-
-                    case Opcode.INIT_AUDIO_BUFFERS:
-                        Log("initialize audio buffers");
-                        break;
-
-                    case Opcode.START_STOP_AUDIO:
-                        Log("start/stop audio\n");
-                        break;
-
-                    case Opcode.INIT_VIDEO_BUFFERS:
-                        Log("initialize video buffers\n");
-                        break;
-
+                    case Opcode.END_OF_STREAM: Log.Info("end of stream"); break;
+                    case Opcode.END_OF_CHUNK: Log.Info("end of chunk"); break;
+                    case Opcode.CREATE_TIMER: Log.Info("create timer"); break;
+                    case Opcode.INIT_AUDIO_BUFFERS: Log.Info("initialize audio buffers"); break;
+                    case Opcode.START_STOP_AUDIO: Log.Info("start/stop audio\n"); break;
+                    case Opcode.INIT_VIDEO_BUFFERS: Log.Info("initialize video buffers\n"); break;
                     case Opcode.UNKNOWN_06:
                     case Opcode.UNKNOWN_0E:
                     case Opcode.UNKNOWN_10:
                     case Opcode.UNKNOWN_12:
                     case Opcode.UNKNOWN_13:
                     case Opcode.UNKNOWN_14:
-                    case Opcode.UNKNOWN_15:
-                        Log($"unknown (but documented) opcode {opcodeType}");
-                        break;
-
-                    case Opcode.SEND_BUFFER:
-                        Log("send buffer");
-                        break;
-
-                    case Opcode.AUDIO_FRAME:
-                        Log("audio frame");
-                        break;
-
-                    case Opcode.SILENCE_FRAME:
-                        Log("silence frame");
-                        break;
-
-                    case Opcode.INIT_VIDEO_MODE:
-                        Log("initialize video mode");
-                        break;
-
-                    case Opcode.CREATE_GRADIENT:
-                        Log("create gradient");
-                        break;
-
-                    case Opcode.SET_PALETTE:
-                        Log("set palette");
-                        break;
-
-                    case Opcode.SET_PALETTE_COMPRESSED:
-                        Log("set palette compressed");
-                        break;
-
-                    case Opcode.SET_DECODING_MAP:
-                        Log("set decoding map");
-                        break;
-
-                    case Opcode.VIDEO_DATA:
-                        Log("set video data");
-                        break;
-
-                    default:
-                        Log(" *** unknown opcode type");
-                        break;
+                    case Opcode.UNKNOWN_15: Log.Info($"unknown (but documented) opcode {opcodeType}"); break;
+                    case Opcode.SEND_BUFFER: Log.Info("send buffer"); break;
+                    case Opcode.AUDIO_FRAME: Log.Info("audio frame"); break;
+                    case Opcode.SILENCE_FRAME: Log.Info("silence frame"); break;
+                    case Opcode.INIT_VIDEO_MODE: Log.Info("initialize video mode"); break;
+                    case Opcode.CREATE_GRADIENT: Log.Info("create gradient"); break;
+                    case Opcode.SET_PALETTE: Log.Info("set palette"); break;
+                    case Opcode.SET_PALETTE_COMPRESSED: Log.Info("set palette compressed"); break;
+                    case Opcode.SET_DECODING_MAP: Log.Info("set decoding map"); break;
+                    case Opcode.VIDEO_DATA: Log.Info("set video data"); break;
+                    default: Log.Info(" *** unknown opcode type"); break;
                 }
-
                 // skip over the meat of the opcode
                 r.Skip(opcodeSize);
             }

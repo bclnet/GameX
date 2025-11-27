@@ -8,7 +8,7 @@ namespace GameX.Base;
 public class FileManagerTest {
     static readonly Family Family = FamilyManager.Unknown;
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(null)]
     [DataRow("game:/#APP")]
     [DataRow("file:///C:/#APP")]

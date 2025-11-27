@@ -17,7 +17,7 @@ public class PakBinaryTest {
     //    pak2.Contains("kitten.jpg");
     //}
 
-    //[DataTestMethod]
+    //[TestMethod]
     //[DataRow("kitten.jpg")]
     //[DataRow("addons\\chess\\chess.vdf")]
     //[DataRow("addons/chess\\chess.vdf")]

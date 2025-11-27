@@ -14,6 +14,23 @@
     "*": {
       "pakFileType": "GameX.Xbox.XboxPakFile, GameX.Xbox"
     },
+    "AxiomVerge": {
+      "name": "Axiom Verge",
+      "url": [
+        "https://store.steampowered.com/app/332200/Axiom_Verge/",
+        "https://en.wikipedia.org/wiki/Axiom_Verge"
+      ],
+      "dev": "Thomas Happ Games",
+      "date": "2015-05-14",
+      "form": "Console;Windows",
+      "files": {
+        "key": [
+          "Steam:332200",
+          "Local:Axiom Verge"
+        ],
+        "path": "Content"
+      }
+    },
     "StardewValley": {
       "gameType": "GameX.Xbox.StardewValleyGame, GameX.Xbox",
       "name": "Stardew Valley",
@@ -28,6 +45,41 @@
         "key": [
           "Steam:413150",
           "Local:Stardew Valley"
+        ],
+        "path": "Content"
+      }
+    },
+    "Celeste": {
+      "name": "Celeste",
+      "url": [
+        "https://store.steampowered.com/app/504230/Celeste/",
+        "https://en.wikipedia.org/wiki/Celeste_(video_game)"
+      ],
+      "dev": "Maddy Makes Games",
+      "date": "2018-01-25",
+      "form": "Console;Windows",
+      "files": {
+        "key": [
+          "Steam:504230",
+          "Local:Celeste"
+        ],
+        "path": "Content"
+      }
+    },
+    "AxiomVerge2": {
+      "gameTypex": "GameX.Xbox.AxiomVerge2Game, GameX.Xbox",
+      "name": "Axiom Verge 2",
+      "url": [
+        "https://store.steampowered.com/app/946030/Axiom_Verge_2/",
+        "https://en.wikipedia.org/wiki/Axiom_Verge_2"
+      ],
+      "dev": "Thomas Happ Games",
+      "date": "2022-08-11",
+      "form": "Console;Windows",
+      "files": {
+        "key": [
+          "Steam:946030",
+          "Local:Axiom Verge 2"
         ],
         "path": "Content"
       }

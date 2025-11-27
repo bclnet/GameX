@@ -7,7 +7,7 @@ namespace GameX.Formats;
 
 [TestClass]
 public class LoadFileObjectsTest {
-    [DataTestMethod]
+    [TestMethod]
     [DataRow("AC:AC")]
     [DataRow("Arkane:D2")]
     [DataRow("Cry:MWO")]

@@ -1,9 +1,9 @@
-﻿using System;
+﻿using OpenStack;
+using System;
 using System.ComponentModel;
 using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
-using static OpenStack.Debug;
 
 namespace GameX.Crytek.Formats.Core;
 
@@ -184,7 +184,7 @@ public partial class Material {
             fileData.SourceFileName = file.fileName.Replace('.', '_');
             return fileData;
         }
-        catch (Exception e) { Log($"{file.fileName} failed deserialize - {e.Message}"); }
+        catch (Exception e) { Log.Error($"{file.fileName} failed deserialize - {e.Message}"); }
         return null;
     }
 }

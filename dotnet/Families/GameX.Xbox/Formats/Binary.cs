@@ -10,9 +10,9 @@ namespace GameX.Xbox.Formats;
 
 #region Binary_Xnb
 
-public class Binary_Xnb : IHaveMetaInfo, IWriteToStream, IRedirected<object> {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Xnb(r));
-    object IRedirected<object>.Value => Obj;
+public class Binary_Xnb : IHaveMetaInfo, IWriteToStream, Indirect<object> {
+    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Xnb(r, f));
+    object Indirect<object>.Value => Obj;
 
     #region Headers
 
@@ -28,16 +28,16 @@ public class Binary_Xnb : IHaveMetaInfo, IWriteToStream, IRedirected<object> {
         public readonly bool Compressed => (Flags & 0x80) != 0;
         public readonly char Platform => (char)(Magic >> 24);
 
-        public ContentReader Validate(BinaryReader r) {
+        public ContentReader Validate(BinaryReader r, string path) {
             if ((Magic & 0x00FFFFFF) != MAGIC) throw new Exception("BAD MAGIC");
             if (Version != 5 && Version != 4) throw new Exception("Invalid XNB version");
             if (SizeOnDisk > r.BaseStream.Length) throw new Exception("XNB file has been truncated.");
             if (Compressed) {
                 uint decompressedSize = r.ReadUInt32(), compressedSize = SizeOnDisk - (uint)r.Tell();
                 var b = r.DecompressXmem((int)compressedSize, (int)decompressedSize);
-                return new ContentReader(new MemoryStream(b), "name", Version, null);
+                return new ContentReader(new MemoryStream(b), path, Version, null);
             }
-            return new ContentReader(r.BaseStream, "name", Version, null);
+            return new ContentReader(r.BaseStream, path, Version, null);
         }
     }
 
@@ -46,9 +46,9 @@ public class Binary_Xnb : IHaveMetaInfo, IWriteToStream, IRedirected<object> {
     public object Obj;
     public bool AtEnd;
 
-    public Binary_Xnb(BinaryReader r2) {
+    public Binary_Xnb(BinaryReader r2, FileSource f) {
         var h = r2.ReadS<Header>();
-        var r = h.Validate(r2);
+        var r = h.Validate(r2, f.Path);
         Obj = r.ReadAsset<object>();
         AtEnd = r.AtEnd();
         //r.EnsureAtEnd(); // h.SizeOnDisk

@@ -28,11 +28,11 @@ class UOGameController(GameController):
 
         # TODO: temporary fix to avoid crash when laoding plugins
         # Settings.GlobalSettings.Encryption = (byte)NetClient.Socket.Load(UO.FileManager.Version, (EncryptionType) Settings.GlobalSettings.Encryption);
-        # Debug.Trace("Loading plugins...");
+        # Log.Trace("Loading plugins...");
         # PluginHost?.Initialize();
         # foreach (string p in Settings.GlobalSettings.Plugins) Plugin.Create(p);
         # _pluginsInitialized = true;
-        # Debug.Trace("Done!");
+        # Log.Trace("Done!");
         
         # SetScene(new LoginScene(UO.World));
 #endif

@@ -1,4 +1,5 @@
 using GameX.Formats;
+using OpenStack;
 using OpenStack.Gfx;
 using System;
 using System.Collections.Generic;
@@ -7,7 +8,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-using static OpenStack.Debug;
 
 namespace GameX.Red.Formats;
 
@@ -610,8 +610,8 @@ public unsafe class Binary_Red : PakBinary<Binary_Red> {
                         source.Version = 'T';
                         r.Seek(r.BaseStream.Length - 20);
                         var header = r.ReadS<CACHE_TEX_Header>();
-                        Assert(header.Unk1 == 1415070536);
-                        Assert(header.Unk2 == 6);
+                        Log.Assert(header.Unk1 == 1415070536);
+                        Log.Assert(header.Unk2 == 6);
                         source.Files = files = new FileSource[header.NumFiles];
                         var offset = 20 + 12 + (header.NumFiles * 52) + header.NamesSize + (header.ChunksSize * 4);
                         r.Seek(r.BaseStream.Length - offset);

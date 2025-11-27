@@ -1,4 +1,5 @@
 ﻿using GameX.Formats;
+using OpenStack;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -8,7 +9,6 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using static OpenStack.Debug;
 
 namespace GameX.Unity.Formats;
 
@@ -460,12 +460,12 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity> {
             var format = Header.Format; var endian = Header.BigEndian;
             if (format == 0 || format > 0x40) { errorData = "Invalid file format"; goto _fileFormatError; }
             if (Tree.UnityVersion[0] == 0 || Tree.UnityVersion[0] < '0' || Tree.UnityVersion[0] > '9') { errorData = $"Invalid version string of {Tree.UnityVersion}"; goto _fileFormatError; }
-            Log($"INFO: The .assets file was built for Unity {Tree.UnityVersion}.");
-            if (format > 0x16 || format < 0x08) Log("WARNING: AssetsTools (for .assets versions 8-22) wasn't tested with this .assets' version, likely parsing or writing the file won't work properly!");
+            Log.Info($"INFO: The .assets file was built for Unity {Tree.UnityVersion}.");
+            if (format > 0x16 || format < 0x08) Log.Info("WARNING: AssetsTools (for .assets versions 8-22) wasn't tested with this .assets' version, likely parsing or writing the file won't work properly!");
 
             r.Seek(AssetTablePos);
             var fileInfos = r.ReadL32FArray(_ => new FileInfo(_, format, endian), endian: endian);
-            Log($"INFO: The .assets file has {fileInfos.Length} assets (info list : {FileInfo.GetSize(format)} bytes)");
+            Log.Info($"INFO: The .assets file has {fileInfos.Length} assets (info list : {FileInfo.GetSize(format)} bytes)");
             if (fileInfos.Length > 0) {
                 if (Header.MetadataSize < 8) { errorData = "Invalid metadata size"; goto _fileFormatError; }
                 var lastFileInfo = fileInfos[^1];
@@ -473,10 +473,10 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity> {
                 ;
                 if (r.Peek(_ => _.ReadBytes(1), Header.OffsFirstFile + lastFileInfo.OffsCurFile + lastFileInfo.CurFileSize - 1, SeekOrigin.Begin).Length != 1) { errorData = "File data are cut off"; goto _fileFormatError; }
             }
-            Log("SUCCESS: The .assets file seems to be ok!");
+            Log.Info("SUCCESS: The .assets file seems to be ok!");
             return true;
         _fileFormatError:
-            Log($"ERROR: Invalid .assets file (error message : '{errorData}')!");
+            Log.Info($"ERROR: Invalid .assets file (error message : '{errorData}')!");
             return false;
         }
 
@@ -1416,10 +1416,10 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity> {
             FileVersion = Signature == "UnityArchive" ? 6 : r.ReadUInt32E();
             // early exit
             if (FileVersion >= 6) {
-                if (FileVersion != 6 && FileVersion != 7) { Log("That file version is unknown!"); return; }
+                if (FileVersion != 6 && FileVersion != 7) { Log.Info("That file version is unknown!"); return; }
             }
             else if (FileVersion == 3) {
-                if (!Signature.StartsWith("UnityRaw", StringComparison.OrdinalIgnoreCase) || !Signature.StartsWith("UnityWeb", StringComparison.OrdinalIgnoreCase)) { Log("AssetBundleHeader : Unknown file type!"); return; }
+                if (!Signature.StartsWith("UnityRaw", StringComparison.OrdinalIgnoreCase) || !Signature.StartsWith("UnityWeb", StringComparison.OrdinalIgnoreCase)) { Log.Info("AssetBundleHeader : Unknown file type!"); return; }
             }
 
             // parse remaining header
@@ -1451,7 +1451,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity> {
                             if (!decompressSuccess || ds.Length != DecompressedSize) return;
                         }
                         catch {
-                            Log("AssetBundleFile.Read : Failed to decompress the directory!");
+                            Log.Info("AssetBundleFile.Read : Failed to decompress the directory!");
                             throw;
                         }
                     }
@@ -1484,7 +1484,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity> {
                 }
                 else return;
             }
-            else { Log("AssetBundleFile.Read : Unknown file version!"); return; }
+            else { Log.Info("AssetBundleFile.Read : Unknown file version!"); return; }
 
             // verify
             Success = Verify();
@@ -1520,7 +1520,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity> {
             if (FileVersion >= 6) {
                 if (BlockAndDirectory6 == null) {
                     if ((Flags & HeaderFlag.Compressed) != 0) return true;
-                    Log("[ERROR] Unable to process the bundle directory.");
+                    Log.Info("[ERROR] Unable to process the bundle directory.");
                     return false;
                 }
                 else {
@@ -1530,10 +1530,10 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity> {
             }
             else if (FileVersion == 3) {
                 if (Signature == "UnityWeb") return true;
-                else if (Blocks3 == null) { Log("[ERROR] Unable to process the bundle directory."); return false; }
+                else if (Blocks3 == null) { Log.Info("[ERROR] Unable to process the bundle directory."); return false; }
                 return true;
             }
-            Log("Open as bundle: [ERROR] Unknown bundle file version.");
+            Log.Info("Open as bundle: [ERROR] Unknown bundle file version.");
             return false;
         }
 
@@ -1557,7 +1557,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity> {
                     //}
                 }
                 catch {
-                    Log("AssetBundleFile.Read : Failed to decompress the directory!");
+                    Log.Info("AssetBundleFile.Read : Failed to decompress the directory!");
                     throw;
                 }
             }
@@ -1666,13 +1666,13 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity> {
         //try
         //{
         //    using var input = pak.GetInputStream(entry);
-        //    if (!input.CanRead) { Log($"Unable to read stream for file: {file.Path}"); exception?.Invoke(file, $"Unable to read stream for file: {file.Path}"); return Task.FromResult(System.IO.Stream.Null); }
+        //    if (!input.CanRead) { Log.Info($"Unable to read stream for file: {file.Path}"); exception?.Invoke(file, $"Unable to read stream for file: {file.Path}"); return Task.FromResult(System.IO.Stream.Null); }
         //    var s = new MemoryStream();
         //    input.CopyTo(s);
         //    s.Position = 0;
         //    return Task.FromResult((Stream)s);
         //}
-        //catch (Exception e) { Log($"{file.Path} - Exception: {e.Message}"); exception?.Invoke(file, $"{file.Path} - Exception: {e.Message}"); return Task.FromResult(System.IO.Stream.Null); }
+        //catch (Exception e) { Log.Info($"{file.Path} - Exception: {e.Message}"); exception?.Invoke(file, $"{file.Path} - Exception: {e.Message}"); return Task.FromResult(System.IO.Stream.Null); }
         return null;
     }
 }

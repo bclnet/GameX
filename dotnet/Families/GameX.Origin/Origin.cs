@@ -3,11 +3,11 @@ using GameX.Origin.Clients.UO.Data;
 using GameX.Origin.Formats;
 using GameX.Origin.Formats.UO;
 using GameX.Transforms;
+using OpenStack;
 using System;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
-using static OpenStack.Debug;
 
 namespace GameX.Origin;
 
@@ -57,12 +57,12 @@ public class UOGame(Family family, string id, JsonElement elem, FamilyGame dgame
         if (!string.IsNullOrWhiteSpace(clientVersionText)) clientVersionText = clientVersionText.Replace(",", ".").Replace(" ", "").ToLowerInvariant();
         var clientVersion = ClientVersionHelper.ValidateClientVersion(clientVersionText);
         if (clientVersion == null) {
-            Warn($"Client version [{clientVersionText}] is invalid, let's try to read the client.exe");
+            Log.Warn($"Client version [{clientVersionText}] is invalid, let's try to read the client.exe");
             if ((clientVersionText = ClientVersionHelper.ParseFromFile(Path.Combine(Found.Root, "client.exe"))) == null || (clientVersion = ClientVersionHelper.ValidateClientVersion(clientVersionText)) == null) {
-                Error($"Invalid client version: {clientVersionText}");
+                Log.Error($"Invalid client version: {clientVersionText}");
                 throw new Exception($"Invalid client version: '{clientVersionText}'");
             }
-            Trace($"Found a valid client.exe [{clientVersionText} - {clientVersion}]");
+            Log.Trace($"Found a valid client.exe [{clientVersionText} - {clientVersion}]");
             Options["clientVersion"] = clientVersionText;
             Options.Dirty = true;
         }
@@ -74,8 +74,8 @@ public class UOGame(Family family, string id, JsonElement elem, FamilyGame dgame
         if (Version >= ClientVersion.CV_308Z) Protocol |= ClientFlags.CF_AOS;
         if (Version >= ClientVersion.CV_405A) Protocol |= ClientFlags.CF_SE;
         if (Version >= ClientVersion.CV_60144) Protocol |= ClientFlags.CF_SA;
-        Trace($"Client version: {clientVersion}");
-        Trace($"Protocol: {Protocol}");
+        Log.Trace($"Client version: {clientVersion}");
+        Log.Trace($"Protocol: {Protocol}");
     }
 }
 

@@ -1,4 +1,13 @@
 ﻿{
+    "AxiomVerge": {
+        "name": "Axiom Verge",
+        "files": [
+            {
+                "path": "Animals/BabyBlue Chicken.xnb",
+                "type": "Texture2D"
+            }
+        ]
+    },
     "StardewValley": {
         "name": "Stardew Valley",
         "files": [
@@ -20,11 +29,18 @@
             },
             {
                 "path": "Maps/Barn.xnb",
-                "type": "Data"
+                "type": "xTile"
             },
             {
-                "path": "Animals/BabyBlue Chicken.xnb",
-                "type": "Data"
+                "path": [
+                    "Data/FruitTrees.xnb",
+                    "Data/Locations.xnb",
+                    "Data/WorldMap.xnb"
+                ],
+                "type": "Errors"
+            },
+            {
+                "path": "Data/AdditionalFarms.xnb"
             },
             {
                 "path": [
@@ -79,6 +95,32 @@
                     "Data/WorldMap.xnb"
                 ],
                 "type": "Custom"
+            }
+        ]
+    },
+    "Celeste": {
+        "name": "Axiom Verge",
+        "files": [
+            {
+                "path": "Animals/BabyBlue Chicken.xnb",
+                "type": "Texture2D"
+            }
+        ]
+    },
+    "AxiomVerge2": {
+        "name": "Axiom Verge 2",
+        "files": [
+            {
+                "path": "Art/Backgrounds/BreachTexture.xnb",
+                "type": "Texture2D"
+            },
+            {
+                "path": "Art/TileMaps/World.xnb",
+                "type": "Custom"
+            },
+            {
+                "path": "Fonts/AV8ptMonogame.xnb",
+                "type": "Font"
             }
         ]
     }

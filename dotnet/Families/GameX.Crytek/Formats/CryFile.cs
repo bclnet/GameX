@@ -1,11 +1,11 @@
 ﻿using GameX.Crytek.Formats.Core;
 using GameX.Crytek.Formats.Core.Chunks;
+using OpenStack;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using static OpenStack.Debug;
 
 namespace GameX.Crytek.Formats;
 
@@ -39,7 +39,7 @@ public partial class CryFile {
         var files = new List<(string, Stream)> { (InputFile, File.Open(InputFile, FileMode.Open)) };
         var mFilePath = Path.ChangeExtension(InputFile, $"{Path.GetExtension(InputFile)}m");
         if (File.Exists(mFilePath)) {
-            Log($"Found geometry file {Path.GetFileName(mFilePath)}");
+            Log.Info($"Found geometry file {Path.GetFileName(mFilePath)}");
             files.Add((mFilePath, File.Open(mFilePath, FileMode.Open))); // Add to list of files to process
         }
         LoadAsync(null, files, FindMaterialFromFile, path => Task.FromResult<(string, Stream)>((path, File.Open(path, FileMode.Open)))).Wait();
@@ -49,7 +49,7 @@ public partial class CryFile {
         var files = new List<(string, Stream)> { (InputFile, stream) };
         var mFilePath = Path.ChangeExtension(InputFile, $"{Path.GetExtension(InputFile)}m");
         if (pak.Contains(mFilePath)) {
-            Log($"Found geometry file {Path.GetFileName(mFilePath)}");
+            Log.Info($"Found geometry file {Path.GetFileName(mFilePath)}");
             files.Add((mFilePath, pak.LoadFileData(mFilePath).Result)); // Add to list of files to process
         }
         LoadAsync(pak, files, FindMaterialFromPak, path => Task.FromResult<(string, Stream)>((path, pak.LoadFileData(path).Result))).Wait();
@@ -138,15 +138,15 @@ public partial class CryFile {
                 var materialPath = getMaterialPath(pak, materialFilePath, fileName, cleanName);
                 var material = materialPath != null ? Material.FromFile(await getFileAsync(materialPath)) : null;
                 if (material != null) {
-                    Log($"Located material file {Path.GetFileName(materialPath)}");
+                    Log.Info($"Located material file {Path.GetFileName(materialPath)}");
                     Materials = FlattenMaterials(material).Where(m => m.Textures != null).ToArray();
                     // only one material, so it's a material file with no submaterials.  Check and set the name
                     if (Materials.Length == 1) Materials[0].Name = RootNode.Name;
                     return; // Early return - we have the material map
                 }
-                else Log($"Unable to locate material file {mtlChunk.Name}.mtl");
+                else Log.Info($"Unable to locate material file {mtlChunk.Name}.mtl");
             }
-            Log("Unable to locate any material file");
+            Log.Info("Unable to locate any material file");
             Materials = new Material[0];
         }
         catch (Exception e) {
@@ -206,7 +206,7 @@ public partial class CryFile {
             if (_nodeMap == null) {
                 _nodeMap = new Dictionary<string, ChunkNode>(StringComparer.InvariantCultureIgnoreCase) { };
                 ChunkNode rootNode = null;
-                //Log("Mapping Nodes");
+                //Log.Info("Mapping Nodes");
                 foreach (var model in Models) {
                     model.RootNode = rootNode ??= model.RootNode; // Each model will have it's own rootnode.
                     foreach (var node in model.ChunkMap.Values.Where(c => c.ChunkType == ChunkType.Node).Select(c => c as ChunkNode)) {

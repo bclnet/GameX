@@ -1,8 +1,8 @@
 ﻿using GameX.Formats.Unknown;
+using OpenStack;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using static OpenStack.Debug;
 
 namespace GameX.Formats.Wavefront;
 
@@ -35,7 +35,7 @@ public partial class WavefrontFileWriter(IUnknownFileModel file) : UnknownFileWr
         ModelFile = GetFileInfo("obj", outputDir, preservePath);
         MaterialFile = GetFileInfo("mtl", outputDir, preservePath);
         if (GroupMeshes) GroupOverride = Path.GetFileNameWithoutExtension(ModelFile.Name);
-        Log($@"Output file is {outputDir}\...\{ModelFile.Name}");
+        Log.Info($@"Output file is {outputDir}\...\{ModelFile.Name}");
 
         if (!ModelFile.Directory.Exists) ModelFile.Directory.Create();
 
@@ -48,12 +48,12 @@ public partial class WavefrontFileWriter(IUnknownFileModel file) : UnknownFileWr
 
         var rootNodes = File.RootNodes.ToArray();
         if (rootNodes.Length > 1)
-            foreach (var node in rootNodes) Log($"Rendering node with null parent {node}");
+            foreach (var node in rootNodes) Log.Info($"Rendering node with null parent {node}");
 
         FaceIndex = 1;
         foreach (var mesh in File.Meshes) {
-            if (SkipShieldNodes && mesh.Name.StartsWith("$shield")) { Log($"Skipped shields node {mesh.Name}"); continue; }
-            if (SkipStreamNodes && mesh.Name.StartsWith("stream")) { Log($"Skipped stream node {mesh.Name}"); continue; }
+            if (SkipShieldNodes && mesh.Name.StartsWith("$shield")) { Log.Info($"Skipped shields node {mesh.Name}"); continue; }
+            if (SkipStreamNodes && mesh.Name.StartsWith("stream")) { Log.Info($"Skipped stream node {mesh.Name}"); continue; }
             WriteMesh(w, mesh);
         }
 

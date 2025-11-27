@@ -5,7 +5,7 @@ namespace GameX.Formats;
 
 [TestClass]
 public class GfxTextureTest {
-    [DataTestMethod]
+    [TestMethod]
     [DataRow("AC:AC", "client_highres.dat:Texture/060043BE.tex")]
     [DataRow("Cry:MWO", "GameData.pak:GameModeObjects.xml")]
     [DataRow("Rsi:StarCitizen", "Sbi/Textures/references/color.dds")] //: Single

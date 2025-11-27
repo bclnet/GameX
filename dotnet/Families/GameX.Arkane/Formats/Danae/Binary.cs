@@ -1,4 +1,5 @@
 using GameX.Formats;
+using OpenStack;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,7 +7,6 @@ using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using static OpenStack.Debug;
 
 namespace GameX.Arkane.Formats.Danae;
 
@@ -546,7 +546,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo {
         if (fsh.SizeZ != Bkg.ZSize) throw new FormatException("BAD HEADER");
         Level.PlayerPos = fsh.PlayerPos;
         Level.MscenePos = fsh.MscenePos;
-        Log($"Header2: {r2.Tell():x}, {sizeof(FAST_SCENE_HEADER)}");
+        Log.Info($"Header2: {r2.Tell():x}, {sizeof(FAST_SCENE_HEADER)}");
 
         // textures
         var textures = Level.Textures = new E_TEXTURE[fsh.NumTextures];

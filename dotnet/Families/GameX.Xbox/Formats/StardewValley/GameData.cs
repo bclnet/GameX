@@ -4,12 +4,11 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Numerics;
-using System.Reflection;
 
 namespace GameX.Xbox.Formats.StardewValley.GameData;
 
 /// <summary>A character's gender identity.</summary>
-[RType("StardewValley.Gender")]
+[RType("StardewValley.Gender"), RAssembly("StardewValley.GameData")]
 public enum Gender {
     Male,
     Female,
@@ -152,6 +151,7 @@ public class GenericSpawnItemDataWithCondition : GenericSpawnItemData {
     [Optional] public string Condition { get; set; }
 }
 /// <summary>An incoming phone call that the player can receive when they have a telephone.</summary>
+[RType]
 public class IncomingPhoneCallData {
     /// <summary>If set, a game state query which indicates whether to trigger this phone call.</summary>
     /// <remarks>Whether a player receives this call depends on two fields: <see cref="F:StardewValley.GameData.IncomingPhoneCallData.TriggerCondition" /> is checked on the host player before sending the call to all players, then <see cref="F:StardewValley.GameData.IncomingPhoneCallData.RingCondition" /> is checked on each player to determine whether the phone rings for them.</remarks>
@@ -179,6 +179,7 @@ public class IncomingPhoneCallData {
     [Optional] public Dictionary<string, string> CustomFields;
 }
 /// <summary>The data for a jukebox track.</summary>
+[RType]
 public class JukeboxTrackData {
     /// <summary>A tokenizable string for the track's display name, or <c>null</c> to use the ID (i.e. cue name).</summary>
     public string Name;
@@ -188,6 +189,7 @@ public class JukeboxTrackData {
     [Optional] public List<string> AlternativeTrackIds;
 }
 /// <summary>An item which is otherwise unobtainable if lost, so it can appear in the crow's lost items shop.</summary>
+[RType]
 public class LostItem {
     /// <summary>A unique string ID for this entry in this list.</summary>
     public string Id;
@@ -201,6 +203,7 @@ public class LostItem {
     [Optional] public string RequireEventSeen;
 }
 /// <summary>The metadata for a mannequin which can be placed in the world and used to store and display clothing.</summary>
+[RType]
 public class MannequinData {
     /// <summary>A tokenizable string for the item's translated display name.</summary>
     public string DisplayName;
@@ -302,6 +305,7 @@ public class ModWallpaperOrFlooring {
     public int Count;
 }
 /// <summary>The data for an Adventurer's Guild monster eradication goal.</summary>
+[RType]
 public class MonsterSlayerQuestData {
     /// <summary>A tokenizable string for the goal's display name, shown on the board in the Adventurer's Guild.</summary>
     public string DisplayName;
@@ -332,6 +336,7 @@ public class MonsterSlayerQuestData {
     /// <summary>Custom fields ignored by the base game, for use by mods.</summary>
     [Optional] public Dictionary<string, string> CustomFields;
 }
+[RType]
 public enum MusicContext {
     Default,
     /// <remarks>
@@ -347,6 +352,7 @@ public enum MusicContext {
     MAX,
 }
 /// <summary>The metadata for a festival like the Night Market which replaces an in-game location for a period of time, which the player can enter/leave anytime, and which doesn't affect the passage of time.</summary>
+[RType]
 public class PassiveFestivalData {
     /// <summary>A tokenizable string for the display name shown on the calendar.</summary>
     public string DisplayName;
@@ -379,6 +385,7 @@ public class PassiveFestivalData {
     [Optional] public Dictionary<string, string> CustomFields;
 }
 /// <summary>Indicates when a seed/sapling can be planted in a location.</summary>
+[RType]
 public enum PlantableResult {
     /// <summary>The seed/sapling can be planted if the location normally allows it.</summary>
     Default,
@@ -388,7 +395,7 @@ public enum PlantableResult {
     Deny,
 }
 /// <summary>As part of <see cref="T:StardewValley.GameData.PlantableRule" />, indicates which cases the rule applies to.</summary>
-[Flags]
+[Flags, RType]
 public enum PlantableRuleContext {
     /// <summary>This rule applies when planting into the ground.</summary>
     Ground = 1,
@@ -398,6 +405,7 @@ public enum PlantableRuleContext {
     Any = GardenPot | Ground, // 0x00000003
 }
 /// <summary>As part of assets like <see cref="T:StardewValley.GameData.Crops.CropData" /> or <see cref="T:StardewValley.GameData.WildTrees.WildTreeData" />, indicates when a seed or sapling can be planted in a location.</summary>
+[RType]
 public class PlantableRule {
     /// <summary>A key which uniquely identifies this entry within the list. The ID should only contain alphanumeric/underscore/dot characters. For custom entries for vanilla items, this should be prefixed with your mod ID like <c>Example.ModId_Id</c>.</summary>
     public string Id;
@@ -483,6 +491,7 @@ public class StatIncrement {
     public string StatName;
 }
 /// <summary>A cosmetic sprite to show temporarily, with optional effects and animation.</summary>
+[RType]
 public class TemporaryAnimatedSpriteDefinition {
     /// <summary>The unique string ID for this entry in the list.</summary>
     public string Id;
@@ -516,6 +525,7 @@ public class TemporaryAnimatedSpriteDefinition {
     [Optional] public string Color;
 }
 /// <summary>An action that's performed when a trigger is called and its conditions are met.</summary>
+[RType]
 public class TriggerActionData {
     /// <summary>A unique string ID for this action in the global list.</summary>
     public string Id;
@@ -540,6 +550,7 @@ public class TriggerActionData {
     [Optional] public bool MarkActionApplied = true;
 }
 /// <summary>The data for a trinket item.</summary>
+[RType]
 public class TrinketData {
     /// <summary>A tokenizable string for the item display name.</summary>
     public string DisplayName;
@@ -1035,6 +1046,7 @@ public class Buildings {
 }
 
 public class Bundles {
+    [RType]
     public class BundleData {
         /// <summary>A unique ID for this entry.</summary>
         [Ignore] public string Id => Name;
@@ -1047,11 +1059,13 @@ public class Bundles {
         [Optional] public int RequiredItems = -1;
         public string Reward;
     }
+    [RType]
     public class BundleSetData {
         /// <summary>A unique ID for this entry.</summary>
         public string Id;
         public List<BundleData> Bundles = [];
     }
+    [RType]
     public class RandomBundleData {
         /// <summary>A unique ID for this entry.</summary>
         [Ignore] public string Id => AreaName;
@@ -1332,7 +1346,7 @@ public class Characters {
     [RType]
     public class CharacterSpousePatioData {
         /// <summary>The default value for <see cref="F:StardewValley.GameData.Characters.CharacterSpousePatioData.MapSourceRect" />.</summary>
-        public static readonly Rectangle DefaultMapSourceRect = new Rectangle(0, 0, 4, 4);
+        public static readonly Rectangle DefaultMapSourceRect = new(0, 0, 4, 4);
         /// <summary>The asset name within the content <c>Maps</c> folder which contains the patio. Defaults to <c>spousePatios</c>.</summary>
         [Optional] public string MapAsset;
         /// <summary>The tile area within the <see cref="F:StardewValley.GameData.Characters.CharacterSpousePatioData.MapAsset" /> containing the spouse's patio. This must be a 4x4 tile area or smaller.</summary>
@@ -1346,7 +1360,7 @@ public class Characters {
     [RType]
     public class CharacterSpouseRoomData {
         /// <summary>The default value for <see cref="F:StardewValley.GameData.Characters.CharacterSpouseRoomData.MapSourceRect" />.</summary>
-        public static readonly Rectangle DefaultMapSourceRect = new Rectangle(0, 0, 6, 9);
+        public static readonly Rectangle DefaultMapSourceRect = new(0, 0, 6, 9);
         /// <summary>The asset name within the content <c>Maps</c> folder which contains the spouse room. Defaults to <c>spouseRooms</c>.</summary>
         [Optional] public string MapAsset;
         /// <summary>The tile area within the <see cref="F:StardewValley.GameData.Characters.CharacterSpouseRoomData.MapAsset" /> containing the spouse's room.</summary>
@@ -1356,6 +1370,7 @@ public class Characters {
 
 public class Crafting {
     /// <summary>A clothing item that can be tailored from ingredients using Emily's sewing machine.</summary>
+    [RType]
     public class TailorItemRecipe {
         /// <summary>The backing field for <see cref="P:StardewValley.GameData.Crafting.TailorItemRecipe.Id" />.</summary>
         string _idImpl;
@@ -1378,7 +1393,7 @@ public class Crafting {
         public string Id {
             get {
                 if (_idImpl != null) return _idImpl;
-                return (CraftedItemIds != null ? (CraftedItemIds.Any<string>() ? 1 : 0) : 0) != 0 ? string.Join(",", CraftedItemIds) : CraftedItemId;
+                return (CraftedItemIds != null ? (CraftedItemIds.Any() ? 1 : 0) : 0) != 0 ? string.Join(",", CraftedItemIds) : CraftedItemId;
             }
             set => _idImpl = value;
         }
@@ -1387,6 +1402,7 @@ public class Crafting {
 
 public class Crops {
     /// <summary>The metadata for a crop that can be planted.</summary>
+    [RType]
     public class CropData {
         /// <summary>The seasons in which this crop can grow.</summary>
         public List<Season> Seasons = [];
@@ -1436,8 +1452,8 @@ public class Crops {
         /// <param name="defaultName">The default asset name.</param>
         public string GetCustomTextureName(string defaultName) => string.IsNullOrWhiteSpace(Texture) || !(Texture != defaultName) ? null : Texture;
     }
-
     /// <summary>Indicates how a crop can be harvested.</summary>
+    [RType]
     public enum HarvestMethod {
         /// <summary>The crop is harvested by hand.</summary>
         Grab,
@@ -1448,6 +1464,7 @@ public class Crops {
 
 public class FarmAnimals {
     /// <summary>As part of <see cref="T:StardewValley.GameData.FarmAnimals.FarmAnimalData" />, a possible variant for a farm animal.</summary>
+    [RType]
     public class AlternatePurchaseAnimals {
         /// <summary>A unique string ID for this entry within the current animal's list.</summary>
         public string Id;
@@ -1457,6 +1474,7 @@ public class FarmAnimals {
         public List<string> AnimalIds;
     }
     /// <summary>The metadata for a farm animal which can be bought from Marnie's ranch.</summary>
+    [RType]
     public class FarmAnimalData {
         /// <summary>A tokenizable string for the animal type's display name.</summary>
         [Optional] public string DisplayName;
@@ -1563,7 +1581,7 @@ public class FarmAnimals {
         /// <summary>A pixel offset to apply to emotes drawn over the farm animal.</summary>
         [Optional] public Point EmoteOffset = Point.Empty;
         /// <summary>A pixel offset to apply to the farm animal's sprite while it's swimming.</summary>
-        [Optional] public Point SwimOffset = new Point(0, 112);
+        [Optional] public Point SwimOffset = new(0, 112);
         /// <summary>The possible alternate appearances, if any. A skin is chosen at random when the animal is purchased or hatched based on the <see cref="F:StardewValley.GameData.FarmAnimals.FarmAnimalSkin.Weight" /> field. The default appearance (e.g. using <see cref="F:StardewValley.GameData.FarmAnimals.FarmAnimalData.Texture" />) is automatically an available skin with a weight of 1.</summary>
         [Optional] public List<FarmAnimalSkin> Skins;
         /// <summary>The shadow to draw when a baby animal is swimming, or <c>null</c> to apply <see cref="F:StardewValley.GameData.FarmAnimals.FarmAnimalData.ShadowWhenBaby" />.</summary>
@@ -1604,6 +1622,7 @@ public class FarmAnimals {
         public FarmAnimalShadowData GetShadow(bool isBaby, bool isSwimming) => isBaby ? (!isSwimming ? ShadowWhenBaby ?? Shadow : ShadowWhenBabySwims ?? ShadowWhenBaby ?? Shadow) : (!isSwimming ? ShadowWhenAdult ?? Shadow : ShadowWhenAdultSwims ?? ShadowWhenAdult ?? Shadow);
     }
     /// <summary>The default gender for a farm animal type.</summary>
+    [RType]
     public enum FarmAnimalGender {
         /// <summary>The farm animal is always female.</summary>
         Female,
@@ -1613,6 +1632,7 @@ public class FarmAnimals {
         MaleOrFemale,
     }
     /// <summary>How produced items are collected from an animal.</summary>
+    [RType]
     public enum FarmAnimalHarvestType {
         /// <summary>The item is placed on the ground in the animal's home building overnight.</summary>
         DropOvernight,
@@ -1622,6 +1642,7 @@ public class FarmAnimals {
         DigUp,
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.FarmAnimals.FarmAnimalData" />, an item that can be produced by the animal when it's an adult.</summary>
+    [RType]
     public class FarmAnimalProduce {
         /// <summary>An ID for this entry within the produce list. This only needs to be unique within the current list.</summary>
         [Optional] public string Id;
@@ -1633,6 +1654,7 @@ public class FarmAnimals {
         public string ItemId;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.FarmAnimals.FarmAnimalData" />, configures how the animal's shadow should be rendered.</summary>
+    [RType]
     public class FarmAnimalShadowData {
         /// <summary>Whether the shadow should be drawn.</summary>
         [Optional] public bool Visible = true;
@@ -1642,6 +1664,7 @@ public class FarmAnimals {
         [Optional] public float? Scale;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.FarmAnimals.FarmAnimalData" />, an alternate appearance for a farm animal.</summary>
+    [RType]
     public class FarmAnimalSkin {
         /// <summary>A key which uniquely identifies the skin for this animal type. The ID should only contain alphanumeric/underscore/dot characters. For custom skins, this should be prefixed with your mod ID like <c>Example.ModId_SkinName</c>.</summary>
         public string Id;
@@ -1658,6 +1681,7 @@ public class FarmAnimals {
 
 public class Fences {
     /// <summary>The metadata for a placeable fence item.</summary>
+    [RType]
     public class FenceData {
         /// <summary>The initial health points for a fence when it's first placed, which affects how quickly it degrades. A fence loses 1/1440 points per in-game minute (roughly 0.04 points per hour or 0.5 points for a 12-hour day).</summary>
         public int Health;
@@ -1692,6 +1716,7 @@ public class Fences {
 
 public class FishPonds {
     /// <summary>The fish data for a Fish Pond building.</summary>
+    [RType]
     public class FishPondData {
         /// <summary>A unique identifier for the entry. The ID should only contain alphanumeric/underscore/dot characters. For custom fish pond entries, this should be prefixed with your mod ID like <c>Example.ModId_Fish.</c></summary>
         public string Id;
@@ -1720,6 +1745,7 @@ public class FishPonds {
         [Optional] public Dictionary<string, string> CustomFields;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.FishPonds.FishPondData" />, an item that can be produced by the fish pond.</summary>
+    [RType]
     public class FishPondReward : GameData.GenericSpawnItemDataWithCondition {
         /// <summary>The minimum population needed before this output becomes available.</summary>
         [Optional] public int RequiredPopulation;
@@ -1729,6 +1755,7 @@ public class FishPonds {
         [Optional] public int Precedence;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.FishPonds.FishPondData" />, a color to apply to the water if its fields match.</summary>
+    [RType]
     public class FishPondWaterColor {
         public string Id;
         /// <summary>A tint color to apply to the water. This can be <c>CopyFromInput</c> (to use the input item's color), a MonoGame property name (like <c>SkyBlue</c>), RGB or RGBA hex code (like <c>#AABBCC</c> or <c>#AABBCCDD</c>), or 8-bit RGB or RGBA code (like <c>34 139 34</c> or <c>34 139 34 255</c>). Default none.</summary>
@@ -1744,6 +1771,7 @@ public class FishPonds {
 
 public class FloorsAndPaths {
     /// <summary>When drawing adjacent flooring items across multiple tiles, how the flooring sprite for each tile is selected.</summary>
+    [RType]
     public enum FloorPathConnectType {
         /// <summary>For normal floors, intended to cover large square areas. This uses some logic to draw inner corners.</summary>
         Default,
@@ -1755,6 +1783,7 @@ public class FloorsAndPaths {
         Random,
     }
     /// <summary>The metadata for a craftable floor or path item.</summary>
+    [RType]
     public class FloorPathData {
         /// <summary>A key which uniquely identifies this floor/path. The ID should only contain alphanumeric/underscore/dot characters. For vanilla floors and paths, this matches the spritesheet index in the <c>TerrainFeatures/Flooring</c> spritesheet; for custom floors and paths, this should be prefixed with your mod ID like <c>Example.ModId_FloorName.</c></summary>
         public string Id;
@@ -1786,6 +1815,7 @@ public class FloorsAndPaths {
         [Optional] public float FarmSpeedBuff = -1f;
     }
     /// <summary>How the shadow under a floor or path tile sprite should be drawn.</summary>
+    [RType]
     public enum FloorPathShadowType {
         /// <summary>Don't draw a shadow.</summary>
         None,
@@ -1798,6 +1828,7 @@ public class FloorsAndPaths {
 
 public class FruitTrees {
     /// <summary>Metadata for a fruit tree type.</summary>
+    [RType]
     public class FruitTreeData {
         /// <summary>The rules which override which locations the tree can be planted in, if applicable. These don't override more specific checks (e.g. not being plantable on stone).</summary>
         [Optional] public List<PlantableRule> PlantableLocationRules;
@@ -1816,7 +1847,8 @@ public class FruitTrees {
         [Optional] public Dictionary<string, string> CustomFields;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.FruitTrees.FruitTreeData" />, a possible item to produce as fruit.</summary>
-    public class FruitTreeFruitData : GameData.GenericSpawnItemDataWithCondition {
+    [RType]
+    public class FruitTreeFruitData : GenericSpawnItemDataWithCondition {
         /// <summary>If set, the specific season when this fruit can be produced. For more complex conditions, see <see cref="P:StardewValley.GameData.GenericSpawnItemDataWithCondition.Condition" />.</summary>
         [Optional] public Season? Season { get; set; }
         /// <summary>The probability that the item will be produced, as a value between 0 (never) and 1 (always).</summary>
@@ -1826,6 +1858,7 @@ public class FruitTrees {
 
 public class GarbageCans {
     /// <summary>The data for in-game garbage cans.</summary>
+    [RType]
     public class GarbageCanData {
         /// <summary>The default probability that any item will be found when searching a garbage can, unless overridden by <see cref="F:StardewValley.GameData.GarbageCans.GarbageCanEntryData.BaseChance" />.</summary>
         public float DefaultBaseChance = 0.2f;
@@ -1837,6 +1870,7 @@ public class GarbageCans {
         public Dictionary<string, GarbageCanEntryData> GarbageCans;
     }
     /// <summary>Metadata for a specific in-game garbage can.</summary>
+    [RType]
     public class GarbageCanEntryData {
         /// <summary>The probability that any item will be found when the garbage can is searched, or <c>-1</c> to use <see cref="F:StardewValley.GameData.GarbageCans.GarbageCanData.DefaultBaseChance" />.</summary>
         [Optional] public float BaseChance = -1f;
@@ -1847,7 +1881,8 @@ public class GarbageCans {
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.GarbageCans.GarbageCanData" />, an item that can be found by rummaging in the garbage can.</summary>
     /// <remarks>Only one item can be produced at a time. If this uses an item query which returns multiple items, one will be chosen at random.</remarks>
-    public class GarbageCanItemData : GameData.GenericSpawnItemDataWithCondition {
+    [RType]
+    public class GarbageCanItemData : GenericSpawnItemDataWithCondition {
         /// <summary>Whether to check this item even if the <see cref="F:StardewValley.GameData.GarbageCans.GarbageCanEntryData.BaseChance" /> didn't pass.</summary>
         [Optional] public bool IgnoreBaseChance { get; set; }
         /// <summary>Whether to treat this item as a 'mega success' if it's selected, which plays a special <c>crit</c> sound and bigger animation.</summary>
@@ -1863,6 +1898,7 @@ public class GarbageCans {
 
 public class GiantCrops {
     /// <summary>A custom giant crop that may spawn in-game.</summary>
+    [RType]
     public class GiantCropData {
         /// <summary>The qualified or unqualified harvest item ID of the crops from which this giant crop can grow. If multiple giant crops have the same item ID, the first one whose <see cref="F:StardewValley.GameData.GiantCrops.GiantCropData.Chance" /> matches will be used.</summary>
         public string FromItemId;
@@ -1884,6 +1920,7 @@ public class GiantCrops {
         [Optional] public Dictionary<string, string> CustomFields;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.GiantCrops.GiantCropData" />, a possible item to produce when it's harvested.</summary>
+    [RType]
     public class GiantCropHarvestItemData : GameData.GenericSpawnItemDataWithCondition {
         /// <summary>The probability that the item will be produced, as a value between 0 (never) and 1 (always).</summary>
         [Optional] public float Chance { get; set; } = 1f;
@@ -1903,6 +1940,7 @@ public class GiantCrops {
 
 public class HomeRenovations {
     /// <summary>A renovation which can be applied to customize the player's farmhouse after the second farmhouse upgrade.</summary>
+    [RType]
     public class HomeRenovation {
         /// <summary>A translation key in the form <c>{asset name}:{key}</c>. The translation text should contain three slash-delimited fields: the translated display name, translated description, and the action message shown to ask the player which area to renovate.</summary>
         public string TextStrings;
@@ -1926,6 +1964,7 @@ public class HomeRenovations {
         [Optional] public Dictionary<string, string> CustomFields;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.HomeRenovations.RectGroup" />, a tile area within the farmhouse.</summary>
+    [RType]
     public class Rect {
         /// <summary>The top-left tile X position.</summary>
         public int X;
@@ -1937,11 +1976,13 @@ public class HomeRenovations {
         public int Height;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.HomeRenovations.HomeRenovation" />, the farmhouse areas where a renovation can be applied.</summary>
+    [RType]
     public class RectGroup {
         /// <summary>The tile areas within the farmhouse where the renovation can be applied.</summary>
         public List<Rect> Rects;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.HomeRenovations.HomeRenovation" />, a renovation requirement or action.</summary>
+    [RType]
     public class RenovationValue {
         /// <summary>The requirement or action type. This can be <c>Mail</c> (check/change a mail flag for the current player) or <c>Value</c> (check/set a C# field on the farmhouse instance).</summary>
         public string Type;
@@ -1973,6 +2014,7 @@ public class HomeRenovations {
 
 public class LocationContexts {
     /// <summary>A world area which groups multiple in-game locations with shared settings and metadata.</summary>
+    [RType]
     public class LocationContextData {
         /// <summary>The season which is always active for locations within this context. For example, setting <see cref="F:StardewValley.Season.Summer" /> will make it always summer there regardless of the calendar season. If not set, the calendar season applies.</summary>
         [Optional] public Season? SeasonOverride;
@@ -2019,6 +2061,7 @@ public class LocationContexts {
         [Optional] public Dictionary<string, string> CustomFields;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.LocationContexts.LocationContextData" />, a letter added to the player's mailbox when they pass out (due to exhaustion or at 2am).</summary>
+    [RType]
     public class PassOutMailData {
         /// <summary>A unique string ID for this entry within the current location context.</summary>
         public string Id;
@@ -2036,6 +2079,7 @@ public class LocationContexts {
         [Optional] public bool SkipRandomSelection;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.LocationContexts.LocationContextData" />, the locations where a player wakes up after passing out or getting knocked out.</summary>
+    [RType]
     public class ReviveLocation {
         /// <summary>A unique string ID for this entry within the current location context.</summary>
         public string Id;
@@ -2047,6 +2091,7 @@ public class LocationContexts {
         public Point Position;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.LocationContexts.LocationContextData" />, a weather rule to apply for locations in this context.</summary>
+    [RType]
     public class WeatherCondition {
         /// <summary>A unique string ID for this entry within the current location context.</summary>
         public string Id;
@@ -2060,7 +2105,8 @@ public class LocationContexts {
 public class Locations {
     /// <summary>As part of <see cref="T:StardewValley.GameData.Locations.LocationData" />, an item that can be found by digging an artifact dig spot.</summary>
     /// <remarks>Only one item can be produced at a time. If this uses an item query which returns multiple items, one will be chosen at random.</remarks>
-    public class ArtifactSpotDropData : GameData.GenericSpawnItemDataWithCondition {
+    [RType]
+    public class ArtifactSpotDropData : GenericSpawnItemDataWithCondition {
         /// <summary>A probability that this item will be found, as a value between 0 (never) and 1 (always).</summary>
         [Optional] public double Chance { get; set; } = 1.0;
         /// <summary>Whether the item may drop twice if the player is using a hoe with the Generous enchantment.</summary>
@@ -2073,6 +2119,7 @@ public class Locations {
         [Optional] public bool ContinueOnDrop { get; set; }
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.Locations.LocationData" />, the data to use to create a location.</summary>
+    [RType]
     public class CreateLocationData {
         /// <summary>The asset name for the map to use for this location.</summary>
         public string MapPath;
@@ -2081,6 +2128,7 @@ public class Locations {
         [Optional] public bool AlwaysActive;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.Locations.LocationData" />, a distinct fish area within the location which may have its own fish (via <see cref="P:StardewValley.GameData.Locations.SpawnFishData.FishAreaId" />) or crab pot catches.</summary>
+    [RType]
     public class FishAreaData {
         /// <summary>A tokenizable string for the translated area name, if any.</summary>
         [Optional] public string DisplayName;
@@ -2093,6 +2141,7 @@ public class Locations {
         [Optional] public float CrabPotJunkChance = 0.2f;
     }
     /// <summary>The data for a location to add to the game.</summary>
+    [RType]
     public class LocationData {
         /// <summary>A tokenizable string for the translated location name. This is used anytime the location name is shown in-game for base game logic or mods. If omitted, the location will default to its internal name (i.e. the key in <c>Data/AdditionalLocationData</c>).</summary>
         [Optional] public string DisplayName;
@@ -2180,6 +2229,7 @@ public class Locations {
         [Optional] public Dictionary<string, string> CustomFields;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.Locations.LocationData" />, a music cue to play when the player enters the location (subject to the other fields like <see cref="F:StardewValley.GameData.Locations.LocationData.MusicContext" />).</summary>
+    [RType]
     public class LocationMusicData {
         /// <summary>The backing field for <see cref="P:StardewValley.GameData.Locations.LocationMusicData.Id" />.</summary>
         string _idImpl;
@@ -2199,7 +2249,8 @@ public class Locations {
     ///     <item><description>Entries using an item query (instead of an item ID) are ignored for the fishing TV channel hints.</description></item>
     ///   </list>
     /// </remarks>
-    public class SpawnFishData : GameData.GenericSpawnItemDataWithCondition {
+    [RType]
+    public class SpawnFishData : GenericSpawnItemDataWithCondition {
         /// <summary>The probability that the fish will spawn, as a value between 0 (never) and 1 (always).</summary>
         [Optional] public float Chance { get; set; } = 1f;
         /// <summary>If set, the specific season when the fish should apply. For more complex conditions, see <see cref="P:StardewValley.GameData.GenericSpawnItemDataWithCondition.Condition" />.</summary>
@@ -2274,7 +2325,8 @@ public class Locations {
     ///     <item><description>The <see cref="P:StardewValley.GameData.GenericSpawnItemDataWithCondition.Condition" /> field is checked once right before spawning forage, to build the list of possible forage spawns. It's not checked again for each forage spawn; use the <see cref="P:StardewValley.GameData.Locations.SpawnForageData.Chance" /> instead for per-spawn probability.</description></item>
     ///   </list>
     /// </remarks>
-    public class SpawnForageData : GameData.GenericSpawnItemDataWithCondition {
+    [RType]
+    public class SpawnForageData : GenericSpawnItemDataWithCondition {
         /// <summary>The probability that the forage will spawn if it's selected, as a value between 0 (never) and 1 (always). If this check fails, that spawn opportunity will be skipped.</summary>
         [Optional] public double Chance { get; set; } = 1.0;
         /// <summary>If set, the specific season when the forage should apply. For more complex conditions, see <see cref="P:StardewValley.GameData.GenericSpawnItemDataWithCondition.Condition" />.</summary>
@@ -2284,6 +2336,7 @@ public class Locations {
 
 public class Machines {
     /// <summary>The behavior and metadata for a machine which takes input, produces output, or both.</summary>
+    [RType]
     public class MachineData {
         /// <summary>Whether to force adding the <c>machine_input</c> context tag, which indicates the machine can accept input.</summary>
         /// <remarks>If false, this will be set automatically if any <see cref="F:StardewValley.GameData.Machines.MachineData.OutputRules" /> use the <see cref="F:StardewValley.GameData.Machines.MachineOutputTrigger.ItemPlacedInMachine" /> trigger.</remarks>
@@ -2352,6 +2405,7 @@ public class Machines {
         [Optional] public Dictionary<string, string> CustomFields;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.Machines.MachineData" />, a cosmetic effect shown when an item is loaded into the machine or while it's processing an input.</summary>
+    [RType]
     public class MachineEffects {
         /// <summary>A unique string ID for this effect in this list.</summary>
         public string Id;
@@ -2369,6 +2423,7 @@ public class Machines {
         [Optional] public List<TemporaryAnimatedSpriteDefinition> TemporarySprites;
     }
     /// <summary>As part of a <see cref="T:StardewValley.GameData.Machines.MachineData" />, an extra item required before the machine starts.</summary>
+    [RType]
     public class MachineItemAdditionalConsumedItems {
         /// <summary>The qualified or unqualified item ID for the required item.</summary>
         public string ItemId;
@@ -2379,6 +2434,7 @@ public class Machines {
     }
     /// <summary>As part of a <see cref="T:StardewValley.GameData.Machines.MachineData" />, an item produced by this machine.</summary>
     /// <remarks>Only one item can be produced at a time. If this uses an item query which returns multiple items, one will be chosen at random.</remarks>
+    [RType]
     public class MachineItemOutput : GameData.GenericSpawnItemDataWithCondition {
         /// <summary>Machine-specific data provided to the machine logic, if applicable.</summary>
         /// <remarks>For vanilla machines, this is used by casks to set the <c>AgingMultiplier</c> for each item.</remarks>
@@ -2407,6 +2463,7 @@ public class Machines {
         [Optional] public QuantityModifier.QuantityModifierMode PriceModifierMode { get; set; }
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.Machines.MachineData" />, a light effect shown around the machine.</summary>
+    [RType]
     public class MachineLight {
         /// <summary>The radius of the light emitted.</summary>
         [Optional] public float Radius = 1f;
@@ -2414,6 +2471,7 @@ public class Machines {
         [Optional] public string Color;
     }
     /// <summary>As part of a <see cref="T:StardewValley.GameData.Machines.MachineData" />, a rule which define how to process input items and produce output.</summary>
+    [RType]
     public class MachineOutputRule {
         /// <summary>A unique identifier for this item within the current list. For a custom entry, you should use a globally unique ID which includes your mod ID like <c>ExampleMod.Id_Parsnips</c>.</summary>
         public string Id;
@@ -2436,7 +2494,7 @@ public class Machines {
         [Optional] public bool RecalculateOnCollect;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.Machines.MachineData" />, indicates when a machine should start producing output.</summary>
-    [Flags]
+    [Flags, RType]
     public enum MachineOutputTrigger {
         /// <summary>The machine is never triggered automatically.</summary>
         None = 0,
@@ -2450,6 +2508,7 @@ public class Machines {
         DayUpdate = 8,
     }
     /// <summary>As part of a <see cref="T:StardewValley.GameData.Machines.MachineOutputRule" />, indicates when the output rule can be applied.</summary>
+    [RType]
     public class MachineOutputTriggerRule {
         /// <summary>The backing field for <see cref="P:StardewValley.GameData.Machines.MachineOutputTriggerRule.Id" />.</summary>
         string _idImpl;
@@ -2470,6 +2529,7 @@ public class Machines {
         [Optional] public string Condition;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.Machines.MachineData" />, an audio cue to play.</summary>
+    [RType]
     public class MachineSoundData {
         /// <summary>The audio cue ID to play.</summary>
         public string Id;
@@ -2477,6 +2537,7 @@ public class Machines {
         [Optional] public int Delay;
     }
     /// <summary>As part of a <see cref="T:StardewValley.GameData.Machines.MachineTimeBlockers" />, indicates when the machine should be paused.</summary>
+    [RType]
     public enum MachineTimeBlockers {
         /// <summary>Pause when placed in an outside location.</summary>
         Outside,
@@ -2501,6 +2562,7 @@ public class Machines {
 
 public class MakeoverOutfits {
     /// <summary>A hat, shirt, or pants that should be equipped on the player as part of a <see cref="T:StardewValley.GameData.MakeoverOutfits.MakeoverOutfit" />.</summary>
+    [RType]
     public class MakeoverItem {
         /// <summary>A unique ID for this entry within the list.</summary>
         public string Id;
@@ -2518,6 +2580,7 @@ public class MakeoverOutfits {
         }
     }
     /// <summary>An outfit that can be selected at the Desert Festival makeover booth.</summary>
+    [RType]
     public class MakeoverOutfit {
         /// <summary>A unique string ID for this entry within the outfit list.</summary>
         public string Id;
@@ -2531,6 +2594,7 @@ public class MakeoverOutfits {
 
 public class Minecarts {
     /// <summary>As part of <see cref="T:StardewValley.GameData.Minecarts.MinecartNetworkData" />, a minecart destination which can be used by players.</summary>
+    [RType]
     public class MinecartDestinationData {
         /// <summary>A unique string ID for this destination within the network.</summary>
         public string Id;
@@ -2552,6 +2616,7 @@ public class Minecarts {
         [Optional] public Dictionary<string, string> CustomFields;
     }
     /// <summary>The data for a network of minecarts, which are enabled together.</summary>
+    [RType]
     public class MinecartNetworkData {
         /// <summary>A game state query which indicates whether this minecart network is unlocked.</summary>
         [Optional] public string UnlockCondition;
@@ -2568,6 +2633,7 @@ public class Minecarts {
 
 public class Movies {
     /// <summary>As part of <see cref="T:StardewValley.GameData.Movies.SpecialResponses" />, a possible dialogue to show.</summary>
+    [RType]
     public class CharacterResponse {
         /// <summary>
         ///   <para>For <see cref="F:StardewValley.GameData.Movies.SpecialResponses.DuringMovie" />, the <see cref="F:StardewValley.GameData.Movies.MovieScene.ResponsePoint" /> used to decide whether it should be shown during a scene.</para>
@@ -2583,6 +2649,7 @@ public class Movies {
         [Optional] public string Text;
     }
     /// <summary>The metadata for a concession which can be purchased at the movie theater.</summary>
+    [RType]
     public class ConcessionItemData {
         /// <summary>A key which uniquely identifies this concession. This should only contain alphanumeric/underscore/dot characters. For custom concessions, this should be prefixed with your mod ID like <c>Example.ModId_ConcessionName</c>.</summary>
         public string Id;
@@ -2602,6 +2669,7 @@ public class Movies {
         [Optional] public List<string> ItemTags;
     }
     /// <summary>The metadata for concession tastes for one or more NPCs.</summary>
+    [RType]
     public class ConcessionTaste {
         /// <summary>A unique ID for this entry.</summary>
         [Ignore] public string Id => Name;
@@ -2624,6 +2692,7 @@ public class Movies {
         [Optional] public List<string> DislikedTags;
     }
     /// <summary>Metadata for how an NPC can react to movies.</summary>
+    [RType]
     public class MovieCharacterReaction {
         /// <summary>A unique ID for this entry.</summary>
         [Ignore] public string Id => NPCName;
@@ -2632,11 +2701,13 @@ public class Movies {
         /// <summary>The possible movie reactions for this NPC.</summary>
         [Optional] public List<MovieReaction> Reactions;
     }
-    public class MovieCranePrizeData : GameData.GenericSpawnItemDataWithCondition {
+    [RType]
+    public class MovieCranePrizeData : GenericSpawnItemDataWithCondition {
         /// <summary>The rarity list to update. This can be 1 (common), 2 (rare), or 3 (deluxe).</summary>
         [Optional] public int Rarity { get; set; } = 1;
     }
     /// <summary>The metadata for a movie that can play at the movie theater.</summary>
+    [RType]
     public class MovieData {
         /// <summary>A key which uniquely identifies this movie. This should only contain alphanumeric/underscore/dot characters. For custom movies, this should be prefixed with your mod ID like <c>Example.ModId_MovieName</c>.</summary>
         [Optional] public string Id;
@@ -2667,6 +2738,7 @@ public class Movies {
         [Optional] public Dictionary<string, string> CustomFields;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.Movies.MovieCharacterReaction" />, a possible reactions to movies matching a tag.</summary>
+    [RType]
     public class MovieReaction {
         /// <summary>
         ///   <para>A pattern which determines which movies this reaction can apply to.</para>
@@ -2700,6 +2772,7 @@ public class Movies {
         }
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.Movies.MovieData" />, a scene to show when watching the movie.</summary>
+    [RType]
     public class MovieScene {
         /// <summary>The screen index within the movie's spritesheet row.</summary>
         /// <remarks>See remarks on <see cref="F:StardewValley.GameData.Movies.MovieData.SheetIndex" /> for the expected sprite layout.</remarks>
@@ -2722,6 +2795,7 @@ public class Movies {
         public string Id;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.Movies.MovieReaction" />, possible dialogue from the NPC during the movie.</summary>
+    [RType]
     public class SpecialResponses {
         /// <summary>The dialogue to show when the player interacts with the NPC in the theater lobby before the movie starts, if any.</summary>
         [Optional] public CharacterResponse BeforeMovie;
@@ -2734,6 +2808,7 @@ public class Movies {
 
 public class Museum {
     /// <summary>As part of <see cref="T:StardewValley.GameData.Museum.MuseumRewards" />, an item that must be donated to complete this reward group.</summary>
+    [RType]
     public class MuseumDonationRequirement {
         /// <summary>The context tag for the items to require.</summary>
         public string Tag;
@@ -2741,6 +2816,7 @@ public class Museum {
         public int Count;
     }
     /// <summary>The data for a set of artifacts that can be donated to the museum, and the resulting reward.</summary>
+    [RType]
     public class MuseumRewards {
         /// <summary>
         ///   <para>The items that must be donated to complete this reward group. The player must fulfill every entry in the list to unlock the reward. For example, an entry with the tag <c>forage_item</c> and count 2 will require donating any two forage items.</para>
@@ -2766,6 +2842,7 @@ public class Museum {
 
 public class Objects {
     /// <summary>As part of <see cref="T:StardewValley.GameData.Objects.ObjectData" />, a buff to set when this item is eaten.</summary>
+    [RType]
     public class ObjectBuffData {
         /// <summary>The backing field for <see cref="P:StardewValley.GameData.Objects.ObjectBuffData.Id" />.</summary>
         string _idImpl;
@@ -2788,6 +2865,7 @@ public class Objects {
         [Optional] public Dictionary<string, string> CustomFields { get; set; }
     }
     /// <summary>The data for an object-type item.</summary>
+    [RType]
     public class ObjectData {
         /// <summary>The internal item name.</summary>
         public string Name;
@@ -2841,7 +2919,8 @@ public class Objects {
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.Objects.ObjectData" />, an item that can be found by breaking the item as a geode.</summary>
     /// <remarks>Only one item can be produced at a time. If this uses an item query which returns multiple items, one will be chosen at random.</remarks>
-    public class ObjectGeodeDropData : GameData.GenericSpawnItemDataWithCondition {
+    [RType]
+    public class ObjectGeodeDropData : GenericSpawnItemDataWithCondition {
         /// <summary>A probability that this item will be found, as a value between 0 (never) and 1 (always).</summary>
         [Optional] public double Chance { get; set; } = 1.0;
         /// <summary>The mail flag to set for the current player when this item is picked up by the player.</summary>
@@ -2853,6 +2932,7 @@ public class Objects {
 
 public class Pants {
     /// <summary>The metadata for a pants item that can be equipped by players.</summary>
+    [RType]
     public class PantsData {
         /// <summary>The pants' internal name.</summary>
         public string Name = "Pants";
@@ -2881,6 +2961,7 @@ public class Pants {
 
 public class Pets {
     /// <summary>As part of <see cref="T:StardewValley.GameData.Pets.PetBehavior" />, the animation frames to play while the state is active.</summary>
+    [RType]
     public class PetAnimationFrame {
         /// <summary>The frame index in the animation. This should be an incremental number starting at 0.</summary>
         public int Frame;
@@ -2900,6 +2981,7 @@ public class Pets {
         [Optional] public bool SoundIsVoice;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.Pets.PetBehavior" />, what to do when the last animation frame is reached while the behavior is still active.</summary>
+    [RType]
     public enum PetAnimationLoopMode {
         /// <summary>Equivalent to <see cref="F:StardewValley.GameData.Pets.PetAnimationLoopMode.Loop" />.</summary>
         None,
@@ -2909,6 +2991,7 @@ public class Pets {
         Hold,
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.Pets.PetData" />, a state in the pet's possible actions and behaviors.</summary>
+    [RType]
     public class PetBehavior {
         /// <summary>A unique string ID for the state. This only needs to be unique within the pet type (e.g. cats and dogs can have different behaviors with the same name).</summary>
         public string Id;
@@ -2964,6 +3047,7 @@ public class Pets {
         [Optional] public List<PetBehaviorChanges> JumpLandBehaviorChanges;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.Pets.PetBehavior" />, a possible behavior transition that can be started.</summary>
+    [RType]
     public class PetBehaviorChanges {
         /// <summary>The option's weight when randomly choosing a behavior, relative to other behaviors in the list (e.g. 2 is twice as likely as 1).</summary>
         [Optional] public float Weight = 1f;
@@ -2986,6 +3070,7 @@ public class Pets {
         [Optional] public string Behavior;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.Pets.PetData" />, a cosmetic breed which can be selected in the character customization menu when creating a save.</summary>
+    [RType]
     public class PetBreed {
         /// <summary>A key which uniquely identifies the pet breed. The ID should only contain alphanumeric/underscore/dot characters. For custom breeds, this should be prefixed with your mod ID like <c>Example.ModId_BreedName.</c></summary>
         public string Id;
@@ -3007,6 +3092,7 @@ public class Pets {
         [Optional] public float VoicePitch = 1f;
     }
     /// <summary>The metadata for a pet type that can be selected by the player.</summary>
+    [RType]
     public class PetData {
         /// <summary>A tokenizable string for the pet type's display name (like "cat"), which can be used in dialogue.</summary>
         public string DisplayName;
@@ -3058,6 +3144,7 @@ public class Pets {
         }
     }
     /// <summary>The item spawn info for a pet gift.</summary>
+    [RType]
     public class PetGift : GameData.GenericSpawnItemDataWithCondition {
         /// <summary>The friendship level that this pet must be at before it can give this gift. Defaults to 1000 (max friendship)</summary>
         [Optional] public int MinimumFriendshipThreshold { get; set; } = 1000;
@@ -3065,6 +3152,7 @@ public class Pets {
         [Optional] public float Weight { get; set; } = 1f;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.Pets.PetData" />, how to render the pet during the summit perfection slide-show.</summary>
+    [RType]
     public class PetSummitPerfectionEventData {
         /// <summary>The source rectangle within the texture to draw.</summary>
         public Rectangle SourceRect;
@@ -3081,6 +3169,7 @@ public class Pets {
 
 public class Powers {
     /// <summary>The content data for powers in the powers sub menu.</summary>
+    [RType]
     public class PowersData {
         /// <summary>A tokenizable string for the power's display name.</summary>
         public string DisplayName;
@@ -3099,6 +3188,7 @@ public class Powers {
 
 public class Shirts {
     /// <summary>The metadata for a shirt item that can be equipped by players.</summary>
+    [RType]
     public class ShirtData {
         /// <summary>The shirt's internal name.</summary>
         [Optional] public string Name = "Shirt";
@@ -3129,6 +3219,7 @@ public class Shirts {
 
 public class Shops {
     /// <summary>How a shop stock limit is applied in multiplayer.</summary>
+    [RType]
     public enum LimitedStockMode {
         /// <summary>The limit applies to every player in the world. For example, if limited to one and a player bought it, no other players can buy one.</summary>
         Global,
@@ -3138,6 +3229,7 @@ public class Shops {
         None,
     }
     /// <summary>Metadata for an in-game shop at which the player can buy and sell items.</summary>
+    [RType]
     public class ShopData {
         /// <summary>The currency in which all items in the shop should be priced. The valid values are 0 (money), 1 (star tokens), 2 (Qi coins), and 4 (Qi gems).</summary>
         /// <remarks>For item trading, see <see cref="P:StardewValley.GameData.Shops.ShopItemData.TradeItemId" /> instead.</remarks>
@@ -3170,6 +3262,7 @@ public class Shops {
         [Optional] public Dictionary<string, string> CustomFields;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.Shops.ShopOwnerData" />, a possible dialogue that can be shown in the shop UI.</summary>
+    [RType]
     public class ShopDialogueData {
         /// <summary>An ID for this dialogue. This only needs to be unique within the current dialogue list. For a custom entry, you should use a globally unique ID which includes your mod ID like <c>ExampleMod.Id_DialogueName</c>.</summary>
         public string Id;
@@ -3181,6 +3274,7 @@ public class Shops {
         [Optional] public List<string> RandomDialogue;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.Shops.ShopData" />, an item to add to the shop inventory.</summary>
+    [RType]
     public class ShopItemData : GameData.GenericSpawnItemDataWithCondition {
         /// <summary>The actions to perform when the item is purchased.</summary>
         [Optional] public List<string> ActionsOnPurchase;
@@ -3219,6 +3313,7 @@ public class Shops {
         [Optional] public QuantityModifier.QuantityModifierMode AvailableStockModifierMode { get; set; }
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.Shops.ShopData" />, an NPC who can run the shop.</summary>
+    [RType]
     public class ShopOwnerData {
         /// <summary>A game state query which indicates whether this owner entry is available. Defaults to always available.</summary>
         [Optional] public string Condition;
@@ -3265,6 +3360,7 @@ public class Shops {
         };
     }
     /// <summary>Specifies how a shop owner entry matches NPCs.</summary>
+    [RType]
     public enum ShopOwnerType {
         /// <summary>The entry matches an NPC whose name is the entry's name.</summary>
         NamedNpc,
@@ -3276,6 +3372,7 @@ public class Shops {
         None,
     }
     /// <summary>A visual theme to apply to the UI, or <c>null</c> for the default theme.</summary>
+    [RType]
     public class ShopThemeData {
         /// <summary>A game state query which indicates whether this theme should be applied. Defaults to always applied.</summary>
         [Optional] public string Condition;
@@ -3325,6 +3422,7 @@ public class Shops {
         [Optional] public Rectangle? ScrollBarBackSourceRect;
     }
     /// <summary>How to draw stack size numbers in the shop list.</summary>
+    [RType]
     public enum StackSizeVisibility {
         /// <summary>Always hide the stack size.</summary>
         Hide,
@@ -3337,6 +3435,7 @@ public class Shops {
 
 public class SpecialOrders {
     /// <summary>The period for which a special order is valid.</summary>
+    [RType]
     public enum QuestDuration {
         /// <summary>The order is valid until the end of this week.</summary>
         Week,
@@ -3353,6 +3452,7 @@ public class SpecialOrders {
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.SpecialOrders.SpecialOrderData" />, a randomized token which can be referenced by other special order fields.</summary>
     /// <remarks>See remarks on <see cref="F:StardewValley.GameData.SpecialOrders.SpecialOrderData.RandomizedElements" /> for usage details.</remarks>
+    [RType]
     public class RandomizedElement {
         /// <summary>The token name used to reference it.</summary>
         public string Name;
@@ -3360,12 +3460,14 @@ public class SpecialOrders {
         public List<RandomizedElementItem> Values;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.SpecialOrders.RandomizedElement" />, a possible value for the token.</summary>
+    [RType]
     public class RandomizedElementItem {
         /// <summary>A set of hardcoded tags that check conditions like the season, received mail, etc.</summary>
         [Optional] public string RequiredTags = "";
         /// <summary>The token value to set if this item is selected.</summary>
         public string Value = "";
     }
+    [RType]
     public class SpecialOrderData {
         /// <summary>The translated display name for the special order.</summary>
         /// <remarks>Square brackets indicate a translation key from <c>Strings\SpecialOrderStrings</c>, like <c>[QiChallenge_Name]</c>.</remarks>
@@ -3413,6 +3515,7 @@ public class SpecialOrders {
         [Optional] public Dictionary<string, string> CustomFields;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.SpecialOrders.SpecialOrderData" />, an objective that must be achieved to complete the special order.</summary>
+    [RType]
     public class SpecialOrderObjectiveData {
         /// <summary>The name of the C# class which handles the logic for this objective.</summary>
         /// <remarks>The class must be in the <c>StardewValley</c> namespace, and its name must end with <c>Objective</c> (without including it in this field). For example, <c>"Gift"</c> will match the <c>StardewValley.GiftObjective</c> type.</remarks>
@@ -3427,6 +3530,7 @@ public class SpecialOrders {
         public Dictionary<string, string> Data;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.SpecialOrders.SpecialOrderData" />, a reward given to the player when they complete this special order..</summary>
+    [RType]
     public class SpecialOrderRewardData {
         /// <summary>The name of the C# class which handles the logic for this reward.</summary>
         /// <remarks>The class must be in the <c>StardewValley</c> namespace, and its name must end with <c>Reward</c> (without including it in this field). For example, <c>"Money"</c> will match the <c>StardewValley.MoneyReward</c> type.</remarks>
@@ -3438,6 +3542,7 @@ public class SpecialOrders {
 
 public class Tools {
     /// <summary>The behavior and metadata for a tool that can be equipped by players.</summary>
+    [RType]
     public class ToolData {
         /// <summary>The name for the C# class to construct within the <c>StardewValley.Tools</c> namespace. This must be a subclass of <c>StardewValley.Tool</c>.</summary>
         public string ClassName;
@@ -3473,6 +3578,7 @@ public class Tools {
         [Optional] public Dictionary<string, string> CustomFields;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.Tools.ToolData" />, the requirements to upgrade items into a tool.</summary>
+    [RType]
     public class ToolUpgradeData {
         /// <summary>A game state query which indicates whether this upgrade is available. Default always enabled.</summary>
         [Optional] public string Condition;
@@ -3489,6 +3595,7 @@ public class Tools {
 
 public class Weapons {
     /// <summary>The metadata for a weapon that can be used by players.</summary>
+    [RType]
     public class WeaponData {
         /// <summary>The internal weapon name.</summary>
         public string Name;
@@ -3532,6 +3639,7 @@ public class Weapons {
         [Optional] public Dictionary<string, string> CustomFields;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.Weapons.WeaponData" />, a projectile fired when the weapon is used.</summary>
+    [RType]
     public class WeaponProjectile {
         /// <summary>A key which uniquely identifies the projectile within its weapon's data. The ID should only contain alphanumeric/underscore/dot characters. For custom projectiles, this should be prefixed with your mod ID like <c>Example.ModId_ProjectileId.</c></summary>
         public string Id;
@@ -3568,6 +3676,7 @@ public class Weapons {
 
 public class Weddings {
     /// <summary>As part of <see cref="T:StardewValley.GameData.Weddings.WeddingData" />, an NPC which should attend wedding events.</summary>
+    [RType]
     public class WeddingAttendeeData {
         /// <summary>The internal name for the NPC.</summary>
         public string Id;
@@ -3580,6 +3689,7 @@ public class Weddings {
         /// <summary>Whether to add this NPC regardless of their <see cref="F:StardewValley.GameData.Characters.CharacterData.UnlockConditions" />.</summary>
         [Optional] public bool IgnoreUnlockConditions;
     }
+    [RType]
     public class WeddingData {
         /// <summary>A tokenizable string for the event script which plays the wedding.</summary>
         /// <remarks>The key is the internal name of the NPC or unique ID of the player being married, else <c>default</c> for the default script which automatically handles marrying either an NPC or player.</remarks>
@@ -3591,6 +3701,7 @@ public class Weddings {
 
 public class WildTrees {
     /// <summary>Metadata for a non-fruit tree type.</summary>
+    [RType]
     public class WildTreeData {
         /// <summary>The tree textures to show in game. The first matching texture will be used.</summary>
         public List<WildTreeTextureData> Textures;
@@ -3660,6 +3771,7 @@ public class WildTrees {
     }
     /// <summary>The growth state for a tree.</summary>
     /// <remarks>These mainly exist to make content edits more readable. Most code should use the constants like <c>Tree.seedStage</c>, which have the same values.</remarks>
+    [RType]
     public enum WildTreeGrowthStage {
         Seed = 0,
         Sprout = 1,
@@ -3668,6 +3780,7 @@ public class WildTrees {
         Tree = 5,
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.WildTrees.WildTreeData" />, a possible item to produce.</summary>
+    [RType]
     public class WildTreeItemData : GameData.GenericSpawnItemDataWithCondition {
         /// <summary>If set, the specific season when this data should apply. For more complex conditions, see <see cref="P:StardewValley.GameData.GenericSpawnItemDataWithCondition.Condition" />.</summary>
         [Optional] public Season? Season { get; set; }
@@ -3675,6 +3788,7 @@ public class WildTrees {
         [Optional] public float Chance { get; set; } = 1f;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.WildTrees.WildTreeData" />, a possible item to drop when the tree is chopped down.</summary>
+    [RType]
     public class WildTreeChopItemData : WildTreeItemData {
         /// <summary>The minimum growth stage at which to produce this item.</summary>
         [Optional] public WildTreeGrowthStage? MinSize { get; set; }
@@ -3696,11 +3810,13 @@ public class WildTrees {
         }
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.WildTrees.WildTreeData" />, a possible item to produce when dropping the tree seed.</summary>
+    [RType]
     public class WildTreeSeedDropItemData : WildTreeItemData {
         /// <summary>If this item is dropped, whether to continue as if it hadn't been dropped for the remaining drop candidates.</summary>
         [Optional] public bool ContinueOnDrop { get; set; }
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.WildTrees.WildTreeData" />, a possible item to produce for tappers on the tree.</summary>
+    [RType]
     public class WildTreeTapItemData : WildTreeItemData {
         /// <summary>If set, the group only applies if the previous item produced by the tapper matches one of these qualified or unqualified item IDs (including <c>null</c> for the initial tap).</summary>
         [Optional] public List<string> PreviousItemId { get; set; }
@@ -3712,6 +3828,7 @@ public class WildTrees {
         [Optional] public QuantityModifier.QuantityModifierMode DaysUntilReadyModifierMode { get; set; }
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.WildTrees.WildTreeData" />, a possible spritesheet to use for the tree.</summary>
+    [RType]
     public class WildTreeTextureData {
         /// <summary>A game state query which indicates whether this spritesheet should be applied for a tree. Defaults to always enabled.</summary>
         /// <remarks>This condition is checked when a tree's texture is loaded. Once it's loaded, the conditions won't be rechecked until the next day.</remarks>
@@ -3725,6 +3842,7 @@ public class WildTrees {
 
 public class WorldMaps {
     /// <summary>An area within a larger <see cref="T:StardewValley.GameData.WorldMaps.WorldMapRegionData" /> to draw onto the world map. This can provide textures, tooltips, and world positioning data.</summary>
+    [RType]
     public class WorldMapAreaData {
         /// <summary>A key which uniquely identifies this entry within the list. The ID should only contain alphanumeric/underscore/dot characters. For custom entries, this should be prefixed with your mod ID like <c>Example.ModId_AreaId</c>.</summary>
         public string Id;
@@ -3744,6 +3862,7 @@ public class WorldMaps {
         [Optional] public Dictionary<string, string> CustomFields;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.WorldMaps.WorldMapAreaData" />, a set of in-game locations and tile positions to match to the area.</summary>
+    [RType]
     public class WorldMapAreaPositionData {
         /// <summary>If set, the smaller areas within this position which show a different scroll text.</summary>
         [Optional] public List<WorldMapAreaPositionScrollTextZoneData> ScrollTextZones = [];
@@ -3779,6 +3898,7 @@ public class WorldMaps {
         [Optional] public string ScrollText;
     }
     /// <summary>As part of <see cref="T:StardewValley.GameData.WorldMaps.WorldMapAreaPositionData" />, a smaller area within this position which shows a different scroll text.</summary>
+    [RType]
     public class WorldMapAreaPositionScrollTextZoneData {
         /// <summary>An ID for this entry within the list. This only needs to be unique within the current position list.</summary>
         public string Id;
@@ -3788,6 +3908,7 @@ public class WorldMaps {
         [Optional] public string ScrollText;
     }
     /// <summary>A large-scale part of the world like the Valley, containing all the areas drawn together as part of the combined map view.</summary>
+    [RType]
     public class WorldMapRegionData {
         /// <summary>The base texture to draw as the base texture, if any. The first matching texture is applied.</summary>
         public List<WorldMapTextureData> BaseTexture = [];
@@ -3797,6 +3918,7 @@ public class WorldMaps {
         public List<WorldMapAreaData> MapAreas = [];
     }
     /// <summary>As part of a larger <see cref="T:StardewValley.GameData.WorldMaps.WorldMapAreaData" />, an image overlay to apply to the map.</summary>
+    [RType]
     public class WorldMapTextureData {
         /// <summary>A key which uniquely identifies this entry within the list. The ID should only contain alphanumeric/underscore/dot characters. For custom entries, this should be prefixed with your mod ID like <c>Example.ModId_OverlayId</c>.</summary>
         public string Id;
@@ -3810,6 +3932,7 @@ public class WorldMaps {
         [Optional] public Rectangle MapPixelArea;
     }
     /// <summary>A tooltip shown when hovering over parts of a larger <see cref="T:StardewValley.GameData.WorldMaps.WorldMapAreaData" /> on the world map.</summary>
+    [RType]
     public class WorldMapTooltipData {
         /// <summary>A key which uniquely identifies this entry within the list. The ID should only contain alphanumeric/underscore/dot characters. For custom entries, this should be prefixed with your mod ID like <c>Example.ModId_TooltipId.</c></summary>
         public string Id;

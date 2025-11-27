@@ -12,7 +12,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using static GameX.MetaItem;
-using static OpenStack.Debug;
 
 namespace GameX;
 
@@ -226,7 +225,7 @@ public abstract class PakFile : ISource, IDisposable {
         watch.Stop();
         Status = PakStatus.Opened;
         items?.AddRange(GetMetaItems(manager));
-        Log($"Opened[{Game.Id}]: {Name} @ {watch.ElapsedMilliseconds}ms");
+        Log.Info($"Opened[{Game.Id}]: {Name} @ {watch.ElapsedMilliseconds}ms");
         return this;
     }
 
@@ -568,14 +567,14 @@ public abstract class BinaryPakFile(PakState state, PakBinary pakBinary) : PakFi
                     if (pak != null) return pak.GetFileSource(s2);
                     var files = FilesByPath[s.Replace('\\', '/')].ToArray();
                     if (files.Length == 1) return (this, files[0]);
-                    Log($"ERROR.LoadFileData: {s} @ {files.Length}");
+                    Log.Info($"ERROR.LoadFileData: {s} @ {files.Length}");
                     if (throwOnError) throw new FileNotFoundException(files.Length == 0 ? $"File not found: {s}" : $"More then one file found: {s}");
                     return (null, null);
                 }
             case int i: {
                     var files = FilesById[i].ToArray();
                     if (files.Length == 1) return (this, files[0]);
-                    Log($"ERROR.LoadFileData: {i} @ {files.Length}");
+                    Log.Info($"ERROR.LoadFileData: {i} @ {files.Length}");
                     if (throwOnError) throw new FileNotFoundException(files.Length == 0 ? $"File not found: {i}" : $"More then one file found: {i}");
                     return (null, null);
                 }
@@ -628,9 +627,9 @@ public abstract class BinaryPakFile(PakState state, PakBinary pakBinary) : PakFi
             Task<object> task = null;
             try {
                 task = objectFactory(r, f, this);
-                if (task != null) return (value = await task) is T z ? z : value is IRedirected<T> y ? y.Value : throw new InvalidCastException();
+                if (task != null) return (value = await task) is T z ? z : value is Indirect<T> y ? y.Value : throw new InvalidCastException();
             }
-            catch (Exception e) { Log(e.Message); throw e; }
+            catch (Exception e) { Log.Error(e.Message); throw e; }
             finally { if (task != null && !(value != null && value is IDisposable)) r.Dispose(); }
         }
         return type == typeof(Stream) || type == typeof(object)
@@ -1001,7 +1000,7 @@ public class PakBinary {
     /// <param name="message">The message.</param>
     /// <exception cref="NotSupportedException"></exception>
     public static void HandleException(object source, object option, string message) {
-        Log(message);
+        Log.Info(message);
         // if ((option & FileOption.Supress) != 0) throw new Exception(message);
     }
 }

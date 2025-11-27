@@ -1,6 +1,6 @@
 ﻿using GameX.Origin.Clients.UO;
+using OpenStack;
 using System;
-using static OpenStack.Debug;
 
 namespace GameX.App.Client;
 
@@ -29,11 +29,11 @@ partial class Program {
         var game = family.OpenPakFile(args.Uri);
         if (game == null) { Console.WriteLine($"No game found named '{args.Uri}'."); return 0; }
 
-        Trace("Running game...");
+        Log.Trace("Running game...");
         using (Game = new UOGameController<object>(game, pluginHost)) {
             Game.Run();
         }
-        Trace("Exiting game...");
+        Log.Trace("Exiting game...");
         return 0;
     }
 }

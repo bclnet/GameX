@@ -1,4 +1,5 @@
 ﻿using GameX.Formats.Unknown;
+using OpenStack;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -7,7 +8,6 @@ using System.Numerics;
 using System.Text;
 using System.Xml.Schema;
 using System.Xml.Serialization;
-using static OpenStack.Debug;
 using ColladaX = Khronos.Collada.Collada;
 
 namespace GameX.Formats.Collada;
@@ -36,9 +36,9 @@ public partial class ColladaFileWriter : UnknownFileWriter {
     public override void Write(string outputDir = null, bool preservePath = true) {
         // The root of the functions to write Collada files
         // At this point, we should have a cryData.Asset object, fully populated.
-        Log("*** Starting WriteCOLLADA() ***");
+        Log.Info("*** Starting WriteCOLLADA() ***");
 
-        Log($"Number of models: {File.Models.Count()}");
+        Log.Info($"Number of models: {File.Models.Count()}");
         //foreach (var model in File.Models) Log($"\tNumber of nodes in model: {model.NodeMap.Count}");
         OutputTest();
 
@@ -67,7 +67,7 @@ public partial class ColladaFileWriter : UnknownFileWriter {
         ValidateXml(); // validates against the schema
         ValidateDoc(); // validates IDs and URLs
 #endif
-        Log("End of Write Collada. Export complete.");
+        Log.Info("End of Write Collada. Export complete.");
     }
 
     /// <summary>

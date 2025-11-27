@@ -1,5 +1,6 @@
 using GameX.Formats.Apple;
 using ICSharpCode.SharpZipLib.Zip;
+using OpenStack;
 using OpenStack.Gfx;
 using System;
 using System.Collections.Concurrent;
@@ -13,7 +14,6 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using static OpenStack.Debug;
 using ZipFile = ICSharpCode.SharpZipLib.Zip.ZipFile;
 
 
@@ -295,7 +295,7 @@ public unsafe class Binary_Iif : IHaveMetaInfo {
         AllocData(); // precaution, in case XDIR wasn't found
         CurEventList = null;
         var timing = ReadEventList(r);
-        if (timing == 0) { Log("Unable to convert data\n"); return false; }
+        if (timing == 0) { Log.Info("Unable to convert data\n"); return false; }
         Timing[CurTrack] = timing;
         Events[CurTrack] = CurEventList;
         CurTrack++;
@@ -347,7 +347,7 @@ public unsafe class Binary_Iif : IHaveMetaInfo {
             //F.Write($"  {status:x}\n");
             switch ((EV)(status & 0xF0)) {
                 // Note On/Off
-                case EV.NOTE_OFF: Log("ERROR: Note off not valid in XMidiFile\n"); return 0;
+                case EV.NOTE_OFF: Log.Info("ERROR: Note off not valid in XMidiFile\n"); return 0;
                 case EV.NOTE_ON: ConvertEvent(r, time, status, 3); break;
                 // 2 byte data, Aftertouch, Controller and Pitch Wheel
                 case EV.POLY_PRESS:
@@ -455,7 +455,7 @@ public unsafe class Binary_Iif : IHaveMetaInfo {
                     if (evnt.Length != 0) w.Write(evnt.Stream);
                     break;
                 // Never occur
-                default: Log("Not supposed to see this"); break;
+                default: Log.Info("Not supposed to see this"); break;
             }
         }
 

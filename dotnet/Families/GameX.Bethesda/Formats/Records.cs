@@ -1,4 +1,5 @@
 using GameX.Formats;
+using OpenStack;
 using OpenStack.Gfx;
 using System;
 using System.Collections.Generic;
@@ -7,7 +8,6 @@ using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using static GameX.Bethesda.Formats.Records.FormType;
-using static OpenStack.Debug;
 using static System.IO.Polyfill;
 
 namespace GameX.Bethesda.Formats.Records;
@@ -594,7 +594,7 @@ public class Header {
     };
 
     public Record CreateRecord(long position, int recordLevel) {
-        if (!CreateMap.TryGetValue(Type, out var recordType)) { Log($"Unsupported ESM record type: {Type}"); return null; }
+        if (!CreateMap.TryGetValue(Type, out var recordType)) { Log.Info($"Unsupported ESM record type: {Type}"); return null; }
         if (!recordType.l(recordLevel)) return null;
         var record = recordType.f();
         record.Header = this;
@@ -676,7 +676,7 @@ public class Record : IRecord {
             }
             else if (fieldHeader.Type == FieldType.OFST && Header.Type == WRLD) { r.Seek(endTell); continue; }
             var tell = r.BaseStream.Position;
-            if (CreateField(r, format, fieldHeader.Type, fieldHeader.DataSize) == Empty) { Log($"Unsupported ESM record type: {Header.Type}:{fieldHeader.Type}"); r.Skip(fieldHeader.DataSize); continue; }
+            if (CreateField(r, format, fieldHeader.Type, fieldHeader.DataSize) == Empty) { Log.Info($"Unsupported ESM record type: {Header.Type}:{fieldHeader.Type}"); r.Skip(fieldHeader.DataSize); continue; }
             // check full read
             if (r.BaseStream.Position != tell + fieldHeader.DataSize) throw new FormatException($"Failed reading {Header.Type}:{fieldHeader.Type} field data at offset {tell} in {filePath} of {r.BaseStream.Position - tell - fieldHeader.DataSize}");
         }
@@ -2279,7 +2279,7 @@ public unsafe class WRLDRecord : Record {
             GridY = r.ReadInt16();
             var referenceCount = r.ReadUInt32();
             var referenceSize = dataSize - 8;
-            Assert(referenceSize >> 3 == referenceCount);
+            Log.Assert(referenceSize >> 3 == referenceCount);
             GridReferences = r.ReadSArray<Reference>(referenceSize >> 3);
         }
     }

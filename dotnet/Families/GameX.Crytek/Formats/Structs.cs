@@ -1,9 +1,9 @@
-﻿using System;
+﻿using OpenStack;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using static OpenStack.Debug;
 
 namespace GameX.Crytek.Formats;
 
@@ -50,14 +50,14 @@ public struct MeshSubset {
     #region Log
 #if LOG
     public void LogMeshSubset() {
-        Log($"*** Mesh Subset ***");
-        Log($"    First Index:  {FirstIndex}");
-        Log($"    Num Indices:  {NumIndices}");
-        Log($"    First Vertex: {FirstVertex}");
-        Log($"    Num Vertices: {NumVertices}");
-        Log($"    Mat ID:       {MatID}");
-        Log($"    Radius:       {Radius:F7}");
-        Log($"    Center:");
+        Log.Info($"*** Mesh Subset ***");
+        Log.Info($"    First Index:  {FirstIndex}");
+        Log.Info($"    Num Indices:  {NumIndices}");
+        Log.Info($"    First Vertex: {FirstVertex}");
+        Log.Info($"    Num Vertices: {NumVertices}");
+        Log.Info($"    Mat ID:       {MatID}");
+        Log.Info($"    Radius:       {Radius:F7}");
+        Log.Info($"    Center:");
         Center.LogVector3();
     }
 #endif
@@ -159,7 +159,7 @@ public struct PhysicsGeometry {
     #region Log
 #if LOG
     public void LogPhysicsGeometry()
-        => Log("WritePhysicsGeometry");
+        => Log.Info("WritePhysicsGeometry");
 #endif
     #endregion
 }
@@ -191,10 +191,10 @@ public class CompiledPhysicalBone {
 #if LOG
     public void LogCompiledPhysicalBone() {
         // Output the bone to the console
-        Log($"*** Compiled bone ID {BoneIndex}");
-        Log($"    Parent Offset: {ParentOffset}");
-        Log($"    Controller ID: {ControllerID}");
-        Log($"*** End Bone {BoneIndex}");
+        Log.Info($"*** Compiled bone ID {BoneIndex}");
+        Log.Info($"    Parent Offset: {ParentOffset}");
+        Log.Info($"    Controller ID: {ControllerID}");
+        Log.Info($"*** End Bone {BoneIndex}");
     }
 #endif
     #endregion
@@ -339,11 +339,11 @@ public struct PhysicalProxy {
     #region Log
 #if LOG
     public void LogHitBox() {
-        Log($"     ** Hitbox **");
-        Log($"        ID: {ID:Center}");
-        Log($"        Num Vertices: {NumVertices:Center}");
-        Log($"        Num Indices:  {NumIndices:Center}");
-        Log($"        Material Index: {Material:Center}");
+        Log.Info($"     ** Hitbox **");
+        Log.Info($"        ID: {ID:Center}");
+        Log.Info($"        Num Vertices: {NumVertices:Center}");
+        Log.Info($"        Num Indices:  {NumIndices:Center}");
+        Log.Info($"        Material Index: {Material:Center}");
     }
 #endif
     #endregion
@@ -477,7 +477,7 @@ public void GetWorldToBone(BinaryReader r)
 {
     worldToBone = new float[3, 4];
     for (var i = 0; i < 3; i++) for (var j = 0; j < 4; j++) worldToBone[i, j] = r.ReadSingle();
-    //Log($"worldToBone: {worldToBone[i, j]:F7}");
+    //Log.Info($"worldToBone: {worldToBone[i, j]:F7}");
     return;
 }
 
@@ -503,10 +503,10 @@ public Matrix4x4 GetMatrix44() => new Matrix4x4
 
 public void LogWorldToBone()
 {
-    //Log("     *** World to Bone ***");
-    Log($"     {worldToBone[0, 0]:F7}  {worldToBone[0, 1]:F7}  {worldToBone[0, 2]:F7}  {worldToBone[0, 3]:F7}");
-    Log($"     {worldToBone[1, 0]:F7}  {worldToBone[1, 1]:F7}  {worldToBone[1, 2]:F7}  {worldToBone[1, 3]:F7}");
-    Log($"     {worldToBone[2, 0]:F7}  {worldToBone[2, 1]:F7}  {worldToBone[2, 2]:F7}  {worldToBone[2, 3]:F7}");
+    //Log.Info("     *** World to Bone ***");
+    Log.Info($"     {worldToBone[0, 0]:F7}  {worldToBone[0, 1]:F7}  {worldToBone[0, 2]:F7}  {worldToBone[0, 3]:F7}");
+    Log.Info($"     {worldToBone[1, 0]:F7}  {worldToBone[1, 1]:F7}  {worldToBone[1, 2]:F7}  {worldToBone[1, 3]:F7}");
+    Log.Info($"     {worldToBone[2, 0]:F7}  {worldToBone[2, 1]:F7}  {worldToBone[2, 2]:F7}  {worldToBone[2, 3]:F7}");
 }
 
 internal Matrix3x3 GetWorldToBoneRotationMatrix() => new Matrix3x3
@@ -542,7 +542,7 @@ public void ReadBoneToWorld(BinaryReader r)
 {
     boneToWorld = new float[3, 4];
     for (var i = 0; i < 3; i++) for (var j = 0; j < 4; j++) boneToWorld[i, j] = r.ReadSingle();
-    //Log($"boneToWorld: {boneToWorld[i, j]:F7}");
+    //Log.Info($"boneToWorld: {boneToWorld[i, j]:F7}");
     return;
 }
 
@@ -572,10 +572,10 @@ public Vector3 GetBoneToWorldTranslationVector() => new Vector3
 
 public void LogBoneToWorld()
 {
-    Log($"*** Bone to World ***");
-    Log($"{boneToWorld[0, 0]:F6}  {boneToWorld[0, 1]:F6}  {boneToWorld[0, 2]:F6} {boneToWorld[0, 3]:F6}");
-    Log($"{boneToWorld[1, 0]:F6}  {boneToWorld[1, 1]:F6}  {boneToWorld[1, 2]:F6} {boneToWorld[1, 3]:F6}");
-    Log($"{boneToWorld[2, 0]:F6}  {boneToWorld[2, 1]:F6}  {boneToWorld[2, 2]:F6} {boneToWorld[2, 3]:F6}");
+    Log.Info($"*** Bone to World ***");
+    Log.Info($"{boneToWorld[0, 0]:F6}  {boneToWorld[0, 1]:F6}  {boneToWorld[0, 2]:F6} {boneToWorld[0, 3]:F6}");
+    Log.Info($"{boneToWorld[1, 0]:F6}  {boneToWorld[1, 1]:F6}  {boneToWorld[1, 2]:F6} {boneToWorld[1, 3]:F6}");
+    Log.Info($"{boneToWorld[2, 0]:F6}  {boneToWorld[2, 1]:F6}  {boneToWorld[2, 2]:F6} {boneToWorld[2, 3]:F6}");
 }
 }
 
@@ -647,17 +647,17 @@ public Matrix4x4 ToMatrix44(float[,] boneToWorld) => new Matrix4x4
 public void LogCompiledBone()
 {
     // Output the bone to the console
-    Log($"*** Compiled bone {boneName}");
-    Log($"    Parent Name: {parentID}");
-    Log($"    Offset in file: {offset:X}");
-    Log($"    Controller ID: {ControllerID}");
-    Log($"    World To Bone:");
+    Log.Info($"*** Compiled bone {boneName}");
+    Log.Info($"    Parent Name: {parentID}");
+    Log.Info($"    Offset in file: {offset:X}");
+    Log.Info($"    Controller ID: {ControllerID}");
+    Log.Info($"    World To Bone:");
     boneToWorld.LogBoneToWorld();
-    Log($"    Limb ID: {limbID}");
-    Log($"    Parent Offset: {offsetParent}");
-    Log($"    Child Offset:  {offsetChild}");
-    Log($"    Number of Children:  {numChildren}");
-    Log($"*** End Bone {boneName}");
+    Log.Info($"    Limb ID: {limbID}");
+    Log.Info($"    Parent Offset: {offsetParent}");
+    Log.Info($"    Child Offset:  {offsetChild}");
+    Log.Info($"    Number of Children:  {numChildren}");
+    Log.Info($"*** End Bone {boneName}");
 }
 }
 #endif

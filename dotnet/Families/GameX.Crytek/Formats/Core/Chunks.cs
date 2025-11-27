@@ -1,4 +1,5 @@
 ﻿using GameX.Crytek.Formats.Models;
+using OpenStack;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,7 +7,6 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Xml;
-using static OpenStack.Debug;
 
 namespace GameX.Crytek.Formats.Core.Chunks;
 
@@ -111,8 +111,8 @@ public abstract class Chunk : IBinaryChunk {
 
     public void SkipBytes(BinaryReader r, long bytesToSkip) {
         if (bytesToSkip == 0) return;
-        if (r.BaseStream.Position > Offset + Size && Size > 0) Log($"Buffer Overflow in {GetType().Name} 0x{ID:Center} ({r.BaseStream.Position - Offset - Size} bytes)");
-        if (r.BaseStream.Length < Offset + Size) Log($"Corrupt Headers in {GetType().Name} 0x{ID:Center}");
+        if (r.BaseStream.Position > Offset + Size && Size > 0) Log.Info($"Buffer Overflow in {GetType().Name} 0x{ID:Center} ({r.BaseStream.Position - Offset - Size} bytes)");
+        if (r.BaseStream.Length < Offset + Size) Log.Info($"Corrupt Headers in {GetType().Name} 0x{ID:Center}");
         //if (!bytesToSkip.HasValue) bytesToSkip = Size - Math.Max(r.BaseStream.Position - Offset, 0);
         for (var i = 0L; i < bytesToSkip; i++) SkippedBytes[r.BaseStream.Position - Offset] = r.ReadByte();
     }
@@ -138,9 +138,9 @@ public abstract class Chunk : IBinaryChunk {
             DataSize = Size - 16;
         }
         if (Offset != _header.Offset || Size != _header.Size) {
-            Log($"Conflict in chunk definition");
-            Log($"{_header.Offset:Center}+{_header.Size:Center}");
-            Log($"{Offset:Center}+{Size:Center}");
+            Log.Info($"Conflict in chunk definition");
+            Log.Info($"{_header.Offset:Center}+{_header.Size:Center}");
+            Log.Info($"{Offset:Center}+{Size:Center}");
         }
     }
 
@@ -171,13 +171,13 @@ public abstract class Chunk : IBinaryChunk {
     #region Log
 #if LOG
     public virtual void LogChunk() {
-        Log($"*** CHUNK ***");
-        Log($"    ChunkType: {ChunkType}");
-        Log($"    ChunkVersion: {Version:Center}");
-        Log($"    Offset: {Offset:Center}");
-        Log($"    ID: {ID:Center}");
-        Log($"    Size: {Size:Center}");
-        Log($"*** END CHUNK ***");
+        Log.Info($"*** CHUNK ***");
+        Log.Info($"    ChunkType: {ChunkType}");
+        Log.Info($"    ChunkVersion: {Version:Center}");
+        Log.Info($"    Offset: {Offset:Center}");
+        Log.Info($"    ID: {ID:Center}");
+        Log.Info($"    Size: {Size:Center}");
+        Log.Info($"*** END CHUNK ***");
     }
 #endif
     #endregion
@@ -217,10 +217,10 @@ public abstract class ChunkBoneAnim : Chunk {
     #region Log
 #if LOG
     public override void LogChunk() {
-        Log($"*** START MorphTargets Chunk ***");
-        Log($"    ChunkType:           {ChunkType}");
-        Log($"    Node ID:             {ID:Center}");
-        Log($"    Number of Targets:   {NumBones:Center}");
+        Log.Info($"*** START MorphTargets Chunk ***");
+        Log.Info($"    ChunkType:           {ChunkType}");
+        Log.Info($"    Node ID:             {ID:Center}");
+        Log.Info($"    Number of Targets:   {NumBones:Center}");
     }
 #endif
     #endregion
@@ -255,11 +255,11 @@ public abstract class ChunkBoneNameList : Chunk {
     #region Log
 #if LOG
     public override void LogChunk() {
-        Log($"*** START MorphTargets Chunk ***");
-        Log($"    ChunkType:           {ChunkType}");
-        Log($"    Node ID:             {ID:Center}");
-        Log($"    Number of Targets:   {NumEntities:Center}");
-        foreach (var name in BoneNames) Log($"    Bone Name:       {name}");
+        Log.Info($"*** START MorphTargets Chunk ***");
+        Log.Info($"    ChunkType:           {ChunkType}");
+        Log.Info($"    Node ID:             {ID:Center}");
+        Log.Info($"    Number of Targets:   {NumEntities:Center}");
+        foreach (var name in BoneNames) Log.Info($"    Bone Name:       {name}");
     }
 #endif
     #endregion
@@ -304,9 +304,9 @@ public abstract class ChunkCompiledBones : Chunk //  0xACDC0000:  Bones info
     #region Log
 #if LOG
     public override void LogChunk() {
-        Log($"*** START CompiledBone Chunk ***");
-        Log($"    ChunkType:           {ChunkType}");
-        Log($"    Node ID:             {ID:Center}");
+        Log.Info($"*** START CompiledBone Chunk ***");
+        Log.Info($"    ChunkType:           {ChunkType}");
+        Log.Info($"    Node ID:             {ID:Center}");
     }
 
     /// <summary>
@@ -459,9 +459,9 @@ public abstract class ChunkCompiledExtToIntMap : Chunk {
     #region Log
 #if LOG
     public override void LogChunk() {
-        Log($"*** START MorphTargets Chunk ***");
-        Log($"    ChunkType:           {ChunkType}");
-        Log($"    Node ID:             {ID:Center}");
+        Log.Info($"*** START MorphTargets Chunk ***");
+        Log.Info($"    ChunkType:           {ChunkType}");
+        Log.Info($"    Node ID:             {ID:Center}");
     }
 #endif
     #endregion
@@ -497,9 +497,9 @@ public abstract class ChunkCompiledIntFaces : Chunk {
     #region Log
 #if LOG
     public override void LogChunk() {
-        Log($"*** START MorphTargets Chunk ***");
-        Log($"    ChunkType:           {ChunkType}");
-        Log($"    Node ID:             {ID:Center}");
+        Log.Info($"*** START MorphTargets Chunk ***");
+        Log.Info($"    ChunkType:           {ChunkType}");
+        Log.Info($"    Node ID:             {ID:Center}");
     }
 #endif
     #endregion
@@ -534,9 +534,9 @@ public abstract class ChunkCompiledIntSkinVertices : Chunk {
     #region Log
 #if LOG
     public override void LogChunk() {
-        Log($"*** START MorphTargets Chunk ***");
-        Log($"    ChunkType:           {ChunkType}");
-        Log($"    Node ID:             {ID:Center}");
+        Log.Info($"*** START MorphTargets Chunk ***");
+        Log.Info($"    ChunkType:           {ChunkType}");
+        Log.Info($"    Node ID:             {ID:Center}");
     }
 #endif
     #endregion
@@ -605,10 +605,10 @@ public abstract class ChunkCompiledMorphTargets : Chunk {
     #region Log
 #if LOG
     public override void LogChunk() {
-        Log($"*** START MorphTargets Chunk ***");
-        Log($"    ChunkType:           {ChunkType}");
-        Log($"    Node ID:             {ID:Center}");
-        Log($"    Number of Targets:   {NumberOfMorphTargets:Center}");
+        Log.Info($"*** START MorphTargets Chunk ***");
+        Log.Info($"    ChunkType:           {ChunkType}");
+        Log.Info($"    Node ID:             {ID:Center}");
+        Log.Info($"    Number of Targets:   {NumberOfMorphTargets:Center}");
     }
 #endif
     #endregion
@@ -700,9 +700,9 @@ public abstract class ChunkCompiledPhysicalBones : Chunk     //  0xACDC0000:  Bo
     #region Log
 #if LOG
     public override void LogChunk() {
-        Log($"*** START CompiledBone Chunk ***");
-        Log($"    ChunkType:           {ChunkType}");
-        Log($"    Node ID:             {ID:Center}");
+        Log.Info($"*** START CompiledBone Chunk ***");
+        Log.Info($"    ChunkType:           {ChunkType}");
+        Log.Info($"    Node ID:             {ID:Center}");
     }
 #endif
     #endregion
@@ -754,10 +754,10 @@ public abstract partial class ChunkCompiledPhysicalProxies : Chunk        // 0xA
     #region Log
 #if LOG
     public override void LogChunk() {
-        Log($"*** START CompiledPhysicalProxies Chunk ***");
-        Log($"    ChunkType:           {ChunkType}");
-        Log($"    Node ID:             {ID:Center}");
-        Log($"    Number of Targets:   {NumPhysicalProxies:Center}");
+        Log.Info($"*** START CompiledPhysicalProxies Chunk ***");
+        Log.Info($"    ChunkType:           {ChunkType}");
+        Log.Info($"    Node ID:             {ID:Center}");
+        Log.Info($"    Number of Targets:   {NumPhysicalProxies:Center}");
     }
 #endif
     #endregion
@@ -810,17 +810,17 @@ public abstract class ChunkController : Chunk    // cccc000d:  Controller chunk
     #region Log
 #if LOG
     public override void LogChunk() {
-        Log($"*** Controller Chunk ***");
-        Log($"Version:                 {Version:Center}");
-        Log($"ID:                      {ID:Center}");
-        Log($"Number of Keys:          {NumKeys}");
-        Log($"Controller Type:         {ControllerType}");
-        Log($"Conttroller Flags:       {ControllerFlags}");
-        Log($"Controller ID:           {ControllerID}");
+        Log.Info($"*** Controller Chunk ***");
+        Log.Info($"Version:                 {Version:Center}");
+        Log.Info($"ID:                      {ID:Center}");
+        Log.Info($"Number of Keys:          {NumKeys}");
+        Log.Info($"Controller Type:         {ControllerType}");
+        Log.Info($"Conttroller Flags:       {ControllerFlags}");
+        Log.Info($"Controller ID:           {ControllerID}");
         for (var i = 0; i < NumKeys; i++) {
-            Log($"        Key {i}:       Time: {Keys[i].Time}");
-            Log($"        AbsPos {i}:    {Keys[i].AbsPos.X:F7}, {Keys[i].AbsPos.Y:F7}, {Keys[i].AbsPos.Z:F7}");
-            Log($"        RelPos {i}:    {Keys[i].RelPos.X:F7}, {Keys[i].RelPos.Y:F7}, {Keys[i].RelPos.Z:F7}");
+            Log.Info($"        Key {i}:       Time: {Keys[i].Time}");
+            Log.Info($"        AbsPos {i}:    {Keys[i].AbsPos.X:F7}, {Keys[i].AbsPos.Y:F7}, {Keys[i].AbsPos.Z:F7}");
+            Log.Info($"        RelPos {i}:    {Keys[i].RelPos.X:F7}, {Keys[i].RelPos.Y:F7}, {Keys[i].RelPos.Z:F7}");
         }
     }
 #endif
@@ -835,7 +835,7 @@ public class ChunkController_826 : ChunkController {
     public override void Read(BinaryReader r) {
         base.Read(r);
 
-        //Log($"ID is: {id}");
+        //Log.Info($"ID is: {id}");
         ControllerType = (CtrlType)r.ReadUInt32();
         NumKeys = (int)r.ReadUInt32();
         ControllerFlags = r.ReadUInt32();
@@ -844,9 +844,9 @@ public class ChunkController_826 : ChunkController {
         for (var i = 0; i < NumKeys; i++) {
             ref Key key = ref Keys[i];
             // Will implement fully later. Not sure I understand the structure, or if it's necessary.
-            key.Time = r.ReadInt32(); //Log($"Time {Keys[i].Time}");
-            key.AbsPos = r.ReadVector3(); //Log($"Abs Pos: {Keys[i].AbsPos.X:F7}  {Keys[i].AbsPos.Y:F7}  {Keys[i].AbsPos.Z:F7}");
-            key.RelPos = r.ReadVector3(); //Log($"Rel Pos: {Keys[i].RelPos.X:F7}  {Keys[i].RelPos.Y:F7}  {Keys[i].RelPos.Z:F7}");
+            key.Time = r.ReadInt32(); //Log.Info($"Time {Keys[i].Time}");
+            key.AbsPos = r.ReadVector3(); //Log.Info($"Abs Pos: {Keys[i].AbsPos.X:F7}  {Keys[i].AbsPos.Y:F7}  {Keys[i].AbsPos.Z:F7}");
+            key.RelPos = r.ReadVector3(); //Log.Info($"Rel Pos: {Keys[i].RelPos.X:F7}  {Keys[i].RelPos.Y:F7}  {Keys[i].RelPos.Z:F7}");
         }
     }
 }
@@ -885,15 +885,15 @@ public abstract class ChunkDataStream : Chunk // cccc0016:  Contains data such a
     #region Log
 #if LOG
     public override void LogChunk() {
-        Log($"*** START DATASTREAM ***");
-        Log($"    ChunkType:                       {ChunkType}");
-        Log($"    Version:                         {Version:Center}");
-        Log($"    DataStream chunk starting point: {Flags:Center}");
-        Log($"    Chunk ID:                        {ID:Center}");
-        Log($"    DataStreamType:                  {DataStreamType}");
-        Log($"    Number of Elements:              {NumElements}");
-        Log($"    Bytes per Element:               {BytesPerElement}");
-        Log($"*** END DATASTREAM ***");
+        Log.Info($"*** START DATASTREAM ***");
+        Log.Info($"    ChunkType:                       {ChunkType}");
+        Log.Info($"    Version:                         {Version:Center}");
+        Log.Info($"    DataStream chunk starting point: {Flags:Center}");
+        Log.Info($"    Chunk ID:                        {ID:Center}");
+        Log.Info($"    DataStreamType:                  {DataStreamType}");
+        Log.Info($"    Number of Elements:              {NumElements}");
+        Log.Info($"    Bytes per Element:               {BytesPerElement}");
+        Log.Info($"*** END DATASTREAM ***");
     }
 #endif
     #endregion
@@ -986,7 +986,7 @@ public class ChunkDataStream_800 : ChunkDataStream {
                                 a: 255);
                         break;
                     case 4: Colors = r.ReadSArray<IRGBA>(NumElements); break;
-                    default: Log("Unknown Color Depth"); SkipBytes(r, NumElements * BytesPerElement); break;
+                    default: Log.Info("Unknown Color Depth"); SkipBytes(r, NumElements * BytesPerElement); break;
                 }
                 break;
             case DataStreamType.VERTSUVS:  // 3 half floats for verts, 3 half floats for normals, 2 half floats for UVs
@@ -1039,7 +1039,7 @@ public class ChunkDataStream_800 : ChunkDataStream {
                         }
                         break;
                     default:
-                        Log("Unknown VertUV structure");
+                        Log.Info("Unknown VertUV structure");
                         SkipBytes(r, NumElements * BytesPerElement);
                         break;
                 }
@@ -1066,7 +1066,7 @@ public class ChunkDataStream_800 : ChunkDataStream {
                             for (var j = 0; j < 4; j++) map.Weight[j] = r.ReadByte();       // read the weights.
                             skin.BoneMapping.Add(map);
                             break;
-                        default: Log("Unknown BoneMapping structure"); break;
+                        default: Log.Info("Unknown BoneMapping structure"); break;
                     }
                 }
                 break;
@@ -1089,7 +1089,7 @@ public class ChunkDataStream_800 : ChunkDataStream {
                     Normals[i].Z = (Tangents[i, 0].X * Tangents[i, 1].Y - Tangents[i, 0].Y * Tangents[i, 1].X);
                 }
                 break;
-            default: Log("***** Unknown DataStream Type *****"); break;
+            default: Log.Info("***** Unknown DataStream Type *****"); break;
         }
     }
 }
@@ -1191,7 +1191,7 @@ public class ChunkDataStream_80000800 : ChunkDataStream {
                                 a: 255);
                         break;
                     case 4: Colors = r.ReadSArray<IRGBA>(IRGBA.SizeOf, NumElements); break;
-                    default: Log("Unknown Color Depth"); SkipBytes(r, NumElements * BytesPerElement); break;
+                    default: Log.Info("Unknown Color Depth"); SkipBytes(r, NumElements * BytesPerElement); break;
                 }
                 break;
             case DataStreamType.BONEMAP:
@@ -1216,7 +1216,7 @@ public class ChunkDataStream_80000800 : ChunkDataStream {
                             for (var j = 0; j < 4; j++) map.Weight[j] = r.ReadByte();       // read the weights.
                             skin.BoneMapping.Add(map);
                             break;
-                        default: Log("Unknown BoneMapping structure"); break;
+                        default: Log.Info("Unknown BoneMapping structure"); break;
                     }
                 }
                 break;
@@ -1239,7 +1239,7 @@ public class ChunkDataStream_80000800 : ChunkDataStream {
                     Normals[i].Z = (Tangents[i, 0].X * Tangents[i, 1].Y - Tangents[i, 0].Y * Tangents[i, 1].X);
                 }
                 break;
-            default: Log("***** Unknown DataStream Type *****"); break;
+            default: Log.Info("***** Unknown DataStream Type *****"); break;
         }
     }
 }
@@ -1327,7 +1327,7 @@ public class ChunkDataStream_801 : ChunkDataStream {
                                 a: 255);
                         break;
                     case 4: Colors = r.ReadSArray<IRGBA>(IRGBA.SizeOf, NumElements); break;
-                    default: Log("Unknown Color Depth"); SkipBytes(r, NumElements * BytesPerElement); break;
+                    default: Log.Info("Unknown Color Depth"); SkipBytes(r, NumElements * BytesPerElement); break;
                 }
                 break;
             case DataStreamType.VERTSUVS:  // 3 half floats for verts, 3 half floats for normals, 2 half floats for UVs
@@ -1372,7 +1372,7 @@ public class ChunkDataStream_801 : ChunkDataStream {
                         }
                         break;
                     default:
-                        Log("Unknown VertUV structure");
+                        Log.Info("Unknown VertUV structure");
                         SkipBytes(r, NumElements * BytesPerElement);
                         break;
                 }
@@ -1399,7 +1399,7 @@ public class ChunkDataStream_801 : ChunkDataStream {
                             for (var j = 0; j < 4; j++) map.Weight[j] = r.ReadByte();       // read the weights.
                             skin.BoneMapping.Add(map);
                             break;
-                        default: Log("Unknown BoneMapping structure"); break;
+                        default: Log.Info("Unknown BoneMapping structure"); break;
                     }
                 }
                 break;
@@ -1422,7 +1422,7 @@ public class ChunkDataStream_801 : ChunkDataStream {
                     Normals[i].Z = (Tangents[i, 0].X * Tangents[i, 1].Y - Tangents[i, 0].Y * Tangents[i, 1].X);
                 }
                 break;
-            default: Log("***** Unknown DataStream Type *****"); break;
+            default: Log.Info("***** Unknown DataStream Type *****"); break;
         }
     }
 }
@@ -1497,7 +1497,7 @@ public class ChunkDataStream_900 : ChunkDataStream {
                         }
                         if (NumElements % 2 == 1) SkipBytes(r, 4);
                         break;
-                    default: Log("Unknown Normals Format"); SkipBytes(r, NumElements * BytesPerElement); break;
+                    default: Log.Info("Unknown Normals Format"); SkipBytes(r, NumElements * BytesPerElement); break;
                 }
                 break;
             case DataStreamType.IVONORMALS3: break;
@@ -1536,11 +1536,11 @@ public class ChunkDataStream_900 : ChunkDataStream {
                         }
                         if (NumElements % 2 == 1) SkipBytes(r, 4);
                         break;
-                    default: Log("Unknown BoneMapping structure"); break;
+                    default: Log.Info("Unknown BoneMapping structure"); break;
                 }
                 break;
             case DataStreamType.IVOUNKNOWN2: break;
-                //default: Log("***** Unknown DataStream Type *****"); break;
+                //default: Log.Info("***** Unknown DataStream Type *****"); break;
         }
     }
 }
@@ -1562,17 +1562,17 @@ public abstract class ChunkExportFlags : Chunk  // cccc0015:  Export Flags
     #region Log
 #if LOG
     public override void LogChunk() {
-        Log($"*** START EXPORT FLAGS ***");
-        Log($"    Export Chunk ID: {ID:Center}");
-        Log($"    ChunkType: {ChunkType}");
-        Log($"    Version: {Version}");
-        Log($"    Flags: {Flags}");
+        Log.Info($"*** START EXPORT FLAGS ***");
+        Log.Info($"    Export Chunk ID: {ID:Center}");
+        Log.Info($"    ChunkType: {ChunkType}");
+        Log.Info($"    Version: {Version}");
+        Log.Info($"    Flags: {Flags}");
         var b = new StringBuilder("    RC Version: ");
         for (var i = 0; i < 4; i++) b.Append(RCVersion[i]);
-        Log(b.ToString());
-        Log();
-        Log("    RCVersion String: {RCVersionString}");
-        Log("*** END EXPORT FLAGS ***");
+        Log.Info(b.ToString());
+        Log.Info();
+        Log.Info("    RCVersion String: {RCVersionString}");
+        Log.Info("*** END EXPORT FLAGS ***");
     }
 #endif
     #endregion
@@ -1691,13 +1691,13 @@ public abstract class ChunkHelper : Chunk // CCCC0001
     #region Log
 #if LOG
     public override void LogChunk() {
-        Log($"*** START Helper Chunk ***");
-        Log($"    ChunkType:   {ChunkType}");
-        Log($"    Version:     {Version:Center}");
-        Log($"    ID:          {ID:Center}");
-        Log($"    HelperType:  {HelperType}");
-        Log($"    Center:    {Pos.X}, {Pos.Y}, {Pos.Z}");
-        Log($"*** END Helper Chunk ***");
+        Log.Info($"*** START Helper Chunk ***");
+        Log.Info($"    ChunkType:   {ChunkType}");
+        Log.Info($"    Version:     {Version:Center}");
+        Log.Info($"    ID:          {ID:Center}");
+        Log.Info($"    HelperType:  {HelperType}");
+        Log.Info($"    Center:    {Pos.X}, {Pos.Y}, {Pos.Z}");
+        Log.Info($"*** END Helper Chunk ***");
     }
 #endif
     #endregion
@@ -1946,20 +1946,20 @@ public abstract partial class ChunkMesh : Chunk      //  cccc0000:  Object that 
     #region Log
 #if LOG
     public override void LogChunk() {
-        Log($"*** START MESH CHUNK ***");
-        Log($"    ChunkType:           {ChunkType}");
-        Log($"    Chunk ID:            {ID:Center}");
-        Log($"    MeshSubSetID:        {MeshSubsetsData:Center}");
-        Log($"    Vertex Datastream:   {VerticesData:Center}");
-        Log($"    Normals Datastream:  {NormalsData:Center}");
-        Log($"    UVs Datastream:      {UVsData:Center}");
-        Log($"    Indices Datastream:  {IndicesData:Center}");
-        Log($"    Tangents Datastream: {TangentsData:Center}");
-        Log($"    Mesh Physics Sbi:   {MeshPhysicsData:Center}");
-        Log($"    VertUVs:             {VertsUVsData:Center}");
-        Log($"    MinBound:            {MinBound.X:F7}, {MinBound.Y:F7}, {MinBound.Z:F7}");
-        Log($"    MaxBound:            {MaxBound.X:F7}, {MaxBound.Y:F7}, {MaxBound.Z:F7}");
-        Log($"*** END MESH CHUNK ***");
+        Log.Info($"*** START MESH CHUNK ***");
+        Log.Info($"    ChunkType:           {ChunkType}");
+        Log.Info($"    Chunk ID:            {ID:Center}");
+        Log.Info($"    MeshSubSetID:        {MeshSubsetsData:Center}");
+        Log.Info($"    Vertex Datastream:   {VerticesData:Center}");
+        Log.Info($"    Normals Datastream:  {NormalsData:Center}");
+        Log.Info($"    UVs Datastream:      {UVsData:Center}");
+        Log.Info($"    Indices Datastream:  {IndicesData:Center}");
+        Log.Info($"    Tangents Datastream: {TangentsData:Center}");
+        Log.Info($"    Mesh Physics Sbi:   {MeshPhysicsData:Center}");
+        Log.Info($"    VertUVs:             {VertsUVsData:Center}");
+        Log.Info($"    MinBound:            {MinBound.X:F7}, {MinBound.Y:F7}, {MinBound.Z:F7}");
+        Log.Info($"    MaxBound:            {MaxBound.X:F7}, {MaxBound.Y:F7}, {MaxBound.Z:F7}");
+        Log.Info($"*** END MESH CHUNK ***");
     }
 #endif
     #endregion
@@ -2168,10 +2168,10 @@ public abstract class ChunkMeshMorphTargets : Chunk {
     #region Log
 #if LOG
     public override void LogChunk() {
-        Log($"*** START MorphTargets Chunk ***");
-        Log($"    ChunkType:           {ChunkType}");
-        Log($"    Node ID:             {ID:Center}");
-        Log($"    Chunk ID Mesh:       {ChunkIDMesh:Center}");
+        Log.Info($"*** START MorphTargets Chunk ***");
+        Log.Info($"    ChunkType:           {ChunkType}");
+        Log.Info($"    Node ID:             {ID:Center}");
+        Log.Info($"    Chunk ID Mesh:       {ChunkIDMesh:Center}");
     }
 #endif
     #endregion
@@ -2212,13 +2212,13 @@ class ChunkMeshPhysicsData : Chunk {
     #region Log
 #if LOG
     public override void LogChunk() {
-        Log($"*** START CompiledBone Chunk ***");
-        Log($"    ChunkType:           {ChunkType}");
-        Log($"    Node ID:             {ID:Center}");
-        Log($"    Node ID:             {PhysicsDataSize:Center}");
-        Log($"    Node ID:             {TetrahedraDataSize:Center}");
-        Log($"    Node ID:             {TetrahedraID:Center}");
-        Log($"    Node ID:             {ID:Center}");
+        Log.Info($"*** START CompiledBone Chunk ***");
+        Log.Info($"    ChunkType:           {ChunkType}");
+        Log.Info($"    Node ID:             {ID:Center}");
+        Log.Info($"    Node ID:             {PhysicsDataSize:Center}");
+        Log.Info($"    Node ID:             {TetrahedraDataSize:Center}");
+        Log.Info($"    Node ID:             {TetrahedraID:Center}");
+        Log.Info($"    Node ID:             {ID:Center}");
     }
 #endif
     #endregion
@@ -2268,22 +2268,22 @@ public abstract class ChunkMeshSubsets : Chunk // cccc0017:  The different parts
     #region Log
 #if LOG
     public override void LogChunk() {
-        Log("*** START MESH SUBSET CHUNK ***");
-        Log("    ChunkType:       {ChunkType}");
-        Log("    Mesh SubSet ID:  {ID:Center}");
-        Log("    Number of Mesh Subsets: {NumMeshSubset}");
+        Log.Info("*** START MESH SUBSET CHUNK ***");
+        Log.Info("    ChunkType:       {ChunkType}");
+        Log.Info("    Mesh SubSet ID:  {ID:Center}");
+        Log.Info("    Number of Mesh Subsets: {NumMeshSubset}");
         for (var i = 0; i < NumMeshSubset; i++) {
-            Log($"        ** Mesh Subset:          {i}");
-            Log($"           First Index:          {MeshSubsets[i].FirstIndex}");
-            Log($"           Number of Indices:    {MeshSubsets[i].NumIndices}");
-            Log($"           First Vertex:         {MeshSubsets[i].FirstVertex}");
-            Log($"           Number of Vertices:   {MeshSubsets[i].NumVertices}  (next will be {MeshSubsets[i].NumVertices + MeshSubsets[i].FirstVertex})");
-            Log($"           Material ID:          {MeshSubsets[i].MatID}");
-            Log($"           Radius:               {MeshSubsets[i].Radius}");
-            Log($"           Center:   {MeshSubsets[i].Center.X},{MeshSubsets[i].Center.Y},{MeshSubsets[i].Center.Z}");
-            Log($"        ** Mesh Subset {i} End");
+            Log.Info($"        ** Mesh Subset:          {i}");
+            Log.Info($"           First Index:          {MeshSubsets[i].FirstIndex}");
+            Log.Info($"           Number of Indices:    {MeshSubsets[i].NumIndices}");
+            Log.Info($"           First Vertex:         {MeshSubsets[i].FirstVertex}");
+            Log.Info($"           Number of Vertices:   {MeshSubsets[i].NumVertices}  (next will be {MeshSubsets[i].NumVertices + MeshSubsets[i].FirstVertex})");
+            Log.Info($"           Material ID:          {MeshSubsets[i].MatID}");
+            Log.Info($"           Radius:               {MeshSubsets[i].Radius}");
+            Log.Info($"           Center:   {MeshSubsets[i].Center.X},{MeshSubsets[i].Center.Y},{MeshSubsets[i].Center.Z}");
+            Log.Info($"        ** Mesh Subset {i} End");
         }
-        Log("*** END MESH SUBSET CHUNK ***");
+        Log.Info("*** END MESH SUBSET CHUNK ***");
     }
 #endif
     #endregion
@@ -2392,15 +2392,15 @@ public abstract class ChunkMtlName : Chunk  // cccc0014:  provides material name
     #region Log
 #if LOG
     public override void LogChunk() {
-        Log("*** START MATERIAL NAMES ***");
-        Log($"    ChunkType:           {ChunkType} ({ChunkType:Center})");
-        Log($"    Material Name:       {Name}");
-        Log($"    Material ID:         {ID:Center}");
-        Log($"    Version:             {Version:Center}");
-        Log($"    Number of Children:  {NumChildren}");
-        Log($"    Material Type:       {MatType} ({MatType:Center})");
-        foreach (var physicsType in PhysicsType) Log($"    Physics Type:        {physicsType} ({physicsType:Center})");
-        Log("*** END MATERIAL NAMES ***");
+        Log.Info("*** START MATERIAL NAMES ***");
+        Log.Info($"    ChunkType:           {ChunkType} ({ChunkType:Center})");
+        Log.Info($"    Material Name:       {Name}");
+        Log.Info($"    Material ID:         {ID:Center}");
+        Log.Info($"    Version:             {Version:Center}");
+        Log.Info($"    Number of Children:  {NumChildren}");
+        Log.Info($"    Material Type:       {MatType} ({MatType:Center})");
+        foreach (var physicsType in PhysicsType) Log.Info($"    Physics Type:        {physicsType} ({physicsType:Center})");
+        Log.Info("*** END MATERIAL NAMES ***");
     }
 #endif
     #endregion
@@ -2565,24 +2565,24 @@ public abstract class ChunkNode : Chunk // cccc000b:   Node
     #region Log
 #if LOG
     public override void LogChunk() {
-        Log($"*** START Node Chunk ***");
-        Log($"    ChunkType:           {ChunkType}");
-        Log($"    Node ID:             {ID:Center}");
-        Log($"    Node Name:           {Name}");
-        Log($"    Object ID:           {ObjectNodeID:Center}");
-        Log($"    Parent ID:           {ParentNodeID:Center}");
-        Log($"    Number of Children:  {__NumChildren}");
-        Log($"    Material ID:         {MatID:Center}"); // 0x1 is mtllib w children, 0x10 is mtl no children, 0x18 is child
-        Log($"    Center:            {Pos.X:F7}   {Pos.Y:F7}   {Pos.Z:F7}");
-        Log($"    Scale:               {Scale.X:F7}   {Scale.Y:F7}   {Scale.Z:F7}");
-        Log($"    Transformation:      {Transform.M11:F7}  {Transform.M12:F7}  {Transform.M13:F7}  {Transform.M14:F7}");
-        Log($"                         {Transform.M21:F7}  {Transform.M22:F7}  {Transform.M23:F7}  {Transform.M24:F7}");
-        Log($"                         {Transform.M31:F7}  {Transform.M32:F7}  {Transform.M33:F7}  {Transform.M34:F7}");
-        Log($"                         {Transform.M41 / 100:F7}  {Transform.M42 / 100:F7}  {Transform.M43 / 100:F7}  {Transform.M44:F7}");
-        //Log($"    Transform_sum:       {TransformSoFar.X:F7}  {TransformSoFar.Y:F7}  {TransformSoFar.Z:F7}");
-        //Log($"    Rotation_sum:");
+        Log.Info($"*** START Node Chunk ***");
+        Log.Info($"    ChunkType:           {ChunkType}");
+        Log.Info($"    Node ID:             {ID:Center}");
+        Log.Info($"    Node Name:           {Name}");
+        Log.Info($"    Object ID:           {ObjectNodeID:Center}");
+        Log.Info($"    Parent ID:           {ParentNodeID:Center}");
+        Log.Info($"    Number of Children:  {__NumChildren}");
+        Log.Info($"    Material ID:         {MatID:Center}"); // 0x1 is mtllib w children, 0x10 is mtl no children, 0x18 is child
+        Log.Info($"    Center:            {Pos.X:F7}   {Pos.Y:F7}   {Pos.Z:F7}");
+        Log.Info($"    Scale:               {Scale.X:F7}   {Scale.Y:F7}   {Scale.Z:F7}");
+        Log.Info($"    Transformation:      {Transform.M11:F7}  {Transform.M12:F7}  {Transform.M13:F7}  {Transform.M14:F7}");
+        Log.Info($"                         {Transform.M21:F7}  {Transform.M22:F7}  {Transform.M23:F7}  {Transform.M24:F7}");
+        Log.Info($"                         {Transform.M31:F7}  {Transform.M32:F7}  {Transform.M33:F7}  {Transform.M34:F7}");
+        Log.Info($"                         {Transform.M41 / 100:F7}  {Transform.M42 / 100:F7}  {Transform.M43 / 100:F7}  {Transform.M44:F7}");
+        //Log.Info($"    Transform_sum:       {TransformSoFar.X:F7}  {TransformSoFar.Y:F7}  {TransformSoFar.Z:F7}");
+        //Log.Info($"    Rotation_sum:");
         //RotSoFar.LogMatrix3x3();
-        Log($"*** END Node Chunk ***");
+        Log.Info($"*** END Node Chunk ***");
     }
 #endif
     #endregion
@@ -2812,12 +2812,12 @@ public abstract class ChunkSceneProp : Chunk     // cccc0008
     #region Log
 #if LOG
     public override void LogChunk() {
-        Log($"*** START SceneProp Chunk ***");
-        Log($"    ChunkType:   {ChunkType}");
-        Log($"    Version:     {Version:Center}");
-        Log($"    ID:          {ID:Center}");
-        for (var i = 0; i < NumProps; i++) Log($"{PropKey[i],30}{PropValue[i],20}");
-        Log("*** END SceneProp Chunk ***");
+        Log.Info($"*** START SceneProp Chunk ***");
+        Log.Info($"    ChunkType:   {ChunkType}");
+        Log.Info($"    Version:     {Version:Center}");
+        Log.Info($"    ID:          {ID:Center}");
+        for (var i = 0; i < NumProps; i++) Log.Info($"{PropKey[i],30}{PropValue[i],20}");
+        Log.Info("*** END SceneProp Chunk ***");
     }
 #endif
     #endregion
@@ -2855,12 +2855,12 @@ public abstract class ChunkSourceInfo : Chunk  // cccc0013:  Source Info chunk. 
     #region Log
 #if LOG
     public override void LogChunk() {
-        Log($"*** SOURCE INFO CHUNK ***");
-        Log($"    ID: {ID:Center}");
-        Log($"    Sourcefile: {SourceFile}.");
-        Log($"    Date:       {Date}.");
-        Log($"    Author:     {Author}.");
-        Log($"*** END SOURCE INFO CHUNK ***");
+        Log.Info($"*** SOURCE INFO CHUNK ***");
+        Log.Info($"    ID: {ID:Center}");
+        Log.Info($"    Sourcefile: {SourceFile}.");
+        Log.Info($"    Date:       {Date}.");
+        Log.Info($"    Author:     {Author}.");
+        Log.Info($"*** END SOURCE INFO CHUNK ***");
     }
 #endif
     #endregion
@@ -2885,9 +2885,9 @@ public class ChunkSourceInfo_0 : ChunkSourceInfo {
         else r.BaseStream.Seek(_header.Offset, 0);
 
         if (Offset != _header.Offset || Size != _header.Size) {
-            Log($"Conflict in chunk definition:  SourceInfo chunk");
-            Log($"{_header.Offset:Center}+{_header.Size:Center}");
-            Log($"{Offset:Center}+{Size:Center}");
+            Log.Info($"Conflict in chunk definition:  SourceInfo chunk");
+            Log.Info($"{_header.Offset:Center}+{_header.Size:Center}");
+            Log.Info($"{Offset:Center}+{Size:Center}");
             LogChunk();
         }
 
@@ -2918,15 +2918,15 @@ public abstract class ChunkTimingFormat : Chunk  // cccc000e:  Timing format chu
     #region Log
 #if LOG
     public override void LogChunk() {
-        Log($"*** TIMING CHUNK ***");
-        Log($"    ID: {ID:Center}");
-        Log($"    Version: {Version:Center}");
-        Log($"    Secs Per Tick: {SecsPerTick}");
-        Log($"    Ticks Per Frame: {TicksPerFrame}");
-        Log($"    Global Range:  Name: {GlobalRange.Name}");
-        Log($"    Global Range:  Start: {GlobalRange.Start}");
-        Log($"    Global Range:  End:  {GlobalRange.End}");
-        Log($"*** END TIMING CHUNK ***");
+        Log.Info($"*** TIMING CHUNK ***");
+        Log.Info($"    ID: {ID:Center}");
+        Log.Info($"    Version: {Version:Center}");
+        Log.Info($"    Secs Per Tick: {SecsPerTick}");
+        Log.Info($"    Ticks Per Frame: {TicksPerFrame}");
+        Log.Info($"    Global Range:  Name: {GlobalRange.Name}");
+        Log.Info($"    Global Range:  Start: {GlobalRange.Start}");
+        Log.Info($"    Global Range:  End:  {GlobalRange.End}");
+        Log.Info($"*** END TIMING CHUNK ***");
     }
 #endif
     #endregion

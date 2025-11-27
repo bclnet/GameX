@@ -20,21 +20,21 @@ public class FormatTests {
     public void LoadCellDat_NoExceptions() {
         var dat = new Database(cell);
         var count = dat.Source.Count;
-        Assert.IsTrue(ExpectedCellCount <= count, $"Insufficient files parsed from .dat. Expected: >= {ExpectedCellCount}, Actual: {count}");
+        Assert.IsLessThanOrEqualTo(count, ExpectedCellCount, $"Insufficient files parsed from .dat. Expected: >= {ExpectedCellCount}, Actual: {count}");
     }
 
     [TestMethod]
     public void LoadPortalDat_NoExceptions() {
         var dat = new Database(portal);
         var count = dat.Source.Count;
-        Assert.IsTrue(ExpectedPortalCount <= count, $"Insufficient files parsed from .dat. Expected: >= {ExpectedPortalCount}, Actual: {count}");
+        Assert.IsLessThanOrEqualTo(count, ExpectedPortalCount, $"Insufficient files parsed from .dat. Expected: >= {ExpectedPortalCount}, Actual: {count}");
     }
 
     [TestMethod]
     public void LoadLocalEnglishDat_NoExceptions() {
         var dat = new Database(localEnglish);
         var count = dat.Source.Count;
-        Assert.IsTrue(ExpectedLocalEnglishCount <= count, $"Insufficient files parsed from .dat. Expected: >= {ExpectedLocalEnglishCount}, Actual: {count}");
+        Assert.IsLessThanOrEqualTo(count, ExpectedLocalEnglishCount, $"Insufficient files parsed from .dat. Expected: >= {ExpectedLocalEnglishCount}, Actual: {count}");
     }
 
     [TestMethod]
@@ -45,8 +45,8 @@ public class FormatTests {
             if ((uint)key == Iteration.FILE_ID) continue;
             if (file.FileSize == 0) continue; // DatFileType.LandBlock files can be empty
 
-            var fileType = WBPakFile.GetFileType(file, PakType.Cell).fileType;
-            Assert.IsNotNull(fileType, $"Key: 0x{key:X8}, ObjectID: 0x{file.Id:X8}, FileSize: {file.FileSize}");
+            var (fileType, ext) = WBPakFile.GetFileType(file, PakType.Cell);
+            Assert.IsNotNull(ext, $"Key: 0x{key:X8}, ObjectID: 0x{file.Id:X8}, FileSize: {file.FileSize}");
 
             var factory = source.EnsureCachedObjectFactory(file);
             if (factory == null) throw new Exception($"Class for fileType: {fileType} does not implement an ObjectFactory.");
@@ -64,8 +64,8 @@ public class FormatTests {
         foreach (var (key, file) in source.FilesById.Select(x => KeyValuePair.Create(x.Key, x.First()))) {
             if ((uint)key == Iteration.FILE_ID) continue;
 
-            var fileType = WBPakFile.GetFileType(file, PakType.Portal).fileType;
-            Assert.IsNotNull(fileType, $"Key: 0x{key:X8}, ObjectID: 0x{file.Id:X8}, FileSize: {file.FileSize}");
+            var (fileType, ext) = WBPakFile.GetFileType(file, PakType.Portal);
+            Assert.IsNotNull(ext, $"Key: 0x{key:X8}, ObjectID: 0x{file.Id:X8}, FileSize: {file.FileSize}");
 
             // These file types aren't converted yet
             if (fileType == PakFileType.KeyMap) continue;
@@ -92,9 +92,8 @@ public class FormatTests {
         foreach (var (key, file) in source.FilesById.Select(x => KeyValuePair.Create(x.Key, x.First()))) {
             if ((uint)key == Iteration.FILE_ID) continue;
 
-            var fileType = WBPakFile.GetFileType(file, PakType.Language).fileType;
-
-            Assert.IsNotNull(fileType, $"Key: 0x{key:X8}, ObjectID: 0x{file.Id:X8}, FileSize: {file.FileSize}");
+            var (fileType, ext) = WBPakFile.GetFileType(file, PakType.Language);
+            Assert.IsNotNull(ext, $"Key: 0x{key:X8}, ObjectID: 0x{file.Id:X8}, FileSize: {file.FileSize}");
 
             // These file types aren't converted yet
             if (fileType == PakFileType.UILayout) continue;

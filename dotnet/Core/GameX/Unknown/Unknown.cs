@@ -1,11 +1,9 @@
 ﻿using GameX.Formats;
-using GameX.Formats.Unknown;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
-using static OpenStack.Debug;
 
 namespace GameX.Unknown;
 

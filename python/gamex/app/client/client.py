@@ -1,6 +1,6 @@
 import sys
 from dataclasses import dataclass
-from openstk import debug
+from openstk import log
 from gamex import getFamily
 from gamex.core.client import GameController
 from gamex.families.Origin.clients.UO.game import UOGameController
@@ -27,11 +27,11 @@ def run(args: RunArgs) -> int:
     game = family.openPakFile(args.uri)
     if not game: print(f'No game found named "{args.Uri}".'); return 0
 
-    debug.trace('Running game...')
+    log.trace('Running game...')
     with UOGameController(game, pluginHost) as g:
         game = g
         game.run()
-    debug.trace('Exiting game...')
+    log.trace('Exiting game...')
     return 0
 
 if __name__ == "__main__":

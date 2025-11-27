@@ -45,7 +45,7 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using static OpenStack.Debug;
+using static OpenStack;
 #pragma warning disable CS9113 // Parameter is unread.
 
 namespace GameX.Gamebryo.Formats.Nif;
@@ -55,7 +55,7 @@ namespace GameX.Gamebryo.Formats.Nif;
 from io import BytesIO
 from enum import Enum, Flag, IntFlag
 from numpy import ndarray, array
-from openstk import Reader, debug
+from openstk import log, Reader
 from gamex import FileSource, PakBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
 from gamex.core.globalx import Color3, Color4
 from gamex.core.desser import DesSer
@@ -130,7 +130,7 @@ static class Z {
                 var p = r.ReadInt32() - 1;
                 //if (p != i) linkMap.insert(p, i);
                 //if (isNiBlock(blockType)) {
-                //    //qDebug() << "loading block" << c << ":" << blockType );
+                //    //log.info($"loading block {c}:{blockType}");
                 //    insertNiBlock(blockType, -1);
                 //    if (!loadItem(root->child(c + 1), stream)) throw Exception($"failed to load block number {i} ({blockType}) previous block was {root->child(c)->name()}");
                 //}
@@ -586,7 +586,7 @@ DesSer.add({'Ref':RefJsonConverter, 'TexCoord':TexCoordJsonConverter, 'Triangle'
         if (nodeType.StartsWith("NiDataStream\\x01")) nodeType = Z.ExtractRTTIArgs(r, nodeType);
         switch (nodeType) {
 BODY
-            default: { Log($"Tried to read an unsupported NiObject type ({nodeType})."); return null; }
+            default: { Log.info($"Tried to read an unsupported NiObject type ({nodeType})."); return null; }
         }
     }
 '''.replace('BODY', body)))
@@ -599,7 +599,7 @@ BODY
         def type(o: NiObject) -> NiObject: setattr(o, '$type', nodeType); return o;
         match nodeType:
 BODY
-            case _: debug.log(f'Tried to read an unsupported NiObject type ({nodeType}).'); node = None
+            case _: log.info(f'Tried to read an unsupported NiObject type ({nodeType}).'); node = None
         return node
 '''.replace('BODY', body)))
         def bhkRigidBody_values(s, values):

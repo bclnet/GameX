@@ -1,10 +1,10 @@
 from __future__ import annotations
 import os
 from enum import Enum, Flag
+from decimal import Decimal
 from numpy import ndarray, array, empty
-from openstk.core.reflect import *
-from gamex.families.Xbox.formats.binary import Binary_Xnb
 from openstk.core.drawing import Point, Rectangle
+from openstk.core.typex import *
 
 # types
 # type Vector2 = ndarray
@@ -14,7 +14,8 @@ type Vector3 = ndarray
 # type Quaternion = ndarray
 
 # A character's gender identity.
-# @RType('StardewValley.Gender')
+@RAssembly('StardewValley.GameData')
+@RType('StardewValley.Gender')
 class Gender(Enum):
     Male = 0
     Female = 1

@@ -1,4 +1,5 @@
 using GameX.Formats;
+using OpenStack;
 using OpenStack.Gfx;
 using System;
 using System.Collections.Concurrent;
@@ -8,7 +9,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-using static OpenStack.Debug;
 
 namespace GameX.Lucas.Formats;
 
@@ -217,7 +217,7 @@ public class Binary_Nwx : IHaveMetaInfo, ITextureSelect {
         Cells = [];
         for (var i = 0; i < cellHeader.Count; i++) {
             var cell = r.ReadS<X_Cell>();
-            if (cell.Size == 1 && cell.Width == 0) { Log($"Empty Cell: {i}"); r.ReadByte(); continue; } // 0xCD Terminator
+            if (cell.Size == 1 && cell.Width == 0) { Log.Info($"Empty Cell: {i}"); r.ReadByte(); continue; } // 0xCD Terminator
 
             // Bit 0 specifies what dimension to use for column table retrieval and decompression. Just swap dimensions.
             var flip = (cell.Flags & 0x00000001) == 0;
@@ -406,7 +406,7 @@ public class Binary_San : IHaveMetaInfo {
                     //case ZFOB_MAGIC:
                     default:
                         var z = BitConverter.GetBytes(chunk.Magic); z.Reverse();
-                        Log($"{Encoding.ASCII.GetString(z)}");
+                        Log.Info($"{Encoding.ASCII.GetString(z)}");
                         r.Skip(chunk.Size);
                         break;
                 }
@@ -845,7 +845,7 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm> {
                     case 0x4E30: SoundResources = ReadResources(r, ResourceFlags.CSL3); break; // 'N0'
                     case 0x4330: CostumeResources = ReadResources(r, ResourceFlags.CSL3); break; // 'C0'
                     case 0x4F30: ReadObjects(r, ObjectFlags.CSL2); if (indy3FmTowns) r.Skip(32); break;// 'O0' - Indy3 FM-TOWNS has 32 extra bytes
-                    default: Log($"Unknown block {block:X2}"); break;
+                    default: Log.Info($"Unknown block {block:X2}"); break;
                 }
             }
         }
@@ -867,7 +867,7 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm> {
                     case 0x534F4344: CostumeResources = ReadResources(r, ResourceFlags.CSL4); break; // 'DCOS'
                     case 0x52484344: CharsetResources = ReadResources(r, ResourceFlags.CSL4); break; // 'DCHR'
                     case 0x4A424F44: ReadObjects(r, ObjectFlags.CSL3); break; // 'DOBJ'
-                    default: Log($"Unknown block {block:X2}"); break;
+                    default: Log.Info($"Unknown block {block:X2}"); break;
                 }
             }
         }
@@ -888,7 +888,7 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm> {
                     case 0x5358414D: ReadMaxSizes(r, game, features, 6); break; // 'MAXS'
                     case 0x554F5344: case 0x4E524944: SoundResources = ReadResources(r, ResourceFlags.CSL4); break; // 'DSOU'/'DIRN'
                     case 0x59524141: ArrayDefinitions = ReadIndexFile(r); break; // 'AARY'
-                    default: Log($"Unknown block {block:X2}"); break;
+                    default: Log.Info($"Unknown block {block:X2}"); break;
                 }
             }
         }
@@ -909,7 +909,7 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm> {
                     case 0x554F5344: case 0x4E524944: SoundResources = ReadResources(r, ResourceFlags.CSL4); break; // 'DSOU'/'DIRN'
                     case 0x59524141: ArrayDefinitions = ReadIndexFile(r); break; // 'AARY'
                     case 0x4D414E41: AudioNames = ReadNames(r); break; // 'ANAM' - Used by: The Dig, FT
-                    default: Log($"Unknown block {block:X2}"); break;
+                    default: Log.Info($"Unknown block {block:X2}"); break;
                 }
             }
         }
@@ -931,7 +931,7 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm> {
                     case 0x554F5344: case 0x4E524944: SoundResources = ReadResources(r, ResourceFlags.CSL4); break; // 'DSOU'/'DIRN'
                     case 0x59524141: ArrayDefinitions = ReadIndexFile(r); break; // 'AARY'
                     case 0x4D414E41: AudioNames = ReadNames(r); break; // 'ANAM' - Used by: The Dig, FT
-                    default: Log($"Unknown block {block:X2}"); break;
+                    default: Log.Info($"Unknown block {block:X2}"); break;
                 }
             }
         }

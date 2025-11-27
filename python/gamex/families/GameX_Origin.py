@@ -1,6 +1,6 @@
 from __future__ import annotations
 import os
-from openstk import debug, _pathExtension
+from openstk import log, _pathExtension
 from gamex import FamilyGame, BinaryPakFile
 from gamex.families.Origin.formats.UO.binary import Binary_Animdata, Binary_AsciiFont, Binary_BodyConverter, Binary_BodyTable, Binary_CalibrationInfo, Binary_Gump, Binary_GumpDef, Binary_Hues, Binary_Land, Binary_Light, Binary_MobType, Binary_MultiMap, Binary_MusicDef, Binary_Multi, Binary_RadarColor, Binary_SkillGroups, Binary_Skills, Binary_Sound, Binary_SpeechList, Binary_Static, Binary_StringTable, Binary_TileData, Binary_UnicodeFont, Binary_Verdata
 from gamex.families.Origin.formats.UO.utility import ClientVersion, ClientVersionHelper
@@ -27,11 +27,11 @@ class UOGame(FamilyGame):
         if clientVersionText: clientVersionText = clientVersionText.replace(',', '.').replace(' ', '').lower()
         clientVersion = ClientVersionHelper.validateClientVersion(clientVersionText)
         if not clientVersion:
-            debug.warn(f'Client version [{clientVersionText}] is invalid, let\'s try to read the client.exe')
+            log.warn(f'Client version [{clientVersionText}] is invalid, let\'s try to read the client.exe')
             if (clientVersionText := ClientVersionHelper.parseFromFile(os.path.join(self.found.root, 'client.exe'))) == None or (clientVersion := ClientVersionHelper.validateClientVersion(clientVersionText)) == None:
-                debug.error(f'Invalid client version: {clientVersionText}')
+                log.error(f'Invalid client version: {clientVersionText}')
                 raise Exception(f'Invalid client version: "{clientVersionText}"')
-            debug.trace(f'Found a valid client.exe [{clientVersionText} - {clientVersion}]')
+            log.trace(f'Found a valid client.exe [{clientVersionText} - {clientVersion}]')
             self.options['clientVersion'] = clientVersionText
             self.options.dirty = True
         self.version = clientVersion
@@ -42,8 +42,8 @@ class UOGame(FamilyGame):
         if self.version >= ClientVersion.CV_308Z: self.protocol |= ClientFlags.CF_AOS
         if self.version >= ClientVersion.CV_405A: self.protocol |= ClientFlags.CF_SE
         if self.version >= ClientVersion.CV_60144: self.protocol |= ClientFlags.CF_SA
-        debug.trace(f'Client version: {clientVersion}')
-        debug.trace(f'Protocol: {self.protocol}')
+        log.trace(f'Client version: {clientVersion}')
+        log.trace(f'Protocol: {self.protocol}')
 
 # OriginPakFile
 class OriginPakFile(BinaryPakFile):

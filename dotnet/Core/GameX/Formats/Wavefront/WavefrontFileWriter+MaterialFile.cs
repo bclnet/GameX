@@ -1,13 +1,13 @@
 ﻿using GameX.Formats.Unknown;
+using OpenStack;
 using System.IO;
 using System.Reflection;
-using static OpenStack.Debug;
 
 namespace GameX.Formats.Wavefront;
 
 public partial class WavefrontFileWriter {
     void WriteMaterialFile(IUnknownFileModel file) {
-        if (file.Materials == null) { Log("No materials loaded"); return; }
+        if (file.Materials == null) { Log.Info("No materials loaded"); return; }
 
         if (!MaterialFile.Directory.Exists) MaterialFile.Directory.Create();
 
@@ -21,13 +21,13 @@ public partial class WavefrontFileWriter {
                 w.WriteLine($"Ka {diffuse.X:F6} {diffuse.Y:F6} {diffuse.Z:F6}"); // Ambient
                 w.WriteLine($"Kd {diffuse.X:F6} {diffuse.Y:F6} {diffuse.Z:F6}"); // Diffuse
             }
-            else Log($"Skipping Diffuse for {material.Name}");
+            else Log.Info($"Skipping Diffuse for {material.Name}");
             if (material.Specular != null) {
                 var specular = material.Specular.Value;
                 w.WriteLine($"Ks {specular.X:F6} {specular.Y:F6} {specular.Z:F6}"); // Specular
                 w.WriteLine($"Ns {material.Shininess / 255D:F6}"); // Specular Exponent
             }
-            else Log($"Skipping Specular for {material.Name}");
+            else Log.Info($"Skipping Specular for {material.Name}");
             w.WriteLine($"d {material.Opacity:F6}"); // Dissolve
             w.WriteLine("illum 2"); // Highlight on. This is a guess.
 

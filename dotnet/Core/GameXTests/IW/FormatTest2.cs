@@ -8,19 +8,19 @@ public class FormatTest2 {
     static readonly Family family = FamilyManager.GetFamily("IW");
     static PakFile main = family.OpenPakFile(new Uri("game:/xxx#MW2"));
 
-    //[DataTestMethod]
+    //[TestMethod]
     //[DataRow("dialogues00.bif:09_ban2ban01.dlg")]
     //public void DLG(string sampleFile) => LoadObject<BinaryGff>(main, sampleFile);
 
-    //[DataTestMethod]
+    //[TestMethod]
     //[DataRow("quests00.bif:act1.qdb")]
     //public void QDB(string sampleFile) => LoadObject<BinaryGff>(main, sampleFile);
 
-    //[DataTestMethod]
+    //[TestMethod]
     //[DataRow("quests00.bif:q1000_act1_init.qst")]
     //public void QST(string sampleFile) => LoadObject<BinaryGff>(main, sampleFile);
 
-    //[DataTestMethod]
+    //[TestMethod]
     //[DataRow("meshes00.bif/alpha_dummy.mdb")]
     //public void MDB(string sampleFile) => LoadObject<BiowareBinaryPak>(main, sampleFile);
 

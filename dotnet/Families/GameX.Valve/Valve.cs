@@ -3,11 +3,11 @@ using GameX.ID.Formats;
 using GameX.Transforms;
 using GameX.Unknown;
 using GameX.Valve.Formats;
+using OpenStack;
 using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Threading.Tasks;
-using static OpenStack.Debug;
 
 namespace GameX.Valve;
 
@@ -66,7 +66,7 @@ public class ValvePakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMode
         if (Contains(p)) return p;
         if (!p.EndsWith("_c", StringComparison.Ordinal)) path = $"{p}_c";
         if (Contains(p)) return p;
-        Log($"Could not find file '{p}' in a PAK file.");
+        Log.Info($"Could not find file '{p}' in a PAK file.");
         return null;
     }
 

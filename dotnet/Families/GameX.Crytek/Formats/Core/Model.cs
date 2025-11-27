@@ -1,10 +1,10 @@
 ﻿using GameX.Crytek.Formats.Core.Chunks;
+using OpenStack;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using static OpenStack.Debug;
 
 namespace GameX.Crytek.Formats.Core;
 
@@ -207,13 +207,13 @@ public class Model {
     /// Output File Header to console for testing
     /// </summary>
     public void LogFileHeader() {
-        Log($"*** HEADER ***");
-        Log($"    Header Filesignature: {FileSignature}");
-        Log($"    FileType:             {FileType:Center}");
-        Log($"    ChunkVersion:         {FileVersion:Center}");
-        Log($"    ChunkTableOffset:     {ChunkTableOffset:Center}");
-        Log($"    NumChunks:            {NumChunks:Center}");
-        Log($"*** END HEADER ***");
+        Log.Info($"*** HEADER ***");
+        Log.Info($"    Header Filesignature: {FileSignature}");
+        Log.Info($"    FileType:             {FileType:Center}");
+        Log.Info($"    ChunkVersion:         {FileVersion:Center}");
+        Log.Info($"    ChunkTableOffset:     {ChunkTableOffset:Center}");
+        Log.Info($"    NumChunks:            {NumChunks:Center}");
+        Log.Info($"*** END HEADER ***");
         return;
     }
 
@@ -221,9 +221,9 @@ public class Model {
     /// Output Chunk Table to console for testing
     /// </summary>
     public void LogChunkTable() {
-        Log("*** Chunk Header Table***");
-        Log("Chunk Type              Version   ID        Size      Offset    ");
-        foreach (var chkHdr in ChunkHeaders) Log($"{chkHdr.ChunkType,-24:Center}{chkHdr.Version,-10:Center}{chkHdr.ID,-10:Center}{chkHdr.Size,-10:Center}{chkHdr.Offset,-10:Center}");
+        Log.Info("*** Chunk Header Table***");
+        Log.Info("Chunk Type              Version   ID        Size      Offset    ");
+        foreach (var chkHdr in ChunkHeaders) Log.Info($"{chkHdr.ChunkType,-24:Center}{chkHdr.Version,-10:Center}{chkHdr.ID,-10:Center}{chkHdr.Size,-10:Center}{chkHdr.Offset,-10:Center}");
         Console.WriteLine("*** Chunk Header Table***");
         Console.WriteLine("Chunk Type              Version   ID        Size      Offset    ");
         foreach (var chkHdr in ChunkHeaders) Console.WriteLine($"{chkHdr.ChunkType,-24:Center}{chkHdr.Version,-10:Center}{chkHdr.ID,-10:Center}{chkHdr.Size,-10:Center}{chkHdr.Offset,-10:Center}");

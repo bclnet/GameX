@@ -1,10 +1,10 @@
+using OpenStack;
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
-using static OpenStack.Debug;
 
 namespace Khronos.Collada;
 
@@ -61,7 +61,7 @@ public partial class Collada {
                 return (Collada)new XmlSerializer(typeof(Collada)).Deserialize(tr);
         }
         catch (Exception ex) {
-            Log(ex.ToString());
+            Log.Error(ex.ToString());
             Console.ReadLine();
             return null;
         }
@@ -123,8 +123,8 @@ public class Collada_Parse_Utils {
                 array[i] = Convert.ToInt32(str[i]);
         }
         catch (Exception e) {
-            Log(e.ToString());
-            Log(int_array);
+            Log.Error(e.ToString());
+            Log.Error(int_array);
         }
         return array;
     }
@@ -137,8 +137,8 @@ public class Collada_Parse_Utils {
                 array[i] = Convert.ToSingle(str[i]);
         }
         catch (Exception e) {
-            Log(e.ToString());
-            Log(float_array);
+            Log.Error(e.ToString());
+            Log.Error(float_array);
         }
         return array;
     }
@@ -151,8 +151,8 @@ public class Collada_Parse_Utils {
                 array[i] = Convert.ToBoolean(str[i]);
         }
         catch (Exception e) {
-            Log(e.ToString());
-            Log(bool_array);
+            Log.Error(e.ToString());
+            Log.Error(bool_array);
         }
         return array;
     }

@@ -6,7 +6,7 @@ namespace GameX.Cig.Formats;
 
 [TestClass]
 public class CryFileTest {
-    [DataTestMethod]
+    [TestMethod]
     [DataRow("Cig:StarCitizen", "Sbi/Objects/animals/fish/CleanerFish_clean_prop_animal_01.chr")]
     //[DataRow("Cig:StarCitizen", "Data/Objects/buildingsets/human/hightech/prop/hydroponic/hydroponic_machine_1_incubator_01x01x02_a.cgf")]
     //[DataRow("Cig:StarCitizen", "Data/Objects/buildingsets/human/hightech/prop/hydroponic/hydroponic_machine_1_incubator_02x01x012_a.cgf")]

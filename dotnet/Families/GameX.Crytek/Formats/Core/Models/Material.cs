@@ -1,8 +1,8 @@
-﻿using System;
+﻿using OpenStack;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml.Serialization;
-using static OpenStack.Debug;
 
 namespace GameX.Crytek.Formats.Models;
 
@@ -56,7 +56,7 @@ public class Material {
             //return HoloXPLOR.DataForge.CryXmlSerializer.Deserialize<Material>(fileStream);
             throw new NotImplementedException();
         }
-        catch (Exception e) { Log($"{materialfile} failed deserialize - {e.Message}"); }
+        catch (Exception e) { Log.Error($"{materialfile} failed deserialize - {e.Message}"); }
         return null;
     }
 }

@@ -13,7 +13,6 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using static GameX.FamilyManager;
 using static GameX.Util;
-using static OpenStack.Debug;
 
 namespace GameX;
 
@@ -1273,7 +1272,7 @@ public partial class FamilyManager {
                 Families.Add(family.Id, family);
             }
             catch (Exception e) {
-                Log(e.ToString());
+                Log.Error(e.ToString());
                 Console.WriteLine(e.ToString());
             }
 

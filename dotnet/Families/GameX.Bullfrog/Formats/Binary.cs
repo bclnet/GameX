@@ -1,4 +1,5 @@
 ﻿using GameX.Formats;
+using OpenStack;
 using OpenStack.Gfx;
 using System;
 using System.Collections.Generic;
@@ -8,7 +9,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-using static OpenStack.Debug;
 
 namespace GameX.Bullfrog.Formats;
 
@@ -311,7 +311,7 @@ public unsafe class Binary_Fli : IDisposable, ITextureFrames, IHaveMetaInfo {
                     //Log($"Frames Remaining: {NumFrames}, Chunks: {frameHeader.NumChunks}");
                     break;
                 default:
-                    Log($"Unknown Type: {header.Type}");
+                    Log.Info($"Unknown Type: {header.Type}");
                     r.Skip(header.Size);
                     break;
             }

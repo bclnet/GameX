@@ -9,7 +9,7 @@ public class FileManagerTests {
     public void MissingEstate_ShouldThrow()
         => Assert.Throws<ArgumentOutOfRangeException>(() => FamilyManager.GetFamily("Missing"));
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow("AC", "AC", "*.dat", 4)]
     [DataRow("Arkane", "AF", "*.pak", 7)]
     [DataRow("Arkane", "DOM", "*_dir.vpk", 9)]

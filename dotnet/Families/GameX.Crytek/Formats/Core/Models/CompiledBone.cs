@@ -1,8 +1,8 @@
-﻿using System;
+﻿using OpenStack;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
-using static OpenStack.Debug;
 
 namespace GameX.Crytek.Formats.Models;
 
@@ -97,16 +97,16 @@ public class CompiledBone {
 #if LOG
     public void LogCompiledBone() {
         // Output the bone to the console
-        Log($"*** Compiled bone {boneName}");
-        Log($"    Parent Name: {parentID}");
-        Log($"    Offset in file: {offset:Center}");
-        Log($"    Controller ID: {ControllerID}");
-        Log($"    World To Bone: {BoneToWorld}");
-        Log($"    Limb ID: {limbID}");
-        Log($"    Parent Offset: {offsetParent}");
-        Log($"    Child Offset:  {offsetChild}");
-        Log($"    Number of Children:  {numChildren}");
-        Log($"*** End Bone {boneName}");
+        Log.Info($"*** Compiled bone {boneName}");
+        Log.Info($"    Parent Name: {parentID}");
+        Log.Info($"    Offset in file: {offset:Center}");
+        Log.Info($"    Controller ID: {ControllerID}");
+        Log.Info($"    World To Bone: {BoneToWorld}");
+        Log.Info($"    Limb ID: {limbID}");
+        Log.Info($"    Parent Offset: {offsetParent}");
+        Log.Info($"    Child Offset:  {offsetChild}");
+        Log.Info($"    Number of Children:  {numChildren}");
+        Log.Info($"*** End Bone {boneName}");
     }
 #endif
     #endregion

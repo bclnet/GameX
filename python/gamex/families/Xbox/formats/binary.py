@@ -18,7 +18,7 @@ type Quaternion = ndarray
 # Binary_Xnb
 class Binary_Xnb(IHaveMetaInfo, IWriteToStream):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_Xnb(r)
+    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_Xnb(r, f)
 
     #region Headers
 
@@ -36,21 +36,21 @@ class Binary_Xnb(IHaveMetaInfo, IWriteToStream):
         @property
         def platform(self) -> chr: return chr(self.magic >> 24)
 
-        def validate(self, r: Reader):
+        def validate(self, r: Reader, path: str):
             if (self.magic & 0x00FFFFFF) != Binary_Xnb.MAGIC: raise Exception('BAD MAGIC')
             if self.version != 5 and self.version != 4: raise Exception('Invalid XNB version')
             if self.sizeOnDisk > r.f.getbuffer().nbytes: raise Exception('XNB file has been truncated.')
             if self.compressed:
                 decompressedSize = r.readUInt32(); compressedSize = self.sizeOnDisk - r.tell()
                 b = decompressXbox(r, compressedSize, decompressedSize)
-                return ContentReader(BytesIO(b))
-            return ContentReader(r.f)
+                return ContentReader(BytesIO(b), path, self.version, None)
+            return ContentReader(r.f, path, self.version, None)
 
     #endregion
 
-    def __init__(self, r2: Reader):
+    def __init__(self, r2: Reader, f: FileSource):
         h = r2.readS(self.Header)
-        r = h.validate(r2)
+        r = h.validate(r2, f.path)
         self.obj = r.readAsset()
         self.atEnd = r.atEnd()
         # r.ensureAtEnd()

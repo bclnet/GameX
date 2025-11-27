@@ -134,7 +134,7 @@ public unsafe class Binary_Bsp30 : PakBinary<Binary_Bsp30>
 #region Binary_Src
 //was:Resource/Resource
 
-public class Binary_Src : IDisposable, IHaveMetaInfo, IRedirected<ITexture>, IRedirected<IMaterial>, IRedirected<IMesh>, IRedirected<IModel>, IRedirected<IParticleSystem> {
+public class Binary_Src : IDisposable, IHaveMetaInfo, Indirect<ITexture>, Indirect<IMaterial>, Indirect<IMesh>, Indirect<IModel>, Indirect<IParticleSystem> {
     internal const ushort KnownHeaderVersion = 12;
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) {
         if (r.BaseStream.Length < 6) return null;
@@ -236,11 +236,11 @@ public class Binary_Src : IDisposable, IHaveMetaInfo, IRedirected<ITexture>, IRe
         }
     }
 
-    ITexture IRedirected<ITexture>.Value => DATA as ITexture;
-    IMaterial IRedirected<IMaterial>.Value => DATA as IMaterial;
-    IMesh IRedirected<IMesh>.Value => DataType == ResourceType.Mesh ? new D_Mesh(this) as IMesh : null;
-    IModel IRedirected<IModel>.Value => DATA as IModel;
-    IParticleSystem IRedirected<IParticleSystem>.Value => DATA as IParticleSystem;
+    ITexture Indirect<ITexture>.Value => DATA as ITexture;
+    IMaterial Indirect<IMaterial>.Value => DATA as IMaterial;
+    IMesh Indirect<IMesh>.Value => DataType == ResourceType.Mesh ? new D_Mesh(this) as IMesh : null;
+    IModel Indirect<IModel>.Value => DATA as IModel;
+    IParticleSystem Indirect<IParticleSystem>.Value => DATA as IParticleSystem;
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
         var nodes = new List<MetaInfo> {

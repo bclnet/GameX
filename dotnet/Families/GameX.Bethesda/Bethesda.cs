@@ -3,12 +3,12 @@ using GameX.Formats.Unknown;
 using GameX.Gamebryo.Formats;
 using GameX.Transforms;
 using GameX.Unknown;
+using OpenStack;
 using OpenStack.Gfx;
 using System;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
-using static OpenStack.Debug;
 
 namespace GameX.Bethesda;
 
@@ -61,7 +61,7 @@ public class BethesdaPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileM
         else if (Contains(p = $"{texturePathWithoutExtension}.dds")) return p;
         else if (Contains(p = $"{textureNameInTexturesDir}.tga")) return p;
         else if (Contains(p = $"{texturePathWithoutExtension}.tga")) return p;
-        else { Log($"Could not find file '{p}' in A PAK file."); return null; }
+        else { Log.Info($"Could not find file '{p}' in A PAK file."); return null; }
     }
 
     #endregion

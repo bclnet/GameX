@@ -1,10 +1,10 @@
 ﻿using GameX.Crytek.Formats.Core.Chunks;
 using GameX.Formats.Unknown;
+using OpenStack;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using static OpenStack.Debug;
 
 namespace GameX.Crytek.Formats;
 
@@ -14,18 +14,18 @@ partial class CryFile : IUnknownFileModel {
     IEnumerable<UnknownMesh> IUnknownFileModel.Meshes {
         get {
             foreach (var node in NodeMap.Values) {
-                if (node.ObjectChunk == null) { Log($"Skipped node with missing Object {node.Name}"); continue; }
+                if (node.ObjectChunk == null) { Log.Info($"Skipped node with missing Object {node.Name}"); continue; }
                 if (node.ObjectChunk.ChunkType == ChunkType.Helper) { continue; }
-                if (node.ObjectChunk.ChunkType != ChunkType.Mesh) { Log($"Skipped a {node.ObjectChunk.ChunkType} chunk"); continue; }
-                if (!(node.ObjectChunk is ChunkMesh chunk)) { Log($"Invalid ChunkMesh in {node.Name}"); continue; }
+                if (node.ObjectChunk.ChunkType != ChunkType.Mesh) { Log.Info($"Skipped a {node.ObjectChunk.ChunkType} chunk"); continue; }
+                if (!(node.ObjectChunk is ChunkMesh chunk)) { Log.Info($"Invalid ChunkMesh in {node.Name}"); continue; }
 
                 // Get the Transform here. It's the node chunk Transform.m(41/42/42) divided by 100, added to the parent transform. The transform of a child has to add the transforms of ALL the parents.
-                if (node.ParentNode != null && node.ParentNode.ChunkType != ChunkType.Node) Log($"Rendering {node.Name} to parent {node.ParentNode.Name}");
+                if (node.ParentNode != null && node.ParentNode.ChunkType != ChunkType.Node) Log.Info($"Rendering {node.Name} to parent {node.ParentNode.Name}");
 
                 // This is probably wrong.  These may be parents with no geometry, but still have an offset
-                if (chunk.MeshSubsetsData == 0) { Log($"*******Found a Mesh chunk with no Submesh ID (ID: {chunk.ID:Center}, Name: {node.Name}).  Skipping..."); continue; }
+                if (chunk.MeshSubsetsData == 0) { Log.Info($"*******Found a Mesh chunk with no Submesh ID (ID: {chunk.ID:Center}, Name: {node.Name}).  Skipping..."); continue; }
                 // This is probably wrong.  These may be parents with no geometry, but still have an offset
-                if (chunk.VerticesData == 0 && chunk.VertsUVsData == 0) { Log($"*******Found a Mesh chunk with no Vertex info (ID: {chunk.ID:Center}, Name: {node.Name}).  Skipping..."); continue; }
+                if (chunk.VerticesData == 0 && chunk.VertsUVsData == 0) { Log.Info($"*******Found a Mesh chunk with no Vertex info (ID: {chunk.ID:Center}, Name: {node.Name}).  Skipping..."); continue; }
 
                 // Going to assume that there is only one VerticesData datastream for now. Need to watch for this. Some 801 types have vertices and not VertsUVs.
                 var chunkMap = node._model.ChunkMap;

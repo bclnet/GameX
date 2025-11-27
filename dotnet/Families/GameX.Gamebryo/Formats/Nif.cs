@@ -1,3 +1,4 @@
+using OpenStack;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -5,7 +6,6 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using static OpenStack.Debug;
 #pragma warning disable CS9113 // Parameter is unread.
 
 namespace GameX.Gamebryo.Formats.Nif;
@@ -1968,7 +1968,7 @@ public abstract class NiObject(NiReader r) { // X
             case "NiStringPalette": return new NiStringPalette(r);
             case "NiDefaultAVObjectPalette": return new NiDefaultAVObjectPalette(r);
             case "NiStencilProperty": return new NiStencilProperty(r);
-            default: { Log($"Tried to read an unsupported NiObject type ({nodeType})."); return null; }
+            default: { Log.Info($"Tried to read an unsupported NiObject type ({nodeType})."); return null; }
         }
     }
 }

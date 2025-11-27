@@ -1,6 +1,6 @@
 using GameX.WB.Formats.AC.FileTypes;
+using OpenStack;
 using System.Collections.Concurrent;
-using static OpenStack.Debug;
 
 namespace GameX.WB;
 
@@ -31,7 +31,7 @@ public class Database {
     internal int GetIteration() {
         var iteration = GetFile<Iteration>(Iteration.FILE_ID);
         if (iteration.Ints.Length > 0) return iteration.Ints[0];
-        else { Log($"Unable to read iteration from {Source}"); return 0; }
+        else { Log.Info($"Unable to read iteration from {Source}"); return 0; }
     }
 
     public T GetFile<T>(uint fileId) where T : FileType {

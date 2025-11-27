@@ -1,14 +1,12 @@
-﻿using System;
+﻿using OpenStack;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text;
 using static GameX.Origin.Formats.UO.Binary_StringTable;
 using static GameX.Util;
-using static OpenStack.Debug;
 
 namespace GameX.Origin.Structs.UO;
 
@@ -749,10 +747,10 @@ public class ParticleData {
         for (var i = 1; i < Data.Length; i++)
             if (itemID < Data[i].ItemID) {
                 data = Data[i - 1];
-                if (itemID != data.ItemID) Log($"ERROR: Mismatch? Requested particle: {itemID}, returning particle: {data.ItemID}.");
+                if (itemID != data.ItemID) Log.Info($"ERROR: Mismatch? Requested particle: {itemID}, returning particle: {data.ItemID}.");
                 return Data[i - 1];
             }
-        Log($"ERROR: Unknown particle effect with ItemID: {itemID}");
+        Log.Info($"ERROR: Unknown particle effect with ItemID: {itemID}");
         return null;
     }
 

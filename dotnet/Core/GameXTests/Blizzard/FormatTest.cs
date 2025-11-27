@@ -7,7 +7,7 @@ namespace GameX.Blizzard;
 public class FormatsTest {
     static readonly Family family = FamilyManager.GetFamily("Blizzard");
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(true, "game:/code_post_gfx.ff#COD4")]          // 2007 - Call of Duty 4: Modern Warfare
     [DataRow(true, "game:/code_post_gfx.ff#WaW")]           // 2008 - Call of Duty: World at War
     [DataRow(true, "game:/code_post_gfx.ff#MW2")]           // 2009 - Call of Duty: Modern Warfare 2
@@ -29,7 +29,7 @@ public class FormatsTest {
         var dat = family.OpenPakFile(new Uri(sampleFile));
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(true, "game:/mp_backlot_load.ff#COD4")]        // 2007 - Call of Duty 4: Modern Warfare
     [DataRow(true, "game:/mp_makin_day_load.ff#WaW")]       // 2008 - Call of Duty: World at War
     [DataRow(true, "game:/mp_underpass_load.ff#MW2")]       // 2009 - Call of Duty: Modern Warfare 2

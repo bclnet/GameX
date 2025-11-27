@@ -726,9 +726,12 @@ match __current__:
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
-            ForcePath = "sample:4",
+            ForcePath = "sample:5",
             Family = "Xbox",
+            # Game = "AxiomVerge", # Axiom Verge
             Game = "StardewValley", # Stardew Valley
+            # Game = "Celeste", # Celeste
+            # Game = "AxiomVerge2", # Axiom Verge 2
         )
     case _:
         familyKeys = [ "Arkane", "Beamdog", "Bethesda", "Bioware", "Black", "Blizzard", "Bohemia", "Bullfrog", "Capcom", "Cig", "Cryptic", "Crytek", "Cyanide", "EA", "Epic", "Frictional", "Frontier", "Gamebryo", "ID", "IW", "Lucas", "Monolith", "Mythic", "Nintendo", "Origin", "Red", "Rockstar", "Ubisoft", "Unity", "Unknown", "Valve", "Volition", "WB", "X2K", "Xbox" ]

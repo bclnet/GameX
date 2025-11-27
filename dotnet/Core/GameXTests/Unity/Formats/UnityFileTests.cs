@@ -5,7 +5,7 @@ namespace GameX.Unity.Formats;
 
 [TestClass]
 public class UnityFileTests {
-    [DataTestMethod]
+    [TestMethod]
     [DataRow("Unity:AmongUs", "Sbi/Objects/animals/fish/CleanerFish_clean_prop_animal_01.chr")]
     public async Task LoadFileObjectAsync(string pak, string sampleFile) => await LoadFileObjectAsync(Helper.Paks[pak].Value, sampleFile);
 

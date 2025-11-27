@@ -1,19 +1,14 @@
 from __future__ import annotations
 import os
-from openstk import _pathExtension, Reflect
+from openstk import _pathExtension
 from gamex import FamilyGame, BinaryPakFile
 from gamex.families.GameX import UnknownPakFile
-from gamex.families.Xbox.formats.StardewValley.main import register
 from gamex.families.Xbox.formats.binary import Binary_Xnb
 
 # StardewValleyGame
 class StardewValleyGame(FamilyGame):
     def __init__(self, family: Family, id: str, elem: dict[str, object], dgame: FamilyGame):
         super().__init__(family, id, elem, dgame)
-    def loaded(self):
-        super().loaded()
-        Reflect.scan(self.__class__)
-        register()
 
 # XboxPakFile
 class XboxPakFile(BinaryPakFile):

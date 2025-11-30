@@ -108,7 +108,7 @@ class ReflectiveReader<T>() : TypeReader(typeof(T)) {
         var reader = manager.GetTypeReader(elem);
         if (reader == null)
             if (elem == typeof(Array)) reader = new ArrayReader<Array>();
-            else throw new Exception($"Content reader could not be found for {elem.FullName} type.");
+            else throw new Exception($"Content reader could not be found for {elem.FullName} typeName.");
 
         // we use the construct delegate to pick the correct existing object to be the target of deserialization.
         Func<object, object> construct = property != null && !property.CanWrite ? parent => property.GetValue(parent, null) : parent => null;
@@ -164,7 +164,7 @@ class VideoReader() : TypeReader<Video>() { public override Video Read(ContentRe
 
 [RAssembly()]
 public class TypeManager {
-    public static Dictionary<string, Dictionary<string, Type>> LiteralTypes = new() {
+    public static Dictionary<string, Dictionary<string, Type>> LTypes = new() {
         ["MonoGame.Framework"] = new() {
             ["BoundingBox"] = typeof(BoundingBox),
             ["BoundingFrustum"] = typeof(BoundingFrustum),
@@ -195,7 +195,7 @@ public class TypeManager {
 
     public TypeReader GetTypeReader(Type type) {
         if (type.IsArray && type.GetArrayRank() > 1) type = typeof(Array);
-        return Readers.TryGetValue(type, out var reader) ? reader : null;
+        return Readers.TryGetValue(type, out var reader) ? reader : throw new Exception($"Type reader not found for {type}.");
     }
 
     static bool Falseflag = false;
@@ -256,9 +256,6 @@ public class TypeManager {
         }
 #pragma warning restore 0219, 0649
 
-        // scan types
-        GetType().ScanTypes();
-
         // the first content byte i read tells me the number of content readers in this XNB file
         var readerCount = r.ReadIntV7();
         var readers = new TypeReader[readerCount];
@@ -273,7 +270,7 @@ public class TypeManager {
                     if (!ReadersCache.TryGetValue(readerType, out var reader)) {
                         try { reader = readerType.GetDefaultConstructor().Invoke(null) as TypeReader; }
                         catch (TargetInvocationException ex) {
-                            throw new InvalidOperationException($"Failed to get default constructor for TypeReader. To work around, add a creation function to ContentTypeReaderManager.AddTypeFactory() with the following failed type string: {readerName}", ex);
+                            throw new InvalidOperationException($"Failed to get default constructor for TypeReader. To work around, add a creation function to ContentTypeReaderManager.AddTypeFactory() with the following failed typeName string: {readerName}", ex);
                         }
                         needsInit[i] = true;
                         ReadersCache.Add(readerType, reader);
@@ -290,21 +287,20 @@ public class TypeManager {
         return readers;
     }
 
-    public static Type GetRType(string type) {
-        //var origType = type;
-        type = type.Replace("Microsoft.Xna", "MonoGame").Replace("MonoGame.Framework.Content", "GameX.Xbox.Formats.Xna");
+    public static Type GetRType(string typeName) {
+        typeName = typeName.Replace("Microsoft.Xna.", "MonoGame.").Replace("MonoGame.Framework.Content.", "GameX.Xbox.Formats.Xna.");
         // needed to support nested types
-        var count = type.Split(["[["], StringSplitOptions.None).Length - 1;
-        for (var i = 0; i < count; i++) type = Regex.Replace(type, @"\[(.+?), Version=.+?\]", "[$1]");
+        var count = typeName.Split(["[["], StringSplitOptions.None).Length - 1;
+        for (var i = 0; i < count; i++) typeName = Regex.Replace(typeName, @"\[(.+?), Version=.+?\]", "[$1]");
         // handle non generic types
-        if (type.Contains("PublicKeyToken")) type = Regex.Replace(type, @"(.+?), Version=.+?$", "$1");
-        type = type.Replace(", MonoGame.Framework.Graphics", $", {AssemblyName}");
-        type = type.Replace(", MonoGame.Framework.Video", $", {AssemblyName}");
-        type = type.Replace(", MonoGame.Framework", $", {AssemblyName}");
-        type = IsRunningOnNetCore ? type.Replace("mscorlib", "System.Private.CoreLib") : type.Replace("System.Private.CoreLib", "mscorlib");
-        return Assembly.GetRType(type) ?? throw new Exception($"Could not find TypeReader Type: {type}"); //  ({origType})
+        if (typeName.Contains("PublicKeyToken")) typeName = Regex.Replace(typeName, @"(.+?), Version=.+?$", "$1");
+        typeName = typeName.Replace(", MonoGame.Framework.Graphics", $", {AssemblyName}");
+        typeName = typeName.Replace(", MonoGame.Framework.Video", $", {AssemblyName}");
+        typeName = typeName.Replace(", MonoGame.Framework", $", {AssemblyName}");
+        typeName = IsRunningOnNetCore ? typeName.Replace("mscorlib", "System.Private.CoreLib") : typeName.Replace("System.Private.CoreLib", "mscorlib");
+        return Assembly.GetRType(typeName) ?? throw new Exception($"Could not find TypeReader Type: {typeName}"); //  ({origType})
     }
-    public static void AddTypeFactory(string type, Func<TypeReader> factory) { if (!TypeFactories.ContainsKey(type)) TypeFactories.Add(type, factory); }
+    public static void AddTypeFactory(string typeName, Func<TypeReader> factory) { if (!TypeFactories.ContainsKey(typeName)) TypeFactories.Add(typeName, factory); }
     public static void ClearTypeFactories() => TypeFactories.Clear();
 }
 
@@ -345,7 +341,7 @@ public class ContentReader(Stream stream, string assetName, int version, Action<
     T InnerReadObject<T>(T obj) {
         var idx = this.ReadIntV7();
         if (idx == 0) return obj;
-        if (idx > TypeReaders.Length) throw new Exception("Incorrect type reader index found.");
+        if (idx > TypeReaders.Length) throw new Exception("Incorrect typeName reader index found.");
         var s = (T)TypeReaders[idx - 1].Read(this, obj); RecordDisposable(s); return s;
     }
 

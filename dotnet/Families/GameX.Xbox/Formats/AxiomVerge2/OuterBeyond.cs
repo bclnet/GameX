@@ -7,8 +7,6 @@ using System.Linq;
 
 namespace GameX.Xbox.Formats.AxiomVerge2.OuterBeyond;
 
-[RType("OuterBeyond.THTileMapReader"), RAssembly("AxiomVerge2, Version=1.0.0.0, Culture=neutral")] class THTileMapReader : TypeReader<THTileMap> { public override THTileMap Read(ContentReader r, THTileMap o) => new(r); }
-
 class THTileMap(BinaryReader r) {
     public int Count = r.ReadInt32();
     public string TileSetName = r.ReadString();
@@ -84,8 +82,8 @@ public class THProperties {
     public Dictionary<string, string> Properties;
 }
 
-public struct THCollisionTile {
-    public THTileFlags Flags;
+public struct THCollisionTile(THTileFlags flags) {
+    public THTileFlags Flags = flags;
     public THProperties Properties;
 }
 
@@ -103,7 +101,10 @@ class THTileMapGroup {
         WidthTiles = r.ReadInt32(); HeightTiles = r.ReadInt32();
         PixelBounds = new(0f, 0f, WidthTiles * 16, HeightTiles * 16);
         TileSetWidthTiles = r.ReadInt32(); TileSetHeightTiles = r.ReadInt32();
-        CollisionTiles = r.ReadFArray(z => r.ReadPArray<uint>("I", WidthTiles).Select(s => new THCollisionTile { Flags = (THTileFlags)s }).ToArray(), HeightTiles);
+        CollisionTiles = r.ReadFArray(z => r.ReadPArray<uint>("I", WidthTiles).Select(s => new THCollisionTile((THTileFlags)s)).ToArray(), HeightTiles);
         // TODO
     }
 }
+
+// AxiomVerge2, Version=1.0.0.0, Culture=neutral
+[RType("OuterBeyond.THTileMapReader"), RAssembly("AxiomVerge2")] class THTileMapReader : TypeReader<THTileMap> { public override THTileMap Read(ContentReader r, THTileMap o) => new(r); }

@@ -14,8 +14,8 @@ type Vector3 = ndarray
 # type Quaternion = ndarray
 
 # A character's gender identity.
-@RAssembly('StardewValley.GameData')
 @RType('StardewValley.Gender')
+@RAssembly('StardewValley.GameData')
 class Gender(Enum):
     Male = 0
     Female = 1
@@ -73,7 +73,6 @@ class ISpawnItemData:
     perItemCondition: str
 # An audio change to apply to the game's sound bank.
 # This describes an override applied to the sound bank. The override is applied permanently for the current game session, even if it's later removed from the data asset. Overriding a cue will reset all values to the ones specified.
-# @RType('StardewValley.GameData.AudioCueData')
 @RType()
 class AudioCueData:
     _fields_ = [

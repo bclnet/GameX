@@ -2,7 +2,7 @@ using GameX.Xbox.Formats.Xna;
 using System;
 using System.IO;
 
-namespace GameX.Xbox.Formats.StardewValley.xTile;
+namespace GameX.Xbox.Formats.xTile;
 
 public class Map {
 }

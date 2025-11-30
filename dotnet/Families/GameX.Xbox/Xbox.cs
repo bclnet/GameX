@@ -26,6 +26,7 @@ public class XboxPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel
     /// <param name="state">The state.</param>
     public XboxPakFile(PakState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         ObjectFactoryFunc = ObjectFactory;
+        TypeX.ScanTypes([typeof(XboxPakFile)]);
     }
 
     #region Factories

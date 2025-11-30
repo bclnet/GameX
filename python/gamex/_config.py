@@ -726,7 +726,7 @@ match __current__:
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
-            ForcePath = "sample:5",
+            ForcePath = "sample:1",
             Family = "Xbox",
             # Game = "AxiomVerge", # Axiom Verge
             Game = "StardewValley", # Stardew Valley

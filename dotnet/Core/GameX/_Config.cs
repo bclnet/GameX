@@ -824,7 +824,7 @@ public partial class FamilyManager {
     {
         Platform = "GL",
         ForceOpen = true,
-        ForcePath = "sample:1",
+        ForcePath = "sample:5",
         Family = "Xbox",
         //Game = "AxiomVerge", // Axiom Verge
         Game = "StardewValley", // Stardew Valley

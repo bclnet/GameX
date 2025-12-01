@@ -13,13 +13,6 @@ from gamex.core.globalx import ByteColor4
 from gamex.core.formats.compression import decompressXbox
 from openstk.core.mscorlib.System import *
 
-# types
-type Vector2 = ndarray
-type Vector3 = ndarray
-type Vector4 = ndarray
-type Matrix4x4 = ndarray
-type Quaternion = ndarray
-
 #region Type Manager
 
 class TypeReader:
@@ -70,7 +63,7 @@ class BooleanReader(TypeReader[bool]):
     def __init__(self, t: type): super().__init__(Boolean, valueType=True)
     def read(self, r: ContentReader, o: bool) -> bool: return r.readBoolean()
 class CharReader(TypeReader[chr]):
-    def __init__(self, t: type): print('char'); exit(0); super().__init__(Char, valueType=True)
+    def __init__(self, t: type): super().__init__(Char, valueType=True)
     def read(self, r: ContentReader, o: chr) -> chr: return r.readChar()
 class StringReader(TypeReader[str]):
     def __init__(self, t: type): super().__init__(String)
@@ -79,23 +72,23 @@ class StringReader(TypeReader[str]):
 # System types
 class EnumReader[T](TypeReader[int]):
     elem: TypeReader 
-    def __init__(self, t: type): super().__init__(typex(Elem, t), valueType=True)
+    def __init__(self, t: type): super().__init__(typex(Elem, t.args), valueType=True)
     def init(self, manager: TypeManager) -> None: self.elem = manager.getTypeReader(self.type.args[0])
     def read(self, r: ContentReader, o: int) -> int: return r.readRawObject(self.elem)
 class NullableReader[T](TypeReader[T]):
-    def __init__(self, t: type): super().__init__(typex(Nullable, t), valueType=True)
+    def __init__(self, t: type): super().__init__(typex(Nullable, t.args), valueType=True)
     def init(self, manager: TypeManager) -> None: self.elem = manager.getTypeReader(self.type.args[0])
     def read(self, r: ContentReader, o: T) -> T: return r.readObject(self.elem, None) if r.readBoolean() else None
 class ArrayReader[T](TypeReader[int]):
-    def __init__(self, t: type): super().__init__(typex(Array, t))
+    def __init__(self, t: type): super().__init__(typex(Array, t.args))
     def init(self, manager: TypeManager) -> None: self.elem = manager.getTypeReader(self.type.args[0])
     def read(self, r: ContentReader, o: int) -> int: return r.readL32FArray(lambda z: r.readObject(self.elem, None), obj=o)
 class ListReader[T](TypeReader[int]):
-    def __init__(self, t: type): super().__init__(typex(Collections.Generic.List, t), canUseObj=False)
+    def __init__(self, t: type): super().__init__(typex(Collections.Generic.List, t.args), canUseObj=False)
     def init(self, manager: TypeManager) -> None: self.elem = manager.getTypeReader(self.type.args[0])
     def read(self, r: ContentReader, o: int) -> int: return r.readL32FList(lambda z: r.readObject(self.elem, None), obj=o)
 class DictionaryReader[TKey, TValue](TypeReader[dict[TKey, TValue]]):
-    def __init__(self, t: type): super().__init__(typex(Collections.Generic.Dictionary, t))
+    def __init__(self, t: type): super().__init__(typex(Collections.Generic.Dictionary, t.args))
     def init(self, manager: TypeManager) -> None: self.key = manager.getTypeReader(self.type.args[0]); self.value = manager.getTypeReader(self.type.args[1])
     def read(self, r: ContentReader, o: dict[TKey, TValue]) -> dict[TKey, TValue]: return r.readL32FMany(None, lambda z: r.readObject(self.key, None), lambda z: r.readObject(self.value, None), obj=o)
 # class MultiArrayReader[T](TypeReader[T]):
@@ -118,8 +111,7 @@ class ReflectiveReader(TypeReader[object]):
     baseTypeReader: TypeReader = None
     constructor: object = None
     readers: list[object] = None
-    def __init__(self, t: type): super().__init__(typex(Object, t))
-
+    def __init__(self, t: type): super().__init__(t.args[0])
     def init(self, manager: TypeManager) -> None:
         self.canUseObj = Type.isClass(self.type)
         baseType = Type.baseType(self.type)
@@ -128,13 +120,12 @@ class ReflectiveReader(TypeReader[object]):
         properties, fields = TypeX.getAllProperties(self.type), TypeX.getAllFields(self.type)
         self.readers = []
         for prop in properties:
-            if (reader := TypeManager.getElementReader(manager, prop)): self.readers.append(reader)
+            if (reader := ReflectiveReader.getElementReader(manager, prop)): self.readers.append(reader)
         for field in fields:
-            if (reader := TypeManager.getElementReader(manager, field)): self.readers.append(reader)
-
+            if (reader := ReflectiveReader.getElementReader(manager, field)): self.readers.append(reader)
     @staticmethod
     def getElementReader(manager: TypeManager, member: MemberInfo) -> callable:
-        property, field = (member if isinstance(member, PropertyInfo) else None), (member if isinstance(member, FieldInfo) else None)
+        property, field = (member if isinstance(member, Reflection.PropertyInfo) else None), (member if isinstance(member, Reflection.FieldInfo) else None)
         if property and (not property.canRead or property.getIndexParameters()): return None
 
         # ignore
@@ -159,7 +150,7 @@ class ReflectiveReader(TypeReader[object]):
         if optional and optional['sharedResource']: return lambda r, p: r.readSharedResource(lambda value: setter(p, value))
 
         # we need to have a reader at this point.
-        reader = TypeManager.getTypeReader(elem)
+        reader = manager.getTypeReader(elem)
         if not reader:
             if elem.name == 'Array': reader = ArrayReader[list]()
             raise Exception(f'Content reader could not be found for {elem.__name__} type.')
@@ -167,27 +158,26 @@ class ReflectiveReader(TypeReader[object]):
         # we use the construct delegate to pick the correct existing object to be the target of deserialization.
         construct = lambda parent: property.getValue(parent, None) if property and not property.canWrite else lambda parent: None
         return lambda r, p: setter(p, r.readObject(reader, construct(p)))
-        
     def read(self, r: ContentReader, o: object) -> object:
-        obj = o if o != None else (TypeX.createInstance(self.type) if not constructor else constructor(None))
-        if self.baseTypeReader: baseTypeReader.read(r, obj)
+        obj = o if o != None else (TypeX.createInstance(self.type) if not self.constructor else self.constructor())
+        if self.baseTypeReader: self.baseTypeReader.read(r, obj)
         for reader in self.readers: reader(r, obj)
         return obj
 
 # Math types
-class Vector2Reader(TypeReader[Vector2]):
+class Vector2Reader(TypeReader[ndarray]):
     def __init__(self, t: type): super().__init__(Vector2, valueType=True)
     def read(self, r: ContentReader, o: Vector2) -> Vector2: return r.readVector2()
-class Vector3Reader(TypeReader[Vector3]):
+class Vector3Reader(TypeReader[ndarray]):
     def __init__(self, t: type): super().__init__(Vector3, valueType=True)
     def read(self, r: ContentReader, o: Vector3) -> Vector3: return r.readVector3()
-class Vector4Reader(TypeReader[Vector4]):
+class Vector4Reader(TypeReader[ndarray]):
     def __init__(self, t: type): super().__init__(Vector4, valueType=True)
     def read(self, r: ContentReader, o: Vector4) -> Vector4: return r.readVector4()
-class MatrixReader(TypeReader[Matrix4x4]):
+class MatrixReader(TypeReader[ndarray]):
     def __init__(self): super().__init__(Matrix4x4, valueType=True)
     def read(self, r: ContentReader, o: Matrix4x4) -> Matrix4x4: return r.readMatrix4x4()
-class QuaternionReader(TypeReader[Quaternion]):
+class QuaternionReader(TypeReader[ndarray]):
     def __init__(self, t: type): super().__init__(Quaternion, valueType=True)
     def read(self, r: ContentReader, o: Quaternion) -> Quaternion: return r.readQuaternion()
 class ColorReader(TypeReader[ByteColor4]):
@@ -220,7 +210,7 @@ class CurveReader(TypeReader[Curve]):
 
 # Graphics types
 class TextureReader(TypeReader['Texture']):
-    def __init__(self, t: type): super().__init__(t)
+    def __init__(self, t: type): super().__init__(None)
     def read(self, r: ContentReader, o: Texture) -> Texture: return o
 class Texture2DReader(TypeReader['Texture2D']):
     def __init__(self, t: type): super().__init__(Texture2D)
@@ -303,16 +293,15 @@ class TypeManager:
             'Vector4': Vector4
             }
         }
-
 class TypeManager:
-    assembly: Assembly = Assembly.getAssembly(TypeManager)
+    assembly: Assembly = Reflection.Assembly.getAssembly(TypeManager)
     assemblyName: str = TypeManager.__module__
     readersCache: dict[type, TypeReader] = {}
     readers: dict[type, TypeReader] = {}
     typeFactories: dict[str, callable] = []
 
     def getTypeReader(self, type: type) -> TypeReader:
-        # print(f'getTypeReader: {type.__name__} in {[s for s in self.readers.keys()]}')
+        # print(f'getTypeReader: {type.__name__} in {[s.__name__ for s in self.readers.keys()]}')
         # if Type.isArray(type): type = Array
         return reader if type in self.readers and (reader := self.readers[type]) else _throw(f'Type reader not found for {type.__name__}.')
 
@@ -675,9 +664,7 @@ class SpriteFont(IHaveMetaInfo):
             self.texture: Texture2D = r.readObject()
             self.glyphs: list[Rectangle] = r.readObject()
             self.cropping: list[Rectangle] = r.readObject()
-            print(f'a {r.tell()}')
             self.characters: str = r.readObject()
-            print(f'b {r.tell()}')
             self.verticalLinespacing: int = r.readInt32()
             self.horizontalSpacing: float = r.readSingle()
             self.kerning: list[Vector3] = r.readObject()

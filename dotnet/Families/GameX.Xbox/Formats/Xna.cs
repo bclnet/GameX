@@ -64,7 +64,6 @@ class ReflectiveReader<T>() : TypeReader(typeof(T)) {
     TypeReader BaseTypeReader;
     ConstructorInfo Constructor;
     List<ReadElement> Readers;
-
     public override void Init(TypeManager manager) {
         CanUseObj = Type.IsClass;
         var baseType = Type.BaseType;
@@ -75,7 +74,6 @@ class ReflectiveReader<T>() : TypeReader(typeof(T)) {
         foreach (var property in properties) { var reader = GetElementReader(manager, property); if (reader != null) Readers.Add(reader); }
         foreach (var field in fields) { var reader = GetElementReader(manager, field); if (reader != null) Readers.Add(reader); }
     }
-
     static ReadElement GetElementReader(TypeManager manager, MemberInfo member) {
         var (property, field) = (member as PropertyInfo, member as FieldInfo);
         if (property != null && (!property.CanRead || property.GetIndexParameters().Any())) return null;
@@ -114,7 +112,6 @@ class ReflectiveReader<T>() : TypeReader(typeof(T)) {
         Func<object, object> construct = property != null && !property.CanWrite ? parent => property.GetValue(parent, null) : parent => null;
         return (r, p) => setter(p, r.ReadObject(reader, construct(p)));
     }
-
     public override object Read(ContentReader r, object o) {
         var obj = o != null ? (T)o : (Constructor == null ? (T)Activator.CreateInstance(typeof(T)) : (T)Constructor.Invoke(null));
         BaseTypeReader?.Read(r, obj);

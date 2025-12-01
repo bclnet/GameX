@@ -9,7 +9,7 @@ class Map:
 @RType('xTile.Pipeline.TideReader')
 @RAssembly('xTile')
 class TideReader(TypeReader[Map]):
-    def __init__(self): super().__init__()
+    def __init__(self, t: type): super().__init__(Map)
     def read(self, r: ContentReader, o: Map) -> Map:
         data = r.readL32Bytes()
-        return None
+        return Map()

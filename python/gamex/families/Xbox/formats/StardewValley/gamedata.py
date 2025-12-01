@@ -427,7 +427,7 @@ class QuantityModifier:
         # A game state query which indicates whether this change should be applied. Item-only tokens are valid for this check, and will check the input (not output) item. Defaults to always true.
         ('[Optional] condition', 'string'),
         # The type of change to apply.
-        ('modification', 'ModificationType'),
+        ('modification', '^ModificationType'),
         # The operand to apply to the target value (e.g. the multiplier if <see cref='F:StardewValley.GameData.QuantityModifier.Modification' /> is set to <see cref='F:StardewValley.GameData.QuantityModifier.ModificationType.Multiply' />).
         ('[Optional] amount', 'float'),
         # A list of random amounts to choose from, using the same format as <see cref='F:StardewValley.GameData.QuantityModifier.Amount' />. If set, <see cref='F:StardewValley.GameData.QuantityModifier.Amount' /> is ignored.
@@ -3776,6 +3776,7 @@ class WildTrees:
 
 class WorldMaps:
     # An area within a larger <see cref='T:StardewValley.GameData.WorldMaps.WorldMapRegionData' /> to draw onto the world map. This can provide textures, tooltips, and world positioning data.
+    @RType()
     class WorldMapAreaData:
         _fields_ = [
             # A key which uniquely identifies this entry within the list. The ID should only contain alphanumeric/underscore/dot characters. For custom entries, this should be prefixed with your mod ID like <c>Example.ModId_AreaId</c>.
@@ -3796,6 +3797,7 @@ class WorldMaps:
             ('[Optional] customFields', 'Dictionary<string, string>'),
         ]
     # As part of <see cref='T:StardewValley.GameData.WorldMaps.WorldMapAreaData' />, a set of in-game locations and tile positions to match to the area.
+    @RType()
     class WorldMapAreaPositionData:
         # The backing field for <see cref='P:StardewValley.GameData.WorldMaps.WorldMapAreaPositionData.Id' />.
         _idImpl: str = None
@@ -3832,6 +3834,7 @@ class WorldMaps:
             ('[Optional] scrollText', 'string'),
         ]
     # As part of <see cref='T:StardewValley.GameData.WorldMaps.WorldMapAreaPositionData' />, a smaller area within this position which shows a different scroll text.
+    @RType()
     class WorldMapAreaPositionScrollTextZoneData:
         _fields_ = [
             # An ID for this entry within the list. This only needs to be unique within the current position list.
@@ -3842,6 +3845,7 @@ class WorldMaps:
             ('[Optional] scrollText', 'string'),
         ]
     # A large-scale part of the world like the Valley, containing all the areas drawn together as part of the combined map view.
+    @RType()
     class WorldMapRegionData:
         _fields_ = [
             # The base texture to draw as the base texture, if any. The first matching texture is applied.
@@ -3852,6 +3856,7 @@ class WorldMaps:
             ('mapAreas', 'List<WorldMapAreaData>', []),
         ]
     # As part of a larger <see cref='T:StardewValley.GameData.WorldMaps.WorldMapAreaData' />, an image overlay to apply to the map.
+    @RType()
     class WorldMapTextureData:
         _fields_ = [
             # A key which uniquely identifies this entry within the list. The ID should only contain alphanumeric/underscore/dot characters. For custom entries, this should be prefixed with your mod ID like <c>Example.ModId_OverlayId</c>.
@@ -3866,6 +3871,7 @@ class WorldMaps:
             ('[Optional] mapPixelArea', 'Rectangle'),
         ]
     # A tooltip shown when hovering over parts of a larger <see cref='T:StardewValley.GameData.WorldMaps.WorldMapAreaData' /> on the world map.
+    @RType()
     class WorldMapTooltipData:
         _fields_ = [
             # A key which uniquely identifies this entry within the list. The ID should only contain alphanumeric/underscore/dot characters. For custom entries, this should be prefixed with your mod ID like <c>Example.ModId_TooltipId.</c>

@@ -172,6 +172,7 @@ public abstract class MetaManager {
         nodes.Add(new MetaInfo("File", items: [
             new($"Path: {file.Path}"),
             new($"FileSize: {file.FileSize}"),
+            new($"AtEnd: {pakFile.LastAtEnd}"),
             file.Parts != null
                 ? new MetaInfo("Parts", items: file.Parts.Select(part => new MetaInfo($"{part.FileSize}@{part.Path}")))
                 : null

@@ -24,6 +24,18 @@
         "type": "Animdata"
       },
       {
+        "path": "artLegacyMUL.uop:art/file04000.art",
+        "type": "Art"
+      },
+      {
+        "path": "artLegacyMUL.uop:land/file00000.land",
+        "type": "Land"
+      },
+      {
+        "path": "Cliloc.enu",
+        "type": "StringTable"
+      },
+      {
         "path": "fonts.mul",
         "type": "AsciiFont"
       },
@@ -50,10 +62,6 @@
       {
         "path": "hues.mul",
         "type": "Hues"
-      },
-      {
-        "path": "artLegacyMUL.uop:land/file00000.land",
-        "type": "Land"
       },
       {
         "path": "lightidx.mul:file00000.light",
@@ -98,14 +106,6 @@
       {
         "path": "speech.mul",
         "type": "SpeechList"
-      },
-      {
-        "path": "artLegacyMUL.uop:static/file04000.art",
-        "type": "Static"
-      },
-      {
-        "path": "Cliloc.enu",
-        "type": "StringTable"
       },
       {
         "path": "tiledata.mul",

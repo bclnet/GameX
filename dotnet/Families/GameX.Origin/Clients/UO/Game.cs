@@ -1,28 +1,32 @@
 using GameX.Eng;
-using GameX.Origin.Renderers.UO;
+using GameX.Xbox;
+using System;
 using System.Threading.Tasks;
 
 namespace GameX.Origin.Clients.UO;
 
 public class UOGameController<Texture2D> : GameController {
+    //AudioManager Audio;
+    Main Main;
     public UOGameController(PakFile game, IPluginHost pluginHost) : base(game, pluginHost) {
         DeviceManager = new GraphicsDeviceManager(this);
+        TypeX.ScanTypes([typeof(XboxPakFile)]);
+        Main = new(((UOGame)game.Game).Uop);
     }
 
     protected override async Task LoadContent() {
         await base.LoadContent();
-        await Fonts<Texture2D>.Load(Game, Device);
-        //SolidColorTextureCache.Load(Game, Device);
+        //await Fonts<Texture2D>.Load(Game, Device);
+        //SolidColorTextureCache.Load(Device);
+
         //Audio = new AudioManager();
-        // var bytes = Loader.GetBackgroundImage().ToArray();
-        // using var ms = new MemoryStream(bytes);
+        // using var ms = new MemoryStream(Loader.GetBackgroundImage());
         // _background = Texture2D.FromStream(GraphicsDevice, ms);
 
 #if false
         //SetScene(new MainScene(this));
 #else
-
-        //UO.Load(this);
+        await Main.Load(Game, this);
         //Audio.Initialize();
 
         // TODO: temporary fix to avoid crash when laoding plugins

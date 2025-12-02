@@ -22,7 +22,7 @@
 //#define Monolith
 //#define Mythic
 //#define Nintendo
-//#define Origin
+#define Origin
 //#define Red
 //#define Rockstar
 //#define Ubisoft
@@ -32,7 +32,7 @@
 //#define Volition
 //#define WB
 //#define X2K
-#define Xbox
+//#define Xbox
 
 namespace GameX;
 
@@ -608,7 +608,7 @@ public partial class FamilyManager {
     {
         Platform = "GL",
         ForceOpen = true,
-        ForcePath = "sample:0",
+        ForcePath = "sample:1",
         //ForcePath = "sample:13",
         Family = "Origin",
         //Game = "U8", // Ultima 8

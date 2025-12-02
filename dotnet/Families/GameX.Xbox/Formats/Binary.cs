@@ -61,8 +61,7 @@ public class Binary_Xnb : IHaveMetaInfo, IWriteToStream, Indirect<object> {
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => (Obj as IHaveMetaInfo)?.GetInfoNodes(resource, file, tag) ?? [
         new(null, new MetaContent { Type = "Data", Name = Path.GetFileName(file.Path), Value = this }),
         new("Xnb", items: [
-            new($"Obj: {Obj}"),
-            new($"AtEnd: {AtEnd}")
+            new($"Obj: {Obj}")
         ])];
 }
 

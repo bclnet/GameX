@@ -122,6 +122,7 @@ class MetaManager:
         nodes.append(MetaInfo('File', items = [
             MetaInfo(f'Path: {file.path}'),
             MetaInfo(f'FileSize: {file.fileSize}'),
+            MetaInfo(f'AtEnd: {pakFile.lastAtEnd}'),
             MetaInfo('Parts', items = [MetaInfo(f'{part.fileSize}@{part.path}') for x in file.parts]) if file.parts else None
             ]))
         # nodes.append(MetaInfo(None, MetaContent(type='Hex',name='TEST',value=BytesIO())))

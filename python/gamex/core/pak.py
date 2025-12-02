@@ -119,6 +119,7 @@ class BinaryPakFile(PakFile):
         self.filesById = None
         self.filesByPath = None
         self.pathSkip = 0
+        self.lastAtEnd = False
 
     def valid(self) -> bool: return self.files != None
 
@@ -155,7 +156,7 @@ class BinaryPakFile(PakFile):
             case f if isinstance(path, FileSource): return (self, f)
             case s if isinstance(path, str):
                 pak, s2 = self._findPath(s)
-                if pak: return pak.getFileSource(s2)
+                if pak and s2: return pak.getFileSource(s2)
                 files = self.filesByPath[s] if self.filesByPath and (s := s.replace('\\', '/')) in self.filesByPath else []
                 if len(files) == 1: return (self, files[0])
                 print(f'ERROR.LoadFileData: {s} @ {len(files)}')
@@ -193,6 +194,9 @@ class BinaryPakFile(PakFile):
                 task = objectFactory(r, f, self)
                 if task: return (value := task)
             except: print(sys.exc_info()[1]); raise
+            finally:
+                self.lastAtEnd = r.atEnd()
+                # if task and not (value and isinstance(value, IDisposable)): r.dispose()
         return data if type == BytesIO or type == object else \
             _throw(f'Stream not returned for {f.path} with {type}')
 

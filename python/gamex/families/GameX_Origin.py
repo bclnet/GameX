@@ -23,18 +23,19 @@ class UOGame(FamilyGame):
         super().__init__(family, id, elem, dgame)
     def loaded(self):
         super().loaded()
-        clientVersionText = self.options['clientVersion'] if 'clientVersion' in self.options else None
-        if clientVersionText: clientVersionText = clientVersionText.replace(',', '.').replace(' ', '').lower()
-        clientVersion = ClientVersionHelper.validateClientVersion(clientVersionText)
-        if not clientVersion:
-            log.warn(f'Client version [{clientVersionText}] is invalid, let\'s try to read the client.exe')
-            if (clientVersionText := ClientVersionHelper.parseFromFile(os.path.join(self.found.root, 'client.exe'))) == None or (clientVersion := ClientVersionHelper.validateClientVersion(clientVersionText)) == None:
-                log.error(f'Invalid client version: {clientVersionText}')
-                raise Exception(f'Invalid client version: "{clientVersionText}"')
-            log.trace(f'Found a valid client.exe [{clientVersionText} - {clientVersion}]')
-            self.options['clientVersion'] = clientVersionText
+        versionText = self.options['version'] if 'version' in self.options else None
+        if versionText: versionText = versionText.replace(',', '.').replace(' ', '').lower()
+        version = ClientVersionHelper.validateClientVersion(versionText)
+        if not version:
+            log.warn(f'Client version [{versionText}] is invalid, let\'s try to read the client.exe')
+            if (versionText := ClientVersionHelper.parseFromFile(os.path.join(self.found.root, 'client.exe'))) == None or (version := ClientVersionHelper.validateClientVersion(versionText)) == None:
+                log.error(f'Invalid client version: {versionText}')
+                raise Exception(f'Invalid client version: "{versionText}"')
+            log.trace(f'Found a valid client.exe [{versionText} - {version}]')
+            self.options['version'] = versionText
             self.options.dirty = True
-        self.version = clientVersion
+        self.uop = version >= ClientVersion.CV_7000 and os.path.exists(os.path.join(self.found.root, 'MainMisc.uop'))
+        self.version = version
         self.protocol = ClientFlags.CF_T2A
         if self.version >= ClientVersion.CV_200: self.protocol |= ClientFlags.CF_RE
         if self.version >= ClientVersion.CV_300: self.protocol |= ClientFlags.CF_TD
@@ -42,7 +43,8 @@ class UOGame(FamilyGame):
         if self.version >= ClientVersion.CV_308Z: self.protocol |= ClientFlags.CF_AOS
         if self.version >= ClientVersion.CV_405A: self.protocol |= ClientFlags.CF_SE
         if self.version >= ClientVersion.CV_60144: self.protocol |= ClientFlags.CF_SA
-        log.trace(f'Client version: {clientVersion}')
+        log.trace(f'Uop: {self.uop}')
+        log.trace(f'Version: {self.version}')
         log.trace(f'Protocol: {self.protocol}')
 
 # OriginPakFile

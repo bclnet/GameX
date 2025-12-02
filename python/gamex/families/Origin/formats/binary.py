@@ -3,14 +3,12 @@ from pathlib import Path
 from ctypes import c_ulong, c_ulonglong
 from io import BytesIO
 from openstk import _pathExtension
-from gamex.core.pak import PakBinaryT
-from gamex.core.meta import FileSource
+from gamex import BinaryPakFile, PakBinaryT, FileSource, DesSer
 from gamex.families.Origin.formats.UO.binary import *
 from gamex.families.Xbox.formats.binary import Binary_Xnb
 
 # typedefs
 class Reader: pass
-class BinaryPakFile: pass
 class FamilyGame: pass
 class IFileSystem: pass
 
@@ -112,7 +110,7 @@ class Binary_UO(PakBinaryT):
                     case '.tex': return (0, Binary_Gump.factory)
                     case '.land': return (0, Binary_Land.factory)
                     case '.light': return (0, Binary_Light.factory)
-                    case '.art': return (0, Binary_Static.factory)
+                    case '.art': return (0, Binary_Art.factory)
                     case '.multi': return (0, Binary_Multi.factory)
                     case _: (0, None)
 

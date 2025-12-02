@@ -1,4 +1,5 @@
-﻿using GameX.Formats.Unknown;
+﻿using GameX.Eng;
+using GameX.Formats.Unknown;
 using GameX.Origin.Clients.UO.Data;
 using GameX.Origin.Formats;
 using GameX.Origin.Formats.UO;
@@ -44,6 +45,7 @@ public class U9Game(Family family, string id, JsonElement elem, FamilyGame dgame
 /// </summary>
 /// <seealso cref="GameX.FamilyGame" />
 public class UOGame(Family family, string id, JsonElement elem, FamilyGame dgame) : FamilyGame(family, id, elem, dgame) {
+    public bool Uop;
     ClientVersion Version;
     ClientFlags Protocol;
 
@@ -53,20 +55,21 @@ public class UOGame(Family family, string id, JsonElement elem, FamilyGame dgame
     /// <returns></returns>
     public override void Loaded() {
         base.Loaded();
-        var clientVersionText = Options.TryGetValue("clientVersion", out var z) ? z as string : null;
-        if (!string.IsNullOrWhiteSpace(clientVersionText)) clientVersionText = clientVersionText.Replace(",", ".").Replace(" ", "").ToLowerInvariant();
-        var clientVersion = ClientVersionHelper.ValidateClientVersion(clientVersionText);
-        if (clientVersion == null) {
-            Log.Warn($"Client version [{clientVersionText}] is invalid, let's try to read the client.exe");
-            if ((clientVersionText = ClientVersionHelper.ParseFromFile(Path.Combine(Found.Root, "client.exe"))) == null || (clientVersion = ClientVersionHelper.ValidateClientVersion(clientVersionText)) == null) {
-                Log.Error($"Invalid client version: {clientVersionText}");
-                throw new Exception($"Invalid client version: '{clientVersionText}'");
+        var versionText = Options.TryGetValue("version", out var z) ? z as string : null;
+        if (!string.IsNullOrWhiteSpace(versionText)) versionText = versionText.Replace(",", ".").Replace(" ", "").ToLowerInvariant();
+        var version = ClientVersionHelper.ValidateClientVersion(versionText);
+        if (version == null) {
+            Log.Warn($"Client version [{versionText}] is invalid, let's try to read the client.exe");
+            if ((versionText = ClientVersionHelper.ParseFromFile(Path.Combine(Found.Root, "client.exe"))) == null || (version = ClientVersionHelper.ValidateClientVersion(versionText)) == null) {
+                Log.Error($"Invalid client version: {versionText}");
+                throw new Exception($"Invalid client version: '{versionText}'");
             }
-            Log.Trace($"Found a valid client.exe [{clientVersionText} - {clientVersion}]");
-            Options["clientVersion"] = clientVersionText;
+            Log.Trace($"Found a valid client.exe [{versionText} - {version}]");
+            Options["version"] = versionText;
             Options.Dirty = true;
         }
-        Version = clientVersion ?? 0;
+        Uop = version >= ClientVersion.CV_7000 && File.Exists(Path.Combine(Found.Root, "MainMisc.uop"));
+        Version = version ?? 0;
         Protocol = ClientFlags.CF_T2A;
         if (Version >= ClientVersion.CV_200) Protocol |= ClientFlags.CF_RE;
         if (Version >= ClientVersion.CV_300) Protocol |= ClientFlags.CF_TD;
@@ -74,7 +77,8 @@ public class UOGame(Family family, string id, JsonElement elem, FamilyGame dgame
         if (Version >= ClientVersion.CV_308Z) Protocol |= ClientFlags.CF_AOS;
         if (Version >= ClientVersion.CV_405A) Protocol |= ClientFlags.CF_SE;
         if (Version >= ClientVersion.CV_60144) Protocol |= ClientFlags.CF_SA;
-        Log.Trace($"Client version: {clientVersion}");
+        Log.Trace($"Uop: {Uop}");
+        Log.Trace($"Version: {Version}");
         Log.Trace($"Protocol: {Protocol}");
     }
 }

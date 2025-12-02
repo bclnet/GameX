@@ -415,6 +415,7 @@ public abstract class BinaryPakFile(PakState state, PakBinary pakBinary) : PakFi
     public ILookup<int, FileSource> FilesById { get; private set; }
     public ILookup<string, FileSource> FilesByPath { get; private set; }
     public int PathSkip;
+    public bool LastAtEnd;
 
     /// <summary>
     /// Valid
@@ -564,7 +565,7 @@ public abstract class BinaryPakFile(PakState state, PakBinary pakBinary) : PakFi
             case FileSource f: return (this, f);
             case string s: {
                     var (pak, s2) = FindPath(s);
-                    if (pak != null) return pak.GetFileSource(s2);
+                    if (pak != null && s2 != null) return pak.GetFileSource(s2);
                     var files = FilesByPath[s.Replace('\\', '/')].ToArray();
                     if (files.Length == 1) return (this, files[0]);
                     Log.Info($"ERROR.LoadFileData: {s} @ {files.Length}");
@@ -630,7 +631,10 @@ public abstract class BinaryPakFile(PakState state, PakBinary pakBinary) : PakFi
                 if (task != null) return (value = await task) is T z ? z : value is Indirect<T> y ? y.Value : throw new InvalidCastException();
             }
             catch (Exception e) { Log.Error(e.Message); throw e; }
-            finally { if (task != null && !(value != null && value is IDisposable)) r.Dispose(); }
+            finally {
+                LastAtEnd = r.AtEnd();
+                if (task != null && !(value != null && value is IDisposable)) r.Dispose();
+            }
         }
         return type == typeof(Stream) || type == typeof(object)
             ? (T)(object)data

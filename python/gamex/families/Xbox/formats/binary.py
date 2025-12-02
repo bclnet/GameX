@@ -65,8 +65,7 @@ class Binary_Xnb(IHaveMetaInfo, IWriteToStream):
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return self.obj.getInfoNodes(resource, file, tag) if isinstance(self.obj, IHaveMetaInfo) else [
         MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
         MetaInfo('Xnb', items = [
-            MetaInfo(f'Obj: {self.obj}'),
-            MetaInfo(f'AtEnd: {self.atEnd}')
+            MetaInfo(f'Obj: {self.obj}')
             ])
         ]
 

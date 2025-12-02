@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using static GameX.Origin.Formats.Binary_UO;
 
@@ -14,21 +15,22 @@ namespace GameX.Origin.Formats.UO;
 
 #region Binary_Anim - TODO
 
-public unsafe class Binary_AnimUO : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_AnimUO(r));
+public unsafe class Binary_Anim : IHaveMetaInfo {
+    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Anim(r));
 
-    // file: artLegacyMUL.mul:static/file04000.art
-    public Binary_AnimUO(BinaryReader r) {
+    // file: xxx
+    public Binary_Anim(BinaryReader r) {
     }
 
+    public override string ToString() => this.Serialize();
+
     // IHaveMetaInfo
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
-        => new List<MetaInfo> {
-            new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "Anim File" }),
-            new MetaInfo("Anim", items: new List<MetaInfo> {
-                //new MetaInfo($"Default: {Default.GumpID}"),
-            })
-        };
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
+        new(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = this }),
+        new("Anim", items: [
+            //new ($"Default: {Default.GumpID}"),
+        ])
+    ];
 }
 
 #endregion
@@ -51,12 +53,12 @@ public unsafe class Binary_Animdata : IHaveMetaInfo {
     }
 
     public class Record {
-        public sbyte[] Frames = new sbyte[64];
+        [JsonIgnore] public sbyte[] Frames = new sbyte[64];
         public byte FrameCount;
         public byte FrameInterval;
         public byte StartInterval;
 
-        public Record(ref AnimRecord record) {
+        internal Record(ref AnimRecord record) {
             fixed (sbyte* frames_ = record.Frames) Frames = UnsafeX.FixedTArray(frames_, 64);
             FrameCount = record.FrameCount;
             FrameInterval = record.FrameInterval;
@@ -64,7 +66,7 @@ public unsafe class Binary_Animdata : IHaveMetaInfo {
         }
     }
 
-    readonly Dictionary<int, Record> Records = new Dictionary<int, Record>();
+    public readonly Dictionary<int, Record> Records = [];
 
     #endregion
 
@@ -77,20 +79,20 @@ public unsafe class Binary_Animdata : IHaveMetaInfo {
             var records = r.ReadSArray<AnimRecord>(8);
             for (var j = 0; j < 8; j++, id++) {
                 ref AnimRecord record = ref records[j];
-                if (record.FrameCount > 0)
-                    Records[id] = new Record(ref record);
+                if (record.FrameCount > 0) Records[id] = new Record(ref record);
             }
         }
     }
 
+    public override string ToString() => this.Serialize();
+
     // IHaveMetaInfo
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
-        => new List<MetaInfo> {
-            new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "Animdata File" }),
-            new MetaInfo("Animdata", items: new List<MetaInfo> {
-                new MetaInfo($"Records: {Records.Count}"),
-            })
-        };
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
+        new(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = this }),
+        new("Animdata", items: [
+            new($"Records: {Records.Count}"),
+        ])
+    ];
 }
 
 #endregion
@@ -145,20 +147,18 @@ public unsafe class Binary_AsciiFont : IHaveMetaInfo {
 
     // file: fonts.mul
     public Binary_AsciiFont(BinaryReader r) {
-        for (var i = 0; i < Fonts.Length; i++)
-            Fonts[i] = new AsciiFont(r);
+        for (var i = 0; i < Fonts.Length; i++) Fonts[i] = new AsciiFont(r);
     }
 
+    public override string ToString() => this.Serialize();
+
     // IHaveMetaInfo
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
-        var nodes = new List<MetaInfo> {
-            new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "AsciiFont File" }),
-            new MetaInfo("AsciiFont", items: new List<MetaInfo> {
-                new MetaInfo($"Fonts: {Fonts.Length}"),
-            })
-        };
-        return nodes;
-    }
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
+        new(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = this }),
+        new("AsciiFont", items: [
+            new($"Fonts: {Fonts.Length}"),
+        ])
+    ];
 }
 
 #endregion
@@ -316,15 +316,13 @@ public unsafe class Binary_BodyConverter : IHaveMetaInfo {
 
     // file: Bodyconv.def
     public Binary_BodyConverter(StreamReader r) {
-        List<int> list1 = new List<int>(), list2 = new List<int>(), list3 = new List<int>(), list4 = new List<int>();
+        List<int> list1 = [], list2 = [], list3 = [], list4 = [];
         int max1 = 0, max2 = 0, max3 = 0, max4 = 0;
-
         while (r.ReadLine() is { } line) {
             line = line.Trim();
             if (line.Length == 0 || line.StartsWith("#") || line.StartsWith("\"#")) continue;
-
             try {
-                var split = line.Split(new[] { '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                var split = line.Split(['\t', ' '], StringSplitOptions.RemoveEmptyEntries);
 
                 var hasOriginalBodyId = int.TryParse(split[0], out int original);
                 if (!hasOriginalBodyId) continue;
@@ -376,19 +374,18 @@ public unsafe class Binary_BodyConverter : IHaveMetaInfo {
         }
     }
 
+    public override string ToString() => this.Serialize();
+
     // IHaveMetaInfo
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
-        var nodes = new List<MetaInfo> {
-            new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "BodyConverter Config" }),
-            new MetaInfo("BodyConverter", items: new List<MetaInfo> {
-                new MetaInfo($"Table1: {Table1.Length}"),
-                new MetaInfo($"Table2: {Table2.Length}"),
-                new MetaInfo($"Table3: {Table3.Length}"),
-                new MetaInfo($"Table4: {Table4.Length}"),
-            })
-        };
-        return nodes;
-    }
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
+        new(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = this }),
+        new("BodyConverter", items: [
+            new($"Table1: {Table1.Length}"),
+            new($"Table2: {Table2.Length}"),
+            new($"Table3: {Table3.Length}"),
+            new($"Table4: {Table4.Length}"),
+        ])
+    ];
 }
 
 #endregion
@@ -430,7 +427,6 @@ public unsafe class Binary_BodyTable : IHaveMetaInfo {
         while (r.ReadLine() is { } line) {
             line = line.Trim();
             if (line.Length == 0 || line.StartsWith("#")) continue;
-
             try {
                 var index1 = line.IndexOf("{", StringComparison.Ordinal);
                 var index2 = line.IndexOf("}", StringComparison.Ordinal);
@@ -451,16 +447,15 @@ public unsafe class Binary_BodyTable : IHaveMetaInfo {
         }
     }
 
+    public override string ToString() => this.Serialize();
+
     // IHaveMetaInfo
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
-        var nodes = new List<MetaInfo> {
-            new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "BodyTable config" }),
-            new MetaInfo("BodyTable", items: new List<MetaInfo> {
-                new MetaInfo($"Records: {Records.Count}"),
-            })
-        };
-        return nodes;
-    }
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
+        new(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = this }),
+        new("BodyTable", items: [
+            new($"Records: {Records.Count}"),
+        ])
+    ];
 }
 
 #endregion
@@ -620,16 +615,15 @@ public unsafe class Binary_CalibrationInfo : IHaveMetaInfo {
         return b;
     }
 
+    public override string ToString() => this.Serialize();
+
     // IHaveMetaInfo
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
-        var nodes = new List<MetaInfo> {
-            new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "CalibrationInfo File" }),
-            new MetaInfo("CalibrationInfo", items: new List<MetaInfo> {
-                new MetaInfo($"Records: {Records.Count}"),
-            })
-        };
-        return nodes;
-    }
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
+        new(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = this }),
+        new("CalibrationInfo", items: [
+            new($"Records: {Records.Count}"),
+        ])
+    ];
 }
 
 #endregion
@@ -762,6 +756,8 @@ public unsafe class Binary_Gump : IHaveMetaInfo, ITexture {
     public T Create<T>(string platform, Func<object, T> func) => func(new Texture_Bytes(Pixels, Format, null));
     #endregion
 
+    public override string ToString() => this.Serialize();
+
     // IHaveMetaInfo
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new(null, new MetaContent { Type = "Texture", Name = Path.GetFileName(file.Path), Value = this }),
@@ -811,16 +807,15 @@ public unsafe class Binary_GumpDef : IHaveMetaInfo {
         }
     }
 
+    public override string ToString() => this.Serialize();
+
     // IHaveMetaInfo
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
-        var nodes = new List<MetaInfo> {
-            new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "Gump Language File" }),
-            new MetaInfo("GumpDef", items: new List<MetaInfo> {
-                new MetaInfo($"Count: {Records.Count}"),
-            })
-        };
-        return nodes;
-    }
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
+        new(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = this }),
+        new("GumpDef", items: [
+            new($"Count: {Records.Count}"),
+        ])
+    ];
 }
 
 #endregion
@@ -870,28 +865,24 @@ public unsafe class Binary_Hues : IHaveMetaInfo {
     public Binary_Hues(BinaryReader r) {
         var blockCount = (int)r.BaseStream.Length / 708;
         if (blockCount > 375) blockCount = 375;
-
         var id = 0;
         for (var i = 0; i < blockCount; ++i) {
             r.Skip(4);
             var records = r.ReadSArray<HueRecord>(8);
-            for (var j = 0; j < 8; j++, id++)
-                Records[id] = new Record(id, ref records[j]);
+            for (var j = 0; j < 8; j++, id++) Records[id] = new Record(id, ref records[j]);
         }
-        for (; id < Records.Length; id++)
-            Records[id] = new Record(id);
+        for (; id < Records.Length; id++) Records[id] = new Record(id);
     }
 
+    public override string ToString() => this.Serialize();
+
     // IHaveMetaInfo
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
-        var nodes = new List<MetaInfo> {
-            new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "Hues File" }),
-            new MetaInfo("Hues", items: new List<MetaInfo> {
-                new MetaInfo($"Records: {Records.Length}"),
-            })
-        };
-        return nodes;
-    }
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
+        new(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = this }),
+        new("Hues", items: [
+            new($"Records: {Records.Length}"),
+        ])
+    ];
 }
 
 #endregion
@@ -1051,16 +1042,15 @@ public unsafe class Binary_MobType : IHaveMetaInfo {
         }
     }
 
+    public override string ToString() => this.Serialize();
+
     // IHaveMetaInfo
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
-        var nodes = new List<MetaInfo> {
-            new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "MobType File" }),
-            new MetaInfo("MobType", items: new List<MetaInfo> {
-                new MetaInfo($"Count: {Records.Count}"),
-            })
-        };
-        return nodes;
-    }
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
+        new(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = this }),
+        new("MobType", items: [
+            new($"Count: {Records.Count}"),
+        ])
+    ];
 }
 
 #endregion
@@ -1191,16 +1181,15 @@ public unsafe class Binary_MusicDef : IHaveMetaInfo {
         }
     }
 
+    public override string ToString() => this.Serialize();
+
     // IHaveMetaInfo
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
-        var nodes = new List<MetaInfo> {
-            new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "Music config" }),
-            new MetaInfo("MusicDef", items: new List<MetaInfo> {
-                new MetaInfo($"Count: {Records.Count}"),
-            })
-        };
-        return nodes;
-    }
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
+        new(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = this }),
+        new("MusicDef", items: [
+            new($"Count: {Records.Count}"),
+        ])
+    ];
 }
 
 #endregion
@@ -1280,9 +1269,9 @@ public unsafe class Binary_Multi : IHaveMetaInfo {
     // file: multi.idx:file00000.multi
     public Binary_Multi(BinaryReader r, int length, bool newFormat) {
         length &= 0x7FFFFFFF;
-        SortedTiles = newFormat
-            ? r.ReadSArray<MultiRecordV1>(length / 16).Select(x => new Record(ref x)).ToArray()
-            : r.ReadSArray<MultiRecordV2>(length / 12).Select(x => new Record(ref x)).ToArray();
+        SortedTiles = [.. newFormat
+            ? r.ReadSArray<MultiRecordV1>(length / 16).Select(x => new Record(ref x))
+            : r.ReadSArray<MultiRecordV2>(length / 12).Select(x => new Record(ref x))];
         foreach (var e in SortedTiles) {
             if (e.OffsetX < Min.X) Min.X = e.OffsetX;
             if (e.OffsetY < Min.Y) Min.Y = e.OffsetY;
@@ -1304,8 +1293,7 @@ public unsafe class Binary_Multi : IHaveMetaInfo {
         for (var x = 0; x < Width; ++x) {
             tiles[x] = new MTileList[Height];
             Tiles[x] = new MTile[Height][];
-            for (var y = 0; y < Height; ++y)
-                tiles[x][y] = new MTileList();
+            for (var y = 0; y < Height; ++y) tiles[x][y] = [];
         }
         for (var i = 0; i < SortedTiles.Length; ++i) {
             var xOffset = SortedTiles[i].OffsetX + Center.X;
@@ -1325,22 +1313,21 @@ public unsafe class Binary_Multi : IHaveMetaInfo {
             }
     }
 
+    public override string ToString() => this.Serialize();
+
     // IHaveMetaInfo
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
-        var nodes = new List<MetaInfo> {
-            new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "Multi File" }),
-            new MetaInfo("Multi", items: new List<MetaInfo> {
-                new MetaInfo($"Center: {Min}"),
-                new MetaInfo($"Radius: {Max}"),
-                new MetaInfo($"Center: {Center}"),
-                new MetaInfo($"Width: {Width}"),
-                new MetaInfo($"Height: {Height}"),
-                new MetaInfo($"MaxHeight: {MaxHeight}"),
-                new MetaInfo($"SortedTiles: {SortedTiles.Length}"),
-            })
-        };
-        return nodes;
-    }
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
+        new(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = this }),
+        new("Multi", items: [
+            new($"Center: {Min}"),
+            new($"Radius: {Max}"),
+            new($"Center: {Center}"),
+            new($"Width: {Width}"),
+            new($"Height: {Height}"),
+            new($"MaxHeight: {MaxHeight}"),
+            new($"SortedTiles: {SortedTiles.Length}"),
+        ])
+    ];
 }
 
 #endregion
@@ -1372,16 +1359,15 @@ public unsafe class Binary_RadarColor : IHaveMetaInfo {
         for (var i = colorCount; i < Colors.Length; i++) Colors[i] = 0xFFFF00FF;
     }
 
+    public override string ToString() => this.Serialize();
+
     // IHaveMetaInfo
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
-        var nodes = new List<MetaInfo> {
-            new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "Radar Color File" }),
-            new MetaInfo("RadarColor", items: new List<MetaInfo> {
-                new MetaInfo($"Colors: {Colors.Length}"),
-            })
-        };
-        return nodes;
-    }
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
+        new(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "Radar Color File" }),
+        new("RadarColor", items: [
+            new($"Colors: {Colors.Length}"),
+        ])
+    ];
 }
 
 #endregion
@@ -1400,16 +1386,15 @@ public unsafe class Binary_SkillGroups : IHaveMetaInfo {
     public Binary_SkillGroups(BinaryReader r) {
     }
 
+    public override string ToString() => this.Serialize();
+
     // IHaveMetaInfo
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
-        var nodes = new List<MetaInfo> {
-            new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "SkillGroups File" }),
-            new MetaInfo("SkillGroups", items: new List<MetaInfo> {
-                //new MetaInfo($"Colors: {Colors.Length}"),
-            })
-        };
-        return nodes;
-    }
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
+        new(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "SkillGroups File" }),
+        new("SkillGroups", items: [
+            //new($"Colors: {Colors.Length}"),
+        ])
+    ];
 }
 
 #endregion
@@ -1477,29 +1462,28 @@ public unsafe class Binary_SpeechList : IHaveMetaInfo {
         }
     }
 
+    public override string ToString() => this.Serialize();
+
     // IHaveMetaInfo
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
-        var nodes = new List<MetaInfo> {
-            new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "SpeechList File" }),
-            new MetaInfo("SpeechList", items: new List<MetaInfo> {
-                new MetaInfo($"Count: {Records.Count}"),
-            })
-        };
-        return nodes;
-    }
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
+        new(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "SpeechList File" }),
+        new("SpeechList", items: [
+            new($"Count: {Records.Count}"),
+        ])
+    ];
 }
 
 #endregion
 
-#region Binary_Static
+#region Binary_Art
 
-public unsafe class Binary_Static : IHaveMetaInfo, ITexture {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Static(r, (int)f.FileSize));
+public unsafe class Binary_Art : IHaveMetaInfo, ITexture {
+    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Art(r, (int)f.FileSize));
 
     byte[] Pixels;
 
     // file: artLegacyMUL.mul:static/file04000.art
-    public Binary_Static(BinaryReader r, int length) {
+    public Binary_Art(BinaryReader r, int length) {
         fixed (byte* _ = r.ReadBytes(length)) {
             var bdata = (ushort*)_;
             var count = 2;
@@ -1550,7 +1534,7 @@ public unsafe class Binary_Static : IHaveMetaInfo, ITexture {
     // IHaveMetaInfo
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new(null, new MetaContent { Type = "Texture", Name = Path.GetFileName(file.Path), Value = this }),
-        new("Static", items: [
+        new("Art", items: [
             new($"Width: {Width}"),
             new($"Height: {Height}"),
         ])
@@ -1562,7 +1546,7 @@ public unsafe class Binary_Static : IHaveMetaInfo, ITexture {
 #region Binary_StringTable
 
 public unsafe class Binary_StringTable : IHaveMetaInfo {
-    public static Dictionary<string, Binary_StringTable> Instances = new Dictionary<string, Binary_StringTable>();
+    public static Dictionary<string, Binary_StringTable> Current = [];
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_StringTable(r, f));
 
     #region Headers
@@ -1574,45 +1558,40 @@ public unsafe class Binary_StringTable : IHaveMetaInfo {
         Modified = 0x2
     }
 
-    public class Record {
-        public string Text;
-        public RecordFlag Flag;
-        public Record(string text, RecordFlag flag) {
-            Text = text;
-            Flag = flag;
-        }
+    public class Record(string text, RecordFlag flag) {
+        public string Text = text;
+        public RecordFlag Flag = flag;
     }
 
-    public Dictionary<int, string> Strings = new Dictionary<int, string>();
-    public Dictionary<int, Record> Records = new Dictionary<int, Record>();
+    public Dictionary<int, string> Strings = [];
+    public Dictionary<int, Record> Records = [];
 
-    public static string GetString(int id) => Instances.TryGetValue(".enu", out var y) && y.Strings.TryGetValue(id, out var z) ? z : string.Empty;
+    public static string GetString(int id) => Current.TryGetValue("enu", out var y) && y.Strings.TryGetValue(id, out var z) ? z : string.Empty;
 
     #endregion
 
     // file: Cliloc.enu
     public Binary_StringTable(BinaryReader r, FileSource f) {
         r.Skip(6);
-        while (r.BaseStream.Position < r.BaseStream.Length) {
+        while (!r.AtEnd()) {
             var id = r.ReadInt32();
             var flag = (RecordFlag)r.ReadByte();
-            var text = r.ReadL16AString();
+            var text = r.ReadL16UString();
             Records[id] = new Record(text, flag);
             Strings[id] = text;
         }
-        Instances[Path.GetExtension(f.Path)] = this;
+        Current[Path.GetExtension(f.Path[1..])] = this;
     }
 
+    public override string ToString() => this.Serialize();
+
     // IHaveMetaInfo
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
-        var nodes = new List<MetaInfo> {
-            new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "StringTable File" }),
-            new MetaInfo("StringTable", items: new List<MetaInfo> {
-                new MetaInfo($"Count: {Records.Count}"),
-            })
-        };
-        return nodes;
-    }
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
+        new(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = this }),
+        new("StringTable", items: [
+            new($"Count: {Records.Count}"),
+        ])
+    ];
 }
 
 #endregion
@@ -1848,17 +1827,16 @@ public unsafe class Binary_TileData : IHaveMetaInfo {
         }
     }
 
+    public override string ToString() => this.Serialize();
+
     // IHaveMetaInfo
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
-        var nodes = new List<MetaInfo> {
-            new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "Tile Sbi File" }),
-            new MetaInfo("TileData", items: new List<MetaInfo> {
-                new MetaInfo($"LandDatas: {LandDatas.Length}"),
-                new MetaInfo($"ItemDatas: {ItemDatas.Length}"),
-            })
-        };
-        return nodes;
-    }
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
+        new(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = this }),
+        new("TileData", items: [
+            new($"LandDatas: {LandDatas.Length}"),
+            new($"ItemDatas: {ItemDatas.Length}"),
+        ])
+    ];
 }
 
 #endregion
@@ -1912,16 +1890,15 @@ public unsafe class Binary_UnicodeFont : IHaveMetaInfo {
         Font = new UnicodeFont(r);
     }
 
+    public override string ToString() => this.Serialize();
+
     // IHaveMetaInfo
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
-        var nodes = new List<MetaInfo> {
-            new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "UnicodeFont File" }),
-            new MetaInfo("UnicodeFont", items: new List<MetaInfo> {
-                //new MetaInfo($"Fonts: {Fonts.Length}"),
-            })
-        };
-        return nodes;
-    }
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
+        new(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = this }),
+        new("UnicodeFont", items: [
+            //new($"Fonts: {Fonts.Length}"),
+        ])
+    ];
 }
 
 #endregion
@@ -1930,18 +1907,18 @@ public unsafe class Binary_UnicodeFont : IHaveMetaInfo {
 
 public unsafe class Binary_Verdata : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Verdata(r, (BinaryPakFile)s));
-    public static Binary_Verdata Instance;
+    public static Binary_Verdata Current;
 
     #region Headers
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct Patch {
         public static (string, int) Struct = ("<5i", 20);
-        public int File;
-        public int Index;
-        public int Offset;
-        public int FileSize;
-        public int Extra;
+        public int File; //FileID
+        public int Index; //BlockID
+        public int Offset; //Position
+        public int Length; //Length
+        public int Extra; //GumpData
     }
 
     #endregion
@@ -1953,21 +1930,20 @@ public unsafe class Binary_Verdata : IHaveMetaInfo {
     public Binary_Verdata(BinaryReader r, BinaryPakFile s) {
         PakFile = s;
         Patches = r.ReadL32SArray<Patch>().GroupBy(x => x.File).ToDictionary(x => x.Key, x => x.ToArray());
-        Instance = this;
+        Current = this;
     }
 
     public Stream ReadData(long offset, int fileSize) => PakFile.ReaderT(r => new MemoryStream(r.Seek(offset).ReadBytes(fileSize)));
 
+    public override string ToString() => this.Serialize();
+
     // IHaveMetaInfo
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
-        var nodes = new List<MetaInfo> {
-            new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "Version Sbi" }),
-            new MetaInfo("Verdata", items: new List<MetaInfo> {
-                new MetaInfo($"Patches: {Patches.Count}"),
-            })
-        };
-        return nodes;
-    }
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
+        new(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = this }),
+        new("Verdata", items: [
+            new($"Patches: {Patches.Count}"),
+        ])
+    ];
 }
 
 #endregion

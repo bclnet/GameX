@@ -213,11 +213,11 @@ public unsafe class Binary_UO : PakBinary<Binary_UO> {
             "data/bodytable.cfg" => (0, ServerBinary_BodyTable.Factory),
             _ => Path.GetExtension(source.Path).ToLowerInvariant() switch {
                 ".xnb" => (0, Binary_Xnb.Factory),
-                ".anim" => (0, Binary_AnimUO.Factory),
+                ".anim" => (0, Binary_Anim.Factory),
                 ".tex" => (0, Binary_Gump.Factory),
                 ".land" => (0, Binary_Land.Factory),
                 ".light" => (0, Binary_Light.Factory),
-                ".art" => (0, Binary_Static.Factory),
+                ".art" => (0, Binary_Art.Factory),
                 ".multi" => (0, Binary_Multi.Factory),
                 //".mul" => (0, Binary_Ignore.Factory($"refer to {source.Path[..^4]}.idx")),
                 _ => (0, null),
@@ -238,11 +238,12 @@ public unsafe class Binary_UO : PakBinary<Binary_UO> {
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     struct UopHeader {
-        public static (string, int) Struct = ("<i2q2i", 28);
-        public int Magic;
-        public long VersionSignature;
+        public static (string, int) Struct = ("<3IqIi", 28);
+        public uint Magic;
+        public uint Version;
+        public uint Timestamp;
         public long NextBlock;
-        public int BlockCapacity;
+        public uint BlockSize;
         public int Count;
     }
 
@@ -275,16 +276,12 @@ public unsafe class Binary_UO : PakBinary<Binary_UO> {
 
     Task ReadUop(BinaryPakFile source, BinaryReader r) {
         (string extension, int length, int idxLength, bool extra, Func<int, string> pathFunc) pair = source.PakPath switch {
-            "artLegacyMUL.uop" => (".tga", 0x14000, 0x13FDC, false, i => i < 0x4000 ? $"land/file{i:x5}.land" : $"static/file{i:x5}.art"),
+            "artLegacyMUL.uop" => (".tga", 0x14000, 0x13FDC, false, i => i < 0x4000 ? $"land/file{i:x5}.land" : $"art/file{i:x5}.art"),
             "gumpartLegacyMUL.uop" => (".tga", 0xFFFF, 0, true, i => $"file{i:x5}.tex"),
             "soundLegacyMUL.uop" => (".dat", 0xFFF, 0, false, i => $"file{i:x5}.wav"),
             _ => (null, 0, 0, false, i => $"file{i:x5}.dat"),
         };
-        var extension = pair.extension;
-        var length = pair.length;
-        var idxLength = pair.idxLength;
-        var extra = pair.extra;
-        var pathFunc = pair.pathFunc;
+        var (extension, length, idxLength, extra, pathFunc) = pair;
         var uopPattern = Path.GetFileNameWithoutExtension(source.PakPath).ToLowerInvariant();
 
         // read header
@@ -444,12 +441,12 @@ public unsafe class Binary_UO : PakBinary<Binary_UO> {
         //        Path = pathFunc(i) });
 
         // apply patch
-        var verdata = Binary_Verdata.Instance;
+        var verdata = Binary_Verdata.Current;
         if (verdata != null && verdata.Patches.TryGetValue(fileId, out var patches))
             foreach (var patch in patches.Where(patch => patch.Index > 0 && patch.Index < files.Count)) {
                 var file = files[patch.Index];
                 file.Offset = patch.Offset;
-                file.FileSize = patch.FileSize | (1 << 31);
+                file.FileSize = patch.Length | (1 << 31);
                 file.Compressed = patch.Extra;
             }
         return Task.CompletedTask;
@@ -471,7 +468,7 @@ public unsafe class Binary_UO : PakBinary<Binary_UO> {
     public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
         if (file.Offset < 0) return Task.FromResult<Stream>(null);
         var fileSize = (int)(file.FileSize & 0x7FFFFFFF);
-        if ((file.FileSize & (1 << 31)) != 0) return Task.FromResult<Stream>(Binary_Verdata.Instance.ReadData(file.Offset, fileSize));
+        if ((file.FileSize & (1 << 31)) != 0) return Task.FromResult<Stream>(Binary_Verdata.Current.ReadData(file.Offset, fileSize));
         r.Seek(file.Offset);
         return Task.FromResult<Stream>(new MemoryStream(r.ReadBytes(fileSize)));
     }

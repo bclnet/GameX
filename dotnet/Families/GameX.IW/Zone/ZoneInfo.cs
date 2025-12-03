@@ -149,7 +149,7 @@ namespace GameX.IW.Zone
         {
             if (containsAsset(type, name) > 0) return;
 
-            Console.Write($"Loading Asset {name} of type {getAssetStringForType(type)}");
+            Console.Write($"Loading Archive {name} of type {getAssetStringForType(type)}");
             if (filename != null) Console.Write($" ({filename})");
             Console.WriteLine();
 

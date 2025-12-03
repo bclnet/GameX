@@ -12,9 +12,9 @@ namespace GameX.WB;
 [TestClass]
 public class FormatTests {
     static readonly Family family = FamilyManager.GetFamily("WB");
-    static readonly PakFile cell = family.OpenPakFile(new Uri("game:/client_cell_1.dat#AC")); const int ExpectedCellCount = 805003;
-    static readonly PakFile portal = family.OpenPakFile(new Uri("game:/client_portal.dat#AC")); const int ExpectedPortalCount = 79694;
-    static readonly PakFile localEnglish = family.OpenPakFile(new Uri("game:/client_local_English.dat#AC")); const int ExpectedLocalEnglishCount = 118;
+    static readonly Archive cell = family.OpenArchive(new Uri("game:/client_cell_1.dat#AC")); const int ExpectedCellCount = 805003;
+    static readonly Archive portal = family.OpenArchive(new Uri("game:/client_portal.dat#AC")); const int ExpectedPortalCount = 79694;
+    static readonly Archive localEnglish = family.OpenArchive(new Uri("game:/client_local_English.dat#AC")); const int ExpectedLocalEnglishCount = 118;
 
     [TestMethod]
     public void LoadCellDat_NoExceptions() {
@@ -51,7 +51,7 @@ public class FormatTests {
             var factory = source.EnsureCachedObjectFactory(file);
             if (factory == null) throw new Exception($"Class for fileType: {fileType} does not implement an ObjectFactory.");
 
-            using var r = new BinaryReader(await source.LoadFileData(file));
+            using var r = new BinaryReader(await source.GetData(file));
             await factory(r, file, source);
             if (r.Tell() != file.FileSize) throw new Exception($"Failed to parse all bytes for fileType: {fileType}, ObjectId: 0x{file.Id:X8}. Bytes parsed: {r.Tell()} of {file.FileSize}");
         }
@@ -79,7 +79,7 @@ public class FormatTests {
             var factory = source.EnsureCachedObjectFactory(file);
             if (factory == null) throw new Exception($"Class for fileType: {fileType} does not implement an ObjectFactory.");
 
-            using var r = new BinaryReader(await source.LoadFileData(file));
+            using var r = new BinaryReader(await source.GetData(file));
             await factory(r, file, source);
             if (r.Tell() != file.FileSize) throw new Exception($"Failed to parse all bytes for fileType: {fileType}, ObjectId: 0x{file.Id:X8}. Bytes parsed: {r.Tell()} of {file.FileSize}");
         }
@@ -101,7 +101,7 @@ public class FormatTests {
             var factory = source.EnsureCachedObjectFactory(file);
             if (factory == null) throw new Exception($"Class for fileType: {fileType} does not implement an ObjectFactory.");
 
-            using var r = new BinaryReader(await source.LoadFileData(file));
+            using var r = new BinaryReader(await source.GetData(file));
             await factory(r, file, source);
             if (r.Tell() != file.FileSize) throw new Exception($"Failed to parse all bytes for fileType: {fileType}, ObjectId: 0x{file.Id:X8}. Bytes parsed: {r.Tell()} of {file.FileSize}");
         }

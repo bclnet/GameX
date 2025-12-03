@@ -22,7 +22,7 @@ public class CryXmlFile : XmlDocument, IHaveMetaInfo, IStream  {
         public int Reserved { get; set; }
     }
 
-    public static Task<object> Factory(BinaryReader r, FileSource m, PakFile s)
+    public static Task<object> Factory(BinaryReader r, FileSource m, Archive s)
         => Task.FromResult((object)new CryXmlFile(r, false));
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [

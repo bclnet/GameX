@@ -23,12 +23,12 @@ public class UnknownFamily : Family {
 /// UnknownPakFile
 /// </summary>
 /// <seealso cref="GameX.Formats.PakFile" />
-public class UnknownPakFile : PakFile {
+public class UnknownPakFile : Archive {
     /// <summary>
     /// Initializes a new instance of the <see cref="UnknownPakFile" /> class.
     /// </summary>
     /// <param name="state">The game.</param>
-    public UnknownPakFile(PakState state) : base(state) {
+    public UnknownPakFile(ArchiveState state) : base(state) {
         Name = "Unknown";
         ObjectFactoryFunc = ObjectFactory;
     }
@@ -40,15 +40,15 @@ public class UnknownPakFile : PakFile {
     public override void Closing() { }
     public override void Opening() { }
     public override bool Contains(object path) => false;
-    public override (PakFile, FileSource) GetFileSource(object path, bool throwOnError = true) => throw new NotImplementedException();
-    public override Task<Stream> LoadFileData(object path, object option = default, bool throwOnError = true) => throw new NotImplementedException();
-    public override Task<T> LoadFileObject<T>(object path, object option = default, bool throwOnError = true) => throw new NotImplementedException();
+    public override (Archive, FileSource) GetSource(object path, bool throwOnError = true) => throw new NotImplementedException();
+    public override Task<Stream> GetData(object path, object option = default, bool throwOnError = true) => throw new NotImplementedException();
+    public override Task<T> GetAsset<T>(object path, object option = default, bool throwOnError = true) => throw new NotImplementedException();
 
     #endregion
 
     #region Factories
 
-    public static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    public static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             ".txt" or ".ini" or ".cfg" or ".csv" or ".xml" => (0, Binary_Txt.Factory),
             ".wav" or ".mp3" => (0, Binary_Snd.Factory),
@@ -67,7 +67,7 @@ public class UnknownPakFile : PakFile {
     #region Binary
 
     public class Binary_TestTri : IHaveMetaInfo {
-        public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_TestTri());
+        public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_TestTri());
 
         // IHaveMetaInfo
         List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)

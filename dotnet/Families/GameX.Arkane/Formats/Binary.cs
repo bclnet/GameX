@@ -11,8 +11,8 @@ namespace GameX.Arkane.Formats;
 
 #region Binary_Danae
 
-public unsafe class Binary_Danae : PakBinary<Binary_Danae> {
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+public unsafe class Binary_Danae : ArcBinary<Binary_Danae> {
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         var files = source.Files = [];
         var key = (byte[])source.Game.Key; int keyLength = key.Length, keyIndex = 0;
 
@@ -72,7 +72,7 @@ public unsafe class Binary_Danae : PakBinary<Binary_Danae> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         return Task.FromResult((Stream)new MemoryStream((file.Compressed & 1) != 0
             ? r.DecompressBlast((int)file.PackedSize, (int)file.FileSize)
@@ -84,7 +84,7 @@ public unsafe class Binary_Danae : PakBinary<Binary_Danae> {
 
 #region Binary_Void
 
-public unsafe class Binary_Void : PakBinary<Binary_Void> {
+public unsafe class Binary_Void : ArcBinary<Binary_Void> {
     #region Headers
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -100,14 +100,14 @@ public unsafe class Binary_Void : PakBinary<Binary_Void> {
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         // must be .index file
-        if (!source.PakPath.EndsWith(".index")) throw new FormatException("must be a .index file");
+        if (!source.ArcPath.EndsWith(".index")) throw new FormatException("must be a .index file");
 
         var files = source.Files = [];
 
         // master.index file
-        if (source.PakPath == "master.index") {
+        if (source.ArcPath == "master.index") {
             const uint MAGIC = 0x04534552;
             const uint SubMarker = 0x18000000;
             const uint EndMarker = 0x01000000;
@@ -125,7 +125,7 @@ public unsafe class Binary_Void : PakBinary<Binary_Void> {
                 if (!path.EndsWith(".index")) continue;
                 files.Add(new FileSource {
                     Path = path,
-                    Pak = new SubPakFile(source, null, path),
+                    Arc = new SubArchive(source, null, path),
                 });
             }
             return Task.CompletedTask;
@@ -133,7 +133,7 @@ public unsafe class Binary_Void : PakBinary<Binary_Void> {
 
         // find files
         var vfx = source.Vfx;
-        var resourcePath = $"{source.PakPath[0..^6]}.resources";
+        var resourcePath = $"{source.ArcPath[0..^6]}.resources";
         if (!vfx.FileExists(resourcePath)) throw new FormatException("Unable to find resources extension");
         var sharedResourcePath = new[] {
             "shared_2_3.sharedrsc",
@@ -176,7 +176,7 @@ public unsafe class Binary_Void : PakBinary<Binary_Void> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
         if (file.FileSize == 0 || _badPositions.Contains(file.Offset)) return Task.FromResult(System.IO.Stream.Null);
         var (path, tag1, tag2) = ((string, string, string))file.Tag;
         return Task.FromResult((Stream)source.ReaderT(r2 => {

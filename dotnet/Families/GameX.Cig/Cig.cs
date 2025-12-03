@@ -13,18 +13,18 @@ namespace GameX.Cig;
 /// CigPakFile
 /// </summary>
 /// <seealso cref="GameEstate.Formats.BinaryPakFile" />
-public class CigPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> {
+public class CigPakFile : BinaryAsset, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="CigPakFile" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public CigPakFile(PakState state) : base(state, PakBinary_P4k.Current) {
+    public CigPakFile(ArchiveState state) : base(state, PakBinary_P4k.Current) {
         ObjectFactoryFunc = ObjectFactory;
     }
 
     #region Factories
 
-    internal static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    internal static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             //".cfg" => (0, BinaryDcb.Factory),
             ".mtl" or ".xml" => (0, CryXmlFile.Factory),
@@ -38,8 +38,8 @@ public class CigPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel>
 
     #region Transforms
 
-    bool ITransformFileObject<IUnknownFileModel>.CanTransformFileObject(PakFile transformTo, object source) => UnknownTransform.CanTransformFileObject(this, transformTo, source);
-    Task<IUnknownFileModel> ITransformFileObject<IUnknownFileModel>.TransformFileObject(PakFile transformTo, object source) => UnknownTransform.TransformFileObjectAsync(this, transformTo, source);
+    bool ITransformAsset<IUnknownFileModel>.CanTransformAsset(Archive transformTo, object source) => UnknownTransform.CanTransformFileObject(this, transformTo, source);
+    Task<IUnknownFileModel> ITransformAsset<IUnknownFileModel>.TransformAsset(Archive transformTo, object source) => UnknownTransform.TransformFileObjectAsync(this, transformTo, source);
 
     #endregion
 }

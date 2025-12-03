@@ -37,12 +37,12 @@ public class MorrowindGame(Family family, string id, JsonElement elem, FamilyGam
 /// BethesdaPakFile
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class BethesdaPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> {
+public class BethesdaPakFile : BinaryAsset, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="BethesdaPakFile" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public BethesdaPakFile(PakState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+    public BethesdaPakFile(ArchiveState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         ObjectFactoryFunc = ObjectFactory;
         PathFinders.Add(typeof(ITexture), FindTexture);
     }
@@ -68,7 +68,7 @@ public class BethesdaPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileM
 
     #region Factories
 
-    static PakBinary GetPakBinary(FamilyGame game, string extension)
+    static ArcBinary GetPakBinary(FamilyGame game, string extension)
         => extension switch {
             "" => null,
             ".bsa" => Binary_Bsa.Current,
@@ -77,7 +77,7 @@ public class BethesdaPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileM
             _ => throw new ArgumentOutOfRangeException(nameof(extension)),
         };
 
-    static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             ".nif" => (FileOption.StreamObject, Binary_Nif.Factory),
             _ => UnknownPakFile.ObjectFactory(source, game),
@@ -87,8 +87,8 @@ public class BethesdaPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileM
 
     #region Transforms
 
-    bool ITransformFileObject<IUnknownFileModel>.CanTransformFileObject(PakFile transformTo, object source) => UnknownTransform.CanTransformFileObject(this, transformTo, source);
-    Task<IUnknownFileModel> ITransformFileObject<IUnknownFileModel>.TransformFileObject(PakFile transformTo, object source) => UnknownTransform.TransformFileObjectAsync(this, transformTo, source);
+    bool ITransformAsset<IUnknownFileModel>.CanTransformAsset(Archive transformTo, object source) => UnknownTransform.CanTransformFileObject(this, transformTo, source);
+    Task<IUnknownFileModel> ITransformAsset<IUnknownFileModel>.TransformAsset(Archive transformTo, object source) => UnknownTransform.TransformFileObjectAsync(this, transformTo, source);
 
     #endregion
 }

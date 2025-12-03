@@ -41,7 +41,7 @@ public class Binary_Abc : IHaveMetaInfo {
 
 #region Binary_Red
 
-public unsafe class Binary_Red : PakBinary<Binary_Red> {
+public unsafe class Binary_Red : ArcBinary<Binary_Red> {
     //class SubPakFile : BinaryPakFile
     //{
     //    public SubPakFile(FamilyGame game, IFileSystem fileSystem, string filePath, object tag = null) : base(game, fileSystem, filePath, Instance, tag) => Open();
@@ -446,10 +446,10 @@ public unsafe class Binary_Red : PakBinary<Binary_Red> {
     // https://zenhax.com/viewtopic.php?t=3954
     // https://forums.cdprojektred.com/index.php?threads/modding-the-witcher-3-a-collection-of-tools-you-need.64557/
     // https://github.com/rfuzzo/CP77Tools
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         FileSource[] files; List<FileSource> files2;
-        var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(source.PakPath);
-        var extension = Path.GetExtension(source.PakPath);
+        var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(source.ArcPath);
+        var extension = Path.GetExtension(source.ArcPath);
         var magic = source.Magic = r.ReadUInt32();
         // KEY
         switch (magic) {
@@ -469,7 +469,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red> {
                     // combine
                     var sourceName = source.Name;
                     var voiceKey = sourceName[0] == 'M' && char.IsNumber(sourceName[1]);
-                    var subPathFormat = Path.Combine(Path.GetDirectoryName(source.PakPath), !voiceKey ? "{0}" : "voices\\{0}");
+                    var subPathFormat = Path.Combine(Path.GetDirectoryName(source.ArcPath), !voiceKey ? "{0}" : "voices\\{0}");
                     for (var i = 0; i < header.NumFiles; i++) {
                         var (file, path) = headerFiles[i];
                         var subPath = string.Format(subPathFormat, path);
@@ -477,7 +477,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red> {
                         files[i] = new FileSource {
                             Path = path,
                             FileSize = file.FileSize,
-                            Pak = new SubPakFile(source, null, subPath, (headerKeys, (uint)i)),
+                            Arc = new SubArchive(source, null, subPath, (headerKeys, (uint)i)),
                         };
                     }
                 }
@@ -594,7 +594,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red> {
                     for (var i = 0; i < headerFiles.Length; i++) {
                         var headerFile = headerFiles[i];
                         var hash = headerFile.NameHash64;
-                        if (nameHashs.Contains(hash)) { Console.WriteLine($"File already added in Archive {source.PakPath}: hash {hash}, idx {i}"); continue; }
+                        if (nameHashs.Contains(hash)) { Console.WriteLine($"File already added in Archive {source.ArcPath}: hash {hash}, idx {i}"); continue; }
                         nameHashs.Add(hash);
                         files2.Add(new FileSource {
                             Path = hashLookup.TryGetValue(hash, out var z) ? z.Replace('\\', '/') : $"{hash:X2}.bin",
@@ -677,7 +677,7 @@ public unsafe class Binary_Red : PakBinary<Binary_Red> {
         BC5 = 7,        // 3DC, ATI2
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
         Stream fileData = null;
         r.Seek(file.Offset);
         switch (source.Version) {

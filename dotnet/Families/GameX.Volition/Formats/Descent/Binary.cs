@@ -13,7 +13,7 @@ namespace GameX.Volition.Formats.Descent;
 #region Binary_Bmp
 
 public class Binary_Bmp : IHaveMetaInfo, ITexture {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Bmp(r, s.Game, f.Tag));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Bmp(r, s.Game, f.Tag));
 
     public Binary_Bmp(BinaryReader r, FamilyGame game, object tag) {
         // get body
@@ -149,7 +149,7 @@ return Task.FromResult<Stream>(s);
 #region Binary_Rdl
 
 public unsafe class Binary_Rdl : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Rdl(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Rdl(r));
 
     #region Headers
 

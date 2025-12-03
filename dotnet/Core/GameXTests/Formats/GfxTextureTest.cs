@@ -30,7 +30,7 @@ public class GfxTextureTest {
     public async Task LoadGfxTexture(string pak, string sampleFile) {
         var source = TestHelper.Paks[pak].Value;
         Assert.IsTrue(source.Contains(sampleFile));
-        var obj0 = await source.LoadFileObject<object>(sampleFile);
+        var obj0 = await source.GetAsset<object>(sampleFile);
         Assert.IsNotNull(obj0);
         //Assert.Equal(sampleFileSize, pakFile.GetLoadFileDataAsync(sampleFile).Result.Length);
     }

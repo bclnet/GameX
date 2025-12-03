@@ -40,7 +40,7 @@ public class WorldLoader {
         // Output is World_t we need to iterate m_worldNodes inside it.
         foreach (var worldNode in World.GetWorldNodeNames())
             if (worldNode != null) {
-                var newResource = Gfx.LoadFileObject<Binary_Src>($"{worldNode}.vwnod_c").Result;
+                var newResource = Gfx.GetAsset<Binary_Src>($"{worldNode}.vwnod_c").Result;
                 if (newResource == null) continue;
                 var subloader = new WorldNodeLoader(Gfx, (D_WorldNode)newResource.DATA);
                 subloader.Load(scene);
@@ -49,7 +49,7 @@ public class WorldLoader {
         foreach (var lumpName in World.GetEntityLumpNames()) {
             if (lumpName == null) continue;
 
-            var newResource = Gfx.LoadFileObject<Binary_Src>("{lumpName}_c").Result;
+            var newResource = Gfx.GetAsset<Binary_Src>("{lumpName}_c").Result;
             if (newResource == null) continue;
 
             var entityLump = (D_EntityLump)newResource.DATA;
@@ -60,7 +60,7 @@ public class WorldLoader {
 
     void LoadEntitiesFromLump(Scene scene, LoadResult result, D_EntityLump entityLump, string layerName = null) {
         foreach (var childEntityName in entityLump.GetChildEntityNames()) {
-            var newResource = Gfx.LoadFileObject<Binary_Src>(childEntityName).Result;
+            var newResource = Gfx.GetAsset<Binary_Src>(childEntityName).Result;
             if (newResource == null) continue;
 
             var childLump = (D_EntityLump)newResource.DATA;
@@ -86,7 +86,7 @@ public class WorldLoader {
                 var targetmapname = entity.Get<string>("targetmapname");
 
                 var skyboxWorldPath = $"maps/{Path.GetFileNameWithoutExtension(targetmapname)}/world.vwrld_c";
-                var skyboxPackage = Gfx.LoadFileObject<Binary_Src>(skyboxWorldPath).Result;
+                var skyboxPackage = Gfx.GetAsset<Binary_Src>(skyboxWorldPath).Result;
                 if (skyboxPackage != null) result.Skybox = (D_World)skyboxPackage.DATA;
             }
 
@@ -112,7 +112,7 @@ public class WorldLoader {
             }
 
             if (particle != null) {
-                var particleResource = Gfx.LoadFileObject<Binary_Src>(particle).Result;
+                var particleResource = Gfx.GetAsset<Binary_Src>(particle).Result;
                 if (particleResource != null) {
                     var particleSystem = (D_ParticleSystem)particleResource.DATA;
                     try {
@@ -157,9 +157,9 @@ public class WorldLoader {
                 continue;
             }
 
-            var newEntity = Gfx.LoadFileObject<Binary_Src>($"{model}_c").Result;
+            var newEntity = Gfx.GetAsset<Binary_Src>($"{model}_c").Result;
             if (newEntity == null) {
-                var errorModelResource = Gfx.LoadFileObject<Binary_Src>("models/dev/error.vmdl_c").Result;
+                var errorModelResource = Gfx.GetAsset<Binary_Src>("models/dev/error.vmdl_c").Result;
                 if (errorModelResource != null) {
                     var errorModel = new ModelSceneNode(scene, (IValveModel)errorModelResource.DATA, skin, false) {
                         Transform = transformationMatrix,
@@ -204,7 +204,7 @@ public class WorldLoader {
             if (phys == null) {
                 var refPhysicsPaths = newModel.GetReferencedPhysNames();
                 if (refPhysicsPaths.Any()) {
-                    var newResource = Gfx.LoadFileObject<Binary_Src>($"{refPhysicsPaths.First()}_c").Result;
+                    var newResource = Gfx.GetAsset<Binary_Src>($"{refPhysicsPaths.First()}_c").Result;
                     if (newResource != null) phys = (D_PhysAggregateData)newResource.DATA;
                 }
             }
@@ -222,10 +222,10 @@ public class WorldLoader {
 
     void AddToolModel(Scene scene, string classname, Matrix4x4 transformationMatrix, Vector3 position) {
         var filename = HammerEntities.GetToolModel(classname);
-        var resource = Gfx.LoadFileObject<Binary_Src>($"{filename}_c").Result;
+        var resource = Gfx.GetAsset<Binary_Src>($"{filename}_c").Result;
         if (resource == null) {
             // TODO: Create a 16x16x16 box to emulate how Hammer draws them
-            resource = Gfx.LoadFileObject<Binary_Src>("materials/editor/obsolete.vmat_c").Result;
+            resource = Gfx.GetAsset<Binary_Src>("materials/editor/obsolete.vmat_c").Result;
             if (resource == null) return;
         }
 

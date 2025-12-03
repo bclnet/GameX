@@ -14,7 +14,7 @@ namespace GameX.Bethesda.Formats;
 #region Binary_Ba2
 // http://en.uesp.net/wiki/Bethesda5Mod:Archive_File_Format
 
-public unsafe class Binary_Ba2 : PakBinary<Binary_Ba2> {
+public unsafe class Binary_Ba2 : ArcBinary<Binary_Ba2> {
     #region Headers : TES5
 
     // Default header data
@@ -97,7 +97,7 @@ public unsafe class Binary_Ba2 : PakBinary<Binary_Ba2> {
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         FileSource[] files;
 
         // Fallout 4 - Starfield
@@ -165,7 +165,7 @@ public unsafe class Binary_Ba2 : PakBinary<Binary_Ba2> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
         const int GNF_HEADER_MAGIC = 0x20464E47;
         const int GNF_HEADER_CONTENT_SIZE = 248;
 
@@ -325,7 +325,7 @@ public unsafe class Binary_Ba2 : PakBinary<Binary_Ba2> {
 // http://en.uesp.net/wiki/Bethesda4Mod:BSA_File_Format
 // http://en.uesp.net/wiki/Bethesda3Mod:BSA_File_Format
 
-public unsafe class Binary_Bsa : PakBinary<Binary_Bsa> {
+public unsafe class Binary_Bsa : ArcBinary<Binary_Bsa> {
     #region Headers : TES4
 
     // Default header data
@@ -421,7 +421,7 @@ public unsafe class Binary_Bsa : PakBinary<Binary_Bsa> {
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         FileSource[] files;
         var magic = source.Magic = r.ReadUInt32();
 
@@ -503,7 +503,7 @@ public unsafe class Binary_Bsa : PakBinary<Binary_Bsa> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
         // position
         var fileSize = (int)file.FileSize;
         r.Seek(file.Offset);
@@ -546,7 +546,7 @@ public unsafe class Binary_Bsa : PakBinary<Binary_Bsa> {
 /// Binary_Esm
 /// </summary>
 /// <seealso cref="GameX.Formats._Packages.PakBinaryBethesdaEsm" />
-public unsafe class Binary_Esm : PakBinary<Binary_Esm> {
+public unsafe class Binary_Esm : ArcBinary<Binary_Esm> {
     const int RecordHeaderSizeInBytes = 16;
     public FormType Format;
     public Dictionary<FormType, RecordGroup> Groups;
@@ -572,10 +572,10 @@ public unsafe class Binary_Esm : PakBinary<Binary_Esm> {
     /// <param name="stage">The stage.</param>
     /// <returns></returns>
     /// <exception cref="ArgumentOutOfRangeException">stage</exception>
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         Format = GetFormat(source.Game.Id);
         var recordLevel = 1;
-        var filePath = source.PakPath;
+        var filePath = source.ArcPath;
         var poolAction = (GenericPoolAction<BinaryReader>)source.GetReader().Action; //: Leak
         var rootHeader = new Records.Header(r, Format, null);
         //if ((Format == FormFormat.TES3 && rootHeader.Type != FormType.TES3) || (Format != FormFormat.TES3 && rootHeader.Type != FormType.TES4)) throw new FormatException($"{filePath} record header {rootHeader.Type} is not valid for this {Format}");
@@ -620,7 +620,7 @@ public unsafe class Binary_Esm : PakBinary<Binary_Esm> {
     Dictionary<uint, Tuple<WRLDRecord, RecordGroup[]>> WRLDsById;
     Dictionary<string, LTEXRecord> LTEXsByEid;
 
-    public override Task Process(BinaryPakFile source) {
+    public override Task Process(BinaryAsset source) {
         if (Format == FormType.TES3) {
             var statGroups = new List<Record>[] { Groups.ContainsKey(FormType.STAT) ? Groups[FormType.STAT].Load() : null };
             MANYsById = statGroups.SelectMany(x => x).Where(x => x != null).ToDictionary(x => x.EDID.Value, x => (IRecord)x);

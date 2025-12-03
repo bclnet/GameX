@@ -37,7 +37,7 @@ public class ViewInfo {
     //public string Path = "meshes/x/ex_common_balcony_01.nif";
 
     protected Family Family;
-    protected PakFile Source;
+    protected Archive Source;
     protected O3deGfxModel Gfx;
     Renderer Renderer;
 

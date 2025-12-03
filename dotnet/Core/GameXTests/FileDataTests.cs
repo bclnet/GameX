@@ -14,12 +14,12 @@ public class FileDataTests {
         Log.Info($"studio: {family.Studio}");
 
         // get pak with game:/uri
-        var pakFile = family.OpenPakFile(file0);
+        var pakFile = family.OpenArchive(file0);
         var sample = file1.StartsWith("sample") ? pakFile.Game.GetSample(file1[7..]).Paths[0] : file1;
         Log.Info($"pak: {pakFile}, {sample}");
 
         // get file
-        var data = pakFile.LoadFileData(sample).Result;
+        var data = pakFile.GetData(sample).Result;
         Log.Info($"dat: {data}");
     }
 }

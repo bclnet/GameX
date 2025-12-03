@@ -36,7 +36,7 @@ partial class Program {
             foreach (var game in family.Games.Values) {
                 Console.WriteLine($"{game.Name}");
                 if (game.Found == null) continue;
-                Console.WriteLine($"  urls: {string.Join(',', (IEnumerable<Uri>)game.Paks)}");
+                Console.WriteLine($"  urls: {string.Join(',', (IEnumerable<Uri>)game.Arcs)}");
                 Console.WriteLine($"  root: {game.Found.Root}");
             }
             return Task.FromResult(0);
@@ -45,12 +45,12 @@ partial class Program {
         // list files in pack for family
         else {
             Console.WriteLine($"{family.Name} - {args.Uri}\n");
-            using var s = family.OpenPakFile(args.Uri) as BinaryPakFile ?? throw new InvalidOperationException("s not BinaryPakFile");
+            using var s = family.OpenArchive(args.Uri) as BinaryAsset ?? throw new InvalidOperationException("s not BinaryAsset");
             if (s.Count == 0) { Console.WriteLine("Nothing found."); return Task.FromResult(0); }
             Console.WriteLine("files:");
             foreach (var p in s.Files.OrderBy(x => x.Path)) {
                 Console.WriteLine($"{p.Path}");
-                var pak = p.Pak;
+                var pak = p.Arc;
                 if (pak == null) continue;
                 pak.Open();
                 foreach (var x in pak.Files.Select(x => Path.GetExtension(x.Path)).GroupBy(x => x)) Console.WriteLine($"  {x.Key}: {x.Count()}");

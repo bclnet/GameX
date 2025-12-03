@@ -229,7 +229,7 @@ public static class AnimationGroupLoader {
         }
         var animArray = data.Get<string[]>("m_localHAnimArray").Where(a => a != null); // Get the list of animation files
         foreach (var animationFile in animArray) {
-            var animResource = gfx.LoadFileObject<Binary_Src>($"{animationFile}_c").Result;
+            var animResource = gfx.GetAsset<Binary_Src>($"{animationFile}_c").Result;
             if (animResource != null) animationList.AddRange(Animation.FromResource(animResource, decodeKey, skeleton)); // Build animation classes
         }
         return animationList;

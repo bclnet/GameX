@@ -567,7 +567,7 @@ public partial class Binary_Dcb_LNG : IHaveMetaInfo {
 
     #endregion
 
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Dcb_LNG(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Dcb_LNG(r));
 
     XmlDocument _xmlDocument = new XmlDocument();
     internal XmlElement CreateElement(string name) => _xmlDocument.CreateElement(name);

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace GameX.Origin.Formats.UO {
     public unsafe class Binary_Font_DEL : IHaveMetaInfo {
-        public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Font_DEL(r, s));
+        public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Font_DEL(r, s));
 
         #region Records
 
@@ -195,13 +195,13 @@ namespace GameX.Origin.Formats.UO {
         #endregion
 
         // file: fonts.mul, unifont?.mul
-        public Binary_Font_DEL(BinaryReader r, PakFile s) {
+        public Binary_Font_DEL(BinaryReader r, Archive s) {
             for (var i = 0; i < AsciiFonts.Length; i++)
                 AsciiFonts[i] = new AsciiFont(r);
             // load Unicode fonts
             var maxHeight = 0; // because all unifonts are designed to be used together, they must all share a single maxheight value.
             for (var i = 0; i < UnicodeFonts.Length; i++) {
-                var stream = s.LoadFileData($"unifont{(i == 0 ? string.Empty : i.ToString())}.mul").Result;
+                var stream = s.GetData($"unifont{(i == 0 ? string.Empty : i.ToString())}.mul").Result;
                 if (stream != null) {
                     UnicodeFonts[i] = new UnicodeFont(new BinaryReader(stream));
                     if (UnicodeFonts[i].Height > maxHeight) maxHeight = UnicodeFonts[i].Height;

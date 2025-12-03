@@ -54,7 +54,7 @@ public class Binary_Gsc : IHaveMetaInfo {
 
 #region Binary_IW
 
-public unsafe class Binary_IW : PakBinary<Binary_IW> {
+public unsafe class Binary_IW : ArcBinary<Binary_IW> {
     CascContext casc;
 
     //class XSUB_PakFile : BinaryPakFile
@@ -273,9 +273,9 @@ public unsafe class Binary_IW : PakBinary<Binary_IW> {
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         var files = source.Files = new List<FileSource>();
-        var extension = Path.GetExtension(source.PakPath);
+        var extension = Path.GetExtension(source.ArcPath);
 
         switch (source.Game.Id) {
             case "BO4":
@@ -285,7 +285,7 @@ public unsafe class Binary_IW : PakBinary<Binary_IW> {
                 var editions = source.Game.Editions;
                 var product = editions.First().Key;
                 casc = new CascContext();
-                casc.Read(source.PakPath, product, files);
+                casc.Read(source.ArcPath, product, files);
                 return Task.CompletedTask;
         }
 
@@ -380,7 +380,7 @@ public unsafe class Binary_IW : PakBinary<Binary_IW> {
         }
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
         switch ((Magic)source.Magic) {
             case Magic.CASC:
                 return Task.FromResult(casc.ReadData(file));
@@ -414,7 +414,7 @@ public unsafe class Binary_IW : PakBinary<Binary_IW> {
 // https://github.com/XLabsProject/img-format-helper - IWI
 
 public class Binary_Iwi : ITexture, IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Iwi(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Iwi(r));
 
     #region Headers
 

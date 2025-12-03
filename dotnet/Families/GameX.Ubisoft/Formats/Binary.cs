@@ -9,7 +9,7 @@ namespace GameX.Ubisoft.Formats;
 
 #region Binary_Ubi
 
-public unsafe class Binary_Ubi : PakBinary<Binary_Ubi> {
+public unsafe class Binary_Ubi : ArcBinary<Binary_Ubi> {
     #region X_Headers
 
     const uint CRLF = 0x0d0a;
@@ -119,7 +119,7 @@ public unsafe class Binary_Ubi : PakBinary<Binary_Ubi> {
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         // read file
         var header = r.ReadS<Header>();
         if (header.Magic != MAGIC) throw new FormatException("BAD MAGIC");
@@ -180,7 +180,7 @@ public unsafe class Binary_Ubi : PakBinary<Binary_Ubi> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
         Stream fileData;
         r.Seek(file.Offset);
         fileData = new MemoryStream(r.ReadBytes((int)file.FileSize));

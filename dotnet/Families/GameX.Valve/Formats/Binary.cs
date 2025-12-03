@@ -136,12 +136,12 @@ public unsafe class Binary_Bsp30 : PakBinary<Binary_Bsp30>
 
 public class Binary_Src : IDisposable, IHaveMetaInfo, Indirect<ITexture>, Indirect<IMaterial>, Indirect<IMesh>, Indirect<IModel>, Indirect<IParticleSystem> {
     internal const ushort KnownHeaderVersion = 12;
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) {
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) {
         if (r.BaseStream.Length < 6) return null;
         var input = r.Peek(z => z.ReadBytes(6));
         var magic = BitConverter.ToUInt32(input, 0);
         var magicResourceVersion = BitConverter.ToUInt16(input, 4);
-        if (magic == Binary_Vpk.MAGIC) throw new InvalidOperationException("Pak File");
+        if (magic == Binary_Vpk.MAGIC) throw new InvalidOperationException("Arc File");
         else if (magic == CompiledShader.MAGIC) return Task.FromResult((object)new CompiledShader(r, f.Path));
         else if (magic == ClosedCaptions.MAGIC) return Task.FromResult((object)new ClosedCaptions(r));
         else if (magic == ToolsAssetInfo.MAGIC || magic == ToolsAssetInfo.MAGIC2) return Task.FromResult((object)new ToolsAssetInfo(r));
@@ -369,7 +369,7 @@ public class Binary_Src : IDisposable, IHaveMetaInfo, Indirect<ITexture>, Indire
 #region Binary_Mdl10
 
 public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Mdl10(r, f, (BinaryPakFile)s));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Mdl10(r, f, (BinaryAsset)s));
 
     #region Headers
 
@@ -870,7 +870,7 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo {
     public Texture[] Textures;
     public short[][] SkinFamilies;
 
-    public Binary_Mdl10(BinaryReader r, FileSource f, BinaryPakFile s) {
+    public Binary_Mdl10(BinaryReader r, FileSource f, BinaryAsset s) {
         // read file
         var header = r.ReadS<M_Header>();
         if (header.Magic != M_MAGIC) throw new FormatException("BAD MAGIC");
@@ -980,7 +980,7 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo {
 //https://developer.valvesoftware.com/wiki/MDL
 
 public unsafe class Binary_Mdl40 : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Mdl40(r, f, (BinaryPakFile)s));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Mdl40(r, f, (BinaryAsset)s));
 
     #region Headers
 
@@ -1104,7 +1104,7 @@ public unsafe class Binary_Mdl40 : IHaveMetaInfo {
     public Vector3 ClippingMin, ClippingMax;
     public HeaderFlags Flags;
 
-    public Binary_Mdl40(BinaryReader r, FileSource f, BinaryPakFile s) {
+    public Binary_Mdl40(BinaryReader r, FileSource f, BinaryAsset s) {
         // read file
         var header = r.ReadS<M_Header>();
         if (header.Magic != M_MAGIC) throw new FormatException("BAD MAGIC");
@@ -1190,7 +1190,7 @@ public unsafe class Binary_Mdl40 : IHaveMetaInfo {
 #region Binary_Vpk
 // https://developer.valvesoftware.com/wiki/VPK_File_Format
 
-public unsafe class Binary_Vpk : PakBinary<Binary_Vpk> {
+public unsafe class Binary_Vpk : ArcBinary<Binary_Vpk> {
     #region Headers
 
     public const int MAGIC = 0x55AA1234;
@@ -1280,7 +1280,7 @@ public unsafe class Binary_Vpk : PakBinary<Binary_Vpk> {
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         var extended = source.Game.Engine.v?.Contains('x') == true;
         var files = source.Files = [];
 
@@ -1293,7 +1293,7 @@ public unsafe class Binary_Vpk : PakBinary<Binary_Vpk> {
         };
 
         // pakPath
-        var pakPath = source.PakPath;
+        var pakPath = source.ArcPath;
         var dirVpk = pakPath.EndsWith("_dir.vpk", StringComparison.OrdinalIgnoreCase);
         if (dirVpk) pakPath = pakPath[..^8];
 
@@ -1352,7 +1352,7 @@ public unsafe class Binary_Vpk : PakBinary<Binary_Vpk> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
         var fileDataLength = file.Data.Length;
         var data = new byte[fileDataLength + file.FileSize];
         if (fileDataLength > 0) file.Data.CopyTo(data, 0);
@@ -1370,7 +1370,7 @@ public unsafe class Binary_Vpk : PakBinary<Binary_Vpk> {
 #region Binary_Wad3
 // https://github.com/Rupan/HLLib/blob/master/HLLib/WADFile.h
 
-public unsafe class Binary_Wad3 : PakBinary<Binary_Wad3> {
+public unsafe class Binary_Wad3 : ArcBinary<Binary_Wad3> {
     #region Headers
 
     const uint W_MAGIC = 0x33444157; //: WAD3
@@ -1405,7 +1405,7 @@ public unsafe class Binary_Wad3 : PakBinary<Binary_Wad3> {
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         var files = source.Files = [];
 
         // read file
@@ -1432,7 +1432,7 @@ public unsafe class Binary_Wad3 : PakBinary<Binary_Wad3> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         return Task.FromResult<Stream>(new MemoryStream(file.Compressed == 0
             ? r.ReadBytes((int)file.FileSize)
@@ -1448,7 +1448,7 @@ public unsafe class Binary_Wad3 : PakBinary<Binary_Wad3> {
 // https://github.com/tmp64/BSPRenderer
 
 public unsafe class Binary_Wad3X : ITexture, IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Wad3X(r, f));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Wad3X(r, f));
 
     #region Headers
 

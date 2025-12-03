@@ -10,8 +10,8 @@ namespace GameX.Formats;
 
 #region Stream
 
-public class PakBinaryCanStream : PakBinary {
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+public class PakBinaryCanStream : ArcBinary {
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         switch ((string)tag) {
             case null: return Task.CompletedTask;
             case "Set": {
@@ -68,7 +68,7 @@ public class PakBinaryCanStream : PakBinary {
         }
     }
 
-    public override Task Write(BinaryPakFile source, BinaryWriter w, object tag) {
+    public override Task Write(BinaryAsset source, BinaryWriter w, object tag) {
         switch ((string)tag) {
             case null: return Task.CompletedTask;
             case "Set": {
@@ -146,7 +146,7 @@ public class PakBinaryCanStream : PakBinary {
 /// StreamPakFile
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class StreamPakFile : BinaryPakFile {
+public class StreamPakFile : BinaryAsset {
     readonly NetworkHost Host;
 
     /// <summary>
@@ -155,7 +155,7 @@ public class StreamPakFile : BinaryPakFile {
     /// <param name="factory">The factory.</param>
     /// <param name="state">The state.</param>
     /// <param name="address">The host.</param>
-    public StreamPakFile(Func<Uri, string, NetworkHost> factory, PakState state, Uri address = null) : base(state, new PakBinaryCanStream()) {
+    public StreamPakFile(Func<Uri, string, NetworkHost> factory, ArchiveState state, Uri address = null) : base(state, new PakBinaryCanStream()) {
         UseReader = false;
         if (address != null) Host = factory(address, state.Path);
     }
@@ -164,7 +164,7 @@ public class StreamPakFile : BinaryPakFile {
     /// </summary>
     /// <param name="parent">The parent.</param>
     /// <param name="state">The state.</param>
-    public StreamPakFile(BinaryPakFile parent, PakState state) : base(state, new PakBinaryCanStream()) {
+    public StreamPakFile(BinaryAsset parent, ArchiveState state) : base(state, new PakBinaryCanStream()) {
         UseReader = false;
         Files = parent.Files;
     }
@@ -183,14 +183,14 @@ public class StreamPakFile : BinaryPakFile {
         }
 
         // read pak
-        var path = PakPath;
+        var path = ArcPath;
         if (string.IsNullOrEmpty(path) || !Directory.Exists(path)) return;
         var setPath = Path.Combine(path, ".set");
-        if (File.Exists(setPath)) using (var r = new BinaryReader(File.Open(setPath, FileMode.Open, FileAccess.Read, FileShare.Read))) await PakBinary.Stream.Read(this, r, "Set");
+        if (File.Exists(setPath)) using (var r = new BinaryReader(File.Open(setPath, FileMode.Open, FileAccess.Read, FileShare.Read))) await ArcBinary.Stream.Read(this, r, "Set");
         var metaPath = Path.Combine(path, ".meta");
-        if (File.Exists(metaPath)) using (var r = new BinaryReader(File.Open(setPath, FileMode.Open, FileAccess.Read, FileShare.Read))) await PakBinary.Stream.Read(this, r, "Meta");
+        if (File.Exists(metaPath)) using (var r = new BinaryReader(File.Open(setPath, FileMode.Open, FileAccess.Read, FileShare.Read))) await ArcBinary.Stream.Read(this, r, "Meta");
         var rawPath = Path.Combine(path, ".raw");
-        if (File.Exists(rawPath)) using (var r = new BinaryReader(File.Open(rawPath, FileMode.Open, FileAccess.Read, FileShare.Read))) await PakBinary.Stream.Read(this, r, "Raw");
+        if (File.Exists(rawPath)) using (var r = new BinaryReader(File.Open(rawPath, FileMode.Open, FileAccess.Read, FileShare.Read))) await ArcBinary.Stream.Read(this, r, "Raw");
     }
 
     /// <summary>
@@ -203,14 +203,14 @@ public class StreamPakFile : BinaryPakFile {
         if (Host != null) throw new NotSupportedException();
 
         // write pak
-        var path = PakPath;
+        var path = ArcPath;
         if (!string.IsNullOrEmpty(path) && !Directory.Exists(path)) Directory.CreateDirectory(path);
         var setPath = Path.Combine(path, ".set");
-        using (var w = new BinaryWriter(new FileStream(setPath, FileMode.Create, FileAccess.Write))) await PakBinary.Stream.Write(this, w, "Set");
+        using (var w = new BinaryWriter(new FileStream(setPath, FileMode.Create, FileAccess.Write))) await ArcBinary.Stream.Write(this, w, "Set");
         var metaPath = Path.Combine(path, ".meta");
-        using (var w = new BinaryWriter(new FileStream(metaPath, FileMode.Create, FileAccess.Write))) await PakBinary.Stream.Write(this, w, "Meta");
+        using (var w = new BinaryWriter(new FileStream(metaPath, FileMode.Create, FileAccess.Write))) await ArcBinary.Stream.Write(this, w, "Meta");
         var rawPath = Path.Combine(path, ".raw");
-        if (FilesRawSet != null && FilesRawSet.Count > 0) using (var w = new BinaryWriter(new FileStream(rawPath, FileMode.Create, FileAccess.Write))) await PakBinary.Stream.Write(this, w, "Raw");
+        if (FilesRawSet != null && FilesRawSet.Count > 0) using (var w = new BinaryWriter(new FileStream(rawPath, FileMode.Create, FileAccess.Write))) await ArcBinary.Stream.Write(this, w, "Raw");
         else if (File.Exists(rawPath)) File.Delete(rawPath);
     }
 
@@ -227,7 +227,7 @@ public class StreamPakFile : BinaryPakFile {
         if (Host != null) return await Host.GetFileAsync(path);
 
         // read pak
-        path = System.IO.Path.Combine(PakPath, path);
+        path = System.IO.Path.Combine(ArcPath, path);
         return File.Exists(path) ? File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read) : null;
     }
 

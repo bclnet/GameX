@@ -156,7 +156,7 @@ public unsafe partial class Binary_Dcb : IHaveMetaInfo {
 
     #endregion
 
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Dcb(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Dcb(r));
 
     public class Record {
         public string Name { get; set; }

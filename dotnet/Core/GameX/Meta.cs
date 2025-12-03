@@ -12,7 +12,7 @@ namespace GameX;
 
 [DebuggerDisplay("{Path}")]
 public class FileSource {
-    internal static readonly Func<BinaryReader, FileSource, PakFile, Task<object>> EmptyObjectFactory = (a, b, c) => null;
+    internal static readonly Func<BinaryReader, FileSource, Archive, Task<object>> EmptyObjectFactory = (a, b, c) => null;
     // common
     public int Id;
     public string Path;
@@ -23,7 +23,7 @@ public class FileSource {
     public int Flags;
     public ulong Hash;
     public DateTime Date;
-    public BinaryPakFile Pak;
+    public BinaryAsset Arc;
     public IList<FileSource> Parts;
     public byte[] Data;
     public object Tag;
@@ -32,7 +32,7 @@ public class FileSource {
     public Action<FileSource> Lazy;
     public FileSource Fix() { Lazy?.Invoke(this); return this; }
     // cached
-    internal Func<BinaryReader, FileSource, PakFile, Task<object>> CachedObjectFactory;
+    internal Func<BinaryReader, FileSource, Archive, Task<object>> CachedObjectFactory;
     internal object CachedObjectOption;
 }
 
@@ -70,7 +70,7 @@ public class MetaInfo(string name, object tag = null, IEnumerable<MetaInfo> item
 }
 
 [DebuggerDisplay("{Name}, items: {Items.Count}")]
-public class MetaItem(object source, string name, object icon, object tag = null, PakFile pakFile = null, List<MetaItem> items = null) {
+public class MetaItem(object source, string name, object icon, object tag = null, Archive archive = null, List<MetaItem> items = null) {
     [DebuggerDisplay("{Name}")]
     public class Filter(string name, string description = "") {
         public string Name = name;
@@ -83,7 +83,7 @@ public class MetaItem(object source, string name, object icon, object tag = null
     public string Name { get; } = name;
     public object Icon { get; } = icon;
     public object Tag { get; } = tag;
-    public PakFile PakFile { get; } = pakFile;
+    public Archive PakFile { get; } = archive;
     public List<MetaItem> Items { get; private set; } = items ?? [];
 
     public MetaItem Search(Func<MetaItem, bool> predicate) {
@@ -104,14 +104,14 @@ public class MetaItem(object source, string name, object icon, object tag = null
     public MetaItem FindByPath(string path, MetaManager manager) {
         var paths = path.Split(['\\', '/', ':'], 2);
         var node = Items.FirstOrDefault(x => x.Name == paths[0]);
-        (node?.Source as FileSource)?.Pak?.Open(node.Items, manager);
+        (node?.Source as FileSource)?.Arc?.Open(node.Items, manager);
         return node == null || paths.Length == 1 ? node : node.FindByPath(paths[1], manager);
     }
 
     public static MetaItem FindByPathForNodes(List<MetaItem> nodes, string path, MetaManager manager) {
         var paths = path.Split(['\\', '/', ':'], 2);
         var node = nodes.FirstOrDefault(x => x.Name == paths[0]);
-        (node?.Source as FileSource)?.Pak?.Open(node.Items, manager);
+        (node?.Source as FileSource)?.Arc?.Open(node.Items, manager);
         return node == null || paths.Length == 1 ? node : node.FindByPath(paths[1], manager);
     }
 }
@@ -148,9 +148,9 @@ public abstract class MetaManager {
     /// <param name="file">The file.</param>
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
-    public static async Task<List<MetaInfo>> GetMetaInfos(MetaManager manager, BinaryPakFile pakFile, FileSource file) {
+    public static async Task<List<MetaInfo>> GetMetaInfos(MetaManager manager, BinaryAsset pakFile, FileSource file) {
         List<MetaInfo> nodes = null;
-        var obj = await pakFile.LoadFileObject<object>(file);
+        var obj = await pakFile.GetAsset<object>(file);
         if (obj == null) return null;
         else if (obj is IHaveMetaInfo info) nodes = info.GetInfoNodes(manager, file);
         else if (obj is Stream stream) {
@@ -172,7 +172,7 @@ public abstract class MetaManager {
         nodes.Add(new MetaInfo("File", items: [
             new($"Path: {file.Path}"),
             new($"FileSize: {file.FileSize}"),
-            new($"AtEnd: {pakFile.LastAtEnd}"),
+            new($"AtEnd: {pakFile.AtEnd}"),
             file.Parts != null
                 ? new MetaInfo("Parts", items: file.Parts.Select(part => new MetaInfo($"{part.FileSize}@{part.Path}")))
                 : null
@@ -188,7 +188,7 @@ public abstract class MetaManager {
     /// <param name="manager">The manager.</param>
     /// <param name="pakFile">The pak file.</param>
     /// <returns></returns>
-    public static List<MetaItem> GetMetaItems(MetaManager manager, BinaryPakFile pakFile) {
+    public static List<MetaItem> GetMetaItems(MetaManager manager, BinaryAsset pakFile) {
         if (manager == null) throw new ArgumentNullException(nameof(manager));
 
         var root = new List<MetaItem>();
@@ -219,9 +219,9 @@ public abstract class MetaManager {
             }
 
             // pakfile
-            if (file.Pak != null) {
-                var items = GetMetaItems(manager, file.Pak);
-                currentFolder.Add(new MetaItem(file, Path.GetFileName(file.Path), manager.PackageIcon, pakFile: pakFile, items: items));
+            if (file.Arc != null) {
+                var items = GetMetaItems(manager, file.Arc);
+                currentFolder.Add(new MetaItem(file, Path.GetFileName(file.Path), manager.PackageIcon, archive: pakFile, items: items));
                 continue;
             }
 
@@ -230,7 +230,7 @@ public abstract class MetaManager {
             var fileNameForIcon = pakFile.FileMask?.Invoke(fileName) ?? fileName;
             var extentionForIcon = Path.GetExtension(fileNameForIcon);
             if (extentionForIcon.Length > 0) extentionForIcon = extentionForIcon[1..];
-            currentFolder.Add(new MetaItem(file, fileName, manager.GetIcon(extentionForIcon), pakFile: pakFile));
+            currentFolder.Add(new MetaItem(file, fileName, manager.GetIcon(extentionForIcon), archive: pakFile));
         }
         return root;
     }

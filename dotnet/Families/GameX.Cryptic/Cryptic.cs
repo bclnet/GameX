@@ -13,22 +13,22 @@ namespace GameX.Cryptic;
 /// CrypticPakFile
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class CrypticPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> {
+public class CrypticPakFile : BinaryAsset, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="CrypticPakFile" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public CrypticPakFile(PakState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+    public CrypticPakFile(ArchiveState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         ObjectFactoryFunc = ObjectFactory;
     }
 
     #region Factories
 
-    static PakBinary GetPakBinary(FamilyGame game, string extension)
+    static ArcBinary GetPakBinary(FamilyGame game, string extension)
         => Binary_Hogg.Current;
 
     //ref https://github.com/PlumberTaskForce/Datamining-Guide/blob/master/README.md
-    internal static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    internal static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             ".bin" => (0, Binary_Bin.Factory),
             ".htex" or ".wtex" => (0, Binary_Tex.Factory), // Textures
@@ -42,8 +42,8 @@ public class CrypticPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMo
 
     #region Transforms
 
-    bool ITransformFileObject<IUnknownFileModel>.CanTransformFileObject(PakFile transformTo, object source) => UnknownTransform.CanTransformFileObject(this, transformTo, source);
-    Task<IUnknownFileModel> ITransformFileObject<IUnknownFileModel>.TransformFileObject(PakFile transformTo, object source) => UnknownTransform.TransformFileObjectAsync(this, transformTo, source);
+    bool ITransformAsset<IUnknownFileModel>.CanTransformAsset(Archive transformTo, object source) => UnknownTransform.CanTransformFileObject(this, transformTo, source);
+    Task<IUnknownFileModel> ITransformAsset<IUnknownFileModel>.TransformAsset(Archive transformTo, object source) => UnknownTransform.TransformFileObjectAsync(this, transformTo, source);
 
     #endregion
 }

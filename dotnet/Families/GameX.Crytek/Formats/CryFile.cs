@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace GameX.Crytek.Formats;
 
 public partial class CryFile {
-    public static Task<object> Factory(BinaryReader r, FileSource m, PakFile s) {
+    public static Task<object> Factory(BinaryReader r, FileSource m, Archive s) {
         var file = new CryFile(m.Path);
         file.LoadFromPak(r.BaseStream, m, s);
         return Task.FromResult((object)file);
@@ -45,17 +45,17 @@ public partial class CryFile {
         LoadAsync(null, files, FindMaterialFromFile, path => Task.FromResult<(string, Stream)>((path, File.Open(path, FileMode.Open)))).Wait();
     }
 
-    public void LoadFromPak(Stream stream, FileSource metadata, PakFile pak) {
+    public void LoadFromPak(Stream stream, FileSource metadata, Archive pak) {
         var files = new List<(string, Stream)> { (InputFile, stream) };
         var mFilePath = Path.ChangeExtension(InputFile, $"{Path.GetExtension(InputFile)}m");
         if (pak.Contains(mFilePath)) {
             Log.Info($"Found geometry file {Path.GetFileName(mFilePath)}");
-            files.Add((mFilePath, pak.LoadFileData(mFilePath).Result)); // Add to list of files to process
+            files.Add((mFilePath, pak.GetData(mFilePath).Result)); // Add to list of files to process
         }
-        LoadAsync(pak, files, FindMaterialFromPak, path => Task.FromResult<(string, Stream)>((path, pak.LoadFileData(path).Result))).Wait();
+        LoadAsync(pak, files, FindMaterialFromPak, path => Task.FromResult<(string, Stream)>((path, pak.GetData(path).Result))).Wait();
     }
 
-    static string FindMaterialFromFile(PakFile pak, string materialPath, string fileName, string cleanName) {
+    static string FindMaterialFromFile(Archive pak, string materialPath, string fileName, string cleanName) {
         // First try relative to file being processed
         if (Path.GetExtension(materialPath) != ".mtl") materialPath = Path.ChangeExtension(materialPath, "mtl");
         // Then try just the last part of the chunk, relative to the file being processed
@@ -71,7 +71,7 @@ public partial class CryFile {
         return File.Exists(materialPath) ? materialPath : null;
     }
 
-    static string FindMaterialFromPak(PakFile pak, string materialPath, string fileName, string cleanName) {
+    static string FindMaterialFromPak(Archive pak, string materialPath, string fileName, string cleanName) {
         // First try relative to file being processed
         if (Path.GetExtension(materialPath) != ".mtl") materialPath = Path.ChangeExtension(materialPath, "mtl");
         // Then try just the last part of the chunk, relative to the file being processed
@@ -87,7 +87,7 @@ public partial class CryFile {
         return pak.Contains(materialPath) ? materialPath : null;
     }
 
-    public async Task LoadAsync(PakFile pak, IEnumerable<(string, Stream)> files, Func<PakFile, string, string, string, string> getMaterialPath, Func<string, Task<(string, Stream)>> getFileAsync) {
+    public async Task LoadAsync(Archive pak, IEnumerable<(string, Stream)> files, Func<Archive, string, string, string, string> getMaterialPath, Func<string, Task<(string, Stream)>> getFileAsync) {
         try {
             Models = new List<Model> { };
             foreach (var file in files) {

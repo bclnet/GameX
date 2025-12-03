@@ -12,19 +12,19 @@ namespace GameX.IW;
 /// IWPakFile
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class IWPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> {
+public class IWPakFile : BinaryAsset, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="IWPakFile" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public IWPakFile(PakState state) : base(state, Binary_IW.Current) {
+    public IWPakFile(ArchiveState state) : base(state, Binary_IW.Current) {
         ObjectFactoryFunc = ObjectFactory;
         UseReader = false;
     }
 
     #region Factories
 
-    static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             //".roq" => (0, VIDEO.Factory),
             //".wav" => (0, BinaryWav.Factory),
@@ -37,8 +37,8 @@ public class IWPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> 
 
     #region Transforms
 
-    bool ITransformFileObject<IUnknownFileModel>.CanTransformFileObject(PakFile transformTo, object source) => UnknownTransform.CanTransformFileObject(this, transformTo, source);
-    Task<IUnknownFileModel> ITransformFileObject<IUnknownFileModel>.TransformFileObject(PakFile transformTo, object source) => UnknownTransform.TransformFileObjectAsync(this, transformTo, source);
+    bool ITransformAsset<IUnknownFileModel>.CanTransformAsset(Archive transformTo, object source) => UnknownTransform.CanTransformFileObject(this, transformTo, source);
+    Task<IUnknownFileModel> ITransformAsset<IUnknownFileModel>.TransformAsset(Archive transformTo, object source) => UnknownTransform.TransformFileObjectAsync(this, transformTo, source);
 
     #endregion
 }

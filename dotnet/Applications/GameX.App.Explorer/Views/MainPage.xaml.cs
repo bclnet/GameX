@@ -12,7 +12,7 @@ namespace GameX.App.Explorer.Views;
 /// </summary>
 public class MainPageTab {
     public string Name { get; set; }
-    public PakFile PakFile { get; set; }
+    public Archive PakFile { get; set; }
     public IList<FamilyApp> AppList { get; set; }
     public string Text { get; set; }
 }
@@ -44,7 +44,7 @@ public partial class MainPage : Window, INotifyPropertyChanged {
         FamilyApps = family.Apps;
         foreach (var pakUri in pakUris) {
             Log.WriteLine($"Opening {pakUri}");
-            var pak = family.OpenPakFile(pakUri);
+            var pak = family.OpenArchive(pakUri);
             if (pak != null) PakFiles.Add(pak);
         }
         Log.WriteLine("Done");
@@ -70,7 +70,7 @@ public partial class MainPage : Window, INotifyPropertyChanged {
         set { _mainTabs = value; OnPropertyChanged(); }
     }
 
-    public readonly IList<PakFile> PakFiles = [];
+    public readonly IList<Archive> PakFiles = [];
     public Dictionary<string, FamilyApp> FamilyApps;
 
     public Task OnOpenedAsync(Family family, string path = null) {
@@ -78,7 +78,7 @@ public partial class MainPage : Window, INotifyPropertyChanged {
             Name = pakFile.Name,
             PakFile = pakFile,
         }).ToList();
-        var firstPakFile = tabs.FirstOrDefault()?.PakFile ?? PakFile.Empty;
+        var firstPakFile = tabs.FirstOrDefault()?.PakFile ?? Archive.Empty;
         if (FamilyApps.Count > 0)
             tabs.Add(new MainPageTab {
                 Name = "Apps",

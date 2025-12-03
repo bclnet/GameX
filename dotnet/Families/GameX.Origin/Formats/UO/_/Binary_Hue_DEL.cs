@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace GameX.Origin.Formats.UO {
     public unsafe class Binary_Hue_DEL : IHaveMetaInfo {
-        public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Hue_DEL(r));
+        public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Hue_DEL(r));
 
         #region Records
 

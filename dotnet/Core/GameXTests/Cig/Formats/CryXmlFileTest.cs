@@ -14,8 +14,8 @@ public class CryXmlFileTest {
     //[DataRow("Cig:StarCitizen", "Data/Objects/Characters/Human/male_v7/armor/nvy/pilot_flightsuit/m_nvy_pilot_light_armor_helmet_01.skin")]
     public async Task LoadFileObjectAsync(string pak, string sampleFile) => await LoadFileObjectAsync(Helper.Paks[pak].Value, sampleFile);
 
-    public async Task LoadFileObjectAsync(PakFile source, string sampleFile) {
+    public async Task LoadFileObjectAsync(Archive source, string sampleFile) {
         Assert.IsTrue(source.Contains(sampleFile));
-        var file = await source.LoadFileObject<CryXmlFile>(sampleFile);
+        var file = await source.GetAsset<CryXmlFile>(sampleFile);
     }
 }

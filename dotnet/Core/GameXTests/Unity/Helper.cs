@@ -6,8 +6,8 @@ namespace GameX.Unity;
 public static class Helper {
     static readonly Family familyUnity = FamilyManager.GetFamily("Unity");
 
-    public static readonly Dictionary<string, Lazy<PakFile>> Paks = new()
+    public static readonly Dictionary<string, Lazy<Archive>> Paks = new()
     {
-        { "Unity:AmongUs", new Lazy<PakFile>(() => familyUnity.OpenPakFile(new Uri("game:/resources.assets#AmongUs"))) },
+        { "Unity:AmongUs", new Lazy<Archive>(() => familyUnity.OpenArchive(new Uri("game:/resources.assets#AmongUs"))) },
     };
 }

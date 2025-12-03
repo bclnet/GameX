@@ -5,5 +5,5 @@ using System.Threading.Tasks;
 namespace GameX.Cig.Formats;
 
 public class Binary_DdsA {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Dds(r, false));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Dds(r, false));
 }

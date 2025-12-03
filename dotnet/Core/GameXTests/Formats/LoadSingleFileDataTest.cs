@@ -39,6 +39,6 @@ public class LoadSingleFileDataTest {
     public async Task LoadFileData(string pak, string sampleFile, int sampleFileSize) {
         var source = TestHelper.Paks[pak].Value;
         Assert.IsTrue(source.Contains(sampleFile));
-        Assert.AreEqual(sampleFileSize, (await source.LoadFileData(sampleFile)).Length);
+        Assert.AreEqual(sampleFileSize, (await source.GetData(sampleFile)).Length);
     }
 }

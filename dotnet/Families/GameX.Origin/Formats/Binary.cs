@@ -13,8 +13,8 @@ namespace GameX.Origin.Formats;
 
 #region Binary_U8
 
-public unsafe class Binary_U8 : PakBinary<Binary_U8> {
-    public static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+public unsafe class Binary_U8 : ArcBinary<Binary_U8> {
+    public static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => source.Path.ToLowerInvariant() switch {
             _ => Path.GetExtension(source.Path).ToLowerInvariant() switch {
                 _ => (0, null),
@@ -70,8 +70,8 @@ public unsafe class Binary_U8 : PakBinary<Binary_U8> {
         ("music", ".mus")
     };
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
-        var fileName = Path.GetFileName(source.PakPath).ToLowerInvariant();
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+        var fileName = Path.GetFileName(source.ArcPath).ToLowerInvariant();
         var nameToExt = NameToExts.FirstOrDefault(x => fileName.Contains(x.name));
         var ext = nameToExt.ext ?? ".dat";
 
@@ -94,7 +94,7 @@ public unsafe class Binary_U8 : PakBinary<Binary_U8> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         return Task.FromResult((Stream)new MemoryStream(r.ReadBytes((int)file.FileSize)));
     }
@@ -104,10 +104,10 @@ public unsafe class Binary_U8 : PakBinary<Binary_U8> {
 
 #region Binary_U9
 
-public unsafe class Binary_U9 : PakBinary<Binary_U9> {
+public unsafe class Binary_U9 : ArcBinary<Binary_U9> {
     #region Factories
 
-    public static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    public static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => source.Path.ToLowerInvariant() switch {
             //"abc" => (0, Binary_Palette.Factory),
             _ => Path.GetExtension(source.Path).ToLowerInvariant() switch {
@@ -153,8 +153,8 @@ public unsafe class Binary_U9 : PakBinary<Binary_U9> {
         ("typename", ".type"),
     };
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
-        var fileName = Path.GetFileName(source.PakPath).ToLowerInvariant();
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+        var fileName = Path.GetFileName(source.ArcPath).ToLowerInvariant();
         var nameToExt = NameToExts.FirstOrDefault(x => fileName.Contains(x.name));
         var ext = nameToExt.ext ?? ".dat";
 
@@ -175,7 +175,7 @@ public unsafe class Binary_U9 : PakBinary<Binary_U9> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         return Task.FromResult((Stream)new MemoryStream(r.ReadBytes((int)file.FileSize)));
     }
@@ -185,12 +185,12 @@ public unsafe class Binary_U9 : PakBinary<Binary_U9> {
 
 #region Binary_UO
 
-public unsafe class Binary_UO : PakBinary<Binary_UO> {
-    public static PakFile Art_Instance = Clients.UO.Database.PakFile?.GetFileSource("artLegacyMUL.uop").Item2.Pak;
+public unsafe class Binary_UO : ArcBinary<Binary_UO> {
+    public static Archive Art_Instance = Clients.UO.Database.PakFile?.GetSource("artLegacyMUL.uop").Item2.Arc;
 
     #region Factories
 
-    public static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    public static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => source.Path.ToLowerInvariant() switch {
             "animdata.mul" => (0, Binary_Animdata.Factory),
             "fonts.mul" => (0, Binary_AsciiFont.Factory),
@@ -264,8 +264,8 @@ public unsafe class Binary_UO : PakBinary<Binary_UO> {
 
     int Count;
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
-        if (source.PakPath.EndsWith(".uop")) ReadUop(source, r);
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+        if (source.ArcPath.EndsWith(".uop")) ReadUop(source, r);
         else ReadIdx(source, r);
         return Task.CompletedTask;
     }
@@ -274,15 +274,15 @@ public unsafe class Binary_UO : PakBinary<Binary_UO> {
 
     const int UOP_MAGIC = 0x50594D;
 
-    Task ReadUop(BinaryPakFile source, BinaryReader r) {
-        (string extension, int length, int idxLength, bool extra, Func<int, string> pathFunc) pair = source.PakPath switch {
+    Task ReadUop(BinaryAsset source, BinaryReader r) {
+        (string extension, int length, int idxLength, bool extra, Func<int, string> pathFunc) pair = source.ArcPath switch {
             "artLegacyMUL.uop" => (".tga", 0x14000, 0x13FDC, false, i => i < 0x4000 ? $"land/file{i:x5}.land" : $"art/file{i:x5}.art"),
             "gumpartLegacyMUL.uop" => (".tga", 0xFFFF, 0, true, i => $"file{i:x5}.tex"),
             "soundLegacyMUL.uop" => (".dat", 0xFFF, 0, false, i => $"file{i:x5}.wav"),
             _ => (null, 0, 0, false, i => $"file{i:x5}.dat"),
         };
         var (extension, length, idxLength, extra, pathFunc) = pair;
-        var uopPattern = Path.GetFileNameWithoutExtension(source.PakPath).ToLowerInvariant();
+        var uopPattern = Path.GetFileNameWithoutExtension(source.ArcPath).ToLowerInvariant();
 
         // read header
         var header = r.ReadS<UopHeader>();
@@ -376,7 +376,7 @@ public unsafe class Binary_UO : PakBinary<Binary_UO> {
 
     #region IDX
 
-    Task ReadIdx(BinaryPakFile source, BinaryReader r) {
+    Task ReadIdx(BinaryAsset source, BinaryReader r) {
         /*
         FileIDs
         --------------
@@ -400,7 +400,7 @@ public unsafe class Binary_UO : PakBinary<Binary_UO> {
         30 - tiledata.mul
         31 - animdata.mul
         */
-        (string mulPath, int length, int fileId, Func<int, string> pathFunc) pair = source.PakPath switch {
+        (string mulPath, int length, int fileId, Func<int, string> pathFunc) pair = source.ArcPath switch {
             "anim.idx" => ("anim.mul", 0x40000, 6, i => $"file{i:x5}.anim"),
             "anim2.idx" => ("anim2.mul", 0x10000, -1, i => $"file{i:x5}.anim"),
             "anim3.idx" => ("anim3.mul", 0x20000, -1, i => $"file{i:x5}.anim"),
@@ -415,7 +415,7 @@ public unsafe class Binary_UO : PakBinary<Binary_UO> {
             "texidx.mul" => ("texmaps.mul", 0x4000, 10, i => $"file{i:x5}.dat"),
             _ => throw new ArgumentOutOfRangeException() // (null, 0, -1, i => $"file{i:x5}.dat"),
         };
-        var mulPath = source.PakPath = pair.mulPath;
+        var mulPath = source.ArcPath = pair.mulPath;
         var length = pair.length;
         var fileId = pair.fileId;
         var pathFunc = pair.pathFunc;
@@ -465,7 +465,7 @@ public unsafe class Binary_UO : PakBinary<Binary_UO> {
     public static ushort Art_ClampItemId(int itemId, bool checkMaxId = true)
         => itemId < 0 || (checkMaxId && itemId > Art_MaxItemId) ? (ushort)0U : (ushort)itemId;
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
         if (file.Offset < 0) return Task.FromResult<Stream>(null);
         var fileSize = (int)(file.FileSize & 0x7FFFFFFF);
         if ((file.FileSize & (1 << 31)) != 0) return Task.FromResult<Stream>(Binary_Verdata.Current.ReadData(file.Offset, fileSize));

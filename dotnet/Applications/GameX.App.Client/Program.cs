@@ -26,7 +26,7 @@ partial class Program {
         if (family == null) { Console.WriteLine($"No family found named '{args.Family}'."); return 0; }
 
         // get game
-        var game = family.OpenPakFile(args.Uri);
+        var game = family.OpenArchive(args.Uri);
         if (game == null) { Console.WriteLine($"No game found named '{args.Uri}'."); return 0; }
 
         Log.Trace("Running game...");

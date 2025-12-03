@@ -14,12 +14,12 @@ namespace GameX.Capcom;
 /// CapcomPakFile
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class CapcomPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> {
+public class CapcomPakFile : BinaryAsset, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="CapcomPakFile" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public CapcomPakFile(PakState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+    public CapcomPakFile(ArchiveState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         ObjectFactoryFunc = state.Game.Engine.n switch {
             "Unity" => Unity.UnityPakFile.ObjectFactory,
             _ => ObjectFactory,
@@ -28,11 +28,11 @@ public class CapcomPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMod
 
     #region Factories
 
-    static readonly ConcurrentDictionary<string, PakBinary> PakBinarys = new();
+    static readonly ConcurrentDictionary<string, ArcBinary> PakBinarys = new();
 
-    static PakBinary GetPakBinary(FamilyGame game, string extension) => PakBinarys.GetOrAdd(game.Id, _ => PakBinaryFactory(game, extension));
+    static ArcBinary GetPakBinary(FamilyGame game, string extension) => PakBinarys.GetOrAdd(game.Id, _ => PakBinaryFactory(game, extension));
 
-    static PakBinary PakBinaryFactory(FamilyGame game, string extension)
+    static ArcBinary PakBinaryFactory(FamilyGame game, string extension)
         => game.Engine.n switch {
             "Zip" => Binary_Zip.GetPakBinary(game),
             "Unity" => Unity.Formats.Binary_Unity.Current,
@@ -46,7 +46,7 @@ public class CapcomPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMod
             },
         };
 
-    static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             _ => UnknownPakFile.ObjectFactory(source, game),
         };
@@ -55,8 +55,8 @@ public class CapcomPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMod
 
     #region Transforms
 
-    bool ITransformFileObject<IUnknownFileModel>.CanTransformFileObject(PakFile transformTo, object source) => UnknownTransform.CanTransformFileObject(this, transformTo, source);
-    Task<IUnknownFileModel> ITransformFileObject<IUnknownFileModel>.TransformFileObject(PakFile transformTo, object source) => UnknownTransform.TransformFileObjectAsync(this, transformTo, source);
+    bool ITransformAsset<IUnknownFileModel>.CanTransformAsset(Archive transformTo, object source) => UnknownTransform.CanTransformFileObject(this, transformTo, source);
+    Task<IUnknownFileModel> ITransformAsset<IUnknownFileModel>.TransformAsset(Archive transformTo, object source) => UnknownTransform.TransformFileObjectAsync(this, transformTo, source);
 
     #endregion
 }

@@ -11,13 +11,13 @@ namespace GameX.Cig.Formats;
 /// PakBinary_P4k
 /// </summary>
 /// <seealso cref="GameX.Formats.PakBinary" />
-public class PakBinary_P4k : PakBinary<PakBinary_P4k> {
+public class PakBinary_P4k : ArcBinary<PakBinary_P4k> {
     readonly byte[] Key = [0x5E, 0x7A, 0x20, 0x02, 0x30, 0x2E, 0xEB, 0x1A, 0x3B, 0xB6, 0x17, 0xC3, 0x0F, 0xDE, 0x1E, 0x47];
 
-    protected class SubPakFileP4k : BinaryPakFile {
+    protected class SubPakFileP4k : BinaryAsset {
         P4kFile Pak;
 
-        public SubPakFileP4k(BinaryPakFile source, P4kFile pak, string path, object tag) : base(new PakState(source.Vfx, source.Game, source.Edition, path, tag), Current) {
+        public SubPakFileP4k(BinaryAsset source, P4kFile pak, string path, object tag) : base(new ArchiveState(source.Vfx, source.Game, source.Edition, path, tag), Current) {
             Pak = pak;
             ObjectFactoryFunc = source.ObjectFactoryFunc;
             UseReader = false;
@@ -28,11 +28,11 @@ public class PakBinary_P4k : PakBinary<PakBinary_P4k> {
             var entry = (P4kEntry)Tag;
             var stream = Pak.GetInputStream(entry.ZipFileIndex);
             using var r2 = new BinaryReader(stream);
-            await PakBinary.Read(this, r2, tag);
+            await ArcBinary.Read(this, r2, tag);
         }
     }
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         source.UseReader = false;
         var files = source.Files = new List<FileSource>();
 
@@ -48,7 +48,7 @@ public class PakBinary_P4k : PakBinary<PakBinary_P4k> {
                 Tag = entry,
             };
             var metadataPath = metadata.Path;
-            if (metadataPath.EndsWith(".pak", StringComparison.OrdinalIgnoreCase) || metadataPath.EndsWith(".socpak", StringComparison.OrdinalIgnoreCase)) metadata.Pak = new SubPakFileP4k(source, pak, metadataPath, metadata.Tag);
+            if (metadataPath.EndsWith(".pak", StringComparison.OrdinalIgnoreCase) || metadataPath.EndsWith(".socpak", StringComparison.OrdinalIgnoreCase)) metadata.Arc = new SubPakFileP4k(source, pak, metadataPath, metadata.Tag);
             else if (metadataPath.EndsWith(".dds", StringComparison.OrdinalIgnoreCase) || metadataPath.EndsWith(".dds.a", StringComparison.OrdinalIgnoreCase)) parentByPath.Add(metadataPath, metadata);
             else if (metadataPath.Length > 8 && metadataPath[^8..].Contains(".dds.", StringComparison.OrdinalIgnoreCase)) {
                 var parentPath = metadataPath[..(metadataPath.IndexOf(".dds", StringComparison.OrdinalIgnoreCase) + 4)];
@@ -67,7 +67,7 @@ public class PakBinary_P4k : PakBinary<PakBinary_P4k> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
         var pak = (P4kFile)source.Tag;
         var entry = (ZipEntry)file.Tag;
         try {
@@ -90,7 +90,7 @@ public class PakBinary_P4k : PakBinary<PakBinary_P4k> {
 
     #region Write
 
-    public override Task Write(BinaryPakFile source, BinaryWriter w, object tag) {
+    public override Task Write(BinaryAsset source, BinaryWriter w, object tag) {
         source.UseReader = false;
         var files = source.Files;
 
@@ -99,13 +99,13 @@ public class PakBinary_P4k : PakBinary<PakBinary_P4k> {
         foreach (var file in files) {
             var entry = (ZipEntry)(file.Tag = new ZipEntry(Path.GetFileName(file.Path)));
             pak.Add(entry);
-            source.PakBinary.WriteData(source, w, file, null);
+            source.ArcBinary.WriteData(source, w, file, null);
         }
         pak.CommitUpdate();
         return Task.CompletedTask;
     }
 
-    public override Task WriteData(BinaryPakFile source, BinaryWriter w, FileSource file, Stream data, object option = default) {
+    public override Task WriteData(BinaryAsset source, BinaryWriter w, FileSource file, Stream data, object option = default) {
         var pak = (P4kFile)source.Tag;
         var entry = (ZipEntry)file.Tag;
         try {

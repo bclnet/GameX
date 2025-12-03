@@ -8,7 +8,7 @@ namespace GameX.WB.Formats;
 
 #region Binary_AC
 
-public unsafe class Binary_AC : PakBinary<Binary_AC> {
+public unsafe class Binary_AC : ArcBinary<Binary_AC> {
     #region Headers
 
     const uint DAT_HEADER_OFFSET = 0x140;
@@ -88,7 +88,7 @@ public unsafe class Binary_AC : PakBinary<Binary_AC> {
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         var files = source.Files = [];
         r.Seek(DAT_HEADER_OFFSET);
         var header = r.ReadS<Header>();
@@ -97,7 +97,7 @@ public unsafe class Binary_AC : PakBinary<Binary_AC> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default)
         => Task.FromResult((Stream)new MemoryStream(ReadBytes(r, file.Offset, (int)file.FileSize, (int)file.Hash)));
 
     static T ReadT<T>(BinaryReader r, long offset, int size, int blockSize) where T : struct

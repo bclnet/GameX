@@ -12,7 +12,7 @@ namespace GameX.Cryptic.Formats;
 #region Binary_Bin
 
 public unsafe class Binary_Bin : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Bin(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Bin(r));
 
     #region Headers
 
@@ -91,7 +91,7 @@ public unsafe class Binary_Bin : IHaveMetaInfo {
 #region Binary_Hogg
 // https://github.com/nohbdy/libhogg
 
-public unsafe class Binary_Hogg : PakBinary<Binary_Hogg> {
+public unsafe class Binary_Hogg : ArcBinary<Binary_Hogg> {
     // Headers
     #region Headers
 
@@ -137,7 +137,7 @@ public unsafe class Binary_Hogg : PakBinary<Binary_Hogg> {
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         // read header
         var header = r.ReadS<Header>();
         if (header.Magic != MAGIC) throw new FormatException("BAD MAGIC");
@@ -194,7 +194,7 @@ public unsafe class Binary_Hogg : PakBinary<Binary_Hogg> {
         for (var i = 0; i < files.Length; i++) {
             var file = files[i];
             file.Path = Encoding.ASCII.GetString(fileAttribs[attributeEntries[i].PathId][..^1]);
-            if (file.Path.EndsWith(".hogg", StringComparison.OrdinalIgnoreCase)) file.Pak = new SubPakFile(source, file, file.Path);
+            if (file.Path.EndsWith(".hogg", StringComparison.OrdinalIgnoreCase)) file.Arc = new SubArchive(source, file, file.Path);
         }
 
         // remove filesize of -1 and file 0
@@ -202,7 +202,7 @@ public unsafe class Binary_Hogg : PakBinary<Binary_Hogg> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         return Task.FromResult((Stream)new MemoryStream(file.Compressed != 0
             ? r.DecompressZlib((int)file.PackedSize, (int)file.FileSize)
@@ -215,7 +215,7 @@ public unsafe class Binary_Hogg : PakBinary<Binary_Hogg> {
 #region Binary_MSet
 
 public unsafe class Binary_MSet : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_MSet(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_MSet(r));
 
     #region MSet
 
@@ -385,7 +385,7 @@ public unsafe class Binary_MSet : IHaveMetaInfo {
 #region Binary_Tex
 
 public class Binary_Tex : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Tex(r, (int)f.FileSize));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Tex(r, (int)f.FileSize));
 
     public string Data;
 

@@ -38,13 +38,13 @@ public class ViewInfo : Node {
     //public string Path = "meshes/x/ex_common_balcony_01.nif";
 
     protected Family Family;
-    protected PakFile Source;
+    protected Archive Source;
     Renderer Renderer;
 
     public override void _Ready() {
         if (string.IsNullOrEmpty(FamilyId)) return;
         Family = FamilyManager.GetFamily(FamilyId);
-        if (!string.IsNullOrEmpty(PakUri)) Source = Family.OpenPakFile(new Uri(PakUri));
+        if (!string.IsNullOrEmpty(PakUri)) Source = Family.OpenArchive(new Uri(PakUri));
         Renderer = GodotRenderer.CreateRenderer(this, Source?.Gfx, Path, Type);
         Renderer?.Start();
     }

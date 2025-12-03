@@ -14,25 +14,25 @@ namespace GameX.Bioware;
 /// BiowarePakFile
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class BiowarePakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> {
+public class BiowarePakFile : BinaryAsset, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="BiowarePakFile" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public BiowarePakFile(PakState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+    public BiowarePakFile(ArchiveState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         ObjectFactoryFunc = ObjectFactory;
     }
 
     #region Factories
 
-    static readonly ConcurrentDictionary<string, PakBinary> PakBinarys = new ConcurrentDictionary<string, PakBinary>();
+    static readonly ConcurrentDictionary<string, ArcBinary> PakBinarys = new ConcurrentDictionary<string, ArcBinary>();
 
-    static PakBinary GetPakBinary(FamilyGame game, string extension)
+    static ArcBinary GetPakBinary(FamilyGame game, string extension)
         => extension != ".zip"
             ? PakBinarys.GetOrAdd(game.Id, _ => PakBinaryFactory(game))
             : Binary_Zip.GetPakBinary(game);
 
-    static PakBinary PakBinaryFactory(FamilyGame game)
+    static ArcBinary PakBinaryFactory(FamilyGame game)
         => game.Engine.n switch {
             //"Infinity" => PakBinary_Infinity.Instance,
             "Aurora" => Binary_Aurora.Current,
@@ -41,7 +41,7 @@ public class BiowarePakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMo
             _ => throw new ArgumentOutOfRangeException(nameof(game.Engine))
         };
 
-    static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             ".dlg" or ".qdb" or ".qst" => (0, Binary_Gff.Factory),
             _ => UnknownPakFile.ObjectFactory(source, game),
@@ -51,8 +51,8 @@ public class BiowarePakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMo
 
     #region Transforms
 
-    bool ITransformFileObject<IUnknownFileModel>.CanTransformFileObject(PakFile transformTo, object source) => UnknownTransform.CanTransformFileObject(this, transformTo, source);
-    Task<IUnknownFileModel> ITransformFileObject<IUnknownFileModel>.TransformFileObject(PakFile transformTo, object source) => UnknownTransform.TransformFileObjectAsync(this, transformTo, source);
+    bool ITransformAsset<IUnknownFileModel>.CanTransformAsset(Archive transformTo, object source) => UnknownTransform.CanTransformFileObject(this, transformTo, source);
+    Task<IUnknownFileModel> ITransformAsset<IUnknownFileModel>.TransformAsset(Archive transformTo, object source) => UnknownTransform.TransformFileObjectAsync(this, transformTo, source);
 
     #endregion
 }

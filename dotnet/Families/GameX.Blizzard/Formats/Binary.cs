@@ -9,21 +9,21 @@ namespace GameX.Blizzard.Formats;
 
 #region Binary_Blizzard
 
-public unsafe class Binary_Blizzard : PakBinary<Binary_Blizzard> {
+public unsafe class Binary_Blizzard : ArcBinary<Binary_Blizzard> {
     CascContext casc;
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         var files = source.Files = [];
 
         // load casc
         var editions = source.Game.Editions;
         var product = editions.First().Key;
         casc = new CascContext();
-        casc.Read(source.PakPath, product, files);
+        casc.Read(source.ArcPath, product, files);
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default)
         => Task.FromResult(casc.ReadData(file));
 }
 

@@ -40,13 +40,13 @@ public class ViewInfo : UnityEngine.MonoBehaviour {
     //public string Path = "meshes/x/ex_common_balcony_01.nif";
 
     protected Family Family;
-    protected PakFile Source;
+    protected Archive Source;
     Renderer Renderer;
 
     public void Awake() {
         if (string.IsNullOrEmpty(FamilyId)) return;
         Family = FamilyManager.GetFamily(FamilyId);
-        if (!string.IsNullOrEmpty(PakUri)) Source = Family.OpenPakFile(new Uri(PakUri));
+        if (!string.IsNullOrEmpty(PakUri)) Source = Family.OpenArchive(new Uri(PakUri));
         Renderer = UnityRenderer.CreateRenderer(this, Source?.Gfx, Path, Type);
     }
 

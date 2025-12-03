@@ -18,7 +18,7 @@ namespace GameX.Unity.Formats;
 /// PakBinaryUnity
 /// </summary>
 /// <seealso cref="GameX.Formats.PakBinary" />
-public unsafe class Binary_Unity : PakBinary<Binary_Unity> {
+public unsafe class Binary_Unity : ArcBinary<Binary_Unity> {
     readonly byte[] Key;
 
     //public PakBinaryUnity(byte[] key = null) => Key = key;
@@ -1603,7 +1603,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity> {
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         // try-bundle
         var bundleFile = new BundleFile(r);
         if (bundleFile.Success) {
@@ -1643,7 +1643,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity> {
         return Task.CompletedTask;
     }
 
-    public override Task Write(BinaryPakFile source, BinaryWriter w, object tag) {
+    public override Task Write(BinaryAsset source, BinaryWriter w, object tag) {
 
 
         //source.UseBinaryReader = false;
@@ -1660,7 +1660,7 @@ public unsafe class Binary_Unity : PakBinary<Binary_Unity> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
         //var pak = (P4kFile)source.Tag;
         //var entry = (ZipEntry)file.Tag;
         //try

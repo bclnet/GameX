@@ -16,7 +16,7 @@ namespace GameX.Origin.Formats.UO;
 #region Binary_Anim - TODO
 
 public unsafe class Binary_Anim : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Anim(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Anim(r));
 
     // file: xxx
     public Binary_Anim(BinaryReader r) {
@@ -38,7 +38,7 @@ public unsafe class Binary_Anim : IHaveMetaInfo {
 #region Binary_Animdata
 
 public unsafe class Binary_Animdata : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Animdata(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Animdata(r));
 
     #region Headers
 
@@ -100,7 +100,7 @@ public unsafe class Binary_Animdata : IHaveMetaInfo {
 #region Binary_AsciiFont
 
 public unsafe class Binary_AsciiFont : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_AsciiFont(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_AsciiFont(r));
 
     #region Headers
 
@@ -166,7 +166,7 @@ public unsafe class Binary_AsciiFont : IHaveMetaInfo {
 #region Binary_BodyConverter
 
 public unsafe class Binary_BodyConverter : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_BodyConverter(r.ToStream()));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_BodyConverter(r.ToStream()));
 
     #region Headers
 
@@ -393,7 +393,7 @@ public unsafe class Binary_BodyConverter : IHaveMetaInfo {
 #region Binary_BodyTable
 
 public unsafe class Binary_BodyTable : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_BodyTable(r.ToStream()));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_BodyTable(r.ToStream()));
 
     #region Headers
 
@@ -463,7 +463,7 @@ public unsafe class Binary_BodyTable : IHaveMetaInfo {
 #region Binary_CalibrationInfo
 
 public unsafe class Binary_CalibrationInfo : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_CalibrationInfo(r.ToStream()));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_CalibrationInfo(r.ToStream()));
 
     #region Headers
 
@@ -631,7 +631,7 @@ public unsafe class Binary_CalibrationInfo : IHaveMetaInfo {
 #region Binary_Gump
 
 public unsafe class Binary_Gump : IHaveMetaInfo, ITexture {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Gump(r, (int)f.FileSize, f.Compressed));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Gump(r, (int)f.FileSize, f.Compressed));
 
     #region Headers
 
@@ -773,7 +773,7 @@ public unsafe class Binary_Gump : IHaveMetaInfo, ITexture {
 #region Binary_GumpDef
 
 public unsafe class Binary_GumpDef : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_GumpDef(r.ToStream()));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_GumpDef(r.ToStream()));
 
     #region Headers
 
@@ -823,7 +823,7 @@ public unsafe class Binary_GumpDef : IHaveMetaInfo {
 #region Binary_Hues
 
 public unsafe class Binary_Hues : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Hues(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Hues(r));
 
     #region Headers
 
@@ -890,7 +890,7 @@ public unsafe class Binary_Hues : IHaveMetaInfo {
 #region Binary_Land
 
 public unsafe class Binary_Land : IHaveMetaInfo, ITexture {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Land(r, (int)f.FileSize));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Land(r, (int)f.FileSize));
 
     byte[] Pixels;
 
@@ -944,7 +944,7 @@ public unsafe class Binary_Land : IHaveMetaInfo, ITexture {
 #region Binary_Light
 
 public unsafe class Binary_Light : IHaveMetaInfo, ITexture {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Light(r, (int)f.FileSize, f.Compressed));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Light(r, (int)f.FileSize, f.Compressed));
 
     byte[] Pixels;
 
@@ -996,7 +996,7 @@ public unsafe class Binary_Light : IHaveMetaInfo, ITexture {
 #region Binary_MobType
 
 public unsafe class Binary_MobType : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_MobType(r.ToStream()));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_MobType(r.ToStream()));
 
     #region Headers
 
@@ -1058,7 +1058,7 @@ public unsafe class Binary_MobType : IHaveMetaInfo {
 #region Binary_MultiMap
 
 public unsafe class Binary_MultiMap : IHaveMetaInfo, ITexture {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_MultiMap(r, f));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_MultiMap(r, f));
 
     byte[] Pixels;
 
@@ -1149,7 +1149,7 @@ public unsafe class Binary_MultiMap : IHaveMetaInfo, ITexture {
 #region Binary_MusicDef
 
 public unsafe class Binary_MusicDef : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_MusicDef(r.ToStream()));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_MusicDef(r.ToStream()));
 
     #region Headers
 
@@ -1197,7 +1197,7 @@ public unsafe class Binary_MusicDef : IHaveMetaInfo {
 #region Binary_Multi
 
 public unsafe class Binary_Multi : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Multi(r, (int)f.FileSize, Art_IsUOAHS));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Multi(r, (int)f.FileSize, Art_IsUOAHS));
 
     #region Headers
 
@@ -1335,7 +1335,7 @@ public unsafe class Binary_Multi : IHaveMetaInfo {
 #region Binary_RadarColor
 
 public unsafe class Binary_RadarColor : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_RadarColor(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_RadarColor(r));
 
     #region Headers
 
@@ -1375,7 +1375,7 @@ public unsafe class Binary_RadarColor : IHaveMetaInfo {
 #region Binary_SkillGroups
 
 public unsafe class Binary_SkillGroups : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_SkillGroups(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_SkillGroups(r));
 
     #region Headers
 
@@ -1410,7 +1410,7 @@ public unsafe class Binary_SkillGroups : IHaveMetaInfo {
 #region Binary_SpeechList
 
 public unsafe class Binary_SpeechList : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_SpeechList(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_SpeechList(r));
 
     #region Headers
 
@@ -1478,7 +1478,7 @@ public unsafe class Binary_SpeechList : IHaveMetaInfo {
 #region Binary_Art
 
 public unsafe class Binary_Art : IHaveMetaInfo, ITexture {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Art(r, (int)f.FileSize));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Art(r, (int)f.FileSize));
 
     byte[] Pixels;
 
@@ -1547,7 +1547,7 @@ public unsafe class Binary_Art : IHaveMetaInfo, ITexture {
 
 public unsafe class Binary_StringTable : IHaveMetaInfo {
     public static Dictionary<string, Binary_StringTable> Current = [];
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_StringTable(r, f));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_StringTable(r, f));
 
     #region Headers
 
@@ -1599,7 +1599,7 @@ public unsafe class Binary_StringTable : IHaveMetaInfo {
 #region Binary_TileData - VERIFY
 
 public unsafe class Binary_TileData : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_TileData(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_TileData(r));
 
     #region Headers
 
@@ -1844,7 +1844,7 @@ public unsafe class Binary_TileData : IHaveMetaInfo {
 #region Binary_UnicodeFont - TODO
 
 public unsafe class Binary_UnicodeFont : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_UnicodeFont(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_UnicodeFont(r));
 
     #region Headers
 
@@ -1906,7 +1906,7 @@ public unsafe class Binary_UnicodeFont : IHaveMetaInfo {
 #region Binary_Verdata
 
 public unsafe class Binary_Verdata : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Verdata(r, (BinaryPakFile)s));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Verdata(r, (BinaryAsset)s));
     public static Binary_Verdata Current;
 
     #region Headers
@@ -1923,11 +1923,11 @@ public unsafe class Binary_Verdata : IHaveMetaInfo {
 
     #endregion
 
-    public BinaryPakFile PakFile;
+    public BinaryAsset PakFile;
     public IDictionary<int, Patch[]> Patches = new Dictionary<int, Patch[]>();
 
     // file: verdata.mul
-    public Binary_Verdata(BinaryReader r, BinaryPakFile s) {
+    public Binary_Verdata(BinaryReader r, BinaryAsset s) {
         PakFile = s;
         Patches = r.ReadL32SArray<Patch>().GroupBy(x => x.File).ToDictionary(x => x.Key, x => x.ToArray());
         Current = this;

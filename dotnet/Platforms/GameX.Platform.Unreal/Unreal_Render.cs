@@ -40,7 +40,7 @@ public class ViewInfo {
     //public string Param1 = "meshes/x/ex_common_balcony_01.nif";
 
     protected Family Family;
-    protected List<PakFile> PakFiles = [];
+    protected List<Archive> PakFiles = [];
     protected UnrealGfxModel Gfx;
 
     Renderer Renderer;

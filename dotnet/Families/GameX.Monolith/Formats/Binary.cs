@@ -10,7 +10,7 @@ namespace GameX.Monolith.Formats;
 
 #region Binary_Lith
 
-public unsafe class Binary_Lith : PakBinary<Binary_Lith> {
+public unsafe class Binary_Lith : ArcBinary<Binary_Lith> {
     #region X_Headers
 
     const uint CRLF = 0x0d0a;
@@ -120,7 +120,7 @@ public unsafe class Binary_Lith : PakBinary<Binary_Lith> {
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         // read file
         var header = r.ReadS<Header>();
         if (header.Magic != MAGIC) throw new FormatException("BAD MAGIC");
@@ -181,7 +181,7 @@ public unsafe class Binary_Lith : PakBinary<Binary_Lith> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
         Stream fileData;
         r.Seek(file.Offset);
         fileData = new MemoryStream(r.ReadBytes((int)file.FileSize));

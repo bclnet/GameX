@@ -10,7 +10,7 @@ namespace GameX.Origin.Formats.UO;
 #region ServerBinary_BodyTable
 
 public unsafe class ServerBinary_BodyTable : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new ServerBinary_BodyTable(r.ToStream()));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new ServerBinary_BodyTable(r.ToStream()));
 
     // file: Data/bodyTable.cfg
     public ServerBinary_BodyTable(StreamReader r) {
@@ -44,7 +44,7 @@ public unsafe class ServerBinary_BodyTable : IHaveMetaInfo {
 #region ServerBinary_Container
 
 public unsafe class ServerBinary_Container : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new ServerBinary_Container(r.ToStream()));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new ServerBinary_Container(r.ToStream()));
 
     #region Records
 

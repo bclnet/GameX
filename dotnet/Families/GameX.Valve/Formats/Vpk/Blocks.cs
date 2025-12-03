@@ -8141,11 +8141,11 @@ public class D_Mesh : XKV3_NTRO, IMesh, IHaveMetaInfo {
         MaxBounds = maxBounds;
     }
 
-    public async void LoadExternalMorphData(PakFile fileLoader) {
+    public async void LoadExternalMorphData(Archive fileLoader) {
         if (MorphData == null) {
             var morphSetPath = Data.Get<string>("m_morphSet");
             if (!string.IsNullOrEmpty(morphSetPath)) {
-                var morphSetResource = await fileLoader.LoadFileObject<Binary_Src>(morphSetPath + "_c");
+                var morphSetResource = await fileLoader.GetAsset<Binary_Src>(morphSetPath + "_c");
                 if (morphSetResource != null) {
                     //MorphData = morphSetResource.GetBlockByType<MRPH>() as DATAMorph;
                     var abc = morphSetResource.GetBlockByType<MRPH>();
@@ -8271,7 +8271,7 @@ public class D_Model : XKV3_NTRO, IValveModel {
 
         // Load animations from referenced animation groups
         foreach (var animGroupPath in animGroupPaths) {
-            var animGroup = gfx.LoadFileObject<Binary_Src>($"{animGroupPath}_c").Result;
+            var animGroup = gfx.GetAsset<Binary_Src>($"{animGroupPath}_c").Result;
             if (animGroup != default) animations.AddRange(AnimationGroupLoader.LoadAnimationGroup(animGroup, gfx, Skeleton));
         }
 
@@ -8320,11 +8320,11 @@ public class D_Morph : XKV3_NTRO {
 
     public D_Morph() : base("MorphSetData_t") { }
 
-    public async Task LoadFlexData(PakFile fileLoader) {
+    public async Task LoadFlexData(Archive fileLoader) {
         var atlasPath = Data.Get<string>("m_pTextureAtlas");
         if (string.IsNullOrEmpty(atlasPath)) return;
 
-        var textureResource = await fileLoader.LoadFileObject<D_Texture>(atlasPath + "_c");
+        var textureResource = await fileLoader.GetAsset<D_Texture>(atlasPath + "_c");
         if (textureResource == null) return;
 
         LocalFunction();

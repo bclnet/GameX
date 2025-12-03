@@ -13,7 +13,7 @@ namespace GameX.Arkane.Formats.Danae;
 #region Binary_Ftl
 
 public unsafe class Binary_Ftl : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Ftl(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Ftl(r));
 
     #region Headers
 
@@ -299,7 +299,7 @@ public unsafe class Binary_Ftl : IHaveMetaInfo {
 #region Binary_Fts
 
 public unsafe class Binary_Fts : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Fts(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Fts(r));
 
     #region Headers : Struct
 
@@ -755,7 +755,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo {
 #region Binary_Tea
 
 public unsafe class Binary_Tea : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Tea(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Tea(r));
 
     // https://github.com/OpenSourcedGames/Arx-Fatalis/blob/master/Sources/EERIE/EERIEAnim.cpp#L355
     public Binary_Tea(BinaryReader r) {

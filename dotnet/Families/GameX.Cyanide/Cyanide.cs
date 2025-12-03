@@ -12,18 +12,18 @@ namespace GameX.Cyanide;
 /// CyanidePakFile
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class CyanidePakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> {
+public class CyanidePakFile : BinaryAsset, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="CyanidePakFile" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public CyanidePakFile(PakState state) : base(state, Binary_Cpk.Current) {
+    public CyanidePakFile(ArchiveState state) : base(state, Binary_Cpk.Current) {
         ObjectFactoryFunc = ObjectFactory;
     }
 
     #region Factories
 
-    static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             ".dds" => (0, Binary_Dds.Factory),
             _ => (0, null),
@@ -33,8 +33,8 @@ public class CyanidePakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMo
 
     #region Transforms
 
-    bool ITransformFileObject<IUnknownFileModel>.CanTransformFileObject(PakFile transformTo, object source) => UnknownTransform.CanTransformFileObject(this, transformTo, source);
-    Task<IUnknownFileModel> ITransformFileObject<IUnknownFileModel>.TransformFileObject(PakFile transformTo, object source) => UnknownTransform.TransformFileObjectAsync(this, transformTo, source);
+    bool ITransformAsset<IUnknownFileModel>.CanTransformAsset(Archive transformTo, object source) => UnknownTransform.CanTransformFileObject(this, transformTo, source);
+    Task<IUnknownFileModel> ITransformAsset<IUnknownFileModel>.TransformAsset(Archive transformTo, object source) => UnknownTransform.TransformFileObjectAsync(this, transformTo, source);
 
     #endregion
 }

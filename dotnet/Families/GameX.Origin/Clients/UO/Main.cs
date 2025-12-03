@@ -12,7 +12,7 @@ public class Main(bool uop) {
     bool Uop = uop;
     //Animations Animations;
     Binary_Animdata AnimData;
-    PakFile Arts;
+    Archive Arts;
     //Maps Maps;
     Binary_StringTable Clilocs;
     //Gumps Gumps;
@@ -35,13 +35,13 @@ public class Main(bool uop) {
     //BuffTable BuffTable;
     //ChairTable ChairTable;
 
-    public async Task Load(PakFile game, GameController ctx) {
+    public async Task Load(Archive game, GameController ctx) {
         var lang = "enu";
         //Animations = new Animations(this);
-        AnimData = await game.LoadFileObject<Binary_Animdata>("animdata.mul");
-        Arts = game.OpenPakFile(Uop ? "artLegacyMUL.uop" : "artidx.mul");
+        AnimData = await game.GetAsset<Binary_Animdata>("animdata.mul");
+        Arts = game.GetArchive(Uop ? "artLegacyMUL.uop" : "artidx.mul");
         //Maps = new Maps(this);
-        Clilocs = await game.LoadFileObject<Binary_StringTable>($"cliloc.{lang}");
+        Clilocs = await game.GetAsset<Binary_StringTable>($"cliloc.{lang}");
         //Gumps = new Gumps(this);
         //Fonts = new Fonts(this);
         //Hues = new Hues(this);

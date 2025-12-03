@@ -12,18 +12,18 @@ namespace GameX.Unity;
 /// UnityPakFile
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class UnityPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> {
+public class UnityPakFile : BinaryAsset, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="UnityPakFile" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public UnityPakFile(PakState state) : base(state, Binary_Unity.Current) {
+    public UnityPakFile(ArchiveState state) : base(state, Binary_Unity.Current) {
         ObjectFactoryFunc = ObjectFactory;
     }
 
     #region Factories
 
-    public static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    public static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             _ => UnknownPakFile.ObjectFactory(source, game),
         };
@@ -32,8 +32,8 @@ public class UnityPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMode
 
     #region Transforms
 
-    bool ITransformFileObject<IUnknownFileModel>.CanTransformFileObject(PakFile transformTo, object source) => UnknownTransform.CanTransformFileObject(this, transformTo, source);
-    Task<IUnknownFileModel> ITransformFileObject<IUnknownFileModel>.TransformFileObject(PakFile transformTo, object source) => UnknownTransform.TransformFileObjectAsync(this, transformTo, source);
+    bool ITransformAsset<IUnknownFileModel>.CanTransformAsset(Archive transformTo, object source) => UnknownTransform.CanTransformFileObject(this, transformTo, source);
+    Task<IUnknownFileModel> ITransformAsset<IUnknownFileModel>.TransformAsset(Archive transformTo, object source) => UnknownTransform.TransformFileObjectAsync(this, transformTo, source);
 
     #endregion
 }

@@ -31,30 +31,30 @@ public class LoadFileDataTest {
     [DataRow("Valve:Dota2", 15000000)]
     public async Task LoadAllFileData(string pak, long maxFileSize = 0) {
         var source = TestHelper.Paks[pak].Value;
-        if (source is MultiPakFile multiPak)
-            foreach (var p in multiPak.PakFiles) {
-                if (p is not BinaryPakFile z) throw new InvalidOperationException("multiPak not A BinaryPakFile");
+        if (source is MultiArchive multiPak)
+            foreach (var p in multiPak.Archives) {
+                if (p is not BinaryAsset z) throw new InvalidOperationException("multiPak not A BinaryAsset");
                 await ExportAsync(z, maxFileSize);
             }
         else await ExportAsync(source, maxFileSize);
     }
 
-    static Task ExportAsync(PakFile source, long maxSize) {
-        if (source is not BinaryPakFile pak) throw new NotSupportedException();
+    static Task ExportAsync(Archive source, long maxSize) {
+        if (source is not BinaryAsset pak) throw new NotSupportedException();
 
         // write files
         Parallel.For(0, pak.Files.Count, new ParallelOptions { /*MaxDegreeOfParallelism = 1*/ }, async index => {
             var file = pak.Files[index].Fix();
 
             // extract pak
-            if (file.Pak != null) { await ExportAsync(file.Pak, maxSize); return; }
+            if (file.Arc != null) { await ExportAsync(file.Arc, maxSize); return; }
             // skip empty file
             if (file.FileSize == 0 && file.PackedSize == 0) return;
             // skip large files
             if (maxSize != 0 && file.FileSize > maxSize) return;
 
             // extract file
-            using var s = await pak.LoadFileData(file);
+            using var s = await pak.GetData(file);
             s.ReadAllBytes();
         });
 

@@ -15,21 +15,21 @@ namespace GameX.Valve;
 /// ValvePakFile
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class ValvePakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> {
+public class ValvePakFile : BinaryAsset, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="ValvePakFile" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public ValvePakFile(PakState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+    public ValvePakFile(ArchiveState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         ObjectFactoryFunc = ObjectFactory;
         PathFinders.Add(typeof(object), FindBinary);
     }
 
     #region Factories
 
-    static readonly ConcurrentDictionary<string, PakBinary> PakBinarys = new();
+    static readonly ConcurrentDictionary<string, ArcBinary> PakBinarys = new();
 
-    static PakBinary GetPakBinary(FamilyGame game, string extension)
+    static ArcBinary GetPakBinary(FamilyGame game, string extension)
         => PakBinarys.GetOrAdd(game.Id, _ => game.Engine.n switch {
             "Unity" => Unity.Formats.Binary_Unity.Current,
             "GoldSrc" => Binary_Wad3.Current,
@@ -37,7 +37,7 @@ public class ValvePakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMode
             _ => throw new ArgumentOutOfRangeException(nameof(game.Engine), game.Engine.n),
         });
 
-    public static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    public static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => game.Engine.n switch {
             "GoldSrc" => Path.GetExtension(source.Path).ToLowerInvariant() switch {
                 ".pic" or ".tex" or ".tex2" or ".fnt" => (0, Binary_Wad3X.Factory),
@@ -74,8 +74,8 @@ public class ValvePakFile : BinaryPakFile, ITransformFileObject<IUnknownFileMode
 
     #region Transforms
 
-    bool ITransformFileObject<IUnknownFileModel>.CanTransformFileObject(PakFile transformTo, object source) => UnknownTransform.CanTransformFileObject(this, transformTo, source);
-    Task<IUnknownFileModel> ITransformFileObject<IUnknownFileModel>.TransformFileObject(PakFile transformTo, object source) => UnknownTransform.TransformFileObjectAsync(this, transformTo, source);
+    bool ITransformAsset<IUnknownFileModel>.CanTransformAsset(Archive transformTo, object source) => UnknownTransform.CanTransformFileObject(this, transformTo, source);
+    Task<IUnknownFileModel> ITransformAsset<IUnknownFileModel>.TransformAsset(Archive transformTo, object source) => UnknownTransform.TransformFileObjectAsync(this, transformTo, source);
 
     #endregion
 }

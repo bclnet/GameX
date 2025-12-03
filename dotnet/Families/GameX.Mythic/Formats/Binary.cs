@@ -12,7 +12,7 @@ namespace GameX.Mythic.Formats;
 #region Binary_Crf
 
 public unsafe class Binary_Crf : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Crf(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Crf(r));
 
     #region Headers
 
@@ -67,7 +67,7 @@ public unsafe class Binary_Crf : IHaveMetaInfo {
 
 #region Binary_Mpk
 
-public unsafe class Binary_Mpk : PakBinary<Binary_Mpk> {
+public unsafe class Binary_Mpk : ArcBinary<Binary_Mpk> {
     #region Headers
 
     const uint MAGIC = 0x4b41504d;
@@ -86,7 +86,7 @@ public unsafe class Binary_Mpk : PakBinary<Binary_Mpk> {
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         var magic = r.ReadUInt32();
         if (magic != MAGIC) throw new FormatException("BAD MAGIC");
         r.Seek(21);
@@ -103,7 +103,7 @@ public unsafe class Binary_Mpk : PakBinary<Binary_Mpk> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         return Task.FromResult((Stream)new MemoryStream(r.DecompressZlib((int)file.PackedSize, (int)file.FileSize)));
     }

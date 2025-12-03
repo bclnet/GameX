@@ -8,7 +8,7 @@ namespace GameX.MODEL.Formats;
 #region Binary_Abc
 
 public class Binary_Abc : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Abc(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Abc(r));
 
     public Binary_Abc(BinaryReader r) {
     }
@@ -24,13 +24,13 @@ public class Binary_Abc : IHaveMetaInfo {
 
 #region Binary_XXX
 
-public unsafe class Binary_XXX : PakBinary<Binary_XXX> {
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+public unsafe class Binary_XXX : ArcBinary<Binary_XXX> {
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         var files = source.Files = [];
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
         throw new NotImplementedException();
     }
 }

@@ -38,14 +38,14 @@ public class ResourceTests {
         var resource = family.ParseResource(new Uri(uri));
         Assert.AreEqual(game, resource.Game.Id);
         //Assert.AreEqual(pathsFound, resource.Paths.Length);
-        var pakFile = family.OpenPakFile(new Uri(uri));
-        if (pakFile is MultiPakFile multiPakFile) {
-            Assert.HasCount(pathsFound, multiPakFile.PakFiles);
-            pakFile = multiPakFile.PakFiles[0];
+        var pakFile = family.OpenArchive(new Uri(uri));
+        if (pakFile is MultiArchive multiPakFile) {
+            Assert.HasCount(pathsFound, multiPakFile.Archives);
+            pakFile = multiPakFile.Archives[0];
         }
         if (pakFile == null) throw new InvalidOperationException("pak not opened");
         Assert.AreEqual(firstPak, pakFile.Name);
         Assert.IsTrue(pakFile.Contains(sampleFile));
-        Assert.AreEqual(sampleFileSize, pakFile.LoadFileData(sampleFile).Result.Length);
+        Assert.AreEqual(sampleFileSize, pakFile.GetData(sampleFile).Result.Length);
     }
 }

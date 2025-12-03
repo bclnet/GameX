@@ -24,15 +24,15 @@ public partial class FileExplorer : UserControl, INotifyPropertyChanged {
     public event PropertyChangedEventHandler PropertyChanged;
     void OnPropertyChanged([CallerMemberName] string propertyName = "") => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
-    public static readonly DependencyProperty PakFileProperty = DependencyProperty.Register(nameof(PakFile), typeof(PakFile), typeof(FileExplorer),
+    public static readonly DependencyProperty PakFileProperty = DependencyProperty.Register(nameof(PakFile), typeof(Archive), typeof(FileExplorer),
         new PropertyMetadata((d, e) => {
-            if (d is not FileExplorer fileExplorer || e.NewValue is not PakFile pakFile) return;
+            if (d is not FileExplorer fileExplorer || e.NewValue is not Archive pakFile) return;
             fileExplorer.Filters = pakFile.GetMetaFilters(Resource);
             fileExplorer.Nodes = [.. fileExplorer.PakNodes = pakFile.GetMetaItems(Resource)];
             fileExplorer.Ready(pakFile);
         }));
-    public PakFile PakFile {
-        get => (PakFile)GetValue(PakFileProperty);
+    public Archive PakFile {
+        get => (Archive)GetValue(PakFileProperty);
         set => SetValue(PakFileProperty, value);
     }
 
@@ -83,10 +83,10 @@ public partial class FileExplorer : UserControl, INotifyPropertyChanged {
             _selectedItem = value;
             if (value == null) { OnInfo(value, null); return; }
             var src = (value.Source as FileSource)?.Fix();
-            var pak = src?.Pak;
+            var pak = src?.Arc;
             try {
                 if (pak != null) {
-                    if (pak.Status == PakFile.PakStatus.Opened) return;
+                    if (pak.Status == Archive.ArcStatus.Opened) return;
                     pak.Open(value.Items, Resource);
                     OnFilterKeyUp(null, null);
                 }
@@ -114,7 +114,7 @@ public partial class FileExplorer : UserControl, INotifyPropertyChanged {
         e.Handled = true;
     }
 
-    void Ready(PakFile pakFile) {
+    void Ready(Archive pakFile) {
         if (string.IsNullOrEmpty(Option.ForcePath) || Option.ForcePath.StartsWith("app:")) return;
         var sample = Option.ForcePath.StartsWith("sample:") ? pakFile.Game.GetSample(Option.ForcePath[7..]) : null;
         var paths = sample != null ? sample.Paths : [Option.ForcePath];

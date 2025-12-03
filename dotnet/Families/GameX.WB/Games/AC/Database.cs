@@ -5,9 +5,9 @@ using System.Collections.Concurrent;
 namespace GameX.WB;
 
 public class Database {
-    public readonly BinaryPakFile Source;
+    public readonly BinaryAsset Source;
 
-    public Database(PakFile source) => Source = source as BinaryPakFile;
+    public Database(Archive source) => Source = source as BinaryAsset;
 
     public override string ToString() => Source.Name;
 
@@ -36,7 +36,7 @@ public class Database {
 
     public T GetFile<T>(uint fileId) where T : FileType {
         if (FileCache.TryGetValue(fileId, out var result)) return (T)result;
-        T obj = Source.LoadFileObject<T>((int)fileId).Result;
+        T obj = Source.GetAsset<T>((int)fileId).Result;
         obj = (T)FileCache.GetOrAdd(fileId, obj);
         return obj;
     }

@@ -12,7 +12,7 @@ namespace GameX.Volition.Formats;
 #region Binary_Abc
 
 public class Binary_Abc : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Abc(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Abc(r));
 
     public Binary_Abc(BinaryReader r) { }
 
@@ -28,14 +28,14 @@ public class Binary_Abc : IHaveMetaInfo {
 
 #region Binary_Ctg
 
-public unsafe class Binary_Ctg : PakBinary<Binary_Ctg> {
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+public unsafe class Binary_Ctg : ArcBinary<Binary_Ctg> {
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         var files = source.Files = [];
 
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
         throw new NotImplementedException();
     }
 }
@@ -44,7 +44,7 @@ public unsafe class Binary_Ctg : PakBinary<Binary_Ctg> {
 
 #region Binary_Descent
 
-public unsafe class Binary_Descent : PakBinary<Binary_Descent> {
+public unsafe class Binary_Descent : ArcBinary<Binary_Descent> {
     #region Headers
 
     [Flags]
@@ -118,7 +118,7 @@ public unsafe class Binary_Descent : PakBinary<Binary_Descent> {
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         const uint MAGIC_PPIG = 0x47495050;
         //const uint MAGIC_DPOG = 0x474f5044;
         const uint MAGIC_DHF = 0x00464844;
@@ -216,7 +216,7 @@ public unsafe class Binary_Descent : PakBinary<Binary_Descent> {
             }));
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         var bytes = r.ReadBytes((int)file.FileSize);
         if (file.Tag != null)
@@ -344,14 +344,14 @@ public unsafe class Binary_Descent : PakBinary<Binary_Descent> {
 
 #region Binary_GeoMod
 
-public unsafe class Binary_GeoMod : PakBinary<Binary_GeoMod> {
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+public unsafe class Binary_GeoMod : ArcBinary<Binary_GeoMod> {
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         var files = source.Files = [];
 
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
         throw new NotImplementedException();
     }
 }
@@ -360,14 +360,14 @@ public unsafe class Binary_GeoMod : PakBinary<Binary_GeoMod> {
 
 #region Binary_Hpl
 
-public unsafe class Binary_Hpl : PakBinary<Binary_Hpl> {
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+public unsafe class Binary_Hpl : ArcBinary<Binary_Hpl> {
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         var files = source.Files = [];
 
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
         throw new NotImplementedException();
     }
 }
@@ -380,7 +380,7 @@ public unsafe class Binary_Hpl : PakBinary<Binary_Hpl> {
 // https://wiki.multimedia.cx/index.php/Interplay_MVE
 
 public class Binary_Mvl : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Mvl(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Mvl(r));
 
     enum Chunk : ushort {
         INIT_AUDIO = 0x0000,

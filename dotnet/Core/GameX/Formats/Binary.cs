@@ -22,7 +22,7 @@ namespace GameX.Formats;
 #region Binary_Bik
 
 public class Binary_Bik(BinaryReader r, int fileSize) : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Bik(r, (int)f.FileSize));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Bik(r, (int)f.FileSize));
 
     public readonly byte[] Data = r.ReadBytes(fileSize);
 
@@ -37,7 +37,7 @@ public class Binary_Bik(BinaryReader r, int fileSize) : IHaveMetaInfo {
 
 // https://github.com/paroj/nv_dds/blob/master/nv_dds.cpp
 public class Binary_Dds : IHaveMetaInfo, ITexture {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Dds(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Dds(r));
 
     public Binary_Dds(BinaryReader r, bool readMagic = true) {
         (Header, HeaderDXT10, Format, Bytes) = DDS_HEADER.Read(r, readMagic);
@@ -91,7 +91,7 @@ public class Binary_Dds : IHaveMetaInfo, ITexture {
 #region Binary_Fsb
 
 public class Binary_Fsb(BinaryReader r, int fileSize) : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Fsb(r, (int)f.FileSize));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Fsb(r, (int)f.FileSize));
 
     public readonly byte[] Data = r.ReadBytes(fileSize);
 
@@ -106,7 +106,7 @@ public class Binary_Fsb(BinaryReader r, int fileSize) : IHaveMetaInfo {
 
 // https://en.wikipedia.org/wiki/Interchange_File_Format
 public unsafe class Binary_Iif : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Iif(r, (int)f.FileSize));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Iif(r, (int)f.FileSize));
 
     #region Headers
 
@@ -515,7 +515,7 @@ public unsafe class Binary_Iif : IHaveMetaInfo {
 #region Binary_Img
 
 public unsafe class Binary_Img : IHaveMetaInfo, ITexture {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Img(r, f));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Img(r, f));
 
     #region Headers
 
@@ -605,7 +605,7 @@ public unsafe class Binary_Img : IHaveMetaInfo, ITexture {
 #region Binary_Msg
 
 public class Binary_Msg(string message) : IHaveMetaInfo {
-    public static Func<BinaryReader, FileSource, PakFile, Task<object>> Factory(string message) => (BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Msg(message));
+    public static Func<BinaryReader, FileSource, Archive, Task<object>> Factory(string message) => (BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Msg(message));
 
     public readonly string Message = message;
 
@@ -619,8 +619,8 @@ public class Binary_Msg(string message) : IHaveMetaInfo {
 #region Binary_Pal
 
 public unsafe class Binary_Pal(BinaryReader r, byte bpp) : IHaveMetaInfo {
-    public static Task<object> Factory_3(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Pal(r, 3));
-    public static Task<object> Factory_4(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Pal(r, 4));
+    public static Task<object> Factory_3(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Pal(r, 3));
+    public static Task<object> Factory_4(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Pal(r, 4));
 
     #region Headers
 
@@ -667,7 +667,7 @@ public unsafe class Binary_Pal(BinaryReader r, byte bpp) : IHaveMetaInfo {
 // https://github.com/warpdesign/pcx-js/blob/master/js/pcx.js
 
 public unsafe class Binary_Pcx : IHaveMetaInfo, ITexture {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Pcx(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Pcx(r));
 
     #region Headers
 
@@ -853,8 +853,8 @@ public unsafe class Binary_Pcx : IHaveMetaInfo, ITexture {
 
 #region Binary_Plist
 
-public unsafe class Binary_Plist : PakBinary<Binary_Plist> {
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+public unsafe class Binary_Plist : ArcBinary<Binary_Plist> {
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         source.Files = [.. ((Dictionary<object, object>)new PlistReader().ReadObject(r.BaseStream)).Select(x => new FileSource {
             Path = (string)x.Key,
             FileSize = ((byte[])x.Value).Length,
@@ -863,7 +863,7 @@ public unsafe class Binary_Plist : PakBinary<Binary_Plist> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default)
         => Task.FromResult<Stream>(new MemoryStream((byte[])file.Tag));
 }
 
@@ -872,8 +872,8 @@ public unsafe class Binary_Plist : PakBinary<Binary_Plist> {
 #region Binary_Raw
 
 public class Binary_Raw : IHaveMetaInfo, ITexture {
-    public static Func<BinaryReader, FileSource, PakFile, Task<object>> FactoryMethod(Action<Binary_Raw, BinaryReader, FileSource> action, Func<string, string, Binary_Pal> palleteFunc)
-        => (BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Raw(r, s.Game, f, action, palleteFunc));
+    public static Func<BinaryReader, FileSource, Archive, Task<object>> FactoryMethod(Action<Binary_Raw, BinaryReader, FileSource> action, Func<string, string, Binary_Pal> palleteFunc)
+        => (BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Raw(r, s.Game, f, action, palleteFunc));
 
     public struct Tag {
         public string Palette;
@@ -945,8 +945,8 @@ public class Binary_Raw : IHaveMetaInfo, ITexture {
 #region Binary_Snd
 
 public unsafe class Binary_Snd(BinaryReader r, int fileSize, object tag) : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Snd(r, (int)f.FileSize, null));
-    public static Task<object> Factory_Wav(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Snd(r, (int)f.FileSize, ".wav"));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Snd(r, (int)f.FileSize, null));
+    public static Task<object> Factory_Wav(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Snd(r, (int)f.FileSize, ".wav"));
 
     #region Headers
 
@@ -1001,7 +1001,7 @@ public unsafe class Binary_Snd(BinaryReader r, int fileSize, object tag) : IHave
 // https://www.conholdate.app/viewer/view/rVqTeZPLAL/tga-file-format-specifications.pdf?default=view&preview=
 
 public unsafe class Binary_Tga : IHaveMetaInfo, ITexture {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Tga(r, f));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Tga(r, f));
 
     #region Headers
 
@@ -1316,7 +1316,7 @@ public unsafe class Binary_Tga : IHaveMetaInfo, ITexture {
 #region Binary_Txt
 
 public class Binary_Txt(BinaryReader r, int fileSize) : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Txt(r, (int)f.FileSize));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Txt(r, (int)f.FileSize));
 
     public readonly string Data = r.ReadFUString(fileSize);
 
@@ -1330,7 +1330,7 @@ public class Binary_Txt(BinaryReader r, int fileSize) : IHaveMetaInfo {
 #region Binary_Xga
 
 public unsafe class Binary_Xga(BinaryReader r, object tag) : IHaveMetaInfo, ITexture {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Xga(r, s.Tag));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Xga(r, s.Tag));
 
     readonly int Type;
     readonly byte[] Body = r.ReadToEnd();
@@ -1375,17 +1375,17 @@ public unsafe class Binary_Xga(BinaryReader r, object tag) : IHaveMetaInfo, ITex
 /// Binary_Zip
 /// </summary>
 /// <seealso cref="GameEstate.Formats.PakBinary" />
-public class Binary_Zip(object key = null) : PakBinary {
+public class Binary_Zip(object key = null) : ArcBinary {
     static readonly PropertyInfo ZipFile_KeyProperty = typeof(ZipFile).GetProperty("Key", BindingFlags.NonPublic | BindingFlags.Instance);
 
-    static readonly PakBinary Instance = new Binary_Zip();
-    static readonly ConcurrentDictionary<object, PakBinary> PakBinarys = new();
-    public static PakBinary GetPakBinary(FamilyGame game) => game.Key == null ? Instance : PakBinarys.GetOrAdd(game.Key, x => new Binary_Zip(x));
+    static readonly ArcBinary Instance = new Binary_Zip();
+    static readonly ConcurrentDictionary<object, ArcBinary> PakBinarys = new();
+    public static ArcBinary GetPakBinary(FamilyGame game) => game.Key == null ? Instance : PakBinarys.GetOrAdd(game.Key, x => new Binary_Zip(x));
 
     readonly object Key = key;
     bool UseSystem => Key == null;
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         source.UseReader = false;
         if (UseSystem) {
             ZipArchive pak;
@@ -1414,7 +1414,7 @@ public class Binary_Zip(object key = null) : PakBinary {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
         //try
         //{
         using var input = UseSystem

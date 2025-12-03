@@ -15,7 +15,7 @@ namespace GameX.Lucas.Formats;
 #region Binary_Abc
 
 public class Binary_Abc : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Abc(r, (int)f.FileSize));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Abc(r, (int)f.FileSize));
 
     public Binary_Abc(BinaryReader r, int fileSize) => Data = r.ReadBytes(fileSize);
 
@@ -30,7 +30,7 @@ public class Binary_Abc : IHaveMetaInfo {
 
 #region Binary_Jedi
 
-public unsafe class Binary_Jedi : PakBinary<Binary_Jedi> {
+public unsafe class Binary_Jedi : ArcBinary<Binary_Jedi> {
     #region Headers
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -76,7 +76,7 @@ public unsafe class Binary_Jedi : PakBinary<Binary_Jedi> {
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         const uint GOB_MAGIC = 0x0a424f47;
         const uint LFD_MAGIC = 0x50414d52;
         const uint LAB_MAGIC = 0x4e42414c;
@@ -127,7 +127,7 @@ public unsafe class Binary_Jedi : PakBinary<Binary_Jedi> {
         }
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         return Task.FromResult((Stream)new MemoryStream(r.ReadBytes((int)file.FileSize)));
     }
@@ -138,7 +138,7 @@ public unsafe class Binary_Jedi : PakBinary<Binary_Jedi> {
 #region Binary_Nwx
 
 public class Binary_Nwx : IHaveMetaInfo, ITextureSelect {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Nwx(r, f, s));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Nwx(r, f, s));
 
     #region Headers
 
@@ -179,9 +179,9 @@ public class Binary_Nwx : IHaveMetaInfo, ITextureSelect {
 
     static readonly ConcurrentDictionary<string, (byte r, byte g, byte b)[]> Palettes = new ConcurrentDictionary<string, (byte r, byte g, byte b)[]>();
 
-    static (byte r, byte g, byte b)[] PaletteBuilder(string path, PakFile pak) {
+    static (byte r, byte g, byte b)[] PaletteBuilder(string path, Archive pak) {
         var paths = path.Split(':');
-        var pcx = pak.OpenPakFile(paths[0]).LoadFileObject<Binary_Pcx>(paths[1], throwOnError: false).Result;
+        var pcx = pak.GetArchive(paths[0]).GetAsset<Binary_Pcx>(paths[1], throwOnError: false).Result;
         if (pcx == null) return null;
         var pal = pcx.GetPalette();
         var b = new List<(byte r, byte g, byte b)>();
@@ -192,7 +192,7 @@ public class Binary_Nwx : IHaveMetaInfo, ITextureSelect {
 
     #endregion
 
-    public Binary_Nwx(BinaryReader r, FileSource f, PakFile s) {
+    public Binary_Nwx(BinaryReader r, FileSource f, Archive s) {
         const uint WAXF_MAGIC = 0x46584157;
         const uint CELT_MAGIC = 0x544c4543;
 
@@ -313,7 +313,7 @@ public class Binary_Nwx : IHaveMetaInfo, ITextureSelect {
 #region Binary_San
 
 public class Binary_San : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_San(r, (int)f.FileSize));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_San(r, (int)f.FileSize));
 
     #region Headers
 
@@ -426,7 +426,7 @@ public class Binary_San : IHaveMetaInfo {
 
 #region Binary_Scumm
 
-public unsafe class Binary_Scumm : PakBinary<Binary_Scumm> {
+public unsafe class Binary_Scumm : ArcBinary<Binary_Scumm> {
     [Flags]
     public enum Features {
         None,
@@ -942,9 +942,9 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm> {
     public class ResourceFile {
     }
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         var game = source.Game;
-        var detect = source.Game.Detect<Dictionary<string, object>>("scumm", source.PakPath, r, (p, s) => {
+        var detect = source.Game.Detect<Dictionary<string, object>>("scumm", source.ArcPath, r, (p, s) => {
             s["variant"] = ((Dictionary<string, object>)p.Data["variants"])[(string)s["variant"]];
             s["features"] = ((string)s["features"]).Split(' ').Aggregate(Features.None, (a, f) => a |= (Features)Enum.Parse(typeof(Features), f, true));
             s["platform"] = (Platform)Enum.Parse(typeof(Platform), s.TryGetValue("platform", out var z) ? (string)z : "None", true);
@@ -971,7 +971,7 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
         throw new NotImplementedException();
     }
 }
@@ -980,14 +980,14 @@ public unsafe class Binary_Scumm : PakBinary<Binary_Scumm> {
 
 #region Binary_XX
 
-public unsafe class Binary_XX : PakBinary<Binary_XX> {
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+public unsafe class Binary_XX : ArcBinary<Binary_XX> {
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         var files = source.Files = [];
 
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
         throw new NotImplementedException();
     }
 }
@@ -1000,7 +1000,7 @@ public unsafe class Binary_XX : PakBinary<Binary_XX> {
 // https://www.quora.com/What-is-the-difference-between-an-EGA-and-VGA-card-What-are-the-benefits-of-using-an-EGA-or-VGA-card-over-a-standard-VGA-card#:~:text=EGA%20(Enhanced%20Graphics%20Adapter)%20was,graphics%20and%20more%20detailed%20images.
 
 public unsafe class Binary_Xga : IHaveMetaInfo, ITexture {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Xga(r, f));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Xga(r, f));
 
     #region Headers
 

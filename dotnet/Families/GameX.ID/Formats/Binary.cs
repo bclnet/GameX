@@ -18,7 +18,7 @@ namespace GameX.ID.Formats;
 // https://developer.valvesoftware.com/wiki/BSP_(Quake)
 // https://www.flipcode.com/archives/Quake_2_BSP_File_Format.shtml
 
-public unsafe class Binary_BspY : PakBinary<Binary_BspY> {
+public unsafe class Binary_BspY : ArcBinary<Binary_BspY> {
     #region Headers
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -150,7 +150,7 @@ public unsafe class Binary_BspY : PakBinary<Binary_BspY> {
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         var files = source.Files = [];
 
         // read file
@@ -182,7 +182,7 @@ public unsafe class Binary_BspY : PakBinary<Binary_BspY> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         return Task.FromResult<Stream>(new MemoryStream(r.ReadBytes((int)file.FileSize)));
     }
@@ -193,7 +193,7 @@ public unsafe class Binary_BspY : PakBinary<Binary_BspY> {
 #region Binary_BspX
 
 public unsafe class Binary_BspX : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_BspX(r, s));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_BspX(r, s));
 
     #region Headers
 
@@ -768,7 +768,7 @@ public unsafe class Binary_BspX : IHaveMetaInfo {
     object s2;
     object x3;
 
-    public Binary_BspX(BinaryReader r, PakFile s) {
+    public Binary_BspX(BinaryReader r, Archive s) {
         var flag = false;
         var gameId = s.Game.Id; var engine = s.Game.Engine;
         h1 = engine.v == "2" || (flag = engine.n == "GoldSrc") ? r.ReadS<X_DHeader_H1>().Read(r, gameId, flag) : default;
@@ -791,7 +791,7 @@ public unsafe class Binary_BspX : IHaveMetaInfo {
 #region Binary_Lmp
 
 public unsafe class Binary_Lmp : IHaveMetaInfo, ITexture {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Lmp(r, f, s));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Lmp(r, f, s));
 
     public static Binary_Lmp Palette;
     public static Binary_Lmp Colormap;
@@ -801,7 +801,7 @@ public unsafe class Binary_Lmp : IHaveMetaInfo, ITexture {
     byte[] Pixels;
 
     // file: PAK0.PAK:gfx/bigbox.lmp
-    public Binary_Lmp(BinaryReader r, FileSource f, PakFile s) {
+    public Binary_Lmp(BinaryReader r, FileSource f, Archive s) {
         switch (Path.GetFileNameWithoutExtension(f.Path)) {
             case "palette":
                 PaletteRecords = r.ReadFArray(s => s.ReadBytes(3).Concat(new byte[] { 0 }).ToArray(), 256);
@@ -848,7 +848,7 @@ public unsafe class Binary_Lmp : IHaveMetaInfo, ITexture {
 // https://icculus.org/homepages/phaethon/q3a/formats/md2-schoenblum.html#:~:text=Quake2%20models%20are%20stored%20in,md2%20extension.
 
 public unsafe class Binary_Mdl : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Mdl(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Mdl(r));
 
     #region Headers
 
@@ -871,7 +871,7 @@ public unsafe class Binary_Mdl : IHaveMetaInfo {
 
 #region Binary_Pak
 
-public unsafe class Binary_Pak : PakBinary<Binary_Pak> {
+public unsafe class Binary_Pak : ArcBinary<Binary_Pak> {
     #region Headers
 
     const uint P_MAGIC = 0x4b434150; // PACK
@@ -894,7 +894,7 @@ public unsafe class Binary_Pak : PakBinary<Binary_Pak> {
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         // read file
         var header = r.ReadS<P_Header>();
         if (header.Magic != P_MAGIC) throw new FormatException("BAD MAGIC");
@@ -907,13 +907,13 @@ public unsafe class Binary_Pak : PakBinary<Binary_Pak> {
                 Offset = s.Offset,
                 FileSize = s.FileSize,
             };
-            if (file.Path.EndsWith(".wad", StringComparison.OrdinalIgnoreCase)) file.Pak = new SubPakFile(source, file, file.Path, instance: Binary_Wad.Current);
+            if (file.Path.EndsWith(".wad", StringComparison.OrdinalIgnoreCase)) file.Arc = new SubArchive(source, file, file.Path, instance: Binary_Wad.Current);
             return file;
         }).ToArray();
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         return Task.FromResult<Stream>(new MemoryStream(r.ReadBytes((int)file.FileSize)));
     }
@@ -925,7 +925,7 @@ public unsafe class Binary_Pak : PakBinary<Binary_Pak> {
 // https://github.com/yuraj11/HL-Texture-Tools
 
 public unsafe class Binary_Spr : ITextureFrames, IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Spr(r, f));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Spr(r, f));
 
     #region Headers
 
@@ -1053,7 +1053,7 @@ public unsafe class Binary_Spr : ITextureFrames, IHaveMetaInfo {
 
 #region Binary_Wad
 
-public unsafe class Binary_Wad : PakBinary<Binary_Wad> {
+public unsafe class Binary_Wad : ArcBinary<Binary_Wad> {
     #region Headers
 
     const uint W_MAGIC = 0x32444157; //: WAD2
@@ -1088,7 +1088,7 @@ public unsafe class Binary_Wad : PakBinary<Binary_Wad> {
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         // read file
         var header = r.ReadS<W_Header>();
         if (header.Magic != W_MAGIC) throw new FormatException("BAD MAGIC");
@@ -1104,7 +1104,7 @@ public unsafe class Binary_Wad : PakBinary<Binary_Wad> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         return Task.FromResult<Stream>(new MemoryStream(r.ReadBytes((int)file.FileSize)));
     }

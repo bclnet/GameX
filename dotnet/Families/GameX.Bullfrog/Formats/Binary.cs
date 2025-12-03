@@ -14,10 +14,10 @@ namespace GameX.Bullfrog.Formats;
 
 #region Binary_Bullfrog
 
-public class Binary_Bullfrog : PakBinary<Binary_Bullfrog> {
+public class Binary_Bullfrog : ArcBinary<Binary_Bullfrog> {
     #region Factories
 
-    public static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    public static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
      => game.Id switch {
          _ => default
      };
@@ -107,7 +107,7 @@ public class Binary_Bullfrog : PakBinary<Binary_Bullfrog> {
 
     byte[] Data;
 
-    public override async Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+    public override async Task Read(BinaryAsset source, BinaryReader r, object tag) {
         //Data = Rnc.Read(r);
         List<FileSource> files;
         source.Files = files = new List<FileSource>();
@@ -122,7 +122,7 @@ public class Binary_Bullfrog : PakBinary<Binary_Bullfrog> {
         //return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
         var bytes = Data.AsSpan((int)file.Offset, (int)file.FileSize);
         return Task.FromResult((Stream)new MemoryStream(bytes.ToArray()));
     }
@@ -192,7 +192,7 @@ public class Binary_Bullfrog : PakBinary<Binary_Bullfrog> {
 #region Binary_Fli
 
 public unsafe class Binary_Fli : IDisposable, ITextureFrames, IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Fli(r, f));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Fli(r, f));
 
     // logging
     //static StreamWriter F;
@@ -424,10 +424,10 @@ public unsafe class Binary_Fli : IDisposable, ITextureFrames, IHaveMetaInfo {
 
 #region Binary_Populus
 
-public class Binary_Populus : PakBinary<Binary_Populus> {
+public class Binary_Populus : ArcBinary<Binary_Populus> {
     #region Factories
 
-    public static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    public static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => source.Path.ToLowerInvariant() switch {
             _ => Path.GetExtension(source.Path).ToLowerInvariant() switch {
                 ".pal" => (0, Binary_Pal.Factory_3),
@@ -478,11 +478,11 @@ public class Binary_Populus : PakBinary<Binary_Populus> {
 
     #endregion
 
-    public override async Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+    public override async Task Read(BinaryAsset source, BinaryReader r, object tag) {
         List<FileSource> files;
         source.Files = files = [];
-        var tabPath = $"{source.PakPath[..^4]}.TAB";
-        var fileName = Path.GetFileName(source.PakPath);
+        var tabPath = $"{source.ArcPath[..^4]}.TAB";
+        var fileName = Path.GetFileName(source.ArcPath);
         switch (source.Game.Id) {
             case "P2":
                 if (fileName.StartsWith("EMSCBLK")) await source.ReaderT(s => ParseSprite(s, files), tabPath);
@@ -547,7 +547,7 @@ public class Binary_Populus : PakBinary<Binary_Populus> {
             });
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         var bytes = r.ReadBytes((int)file.FileSize);
         return Task.FromResult((Stream)new MemoryStream(bytes));
@@ -558,11 +558,11 @@ public class Binary_Populus : PakBinary<Binary_Populus> {
 
 #region Binary_Syndicate
 
-public class Binary_Syndicate : PakBinary<Binary_Syndicate> {
+public class Binary_Syndicate : ArcBinary<Binary_Syndicate> {
     #region Factories
 
     static readonly string[] S_FLIFILES = ["INTRO.DAT", "MBRIEF.DAT", "MBRIEOUT.DAT", "MCONFOUT.DAT", "MCONFUP.DAT", "MDEBRIEF.DAT", "MDEOUT.DAT", "MENDLOSE.DAT", "MENDWIN.DAT", "MGAMEWIN.DAT", "MLOSA.DAT", "MLOSAOUT.DAT", "MLOSEGAM.DAT", "MMAP.DAT", "MMAPOUT.DAT", "MOPTION.DAT", "MOPTOUT.DAT", "MRESOUT.DAT", "MRESRCH.DAT", "MSCRENUP.DAT", "MSELECT.DAT", "MSELOUT.DAT", "MTITLE.DAT", "MMULTI.DAT", "MMULTOUT.DAT"];
-    public static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    public static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
      => Path.GetFileName(source.Path).ToUpperInvariant() switch {
          var x when S_FLIFILES.Contains(x) => (0, Binary_Fli.Factory),
          //"MCONSCR.DAT" => (0, Binary_Raw.FactoryMethod()),
@@ -599,22 +599,22 @@ public class Binary_Syndicate : PakBinary<Binary_Syndicate> {
 public unsafe class Binary_SyndicateX : IHaveMetaInfo {
     public enum Kind { Font, Game, MapColumn, MapData, MapTile, Mission, Palette, Raw, Req, SoundData, SoundTab, SpriteAnim, SpriteFrame, SpriteElement, SpriteTab, SpriteData };
 
-    public static Task<object> Factory_Font(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_SyndicateX(r, f, s, Kind.Font));
-    public static Task<object> Factory_Game(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_SyndicateX(r, f, s, Kind.Game));
-    public static Task<object> Factory_MapColumn(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_SyndicateX(r, f, s, Kind.MapColumn));
-    public static Task<object> Factory_MapData(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_SyndicateX(r, f, s, Kind.MapData));
-    public static Task<object> Factory_MapTile(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_SyndicateX(r, f, s, Kind.MapTile));
-    public static Task<object> Factory_Mission(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_SyndicateX(r, f, s, Kind.Mission));
-    public static Task<object> Factory_Palette(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_SyndicateX(r, f, s, Kind.Palette));
-    public static Task<object> Factory_Raw(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_SyndicateX(r, f, s, Kind.Raw));
-    public static Task<object> Factory_Req(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_SyndicateX(r, f, s, Kind.Req));
-    public static Task<object> Factory_SoundData(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_SyndicateX(r, f, s, Kind.SoundData));
-    public static Task<object> Factory_SoundTab(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_SyndicateX(r, f, s, Kind.SoundTab));
-    public static Task<object> Factory_SpriteAnim(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_SyndicateX(r, f, s, Kind.SpriteAnim));
-    public static Task<object> Factory_SpriteFrame(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_SyndicateX(r, f, s, Kind.SpriteFrame));
-    public static Task<object> Factory_SpriteElement(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_SyndicateX(r, f, s, Kind.SpriteElement));
-    public static Task<object> Factory_SpriteTab(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_SyndicateX(r, f, s, Kind.SpriteTab));
-    public static Task<object> Factory_SpriteData(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_SyndicateX(r, f, s, Kind.SpriteData));
+    public static Task<object> Factory_Font(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_SyndicateX(r, f, s, Kind.Font));
+    public static Task<object> Factory_Game(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_SyndicateX(r, f, s, Kind.Game));
+    public static Task<object> Factory_MapColumn(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_SyndicateX(r, f, s, Kind.MapColumn));
+    public static Task<object> Factory_MapData(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_SyndicateX(r, f, s, Kind.MapData));
+    public static Task<object> Factory_MapTile(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_SyndicateX(r, f, s, Kind.MapTile));
+    public static Task<object> Factory_Mission(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_SyndicateX(r, f, s, Kind.Mission));
+    public static Task<object> Factory_Palette(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_SyndicateX(r, f, s, Kind.Palette));
+    public static Task<object> Factory_Raw(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_SyndicateX(r, f, s, Kind.Raw));
+    public static Task<object> Factory_Req(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_SyndicateX(r, f, s, Kind.Req));
+    public static Task<object> Factory_SoundData(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_SyndicateX(r, f, s, Kind.SoundData));
+    public static Task<object> Factory_SoundTab(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_SyndicateX(r, f, s, Kind.SoundTab));
+    public static Task<object> Factory_SpriteAnim(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_SyndicateX(r, f, s, Kind.SpriteAnim));
+    public static Task<object> Factory_SpriteFrame(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_SyndicateX(r, f, s, Kind.SpriteFrame));
+    public static Task<object> Factory_SpriteElement(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_SyndicateX(r, f, s, Kind.SpriteElement));
+    public static Task<object> Factory_SpriteTab(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_SyndicateX(r, f, s, Kind.SpriteTab));
+    public static Task<object> Factory_SpriteData(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_SyndicateX(r, f, s, Kind.SpriteData));
 
     #region Headers
 
@@ -1061,7 +1061,7 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo {
 
     public object Obj;
 
-    public Binary_SyndicateX(BinaryReader r, FileSource f, PakFile s, Kind kind) {
+    public Binary_SyndicateX(BinaryReader r, FileSource f, Archive s, Kind kind) {
         const int NUMOFTILES = 256;
         const int PIXELS_PER_BLOCK = 8;
         const int COLOR_BYTES_PER_BLOCK = PIXELS_PER_BLOCK / 2, ALPHA_BYTES_PER_BLOCK = PIXELS_PER_BLOCK / 8;
@@ -1075,7 +1075,7 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo {
             case Kind.SoundData: throw new FormatException("Please load the .TAB");
             case Kind.SoundTab: // Skips Kind.SoundData
                 {
-                    var data = ((MemoryStream)s.LoadFileData(Path.ChangeExtension(f.Path, ".DAT")).Result).ToArray();
+                    var data = ((MemoryStream)s.GetData(Path.ChangeExtension(f.Path, ".DAT")).Result).ToArray();
                     const int OFFSET = 58;
                     var sounds = new List<byte[]>();
                     r2.Seek(OFFSET);
@@ -1142,7 +1142,7 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo {
             case Kind.MapColumn: Obj = r2.ReadToEnd().Cast<ColType>().ToArray(); break;
             case Kind.MapTile: // Loads Kind.MapColumn
                 {
-                    var types = (ColType[])s.LoadFileObject<Binary_SyndicateX>(f.Path.Replace("HBLK", "COL")).Result.Obj;
+                    var types = (ColType[])s.GetAsset<Binary_SyndicateX>(f.Path.Replace("HBLK", "COL")).Result.Obj;
 
                     static void UnpackBlock(byte[] data, Span<byte> pixels) {
                         for (var j = 0; j < 4; ++j)
@@ -1181,7 +1181,7 @@ public unsafe class Binary_SyndicateX : IHaveMetaInfo {
             case Kind.SpriteData: Obj = new MemoryStream(r2.ReadToEnd()); break;
             case Kind.SpriteTab: // Loads Kind.SpriteData
                 {
-                    using var r3 = new BinaryReader((MemoryStream)s.LoadFileObject<Binary_SyndicateX>(Path.ChangeExtension(f.Path, ".DAT")).Result.Obj);
+                    using var r3 = new BinaryReader((MemoryStream)s.GetAsset<Binary_SyndicateX>(Path.ChangeExtension(f.Path, ".DAT")).Result.Obj);
 
                     static void UnpackBlock(byte[] data, Span<byte> pixels) {
                         for (var i = 0; i < 8; ++i)

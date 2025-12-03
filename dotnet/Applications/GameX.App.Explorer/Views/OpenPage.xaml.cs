@@ -84,13 +84,13 @@ public partial class OpenPage : Window, INotifyPropertyChanged {
         Editions = selectedGame?.Editions.Values.ToList();
         Edition.SelectedIndex = Editions != null ? ((List<FamilyGame.Edition>)Editions).FindIndex(x => x.Id == string.Empty) : default;
         var selectedEdition = (FamilyGame.Edition)Edition.SelectedItem;
-        PakUris = selectedGame?.ToPaks(selectedEdition?.Id);
+        PakUris = selectedGame?.ToArcs(selectedEdition?.Id);
     }
 
     void Edition_SelectionChanged(object sender, SelectionChangedEventArgs e) {
         var selectedGame = (FamilyGame)Game.SelectedItem;
         var selectedEdition = (FamilyGame.Edition)Edition.SelectedItem;
-        PakUris = selectedGame?.ToPaks(selectedEdition?.Id);
+        PakUris = selectedGame?.ToArcs(selectedEdition?.Id);
     }
 
     void Pak1Uri_Click(object sender, RoutedEventArgs e) {

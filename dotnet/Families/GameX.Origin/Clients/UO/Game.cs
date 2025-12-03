@@ -8,7 +8,7 @@ namespace GameX.Origin.Clients.UO;
 public class UOGameController<Texture2D> : GameController {
     //AudioManager Audio;
     Main Main;
-    public UOGameController(PakFile game, IPluginHost pluginHost) : base(game, pluginHost) {
+    public UOGameController(Archive game, IPluginHost pluginHost) : base(game, pluginHost) {
         DeviceManager = new GraphicsDeviceManager(this);
         TypeX.ScanTypes([typeof(XboxPakFile)]);
         Main = new(((UOGame)game.Game).Uop);

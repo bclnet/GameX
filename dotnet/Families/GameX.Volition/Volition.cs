@@ -45,20 +45,20 @@ public class D2Game(Family family, string id, JsonElement elem, FamilyGame dgame
 /// VolitionPakFile
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class VolitionPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileModel> {
+public class VolitionPakFile : BinaryAsset, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="VolitionPakFile" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public VolitionPakFile(PakState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+    public VolitionPakFile(ArchiveState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         ObjectFactoryFunc = ObjectFactory;
     }
 
     #region Factories
 
-    static readonly ConcurrentDictionary<string, PakBinary> PakBinarys = new ConcurrentDictionary<string, PakBinary>();
+    static readonly ConcurrentDictionary<string, ArcBinary> PakBinarys = new ConcurrentDictionary<string, ArcBinary>();
 
-    static PakBinary GetPakBinary(FamilyGame game, string extension)
+    static ArcBinary GetPakBinary(FamilyGame game, string extension)
         => PakBinarys.GetOrAdd(game.Id, _ => game.Engine.n switch {
             "Descent" => Binary_Descent.Current,
             "CTG" => Binary_Ctg.Current,
@@ -67,7 +67,7 @@ public class VolitionPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileM
             _ => throw new ArgumentOutOfRangeException(nameof(game.Engine.n)),
         });
 
-    static (object, Func<BinaryReader, FileSource, PakFile, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             ".256" => (0, Binary_Pal.Factory_3),
             ".mvl" => (0, Binary_Mvl.Factory),
@@ -78,8 +78,8 @@ public class VolitionPakFile : BinaryPakFile, ITransformFileObject<IUnknownFileM
 
     #region Transforms
 
-    bool ITransformFileObject<IUnknownFileModel>.CanTransformFileObject(PakFile transformTo, object source) => UnknownTransform.CanTransformFileObject(this, transformTo, source);
-    Task<IUnknownFileModel> ITransformFileObject<IUnknownFileModel>.TransformFileObject(PakFile transformTo, object source) => UnknownTransform.TransformFileObjectAsync(this, transformTo, source);
+    bool ITransformAsset<IUnknownFileModel>.CanTransformAsset(Archive transformTo, object source) => UnknownTransform.CanTransformFileObject(this, transformTo, source);
+    Task<IUnknownFileModel> ITransformAsset<IUnknownFileModel>.TransformAsset(Archive transformTo, object source) => UnknownTransform.TransformFileObjectAsync(this, transformTo, source);
 
     #endregion
 }

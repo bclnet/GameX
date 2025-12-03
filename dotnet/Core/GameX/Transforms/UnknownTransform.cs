@@ -8,6 +8,6 @@ namespace GameX.Transforms;
 /// UnknownTransform
 /// </summary>
 public static class UnknownTransform {
-    public static bool CanTransformFileObject(PakFile left, PakFile right, object source) => false;
-    public static Task<IUnknownFileModel> TransformFileObjectAsync(PakFile left, PakFile right, object source) => throw new NotImplementedException();
+    public static bool CanTransformFileObject(Archive left, Archive right, object source) => false;
+    public static Task<IUnknownFileModel> TransformFileObjectAsync(Archive left, Archive right, object source) => throw new NotImplementedException();
 }

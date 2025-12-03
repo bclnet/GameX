@@ -448,7 +448,7 @@ public class Family {
             SpecSamples = _list(elem, "samples");
             Specs = _list(elem, "specs");
             // related
-            var dgame = new FamilyGame { SearchBy = SearchBy.Default, Paks = [new Uri("game:/")] };
+            var dgame = new FamilyGame { SearchBy = SearchBy.Default, Arcs = [new Uri("game:/")] };
             Samples = [];
             Engines = _related(elem, "engines", (k, v) => CreateFamilyEngine(this, k, v));
             Games = _dictTrim(_related(elem, "games", (k, v) => CreateFamilyGame(this, k, v, ref dgame)));
@@ -560,12 +560,12 @@ public class Family {
     }
 
     /// <summary>
-    /// Opens the family pak file.
+    /// Opens the family archive.
     /// </summary>
     /// <param name="res">The res.</param>
     /// <param name="throwOnError">Throws on error.</param>
     /// <returns></returns>
-    public PakFile OpenPakFile(object res, bool throwOnError = true) {
+    public Archive OpenArchive(object res, bool throwOnError = true) {
         var r = res switch {
             Resource s => s,
             string s => ParseResource(new Uri(s)),
@@ -574,7 +574,7 @@ public class Family {
         };
         if (!r.Game.HasLoaded) { r.Game.HasLoaded = true; r.Game.Loaded(); }
         return r.Game != null
-            ? r.Game.CreatePakFile(r.Vfx, r.Edition, r.SearchPattern, throwOnError)?.Open()
+            ? r.Game.CreateArchive(r.Vfx, r.Edition, r.SearchPattern, throwOnError)?.Open()
             : throw new ArgumentNullException(nameof(r.Game));
     }
 }
@@ -935,17 +935,17 @@ public class FamilyGame {
     /// </summary>
     public SearchBy SearchBy { get; set; }
     /// <summary>
-    /// Gets or sets the pakFile type.
+    /// Gets or sets the archive type.
     /// </summary>
-    public Type PakFileType { get; set; }
+    public Type ArchiveType { get; set; }
     /// <summary>
-    /// Gets or sets the pak exts.
+    /// Gets or sets the arc exts.
     /// </summary>
-    public string[] PakExts { get; set; }
+    public string[] ArcExts { get; set; }
     /// <summary>
     /// Gets or sets the paks.
     /// </summary>
-    public Uri[] Paks { get; set; }
+    public Uri[] Arcs { get; set; }
     /// <summary>
     /// Gets or sets the Paths.
     /// </summary>
@@ -1037,7 +1037,7 @@ public class FamilyGame {
         Urls = _list(elem, "url", x => new Uri(x));
         Date = _valueF(elem, "date", z => DateTime.Parse(z.GetString()));
         //Option = _value(elem, "option", z => Enum.TryParse<GameOption>(z.GetString(), true, out var zT) ? zT : throw new ArgumentOutOfRangeException("option", $"Unknown option: {z}"), dgame.Option);
-        Paks = _list(elem, "pak", x => new Uri(x), dgame.Paks);
+        Arcs = _list(elem, "pak", x => new Uri(x), dgame.Arcs);
         Paths = _list(elem, "path", dgame.Paths);
         Key = _valueF(elem, "key", ParseKey, dgame.Key);
         //Status = _value(elem, "status");
@@ -1045,8 +1045,8 @@ public class FamilyGame {
         // interface
         VfxType = _valueF(elem, "vfxType", z => Type.GetType(z.GetString(), false) ?? throw new ArgumentOutOfRangeException("vfxType", $"Unknown type: {z}"), dgame.VfxType);
         SearchBy = _valueF(elem, "searchBy", z => Enum.TryParse<SearchBy>(z.GetString(), true, out var zS) ? zS : throw new ArgumentOutOfRangeException("searchBy", $"Unknown option: {z}"), dgame.SearchBy);
-        PakFileType = _valueF(elem, "pakFileType", z => Type.GetType(z.GetString(), false) ?? throw new ArgumentOutOfRangeException("pakFileType", $"Unknown type: {z}"), dgame.PakFileType);
-        PakExts = _list(elem, "pakExt", dgame.PakExts);
+        ArchiveType = _valueF(elem, "archiveType", z => Type.GetType(z.GetString(), false) ?? throw new ArgumentOutOfRangeException("archiveType", $"Unknown type: {z}"), dgame.ArchiveType);
+        ArcExts = _list(elem, "arcExt", dgame.ArcExts);
         // related
         Editions = _related(elem, "editions", (k, v) => new Edition(k, v));
         Dlcs = _related(elem, "dlcs", (k, v) => new DownloadableContent(k, v));
@@ -1083,9 +1083,9 @@ public class FamilyGame {
     }
 
     /// <summary>
-    /// Converts the Paks to Application Paks.
+    /// Converts the arcs to uris.
     /// </summary>
-    public IList<Uri> ToPaks(string edition) => Paks.Select(x => new Uri($"{x}#{Id}{(string.IsNullOrEmpty(edition) ? "" : $".{edition}")}")).ToList();
+    public IList<Uri> ToArcs(string edition) => [.. Arcs.Select(x => new Uri($"{x}#{Id}{(string.IsNullOrEmpty(edition) ? "" : $".{edition}")}"))];
 
     /// <summary>
     /// Gets a game sample
@@ -1113,19 +1113,19 @@ public class FamilyGame {
         return default;
     }
 
-    #region Pak
+    #region Arc
 
     /// <summary>
     /// Adds the platform.
     /// </summary>
-    /// <param name="pakFile">The pak file.</param>
+    /// <param name="archive">The arc file.</param>
     /// <returns></returns>
-    //public static PakFile SetPlatform(PakFile pakFile, Platform platform)
+    //public static Archive SetPlatform(Archive archive, Platform platform)
     //{
-    //    if (pakFile == null) { return null; }
-    //    pakFile.Gfx = platform.GfxFactory?.Invoke(pakFile);
-    //    pakFile.Sfx = platform.SfxFactory?.Invoke(pakFile);
-    //    return pakFile;
+    //    if (archive == null) { return null; }
+    //    archive.Gfx = platform.GfxFactory?.Invoke(archive);
+    //    archive.Sfx = platform.SfxFactory?.Invoke(archive);
+    //    return archive;
     //}
 
     /// <summary>
@@ -1137,8 +1137,8 @@ public class FamilyGame {
         if (!string.IsNullOrEmpty(searchPattern)) return searchPattern;
         return SearchBy switch {
             SearchBy.Default => "",
-            SearchBy.Pak => PakExts == null || PakExts.Length == 0 ? ""
-                : PakExts.Length == 1 ? $"*{PakExts[0]}" : $"(*{string.Join(":*", PakExts)})",
+            SearchBy.Pak => ArcExts == null || ArcExts.Length == 0 ? ""
+                : ArcExts.Length == 1 ? $"*{ArcExts[0]}" : $"(*{string.Join(":*", ArcExts)})",
             SearchBy.TopDir => "*",
             SearchBy.TwoDir => "*/*",
             SearchBy.DirDown => "**/*",
@@ -1148,17 +1148,17 @@ public class FamilyGame {
     }
 
     /// <summary>
-    /// Create pak file.
+    /// Create the archive.
     /// </summary>
     /// <param name="vfx">The vfx.</param>
     /// <param name="edition">The edition.</param>
     /// <param name="searchPattern">The search pattern.</param>
     /// <param name="throwOnError">Throws on error.</param>
     /// <returns></returns>
-    internal PakFile CreatePakFile(FileSystem vfx, Edition edition, string searchPattern, bool throwOnError) {
+    internal Archive CreateArchive(FileSystem vfx, Edition edition, string searchPattern, bool throwOnError) {
         if (vfx is NetworkFileSystem k) throw new NotImplementedException($"{k}"); //return new StreamPakFile(family.FileManager.HostFactory, game, path, vfx),
         searchPattern = CreateSearchPatterns(searchPattern);
-        var pakFiles = new List<PakFile>();
+        var pakFiles = new List<Archive>();
         var dlcKeys = Dlcs.Where(x => !string.IsNullOrEmpty(x.Value.Path)).Select(x => x.Key).ToArray();
         var slash = '\\';
         foreach (var key in (new string[] { null }).Concat(dlcKeys))
@@ -1166,56 +1166,56 @@ public class FamilyGame {
                 switch (SearchBy) {
                     case SearchBy.Pak:
                         foreach (var path in p.paths)
-                            if (IsPakFile(path))
-                                pakFiles.Add(CreatePakFileObj(vfx, edition, path));
+                            if (IsArcPath(path))
+                                pakFiles.Add(CreateArchiveObj(vfx, edition, path));
                         break;
                     default:
-                        pakFiles.Add(CreatePakFileObj(vfx, edition,
+                        pakFiles.Add(CreateArchiveObj(vfx, edition,
                             SearchBy == SearchBy.DirDown ? (p.root, p.paths.Where(x => x.Contains(slash)).ToArray())
                             : p));
                         break;
                 }
-        return (pakFiles.Count == 1 ? pakFiles[0] : CreatePakFileObj(vfx, edition, pakFiles))?.SetPlatform(PlatformX.Current);
+        return (pakFiles.Count == 1 ? pakFiles[0] : CreateArchiveObj(vfx, edition, pakFiles))?.SetPlatform(PlatformX.Current);
     }
 
     /// <summary>
-    /// Create pak file.
+    /// Create the archive.
     /// </summary>
     /// <param name="vfx">The vfx.</param>
     /// <param name="edition">The edition.</param>
     /// <param name="value">The value.</param>
     /// <param name="tag">The tag.</param>
     /// <returns></returns>
-    public PakFile CreatePakFileObj(FileSystem vfx, Edition edition, object value, object tag = null) {
-        var pakState = new PakState(vfx, this, edition, value as string, tag);
+    public Archive CreateArchiveObj(FileSystem vfx, Edition edition, object value, object tag = null) {
+        var state = new ArchiveState(vfx, this, edition, value as string, tag);
         return value switch {
-            string s => IsPakFile(s) ? CreatePakFileType(pakState) : throw new InvalidOperationException($"{Id} missing {s}"),
-            ValueTuple<string, string[]> s => s.Item2.Length == 1 && IsPakFile(s.Item2[0])
-                ? CreatePakFileObj(vfx, edition, s.Item2[0], tag)
-                : new ManyPakFile(
-                    CreatePakFileType(pakState), pakState,
+            string s => IsArcPath(s) ? CreateArchiveType(state) : throw new InvalidOperationException($"{Id} missing {s}"),
+            ValueTuple<string, string[]> s => s.Item2.Length == 1 && IsArcPath(s.Item2[0])
+                ? CreateArchiveObj(vfx, edition, s.Item2[0], tag)
+                : new ManyArchive(
+                    CreateArchiveType(state), state,
                     s.Item1.Length > 0 ? s.Item1 : "Many", s.Item2,
                     pathSkip: s.Item1.Length > 0 ? s.Item1.Length + 1 : 0),
-            IList<PakFile> s => s.Count == 1 ? s[0] : new MultiPakFile(pakState, "Multi", s),
+            IList<Archive> s => s.Count == 1 ? s[0] : new MultiArchive(state, "Multi", s),
             null => null,
             _ => throw new ArgumentOutOfRangeException(nameof(value), $"{value}"),
         };
     }
 
     /// <summary>
-    /// Create pak file.
+    /// Create archive type
     /// </summary>
     /// <param name="state">The state.</param>
     /// <returns></returns>
-    public PakFile CreatePakFileType(PakState state)
-        => (PakFile)Activator.CreateInstance(PakFileType ?? throw new InvalidOperationException($"{Id} missing PakFileType"), state);
+    public Archive CreateArchiveType(ArchiveState state)
+        => (Archive)Activator.CreateInstance(ArchiveType ?? throw new InvalidOperationException($"{Id} missing ArchiveType"), state);
 
     /// <summary>
     /// Is pak file.
     /// </summary>
     /// <param name="path">The path.</param>
     /// <returns></returns>
-    public bool IsPakFile(string path) => PakExts != null && PakExts.Any(x => path.EndsWith(x, StringComparison.OrdinalIgnoreCase));
+    public bool IsArcPath(string path) => ArcExts != null && ArcExts.Any(x => path.EndsWith(x, StringComparison.OrdinalIgnoreCase));
 
     /// <summary>
     /// Find the games paths.
@@ -1253,7 +1253,7 @@ public partial class FamilyManager {
     /// <summary>
     /// The Unknown pak file.
     /// </summary>
-    public static readonly PakFile UnknownPakFile;
+    public static readonly Archive UnknownPakFile;
 
     static readonly Func<string, Stream> GetManifestResourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream;
     static string FamilyJsonLoader(string path) {
@@ -1278,7 +1278,7 @@ public partial class FamilyManager {
 
         // load unknown
         Unknown = GetFamily("Unknown");
-        UnknownPakFile = Unknown.OpenPakFile(new Uri("game:/#APP"), throwOnError: false);
+        UnknownPakFile = Unknown.OpenArchive(new Uri("game:/#APP"), throwOnError: false);
     }
 
     /// <summary>

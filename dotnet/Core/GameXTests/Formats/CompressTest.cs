@@ -67,8 +67,8 @@ public class CompressTests {
     [DataRow("Tes:Fallout76", "SeventySix - 00UpdateMain.ba2:meshes/actors/moleminer/treasurehunter/treasurehunter.ztl", 17725)]
     public async Task Errors(string pak, string sampleFile, int sampleFileSize) => await LoadDataAync(TestHelper.Paks[pak].Value, sampleFile, sampleFileSize);
 
-    static async Task LoadDataAync(PakFile source, string sampleFile, int sampleFileSize) {
+    static async Task LoadDataAync(Archive source, string sampleFile, int sampleFileSize) {
         Assert.IsTrue(source.Contains(sampleFile));
-        Assert.AreEqual(sampleFileSize, (await source.LoadFileData(sampleFile)).Length);
+        Assert.AreEqual(sampleFileSize, (await source.GetData(sampleFile)).Length);
     }
 }

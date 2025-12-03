@@ -17,7 +17,7 @@ namespace GameX.Origin.Formats.U9;
 #region Binary_Music
 
 public unsafe class Binary_Music : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Music(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Music(r));
 
     #region Records
 
@@ -42,7 +42,7 @@ public unsafe class Binary_Music : IHaveMetaInfo {
 #region Binary_Sfx
 
 public unsafe class Binary_Sfx : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Sfx(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Sfx(r));
 
     #region Records
 
@@ -67,7 +67,7 @@ public unsafe class Binary_Sfx : IHaveMetaInfo {
 #region Binary_Speech
 
 public unsafe class Binary_Speech : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Speech(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Speech(r));
 
     #region Records
 
@@ -92,7 +92,7 @@ public unsafe class Binary_Speech : IHaveMetaInfo {
 #region Binary_AnimU9
 
 public unsafe class Binary_AnimU9 : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_AnimU9(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_AnimU9(r));
 
     #region Records
 
@@ -161,7 +161,7 @@ public unsafe class Binary_AnimU9 : IHaveMetaInfo {
 #region Binary_Bitmap
 
 public unsafe class Binary_Bitmap : IHaveMetaInfo, ITexture {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Bitmap(r, s));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Bitmap(r, s));
 
     #region Headers
 
@@ -208,7 +208,7 @@ public unsafe class Binary_Bitmap : IHaveMetaInfo, ITexture {
     #endregion
 
     // file: static/bitmap16.flx:file0001.bmp
-    public Binary_Bitmap(BinaryReader r, PakFile s) {
+    public Binary_Bitmap(BinaryReader r, Archive s) {
         switch ((char)s.Tag) {
             case '6': BytesPerPixel = 2; break;
             case 'c': BytesPerPixel = 2; break;
@@ -278,7 +278,7 @@ public unsafe class Binary_Bitmap : IHaveMetaInfo, ITexture {
 #region Binary_Book
 
 public unsafe class Binary_Book : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Book(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Book(r));
 
     #region Records
 
@@ -308,7 +308,7 @@ public unsafe class Binary_Book : IHaveMetaInfo {
 #region Binary_Text
 
 public unsafe class Binary_Text : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Text(r, (int)f.FileSize));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Text(r, (int)f.FileSize));
 
     #region Records
 
@@ -336,7 +336,7 @@ public unsafe class Binary_Text : IHaveMetaInfo {
 #region Binary_Mesh
 
 public unsafe class Binary_Mesh : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Mesh(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Mesh(r));
 
     #region Records
 
@@ -361,7 +361,7 @@ public unsafe class Binary_Mesh : IHaveMetaInfo {
 #region Binary_Texture
 
 public unsafe class Binary_Texture : IHaveMetaInfo, ITexture {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Texture(r, s));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Texture(r, s));
 
     #region Records
 
@@ -373,7 +373,7 @@ public unsafe class Binary_Texture : IHaveMetaInfo, ITexture {
 
     // file: static/Texture8.9:file043f.tex
     // file: static/texture16.9:file043f.tex
-    public Binary_Texture(BinaryReader r, PakFile s) {
+    public Binary_Texture(BinaryReader r, Archive s) {
         switch ((char)s.Tag) {
             case '6': BytesPerPixel = 2; break;
         }
@@ -431,7 +431,7 @@ public unsafe class Binary_Texture : IHaveMetaInfo, ITexture {
 #region Binary_Typename
 
 public unsafe class Binary_Typename : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Typename(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Typename(r));
 
     #region Records
 

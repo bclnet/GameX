@@ -10,7 +10,7 @@ namespace GameX.Bioware.Formats;
 
 #region Binary_Aurora
 
-public unsafe class Binary_Aurora : PakBinary<Binary_Aurora> {
+public unsafe class Binary_Aurora : ArcBinary<Binary_Aurora> {
     // https://nwn2.fandom.com/wiki/File_formats
 
     #region Headers : KEY/BIF
@@ -208,7 +208,7 @@ public unsafe class Binary_Aurora : PakBinary<Binary_Aurora> {
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         FileSource[] files; List<FileSource> files2;
 
         // KEY
@@ -230,7 +230,7 @@ public unsafe class Binary_Aurora : PakBinary<Binary_Aurora> {
             var headerKeys = r.ReadSArray<KEY_HeaderKey>((int)header.NumKeys).ToDictionary(x => x.Id, x => UnsafeX.FixedAString(x.Name, 0x10));
 
             // combine
-            var subPathFormat = Path.Combine(Path.GetDirectoryName(source.PakPath), "{0}");
+            var subPathFormat = Path.Combine(Path.GetDirectoryName(source.ArcPath), "{0}");
             for (var i = 0; i < header.NumFiles; i++) {
                 var (file, path) = headerFiles[i];
                 var subPath = string.Format(subPathFormat, path);
@@ -238,7 +238,7 @@ public unsafe class Binary_Aurora : PakBinary<Binary_Aurora> {
                 files[i] = new FileSource {
                     Path = path,
                     FileSize = file.FileSize,
-                    Pak = new SubPakFile(source, null, subPath, (headerKeys, (uint)i)),
+                    Arc = new SubArchive(source, null, subPath, (headerKeys, (uint)i)),
                 };
             }
         }
@@ -271,7 +271,7 @@ public unsafe class Binary_Aurora : PakBinary<Binary_Aurora> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
         Stream fileData;
         r.Seek(file.Offset);
         if (source.Version == BIFF_VERSION) fileData = new MemoryStream(r.ReadBytes((int)file.FileSize));
@@ -284,7 +284,7 @@ public unsafe class Binary_Aurora : PakBinary<Binary_Aurora> {
 
 #region Binary_Myp
 
-public unsafe class Binary_Myp : PakBinary<Binary_Myp> {
+public unsafe class Binary_Myp : ArcBinary<Binary_Myp> {
     #region Headers
 
     const uint MYP_MAGIC = 0x0050594d;
@@ -323,7 +323,7 @@ public unsafe class Binary_Myp : PakBinary<Binary_Myp> {
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         var files = source.Files = [];
         var hashLookup = source.Game.Id switch {
             "SWTOR" => TOR.HashLookup,
@@ -363,7 +363,7 @@ public unsafe class Binary_Myp : PakBinary<Binary_Myp> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
         if (file.FileSize == 0) return Task.FromResult(System.IO.Stream.Null);
         r.Seek(file.Offset);
         return Task.FromResult((Stream)new MemoryStream(file.Compressed == 0
@@ -380,7 +380,7 @@ public unsafe class Binary_Myp : PakBinary<Binary_Myp> {
 #region Binary_Gff
 
 public unsafe class Binary_Gff : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Gff(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Gff(r));
 
     #region Headers
 

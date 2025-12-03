@@ -7,7 +7,7 @@ namespace GameX.Red;
 [TestClass]
 public class FormatTests2 {
     static readonly Family family = FamilyManager.GetFamily("Red");
-    static PakFile main = family.OpenPakFile(new Uri("game:/main.key#Witcher"));
+    static Archive main = family.OpenArchive(new Uri("game:/main.key#Witcher"));
 
     [TestMethod]
     [DataRow("dialogues00.bif:09_ban2ban01.dlg")]
@@ -25,8 +25,8 @@ public class FormatTests2 {
     //[DataRow("meshes00.bif/alpha_dummy.mdb")]
     //public void MDB(string sampleFile) => LoadObject<BiowareBinaryPak>(main, sampleFile);
 
-    static void LoadObject<T>(PakFile source, string sampleFile) {
+    static void LoadObject<T>(Archive source, string sampleFile) {
         Assert.IsTrue(source.Contains(sampleFile));
-        var result = source.LoadFileObject<T>(sampleFile).Result;
+        var result = source.GetAsset<T>(sampleFile).Result;
     }
 }

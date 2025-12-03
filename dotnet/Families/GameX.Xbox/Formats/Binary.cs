@@ -11,7 +11,7 @@ namespace GameX.Xbox.Formats;
 #region Binary_Xnb
 
 public class Binary_Xnb : IHaveMetaInfo, IWriteToStream, Indirect<object> {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Xnb(r, f));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Xnb(r, f));
     object Indirect<object>.Value => Obj;
 
     #region Headers
@@ -69,13 +69,13 @@ public class Binary_Xnb : IHaveMetaInfo, IWriteToStream, Indirect<object> {
 
 #region Binary_XXX
 
-public unsafe class Binary_XXX : PakBinary<Binary_XXX> {
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+public unsafe class Binary_XXX : ArcBinary<Binary_XXX> {
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         var files = source.Files = [];
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
         throw new NotImplementedException();
     }
 }

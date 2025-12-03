@@ -8,7 +8,7 @@ namespace GameX.Origin.Formats.U8;
 #region Binary_Shp
 
 public unsafe class Binary_Shp {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Shp(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Shp(r));
 
     #region Headers
 

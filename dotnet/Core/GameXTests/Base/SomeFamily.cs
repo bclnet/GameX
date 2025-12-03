@@ -31,15 +31,15 @@ internal static class Some {
 }";
     public static readonly Family Family = FamilyManager.CreateFamily(FamilyJson.Replace("'", "\""));
 
-    public class SomePakFile : PakFile {
-        public SomePakFile(PakState state) : base(state) { Name = "Some Name"; }
+    public class SomePakFile : Archive {
+        public SomePakFile(ArchiveState state) : base(state) { Name = "Some Name"; }
         public override int Count => 0;
         public override void Closing() { }
         public override void Opening() { }
         public override bool Contains(object path) => false;
-        public override (PakFile, FileSource) GetFileSource(object path, bool throwOnError = true) => throw new NotImplementedException();
-        public override Task<Stream> LoadFileData(object path, object option = default, bool throwOnError = true) => throw new NotImplementedException();
-        public override Task<T> LoadFileObject<T>(object path, object option = default, bool throwOnError = true) => throw new NotImplementedException();
+        public override (Archive, FileSource) GetSource(object path, bool throwOnError = true) => throw new NotImplementedException();
+        public override Task<Stream> GetData(object path, object option = default, bool throwOnError = true) => throw new NotImplementedException();
+        public override Task<T> GetAsset<T>(object path, object option = default, bool throwOnError = true) => throw new NotImplementedException();
     }
 
     public const string FileManagerJson =

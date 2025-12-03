@@ -11,7 +11,7 @@ namespace GameX.Black.Formats;
 #region Binary_Dat
 
 // Fallout 2
-public unsafe class Binary_Dat : PakBinary<Binary_Dat> {
+public unsafe class Binary_Dat : ArcBinary<Binary_Dat> {
     // Header : F1
     #region Headers : F1
     // https://falloutmods.fandom.com/wiki/DAT_file_format
@@ -74,7 +74,7 @@ public unsafe class Binary_Dat : PakBinary<Binary_Dat> {
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag) {
+    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         var gameId = source.Game.Id;
 
         // Fallout
@@ -128,7 +128,7 @@ public unsafe class Binary_Dat : PakBinary<Binary_Dat> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
         var magic = source.Magic;
         // F1
         if (magic == F1_HEADER_FILEID) {
@@ -155,7 +155,7 @@ public unsafe class Binary_Dat : PakBinary<Binary_Dat> {
 #region Binary_Frm
 
 public class Binary_Frm : IHaveMetaInfo, ITextureFramesSelect {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Frm(r, f, s));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Frm(r, f, s));
 
     #region Headers
     // https://falloutmods.fandom.com/wiki/FRM_File_Format
@@ -193,8 +193,8 @@ public class Binary_Frm : IHaveMetaInfo, ITextureFramesSelect {
     public (FrmFrame f, byte[] b)[] Frames;
     byte[] Bytes;
 
-    public unsafe Binary_Frm(BinaryReader r, FileSource f, PakFile s) {
-        var pallet = GetPalletObjAsync(f.Path, (BinaryPakFile)s).Result ?? throw new Exception("No pallet found");
+    public unsafe Binary_Frm(BinaryReader r, FileSource f, Archive s) {
+        var pallet = GetPalletObjAsync(f.Path, (BinaryAsset)s).Result ?? throw new Exception("No pallet found");
         var rgba32 = pallet.Rgba32;
 
         // parse header
@@ -219,12 +219,12 @@ public class Binary_Frm : IHaveMetaInfo, ITextureFramesSelect {
         FrameSelect(0);
     }
 
-    async Task<Binary_Pal2> GetPalletObjAsync(string path, BinaryPakFile s) {
+    async Task<Binary_Pal2> GetPalletObjAsync(string path, BinaryAsset s) {
         var palletPath = $"{path[..^4]}.PAL";
         if (s.Contains(palletPath))
-            return await s.LoadFileObject<Binary_Pal2>(palletPath);
+            return await s.GetAsset<Binary_Pal2>(palletPath);
         if (DefaultPallet == null && s.Contains("COLOR.PAL")) {
-            DefaultPallet ??= await s.LoadFileObject<Binary_Pal2>("COLOR.PAL");
+            DefaultPallet ??= await s.GetAsset<Binary_Pal2>("COLOR.PAL");
             DefaultPallet.SetColors();
         }
         return DefaultPallet;
@@ -267,7 +267,7 @@ public class Binary_Frm : IHaveMetaInfo, ITextureFramesSelect {
 #region Binary_Pal2
 
 public unsafe class Binary_Pal2 : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Pal2(r, f));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Pal2(r, f));
 
     public uint[] Rgba32 = new uint[256];
 
@@ -301,7 +301,7 @@ public unsafe class Binary_Pal2 : IHaveMetaInfo {
 #region Binary_Rix
 
 public unsafe class Binary_Rix : IHaveMetaInfo, ITexture {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Rix(r, f));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Rix(r, f));
 
     #region Headers
     // https://falloutmods.fandom.com/wiki/RIX_File_Format

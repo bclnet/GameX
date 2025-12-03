@@ -159,13 +159,13 @@ class Binary_UO(ArcBinaryT):
     UOP_MAGIC = 0x50594D
 
     def readUop(self, source: BinaryArchive, r: Reader):
-        def parse():
+        def parse_():
             match source.arcPath:
-                case 'artLegacyMUL.uop': return ('.tga', 0x14000, 0x13FDC, False, lambda i: f'land/file{i:05x}.land' if i < 0x4000 else f'static/file{i:05x}.art')
+                case 'artLegacyMUL.uop': return ('.tga', 0x14000, 0x13FDC, False, lambda i: f'land/file{i:05x}.land' if i < 0x4000 else f'art/file{i:05x}.art')
                 case 'gumpartLegacyMUL.uop': return (".tga", 0xFFFF, 0, True, lambda i: f'file{i:05x}.tex')
                 case 'soundLegacyMUL.uop': return (".dat", 0xFFF, 0, False, lambda i: f'file{i:05x}.wav')
                 case _: return (None, 0, 0, False, lambda i: f'file{i:05x}.dat')
-        extension, length, idxLength, extra, pathFunc = parse()
+        extension, length, idxLength, extra, pathFunc = parse_()
         uopPattern = Path(source.arcPath).stem.lower()
 
         # read header
@@ -180,7 +180,7 @@ class Binary_UO(ArcBinaryT):
         for i in range(length): hashes[self.createUopHash(f'build/{uopPattern}/{i:08}{extension}'.encode('ascii'))] = i
 
         # load files
-        files = [None]*length
+        files = [None] * length
         nextBlock = header.nextBlock
         r.seek(nextBlock)
         while True:
@@ -198,16 +198,16 @@ class Binary_UO(ArcBinaryT):
                     fileSize = record.fileSize)
                 # load extra
                 if not extra: continue
-                def peekLambda(x):
+                def peek_(z):
                     r.seek(file.offset)
                     extra = r.readBytes(8)
                     extra1 = ((extra[3] << 24) | (extra[2] << 16) | (extra[1] << 8) | extra[0]) & 0xffff
                     extra2 = ((extra[7] << 24) | (extra[6] << 16) | (extra[5] << 8) | extra[4]) & 0xffff
                     file.offset += 8
                     file.compressed = extra1 << 16 | extra2
-                r.peek(peekLambda)
+                r.peek(peek_)
             if r.f.seek(nextBlock, os.SEEK_SET) == 0: break
-        source.files = [x for x in files if x]
+        source.files = [s for s in files if s]
 
     @staticmethod
     def createUopHash2(s: str) -> int:

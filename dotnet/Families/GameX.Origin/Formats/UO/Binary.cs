@@ -111,11 +111,9 @@ public unsafe class Binary_AsciiFont : IHaveMetaInfo {
         public AsciiFont(BinaryReader r) {
             r.ReadByte();
             for (var i = 0; i < 224; ++i) {
-                var width = r.ReadByte();
-                var height = r.ReadByte();
+                byte width = r.ReadByte(), height = r.ReadByte();
                 r.ReadByte();
                 if (width <= 0 || height <= 0) continue;
-
                 if (height > Height && i < 96) Height = height;
 
                 //var bd = MemoryMarshal.Cast<byte, ushort>(data.AsSpan(0, length << 1));
@@ -123,12 +121,9 @@ public unsafe class Binary_AsciiFont : IHaveMetaInfo {
                 //Pixels = MemoryMarshal.Cast<ushort, byte>(bd.ToArray()).ToArray();
 
                 var bd = new byte[width * height << 1];
-                var bd_Stride = width << 1;
                 fixed (byte* bd_Scan0 = bd) {
                     var line = (ushort*)bd_Scan0;
-                    var delta = bd_Stride >> 1;
-
-                    for (var y = 0; y < height; ++y, line += delta) {
+                    for (var y = 0; y < height; ++y, line += width) {
                         ushort* cur = line;
                         for (var x = 0; x < width; ++x) {
                             var pixel = (ushort)(r.ReadByte() | (r.ReadByte() << 8));
@@ -897,21 +892,20 @@ public unsafe class Binary_Land : IHaveMetaInfo, ITexture {
     // file: artLegacyMUL.uop:land/file00000.land
     public Binary_Land(BinaryReader r, int length) {
         fixed (byte* _ = r.ReadBytes(length)) {
+            var bdata = (ushort*)_;
             var bd = Pixels = new byte[44 * 44 << 1];
-            var bd_Stride = 44 << 1;
+            var width = 44;
             fixed (byte* bd_Scan0 = bd) {
-                var bdata = (ushort*)_;
-                int xOffset = 21, xRun = 2;
                 var line = (ushort*)bd_Scan0;
-                var delta = bd_Stride >> 1;
-
-                for (var y = 0; y < 22; ++y, --xOffset, xRun += 2, line += delta) {
+                // run
+                int xOffset = 21, xRun = 2;
+                for (var y = 0; y < 22; ++y, --xOffset, xRun += 2, line += width) {
                     ushort* cur = line + xOffset, end = cur + xRun;
                     while (cur < end) *cur++ = (ushort)(*bdata++ | 0x8000);
                 }
-
+                // run
                 xOffset = 0; xRun = 44;
-                for (var y = 0; y < 22; ++y, ++xOffset, xRun -= 2, line += delta) {
+                for (var y = 0; y < 22; ++y, ++xOffset, xRun -= 2, line += width) {
                     ushort* cur = line + xOffset, end = cur + xRun;
                     while (cur < end) *cur++ = (ushort)(*bdata++ | 0x8000);
                 }
@@ -1490,31 +1484,22 @@ public unsafe class Binary_Art : IHaveMetaInfo, ITexture {
             var width = Width = bdata[count++];
             var height = Height = bdata[count++];
             if (width <= 0 || height <= 0) return;
-
-            var lookups = new int[height];
             var start = height + 4;
-            for (var i = 0; i < height; ++i)
-                lookups[i] = start + bdata[count++];
-
+            var lookups = new int[height]; for (var i = 0; i < height; ++i) lookups[i] = start + bdata[count++];
             var bd = Pixels = new byte[width * height << 1];
-            var bd_Stride = width << 1;
             fixed (byte* bd_Scan0 = bd) {
                 var line = (ushort*)bd_Scan0;
-                var delta = bd_Stride >> 1;
-
-                for (var y = 0; y < height; ++y, line += delta) {
+                for (var y = 0; y < height; ++y, line += width) {
                     count = lookups[y];
                     var cur = line;
                     int xOffset, xRun;
                     while ((xOffset = bdata[count++]) + (xRun = bdata[count++]) != 0) {
-                        if (xOffset > delta) break;
-
+                        if (xOffset > width) break;
                         cur += xOffset;
-                        if (xOffset + xRun > delta) break;
-
+                        if (xOffset + xRun > width) break;
+                        // run
                         var end = cur + xRun;
-                        while (cur < end)
-                            *cur++ = (ushort)(bdata[count++] ^ 0x8000);
+                        while (cur < end) *cur++ = (ushort)(bdata[count++] ^ 0x8000);
                     }
                 }
             }
@@ -1546,8 +1531,8 @@ public unsafe class Binary_Art : IHaveMetaInfo, ITexture {
 #region Binary_StringTable
 
 public unsafe class Binary_StringTable : IHaveMetaInfo {
-    public static Dictionary<string, Binary_StringTable> Current = [];
     public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_StringTable(r, f));
+    public static Dictionary<string, Binary_StringTable> Current = [];
 
     #region Headers
 
@@ -1563,12 +1548,10 @@ public unsafe class Binary_StringTable : IHaveMetaInfo {
         public RecordFlag Flag = flag;
     }
 
+    #endregion
+
     public Dictionary<int, string> Strings = [];
     public Dictionary<int, Record> Records = [];
-
-    public static string GetString(int id) => Current.TryGetValue("enu", out var y) && y.Strings.TryGetValue(id, out var z) ? z : string.Empty;
-
-    #endregion
 
     // file: Cliloc.enu
     public Binary_StringTable(BinaryReader r, FileSource f) {
@@ -1582,6 +1565,8 @@ public unsafe class Binary_StringTable : IHaveMetaInfo {
         }
         Current[Path.GetExtension(f.Path[1..])] = this;
     }
+
+    public static string GetString(int id) => Current.TryGetValue("enu", out var y) && y.Strings.TryGetValue(id, out var z) ? z : string.Empty;
 
     public override string ToString() => this.Serialize();
 

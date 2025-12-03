@@ -275,13 +275,13 @@ public unsafe class Binary_UO : ArcBinary<Binary_UO> {
     const int UOP_MAGIC = 0x50594D;
 
     Task ReadUop(BinaryAsset source, BinaryReader r) {
-        (string extension, int length, int idxLength, bool extra, Func<int, string> pathFunc) pair = source.ArcPath switch {
+        (string extension, int length, int idxLength, bool extra, Func<int, string> pathFunc) parse = source.ArcPath switch {
             "artLegacyMUL.uop" => (".tga", 0x14000, 0x13FDC, false, i => i < 0x4000 ? $"land/file{i:x5}.land" : $"art/file{i:x5}.art"),
             "gumpartLegacyMUL.uop" => (".tga", 0xFFFF, 0, true, i => $"file{i:x5}.tex"),
             "soundLegacyMUL.uop" => (".dat", 0xFFF, 0, false, i => $"file{i:x5}.wav"),
             _ => (null, 0, 0, false, i => $"file{i:x5}.dat"),
         };
-        var (extension, length, idxLength, extra, pathFunc) = pair;
+        var (extension, length, idxLength, extra, pathFunc) = parse;
         var uopPattern = Path.GetFileNameWithoutExtension(source.ArcPath).ToLowerInvariant();
 
         // read header
@@ -314,7 +314,7 @@ public unsafe class Binary_UO : ArcBinary<Binary_UO> {
                 };
                 // load extra
                 if (!extra) continue;
-                r.Peek(x => {
+                r.Peek(z => {
                     r.Seek(file.Offset);
                     var extra = r.ReadBytes(8);
                     var extra1 = (ushort)((extra[3] << 24) | (extra[2] << 16) | (extra[1] << 8) | extra[0]);

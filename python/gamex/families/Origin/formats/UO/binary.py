@@ -1,5 +1,6 @@
 import os, re, struct, numpy as np
-from io import BytesIO
+# from io import BytesIO
+from enum import Flag
 from itertools import groupby
 from openstk.gfx import Texture_Bytes, ITexture, TextureFormat, TexturePixel
 from gamex import FileSource, MetaInfo, MetaContent, IHaveMetaInfo, DesSer
@@ -91,20 +92,15 @@ class Binary_AsciiFont(IHaveMetaInfo):
         characters: list[list[int]] = [None]*224
         height: int = 0
         def __init__(self, r: Reader):
-            
             r.readByte()
             for i in range(224):
-                width = r.readByte()
-                height = r.readByte()
+                width = r.readByte(); height = r.readByte()
                 r.readByte()
                 if width <= 0 or height <= 0: continue
-
                 if height > self.height and i < 96: self.height = height
 
                 length = width * height
-                dt = np.uint16
-                # dt = dt.newbyteorder('>')
-                bd = list(np.frombuffer(r.readBytes(length << 1), dtype = dt))
+                bd = list(np.frombuffer(r.readBytes(length << 1), dtype = np.uint16))
                 for j in range(length):
                     if bd[j] != 0: bd[j] ^= 0x8000
                 self.characters[i] = np.array(bd).tobytes()
@@ -114,8 +110,7 @@ class Binary_AsciiFont(IHaveMetaInfo):
     #endregion
 
     def __init__(self, r: Reader):
-        for i in range(len(self.fonts)):
-            self.fonts[i] = self.AsciiFont(r)
+        for i in range(len(self.fonts)): self.fonts[i] = self.AsciiFont(r)
 
     def __repr__(self): return DesSer.serialize(self)
 
@@ -229,10 +224,10 @@ class Binary_BodyConverter(IHaveMetaInfo):
             self.table2 = [-1]*(max2 + 1)
             for i in range(0, len(list2), 2): self.table2[list2[i]] = list2[i + 1]
 
-            self.table3 = [-1]*(max3 + 1)
+            self.table3 = [0]*(max3 + 1)
             for i in range(0, len(list3), 2): self.table3[list3[i]] = list3[i + 1]
 
-            self.table4 = [-1]*(max4 + 1)
+            self.table4 = [0]*(max4 + 1)
             for i in range(0, len(list4), 2): self.table4[list4[i]] = list4[i + 1]
 
     def __repr__(self): return DesSer.serialize(self)
@@ -532,23 +527,50 @@ class Binary_Hues(IHaveMetaInfo):
         ]
 
 # Binary_Land
-class Binary_Land(IHaveMetaInfo):
+class Binary_Land(IHaveMetaInfo, ITexture):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_XX(r)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Land(r, f.fileSize)
 
     #region Headers
 
     #endregion
 
-    def __init__(self, r: Reader):
-        pass
+    def __init__(self, r: Reader, length: int):
+        bdata = np.frombuffer(r.readBytes(length), dtype = np.uint16); bdata_ = 0
+        bd = self.pixels = bytearray(44 * 44 << 1)
+        mv = memoryview(np.frombuffer(bd, dtype = np.uint16))
+        width = 44
+        line = 0
+        # run
+        xOffset = 21; xRun = 2
+        for y in range(22):
+            cur = line + xOffset; end = cur + xRun
+            while cur < end: mv[cur] = bdata[bdata_] ^ 0x8000; cur += 1; bdata_ += 1
+            xOffset -= 1; xRun += 2; line += width
+        # run
+        xOffset = 0; xRun = 44
+        for y in range(22):
+            cur = line + xOffset; end = cur + xRun
+            while cur < end: mv[cur] = bdata[bdata_] ^ 0x8000; cur += 1; bdata_ += 1
+            xOffset += 1; xRun -= 2; line += width
 
-    def __repr__(self): return DesSer.serialize(self)
+    #region ITexture
+
+    format: tuple = (TextureFormat.BGRA1555, TexturePixel.Unknown)
+    width: int = 44
+    height: int = 44
+    depth: int = 0
+    mipMaps: int = 1
+    texFlags: TextureFlags = 0
+    def create(self, platform: str, func: callable): return func(Texture_Bytes(self.pixels, self.format, None))
+
+    #endregion
 
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
-        MetaInfo('XX', items = [
-            # MetaInfo(f'Fonts: {len(self.fonts)}')
+        MetaInfo(None, MetaContent(type = 'Texture', name = os.path.basename(file.path), value = self)),
+        MetaInfo('Land', items = [
+            MetaInfo(f'Width: {self.width}'),
+            MetaInfo(f'Height: {self.height}')
             ])
         ]
 
@@ -762,45 +784,103 @@ class Binary_SpeechList(IHaveMetaInfo):
             ])
         ]
 
-# Binary_Static
-class Binary_Static(IHaveMetaInfo):
+# Binary_Art
+class Binary_Art(IHaveMetaInfo, ITexture):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Static(r)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Art(r, f.fileSize)
 
     #region Headers
 
     #endregion
 
-    def __init__(self, r: Reader):
-        pass
+    def __init__(self, r: Reader, length: int):
+        bdata = np.frombuffer(r.readBytes(length), dtype = np.uint16); bdata_ = 0
+        count = 2
+        width = self.width = bdata[count]; count += 1
+        height = self.height = bdata[count]; count += 1
+        if width <= 0 or height <= 0: return
+        start = height + 4
+        lookups = [start + bdata[count + i] for i in range(height)]; count += height
+        bd = self.pixels = bytearray(width * height << 1)
+        mv = memoryview(np.frombuffer(bd, dtype = np.uint16))
+        line = 0
+        for y in range(height):
+            count = lookups[y]
+            cur = line
+            xOffset = xRun = 0
+            while (xOffset := bdata[count+0]) + (xRun := bdata[count+1]) != 0:
+                count += 2
+                if xOffset > width: break
+                cur += xOffset
+                if xOffset + xRun > width: break
+                # run
+                end = cur + xRun
+                while cur < end: mv[cur] = bdata[count] ^ 0x8000; cur += 1; count += 1
+            line += width
+
+    #region ITexture
+
+    format: tuple = (TextureFormat.BGRA1555, TexturePixel.Unknown)
+    width: int = 0
+    height: int = 0
+    depth: int = 0
+    mipMaps: int = 1
+    texFlags: TextureFlags = 0
+    def create(self, platform: str, func: callable): return func(Texture_Bytes(self.pixels, self.format, None))
+
+    #endregion
 
     def __repr__(self): return DesSer.serialize(self)
 
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
-        MetaInfo('XX', items = [
-            # MetaInfo(f'Fonts: {len(self.fonts)}')
+        MetaInfo(None, MetaContent(type = 'Texture', name = os.path.basename(file.path), value = self)),
+        MetaInfo('Art', items = [
+            MetaInfo(f'Width: {self.width}'),
+            MetaInfo(f'Height: {self.height}')
             ])
         ]
 
 # Binary_StringTable
 class Binary_StringTable(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_StringTable(r)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_StringTable(r, f)
+    _current: dict[str, 'Binary_StringTable'] = {}
 
     #region Headers
 
+    class RecordFlag(Flag):
+        Original = 0x0
+        Custom = 0x1
+        Modified = 0x2
+
+    class Record:
+        def __init__(self, text: str, flag: 'RecordFlag'):
+            self.text = text
+            self.flag = flag
+
     #endregion
 
-    def __init__(self, r: Reader):
-        pass
+    strings: dict[int, str] = {}
+    records: dict[int, Record] = {}
+
+    def __init__(self, r: Reader, f: FileSource):
+        r.skip(6)
+        while not r.atEnd():
+            id = r.readInt32()
+            flag = Binary_StringTable.RecordFlag(r.readByte())
+            text = r.readL16UString()
+            self.records[id] = Binary_StringTable.Record(text, flag)
+            self.strings[id] = text
+        Binary_StringTable._current[os.path.splitext(f.path[1:])[1]] = self
+
+    def getString(self, id: int) -> str: return z if 'enu' in Binary_StringTable._current and (y := Binary_StringTable._current['enu']) and id in y.strings[id] and (z := y.strings[id]) else ''
 
     def __repr__(self): return DesSer.serialize(self)
 
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
         MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
-        MetaInfo('XX', items = [
-            # MetaInfo(f'Fonts: {len(self.fonts)}')
+        MetaInfo('StringTable', items = [
+            MetaInfo(f'Count: {len(self.records)}')
             ])
         ]
 

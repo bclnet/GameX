@@ -134,11 +134,10 @@ class Binary_BodyConverter(IHaveMetaInfo):
     table4: list[int]
 
     def contains(body: int) -> bool:
-          return True if self.table1 & body >= 0 & body < len(self.table1) & self.table1[body] != -1 else \
-          True if self.table2 & body >= 0 & body < len(self.table2) & self.table2[body] != -1 else \
-          True if self.table3 & body >= 0 & body < len(self.table3) & self.table3[body] != -1 else \
-          True if self.table4 & body >= 0 & body < len(self.table4) & self.table4[body] != -1 else \
-          False
+        return self.table1 & body >= 0 & body < len(self.table1) & self.table1[body] != -1 \
+        or self.table2 & body >= 0 & body < len(self.table2) & self.table2[body] != -1 \
+        or self.table3 & body >= 0 & body < len(self.table3) & self.table3[body] != -1 \
+        or self.table4 & body >= 0 & body < len(self.table4) & self.table4[body] != -1
     
     def convert(body: int) -> (int, int):
         if self.table1 & body >= 0 & body < len(self.table1):
@@ -182,12 +181,10 @@ class Binary_BodyConverter(IHaveMetaInfo):
     def __init__(self, r: Reader):
         list1 = []; list2 = []; list3 = []; list4 = []
         max1 = max2 = max3 = max4 = 0
-
         line: str
         while (line := r.readLine()):
             line = line.strip()
             if not line or line.startswith('#') or line.startswith('"#'): continue
-
             try:
                 split = [x for x in re.split('\t| ', line) if x]
                 hasOriginalBodyId = split[0].isdecimal()
@@ -217,16 +214,12 @@ class Binary_BodyConverter(IHaveMetaInfo):
                     list4.append(original)
                     list4.append(anim5)
             except: pass
-
-            self.table1 = [-1]*(max1 + 1)
+            self.table1 = [0]*(max1 + 1)
             for i in range(0, len(list1), 2): self.table1[list1[i]] = list1[i + 1]
-
-            self.table2 = [-1]*(max2 + 1)
+            self.table2 = [0]*(max2 + 1)
             for i in range(0, len(list2), 2): self.table2[list2[i]] = list2[i + 1]
-
             self.table3 = [0]*(max3 + 1)
             for i in range(0, len(list3), 2): self.table3[list3[i]] = list3[i + 1]
-
             self.table4 = [0]*(max4 + 1)
             for i in range(0, len(list4), 2): self.table4[list4[i]] = list4[i + 1]
 
@@ -255,22 +248,21 @@ class Binary_BodyTable(IHaveMetaInfo):
             self.newId = newId
             self.newHue = newHue
 
-    records: dict[int, Record] = {}
-    
     #endregion
+
+    records: dict[int, Record] = {}
 
     def __init__(self, r: Reader):
         line: str
         while (line := r.readLine()):
             line = line.strip()
             if not line or line.startswith('#') or line.startswith('"#'): continue
-
             try:
                 index1 = line.find('{')
                 index2 = line.find('}')
 
                 param1 = line[:index1]
-                param2 = line[index1 + 1: index2]
+                param2 = line[index1 + 1:index2]
                 param3 = line[(index2 + 1):]
 
                 indexOf = param2.find(',')
@@ -282,9 +274,9 @@ class Binary_BodyTable(IHaveMetaInfo):
                 self.records[oldId] = self.Record(oldId, newId, newHue)
             except: pass
 
-        def __repr__(self): return DesSer.serialize(self)
+    def __repr__(self): return DesSer.serialize(self)
         
-        def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
+    def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
         MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
         MetaInfo('BodyTable', items = [
             MetaInfo(f'Records: {len(self.records)}')
@@ -306,8 +298,6 @@ class Binary_CalibrationInfo(IHaveMetaInfo):
             self.detY = detY
             self.detZ = detZ
             self.detF = detF
-
-    records: list[Record] = []
 
     defaultRecords: list[Record] = [
         Record(
@@ -384,43 +374,42 @@ class Binary_CalibrationInfo(IHaveMetaInfo):
 
     #endregion
 
+    records: list[Record] = []
+
     def __init__(self, r: Reader):
         line: str
         while (line := r.readLine()):
             line = line.strip()
             if line.lower() != 'begin': continue
-
             mask, vals, detx, dety, detz, detf
-            if (mask := readBytes(r)) == None: continue
-            if (vals := readBytes(r)) == None: continue
-            if (detx := readBytes(r)) == None: continue
-            if (dety := readBytes(r)) == None: continue
-            if (detz := readBytes(r)) == None: continue
-            if (detf := readBytes(r)) == None: continue
+            if (mask := _readBytes(r)) == None: continue
+            if (vals := _readBytes(r)) == None: continue
+            if (detx := _readBytes(r)) == None: continue
+            if (dety := _readBytes(r)) == None: continue
+            if (detz := _readBytes(r)) == None: continue
+            if (detf := _readBytes(r)) == None: continue
             self.records.append(self.Record(mask, vals, detx, dety, detz, detf))
         self.records += self.defaultRecords
 
     @staticmethod
-    def readBytes(r: Reader) -> bytes:
+    def _readBytes(r: Reader) -> bytes:
         line = r.readLine()
         if not line: return None
-
         b = bytes((line.Length + 2) / 3)
         index = 0
         for i in range(0, line.length + 1, 3):
-            ch = line[i + 0]
-            cl = line[i + 1]
-
+            ch = line[i + 0]; cl = line[i + 1]
+            # parse ch
             if ch >= '0' & ch <= '9': ch -= '0'
             elif ch >= 'a' & ch <= 'f': ch -= ('a' - 10)
             elif ch >= 'A' & ch <= 'F': ch -= ('A' - 10)
             else: return None
-
+            # parse cl
             if cl >= '0' & cl <= '9': cl -= '0'
             elif cl >= 'a' & cl <= 'f': cl -= ('a' - 10)
             elif cl >= 'A' & cl <= 'F': cl -= ('A' - 10)
             else: return None
-
+            # add
             b[index] = ((ch << 4) | cl) & 0xff; index += 1
         return b
     
@@ -462,6 +451,9 @@ class Binary_Gump(IHaveMetaInfo, ITexture):
                     while cur < next: mv[cur] = color; cur += 1
             line += width
 
+    def loadWithHue(self, data: bytes, hue: 'Binary_Hues.Record', onlyHueGrayPixels: bool) -> None:
+        pass
+
     #region ITexture
 
     format: tuple = (TextureFormat.BGRA1555, TexturePixel.Unknown)
@@ -473,8 +465,6 @@ class Binary_Gump(IHaveMetaInfo, ITexture):
     def create(self, platform: str, func: callable): return func(Texture_Bytes(self.pixels, self.format, None))
 
     #endregion
-
-    def __repr__(self): return DesSer.serialize(self)
 
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
         MetaInfo(None, MetaContent(type = 'Texture', name = os.path.basename(file.path), value = self)),
@@ -489,19 +479,30 @@ class Binary_GumpDef(IHaveMetaInfo):
     @staticmethod
     def factory(r: Reader, f: FileSource, s: Archive): return Binary_GumpDef(r)
 
-    #region Headers
-
-    #endregion
-
     def __init__(self, r: Reader):
-        pass
+        line: str
+        while (line := r.readLine()):
+            line = line.strip()
+            if len(line) == 0 or line.startswith('#'): continue
+            defs = line.replace('\t', ' ').split(' ')
+            if len(defs) != 3: continue
+            inGump = int(defs[0])
+            outGump = int(defs[1].replace('{', '').replace('}', ''))
+            outHue = int(defs[2])
+            self.records[inGump] = (outGump, outHue)
+
+    records: dict[int, (int, int)] = {}
+
+    def itemHasGumpTranslation(self, gumpIndex: int) -> tuple:
+        if gumpIndex in self.records and (z := self.records[gumpIndex]): return (True, z[0], z[1])
+        return (False, 0, 0)
 
     def __repr__(self): return DesSer.serialize(self)
 
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
         MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
-        MetaInfo('XX', items = [
-            # MetaInfo(f'Fonts: {len(self.fonts)}')
+        MetaInfo('GumpDef', items = [
+                MetaInfo(f'Count: {len(self.records)}')
             ])
         ]
 
@@ -512,17 +513,44 @@ class Binary_Hues(IHaveMetaInfo):
 
     #region Headers
 
+    class HueRecord:
+        _struct = ('<64s4B', 68)
+        def __init__(self, tuple):
+            self.colors, \
+            self.tableStart, \
+            self.tableEnd, \
+            self.name = tuple
+
+    class Record:
+        def __init__(self, id: str, record: object = None):
+            self.id = id
+            if not record:
+                self.colors = [0]*32
+                self.name = 'Null'
+                return
+            # self.colors = UnsafeX.FixedTArray(record.colors, 32)
+            # self.tableStart = record.tableStart
+            # self.tableEnd = record.tableEnd
+            # self.name = UnsafeX.fixedAString(record.name, 20)
+
     #endregion
 
     def __init__(self, r: Reader):
-        pass
+        blockCount = r.length() / 708
+        if blockCount > 375: blockCount = 375
+        id = 0
+        for i in range(blockCount):
+            r.skip(4)
+            records = r.readSArray(self.HueRecord, 8)
+        #     for (var j = 0; j < 8; j++, id++) Records[id] = new Record(id, ref records[j]);
+        # for (; id < Records.Length; id++) Records[id] = new Record(id);
 
     def __repr__(self): return DesSer.serialize(self)
 
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
         MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
-        MetaInfo('XX', items = [
-            # MetaInfo(f'Fonts: {len(self.fonts)}')
+        MetaInfo('Hues', items = [
+            MetaInfo(f'Records: {len(self.records)}')
             ])
         ]
 

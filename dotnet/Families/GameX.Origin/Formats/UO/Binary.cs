@@ -160,7 +160,7 @@ public unsafe class Binary_AsciiFont : IHaveMetaInfo {
 
 #region Binary_BodyConverter
 
-public unsafe class Binary_BodyConverter : IHaveMetaInfo {
+public class Binary_BodyConverter : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_BodyConverter(r.ToStream()));
 
     #region Headers
@@ -171,11 +171,10 @@ public unsafe class Binary_BodyConverter : IHaveMetaInfo {
     readonly int[] Table4;
 
     public bool Contains(int body)
-        => Table1 != null && body >= 0 && body < Table1.Length && Table1[body] != -1 ? true
-        : Table2 != null && body >= 0 && body < Table2.Length && Table2[body] != -1 ? true
-        : Table3 != null && body >= 0 && body < Table3.Length && Table3[body] != -1 ? true
-        : Table4 != null && body >= 0 && body < Table4.Length && Table4[body] != -1 ? true
-        : false;
+        => Table1 != null && body >= 0 && body < Table1.Length && Table1[body] != -1
+        || Table2 != null && body >= 0 && body < Table2.Length && Table2[body] != -1
+        || Table3 != null && body >= 0 && body < Table3.Length && Table3[body] != -1
+        || Table4 != null && body >= 0 && body < Table4.Length && Table4[body] != -1;
 
     public int Convert(ref int body) {
         // Converts MountItemID to BodyID
@@ -318,8 +317,7 @@ public unsafe class Binary_BodyConverter : IHaveMetaInfo {
             if (line.Length == 0 || line.StartsWith("#") || line.StartsWith("\"#")) continue;
             try {
                 var split = line.Split(['\t', ' '], StringSplitOptions.RemoveEmptyEntries);
-
-                var hasOriginalBodyId = int.TryParse(split[0], out int original);
+                var hasOriginalBodyId = int.TryParse(split[0], out var original);
                 if (!hasOriginalBodyId) continue;
 
                 if (!int.TryParse(split[1], out var anim2)) anim2 = -1;
@@ -350,19 +348,15 @@ public unsafe class Binary_BodyConverter : IHaveMetaInfo {
                 }
             }
             catch { }
-
             Table1 = new int[max1 + 1];
             for (var i = 0; i < Table1.Length; ++i) Table1[i] = -1;
             for (var i = 0; i < list1.Count; i += 2) Table1[list1[i]] = list1[i + 1];
-
             Table2 = new int[max2 + 1];
             for (var i = 0; i < Table2.Length; ++i) Table2[i] = -1;
             for (var i = 0; i < list2.Count; i += 2) Table2[list2[i]] = list2[i + 1];
-
             Table3 = new int[max3 + 1];
             for (var i = 0; i < Table3.Length; ++i) Table3[i] = -1;
             for (var i = 0; i < list3.Count; i += 2) Table3[list3[i]] = list3[i + 1];
-
             Table4 = new int[max4 + 1];
             for (var i = 0; i < Table4.Length; ++i) Table4[i] = -1;
             for (var i = 0; i < list4.Count; i += 2) Table4[list4[i]] = list4[i + 1];
@@ -387,7 +381,7 @@ public unsafe class Binary_BodyConverter : IHaveMetaInfo {
 
 #region Binary_BodyTable
 
-public unsafe class Binary_BodyTable : IHaveMetaInfo {
+public class Binary_BodyTable : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_BodyTable(r.ToStream()));
 
     #region Headers
@@ -404,7 +398,6 @@ public unsafe class Binary_BodyTable : IHaveMetaInfo {
         }
     }
 
-    readonly Dictionary<int, Record> Records = new Dictionary<int, Record>();
 
     //public static void TranslateBodyAndHue(ref int id, ref int hue)
     //{
@@ -416,6 +409,8 @@ public unsafe class Binary_BodyTable : IHaveMetaInfo {
     //}
 
     #endregion
+
+    readonly Dictionary<int, Record> Records = [];
 
     // file: Body.def
     public Binary_BodyTable(StreamReader r) {
@@ -457,7 +452,7 @@ public unsafe class Binary_BodyTable : IHaveMetaInfo {
 
 #region Binary_CalibrationInfo
 
-public unsafe class Binary_CalibrationInfo : IHaveMetaInfo {
+public class Binary_CalibrationInfo : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_CalibrationInfo(r.ToStream()));
 
     #region Headers
@@ -480,99 +475,88 @@ public unsafe class Binary_CalibrationInfo : IHaveMetaInfo {
         }
     }
 
-    readonly List<Record> Records = new List<Record>();
-
-    static Record[] DefaultRecords = {
+    static Record[] DefaultRecords = [
         new Record(
             // Post 7.0.4.0 (Andreew)
-            new byte[]
-            {
+            [
                 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF,
                 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF
-            },
-            new byte[]
-            {
+            ],
+            [
                 0xFF, 0xD0, 0xE8, 0x00, 0x00, 0x00, 0x00, 0x8B, 0x0D, 0x00, 0x00, 0x00, 0x00, 0x8B, 0x11, 0x8B,
                 0x82, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xD0, 0x5B, 0x83, 0x00, 0x00, 0x00, 0x00, 0x00, 0xEC
-            },
-            new byte[]{ 0x22, 0x04, 0xFF, 0xFF, 0xFF, 0x04, 0x0C }, // x
-            new byte[]{ 0x22, 0x04, 0xFF, 0xFF, 0xFF, 0x04, 0x08 }, // y
-            new byte[]{ 0x22, 0x04, 0xFF, 0xFF, 0xFF, 0x04, 0x04 }, // z
-            new byte[]{ 0x22, 0x04, 0xFF, 0xFF, 0xFF, 0x04, 0x10 }),// f
+            ],
+            [0x22, 0x04, 0xFF, 0xFF, 0xFF, 0x04, 0x0C], // x
+            [0x22, 0x04, 0xFF, 0xFF, 0xFF, 0x04, 0x08], // y
+            [0x22, 0x04, 0xFF, 0xFF, 0xFF, 0x04, 0x04], // z
+            [0x22, 0x04, 0xFF, 0xFF, 0xFF, 0x04, 0x10]),// f
         new Record(
             // (arul) 6.0.9.x+ : Calibrates both 
-            new byte[]
-            {
+            [
                 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF,
                 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF
-            },
-            new byte[]
-            {
+            ],
+            [
                 0xFF, 0xD0, 0xE8, 0x00, 0x00, 0x00, 0x00, 0x8B, 0x0D, 0x00, 0x00, 0x00, 0x00, 0x8B, 0x11, 0x8B,
                 0x82, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xD0, 0x5E, 0xE9, 0x00, 0x00, 0x00, 0x00, 0x8B, 0x0D
-            },
-            new byte[]{ 0x1F, 0x04, 0xFF, 0xFF, 0xFF, 0x04, 0x0C },
-            new byte[]{ 0x1F, 0x04, 0xFF, 0xFF, 0xFF, 0x04, 0x08 },
-            new byte[]{ 0x1F, 0x04, 0xFF, 0xFF, 0xFF, 0x04, 0x04 },
-            new byte[]{ 0x1F, 0x04, 0xFF, 0xFF, 0xFF, 0x04, 0x10 }),
+            ],
+            [0x1F, 0x04, 0xFF, 0xFF, 0xFF, 0x04, 0x0C],
+            [0x1F, 0x04, 0xFF, 0xFF, 0xFF, 0x04, 0x08],
+            [0x1F, 0x04, 0xFF, 0xFF, 0xFF, 0x04, 0x04],
+            [0x1F, 0x04, 0xFF, 0xFF, 0xFF, 0x04, 0x10]),
         new Record(
             // Facet
-            new byte[]
-            {
+            [
                 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
-            },
-            new byte[]
-            {
+            ],
+            [
                 0xA0, 0x00, 0x00, 0x00, 0x00, 0x84, 0xC0, 0x0F, 0x85, 0x00, 0x00, 0x00, 0x00, 0x8B, 0x0D
-            },
-            Array.Empty<byte>(),
-            Array.Empty<byte>(),
-            Array.Empty<byte>(),
-            new byte[]{ 0x01, 0x04, 0xFF, 0xFF, 0xFF, 0x01 }),
+            ],
+            [],
+            [],
+            [],
+            [0x01, 0x04, 0xFF, 0xFF, 0xFF, 0x01]),
         new Record(
             // Location
-            new byte[]
-            {
+            [
                 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0x00, 0x00,
                 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0x00
-            },
-            new byte[]
-            {
+            ],
+            [
                 0x8B, 0x15, 0x00, 0x00, 0x00, 0x00, 0x83, 0xC4, 0x10, 0x66, 0x89, 0x5A, 0x00, 0xA1, 0x00, 0x00,
                 0x00, 0x00, 0x66, 0x89, 0x78, 0x00, 0x8B, 0x0D, 0x00, 0x00, 0x00, 0x00, 0x66, 0x89, 0x71, 0x00
-            },
-            new byte[]{ 0x02, 0x04, 0x04, 0x0C, 0x01, 0x02 },
-            new byte[]{ 0x0E, 0x04, 0x04, 0x15, 0x01, 0x02 },
-            new byte[]{ 0x18, 0x04, 0x04, 0x1F, 0x01, 0x02 },
-            Array.Empty<byte>()),
+            ],
+            [0x02, 0x04, 0x04, 0x0C, 0x01, 0x02],
+            [0x0E, 0x04, 0x04, 0x15, 0x01, 0x02],
+            [0x18, 0x04, 0x04, 0x1F, 0x01, 0x02],
+            []),
         new Record(
             // UO3D Only, calibrates both
-            new byte[]
-            {
+            [
                 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF,
                 0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
                 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00
-            },
-            new byte[]
-            {
+            ],
+            [
                 0xA1, 0x00, 0x00, 0x00, 0x00, 0x68, 0x40, 0x2E, 0x04, 0x01, 0x0F, 0xBF, 0x50, 0x00, 0x0F, 0xBF,
                 0x48, 0x00, 0x52, 0x51, 0x0F, 0xBF, 0x50, 0x00, 0x52, 0x8D, 0x85, 0xE4, 0xFD, 0xFF, 0xFF, 0x68,
                 0x00, 0x00, 0x00, 0x00, 0x50, 0xE8, 0x07, 0x44, 0x10, 0x00, 0x8A, 0x0D, 0x00, 0x00, 0x00, 0x00
-            },
-            new byte[] { 0x01, 0x04, 0x04, 0x17, 0x01, 0x02 },
-            new byte[] { 0x01, 0x04, 0x04, 0x11, 0x01, 0x02 },
-            new byte[] { 0x01, 0x04, 0x04, 0x0D, 0x01, 0x02 },
-            new byte[] { 0x2C, 0x04, 0xFF, 0xFF, 0xFF, 0x01 })
-    };
+            ],
+            [0x01, 0x04, 0x04, 0x17, 0x01, 0x02],
+            [0x01, 0x04, 0x04, 0x11, 0x01, 0x02],
+            [0x01, 0x04, 0x04, 0x0D, 0x01, 0x02],
+            [0x2C, 0x04, 0xFF, 0xFF, 0xFF, 0x01])
+    ];
 
     #endregion
+
+    readonly List<Record> Records = [];
 
     // file: calibration.cfg
     public Binary_CalibrationInfo(StreamReader r) {
         while (r.ReadLine() is { } line) {
             line = line.Trim();
             if (!line.Equals("Begin", StringComparison.OrdinalIgnoreCase)) continue;
-
             byte[] mask, vals, detx, dety, detz, detf;
             if ((mask = ReadBytes(r)) == null) continue;
             if ((vals = ReadBytes(r)) == null) continue;
@@ -588,23 +572,21 @@ public unsafe class Binary_CalibrationInfo : IHaveMetaInfo {
     static byte[] ReadBytes(TextReader r) {
         var line = r.ReadLine();
         if (line == null) return null;
-
         var b = new byte[(line.Length + 2) / 3];
         var index = 0;
         for (var i = 0; (i + 1) < line.Length; i += 3) {
-            var ch = line[i + 0];
-            var cl = line[i + 1];
-
+            char ch = line[i + 0], cl = line[i + 1];
+            // parse ch
             if (ch >= '0' && ch <= '9') ch -= '0';
             else if (ch >= 'a' && ch <= 'f') ch -= (char)('a' - 10);
             else if (ch >= 'A' && ch <= 'F') ch -= (char)('A' - 10);
             else return null;
-
+            // parse cl
             if (cl >= '0' && cl <= '9') cl -= '0';
             else if (cl >= 'a' && cl <= 'f') cl -= (char)('a' - 10);
             else if (cl >= 'A' && cl <= 'F') cl -= (char)('A' - 10);
             else return null;
-
+            // add
             b[index++] = (byte)((ch << 4) | cl);
         }
         return b;
@@ -767,25 +749,8 @@ public unsafe class Binary_Gump : IHaveMetaInfo, ITexture {
 
 #region Binary_GumpDef
 
-public unsafe class Binary_GumpDef : IHaveMetaInfo {
+public class Binary_GumpDef : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_GumpDef(r.ToStream()));
-
-    #region Headers
-
-    public bool ItemHasGumpTranslation(int gumpIndex, out int gumpIndexTranslated, out int defaultHue) {
-        if (Records.TryGetValue(gumpIndex, out var translation)) {
-            gumpIndexTranslated = translation.Item1;
-            defaultHue = translation.Item2;
-            return true;
-        }
-        gumpIndexTranslated = 0;
-        defaultHue = 0;
-        return false;
-    }
-
-    readonly Dictionary<int, (int, int)> Records = new Dictionary<int, (int, int)>();
-
-    #endregion
 
     // file: gump.def
     public Binary_GumpDef(StreamReader r) {
@@ -800,6 +765,13 @@ public unsafe class Binary_GumpDef : IHaveMetaInfo {
             var outHue = int.Parse(defs[2]);
             Records[inGump] = (outGump, outHue);
         }
+    }
+
+    readonly Dictionary<int, (int, int)> Records = [];
+
+    public bool ItemHasGumpTranslation(int gumpIndex, out int gumpIndexTranslated, out int defaultHue) {
+        if (Records.TryGetValue(gumpIndex, out var z)) { gumpIndexTranslated = z.Item1; defaultHue = z.Item2; return true; }
+        gumpIndexTranslated = 0; defaultHue = 0; return false;
     }
 
     public override string ToString() => this.Serialize();
@@ -822,6 +794,15 @@ public unsafe class Binary_Hues : IHaveMetaInfo {
 
     #region Headers
 
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public struct HueRecord {
+        public static (string, int) Struct = ("<?", sizeof(HueRecord));
+        public fixed ushort Colors[32];
+        public ushort TableStart;
+        public ushort TableEnd;
+        public fixed byte Name[20];
+    }
+
     public class Record {
         public int Id;
         public ushort[] Colors = new ushort[32];
@@ -843,18 +824,9 @@ public unsafe class Binary_Hues : IHaveMetaInfo {
         }
     }
 
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct HueRecord {
-        public static (string, int) Struct = ("<?", sizeof(HueRecord));
-        public fixed ushort Colors[32];
-        public ushort TableStart;
-        public ushort TableEnd;
-        public fixed byte Name[20];
-    }
+    #endregion
 
     readonly Record[] Records = new Record[3000];
-
-    #endregion
 
     // file: hues.mul
     public Binary_Hues(BinaryReader r) {
@@ -989,7 +961,7 @@ public unsafe class Binary_Light : IHaveMetaInfo, ITexture {
 
 #region Binary_MobType
 
-public unsafe class Binary_MobType : IHaveMetaInfo {
+public class Binary_MobType : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_MobType(r.ToStream()));
 
     #region Headers
@@ -1142,7 +1114,7 @@ public unsafe class Binary_MultiMap : IHaveMetaInfo, ITexture {
 
 #region Binary_MusicDef
 
-public unsafe class Binary_MusicDef : IHaveMetaInfo {
+public class Binary_MusicDef : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_MusicDef(r.ToStream()));
 
     #region Headers
@@ -1328,7 +1300,7 @@ public unsafe class Binary_Multi : IHaveMetaInfo {
 
 #region Binary_RadarColor
 
-public unsafe class Binary_RadarColor : IHaveMetaInfo {
+public class Binary_RadarColor : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_RadarColor(r));
 
     #region Headers
@@ -1368,7 +1340,7 @@ public unsafe class Binary_RadarColor : IHaveMetaInfo {
 
 #region Binary_SkillGroups
 
-public unsafe class Binary_SkillGroups : IHaveMetaInfo {
+public class Binary_SkillGroups : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_SkillGroups(r));
 
     #region Headers
@@ -1403,7 +1375,7 @@ public unsafe class Binary_SkillGroups : IHaveMetaInfo {
 
 #region Binary_SpeechList
 
-public unsafe class Binary_SpeechList : IHaveMetaInfo {
+public class Binary_SpeechList : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_SpeechList(r));
 
     #region Headers
@@ -1530,7 +1502,7 @@ public unsafe class Binary_Art : IHaveMetaInfo, ITexture {
 
 #region Binary_StringTable
 
-public unsafe class Binary_StringTable : IHaveMetaInfo {
+public class Binary_StringTable : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_StringTable(r, f));
     public static Dictionary<string, Binary_StringTable> Current = [];
 
@@ -1890,7 +1862,7 @@ public unsafe class Binary_UnicodeFont : IHaveMetaInfo {
 
 #region Binary_Verdata
 
-public unsafe class Binary_Verdata : IHaveMetaInfo {
+public class Binary_Verdata : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Verdata(r, (BinaryAsset)s));
     public static Binary_Verdata Current;
 

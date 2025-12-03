@@ -1,8 +1,8 @@
 from __future__ import annotations
 import os
 from openstk import _pathExtension, TypeX
-from gamex import FamilyGame, BinaryPakFile
-from gamex.families.GameX import UnknownPakFile
+from gamex import FamilyGame, BinaryArchive
+from gamex.families.GameX import UnknownArchive
 from gamex.families.Xbox.formats.binary import Binary_Xnb
 # scan types
 from gamex.families.Xbox.formats.xna import TypeReader as xna_TypeReader
@@ -17,23 +17,23 @@ class StardewValleyGame(FamilyGame):
     def __init__(self, family: Family, id: str, elem: dict[str, object], dgame: FamilyGame):
         super().__init__(family, id, elem, dgame)
 
-# XboxPakFile
-class XboxPakFile(BinaryPakFile):
-    def __init__(self, state: PakState):
-        super().__init__(state, self.getPakBinary(state.game, _pathExtension(state.path).lower()))
-        self.objectFactoryFunc = self.objectFactory
+# XboxArchive
+class XboxArchive(BinaryArchive):
+    def __init__(self, state: ArcState):
+        super().__init__(state, self.getArcBinary(state.game, _pathExtension(state.path).lower()))
+        self.assetFactoryFunc = self.assetFactory
         TypeX.scanTypes(typesToScan)
         
     #region Factories
 
     @staticmethod
-    def getPakBinary(game: FamilyGame, extension: str) -> object:
+    def getArcBinary(game: FamilyGame, extension: str) -> object:
         pass
 
     @staticmethod
-    def objectFactory(source: FileSource, game: FamilyGame) -> (object, callable):
+    def assetFactory(source: FileSource, game: FamilyGame) -> (object, callable):
         match _pathExtension(source.path).lower():
             case '.xnb': return (0, Binary_Xnb.factory)
-            case _: return UnknownPakFile.objectFactory(source, game)
+            case _: return UnknownArchive.assetFactory(source, game)
 
     #endregion

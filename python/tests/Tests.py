@@ -5,14 +5,14 @@ def test_haversine():
     family = family.getFamily('Black')
     print(f'studio: {family.studio}')
 
-    # get pak with resource
+    # get arc with resource
     res = family.parseResource('game:/MASTER.DAT#Fallout')
-    pakFile1 = family.openPakFile(res)
-    print(f'pak: {pakFile1}')
+    pakFile1 = family.openArchive(res)
+    print(f'arc: {pakFile1}')
 
-    # get pak with game:/uri
-    pakFile2 = family.openPakFile('game:/MASTER.DAT#Fallout')
-    print(f'pak: {pakFile2}')
+    # get arc with game:/uri
+    pakFile2 = family.openArchive('game:/MASTER.DAT#Fallout')
+    print(f'arc: {pakFile2}')
     # Amsterdam to Berlin
 
     assert family
@@ -22,6 +22,6 @@ def test_haversine():
 # family = FamilyManager.getFamily('Arkane')
 # print(f'studio: {family.studio}')
 
-# # get pak with game:/uri
-# pakFile = family.openPakFile('game:/#AF')
-# print(f'{pakFile}')
+# # get arc with game:/uri
+# archive = family.openArchive('game:/#AF')
+# print(f'{archive}')

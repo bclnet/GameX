@@ -7,7 +7,7 @@ namespace GameX.Formats;
 public class LoadSingleFileDataTest {
     [TestMethod]
     [DataRow("AC:AC", ">client_highres.dat:Texture/060043BE.tex", 32792)]
-    [DataRow("Arkane:AF", ">data.pak:GRAPH/particles/BOOM.jpg", 1923)]
+    [DataRow("Arkane:AF", ">data.arc:GRAPH/particles/BOOM.jpg", 1923)]
     [DataRow("Arkane:DOM", ">depot_2101_dir.vpk:platform/config/server.vdf", 13)]
     [DataRow("Arkane:Radius", ">game1.Index:strings/english_m.lang", 765258)]
     [DataRow("Arkane:D2", ">game1.Index:strings/english_m.lang", 765258)]
@@ -16,7 +16,7 @@ public class LoadSingleFileDataTest {
     [DataRow("Arkane:Height:YB", ">game1.Index:strings/english_m.lang", 765258)]
     [DataRow("Arkane:Height:CP", ">game1.Index:strings/english_m.lang", 765258)]
     [DataRow("Arkane:DL", ">game1.Index:strings/english_m.lang", 765258)]
-    //[DataRow("Cry:MWO", ">GameData.pak:GameModeObjects.xml", 153832)]
+    //[DataRow("Cry:MWO", ">GameData.arc:GameModeObjects.xml", 153832)]
     //[DataRow("Cyanide:TC", ">Engine_Main_0.cpk:data/engine_0.prefab", 20704)]
     //[DataRow("Origin:UO", ">anim.idx:default_cch.dds", 16520)]
     //[DataRow("Origin:U9", ">activity.flx:Engine/default_cch.dds", 16520)]
@@ -36,8 +36,8 @@ public class LoadSingleFileDataTest {
     //[DataRow("Tes:Fallout4VR", ">Fallout4 - Startup.ba2:Textures/Water/WaterRainRipples.dds", 349680)]
     //[DataRow("Tes:Fallout4VR", ">Fallout4 - Textures8.ba2:Textures/Terrain/DiamondCity/DiamondCity.16.-2.-2.DDS", 174904)]
     //[DataRow("Valve:Dota2", ">dota/pak01_dir.vpk:stringtokendatabase.txt", 35624)]
-    public async Task LoadFileData(string pak, string sampleFile, int sampleFileSize) {
-        var source = TestHelper.Paks[pak].Value;
+    public async Task GetData(string arc, string sampleFile, int sampleFileSize) {
+        var source = TestHelper.Paks[arc].Value;
         Assert.IsTrue(source.Contains(sampleFile));
         Assert.AreEqual(sampleFileSize, (await source.GetData(sampleFile)).Length);
     }

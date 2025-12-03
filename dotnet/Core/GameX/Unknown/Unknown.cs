@@ -20,17 +20,17 @@ public class UnknownFamily : Family {
 }
 
 /// <summary>
-/// UnknownPakFile
+/// UnknownArchive
 /// </summary>
-/// <seealso cref="GameX.Formats.PakFile" />
-public class UnknownPakFile : Archive {
+/// <seealso cref="GameX.Formats.Archive" />
+public class UnknownArchive : Archive {
     /// <summary>
-    /// Initializes a new instance of the <see cref="UnknownPakFile" /> class.
+    /// Initializes a new instance of the <see cref="UnknownArchive" /> class.
     /// </summary>
     /// <param name="state">The game.</param>
-    public UnknownPakFile(ArchiveState state) : base(state) {
+    public UnknownArchive(ArchiveState state) : base(state) {
         Name = "Unknown";
-        ObjectFactoryFunc = ObjectFactory;
+        AssetFactoryFunc = AssetFactory;
     }
 
     #region Base
@@ -48,7 +48,7 @@ public class UnknownPakFile : Archive {
 
     #region Factories
 
-    public static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    public static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) AssetFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             ".txt" or ".ini" or ".cfg" or ".csv" or ".xml" => (0, Binary_Txt.Factory),
             ".wav" or ".mp3" => (0, Binary_Snd.Factory),

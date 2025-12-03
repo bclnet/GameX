@@ -8117,7 +8117,7 @@ public class D_Mesh : XKV3_NTRO, IMesh, IHaveMetaInfo {
     public Vector3 MaxBounds { get; private set; }
     public D_Morph MorphData { get; set; }
 
-    public D_Mesh(Binary_Src pak) : base("PermRenderMeshData_t") { }
+    public D_Mesh(Binary_Src arc) : base("PermRenderMeshData_t") { }
 
     public void GetBounds() {
         var sceneObjects = Data.GetArray("m_sceneObjects");

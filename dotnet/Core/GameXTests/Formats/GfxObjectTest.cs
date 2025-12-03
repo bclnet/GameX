@@ -7,7 +7,7 @@ namespace GameX.Formats;
 public class GfxObjectTest {
     [TestMethod]
     [DataRow("AC:AC", "client_highres.dat:Texture/060043BE.tex")]
-    [DataRow("Cry:MWO", "GameData.pak:GameModeObjects.xml")]
+    [DataRow("Cry:MWO", "GameData.arc:GameModeObjects.xml")]
     [DataRow("Rsi:StarCitizen", "Engine/default_cch.dds")]
     [DataRow("Red:Witcher", "main.key:2da00.bif")]
     [DataRow("Red:Witcher2", "base_scripts.dzip:globals/ch_credits_main.csv")]
@@ -24,11 +24,11 @@ public class GfxObjectTest {
     [DataRow("Origin:UltimaOnline", "anim.idx:Engine/default_cch.dds")]
     [DataRow("Origin:UltimaIX", "static/activity.flx:Engine/default_cch.dds")]
     [DataRow("Valve:Dota2", "dota/pak01_dir.vpk:stringtokendatabase.txt")]
-    public async Task GfxObject(string pak, string sampleFile) {
-        var source = TestHelper.Paks[pak].Value;
+    public async Task GfxObject(string arc, string sampleFile) {
+        var source = TestHelper.Paks[arc].Value;
         Assert.IsTrue(source.Contains(sampleFile));
         var obj0 = await source.GetAsset<object>(sampleFile);
         Assert.IsNotNull(obj0);
-        //Assert.Equal(sampleFileSize, pakFile.GetLoadFileDataAsync(sampleFile).Result.Length);
+        //Assert.Equal(sampleFileSize, archive.GetLoadFileDataAsync(sampleFile).Result.Length);
     }
 }

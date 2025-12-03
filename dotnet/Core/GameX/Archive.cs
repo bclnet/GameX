@@ -74,7 +74,7 @@ public class ArchiveState(FileSystem vfx, FamilyGame game, FamilyGame.Edition ed
     public readonly FileSystem Vfx = vfx;
 
     /// <summary>
-    /// Gets the pak family game.
+    /// Gets the arc family game.
     /// </summary>
     public readonly FamilyGame Game = game;
 
@@ -108,7 +108,7 @@ public abstract class Archive : ISource, IDisposable {
     /// <summary>
     /// An empty family.
     /// </summary>
-    public static Archive Empty = new UnknownPakFile(new ArchiveState(new DirectoryFileSystem("", null), FamilyGame.Empty)) { Name = "Empty" };
+    public static Archive Empty = new UnknownArchive(new ArchiveState(new DirectoryFileSystem("", null), FamilyGame.Empty)) { Name = "Empty" };
 
     public enum ArcStatus { Opening, Opened, Closing, Closed }
 
@@ -123,12 +123,12 @@ public abstract class Archive : ISource, IDisposable {
     public readonly FileSystem Vfx;
 
     /// <summary>
-    /// The pak family.
+    /// The arc family.
     /// </summary>
     public readonly Family Family;
 
     /// <summary>
-    /// The pak family game.
+    /// The arc family game.
     /// </summary>
     public readonly FamilyGame Game;
 
@@ -143,7 +143,7 @@ public abstract class Archive : ISource, IDisposable {
     public string ArcPath;
 
     /// <summary>
-    /// The pak name.
+    /// The arc name.
     /// </summary>
     public string Name;
 
@@ -153,14 +153,14 @@ public abstract class Archive : ISource, IDisposable {
     public object Tag;
 
     /// <summary>
-    /// The pak path finders.
+    /// The arc path finders.
     /// </summary>
     public readonly Dictionary<Type, Func<object, object>> PathFinders = [];
 
     /// <summary>
-    /// The pak path finders.
+    /// The arc path finders.
     /// </summary>
-    public FuncObjectFactory ObjectFactoryFunc;
+    public FuncObjectFactory AssetFactoryFunc;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Archive" /> class.
@@ -178,7 +178,7 @@ public abstract class Archive : ISource, IDisposable {
         Name = string.IsNullOrEmpty(state.Path) ? ""
             : !string.IsNullOrEmpty(z = Path.GetFileName(state.Path)) ? z : Path.GetFileName(Path.GetDirectoryName(state.Path));
         Tag = state.Tag;
-        ObjectFactoryFunc = null;
+        AssetFactoryFunc = null;
         Gfx = null;
         Sfx = null;
     }
@@ -244,7 +244,7 @@ public abstract class Archive : ISource, IDisposable {
     public abstract bool Contains(object path);
 
     /// <summary>
-    /// Gets the pak item count.
+    /// Gets the arc item count.
     /// </summary>
     /// <value>
     /// The count.
@@ -265,7 +265,7 @@ public abstract class Archive : ISource, IDisposable {
     /// <summary>
     /// Sets the platform.
     /// </summary>
-    /// <param name="pakFile">The pak file.</param>
+    /// <param name="archive">The arc file.</param>
     /// <returns></returns>
     public Archive SetPlatform(Platform platform) {
         Gfx = platform?.GfxFactory?.Invoke(this);
@@ -391,7 +391,7 @@ public abstract class Archive : ISource, IDisposable {
 /// </summary>
 /// <param name="state">The state.</param>
 /// <param name="name">The name.</param>
-/// <param name="arcBinary">The pak binary.</param>
+/// <param name="arcBinary">The arc binary.</param>
 [DebuggerDisplay("{Name}")]
 public abstract class BinaryAsset(ArchiveState state, ArcBinary arcBinary) : Archive(state) {
     public readonly ArcBinary ArcBinary = arcBinary;
@@ -528,9 +528,9 @@ public abstract class BinaryAsset(ArchiveState state, ArcBinary arcBinary) : Arc
         switch (path) {
             case null: throw new ArgumentNullException(nameof(path));
             case string s: {
-                    var (pak, s2) = FindPath(s);
-                    return pak != null
-                    ? pak.Contains(s2)
+                    var (arc, s2) = FindPath(s);
+                    return arc != null
+                    ? arc.Contains(s2)
                     : FilesByPath != null && FilesByPath.Contains(s.Replace('\\', '/'));
                 }
             case int i: return FilesById != null && FilesById.Contains(i);
@@ -645,9 +645,9 @@ public abstract class BinaryAsset(ArchiveState state, ArcBinary arcBinary) : Arc
     /// <param name="file">The file.</param>
     /// <returns></returns>
     public Func<BinaryReader, FileSource, Archive, Task<object>> EnsureCachedObjectFactory(FileSource file) {
-        if (ObjectFactoryFunc == null) return FileSource.EmptyObjectFactory;
+        if (AssetFactoryFunc == null) return FileSource.EmptyObjectFactory;
         if (file.CachedObjectFactory != null) return file.CachedObjectFactory;
-        var factory = ObjectFactoryFunc(file, Game);
+        var factory = AssetFactoryFunc(file, Game);
         file.CachedObjectOption = factory.option;
         file.CachedObjectFactory = factory.factory ?? FileSource.EmptyObjectFactory;
         return file.CachedObjectFactory;
@@ -761,7 +761,7 @@ public class ManyArchive : BinaryAsset {
     /// <param name="paths">The paths.</param>
     /// <param name="pathSkip">The pathSkip.</param>
     public ManyArchive(Archive basis, ArchiveState state, string name, string[] paths, int pathSkip = 0) : base(state, null) {
-        ObjectFactoryFunc = basis.ObjectFactoryFunc;
+        AssetFactoryFunc = basis.AssetFactoryFunc;
         Name = name;
         Paths = paths;
         PathSkip = pathSkip;
@@ -839,7 +839,7 @@ public class MultiArchive : Archive {
     public override bool Contains(object path)
         => path switch {
             null => throw new ArgumentNullException(nameof(path)),
-            string s => FindPakFiles(s, out var next).Any(s => s.Valid && s.Contains(next)),
+            string s => FindArchives(s, out var next).Any(s => s.Valid && s.Contains(next)),
             int i => Archives.Any(s => s.Valid && s.Contains(i)),
             _ => throw new ArgumentOutOfRangeException(nameof(path)),
         };
@@ -854,7 +854,7 @@ public class MultiArchive : Archive {
         get { var count = 0; foreach (var s in Archives) count += s.Count; return count; }
     }
 
-    IList<Archive> FindPakFiles(string path, out string next) {
+    IList<Archive> FindArchives(string path, out string next) {
         var paths = path.Split(['\\', '/', ':'], 2);
         if (paths.Length == 1) { next = path; return Archives; }
         path = paths[0]; next = paths[1];
@@ -873,7 +873,7 @@ public class MultiArchive : Archive {
     public override (Archive, FileSource) GetSource(object path, bool throwOnError = true)
         => path switch {
             null => throw new ArgumentNullException(nameof(path)),
-            string s => (FindPakFiles(s, out var s2).FirstOrDefault(s => s.Valid && s.Contains(s2)) ?? throw new FileNotFoundException($"Could not find file \"{s}\"."))
+            string s => (FindArchives(s, out var s2).FirstOrDefault(s => s.Valid && s.Contains(s2)) ?? throw new FileNotFoundException($"Could not find file \"{s}\"."))
                 .GetSource(s2, throwOnError),
             int i => (Archives.FirstOrDefault(s => s.Valid && s.Contains(i)) ?? throw new FileNotFoundException($"Could not find file \"{i}\"."))
                 .GetSource(i, throwOnError),
@@ -891,7 +891,7 @@ public class MultiArchive : Archive {
     public override Task<Stream> GetData(object path, object option = default, bool throwOnError = true)
         => path switch {
             null => throw new ArgumentNullException(nameof(path)),
-            string s => (FindPakFiles(s, out var s2).FirstOrDefault(s => s.Valid && s.Contains(s2)) ?? throw new FileNotFoundException($"Could not find file \"{s}\"."))
+            string s => (FindArchives(s, out var s2).FirstOrDefault(s => s.Valid && s.Contains(s2)) ?? throw new FileNotFoundException($"Could not find file \"{s}\"."))
                 .GetData(s2, option, throwOnError),
             int i => (Archives.FirstOrDefault(s => s.Valid && s.Contains(i)) ?? throw new FileNotFoundException($"Could not find file \"{i}\"."))
                 .GetData(i, option, throwOnError),
@@ -909,7 +909,7 @@ public class MultiArchive : Archive {
     public override Task<T> GetAsset<T>(object path, object option = default, bool throwOnError = true)
         => path switch {
             null => throw new ArgumentNullException(nameof(path)),
-            string s => (FindPakFiles(s, out var s2).FirstOrDefault(s => s.Valid && s.Contains(s2)) ?? throw new FileNotFoundException($"Could not find file \"{s}\"."))
+            string s => (FindArchives(s, out var s2).FirstOrDefault(s => s.Valid && s.Contains(s2)) ?? throw new FileNotFoundException($"Could not find file \"{s}\"."))
                 .GetAsset<T>(s2, option, throwOnError),
             int i => (Archives.FirstOrDefault(s => s.Valid && s.Contains(i)) ?? throw new FileNotFoundException($"Could not find file \"{i}\"."))
                 .GetAsset<T>(i, option, throwOnError),
@@ -1022,7 +1022,7 @@ public class ArcBinary<Self> : ArcBinary where Self : ArcBinary, new() {
         public SubArchive(BinaryAsset source, FileSource file, string path, object tag = null, ArcBinary instance = null) : base(new ArchiveState(source.Vfx, source.Game, source.Edition, path, tag), instance ?? Current) {
             File = file;
             Source = source;
-            ObjectFactoryFunc = source.ObjectFactoryFunc;
+            AssetFactoryFunc = source.AssetFactoryFunc;
             Open();
         }
 

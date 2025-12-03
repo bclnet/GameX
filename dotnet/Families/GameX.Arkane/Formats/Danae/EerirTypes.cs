@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.InteropServices;
+#pragma warning disable CS8500
 
 namespace GameX.Arkane.Formats.Danae;
 

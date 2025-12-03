@@ -53,10 +53,10 @@ public partial class FileContent : UserControl, INotifyPropertyChanged {
         set { _contentTabs = value; OnPropertyChanged(); }
     }
 
-    public void OnInfo(MetaItem item, Archive pakFile, List<MetaInfo> infos) {
+    public void OnInfo(MetaItem item, Archive archive, List<MetaInfo> infos) {
         if (ContentTabs != null) foreach (var dispose in ContentTabs.Where(x => x.Dispose != null).Select(x => x.Dispose)) dispose.Dispose();
-        Gfx = pakFile.Gfx;
-        Sfx = pakFile.Sfx;
+        Gfx = archive.Gfx;
+        Sfx = archive.Sfx;
         Path = "PATH";
         ContentTabs = infos?.Select(x => x.Tag as MetaContent).Where(x => x != null).ToList();
         ContentTab.SelectedIndex = ContentTabs != null ? 0 : -1;

@@ -9,13 +9,13 @@
   ],
   "games": {
     "*": {
-      "pakFileType": "GameX.Cig.CigPakFile, GameX.Cig"
+      "archiveType": "GameX.Cig.CigArchive, GameX.Cig"
     },
     "StarCitizen": {
       "name": "Star Citizen",
       "url": "https://robertsspaceindustries.com/playstarcitizen",
       "key": "hex:5E7A2002302EEB1A3BB617C30FDE1E47",
-      "pakExt": "Data.p4k",
+      "arcExt": "Data.p4k",
       "files": {
         "key": [
           "Unknown:StarCitizen",

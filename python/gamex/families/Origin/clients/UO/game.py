@@ -1,5 +1,5 @@
 from enum import IntFlag
-from gamex import PakFile
+from gamex import Archive
 from gamex.core.client import IPluginHost, GameController
 from gamex.core.eng.eng import GraphicsDeviceManager
 from gamex.families.Origin.renderers.UO.sprites import Fonts
@@ -7,7 +7,7 @@ from gamex.families.Origin.renderers.UO.sprites import Fonts
 
 # UOGameController
 class UOGameController(GameController):
-    def __init__(self, game: PakFile, pluginHost: IPluginHost):
+    def __init__(self, game: Archive, pluginHost: IPluginHost):
         super().__init__(game, pluginHost)
         self.deviceManager = GraphicsDeviceManager(self)
     def loadContent(self) -> None:

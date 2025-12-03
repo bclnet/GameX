@@ -33,8 +33,8 @@
                 </Grid>
             </ControlTemplate>
             <ControlTemplate x:Key="TFileExplorer">
-                <views:FileExplorer PakFile="{Binding PakFile, x:DataType=views:MainPageTab}" Margin="0,0,10,10" />
-                <!--<views:FileExplorer PakFile="{TemplateBinding PakFile, x:DataType=views:MainPageTab}" Margin="0,0,10,10" />-->
+                <views:FileExplorer Archive="{Binding Archive, x:DataType=views:MainPageTab}" Margin="0,0,10,10" />
+                <!--<views:FileExplorer Archive="{TemplateBinding Archive, x:DataType=views:MainPageTab}" Margin="0,0,10,10" />-->
             </ControlTemplate>
             <ControlTemplate x:Key="TAppList" x:DataType="views:MainPageTab">
                 <VerticalStackLayout BindableLayout.ItemsSource="{Binding AppList, x:DataType=views:MainPageTab}">
@@ -70,7 +70,7 @@
                                 <DataTrigger TargetType="ContentView" Binding="{Binding AppList}" x:DataType="views:MainPageTab" Value="{x:Null}">
                                     <Setter Property="ControlTemplate" Value="{StaticResource TFileExplorer}" />
                                 </DataTrigger>
-                                <DataTrigger TargetType="ContentView" Binding="{Binding PakFile}" x:DataType="views:MainPageTab" Value="{x:Null}">
+                                <DataTrigger TargetType="ContentView" Binding="{Binding Archive}" x:DataType="views:MainPageTab" Value="{x:Null}">
                                     <Setter Property="ControlTemplate" Value="{StaticResource TTextBlock}" />
                                 </DataTrigger>
                             </Style.Triggers>

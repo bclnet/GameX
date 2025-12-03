@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace GameX.App.Cli;
 
 partial class Program {
-    [Verb("set", HelpText = "Insert files contents to pak")]
+    [Verb("set", HelpText = "Insert files contents to arc")]
     class SetOptions {
         [Option('f', "family", Required = true, HelpText = "Family")] public string Family { get; set; }
         [Option('u', "uri", Required = true, HelpText = "Uri to create")] public Uri Uri { get; set; }

@@ -10,33 +10,33 @@ using System.Threading.Tasks;
 namespace GameX.Red;
 
 /// <summary>
-/// RedPakFile
+/// RedArchive
 /// </summary>
-/// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class RedPakFile : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+/// <seealso cref="GameX.Formats.BinaryArchive" />
+public class RedArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
     /// <summary>
-    /// Initializes a new instance of the <see cref="RedPakFile" /> class.
+    /// Initializes a new instance of the <see cref="RedArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public RedPakFile(ArchiveState state) : base(state, Binary_Red.Current) {
-        ObjectFactoryFunc = ObjectFactory;
+    public RedArchive(ArchiveState state) : base(state, Binary_Red.Current) {
+        AssetFactoryFunc = AssetFactory;
     }
 
     #region Factories
 
-    static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) AssetFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             // witcher 1
             ".dlg" or ".qdb" or ".qst" => (0, Binary_Gff.Factory),
-            _ => UnknownPakFile.ObjectFactory(source, game),
+            _ => UnknownArchive.AssetFactory(source, game),
         };
 
     #endregion
 
     #region Transforms
 
-    bool ITransformAsset<IUnknownFileModel>.CanTransformAsset(Archive transformTo, object source) => UnknownTransform.CanTransformFileObject(this, transformTo, source);
-    Task<IUnknownFileModel> ITransformAsset<IUnknownFileModel>.TransformAsset(Archive transformTo, object source) => UnknownTransform.TransformFileObjectAsync(this, transformTo, source);
+    bool ITransformAsset<IUnknownFileModel>.CanTransformAsset(Archive transformTo, object source) => UnknownTransform.CanTransformAsset(this, transformTo, source);
+    Task<IUnknownFileModel> ITransformAsset<IUnknownFileModel>.TransformAsset(Archive transformTo, object source) => UnknownTransform.TransformAsset(this, transformTo, source);
 
     #endregion
 }

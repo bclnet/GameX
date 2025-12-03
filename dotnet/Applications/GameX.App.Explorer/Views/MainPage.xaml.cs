@@ -12,7 +12,7 @@ namespace GameX.App.Explorer.Views;
 /// </summary>
 public class MainPageTab {
     public string Name { get; set; }
-    public Archive PakFile { get; set; }
+    public Archive Archive { get; set; }
     public IList<FamilyApp> AppList { get; set; }
     public string Text { get; set; }
 }
@@ -38,14 +38,14 @@ public partial class MainPage : Window, INotifyPropertyChanged {
     public MainPage Open(Family family, IEnumerable<Uri> pakUris, string path = null) {
         var selected = (Platform)Platform.SelectedItem;
         PlatformX.Activate(selected);
-        foreach (var pakFile in PakFiles) pakFile?.Dispose();
-        PakFiles.Clear();
+        foreach (var archive in Archives) archive?.Dispose();
+        Archives.Clear();
         if (family == null) return this;
         FamilyApps = family.Apps;
         foreach (var pakUri in pakUris) {
             Log.WriteLine($"Opening {pakUri}");
-            var pak = family.OpenArchive(pakUri);
-            if (pak != null) PakFiles.Add(pak);
+            var arc = family.OpenArchive(pakUri);
+            if (arc != null) Archives.Add(arc);
         }
         Log.WriteLine("Done");
         OnOpenedAsync(family, path).Wait();
@@ -54,7 +54,7 @@ public partial class MainPage : Window, INotifyPropertyChanged {
 
     public void SetPlatform(Platform platform) {
         PlatformX.Activate(platform);
-        foreach (var s in PakFiles) s.SetPlatform(platform);
+        foreach (var s in Archives) s.SetPlatform(platform);
         FileContent.SetPlatform(platform);
     }
 
@@ -70,19 +70,19 @@ public partial class MainPage : Window, INotifyPropertyChanged {
         set { _mainTabs = value; OnPropertyChanged(); }
     }
 
-    public readonly IList<Archive> PakFiles = [];
+    public readonly IList<Archive> Archives = [];
     public Dictionary<string, FamilyApp> FamilyApps;
 
     public Task OnOpenedAsync(Family family, string path = null) {
-        var tabs = PakFiles.Select(pakFile => new MainPageTab {
-            Name = pakFile.Name,
-            PakFile = pakFile,
+        var tabs = Archives.Select(archive => new MainPageTab {
+            Name = archive.Name,
+            Archive = archive,
         }).ToList();
-        var firstPakFile = tabs.FirstOrDefault()?.PakFile ?? Archive.Empty;
+        var firstArchive = tabs.FirstOrDefault()?.Archive ?? Archive.Empty;
         if (FamilyApps.Count > 0)
             tabs.Add(new MainPageTab {
                 Name = "Apps",
-                PakFile = firstPakFile,
+                Archive = firstArchive,
                 AppList = [.. FamilyApps.Values],
                 Text = "Choose an application.",
             });
@@ -113,7 +113,7 @@ public partial class MainPage : Window, INotifyPropertyChanged {
 
     internal void OpenPage_Click(object sender, RoutedEventArgs e) {
         var openPage = new OpenPage();
-        if (openPage.ShowDialog() == true) Current.Open((Family)openPage.Family.SelectedItem, openPage.PakUris);
+        if (openPage.ShowDialog() == true) Current.Open((Family)openPage.Family.SelectedItem, openPage.ArcUris);
     }
 
     void OptionsPage_Click(object sender, RoutedEventArgs e) {

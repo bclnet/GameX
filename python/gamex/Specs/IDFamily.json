@@ -13,8 +13,8 @@
   },
   "games": {
     "*": {
-      "pakFileType": "GameX.ID.IDPakFile, GameX.ID",
-      "pakExt": ".pak"
+      "archiveType": "GameX.ID.IDArchive, GameX.ID",
+      "arcExt": ".arc"
     },
     "CK:IOTV": {
       "name": "Commander Keen in Invasion of the Vorticons",
@@ -120,9 +120,9 @@
           "path": "rerelease"
         }
       },
-      "searchBy": "Pak",
-      "pakExt": [
-        ".pak",
+      "searchBy": "Arc",
+      "arcExt": [
+        ".arc",
         ".wad"
       ],
       "path": "id1",
@@ -168,9 +168,9 @@
         "https://en.wikipedia.org/wiki/Quake_II"
       ],
       "date": "1997-12-09",
-      "searchBy": "Pak",
-      "pakExt": [
-        ".pak",
+      "searchBy": "Arc",
+      "arcExt": [
+        ".arc",
         ".wad"
       ],
       "path": "baseq2",
@@ -217,8 +217,8 @@
         "https://en.wikipedia.org/wiki/Quake_III_Arena"
       ],
       "date": "1999-12-05",
-      "searchBy": "Pak",
-      "pakExt": [
+      "searchBy": "Arc",
+      "arcExt": [
         ".pk3",
         ".wad"
       ],
@@ -249,8 +249,8 @@
         "https://en.wikipedia.org/wiki/Doom_3"
       ],
       "date": "2004-08-09",
-      "searchBy": "Pak",
-      "pakExt": [
+      "searchBy": "Arc",
+      "arcExt": [
         ".pk4",
         ".wad"
       ],
@@ -301,8 +301,8 @@
         "https://en.wikipedia.org/wiki/Quake_Live"
       ],
       "date": "2010-08-06",
-      "searchBy": "Pak",
-      "pakExt": [
+      "searchBy": "Arc",
+      "arcExt": [
         ".pk3",
         ".wad"
       ],
@@ -329,8 +329,8 @@
         "https://en.wikipedia.org/wiki/Rage_(video_game)"
       ],
       "date": "2011-10-04",
-      "searchBy_": "Pak",
-      "pakExt": [
+      "searchBy_": "Arc",
+      "arcExt": [
         ".pk3",
         ".wad"
       ],

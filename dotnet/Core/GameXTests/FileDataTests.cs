@@ -13,13 +13,13 @@ public class FileDataTests {
         var family = GetFamily(familyName);
         Log.Info($"studio: {family.Studio}");
 
-        // get pak with game:/uri
-        var pakFile = family.OpenArchive(file0);
-        var sample = file1.StartsWith("sample") ? pakFile.Game.GetSample(file1[7..]).Paths[0] : file1;
-        Log.Info($"pak: {pakFile}, {sample}");
+        // get arc with game:/uri
+        var archive = family.OpenArchive(file0);
+        var sample = file1.StartsWith("sample") ? archive.Game.GetSample(file1[7..]).Paths[0] : file1;
+        Log.Info($"arc: {archive}, {sample}");
 
         // get file
-        var data = pakFile.GetData(sample).Result;
+        var data = archive.GetData(sample).Result;
         Log.Info($"dat: {data}");
     }
 }

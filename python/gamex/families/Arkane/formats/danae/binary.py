@@ -1,11 +1,11 @@
 import os
 from io import BytesIO
-from gamex import PakBinary, FileSource, MetaInfo, MetaContent, IHaveMetaInfo
+from gamex import ArcBinary, FileSource, MetaInfo, MetaContent, IHaveMetaInfo
 
 # typedefs
 class Reader: pass
-class BinaryPakFile: pass
-class PakFile: pass
+class BinaryArchive: pass
+class Archive: pass
 class MetaManager: pass
 
 #region Binary_Ftl
@@ -13,7 +13,7 @@ class MetaManager: pass
 # Binary_Ftl
 class Binary_Ftl(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_Ftl(r)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Ftl(r)
 
     #region Headers
 
@@ -33,7 +33,7 @@ class Binary_Ftl(IHaveMetaInfo):
 # Binary_Fts
 class Binary_Fts(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_Fts(r)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Fts(r)
 
     #region Headers
 
@@ -53,7 +53,7 @@ class Binary_Fts(IHaveMetaInfo):
 # Binary_Tea
 class Binary_Tea(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_Tea(r)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Tea(r)
 
     def __init__(self, r: Reader):
         pass

@@ -9,7 +9,7 @@
   ],
   "games": {
     "*": {
-      "pakFileType": "GameX.Firaxis.FiraxisPakFile, GameX.Firaxis"
+      "archiveType": "GameX.Firaxis.FiraxisArchive, GameX.Firaxis"
     },
     "Gettysburg": {
       "name": "Sid Meier's Gettysburg!",

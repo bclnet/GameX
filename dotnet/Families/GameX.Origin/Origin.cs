@@ -84,21 +84,21 @@ public class UOGame(Family family, string id, JsonElement elem, FamilyGame dgame
 }
 
 /// <summary>
-/// OriginPakFile
+/// OriginArchive
 /// </summary>
-/// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class OriginPakFile : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+/// <seealso cref="GameX.Formats.BinaryArchive" />
+public class OriginArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
     /// <summary>
-    /// Initializes a new instance of the <see cref="OriginPakFile" /> class.
+    /// Initializes a new instance of the <see cref="OriginArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public OriginPakFile(ArchiveState state) : base(state, GetPakBinary(state.Game)) {
-        ObjectFactoryFunc = ObjectFactory;
+    public OriginArchive(ArchiveState state) : base(state, GetArcBinary(state.Game)) {
+        AssetFactoryFunc = AssetFactory;
     }
 
     #region Factories
 
-    static ArcBinary GetPakBinary(FamilyGame game)
+    static ArcBinary GetArcBinary(FamilyGame game)
         => game.Id switch {
             "U8" => Binary_U8.Current,
             "UO" => Binary_UO.Current,
@@ -106,11 +106,11 @@ public class OriginPakFile : BinaryAsset, ITransformAsset<IUnknownFileModel> {
             _ => throw new ArgumentOutOfRangeException(),
         };
 
-    static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) AssetFactory(FileSource source, FamilyGame game)
         => game.Id switch {
-            "U8" => Binary_U8.ObjectFactory(source, game),
-            "UO" => Binary_UO.ObjectFactory(source, game),
-            "U9" => Binary_U9.ObjectFactory(source, game),
+            "U8" => Binary_U8.AssetFactory(source, game),
+            "UO" => Binary_UO.AssetFactory(source, game),
+            "U9" => Binary_U9.AssetFactory(source, game),
             _ => throw new ArgumentOutOfRangeException(),
         };
 
@@ -118,8 +118,8 @@ public class OriginPakFile : BinaryAsset, ITransformAsset<IUnknownFileModel> {
 
     #region Transforms
 
-    bool ITransformAsset<IUnknownFileModel>.CanTransformAsset(Archive transformTo, object source) => UnknownTransform.CanTransformFileObject(this, transformTo, source);
-    Task<IUnknownFileModel> ITransformAsset<IUnknownFileModel>.TransformAsset(Archive transformTo, object source) => UnknownTransform.TransformFileObjectAsync(this, transformTo, source);
+    bool ITransformAsset<IUnknownFileModel>.CanTransformAsset(Archive transformTo, object source) => UnknownTransform.CanTransformAsset(this, transformTo, source);
+    Task<IUnknownFileModel> ITransformAsset<IUnknownFileModel>.TransformAsset(Archive transformTo, object source) => UnknownTransform.TransformAsset(this, transformTo, source);
 
     #endregion
 }

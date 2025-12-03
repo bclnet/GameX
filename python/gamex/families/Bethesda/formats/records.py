@@ -1,12 +1,12 @@
 import os
 from io import BytesIO
 from enum import Enum, IntFlag
-from gamex import FileSource, PakBinaryT
+from gamex import FileSource, ArcBinaryT
 from gamex.core.formats.compression import decompressLz4, decompressZlib
 
 # typedefs
 class Reader: pass
-class BinaryPakFile: pass
+class BinaryArchive: pass
 class Header: pass
 class Record: pass
 class FormId: pass

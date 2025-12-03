@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os
 from openstk import _pathExtension
-from gamex import Family, PakFile, FileSource, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
+from gamex import Family, Archive, FileSource, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
 from gamex.core.formats.binary import Binary_Dds, Binary_Img, Binary_Pcx, Binary_Snd, Binary_Tga, Binary_Txt
 
 # UnknownFamily
@@ -9,17 +9,17 @@ class UnknownFamily(Family):
     def __init__(self, elem: dict[str, object]):
         super().__init__(elem)
 
-# UnknownPakFile
-class UnknownPakFile(PakFile):
-    def __init__(self, state: PakState):
+# UnknownArchive
+class UnknownArchive(Archive):
+    def __init__(self, state: ArcState):
         super().__init__(state)
         self.name = 'Unknown'
-        self.objectFactoryFunc = self.objectFactory
+        self.assetFactoryFunc = self.assetFactory
 
     #region Factories
 
     @staticmethod
-    def objectFactory(source: FileSource, game: FamilyGame) -> (object, callable):
+    def assetFactory(source: FileSource, game: FamilyGame) -> (object, callable):
         match _pathExtension(source.path).lower():
             case '.txt' | '.ini' | '.cfg' | '.csv' | '.xml': return (0, Binary_Txt.factory)
             case '.wav': return (0, Binary_Snd.factory)
@@ -29,7 +29,7 @@ class UnknownPakFile(PakFile):
             case '.dds': return (0, Binary_Dds.factory)
             case _:
                 match source.path:
-                    case 'testtri.gfx': return (0, UnknownPakFile.Binary_TestTri.factory)
+                    case 'testtri.gfx': return (0, UnknownArchive.Binary_TestTri.factory)
                     case _: return (0, None)
 
     #endregion
@@ -38,7 +38,7 @@ class UnknownPakFile(PakFile):
 
     class Binary_TestTri(IHaveMetaInfo):
         @staticmethod
-        def factory(r: Reader, f: FileSource, s: PakFile): return UnknownPakFile.Binary_TestTri(r)
+        def factory(r: Reader, f: FileSource, s: Archive): return UnknownArchive.Binary_TestTri(r)
 
         def __init__(self, r: Reader):
             pass

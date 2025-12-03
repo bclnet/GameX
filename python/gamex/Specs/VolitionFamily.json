@@ -14,7 +14,7 @@
   },
   "games": {
     "*": {
-      "pakFileType": "GameX.Volition.VolitionPakFile, GameX.Volition"
+      "archiveType": "GameX.Volition.VolitionArchive, GameX.Volition"
     },
     "D": {
       "gameType": "GameX.Volition.DGame, GameX.Volition",
@@ -22,7 +22,7 @@
       "engine": "Descent",
       "url": "https://en.wikipedia.org/wiki/Descent_(video_game)",
       "date": "March 5, 1995",
-      "pakExt": [
+      "arcExt": [
         ".hog",
         ".pig"
       ],
@@ -41,7 +41,7 @@
       "engine": "Descent",
       "url": "https://en.wikipedia.org/wiki/Descent_II",
       "date": "March 13, 1996",
-      "pakExt": [
+      "arcExt": [
         ".hog",
         ".pig",
         ".s11",
@@ -61,7 +61,7 @@
       "engine": "CTG",
       "url": "https://en.wikipedia.org/wiki/Descent:_FreeSpace_%E2%80%93_The_Great_War",
       "date": "March 19, 1998",
-      "pakExt": ".xx",
+      "arcExt": ".xx",
       "files": {
         "key": [
           "Steam:273600",
@@ -75,7 +75,7 @@
       "engine": "CTG",
       "url": "https://en.wikipedia.org/wiki/FreeSpace_2",
       "date": "September 30, 1999",
-      "pakExt": ".xx",
+      "arcExt": ".xx",
       "files": {
         "key": [
           "Steam:273620",
@@ -89,7 +89,7 @@
       "engine": "CTG",
       "url": "https://en.wikipedia.org/wiki/Summoner_(video_game)",
       "date": "October 24, 2000",
-      "pakExt": ".xx",
+      "arcExt": ".xx",
       "files": {
         "key": [
           "Steam:275570",
@@ -103,7 +103,7 @@
       "engine": "Geo-Mod",
       "url": "https://en.wikipedia.org/wiki/Red_Faction_(video_game)",
       "date": "May 22, 2001",
-      "pakExt": ".xx",
+      "arcExt": ".xx",
       "files": {
         "key": [
           "Steam:20530",
@@ -117,7 +117,7 @@
       "engine": "CTG",
       "url": "https://en.wikipedia.org/wiki/Summoner_2",
       "date": "September 23, 2002",
-      "pakExt": ".xx",
+      "arcExt": ".xx",
       "files": {
         "key": [
           "Unknown:XX",
@@ -131,7 +131,7 @@
       "engine": "Geo-Mod",
       "url": "https://en.wikipedia.org/wiki/Red_Faction_II",
       "date": "October 16, 2002",
-      "pakExt": ".xx",
+      "arcExt": ".xx",
       "files": {
         "key": [
           "Steam:20550",
@@ -145,7 +145,7 @@
       "engine": "CTG",
       "url": "https://en.wikipedia.org/wiki/The_Punisher_(2004_video_game)",
       "date": "April 12, 2004",
-      "pakExt": ".xx",
+      "arcExt": ".xx",
       "files": {
         "key": [
           "Unknown:XX",
@@ -159,7 +159,7 @@
       "engine": "CTG",
       "url": "https://en.wikipedia.org/wiki/Saints_Row_(2006_video_game)",
       "date": "August 29, 2006",
-      "pakExt": ".xx",
+      "arcExt": ".xx",
       "files": {
         "key": [
           "Unknown:XX",
@@ -173,7 +173,7 @@
       "engine": "CTG",
       "url": "https://en.wikipedia.org/wiki/Saints_Row_2",
       "date": "October 14, 2008",
-      "pakExt": ".xx",
+      "arcExt": ".xx",
       "files": {
         "key": [
           "Steam:9480",
@@ -187,7 +187,7 @@
       "engine": "Geo-Mod2",
       "url": "https://en.wikipedia.org/wiki/Red_Faction:_Guerrilla",
       "date": "June 2, 2009",
-      "pakExt": ".xx",
+      "arcExt": ".xx",
       "files": {
         "key": [
           "Steam:20500",
@@ -201,7 +201,7 @@
       "engine": "Geo-Mod2",
       "url": "https://en.wikipedia.org/wiki/Red_Faction:_Armageddon",
       "date": "June 7, 2011",
-      "pakExt": ".xx",
+      "arcExt": ".xx",
       "files": {
         "key": [
           "Steam:55110",
@@ -215,7 +215,7 @@
       "engine": "CTG",
       "url": "https://en.wikipedia.org/wiki/Saints_Row:_The_Third",
       "date": "November 15, 2011",
-      "pakExt": ".xx",
+      "arcExt": ".xx",
       "files": {
         "key": [
           "Steam:55230",
@@ -229,7 +229,7 @@
       "engine": "CTG",
       "url": "https://en.wikipedia.org/wiki/Saints_Row_IV",
       "date": "August 20, 2013",
-      "pakExt": ".xx",
+      "arcExt": ".xx",
       "files": {
         "key": [
           "Steam:206420",
@@ -243,7 +243,7 @@
       "engine": "CTG",
       "url": "https://store.steampowered.com/app/273590",
       "date": "Apr 15, 2014",
-      "pakExt": ".xx",
+      "arcExt": ".xx",
       "tag": "OtherStudio",
       "files": {
         "key": [
@@ -258,7 +258,7 @@
       "engine": "CTG",
       "url": "https://en.wikipedia.org/wiki/Saints_Row:_Gat_out_of_Hell",
       "date": "January 20, 2015",
-      "pakExt": ".xx",
+      "arcExt": ".xx",
       "files": {
         "key": [
           "Steam:301910",
@@ -272,7 +272,7 @@
       "engine": "CTG",
       "url": "https://en.wikipedia.org/wiki/Agents_of_Mayhem",
       "date": "August 15, 2017",
-      "pakExt": ".xx",
+      "arcExt": ".xx",
       "files": {
         "key": [
           "Steam:304530",
@@ -286,7 +286,7 @@
       "engine": "CTG",
       "url": "https://en.wikipedia.org/wiki/Red_Faction:_Guerrilla",
       "date": "Jul 3, 2018",
-      "pakExt": ".xx",
+      "arcExt": ".xx",
       "files": {
         "key": [
           "Steam:667720",
@@ -300,7 +300,7 @@
       "engine": "CTG",
       "url": "https://en.wikipedia.org/wiki/Saints_Row_(2022_video_game)",
       "date": "August 23, 2022",
-      "pakExt": ".xx",
+      "arcExt": ".xx",
       "files": {
         "key": [
           "Steam:742420",

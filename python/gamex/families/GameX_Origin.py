@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os
 from openstk import log, _pathExtension
-from gamex import FamilyGame, BinaryPakFile
+from gamex import FamilyGame, BinaryArchive
 from gamex.families.Origin.formats.UO.binary import Binary_Animdata, Binary_AsciiFont, Binary_BodyConverter, Binary_BodyTable, Binary_CalibrationInfo, Binary_Gump, Binary_GumpDef, Binary_Hues, Binary_Land, Binary_Light, Binary_MobType, Binary_MultiMap, Binary_MusicDef, Binary_Multi, Binary_RadarColor, Binary_SkillGroups, Binary_Skills, Binary_Sound, Binary_SpeechList, Binary_Static, Binary_StringTable, Binary_TileData, Binary_UnicodeFont, Binary_Verdata
 from gamex.families.Origin.formats.UO.utility import ClientVersion, ClientVersionHelper
 from gamex.families.Origin.formats.binary import Binary_U8, Binary_U9, Binary_UO
@@ -47,16 +47,16 @@ class UOGame(FamilyGame):
         log.trace(f'Version: {self.version}')
         log.trace(f'Protocol: {self.protocol}')
 
-# OriginPakFile
-class OriginPakFile(BinaryPakFile):
-    def __init__(self, state: PakState):
-        super().__init__(state, self.getPakBinary(state.game))
-        self.objectFactoryFunc = self.objectFactory
+# OriginArchive
+class OriginArchive(BinaryArchive):
+    def __init__(self, state: ArcState):
+        super().__init__(state, self.getArcBinary(state.game))
+        self.assetFactoryFunc = self.assetFactory
 
     #region Factories
 
     @staticmethod
-    def getPakBinary(game: FamilyGame) -> PakBinary:
+    def getArcBinary(game: FamilyGame) -> ArcBinary:
         match game.id:
             case 'U8': return Binary_U8()
             case 'UO': return Binary_UO()
@@ -64,11 +64,11 @@ class OriginPakFile(BinaryPakFile):
             case _: raise Exception(f'Unknown: {game.id}')
         
     @staticmethod
-    def objectFactory(source: FileSource, game: FamilyGame) -> (object, callable):
+    def assetFactory(source: FileSource, game: FamilyGame) -> (object, callable):
         match game.id:
-            case 'U8': return Binary_U8.objectFactory(source, game)
-            case 'UO': return Binary_UO.objectFactory(source, game)
-            case 'U9': return Binary_U9.objectFactory(source, game)
+            case 'U8': return Binary_U8.assetFactory(source, game)
+            case 'UO': return Binary_UO.assetFactory(source, game)
+            case 'U9': return Binary_U9.assetFactory(source, game)
             case _: raise Exception(f'Unknown: {game.id}')
 
     #endregion

@@ -1,22 +1,20 @@
 import os, re, struct, numpy as np
 from io import BytesIO
 from itertools import groupby
-from operator import itemgetter
 from openstk.gfx import Texture_Bytes, ITexture, TextureFormat, TexturePixel
-from gamex.core.pak import PakBinary
-from gamex.core.meta import FileSource, MetaInfo, MetaContent, IHaveMetaInfo
+from gamex import FileSource, MetaInfo, MetaContent, IHaveMetaInfo, DesSer
 
 # typedefs
 class Reader: pass
-class BinaryPakFile: pass
-class PakFile: pass
+class BinaryArchive: pass
+class Archive: pass
 class MetaManager: pass
 class TextureFlags: pass
 
 # Binary_Anim
 class Binary_Anim(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_Anim(r)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Anim(r)
 
     #region Headers
     #endregion
@@ -24,8 +22,10 @@ class Binary_Anim(IHaveMetaInfo):
     def __init__(self, r: Reader):
         pass
 
+    def __repr__(self): return DesSer.serialize(self)
+
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = 'Anim File')),
+        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
         MetaInfo('Anim', items = [
             # MetaInfo(f'Default: {Default.GumpID}')
             ])
@@ -34,7 +34,7 @@ class Binary_Anim(IHaveMetaInfo):
 # Binary_Animdata
 class Binary_Animdata(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_Animdata(r)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Animdata(r)
 
     #region Headers
 
@@ -69,10 +69,12 @@ class Binary_Animdata(IHaveMetaInfo):
                 record = records[j]
                 if record.frameCount > 0:
                     self.records[id] = self.Record(record)
-                id += 1                    
+                id += 1
+
+    def __repr__(self): return DesSer.serialize(self)
 
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = 'Animdata File')),
+        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
         MetaInfo('Animdata', items = [
             MetaInfo(f'Records: {len(self.records)}')
             ])
@@ -81,7 +83,7 @@ class Binary_Animdata(IHaveMetaInfo):
 # Binary_AsciiFont
 class Binary_AsciiFont(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_AsciiFont(r)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_AsciiFont(r)
 
     #region Headers
 
@@ -115,8 +117,10 @@ class Binary_AsciiFont(IHaveMetaInfo):
         for i in range(len(self.fonts)):
             self.fonts[i] = self.AsciiFont(r)
 
+    def __repr__(self): return DesSer.serialize(self)
+
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = 'AsciiFont File')),
+        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
         MetaInfo('AsciiFont', items = [
             MetaInfo(f'Fonts: {len(self.fonts)}')
             ])
@@ -125,7 +129,7 @@ class Binary_AsciiFont(IHaveMetaInfo):
 # Binary_BodyConverter
 class Binary_BodyConverter(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_BodyConverter(r)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_BodyConverter(r)
 
     #region Headers
 
@@ -231,8 +235,10 @@ class Binary_BodyConverter(IHaveMetaInfo):
             self.table4 = [-1]*(max4 + 1)
             for i in range(0, len(list4), 2): self.table4[list4[i]] = list4[i + 1]
 
+    def __repr__(self): return DesSer.serialize(self)
+
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = 'BodyConverter Config')),
+        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
         MetaInfo('BodyConverter', items = [
             MetaInfo(f'Table1: {len(self.table1)}'),
             MetaInfo(f'Table2: {len(self.table2)}'),
@@ -244,7 +250,7 @@ class Binary_BodyConverter(IHaveMetaInfo):
 # Binary_BodyTable
 class Binary_BodyTable(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_BodyTable(r)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_BodyTable(r)
 
     #region Headers
 
@@ -281,8 +287,10 @@ class Binary_BodyTable(IHaveMetaInfo):
                 self.records[oldId] = self.Record(oldId, newId, newHue)
             except: pass
 
-    def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = 'BodyTable config')),
+        def __repr__(self): return DesSer.serialize(self)
+        
+        def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
+        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
         MetaInfo('BodyTable', items = [
             MetaInfo(f'Records: {len(self.records)}')
             ])
@@ -291,7 +299,7 @@ class Binary_BodyTable(IHaveMetaInfo):
 # Binary_CalibrationInfo
 class Binary_CalibrationInfo(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_CalibrationInfo(r)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_CalibrationInfo(r)
 
     #region Headers
 
@@ -420,9 +428,11 @@ class Binary_CalibrationInfo(IHaveMetaInfo):
 
             b[index] = ((ch << 4) | cl) & 0xff; index += 1
         return b
+    
+    def __repr__(self): return DesSer.serialize(self)
 
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = 'CalibrationInfo File')),
+        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
         MetaInfo('CalibrationInfo', items = [
             MetaInfo(f'Records: {len(self.records)}')
             ])
@@ -431,7 +441,7 @@ class Binary_CalibrationInfo(IHaveMetaInfo):
 # Binary_Gump
 class Binary_Gump(IHaveMetaInfo, ITexture):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_Gump(r, f.fileSize, f.compressed)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Gump(r, f.fileSize, f.compressed)
 
     def __init__(self, r: Reader, length: int, extra: int):
         width = self.width = (extra >> 16) & 0xFFFF
@@ -469,6 +479,8 @@ class Binary_Gump(IHaveMetaInfo, ITexture):
 
     #endregion
 
+    def __repr__(self): return DesSer.serialize(self)
+
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
         MetaInfo(None, MetaContent(type = 'Texture', name = os.path.basename(file.path), value = self)),
         MetaInfo('Gump', items = [
@@ -480,7 +492,7 @@ class Binary_Gump(IHaveMetaInfo, ITexture):
 # Binary_GumpDef
 class Binary_GumpDef(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_GumpDef(r)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_GumpDef(r)
 
     #region Headers
 
@@ -489,8 +501,10 @@ class Binary_GumpDef(IHaveMetaInfo):
     def __init__(self, r: Reader):
         pass
 
+    def __repr__(self): return DesSer.serialize(self)
+
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = 'XX File')),
+        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
         MetaInfo('XX', items = [
             # MetaInfo(f'Fonts: {len(self.fonts)}')
             ])
@@ -499,7 +513,7 @@ class Binary_GumpDef(IHaveMetaInfo):
 # Binary_Hues
 class Binary_Hues(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_Hues(r)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Hues(r)
 
     #region Headers
 
@@ -508,8 +522,10 @@ class Binary_Hues(IHaveMetaInfo):
     def __init__(self, r: Reader):
         pass
 
+    def __repr__(self): return DesSer.serialize(self)
+
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = 'XX File')),
+        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
         MetaInfo('XX', items = [
             # MetaInfo(f'Fonts: {len(self.fonts)}')
             ])
@@ -518,7 +534,7 @@ class Binary_Hues(IHaveMetaInfo):
 # Binary_Land
 class Binary_Land(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_XX(r)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_XX(r)
 
     #region Headers
 
@@ -527,8 +543,10 @@ class Binary_Land(IHaveMetaInfo):
     def __init__(self, r: Reader):
         pass
 
+    def __repr__(self): return DesSer.serialize(self)
+
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = 'XX File')),
+        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
         MetaInfo('XX', items = [
             # MetaInfo(f'Fonts: {len(self.fonts)}')
             ])
@@ -537,7 +555,7 @@ class Binary_Land(IHaveMetaInfo):
 # Binary_Light
 class Binary_Light(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_Light(r)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Light(r)
 
     #region Headers
 
@@ -546,8 +564,10 @@ class Binary_Light(IHaveMetaInfo):
     def __init__(self, r: Reader):
         pass
 
+    def __repr__(self): return DesSer.serialize(self)
+
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = 'XX File')),
+        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
         MetaInfo('XX', items = [
             # MetaInfo(f'Fonts: {len(self.fonts)}')
             ])
@@ -556,7 +576,7 @@ class Binary_Light(IHaveMetaInfo):
 # Binary_MobType
 class Binary_MobType(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_MobType(r)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_MobType(r)
 
     #region Headers
 
@@ -565,8 +585,10 @@ class Binary_MobType(IHaveMetaInfo):
     def __init__(self, r: Reader):
         pass
 
+    def __repr__(self): return DesSer.serialize(self)
+
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = 'XX File')),
+        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
         MetaInfo('XX', items = [
             # MetaInfo(f'Fonts: {len(self.fonts)}')
             ])
@@ -575,7 +597,7 @@ class Binary_MobType(IHaveMetaInfo):
 # Binary_MultiMap
 class Binary_MultiMap(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_MultiMap(r)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_MultiMap(r)
 
     #region Headers
 
@@ -584,8 +606,10 @@ class Binary_MultiMap(IHaveMetaInfo):
     def __init__(self, r: Reader):
         pass
 
+    def __repr__(self): return DesSer.serialize(self)
+
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = 'XX File')),
+        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
         MetaInfo('XX', items = [
             # MetaInfo(f'Fonts: {len(self.fonts)}')
             ])
@@ -594,7 +618,7 @@ class Binary_MultiMap(IHaveMetaInfo):
 # Binary_MusicDef
 class Binary_MusicDef(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_MusicDef(r)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_MusicDef(r)
 
     #region Headers
 
@@ -603,8 +627,10 @@ class Binary_MusicDef(IHaveMetaInfo):
     def __init__(self, r: Reader):
         pass
 
+    def __repr__(self): return DesSer.serialize(self)
+
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = 'XX File')),
+        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
         MetaInfo('XX', items = [
             # MetaInfo(f'Fonts: {len(self.fonts)}')
             ])
@@ -613,7 +639,7 @@ class Binary_MusicDef(IHaveMetaInfo):
 # Binary_Multi
 class Binary_Multi(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_Multi(r)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Multi(r)
 
     #region Headers
 
@@ -622,8 +648,10 @@ class Binary_Multi(IHaveMetaInfo):
     def __init__(self, r: Reader):
         pass
 
+    def __repr__(self): return DesSer.serialize(self)
+
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = 'XX File')),
+        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
         MetaInfo('XX', items = [
             # MetaInfo(f'Fonts: {len(self.fonts)}')
             ])
@@ -632,7 +660,7 @@ class Binary_Multi(IHaveMetaInfo):
 # Binary_RadarColor
 class Binary_RadarColor(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_RadarColor(r)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_RadarColor(r)
 
     #region Headers
 
@@ -641,8 +669,10 @@ class Binary_RadarColor(IHaveMetaInfo):
     def __init__(self, r: Reader):
         pass
 
+    def __repr__(self): return DesSer.serialize(self)
+
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = 'XX File')),
+        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
         MetaInfo('XX', items = [
             # MetaInfo(f'Fonts: {len(self.fonts)}')
             ])
@@ -651,7 +681,7 @@ class Binary_RadarColor(IHaveMetaInfo):
 # Binary_SkillGroups
 class Binary_SkillGroups(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_SkillGroups(r)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_SkillGroups(r)
 
     #region Headers
 
@@ -660,8 +690,10 @@ class Binary_SkillGroups(IHaveMetaInfo):
     def __init__(self, r: Reader):
         pass
 
+    def __repr__(self): return DesSer.serialize(self)
+
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = 'XX File')),
+        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
         MetaInfo('XX', items = [
             # MetaInfo(f'Fonts: {len(self.fonts)}')
             ])
@@ -670,7 +702,7 @@ class Binary_SkillGroups(IHaveMetaInfo):
 # Binary_Skills
 class Binary_Skills(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_Skills(r)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Skills(r)
 
     #region Headers
 
@@ -679,8 +711,10 @@ class Binary_Skills(IHaveMetaInfo):
     def __init__(self, r: Reader):
         pass
 
+    def __repr__(self): return DesSer.serialize(self)
+
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = 'XX File')),
+        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
         MetaInfo('XX', items = [
             # MetaInfo(f'Fonts: {len(self.fonts)}')
             ])
@@ -689,7 +723,7 @@ class Binary_Skills(IHaveMetaInfo):
 # Binary_Sound
 class Binary_Sound(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_Sound(r)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Sound(r)
 
     #region Headers
 
@@ -698,8 +732,10 @@ class Binary_Sound(IHaveMetaInfo):
     def __init__(self, r: Reader):
         pass
 
+    def __repr__(self): return DesSer.serialize(self)
+
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = 'XX File')),
+        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
         MetaInfo('XX', items = [
             # MetaInfo(f'Fonts: {len(self.fonts)}')
             ])
@@ -708,7 +744,7 @@ class Binary_Sound(IHaveMetaInfo):
 # Binary_SpeechList
 class Binary_SpeechList(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_SpeechList(r)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_SpeechList(r)
 
     #region Headers
 
@@ -717,8 +753,10 @@ class Binary_SpeechList(IHaveMetaInfo):
     def __init__(self, r: Reader):
         pass
 
+    def __repr__(self): return DesSer.serialize(self)
+
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = 'XX File')),
+        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
         MetaInfo('XX', items = [
             # MetaInfo(f'Fonts: {len(self.fonts)}')
             ])
@@ -727,7 +765,7 @@ class Binary_SpeechList(IHaveMetaInfo):
 # Binary_Static
 class Binary_Static(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_Static(r)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Static(r)
 
     #region Headers
 
@@ -736,8 +774,10 @@ class Binary_Static(IHaveMetaInfo):
     def __init__(self, r: Reader):
         pass
 
+    def __repr__(self): return DesSer.serialize(self)
+
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = 'XX File')),
+        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
         MetaInfo('XX', items = [
             # MetaInfo(f'Fonts: {len(self.fonts)}')
             ])
@@ -746,7 +786,7 @@ class Binary_Static(IHaveMetaInfo):
 # Binary_StringTable
 class Binary_StringTable(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_StringTable(r)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_StringTable(r)
 
     #region Headers
 
@@ -755,8 +795,10 @@ class Binary_StringTable(IHaveMetaInfo):
     def __init__(self, r: Reader):
         pass
 
+    def __repr__(self): return DesSer.serialize(self)
+
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = 'XX File')),
+        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
         MetaInfo('XX', items = [
             # MetaInfo(f'Fonts: {len(self.fonts)}')
             ])
@@ -765,7 +807,7 @@ class Binary_StringTable(IHaveMetaInfo):
 # Binary_TileData
 class Binary_TileData(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_TileData(r)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_TileData(r)
 
     #region Headers
 
@@ -774,8 +816,10 @@ class Binary_TileData(IHaveMetaInfo):
     def __init__(self, r: Reader):
         pass
 
+    def __repr__(self): return DesSer.serialize(self)
+
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = 'XX File')),
+        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
         MetaInfo('XX', items = [
             # MetaInfo(f'Fonts: {len(self.fonts)}')
             ])
@@ -784,7 +828,7 @@ class Binary_TileData(IHaveMetaInfo):
 # Binary_UnicodeFont
 class Binary_UnicodeFont(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_UnicodeFont(r)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_UnicodeFont(r)
 
     #region Headers
 
@@ -793,8 +837,10 @@ class Binary_UnicodeFont(IHaveMetaInfo):
     def __init__(self, r: Reader):
         pass
 
+    def __repr__(self): return DesSer.serialize(self)
+
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = 'XX File')),
+        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
         MetaInfo('XX', items = [
             # MetaInfo(f'Fonts: {len(self.fonts)}')
             ])
@@ -803,7 +849,7 @@ class Binary_UnicodeFont(IHaveMetaInfo):
 # Binary_Verdata
 class Binary_Verdata(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_Verdata(r, s)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Verdata(r, s)
     instance: object = None
 
     #region Headers
@@ -819,16 +865,18 @@ class Binary_Verdata(IHaveMetaInfo):
 
     #endregion
 
-    def __init__(self, r: Reader, s: BinaryPakFile):
-        self.pakFile = s
+    def __init__(self, r: Reader, s: BinaryArchive):
+        self.archive = s
         patches = r.readL32SArray(self.Patch); print(patches); patches.sort()
         self.patches = { k: list(g) for k, g in groupby(patches) }
         Binary_Verdata.instance = self
 
-    def readData(self, offset: int, fileSize: int): return PakFile.ReaderT(lambda r: BytesIO(r.seek(offset).readBytes(fileSize)))
+    def readData(self, offset: int, fileSize: int): return Archive.ReaderT(lambda r: BytesIO(r.seek(offset).readBytes(fileSize)))
+
+    def __repr__(self): return DesSer.serialize(self)
 
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = 'Version Sbi')),
+        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
         MetaInfo('Verdata', items = [
                 MetaInfo(f'Patches: {len(self.patches)}')
             ])

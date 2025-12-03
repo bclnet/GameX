@@ -66,16 +66,16 @@ public class Database {
         "spanish_(spain)"
     };
     Family family;
-    Archive pakFile;
+    Archive archive;
 
     public List<Node> Nodes = new List<Node>();
     public Dictionary<string, Dictionary<string, string>> Others = new Dictionary<string, Dictionary<string, string>>();
 
     public async Task OpenAsync(MetaManager manager) {
         family = FamilyManager.GetFamily("Cig");
-        pakFile = family.OpenArchive(new Uri("game:/Sbi.p4k#StarCitizen"));
+        archive = family.OpenArchive(new Uri("game:/Sbi.p4k#StarCitizen"));
         foreach (var local in locales) {
-            var stream = await pakFile.GetData($"Sbi/Localization/{local}/global.ini");
+            var stream = await archive.GetData($"Sbi/Localization/{local}/global.ini");
             using var r = new StreamReader(stream, Encoding.UTF8);
             var body = r.ReadToEnd();
             var values = body.Split('\n', StringSplitOptions.RemoveEmptyEntries).Select(x => x.Split('=', 2)).ToDictionary(x => x[0].Trim(), x => x.Length > 1 ? x[1] : null);

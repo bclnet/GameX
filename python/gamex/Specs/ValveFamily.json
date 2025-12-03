@@ -14,10 +14,10 @@
   },
   "games": {
     "*": {
-      "pakFileType": "GameX.Valve.ValvePakFile, GameX.Valve",
+      "archiveType": "GameX.Valve.ValveArchive, GameX.Valve",
       "engine": "GoldSrc",
       "searchBy": "AllDir",
-      "pakExt": [
+      "arcExt": [
         ".wad",
         ".bsp"
       ]
@@ -165,7 +165,7 @@
     },
     "*2": {
       "engine": "Source",
-      "pakExt": "_dir.vpk"
+      "arcExt": "_dir.vpk"
     },
     "HL:Src": {
       "name": "Half-Life: Source",
@@ -425,7 +425,7 @@
     },
     "*3": {
       "engine": "Source2",
-      "pakExt": "_dir.vpk"
+      "arcExt": "_dir.vpk"
     },
     "CS:GO": {
       "name": "Counter-Strike: Global Offensive",
@@ -594,7 +594,7 @@
       "url": "https://store.steampowered.com/app/450390",
       "date": "2016-05-05",
       "tags": "VR",
-      "pakExt": ".assets",
+      "arcExt": ".assets",
       "status": "!unity",
       "files": {
         "key": [
@@ -611,7 +611,7 @@
       "url": "https://store.steampowered.com/app/450390",
       "date": "2016-05-05",
       "tags": "VR",
-      "pakExt": ".assets",
+      "arcExt": ".assets",
       "status": "!unity",
       "files": {
         "key": [

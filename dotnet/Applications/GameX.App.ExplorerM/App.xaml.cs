@@ -57,7 +57,7 @@ public partial class App : Application {
         [Option('f', "family", HelpText = "Family", Required = true)]
         public string Family { get; set; }
 
-        [Option('u', "uri", HelpText = "Pak file to be opened", Required = true)]
+        [Option('u', "uri", HelpText = "arc file to be opened", Required = true)]
         public Uri Uri { get; set; }
 
         [Option('p', "path", HelpText = "optional file to be opened")]

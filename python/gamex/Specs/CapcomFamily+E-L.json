@@ -3,7 +3,7 @@
   "url": "https://en.wikipedia.org/wiki/List_of_Capcom_games:_E%E2%80%93L",
   "games": {
     "*": {
-      "pakFileType": "GameX.Capcom.CapcomPakFile, GameX.Capcom"
+      "archiveType": "GameX.Capcom.CapcomArchive, GameX.Capcom"
     },
     "EXTroopers": {
       "name": "E.X. Troopers",
@@ -215,7 +215,7 @@
       ],
       "date": "2009-04-09",
       "form": "Console;Windows",
-      "pakExt": ".fpk",
+      "arcExt": ".fpk",
       "files": {
         "key": [
           "Steam:21640",
@@ -599,7 +599,7 @@
         "ZZPack1",
         "ZZPack2"
       ],
-      "pakExt": ".arc",
+      "arcExt": ".arc",
       "files": {
         "key": [
           "Steam:6510",
@@ -630,8 +630,8 @@
       ],
       "date": "2013-08-27",
       "form": "XX",
-      "pakExt": ".txt",
-      "pak": "game:/PCConsoleTOC.txt",
+      "arcExt": ".txt",
+      "arc": "game:/PCConsoleTOC.txt",
       "files": {
         "key": [
           "Steam:226720",

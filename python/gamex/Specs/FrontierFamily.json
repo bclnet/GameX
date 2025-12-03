@@ -9,8 +9,8 @@
   ],
   "games": {
     "*": {
-      "pakFileType": "GameX.Frontier.FrontierPakFile, GameX.Frontier",
-      "pakExt": ".ovl"
+      "archiveType": "GameX.Frontier.FrontierArchive, GameX.Frontier",
+      "arcExt": ".ovl"
     },
     "FE": {
       "name": "Frontier: First Encounters",
@@ -98,7 +98,7 @@
         "https://en.wikipedia.org/wiki/LostWinds"
       ],
       "date": "2008-05-12",
-      "pak": "game:/**/*.ovl",
+      "arc": "game:/**/*.ovl",
       "files": {
         "key": [
           "Steam:447780",
@@ -115,7 +115,7 @@
         "https://en.wikipedia.org/wiki/LostWinds_2:_Winter_of_the_Melodias"
       ],
       "date": "2009-10-09",
-      "pak": "game:/**/*.ovl",
+      "arc": "game:/**/*.ovl",
       "files": {
         "key": [
           "Steam:447800",
@@ -164,7 +164,7 @@
         "https://en.wikipedia.org/wiki/Elite_Dangerous"
       ],
       "date": "2014-12-16",
-      "pak": "game:/**/*.ovl",
+      "arc": "game:/**/*.ovl",
       "dlcs": {
         "Odyssey": {
           "name": "Elite Dangerous: Odyssey",

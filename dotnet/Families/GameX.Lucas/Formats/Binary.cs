@@ -179,9 +179,9 @@ public class Binary_Nwx : IHaveMetaInfo, ITextureSelect {
 
     static readonly ConcurrentDictionary<string, (byte r, byte g, byte b)[]> Palettes = new ConcurrentDictionary<string, (byte r, byte g, byte b)[]>();
 
-    static (byte r, byte g, byte b)[] PaletteBuilder(string path, Archive pak) {
+    static (byte r, byte g, byte b)[] PaletteBuilder(string path, Archive arc) {
         var paths = path.Split(':');
-        var pcx = pak.GetArchive(paths[0]).GetAsset<Binary_Pcx>(paths[1], throwOnError: false).Result;
+        var pcx = arc.GetArchive(paths[0]).GetAsset<Binary_Pcx>(paths[1], throwOnError: false).Result;
         if (pcx == null) return null;
         var pal = pcx.GetPalette();
         var b = new List<(byte r, byte g, byte b)>();

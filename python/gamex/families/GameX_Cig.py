@@ -1,21 +1,21 @@
 from __future__ import annotations
 import os
 from openstk import _pathExtension
-from gamex import BinaryPakFile
+from gamex import BinaryArchive
 from gamex.families.Cig.formats.binary import Binary_P4k
-from gamex.families.GameX import UnknownPakFile
+from gamex.families.GameX import UnknownArchive
 
-# CigPakFile
-class CigPakFile(BinaryPakFile):
-    def __init__(self, state: PakState):
+# CigArchive
+class CigArchive(BinaryArchive):
+    def __init__(self, state: ArcState):
         super().__init__(state, Binary_P4k())
-        self.objectFactoryFunc = self.objectFactory
+        self.assetFactoryFunc = self.assetFactory
 
     #region Factories
 
     @staticmethod
-    def objectFactory(source: FileSource, game: FamilyGame) -> (object, callable):
+    def assetFactory(source: FileSource, game: FamilyGame) -> (object, callable):
         match _pathExtension(source.path).lower():
-            case _: return UnknownPakFile.objectFactory(source, game)
+            case _: return UnknownArchive.assetFactory(source, game)
 
     #endregion

@@ -1,15 +1,15 @@
 from __future__ import annotations
 import os
 from openstk import _pathExtension
-from gamex import Family, FamilyGame, BinaryPakFile
+from gamex import Family, FamilyGame, BinaryArchive
 from gamex.families.Bullfrog.formats.binary import Binary_Bullfrog, Binary_Populus, Binary_Syndicate
-from gamex.families.GameX import UnknownPakFile
+from gamex.families.GameX import UnknownArchive
 
 # DKGame
 class DKGame(FamilyGame):
     def __init__(self, family: Family, id: str, elem: dict[str, object], dgame: FamilyGame):
         super().__init__(family, id, elem, dgame)
-        self.objectFactoryFunc = self.objectFactory
+        self.assetFactoryFunc = self.assetFactory
 
     def loaded(self):
         super().loaded()
@@ -19,7 +19,7 @@ class DKGame(FamilyGame):
 class DK2Game(FamilyGame):
     def __init__(self, family: Family, id: str, elem: dict[str, object], dgame: FamilyGame):
         super().__init__(family, id, elem, dgame)
-        self.objectFactoryFunc = self.objectFactory
+        self.assetFactoryFunc = self.assetFactory
 
     def loaded(self):
         super().loaded()
@@ -29,7 +29,7 @@ class DK2Game(FamilyGame):
 class P2Game(FamilyGame):
     def __init__(self, family: Family, id: str, elem: dict[str, object], dgame: FamilyGame):
         super().__init__(family, id, elem, dgame)
-        self.objectFactoryFunc = self.objectFactory
+        self.assetFactoryFunc = self.assetFactory
 
     def loaded(self):
         super().loaded()
@@ -39,22 +39,22 @@ class P2Game(FamilyGame):
 class SGame(FamilyGame):
     def __init__(self, family: Family, id: str, elem: dict[str, object], dgame: FamilyGame):
         super().__init__(family, id, elem, dgame)
-        self.objectFactoryFunc = self.objectFactory
+        self.assetFactoryFunc = self.assetFactory
 
     def loaded(self):
         super().loaded()
         #S_Database.loaded(self)
 
-# BullfrogPakFile
-class BullfrogPakFile(BinaryPakFile):
-    def __init__(self, state: PakState):
-        super().__init__(state, self.getPakBinary(state.game, state.path))
-        self.objectFactoryFunc = self.objectFactory
+# BullfrogArchive
+class BullfrogArchive(BinaryArchive):
+    def __init__(self, state: ArcState):
+        super().__init__(state, self.getArcBinary(state.game, state.path))
+        self.assetFactoryFunc = self.assetFactory
 
     #region Factories
 
     @staticmethod
-    def getPakBinary(game: FamilyGame, filePath: str) -> PakBinary:
+    def getArcBinary(game: FamilyGame, filePath: str) -> ArcBinary:
         match game.id:
             case 'DK' | 'DK2': return Binary_Bullfrog()            # Keeper
             case 'P' | 'P2' | 'P3': return Binary_Populus()        # Populs
@@ -64,11 +64,11 @@ class BullfrogPakFile(BinaryPakFile):
             case _: raise Exception(f'Unknown: {game.id}')
 
     @staticmethod
-    def objectFactory(source: FileSource, game: FamilyGame) -> (object, callable):
+    def assetFactory(source: FileSource, game: FamilyGame) -> (object, callable):
         match game.id:
-            case 'DK' | 'DK2': return Binary_Bullfrog.objectFactory(source, game)
-            case 'P' | 'P2' | 'P3': return Binary_Populus.objectFactory(source, game)
-            case 'S' | 'S2': return Binary_Syndicate.objectFactory(source, game)
+            case 'DK' | 'DK2': return Binary_Bullfrog.assetFactory(source, game)
+            case 'P' | 'P2' | 'P3': return Binary_Populus.assetFactory(source, game)
+            case 'S' | 'S2': return Binary_Syndicate.assetFactory(source, game)
             case _: raise Exception(f'Unknown: {game.id}')
 
     #endregion

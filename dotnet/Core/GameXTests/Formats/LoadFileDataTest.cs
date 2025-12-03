@@ -29,8 +29,8 @@ public class LoadFileDataTest {
     [DataRow("Tes:Fallout4VR")]
     [DataRow("Tes:Fallout76", 15000000)]
     [DataRow("Valve:Dota2", 15000000)]
-    public async Task LoadAllFileData(string pak, long maxFileSize = 0) {
-        var source = TestHelper.Paks[pak].Value;
+    public async Task LoadAllFileData(string arc, long maxFileSize = 0) {
+        var source = TestHelper.Paks[arc].Value;
         if (source is MultiArchive multiPak)
             foreach (var p in multiPak.Archives) {
                 if (p is not BinaryAsset z) throw new InvalidOperationException("multiPak not A BinaryAsset");
@@ -40,13 +40,13 @@ public class LoadFileDataTest {
     }
 
     static Task ExportAsync(Archive source, long maxSize) {
-        if (source is not BinaryAsset pak) throw new NotSupportedException();
+        if (source is not BinaryAsset arc) throw new NotSupportedException();
 
         // write files
-        Parallel.For(0, pak.Files.Count, new ParallelOptions { /*MaxDegreeOfParallelism = 1*/ }, async index => {
-            var file = pak.Files[index].Fix();
+        Parallel.For(0, arc.Files.Count, new ParallelOptions { /*MaxDegreeOfParallelism = 1*/ }, async index => {
+            var file = arc.Files[index].Fix();
 
-            // extract pak
+            // extract arc
             if (file.Arc != null) { await ExportAsync(file.Arc, maxSize); return; }
             // skip empty file
             if (file.FileSize == 0 && file.PackedSize == 0) return;
@@ -54,7 +54,7 @@ public class LoadFileDataTest {
             if (maxSize != 0 && file.FileSize > maxSize) return;
 
             // extract file
-            using var s = await pak.GetData(file);
+            using var s = await arc.GetData(file);
             s.ReadAllBytes();
         });
 

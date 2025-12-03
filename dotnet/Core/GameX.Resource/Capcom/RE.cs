@@ -13,8 +13,8 @@ public static class RE {
     static RE() {
         var assembly = typeof(RE).Assembly;
         var s = assembly.GetManifestResourceStream("GameX.Resource.Capcom.RE.zip");
-        var pak = new ZipArchive(s, ZipArchiveMode.Read);
-        HashEntries = pak.Entries.ToDictionary(x => x.Name, x => x);
+        var arc = new ZipArchive(s, ZipArchiveMode.Read);
+        HashEntries = arc.Entries.ToDictionary(x => x.Name, x => x);
     }
 
     static readonly ConcurrentDictionary<string, IDictionary<ulong, string>> HashLookups = new();

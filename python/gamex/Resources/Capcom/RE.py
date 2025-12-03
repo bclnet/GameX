@@ -38,8 +38,8 @@ class MurmurHash3:
         return h
 
 file = resources.files().joinpath('resources', 'Capcom/RE.zip').open('rb')
-pak: ZipFile = ZipFile(file, 'r')
-hashEntries: dict[str, object] = { x.filename:x for x in pak.infolist() }
+arc: ZipFile = ZipFile(file, 'r')
+hashEntries: dict[str, object] = { x.filename:x for x in arc.infolist() }
 hashLookup: dict[str, dict[int, str]] = {}
 
 @staticmethod
@@ -47,7 +47,7 @@ def getHashLookup(path: str) -> dict[int, str]:
     if path in hashLookup: return hashLookup[path]
     line: str
     value: dict[int, str] = {}
-    with pak.open(hashEntries[path]) as r:
+    with arc.open(hashEntries[path]) as r:
         while line := r.readline().decode('ascii').rstrip('\r\n'):
             hashLower = MurmurHash3.hash(line.lower())
             hashUpper = MurmurHash3.hash(line.upper())

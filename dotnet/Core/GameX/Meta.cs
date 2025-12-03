@@ -83,7 +83,7 @@ public class MetaItem(object source, string name, object icon, object tag = null
     public string Name { get; } = name;
     public object Icon { get; } = icon;
     public object Tag { get; } = tag;
-    public Archive PakFile { get; } = archive;
+    public Archive Archive { get; } = archive;
     public List<MetaItem> Items { get; private set; } = items ?? [];
 
     public MetaItem Search(Func<MetaItem, bool> predicate) {
@@ -144,13 +144,13 @@ public abstract class MetaManager {
     /// Gets the explorer information nodes.
     /// </summary>
     /// <param name="manager">The manager.</param>
-    /// <param name="pakFile">The pak file.</param>
+    /// <param name="archive">The arc file.</param>
     /// <param name="file">The file.</param>
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
-    public static async Task<List<MetaInfo>> GetMetaInfos(MetaManager manager, BinaryAsset pakFile, FileSource file) {
+    public static async Task<List<MetaInfo>> GetMetaInfos(MetaManager manager, BinaryAsset archive, FileSource file) {
         List<MetaInfo> nodes = null;
-        var obj = await pakFile.GetAsset<object>(file);
+        var obj = await archive.GetAsset<object>(file);
         if (obj == null) return null;
         else if (obj is IHaveMetaInfo info) nodes = info.GetInfoNodes(manager, file);
         else if (obj is Stream stream) {
@@ -172,7 +172,7 @@ public abstract class MetaManager {
         nodes.Add(new MetaInfo("File", items: [
             new($"Path: {file.Path}"),
             new($"FileSize: {file.FileSize}"),
-            new($"AtEnd: {pakFile.AtEnd}"),
+            new($"AtEnd: {archive.AtEnd}"),
             file.Parts != null
                 ? new MetaInfo("Parts", items: file.Parts.Select(part => new MetaInfo($"{part.FileSize}@{part.Path}")))
                 : null
@@ -186,19 +186,19 @@ public abstract class MetaManager {
     /// Gets the meta items.
     /// </summary>
     /// <param name="manager">The manager.</param>
-    /// <param name="pakFile">The pak file.</param>
+    /// <param name="archive">The arc file.</param>
     /// <returns></returns>
-    public static List<MetaItem> GetMetaItems(MetaManager manager, BinaryAsset pakFile) {
+    public static List<MetaItem> GetMetaItems(MetaManager manager, BinaryAsset archive) {
         if (manager == null) throw new ArgumentNullException(nameof(manager));
 
         var root = new List<MetaItem>();
-        if (pakFile.Files == null || pakFile.Files.Count == 0) return root;
+        if (archive.Files == null || archive.Files.Count == 0) return root;
         string currentPath = null; List<MetaItem> currentFolder = null;
 
         // parse paths
-        foreach (var file in pakFile.Files.OrderBy(x => x.Path)) {
+        foreach (var file in archive.Files.OrderBy(x => x.Path)) {
             // next path, skip empty
-            var path = file.Path[pakFile.PathSkip..];
+            var path = file.Path[archive.PathSkip..];
             if (string.IsNullOrEmpty(path)) continue;
 
             // folder
@@ -208,7 +208,7 @@ public abstract class MetaManager {
                 currentFolder = root;
                 if (!string.IsNullOrEmpty(fileFolder))
                     foreach (var folder in fileFolder.Split('\\')) {
-                        var found = currentFolder.Find(x => x.Name == folder && x.PakFile == null);
+                        var found = currentFolder.Find(x => x.Name == folder && x.Archive == null);
                         if (found != null) currentFolder = found.Items;
                         else {
                             found = new MetaItem(null, folder, manager.FolderIcon);
@@ -221,16 +221,16 @@ public abstract class MetaManager {
             // pakfile
             if (file.Arc != null) {
                 var items = GetMetaItems(manager, file.Arc);
-                currentFolder.Add(new MetaItem(file, Path.GetFileName(file.Path), manager.PackageIcon, archive: pakFile, items: items));
+                currentFolder.Add(new MetaItem(file, Path.GetFileName(file.Path), manager.PackageIcon, archive: archive, items: items));
                 continue;
             }
 
             // file
             var fileName = Path.GetFileName(path);
-            var fileNameForIcon = pakFile.FileMask?.Invoke(fileName) ?? fileName;
+            var fileNameForIcon = archive.FileMask?.Invoke(fileName) ?? fileName;
             var extentionForIcon = Path.GetExtension(fileNameForIcon);
             if (extentionForIcon.Length > 0) extentionForIcon = extentionForIcon[1..];
-            currentFolder.Add(new MetaItem(file, fileName, manager.GetIcon(extentionForIcon), archive: pakFile));
+            currentFolder.Add(new MetaItem(file, fileName, manager.GetIcon(extentionForIcon), archive: archive));
         }
         return root;
     }

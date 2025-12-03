@@ -47,14 +47,14 @@ public class Entity {
 /// </summary>
 public class Database {
     Family family;
-    Archive pakFile;
+    Archive archive;
 
     public List<Node> Nodes = new List<Node>();
 
     public async Task OpenAsync(MetaManager manager) {
         family = FamilyManager.GetFamily("Cig");
-        pakFile = family.OpenArchive(new Uri("game:/#StarCitizen"));
-        var obj = await pakFile.GetAsset<Binary_Dcb>($"Sbi/Game.dcb");
+        archive = family.OpenArchive(new Uri("game:/#StarCitizen"));
+        var obj = await archive.GetAsset<Binary_Dcb>($"Sbi/Game.dcb");
         foreach (var value in obj.RecordTable)
             Node.CreateNode(manager, Nodes, value);
     }

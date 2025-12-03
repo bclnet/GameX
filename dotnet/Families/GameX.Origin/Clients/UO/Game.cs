@@ -10,7 +10,7 @@ public class UOGameController<Texture2D> : GameController {
     Main Main;
     public UOGameController(Archive game, IPluginHost pluginHost) : base(game, pluginHost) {
         DeviceManager = new GraphicsDeviceManager(this);
-        TypeX.ScanTypes([typeof(XboxPakFile)]);
+        TypeX.ScanTypes([typeof(XboxArchive)]);
         Main = new(((UOGame)game.Game).Uop);
     }
 

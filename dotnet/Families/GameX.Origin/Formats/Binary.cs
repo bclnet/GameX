@@ -14,7 +14,7 @@ namespace GameX.Origin.Formats;
 #region Binary_U8
 
 public unsafe class Binary_U8 : ArcBinary<Binary_U8> {
-    public static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    public static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) AssetFactory(FileSource source, FamilyGame game)
         => source.Path.ToLowerInvariant() switch {
             _ => Path.GetExtension(source.Path).ToLowerInvariant() switch {
                 _ => (0, null),
@@ -107,7 +107,7 @@ public unsafe class Binary_U8 : ArcBinary<Binary_U8> {
 public unsafe class Binary_U9 : ArcBinary<Binary_U9> {
     #region Factories
 
-    public static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    public static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) AssetFactory(FileSource source, FamilyGame game)
         => source.Path.ToLowerInvariant() switch {
             //"abc" => (0, Binary_Palette.Factory),
             _ => Path.GetExtension(source.Path).ToLowerInvariant() switch {
@@ -186,11 +186,11 @@ public unsafe class Binary_U9 : ArcBinary<Binary_U9> {
 #region Binary_UO
 
 public unsafe class Binary_UO : ArcBinary<Binary_UO> {
-    public static Archive Art_Instance = Clients.UO.Database.PakFile?.GetSource("artLegacyMUL.uop").Item2.Arc;
+    public static Archive Art_Instance = Clients.UO.Database.Archive?.GetSource("artLegacyMUL.uop").Item2.Arc;
 
     #region Factories
 
-    public static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    public static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) AssetFactory(FileSource source, FamilyGame game)
         => source.Path.ToLowerInvariant() switch {
             "animdata.mul" => (0, Binary_Animdata.Factory),
             "fonts.mul" => (0, Binary_AsciiFont.Factory),

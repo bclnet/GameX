@@ -9,6 +9,7 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using static GameX.Bethesda.Formats.Records.FormType;
 using static System.IO.Polyfill;
+#pragma warning disable CS9113
 
 namespace GameX.Bethesda.Formats.Records;
 

@@ -9,7 +9,7 @@
   ],
   "games": {
     "*": {
-      "pakFileType": "GameX.Unknown.UnknownPakFile, GameX"
+      "archiveType": "GameX.Unknown.UnknownArchive, GameX"
     },
     "APP": {
       "name": "Application",
@@ -22,7 +22,7 @@
     },
     "CAT": {
       "name": "Catalog",
-      "pak": "game:/main.yaml",
+      "arc": "game:/main.yaml",
       "files": {
         "key": "Direct:%AppPath%/catalogs"
       }

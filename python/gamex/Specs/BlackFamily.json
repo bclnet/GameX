@@ -9,14 +9,14 @@
   ],
   "games": {
     "*": {
-      "pakFileType": "GameX.Black.BlackPakFile, GameX.Black"
+      "archiveType": "GameX.Black.BlackArchive, GameX.Black"
     },
     "Fallout": {
       "name": "Fallout",
       "url": "https://store.steampowered.com/app/38400",
       "date": "1997-09-30",
       "searchBy": "AllDir",
-      "pakExt": ".dat",
+      "arcExt": ".dat",
       "files": {
         "key": [
           "Steam:38400",
@@ -30,7 +30,7 @@
       "url": "https://store.steampowered.com/app/38410",
       "date": "1998-12-01",
       "searchBy": "AllDir",
-      "pakExt": ".dat",
+      "arcExt": ".dat",
       "files": {
         "key": [
           "Steam:38410",
@@ -52,7 +52,7 @@
       "https://store.steampowered.com/app/466300"
     ],
     "date": "1999-12-10",
-    "pakExt": ".x"
+    "arcExt": ".x"
   },
   "ID": {
     "name": "Icewind Dale",
@@ -61,24 +61,24 @@
       "https://store.steampowered.com/app/321800"
     ],
     "date": "2000-06-29",
-    "pakExt": ".x"
+    "arcExt": ".x"
   },
   "ID:HoW": {
     "name": "Icewind Dale: Heart of Winter",
     "url": "https://en.wikipedia.org/wiki/Icewind_Dale:_Heart_of_Winter",
     "date": "2001-02-21",
-    "pakExt": ".x"
+    "arcExt": ".x"
   },
   "ID2": {
     "name": "Icewind Dale II",
     "url": "https://en.wikipedia.org/wiki/Icewind_Dale_II",
     "date": "2002-08-27",
-    "pakExt": ".x"
+    "arcExt": ".x"
   },
   "BG:DA2": {
     "name": "Baldur's Gate: Dark Alliance II",
     "url": "https://en.wikipedia.org/wiki/Baldur%27s_Gate:_Dark_Alliance_II",
     "date": "2004-01-20",
-    "pakExt": ".x"
+    "arcExt": ".x"
   }
 }

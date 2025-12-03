@@ -50,14 +50,14 @@ public partial class Navigator : UserControl, INotifyPropertyChanged {
             _selectedItem = value;
             //try
             //{
-            //    var pak = (value?.Source as FileMetadata)?.Pak;
-            //    if (pak != null && pak.Status == PakFile.PakStatus.Closed)
+            //    var arc = (value?.Source as FileMetadata)?.Arc;
+            //    if (arc != null && arc.Status == Archive.ArcStatus.Closed)
             //    {
-            //        pak.Open();
-            //        value.Items.AddRange(pak.GetMetaItemsAsync(Resource).Result);
+            //        arc.Open();
+            //        value.Items.AddRange(arc.GetMetaItemsAsync(Resource).Result);
             //        OnNodeFilterKeyUp(null, null);
             //    }
-            //    OnFileInfo(value?.PakFile?.GetMetaInfosAsync(Resource, value).Result);
+            //    OnFileInfo(value?.Archive?.GetMetaInfosAsync(Resource, value).Result);
             //}
             //catch (Exception ex)
             //{

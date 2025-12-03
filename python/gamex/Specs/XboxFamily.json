@@ -12,7 +12,7 @@
   ],
   "games": {
     "*": {
-      "pakFileType": "GameX.Xbox.XboxPakFile, GameX.Xbox"
+      "archiveType": "GameX.Xbox.XboxArchive, GameX.Xbox"
     },
     "AxiomVerge": {
       "name": "Axiom Verge",

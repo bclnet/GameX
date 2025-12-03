@@ -7,6 +7,7 @@ using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+#pragma warning disable CS0649, CS8500
 
 namespace GameX.Arkane.Formats.Danae;
 

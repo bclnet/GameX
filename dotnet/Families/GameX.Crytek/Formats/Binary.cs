@@ -104,10 +104,10 @@ public unsafe class Binary_Cry3 : ArcBinary<Binary_Cry3> {
         var files = source.Files = new List<FileSource>();
         source.UseReader = false;
 
-        var pak = (Cry3File)(source.Tag = new Cry3File(r.BaseStream, Key));
+        var arc = (Cry3File)(source.Tag = new Cry3File(r.BaseStream, Key));
         var parentByPath = new Dictionary<string, FileSource>();
         var partByPath = new Dictionary<string, SortedList<string, FileSource>>();
-        foreach (ZipEntry entry in pak) {
+        foreach (ZipEntry entry in arc) {
             var metadata = new FileSource {
                 Path = entry.Name.Replace('\\', '/'),
                 Flags = entry.Flags,
@@ -136,22 +136,22 @@ public unsafe class Binary_Cry3 : ArcBinary<Binary_Cry3> {
     public override Task Write(BinaryAsset source, BinaryWriter w, object tag) {
         source.UseReader = false;
         var files = source.Files;
-        var pak = (Cry3File)(source.Tag = new Cry3File(w.BaseStream, Key));
-        pak.BeginUpdate();
+        var arc = (Cry3File)(source.Tag = new Cry3File(w.BaseStream, Key));
+        arc.BeginUpdate();
         foreach (var file in files) {
             var entry = (ZipEntry)(file.Tag = new ZipEntry(Path.GetFileName(file.Path)));
-            pak.Add(entry);
+            arc.Add(entry);
             source.ArcBinary.WriteData(source, w, file, null);
         }
-        pak.CommitUpdate();
+        arc.CommitUpdate();
         return Task.CompletedTask;
     }
 
     public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
-        var pak = (Cry3File)source.Tag;
+        var arc = (Cry3File)source.Tag;
         var entry = (ZipEntry)file.Tag;
         try {
-            using var input = pak.GetInputStream(entry);
+            using var input = arc.GetInputStream(entry);
             if (!input.CanRead) { HandleException(file, option, $"Unable to read stream for file: {file.Path}"); return Task.FromResult(System.IO.Stream.Null); }
             var s = new MemoryStream();
             input.CopyTo(s);
@@ -162,10 +162,10 @@ public unsafe class Binary_Cry3 : ArcBinary<Binary_Cry3> {
     }
 
     public override Task WriteData(BinaryAsset source, BinaryWriter w, FileSource file, Stream data, object option = default) {
-        var pak = (Cry3File)source.Tag;
+        var arc = (Cry3File)source.Tag;
         var entry = (ZipEntry)file.Tag;
         try {
-            using var s = pak.GetInputStream(entry);
+            using var s = arc.GetInputStream(entry);
             data.CopyTo(s);
         }
         catch (Exception e) { HandleException(file, option, $"Exception: {e.Message}"); }

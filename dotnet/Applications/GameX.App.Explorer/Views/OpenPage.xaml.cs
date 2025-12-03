@@ -22,7 +22,7 @@ public partial class OpenPage : Window, INotifyPropertyChanged {
 
     public IList<Family> Families { get; } = [.. FamilyManager.Families.Values];
 
-    public IList<Uri> PakUris {
+    public IList<Uri> ArcUris {
         get => new[] { _pak1Uri, _pak2Uri, _pak3Uri }.Where(x => x != null).ToList();
         set {
             var idx = 0;
@@ -84,17 +84,17 @@ public partial class OpenPage : Window, INotifyPropertyChanged {
         Editions = selectedGame?.Editions.Values.ToList();
         Edition.SelectedIndex = Editions != null ? ((List<FamilyGame.Edition>)Editions).FindIndex(x => x.Id == string.Empty) : default;
         var selectedEdition = (FamilyGame.Edition)Edition.SelectedItem;
-        PakUris = selectedGame?.ToArcs(selectedEdition?.Id);
+        ArcUris = selectedGame?.ToArcs(selectedEdition?.Id);
     }
 
     void Edition_SelectionChanged(object sender, SelectionChangedEventArgs e) {
         var selectedGame = (FamilyGame)Game.SelectedItem;
         var selectedEdition = (FamilyGame.Edition)Edition.SelectedItem;
-        PakUris = selectedGame?.ToArcs(selectedEdition?.Id);
+        ArcUris = selectedGame?.ToArcs(selectedEdition?.Id);
     }
 
     void Pak1Uri_Click(object sender, RoutedEventArgs e) {
-        var openDialog = new OpenFileDialog { Filter = "PAK files|*.*" };
+        var openDialog = new OpenFileDialog { Filter = "Arc files|*.*" };
         if (openDialog.ShowDialog() == true) {
             var files = openDialog.FileNames;
             if (files.Length < 1) return;
@@ -105,7 +105,7 @@ public partial class OpenPage : Window, INotifyPropertyChanged {
     }
 
     void Pak2Uri_Click(object sender, RoutedEventArgs e) {
-        var openDialog = new OpenFileDialog { Filter = "PAK files|*.*" };
+        var openDialog = new OpenFileDialog { Filter = "Arc files|*.*" };
         if (openDialog.ShowDialog() == true) {
             var files = openDialog.FileNames;
             if (files.Length < 1) return;
@@ -116,7 +116,7 @@ public partial class OpenPage : Window, INotifyPropertyChanged {
     }
 
     void Pak3Uri_Click(object sender, RoutedEventArgs e) {
-        var openDialog = new OpenFileDialog { Filter = "PAK files|*.*" };
+        var openDialog = new OpenFileDialog { Filter = "Ar files|*.*" };
         if (openDialog.ShowDialog() == true) {
             var files = openDialog.FileNames;
             if (files.Length < 1) return;

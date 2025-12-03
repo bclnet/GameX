@@ -10,36 +10,36 @@ using System.Threading.Tasks;
 namespace GameX.Cig;
 
 /// <summary>
-/// CigPakFile
+/// CigArchive
 /// </summary>
-/// <seealso cref="GameEstate.Formats.BinaryPakFile" />
-public class CigPakFile : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+/// <seealso cref="GameEstate.Formats.BinaryArchive" />
+public class CigArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
     /// <summary>
-    /// Initializes a new instance of the <see cref="CigPakFile" /> class.
+    /// Initializes a new instance of the <see cref="CigArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public CigPakFile(ArchiveState state) : base(state, PakBinary_P4k.Current) {
-        ObjectFactoryFunc = ObjectFactory;
+    public CigArchive(ArchiveState state) : base(state, PakBinary_P4k.Current) {
+        AssetFactoryFunc = AssetFactory;
     }
 
     #region Factories
 
-    internal static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    internal static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) AssetFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             //".cfg" => (0, BinaryDcb.Factory),
             ".mtl" or ".xml" => (0, CryXmlFile.Factory),
             ".a" => (0, Binary_DdsA.Factory),
             ".dcb" => (0, Binary_Dcb.Factory),
             ".soc" or ".cgf" or ".cga" or ".chr" or ".skin" or ".anim" => (0, CryFile.Factory),
-            _ => UnknownPakFile.ObjectFactory(source, game),
+            _ => UnknownArchive.AssetFactory(source, game),
         };
 
     #endregion
 
     #region Transforms
 
-    bool ITransformAsset<IUnknownFileModel>.CanTransformAsset(Archive transformTo, object source) => UnknownTransform.CanTransformFileObject(this, transformTo, source);
-    Task<IUnknownFileModel> ITransformAsset<IUnknownFileModel>.TransformAsset(Archive transformTo, object source) => UnknownTransform.TransformFileObjectAsync(this, transformTo, source);
+    bool ITransformAsset<IUnknownFileModel>.CanTransformAsset(Archive transformTo, object source) => UnknownTransform.CanTransformAsset(this, transformTo, source);
+    Task<IUnknownFileModel> ITransformAsset<IUnknownFileModel>.TransformAsset(Archive transformTo, object source) => UnknownTransform.TransformAsset(this, transformTo, source);
 
     #endregion
 }

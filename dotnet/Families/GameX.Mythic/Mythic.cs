@@ -11,21 +11,21 @@ using System.Threading.Tasks;
 namespace GameX.Mythic;
 
 /// <summary>
-/// MythicPakFile
+/// MythicArchive
 /// </summary>
-/// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class MythicPakFile : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+/// <seealso cref="GameX.Formats.BinaryArchive" />
+public class MythicArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
     /// <summary>
-    /// Initializes a new instance of the <see cref="MythicPakFile" /> class.
+    /// Initializes a new instance of the <see cref="MythicArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public MythicPakFile(ArchiveState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
-        ObjectFactoryFunc = ObjectFactory;
+    public MythicArchive(ArchiveState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+        AssetFactoryFunc = AssetFactory;
     }
 
     #region Factories
 
-    static ArcBinary GetPakBinary(FamilyGame game, string extension)
+    static ArcBinary GetArcBinary(FamilyGame game, string extension)
         => extension switch {
             "" => null,
             ".mpk" or ".npk" => Binary_Mpk.Current,
@@ -33,19 +33,19 @@ public class MythicPakFile : BinaryAsset, ITransformAsset<IUnknownFileModel> {
             _ => throw new ArgumentOutOfRangeException(nameof(extension)),
         };
 
-    static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) AssetFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             ".nif" => (FileOption.StreamObject, Binary_Nif.Factory),
             ".crf" => (FileOption.StreamObject, Binary_Crf.Factory),
-            _ => UnknownPakFile.ObjectFactory(source, game),
+            _ => UnknownArchive.AssetFactory(source, game),
         };
 
     #endregion
 
     #region Transforms
 
-    bool ITransformAsset<IUnknownFileModel>.CanTransformAsset(Archive transformTo, object source) => UnknownTransform.CanTransformFileObject(this, transformTo, source);
-    Task<IUnknownFileModel> ITransformAsset<IUnknownFileModel>.TransformAsset(Archive transformTo, object source) => UnknownTransform.TransformFileObjectAsync(this, transformTo, source);
+    bool ITransformAsset<IUnknownFileModel>.CanTransformAsset(Archive transformTo, object source) => UnknownTransform.CanTransformAsset(this, transformTo, source);
+    Task<IUnknownFileModel> ITransformAsset<IUnknownFileModel>.TransformAsset(Archive transformTo, object source) => UnknownTransform.TransformAsset(this, transformTo, source);
 
     #endregion
 }

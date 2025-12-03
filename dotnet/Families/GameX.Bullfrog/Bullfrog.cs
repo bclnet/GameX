@@ -69,20 +69,20 @@ public class SGame(Family family, string id, JsonElement elem, FamilyGame dgame)
 }
 
 /// <summary>
-/// BullfrogPakFile
+/// BullfrogArchive
 /// </summary>
-/// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class BullfrogPakFile : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+/// <seealso cref="GameX.Formats.BinaryArchive" />
+public class BullfrogArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
     /// <summary>
-    /// Initializes a new instance of the <see cref="BullfrogPakFile" /> class.
+    /// Initializes a new instance of the <see cref="BullfrogArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public BullfrogPakFile(ArchiveState state) : base(state, GetPakBinary(state.Game, state.Path))
-        => ObjectFactoryFunc = ObjectFactory;
+    public BullfrogArchive(ArchiveState state) : base(state, GetArcBinary(state.Game, state.Path))
+        => AssetFactoryFunc = AssetFactory;
 
     #region Factories
 
-    static ArcBinary GetPakBinary(FamilyGame game, string filePath)
+    static ArcBinary GetArcBinary(FamilyGame game, string filePath)
         => game.Id switch {
             "DK" or "DK2" => Binary_Bullfrog.Current,           // Keeper
             "P" or "P2" or "P3" => Binary_Populus.Current, // Populus
@@ -92,11 +92,11 @@ public class BullfrogPakFile : BinaryAsset, ITransformAsset<IUnknownFileModel> {
             _ => throw new ArgumentOutOfRangeException(),
         };
 
-    static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) AssetFactory(FileSource source, FamilyGame game)
         => game.Id switch {
-            "DK" or "DK2" => Binary_Bullfrog.ObjectFactory(source, game),
-            "P" or "P2" or "P3" => Binary_Populus.ObjectFactory(source, game),
-            "S" or "S2" => Binary_Syndicate.ObjectFactory(source, game),
+            "DK" or "DK2" => Binary_Bullfrog.AssetFactory(source, game),
+            "P" or "P2" or "P3" => Binary_Populus.AssetFactory(source, game),
+            "S" or "S2" => Binary_Syndicate.AssetFactory(source, game),
             _ => throw new ArgumentOutOfRangeException(),
         };
 
@@ -104,8 +104,8 @@ public class BullfrogPakFile : BinaryAsset, ITransformAsset<IUnknownFileModel> {
 
     #region Transforms
 
-    bool ITransformAsset<IUnknownFileModel>.CanTransformAsset(Archive transformTo, object source) => UnknownTransform.CanTransformFileObject(this, transformTo, source);
-    Task<IUnknownFileModel> ITransformAsset<IUnknownFileModel>.TransformAsset(Archive transformTo, object source) => UnknownTransform.TransformFileObjectAsync(this, transformTo, source);
+    bool ITransformAsset<IUnknownFileModel>.CanTransformAsset(Archive transformTo, object source) => UnknownTransform.CanTransformAsset(this, transformTo, source);
+    Task<IUnknownFileModel> ITransformAsset<IUnknownFileModel>.TransformAsset(Archive transformTo, object source) => UnknownTransform.TransformAsset(this, transformTo, source);
 
     #endregion
 }

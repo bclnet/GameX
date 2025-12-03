@@ -7,7 +7,7 @@ namespace GameX.Formats;
 public class GfxTextureTest {
     [TestMethod]
     [DataRow("AC:AC", "client_highres.dat:Texture/060043BE.tex")]
-    [DataRow("Cry:MWO", "GameData.pak:GameModeObjects.xml")]
+    [DataRow("Cry:MWO", "GameData.arc:GameModeObjects.xml")]
     [DataRow("Rsi:StarCitizen", "Sbi/Textures/references/color.dds")] //: Single
     [DataRow("Rsi:StarCitizen", "Sbi/Textures/asteroids/asteroid_dmg_brown_organic_01_ddn.dds")] //: Multiple
     //[DataRow("Rsi:StarCitizen", "Data/Textures/colors/224x.dds")] //: "Engine/default_cch.dds"
@@ -27,11 +27,11 @@ public class GfxTextureTest {
     [DataRow("Tes:Fallout4VR", "Fallout4 - Startup.ba2:Textures/Water/WaterRainRipples.dds")]
     [DataRow("Tes:Fallout4VR", "Fallout4 - Textures8.ba2:Textures/Terrain/DiamondCity/DiamondCity.16.-2.-2.DDS")]
     [DataRow("Valve:Dota2", "dota/pak01_dir.vpk:stringtokendatabase.txt")]
-    public async Task LoadGfxTexture(string pak, string sampleFile) {
-        var source = TestHelper.Paks[pak].Value;
+    public async Task LoadGfxTexture(string arc, string sampleFile) {
+        var source = TestHelper.Paks[arc].Value;
         Assert.IsTrue(source.Contains(sampleFile));
         var obj0 = await source.GetAsset<object>(sampleFile);
         Assert.IsNotNull(obj0);
-        //Assert.Equal(sampleFileSize, pakFile.GetLoadFileDataAsync(sampleFile).Result.Length);
+        //Assert.Equal(sampleFileSize, archive.GetLoadFileDataAsync(sampleFile).Result.Length);
     }
 }

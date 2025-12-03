@@ -57,9 +57,9 @@ public class Binary_Gsc : IHaveMetaInfo {
 public unsafe class Binary_IW : ArcBinary<Binary_IW> {
     CascContext casc;
 
-    //class XSUB_PakFile : BinaryPakFile
+    //class XSUB_Archive : BinaryArchive
     //{
-    //    public XSUB_PakFile(FamilyGame game, IFileSystem fileSystem, string filePath, object tag = null) : base(game, fileSystem, filePath, Instance, tag) { Open(); }
+    //    public XSUB_Archive(FamilyGame game, IFileSystem fileSystem, string filePath, object tag = null) : base(game, fileSystem, filePath, Instance, tag) { Open(); }
     //}
 
     enum Magic {
@@ -295,8 +295,8 @@ public unsafe class Binary_IW : ArcBinary<Binary_IW> {
                     source.UseReader = false;
                     source.Magic = (int)Magic.IWD;
 
-                    var pak = (ZipFile)(source.Tag = new ZipFile(r.BaseStream));
-                    foreach (ZipEntry entry in pak)
+                    var arc = (ZipFile)(source.Tag = new ZipFile(r.BaseStream));
+                    foreach (ZipEntry entry in arc)
                         if (entry.Size != 0)
                             files.Add(new FileSource {
                                 Path = entry.Name.Replace('\\', '/'),
@@ -385,10 +385,10 @@ public unsafe class Binary_IW : ArcBinary<Binary_IW> {
             case Magic.CASC:
                 return Task.FromResult(casc.ReadData(file));
             case Magic.IWD:
-                var pak = (ZipFile)source.Tag;
+                var arc = (ZipFile)source.Tag;
                 var entry = (ZipEntry)file.Tag;
                 try {
-                    using var input = pak.GetInputStream(entry);
+                    using var input = arc.GetInputStream(entry);
                     if (!input.CanRead) { HandleException(file, option, $"Unable to read stream for file: {file.Path}"); return Task.FromResult(System.IO.Stream.Null); }
                     var s = new MemoryStream();
                     input.CopyTo(s);

@@ -2,19 +2,19 @@ import os
 from io import BytesIO
 from enum import Enum
 from openstk import IWriteToStream
-from gamex import FileSource, PakBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo, DesSer
+from gamex import FileSource, ArcBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo, DesSer
 from gamex.core.formats.compression import decompressLz4, decompressZlib
 from gamex.families.Bethesda.formats.records import FormType, Header
 
 # typedefs
 class Reader: pass
-class PakFile: pass
-class BinaryPakFile: pass
+class Archive: pass
+class BinaryArchive: pass
 
 #region Binary_Ba2
 
 # Binary_Ba2
-class Binary_Ba2(PakBinaryT):
+class Binary_Ba2(ArcBinaryT):
 
     #region Headers : TES5
 
@@ -94,7 +94,7 @@ class Binary_Ba2(PakBinaryT):
     #endregion
 
     # read
-    def read(self, source: BinaryPakFile, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
         source.magic = magic = r.readUInt32()
 
         # Fallout 4 - Starfield
@@ -151,7 +151,7 @@ class Binary_Ba2(PakBinaryT):
                 for file in files: file.path = path
 
     # readData
-    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
         r.seek(file.offset)
 
         # General BA2 Format
@@ -175,7 +175,7 @@ class Binary_Ba2(PakBinaryT):
 #region Binary_Bsa
 
 # Binary_Bsa
-class Binary_Bsa(PakBinaryT):
+class Binary_Bsa(ArcBinaryT):
 
     #region Headers : TES4
 
@@ -251,7 +251,7 @@ class Binary_Bsa(PakBinaryT):
     #endregion
 
     # read
-    def read(self, source: BinaryPakFile, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
         files: list[FileSource]
         magic = source.magic = r.readUInt32()
 
@@ -326,7 +326,7 @@ class Binary_Bsa(PakBinaryT):
         else: raise Exception('BAD MAGIC')
     
     # readData
-    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
         # position
         fileSize = file.fileSize
         r.seek(file.offset)
@@ -353,7 +353,7 @@ class Binary_Bsa(PakBinaryT):
 class RecordGroup: pass
 
 # Binary_Esm
-class Binary_Esm(PakBinaryT):
+class Binary_Esm(ArcBinaryT):
     RecordHeaderSizeInBytes: int = 16
     format: FormType
     groups: dict[FormType, RecordGroup]
@@ -372,10 +372,10 @@ class Binary_Esm(PakBinaryT):
             case _: raise Exception(f'Unknown: {game}')
 
     # read
-    def read(self, source: BinaryPakFile, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
         format = self.getFormat(source.game.id)
         recordLevel = 1
-        filePath = source.pakPath
+        filePath = source.arcPath
         poolAction = None #(GenericPoolAction<BinaryReader>)source.GetReader().Action; //: Leak
         rootHeader = Header(r, format, None)
         rootRecord = rootHeader.createRecord(rootHeader.position, recordLevel)

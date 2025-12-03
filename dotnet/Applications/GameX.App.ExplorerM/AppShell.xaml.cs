@@ -14,9 +14,9 @@ public partial class AppShell : Shell {
         return 0;
     }
 
-    internal int StartupOpen(Family family, IEnumerable<Uri> pakUris, string path = null) {
+    internal int StartupOpen(Family family, IEnumerable<Uri> uris, string path = null) {
         var p = MainPage.Current;
-        p.Open(family, pakUris, path);
+        p.Open(family, uris, path);
         return 0;
     }
 }

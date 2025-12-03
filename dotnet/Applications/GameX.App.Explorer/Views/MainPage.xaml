@@ -19,7 +19,7 @@
         </Grid.ColumnDefinitions>
         <Grid.Resources>
             <DataTemplate x:Key="TFileExplorer" DataType="{x:Type views:MainPageTab}">
-                <views:FileExplorer PakFile="{Binding Content.PakFile, RelativeSource={RelativeSource TemplatedParent}}" Margin="0,0,10,10" />
+                <views:FileExplorer Archive="{Binding Content.Archive, RelativeSource={RelativeSource TemplatedParent}}" Margin="0,0,10,10" />
             </DataTemplate>
             <DataTemplate x:Key="TAppList" DataType="{x:Type views:MainPageTab}">
                 <StackPanel Orientation="Vertical">
@@ -78,7 +78,7 @@
                                     <DataTrigger Binding="{Binding AppList}" Value="{x:Null}">
                                         <Setter Property="ContentTemplate" Value="{StaticResource TFileExplorer}" />
                                     </DataTrigger>
-                                    <DataTrigger Binding="{Binding PakFile}" Value="{x:Null}">
+                                    <DataTrigger Binding="{Binding Archive}" Value="{x:Null}">
                                         <Setter Property="ContentTemplate" Value="{StaticResource TTextBlock}" />
                                     </DataTrigger>
                                 </Style.Triggers>

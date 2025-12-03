@@ -8,7 +8,7 @@ from PyQt6 import QtCore, QtMultimedia
 from widgets.HexViewWidget import HexViewWidget
 from widgets.OpenWidget import OpenWidget
 from widgets.SaveFileWidget import SaveFileWidget
-from gamex import Family, PakFile, util
+from gamex import Family, Archive, util
 
 # https://doc.qt.io/qt-6/qtreeview.html
 
@@ -66,33 +66,33 @@ class FileExplorer(QWidget):
         self.load_empty_table()
         self.initUI()
         # ready
-        pakFile = tab.pakFile
-        self.nodes = pakFile.getMetaItems(self.resource)
-        self.load_dir(tab.pakFile)
+        archive = tab.archive
+        self.nodes = archive.getMetaItems(self.resource)
+        self.load_dir(tab.archive)
 
     def load_empty_table(self):
-        self.pakFile = None
+        self.archive = None
         self.filetree = self.genFileTree(None)
         self.curPath = []
 
-    def load_dir(self, pakFile):
-        self.pakFile = pakFile
-        self.filetree = self.genFileTree(self.pakFile)
+    def load_dir(self, archive):
+        self.archive = archive
+        self.filetree = self.genFileTree(self.archive)
         self.curPath = []
         self.updateTable()
 
-    def genFileTree(self, pakFile):
+    def genFileTree(self, archive):
         ftree = {'folders':{}, 'files':{}}
-        if not pakFile: return ftree
-        for f in pakFile.files:
+        if not archive: return ftree
+        for f in archive.files:
             path = f.path.replace('\\', '/').split('/')
             toptree = ftree
             for sp in path[:-1]:
                 if sp not in toptree['folders']:
                     toptree['folders'][sp] = {'folders':{}, 'files':{}}
                 toptree = toptree['folders'][sp]
-            if f.pak and f.pak.status == PakFile.PakStatus.Opened:
-                stree = self.genFileTree(f.pak)
+            if f.arc and f.arc.status == Archive.ArcStatus.Opened:
+                stree = self.genFileTree(f.arc)
                 toptree['folders'][path[-1]] = stree
             else: toptree['files'][path[-1]] = f
         return ftree
@@ -230,12 +230,12 @@ class FileExplorer(QWidget):
 
     def setSelectedItem(self, value):
         item = value.file_data
-        pak = item.pak
-        if pak:
-            if pak.status == PakFile.PakStatus.Opened: return
+        arc = item.arc
+        if arc:
+            if arc.status == Archive.ArcStatus.Opened: return
             # open pakfile
-            pak.open()
-            self.filetree = self.genFileTree(self.pakFile)
+            arc.open()
+            self.filetree = self.genFileTree(self.archive)
             self.updateTable()
         # item
         size = item.fileSize
@@ -244,7 +244,7 @@ class FileExplorer(QWidget):
 
     def show_hexview_for_item(self, item, force_type=None):
         size = item.file_data.fileSize
-        data = self.pakFile.loadFileData(item.file_data)
+        data = self.archive.getData(item.file_data)
         if not data: return
         w = HexViewWidget(self.parent)
         w.viewFile(item.text, data.read(), size, force_type)

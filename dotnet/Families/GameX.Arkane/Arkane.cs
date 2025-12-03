@@ -12,31 +12,31 @@ using System.Threading.Tasks;
 namespace GameX.Arkane;
 
 /// <summary>
-/// ArkanePakFile
+/// ArkaneArchive
 /// </summary>
-/// <seealso cref="GameEstate.Formats.BinaryPakFile" />
-public class ArkanePakFile : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+/// <seealso cref="GameEstate.Formats.BinaryArchive" />
+public class ArkaneArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="Arkane" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public ArkanePakFile(ArchiveState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
-        ObjectFactoryFunc = state.Game.Engine.n switch {
-            "CryEngine" => Crytek.CrytekPakFile.ObjectFactory,
-            "Unreal" => Epic.EpicPakFile.ObjectFactory,
-            "Source" => Valve.ValvePakFile.ObjectFactory,
-            "idTech" => ID.IDPakFile.ObjectFactory,
-            _ => ObjectFactory,
+    public ArkaneArchive(ArchiveState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+        AssetFactoryFunc = state.Game.Engine.n switch {
+            "CryEngine" => Crytek.CrytekArchive.AssetFactory,
+            "Unreal" => Epic.EpicArchive.AssetFactory,
+            "Source" => Valve.ValveArchive.AssetFactory,
+            "idTech" => ID.IDArchive.AssetFactory,
+            _ => AssetFactory,
         };
         UseFileId = true;
     }
 
     #region Factories
 
-    static readonly ConcurrentDictionary<string, ArcBinary> PakBinarys = new();
+    static readonly ConcurrentDictionary<string, ArcBinary> ArcBinarys = new();
 
-    static ArcBinary GetPakBinary(FamilyGame game, string extension)
-        => PakBinarys.GetOrAdd(game.Id, _ => game.Engine.n switch {
+    static ArcBinary GetArcBinary(FamilyGame game, string extension)
+        => ArcBinarys.GetOrAdd(game.Id, _ => game.Engine.n switch {
             "Danae" => Binary_Danae.Current,
             "Void" => Binary_Void.Current,
             "CryEngine" => Crytek.Formats.Binary_Cry3.Current,
@@ -46,7 +46,7 @@ public class ArkanePakFile : BinaryAsset, ITransformAsset<IUnknownFileModel> {
             _ => throw new ArgumentOutOfRangeException(nameof(game.Engine)),
         });
 
-    internal static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    internal static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) AssetFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             ".asl" => (0, Binary_Txt.Factory),
             // Danae (AF)
@@ -56,15 +56,15 @@ public class ArkanePakFile : BinaryAsset, ITransformAsset<IUnknownFileModel> {
             //
             //".llf" => (0, Binary_Flt.Factory),
             //".dlf" => (0, Binary_Flt.Factory),
-            _ => UnknownPakFile.ObjectFactory(source, game),
+            _ => UnknownArchive.AssetFactory(source, game),
         };
 
     #endregion
 
     #region Transforms
 
-    bool ITransformAsset<IUnknownFileModel>.CanTransformAsset(Archive transformTo, object source) => UnknownTransform.CanTransformFileObject(this, transformTo, source);
-    Task<IUnknownFileModel> ITransformAsset<IUnknownFileModel>.TransformAsset(Archive transformTo, object source) => UnknownTransform.TransformFileObjectAsync(this, transformTo, source);
+    bool ITransformAsset<IUnknownFileModel>.CanTransformAsset(Archive transformTo, object source) => UnknownTransform.CanTransformAsset(this, transformTo, source);
+    Task<IUnknownFileModel> ITransformAsset<IUnknownFileModel>.TransformAsset(Archive transformTo, object source) => UnknownTransform.TransformAsset(this, transformTo, source);
 
     #endregion
 }

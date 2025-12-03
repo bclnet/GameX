@@ -3,12 +3,12 @@ from io import BytesIO
 from enum import Enum
 from datetime import datetime
 from openstk import Reader, unsafe
-from gamex import FileSource, PakBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo, DesSer
+from gamex import FileSource, ArcBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo, DesSer
 from gamex.core.formats.compression import decompressZlibStream, decompressZlib
 
 # typedefs
-class PakFile: pass
-class BinaryPakFile: pass
+class Archive: pass
+class BinaryArchive: pass
 
 #region Binary_Mpk
 
@@ -20,7 +20,7 @@ class Binary_Crf:
 #region Binary_Mpk
 
 # Binary_Mpk
-class Binary_Mpk(PakBinaryT):
+class Binary_Mpk(ArcBinaryT):
 
     #region Headers
 
@@ -40,7 +40,7 @@ class Binary_Mpk(PakBinaryT):
     #endregion
 
     # read
-    def read(self, source: BinaryPakFile, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
         magic = r.readUInt32()
         if magic != self.MAGIC: raise Exception('BAD MAGIC')
         r.seek(21)
@@ -56,7 +56,7 @@ class Binary_Mpk(PakBinaryT):
         ) for f in s.readSArray(self.MPK_File, len(files) // 284)]
 
     # readData
-    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
         r.seek(file.offset)
         return BytesIO(decompressZlib(r, file.packedSize, file.fileSize))
 

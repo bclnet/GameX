@@ -9,7 +9,7 @@
   ],
   "games": {
     "*": {
-      "pakFileType": "GameX.Rockstar.RockstarPakFile, GameX.Rockstar"
+      "archiveType": "GameX.Rockstar.RockstarArchive, GameX.Rockstar"
     },
     "GTA": {
       "name": "Grand Theft Auto",

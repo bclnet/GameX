@@ -6,6 +6,7 @@ using static GameX.Epic.Formats.Core.ReaderExtensions;
 using static GameX.Epic.Formats.Core.UDecrypt;
 using static GameX.Epic.Formats.Core.UPackage;
 using static GameX.Formats.Compression;
+#pragma warning disable CS0169, CS0649
 
 namespace GameX.Epic.Formats.Core;
 
@@ -233,7 +234,7 @@ class RocketLeagueStream : Stream {
         int EncryptedOffset = StartOffset - BlockStartOffset;
 
         // Decrypt and copy
-        throw new NotImplementedException();
+        // throw new NotImplementedException();
         //byte* EncryptedBuffer = (byte*)(appMalloc(EncryptedSize));
         //Reader->Seek(EncryptionStart + BlockStartOffset);
         //Reader->Serialize(EncryptedBuffer, EncryptedSize);

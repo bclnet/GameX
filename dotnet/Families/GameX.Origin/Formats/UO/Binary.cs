@@ -1923,17 +1923,17 @@ public unsafe class Binary_Verdata : IHaveMetaInfo {
 
     #endregion
 
-    public BinaryAsset PakFile;
+    public BinaryAsset Archive;
     public IDictionary<int, Patch[]> Patches = new Dictionary<int, Patch[]>();
 
     // file: verdata.mul
     public Binary_Verdata(BinaryReader r, BinaryAsset s) {
-        PakFile = s;
+        Archive = s;
         Patches = r.ReadL32SArray<Patch>().GroupBy(x => x.File).ToDictionary(x => x.Key, x => x.ToArray());
         Current = this;
     }
 
-    public Stream ReadData(long offset, int fileSize) => PakFile.ReaderT(r => new MemoryStream(r.Seek(offset).ReadBytes(fileSize)));
+    public Stream ReadData(long offset, int fileSize) => Archive.ReaderT(r => new MemoryStream(r.Seek(offset).ReadBytes(fileSize)));
 
     public override string ToString() => this.Serialize();
 

@@ -3,7 +3,7 @@
   "url": "https://en.wikipedia.org/wiki/Nintendo_Entertainment_Planning_%26_Development",
   "games": {
     "*": {
-      "pakFileType": "GameX.Nintendo.NintendoPakFile, GameX.Nintendo"
+      "archiveType": "GameX.Nintendo.NintendoArchive, GameX.Nintendo"
     },
     "Z:TFH": {
       "name": "The Legend of Zelda: Tri Force Heroes",

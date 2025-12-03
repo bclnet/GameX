@@ -2,20 +2,20 @@ import os
 from io import BytesIO
 from enum import Enum
 from openstk import IWriteToStream
-from gamex import FileSource, PakBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo, DesSer
+from gamex import FileSource, ArcBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo, DesSer
 from gamex.families.Gamebryo.formats.nif import NiReader
 
 # typedefs
 class Reader: pass
-class PakFile: pass
-class BinaryPakFile: pass
+class Archive: pass
+class BinaryArchive: pass
 
 #region Binary_Nif
 
 # Binary_Nif
 class Binary_Nif(NiReader, IHaveMetaInfo, IWriteToStream):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_Nif(r, f)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Nif(r, f)
 
     def __init__(self, r: Reader, f: FileSource):
         super().__init__(r)

@@ -4,11 +4,11 @@ using System;
 namespace GameX.ID.Games.Q;
 
 public static class Database {
-    public static Archive PakFile;
+    public static Archive Archive;
 
     internal static void Loaded(FamilyGame game) {
-        PakFile = game.Family.OpenArchive(new Uri("game:/#Q"));
-        PakFile.GetAsset<Binary_Lmp>("PAK0.PAK:gfx/palette.lmp");
-        PakFile.GetAsset<Binary_Lmp>("PAK0.PAK:gfx/colormap.lmp");
+        Archive = game.Family.OpenArchive(new Uri("game:/#Q"));
+        Archive.GetAsset<Binary_Lmp>("PAK0.PAK:gfx/palette.lmp");
+        Archive.GetAsset<Binary_Lmp>("PAK0.PAK:gfx/colormap.lmp");
     }
 }

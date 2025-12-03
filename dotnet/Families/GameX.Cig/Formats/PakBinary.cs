@@ -14,19 +14,19 @@ namespace GameX.Cig.Formats;
 public class PakBinary_P4k : ArcBinary<PakBinary_P4k> {
     readonly byte[] Key = [0x5E, 0x7A, 0x20, 0x02, 0x30, 0x2E, 0xEB, 0x1A, 0x3B, 0xB6, 0x17, 0xC3, 0x0F, 0xDE, 0x1E, 0x47];
 
-    protected class SubPakFileP4k : BinaryAsset {
-        P4kFile Pak;
+    protected class SubArchiveP4k : BinaryAsset {
+        P4kFile Arc;
 
-        public SubPakFileP4k(BinaryAsset source, P4kFile pak, string path, object tag) : base(new ArchiveState(source.Vfx, source.Game, source.Edition, path, tag), Current) {
-            Pak = pak;
-            ObjectFactoryFunc = source.ObjectFactoryFunc;
+        public SubArchiveP4k(BinaryAsset source, P4kFile arc, string path, object tag) : base(new ArchiveState(source.Vfx, source.Game, source.Edition, path, tag), Current) {
+            Arc = arc;
+            AssetFactoryFunc = source.AssetFactoryFunc;
             UseReader = false;
             //Open();
         }
 
         public async override Task Read(object tag) {
             var entry = (P4kEntry)Tag;
-            var stream = Pak.GetInputStream(entry.ZipFileIndex);
+            var stream = Arc.GetInputStream(entry.ZipFileIndex);
             using var r2 = new BinaryReader(stream);
             await ArcBinary.Read(this, r2, tag);
         }
@@ -36,10 +36,10 @@ public class PakBinary_P4k : ArcBinary<PakBinary_P4k> {
         source.UseReader = false;
         var files = source.Files = new List<FileSource>();
 
-        var pak = (P4kFile)(source.Tag = new P4kFile(r.BaseStream, Key));
+        var arc = (P4kFile)(source.Tag = new P4kFile(r.BaseStream, Key));
         var parentByPath = new Dictionary<string, FileSource>();
         var partsByPath = new Dictionary<string, SortedList<string, FileSource>>();
-        foreach (ZipEntry entry in pak) {
+        foreach (ZipEntry entry in arc) {
             var metadata = new FileSource {
                 Path = entry.Name.Replace('\\', '/'),
                 Flags = entry.Flags,
@@ -48,7 +48,7 @@ public class PakBinary_P4k : ArcBinary<PakBinary_P4k> {
                 Tag = entry,
             };
             var metadataPath = metadata.Path;
-            if (metadataPath.EndsWith(".pak", StringComparison.OrdinalIgnoreCase) || metadataPath.EndsWith(".socpak", StringComparison.OrdinalIgnoreCase)) metadata.Arc = new SubPakFileP4k(source, pak, metadataPath, metadata.Tag);
+            if (metadataPath.EndsWith(".arc", StringComparison.OrdinalIgnoreCase) || metadataPath.EndsWith(".socpak", StringComparison.OrdinalIgnoreCase)) metadata.Arc = new SubArchiveP4k(source, arc, metadataPath, metadata.Tag);
             else if (metadataPath.EndsWith(".dds", StringComparison.OrdinalIgnoreCase) || metadataPath.EndsWith(".dds.a", StringComparison.OrdinalIgnoreCase)) parentByPath.Add(metadataPath, metadata);
             else if (metadataPath.Length > 8 && metadataPath[^8..].Contains(".dds.", StringComparison.OrdinalIgnoreCase)) {
                 var parentPath = metadataPath[..(metadataPath.IndexOf(".dds", StringComparison.OrdinalIgnoreCase) + 4)];
@@ -68,17 +68,17 @@ public class PakBinary_P4k : ArcBinary<PakBinary_P4k> {
     }
 
     public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
-        var pak = (P4kFile)source.Tag;
+        var arc = (P4kFile)source.Tag;
         var entry = (ZipEntry)file.Tag;
         try {
-            using var input = pak.GetInputStream(entry.ZipFileIndex);
+            using var input = arc.GetInputStream(entry.ZipFileIndex);
             if (!input.CanRead) { HandleException(file, option, $"Unable to read stream for file: {file.Path}"); return Task.FromResult(System.IO.Stream.Null); }
             var s = new MemoryStream();
             input.CopyTo(s);
             if (file.Parts != null)
                 foreach (var part in file.Parts.Reverse()) {
                     var entry2 = (ZipEntry)part.Tag;
-                    using var input2 = pak.GetInputStream(entry2.ZipFileIndex);
+                    using var input2 = arc.GetInputStream(entry2.ZipFileIndex);
                     if (!input2.CanRead) { HandleException(file, option, $"Unable to read stream for file: {part.Path}"); return Task.FromResult(System.IO.Stream.Null); }
                     input2.CopyTo(s);
                 }
@@ -94,27 +94,27 @@ public class PakBinary_P4k : ArcBinary<PakBinary_P4k> {
         source.UseReader = false;
         var files = source.Files;
 
-        var pak = (P4kFile)(source.Tag = new P4kFile(w.BaseStream, Key));
-        pak.BeginUpdate();
+        var arc = (P4kFile)(source.Tag = new P4kFile(w.BaseStream, Key));
+        arc.BeginUpdate();
         foreach (var file in files) {
             var entry = (ZipEntry)(file.Tag = new ZipEntry(Path.GetFileName(file.Path)));
-            pak.Add(entry);
+            arc.Add(entry);
             source.ArcBinary.WriteData(source, w, file, null);
         }
-        pak.CommitUpdate();
+        arc.CommitUpdate();
         return Task.CompletedTask;
     }
 
     public override Task WriteData(BinaryAsset source, BinaryWriter w, FileSource file, Stream data, object option = default) {
-        var pak = (P4kFile)source.Tag;
+        var arc = (P4kFile)source.Tag;
         var entry = (ZipEntry)file.Tag;
         try {
-            using var s = pak.GetInputStream(entry);
+            using var s = arc.GetInputStream(entry);
             data.CopyTo(s);
             if (file.Parts != null)
                 foreach (var part in file.Parts.Reverse()) {
                     var entry2 = (ZipEntry)part.Tag;
-                    using var s2 = pak.GetInputStream(entry);
+                    using var s2 = arc.GetInputStream(entry);
                     data.CopyTo(s2);
                 }
         }

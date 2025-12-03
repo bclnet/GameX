@@ -13,14 +13,14 @@
   },
   "games": {
     "*": {
-      "pakFileType": "GameX.Bethesda.BethesdaPakFile, GameX.Bethesda"
+      "archiveType": "GameX.Bethesda.BethesdaArchive, GameX.Bethesda"
     },
     "Morrowind": {
       "gameType": "GameX.Bethesda.MorrowindGame, GameX.Bethesda",
       "name": "The Elder Scrolls III: Morrowind",
       "url": "https://store.steampowered.com/app/22320/The_Elder_Scrolls_III_Morrowind_Game_of_the_Year_Edition/",
       "date": "2002-04-29",
-      "pakExt": [
+      "arcExt": [
         ".bsa",
         ".esm"
       ],
@@ -55,9 +55,9 @@
         "https://en.wikipedia.org/wiki/The_Elder_Scrolls_IV:_Oblivion"
       ],
       "date": "2007-09-11",
-      "pakExt": ".bsa",
+      "arcExt": ".bsa",
       "datExt": ".esm",
-      "pak": "game:/Oblivion*.bsa",
+      "arc": "game:/Oblivion*.bsa",
       "pakx": "game:/Oblivion - Meshes.bsa",
       "dat": "game:/Oblivion.esm",
       "files": {
@@ -74,9 +74,9 @@
       "name": "Fallout 3",
       "url": "https://store.steampowered.com/app/22370/Fallout_3_Game_of_the_Year_Edition/",
       "date": "2009-10-13",
-      "pakExt": ".bsa",
+      "arcExt": ".bsa",
       "datExt": ".esm",
-      "pak": "game:/Fallout*.bsa",
+      "arc": "game:/Fallout*.bsa",
       "dat": "game:/Fallout3.esm",
       "files": {
         "key": [
@@ -92,9 +92,9 @@
       "name": "Fallout New Vegas",
       "url": "https://store.steampowered.com/app/22380/Fallout_New_Vegas/",
       "date": "2010-10-19",
-      "pakExt": ".bsa",
+      "arcExt": ".bsa",
       "datExt": ".esm",
-      "pak": "game:/Fallout*.bsa",
+      "arc": "game:/Fallout*.bsa",
       "dat": "game:/FalloutNV.esm",
       "files": {
         "key": [
@@ -110,9 +110,9 @@
       "name": "The Elder Scrolls V: Skyrim",
       "url": "https://store.steampowered.com/app/72850/The_Elder_Scrolls_V_Skyrim/",
       "date": "2011-11-10",
-      "pakExt": ".bsa",
+      "arcExt": ".bsa",
       "datExt": ".esm",
-      "pak": "game:/Skyrim*.bsa",
+      "arc": "game:/Skyrim*.bsa",
       "dat": "game:/Skyrim.esm",
       "files": {
         "reg": [
@@ -128,9 +128,9 @@
       "name": "Fallout 4",
       "url": "https://store.steampowered.com/app/377160/Fallout_4/",
       "date": "2015-11-09",
-      "pakExt": ".ba2",
+      "arcExt": ".ba2",
       "datExt": ".esm",
-      "pak": "game:/Fallout4*.ba2",
+      "arc": "game:/Fallout4*.ba2",
       "dat": "game:/Fallout4.esm",
       "files": {
         "key": [
@@ -146,9 +146,9 @@
       "name": "The Elder Scrolls V: Skyrim - Special Edition",
       "url": "https://store.steampowered.com/app/489830/The_Elder_Scrolls_V_Skyrim_Special_Edition/",
       "date": "2016-10-27",
-      "pakExt": ".bsa",
+      "arcExt": ".bsa",
       "datExt": ".esm",
-      "pak": "game:/Skyrim*.bsa",
+      "arc": "game:/Skyrim*.bsa",
       "dat": "game:/Skyrim.esm",
       "files": {
         "key": [
@@ -177,9 +177,9 @@
       "name": "Fallout 4 VR",
       "url": "https://store.steampowered.com/app/611660/Fallout_4_VR/",
       "date": "2017-12-11",
-      "pakExt": ".ba2",
+      "arcExt": ".ba2",
       "datExt": ".esm",
-      "pak": "game:/Fallout4*.ba2",
+      "arc": "game:/Fallout4*.ba2",
       "dat": "game:/Fallout4.esm",
       "files": {
         "key": [
@@ -195,9 +195,9 @@
       "name": "The Elder Scrolls V: Skyrim VR",
       "url": "https://store.steampowered.com/app/611670/The_Elder_Scrolls_V_Skyrim_VR/",
       "date": "2018-04-02",
-      "pakExt": ".bsa",
+      "arcExt": ".bsa",
       "datExt": ".esm",
-      "pak": "game:/Skyrim*.bsa",
+      "arc": "game:/Skyrim*.bsa",
       "dat": "game:/Skyrim.esm",
       "files": {
         "key": [
@@ -213,9 +213,9 @@
       "name": "Fallout 76",
       "url": "https://store.steampowered.com/app/1151340/Fallout_76/",
       "date": "2020-04-14",
-      "pakExt": ".ba2",
+      "arcExt": ".ba2",
       "datExt": ".esm",
-      "pak": "game:/SeventySix.ba2",
+      "arc": "game:/SeventySix.ba2",
       "dat": "game:/SeventySix.esm",
       "files": {
         "key": [
@@ -235,9 +235,9 @@
       "name": "Starfield",
       "url": "https://store.steampowered.com/app/1716740/Starfield/",
       "date": "2023-09-05",
-      "pakExt": ".ba2",
+      "arcExt": ".ba2",
       "datExt": ".esm",
-      "pak": "game:/Starfield*.ba2",
+      "arc": "game:/Starfield*.ba2",
       "dat": "game:/Starfield.esm",
       "files": {
         "key": [
@@ -260,7 +260,7 @@
         "https://en.wikipedia.org/wiki/The_Elder_Scrolls_IV:_Oblivion_Remastered"
       ],
       "date": "2025-04-22",
-      "pakExt": ".bsa",
+      "arcExt": ".bsa",
       "datExt": ".esm",
       "zpak": "game:/Oblivion*.bsa",
       "zpakx": "game:/Oblivion - Meshes.bsa",

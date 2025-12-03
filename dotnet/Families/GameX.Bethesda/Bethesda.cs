@@ -34,16 +34,16 @@ public class MorrowindGame(Family family, string id, JsonElement elem, FamilyGam
 }
 
 /// <summary>
-/// BethesdaPakFile
+/// BethesdaArchive
 /// </summary>
-/// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class BethesdaPakFile : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+/// <seealso cref="GameX.Formats.BinaryArchive" />
+public class BethesdaArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
     /// <summary>
-    /// Initializes a new instance of the <see cref="BethesdaPakFile" /> class.
+    /// Initializes a new instance of the <see cref="BethesdaArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public BethesdaPakFile(ArchiveState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
-        ObjectFactoryFunc = ObjectFactory;
+    public BethesdaArchive(ArchiveState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+        AssetFactoryFunc = AssetFactory;
         PathFinders.Add(typeof(ITexture), FindTexture);
     }
 
@@ -61,14 +61,14 @@ public class BethesdaPakFile : BinaryAsset, ITransformAsset<IUnknownFileModel> {
         else if (Contains(p = $"{texturePathWithoutExtension}.dds")) return p;
         else if (Contains(p = $"{textureNameInTexturesDir}.tga")) return p;
         else if (Contains(p = $"{texturePathWithoutExtension}.tga")) return p;
-        else { Log.Info($"Could not find file '{p}' in A PAK file."); return null; }
+        else { Log.Info($"Could not find file '{p}' in an arc file."); return null; }
     }
 
     #endregion
 
     #region Factories
 
-    static ArcBinary GetPakBinary(FamilyGame game, string extension)
+    static ArcBinary GetArcBinary(FamilyGame game, string extension)
         => extension switch {
             "" => null,
             ".bsa" => Binary_Bsa.Current,
@@ -77,18 +77,18 @@ public class BethesdaPakFile : BinaryAsset, ITransformAsset<IUnknownFileModel> {
             _ => throw new ArgumentOutOfRangeException(nameof(extension)),
         };
 
-    static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) AssetFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             ".nif" => (FileOption.StreamObject, Binary_Nif.Factory),
-            _ => UnknownPakFile.ObjectFactory(source, game),
+            _ => UnknownArchive.AssetFactory(source, game),
         };
 
     #endregion
 
     #region Transforms
 
-    bool ITransformAsset<IUnknownFileModel>.CanTransformAsset(Archive transformTo, object source) => UnknownTransform.CanTransformFileObject(this, transformTo, source);
-    Task<IUnknownFileModel> ITransformAsset<IUnknownFileModel>.TransformAsset(Archive transformTo, object source) => UnknownTransform.TransformFileObjectAsync(this, transformTo, source);
+    bool ITransformAsset<IUnknownFileModel>.CanTransformAsset(Archive transformTo, object source) => UnknownTransform.CanTransformAsset(this, transformTo, source);
+    Task<IUnknownFileModel> ITransformAsset<IUnknownFileModel>.TransformAsset(Archive transformTo, object source) => UnknownTransform.TransformAsset(this, transformTo, source);
 
     #endregion
 }

@@ -11,8 +11,8 @@ public static class S {
     static S() {
         var assembly = typeof(S).Assembly;
         var s = assembly.GetManifestResourceStream("GameX.Resource.Bullfrog.S.zip");
-        var pak = new ZipArchive(s, ZipArchiveMode.Read);
-        Entries = pak.Entries.ToDictionary(x => x.Name, x => x);
+        var arc = new ZipArchive(s, ZipArchiveMode.Read);
+        Entries = arc.Entries.ToDictionary(x => x.Name, x => x);
     }
 
     public struct Event {

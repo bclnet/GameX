@@ -27,7 +27,7 @@ public partial class FamilyManager {
     /// </summary>
     public enum SearchBy {
         Default,
-        Pak,
+        Arc,
         TopDir,
         TwoDir,
         DirDown,
@@ -1037,7 +1037,7 @@ public class FamilyGame {
         Urls = _list(elem, "url", x => new Uri(x));
         Date = _valueF(elem, "date", z => DateTime.Parse(z.GetString()));
         //Option = _value(elem, "option", z => Enum.TryParse<GameOption>(z.GetString(), true, out var zT) ? zT : throw new ArgumentOutOfRangeException("option", $"Unknown option: {z}"), dgame.Option);
-        Arcs = _list(elem, "pak", x => new Uri(x), dgame.Arcs);
+        Arcs = _list(elem, "arc", x => new Uri(x), dgame.Arcs);
         Paths = _list(elem, "path", dgame.Paths);
         Key = _valueF(elem, "key", ParseKey, dgame.Key);
         //Status = _value(elem, "status");
@@ -1137,7 +1137,7 @@ public class FamilyGame {
         if (!string.IsNullOrEmpty(searchPattern)) return searchPattern;
         return SearchBy switch {
             SearchBy.Default => "",
-            SearchBy.Pak => ArcExts == null || ArcExts.Length == 0 ? ""
+            SearchBy.Arc => ArcExts == null || ArcExts.Length == 0 ? ""
                 : ArcExts.Length == 1 ? $"*{ArcExts[0]}" : $"(*{string.Join(":*", ArcExts)})",
             SearchBy.TopDir => "*",
             SearchBy.TwoDir => "*/*",
@@ -1156,26 +1156,25 @@ public class FamilyGame {
     /// <param name="throwOnError">Throws on error.</param>
     /// <returns></returns>
     internal Archive CreateArchive(FileSystem vfx, Edition edition, string searchPattern, bool throwOnError) {
-        if (vfx is NetworkFileSystem k) throw new NotImplementedException($"{k}"); //return new StreamPakFile(family.FileManager.HostFactory, game, path, vfx),
+        if (vfx is NetworkFileSystem k) throw new NotImplementedException($"{k}"); //return new StreamArchive(family.FileManager.HostFactory, game, path, vfx),
         searchPattern = CreateSearchPatterns(searchPattern);
-        var pakFiles = new List<Archive>();
+        var archives = new List<Archive>();
         var dlcKeys = Dlcs.Where(x => !string.IsNullOrEmpty(x.Value.Path)).Select(x => x.Key).ToArray();
         var slash = '\\';
         foreach (var key in (new string[] { null }).Concat(dlcKeys))
             foreach (var p in FindPaths(vfx, edition, key != null ? Dlcs[key] : null, searchPattern))
                 switch (SearchBy) {
-                    case SearchBy.Pak:
+                    case SearchBy.Arc:
                         foreach (var path in p.paths)
-                            if (IsArcPath(path))
-                                pakFiles.Add(CreateArchiveObj(vfx, edition, path));
+                            if (IsArcPath(path)) archives.Add(CreateArchiveObj(vfx, edition, path));
                         break;
                     default:
-                        pakFiles.Add(CreateArchiveObj(vfx, edition,
+                        archives.Add(CreateArchiveObj(vfx, edition,
                             SearchBy == SearchBy.DirDown ? (p.root, p.paths.Where(x => x.Contains(slash)).ToArray())
                             : p));
                         break;
                 }
-        return (pakFiles.Count == 1 ? pakFiles[0] : CreateArchiveObj(vfx, edition, pakFiles))?.SetPlatform(PlatformX.Current);
+        return (archives.Count == 1 ? archives[0] : CreateArchiveObj(vfx, edition, archives))?.SetPlatform(PlatformX.Current);
     }
 
     /// <summary>
@@ -1211,7 +1210,7 @@ public class FamilyGame {
         => (Archive)Activator.CreateInstance(ArchiveType ?? throw new InvalidOperationException($"{Id} missing ArchiveType"), state);
 
     /// <summary>
-    /// Is pak file.
+    /// Is arc file.
     /// </summary>
     /// <param name="path">The path.</param>
     /// <returns></returns>
@@ -1251,9 +1250,9 @@ public partial class FamilyManager {
     /// </summary>
     public static readonly Family Unknown;
     /// <summary>
-    /// The Unknown pak file.
+    /// The Unknown arc file.
     /// </summary>
-    public static readonly Archive UnknownPakFile;
+    public static readonly Archive UnknownArchive;
 
     static readonly Func<string, Stream> GetManifestResourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream;
     static string FamilyJsonLoader(string path) {
@@ -1278,7 +1277,7 @@ public partial class FamilyManager {
 
         // load unknown
         Unknown = GetFamily("Unknown");
-        UnknownPakFile = Unknown.OpenArchive(new Uri("game:/#APP"), throwOnError: false);
+        UnknownArchive = Unknown.OpenArchive(new Uri("game:/#APP"), throwOnError: false);
     }
 
     /// <summary>

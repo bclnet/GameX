@@ -87,7 +87,7 @@ public unsafe class Binary_Bsp30 : PakBinary<Binary_Bsp30>
 
     #endregion
 
-    public override Task Read(BinaryPakFile source, BinaryReader r, object tag)
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag)
     {
         var files = source.Files = [];
 
@@ -121,7 +121,7 @@ public unsafe class Binary_Bsp30 : PakBinary<Binary_Bsp30>
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryPakFile source, BinaryReader r, FileSource file, object option = default)
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default)
     {
         r.Seek(file.Offset);
         return Task.FromResult<Stream>(new MemoryStream(r.ReadBytes((int)file.FileSize)));
@@ -149,11 +149,11 @@ public class Binary_Src : IDisposable, IHaveMetaInfo, Indirect<ITexture>, Indire
         else if (magicResourceVersion == KnownHeaderVersion) return Task.FromResult((object)new Binary_Src(r));
         //else if (magicResourceVersion == BinaryPak.KnownHeaderVersion)
         //{
-        //    var pak = new BinaryPak(r);
-        //    switch (pak.DataType)
+        //    var arc = new BinaryPak(r);
+        //    switch (arc.DataType)
         //    {
-        //        //case DATA.DataType.Mesh: return Task.FromResult((object)new DATAMesh(pak));
-        //        default: return Task.FromResult((object)pak);
+        //        //case DATA.DataType.Mesh: return Task.FromResult((object)new DATAMesh(arc));
+        //        default: return Task.FromResult((object)arc);
         //    }
         //}
         else return null;
@@ -1292,10 +1292,10 @@ public unsafe class Binary_Vpk : ArcBinary<Binary_Vpk> {
             return $"{Path.GetFileNameWithoutExtension(path)}{extension}";
         };
 
-        // pakPath
-        var pakPath = source.ArcPath;
-        var dirVpk = pakPath.EndsWith("_dir.vpk", StringComparison.OrdinalIgnoreCase);
-        if (dirVpk) pakPath = pakPath[..^8];
+        // arcPath
+        var arcPath = source.ArcPath;
+        var dirVpk = arcPath.EndsWith("_dir.vpk", StringComparison.OrdinalIgnoreCase);
+        if (dirVpk) arcPath = arcPath[..^8];
 
         // read header
         if (r.ReadUInt32() != MAGIC) throw new FormatException("BAD MAGIC");
@@ -1331,7 +1331,7 @@ public unsafe class Binary_Vpk : ArcBinary<Binary_Vpk> {
                     if (file.Data.Length > 0) r.Read(file.Data, 0, file.Data.Length);
                     if (file.Id != 0x7FFF) {
                         if (!dirVpk) throw new FormatException("Given VPK is not a _dir, but entry is referencing an external archive.");
-                        file.Tag = $"{pakPath}_{file.Id:D3}.vpk";
+                        file.Tag = $"{arcPath}_{file.Id:D3}.vpk";
                     }
                     else file.Tag = (long)(headerPosition + treeSize);
                     // add file
@@ -1358,7 +1358,7 @@ public unsafe class Binary_Vpk : ArcBinary<Binary_Vpk> {
         if (fileDataLength > 0) file.Data.CopyTo(data, 0);
         if (file.FileSize == 0) { }
         else if (file.Tag is long offset) { r.Seek(file.Offset + offset); r.Read(data, fileDataLength, (int)file.FileSize); }
-        else if (file.Tag is string pakPath) source.Reader(r2 => { r2.Seek(file.Offset); r2.Read(data, fileDataLength, (int)file.FileSize); }, pakPath);
+        else if (file.Tag is string arcPath) source.Reader(r2 => { r2.Seek(file.Offset); r2.Read(data, fileDataLength, (int)file.FileSize); }, arcPath);
         var actualChecksum = Crc32Digest.Compute(data);
         if (file.Hash != actualChecksum) throw new InvalidDataException($"CRC32 mismatch for read data (expected {file.Hash:X2}, got {actualChecksum:X2})");
         return Task.FromResult((Stream)new MemoryStream(data));

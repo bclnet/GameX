@@ -15,7 +15,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using ZipFile = ICSharpCode.SharpZipLib.Zip.ZipFile;
-
+#pragma warning disable CS9113
 
 namespace GameX.Formats;
 
@@ -1332,7 +1332,7 @@ public class Binary_Txt(BinaryReader r, int fileSize) : IHaveMetaInfo {
 public unsafe class Binary_Xga(BinaryReader r, object tag) : IHaveMetaInfo, ITexture {
     public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Xga(r, s.Tag));
 
-    readonly int Type;
+    readonly int Type = 1;
     readonly byte[] Body = r.ReadToEnd();
 
     #region ITexture
@@ -1379,8 +1379,8 @@ public class Binary_Zip(object key = null) : ArcBinary {
     static readonly PropertyInfo ZipFile_KeyProperty = typeof(ZipFile).GetProperty("Key", BindingFlags.NonPublic | BindingFlags.Instance);
 
     static readonly ArcBinary Instance = new Binary_Zip();
-    static readonly ConcurrentDictionary<object, ArcBinary> PakBinarys = new();
-    public static ArcBinary GetPakBinary(FamilyGame game) => game.Key == null ? Instance : PakBinarys.GetOrAdd(game.Key, x => new Binary_Zip(x));
+    static readonly ConcurrentDictionary<object, ArcBinary> ArcBinarys = new();
+    public static ArcBinary GetArcBinary(FamilyGame game) => game.Key == null ? Instance : ArcBinarys.GetOrAdd(game.Key, x => new Binary_Zip(x));
 
     readonly object Key = key;
     bool UseSystem => Key == null;
@@ -1388,9 +1388,9 @@ public class Binary_Zip(object key = null) : ArcBinary {
     public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         source.UseReader = false;
         if (UseSystem) {
-            ZipArchive pak;
-            source.Tag = pak = new ZipArchive(r.BaseStream, ZipArchiveMode.Read);
-            source.Files = [.. pak.Entries.Cast<ZipArchiveEntry>().Where(s => !s.FullName.EndsWith('/')).Select(s => new FileSource {
+            ZipArchive arc;
+            source.Tag = arc = new ZipArchive(r.BaseStream, ZipArchiveMode.Read);
+            source.Files = [.. arc.Entries.Cast<ZipArchiveEntry>().Where(s => !s.FullName.EndsWith('/')).Select(s => new FileSource {
                 Path = s.FullName.Replace('\\', '/'),
                 PackedSize = s.CompressedLength,
                 FileSize = s.Length,
@@ -1398,12 +1398,12 @@ public class Binary_Zip(object key = null) : ArcBinary {
             })];
         }
         else {
-            ZipFile pak;
-            source.Tag = pak = new ZipFile(r.BaseStream);
+            ZipFile arc;
+            source.Tag = arc = new ZipFile(r.BaseStream);
             if (Key == null) { }
-            else if (Key is string s) pak.Password = s;
-            else if (Key is byte[] z) ZipFile_KeyProperty.SetValue(pak, z);
-            source.Files = [.. pak.Cast<ZipEntry>().Where(s => s.IsFile).Select(s => new FileSource {
+            else if (Key is string s) arc.Password = s;
+            else if (Key is byte[] z) ZipFile_KeyProperty.SetValue(arc, z);
+            source.Files = [.. arc.Cast<ZipEntry>().Where(s => s.IsFile).Select(s => new FileSource {
                 Path = s.Name.Replace('\\', '/'),
                 Flags = s.IsCrypted ? 1 : 0,
                 PackedSize = s.CompressedSize,
@@ -1429,29 +1429,29 @@ public class Binary_Zip(object key = null) : ArcBinary {
         //catch (Exception e) { HandleException(file, option, $"{file.Path} - Exception: {e.Message}"); return Task.FromResult(System.IO.Stream.Null); }
     }
 
-    //public override Task WriteAsync(BinaryPakFile source, BinaryWriter w, object tag)
+    //public override Task WriteAsync(BinaryArchive source, BinaryWriter w, object tag)
     //{
     //    source.UseReader = false;
     //    var files = source.Files;
-    //    var pak = (ZipFile)(source.Tag = new ZipFile(w.BaseStream));
-    //    ZipFile_KeyProperty.SetValue(pak, Key);
-    //    pak.BeginUpdate();
+    //    var arc = (ZipFile)(source.Tag = new ZipFile(w.BaseStream));
+    //    ZipFile_KeyProperty.SetValue(arc, Key);
+    //    arc.BeginUpdate();
     //    foreach (var file in files)
     //    {
     //        var entry = (ZipEntry)(file.Tag = new ZipEntry(Path.GetFileName(file.Path)));
-    //        pak.Add(entry);
+    //        arc.Add(entry);
     //        source.PakBinary.WriteDataAsync(source, w, file, null, 0, null);
     //    }
-    //    pak.CommitUpdate();
+    //    arc.CommitUpdate();
     //    return Task.CompletedTask;
     //}
-    //public override Task WriteDataAsync(BinaryPakFile source, BinaryWriter w, FileSource file, Stream data, DataOption option = 0, Action<FileSource, string> exception = null)
+    //public override Task WriteDataAsync(BinaryArchive source, BinaryWriter w, FileSource file, Stream data, DataOption option = 0, Action<FileSource, string> exception = null)
     //{
-    //    var pak = (ZipFile)source.Tag;
+    //    var arc = (ZipFile)source.Tag;
     //    var entry = (ZipEntry)file.Tag;
     //    try
     //    {
-    //        using var s = pak.GetInputStream(entry);
+    //        using var s = arc.GetInputStream(entry);
     //        data.CopyTo(s);
     //    }
     //    catch (Exception e) { exception?.Invoke(file, $"Exception: {e.Message}"); }

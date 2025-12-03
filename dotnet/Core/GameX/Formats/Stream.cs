@@ -143,28 +143,28 @@ public class PakBinaryCanStream : ArcBinary {
 }
 
 /// <summary>
-/// StreamPakFile
+/// StreamArchive
 /// </summary>
-/// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class StreamPakFile : BinaryAsset {
+/// <seealso cref="GameX.Formats.BinaryArchive" />
+public class StreamArchive : BinaryAsset {
     readonly NetworkHost Host;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="StreamPakFile" /> class.
+    /// Initializes a new instance of the <see cref="StreamArchive" /> class.
     /// </summary>
     /// <param name="factory">The factory.</param>
     /// <param name="state">The state.</param>
     /// <param name="address">The host.</param>
-    public StreamPakFile(Func<Uri, string, NetworkHost> factory, ArchiveState state, Uri address = null) : base(state, new PakBinaryCanStream()) {
+    public StreamArchive(Func<Uri, string, NetworkHost> factory, ArchiveState state, Uri address = null) : base(state, new PakBinaryCanStream()) {
         UseReader = false;
         if (address != null) Host = factory(address, state.Path);
     }
     /// <summary>
-    /// Initializes a new instance of the <see cref="StreamPakFile" /> class.
+    /// Initializes a new instance of the <see cref="StreamArchive" /> class.
     /// </summary>
     /// <param name="parent">The parent.</param>
     /// <param name="state">The state.</param>
-    public StreamPakFile(BinaryAsset parent, ArchiveState state) : base(state, new PakBinaryCanStream()) {
+    public StreamArchive(BinaryAsset parent, ArchiveState state) : base(state, new PakBinaryCanStream()) {
         UseReader = false;
         Files = parent.Files;
     }
@@ -174,7 +174,7 @@ public class StreamPakFile : BinaryAsset {
     /// </summary>
     /// <param name="tag">The tag.</param>
     public override async Task Read(object tag) {
-        // http pak
+        // http arc
         if (Host != null) {
             var files = Files = [];
             var set = await Host.GetSetAsync() ?? throw new NotSupportedException(".set not found");
@@ -182,7 +182,7 @@ public class StreamPakFile : BinaryAsset {
             return;
         }
 
-        // read pak
+        // read arc
         var path = ArcPath;
         if (string.IsNullOrEmpty(path) || !Directory.Exists(path)) return;
         var setPath = Path.Combine(path, ".set");
@@ -199,10 +199,10 @@ public class StreamPakFile : BinaryAsset {
     /// <param name="tag">The tag.</param>
     /// <exception cref="NotSupportedException"></exception>
     public override async Task Write(object tag) {
-        // http pak
+        // http arc
         if (Host != null) throw new NotSupportedException();
 
-        // write pak
+        // write arc
         var path = ArcPath;
         if (!string.IsNullOrEmpty(path) && !Directory.Exists(path)) Directory.CreateDirectory(path);
         var setPath = Path.Combine(path, ".set");
@@ -223,10 +223,10 @@ public class StreamPakFile : BinaryAsset {
     /// <returns></returns>
     public override async Task<Stream> ReadData(FileSource file, object option = default) {
         var path = file.Path;
-        // http pak
+        // http arc
         if (Host != null) return await Host.GetFileAsync(path);
 
-        // read pak
+        // read arc
         path = System.IO.Path.Combine(ArcPath, path);
         return File.Exists(path) ? File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read) : null;
     }

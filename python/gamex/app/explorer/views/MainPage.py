@@ -19,9 +19,9 @@ platformIndex = max(_find([x.id for x in platformValues], option.Platform), 0)
 
 # ExplorerMainTab
 class ExplorerMainTab:
-    def __init__(self, name: str=None, pakFile: Any=None, appList: list[Any]=None, text: str=None):
+    def __init__(self, name: str=None, archive: Any=None, appList: list[Any]=None, text: str=None):
         self.name = name
-        self.pakFile = pakFile
+        self.archive = archive
         self.appList = appList
         self.text = text
 
@@ -64,7 +64,7 @@ class MainPage(QMainWindow):
         self.title = 'Explorer'
         self.width = 800
         self.height = 600
-        self.pakFiles = []
+        self.archives = []
         self.openWidgets = []
         self.mainTabs = []
         self.initUI()
@@ -128,7 +128,7 @@ class MainPage(QMainWindow):
 
     def setPlatform(self, platform):
         PlatformX.activate(platform)
-        for s in self.pakFiles: s.setPlatform(platform)
+        for s in self.archives: s.setPlatform(platform)
         self.contentBlock.setPlatform(platform)
 
     def platform_change(self, index):
@@ -143,7 +143,7 @@ class MainPage(QMainWindow):
     def updateTabs(self):
         self.mainTab.clear()
         for tab in self.mainTabs:
-            control = FileExplorer(self, tab) if tab.pakFile else \
+            control = FileExplorer(self, tab) if tab.archive else \
                 AppList(self, tab) if tab.appList else \
                 TextBlock(self, tab)
             self.mainTab.addTab(control, tab.name)
@@ -159,21 +159,21 @@ class MainPage(QMainWindow):
         logBar.setText(text + value + '\n')
 
     def open(self, family: Family, pakUris: list[str], path: str = None):
-        self.pakFiles.clear()
+        self.archives.clear()
         if not family: return
         self.familyApps = family.apps
         for pakUri in pakUris:
             self.log(f'Opening {pakUri}')
-            pak = family.openPakFile(pakUri)
-            if pak: self.pakFiles.append(pak)
+            arc = family.openArchive(pakUri)
+            if arc: self.archives.append(arc)
         self.log('Done')
         self.onOpened(family, path)
 
     def onOpened(self, family, path):
         tabs = [ExplorerMainTab(
-            name = pakFile.name,
-            pakFile = pakFile
-        ) for pakFile in self.pakFiles]
+            name = archive.name,
+            archive = archive
+        ) for archive in self.archives]
         if family.description:
             tabs.append(ExplorerMainTab(
                 name = 'Information',

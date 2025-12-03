@@ -3,7 +3,7 @@
   "url": "https://en.wikipedia.org/wiki/List_of_Capcom_games:_N%E2%80%93R",
   "games": {
     "*": {
-      "pakFileType": "GameX.Capcom.CapcomPakFile, GameX.Capcom"
+      "archiveType": "GameX.Capcom.CapcomArchive, GameX.Capcom"
     },
     "NamcoxCapcom": {
       "name": "Namco x Capcom",
@@ -46,7 +46,7 @@
         "https://en.wikipedia.org/wiki/%C5%8Ckami_HD"
       ],
       "date": "October 30, 2012",
-      "pakExt": ".?",
+      "arcExt": ".?",
       "files": {
         "key": [
           "Steam:587620",
@@ -103,7 +103,7 @@
         "https://en.wikipedia.org/wiki/Onimusha:_Warlords"
       ],
       "date": "January 25, 2001",
-      "pakExt": ".?",
+      "arcExt": ".?",
       "files": {
         "key": [
           "Steam:761600",
@@ -293,7 +293,7 @@
         "https://en.wikipedia.org/wiki/Remember_Me_(video_game)"
       ],
       "date": "June 3, 2013",
-      "pakExt": ".?",
+      "arcExt": ".?",
       "files": {
         "key": [
           "Steam:228300",
@@ -318,7 +318,7 @@
         }
       },
       "engine": "MT2",
-      "pakExt": ".?",
+      "arcExt": ".?",
       "files": {
         "key": [
           "Steam:304240",
@@ -336,7 +336,7 @@
       ],
       "date": "January 21, 1998",
       "engine": "RE",
-      "pakExt": ".?",
+      "arcExt": ".?",
       "files": {
         "key": [
           "Steam:883710",
@@ -370,7 +370,7 @@
       "date": "April 3, 2020",
       "engine": "RE",
       "resource": "RE3_PC_Release",
-      "pakExt": ".?",
+      "arcExt": ".?",
       "files": {
         "key": [
           "Steam:952060",
@@ -389,7 +389,7 @@
       "date": "January 11, 2005",
       "engine": "RE",
       "resource": "RE4_PC_Release",
-      "pakExt": ".?",
+      "arcExt": ".?",
       "files": {
         "key": [
           "Steam:254700",
@@ -433,7 +433,7 @@
         }
       },
       "engine": "MT1",
-      "pakExt": ".?",
+      "arcExt": ".?",
       "files": {
         "key": [
           "Steam:21690",
@@ -451,7 +451,7 @@
       ],
       "date": "October 2, 2012",
       "engine": "MT2",
-      "pakExt": ".?",
+      "arcExt": ".?",
       "files": {
         "key": [
           "Steam:221040",
@@ -468,7 +468,7 @@
         "https://en.wikipedia.org/wiki/Resident_Evil_7:_Biohazard"
       ],
       "date": "January 24, 2017",
-      "pakExt": ".?",
+      "arcExt": ".?",
       "files": {
         "key": [
           "Steam:418370",
@@ -561,7 +561,7 @@
       ],
       "date": "January 26, 2012",
       "engine": "MT2",
-      "pakExt": ".?",
+      "arcExt": ".?",
       "files": {
         "key": [
           "Steam:222480",
@@ -579,7 +579,7 @@
       ],
       "date": "February 24, 2015",
       "engine": "MT2",
-      "pakExt": ".?",
+      "arcExt": ".?",
       "files": {
         "key": [
           "Steam:287290",
@@ -628,7 +628,7 @@
         "https://en.wikipedia.org/wiki/Resident_Evil_Village"
       ],
       "date": "May 7, 2021",
-      "pakExt": ".?",
+      "arcExt": ".?",
       "files": {
         "key": [
           "Steam:1196590",
@@ -652,7 +652,7 @@
         }
       },
       "engine": "MT2",
-      "pakExt": ".?",
+      "arcExt": ".?",
       "files": {
         "key": [
           "Steam:339340",

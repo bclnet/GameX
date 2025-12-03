@@ -2,7 +2,7 @@ from __future__ import annotations
 import os, itertools
 from io import BytesIO
 from openstk import _throw, _pathExtension, Reader, IWriteToStream
-from gamex import PakFile, BinaryPakFile, PakBinary, PakBinaryT, FileSource, MetaInfo, MetaManager, MetaContent, IHaveMetaInfo, DesSer
+from gamex import Archive, BinaryArchive, ArcBinary, ArcBinaryT, FileSource, MetaInfo, MetaManager, MetaContent, IHaveMetaInfo, DesSer
 from gamex.core.formats.compression import decompressXbox
 from gamex.families.Xbox.formats.xna import ContentReader
 
@@ -18,7 +18,7 @@ type Quaternion = ndarray
 # Binary_Xnb
 class Binary_Xnb(IHaveMetaInfo, IWriteToStream):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_Xnb(r, f)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Xnb(r, f)
 
     #region Headers
 

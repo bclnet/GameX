@@ -3,7 +3,7 @@
   "url": "https://en.wikipedia.org/wiki/List_of_Ubisoft_games:_1986%E2%80%931999",
   "games": {
     "*": {
-      "pakFileType": "GameX.Ubisoft.UbisoftPakFile, GameX.Ubisoft"
+      "archiveType": "GameX.Ubisoft.UbisoftArchive, GameX.Ubisoft"
     },
     "Zombi86": {
       "name": "Zombi '86",

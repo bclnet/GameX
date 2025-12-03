@@ -32,11 +32,11 @@
     "name": "Quake II",
     "files": [
       {
-        "path": "pak0.pak:env/space1bk.pcx",
+        "path": "pak0.arc:env/space1bk.pcx",
         "type": "Texture"
       },
       {
-        "path": "pak0.pak:maps/base1.bsp",
+        "path": "pak0.arc:maps/base1.bsp",
         "type": "Bsp"
       }
     ]

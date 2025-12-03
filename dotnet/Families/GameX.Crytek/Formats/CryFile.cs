@@ -45,17 +45,17 @@ public partial class CryFile {
         LoadAsync(null, files, FindMaterialFromFile, path => Task.FromResult<(string, Stream)>((path, File.Open(path, FileMode.Open)))).Wait();
     }
 
-    public void LoadFromPak(Stream stream, FileSource metadata, Archive pak) {
+    public void LoadFromPak(Stream stream, FileSource metadata, Archive arc) {
         var files = new List<(string, Stream)> { (InputFile, stream) };
         var mFilePath = Path.ChangeExtension(InputFile, $"{Path.GetExtension(InputFile)}m");
-        if (pak.Contains(mFilePath)) {
+        if (arc.Contains(mFilePath)) {
             Log.Info($"Found geometry file {Path.GetFileName(mFilePath)}");
-            files.Add((mFilePath, pak.GetData(mFilePath).Result)); // Add to list of files to process
+            files.Add((mFilePath, arc.GetData(mFilePath).Result)); // Add to list of files to process
         }
-        LoadAsync(pak, files, FindMaterialFromPak, path => Task.FromResult<(string, Stream)>((path, pak.GetData(path).Result))).Wait();
+        LoadAsync(arc, files, FindMaterialFromPak, path => Task.FromResult<(string, Stream)>((path, arc.GetData(path).Result))).Wait();
     }
 
-    static string FindMaterialFromFile(Archive pak, string materialPath, string fileName, string cleanName) {
+    static string FindMaterialFromFile(Archive arc, string materialPath, string fileName, string cleanName) {
         // First try relative to file being processed
         if (Path.GetExtension(materialPath) != ".mtl") materialPath = Path.ChangeExtension(materialPath, "mtl");
         // Then try just the last part of the chunk, relative to the file being processed
@@ -71,23 +71,23 @@ public partial class CryFile {
         return File.Exists(materialPath) ? materialPath : null;
     }
 
-    static string FindMaterialFromPak(Archive pak, string materialPath, string fileName, string cleanName) {
+    static string FindMaterialFromPak(Archive arc, string materialPath, string fileName, string cleanName) {
         // First try relative to file being processed
         if (Path.GetExtension(materialPath) != ".mtl") materialPath = Path.ChangeExtension(materialPath, "mtl");
         // Then try just the last part of the chunk, relative to the file being processed
-        if (!pak.Contains(materialPath)) materialPath = Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileName(cleanName));
+        if (!arc.Contains(materialPath)) materialPath = Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileName(cleanName));
         if (Path.GetExtension(materialPath) != ".mtl") materialPath = Path.ChangeExtension(materialPath, "mtl");
         // Then try relative to the ObjectDir
-        if (!pak.Contains(materialPath)) materialPath = Path.Combine("Sbi", cleanName);
+        if (!arc.Contains(materialPath)) materialPath = Path.Combine("Sbi", cleanName);
         if (Path.GetExtension(materialPath) != ".mtl") materialPath = Path.ChangeExtension(materialPath, "mtl");
         // Then try just the fileName.mtl
-        if (!pak.Contains(materialPath)) materialPath = fileName;
+        if (!arc.Contains(materialPath)) materialPath = fileName;
         if (Path.GetExtension(materialPath) != ".mtl") materialPath = Path.ChangeExtension(materialPath, "mtl");
         // TODO: Try more paths
-        return pak.Contains(materialPath) ? materialPath : null;
+        return arc.Contains(materialPath) ? materialPath : null;
     }
 
-    public async Task LoadAsync(Archive pak, IEnumerable<(string, Stream)> files, Func<Archive, string, string, string, string> getMaterialPath, Func<string, Task<(string, Stream)>> getFileAsync) {
+    public async Task LoadAsync(Archive arc, IEnumerable<(string, Stream)> files, Func<Archive, string, string, string, string> getMaterialPath, Func<string, Task<(string, Stream)>> getFileAsync) {
         try {
             Models = new List<Model> { };
             foreach (var file in files) {
@@ -135,7 +135,7 @@ public partial class CryFile {
                     materialFilePath = Path.Combine(Path.GetDirectoryName(fileName), cleanName);
                 }
                 // Populate CryEngine_Core.Material
-                var materialPath = getMaterialPath(pak, materialFilePath, fileName, cleanName);
+                var materialPath = getMaterialPath(arc, materialFilePath, fileName, cleanName);
                 var material = materialPath != null ? Material.FromFile(await getFileAsync(materialPath)) : null;
                 if (material != null) {
                     Log.Info($"Located material file {Path.GetFileName(materialPath)}");

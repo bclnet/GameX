@@ -1,30 +1,30 @@
 from __future__ import annotations
 import os
 from openstk import _pathExtension
-from gamex import BinaryPakFile
-from gamex.families.GameX import UnknownPakFile
+from gamex import BinaryArchive
+from gamex.families.GameX import UnknownArchive
 from gamex.families.Mythic.formats.binary import Binary_Mpk, Binary_Crf
 from gamex.families.Bioware.formats.binary import Binary_Myp
 from gamex.families.Gamebryo.formats.binary import Binary_Nif
-from gamex.families.GameX_Bioware import BiowarePakFile
-from gamex.families.GameX_Origin import OriginPakFile
+from gamex.families.GameX_Bioware import BiowareArchive
+from gamex.families.GameX_Origin import OriginArchive
 
-# MythicPakFile
-class MythicPakFile(BinaryPakFile):
-    def __init__(self, state: PakState):
-        super().__init__(state, self.getPakBinary(state.game, _pathExtension(state.path).lower()))
+# MythicArchive
+class MythicArchive(BinaryArchive):
+    def __init__(self, state: ArcState):
+        super().__init__(state, self.getArcBinary(state.game, _pathExtension(state.path).lower()))
         match state.game.id:
-            case 'UO': self.objectFactoryFunc = OriginPakFile.objectFactory
-            case 'DA2': self.objectFactoryFunc = BiowarePakFile.objectFactory
-            case _: self.objectFactoryFunc = self.objectFactory
+            case 'UO': self.assetFactoryFunc = OriginArchive.assetFactory
+            case 'DA2': self.assetFactoryFunc = BiowareArchive.assetFactory
+            case _: self.assetFactoryFunc = self.assetFactory
 
     #region Factories
 
     @staticmethod
-    def getPakBinary(game: FamilyGame, extension: str) -> PakBinary:
+    def getArcBinary(game: FamilyGame, extension: str) -> ArcBinary:
         match game.id:
-            case 'UO': return OriginPakFile.getPakBinary(game, extension)
-            case 'DA2': return BiowarePakFile.getPakBinary(game, extension)
+            case 'UO': return OriginArchive.getArcBinary(game, extension)
+            case 'DA2': return BiowareArchive.getArcBinary(game, extension)
             case _:
                 match extension:
                     case '': return None
@@ -33,10 +33,10 @@ class MythicPakFile(BinaryPakFile):
                     case _: raise Exception(f'Unknown: {extension}')
 
     @staticmethod
-    def objectFactory(source: FileSource, game: FamilyGame) -> (object, callable):
+    def assetFactory(source: FileSource, game: FamilyGame) -> (object, callable):
         match _pathExtension(source.path).lower():
             case '.crf': return (FileOption.StreamObject, Binary_Crf.factory)
             case '.nif': return (FileOption.StreamObject, Binary_Nif.factory)
-            case _: return UnknownPakFile.objectFactory(source, game)
+            case _: return UnknownArchive.assetFactory(source, game)
 
     #endregion

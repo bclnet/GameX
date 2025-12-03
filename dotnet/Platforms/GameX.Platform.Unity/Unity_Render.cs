@@ -34,7 +34,7 @@ public class ViewInfo : UnityEngine.MonoBehaviour {
 
     [UnityEngine.Header("View")]
     public string FamilyId = "Bethesda";
-    public string PakUri = "game:/Morrowind.bsa#Morrowind";
+    public string ArcUri = "game:/Morrowind.bsa#Morrowind";
     public string Type = "Texture";
     public string Path = "bookart/boethiah_256.dds";
     //public string Path = "meshes/x/ex_common_balcony_01.nif";
@@ -46,7 +46,7 @@ public class ViewInfo : UnityEngine.MonoBehaviour {
     public void Awake() {
         if (string.IsNullOrEmpty(FamilyId)) return;
         Family = FamilyManager.GetFamily(FamilyId);
-        if (!string.IsNullOrEmpty(PakUri)) Source = Family.OpenArchive(new Uri(PakUri));
+        if (!string.IsNullOrEmpty(ArcUri)) Source = Family.OpenArchive(new Uri(ArcUri));
         Renderer = UnityRenderer.CreateRenderer(this, Source?.Gfx, Path, Type);
     }
 

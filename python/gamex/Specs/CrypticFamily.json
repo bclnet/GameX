@@ -9,7 +9,7 @@
   ],
   "games": {
     "*": {
-      "pakFileType": "GameX.Cryptic.CrypticPakFile, GameX.Cryptic"
+      "archiveType": "GameX.Cryptic.CrypticArchive, GameX.Cryptic"
     },
     "COH": {
       "name": "City of Heroes",
@@ -20,7 +20,7 @@
       "name": "Champions Online",
       "date": "2009-09-01",
       "url": "https://store.steampowered.com/app/9880",
-      "pakExt": ".hogg",
+      "arcExt": ".hogg",
       "status": "open;read",
       "files": {
         "key": [
@@ -35,7 +35,7 @@
       "name": "Star Trek Online",
       "date": "2010-02-02",
       "url": "https://store.steampowered.com/app/9900",
-      "pakExt": ".hogg",
+      "arcExt": ".hogg",
       "status": "open;read",
       "files": {
         "key": [
@@ -50,7 +50,7 @@
       "name": "Neverwinter",
       "date": "2013-12-05",
       "url": "https://store.steampowered.com/app/109600",
-      "pakExt": ".hogg",
+      "arcExt": ".hogg",
       "status": "open;read",
       "files": {
         "key": [

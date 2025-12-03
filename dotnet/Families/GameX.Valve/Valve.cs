@@ -12,43 +12,43 @@ using System.Threading.Tasks;
 namespace GameX.Valve;
 
 /// <summary>
-/// ValvePakFile
+/// ValveArchive
 /// </summary>
-/// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class ValvePakFile : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+/// <seealso cref="GameX.Formats.BinaryArchive" />
+public class ValveArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
     /// <summary>
-    /// Initializes a new instance of the <see cref="ValvePakFile" /> class.
+    /// Initializes a new instance of the <see cref="ValveArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public ValvePakFile(ArchiveState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
-        ObjectFactoryFunc = ObjectFactory;
+    public ValveArchive(ArchiveState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+        AssetFactoryFunc = AssetFactory;
         PathFinders.Add(typeof(object), FindBinary);
     }
 
     #region Factories
 
-    static readonly ConcurrentDictionary<string, ArcBinary> PakBinarys = new();
+    static readonly ConcurrentDictionary<string, ArcBinary> ArcBinarys = new();
 
-    static ArcBinary GetPakBinary(FamilyGame game, string extension)
-        => PakBinarys.GetOrAdd(game.Id, _ => game.Engine.n switch {
+    static ArcBinary GetArcBinary(FamilyGame game, string extension)
+        => ArcBinarys.GetOrAdd(game.Id, _ => game.Engine.n switch {
             "Unity" => Unity.Formats.Binary_Unity.Current,
             "GoldSrc" => Binary_Wad3.Current,
             "Source" or "Source2" => Binary_Vpk.Current,
             _ => throw new ArgumentOutOfRangeException(nameof(game.Engine), game.Engine.n),
         });
 
-    public static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    public static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) AssetFactory(FileSource source, FamilyGame game)
         => game.Engine.n switch {
             "GoldSrc" => Path.GetExtension(source.Path).ToLowerInvariant() switch {
                 ".pic" or ".tex" or ".tex2" or ".fnt" => (0, Binary_Wad3X.Factory),
                 ".bsp" => (0, Binary_BspX.Factory),
                 ".spr" => (0, Binary_Spr.Factory),
                 ".mdl" => (0, Binary_Mdl10.Factory),
-                _ => UnknownPakFile.ObjectFactory(source, game),
+                _ => UnknownArchive.AssetFactory(source, game),
             },
             "Source" => Path.GetExtension(source.Path).ToLowerInvariant() switch {
                 ".mdl" => (0, Binary_Mdl40.Factory),
-                _ => UnknownPakFile.ObjectFactory(source, game),
+                _ => UnknownArchive.AssetFactory(source, game),
             },
             "Source2" => (0, Binary_Src.Factory),
             _ => throw new ArgumentOutOfRangeException(nameof(game.Engine), game.Engine.n),
@@ -66,7 +66,7 @@ public class ValvePakFile : BinaryAsset, ITransformAsset<IUnknownFileModel> {
         if (Contains(p)) return p;
         if (!p.EndsWith("_c", StringComparison.Ordinal)) path = $"{p}_c";
         if (Contains(p)) return p;
-        Log.Info($"Could not find file '{p}' in a PAK file.");
+        Log.Info($"Could not find file '{p}' in an arc file.");
         return null;
     }
 
@@ -74,8 +74,8 @@ public class ValvePakFile : BinaryAsset, ITransformAsset<IUnknownFileModel> {
 
     #region Transforms
 
-    bool ITransformAsset<IUnknownFileModel>.CanTransformAsset(Archive transformTo, object source) => UnknownTransform.CanTransformFileObject(this, transformTo, source);
-    Task<IUnknownFileModel> ITransformAsset<IUnknownFileModel>.TransformAsset(Archive transformTo, object source) => UnknownTransform.TransformFileObjectAsync(this, transformTo, source);
+    bool ITransformAsset<IUnknownFileModel>.CanTransformAsset(Archive transformTo, object source) => UnknownTransform.CanTransformAsset(this, transformTo, source);
+    Task<IUnknownFileModel> ITransformAsset<IUnknownFileModel>.TransformAsset(Archive transformTo, object source) => UnknownTransform.TransformAsset(this, transformTo, source);
 
     #endregion
 }

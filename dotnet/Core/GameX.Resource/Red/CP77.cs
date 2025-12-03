@@ -16,8 +16,8 @@ public static class CP77 {
     static CP77() {
         var assembly = typeof(CP77).Assembly;
         using var s = assembly.GetManifestResourceStream("GameX.Resource.Red.CP77.zip");
-        var pak = new ZipArchive(s, ZipArchiveMode.Read);
-        using var r = new StreamReader(pak.GetEntry("CP77/hashes.csv")?.Open());
+        var arc = new ZipArchive(s, ZipArchiveMode.Read);
+        using var r = new StreamReader(arc.GetEntry("CP77/hashes.csv")?.Open());
         using var csv = new CsvReader(r, CultureInfo.InvariantCulture);
         HashLookup = csv.GetRecords<HashRecord>().ToDictionary(x => ulong.Parse(x.Hash), x => x.String);
     }

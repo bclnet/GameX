@@ -12,27 +12,27 @@ public partial class FileExplorer : ContentView {
         BindingContext = this;
     }
 
-    public static readonly BindableProperty PakFileProperty = BindableProperty.Create(nameof(PakFile), typeof(PakFile), typeof(FileExplorer),
+    public static readonly BindableProperty ArchiveProperty = BindableProperty.Create(nameof(Archive), typeof(Archive), typeof(FileExplorer),
         propertyChanged: (d, e, n) => {
-            if (d is not FileExplorer fileExplorer || n is not PakFile pakFile) return;
-            fileExplorer.Filters = pakFile.GetMetaFilters(Resource);
-            fileExplorer.Nodes = fileExplorer.PakNodes = pakFile.GetMetaItems(Resource);
-            fileExplorer.Ready(pakFile);
+            if (d is not FileExplorer fileExplorer || n is not Archive archive) return;
+            fileExplorer.Filters = archive.GetMetaFilters(Resource);
+            fileExplorer.Nodes = fileExplorer.ArcNodes = archive.GetMetaItems(Resource);
+            fileExplorer.Ready(archive);
         });
-    //public PakFile PakFile
+    //public Archive Archive
     //{
-    //    get => (PakFile)GetValue(PakFileProperty);
-    //    set => SetValue(PakFileProperty, value);
+    //    get => (Archive)GetValue(ArchiveProperty);
+    //    set => SetValue(ArchiveProperty, value);
     //}
 
-    PakFile _pakFile;
-    public PakFile PakFile {
-        get => _pakFile;
+    Archive _archive;
+    public Archive Archive {
+        get => _archive;
         set {
-            _pakFile = value; OnPropertyChanged();
-            Filters = _pakFile.GetMetaFilters(Resource);
-            Nodes = PakNodes = _pakFile.GetMetaItems(Resource);
-            Ready(_pakFile);
+            _archive = value; OnPropertyChanged();
+            Filters = _archive.GetMetaFilters(Resource);
+            Nodes = ArcNodes = _archive.GetMetaItems(Resource);
+            Ready(_archive);
         }
     }
 
@@ -44,8 +44,8 @@ public partial class FileExplorer : ContentView {
 
     //void OnFilterKeyUp(object sender, EventArgs e)
     //{
-    //    if (string.IsNullOrEmpty(Filter.SelectedItem as string)) Nodes = PakNodes;
-    //    else Nodes = PakNodes.Select(x => x.Search(y => y.Name.Contains(Filter.SelectedItem as string))).Where(x => x != null).ToList();
+    //    if (string.IsNullOrEmpty(Filter.SelectedItem as string)) Nodes = ArcNodes;
+    //    else Nodes = ArcNodes.Select(x => x.Search(y => y.Name.Contains(Filter.SelectedItem as string))).Where(x => x != null).ToList();
     //    //var view = (CollectionView)CollectionViewSource.GetDefaultView(Node.ItemsSource);
     //    //view.Filter = o =>
     //    //{
@@ -57,11 +57,11 @@ public partial class FileExplorer : ContentView {
 
     void OnFilterSelected(object s, EventArgs e) {
         var filter = (MetaItem.Filter)Filter.SelectedItem;
-        if (filter == null) Nodes = PakNodes;
-        else Nodes = PakNodes.Select(x => x.Search(y => y.Name.Contains(filter.Description))).Where(x => x != null).ToList();
+        if (filter == null) Nodes = ArcNodes;
+        else Nodes = ArcNodes.Select(x => x.Search(y => y.Name.Contains(filter.Description))).Where(x => x != null).ToList();
     }
 
-    List<MetaItem> PakNodes;
+    List<MetaItem> ArcNodes;
 
     List<MetaItem> _nodes;
     public List<MetaItem> Nodes {
@@ -83,14 +83,14 @@ public partial class FileExplorer : ContentView {
             _selectedItem = value;
             if (value == null) { OnInfo(); return; }
             var src = (value.Source as FileSource)?.Fix();
-            var pak = src?.Pak;
+            var arc = src?.Arc;
             try {
-                if (pak != null) {
-                    if (pak.Status == PakFile.PakStatus.Opened) return;
-                    pak.Open(value.Items, Resource);
-                    //OnFilterKeyUp(null, null); //value.Items.AddRange(pak.GetMetaItemsAsync(Resource).Result);
+                if (arc != null) {
+                    if (arc.Status == Archive.ArcStatus.Opened) return;
+                    arc.Open(value.Items, Resource);
+                    //OnFilterKeyUp(null, null); //value.Items.AddRange(arc.GetMetaItemsAsync(Resource).Result);
                 }
-                OnInfo(value.PakFile?.GetMetaInfos(Resource, value).Result);
+                OnInfo(value.Archive?.GetMetaInfos(Resource, value).Result);
             }
             catch (Exception ex) {
                 OnInfo([
@@ -105,21 +105,21 @@ public partial class FileExplorer : ContentView {
     }
 
     public void OnInfo(IEnumerable<MetaInfo> infos = null) {
-        FileContent.Current.OnInfo(PakFile, infos?.Where(x => x.Name == null).ToList());
+        FileContent.Current.OnInfo(Archive, infos?.Where(x => x.Name == null).ToList());
         Infos = infos?.Where(x => x.Name != null).ToList();
     }
 
     void OnNodeSelected(object s, EventArgs args) {
         var parameter = ((TappedEventArgs)args).Parameter;
-        if (parameter is MetaItem item && item.PakFile != null) SelectedItem = item;
+        if (parameter is MetaItem item && item.Archive != null) SelectedItem = item;
         //e.Handled = true;
     }
 
-    void Ready(PakFile pakFile) {
+    void Ready(Archive archive) {
         if (string.IsNullOrEmpty(Option.ForcePath) || Option.ForcePath.StartsWith("app:")) return;
-        var sample = Option.ForcePath.StartsWith("sample:") ? pakFile.Game.GetSample(Option.ForcePath[7..]) : null;
+        var sample = Option.ForcePath.StartsWith("sample:") ? archive.Game.GetSample(Option.ForcePath[7..]) : null;
         var paths = sample != null ? sample.Paths : [Option.ForcePath];
         if (paths == null) return;
-        foreach (var path in paths) SelectedItem = MetaItem.FindByPathForNodes(PakNodes, path, Resource);
+        foreach (var path in paths) SelectedItem = MetaItem.FindByPathForNodes(ArcNodes, path, Resource);
     }
 }

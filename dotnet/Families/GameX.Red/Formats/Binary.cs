@@ -42,9 +42,9 @@ public class Binary_Abc : IHaveMetaInfo {
 #region Binary_Red
 
 public unsafe class Binary_Red : ArcBinary<Binary_Red> {
-    //class SubPakFile : BinaryPakFile
+    //class SubArchive : BinaryArchive
     //{
-    //    public SubPakFile(FamilyGame game, IFileSystem fileSystem, string filePath, object tag = null) : base(game, fileSystem, filePath, Instance, tag) => Open();
+    //    public SubArchive(FamilyGame game, IFileSystem fileSystem, string filePath, object tag = null) : base(game, fileSystem, filePath, Instance, tag) => Open();
     //}
 
     // Headers : KEY/BIF (Witcher)

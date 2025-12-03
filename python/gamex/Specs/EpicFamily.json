@@ -14,7 +14,7 @@
   },
   "games": {
     "*": {
-      "pakFileType": "GameX.Epic.EpicPakFile, GameX.Epic",
+      "archiveType": "GameX.Epic.EpicArchive, GameX.Epic",
       "engine": "Unreal",
       "searchBy": "TopDir"
       //"paths": [ "Animations", "Maps", "Sounds", "StaticMeshes", "System", "Systextures", "XboxTextures", "XboxAnimations", "Textures" ],
@@ -23,7 +23,7 @@
       "name": "Unreal",
       "url": "https://oldgamesdownload.com/unreal",
       "date": "1998-01-01",
-      "pakExt": [
+      "arcExt": [
         ".unr",
         ".umx",
         ".uax",
@@ -46,7 +46,7 @@
       "name": "The Wheel of Time",
       "url": "https://www.gog.com/en/game/the_wheel_of_time",
       "date": "1999-11-15",
-      "pakExt": ".upk",
+      "arcExt": ".upk",
       "files": {
         "key": [
           "Gog:1584652180",
@@ -60,7 +60,7 @@
       "name": "Deus Ex™ GOTY Edition",
       "url": "https://www.gog.com/en/game/deus_ex",
       "date": "2000-06-22",
-      "pakExt": ".upk",
+      "arcExt": ".upk",
       "files": {
         "key": [
           "Gog:1207658995",
@@ -74,7 +74,7 @@
       "name": "Deus Ex: Mankind Divided",
       "url": "https://www.gog.com/en/game/deus_ex_mankind_divided",
       "date": "2016-08-23",
-      "pakExt": ".upk",
+      "arcExt": ".upk",
       "files": {
         "key": [
           "Gog:1296690054",
@@ -88,7 +88,7 @@
       "name": "Deus Ex 2: Invisible War",
       "url": "https://www.gog.com/en/game/deus_ex_invisible_war",
       "date": "2003-12-02",
-      "pakExt": ".upk",
+      "arcExt": ".upk",
       "files": {
         "key": [
           "Gog:1207659068",
@@ -102,7 +102,7 @@
       "name": "Deus Ex: Human Revolution - Director's Cut",
       "url": "https://www.gog.com/en/game/deus_ex_human_revolution_directors_cut",
       "date": "2013-10-25",
-      "pakExt": ".upk",
+      "arcExt": ".upk",
       "files": {
         "key": [
           "Gog:1370227705",
@@ -116,7 +116,7 @@
       "name": "Rune",
       "url": "https://www.gog.com/en/game/rune_classic",
       "date": "2000-11-18",
-      "pakExt": ".upk",
+      "arcExt": ".upk",
       "files": {
         "key": [
           "Gog:0",
@@ -130,7 +130,7 @@
       "name": "Clive Barker's Undying",
       "url": "https://www.gog.com/en/game/clive_barkers_undying",
       "date": "2001-02-19",
-      "pakExt": ".upk",
+      "arcExt": ".upk",
       "files": {
         "key": [
           "Gog:1207659191",
@@ -141,26 +141,26 @@
       }
     },
     "*2": {
-      "pak": "game:/"
+      "arc": "game:/"
     },
     "UT2K": {
       "name": "Unreal Tournament 2003",
       "url": "https://oldgamesdownload.com/unreal-tournament-2003/",
-      "pakExt": ".upk"
+      "arcExt": ".upk"
     },
     "UE2": {
       "name": "Unreal II: The Awakening",
       "url": "https://store.steampowered.com/app/13200/Unreal_2_The_Awakening/",
       "date": "2003-02-03",
-      "pakExt": ".upk"
+      "arcExt": ".upk"
     },
     "*3": {
-      "pak": "game:/"
+      "arc": "game:/"
     },
     "BioShock": {
       "name": "BioShock",
       "url": "https://store.steampowered.com/app/7670",
-      "pak": "game:/*.(bsm:u)#BioShock",
+      "arc": "game:/*.(bsm:u)#BioShock",
       "path": [
         "Maps",
         "System"
@@ -177,7 +177,7 @@
     "BioShockR": {
       "name": "BioShock Remastered",
       "url": "https://store.steampowered.com/app/409710",
-      "pakExt": ".upk",
+      "arcExt": ".upk",
       "files": {
         "key": [
           "Steam:409710",
@@ -190,7 +190,7 @@
     "BioShock2": {
       "name": "BioShock 2",
       "url": "https://store.steampowered.com/app/8850",
-      "pakExt": ".upk",
+      "arcExt": ".upk",
       "files": {
         "key": [
           "Steam:8850",
@@ -203,7 +203,7 @@
     "BioShock2R": {
       "name": "BioShock 2 Remastered",
       "url": "https://store.steampowered.com/app/409720",
-      "pakExt": ".upk",
+      "arcExt": ".upk",
       "files": {
         "key": [
           "Steam:409720",
@@ -216,7 +216,7 @@
     "BioShock:Inf": {
       "name": "BioShock Infinite",
       "url": "https://store.steampowered.com/app/8870",
-      "pakExt": ".upk",
+      "arcExt": ".upk",
       "files": {
         "key": [
           "Steam:8870",

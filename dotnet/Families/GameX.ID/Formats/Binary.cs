@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using static System.IO.Polyfill;
+#pragma warning disable CS0169, CS0649
 
 // https://www.gamers.org/dEngine/quake/spec/quake-spec34/qkspec_3.htm
 // https://wiki.eternalmods.com/books/8-reverse-engineering-file-formats

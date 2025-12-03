@@ -3,7 +3,7 @@ from pathlib import Path
 from ctypes import c_ulong, c_ulonglong
 from io import BytesIO
 from openstk import _pathExtension
-from gamex import BinaryPakFile, PakBinaryT, FileSource, DesSer
+from gamex import BinaryArchive, ArcBinaryT, FileSource, DesSer
 from gamex.families.Origin.formats.UO.binary import *
 from gamex.families.Xbox.formats.binary import Binary_Xnb
 
@@ -15,12 +15,12 @@ class IFileSystem: pass
 #region Binary_U8
 
 # Binary_U8
-class Binary_U8(PakBinaryT):
+class Binary_U8(ArcBinaryT):
 
     #region Factories
 
     @staticmethod
-    def objectFactory(source: FileSource, game: FamilyGame) -> (object, callable):
+    def assetFactory(source: FileSource, game: FamilyGame) -> (object, callable):
         match source.path.lower():
             case _: pass
 
@@ -31,11 +31,11 @@ class Binary_U8(PakBinaryT):
     #endregion
 
     # read
-    def read(self, source: BinaryPakFile, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
         pass
         
     # readData
-    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
         pass
 
 #endregion
@@ -43,12 +43,12 @@ class Binary_U8(PakBinaryT):
 #region Binary_U9
 
 # Binary_U9
-class Binary_U9(PakBinaryT):
+class Binary_U9(ArcBinaryT):
 
     #region Factories
 
     @staticmethod
-    def objectFactory(source: FileSource, game: FamilyGame) -> (object, callable):
+    def assetFactory(source: FileSource, game: FamilyGame) -> (object, callable):
         match source.path.lower():
             case _: pass
             # case 'animdata.mul': return (0, Binary_Animdata.factory)
@@ -65,11 +65,11 @@ class Binary_U9(PakBinaryT):
     #endregion
 
     # read
-    def read(self, source: BinaryPakFile, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
         pass
         
     # readData
-    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
         pass
 
 #endregion
@@ -77,12 +77,12 @@ class Binary_U9(PakBinaryT):
 #region Binary_UO
 
 # Binary_UO
-class Binary_UO(PakBinaryT):
+class Binary_UO(ArcBinaryT):
 
     #region Factories
 
     @staticmethod
-    def objectFactory(source: FileSource, game: FamilyGame) -> (object, callable):
+    def assetFactory(source: FileSource, game: FamilyGame) -> (object, callable):
         match source.path.lower():
             case 'animdata.mul': return (0, Binary_Animdata.factory)
             case 'fonts.mul': return (0, Binary_AsciiFont.factory)
@@ -150,23 +150,23 @@ class Binary_UO(PakBinaryT):
     #endregion
 
     # read
-    def read(self, source: BinaryPakFile, r: Reader, tag: object) -> None:
-        if source.pakPath.endswith('.uop'): self.readUop(source, r)
+    def read(self, source: BinaryArchive, r: Reader, tag: object) -> None:
+        if source.arcPath.endswith('.uop'): self.readUop(source, r)
         else: self.readIdx(source, r)
         
     #region UOP
 
     UOP_MAGIC = 0x50594D
 
-    def readUop(self, source: BinaryPakFile, r: Reader):
+    def readUop(self, source: BinaryArchive, r: Reader):
         def parse():
-            match source.pakPath:
+            match source.arcPath:
                 case 'artLegacyMUL.uop': return ('.tga', 0x14000, 0x13FDC, False, lambda i: f'land/file{i:05x}.land' if i < 0x4000 else f'static/file{i:05x}.art')
                 case 'gumpartLegacyMUL.uop': return (".tga", 0xFFFF, 0, True, lambda i: f'file{i:05x}.tex')
                 case 'soundLegacyMUL.uop': return (".dat", 0xFFF, 0, False, lambda i: f'file{i:05x}.wav')
                 case _: return (None, 0, 0, False, lambda i: f'file{i:05x}.dat')
         extension, length, idxLength, extra, pathFunc = parse()
-        uopPattern = Path(source.pakPath).stem.lower()
+        uopPattern = Path(source.arcPath).stem.lower()
 
         # read header
         header = r.readS(self.UopHeader)
@@ -295,9 +295,9 @@ class Binary_UO(PakBinaryT):
 
     #region IDX
 
-    def readIdx(self, source: BinaryPakFile, r: Reader):
+    def readIdx(self, source: BinaryArchive, r: Reader):
         def parse():
-            match source.pakPath:
+            match source.arcPath:
                 case 'anim.idx': return ('anim.mul', 0x40000, 6, lambda i: f'file{i:05x}.anim')
                 case 'anim2.idx': return ('anim2.mul', 0x10000, -1, lambda i: f'file{i:05x}.anim')
                 case 'anim3.idx': return ('anim3.mul', 0x20000, -1, lambda i: f'file{i:05x}.anim')
@@ -312,7 +312,7 @@ class Binary_UO(PakBinaryT):
                 case 'texidx.mul': return ('texmaps.mul', 0x4000, 10, lambda i: f'file{i:05x}.dat')
                 case _: raise Exception()
         mulPath, length, fileId, pathFunc = parse()
-        source.pakPath = mulPath
+        source.arcPath = mulPath
 
         # record count
         self.count = r.length // 12
@@ -359,7 +359,7 @@ class Binary_UO(PakBinaryT):
     #endregion
 
     # readData
-    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
         if file.offset < 0: return None
         fileSize = file.fileSize & 0x7FFFFFFF
         if (file.fileSize & (1 << 31)) != 0: return Binary_Verdata.instance.readData(file.offset, fileSize)

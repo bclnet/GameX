@@ -26,37 +26,37 @@ public class QGame(Family family, string id, JsonElement elem, FamilyGame dgame)
 }
 
 /// <summary>
-/// IDPakFile
+/// IDArchive
 /// </summary>
-/// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class IDPakFile : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+/// <seealso cref="GameX.Formats.BinaryArchive" />
+public class IDArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
     /// <summary>
-    /// Initializes a new instance of the <see cref="IDPakFile" /> class.
+    /// Initializes a new instance of the <see cref="IDArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public IDPakFile(ArchiveState state) : base(state, GetPakBinary(state.Game, state.Path)) {
-        ObjectFactoryFunc = ObjectFactory;
+    public IDArchive(ArchiveState state) : base(state, GetArcBinary(state.Game, state.Path)) {
+        AssetFactoryFunc = AssetFactory;
     }
 
     #region Factories
 
-    static ArcBinary GetPakBinary(FamilyGame game, string filePath)
+    static ArcBinary GetArcBinary(FamilyGame game, string filePath)
          => Path.GetExtension(filePath).ToLowerInvariant() switch {
              "" => null,
-             ".pk3" or ".pk4" or ".zip" => Binary_Zip.GetPakBinary(game),
-             ".pak" => Binary_Pak.Current,
+             ".pk3" or ".pk4" or ".zip" => Binary_Zip.GetArcBinary(game),
+             ".arc" => Binary_Pak.Current,
              ".wad" => Binary_Wad.Current,
              _ => throw new ArgumentOutOfRangeException(),
          };
 
-    public static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    public static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) AssetFactory(FileSource source, FamilyGame game)
         => game.Engine.n switch {
             "idTech" => Path.GetExtension(source.Path).ToLowerInvariant() switch {
                 ".lmp" or ".tex" => (0, Binary_Lmp.Factory),
                 ".bsp" => (0, Binary_BspX.Factory),
                 ".mdl" => (0, Binary_Mdl.Factory),
                 ".spr" => (0, Binary_Spr.Factory),
-                _ => UnknownPakFile.ObjectFactory(source, game),
+                _ => UnknownArchive.AssetFactory(source, game),
             },
             _ => throw new ArgumentOutOfRangeException(nameof(game.Engine), game.Engine.n),
         };
@@ -65,8 +65,8 @@ public class IDPakFile : BinaryAsset, ITransformAsset<IUnknownFileModel> {
 
     #region Transforms
 
-    bool ITransformAsset<IUnknownFileModel>.CanTransformAsset(Archive transformTo, object source) => UnknownTransform.CanTransformFileObject(this, transformTo, source);
-    Task<IUnknownFileModel> ITransformAsset<IUnknownFileModel>.TransformAsset(Archive transformTo, object source) => UnknownTransform.TransformFileObjectAsync(this, transformTo, source);
+    bool ITransformAsset<IUnknownFileModel>.CanTransformAsset(Archive transformTo, object source) => UnknownTransform.CanTransformAsset(this, transformTo, source);
+    Task<IUnknownFileModel> ITransformAsset<IUnknownFileModel>.TransformAsset(Archive transformTo, object source) => UnknownTransform.TransformAsset(this, transformTo, source);
 
     #endregion
 }

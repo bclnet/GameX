@@ -7,6 +7,6 @@ namespace GameX.Cig.Transforms;
 /// UnknownTransform
 /// </summary>
 public static class UnknownTransform {
-    internal static bool CanTransformFileObject(Archive left, Archive right, object source) => Crytek.Transforms.UnknownTransform.CanTransformFileObject(left, right, source);
-    internal static Task<IUnknownFileModel> TransformFileObjectAsync(Archive left, Archive right, object source) => Crytek.Transforms.UnknownTransform.TransformFileObjectAsync(left, right, source);
+    internal static bool CanTransformAsset(Archive left, Archive right, object source) => Crytek.Transforms.UnknownTransform.CanTransformAsset(left, right, source);
+    internal static Task<IUnknownFileModel> TransformAsset(Archive left, Archive right, object source) => Crytek.Transforms.UnknownTransform.TransformAsset(left, right, source);
 }

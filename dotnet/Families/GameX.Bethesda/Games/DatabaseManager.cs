@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+#pragma warning disable CS0169, CS0649
 
 namespace GameX.Bethesda;
 
@@ -18,7 +19,7 @@ public static class DatabaseManager {
 
         //try
         //{
-        //    Cell = new DatabaseCell(estate.OpenPakFile(new Uri("game:/client_cell_1.dat#AC")));
+        //    Cell = new DatabaseCell(estate.OpenArchive(new Uri("game:/client_cell_1.dat#AC")));
         //    count = Cell.Source.Count;
         //    Log($"Successfully opened {Cell} file, containing {count} records, iteration {Cell.GetIteration()}");
         //    if (count != ExpectedCount) Log($"{count} count does not match expected end-of-retail version of {ExpectedCount}.");

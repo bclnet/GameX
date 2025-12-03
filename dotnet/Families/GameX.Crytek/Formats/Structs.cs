@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using System.Runtime.InteropServices;
+#pragma warning disable CS0169
 
 namespace GameX.Crytek.Formats;
 

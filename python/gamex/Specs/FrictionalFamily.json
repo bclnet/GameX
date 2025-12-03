@@ -9,8 +9,8 @@
   ],
   "games": {
     "*": {
-      "pakFileType": "GameX.Frictional.FrictionalPakFile, GameX.Frictional",
-      "pakExt": ".iwd"
+      "archiveType": "GameX.Frictional.FrictionalArchive, GameX.Frictional",
+      "arcExt": ".iwd"
     },
     "P:O": {
       "name": "Penumbra: Overture",

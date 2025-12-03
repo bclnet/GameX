@@ -79,7 +79,7 @@ public unsafe class Binary_AC : ArcBinary<Binary_AC> {
                     Hash = (ulong)blockSize,
                     Tag = entry,
                 };
-                file.Path = Path.Combine(path, WBPakFile.GetPath(file, r, pakType, out var type));
+                file.Path = Path.Combine(path, WBArchive.GetPath(file, r, pakType, out var type));
                 file.Tag2 = (pakType, type);
                 files.Add(file);
             }

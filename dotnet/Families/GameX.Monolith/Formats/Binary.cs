@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+#pragma warning disable CS0169
 
 namespace GameX.Monolith.Formats;
 

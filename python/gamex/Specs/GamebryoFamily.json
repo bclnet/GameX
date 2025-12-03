@@ -9,7 +9,7 @@
   ],
   "games": {
     "*": {
-      "pakFileType": "GameX.Arkane.GamebryoPakFile, GameX.Gamebryo",
+      "archiveType": "GameX.Arkane.GamebryoArchive, GameX.Gamebryo",
       "engine": "Gamebryo"
     },
     "PoP": {
@@ -78,8 +78,8 @@
       "url": "https://en.wikipedia.org/wiki/The_Elder_Scrolls_III:_Morrowind",
       "dev": "Bethesda Game Studios",
       "date": "May 2, 2002",
-      "pakFileType": "GameX.Bethesda.BethesdaPakFile, GameX.Bethesda",
-      "pakExt": [
+      "archiveType": "GameX.Bethesda.BethesdaArchive, GameX.Bethesda",
+      "arcExt": [
         ".bsa",
         ".esm"
       ],
@@ -206,8 +206,8 @@
       "url": "https://en.wikipedia.org/wiki/The_Elder_Scrolls_IV:_Oblivion",
       "dev": "Bethesda Game Studios",
       "date": "March 20, 2006",
-      "pakFileType": "GameX.Bethesda.BethesdaPakFile, GameX.Bethesda",
-      "pakExt": ".bsa",
+      "archiveType": "GameX.Bethesda.BethesdaArchive, GameX.Bethesda",
+      "arcExt": ".bsa",
       "files": {
         "key": [
           "Steam:22330",
@@ -311,8 +311,8 @@
       "url": "https://en.wikipedia.org/wiki/Fallout_3",
       "dev": "Bethesda Game Studios",
       "date": "October 28, 2008",
-      "pakExt": ".bsa",
-      "pak": "game:/Fallout*.bsa",
+      "arcExt": ".bsa",
+      "arc": "game:/Fallout*.bsa",
       "files": {
         "key": [
           "Steam:22370",
@@ -449,9 +449,9 @@
       "url": "https://en.wikipedia.org/wiki/Fallout:_New_Vegas",
       "dev": "Obsidian Entertainment",
       "date": "October 19, 2010",
-      "pakExt": ".bsa",
+      "arcExt": ".bsa",
       "datExt": ".esm",
-      "pak": "game:/Fallout*.bsa",
+      "arc": "game:/Fallout*.bsa",
       "dat": "game:/FalloutNV.esm",
       "files": {
         "key": [

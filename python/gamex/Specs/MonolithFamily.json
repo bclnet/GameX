@@ -15,8 +15,8 @@
   },
   "games": {
     "*": {
-      "pakFileType": "GameX.Monolith.MonolithPakFile, GameX.Monolith",
-      "pakExt": ".Arch1"
+      "archiveType": "GameX.Monolith.MonolithArchive, GameX.Monolith",
+      "arcExt": ".Arch1"
     },
     "FEAR": {
       "name": "F.E.A.R.",

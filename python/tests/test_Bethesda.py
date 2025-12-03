@@ -9,11 +9,11 @@ file = ('game:/Morrowind.esm#Morrowind', 'sample:0')
 # file = ('game:/Fallout - Meshes.bsa#Fallout3', 'strings/english_m.lang')
 # file = ('game:/Fallout4 - Meshes.ba2#Fallout4', 'Meshes/Marker_Error.NIF')
 
-# get pak with game:/uri
-pakFile = family.openPakFile(file[0])
-sample = pakFile.game.getSample(file[1][7:]).path if file[1].startswith('sample') else file[1]
-print(f'pak: {pakFile}, {sample}')
+# get arc with game:/uri
+archive = family.openArchive(file[0])
+sample = archive.game.getSample(file[1][7:]).path if file[1].startswith('sample') else file[1]
+print(f'arc: {archive}, {sample}')
 
 # get file
-data = pakFile.loadFileData(sample)
+data = archive.getData(sample)
 print(f'dat: {data}')

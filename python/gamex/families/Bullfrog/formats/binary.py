@@ -4,14 +4,14 @@ from enum import Enum
 from io import BytesIO
 from openstk import _pathExtension
 from openstk.gfx import Raster, ITextureFrames, TextureFormat, TexturePixel
-from gamex import PakBinary, PakBinaryT, FileSource, MetaInfo, MetaContent, IHaveMetaInfo
+from gamex import ArcBinary, ArcBinaryT, FileSource, MetaInfo, MetaContent, IHaveMetaInfo
 
 #region Binary_Bullfrog
 
 # Binary_Bullfrog
-class Binary_Bullfrog(PakBinaryT):
+class Binary_Bullfrog(ArcBinaryT):
     @staticmethod
-    def objectFactory(source: FileSource, game: FamilyGame) -> (object, callable):
+    def assetFactory(source: FileSource, game: FamilyGame) -> (object, callable):
         match game.id:
             case _: return (0, None)
 
@@ -30,7 +30,7 @@ class Binary_Bullfrog(PakBinaryT):
     #endregion
 
     # read
-    def read(self, source: BinaryPakFile, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
         # must be .index file
         if _pathExtension(source.filePath) != '.index':
             raise Exception('must be a .index file')
@@ -56,7 +56,7 @@ class Binary_Bullfrog(PakBinaryT):
                 if not path.endswith('.index'): continue
                 files.append(FileSource(
                     path = path,
-                    pak = self.SubPakFile(self, None, source, source.game, source.fileSystem, path)))
+                    arc = self.SubArchive(self, None, source, source.game, source.fileSystem, path)))
             return
 
         # find files
@@ -93,7 +93,7 @@ class Binary_Bullfrog(PakBinaryT):
                 tag = (newPath, tag1, tag2)))
 
     # readData
-    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
         pass
 
 #endregion
@@ -103,7 +103,7 @@ class Binary_Bullfrog(PakBinaryT):
 # Binary_Fli
 class Binary_Fli(IHaveMetaInfo, ITextureFrames):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_Fli(r, f)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Fli(r, f)
 
     #region Headers
 
@@ -295,9 +295,9 @@ class Binary_Fli(IHaveMetaInfo, ITextureFrames):
 #region Binary_Populus
 
 # Binary_Populus
-class Binary_Populus(PakBinaryT):
+class Binary_Populus(ArcBinaryT):
     @staticmethod
-    def objectFactory(source: FileSource, game: FamilyGame) -> (object, callable):
+    def assetFactory(source: FileSource, game: FamilyGame) -> (object, callable):
         match game.id:
             case _: return (0, None)
 
@@ -323,11 +323,11 @@ class Binary_Populus(PakBinaryT):
     #endregion
 
     # read
-    def read(self, source: BinaryPakFile, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
         source.files = files = []
 
     # readData
-    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
         pass
 
 #endregion
@@ -337,9 +337,9 @@ class Binary_Populus(PakBinaryT):
 S_FLIFILES = ['INTRO.DAT', 'MBRIEF.DAT', 'MBRIEOUT.DAT', 'MCONFOUT.DAT', 'MCONFUP.DAT', 'MDEBRIEF.DAT', 'MDEOUT.DAT', 'MENDLOSE.DAT', 'MENDWIN.DAT', 'MGAMEWIN.DAT', 'MLOSA.DAT', 'MLOSAOUT.DAT', 'MLOSEGAM.DAT', 'MMAP.DAT', 'MMAPOUT.DAT', 'MOPTION.DAT', 'MOPTOUT.DAT', 'MRESOUT.DAT', 'MRESRCH.DAT', 'MSCRENUP.DAT', 'MSELECT.DAT', 'MSELOUT.DAT', 'MTITLE.DAT', 'MMULTI.DAT', 'MMULTOUT.DAT']
 
 # Binary_Syndicate
-class Binary_Syndicate(PakBinaryT):
+class Binary_Syndicate(ArcBinaryT):
     @staticmethod
-    def objectFactory(source: FileSource, game: FamilyGame) -> (object, callable):
+    def assetFactory(source: FileSource, game: FamilyGame) -> (object, callable):
         match os.path.basename(source.path).upper():
             case x if x in S_FLIFILES: return (0, Binary_Fli.factory)
             ## case 'MCONSCR.DAT': return (0, Binary_Raw.FactoryMethod()),
@@ -350,11 +350,11 @@ class Binary_Syndicate(PakBinaryT):
             case _: return (0, None)
 
     # read
-    def read(self, source: BinaryPakFile, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
         source.files = files = []
 
     # readData
-    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
         pass
 
 #endregion
@@ -364,7 +364,7 @@ class Binary_Syndicate(PakBinaryT):
 # Binary_SyndicateX
 class Binary_SyndicateX(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_Ftl(r)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Ftl(r)
 
     def __init__(self, r: Reader):
         pass

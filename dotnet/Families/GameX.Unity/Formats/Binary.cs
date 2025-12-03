@@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+#pragma warning disable CS0169, CS0649
 
 namespace GameX.Unity.Formats;
 
@@ -922,7 +923,7 @@ public unsafe class Binary_Unity : ArcBinary<Binary_Unity> {
                 //AssetTypeValueField** pCurValueList = (AssetTypeValueField**)(&((uint8_t*)pValueFieldMemory)[newChildrenCount * sizeof(AssetTypeValueField) + newValueByteLen]);
                 //uint8_t* pCurRawByte = (uint8_t*)(&((uint8_t*)pValueFieldMemory)[newChildrenCount * sizeof(AssetTypeValueField) + newValueByteLen + childListByteLen]);
 
-                TypeValueField[] curValueList = null;
+                // TypeValueField[] curValueList = null;
                 var valueFields = new List<TypeValueField>();
                 _RecursiveMakeValues(this, r, firstPosition + fileLen, valueFields, endian);
                 //_RecursiveDumpValues(pValueFields, 0);
@@ -1627,8 +1628,8 @@ public unsafe class Binary_Unity : ArcBinary<Binary_Unity> {
         }
 
         //var files = source.Files = new List<FileMetadata>();
-        //var pak = (P4kFile)(source.Tag = new P4kFile(r.BaseStream) { Key = Key });
-        //foreach (ZipEntry entry in pak)
+        //var arc = (P4kFile)(source.Tag = new P4kFile(r.BaseStream) { Key = Key });
+        //foreach (ZipEntry entry in arc)
         //{
         //    var metadata = new FileMetadata
         //    {
@@ -1648,24 +1649,24 @@ public unsafe class Binary_Unity : ArcBinary<Binary_Unity> {
 
         //source.UseBinaryReader = false;
         //var files = source.Files;
-        //var pak = (P4kFile)(source.Tag = new P4kFile(w.BaseStream) { Key = Key });
-        //pak.BeginUpdate();
+        //var arc = (P4kFile)(source.Tag = new P4kFile(w.BaseStream) { Key = Key });
+        //arc.BeginUpdate();
         //foreach (var file in files)
         //{
         //    var entry = (ZipEntry)(file.Tag = new ZipEntry(Path.GetFileName(file.Path)));
-        //    pak.Add(entry);
+        //    arc.Add(entry);
         //    source.PakBinary.WriteDataAsync(source, w, file, null, null);
         //}
-        //pak.CommitUpdate();
+        //arc.CommitUpdate();
         return Task.CompletedTask;
     }
 
     public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
-        //var pak = (P4kFile)source.Tag;
+        //var arc = (P4kFile)source.Tag;
         //var entry = (ZipEntry)file.Tag;
         //try
         //{
-        //    using var input = pak.GetInputStream(entry);
+        //    using var input = arc.GetInputStream(entry);
         //    if (!input.CanRead) { Log.Info($"Unable to read stream for file: {file.Path}"); exception?.Invoke(file, $"Unable to read stream for file: {file.Path}"); return Task.FromResult(System.IO.Stream.Null); }
         //    var s = new MemoryStream();
         //    input.CopyTo(s);

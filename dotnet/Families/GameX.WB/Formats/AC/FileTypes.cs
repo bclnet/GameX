@@ -28,7 +28,7 @@ public abstract class FileType //(uint Id)
 /// Special thanks to Dan Skorupski for his work on Bael'Zharon's Respite, which helped fill in some of the gaps https://github.com/boardwalk/bzr
 /// </summary>
 //: FileTypes.Animation
-[PakFileType(PakFileType.Animation)]
+[ArchiveType(ArchiveType.Animation)]
 public class Animation : FileType, IHaveMetaInfo {
     public readonly AnimationFlags Flags;
     public readonly uint NumParts;
@@ -56,7 +56,7 @@ public class Animation : FileType, IHaveMetaInfo {
 
 #region BadData
 //: FileTypes.BadData
-[PakFileType(PakFileType.BadData)]
+[ArchiveType(ArchiveType.BadData)]
 public class BadData : FileType, IHaveMetaInfo {
     public const uint FILE_ID = 0x0E00001A;
 
@@ -77,7 +77,7 @@ public class BadData : FileType, IHaveMetaInfo {
 
 #region CharGen
 //: FileTypes.CharGen
-[PakFileType(PakFileType.CharacterGenerator)]
+[ArchiveType(ArchiveType.CharacterGenerator)]
 public class CharGen : FileType, IHaveMetaInfo {
     public const uint FILE_ID = 0x0E000002;
 
@@ -114,7 +114,7 @@ public class CharGen : FileType, IHaveMetaInfo {
 
 #region ChatPoseTable
 //: FileTypes.ChatPoseTable
-[PakFileType(PakFileType.ChatPoseTable)]
+[ArchiveType(ArchiveType.ChatPoseTable)]
 public class ChatPoseTable : FileType, IHaveMetaInfo {
     public const uint FILE_ID = 0x0E000007;
 
@@ -147,7 +147,7 @@ public class ChatPoseTable : FileType, IHaveMetaInfo {
 /// Thanks to Steven Nygard and his work on the Mac program ACDataTools that were used to help debug & verify some of this data.
 /// </remarks>
 //: FileTypes.ClothingTable
-[PakFileType(PakFileType.Clothing)]
+[ArchiveType(ArchiveType.Clothing)]
 public class ClothingTable : FileType, IHaveMetaInfo {
     /// <summary>
     /// Key is the setup model id
@@ -221,7 +221,7 @@ public class ClothingTable : FileType, IHaveMetaInfo {
 /// These are client_portal.dat files starting with 0x30. 
 /// </summary>
 //: FileTypes.CombatTable
-[PakFileType(PakFileType.CombatTable)]
+[ArchiveType(ArchiveType.CombatTable)]
 public class CombatManeuverTable : FileType, IHaveMetaInfo {
     public readonly CombatManeuver[] CMT;
     public readonly Dictionary<MotionStance, AttackHeights> Stances;
@@ -317,7 +317,7 @@ public class CombatManeuverTable : FileType, IHaveMetaInfo {
 /// This is the client_portal.dat file 0x0E00001D
 /// </summary>
 //: FileTypes.ContractTable
-[PakFileType(PakFileType.ContractTable)]
+[ArchiveType(ArchiveType.ContractTable)]
 public class ContractTable : FileType, IHaveMetaInfo {
     public const uint FILE_ID = 0x0E00001D;
 
@@ -342,7 +342,7 @@ public class ContractTable : FileType, IHaveMetaInfo {
 /// They contain, as the name implies, a map of different enumeration types to a DataID value (item that exist in a client_portal.dat file)
 /// A description of each DidMapper is in DidMapper entry 0x25000000
 /// </summary>
-[PakFileType(PakFileType.DidMapper)]
+[ArchiveType(ArchiveType.DidMapper)]
 public class DidMapper : FileType, IHaveMetaInfo {
     // The client/server designation is guessed based on the content in each list.
     // The keys in these two Dictionaries are common. So ClientEnumToId[key] = ClientEnumToName[key].
@@ -397,7 +397,7 @@ public class DidMapper : FileType, IHaveMetaInfo {
 /// 27000004 - TradeNotes
 /// </summary>
 //: FileTypes.DualDidMapper
-[PakFileType(PakFileType.DualDidMapper)]
+[ArchiveType(ArchiveType.DualDidMapper)]
 public class DualDidMapper : FileType, IHaveMetaInfo {
     // The client/server designation is guessed based on the content in each list.
     // The keys in these two Dictionaries are common. So ClientEnumToId[key] = ClientEnumToName[key].
@@ -440,7 +440,7 @@ public class DualDidMapper : FileType, IHaveMetaInfo {
 
 #region EnumMapper
 //: FileTypes.EnumMapper
-[PakFileType(PakFileType.EnumMapper)]
+[ArchiveType(ArchiveType.EnumMapper)]
 public class EnumMapper : FileType, IHaveMetaInfo {
     public readonly uint BaseEnumMap; // _base_emp_did
     public readonly NumberingType NumberingType;
@@ -474,7 +474,7 @@ public class EnumMapper : FileType, IHaveMetaInfo {
 /// Very special thanks again to David Simpson for his early work on reading the cell.dat. Even bigger thanks for his documentation of it!
 /// </remarks>
 //: FileTypes.EnvCell
-[PakFileType(PakFileType.EnvCell)]
+[ArchiveType(ArchiveType.EnvCell)]
 public class EnvCell : FileType, IHaveMetaInfo {
     public readonly EnvCellFlags Flags;
     public readonly uint[] Surfaces; // 0x08000000 surfaces (which contains degrade/quality info to reference the specific 0x06000000 graphics)
@@ -525,7 +525,7 @@ public class EnvCell : FileType, IHaveMetaInfo {
 /// These are client_portal.dat files starting with 0x0D. 
 /// These are basically pre-fab regions for things like the interior of a dungeon.
 /// </summary>
-[PakFileType(PakFileType.Environment)]
+[ArchiveType(ArchiveType.Environment)]
 public class Environment : FileType, IHaveMetaInfo {
     public readonly IDictionary<uint, CellStruct> Cells;
 
@@ -546,7 +546,7 @@ public class Environment : FileType, IHaveMetaInfo {
 /// These are client_portal.dat files starting with 0x40.
 /// It is essentially a map to a specific texture file (spritemap) that contains all the characters in this font.
 /// </summary>
-[PakFileType(PakFileType.Font)]
+[ArchiveType(ArchiveType.Font)]
 public class Font : FileType, IHaveMetaInfo {
     public readonly uint MaxCharHeight;
     public readonly uint MaxCharWidth;
@@ -582,7 +582,7 @@ public class Font : FileType, IHaveMetaInfo {
 /// Thanks alot Widgeon of Leafcull for his ACDataTools which helped understanding this structure.
 /// And thanks alot to Pea as well whos hard work surely helped in the creation of those Tools too.
 /// </summary>
-[PakFileType(PakFileType.ObjectHierarchy)]
+[ArchiveType(ArchiveType.ObjectHierarchy)]
 public class GeneratorTable : FileType, IHaveMetaInfo {
     public const uint FILE_ID = 0x0E00000D;
 
@@ -620,7 +620,7 @@ public class GeneratorTable : FileType, IHaveMetaInfo {
 /// These are used both on their own for some pre-populated structures in the world (trees, buildings, etc) or make up SetupModel (0x02) objects.
 /// </summary>
 //: FileTypes.GfxObj
-[PakFileType(PakFileType.GfxObject)]
+[ArchiveType(ArchiveType.GfxObject)]
 public class GfxObj : FileType, IHaveMetaInfo {
     public readonly GfxObjFlags Flags;
     public readonly uint[] Surfaces; // also referred to as m_rgSurfaces in the client
@@ -673,7 +673,7 @@ public class GfxObj : FileType, IHaveMetaInfo {
 /// Contains info on what objects to display at what distance to help with render performance (e.g. low-poly very far away, but high-poly when close)
 /// </summary>
 //: FileTypes.DegradeInfo
-[PakFileType(PakFileType.DegradeInfo)]
+[ArchiveType(ArchiveType.DegradeInfo)]
 public class GfxObjDegradeInfo : FileType, IHaveMetaInfo {
     public readonly GfxObjInfo[] Degrades;
 
@@ -745,7 +745,7 @@ public class Iteration : FileType, IHaveMetaInfo {
 /// Very special thanks to David Simpson for his early work on reading the cell.dat. Even bigger thanks for his documentation of it!
 /// </remarks>
 //: FileTypes.CellLandblock
-[PakFileType(PakFileType.LandBlock)]
+[ArchiveType(ArchiveType.LandBlock)]
 public class Landblock : FileType, IHaveMetaInfo {
     /// <summary>
     /// Places in the inland sea, for example, are false. Should denote presence of xxxxFFFE (where xxxx is the cell).
@@ -801,7 +801,7 @@ public class Landblock : FileType, IHaveMetaInfo {
 /// Very special thanks again to David Simpson for his early work on reading the cell.dat. Even bigger thanks for his documentation of it!
 /// </remarks>
 //: FileTypes.LandblockInfo
-[PakFileType(PakFileType.LandBlockInfo)]
+[ArchiveType(ArchiveType.LandBlockInfo)]
 public class LandblockInfo : FileType, IHaveMetaInfo {
     /// <summary>
     /// number of EnvCells in the landblock. This should match up to the unique items in the building stab lists.
@@ -862,7 +862,7 @@ public class LandblockInfo : FileType, IHaveMetaInfo {
 /// Contains some very basic language and formatting rules.
 /// </summary>
 //: New
-[PakFileType(PakFileType.StringState)]
+[ArchiveType(ArchiveType.StringState)]
 public class LanguageInfo : FileType, IHaveMetaInfo {
     public const uint FILE_ID = 0x41000000;
 
@@ -975,7 +975,7 @@ public class LanguageInfo : FileType, IHaveMetaInfo {
 /// This is called a "String" in the client; It has been renamed to avoid conflicts with the generic "String" class.
 /// </summary>
 //: New
-[PakFileType(PakFileType.String)]
+[ArchiveType(ArchiveType.String)]
 public class LanguageString : FileType, IHaveMetaInfo {
     public string CharBuffer;
 
@@ -991,7 +991,7 @@ public class LanguageString : FileType, IHaveMetaInfo {
 #endregion
 
 #region MotionTable
-[PakFileType(PakFileType.MotionTable)]
+[ArchiveType(ArchiveType.MotionTable)]
 public class MotionTable : FileType, IHaveMetaInfo {
     public static Dictionary<ushort, MotionCommand> RawToInterpreted = Enum.GetValues(typeof(MotionCommand)).Cast<object>().ToDictionary(x => (ushort)(uint)x, x => (MotionCommand)x);
     public readonly uint DefaultStyle;
@@ -1199,7 +1199,7 @@ public class MotionTable : FileType, IHaveMetaInfo {
 
 #region NameFilterTable
 //: FileTypes.GeneratorTable
-[PakFileType(PakFileType.NameFilterTable)]
+[ArchiveType(ArchiveType.NameFilterTable)]
 public class NameFilterTable : FileType, IHaveMetaInfo {
     public const uint FILE_ID = 0x0E000020;
 
@@ -1224,7 +1224,7 @@ public class NameFilterTable : FileType, IHaveMetaInfo {
 /// These are client_portal.dat files starting with 0x04. 
 /// </summary>
 //: FileTypes.Palette
-[PakFileType(PakFileType.Palette)]
+[ArchiveType(ArchiveType.Palette)]
 public class Palette : FileType, IHaveMetaInfo {
     /// <summary>
     /// Color data is stored in ARGB format
@@ -1250,7 +1250,7 @@ public class Palette : FileType, IHaveMetaInfo {
 /// They contain, as the name may imply, a set of palettes (0x04 files)
 /// </summary>
 //: FileTypes.Palette
-[PakFileType(PakFileType.PaletteSet)]
+[ArchiveType(ArchiveType.PaletteSet)]
 public class PaletteSet : FileType, IHaveMetaInfo {
     public uint[] PaletteList;
 
@@ -1290,7 +1290,7 @@ public class PaletteSet : FileType, IHaveMetaInfo {
 /// These are client_portal.dat files starting with 0x32. 
 /// </summary>
 //: FileTypes.ParticleEmitterInfo
-[PakFileType(PakFileType.ParticleEmitter)]
+[ArchiveType(ArchiveType.ParticleEmitter)]
 public class ParticleEmitterInfo : FileType, IHaveMetaInfo {
     public readonly uint Unknown;
     public readonly EmitterType EmitterType;
@@ -1375,7 +1375,7 @@ public class ParticleEmitterInfo : FileType, IHaveMetaInfo {
 /// These are client_portal.dat files starting with 0x33. 
 /// </summary>
 //: FileTypes.PhysicsScript
-[PakFileType(PakFileType.PhysicsScript)]
+[ArchiveType(ArchiveType.PhysicsScript)]
 public class PhysicsScript : FileType, IHaveMetaInfo {
     public readonly PhysicsScriptData[] ScriptData;
 
@@ -1397,7 +1397,7 @@ public class PhysicsScript : FileType, IHaveMetaInfo {
 /// These are client_portal.dat files starting with 0x34. 
 /// </summary>
 //: FileTypes.PhysicsScriptTable
-[PakFileType(PakFileType.PhysicsScriptTable)]
+[ArchiveType(ArchiveType.PhysicsScriptTable)]
 public class PhysicsScriptTable : FileType, IHaveMetaInfo {
     public readonly IDictionary<uint, PhysicsScriptTableData> ScriptTable;
 
@@ -1416,7 +1416,7 @@ public class PhysicsScriptTable : FileType, IHaveMetaInfo {
 
 #region QualityFilter
 //: New
-[PakFileType(PakFileType.QualityFilter)]
+[ArchiveType(ArchiveType.QualityFilter)]
 public class QualityFilter : FileType, IHaveMetaInfo {
     public readonly uint[] IntStatFilter;
     public readonly uint[] Int64StatFilter;
@@ -1467,7 +1467,7 @@ public class QualityFilter : FileType, IHaveMetaInfo {
 /// This is the client_portal.dat file starting with 0x13 -- There is only one of these, which is why REGION_ID is a constant.
 /// </summary>
 //: FileTypes.Region
-[PakFileType(PakFileType.Region)]
+[ArchiveType(ArchiveType.Region)]
 public class RegionDesc : FileType, IHaveMetaInfo {
     public const uint FILE_ID = 0x13000000;
 
@@ -1529,7 +1529,7 @@ public class RegionDesc : FileType, IHaveMetaInfo {
 /// 0x15000001 = ConsoleInputBackgroundTexture
 /// </summary>
 //: New
-[PakFileType(PakFileType.RenderTexture)]
+[ArchiveType(ArchiveType.RenderTexture)]
 public class RenderTexture : FileType, IHaveMetaInfo {
     public readonly int Unknown;
     public readonly byte UnknownByte;
@@ -1553,7 +1553,7 @@ public class RenderTexture : FileType, IHaveMetaInfo {
 /// These are client_portal.dat files starting with 0x12. 
 /// </summary>
 //: FileTypes.Scene
-[PakFileType(PakFileType.Scene)]
+[ArchiveType(ArchiveType.Scene)]
 public class Scene : FileType, IHaveMetaInfo {
     public readonly ObjectDesc[] Objects;
 
@@ -1577,7 +1577,7 @@ public class Scene : FileType, IHaveMetaInfo {
 
 #region SecondaryAttributeTable
 //: FileTypes.SecondaryAttributeTable
-[PakFileType(PakFileType.SecondaryAttributeTable)]
+[ArchiveType(ArchiveType.SecondaryAttributeTable)]
 public class SecondaryAttributeTable : FileType, IHaveMetaInfo {
     public const uint FILE_ID = 0x0E000003;
 
@@ -1608,7 +1608,7 @@ public class SecondaryAttributeTable : FileType, IHaveMetaInfo {
 /// They are basically 3D model descriptions.
 /// </summary>
 //: FileTypes.Setup
-[PakFileType(PakFileType.Setup)]
+[ArchiveType(ArchiveType.Setup)]
 public class SetupModel : FileType, IHaveMetaInfo {
     public static readonly SetupModel Empty = new SetupModel();
     public readonly SetupFlags Flags;
@@ -1702,7 +1702,7 @@ public class SetupModel : FileType, IHaveMetaInfo {
 
 #region SkillTable
 //: FileTypes.SkillTable
-[PakFileType(PakFileType.SkillTable)]
+[ArchiveType(ArchiveType.SkillTable)]
 public class SkillTable : FileType, IHaveMetaInfo {
     public const uint FILE_ID = 0x0E000004;
 
@@ -1741,7 +1741,7 @@ public class SkillTable : FileType, IHaveMetaInfo {
 /// They are located in the client_portal.dat and are files starting with 0x20
 /// </summary>
 //: FileTypes.SoundTable
-[PakFileType(PakFileType.SoundTable)]
+[ArchiveType(ArchiveType.SoundTable)]
 public class SoundTable : FileType, IHaveMetaInfo {
     public readonly uint Unknown; // As the name implies, not sure what this is
     // Not quite sure what this is for, but it's the same in every file.
@@ -1772,7 +1772,7 @@ public class SoundTable : FileType, IHaveMetaInfo {
 
 #region SpellComponentTable
 //: FileTypes.SpellComponentTable
-[PakFileType(PakFileType.SpellComponentTable)]
+[ArchiveType(ArchiveType.SpellComponentTable)]
 public class SpellComponentTable : FileType, IHaveMetaInfo {
     public enum Type {
         Scarab = 1,
@@ -1825,7 +1825,7 @@ public class SpellComponentTable : FileType, IHaveMetaInfo {
 
 #region SpellTable
 //: FileTypes.SpellTable
-[PakFileType(PakFileType.SpellTable)]
+[ArchiveType(ArchiveType.SpellTable)]
 public class SpellTable : FileType, IHaveMetaInfo {
     public const uint FILE_ID = 0x0E00000E;
 
@@ -1955,7 +1955,7 @@ public class SpellTable : FileType, IHaveMetaInfo {
 
 #region StringTable
 //: FileTypes.StringTable
-[PakFileType(PakFileType.StringTable)]
+[ArchiveType(ArchiveType.StringTable)]
 public class StringTable : FileType, IHaveMetaInfo {
     public static uint CharacterTitle_FileID = 0x2300000E;
 
@@ -1991,7 +1991,7 @@ public class StringTable : FileType, IHaveMetaInfo {
 /// As the name implies this contains surface info for an object. Either texture reference or color and whatever effects applied to it.
 /// </summary>
 //: FileTypes.Surface
-[PakFileType(PakFileType.Surface)]
+[ArchiveType(ArchiveType.Surface)]
 public class Surface : FileType, IHaveMetaInfo {
     public readonly SurfaceType Type;
     public readonly uint OrigTextureId;
@@ -2029,7 +2029,7 @@ public class Surface : FileType, IHaveMetaInfo {
 
 #region SurfaceTexture
 //: FileTypes.SurfaceTexture
-[PakFileType(PakFileType.SurfaceTexture)]
+[ArchiveType(ArchiveType.SurfaceTexture)]
 public class SurfaceTexture : FileType, IHaveMetaInfo {
     public readonly int Unknown;
     public readonly byte UnknownByte;
@@ -2054,7 +2054,7 @@ public class SurfaceTexture : FileType, IHaveMetaInfo {
 
 #region TabooTable
 //: FileTypes.TabooTable
-[PakFileType(PakFileType.TabooTable)]
+[ArchiveType(ArchiveType.TabooTable)]
 public class TabooTable : FileType, IHaveMetaInfo {
     public const uint FILE_ID = 0x0E00001E;
 
@@ -2101,7 +2101,7 @@ public class TabooTable : FileType, IHaveMetaInfo {
 #endregion
 
 #region Texture
-[PakFileType(PakFileType.Texture)]
+[ArchiveType(ArchiveType.Texture)]
 public unsafe class Texture : FileType, IHaveMetaInfo, ITexture {
     public readonly int Unknown;
     public readonly SurfacePixelFormat PixFormat;
@@ -2264,7 +2264,7 @@ public unsafe class Texture : FileType, IHaveMetaInfo, ITexture {
 /// I'm not sure of an instance where the server would ever need this data, but it's fun nonetheless and included for completion sake.
 /// </summary>
 //: FileTypes.Sound
-[PakFileType(PakFileType.Wave)]
+[ArchiveType(ArchiveType.Wave)]
 public class Wave : FileType, IHaveMetaInfo {
     public byte[] Header { get; private set; }
     public byte[] Data { get; private set; }
@@ -2326,7 +2326,7 @@ public class Wave : FileType, IHaveMetaInfo {
 /// Reads and stores the XP Tables from the client_portal.dat (file 0x0E000018).
 /// </summary>
 //: FileTypes.XpTable
-[PakFileType(PakFileType.XpTable)]
+[ArchiveType(ArchiveType.XpTable)]
 public class XpTable : FileType, IHaveMetaInfo {
     public const uint FILE_ID = 0x0E000018;
 

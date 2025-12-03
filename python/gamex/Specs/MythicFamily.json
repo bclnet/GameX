@@ -9,7 +9,7 @@
   ],
   "games": {
     "*": {
-      "pakFileType": "GameX.Mythic.MythicPakFile, GameX.Mythic"
+      "archiveType": "GameX.Mythic.MythicArchive, GameX.Mythic"
     },
     "DG": {
       "name": "Dragon's Gate",
@@ -99,7 +99,7 @@
           "url": "https://en.wikipedia.org/wiki/Dark_Age_of_Camelot:_Darkness_Rising"
         }
       },
-      "pakExt": [
+      "arcExt": [
         ".mpk",
         ".npk",
         ".myp"
@@ -117,7 +117,7 @@
       "url": "https://en.wikipedia.org/wiki/Warhammer_Online:_Age_of_Reckoning",
       "dnl": "https://www.returnofreckoning.com/forum/install",
       "engine": "Gamebryo",
-      "pakExt": ".myp",
+      "arcExt": ".myp",
       "files": {
         "key": [
           "WinReg:@Return of Reckoning/Return of Reckoning"

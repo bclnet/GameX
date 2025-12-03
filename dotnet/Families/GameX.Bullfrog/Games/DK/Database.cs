@@ -5,13 +5,13 @@ using System.Collections.Concurrent;
 namespace GameX.Bullfrog.Games.DK;
 
 public static class Database {
-    public static Archive PakFile;
+    public static Archive Archive;
     static ConcurrentDictionary<string, Binary_Pal> Palettes = new();
 
     internal static void Loaded(FamilyGame game) {
-        PakFile = game.Family.OpenArchive(new Uri("game:/#DK"));
+        Archive = game.Family.OpenArchive(new Uri("game:/#DK"));
     }
 
     public static Binary_Pal GetPalette(string path, string defaultValue)
-        => Palettes.GetOrAdd(path ?? string.Empty, s => PakFile.GetAsset<Binary_Pal>(s.Length > 0 && PakFile.Contains($"{s}.PAL") ? $"{s}.PAL" : $"{defaultValue}.PAL").Result.ConvertVgaPalette());
+        => Palettes.GetOrAdd(path ?? string.Empty, s => Archive.GetAsset<Binary_Pal>(s.Length > 0 && Archive.Contains($"{s}.PAL") ? $"{s}.PAL" : $"{defaultValue}.PAL").Result.ConvertVgaPalette());
 }

@@ -1,4 +1,6 @@
-﻿namespace GameX.Epic.Formats.Core;
+﻿#pragma warning disable CS0169
+
+namespace GameX.Epic.Formats.Core;
 
 public class UObject {
     // internal storage

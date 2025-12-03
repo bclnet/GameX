@@ -24,7 +24,7 @@ def run(args: RunArgs) -> int:
     if not family: print(f'No family found named "{args.family}".'); return 0
 
     # get game
-    game = family.openPakFile(args.uri)
+    game = family.openArchive(args.uri)
     if not game: print(f'No game found named "{args.Uri}".'); return 0
 
     log.trace('Running game...')

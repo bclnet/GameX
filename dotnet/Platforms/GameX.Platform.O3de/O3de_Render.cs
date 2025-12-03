@@ -31,7 +31,7 @@ public class ViewInfo {
     static ViewInfo() => PlatformX.Activate(O3dePlatform.This);
 
     public string FamilyId = "Bethesda";
-    public string PakUri = "game:/Morrowind.bsa#Morrowind";
+    public string ArcUri = "game:/Morrowind.bsa#Morrowind";
     public string Type = "Texture";
     public string Path = "bookart/boethiah_256.dds";
     //public string Path = "meshes/x/ex_common_balcony_01.nif";
@@ -45,8 +45,8 @@ public class ViewInfo {
     //{
     //    if (string.IsNullOrEmpty(FamilyId)) return;
     //    Family = FamilyManager.GetFamily(FamilyId);
-    //    if (!string.IsNullOrEmpty(PakUri)) PakFiles.Add(Family.OpenPakFile(new Uri(PakUri)));
-    //    var first = PakFiles.FirstOrDefault();
+    //    if (!string.IsNullOrEmpty(ArcUri)) Archives.Add(Family.OpenArchive(new Uri(ArcUri)));
+    //    var first = Archives.FirstOrDefault();
     //    Gfx = (IO3deGfx3d)first?.Gfx;
     //    Renderer = O3deRenderer.CreateRenderer(this, Gfx, Param1, ViewKind.ToString());
     //    Renderer?.Start();
@@ -61,8 +61,8 @@ public class ViewInfo {
     //    {
     //        case NotificationPredelete:
     //            //Renderer?.Dispose();
-    //            foreach (var pakFile in PakFiles) pakFile.Dispose();
-    //            PakFiles.Clear();
+    //            foreach (var archive in Archives) archive.Dispose();
+    //            Archives.Clear();
     //            break;
     //    }
     //}

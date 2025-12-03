@@ -31,18 +31,18 @@ public static class TestHelper {
     public static readonly Dictionary<string, Lazy<Archive>> Paks = new()
     {
         { "AC:AC", new Lazy<Archive>(() => familyAC.OpenArchive(new Uri("game:/*.dat#AC"))) },
-        { "Arkane:AF", new Lazy<Archive>(() => familyArkane.OpenArchive(new Uri("game:/*.pak#AF"))) },
+        { "Arkane:AF", new Lazy<Archive>(() => familyArkane.OpenArchive(new Uri("game:/*.arc#AF"))) },
         { "Arkane:DOM", new Lazy<Archive>(() => familyArkane.OpenArchive(new Uri("game:/*_dir.vpk#DOM"))) },
         { "Arkane:Radius", new Lazy<Archive>(() => familyArkane.OpenArchive(new Uri("game:/*TOC.txt#Radius"))) },
         { "Arkane:D2", new Lazy<Archive>(() => familyArkane.OpenArchive(new Uri("game:/*.Index#D2"))) },
-        { "Arkane:P", new Lazy<Archive>(() => familyArkane.OpenArchive(new Uri("game:/*.pak#P"))) },
+        { "Arkane:P", new Lazy<Archive>(() => familyArkane.OpenArchive(new Uri("game:/*.arc#P"))) },
         { "Arkane:Radius:DOTO", new Lazy<Archive>(() => familyArkane.OpenArchive(new Uri("game:/*.Index#Radius:DOTO"))) },
         { "Arkane:Height:YB", new Lazy<Archive>(() => familyArkane.OpenArchive(new Uri("game:/*#Height:YB"))) },
         { "Arkane:Height:CP", new Lazy<Archive>(() => familyArkane.OpenArchive(new Uri("game:/*#Height:CP"))) },
         { "Arkane:DL", new Lazy<Archive>(() => familyArkane.OpenArchive(new Uri("game:/*.Index#DL"))) },
-        //{ "Arkane:RF", new Lazy<PakFile>(() => familyArkane.OpenPakFile(new Uri("game:/*#RF"))) }, //: future
+        //{ "Arkane:RF", new Lazy<Archive>(() => familyArkane.OpenArchive(new Uri("game:/*#RF"))) }, //: future
 
-        { "Cry:MWO", new Lazy<Archive>(() => familyCry.OpenArchive(new Uri("game:/*.pak#MWO"))) },
+        { "Cry:MWO", new Lazy<Archive>(() => familyCry.OpenArchive(new Uri("game:/*.arc#MWO"))) },
         { "Cyanide:TC", new Lazy<Archive>(() => familyCyanide.OpenArchive(new Uri("game:/*.cpk#TC"))) },
         { "Origin:UO", new Lazy<Archive>(() => familyOrigin.OpenArchive(new Uri("game:/*.idx#UO"))) },
         { "Origin:U9", new Lazy<Archive>(() => familyOrigin.OpenArchive(new Uri("game:/*.flx#U9"))) },

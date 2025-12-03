@@ -25,16 +25,16 @@ public partial class AppShell : UserControl {
         return 0;
     }
 
-    internal int StartupOpen(Family family, IEnumerable<Uri> pakUris, string path = null) {
+    internal int StartupOpen(Family family, IEnumerable<Uri> uris, string path = null) {
         var p = new MainPage();
         p.Show();
-        p.Open(family, pakUris, path);
+        p.Open(family, uris, path);
         return 0;
     }
 
     void OpenPage_Click(object sender, RoutedEventArgs e) {
         //var openPage = new OpenPage();
-        //if (openPage.ShowDialog() == true) Instance.Open((Family)openPage.Family.SelectedItem, openPage.PakUris);
+        //if (openPage.ShowDialog() == true) Instance.Open((Family)openPage.Family.SelectedItem, openPage.ArcUris);
     }
 
     void OptionsPage_Click(object sender, RoutedEventArgs e) {

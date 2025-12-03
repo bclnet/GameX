@@ -6,7 +6,7 @@ from openstk import _throw
 # FileSource
 class FileSource:
     emptyObjectFactory = lambda a, b, c: None
-    def __init__(self, id = None, path = None, offset = None, fileSize = None, packedSize = None, compressed = None, flags = None, hash = None, date = None, pak = None, parts = None, data = None, tag = None, lazy = None):
+    def __init__(self, id = None, path = None, offset = None, fileSize = None, packedSize = None, compressed = None, flags = None, hash = None, date = None, arc = None, parts = None, data = None, tag = None, lazy = None):
         self.id = id
         self.path = path
         self.offset = offset
@@ -16,7 +16,7 @@ class FileSource:
         self.flags = flags
         self.hash = hash
         self.date = date
-        self.pak = pak
+        self.arc = arc
         self.parts = parts
         self.data = data
         self.tag = tag
@@ -59,25 +59,25 @@ class MetaItem:
             self.name = name
             self.description = description
 
-    def __init__(self, source: object, name: str, icon: object = None, tag: object = None, pakFile: PakFile = None, items: list[MetaItem] = None):
+    def __init__(self, source: object, name: str, icon: object = None, tag: object = None, archive: Archive = None, items: list[MetaItem] = None):
         self.source = source
         self.name = name
         self.icon = icon
         self.tag = tag
-        self.pakFile = pakFile
+        self.archive = archive
         self.items = items or []
 
     def findByPath(self, path: str, manager: MetaManager) -> MetaItem:
         paths = re.split('\\\\|/|:', path, 1)
         node = next(iter([x for x in self.items if x.name == paths[0]]), None)
-        if node and isinstance(node.source, FileSource) and node.source.pak: node.source.pak.open(node.items, manager)
+        if node and isinstance(node.source, FileSource) and node.source.arc: node.source.arc.open(node.items, manager)
         return node if not node or len(paths) == 1 else node.findByPath(paths[1], manager)
 
     @staticmethod
     def findByPathForNodes(nodes: list[MetaItem], path: str, manager: MetaManager) -> MetaItem:
         paths = re.split('\\\\|/|:', path, 1)
         node = next(iter([x for x in nodes if x.name == paths[0]]), None)
-        if node and isinstance(node.source, FileSource) and node.source.pak: node.source.pak.open(node.items, manager)
+        if node and isinstance(node.source, FileSource) and node.source.arc: node.source.arc.open(node.items, manager)
         return node if not node or len(paths) == 1 else node.findByPath(paths[1], manager)
 
 # IHaveMetaInfo
@@ -99,9 +99,9 @@ class MetaManager:
         return stream
 
     @staticmethod
-    def getMetaInfos(manager: MetaManager, pakFile: BinaryPakFile, file: FileSource) -> list[MetaInfo]:
+    def getMetaInfos(manager: MetaManager, archive: BinaryArchive, file: FileSource) -> list[MetaInfo]:
         nodes = None
-        obj = pakFile.loadFileObject(object, file)
+        obj = archive.getAsset(object, file)
         match obj:
             case None: return None
             case s if isinstance(obj, IHaveMetaInfo): nodes = s.getInfoNodes(manager, file)
@@ -122,24 +122,24 @@ class MetaManager:
         nodes.append(MetaInfo('File', items = [
             MetaInfo(f'Path: {file.path}'),
             MetaInfo(f'FileSize: {file.fileSize}'),
-            MetaInfo(f'AtEnd: {pakFile.lastAtEnd}'),
+            MetaInfo(f'AtEnd: {archive.atEnd}'),
             MetaInfo('Parts', items = [MetaInfo(f'{part.fileSize}@{part.path}') for x in file.parts]) if file.parts else None
             ]))
         # nodes.append(MetaInfo(None, MetaContent(type='Hex',name='TEST',value=BytesIO())))
         return nodes
 
     @staticmethod
-    def getMetaItems(manager: MetaManager, pakFile: BinaryPakFile) -> list[MetaItem]:
+    def getMetaItems(manager: MetaManager, archive: BinaryArchive) -> list[MetaItem]:
         if not manager: raise Exception('manager')
 
         root = []
-        if not pakFile.files: return root
+        if not archive.files: return root
         currentPath = None; currentFolder = None
 
         # parse paths
-        for file in sorted(pakFile.files, key = lambda x: x.path):
+        for file in sorted(archive.files, key = lambda x: x.path):
             # next path, skip empty
-            path = file.path[pakFile.pathSkip:]
+            path = file.path[archive.pathSkip:]
             if not path: continue
 
             # folder
@@ -149,22 +149,22 @@ class MetaManager:
                 currentFolder = root
                 if fileFolder:
                     for folder in fileFolder.split('/'):
-                        found = next(iter([x for x in currentFolder if x.name == folder and not x.pakFile]), None)
+                        found = next(iter([x for x in currentFolder if x.name == folder and not x.archive]), None)
                         if found: currentFolder = found.items
                         else:
                             found = MetaItem(None, folder, manager.folderIcon)
                             currentFolder.append(found)
                             currentFolder = found.items
             # pakfile
-            if file.pak:
-                items = MetaManager.getMetaItems(manager, file.pak)
-                currentFolder.append(MetaItem(file, os.path.basename(file.path), manager.packageIcon, pakFile = pakFile, items = items))
+            if file.arc:
+                items = MetaManager.getMetaItems(manager, file.arc)
+                currentFolder.append(MetaItem(file, os.path.basename(file.path), manager.packageIcon, archive = archive, items = items))
                 continue
                 
             # file
             fileName = os.path.basename(path)
-            fileNameForIcon = pakFile.fileMask(fileName) or fileName if pakFile.fileMask else fileName
+            fileNameForIcon = archive.fileMask(fileName) or fileName if archive.fileMask else fileName
             _, extentionForIcon = os.path.splitext(fileNameForIcon)
             if extentionForIcon: extentionForIcon = extentionForIcon[1:]
-            currentFolder.append(MetaItem(file, fileName, manager.getIcon(extentionForIcon), pakFile = pakFile))
+            currentFolder.append(MetaItem(file, fileName, manager.getIcon(extentionForIcon), archive = archive))
         return root

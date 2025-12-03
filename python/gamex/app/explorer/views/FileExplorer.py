@@ -6,7 +6,7 @@ from PyQt6.QtMultimedia import QMediaPlayer
 from PyQt6.QtMultimediaWidgets import QVideoWidget
 from PyQt6 import QtCore, QtMultimedia
 from gamex import option
-from gamex.core.pak import PakFile
+from gamex.core.archive import Archive
 from gamex.core.meta import FileSource, MetaItem, MetaInfo
 
 # https://doc.qt.io/qt-6/qtreeview.html
@@ -51,13 +51,13 @@ class FileExplorer(QWidget):
         self._selectedItem = None
         self.initUI()
         # ready
-        self.setPakFile(tab.pakFile)
+        self.setArchive(tab.archive)
 
-    def setPakFile(self, pakFile):
-        self.pakFile = pakFile
-        self.filters = pakFile.getMetaFilters(self.resource)
-        self.nodes = self.pakNodes = pakFile.getMetaItems(self.resource)
-        self.ready(pakFile)
+    def setArchive(self, archive):
+        self.archive = archive
+        self.filters = archive.getMetaFilters(self.resource)
+        self.nodes = self.pakNodes = archive.getMetaItems(self.resource)
+        self.ready(archive)
 
     def initUI(self):
         filterLabel = QLabel(self); filterLabel.setText('File Filter:')
@@ -123,14 +123,14 @@ class FileExplorer(QWidget):
         self._selectedItem = value
         if not value: self.onInfo(); return
         src = value.source.fix() if isinstance(value.source, FileSource) else None
-        pak = src.pak if src else None
+        arc = src.arc if src else None
         try:
-            if pak:
-                if pak.status == PakFile.PakStatus.Opened: return
-                pak.open(value.items, self.resource)
+            if arc:
+                if arc.status == Archive.ArcStatus.Opened: return
+                arc.open(value.items, self.resource)
                 self.updateNodes()
                 self.onFilterKeyUp(None, None)
-            self.onInfo(value.pakFile.getMetaInfos(self.resource, value) if value.pakFile else None)
+            self.onInfo(value.archive.getMetaInfos(self.resource, value) if value.archive else None)
         except:
             print(traceback.format_exc())
             self.onInfo([
@@ -154,12 +154,12 @@ class FileExplorer(QWidget):
         pass
 
     def onInfo(self, infos: list[MetaInfo] = None):
-        self.parent.contentBlock.onInfo(self.pakFile, [x for x in infos if not x.name] if infos else None)
+        self.parent.contentBlock.onInfo(self.archive, [x for x in infos if not x.name] if infos else None)
         self.infos = [x for x in infos if x.name] if infos else None
 
-    def ready(self, pakFile):
+    def ready(self, archive):
         if not option.ForcePath or option.ForcePath.startswith('app:'): return
-        sample = pakFile.game.getSample(option.ForcePath[7:]) if option.ForcePath.startswith('sample:') else None
+        sample = archive.game.getSample(option.ForcePath[7:]) if option.ForcePath.startswith('sample:') else None
         paths = sample.paths if sample else [option.ForcePath]
         if not paths: return
         # abc = MetaItem.findByPathForNodes(self.pakNodes, paths, self.resource)

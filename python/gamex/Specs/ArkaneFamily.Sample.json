@@ -11,23 +11,23 @@
         "type": "Texture"
       },
       {
-        "path": "data.pak:GRAPH/particles/DEFAULT.jpg",
+        "path": "data.arc:GRAPH/particles/DEFAULT.jpg",
         "type": "Texture"
       },
       {
-        "path": "data.pak:GRAPH/particles/Boom.bmp",
+        "path": "data.arc:GRAPH/particles/Boom.bmp",
         "type": "Texture"
       },
       {
-        "path": "data.pak:GAME/GRAPH/INTERFACE/BOOK/RUNES/LACET.FTL",
+        "path": "data.arc:GAME/GRAPH/INTERFACE/BOOK/RUNES/LACET.FTL",
         "type": "Model"
       },
       {
-        "path": "data.pak:GAME/GRAPH/OBJ3D/INTERACTIVE/NPC/RATMAN_BASE/RATMAN_BASE.FTL",
+        "path": "data.arc:GAME/GRAPH/OBJ3D/INTERACTIVE/NPC/RATMAN_BASE/RATMAN_BASE.FTL",
         "type": "Model"
       },
       {
-        "path": "data.pak:GAME/GRAPH/Levels/Level10/fast.fts",
+        "path": "data.arc:GAME/GRAPH/Levels/Level10/fast.fts",
         "type": "Level"
       }
     ]

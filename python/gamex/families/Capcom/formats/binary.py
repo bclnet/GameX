@@ -1,6 +1,6 @@
 import os
 from io import BytesIO
-from gamex.core.pak import PakBinaryT
+from gamex.core.archive import ArcBinaryT
 from gamex.core.meta import FileSource
 from gamex.core.formats.compression import decompressZlib, decompressZstd
 from gamex.core.util import _guessExtension
@@ -8,12 +8,12 @@ from ....resources.Capcom import RE
 
 # typedefs
 class Reader: pass
-class BinaryPakFile: pass
+class BinaryArchive: pass
 
 #region Binary_Arc
 
 # Binary_Arc
-class Binary_Arc(PakBinaryT):
+class Binary_Arc(ArcBinaryT):
 
     #region K
 
@@ -35,7 +35,7 @@ class Binary_Arc(PakBinaryT):
     #endregion
 
     # read
-    def read(self, source: BinaryPakFile, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
         magic = r.readUInt32()
         if magic != self.K_MAGIC: raise Exception('BAD MAGIC')
 
@@ -58,7 +58,7 @@ class Binary_Arc(PakBinaryT):
             file.path += _guessExtension(buf)
 
     # readData
-    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
         r.seek(file.offset)
         return BytesIO(_decompress(r, file.compressed, file.packedSize, file.fileSize))
 
@@ -71,10 +71,10 @@ class Binary_Arc(PakBinaryT):
 #region Binary_Big
 
 # Binary_Big
-class Binary_Big(PakBinaryT):
+class Binary_Big(ArcBinaryT):
 
     # read
-    def read(self, source: BinaryPakFile, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
         raise NotImplementedError()
 
 #endregion
@@ -82,10 +82,10 @@ class Binary_Big(PakBinaryT):
 #region Binary_Bundle
 
 # Binary_Bundle
-class Binary_Bundle(PakBinaryT):
+class Binary_Bundle(ArcBinaryT):
 
     # read
-    def read(self, source: BinaryPakFile, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
         raise NotImplementedError()
 
 #endregion
@@ -109,7 +109,7 @@ Exponent = int.from_bytes([
     ])
 
 # Binary_Kpka
-class Binary_Kpka(PakBinaryT):
+class Binary_Kpka(ArcBinaryT):
 
     #region K
 
@@ -141,7 +141,7 @@ class Binary_Kpka(PakBinaryT):
     #endregion
 
     # read
-    def read(self, source: BinaryPakFile, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
         magic = r.readUInt32()
         if magic != self.K_MAGIC: raise Exception('BAD MAGIC')
 
@@ -180,7 +180,7 @@ class Binary_Kpka(PakBinaryT):
             ) for x in tr.readTArray(self.K_FileV4, header.numFiles)]
 
     # readData
-    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
         r.seek(file.offset)
         return BytesIO(_decompress(r, file.compressed, file.packedSize, file.fileSize))
 
@@ -207,10 +207,10 @@ class Binary_Kpka(PakBinaryT):
 #region Binary_Plist
 
 # Binary_Plist
-class Binary_Plist(PakBinaryT):
+class Binary_Plist(ArcBinaryT):
 
     # read
-    def read(self, source: BinaryPakFile, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
         raise NotImplementedError()
 
 #endregion

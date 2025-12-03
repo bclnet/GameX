@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os, io, asyncio, shutil
 from openstk import parallelFor, IStream, IWriteToStream
-from gamex import FileOption, PakFile, MultiPakFile, BinaryPakFile
+from gamex import FileOption, Archive, MultiArchive, BinaryArchive
 
 # ExportManager
 class ExportManager:
@@ -10,32 +10,32 @@ class ExportManager:
     @staticmethod
     async def exportAsync(family: Family, res: Resource, filePath: str, match: callable, from_: int, option: object) -> None:
         fo = option if isinstance(option, FileOption) else FileOption.Default
-        with family.openPakFile(res) as pak:
+        with family.openArchive(res) as arc:
             # single
-            if not isinstance(pak, MultiPakFile): await ExportManager.exportPakAsync(filePath, match, from_, option, pak); return
-            # write paks
+            if not isinstance(arc, MultiArchive): await ExportManager.exportPakAsync(filePath, match, from_, option, arc); return
+            # write arcs
             if FileOption.Marker in fo:
                 if filePath and not os.path.isdir(filePath): os.makedirs(filePath)
                 setPath = os.path.join(filePath, '.set')
             #     using var w = new BinaryWriter(new FileStream(setPath, FileMode.Create, FileAccess.Write));
-            #     await PakBinary.Stream.Write(new StreamPakFile(NetworkHost.Factory, new PakState(null, null, null, "Root")) {
-            #         Files = [.. multi.PakFiles.Select(x => new FileSource { Path = x.Name })]
+            #     await ArcBinary.Stream.Write(new StreamArchive(NetworkHost.Factory, new ArcState(null, null, null, "Root")) {
+            #         Files = [.. multi.Archives.Select(x => new FileSource { Path = x.Name })]
             #     }, w, "Set");
             # multi
-            for _ in pak.pakFiles: await ExportManager.exportPakAsync(filePath, match, from_, option, _)
+            for _ in arc.archives: await ExportManager.exportPakAsync(filePath, match, from_, option, _)
 
     @staticmethod
-    async def exportPakAsync(filePath: str, match: callable, from_: int, option: object, _: PakFile) -> None:
-        pak = _
-        if not isinstance(pak, BinaryPakFile): raise Exception('s not a BinaryPakFile')
-        newPath = os.path.join(filePath, os.path.basename(pak.pakPath)) if filePath else None
-        # write pak
-        await ExportManager.exportPak2Async(pak, newPath, match, from_, option, \
+    async def exportPakAsync(filePath: str, match: callable, from_: int, option: object, _: Archive) -> None:
+        arc = _
+        if not isinstance(arc, BinaryArchive): raise Exception('s not a BinaryArchive')
+        newPath = os.path.join(filePath, os.path.basename(arc.arcPath)) if filePath else None
+        # write arc
+        await ExportManager.exportPak2Async(arc, newPath, match, from_, option, \
             lambda file, idx: print(f'{idx:>6}> {file.path}') if (idx % 50) == 0 else None, \
             lambda file, msg: print(f'ERROR: {msg} - {file.path}'))
 
     @staticmethod
-    async def exportPak2Async(source: BinaryPakFile, filePath: str, match: callable, from_: int, option: object, next: callable, error: callable) -> None:
+    async def exportPak2Async(source: BinaryArchive, filePath: str, match: callable, from_: int, option: object, next: callable, error: callable) -> None:
         fo = option if isinstance(option, FileOption) else FileOption.Default
         # create directory
         if filePath and not os.path.isdir(filePath): os.makedirs(filePath)
@@ -48,8 +48,8 @@ class ExportManager:
             # create directory
             directory = os.path.dirname(newPath) if newPath else None
             if directory and not os.path.isdir(directory): os.makedirs(directory)
-            # recursive extract pak, and exit
-            if file.pak: await exportPak2Async(file.pak, newPath, match, 0, option, next, error); return
+            # recursive extract arc, and exit
+            if file.arc: await exportPak2Async(file.arc, newPath, match, 0, option, next, error); return
             # ensure cached object factory
             if FileOption.Object in fo: source.ensureCachedObjectFactory(file)
             # extract file
@@ -60,38 +60,38 @@ class ExportManager:
                 if next: next(file, index)
             except Exception as e: error(file, repr(e)) if error else None # f'Exception: {str(e)}'
         await parallelFor(from_, len(source.files), { 'max': ExportManager.MaxDegreeOfParallelism }, _lambdax)
-        # write pak-raw
-        # if FileOption.Marker in fo: await StreamPakFile(source, new PakState(source.Vfx, source.Game, source.Edition, filePath)).Write(null)
+        # write arc-raw
+        # if FileOption.Marker in fo: await StreamArchive(source, new ArcState(source.Vfx, source.Game, source.Edition, filePath)).Write(null)
 
     @staticmethod
-    async def exportFileAsync(file: FileSource, source: BinaryPakFile, newPath: str, option: object) -> None:
+    async def exportFileAsync(file: FileSource, source: BinaryArchive, newPath: str, option: object) -> None:
         fo = option if isinstance(option, FileOption) else FileOption.Default
         if file.fileSize == 0 and file.packedSize == 0: return
         oo = file.cachedObjectOption if isinstance(file.cachedObjectOption, FileOption) else FileOption.Default
         if file.cachedObjectOption and bool(fo & oo):
             if FileOption.UnknownFileModel in oo:
-                model = source.loadFileObject(IUnknownFileModel, file, FamilyManager.UnknownPakFile)
+                model = source.getAsset(IUnknownFileModel, file, FamilyManager.UnknownArchive)
                 # UnknownFileWriter.Factory('default', model).Write(newPath, false)
                 return
             elif FileOption.BinaryObject in oo:
-                obj = source.loadFileObject(object, file)
+                obj = source.getAsset(object, file)
                 if isinstance(obj, IStream):
                     with obj.getStream() as b2, open(newPath, 'wb') if newPath else io.BytesIO() as s2:
                         shutil.copyfileobj(b2, s2)
                     return
-                PakBinary.handleException(None, option, f'BinaryObject: {file.Path} @ {file.FileSize}')
+                ArcBinary.handleException(None, option, f'BinaryObject: {file.Path} @ {file.FileSize}')
                 raise Exception()
             elif FileOption.StreamObject in oo:
-                obj = source.loadFileObject(object, file)
+                obj = source.getAsset(object, file)
                 if isinstance(obj, IWriteToStream):
                     with open(newPath, 'w') if newPath else io.BytesIO() as s2:
                         obj.writeToStream(s2)
                     return
-                PakBinary.handleException(None, option, f'StreamObject: {file.Path} @ {file.FileSize}')
+                ArcBinary.handleException(None, option, f'StreamObject: {file.Path} @ {file.FileSize}')
                 raise Exception()
-        with source.loadFileData(file, option) as b, open(newPath, 'wb') if newPath else io.BytesIO() as s:
+        with source.getData(file, option) as b, open(newPath, 'wb') if newPath else io.BytesIO() as s:
             shutil.copyfileobj(b, s)
             if file.parts and FileOption.Raw not in fo:
                 for part in file.parts:
-                    with await source.loadFileData(part, option) as b2:
+                    with await source.getData(part, option) as b2:
                         shutil.copyfileobj(b2, s)

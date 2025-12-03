@@ -13,15 +13,15 @@ public static class ExportManager {
 
     public static async Task ExportAsync(Family family, Resource res, string filePath, Func<string, bool> match, int from, object option) {
         var fo = option as FileOption? ?? FileOption.Default;
-        using var pak = family.OpenArchive(res);
+        using var arc = family.OpenArchive(res);
         // single
-        if (pak is not MultiArchive multi) { await ExportPakAsync(filePath, match, from, option, pak); return; }
+        if (arc is not MultiArchive multi) { await ExportPakAsync(filePath, match, from, option, arc); return; }
         // write paks
         if ((fo & FileOption.Marker) != 0) {
             if (!string.IsNullOrEmpty(filePath) && !Directory.Exists(filePath)) Directory.CreateDirectory(filePath);
             var setPath = Path.Combine(filePath, ".set");
             using var w = new BinaryWriter(new FileStream(setPath, FileMode.Create, FileAccess.Write));
-            await ArcBinary.Stream.Write(new StreamPakFile(NetworkHost.Factory, new ArchiveState(null, null, null, "Root")) {
+            await ArcBinary.Stream.Write(new StreamArchive(NetworkHost.Factory, new ArchiveState(null, null, null, "Root")) {
                 Files = [.. multi.Archives.Select(x => new FileSource { Path = x.Name })]
             }, w, "Set");
         }
@@ -30,10 +30,10 @@ public static class ExportManager {
     }
 
     static async Task ExportPakAsync(string filePath, Func<string, bool> match, int from, object option, Archive _) {
-        if (_ is not BinaryAsset pak) throw new InvalidOperationException("s not a BinaryAsset");
-        var newPath = filePath != null ? Path.Combine(filePath, Path.GetFileName(pak.ArcPath)) : null;
-        // write pak
-        await ExportPak2Async(pak, newPath, match, from, option,
+        if (_ is not BinaryAsset arc) throw new InvalidOperationException("s not a BinaryAsset");
+        var newPath = filePath != null ? Path.Combine(filePath, Path.GetFileName(arc.ArcPath)) : null;
+        // write arc
+        await ExportPak2Async(arc, newPath, match, from, option,
             (file, idx) => { if ((idx % 50) == 0) Console.WriteLine($"{idx,6}> {file.Path}"); },
             (file, msg) => Console.WriteLine($"ERROR: {msg} - {file?.Path}"));
     }
@@ -53,7 +53,7 @@ public static class ExportManager {
             var directory = newPath != null ? Path.GetDirectoryName(newPath) : null;
             if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory)) Directory.CreateDirectory(directory);
 
-            // recursive extract pak, and exit
+            // recursive extract arc, and exit
             if (file.Arc != null) { await ExportPak2Async(file.Arc, newPath, match, 0, option, next, error); return; }
 
             // ensure cached object factory
@@ -68,8 +68,8 @@ public static class ExportManager {
             }
             catch (Exception e) { error?.Invoke(file, $"Exception: {e.Message}"); }
         });
-        // write pak-raw
-        if ((fo & FileOption.Marker) != 0) await new StreamPakFile(source, new ArchiveState(source.Vfx, source.Game, source.Edition, filePath)).Write(null);
+        // write arc-raw
+        if ((fo & FileOption.Marker) != 0) await new StreamArchive(source, new ArchiveState(source.Vfx, source.Game, source.Edition, filePath)).Write(null);
     }
 
     static async Task ExportFileAsync(FileSource file, BinaryAsset source, string newPath, object option) {
@@ -78,7 +78,7 @@ public static class ExportManager {
         var oo = (file.CachedObjectOption as FileOption?) ?? FileOption.Default;
         if (file.CachedObjectOption != null && (fo & oo) != 0) {
             if (oo.HasFlag(FileOption.UnknownFileModel)) {
-                var model = await source.GetAsset<IUnknownFileModel>(file, FamilyManager.UnknownPakFile);
+                var model = await source.GetAsset<IUnknownFileModel>(file, FamilyManager.UnknownArchive);
                 UnknownFileWriter.Factory("default", model).Write(newPath, false);
                 return;
             }

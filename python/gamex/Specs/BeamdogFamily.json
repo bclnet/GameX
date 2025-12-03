@@ -9,7 +9,7 @@
   ],
   "games": {
     "*": {
-      "pakFileType": "GameX.Beamdog.BeamdogPakFile, GameX.Beamdog"
+      "archiveType": "GameX.Beamdog.BeamdogArchive, GameX.Beamdog"
     },
     "MDK2:W": {
       "name": "MDK2 (wii)",
@@ -21,7 +21,7 @@
       "url": "https://en.wikipedia.org/wiki/MDK2#Wii_port_and_MDK2_HD",
       "date": "October 1, 2011",
       "searchBy": "AllDir",
-      "pakExt": ".dat"
+      "arcExt": ".dat"
     },
     "P:T": {
       "name": "Baldur's Gate: Enhanced Edition",
@@ -30,7 +30,7 @@
         "https://store.steampowered.com/app/466300"
       ],
       "date": "1999-12-10",
-      "pakExt": ".x"
+      "arcExt": ".x"
     },
     "ID": {
       "name": "Baldur's Gate II: Enhanced Edition",
@@ -39,25 +39,25 @@
         "https://store.steampowered.com/app/321800"
       ],
       "date": "2000-06-29",
-      "pakExt": ".x"
+      "arcExt": ".x"
     },
     "ID:HoW": {
       "name": "Icewind Dale: Heart of Winter",
       "url": "https://en.wikipedia.org/wiki/Icewind_Dale:_Heart_of_Winter",
       "date": "2001-02-21",
-      "pakExt": ".x"
+      "arcExt": ".x"
     },
     "ID2": {
       "name": "Icewind Dale II",
       "url": "https://en.wikipedia.org/wiki/Icewind_Dale_II",
       "date": "2002-08-27",
-      "pakExt": ".x"
+      "arcExt": ".x"
     },
     "BG:DA2": {
       "name": "Baldur's Gate: Dark Alliance II",
       "url": "https://en.wikipedia.org/wiki/Baldur%27s_Gate:_Dark_Alliance_II",
       "date": "2004-01-20",
-      "pakExt": ".x"
+      "arcExt": ".x"
     }
   }
 }

@@ -12,8 +12,8 @@
   },
   "games": {
     "*": {
-      "pakFileType": "GameX.Bohemia.BohemiaPakFile, GameX.Bohemia",
-      "pakExt": ".pak"
+      "archiveType": "GameX.Bohemia.BohemiaArchive, GameX.Bohemia",
+      "arcExt": ".arc"
     },
     "FTaFFIaN": {
       "name": "Fairy Tale about Father Frost, Ivan and Nastya",

@@ -10,18 +10,18 @@ public static class ImportManager {
     public static async Task ImportAsync(Family family, Resource resource, string filePath, Func<string, bool> match, int from, object option) {
         //foreach (var path in resource.Paths)
         //{
-        //    using var pak = family.OpenPakFile(resource.Game, new[] { path }) as BinaryPakFile;
-        //    if (pak == null) throw new InvalidOperationException("Pak not a BinaryPakFile");
+        //    using var arc = family.OpenArchive(resource.Game, new[] { path }) as BinaryArchive;
+        //    if (arc == null) throw new InvalidOperationException("Arc not a BinaryArchive");
 
-        //    // import pak
-        //    var w = await ImportPakAsync(filePath, from, path, option, pak);
+        //    // import arc
+        //    var w = await ImportPakAsync(filePath, from, path, option, arc);
         //}
     }
 
-    static async Task<BinaryWriter> ImportPakAsync(string filePath, int from, string path, object option, BinaryAsset pak) {
-        // import pak
+    static async Task<BinaryWriter> ImportPakAsync(string filePath, int from, string path, object option, BinaryAsset arc) {
+        // import arc
         var w = new BinaryWriter(new FileStream(path, FileMode.Create, FileAccess.Write));
-        await pak.ImportAsync(w, filePath, from, option, (file, index) => {
+        await arc.ImportAsync(w, filePath, from, option, (file, index) => {
             //if ((index % 50) == 0)
             //    Console.WriteLine($"{file.Path}");
         }, (file, message) => {
@@ -31,7 +31,7 @@ public static class ImportManager {
     }
 
     static async Task ImportAsync(this BinaryAsset source, BinaryWriter w, string filePath, int from = 0, object option = default, Action<FileSource, int> advance = null, Action<FileSource, string> exception = null) {
-        // read pak
+        // read arc
         if (string.IsNullOrEmpty(filePath) || !Directory.Exists(filePath)) { exception?.Invoke(null, $"Directory Missing: {filePath}"); return; }
         var setPath = Path.Combine(filePath, ".set");
         using (var r = new BinaryReader(File.Open(setPath, FileMode.Open, FileAccess.Read, FileShare.Read))) await ArcBinary.Stream.Read(source, r, "Set");

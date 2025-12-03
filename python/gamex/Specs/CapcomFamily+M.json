@@ -3,7 +3,7 @@
   "url": "https://en.wikipedia.org/wiki/List_of_Capcom_games:_M",
   "games": {
     "*": {
-      "pakFileType": "GameX.Capcom.CapcomPakFile, GameX.Capcom"
+      "archiveType": "GameX.Capcom.CapcomArchive, GameX.Capcom"
     },
     "MagicSword": {
       "name": "Magic Sword",
@@ -93,7 +93,7 @@
       ],
       "date": "September 19, 2017",
       "path": "Paks",
-      "pakExt": ".pak",
+      "arcExt": ".arc",
       "files": {
         "key": [
           "Steam:493840",
@@ -197,8 +197,8 @@
       "date": "October 2, 2018",
       "engine": "MT2",
       "path": "arc",
-      "pakExt": ".arc",
-      "pak": "game:/*/*.arc",
+      "arcExt": ".arc",
+      "arc": "game:/*/*.arc",
       "files": {
         "key": [
           "Steam:742300",
@@ -362,8 +362,8 @@
         "X4/romPC",
         "XChallenge/romPC"
       ],
-      "pakExt": ".arc",
-      "pak": "game:/**/*.arc",
+      "arcExt": ".arc",
+      "arc": "game:/**/*.arc",
       "files": {
         "key": [
           "Steam:743890",
@@ -390,8 +390,8 @@
         "X8/romPC",
         "XChallenge/romPC"
       ],
-      "pakExt": ".arc",
-      "pak": "game:/**/*.arc",
+      "arcExt": ".arc",
+      "arc": "game:/**/*.arc",
       "files": {
         "key": [
           "Steam:743900",
@@ -646,7 +646,7 @@
       ],
       "date": "January 26, 2018",
       "engine": "MT2",
-      "pakExt": ".bin",
+      "arcExt": ".bin",
       "files": {
         "key": [
           "Steam:582010",

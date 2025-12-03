@@ -17,14 +17,14 @@ public class PakTypeAttribute(PakType type) : Attribute {
 }
 
 [AttributeUsage(AttributeTargets.Class)]
-public class PakFileTypeAttribute(PakFileType fileType) : Attribute {
-    public PakFileType FileType { get; set; } = fileType;
+public class ArchiveTypeAttribute(ArchiveType fileType) : Attribute {
+    public ArchiveType FileType { get; set; } = fileType;
 }
 
 [AttributeUsage(AttributeTargets.Field)]
-public class PakFileExtensionAttribute : Attribute {
-    public PakFileExtensionAttribute(string extension) => Value = extension;
-    public PakFileExtensionAttribute(Type classType, string methodName) {
+public class ArchiveExtensionAttribute : Attribute {
+    public ArchiveExtensionAttribute(string extension) => Value = extension;
+    public ArchiveExtensionAttribute(Type classType, string methodName) {
         ExtensionMethod = classType.GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
         Value = (Func<FileSource, BinaryReader, string>)((s, r) => (string)ExtensionMethod.Invoke(null, [s, r]));
     }
@@ -33,14 +33,14 @@ public class PakFileExtensionAttribute : Attribute {
 }
 
 [AttributeUsage(AttributeTargets.Field)]
-public class PakFileIdRangeAttribute(uint begin, uint end) : Attribute {
+public class ArchiveIdRangeAttribute(uint begin, uint end) : Attribute {
     public uint Begin { get; set; } = begin; public uint End { get; set; } = end;
 }
 
 /// <summary>
 /// File types inside .dat files.  These constants were extracted from the decompiled client
 /// </summary>
-public enum PakFileType : uint {
+public enum ArchiveType : uint {
     /// <summary>
     /// File Format:
     ///     DWORD LandblockId
@@ -82,37 +82,37 @@ public enum PakFileType : uint {
     ///     FLOAT Quat.Y
     ///     FLOAT Quat.Z
     /// </summary>
-    [PakType(PakType.Cell), PakFileExtension("lbi")] LandBlockInfo = 2, // DB_TYPE_LBI
+    [PakType(PakType.Cell), ArchiveExtension("lbi")] LandBlockInfo = 2, // DB_TYPE_LBI
 
-    [PakType(PakType.Cell), PakFileExtension("cell"), PakFileIdRange(0x01010000, 0x013EFFFF)] EnvCell = 3, // DB_TYPE_ENVCELL
-
-    /// <summary>
-    /// usage of this is currently unknown.  exists in the client, but has no discernable
-    /// source dat file.  appears to be a server file not distributed to clients.
-    /// </summary>
-    [PakFileExtension("lbo")] LandBlockObjects = 4, // DB_TYPE_LBO
+    [PakType(PakType.Cell), ArchiveExtension("cell"), ArchiveIdRange(0x01010000, 0x013EFFFF)] EnvCell = 3, // DB_TYPE_ENVCELL
 
     /// <summary>
     /// usage of this is currently unknown.  exists in the client, but has no discernable
     /// source dat file.  appears to be a server file not distributed to clients.
     /// </summary>
-    [PakFileExtension("ins")] Instantiation = 5, // DB_TYPE_INSTANTIATION
-
-    [PakType(PakType.Portal), PakFileExtension("obj"), PakFileIdRange(0x01000000, 0x0100FFFF)] GfxObject = 6, // DB_TYPE_GFXOBJ
-
-    [PakType(PakType.Portal), PakFileExtension("set"), PakFileIdRange(0x02000000, 0x0200FFFF)] Setup = 7, // DB_TYPE_SETUP
-
-    [PakType(PakType.Portal), PakFileExtension("anm"), PakFileIdRange(0x03000000, 0x0300FFFF)] Animation = 8, // DB_TYPE_ANIM
+    [ArchiveExtension("lbo")] LandBlockObjects = 4, // DB_TYPE_LBO
 
     /// <summary>
     /// usage of this is currently unknown.  exists in the client, but has no discernable
     /// source dat file.  appears to be a server file not distributed to clients.
     /// </summary>
-    [PakFileExtension("hk")] AnimationHook = 9, // DB_TYPE_ANIMATION_HOOK
+    [ArchiveExtension("ins")] Instantiation = 5, // DB_TYPE_INSTANTIATION
 
-    [PakType(PakType.Portal), PakFileExtension("pal"), PakFileIdRange(0x04000000, 0x0400FFFF)] Palette = 10, // DB_TYPE_PALETTE
+    [PakType(PakType.Portal), ArchiveExtension("obj"), ArchiveIdRange(0x01000000, 0x0100FFFF)] GfxObject = 6, // DB_TYPE_GFXOBJ
 
-    [PakType(PakType.Portal), PakFileExtension("texture"), PakFileIdRange(0x05000000, 0x05FFFFFF)] SurfaceTexture = 11, // DB_TYPE_SURFACETEXTURE
+    [PakType(PakType.Portal), ArchiveExtension("set"), ArchiveIdRange(0x02000000, 0x0200FFFF)] Setup = 7, // DB_TYPE_SETUP
+
+    [PakType(PakType.Portal), ArchiveExtension("anm"), ArchiveIdRange(0x03000000, 0x0300FFFF)] Animation = 8, // DB_TYPE_ANIM
+
+    /// <summary>
+    /// usage of this is currently unknown.  exists in the client, but has no discernable
+    /// source dat file.  appears to be a server file not distributed to clients.
+    /// </summary>
+    [ArchiveExtension("hk")] AnimationHook = 9, // DB_TYPE_ANIMATION_HOOK
+
+    [PakType(PakType.Portal), ArchiveExtension("pal"), ArchiveIdRange(0x04000000, 0x0400FFFF)] Palette = 10, // DB_TYPE_PALETTE
+
+    [PakType(PakType.Portal), ArchiveExtension("texture"), ArchiveIdRange(0x05000000, 0x05FFFFFF)] SurfaceTexture = 11, // DB_TYPE_SURFACETEXTURE
 
     /// <summary>
     /// the 5th dword of these files has values from the following enum:
@@ -129,19 +129,19 @@ public enum PakFileType : uint {
     ///     16: format (see above)
     ///     20: length
     /// </summary>
-    [PakType(PakType.Portal), PakFileExtension(typeof(WBPakFile), "TextureExtensionLookup"), PakFileIdRange(0x06000000, 0x07FFFFFF)] Texture = 12, // DB_TYPE_RENDERSURFACE
+    [PakType(PakType.Portal), ArchiveExtension(typeof(WBArchive), "TextureExtensionLookup"), ArchiveIdRange(0x06000000, 0x07FFFFFF)] Texture = 12, // DB_TYPE_RENDERSURFACE
 
     /// <summary>
     /// indexed in client as "materials" for some reason
     /// </summary>
-    [PakType(PakType.Portal), PakFileExtension("surface"), PakFileIdRange(0x08000000, 0x0800FFFF)] Surface = 13, // DB_TYPE_SURFACE
+    [PakType(PakType.Portal), ArchiveExtension("surface"), ArchiveIdRange(0x08000000, 0x0800FFFF)] Surface = 13, // DB_TYPE_SURFACE
 
-    [PakType(PakType.Portal), PakFileExtension("dsc"), PakFileIdRange(0x09000000, 0x0900FFFF)] MotionTable = 14, // DB_TYPE_MTABLE
+    [PakType(PakType.Portal), ArchiveExtension("dsc"), ArchiveIdRange(0x09000000, 0x0900FFFF)] MotionTable = 14, // DB_TYPE_MTABLE
 
     /// <summary>
     /// indexed as "sound" in the client
     /// </summary>
-    [PakType(PakType.Portal), PakFileExtension("wav"), PakFileIdRange(0x0A000000, 0x0A00FFFF)] Wave = 15, // DB_TYPE_WAVE
+    [PakType(PakType.Portal), ArchiveExtension("wav"), ArchiveIdRange(0x0A000000, 0x0A00FFFF)] Wave = 15, // DB_TYPE_WAVE
 
     /// <summary>
     /// File content structure:
@@ -194,160 +194,160 @@ public enum PakFileType : uint {
     /// 
     /// Note: If CullMode is 1, copy Front-Face data to Back-face
     /// </summary>
-    [PakType(PakType.Portal), PakFileExtension("env"), PakFileIdRange(0x0D000000, 0x0D00FFFF)] Environment = 16, // DB_TYPE_ENVIRONMENT
+    [PakType(PakType.Portal), ArchiveExtension("env"), ArchiveIdRange(0x0D000000, 0x0D00FFFF)] Environment = 16, // DB_TYPE_ENVIRONMENT
 
     /// <summary>
     /// indexed as "ui" in the client
     /// </summary>
-    [PakType(PakType.Portal), PakFileExtension("cps"), PakFileIdRange(0x0E000007, 0x0E000007)] ChatPoseTable = 17, // DB_TYPE_CHAT_POSE_TABLE
+    [PakType(PakType.Portal), ArchiveExtension("cps"), ArchiveIdRange(0x0E000007, 0x0E000007)] ChatPoseTable = 17, // DB_TYPE_CHAT_POSE_TABLE
 
     /// <summary>
     /// indexed as "DungeonCfgs" in the client
     /// </summary>
-    [PakType(PakType.Portal), PakFileExtension("hrc"), PakFileIdRange(0x0E00000D, 0x0E00000D)] ObjectHierarchy = 18, // DB_TYPE_OBJECT_HIERARCHY
+    [PakType(PakType.Portal), ArchiveExtension("hrc"), ArchiveIdRange(0x0E00000D, 0x0E00000D)] ObjectHierarchy = 18, // DB_TYPE_OBJECT_HIERARCHY
 
     /// <summary>
     /// indexed as "weenie" in the client
     /// </summary>
-    [PakType(PakType.Portal), PakFileExtension("bad"), PakFileIdRange(0x0E00001A, 0x0E00001A)] BadData = 19, // DB_TYPE_BADDATA
+    [PakType(PakType.Portal), ArchiveExtension("bad"), ArchiveIdRange(0x0E00001A, 0x0E00001A)] BadData = 19, // DB_TYPE_BADDATA
 
     /// <summary>
     /// indexed as "weenie" in the client
     /// </summary>
-    [PakType(PakType.Portal), PakFileExtension("taboo"), PakFileIdRange(0x0E00001E, 0x0E00001E)] TabooTable = 20, // DB_TYPE_TABOO_TABLE
+    [PakType(PakType.Portal), ArchiveExtension("taboo"), ArchiveIdRange(0x0E00001E, 0x0E00001E)] TabooTable = 20, // DB_TYPE_TABOO_TABLE
 
-    [PakType(PakType.Portal), PakFileIdRange(0x0E00001F, 0x0E00001F)] FileToId = 21, // DB_TYPE_FILE2ID_TABLE
+    [PakType(PakType.Portal), ArchiveIdRange(0x0E00001F, 0x0E00001F)] FileToId = 21, // DB_TYPE_FILE2ID_TABLE
 
     /// <summary>
     /// indexed as "namefilter" in the client
     /// </summary>
-    [PakType(PakType.Portal), PakFileExtension("nft"), PakFileIdRange(0x0E000020, 0x0E000020)] NameFilterTable = 22, // DB_TYPE_NAME_FILTER_TABLE
+    [PakType(PakType.Portal), ArchiveExtension("nft"), ArchiveIdRange(0x0E000020, 0x0E000020)] NameFilterTable = 22, // DB_TYPE_NAME_FILTER_TABLE
 
     /// <summary>
     /// indexed as "properties" in the client
     /// </summary>
-    [PakType(PakType.Portal), PakFileExtension("monprop"), PakFileIdRange(0x0E020000, 0x0E02FFFF)] MonitoredProperties = 23, // DB_TYPE_MONITOREDPROPERTIES
+    [PakType(PakType.Portal), ArchiveExtension("monprop"), ArchiveIdRange(0x0E020000, 0x0E02FFFF)] MonitoredProperties = 23, // DB_TYPE_MONITOREDPROPERTIES
 
-    [PakType(PakType.Portal), PakFileExtension("pst"), PakFileIdRange(0x0F000000, 0x0F00FFFF)] PaletteSet = 24, // DB_TYPE_PAL_SET
+    [PakType(PakType.Portal), ArchiveExtension("pst"), ArchiveIdRange(0x0F000000, 0x0F00FFFF)] PaletteSet = 24, // DB_TYPE_PAL_SET
 
-    [PakType(PakType.Portal), PakFileExtension("clo"), PakFileIdRange(0x10000000, 0x1000FFFF)] Clothing = 25, // DB_TYPE_CLOTHING
+    [PakType(PakType.Portal), ArchiveExtension("clo"), ArchiveIdRange(0x10000000, 0x1000FFFF)] Clothing = 25, // DB_TYPE_CLOTHING
 
-    [PakType(PakType.Portal), PakFileExtension("deg"), PakFileIdRange(0x11000000, 0x1100FFFF)] DegradeInfo = 26, // DB_TYPE_DEGRADEINFO
+    [PakType(PakType.Portal), ArchiveExtension("deg"), ArchiveIdRange(0x11000000, 0x1100FFFF)] DegradeInfo = 26, // DB_TYPE_DEGRADEINFO
 
-    [PakType(PakType.Portal), PakFileExtension("scn"), PakFileIdRange(0x12000000, 0x1200FFFF)] Scene = 27, // DB_TYPE_SCENE 
+    [PakType(PakType.Portal), ArchiveExtension("scn"), ArchiveIdRange(0x12000000, 0x1200FFFF)] Scene = 27, // DB_TYPE_SCENE 
 
     /// <summary>
     /// indexed as "landscape" by the client
     /// </summary>
-    [PakType(PakType.Portal), PakFileExtension("rgn"), PakFileIdRange(0x13000000, 0x1300FFFF)] Region = 28, // DB_TYPE_REGION
+    [PakType(PakType.Portal), ArchiveExtension("rgn"), ArchiveIdRange(0x13000000, 0x1300FFFF)] Region = 28, // DB_TYPE_REGION
 
-    [PakType(PakType.Portal), PakFileExtension("keymap"), PakFileIdRange(0x14000000, 0x1400FFFF)] KeyMap = 29, // DB_TYPE_KEYMAP
+    [PakType(PakType.Portal), ArchiveExtension("keymap"), ArchiveIdRange(0x14000000, 0x1400FFFF)] KeyMap = 29, // DB_TYPE_KEYMAP
 
     /// <summary>
     /// indexed as "textures" in the client
     /// </summary>
-    [PakType(PakType.Portal), PakFileExtension("rtexture"), PakFileIdRange(0x15000000, 0x15FFFFFF)] RenderTexture = 30, // DB_TYPE_RENDERTEXTURE 
+    [PakType(PakType.Portal), ArchiveExtension("rtexture"), ArchiveIdRange(0x15000000, 0x15FFFFFF)] RenderTexture = 30, // DB_TYPE_RENDERTEXTURE 
 
     /// <summary>
     /// indexed as "materials" in the client
     /// </summary>
-    [PakType(PakType.Portal), PakFileExtension("mat"), PakFileIdRange(0x16000000, 0x16FFFFFF)] RenderMaterial = 31, // DB_TYPE_RENDERMATERIAL 
+    [PakType(PakType.Portal), ArchiveExtension("mat"), ArchiveIdRange(0x16000000, 0x16FFFFFF)] RenderMaterial = 31, // DB_TYPE_RENDERMATERIAL 
 
     /// <summary>
     /// indexed as "materials" in the client
     /// </summary>
-    [PakType(PakType.Portal), PakFileExtension("mm"), PakFileIdRange(0x17000000, 0x17FFFFFF)] MaterialModifier = 32, // DB_TYPE_MATERIALMODIFIER 
+    [PakType(PakType.Portal), ArchiveExtension("mm"), ArchiveIdRange(0x17000000, 0x17FFFFFF)] MaterialModifier = 32, // DB_TYPE_MATERIALMODIFIER 
 
     /// <summary>
     /// indexed as "materials" in the client
     /// </summary>
-    [PakType(PakType.Portal), PakFileExtension("mi"), PakFileIdRange(0x18000000, 0x18FFFFFF)] MaterialInstance = 33, // DB_TYPE_MATERIALINSTANCE
+    [PakType(PakType.Portal), ArchiveExtension("mi"), ArchiveIdRange(0x18000000, 0x18FFFFFF)] MaterialInstance = 33, // DB_TYPE_MATERIALINSTANCE
 
     /// <summary>
     /// SoundTable
     /// </summary>
-    [PakType(PakType.Portal), PakFileExtension("stb"), PakFileIdRange(0x20000000, 0x2000FFFF)] SoundTable = 34, // DB_TYPE_STABLE
+    [PakType(PakType.Portal), ArchiveExtension("stb"), ArchiveIdRange(0x20000000, 0x2000FFFF)] SoundTable = 34, // DB_TYPE_STABLE
 
     /// <summary>
     /// This is in the Language dat (client_local_English.dat)
     /// </summary>
-    [PakType(PakType.Language), PakFileExtension("uil"), PakFileIdRange(0x21000000, 0x21FFFFFF)] UILayout = 35, // DB_TYPE_UI_LAYOUT
+    [PakType(PakType.Language), ArchiveExtension("uil"), ArchiveIdRange(0x21000000, 0x21FFFFFF)] UILayout = 35, // DB_TYPE_UI_LAYOUT
 
     /// <summary>
     /// indexed as "emp" in the client
     /// </summary>
-    [PakType(PakType.Portal), PakFileExtension("emp"), PakFileIdRange(0x22000000, 0x22FFFFFF)] EnumMapper = 36, // DB_TYPE_ENUM_MAPPER
+    [PakType(PakType.Portal), ArchiveExtension("emp"), ArchiveIdRange(0x22000000, 0x22FFFFFF)] EnumMapper = 36, // DB_TYPE_ENUM_MAPPER
 
     /// <summary>
     /// This is in the Language dat (client_local_English.dat)
     /// </summary>
-    [PakType(PakType.Language), PakFileExtension("stt"), PakFileIdRange(0x23000000, 0x24FFFFFF)] StringTable = 37, // DB_TYPE_STRING_TABLE 
+    [PakType(PakType.Language), ArchiveExtension("stt"), ArchiveIdRange(0x23000000, 0x24FFFFFF)] StringTable = 37, // DB_TYPE_STRING_TABLE 
 
     /// <summary>
     /// indexed as "emp/idmap" in the client
     /// </summary>
-    [PakType(PakType.Portal), PakFileExtension("imp"), PakFileIdRange(0x25000000, 0x25FFFFFF)] DidMapper = 38, // DB_TYPE_DID_MAPPER 
+    [PakType(PakType.Portal), ArchiveExtension("imp"), ArchiveIdRange(0x25000000, 0x25FFFFFF)] DidMapper = 38, // DB_TYPE_DID_MAPPER 
 
-    [PakType(PakType.Portal), PakFileExtension("actionmap"), PakFileIdRange(0x26000000, 0x2600FFFF)] ActionMap = 39, // DB_TYPE_ACTIONMAP 
+    [PakType(PakType.Portal), ArchiveExtension("actionmap"), ArchiveIdRange(0x26000000, 0x2600FFFF)] ActionMap = 39, // DB_TYPE_ACTIONMAP 
 
     /// <summary>
     /// indexed as "emp/idmap" in the client
     /// </summary>
-    [PakType(PakType.Portal), PakFileExtension("dimp"), PakFileIdRange(0x27000000, 0x27FFFFFF)] DualDidMapper = 40, // DB_TYPE_DUAL_DID_MAPPER
+    [PakType(PakType.Portal), ArchiveExtension("dimp"), ArchiveIdRange(0x27000000, 0x27FFFFFF)] DualDidMapper = 40, // DB_TYPE_DUAL_DID_MAPPER
 
-    [PakType(PakType.Portal), PakFileExtension("str"), PakFileIdRange(0x31000000, 0x3100FFFF)] String = 41, // DB_TYPE_STRING
+    [PakType(PakType.Portal), ArchiveExtension("str"), ArchiveIdRange(0x31000000, 0x3100FFFF)] String = 41, // DB_TYPE_STRING
 
     /// <summary>
     /// inedexed as "emt" in the client
     /// </summary>
-    [PakType(PakType.Portal), PakFileExtension("emt"), PakFileIdRange(0x32000000, 0x3200FFFF)] ParticleEmitter = 42, // DB_TYPE_PARTICLE_EMITTER 
+    [PakType(PakType.Portal), ArchiveExtension("emt"), ArchiveIdRange(0x32000000, 0x3200FFFF)] ParticleEmitter = 42, // DB_TYPE_PARTICLE_EMITTER 
 
     /// <summary>
     /// inedexed as "pes" in the client
     /// </summary>
-    [PakType(PakType.Portal), PakFileExtension("pes"), PakFileIdRange(0x33000000, 0x3300FFFF)] PhysicsScript = 43, // DB_TYPE_PHYSICS_SCRIPT 
+    [PakType(PakType.Portal), ArchiveExtension("pes"), ArchiveIdRange(0x33000000, 0x3300FFFF)] PhysicsScript = 43, // DB_TYPE_PHYSICS_SCRIPT 
 
     /// <summary>
     /// inedexed as "pet" in the client
     /// </summary>
-    [PakType(PakType.Portal), PakFileExtension("pet"), PakFileIdRange(0x34000000, 0x3400FFFF)] PhysicsScriptTable = 44, // DB_TYPE_PHYSICS_SCRIPT_TABLE 
+    [PakType(PakType.Portal), ArchiveExtension("pet"), ArchiveIdRange(0x34000000, 0x3400FFFF)] PhysicsScriptTable = 44, // DB_TYPE_PHYSICS_SCRIPT_TABLE 
 
     /// <summary>
     /// inedexed as "emt/property" in the client
     /// </summary>
-    [PakType(PakType.Portal), PakFileExtension("mpr"), PakFileIdRange(0x39000000, 0x39FFFFFF)] MasterProperty = 45, // DB_TYPE_MASTER_PROPERTY 
+    [PakType(PakType.Portal), ArchiveExtension("mpr"), ArchiveIdRange(0x39000000, 0x39FFFFFF)] MasterProperty = 45, // DB_TYPE_MASTER_PROPERTY 
 
-    [PakType(PakType.Portal), PakFileExtension("font"), PakFileIdRange(0x40000000, 0x40000FFF)] Font = 46, // DB_TYPE_FONT 
+    [PakType(PakType.Portal), ArchiveExtension("font"), ArchiveIdRange(0x40000000, 0x40000FFF)] Font = 46, // DB_TYPE_FONT 
 
-    [PakType(PakType.Portal), PakFileExtension("font_local"), PakFileIdRange(0x40001000, 0x400FFFFF)] FontLocal = 47, // DB_TYPE_FONT_LOCAL 
+    [PakType(PakType.Portal), ArchiveExtension("font_local"), ArchiveIdRange(0x40001000, 0x400FFFFF)] FontLocal = 47, // DB_TYPE_FONT_LOCAL 
 
     /// <summary>
     /// This is located in the Language dat (client_local_English.dat)
     /// "stringtable" in the client
     /// </summary>
-    [PakType(PakType.Language), PakFileExtension("sti"), PakFileIdRange(0x41000000, 0x41FFFFFF)] StringState = 48, // DB_TYPE_STRING_STATE
+    [PakType(PakType.Language), ArchiveExtension("sti"), ArchiveIdRange(0x41000000, 0x41FFFFFF)] StringState = 48, // DB_TYPE_STRING_STATE
 
-    [PakType(PakType.Portal), PakFileExtension(typeof(WBPakFile), "DbPropertyExtensionLookup"), PakFileIdRange(0x78000000, 0x7FFFFFFF)] DbProperties = 49, // DB_TYPE_DBPROPERTIES
+    [PakType(PakType.Portal), ArchiveExtension(typeof(WBArchive), "DbPropertyExtensionLookup"), ArchiveIdRange(0x78000000, 0x7FFFFFFF)] DbProperties = 49, // DB_TYPE_DBPROPERTIES
 
     /// <summary>
     /// indexed as "mesh" in the client
     /// </summary>
-    [PakType(PakType.Portal), PakFileExtension("rendermesh"), PakFileIdRange(0x19000000, 0x19FFFFFF)] RenderMesh = 67, // DB_TYPE_RENDER_MESH
+    [PakType(PakType.Portal), ArchiveExtension("rendermesh"), ArchiveIdRange(0x19000000, 0x19FFFFFF)] RenderMesh = 67, // DB_TYPE_RENDER_MESH
 
     // the following special files are called out in a different section of the decompiled client:
-    [PakType(PakType.Portal), PakFileIdRange(0x0E000001, 0x0E000001)] WeenieDefaults = 97, // DB_TYPE_WEENIE_DEF
-    [PakType(PakType.Portal), PakFileIdRange(0x0E000002, 0x0E000002)] CharacterGenerator = 98, // DB_TYPE_CHAR_GEN_0
-    [PakType(PakType.Portal), PakFileIdRange(0x0E000003, 0x0E000003)] SecondaryAttributeTable = 99, // DB_TYPE_ATTRIBUTE_2ND_TABLE_0
-    [PakType(PakType.Portal), PakFileIdRange(0x0E000004, 0x0E000004)] SkillTable = 100, // DB_TYPE_SKILL_TABLE_0
-    [PakType(PakType.Portal), PakFileIdRange(0x0E00000E, 0x0E00000E)] SpellTable = 101, // DB_TYPE_SPELL_TABLE_0
-    [PakType(PakType.Portal), PakFileIdRange(0x0E00000F, 0x0E00000F)] SpellComponentTable = 102, // DB_TYPE_SPELLCOMPONENT_TABLE_0
-    [PakType(PakType.Portal), PakFileIdRange(0x0E000010, 0x0E000010)] TreasureTable = 103, // DB_TYPE_W_TREASURE_SYSTEM //:SKY IdRangeError
-    [PakType(PakType.Portal), PakFileIdRange(0x0E000019, 0x0E000019)] CraftTable = 104, // DB_TYPE_W_CRAFT_TABLE
-    [PakType(PakType.Portal), PakFileIdRange(0x0E000018, 0x0E000018)] XpTable = 105, // DB_TYPE_XP_TABLE_0
-    [PakType(PakType.Portal), PakFileIdRange(0x0E00001B, 0x0E00001B)] Quests = 106, // DB_TYPE_QUEST_DEF_DB_0
-    [PakType(PakType.Portal), PakFileIdRange(0x0E00001C, 0x0E00001C)] GameEventTable = 107, // DB_TYPE_GAME_EVENT_DB
-    [PakType(PakType.Portal), PakFileIdRange(0x0E010000, 0x0E01FFFF)] QualityFilter = 108, // DB_TYPE_QUALITY_FILTER_0
-    [PakType(PakType.Portal), PakFileIdRange(0x30000000, 0x3000FFFF)] CombatTable = 109, // DB_TYPE_COMBAT_TABLE_0
-    [PakType(PakType.Portal), PakFileIdRange(0x38000000, 0x3800FFFF)] ItemMutation = 110, // DB_TYPE_MUTATE_FILTER
-    [PakType(PakType.Portal), PakFileIdRange(0x0E00001D, 0x0E00001D)] ContractTable = 111, // DB_TYPE_CONTRACT_TABLE_0
+    [PakType(PakType.Portal), ArchiveIdRange(0x0E000001, 0x0E000001)] WeenieDefaults = 97, // DB_TYPE_WEENIE_DEF
+    [PakType(PakType.Portal), ArchiveIdRange(0x0E000002, 0x0E000002)] CharacterGenerator = 98, // DB_TYPE_CHAR_GEN_0
+    [PakType(PakType.Portal), ArchiveIdRange(0x0E000003, 0x0E000003)] SecondaryAttributeTable = 99, // DB_TYPE_ATTRIBUTE_2ND_TABLE_0
+    [PakType(PakType.Portal), ArchiveIdRange(0x0E000004, 0x0E000004)] SkillTable = 100, // DB_TYPE_SKILL_TABLE_0
+    [PakType(PakType.Portal), ArchiveIdRange(0x0E00000E, 0x0E00000E)] SpellTable = 101, // DB_TYPE_SPELL_TABLE_0
+    [PakType(PakType.Portal), ArchiveIdRange(0x0E00000F, 0x0E00000F)] SpellComponentTable = 102, // DB_TYPE_SPELLCOMPONENT_TABLE_0
+    [PakType(PakType.Portal), ArchiveIdRange(0x0E000010, 0x0E000010)] TreasureTable = 103, // DB_TYPE_W_TREASURE_SYSTEM //:SKY IdRangeError
+    [PakType(PakType.Portal), ArchiveIdRange(0x0E000019, 0x0E000019)] CraftTable = 104, // DB_TYPE_W_CRAFT_TABLE
+    [PakType(PakType.Portal), ArchiveIdRange(0x0E000018, 0x0E000018)] XpTable = 105, // DB_TYPE_XP_TABLE_0
+    [PakType(PakType.Portal), ArchiveIdRange(0x0E00001B, 0x0E00001B)] Quests = 106, // DB_TYPE_QUEST_DEF_DB_0
+    [PakType(PakType.Portal), ArchiveIdRange(0x0E00001C, 0x0E00001C)] GameEventTable = 107, // DB_TYPE_GAME_EVENT_DB
+    [PakType(PakType.Portal), ArchiveIdRange(0x0E010000, 0x0E01FFFF)] QualityFilter = 108, // DB_TYPE_QUALITY_FILTER_0
+    [PakType(PakType.Portal), ArchiveIdRange(0x30000000, 0x3000FFFF)] CombatTable = 109, // DB_TYPE_COMBAT_TABLE_0
+    [PakType(PakType.Portal), ArchiveIdRange(0x38000000, 0x3800FFFF)] ItemMutation = 110, // DB_TYPE_MUTATE_FILTER
+    [PakType(PakType.Portal), ArchiveIdRange(0x0E00001D, 0x0E00001D)] ContractTable = 111, // DB_TYPE_CONTRACT_TABLE_0
 }

@@ -1,17 +1,17 @@
 import os
 from io import BytesIO
 from openstk import Reader
-from gamex.core.pak import PakBinaryT
+from gamex.core.archive import ArcBinaryT
 from gamex.core.meta import FileSource
 from gamex.core.formats.compression import decompressLzss, decompressZlib
 
 # typedefs
-class BinaryPakFile: pass
+class BinaryArchive: pass
 
 #region Binary_Hogg
 
 # Binary_Hogg
-class Binary_Hogg(PakBinaryT):
+class Binary_Hogg(ArcBinaryT):
 
     #region Headers
 
@@ -58,7 +58,7 @@ class Binary_Hogg(PakBinaryT):
     #endregion
 
     # read
-    def read(self, source: BinaryPakFile, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
         # read header
         header = r.readS(self.Header)
         if header.magic != self.MAGIC: raise Exception('BAD MAGIC')
@@ -110,13 +110,13 @@ class Binary_Hogg(PakBinaryT):
         for i in range(numFiles):
             file = files[i]
             file.path = fileAttribs[attributeEntries[i].pathId][:-1].decode('ascii')
-            if file.path.endswith('.hogg'): file.pak = PakBinary_Hogg.SubPakFile(self, file, source, source.game, source.fileSystem, file.path, file.tag)
+            if file.path.endswith('.hogg'): file.arc = PakBinary_Hogg.SubArchive(self, file, source, source.game, source.fileSystem, file.path, file.tag)
         
         # remove filesize of -1 and file 0
         source.files = [x for x in files if x.fileSize != -1 and x.id != 0]
 
     # readData
-    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
         r.seek(file.offset)
         return BytesIO(
             decompressZlib(r, file.packedSize, file.fileSize) if file.compressed != 0 else \

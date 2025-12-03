@@ -3,7 +3,7 @@ using GameX.WB.Formats.AC.FileTypes;
 namespace GameX.WB;
 
 public class DatabasePortal : Database {
-    public DatabasePortal(Archive pakFile) : base(pakFile) {
+    public DatabasePortal(Archive archive) : base(archive) {
         BadData = GetFile<BadData>(BadData.FILE_ID);
         ChatPoseTable = GetFile<ChatPoseTable>(ChatPoseTable.FILE_ID);
         CharGen = GetFile<CharGen>(CharGen.FILE_ID);

@@ -1,24 +1,24 @@
 import os
 from io import BytesIO
-from gamex.core.pak import PakBinaryT
+from gamex.core.archive import ArcBinaryT
 from gamex.core.meta import FileSource
 from gamex.core.formats.compression import decompressZstd, decompressZlib
 from ....resources.Bioware import TOR, WAR
 
 # typedefs
 class Reader: pass
-class BinaryPakFile: pass
+class BinaryArchive: pass
 
 # Binary_Aurora
-class Binary_Aurora(PakBinaryT):
+class Binary_Aurora(ArcBinaryT):
 
     # read
-    def read(self, source: BinaryPakFile, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
         raise Exception('BAD MAGIC')
 
 
 # Binary_Myp
-class Binary_Myp(PakBinaryT):
+class Binary_Myp(ArcBinaryT):
 
     #region Headers
 
@@ -55,7 +55,7 @@ class Binary_Myp(PakBinaryT):
     #endregion
 
     # read
-    def read(self, source: BinaryPakFile, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
         files = source.files = []
         match source.game.id:
             case 'SWTOR': hashLookup = TOR.hashLookup
@@ -92,7 +92,7 @@ class Binary_Myp(PakBinaryT):
                     compressed = headerFile.compressed))
 
     # readData
-    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
         if file.fileSize == 0: return BytesIO()
         r.seek(file.offset)
         return BytesIO(

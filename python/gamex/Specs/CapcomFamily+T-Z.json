@@ -3,7 +3,7 @@
   "url": "https://en.wikipedia.org/wiki/List_of_Capcom_games:_T%E2%80%93Z",
   "games": {
     "*": {
-      "pakFileType": "GameX.Capcom.CapcomPakFile, GameX.Capcom"
+      "archiveType": "GameX.Capcom.CapcomArchive, GameX.Capcom"
     },
     "TNGCP:AS": {
       "name": "Taisen Net Gimmick Capcom & Psikyo All Stars",
@@ -167,7 +167,7 @@
       ],
       "date": "November 15, 2011",
       "engine": "MT2",
-      "pakExt": ".?",
+      "arcExt": ".?",
       "files": {
         "key": [
           "Steam:357190",
@@ -184,7 +184,7 @@
         "https://en.wikipedia.org/wiki/Umbrella_Corps"
       ],
       "date": "June 21, 2016",
-      "pakExt": ".?",
+      "arcExt": ".?",
       "files": {
         "key": [
           "Steam:390340",

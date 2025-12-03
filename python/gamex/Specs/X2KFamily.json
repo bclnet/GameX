@@ -9,7 +9,7 @@
   ],
   "games": {
     "*": {
-      "pakFileType": "GameX.2K.2KPakFile, GameX.2K"
+      "archiveType": "GameX.2K.2KArchive, GameX.2K"
     },
     "M": {
       "name": "Mafia",

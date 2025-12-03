@@ -45,11 +45,11 @@ public class FormatTests {
             if ((uint)key == Iteration.FILE_ID) continue;
             if (file.FileSize == 0) continue; // DatFileType.LandBlock files can be empty
 
-            var (fileType, ext) = WBPakFile.GetFileType(file, PakType.Cell);
+            var (fileType, ext) = WBArchive.GetFileType(file, PakType.Cell);
             Assert.IsNotNull(ext, $"Key: 0x{key:X8}, ObjectID: 0x{file.Id:X8}, FileSize: {file.FileSize}");
 
             var factory = source.EnsureCachedObjectFactory(file);
-            if (factory == null) throw new Exception($"Class for fileType: {fileType} does not implement an ObjectFactory.");
+            if (factory == null) throw new Exception($"Class for fileType: {fileType} does not implement an AssetFactory.");
 
             using var r = new BinaryReader(await source.GetData(file));
             await factory(r, file, source);
@@ -64,20 +64,20 @@ public class FormatTests {
         foreach (var (key, file) in source.FilesById.Select(x => KeyValuePair.Create(x.Key, x.First()))) {
             if ((uint)key == Iteration.FILE_ID) continue;
 
-            var (fileType, ext) = WBPakFile.GetFileType(file, PakType.Portal);
+            var (fileType, ext) = WBArchive.GetFileType(file, PakType.Portal);
             Assert.IsNotNull(ext, $"Key: 0x{key:X8}, ObjectID: 0x{file.Id:X8}, FileSize: {file.FileSize}");
 
             // These file types aren't converted yet
-            if (fileType == PakFileType.KeyMap) continue;
-            if (fileType == PakFileType.RenderMaterial) continue;
-            if (fileType == PakFileType.MaterialModifier) continue;
-            if (fileType == PakFileType.MaterialInstance) continue;
-            if (fileType == PakFileType.ActionMap) continue;
-            if (fileType == PakFileType.MasterProperty) continue;
-            if (fileType == PakFileType.DbProperties) continue;
+            if (fileType == ArchiveType.KeyMap) continue;
+            if (fileType == ArchiveType.RenderMaterial) continue;
+            if (fileType == ArchiveType.MaterialModifier) continue;
+            if (fileType == ArchiveType.MaterialInstance) continue;
+            if (fileType == ArchiveType.ActionMap) continue;
+            if (fileType == ArchiveType.MasterProperty) continue;
+            if (fileType == ArchiveType.DbProperties) continue;
 
             var factory = source.EnsureCachedObjectFactory(file);
-            if (factory == null) throw new Exception($"Class for fileType: {fileType} does not implement an ObjectFactory.");
+            if (factory == null) throw new Exception($"Class for fileType: {fileType} does not implement an AssetFactory.");
 
             using var r = new BinaryReader(await source.GetData(file));
             await factory(r, file, source);
@@ -92,14 +92,14 @@ public class FormatTests {
         foreach (var (key, file) in source.FilesById.Select(x => KeyValuePair.Create(x.Key, x.First()))) {
             if ((uint)key == Iteration.FILE_ID) continue;
 
-            var (fileType, ext) = WBPakFile.GetFileType(file, PakType.Language);
+            var (fileType, ext) = WBArchive.GetFileType(file, PakType.Language);
             Assert.IsNotNull(ext, $"Key: 0x{key:X8}, ObjectID: 0x{file.Id:X8}, FileSize: {file.FileSize}");
 
             // These file types aren't converted yet
-            if (fileType == PakFileType.UILayout) continue;
+            if (fileType == ArchiveType.UILayout) continue;
 
             var factory = source.EnsureCachedObjectFactory(file);
-            if (factory == null) throw new Exception($"Class for fileType: {fileType} does not implement an ObjectFactory.");
+            if (factory == null) throw new Exception($"Class for fileType: {fileType} does not implement an AssetFactory.");
 
             using var r = new BinaryReader(await source.GetData(file));
             await factory(r, file, source);

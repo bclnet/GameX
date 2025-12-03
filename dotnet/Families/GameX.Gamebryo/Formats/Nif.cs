@@ -6,7 +6,7 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-#pragma warning disable CS9113 // Parameter is unread.
+#pragma warning disable CS9113, CS0108
 
 namespace GameX.Gamebryo.Formats.Nif;
 

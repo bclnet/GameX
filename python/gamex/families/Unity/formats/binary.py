@@ -1,19 +1,19 @@
 import os
 from io import BytesIO
-from gamex.core.pak import PakBinaryT
+from gamex.core.archive import ArcBinaryT
 from gamex.core.meta import FileSource
 
 # typedefs
 class Reader: pass
-class BinaryPakFile: pass
+class BinaryArchive: pass
 
 #region Binary_Unity
 
 # Binary_Unity
-class Binary_Unity(PakBinaryT):
+class Binary_Unity(ArcBinaryT):
 
     # read
-    def read(self, source: BinaryPakFile, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
         raise NotImplementedError()
 
 #endregion

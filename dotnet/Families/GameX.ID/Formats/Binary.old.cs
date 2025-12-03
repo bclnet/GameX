@@ -17,7 +17,7 @@ namespace GameX.ID.Formats;
 // https://github.com/demoth/jake2/blob/main/info/BSP.md
 
 public unsafe class Binary_Bsp2 : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Bsp2(r, s));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Bsp2(r, s));
 
     #region Headers
 
@@ -580,7 +580,7 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo {
     AreaPortal[] AreaPortals; // | -- | 18 | --
     Surface[] MarkSurfaces; // | 11 | -- | --
 
-    public Binary_Bsp2(BinaryReader r, PakFile s) {
+    public Binary_Bsp2(BinaryReader r, Archive s) {
         var engineV = s.Game.Engine.v;
         // read file
         var magic = engineV == "2" ? 0 : r.ReadUInt32();
@@ -764,7 +764,7 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo {
 
 //public unsafe class Binary_Level : IHaveMetaInfo
 //{
-//    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Level(r));
+//    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Level(r));
 
 //    #region Headers
 
@@ -915,7 +915,7 @@ public unsafe class Binary_Bsp2 : IHaveMetaInfo {
 #region Binary_Spr
 
 public unsafe class Binary_Spr : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Spr(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Spr(r));
 
     #region Records
 

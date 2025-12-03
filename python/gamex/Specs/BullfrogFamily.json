@@ -13,7 +13,7 @@
   },
   "games": {
     "*": {
-      "pakFileType": "GameX.Bullfrog.BullfrogPakFile, GameX.Bullfrog"
+      "archiveType": "GameX.Bullfrog.BullfrogArchive, GameX.Bullfrog"
     },
     "Fusion": {
       "name": "Fusion",
@@ -25,7 +25,7 @@
       "name": "Populous",
       "url": "https://en.wikipedia.org/wiki/Populous_(video_game)",
       "date": "April 1, 1989",
-      "pakExt": ".dat",
+      "arcExt": ".dat",
       "files": {
         "key": [
           "Steam:2203860",
@@ -56,7 +56,7 @@
       "name": "Populous II: Trials of the Olympian Gods",
       "url": "https://en.wikipedia.org/wiki/Populous_II:_Trials_of_the_Olympian_Gods",
       "date": "November 1, 1991",
-      "pakExt": ".dat",
+      "arcExt": ".dat",
       "pathx": [
         "DATA",
         "SOUND"
@@ -80,7 +80,7 @@
       "name": "Syndicate",
       "url": "https://en.wikipedia.org/wiki/Syndicate_(1993_video_game)",
       "date": "June 6, 1993",
-      "pakExt": ".vir",
+      "arcExt": ".vir",
       "editions": {
         "": {
           "name": "Original",
@@ -105,7 +105,7 @@
       "name": "Magic Carpet",
       "url": "https://en.wikipedia.org/wiki/Magic_Carpet_(video_game)",
       "date": "2019-07-25",
-      "pakExt": ".xyz",
+      "arcExt": ".xyz",
       "files": {
         "key": [
           "Gog:1207658935",
@@ -119,7 +119,7 @@
       "name": "Theme Park",
       "url": "https://en.wikipedia.org/wiki/Theme_Park_(video_game)",
       "date": "June 1, 1994",
-      "pakExt": ".xyz",
+      "arcExt": ".xyz",
       "files": {
         "key": [
           "Gog:1207660423",
@@ -143,7 +143,7 @@
       "name": "Magic Carpet 2",
       "url": "https://en.wikipedia.org/wiki/Magic_Carpet_2",
       "date": "1995-01-01",
-      "pakExt": ".xyz",
+      "arcExt": ".xyz",
       "files": {
         "key": [
           "Gog:1207659187",
@@ -162,7 +162,7 @@
       "name": "Syndicate Wars",
       "url": "https://en.wikipedia.org/wiki/Syndicate_Wars",
       "date": "October 31, 1996",
-      "pakExt": ".xyz",
+      "arcExt": ".xyz",
       "files": {
         "key": [
           "Gog:1207659193",
@@ -189,7 +189,7 @@
       "name": "Dungeon Keeper",
       "url": "https://en.wikipedia.org/wiki/Dungeon_Keeper",
       "date": "26 June 1997",
-      "pakExt": [
+      "arcExt": [
         ".dat",
         ".jty"
       ],
@@ -207,7 +207,7 @@
       "name": "Populous: The Beginning",
       "url": "https://en.wikipedia.org/wiki/Populous:_The_Beginning",
       "date": "November 30, 1998",
-      "pakExt": [
+      "arcExt": [
         ".dat",
         ".spr"
       ],
@@ -229,7 +229,7 @@
       "name": "Dungeon Keeper 2",
       "url": "https://en.wikipedia.org/wiki/Dungeon_Keeper_2",
       "date": "July 7, 1999",
-      "pakExt": [
+      "arcExt": [
         ".dat",
         ".spr"
       ],

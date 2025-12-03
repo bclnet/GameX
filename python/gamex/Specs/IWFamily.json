@@ -9,8 +9,8 @@
   ],
   "games": {
     "*": {
-      "pakFileType": "GameX.IW.IWPakFile, GameX.IW",
-      "pakExt": ".iwd"
+      "archiveType": "GameX.IW.IWArchive, GameX.IW",
+      "arcExt": ".iwd"
     },
     "COD": {
       "name": "Call of Duty",
@@ -58,7 +58,7 @@
       "url": "https://store.steampowered.com/app/7940",
       "date": "2007-11-07",
       "tags": "ModernWarfare COD4",
-      "pak": "game:/*.iwd",
+      "arc": "game:/*.iwd",
       "pakx": "game:/mp_backlot_load.ff",
       "paky": "game:/*.(iwd:ff)",
       "files": {
@@ -82,7 +82,7 @@
       "url": "https://store.steampowered.com/app/10090",
       "date": "2008-11-11",
       "tags": "BlackOps COD:WaW",
-      "pak": "game:/mp_makin_day_load.ff",
+      "arc": "game:/mp_makin_day_load.ff",
       "pakx": "game:/ber3.ff",
       "pak_": "game:/*.ff",
       "paky": "game:/*.(iwd:ff)",
@@ -104,7 +104,7 @@
       "date": "2009-11-11",
       "tags": "ModernWarfare MW2",
       "pakx": "game:/*.(iwd:ff)",
-      "pak": "game:/*.(iwd:ff)",
+      "arc": "game:/*.(iwd:ff)",
       "files": {
         "key": [
           "Steam:10180",
@@ -123,7 +123,7 @@
       "date": "2010-11-09",
       "tags": "BlackOps COD:BO",
       "key": "hex:1ac1d12d527c59b40eca619120ff8217ccff09cd16896f81b829c7f52793405d",
-      "pak": "game:/*.(iwd:ff)",
+      "arc": "game:/*.(iwd:ff)",
       "files": {
         "key": [
           "Steam:42700",
@@ -142,7 +142,7 @@
       "url": "https://store.steampowered.com/app/42680",
       "date": "2011-11-08",
       "tags": "ModernWarfare MW3",
-      "pak": "game:/*.(iwd:ff)",
+      "arc": "game:/*.(iwd:ff)",
       "files": {
         "key": [
           "Steam:42680",
@@ -161,7 +161,7 @@
       "date": "2012-05-01",
       "tags": "BlackOps COD:BO2",
       "key": "hex:641D8A2FE31D3AA63622BBC9CE8587229D42B0F8ED9B924130BF88B65EDC50BE",
-      "pak": "game:/*.ff",
+      "arc": "game:/*.ff",
       "pakx": "game:/karma_gump_checkin.ff",
       "files": {
         "key": [
@@ -198,7 +198,7 @@
       "url": "https://store.steampowered.com/app/209650",
       "date": "2014-11-04",
       "tags": "Standalone COD:AW",
-      "pak": "game:/*.(iwd:ff)",
+      "arc": "game:/*.(iwd:ff)",
       "files": {
         "key": [
           "Steam:209650",
@@ -217,7 +217,7 @@
       "date": "2015-11-06",
       "tags": "BlackOps COD:BO3",
       "pak_": "game:/*.(xpak,ff)",
-      "pak": "game:/*.xpak",
+      "arc": "game:/*.xpak",
       "files": {
         "key": [
           "Steam:311210",
@@ -251,9 +251,9 @@
       "url": "https://store.steampowered.com/app/476600",
       "date": "2017-11-03",
       "tags": "WorldWarII WWII",
-      "pak": "game:/ui.ff",
-      "pakx": "game:/xpakfile1.pak",
-      "pak_": "game:/*.(pak:ff)",
+      "arc": "game:/ui.ff",
+      "pakx": "game:/xpakfile1.arc",
+      "pak_": "game:/*.(arc:ff)",
       "files": {
         "key": [
           "Steam:476600",
@@ -272,7 +272,7 @@
       "url": "https://us.shop.battle.net/en-us/product/call-of-duty-black-ops-4",
       "date": "2018-10-12",
       "tags": "BlackOps COD:BO4",
-      "pak": "game:/*.ff",
+      "arc": "game:/*.ff",
       "editions": {
         "viper": {
           "name": "Call of Duty: Black Ops 4"
@@ -346,7 +346,7 @@
       "url": "https://store.steampowered.com/app/1938090",
       "date": "2022-10-28",
       "tags": "ModernWarfare COD:MW2",
-      "pak": "game:/*.ff",
+      "arc": "game:/*.ff",
       "pak_": [
         "game:/*.xpak",
         "game:/*.ff"

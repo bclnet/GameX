@@ -8,6 +8,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Obj = System.Collections.Generic.Dictionary<string, object>;
+#pragma warning disable CS0649
 
 namespace GameX.Cig.Formats;
 

@@ -1,7 +1,7 @@
 namespace GameX.WB;
 
 public class DatabaseCell : Database {
-    public DatabaseCell(Archive pakFile) : base(pakFile) { }
+    public DatabaseCell(Archive archive) : base(archive) { }
 
     //public void ExtractLandblockContents(string path)
     //{

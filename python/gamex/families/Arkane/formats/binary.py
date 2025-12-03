@@ -1,19 +1,19 @@
 import os
 from io import BytesIO
 from openstk import _pathExtension
-from gamex import FileSource, PakBinaryT
+from gamex import FileSource, ArcBinaryT
 from gamex.core.formats.compression import decompressBlast
 
 # typedefs
 class Reader: pass
-class BinaryPakFile: pass
+class BinaryArchive: pass
 
 #region Binary_Danae
 
 # Binary_Danae
-class Binary_Danae(PakBinaryT):
+class Binary_Danae(ArcBinaryT):
     # read
-    def read(self, source: BinaryPakFile, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
         source.files = files = []
         key = source.game.key; keyLength = len(key); keyIndex = 0
 
@@ -70,7 +70,7 @@ class Binary_Danae(PakBinaryT):
                 files.append(file)
 
     # readData
-    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
         r.seek(file.offset)
         return BytesIO(
             decompressBlast(r, file.packedSize, file.fileSize) if (file.compressed & 1) != 0 else \
@@ -81,7 +81,7 @@ class Binary_Danae(PakBinaryT):
 #region Binary_Void
 
 # Binary_Void
-class Binary_Void(PakBinaryT):
+class Binary_Void(ArcBinaryT):
 
     #region Headers
 
@@ -98,7 +98,7 @@ class Binary_Void(PakBinaryT):
     #endregion
 
     # read
-    def read(self, source: BinaryPakFile, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
         # must be .index file
         if _pathExtension(source.filePath) != '.index': raise Exception('must be a .index file')
 
@@ -123,7 +123,7 @@ class Binary_Void(PakBinaryT):
                 if not path.endswith('.index'): continue
                 files.append(FileSource(
                     path = path,
-                    pak = self.SubPakFile(self, None, source, source.game, source.fileSystem, path)))
+                    arc = self.SubArchive(self, None, source, source.game, source.fileSystem, path)))
             return
 
         # find files
@@ -160,7 +160,7 @@ class Binary_Void(PakBinaryT):
                 tag = (newPath, tag1, tag2)))
 
     # readData
-    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
         pass
 
 #endregion

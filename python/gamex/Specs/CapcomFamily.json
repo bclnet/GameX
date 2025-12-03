@@ -39,7 +39,7 @@
   },
   "games": {
     "*": {
-      "pakFileType": "GameX.Capcom.CapcomPakFile, GameX.Capcom"
+      "archiveType": "GameX.Capcom.CapcomArchive, GameX.Capcom"
     },
     "CAS": {
       "name": "Capcom Arcade Stadium",
@@ -47,8 +47,8 @@
       "date": "May 24, 2021",
       "engine": "RE",
       "resource": "CAS_PC_Release",
-      "pakExt": ".pak",
-      "pakx": "game:/re_chunk_000.pak.patch_001.pak",
+      "arcExt": ".arc",
+      "pakx": "game:/re_chunk_000.arc.patch_001.arc",
       "dlcs": {
         "dlc": {
           "path": "dlc"
@@ -68,7 +68,7 @@
       "date": "Jun 23, 2022",
       "engine": "MT2",
       "searchBy": "AllDir",
-      "pakExt": ".arc",
+      "arcExt": ".arc",
       "files": {
         "key": [
           "Steam:1685750",
@@ -84,7 +84,7 @@
       "date": "May 31, 2021",
       "engine": "RE",
       "resource": "GGR_PC_Release",
-      "pakExt": ".pak",
+      "arcExt": ".arc",
       "files": {
         "key": [
           "Steam:1375400",
@@ -99,7 +99,7 @@
       "date": "Aug 24, 2015",
       "key": "P091uWEdwe4lI6StDNMNlkodPGvJ38bL3HW6t3BCMYdFi83FXKu7k0NsHP8caDKS",
       "engine": "Zip",
-      "pakExt": "data.pie",
+      "arcExt": "data.pie",
       "files": {
         "key": [
           "Steam:363440",
@@ -114,7 +114,7 @@
       "date": "Aug 8, 2017",
       "key": "NEED",
       "engine": "Zip",
-      "pakExt": "disc",
+      "arcExt": "disc",
       "files": {
         "key": [
           "Steam:495050",
@@ -128,7 +128,7 @@
       "url": "https://store.steampowered.com/app/1582620",
       "date": "Aug 8, 2017",
       "engine": "Unity",
-      "pakExt": ".assets",
+      "arcExt": ".assets",
       "files": {
         "key": [
           "Steam:1582620",
@@ -145,7 +145,7 @@
       "engine": "MT2",
       "searchBy": "AllDir",
       "path": "RZZC/romPC",
-      "pakExt": ".arc",
+      "arcExt": ".arc",
       "files": {
         "key": [
           "Steam:999020",
@@ -161,7 +161,7 @@
       "date": "Jan 12, 2022",
       "engine": "RE",
       "resource": "MHR_PC_Release",
-      "pakExt": ".pak",
+      "arcExt": ".arc",
       "files": {
         "key": [
           "Steam:1446780",
@@ -176,8 +176,8 @@
       "url": "https://store.steampowered.com/app/1277400",
       "date": "Jul 8, 2021",
       "searchBy": "AllDir",
-      "pakExt": ".arc",
-      "pak": "game:/archive/**/*.arc",
+      "arcExt": ".arc",
+      "arc": "game:/archive/**/*.arc",
       "files": {
         "key": [
           "Steam:1277400",
@@ -192,7 +192,7 @@
       "engine": "Unity",
       "url": "https://store.steampowered.com/app/787480",
       "date": "Apr 9, 2019",
-      "pakExt": ".assets",
+      "arcExt": ".assets",
       "files": {
         "key": [
           "Steam:787480",
@@ -244,7 +244,7 @@
       "name": "The Disney Afternoon Collection",
       "url": "https://store.steampowered.com/app/525040",
       "date": "Apr 18, 2017",
-      "pakExt": [
+      "arcExt": [
         ".pie",
         ".mbundle"
       ],
@@ -263,7 +263,7 @@
       "date": "Jul 26, 2021",
       "engine": "MT2",
       "path": "archive",
-      "pakExt": ".arc",
+      "arcExt": ".arc",
       "files": {
         "key": [
           "Steam:1158850",

@@ -13,7 +13,7 @@ public partial class OpenPage : ContentPage {
 
     internal Family FamilySelectedItem => (Family)Family.SelectedItem;
 
-    public IList<Uri> PakUris {
+    public IList<Uri> ArcUris {
         get => new[] { _pak1Uri, _pak2Uri, _pak3Uri }.Where(x => x != null).ToList();
         set {
             var idx = 0;
@@ -75,17 +75,17 @@ public partial class OpenPage : ContentPage {
         Editions = selectedGame?.Editions.Values.ToList();
         Edition.SelectedIndex = Editions != null ? ((List<FamilyGame.Edition>)Editions).FindIndex(x => x.Id == string.Empty) : default;
         var selectedEdition = (FamilyGame.Edition)Edition.SelectedItem;
-        PakUris = selectedGame?.ToPaks(selectedEdition?.Id);
+        ArcUris = selectedGame?.ToArcs(selectedEdition?.Id);
     }
 
     void Edition_SelectionChanged(object sender, EventArgs e) {
         var selectedGame = (FamilyGame)Game.SelectedItem;
         var selectedEdition = (FamilyGame.Edition)Edition.SelectedItem;
-        PakUris = selectedGame?.ToPaks(selectedEdition?.Id);
+        ArcUris = selectedGame?.ToArcs(selectedEdition?.Id);
     }
 
     async void Pak1Uri_Click(object sender, EventArgs e) {
-        var results = await FilePicker.Default.PickAsync(new PickOptions { PickerTitle = "PAK files" });
+        var results = await FilePicker.Default.PickAsync(new PickOptions { PickerTitle = "Arc files" });
         if (results != null) {
             var file = results.FileName;
             var selected = (FamilyGame)Game.SelectedItem;
@@ -94,7 +94,7 @@ public partial class OpenPage : ContentPage {
     }
 
     async void Pak2Uri_Click(object sender, EventArgs e) {
-        var results = await FilePicker.Default.PickAsync(new PickOptions { PickerTitle = "PAK files" });
+        var results = await FilePicker.Default.PickAsync(new PickOptions { PickerTitle = "Arc files" });
         if (results != null) {
             var file = results.FileName;
             var selected = (FamilyGame)Game.SelectedItem;
@@ -103,7 +103,7 @@ public partial class OpenPage : ContentPage {
     }
 
     async void Pak3Uri_Click(object sender, EventArgs e) {
-        var results = await FilePicker.Default.PickAsync(new PickOptions { PickerTitle = "PAK files" });
+        var results = await FilePicker.Default.PickAsync(new PickOptions { PickerTitle = "Arc files" });
         if (results != null) {
             var file = results.FileName;
             var selected = (FamilyGame)Game.SelectedItem;
@@ -114,7 +114,7 @@ public partial class OpenPage : ContentPage {
     async void Cancel_Click(object sender, EventArgs e) => await Shell.Current.GoToAsync("//home");
 
     async void Open_Click(object sender, EventArgs e) {
-        MainPage.Current.Open(FamilySelectedItem, PakUris);
+        MainPage.Current.Open(FamilySelectedItem, ArcUris);
         await Shell.Current.GoToAsync("//home");
     }
 

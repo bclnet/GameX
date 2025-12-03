@@ -7,7 +7,7 @@ from openstk import findType, _throw, YamlDict
 from openstk.vfx import FileSystem, AggregateFileSystem, NetworkFileSystem, DirectoryFileSystem, VirtualFileSystem
 from openstk.platform import PlatformX
 from gamex import option, familyKeys 
-from gamex.core.pak import PakState, ManyPakFile, MultiPakFile
+from gamex.core.archive import ArcState, ManyArchive, MultiArchive
 from gamex.core.store import getPathByKey as Store_getPathByKey
 from .util import _valueF, _value, _list, _related, _dictTrim
 
@@ -16,7 +16,7 @@ from .util import _valueF, _value, _list, _related, _dictTrim
 # tag::SearchBy[]
 class SearchBy(Enum):
     Default = 1
-    Pak = 2
+    Arc = 2
     TopDir = 3
     TwoDir = 4
     DirDown = 5
@@ -243,15 +243,15 @@ games: {[x for x in self.games.values()]}'''
     def toResource(self, res: Resource) -> str:
         return ''
 
-    # open PakFile
-    def openPakFile(self, res: Resource | str, throwOnError: bool = True) -> PakFile:
+    # open Archive
+    def openArchive(self, res: Resource | str, throwOnError: bool = True) -> Archive:
         r = None
         match res:
             case s if isinstance(res, Resource): r = s
             case u if isinstance(res, str): r = self.parseResource(u)
             case _: raise Exception(f'Unknown: {res}')
         if not r.game.hasLoaded: r.game.hasLoaded = True; r.game.loaded()
-        return (pak := r.game.createPakFile(r.vfx, r.edition, r.searchPattern, throwOnError)) and pak.open() if r.game else \
+        return (arc := r.game.createArchive(r.vfx, r.edition, r.searchPattern, throwOnError)) and arc.open() if r.game else \
             _throw(f'Undefined Game')
 # end::Family[]
 
@@ -375,10 +375,10 @@ class FamilyGame:
         self.family = family
         self.id = id
         if not dgame:
-            self.searchBy = SearchBy.Default; self.paks = ['game:/']
+            self.searchBy = SearchBy.Default; self.arcs = ['game:/']
             self.gameType = self.engine = self.resource = \
             self.paths = self.key = self.detector = self.vfxType = \
-            self.pakFileType = self.pakExts = None
+            self.archiveType = self.arcExts = None
             return
         self.name = _value(elem, 'name')
         self.engine = _valueF(elem, 'engine', parseEngine, dgame.engine)
@@ -386,7 +386,7 @@ class FamilyGame:
         self.urls = _list(elem, 'url')
         self.date = _value(elem, 'date')
         #self.option = _list(elem, 'option', dgame.option)
-        self.paks = _list(elem, 'pak', dgame.paks)
+        self.arcs = _list(elem, 'arc', dgame.arcs)
         self.paths = _list(elem, 'path', dgame.paths)
         self.key = _valueF(elem, 'key', parseKey, dgame.key)
         # self.status = _value(elem, 'status')
@@ -394,8 +394,8 @@ class FamilyGame:
         # interface
         self.vfxType = _value(elem, 'vfxType', dgame.vfxType)
         self.searchBy = _value(elem, 'searchBy', dgame.searchBy)
-        self.pakFileType = _value(elem, 'pakFileType', dgame.pakFileType)
-        self.pakExts = _list(elem, 'pakExt', dgame.pakExts) 
+        self.archiveType = _value(elem, 'archiveType', dgame.archiveType)
+        self.arcExts = _list(elem, 'arcExt', dgame.arcExts) 
         # related
         self.editions = _related(elem, 'editions', lambda k,v: FamilyGame.Edition(k, v))
         self.dlcs = _related(elem, 'dlcs', lambda k,v: FamilyGame.DownloadableContent(k, v))
@@ -427,8 +427,8 @@ class FamilyGame:
         self.options = YamlDict(f'~/.gamex.{self.family.id}_{self.id}.yaml')
 
     # converts the Paks to Application Paks
-    def toPaks(self, edition: str) -> list[str]:
-        return [f'{x}#{self.id}{'.' + edition if edition else ''}' for x in self.paks] # if self.paks else []
+    def toArcs(self, edition: str) -> list[str]:
+        return [f'{x}#{self.id}{'.' + edition if edition else ''}' for x in self.arcs] # if self.arcs else []
 
     # gets a game sample
     def getSample(self, id: str) -> FamilySample.File:
@@ -454,51 +454,50 @@ class FamilyGame:
     def createSearchPatterns(self, searchPattern: str) -> str:
         if searchPattern: return searchPattern
         elif self.searchBy == SearchBy.Default: return ''
-        elif self.searchBy == SearchBy.Pak: return '' if not self.pakExts else \
-            f'*{self.pakExts[0]}' if len(self.pakExts) == 1 else f'(*{":*".join(self.pakExts)})'
+        elif self.searchBy == SearchBy.Arc: return '' if not self.arcExts else \
+            f'*{self.arcExts[0]}' if len(self.arcExts) == 1 else f'(*{":*".join(self.arcExts)})'
         elif self.searchBy == SearchBy.TopDir: return '*'
         elif self.searchBy == SearchBy.TwoDir: return '*/*'
         elif self.searchBy == SearchBy.DirDown: return '**/*'
         elif self.searchBy == SearchBy.AllDir: return '**/*'
         else: raise Exception(f'Unknown searchBy: {self.searchBy}')
 
-    # create PakFile
-    def createPakFile(self, vfx: FileSystem, edition: Edition, searchPattern: str, throwOnError: bool) -> PakFile:
+    # create Archive
+    def createArchive(self, vfx: FileSystem, edition: Edition, searchPattern: str, throwOnError: bool) -> Archive:
         if isinstance(vfx, NetworkFileSystem): raise Exception('NetworkFileSystem not supported')
         searchPattern = self.createSearchPatterns(searchPattern)
-        pakFiles = []
+        archives = []
         dlcKeys = [x[0] for x in self.dlcs.items() if x[1].path]
         slash = '\\'
         for key in [None] + dlcKeys:
             for p in self.findPaths(vfx, edition, self.dlcs[key] if key else None, searchPattern):
-                if self.searchBy == SearchBy.Pak:
+                if self.searchBy == SearchBy.Arc:
                     for path in p[1]:
-                        if self.isPakFile(path):
-                            pakFiles.append(self.createPakFileObj(vfx, edition, path))
+                        if self.isArcPath(path): archives.append(self.createArchiveObj(vfx, edition, path))
                 else:
-                    pakFiles.append(self.createPakFileObj(vfx, edition,
+                    archives.append(self.createArchiveObj(vfx, edition,
                         (p[0], [x for x in p[1] if x.find(slash) >= 0]) if self.searchBy == SearchBy.DirDown else p))
-        return (pakFiles[0] if len(pakFiles) == 1 else self.createPakFileObj(vfx, edition, pakFiles)).setPlatform(PlatformX.current)
+        return (archives[0] if len(archives) == 1 else self.createArchiveObj(vfx, edition, archives)).setPlatform(PlatformX.current)
 
-    # create createPakFileObj
-    def createPakFileObj(self, vfx: FileSystem, edition: Edition, value: object, tag: object = None) -> PakFile:
-        pakState = PakState(vfx, self, edition, value if isinstance(value, str) else None, tag)
+    # create createArchiveObj
+    def createArchiveObj(self, vfx: FileSystem, edition: Edition, value: object, tag: object = None) -> Archive:
+        arcState = ArcState(vfx, self, edition, value if isinstance(value, str) else None, tag)
         match value:
-            case s if isinstance(value, str): return self.createPakFileType(pakState) if self.isPakFile(s) else _throw(f'{self.id} missing {s}')
+            case s if isinstance(value, str): return self.createArchiveType(arcState) if self.isArcPath(s) else _throw(f'{self.id} missing {s}')
             case p, l if isinstance(value, tuple):
-                return self.createPakFileObj(vfx, edition, l[0], tag) if len(l) == 1 and self.isPakFile(l[0]) \
-                    else ManyPakFile(
-                        self.createPakFileType(pakState), pakState,
+                return self.createArchiveObj(vfx, edition, l[0], tag) if len(l) == 1 and self.isArcPath(l[0]) \
+                    else ManyArchive(
+                        self.createArchiveType(arcState), arcState,
                         p if len(p) > 0 else 'Many', l,
                         pathSkip = len(p) + 1 if len(p) > 0 else 0)
-            case s if isinstance(value, list): return s[0] if len(s) == 1 else MultiPakFile(pakState, 'Multi', s)
+            case s if isinstance(value, list): return s[0] if len(s) == 1 else MultiArchive(arcState, 'Multi', s)
             case None: return None
             case _: raise Exception(f'Unknown: {value}')
 
-    # create PakFileType
-    def createPakFileType(self, state: PakState) -> PakFile:
-        if not self.pakFileType: raise Exception(f'{self.id} missing PakFileType')
-        return findType(self.pakFileType)(state)
+    # create ArchiveType
+    def createArchiveType(self, state: ArcState) -> Archive:
+        if not self.archiveType: raise Exception(f'{self.id} missing ArchiveType')
+        return findType(self.archiveType)(state)
 
     # find Paths
     def findPaths(self, vfx: FileSystem, edition: Edition, dlc: DownloadableContent, searchPattern: str):
@@ -509,9 +508,8 @@ class FamilyGame:
             if ignores: fileSearch = [x for x in fileSearch if not os.path.basename(x) in ignores]
             yield (path, list(fileSearch))
 
-    # is a PakFile
-    def isPakFile(self, path: str) -> bool:
-        return self.pakExts and any([x for x in self.pakExts if path.endswith(x)])
+    # is a Archive
+    def isArcPath(self, path: str) -> bool: return self.arcExts and any([x for x in self.arcExts if path.endswith(x)])
 # end::FamilyGame[]
 
 #endregion
@@ -520,7 +518,7 @@ class FamilyGame:
 
 Families = {}
 unknown = None
-unknownPakFile = None
+unknownArchive = None
 
 @staticmethod
 def init(loadSamples: bool = True):
@@ -539,7 +537,7 @@ def init(loadSamples: bool = True):
 
     # load unknown
     unknown = getFamily('Unknown')
-    unknownPakFile = unknown.openPakFile('game:/#APP', False)
+    unknownArchive = unknown.openArchive('game:/#APP', False)
 
 @staticmethod
 def getFamily(id: str, throwOnError: bool = True) -> Family:

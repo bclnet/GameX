@@ -19,7 +19,7 @@
   },
   "games": {
     "*": {
-      "pakFileType": "GameX.Lucas.LucasPakFile, GameX.Lucas"
+      "archiveType": "GameX.Lucas.LucasArchive, GameX.Lucas"
     },
     "B": {
       "name": "Ballblazer",
@@ -92,8 +92,8 @@
         "https://en.wikipedia.org/wiki/Maniac_Mansion"
       ],
       "date": "October 5, 1987",
-      "searchBy": "Pak",
-      "pakExt": "00.lfl",
+      "searchBy": "Arc",
+      "arcExt": "00.lfl",
       "editions": {
         "": {
           "name": "Original",
@@ -308,8 +308,8 @@
         "https://en.wikipedia.org/wiki/Zak_McKracken_and_the_Alien_Mindbenders"
       ],
       "date": "October 1, 1988",
-      "searchBy": "Pak",
-      "pakExt": "00.lfl",
+      "searchBy": "Arc",
+      "arcExt": "00.lfl",
       "editions": {
         "": {
           "name": "Original",
@@ -491,7 +491,7 @@
         "https://en.wikipedia.org/wiki/Indiana_Jones_and_the_Last_Crusade:_The_Graphic_Adventure"
       ],
       "date": "July 1, 1989",
-      "pakExt": "01.lfl",
+      "arcExt": "01.lfl",
       "detectors": {
         "scumm": {
           "variants": {
@@ -1535,7 +1535,7 @@
         "https://en.wikipedia.org/wiki/Star_Wars:_Dark_Forces"
       ],
       "date": "February 28, 1995",
-      "pakExt": [
+      "arcExt": [
         ".gob",
         ".lfd"
       ],
@@ -1756,7 +1756,7 @@
         "https://en.wikipedia.org/wiki/Outlaws_(1997_video_game)"
       ],
       "date": "April 7, 1997",
-      "pakExt": ".lab",
+      "arcExt": ".lab",
       "files": {
         "key": [
           "Steam:559620",

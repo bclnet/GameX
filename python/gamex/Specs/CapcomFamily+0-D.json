@@ -4,7 +4,7 @@
   "games": {
     "*": {
       "dev": "Capcom",
-      "pakFileType": "GameX.Capcom.CapcomPakFile, GameX.Capcom"
+      "archiveType": "GameX.Capcom.CapcomArchive, GameX.Capcom"
     },
     "1941:CA": {
       "name": "1941: Counter Attack",
@@ -215,7 +215,7 @@
       "date": "2017-01-24",
       "form": "Console;Windows",
       "resource": "RE7_PC_Release",
-      "pakExt": ".pak",
+      "arcExt": ".arc",
       "files": {
         "key": [
           "Steam:418370",
@@ -259,7 +259,7 @@
       ],
       "date": "2009-11-11",
       "form": "Console;Windows",
-      "pakExt": ".bundle",
+      "arcExt": ".bundle",
       "files": {
         "key": [
           "Steam:21670",
@@ -278,7 +278,7 @@
       "dev": "Grin",
       "date": "2008-08-13",
       "form": "Console;Windows",
-      "pakExt": ".bundle",
+      "arcExt": ".bundle",
       "files": {
         "key": [
           "Steam:21680",
@@ -442,7 +442,7 @@
       "date": "2022-07-22",
       "form": "Console;Windows",
       "resource": "CAS2_PC_Release",
-      "pakExt": ".pak",
+      "arcExt": ".arc",
       "files": {
         "key": [
           "Steam:1755910",
@@ -490,7 +490,7 @@
       "date": "2018-09-18",
       "form": "Console;Windows",
       "path": "arc",
-      "pakExt": ".arc",
+      "arcExt": ".arc",
       "files": {
         "key": [
           "Steam:885150",
@@ -788,8 +788,8 @@
         "Engine",
         "SkyGame"
       ],
-      "pakExt": ".txt",
-      "pak": "game:/PCTOC.txt"
+      "arcExt": ".txt",
+      "arc": "game:/PCTOC.txt"
     },
     "DV:Z": {
       "name": "Dark Void Zero",
@@ -800,7 +800,7 @@
       "dev": "Other Ocean Interactive",
       "date": "2010-01-18",
       "form": "Console;Windows",
-      "pak": "game:/DVZDATA.*",
+      "arc": "game:/DVZDATA.*",
       "files": {
         "key": [
           "Steam:45730",
@@ -839,8 +839,8 @@
       ],
       "date": "2006-08-08",
       "form": "Console;Windows",
-      "pakExt": ".arc",
-      "pak": "game:/**/*.arc",
+      "arcExt": ".arc",
+      "arc": "game:/**/*.arc",
       "files": {
         "key": [
           "Steam:427190",
@@ -861,8 +861,8 @@
       "dev": "Blue Castle Games",
       "date": "2010-09-24",
       "form": "Console;Windows",
-      "pakExt": ".big",
-      "pak": "game:/*/*.big",
+      "arcExt": ".big",
+      "arc": "game:/*/*.big",
       "dlc": {
         "cw": {
           "name": "Dead Rising 2: Case West",
@@ -896,8 +896,8 @@
       ],
       "date": "2011-10-11",
       "form": "Console;Windows",
-      "pakExt": ".big",
-      "pak": "game:/*/*.big",
+      "arcExt": ".big",
+      "arc": "game:/*/*.big",
       "files": {
         "key": [
           "Steam:45770",
@@ -920,8 +920,8 @@
       ],
       "date": "2013-11-22",
       "form": "Console;Windows",
-      "pakExt": ".big",
-      "pak": "game:/**/*.big",
+      "arcExt": ".big",
+      "arc": "game:/**/*.big",
       "files": {
         "key": [
           "Steam:265550",
@@ -944,8 +944,8 @@
       ],
       "date": "2016-12-06",
       "form": "Console;Windows",
-      "pakExt": ".big",
-      "pak": "game:/**/*.big",
+      "arcExt": ".big",
+      "arc": "game:/**/*.big",
       "files": {
         "key": [
           "Steam:543460",
@@ -1041,8 +1041,8 @@
       "date": "2008-11-11",
       "form": "Console;Windows",
       "path": "data",
-      "pakExt": ".pak",
-      "pak": "game:/*.pak",
+      "arcExt": ".arc",
+      "arc": "game:/*.arc",
       "files": {
         "key": [
           "Steam:6550",
@@ -1074,7 +1074,7 @@
       "date": "2015-06-18",
       "form": "Console;Windows",
       "searchBy": "AllDir",
-      "pakExt": ".arc",
+      "arcExt": ".arc",
       "pakx": "game:/**/*.arc",
       "files": {
         "key": [
@@ -1097,7 +1097,7 @@
       "resource": "DMC5_PC_Release",
       "date": "2019-03-08",
       "form": "Console;Windows",
-      "pakExt": ".pak",
+      "arcExt": ".arc",
       "files": {
         "key": [
           "Steam:601150",
@@ -1129,8 +1129,8 @@
       ],
       "date": "2001-08-23",
       "form": "Console;Windows",
-      "pakExt": ".nbz",
-      "pak": "game:/**/*.nbz",
+      "arcExt": ".nbz",
+      "arc": "game:/**/*.nbz",
       "files": {
         "key": [
           "Steam:631510",
@@ -1218,7 +1218,7 @@
       "dev": "Ninja Theory",
       "form": "Console;Windows",
       "path": "DevilGame/CookedPCConsole",
-      "pakExt": ".upk",
+      "arcExt": ".upk",
       "files": {
         "key": [
           "Steam:220440",
@@ -1257,8 +1257,8 @@
           "date": "2013-04-25"
         }
       },
-      "pakExt": ".arc",
-      "pak": "game:/**/*.arc",
+      "arcExt": ".arc",
+      "arc": "game:/**/*.arc",
       "files": {
         "key": [
           "Steam:367500",
@@ -1309,7 +1309,7 @@
       "date": "2013-08-13",
       "dev": "WayForward Technologies",
       "form": "Mobile;Console;Windows",
-      "pakExt": ".pak",
+      "arcExt": ".arc",
       "files": {
         "key": [
           "Steam:237630",

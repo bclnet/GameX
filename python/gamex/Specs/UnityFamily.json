@@ -9,8 +9,8 @@
   ],
   "games": {
     "*": {
-      "pakFileType": "GameX.Unity.UnityPakFile, GameX.Unity",
-      "pakExt": ".assets"
+      "archiveType": "GameX.Unity.UnityArchive, GameX.Unity",
+      "arcExt": ".assets"
     },
     "AmongUs": {
       "name": "Among Us",

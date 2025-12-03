@@ -6,10 +6,10 @@
 //    public static class TestAsset
 //    {
 //        static Estate Estate = EstateManager.GetEstate("Tes");
-//        static UnityPakFile PakFile = new UnityPakFile(Estate.OpenPakFile(new Uri("game:/Morrowind.bsa#Morrowind")));
-//        //static TesUnityPakFile PakFile = new TesUnityPakFile(Estate.OpenPakFile(new Uri("http://192.168.1.3/ASSETS/Morrowind/Morrowind.bsa#Morrowind")));
-//        //static TesUnityPakFile PakFile = new TesUnityPakFile(Estate.OpenPakFile(new Uri("game:/Skyrim*#SkyrimVR")));
-//        //static TesUnityPakFile PakFile = new TesUnityPakFile(Estate.OpenPakFile(new Uri("game:/Fallout4*#Fallout4VR")));
+//        static UnityArchive Archive = new UnityArchive(Estate.OpenArchive(new Uri("game:/Morrowind.bsa#Morrowind")));
+//        //static TesUnityArchive Archive = new TesUnityArchive(Estate.OpenArchive(new Uri("http://192.168.1.3/ASSETS/Morrowind/Morrowind.bsa#Morrowind")));
+//        //static TesUnityArchive Archive = new TesUnityArchive(Estate.OpenArchive(new Uri("game:/Skyrim*#SkyrimVR")));
+//        //static TesUnityArchive Archive = new TesUnityArchive(Estate.OpenArchive(new Uri("game:/Fallout4*#Fallout4VR")));
 
 //        public static void Awake() { }
 //        public static void Start()
@@ -27,13 +27,13 @@
 //            //MakeObject("meshes/w/w_arrow01.nif");
 //            //MakeObject("meshes/x/ex_common_balcony_01.nif");
 //        }
-//        public static void OnDestroy() => PakFile.Dispose();
+//        public static void OnDestroy() => Archive.Dispose();
 //        public static void Update() { }
 
-//        static GameObject MakeObject(string path) => PakFile.CreateObject(path);
+//        static GameObject MakeObject(string path) => Archive.CreateObject(path);
 //        static GameObject MakeTexture(string path)
 //        {
-//            var materialManager = PakFile.MaterialManager;
+//            var materialManager = Archive.MaterialManager;
 //            var obj = GameObject.CreatePrimitive(PrimitiveType.Cube); // GameObject.Find("Cube"); // CreatePrimitive(PrimitiveType.Cube);
 //            var meshRenderer = obj.GetComponent<MeshRenderer>();
 //            var materialProp = new MaterialProp
@@ -43,6 +43,6 @@
 //            meshRenderer.material = materialManager.BuildMaterialFromProperties(materialProp);
 //            return obj;
 //        }
-//        static void MakeCursor(string path) => Cursor.SetCursor(PakFile.LoadTexture(path), Vector2.zero, CursorMode.Auto);
+//        static void MakeCursor(string path) => Cursor.SetCursor(Archive.LoadTexture(path), Vector2.zero, CursorMode.Auto);
 //    }
 //}

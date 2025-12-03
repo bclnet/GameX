@@ -9,7 +9,7 @@
   ],
   "games": {
     "*": {
-      "pakFileType": "GameX.Origin.OriginPakFile, GameX.Origin"
+      "archiveType": "GameX.Origin.OriginArchive, GameX.Origin"
     },
     "CoC": {
       "name": "Caverns of Callisto",
@@ -231,7 +231,7 @@
         }
       },
       "searchBy": "AllDir",
-      "pakExt": [
+      "arcExt": [
         ".flx",
         ".dat",
         ".skf"
@@ -319,7 +319,7 @@
       "dnl": "https://uo.com/client-download/",
       "date": "September 24, 1997",
       "searchByx": "AllDir",
-      "pakExt": [
+      "arcExt": [
         ".idx",
         "idx.mul",
         ".uop"
@@ -435,7 +435,7 @@
       ],
       "date": "November 23, 1999",
       "searchBy": "DirDown",
-      "pakExt": [
+      "arcExt": [
         ".flx",
         "Texture8.9",
         "Texture8.14",

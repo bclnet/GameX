@@ -12,17 +12,17 @@
   ],
   "games": {
     "*": {
-      "pakFileType": "GameX.Red.RedPakFile, GameX.Red"
+      "archiveType": "GameX.Red.RedArchive, GameX.Red"
     },
     "Witcher": {
       "name": "The Witcher Enhanced Edition",
       "engine": "Aurora",
       "url": "https://www.gog.com/en/game/the_witcher",
-      "pakExt": ".key",
-      //"pak": "game:/*.key"
-      "pak": "game:/main.key",
+      "arcExt": ".key",
+      //"arc": "game:/*.key"
+      "arc": "game:/main.key",
       //"pakZ": "game:/attackeffects.2da",
-      //"pak": "game:/dialog_3.tlk",
+      //"arc": "game:/dialog_3.tlk",
       "files": {
         "key": [
           "Steam:20900",
@@ -38,7 +38,7 @@
       "name": "The Witcher 2",
       "engine": "REDengine",
       "url": "https://www.gog.com/en/game/the_witcher_2",
-      "pak": "game:/*",
+      "arc": "game:/*",
       "pak_": "game:/base_scripts.dzip",
       "pak2": "game:/br0.w2strings",
       "files": {
@@ -58,7 +58,7 @@
         "https://www.gog.com/en/game/the_witcher_3_wild_hunt",
         "https://www.gog.com/en/game/the_witcher_3_wild_hunt_game_of_the_year_edition"
       ],
-      "pak": "game:/content0/texture.cache",
+      "arc": "game:/content0/texture.cache",
       "pak0": "game:/content0/bundles/xml.bundle",
       "pak1": "game:/content0/ar.w3strings",
       "files": {
@@ -76,11 +76,11 @@
     "CP77": {
       "name": "Cyberpunk 2077",
       "url": "https://store.steampowered.com/app/1091500",
-      "pakExt": ".archive",
-      "pak": "game:/basegame_2_mainmenu.archive",
+      "arcExt": ".archive",
+      "arc": "game:/basegame_2_mainmenu.archive",
       "pak1": "game:/lang_en_text.archive",
-      //"pak": "game:/lang_en_voice.archive"
-      //"pak": "game:/*.archive"
+      //"arc": "game:/lang_en_voice.archive"
+      //"arc": "game:/*.archive"
       "local": {
         "key": [
           "Steam:1091500",

@@ -29,8 +29,8 @@ public class LoadFileObjectsTest {
     [DataRow("Tes:Fallout4VR")]
     [DataRow("Tes:Fallout76")]
     [DataRow("Valve:Dota2")]
-    public async Task LoadAllFileObjectsAsync(string pak) {
-        var source = TestHelper.Paks[pak].Value;
+    public async Task LoadAllFileObjectsAsync(string arc) {
+        var source = TestHelper.Paks[arc].Value;
         if (source is MultiArchive multiPak)
             foreach (var p in multiPak.Archives) {
                 if (p is not BinaryAsset z) throw new InvalidOperationException("multiPak not A BinaryAsset");
@@ -40,13 +40,13 @@ public class LoadFileObjectsTest {
     }
 
     static Task ExportAsync(Archive source) {
-        if (source is not BinaryAsset pak) throw new NotSupportedException();
+        if (source is not BinaryAsset arc) throw new NotSupportedException();
 
         // write files
-        Parallel.For(0, pak.Files.Count, new ParallelOptions { MaxDegreeOfParallelism = 1 }, async index => {
-            var file = pak.Files[index].Fix();
+        Parallel.For(0, arc.Files.Count, new ParallelOptions { MaxDegreeOfParallelism = 1 }, async index => {
+            var file = arc.Files[index].Fix();
 
-            // extract pak
+            // extract arc
             if (file.Arc != null) await ExportAsync(file.Arc);
 
             // skip empty file
@@ -56,7 +56,7 @@ public class LoadFileObjectsTest {
             //if (file.FileSize > 50000000) return;
 
             // extract file
-            var obj = await pak.GetAsset<object>(file);
+            var obj = await arc.GetAsset<object>(file);
             if (obj is Stream stream) {
                 var value = MetaManager.GuessStringOrBytes(stream);
             }

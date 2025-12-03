@@ -32,7 +32,7 @@ public class ViewInfo : Node {
     static ViewInfo() => PlatformX.Activate(GodotPlatform.This);
 
     public string FamilyId = "Bethesda";
-    public string PakUri = "game:/Morrowind.bsa#Morrowind";
+    public string ArcUri = "game:/Morrowind.bsa#Morrowind";
     public string Type = "Texture";
     public string Path = "bookart/boethiah_256.dds";
     //public string Path = "meshes/x/ex_common_balcony_01.nif";
@@ -44,7 +44,7 @@ public class ViewInfo : Node {
     public override void _Ready() {
         if (string.IsNullOrEmpty(FamilyId)) return;
         Family = FamilyManager.GetFamily(FamilyId);
-        if (!string.IsNullOrEmpty(PakUri)) Source = Family.OpenArchive(new Uri(PakUri));
+        if (!string.IsNullOrEmpty(ArcUri)) Source = Family.OpenArchive(new Uri(ArcUri));
         Renderer = GodotRenderer.CreateRenderer(this, Source?.Gfx, Path, Type);
         Renderer?.Start();
     }

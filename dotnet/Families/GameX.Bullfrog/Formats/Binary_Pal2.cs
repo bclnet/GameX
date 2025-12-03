@@ -11,7 +11,7 @@ namespace GameX.Bullfrog.Formats;
 /*
 public unsafe class Binary_Pal2x : IHaveMetaInfo
 {
-    public static Task<object> Factory(BinaryReader r, FileSource f, PakFile s) => Task.FromResult((object)new Binary_Pal2x(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Pal2x(r));
 
     #region Palette
 

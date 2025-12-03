@@ -4,6 +4,7 @@ using System.IO;
 using static GameX.Epic.Formats.Core.Game;
 using static GameX.Epic.Formats.Core.GameDatabase;
 using static GameX.Epic.Formats.Core.UPackage;
+#pragma warning disable CS0169, CS0649
 
 namespace GameX.Epic.Formats.Core;
 
@@ -200,7 +201,7 @@ partial class FPackageFileSummary {
             LegacyVersion = Version;
             Ar.Game = UE4_BASE;
             Serialize4(r);
-            //!! note: UE4 requires different DetectGame way, perhaps it's not possible at all (but can use PAK file names for game detection)
+            //!! note: UE4 requires different DetectGame way, perhaps it's not possible at all (but can use Ar file names for game detection)
             return;
         }
 

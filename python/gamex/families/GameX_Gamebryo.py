@@ -1,28 +1,28 @@
 from __future__ import annotations
 import os
 from openstk import _pathExtension
-from gamex import Family, FamilyGame, BinaryPakFile, FileOption
+from gamex import Family, FamilyGame, BinaryArchive, FileOption
 from gamex.core.formats.binary import Binary_Dds
 from gamex.families.Gamebryo.formats.binary import Binary_Nif
-from gamex.families.GameX import UnknownPakFile
+from gamex.families.GameX import UnknownArchive
 
-# GamebryoPakFile
-class GamebryoPakFile(BinaryPakFile):
-    def __init__(self, state: PakState):
-        super().__init__(state, self.getPakBinary(state.game, _pathExtension(state.path).lower()))
-        self.objectFactoryFunc = self.objectFactory
+# GamebryoArchive
+class GamebryoArchive(BinaryArchive):
+    def __init__(self, state: ArcState):
+        super().__init__(state, self.getArcBinary(state.game, _pathExtension(state.path).lower()))
+        self.assetFactoryFunc = self.assetFactory
 
     #region Factories
 
     @staticmethod
-    def getPakBinary(game: FamilyGame, extension: str) -> PakBinary:
+    def getArcBinary(game: FamilyGame, extension: str) -> ArcBinary:
         match extension:
             case _: raise Exception(f'Unknown: {extension}')
 
     @staticmethod
-    def objectFactory(source: FileSource, game: FamilyGame) -> (object, callable):
+    def assetFactory(source: FileSource, game: FamilyGame) -> (object, callable):
         match _pathExtension(source.path).lower():
             case '.nif': return (FileOption.StreamObject, Binary_Nif.factory)
-            case _: return UnknownPakFile.objectFactory(source, game)
+            case _: return UnknownArchive.assetFactory(source, game)
 
     #endregion

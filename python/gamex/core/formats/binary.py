@@ -5,7 +5,7 @@ from PIL import Image
 from enum import Enum
 from openstk import _pathExtension
 from openstk.gfx import Raster, DDS_HEADER, Texture_Bytes, ITexture, TextureFormat, TexturePixel
-from gamex import PakBinary, PakBinaryT, FileSource, BinaryPakFile, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
+from gamex import ArcBinary, ArcBinaryT, FileSource, BinaryArchive, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
 from zipfile import ZipFile
 
 #region Binary_Bik
@@ -13,7 +13,7 @@ from zipfile import ZipFile
 # Binary_Bik
 class Binary_Bik(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_Bik(r, f.fileSize)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Bik(r, f.fileSize)
 
     def __init__(self, r: Reader, fileSize: int):
         self.data = r.readBytes(fileSize)
@@ -29,7 +29,7 @@ class Binary_Bik(IHaveMetaInfo):
 # Binary_Dds
 class Binary_Dds(IHaveMetaInfo, ITexture):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_Dds(r)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Dds(r)
 
     def __init__(self, r: Reader, readMagic: bool = True):
         self.header, self.headerDXT10, self.format, self.bytes = DDS_HEADER.read(r, readMagic)
@@ -76,7 +76,7 @@ class Binary_Dds(IHaveMetaInfo, ITexture):
 # Binary_Fsb
 class Binary_Fsb(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_Fsb(r, f.fileSize)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Fsb(r, f.fileSize)
 
     def __init__(self, r: Reader, fileSize: int):
         self.data = r.readBytes(fileSize)
@@ -92,7 +92,7 @@ class Binary_Fsb(IHaveMetaInfo):
 # Binary_Img
 class Binary_Img(IHaveMetaInfo, ITexture):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_Img(r, f)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Img(r, f)
 
     def __init__(self, r: Reader, f: FileSource):
         self.image = Image.open(r.f)
@@ -163,7 +163,7 @@ class Binary_Msg(IHaveMetaInfo):
 # Binary_Pcx
 class Binary_Pcx(IHaveMetaInfo, ITexture):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_Pcx(r, f.fileSize)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Pcx(r, f.fileSize)
 
     #region Headers
 
@@ -310,7 +310,7 @@ class Binary_Pcx(IHaveMetaInfo, ITexture):
 # Binary_Snd
 class Binary_Snd(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_Snd(r, f.fileSize)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Snd(r, f.fileSize)
 
     def __init__(self, r: Reader, fileSize: int):
         self.data = r.readBytes(fileSize)
@@ -327,7 +327,7 @@ class Binary_Snd(IHaveMetaInfo):
 class Binary_Tga(IHaveMetaInfo, ITexture):
 
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_Tga(r, f)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Tga(r, f)
 
     #region Headers
 
@@ -618,7 +618,7 @@ class Binary_Tga(IHaveMetaInfo, ITexture):
 # Binary_Txt
 class Binary_Txt(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_Txt(r, f.fileSize)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Txt(r, f.fileSize)
 
     def __init__(self, r: Reader, fileSize: int):
         self.data = r.readBytes(fileSize).decode('utf8', 'ignore')
@@ -632,29 +632,29 @@ class Binary_Txt(IHaveMetaInfo):
 #region Binary_Zip
 
 # Binary_Zip
-class Binary_Zip(PakBinaryT):
+class Binary_Zip(ArcBinaryT):
     def __init__(self, key: str | bytes = None):
         self.key = key
 
     # read
-    def read(self, source: BinaryPakFile, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
         source.useReader = False
-        pak: ZipFile
-        source.tag = pak = ZipFile(r.f)
+        arc: ZipFile
+        source.tag = arc = ZipFile(r.f)
         match self.key:
             case None: pass
-            case s if isinstance(key, str): pak.setpassword(s)
+            case s if isinstance(key, str): arc.setpassword(s)
             case z if isinstance(key, bytes): raise NotImplementedError()
         source.files = [FileSource(
             path = s.filename, #.replace('\\', '/'),
             packedSize = s.compress_size,
             fileSize = s.file_size,
             tag = s
-            ) for s in pak.infolist() if not s.is_dir()]
+            ) for s in arc.infolist() if not s.is_dir()]
 
     # readData
-    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None) -> BytesIO:
-        pak: ZipFile = source.tag
-        print(pak.read(file.path))
+    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+        arc: ZipFile = source.tag
+        print(arc.read(file.path))
 
 #endregion

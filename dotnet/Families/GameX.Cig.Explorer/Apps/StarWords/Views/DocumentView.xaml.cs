@@ -30,9 +30,9 @@ public partial class DocumentView : UserControl, INotifyPropertyChanged {
 
     public static readonly DependencyProperty DocumentProperty = DependencyProperty.Register(nameof(Document), typeof(object), typeof(DocumentView),
         new PropertyMetadata((d, e) => {
-            //if (d is not FileExplorer fileExplorer || e.NewValue is not PakFile pakFile) return;
-            //fileExplorer.NodeFilters = pakFile.GetMetaItemFiltersAsync(Resource).Result;
-            //fileExplorer.Nodes = new ObservableCollection<MetaItem>(fileExplorer.PakNodes = pakFile.GetMetaItemsAsync(Resource).Result.ToList());
+            //if (d is not FileExplorer fileExplorer || e.NewValue is not Archive archive) return;
+            //fileExplorer.NodeFilters = archive.GetMetaItemFiltersAsync(Resource).Result;
+            //fileExplorer.Nodes = new ObservableCollection<MetaItem>(fileExplorer.ArcNodes = archive.GetMetaItemsAsync(Resource).Result.ToList());
             //fileExplorer.SelectedItem = string.IsNullOrEmpty(fileExplorer.OpenPath) ? null : fileExplorer.FindByPath(fileExplorer.OpenPath);
             //fileExplorer.OnReady();
         }));

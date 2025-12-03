@@ -7,13 +7,13 @@ namespace GameX.Valve;
 [TestClass]
 public class PakBinaryTest {
     static readonly Family family = FamilyManager.GetFamily("Valve");
-    //static readonly PakFile dota2 = family.OpenPakFile(new Uri("game:/platform_misc_dir.vpk#H2"));
+    //static readonly Archive dota2 = family.OpenArchive(new Uri("game:/platform_misc_dir.vpk#H2"));
 
     //[TestMethod]
     //public void AGRP()
     //{
-    //    var pak1 = family.OpenPakFile(new Uri("game:/platform_misc_dir.vpk#H2"));
-    //    var pak2 = family.OpenPakFile(new Uri("vpk_file_not_ending_in_vpk.vpk.0123456789abc"));
+    //    var pak1 = family.OpenArchive(new Uri("game:/platform_misc_dir.vpk#H2"));
+    //    var pak2 = family.OpenArchive(new Uri("vpk_file_not_ending_in_vpk.vpk.0123456789abc"));
     //    pak2.Contains("kitten.jpg");
     //}
 

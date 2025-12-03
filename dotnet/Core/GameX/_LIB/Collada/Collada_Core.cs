@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
+#pragma warning disable CS0169
 
 namespace Khronos.Collada;
 

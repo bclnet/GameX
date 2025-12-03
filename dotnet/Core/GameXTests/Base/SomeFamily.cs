@@ -15,15 +15,15 @@ internal static class Some {
     'name': 'Some Family',
     'games': {
         '*': {
-            'pakFileType': 'GameX.Some+SomePakFile, GameX.BaseTests'
+            'pakFileType': 'GameX.Some+SomeArchive, GameX.BaseTests'
         },
         'Found': {
             'name': 'Found',
-            'pak': 'game:/path#Found'
+            'arc': 'game:/path#Found'
         },
         'Missing': {
             'name': 'Missing',
-            'pak': 'game:/path#Missing'
+            'arc': 'game:/path#Missing'
         }
     },
     'fileManager': {
@@ -31,8 +31,8 @@ internal static class Some {
 }";
     public static readonly Family Family = FamilyManager.CreateFamily(FamilyJson.Replace("'", "\""));
 
-    public class SomePakFile : Archive {
-        public SomePakFile(ArchiveState state) : base(state) { Name = "Some Name"; }
+    public class SomeArchive : Archive {
+        public SomeArchive(ArchiveState state) : base(state) { Name = "Some Name"; }
         public override int Count => 0;
         public override void Closing() { }
         public override void Opening() { }

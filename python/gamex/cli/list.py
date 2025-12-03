@@ -39,20 +39,20 @@ def list(args: CLIListArgs) -> None:
         for game in family.games.values():
             print(f'{game.name}')
             if not game.found: continue
-            print(f'  urls: {', '.join(game.paks)}')
+            print(f'  urls: {', '.join(game.arcs)}')
             print(f'  root: {game.found.root}')
         return
     
     # list files in pack for family
     else:
         print(f'{family.name} - {args.uri}')
-        with family.openPakFile(args.uri) as s:
+        with family.openArchive(args.uri) as s:
             # if s.count == 0: print('Nothing found.'); return
             for p in sorted(s.files, key=lambda x: x.path):
                 print(f'{p.path}')
-                pak = p.pak
-                if not pak: continue
-                pak.open()
+                arc = p.arc
+                if not arc: continue
+                arc.open()
                 exts = Counter([os.path.splitext(x.path)[1] for x in s.files])
                 for x in exts:
                     print(f'  {x}: {exts[x]}')

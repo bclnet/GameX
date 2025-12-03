@@ -50,10 +50,10 @@ partial class Program {
             Console.WriteLine("files:");
             foreach (var p in s.Files.OrderBy(x => x.Path)) {
                 Console.WriteLine($"{p.Path}");
-                var pak = p.Arc;
-                if (pak == null) continue;
-                pak.Open();
-                foreach (var x in pak.Files.Select(x => Path.GetExtension(x.Path)).GroupBy(x => x)) Console.WriteLine($"  {x.Key}: {x.Count()}");
+                var arc = p.Arc;
+                if (arc == null) continue;
+                arc.Open();
+                foreach (var x in arc.Files.Select(x => Path.GetExtension(x.Path)).GroupBy(x => x)) Console.WriteLine($"  {x.Key}: {x.Count()}");
             }
         }
         return Task.FromResult(0);

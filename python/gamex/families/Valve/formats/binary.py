@@ -4,7 +4,7 @@ from io import BytesIO
 from enum import Enum, Flag
 from openstk import _throw, _pathExtension, unsafe, Reader, X_LumpON, X_LumpNO, X_LumpNO2, X_Lump2NO
 from openstk.gfx import Raster, Texture_Bytes, ITexture, ITextureFrames, TextureFlags, TextureFormat, TexturePixel
-from gamex import PakFile, BinaryPakFile, PakBinary, PakBinaryT, FileSource, MetaInfo, MetaManager, MetaContent, IHaveMetaInfo
+from gamex import Archive, BinaryArchive, ArcBinary, ArcBinaryT, FileSource, MetaInfo, MetaManager, MetaContent, IHaveMetaInfo
 from gamex.core.formats.compression import decompressBlast
 from hashlib import md5
 from cryptography.hazmat.primitives import hashes
@@ -15,7 +15,7 @@ from cryptography.hazmat.primitives import serialization
 #region Binary_Bsp30
 
 # Binary_Bsp30
-class Binary_Bsp30(PakBinaryT):
+class Binary_Bsp30(ArcBinaryT):
 
     #region Headers
 
@@ -88,7 +88,7 @@ class Binary_Bsp30(PakBinaryT):
     #endregion
 
     #read
-    def read(self, source: BinaryPakFile, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
         source.files = files = []
 
         # read file
@@ -112,7 +112,7 @@ class Binary_Bsp30(PakBinaryT):
         files.append(FileSource(path = 'markSurfaces.dat', offset = header.markSurfaces.offset, fileSize = header.markSurfaces.num))
 
     # readData
-    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
         r.seek(file.offset)
         return BytesIO(r.readBytes(file.fileSize))
 
@@ -123,7 +123,7 @@ class Binary_Bsp30(PakBinaryT):
 # Binary_Src
 class Binary_Src(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile):
+    def factory(r: Reader, f: FileSource, s: Archive):
         pass
         
     def __init__(self, r: Reader):
@@ -140,7 +140,7 @@ class Binary_Src(IHaveMetaInfo):
 # Binary_Spr
 class Binary_Spr(IHaveMetaInfo, ITextureFrames):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_Spr(r)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Spr(r)
 
     #region Headers
 
@@ -245,7 +245,7 @@ class Binary_Spr(IHaveMetaInfo, ITextureFrames):
 # Binary_Mdl10
 class Binary_Mdl10(IHaveMetaInfo, ITexture):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_Mdl10(r, f, s)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Mdl10(r, f, s)
 
     #region Headers
 
@@ -707,7 +707,7 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
     skinFamilies: list[list[int]]
     transitions: list[bytearray]
 
-    def __init__(self, r: Reader, f: FileSource, s: BinaryPakFile):
+    def __init__(self, r: Reader, f: FileSource, s: BinaryArchive):
         # read file
         header = r.readS(self.M_Header)
         if header.magic != self.M_MAGIC: raise Exception('BAD MAGIC')
@@ -809,7 +809,7 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
 # Binary_Mdl40
 class Binary_Mdl40(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_Mdl40(r, f, s)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Mdl40(r, f, s)
 
     #region Headers
 
@@ -955,7 +955,7 @@ class Binary_Mdl40(IHaveMetaInfo):
     clippingMax: np.ndarray
     flags: HeaderFlags
 
-    def __init__(self, r: Reader, f: FileSource, s: BinaryPakFile):
+    def __init__(self, r: Reader, f: FileSource, s: BinaryArchive):
         # read file
         header = r.readS(self.M_Header)
         if header.magic != self.M_MAGIC: raise Exception('BAD MAGIC')
@@ -1031,7 +1031,7 @@ class Binary_Mdl40(IHaveMetaInfo):
 #region Binary_Vpk
 
 # Binary_Vpk
-class Binary_Vpk(PakBinaryT):
+class Binary_Vpk(ArcBinaryT):
 
     #region Headers
 
@@ -1108,7 +1108,7 @@ class Binary_Vpk(PakBinaryT):
     #endregion
 
     # read
-    def read(self, source: BinaryPakFile, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
         source.files = files = []
 
         # file mask
@@ -1119,10 +1119,10 @@ class Binary_Vpk(PakBinaryT):
             return f'{os.path.splitext(os.path.basename(path))[0]}{extension}'
         source.fileMask = fileMask
 
-        # pakPath
-        pakPath = source.pakPath
-        dirVpk = pakPath.endswith('_dir.vpk')
-        if dirVpk: pakPath = pakPath[:-8]
+        # arcPath
+        arcPath = source.arcPath
+        dirVpk = arcPath.endswith('_dir.vpk')
+        if dirVpk: arcPath = arcPath[:-8]
 
         # read header
         if r.readUInt32() != self.MAGIC: raise Exception('BAD MAGIC')
@@ -1157,7 +1157,7 @@ class Binary_Vpk(PakBinaryT):
                     if len(file.data) > 0: r.read(file.data, 0, len(file.data))
                     if file.id != 0x7FFF:
                         if not dirVpk: raise Exception('Given VPK is not a _dir, but entry is referencing an external archive.')
-                        file.tag = f'{pakPath}_{file.id:03d}.vpk'
+                        file.tag = f'{arcPath}_{file.id:03d}.vpk'
                     else: file.tag = headerPosition + treeSize
                     # add file
                     files.append(file)
@@ -1171,7 +1171,7 @@ class Binary_Vpk(PakBinaryT):
             v.verifySignature(r)
 
     # readData
-    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
         fileDataLength = len(file.data)
         data = bytearray(fileDataLength + file.fileSize); mv = memoryview(data)
         if fileDataLength > 0: data[0:] = file.data
@@ -1186,7 +1186,7 @@ class Binary_Vpk(PakBinaryT):
 #region Binary_Wad3
 
 # Binary_Wad3
-class Binary_Wad3(PakBinaryT):
+class Binary_Wad3(ArcBinaryT):
 
     #region Headers
 
@@ -1220,7 +1220,7 @@ class Binary_Wad3(PakBinaryT):
     #endregion
 
     # read
-    def read(self, source: BinaryPakFile, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
         source.files = files = []
 
         # read file
@@ -1245,7 +1245,7 @@ class Binary_Wad3(PakBinaryT):
                 packedSize = lump.size))
 
     # readData
-    def readData(self, source: BinaryPakFile, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
         r.seek(file.offset)
         return BytesIO(
             r.readBytes(file.fileSize) if file.compressed == 0 else \
@@ -1258,7 +1258,7 @@ class Binary_Wad3(PakBinaryT):
 # Binary_Wad3X
 class Binary_Wad3X(IHaveMetaInfo, ITexture):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: PakFile): return Binary_Wad3X(r, f)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Wad3X(r, f)
 
     #region Headers
 

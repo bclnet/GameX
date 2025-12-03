@@ -9,7 +9,7 @@
   ],
   "games": {
     "*": {
-      "pakFileType": "GameX.Cyanide.CyanidePakFile, GameX.Cyanide"
+      "archiveType": "GameX.Cyanide.CyanideArchive, GameX.Cyanide"
     },
     "TC": {
       "name": "The Council",
@@ -19,7 +19,7 @@
       ],
       "date": "2018-03-13",
       "tags": "",
-      "pakExt": ".cpk",
+      "arcExt": ".cpk",
       "pak2": "game:/*.bsa",
       "files": {
         "key": [
@@ -38,7 +38,7 @@
       "name": "Werewolf: The Apocalypse - Earthblood",
       "url": "https://store.steampowered.com/app/679110",
       "date": "2022-02-07",
-      "pakExt": ".pak",
+      "arcExt": ".arc",
       "files": {
         "key": [
           "Steam:679110",

@@ -42,24 +42,24 @@ public class D2Game(Family family, string id, JsonElement elem, FamilyGame dgame
 }
 
 /// <summary>
-/// VolitionPakFile
+/// VolitionArchive
 /// </summary>
-/// <seealso cref="GameX.Formats.BinaryPakFile" />
-public class VolitionPakFile : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+/// <seealso cref="GameX.Formats.BinaryArchive" />
+public class VolitionArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
     /// <summary>
-    /// Initializes a new instance of the <see cref="VolitionPakFile" /> class.
+    /// Initializes a new instance of the <see cref="VolitionArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public VolitionPakFile(ArchiveState state) : base(state, GetPakBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
-        ObjectFactoryFunc = ObjectFactory;
+    public VolitionArchive(ArchiveState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+        AssetFactoryFunc = AssetFactory;
     }
 
     #region Factories
 
-    static readonly ConcurrentDictionary<string, ArcBinary> PakBinarys = new ConcurrentDictionary<string, ArcBinary>();
+    static readonly ConcurrentDictionary<string, ArcBinary> ArcBinarys = new ConcurrentDictionary<string, ArcBinary>();
 
-    static ArcBinary GetPakBinary(FamilyGame game, string extension)
-        => PakBinarys.GetOrAdd(game.Id, _ => game.Engine.n switch {
+    static ArcBinary GetArcBinary(FamilyGame game, string extension)
+        => ArcBinarys.GetOrAdd(game.Id, _ => game.Engine.n switch {
             "Descent" => Binary_Descent.Current,
             "CTG" => Binary_Ctg.Current,
             "Geo-Mod" => Binary_GeoMod.Current,
@@ -67,19 +67,19 @@ public class VolitionPakFile : BinaryAsset, ITransformAsset<IUnknownFileModel> {
             _ => throw new ArgumentOutOfRangeException(nameof(game.Engine.n)),
         });
 
-    static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) ObjectFactory(FileSource source, FamilyGame game)
+    static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) AssetFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             ".256" => (0, Binary_Pal.Factory_3),
             ".mvl" => (0, Binary_Mvl.Factory),
-            _ => UnknownPakFile.ObjectFactory(source, game),
+            _ => UnknownArchive.AssetFactory(source, game),
         };
 
     #endregion
 
     #region Transforms
 
-    bool ITransformAsset<IUnknownFileModel>.CanTransformAsset(Archive transformTo, object source) => UnknownTransform.CanTransformFileObject(this, transformTo, source);
-    Task<IUnknownFileModel> ITransformAsset<IUnknownFileModel>.TransformAsset(Archive transformTo, object source) => UnknownTransform.TransformFileObjectAsync(this, transformTo, source);
+    bool ITransformAsset<IUnknownFileModel>.CanTransformAsset(Archive transformTo, object source) => UnknownTransform.CanTransformAsset(this, transformTo, source);
+    Task<IUnknownFileModel> ITransformAsset<IUnknownFileModel>.TransformAsset(Archive transformTo, object source) => UnknownTransform.TransformAsset(this, transformTo, source);
 
     #endregion
 }

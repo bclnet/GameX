@@ -3,7 +3,7 @@
   "url": "https://en.wikipedia.org/wiki/List_of_Ubisoft_games:_2020%E2%80%93present",
   "games": {
     "*": {
-      "pakFileType": "GameX.Ubisoft.UbisoftPakFile, GameX.Ubisoft"
+      "archiveType": "GameX.Ubisoft.UbisoftArchive, GameX.Ubisoft"
     },
     "MnM:CR": {
       "name": "Might & Magic: Chess Royale",

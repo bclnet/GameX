@@ -92,7 +92,7 @@ class Binary_UO(ArcBinaryT):
             case 'gump.def': return (0, Binary_GumpDef.factory)
             case 'hues.mul': return (0, Binary_Hues.factory)
             case 'mobtypes.txt': return (0, Binary_MobType.factory)
-            case x if x == 'multimap.rle' or x.startswith('facet') == 'facet': return (0, Binary_MultiMap.factory)
+            case x if x == 'multimap.rle' or x.startswith('facet'): return (0, Binary_MultiMap.factory)
             case 'music/digital/config.txt': return (0, Binary_MusicDef.factory)
             case 'radarcol.mul': return (0, Binary_RadarColor.factory)
             case 'skillgrp.mul': return (0, Binary_SkillGroups.factory)

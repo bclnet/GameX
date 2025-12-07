@@ -276,7 +276,7 @@ class Binary_Fli(IHaveMetaInfo, ITextureFrames):
         #     while numChunks != 0:
         #         numChunks -= 1
         #         count = r.readSByte()
-        #         if count > 0: _ += count #Unsafe.InitBlock(ref *ptr, r.ReadByte(), (uint)count); _ += count
+        #         if count > 0: _ += count #unsafe.InitBlock(ref *ptr, r.ReadByte(), (uint)count); _ += count
         #         else: count = -count; pixels[_:_+count] = r.readBytes(count); _ += count
     
     #endregion

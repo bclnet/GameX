@@ -11,7 +11,7 @@ file = ('game:/#S', 'sample:0')
 # file = ('game:/#TP', 'sample:0')
 
 # get arc with game:/uri
-archive = family.openArchive(file[0])
+archive = family.getArchive(file[0])
 sample = archive.game.getSample(file[1][7:]).path if file[1].startswith('sample') else file[1]
 print(f'arc: {archive}, {sample}')
 

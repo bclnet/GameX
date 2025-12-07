@@ -26,7 +26,7 @@ public class FormatsTest {
     [DataRow(true, "game:/code_post_gfx.ff#COD:MW2")]       // 2022 - Call of Duty: Modern Warfare II
     public void DLG(bool installed, string sampleFile) {
         if (!installed) return;
-        var dat = family.OpenArchive(new Uri(sampleFile));
+        var dat = family.GetArchive(new Uri(sampleFile));
     }
 
     [TestMethod]
@@ -48,7 +48,7 @@ public class FormatsTest {
     //[DataRow(true, "game:/karma_gump_checkin.ff#COD:MW2")]    // 2022 - Call of Duty: Modern Warfare II
     public void DLG2(bool installed, string sampleFile) {
         if (!installed) return;
-        var dat = family.OpenArchive(new Uri(sampleFile));
+        var dat = family.GetArchive(new Uri(sampleFile));
     }
 }
 

@@ -5,9 +5,9 @@ from urllib.parse import urlparse
 from importlib import resources
 from openstk import findType, _throw, YamlDict
 from openstk.vfx import FileSystem, AggregateFileSystem, NetworkFileSystem, DirectoryFileSystem, VirtualFileSystem
-from openstk.platform import PlatformX
+from openstk.platforms import PlatformX
 from gamex import option, familyKeys 
-from gamex.core.archive import ArcState, ManyArchive, MultiArchive
+from gamex.core.archive import ArchiveState, ManyArchive, MultiArchive
 from gamex.core.store import getPathByKey as Store_getPathByKey
 from .util import _valueF, _value, _list, _related, _dictTrim
 
@@ -55,12 +55,6 @@ def parseEngine(value: str) -> (str, str):
     p = value.split(':', 1)
     return (p[0], None if len(p) < 2 else p[1])
 # end::parseEngine[]
-
-# create Detector
-@staticmethod
-def createDetector(game: FamilyGame, id: str, elem: dict[str, object]) -> Detector:
-    detectorType = _value(elem, 'detectorType')
-    return findType(detectorType)(game, id, elem) if detectorType else Detector(game, id, elem)
 
 # create FamilySample
 @staticmethod
@@ -210,8 +204,7 @@ games: {[x for x in self.games.values()]}'''
         return (game, edition)
 
     # to Game
-    def toGame(self, game: FamilyGame, edition: FamilyGame.Edition) -> str:
-        return f'{game.id}.{edition.id}' if edition else game.id
+    def toGame(self, game: FamilyGame, edition: FamilyGame.Edition) -> str: return f'{game.id}.{edition.id}' if edition else game.id
 
     # tag::Family.parseResource[]
     # parse Resource
@@ -244,14 +237,14 @@ games: {[x for x in self.games.values()]}'''
         return ''
 
     # open Archive
-    def openArchive(self, res: Resource | str, throwOnError: bool = True) -> Archive:
+    def getArchive(self, res: Resource | str, throwOnError: bool = True) -> Archive:
         r = None
         match res:
             case s if isinstance(res, Resource): r = s
             case u if isinstance(res, str): r = self.parseResource(u)
             case _: raise Exception(f'Unknown: {res}')
         if not r.game.hasLoaded: r.game.hasLoaded = True; r.game.loaded()
-        return (arc := r.game.createArchive(r.vfx, r.edition, r.searchPattern, throwOnError)) and arc.open() if r.game else \
+        return (arc := r.game._getArchive(r.vfx, r.edition, r.searchPattern, throwOnError)) and arc.open() if r.game else \
             _throw(f'Undefined Game')
 # end::Family[]
 
@@ -322,8 +315,16 @@ class FamilySample:
 
 #region FamilyGame
 
+# The client state.
+class ClientState:
+    def __init__(self, archive: Archive, args: list[str] = None, tag: object = None):
+        self.archive = archive
+        self.args = args or []
+        self.tag = tag
+
 # tag::FamilyGame[]
 class FamilyGame:
+    # The game edition.
     class Edition:
         def __init__(self, id: str, elem: dict[str, object]):
             self.id = self.name = id
@@ -338,7 +339,8 @@ class FamilyGame:
                     case _: return v
             self.data = { k:switch(k,v) for k,v in elem.items() }
         def __repr__(self): return f'{self.id}: {self.name}'
-        
+
+    # The game DLC.    
     class DownloadableContent:
         def __init__(self, id: str, elem: dict[str, object]):
             self.id = self.name = id
@@ -352,6 +354,7 @@ class FamilyGame:
             self.data = { k:switch(k,v) for k,v in elem.items() }
         def __repr__(self): return f'{self.id}: {self.name}'
 
+    # The game locale.
     class Locale:
         def __init__(self, id: str, elem: dict[str, object]):
             self.id = self.name = id
@@ -363,12 +366,24 @@ class FamilyGame:
             self.data = { k:switch(k,v) for k,v in elem.items() }
         def __repr__(self): return f'{self.id}: {self.name}'
 
+    # The game files.
     class FileSet:
         keys: list[str]
         paths: list[str]
         def __init__(self, elem: dict[str, object]):
             self.keys = _list(elem, 'key')
             self.paths = _list(elem, 'path', [])
+
+    # create Detector
+    def createDetector(self, id: str, elem: dict[str, object]) -> Detector:
+        detectorType = _value(elem, 'detectorType')
+        return findType(detectorType)(self, id, elem) if detectorType else Detector(self, id, elem)
+
+    # create Archive
+    def createArchive(self, state: ArchiveState) -> Archive: return findType(self.archiveType)(state) if self.archiveType else _throw(f'{self.id} missing ArchiveType')
+
+    # create Client
+    def createClient(self, state: ClientState) -> Archive: return findType(self.clientType)(state) if self.clientType else _throw(f'{self.id} missing ClientType')
 
     def __init__(self, family: Family, id: str, elem: dict[str, object], dgame: FamilyGame):
         self.hasLoaded = False
@@ -377,7 +392,7 @@ class FamilyGame:
         if not dgame:
             self.searchBy = SearchBy.Default; self.arcs = ['game:/']
             self.gameType = self.engine = self.resource = \
-            self.paths = self.key = self.detector = self.vfxType = \
+            self.paths = self.key = self.detector = self.clientType = self.vfxType = \
             self.archiveType = self.arcExts = None
             return
         self.name = _value(elem, 'name')
@@ -392,6 +407,7 @@ class FamilyGame:
         # self.status = _value(elem, 'status')
         self.tags = _value(elem, 'tags', '').split(' ')
         # interface
+        self.clientType = _value(elem, 'clientType', dgame.clientType)
         self.vfxType = _value(elem, 'vfxType', dgame.vfxType)
         self.searchBy = _value(elem, 'searchBy', dgame.searchBy)
         self.archiveType = _value(elem, 'archiveType', dgame.archiveType)
@@ -407,7 +423,7 @@ class FamilyGame:
         self.virtuals = _related(elem, 'virtuals', lambda k,v: parseKey(v)) #virtuals: dict[str, object] = {}
         self.filters = _related(elem, 'filters', lambda k,v: v) #filters: dict[str, object] = {}
         # find
-        self.found = self.getSystemPath(option.FindKey, family.id, elem)
+        self.found = self._getSystemPath(option.FindKey, family.id, elem)
         self.options = None
         
     def __repr__(self): return f'''
@@ -419,16 +435,20 @@ class FamilyGame:
 #   - locales: {self.locales if self.locales else None}'''
 
     # detect
-    def detect(self, id: str, key: str, value: object, func: callable) -> object:
-        return self.detectors[id].get(key, value, func) if id in self.detectors else None
+    def detect(self, id: str, key: str, value: object, func: callable) -> object: return self.detectors[id].get(key, value, func) if id in self.detectors else None
 
     # Ensures this instance.
-    def loaded(self) -> None:
-        self.options = YamlDict(f'~/.gamex.{self.family.id}_{self.id}.yaml')
+    def loaded(self) -> None: self.options = YamlDict(f'~/.gamex.{self.family.id}_{self.id}.yaml')
 
-    # converts the Paks to Application Paks
-    def toArcs(self, edition: str) -> list[str]:
-        return [f'{x}#{self.id}{'.' + edition if edition else ''}' for x in self.arcs] # if self.arcs else []
+    # Converts the game to uris.
+    def toUris(self, edition: str) -> list[str]: return [FamilyGame.toUri(self.id, edition, s) for s in self.arcs] # if self.arcs else []
+
+    # Converts the game to a uri
+    @staticmethod
+    def toUri(id: str, edition: str = None, prefix: str = None) -> list[str]: return f'{prefix or 'game:/'}#{id}{'.' + edition if edition else ''}'
+
+    # gets a client
+    def getClient(self, state: ClientState) -> object: return self.createClient(state)
 
     # gets a game sample
     def getSample(self, id: str) -> FamilySample.File:
@@ -438,7 +458,7 @@ class FamilyGame:
         return samples[idx] if len(samples) > idx else None
 
     # gets a game system path
-    def getSystemPath(self, startsWith: str, family: str, elem: map[str, object]) -> SystemPath:
+    def _getSystemPath(self, startsWith: str, family: str, elem: map[str, object]) -> SystemPath:
         if not self.files or not self.files.keys: return None
         for key in [x for x in self.files.keys if x.startsWith(startsWith)] if startsWith else self.files.keys:
             p = key.split('#', 1)
@@ -451,7 +471,7 @@ class FamilyGame:
         return None
 
     # create SearchPatterns
-    def createSearchPatterns(self, searchPattern: str) -> str:
+    def _createSearchPatterns(self, searchPattern: str) -> str:
         if searchPattern: return searchPattern
         elif self.searchBy == SearchBy.Default: return ''
         elif self.searchBy == SearchBy.Arc: return '' if not self.arcExts else \
@@ -462,54 +482,50 @@ class FamilyGame:
         elif self.searchBy == SearchBy.AllDir: return '**/*'
         else: raise Exception(f'Unknown searchBy: {self.searchBy}')
 
-    # create Archive
-    def createArchive(self, vfx: FileSystem, edition: Edition, searchPattern: str, throwOnError: bool) -> Archive:
+    # is a Archive
+    def _isArcPath(self, path: str) -> bool: return self.arcExts and any([x for x in self.arcExts if path.endswith(x)])
+
+    # get Archive
+    def _getArchive(self, vfx: FileSystem, edition: Edition, searchPattern: str, throwOnError: bool) -> Archive:
         if isinstance(vfx, NetworkFileSystem): raise Exception('NetworkFileSystem not supported')
-        searchPattern = self.createSearchPatterns(searchPattern)
+        searchPattern = self._createSearchPatterns(searchPattern)
         archives = []
         dlcKeys = [x[0] for x in self.dlcs.items() if x[1].path]
         slash = '\\'
         for key in [None] + dlcKeys:
-            for p in self.findPaths(vfx, edition, self.dlcs[key] if key else None, searchPattern):
+            for p in self._findPaths(vfx, edition, self.dlcs[key] if key else None, searchPattern):
                 if self.searchBy == SearchBy.Arc:
                     for path in p[1]:
-                        if self.isArcPath(path): archives.append(self.createArchiveObj(vfx, edition, path))
+                        if self._isArcPath(path): archives.append(self._getArchiveObj(vfx, edition, path))
                 else:
-                    archives.append(self.createArchiveObj(vfx, edition,
+                    archives.append(self._getArchiveObj(vfx, edition,
                         (p[0], [x for x in p[1] if x.find(slash) >= 0]) if self.searchBy == SearchBy.DirDown else p))
-        return (archives[0] if len(archives) == 1 else self.createArchiveObj(vfx, edition, archives)).setPlatform(PlatformX.current)
+        return (archives[0] if len(archives) == 1 else self._getArchiveObj(vfx, edition, archives)).setPlatform(PlatformX.current)
 
-    # create createArchiveObj
-    def createArchiveObj(self, vfx: FileSystem, edition: Edition, value: object, tag: object = None) -> Archive:
-        arcState = ArcState(vfx, self, edition, value if isinstance(value, str) else None, tag)
+    # get ArchiveObj
+    def _getArchiveObj(self, vfx: FileSystem, edition: Edition, value: object, tag: object = None) -> Archive:
+        arcState = ArchiveState(vfx, self, edition, value if isinstance(value, str) else None, tag)
         match value:
-            case s if isinstance(value, str): return self.createArchiveType(arcState) if self.isArcPath(s) else _throw(f'{self.id} missing {s}')
+            case s if isinstance(value, str): return self.createArchive(arcState) if self._isArcPath(s) else _throw(f'{self.id} missing {s}')
             case p, l if isinstance(value, tuple):
-                return self.createArchiveObj(vfx, edition, l[0], tag) if len(l) == 1 and self.isArcPath(l[0]) \
+                return self._getArchiveObj(vfx, edition, l[0], tag) if len(l) == 1 and self._isArcPath(l[0]) \
                     else ManyArchive(
-                        self.createArchiveType(arcState), arcState,
+                        self.createArchive(arcState), arcState,
                         p if len(p) > 0 else 'Many', l,
                         pathSkip = len(p) + 1 if len(p) > 0 else 0)
             case s if isinstance(value, list): return s[0] if len(s) == 1 else MultiArchive(arcState, 'Multi', s)
             case None: return None
             case _: raise Exception(f'Unknown: {value}')
 
-    # create ArchiveType
-    def createArchiveType(self, state: ArcState) -> Archive:
-        if not self.archiveType: raise Exception(f'{self.id} missing ArchiveType')
-        return findType(self.archiveType)(state)
-
     # find Paths
-    def findPaths(self, vfx: FileSystem, edition: Edition, dlc: DownloadableContent, searchPattern: str):
+    def _findPaths(self, vfx: FileSystem, edition: Edition, dlc: DownloadableContent, searchPattern: str):
         ignores = self.ignores
         for path in self.paths or ['']:
             searchPath = os.path.join(path, dlc.path) if dlc and dlc.path else path
             fileSearch = vfx.findPaths(searchPath, searchPattern)
-            if ignores: fileSearch = [x for x in fileSearch if not os.path.basename(x) in ignores]
+            if ignores: fileSearch = [s for s in fileSearch if not os.path.basename(s) in ignores]
             yield (path, list(fileSearch))
 
-    # is a Archive
-    def isArcPath(self, path: str) -> bool: return self.arcExts and any([x for x in self.arcExts if path.endswith(x)])
 # end::FamilyGame[]
 
 #endregion
@@ -537,7 +553,7 @@ def init(loadSamples: bool = True):
 
     # load unknown
     unknown = getFamily('Unknown')
-    unknownArchive = unknown.openArchive('game:/#APP', False)
+    unknownArchive = unknown.getArchive('game:/#APP', False)
 
 @staticmethod
 def getFamily(id: str, throwOnError: bool = True) -> Family:

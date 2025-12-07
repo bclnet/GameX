@@ -8,6 +8,6 @@ partial class ColladaFileWriter {
     /// </summary>
     void SetScene()
         => daeObject.Scene = new Collada_Scene {
-            Visual_Scene = new Collada_Instance_Visual_Scene { URL = "#Scene", Name = "Scene" }
+            Visual_Scene = new Collada_Instance_Visual_Scene { URL = "#SceneBase", Name = "SceneBase" }
         };
 }

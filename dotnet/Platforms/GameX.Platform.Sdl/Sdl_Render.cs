@@ -3,6 +3,7 @@ using OpenStack.Gfx;
 using OpenStack.Gfx.Sdl;
 using System.Collections.Generic;
 using static OpenStack.Gfx.GfX;
+#pragma warning disable CS9113
 
 namespace GameX.Platforms.Sdl;
 

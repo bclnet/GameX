@@ -4,6 +4,7 @@ using OpenStack.Gfx.O3de;
 using System;
 using System.Collections.Generic;
 using static OpenStack.Gfx.GfX;
+#pragma warning disable CS9113, CS0169
 
 namespace GameX.Platforms.O3de;
 

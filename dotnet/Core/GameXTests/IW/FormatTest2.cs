@@ -6,7 +6,7 @@ namespace GameX.IW;
 [TestClass]
 public class FormatTest2 {
     static readonly Family family = FamilyManager.GetFamily("IW");
-    static Archive main = family.OpenArchive(new Uri("game:/xxx#MW2"));
+    static Archive main = family.GetArchive(new Uri("game:/xxx#MW2"));
 
     //[TestMethod]
     //[DataRow("dialogues00.bif:09_ban2ban01.dlg")]

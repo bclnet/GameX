@@ -5,6 +5,7 @@ using OpenStack.Gfx.Godot;
 using System;
 using System.Collections.Generic;
 using static OpenStack.Gfx.GfX;
+#pragma warning disable CS9113
 
 namespace GameX.Platforms.Godot;
 
@@ -44,7 +45,7 @@ public class ViewInfo : Node {
     public override void _Ready() {
         if (string.IsNullOrEmpty(FamilyId)) return;
         Family = FamilyManager.GetFamily(FamilyId);
-        if (!string.IsNullOrEmpty(ArcUri)) Source = Family.OpenArchive(new Uri(ArcUri));
+        if (!string.IsNullOrEmpty(ArcUri)) Source = Family.GetArchive(new Uri(ArcUri));
         Renderer = GodotRenderer.CreateRenderer(this, Source?.Gfx, Path, Type);
         Renderer?.Start();
     }

@@ -33,7 +33,7 @@ public class FamilyTest {
     [TestMethod]
     public void ShouldOpenArchive_Resource() {
         var family = Some.Family;
-        Assert.Throws<ArgumentNullException>(() => family.OpenArchive(new Resource { }));
+        Assert.Throws<ArgumentNullException>(() => family.GetArchive(new Resource { }));
         //Assert.IsNull(family.OpenArchive(new Resource { Paths = null, Game = FamilyGame.Empty }, throwOnError: false));
         //Assert.IsNotNull(family.OpenArchive(new Resource { Paths = new[] { "path" }, Game = family.GetGame("Found") }));
     }
@@ -41,7 +41,7 @@ public class FamilyTest {
     [TestMethod]
     public void ShouldOpenArchive_Uri() {
         var family = Some.Family;
-        Assert.IsNull(family.OpenArchive(null, throwOnError: false));
+        Assert.IsNull(family.GetArchive(null, throwOnError: false));
         //// game-scheme
         //Assert.IsNull(null, family.OpenArchive(new Uri("game:/path#Found")));
         //// file-scheme

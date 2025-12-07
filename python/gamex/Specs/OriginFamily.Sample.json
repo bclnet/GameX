@@ -72,11 +72,10 @@
         "type": "MobTypes"
       },
       {
-        "path": "Multimap.rle",
-        "type": "Multimap"
-      },
-      {
-        "path": "facet00.mul",
+        "path": [
+          "Multimap.rle",
+          "facet00.mul"
+        ],
         "type": "Multimap"
       },
       {

@@ -1,15 +1,11 @@
 from __future__ import annotations
 import os
-from gamex import Archive
-from gamex.core.eng.eng import Game
+from openstk.core.client import ClientBase
+from gamex import ClientState
 
-# IPluginHost
-class IPluginHost: pass
-
-# IPluginHost
-class GameController(Game):
-    def __init__(self, game: Archive, pluginHost: IPluginHost):
+# GameClient
+class GameClient(ClientBase):
+    def __init__(self, state: ClientState):
         super().__init__()
-        self.game = game
-        self.pluginHost = pluginHost
-    
+        self.archive = state.archive
+        self.tag = state.tag

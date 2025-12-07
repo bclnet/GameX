@@ -3,7 +3,7 @@ using System;
 namespace GameX.Origin.Clients.UO;
 
 public static class Database {
-    public static Archive Archive = FamilyManager.GetFamily("Origin").OpenArchive(new Uri("game:/#UO"));
+    public static Archive Archive = FamilyManager.GetFamily("Origin").GetArchive(new Uri("game:/#UO"));
 
     //Games.UO.Database.Archive?.GetAsset<Binary_StringTable>("Cliloc.enu").Result;
     //public static int ItemIDMask => ClientVersion.InstallationIsUopFormat ? 0xffff : 0x3fff;

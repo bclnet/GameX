@@ -1,23 +1,22 @@
 using GameX.Origin.Formats.UO;
-using GameX.Origin.Structs.UO;
-using GameX.Xbox.Formats;
-using GameX.Xbox.Formats.Xna;
+using GameX.Xbox;
 using System;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace GameX.Origin.Clients.UO;
 
-public class Main(bool uop) {
-    bool Uop = uop;
+public class Assets(UOGame game) {
+    bool Uop = game.Uop;
     //Animations Animations;
     Binary_Animdata AnimData;
     Archive Arts;
     //Maps Maps;
     Binary_StringTable Clilocs;
-    //Gumps Gumps;
+    Archive Gumps;
+    Binary_GumpDef GumpsDef;
     //Fonts Fonts;
-    //Hues Hues;
+    Binary_Hues Hues;
+    Binary_RadarColor HuesRadar;
     //TileData TileData;
     //Multi Multis;
     //Skills Skills;
@@ -35,16 +34,19 @@ public class Main(bool uop) {
     //BuffTable BuffTable;
     //ChairTable ChairTable;
 
-    public async Task Load(Archive game, GameController ctx) {
+    public async Task Load(Archive game, UOGameClient ctx) {
         var lang = "enu";
         //Animations = new Animations(this);
         AnimData = await game.GetAsset<Binary_Animdata>("animdata.mul");
-        Arts = game.GetArchive(Uop ? "artLegacyMUL.uop" : "artidx.mul");
+        Arts = await game.GetAsset<Archive>(Uop ? "artLegacyMUL.uop" : "artidx.mul");
         //Maps = new Maps(this);
         Clilocs = await game.GetAsset<Binary_StringTable>($"cliloc.{lang}");
-        //Gumps = new Gumps(this);
-        //Fonts = new Fonts(this);
-        //Hues = new Hues(this);
+        Gumps = await game.GetAsset<Archive>(Uop ? "gumpartLegacyMUL.uop" : "gumpidx.mul");
+        GumpsDef = await game.GetAsset<Binary_GumpDef>("gump.def");
+        //Fonts = await game.GetAsset<Binary_AsciiFont>("fonts.mul");
+        //Fonts = await game.GetAsset<Binary_UnicodeFont>("fonts.mul");
+        Hues = await game.GetAsset<Binary_Hues>("hues.mul");
+        HuesRadar = await game.GetAsset<Binary_RadarColor>("radarcol.mul");
         //TileData = new TileDataoader(this);
         //Multis = new Multi(this);
         //Skills = new Skills(this);
@@ -63,4 +65,30 @@ public class Main(bool uop) {
         //ChairTable.Load();
         ////UltimaLive.Enable();
     }
+}
+
+public class UOGameClient : GameClient {
+    //AudioManager Audio;
+    readonly Assets Assets;
+
+    public UOGameClient(ClientState state) : base(state) {
+        TypeX.ScanTypes([typeof(XboxArchive)]);
+        Assets = new(state.Archive.Game as UOGame);
+    }
+
+    protected override async Task LoadContent() {
+        await base.LoadContent();
+        //await Fonts<Texture2D>.Load(Game, Device);
+        //SolidColorTextureCache.Load(Device);
+        //Audio = new AudioManager();
+#if false
+        //SetScene(new MainScene(this));
+#else
+        await Assets.Load(Archive, this);
+        //Audio.Initialize();
+        // SetScene(new LoginScene(UO.World));
+#endif
+    }
+
+    protected override Task UnloadContent() => Task.CompletedTask;
 }

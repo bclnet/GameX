@@ -1,5 +1,6 @@
 ﻿using GameX.Unknown;
 using OpenStack;
+using OpenStack.Client;
 using OpenStack.Vfx;
 using System;
 using System.Collections.Concurrent;
@@ -79,19 +80,6 @@ public partial class FamilyManager {
         if (string.IsNullOrEmpty(str)) { return default; }
         var p = str.Split([':'], 2);
         return (p[0], p.Length < 2 ? null : p[1]);
-    }
-
-    /// <summary>
-    /// Create Detector.
-    /// </summary>
-    /// <param name="game"></param>
-    /// <param name="id"></param>
-    /// <param name="elem"></param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentOutOfRangeException"></exception>
-    internal static Detector CreateDetector(FamilyGame game, string id, JsonElement elem) {
-        var detectorType = _valueF(elem, "detectorType", z => Type.GetType(z.GetString(), false) ?? throw new ArgumentOutOfRangeException("detectorType", $"Unknown type: {z}"));
-        return detectorType != null ? (Detector)Activator.CreateInstance(detectorType, game, id, elem) : new Detector(game, id, elem);
     }
 
     /// <summary>
@@ -274,7 +262,7 @@ public class Detector {
                     for (var i = 0U; i < len; i++)
                         crc = (crc >> 8) ^ table[(crc ^ r.ReadByte()) & 0xFF];
                     crc ^= 0xFFFFFFFF;
-                    return $"{crc:x}";
+                    return $"{crc:s}";
                 }
             case "md5": {
                     using var md5 = System.Security.Cryptography.MD5.Create();
@@ -448,7 +436,7 @@ public class Family {
             SpecSamples = _list(elem, "samples");
             Specs = _list(elem, "specs");
             // related
-            var dgame = new FamilyGame { SearchBy = SearchBy.Default, Arcs = [new Uri("game:/")] };
+            var dgame = new FamilyGame { SearchBy = SearchBy.Default, Arcs = [new Uri("archive:/")] };
             Samples = [];
             Engines = _related(elem, "engines", (k, v) => CreateFamilyEngine(this, k, v));
             Games = _dictTrim(_related(elem, "games", (k, v) => CreateFamilyGame(this, k, v, ref dgame)));
@@ -516,8 +504,7 @@ public class Family {
     /// <param name="edition">The edition.</param>
     /// <returns></returns>
     /// <exception cref="ArgumentOutOfRangeException">game</exception>
-    public string ToGame(FamilyGame game, FamilyGame.Edition edition)
-        => edition != null ? $"{game.Id}.{edition.Id}" : game.Id;
+    public string ToGame(FamilyGame game, FamilyGame.Edition edition) => edition != null ? $"{game.Id}.{edition.Id}" : game.Id;
 
     /// <summary>
     /// Parses the family resource uri.
@@ -534,12 +521,12 @@ public class Family {
         var subPath = edition?.Path;
         var vfxType = game.VfxType;
         var vfx =
-            string.Equals(uri.Scheme, "game", StringComparison.OrdinalIgnoreCase) ? found != null ? CreateFileSystem(vfxType, found, subPath) : default
+            string.Equals(uri.Scheme, "archive", StringComparison.OrdinalIgnoreCase) ? found != null ? CreateFileSystem(vfxType, found, subPath) : default
             : uri.IsFile ? !string.IsNullOrEmpty(uri.LocalPath) ? CreateFileSystem(vfxType, new SystemPath { Root = uri.LocalPath }, subPath) : default
             : uri.Scheme.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? !string.IsNullOrEmpty(uri.Host) ? CreateFileSystem(vfxType, found, subPath, uri) : default
             : default;
         if (vfx == null)
-            if (throwOnError) throw new ArgumentOutOfRangeException(nameof(uri), $"{game.Id}: unable to find game");
+            if (throwOnError) throw new ArgumentOutOfRangeException(nameof(uri), $"{game.Id}: unable to find archive");
             else return default;
         if (virtuals != null) vfx = new AggregateFileSystem([vfx, new VirtualFileSystem(virtuals)]);
         return new Resource {
@@ -565,7 +552,7 @@ public class Family {
     /// <param name="res">The res.</param>
     /// <param name="throwOnError">Throws on error.</param>
     /// <returns></returns>
-    public Archive OpenArchive(object res, bool throwOnError = true) {
+    public Archive GetArchive(object res, bool throwOnError = true) {
         var r = res switch {
             Resource s => s,
             string s => ParseResource(new Uri(s)),
@@ -574,7 +561,7 @@ public class Family {
         };
         if (!r.Game.HasLoaded) { r.Game.HasLoaded = true; r.Game.Loaded(); }
         return r.Game != null
-            ? r.Game.CreateArchive(r.Vfx, r.Edition, r.SearchPattern, throwOnError)?.Open()
+            ? r.Game.GetArchive(r.Vfx, r.Edition, r.SearchPattern, throwOnError)?.Open()
             : throw new ArgumentNullException(nameof(r.Game));
     }
 }
@@ -758,6 +745,29 @@ public class FamilySample {
 #endregion
 
 #region FamilyGame
+
+/// <summary>
+/// ClientState
+/// </summary>
+/// <param name="archive">The archive.</param>
+/// <param name="args">The pargsath.</param>
+/// <param name="tag">The tag.</param>
+public class ClientState(Archive archive, string[] args = null, object tag = null) {
+    /// <summary>
+    /// Gets the arc family game.
+    /// </summary>
+    public readonly Archive Archive = archive;
+
+    /// <summary>
+    /// Gets the args.
+    /// </summary>
+    public readonly string[] Args = args ?? [];
+
+    /// <summary>
+    /// Gets the tag.
+    /// </summary>
+    public object Tag = tag;
+}
 
 /// <summary>
 /// FamilyGame
@@ -965,10 +975,11 @@ public class FamilyGame {
     /// <summary>
     /// Gets or sets the type of the file system.
     /// </summary>
-    /// <value>
-    /// Gets or sets the file system type.
-    /// </value>
     public Type VfxType { get; set; }
+    /// <summary>
+    /// Gets or sets the type of the client.
+    /// </summary>
+    public Type ClientType { get; set; }
     /// <summary>
     /// Gets or sets the game editions.
     /// </summary>
@@ -1017,6 +1028,35 @@ public class FamilyGame {
     public YamlDict Options;
 
     /// <summary>
+    /// Create Detector.
+    /// </summary>
+    /// <param name="game"></param>
+    /// <param name="id"></param>
+    /// <param name="elem"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
+    internal Detector CreateDetector(string id, JsonElement elem) {
+        var detectorType = _valueF(elem, "detectorType", z => Type.GetType(z.GetString(), false) ?? throw new ArgumentOutOfRangeException("detectorType", $"Unknown type: {z}"));
+        return detectorType != null ? (Detector)Activator.CreateInstance(detectorType, this, id, elem) : new Detector(this, id, elem);
+    }
+
+    /// <summary>
+    /// Create archive
+    /// </summary>
+    /// <param name="game">The game.</param>
+    /// <param name="state">The state.</param>
+    /// <returns></returns>
+    internal Archive CreateArchive(ArchiveState state) => (Archive)Activator.CreateInstance(ArchiveType ?? throw new InvalidOperationException($"{Id} missing ArchiveType"), state);
+
+    /// <summary>
+    /// Create client
+    /// </summary>
+    /// <param name="game">The game.</param>
+    /// <param name="state">The state.</param>
+    /// <returns></returns>
+    internal ClientBase CreateClient(ClientState state) => (ClientBase)Activator.CreateInstance(ClientType ?? throw new InvalidOperationException($"{Id} missing ArchiveType"), state);
+
+    /// <summary>
     /// FamilyGame
     /// </summary>
     internal FamilyGame() { }
@@ -1043,6 +1083,7 @@ public class FamilyGame {
         //Status = _value(elem, "status");
         Tags = _value(elem, "tags", string.Empty).Split(' ');
         // interface
+        ClientType = _valueF(elem, "clientType", z => Type.GetType(z.GetString(), false) ?? throw new ArgumentOutOfRangeException("clientType", $"Unknown type: {z}"), dgame.ClientType);
         VfxType = _valueF(elem, "vfxType", z => Type.GetType(z.GetString(), false) ?? throw new ArgumentOutOfRangeException("vfxType", $"Unknown type: {z}"), dgame.VfxType);
         SearchBy = _valueF(elem, "searchBy", z => Enum.TryParse<SearchBy>(z.GetString(), true, out var zS) ? zS : throw new ArgumentOutOfRangeException("searchBy", $"Unknown option: {z}"), dgame.SearchBy);
         ArchiveType = _valueF(elem, "archiveType", z => Type.GetType(z.GetString(), false) ?? throw new ArgumentOutOfRangeException("archiveType", $"Unknown type: {z}"), dgame.ArchiveType);
@@ -1051,7 +1092,7 @@ public class FamilyGame {
         Editions = _related(elem, "editions", (k, v) => new Edition(k, v));
         Dlcs = _related(elem, "dlcs", (k, v) => new DownloadableContent(k, v));
         Locales = _related(elem, "locals", (k, v) => new Locale(k, v));
-        Detectors = _related(elem, "detectors", (k, v) => CreateDetector(this, k, v));
+        Detectors = _related(elem, "detectors", (k, v) => CreateDetector(k, v));
         // files
         Files = _valueF(elem, "files", x => new FileSet(x));
         Ignores = [.. _list(elem, "ignores", default_: [])];
@@ -1078,14 +1119,34 @@ public class FamilyGame {
     /// <summary>
     /// Ensures this instance.
     /// </summary>
-    public virtual void Loaded() {
-        Options = new YamlDict($"~/.gamex.{Family.Id}_{Id}.yaml");
-    }
+    public virtual void Loaded() { Options = new YamlDict($"~/.gamex.{Family.Id}_{Id}.yaml"); }
 
     /// <summary>
-    /// Converts the arcs to uris.
+    /// Converts the game to uris.
+    /// <param name="edition"></param>
     /// </summary>
-    public IList<Uri> ToArcs(string edition) => [.. Arcs.Select(x => new Uri($"{x}#{Id}{(string.IsNullOrEmpty(edition) ? "" : $".{edition}")}"))];
+    public IList<Uri> ToUris(string edition) => [.. Arcs.Select(s => ToUri(Id, edition, s))];
+
+    /// <summary>
+    /// Converts the game to a uri
+    /// <param name="id"></param>
+    /// <param name="edition"></param>
+    /// <param name="prefix"></param>
+    /// </summary>
+    public static Uri ToUri(string id, string edition = null, Uri prefix = null) => new($"{prefix ?? new("archive:/")}#{id}{(string.IsNullOrEmpty(edition) ? "" : $".{edition}")}");
+
+    /// <summary>
+    /// Converts the game to an id
+    /// <param name="id"></param>
+    /// <param name="edition"></param>
+    /// </summary>
+    public static string ToId(string id, string edition = null) => $"{id}{(string.IsNullOrEmpty(edition) ? "" : $".{edition}")}";
+
+    /// <summary>
+    /// Gets a client
+    /// </summary>
+    /// <param name="state"></param>
+    public ClientBase GetClient(ClientState state) => CreateClient(state);
 
     /// <summary>
     /// Gets a game sample
@@ -1099,7 +1160,7 @@ public class FamilyGame {
     /// <summary>
     /// Gets a game system path
     /// </summary>
-    public SystemPath GetSystemPath(string startsWith, string family, JsonElement elem) {
+    SystemPath GetSystemPath(string startsWith, string family, JsonElement elem) {
         if (Files == null || Files.Keys == null) return default;
         foreach (var key in startsWith != null ? Files.Keys.Where(startsWith.StartsWith) : Files.Keys) {
             var p = key.Split('#', 2);
@@ -1133,7 +1194,7 @@ public class FamilyGame {
     /// </summary>
     /// <param name="searchPattern">The search pattern.</param>
     /// <returns></returns>
-    public string CreateSearchPatterns(string searchPattern) {
+    string CreateSearchPatterns(string searchPattern) {
         if (!string.IsNullOrEmpty(searchPattern)) return searchPattern;
         return SearchBy switch {
             SearchBy.Default => "",
@@ -1148,6 +1209,13 @@ public class FamilyGame {
     }
 
     /// <summary>
+    /// Is arc file.
+    /// </summary>
+    /// <param name="path">The path.</param>
+    /// <returns></returns>
+    internal bool IsArcPath(string path) => ArcExts != null && ArcExts.Any(x => path.EndsWith(x, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>
     /// Create the archive.
     /// </summary>
     /// <param name="vfx">The vfx.</param>
@@ -1155,7 +1223,7 @@ public class FamilyGame {
     /// <param name="searchPattern">The search pattern.</param>
     /// <param name="throwOnError">Throws on error.</param>
     /// <returns></returns>
-    internal Archive CreateArchive(FileSystem vfx, Edition edition, string searchPattern, bool throwOnError) {
+    internal Archive GetArchive(FileSystem vfx, Edition edition, string searchPattern, bool throwOnError) {
         if (vfx is NetworkFileSystem k) throw new NotImplementedException($"{k}"); //return new StreamArchive(family.FileManager.HostFactory, game, path, vfx),
         searchPattern = CreateSearchPatterns(searchPattern);
         var archives = new List<Archive>();
@@ -1166,15 +1234,15 @@ public class FamilyGame {
                 switch (SearchBy) {
                     case SearchBy.Arc:
                         foreach (var path in p.paths)
-                            if (IsArcPath(path)) archives.Add(CreateArchiveObj(vfx, edition, path));
+                            if (IsArcPath(path)) archives.Add(GetArchiveObj(vfx, edition, path));
                         break;
                     default:
-                        archives.Add(CreateArchiveObj(vfx, edition,
+                        archives.Add(GetArchiveObj(vfx, edition,
                             SearchBy == SearchBy.DirDown ? (p.root, p.paths.Where(x => x.Contains(slash)).ToArray())
                             : p));
                         break;
                 }
-        return (archives.Count == 1 ? archives[0] : CreateArchiveObj(vfx, edition, archives))?.SetPlatform(PlatformX.Current);
+        return (archives.Count == 1 ? archives[0] : GetArchiveObj(vfx, edition, archives))?.SetPlatform(PlatformX.Current);
     }
 
     /// <summary>
@@ -1185,14 +1253,14 @@ public class FamilyGame {
     /// <param name="value">The value.</param>
     /// <param name="tag">The tag.</param>
     /// <returns></returns>
-    public Archive CreateArchiveObj(FileSystem vfx, Edition edition, object value, object tag = null) {
+    Archive GetArchiveObj(FileSystem vfx, Edition edition, object value, object tag = null) {
         var state = new ArchiveState(vfx, this, edition, value as string, tag);
         return value switch {
-            string s => IsArcPath(s) ? CreateArchiveType(state) : throw new InvalidOperationException($"{Id} missing {s}"),
+            string s => IsArcPath(s) ? CreateArchive(state) : throw new InvalidOperationException($"{Id} missing {s}"),
             ValueTuple<string, string[]> s => s.Item2.Length == 1 && IsArcPath(s.Item2[0])
-                ? CreateArchiveObj(vfx, edition, s.Item2[0], tag)
+                ? GetArchiveObj(vfx, edition, s.Item2[0], tag)
                 : new ManyArchive(
-                    CreateArchiveType(state), state,
+                    CreateArchive(state), state,
                     s.Item1.Length > 0 ? s.Item1 : "Many", s.Item2,
                     pathSkip: s.Item1.Length > 0 ? s.Item1.Length + 1 : 0),
             IList<Archive> s => s.Count == 1 ? s[0] : new MultiArchive(state, "Multi", s),
@@ -1202,33 +1270,18 @@ public class FamilyGame {
     }
 
     /// <summary>
-    /// Create archive type
-    /// </summary>
-    /// <param name="state">The state.</param>
-    /// <returns></returns>
-    public Archive CreateArchiveType(ArchiveState state)
-        => (Archive)Activator.CreateInstance(ArchiveType ?? throw new InvalidOperationException($"{Id} missing ArchiveType"), state);
-
-    /// <summary>
-    /// Is arc file.
-    /// </summary>
-    /// <param name="path">The path.</param>
-    /// <returns></returns>
-    public bool IsArcPath(string path) => ArcExts != null && ArcExts.Any(x => path.EndsWith(x, StringComparison.OrdinalIgnoreCase));
-
-    /// <summary>
     /// Find the games paths.
     /// </summary>
     /// <param name="vfx">The vfx.</param>
     /// <param name="edition">The edition.</param>
     /// <param name="searchPattern">The search pattern.</param>
     /// <returns></returns>
-    public IEnumerable<(string root, string[] paths)> FindPaths(FileSystem vfx, Edition edition, DownloadableContent dlc, string searchPattern) {
+    IEnumerable<(string root, string[] paths)> FindPaths(FileSystem vfx, Edition edition, DownloadableContent dlc, string searchPattern) {
         var ignores = Ignores;
         foreach (var path in Paths ?? [""]) {
             var searchPath = dlc != null && dlc.Path != null ? Path.Join(path, dlc.Path) : path;
             var fileSearch = vfx.FindPaths(searchPath, searchPattern);
-            if (ignores != null) fileSearch = fileSearch.Where(x => !ignores.Contains(Path.GetFileName(x)));
+            if (ignores != null) fileSearch = fileSearch.Where(s => !ignores.Contains(Path.GetFileName(s)));
             yield return (path, fileSearch.ToArray());
         }
     }
@@ -1277,7 +1330,7 @@ public partial class FamilyManager {
 
         // load unknown
         Unknown = GetFamily("Unknown");
-        UnknownArchive = Unknown.OpenArchive(new Uri("game:/#APP"), throwOnError: false);
+        UnknownArchive = Unknown.GetArchive(new Uri("archive:/#APP"), throwOnError: false);
     }
 
     /// <summary>

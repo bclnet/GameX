@@ -4,6 +4,7 @@ using OpenStack.Gfx.Unity;
 using System;
 using System.Collections.Generic;
 using static OpenStack.Gfx.GfX;
+#pragma warning disable CS9113
 
 namespace GameX.Platforms.Unity;
 
@@ -46,7 +47,7 @@ public class ViewInfo : UnityEngine.MonoBehaviour {
     public void Awake() {
         if (string.IsNullOrEmpty(FamilyId)) return;
         Family = FamilyManager.GetFamily(FamilyId);
-        if (!string.IsNullOrEmpty(ArcUri)) Source = Family.OpenArchive(new Uri(ArcUri));
+        if (!string.IsNullOrEmpty(ArcUri)) Source = Family.GetArchive(new Uri(ArcUri));
         Renderer = UnityRenderer.CreateRenderer(this, Source?.Gfx, Path, Type);
     }
 

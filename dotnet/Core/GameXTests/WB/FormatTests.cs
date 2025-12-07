@@ -12,9 +12,9 @@ namespace GameX.WB;
 [TestClass]
 public class FormatTests {
     static readonly Family family = FamilyManager.GetFamily("WB");
-    static readonly Archive cell = family.OpenArchive(new Uri("game:/client_cell_1.dat#AC")); const int ExpectedCellCount = 805003;
-    static readonly Archive portal = family.OpenArchive(new Uri("game:/client_portal.dat#AC")); const int ExpectedPortalCount = 79694;
-    static readonly Archive localEnglish = family.OpenArchive(new Uri("game:/client_local_English.dat#AC")); const int ExpectedLocalEnglishCount = 118;
+    static readonly Archive cell = family.GetArchive(new Uri("game:/client_cell_1.dat#AC")); const int ExpectedCellCount = 805003;
+    static readonly Archive portal = family.GetArchive(new Uri("game:/client_portal.dat#AC")); const int ExpectedPortalCount = 79694;
+    static readonly Archive localEnglish = family.GetArchive(new Uri("game:/client_local_English.dat#AC")); const int ExpectedLocalEnglishCount = 118;
 
     [TestMethod]
     public void LoadCellDat_NoExceptions() {

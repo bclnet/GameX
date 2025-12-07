@@ -1424,7 +1424,7 @@ public class SceneType(BinaryReader r) : IHaveMetaInfo
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new($"SceneTableIdx: {StbIndex}"),
-        new("Scene", items: Scenes.Select(x => new MetaInfo($"{x:X8}", clickable: true))),
+        new("SceneBase", items: Scenes.Select(x => new MetaInfo($"{x:X8}", clickable: true))),
     ];
 }
 #endregion

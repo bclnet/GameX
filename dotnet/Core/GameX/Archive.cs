@@ -325,7 +325,7 @@ public abstract class Archive : ISource, IDisposable {
     /// <returns></returns>
     public Archive GetArchive(object path, bool throwOnError = true)
         => path switch {
-            string s => Game.CreateArchive(Vfx, Edition, s, throwOnError)?.Open(),
+            string s => Game.GetArchive(Vfx, Edition, s, throwOnError)?.Open(),
             _ => throw new ArgumentOutOfRangeException(nameof(path)),
         };
 
@@ -778,7 +778,7 @@ public class ManyArchive : BinaryAsset {
     public override Task Read(object tag = default) {
         Files = [.. Paths.Select(s => new FileSource {
             Path = s.Replace('\\', '/'),
-            Arc = Game.IsArcPath(s) ? (BinaryAsset)Game.CreateArchiveType(new ArchiveState(Vfx, Game, Edition, s)) : default,
+            Arc = Game.IsArcPath(s) ? (BinaryAsset)Game.CreateArchive(new ArchiveState(Vfx, Game, Edition, s)) : default,
             Lazy = x => { x.FileSize = Vfx.FileInfo(s).length; x.Lazy = null; }
         })];
         return Task.CompletedTask;

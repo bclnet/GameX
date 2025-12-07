@@ -314,6 +314,7 @@
     },
     "UO": {
       "gameType": "GameX.Origin.UOGame, GameX.Origin",
+      "clientType": "GameX.Origin.Clients.UO.UOGameClient, GameX.Origin",
       "name": "Ultima Online",
       "url": "https://en.wikipedia.org/wiki/Ultima_Online",
       "dnl": "https://uo.com/client-download/",

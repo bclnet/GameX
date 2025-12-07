@@ -8,6 +8,6 @@ public static class Helper {
 
     public static readonly Dictionary<string, Lazy<Archive>> Paks = new()
     {
-        { "Cig:StarCitizen", new Lazy<Archive>(() => familyCig.OpenArchive(new Uri("game:/Sbi.p4k#StarCitizen"))) },
+        { "Cig:StarCitizen", new Lazy<Archive>(() => familyCig.GetArchive(new Uri("game:/Sbi.p4k#StarCitizen"))) },
     };
 }

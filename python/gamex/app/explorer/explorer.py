@@ -3,9 +3,9 @@ from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QSurfaceFormat
 from gamex import PlatformX
-from openstk.platform.platform_opengl import OpenGLPlatform
-from openstk.platform.platform_panda3d import Panda3dPlatform
-from openstk.platform.platform_pygame import PygamePlatform
+from openstk.platforms.platform_opengl import OpenGLPlatform
+from openstk.platforms.platform_panda3d import Panda3dPlatform
+from openstk.platforms.platform_pygame import PygamePlatform
 
 PlatformX.platforms = PlatformX.platforms.union({OpenGLPlatform.This, Panda3dPlatform.This, PygamePlatform.This})
 from gamex.app.explorer.views.MainPage import MainPage

@@ -11,7 +11,7 @@ class UnknownFamily(Family):
 
 # UnknownArchive
 class UnknownArchive(Archive):
-    def __init__(self, state: ArcState):
+    def __init__(self, state: ArchiveState):
         super().__init__(state)
         self.name = 'Unknown'
         self.assetFactoryFunc = self.assetFactory

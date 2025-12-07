@@ -121,8 +121,8 @@ public unsafe class Binary_AsciiFont : IHaveMetaInfo {
                 //Pixels = MemoryMarshal.Cast<ushort, byte>(bd.ToArray()).ToArray();
 
                 var bd = new byte[width * height << 1];
-                fixed (byte* bd_Scan0 = bd) {
-                    var line = (ushort*)bd_Scan0;
+                fixed (byte* bd_ = bd) {
+                    var line = (ushort*)bd_;
                     for (var y = 0; y < height; ++y, line += width) {
                         ushort* cur = line;
                         for (var x = 0; x < width; ++x) {
@@ -386,18 +386,11 @@ public class Binary_BodyTable : IHaveMetaInfo {
 
     #region Headers
 
-    public class Record {
-        public readonly int OldId;
-        public readonly int NewId;
-        public readonly int NewHue;
-
-        public Record(int oldId, int newId, int newHue) {
-            OldId = oldId;
-            NewId = newId;
-            NewHue = newHue;
-        }
+    public class Record(int oldId, int newId, int newHue) {
+        public readonly int OldId = oldId;
+        public readonly int NewId = newId;
+        public readonly int NewHue = newHue;
     }
-
 
     //public static void TranslateBodyAndHue(ref int id, ref int hue)
     //{
@@ -457,25 +450,16 @@ public class Binary_CalibrationInfo : IHaveMetaInfo {
 
     #region Headers
 
-    public class Record {
-        public readonly byte[] Mask;
-        public readonly byte[] Vals;
-        public readonly byte[] DetX;
-        public readonly byte[] DetY;
-        public readonly byte[] DetZ;
-        public readonly byte[] DetF;
-
-        public Record(byte[] mask, byte[] vals, byte[] detx, byte[] dety, byte[] detz, byte[] detf) {
-            Mask = mask;
-            Vals = vals;
-            DetX = detx;
-            DetY = dety;
-            DetZ = detz;
-            DetF = detf;
-        }
+    public class Record(byte[] mask, byte[] vals, byte[] detx, byte[] dety, byte[] detz, byte[] detf) {
+        public readonly byte[] Mask = mask;
+        public readonly byte[] Vals = vals;
+        public readonly byte[] DetX = detx;
+        public readonly byte[] DetY = dety;
+        public readonly byte[] DetZ = detz;
+        public readonly byte[] DetF = detf;
     }
 
-    static Record[] DefaultRecords = [
+    static readonly Record[] DefaultRecords = [
         new Record(
             // Post 7.0.4.0 (Andreew)
             [
@@ -796,7 +780,7 @@ public unsafe class Binary_Hues : IHaveMetaInfo {
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct HueRecord {
-        public static (string, int) Struct = ("<?", sizeof(HueRecord));
+        public static (string, int) Struct = ("<32h2h20s", 88);
         public fixed ushort Colors[32];
         public ushort TableStart;
         public ushort TableEnd;
@@ -810,17 +794,13 @@ public unsafe class Binary_Hues : IHaveMetaInfo {
         public ushort TableEnd;
         public string Name;
 
-        public Record(int id) {
+        public Record(int id) { Id = id; Colors = new ushort[32]; Name = "Null"; }
+        public Record(int id, ref HueRecord s) {
             Id = id;
-            Colors = new ushort[32];
-            Name = "Null";
-        }
-        public Record(int id, ref HueRecord record) {
-            Id = id;
-            fixed (ushort* colors_ = record.Colors) Colors = UnsafeX.FixedTArray(colors_, 32);
-            TableStart = record.TableStart;
-            TableEnd = record.TableEnd;
-            fixed (byte* name_ = record.Name) Name = UnsafeX.FixedAString(name_, 20);
+            fixed (ushort* colors_ = s.Colors) Colors = UnsafeX.FixedTArray(colors_, 32);
+            TableStart = s.TableStart;
+            TableEnd = s.TableEnd;
+            fixed (byte* name_ = s.Name) Name = UnsafeX.FixedAString(name_, 20);
         }
     }
 
@@ -867,8 +847,8 @@ public unsafe class Binary_Land : IHaveMetaInfo, ITexture {
             var bdata = (ushort*)_;
             var bd = Pixels = new byte[44 * 44 << 1];
             var width = 44;
-            fixed (byte* bd_Scan0 = bd) {
-                var line = (ushort*)bd_Scan0;
+            fixed (byte* bd_ = bd) {
+                var line = (ushort*)bd_;
                 // run
                 int xOffset = 21, xRun = 2;
                 for (var y = 0; y < 22; ++y, --xOffset, xRun += 2, line += width) {
@@ -921,17 +901,12 @@ public unsafe class Binary_Light : IHaveMetaInfo, ITexture {
             var width = Width = extra & 0xFFFF;
             var height = Height = (extra >> 16) & 0xFFFF;
             if (width <= 0 || height <= 0) return;
-
             var bd = Pixels = new byte[width * height << 1];
-            var delta = width;
-            fixed (byte* bd_Scan0 = bd) {
-                var line = (ushort*)bd_Scan0;
-                for (var y = 0; y < height; ++y, line += delta) {
+            fixed (byte* bd_ = bd) {
+                var line = (ushort*)bd_;
+                for (var y = 0; y < height; ++y, line += width) {
                     ushort* cur = line, end = cur + width;
-                    while (cur < end) {
-                        var value = *bdata++;
-                        *cur++ = (ushort)(((0x1f + value) << 10) + ((0x1F + value) << 5) + (0x1F + value));
-                    }
+                    while (cur < end) { var v = *bdata++; *cur++ = (ushort)(((0x1f + v) << 10) + ((0x1F + v) << 5) + (0x1F + v)); }
                 }
             }
         }
@@ -973,28 +948,23 @@ public class Binary_MobType : IHaveMetaInfo {
         Humanoid = 2
     }
 
-    struct Record {
-        public string Flags;
-        public MobType AnimationType;
-
-        public Record(string type, string flags) {
-            Flags = flags;
-            AnimationType = type switch {
-                "MONSTER" => MobType.Monster,
-                "ANIMAL" => MobType.Animal,
-                "SEA_MONSTER" => MobType.Monster,
-                "HUMAN" => MobType.Humanoid,
-                "EQUIPMENT" => MobType.Humanoid,
-                _ => MobType.Null,
-            };
-        }
+    struct Record(string type, string flags) {
+        public string Flags = flags;
+        public MobType AnimationType = type switch {
+            "MONSTER" => MobType.Monster,
+            "ANIMAL" => MobType.Animal,
+            "SEA_MONSTER" => MobType.Monster,
+            "HUMAN" => MobType.Humanoid,
+            "EQUIPMENT" => MobType.Humanoid,
+            _ => MobType.Null,
+        };
     }
 
-    public MobType AnimationTypeXXX(int bodyID) => Records[bodyID].AnimationType;
-
-    readonly Dictionary<int, Record> Records = new Dictionary<int, Record>();
-
     #endregion
+
+    readonly Dictionary<int, Record> Records = [];
+
+    public MobType AnimationTypeXXX(int bodyID) => Records[bodyID].AnimationType;
 
     // file: mobtypes.txt
     public Binary_MobType(StreamReader r) {
@@ -1031,18 +1001,14 @@ public unsafe class Binary_MultiMap : IHaveMetaInfo, ITexture {
     // file: Multimap.rle
     public Binary_MultiMap(BinaryReader r, FileSource f) {
         if (f.Path.StartsWith("facet")) {
-            Width = r.ReadInt16();
-            Height = r.ReadInt16();
-
-            var bd = Pixels = new byte[Width * Height << 1];
-            var bd_Stride = Width << 1;
-            fixed (byte* bd_Scan0 = bd) {
-                var line = (ushort*)bd_Scan0;
-                int delta = bd_Stride >> 1;
-
-                for (var y = 0; y < Height; y++, line += delta) {
+            var width = Width = r.ReadInt16();
+            var height = Height = r.ReadInt16();
+            var bd = Pixels = new byte[width * height << 1];
+            fixed (byte* bd_ = bd) {
+                var line = (ushort*)bd_;
+                for (var y = 0; y < height; y++, line += width) {
                     var colorsCount = r.ReadInt32() / 3;
-                    ushort* cur = line, endline = line + delta;
+                    ushort* cur = line, endline = line + width;
                     for (var c = 0; c < colorsCount; c++) {
                         var count = r.ReadByte();
                         var color = r.ReadInt16();
@@ -1056,33 +1022,25 @@ public unsafe class Binary_MultiMap : IHaveMetaInfo, ITexture {
             }
         }
         else {
-            Width = r.ReadInt32();
-            Height = r.ReadInt32();
-
-            var bd = Pixels = new byte[Width * Height << 1];
-            var bd_Stride = Width << 1;
-            fixed (byte* bd_Scan0 = bd) {
-                var line = (ushort*)bd_Scan0;
-                var delta = bd_Stride >> 1;
-
+            var width = Width = r.ReadInt32();
+            var height = Height = r.ReadInt32();
+            var bd = Pixels = new byte[width * height << 1];
+            fixed (byte* bd_ = bd) {
+                var line = (ushort*)bd_;
                 var cur = line;
                 var len = (int)(r.BaseStream.Length - r.BaseStream.Position);
-
                 var b = new byte[len];
                 r.Read(b, 0, len);
-
                 int j = 0, x = 0;
                 while (j != len) {
                     var pixel = b[j++];
                     var count = pixel & 0x7f;
-
                     // black or white color
-                    var c = (pixel & 0x80) != 0 ? (ushort)0x8000 : (ushort)0xffff;
-
+                    var color = (pixel & 0x80) != 0 ? (ushort)0x8000 : (ushort)0xffff;
                     for (var i = 0; i < count; ++i) {
-                        cur[x++] = c;
-                        if (x < Width) continue;
-                        cur += delta;
+                        cur[x++] = color;
+                        if (x < width) continue;
+                        cur += width;
                         x = 0;
                     }
                 }
@@ -1117,28 +1075,20 @@ public unsafe class Binary_MultiMap : IHaveMetaInfo, ITexture {
 public class Binary_MusicDef : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_MusicDef(r.ToStream()));
 
-    #region Headers
+    static readonly Dictionary<int, (string, bool)> Records = [];
 
     public static bool TryGetMusicData(int index, out string name, out bool doesLoop) {
-        if (Records.ContainsKey(index)) {
-            name = Records[index].Item1;
-            doesLoop = Records[index].Item2;
-            return true;
-        }
+        if (Records.ContainsKey(index)) { name = Records[index].Item1; doesLoop = Records[index].Item2; return true; }
         name = null;
         doesLoop = false;
         return false;
     }
 
-    static readonly Dictionary<int, (string, bool)> Records = new Dictionary<int, (string, bool)>();
-
-    #endregion
-
     // file: Music/Digital/Config.txt
     public Binary_MusicDef(StreamReader r) {
         string line;
         while ((line = r.ReadLine()) != null) {
-            var splits = line.Split(new[] { ' ', ',', '\t' });
+            var splits = line.Split([' ', ',', '\t']);
             if (splits.Length < 2 || splits.Length > 3) continue;
             var index = int.Parse(splits[0]);
             var name = splits[1].Trim();
@@ -1303,11 +1253,7 @@ public unsafe class Binary_Multi : IHaveMetaInfo {
 public class Binary_RadarColor : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_RadarColor(r));
 
-    #region Headers
-
     public uint[] Colors = new uint[0x20000];
-
-    #endregion
 
     // file: radarcol.mul
     public Binary_RadarColor(BinaryReader r) {
@@ -1329,7 +1275,7 @@ public class Binary_RadarColor : IHaveMetaInfo {
 
     // IHaveMetaInfo
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "Radar Color File" }),
+        new(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = this }),
         new("RadarColor", items: [
             new($"Colors: {Colors.Length}"),
         ])
@@ -1459,8 +1405,8 @@ public unsafe class Binary_Art : IHaveMetaInfo, ITexture {
             var start = height + 4;
             var lookups = new int[height]; for (var i = 0; i < height; ++i) lookups[i] = start + bdata[count++];
             var bd = Pixels = new byte[width * height << 1];
-            fixed (byte* bd_Scan0 = bd) {
-                var line = (ushort*)bd_Scan0;
+            fixed (byte* bd_ = bd) {
+                var line = (ushort*)bd_;
                 for (var y = 0; y < height; ++y, line += width) {
                     count = lookups[y];
                     var cur = line;
@@ -1821,8 +1767,8 @@ public unsafe class Binary_UnicodeFont : IHaveMetaInfo {
 
                 var bd = new byte[width * height << 1];
                 var bd_Stride = width << 1;
-                fixed (byte* bd_Scan0 = bd) {
-                    var line = (ushort*)bd_Scan0;
+                fixed (byte* bd_ = bd) {
+                    var line = (ushort*)bd_;
                     var delta = bd_Stride >> 1;
 
                     for (var y = 0; y < height; ++y, line += delta) {

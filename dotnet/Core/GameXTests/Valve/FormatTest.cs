@@ -7,7 +7,7 @@ namespace GameX.Valve;
 [TestClass]
 public class FormatTest {
     static readonly Family family = FamilyManager.GetFamily("Valve");
-    static readonly Archive dota2 = family.OpenArchive(new Uri("game:/dota/pak01_dir.vpk#Dota2"));
+    static readonly Archive dota2 = family.GetArchive(new Uri("game:/dota/pak01_dir.vpk#Dota2"));
 
     [TestMethod]
     [DataRow("materials/models/courier/frog/frog_color_psd_15017e0b.vtex_c")]

@@ -8,7 +8,7 @@ public static class Database {
     public static Binary_Pal Palette;
 
     internal static void Loaded(FamilyGame game) {
-        Archive = game.Family.OpenArchive(new Uri("game:/#D2"));
+        Archive = game.Family.GetArchive(new Uri("game:/#D2"));
         Palette = Archive.GetAsset<Binary_Pal>("groupa.256").Result.ConvertVgaPalette();
     }
 }

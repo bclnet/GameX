@@ -8,9 +8,9 @@ namespace GameX.WB;
 [TestClass]
 public class FormatTests2 {
     static readonly Family family = FamilyManager.GetFamily("WB");
-    static readonly Archive portal = family.OpenArchive(new Uri("game:/client_portal.dat#AC"));
-    static readonly Archive cell = family.OpenArchive(new Uri("game:/client_cell_1.dat#AC"));
-    static readonly Archive localEnglish = family.OpenArchive(new Uri("game:/client_local_English.dat#AC"));
+    static readonly Archive portal = family.GetArchive(new Uri("game:/client_portal.dat#AC"));
+    static readonly Archive cell = family.GetArchive(new Uri("game:/client_cell_1.dat#AC"));
+    static readonly Archive localEnglish = family.GetArchive(new Uri("game:/client_local_English.dat#AC"));
 
     [TestMethod]
     [DataRow("0E000002")]
@@ -133,8 +133,8 @@ public class FormatTests2 {
     public void DegradeInfo(string sampleFile) => LoadObject<GfxObjDegradeInfo>(portal, sampleFile);
 
     [TestMethod]
-    [DataRow("Scene/12000009.scn")]
-    [DataRow("Scene/120002C6.scn")]
+    [DataRow("SceneBase/12000009.scn")]
+    [DataRow("SceneBase/120002C6.scn")]
     public void Scene(string sampleFile) => LoadObject<Scene>(portal, sampleFile);
 
     [TestMethod]

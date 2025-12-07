@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 namespace GameX.Cig.Apps.DataForge;
 
 public class Node {
-    static readonly Dictionary<string, Node> Paths = new Dictionary<string, Node>();
+    static readonly Dictionary<string, Node> Paths = [];
     public string Name { get; private set; }
     public object Icon { get; private set; }
     public object Tag { get; }
-    public List<Node> Items { get; } = new List<Node>();
-    public List<Entity> Entities { get; } = new List<Entity>();
+    public List<Node> Items { get; } = [];
+    public List<Entity> Entities { get; } = [];
 
     public static void CreateNode(MetaManager manager, List<Node> nodes, Binary_Dcb.Record v) {
         var path = v.FileName?[21..] ?? v.Name;
@@ -49,12 +49,12 @@ public class Database {
     Family family;
     Archive archive;
 
-    public List<Node> Nodes = new List<Node>();
+    public List<Node> Nodes = [];
 
     public async Task OpenAsync(MetaManager manager) {
         family = FamilyManager.GetFamily("Cig");
-        archive = family.OpenArchive(new Uri("game:/#StarCitizen"));
-        var obj = await archive.GetAsset<Binary_Dcb>($"Sbi/Game.dcb");
+        archive = family.GetArchive(new Uri("game:/#StarCitizen"));
+        var obj = await archive.GetAsset<Binary_Dcb>($"Sbi/Archive.dcb");
         foreach (var value in obj.RecordTable)
             Node.CreateNode(manager, Nodes, value);
     }

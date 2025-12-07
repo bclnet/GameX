@@ -10,7 +10,7 @@ from gamex.families.GameX import UnknownArchive
 
 # ArkaneArchive
 class ArkaneArchive(BinaryArchive):
-    def __init__(self, state: ArcState):
+    def __init__(self, state: ArchiveState):
         super().__init__(state, self.getArcBinary(state.game, _pathExtension(state.path).lower()))
         match state.game.engine[0]:
             # case 'CryEngine': self.assetFactoryFunc = Crytek.CrytekArchive.AssetFactory

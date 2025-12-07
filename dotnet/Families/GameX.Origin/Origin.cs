@@ -1,5 +1,4 @@
-﻿using GameX.Eng;
-using GameX.Formats.Unknown;
+﻿using GameX.Formats.Unknown;
 using GameX.Origin.Clients.UO.Data;
 using GameX.Origin.Formats;
 using GameX.Origin.Formats.UO;
@@ -17,13 +16,7 @@ namespace GameX.Origin;
 /// </summary>
 /// <seealso cref="GameX.FamilyGame" />
 public class U8Game(Family family, string id, JsonElement elem, FamilyGame dgame) : FamilyGame(family, id, elem, dgame) {
-    /// <summary>
-    /// Ensures this instance.
-    /// </summary>
-    /// <returns></returns>
-    //public override FamilyGame Ensure() {
-    //    return this;
-    //}
+    public override string ToString() => $"U8";
 }
 
 /// <summary>
@@ -35,13 +28,12 @@ public class U9Game(Family family, string id, JsonElement elem, FamilyGame dgame
     /// Ensures this instance.
     /// </summary>
     /// <returns></returns>
-    //public override FamilyGame Ensure() {
-    //    return Games.U9.Database.Ensure(this);
-    //}
+    //public override FamilyGame Ensure() => Games.U9.Database.Ensure(this);
+    public override string ToString() => $"U9";
 }
 
 /// <summary>
-/// OriginGame
+/// UOGame
 /// </summary>
 /// <seealso cref="GameX.FamilyGame" />
 public class UOGame(Family family, string id, JsonElement elem, FamilyGame dgame) : FamilyGame(family, id, elem, dgame) {
@@ -81,6 +73,8 @@ public class UOGame(Family family, string id, JsonElement elem, FamilyGame dgame
         Log.Trace($"Version: {Version}");
         Log.Trace($"Protocol: {Protocol}");
     }
+
+    public override string ToString() => $"UO - {Version}";
 }
 
 /// <summary>

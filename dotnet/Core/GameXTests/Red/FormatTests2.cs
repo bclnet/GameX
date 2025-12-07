@@ -7,7 +7,7 @@ namespace GameX.Red;
 [TestClass]
 public class FormatTests2 {
     static readonly Family family = FamilyManager.GetFamily("Red");
-    static Archive main = family.OpenArchive(new Uri("game:/main.key#Witcher"));
+    static Archive main = family.GetArchive(new Uri("game:/main.key#Witcher"));
 
     [TestMethod]
     [DataRow("dialogues00.bif:09_ban2ban01.dlg")]

@@ -4,6 +4,7 @@ using OpenStack.Gfx.Stride;
 using System;
 using System.Collections.Generic;
 using static OpenStack.Gfx.GfX;
+#pragma warning disable CS9113
 
 namespace GameX.Platforms.Stride;
 

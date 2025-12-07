@@ -7,7 +7,7 @@ from gamex.families.GameX import UnknownArchive
 
 # CigArchive
 class CigArchive(BinaryArchive):
-    def __init__(self, state: ArcState):
+    def __init__(self, state: ArchiveState):
         super().__init__(state, Binary_P4k())
         self.assetFactoryFunc = self.assetFactory
 

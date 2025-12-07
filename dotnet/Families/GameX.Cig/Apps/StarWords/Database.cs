@@ -8,12 +8,12 @@ using System.Linq;
 namespace GameX.Cig.Apps.StarWords;
 
 public class Node {
-    static readonly Dictionary<string, Node> Paths = new Dictionary<string, Node>();
+    static readonly Dictionary<string, Node> Paths = [];
     public string Name { get; private set; }
     public object Icon { get; private set; }
     public object Tag { get; }
-    public List<Node> Items { get; } = new List<Node>();
-    public List<Entity> Entities { get; } = new List<Entity>();
+    public List<Node> Items { get; } = [];
+    public List<Entity> Entities { get; } = [];
 
     public static void CreateNode(MetaManager manager, List<Node> nodes, string k, string v) {
         var p = k.Split("_");
@@ -50,8 +50,7 @@ public class Entity {
 /// Database
 /// </summary>
 public class Database {
-    readonly static string[] locales = new string[]
-    {
+    readonly static string[] locales = [
         "chinese_(simplified)",
         "chinese_(traditional)",
         "english",
@@ -64,16 +63,16 @@ public class Database {
         "portuguese_(brazil)",
         "spanish_(latin_america)",
         "spanish_(spain)"
-    };
+    ];
     Family family;
     Archive archive;
 
-    public List<Node> Nodes = new List<Node>();
-    public Dictionary<string, Dictionary<string, string>> Others = new Dictionary<string, Dictionary<string, string>>();
+    public List<Node> Nodes = [];
+    public Dictionary<string, Dictionary<string, string>> Others = [];
 
     public async Task OpenAsync(MetaManager manager) {
         family = FamilyManager.GetFamily("Cig");
-        archive = family.OpenArchive(new Uri("game:/Sbi.p4k#StarCitizen"));
+        archive = family.GetArchive(new Uri("game:/Sbi.p4k#StarCitizen"));
         foreach (var local in locales) {
             var stream = await archive.GetData($"Sbi/Localization/{local}/global.ini");
             using var r = new StreamReader(stream, Encoding.UTF8);

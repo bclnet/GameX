@@ -6,6 +6,7 @@ from gamex.families.Origin.formats.UO.binary import Binary_Animdata, Binary_Asci
 from gamex.families.Origin.formats.UO.utility import ClientVersion, ClientVersionHelper
 from gamex.families.Origin.formats.binary import Binary_U8, Binary_U9, Binary_UO
 from gamex.families.Origin.clients.UO.data import ClientFlags
+from gamex.families.Origin.clients.UO.client import UOGameClient
 
 # U8Game
 class U8Game(FamilyGame):
@@ -49,7 +50,7 @@ class UOGame(FamilyGame):
 
 # OriginArchive
 class OriginArchive(BinaryArchive):
-    def __init__(self, state: ArcState):
+    def __init__(self, state: ArchiveState):
         super().__init__(state, self.getArcBinary(state.game))
         self.assetFactoryFunc = self.assetFactory
 

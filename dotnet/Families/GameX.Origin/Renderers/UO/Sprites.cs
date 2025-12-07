@@ -1,4 +1,3 @@
-using GameX.Eng;
 using GameX.Xbox.Formats;
 using GameX.Xbox.Formats.Xna;
 using System.Threading.Tasks;
@@ -15,7 +14,7 @@ public static class Fonts<Texture2D> {
     public static SpriteFont Map5;
     public static SpriteFont Map6;
 
-    public static async Task Load(Archive game, GraphicsDevice device) {
+    public static async Task Load(Archive game) {
         Regular = (SpriteFont)(await game.GetAsset<Binary_Xnb>("fonts/regular_font.xnb")).Obj;
         Bold = (SpriteFont)(await game.GetAsset<Binary_Xnb>("fonts/bold_font.xnb")).Obj;
         Map1 = (SpriteFont)(await game.GetAsset<Binary_Xnb>("fonts/map1_font.xnb")).Obj;

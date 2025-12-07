@@ -14,7 +14,7 @@ public class FileDataTests {
         Log.Info($"studio: {family.Studio}");
 
         // get arc with game:/uri
-        var archive = family.OpenArchive(file0);
+        var archive = family.GetArchive(file0);
         var sample = file1.StartsWith("sample") ? archive.Game.GetSample(file1[7..]).Paths[0] : file1;
         Log.Info($"arc: {archive}, {sample}");
 

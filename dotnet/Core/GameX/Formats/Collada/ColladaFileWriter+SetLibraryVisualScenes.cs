@@ -32,7 +32,7 @@ partial class ColladaFileWriter {
 
         // Set up the library
         daeObject.Library_Visual_Scene = new Collada_Library_Visual_Scenes {
-            Visual_Scene = new[] { new Collada_Visual_Scene { Node = nodes.ToArray(), ID = "Scene" } }
+            Visual_Scene = new[] { new Collada_Visual_Scene { Node = nodes.ToArray(), ID = "SceneBase" } }
         };
     }
 }

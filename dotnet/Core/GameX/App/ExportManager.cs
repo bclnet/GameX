@@ -13,7 +13,7 @@ public static class ExportManager {
 
     public static async Task ExportAsync(Family family, Resource res, string filePath, Func<string, bool> match, int from, object option) {
         var fo = option as FileOption? ?? FileOption.Default;
-        using var arc = family.OpenArchive(res);
+        using var arc = family.GetArchive(res);
         // single
         if (arc is not MultiArchive multi) { await ExportPakAsync(filePath, match, from, option, arc); return; }
         // write paks

@@ -44,7 +44,7 @@ public partial class MainPage : Window, INotifyPropertyChanged {
         FamilyApps = family.Apps;
         foreach (var pakUri in pakUris) {
             Log.WriteLine($"Opening {pakUri}");
-            var arc = family.OpenArchive(pakUri);
+            var arc = family.GetArchive(pakUri);
             if (arc != null) Archives.Add(arc);
         }
         Log.WriteLine("Done");

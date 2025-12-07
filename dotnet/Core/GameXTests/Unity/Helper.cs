@@ -8,6 +8,6 @@ public static class Helper {
 
     public static readonly Dictionary<string, Lazy<Archive>> Paks = new()
     {
-        { "Unity:AmongUs", new Lazy<Archive>(() => familyUnity.OpenArchive(new Uri("game:/resources.assets#AmongUs"))) },
+        { "Unity:AmongUs", new Lazy<Archive>(() => familyUnity.GetArchive(new Uri("game:/resources.assets#AmongUs"))) },
     };
 }

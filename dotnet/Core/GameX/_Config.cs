@@ -608,8 +608,7 @@ public partial class FamilyManager {
     {
         Platform = "GL",
         ForceOpen = true,
-        ForcePath = "sample:1",
-        //ForcePath = "sample:13",
+        ForcePath = "sample:15",
         Family = "Origin",
         //Game = "U8", // Ultima 8
         Game = "UO", // Ultima Online

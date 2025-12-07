@@ -1,38 +1,44 @@
-﻿using GameX.Origin.Clients.UO;
-using OpenStack;
+﻿using OpenStack;
+using OpenStack.Client;
 using System;
+using static GameX.FamilyManager;
 
 namespace GameX.App.Client;
 
 record RunArgs {
+    public string[] Args;
+    public string Platform;
     public string Family;
-    public Uri Uri;
+    public string Game;
+    public string Edition;
 }
 
 // test
 partial class Program {
-    static int Main(string[] args2) {
-        RunArgs args = new() { Family = "Origin", Uri = new Uri(@"game:/#UO") };
+    [STAThread]
+    public static int Main(string[] args2) {
+        RunArgs args = new() { Args = args2, Platform = Option.Platform, Family = Option.Family, Game = Option.Game, Edition = Option.Edition };
         return Run(args);
     }
 
-    public static GameController Game;
+    public static IClientHost ClientHost;
+
+    // factory
+    public static Func<ClientBase> CreateClient(string family, Uri uri, string[] args, object tag) {
+        var archive = GetFamily(family).GetArchive(uri);
+        return () => archive.Game.GetClient(new ClientState(archive, args, tag));
+    }
+
+    public static IClientHost CreateClientHost(string platform, Func<ClientBase> client) => platform switch {
+        "GL" => new MgClientHost(client),
+        "EX" => new ExClientHost(client),
+        "MG" => new MgClientHost(client),
+        _ => throw new ArgumentOutOfRangeException(nameof(platform))
+    };
 
     static int Run(RunArgs args) {
-        IPluginHost pluginHost = null;
-
-        // get family
-        var family = FamilyManager.GetFamily(args.Family);
-        if (family == null) { Console.WriteLine($"No family found named '{args.Family}'."); return 0; }
-
-        // get game
-        var game = family.OpenArchive(args.Uri);
-        if (game == null) { Console.WriteLine($"No game found named '{args.Uri}'."); return 0; }
-
         Log.Trace("Running game...");
-        using (Game = new UOGameController<object>(game, pluginHost)) {
-            Game.Run();
-        }
+        using (ClientHost = CreateClientHost(args.Platform, CreateClient(args.Family, FamilyGame.ToUri(args.Game, args.Edition), args.Args, null))) ClientHost.Run();
         Log.Trace("Exiting game...");
         return 0;
     }

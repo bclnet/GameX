@@ -22,7 +22,7 @@ class D2Game(FamilyGame):
 
 # VolitionArchive
 class VolitionArchive(BinaryArchive):
-    def __init__(self, state: ArcState):
+    def __init__(self, state: ArchiveState):
         super().__init__(state, self.getArcBinary(state.game, _pathExtension(state.path).lower()))
         self.assetFactoryFunc = self.assetFactory
 

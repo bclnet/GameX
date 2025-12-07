@@ -24,11 +24,11 @@ public partial class MainPage : Window, INotifyPropertyChanged {
     public static MainPage Instance;
     public SubsumptionApp App;
 
-    public MainPage(SubsumptionApp App) {
+    public MainPage(SubsumptionApp app) {
         InitializeComponent();
         Instance = this;
         DataContext = this;
-        App = App;
+        App = app;
     }
 
     public event PropertyChangedEventHandler PropertyChanged;

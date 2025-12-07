@@ -408,7 +408,7 @@ static class Store_Ubisoft {
         IEnumerable<string> paths;
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
             var home = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            string[] search = ["Ubisoft Game Launcher"];
+            string[] search = ["Ubisoft Archive Launcher"];
             paths = search.Select(path => Path.Join(home, path));
         }
         else if (RuntimeInformation.OSDescription.StartsWith("android-")) return null;

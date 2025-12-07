@@ -1,23 +1,12 @@
-﻿using GameX.Eng;
+﻿using OpenStack.Client;
 
 namespace GameX;
 
-#region IPluginHost
+#region GameClient
 
-public interface IPluginHost { }
-
-#endregion
-
-#region GameController
-
-public class GameController : Game {
-    public Archive Game;
-    public IPluginHost PluginHost;
-
-    public GameController(Archive game, IPluginHost pluginHost) {
-        Game = game;
-        PluginHost = pluginHost;
-    }
+public class GameClient(ClientState state) : ClientBase() {
+    public Archive Archive = state.Archive;
+    public object Tag = state.Tag;
 }
 
 #endregion

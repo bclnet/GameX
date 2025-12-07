@@ -25,7 +25,7 @@
 
   <ItemGroup>
     <Reference Include="GodotSharp">
-      <HintPath>..\..\..\OpenStack\dotnet\Platform\Godot\4.4\Debug\GodotSharp.dll</HintPath>
+      <HintPath>..\..\..\OpenStack\dotnet\Platform\Godot\4.5\Debug\GodotSharp.dll</HintPath>
     </Reference>
   </ItemGroup>
 

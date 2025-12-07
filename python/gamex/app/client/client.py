@@ -1,38 +1,40 @@
 import sys
 from dataclasses import dataclass
 from openstk import log
-from gamex import getFamily
-from gamex.core.client import GameController
-from gamex.families.Origin.clients.UO.game import UOGameController
+from openstk.core.client import IClientHost
+from gamex import getFamily, FamilyGame, option
+from gamex.core.client import ClientState
+from openstk.platforms.client_ex import ExClientHost
 
 @dataclass
 class RunArgs:
+    args: list[str]
+    platform: str
     family: str
-    uri: str
+    game: str
+    edition: str
 
-def main() -> int:
-    args = RunArgs('Origin', 'game:/#UO')
+def main(args2: list[str]) -> int:
+    args = RunArgs(args2, option.Platform, option.Family, option.Game, option.Edition)
     return run(args)
 
-game: GameController
+clientHost: IClientHost
+
+# factory
+def _createClient(family: str, uri: str, args: list[str], tag: object) -> callable: 
+    archive = getFamily(family).getArchive(uri)
+    return lambda: archive.game.getClient(ClientState(archive, args, tag))
+
+def _createClientHost(platform: str, client: callable) -> IClientHost:
+    match platform:
+        case 'GL': return ExClientHost(client)
+        case _: raise Exception(f'platform OutOfRange {platform}')
 
 def run(args: RunArgs) -> int:
-    pluginHost = None
-
-    # get family
-    family = getFamily(args.family)
-    if not family: print(f'No family found named "{args.family}".'); return 0
-
-    # get game
-    game = family.openArchive(args.uri)
-    if not game: print(f'No game found named "{args.Uri}".'); return 0
-
     log.trace('Running game...')
-    with UOGameController(game, pluginHost) as g:
-        game = g
-        game.run()
+    with _createClientHost(args.platform, _createClient(args.family, FamilyGame.toUri(args.game, args.edition), args.args, None)) as host: clientHost = host; clientHost.run()
     log.trace('Exiting game...')
     return 0
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main([]))

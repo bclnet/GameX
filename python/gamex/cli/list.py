@@ -46,7 +46,7 @@ def list(args: CLIListArgs) -> None:
     # list files in pack for family
     else:
         print(f'{family.name} - {args.uri}')
-        with family.openArchive(args.uri) as s:
+        with family.getArchive(args.uri) as s:
             # if s.count == 0: print('Nothing found.'); return
             for p in sorted(s.files, key=lambda x: x.path):
                 print(f'{p.path}')

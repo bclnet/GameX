@@ -8,8 +8,6 @@ namespace GameX.Cig.Apps;
 /// SubsumptionApp
 /// </summary>
 /// <seealso cref="FamilyApp" />
-public class SubsumptionApp : FamilyApp {
-    public SubsumptionApp(Family family, string id, JsonElement elem) : base(family, id, elem) { }
-
+public class SubsumptionApp(Family family, string id, JsonElement elem) : FamilyApp(family, id, elem) {
     public override Task OpenAsync(Type explorerType, MetaManager manager) => base.OpenAsync(explorerType, manager);
 }

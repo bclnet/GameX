@@ -8,7 +8,7 @@ public static class Database {
     public static Binary_Pal Palette;
 
     internal static FamilyGame Ensure(FamilyGame game) {
-        Archive = game.Family.OpenArchive(new Uri("game:/#U9"));
+        Archive = game.Family.GetArchive(new Uri("game:/#U9"));
         Palette = Archive.GetAsset<Binary_Pal>("static/ankh.pal").Result;
         return game;
     }

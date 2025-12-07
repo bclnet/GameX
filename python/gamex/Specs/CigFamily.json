@@ -31,17 +31,17 @@
   "apps": {
     "DataForge": {
       "name": "DataForge",
-      "familyAppType": "GameX.Cig.Apps.DataForgeApp, GameX.Cig",
+      "appType": "GameX.Cig.Apps.DataForgeApp, GameX.Cig",
       "explorerAppType": "GameX.Cig.Apps.DataForge.App, GameX.Cig.Explorer"
     },
     "StarWords": {
       "name": "StarWords",
-      "familyAppType": "GameX.Cig.Apps.StarWordsApp, GameX.Cig",
+      "appType": "GameX.Cig.Apps.StarWordsApp, GameX.Cig",
       "explorerAppType": "GameX.Cig.Apps.StarWords.App, GameX.Cig.Explorer"
     },
     "Subsumption": {
       "name": "Subsumption",
-      "familyAppType": "GameX.Cig.Apps.SubsumptionApp, GameX.Cig",
+      "appType": "GameX.Cig.Apps.SubsumptionApp, GameX.Cig",
       "explorerAppType": "GameX.Cig.Apps.Subsumption.App, GameX.Cig.Explorer"
     }
   }

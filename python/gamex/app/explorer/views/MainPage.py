@@ -164,7 +164,7 @@ class MainPage(QMainWindow):
         self.familyApps = family.apps
         for pakUri in pakUris:
             self.log(f'Opening {pakUri}')
-            arc = family.openArchive(pakUri)
+            arc = family.getArchive(pakUri)
             if arc: self.archives.append(arc)
         self.log('Done')
         self.onOpened(family, path)

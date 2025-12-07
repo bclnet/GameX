@@ -1,7 +1,8 @@
 import os, re, struct, numpy as np
 # from io import BytesIO
-from enum import Flag
+from enum import Enum, Flag
 from itertools import groupby
+from openstk import unsafe
 from openstk.gfx import Texture_Bytes, ITexture, TextureFormat, TexturePixel
 from gamex import FileSource, MetaInfo, MetaContent, IHaveMetaInfo, DesSer
 
@@ -483,7 +484,7 @@ class Binary_GumpDef(IHaveMetaInfo):
         line: str
         while (line := r.readLine()):
             line = line.strip()
-            if len(line) == 0 or line.startswith('#'): continue
+            if not line or line.startswith('#'): continue
             defs = line.replace('\t', ' ').split(' ')
             if len(defs) != 3: continue
             inGump = int(defs[0])
@@ -514,7 +515,7 @@ class Binary_Hues(IHaveMetaInfo):
     #region Headers
 
     class HueRecord:
-        _struct = ('<64s4B', 68)
+        _struct = ('<64s2h20s', 88)
         def __init__(self, tuple):
             self.colors, \
             self.tableStart, \
@@ -522,28 +523,27 @@ class Binary_Hues(IHaveMetaInfo):
             self.name = tuple
 
     class Record:
-        def __init__(self, id: str, record: object = None):
+        def __init__(self, id: str, s: object = None):
             self.id = id
-            if not record:
-                self.colors = [0]*32
-                self.name = 'Null'
-                return
-            # self.colors = UnsafeX.FixedTArray(record.colors, 32)
-            # self.tableStart = record.tableStart
-            # self.tableEnd = record.tableEnd
-            # self.name = UnsafeX.fixedAString(record.name, 20)
+            if not s: self.colors = [0]*32; self.name = 'Null'; return
+            self.colors = unsafe.fixedTArray('H', s.colors, 32)
+            self.tableStart = s.tableStart
+            self.tableEnd = s.tableEnd
+            self.name = unsafe.fixedAString(s.name, 20)
 
     #endregion
 
+    records: list[Record] = [None] * 3000
+
     def __init__(self, r: Reader):
-        blockCount = r.length() / 708
+        blockCount = r.length // 708
         if blockCount > 375: blockCount = 375
         id = 0
         for i in range(blockCount):
             r.skip(4)
             records = r.readSArray(self.HueRecord, 8)
-        #     for (var j = 0; j < 8; j++, id++) Records[id] = new Record(id, ref records[j]);
-        # for (; id < Records.Length; id++) Records[id] = new Record(id);
+            for j in range(8): self.records[id] = Binary_Hues.Record(id, records[j]); id += 1
+        for i in range(id, len(self.records)): self.records[id] = Binary_Hues.Record(id); id += 1
 
     def __repr__(self): return DesSer.serialize(self)
 
@@ -558,10 +558,6 @@ class Binary_Hues(IHaveMetaInfo):
 class Binary_Land(IHaveMetaInfo, ITexture):
     @staticmethod
     def factory(r: Reader, f: FileSource, s: Archive): return Binary_Land(r, f.fileSize)
-
-    #region Headers
-
-    #endregion
 
     def __init__(self, r: Reader, length: int):
         bdata = np.frombuffer(r.readBytes(length), dtype = np.uint16); bdata_ = 0
@@ -603,23 +599,40 @@ class Binary_Land(IHaveMetaInfo, ITexture):
         ]
 
 # Binary_Light
-class Binary_Light(IHaveMetaInfo):
+class Binary_Light(IHaveMetaInfo, ITexture):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Light(r)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Light(r, f.fileSize, f.compressed)
 
-    #region Headers
+    def __init__(self, r: Reader, length: int, extra: int):
+        bdata = np.frombuffer(r.readBytes(length), dtype = np.int8); bdata_ = 0
+        width = self.width = extra & 0xFFFF
+        height = self.height = (extra >> 16) & 0xFFFF
+        if width <= 0 or height <= 0: return
+        bd = self.pixels = bytearray(width * height << 1)
+        mv = memoryview(np.frombuffer(bd, dtype = np.uint16))
+        line = 0
+        for y in range(height):
+            cur = line; end = cur + width
+            while cur < end: v = int(bdata[bdata_]); bdata_ += 1; mv[cur] = (((0x1f + v) << 10) + ((0x1F + v) << 5) + (0x1F + v)) & 0xFFFF; cur += 1
+            line += width
+
+    #region ITexture
+
+    format: tuple = (TextureFormat.BGRA1555, TexturePixel.Unknown)
+    width: int = 0
+    height: int = 0
+    depth: int = 0
+    mipMaps: int = 1
+    texFlags: TextureFlags = 0
+    def create(self, platform: str, func: callable): return func(Texture_Bytes(self.pixels, self.format, None))
 
     #endregion
 
-    def __init__(self, r: Reader):
-        pass
-
-    def __repr__(self): return DesSer.serialize(self)
-
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
-        MetaInfo('XX', items = [
-            # MetaInfo(f'Fonts: {len(self.fonts)}')
+        MetaInfo(None, MetaContent(type = 'Texture', name = os.path.basename(file.path), value = self)),
+        MetaInfo('Light', items = [
+            MetaInfo(f'Width: {self.width}'),
+            MetaInfo(f'Height: {self.height}')
             ])
         ]
 
@@ -630,38 +643,106 @@ class Binary_MobType(IHaveMetaInfo):
 
     #region Headers
 
+    class MobType(Enum):
+        Null = -1
+        Monster = 0
+        Animal = 1
+        Humanoid = 2
+
+    class Record:
+        def __init__(self, type: str, flags: str):
+            self.flags = flags
+            match type:
+                case 'MONSTER': self.animationType = Binary_MobType.MobType.Monster
+                case 'ANIMAL': self.animationType = Binary_MobType.MobType.Animal
+                case 'SEA_MONSTER': self.animationType = Binary_MobType.MobType.Monster
+                case 'HUMAN': self.animationType = Binary_MobType.MobType.Humanoid
+                case 'EQUIPMENT': self.animationType = Binary_MobType.MobType.Humanoid
+                case _: self.animationType = Binary_MobType.MobType.Null
+
     #endregion
 
+    records: dict[int, Record] = {}
+
     def __init__(self, r: Reader):
-        pass
+        line: str
+        while (line := r.readLine()):
+            line = line.strip()
+            if not line or line.startswith('#'): continue
+            data = line.replace('   ', '\t').split('\t')
+            bodyID = int(data[0])
+            self.records[bodyID] = Binary_MobType.Record(data[1].strip(), data[2].strip())
 
     def __repr__(self): return DesSer.serialize(self)
 
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
         MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
-        MetaInfo('XX', items = [
-            # MetaInfo(f'Fonts: {len(self.fonts)}')
+        MetaInfo('MobType', items = [
+            MetaInfo(f'Count: {len(self.records)}')
             ])
         ]
 
 # Binary_MultiMap
-class Binary_MultiMap(IHaveMetaInfo):
+class Binary_MultiMap(IHaveMetaInfo, ITexture):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_MultiMap(r)
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_MultiMap(r, f)
 
-    #region Headers
+    def __init__(self, r: Reader, f: FileSource):
+        if f.path.startswith('facet'):
+            width = self.width = r.readInt16()
+            height = self.height = r.readInt16()
+            bd = self.pixels = bytearray(width * height << 1)
+            mv = memoryview(np.frombuffer(bd, dtype = np.uint16))
+            line = 0
+            for y in range(height):
+                colorsCount = r.readInt32() // 3
+                cur = line; endline = line + width
+                for c in range(colorsCount):
+                    count = r.readByte()
+                    color = r.readInt16()
+                    end = cur + count
+                    while cur < end:
+                        if cur > endline: break
+                        mv[cur] = color ^ 0x8000; cur += 1
+                line += width
+        else:
+            width = self.width = r.readInt32()
+            height = self.height = r.readInt32()
+            bd = self.pixels = bytearray(width * height << 1)
+            mv = memoryview(np.frombuffer(bd, dtype = np.uint16))
+            line = 0
+            cur = line
+            len = r.length - r.tell()
+            b = r.readBytes(len)
+            j = x = 0
+            while j != len:
+                pixel = b[j]; j += 1
+                count = pixel & 0x7f
+                # black or white color
+                color = 0x8000 if (pixel & 0x80) != 0 else 0xffff
+                for i in range(count):
+                    mv[cur + x] = color; x += 1
+                    if x < width: continue
+                    cur += width
+                    x = 0
+
+    #region ITexture
+
+    format: tuple = (TextureFormat.BGRA1555, TexturePixel.Unknown)
+    width: int = 0
+    height: int = 0
+    depth: int = 0
+    mipMaps: int = 1
+    texFlags: TextureFlags = 0
+    def create(self, platform: str, func: callable): return func(Texture_Bytes(self.pixels, self.format, None))
 
     #endregion
 
-    def __init__(self, r: Reader):
-        pass
-
-    def __repr__(self): return DesSer.serialize(self)
-
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
-        MetaInfo('XX', items = [
-            # MetaInfo(f'Fonts: {len(self.fonts)}')
+        MetaInfo(None, MetaContent(type = 'Texture', name = os.path.basename(file.path), value = self)),
+        MetaInfo('MultiMap', items = [
+            MetaInfo(f'Width: {self.width}'),
+            MetaInfo(f'Height: {self.height}')
             ])
         ]
 
@@ -670,19 +751,24 @@ class Binary_MusicDef(IHaveMetaInfo):
     @staticmethod
     def factory(r: Reader, f: FileSource, s: Archive): return Binary_MusicDef(r)
 
-    #region Headers
-
-    #endregion
-
     def __init__(self, r: Reader):
-        pass
+        line: str
+        while (line := r.readLine()):
+            splits = re.split(r'[ ,\t]+', line)
+            if len(splits) < 2 or len(splits) > 3: continue
+            index = int(splits[0])
+            name = splits[1].strip()
+            doesLoop = len(splits) == 3 and splits[2] == 'loop'
+            self.records[index] = (name, doesLoop)
+
+    records: dict[int, tuple] = {}
 
     def __repr__(self): return DesSer.serialize(self)
 
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
         MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
-        MetaInfo('XX', items = [
-            # MetaInfo(f'Fonts: {len(self.fonts)}')
+        MetaInfo('MusicDef', items = [
+            MetaInfo(f'Count: {len(self.records)}')
             ])
         ]
 
@@ -816,10 +902,6 @@ class Binary_SpeechList(IHaveMetaInfo):
 class Binary_Art(IHaveMetaInfo, ITexture):
     @staticmethod
     def factory(r: Reader, f: FileSource, s: Archive): return Binary_Art(r, f.fileSize)
-
-    #region Headers
-
-    #endregion
 
     def __init__(self, r: Reader, length: int):
         bdata = np.frombuffer(r.readBytes(length), dtype = np.uint16); bdata_ = 0

@@ -521,7 +521,7 @@ match __current__:
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
-            ForcePath = "sample:10",
+            ForcePath = "sample:15",
             Family = "Origin",
             # Game = "U8", # Ultima 8
             Game = "UO", # Ultima Online

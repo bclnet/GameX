@@ -9,10 +9,8 @@ namespace GameX.Cig.Apps;
 /// StarWordsApp
 /// </summary>
 /// <seealso cref="FamilyApp" />
-public class StarWordsApp : FamilyApp {
-    public readonly Database Db = new Database();
-
-    public StarWordsApp(Family family, string id, JsonElement elem) : base(family, id, elem) { }
+public class StarWordsApp(Family family, string id, JsonElement elem) : FamilyApp(family, id, elem) {
+    public readonly Database Db = new();
 
     public override async Task OpenAsync(Type explorerType, MetaManager manager) {
         await Db.OpenAsync(manager);

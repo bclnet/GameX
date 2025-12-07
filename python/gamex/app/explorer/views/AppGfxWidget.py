@@ -1,4 +1,4 @@
-from openstk.platform.platform_qt_widget import OpenGLWidget, Panda3dWidget, PygameWidget
+from openstk.platforms.platform_qt_widget import OpenGLWidget, Panda3dWidget, PygameWidget
 from gamex.platform_opengl_render import OpenGLRenderer
 from gamex.platform_panda3d_render import Panda3dRenderer
 from gamex.platform_pygame_render import PygameRenderer

@@ -22,7 +22,7 @@ public static class DatabaseManager {
         var family = game.Family;
         if (loadCell)
             try {
-                Cell = new DatabaseCell(family.OpenArchive(new Uri("game:/client_cell_1.dat#AC")));
+                Cell = new DatabaseCell(family.GetArchive(new Uri("game:/client_cell_1.dat#AC")));
                 count = Cell.Source.Count;
                 Log.Info($"Successfully opened {Cell} file, containing {count} records, iteration {Cell.GetIteration()}");
                 if (Cell.GetIteration() != ITERATION_CELL) Log.Info($"{Cell} iteration does not match expected end-of-retail version of {ITERATION_CELL}.");
@@ -33,7 +33,7 @@ public static class DatabaseManager {
             }
 
         try {
-            Portal = new DatabasePortal(family.OpenArchive(new Uri("game:/client_portal.dat#AC")));
+            Portal = new DatabasePortal(family.GetArchive(new Uri("game:/client_portal.dat#AC")));
             Portal.SkillTable.AddRetiredSkills();
             count = Portal.Source.Count;
             Log.Info($"Successfully opened {Portal} file, containing {count} records, iteration {Portal.GetIteration()}");
@@ -45,13 +45,13 @@ public static class DatabaseManager {
         }
 
         // Load the client_highres.dat file. This is not required for ACE operation, so no exception needs to be generated.
-        HighRes = new Database(family.OpenArchive(new Uri("game:/client_highres.dat#AC")));
+        HighRes = new Database(family.GetArchive(new Uri("game:/client_highres.dat#AC")));
         count = HighRes.Source.Count;
         Log.Info($"Successfully opened {HighRes} file, containing {count} records, iteration {HighRes.GetIteration()}");
         if (HighRes.GetIteration() != ITERATION_HIRES) Log.Info($"{HighRes} iteration does not match expected end-of-retail version of {ITERATION_HIRES}.");
 
         try {
-            Language = new DatabaseLanguage(family.OpenArchive(new Uri("game:/client_local_English.dat#AC")));
+            Language = new DatabaseLanguage(family.GetArchive(new Uri("game:/client_local_English.dat#AC")));
             count = Language.Source.Count;
             Log.Info($"Successfully opened {Language} file, containing {count} records, iteration {Language.GetIteration()}");
             if (Language.GetIteration() != ITERATION_LANGUAGE) Log.Info($"{Language} iteration does not match expected end-of-retail version of {ITERATION_LANGUAGE}.");

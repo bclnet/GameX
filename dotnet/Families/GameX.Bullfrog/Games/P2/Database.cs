@@ -9,7 +9,7 @@ public static class Database {
     static ConcurrentDictionary<string, Binary_Pal> Palettes = new();
 
     internal static void Loaded(FamilyGame game) {
-        Archive = game.Family.OpenArchive(new Uri("game:/#P2"));
+        Archive = game.Family.GetArchive(new Uri("game:/#P2"));
     }
 
     public static Binary_Pal GetPalette(string path, string defaultValue)

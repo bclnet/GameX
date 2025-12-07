@@ -11,7 +11,7 @@ from gamex.families.GameX_Origin import OriginArchive
 
 # MythicArchive
 class MythicArchive(BinaryArchive):
-    def __init__(self, state: ArcState):
+    def __init__(self, state: ArchiveState):
         super().__init__(state, self.getArcBinary(state.game, _pathExtension(state.path).lower()))
         match state.game.id:
             case 'UO': self.assetFactoryFunc = OriginArchive.assetFactory

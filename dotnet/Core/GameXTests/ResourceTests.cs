@@ -38,7 +38,7 @@ public class ResourceTests {
         var resource = family.ParseResource(new Uri(uri));
         Assert.AreEqual(game, resource.Game.Id);
         //Assert.AreEqual(pathsFound, resource.Paths.Length);
-        var archive = family.OpenArchive(new Uri(uri));
+        var archive = family.GetArchive(new Uri(uri));
         if (archive is MultiArchive multiArchive) {
             Assert.HasCount(pathsFound, multiArchive.Archives);
             archive = multiArchive.Archives[0];

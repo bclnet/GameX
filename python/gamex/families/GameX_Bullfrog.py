@@ -47,7 +47,7 @@ class SGame(FamilyGame):
 
 # BullfrogArchive
 class BullfrogArchive(BinaryArchive):
-    def __init__(self, state: ArcState):
+    def __init__(self, state: ArchiveState):
         super().__init__(state, self.getArcBinary(state.game, state.path))
         self.assetFactoryFunc = self.assetFactory
 

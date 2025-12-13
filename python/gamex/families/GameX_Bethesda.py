@@ -6,6 +6,7 @@ from gamex.core.formats.binary import Binary_Dds
 from gamex.families.Bethesda.formats.binary import Binary_Ba2, Binary_Bsa, Binary_Esm
 from gamex.families.Gamebryo.formats.binary import Binary_Nif
 from gamex.families.GameX import UnknownArchive
+from gamex.families.Bethesda.clients.Morrowind.client import MorrowindGameClient
 
 # BethesdaFamily
 # class BethesdaFamily(Family):

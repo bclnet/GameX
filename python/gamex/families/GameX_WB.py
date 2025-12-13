@@ -8,7 +8,6 @@ from gamex.families.GameX import UnknownArchive
 class ACGame(FamilyGame):
     def __init__(self, family: Family, id: str, elem: dict[str, object], dgame: FamilyGame):
         super().__init__(family, id, elem, dgame)
-        self.assetFactoryFunc = self.assetFactory
     def loaded(self):
         super().loaded()
 

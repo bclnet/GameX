@@ -404,7 +404,7 @@ class FamilyGame:
         self.arcs = _list(elem, 'arc', dgame.arcs)
         self.paths = _list(elem, 'path', dgame.paths)
         self.key = _valueF(elem, 'key', parseKey, dgame.key)
-        self.status = _list(elem, 'status')
+        self.status = _value(elem, 'status')
         self.tags = _value(elem, 'tags', '').split(' ')
         # interface
         self.clientType = _value(elem, 'clientType', dgame.clientType)
@@ -416,7 +416,7 @@ class FamilyGame:
         self.editions = _related(elem, 'editions', lambda k,v: FamilyGame.Edition(k, v))
         self.dlcs = _related(elem, 'dlcs', lambda k,v: FamilyGame.DownloadableContent(k, v))
         self.locales = _related(elem, 'locales', lambda k,v: FamilyGame.Locale(k, v))
-        self.detectors = _related(elem, 'detectors', lambda k,v: createDetector(self, k, v))
+        self.detectors = _related(elem, 'detectors', lambda k,v: self.createDetector(k, v))
         # files
         self.files = _valueF(elem, 'files', lambda x: FamilyGame.FileSet(x)) #files: dict[str, PathItem] = {}
         self.ignores = _list(elem, 'ignores') #ignores: dict[str, object] = {}

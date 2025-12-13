@@ -8,14 +8,13 @@ def writeFile(path, marker, body):
     with open(path, 'w', encoding='utf-8') as f: f.write(text)
 
 def gamesBody():
-    def single(s, value): return value if s and value in s else '-'
-    def platform(s, value):
-        values = [i[len(value) + 1:].split('/') for i in s if i.startswith(value)] if s else []
+    def single(stat, key): return key if key in stat else '-'
+    def platform(stat, key):
+        values = [i[len(key) + 1:].split('/') for i in stat if i.startswith(key)]
         values = values[0] if len(values) > 0 else values
         gl = 'gl' if 'GL' in values else '--'
         un = 'un' if 'UN' in values else '--'
         ur = 'ur' if 'UR' in values else '--'
-        vk = 'vk' if 'VK' in values else '--'
         return f'{gl} {un} {ur}'
     b = ['''---
 The following are the current games:\n
@@ -23,11 +22,12 @@ The following are the current games:\n
 | -- | --   | --   | --   | --     | --    | --
 ''']
     for f in Families.values():
-        print(f.id)
+        # print(f.id)
         b.append(f'| **{f.id}** | **{f.name}**\n')
-        for g in [x for x in f.games.values()]:
-            b.append(f'| [{g.id}]({g.urls[0] if g.urls else ''}) | {g.name} | {single(g.status, "open")} | {single(g.status, "read")} | {platform(g.status, "texture")} | {platform(g.status, "model")} | {platform(g.status, "level")}\n')
+        for g in f.games.values():
+            stat = g.status.split(';') if g.status else []
+            b.append(f'| [{g.id}]({g.urls[0] if g.urls else ''}) | {g.name} | {single(stat, "open")} | {single(stat, "read")} | {platform(stat, "tex")} | {platform(stat, "model")} | {platform(stat, "level")}\n')
     return ''.join(b)
-# body = gamesBody()
+body = gamesBody()
 # print(body)
-#writeFile('README.md', '## Games\n', body)
+writeFile('README.md', '## Games\n', body)

@@ -1,14 +1,13 @@
 from __future__ import annotations
 import os
 from openstk import _pathExtension
-from gamex import BinaryArchive
+from gamex import Family, FamilyGame, BinaryArchive
 from gamex.families.GameX import UnknownArchive
 
 # DGame
 class DGame(FamilyGame):
     def __init__(self, family: Family, id: str, elem: dict[str, object], dgame: FamilyGame):
         super().__init__(family, id, elem, dgame)
-        self.assetFactoryFunc = self.assetFactory
     def loaded(self):
         super().loaded()
 
@@ -16,7 +15,6 @@ class DGame(FamilyGame):
 class D2Game(FamilyGame):
     def __init__(self, family: Family, id: str, elem: dict[str, object], dgame: FamilyGame):
         super().__init__(family, id, elem, dgame)
-        self.assetFactoryFunc = self.assetFactory
     def loaded(self):
         super().loaded()
 

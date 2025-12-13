@@ -76,7 +76,7 @@ public class UOGameClient : GameClient {
         Assets = new(state.Archive.Game as UOGame);
     }
 
-    protected override async Task LoadContent() {
+    public override async Task LoadContent() {
         await base.LoadContent();
         //await Fonts<Texture2D>.Load(Game, Device);
         //SolidColorTextureCache.Load(Device);
@@ -90,5 +90,5 @@ public class UOGameClient : GameClient {
 #endif
     }
 
-    protected override Task UnloadContent() => Task.CompletedTask;
+    public override Task UnloadContent() => Task.CompletedTask;
 }

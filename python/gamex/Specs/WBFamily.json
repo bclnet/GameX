@@ -24,7 +24,7 @@
       "arcExt": ".dat",
       "pakx": "game:/client_portal.dat",
       "tags": "Shutdown",
-      "status": "open;read;texture:GL",
+      "status": "open;read;tex:GL",
       "files": {
         "key": [
           "Unknown:AC",

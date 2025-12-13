@@ -2,7 +2,10 @@
   "id": "ID",
   "name": "ID",
   "studio": "id Software",
-  "url": "https://en.wikipedia.org/wiki/List_of_id_Software_games",
+  "url": [
+    "https://en.wikipedia.org/wiki/Id_Software",
+    "https://en.wikipedia.org/wiki/List_of_id_Software_games"
+  ],
   "samples": [
     "IDFamily.Sample.json"
   ],

@@ -3,7 +3,10 @@
   "name": "Electronic Arts",
   "studio": "Electronic Arts",
   "description": "The file formats used by Electronic Arts",
-  "url": "https://en.wikipedia.org/wiki/List_of_Electronic_Arts_games",
+  "url": [
+    "https://en.wikipedia.org/wiki/Electronic_Arts",
+    "https://en.wikipedia.org/wiki/List_of_Electronic_Arts_games"
+  ],
   "samples": [
     "EAFamily.Sample.json"
   ],

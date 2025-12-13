@@ -3,7 +3,10 @@
   "name": "Epic",
   "studio": "Epic Games",
   "description": "Epic formats",
-  "url": "https://wiki.beyondunreal.com/List_of_Unreal_Engine_games",
+  "url": [
+    "https://en.wikipedia.org/wiki/Epic_Games",
+    "https://wiki.beyondunreal.com/List_of_Unreal_Engine_games"
+  ],
   "samples": [
     "EpicFamily.Sample.json"
   ],

@@ -2,7 +2,10 @@
   "id": "Lucas",
   "name": "Lucas Arts",
   "studio": "Lucas Arts",
-  "url": "https://en.wikipedia.org/wiki/List_of_LucasArts_games",
+  "url": [
+    "https://en.wikipedia.org/wiki/Lucasfilm_Games",
+    "https://en.wikipedia.org/wiki/List_of_LucasArts_games"
+  ],
   "samples": [
     "LucasFamily.Sample.json"
   ],

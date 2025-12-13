@@ -3,7 +3,10 @@
   "name": "Infinity Ward",
   "studio": "Infinity Ward",
   "description": "Infinity Ward file formats",
-  "url": "https://en.wikipedia.org/wiki/IW_(game_engine)",
+  "url": [
+    "https://en.wikipedia.org/wiki/Infinity_Ward",
+    "https://en.wikipedia.org/wiki/IW_(game_engine)"
+  ],
   "samples": [
     "IWFamily.Sample.json"
   ],

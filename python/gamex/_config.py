@@ -310,6 +310,21 @@ match __current__:
             # Game = "BioShock2R", # BioShock 2 Remastered
             # Game = "BioShock:Inf", # BioShock Infinite
         )
+    case 'Firaxis':
+        familyKeys = [ "Firaxis", "Unknown" ]
+
+        option = GlobalOption(
+            Platform = "GL",
+            ForceOpen = True,
+            ForcePath = "sample:*",
+            Family = "Firaxis",
+            Game = "UE1", # Unreal
+            # Game = "BioShock", # BioShock
+            # Game = "BioShockR", # BioShock Remastered
+            # Game = "BioShock2", # BioShock 2
+            # Game = "BioShock2R", # BioShock 2 Remastered
+            # Game = "BioShock:Inf", # BioShock Infinite
+        )
     case 'Frictional':
         familyKeys = [ "Frictional", "Unknown" ]
 
@@ -735,6 +750,6 @@ match __current__:
             # Game = "AxiomVerge2", # Axiom Verge 2
         )
     case _:
-        familyKeys = [ "Arkane", "Beamdog", "Bethesda", "Bioware", "Black", "Blizzard", "Bohemia", "Bullfrog", "Capcom", "Cig", "Cryptic", "Crytek", "Cyanide", "EA", "Epic", "Frictional", "Frontier", "Gamebryo", "ID", "IW", "Lucas", "Monolith", "Mythic", "Nintendo", "Origin", "Red", "Rockstar", "Ubisoft", "Unity", "Unknown", "Valve", "Volition", "WB", "X2K", "Xbox" ]
+        familyKeys = [ "Arkane", "Beamdog", "Bethesda", "Bioware", "Black", "Blizzard", "Bohemia", "Bullfrog", "Capcom", "Cig", "Cryptic", "Crytek", "Cyanide", "EA", "Epic", "Firaxis", "Frictional", "Frontier", "Gamebryo", "ID", "IW", "Lucas", "Monolith", "Mythic", "Nintendo", "Origin", "Red", "Rockstar", "Ubisoft", "Unity", "Unknown", "Valve", "Volition", "WB", "X2K", "Xbox" ]
 
         option = GlobalOption()

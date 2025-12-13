@@ -408,7 +408,7 @@ class FamilyGame:
         #self.option = _list(elem, 'option', dgame.option)
         self.arcs = _list(elem, 'arc', dgame.arcs)
         self.paths = _list(elem, 'path', dgame.paths)
-        self.key = _valueF(elem, 'key', parseKey, dgame.key)
+        self.key = _valueF(elem, 'key', parseKey, dgame.key); self.keyorig = _value(elem, 'key')
         self.status = _value(elem, 'status')
         self.tags = _value(elem, 'tags', '').split(' ')
         # interface

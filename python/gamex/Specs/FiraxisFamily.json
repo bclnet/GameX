@@ -3,7 +3,10 @@
   "name": "Firaxis Games",
   "studio": "Firaxis Games",
   "description": "Firaxis Games is an American video game developer based in Sparks, Maryland.",
-  "url": "https://en.wikipedia.org/wiki/List_of_games_by_Firaxis_Games",
+  "url": [
+    "https://en.wikipedia.org/wiki/Firaxis_Games",
+    "https://en.wikipedia.org/wiki/List_of_games_by_Firaxis_Games"
+  ],
   "samples": [
     "FiraxisFamily.Sample.json"
   ],
@@ -29,7 +32,7 @@
     "Civ3": {
       "name": "Civilization III",
       "url": "https://en.wikipedia.org/wiki/Civilization_III",
-      "date": "xxxx-01-01"
+      "date": "October 30, 2001"
     },
     "SimGolf": {
       "name": "Sid Meier's SimGolf",

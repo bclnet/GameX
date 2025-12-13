@@ -22,7 +22,6 @@ $ bundle exec rake
 You can generate the e-book files manually with Asciidoctor.
 If you run the following you _may_ actually get HTML, Epub, Mobi and PDF output files:
 
-
 ```
 $ bundle exec rake book:build
 Converting to HTML...

@@ -17,6 +17,8 @@ def getUrl(url):
         img.save(path)
     return f'image:qrcodes/{file}[width=100,height=100]'
 
+def escape(s): return s.replace('!', '_')
+
 def gameFamily(f):
     b = ['\n']
     b.append('[cols="1a"]\n')
@@ -52,7 +54,7 @@ def gameFamily(f):
             b.append('\n')
             if multi: b.append('.2+')
             b.append(f'|{s.id}\n')
-            b.append(f'|{s.name}{engine}\n')
+            b.append(f'|{escape(s.name)}{engine}\n')
             b.append(f'|{s.date.strftime('%b %d, %Y') if s.date else '-'}\n')
             b.append(f'|{', '.join(s.arcExts) if s.arcExts else '-'}\n')
             b.append(f'|{'\n\n'.join([getUrl(x) for x in s.urls]) if s.urls else '-'}\n')
@@ -60,7 +62,7 @@ def gameFamily(f):
                 b.append('\n')
                 b.append(f'4+a|\n')
                 # s.key
-                if s.key: b.append(f'{s.key}\n')
+                if s.keyorig: b.append(f'{s.keyorig}\n')
                 # editions
                 if s.editions:
                     b.append('[cols="1,3"]\n')
@@ -116,7 +118,7 @@ def gameFamily(f):
                         for t in [z.split(':') for z in s.files.keys]:
                             b.append('\n')
                             b.append(f'!{t[0]}\n')
-                            b.append(f'!{t[1]}\n')
+                            b.append(f'!{escape(t[1])}\n')
                     if s.files.paths:
                         b.append('\n')
                         b.append(f'2+!{' +\n'.join(s.files.paths)}\n')
@@ -161,7 +163,7 @@ def gameFamily(f):
 
 ascBodys = []
 for f in Families.values():
-    if f.id != 'Crytek': continue
+    if f.id != 'Rockstar': continue
     # print(f.id)
     body = gameFamily(f)
     # print(body)

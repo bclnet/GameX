@@ -1,7 +1,4 @@
 ﻿{
-  // Project RED, REDKit
-  // https://witcher.fandom.com/wiki/File_format
-  // http://jlouisb.users.sourceforge.net/
   "id": "Red",
   "name": "REDengine",
   "studio": "CD Projekt Red",
@@ -10,6 +7,10 @@
   "samples": [
     "RedFamily.Sample.json"
   ],
+  "engines": {
+    "Aurora": {},
+    "REDengine": {}
+  },
   "games": {
     "*": {
       "archiveType": "GameX.Red.RedArchive, GameX.Red"
@@ -76,6 +77,8 @@
     "CP77": {
       "name": "Cyberpunk 2077",
       "url": "https://store.steampowered.com/app/1091500",
+      "date": "",
+      "engine": "REDengine:4",
       "arcExt": ".archive",
       "arc": "game:/basegame_2_mainmenu.archive",
       "pak1": "game:/lang_en_text.archive",

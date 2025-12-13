@@ -369,6 +369,22 @@ public partial class FamilyManager {
         //Game = "BioShock2R", // BioShock 2 Remastered
         //Game = "BioShock:Inf", // BioShock Infinite
     };
+#elif Firaxis
+    static readonly string[] FamilyKeys = ["Firaxis", "Unknown"];
+
+    public static GlobalOption Option = new()
+    {
+        Platform = "GL",
+        ForceOpen = true,
+        ForcePath = "sample:*",
+        Family = "Firaxis",
+        Game = "UE1", // Unreal
+        //Game = "BioShock", // BioShock
+        //Game = "BioShockR", // BioShock Remastered
+        //Game = "BioShock2", // BioShock 2
+        //Game = "BioShock2R", // BioShock 2 Remastered
+        //Game = "BioShock:Inf", // BioShock Infinite
+    };
 #elif Frictional
     static readonly string[] FamilyKeys = ["Frictional", "Unknown"];
 
@@ -831,7 +847,7 @@ public partial class FamilyManager {
         //Game = "AxiomVerge2", // Axiom Verge 2
     };
 #else
-    static readonly string[] FamilyKeys = ["Arkane", "Beamdog", "Bethesda", "Bioware", "Black", "Blizzard", "Bohemia", "Bullfrog", "Capcom", "Cig", "Cryptic", "Crytek", "Cyanide", "EA", "Epic", "Frictional", "Frontier", "Gamebryo", "ID", "IW", "Lucas", "Monolith", "Mythic", "Nintendo", "Origin", "Red", "Rockstar", "Ubisoft", "Unity", "Unknown", "Valve", "Volition", "WB", "X2K", "Xbox"];
+    static readonly string[] FamilyKeys = ["Arkane", "Beamdog", "Bethesda", "Bioware", "Black", "Blizzard", "Bohemia", "Bullfrog", "Capcom", "Cig", "Cryptic", "Crytek", "Cyanide", "EA", "Epic", "Firaxis", "Frictional", "Frontier", "Gamebryo", "ID", "IW", "Lucas", "Monolith", "Mythic", "Nintendo", "Origin", "Red", "Rockstar", "Ubisoft", "Unity", "Unknown", "Valve", "Volition", "WB", "X2K", "Xbox"];
 
     public static GlobalOption Option = new() { };
 #endif

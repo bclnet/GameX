@@ -3,7 +3,10 @@
   "name": "Rockstar Games",
   "studio": "Rockstar Games",
   "description": "",
-  "url": "https://en.wikipedia.org/wiki/List_of_video_games_published_by_Rockstar_Games",
+  "url": [
+    "https://en.wikipedia.org/wiki/Rockstar_Games",
+    "https://en.wikipedia.org/wiki/List_of_video_games_published_by_Rockstar_Games"
+  ],
   "samples": [
     "RockstarFamily.Sample.json"
   ],

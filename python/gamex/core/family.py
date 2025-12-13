@@ -404,7 +404,7 @@ class FamilyGame:
         self.arcs = _list(elem, 'arc', dgame.arcs)
         self.paths = _list(elem, 'path', dgame.paths)
         self.key = _valueF(elem, 'key', parseKey, dgame.key)
-        # self.status = _value(elem, 'status')
+        self.status = _list(elem, 'status')
         self.tags = _value(elem, 'tags', '').split(' ')
         # interface
         self.clientType = _value(elem, 'clientType', dgame.clientType)
@@ -547,9 +547,13 @@ def init(loadSamples: bool = True):
         return json.loads(commentRemover(body).encode().decode('utf-8-sig'))
 
     # load Families
-    for path in [f'{x}Family.json' for x in familyKeys]:
-        family = createFamily(path, familyJsonLoader, loadSamples)
-        Families[family.id] = family
+    for path in [f'{s}Family.json' for s in familyKeys]:
+        try:
+            family = createFamily(path, familyJsonLoader, loadSamples)
+            Families[family.id] = family
+        except Exception as e:
+            print(f'{path} - {type(e).__name__}')
+            print(e)
 
     # load unknown
     unknown = getFamily('Unknown')

@@ -284,8 +284,8 @@
         "key": [
           "Steam:12140",
           "Archive:Max Payne (USA).zip#cue.ps2",
-          "Sony:UP1004-CUSA03513_00-SLUS202300000001",
-          "XBox:9NTGH3ZZ3PX3"
+          "Play:UP1004-CUSA03513_00-SLUS202300000001",
+          "Xbox:9NTGH3ZZ3PX3"
         ]
       }
     },
@@ -397,7 +397,7 @@
       "files": {
         "key": [
           "Steam:12150",
-          "XBox:9P8MQ0X518GC",
+          "Xbox:9P8MQ0X518GC",
           "Archive:Max Payne 2 - The Fall of Max Payne (USA).zip#iso.ps2"
         ]
       }
@@ -422,7 +422,7 @@
       "files": {
         "key": [
           "Steam:12130",
-          "XBox:9NN3VX0L45VL",
+          "Xbox:9NN3VX0L45VL",
           "Archive:Manhunt.rar#.win",
           "Archive:Manhunt (USA).zip#iso.ps2",
           "Archive:Manhunt (USA) (PS2 Classics).zip#iso.ps3"
@@ -446,8 +446,8 @@
       "form": "Console",
       "files": {
         "key": [
-          "Sony:UP1004-CUSA03517_00-SLUS205000000001",
-          "XBox:9NP7Q2SSS81W",
+          "Play:UP1004-CUSA03517_00-SLUS205000000001",
+          "Xbox:9NP7Q2SSS81W",
           "Archive:Red Dead Revolver (USA).zip#iso.ps2",
           "Archive:Red Dead Revolver (USA) (PS2 Classics).zip#iso.ps3"
         ]
@@ -516,7 +516,7 @@
       "files": {
         "key": [
           "Archive:Warriors, The (USA) (En,Fr,De,Es,It).zip#iso.ps2",
-          "Sony:UP1004-CUSA03515_00-SLUS212150000001"
+          "Play:UP1004-CUSA03515_00-SLUS212150000001"
         ]
       }
     },
@@ -569,7 +569,7 @@
       "date": "2006-05-22",
       "form": "Console",
       "files": {
-        "key": "XBox:BVZ4H08BMQ3H"
+        "key": "Xbox:BVZ4H08BMQ3H"
       }
     },
     "B": {
@@ -634,7 +634,7 @@
       "files": {
         "key": [
           "Steam:12200",
-          "XBox:C3WX803ZX8SD"
+          "Xbox:C3WX803ZX8SD"
         ]
       }
     },
@@ -664,7 +664,7 @@
       "files": {
         "key": [
           "Steam:12210",
-          "XBox:BRQ2SCZCTXF2"
+          "Xbox:BRQ2SCZCTXF2"
         ]
       }
     },
@@ -683,7 +683,7 @@
       "files": {
         "key": [
           "Archive:Midnight Club - Los Angeles - Complete Edition (USA).zip#iso.ps3",
-          "XBox:BV6WLXGS887C"
+          "Xbox:BV6WLXGS887C"
         ]
       }
     },
@@ -737,7 +737,7 @@
       "files": {
         "key": [
           "Steam:2668510",
-          "XBox:BWKLFHWT7DHC"
+          "Xbox:BWKLFHWT7DHC"
         ]
       }
     },
@@ -756,7 +756,7 @@
       "files": {
         "key": [
           "Steam:110800",
-          "XBox:BQDVBCS5Z4N1"
+          "Xbox:BQDVBCS5Z4N1"
         ]
       }
     },
@@ -775,7 +775,7 @@
       "files": {
         "key": [
           "Steam:12120",
-          "XBox:9PFKHJH25TFF"
+          "Xbox:9PFKHJH25TFF"
         ]
       }
     },
@@ -794,7 +794,7 @@
       "files": {
         "key": [
           "Steam:271590",
-          "XBox:9NXMBTB02ZSF"
+          "Xbox:9NXMBTB02ZSF"
         ]
       }
     },
@@ -809,7 +809,7 @@
       "date": "2013-10-01",
       "form": "Console;Windows",
       "files": {
-        "key": "XBox:9NKC1Z4Z92VN"
+        "key": "Xbox:9NKC1Z4Z92VN"
       }
     },
     "LAN:VR": {
@@ -839,7 +839,7 @@
       "files": {
         "key": [
           "Steam:1174180",
-          "XBox:9N2ZDN7NWQKV"
+          "Xbox:9N2ZDN7NWQKV"
         ]
       }
     },
@@ -857,7 +857,7 @@
       "files": {
         "key": [
           "Steam:1404210",
-          "XBox:9N3L5FF8M6SW"
+          "Xbox:9N3L5FF8M6SW"
         ]
       }
     },

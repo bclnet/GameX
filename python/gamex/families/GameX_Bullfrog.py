@@ -9,7 +9,6 @@ from gamex.families.GameX import UnknownArchive
 class DKGame(FamilyGame):
     def __init__(self, family: Family, id: str, elem: dict[str, object], dgame: FamilyGame):
         super().__init__(family, id, elem, dgame)
-        self.assetFactoryFunc = self.assetFactory
 
     def loaded(self):
         super().loaded()
@@ -19,7 +18,6 @@ class DKGame(FamilyGame):
 class DK2Game(FamilyGame):
     def __init__(self, family: Family, id: str, elem: dict[str, object], dgame: FamilyGame):
         super().__init__(family, id, elem, dgame)
-        self.assetFactoryFunc = self.assetFactory
 
     def loaded(self):
         super().loaded()
@@ -29,7 +27,6 @@ class DK2Game(FamilyGame):
 class P2Game(FamilyGame):
     def __init__(self, family: Family, id: str, elem: dict[str, object], dgame: FamilyGame):
         super().__init__(family, id, elem, dgame)
-        self.assetFactoryFunc = self.assetFactory
 
     def loaded(self):
         super().loaded()
@@ -39,7 +36,6 @@ class P2Game(FamilyGame):
 class SGame(FamilyGame):
     def __init__(self, family: Family, id: str, elem: dict[str, object], dgame: FamilyGame):
         super().__init__(family, id, elem, dgame)
-        self.assetFactoryFunc = self.assetFactory
 
     def loaded(self):
         super().loaded()

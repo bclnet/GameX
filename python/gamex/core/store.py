@@ -26,7 +26,9 @@ def getPathByKey(key: str, family: str, elem: dict[str, object]):
         case 'WinReg': store_winreg.init(); return store_winreg.getPathByKey(v, elem)
         case 'Local': store_local.init(); return store_local.paths[v] if v in store_local.paths else None
         case 'Direct': store_direct.init(); return store_direct.getPathByKey(v)
-        case 'Unknown': return None
+        case 'Droid': return None
+        case 'Play' | 'Xbox': return None
+        case 'x' | 'Unknown': return None
         case _: raise Exception(f'Unknown key: {key}')
 
 #region store_abandon

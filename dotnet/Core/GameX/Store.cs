@@ -45,9 +45,8 @@ public static class Store {
             "Local" => Store_Local.Paths.TryGetValue(v, out var z) ? z : null,
             "Direct" => Store_Direct.GetPathByKey(v),
             "Droid" => null,
-            "XBox" => null,
-            "Sony" => null,
-            "Unknown" => null,
+            "Play" or "Xbox" => null,
+            "x" or "Unknown" => null,
             _ => throw new ArgumentOutOfRangeException(nameof(key), key),
         };
     }

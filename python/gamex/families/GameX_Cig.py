@@ -19,3 +19,11 @@ class CigArchive(BinaryArchive):
             case _: return UnknownArchive.assetFactory(source, game)
 
     #endregion
+
+class DataForgeApp:
+    def __init__(self, family: Family, id: str, elem: object): pass
+class StarWordsApp:
+    def __init__(self, family: Family, id: str, elem: object): pass
+class SubsumptionApp:
+    def __init__(self, family: Family, id: str, elem: object): pass
+    

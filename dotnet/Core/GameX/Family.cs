@@ -967,7 +967,7 @@ public class FamilyGame {
     /// <summary>
     /// Gets or sets the Status.
     /// </summary>
-    //public string[] Status { get; set; }
+    public string[] Status { get; set; }
     /// <summary>
     /// Gets or sets the Tags.
     /// </summary>
@@ -1080,7 +1080,7 @@ public class FamilyGame {
         Arcs = _list(elem, "arc", x => new Uri(x), dgame.Arcs);
         Paths = _list(elem, "path", dgame.Paths);
         Key = _valueF(elem, "key", ParseKey, dgame.Key);
-        //Status = _value(elem, "status");
+        Status = _list(elem, "status");
         Tags = _value(elem, "tags", string.Empty).Split(' ');
         // interface
         ClientType = _valueF(elem, "clientType", z => Type.GetType(z.GetString(), false) ?? throw new ArgumentOutOfRangeException("clientType", $"Unknown type: {z}"), dgame.ClientType);

@@ -8,10 +8,11 @@ __version__ = "0.0.1"
 # __current__ = "ID"
 # __current__ = "Lucas"
 # __current__ = "Mythic"
-__current__ = "Origin"
+# __current__ = "Origin"
 # __current__ = "Red"
 # __current__ = "Valve"
 # __current__ = "Xbox"
+__current__ = None
 
 class GlobalOption:
     def __init__(self, Platform:str=None, FindKey:str=None, Family:str=None, Game:str=None, Edition:str=None, ForcePath:str=None, ForceOpen:bool=False):

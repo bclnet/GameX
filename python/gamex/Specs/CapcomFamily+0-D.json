@@ -140,7 +140,7 @@
       "date": "2008-11-24",
       "form": "Mobile",
       "files": {
-        "key": "Driod:dh3games.areyousmarterthana5thgrader"
+        "key": "Droid:dh3games.areyousmarterthana5thgrader"
       }
     },
     "ArmoredWarriors": {
@@ -322,7 +322,7 @@
       "date": "2018-09-26",
       "form": "Mobile",
       "files": {
-        "key": "Driod:XX"
+        "key": "Droid:XX"
       }
     },
     "Bombastic": {
@@ -1104,8 +1104,7 @@
           "Xbox:BNLG5J5KDVJ3",
           "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 601150",
           "Local:Devil May Cry 5"
-        ],
-        "dir":
+        ]
       }
     },
     "DmC5:S": {

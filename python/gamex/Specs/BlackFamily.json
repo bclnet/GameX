@@ -40,9 +40,9 @@
           "Local:Fallout 2"
         ]
       },
-      "ignores": {
-        "path": "unins000.dat"
-      }
+      "ignores": [
+        "unins000.dat"
+      ]
     }
   },
   "P:T": {

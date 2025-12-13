@@ -1,4 +1,4 @@
-book\introduction._intro.gpt
+#book\introduction._intro.gpt
 #book\01-introduction\_intro.gpt
 #book\01-introduction\sections\01-game-families.gpt
 #book\01-introduction\sections\02-locating-files.gpt

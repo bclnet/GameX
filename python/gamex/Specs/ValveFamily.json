@@ -378,7 +378,7 @@
       "files": {
         "key": [
           "Steam:550",
-          "Microsoft/Windows/CurrentVersion/Uninstall/Steam App 550",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 550",
           "Local:Left 4 Dead 2"
         ]
       }

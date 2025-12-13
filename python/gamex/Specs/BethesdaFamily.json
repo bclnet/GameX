@@ -2,14 +2,20 @@
   "id": "Bethesda",
   "name": "Bethesda Game Studios",
   "studio": "Bethesda Game Studios",
-  "description": "TES formats used by Bethesda",
+  "description": "File formats used by Bethesda",
   "url": "https://en.wikipedia.org/wiki/Bethesda_Game_Studios",
   "samples": [
     "BethesdaFamily.Sample.json"
   ],
   "familyType_": "GameX.Bethesda.BethesdaFamily, GameX.Bethesda",
   "engines": {
-    "TES3": {}
+    "Gamebryo": {},
+    "Creation": {
+      "name": "Creation Engine"
+    },
+    "Creation2": {
+      "name": "Creation Engine 2"
+    }
   },
   "games": {
     "*": {
@@ -21,6 +27,7 @@
       "name": "The Elder Scrolls III: Morrowind",
       "url": "https://store.steampowered.com/app/22320/The_Elder_Scrolls_III_Morrowind_Game_of_the_Year_Edition/",
       "date": "2002-04-29",
+      "engine": "Gamebryo",
       "arcExt": [
         ".bsa",
         ".esm"
@@ -47,7 +54,8 @@
     "IHRA": {
       "name": "IHRA Professional Drag Racing 2005",
       "url": "https://en.wikipedia.org/wiki/IHRA_Drag_Racing",
-      "date": "2004-11-01"
+      "date": "2004-11-01",
+      "engine": "Gamebryo"
     },
     "Oblivion": {
       "name": "The Elder Scrolls IV: Oblivion",
@@ -56,6 +64,7 @@
         "https://en.wikipedia.org/wiki/The_Elder_Scrolls_IV:_Oblivion"
       ],
       "date": "2007-09-11",
+      "engine": "Gamebryo",
       "arcExt": ".bsa",
       "datExt": ".esm",
       "arc": "game:/Oblivion*.bsa",
@@ -75,6 +84,7 @@
       "name": "Fallout 3",
       "url": "https://store.steampowered.com/app/22370/Fallout_3_Game_of_the_Year_Edition/",
       "date": "2009-10-13",
+      "engine": "Gamebryo",
       "arcExt": ".bsa",
       "datExt": ".esm",
       "arc": "game:/Fallout*.bsa",
@@ -93,6 +103,7 @@
       "name": "Fallout New Vegas",
       "url": "https://store.steampowered.com/app/22380/Fallout_New_Vegas/",
       "date": "2010-10-19",
+      "engine": "Gamebryo",
       "arcExt": ".bsa",
       "datExt": ".esm",
       "arc": "game:/Fallout*.bsa",
@@ -111,12 +122,13 @@
       "name": "The Elder Scrolls V: Skyrim",
       "url": "https://store.steampowered.com/app/72850/The_Elder_Scrolls_V_Skyrim/",
       "date": "2011-11-10",
+      "engine": "Creation",
       "arcExt": ".bsa",
       "datExt": ".esm",
       "arc": "game:/Skyrim*.bsa",
       "dat": "game:/Skyrim.esm",
       "files": {
-        "reg": [
+        "key": [
           "Steam:72850",
           "WinReg:Bethesda Softworks/skyrim",
           "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 72850",
@@ -129,6 +141,7 @@
       "name": "Fallout 4",
       "url": "https://store.steampowered.com/app/377160/Fallout_4/",
       "date": "2015-11-09",
+      "engine": "Creation",
       "arcExt": ".ba2",
       "datExt": ".esm",
       "arc": "game:/Fallout4*.ba2",
@@ -147,6 +160,7 @@
       "name": "The Elder Scrolls V: Skyrim - Special Edition",
       "url": "https://store.steampowered.com/app/489830/The_Elder_Scrolls_V_Skyrim_Special_Edition/",
       "date": "2016-10-27",
+      "engine": "Creation",
       "arcExt": ".bsa",
       "datExt": ".esm",
       "arc": "game:/Skyrim*.bsa",
@@ -166,6 +180,7 @@
       "name": "Fallout Shelter",
       "url": "https://store.steampowered.com/app/588430/Fallout_Shelter/",
       "date": "2017-03-29",
+      "engine": "Unity",
       "files": {
         "key": [
           "Steam:588430",
@@ -178,6 +193,7 @@
       "name": "Fallout 4 VR",
       "url": "https://store.steampowered.com/app/611660/Fallout_4_VR/",
       "date": "2017-12-11",
+      "engine": "Creation",
       "arcExt": ".ba2",
       "datExt": ".esm",
       "arc": "game:/Fallout4*.ba2",
@@ -196,6 +212,7 @@
       "name": "The Elder Scrolls V: Skyrim VR",
       "url": "https://store.steampowered.com/app/611670/The_Elder_Scrolls_V_Skyrim_VR/",
       "date": "2018-04-02",
+      "engine": "Creation",
       "arcExt": ".bsa",
       "datExt": ".esm",
       "arc": "game:/Skyrim*.bsa",
@@ -213,6 +230,7 @@
     "Fallout76": {
       "name": "Fallout 76",
       "url": "https://store.steampowered.com/app/1151340/Fallout_76/",
+      "engine": "Creation",
       "date": "2020-04-14",
       "arcExt": ".ba2",
       "datExt": ".esm",
@@ -230,12 +248,14 @@
     "TES:B": {
       "name": "The Elder Scrolls: Blades",
       "url": "https://elderscrolls.bethesda.net/en/blades",
-      "date": "2020-05-12"
+      "date": "2020-05-12",
+      "engine": "Unity"
     },
     "Starfield": {
       "name": "Starfield",
       "url": "https://store.steampowered.com/app/1716740/Starfield/",
       "date": "2023-09-05",
+      "engine": "Creation2",
       "arcExt": ".ba2",
       "datExt": ".esm",
       "arc": "game:/Starfield*.ba2",
@@ -252,7 +272,8 @@
     "TES:C": {
       "name": "The Elder Scrolls: Castles",
       "url": "https://en.wikipedia.org/wiki/The_Elder_Scrolls:_Castles",
-      "date": "2024-09-10"
+      "date": "2024-09-10",
+      "engine": "Unity"
     },
     "Oblivion:R": {
       "name": "The Elder Scrolls IV: Oblivion Remastered",
@@ -261,6 +282,7 @@
         "https://en.wikipedia.org/wiki/The_Elder_Scrolls_IV:_Oblivion_Remastered"
       ],
       "date": "2025-04-22",
+      "engine": "Unreal:5",
       "arcExt": ".bsa",
       "datExt": ".esm",
       "zpak": "game:/Oblivion*.bsa",
@@ -275,7 +297,7 @@
         "path": "OblivionRemastered/Content"
       }
     },
-    "Tes6": {
+    "TES6": {
       "name": "The Elder Scrolls VI (future)",
       "url": "https://en.wikipedia.org/wiki/The_Elder_Scrolls"
     },

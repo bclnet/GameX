@@ -33,7 +33,7 @@
       "name": "The Great Ace Attorney: Adventures",
       "url": "https://en.wikipedia.org/wiki/The_Great_Ace_Attorney:_Adventures",
       "date": "July 9, 2015",
-      "engine": "MTFM "
+      "engine": "MT:M"
     },
     "TGAA2:R": {
       "name": "The Great Ace Attorney 2: Resolve",
@@ -166,7 +166,7 @@
         "https://en.wikipedia.org/wiki/Ultimate_Marvel_vs._Capcom_3"
       ],
       "date": "November 15, 2011",
-      "engine": "MT2",
+      "engine": "MT:2",
       "arcExt": ".?",
       "files": {
         "key": [
@@ -329,7 +329,7 @@
     "X-Men:VSF": {
       "name": "X-Men vs. Street Fighter",
       "url": "https://en.wikipedia.org/wiki/X-Men_vs._Street_Fighter",
-      "date": "September 1996"
+      "date": "September 1, 1996"
     },
     "X-Men:VSFEX": {
       "name": "X-Men vs. Street Fighter EX Edition",

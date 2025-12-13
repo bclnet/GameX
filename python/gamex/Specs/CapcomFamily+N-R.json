@@ -13,7 +13,7 @@
     "NazoWakuYakata": {
       "name": "Nazo Waku Yakata",
       "date": "2011-01-01",
-      "engine": "MTFM"
+      "engine": "MT:M"
     },
     "Nemo": {
       "name": "Nemo",
@@ -135,7 +135,7 @@
       "name": "Phoenix Wright: Ace Attorney - Dual Destinies",
       "url": "https://en.wikipedia.org/wiki/Phoenix_Wright:_Ace_Attorney_%E2%88%92_Dual_Destinies",
       "date": "July 25, 2013",
-      "engine": "MTFM"
+      "engine": "MT:M"
     },
     "PWAA:JfA": {
       "name": "Phoenix Wright: Ace Attorney - Justice for All",
@@ -146,7 +146,7 @@
       "name": "Phoenix Wright: Ace Attorney - Spirit of Justice",
       "url": "https://en.wikipedia.org/wiki/Phoenix_Wright:_Ace_Attorney_%E2%88%92_Spirit_of_Justice",
       "date": "June 9, 2016",
-      "engine": "MTFM"
+      "engine": "MT:M"
     },
     "PWAA:TaT": {
       "name": "Phoenix Wright: Ace Attorney - Trials and Tribulations",
@@ -241,7 +241,7 @@
     "PuzzLoop": {
       "name": "Puzz Loop",
       "url": "https://en.wikipedia.org/wiki/Puzz_Loop",
-      "date": "December 1998"
+      "date": "December 1, 1998"
     },
     "PuzzLoop2": {
       "name": "Puzz Loop 2",
@@ -261,7 +261,7 @@
     "Quiz:ND": {
       "name": "Quiz Nanairo Dreams",
       "url": "https://en.wikipedia.org/wiki/Quiz_Nanairo_Dreams",
-      "date": "August 1996"
+      "date": "August 1, 1996"
     },
     "Quiz:NDNK": {
       "name": "Quiz Nanairo Dreams: Nijiiro-cho no Kiseki",
@@ -317,7 +317,7 @@
           "date": "March 22, 2002"
         }
       },
-      "engine": "MT2",
+      "engine": "MT:2",
       "arcExt": ".?",
       "files": {
         "key": [
@@ -432,7 +432,7 @@
           "date": "February 18, 2010"
         }
       },
-      "engine": "MT1",
+      "engine": "MT:1",
       "arcExt": ".?",
       "files": {
         "key": [
@@ -450,7 +450,7 @@
         "https://en.wikipedia.org/wiki/Resident_Evil_6"
       ],
       "date": "October 2, 2012",
-      "engine": "MT2",
+      "engine": "MT:2",
       "arcExt": ".?",
       "files": {
         "key": [
@@ -502,7 +502,7 @@
       "name": "Resident Evil - Code: Veronica X HD",
       "url": "https://en.wikipedia.org/wiki/Resident_Evil_%E2%80%93_Code:_Veronica",
       "date": "September 27, 2011",
-      "engine": "MT2"
+      "engine": "MT:2"
     },
     "RE:DA": {
       "name": "Resident Evil: Dead Aim",
@@ -560,7 +560,7 @@
         "https://en.wikipedia.org/wiki/Resident_Evil:_Revelations"
       ],
       "date": "January 26, 2012",
-      "engine": "MT2",
+      "engine": "MT:2",
       "arcExt": ".?",
       "files": {
         "key": [
@@ -578,7 +578,7 @@
         "https://en.wikipedia.org/wiki/Resident_Evil:_Revelations_2"
       ],
       "date": "February 24, 2015",
-      "engine": "MT2",
+      "engine": "MT:2",
       "arcExt": ".?",
       "files": {
         "key": [
@@ -608,13 +608,13 @@
       "name": "Resident Evil: The Darkside Chronicles",
       "url": "https://en.wikipedia.org/wiki/Resident_Evil:_The_Darkside_Chronicles",
       "date": "November 17, 2009",
-      "engine": "MTFL"
+      "engine": "MT:L"
     },
     "RE:TM3D": {
       "name": "Resident Evil: The Mercenaries 3D",
       "url": "https://en.wikipedia.org/wiki/Resident_Evil:_The_Mercenaries_3D",
       "date": "June 2, 2011",
-      "engine": "MTFM"
+      "engine": "MT:M"
     },
     "RE:TUC": {
       "name": "Resident Evil: The Umbrella Chronicles",
@@ -651,7 +651,7 @@
           "date": "January 19, 2016"
         }
       },
-      "engine": "MT2",
+      "engine": "MT:2",
       "arcExt": ".?",
       "files": {
         "key": [

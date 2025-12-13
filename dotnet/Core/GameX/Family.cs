@@ -394,11 +394,12 @@ public class Family {
     /// <returns></returns>
     public string[] Specs { get; set; }
 
+
     /// <summary>
-    /// Gets the family samples.
+    /// Gets the family apps.
     /// </summary>
     /// <returns></returns>
-    public Dictionary<string, List<FamilySample.File>> Samples { get; set; }
+    public Dictionary<string, FamilyApp> Apps { get; set; }
 
     /// <summary>
     /// Gets the family engines.
@@ -413,10 +414,10 @@ public class Family {
     public Dictionary<string, FamilyGame> Games { get; set; }
 
     /// <summary>
-    /// Gets the family apps.
+    /// Gets the family samples.
     /// </summary>
     /// <returns></returns>
-    public Dictionary<string, FamilyApp> Apps { get; set; }
+    public Dictionary<string, List<FamilySample.File>> Samples { get; set; }
 
     /// <summary>
     /// Family
@@ -437,10 +438,10 @@ public class Family {
             Specs = _list(elem, "specs");
             // related
             var dgame = new FamilyGame { SearchBy = SearchBy.Default, Arcs = [new Uri("archive:/")] };
-            Samples = [];
+            Apps = _related(elem, "apps", (k, v) => CreateFamilyApp(this, k, v));
             Engines = _related(elem, "engines", (k, v) => CreateFamilyEngine(this, k, v));
             Games = _dictTrim(_related(elem, "games", (k, v) => CreateFamilyGame(this, k, v, ref dgame)));
-            Apps = _related(elem, "apps", (k, v) => CreateFamilyApp(this, k, v));
+            Samples = [];
         }
         catch (Exception e) {
             Console.WriteLine(e.Message);
@@ -1095,7 +1096,7 @@ public class FamilyGame {
         Detectors = _related(elem, "detectors", (k, v) => CreateDetector(k, v));
         // files
         Files = _valueF(elem, "files", x => new FileSet(x));
-        Ignores = [.. _list(elem, "ignores", default_: [])];
+        Ignores = [.. _list(elem, "ignores", [])];
         Virtuals = _related(elem, "virtuals", (k, v) => (byte[])ParseKey(v));
         Filters = _related(elem, "filters", (k, v) => _valueV(v).ToString());
         // find

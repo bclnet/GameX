@@ -3,7 +3,10 @@
   "name": "Capcom",
   "studio": "Capcom",
   "description": "Capcom file formats",
-  "url": "https://en.wikipedia.org/wiki/List_of_Capcom_games",
+  "url": [
+    "https://en.wikipedia.org/wiki/Capcom",
+    "https://en.wikipedia.org/wiki/List_of_Capcom_games"
+  ],
   "samples": [
     "CapcomFamily.Sample.json"
   ],
@@ -20,20 +23,8 @@
       "name": "RE Engine",
       "url": "https://en.wikipedia.org/wiki/RE_Engine"
     },
-    "MT1": {
+    "MT": {
       "name": "MT Framework 1.x",
-      "url": "https://en.wikipedia.org/wiki/MT_Framework"
-    },
-    "MT2": {
-      "name": "MT Framework 2.x",
-      "url": "https://en.wikipedia.org/wiki/MT_Framework"
-    },
-    "MTFL": {
-      "name": "MT Framework Lite",
-      "url": "https://en.wikipedia.org/wiki/MT_Framework"
-    },
-    "MTFM": {
-      "name": "MT Framework Mobile",
       "url": "https://en.wikipedia.org/wiki/MT_Framework"
     }
   },
@@ -66,7 +57,7 @@
       "name": "Capcom Fighting Collection",
       "url": "https://store.steampowered.com/app/1685750",
       "date": "Jun 23, 2022",
-      "engine": "MT2",
+      "engine": "MT:2",
       "searchBy": "AllDir",
       "arcExt": ".arc",
       "files": {
@@ -142,7 +133,7 @@
       "name": "Mega Man Zero/ZX Legacy Collection",
       "url": "https://store.steampowered.com/app/999020",
       "date": "Feb 25, 2020",
-      "engine": "MT2",
+      "engine": "MT:2",
       "searchBy": "AllDir",
       "path": "RZZC/romPC",
       "arcExt": ".arc",
@@ -172,7 +163,7 @@
     },
     "MH:S2": {
       "name": "Monster Hunter Stories 2: Wings of Ruin",
-      "engine": "MT2",
+      "engine": "MT:2",
       "url": "https://store.steampowered.com/app/1277400",
       "date": "Jul 8, 2021",
       "searchBy": "AllDir",
@@ -261,7 +252,7 @@
       "name": "The Great Ace Attorney Chronicles",
       "url": "https://store.steampowered.com/app/1158850",
       "date": "Jul 26, 2021",
-      "engine": "MT2",
+      "engine": "MT:2",
       "path": "archive",
       "arcExt": ".arc",
       "files": {

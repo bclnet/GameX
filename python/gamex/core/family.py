@@ -1,6 +1,7 @@
 from __future__ import annotations
 import os, json, re, random, platform
 from enum import Enum
+from datetime import datetime
 from urllib.parse import urlparse
 from importlib import resources
 from openstk import findType, _throw, YamlDict
@@ -116,26 +117,28 @@ def createFileSystem(vfxType: str, path: SystemPath, subPath: str, host: str = N
 # tag::Detector[]
 class Detector:
     def __init__(self, game: FamilyGame, id: str, elem: dict[str, object]):
-        self.cache = {}
-        self.id = id
+        self.cache: dict[str, object] = {}
+        self.hashs: dict[str, dict[str, object]] = {}
+        self.id = self.name = id
         self.game = game
-        def switch(k,v):
+        def data_(k,v):
             match k:
+                case 'name': self.name = name; return v
                 case 'type': return v
                 case 'key': return _valueF(elem, 'key', parseKey)
-                # case 'hashs': Hashs = _related(elem, 'hashs', k => k.GetProperty("hash").GetString(), v => parseHash(game, v)); return v
+                # case 'hashs': self.hashs = _related(elem, 'hashs', k => k.GetProperty("hash").GetString(), v => parseHash(game, v)); return v
                 case _: return v
-        self.data = { k:switch(k,v) for k,v in elem.items() }
-    @property
-    def name(self): return self.data['name'] or self.id
+        self.data = { k:data_(k,v) for k,v in elem.items() }
     def parseHash(self, game: FamilyGame, elem: dict[str, object]) -> dict[str, object]:
-        def switch(k,v):
+        def data_(k,v):
             match k:
                 case 'edition': return v
                 case 'locale': return v
                 case _: return v
-        return { k:switch(k,v) for k,v in elem.items() }
+        return { k:data_(k,v) for k,v in elem.items() }
     def __repr__(self): return f'detector#{self.game}'
+    def getHash(self, r: Reader) -> str:
+        pass
     #TODO:Needsmore
 # end::Detector[]
 
@@ -174,10 +177,10 @@ class Family:
             game = createFamilyGame(self, k, v, dgame)
             if k.startswith('*'): dgame = game; return None
             return game
-        self.samples = {}
+        self.apps = _related(elem, 'apps', lambda k,v: createFamilyApp(self, k, v))
         self.engines = _related(elem, 'engines', lambda k,v: createFamilyEngine(self, k, v))
         self.games = _dictTrim(_related(elem, 'games', gameMethod))
-        self.apps = _related(elem, 'apps', lambda k,v: createFamilyApp(self, k, v))
+        self.samples = {}
     def __repr__(self): return f'''
 {self.id}: {self.name}
 engines: {[x for x in self.engines.values()]}
@@ -399,7 +402,9 @@ class FamilyGame:
         self.engine = _valueF(elem, 'engine', parseEngine, dgame.engine)
         self.resource = _value(elem, 'resource', dgame.resource)
         self.urls = _list(elem, 'url')
-        self.date = _value(elem, 'date')
+        try:
+            self.date = _valueF(elem, 'date', lambda s: datetime.strptime(s, '%Y-%m-%d' if s[0].isdigit() else '%b %d, %Y' if s.find(' ') == 3 else '%B %d, %Y').date() if s and s != 'XXX' else None)
+        except Exception as e: print(f'{self.id} - {e}')
         #self.option = _list(elem, 'option', dgame.option)
         self.arcs = _list(elem, 'arc', dgame.arcs)
         self.paths = _list(elem, 'path', dgame.paths)
@@ -418,10 +423,10 @@ class FamilyGame:
         self.locales = _related(elem, 'locales', lambda k,v: FamilyGame.Locale(k, v))
         self.detectors = _related(elem, 'detectors', lambda k,v: self.createDetector(k, v))
         # files
-        self.files = _valueF(elem, 'files', lambda x: FamilyGame.FileSet(x)) #files: dict[str, PathItem] = {}
-        self.ignores = _list(elem, 'ignores') #ignores: dict[str, object] = {}
-        self.virtuals = _related(elem, 'virtuals', lambda k,v: parseKey(v)) #virtuals: dict[str, object] = {}
-        self.filters = _related(elem, 'filters', lambda k,v: v) #filters: dict[str, object] = {}
+        self.files: dict[str, PathItem] = _valueF(elem, 'files', lambda x: FamilyGame.FileSet(x))
+        self.ignores: set = set(_list(elem, 'ignores', []))
+        self.virtuals: dict[str, object] = _related(elem, 'virtuals', lambda k,v: parseKey(v))
+        self.filters: dict[str, object] = _related(elem, 'filters', lambda k,v: v)
         # find
         self.found = self._getSystemPath(option.FindKey, family.id, elem)
         self.options = None

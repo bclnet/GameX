@@ -3,18 +3,25 @@
   "name": "Cloud Imperium Games",
   "studio": "Cloud Imperium Games",
   "description": "CIG formats used in StarCitizen",
-  "url": "https://en.wikipedia.org/wiki/Star_Citizen",
+  "url": "https://starcitizen.fandom.com/wiki/Cloud_Imperium_Games_Corporation",
   "samples": [
     "CigFamily.Sample.json"
   ],
+  "engines": {
+    "StarEngine": {}
+  },
   "games": {
     "*": {
       "archiveType": "GameX.Cig.CigArchive, GameX.Cig"
     },
     "StarCitizen": {
       "name": "Star Citizen",
-      "url": "https://robertsspaceindustries.com/playstarcitizen",
+      "url": [
+        "https://en.wikipedia.org/wiki/Star_Citizen",
+        "https://robertsspaceindustries.com/playstarcitizen"
+      ],
       "key": "hex:5E7A2002302EEB1A3BB617C30FDE1E47",
+      "engine": "StarEngine",
       "arcExt": "Data.p4k",
       "files": {
         "key": [

@@ -24,7 +24,7 @@ The following are the current games:\n
     for f in Families.values():
         # print(f.id)
         b.append(f'| **{f.id}** | **{f.name}**\n')
-        for g in f.games.values():
+        for g in [s for s in f.games.values() if s.files]:
             stat = g.status.split(';') if g.status else []
             b.append(f'| [{g.id}]({g.urls[0] if g.urls else ''}) | {g.name} | {single(stat, "open")} | {single(stat, "read")} | {platform(stat, "tex")} | {platform(stat, "model")} | {platform(stat, "level")}\n')
     return ''.join(b)

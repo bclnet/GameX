@@ -1,9 +1,12 @@
 ﻿{
   "id": "Bullfrog",
-  "name": "Bullfrog",
-  "studio": "Bullfrog",
-  "description": "The file formats used in Bullfrog",
-  "url": "https://en.wikipedia.org/wiki/List_of_Bullfrog_Productions_games",
+  "name": "Bullfrog Productions",
+  "studio": "Bullfrog Productions",
+  "description": "The file formats used by Bullfrog",
+  "url": [
+    "https://en.wikipedia.org/wiki/Bullfrog_Productions",
+    "https://en.wikipedia.org/wiki/List_of_Bullfrog_Productions_games"
+  ],
   "samples": [
     "BullfrogFamily.Sample.json"
   ],
@@ -188,7 +191,7 @@
       "gameType": "GameX.Bullfrog.DKGame, GameX.Bullfrog",
       "name": "Dungeon Keeper",
       "url": "https://en.wikipedia.org/wiki/Dungeon_Keeper",
-      "date": "26 June 1997",
+      "date": "June 26, 1997",
       "arcExt": [
         ".dat",
         ".jty"

@@ -6,13 +6,13 @@ seed = 0xdeadbeef
 client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
 
 # yeild paths recursivly and in order
-def yieldPaths(folder, extension):
-    files = {os.path.basename(f.path):f for f in os.scandir(folder) if f.path.endswith(extension)}
-    _intro = files.pop('_intro' + extension, None)
-    _summary = files.pop('_summary' + extension, None)
+def yieldPaths(folder, ext):
+    files = {os.path.basename(f.path):f for f in os.scandir(folder) if f.path.endswith(ext)}
+    _meta = files.pop('_meta' + ext, None)
+    # _summary = files.pop('_summary' + ext, None)
 
     # introduction
-    if _intro: yield _intro.path
+    if _meta: yield _meta.path
 
     # files
     for f in files.values(): yield f.path
@@ -20,10 +20,10 @@ def yieldPaths(folder, extension):
     # directories
     dirs = {os.path.basename(f.path):f for f in os.scandir(folder) if f.is_dir()}
     for f in dirs.values():
-        for x in yieldPaths(f.path, extension): yield x
+        for x in yieldPaths(f.path, ext): yield x
 
     # summary
-    if _summary: yield _summary.path
+    # if _summary: yield _summary.path
 
 # openai chat
 messages = []
@@ -51,12 +51,12 @@ def chat(content, reply, callout):
     return reply
 
 # read tags
-with open('GPT.txt', 'r') as f: tags = f.read().split('\n')
+with open('gpt.txt', 'r') as f: tags = f.read().split('\n')
 allTag = len(tags) > 0 and tags[0] == 'all'
 
 # process .gpt files
 count = 0; maxcount = 100
-for path in yieldPaths('book', '.gpt'):
+for path in yieldPaths('.', '.gpt'):
     count += 1
     if count > maxcount: break
     ascPath = f'{path[:-4]}.asc'
@@ -67,6 +67,6 @@ for path in yieldPaths('book', '.gpt'):
 
     # process files
     reply = ''
-    with open(ascPath, 'r') as f: reply = f.read()
-    with open(path, 'r') as f: reply = chat(f.read(), reply, callout)
-    with open(ascPath, 'w') as f: f.write(reply)
+    # with open(ascPath, 'r') as f: reply = f.read()
+    # with open(path, 'r') as f: reply = chat(f.read(), reply, callout)
+    # with open(ascPath, 'w') as f: f.write(reply)

@@ -481,7 +481,7 @@
     },
     "BEUB": {
       "name": "Capcom Beat 'Em Up Bundle",
-      "engine": "MT2",
+      "engine": "MT:2",
       "url": [
         "https://store.steampowered.com/app/885150/Capcom_Beat_Em_Up_Bundle/",
         "https://www.xbox.com/en-US/games/store/capcom-beat-em-up-bundle/BV26W4BTCLKG/0001",
@@ -831,7 +831,7 @@
     },
     "DR": {
       "name": "Dead Rising",
-      "engine": "MT1",
+      "engine": "MT:1",
       "url": [
         "https://store.steampowered.com/app/427190/DEAD_RISING/",
         "https://www.xbox.com/en-US/games/store/dead-rising/BZV7W98B3XN4/0001",
@@ -1053,7 +1053,7 @@
     },
     "DmC4": {
       "name": "Devil May Cry 4",
-      "engine": "MT1",
+      "engine": "MT:1",
       "url": "https://en.wikipedia.org/wiki/Devil_May_Cry_4",
       "date": "2008-01-31"
     },
@@ -1065,7 +1065,7 @@
     },
     "DmC4:S": {
       "name": "Devil May Cry 4: Special Edition",
-      "engine": "MT2",
+      "engine": "MT:2",
       "url": [
         "https://store.steampowered.com/app/329050/Devil_May_Cry_4_Special_Edition/",
         "https://www.xbox.com/en-US/games/store/devil-may-cry-4-special-edition/BPZT3CQCCWKG/0001",
@@ -1241,7 +1241,7 @@
     },
     "DD": {
       "name": "Dragon's Dogma",
-      "engine": "MT2",
+      "engine": "MT:2",
       "url": [
         "https://store.steampowered.com/app/367500/Dragons_Dogma_Dark_Arisen/",
         "https://www.xbox.com/en-US/games/store/dragons-dogma-dark-arisen/BNGT6SZBFM2T/0001",

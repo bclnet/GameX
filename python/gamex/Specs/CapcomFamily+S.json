@@ -17,7 +17,7 @@
     "SectionZ": {
       "name": "Section Z",
       "url": "https://en.wikipedia.org/wiki/Section_Z",
-      "date": "December 1985"
+      "date": "December 1, 1985"
     },
     "Sengoku": {
       "name": "Sengoku Basara",
@@ -48,19 +48,19 @@
       "name": "Sengoku Basara: Samurai Heroes",
       "url": "https://en.wikipedia.org/wiki/Sengoku_Basara:_Samurai_Heroes",
       "date": "July 29, 2010",
-      "engine": "MTFL"
+      "engine": "MT:L"
     },
     "Sengoku4": {
       "name": "Sengoku Basara 4",
       "url": "https://en.wikipedia.org/wiki/Sengoku_Basara_4",
       "date": "January 23, 2014",
-      "engine": "MT2"
+      "engine": "MT:2"
     },
     "Sengoku:SYD": {
       "name": "Sengoku Basara: Sanada Yukimura-Den",
       "url": "https://en.wikipedia.org/wiki/Sengoku_Basara",
       "date": "August 25, 2016",
-      "engine": "MT2"
+      "engine": "MT:2"
     },
     "Shadow of Rome": {
       "name": "Shadow of Rome",
@@ -417,7 +417,7 @@
     "Strider:NES": {
       "name": "Strider (1989 NES video game)",
       "url": "https://en.wikipedia.org/wiki/Strider_(1989_NES_video_game)",
-      "date": "July 1989"
+      "date": "July 1, 1989"
     },
     "Strider:HD": {
       "name": "Strider HD",
@@ -452,7 +452,7 @@
     "SuperPang": {
       "name": "Super Pang",
       "url": "https://en.wikipedia.org/wiki/Super_Pang",
-      "date": "October 1992"
+      "date": "October 1, 1992"
     },
     "SPF2:T": {
       "name": "Super Puzzle Fighter II Turbo",
@@ -502,7 +502,7 @@
       "name": "Super Street Fighter IV: 3D Edition",
       "url": "https://en.wikipedia.org/wiki/Super_Street_Fighter_IV:_3D_Edition",
       "date": "February 26, 2011",
-      "engine": "MTFM"
+      "engine": "MT:M"
     },
     "SSF4:A": {
       "name": "Super Street Fighter IV: Arcade Edition",

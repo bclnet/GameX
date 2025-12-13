@@ -3,7 +3,10 @@
   "name": "BioWare",
   "studio": "BioWare",
   "description": "BioWare used the Bioware Engine",
-  "url": "https://en.wikipedia.org/wiki/List_of_BioWare_video_games",
+  "url": [
+    "https://en.wikipedia.org/wiki/BioWare",
+    "https://en.wikipedia.org/wiki/List_of_BioWare_video_games"
+  ],
   "samples": [
     "BiowareFamily.Sample.json"
   ],

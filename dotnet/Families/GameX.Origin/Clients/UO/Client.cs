@@ -7,7 +7,7 @@ namespace GameX.Origin.Clients.UO;
 
 public class Assets(UOGame game) {
     bool Uop = game.Uop;
-    //Animations Animations;
+    UoAnimations Animations;
     Binary_Animdata AnimData;
     Archive Arts;
     //Maps Maps;
@@ -34,9 +34,31 @@ public class Assets(UOGame game) {
     //BuffTable BuffTable;
     //ChairTable ChairTable;
 
+
+    public class UoAnimations {
+        public Archive[] Anims = new Archive[10];
+
+        public async Task<UoAnimations> Load(bool uop, Archive game, ClientVersion version) {
+            for (var i = 0; i < 10; i++) Anims[i] = await game.GetAsset<Archive>(uop ? $"AnimationFrame{i + 1}.uop" : $"anim{(i == 0 ? string.Empty : (i + 1).ToString())}.idx");
+            if (uop & version > ClientVersion.CV_60144) await game.GetAsset<Binary_Animdata>("AnimationSequence.uop");
+            if (version >= ClientVersion.CV_500A)
+                await game.GetAsset<Binary_MobType>("mobtypes.txt");
+            await game.GetAsset<Binary_Animdef>("Anim1.def");
+            await game.GetAsset<Binary_Animdef>("Anim2.def");
+            if (version >= ClientVersion.CV_300) {
+                await game.GetAsset<Binary_Animdata>("Equipconv.def");
+                await game.GetAsset<Binary_Animdata>("Bodyconv.def");
+                await game.GetAsset<Binary_Animdata>("Body.def");
+                await game.GetAsset<Binary_Animdata>("Corpse.def");
+            }
+            return this;
+        }
+    }
+
     public async Task Load(Archive game, UOGameClient ctx) {
+        var version = ((UOGame)game.Game).Version;
         var lang = "enu";
-        //Animations = new Animations(this);
+        Animations = await new UoAnimations().Load(Uop, game, version);
         AnimData = await game.GetAsset<Binary_Animdata>("animdata.mul");
         Arts = await game.GetAsset<Archive>(Uop ? "artLegacyMUL.uop" : "artidx.mul");
         //Maps = new Maps(this);

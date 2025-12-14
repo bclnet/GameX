@@ -35,6 +35,61 @@ public unsafe class Binary_Anim : IHaveMetaInfo {
 
 #endregion
 
+#region Binary_AnimDef
+
+public class Binary_Animdef : IHaveMetaInfo {
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Animdef(r.ToStream()));
+
+    #region Headers
+
+    public enum MobType {
+        Null = -1,
+        Monster = 0,
+        Animal = 1,
+        Humanoid = 2
+    }
+
+    struct Record(string type, string flags) {
+        public string Flags = flags;
+        public MobType AnimationType = type switch {
+            "MONSTER" => MobType.Monster,
+            "ANIMAL" => MobType.Animal,
+            "SEA_MONSTER" => MobType.Monster,
+            "HUMAN" => MobType.Humanoid,
+            "EQUIPMENT" => MobType.Humanoid,
+            _ => MobType.Null,
+        };
+    }
+
+    #endregion
+
+    readonly Dictionary<int, Record> Records = [];
+
+    // file: Anim1.def, Anim2.def
+    public Binary_Animdef(StreamReader r) {
+        string line;
+        while ((line = r.ReadLine()) != null) {
+            line = line.Trim();
+            if (line.Length == 0 || line.StartsWith("#")) continue;
+            var data = line.Replace("   ", "\t").Split('\t');
+            var bodyID = int.Parse(data[0]);
+            Records[bodyID] = new Record(data[1].Trim(), data[2].Trim());
+        }
+    }
+
+    public override string ToString() => this.Serialize();
+
+    // IHaveMetaInfo
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
+        new(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = this }),
+        new("MobType", items: [
+            new($"Count: {Records.Count}"),
+        ])
+    ];
+}
+
+#endregion
+
 #region Binary_Animdata
 
 public unsafe class Binary_Animdata : IHaveMetaInfo {

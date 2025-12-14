@@ -16,6 +16,18 @@
     "name": "Ultima Online",
     "files": [
       {
+        "path": "Anim1.def"
+      },
+      {
+        "path": [
+          "AnimationFrame.uop:file00000.anim",
+          "anim.idx:file00000.anim",
+          "mobtypes.txt",
+          "Anim1.def"
+        ],
+        "type": "Anim"
+      },
+      {
         "path": "anim.idx:file00000.anim",
         "type": "Anim"
       },

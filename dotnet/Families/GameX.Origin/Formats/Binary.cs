@@ -275,14 +275,21 @@ public unsafe class Binary_UO : ArcBinary<Binary_UO> {
     const int UOP_MAGIC = 0x50594D;
 
     Task ReadUop(BinaryAsset source, BinaryReader r) {
-        (string extension, int length, int idxLength, bool extra, Func<int, string> pathFunc) parse = source.ArcPath switch {
-            "artLegacyMUL.uop" => (".tga", 0x14000, 0x13FDC, false, i => i < 0x4000 ? $"land/file{i:x5}.land" : $"art/file{i:x5}.art"),
-            "gumpartLegacyMUL.uop" => (".tga", 0xFFFF, 0, true, i => $"file{i:x5}.tex"),
-            "soundLegacyMUL.uop" => (".dat", 0xFFF, 0, false, i => $"file{i:x5}.wav"),
-            _ => (null, 0, 0, false, i => $"file{i:x5}.dat"),
+        (Func<string, int, string> uopFunc, int length, int idxLength, bool extra, Func<int, string> pathFunc) parse = source.ArcPath switch {
+            "artLegacyMUL.uop" => ((s, i) => $"build/artlegacymul/{i:D8}.tga", 0x14000, 0x13FDC, false, i => i < 0x4000 ? $"land/file{i:x5}.land" : $"art/file{i:x5}.art"),
+            "gumpartLegacyMUL.uop" => ((s, i) => $"build/gumpartlegacymul/{i:D8}.tga", 0xFFFF, 0, true, i => $"file{i:x5}.tex"),
+            "soundLegacyMUL.uop" => ((s, i) => $"build/soundlegacymul/{i:D8}.dat", 0xFFF, 0, false, i => $"file{i:x5}.wav"),
+            // new
+            "AnimationSequence.uop" => ((s, i) => $"build/animationsequence/{i:D8}.bin", 0, 0, false, i => $"file{i:x5}.seq"),
+            "MultiCollection.uop" => ((s, i) => $"build/multicollection/{i:D8}.bin", 0, 0, false, i => $"file{i:x5}.mcol"),
+            "string_dictionary.uop" => ((s, i) => $"build/stringdictionary/string_dictionary.bin", 0, 0, false, i => $"file{i:x5}.sdict"),
+            "tileart.uop" => ((s, i) => $"build/tileart/{i:D8}.bin", 0, 0, false, i => $"file{i:x5}.tart"),
+            var x when x.StartsWith("map") => ((s, i) => $"build/{s}/{{i:D8}}.dat", 0x0, 0, false, i => $"file{i:x5}.anim"),
+            var x when x.StartsWith("AnimationFrame") => ((s, i) => $"build/animationlegacyframe/{i:D6}/{i:D2}.bin", 0x0, 0, false, i => $"file{i:x5}.anim"),
+            _ => ((s, i) => "", 0, 0, false, i => $"file{i:x5}.dat"),
         };
-        var (extension, length, idxLength, extra, pathFunc) = parse;
-        var uopPattern = Path.GetFileNameWithoutExtension(source.ArcPath).ToLowerInvariant();
+        var (uopFunc, length, idxLength, extra, pathFunc) = parse;
+        var uopFile = Path.GetFileNameWithoutExtension(source.ArcPath).ToLowerInvariant();
 
         // read header
         var header = r.ReadS<UopHeader>();
@@ -293,7 +300,7 @@ public unsafe class Binary_UO : ArcBinary<Binary_UO> {
 
         // find hashes
         var hashes = new Dictionary<ulong, int>();
-        for (var i = 0; i < length; i++) hashes.TryAdd(CreateUopHash($"build/{uopPattern}/{i:D8}{extension}"), i);
+        for (var i = 0; i < length; i++) hashes.TryAdd(CreateUopHash(uopFunc(uopFile, i)), i);
 
         // load files
         var files = new FileSource[length];

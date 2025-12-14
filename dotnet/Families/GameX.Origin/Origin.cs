@@ -37,9 +37,9 @@ public class U9Game(Family family, string id, JsonElement elem, FamilyGame dgame
 /// </summary>
 /// <seealso cref="GameX.FamilyGame" />
 public class UOGame(Family family, string id, JsonElement elem, FamilyGame dgame) : FamilyGame(family, id, elem, dgame) {
-    public bool Uop;
-    ClientVersion Version;
-    ClientFlags Protocol;
+    internal bool Uop;
+    internal ClientVersion Version;
+    internal ClientFlags Protocol;
 
     /// <summary>
     /// Ensures this instance.

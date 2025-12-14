@@ -140,7 +140,7 @@ def gameFamily(f):
 ascBodys = []
 for f in Families.values():
     if f.id != 'Arkane': continue
-    # print(f.id)
+    print(f.id)
     body = gameFamily(f)
     # print(body)
     writeFile(f, f'families/{f.id}/{f.id}.asc', '=== Family Info\n', body)

@@ -3,7 +3,10 @@
   "name": "Valve",
   "studio": "Valve",
   "description": "Valve formats used by Source/Source 2",
-  "url": "https://en.wikipedia.org/wiki/List_of_Valve_games",
+  "url": [
+    "https://en.wikipedia.org/wiki/Valve_Corporation",
+    "https://en.wikipedia.org/wiki/List_of_Valve_games"
+  ],
   "samples": [
     "ValveFamily.Sample.json"
   ],

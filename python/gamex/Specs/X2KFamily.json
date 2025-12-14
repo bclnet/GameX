@@ -3,7 +3,10 @@
   "name": "Rockstar Games",
   "studio": "Rockstar Games",
   "description": "",
-  "url": "https://en.wikipedia.org/wiki/List_of_2K_games",
+  "url": [
+    "https://en.wikipedia.org/wiki/2K_(company)",
+    "https://en.wikipedia.org/wiki/List_of_2K_games"
+  ],
   "samples": [
     "X2KFamily.Sample.json"
   ],

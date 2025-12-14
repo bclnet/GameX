@@ -10,19 +10,18 @@ def writeFile(z, path, marker, body):
 
 def getUrl(url):
     if url == '': return ''
-    file = f'{url.replace(':', '').replace('_', '').replace('/', '_').replace('?', '+').replace('.', '').replace('&', '+').replace("'", '+')}.png'
+    file = f'{url.replace('https://', '').replace('http://', '').replace(':', '').replace('_', '').replace('/', '_').replace('?', '+').replace('.', '').replace('&', '+').replace("'", '+')}.png'
     path = os.path.join('.', 'qrcodes', file)
     if not os.path.exists(path):
         img = qrcode.make(url, box_size=5)
         img.save(path)
     return f'image:qrcodes/{file}[width=100,height=100]'
 
-def escape(s): return s.replace('!', '_')
+def escape(s): return s.replace('! ', '\\! ')
 
 def gameFamily(f):
     b = ['\n']
-    b.append('[cols="1a"]\n')
-    b.append('|===\n')
+    b.append('[cols="1a"]\n|===\n')
     b.append(f'|{f.id}\n')
     b.append(f'|name: {f.name}\n')
     b.append(f'|studio: {f.studio}\n')
@@ -33,137 +32,110 @@ def gameFamily(f):
     if f.engines:
         b.append(f'==== List of Engines\n')
         b.append(f'\n')
-        b.append('[cols="1,1"]\n')
-        b.append('|===\n')
+        b.append('[cols="1,1"]\n|===\n')
         b.append(f'|ID |Name\n')
-        for s in f.engines.values():
-            b.append('\n')
-            b.append(f'|{s.id}\n')
-            b.append(f'|{s.name}\n')
-        b.append('|===\n')
-        b.append(f'\n')
+        for s in f.engines.values(): b.append(f'\n|{s.id}\n|{s.name}\n')
+        b.append('|===\n\n')
     if f.games:
         b.append(f'==== List of Games\n')
         b.append(f'\n')
-        b.append('[cols="1,3,1,1,1a"]\n')
-        b.append('|===\n')
-        b.append(f'|ID |Name |Date |Ext |Url\n')
+        b.append('[cols="1,3,1,1,1a"]\n|===\n')
+        b.append(f'|ID |Name |Date |Exts |Urls\n')
         for s in f.games.values():
             multi = s.key or s.editions or s.dlcs or s.locales or s.detectors or s.files or s.virtuals or s.ignores or s.filters
             engine = f' +\nEngine: {s.engine[0]}{':' + s.engine[1] if s.engine[1] else ''}' if s.engine else ''
+            # open game
             b.append('\n')
             if multi: b.append('.2+')
             b.append(f'|{s.id}\n')
             b.append(f'|{escape(s.name)}{engine}\n')
             b.append(f'|{s.date.strftime('%b %d, %Y') if s.date else '-'}\n')
             b.append(f'|{', '.join(s.arcExts) if s.arcExts else '-'}\n')
-            b.append(f'|{'\n\n'.join([getUrl(x) for x in s.urls]) if s.urls else '-'}\n')
-            if multi:
-                b.append('\n')
-                b.append(f'4+a|\n')
-                # s.key
-                if s.keyorig: b.append(f'{s.keyorig}\n')
-                # editions
-                if s.editions:
-                    b.append('[cols="1,3"]\n')
-                    b.append('!===\n')
-                    b.append(f'!Editions !Name\n')
-                    for t in s.editions.values():
-                        b.append('\n')
-                        b.append(f'!{t.id}\n')
-                        b.append(f'!{t.name}\n')
-                    b.append('!===\n')
-                    b.append(f'\n')
-                # dlcs
-                if s.dlcs:
-                    b.append('[cols="1,2,2"]\n')
-                    b.append('!===\n')
-                    b.append(f'!DLCs !Name !Path\n')
-                    for t in s.dlcs.values():
-                        b.append('\n')
-                        b.append(f'!{t.id}\n')
-                        b.append(f'!{t.name}\n')
-                        b.append(f'!{t.path}\n')
-                    b.append('!===\n')
-                    b.append(f'\n')
-                # locales
-                if s.locales:
-                    b.append('[cols="1,4"]\n')
-                    b.append('!===\n')
-                    b.append(f'!Locales !Name\n')
-                    for t in s.locales.values():
-                        b.append('\n')
-                        b.append(f'!{t.id}\n')
-                        b.append(f'!{t.name}\n')
-                    b.append('!===\n')
-                    b.append(f'\n')
-                # detectors
-                if s.detectors:
-                    b.append('[cols="1,4"]\n')
-                    b.append('!===\n')
-                    b.append(f'!Detectors !Name\n')
-                    for k,v in s.detectors.items():
-                        b.append('\n')
-                        # b.append(f'!{k}\n')
-                        b.append(f'!{v.id}\n')
-                        b.append(f'!{v.name}\n')
-                    b.append('!===\n')
-                    b.append(f'\n')
-                # files
-                if s.files:
-                    b.append('[cols="1,4"]\n')
-                    b.append('!===\n')
-                    b.append(f'!Files !Value\n')
-                    if s.files.keys:
-                        for t in [z.split(':') for z in s.files.keys]:
-                            b.append('\n')
-                            b.append(f'!{t[0]}\n')
-                            b.append(f'!{escape(t[1])}\n')
-                    if s.files.paths:
-                        b.append('\n')
-                        b.append(f'2+!{' +\n'.join(s.files.paths)}\n')
-                    b.append('!===\n')
-                    b.append(f'\n')
-                # virtuals
-                if s.virtuals:
-                    b.append('[cols="1,1"]\n')
-                    b.append('!===\n')
-                    b.append(f'!Virtuals !Value\n')
-                    for k,v in s.virtuals.items():
-                        b.append('\n')
-                        b.append(f'!{k}\n')
-                        b.append(f'!{v}\n')
-                    b.append('!===\n')
-                    b.append(f'\n')
-                # ignores
-                if s.ignores:
-                    b.append('[cols="1"]\n')
-                    b.append('!===\n')
-                    b.append(f'!Ignores\n')
-                    for k in s.ignores:
-                        b.append('\n')
-                        b.append(f'!{k}\n')
-                    b.append('!===\n')
-                    b.append(f'\n')
-                # filters
-                if s.filters:
-                    b.append('[cols="1,1"]\n')
-                    b.append('!===\n')
-                    b.append(f'!Filters !Value\n')
-                    for k,v in s.filters.items():
-                        b.append('\n')
-                        b.append(f'!{k}\n')
-                        b.append(f'!{v}\n')
-                    b.append('!===\n')
-                    b.append(f'\n')
-
-        b.append('|===\n')
-        b.append(f'\n')
+            b.append(f'|{' +\n'.join([getUrl(x) for x in s.urls]) if s.urls else '-'}\n'); i = 0
+            if not multi: continue
+            breakat = 24
+            def break_(h0, h1):
+                b.append('!===\n\n')
+                # open game
+                b.append(f'\n|{s.id} +\n(cont.)\n4+a|\n')
+                b.append(h0)
+                b.append(h1)
+            b.append('\n')
+            b.append(f'4+a|\n')
+            # s.key
+            if s.keyorig: b.append(f'{s.keyorig}\n')
+            # editions
+            if s.editions:
+                b.append(h0 := '[cols="1,3"]\n!===\n')
+                b.append(h1 := f'!Editions !Name\n'); i+=1
+                for t in s.editions.values():
+                    if i >= breakat: break_(h0, h1); i = 1
+                    b.append(f'\n!{t.id}\n!{t.name}\n'); i+=1
+                b.append('!===\n\n')
+            # dlcs
+            if s.dlcs:
+                b.append(h0 := '[cols="1,2,2"]\n!===\n')
+                b.append(h1 := '')
+                b.append(h2 := f'!DLCs !Name !Path\n'); i+=1
+                for t in s.dlcs.values():
+                    if i >= breakat: break_(h0, h1); i = 1
+                    b.append(f'\n!{t.id}\n!{t.name}\n!{t.path}\n'); i+=1
+                b.append('!===\n\n')
+            # locales
+            if s.locales:
+                b.append(h0 := '[cols="1,4"]\n!===\n')
+                b.append(h1 := f'!Locales !Name\n'); i+=1
+                for t in s.locales.values():
+                    if i >= breakat: break_(h0, h1); i = 1
+                    b.append(f'\n!{t.id}\n!{t.name}\n'); i+=1
+                b.append('!===\n\n')
+            # detectors
+            if s.detectors:
+                b.append(h0 := '[cols="1,4"]\n!===\n')
+                b.append(h1 := f'!Detectors !Name\n'); i+=1
+                for k,v in s.detectors.items():
+                    if i >= breakat: break_(h0, h1); i = 1
+                    b.append(f'\n!{v.id}\n!{v.name}\n'); i+=1
+                b.append('!===\n\n')
+            # files
+            if s.files:
+                b.append(h0 := '[cols="1,4"]\n!===\n')
+                b.append(h1 := f'!Files !Value\n'); i+=1
+                for t in [z.split(':') for z in s.files.keys or []]:
+                    if i >= breakat: break_(h0, h1); i = 1
+                    b.append(f'\n!{t[0]}\n!{escape(t[1])}\n'); i+=1
+                if s.files.paths: b.append(f'\n2+!{' +\n'.join(s.files.paths)}\n')
+                b.append('!===\n\n')
+            # virtuals
+            if s.virtuals:
+                b.append(h0 := '[cols="1,1"]\n!===\n')
+                b.append(h1 := f'!Virtuals !Value\n'); i+=1
+                for k,v in s.virtuals.items():
+                    if i >= breakat: break_(h0, h1); i = 1
+                    b.append(f'\n!{k}\n!{v}\n'); i+=1
+                b.append('!===\n\n')
+            # ignores
+            if s.ignores:
+                b.append(h0 := '[cols="1"]\n!===\n')
+                b.append(h1 := f'!Ignores\n'); i+=1
+                for k in s.ignores:
+                    if i >= breakat: break_(h0, h1); i = 1
+                    b.append(f'\n!{k}\n'); i+=1
+                b.append('!===\n\n')
+            # filters
+            if s.filters:
+                b.append(h0 := '[cols="1,1"]\n!===\n')
+                b.append(h1 := f'!Filters !Value\n'); i+=1
+                for k,v in s.filters.items():
+                    if i >= breakat: break_(h0, h1); i = 1
+                    b.append(f'\n!{k}\n!{v}\n'); i+=1
+                b.append('!===\n\n')
+        b.append('|===\n\n')
     return ''.join(b)
 
 ascBodys = []
 for f in Families.values():
-    if f.id != 'Rockstar': continue
+    if f.id != 'Xbox': continue
     # print(f.id)
     body = gameFamily(f)
     # print(body)

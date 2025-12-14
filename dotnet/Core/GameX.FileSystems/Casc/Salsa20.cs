@@ -8,7 +8,7 @@ namespace GameX.FileSystems.Casc
     /// <summary>
     /// Implements the Salsa20 stream encryption cipher, as defined at http://cr.yp.to/snuffle.html.
     /// </summary>
-    /// <remarks>See <a href="http://code.logos.com/blog/2008/06/salsa20_implementation_in_c_1.html">Salsa20 Implementation in C#</a>.</remarks>
+    /// <remarks>See <a href="https://code.logos.com/blog/2008/06/salsa20_implementation_in_c_1.html">Salsa20 Implementation in C#</a>.</remarks>
     public sealed class Salsa20 : SymmetricAlgorithm
     {
         /// <summary>

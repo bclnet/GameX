@@ -2296,7 +2296,7 @@ public class Wave : FileType, IHaveMetaInfo {
         var ext = Header[0] == 0x55 ? ".mp3" : ".wav";
         var filename = Path.Combine(directory, Id.ToString("X8") + ext);
         // Good summary of the header for a WAV file and what all this means
-        // http://www.topherlee.com/software/pcm-tut-wavformat.html
+        // https://www.topherlee.com/software/pcm-tut-wavformat.html
         var f = new FileStream(filename, FileMode.Create);
         WriteData(f);
         f.Close();

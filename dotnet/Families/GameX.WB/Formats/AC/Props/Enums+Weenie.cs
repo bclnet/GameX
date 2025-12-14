@@ -31139,7 +31139,7 @@ public enum WeenieClassName : ushort
 /// There are cases where the value was used by multiple messages e.g. 0x0036 ActionCancelled.
 ///
 /// Client error messages:
-/// http://ac.yotesfan.com/client/errors.php
+/// https://ac.yotesfan.com/client/errors.php
 /// </summary>
 public enum WeenieError
 {

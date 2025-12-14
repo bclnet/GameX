@@ -129,7 +129,7 @@ public unsafe class Binary_U9 : ArcBinary<Binary_U9> {
     #endregion
 
     #region Headers
-    // http://wiki.ultimacodex.com/wiki/Ultima_IX_Internal_Formats#FLX_Format
+    // https://wiki.ultimacodex.com/wiki/Ultima_IX_Internal_Formats#FLX_Format
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     struct FlxRecord {

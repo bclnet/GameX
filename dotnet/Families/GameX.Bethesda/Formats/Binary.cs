@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 namespace GameX.Bethesda.Formats;
 
 #region Binary_Ba2
-// http://en.uesp.net/wiki/Bethesda5Mod:Archive_File_Format
+// https://en.uesp.net/wiki/Bethesda5Mod:Archive_File_Format
 
 public unsafe class Binary_Ba2 : ArcBinary<Binary_Ba2> {
     #region Headers : TES5
@@ -322,8 +322,8 @@ public unsafe class Binary_Ba2 : ArcBinary<Binary_Ba2> {
 #endregion
 
 #region Binary_Bsa
-// http://en.uesp.net/wiki/Bethesda4Mod:BSA_File_Format
-// http://en.uesp.net/wiki/Bethesda3Mod:BSA_File_Format
+// https://en.uesp.net/wiki/Bethesda4Mod:BSA_File_Format
+// https://en.uesp.net/wiki/Bethesda3Mod:BSA_File_Format
 
 public unsafe class Binary_Bsa : ArcBinary<Binary_Bsa> {
     #region Headers : TES4
@@ -530,16 +530,16 @@ public unsafe class Binary_Bsa : ArcBinary<Binary_Bsa> {
 #region Binary_Esm
 
 // TES3
-//http://en.uesp.net/wiki/Bethesda3Mod:File_Format
+//https://en.uesp.net/wiki/Bethesda3Mod:File_Format
 //https://github.com/TES5Edit/TES5Edit/blob/dev/wbDefinitionsTES3.pas
-//http://en.uesp.net/morrow/tech/mw_esm.txt
+//https://en.uesp.net/morrow/tech/mw_esm.txt
 //https://github.com/mlox/mlox/blob/master/util/tes3cmd/tes3cmd
 // TES4
 //https://github.com/WrinklyNinja/esplugin/tree/master/src
-//http://en.uesp.net/wiki/Bethesda4Mod:Mod_File_Format
+//https://en.uesp.net/wiki/Bethesda4Mod:Mod_File_Format
 //https://github.com/TES5Edit/TES5Edit/blob/dev/wbDefinitionsTES4.pas 
 // TES5
-//http://en.uesp.net/wiki/Bethesda5Mod:Mod_File_Format
+//https://en.uesp.net/wiki/Bethesda5Mod:Mod_File_Format
 //https://github.com/TES5Edit/TES5Edit/blob/dev/wbDefinitionsTES5.pas 
 
 /// <summary>

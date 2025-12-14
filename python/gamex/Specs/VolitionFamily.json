@@ -3,7 +3,10 @@
   "name": "Volition",
   "studio": "Deep Silver Volition, LLC",
   "description": "The file formats used in the Volition family",
-  "url": "https://en.wikipedia.org/wiki/List_of_Volition_games",
+  "url": [
+    "https://en.wikipedia.org/wiki/Volition_(company)",
+    "https://en.wikipedia.org/wiki/List_of_Volition_games"
+  ],
   "samples": [
     "VolitionFamily.Sample.json"
   ],

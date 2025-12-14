@@ -9144,8 +9144,8 @@ public class D_Sound : DATA {
         r.Seek(Offset + Size);
         var s = new MemoryStream();
         if (SoundType == AudioFileType.WAV) {
-            // http://soundfile.sapp.org/doc/WaveFormat/
-            // http://www.codeproject.com/Articles/129173/Writing-a-Proper-Wave-File
+            // https://soundfile.sapp.org/doc/WaveFormat/
+            // https://www.codeproject.com/Articles/129173/Writing-a-Proper-Wave-File
             var headerRiff = new byte[] { 0x52, 0x49, 0x46, 0x46 };
             var formatWave = new byte[] { 0x57, 0x41, 0x56, 0x45 };
             var formatTag = new byte[] { 0x66, 0x6d, 0x74, 0x20 };

@@ -8,7 +8,7 @@ from gamex.core.formats.compression import decompressBlast
 class Reader: pass
 class BinaryArchive: pass
 
-#region Binary_Danae
+#region Binary_Danae - tag::Binary_Danae[]
 
 # Binary_Danae
 class Binary_Danae(ArcBinaryT):
@@ -76,9 +76,9 @@ class Binary_Danae(ArcBinaryT):
             decompressBlast(r, file.packedSize, file.fileSize) if (file.compressed & 1) != 0 else \
             r.readBytes(file.packedSize))
 
-#endregion
+#endregion - end::Binary_Danae[]
 
-#region Binary_Void
+#region Binary_Void - tag::Binary_Void[]
 
 # Binary_Void
 class Binary_Void(ArcBinaryT):
@@ -163,4 +163,4 @@ class Binary_Void(ArcBinaryT):
     def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
         pass
 
-#endregion
+#endregion - end::Binary_Void[]

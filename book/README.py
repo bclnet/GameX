@@ -8,6 +8,8 @@ def writeFile(z, path, marker, body):
     text = head + sep + body
     with open(path, 'w', encoding='utf-8') as f: f.write(text)
 
+#region build
+
 def getUrl(url):
     if url == '': return ''
     file = f'{url.replace('https://', '').replace('http://', '').replace(':', '').replace('_', '').replace('/', '_').replace('?', '+').replace('.', '').replace('&', '+').replace("'", '+')}.png'
@@ -133,9 +135,11 @@ def gameFamily(f):
         b.append('|===\n\n')
     return ''.join(b)
 
+#endregion
+
 ascBodys = []
 for f in Families.values():
-    if f.id != 'Xbox': continue
+    if f.id != 'Arkane': continue
     # print(f.id)
     body = gameFamily(f)
     # print(body)

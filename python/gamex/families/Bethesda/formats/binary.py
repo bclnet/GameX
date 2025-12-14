@@ -11,7 +11,7 @@ class Reader: pass
 class Archive: pass
 class BinaryArchive: pass
 
-#region Binary_Ba2
+#region Binary_Ba2 - tag::Binary_Ba2[]
 
 # Binary_Ba2
 class Binary_Ba2(ArcBinaryT):
@@ -170,9 +170,9 @@ class Binary_Ba2(ArcBinaryT):
 
         else: raise Exception(f'Unknown fileInfo: {file.fileInfo}')
 
-#endregion
+#endregion - end::Binary_Ba2[]
 
-#region Binary_Bsa
+#region Binary_Bsa - tag::Binary_Bsa[]
 
 # Binary_Bsa
 class Binary_Bsa(ArcBinaryT):
@@ -345,9 +345,9 @@ class Binary_Bsa(ArcBinaryT):
             decompressLz4(r, fileSize, newFileSize) if source.version == self.SSE_BSAHEADER_VERSION else \
             decompressZlib(r, fileSize, newFileSize))
 
-#endregion
+#endregion - end::Binary_Bsa[]
 
-#region Binary_Esm
+#region Binary_Esm - tag::Binary_Esm[]
 
 # typedefs
 class RecordGroup: pass
@@ -405,4 +405,4 @@ class Binary_Esm(ArcBinaryT):
             group.addHeader(header)
             r.seek(nextPosition)
     
-#endregion
+#endregion - end::Binary_Esm[]

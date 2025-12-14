@@ -8,6 +8,8 @@ from gamex.core.formats.compression import decompressLzss, decompressZlib
 class Reader: pass
 class BinaryArchive: pass
 
+#region Binary_Dat - tag::Binary_Dat[]
+
 # Binary_Dat
 class Binary_Dat(ArcBinaryT):
 
@@ -113,3 +115,5 @@ class Binary_Dat(ArcBinaryT):
                 decompressZlib(r, file.packedSize, -1) if r.peek(lambda z : z.readUInt16()) == 0xda78 else \
                 r.readBytes(file.packedSize))
         else: raise Exception('BAD MAGIC')
+
+#endregion - end::Binary_Dat[]

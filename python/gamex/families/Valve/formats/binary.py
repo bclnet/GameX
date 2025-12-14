@@ -12,7 +12,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import serialization
 
-#region Binary_Bsp30
+#region Binary_Bsp30 - tag::Binary_Bsp30[]
 
 # Binary_Bsp30
 class Binary_Bsp30(ArcBinaryT):
@@ -116,9 +116,9 @@ class Binary_Bsp30(ArcBinaryT):
         r.seek(file.offset)
         return BytesIO(r.readBytes(file.fileSize))
 
-#endregion
+#endregion - end::Binary_Bsp30[]
 
-#region Binary_Src
+#region Binary_Src - tag::Binary_Src[]
 
 # Binary_Src
 class Binary_Src(IHaveMetaInfo):
@@ -133,9 +133,9 @@ class Binary_Src(IHaveMetaInfo):
         # MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self.data))
         ]
 
-#endregion
+#endregion - tag::Binary_Src[]
 
-#region Binary_Spr
+#region Binary_Spr - tag::Binary_Spr[]
 
 # Binary_Spr
 class Binary_Spr(IHaveMetaInfo, ITextureFrames):
@@ -238,9 +238,9 @@ class Binary_Spr(IHaveMetaInfo, ITextureFrames):
             ])
         ]
 
-#endregion
+#endregion - end::Binary_Spr[]
 
-#region Binary_Mdl10
+#region Binary_Mdl10 - tag::Binary_Mdl10[]
 
 # Binary_Mdl10
 class Binary_Mdl10(IHaveMetaInfo, ITexture):
@@ -802,9 +802,9 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
             ])
         ]
 
-#endregion
+#endregion - end::Binary_Mdl10[]
 
-#region Binary_Mdl40
+#region Binary_Mdl40 - tag::Binary_Mdl40[]
 
 # Binary_Mdl40
 class Binary_Mdl40(IHaveMetaInfo):
@@ -1026,9 +1026,9 @@ class Binary_Mdl40(IHaveMetaInfo):
             ])
         ]
 
-#endregion
+#endregion - end::Binary_Mdl40[]
 
-#region Binary_Vpk
+#region Binary_Vpk - tag::Binary_Vpk[]
 
 # Binary_Vpk
 class Binary_Vpk(ArcBinaryT):
@@ -1181,9 +1181,9 @@ class Binary_Vpk(ArcBinaryT):
         elif isinstance(file.tag, str): source.reader(_str, file.tag)
         return BytesIO(data)
 
-#endregion
+#endregion - end::Binary_Vpk[]
 
-#region Binary_Wad3
+#region Binary_Wad3 - tag::Binary_Wad3[]
 
 # Binary_Wad3
 class Binary_Wad3(ArcBinaryT):
@@ -1251,9 +1251,9 @@ class Binary_Wad3(ArcBinaryT):
             r.readBytes(file.fileSize) if file.compressed == 0 else \
             _throw('NotSupportedException'))
 
-#endregion
+#endregion - end::Binary_Wad3[]
 
-#region Binary_Wad3X
+#region Binary_Wad3X - tag::Binary_Wad3X[]
 
 # Binary_Wad3X
 class Binary_Wad3X(IHaveMetaInfo, ITexture):
@@ -1351,4 +1351,4 @@ class Binary_Wad3X(IHaveMetaInfo, ITexture):
             ])
         ]
 
-#endregion
+#endregion - end::Binary_Wad3X[]

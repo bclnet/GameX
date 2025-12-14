@@ -17,6 +17,10 @@ $ bundle install
 $ bundle exec rake
 ```
 
+```
+$ py README.py & bundle exec rake
+```
+
 ## How To Generate the Book
 
 You can generate the e-book files manually with Asciidoctor.

@@ -160,7 +160,7 @@ The following are the current games:
 | [D4](https://diablo4.blizzard.com/en-us/) | Diablo IV | - | - | -- -- -- | -- -- -- | -- -- --
 | **Bohemia** | **Bohemia Interactive**
 | [FTaFFIaN](https://en.wikipedia.org/wiki/Fairy_Tale_about_Father_Frost,_Ivan_and_Nastya) | Fairy Tale about Father Frost, Ivan and Nastya | - | - | -- -- -- | -- -- -- | -- -- --
-| **Bullfrog** | **Bullfrog**
+| **Bullfrog** | **Bullfrog Productions**
 | [P](https://en.wikipedia.org/wiki/Populous_(video_game)) | Populous | - | - | -- -- -- | -- -- -- | -- -- --
 | [P2](https://en.wikipedia.org/wiki/Populous_II:_Trials_of_the_Olympian_Gods) | Populous II: Trials of the Olympian Gods | - | - | -- -- -- | -- -- -- | -- -- --
 | [S](https://en.wikipedia.org/wiki/Syndicate_(1993_video_game)) | Syndicate | - | - | -- -- -- | -- -- -- | -- -- --
@@ -248,7 +248,7 @@ The following are the current games:
 | [UMVC3](https://store.steampowered.com/app/357190) | Ultimate Marvel vs. Capcom 3 | - | - | -- -- -- | -- -- -- | -- -- --
 | [UmbrellaCorps](https://store.steampowered.com/app/390340) | Umbrella Corps | - | - | -- -- -- | -- -- -- | -- -- --
 | **Cig** | **Cloud Imperium Games**
-| [StarCitizen](https://robertsspaceindustries.com/playstarcitizen) | Star Citizen | - | - | -- -- -- | -- -- -- | -- -- --
+| [StarCitizen](https://en.wikipedia.org/wiki/Star_Citizen) | Star Citizen | - | - | -- -- -- | -- -- -- | -- -- --
 | **Cryptic** | **Cryptic**
 | [CO](https://store.steampowered.com/app/9880) | Champions Online | open | read | -- -- -- | -- -- -- | -- -- --
 | [STO](https://store.steampowered.com/app/9900) | Star Trek Online | open | read | -- -- -- | -- -- -- | -- -- --
@@ -281,6 +281,7 @@ The following are the current games:
 | [BioShock2](https://store.steampowered.com/app/8850) | BioShock 2 | - | - | -- -- -- | -- -- -- | -- -- --
 | [BioShock2R](https://store.steampowered.com/app/409720) | BioShock 2 Remastered | - | - | -- -- -- | -- -- -- | -- -- --
 | [BioShock:Inf](https://store.steampowered.com/app/8870) | BioShock Infinite | - | - | -- -- -- | -- -- -- | -- -- --
+| **Firaxis** | **Firaxis Games**
 | **Frictional** | **HPL Engine**
 | [P:O](https://store.steampowered.com/app/22180) | Penumbra: Overture | - | - | -- -- -- | -- -- -- | -- -- --
 | [P:BP](https://store.steampowered.com/app/22120) | Penumbra: Black Plague | - | - | -- -- -- | -- -- -- | -- -- --

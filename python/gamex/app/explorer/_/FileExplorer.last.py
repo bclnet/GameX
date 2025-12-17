@@ -91,7 +91,7 @@ class FileExplorer(QWidget):
                 if sp not in toptree['folders']:
                     toptree['folders'][sp] = {'folders':{}, 'files':{}}
                 toptree = toptree['folders'][sp]
-            if f.arc and f.arc.status == Archive.ArcStatus.Opened:
+            if f.arc and f.arc.status == Archive.BlobStatus.Opened:
                 stree = self.genFileTree(f.arc)
                 toptree['folders'][path[-1]] = stree
             else: toptree['files'][path[-1]] = f
@@ -232,7 +232,7 @@ class FileExplorer(QWidget):
         item = value.file_data
         arc = item.arc
         if arc:
-            if arc.status == Archive.ArcStatus.Opened: return
+            if arc.status == Archive.BlobStatus.Opened: return
             # open pakfile
             arc.open()
             self.filetree = self.genFileTree(self.archive)

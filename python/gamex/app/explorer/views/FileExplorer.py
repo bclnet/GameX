@@ -6,7 +6,7 @@ from PyQt6.QtMultimedia import QMediaPlayer
 from PyQt6.QtMultimediaWidgets import QVideoWidget
 from PyQt6 import QtCore, QtMultimedia
 from gamex import option
-from gamex.core.archive import Archive
+from gamex.core.binary import Archive
 from gamex.core.meta import FileSource, MetaItem, MetaInfo
 
 # https://doc.qt.io/qt-6/qtreeview.html
@@ -126,7 +126,7 @@ class FileExplorer(QWidget):
         arc = src.arc if src else None
         try:
             if arc:
-                if arc.status == Archive.ArcStatus.Opened: return
+                if arc.status == Archive.BlobStatus.Opened: return
                 arc.open(value.items, self.resource)
                 self.updateNodes()
                 self.onFilterKeyUp(None, None)

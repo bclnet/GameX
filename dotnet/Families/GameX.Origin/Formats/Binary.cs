@@ -71,7 +71,7 @@ public unsafe class Binary_U8 : ArcBinary<Binary_U8> {
     };
 
     public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
-        var fileName = Path.GetFileName(source.ArcPath).ToLowerInvariant();
+        var fileName = Path.GetFileName(source.BlobPath).ToLowerInvariant();
         var nameToExt = NameToExts.FirstOrDefault(x => fileName.Contains(x.name));
         var ext = nameToExt.ext ?? ".dat";
 
@@ -154,7 +154,7 @@ public unsafe class Binary_U9 : ArcBinary<Binary_U9> {
     };
 
     public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
-        var fileName = Path.GetFileName(source.ArcPath).ToLowerInvariant();
+        var fileName = Path.GetFileName(source.BlobPath).ToLowerInvariant();
         var nameToExt = NameToExts.FirstOrDefault(x => fileName.Contains(x.name));
         var ext = nameToExt.ext ?? ".dat";
 
@@ -265,7 +265,7 @@ public unsafe class Binary_UO : ArcBinary<Binary_UO> {
     int Count;
 
     public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
-        if (source.ArcPath.EndsWith(".uop")) ReadUop(source, r);
+        if (source.BlobPath.EndsWith(".uop")) ReadUop(source, r);
         else ReadIdx(source, r);
         return Task.CompletedTask;
     }
@@ -275,7 +275,7 @@ public unsafe class Binary_UO : ArcBinary<Binary_UO> {
     const int UOP_MAGIC = 0x50594D;
 
     Task ReadUop(BinaryAsset source, BinaryReader r) {
-        (Func<string, int, string> uopFunc, int length, int idxLength, bool extra, Func<int, string> pathFunc) parse = source.ArcPath switch {
+        (Func<string, int, string> uopFunc, int length, int idxLength, bool extra, Func<int, string> pathFunc) parse = source.BlobPath switch {
             "artLegacyMUL.uop" => ((s, i) => $"build/artlegacymul/{i:D8}.tga", 0x14000, 0x13FDC, false, i => i < 0x4000 ? $"land/file{i:x5}.land" : $"art/file{i:x5}.art"),
             "gumpartLegacyMUL.uop" => ((s, i) => $"build/gumpartlegacymul/{i:D8}.tga", 0xFFFF, 0, true, i => $"file{i:x5}.tex"),
             "soundLegacyMUL.uop" => ((s, i) => $"build/soundlegacymul/{i:D8}.dat", 0xFFF, 0, false, i => $"file{i:x5}.wav"),
@@ -289,7 +289,7 @@ public unsafe class Binary_UO : ArcBinary<Binary_UO> {
             _ => ((s, i) => "", 0, 0, false, i => $"file{i:x5}.dat"),
         };
         var (uopFunc, length, idxLength, extra, pathFunc) = parse;
-        var uopFile = Path.GetFileNameWithoutExtension(source.ArcPath).ToLowerInvariant();
+        var uopFile = Path.GetFileNameWithoutExtension(source.BlobPath).ToLowerInvariant();
 
         // read header
         var header = r.ReadS<UopHeader>();
@@ -407,7 +407,7 @@ public unsafe class Binary_UO : ArcBinary<Binary_UO> {
         30 - tiledata.mul
         31 - animdata.mul
         */
-        (string mulPath, int length, int fileId, Func<int, string> pathFunc) pair = source.ArcPath switch {
+        (string mulPath, int length, int fileId, Func<int, string> pathFunc) pair = source.BlobPath switch {
             "anim.idx" => ("anim.mul", 0x40000, 6, i => $"file{i:x5}.anim"),
             "anim2.idx" => ("anim2.mul", 0x10000, -1, i => $"file{i:x5}.anim"),
             "anim3.idx" => ("anim3.mul", 0x20000, -1, i => $"file{i:x5}.anim"),
@@ -422,7 +422,7 @@ public unsafe class Binary_UO : ArcBinary<Binary_UO> {
             "texidx.mul" => ("texmaps.mul", 0x4000, 10, i => $"file{i:x5}.dat"),
             _ => throw new ArgumentOutOfRangeException() // (null, 0, -1, i => $"file{i:x5}.dat"),
         };
-        var mulPath = source.ArcPath = pair.mulPath;
+        var mulPath = source.BlobPath = pair.mulPath;
         var length = pair.length;
         var fileId = pair.fileId;
         var pathFunc = pair.pathFunc;

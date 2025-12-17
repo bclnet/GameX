@@ -18,10 +18,11 @@ class CellManager:
             self.record = record
             self.action = action
         def setVisible(self, visible: bool):
-            if visible:
-                if not self.container.activeSelf: self.container.SetActive(True)
-            else:
-                if self.container.activeSelf: self.container.aetActive(False)
+            pass
+            # if visible:
+            #     if not self.container.activeSelf: self.container.SetActive(True)
+            # else:
+            #     if self.container.activeSelf: self.container.setActive(False)
 
     class Reference:
         def __init__(self, obj: object, record: IRecord, path: str):

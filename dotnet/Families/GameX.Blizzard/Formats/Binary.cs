@@ -19,7 +19,7 @@ public unsafe class Binary_Blizzard : ArcBinary<Binary_Blizzard> {
         var editions = source.Game.Editions;
         var product = editions.First().Key;
         casc = new CascContext();
-        casc.Read(source.ArcPath, product, files);
+        casc.Read(source.BlobPath, product, files);
         return Task.CompletedTask;
     }
 

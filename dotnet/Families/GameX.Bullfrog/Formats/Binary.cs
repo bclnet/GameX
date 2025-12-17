@@ -482,8 +482,8 @@ public class Binary_Populus : ArcBinary<Binary_Populus> {
     public override async Task Read(BinaryAsset source, BinaryReader r, object tag) {
         List<FileSource> files;
         source.Files = files = [];
-        var tabPath = $"{source.ArcPath[..^4]}.TAB";
-        var fileName = Path.GetFileName(source.ArcPath);
+        var tabPath = $"{source.BlobPath[..^4]}.TAB";
+        var fileName = Path.GetFileName(source.BlobPath);
         switch (source.Game.Id) {
             case "P2":
                 if (fileName.StartsWith("EMSCBLK")) await source.ReaderT(s => ParseSprite(s, files), tabPath);

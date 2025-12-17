@@ -16,13 +16,8 @@ class FileOption(Flag):
     # Supress = 0x10
     UnknownFileModel = 0x100
 
-# ITransformAsset
-class ITransformAsset:
-    def canTransformAsset(self, transformTo: Archive, source: object) -> bool: pass
-    def transformAsset(self, transformTo: Archive, source: object) -> object: pass
-
-# ArchiveState
-class ArchiveState:
+# BlobState
+class BlobState:
     def __init__(self, vfx: FileSystem, game: FamilyGame, edition: Edition = None, path: str = None, tag: object = None):
         self.vfx = vfx
         self.game = game
@@ -30,57 +25,76 @@ class ArchiveState:
         self.path = path or ''
         self.tag = tag
 
-# tag::Archive[]
-class Archive:
-    class FuncObjectFactoryFactory: pass
-    class ArcStatus(Enum):
+# tag::Blob[]
+class Blob:
+    class BlobStatus(Enum):
         Opening = 1
         Opened = 2
         Closing = 3
         Closed = 4
-
-    def __init__(self, state: ArchiveState):
+    def __init__(self, state: BlobState):
         z = None
-        self.status = self.ArcStatus.Closed
+        self.status = self.BlobStatus.Closed
         self.vfx = state.vfx
         self.family = state.game.family
         self.game = state.game
         self.edition = state.edition
-        self.arcPath = state.path
+        self.blobPath = state.path
         self.name = z if not state.path or (z := os.path.basename(state.path)) else os.path.basename(os.path.dirname(state.path))
         self.tag = state.tag
-        self.assetFactoryFunc = None
-        self.gfx = None
-        self.sfx = None
     def __enter__(self): return self
     def __exit__(self, type, value, traceback): self.close()
     def __repr__(self): return f'{self.name}#{self.game.id}'
     def valid(self) -> bool: return True
     def close(self) -> None:
-        self.status = self.ArcStatus.Closing
+        self.status = self.BlobStatus.Closing
         self.closing()
-        self.status = self.ArcStatus.Closed
+        self.status = self.BlobStatus.Closed
         return self
     def closing(self) -> None: pass
-    def open(self, items: list[MetaItem] = None, manager: MetaManager = None) -> None:
-        if self.status != self.ArcStatus.Closed: return self
-        self.status = self.ArcStatus.Opening
+    def open(self) -> None:
+        if self.status != self.BlobStatus.Closed: return self
+        self.status = self.BlobStatus.Opening
         start = time.time()
         self.opening()
         end = time.time()
-        self.status = self.ArcStatus.Opened
+        self.status = self.BlobStatus.Opened
         elapsed = round(end - start, 4)
-        if items != None:
-            for item in self.getMetaItems(manager): items.append(item)
         print(f'Opened[{self.game.id}]: {self.name} @ {elapsed}ms')
         return self
     def opening(self) -> None: pass
+# end::Blob[]
+
+# ITransformAsset
+class ITransformAsset:
+    def canTransformAsset(self, transformTo: Archive, source: object) -> bool: pass
+    def transformAsset(self, transformTo: Archive, source: object) -> object: pass
+
+# ArchiveState
+class ArchiveState(BlobState):
+    def __init__(self, vfx: FileSystem, game: FamilyGame, edition: Edition = None, path: str = None, tag: object = None):
+        super().__init__(vfx, game, edition, path, tag)
+
+# tag::Archive[]
+class Archive(Blob):
+    class FuncObjectFactoryFactory: pass
+    def __init__(self, state: ArchiveState):
+        super().__init__(state)
+        self.assetFactoryFunc = None
+        self.gfx = None
+        self.sfx = None
+    def open(self, items: list[MetaItem] = None, manager: MetaManager = None) -> None:
+        if self.status != self.BlobStatus.Closed: return self
+        super().open()
+        if items != None:
+            for item in self.getMetaItems(manager): items.append(item)
+        return self
     def setPlatform(self, platform: Platform) -> Archive:
         self.gfx = platform.gfxFactory(self) if platform and platform.gfxFactory else None
         self.sfx = platform.sfxFactory(self) if platform and platform.sfxFactory else None
         return self
     def contains(self, path: FileSource | str | int) -> bool: pass
-    def getSource(self, path: FileSource | str | int, throwOnError: bool = True) -> (Archive, FileSource): pass
+    def getSource(self, path: FileSource | str | int, throwOnError: bool = True) -> tuple[Archive, FileSource]: pass
     def getData(self, path: FileSource | str | int, option: object = None, throwOnError: bool = True) -> bytes: pass
     def getAsset(self, path: FileSource | str | int, option: object = None, throwOnError: bool = True) -> object: pass
     def getArchive(self, res: object, throwOnError: bool = True) -> Archive: raise Exception('Not Implemented')
@@ -125,7 +139,7 @@ class BinaryArchive(Archive):
     readers: dict[str, GenericPool] = {}
     
     def getReader(self, path: str = None, pooled: bool = True) -> Reader:
-        path = path or self.arcPath
+        path = path or self.blobPath
         return self.readers.get(path) or self.readers.setdefault(path, GenericPool[Reader](lambda: Reader(self.vfx.open(path)), lambda r: r.seek(0)) if self.vfx.fileExists(path) else None) if pooled else \
             SinglePool[Reader](Reader(self.vfx.open(path)) if self.vfx.fileExists(path) else None)
     
@@ -212,7 +226,7 @@ class BinaryArchive(Archive):
         if self.files: self.filesByPath = { k:list(g) for k,g in itertools.groupby(self.files, lambda x: x.path) }
         if self.arcBinary: self.arcBinary.process(self)
 
-    def _findPath(self, path: str) -> (object, str):
+    def _findPath(self, path: str) -> tuple[object, str]:
         paths = path.split(':', 1)
         p = paths[0].replace('\\', '/')
         first = next(iter(self.filesByPath[p]), None) if self.filesByPath and p in self.filesByPath else None

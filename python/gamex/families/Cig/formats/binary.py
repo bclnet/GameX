@@ -1,6 +1,6 @@
 import os
 from io import BytesIO
-from gamex.core.archive import ArcBinaryT, BinaryArchive
+from gamex.core.binary import ArcBinaryT, BinaryArchive
 from gamex.core.meta import FileSource
 
 # typedefs

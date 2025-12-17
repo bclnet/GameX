@@ -944,7 +944,7 @@ public unsafe class Binary_Scumm : ArcBinary<Binary_Scumm> {
 
     public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         var game = source.Game;
-        var detect = source.Game.Detect<Dictionary<string, object>>("scumm", source.ArcPath, r, (p, s) => {
+        var detect = source.Game.Detect<Dictionary<string, object>>("scumm", source.BlobPath, r, (p, s) => {
             s["variant"] = ((Dictionary<string, object>)p.Data["variants"])[(string)s["variant"]];
             s["features"] = ((string)s["features"]).Split(' ').Aggregate(Features.None, (a, f) => a |= (Features)Enum.Parse(typeof(Features), f, true));
             s["platform"] = (Platform)Enum.Parse(typeof(Platform), s.TryGetValue("platform", out var z) ? (string)z : "None", true);

@@ -448,8 +448,8 @@ public unsafe class Binary_Red : ArcBinary<Binary_Red> {
     // https://github.com/rfuzzo/CP77Tools
     public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         FileSource[] files; List<FileSource> files2;
-        var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(source.ArcPath);
-        var extension = Path.GetExtension(source.ArcPath);
+        var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(source.BlobPath);
+        var extension = Path.GetExtension(source.BlobPath);
         var magic = source.Magic = r.ReadUInt32();
         // KEY
         switch (magic) {
@@ -469,7 +469,7 @@ public unsafe class Binary_Red : ArcBinary<Binary_Red> {
                     // combine
                     var sourceName = source.Name;
                     var voiceKey = sourceName[0] == 'M' && char.IsNumber(sourceName[1]);
-                    var subPathFormat = Path.Combine(Path.GetDirectoryName(source.ArcPath), !voiceKey ? "{0}" : "voices\\{0}");
+                    var subPathFormat = Path.Combine(Path.GetDirectoryName(source.BlobPath), !voiceKey ? "{0}" : "voices\\{0}");
                     for (var i = 0; i < header.NumFiles; i++) {
                         var (file, path) = headerFiles[i];
                         var subPath = string.Format(subPathFormat, path);
@@ -594,7 +594,7 @@ public unsafe class Binary_Red : ArcBinary<Binary_Red> {
                     for (var i = 0; i < headerFiles.Length; i++) {
                         var headerFile = headerFiles[i];
                         var hash = headerFile.NameHash64;
-                        if (nameHashs.Contains(hash)) { Console.WriteLine($"File already added in Archive {source.ArcPath}: hash {hash}, idx {i}"); continue; }
+                        if (nameHashs.Contains(hash)) { Console.WriteLine($"File already added in Archive {source.BlobPath}: hash {hash}, idx {i}"); continue; }
                         nameHashs.Add(hash);
                         files2.Add(new FileSource {
                             Path = hashLookup.TryGetValue(hash, out var z) ? z.Replace('\\', '/') : $"{hash:X2}.bin",

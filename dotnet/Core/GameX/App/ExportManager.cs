@@ -31,7 +31,7 @@ public static class ExportManager {
 
     static async Task ExportPakAsync(string filePath, Func<string, bool> match, int from, object option, Archive _) {
         if (_ is not BinaryAsset arc) throw new InvalidOperationException("s not a BinaryAsset");
-        var newPath = filePath != null ? Path.Combine(filePath, Path.GetFileName(arc.ArcPath)) : null;
+        var newPath = filePath != null ? Path.Combine(filePath, Path.GetFileName(arc.BlobPath)) : null;
         // write arc
         await ExportPak2Async(arc, newPath, match, from, option,
             (file, idx) => { if ((idx % 50) == 0) Console.WriteLine($"{idx,6}> {file.Path}"); },

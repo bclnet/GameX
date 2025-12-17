@@ -375,7 +375,7 @@ class Binary_Esm(ArcBinaryT):
     def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
         format = self.getFormat(source.game.id)
         recordLevel = 1
-        filePath = source.arcPath
+        filePath = source.blobPath
         poolAction = None #(GenericPoolAction<BinaryReader>)source.GetReader().Action; //: Leak
         rootHeader = Header(r, format, None)
         rootRecord = rootHeader.createRecord(rootHeader.position, recordLevel)

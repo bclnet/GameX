@@ -151,7 +151,7 @@ class Binary_UO(ArcBinaryT):
 
     # read
     def read(self, source: BinaryArchive, r: Reader, tag: object) -> None:
-        if source.arcPath.endswith('.uop'): self.readUop(source, r)
+        if source.blobPath.endswith('.uop'): self.readUop(source, r)
         else: self.readIdx(source, r)
         
     #region UOP
@@ -160,13 +160,13 @@ class Binary_UO(ArcBinaryT):
 
     def readUop(self, source: BinaryArchive, r: Reader):
         def parse_():
-            match source.arcPath:
+            match source.blobPath:
                 case 'artLegacyMUL.uop': return ('.tga', 0x14000, 0x13FDC, False, lambda i: f'land/file{i:05x}.land' if i < 0x4000 else f'art/file{i:05x}.art')
                 case 'gumpartLegacyMUL.uop': return (".tga", 0xFFFF, 0, True, lambda i: f'file{i:05x}.tex')
                 case 'soundLegacyMUL.uop': return (".dat", 0xFFF, 0, False, lambda i: f'file{i:05x}.wav')
                 case _: return (None, 0, 0, False, lambda i: f'file{i:05x}.dat')
         extension, length, idxLength, extra, pathFunc = parse_()
-        uopPattern = Path(source.arcPath).stem.lower()
+        uopPattern = Path(source.blobPath).stem.lower()
 
         # read header
         header = r.readS(self.UopHeader)
@@ -297,7 +297,7 @@ class Binary_UO(ArcBinaryT):
 
     def readIdx(self, source: BinaryArchive, r: Reader):
         def parse():
-            match source.arcPath:
+            match source.blobPath:
                 case 'anim.idx': return ('anim.mul', 0x40000, 6, lambda i: f'file{i:05x}.anim')
                 case 'anim2.idx': return ('anim2.mul', 0x10000, -1, lambda i: f'file{i:05x}.anim')
                 case 'anim3.idx': return ('anim3.mul', 0x20000, -1, lambda i: f'file{i:05x}.anim')
@@ -312,7 +312,7 @@ class Binary_UO(ArcBinaryT):
                 case 'texidx.mul': return ('texmaps.mul', 0x4000, 10, lambda i: f'file{i:05x}.dat')
                 case _: raise Exception()
         mulPath, length, fileId, pathFunc = parse()
-        source.arcPath = mulPath
+        source.blobPath = mulPath
 
         # record count
         self.count = r.length // 12

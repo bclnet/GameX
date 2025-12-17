@@ -1,6 +1,6 @@
 import os
 from io import BytesIO
-from gamex.core.archive import ArcBinaryT
+from gamex.core.binary import ArcBinaryT
 from gamex.core.meta import FileSource
 from gamex.core.formats.compression import decompressLzss, decompressZlib
 

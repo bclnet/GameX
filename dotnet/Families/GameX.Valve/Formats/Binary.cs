@@ -1292,10 +1292,10 @@ public unsafe class Binary_Vpk : ArcBinary<Binary_Vpk> {
             return $"{Path.GetFileNameWithoutExtension(path)}{extension}";
         };
 
-        // arcPath
-        var arcPath = source.ArcPath;
-        var dirVpk = arcPath.EndsWith("_dir.vpk", StringComparison.OrdinalIgnoreCase);
-        if (dirVpk) arcPath = arcPath[..^8];
+        // blobPath
+        var blobPath = source.BlobPath;
+        var dirVpk = blobPath.EndsWith("_dir.vpk", StringComparison.OrdinalIgnoreCase);
+        if (dirVpk) blobPath = blobPath[..^8];
 
         // read header
         if (r.ReadUInt32() != MAGIC) throw new FormatException("BAD MAGIC");
@@ -1331,7 +1331,7 @@ public unsafe class Binary_Vpk : ArcBinary<Binary_Vpk> {
                     if (file.Data.Length > 0) r.Read(file.Data, 0, file.Data.Length);
                     if (file.Id != 0x7FFF) {
                         if (!dirVpk) throw new FormatException("Given VPK is not a _dir, but entry is referencing an external archive.");
-                        file.Tag = $"{arcPath}_{file.Id:D3}.vpk";
+                        file.Tag = $"{blobPath}_{file.Id:D3}.vpk";
                     }
                     else file.Tag = (long)(headerPosition + treeSize);
                     // add file
@@ -1358,7 +1358,7 @@ public unsafe class Binary_Vpk : ArcBinary<Binary_Vpk> {
         if (fileDataLength > 0) file.Data.CopyTo(data, 0);
         if (file.FileSize == 0) { }
         else if (file.Tag is long offset) { r.Seek(file.Offset + offset); r.Read(data, fileDataLength, (int)file.FileSize); }
-        else if (file.Tag is string arcPath) source.Reader(r2 => { r2.Seek(file.Offset); r2.Read(data, fileDataLength, (int)file.FileSize); }, arcPath);
+        else if (file.Tag is string blobPath) source.Reader(r2 => { r2.Seek(file.Offset); r2.Read(data, fileDataLength, (int)file.FileSize); }, blobPath);
         var actualChecksum = Crc32Digest.Compute(data);
         if (file.Hash != actualChecksum) throw new InvalidDataException($"CRC32 mismatch for read data (expected {file.Hash:X2}, got {actualChecksum:X2})");
         return Task.FromResult((Stream)new MemoryStream(data));

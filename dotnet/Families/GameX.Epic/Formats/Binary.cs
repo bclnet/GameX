@@ -15,7 +15,7 @@ public unsafe class Binary_Pck : ArcBinary<Binary_Pck> {
     public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         List<FileSource> files;
         source.Files = files = new List<FileSource>();
-        var header = new Core.UPackage(r, source.ArcPath);
+        var header = new Core.UPackage(r, source.BlobPath);
         if (header.Exports == null) return Task.CompletedTask;
         var R = header.R;
         foreach (var item in header.Exports)

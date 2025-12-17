@@ -230,7 +230,7 @@ public unsafe class Binary_Aurora : ArcBinary<Binary_Aurora> {
             var headerKeys = r.ReadSArray<KEY_HeaderKey>((int)header.NumKeys).ToDictionary(x => x.Id, x => UnsafeX.FixedAString(x.Name, 0x10));
 
             // combine
-            var subPathFormat = Path.Combine(Path.GetDirectoryName(source.ArcPath), "{0}");
+            var subPathFormat = Path.Combine(Path.GetDirectoryName(source.BlobPath), "{0}");
             for (var i = 0; i < header.NumFiles; i++) {
                 var (file, path) = headerFiles[i];
                 var subPath = string.Format(subPathFormat, path);

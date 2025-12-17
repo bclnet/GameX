@@ -8,7 +8,7 @@ from openstk import findType, _throw, YamlDict
 from openstk.vfx import FileSystem, AggregateFileSystem, NetworkFileSystem, DirectoryFileSystem, VirtualFileSystem
 from openstk.platforms import PlatformX
 from gamex import option, familyKeys 
-from gamex.core.archive import ArchiveState, ManyArchive, MultiArchive
+from gamex.core.binary import ArchiveState, ManyArchive, MultiArchive
 from gamex.core.store import getPathByKey as Store_getPathByKey
 from .util import _valueF, _value, _list, _related, _dictTrim
 

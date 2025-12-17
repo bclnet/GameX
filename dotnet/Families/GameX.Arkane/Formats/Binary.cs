@@ -102,12 +102,12 @@ public unsafe class Binary_Void : ArcBinary<Binary_Void> {
 
     public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         // must be .index file
-        if (!source.ArcPath.EndsWith(".index")) throw new FormatException("must be a .index file");
+        if (!source.BlobPath.EndsWith(".index")) throw new FormatException("must be a .index file");
 
         var files = source.Files = [];
 
         // master.index file
-        if (source.ArcPath == "master.index") {
+        if (source.BlobPath == "master.index") {
             const uint MAGIC = 0x04534552;
             const uint SubMarker = 0x18000000;
             const uint EndMarker = 0x01000000;
@@ -133,7 +133,7 @@ public unsafe class Binary_Void : ArcBinary<Binary_Void> {
 
         // find files
         var vfx = source.Vfx;
-        var resourcePath = $"{source.ArcPath[0..^6]}.resources";
+        var resourcePath = $"{source.BlobPath[0..^6]}.resources";
         if (!vfx.FileExists(resourcePath)) throw new FormatException("Unable to find resources extension");
         var sharedResourcePath = new[] {
             "shared_2_3.sharedrsc",

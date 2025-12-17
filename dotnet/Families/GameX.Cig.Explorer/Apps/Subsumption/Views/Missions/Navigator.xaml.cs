@@ -51,7 +51,7 @@ public partial class Navigator : UserControl, INotifyPropertyChanged {
             //try
             //{
             //    var arc = (value?.Source as FileMetadata)?.Arc;
-            //    if (arc != null && arc.Status == Archive.ArcStatus.Closed)
+            //    if (arc != null && arc.Status == Archive.BlobStatus.Closed)
             //    {
             //        arc.Open();
             //        value.Items.AddRange(arc.GetMetaItemsAsync(Resource).Result);

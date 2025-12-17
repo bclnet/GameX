@@ -577,7 +577,7 @@ public unsafe class Binary_Esm : ArcBinary<Binary_Esm> {
         var recordLevel = 1;
         var filePath = source.ArcPath;
         var poolAction = (GenericPoolAction<BinaryReader>)source.GetReader().Action; //: Leak
-        var rootHeader = new Records.Header(r, Format, null);
+        var rootHeader = new Header(r, Format, null);
         //if ((Format == FormFormat.TES3 && rootHeader.Type != FormType.TES3) || (Format != FormFormat.TES3 && rootHeader.Type != FormType.TES4)) throw new FormatException($"{filePath} record header {rootHeader.Type} is not valid for this {Format}");
         var rootRecord = rootHeader.CreateRecord(rootHeader.Position, recordLevel);
         rootRecord.Read(r, filePath, Format);
@@ -585,7 +585,7 @@ public unsafe class Binary_Esm : ArcBinary<Binary_Esm> {
         // morrowind hack
         if (Format == FormType.TES3) {
             var group = new RecordGroup(poolAction, filePath, Format, recordLevel);
-            group.AddHeader(new Records.Header { Label = 0, DataSize = (uint)(r.BaseStream.Length - r.Tell()), Position = r.Tell() });
+            group.AddHeader(new Header { Label = 0, DataSize = (uint)(r.BaseStream.Length - r.Tell()), Position = r.Tell() });
             group.Load();
             Groups = group.Records.GroupBy(x => x.Header.Type).ToDictionary(x => x.Key, x => {
                 var s = new RecordGroup(null, filePath, Format, recordLevel) { Records = [.. x] };
@@ -597,9 +597,8 @@ public unsafe class Binary_Esm : ArcBinary<Binary_Esm> {
 
         // read groups
         Groups = [];
-        var endPosition = r.BaseStream.Length;
-        while (r.BaseStream.Position < endPosition) {
-            var header = new Records.Header(r, Format, null);
+        while (!r.AtEnd()) {
+            var header = new Header(r, Format, null);
             if (header.Type != FormType.GRUP) throw new InvalidOperationException($"{header.Type} not GRUP");
             var nextPosition = r.Tell() + header.DataSize;
             if (!Groups.TryGetValue(header.Label, out var group)) { group = new RecordGroup(poolAction, filePath, Format, recordLevel); Groups.Add(header.Label, group); }
@@ -639,6 +638,48 @@ public unsafe class Binary_Esm : ArcBinary<Binary_Esm> {
         LTEXsByEid = Groups[FormType.LTEX].Load().Cast<LTEXRecord>().ToDictionary(x => x.EDID.Value);
         return Task.CompletedTask;
     }
+
+    //public LTEXRecord FindLTEXRecord(int index) {
+    //    if (Format == GameFormatId.TES3) {
+    //        _LTEXsById.TryGetValue(index, out var ltex);
+    //        return ltex;
+    //    }
+    //    throw new NotImplementedException();
+    //}
+
+    //public LANDRecord FindLANDRecord(Vector3Int cellId) {
+    //    if (Format == GameFormatId.TES3) {
+    //        _LANDsById.TryGetValue(cellId, out var land);
+    //        return land;
+    //    }
+    //    var world = _WRLDsById[(uint)cellId.z];
+    //    foreach (var wrld in world.Item2)
+    //        foreach (var cellBlock in wrld.EnsureWrldAndCell(cellId))
+    //            if (cellBlock.LANDsById.TryGetValue(cellId, out var land))
+    //                return land;
+    //    return null;
+    //}
+
+    //public CELLRecord FindCellRecord(Vector3Int cellId) {
+    //    if (Format == GameFormatId.TES3) {
+    //        _CELLsById.TryGetValue(cellId, out var cell);
+    //        return cell;
+    //    }
+    //    var world = _WRLDsById[(uint)cellId.z];
+    //    foreach (var wrld in world.Item2)
+    //        foreach (var cellBlock in wrld.EnsureWrldAndCell(cellId))
+    //            if (cellBlock.CELLsById.TryGetValue(cellId, out var cell))
+    //                return cell;
+    //    return null;
+    //}
+
+    //public CELLRecord FindCellRecordByName(int world, int cellId, string cellName) {
+    //    if (Format == GameFormatId.TES3) {
+    //        _CELLsByName.TryGetValue(cellName, out var cell);
+    //        return cell;
+    //    }
+    //    throw new NotImplementedException();
+    //}
 }
 
 #endregion

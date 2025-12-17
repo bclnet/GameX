@@ -396,8 +396,7 @@ class Binary_Esm(ArcBinaryT):
         
         # read groups
         groups = self.groups = {}
-        endPosition = r.length
-        while r.position < endPosition:
+        while not r.atEnd():
             header = Header(r, format, None)
             if header.Type != FormType.GRUP: raise Exception(f'{header.type} not GRUP')
             nextPosition = r.tell() + header.dataSize

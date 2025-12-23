@@ -149,7 +149,7 @@ class MainPage(QMainWindow):
             self.mainTab.addTab(control, tab.name)
 
     def openPage_click(self):
-        w = OpenWidget(self, lambda s:self.open(s.familySelected, OpenWidget.pakUris.__get__(s)))
+        w = OpenWidget(self, lambda s: self.open(s.familySelected, OpenWidget.pakUris.__get__(s)))
         self.openWidgets.append(w)
         w.loaded()
 

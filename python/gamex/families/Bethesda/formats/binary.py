@@ -4,7 +4,7 @@ from enum import Enum
 from openstk import IWriteToStream
 from gamex import FileSource, ArcBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo, DesSer
 from gamex.core.formats.compression import decompressLz4, decompressZlib
-from gamex.families.Bethesda.formats.records import FormType, Header
+from gamex.families.Bethesda.formats.database import FormType, Header
 
 # typedefs
 class Reader: pass

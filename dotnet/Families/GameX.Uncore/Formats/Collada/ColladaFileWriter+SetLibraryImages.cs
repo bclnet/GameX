@@ -2,7 +2,7 @@
 using System;
 using System.Linq;
 
-namespace GameX.Formats.Collada;
+namespace GameX.Uncore.Formats.Collada;
 
 partial class ColladaFileWriter {
     /// <summary>

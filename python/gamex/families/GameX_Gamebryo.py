@@ -2,7 +2,7 @@ from __future__ import annotations
 import os
 from openstk import _pathExtension
 from gamex import Family, FamilyGame, BinaryArchive, FileOption
-from gamex.core.formats.binary import Binary_Dds
+from gamex.families.Uncore.formats.binary import Binary_Dds
 from gamex.families.Gamebryo.formats.binary import Binary_Nif
 from gamex.families.GameX_Uncore import UncoreArchive
 

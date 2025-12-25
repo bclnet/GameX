@@ -2,7 +2,7 @@ import os
 from io import BytesIO
 from openstk import _pathExtension
 from gamex import FileSource, ArcBinaryT
-from gamex.core.formats.compression import decompressBlast
+from gamex.families.Uncore.formats.compression import decompressBlast
 
 # typedefs
 class Reader: pass

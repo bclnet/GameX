@@ -10,7 +10,7 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using ColladaX = Khronos.Collada.Collada;
 
-namespace GameX.Formats.Collada;
+namespace GameX.Uncore.Formats.Collada;
 
 /// <summary>
 /// export to .dae format (COLLADA)

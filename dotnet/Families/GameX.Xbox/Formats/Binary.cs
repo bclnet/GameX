@@ -1,4 +1,4 @@
-using GameX.Formats;
+using GameX.Uncore.Formats;
 using GameX.Xbox.Formats.Xna;
 using System;
 using System.Collections.Generic;

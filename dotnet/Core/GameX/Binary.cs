@@ -1068,3 +1068,9 @@ public interface ITransformAsset<T> {
 }
 
 #endregion
+
+public interface IDatabase { }
+
+public interface IRecord { }
+
+public interface ICellRecord : IRecord { }

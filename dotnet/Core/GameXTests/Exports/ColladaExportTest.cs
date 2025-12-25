@@ -1,4 +1,4 @@
-using GameX.Formats.Collada;
+using GameX.Uncore.Formats.Collada;
 using GameX.Formats.IUnknown;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading.Tasks;

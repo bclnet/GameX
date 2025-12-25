@@ -4,7 +4,7 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Schema;
 
-namespace GameX.Formats.Collada;
+namespace GameX.Uncore.Formats.Collada;
 
 partial class ColladaFileWriter {
     void ValidateXml()  // For testing

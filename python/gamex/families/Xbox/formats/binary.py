@@ -3,7 +3,7 @@ import os, itertools
 from io import BytesIO
 from openstk import _throw, _pathExtension, Reader, IWriteToStream
 from gamex import Archive, BinaryArchive, ArcBinary, ArcBinaryT, FileSource, MetaInfo, MetaManager, MetaContent, IHaveMetaInfo, DesSer
-from gamex.core.formats.compression import decompressXbox
+from gamex.families.Uncore.formats.compression import decompressXbox
 from gamex.families.Xbox.formats.xna import ContentReader
 
 # types

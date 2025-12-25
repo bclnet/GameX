@@ -3,7 +3,7 @@ using OpenStack;
 using System.IO;
 using System.Reflection;
 
-namespace GameX.Formats.Wavefront;
+namespace GameX.Uncore.Formats.Wavefront;
 
 public partial class WavefrontFileWriter {
     void WriteMaterialFile(IUnknownFileModel file) {

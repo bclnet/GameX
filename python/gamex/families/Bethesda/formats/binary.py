@@ -3,7 +3,7 @@ from io import BytesIO
 from enum import Enum
 from openstk import IWriteToStream
 from gamex import FileSource, ArcBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo, DesSer
-from gamex.core.formats.compression import decompressLz4, decompressZlib
+from gamex.families.Uncore.formats.compression import decompressLz4, decompressZlib
 from gamex.families.Bethesda.formats.database import FormType, Header
 
 # typedefs

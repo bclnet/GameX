@@ -2,7 +2,7 @@ from enum import IntFlag
 from gamex import Archive
 from gamex.core.client import ClientState, GameClient
 from gamex.families.Origin.renderers.UO.sprites import Fonts
-# from gamex.core.formats.network import PacketLogger
+# from gamex.families.Uncore.formats.network import PacketLogger
 
 # Assets
 class Assets:

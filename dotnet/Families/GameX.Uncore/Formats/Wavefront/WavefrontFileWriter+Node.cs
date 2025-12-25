@@ -4,7 +4,7 @@
 //using System.IO;
 //using static OpenStack.Debug;
 
-//namespace GameX.Formats.Wavefront;
+//namespace GameX.Uncore.Formats.Wavefront;
 
 //    partial class WavefrontObjectWriter
 //    {

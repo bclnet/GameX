@@ -1,4 +1,4 @@
-﻿using GameX.Formats;
+﻿using GameX.Uncore.Formats;
 using GameX.Origin.Formats.U9;
 using GameX.Origin.Formats.UO;
 using GameX.Xbox.Formats;

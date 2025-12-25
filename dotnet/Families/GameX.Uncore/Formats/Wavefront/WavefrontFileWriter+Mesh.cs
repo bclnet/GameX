@@ -4,7 +4,7 @@ using System;
 using System.IO;
 using System.Linq;
 
-namespace GameX.Formats.Wavefront;
+namespace GameX.Uncore.Formats.Wavefront;
 
 partial class WavefrontFileWriter {
     // Pass a node to this to have it write to the Stream

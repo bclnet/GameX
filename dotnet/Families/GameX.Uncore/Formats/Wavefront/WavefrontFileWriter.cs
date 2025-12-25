@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-namespace GameX.Formats.Wavefront;
+namespace GameX.Uncore.Formats.Wavefront;
 
 /// <summary>
 /// export to .obj/.mat format (WAVEFRONT)

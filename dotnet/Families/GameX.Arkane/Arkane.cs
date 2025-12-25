@@ -1,6 +1,6 @@
 ﻿using GameX.Arkane.Formats;
 using GameX.Arkane.Formats.Danae;
-using GameX.Formats;
+using GameX.Uncore.Formats;
 using GameX.Formats.IUnknown;
 using GameX.Transforms;
 using GameX.Uncore;

@@ -1,4 +1,4 @@
-﻿using GameX.Formats;
+﻿using GameX.Uncore.Formats;
 using GameX.Formats.IUnknown;
 using GameX.Uncore;
 using GameX.Volition.Formats;

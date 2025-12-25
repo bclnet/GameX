@@ -5,7 +5,7 @@
 //using System.Text;
 //using static OpenStack.Debug;
 
-//namespace GameX.Formats.Collada;
+//namespace GameX.Uncore.Formats.Collada;
 
 //    /// <summary>
 //    /// Adds the Library_Controllers element to the Collada document.

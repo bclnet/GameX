@@ -9,7 +9,7 @@ from openstk.core.drawing import Plane, Point, Rectangle, BoundingBox, BoundingS
 from openstk.core.reflect import *
 from gamex import MetaInfo, MetaManager, MetaContent, IHaveMetaInfo
 from gamex.core.globalx import ByteColor4
-from gamex.core.formats.compression import decompressXbox
+from gamex.families.Uncore.formats.compression import decompressXbox
 
 # types
 type Vector2 = ndarray

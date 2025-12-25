@@ -1,4 +1,4 @@
-using GameX.Formats;
+using GameX.Uncore.Formats;
 using GameX.Valve.Algorithms;
 using K4os.Compression.LZ4;
 using K4os.Compression.LZ4.Encoders;

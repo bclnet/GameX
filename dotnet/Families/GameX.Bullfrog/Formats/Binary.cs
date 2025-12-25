@@ -1,4 +1,4 @@
-﻿using GameX.Formats;
+﻿using GameX.Uncore.Formats;
 using OpenStack;
 using OpenStack.Gfx;
 using System;

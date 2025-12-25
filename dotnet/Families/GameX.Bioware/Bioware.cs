@@ -1,5 +1,5 @@
 ﻿using GameX.Bioware.Formats;
-using GameX.Formats;
+using GameX.Uncore.Formats;
 using GameX.Formats.IUnknown;
 using GameX.Transforms;
 using GameX.Uncore;

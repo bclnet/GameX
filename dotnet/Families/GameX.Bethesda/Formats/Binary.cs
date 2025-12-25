@@ -1,5 +1,5 @@
 ﻿using GameX.Bethesda.Formats.Records;
-using GameX.Formats;
+using GameX.Uncore.Formats;
 using OpenStack.Gfx;
 using System;
 using System.Collections.Generic;

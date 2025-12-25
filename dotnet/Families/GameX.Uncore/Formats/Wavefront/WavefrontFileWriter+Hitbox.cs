@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace GameX.Formats.Wavefront;
+namespace GameX.Uncore.Formats.Wavefront;
 
 partial class WavefrontFileWriter {
     // Pass a bone stream to write to the stream.  For .chr files (armatures)

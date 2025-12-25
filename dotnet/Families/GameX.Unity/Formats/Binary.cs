@@ -1,4 +1,4 @@
-﻿using GameX.Formats;
+﻿using GameX.Uncore.Formats;
 using OpenStack;
 using System;
 using System.Collections.Generic;
@@ -1308,7 +1308,7 @@ public unsafe class Binary_Unity : ArcBinary<Binary_Unity> {
                 try {
                     switch (Header.CompressionType) {
                         case 1: ds = new MemoryStream(r.DecompressLz4((int)Header.CompressedSize, (int)Header.UncompressedSize)); break;
-                        case 2: ds = new MemoryStream(r.DecompressLzma((int)Header.CompressedSize - GameX.Formats.Compression.LZMAPropsSize, (int)Header.UncompressedSize)); break;
+                        case 2: ds = new MemoryStream(r.DecompressLzma((int)Header.CompressedSize - GameX.Uncore.Formats.Compression.LZMAPropsSize, (int)Header.UncompressedSize)); break;
                     }
                     if (ds.Length != Header.UncompressedSize) return;
                 }

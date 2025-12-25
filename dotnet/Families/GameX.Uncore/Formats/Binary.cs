@@ -1,4 +1,4 @@
-using GameX.Formats.Apple;
+using GameX.Uncore.Formats.Apple;
 using ICSharpCode.SharpZipLib.Zip;
 using OpenStack;
 using OpenStack.Gfx;
@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 using ZipFile = ICSharpCode.SharpZipLib.Zip.ZipFile;
 #pragma warning disable CS9113
 
-namespace GameX.Formats;
+namespace GameX.Uncore.Formats;
 
 #region Binary_Bik
 

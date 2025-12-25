@@ -2,7 +2,7 @@ import os
 from io import BytesIO
 from gamex.core.binary import ArcBinaryT
 from gamex.core.meta import FileSource
-from gamex.core.formats.compression import decompressZstd, decompressZlib
+from gamex.families.Uncore.formats.compression import decompressZstd, decompressZlib
 from ....resources.Bioware import TOR, WAR
 
 # typedefs

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-using static GameX.Formats.Compression;
+using static GameX.Uncore.Formats.Compression;
 
 namespace GameX.Mythic.Formats;
 

@@ -5,7 +5,7 @@ using static GameX.Epic.Formats.Core.Game;
 using static GameX.Epic.Formats.Core.ReaderExtensions;
 using static GameX.Epic.Formats.Core.UDecrypt;
 using static GameX.Epic.Formats.Core.UPackage;
-using static GameX.Formats.Compression;
+using static GameX.Uncore.Formats.Compression;
 #pragma warning disable CS0169, CS0649
 
 namespace GameX.Epic.Formats.Core;

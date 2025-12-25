@@ -2,7 +2,7 @@ import os
 from io import BytesIO
 from enum import Enum, IntFlag
 from gamex import FileSource, ArcBinaryT
-from gamex.core.formats.compression import decompressLz4, decompressZlib
+from gamex.families.Uncore.formats.compression import decompressLz4, decompressZlib
 
 # typedefs
 class Reader: pass

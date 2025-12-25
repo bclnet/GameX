@@ -2,7 +2,7 @@ import os
 from io import BytesIO
 from gamex.core.binary import ArcBinaryT
 from gamex.core.meta import FileSource
-from gamex.core.formats.compression import decompressZlib, decompressZstd
+from gamex.families.Uncore.formats.compression import decompressZlib, decompressZstd
 from gamex.core.util import _guessExtension
 from ....resources.Capcom import RE
 

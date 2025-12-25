@@ -2,7 +2,7 @@ import os
 from io import BytesIO
 from gamex.core.binary import ArcBinaryT
 from gamex.core.meta import FileSource
-from gamex.core.formats.compression import decompressLzss, decompressZlib
+from gamex.families.Uncore.formats.compression import decompressLzss, decompressZlib
 
 # typedefs
 class Reader: pass

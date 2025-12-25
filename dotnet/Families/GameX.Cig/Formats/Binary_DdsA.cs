@@ -1,4 +1,4 @@
-using GameX.Formats;
+using GameX.Uncore.Formats;
 using System.IO;
 using System.Threading.Tasks;
 

@@ -2,3 +2,4 @@
 
 [assembly: InternalsVisibleTo("GameXTests")]
 [assembly: InternalsVisibleTo("GameX.AllTests")]
+[assembly: InternalsVisibleTo("GameX.Uncore")]

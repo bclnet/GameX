@@ -5,6 +5,7 @@ from gamex import BinaryArchive
 from gamex.families.Arkane.formats.danae.binary import Binary_Ftl, Binary_Fts, Binary_Tea
 from gamex.families.Arkane.formats.binary import Binary_Danae, Binary_Void
 from gamex.families.Valve.formats.binary import Binary_Vpk
+from gamex.families.Uncore.formats.binary import Binary_Txt
 from gamex.families.GameX_Valve import ValveArchive
 from gamex.families.GameX_Uncore import UncoreArchive
 

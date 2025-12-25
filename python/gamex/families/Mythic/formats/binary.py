@@ -4,7 +4,7 @@ from enum import Enum
 from datetime import datetime
 from openstk import Reader, unsafe
 from gamex import FileSource, ArcBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo, DesSer
-from gamex.core.formats.compression import decompressZlibStream, decompressZlib
+from gamex.families.Uncore.formats.compression import decompressZlibStream, decompressZlib
 
 # typedefs
 class Archive: pass

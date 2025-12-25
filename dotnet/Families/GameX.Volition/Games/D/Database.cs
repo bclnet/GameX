@@ -1,4 +1,4 @@
-using GameX.Formats;
+using GameX.Uncore.Formats;
 using System;
 
 namespace GameX.Volition.Games.D;

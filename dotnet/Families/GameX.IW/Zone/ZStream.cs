@@ -130,7 +130,7 @@ namespace GameX.IW.Zone
             //fwrite(origin, size, 1, file);
         }
 
-        public byte[] compressZlib() => GameX.Formats.Compression.CompressZlib(origin, size);
+        public byte[] compressZlib() => GameX.Uncore.Formats.Compression.CompressZlib(origin, size);
 
         public int getStreamOffset(ZSTREAM stream) => streamOffsets[(int)stream];
 

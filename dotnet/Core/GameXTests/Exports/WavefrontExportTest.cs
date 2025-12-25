@@ -1,5 +1,5 @@
 using GameX.Formats.IUnknown;
-using GameX.Formats.Wavefront;
+using GameX.Uncore.Formats.Wavefront;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading.Tasks;
 

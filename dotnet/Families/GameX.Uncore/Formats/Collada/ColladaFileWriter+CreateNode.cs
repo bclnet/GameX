@@ -1,4 +1,4 @@
-﻿namespace GameX.Formats.Collada;
+﻿namespace GameX.Uncore.Formats.Collada;
 
 partial class ColladaFileWriter {
 

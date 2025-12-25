@@ -3,7 +3,7 @@ using System;
 using System.IO;
 using System.Text;
 
-namespace GameX.Formats.Network;
+namespace GameX.Uncore.Formats.Network;
 
 // PacketLogger
 public class PacketLogger {

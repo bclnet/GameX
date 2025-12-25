@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace GameX.Formats.Apple;
+namespace GameX.Uncore.Formats.Apple;
 
 /// <summary>
 /// Performs de-serialization of binary plists.

@@ -11,7 +11,7 @@ using System.Linq;
 using ZstdNet;
 using Decoder = SevenZip.Compression.LZMA.Decoder;
 
-namespace GameX.Formats;
+namespace GameX.Uncore.Formats;
 
 public static class Compression {
     const int BufferSize = 4096 * 10;

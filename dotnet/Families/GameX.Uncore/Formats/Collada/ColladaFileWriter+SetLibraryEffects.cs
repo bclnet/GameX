@@ -5,7 +5,7 @@ using System.Linq;
 using System.Numerics;
 using System.Xml;
 
-namespace GameX.Formats.Collada;
+namespace GameX.Uncore.Formats.Collada;
 
 partial class ColladaFileWriter {
     /// <summary>

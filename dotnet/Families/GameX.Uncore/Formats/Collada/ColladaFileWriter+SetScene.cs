@@ -1,6 +1,6 @@
 ﻿using Khronos.Collada;
 
-namespace GameX.Formats.Collada;
+namespace GameX.Uncore.Formats.Collada;
 
 partial class ColladaFileWriter {
     /// <summary>

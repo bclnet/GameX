@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using static GameX.Formats.Binary_Snd;
+using static GameX.Uncore.Formats.Binary_Snd;
 
 namespace GameX.Volition.Formats;
 

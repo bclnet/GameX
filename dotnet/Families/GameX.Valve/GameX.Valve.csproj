@@ -18,6 +18,7 @@
     <ProjectReference Include="..\..\..\OpenStack\dotnet\Gfx\OpenStack.Gfx.Egin\OpenStack.Gfx.Egin.csproj" />
     <ProjectReference Include="..\..\Core\GameX\GameX.csproj" />
     <ProjectReference Include="..\GameX.ID\GameX.ID.csproj" />
+    <ProjectReference Include="..\GameX.Uncore\GameX.Uncore.csproj" />
     <ProjectReference Include="..\GameX.Unity\GameX.Unity.csproj" />
   </ItemGroup>
 

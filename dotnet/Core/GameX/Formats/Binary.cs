@@ -1460,3 +1460,17 @@ public class Binary_Zip(object key = null) : ArcBinary {
 }
 
 #endregion
+
+#region Binary_TestTri
+
+public class Binary_TestTri : IHaveMetaInfo {
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_TestTri());
+
+    // IHaveMetaInfo
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
+        => [
+            new(null, new MetaContent { Type = "TestTri", Name = Path.GetFileName(file.Path), Value = this }),
+        ];
+}
+
+#endregion

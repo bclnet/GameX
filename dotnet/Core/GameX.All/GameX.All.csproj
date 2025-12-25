@@ -30,6 +30,7 @@
     <ProjectReference Include="..\..\Families\GameX.Cyanide\GameX.Cyanide.csproj" />
     <ProjectReference Include="..\..\Families\GameX.EA\GameX.EA.csproj" />
     <ProjectReference Include="..\..\Families\GameX.Epic\GameX.Epic.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.Firaxis\GameX.Firaxis.csproj" />
     <ProjectReference Include="..\..\Families\GameX.Frictional\GameX.Frictional.csproj" />
     <ProjectReference Include="..\..\Families\GameX.Frontier\GameX.Frontier.csproj" />
     <ProjectReference Include="..\..\Families\GameX.Gamebryo\GameX.Gamebryo.csproj" />
@@ -43,6 +44,7 @@
     <ProjectReference Include="..\..\Families\GameX.Red\GameX.Red.csproj" />
     <ProjectReference Include="..\..\Families\GameX.Rockstar\GameX.Rockstar.csproj" />
 	<ProjectReference Include="..\..\Families\GameX.Ubisoft\GameX.Ubisoft.csproj" />
+	<ProjectReference Include="..\..\Families\GameX.Uncore\GameX.Uncore.csproj" />
     <ProjectReference Include="..\..\Families\GameX.Unity\GameX.Unity.csproj" />
     <ProjectReference Include="..\..\Families\GameX.Valve.Platform\GameX.Valve.Platform.csproj" />
     <ProjectReference Include="..\..\Families\GameX.Valve\GameX.Valve.csproj" />
@@ -58,7 +60,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\Families\GameX.Unknown\catalogs\main.yaml" Link="catalogs\main.yaml">
+    <None Include="..\..\Families\GameX.Uncore\catalogs\main.yaml" Link="catalogs\main.yaml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

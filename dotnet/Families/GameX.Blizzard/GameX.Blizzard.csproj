@@ -28,6 +28,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Core\GameX.FileSystems\GameX.FileSystems.csproj" />
     <ProjectReference Include="..\..\Core\GameX\GameX.csproj" />
+    <ProjectReference Include="..\GameX.Uncore\GameX.Uncore.csproj" />
   </ItemGroup>
 
 </Project>

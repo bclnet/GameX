@@ -1,8 +1,8 @@
 ﻿using GameX.Cryptic.Formats;
 using GameX.Formats;
-using GameX.Formats.Unknown;
+using GameX.Formats.IUnknown;
 using GameX.Transforms;
-using GameX.Unknown;
+using GameX.Uncore;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -35,7 +35,7 @@ public class CrypticArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
             ".mset" => (0, Binary_MSet.Factory), // 3D Models
             ".fsb" => (0, Binary_Fsb.Factory), // FMod Soundbanks
             ".bik" => (0, Binary_Bik.Factory), // Bink Video
-            _ => UnknownArchive.AssetFactory(source, game),
+            _ => UncoreArchive.AssetFactory(source, game),
         };
 
     #endregion

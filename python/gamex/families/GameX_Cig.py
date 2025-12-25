@@ -3,7 +3,7 @@ import os
 from openstk import _pathExtension
 from gamex import BinaryArchive
 from gamex.families.Cig.formats.binary import Binary_P4k
-from gamex.families.GameX import UnknownArchive
+from gamex.families.GameX_Uncore import UncoreArchive
 
 # CigArchive
 class CigArchive(BinaryArchive):
@@ -16,7 +16,7 @@ class CigArchive(BinaryArchive):
     @staticmethod
     def assetFactory(source: FileSource, game: FamilyGame) -> (object, callable):
         match _pathExtension(source.path).lower():
-            case _: return UnknownArchive.assetFactory(source, game)
+            case _: return UncoreArchive.assetFactory(source, game)
 
     #endregion
 

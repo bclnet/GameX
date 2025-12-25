@@ -14,8 +14,8 @@
     "AC": {
       "gameType": "GameX.WB.ACGame, GameX.WB",
       "name": "Asheron's Call",
-      "url": [
-        "https://en.wikipedia.org/wiki/Asheron%27s_Call",
+      "url": "https://en.wikipedia.org/wiki/Asheron%27s_Call",
+      "dls": [
         "https://emulator.ac/how-to-play/",
         "https://content.turbine.com/sites/clientdl/ac1/ac1install.exe",
         "https://www.thwargle.com/"

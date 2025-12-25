@@ -1,7 +1,7 @@
-﻿using GameX.Formats.Unknown;
+﻿using GameX.Formats.IUnknown;
 using GameX.Gamebryo.Formats;
 using GameX.Transforms;
-using GameX.Unknown;
+using GameX.Uncore;
 using OpenStack;
 using OpenStack.Gfx;
 using System;
@@ -53,7 +53,7 @@ public class GamebryoArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
     static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) AssetFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             ".nif" => (FileOption.StreamObject, Binary_Nif.Factory),
-            _ => UnknownArchive.AssetFactory(source, game),
+            _ => UncoreArchive.AssetFactory(source, game),
         };
 
     #endregion

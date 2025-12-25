@@ -1,7 +1,7 @@
-﻿using GameX.Formats.Unknown;
+﻿using GameX.Formats.IUnknown;
 using GameX.Lucas.Formats;
 using GameX.Transforms;
-using GameX.Unknown;
+using GameX.Uncore;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -34,7 +34,7 @@ public class LucasArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
         => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             ".nwx" => (0, Binary_Nwx.Factory),
             ".san" => (0, Binary_San.Factory),
-            _ => UnknownArchive.AssetFactory(source, game),
+            _ => UncoreArchive.AssetFactory(source, game),
         };
 
     #endregion

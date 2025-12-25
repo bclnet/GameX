@@ -16,8 +16,8 @@ class FileOption(Flag):
     # Supress = 0x10
     UnknownFileModel = 0x100
 
-# BlobState
-class BlobState:
+# BinaryState
+class BinaryState:
     def __init__(self, vfx: FileSystem, game: FamilyGame, edition: Edition = None, path: str = None, tag: object = None):
         self.vfx = vfx
         self.game = game
@@ -25,21 +25,21 @@ class BlobState:
         self.path = path or ''
         self.tag = tag
 
-# tag::Blob[]
-class Blob:
-    class BlobStatus(Enum):
+# tag::Binary[]
+class Binary:
+    class Stat(Enum):
         Opening = 1
         Opened = 2
         Closing = 3
         Closed = 4
-    def __init__(self, state: BlobState):
+    def __init__(self, state: BinaryState):
         z = None
-        self.status = self.BlobStatus.Closed
+        self.status = self.Stat.Closed
         self.vfx = state.vfx
         self.family = state.game.family
         self.game = state.game
         self.edition = state.edition
-        self.blobPath = state.path
+        self.binPath = state.path
         self.name = z if not state.path or (z := os.path.basename(state.path)) else os.path.basename(os.path.dirname(state.path))
         self.tag = state.tag
     def __enter__(self): return self
@@ -47,36 +47,31 @@ class Blob:
     def __repr__(self): return f'{self.name}#{self.game.id}'
     def valid(self) -> bool: return True
     def close(self) -> None:
-        self.status = self.BlobStatus.Closing
+        self.status = self.Stat.Closing
         self.closing()
-        self.status = self.BlobStatus.Closed
+        self.status = self.Stat.Closed
         return self
     def closing(self) -> None: pass
     def open(self) -> None:
-        if self.status != self.BlobStatus.Closed: return self
-        self.status = self.BlobStatus.Opening
+        if self.status != self.Stat.Closed: return self
+        self.status = self.Stat.Opening
         start = time.time()
         self.opening()
         end = time.time()
-        self.status = self.BlobStatus.Opened
+        self.status = self.Stat.Opened
         elapsed = round(end - start, 4)
         print(f'Opened[{self.game.id}]: {self.name} @ {elapsed}ms')
         return self
     def opening(self) -> None: pass
-# end::Blob[]
-
-# ITransformAsset
-class ITransformAsset:
-    def canTransformAsset(self, transformTo: Archive, source: object) -> bool: pass
-    def transformAsset(self, transformTo: Archive, source: object) -> object: pass
+# end::Binary[]
 
 # ArchiveState
-class ArchiveState(BlobState):
+class ArchiveState(BinaryState):
     def __init__(self, vfx: FileSystem, game: FamilyGame, edition: Edition = None, path: str = None, tag: object = None):
         super().__init__(vfx, game, edition, path, tag)
 
 # tag::Archive[]
-class Archive(Blob):
+class Archive(Binary):
     class FuncObjectFactoryFactory: pass
     def __init__(self, state: ArchiveState):
         super().__init__(state)
@@ -84,7 +79,7 @@ class Archive(Blob):
         self.gfx = None
         self.sfx = None
     def open(self, items: list[MetaItem] = None, manager: MetaManager = None) -> None:
-        if self.status != self.BlobStatus.Closed: return self
+        if self.status != self.Stat.Closed: return self
         super().open()
         if items != None:
             for item in self.getMetaItems(manager): items.append(item)
@@ -139,7 +134,7 @@ class BinaryArchive(Archive):
     readers: dict[str, GenericPool] = {}
     
     def getReader(self, path: str = None, pooled: bool = True) -> Reader:
-        path = path or self.blobPath
+        path = path or self.binPath
         return self.readers.get(path) or self.readers.setdefault(path, GenericPool[Reader](lambda: Reader(self.vfx.open(path)), lambda r: r.seek(0)) if self.vfx.fileExists(path) else None) if pooled else \
             SinglePool[Reader](Reader(self.vfx.open(path)) if self.vfx.fileExists(path) else None)
     
@@ -391,3 +386,8 @@ class ArcBinaryT(ArcBinary):
         #     with Reader(self.readData(self.source.getReader(), self.file)) as r2:
         #         self.arcBinary.read(self, r2, tag)
 # end::ArcBinary[]
+
+# ITransformAsset
+class ITransformAsset:
+    def canTransformAsset(self, transformTo: Archive, source: object) -> bool: pass
+    def transformAsset(self, transformTo: Archive, source: object) -> object: pass

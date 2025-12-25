@@ -17,10 +17,8 @@
     },
     "AxiomVerge": {
       "name": "Axiom Verge",
-      "url": [
-        "https://store.steampowered.com/app/332200/Axiom_Verge/",
-        "https://en.wikipedia.org/wiki/Axiom_Verge"
-      ],
+      "url": "https://en.wikipedia.org/wiki/Axiom_Verge",
+      "dls": "https://store.steampowered.com/app/332200/Axiom_Verge/",
       "dev": "Thomas Happ Games",
       "date": "2015-05-14",
       "form": "Console;Windows",
@@ -35,10 +33,8 @@
     "StardewValley": {
       "gameType": "GameX.Xbox.StardewValleyGame, GameX.Xbox",
       "name": "Stardew Valley",
-      "url": [
-        "https://store.steampowered.com/app/413150/Stardew_Valley/",
-        "https://en.wikipedia.org/wiki/Stardew_Valley"
-      ],
+      "url": "https://en.wikipedia.org/wiki/Stardew_Valley",
+      "dls": "https://store.steampowered.com/app/413150/Stardew_Valley/",
       "dev": "ConcernedApe",
       "date": "2016-02-26",
       "form": "Console;Windows",
@@ -52,10 +48,8 @@
     },
     "Celeste": {
       "name": "Celeste",
-      "url": [
-        "https://store.steampowered.com/app/504230/Celeste/",
-        "https://en.wikipedia.org/wiki/Celeste_(video_game)"
-      ],
+      "url": "https://en.wikipedia.org/wiki/Celeste_(video_game)",
+      "dls": "https://store.steampowered.com/app/504230/Celeste/",
       "dev": "Maddy Makes Games",
       "date": "2018-01-25",
       "form": "Console;Windows",
@@ -70,10 +64,8 @@
     "AxiomVerge2": {
       "gameTypex": "GameX.Xbox.AxiomVerge2Game, GameX.Xbox",
       "name": "Axiom Verge 2",
-      "url": [
-        "https://store.steampowered.com/app/946030/Axiom_Verge_2/",
-        "https://en.wikipedia.org/wiki/Axiom_Verge_2"
-      ],
+      "url": "https://en.wikipedia.org/wiki/Axiom_Verge_2",
+      "dls": "https://store.steampowered.com/app/946030/Axiom_Verge_2/",
       "dev": "Thomas Happ Games",
       "date": "2022-08-11",
       "form": "Console;Windows",

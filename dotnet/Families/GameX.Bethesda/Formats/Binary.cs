@@ -575,7 +575,7 @@ public unsafe class Binary_Esm : ArcBinary<Binary_Esm> {
     public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         Format = GetFormat(source.Game.Id);
         var recordLevel = 1;
-        var filePath = source.BlobPath;
+        var filePath = source.BinPath;
         var poolAction = (GenericPoolAction<BinaryReader>)source.GetReader().Action; //: Leak
         var rootHeader = new Header(r, Format, null);
         //if ((Format == FormFormat.TES3 && rootHeader.Type != FormType.TES3) || (Format != FormFormat.TES3 && rootHeader.Type != FormType.TES4)) throw new FormatException($"{filePath} record header {rootHeader.Type} is not valid for this {Format}");

@@ -1,5 +1,5 @@
 ﻿using GameX.Formats;
-using GameX.Formats.Unknown;
+using GameX.Formats.IUnknown;
 using OpenStack.Vfx;
 using System;
 using System.IO;
@@ -31,7 +31,7 @@ public static class ExportManager {
 
     static async Task ExportPakAsync(string filePath, Func<string, bool> match, int from, object option, Archive _) {
         if (_ is not BinaryAsset arc) throw new InvalidOperationException("s not a BinaryAsset");
-        var newPath = filePath != null ? Path.Combine(filePath, Path.GetFileName(arc.BlobPath)) : null;
+        var newPath = filePath != null ? Path.Combine(filePath, Path.GetFileName(arc.BinPath)) : null;
         // write arc
         await ExportPak2Async(arc, newPath, match, from, option,
             (file, idx) => { if ((idx % 50) == 0) Console.WriteLine($"{idx,6}> {file.Path}"); },
@@ -78,7 +78,7 @@ public static class ExportManager {
         var oo = (file.CachedObjectOption as FileOption?) ?? FileOption.Default;
         if (file.CachedObjectOption != null && (fo & oo) != 0) {
             if (oo.HasFlag(FileOption.UnknownFileModel)) {
-                var model = await source.GetAsset<IUnknownFileModel>(file, FamilyManager.UnknownArchive);
+                var model = await source.GetAsset<IUnknownFileModel>(file, FamilyManager.UncoreArchive);
                 UnknownFileWriter.Factory("default", model).Write(newPath, false);
                 return;
             }

@@ -13,7 +13,6 @@ using System.Windows.Data;
 using GameX.Formats;
 using System.Collections.Specialized;
 using System.Collections.ObjectModel;
-using static GameX.Formats.Unknown.IUnknownFileObject;
 
 namespace GameX.Cig.Apps.DataForge.Views;
 

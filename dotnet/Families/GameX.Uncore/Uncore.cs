@@ -5,31 +5,25 @@ using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace GameX.Unknown;
+namespace GameX.Uncore;
 
 /// <summary>
-/// UnknownFamily
+/// UncoreFamily
 /// </summary>
 /// <seealso cref="GameX.Family" />
-public class UnknownFamily : Family {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="UnknownFamily"/> class.
-    /// </summary>
-    internal UnknownFamily() : base() { }
-    public UnknownFamily(JsonElement elem) : base(elem) { }
-}
+public class UncoreFamily(JsonElement elem) : Family(elem) { }
 
 /// <summary>
-/// UnknownArchive
+/// UncoreArchive
 /// </summary>
 /// <seealso cref="GameX.Formats.Archive" />
-public class UnknownArchive : Archive {
+public class UncoreArchive : Archive {
     /// <summary>
-    /// Initializes a new instance of the <see cref="UnknownArchive" /> class.
+    /// Initializes a new instance of the <see cref="UncoreArchive" /> class.
     /// </summary>
     /// <param name="state">The game.</param>
-    public UnknownArchive(ArchiveState state) : base(state) {
-        Name = "Unknown";
+    public UncoreArchive(ArchiveState state) : base(state) {
+        Name = "Uncore";
         AssetFactoryFunc = AssetFactory;
     }
 
@@ -61,20 +55,6 @@ public class UnknownArchive : Archive {
                 _ => (0, null),
             }
         };
-
-    #endregion
-
-    #region Binary
-
-    public class Binary_TestTri : IHaveMetaInfo {
-        public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_TestTri());
-
-        // IHaveMetaInfo
-        List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
-            => [
-                new(null, new MetaContent { Type = "TestTri", Name = Path.GetFileName(file.Path), Value = this }),
-            ];
-    }
 
     #endregion
 }

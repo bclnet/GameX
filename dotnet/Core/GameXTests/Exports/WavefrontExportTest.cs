@@ -1,4 +1,4 @@
-using GameX.Formats.Unknown;
+using GameX.Formats.IUnknown;
 using GameX.Formats.Wavefront;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading.Tasks;
@@ -17,7 +17,7 @@ public class WavefrontExportTest {
 
     public async Task ExportFileObjectAsync(Archive source, string sampleFile) {
         Assert.IsTrue(source.Contains(sampleFile));
-        var file = await source.GetAsset<IUnknownFileModel>(sampleFile, FamilyManager.UnknownArchive);
+        var file = await source.GetAsset<IUnknownFileModel>(sampleFile, FamilyManager.UncoreArchive);
         var objFile = new WavefrontFileWriter(file);
         objFile.Write(@"C:\T_\Models", false);
     }

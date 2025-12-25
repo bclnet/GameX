@@ -26,8 +26,8 @@
 //#define Red
 //#define Rockstar
 //#define Ubisoft
+//#define Uncore
 //#define Unity
-//#define Unknown
 //#define Valve
 //#define Volition
 //#define WB
@@ -51,8 +51,6 @@ public partial class FamilyManager {
     }
 
 #if Arkane
-    static readonly string[] FamilyKeys = ["Arkane", "Unknown"];
-
     public static GlobalOption Option = new()
     {
         Platform = "UK",
@@ -71,8 +69,6 @@ public partial class FamilyManager {
         //Missing: Game = "RF", // Redfall (future)
     };
 #elif Beamdog
-    static readonly string[] FamilyKeys = ["Beamdog", "Unknown"];
-
     public static GlobalOption Option = new()
     {
         Platform = "UK",
@@ -87,8 +83,6 @@ public partial class FamilyManager {
         //Game = "BG:DA2", // Baldur's Gate: Dark Alliance II
     };
 #elif Bethesda
-    static readonly string[] FamilyKeys = ["Bethesda", "Unknown"];
-
     public static GlobalOption Option = new() {
         Platform = "UK",
         ForceOpen = true,
@@ -109,8 +103,6 @@ public partial class FamilyManager {
         //Game = "Oblivion:R", // The Elder Scrolls IV: Oblivion Remastered
     };
 #elif Bioware
-    static readonly string[] FamilyKeys = ["Bioware", "Unknown"];
-
     public static GlobalOption Option = new()
     {
         Platform = "GL",
@@ -137,8 +129,6 @@ public partial class FamilyManager {
         //Game = "ME:LE", // Mass Effect: Legendary Edition
     };
 #elif Black
-    static readonly string[] FamilyKeys = ["Black", "Unknown"];
-
     public static GlobalOption Option = new()
     {
         Platform = "GL",
@@ -149,8 +139,6 @@ public partial class FamilyManager {
         //Game = "Fallout2", // Fallout 2
     };
 #elif Blizzard
-    static readonly string[] FamilyKeys = ["Blizzard", "Unknown"];
-
     public static GlobalOption Option = new()
     {
         Platform = "GL",
@@ -171,8 +159,6 @@ public partial class FamilyManager {
         //Game = "D4", // Diablo IV
     };
 #elif Bohemia
-    static readonly string[] FamilyKeys = ["Bohemia", "Unknown"];
-
     public static GlobalOption Option = new()
     {
         Platform = "GL",
@@ -198,8 +184,6 @@ public partial class FamilyManager {
         //Game = "SL", // Silica
     };
 #elif Bullfrog
-    static readonly string[] FamilyKeys = ["Bullfrog", "Unknown"];
-
     public static GlobalOption Option = new()
     {
         Platform = "GL",
@@ -219,8 +203,6 @@ public partial class FamilyManager {
         //Game = "DK2", // Dungeon Keeper 2
     };
 #elif Capcom
-    static readonly string[] FamilyKeys = ["Capcom", "Unknown"];
-
     public static GlobalOption Option = new()
     {
         Platform = "GL",
@@ -285,8 +267,6 @@ public partial class FamilyManager {
         //Game = "USF4", // Ultra Street Fighter IV
     };
 #elif Cig
-    static readonly string[] FamilyKeys = ["Cig", "Unknown"];
-
     public static GlobalOption Option = new()
     {
         //ForcePath = "app:DataForge",
@@ -299,8 +279,6 @@ public partial class FamilyManager {
         Game = "StarCitizen", // Star Citizen
     };
 #elif Cryptic
-    static readonly string[] FamilyKeys = ["Cryptic", "Unknown"];
-
     public static GlobalOption Option = new()
     {
         Platform = "GL",
@@ -312,8 +290,6 @@ public partial class FamilyManager {
         //Game = "NVW", // Neverwinter [open, read]
     };
 #elif Crytek
-    static readonly string[] FamilyKeys = ["Crytek", "Unknown"];
-
     public static GlobalOption Option = new()
     {
         Platform = "GL",
@@ -331,8 +307,6 @@ public partial class FamilyManager {
         //Game = "Snow", // SNOW - The Ultimate Edition
     };
 #elif Cyanide
-    static readonly string[] FamilyKeys = ["Cyanide", "Unknown"];
-
     public static GlobalOption Option = new()
     {
         Platform = "GL",
@@ -343,8 +317,6 @@ public partial class FamilyManager {
         //Game = "Werewolf:TA", // Werewolf: The Apocalypse - Earthblood
     };
 #elif EA
-    static readonly string[] FamilyKeys = ["EA", "Unknown"];
-
     public static GlobalOption Option = new()
     {
         Platform = "GL",
@@ -354,8 +326,6 @@ public partial class FamilyManager {
         Game = "xx", // xx
     };
 #elif Epic
-    static readonly string[] FamilyKeys = ["Epic", "Unknown"];
-
     public static GlobalOption Option = new()
     {
         Platform = "GL",
@@ -370,8 +340,6 @@ public partial class FamilyManager {
         //Game = "BioShock:Inf", // BioShock Infinite
     };
 #elif Firaxis
-    static readonly string[] FamilyKeys = ["Firaxis", "Unknown"];
-
     public static GlobalOption Option = new()
     {
         Platform = "GL",
@@ -386,8 +354,6 @@ public partial class FamilyManager {
         //Game = "BioShock:Inf", // BioShock Infinite
     };
 #elif Frictional
-    static readonly string[] FamilyKeys = ["Frictional", "Unknown"];
-
     public static GlobalOption Option = new()
     {
         Platform = "GL",
@@ -403,8 +369,6 @@ public partial class FamilyManager {
         //Game = "A:R", // Amnesia: Rebirth
     };
 #elif Frontier
-    static readonly string[] FamilyKeys = ["Frontier", "Unknown"];
-
     public static GlobalOption Option = new()
     {
         Platform = "GL",
@@ -414,8 +378,6 @@ public partial class FamilyManager {
         Game = "ED"
     };
 #elif Gamebryo
-    static readonly string[] FamilyKeys = ["Gamebryo", "Unknown"];
-
     public static GlobalOption Option = new()
     {
         Platform = "GL",
@@ -425,8 +387,6 @@ public partial class FamilyManager {
         Game = "XX"
     };
 #elif ID
-    static readonly string[] FamilyKeys = ["ID", "Unknown"];
-
     public static GlobalOption Option = new()
     {
         Platform = "GL",
@@ -446,8 +406,6 @@ public partial class FamilyManager {
         //Game = "Q:C", // Quake Champions [7]
     };
 #elif IW
-    static readonly string[] FamilyKeys = ["IW", "Unknown"];
-
     public static GlobalOption Option = new()
     {
         Platform = "GL",
@@ -471,8 +429,6 @@ public partial class FamilyManager {
         //Game = "Vanguard", // Call of Duty Vanguard
     };
 #elif Lucas
-    static readonly string[] FamilyKeys = ["Lucas", "Unknown"];
-
     public static GlobalOption Option = new()
     {
         //Edition = "enhanced",
@@ -559,8 +515,6 @@ public partial class FamilyManager {
         //Game = "SW:TOR", // Star Wars: The Old Republic
     };
 #elif Monolith
-    static readonly string[] FamilyKeys = ["Monolith", "Unknown"];
-
     public static GlobalOption Option = new()
     {
         Platform = "GL",
@@ -574,8 +528,6 @@ public partial class FamilyManager {
         //Game = "FEAR3", // F.E.A.R. 3
     };
 #elif Mythic
-    static readonly string[] FamilyKeys = ["Mythic", "Unknown"];
-
     public static GlobalOption Option = new()
     {
         Platform = "GL",
@@ -591,8 +543,6 @@ public partial class FamilyManager {
         //Game = "DA2", // Dragon Age II
     };
 #elif Nintendo
-    static readonly string[] FamilyKeys = ["Nintendo", "Unknown"];
-
     public static GlobalOption Option = new()
     {
         Platform = "GL",
@@ -618,8 +568,6 @@ public partial class FamilyManager {
         //Game = "XX", // XX
     };
 #elif Origin
-    static readonly string[] FamilyKeys = ["Origin", "Unknown"];
-
     public static GlobalOption Option = new()
     {
         Platform = "GL",
@@ -631,8 +579,6 @@ public partial class FamilyManager {
         //Game = "U9", // Ultima IX
     };
 #elif Red
-    static readonly string[] FamilyKeys = ["Red", "Unknown"];
-
     public static GlobalOption Option = new()
     {
         Platform = "GL",
@@ -646,8 +592,6 @@ public partial class FamilyManager {
         //Game = "Witcher4", // The Witcher 4 Polaris (future)
     };
 #elif Rockstar
-    static readonly string[] FamilyKeys = ["Rockstar", "Unknown"];
-
     public static GlobalOption Option = new()
     {
         Platform = "GL",
@@ -704,8 +648,6 @@ public partial class FamilyManager {
         //Game = "RDO", // Red Dead Online
     };
 #elif Ubisoft
-    static readonly string[] FamilyKeys = ["Ubisoft", "Unknown"];
-
     public static GlobalOption Option = new()
     {
         Platform = "GL",
@@ -714,9 +656,16 @@ public partial class FamilyManager {
         Family = "Ubisoft",
         //Game = "XX", // xx
     };
+#elif Uncore
+    public static GlobalOption Option = new()
+    {
+        Platform = "GL",
+        ForceOpen = true,
+        ForcePath = "sample:0",
+        Family = "Uncore",
+        Game = "APP", // Application
+    };
 #elif Unity
-    static readonly string[] FamilyKeys = ["Unity", "Unknown"];
-
     public static GlobalOption Option = new()
     {
         Platform = "GL",
@@ -729,20 +678,7 @@ public partial class FamilyManager {
         //Game = "UBoat", // Destroyer: The U-Boat Hunter
         //Game = "7D2D", // 7 Days to Die
     };
-#elif Unknown
-    static readonly string[] FamilyKeys = ["Unknown"];
-
-    public static GlobalOption Option = new()
-    {
-        Platform = "GL",
-        ForceOpen = true,
-        ForcePath = "sample:0",
-        Family = "Unknown",
-        Game = "APP", // Application
-    };
 #elif Valve
-    static readonly string[] FamilyKeys = ["Valve", "Unknown"];
-
     public static GlobalOption Option = new()
     {
         Platform = "GL",
@@ -759,30 +695,38 @@ public partial class FamilyManager {
         //Game = "DOD", // Day of Defeat
         //Game = "CS:CZ", // Counter-Strike: Condition Zero
         //# Source
-        Game = "HL:Src", // Half-Life: Source
         //Game = "CS:Src", // Counter-Strike: Source
+        Game = "HL:Src", // Half-Life: Source
         //Game = "HL2", // Half-Life 2
         //Game = "HL2:DM", // Half-Life 2: Deathmatch
+        //Game = "DOD:Src", // Day of Defeat: Source
+        //Game = "HL2:LC", // Half-Life 2: Lost Coast
         //Game = "HL:DM:Src", // Half-Life Deathmatch: Source
         //Game = "HL2:E1", // Half-Life 2: Episode One
-        //Game = "Portal", // Portal
         //Game = "HL2:E2", // Half-Life 2: Episode Two
+        //Game = "Portal", // Portal
         //Game = "TF2", // Team Fortress 2
         //Game = "L4D", // Left 4 Dead
         //Game = "L4D2", // Left 4 Dead 2
-        //Game = "DOD:Src", // Day of Defeat: Source
+        //Game = "AlienSwarm", // Alien Swarm
         //Game = "Portal2", // Portal 2
         //# Source2
-        //Game = "CS:GO", // Counter-Strike: Global Offensive
+        //Game = "CS2", // Counter-Strike: Global Offensive
         //Game = "D2", // Dota 2
+        //Game = "CS:NZ", // Counter-Strike Nexon
         //Game = "TheLab:RR", // The Lab: Robot Repair
         //Game = "TheLab:SS", // The Lab: Secret Shop [!unity]
         //Game = "TheLab:TL", // The Lab: The Lab [!unity]
-        //Game = "HL:Alyx", // Half-Life: Alyx
+        //Game = "Artifact", // Artifact Classic
+        //Game = "DU", // Dota Underlords
+        //Game = "HL:A", // Half-Life: Alyx
+        //Game = "ArtifactF", // Artifact Foundry
+        //Game = "Aperture:DJ", // Aperture Desk Job
+        //Game = "CodenameGordon", // Codename Gordon
+        //Game = "GarrysMod", // Garry's Mod
+        //Game = "Aperture:HL", // Aperture Hand Lab [!unity]
     };
 #elif Volition
-    static readonly string[] FamilyKeys = ["Volition", "Unknown"];
-
     public static GlobalOption Option = new()
     {
         Platform = "GL",
@@ -811,8 +755,6 @@ public partial class FamilyManager {
         //Game = "SR", // Saints Row
     };
 #elif WB
-    static readonly string[] FamilyKeys = ["WB", "Unknown"];
-
     public static GlobalOption Option = new()
     {
         Platform = "GL",
@@ -822,8 +764,6 @@ public partial class FamilyManager {
         Game = "AC", // Asheron's Call [open, read, texture:GL]
     };
 #elif X2K
-    static readonly string[] FamilyKeys = ["X2K", "Unknown"];
-
     public static GlobalOption Option = new()
     {
         Platform = "GL",
@@ -833,8 +773,6 @@ public partial class FamilyManager {
         Game = "XX", // XX
     };
 #elif Xbox
-    static readonly string[] FamilyKeys = ["Xbox", "Unknown"];
-
     public static GlobalOption Option = new()
     {
         Platform = "GL",
@@ -847,8 +785,7 @@ public partial class FamilyManager {
         //Game = "AxiomVerge2", // Axiom Verge 2
     };
 #else
-    static readonly string[] FamilyKeys = ["Arkane", "Beamdog", "Bethesda", "Bioware", "Black", "Blizzard", "Bohemia", "Bullfrog", "Capcom", "Cig", "Cryptic", "Crytek", "Cyanide", "EA", "Epic", "Firaxis", "Frictional", "Frontier", "Gamebryo", "ID", "IW", "Lucas", "Monolith", "Mythic", "Nintendo", "Origin", "Red", "Rockstar", "Ubisoft", "Unity", "Unknown", "Valve", "Volition", "WB", "X2K", "Xbox"];
-
     public static GlobalOption Option = new() { };
 #endif
+    static readonly string[] FamilyKeys = ["Arkane", "Beamdog", "Bethesda", "Bioware", "Black", "Blizzard", "Bohemia", "Bullfrog", "Capcom", "Cig", "Cryptic", "Crytek", "Cyanide", "EA", "Epic", "Firaxis", "Frictional", "Frontier", "Gamebryo", "ID", "IW", "Lucas", "Monolith", "Mythic", "Nintendo", "Origin", "Red", "Rockstar", "Ubisoft", "Uncore", "Unity", "Valve", "Volition", "WB", "X2K", "Xbox"];
 }

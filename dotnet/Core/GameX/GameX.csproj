@@ -51,10 +51,14 @@
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\EAFamily.Sample.json" Link="Specs\EAFamily.Sample.json" />
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\EpicFamily.json" Link="Specs\EpicFamily.json" />
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\EpicFamily.Sample.json" Link="Specs\EpicFamily.Sample.json" />
+    <EmbeddedResource Include="..\..\..\python\gamex\Specs\FiraxisFamily.json" Link="Specs\FiraxisFamily.json" />
+    <EmbeddedResource Include="..\..\..\python\gamex\Specs\FiraxisFamily.Sample.json" Link="Specs\FiraxisFamily.Sample.json" />
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\FrictionalFamily.json" Link="Specs\FrictionalFamily.json" />
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\FrictionalFamily.Sample.json" Link="Specs\FrictionalFamily.Sample.json" />
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\FrontierFamily.json" Link="Specs\FrontierFamily.json" />
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\FrontierFamily.Sample.json" Link="Specs\FrontierFamily.Sample.json" />
+    <EmbeddedResource Include="..\..\..\python\gamex\Specs\GamebryoFamily.json" Link="Specs\GamebryoFamily.json" />
+    <EmbeddedResource Include="..\..\..\python\gamex\Specs\GamebryoFamily.Sample.json" Link="Specs\GamebryoFamily.Sample.json" />
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\IDFamily.json" Link="Specs\IDFamily.json" />
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\IDFamily.Sample.json" Link="Specs\IDFamily.Sample.json" />
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\IWFamily.json" Link="Specs\IWFamily.json" />
@@ -82,8 +86,8 @@
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\UbisoftFamily+2020-present.json" Link="Specs\UbisoftFamily+2020-present.json" />
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\UnityFamily.json" Link="Specs\UnityFamily.json" />
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\UnityFamily.Sample.json" Link="Specs\UnityFamily.Sample.json" />
-    <EmbeddedResource Include="..\..\..\python\gamex\Specs\UnknownFamily.json" Link="Specs\UnknownFamily.json" />
-    <EmbeddedResource Include="..\..\..\python\gamex\Specs\UnknownFamily.Sample.json" Link="Specs\UnknownFamily.Sample.json" />
+    <EmbeddedResource Include="..\..\..\python\gamex\Specs\UncoreFamily.json" Link="Specs\UncoreFamily.json" />
+    <EmbeddedResource Include="..\..\..\python\gamex\Specs\UncoreFamily.Sample.json" Link="Specs\UncoreFamily.Sample.json" />
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\ValveFamily.json" Link="Specs\ValveFamily.json" />
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\ValveFamily.Sample.json" Link="Specs\ValveFamily.Sample.json" />
     <EmbeddedResource Include="..\..\..\python\gamex\Specs\VolitionFamily.json" Link="Specs\VolitionFamily.json" />

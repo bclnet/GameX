@@ -1,6 +1,6 @@
 ﻿using CommandLine;
 using GameX.Formats.Collada;
-using GameX.Formats.Unknown;
+using GameX.Formats.IUnknown;
 using GameX.Formats.Wavefront;
 using System;
 using System.IO;

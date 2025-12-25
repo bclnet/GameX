@@ -1,12 +1,11 @@
 output
 .DS_Store
 .asciidoctor
+.pdf
 
 # build artifacts
 Gemfile.lock
 gamex.html
-gamex.pdf
-gamex.x.pdf
 gamex.pdfmarks
 gamex.epub
 gamex.fb2.zip

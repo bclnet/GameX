@@ -389,44 +389,44 @@ class FamilyGame:
     def createClient(self, state: ClientState) -> Archive: return findType(self.clientType)(state) if self.clientType else _throw(f'{self.id} missing ClientType')
 
     def __init__(self, family: Family, id: str, elem: dict[str, object], dgame: FamilyGame):
-        self.hasLoaded = False
-        self.family = family
-        self.id = id
-        if not dgame:
-            self.searchBy = SearchBy.Default; self.arcs = ['game:/']
-            self.gameType = self.engine = self.resource = \
-            self.paths = self.key = self.detector = self.clientType = self.vfxType = \
-            self.archiveType = self.arcExts = None
-            return
-        self.name = _value(elem, 'name')
-        self.engine = _valueF(elem, 'engine', parseEngine, dgame.engine)
-        self.resource = _value(elem, 'resource', dgame.resource)
-        self.urls = _list(elem, 'url')
         try:
+            self.hasLoaded = False
+            self.family = family
+            self.id = id
+            if not dgame:
+                self.searchBy = SearchBy.Default; self.arcs = ['game:/']
+                self.gameType = self.engine = self.resource = \
+                self.paths = self.key = self.detector = self.clientType = self.vfxType = \
+                self.archiveType = self.arcExts = None
+                return
+            self.name = _value(elem, 'name')
+            self.engine = _valueF(elem, 'engine', parseEngine, dgame.engine)
+            self.resource = _value(elem, 'resource', dgame.resource)
+            self.urls = _list(elem, 'url')
             self.date = _valueF(elem, 'date', lambda s: datetime.strptime(s, '%Y-%m-%d' if s[0].isdigit() else '%b %d, %Y' if s.find(' ') == 3 else '%B %d, %Y').date() if s and s != 'XXX' else None)
-        except Exception as e: print(f'{self.id} - {e}')
-        #self.option = _list(elem, 'option', dgame.option)
-        self.arcs = _list(elem, 'arc', dgame.arcs)
-        self.paths = _list(elem, 'path', dgame.paths)
-        self.key = _valueF(elem, 'key', parseKey, dgame.key); self.keyorig = _value(elem, 'key')
-        self.status = _value(elem, 'status')
-        self.tags = _value(elem, 'tags', '').split(' ')
-        # interface
-        self.clientType = _value(elem, 'clientType', dgame.clientType)
-        self.vfxType = _value(elem, 'vfxType', dgame.vfxType)
-        self.searchBy = _value(elem, 'searchBy', dgame.searchBy)
-        self.archiveType = _value(elem, 'archiveType', dgame.archiveType)
-        self.arcExts = _list(elem, 'arcExt', dgame.arcExts) 
-        # related
-        self.editions = _related(elem, 'editions', lambda k,v: FamilyGame.Edition(k, v))
-        self.dlcs = _related(elem, 'dlcs', lambda k,v: FamilyGame.DownloadableContent(k, v))
-        self.locales = _related(elem, 'locales', lambda k,v: FamilyGame.Locale(k, v))
-        self.detectors = _related(elem, 'detectors', lambda k,v: self.createDetector(k, v))
-        # files
-        self.files: dict[str, PathItem] = _valueF(elem, 'files', lambda x: FamilyGame.FileSet(x))
-        self.ignores: set = set(_list(elem, 'ignores', []))
-        self.virtuals: dict[str, object] = _related(elem, 'virtuals', lambda k,v: parseKey(v))
-        self.filters: dict[str, object] = _related(elem, 'filters', lambda k,v: v)
+            #self.option = _list(elem, 'option', dgame.option)
+            self.arcs = _list(elem, 'arc', dgame.arcs)
+            self.paths = _list(elem, 'path', dgame.paths)
+            self.key = _valueF(elem, 'key', parseKey, dgame.key); self.keyorig = _value(elem, 'key')
+            self.status = _value(elem, 'status')
+            self.tags = _value(elem, 'tags', '').split(' ')
+            # interface
+            self.clientType = _value(elem, 'clientType', dgame.clientType)
+            self.vfxType = _value(elem, 'vfxType', dgame.vfxType)
+            self.searchBy = _value(elem, 'searchBy', dgame.searchBy)
+            self.archiveType = _value(elem, 'archiveType', dgame.archiveType)
+            self.arcExts = _list(elem, 'arcExt', dgame.arcExts) 
+            # related
+            self.editions = _related(elem, 'editions', lambda k,v: FamilyGame.Edition(k, v))
+            self.dlcs = _related(elem, 'dlcs', lambda k,v: FamilyGame.DownloadableContent(k, v))
+            self.locales = _related(elem, 'locales', lambda k,v: FamilyGame.Locale(k, v))
+            self.detectors = _related(elem, 'detectors', lambda k,v: self.createDetector(k, v))
+            # files
+            self.files: dict[str, PathItem] = _valueF(elem, 'files', lambda x: FamilyGame.FileSet(x))
+            self.ignores: set = set(_list(elem, 'ignores', []))
+            self.virtuals: dict[str, object] = _related(elem, 'virtuals', lambda k,v: parseKey(v))
+            self.filters: dict[str, object] = _related(elem, 'filters', lambda k,v: v)
+        except Exception as e: print(f'ERR: {self.id} - {e}')
         # find
         self.found = self._getSystemPath(option.FindKey, family.id, elem)
         self.options = None
@@ -538,8 +538,8 @@ class FamilyGame:
 #region Loader
 
 Families = {}
-unknown = None
-unknownArchive = None
+uncore = None
+uncoreArchive = None
 
 @staticmethod
 def init(loadSamples: bool = True):
@@ -556,13 +556,14 @@ def init(loadSamples: bool = True):
         try:
             family = createFamily(path, familyJsonLoader, loadSamples)
             Families[family.id] = family
+        except ImportError as e: print(f'Import Error: {path}: {e}')
         except Exception as e:
             print(f'{path} - {type(e).__name__}')
             print(e)
 
-    # load unknown
-    unknown = getFamily('Unknown')
-    unknownArchive = unknown.getArchive('game:/#APP', False)
+    # load uncore
+    uncore = getFamily('Uncore')
+    uncoreArchive = uncore.getArchive('game:/#APP', False)
 
 @staticmethod
 def getFamily(id: str, throwOnError: bool = True) -> Family:

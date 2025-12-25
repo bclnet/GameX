@@ -6,7 +6,7 @@ from gamex.families.Arkane.formats.danae.binary import Binary_Ftl, Binary_Fts, B
 from gamex.families.Arkane.formats.binary import Binary_Danae, Binary_Void
 from gamex.families.Valve.formats.binary import Binary_Vpk
 from gamex.families.GameX_Valve import ValveArchive
-from gamex.families.GameX import UnknownArchive
+from gamex.families.GameX_Uncore import UncoreArchive
 
 # ArkaneArchive
 class ArkaneArchive(BinaryArchive):
@@ -44,6 +44,6 @@ class ArkaneArchive(BinaryArchive):
             #
             #case ".llf": return (0, Binary_Flt.factory)
             #case ".dlf": return (0, Binary_Flt.factory)
-            case _: return UnknownArchive.assetFactory(source, game)
+            case _: return UncoreArchive.assetFactory(source, game)
 
     #endregion

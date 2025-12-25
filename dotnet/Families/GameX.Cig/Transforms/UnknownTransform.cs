@@ -1,4 +1,4 @@
-﻿using GameX.Formats.Unknown;
+﻿using GameX.Formats.IUnknown;
 using System.Threading.Tasks;
 
 namespace GameX.Cig.Transforms;

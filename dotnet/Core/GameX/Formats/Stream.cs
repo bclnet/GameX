@@ -183,7 +183,7 @@ public class StreamArchive : BinaryAsset {
         }
 
         // read arc
-        var path = BlobPath;
+        var path = BinPath;
         if (string.IsNullOrEmpty(path) || !Directory.Exists(path)) return;
         var setPath = Path.Combine(path, ".set");
         if (File.Exists(setPath)) using (var r = new BinaryReader(File.Open(setPath, FileMode.Open, FileAccess.Read, FileShare.Read))) await ArcBinary.Stream.Read(this, r, "Set");
@@ -203,7 +203,7 @@ public class StreamArchive : BinaryAsset {
         if (Host != null) throw new NotSupportedException();
 
         // write arc
-        var path = BlobPath;
+        var path = BinPath;
         if (!string.IsNullOrEmpty(path) && !Directory.Exists(path)) Directory.CreateDirectory(path);
         var setPath = Path.Combine(path, ".set");
         using (var w = new BinaryWriter(new FileStream(setPath, FileMode.Create, FileAccess.Write))) await ArcBinary.Stream.Write(this, w, "Set");
@@ -227,7 +227,7 @@ public class StreamArchive : BinaryAsset {
         if (Host != null) return await Host.GetFileAsync(path);
 
         // read arc
-        path = System.IO.Path.Combine(BlobPath, path);
+        path = System.IO.Path.Combine(BinPath, path);
         return File.Exists(path) ? File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read) : null;
     }
 

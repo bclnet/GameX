@@ -1293,7 +1293,7 @@ public unsafe class Binary_Vpk : ArcBinary<Binary_Vpk> {
         };
 
         // blobPath
-        var blobPath = source.BlobPath;
+        var blobPath = source.BinPath;
         var dirVpk = blobPath.EndsWith("_dir.vpk", StringComparison.OrdinalIgnoreCase);
         if (dirVpk) blobPath = blobPath[..^8];
 

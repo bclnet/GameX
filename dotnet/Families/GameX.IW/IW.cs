@@ -1,7 +1,7 @@
-﻿using GameX.Formats.Unknown;
+﻿using GameX.Formats.IUnknown;
 using GameX.IW.Formats;
 using GameX.Transforms;
-using GameX.Unknown;
+using GameX.Uncore;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -30,7 +30,7 @@ public class IWArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
             //".wav" => (0, BinaryWav.Factory),
             //".d3dbsp" => (0, BinaryD3dbsp.Factory),
             ".iwi" => (0, Binary_Iwi.Factory),
-            _ => UnknownArchive.AssetFactory(source, game),
+            _ => UncoreArchive.AssetFactory(source, game),
         };
 
     #endregion

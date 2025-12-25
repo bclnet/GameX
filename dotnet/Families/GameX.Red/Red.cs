@@ -1,8 +1,8 @@
 ﻿using GameX.Bioware.Formats;
-using GameX.Formats.Unknown;
+using GameX.Formats.IUnknown;
 using GameX.Red.Formats;
 using GameX.Transforms;
-using GameX.Unknown;
+using GameX.Uncore;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -28,7 +28,7 @@ public class RedArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
         => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             // witcher 1
             ".dlg" or ".qdb" or ".qst" => (0, Binary_Gff.Factory),
-            _ => UnknownArchive.AssetFactory(source, game),
+            _ => UncoreArchive.AssetFactory(source, game),
         };
 
     #endregion

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 
-namespace GameX.Formats.Unknown;
+namespace GameX.Formats.IUnknown;
 
 #region IUnknownBone
 

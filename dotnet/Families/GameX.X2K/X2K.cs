@@ -1,6 +1,6 @@
-﻿using GameX.Formats.Unknown;
+﻿using GameX.Formats.IUnknown;
 using GameX.Transforms;
-using GameX.Unknown;
+using GameX.Uncore;
 using GameX.X2K.Formats;
 using System;
 using System.IO;
@@ -31,7 +31,7 @@ public class X2KArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
 
     static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) AssetFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch {
-            _ => UnknownArchive.AssetFactory(source, game),
+            _ => UncoreArchive.AssetFactory(source, game),
         };
 
     #endregion

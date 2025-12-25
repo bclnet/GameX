@@ -1,5 +1,5 @@
 ﻿using GameX.Bullfrog.Formats;
-using GameX.Formats.Unknown;
+using GameX.Formats.IUnknown;
 using GameX.Transforms;
 using System;
 using System.IO;

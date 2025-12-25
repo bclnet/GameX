@@ -3,7 +3,7 @@ import os
 from openstk import _pathExtension
 from gamex import Family, FamilyGame, BinaryArchive
 from gamex.families.Bullfrog.formats.binary import Binary_Bullfrog, Binary_Populus, Binary_Syndicate
-from gamex.families.GameX import UnknownArchive
+from gamex.families.GameX_Uncore import UncoreArchive
 
 # DKGame
 class DKGame(FamilyGame):

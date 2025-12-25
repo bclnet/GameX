@@ -18,6 +18,7 @@
     <ProjectReference Include="..\GameX.Bioware\GameX.Bioware.csproj" />
     <ProjectReference Include="..\..\Core\GameX\GameX.csproj" />
     <ProjectReference Include="..\..\Core\GameX.Resource\GameX.Resource.csproj" />
+    <ProjectReference Include="..\GameX.Uncore\GameX.Uncore.csproj" />
   </ItemGroup>
 
 </Project>

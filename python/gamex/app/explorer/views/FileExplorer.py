@@ -126,7 +126,7 @@ class FileExplorer(QWidget):
         arc = src.arc if src else None
         try:
             if arc:
-                if arc.status == Archive.BlobStatus.Opened: return
+                if arc.status == Archive.Stat.Opened: return
                 arc.open(value.items, self.resource)
                 self.updateNodes()
                 self.onFilterKeyUp(None, None)

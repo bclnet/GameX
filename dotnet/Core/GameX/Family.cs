@@ -1,5 +1,4 @@
-﻿using GameX.Unknown;
-using OpenStack;
+﻿using OpenStack;
 using OpenStack.Client;
 using OpenStack.Vfx;
 using System;
@@ -331,7 +330,7 @@ public class Family {
     /// <summary>
     /// An empty family.
     /// </summary>
-    public static readonly Family Empty = new UnknownFamily {
+    public static readonly Family Empty = new() {
         Id = string.Empty,
         Name = "Empty",
         Games = []
@@ -444,8 +443,7 @@ public class Family {
             Samples = [];
         }
         catch (Exception e) {
-            Console.WriteLine(e.Message);
-            Console.WriteLine(e.StackTrace);
+            Log.Error($"{Id}: {e.Message}\n{e.StackTrace}");
             throw;
         }
     }
@@ -1069,39 +1067,44 @@ public class FamilyGame {
     /// <param name="elem"></param>
     /// <param name="dgame"></param>
     public FamilyGame(Family family, string id, JsonElement elem, FamilyGame dgame) {
-        HasLoaded = false;
-        Family = family;
-        Id = id;
-        Name = _value(elem, "name"); //System.Diagnostics.Debugger.Log(0, null, $"Game: {Name}\n");
-        Engine = _valueF(elem, "engine", ParseEngine, dgame.Engine);
-        Resource = _value(elem, "resource", dgame.Resource);
-        Urls = _list(elem, "url", x => new Uri(x));
-        Date = _valueF(elem, "date", z => DateTime.Parse(z.GetString()));
-        //Option = _value(elem, "option", z => Enum.TryParse<GameOption>(z.GetString(), true, out var zT) ? zT : throw new ArgumentOutOfRangeException("option", $"Unknown option: {z}"), dgame.Option);
-        Arcs = _list(elem, "arc", x => new Uri(x), dgame.Arcs);
-        Paths = _list(elem, "path", dgame.Paths);
-        Key = _valueF(elem, "key", ParseKey, dgame.Key);
-        Status = _value(elem, "status");
-        Tags = _value(elem, "tags", string.Empty).Split(' ');
-        // interface
-        ClientType = _valueF(elem, "clientType", z => Type.GetType(z.GetString(), false) ?? throw new ArgumentOutOfRangeException("clientType", $"Unknown type: {z}"), dgame.ClientType);
-        VfxType = _valueF(elem, "vfxType", z => Type.GetType(z.GetString(), false) ?? throw new ArgumentOutOfRangeException("vfxType", $"Unknown type: {z}"), dgame.VfxType);
-        SearchBy = _valueF(elem, "searchBy", z => Enum.TryParse<SearchBy>(z.GetString(), true, out var zS) ? zS : throw new ArgumentOutOfRangeException("searchBy", $"Unknown option: {z}"), dgame.SearchBy);
-        ArchiveType = _valueF(elem, "archiveType", z => Type.GetType(z.GetString(), false) ?? throw new ArgumentOutOfRangeException("archiveType", $"Unknown type: {z}"), dgame.ArchiveType);
-        ArcExts = _list(elem, "arcExt", dgame.ArcExts);
-        // related
-        Editions = _related(elem, "editions", (k, v) => new Edition(k, v));
-        Dlcs = _related(elem, "dlcs", (k, v) => new DownloadableContent(k, v));
-        Locales = _related(elem, "locals", (k, v) => new Locale(k, v));
-        Detectors = _related(elem, "detectors", (k, v) => CreateDetector(k, v));
-        // files
-        Files = _valueF(elem, "files", x => new FileSet(x));
-        Ignores = [.. _list(elem, "ignores", [])];
-        Virtuals = _related(elem, "virtuals", (k, v) => (byte[])ParseKey(v));
-        Filters = _related(elem, "filters", (k, v) => _valueV(v).ToString());
-        // find
-        Found = GetSystemPath(Option.FindKey, family.Id, elem);
-        Options = null;
+        try {
+            HasLoaded = false;
+            Family = family;
+            Id = id;
+            Name = _value(elem, "name"); //System.Diagnostics.Debugger.Log(0, null, $"Game: {Name}\n");
+            Engine = _valueF(elem, "engine", ParseEngine, dgame.Engine);
+            Resource = _value(elem, "resource", dgame.Resource);
+            Urls = _list(elem, "url", x => new Uri(x));
+            Date = _valueF(elem, "date", z => DateTime.Parse(z.GetString()));
+            //Option = _value(elem, "option", z => Enum.TryParse<GameOption>(z.GetString(), true, out var zT) ? zT : throw new ArgumentOutOfRangeException("option", $"Unknown option: {z}"), dgame.Option);
+            Arcs = _list(elem, "arc", x => new Uri(x), dgame.Arcs);
+            Paths = _list(elem, "path", dgame.Paths);
+            Key = _valueF(elem, "key", ParseKey, dgame.Key);
+            Status = _value(elem, "status");
+            Tags = _value(elem, "tags", string.Empty).Split(' ');
+            // interface
+            ClientType = _valueF(elem, "clientType", z => Type.GetType(z.GetString(), false) ?? throw new ArgumentOutOfRangeException("clientType", $"Unknown type: {z}"), dgame.ClientType);
+            VfxType = _valueF(elem, "vfxType", z => Type.GetType(z.GetString(), false) ?? throw new ArgumentOutOfRangeException("vfxType", $"Unknown type: {z}"), dgame.VfxType);
+            SearchBy = _valueF(elem, "searchBy", z => Enum.TryParse<SearchBy>(z.GetString(), true, out var zS) ? zS : throw new ArgumentOutOfRangeException("searchBy", $"Unknown option: {z}"), dgame.SearchBy);
+            ArchiveType = _valueF(elem, "archiveType", z => Type.GetType(z.GetString(), false) ?? throw new ArgumentOutOfRangeException("archiveType", $"Unknown type: {z}"), dgame.ArchiveType);
+            ArcExts = _list(elem, "arcExt", dgame.ArcExts);
+            // related
+            Editions = _related(elem, "editions", (k, v) => new Edition(k, v));
+            Dlcs = _related(elem, "dlcs", (k, v) => new DownloadableContent(k, v));
+            Locales = _related(elem, "locals", (k, v) => new Locale(k, v));
+            Detectors = _related(elem, "detectors", (k, v) => CreateDetector(k, v));
+            // files
+            Files = _valueF(elem, "files", x => new FileSet(x));
+            Ignores = [.. _list(elem, "ignores", [])];
+            Virtuals = _related(elem, "virtuals", (k, v) => (byte[])ParseKey(v));
+            Filters = _related(elem, "filters", (k, v) => _valueV(v).ToString());
+            // find
+            Found = GetSystemPath(Option.FindKey, family.Id, elem);
+            Options = null;
+        }
+        catch (Exception e) {
+            Log.Error($"{Family.Id}.{Id}: {e.Message}\n{e.StackTrace}");
+        }
     }
 
     /// <summary>
@@ -1302,11 +1305,11 @@ public partial class FamilyManager {
     /// <summary>
     /// The Unknown family.
     /// </summary>
-    public static readonly Family Unknown;
+    public static readonly Family Uncore;
     /// <summary>
     /// The Unknown arc file.
     /// </summary>
-    public static readonly Archive UnknownArchive;
+    public static readonly Archive UncoreArchive;
 
     static readonly Func<string, Stream> GetManifestResourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream;
     static string FamilyJsonLoader(string path) {
@@ -1329,9 +1332,9 @@ public partial class FamilyManager {
                 Console.WriteLine(e.ToString());
             }
 
-        // load unknown
-        Unknown = GetFamily("Unknown");
-        UnknownArchive = Unknown.GetArchive(new Uri("archive:/#APP"), throwOnError: false);
+        // load uncore
+        Uncore = GetFamily("Uncore");
+        UncoreArchive = Uncore.GetArchive(new Uri("archive:/#APP"), throwOnError: false);
     }
 
     /// <summary>

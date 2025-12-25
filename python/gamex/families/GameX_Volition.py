@@ -2,7 +2,7 @@ from __future__ import annotations
 import os
 from openstk import _pathExtension
 from gamex import Family, FamilyGame, BinaryArchive
-from gamex.families.GameX import UnknownArchive
+from gamex.families.GameX_Uncore import UncoreArchive
 
 # DGame
 class DGame(FamilyGame):
@@ -33,6 +33,6 @@ class VolitionArchive(BinaryArchive):
     @staticmethod
     def assetFactory(source: FileSource, game: FamilyGame) -> (object, callable):
         match _pathExtension(source.path).lower():
-            case _: return UnknownArchive.assetFactory(source, game)
+            case _: return UncoreArchive.assetFactory(source, game)
 
     #endregion

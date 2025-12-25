@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Core\GameX\GameX.csproj" />
+    <ProjectReference Include="..\GameX.Uncore\GameX.Uncore.csproj" />
     <ProjectReference Include="..\\GameX.Blizzard\GameX.Blizzard.csproj" />
   </ItemGroup>
 

@@ -1,6 +1,6 @@
 __title__ = "gamex"
 __version__ = "0.0.1"
-# __current__ = "Unknown"
+# __current__ = "Uncore"
 # __current__ = "Arkane"
 __current__ = "Bethesda"
 # __current__ = "Bioware"
@@ -26,8 +26,6 @@ class GlobalOption:
 
 match __current__:
     case 'Arkane':
-        familyKeys = [ "Arkane", "Unknown" ]
-
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
@@ -45,8 +43,6 @@ match __current__:
             # Missing: Game = "RF", # Redfall (future)
         )
     case 'Beamdog':
-        familyKeys = [ "Beamdog", "Unknown" ]
-
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
@@ -60,8 +56,6 @@ match __current__:
             #Game = "BG:DA2", # Baldur's Gate: Dark Alliance II
         )
     case 'Bethesda':
-        familyKeys = [ "Bethesda", "Unknown" ]
-
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
@@ -81,8 +75,6 @@ match __current__:
             # Game = "Starfield", # Starfield
         )
     case 'Bioware':
-        familyKeys = [ "Bioware", "Unknown" ]
-
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
@@ -108,8 +100,6 @@ match __current__:
             # Game = "ME:LE", # Mass Effect: Legendary Edition
         )
     case 'Black':
-        familyKeys = [ "Black", "Unknown" ]
-
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
@@ -119,8 +109,6 @@ match __current__:
             # Game = "Fallout2", # Fallout 2
         )
     case 'Blizzard':
-        familyKeys = [ "Blizzard", "Unknown" ]
-
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
@@ -140,8 +128,6 @@ match __current__:
             # Game = "D4", # Diablo IV
         )
     case 'Bohemia':
-        familyKeys = [ "Bohemia", "Unknown" ]
-
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
@@ -166,8 +152,6 @@ match __current__:
             #Game = "SL", # Silica
         )
     case 'Bullfrog':
-        familyKeys = [ "Bullfrog", "Unknown" ]
-
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
@@ -186,8 +170,6 @@ match __current__:
             # Game = "DK2", # Dungeon Keeper 2
         )
     case 'Capcom':
-        familyKeys = [ "Capcom", "Unknown" ]
-
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
@@ -232,8 +214,6 @@ match __current__:
             # Game = "DT:R", # XX
         )
     case 'Cig':
-        familyKeys = [ "Cig", "Unknown" ]
-
         option = GlobalOption(
             # ForcePath = "app:DataForge",
             # ForcePath = "app:StarWords",
@@ -245,8 +225,6 @@ match __current__:
             Game = "StarCitizen", # Star Citizen
         )
     case 'Cryptic':
-        familyKeys = [ "Cryptic", "Unknown" ]
-
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
@@ -257,8 +235,6 @@ match __current__:
             # Game = "NVW", # Neverwinter [open, read]
         )
     case 'Crytek':
-        familyKeys = [ "Crytek", "Unknown" ]
-
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
@@ -275,8 +251,6 @@ match __current__:
             # Game = "Snow", # SNOW - The Ultimate Edition
         )
     case 'Cyanide':
-        familyKeys = [ "Cyanide", "Unknown" ]
-
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
@@ -286,8 +260,6 @@ match __current__:
             # Game = "Werewolf:TA", # Werewolf: The Apocalypse - Earthblood
         )
     case 'EA':
-        familyKeys = [ "EA", "Unknown" ]
-
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
@@ -296,8 +268,6 @@ match __current__:
             # Game = "xx", # xx
         )
     case 'Epic':
-        familyKeys = [ "Epic", "Unknown" ]
-
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
@@ -311,8 +281,6 @@ match __current__:
             # Game = "BioShock:Inf", # BioShock Infinite
         )
     case 'Firaxis':
-        familyKeys = [ "Firaxis", "Unknown" ]
-
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
@@ -326,8 +294,6 @@ match __current__:
             # Game = "BioShock:Inf", # BioShock Infinite
         )
     case 'Frictional':
-        familyKeys = [ "Frictional", "Unknown" ]
-
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
@@ -342,8 +308,6 @@ match __current__:
             # Game = "A:R", # Amnesia: Rebirth
         )
     case 'Frontier':
-        familyKeys = [ "Frontier", "Unknown" ]
-
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
@@ -352,8 +316,6 @@ match __current__:
             Game = "ED"
         )
     case 'Gamebryo':
-        familyKeys = [ "Gamebryo", "Unknown" ]
-
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
@@ -362,8 +324,6 @@ match __current__:
             Game = "XX"
         )
     case 'ID':
-        familyKeys = [ "ID", "Unknown" ]
-
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
@@ -382,8 +342,6 @@ match __current__:
             # Game = "Q:C", # Quake Champions
         )
     case 'IW':
-        familyKeys = [ "IW", "Unknown" ]
-
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
@@ -406,8 +364,6 @@ match __current__:
             # Game = "Vanguard", # Call of Duty Vanguard
         )
     case 'Lucas':
-        familyKeys = [ "Lucas", "Unknown" ]
-
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
@@ -492,8 +448,6 @@ match __current__:
             # Game = "SW:TOR", # Star Wars: The Old Republic
         )
     case 'Monolith':
-        familyKeys = [ "Monolith", "Unknown" ]
-
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
@@ -506,8 +460,6 @@ match __current__:
             # Game = "FEAR3", # F.E.A.R. 3
         )
     case 'Mythic':
-        familyKeys = [ "Mythic", "Unknown" ]
-
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
@@ -522,8 +474,6 @@ match __current__:
             # Game = "DA2", # Dragon Age II
         )
     case 'Nintendo':
-        familyKeys = [ "Nintendo", "Unknown" ]
-
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
@@ -532,8 +482,6 @@ match __current__:
             # Game = "XX", # XX
         )
     case 'Origin':
-        familyKeys = [ "Origin", "Unknown" ]
-
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
@@ -544,8 +492,6 @@ match __current__:
             # Game = "U9", # Ultima IX
         )
     case 'Red':
-        familyKeys = [ "Red", "Unknown" ]
-
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
@@ -558,8 +504,6 @@ match __current__:
             # Game = "Witcher4", # The Witcher 4 Polaris (future)
         )
     case 'Rockstar':
-        familyKeys = [ "Rockstar", "Unknown" ]
-
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
@@ -615,8 +559,6 @@ match __current__:
             # Game = "RDO", # Red Dead Online
         )
     case 'Ubisoft':
-        familyKeys = [ "Ubisoft", "Unknown" ]
-
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
@@ -625,8 +567,6 @@ match __current__:
             # Game = "XX", # xx
         )
     case 'Unity':
-        familyKeys = [ "Unity", "Unknown" ]
-
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
@@ -638,19 +578,15 @@ match __current__:
             # Game = "UBoat", # Destroyer: The U-Boat Hunter
             # Game = "7D2D", # 7 Days to Die
         )
-    case 'Unknown':
-        familyKeys = [ "Unknown" ]
-
+    case 'Uncore':
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
             ForcePath = "sample:*",
-            Family = "Unknown",
+            Family = "Uncore",
             Game = "APP" # Application
         )
     case 'Valve':
-        familyKeys = [ "Valve", "Unknown" ]
-
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
@@ -666,30 +602,39 @@ match __current__:
             # Game = "DOD", # Day of Defeat
             # Game = "CS:CZ", # Counter-Strike: Condition Zero
             # Source
-            Game = "HL:Src", # Half-Life: Source
             # Game = "CS:Src", # Counter-Strike: Source
+            Game = "HL:Src", # Half-Life: Source
             # Game = "HL2", # Half-Life 2
             # Game = "HL2:DM", # Half-Life 2: Deathmatch
+            # Game = "DOD:Src", # Day of Defeat: Source
+            # Game = "HL2:LC", # Half-Life 2: Lost Coast
             # Game = "HL:DM:Src", # Half-Life Deathmatch: Source
             # Game = "HL2:E1", # Half-Life 2: Episode One
-            # Game = "Portal", # Portal
             # Game = "HL2:E2", # Half-Life 2: Episode Two
+            # Game = "Portal", # Portal
             # Game = "TF2", # Team Fortress 2
             # Game = "L4D", # Left 4 Dead
             # Game = "L4D2", # Left 4 Dead 2
-            # Game = "DOD:Src", # Day of Defeat: Source
+            # Game = "AlienSwarm", # Alien Swarm
             # Game = "Portal2", # Portal 2
             # Source 2
-            # Game = "CS:GO", # Counter-Strike: Global Offensive
+            # Game = "CS2", # Counter-Strike: Global Offensive
             # Game = "D2", # Dota 2
+            # Game = "CS:NZ", # Counter-Strike Nexon
             # Game = "TheLab:RR", # The Lab: Robot Repair
             # Game = "TheLab:SS", # The Lab: Secret Shop [!unity]
             # Game = "TheLab:TL", # The Lab: The Lab [!unity]
-            # Game = "HL:Alyx", # Half-Life: Alyx
+            # Game = "Artifact", # Artifact Classic
+            # Game = "DU", # Dota Underlords
+            # Game = "HL:A", # Half-Life: Alyx
+            # Game = "ArtifactF", # Artifact Foundry
+            # Game = "Aperture:DJ", # Aperture Desk Job
+            # Game = "CodenameGordon", # Codename Gordon
+            # Game = "GarrysMod", # Garry's Mod
+            # Game = "Portal:SA", # Portal: Still Alive
+            # Game = "Aperture:HL", # Aperture Hand Lab [!unity]
         )
     case 'Volition':
-        familyKeys = [ "Volition", "Unknown" ]
-
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
@@ -717,8 +662,6 @@ match __current__:
             # Game = "SR", # Saints Row
         )
     case 'WB':
-        familyKeys = [ "WB", "Unknown" ]
-
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
@@ -727,8 +670,6 @@ match __current__:
             Game = "AC", # Asheron's Call [open, read, texture:GL]
         )
     case 'X2K':
-        familyKeys = [ "X2K", "Unknown" ]
-
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
@@ -737,8 +678,6 @@ match __current__:
             # Game = "XX", # XX
         )
     case 'Xbox':
-        familyKeys = [ "Xbox", "Unknown" ]
-
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
@@ -750,6 +689,6 @@ match __current__:
             # Game = "AxiomVerge2", # Axiom Verge 2
         )
     case _:
-        familyKeys = [ "Arkane", "Beamdog", "Bethesda", "Bioware", "Black", "Blizzard", "Bohemia", "Bullfrog", "Capcom", "Cig", "Cryptic", "Crytek", "Cyanide", "EA", "Epic", "Firaxis", "Frictional", "Frontier", "Gamebryo", "ID", "IW", "Lucas", "Monolith", "Mythic", "Nintendo", "Origin", "Red", "Rockstar", "Ubisoft", "Unity", "Unknown", "Valve", "Volition", "WB", "X2K", "Xbox" ]
-
         option = GlobalOption()
+
+familyKeys = [ "Arkane", "Beamdog", "Bethesda", "Bioware", "Black", "Blizzard", "Bohemia", "Bullfrog", "Capcom", "Cig", "Cryptic", "Crytek", "Cyanide", "EA", "Epic", "Firaxis", "Frictional", "Frontier", "Gamebryo", "ID", "IW", "Lucas", "Monolith", "Mythic", "Nintendo", "Origin", "Red", "Rockstar", "Ubisoft", "Uncore", "Unity", "Valve", "Volition", "WB", "X2K", "Xbox" ]

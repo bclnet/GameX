@@ -2,7 +2,7 @@ from __future__ import annotations
 import os
 from openstk import _pathExtension
 from gamex import BinaryArchive
-from gamex.families.GameX import UnknownArchive
+from gamex.families.GameX_Uncore import UncoreArchive
 from gamex.families.Mythic.formats.binary import Binary_Mpk, Binary_Crf
 from gamex.families.Bioware.formats.binary import Binary_Myp
 from gamex.families.Gamebryo.formats.binary import Binary_Nif
@@ -37,6 +37,6 @@ class MythicArchive(BinaryArchive):
         match _pathExtension(source.path).lower():
             case '.crf': return (FileOption.StreamObject, Binary_Crf.factory)
             case '.nif': return (FileOption.StreamObject, Binary_Nif.factory)
-            case _: return UnknownArchive.assetFactory(source, game)
+            case _: return UncoreArchive.assetFactory(source, game)
 
     #endregion

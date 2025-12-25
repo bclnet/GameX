@@ -9,7 +9,7 @@
   ],
   "games": {
     "*": {
-      "archiveType": "GameX.Arkane.GamebryoArchive, GameX.Gamebryo",
+      "archiveType": "GameX.Gamebryo.GamebryoArchive, GameX.Gamebryo",
       "engine": "Gamebryo"
     },
     "PoP": {
@@ -603,7 +603,7 @@
     },
     "Epic Mickey 2: The Power of Two": {
       "name": "Epic Mickey 2: The Power of Two",
-      "url": "XXX",
+      "url": "https://en.wikipedia.org/wiki/Epic_Mickey_2:_The_Power_of_Two",
       "dev": "Junction Point Studios",
       "date": "November 18, 2012",
       "files": {
@@ -655,7 +655,7 @@
       "name": "Ghost in the Shell: Stand Alone Complex - First Assault Online",
       "url": "https://en.wikipedia.org/wiki/Ghost_in_the_Shell:_Stand_Alone_Complex_-_First_Assault_Online",
       "dev": "Nexon Inc.",
-      "date": "XXX",
+      "date": "July 1, 2017",
       "files": {
         "key": [
           "x:x"

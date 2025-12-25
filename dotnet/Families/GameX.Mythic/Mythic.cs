@@ -1,9 +1,9 @@
 ﻿using GameX.Bioware.Formats;
-using GameX.Formats.Unknown;
+using GameX.Formats.IUnknown;
 using GameX.Gamebryo.Formats;
 using GameX.Mythic.Formats;
 using GameX.Transforms;
-using GameX.Unknown;
+using GameX.Uncore;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -37,7 +37,7 @@ public class MythicArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
         => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             ".nif" => (FileOption.StreamObject, Binary_Nif.Factory),
             ".crf" => (FileOption.StreamObject, Binary_Crf.Factory),
-            _ => UnknownArchive.AssetFactory(source, game),
+            _ => UncoreArchive.AssetFactory(source, game),
         };
 
     #endregion

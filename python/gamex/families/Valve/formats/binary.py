@@ -1119,10 +1119,10 @@ class Binary_Vpk(ArcBinaryT):
             return f'{os.path.splitext(os.path.basename(path))[0]}{extension}'
         source.fileMask = fileMask
 
-        # blobPath
-        blobPath = source.blobPath
-        dirVpk = blobPath.endswith('_dir.vpk')
-        if dirVpk: blobPath = blobPath[:-8]
+        # binPath
+        binPath = source.binPath
+        dirVpk = binPath.endswith('_dir.vpk')
+        if dirVpk: binPath = binPath[:-8]
 
         # read header
         if r.readUInt32() != self.MAGIC: raise Exception('BAD MAGIC')
@@ -1157,7 +1157,7 @@ class Binary_Vpk(ArcBinaryT):
                     if len(file.data) > 0: r.read(file.data, 0, len(file.data))
                     if file.id != 0x7FFF:
                         if not dirVpk: raise Exception('Given VPK is not a _dir, but entry is referencing an external archive.')
-                        file.tag = f'{blobPath}_{file.id:03d}.vpk'
+                        file.tag = f'{binPath}_{file.id:03d}.vpk'
                     else: file.tag = headerPosition + treeSize
                     # add file
                     files.append(file)

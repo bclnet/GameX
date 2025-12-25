@@ -658,3 +658,17 @@ class Binary_Zip(ArcBinaryT):
         print(arc.read(file.path))
 
 #endregion
+
+#region Binary_TestTri
+
+class Binary_TestTri(IHaveMetaInfo):
+    @staticmethod
+    def factory(r: Reader, f: FileSource, s: Archive): return Binary_TestTri(r)
+
+    def __init__(self, r: Reader): pass
+
+    def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
+        MetaInfo(None, MetaContent(type = 'TestTri', name = os.path.basename(file.path), value = self))
+        ]
+
+#endregion

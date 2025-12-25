@@ -1,8 +1,8 @@
 ﻿using GameX.Cig.Formats;
 using GameX.Cig.Transforms;
 using GameX.Crytek.Formats;
-using GameX.Formats.Unknown;
-using GameX.Unknown;
+using GameX.Formats.IUnknown;
+using GameX.Uncore;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -31,7 +31,7 @@ public class CigArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
             ".a" => (0, Binary_DdsA.Factory),
             ".dcb" => (0, Binary_Dcb.Factory),
             ".soc" or ".cgf" or ".cga" or ".chr" or ".skin" or ".anim" => (0, CryFile.Factory),
-            _ => UnknownArchive.AssetFactory(source, game),
+            _ => UncoreArchive.AssetFactory(source, game),
         };
 
     #endregion

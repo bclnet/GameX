@@ -1,12 +1,11 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Text.Json;
 
 namespace GameX.Base;
 
 [TestClass]
 public class FileManagerTest {
-    static readonly Family Family = FamilyManager.Unknown;
+    static readonly Family Family = FamilyManager.Uncore;
 
     [TestMethod]
     [DataRow(null)]

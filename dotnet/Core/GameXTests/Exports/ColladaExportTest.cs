@@ -1,5 +1,5 @@
 using GameX.Formats.Collada;
-using GameX.Formats.Unknown;
+using GameX.Formats.IUnknown;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading.Tasks;
 
@@ -17,7 +17,7 @@ public class ColladaExportTest {
 
     public async Task ExportFileObjectAsync(Archive source, string sampleFile) {
         Assert.IsTrue(source.Contains(sampleFile));
-        var file = await source.GetAsset<IUnknownFileModel>(sampleFile, FamilyManager.UnknownArchive);
+        var file = await source.GetAsset<IUnknownFileModel>(sampleFile, FamilyManager.UncoreArchive);
         var objFile = new ColladaFileWriter(file);
         objFile.Write(@"C:\T_\Models", false);
     }

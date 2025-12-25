@@ -1,5 +1,4 @@
 ﻿using GameX.Formats;
-using GameX.Unknown;
 using OpenStack;
 using OpenStack.Gfx;
 using OpenStack.Sfx;
@@ -31,17 +30,17 @@ public enum FileOption {
 
 #endregion
 
-#region BlobState
+#region BinaryState
 
 /// <summary>
-/// BlobState
+/// BinaryState
 /// </summary>
 /// <param name="vfx">The file system.</param>
 /// <param name="game">The game.</param>
 /// <param name="edition">The edition.</param>
 /// <param name="path">The path.</param>
 /// <param name="tag">The tag.</param>
-public class BlobState(FileSystem vfx, FamilyGame game, FamilyGame.Edition edition = null, string path = null, object tag = null) {
+public class BinaryState(FileSystem vfx, FamilyGame game, FamilyGame.Edition edition = null, string path = null, object tag = null) {
     /// <summary>
     /// Gets the filesystem.
     /// </summary>
@@ -76,23 +75,23 @@ public class BlobState(FileSystem vfx, FamilyGame game, FamilyGame.Edition editi
 /// <param name="edition">The edition.</param>
 /// <param name="path">The path.</param>
 /// <param name="tag">The tag.</param>
-public class ArchiveState(FileSystem vfx, FamilyGame game, FamilyGame.Edition edition = null, string path = null, object tag = null) : BlobState(vfx, game, edition, path, tag) { }
+public class ArchiveState(FileSystem vfx, FamilyGame game, FamilyGame.Edition edition = null, string path = null, object tag = null) : BinaryState(vfx, game, edition, path, tag) { }
 
 #endregion
 
-#region Blob
+#region Binary
 
 /// <summary>
-/// Blob
+/// Binary
 /// </summary>
 /// <seealso cref="System.IDisposable" />
-public abstract class Blob : IDisposable {
-    public enum BlobStatus { Opening, Opened, Closing, Closed }
+public abstract class Binary : IDisposable {
+    public enum Stat { Opening, Opened, Closing, Closed }
 
     /// <summary>
     /// The status
     /// </summary>
-    public volatile BlobStatus Status;
+    public volatile Stat Status;
 
     /// <summary>
     /// The filesystem.
@@ -100,12 +99,12 @@ public abstract class Blob : IDisposable {
     public readonly FileSystem Vfx;
 
     /// <summary>
-    /// The arc family.
+    /// The family.
     /// </summary>
     public readonly Family Family;
 
     /// <summary>
-    /// The arc family game.
+    /// The family game.
     /// </summary>
     public readonly FamilyGame Game;
 
@@ -115,12 +114,12 @@ public abstract class Blob : IDisposable {
     public readonly FamilyGame.Edition Edition;
 
     /// <summary>
-    /// The arc path.
+    /// The bin path.
     /// </summary>
-    public string BlobPath;
+    public string BinPath;
 
     /// <summary>
-    /// The arc name.
+    /// The name.
     /// </summary>
     public string Name;
 
@@ -130,18 +129,18 @@ public abstract class Blob : IDisposable {
     public object Tag;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="Blob" /> class.
+    /// Initializes a new instance of the <see cref="Binary" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
     /// <param name="name">The name.</param>
-    public Blob(BlobState state) {
+    public Binary(BinaryState state) {
         string z;
-        Status = BlobStatus.Closed;
+        Status = Stat.Closed;
         Vfx = state.Vfx ?? throw new ArgumentNullException(nameof(state.Vfx));
         Family = state.Game.Family ?? throw new ArgumentNullException(nameof(state.Game.Family));
         Game = state.Game ?? throw new ArgumentNullException(nameof(state.Game));
         Edition = state.Edition;
-        BlobPath = state.Path;
+        BinPath = state.Path;
         Name = string.IsNullOrEmpty(state.Path) ? ""
             : !string.IsNullOrEmpty(z = Path.GetFileName(state.Path)) ? z : Path.GetFileName(Path.GetDirectoryName(state.Path));
         Tag = state.Tag;
@@ -159,16 +158,16 @@ public abstract class Blob : IDisposable {
         Close();
         GC.SuppressFinalize(this);
     }
-    ~Blob() => Close();
+    ~Binary() => Close();
 
     /// <summary>
     /// Closes this instance.
     /// </summary>
-    public Blob Close() {
-        Status = BlobStatus.Closing;
+    public Binary Close() {
+        Status = Stat.Closing;
         Closing();
         if (Tag is IDisposable s) s.Dispose();
-        Status = BlobStatus.Closed;
+        Status = Stat.Closed;
         return this;
     }
 
@@ -180,14 +179,14 @@ public abstract class Blob : IDisposable {
     /// <summary>
     /// Opens this instance.
     /// </summary>
-    public virtual Blob Open() {
-        if (Status != BlobStatus.Closed) return this;
-        Status = BlobStatus.Opening;
+    public virtual Binary Open() {
+        if (Status != Stat.Closed) return this;
+        Status = Stat.Opening;
         var watch = new Stopwatch();
         watch.Start();
         Opening();
         watch.Stop();
-        Status = BlobStatus.Opened;
+        Status = Stat.Opened;
         Log.Info($"Opened[{Game.Id}]: {Name} @ {watch.ElapsedMilliseconds}ms");
         return this;
     }
@@ -200,45 +199,30 @@ public abstract class Blob : IDisposable {
 
 #endregion
 
-#region ITransformAsset
-
-/// <summary>
-/// ITransformAsset
-/// </summary>
-public interface ITransformAsset<T> {
-    /// <summary>
-    /// Determines whether this instance [can transform file object] the specified transform to.
-    /// </summary>
-    /// <param name="transformTo">The transform to.</param>
-    /// <param name="source">The source.</param>
-    /// <returns>
-    ///   <c>true</c> if this instance [can transform file object] the specified transform to; otherwise, <c>false</c>.
-    /// </returns>
-    bool CanTransformAsset(Archive transformTo, object source);
-    /// <summary>
-    /// Transforms the file object asynchronous.
-    /// </summary>
-    /// <param name="transformTo">The transform to.</param>
-    /// <param name="source">The source.</param>
-    /// <returns></returns>
-    Task<T> TransformAsset(Archive transformTo, object source);
-}
-
-#endregion
-
 #region Archive
 
 /// <summary>
 /// Archive
+/// Initializes a new instance of the <see cref="Archive" /> class.
 /// </summary>
-/// <seealso cref="System.IDisposable" />
-public abstract class Archive : Blob, ISource {
+/// <param name="state">The state.</param>
+public abstract class Archive(ArchiveState state) : Binary(state), ISource {
+    class EmptyArchive(ArchiveState state) : Archive(state) {
+        public override int Count => 0;
+        public override void Closing() { }
+        public override void Opening() { }
+        public override bool Contains(object path) => false;
+        public override (Archive, FileSource) GetSource(object path, bool throwOnError = true) => throw new NotImplementedException();
+        public override Task<Stream> GetData(object path, object option = default, bool throwOnError = true) => throw new NotImplementedException();
+        public override Task<T> GetAsset<T>(object path, object option = default, bool throwOnError = true) => throw new NotImplementedException();
+    }
+
     public delegate (object option, Func<BinaryReader, FileSource, Archive, Task<object>> factory) FuncObjectFactory(FileSource source, FamilyGame game);
 
     /// <summary>
     /// An empty family.
     /// </summary>
-    public static Archive Empty = new UnknownArchive(new ArchiveState(new DirectoryFileSystem("", null), FamilyGame.Empty)) { Name = "Empty" };
+    public static Archive Empty = new EmptyArchive(new ArchiveState(new DirectoryFileSystem("", null), FamilyGame.Empty)) { Name = "Empty" };
 
     /// <summary>
     /// The arc path finders.
@@ -248,18 +232,7 @@ public abstract class Archive : Blob, ISource {
     /// <summary>
     /// The arc path finders.
     /// </summary>
-    public FuncObjectFactory AssetFactoryFunc;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Archive" /> class.
-    /// </summary>
-    /// <param name="state">The state.</param>
-    /// <param name="name">The name.</param>
-    public Archive(ArchiveState state) : base(state) {
-        AssetFactoryFunc = null;
-        Gfx = null;
-        Sfx = null;
-    }
+    public FuncObjectFactory AssetFactoryFunc = null;
 
     /// <summary>
     /// Opens this instance.
@@ -315,7 +288,7 @@ public abstract class Archive : Blob, ISource {
     /// <value>
     /// The gfx.
     /// </value>
-    public IOpenGfx[] Gfx { get; internal set; }
+    public IOpenGfx[] Gfx { get; internal set; } = null;
 
     /// <summary>
     /// Gets the gfx.
@@ -323,7 +296,7 @@ public abstract class Archive : Blob, ISource {
     /// <value>
     /// The sfx.
     /// </value>
-    public IOpenSfx[] Sfx { get; internal set; }
+    public IOpenSfx[] Sfx { get; internal set; } = null;
 
     /// <summary>
     /// Gets the file source.
@@ -468,8 +441,8 @@ public abstract class BinaryAsset(ArchiveState state, ArcBinary arcBinary) : Arc
     /// <param name="path">The path.</param>
     /// <returns></returns>
     public virtual IGenericPool<BinaryReader> GetReader(string path = default, bool pooled = true) => pooled
-        ? Readers.GetOrAdd(path ?? BlobPath, path => Vfx.FileExists(path) ? new GenericPoolX<BinaryReader>(() => new(Vfx.Open(path, null)), r => r.Seek(0), RetainInPool) : null)
-        : new SinglePool<BinaryReader>(Vfx.FileExists(path ??= BlobPath) ? new(Vfx.Open(path, null)) : null);
+        ? Readers.GetOrAdd(path ?? BinPath, path => Vfx.FileExists(path) ? new GenericPoolX<BinaryReader>(() => new(Vfx.Open(path, null)), r => r.Seek(0), RetainInPool) : null)
+        : new SinglePool<BinaryReader>(Vfx.FileExists(path ??= BinPath) ? new(Vfx.Open(path, null)) : null);
 
     /// <summary>
     /// Reader
@@ -513,7 +486,7 @@ public abstract class BinaryAsset(ArchiveState state, ArcBinary arcBinary) : Arc
     /// <param name="path">The path.</param>
     /// <returns></returns>
     public GenericPoolX<BinaryWriter> GetWriter(string path = default)
-        => Writers.GetOrAdd(path ?? BlobPath, path => Vfx.FileExists(path) ? new GenericPoolX<BinaryWriter>(() => new(Vfx.Open(path, "w")), r => r.Seek(0), RetainInPool) : null);
+        => Writers.GetOrAdd(path ?? BinPath, path => Vfx.FileExists(path) ? new GenericPoolX<BinaryWriter>(() => new(Vfx.Open(path, "w")), r => r.Seek(0), RetainInPool) : null);
 
     /// <summary>
     /// Writer
@@ -1066,6 +1039,32 @@ public class ArcBinary<Self> : ArcBinary where Self : ArcBinary, new() {
         public override void Closing() { R?.Dispose(); base.Closing(); }
         public override IGenericPool<BinaryReader> GetReader(string path = null, bool pooled = true) => Pool;
     }
+}
+
+#endregion
+
+#region ITransformAsset
+
+/// <summary>
+/// ITransformAsset
+/// </summary>
+public interface ITransformAsset<T> {
+    /// <summary>
+    /// Determines whether this instance [can transform file object] the specified transform to.
+    /// </summary>
+    /// <param name="transformTo">The transform to.</param>
+    /// <param name="source">The source.</param>
+    /// <returns>
+    ///   <c>true</c> if this instance [can transform file object] the specified transform to; otherwise, <c>false</c>.
+    /// </returns>
+    bool CanTransformAsset(Archive transformTo, object source);
+    /// <summary>
+    /// Transforms the file object asynchronous.
+    /// </summary>
+    /// <param name="transformTo">The transform to.</param>
+    /// <param name="source">The source.</param>
+    /// <returns></returns>
+    Task<T> TransformAsset(Archive transformTo, object source);
 }
 
 #endregion

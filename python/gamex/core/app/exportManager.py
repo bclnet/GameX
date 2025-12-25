@@ -28,7 +28,7 @@ class ExportManager:
     async def exportPakAsync(filePath: str, match: callable, from_: int, option: object, _: Archive) -> None:
         arc = _
         if not isinstance(arc, BinaryArchive): raise Exception('s not a BinaryArchive')
-        newPath = os.path.join(filePath, os.path.basename(arc.blobPath)) if filePath else None
+        newPath = os.path.join(filePath, os.path.basename(arc.binPath)) if filePath else None
         # write arc
         await ExportManager.exportPak2Async(arc, newPath, match, from_, option, \
             lambda file, idx: print(f'{idx:>6}> {file.path}') if (idx % 50) == 0 else None, \
@@ -70,7 +70,7 @@ class ExportManager:
         oo = file.cachedObjectOption if isinstance(file.cachedObjectOption, FileOption) else FileOption.Default
         if file.cachedObjectOption and bool(fo & oo):
             if FileOption.UnknownFileModel in oo:
-                model = source.getAsset(IUnknownFileModel, file, FamilyManager.UnknownArchive)
+                model = source.getAsset(IUnknownFileModel, file, FamilyManager.UncoreArchive)
                 # UnknownFileWriter.Factory('default', model).Write(newPath, false)
                 return
             elif FileOption.BinaryObject in oo:

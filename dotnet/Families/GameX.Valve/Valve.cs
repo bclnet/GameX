@@ -1,7 +1,7 @@
-﻿using GameX.Formats.Unknown;
+﻿using GameX.Formats.IUnknown;
 using GameX.ID.Formats;
 using GameX.Transforms;
-using GameX.Unknown;
+using GameX.Uncore;
 using GameX.Valve.Formats;
 using OpenStack;
 using System;
@@ -44,11 +44,11 @@ public class ValveArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
                 ".bsp" => (0, Binary_BspX.Factory),
                 ".spr" => (0, Binary_Spr.Factory),
                 ".mdl" => (0, Binary_Mdl10.Factory),
-                _ => UnknownArchive.AssetFactory(source, game),
+                _ => UncoreArchive.AssetFactory(source, game),
             },
             "Source" => Path.GetExtension(source.Path).ToLowerInvariant() switch {
                 ".mdl" => (0, Binary_Mdl40.Factory),
-                _ => UnknownArchive.AssetFactory(source, game),
+                _ => UncoreArchive.AssetFactory(source, game),
             },
             "Source2" => (0, Binary_Src.Factory),
             _ => throw new ArgumentOutOfRangeException(nameof(game.Engine), game.Engine.n),

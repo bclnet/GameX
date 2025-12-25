@@ -1,7 +1,7 @@
 ﻿using GameX.Crytek.Formats;
 using GameX.Crytek.Transforms;
-using GameX.Formats.Unknown;
-using GameX.Unknown;
+using GameX.Formats.IUnknown;
+using GameX.Uncore;
 using System;
 using System.Collections.Concurrent;
 using System.IO;
@@ -42,7 +42,7 @@ public class CrytekArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
         => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             ".xml" => (0, CryXmlFile.Factory),
             ".cgf" or ".cga" or ".chr" or ".skin" or ".anim" => (0, CryFile.Factory),
-            _ => UnknownArchive.AssetFactory(source, game),
+            _ => UncoreArchive.AssetFactory(source, game),
         };
 
     #endregion

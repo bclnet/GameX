@@ -1,5 +1,5 @@
 ﻿using GameX.Crytek.Formats.Core.Chunks;
-using GameX.Formats.Unknown;
+using GameX.Formats.IUnknown;
 using OpenStack;
 using System;
 using System.Collections.Generic;

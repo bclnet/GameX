@@ -86,7 +86,7 @@ public partial class FileExplorer : UserControl, INotifyPropertyChanged {
             var arc = src?.Arc;
             try {
                 if (arc != null) {
-                    if (arc.Status == Archive.BlobStatus.Opened) return;
+                    if (arc.Status == Archive.Stat.Opened) return;
                     arc.Open(value.Items, Resource);
                     OnFilterKeyUp(null, null);
                 }

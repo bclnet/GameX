@@ -1,8 +1,8 @@
 ﻿using GameX.Formats;
-using GameX.Formats.Unknown;
+using GameX.Formats.IUnknown;
 using GameX.ID.Formats;
 using GameX.Transforms;
-using GameX.Unknown;
+using GameX.Uncore;
 using System;
 using System.IO;
 using System.Text.Json;
@@ -56,7 +56,7 @@ public class IDArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
                 ".bsp" => (0, Binary_BspX.Factory),
                 ".mdl" => (0, Binary_Mdl.Factory),
                 ".spr" => (0, Binary_Spr.Factory),
-                _ => UnknownArchive.AssetFactory(source, game),
+                _ => UncoreArchive.AssetFactory(source, game),
             },
             _ => throw new ArgumentOutOfRangeException(nameof(game.Engine), game.Engine.n),
         };

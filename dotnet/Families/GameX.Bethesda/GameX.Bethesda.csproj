@@ -17,6 +17,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Core\GameX\GameX.csproj" />
     <ProjectReference Include="..\GameX.Gamebryo\GameX.Gamebryo.csproj" />
+    <ProjectReference Include="..\GameX.Uncore\GameX.Uncore.csproj" />
   </ItemGroup>
 
 </Project>

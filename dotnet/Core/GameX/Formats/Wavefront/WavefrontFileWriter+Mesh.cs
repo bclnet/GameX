@@ -1,4 +1,4 @@
-﻿using GameX.Formats.Unknown;
+﻿using GameX.Formats.IUnknown;
 using OpenStack;
 using System;
 using System.IO;

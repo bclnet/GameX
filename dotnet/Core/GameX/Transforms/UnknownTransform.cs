@@ -1,4 +1,5 @@
-﻿using GameX.Formats.Unknown;
+﻿using GameX.Formats;
+using GameX.Formats.IUnknown;
 using System;
 using System.Threading.Tasks;
 

@@ -1,7 +1,7 @@
 ﻿using GameX.Blizzard.Formats;
-using GameX.Formats.Unknown;
+using GameX.Formats.IUnknown;
 using GameX.Transforms;
-using GameX.Unknown;
+using GameX.Uncore;
 using Microsoft.Extensions.FileSystemGlobbing;
 using OpenStack.Vfx;
 using System;
@@ -56,7 +56,7 @@ public class BlizzardArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
 
     static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) AssetFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch {
-            _ => UnknownArchive.AssetFactory(source, game),
+            _ => UncoreArchive.AssetFactory(source, game),
         };
 
     #endregion

@@ -1,4 +1,4 @@
-﻿using GameX.Formats.Unknown;
+﻿using GameX.Formats.IUnknown;
 using GameX.Origin.Clients.UO.Data;
 using GameX.Origin.Formats;
 using GameX.Origin.Formats.UO;

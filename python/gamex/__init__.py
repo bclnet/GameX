@@ -6,5 +6,5 @@ from .core.binary import *
 
 init()
 
-# unknown = getFamily('Unknown')
-# unknownArchive = unknown.getArchive('game:/#APP', False)
+# uncore = getFamily('Uncore')
+# uncoreArchive = uncore.getArchive('game:/#APP', False)

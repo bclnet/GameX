@@ -1,5 +1,5 @@
 ﻿using GameX.Crytek.Formats;
-using GameX.Formats.Unknown;
+using GameX.Formats.IUnknown;
 using System.Threading.Tasks;
 
 namespace GameX.Crytek.Transforms;

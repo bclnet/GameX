@@ -17,8 +17,13 @@
     },
     "Witcher": {
       "name": "The Witcher Enhanced Edition",
+      "date": "October 26, 2007",
       "engine": "Aurora",
-      "url": "https://www.gog.com/en/game/the_witcher",
+      "url": "https://en.wikipedia.org/wiki/The_Witcher_(video_game)",
+      "dls": [
+        "https://store.steampowered.com/app/20900/The_Witcher_Enhanced_Edition_Directors_Cut/",
+        "https://www.gog.com/en/game/the_witcher"
+      ],
       "arcExt": ".key",
       //"arc": "game:/*.key"
       "arc": "game:/main.key",
@@ -38,12 +43,17 @@
     "Witcher2": {
       "name": "The Witcher 2",
       "engine": "REDengine",
-      "url": "https://www.gog.com/en/game/the_witcher_2",
+      "url": "https://en.wikipedia.org/wiki/The_Witcher_2:_Assassins_of_Kings",
+      "dls": [
+        "https://store.steampowered.com/app/20920/The_Witcher_2_Assassins_of_Kings_Enhanced_Edition/",
+        "https://www.gog.com/en/game/the_witcher_2"
+      ],
       "arc": "game:/*",
       "pak_": "game:/base_scripts.dzip",
       "pak2": "game:/br0.w2strings",
       "files": {
         "key": [
+          "Steam:20920",
           "Gog:1207658930",
           "WinReg:CD Projekt RED/The Witcher 2",
           "WinReg:GOG.com/Games/1207658930",
@@ -54,16 +64,20 @@
     },
     "Witcher3": {
       "name": "The Witcher 3: Wild Hunt",
-      "engine": "REDengine",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/The_Witcher_3:_Wild_Hunt",
+      "dls": [
+        "https://store.steampowered.com/app/292030/The_Witcher_3_Wild_Hunt/",
         "https://www.gog.com/en/game/the_witcher_3_wild_hunt",
         "https://www.gog.com/en/game/the_witcher_3_wild_hunt_game_of_the_year_edition"
       ],
+      "date": "December 10, 2020",
+      "engine": "REDengine",
       "arc": "game:/content0/texture.cache",
       "pak0": "game:/content0/bundles/xml.bundle",
       "pak1": "game:/content0/ar.w3strings",
       "files": {
         "key": [
+          "Steam:292030",
           "Gog:1207664643",
           "Gog:1495134320",
           "WinReg:GOG.com/Games/1207664643",
@@ -76,8 +90,12 @@
     },
     "CP77": {
       "name": "Cyberpunk 2077",
-      "url": "https://store.steampowered.com/app/1091500",
-      "date": "",
+      "url": "https://en.wikipedia.org/wiki/Cyberpunk_2077",
+      "dls": [
+        "https://store.steampowered.com/app/1091500/Cyberpunk_2077/",
+        "https://www.gog.com/en/game/cyberpunk_2077"
+      ],
+      "date": "December 10, 2020",
       "engine": "REDengine:4",
       "arcExt": ".archive",
       "arc": "game:/basegame_2_mainmenu.archive",
@@ -94,8 +112,8 @@
       }
     },
     "Witcher4": {
-      "name": "The Witcher 4 Polaris (future)",
-      "url": "https://en.wikipedia.org/wiki/The_Witcher_(video_game_series)",
+      "name": "The Witcher IV (future)",
+      "url": "https://en.wikipedia.org/wiki/The_Witcher_IV",
       "engine": "Unreal",
       "local": {
         "key": [

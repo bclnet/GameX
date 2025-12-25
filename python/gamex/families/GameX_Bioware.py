@@ -4,7 +4,7 @@ from openstk import _pathExtension
 from gamex import BinaryArchive
 from gamex.core.formats.binary import Binary_Zip
 from gamex.families.Bioware.formats.binary import Binary_Aurora, Binary_Myp
-from gamex.families.GameX import UnknownArchive
+from gamex.families.GameX_Uncore import UncoreArchive
 
 # BiowareArchive
 class BiowareArchive(BinaryArchive):
@@ -27,6 +27,6 @@ class BiowareArchive(BinaryArchive):
     @staticmethod
     def assetFactory(source: FileSource, game: FamilyGame) -> (object, callable):
         match _pathExtension(source.path).lower():
-            case _: return UnknownArchive.assetFactory(source, game)
+            case _: return UncoreArchive.assetFactory(source, game)
 
     #endregion

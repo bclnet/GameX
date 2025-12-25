@@ -19,6 +19,7 @@
     <ProjectReference Include="..\GameX.Crytek\GameX.Crytek.csproj" />
     <ProjectReference Include="..\GameX.ID\GameX.ID.csproj" />
     <ProjectReference Include="..\GameX.Epic\GameX.Epic.csproj" />
+    <ProjectReference Include="..\GameX.Uncore\GameX.Uncore.csproj" />
     <ProjectReference Include="..\GameX.Valve\GameX.Valve.csproj" />
   </ItemGroup>
 

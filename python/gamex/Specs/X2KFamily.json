@@ -12,17 +12,23 @@
   ],
   "games": {
     "*": {
-      "archiveType": "GameX.2K.2KArchive, GameX.2K"
+      "archiveType": "GameX.X2K.X2KArchive, GameX.X2K"
     },
     "M": {
       "name": "Mafia",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/Mafia_(video_game)",
+      "dls": [
         "https://store.steampowered.com/app/40990/Mafia/",
-        "https://en.wikipedia.org/wiki/Mafia_(video_game)"
+        "https://www.gog.com/en/game/mafia_definitive_edition"
       ],
       "dev": "Illusion Softworks",
       "date": "2002-08-29",
-      "form": "Console;Windows"
+      "form": "Console;Windows",
+      "files": {
+        "keys": [
+          "Steam:40990"
+        ]
+      }
     },
     "MLB2K5": {
       "name": "Major League Baseball 2K5",
@@ -54,20 +60,21 @@
     },
     "Stronghold2": {
       "name": "Stronghold 2",
-      "url": [
-        "https://store.steampowered.com/app/40960/Stronghold_2_Steam_Edition/",
-        "https://en.wikipedia.org/wiki/Stronghold_2"
-      ],
+      "url": "https://en.wikipedia.org/wiki/Stronghold_2",
+      "dls": "https://store.steampowered.com/app/40960/Stronghold_2_Steam_Edition/",
       "dev": "Firefly Studios",
       "date": "2005-04-19",
-      "form": "Windows"
+      "form": "Windows",
+      "files": {
+        "keys": [
+          "Steam:40960"
+        ]
+      }
     },
     "MotocrossMania3": {
       "name": "Motocross Mania 3",
-      "url": [
-        "https://cdromance.org/ps2-iso/motocross-mania-3-usa/",
-        "https://en.wikipedia.org/wiki/Motocross_Mania_3"
-      ],
+      "url": "https://en.wikipedia.org/wiki/Motocross_Mania_3",
+      "dls": "https://cdromance.org/ps2-iso/motocross-mania-3-usa/",
       "dev": "Deibus Studios",
       "date": "2005-04-27",
       "form": "Console"
@@ -102,23 +109,27 @@
     },
     "Conflict:GT": {
       "name": "Conflict: Global Terror",
-      "url": [
-        "https://www.myabandonware.com/game/conflict-global-terror-e39",
-        "https://en.wikipedia.org/wiki/Conflict:_Global_Terror"
-      ],
+      "url": "https://en.wikipedia.org/wiki/Conflict:_Global_Terror",
+      "dls": "https://www.myabandonware.com/game/conflict-global-terror-e39",
       "dev": "Pivotal Games",
       "date": "2005-10-04",
       "form": "Console;Windows"
     },
     "SeriousSam2": {
       "name": "Serious Sam 2",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/Serious_Sam_2",
+      "dls": [
         "https://store.steampowered.com/app/204340/Serious_Sam_2/",
-        "https://en.wikipedia.org/wiki/Serious_Sam_2"
+        "https://www.gog.com/en/game/serious_sam_the_second_encounter"
       ],
       "dev": "Croteam",
       "date": "2005-10-11",
-      "form": "Console;Windows"
+      "form": "Console;Windows",
+      "files": {
+        "keys": [
+          "Steam:204340"
+        ]
+      }
     },
     "MLB2K5:WSE": {
       "name": "Major League Baseball 2K5: World Series Edition",
@@ -129,10 +140,8 @@
     },
     "ShatteredUnion": {
       "name": "Shattered Union",
-      "url": [
-        "https://store.steampowered.com/app/3960/Shattered_Union/",
-        "https://en.wikipedia.org/wiki/Shattered_Union"
-      ],
+      "url": "https://en.wikipedia.org/wiki/Shattered_Union",
+      "dls": "https://store.steampowered.com/app/3960/Shattered_Union/",
       "dev": "PopTop Software",
       "date": "2005-10-18",
       "form": "Console;Windows"
@@ -153,23 +162,32 @@
     },
     "Vietcong2": {
       "name": "Vietcong 2",
-      "url": [
-        "https://www.myabandonware.com/game/vietcong-2-eop",
-        "https://en.wikipedia.org/wiki/Vietcong_2"
-      ],
+      "url": "https://en.wikipedia.org/wiki/Vietcong_2",
+      "dls": "https://www.myabandonware.com/game/vietcong-2-eop",
       "dev": "Pterodon;Outsider Development",
       "date": "2005-10-25",
-      "form": "Windows"
+      "form": "Windows",
+      "files": {
+        "keys": [
+          "Abandon:XXX"
+        ]
+      }
     },
     "SM:C4": {
       "name": "Sid Meier's Civilization IV",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/Civilization_IV",
+      "dls": [
         "https://store.steampowered.com/app/3900/Sid_Meiers_Civilization_IV/",
-        "https://en.wikipedia.org/wiki/Civilization_IV"
+        "https://www.gog.com/en/game/sid_meiers_civilization_iv_the_complete_edition"
       ],
       "dev": "Firaxis Games",
       "date": "2005-10-25",
-      "form": "Windows"
+      "form": "Windows",
+      "files": {
+        "keys": [
+          "Steam:3900"
+        ]
+      }
     },
     "Zathura": {
       "name": "Zathura",
@@ -215,13 +233,19 @@
     },
     "Oblivion": {
       "name": "The Elder Scrolls IV: Oblivion",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/The_Elder_Scrolls_IV:_Oblivion",
+      "dls": [
         "https://store.steampowered.com/app/22330/The_Elder_Scrolls_IV_Oblivion_Game_of_the_Year_Edition/",
-        "https://en.wikipedia.org/wiki/The_Elder_Scrolls_IV:_Oblivion"
+        "https://www.gog.com/en/game/elder_scrolls_iv_oblivion_game_of_the_year_edition_deluxe_the"
       ],
       "dev": "Bethesda Game Studios",
       "date": "2006-03-20",
-      "form": "Console;Windows"
+      "form": "Console;Windows",
+      "files": {
+        "keys": [
+          "Steam:22330"
+        ]
+      }
     },
     "TopSpin2": {
       "name": "Top Spin 2",
@@ -239,46 +263,64 @@
     },
     "TDVC": {
       "name": "The Da Vinci Code",
-      "url": [
-        "https://www.myabandonware.com/game/the-da-vinci-code-fjg",
-        "https://en.wikipedia.org/wiki/The_Da_Vinci_Code_(video_game)"
-      ],
+      "url": "https://en.wikipedia.org/wiki/The_Da_Vinci_Code_(video_game)",
+      "dls": "https://www.myabandonware.com/game/the-da-vinci-code-fjg",
       "dev": "The Collective",
       "date": "2006-04-15",
-      "form": "Console;Windows"
+      "form": "Console;Windows",
+      "files": {
+        "keys": [
+          "Abandon:XXX"
+        ]
+      }
     },
     "Prey": {
       "name": "Prey",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/Prey_(2006_video_game)",
+      "dls": [
         "https://www.myabandonware.com/game/prey-dd1",
-        "https://www.xbox.com/en-US/games/store/prey/BVPGZMMDDZ0M/0001",
-        "https://en.wikipedia.org/wiki/Prey_(2006_video_game)"
+        "https://www.xbox.com/en-US/games/store/prey/BVPGZMMDDZ0M/0001"
       ],
       "dev": "Human Head Studios;3D Realms;Venom Games",
       "date": "2006-07-11",
-      "form": "Console;Windows"
+      "form": "Console;Windows",
+      "files": {
+        "keys": [
+          "Abandon:XXX"
+        ]
+      }
     },
     "CivCity:R": {
       "name": "CivCity: Rome",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/CivCity:_Rome",
+      "dls": [
         "https://store.steampowered.com/app/3980/CivCity_Rome/",
-        "https://www.gog.com/en/game/civcity_rome",
-        "https://en.wikipedia.org/wiki/CivCity:_Rome"
+        "https://www.gog.com/en/game/civcity_rome"
       ],
       "dev": "Firefly Studios;Firaxis Games",
       "date": "2006-07-26",
-      "form": "Windows"
+      "form": "Windows",
+      "files": {
+        "keys": [
+          "Steam:3980"
+        ]
+      }
     },
     "DS2": {
       "name": "Dungeon Siege II: Broken World",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/Dungeon_Siege_II:_Broken_World",
+      "dls": [
         "https://store.steampowered.com/app/39200/Dungeon_Siege_II/",
-        "https://www.gog.com/en/game/dungeon_siege_collection",
-        "https://en.wikipedia.org/wiki/Dungeon_Siege_II:_Broken_World"
+        "https://www.gog.com/en/game/dungeon_siege_collection"
       ],
       "dev": "Gas Powered Games",
       "date": "2006-08-04",
-      "form": "Windows"
+      "form": "Windows",
+      "files": {
+        "keys": [
+          "Steam:39200"
+        ]
+      }
     },
     "NHL2K7": {
       "name": "NHL 2K7",
@@ -303,31 +345,37 @@
     },
     "SM:R": {
       "name": "Sid Meier's Railroads!",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/Sid_Meier%27s_Railroads!",
+      "dls": [
         "https://store.steampowered.com/app/7600/Sid_Meiers_Railroads/",
-        "https://www.gog.com/en/game/sid_meiers_railroads",
-        "https://en.wikipedia.org/wiki/Sid_Meier%27s_Railroads!"
+        "https://www.gog.com/en/game/sid_meiers_railroads"
       ],
       "dev": "Firaxis Games;2K China",
       "date": "2006-10-17",
-      "form": "Windows"
+      "form": "Windows",
+      "files": {
+        "keys": [
+          "Steam:7600"
+        ]
+      }
     },
     "StrongholdLegends": {
       "name": "Stronghold Legends",
-      "url": [
-        "https://store.steampowered.com/app/40980/Stronghold_Legends_Steam_Edition/",
-        "https://en.wikipedia.org/wiki/Stronghold_Legends"
-      ],
+      "url": "https://en.wikipedia.org/wiki/Stronghold_Legends",
+      "dls": "https://store.steampowered.com/app/40980/Stronghold_Legends_Steam_Edition/",
       "dev": "Firefly Studios",
       "date": "2006-10-23",
-      "form": "Windows"
+      "form": "Windows",
+      "files": {
+        "keys": [
+          "Steam:40980"
+        ]
+      }
     },
     "DS:ToA": {
       "name": "Dungeon Siege: Throne of Agony",
-      "url": [
-        "https://cdromance.org/psp/dungeon-siege-throne-of-agony/",
-        "https://en.wikipedia.org/wiki/Dungeon_Siege:_Throne_of_Agony"
-      ],
+      "url": "https://en.wikipedia.org/wiki/Dungeon_Siege:_Throne_of_Agony",
+      "dls": "https://cdromance.org/psp/dungeon-siege-throne-of-agony/",
       "dev": "SuperVillain Studios",
       "date": "2006-10-29",
       "form": "Console"
@@ -348,14 +396,19 @@
     },
     "JE:SE": {
       "name": "Jade Empire: Special Edition",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/Jade_Empire#Jade_Empire:_Special_Edition",
+      "dls": [
         "https://store.steampowered.com/app/7110/Jade_Empire_Special_Edition/",
-        "https://www.gog.com/en/game/jade_empire_special_edition",
-        "https://en.wikipedia.org/wiki/Jade_Empire#Jade_Empire:_Special_Edition"
+        "https://www.gog.com/en/game/jade_empire_special_edition"
       ],
       "dev": "LTI Gray Matter",
       "date": "2007-02-27",
-      "form": "Console"
+      "form": "Console",
+      "files": {
+        "keys": [
+          "Steam:7110"
+        ]
+      }
     },
     "MLB2K7": {
       "name": "Major League Baseball 2K7",
@@ -397,14 +450,19 @@
     },
     "BS": {
       "name": "BioShock",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/BioShock",
+      "dls": [
         "https://store.steampowered.com/app/7670/BioShock/",
-        "https://www.xbox.com/en-US/games/store/bioshock/BTBMZQ3FM2V8/0001",
-        "https://en.wikipedia.org/wiki/BioShock"
+        "https://www.xbox.com/en-US/games/store/bioshock/BTBMZQ3FM2V8/0001"
       ],
       "dev": "2K Boston;2K Australia",
       "date": "2007-06-25",
-      "form": "Console"
+      "form": "Console",
+      "files": {
+        "keys": [
+          "Steam:7670"
+        ]
+      }
     },
     "NHL2K8": {
       "name": "NHL 2K8",
@@ -450,13 +508,16 @@
     },
     "DoND:SVG": {
       "name": "Deal or No Deal: Secret Vault Games",
-      "url": [
-        "https://www.myabandonware.com/game/deal-or-no-deal-secret-vault-games-imw",
-        "https://gamefaqs.gamespot.com/pc/943587-deal-or-no-deal-secret-vault-games"
-      ],
+      "url": "https://gamefaqs.gamespot.com/pc/943587-deal-or-no-deal-secret-vault-games",
+      "dls": "https://www.myabandonware.com/game/deal-or-no-deal-secret-vault-games-imw",
       "dev": "Cat Daddy Games",
       "date": "2007-11-29",
-      "form": "Console"
+      "form": "Console",
+      "files": {
+        "keys": [
+          "Abandon:XXX"
+        ]
+      }
     },
     "MLB2K8": {
       "name": "Major League Baseball 2K8",
@@ -481,20 +542,16 @@
     },
     "CG": {
       "name": "Carnival Games",
-      "url": [
-        "https://store.steampowered.com/app/1249740/Carnival_Games/",
-        "https://en.wikipedia.org/wiki/Carnival_Games"
-      ],
+      "url": "https://en.wikipedia.org/wiki/Carnival_Games",
+      "dls": "https://store.steampowered.com/app/1249740/Carnival_Games/",
       "dev": "Cat Daddy Games;2K China;Mass Media Games",
       "date": "2008-07-08",
       "form": "Mobile;Console;Windows"
     },
     "SM:CR": {
       "name": "Sid Meier's Civilization Revolution",
-      "url": [
-        "https://www.xbox.com/en-US/games/store/sid-meiers-civilization-revolution/BQ0WGG6B6X2H",
-        "https://en.wikipedia.org/wiki/Civilization_Revolution"
-      ],
+      "url": "https://en.wikipedia.org/wiki/Civilization_Revolution",
+      "dls": "https://www.xbox.com/en-US/games/store/sid-meiers-civilization-revolution/BQ0WGG6B6X2H",
       "dev": "Firaxis Games;2K China",
       "date": "2007-10-19",
       "form": "Console;Mobile"
@@ -592,7 +649,7 @@
     },
     "DKB": {
       "name": "Don King Boxing",
-      "url": "XXX",
+      "url": "https://en.wikipedia.org/wiki/Don_King_Boxing",
       "dev": "2K China;Mineloader Software",
       "date": "2009-03-31",
       "form": "Console"
@@ -651,10 +708,10 @@
     },
     "BL": {
       "name": "Borderlands",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/Borderlands_(video_game)",
+      "dls": [
         "https://store.steampowered.com/app/729040/Borderlands_Game_of_the_Year_Enhanced/",
-        "https://www.xbox.com/en-US/games/store/borderlands/C0NDKFJXW9SZ/0001",
-        "https://en.wikipedia.org/wiki/Borderlands_(video_game)"
+        "https://www.xbox.com/en-US/games/store/borderlands/C0NDKFJXW9SZ/0001"
       ],
       "dev": "Gearbox Software; Critical Mass Interactive;Demiurge Studios",
       "date": "2009-10-20",
@@ -706,20 +763,16 @@
     },
     "BS2": {
       "name": "BioShock 2",
-      "url": [
-        "https://store.steampowered.com/app/8850/BioShock_2/",
-        "https://en.wikipedia.org/wiki/BioShock_2"
-      ],
+      "url": "https://en.wikipedia.org/wiki/BioShock_2",
+      "dls": "https://store.steampowered.com/app/8850/BioShock_2/",
       "dev": "2K Marin;2K Australia;Digital Extremes;Arkane Studios;2K Boston",
       "date": "2010-02-09",
       "form": "Console;Windows"
     },
     "TMoPBW": {
       "name": "The Misadventures of P.B. Winterbottom",
-      "url": [
-        "https://store.steampowered.com/app/40930/The_Misadventures_of_PB_Winterbottom/",
-        "https://en.wikipedia.org/wiki/The_Misadventures_of_P.B._Winterbottom"
-      ],
+      "url": "https://en.wikipedia.org/wiki/The_Misadventures_of_P.B._Winterbottom",
+      "dls": "https://store.steampowered.com/app/40930/The_Misadventures_of_PB_Winterbottom/",
       "dev": "The Odd Gentlemen;2K Hangzhou",
       "date": "2010-02-17",
       "form": "Console"
@@ -739,10 +792,10 @@
     },
     "M2": {
       "name": "Mafia II",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/Mafia_II",
+      "dls": [
         "https://store.steampowered.com/app/50130/Mafia_II_Classic/",
-        "https://www.xbox.com/en-US/games/store/mafia-ii/C1H15FFSH2CB/0001",
-        "https://en.wikipedia.org/wiki/Mafia_II"
+        "https://www.xbox.com/en-US/games/store/mafia-ii/C1H15FFSH2CB/0001"
       ],
       "dev": "2K Czech",
       "date": "2010-08-24",
@@ -764,10 +817,8 @@
     },
     "SM:C5": {
       "name": "Sid Meier's Civilization V",
-      "url": [
-        "https://store.steampowered.com/app/8930/Sid_Meiers_Civilization_V/",
-        "https://en.wikipedia.org/wiki/Civilization_V"
-      ],
+      "url": "https://en.wikipedia.org/wiki/Civilization_V",
+      "dls": "https://store.steampowered.com/app/8930/Sid_Meiers_Civilization_V/",
       "dev": "Firaxis Games;2K Shanghai",
       "date": "2010-09-21",
       "form": "Windows"
@@ -826,10 +877,10 @@
     },
     "DukeNukem": {
       "name": "Duke Nukem Forever",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/Duke_Nukem_Forever",
+      "dls": [
         "https://store.steampowered.com/app/57900/Duke_Nukem_Forever/",
-        "https://www.xbox.com/en-US/games/store/duke-nukem-forever/BZ0NBMRKLT18",
-        "https://en.wikipedia.org/wiki/Duke_Nukem_Forever"
+        "https://www.xbox.com/en-US/games/store/duke-nukem-forever/BZ0NBMRKLT18"
       ],
       "dev": "Gearbox Software;Triptych Games;Piranha Games;3D Realms",
       "date": "2011-06-14",
@@ -889,10 +940,10 @@
     },
     "TheDarkness2": {
       "name": "The Darkness II",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/The_Darkness_II",
+      "dls": [
         "https://store.steampowered.com/app/67370/The_Darkness_II/",
-        "https://www.xbox.com/en-US/games/store/the-darkness-ii/C20T418C1T43",
-        "https://en.wikipedia.org/wiki/The_Darkness_II"
+        "https://www.xbox.com/en-US/games/store/the-darkness-ii/C20T418C1T43"
       ],
       "dev": "Digital Extremes;2K China",
       "date": "2012-02-07",
@@ -920,10 +971,10 @@
     },
     "SpecOps:TL": {
       "name": "Spec Ops: The Line",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/Spec_Ops:_The_Line",
+      "dls": [
         "https://store.steampowered.com/app/50300/Spec_Ops_The_Line/",
-        "https://www.xbox.com/en-US/games/store/spec-ops-the-line/c160k9cdddcw",
-        "https://en.wikipedia.org/wiki/Spec_Ops:_The_Line"
+        "https://www.xbox.com/en-US/games/store/spec-ops-the-line/c160k9cdddcw"
       ],
       "dev": "Yager Development;Darkside Game Studios;Blind Squirrel Games",
       "date": "2012-06-26",
@@ -950,10 +1001,10 @@
     },
     "BL2": {
       "name": "Borderlands 2",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/Borderlands_2",
+      "dls": [
         "https://store.steampowered.com/app/49520/Borderlands_2/",
-        "https://www.xbox.com/en-US/games/store/borderlands-2/BRC33X34H2C9/0001",
-        "https://en.wikipedia.org/wiki/Borderlands_2"
+        "https://www.xbox.com/en-US/games/store/borderlands-2/BRC33X34H2C9/0001"
       ],
       "dev": "Gearbox Software",
       "date": "2012-09-18",
@@ -992,10 +1043,10 @@
     },
     "XCOM:EU": {
       "name": "XCOM: Enemy Unknown",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/XCOM:_Enemy_Unknown",
+      "dls": [
         "https://store.steampowered.com/app/200510/XCOM_Enemy_Unknown/",
-        "https://www.xbox.com/en-US/games/store/xcom-enemy-unknown/BQZ0V5R1HPXF/0001",
-        "https://en.wikipedia.org/wiki/XCOM:_Enemy_Unknown"
+        "https://www.xbox.com/en-US/games/store/xcom-enemy-unknown/BQZ0V5R1HPXF/0001"
       ],
       "dev": "Firaxis Games;2K China;Blind Squirrel Games;Darkside Game Studios;Digital Extremes",
       "date": "2012-10-09",
@@ -1047,10 +1098,10 @@
     },
     "BSI": {
       "name": "BioShock Infinite",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/BioShock_Infinite",
+      "dls": [
         "https://store.steampowered.com/app/8870/BioShock_Infinite/",
-        "https://www.xbox.com/en-US/games/store/bioshock-infinite/C4XX6JL0N0DM",
-        "https://en.wikipedia.org/wiki/BioShock_Infinite"
+        "https://www.xbox.com/en-US/games/store/bioshock-infinite/C4XX6JL0N0DM"
       ],
       "dev": "Irrational Games;2K Australia",
       "date": "2013-03-26",
@@ -1071,10 +1122,8 @@
     },
     "SM:AP": {
       "name": "Sid Meier's Ace Patrol",
-      "url": [
-        "https://store.steampowered.com/app/244070/Sid_Meiers_Ace_Patrol/",
-        "https://en.wikipedia.org/wiki/Sid_Meier%27s_Ace_Patrol"
-      ],
+      "url": "https://en.wikipedia.org/wiki/Sid_Meier%27s_Ace_Patrol",
+      "dls": "https://store.steampowered.com/app/244070/Sid_Meiers_Ace_Patrol/",
       "dev": "Firaxis Games",
       "date": "2013-05-02",
       "form": "Mobile"
@@ -1087,18 +1136,18 @@
     },
     "TurdBirds": {
       "name": "Turd Birds",
-      "url": "XXX",
+      "url": "https://www.mobygames.com/game/176162/turd-birds/",
       "dev": "Cat Daddy Games",
       "date": "2013-07-11",
       "form": "Mobile"
     },
     "XCOM:TBD": {
       "name": "The Bureau: XCOM Declassified",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/The_Bureau:_XCOM_Declassified",
+      "dls": [
         "https://store.steampowered.com/app/65930/The_Bureau_XCOM_Declassified/",
         "https://www.gog.com/en/game/the_bureau_xcom_declassified",
-        "https://www.xbox.com/en-US/games/store/the-bureau/BWGWPKRVZZV2",
-        "https://en.wikipedia.org/wiki/The_Bureau:_XCOM_Declassified"
+        "https://www.xbox.com/en-US/games/store/the-bureau/BWGWPKRVZZV2"
       ],
       "dev": "2K Marin;2K Australia;2K China",
       "date": "2013-08-20",
@@ -1166,10 +1215,10 @@
     },
     "BL:TPS": {
       "name": "Borderlands: The Pre-Sequel!",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/Borderlands:_The_Pre-Sequel",
+      "dls": [
         "https://store.steampowered.com/app/261640/Borderlands_The_PreSequel/",
-        "https://www.xbox.com/en-US/games/store/borderlands-the-pre-sequel/BT056K0FLWHT",
-        "https://en.wikipedia.org/wiki/Borderlands:_The_Pre-Sequel"
+        "https://www.xbox.com/en-US/games/store/borderlands-the-pre-sequel/BT056K0FLWHT"
       ],
       "dev": "2K Australia;Gearbox Software;Darkside Game Studios;2K China",
       "date": "2014-10-14",
@@ -1184,10 +1233,8 @@
     },
     "SM:CBE": {
       "name": "Sid Meier's Civilization: Beyond Earth",
-      "url": [
-        "https://store.steampowered.com/app/65980/Sid_Meiers_Civilization_Beyond_Earth/",
-        "https://en.wikipedia.org/wiki/Civilization:_Beyond_Earth"
-      ],
+      "url": "https://en.wikipedia.org/wiki/Civilization:_Beyond_Earth",
+      "dls": "https://store.steampowered.com/app/65980/Sid_Meiers_Civilization_Beyond_Earth/",
       "dev": "Firaxis Games",
       "date": "2014-10-24",
       "form": "Windows"
@@ -1207,30 +1254,26 @@
     },
     "Evolve": {
       "name": "Evolve",
-      "url": [
-        "https://www.xbox.com/en-US/games/store/evolve/C4HHJM5JSSJ1/0001",
-        "https://en.wikipedia.org/wiki/Evolve_(video_game)"
-      ],
+      "url": "https://en.wikipedia.org/wiki/Evolve_(video_game)",
+      "dls": "https://www.xbox.com/en-US/games/store/evolve/C4HHJM5JSSJ1/0001",
       "dev": "Turtle Rock Studios;Agora Games;Blind Squirrel Games;Crytek;IllFonic;Mass Media Games",
       "date": "2015-02-10",
       "form": "Console;Windows"
     },
     "SM:S": {
       "name": "Sid Meier's Starships",
-      "url": [
-        "https://store.steampowered.com/app/282210/Sid_Meiers_Starships/",
-        "https://en.wikipedia.org/wiki/Sid_Meier%27s_Starships"
-      ],
+      "url": "https://en.wikipedia.org/wiki/Sid_Meier%27s_Starships",
+      "dls": "https://store.steampowered.com/app/282210/Sid_Meiers_Starships/",
       "dev": "Firaxis Games",
       "date": "2015-03-12",
       "form": "Console"
     },
     "BL:THC": {
       "name": "Borderlands: The Handsome Collection",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/Borderlands:_The_Handsome_Collection",
+      "dls": [
         "https://store.steampowered.com/bundle/8133/Borderlands_The_Handsome_Collection/",
-        "https://www.xbox.com/en-US/games/store/borderlands-the-handsome-collection/C4DQHRNN1ZN5",
-        "https://en.wikipedia.org/wiki/Borderlands:_The_Handsome_Collection"
+        "https://www.xbox.com/en-US/games/store/borderlands-the-handsome-collection/C4DQHRNN1ZN5"
       ],
       "dev": "Armature Studio;Iron Galaxy Studios",
       "date": "2015-03-24",
@@ -1277,11 +1320,11 @@
     },
     "XCOM2": {
       "name": "XCOM 2",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/XCOM_2",
+      "dls": [
         "https://store.steampowered.com/app/268500/XCOM_2/",
         "https://www.gog.com/en/game/xcom_2",
-        "https://www.xbox.com/en-US/games/store/xcom-2-collection/C46J5M9FS4N6",
-        "https://en.wikipedia.org/wiki/XCOM_2"
+        "https://www.xbox.com/en-US/games/store/xcom-2-collection/C46J5M9FS4N6"
       ],
       "dev": "Firaxis Games;The Workshop;Blind Squirrel Games",
       "date": "2016-02-05",
@@ -1307,10 +1350,8 @@
     },
     "Battleborn": {
       "name": "Battleborn",
-      "url": [
-        "https://store.steampowered.com/app/394230/Battleborn/",
-        "https://en.wikipedia.org/wiki/Battleborn_(video_game)"
-      ],
+      "url": "https://en.wikipedia.org/wiki/Battleborn_(video_game)",
+      "dls": "https://store.steampowered.com/app/394230/Battleborn/",
       "dev": "Gearbox Software",
       "date": "2016-05-03",
       "form": "Console;Windows"
@@ -1337,11 +1378,11 @@
     },
     "BS:TC": {
       "name": "BioShock: The Collection",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/BioShock:_The_Collection",
+      "dls": [
         "https://store.steampowered.com/sub/127633/",
         "https://www.xbox.com/en-US/games/store/bioshock-the-collection/C2HCDG7L1469",
-        "https://store.epicgames.com/en-US/bundles/bioshock-the-collection",
-        "https://en.wikipedia.org/wiki/BioShock:_The_Collection"
+        "https://store.epicgames.com/en-US/bundles/bioshock-the-collection"
       ],
       "dev": "Blind Squirrel Games",
       "date": "2016-09-13",
@@ -1349,7 +1390,8 @@
     },
     "BS:R": {
       "name": "BioShock Remastered",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/BioShock",
+      "dls": [
         "https://store.steampowered.com/app/409710/BioShock_Remastered/",
         "https://www.gog.com/en/game/bioshock_remastered",
         "https://www.xbox.com/en-US/games/store/bioshock-remastered/BNCBCS5RJWH7"
@@ -1360,7 +1402,8 @@
     },
     "BS2:R": {
       "name": "BioShock 2 Remastered",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/BioShock_2",
+      "dls": [
         "https://store.steampowered.com/app/409720/BioShock_2_Remastered/",
         "https://www.gog.com/en/game/bioshock_2_remastered",
         "https://www.xbox.com/en-US/games/store/bioshock-2-remastered/BP8T903FZL2X"
@@ -1378,10 +1421,8 @@
     },
     "M3": {
       "name": "Mafia III",
-      "url": [
-        "https://www.playstation.com/en-us/games/mafia-iii/",
-        "https://en.wikipedia.org/wiki/Mafia_III"
-      ],
+      "url": "https://en.wikipedia.org/wiki/Mafia_III",
+      "dls": "https://www.playstation.com/en-us/games/mafia-iii/",
       "dev": "Hangar 13;2K Czech;22nd Century Toys;Blind Squirrel Games;Certain Affinity;Mass Media Games",
       "date": "2016-10-07",
       "form": "Console;Windows"
@@ -1407,10 +1448,10 @@
     },
     "SM:C6": {
       "name": "Sid Meier's Civilization VI",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/Civilization_VI",
+      "dls": [
         "https://store.steampowered.com/app/289070/Sid_Meiers_Civilization_VI/",
-        "https://www.xbox.com/en-US/games/store/sid-meiers-civilization-vi/9n4rsg99kv1x",
-        "https://en.wikipedia.org/wiki/Civilization_VI"
+        "https://www.xbox.com/en-US/games/store/sid-meiers-civilization-vi/9n4rsg99kv1x"
       ],
       "dev": "Firaxis Games;Aspyr",
       "date": "2016-10-21",
@@ -1418,7 +1459,8 @@
     },
     "CG:VR": {
       "name": "Carnival Games VR",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/Carnival_Games",
+      "dls": [
         "https://store.steampowered.com/app/458920/Carnival_Games_VR/",
         "https://www.meta.com/experiences/carnival-adventure-vr/5722284594538668/"
       ],
@@ -1428,10 +1470,10 @@
     },
     "NBA2K:VR": {
       "name": "NBA 2KVR Experience",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/NBA_2KVR_Experience",
+      "dls": [
         "https://store.steampowered.com/app/519490/NBA_2KVR_Experience/",
-        "https://www.meta.com/experiences/pcvr/nba-2kvr-experience/1096989123704521/",
-        "https://en.wikipedia.org/wiki/NBA_2KVR_Experience"
+        "https://www.meta.com/experiences/pcvr/nba-2kvr-experience/1096989123704521/"
       ],
       "dev": "Specular Interactive;Visual Concepts",
       "date": "2016-11-22",
@@ -1518,10 +1560,10 @@
     },
     "NBA2K:P2": {
       "name": "NBA 2K Playgrounds 2",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/NBA_2K_Playgrounds_2",
+      "dls": [
         "https://store.steampowered.com/app/726590/NBA_2K_Playgrounds_2/",
-        "https://www.xbox.com/en-US/games/store/nba-2k-playgrounds-2/BSC0RPMPF8VH",
-        "https://en.wikipedia.org/wiki/NBA_2K_Playgrounds_2"
+        "https://www.xbox.com/en-US/games/store/nba-2k-playgrounds-2/BSC0RPMPF8VH"
       ],
       "dev": "Saber Interactive",
       "date": "2018-10-16",
@@ -1536,10 +1578,10 @@
     },
     "BL2:VR": {
       "name": "Borderlands 2 VR",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/Borderlands_2#PlayStation_VR_port",
+      "dls": [
         "https://store.steampowered.com/app/991260/Borderlands_2_VR/",
-        "https://store.playstation.com/en-us/product/UP1001-CUSA13897_00-000000000000BLVR",
-        "https://en.wikipedia.org/wiki/Borderlands_2#PlayStation_VR_port"
+        "https://store.playstation.com/en-us/product/UP1001-CUSA13897_00-000000000000BLVR"
       ],
       "dev": "Gearbox Software",
       "date": "2018-12-14",
@@ -1560,11 +1602,11 @@
     },
     "BL3": {
       "name": "Borderlands 3",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/Borderlands_3",
+      "dls": [
         "https://store.steampowered.com/app/397540/Borderlands_3/",
         "https://www.xbox.com/en-US/games/store/borderlands-3/C34NB0F1B5WQ",
-        "https://store.epicgames.com/en-US/p/borderlands-3",
-        "https://en.wikipedia.org/wiki/Borderlands_3"
+        "https://store.epicgames.com/en-US/p/borderlands-3"
       ],
       "dev": "Gearbox Software",
       "date": "2019-09-13",
@@ -1579,10 +1621,10 @@
     },
     "XCOM:CS": {
       "name": "XCOM: Chimera Squad",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/XCOM:_Chimera_Squad",
+      "dls": [
         "https://store.steampowered.com/app/882100/XCOM_Chimera_Squad/",
-        "https://www.gog.com/en/game/xcom_chimera_squad",
-        "https://en.wikipedia.org/wiki/XCOM:_Chimera_Squad"
+        "https://www.gog.com/en/game/xcom_chimera_squad"
       ],
       "dev": "Firaxis Games",
       "date": "2020-04-24",
@@ -1610,11 +1652,11 @@
     },
     "WWE2K:B": {
       "name": "WWE 2K Battlegrounds",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/WWE_2K_Battlegrounds",
+      "dls": [
         "https://store.steampowered.com/app/1142100/WWE_2K_BATTLEGROUNDS/",
         "https://store.playstation.com/en-us/product/UP1001-CUSA16767_00-WWEBATTLEGROUNDS",
-        "https://www.xbox.com/en-US/games/store/wwe-2k-battlegrounds/9PLGHH2VNRLX",
-        "https://en.wikipedia.org/wiki/WWE_2K_Battlegrounds"
+        "https://www.xbox.com/en-US/games/store/wwe-2k-battlegrounds/9PLGHH2VNRLX"
       ],
       "dev": "Saber Interactive Madrid",
       "date": "2020-09-18",
@@ -1622,20 +1664,18 @@
     },
     "M:DE": {
       "name": "Mafia: Definitive Edition",
-      "url": [
-        "https://store.steampowered.com/app/1030840/Mafia_Definitive_Edition/",
-        "https://en.wikipedia.org/wiki/Mafia:_Definitive_Edition"
-      ],
+      "url": "https://en.wikipedia.org/wiki/Mafia:_Definitive_Edition",
+      "dls": "https://store.steampowered.com/app/1030840/Mafia_Definitive_Edition/",
       "dev": "Hangar 13;Climax Studios;Snappers Systems",
       "date": "2020-09-25",
       "form": "Console;Windows"
     },
     "M2:DE": {
       "name": "Mafia II: Definitive Edition",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/Mafia_II:_Definitive_Edition",
+      "dls": [
         "https://store.steampowered.com/app/1030830/Mafia_II_Definitive_Edition/",
-        "https://www.playstation.com/en-us/games/mafia-ii-remaster/",
-        "https://en.wikipedia.org/wiki/Mafia_II:_Definitive_Edition"
+        "https://www.playstation.com/en-us/games/mafia-ii-remaster/"
       ],
       "dev": "Hangar 13;D3T",
       "date": "2020-05-19",
@@ -1656,12 +1696,12 @@
     },
     "M3:DE": {
       "name": "Mafia III: Definitive Edition",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/Mafia_III",
+      "dls": [
         "https://store.steampowered.com/app/360430/Mafia_III_Definitive_Edition/",
         "https://store.playstation.com/en-us/product/UP1001-CUSA03652_00-MAFIA3DEFINITIVE",
         "https://www.gog.com/en/game/mafia_iii_definitive_edition",
-        "https://www.xbox.com/en-US/games/store/mafia-iii-definitive-edition/BVZLS7XZ68KF/0001",
-        "https://en.wikipedia.org/wiki/Mafia_III"
+        "https://www.xbox.com/en-US/games/store/mafia-iii-definitive-edition/BVZLS7XZ68KF/0001"
       ],
       "dev": "Red Kite Games",
       "date": "2021-10-01",
@@ -1676,10 +1716,10 @@
     },
     "TTW": {
       "name": "Tiny Tina's Wonderlands",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/Tiny_Tina%27s_Wonderlands",
+      "dls": [
         "https://store.steampowered.com/app/1286680/Tiny_Tinas_Wonderlands/",
-        "https://www.xbox.com/en-US/games/store/tiny-tinas-wonderlands/9NFRN3NDXR2D/0010",
-        "https://en.wikipedia.org/wiki/Tiny_Tina%27s_Wonderlands"
+        "https://www.xbox.com/en-US/games/store/tiny-tinas-wonderlands/9NFRN3NDXR2D/0010"
       ],
       "dev": "Gearbox Software",
       "date": "2022-03-25",
@@ -1687,11 +1727,11 @@
     },
     "TheQuarry": {
       "name": "The Quarry",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/The_Quarry_(video_game)",
+      "dls": [
         "https://store.steampowered.com/app/1577120/The_Quarry/",
         "https://www.xbox.com/en-US/games/store/the-quarry-for-xbox-series-xs/9N5HDNDWVV34/0010",
-        "https://www.xbox.com/en-US/games/store/the-quarry-for-xbox-one/9N833N5FFF9P/0010",
-        "https://en.wikipedia.org/wiki/The_Quarry_(video_game)"
+        "https://www.xbox.com/en-US/games/store/the-quarry-for-xbox-one/9N833N5FFF9P/0010"
       ],
       "dev": "Supermassive Games",
       "date": "2022-06-10",
@@ -1699,20 +1739,18 @@
     },
     "NBA2K23": {
       "name": "NBA 2K23",
-      "url": [
-        "https://store.steampowered.com/app/1919590/NBA_2K23/",
-        "https://en.wikipedia.org/wiki/NBA_2K23"
-      ],
+      "url": "https://en.wikipedia.org/wiki/NBA_2K23",
+      "dls": "https://store.steampowered.com/app/1919590/NBA_2K23/",
       "dev": "Visual Concepts",
       "date": "2022-09-09",
       "form": "Console;Windows"
     },
     "PGATour2K23": {
       "name": "PGA Tour 2K23",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/PGA_Tour_2K23",
+      "dks": [
         "https://store.steampowered.com/app/1588010/PGA_TOUR_2K23/",
-        "https://www.xbox.com/en-US/games/store/pga-tour-2k23/9PF7HB2DJ7CR",
-        "https://en.wikipedia.org/wiki/PGA_Tour_2K23"
+        "https://www.xbox.com/en-US/games/store/pga-tour-2k23/9PF7HB2DJ7CR"
       ],
       "dev": "HB Studios",
       "date": "2022-10-14",
@@ -1720,10 +1758,10 @@
     },
     "BL:NT": {
       "name": "New Tales from the Borderlands",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/New_Tales_from_the_Borderlands",
+      "dls": [
         "https://store.steampowered.com/app/1454970/New_Tales_from_the_Borderlands/",
-        "https://www.xbox.com/en-US/games/store/new-tales-from-the-borderlands/9NTZV27BDFCP",
-        "https://en.wikipedia.org/wiki/New_Tales_from_the_Borderlands"
+        "https://www.xbox.com/en-US/games/store/new-tales-from-the-borderlands/9NTZV27BDFCP"
       ],
       "dev": "Gearbox Software Quebec",
       "date": "2022-10-21",
@@ -1731,10 +1769,10 @@
     },
     "Marvel:MS": {
       "name": "Marvel's Midnight Suns",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/Marvel%27s_Midnight_Suns",
+      "dls": [
         "https://store.steampowered.com/app/368260/Marvels_Midnight_Suns/",
-        "https://www.xbox.com/en-US/games/store/marvels-midnight-suns-for-xbox-one/9NS10SXBG0HX/0010",
-        "https://en.wikipedia.org/wiki/Marvel%27s_Midnight_Suns"
+        "https://www.xbox.com/en-US/games/store/marvels-midnight-suns-for-xbox-one/9NS10SXBG0HX/0010"
       ],
       "dev": "Firaxis Games",
       "date": "2022-12-02",
@@ -1742,21 +1780,19 @@
     },
     "WWE2K23": {
       "name": "WWE 2K23",
-      "url": [
-        "https://store.steampowered.com/app/1942660/WWE_2K23/",
-        "https://en.wikipedia.org/wiki/WWE_2K23"
-      ],
+      "url": "https://en.wikipedia.org/wiki/WWE_2K23",
+      "dls": "https://store.steampowered.com/app/1942660/WWE_2K23/",
       "dev": "Visual Concepts",
       "date": "2022-12-02",
       "form": "Console;Windows"
     },
     "Lego2KDrive": {
       "name": "Lego 2K Drive",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/Lego_2K_Drive",
+      "dls": [
         "https://store.steampowered.com/app/1451810/LEGO_2K_Drive/",
         "https://store.playstation.com/en-us/product/UP1001-PPSA04048_00-CROSSGENEDPS4PS5",
-        "https://www.xbox.com/en-US/games/store/lego-2k-drive-for-xbox-one/9PNH6BGC71FP",
-        "https://en.wikipedia.org/wiki/Lego_2K_Drive"
+        "https://www.xbox.com/en-US/games/store/lego-2k-drive-for-xbox-one/9PNH6BGC71FP"
       ],
       "dev": "Visual Concepts",
       "date": "2022-12-02",
@@ -1764,11 +1800,11 @@
     },
     "NBA2K24": {
       "name": "NBA 2K24",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/NBA_2K24",
+      "dls": [
         "https://store.steampowered.com/app/2338770/NBA_2K24/",
         "https://store.playstation.com/en-us/product/UP1001-PPSA15301_00-NBA2K24000000000",
-        "https://www.xbox.com/en-US/games/store/nba-2k24-for-xbox-series-xs/9NT7FNZ0WJM1",
-        "https://en.wikipedia.org/wiki/NBA_2K24"
+        "https://www.xbox.com/en-US/games/store/nba-2k24-for-xbox-series-xs/9NT7FNZ0WJM1"
       ],
       "dev": "Visual Concepts",
       "date": "2022-12-02",
@@ -1776,11 +1812,11 @@
     },
     "WWE2K24": {
       "name": "WWE 2K24",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/WWE_2K24",
+      "dls": [
         "https://store.steampowered.com/app/2315690/WWE_2K24/",
         "https://store.playstation.com/en-us/product/UP1001-PPSA16306_00-WWE2K24CROSSGEN0",
-        "https://www.xbox.com/en-US/games/store/wwe-2k24-cross-gen-digital-edition/9nbffpwtxbtj",
-        "https://en.wikipedia.org/wiki/WWE_2K24"
+        "https://www.xbox.com/en-US/games/store/wwe-2k24-cross-gen-digital-edition/9nbffpwtxbtj"
       ],
       "dev": "Visual Concepts",
       "date": "2024-05-08",
@@ -1788,11 +1824,11 @@
     },
     "TopSpin2K25": {
       "name": "TopSpin 2K25",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/TopSpin_2K25",
+      "dls": [
         "https://store.steampowered.com/app/1785650/TopSpin_2K25/",
         "https://store.playstation.com/en-us/product/UP1001-PPSA06898_00-TS2K25CROSSGENED",
-        "https://www.xbox.com/en-US/games/store/topspin-2k25-cross-gen-digital-edition/9n6kxjpxft38",
-        "https://en.wikipedia.org/wiki/TopSpin_2K25"
+        "https://www.xbox.com/en-US/games/store/topspin-2k25-cross-gen-digital-edition/9n6kxjpxft38"
       ],
       "dev": "Hangar 13",
       "date": "2024-05-26",
@@ -1800,11 +1836,11 @@
     },
     "NBA2K25": {
       "name": "NBA 2K25",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/NBA_2K25",
+      "dls": [
         "https://store.steampowered.com/app/2878980/NBA_2K25/",
         "https://store.playstation.com/en-us/product/UP1001-PPSA22120_00-NBA2K25STANDARD0",
-        "https://www.xbox.com/en-US/games/store/nba-2k25-standard-edition/9PL2XQ4GF10R/0010",
-        "https://en.wikipedia.org/wiki/NBA_2K25"
+        "https://www.xbox.com/en-US/games/store/nba-2k25-standard-edition/9PL2XQ4GF10R/0010"
       ],
       "dev": "Visual Concepts",
       "date": "2024-09-06",
@@ -1812,10 +1848,10 @@
     },
     "M:TOC": {
       "name": "Mafia: The Old Country",
-      "url": [
+      "url": "https://en.wikipedia.org/wiki/Mafia:_The_Old_Country",
+      "dls": [
         "https://store.steampowered.com/app/1941540/Mafia_The_Old_Country/",
-        "https://www.playstation.com/en-us/games/mafia-the-old-country/",
-        "https://en.wikipedia.org/wiki/Mafia:_The_Old_Country"
+        "https://www.playstation.com/en-us/games/mafia-the-old-country/"
       ],
       "dev": "Hangar 13",
       "date": "2025-01-01",

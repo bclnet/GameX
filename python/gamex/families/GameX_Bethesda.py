@@ -5,7 +5,7 @@ from gamex import Family, FamilyGame, BinaryArchive, FileOption
 from gamex.core.formats.binary import Binary_Dds
 from gamex.families.Bethesda.formats.binary import Binary_Ba2, Binary_Bsa, Binary_Esm
 from gamex.families.Gamebryo.formats.binary import Binary_Nif
-from gamex.families.GameX import UnknownArchive
+from gamex.families.GameX_Uncore import UncoreArchive
 from gamex.families.Bethesda.clients.Morrowind.client import MorrowindGameClient
 
 # BethesdaFamily
@@ -39,6 +39,6 @@ class BethesdaArchive(BinaryArchive):
     def assetFactory(source: FileSource, game: FamilyGame) -> (object, callable):
         match _pathExtension(source.path).lower():
             case '.nif': return (FileOption.StreamObject, Binary_Nif.factory)
-            case _: return UnknownArchive.assetFactory(source, game)
+            case _: return UncoreArchive.assetFactory(source, game)
 
     #endregion

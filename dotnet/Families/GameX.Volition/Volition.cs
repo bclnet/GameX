@@ -1,6 +1,6 @@
 ﻿using GameX.Formats;
-using GameX.Formats.Unknown;
-using GameX.Unknown;
+using GameX.Formats.IUnknown;
+using GameX.Uncore;
 using GameX.Volition.Formats;
 using GameX.Transforms;
 using System;
@@ -71,7 +71,7 @@ public class VolitionArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
         => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             ".256" => (0, Binary_Pal.Factory_3),
             ".mvl" => (0, Binary_Mvl.Factory),
-            _ => UnknownArchive.AssetFactory(source, game),
+            _ => UncoreArchive.AssetFactory(source, game),
         };
 
     #endregion

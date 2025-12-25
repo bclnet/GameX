@@ -2,7 +2,7 @@ from __future__ import annotations
 import os
 from openstk import _pathExtension, TypeX
 from gamex import FamilyGame, BinaryArchive
-from gamex.families.GameX import UnknownArchive
+from gamex.families.GameX_Uncore import UncoreArchive
 from gamex.families.Xbox.formats.binary import Binary_Xnb
 # scan types
 from gamex.families.Xbox.formats.xna import TypeReader as xna_TypeReader
@@ -34,6 +34,6 @@ class XboxArchive(BinaryArchive):
     def assetFactory(source: FileSource, game: FamilyGame) -> (object, callable):
         match _pathExtension(source.path).lower():
             case '.xnb': return (0, Binary_Xnb.factory)
-            case _: return UnknownArchive.assetFactory(source, game)
+            case _: return UncoreArchive.assetFactory(source, game)
 
     #endregion

@@ -1,15 +1,15 @@
 ﻿{
-  "id": "Unknown",
-  "name": "Unknown",
+  "id": "Uncore",
+  "name": "Uncore",
   "studio": "",
-  "description": "Unknown formats",
-  "familyType": "GameX.Unknown.UnknownFamily, GameX",
+  "description": "Uncore formats",
+  "familyType": "GameX.Uncore.UncoreFamily, GameX.Uncore",
   "samples": [
-    "UnknownFamily.Sample.json"
+    "UncoreFamily.Sample.json"
   ],
   "games": {
     "*": {
-      "archiveType": "GameX.Unknown.UnknownArchive, GameX"
+      "archiveType": "GameX.Uncore.UncoreArchive, GameX.Uncore"
     },
     "APP": {
       "name": "Application",

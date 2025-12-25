@@ -275,7 +275,7 @@ public unsafe class Binary_IW : ArcBinary<Binary_IW> {
 
     public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
         var files = source.Files = new List<FileSource>();
-        var extension = Path.GetExtension(source.BlobPath);
+        var extension = Path.GetExtension(source.BinPath);
 
         switch (source.Game.Id) {
             case "BO4":
@@ -285,7 +285,7 @@ public unsafe class Binary_IW : ArcBinary<Binary_IW> {
                 var editions = source.Game.Editions;
                 var product = editions.First().Key;
                 casc = new CascContext();
-                casc.Read(source.BlobPath, product, files);
+                casc.Read(source.BinPath, product, files);
                 return Task.CompletedTask;
         }
 

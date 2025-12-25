@@ -363,7 +363,7 @@ namespace GameX.IW.Formats {
         // https://gist.github.com/Scobalula/a0fd08197497336f67b7ff551b2db404 - S1ff 0x42|0x72e 
         // https://wiki.zeroy.com/index.php?title=Call_of_Duty_4:_FastFile_Format - COD4 FF
         internal static List<FileHeader> GetAssets(BinaryAsset source, BinaryReader r, byte[] cryptKey, ref FF_Header header) {
-            var zonePath = GetZoneFile(source.BlobPath, cryptKey, r, ref header);
+            var zonePath = GetZoneFile(source.BinPath, cryptKey, r, ref header);
             if (zonePath == null) return null;
             var headers = new List<FileHeader>();
 

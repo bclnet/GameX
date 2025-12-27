@@ -14,8 +14,8 @@ from .FileContent import FileContent
 from .FileExplorer import FileExplorer
 from ..resourcemgr import ResourceManager
 
-platformValues = sorted([x for x in PlatformX.platforms if x and x.enabled], key=lambda s: s.name)
-platformIndex = max(_find([x.id for x in platformValues], option.Platform), 0)
+platformValues = sorted([s for s in PlatformX.platforms if s and s.enabled], key=lambda s: s.name)
+platformIndex = max(_find([s.id for s in platformValues], option.Platform), 0)
 
 # ExplorerMainTab
 class ExplorerMainTab:
@@ -158,13 +158,13 @@ class MainPage(QMainWindow):
         text = logBar.text()
         logBar.setText(text + value + '\n')
 
-    def open(self, family: Family, pakUris: list[str], path: str = None):
+    def open(self, family: Family, uris: list[str], path: str = None):
         self.archives.clear()
         if not family: return
         self.familyApps = family.apps
-        for pakUri in pakUris:
-            self.log(f'Opening {pakUri}')
-            arc = family.getArchive(pakUri)
+        for s in uris:
+            self.log(f'Opening {s}')
+            arc = family.getArchive(s)
             if arc: self.archives.append(arc)
         self.log('Done')
         self.onOpened(family, path)
@@ -181,5 +181,3 @@ class MainPage(QMainWindow):
             ))
         self.mainTabs = tabs
         self.updateTabs()
-
-

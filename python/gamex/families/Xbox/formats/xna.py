@@ -4,7 +4,7 @@ from io import BytesIO
 from enum import IntEnum
 from decimal import Decimal
 from numpy import ndarray, array
-from openstk import _throw, Reader
+from openstk import _throw, BinaryReader
 from openstk.gfx import Raster, Texture_Bytes, ITexture, TextureFormat, TexturePixel
 from openstk.core.drawing import Plane, Point, Rectangle, BoundingBox, BoundingSphere, BoundingFrustum, Ray, Curve
 from openstk.core.typex import *
@@ -350,7 +350,7 @@ class TypeManager:
     def clearTypeFactories() -> None: TypeManager.typeFactories.clear()
 
 # ContentReader
-class ContentReader(Reader):
+class ContentReader(BinaryReader):
     def __init__(self, f, assetName: str, version: int, recordDisposableAction: callable):
         super().__init__(f)
         self.assetName: str = assetName

@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os, itertools
 from io import BytesIO
-from openstk import _throw, _pathExtension, Reader, IWriteToStream
+from openstk import _throw, _pathExtension, BinaryReader, IWriteToStream
 from gamex import Archive, BinaryArchive, ArcBinary, ArcBinaryT, FileSource, MetaInfo, MetaManager, MetaContent, IHaveMetaInfo, DesSer
 from gamex.families.Uncore.formats.compression import decompressXbox
 from gamex.families.Xbox.formats.xna import ContentReader
@@ -18,7 +18,7 @@ type Quaternion = ndarray
 # Binary_Xnb
 class Binary_Xnb(IHaveMetaInfo, IWriteToStream):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Xnb(r, f)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Xnb(r, f)
 
     #region Headers
 
@@ -36,7 +36,7 @@ class Binary_Xnb(IHaveMetaInfo, IWriteToStream):
         @property
         def platform(self) -> chr: return chr(self.magic >> 24)
 
-        def validate(self, r: Reader, path: str):
+        def validate(self, r: BinaryReader, path: str):
             if (self.magic & 0x00FFFFFF) != Binary_Xnb.MAGIC: raise Exception('BAD MAGIC')
             if self.version != 5 and self.version != 4: raise Exception('Invalid XNB version')
             if self.sizeOnDisk > r.f.getbuffer().nbytes: raise Exception('XNB file has been truncated.')
@@ -48,7 +48,7 @@ class Binary_Xnb(IHaveMetaInfo, IWriteToStream):
 
     #endregion
 
-    def __init__(self, r2: Reader, f: FileSource):
+    def __init__(self, r2: BinaryReader, f: FileSource):
         h = r2.readS(self.Header)
         r = h.validate(r2, f.path)
         self.obj = r.readAsset()

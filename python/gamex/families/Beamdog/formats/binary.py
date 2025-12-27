@@ -1,6 +1,6 @@
 import os
 from io import BytesIO
-from openstk import Reader
+from openstk import BinaryReader
 from gamex.core.binary import ArcBinaryT
 from gamex.core.meta import FileSource
 from gamex.families.Uncore.formats.compression import decompressLzss, decompressZlib
@@ -58,7 +58,7 @@ class Binary_Hogg(ArcBinaryT):
     #endregion
 
     # read
-    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
         # read header
         header = r.readS(self.Header)
         if header.magic != self.MAGIC: raise Exception('BAD MAGIC')
@@ -90,7 +90,7 @@ class Binary_Hogg(ArcBinaryT):
         dataListFile = files[0]
         if dataListFile.id != 0 or dataListFile.fileSize == -1: raise Exception('BAD DataList')
         fileAttribs = {}
-        with Reader(self.readData(source, r, dataListFile)) as r2:
+        with BinaryReader(self.readData(source, r, dataListFile)) as r2:
             if r2.readUInt32() != 0: raise Exception('BAD DataList')
             count = r2.readInt32()
             for i in range(count): fileAttribs[i] = r2.readBytes(r2.readUInt32())
@@ -116,7 +116,7 @@ class Binary_Hogg(ArcBinaryT):
         source.files = [x for x in files if x.fileSize != -1 and x.id != 0]
 
     # readData
-    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+    def readData(self, source: BinaryArchive, r: BinaryReader, file: FileSource, option: object = None) -> BytesIO:
         r.seek(file.offset)
         return BytesIO(
             decompressZlib(r, file.packedSize, file.fileSize) if file.compressed != 0 else \

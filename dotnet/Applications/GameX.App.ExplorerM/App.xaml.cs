@@ -1,5 +1,6 @@
 ﻿using CommandLine;
 using OpenStack;
+using static GameX.FamilyManager;
 
 namespace GameX.App.Explorer;
 
@@ -25,6 +26,7 @@ public partial class App : Application {
 
     public App() {
         InitializeComponent();
+        LoadFamilies(Option.Family != null ? [Option.Family] : null);
         //MainPage = new AppShell();
     }
 

@@ -75,13 +75,13 @@ public partial class OpenPage : ContentPage {
         Editions = selectedGame?.Editions.Values.ToList();
         Edition.SelectedIndex = Editions != null ? ((List<FamilyGame.Edition>)Editions).FindIndex(x => x.Id == string.Empty) : default;
         var selectedEdition = (FamilyGame.Edition)Edition.SelectedItem;
-        ArcUris = selectedGame?.ToArcs(selectedEdition?.Id);
+        ArcUris = selectedGame?.ToUris(selectedEdition?.Id);
     }
 
     void Edition_SelectionChanged(object sender, EventArgs e) {
         var selectedGame = (FamilyGame)Game.SelectedItem;
         var selectedEdition = (FamilyGame.Edition)Edition.SelectedItem;
-        ArcUris = selectedGame?.ToArcs(selectedEdition?.Id);
+        ArcUris = selectedGame?.ToUris(selectedEdition?.Id);
     }
 
     async void Pak1Uri_Click(object sender, EventArgs e) {

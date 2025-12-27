@@ -7,7 +7,7 @@ from openstk.gfx import Texture_Bytes, ITexture, TextureFormat, TexturePixel
 from gamex import FileSource, MetaInfo, MetaContent, IHaveMetaInfo, DesSer
 
 # typedefs
-class Reader: pass
+class BinaryReader: pass
 class BinaryArchive: pass
 class Archive: pass
 class MetaManager: pass
@@ -16,12 +16,12 @@ class TextureFlags: pass
 # Binary_Anim
 class Binary_Anim(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Anim(r)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Anim(r)
 
     #region Headers
     #endregion
 
-    def __init__(self, r: Reader):
+    def __init__(self, r: BinaryReader):
         pass
 
     def __repr__(self): return DesSer.serialize(self)
@@ -36,7 +36,7 @@ class Binary_Anim(IHaveMetaInfo):
 # Binary_Animdata
 class Binary_Animdata(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Animdata(r)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Animdata(r)
 
     #region Headers
 
@@ -61,7 +61,7 @@ class Binary_Animdata(IHaveMetaInfo):
 
     #endregion
 
-    def __init__(self, r: Reader):
+    def __init__(self, r: BinaryReader):
         id = 0
         length = int(r.length / (4 + (8 * (64 + 4))))
         for i in range(length):
@@ -85,14 +85,14 @@ class Binary_Animdata(IHaveMetaInfo):
 # Binary_AsciiFont
 class Binary_AsciiFont(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_AsciiFont(r)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_AsciiFont(r)
 
     #region Headers
 
     class AsciiFont:
         characters: list[list[int]] = [None]*224
         height: int = 0
-        def __init__(self, r: Reader):
+        def __init__(self, r: BinaryReader):
             r.readByte()
             for i in range(224):
                 width = r.readByte(); height = r.readByte()
@@ -110,7 +110,7 @@ class Binary_AsciiFont(IHaveMetaInfo):
 
     #endregion
 
-    def __init__(self, r: Reader):
+    def __init__(self, r: BinaryReader):
         for i in range(len(self.fonts)): self.fonts[i] = self.AsciiFont(r)
 
     def __repr__(self): return DesSer.serialize(self)
@@ -125,7 +125,7 @@ class Binary_AsciiFont(IHaveMetaInfo):
 # Binary_BodyConverter
 class Binary_BodyConverter(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_BodyConverter(r)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_BodyConverter(r)
 
     #region Headers
 
@@ -179,7 +179,7 @@ class Binary_BodyConverter(IHaveMetaInfo):
 
     #endregion
 
-    def __init__(self, r: Reader):
+    def __init__(self, r: BinaryReader):
         list1 = []; list2 = []; list3 = []; list4 = []
         max1 = max2 = max3 = max4 = 0
         line: str
@@ -239,7 +239,7 @@ class Binary_BodyConverter(IHaveMetaInfo):
 # Binary_BodyTable
 class Binary_BodyTable(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_BodyTable(r)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_BodyTable(r)
 
     #region Headers
 
@@ -253,7 +253,7 @@ class Binary_BodyTable(IHaveMetaInfo):
 
     records: dict[int, Record] = {}
 
-    def __init__(self, r: Reader):
+    def __init__(self, r: BinaryReader):
         line: str
         while (line := r.readLine()):
             line = line.strip()
@@ -287,7 +287,7 @@ class Binary_BodyTable(IHaveMetaInfo):
 # Binary_CalibrationInfo
 class Binary_CalibrationInfo(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_CalibrationInfo(r)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_CalibrationInfo(r)
 
     #region Headers
 
@@ -377,7 +377,7 @@ class Binary_CalibrationInfo(IHaveMetaInfo):
 
     records: list[Record] = []
 
-    def __init__(self, r: Reader):
+    def __init__(self, r: BinaryReader):
         line: str
         while (line := r.readLine()):
             line = line.strip()
@@ -393,7 +393,7 @@ class Binary_CalibrationInfo(IHaveMetaInfo):
         self.records += self.defaultRecords
 
     @staticmethod
-    def _readBytes(r: Reader) -> bytes:
+    def _readBytes(r: BinaryReader) -> bytes:
         line = r.readLine()
         if not line: return None
         b = bytes((line.Length + 2) / 3)
@@ -426,9 +426,9 @@ class Binary_CalibrationInfo(IHaveMetaInfo):
 # Binary_Gump
 class Binary_Gump(IHaveMetaInfo, ITexture):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Gump(r, f.fileSize, f.compressed)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Gump(r, f.fileSize, f.compressed)
 
-    def __init__(self, r: Reader, length: int, extra: int):
+    def __init__(self, r: BinaryReader, length: int, extra: int):
         width = self.width = (extra >> 16) & 0xFFFF
         height = self.height = extra & 0xFFFF
         self.pixels = []
@@ -478,9 +478,9 @@ class Binary_Gump(IHaveMetaInfo, ITexture):
 # Binary_GumpDef
 class Binary_GumpDef(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_GumpDef(r)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_GumpDef(r)
 
-    def __init__(self, r: Reader):
+    def __init__(self, r: BinaryReader):
         line: str
         while (line := r.readLine()):
             line = line.strip()
@@ -510,7 +510,7 @@ class Binary_GumpDef(IHaveMetaInfo):
 # Binary_Hues
 class Binary_Hues(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Hues(r)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Hues(r)
 
     #region Headers
 
@@ -535,7 +535,7 @@ class Binary_Hues(IHaveMetaInfo):
 
     records: list[Record] = [None] * 3000
 
-    def __init__(self, r: Reader):
+    def __init__(self, r: BinaryReader):
         blockCount = r.length // 708
         if blockCount > 375: blockCount = 375
         id = 0
@@ -557,9 +557,9 @@ class Binary_Hues(IHaveMetaInfo):
 # Binary_Land
 class Binary_Land(IHaveMetaInfo, ITexture):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Land(r, f.fileSize)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Land(r, f.fileSize)
 
-    def __init__(self, r: Reader, length: int):
+    def __init__(self, r: BinaryReader, length: int):
         bdata = np.frombuffer(r.readBytes(length), dtype = np.uint16); bdata_ = 0
         bd = self.pixels = bytearray(44 * 44 << 1)
         mv = memoryview(np.frombuffer(bd, dtype = np.uint16))
@@ -601,9 +601,9 @@ class Binary_Land(IHaveMetaInfo, ITexture):
 # Binary_Light
 class Binary_Light(IHaveMetaInfo, ITexture):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Light(r, f.fileSize, f.compressed)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Light(r, f.fileSize, f.compressed)
 
-    def __init__(self, r: Reader, length: int, extra: int):
+    def __init__(self, r: BinaryReader, length: int, extra: int):
         bdata = np.frombuffer(r.readBytes(length), dtype = np.int8); bdata_ = 0
         width = self.width = extra & 0xFFFF
         height = self.height = (extra >> 16) & 0xFFFF
@@ -639,7 +639,7 @@ class Binary_Light(IHaveMetaInfo, ITexture):
 # Binary_MobType
 class Binary_MobType(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_MobType(r)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_MobType(r)
 
     #region Headers
 
@@ -664,7 +664,7 @@ class Binary_MobType(IHaveMetaInfo):
 
     records: dict[int, Record] = {}
 
-    def __init__(self, r: Reader):
+    def __init__(self, r: BinaryReader):
         line: str
         while (line := r.readLine()):
             line = line.strip()
@@ -685,9 +685,9 @@ class Binary_MobType(IHaveMetaInfo):
 # Binary_MultiMap
 class Binary_MultiMap(IHaveMetaInfo, ITexture):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_MultiMap(r, f)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_MultiMap(r, f)
 
-    def __init__(self, r: Reader, f: FileSource):
+    def __init__(self, r: BinaryReader, f: FileSource):
         if f.path.startswith('facet'):
             width = self.width = r.readInt16()
             height = self.height = r.readInt16()
@@ -749,9 +749,9 @@ class Binary_MultiMap(IHaveMetaInfo, ITexture):
 # Binary_MusicDef
 class Binary_MusicDef(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_MusicDef(r)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_MusicDef(r)
 
-    def __init__(self, r: Reader):
+    def __init__(self, r: BinaryReader):
         line: str
         while (line := r.readLine()):
             splits = re.split(r'[ ,\t]+', line)
@@ -775,13 +775,13 @@ class Binary_MusicDef(IHaveMetaInfo):
 # Binary_Multi
 class Binary_Multi(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Multi(r)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Multi(r)
 
     #region Headers
 
     #endregion
 
-    def __init__(self, r: Reader):
+    def __init__(self, r: BinaryReader):
         pass
 
     def __repr__(self): return DesSer.serialize(self)
@@ -796,13 +796,13 @@ class Binary_Multi(IHaveMetaInfo):
 # Binary_RadarColor
 class Binary_RadarColor(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_RadarColor(r)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_RadarColor(r)
 
     #region Headers
 
     #endregion
 
-    def __init__(self, r: Reader):
+    def __init__(self, r: BinaryReader):
         pass
 
     def __repr__(self): return DesSer.serialize(self)
@@ -817,13 +817,13 @@ class Binary_RadarColor(IHaveMetaInfo):
 # Binary_SkillGroups
 class Binary_SkillGroups(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_SkillGroups(r)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_SkillGroups(r)
 
     #region Headers
 
     #endregion
 
-    def __init__(self, r: Reader):
+    def __init__(self, r: BinaryReader):
         pass
 
     def __repr__(self): return DesSer.serialize(self)
@@ -838,13 +838,13 @@ class Binary_SkillGroups(IHaveMetaInfo):
 # Binary_Skills
 class Binary_Skills(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Skills(r)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Skills(r)
 
     #region Headers
 
     #endregion
 
-    def __init__(self, r: Reader):
+    def __init__(self, r: BinaryReader):
         pass
 
     def __repr__(self): return DesSer.serialize(self)
@@ -859,13 +859,13 @@ class Binary_Skills(IHaveMetaInfo):
 # Binary_Sound
 class Binary_Sound(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Sound(r)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Sound(r)
 
     #region Headers
 
     #endregion
 
-    def __init__(self, r: Reader):
+    def __init__(self, r: BinaryReader):
         pass
 
     def __repr__(self): return DesSer.serialize(self)
@@ -880,13 +880,13 @@ class Binary_Sound(IHaveMetaInfo):
 # Binary_SpeechList
 class Binary_SpeechList(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_SpeechList(r)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_SpeechList(r)
 
     #region Headers
 
     #endregion
 
-    def __init__(self, r: Reader):
+    def __init__(self, r: BinaryReader):
         pass
 
     def __repr__(self): return DesSer.serialize(self)
@@ -901,9 +901,9 @@ class Binary_SpeechList(IHaveMetaInfo):
 # Binary_Art
 class Binary_Art(IHaveMetaInfo, ITexture):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Art(r, f.fileSize)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Art(r, f.fileSize)
 
-    def __init__(self, r: Reader, length: int):
+    def __init__(self, r: BinaryReader, length: int):
         bdata = np.frombuffer(r.readBytes(length), dtype = np.uint16); bdata_ = 0
         count = 2
         width = self.width = bdata[count]; count += 1
@@ -953,7 +953,7 @@ class Binary_Art(IHaveMetaInfo, ITexture):
 # Binary_StringTable
 class Binary_StringTable(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_StringTable(r, f)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_StringTable(r, f)
     _current: dict[str, 'Binary_StringTable'] = {}
 
     #region Headers
@@ -973,7 +973,7 @@ class Binary_StringTable(IHaveMetaInfo):
     strings: dict[int, str] = {}
     records: dict[int, Record] = {}
 
-    def __init__(self, r: Reader, f: FileSource):
+    def __init__(self, r: BinaryReader, f: FileSource):
         r.skip(6)
         while not r.atEnd():
             id = r.readInt32()
@@ -997,13 +997,13 @@ class Binary_StringTable(IHaveMetaInfo):
 # Binary_TileData
 class Binary_TileData(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_TileData(r)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_TileData(r)
 
     #region Headers
 
     #endregion
 
-    def __init__(self, r: Reader):
+    def __init__(self, r: BinaryReader):
         pass
 
     def __repr__(self): return DesSer.serialize(self)
@@ -1018,13 +1018,13 @@ class Binary_TileData(IHaveMetaInfo):
 # Binary_UnicodeFont
 class Binary_UnicodeFont(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_UnicodeFont(r)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_UnicodeFont(r)
 
     #region Headers
 
     #endregion
 
-    def __init__(self, r: Reader):
+    def __init__(self, r: BinaryReader):
         pass
 
     def __repr__(self): return DesSer.serialize(self)
@@ -1039,7 +1039,7 @@ class Binary_UnicodeFont(IHaveMetaInfo):
 # Binary_Verdata
 class Binary_Verdata(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Verdata(r, s)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Verdata(r, s)
     instance: object = None
 
     #region Headers
@@ -1055,7 +1055,7 @@ class Binary_Verdata(IHaveMetaInfo):
 
     #endregion
 
-    def __init__(self, r: Reader, s: BinaryArchive):
+    def __init__(self, r: BinaryReader, s: BinaryArchive):
         self.archive = s
         patches = r.readL32SArray(self.Patch); print(patches); patches.sort()
         self.patches = { k: list(g) for k, g in groupby(patches) }

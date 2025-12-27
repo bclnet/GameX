@@ -5,7 +5,7 @@ from gamex import FileSource, ArcBinaryT
 from gamex.families.Uncore.formats.compression import decompressBlast
 
 # typedefs
-class Reader: pass
+class BinaryReader: pass
 class BinaryArchive: pass
 
 #region Binary_Danae - tag::Binary_Danae[]
@@ -13,7 +13,7 @@ class BinaryArchive: pass
 # Binary_Danae
 class Binary_Danae(ArcBinaryT):
     # read
-    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
         source.files = files = []
         key = source.game.key; keyLength = len(key); keyIndex = 0
 
@@ -70,7 +70,7 @@ class Binary_Danae(ArcBinaryT):
                 files.append(file)
 
     # readData
-    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+    def readData(self, source: BinaryArchive, r: BinaryReader, file: FileSource, option: object = None) -> BytesIO:
         r.seek(file.offset)
         return BytesIO(
             decompressBlast(r, file.packedSize, file.fileSize) if (file.compressed & 1) != 0 else \
@@ -98,7 +98,7 @@ class Binary_Void(ArcBinaryT):
     #endregion
 
     # read
-    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
         # must be .index file
         if _pathExtension(source.filePath) != '.index': raise Exception('must be a .index file')
 
@@ -160,7 +160,7 @@ class Binary_Void(ArcBinaryT):
                 tag = (newPath, tag1, tag2)))
 
     # readData
-    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+    def readData(self, source: BinaryArchive, r: BinaryReader, file: FileSource, option: object = None) -> BytesIO:
         pass
 
 #endregion - end::Binary_Void[]

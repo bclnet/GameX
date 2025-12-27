@@ -7,7 +7,7 @@ from gamex.families.Uncore.formats.compression import decompressLz4, decompressZ
 from gamex.families.Bethesda.formats.database import FormType, Header
 
 # typedefs
-class Reader: pass
+class BinaryReader: pass
 class Archive: pass
 class BinaryArchive: pass
 
@@ -94,7 +94,7 @@ class Binary_Ba2(ArcBinaryT):
     #endregion
 
     # read
-    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
         source.magic = magic = r.readUInt32()
 
         # Fallout 4 - Starfield
@@ -151,7 +151,7 @@ class Binary_Ba2(ArcBinaryT):
                 for file in files: file.path = path
 
     # readData
-    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+    def readData(self, source: BinaryArchive, r: BinaryReader, file: FileSource, option: object = None) -> BytesIO:
         r.seek(file.offset)
 
         # General BA2 Format
@@ -251,7 +251,7 @@ class Binary_Bsa(ArcBinaryT):
     #endregion
 
     # read
-    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
         files: list[FileSource]
         magic = source.magic = r.readUInt32()
 
@@ -326,7 +326,7 @@ class Binary_Bsa(ArcBinaryT):
         else: raise Exception('BAD MAGIC')
     
     # readData
-    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+    def readData(self, source: BinaryArchive, r: BinaryReader, file: FileSource, option: object = None) -> BytesIO:
         # position
         fileSize = file.fileSize
         r.seek(file.offset)
@@ -372,7 +372,7 @@ class Binary_Esm(ArcBinaryT):
             case _: raise Exception(f'Unknown: {game}')
 
     # read
-    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
         format = self.getFormat(source.game.id)
         recordLevel = 1
         filePath = source.binPath

@@ -30,7 +30,7 @@ class Binary_Bullfrog(ArcBinaryT):
     #endregion
 
     # read
-    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
         # must be .index file
         if _pathExtension(source.filePath) != '.index':
             raise Exception('must be a .index file')
@@ -93,7 +93,7 @@ class Binary_Bullfrog(ArcBinaryT):
                 tag = (newPath, tag1, tag2)))
 
     # readData
-    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+    def readData(self, source: BinaryArchive, r: BinaryReader, file: FileSource, option: object = None) -> BytesIO:
         pass
 
 #endregion
@@ -103,7 +103,7 @@ class Binary_Bullfrog(ArcBinaryT):
 # Binary_Fli
 class Binary_Fli(IHaveMetaInfo, ITextureFrames):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Fli(r, f)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Fli(r, f)
 
     #region Headers
 
@@ -152,7 +152,7 @@ class Binary_Fli(IHaveMetaInfo, ITextureFrames):
 
     frames: int = 1
 
-    def __init__(self, r: Reader, f: FileSource):
+    def __init__(self, r: BinaryReader, f: FileSource):
         # read events
         # self.events = S.GetEvents(f'{Path.GetFileNameWithoutExtension(f.Path).ToLowerInvariant()}.evt')
 
@@ -207,7 +207,7 @@ class Binary_Fli(IHaveMetaInfo, ITextureFrames):
         if header.type == self.ChunkType.FRAME: r.skip(-self.X_ChunkHeader.struct[1])
         return header.isValid
 
-    def setPalette(self, r: Reader) -> None:
+    def setPalette(self, r: BinaryReader) -> None:
         palette = self.palette
         numPackets = r.readUInt16()
         if r.readUInt16() == 0: # special case
@@ -230,7 +230,7 @@ class Binary_Fli(IHaveMetaInfo, ITextureFrames):
                 palette[palPos + i + 2] = ((data[i + 2] << 2) | (data[i + 2] & 3))
             palPos += change
 
-    def decodeDeltaFLC(self, r: Reader) -> None:
+    def decodeDeltaFLC(self, r: BinaryReader) -> None:
         linesInChunk = r.readUInt16()
         curLine = 0; numPackets = 0; value = 0
         while linesInChunk > 0:
@@ -268,7 +268,7 @@ class Binary_Fli(IHaveMetaInfo, ITextureFrames):
                 else: return
             curLine += 1
 
-    def decodeByteRun(self, r: Reader):
+    def decodeByteRun(self, r: BinaryReader):
         _ = 0; end_ = self.width * self.height
         # pixels = self.pixels
         # while _ < end_:
@@ -323,11 +323,11 @@ class Binary_Populus(ArcBinaryT):
     #endregion
 
     # read
-    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
         source.files = files = []
 
     # readData
-    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+    def readData(self, source: BinaryArchive, r: BinaryReader, file: FileSource, option: object = None) -> BytesIO:
         pass
 
 #endregion
@@ -350,11 +350,11 @@ class Binary_Syndicate(ArcBinaryT):
             case _: return (0, None)
 
     # read
-    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
         source.files = files = []
 
     # readData
-    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+    def readData(self, source: BinaryArchive, r: BinaryReader, file: FileSource, option: object = None) -> BytesIO:
         pass
 
 #endregion
@@ -364,9 +364,9 @@ class Binary_Syndicate(ArcBinaryT):
 # Binary_SyndicateX
 class Binary_SyndicateX(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Ftl(r)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Ftl(r)
 
-    def __init__(self, r: Reader):
+    def __init__(self, r: BinaryReader):
         pass
 
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [

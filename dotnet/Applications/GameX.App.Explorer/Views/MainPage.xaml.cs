@@ -28,23 +28,23 @@ public partial class MainPage : Window, INotifyPropertyChanged {
         InitializeComponent();
         Current = this;
         DataContext = this;
-        Platforms = [.. PlatformX.Platforms.Where(x => x != null && x.Enabled)];
-        Platform.SelectedIndex = ((List<Platform>)Platforms)?.FindIndex(x => x.Id == Option.Platform) ?? -1;
+        Platforms = [.. PlatformX.Platforms.Where(s => s != null && s.Enabled)];
+        Platform.SelectedIndex = ((List<Platform>)Platforms)?.FindIndex(s => s.Id == Option.Platform) ?? -1;
     }
 
     public event PropertyChangedEventHandler PropertyChanged;
     void OnPropertyChanged([CallerMemberName] string propertyName = "") => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
-    public MainPage Open(Family family, IEnumerable<Uri> pakUris, string path = null) {
+    public MainPage Open(Family family, IEnumerable<Uri> uris, string path = null) {
         var selected = (Platform)Platform.SelectedItem;
         PlatformX.Activate(selected);
         foreach (var archive in Archives) archive?.Dispose();
         Archives.Clear();
         if (family == null) return this;
         FamilyApps = family.Apps;
-        foreach (var pakUri in pakUris) {
-            Log.WriteLine($"Opening {pakUri}");
-            var arc = family.GetArchive(pakUri);
+        foreach (var s in uris) {
+            Log.WriteLine($"Opening {s}");
+            var arc = family.GetArchive(s);
             if (arc != null) Archives.Add(arc);
         }
         Log.WriteLine("Done");

@@ -6,7 +6,7 @@ from gamex.core.meta import FileSource
 # typedefs
 class FamilyGame: pass
 class IFileSystem: pass
-class Reader: pass
+class BinaryReader: pass
 class P4kFile: pass
 
 #region Binary_P4k
@@ -23,11 +23,11 @@ class Binary_P4k(ArcBinaryT):
             self.useReader = False
             # self.open()
 
-        def read(self, r: Reader, tag: object = None):
+        def read(self, r: BinaryReader, tag: object = None):
             pass
 
     # read
-    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
         source.useReader = False
 
 #endregion

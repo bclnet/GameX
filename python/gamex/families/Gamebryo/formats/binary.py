@@ -6,7 +6,7 @@ from gamex import FileSource, ArcBinaryT, MetaManager, MetaInfo, MetaContent, IH
 from gamex.families.Gamebryo.formats.nif import NiReader
 
 # typedefs
-class Reader: pass
+class BinaryReader: pass
 class Archive: pass
 class BinaryArchive: pass
 
@@ -15,9 +15,9 @@ class BinaryArchive: pass
 # Binary_Nif
 class Binary_Nif(NiReader, IHaveMetaInfo, IWriteToStream):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Nif(r, f)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Nif(r, f)
 
-    def __init__(self, r: Reader, f: FileSource):
+    def __init__(self, r: BinaryReader, f: FileSource):
         super().__init__(r)
         self.name = os.path.splitext(os.path.basename(f.path))[0]
 

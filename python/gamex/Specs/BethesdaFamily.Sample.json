@@ -3,6 +3,10 @@
     "name": "The Elder Scrolls III: Morrowind",
     "files": [
       {
+        "path": "Morrowind.esm",
+        "type": "Database"
+      },
+      {
         "path": "Morrowind.bsa:bookart/boethiah_256.dds",
         "type": "Texture"
       },

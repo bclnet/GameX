@@ -58,7 +58,7 @@ public partial class FileExplorer : ContentView {
     void OnFilterSelected(object s, EventArgs e) {
         var filter = (MetaItem.Filter)Filter.SelectedItem;
         if (filter == null) Nodes = ArcNodes;
-        else Nodes = ArcNodes.Select(x => x.Search(y => y.Name.Contains(filter.Description))).Where(x => x != null).ToList();
+        else Nodes = [.. ArcNodes.Select(s => s.Search(y => y.Name.Contains(filter.Description))).Where(s => s != null)];
     }
 
     List<MetaItem> ArcNodes;
@@ -86,7 +86,7 @@ public partial class FileExplorer : ContentView {
             var arc = src?.Arc;
             try {
                 if (arc != null) {
-                    if (arc.Status == Archive.BlobStatus.Opened) return;
+                    if (arc.Status == Binary.Stat.Opened) return;
                     arc.Open(value.Items, Resource);
                     //OnFilterKeyUp(null, null); //value.Items.AddRange(arc.GetMetaItemsAsync(Resource).Result);
                 }
@@ -105,7 +105,7 @@ public partial class FileExplorer : ContentView {
     }
 
     public void OnInfo(IEnumerable<MetaInfo> infos = null) {
-        FileContent.Current.OnInfo(Archive, infos?.Where(x => x.Name == null).ToList());
+        FileContent.Current.OnInfo(Archive, infos?.Where(s => s.Name == null).ToList());
         Infos = infos?.Where(x => x.Name != null).ToList();
     }
 

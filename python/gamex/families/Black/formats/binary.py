@@ -5,7 +5,7 @@ from gamex.core.meta import FileSource
 from gamex.families.Uncore.formats.compression import decompressLzss, decompressZlib
 
 # typedefs
-class Reader: pass
+class BinaryReader: pass
 class BinaryArchive: pass
 
 #region Binary_Dat - tag::Binary_Dat[]
@@ -55,7 +55,7 @@ class Binary_Dat(ArcBinaryT):
     #endregion
 
     # read
-    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
         gameId = source.game.id
 
         # Fallout
@@ -100,7 +100,7 @@ class Binary_Dat(ArcBinaryT):
                     offset = file.offset))
 
     # readData
-    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+    def readData(self, source: BinaryArchive, r: BinaryReader, file: FileSource, option: object = None) -> BytesIO:
         magic = source.magic
         # F1
         if magic == self.F1_HEADER_FILEID:

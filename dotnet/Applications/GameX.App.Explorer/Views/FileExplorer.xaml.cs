@@ -58,7 +58,7 @@ public partial class FileExplorer : UserControl, INotifyPropertyChanged {
         if (e.AddedItems.Count <= 0) return;
         var filter = e.AddedItems[0] as MetaItem.Filter;
         if (string.IsNullOrEmpty(Filter.Text)) Nodes = [.. ArcNodes];
-        else Nodes = [.. ArcNodes.Select(x => x.Search(y => y.Name.Contains(filter.Description))).Where(x => x != null)];
+        else Nodes = [.. ArcNodes.Select(s => s.Search(y => y.Name.Contains(filter.Description))).Where(s => s != null)];
     }
 
     List<MetaItem> ArcNodes;
@@ -86,7 +86,7 @@ public partial class FileExplorer : UserControl, INotifyPropertyChanged {
             var arc = src?.Arc;
             try {
                 if (arc != null) {
-                    if (arc.Status == Archive.Stat.Opened) return;
+                    if (arc.Status == Binary.Stat.Opened) return;
                     arc.Open(value.Items, Resource);
                     OnFilterKeyUp(null, null);
                 }
@@ -104,7 +104,7 @@ public partial class FileExplorer : UserControl, INotifyPropertyChanged {
     public void OnInfoUpdated() { }
 
     public void OnInfo(MetaItem item, IEnumerable<MetaInfo> infos) {
-        FileContent.Current.OnInfo(item, Archive, infos?.Where(x => x.Name == null).ToList());
+        FileContent.Current.OnInfo(item, Archive, infos?.Where(s => s.Name == null).ToList());
         Infos = infos?.Where(x => x.Name != null).ToList();
     }
 

@@ -667,22 +667,23 @@ public class Record : IRecord {
     public virtual object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => Empty;
 
     public void Read(BinaryReader r, string filePath, FormType format) {
-        long startTell = r.Tell(), endTell = startTell + Header.DataSize;
-        while (r.BaseStream.Position < endTell) {
+        long startTell = r.Tell(), end = startTell + Header.DataSize;
+        while (!r.AtEnd(end)) {
+            //while (r.BaseStream.Position < end) {
             var fieldHeader = new FieldHeader(r, format);
             if (fieldHeader.Type == FieldType.XXXX) {
                 if (fieldHeader.DataSize != 4) throw new InvalidOperationException();
                 fieldHeader.DataSize = (int)r.ReadUInt32();
                 continue;
             }
-            else if (fieldHeader.Type == FieldType.OFST && Header.Type == WRLD) { r.Seek(endTell); continue; }
+            else if (fieldHeader.Type == FieldType.OFST && Header.Type == WRLD) { r.Seek(end); continue; }
             var tell = r.BaseStream.Position;
             if (CreateField(r, format, fieldHeader.Type, fieldHeader.DataSize) == Empty) { Log.Info($"Unsupported ESM record type: {Header.Type}:{fieldHeader.Type}"); r.Skip(fieldHeader.DataSize); continue; }
             // check full read
             if (r.BaseStream.Position != tell + fieldHeader.DataSize) throw new FormatException($"Failed reading {Header.Type}:{fieldHeader.Type} field data at offset {tell} in {filePath} of {r.BaseStream.Position - tell - fieldHeader.DataSize}");
         }
         // check full read
-        if (r.Tell() != endTell) throw new FormatException($"Failed reading {Header.Type} record data at offset {startTell} in {filePath}");
+        if (r.Tell() != end) throw new FormatException($"Failed reading {Header.Type} record data at offset {startTell} in {filePath}");
     }
 }
 

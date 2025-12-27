@@ -691,4 +691,4 @@ match __current__:
     case _:
         option = GlobalOption()
 
-familyKeys = [ "Arkane", "Beamdog", "Bethesda", "Bioware", "Black", "Blizzard", "Bohemia", "Bullfrog", "Capcom", "Cig", "Cryptic", "Crytek", "Cyanide", "EA", "Epic", "Firaxis", "Frictional", "Frontier", "Gamebryo", "ID", "IW", "Lucas", "Monolith", "Mythic", "Nintendo", "Origin", "Red", "Rockstar", "Ubisoft", "Uncore", "Unity", "Valve", "Volition", "WB", "X2K", "Xbox" ]
+familyIds = [ "Arkane", "Beamdog", "Bethesda", "Bioware", "Black", "Blizzard", "Bohemia", "Bullfrog", "Capcom", "Cig", "Cryptic", "Crytek", "Cyanide", "EA", "Epic", "Firaxis", "Frictional", "Frontier", "Gamebryo", "ID", "IW", "Lucas", "Monolith", "Mythic", "Nintendo", "Origin", "Red", "Rockstar", "Ubisoft", "Uncore", "Unity", "Valve", "Volition", "WB", "X2K", "Xbox" ]

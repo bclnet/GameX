@@ -7,7 +7,7 @@ from importlib import resources
 from openstk import findType, _throw, YamlDict
 from openstk.vfx import FileSystem, AggregateFileSystem, NetworkFileSystem, DirectoryFileSystem, VirtualFileSystem
 from openstk.platforms import PlatformX
-from gamex import option, familyKeys 
+from gamex import option, familyIds 
 from gamex.core.binary import ArchiveState, ManyArchive, MultiArchive
 from gamex.core.store import getPathByKey as Store_getPathByKey
 from .util import _valueF, _value, _list, _related, _dictTrim
@@ -137,7 +137,7 @@ class Detector:
                 case _: return v
         return { k:data_(k,v) for k,v in elem.items() }
     def __repr__(self): return f'detector#{self.game}'
-    def getHash(self, r: Reader) -> str:
+    def getHash(self, r: BinaryReader) -> str:
         pass
     #TODO:Needsmore
 # end::Detector[]
@@ -537,38 +537,40 @@ class FamilyGame:
 
 #region Loader
 
-Families = {}
-uncore = None
-uncoreArchive = None
+loadSamples: bool = True
+Families: dict = {}
+uncore: Family = None
+uncoreArchive: Archive = None
 
-@staticmethod
-def init(loadSamples: bool = True):
-    def commentRemover(text: str) -> str:
-        def replacer(match): s = match.group(0); return ' ' if s.startswith('/') else s
-        pattern = re.compile(r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"', re.DOTALL | re.MULTILINE)
-        return re.sub(pattern, replacer, text)
-    def familyJsonLoader(path: str) -> dict[str, object]:
-        body = resources.files().joinpath('../specs', path).read_text(encoding='utf-8')
-        return json.loads(commentRemover(body).encode().decode('utf-8-sig'))
+def _commentRemover(text: str) -> str:
+    def replacer(match): s = match.group(0); return ' ' if s.startswith('/') else s
+    pattern = re.compile(r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"', re.DOTALL | re.MULTILINE)
+    return re.sub(pattern, replacer, text)
+def _familyJsonLoader(path: str) -> dict[str, object]:
+    body = resources.files().joinpath('../specs', path).read_text(encoding='utf-8')
+    return json.loads(_commentRemover(body).encode().decode('utf-8-sig'))
 
-    # load Families
-    for path in [f'{s}Family.json' for s in familyKeys]:
-        try:
-            family = createFamily(path, familyJsonLoader, loadSamples)
-            Families[family.id] = family
-        except ImportError as e: print(f'Import Error: {path}: {e}')
-        except Exception as e:
-            print(f'{path} - {type(e).__name__}')
-            print(e)
-
-    # load uncore
-    uncore = getFamily('Uncore')
-    uncoreArchive = uncore.getArchive('game:/#APP', False)
-
-@staticmethod
 def getFamily(id: str, throwOnError: bool = True) -> Family:
     family = _value(Families, id)
-    if not family and throwOnError: raise Exception(f'Unknown family: {id}')
+    if family: return family
+    # load
+    path = f'{id}Family.json'
+    try:
+        family = createFamily(path, _familyJsonLoader, loadSamples)
+        Families[family.id] = family
+        return family
+    except ImportError as e: print(f'Import Error: {path}: {e}')
+    except Exception as e:
+        print(f'{path} - {type(e).__name__}')
+        print(e)
+    if throwOnError: raise Exception(f'Unknown family: {id}')
     return family
+
+def loadFamilies(ids: list[str] = None, throwOnError: bool = True) -> None:
+    for s in ids or familyIds: getFamily(s, throwOnError)
+
+def init():
+    uncore = getFamily('Uncore')
+    uncoreArchive = uncore.getArchive('game:/#APP', False)
 
 #endregion

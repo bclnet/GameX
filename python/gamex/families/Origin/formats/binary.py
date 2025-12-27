@@ -8,7 +8,7 @@ from gamex.families.Origin.formats.UO.binary import *
 from gamex.families.Xbox.formats.binary import Binary_Xnb
 
 # typedefs
-class Reader: pass
+class BinaryReader: pass
 class FamilyGame: pass
 class IFileSystem: pass
 
@@ -31,11 +31,11 @@ class Binary_U8(ArcBinaryT):
     #endregion
 
     # read
-    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
         pass
         
     # readData
-    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+    def readData(self, source: BinaryArchive, r: BinaryReader, file: FileSource, option: object = None) -> BytesIO:
         pass
 
 #endregion
@@ -65,11 +65,11 @@ class Binary_U9(ArcBinaryT):
     #endregion
 
     # read
-    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
         pass
         
     # readData
-    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+    def readData(self, source: BinaryArchive, r: BinaryReader, file: FileSource, option: object = None) -> BytesIO:
         pass
 
 #endregion
@@ -150,7 +150,7 @@ class Binary_UO(ArcBinaryT):
     #endregion
 
     # read
-    def read(self, source: BinaryArchive, r: Reader, tag: object) -> None:
+    def read(self, source: BinaryArchive, r: BinaryReader, tag: object) -> None:
         if source.binPath.endswith('.uop'): self.readUop(source, r)
         else: self.readIdx(source, r)
         
@@ -158,7 +158,7 @@ class Binary_UO(ArcBinaryT):
 
     UOP_MAGIC = 0x50594D
 
-    def readUop(self, source: BinaryArchive, r: Reader):
+    def readUop(self, source: BinaryArchive, r: BinaryReader):
         def parse_():
             match source.binPath:
                 case 'artLegacyMUL.uop': return ('.tga', 0x14000, 0x13FDC, False, lambda i: f'land/file{i:05x}.land' if i < 0x4000 else f'art/file{i:05x}.art')
@@ -295,7 +295,7 @@ class Binary_UO(ArcBinaryT):
 
     #region IDX
 
-    def readIdx(self, source: BinaryArchive, r: Reader):
+    def readIdx(self, source: BinaryArchive, r: BinaryReader):
         def parse():
             match source.binPath:
                 case 'anim.idx': return ('anim.mul', 0x40000, 6, lambda i: f'file{i:05x}.anim')
@@ -359,7 +359,7 @@ class Binary_UO(ArcBinaryT):
     #endregion
 
     # readData
-    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+    def readData(self, source: BinaryArchive, r: BinaryReader, file: FileSource, option: object = None) -> BytesIO:
         if file.offset < 0: return None
         fileSize = file.fileSize & 0x7FFFFFFF
         if (file.fileSize & (1 << 31)) != 0: return Binary_Verdata.instance.readData(file.offset, fileSize)

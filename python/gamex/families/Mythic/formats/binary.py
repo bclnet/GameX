@@ -2,7 +2,7 @@ import os
 from io import BytesIO
 from enum import Enum
 from datetime import datetime
-from openstk import Reader, unsafe
+from openstk import BinaryReader, unsafe
 from gamex import FileSource, ArcBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo, DesSer
 from gamex.families.Uncore.formats.compression import decompressZlibStream, decompressZlib
 
@@ -40,13 +40,13 @@ class Binary_Mpk(ArcBinaryT):
     #endregion
 
     # read
-    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
         magic = r.readUInt32()
         if magic != self.MAGIC: raise Exception('BAD MAGIC')
         r.seek(21)
         source.tag = decompressZlibStream(r).decode('ascii') # tag: ArchiveName
         files = decompressZlibStream(r); baseOffset = r.tell()
-        s = Reader(BytesIO(files))
+        s = BinaryReader(BytesIO(files))
         source.files = [FileSource(
             path = unsafe.fixedAStringScan(f.fileName, 256),
             offset = baseOffset + f.offset,
@@ -56,7 +56,7 @@ class Binary_Mpk(ArcBinaryT):
         ) for f in s.readSArray(self.MPK_File, len(files) // 284)]
 
     # readData
-    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+    def readData(self, source: BinaryArchive, r: BinaryReader, file: FileSource, option: object = None) -> BytesIO:
         r.seek(file.offset)
         return BytesIO(decompressZlib(r, file.packedSize, file.fileSize))
 

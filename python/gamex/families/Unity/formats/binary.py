@@ -4,7 +4,7 @@ from gamex.core.binary import ArcBinaryT
 from gamex.core.meta import FileSource
 
 # typedefs
-class Reader: pass
+class BinaryReader: pass
 class BinaryArchive: pass
 
 #region Binary_Unity
@@ -13,7 +13,7 @@ class BinaryArchive: pass
 class Binary_Unity(ArcBinaryT):
 
     # read
-    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
         raise NotImplementedError()
 
 #endregion

@@ -2,7 +2,7 @@ import os
 from io import BytesIO
 from enum import Enum, Flag, IntFlag
 from numpy import ndarray, array
-from openstk import log, Reader
+from openstk import log, BinaryReader
 from gamex import FileSource, ArcBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
 from gamex.core.globalx import Color3, Color4
 from gamex.core.desser import DesSer
@@ -29,9 +29,9 @@ class Ref[T]:
     def value() -> T: return self.val
 class X[T]:
     @staticmethod # Refers to an object before the current one in the hierarchy.
-    def ptr(r: Reader): return None if (v := r.readInt32()) < 0 else Ref(r, v)
+    def ptr(r: BinaryReader): return None if (v := r.readInt32()) < 0 else Ref(r, v)
     @staticmethod # Refers to an object after the current one in the hierarchy.
-    def ref(r: Reader): return None if (v := r.readInt32()) < 0 else Ref(r, v)
+    def ref(r: BinaryReader): return None if (v := r.readInt32()) < 0 else Ref(r, v)
 class Z:
     @staticmethod
     def readBlocks(s, r: NiReader) -> list[object]:
@@ -960,7 +960,7 @@ class ExportInfo: # X
         self.exportScript: str = r.readL8AString()
 
 # The NIF file header.
-class NiReader(Reader): # X
+class NiReader(BinaryReader): # X
     headerString: str = None                            # 'NetImmerse File Format x.x.x.x' (versions <= 10.0.1.2) or 'Gamebryo File Format x.x.x.x' (versions >= 10.1.0.0), with x.x.x.x the version written out. Ends with a newline character (0x0A).
     copyright: list[str] = None
     v: int = 0x04000002                                 # The NIF version, in hexadecimal notation: 0x04000002, 0x0401000C, 0x04020002, 0x04020100, 0x04020200, 0x0A000100, 0x0A010000, 0x0A020000, 0x14000004, ...
@@ -983,7 +983,7 @@ class NiReader(Reader): # X
     blocks: list[NiObject]
     roots: list[Ref[NiObject]]
 
-    def __init__(self, b: Reader):
+    def __init__(self, b: BinaryReader):
         super().__init__(b.f)
         (self.headerString, self.v) = Z.parseHeaderStr(b.readVAString(128, b'\x0A')); r = self
         if r.v <= 0x03010000: self.copyright = [r.readL8AString(), r.readL8AString(), r.readL8AString()]

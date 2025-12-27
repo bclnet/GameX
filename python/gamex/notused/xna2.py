@@ -3,7 +3,7 @@ import os, itertools
 from io import BytesIO
 from enum import Enum
 from numpy import ndarray, array
-from openstk import _throw, Reader
+from openstk import _throw, BinaryReader
 from openstk.gfx import Raster, Texture_Bytes, ITexture, TextureFormat, TexturePixel
 from openstk.core.drawing import Plane, Point, Rectangle, BoundingBox, BoundingSphere, BoundingFrustum, Ray, Curve
 from openstk.core.reflect import *
@@ -203,7 +203,7 @@ class TypeManager:
         _throw(f'Cannot find type reader "{t}".')
 
 # ContentReader
-class ContentReader(Reader):
+class ContentReader(BinaryReader):
     def __init__(self, f):
         super().__init__(f)
         self.typeReaders: list[TypeReader] = None

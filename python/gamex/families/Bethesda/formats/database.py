@@ -5,7 +5,7 @@ from gamex import FileSource, ArcBinaryT
 from gamex.families.Uncore.formats.compression import decompressLz4, decompressZlib
 
 # typedefs
-class Reader: pass
+class BinaryReader: pass
 class BinaryArchive: pass
 class Header: pass
 class Record: pass
@@ -472,7 +472,7 @@ class Header:
     groupType: HeaderGroupType
 
     def __init__(self): pass
-    def __init__(self, r: Reader, format: FormType, parent: Header):
+    def __init__(self, r: BinaryReader, format: FormType, parent: Header):
         self.parent = parent
         self.type = FormType(r.readUInt32())
         if type == FormType.GRUP:
@@ -598,7 +598,7 @@ class Header:
 # FieldHeader
 class FieldHeader:
     def __repr__(self) -> str: return f'{self.type}'
-    def __init__(self, r: Reader, format: FormType):
+    def __init__(self, r: BinaryReader, format: FormType):
         self.type: FieldType = FieldType(r.readUInt32())
         self.dataSize: int = (r.readUInt32() if format == FormType.TES3 else r.readUInt16())
 
@@ -661,7 +661,7 @@ class CNTOField:
     def __repr__(self) -> str: return f'{self.item}'
     itemCount: int # Number of the item
     item: FormId   # The ID of the item
-    def __init__(self, r: Reader, dataSize: int, format: FormType):
+    def __init__(self, r: BinaryReader, dataSize: int, format: FormType):
         if format == FormType.TES3: self.itemCount = r.readUInt32(); self.item = FormId(r.readZString(32)); return
         self.item = FormId(r.readUInt32()); self.itemCount = r.readUInt32()
 class BYTVField:
@@ -673,11 +673,11 @@ class UNKNField:
 
 class MODLGroup:
     def __repr__(self) -> str: return f'{self.value}'
-    def __init__(self, r: Reader, dataSize: int): self.value: str = r.readYEncoding(dataSize)
+    def __init__(self, r: BinaryReader, dataSize: int): self.value: str = r.readYEncoding(dataSize)
     bound: float
     textures: bytes # Texture Files Hashes
-    def MODBField(self, r: Reader, dataSize: int) -> object: return setattr(self, bound, r.readSingle())
-    def MODTField(self, r: Reader, dataSize: int) -> object: return setattr(self, textures, r.readBytes(dataSize))
+    def MODBField(self, r: BinaryReader, dataSize: int) -> object: return setattr(self, bound, r.readSingle())
+    def MODTField(self, r: BinaryReader, dataSize: int) -> object: return setattr(self, textures, r.readBytes(dataSize))
 
 #endregion
 
@@ -692,9 +692,9 @@ class Record:
     EDID: STRVField # Editor ID
 
     # Return an uninitialized subrecord to deserialize, or null to skip.
-    def createField(self, r: Reader, format: FormType, type: FieldType, dataSize: int) -> object: return Empty
+    def createField(self, r: BinaryReader, format: FormType, type: FieldType, dataSize: int) -> object: return Empty
 
-    def read(self, r: Reader, filePath: str, format: FormType) -> None:
+    def read(self, r: BinaryReader, filePath: str, format: FormType) -> None:
         startTell = r.tell(); endTell = startTell + self.header.dataSize
         while r.tell() < endTell:
             fieldHeader = FieldHeader(r, format)
@@ -728,7 +728,7 @@ class Record:
 
 class TES3Record(Record):
     class HEDRField:
-        def __init__(r: Reader, dataSize: int):
+        def __init__(r: BinaryReader, dataSize: int):
             self.version: float = r.readSingle()
             self.fileType: int = r.readUInt32()
             self.companyName: str = r.readZString(32)
@@ -739,7 +739,7 @@ class TES3Record(Record):
         MASTs: list[STRVField]
         DATAs: list[INTVField]
 
-    def createField(r: Reader, format: FormType, type: FieldType, dataSize: int) -> object:
+    def createField(r: BinaryReader, format: FormType, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.HEDR: return setattr(self, HEDR, HEDRField(r, dataSize))
             case FieldType.MAST: return None #(MASTs ??= []).AddX(r.ReadSTRV(dataSize))

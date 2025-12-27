@@ -13,9 +13,9 @@ from zipfile import ZipFile
 # Binary_Bik
 class Binary_Bik(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Bik(r, f.fileSize)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Bik(r, f.fileSize)
 
-    def __init__(self, r: Reader, fileSize: int):
+    def __init__(self, r: BinaryReader, fileSize: int):
         self.data = r.readBytes(fileSize)
 
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
@@ -29,9 +29,9 @@ class Binary_Bik(IHaveMetaInfo):
 # Binary_Dds
 class Binary_Dds(IHaveMetaInfo, ITexture):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Dds(r)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Dds(r)
 
-    def __init__(self, r: Reader, readMagic: bool = True):
+    def __init__(self, r: BinaryReader, readMagic: bool = True):
         self.header, self.headerDXT10, self.format, self.bytes = DDS_HEADER.read(r, readMagic)
         width = self.header.dwWidth; height = self.header.dwHeight; mipMaps = max(1, self.header.dwMipMapCount)
         offset = 0
@@ -76,9 +76,9 @@ class Binary_Dds(IHaveMetaInfo, ITexture):
 # Binary_Fsb
 class Binary_Fsb(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Fsb(r, f.fileSize)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Fsb(r, f.fileSize)
 
-    def __init__(self, r: Reader, fileSize: int):
+    def __init__(self, r: BinaryReader, fileSize: int):
         self.data = r.readBytes(fileSize)
 
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
@@ -92,9 +92,9 @@ class Binary_Fsb(IHaveMetaInfo):
 # Binary_Img
 class Binary_Img(IHaveMetaInfo, ITexture):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Img(r, f)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Img(r, f)
 
-    def __init__(self, r: Reader, f: FileSource):
+    def __init__(self, r: BinaryReader, f: FileSource):
         self.image = Image.open(r.f)
         self.width, self.height = self.image.size
         bytes = self.image.tobytes(); palette = self.image.getpalette()
@@ -163,7 +163,7 @@ class Binary_Msg(IHaveMetaInfo):
 # Binary_Pcx
 class Binary_Pcx(IHaveMetaInfo, ITexture):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Pcx(r, f.fileSize)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Pcx(r, f.fileSize)
 
     #region Headers
 
@@ -191,7 +191,7 @@ class Binary_Pcx(IHaveMetaInfo, ITexture):
 
     #endregion
 
-    def __init__(self, r: Reader, fileSize: int):
+    def __init__(self, r: BinaryReader, fileSize: int):
         self.header = r.readS(self.X_Header)
         if self.header.manufacturer != 0x0a: raise Exception('BAD MAGIC')
         elif self.header.encoding == 0: raise Exception('NO COMPRESSION')
@@ -310,9 +310,9 @@ class Binary_Pcx(IHaveMetaInfo, ITexture):
 # Binary_Snd
 class Binary_Snd(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Snd(r, f.fileSize)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Snd(r, f.fileSize)
 
-    def __init__(self, r: Reader, fileSize: int):
+    def __init__(self, r: BinaryReader, fileSize: int):
         self.data = r.readBytes(fileSize)
 
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
@@ -327,7 +327,7 @@ class Binary_Snd(IHaveMetaInfo):
 class Binary_Tga(IHaveMetaInfo, ITexture):
 
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Tga(r, f)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Tga(r, f)
 
     #region Headers
 
@@ -432,7 +432,7 @@ class Binary_Tga(IHaveMetaInfo, ITexture):
             elif not self.IS_SUPPORTED_IMAGE_TYPE: raise Exception('UNSUPPORTED_IMAGE_TYPE')
             elif self.imageWidth <= 0 or self.imageWidth > MAX_IMAGE_DIMENSIONS or self.imageHeight <= 0 or self.imageHeight > MAX_IMAGE_DIMENSIONS: raise Exception('INVALID_IMAGE_DIMENSIONS')
 
-        def getColorMap(self, r: Reader) -> object: #ColorMap
+        def getColorMap(self, r: BinaryReader) -> object: #ColorMap
             mapSize = self.mapLength * Binary_Tga.bitsToBytes(self.mapEntrySize)
             s = ColorMap()
             if self.IS_COLOR_MAPPED:
@@ -463,7 +463,7 @@ class Binary_Tga(IHaveMetaInfo, ITexture):
 
     #endregion
 
-    def __init__(self, r: Reader, f: FileSource):
+    def __init__(self, r: BinaryReader, f: FileSource):
         header = self.header = r.readS(self.X_Header)
         header.check()
         r.skip(header.idLength)
@@ -618,9 +618,9 @@ class Binary_Tga(IHaveMetaInfo, ITexture):
 # Binary_Txt
 class Binary_Txt(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Txt(r, f.fileSize)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Txt(r, f.fileSize)
 
-    def __init__(self, r: Reader, fileSize: int):
+    def __init__(self, r: BinaryReader, fileSize: int):
         self.data = r.readBytes(fileSize).decode('utf8', 'ignore')
 
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
@@ -637,7 +637,7 @@ class Binary_Zip(ArcBinaryT):
         self.key = key
 
     # read
-    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
         source.useReader = False
         arc: ZipFile
         source.tag = arc = ZipFile(r.f)
@@ -653,7 +653,7 @@ class Binary_Zip(ArcBinaryT):
             ) for s in arc.infolist() if not s.is_dir()]
 
     # readData
-    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+    def readData(self, source: BinaryArchive, r: BinaryReader, file: FileSource, option: object = None) -> BytesIO:
         arc: ZipFile = source.tag
         print(arc.read(file.path))
 
@@ -663,9 +663,9 @@ class Binary_Zip(ArcBinaryT):
 
 class Binary_TestTri(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_TestTri(r)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_TestTri(r)
 
-    def __init__(self, r: Reader): pass
+    def __init__(self, r: BinaryReader): pass
 
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
         MetaInfo(None, MetaContent(type = 'TestTri', name = os.path.basename(file.path), value = self))

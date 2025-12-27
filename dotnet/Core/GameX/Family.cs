@@ -1298,6 +1298,13 @@ public class FamilyGame {
 #region Loader
 
 public partial class FamilyManager {
+    static readonly Func<string, Stream> GetManifestResourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream;
+    static string FamilyJsonLoader(string path) { using var r = new StreamReader(GetManifestResourceStream($"GameX.Specs.{path}") ?? throw new Exception($"Unable to spec: GameX.Specs.{path}")); return r.ReadToEnd(); }
+
+    /// <summary>
+    /// Load samples.
+    /// </summary>
+    public static bool LoadSamples = true;
     /// <summary>
     /// The families.
     /// </summary>
@@ -1311,28 +1318,8 @@ public partial class FamilyManager {
     /// </summary>
     public static readonly Archive UncoreArchive;
 
-    static readonly Func<string, Stream> GetManifestResourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream;
-    static string FamilyJsonLoader(string path) {
-        using var r = new StreamReader(GetManifestResourceStream($"GameX.Specs.{path}") ?? throw new Exception($"Unable to spec: GameX.Specs.{path}"));
-        return r.ReadToEnd();
-    }
-
     static FamilyManager() {
         Family.Touch();
-        var loadSamples = true;
-
-        // load families
-        foreach (var id in FamilyKeys)
-            try {
-                var family = CreateFamily($"{id}Family.json", FamilyJsonLoader, loadSamples);
-                Families.Add(family.Id, family);
-            }
-            catch (Exception e) {
-                Log.Error(e.ToString());
-                Console.WriteLine(e.ToString());
-            }
-
-        // load uncore
         Uncore = GetFamily("Uncore");
         UncoreArchive = Uncore.GetArchive(new Uri("archive:/#APP"), throwOnError: false);
     }
@@ -1342,11 +1329,29 @@ public partial class FamilyManager {
     /// </summary>
     /// <param name="id">Name of the family.</param>
     /// <param name="throwOnError">Throw on error.</param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentOutOfRangeException">estateName</exception>
-    public static Family GetFamily(string id, bool throwOnError = true)
-        => Families.TryGetValue(id, out var family) ? family
-        : throwOnError ? throw new ArgumentOutOfRangeException(nameof(id), id) : default;
+    /// <returns>Family</returns>
+    /// <exception cref="ArgumentOutOfRangeException">id</exception>
+    public static Family GetFamily(string id, bool throwOnError = true) {
+        if (Families.TryGetValue(id, out var family)) return family;
+        try {
+            family = CreateFamily($"{id}Family.json", FamilyJsonLoader, LoadSamples);
+            Families.Add(family.Id, family);
+            return family;
+        }
+        catch (Exception e) {
+            Log.Error(e.ToString());
+            Console.WriteLine(e.ToString());
+        }
+        return throwOnError ? throw new ArgumentOutOfRangeException(nameof(id), id) : default;
+    }
+
+    /// <summary>
+    /// Loads all families
+    /// </summary>
+    /// <param name="throwOnError">Throw on error.</param>
+    public static void LoadFamilies(string[] ids = null, bool throwOnError = true) {
+        foreach (var s in ids ?? FamilyIds) GetFamily(s, throwOnError);
+    }
 }
 
 #endregion

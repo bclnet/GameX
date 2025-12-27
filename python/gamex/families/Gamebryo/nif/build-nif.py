@@ -55,7 +55,7 @@ namespace GameX.Gamebryo.Formats.Nif;
 from io import BytesIO
 from enum import Enum, Flag, IntFlag
 from numpy import ndarray, array
-from openstk import log, Reader
+from openstk import log, BinaryReader
 from gamex import FileSource, ArcBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
 from gamex.core.globalx import Color3, Color4
 from gamex.core.desser import DesSer
@@ -263,9 +263,9 @@ public class TriangleJsonConverter : JsonConverter<Triangle> {
     def value() -> T: return self.val
 class X[T]:
     @staticmethod # Refers to an object before the current one in the hierarchy.
-    def ptr(r: Reader): return None if (v := r.readInt32()) < 0 else Ref(r, v)
+    def ptr(r: BinaryReader): return None if (v := r.readInt32()) < 0 else Ref(r, v)
     @staticmethod # Refers to an object after the current one in the hierarchy.
-    def ref(r: Reader): return None if (v := r.readInt32()) < 0 else Ref(r, v)
+    def ref(r: BinaryReader): return None if (v := r.readInt32()) < 0 else Ref(r, v)
 class Z:
     @staticmethod
     def readBlocks(s, r: NiReader) -> list[object]:
@@ -389,8 +389,8 @@ DesSer.add({'Ref':RefJsonConverter, 'TexCoord':TexCoordJsonConverter, 'Triangle'
             values.insert(20, vx1 := Class.Value(s, Elem({ 'name': 'Roots', 'type': 'Ref', 'template': 'NiObject', 'arr1': 'x' })))
             vx1.initcw = ('Roots = new Footer(r).Roots;', 'self.roots = Footer(r).roots')
         def Header_code(s):
-            s.init = (['BinaryReader b', 'b: Reader'], ['rx', 'rx'], [f'new NiReader(r)', f'NiReader(r)'])
-            s.namecw = ('NiReader', 'NiReader'); s.inherit = 'BinaryReader' if self.ex == CS else 'Reader'
+            s.init = (['BinaryReader b', 'b: BinaryReader'], ['rx', 'rx'], [f'new NiReader(r)', f'NiReader(r)'])
+            s.namecw = ('NiReader', 'NiReader'); s.inherit = 'BinaryReader' if self.ex == CS else 'BinaryReader'
             s.values[0].initcw = ('(HeaderString, V) = Z.ParseHeaderStr(b.ReadVAString(0x80, 0xA)); var r = this;', '(self.headerString, self.v) = Z.parseHeaderStr(b.readVAString(128, b\'\\x0A\')); r = self')
         def StringPalette_code(s):
             s.values[0].typecw = ('string[]', 'list[str]'); s.values[0].initcw = ('Palette = r.ReadL32AString().Split(\'\\x00\');', 'self.palette: list[str] = r.readL32AString().split(\'0x00\')')

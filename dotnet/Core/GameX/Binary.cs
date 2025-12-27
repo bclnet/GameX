@@ -666,8 +666,8 @@ public abstract class BinaryAsset(ArchiveState state, ArcBinary arcBinary) : Arc
     /// Processes this instance.
     /// </summary>
     public async virtual Task Process() {
-        if (UseFileId) FilesById = Files.Where(x => x != null).ToLookup(x => x.Id);
-        FilesByPath = Files.Where(x => x != null).ToLookup(x => x.Path, StringComparer.OrdinalIgnoreCase);
+        if (UseFileId) FilesById = Files.Where(s => s != null).ToLookup(s => s.Id);
+        FilesByPath = Files.Where(s => s != null).ToLookup(s => s.Path, StringComparer.OrdinalIgnoreCase);
         if (ArcBinary != null) await ArcBinary.Process(this);
     }
 

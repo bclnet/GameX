@@ -1,9 +1,10 @@
 import os, pathlib
 from PyQt6.QtWidgets import QWidget, QGridLayout, QFileDialog, QLabel, QComboBox, QLineEdit, QPushButton
 from PyQt6.QtCore import Qt
-from gamex import Families, getFamily, option
+from gamex import Families, getFamily, option, loadFamilies
 from gamex.core.util import _find
 
+loadFamilies([option.Family] if option.Family else None)
 familyValues = list(Families.values())
 
 # OpenWidget
@@ -26,7 +27,7 @@ class OpenWidget(QWidget):
 
         familyLabel = QLabel(self); familyLabel.setText("Family:")
         familyInput = self.familyInput = QComboBox(self)
-        familyInput.addItems([None] + [x.name for x in familyValues])
+        familyInput.addItems([None] + [s.name for s in familyValues])
         familyInput.currentIndexChanged.connect(self.family_change)
 
         gameLabel = QLabel(self); gameLabel.setText("Game:")
@@ -144,8 +145,8 @@ class OpenWidget(QWidget):
 
     def loaded(self):
         if not option.Family: return
-        self.familyInput.setCurrentIndex(_find([x.id for x in familyValues], option.Family) + 1)
+        self.familyInput.setCurrentIndex(_find([s.id for s in familyValues], option.Family) + 1)
         if not option.Game: return
-        self.gameInput.setCurrentIndex(_find([x.id for x in self.gameValues], option.Game) + 1)
-        if self.editionInput: self.editionInput.setCurrentIndex(_find([x.id for x in self.editionValues], option.Edition or '') + 1)
+        self.gameInput.setCurrentIndex(_find([s.id for s in self.gameValues], option.Game) + 1)
+        if self.editionInput: self.editionInput.setCurrentIndex(_find([s.id for s in self.editionValues], option.Edition or '') + 1)
         if option.ForceOpen: self.open_click()

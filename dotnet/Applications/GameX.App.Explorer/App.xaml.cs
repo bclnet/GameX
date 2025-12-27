@@ -1,6 +1,7 @@
 ﻿using CommandLine;
 using OpenStack;
 using System.Windows;
+using static GameX.FamilyManager;
 [assembly: ThemeInfo(ResourceDictionaryLocation.None, ResourceDictionaryLocation.SourceAssembly)]
 
 // https://www.wpf-tutorial.com/data-binding/debugging/
@@ -38,6 +39,7 @@ public partial class App : Application {
     //static readonly string[] args = ["open", "-f", "Valve", "-u", "game:/dota/pak01_dir.vpk#Dota2", "-p", "particles/hw_fx/candy_carrying_overhead.vpcf_c"];
 
     void Application_Startup(object sender, StartupEventArgs e) {
+        LoadFamilies(Option.Family != null ? [Option.Family] : null);
         //PlatformX.Activate(OpenGLPlatform.This);
         //OpenStack.Wpf.Control.GLControl.ShowConsole = true;
         //OpenTK.ConsoleManager.Show();

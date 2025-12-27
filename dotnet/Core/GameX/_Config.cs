@@ -86,7 +86,7 @@ public partial class FamilyManager {
     public static GlobalOption Option = new() {
         Platform = "UK",
         ForceOpen = true,
-        ForcePath = "sample:2",
+        ForcePath = "sample:0",
         Family = "Bethesda",
         Game = "Morrowind", // The Elder Scrolls III: Morrowind
         //Game = "Oblivion", // The Elder Scrolls IV: Oblivion
@@ -787,5 +787,5 @@ public partial class FamilyManager {
 #else
     public static GlobalOption Option = new() { };
 #endif
-    static readonly string[] FamilyKeys = ["Arkane", "Beamdog", "Bethesda", "Bioware", "Black", "Blizzard", "Bohemia", "Bullfrog", "Capcom", "Cig", "Cryptic", "Crytek", "Cyanide", "EA", "Epic", "Firaxis", "Frictional", "Frontier", "Gamebryo", "ID", "IW", "Lucas", "Monolith", "Mythic", "Nintendo", "Origin", "Red", "Rockstar", "Ubisoft", "Uncore", "Unity", "Valve", "Volition", "WB", "X2K", "Xbox"];
+    static readonly string[] FamilyIds = ["Arkane", "Beamdog", "Bethesda", "Bioware", "Black", "Blizzard", "Bohemia", "Bullfrog", "Capcom", "Cig", "Cryptic", "Crytek", "Cyanide", "EA", "Epic", "Firaxis", "Frictional", "Frontier", "Gamebryo", "ID", "IW", "Lucas", "Monolith", "Mythic", "Nintendo", "Origin", "Red", "Rockstar", "Ubisoft", "Uncore", "Unity", "Valve", "Volition", "WB", "X2K", "Xbox"];
 }

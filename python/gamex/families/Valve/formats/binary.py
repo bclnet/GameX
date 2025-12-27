@@ -2,7 +2,7 @@ from __future__ import annotations
 import os, numpy as np
 from io import BytesIO
 from enum import Enum, Flag
-from openstk import _throw, _pathExtension, unsafe, Reader, X_LumpON, X_LumpNO, X_LumpNO2, X_Lump2NO
+from openstk import _throw, _pathExtension, unsafe, BinaryReader, X_LumpON, X_LumpNO, X_LumpNO2, X_Lump2NO
 from openstk.gfx import Raster, Texture_Bytes, ITexture, ITextureFrames, TextureFlags, TextureFormat, TexturePixel
 from gamex import Archive, BinaryArchive, ArcBinary, ArcBinaryT, FileSource, MetaInfo, MetaManager, MetaContent, IHaveMetaInfo
 from gamex.families.Uncore.formats.compression import decompressBlast
@@ -88,7 +88,7 @@ class Binary_Bsp30(ArcBinaryT):
     #endregion
 
     #read
-    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
         source.files = files = []
 
         # read file
@@ -112,7 +112,7 @@ class Binary_Bsp30(ArcBinaryT):
         files.append(FileSource(path = 'markSurfaces.dat', offset = header.markSurfaces.offset, fileSize = header.markSurfaces.num))
 
     # readData
-    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+    def readData(self, source: BinaryArchive, r: BinaryReader, file: FileSource, option: object = None) -> BytesIO:
         r.seek(file.offset)
         return BytesIO(r.readBytes(file.fileSize))
 
@@ -123,10 +123,10 @@ class Binary_Bsp30(ArcBinaryT):
 # Binary_Src
 class Binary_Src(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive):
+    def factory(r: BinaryReader, f: FileSource, s: Archive):
         pass
         
-    def __init__(self, r: Reader):
+    def __init__(self, r: BinaryReader):
         pass
 
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
@@ -140,7 +140,7 @@ class Binary_Src(IHaveMetaInfo):
 # Binary_Spr
 class Binary_Spr(IHaveMetaInfo, ITextureFrames):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Spr(r)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Spr(r)
 
     #region Headers
 
@@ -188,7 +188,7 @@ class Binary_Spr(IHaveMetaInfo, ITextureFrames):
 
     #endregion
 
-    def __init__(self, r: Reader):
+    def __init__(self, r: BinaryReader):
         # read file
         header = r.readS(self.S_Header)
         if header.magic != self.S_MAGIC: raise Exception('BAD MAGIC')
@@ -245,7 +245,7 @@ class Binary_Spr(IHaveMetaInfo, ITextureFrames):
 # Binary_Mdl10
 class Binary_Mdl10(IHaveMetaInfo, ITexture):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Mdl10(r, f, s)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Mdl10(r, f, s)
 
     #region Headers
 
@@ -462,7 +462,7 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
             self.axis = axis
 
     class Seq:
-        def __init__(self, r: Reader, s: M_Seq, sequences: list[M_SeqHeader], zeroGroupOffset: int, isXashModel: bool, bones: list[Bone]):
+        def __init__(self, r: BinaryReader, s: M_Seq, sequences: list[M_SeqHeader], zeroGroupOffset: int, isXashModel: bool, bones: list[Bone]):
             if s.seqGroup < 0 or (s.seqGroup != 0 and (s.seqGroup - 1) >= len(sequences)): raise Exception('Invalid seqgroup value')
             self.label = unsafe.fixedAString(s.label, 32)
             self.fps = s.fps
@@ -484,7 +484,7 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
             self.nodeFlags = s.nodeFlags
             self.nextSequence = s.nextSeq
         @staticmethod
-        def getAnimationBlends(r: Reader, s: M_Seq, sequences: list[M_SeqHeader], zeroGroupOffset: int, numBones: int) -> list[SeqAnimation]:
+        def getAnimationBlends(r: BinaryReader, s: M_Seq, sequences: list[M_SeqHeader], zeroGroupOffset: int, numBones: int) -> list[SeqAnimation]:
             (sr, so) = (r, zeroGroupOffset + s.animIndex) if s.seqGroup == 0 else (sequences[s.seqGroup - 1][0], s.animIndex)
             sr.seek(so)
             anim = sr.readS(Binary_Mdl10.M_Anim)
@@ -569,7 +569,7 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
             models.num, models.offset, models.offset2 = tuple
 
     class Bodypart:
-        def __init__(self, r: Reader, s: M_Bodypart, bones: list[Bone]):
+        def __init__(self, r: BinaryReader, s: M_Bodypart, bones: list[Bone]):
             self.name = unsafe.fixedAString(s.name, 32)
             self.base = s.models.offset
             r.seek(s.models.offset2); self.models = [Binary_Mdl10.Model(r, x, bones) for x in r.readSArray(Binary_Mdl10.M_Model, s.models.num)]
@@ -584,7 +584,7 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
             self.index = tuple
 
     class Texture:
-        def __init__(self, r: Reader, s: M_Texture):
+        def __init__(self, r: BinaryReader, s: M_Texture):
             self.name = unsafe.fixedAString(s.name, 64)
             self.flags = s.flags
             self.width = s.width; self.height = s.height
@@ -612,13 +612,13 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
             self.bone = bone
             self.vertex = vertex
         @staticmethod
-        def create(r: Reader, s: M_Lump2, bones: list[Bone]) -> list[ModelVertex]:
+        def create(r: BinaryReader, s: M_Lump2, bones: list[Bone]) -> list[ModelVertex]:
             r.seek(s.offset); boneIds = r.readPArray(None, 'B', s.num)
             r.seek(s.offset2); verts = r.readPArray(np.array, '3f', s.num)
             return [Binary_Mdl10.ModelVertex(bones[boneIds[i]], verts[i]) for i in range(s.num)]
 
     class Model:
-        def __init__(self, r: Reader, s: M_Model, bones: list[Bone]):
+        def __init__(self, r: BinaryReader, s: M_Model, bones: list[Bone]):
             self.name = unsafe.fixedAString(s.name, 64)
             self.type = s.type
             self.boundingRadius = s.boundingRadius
@@ -637,7 +637,7 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
             norms.num, norms.offset = tuple
 
     class Mesh:
-        def __init__(self, r: Reader, s: M_Mesh):
+        def __init__(self, r: BinaryReader, s: M_Mesh):
             r.seek(s.tris.offset); self.triangles = r.readPArray(None, 'H', s.tris.num) #TODO
             self.numTriangles = s.tris.num
             self.numNorms = s.norms.num
@@ -707,7 +707,7 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
     skinFamilies: list[list[int]]
     transitions: list[bytearray]
 
-    def __init__(self, r: Reader, f: FileSource, s: BinaryArchive):
+    def __init__(self, r: BinaryReader, f: FileSource, s: BinaryArchive):
         # read file
         header = r.readS(self.M_Header)
         if header.magic != self.M_MAGIC: raise Exception('BAD MAGIC')
@@ -722,7 +722,7 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
         self.hasTextureFile = header.textures.offset == 0
 
         # load texture
-        def _texture(r2: Reader):
+        def _texture(r2: BinaryReader):
             if not r2: raise Exception(f'External texture file "{path}" does not exist')
             header = r2.readS(self.M_Header)
             if header.magic != self.M_MAGIC: raise Exception('BAD MAGIC')
@@ -731,11 +731,11 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
         (tr, theader) = s.readerT(_texture, path := f'{pathName}T{pathExt}', True) if self.hasTextureFile else (r, header)
 
         # load animations
-        sequences: list[(Reader, M_SeqHeader)] = None
+        sequences: list[(BinaryReader, M_SeqHeader)] = None
         if header.seqGroups.num > 1:
-            sequences = [(Reader, self.M_SeqHeader)] * (header.seqGroups.num - 1)
+            sequences = [(BinaryReader, self.M_SeqHeader)] * (header.seqGroups.num - 1)
             for i in range(len(sequences)):
-                def _sequences(r2: Reader):
+                def _sequences(r2: BinaryReader):
                     if not r2: raise Exception(f'Sequence group file "{path}" does not exist')
                     header = r2.readS(self.M_SeqHeader)
                     if header.magic != self.M_MAGIC2: raise Exception('BAD MAGIC')
@@ -809,7 +809,7 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
 # Binary_Mdl40
 class Binary_Mdl40(IHaveMetaInfo):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Mdl40(r, f, s)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Mdl40(r, f, s)
 
     #region Headers
 
@@ -955,7 +955,7 @@ class Binary_Mdl40(IHaveMetaInfo):
     clippingMax: np.ndarray
     flags: HeaderFlags
 
-    def __init__(self, r: Reader, f: FileSource, s: BinaryArchive):
+    def __init__(self, r: BinaryReader, f: FileSource, s: BinaryArchive):
         # read file
         header = r.readS(self.M_Header)
         if header.magic != self.M_MAGIC: raise Exception('BAD MAGIC')
@@ -965,7 +965,7 @@ class Binary_Mdl40(IHaveMetaInfo):
         path = f.path; pathExt = _pathExtension(path); pathName = path[:-len(pathExt)]
 
         # # load texture
-        # def _texture(r2: Reader):
+        # def _texture(r2: BinaryReader):
         #     if not r2: raise Exception(f'External texture file "{path}" does not exist')
         #     header = r2.readS(self.M_Header)
         #     if header.magic != self.M_MAGIC: raise Exception('BAD MAGIC')
@@ -974,11 +974,11 @@ class Binary_Mdl40(IHaveMetaInfo):
         # (tr, theader) = s.readerT(_texture, path := f'{pathName}T{pathExt}', True) if self.hasTextureFile else (r, header)
 
         # # load animations
-        # sequences: list[(Reader, M_SeqHeader)] = None
+        # sequences: list[(BinaryReader, M_SeqHeader)] = None
         # if header.seqGroups.num > 1:
-        #     sequences = [(Reader, self.M_SeqHeader)] * (header.seqGroups.num - 1)
+        #     sequences = [(BinaryReader, self.M_SeqHeader)] * (header.seqGroups.num - 1)
         #     for i in range(len(sequences)):
-        #         def _sequences(r2: Reader):
+        #         def _sequences(r2: BinaryReader):
         #             if not r2: raise Exception(f'Sequence group file "{path}" does not exist')
         #             header = r2.readS(self.M_SeqHeader)
         #             if header.magic != self.M_MAGIC2: raise Exception('BAD MAGIC')
@@ -1061,7 +1061,7 @@ class Binary_Vpk(ArcBinaryT):
         publicKey: bytearray = bytearray()                     # Gets the public key.
         signature: tuple = (0, bytearray())                    # Gets the signature.
 
-        def __init__(self, r: Reader, h: V_HeaderV2):
+        def __init__(self, r: BinaryReader, h: V_HeaderV2):
             # archive md5
             if h.archiveMd5SectionSize != 0:
                 self.archiveMd5s = (r.tell(), r.readSArray(PakBinary_Vpk.V_ArchiveMd5, h.archiveMd5SectionSize // 28))
@@ -1079,7 +1079,7 @@ class Binary_Vpk(ArcBinaryT):
                 self.signature = (position, r.readBytes(r.readInt32()))
 
         # Verify checksums and signatures provided in the VPK
-        def verifyHashes(self, r: Reader, treeSize: int, h: V_HeaderV2, headerPosition: int) -> None:
+        def verifyHashes(self, r: BinaryReader, treeSize: int, h: V_HeaderV2, headerPosition: int) -> None:
             # treeChecksum
             r.seek(headerPosition)
             hash = md5(r.readBytes(treeSize)).digest()
@@ -1094,7 +1094,7 @@ class Binary_Vpk(ArcBinaryT):
             if hash != self.wholeFileChecksum[1]: raise Exception(f'Package checksum mismatch ({hash.hex()} != expected {self.wholeFileChecksum[1].hex()})')
 
         # Verifies the RSA signature
-        def verifySignature(self, r: Reader) -> None:
+        def verifySignature(self, r: BinaryReader) -> None:
             if not self.publicKey or not self.signature[1]: return
             publicKey = serialization.load_der_public_key(self.publicKey, backend = default_backend())
             r.seek(0)
@@ -1108,7 +1108,7 @@ class Binary_Vpk(ArcBinaryT):
     #endregion
 
     # read
-    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
         source.files = files = []
 
         # file mask
@@ -1171,11 +1171,11 @@ class Binary_Vpk(ArcBinaryT):
             v.verifySignature(r)
 
     # readData
-    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+    def readData(self, source: BinaryArchive, r: BinaryReader, file: FileSource, option: object = None) -> BytesIO:
         fileDataLength = len(file.data)
         data = bytearray(fileDataLength + file.fileSize); mv = memoryview(data)
         if fileDataLength > 0: data[0:] = file.data
-        def _str(r2: Reader): r2.seek(file.offset); r2.read(mv, fileDataLength, file.fileSize)
+        def _str(r2: BinaryReader): r2.seek(file.offset); r2.read(mv, fileDataLength, file.fileSize)
         if file.fileSize == 0: pass
         elif isinstance(file.tag, int): r.seek(file.offset + file.tag); r.read(mv, fileDataLength, file.fileSize)
         elif isinstance(file.tag, str): source.reader(_str, file.tag)
@@ -1220,7 +1220,7 @@ class Binary_Wad3(ArcBinaryT):
     #endregion
 
     # read
-    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
         source.files = files = []
 
         # read file
@@ -1245,7 +1245,7 @@ class Binary_Wad3(ArcBinaryT):
                 packedSize = lump.size))
 
     # readData
-    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+    def readData(self, source: BinaryArchive, r: BinaryReader, file: FileSource, option: object = None) -> BytesIO:
         r.seek(file.offset)
         return BytesIO(
             r.readBytes(file.fileSize) if file.compressed == 0 else \
@@ -1258,7 +1258,7 @@ class Binary_Wad3(ArcBinaryT):
 # Binary_Wad3X
 class Binary_Wad3X(IHaveMetaInfo, ITexture):
     @staticmethod
-    def factory(r: Reader, f: FileSource, s: Archive): return Binary_Wad3X(r, f)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Wad3X(r, f)
 
     #region Headers
 
@@ -1277,7 +1277,7 @@ class Binary_Wad3X(IHaveMetaInfo, ITexture):
 
     #endregion
 
-    def __init__(self, r: Reader, f: FileSource):
+    def __init__(self, r: BinaryReader, f: FileSource):
         match _pathExtension(f.path):
             case '.pic': type = self.Formats.Pic
             case '.tex': type = self.Formats.Tex

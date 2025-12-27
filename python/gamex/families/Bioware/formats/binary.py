@@ -6,14 +6,14 @@ from gamex.families.Uncore.formats.compression import decompressZstd, decompress
 from ....resources.Bioware import TOR, WAR
 
 # typedefs
-class Reader: pass
+class BinaryReader: pass
 class BinaryArchive: pass
 
 # Binary_Aurora
 class Binary_Aurora(ArcBinaryT):
 
     # read
-    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
         raise Exception('BAD MAGIC')
 
 
@@ -55,7 +55,7 @@ class Binary_Myp(ArcBinaryT):
     #endregion
 
     # read
-    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None:
+    def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
         files = source.files = []
         match source.game.id:
             case 'SWTOR': hashLookup = TOR.hashLookup
@@ -92,7 +92,7 @@ class Binary_Myp(ArcBinaryT):
                     compressed = headerFile.compressed))
 
     # readData
-    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None) -> BytesIO:
+    def readData(self, source: BinaryArchive, r: BinaryReader, file: FileSource, option: object = None) -> BytesIO:
         if file.fileSize == 0: return BytesIO()
         r.seek(file.offset)
         return BytesIO(

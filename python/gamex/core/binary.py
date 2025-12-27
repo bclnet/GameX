@@ -2,7 +2,7 @@ from __future__ import annotations
 import sys, os, re, time, itertools
 from enum import Enum, Flag
 from io import BytesIO
-from openstk import _throw, Reader, GenericPool, SinglePool, StaticPool
+from openstk import _throw, BinaryReader, GenericPool, SinglePool, StaticPool
 from gamex.core.meta import FileSource, MetaManager, MetaItem, MetaInfo
 
 # FileOption
@@ -133,10 +133,10 @@ class BinaryArchive(Archive):
 
     readers: dict[str, GenericPool] = {}
     
-    def getReader(self, path: str = None, pooled: bool = True) -> Reader:
+    def getReader(self, path: str = None, pooled: bool = True) -> BinaryReader:
         path = path or self.binPath
-        return self.readers.get(path) or self.readers.setdefault(path, GenericPool[Reader](lambda: Reader(self.vfx.open(path)), lambda r: r.seek(0)) if self.vfx.fileExists(path) else None) if pooled else \
-            SinglePool[Reader](Reader(self.vfx.open(path)) if self.vfx.fileExists(path) else None)
+        return self.readers.get(path) or self.readers.setdefault(path, GenericPool[BinaryReader](lambda: BinaryReader(self.vfx.open(path)), lambda r: r.seek(0)) if self.vfx.fileExists(path) else None) if pooled else \
+            SinglePool[BinaryReader](BinaryReader(self.vfx.open(path)) if self.vfx.fileExists(path) else None)
     
     def reader(self, func: callable, path: str = None, pooled: bool = False): self.getReader(path, pooled).action(func)
 
@@ -197,7 +197,7 @@ class BinaryArchive(Archive):
         if not data: return None
         assetFactory = self.ensureCachedObjectFactory(f)
         if assetFactory != FileSource.emptyObjectFactory:
-            r = Reader(data)
+            r = BinaryReader(data)
             try:
                 task = assetFactory(r, f, self)
                 if task: return (value := task)
@@ -269,7 +269,7 @@ class ManyArchive(BinaryArchive):
 
     def readData(self, file: FileSource, option: object = None) -> BytesIO:
         return file.arc.readData(file, option) if file.arc else \
-            BytesIO(Reader(self.vfx.open(file.path)).readBytes(file.fileSize))
+            BytesIO(BinaryReader(self.vfx.open(file.path)).readBytes(file.fileSize))
     #endregion
 
 # MultiArchive
@@ -355,8 +355,8 @@ class MultiArchive(Archive):
 # tag::ArcBinary[]
 # ArcBinary
 class ArcBinary:
-    def read(self, source: BinaryArchive, r: Reader, tag: object = None) -> None: pass
-    def readData(self, source: BinaryArchive, r: Reader, file: FileSource, option: object = None): pass
+    def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None: pass
+    def readData(self, source: BinaryArchive, r: BinaryReader, file: FileSource, option: object = None): pass
     def process(self, source: BinaryArchive): pass
     def handleException(self, source: object, option: object, message: str):
         print(message)
@@ -377,13 +377,13 @@ class ArcBinaryT(ArcBinary):
             self.assetFactoryFunc = source.assetFactoryFunc
             # self.open()
 
-        def opening(self) -> None: self.r = Reader(self.source.readData(file)); self.pool = StaticPool[Reader](self.r); super().opening()
+        def opening(self) -> None: self.r = BinaryReader(self.source.readData(file)); self.pool = StaticPool[BinaryReader](self.r); super().opening()
         def closing(self) -> None: self.r.__exit__(); super().closing()
-        def getReader(path: str, pooled: bool) -> IGenericPool[Reader]: return self.pool
+        def getReader(path: str, pooled: bool) -> IGenericPool[BinaryReader]: return self.pool
 
-        # def read(self, r: Reader, tag: object = None):
+        # def read(self, r: BinaryReader, tag: object = None):
         #     if self.useReader: super().read(r, tag); return
-        #     with Reader(self.readData(self.source.getReader(), self.file)) as r2:
+        #     with BinaryReader(self.readData(self.source.getReader(), self.file)) as r2:
         #         self.arcBinary.read(self, r2, tag)
 # end::ArcBinary[]
 

@@ -655,7 +655,7 @@ public abstract class BinaryArchive(BinaryState state, ArcBinary arcBinary) : Ar
     /// </summary>
     public async virtual Task Process() {
         if (UseFileId) FilesById = Files.Where(s => s != null).ToLookup(s => s.Id);
-        FilesByPath = Files.Where(s => s != null).ToLookup(s => s.Path, StringComparer.OrdinalIgnoreCase);
+        FilesByPath = Files?.Where(s => s != null).ToLookup(s => s.Path, StringComparer.OrdinalIgnoreCase);
         if (ArcBinary != null) await ArcBinary.Process(this);
     }
 
@@ -1057,8 +1057,12 @@ public interface ITransformAsset<T> {
 
 #endregion
 
+#region Database
+
 public interface IDatabase { }
 
 public interface IRecord { }
 
 public interface ICellRecord : IRecord { }
+
+#endregion

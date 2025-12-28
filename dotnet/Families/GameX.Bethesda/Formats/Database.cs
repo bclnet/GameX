@@ -420,9 +420,9 @@ public interface IHaveMODL {
     MODLGroup MODL { get; }
 }
 
-public class Header {
+public class EsmReader : BinaryReader {
     [Flags]
-    public enum HeaderFlags : uint {
+    public enum EsmFlags : uint {
         EsmFile = 0x00000001,               // ESM file. (TES4.HEDR record only.)
         Deleted = 0x00000020,               // Deleted
         R00 = 0x00000040,                   // Constant / (REFR) Hidden From Local Map (Needs Confirmation: Related to shields)
@@ -448,7 +448,7 @@ public class Header {
         R11 = 0x80000000,                   // (REFR) MultiBound
     }
 
-    public enum HeaderGroupType : int {
+    public enum EsmGroupType : int {
         Top = 0,                    // Label: Record type
         WorldChildren,              // Label: Parent (WRLD)
         InteriorCellBlock,          // Label: Block number
@@ -463,25 +463,26 @@ public class Header {
     }
 
     public override string ToString() => $"{Type}:{GroupType}";
-    public Header Parent;
+    public EsmReader Parent;
+    public FormType Format;
     public FormType Type;
     public uint DataSize;
-    public HeaderFlags Flags;
-    public bool Compressed => (Flags & HeaderFlags.Compressed) != 0;
+    public EsmFlags Flags;
+    public bool Compressed => (Flags & EsmFlags.Compressed) != 0;
     public uint FormId;
     public long Position;
     // group
     public FormType Label;
-    public HeaderGroupType GroupType;
+    public EsmGroupType GroupType;
 
-    public Header() { }
-    public Header(BinaryReader r, FormType format, Header parent) {
-        Parent = parent;
+    public EsmReader(EsmReader parent) : this(parent, parent.Format) => Parent = parent;
+    public EsmReader(BinaryReader r, FormType format) : base(r.BaseStream) {
+        Format = format;
         Type = (FormType)r.ReadUInt32();
         if (Type == GRUP) {
             DataSize = (uint)(r.ReadUInt32() - (format == TES4 ? 20 : 24));
             Label = (FormType)r.ReadUInt32();
-            GroupType = (HeaderGroupType)r.ReadInt32();
+            GroupType = (EsmGroupType)r.ReadInt32();
             r.ReadUInt32(); // stamp | stamp + uknown
             if (format != TES4) r.ReadUInt32(); // version + uknown
             Position = r.Tell();
@@ -489,7 +490,7 @@ public class Header {
         }
         DataSize = r.ReadUInt32();
         if (format == TES3) r.ReadUInt32(); // Unknown
-        Flags = (HeaderFlags)r.ReadUInt32();
+        Flags = (EsmFlags)r.ReadUInt32();
         if (format == TES3) { Position = r.Tell(); return; }
         // tes4
         FormId = r.ReadUInt32();
@@ -603,10 +604,10 @@ public class Header {
     }
 }
 
-public class FieldHeader(BinaryReader r, FormType format) {
+public class FieldHeader(EsmReader r) {
     public override string ToString() => $"{Type}";
     public FieldType Type = (FieldType)r.ReadUInt32();
-    public int DataSize = (int)(format == TES3 ? r.ReadUInt32() : r.ReadUInt16());
+    public int DataSize = (int)(r.Format == TES3 ? r.ReadUInt32() : r.ReadUInt16());
 }
 
 #endregion
@@ -632,21 +633,21 @@ public struct CNTOField {
     public override readonly string ToString() => $"{Item}";
     public uint ItemCount; // Number of the item
     public FormId<Record> Item; // The ID of the item
-    public CNTOField(BinaryReader r, int dataSize, FormType format) {
-        if (format == TES3) { ItemCount = r.ReadUInt32(); Item = new FormId<Record>(r.ReadFAString(32)); return; }
+    public CNTOField(EsmReader r, int dataSize) {
+        if (r.Format == TES3) { ItemCount = r.ReadUInt32(); Item = new FormId<Record>(r.ReadFAString(32)); return; }
         Item = new FormId<Record>(r.ReadUInt32()); ItemCount = r.ReadUInt32();
     }
 }
 public struct BYTVField { public override readonly string ToString() => $"BYTS"; public byte[] Value; }
 public struct UNKNField { public override readonly string ToString() => $"UNKN"; public byte[] Value; }
 
-public class MODLGroup(BinaryReader r, int dataSize) {
+public class MODLGroup(EsmReader r, int dataSize) {
     public override string ToString() => $"{Value}";
     public string Value = r.ReadFUString(dataSize);
     public float Bound;
     public byte[] Textures; // Texture Files Hashes
-    public object MODBField(BinaryReader r, int dataSize) => Bound = r.ReadSingle();
-    public object MODTField(BinaryReader r, int dataSize) => Textures = r.ReadBytes(dataSize);
+    public object MODBField(EsmReader r, int dataSize) => Bound = r.ReadSingle();
+    public object MODTField(EsmReader r, int dataSize) => Textures = r.ReadBytes(dataSize);
 }
 
 #endregion
@@ -656,7 +657,7 @@ public class MODLGroup(BinaryReader r, int dataSize) {
 public class Record : IRecord {
     public static readonly Record Empty = new();
     public override string ToString() => $"{GetType().Name[..4]}: {EDID.Value}";
-    internal Header Header;
+    internal EsmReader Header;
     public uint Id => Header.FormId;
     public STRVField EDID;  // Editor ID
 
@@ -664,13 +665,13 @@ public class Record : IRecord {
     /// Return an uninitialized subrecord to deserialize, or null to skip.
     /// </summary>
     /// <returns>Return an uninitialized subrecord to deserialize, or null to skip.</returns>
-    public virtual object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => Empty;
+    public virtual object CreateField(EsmReader r, FieldType type, int dataSize) => Empty;
 
-    public void Read(BinaryReader r, string filePath, FormType format) {
+    public void Read(EsmReader r, string filePath) {
         long startTell = r.Tell(), end = startTell + Header.DataSize;
         while (!r.AtEnd(end)) {
             //while (r.BaseStream.Position < end) {
-            var fieldHeader = new FieldHeader(r, format);
+            var fieldHeader = new FieldHeader(r);
             if (fieldHeader.Type == FieldType.XXXX) {
                 if (fieldHeader.DataSize != 4) throw new InvalidOperationException();
                 fieldHeader.DataSize = (int)r.ReadUInt32();
@@ -678,7 +679,7 @@ public class Record : IRecord {
             }
             else if (fieldHeader.Type == FieldType.OFST && Header.Type == WRLD) { r.Seek(end); continue; }
             var tell = r.BaseStream.Position;
-            if (CreateField(r, format, fieldHeader.Type, fieldHeader.DataSize) == Empty) { Log.Info($"Unsupported ESM record type: {Header.Type}:{fieldHeader.Type}"); r.Skip(fieldHeader.DataSize); continue; }
+            if (CreateField(r, fieldHeader.Type, fieldHeader.DataSize) == Empty) { Log.Info($"Unsupported ESM record type: {Header.Type}:{fieldHeader.Type}"); r.Skip(fieldHeader.DataSize); continue; }
             // check full read
             if (r.BaseStream.Position != tell + fieldHeader.DataSize) throw new FormatException($"Failed reading {Header.Type}:{fieldHeader.Type} field data at offset {tell} in {filePath} of {r.BaseStream.Position - tell - fieldHeader.DataSize}");
         }
@@ -691,90 +692,87 @@ public class Record : IRecord {
 
 #region Base : RecordGroup
 
-public partial class RecordGroup(GenericPoolAction<BinaryReader> poolAction, string filePath, FormType format, int recordLevel) {
-    public FormType Label => Headers.First.Value.Label;
-    public override string ToString() => Headers.First.Value.ToString();
-    public LinkedList<Header> Headers = [];
+public partial class RecordGroup(string filePath, FormType format, int recordLevel) {
+    public FormType Label => Readers.First.Value.Label;
+    public override string ToString() => Readers.First.Value.ToString();
+    public LinkedList<EsmReader> Readers = [];
     public List<Record> Records = [];
     public List<RecordGroup> Groups;
     public Dictionary<uint, RecordGroup[]> GroupsByLabel;
-    readonly GenericPoolAction<BinaryReader> poolAction = poolAction;
     readonly string filePath = filePath;
     readonly FormType format = format;
     readonly int recordLevel = recordLevel;
     int headerSkip;
 
-    public void AddHeader(Header header, bool load = true) {
-        //Console.WriteLine($"Read: {header.Label}");
-        Headers.AddLast(header);
-        if (load && header.Label != 0 && header.GroupType == Header.HeaderGroupType.Top)
-            switch (header.Label) {
+    public void AddReader(EsmReader r, bool load = true) {
+        //Console.WriteLine($"Read: {r.Label}");
+        Readers.AddLast(r);
+        if (load && r.Label != 0 && r.GroupType == EsmReader.EsmGroupType.Top)
+            switch (r.Label) {
                 case CELL: case WRLD: Load(); break; // "DIAL"
             }
     }
 
     public List<Record> Load(bool loadAll = false) {
-        if (headerSkip == Headers.Count) return Records;
+        if (headerSkip == Readers.Count) return Records;
         lock (Records) {
-            if (headerSkip == Headers.Count) return Records;
-            poolAction?.Invoke(r => {
-                foreach (var header in Headers.Skip(headerSkip)) ReadGroup(r, header, loadAll);
-            });
-            headerSkip = Headers.Count;
+            if (headerSkip == Readers.Count) return Records;
+            foreach (var header in Readers.Skip(headerSkip)) ReadGroup(header, loadAll);
+            headerSkip = Readers.Count;
             return Records;
         }
     }
 
     static int cellsLoaded = 0;
-    void ReadGroup(BinaryReader r, Header header, bool loadAll) {
-        r.Seek(header.Position);
-        var endPosition = header.Position + header.DataSize;
+    void ReadGroup(EsmReader r, bool loadAll) {
+        r.Seek(r.Position);
+        var endPosition = r.Position + r.DataSize;
         while (r.BaseStream.Position < endPosition) {
-            var recordHeader = new Header(r, format, header);
-            if (recordHeader.Type == GRUP) {
-                var group = ReadGRUP(r, header, recordHeader);
+            var r2 = new EsmReader(r);
+            if (r2.Type == GRUP) {
+                var group = ReadGRUP(r, r2);
                 if (loadAll) group.Load(loadAll);
                 continue;
             }
             // HACK to limit cells loading
-            if (recordHeader.Type == CELL && cellsLoaded > int.MaxValue) { r.Skip(recordHeader.DataSize); continue; }
-            var record = recordHeader.CreateRecord(r.BaseStream.Position, recordLevel);
-            if (record == null) { r.Skip(recordHeader.DataSize); continue; }
-            ReadRecord(r, record, recordHeader.Compressed);
+            if (r2.Type == CELL && cellsLoaded > int.MaxValue) { r.Skip(r2.DataSize); continue; }
+            var record = r2.CreateRecord(r.BaseStream.Position, recordLevel);
+            if (record == null) { r.Skip(r2.DataSize); continue; }
+            ReadRecord(r, record, r2.Compressed);
             Records.Add(record);
-            if (recordHeader.Type == CELL) cellsLoaded++;
+            if (r2.Type == CELL) cellsLoaded++;
         }
         GroupsByLabel = Groups?.GroupBy(x => (uint)x.Label).ToDictionary(x => x.Key, x => x.ToArray());
     }
 
-    RecordGroup ReadGRUP(BinaryReader r, Header header, Header recordHeader) {
-        var nextPosition = r.Tell() + recordHeader.DataSize;
+    RecordGroup ReadGRUP(EsmReader r, EsmReader r2) {
+        var nextPosition = r.Tell() + r2.DataSize;
         Groups ??= [];
-        var group = new RecordGroup(poolAction, filePath, format, recordLevel);
-        group.AddHeader(recordHeader);
+        var group = new RecordGroup(filePath, format, recordLevel);
+        group.AddReader(r2);
         Groups.Add(group);
         r.Seek(nextPosition);
         // print header path
-        var headerPath = string.Join("/", [.. GetHeaderPath([], header)]);
-        Console.WriteLine($"Grup: {headerPath} {header.GroupType}");
+        var headerPath = string.Join("/", [.. GetHeaderPath([], r)]);
+        Console.WriteLine($"Grup: {headerPath} {r.GroupType}");
         return group;
     }
 
-    static List<string> GetHeaderPath(List<string> b, Header header) {
+    static List<string> GetHeaderPath(List<string> b, EsmReader header) {
         if (header.Parent != null) GetHeaderPath(b, header.Parent);
         //b.Add(header.GroupType != Header.HeaderGroupType.Top ? BitConverter.ToString(header.Label).Replace("-", string.Empty) : Encoding.ASCII.GetString(header.Label));
         return b;
     }
 
-    void ReadRecord(BinaryReader r, Record record, bool compressed) {
+    void ReadRecord(EsmReader r, Record record, bool compressed) {
         //Console.WriteLine($"Recd: {record.Header.Type}");
-        if (!compressed) { record.Read(r, filePath, format); return; }
+        if (!compressed) { record.Read(r, filePath); return; }
         var newDataSize = r.ReadUInt32();
         var newData = r.DecompressZlib2((int)record.Header.DataSize - 4, (int)newDataSize);
         // read record
         record.Header.Position = 0;
         record.Header.DataSize = newDataSize;
-        using var r2 = new BinaryReader(new MemoryStream(newData)); record.Read(r2, filePath, format);
+        using var r2 = new EsmReader(new BinaryReader(new MemoryStream(newData)), r.Format); record.Read(r2, filePath);
     }
 }
 
@@ -822,7 +820,7 @@ partial class RecordGroup {
                 // find children
                 if (cellSubBlock.GroupsByLabel.TryGetValue(cell.Id, out var cellChildren)) {
                     var cellChild = cellChildren.Single();
-                    var cellTemporaryChildren = cellChild.Groups.Single(x => x.Headers.First().GroupType == Header.HeaderGroupType.CellTemporaryChildren);
+                    var cellTemporaryChildren = cellChild.Groups.Single(x => x.Readers.First().GroupType == EsmReader.EsmGroupType.CellTemporaryChildren);
                     foreach (var land in cellTemporaryChildren.Records.Cast<LANDRecord>()) {
                         land.GridId = new Int3(cell.XCLC.Value.GridX, cell.XCLC.Value.GridY, !cell.IsInterior ? cellId.Z : -1);
                         LANDsById.Add(land.GridId, land);
@@ -845,7 +843,7 @@ public static class Extensions {
     public static T AddX<T>(this IList<T> s, T value) { s.Add(value); return value; }
     public static IEnumerable<T> AddRangeX<T>(this List<T> s, IEnumerable<T> value) { s.AddRange(value); return value; }
 
-    public static INTVField ReadINTV(this BinaryReader r, int length)
+    public static INTVField ReadINTV(this EsmReader r, int length)
         => length switch {
             1 => new INTVField { Value = r.ReadByte() },
             2 => new INTVField { Value = r.ReadInt16() },
@@ -853,7 +851,7 @@ public static class Extensions {
             8 => new INTVField { Value = r.ReadInt64() },
             _ => throw new NotImplementedException($"Tried to read an INTV subrecord with an unsupported size ({length})"),
         };
-    public static DATVField ReadDATV(this BinaryReader r, int length, char type)
+    public static DATVField ReadDATV(this EsmReader r, int length, char type)
         => type switch {
             'b' => new DATVField { B = r.ReadInt32() != 0 },
             'i' => new DATVField { I = r.ReadInt32() },
@@ -861,11 +859,11 @@ public static class Extensions {
             's' => new DATVField { S = r.ReadFUString(length) },
             _ => throw new InvalidOperationException($"{type}"),
         };
-    public static STRVField ReadSTRV(this BinaryReader r, int length) => new() { Value = r.ReadFUString(length) };
-    public static STRVField ReadSTRV_ZPad(this BinaryReader r, int length) => new() { Value = r.ReadFAString(length) };
-    public static FILEField ReadFILE(this BinaryReader r, int length) => new() { Value = r.ReadFUString(length) };
-    public static BYTVField ReadBYTV(this BinaryReader r, int length) => new() { Value = r.ReadBytes(length) };
-    public static UNKNField ReadUNKN(this BinaryReader r, int length) => new() { Value = r.ReadBytes(length) };
+    public static STRVField ReadSTRV(this EsmReader r, int length) => new() { Value = r.ReadFUString(length) };
+    public static STRVField ReadSTRV_ZPad(this EsmReader r, int length) => new() { Value = r.ReadFAString(length) };
+    public static FILEField ReadFILE(this EsmReader r, int length) => new() { Value = r.ReadFUString(length) };
+    public static BYTVField ReadBYTV(this EsmReader r, int length) => new() { Value = r.ReadBytes(length) };
+    public static UNKNField ReadUNKN(this EsmReader r, int length) => new() { Value = r.ReadBytes(length) };
 }
 
 #endregion
@@ -889,13 +887,13 @@ public readonly struct FormId<TRecord> where TRecord : Record {
     public FormId<TRecord> AddName(string name) => new(Id, name);
 }
 
-public struct FMIDField<TRecord>(BinaryReader r, int dataSize) where TRecord : Record {
+public struct FMIDField<TRecord>(EsmReader r, int dataSize) where TRecord : Record {
     public override readonly string ToString() => $"{Value}";
     public FormId<TRecord> Value = dataSize == 4 ? new FormId<TRecord>(r.ReadUInt32()) : new FormId<TRecord>(r.ReadFAString(dataSize));
     public object AddName(string name) => Value = Value.AddName(name);
 }
 
-public struct FMID2Field<TRecord>(BinaryReader r, int dataSize) where TRecord : Record {
+public struct FMID2Field<TRecord>(EsmReader r, int dataSize) where TRecord : Record {
     public override readonly string ToString() => $"{Value1}x{Value2}";
     public FormId<TRecord> Value1 = new(r.ReadUInt32());
     public FormId<TRecord> Value2 = new(r.ReadUInt32());
@@ -908,7 +906,7 @@ public struct FMID2Field<TRecord>(BinaryReader r, int dataSize) where TRecord : 
 public class AACTRecord : Record {
     public CREFField CNAM; // RGB color
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.CNAM => CNAM = r.ReadS<CREFField>(dataSize),
         _ => Empty,
@@ -922,7 +920,7 @@ public class AACTRecord : Record {
 public class ADDNRecord : Record {
     public CREFField CNAM; // RGB color
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.CNAM => CNAM = r.ReadS<CREFField>(dataSize),
         _ => Empty,
@@ -934,7 +932,7 @@ public class ADDNRecord : Record {
 #region 0050 : ARMA.Armature (Model)
 
 public class ARMARecord : Record {
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         _ => false,
     };
@@ -947,7 +945,7 @@ public class ARMARecord : Record {
 public class ARTORecord : Record {
     public CREFField CNAM; // RGB color
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.CNAM => CNAM = r.ReadS<CREFField>(dataSize),
         _ => Empty,
@@ -961,7 +959,7 @@ public class ARTORecord : Record {
 public class ASPCRecord : Record {
     public CREFField CNAM; // RGB color
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.CNAM => CNAM = r.ReadS<CREFField>(dataSize),
         _ => Empty,
@@ -975,7 +973,7 @@ public class ASPCRecord : Record {
 public class ASTPRecord : Record {
     public CREFField CNAM; // RGB color
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.CNAM => CNAM = r.ReadS<CREFField>(dataSize),
         _ => Empty,
@@ -989,7 +987,7 @@ public class ASTPRecord : Record {
 public class AVIFRecord : Record {
     public CREFField CNAM; // RGB color
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.CNAM => CNAM = r.ReadS<CREFField>(dataSize),
         _ => Empty,
@@ -1003,7 +1001,7 @@ public class AVIFRecord : Record {
 public class DLBRRecord : Record {
     public CREFField CNAM; // RGB color
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.CNAM => CNAM = r.ReadS<CREFField>(dataSize),
         _ => Empty,
@@ -1017,7 +1015,7 @@ public class DLBRRecord : Record {
 public class DLVWRecord : Record {
     public CREFField CNAM; // RGB color
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.CNAM => CNAM = r.ReadS<CREFField>(dataSize),
         _ => Empty,
@@ -1031,7 +1029,7 @@ public class DLVWRecord : Record {
 public class SNDRRecord : Record {
     public CREFField CNAM; // RGB color
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.CNAM => CNAM = r.ReadS<CREFField>(dataSize),
         _ => Empty,
@@ -1050,7 +1048,7 @@ public class ACRERecord : Record {
     public FLTVField XSCL; // Scale (optional)
     public BYTVField? XRGD; // Ragdoll Data (optional)
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.NAME => NAME = new FMIDField<Record>(r, dataSize),
         FieldType.DATA => DATA = new REFRRecord.DATAField(r, dataSize),
@@ -1074,7 +1072,7 @@ public class HAIRRecord : Record, IHaveMODL {
     public FILEField ICON;
     public BYTEField DATA; // Playable, Not Male, Not Female, Fixed
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.FULL => FULL = r.ReadSTRV(dataSize),
         FieldType.MODL => MODL = new MODLGroup(r, dataSize),
@@ -1090,7 +1088,7 @@ public class HAIRRecord : Record, IHaveMODL {
 #region 0400 : KEYM.Key
 
 public class KEYMRecord : Record, IHaveMODL {
-    public struct DATAField(BinaryReader r, int dataSize) {
+    public struct DATAField(EsmReader r, int dataSize) {
         public int Value = r.ReadInt32();
         public float Weight = r.ReadSingle();
     }
@@ -1101,7 +1099,7 @@ public class KEYMRecord : Record, IHaveMODL {
     public DATAField DATA; // Type of soul contained in the gem
     public FILEField ICON; // Icon (optional)
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.MODL => MODL = new MODLGroup(r, dataSize),
         FieldType.MODB => MODL.MODBField(r, dataSize),
@@ -1125,7 +1123,7 @@ public class LVLCRecord : Record {
     public FMIDField<CREARecord> TNAM; // Creature Template (optional)
     public List<LVLIRecord.LVLOField> LVLOs = [];
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.LVLD => LVLD = r.ReadS<BYTEField>(dataSize),
         FieldType.LVLF => LVLF = r.ReadS<BYTEField>(dataSize),
@@ -1146,7 +1144,7 @@ public class LVLIRecord : Record {
         public FormId<Record> ItemFormId;
         public int Count;
 
-        public LVLOField(BinaryReader r, int dataSize) {
+        public LVLOField(EsmReader r, int dataSize) {
             Level = r.ReadInt16();
             r.Skip(2); // Unused
             ItemFormId = new FormId<Record>(r.ReadUInt32());
@@ -1163,7 +1161,7 @@ public class LVLIRecord : Record {
     public BYTEField? DATA; // Data (optional)
     public List<LVLOField> LVLOs = [];
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.LVLD => LVLD = r.ReadS<BYTEField>(dataSize),
         FieldType.LVLF => LVLF = r.ReadS<BYTEField>(dataSize),
@@ -1182,7 +1180,7 @@ public class LVSPRecord : Record {
     public BYTEField LVLF; // Flags
     public List<LVLIRecord.LVLOField> LVLOs = []; // Number of items in list
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.LVLD => LVLD = r.ReadS<BYTEField>(dataSize),
         FieldType.LVLF => LVLF = r.ReadS<BYTEField>(dataSize),
@@ -1199,7 +1197,7 @@ public class ROADRecord : Record {
     public PGRDRecord.PGRPField[] PGRPs;
     public UNKNField PGRR;
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.PGRP => PGRPs = [.. Enumerable.Range(0, dataSize >> 4).Select(x => new PGRDRecord.PGRPField(r, dataSize))],
         FieldType.PGRR => PGRR = r.ReadUNKN(dataSize),
         _ => Empty,
@@ -1211,7 +1209,7 @@ public class ROADRecord : Record {
 #region 0400 : SBSP.Subspace
 
 public class SBSPRecord : Record {
-    public struct DNAMField(BinaryReader r, int dataSize) {
+    public struct DNAMField(EsmReader r, int dataSize) {
         public float X = r.ReadSingle(); // X dimension
         public float Y = r.ReadSingle(); // Y dimension
         public float Z = r.ReadSingle(); // Z dimension
@@ -1219,7 +1217,7 @@ public class SBSPRecord : Record {
 
     public DNAMField DNAM;
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.DNAM => DNAM = new DNAMField(r, dataSize),
         _ => Empty,
@@ -1231,7 +1229,7 @@ public class SBSPRecord : Record {
 #region 0400 : SGST.Sigil Stone
 
 public class SGSTRecord : Record, IHaveMODL {
-    public struct DATAField(BinaryReader r, int dataSize) {
+    public struct DATAField(EsmReader r, int dataSize) {
         public byte Uses = r.ReadByte();
         public int Value = r.ReadInt32();
         public float Weight = r.ReadSingle();
@@ -1245,7 +1243,7 @@ public class SGSTRecord : Record, IHaveMODL {
     public List<ENCHRecord.EFITField> EFITs = []; // Effect Data
     public List<ENCHRecord.SCITField> SCITs = []; // Script Effect Data
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.MODL => MODL = new MODLGroup(r, dataSize),
         FieldType.MODB => MODL.MODBField(r, dataSize),
@@ -1255,7 +1253,7 @@ public class SGSTRecord : Record, IHaveMODL {
         FieldType.ICON => ICON = r.ReadFILE(dataSize),
         FieldType.SCRI => SCRI = new FMIDField<SCPTRecord>(r, dataSize),
         FieldType.EFID => r.Skip(dataSize),
-        FieldType.EFIT => EFITs.AddX(new ENCHRecord.EFITField(r, dataSize, format)),
+        FieldType.EFIT => EFITs.AddX(new ENCHRecord.EFITField(r, dataSize)),
         FieldType.SCIT => SCITs.AddX(new ENCHRecord.SCITField(r, dataSize)),
         _ => Empty,
     };
@@ -1276,7 +1274,7 @@ public class ACHRRecord : Record {
     public FLTVField? XSCL; // Scale (optional)
     public BYTVField? XRGD; // Ragdoll Data (optional)
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.NAME => NAME = new FMIDField<Record>(r, dataSize),
         FieldType.DATA => DATA = new REFRRecord.DATAField(r, dataSize),
@@ -1297,7 +1295,7 @@ public class ACHRRecord : Record {
 #region 0450 : AMMO.Ammo
 
 public class AMMORecord : Record, IHaveMODL {
-    public struct DATAField(BinaryReader r, int dataSize) {
+    public struct DATAField(EsmReader r, int dataSize) {
         public float Speed = r.ReadSingle();
         public uint Flags = r.ReadUInt32();
         public uint Value = r.ReadUInt32();
@@ -1312,7 +1310,7 @@ public class AMMORecord : Record, IHaveMODL {
     public IN16Field? ANAM; // Enchantment points (optional)
     public DATAField DATA; // Ammo Data
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.MODL => MODL = new MODLGroup(r, dataSize),
         FieldType.MODB => MODL.MODBField(r, dataSize),
@@ -1334,7 +1332,7 @@ public class ANIORecord : Record, IHaveMODL {
     public MODLGroup MODL { get; set; } // Model
     public FMIDField<IDLERecord> DATA; // IDLE animation
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.MODL => MODL = new MODLGroup(r, dataSize),
         FieldType.MODB => MODL.MODBField(r, dataSize),
@@ -1348,12 +1346,12 @@ public class ANIORecord : Record, IHaveMODL {
 #region 0450 : CLMT.Climate
 
 public class CLMTRecord : Record, IHaveMODL {
-    public struct WLSTField(BinaryReader r, int dataSize) {
+    public struct WLSTField(EsmReader r, int dataSize) {
         public FormId<WTHRRecord> Weather = new(r.ReadUInt32());
         public int Chance = r.ReadInt32();
     }
 
-    public struct TNAMField(BinaryReader r, int dataSize) {
+    public struct TNAMField(EsmReader r, int dataSize) {
         public byte Sunrise_Begin = r.ReadByte();
         public byte Sunrise_End = r.ReadByte();
         public byte Sunset_Begin = r.ReadByte();
@@ -1368,7 +1366,7 @@ public class CLMTRecord : Record, IHaveMODL {
     public List<WLSTField> WLSTs = []; // Climate
     public TNAMField TNAM; // Timing
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.MODL => MODL = new MODLGroup(r, dataSize),
         FieldType.MODB => MODL.MODBField(r, dataSize),
@@ -1424,7 +1422,7 @@ public class CSTYRecord : Record {
         public float RushingAttackDistanceMult;
         public uint Flags2;
 
-        public CSTDField(BinaryReader r, int dataSize) {
+        public CSTDField(EsmReader r, int dataSize) {
             //if (dataSize != 124 && dataSize != 120 && dataSize != 112 && dataSize != 104 && dataSize != 92 && dataSize != 84)
             //    DodgePercentChance = 0;
             DodgePercentChance = r.ReadByte();
@@ -1473,7 +1471,7 @@ public class CSTYRecord : Record {
         }
     }
 
-    public struct CSADField(BinaryReader r, int dataSize) {
+    public struct CSADField(EsmReader r, int dataSize) {
         public float DodgeFatigueModMult = r.ReadSingle();
         public float DodgeFatigueModBase = r.ReadSingle();
         public float EncumbSpeedModBase = r.ReadSingle();
@@ -1500,7 +1498,7 @@ public class CSTYRecord : Record {
     public CSTDField CSTD; // Standard
     public CSADField CSAD; // Advanced
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.CSTD => CSTD = new CSTDField(r, dataSize),
         FieldType.CSAD => CSAD = new CSADField(r, dataSize),
@@ -1571,7 +1569,7 @@ public class EFSHRecord : Record {
         public float ColorKey2_ColorKeyTime;
         public float ColorKey3_ColorKeyTime;
 
-        public DATAField(BinaryReader r, int dataSize) {
+        public DATAField(EsmReader r, int dataSize) {
             if (dataSize != 224 && dataSize != 96) Flags = 0;
             Flags = r.ReadByte();
             r.Skip(3); // Unused
@@ -1638,7 +1636,7 @@ public class EFSHRecord : Record {
     public FILEField ICO2; // Particle Shader Texture
     public DATAField DATA; // Data
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.ICON => ICON = r.ReadFILE(dataSize),
         FieldType.ICO2 => ICO2 = r.ReadFILE(dataSize),
@@ -1656,7 +1654,7 @@ public class EYESRecord : Record {
     public FILEField ICON;
     public BYTEField DATA; // Playable
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.FULL => FULL = r.ReadSTRV(dataSize),
         FieldType.ICON => ICON = r.ReadFILE(dataSize),
@@ -1676,7 +1674,7 @@ public class FLORRecord : Record, IHaveMODL {
     public FMIDField<INGRRecord> PFIG; // The ingredient the plant produces (optional)
     public BYTVField PFPC; // Spring, Summer, Fall, Winter Ingredient Production (byte)
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.MODL => MODL = new MODLGroup(r, dataSize),
         FieldType.MODB => MODL.MODBField(r, dataSize),
@@ -1699,7 +1697,7 @@ public class FURNRecord : Record, IHaveMODL {
     public FMIDField<SCPTRecord> SCRI; // Script (optional)
     public IN32Field MNAM; // Active marker flags, required. A bit field with a bit value of 1 indicating that the matching marker position in the NIF file is active.
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.MODL => MODL = new MODLGroup(r, dataSize),
         FieldType.MODB => MODL.MODBField(r, dataSize),
@@ -1736,7 +1734,7 @@ public class GRASRecord : Record {
         public float WavePeriod;
         public byte Flags;
 
-        public DATAField(BinaryReader r, int dataSize) {
+        public DATAField(EsmReader r, int dataSize) {
             Density = r.ReadByte();
             MinSlope = r.ReadByte();
             MaxSlope = r.ReadByte();
@@ -1756,7 +1754,7 @@ public class GRASRecord : Record {
     public MODLGroup MODL;
     public DATAField DATA;
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.MODL => MODL = new MODLGroup(r, dataSize),
         FieldType.MODB => MODL.MODBField(r, dataSize),
@@ -1776,11 +1774,11 @@ public class IDLERecord : Record, IHaveMODL {
     public BYTEField ANAM;
     public FMIDField<IDLERecord>[] DATAs;
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.MODL => MODL = new MODLGroup(r, dataSize),
         FieldType.MODB => MODL.MODBField(r, dataSize),
-        FieldType.CTDA or FieldType.CTDT => CTDAs.AddX(new SCPTRecord.CTDAField(r, dataSize, format)),
+        FieldType.CTDA or FieldType.CTDT => CTDAs.AddX(new SCPTRecord.CTDAField(r, dataSize)),
         FieldType.ANAM => ANAM = r.ReadS<BYTEField>(dataSize),
         FieldType.DATA => DATAs = [.. Enumerable.Range(0, dataSize >> 2).Select(x => new FMIDField<IDLERecord>(r, 4))],
         _ => Empty,
@@ -1792,7 +1790,7 @@ public class IDLERecord : Record, IHaveMODL {
 #region 0450 : LSCR.Load Screen
 
 public class LSCRRecord : Record {
-    public struct LNAMField(BinaryReader r, int dataSize) {
+    public struct LNAMField(EsmReader r, int dataSize) {
         public FormId<Record> Direct = new(r.ReadUInt32());
         public FormId<WRLDRecord> IndirectWorld = new(r.ReadUInt32());
         public short IndirectGridX = r.ReadInt16();
@@ -1803,7 +1801,7 @@ public class LSCRRecord : Record {
     public STRVField DESC; // Description
     public List<LNAMField> LNAMs; // LoadForm
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.ICON => ICON = r.ReadFILE(dataSize),
         FieldType.DESC => DESC = r.ReadSTRV(dataSize),
@@ -1821,20 +1819,20 @@ public class PACKRecord : Record {
         public ushort Flags;
         public byte Type;
 
-        public PKDTField(BinaryReader r, int dataSize) {
+        public PKDTField(EsmReader r, int dataSize) {
             Flags = r.ReadUInt16();
             Type = r.ReadByte();
             r.Skip(dataSize - 3); // Unused
         }
     }
 
-    public struct PLDTField(BinaryReader r, int dataSize) {
+    public struct PLDTField(EsmReader r, int dataSize) {
         public int Type = r.ReadInt32();
         public uint Target = r.ReadUInt32();
         public int Radius = r.ReadInt32();
     }
 
-    public struct PSDTField(BinaryReader r, int dataSize) {
+    public struct PSDTField(EsmReader r, int dataSize) {
         public byte Month = r.ReadByte();
         public byte DayOfWeek = r.ReadByte();
         public byte Date = r.ReadByte();
@@ -1842,7 +1840,7 @@ public class PACKRecord : Record {
         public int Duration = r.ReadInt32();
     }
 
-    public struct PTDTField(BinaryReader r, int dataSize) {
+    public struct PTDTField(EsmReader r, int dataSize) {
         public int Type = r.ReadInt32();
         public uint Target = r.ReadUInt32();
         public int Count = r.ReadInt32();
@@ -1854,13 +1852,13 @@ public class PACKRecord : Record {
     public PTDTField PTDT; // Target
     public List<SCPTRecord.CTDAField> CTDAs = []; // Conditions
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.PKDT => PKDT = new PKDTField(r, dataSize),
         FieldType.PLDT => PLDT = new PLDTField(r, dataSize),
         FieldType.PSDT => PSDT = new PSDTField(r, dataSize),
         FieldType.PTDT => PTDT = new PTDTField(r, dataSize),
-        FieldType.CTDA or FieldType.CTDT => CTDAs.AddX(new SCPTRecord.CTDAField(r, dataSize, format)),
+        FieldType.CTDA or FieldType.CTDT => CTDAs.AddX(new SCPTRecord.CTDAField(r, dataSize)),
         _ => Empty,
     };
 }
@@ -1870,7 +1868,7 @@ public class PACKRecord : Record {
 #region 0450 : QUST.Quest
 
 public class QUSTRecord : Record {
-    public struct DATAField(BinaryReader r, int dataSize) {
+    public struct DATAField(EsmReader r, int dataSize) {
         public byte Flags = r.ReadByte();
         public byte Priority = r.ReadByte();
     }
@@ -1884,7 +1882,7 @@ public class QUSTRecord : Record {
     public STRVField SCTX; // Script Source
     public List<FMIDField<Record>> SCROs = []; // Global variable reference
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.FULL => FULL = r.ReadSTRV(dataSize),
         FieldType.ICON => ICON = r.ReadFILE(dataSize),
@@ -1908,13 +1906,13 @@ public class QUSTRecord : Record {
 #region 0450 : REFR.Placed Object
 
 public class REFRRecord : Record {
-    public struct XTELField(BinaryReader r, int dataSize) {
+    public struct XTELField(EsmReader r, int dataSize) {
         public FormId<REFRRecord> Door = new(r.ReadUInt32());
         public Vector3 Position = new(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
         public Vector3 Rotation = new(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
     }
 
-    public struct DATAField(BinaryReader r, int dataSize) {
+    public struct DATAField(EsmReader r, int dataSize) {
         public Vector3 Position = new(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
         public Vector3 Rotation = new(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
     }
@@ -1925,7 +1923,7 @@ public class REFRRecord : Record {
         public FormId<KEYMRecord> Key;
         public byte Flags;
 
-        public XLOCField(BinaryReader r, int dataSize) {
+        public XLOCField(EsmReader r, int dataSize) {
             LockLevel = r.ReadByte();
             r.Skip(3); // Unused
             Key = new FormId<KEYMRecord>(r.ReadUInt32());
@@ -1940,7 +1938,7 @@ public class REFRRecord : Record {
         public FormId<Record> Reference;
         public byte Flags;
 
-        public XESPField(BinaryReader r, int dataSize) {
+        public XESPField(EsmReader r, int dataSize) {
             Reference = new FormId<Record>(r.ReadUInt32());
             Flags = r.ReadByte();
             r.Skip(3); // Unused
@@ -1951,7 +1949,7 @@ public class REFRRecord : Record {
         public override readonly string ToString() => $"{Seed}";
         public byte Seed;
 
-        public XSEDField(BinaryReader r, int dataSize) {
+        public XSEDField(EsmReader r, int dataSize) {
             Seed = r.ReadByte();
             if (dataSize == 4) r.Skip(3); // Unused
         }
@@ -1987,7 +1985,7 @@ public class REFRRecord : Record {
     public BYTEField? XSOL; // Contained Soul (optional)
     int _nextFull;
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.NAME => NAME = new FMIDField<Record>(r, dataSize),
         FieldType.XTEL => XTEL = new XTELField(r, dataSize),
@@ -2024,7 +2022,7 @@ public class REFRRecord : Record {
 #region 0450 : SLGM.Soul Gem
 
 public class SLGMRecord : Record, IHaveMODL {
-    public struct DATAField(BinaryReader r, int dataSize) {
+    public struct DATAField(EsmReader r, int dataSize) {
         public int Value = r.ReadInt32();
         public float Weight = r.ReadSingle();
     }
@@ -2037,7 +2035,7 @@ public class SLGMRecord : Record, IHaveMODL {
     public BYTEField SOUL; // Type of soul contained in the gem
     public BYTEField SLCP; // Soul gem maximum capacity
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.MODL => MODL = new MODLGroup(r, dataSize),
         FieldType.MODB => MODL.MODBField(r, dataSize),
@@ -2075,7 +2073,7 @@ public unsafe class TES4Record : Record {
     // TES5
     public UNKNField? TNAM; // overrides (Optional)
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.HEDR => HEDR = r.ReadS<HEDRField>(dataSize),
         FieldType.OFST => r.Skip(dataSize),
         FieldType.DELE => r.Skip(dataSize),
@@ -2100,14 +2098,14 @@ public class TREERecord : Record, IHaveMODL {
     public struct SNAMField {
         public int[] Values;
 
-        public SNAMField(BinaryReader r, int dataSize) {
+        public SNAMField(EsmReader r, int dataSize) {
             Values = new int[dataSize >> 2];
             for (var i = 0; i < Values.Length; i++)
                 Values[i] = r.ReadInt32();
         }
     }
 
-    public struct CNAMField(BinaryReader r, int dataSize) {
+    public struct CNAMField(EsmReader r, int dataSize) {
         public float LeafCurvature = r.ReadSingle();
         public float MinimumLeafAngle = r.ReadSingle();
         public float MaximumLeafAngle = r.ReadSingle();
@@ -2118,7 +2116,7 @@ public class TREERecord : Record, IHaveMODL {
         public float RustleSpeed = r.ReadSingle();
     }
 
-    public struct BNAMField(BinaryReader r, int dataSize) {
+    public struct BNAMField(EsmReader r, int dataSize) {
         public float Width = r.ReadSingle();
         public float Height = r.ReadSingle();
     }
@@ -2129,7 +2127,7 @@ public class TREERecord : Record, IHaveMODL {
     public CNAMField CNAM; // Tree Parameters
     public BNAMField BNAM; // Billboard Dimensions
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.MODL => MODL = new MODLGroup(r, dataSize),
         FieldType.MODB => MODL.MODBField(r, dataSize),
@@ -2175,7 +2173,7 @@ public class WATRRecord : Record {
         public float DisplacementSimulator_StartingSize;
         public ushort Damage;
 
-        public DATAField(BinaryReader r, int dataSize) {
+        public DATAField(EsmReader r, int dataSize) {
             if (dataSize != 102 && dataSize != 86 && dataSize != 62 && dataSize != 42 && dataSize != 2) WindVelocity = 1;
             if (dataSize == 2) { Damage = r.ReadUInt16(); return; }
             WindVelocity = r.ReadSingle();
@@ -2215,7 +2213,7 @@ public class WATRRecord : Record {
         }
     }
 
-    public struct GNAMField(BinaryReader r, int dataSize) {
+    public struct GNAMField(EsmReader r, int dataSize) {
         public FormId<WATRRecord> Daytime = new(r.ReadUInt32());
         public FormId<WATRRecord> Nighttime = new(r.ReadUInt32());
         public FormId<WATRRecord> Underwater = new(r.ReadUInt32());
@@ -2229,7 +2227,7 @@ public class WATRRecord : Record {
     public DATAField DATA; // DATA
     public GNAMField GNAM; // GNAM
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.TNAM => TNAM = r.ReadSTRV(dataSize),
         FieldType.ANAM => ANAM = r.ReadS<BYTEField>(dataSize),
@@ -2257,12 +2255,12 @@ public unsafe class WRLDRecord : Record {
         public short SECell_Y;
     }
 
-    public struct NAM0Field(BinaryReader r, int dataSize) {
+    public struct NAM0Field(EsmReader r, int dataSize) {
         //public static (string, int) Struct = ("<2f", 8);
         //public static (string, int) Struct = ("<4f", 16);
         public Vector2 Min = new(r.ReadSingle(), r.ReadSingle());
         public Vector2 Max = Vector2.Zero;
-        public object NAM9Field(BinaryReader r, int dataSize) => Max = new Vector2(r.ReadSingle(), r.ReadSingle());
+        public object NAM9Field(EsmReader r, int dataSize) => Max = new Vector2(r.ReadSingle(), r.ReadSingle());
     }
 
     // TES5
@@ -2276,7 +2274,7 @@ public unsafe class WRLDRecord : Record {
         public short GridY;
         public Reference[] GridReferences;
 
-        public RNAMField(BinaryReader r, int dataSize) {
+        public RNAMField(EsmReader r, int dataSize) {
             GridX = r.ReadInt16();
             GridY = r.ReadInt16();
             var referenceCount = r.ReadUInt32();
@@ -2298,7 +2296,7 @@ public unsafe class WRLDRecord : Record {
     // TES5
     public List<RNAMField> RNAMs = []; // Large References
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.FULL => FULL = r.ReadSTRV(dataSize),
         FieldType.WNAM => WNAM = new FMIDField<WRLDRecord>(r, dataSize),
@@ -2322,14 +2320,14 @@ public unsafe class WRLDRecord : Record {
 #region 0450 : WTHR.Weather
 
 public class WTHRRecord : Record, IHaveMODL {
-    public struct FNAMField(BinaryReader r, int dataSize) {
+    public struct FNAMField(EsmReader r, int dataSize) {
         public float DayNear = r.ReadSingle();
         public float DayFar = r.ReadSingle();
         public float NightNear = r.ReadSingle();
         public float NightFar = r.ReadSingle();
     }
 
-    public struct HNAMField(BinaryReader r, int dataSize) {
+    public struct HNAMField(EsmReader r, int dataSize) {
         public float EyeAdaptSpeed = r.ReadSingle();
         public float BlurRadius = r.ReadSingle();
         public float BlurPasses = r.ReadSingle();
@@ -2361,7 +2359,7 @@ public class WTHRRecord : Record, IHaveMODL {
         public byte WeatherClassification;
         public ColorRef4 LightningColor;
 
-        public DATAField(BinaryReader r, int dataSize) {
+        public DATAField(EsmReader r, int dataSize) {
             WindSpeed = r.ReadByte();
             CloudSpeed_Lower = r.ReadByte();
             CloudSpeed_Upper = r.ReadByte();
@@ -2378,7 +2376,7 @@ public class WTHRRecord : Record, IHaveMODL {
         }
     }
 
-    public struct SNAMField(BinaryReader r, int dataSize) {
+    public struct SNAMField(EsmReader r, int dataSize) {
         public FormId<SOUNRecord> Sound = new(r.ReadUInt32()); // Sound FormId
         public uint Type = r.ReadUInt32(); // Sound Type - 0=Default, 1=Precipitation, 2=Wind, 3=Thunder
     }
@@ -2392,7 +2390,7 @@ public class WTHRRecord : Record, IHaveMODL {
     public DATAField DATA; // Weather Data
     public List<SNAMField> SNAMs = []; // Sounds
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.MODL => MODL = new MODLGroup(r, dataSize),
         FieldType.MODB => MODL.MODBField(r, dataSize),
@@ -2412,7 +2410,7 @@ public class WTHRRecord : Record, IHaveMODL {
 #region 3000 : BODY.Body
 
 public class BODYRecord : Record, IHaveMODL {
-    public struct BYDTField(BinaryReader r, int dataSize) {
+    public struct BYDTField(EsmReader r, int dataSize) {
         public byte Part = r.ReadByte();
         public byte Vampire = r.ReadByte();
         public byte Flags = r.ReadByte();
@@ -2423,7 +2421,7 @@ public class BODYRecord : Record, IHaveMODL {
     public STRVField FNAM; // Body name
     public BYDTField BYDT;
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => format == FormType.TES3
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => r.Format == FormType.TES3
         ? type switch {
             FieldType.NAME => EDID = r.ReadSTRV(dataSize),
             FieldType.MODL => MODL = new MODLGroup(r, dataSize),
@@ -2446,7 +2444,7 @@ public class LEVCRecord : Record {
     public List<IN16Field> INTVs = []; // PC level for previous CNAM
     // The CNAM/INTV can occur many times in pairs
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => format == FormType.TES3
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => r.Format == FormType.TES3
         ? type switch {
             FieldType.NAME => EDID = r.ReadSTRV(dataSize),
             FieldType.DATA => DATA = r.ReadS<IN32Field>(dataSize),
@@ -2471,7 +2469,7 @@ public class LEVIRecord : Record {
     public List<IN16Field> INTVs = []; // PC level for previous INAM
     // The CNAM/INTV can occur many times in pairs
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => format == FormType.TES3
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => r.Format == FormType.TES3
         ? type switch {
             FieldType.NAME => EDID = r.ReadSTRV(dataSize),
             FieldType.DATA => DATA = r.ReadS<IN32Field>(dataSize),
@@ -2489,7 +2487,7 @@ public class LEVIRecord : Record {
 #region 3000 : PROB.Probe
 
 public class PROBRecord : Record, IHaveMODL {
-    public struct PBDTField(BinaryReader r, int dataSize) {
+    public struct PBDTField(EsmReader r, int dataSize) {
         public float Weight = r.ReadSingle();
         public int Value = r.ReadInt32();
         public float Quality = r.ReadSingle();
@@ -2502,7 +2500,7 @@ public class PROBRecord : Record, IHaveMODL {
     public FILEField ICON; // Inventory Icon
     public FMIDField<SCPTRecord> SCRI; // Script Name
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => format == FormType.TES3
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => r.Format == FormType.TES3
         ? type switch {
             FieldType.NAME => EDID = r.ReadSTRV(dataSize),
             FieldType.MODL => MODL = new MODLGroup(r, dataSize),
@@ -2520,7 +2518,7 @@ public class PROBRecord : Record, IHaveMODL {
 #region 3000 : REPA.Repair Item
 
 public class REPARecord : Record, IHaveMODL {
-    public struct RIDTField(BinaryReader r, int dataSize) {
+    public struct RIDTField(EsmReader r, int dataSize) {
         public float Weight = r.ReadSingle();
         public int Value = r.ReadInt32();
         public int Uses = r.ReadInt32();
@@ -2533,7 +2531,7 @@ public class REPARecord : Record, IHaveMODL {
     public FILEField ICON; // Inventory Icon
     public FMIDField<SCPTRecord> SCRI; // Script Name
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => format == FormType.TES3
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => r.Format == FormType.TES3
         ? type switch {
             FieldType.NAME => EDID = r.ReadSTRV(dataSize),
             FieldType.MODL => MODL = new MODLGroup(r, dataSize),
@@ -2566,7 +2564,7 @@ public class SNDGRecord : Record {
     public STRVField SNAM; // Sound ID
     public STRVField? CNAM; // Creature name (optional)
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => format == FormType.TES3
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => r.Format == FormType.TES3
         ? type switch {
             FieldType.NAME => EDID = r.ReadSTRV(dataSize),
             FieldType.DATA => DATA = r.ReadS<IN32Field>(dataSize),
@@ -2584,7 +2582,7 @@ public class SNDGRecord : Record {
 public class SSCRRecord : Record {
     public STRVField DATA; // Digits
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => format == FormType.TES3
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => r.Format == FormType.TES3
         ? type switch {
             FieldType.NAME => EDID = r.ReadSTRV(dataSize),
             FieldType.DATA => DATA = r.ReadSTRV(dataSize),
@@ -2598,7 +2596,7 @@ public class SSCRRecord : Record {
 #region 3000 : TES3.Plugin info
 
 public class TES3Record : Record {
-    public struct HEDRField(BinaryReader r, int dataSize) {
+    public struct HEDRField(EsmReader r, int dataSize) {
         public float Version = r.ReadSingle();
         public uint FileType = r.ReadUInt32();
         public string CompanyName = r.ReadFAString(32);
@@ -2610,7 +2608,7 @@ public class TES3Record : Record {
     public List<STRVField> MASTs;
     public List<INTVField> DATAs;
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.HEDR => HEDR = new HEDRField(r, dataSize),
         FieldType.MAST => (MASTs ??= []).AddX(r.ReadSTRV(dataSize)),
         FieldType.DATA => (DATAs ??= []).AddX(r.ReadINTV(dataSize)),
@@ -2629,7 +2627,7 @@ public class BSGNRecord : Record {
     public List<STRVField> NPCSs = []; // TES3: Spell/ability
     public List<FMIDField<Record>> SPLOs = []; // TES4: (points to a SPEL or LVSP record)
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadSTRV(dataSize),
         FieldType.FULL or FieldType.FNAM => FULL = r.ReadSTRV(dataSize),
         FieldType.ICON or FieldType.TNAM => ICON = r.ReadFILE(dataSize),
@@ -2655,7 +2653,7 @@ public class MGEFRecord : Record {
         public float SizeX;
         public float SizeCap;
 
-        public MEDTField(BinaryReader r, int dataSize) {
+        public MEDTField(EsmReader r, int dataSize) {
             SpellSchool = r.ReadInt32();
             BaseCost = r.ReadSingle();
             Flags = r.ReadInt32();
@@ -2721,7 +2719,7 @@ public class MGEFRecord : Record {
         public float ConstantEffectEnchantmentFactor;
         public float ConstantEffectBarterFactor;
 
-        public DATAField(BinaryReader r, int dataSize) {
+        public DATAField(EsmReader r, int dataSize) {
             Flags = r.ReadUInt32();
             BaseCost = r.ReadSingle();
             AssocItem = r.ReadInt32();
@@ -2771,7 +2769,7 @@ public class MGEFRecord : Record {
     public DATAField DATA;
     public STRVField[] ESCEs;
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => format == FormType.TES3
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => r.Format == FormType.TES3
         ? type switch {
             FieldType.INDX => INDX = r.ReadINTV(dataSize),
             FieldType.MEDT => MEDT = new MEDTField(r, dataSize),
@@ -2812,8 +2810,8 @@ public class PGRDRecord : Record {
         public short Granularity;
         public short PointCount;
 
-        public DATAField(BinaryReader r, int dataSize, FormType format) {
-            if (format != FormType.TES3) {
+        public DATAField(EsmReader r, int dataSize) {
+            if (r.Format != FormType.TES3) {
                 X = Y = Granularity = 0;
                 PointCount = r.ReadInt16();
                 return;
@@ -2829,14 +2827,14 @@ public class PGRDRecord : Record {
         public Vector3 Point;
         public byte Connections;
 
-        public PGRPField(BinaryReader r, int dataSize) {
+        public PGRPField(EsmReader r, int dataSize) {
             Point = new Vector3(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
             Connections = r.ReadByte();
             r.Skip(3); // Unused
         }
     }
 
-    public struct PGRRField(BinaryReader r, int dataSize) {
+    public struct PGRRField(EsmReader r, int dataSize) {
         public short StartPointId = r.ReadInt16();
         public short EndPointId = r.ReadInt16();
     }
@@ -2845,7 +2843,7 @@ public class PGRDRecord : Record {
         public short PointId;
         public Vector3 ForeignNode;
 
-        public PGRIField(BinaryReader r, int dataSize) {
+        public PGRIField(EsmReader r, int dataSize) {
             PointId = r.ReadInt16();
             r.Skip(2); // Unused (can merge back)
             ForeignNode = new Vector3(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
@@ -2856,7 +2854,7 @@ public class PGRDRecord : Record {
         public FormId<REFRRecord> Reference;
         public short[] PointIds;
 
-        public PGRLField(BinaryReader r, int dataSize) {
+        public PGRLField(EsmReader r, int dataSize) {
             Reference = new FormId<REFRRecord>(r.ReadUInt32());
             PointIds = new short[(dataSize - 4) >> 2];
             for (var i = 0; i < PointIds.Length; i++) {
@@ -2874,9 +2872,9 @@ public class PGRDRecord : Record {
     public List<PGRLField> PGRLs; // Point-to-Reference Mappings
     public PGRIField[] PGRIs; // Inter-Cell Connections
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadSTRV(dataSize),
-        FieldType.DATA => DATA = new DATAField(r, dataSize, format),
+        FieldType.DATA => DATA = new DATAField(r, dataSize),
         FieldType.PGRP => PGRPs = [.. Enumerable.Range(0, dataSize >> 4).Select(x => new PGRPField(r, 16))],
         FieldType.PGRC => PGRC = r.ReadUNKN(dataSize),
         FieldType.PGAG => PGAG = r.ReadUNKN(dataSize),
@@ -2913,8 +2911,8 @@ public class SCPTRecord : Record {
         public int Parameter1; // Parameter #1
         public int Parameter2; // Parameter #2
 
-        public CTDAField(BinaryReader r, int dataSize, FormType format) {
-            if (format == FormType.TES3) {
+        public CTDAField(EsmReader r, int dataSize) {
+            if (r.Format == FormType.TES3) {
                 Index = r.ReadByte();
                 Type = r.ReadByte();
                 FunctionId = r.ReadFAString(2);
@@ -2936,7 +2934,7 @@ public class SCPTRecord : Record {
     }
 
     // TES3
-    public class SCHDField(BinaryReader r, int dataSize) {
+    public class SCHDField(EsmReader r, int dataSize) {
         public override string ToString() => $"{Name}";
         public string Name = r.ReadFAString(32);
         public int NumShorts = r.ReadInt32();
@@ -2945,7 +2943,7 @@ public class SCPTRecord : Record {
         public int ScriptDataSize = r.ReadInt32();
         public int LocalVarSize = r.ReadInt32();
         public string[] Variables = null;
-        public object SCVRField(BinaryReader r, int dataSize) => Variables = r.ReadZAStringList(dataSize).ToArray();
+        public object SCVRField(EsmReader r, int dataSize) => Variables = r.ReadZAStringList(dataSize).ToArray();
     }
 
     // TES4
@@ -2956,7 +2954,7 @@ public class SCPTRecord : Record {
         public uint VariableCount;
         public uint Type; // 0x000 = Object, 0x001 = Quest, 0x100 = Magic Effect
 
-        public SCHRField(BinaryReader r, int dataSize) {
+        public SCHRField(EsmReader r, int dataSize) {
             r.Skip(4); // Unused
             RefCount = r.ReadUInt32();
             CompiledSize = r.ReadUInt32();
@@ -2973,7 +2971,7 @@ public class SCPTRecord : Record {
         public uint Type;
         public string VariableName;
 
-        public SLSDField(BinaryReader r, int dataSize) {
+        public SLSDField(EsmReader r, int dataSize) {
             Idx = r.ReadUInt32();
             r.ReadUInt32(); // Unknown
             r.ReadUInt32(); // Unknown
@@ -2983,7 +2981,7 @@ public class SCPTRecord : Record {
                             // SCVRField
             VariableName = null;
         }
-        public object SCVRField(BinaryReader r, int dataSize) => VariableName = r.ReadFUString(dataSize);
+        public object SCVRField(EsmReader r, int dataSize) => VariableName = r.ReadFUString(dataSize);
     }
 
     public override string ToString() => $"SCPT: {EDID.Value ?? SCHD.Name}";
@@ -2997,11 +2995,11 @@ public class SCPTRecord : Record {
     public List<SLSDField> SCRVs = []; // Ref variable data (one for each ref declared)
     public List<FMIDField<Record>> SCROs = []; // Global variable reference
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) {
         return type switch {
             FieldType.EDID => EDID = r.ReadSTRV(dataSize),
             FieldType.SCHD => SCHD = new SCHDField(r, dataSize),
-            FieldType.SCVR => format != FormType.TES3 ? SLSDs.Last().SCVRField(r, dataSize) : SCHD.SCVRField(r, dataSize),
+            FieldType.SCVR => r.Format != FormType.TES3 ? SLSDs.Last().SCVRField(r, dataSize) : SCHD.SCVRField(r, dataSize),
             FieldType.SCDA or FieldType.SCDT => SCDA = r.ReadBYTV(dataSize),
             FieldType.SCTX => SCTX = r.ReadSTRV(dataSize),
             // TES4
@@ -3025,7 +3023,7 @@ public class ACTIRecord : Record, IHaveMODL {
                                        // TES4
     public FMIDField<SOUNRecord> SNAM; // Sound (Optional)
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadSTRV(dataSize),
         FieldType.MODL => MODL = new MODLGroup(r, dataSize),
         FieldType.MODB => MODL.MODBField(r, dataSize),
@@ -3048,14 +3046,14 @@ public class ALCHRecord : Record, IHaveMODL {
         public int Value;
         public int Flags; //: AutoCalc
 
-        public DATAField(BinaryReader r, int dataSize, FormType format) {
+        public DATAField(EsmReader r, int dataSize) {
             Weight = r.ReadSingle();
-            if (format == FormType.TES3) {
+            if (r.Format == FormType.TES3) {
                 Value = r.ReadInt32();
                 Flags = r.ReadInt32();
             }
         }
-        public object ENITField(BinaryReader r, int dataSize) {
+        public object ENITField(EsmReader r, int dataSize) {
             Value = r.ReadInt32();
             Flags = r.ReadByte();
             r.Skip(3); // Unknown
@@ -3064,7 +3062,7 @@ public class ALCHRecord : Record, IHaveMODL {
     }
 
     // TES3
-    public struct ENAMField(BinaryReader r, int dataSize) {
+    public struct ENAMField(EsmReader r, int dataSize) {
         public short EffectId = r.ReadInt16();
         public byte SkillId = r.ReadByte(); // for skill related effects, -1/0 otherwise
         public byte AttributeId = r.ReadByte(); // for attribute related effects, -1/0 otherwise
@@ -3085,21 +3083,21 @@ public class ALCHRecord : Record, IHaveMODL {
     public List<ENCHRecord.EFITField> EFITs = []; // Effect Data
     public List<ENCHRecord.SCITField> SCITs = []; // Script Effect Data
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadSTRV(dataSize),
         FieldType.MODL => MODL = new MODLGroup(r, dataSize),
         FieldType.MODB => MODL.MODBField(r, dataSize),
         FieldType.MODT => MODL.MODTField(r, dataSize),
         FieldType.FULL => SCITs.Count == 0 ? FULL = r.ReadSTRV(dataSize) : SCITs.Last().FULLField(r, dataSize),
         FieldType.FNAM => FULL = r.ReadSTRV(dataSize),
-        FieldType.DATA or FieldType.ALDT => DATA = new DATAField(r, dataSize, format),
+        FieldType.DATA or FieldType.ALDT => DATA = new DATAField(r, dataSize),
         FieldType.ENAM => ENAM = new ENAMField(r, dataSize),
         FieldType.ICON or FieldType.TEXT => ICON = r.ReadFILE(dataSize),
         FieldType.SCRI => SCRI = new FMIDField<SCPTRecord>(r, dataSize),
         //
         FieldType.ENIT => DATA.ENITField(r, dataSize),
         FieldType.EFID => r.Skip(dataSize),
-        FieldType.EFIT => EFITs.AddX(new ENCHRecord.EFITField(r, dataSize, format)),
+        FieldType.EFIT => EFITs.AddX(new ENCHRecord.EFITField(r, dataSize)),
         FieldType.SCIT => SCITs.AddX(new ENCHRecord.SCITField(r, dataSize)),
         _ => Empty,
     };
@@ -3117,8 +3115,8 @@ public class APPARecord : Record, IHaveMODL {
         public float Weight;
         public int Value;
 
-        public DATAField(BinaryReader r, int dataSize, FormType format) {
-            if (format == FormType.TES3) {
+        public DATAField(EsmReader r, int dataSize) {
+            if (r.Format == FormType.TES3) {
                 Type = (byte)r.ReadInt32();
                 Quality = r.ReadSingle();
                 Weight = r.ReadSingle();
@@ -3138,13 +3136,13 @@ public class APPARecord : Record, IHaveMODL {
     public FILEField ICON; // Inventory Icon
     public FMIDField<SCPTRecord> SCRI; // Script Name
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadSTRV(dataSize),
         FieldType.MODL => MODL = new MODLGroup(r, dataSize),
         FieldType.MODB => MODL.MODBField(r, dataSize),
         FieldType.MODT => MODL.MODTField(r, dataSize),
         FieldType.FULL or FieldType.FNAM => FULL = r.ReadSTRV(dataSize),
-        FieldType.DATA or FieldType.AADT => DATA = new DATAField(r, dataSize, format),
+        FieldType.DATA or FieldType.AADT => DATA = new DATAField(r, dataSize),
         FieldType.ICON or FieldType.ITEX => ICON = r.ReadFILE(dataSize),
         FieldType.SCRI => SCRI = new FMIDField<SCPTRecord>(r, dataSize),
         _ => Empty,
@@ -3168,8 +3166,8 @@ public class ARMORecord : Record, IHaveMODL {
         public int Type;
         public int EnchantPts;
 
-        public DATAField(BinaryReader r, int dataSize, FormType format) {
-            if (format == FormType.TES3) {
+        public DATAField(EsmReader r, int dataSize) {
+            if (r.Format == FormType.TES3) {
                 Type = r.ReadInt32();
                 Weight = r.ReadSingle();
                 Value = r.ReadInt32();
@@ -3203,13 +3201,13 @@ public class ARMORecord : Record, IHaveMODL {
     public FILEField? ICO2; // Female icon (optional)
     public IN16Field? ANAM; // Enchantment points (optional)
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadSTRV(dataSize),
         FieldType.MODL => MODL = new MODLGroup(r, dataSize),
         FieldType.MODB => MODL.MODBField(r, dataSize),
         FieldType.MODT => MODL.MODTField(r, dataSize),
         FieldType.FULL or FieldType.FNAM => FULL = r.ReadSTRV(dataSize),
-        FieldType.DATA or FieldType.AODT => DATA = new DATAField(r, dataSize, format),
+        FieldType.DATA or FieldType.AODT => DATA = new DATAField(r, dataSize),
         FieldType.ICON or FieldType.ITEX => ICON = r.ReadFILE(dataSize),
         FieldType.INDX => INDXs.AddX(new CLOTRecord.INDXFieldGroup { INDX = r.ReadINTV(dataSize) }),
         FieldType.BNAM => INDXs.Last().BNAM = r.ReadSTRV(dataSize),
@@ -3245,8 +3243,8 @@ public class BOOKRecord : Record, IHaveMODL {
         //
         public int EnchantPts;
 
-        public DATAField(BinaryReader r, int dataSize, FormType format) {
-            if (format == FormType.TES3) {
+        public DATAField(EsmReader r, int dataSize) {
+            if (r.Format == FormType.TES3) {
                 Weight = r.ReadSingle();
                 Value = r.ReadInt32();
                 Flags = (byte)r.ReadInt32();
@@ -3272,13 +3270,13 @@ public class BOOKRecord : Record, IHaveMODL {
                                        // TES4
     public IN16Field? ANAM; // Enchantment points (optional)
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadSTRV(dataSize),
         FieldType.MODL => MODL = new MODLGroup(r, dataSize),
         FieldType.MODB => MODL.MODBField(r, dataSize),
         FieldType.MODT => MODL.MODTField(r, dataSize),
         FieldType.FULL or FieldType.FNAM => FULL = r.ReadSTRV(dataSize),
-        FieldType.DATA or FieldType.BKDT => DATA = new DATAField(r, dataSize, format),
+        FieldType.DATA or FieldType.BKDT => DATA = new DATAField(r, dataSize),
         FieldType.ICON or FieldType.ITEX => ICON = r.ReadFILE(dataSize),
         FieldType.SCRI => SCRI = new FMIDField<SCPTRecord>(r, dataSize),
         FieldType.DESC or FieldType.TEXT => DESC = r.ReadSTRV(dataSize),
@@ -3404,15 +3402,15 @@ public unsafe class CELLRecord : Record, ICellRecord {
     public Int3 GridId; // => new Int3(XCLC.Value.GridX, XCLC.Value.GridY, !IsInterior ? 0 : -1);
     public Colorf? AmbientLight => XCLL != null ? (Colorf?)XCLL.Value.AmbientColor.AsColor32 : null;
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) {
         //Console.WriteLine($"   {type}");
         if (!InFRMR && type == FieldType.FRMR) InFRMR = true;
         if (!InFRMR)
             return type switch {
                 FieldType.EDID or FieldType.NAME => EDID = r.ReadSTRV(dataSize),
                 FieldType.FULL or FieldType.RGNN => FULL = r.ReadSTRV(dataSize),
-                FieldType.DATA => (DATA = r.ReadINTV(format == TES3 ? 4 : dataSize).AsUI16Field, format == TES3 ? XCLC = r.ReadS<XCLCField>(format == TES3 ? 8 : dataSize) : null),
-                FieldType.XCLC => XCLC = r.ReadS<XCLCField>(format == TES3 ? 8 : dataSize),
+                FieldType.DATA => (DATA = r.ReadINTV(r.Format == TES3 ? 4 : dataSize).AsUI16Field, r.Format == TES3 ? XCLC = r.ReadS<XCLCField>(r.Format == TES3 ? 8 : dataSize) : null),
+                FieldType.XCLC => XCLC = r.ReadS<XCLCField>(r.Format == TES3 ? 8 : dataSize),
                 FieldType.XCLL or FieldType.AMBI => XCLL = r.ReadS<XCLLField>(dataSize),
                 FieldType.XCLW or FieldType.WHGT => XCLW = r.ReadS<FLTVField>(dataSize),
                 // TES3
@@ -3471,7 +3469,7 @@ public class CLASRecord : Record {
         //wbInteger('Teaches', itS8, wbSkillEnum),
         //wbInteger('Maximum training level', itU8),
         //wbInteger('Unused', itU16)
-        public DATAField(BinaryReader r, int dataSize) => r.Skip(dataSize);
+        public DATAField(EsmReader r, int dataSize) => r.Skip(dataSize);
     }
 
     public STRVField FULL; // Name
@@ -3479,7 +3477,7 @@ public class CLASRecord : Record {
     public STRVField? ICON; // Icon (Optional)
     public DATAField DATA; // Data
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => format == FormType.TES3
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => r.Format == FormType.TES3
         ? type switch {
             FieldType.NAME => EDID = r.ReadSTRV(dataSize),
             FieldType.FNAM => FULL = r.ReadSTRV(dataSize),
@@ -3512,8 +3510,8 @@ public class CLOTRecord : Record, IHaveMODL {
         public int Type;
         public short EnchantPts;
 
-        public DATAField(BinaryReader r, int dataSize, FormType format) {
-            if (format == FormType.TES3) {
+        public DATAField(EsmReader r, int dataSize) {
+            if (r.Format == FormType.TES3) {
                 Type = r.ReadInt32();
                 Weight = r.ReadSingle();
                 Value = r.ReadInt16();
@@ -3550,13 +3548,13 @@ public class CLOTRecord : Record, IHaveMODL {
     public FILEField? ICO2; // Female icon (optional)
     public IN16Field? ANAM; // Enchantment points (optional)
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadSTRV(dataSize),
         FieldType.MODL => MODL = new MODLGroup(r, dataSize),
         FieldType.MODB => MODL.MODBField(r, dataSize),
         FieldType.MODT => MODL.MODTField(r, dataSize),
         FieldType.FULL or FieldType.FNAM => FULL = r.ReadSTRV(dataSize),
-        FieldType.DATA or FieldType.CTDT => DATA = new DATAField(r, dataSize, format),
+        FieldType.DATA or FieldType.CTDT => DATA = new DATAField(r, dataSize),
         FieldType.ICON or FieldType.ITEX => ICON = r.ReadFILE(dataSize),
         FieldType.INDX => INDXs.AddX(new INDXFieldGroup { INDX = r.ReadINTV(dataSize) }),
         FieldType.BNAM => INDXs.Last().BNAM = r.ReadSTRV(dataSize),
@@ -3589,15 +3587,15 @@ public class CONTRecord : Record, IHaveMODL {
         public byte Flags; // flags 0x0001 = Organic, 0x0002 = Respawns, organic only, 0x0008 = Default, unknown
         public float Weight;
 
-        public DATAField(BinaryReader r, int dataSize, FormType format) {
-            if (format == FormType.TES3) {
+        public DATAField(EsmReader r, int dataSize) {
+            if (r.Format == FormType.TES3) {
                 Weight = r.ReadSingle();
                 return;
             }
             Flags = r.ReadByte();
             Weight = r.ReadSingle();
         }
-        public object FLAGField(BinaryReader r, int dataSize) => Flags = (byte)r.ReadUInt32();
+        public object FLAGField(EsmReader r, int dataSize) => Flags = (byte)r.ReadUInt32();
     }
 
     public MODLGroup MODL { get; set; } // Model
@@ -3609,15 +3607,15 @@ public class CONTRecord : Record, IHaveMODL {
     public FMIDField<SOUNRecord> SNAM; // Open sound
     public FMIDField<SOUNRecord> QNAM; // Close sound
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadSTRV(dataSize),
         FieldType.MODL => MODL = new MODLGroup(r, dataSize),
         FieldType.MODB => MODL.MODBField(r, dataSize),
         FieldType.MODT => MODL.MODTField(r, dataSize),
         FieldType.FULL or FieldType.FNAM => FULL = r.ReadSTRV(dataSize),
-        FieldType.DATA or FieldType.CNDT => DATA = new DATAField(r, dataSize, format),
+        FieldType.DATA or FieldType.CNDT => DATA = new DATAField(r, dataSize),
         FieldType.FLAG => DATA.FLAGField(r, dataSize),
-        FieldType.CNTO or FieldType.NPCO => CNTOs.AddX(new CNTOField(r, dataSize, format)),
+        FieldType.CNTO or FieldType.NPCO => CNTOs.AddX(new CNTOField(r, dataSize)),
         FieldType.SCRI => SCRI = new FMIDField<SCPTRecord>(r, dataSize),
         FieldType.SNAM => SNAM = new FMIDField<SOUNRecord>(r, dataSize),
         FieldType.QNAM => QNAM = new FMIDField<SOUNRecord>(r, dataSize),
@@ -3645,7 +3643,7 @@ public class CREARecord : Record, IHaveMODL {
         MetalBlood = 0x0800
     }
 
-    public struct NPDTField(BinaryReader r, int dataSize) {
+    public struct NPDTField(EsmReader r, int dataSize) {
         public int Type = r.ReadInt32(); // 0 = Creature, 1 = Daedra, 2 = Undead, 3 = Humanoid
         public int Level = r.ReadInt32();
         public int Strength = r.ReadInt32();
@@ -3672,7 +3670,7 @@ public class CREARecord : Record, IHaveMODL {
         public int Gold = r.ReadInt32();
     }
 
-    public struct AIDTField(BinaryReader r, int dataSize) {
+    public struct AIDTField(EsmReader r, int dataSize) {
         public enum AIFlags : uint {
             Weapon = 0x00001,
             Armor = 0x00002,
@@ -3705,7 +3703,7 @@ public class CREARecord : Record, IHaveMODL {
         public uint Flags = r.ReadUInt32();
     }
 
-    public struct AI_WField(BinaryReader r, int dataSize) {
+    public struct AI_WField(EsmReader r, int dataSize) {
         public short Distance = r.ReadInt16();
         public short Duration = r.ReadInt16();
         public byte TimeOfDay = r.ReadByte();
@@ -3713,14 +3711,14 @@ public class CREARecord : Record, IHaveMODL {
         public byte Unknown = r.ReadByte();
     }
 
-    public struct AI_TField(BinaryReader r, int dataSize) {
+    public struct AI_TField(EsmReader r, int dataSize) {
         public float X = r.ReadSingle();
         public float Y = r.ReadSingle();
         public float Z = r.ReadSingle();
         public float Unknown = r.ReadSingle();
     }
 
-    public struct AI_FField(BinaryReader r, int dataSize) {
+    public struct AI_FField(EsmReader r, int dataSize) {
         public float X = r.ReadSingle();
         public float Y = r.ReadSingle();
         public float Z = r.ReadSingle();
@@ -3729,7 +3727,7 @@ public class CREARecord : Record, IHaveMODL {
         public short Unknown = r.ReadInt16();
     }
 
-    public struct AI_AField(BinaryReader r, int dataSize) {
+    public struct AI_AField(EsmReader r, int dataSize) {
         public string Name = r.ReadFAString(32);
         public byte Unknown = r.ReadByte();
     }
@@ -3750,7 +3748,7 @@ public class CREARecord : Record, IHaveMODL {
     public STRVField? CNAM;
     public List<STRVField> NPCSs = [];
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => format == FormType.TES3
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => r.Format == FormType.TES3
         ? type switch {
             FieldType.NAME => EDID = r.ReadSTRV(dataSize),
             FieldType.MODL => MODL = new MODLGroup(r, dataSize),
@@ -3758,7 +3756,7 @@ public class CREARecord : Record, IHaveMODL {
             FieldType.NPDT => NPDT = new NPDTField(r, dataSize),
             FieldType.FLAG => FLAG = r.ReadS<IN32Field>(dataSize),
             FieldType.SCRI => SCRI = new FMIDField<SCPTRecord>(r, dataSize),
-            FieldType.NPCO => NPCO = new CNTOField(r, dataSize, format),
+            FieldType.NPCO => NPCO = new CNTOField(r, dataSize),
             FieldType.AIDT => AIDT = new AIDTField(r, dataSize),
             FieldType.AI_W => AI_W = new AI_WField(r, dataSize),
             FieldType.AI_T => AI_T = new AI_TField(r, dataSize),
@@ -3787,7 +3785,7 @@ public class DIALRecord : Record {
     public List<FMIDField<QUSTRecord>> QSTIs; // Quests (optional)
     public List<INFORecord> INFOs = []; // Info Records
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => (LastRecord = this, EDID = r.ReadSTRV(dataSize)),
         FieldType.FULL => FULL = r.ReadSTRV(dataSize),
         FieldType.DATA => DATA = r.ReadS<BYTEField>(dataSize),
@@ -3811,10 +3809,10 @@ public class DOORRecord : Record, IHaveMODL {
     public BYTEField FNAM; // Flags
     public FMIDField<Record> TNAM; // Random teleport destination
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadSTRV(dataSize),
         FieldType.FULL => FULL = r.ReadSTRV(dataSize),
-        FieldType.FNAM => format != FormType.TES3 ? FNAM = r.ReadS<BYTEField>(dataSize) : FULL = r.ReadSTRV(dataSize),
+        FieldType.FNAM => r.Format != FormType.TES3 ? FNAM = r.ReadS<BYTEField>(dataSize) : FULL = r.ReadSTRV(dataSize),
         FieldType.MODL => MODL = new MODLGroup(r, dataSize),
         FieldType.MODB => MODL.MODBField(r, dataSize),
         FieldType.MODT => MODL.MODTField(r, dataSize),
@@ -3841,9 +3839,9 @@ public class ENCHRecord : Record {
         public int ChargeAmount; //: Charge
         public int Flags; //: AutoCalc
 
-        public ENITField(BinaryReader r, int dataSize, FormType format) {
+        public ENITField(EsmReader r, int dataSize) {
             Type = r.ReadInt32();
-            if (format == FormType.TES3) {
+            if (r.Format == FormType.TES3) {
                 EnchantCost = r.ReadInt32();
                 ChargeAmount = r.ReadInt32();
             }
@@ -3868,8 +3866,8 @@ public class ENCHRecord : Record {
         // TES4
         public int ActorValue;
 
-        public EFITField(BinaryReader r, int dataSize, FormType format) {
-            if (format == FormType.TES3) {
+        public EFITField(EsmReader r, int dataSize) {
+            if (r.Format == FormType.TES3) {
                 EffectId = r.ReadFAString(2);
                 SkillId = r.ReadByte();
                 AttributeId = r.ReadByte();
@@ -3897,7 +3895,7 @@ public class ENCHRecord : Record {
         public string VisualEffect;
         public uint Flags;
 
-        public SCITField(BinaryReader r, int dataSize) {
+        public SCITField(EsmReader r, int dataSize) {
             Name = "Script Effect";
             ScriptFormId = r.ReadInt32();
             if (dataSize == 4) return;
@@ -3905,7 +3903,7 @@ public class ENCHRecord : Record {
             VisualEffect = r.ReadFAString(4);
             Flags = dataSize > 12 ? r.ReadUInt32() : 0;
         }
-        public object FULLField(BinaryReader r, int dataSize) => Name = r.ReadFUString(dataSize);
+        public object FULLField(EsmReader r, int dataSize) => Name = r.ReadFUString(dataSize);
     }
 
     public STRVField FULL; // Enchant name
@@ -3914,12 +3912,12 @@ public class ENCHRecord : Record {
                                        // TES4
     public List<SCITField> SCITs = []; // Script effect data
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadSTRV(dataSize),
         FieldType.FULL => SCITs.Count == 0 ? FULL = r.ReadSTRV(dataSize) : SCITs.Last().FULLField(r, dataSize),
-        FieldType.ENIT or FieldType.ENDT => ENIT = new ENITField(r, dataSize, format),
+        FieldType.ENIT or FieldType.ENDT => ENIT = new ENITField(r, dataSize),
         FieldType.EFID => r.Skip(dataSize),
-        FieldType.EFIT or FieldType.ENAM => EFITs.AddX(new EFITField(r, dataSize, format)),
+        FieldType.EFIT or FieldType.ENAM => EFITs.AddX(new EFITField(r, dataSize)),
         FieldType.SCIT => SCITs.AddX(new SCITField(r, dataSize)),
         _ => Empty,
     };
@@ -3941,15 +3939,15 @@ public class FACTRecord : Record {
 
     // TES3
     public struct FADTField {
-        public FADTField(BinaryReader r, int dataSize) => r.Skip(dataSize);
+        public FADTField(EsmReader r, int dataSize) => r.Skip(dataSize);
     }
 
     // TES4
-    public struct XNAMField(BinaryReader r, int dataSize, FormType format) {
+    public struct XNAMField(EsmReader r, int dataSize) {
         public override string ToString() => $"{FormId}";
         public int FormId = r.ReadInt32();
         public int Mod = r.ReadInt32();
-        public int Combat = format > FormType.TES4 ? r.ReadInt32() : 0;
+        public int Combat = r.Format > FormType.TES4 ? r.ReadInt32() : 0;
     }
 
     public STRVField FNAM; // Faction name
@@ -3962,7 +3960,7 @@ public class FACTRecord : Record {
     public INTVField DATA; // Flags (byte, uint32)
     public UI32Field CNAM;
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => format == FormType.TES3
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => r.Format == FormType.TES3
         ? type switch {
             FieldType.NAME => EDID = r.ReadSTRV(dataSize),
             FieldType.FNAM => FNAM = r.ReadSTRV(dataSize),
@@ -3975,7 +3973,7 @@ public class FACTRecord : Record {
         : type switch {
             FieldType.EDID => EDID = r.ReadSTRV(dataSize),
             FieldType.FULL => FNAM = r.ReadSTRV(dataSize),
-            FieldType.XNAM => XNAM = new XNAMField(r, dataSize, format),
+            FieldType.XNAM => XNAM = new XNAMField(r, dataSize),
             FieldType.DATA => DATA = r.ReadINTV(dataSize),
             FieldType.CNAM => CNAM = r.ReadS<UI32Field>(dataSize),
             FieldType.RNAM => RNAMs.AddX(new RNAMGroup { RNAM = r.ReadS<IN32Field>(dataSize) }),
@@ -3994,7 +3992,7 @@ public class GLOBRecord : Record {
     public BYTEField? FNAM; // Type of global (s, l, f)
     public FLTVField? FLTV; // Float data
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadSTRV(dataSize),
         FieldType.FNAM => FNAM = r.ReadS<BYTEField>(dataSize),
         FieldType.FLTV => FLTV = r.ReadS<FLTVField>(dataSize),
@@ -4009,7 +4007,7 @@ public class GLOBRecord : Record {
 public class GMSTRecord : Record {
     public DATVField DATA; // Data
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => format == FormType.TES3
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => r.Format == FormType.TES3
         ? type switch {
             FieldType.NAME => EDID = r.ReadSTRV(dataSize),
             FieldType.STRV => DATA = r.ReadDATV(dataSize, 's'),
@@ -4030,7 +4028,7 @@ public class GMSTRecord : Record {
 
 public class INFORecord : Record {
     // TES3
-    public struct DATA3Field(BinaryReader r, int dataSize) {
+    public struct DATA3Field(EsmReader r, int dataSize) {
         public int Unknown1 = r.ReadInt32();
         public int Disposition = r.ReadInt32();
         public byte Rank = r.ReadByte(); // (0-10)
@@ -4060,7 +4058,7 @@ public class INFORecord : Record {
     }
 
     // TES4
-    public struct DATA4Field(BinaryReader r, int dataSize) {
+    public struct DATA4Field(EsmReader r, int dataSize) {
         public byte Type = r.ReadByte();
         public byte NextSpeaker = r.ReadByte();
         public byte Flags = dataSize == 3 ? r.ReadByte() : (byte)0;
@@ -4073,15 +4071,15 @@ public class INFORecord : Record {
         public string ResponseText;
         public string ActorNotes;
 
-        public TRDTField(BinaryReader r, int dataSize) {
+        public TRDTField(EsmReader r, int dataSize) {
             EmotionType = r.ReadUInt32();
             EmotionValue = r.ReadInt32();
             r.Skip(4); // Unused
             ResponseNumber = r.ReadByte();
             r.Skip(3); // Unused
         }
-        public object NAM1Field(BinaryReader r, int dataSize) => ResponseText = r.ReadFUString(dataSize);
-        public object NAM2Field(BinaryReader r, int dataSize) => ActorNotes = r.ReadFUString(dataSize);
+        public object NAM1Field(EsmReader r, int dataSize) => ResponseText = r.ReadFUString(dataSize);
+        public object NAM2Field(EsmReader r, int dataSize) => ActorNotes = r.ReadFUString(dataSize);
     }
 
     public class TES4Group {
@@ -4103,7 +4101,7 @@ public class INFORecord : Record {
     public TES3Group TES3 = new();
     public TES4Group TES4 = new();
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => format == FormType.TES3
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => r.Format == FormType.TES3
         ? type switch {
             FieldType.INAM => (DIALRecord.LastRecord?.INFOs.AddX(this), EDID = r.ReadSTRV(dataSize)),
             FieldType.PNAM => PNAM = new FMIDField<INFORecord>(r, dataSize),
@@ -4120,7 +4118,7 @@ public class INFORecord : Record {
             FieldType.QSTN => TES3.QSTN = r.ReadS<BYTEField>(dataSize),
             FieldType.QSTF => TES3.QSTF = r.ReadS<BYTEField>(dataSize),
             FieldType.QSTR => TES3.QSTR = r.ReadS<BYTEField>(dataSize),
-            FieldType.SCVR => TES3.SCVR = new SCPTRecord.CTDAField(r, dataSize, format),
+            FieldType.SCVR => TES3.SCVR = new SCPTRecord.CTDAField(r, dataSize),
             FieldType.INTV => TES3.INTV = r.ReadUNKN(dataSize),
             FieldType.FLTV => TES3.FLTV = r.ReadUNKN(dataSize),
             FieldType.BNAM => TES3.BNAM = r.ReadSTRV(dataSize),
@@ -4134,7 +4132,7 @@ public class INFORecord : Record {
             FieldType.TRDT => TES4.TRDTs.AddX(new TRDTField(r, dataSize)),
             FieldType.NAM1 => TES4.TRDTs.Last().NAM1Field(r, dataSize),
             FieldType.NAM2 => TES4.TRDTs.Last().NAM2Field(r, dataSize),
-            FieldType.CTDA or FieldType.CTDT => TES4.CTDAs.AddX(new SCPTRecord.CTDAField(r, dataSize, format)),
+            FieldType.CTDA or FieldType.CTDT => TES4.CTDAs.AddX(new SCPTRecord.CTDAField(r, dataSize)),
             FieldType.TCLT => TES4.TCLTs.AddX(new FMIDField<DIALRecord>(r, dataSize)),
             FieldType.TCLF => TES4.TCLFs.AddX(new FMIDField<DIALRecord>(r, dataSize)),
             FieldType.SCHR or FieldType.SCHD => TES4.SCHR = new SCPTRecord.SCHRField(r, dataSize),
@@ -4158,7 +4156,7 @@ public class INGRRecord : Record, IHaveMODL {
         public int[] SkillId; // only for Skill related effects, 0 or -1 otherwise
         public int[] AttributeId; // only for Attribute related effects, 0 or -1 otherwise
 
-        public IRDTField(BinaryReader r, int dataSize) {
+        public IRDTField(EsmReader r, int dataSize) {
             Weight = r.ReadSingle();
             Value = r.ReadInt32();
             EffectId = new int[4];
@@ -4171,12 +4169,12 @@ public class INGRRecord : Record, IHaveMODL {
     }
 
     // TES4
-    public class DATAField(BinaryReader r, int dataSize) {
+    public class DATAField(EsmReader r, int dataSize) {
         public float Weight = r.ReadSingle();
         public int Value;
         public uint Flags;
 
-        public object ENITField(BinaryReader r, int dataSize) {
+        public object ENITField(EsmReader r, int dataSize) {
             Value = r.ReadInt32();
             Flags = r.ReadUInt32();
             return Value;
@@ -4193,7 +4191,7 @@ public class INGRRecord : Record, IHaveMODL {
     public List<ENCHRecord.EFITField> EFITs = []; // Effect Data
     public List<ENCHRecord.SCITField> SCITs = []; // Script effect data
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadSTRV(dataSize),
         FieldType.MODL => MODL = new MODLGroup(r, dataSize),
         FieldType.MODB => MODL.MODBField(r, dataSize),
@@ -4207,7 +4205,7 @@ public class INGRRecord : Record, IHaveMODL {
         //
         FieldType.ENIT => DATA.ENITField(r, dataSize),
         FieldType.EFID => r.Skip(dataSize),
-        FieldType.EFIT => EFITs.AddX(new ENCHRecord.EFITField(r, dataSize, format)),
+        FieldType.EFIT => EFITs.AddX(new ENCHRecord.EFITField(r, dataSize)),
         FieldType.SCIT => SCITs.AddX(new ENCHRecord.SCITField(r, dataSize)),
         _ => Empty,
     };
@@ -4219,7 +4217,7 @@ public class INGRRecord : Record, IHaveMODL {
 
 public unsafe class LANDRecord : Record {
     // TESX
-    public struct VNMLField(BinaryReader r, int dataSize) {
+    public struct VNMLField(EsmReader r, int dataSize) {
         public Byte3[] Vertexs = r.ReadPArray<Byte3>("3B", dataSize / 3); // XYZ 8 bit floats
     }
 
@@ -4227,7 +4225,7 @@ public unsafe class LANDRecord : Record {
         public float ReferenceHeight; // A height offset for the entire cell. Decreasing this value will shift the entire cell land down.
         public sbyte[] HeightData; // HeightData
 
-        public VHGTField(BinaryReader r, int dataSize) {
+        public VHGTField(EsmReader r, int dataSize) {
             ReferenceHeight = r.ReadSingle();
             var count = dataSize - 4 - 3;
             HeightData = r.ReadPArray<sbyte>("B", count);
@@ -4235,7 +4233,7 @@ public unsafe class LANDRecord : Record {
         }
     }
 
-    public struct VCLRField(BinaryReader r, int dataSize) {
+    public struct VCLRField(EsmReader r, int dataSize) {
         public ColorRef3[] Colors = r.ReadSArray<ColorRef3>(dataSize / 24); // 24-bit RGB
     }
 
@@ -4243,8 +4241,8 @@ public unsafe class LANDRecord : Record {
         public ushort[] TextureIndicesT3;
         public uint[] TextureIndicesT4;
 
-        public VTEXField(BinaryReader r, int dataSize, FormType format) {
-            if (format == FormType.TES3) {
+        public VTEXField(EsmReader r, int dataSize) {
+            if (r.Format == FormType.TES3) {
                 TextureIndicesT3 = r.ReadPArray<ushort>("H", dataSize >> 1);
                 TextureIndicesT4 = null;
                 return;
@@ -4265,7 +4263,7 @@ public unsafe class LANDRecord : Record {
 
     public struct WNAMField {
         // Low-LOD heightmap (signed chars)
-        public WNAMField(BinaryReader r, int dataSize) {
+        public WNAMField(EsmReader r, int dataSize) {
             r.Skip(dataSize);
             //var heightCount = dataSize;
             //for (var i = 0; i < heightCount; i++) { var height = r.ReadByte(); }
@@ -4314,12 +4312,12 @@ public unsafe class LANDRecord : Record {
 
     public Int3 GridId; // => new Int3(INTV.CellX, INTV.CellY, 0);
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.DATA => DATA = r.ReadS<IN32Field>(dataSize),
         FieldType.VNML => VNML = new VNMLField(r, dataSize),
         FieldType.VHGT => VHGT = new VHGTField(r, dataSize),
         FieldType.VCLR => VCLR = new VNMLField(r, dataSize),
-        FieldType.VTEX => VTEX = new VTEXField(r, dataSize, format),
+        FieldType.VTEX => VTEX = new VTEXField(r, dataSize),
         // TES3
         FieldType.INTV => INTV = r.ReadS<CORDField>(dataSize),
         FieldType.WNAM => WNAM = new WNAMField(r, dataSize),
@@ -4360,8 +4358,8 @@ public class LIGHRecord : Record, IHaveMODL {
         public float FalloffExponent;
         public float FOV;
 
-        public DATAField(BinaryReader r, int dataSize, FormType format) {
-            if (format == FormType.TES3) {
+        public DATAField(EsmReader r, int dataSize) {
+            if (r.Format == FormType.TES3) {
                 Weight = r.ReadSingle();
                 Value = r.ReadInt32();
                 Time = r.ReadInt32();
@@ -4392,11 +4390,11 @@ public class LIGHRecord : Record, IHaveMODL {
     public FLTVField FNAM; // Fade Value
     public FMIDField<SOUNRecord> SNAM; // Sound FormId (optional)
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadSTRV(dataSize),
         FieldType.FULL => FULL = r.ReadSTRV(dataSize),
-        FieldType.FNAM => format != FormType.TES3 ? FNAM = r.ReadS<FLTVField>(dataSize) : FULL = r.ReadSTRV(dataSize),
-        FieldType.DATA or FieldType.LHDT => DATA = new DATAField(r, dataSize, format),
+        FieldType.FNAM => r.Format != FormType.TES3 ? FNAM = r.ReadS<FLTVField>(dataSize) : FULL = r.ReadSTRV(dataSize),
+        FieldType.DATA or FieldType.LHDT => DATA = new DATAField(r, dataSize),
         FieldType.SCPT => SCPT = r.ReadSTRV(dataSize),
         FieldType.SCRI => SCRI = new FMIDField<SCPTRecord>(r, dataSize),
         FieldType.ICON or FieldType.ITEX => ICON = r.ReadFILE(dataSize),
@@ -4413,7 +4411,7 @@ public class LIGHRecord : Record, IHaveMODL {
 #region 3450 : LOCK.Lock
 
 public class LOCKRecord : Record, IHaveMODL {
-    public struct LKDTField(BinaryReader r, int dataSize) {
+    public struct LKDTField(EsmReader r, int dataSize) {
         public float Weight = r.ReadSingle();
         public int Value = r.ReadInt32();
         public float Quality = r.ReadSingle();
@@ -4426,7 +4424,7 @@ public class LOCKRecord : Record, IHaveMODL {
     public FILEField ICON; // Inventory Icon
     public FMIDField<SCPTRecord> SCRI; // Script Name
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => format == FormType.TES3
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => r.Format == FormType.TES3
         ? type switch {
             FieldType.NAME => EDID = r.ReadSTRV(dataSize),
             FieldType.MODL => MODL = new MODLGroup(r, dataSize),
@@ -4444,7 +4442,7 @@ public class LOCKRecord : Record, IHaveMODL {
 #region 3450 : LTEX.Land Texture
 
 public class LTEXRecord : Record {
-    public struct HNAMField(BinaryReader r, int dataSize) {
+    public struct HNAMField(EsmReader r, int dataSize) {
         public byte MaterialType = r.ReadByte();
         public byte Friction = r.ReadByte();
         public byte Restitution = r.ReadByte();
@@ -4458,7 +4456,7 @@ public class LTEXRecord : Record {
     public BYTEField SNAM; // Texture specular exponent
     public List<FMIDField<GRASRecord>> GNAMs = []; // Potential grass
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadSTRV(dataSize),
         FieldType.INTV => INTV = r.ReadINTV(dataSize),
         FieldType.ICON or FieldType.DATA => ICON = r.ReadFILE(dataSize),
@@ -4481,8 +4479,8 @@ public class MISCRecord : Record, IHaveMODL {
         public uint Value;
         public uint Unknown;
 
-        public DATAField(BinaryReader r, int dataSize, FormType format) {
-            if (format == FormType.TES3) {
+        public DATAField(EsmReader r, int dataSize) {
+            if (r.Format == FormType.TES3) {
                 Weight = r.ReadSingle();
                 Value = r.ReadUInt32();
                 Unknown = r.ReadUInt32();
@@ -4502,13 +4500,13 @@ public class MISCRecord : Record, IHaveMODL {
     // TES3
     public FMIDField<ENCHRecord> ENAM; // enchantment ID
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadSTRV(dataSize),
         FieldType.MODL => MODL = new MODLGroup(r, dataSize),
         FieldType.MODB => MODL.MODBField(r, dataSize),
         FieldType.MODT => MODL.MODTField(r, dataSize),
         FieldType.FULL or FieldType.FNAM => FULL = r.ReadSTRV(dataSize),
-        FieldType.DATA or FieldType.MCDT => DATA = new DATAField(r, dataSize, format),
+        FieldType.DATA or FieldType.MCDT => DATA = new DATAField(r, dataSize),
         FieldType.ICON or FieldType.ITEX => ICON = r.ReadFILE(dataSize),
         FieldType.ENAM => ENAM = new FMIDField<ENCHRecord>(r, dataSize),
         FieldType.SCRI => SCRI = new FMIDField<SCPTRecord>(r, dataSize),
@@ -4563,7 +4561,7 @@ public class NPC_Record : Record, IHaveMODL {
         public byte Unknown3;
         //public int Gold;
 
-        public NPDTField(BinaryReader r, int dataSize) {
+        public NPDTField(EsmReader r, int dataSize) {
             if (dataSize == 52) {
                 Level = r.ReadInt16();
                 Strength = r.ReadByte();
@@ -4598,7 +4596,7 @@ public class NPC_Record : Record, IHaveMODL {
         }
     }
 
-    public struct DODTField(BinaryReader r, int dataSize) {
+    public struct DODTField(EsmReader r, int dataSize) {
         public float XPos = r.ReadSingle();
         public float YPos = r.ReadSingle();
         public float ZPos = r.ReadSingle();
@@ -4630,7 +4628,7 @@ public class NPC_Record : Record, IHaveMODL {
     public FLTVField? XSCL; // Scale (optional) Only present if the scale is not 1.0
     public FMIDField<SCPTRecord>? SCRI; // Unknown
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadSTRV(dataSize),
         FieldType.FULL or FieldType.FNAM => FULL = r.ReadSTRV(dataSize),
         FieldType.MODL => MODL = new MODLGroup(r, dataSize),
@@ -4642,7 +4640,7 @@ public class NPC_Record : Record, IHaveMODL {
         FieldType.KNAM => KNAM = r.ReadSTRV(dataSize),
         FieldType.NPDT => NPDT = new NPDTField(r, dataSize),
         FieldType.FLAG => FLAG = r.ReadINTV(dataSize),
-        FieldType.NPCO => NPCOs.AddX(new CNTOField(r, dataSize, format)),
+        FieldType.NPCO => NPCOs.AddX(new CNTOField(r, dataSize)),
         FieldType.NPCS => NPCSs.AddX(r.ReadSTRV_ZPad(dataSize)),
         FieldType.AIDT => AIDT = new CREARecord.AIDTField(r, dataSize),
         FieldType.AI_W => AI_W = new CREARecord.AI_WField(r, dataSize),
@@ -4705,8 +4703,8 @@ public class RACERecord : Record {
             public byte SkillId;
             public sbyte Bonus;
 
-            public SkillBoost(BinaryReader r, int dataSize, FormType format) {
-                if (format == FormType.TES3) {
+            public SkillBoost(EsmReader r, int dataSize) {
+                if (r.Format == FormType.TES3) {
                     SkillId = (byte)r.ReadInt32();
                     Bonus = (sbyte)r.ReadInt32();
                     return;
@@ -4735,9 +4733,9 @@ public class RACERecord : Record {
         public RaceStats Female = new();
         public uint Flags; // 1 = Playable 2 = Beast Race
 
-        public DATAField(BinaryReader r, int dataSize, FormType format) {
-            if (format == FormType.TES3) {
-                for (var i = 0; i < SkillBoosts.Length; i++) SkillBoosts[i] = new SkillBoost(r, 8, format);
+        public DATAField(EsmReader r, int dataSize) {
+            if (r.Format == FormType.TES3) {
+                for (var i = 0; i < SkillBoosts.Length; i++) SkillBoosts[i] = new SkillBoost(r, 8);
                 Male.Strength = (byte)r.ReadInt32(); Female.Strength = (byte)r.ReadInt32();
                 Male.Intelligence = (byte)r.ReadInt32(); Female.Intelligence = (byte)r.ReadInt32();
                 Male.Willpower = (byte)r.ReadInt32(); Female.Willpower = (byte)r.ReadInt32();
@@ -4751,14 +4749,14 @@ public class RACERecord : Record {
                 Flags = r.ReadUInt32();
                 return;
             }
-            for (var i = 0; i < SkillBoosts.Length; i++) SkillBoosts[i] = new SkillBoost(r, 2, format);
+            for (var i = 0; i < SkillBoosts.Length; i++) SkillBoosts[i] = new SkillBoost(r, 2);
             r.ReadInt16(); // padding
             Male.Height = r.ReadSingle(); Female.Height = r.ReadSingle();
             Male.Weight = r.ReadSingle(); Female.Weight = r.ReadSingle();
             Flags = r.ReadUInt32();
         }
 
-        public object ATTRField(BinaryReader r, int dataSize) {
+        public object ATTRField(EsmReader r, int dataSize) {
             Male.Strength = r.ReadByte();
             Male.Intelligence = r.ReadByte();
             Male.Willpower = r.ReadByte();
@@ -4825,22 +4823,22 @@ public class RACERecord : Record {
     sbyte _nameState;
     sbyte _genderState;
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) =>
-        format == FormType.TES3 ? type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) =>
+        r.Format == FormType.TES3 ? type switch {
             FieldType.NAME => EDID = r.ReadSTRV(dataSize),
             FieldType.FNAM => FULL = r.ReadSTRV(dataSize),
-            FieldType.RADT => DATA = new DATAField(r, dataSize, format),
+            FieldType.RADT => DATA = new DATAField(r, dataSize),
             FieldType.NPCS => SPLOs.AddX(r.ReadSTRV(dataSize)),
             FieldType.DESC => DESC = r.ReadSTRV(dataSize),
             _ => Empty,
         }
-        : format == FormType.TES4 ? _nameState switch {
+        : r.Format == FormType.TES4 ? _nameState switch {
             // preamble
             0 => type switch {
                 FieldType.EDID => EDID = r.ReadSTRV(dataSize),
                 FieldType.FULL => FULL = r.ReadSTRV(dataSize),
                 FieldType.DESC => DESC = r.ReadSTRV(dataSize),
-                FieldType.DATA => DATA = new DATAField(r, dataSize, format),
+                FieldType.DATA => DATA = new DATAField(r, dataSize),
                 FieldType.SPLO => SPLOs.AddX(r.ReadSTRV(dataSize)),
                 FieldType.VNAM => VNAM = new FMID2Field<RACERecord>(r, dataSize),
                 FieldType.DNAM => DNAM = new FMID2Field<HAIRRecord>(r, dataSize),
@@ -4908,7 +4906,7 @@ public class REGNRecord : Record {
         public RDWTField[] RDWTs; // Weather Types
 
         public RDATField() { }
-        public RDATField(BinaryReader r, int dataSize) {
+        public RDATField(EsmReader r, int dataSize) {
             Type = r.ReadUInt32();
             Flags = (REGNType)r.ReadByte();
             Priority = r.ReadByte();
@@ -4935,7 +4933,7 @@ public class REGNRecord : Record {
         public Int3 AngleVariance;
         public ColorRef4 VertexShading; // RGB + Shading radius (0 - 200) %
 
-        public RDOTField(BinaryReader r, int dataSize) {
+        public RDOTField(EsmReader r, int dataSize) {
             Object = new FormId<Record>(r.ReadUInt32());
             ParentIdx = r.ReadUInt16();
             r.Skip(2); // Unused
@@ -4961,7 +4959,7 @@ public class REGNRecord : Record {
         public override readonly string ToString() => $"{Grass}";
         public FormId<GRASRecord> Grass;
 
-        public RDGSField(BinaryReader r, int dataSize) {
+        public RDGSField(EsmReader r, int dataSize) {
             Grass = new FormId<GRASRecord>(r.ReadUInt32());
             r.Skip(4); // Unused
         }
@@ -4973,8 +4971,8 @@ public class REGNRecord : Record {
         public uint Flags;
         public uint Chance;
 
-        public RDSDField(BinaryReader r, int dataSize, FormType format) {
-            if (format == FormType.TES3) {
+        public RDSDField(EsmReader r, int dataSize) {
+            if (r.Format == FormType.TES3) {
                 Sound = new FormId<SOUNRecord>(r.ReadFAString(32));
                 Flags = 0;
                 Chance = r.ReadByte();
@@ -4986,12 +4984,12 @@ public class REGNRecord : Record {
         }
     }
 
-    public struct RDWTField(BinaryReader r, int dataSize, FormType format) {
+    public struct RDWTField(EsmReader r, int dataSize) {
         public override readonly string ToString() => $"{Weather}";
         public static byte SizeOf(FormType format) => format == FormType.TES4 ? (byte)8 : (byte)12;
-        public FormId<WTHRRecord> Weather = new FormId<WTHRRecord>(r.ReadUInt32());
+        public FormId<WTHRRecord> Weather = new(r.ReadUInt32());
         public uint Chance = r.ReadUInt32();
-        public FormId<GLOBRecord> Global = format == FormType.TES5 ? new FormId<GLOBRecord>(r.ReadUInt32()) : new FormId<GLOBRecord>();
+        public FormId<GLOBRecord> Global = r.Format == FormType.TES5 ? new FormId<GLOBRecord>(r.ReadUInt32()) : new FormId<GLOBRecord>();
     }
 
     // TES3
@@ -5005,7 +5003,7 @@ public class REGNRecord : Record {
         public byte Ash;
         public byte Blight;
 
-        public WEATField(BinaryReader r, int dataSize) {
+        public WEATField(EsmReader r, int dataSize) {
             Clear = r.ReadByte();
             Cloudy = r.ReadByte();
             Foggy = r.ReadByte();
@@ -5021,11 +5019,11 @@ public class REGNRecord : Record {
     }
 
     // TES4
-    public class RPLIField(BinaryReader r, int dataSize) {
+    public class RPLIField(EsmReader r, int dataSize) {
         public uint EdgeFalloff = r.ReadUInt32(); // (World Units)
         public Vector2[] Points; // Region Point List Data
 
-        public object RPLDField(BinaryReader r, int dataSize) {
+        public object RPLDField(EsmReader r, int dataSize) {
             Points = new Vector2[dataSize >> 3];
             for (var i = 0; i < Points.Length; i++) Points[i] = new Vector2(r.ReadSingle(), r.ReadSingle());
             return Points;
@@ -5041,13 +5039,13 @@ public class REGNRecord : Record {
     // TES4
     public List<RPLIField> RPLIs = []; // Region Areas
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadSTRV(dataSize),
         FieldType.WNAM or FieldType.FNAM => WNAM = new FMIDField<WRLDRecord>(r, dataSize),
         FieldType.WEAT => WEAT = new WEATField(r, dataSize),//: TES3
         FieldType.ICON or FieldType.BNAM => ICON = r.ReadSTRV(dataSize),
         FieldType.RCLR or FieldType.CNAM => RCLR = r.ReadS<CREFField>(dataSize),
-        FieldType.SNAM => RDATs.AddX(new RDATField { RDSDs = [new RDSDField(r, dataSize, format)] }),
+        FieldType.SNAM => RDATs.AddX(new RDATField { RDSDs = [new RDSDField(r, dataSize)] }),
         FieldType.RPLI => RPLIs.AddX(new RPLIField(r, dataSize)),
         FieldType.RPLD => RPLIs.Last().RPLDField(r, dataSize),
         FieldType.RDAT => RDATs.AddX(new RDATField(r, dataSize)),
@@ -5055,8 +5053,8 @@ public class REGNRecord : Record {
         FieldType.RDMP => RDATs.Last().RDMP = r.ReadSTRV(dataSize),
         FieldType.RDGS => RDATs.Last().RDGSs = [.. Enumerable.Range(0, dataSize / 8).Select(x => new RDGSField(r, dataSize))],
         FieldType.RDMD => RDATs.Last().RDMD = r.ReadS<UI32Field>(dataSize),
-        FieldType.RDSD => RDATs.Last().RDSDs = [.. Enumerable.Range(0, dataSize / 12).Select(x => new RDSDField(r, dataSize, format))],
-        FieldType.RDWT => RDATs.Last().RDWTs = [.. Enumerable.Range(0, dataSize / RDWTField.SizeOf(format)).Select(x => new RDWTField(r, dataSize, format))],
+        FieldType.RDSD => RDATs.Last().RDSDs = [.. Enumerable.Range(0, dataSize / 12).Select(x => new RDSDField(r, dataSize))],
+        FieldType.RDWT => RDATs.Last().RDWTs = [.. Enumerable.Range(0, dataSize / RDWTField.SizeOf(r.Format)).Select(x => new RDWTField(r, dataSize))],
         _ => Empty,
     };
 }
@@ -5073,11 +5071,11 @@ public class SKILRecord : Record {
         public uint Specialization; // 0 = Combat, 1 = Magic, 2 = Stealth
         public float[] UseValue; // The use types for each skill are hard-coded.
 
-        public DATAField(BinaryReader r, int dataSize, FormType format) {
-            Action = format == FormType.TES3 ? 0 : r.ReadInt32();
+        public DATAField(EsmReader r, int dataSize) {
+            Action = r.Format == FormType.TES3 ? 0 : r.ReadInt32();
             Attribute = r.ReadInt32();
             Specialization = r.ReadUInt32();
-            UseValue = new float[format == FormType.TES3 ? 4 : 2];
+            UseValue = new float[r.Format == FormType.TES3 ? 4 : 2];
             for (var i = 0; i < UseValue.Length; i++) UseValue[i] = r.ReadSingle();
         }
     }
@@ -5093,10 +5091,10 @@ public class SKILRecord : Record {
     public STRVField ENAM; // Expert Text
     public STRVField MNAM; // Master Text
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.INDX => INDX = r.ReadS<IN32Field>(dataSize),
-        FieldType.DATA or FieldType.SKDT => DATA = new DATAField(r, dataSize, format),
+        FieldType.DATA or FieldType.SKDT => DATA = new DATAField(r, dataSize),
         FieldType.DESC => DESC = r.ReadSTRV(dataSize),
         FieldType.ICON => ICON = r.ReadFILE(dataSize),
         FieldType.ANAM => ANAM = r.ReadSTRV(dataSize),
@@ -5136,11 +5134,11 @@ public class SOUNRecord : Record {
         public byte StopTime; // Stop time
         public byte StartTime; // Start time
 
-        public DATAField(BinaryReader r, int dataSize, FormType format) {
-            Volume = format == FormType.TES3 ? r.ReadByte() : (byte)0;
+        public DATAField(EsmReader r, int dataSize) {
+            Volume = r.Format == FormType.TES3 ? r.ReadByte() : (byte)0;
             MinRange = r.ReadByte();
             MaxRange = r.ReadByte();
-            if (format == FormType.TES3) return;
+            if (r.Format == FormType.TES3) return;
             FrequencyAdjustment = r.ReadSByte();
             r.ReadByte(); // Unused
             Flags = r.ReadUInt16();
@@ -5155,12 +5153,12 @@ public class SOUNRecord : Record {
     public FILEField FNAM; // Sound Filename (relative to Sounds\)
     public DATAField DATA; // Sound Data
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadSTRV(dataSize),
         FieldType.FNAM => FNAM = r.ReadFILE(dataSize),
-        FieldType.SNDX => DATA = new DATAField(r, dataSize, format),
-        FieldType.SNDD => DATA = new DATAField(r, dataSize, format),
-        FieldType.DATA => DATA = new DATAField(r, dataSize, format),
+        FieldType.SNDX => DATA = new DATAField(r, dataSize),
+        FieldType.SNDD => DATA = new DATAField(r, dataSize),
+        FieldType.DATA => DATA = new DATAField(r, dataSize),
         _ => Empty,
     };
 }
@@ -5171,7 +5169,7 @@ public class SOUNRecord : Record {
 
 public class SPELRecord : Record {
     // TESX
-    public struct SPITField(BinaryReader r, int dataSize, FormType format) {
+    public struct SPITField(EsmReader r, int dataSize) {
         public override readonly string ToString() => $"{Type}";
         // TES3: 0 = Spell, 1 = Ability, 2 = Blight, 3 = Disease, 4 = Curse, 5 = Power
         // TES4: 0 = Spell, 1 = Disease, 2 = Power, 3 = Lesser Power, 4 = Ability, 5 = Poison
@@ -5179,7 +5177,7 @@ public class SPELRecord : Record {
         public int SpellCost = r.ReadInt32();
         public uint Flags = r.ReadUInt32(); // 0x0001 = AutoCalc, 0x0002 = PC Start, 0x0004 = Always Succeeds
         // TES4
-        public int SpellLevel = format != FormType.TES3 ? r.ReadInt32() : 0;
+        public int SpellLevel = r.Format != FormType.TES3 ? r.ReadInt32() : 0;
     }
 
     public STRVField FULL; // Spell name
@@ -5188,13 +5186,13 @@ public class SPELRecord : Record {
     // TES4
     public List<ENCHRecord.SCITField> SCITs = []; // Script effect data
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadSTRV(dataSize),
         FieldType.FULL => SCITs.Count == 0 ? FULL = r.ReadSTRV(dataSize) : SCITs.Last().FULLField(r, dataSize),
         FieldType.FNAM => FULL = r.ReadSTRV(dataSize),
-        FieldType.SPIT or FieldType.SPDT => SPIT = new SPITField(r, dataSize, format),
+        FieldType.SPIT or FieldType.SPDT => SPIT = new SPITField(r, dataSize),
         FieldType.EFID => r.Skip(dataSize),
-        FieldType.EFIT or FieldType.ENAM => EFITs.AddX(new ENCHRecord.EFITField(r, dataSize, format)),
+        FieldType.EFIT or FieldType.ENAM => EFITs.AddX(new ENCHRecord.EFITField(r, dataSize)),
         FieldType.SCIT => SCITs.AddX(new ENCHRecord.SCITField(r, dataSize)),
         _ => Empty,
     };
@@ -5207,7 +5205,7 @@ public class SPELRecord : Record {
 public class STATRecord : Record, IHaveMODL {
     public MODLGroup MODL { get; set; } // Model
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadSTRV(dataSize),
         FieldType.MODL => MODL = new MODLGroup(r, dataSize),
         FieldType.MODB => MODL.MODBField(r, dataSize),
@@ -5239,8 +5237,8 @@ public class WEAPRecord : Record, IHaveMODL {
         public byte ThrustMax;
         public int Flags; // 0 = ?, 1 = Ignore Normal Weapon Resistance?
 
-        public DATAField(BinaryReader r, int dataSize, FormType format) {
-            if (format == FormType.TES3) {
+        public DATAField(EsmReader r, int dataSize) {
+            if (r.Format == FormType.TES3) {
                 Weight = r.ReadSingle();
                 Value = r.ReadInt32();
                 Type = r.ReadUInt16();
@@ -5278,13 +5276,13 @@ public class WEAPRecord : Record, IHaveMODL {
                                        // TES4
     public IN16Field? ANAM; // Enchantment points (optional)
 
-    public override object CreateField(BinaryReader r, FormType format, FieldType type, int dataSize) => type switch {
+    public override object CreateField(EsmReader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadSTRV(dataSize),
         FieldType.MODL => MODL = new MODLGroup(r, dataSize),
         FieldType.MODB => MODL.MODBField(r, dataSize),
         FieldType.MODT => MODL.MODTField(r, dataSize),
         FieldType.FULL or FieldType.FNAM => FULL = r.ReadSTRV(dataSize),
-        FieldType.DATA or FieldType.WPDT => DATA = new DATAField(r, dataSize, format),
+        FieldType.DATA or FieldType.WPDT => DATA = new DATAField(r, dataSize),
         FieldType.ICON or FieldType.ITEX => ICON = r.ReadFILE(dataSize),
         FieldType.ENAM => ENAM = new FMIDField<ENCHRecord>(r, dataSize),
         FieldType.SCRI => SCRI = new FMIDField<SCPTRecord>(r, dataSize),

@@ -15,12 +15,12 @@ namespace GameX.Valve;
 /// ValveArchive
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryArchive" />
-public class ValveArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+public class ValveArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="ValveArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public ValveArchive(ArchiveState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+    public ValveArchive(BinaryState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         AssetFactoryFunc = AssetFactory;
         PathFinders.Add(typeof(object), FindBinary);
     }

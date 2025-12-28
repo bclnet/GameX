@@ -1604,7 +1604,7 @@ public unsafe class Binary_Unity : ArcBinary<Binary_Unity> {
 
     #endregion
 
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         // try-bundle
         var bundleFile = new BundleFile(r);
         if (bundleFile.Success) {
@@ -1644,7 +1644,7 @@ public unsafe class Binary_Unity : ArcBinary<Binary_Unity> {
         return Task.CompletedTask;
     }
 
-    public override Task Write(BinaryAsset source, BinaryWriter w, object tag) {
+    public override Task Write(BinaryArchive source, BinaryWriter w, object tag) {
 
 
         //source.UseBinaryReader = false;
@@ -1661,7 +1661,7 @@ public unsafe class Binary_Unity : ArcBinary<Binary_Unity> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         //var arc = (P4kFile)source.Tag;
         //var entry = (ZipEntry)file.Tag;
         //try

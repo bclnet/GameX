@@ -12,12 +12,12 @@ namespace GameX.Ubisoft;
 /// UbisoftArchive
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryArchive" />
-public class UbisoftArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+public class UbisoftArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="UbisoftArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public UbisoftArchive(ArchiveState state) : base(state, GetArcBinary(state.Game, state.Path)) {
+    public UbisoftArchive(BinaryState state) : base(state, GetArcBinary(state.Game, state.Path)) {
         AssetFactoryFunc = AssetFactory;
     }
 

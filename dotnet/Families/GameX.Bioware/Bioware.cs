@@ -14,12 +14,12 @@ namespace GameX.Bioware;
 /// BiowareArchive
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryArchive" />
-public class BiowareArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+public class BiowareArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="BiowareArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public BiowareArchive(ArchiveState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+    public BiowareArchive(BinaryState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         AssetFactoryFunc = AssetFactory;
     }
 

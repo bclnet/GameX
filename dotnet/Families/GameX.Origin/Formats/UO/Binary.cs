@@ -1864,7 +1864,7 @@ public unsafe class Binary_UnicodeFont : IHaveMetaInfo {
 #region Binary_Verdata
 
 public class Binary_Verdata : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Verdata(r, (BinaryAsset)s));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Verdata(r, (BinaryArchive)s));
     public static Binary_Verdata Current;
 
     #region Headers
@@ -1881,11 +1881,11 @@ public class Binary_Verdata : IHaveMetaInfo {
 
     #endregion
 
-    public BinaryAsset Archive;
+    public BinaryArchive Archive;
     public IDictionary<int, Patch[]> Patches = new Dictionary<int, Patch[]>();
 
     // file: verdata.mul
-    public Binary_Verdata(BinaryReader r, BinaryAsset s) {
+    public Binary_Verdata(BinaryReader r, BinaryArchive s) {
         Archive = s;
         Patches = r.ReadL32SArray<Patch>().GroupBy(x => x.File).ToDictionary(x => x.Key, x => x.ToArray());
         Current = this;

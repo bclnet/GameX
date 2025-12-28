@@ -12,12 +12,12 @@ namespace GameX.Epic;
 /// EpicArchive
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryArchive" />
-public class EpicArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+public class EpicArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="EpicArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public EpicArchive(ArchiveState state) : base(state, Binary_Pck.Current) {
+    public EpicArchive(BinaryState state) : base(state, Binary_Pck.Current) {
         AssetFactoryFunc = AssetFactory;
     }
 

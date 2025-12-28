@@ -12,12 +12,12 @@ namespace GameX.Bohemia;
 /// BohemiaArchive
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryArchive" />
-public class BohemiaArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+public class BohemiaArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="BohemiaArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public BohemiaArchive(ArchiveState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+    public BohemiaArchive(BinaryState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         AssetFactoryFunc = AssetFactory;
     }
 

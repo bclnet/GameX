@@ -12,7 +12,7 @@ namespace GameX.Blizzard.Formats;
 public unsafe class Binary_Blizzard : ArcBinary<Binary_Blizzard> {
     CascContext casc;
 
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         var files = source.Files = [];
 
         // load casc
@@ -23,7 +23,7 @@ public unsafe class Binary_Blizzard : ArcBinary<Binary_Blizzard> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default)
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default)
         => Task.FromResult(casc.ReadData(file));
 }
 

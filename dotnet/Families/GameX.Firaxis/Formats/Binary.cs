@@ -26,13 +26,13 @@ public class Binary_Abc : IHaveMetaInfo {
 #region Binary_Hpl
 
 public unsafe class Binary_Hpl : ArcBinary<Binary_Hpl> {
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         var files = source.Files = [];
 
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         throw new NotImplementedException();
     }
 }

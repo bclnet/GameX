@@ -12,12 +12,12 @@ namespace GameX.Monolith;
 /// MonolithArchive
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryArchive" />
-public class MonolithArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+public class MonolithArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="MonolithArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public MonolithArchive(ArchiveState state) : base(state, GetArcBinary(state.Game, state.Path)) {
+    public MonolithArchive(BinaryState state) : base(state, GetArcBinary(state.Game, state.Path)) {
         AssetFactoryFunc = AssetFactory;
     }
 

@@ -14,12 +14,12 @@ namespace GameX.Gamebryo;
 /// GamebryoArchive
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryArchive" />
-public class GamebryoArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+public class GamebryoArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="GamebryoArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public GamebryoArchive(ArchiveState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+    public GamebryoArchive(BinaryState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         AssetFactoryFunc = AssetFactory;
         PathFinders.Add(typeof(ITexture), FindTexture);
     }

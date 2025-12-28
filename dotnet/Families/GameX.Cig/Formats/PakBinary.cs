@@ -14,10 +14,10 @@ namespace GameX.Cig.Formats;
 public class PakBinary_P4k : ArcBinary<PakBinary_P4k> {
     readonly byte[] Key = [0x5E, 0x7A, 0x20, 0x02, 0x30, 0x2E, 0xEB, 0x1A, 0x3B, 0xB6, 0x17, 0xC3, 0x0F, 0xDE, 0x1E, 0x47];
 
-    protected class SubArchiveP4k : BinaryAsset {
+    protected class SubArchiveP4k : BinaryArchive {
         P4kFile Arc;
 
-        public SubArchiveP4k(BinaryAsset source, P4kFile arc, string path, object tag) : base(new ArchiveState(source.Vfx, source.Game, source.Edition, path, tag), Current) {
+        public SubArchiveP4k(BinaryArchive source, P4kFile arc, string path, object tag) : base(new BinaryState(source.Vfx, source.Game, source.Edition, path, tag), Current) {
             Arc = arc;
             AssetFactoryFunc = source.AssetFactoryFunc;
             UseReader = false;
@@ -32,7 +32,7 @@ public class PakBinary_P4k : ArcBinary<PakBinary_P4k> {
         }
     }
 
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         source.UseReader = false;
         var files = source.Files = new List<FileSource>();
 
@@ -67,7 +67,7 @@ public class PakBinary_P4k : ArcBinary<PakBinary_P4k> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         var arc = (P4kFile)source.Tag;
         var entry = (ZipEntry)file.Tag;
         try {
@@ -90,7 +90,7 @@ public class PakBinary_P4k : ArcBinary<PakBinary_P4k> {
 
     #region Write
 
-    public override Task Write(BinaryAsset source, BinaryWriter w, object tag) {
+    public override Task Write(BinaryArchive source, BinaryWriter w, object tag) {
         source.UseReader = false;
         var files = source.Files;
 
@@ -105,7 +105,7 @@ public class PakBinary_P4k : ArcBinary<PakBinary_P4k> {
         return Task.CompletedTask;
     }
 
-    public override Task WriteData(BinaryAsset source, BinaryWriter w, FileSource file, Stream data, object option = default) {
+    public override Task WriteData(BinaryArchive source, BinaryWriter w, FileSource file, Stream data, object option = default) {
         var arc = (P4kFile)source.Tag;
         var entry = (ZipEntry)file.Tag;
         try {

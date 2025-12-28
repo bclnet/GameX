@@ -12,12 +12,12 @@ namespace GameX.Cyanide;
 /// CyanideArchive
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryArchive" />
-public class CyanideArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+public class CyanideArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="CyanideArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public CyanideArchive(ArchiveState state) : base(state, Binary_Cpk.Current) {
+    public CyanideArchive(BinaryState state) : base(state, Binary_Cpk.Current) {
         AssetFactoryFunc = AssetFactory;
     }
 

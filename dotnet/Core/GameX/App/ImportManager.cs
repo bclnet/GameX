@@ -18,7 +18,7 @@ public static class ImportManager {
         //}
     }
 
-    static async Task<BinaryWriter> ImportPakAsync(string filePath, int from, string path, object option, BinaryAsset arc) {
+    static async Task<BinaryWriter> ImportPakAsync(string filePath, int from, string path, object option, BinaryArchive arc) {
         // import arc
         var w = new BinaryWriter(new FileStream(path, FileMode.Create, FileAccess.Write));
         await arc.ImportAsync(w, filePath, from, option, (file, index) => {
@@ -30,7 +30,7 @@ public static class ImportManager {
         return w;
     }
 
-    static async Task ImportAsync(this BinaryAsset source, BinaryWriter w, string filePath, int from = 0, object option = default, Action<FileSource, int> advance = null, Action<FileSource, string> exception = null) {
+    static async Task ImportAsync(this BinaryArchive source, BinaryWriter w, string filePath, int from = 0, object option = default, Action<FileSource, int> advance = null, Action<FileSource, string> exception = null) {
         // read arc
         if (string.IsNullOrEmpty(filePath) || !Directory.Exists(filePath)) { exception?.Invoke(null, $"Directory Missing: {filePath}"); return; }
         var setPath = Path.Combine(filePath, ".set");

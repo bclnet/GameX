@@ -273,7 +273,7 @@ public unsafe class Binary_IW : ArcBinary<Binary_IW> {
 
     #endregion
 
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         var files = source.Files = new List<FileSource>();
         var extension = Path.GetExtension(source.BinPath);
 
@@ -380,7 +380,7 @@ public unsafe class Binary_IW : ArcBinary<Binary_IW> {
         }
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         switch ((Magic)source.Magic) {
             case Magic.CASC:
                 return Task.FromResult(casc.ReadData(file));

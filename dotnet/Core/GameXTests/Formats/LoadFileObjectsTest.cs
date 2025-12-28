@@ -33,14 +33,14 @@ public class LoadFileObjectsTest {
         var source = TestHelper.Paks[arc].Value;
         if (source is MultiArchive multiPak)
             foreach (var p in multiPak.Archives) {
-                if (p is not BinaryAsset z) throw new InvalidOperationException("multiPak not A BinaryAsset");
+                if (p is not BinaryArchive z) throw new InvalidOperationException("multiPak not A BinaryArchive");
                 await ExportAsync(z);
             }
         else await ExportAsync(source);
     }
 
     static Task ExportAsync(Archive source) {
-        if (source is not BinaryAsset arc) throw new NotSupportedException();
+        if (source is not BinaryArchive arc) throw new NotSupportedException();
 
         // write files
         Parallel.For(0, arc.Files.Count, new ParallelOptions { MaxDegreeOfParallelism = 1 }, async index => {

@@ -13,12 +13,12 @@ namespace GameX.Red;
 /// RedArchive
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryArchive" />
-public class RedArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+public class RedArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="RedArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public RedArchive(ArchiveState state) : base(state, Binary_Red.Current) {
+    public RedArchive(BinaryState state) : base(state, Binary_Red.Current) {
         AssetFactoryFunc = AssetFactory;
     }
 

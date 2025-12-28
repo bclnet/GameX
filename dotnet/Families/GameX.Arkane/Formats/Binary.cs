@@ -12,7 +12,7 @@ namespace GameX.Arkane.Formats;
 #region Binary_Danae
 
 public unsafe class Binary_Danae : ArcBinary<Binary_Danae> {
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         var files = source.Files = [];
         var key = (byte[])source.Game.Key; int keyLength = key.Length, keyIndex = 0;
 
@@ -72,7 +72,7 @@ public unsafe class Binary_Danae : ArcBinary<Binary_Danae> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         return Task.FromResult((Stream)new MemoryStream((file.Compressed & 1) != 0
             ? r.DecompressBlast((int)file.PackedSize, (int)file.FileSize)
@@ -100,7 +100,7 @@ public unsafe class Binary_Void : ArcBinary<Binary_Void> {
 
     #endregion
 
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         // must be .index file
         if (!source.BinPath.EndsWith(".index")) throw new FormatException("must be a .index file");
 
@@ -176,7 +176,7 @@ public unsafe class Binary_Void : ArcBinary<Binary_Void> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         if (file.FileSize == 0 || _badPositions.Contains(file.Offset)) return Task.FromResult(System.IO.Stream.Null);
         var (path, tag1, tag2) = ((string, string, string))file.Tag;
         return Task.FromResult((Stream)source.ReaderT(r2 => {

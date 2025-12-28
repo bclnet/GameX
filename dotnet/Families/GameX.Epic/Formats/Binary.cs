@@ -12,7 +12,7 @@ namespace GameX.Epic.Formats;
 /// </summary>
 /// <seealso cref="GameX.Formats.PakBinary" />
 public unsafe class Binary_Pck : ArcBinary<Binary_Pck> {
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         List<FileSource> files;
         source.Files = files = new List<FileSource>();
         var header = new Core.UPackage(r, source.BinPath);
@@ -28,13 +28,13 @@ public unsafe class Binary_Pck : ArcBinary<Binary_Pck> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         var R = (BinaryReader)file.Tag;
         R.Seek(file.Offset);
         return Task.FromResult((Stream)new MemoryStream(R.ReadBytes((int)file.FileSize)));
     }
 
-    public override Task WriteData(BinaryAsset source, BinaryWriter w, FileSource file, Stream data, object option = default)
+    public override Task WriteData(BinaryArchive source, BinaryWriter w, FileSource file, Stream data, object option = default)
         => throw new NotImplementedException();
 }
 

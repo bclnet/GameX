@@ -37,12 +37,12 @@ public class MorrowindGame(Family family, string id, JsonElement elem, FamilyGam
 /// BethesdaArchive
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryArchive" />
-public class BethesdaArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+public class BethesdaArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="BethesdaArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public BethesdaArchive(ArchiveState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+    public BethesdaArchive(BinaryState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         AssetFactoryFunc = AssetFactory;
         PathFinders.Add(typeof(ITexture), FindTexture);
     }

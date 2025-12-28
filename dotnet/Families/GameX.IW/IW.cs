@@ -12,12 +12,12 @@ namespace GameX.IW;
 /// IWArchive
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryArchive" />
-public class IWArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+public class IWArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="IWArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public IWArchive(ArchiveState state) : base(state, Binary_IW.Current) {
+    public IWArchive(BinaryState state) : base(state, Binary_IW.Current) {
         AssetFactoryFunc = AssetFactory;
         UseReader = false;
     }

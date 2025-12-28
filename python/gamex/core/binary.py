@@ -65,15 +65,10 @@ class Binary:
     def opening(self) -> None: pass
 # end::Binary[]
 
-# ArchiveState
-class ArchiveState(BinaryState):
-    def __init__(self, vfx: FileSystem, game: FamilyGame, edition: Edition = None, path: str = None, tag: object = None):
-        super().__init__(vfx, game, edition, path, tag)
-
 # tag::Archive[]
 class Archive(Binary):
     class FuncObjectFactoryFactory: pass
-    def __init__(self, state: ArchiveState):
+    def __init__(self, state: BinaryState):
         super().__init__(state)
         self.assetFactoryFunc = None
         self.gfx = None
@@ -108,7 +103,7 @@ class Archive(Binary):
 
 # BinaryArchive
 class BinaryArchive(Archive):
-    def __init__(self, state: ArchiveState, arcBinary: ArcBinary):
+    def __init__(self, state: BinaryState, arcBinary: ArcBinary):
         super().__init__(state)
         self.arcBinary = arcBinary
         # options
@@ -249,7 +244,7 @@ class BinaryArchive(Archive):
 
 # ManyArchive
 class ManyArchive(BinaryArchive):
-    def __init__(self, basis: Archive, state: ArchiveState, name: str, paths: list[str], pathSkip: int = 0):
+    def __init__(self, basis: Archive, state: BinaryState, name: str, paths: list[str], pathSkip: int = 0):
         super().__init__(state, None)
         self.assetFactoryFunc = basis.assetFactoryFunc
         self.name = name
@@ -262,7 +257,7 @@ class ManyArchive(BinaryArchive):
         def lambdax(x, s): x.fileSize = self.vfx.fileInfo(s)[1]; x.lazy = None
         self.files = [FileSource(
             path = s.replace('\\', '/'),
-            arc = self.game.createArchive(ArchiveState(self.vfx, self.game, self.edition, s)) if self.game._isArcPath(s) else None,
+            arc = self.game.createArchive(BinaryState(self.vfx, self.game, self.edition, s)) if self.game._isArcPath(s) else None,
             fileSize = 0,
             lazy = lambda x, _s=s: lambdax(x, _s))
             for s in self.paths]
@@ -274,7 +269,7 @@ class ManyArchive(BinaryArchive):
 
 # MultiArchive
 class MultiArchive(Archive):
-    def __init__(self, state: ArchiveState, name: str, archives: list[Archive]):
+    def __init__(self, state: BinaryState, name: str, archives: list[Archive]):
         super().__init__(state)
         self.name = name
         self.archives = archives or _throw('Empty archives')
@@ -370,7 +365,7 @@ class ArcBinaryT(ArcBinary):
         return cls._instance
 
     class SubArchive(BinaryArchive):
-        def __init__(self, parent: ArcBinary, state: ArchiveState, file: FileSource, source: BinaryArchive):
+        def __init__(self, parent: ArcBinary, state: BinaryState, file: FileSource, source: BinaryArchive):
             super().__init__(state, parent._instance)
             self.file = file
             self.source = source
@@ -392,8 +387,11 @@ class ITransformAsset:
     def canTransformAsset(self, transformTo: Archive, source: object) -> bool: pass
     def transformAsset(self, transformTo: Archive, source: object) -> object: pass
 
+# IDatabase
 class IDatabase: pass
 
+# IRecord
 class IRecord: pass
 
+# ICellRecord
 class ICellRecord(IRecord): pass

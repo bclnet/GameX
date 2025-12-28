@@ -7,7 +7,7 @@ from gamex.families.GameX_Uncore import UncoreArchive
 
 # ValveArchive
 class ValveArchive(BinaryArchive):
-    def __init__(self, state: ArchiveState):
+    def __init__(self, state: BinaryState):
         super().__init__(state, self.getArcBinary(state.game, _pathExtension(state.path).lower()))
         self.assetFactoryFunc = self.assetFactory
         # self.pathFinders.add(typeof(object), FindBinary)

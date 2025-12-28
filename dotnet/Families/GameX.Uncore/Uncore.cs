@@ -21,7 +21,7 @@ public class UncoreArchive : Archive {
     /// Initializes a new instance of the <see cref="UncoreArchive" /> class.
     /// </summary>
     /// <param name="state">The game.</param>
-    public UncoreArchive(ArchiveState state) : base(state) {
+    public UncoreArchive(BinaryState state) : base(state) {
         Name = "Uncore";
         AssetFactoryFunc = AssetFactory;
     }

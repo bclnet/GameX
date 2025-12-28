@@ -12,12 +12,12 @@ namespace GameX.Rockstar;
 /// RockstarArchive
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryArchive" />
-public class RockstarArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+public class RockstarArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="RockstarArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public RockstarArchive(ArchiveState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+    public RockstarArchive(BinaryState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         AssetFactoryFunc = AssetFactory;
     }
 

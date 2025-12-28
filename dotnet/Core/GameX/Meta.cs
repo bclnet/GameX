@@ -23,7 +23,7 @@ public class FileSource {
     public int Flags;
     public ulong Hash;
     public DateTime Date;
-    public BinaryAsset Arc;
+    public BinaryArchive Arc;
     public IList<FileSource> Parts;
     public byte[] Data;
     public object Tag;
@@ -148,7 +148,7 @@ public abstract class MetaManager {
     /// <param name="file">The file.</param>
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
-    public static async Task<List<MetaInfo>> GetMetaInfos(MetaManager manager, BinaryAsset archive, FileSource file) {
+    public static async Task<List<MetaInfo>> GetMetaInfos(MetaManager manager, BinaryArchive archive, FileSource file) {
         List<MetaInfo> nodes = null;
         var obj = await archive.GetAsset<object>(file);
         if (obj == null) return null;
@@ -188,7 +188,7 @@ public abstract class MetaManager {
     /// <param name="manager">The manager.</param>
     /// <param name="archive">The arc file.</param>
     /// <returns></returns>
-    public static List<MetaItem> GetMetaItems(MetaManager manager, BinaryAsset archive) {
+    public static List<MetaItem> GetMetaItems(MetaManager manager, BinaryArchive archive) {
         if (manager == null) throw new ArgumentNullException(nameof(manager));
 
         var root = new List<MetaItem>();

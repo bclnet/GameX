@@ -12,12 +12,12 @@ namespace GameX.Firaxis;
 /// FiraxisArchive
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryArchive" />
-public class FiraxisArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+public class FiraxisArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="FiraxisArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public FiraxisArchive(ArchiveState state) : base(state, Binary_Hpl.Current) {
+    public FiraxisArchive(BinaryState state) : base(state, Binary_Hpl.Current) {
         AssetFactoryFunc = AssetFactory;
     }
 

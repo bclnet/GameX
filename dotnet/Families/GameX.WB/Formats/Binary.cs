@@ -88,7 +88,7 @@ public unsafe class Binary_AC : ArcBinary<Binary_AC> {
 
     #endregion
 
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         var files = source.Files = [];
         r.Seek(DAT_HEADER_OFFSET);
         var header = r.ReadS<Header>();
@@ -97,7 +97,7 @@ public unsafe class Binary_AC : ArcBinary<Binary_AC> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default)
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default)
         => Task.FromResult((Stream)new MemoryStream(ReadBytes(r, file.Offset, (int)file.FileSize, (int)file.Hash)));
 
     static T ReadT<T>(BinaryReader r, long offset, int size, int blockSize) where T : struct

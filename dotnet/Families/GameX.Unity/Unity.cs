@@ -12,12 +12,12 @@ namespace GameX.Unity;
 /// UnityArchive
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryArchive" />
-public class UnityArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+public class UnityArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="UnityArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public UnityArchive(ArchiveState state) : base(state, Binary_Unity.Current) {
+    public UnityArchive(BinaryState state) : base(state, Binary_Unity.Current) {
         AssetFactoryFunc = AssetFactory;
     }
 

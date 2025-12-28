@@ -369,7 +369,7 @@ public class Binary_Src : IDisposable, IHaveMetaInfo, Indirect<ITexture>, Indire
 #region Binary_Mdl10
 
 public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Mdl10(r, f, (BinaryAsset)s));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Mdl10(r, f, (BinaryArchive)s));
 
     #region Headers
 
@@ -870,7 +870,7 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo {
     public Texture[] Textures;
     public short[][] SkinFamilies;
 
-    public Binary_Mdl10(BinaryReader r, FileSource f, BinaryAsset s) {
+    public Binary_Mdl10(BinaryReader r, FileSource f, BinaryArchive s) {
         // read file
         var header = r.ReadS<M_Header>();
         if (header.Magic != M_MAGIC) throw new FormatException("BAD MAGIC");
@@ -980,7 +980,7 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo {
 //https://developer.valvesoftware.com/wiki/MDL
 
 public unsafe class Binary_Mdl40 : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Mdl40(r, f, (BinaryAsset)s));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Mdl40(r, f, (BinaryArchive)s));
 
     #region Headers
 
@@ -1104,7 +1104,7 @@ public unsafe class Binary_Mdl40 : IHaveMetaInfo {
     public Vector3 ClippingMin, ClippingMax;
     public HeaderFlags Flags;
 
-    public Binary_Mdl40(BinaryReader r, FileSource f, BinaryAsset s) {
+    public Binary_Mdl40(BinaryReader r, FileSource f, BinaryArchive s) {
         // read file
         var header = r.ReadS<M_Header>();
         if (header.Magic != M_MAGIC) throw new FormatException("BAD MAGIC");
@@ -1280,7 +1280,7 @@ public unsafe class Binary_Vpk : ArcBinary<Binary_Vpk> {
 
     #endregion
 
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         var extended = source.Game.Engine.v?.Contains('x') == true;
         var files = source.Files = [];
 
@@ -1352,7 +1352,7 @@ public unsafe class Binary_Vpk : ArcBinary<Binary_Vpk> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         var fileDataLength = file.Data.Length;
         var data = new byte[fileDataLength + file.FileSize];
         if (fileDataLength > 0) file.Data.CopyTo(data, 0);
@@ -1405,7 +1405,7 @@ public unsafe class Binary_Wad3 : ArcBinary<Binary_Wad3> {
 
     #endregion
 
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         var files = source.Files = [];
 
         // read file
@@ -1432,7 +1432,7 @@ public unsafe class Binary_Wad3 : ArcBinary<Binary_Wad3> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         return Task.FromResult<Stream>(new MemoryStream(file.Compressed == 0
             ? r.ReadBytes((int)file.FileSize)

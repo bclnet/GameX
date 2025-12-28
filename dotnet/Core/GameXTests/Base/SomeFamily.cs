@@ -32,7 +32,7 @@ internal static class Some {
     public static readonly Family Family = FamilyManager.CreateFamily(FamilyJson.Replace("'", "\""));
 
     public class SomeArchive : Archive {
-        public SomeArchive(ArchiveState state) : base(state) { Name = "Some Name"; }
+        public SomeArchive(BinaryState state) : base(state) { Name = "Some Name"; }
         public override int Count => 0;
         public override void Closing() { }
         public override void Opening() { }

@@ -14,12 +14,12 @@ namespace GameX.Mythic;
 /// MythicArchive
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryArchive" />
-public class MythicArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+public class MythicArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="MythicArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public MythicArchive(ArchiveState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+    public MythicArchive(BinaryState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         AssetFactoryFunc = AssetFactory;
     }
 

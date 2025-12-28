@@ -86,7 +86,7 @@ public unsafe class Binary_Mpk : ArcBinary<Binary_Mpk> {
 
     #endregion
 
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         var magic = r.ReadUInt32();
         if (magic != MAGIC) throw new FormatException("BAD MAGIC");
         r.Seek(21);
@@ -103,7 +103,7 @@ public unsafe class Binary_Mpk : ArcBinary<Binary_Mpk> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         return Task.FromResult((Stream)new MemoryStream(r.DecompressZlib((int)file.PackedSize, (int)file.FileSize)));
     }

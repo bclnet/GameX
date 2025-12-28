@@ -19,12 +19,12 @@ public class StardewValleyGame(Family family, string id, JsonElement elem, Famil
 /// XboxArchive
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryArchive" />
-public class XboxArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+public class XboxArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="XboxArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public XboxArchive(ArchiveState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+    public XboxArchive(BinaryState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         AssetFactoryFunc = AssetFactory;
         TypeX.ScanTypes([typeof(XboxArchive)]);
     }

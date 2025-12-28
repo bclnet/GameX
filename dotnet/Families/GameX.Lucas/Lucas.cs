@@ -12,12 +12,12 @@ namespace GameX.Lucas;
 /// LucasArchive
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryArchive" />
-public class LucasArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+public class LucasArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="LucasArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public LucasArchive(ArchiveState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+    public LucasArchive(BinaryState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         AssetFactoryFunc = AssetFactory;
     }
 

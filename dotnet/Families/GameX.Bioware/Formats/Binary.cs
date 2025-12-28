@@ -208,7 +208,7 @@ public unsafe class Binary_Aurora : ArcBinary<Binary_Aurora> {
 
     #endregion
 
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         FileSource[] files; List<FileSource> files2;
 
         // KEY
@@ -271,7 +271,7 @@ public unsafe class Binary_Aurora : ArcBinary<Binary_Aurora> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         Stream fileData;
         r.Seek(file.Offset);
         if (source.Version == BIFF_VERSION) fileData = new MemoryStream(r.ReadBytes((int)file.FileSize));
@@ -323,7 +323,7 @@ public unsafe class Binary_Myp : ArcBinary<Binary_Myp> {
 
     #endregion
 
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         var files = source.Files = [];
         var hashLookup = source.Game.Id switch {
             "SWTOR" => TOR.HashLookup,
@@ -363,7 +363,7 @@ public unsafe class Binary_Myp : ArcBinary<Binary_Myp> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         if (file.FileSize == 0) return Task.FromResult(System.IO.Stream.Null);
         r.Seek(file.Offset);
         return Task.FromResult((Stream)new MemoryStream(file.Compressed == 0

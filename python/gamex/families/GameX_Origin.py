@@ -50,7 +50,7 @@ class UOGame(FamilyGame):
 
 # OriginArchive
 class OriginArchive(BinaryArchive):
-    def __init__(self, state: ArchiveState):
+    def __init__(self, state: BinaryState):
         super().__init__(state, self.getArcBinary(state.game))
         self.assetFactoryFunc = self.assetFactory
 

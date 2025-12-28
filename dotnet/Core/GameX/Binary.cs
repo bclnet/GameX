@@ -67,16 +67,6 @@ public class BinaryState(FileSystem vfx, FamilyGame game, FamilyGame.Edition edi
     public object Tag = tag;
 }
 
-/// <summary>
-/// ArchiveState
-/// </summary>
-/// <param name="vfx">The file system.</param>
-/// <param name="game">The game.</param>
-/// <param name="edition">The edition.</param>
-/// <param name="path">The path.</param>
-/// <param name="tag">The tag.</param>
-public class ArchiveState(FileSystem vfx, FamilyGame game, FamilyGame.Edition edition = null, string path = null, object tag = null) : BinaryState(vfx, game, edition, path, tag) { }
-
 #endregion
 
 #region Binary
@@ -174,7 +164,7 @@ public abstract class Binary : IDisposable {
     /// <summary>
     /// Closes this instance.
     /// </summary>
-    public abstract void Closing();
+    public virtual void Closing() { }
 
     /// <summary>
     /// Opens this instance.
@@ -194,7 +184,7 @@ public abstract class Binary : IDisposable {
     /// <summary>
     /// Opens this instance.
     /// </summary>
-    public abstract void Opening();
+    public virtual void Opening() { }
 }
 
 #endregion
@@ -206,11 +196,9 @@ public abstract class Binary : IDisposable {
 /// Initializes a new instance of the <see cref="Archive" /> class.
 /// </summary>
 /// <param name="state">The state.</param>
-public abstract class Archive(ArchiveState state) : Binary(state), ISource {
-    class EmptyArchive(ArchiveState state) : Archive(state) {
+public abstract class Archive(BinaryState state) : Binary(state), ISource {
+    class EmptyArchive(BinaryState state) : Archive(state) {
         public override int Count => 0;
-        public override void Closing() { }
-        public override void Opening() { }
         public override bool Contains(object path) => false;
         public override (Archive, FileSource) GetSource(object path, bool throwOnError = true) => throw new NotImplementedException();
         public override Task<Stream> GetData(object path, object option = default, bool throwOnError = true) => throw new NotImplementedException();
@@ -222,7 +210,7 @@ public abstract class Archive(ArchiveState state) : Binary(state), ISource {
     /// <summary>
     /// An empty family.
     /// </summary>
-    public static Archive Empty = new EmptyArchive(new ArchiveState(new DirectoryFileSystem("", null), FamilyGame.Empty)) { Name = "Empty" };
+    public static Archive Empty = new EmptyArchive(new BinaryState(new DirectoryFileSystem("", null), FamilyGame.Empty)) { Name = "Empty" };
 
     /// <summary>
     /// The arc path finders.
@@ -393,16 +381,16 @@ public abstract class Archive(ArchiveState state) : Binary(state), ISource {
 
 #endregion
 
-#region BinaryAsset
+#region BinaryArchive
 
 /// <summary>
-/// Initializes a new instance of the <see cref="BinaryAsset" /> class.
+/// Initializes a new instance of the <see cref="BinaryArchive" /> class.
 /// </summary>
 /// <param name="state">The state.</param>
 /// <param name="name">The name.</param>
 /// <param name="arcBinary">The arc binary.</param>
 [DebuggerDisplay("{Name}")]
-public abstract class BinaryAsset(ArchiveState state, ArcBinary arcBinary) : Archive(state) {
+public abstract class BinaryArchive(BinaryState state, ArcBinary arcBinary) : Archive(state) {
     public readonly ArcBinary ArcBinary = arcBinary;
     // options
     public int RetainInPool = 10;
@@ -415,7 +403,7 @@ public abstract class BinaryAsset(ArchiveState state, ArcBinary arcBinary) : Arc
     public uint Magic;
     public uint Version;
     // metadata/factory
-    protected Dictionary<string, Func<MetaManager, BinaryAsset, FileSource, Task<List<MetaInfo>>>> MetaInfos = [];
+    protected Dictionary<string, Func<MetaManager, BinaryArchive, FileSource, Task<List<MetaInfo>>>> MetaInfos = [];
 
     // binary
     public IList<FileSource> Files;
@@ -755,7 +743,7 @@ public abstract class BinaryAsset(ArchiveState state, ArcBinary arcBinary) : Arc
 
 #region ManyArchive
 
-public class ManyArchive : BinaryAsset {
+public class ManyArchive : BinaryArchive {
     /// <summary>
     /// The paths
     /// </summary>
@@ -769,7 +757,7 @@ public class ManyArchive : BinaryAsset {
     /// <param name="name">The name.</param>
     /// <param name="paths">The paths.</param>
     /// <param name="pathSkip">The pathSkip.</param>
-    public ManyArchive(Archive basis, ArchiveState state, string name, string[] paths, int pathSkip = 0) : base(state, null) {
+    public ManyArchive(Archive basis, BinaryState state, string name, string[] paths, int pathSkip = 0) : base(state, null) {
         AssetFactoryFunc = basis.AssetFactoryFunc;
         Name = name;
         Paths = paths;
@@ -787,7 +775,7 @@ public class ManyArchive : BinaryAsset {
     public override Task Read(object tag = default) {
         Files = [.. Paths.Select(s => new FileSource {
             Path = s.Replace('\\', '/'),
-            Arc = Game.IsArcPath(s) ? (BinaryAsset)Game.CreateArchive(new ArchiveState(Vfx, Game, Edition, s)) : default,
+            Arc = Game.IsArcPath(s) ? (BinaryArchive)Game.CreateArchive(new BinaryState(Vfx, Game, Edition, s)) : default,
             Lazy = x => { x.FileSize = Vfx.FileInfo(s).length; x.Lazy = null; }
         })];
         return Task.CompletedTask;
@@ -819,7 +807,7 @@ public class MultiArchive : Archive {
     /// <param name="name">The name.</param>
     /// <param name="archives">The archives.</param>
     /// <param name="tag">The tag.</param>
-    public MultiArchive(ArchiveState state, string name, IList<Archive> archives) : base(state) {
+    public MultiArchive(BinaryState state, string name, IList<Archive> archives) : base(state) {
         Name = name;
         Archives = archives ?? throw new ArgumentNullException(nameof(archives));
     }
@@ -960,7 +948,7 @@ public class ArcBinary {
     /// <param name="tag">The tag.</param>
     /// <returns></returns>
     /// <exception cref="NotSupportedException"></exception>
-    public virtual Task Read(BinaryAsset source, BinaryReader r, object tag = default) => throw new NotSupportedException();
+    public virtual Task Read(BinaryArchive source, BinaryReader r, object tag = default) => throw new NotSupportedException();
 
     /// <summary>
     /// Reads the asynchronous.
@@ -971,7 +959,7 @@ public class ArcBinary {
     /// <param name="option">The option.</param>
     /// <returns></returns>
     /// <exception cref="NotSupportedException"></exception>
-    public virtual Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) => throw new NotSupportedException();
+    public virtual Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) => throw new NotSupportedException();
 
     /// <summary>
     /// Writes the asynchronous.
@@ -981,7 +969,7 @@ public class ArcBinary {
     /// <param name="tag">The tag.</param>
     /// <returns></returns>
     /// <exception cref="NotSupportedException"></exception>
-    public virtual Task Write(BinaryAsset source, BinaryWriter w, object tag = default) => throw new NotSupportedException();
+    public virtual Task Write(BinaryArchive source, BinaryWriter w, object tag = default) => throw new NotSupportedException();
 
     /// <summary>
     /// Writes the asynchronous.
@@ -993,14 +981,14 @@ public class ArcBinary {
     /// <param name="data">The data.</param>
     /// <returns></returns>
     /// <exception cref="NotSupportedException"></exception>
-    public virtual Task WriteData(BinaryAsset source, BinaryWriter w, FileSource file, Stream data, object option = default) => throw new NotSupportedException();
+    public virtual Task WriteData(BinaryArchive source, BinaryWriter w, FileSource file, Stream data, object option = default) => throw new NotSupportedException();
 
     /// <summary>
     /// Processes this instance.
     /// </summary>
     /// <param name="source">The source.</param>
     /// <exception cref="NotSupportedException"></exception>
-    public virtual Task Process(BinaryAsset source) => Task.CompletedTask;
+    public virtual Task Process(BinaryArchive source) => Task.CompletedTask;
 
     /// <summary>
     /// handles an exception.
@@ -1022,13 +1010,13 @@ public class ArcBinary {
 public class ArcBinary<Self> : ArcBinary where Self : ArcBinary, new() {
     public static readonly ArcBinary Current = new Self();
 
-    protected class SubArchive : BinaryAsset {
+    protected class SubArchive : BinaryArchive {
         readonly FileSource File;
-        readonly BinaryAsset Source;
+        readonly BinaryArchive Source;
         StaticPool<BinaryReader> Pool;
         BinaryReader R;
 
-        public SubArchive(BinaryAsset source, FileSource file, string path, object tag = null, ArcBinary instance = null) : base(new ArchiveState(source.Vfx, source.Game, source.Edition, path, tag), instance ?? Current) {
+        public SubArchive(BinaryArchive source, FileSource file, string path, object tag = null, ArcBinary instance = null) : base(new BinaryState(source.Vfx, source.Game, source.Edition, path, tag), instance ?? Current) {
             File = file;
             Source = source;
             AssetFactoryFunc = source.AssetFactoryFunc;

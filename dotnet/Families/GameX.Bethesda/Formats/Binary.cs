@@ -97,7 +97,7 @@ public unsafe class Binary_Ba2 : ArcBinary<Binary_Ba2> {
 
     #endregion
 
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         FileSource[] files;
 
         // Fallout 4 - Starfield
@@ -165,7 +165,7 @@ public unsafe class Binary_Ba2 : ArcBinary<Binary_Ba2> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         const int GNF_HEADER_MAGIC = 0x20464E47;
         const int GNF_HEADER_CONTENT_SIZE = 248;
 
@@ -421,7 +421,7 @@ public unsafe class Binary_Bsa : ArcBinary<Binary_Bsa> {
 
     #endregion
 
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         FileSource[] files;
         var magic = source.Magic = r.ReadUInt32();
 
@@ -503,7 +503,7 @@ public unsafe class Binary_Bsa : ArcBinary<Binary_Bsa> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         // position
         var fileSize = (int)file.FileSize;
         r.Seek(file.Offset);
@@ -572,7 +572,7 @@ public unsafe class Binary_Esm : ArcBinary<Binary_Esm> {
     /// <param name="stage">The stage.</param>
     /// <returns></returns>
     /// <exception cref="ArgumentOutOfRangeException">stage</exception>
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         Format = GetFormat(source.Game.Id);
         var recordLevel = 1;
         var filePath = source.BinPath;
@@ -619,7 +619,7 @@ public unsafe class Binary_Esm : ArcBinary<Binary_Esm> {
     Dictionary<uint, Tuple<WRLDRecord, RecordGroup[]>> WRLDsById;
     Dictionary<string, LTEXRecord> LTEXsByEid;
 
-    public override Task Process(BinaryAsset source) {
+    public override Task Process(BinaryArchive source) {
         if (Format == FormType.TES3) {
             var statGroups = new List<Record>[] { Groups.ContainsKey(FormType.STAT) ? Groups[FormType.STAT].Load() : null };
             MANYsById = statGroups.SelectMany(x => x).Where(x => x != null).ToDictionary(x => x.EDID.Value, x => (IRecord)x);

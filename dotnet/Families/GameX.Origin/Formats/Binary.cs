@@ -70,7 +70,7 @@ public unsafe class Binary_U8 : ArcBinary<Binary_U8> {
         ("music", ".mus")
     };
 
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         var fileName = Path.GetFileName(source.BinPath).ToLowerInvariant();
         var nameToExt = NameToExts.FirstOrDefault(x => fileName.Contains(x.name));
         var ext = nameToExt.ext ?? ".dat";
@@ -94,7 +94,7 @@ public unsafe class Binary_U8 : ArcBinary<Binary_U8> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         return Task.FromResult((Stream)new MemoryStream(r.ReadBytes((int)file.FileSize)));
     }
@@ -153,7 +153,7 @@ public unsafe class Binary_U9 : ArcBinary<Binary_U9> {
         ("typename", ".type"),
     };
 
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         var fileName = Path.GetFileName(source.BinPath).ToLowerInvariant();
         var nameToExt = NameToExts.FirstOrDefault(x => fileName.Contains(x.name));
         var ext = nameToExt.ext ?? ".dat";
@@ -175,7 +175,7 @@ public unsafe class Binary_U9 : ArcBinary<Binary_U9> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         return Task.FromResult((Stream)new MemoryStream(r.ReadBytes((int)file.FileSize)));
     }
@@ -264,7 +264,7 @@ public unsafe class Binary_UO : ArcBinary<Binary_UO> {
 
     int Count;
 
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         if (source.BinPath.EndsWith(".uop")) ReadUop(source, r);
         else ReadIdx(source, r);
         return Task.CompletedTask;
@@ -274,7 +274,7 @@ public unsafe class Binary_UO : ArcBinary<Binary_UO> {
 
     const int UOP_MAGIC = 0x50594D;
 
-    Task ReadUop(BinaryAsset source, BinaryReader r) {
+    Task ReadUop(BinaryArchive source, BinaryReader r) {
         (Func<string, int, string> uopFunc, int length, int idxLength, bool extra, Func<int, string> pathFunc) parse = source.BinPath switch {
             "artLegacyMUL.uop" => ((s, i) => $"build/artlegacymul/{i:D8}.tga", 0x14000, 0x13FDC, false, i => i < 0x4000 ? $"land/file{i:x5}.land" : $"art/file{i:x5}.art"),
             "gumpartLegacyMUL.uop" => ((s, i) => $"build/gumpartlegacymul/{i:D8}.tga", 0xFFFF, 0, true, i => $"file{i:x5}.tex"),
@@ -383,7 +383,7 @@ public unsafe class Binary_UO : ArcBinary<Binary_UO> {
 
     #region IDX
 
-    Task ReadIdx(BinaryAsset source, BinaryReader r) {
+    Task ReadIdx(BinaryArchive source, BinaryReader r) {
         /*
         FileIDs
         --------------
@@ -472,7 +472,7 @@ public unsafe class Binary_UO : ArcBinary<Binary_UO> {
     public static ushort Art_ClampItemId(int itemId, bool checkMaxId = true)
         => itemId < 0 || (checkMaxId && itemId > Art_MaxItemId) ? (ushort)0U : (ushort)itemId;
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         if (file.Offset < 0) return Task.FromResult<Stream>(null);
         var fileSize = (int)(file.FileSize & 0x7FFFFFFF);
         if ((file.FileSize & (1 << 31)) != 0) return Task.FromResult<Stream>(Binary_Verdata.Current.ReadData(file.Offset, fileSize));

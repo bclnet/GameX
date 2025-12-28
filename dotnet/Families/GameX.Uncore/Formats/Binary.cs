@@ -854,7 +854,7 @@ public unsafe class Binary_Pcx : IHaveMetaInfo, ITexture {
 #region Binary_Plist
 
 public unsafe class Binary_Plist : ArcBinary<Binary_Plist> {
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         source.Files = [.. ((Dictionary<object, object>)new PlistReader().ReadObject(r.BaseStream)).Select(x => new FileSource {
             Path = (string)x.Key,
             FileSize = ((byte[])x.Value).Length,
@@ -863,7 +863,7 @@ public unsafe class Binary_Plist : ArcBinary<Binary_Plist> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default)
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default)
         => Task.FromResult<Stream>(new MemoryStream((byte[])file.Tag));
 }
 
@@ -1385,7 +1385,7 @@ public class Binary_Zip(object key = null) : ArcBinary {
     readonly object Key = key;
     bool UseSystem => Key == null;
 
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         source.UseReader = false;
         if (UseSystem) {
             ZipArchive arc;
@@ -1414,7 +1414,7 @@ public class Binary_Zip(object key = null) : ArcBinary {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         //try
         //{
         using var input = UseSystem

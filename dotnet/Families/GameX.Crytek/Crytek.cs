@@ -16,12 +16,12 @@ namespace GameX.Crytek;
 /// CrytekArchive
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryArchive" />
-public class CrytekArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+public class CrytekArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="CrytekArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public CrytekArchive(ArchiveState state) : base(state, GetArcBinary(state.Game)) {
+    public CrytekArchive(BinaryState state) : base(state, GetArcBinary(state.Game)) {
         AssetFactoryFunc = AssetFactory;
     }
 

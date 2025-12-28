@@ -74,7 +74,7 @@ public unsafe class Binary_Dat : ArcBinary<Binary_Dat> {
 
     #endregion
 
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         var gameId = source.Game.Id;
 
         // Fallout
@@ -128,7 +128,7 @@ public unsafe class Binary_Dat : ArcBinary<Binary_Dat> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         var magic = source.Magic;
         // F1
         if (magic == F1_HEADER_FILEID) {
@@ -194,7 +194,7 @@ public class Binary_Frm : IHaveMetaInfo, ITextureFramesSelect {
     byte[] Bytes;
 
     public unsafe Binary_Frm(BinaryReader r, FileSource f, Archive s) {
-        var pallet = GetPalletObjAsync(f.Path, (BinaryAsset)s).Result ?? throw new Exception("No pallet found");
+        var pallet = GetPalletObjAsync(f.Path, (BinaryArchive)s).Result ?? throw new Exception("No pallet found");
         var rgba32 = pallet.Rgba32;
 
         // parse header
@@ -219,7 +219,7 @@ public class Binary_Frm : IHaveMetaInfo, ITextureFramesSelect {
         FrameSelect(0);
     }
 
-    async Task<Binary_Pal2> GetPalletObjAsync(string path, BinaryAsset s) {
+    async Task<Binary_Pal2> GetPalletObjAsync(string path, BinaryArchive s) {
         var palletPath = $"{path[..^4]}.PAL";
         if (s.Contains(palletPath))
             return await s.GetAsset<Binary_Pal2>(palletPath);

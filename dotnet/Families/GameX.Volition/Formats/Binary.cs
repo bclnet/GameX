@@ -29,13 +29,13 @@ public class Binary_Abc : IHaveMetaInfo {
 #region Binary_Ctg
 
 public unsafe class Binary_Ctg : ArcBinary<Binary_Ctg> {
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         var files = source.Files = [];
 
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         throw new NotImplementedException();
     }
 }
@@ -118,7 +118,7 @@ public unsafe class Binary_Descent : ArcBinary<Binary_Descent> {
 
     #endregion
 
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         const uint MAGIC_PPIG = 0x47495050;
         //const uint MAGIC_DPOG = 0x474f5044;
         const uint MAGIC_DHF = 0x00464844;
@@ -216,7 +216,7 @@ public unsafe class Binary_Descent : ArcBinary<Binary_Descent> {
             }));
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         var bytes = r.ReadBytes((int)file.FileSize);
         if (file.Tag != null)
@@ -345,13 +345,13 @@ public unsafe class Binary_Descent : ArcBinary<Binary_Descent> {
 #region Binary_GeoMod
 
 public unsafe class Binary_GeoMod : ArcBinary<Binary_GeoMod> {
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         var files = source.Files = [];
 
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         throw new NotImplementedException();
     }
 }
@@ -361,13 +361,13 @@ public unsafe class Binary_GeoMod : ArcBinary<Binary_GeoMod> {
 #region Binary_Hpl
 
 public unsafe class Binary_Hpl : ArcBinary<Binary_Hpl> {
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         var files = source.Files = [];
 
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         throw new NotImplementedException();
     }
 }

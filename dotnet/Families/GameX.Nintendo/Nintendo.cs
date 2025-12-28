@@ -12,13 +12,13 @@ namespace GameX.Nintendo;
 /// NintendoArchive
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryArchive" />
-public class NintendoArchive : BinaryAsset, ITransformAsset<IUnknownFileModel>
+public class NintendoArchive : BinaryArchive, ITransformAsset<IUnknownFileModel>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="NintendoArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public NintendoArchive(ArchiveState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant()))
+    public NintendoArchive(BinaryState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant()))
     {
         AssetFactoryFunc = AssetFactory;
     }

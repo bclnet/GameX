@@ -81,12 +81,12 @@ public class UOGame(Family family, string id, JsonElement elem, FamilyGame dgame
 /// OriginArchive
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryArchive" />
-public class OriginArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+public class OriginArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="OriginArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public OriginArchive(ArchiveState state) : base(state, GetArcBinary(state.Game)) {
+    public OriginArchive(BinaryState state) : base(state, GetArcBinary(state.Game)) {
         AssetFactoryFunc = AssetFactory;
     }
 

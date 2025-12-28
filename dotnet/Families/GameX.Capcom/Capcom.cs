@@ -14,12 +14,12 @@ namespace GameX.Capcom;
 /// CapcomArchive
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryArchive" />
-public class CapcomArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+public class CapcomArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="CapcomArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public CapcomArchive(ArchiveState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+    public CapcomArchive(BinaryState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         AssetFactoryFunc = state.Game.Engine.n switch {
             "Unity" => Unity.UnityArchive.AssetFactory,
             _ => AssetFactory,

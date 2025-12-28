@@ -29,12 +29,12 @@ public class QGame(Family family, string id, JsonElement elem, FamilyGame dgame)
 /// IDArchive
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryArchive" />
-public class IDArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+public class IDArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="IDArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public IDArchive(ArchiveState state) : base(state, GetArcBinary(state.Game, state.Path)) {
+    public IDArchive(BinaryState state) : base(state, GetArcBinary(state.Game, state.Path)) {
         AssetFactoryFunc = AssetFactory;
     }
 

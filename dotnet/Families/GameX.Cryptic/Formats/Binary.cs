@@ -137,7 +137,7 @@ public unsafe class Binary_Hogg : ArcBinary<Binary_Hogg> {
 
     #endregion
 
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         // read header
         var header = r.ReadS<Header>();
         if (header.Magic != MAGIC) throw new FormatException("BAD MAGIC");
@@ -202,7 +202,7 @@ public unsafe class Binary_Hogg : ArcBinary<Binary_Hogg> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         return Task.FromResult((Stream)new MemoryStream(file.Compressed != 0
             ? r.DecompressZlib((int)file.PackedSize, (int)file.FileSize)

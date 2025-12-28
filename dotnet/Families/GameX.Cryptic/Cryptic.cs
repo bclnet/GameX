@@ -13,12 +13,12 @@ namespace GameX.Cryptic;
 /// CrypticArchive
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryArchive" />
-public class CrypticArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+public class CrypticArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="CrypticArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public CrypticArchive(ArchiveState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+    public CrypticArchive(BinaryState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         AssetFactoryFunc = AssetFactory;
     }
 

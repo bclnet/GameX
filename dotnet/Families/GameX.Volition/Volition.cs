@@ -45,12 +45,12 @@ public class D2Game(Family family, string id, JsonElement elem, FamilyGame dgame
 /// VolitionArchive
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryArchive" />
-public class VolitionArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+public class VolitionArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="VolitionArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public VolitionArchive(ArchiveState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+    public VolitionArchive(BinaryState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         AssetFactoryFunc = AssetFactory;
     }
 

@@ -12,12 +12,12 @@ namespace GameX.MODEL;
 /// MODELArchive
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryArchive" />
-public class MODELArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+public class MODELArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="MODELArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public MODELArchive(ArchiveState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+    public MODELArchive(BinaryState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         AssetFactoryFunc = AssetFactory;
     }
 

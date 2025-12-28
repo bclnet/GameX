@@ -8,7 +8,7 @@ from openstk import findType, _throw, YamlDict
 from openstk.vfx import FileSystem, AggregateFileSystem, NetworkFileSystem, DirectoryFileSystem, VirtualFileSystem
 from openstk.platforms import PlatformX
 from gamex import option, familyIds 
-from gamex.core.binary import ArchiveState, ManyArchive, MultiArchive
+from gamex.core.binary import BinaryState, ManyArchive, MultiArchive
 from gamex.core.store import getPathByKey as Store_getPathByKey
 from .util import _valueF, _value, _list, _related, _dictTrim
 
@@ -383,7 +383,7 @@ class FamilyGame:
         return findType(detectorType)(self, id, elem) if detectorType else Detector(self, id, elem)
 
     # create Archive
-    def createArchive(self, state: ArchiveState) -> Archive: return findType(self.archiveType)(state) if self.archiveType else _throw(f'{self.id} missing ArchiveType')
+    def createArchive(self, state: BinaryState) -> Archive: return findType(self.archiveType)(state) if self.archiveType else _throw(f'{self.id} missing ArchiveType')
 
     # create Client
     def createClient(self, state: ClientState) -> Archive: return findType(self.clientType)(state) if self.clientType else _throw(f'{self.id} missing ClientType')
@@ -509,16 +509,16 @@ class FamilyGame:
 
     # get ArchiveObj
     def _getArchiveObj(self, vfx: FileSystem, edition: Edition, value: object, tag: object = None) -> Archive:
-        arcState = ArchiveState(vfx, self, edition, value if isinstance(value, str) else None, tag)
+        state = BinaryState(vfx, self, edition, value if isinstance(value, str) else None, tag)
         match value:
-            case s if isinstance(value, str): return self.createArchive(arcState) if self._isArcPath(s) else _throw(f'{self.id} missing {s}')
+            case s if isinstance(value, str): return self.createArchive(state) if self._isArcPath(s) else _throw(f'{self.id} missing {s}')
             case p, l if isinstance(value, tuple):
                 return self._getArchiveObj(vfx, edition, l[0], tag) if len(l) == 1 and self._isArcPath(l[0]) \
                     else ManyArchive(
-                        self.createArchive(arcState), arcState,
+                        self.createArchive(state), state,
                         p if len(p) > 0 else 'Many', l,
                         pathSkip = len(p) + 1 if len(p) > 0 else 0)
-            case s if isinstance(value, list): return s[0] if len(s) == 1 else MultiArchive(arcState, 'Multi', s)
+            case s if isinstance(value, list): return s[0] if len(s) == 1 else MultiArchive(state, 'Multi', s)
             case None: return None
             case _: raise Exception(f'Unknown: {value}')
 

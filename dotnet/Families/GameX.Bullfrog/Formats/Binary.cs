@@ -108,7 +108,7 @@ public class Binary_Bullfrog : ArcBinary<Binary_Bullfrog> {
 
     byte[] Data;
 
-    public override async Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override async Task Read(BinaryArchive source, BinaryReader r, object tag) {
         //Data = Rnc.Read(r);
         List<FileSource> files;
         source.Files = files = new List<FileSource>();
@@ -123,7 +123,7 @@ public class Binary_Bullfrog : ArcBinary<Binary_Bullfrog> {
         //return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         var bytes = Data.AsSpan((int)file.Offset, (int)file.FileSize);
         return Task.FromResult((Stream)new MemoryStream(bytes.ToArray()));
     }
@@ -479,7 +479,7 @@ public class Binary_Populus : ArcBinary<Binary_Populus> {
 
     #endregion
 
-    public override async Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override async Task Read(BinaryArchive source, BinaryReader r, object tag) {
         List<FileSource> files;
         source.Files = files = [];
         var tabPath = $"{source.BinPath[..^4]}.TAB";
@@ -548,7 +548,7 @@ public class Binary_Populus : ArcBinary<Binary_Populus> {
             });
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         var bytes = r.ReadBytes((int)file.FileSize);
         return Task.FromResult((Stream)new MemoryStream(bytes));

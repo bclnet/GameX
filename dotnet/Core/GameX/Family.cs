@@ -1045,7 +1045,7 @@ public class FamilyGame {
     /// <param name="game">The game.</param>
     /// <param name="state">The state.</param>
     /// <returns></returns>
-    internal Archive CreateArchive(ArchiveState state) => (Archive)Activator.CreateInstance(ArchiveType ?? throw new InvalidOperationException($"{Id} missing ArchiveType"), state);
+    internal Archive CreateArchive(BinaryState state) => (Archive)Activator.CreateInstance(ArchiveType ?? throw new InvalidOperationException($"{Id} missing ArchiveType"), state);
 
     /// <summary>
     /// Create client
@@ -1258,7 +1258,7 @@ public class FamilyGame {
     /// <param name="tag">The tag.</param>
     /// <returns></returns>
     Archive GetArchiveObj(FileSystem vfx, Edition edition, object value, object tag = null) {
-        var state = new ArchiveState(vfx, this, edition, value as string, tag);
+        var state = new BinaryState(vfx, this, edition, value as string, tag);
         return value switch {
             string s => IsArcPath(s) ? CreateArchive(state) : throw new InvalidOperationException($"{Id} missing {s}"),
             ValueTuple<string, string[]> s => s.Item2.Length == 1 && IsArcPath(s.Item2[0])

@@ -12,12 +12,12 @@ namespace GameX.X2K;
 /// X2KArchive
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryArchive" />
-public class X2KArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+public class X2KArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="X2KArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public X2KArchive(ArchiveState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+    public X2KArchive(BinaryState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         AssetFactoryFunc = AssetFactory;
     }
 

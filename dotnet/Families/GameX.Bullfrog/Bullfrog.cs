@@ -72,12 +72,12 @@ public class SGame(Family family, string id, JsonElement elem, FamilyGame dgame)
 /// BullfrogArchive
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryArchive" />
-public class BullfrogArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+public class BullfrogArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="BullfrogArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public BullfrogArchive(ArchiveState state) : base(state, GetArcBinary(state.Game, state.Path))
+    public BullfrogArchive(BinaryState state) : base(state, GetArcBinary(state.Game, state.Path))
         => AssetFactoryFunc = AssetFactory;
 
     #region Factories

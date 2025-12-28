@@ -13,12 +13,12 @@ namespace GameX.Cig;
 /// CigArchive
 /// </summary>
 /// <seealso cref="GameEstate.Formats.BinaryArchive" />
-public class CigArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+public class CigArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="CigArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public CigArchive(ArchiveState state) : base(state, PakBinary_P4k.Current) {
+    public CigArchive(BinaryState state) : base(state, PakBinary_P4k.Current) {
         AssetFactoryFunc = AssetFactory;
     }
 

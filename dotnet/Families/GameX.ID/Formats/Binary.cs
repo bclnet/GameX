@@ -151,7 +151,7 @@ public unsafe class Binary_BspY : ArcBinary<Binary_BspY> {
 
     #endregion
 
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         var files = source.Files = [];
 
         // read file
@@ -183,7 +183,7 @@ public unsafe class Binary_BspY : ArcBinary<Binary_BspY> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         return Task.FromResult<Stream>(new MemoryStream(r.ReadBytes((int)file.FileSize)));
     }
@@ -895,7 +895,7 @@ public unsafe class Binary_Pak : ArcBinary<Binary_Pak> {
 
     #endregion
 
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         // read file
         var header = r.ReadS<P_Header>();
         if (header.Magic != P_MAGIC) throw new FormatException("BAD MAGIC");
@@ -914,7 +914,7 @@ public unsafe class Binary_Pak : ArcBinary<Binary_Pak> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         return Task.FromResult<Stream>(new MemoryStream(r.ReadBytes((int)file.FileSize)));
     }
@@ -1089,7 +1089,7 @@ public unsafe class Binary_Wad : ArcBinary<Binary_Wad> {
 
     #endregion
 
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         // read file
         var header = r.ReadS<W_Header>();
         if (header.Magic != W_MAGIC) throw new FormatException("BAD MAGIC");
@@ -1105,7 +1105,7 @@ public unsafe class Binary_Wad : ArcBinary<Binary_Wad> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         return Task.FromResult<Stream>(new MemoryStream(r.ReadBytes((int)file.FileSize)));
     }

@@ -5,9 +5,9 @@ using System.Collections.Concurrent;
 namespace GameX.WB;
 
 public class Database {
-    public readonly BinaryAsset Source;
+    public readonly BinaryArchive Source;
 
-    public Database(Archive source) => Source = source as BinaryAsset;
+    public Database(Archive source) => Source = source as BinaryArchive;
 
     public override string ToString() => Source.Name;
 

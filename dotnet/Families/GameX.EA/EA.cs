@@ -12,12 +12,12 @@ namespace GameX.EA;
 /// EAArchive
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryArchive" />
-public class EAArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+public class EAArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="EAArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public EAArchive(ArchiveState state) : base(state, Binary_Hpl.Current) {
+    public EAArchive(BinaryState state) : base(state, Binary_Hpl.Current) {
         AssetFactoryFunc = AssetFactory;
     }
 

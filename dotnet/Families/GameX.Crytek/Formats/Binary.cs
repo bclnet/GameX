@@ -34,7 +34,7 @@ public class Binary_ArcheAge : ArcBinary {
 
     #endregion
 
-    public unsafe override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public unsafe override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         FileSource[] files;
 
         var stream = r.BaseStream;
@@ -78,7 +78,7 @@ public class Binary_ArcheAge : ArcBinary {
         return Task.CompletedTask;
     }
 
-    public unsafe override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public unsafe override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         // position
         r.Seek(file.Offset);
         Stream fileData = new MemoryStream(r.ReadBytes((int)file.FileSize));
@@ -100,7 +100,7 @@ public unsafe class Binary_Cry3 : ArcBinary<Binary_Cry3> {
     public Binary_Cry3() { }
     public Binary_Cry3(byte[] key = null) => Key = key;
 
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         var files = source.Files = new List<FileSource>();
         source.UseReader = false;
 
@@ -133,7 +133,7 @@ public unsafe class Binary_Cry3 : ArcBinary<Binary_Cry3> {
         return Task.CompletedTask;
     }
 
-    public override Task Write(BinaryAsset source, BinaryWriter w, object tag) {
+    public override Task Write(BinaryArchive source, BinaryWriter w, object tag) {
         source.UseReader = false;
         var files = source.Files;
         var arc = (Cry3File)(source.Tag = new Cry3File(w.BaseStream, Key));
@@ -147,7 +147,7 @@ public unsafe class Binary_Cry3 : ArcBinary<Binary_Cry3> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         var arc = (Cry3File)source.Tag;
         var entry = (ZipEntry)file.Tag;
         try {
@@ -161,7 +161,7 @@ public unsafe class Binary_Cry3 : ArcBinary<Binary_Cry3> {
         catch (Exception e) { HandleException(file, option, $"{file.Path} - Exception: {e.Message}"); return Task.FromResult(System.IO.Stream.Null); }
     }
 
-    public override Task WriteData(BinaryAsset source, BinaryWriter w, FileSource file, Stream data, object option = default) {
+    public override Task WriteData(BinaryArchive source, BinaryWriter w, FileSource file, Stream data, object option = default) {
         var arc = (Cry3File)source.Tag;
         var entry = (ZipEntry)file.Tag;
         try {

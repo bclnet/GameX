@@ -11,12 +11,12 @@ namespace GameX.Black;
 /// BlackArchive
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryArchive" />
-public class BlackArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+public class BlackArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="BlackArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public BlackArchive(ArchiveState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+    public BlackArchive(BinaryState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         AssetFactoryFunc = AssetFactory;
     }
 

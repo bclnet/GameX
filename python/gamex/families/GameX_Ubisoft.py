@@ -6,7 +6,7 @@ from gamex.families.GameX_Uncore import UncoreArchive
 
 # UbisoftArchive
 class UbisoftArchive(BinaryArchive):
-    def __init__(self, state: ArchiveState):
+    def __init__(self, state: BinaryState):
         super().__init__(state, self.getArcBinary(state, _pathExtension(state.path).lower()))
         self.assetFactoryFunc = self.assetFactory
 

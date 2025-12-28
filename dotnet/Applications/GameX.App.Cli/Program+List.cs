@@ -45,7 +45,7 @@ partial class Program {
         // list files in pack for family
         else {
             Console.WriteLine($"{family.Name} - {args.Uri}\n");
-            using var s = family.GetArchive(args.Uri) as BinaryAsset ?? throw new InvalidOperationException("s not BinaryAsset");
+            using var s = family.GetArchive(args.Uri) as BinaryArchive ?? throw new InvalidOperationException("s not BinaryArchive");
             if (s.Count == 0) { Console.WriteLine("Nothing found."); return Task.FromResult(0); }
             Console.WriteLine("files:");
             foreach (var p in s.Files.OrderBy(x => x.Path)) {

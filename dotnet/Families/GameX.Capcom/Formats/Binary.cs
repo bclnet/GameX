@@ -35,7 +35,7 @@ public unsafe class Binary_Arc : ArcBinary<Binary_Arc> {
 
     #endregion
 
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         var magic = r.ReadUInt32();
         magic &= 0x00FFFFFF;
         if (magic != K_MAGIC) throw new FormatException("BAD MAGIC");
@@ -55,7 +55,7 @@ public unsafe class Binary_Arc : ArcBinary<Binary_Arc> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         return Task.FromResult<Stream>(new MemoryStream(r.DecompressZlib((int)file.PackedSize, (int)file.FileSize)));
     }
@@ -71,13 +71,13 @@ public unsafe class Binary_Arc : ArcBinary<Binary_Arc> {
 #region Binary_Big
 
 public unsafe class Binary_Big : ArcBinary<Binary_Big> {
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         var files = source.Files = [];
 
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         throw new NotImplementedException();
     }
 }
@@ -87,13 +87,13 @@ public unsafe class Binary_Big : ArcBinary<Binary_Big> {
 #region Binary_Bundle
 
 public unsafe class Binary_Bundle : ArcBinary<Binary_Bundle> {
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         var files = source.Files = [];
 
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         throw new NotImplementedException();
     }
 }
@@ -135,7 +135,7 @@ public unsafe class Binary_Kpka : ArcBinary<Binary_Kpka> {
 
     #endregion
 
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         var magic = r.ReadUInt32();
         if (magic != K_MAGIC) throw new FormatException("BAD MAGIC");
 
@@ -182,7 +182,7 @@ public unsafe class Binary_Kpka : ArcBinary<Binary_Kpka> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         return Task.FromResult<Stream>(new MemoryStream(Decompress(r, file.Compressed, (int)file.PackedSize, (int)file.FileSize)));
     }

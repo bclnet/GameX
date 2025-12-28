@@ -76,7 +76,7 @@ public unsafe class Binary_Jedi : ArcBinary<Binary_Jedi> {
 
     #endregion
 
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         const uint GOB_MAGIC = 0x0a424f47;
         const uint LFD_MAGIC = 0x50414d52;
         const uint LAB_MAGIC = 0x4e42414c;
@@ -127,7 +127,7 @@ public unsafe class Binary_Jedi : ArcBinary<Binary_Jedi> {
         }
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
         return Task.FromResult((Stream)new MemoryStream(r.ReadBytes((int)file.FileSize)));
     }
@@ -942,7 +942,7 @@ public unsafe class Binary_Scumm : ArcBinary<Binary_Scumm> {
     public class ResourceFile {
     }
 
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         var game = source.Game;
         var detect = source.Game.Detect<Dictionary<string, object>>("scumm", source.BinPath, r, (p, s) => {
             s["variant"] = ((Dictionary<string, object>)p.Data["variants"])[(string)s["variant"]];
@@ -971,7 +971,7 @@ public unsafe class Binary_Scumm : ArcBinary<Binary_Scumm> {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         throw new NotImplementedException();
     }
 }
@@ -981,13 +981,13 @@ public unsafe class Binary_Scumm : ArcBinary<Binary_Scumm> {
 #region Binary_XX
 
 public unsafe class Binary_XX : ArcBinary<Binary_XX> {
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         var files = source.Files = [];
 
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         throw new NotImplementedException();
     }
 }

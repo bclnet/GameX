@@ -21,7 +21,7 @@ public static class ExportManager {
             if (!string.IsNullOrEmpty(filePath) && !Directory.Exists(filePath)) Directory.CreateDirectory(filePath);
             var setPath = Path.Combine(filePath, ".set");
             using var w = new BinaryWriter(new FileStream(setPath, FileMode.Create, FileAccess.Write));
-            await ArcBinary.Stream.Write(new StreamArchive(NetworkHost.Factory, new ArchiveState(null, null, null, "Root")) {
+            await ArcBinary.Stream.Write(new StreamArchive(NetworkHost.Factory, new BinaryState(null, null, null, "Root")) {
                 Files = [.. multi.Archives.Select(x => new FileSource { Path = x.Name })]
             }, w, "Set");
         }
@@ -30,7 +30,7 @@ public static class ExportManager {
     }
 
     static async Task ExportPakAsync(string filePath, Func<string, bool> match, int from, object option, Archive _) {
-        if (_ is not BinaryAsset arc) throw new InvalidOperationException("s not a BinaryAsset");
+        if (_ is not BinaryArchive arc) throw new InvalidOperationException("s not a BinaryArchive");
         var newPath = filePath != null ? Path.Combine(filePath, Path.GetFileName(arc.BinPath)) : null;
         // write arc
         await ExportPak2Async(arc, newPath, match, from, option,
@@ -38,7 +38,7 @@ public static class ExportManager {
             (file, msg) => Console.WriteLine($"ERROR: {msg} - {file?.Path}"));
     }
 
-    static async Task ExportPak2Async(BinaryAsset source, string filePath, Func<string, bool> match, int from, object option, Action<FileSource, int> next, Action<FileSource, string> error) {
+    static async Task ExportPak2Async(BinaryArchive source, string filePath, Func<string, bool> match, int from, object option, Action<FileSource, int> next, Action<FileSource, string> error) {
         var fo = option as FileOption? ?? FileOption.Default;
         source.Open();
         // create directory
@@ -69,10 +69,10 @@ public static class ExportManager {
             catch (Exception e) { error?.Invoke(file, $"Exception: {e.Message}"); }
         });
         // write arc-raw
-        if ((fo & FileOption.Marker) != 0) await new StreamArchive(source, new ArchiveState(source.Vfx, source.Game, source.Edition, filePath)).Write(null);
+        if ((fo & FileOption.Marker) != 0) await new StreamArchive(source, new BinaryState(source.Vfx, source.Game, source.Edition, filePath)).Write(null);
     }
 
-    static async Task ExportFileAsync(FileSource file, BinaryAsset source, string newPath, object option) {
+    static async Task ExportFileAsync(FileSource file, BinaryArchive source, string newPath, object option) {
         var fo = option as FileOption? ?? FileOption.Default;
         if (file.FileSize == 0 && file.PackedSize == 0) return;
         var oo = (file.CachedObjectOption as FileOption?) ?? FileOption.Default;

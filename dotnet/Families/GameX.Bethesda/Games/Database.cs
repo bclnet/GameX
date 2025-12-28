@@ -1,7 +1,7 @@
 namespace GameX.Bethesda;
 
 public class Database(Archive source) {
-    public readonly BinaryAsset Source = source as BinaryAsset;
+    public readonly BinaryArchive Source = source as BinaryArchive;
 
     public override string ToString() => Source.Name;
 

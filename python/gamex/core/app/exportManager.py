@@ -18,7 +18,7 @@ class ExportManager:
                 if filePath and not os.path.isdir(filePath): os.makedirs(filePath)
                 setPath = os.path.join(filePath, '.set')
             #     using var w = new BinaryWriter(new FileStream(setPath, FileMode.Create, FileAccess.Write));
-            #     await ArcBinary.Stream.Write(new StreamArchive(NetworkHost.Factory, new ArchiveState(null, null, null, "Root")) {
+            #     await ArcBinary.Stream.Write(new StreamArchive(NetworkHost.Factory, new BinaryState(null, null, null, "Root")) {
             #         Files = [.. multi.Archives.Select(x => new FileSource { Path = x.Name })]
             #     }, w, "Set");
             # multi
@@ -61,7 +61,7 @@ class ExportManager:
             except Exception as e: error(file, repr(e)) if error else None # f'Exception: {str(e)}'
         await parallelFor(from_, len(source.files), { 'max': ExportManager.MaxDegreeOfParallelism }, _lambdax)
         # write arc-raw
-        # if FileOption.Marker in fo: await StreamArchive(source, new ArchiveState(source.Vfx, source.Game, source.Edition, filePath)).Write(null)
+        # if FileOption.Marker in fo: await StreamArchive(source, new BinaryState(source.Vfx, source.Game, source.Edition, filePath)).Write(null)
 
     @staticmethod
     async def exportFileAsync(file: FileSource, source: BinaryArchive, newPath: str, option: object) -> None:

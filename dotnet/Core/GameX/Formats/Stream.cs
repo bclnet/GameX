@@ -11,7 +11,7 @@ namespace GameX.Formats;
 #region Stream
 
 public class PakBinaryCanStream : ArcBinary {
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         switch ((string)tag) {
             case null: return Task.CompletedTask;
             case "Set": {
@@ -68,7 +68,7 @@ public class PakBinaryCanStream : ArcBinary {
         }
     }
 
-    public override Task Write(BinaryAsset source, BinaryWriter w, object tag) {
+    public override Task Write(BinaryArchive source, BinaryWriter w, object tag) {
         switch ((string)tag) {
             case null: return Task.CompletedTask;
             case "Set": {
@@ -146,7 +146,7 @@ public class PakBinaryCanStream : ArcBinary {
 /// StreamArchive
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryArchive" />
-public class StreamArchive : BinaryAsset {
+public class StreamArchive : BinaryArchive {
     readonly NetworkHost Host;
 
     /// <summary>
@@ -155,7 +155,7 @@ public class StreamArchive : BinaryAsset {
     /// <param name="factory">The factory.</param>
     /// <param name="state">The state.</param>
     /// <param name="address">The host.</param>
-    public StreamArchive(Func<Uri, string, NetworkHost> factory, ArchiveState state, Uri address = null) : base(state, new PakBinaryCanStream()) {
+    public StreamArchive(Func<Uri, string, NetworkHost> factory, BinaryState state, Uri address = null) : base(state, new PakBinaryCanStream()) {
         UseReader = false;
         if (address != null) Host = factory(address, state.Path);
     }
@@ -164,7 +164,7 @@ public class StreamArchive : BinaryAsset {
     /// </summary>
     /// <param name="parent">The parent.</param>
     /// <param name="state">The state.</param>
-    public StreamArchive(BinaryAsset parent, ArchiveState state) : base(state, new PakBinaryCanStream()) {
+    public StreamArchive(BinaryArchive parent, BinaryState state) : base(state, new PakBinaryCanStream()) {
         UseReader = false;
         Files = parent.Files;
     }

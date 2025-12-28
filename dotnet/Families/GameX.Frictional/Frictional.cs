@@ -12,12 +12,12 @@ namespace GameX.Frictional;
 /// FrictionalArchive
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryArchive" />
-public class FrictionalArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+public class FrictionalArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="FrictionalArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public FrictionalArchive(ArchiveState state) : base(state, Binary_Hpl.Current) {
+    public FrictionalArchive(BinaryState state) : base(state, Binary_Hpl.Current) {
         AssetFactoryFunc = AssetFactory;
     }
 

@@ -12,12 +12,12 @@ namespace GameX.Beamdog;
 /// BeamdogArchive
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryArchive" />
-public class BeamdogArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+public class BeamdogArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="BeamdogArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public BeamdogArchive(ArchiveState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+    public BeamdogArchive(BinaryState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         AssetFactoryFunc = AssetFactory;
     }
 

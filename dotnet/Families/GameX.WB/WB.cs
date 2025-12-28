@@ -30,14 +30,14 @@ public class ACGame(Family family, string id, JsonElement elem, FamilyGame dgame
 /// WBArchive
 /// </summary>
 /// <seealso cref="GameEstate.Formats.BinaryArchive" />
-public class WBArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+public class WBArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     static WBArchive() => Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="WBArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public WBArchive(ArchiveState state) : base(state, Binary_AC.Current) {
+    public WBArchive(BinaryState state) : base(state, Binary_AC.Current) {
         AssetFactoryFunc = AssetFactory;
         UseFileId = true;
     }

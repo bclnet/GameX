@@ -39,12 +39,12 @@ public class BlizzardFileSystem : FileSystem {
 /// BlizzardArchive
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryArchive" />
-public class BlizzardArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+public class BlizzardArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="BlizzardArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public BlizzardArchive(ArchiveState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+    public BlizzardArchive(BinaryState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         AssetFactoryFunc = AssetFactory;
         UseReader = false;
     }

@@ -446,7 +446,7 @@ public unsafe class Binary_Red : ArcBinary<Binary_Red> {
     // https://zenhax.com/viewtopic.php?t=3954
     // https://forums.cdprojektred.com/index.php?threads/modding-the-witcher-3-a-collection-of-tools-you-need.64557/
     // https://github.com/rfuzzo/CP77Tools
-    public override Task Read(BinaryAsset source, BinaryReader r, object tag) {
+    public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         FileSource[] files; List<FileSource> files2;
         var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(source.BinPath);
         var extension = Path.GetExtension(source.BinPath);
@@ -677,7 +677,7 @@ public unsafe class Binary_Red : ArcBinary<Binary_Red> {
         BC5 = 7,        // 3DC, ATI2
     }
 
-    public override Task<Stream> ReadData(BinaryAsset source, BinaryReader r, FileSource file, object option = default) {
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         Stream fileData = null;
         r.Seek(file.Offset);
         switch (source.Version) {

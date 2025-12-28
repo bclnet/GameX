@@ -12,12 +12,12 @@ namespace GameX.Frontier;
 /// FrontierArchive
 /// </summary>
 /// <seealso cref="GameX.Formats.BinaryArchive" />
-public class FrontierArchive : BinaryAsset, ITransformAsset<IUnknownFileModel> {
+public class FrontierArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="FrontierArchive" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
-    public FrontierArchive(ArchiveState state) : base(state, Binary_Frontier.Current) {
+    public FrontierArchive(BinaryState state) : base(state, Binary_Frontier.Current) {
         AssetFactoryFunc = AssetFactory;
     }
 

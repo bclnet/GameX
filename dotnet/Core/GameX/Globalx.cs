@@ -1,4 +1,6 @@
-﻿using System.Drawing;
+﻿using OpenStack.Gfx;
+using Org.BouncyCastle.Ocsp;
+using System.Drawing;
 using System.IO;
 
 namespace GameX;
@@ -7,6 +9,8 @@ namespace GameX;
 /// A color without alpha (red, green, blue).
 /// </summary>
 public struct Color3 { //:M
+    public static (string, int) Struct = ("<3f", 12);
+    public override readonly string ToString() => $"{R:g9} {G:g9} {B:g9}";
     public float R; // Red color component.
     public float G; // Green color component.
     public float B; // Blue color component.
@@ -19,14 +23,15 @@ public struct Color3 { //:M
         G = r.ReadSingle();
         B = r.ReadSingle();
     }
-    public Color ToColor() => Color.FromArgb((int)(R * 255f), (int)(G * 255f), (int)(B * 255f));
-    public override string ToString() => $"{R:g9} {G:g9} {B:g9}";
+    public readonly Color AsColor => Color.FromArgb((int)(R * 255f), (int)(G * 255f), (int)(B * 255f));
 }
 
 /// <summary>
 /// A color without alpha (red, green, blue).
 /// </summary>
 public struct ByteColor3 { //:X
+    public static (string, int) Struct = ("<3c", 3);
+    public override readonly string ToString() => $"{R} {G} {B}";
     public byte R;   // Red color component.
     public byte G;   // Green color component.
     public byte B;   // Blue color component.
@@ -38,14 +43,15 @@ public struct ByteColor3 { //:X
         G = r.ReadByte();
         B = r.ReadByte();
     }
-    public Color ToColor() => Color.FromArgb(R, G, B);
-    public override string ToString() => $"{R} {G} {B}";
+    public readonly Color AsColor => Color.FromArgb(R, G, B);
 }
 
 /// <summary>
 /// A color with alpha (red, green, blue, alpha).
 /// </summary>
 public struct Color4 { //:M
+    public static (string, int) Struct = ("<4f", 16);
+    public override readonly string ToString() => $"{R:g9} {G:g9} {B:g9} {A:g9}";
     public float R; // Red component.
     public float G; // Green component.
     public float B; // Blue component.
@@ -60,13 +66,14 @@ public struct Color4 { //:M
         B = r.ReadSingle();
         A = r.ReadSingle();
     }
-    public override string ToString() => $"{R:g9} {G:g9} {B:g9} {A:g9}";
 }
 
 /// <summary>
 /// A color with alpha (red, green, blue, alpha).
 /// </summary>
 public struct ByteColor4 { //:X
+    public static (string, int) Struct = ("<4c", 4);
+    public override readonly string ToString() => $"{R} {G} {B} {A}";
     public byte R; // Red component.
     public byte G; // Green component.
     public byte B; // Blue component.
@@ -80,5 +87,5 @@ public struct ByteColor4 { //:X
         B = r.ReadByte();
         A = r.ReadByte();
     }
-    public override string ToString() => $"{R} {G} {B} {A}";
+    public readonly Color32 AsColor32 => new(R, G, B, A);
 }

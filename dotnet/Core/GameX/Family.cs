@@ -436,7 +436,7 @@ public class Family {
             SpecSamples = _list(elem, "samples");
             Specs = _list(elem, "specs");
             // related
-            var dgame = new FamilyGame { SearchBy = SearchBy.Default, Arcs = [new Uri("archive:/")] };
+            var dgame = new FamilyGame { SearchBy = SearchBy.Default, Arcs = [new Uri("game:/")] };
             Apps = _related(elem, "apps", (k, v) => CreateFamilyApp(this, k, v));
             Engines = _related(elem, "engines", (k, v) => CreateFamilyEngine(this, k, v));
             Games = _dictTrim(_related(elem, "games", (k, v) => CreateFamilyGame(this, k, v, ref dgame)));
@@ -520,7 +520,7 @@ public class Family {
         var subPath = edition?.Path;
         var vfxType = game.VfxType;
         var vfx =
-            string.Equals(uri.Scheme, "archive", StringComparison.OrdinalIgnoreCase) ? found != null ? CreateFileSystem(vfxType, found, subPath) : default
+            string.Equals(uri.Scheme, "game", StringComparison.OrdinalIgnoreCase) ? found != null ? CreateFileSystem(vfxType, found, subPath) : default
             : uri.IsFile ? !string.IsNullOrEmpty(uri.LocalPath) ? CreateFileSystem(vfxType, new SystemPath { Root = uri.LocalPath }, subPath) : default
             : uri.Scheme.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? !string.IsNullOrEmpty(uri.Host) ? CreateFileSystem(vfxType, found, subPath, uri) : default
             : default;
@@ -1137,7 +1137,7 @@ public class FamilyGame {
     /// <param name="edition"></param>
     /// <param name="prefix"></param>
     /// </summary>
-    public static Uri ToUri(string id, string edition = null, Uri prefix = null) => new($"{prefix ?? new("archive:/")}#{id}{(string.IsNullOrEmpty(edition) ? "" : $".{edition}")}");
+    public static Uri ToUri(string id, string edition = null, Uri prefix = null) => new($"{prefix ?? new("game:/")}#{id}{(string.IsNullOrEmpty(edition) ? "" : $".{edition}")}");
 
     /// <summary>
     /// Converts the game to an id
@@ -1321,7 +1321,7 @@ public partial class FamilyManager {
     static FamilyManager() {
         Family.Touch();
         Uncore = GetFamily("Uncore");
-        UncoreArchive = Uncore.GetArchive(new Uri("archive:/#APP"), throwOnError: false);
+        UncoreArchive = Uncore.GetArchive(new Uri("game:/#APP"), throwOnError: false);
     }
 
     /// <summary>

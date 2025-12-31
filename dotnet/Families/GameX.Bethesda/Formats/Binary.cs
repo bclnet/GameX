@@ -546,7 +546,7 @@ public unsafe class Binary_Bsa : ArcBinary<Binary_Bsa> {
 /// Binary_Esm
 /// </summary>
 /// <seealso cref="GameX.Formats._Packages.PakBinaryBethesdaEsm" />
-public unsafe class Binary_Esm : ArcBinary<Binary_Esm> {
+public unsafe class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
     const int RecordHeaderSizeInBytes = 16;
     public FormType Format;
     public Dictionary<FormType, RecordGroup> Groups;
@@ -573,40 +573,39 @@ public unsafe class Binary_Esm : ArcBinary<Binary_Esm> {
     /// <returns></returns>
     /// <exception cref="ArgumentOutOfRangeException">stage</exception>
     public override Task Read(BinaryArchive source, BinaryReader b, object tag) {
-        Format = GetFormat(source.Game.Id);
-        var recordLevel = 1;
-        var filePath = source.BinPath;
-        var poolAction = (GenericPoolAction<BinaryReader>)source.GetReader().Action; //: Leak
-        var root = new EsmReader(b, Format);
-        //if ((Format == FormFormat.TES3 && root.Type != FormType.TES3) || (Format != FormFormat.TES3 && root.Type != FormType.TES4)) throw new FormatException($"{filePath} record header {root.Type} is not valid for this {Format}");
-        var rootRecord = root.CreateRecord(root.Position, recordLevel);
-        rootRecord.Read(root, filePath);
+        var format = Format = GetFormat(source.Game.Id);
+        var level = 1;
+        var binPath = source.BinPath;
+        var r = new Header(b, binPath, format);
+        var record = Record.Factory(r, level);
+        record.Read(r);
 
         // morrowind hack
         if (Format == FormType.TES3) {
-            var group = new RecordGroup(filePath, Format, recordLevel);
-            group.AddReader(new EsmReader(b, Format) { Label = 0, DataSize = (uint)(b.BaseStream.Length - b.Tell()), Position = b.Tell() });
+            var group = new RecordGroup(level);
+            group.AddHeader(new GroupHeader { Header = r, Label = 0, DataSize = (uint)(b.BaseStream.Length - b.Tell()), Position = b.Tell() });
             group.Load();
-            Groups = group.Records.GroupBy(x => x.Header.Type).ToDictionary(x => x.Key, x => {
-                var s = new RecordGroup(filePath, Format, recordLevel) { Records = [.. x] };
-                s.AddReader(new EsmReader(b, Format) { Label = x.Key }, load: false);
-                return s;
+            Groups = group.Records.GroupBy(s => s.Header.Type).ToDictionary(s => s.Key, s => {
+                var t = new RecordGroup(level) { Records = [.. s] };
+                t.AddHeader(new GroupHeader { Header = r, Label = s.Key }, load: false);
+                return t;
             });
             return Task.CompletedTask;
         }
 
         // read groups
-        Groups = [];
+        var groups = Groups = [];
         while (!b.AtEnd()) {
-            var r = new EsmReader(b, Format);
+            r = new Header(b, binPath, format);
             if (r.Type != FormType.GRUP) throw new InvalidOperationException($"{r.Type} not GRUP");
             var nextPosition = b.Tell() + r.DataSize;
-            if (!Groups.TryGetValue(r.Label, out var group)) { group = new RecordGroup(filePath, Format, recordLevel); Groups.Add(r.Label, group); }
-            group.AddReader(r);
+            if (!groups.TryGetValue(r.Group.Label, out var group)) { group = new RecordGroup(level); groups.Add(r.Group.Label, group); }
+            group.AddHeader(r.Group);
             b.Seek(nextPosition);
         }
         return Task.CompletedTask;
     }
+    //var poolAction = (GenericPoolAction<BinaryReader>)source.GetReader().Action; //: Leak
 
     // TES3
     Dictionary<string, IRecord> MANYsById;
@@ -622,64 +621,62 @@ public unsafe class Binary_Esm : ArcBinary<Binary_Esm> {
     public override Task Process(BinaryArchive source) {
         if (Format == FormType.TES3) {
             var statGroups = new List<Record>[] { Groups.ContainsKey(FormType.STAT) ? Groups[FormType.STAT].Load() : null };
-            MANYsById = statGroups.SelectMany(x => x).Where(x => x != null).ToDictionary(x => x.EDID.Value, x => (IRecord)x);
-            LTEXsById = Groups[FormType.LTEX].Load().Cast<LTEXRecord>().ToDictionary(x => x.INTV.Value);
+            MANYsById = statGroups.SelectMany(s => s).Where(s => s != null).ToDictionary(s => s.EDID.Value, s => (IRecord)s);
+            LTEXsById = Groups[FormType.LTEX].Load().Cast<LTEXRecord>().ToDictionary(s => s.INTV.Value);
             var lands = Groups[FormType.LAND].Load().Cast<LANDRecord>().ToList();
             foreach (var land in lands) land.GridId = new Int3(land.INTV.CellX, land.INTV.CellY, 0);
-            LANDsById = lands.ToDictionary(x => x.GridId);
+            LANDsById = lands.ToDictionary(s => s.GridId);
             var cells = Groups[FormType.CELL].Load().Cast<CELLRecord>().ToList();
             foreach (var cell in cells) cell.GridId = new Int3(cell.XCLC.Value.GridX, cell.XCLC.Value.GridY, !cell.IsInterior ? 0 : -1);
-            CELLsById = cells.Where(x => !x.IsInterior).ToDictionary(x => x.GridId);
-            CELLsByName = cells.Where(x => x.IsInterior).ToDictionary(x => x.EDID.Value);
+            CELLsById = cells.Where(x => !x.IsInterior).ToDictionary(s => s.GridId);
+            CELLsByName = cells.Where(x => x.IsInterior).ToDictionary(s => s.EDID.Value);
             return Task.CompletedTask;
         }
         var wrldsByLabel = Groups[FormType.WRLD].GroupsByLabel;
-        WRLDsById = Groups[FormType.WRLD].Load().Cast<WRLDRecord>().ToDictionary(x => x.Id, x => { wrldsByLabel.TryGetValue(x.Id, out var wrlds); return new Tuple<WRLDRecord, RecordGroup[]>(x, wrlds); });
-        LTEXsByEid = Groups[FormType.LTEX].Load().Cast<LTEXRecord>().ToDictionary(x => x.EDID.Value);
+        WRLDsById = Groups[FormType.WRLD].Load().Cast<WRLDRecord>().ToDictionary(s => s.Id, s => { wrldsByLabel.TryGetValue(s.Id, out var wrlds); return new Tuple<WRLDRecord, RecordGroup[]>(s, wrlds); });
+        LTEXsByEid = Groups[FormType.LTEX].Load().Cast<LTEXRecord>().ToDictionary(s => s.EDID.Value);
         return Task.CompletedTask;
     }
 
-    //public LTEXRecord FindLTEXRecord(int index) {
-    //    if (Format == GameFormatId.TES3) {
-    //        _LTEXsById.TryGetValue(index, out var ltex);
-    //        return ltex;
-    //    }
-    //    throw new NotImplementedException();
-    //}
+    #region Query
 
-    //public LANDRecord FindLANDRecord(Vector3Int cellId) {
-    //    if (Format == GameFormatId.TES3) {
-    //        _LANDsById.TryGetValue(cellId, out var land);
-    //        return land;
-    //    }
-    //    var world = _WRLDsById[(uint)cellId.z];
-    //    foreach (var wrld in world.Item2)
-    //        foreach (var cellBlock in wrld.EnsureWrldAndCell(cellId))
-    //            if (cellBlock.LANDsById.TryGetValue(cellId, out var land))
-    //                return land;
-    //    return null;
-    //}
+    public class FindLTEX(int index) {
+        public IRecord Tes3(Binary_Esm _) => _.LTEXsById.TryGetValue(index, out var z) ? z : default;
+    }
+    public class FindLAND(Int3 cell) {
+        public IRecord Tes3(Binary_Esm _) => _.LANDsById.TryGetValue(cell, out var z) ? z : default;
+        public IRecord Else(Binary_Esm _) {
+            var world = _.WRLDsById[(uint)cell.Z];
+            foreach (var wrld in world.Item2)
+                foreach (var cellBlock in wrld.EnsureWrldAndCell(cell))
+                    if (cellBlock.LANDsById.TryGetValue(cell, out var z)) return z;
+            return null;
+        }
+    }
+    public class FindCELL(Int3 cell) {
+        public IRecord Tes3(Binary_Esm _) => _.CELLsById.TryGetValue(cell, out var z) ? z : default;
+        public IRecord Else(Binary_Esm _) {
+            var world = _.WRLDsById[(uint)cell.Z];
+            foreach (var wrld in world.Item2)
+                foreach (var cellBlock in wrld.EnsureWrldAndCell(cell))
+                    if (cellBlock.CELLsById.TryGetValue(cell, out var z)) return z;
+            return null;
+        }
+    }
+    public class FindCELLByName(string name) {
+        public IRecord Tes3(Binary_Esm _) => _.CELLsByName.TryGetValue(name, out var z) ? z : default;
+    }
 
-    //public CELLRecord FindCellRecord(Vector3Int cellId) {
-    //    if (Format == GameFormatId.TES3) {
-    //        _CELLsById.TryGetValue(cellId, out var cell);
-    //        return cell;
-    //    }
-    //    var world = _WRLDsById[(uint)cellId.z];
-    //    foreach (var wrld in world.Item2)
-    //        foreach (var cellBlock in wrld.EnsureWrldAndCell(cellId))
-    //            if (cellBlock.CELLsById.TryGetValue(cellId, out var cell))
-    //                return cell;
-    //    return null;
-    //}
+    public IEnumerable<IRecord> Query(object s) => throw new NotImplementedException();
+    public IRecord QuerySingle(object source) => source switch {
+        FindLTEX s => Format == FormType.TES3 ? s.Tes3(this) : throw new NotImplementedException(),
+        FindLAND s => Format == FormType.TES3 ? s.Tes3(this) : s.Else(this),
+        FindCELL s => Format == FormType.TES3 ? s.Tes3(this) : s.Else(this),
+        FindCELLByName s => Format == FormType.TES3 ? s.Tes3(this) : throw new NotImplementedException(),
+        _ => throw new ArgumentOutOfRangeException(),
+    };
 
-    //public CELLRecord FindCellRecordByName(int world, int cellId, string cellName) {
-    //    if (Format == GameFormatId.TES3) {
-    //        _CELLsByName.TryGetValue(cellName, out var cell);
-    //        return cell;
-    //    }
-    //    throw new NotImplementedException();
-    //}
+    #endregion
 }
 
 #endregion

@@ -1,10 +1,10 @@
 import os
 from io import BytesIO
 from enum import Enum
-from openstk import IWriteToStream
+from openstk import log, IWriteToStream
 from gamex import FileSource, ArcBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo, DesSer
 from gamex.families.Uncore.formats.compression import decompressLz4, decompressZlib
-from gamex.families.Bethesda.formats.database import FormType, Header
+from gamex.families.Bethesda.formats.records import FormType, Header, GroupHeader, Record, RecordGroup
 
 # typedefs
 class BinaryReader: pass
@@ -349,9 +349,6 @@ class Binary_Bsa(ArcBinaryT):
 
 #region Binary_Esm - tag::Binary_Esm[]
 
-# typedefs
-class RecordGroup: pass
-
 # Binary_Esm
 class Binary_Esm(ArcBinaryT):
     RecordHeaderSizeInBytes: int = 16
@@ -372,36 +369,34 @@ class Binary_Esm(ArcBinaryT):
             case _: raise Exception(f'Unknown: {game}')
 
     # read
-    def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
-        format = self.getFormat(source.game.id)
-        recordLevel = 1
-        filePath = source.binPath
-        poolAction = None #(GenericPoolAction<BinaryReader>)source.GetReader().Action; //: Leak
-        rootHeader = Header(r, format, None)
-        rootRecord = rootHeader.createRecord(rootHeader.position, recordLevel)
-        rootRecord.read(r, filePath, format)
+    def read(self, source: BinaryArchive, b: BinaryReader, tag: object = None) -> None:
+        format = self.format = self.getFormat(source.game.id)
+        level = 1
+        binPath = source.binPath
+        r = Header(b, binPath, format)
+        record = Record.factory(r, level)
+        record.read(r)
 
         # morrowind hack
         if format == FormType.TES3:
-            group = RecordGroup(poolAction, filePath, format, recordLevel)
-            group.addHeader(Header(label = 0, dataSize = (r.length - r.tell()), position = r.tell()))
+            group = RecordGroup(level)
+            group.addHeader(GroupHeader(header = r, label = 0, dataSize = r.length - r.tell(), position = r.tell()))
             group.load()
             groups = self.groups = {}
-            for k, g in groupby(group.records, lambda x: x.header.type):
-                s = RecordGroup(None, filePath, format, recordLevel)
-                s.records = list(g)
-                s.addHeader(Header(label = x.key), False)
-                groups.add(k, s)
+            for s, g in groupby(group.records, lambda s: s.header.type):
+                t = RecordGroup(level); t.records = list(g)
+                t.addHeader(GroupHeader(header = r, label = s.key), load = False)
+                groups.add(s.key, t)
             return
         
         # read groups
         groups = self.groups = {}
-        while not r.atEnd():
-            header = Header(r, format, None)
-            if header.Type != FormType.GRUP: raise Exception(f'{header.type} not GRUP')
-            nextPosition = r.tell() + header.dataSize
-            if not (group := groups.get(header.label)): group = RecordGroup(poolAction, filePath, format, recordLevel); groups.add(header.label, group)
-            group.addHeader(header)
-            r.seek(nextPosition)
+        while not b.atEnd():
+            r = Header(b, binPath, format)
+            if r.type != FormType.GRUP: raise Exception(f'{header.type} not GRUP')
+            nextPosition = b.tell() + r.dataSize
+            if not (group := groups.get(r.label)): group = RecordGroup(level); groups.add(r.label, group)
+            group.addHeader(r.group)
+            b.seek(nextPosition)
     
 #endregion - end::Binary_Esm[]

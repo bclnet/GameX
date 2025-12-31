@@ -1,6 +1,6 @@
 import sys, os, re, qrcode
 sys.path.append('..')
-from gamex import Families
+from gamex import Families, loadFamilies
 
 def writeFile(z, path, marker, body):
     with open(path, 'r', encoding='utf-8') as f: text = f.read()
@@ -138,8 +138,9 @@ def gameFamily(f):
 #endregion
 
 ascBodys = []
+loadFamilies()
 for f in Families.values():
-    if f.id != 'Arkane': continue
+    if f.id != 'Bethesda': continue
     print(f.id)
     body = gameFamily(f)
     # print(body)

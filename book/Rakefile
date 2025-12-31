@@ -1,5 +1,8 @@
 namespace :book do
 
+  arg1 = ARGV[1]
+  filename = "#{arg1 or '.'}/README"
+
   # Variables referenced for build
   version_string = `git describe --tags --abbrev=0`.chomp
   if version_string.empty?
@@ -85,63 +88,55 @@ namespace :book do
       #check_contrib()
 
       puts 'Converting to HTML...'
-      sh "bundle exec asciidoctor #{params} -a data-uri gamex.asc"
-      puts ' -- HTML output at gamex.html'
+      sh "bundle exec asciidoctor #{params} -a data-uri #{filename}.asc"
+      puts " -- HTML output at #{filename}.html"
 
   end
 
   desc 'build Epub format'
   task :build_epub => 'contributors.txt' do
       #check_contrib()
-
       puts 'Converting to EPub...'
-      sh "bundle exec asciidoctor-epub3 #{params} gamex.asc"
-      puts ' -- Epub output at gamex.epub'
-
+      sh "bundle exec asciidoctor-epub3 #{params} #{filename}.asc"
+      puts " -- Epub output at #{filename}.epub"
   end
 
   desc 'build FB2 format'
   task :build_fb2 => 'contributors.txt' do
       #check_contrib()
-
       puts 'Converting to FB2...'
-      sh "bundle exec asciidoctor-fb2 #{params} gamex.asc"
-      puts ' -- FB2 output at gamex.fb2.zip'
-
+      sh "bundle exec asciidoctor-fb2 #{params} #{filename}.asc"
+      puts " -- FB2 output at #{filename}.fb2.zip"
   end
 
   desc 'build Mobi format'
   task :build_mobi => 'contributors.txt' do
       #check_contrib()
-
       puts "Converting to Mobi (kf8)..."
-      sh "bundle exec asciidoctor-epub3 #{params} -a ebook-format=kf8 gamex.asc"
-      puts " -- Mobi output at gamex.mobi"
+      sh "bundle exec asciidoctor-epub3 #{params} -a ebook-format=kf8 #{filename}.asc"
+      puts " -- Mobi output at #{filename}.mobi"
   end
 
   desc 'build PDF format'
   task :build_pdf => 'contributors.txt' do
       #check_contrib()
-
       puts 'Converting to PDF... (this one takes a while)'
-      sh "bundle exec asciidoctor-pdf #{params} gamex.x.asc" # ">#{os_devnull}"
-      puts ' -- PDF output at gamex.pdf'
+      sh "bundle exec asciidoctor-pdf #{params} #{filename}.asc" # ">#{os_devnull}"
+      puts " -- PDF output at #{filename}.pdf"
   end
 
   desc 'Check generated books'
   task :check => [:build_html, :build_epub] do
       puts 'Checking generated books'
-
-      sh "htmlproofer gamex.html"
-      sh "epubcheck gamex.epub"
+      sh "htmlproofer #{filename}.html"
+      sh "epubcheck #{filename}.epub"
   end
 
   desc 'Clean all generated files'
   task :clean do
     begin
         puts 'Removing generated files'
-
-        FileList['gamex.html', 'gamex-kf8.epub', 'gamex.epub', 'gamex.fb2.zip', 'gamex.mobi', 'gamex.pdf'].each do |file|
+        FileList["#{filename}.html", "#{filename}-kf8.epub", "#{filename}.epub", "ga#{filename}mex.fb2.zip", "#{filename}.mobi", "#{filename}.pdf"].each do |file|
             rm file
 
             # Rescue if file not found

@@ -1,4 +1,9 @@
-import sys, os, re, qrcode
+import sys
+arg1 = sys.argv[1] if len(sys.argv) > 1 else None
+if arg1 and not arg1.startswith('families/'): exit(0)
+family = arg1[9:] if arg1 else None
+# gamex
+import os, re, qrcode
 sys.path.append('..')
 from gamex import Families, loadFamilies
 
@@ -138,13 +143,14 @@ def gameFamily(f):
 #endregion
 
 ascBodys = []
-loadFamilies()
+loadFamilies([family] if family else None)
 for f in Families.values():
-    if f.id != 'Bethesda': continue
+    if family and f.id != family: continue
     print(f.id)
     body = gameFamily(f)
     # print(body)
     writeFile(f, f'families/{f.id}/{f.id}.asc', '=== Family Info\n', body)
     ascBodys.append(f'include::{f.id}/{f.id}.asc[]\n')
-body = '\n'.join(ascBodys)
-writeFile(f, f'families/families.asc', '---\n', body)
+if not family:
+    body = '\n'.join(ascBodys)
+    writeFile(f, f'families/families.asc', '---\n', body)

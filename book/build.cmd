@@ -1,3 +1,4 @@
 @echo off
-rem py README.py & bundle exec rake
-bundle exec rake
+@REM py README.py %1 & rake default[%1]
+@REM py README.py %1
+rake default %1

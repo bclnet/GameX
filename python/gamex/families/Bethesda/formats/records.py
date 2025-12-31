@@ -859,9 +859,10 @@ class AACTRecord(Record):
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
-            case FieldType.EDID: return self.EDID := r.readSTRV(dataSize)
-            case FieldType.CNAM: return self.CNAM := r.readS(CREFField, dataSize)
-            case _: return Record.empty
+            case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
+            case FieldType.CNAM: z = self.CNAM = r.readS(CREFField, dataSize)
+            case _: z = Record.empty
+        return z
 # end::AACT[]
 
 # ACRE.Placed creature - 0400 - tag::ACRE[]
@@ -875,16 +876,17 @@ class ACRERecord(Record):
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
-            case FieldType.EDID: return self.EDID := r.readSTRV(dataSize)
-            case FieldType.NAME: return self.NAME := RefField[Record](r, dataSize)
-            case FieldType.DATA: return self.DATA := REFRRecord.DATAField(r, dataSize)
-            case FieldType.XOWN: return self.XOWNs := addX((self.XOWNs or []), CELLRecord.XOWNGroup(XOWN = RefField[Record](r, dataSize)))
-            case FieldType.XRNK: return XOWNs.Last().XRNK = r.readS(IN32Field, dataSize)
-            case FieldType.XGLB: return XOWNs.Last().XGLB = RefField<Record>(r, dataSize)
-            case FieldType.XESP: return self.XESP := REFRRecord.XESPField(r, dataSize)
-            case FieldType.XSCL: return self.XSCL := r.readS<FLTVField>(dataSize)
-            case FieldType.XRGD: return self.XRGD := r.readBYTV(dataSize)
-            case _: return Record.empty
+            case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
+            case FieldType.NAME: z = self.NAME = RefField[Record](r, dataSize)
+            case FieldType.DATA: z = self.DATA = REFRRecord.DATAField(r, dataSize)
+            case FieldType.XOWN: z = self.XOWNs = addX((self.XOWNs or []), CELLRecord.XOWNGroup(XOWN = RefField[Record](r, dataSize)))
+            case FieldType.XRNK: z = XOWNs.last().XRNK = r.readS(IN32Field, dataSize)
+            case FieldType.XGLB: z = XOWNs.last().XGLB = RefField<Record>(r, dataSize)
+            case FieldType.XESP: z = self.XESP = REFRRecord.XESPField(r, dataSize)
+            case FieldType.XSCL: z = self.XSCL = r.readS<FLTVField>(dataSize)
+            case FieldType.XRGD: z = self.XRGD = r.readBYTV(dataSize)
+            case _: z = Record.empty
+        return z
 # end::ACRE[]
 
 # TES3.Plugin info - 3000

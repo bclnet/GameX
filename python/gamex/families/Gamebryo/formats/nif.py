@@ -875,7 +875,7 @@ class MatchGroup: # X
 class MipMap: # X
     _struct = ('<3i', 12)
     def __init__(self, r: NiReader):
-        if isinstance(r, tuple): self.width,self.height,self.offset=r; return
+        if isinstance(r, tuple): self.width, self.height, self.offset = tuple; return
         self.width: int = r.readUInt32()                # Width of the mipmap image.
         self.height: int = r.readUInt32()               # Height of the mipmap image.
         self.offset: int = r.readUInt32()               # Offset into the pixel data array where this mipmap starts.
@@ -884,7 +884,7 @@ class MipMap: # X
 class BoneVertData: # X
     _struct = ('<Hf', 6)
     def __init__(self, r: NiReader, half: bool = None):
-        if isinstance(r, tuple): self.index,self.weight=r; return
+        if isinstance(r, tuple): self.index, self.weight = tuple; return
         if half: self.index = r.readUInt16(); self.weight = r.readHalf(); return
         self.index: int = r.readUInt16()                # The vertex index, in the mesh.
         self.weight: float = r.readSingle() if full else r.readHalf() # The vertex weight - between 0.0 and 1.0

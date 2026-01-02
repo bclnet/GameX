@@ -13,15 +13,9 @@ namespace GameX.Arkane.Formats;
 
 public unsafe class Binary_Danae : ArcBinary<Binary_Danae> {
     public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
-        var files = source.Files = [];
+        #region Encryption
+
         var key = (byte[])source.Game.Key; int keyLength = key.Length, keyIndex = 0;
-
-        // move to fat table
-        r.Seek(r.ReadUInt32());
-        var fatSize = (int)r.ReadUInt32();
-        var fatBytes = r.ReadBytes(fatSize);
-
-        // read int32
         int readInt32(ref byte* b) {
             var p = b;
             *(p + 0) = (byte)(*(p + 0) ^ key[keyIndex++]); if (keyIndex >= keyLength) keyIndex = 0;
@@ -31,8 +25,6 @@ public unsafe class Binary_Danae : ArcBinary<Binary_Danae> {
             b += 4;
             return *(int*)p;
         }
-
-        // read string
         string readString(ref byte* b) {
             var p = b;
             while (true) {
@@ -45,6 +37,15 @@ public unsafe class Binary_Danae : ArcBinary<Binary_Danae> {
             b = p + 1;
             return r;
         }
+
+        #endregion
+
+        var files = source.Files = [];
+
+        // move to fat table
+        r.Seek(r.ReadUInt32());
+        var fatSize = (int)r.ReadUInt32();
+        var fatBytes = r.ReadBytes(fatSize);
 
         // while there are bytes
         fixed (byte* _ = fatBytes) {

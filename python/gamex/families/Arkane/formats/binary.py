@@ -8,23 +8,15 @@ from gamex.families.Uncore.formats.compression import decompressBlast
 class BinaryReader: pass
 class BinaryArchive: pass
 
-#region Binary_Danae - tag::Binary_Danae[]
-
 # Binary_Danae
 class Binary_Danae(ArcBinaryT):
     # read
     def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
-        source.files = files = []
-        key = source.game.key; keyLength = len(key); keyIndex = 0
+        key = source.game.key; keyLength = len(key); keyIndex = 0; fatBytes = None
 
-        # move to fat table
-        r.seek(r.readUInt32())
-        fatSize = r.readUInt32()
-        fatBytes = bytearray(r.readBytes(fatSize)); b = 0
-
-        # read int32
+        # read int32 - tag::Binary_Danae.readInt32[]
         def readInt32() -> int:
-            nonlocal b, keyIndex
+            nonlocal b, keyIndex, fatBytes
             p = b
             fatBytes[p + 0] = fatBytes[p + 0] ^ key[keyIndex]; keyIndex += 1
             if keyIndex >= keyLength: keyIndex = 0
@@ -36,10 +28,11 @@ class Binary_Danae(ArcBinaryT):
             if keyIndex >= keyLength: keyIndex = 0
             b += 4
             return int.from_bytes(fatBytes[p:p+4], 'little', signed=True)
+        # end::Binary_Danae.readInt32[]
 
-        # read string
+        # read string - tag::Binary_Danae.readString[]
         def readString() -> str:
-            nonlocal b, keyIndex
+            nonlocal b, keyIndex, fatBytes
             p = b
             while True:
                 fatBytes[p] = fatBytes[p] ^ key[keyIndex]; keyIndex += 1
@@ -50,8 +43,17 @@ class Binary_Danae(ArcBinaryT):
             r = fatBytes[b:p].decode('ascii', 'replace')
             b = p + 1
             return r
+        # end::Binary_Danae.readString[]
 
-        # while there are bytes
+        # tag::Binary_Danae.read[]
+        source.files = files = []
+
+        # move to fat table
+        r.seek(r.readUInt32())
+        fatSize = r.readUInt32()
+        fatBytes = bytearray(r.readBytes(fatSize)); b = 0
+
+        # deconstruct the fat table - while there are bytes
         while b < fatSize:
             dirPath = readString().replace('\\', '/')
             numFiles = readInt32()
@@ -68,17 +70,16 @@ class Binary_Danae(ArcBinaryT):
                 elif file.compressed == 0: file.fileSize = file.packedSize
                 # add file
                 files.append(file)
+        # end::Binary_Danae.read[]
 
     # readData
     def readData(self, source: BinaryArchive, r: BinaryReader, file: FileSource, option: object = None) -> BytesIO:
+        # tag::Binary_Danae.readData[]
         r.seek(file.offset)
         return BytesIO(
             decompressBlast(r, file.packedSize, file.fileSize) if (file.compressed & 1) != 0 else \
             r.readBytes(file.packedSize))
-
-#endregion - end::Binary_Danae[]
-
-#region Binary_Void - tag::Binary_Void[]
+        # end::Binary_Danae.readData[]
 
 # Binary_Void
 class Binary_Void(ArcBinaryT):
@@ -162,5 +163,3 @@ class Binary_Void(ArcBinaryT):
     # readData
     def readData(self, source: BinaryArchive, r: BinaryReader, file: FileSource, option: object = None) -> BytesIO:
         pass
-
-#endregion - end::Binary_Void[]

@@ -1,6 +1,6 @@
-﻿//#define Arkane
+﻿#define Arkane
 //#define Beamdog
-#define Bethesda
+//#define Bethesda
 //#define Bioware
 //#define Black
 //#define Blizzard
@@ -53,7 +53,7 @@ public partial class FamilyManager {
 #if Arkane
     public static GlobalOption Option = new()
     {
-        Platform = "UK",
+        Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:4",
         Family = "Arkane",

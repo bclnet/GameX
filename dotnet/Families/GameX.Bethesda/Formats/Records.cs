@@ -1173,7 +1173,7 @@ public class APPARecord : Record, IHaveMODL {
 public class ARMARecord : Record {
     public override object CreateField(Header r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
-        _ => false,
+        _ => Empty,
     };
 }
 
@@ -1184,7 +1184,6 @@ public class ARMORecord : Record, IHaveMODL {
     // TESX
     public struct DATAField {
         public enum ARMOType { Helmet = 0, Cuirass, L_Pauldron, R_Pauldron, Greaves, Boots, L_Gauntlet, R_Gauntlet, Shield, L_Bracer, R_Bracer, }
-
         public short Armour;
         public int Value;
         public int Health;
@@ -1436,10 +1435,7 @@ public unsafe class CELLRecord : Record, ICellRecord {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct XCLCField {
         public override readonly string ToString() => $"{GridX}x{GridY}";
-        public static Dictionary<int, string> Struct = new() {
-            { 8, "<2i" },
-            { 12, "<2iI" }
-        };
+        public static Dictionary<int, string> Struct = new() { [8] = "<2i", [12] = "<2iI" };
         public int GridX;
         public int GridY;
         public uint Flags;
@@ -1447,11 +1443,7 @@ public unsafe class CELLRecord : Record, ICellRecord {
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct XCLLField {
-        public static Dictionary<int, string> Struct = new() {
-            { 16, "<12cf" },
-            { 36, "<12c2f2i2f" },
-            { 40, "<12c2f2i3f" }
-        };
+        public static Dictionary<int, string> Struct = new() { [16] = "<4c4c4cf", [36] = "<4c4c4cc2f2i2f", [40] = "<4c4c4c2f2i3f" };
         public ByteColor4 AmbientColor;
         public ByteColor4 DirectionalColor; // SunlightColor
         public ByteColor4 FogColor;
@@ -1480,9 +1472,9 @@ public unsafe class CELLRecord : Record, ICellRecord {
     }
 
     public class RefObj {
+        public override string ToString() => $"CREF: {EDID.Value}";
         public UI32Field? FRMR; // Object Index (starts at 1)
         // This is used to uniquely identify objects in the cell. For new files the index starts at 1 and is incremented for each new object added. For modified objects the index is kept the same.
-        public override string ToString() => $"CREF: {EDID.Value}";
         public STRVField EDID; // Object ID
         public FLTVField? XSCL; // Scale (Static)
         public IN32Field? DELE; // Indicates that the reference is deleted.
@@ -1556,7 +1548,7 @@ public unsafe class CELLRecord : Record, ICellRecord {
                 _ => Empty,
             };
         // Referenced Object Data Grouping
-        else return type switch {
+        return type switch {
             // RefObjDataGroup sub-records
             FieldType.FRMR => RefObjs.AddX(_lastRef = new RefObj()).FRMR = r.ReadS<UI32Field>(dataSize),
             FieldType.NAME => _lastRef.EDID = r.ReadSTRV(dataSize),
@@ -1624,7 +1616,6 @@ public class CLOTRecord : Record, IHaveMODL {
     // TESX
     public struct DATAField {
         public enum CLOTType { Pants = 0, Shoes, Shirt, Belt, Robe, R_Glove, L_Glove, Skirt, Ring, Amulet }
-
         public int Value;
         public float Weight;
         // TES3
@@ -1708,10 +1699,10 @@ public class CLMTRecord : Record, IHaveMODL {
     }
 
     public struct TNAMField(Header r, int dataSize) {
-        public byte Sunrise_Begin = r.ReadByte();
-        public byte Sunrise_End = r.ReadByte();
-        public byte Sunset_Begin = r.ReadByte();
-        public byte Sunset_End = r.ReadByte();
+        public byte SunriseBegin = r.ReadByte();
+        public byte SunriseEnd = r.ReadByte();
+        public byte SunsetBegin = r.ReadByte();
+        public byte SunsetEnd = r.ReadByte();
         public byte Volatility = r.ReadByte();
         public byte MoonsPhaseLength = r.ReadByte();
     }
@@ -1826,6 +1817,7 @@ public class CREARecord : Record, IHaveMODL {
     }
 
     public struct AIDTField(Header r, int dataSize) {
+        [Flags]
         public enum AIFlags : uint {
             Weapon = 0x00001,
             Armor = 0x00002,
@@ -1970,8 +1962,7 @@ public class CSTYRecord : Record {
         public uint Flags2;
 
         public CSTDField(Header r, int dataSize) {
-            //if (dataSize != 124 && dataSize != 120 && dataSize != 112 && dataSize != 104 && dataSize != 92 && dataSize != 84)
-            //    DodgePercentChance = 0;
+            //if (dataSize != 124 && dataSize != 120 && dataSize != 112 && dataSize != 104 && dataSize != 92 && dataSize != 84) DodgePercentChance = 0;
             DodgePercentChance = r.ReadByte();
             LeftRightPercentChance = r.ReadByte();
             r.Skip(2); // Unused
@@ -4355,9 +4346,7 @@ public class SBSPRecord : Record {
 public class SCPTRecord : Record {
     // TESX
     public struct CTDAField {
-        public enum INFOType : byte {
-            Nothing = 0, Function, Global, Local, Journal, Item, Dead, NotId, NotFaction, NotClass, NotRace, NotCell, NotLocal
-        }
+        public enum INFOType : byte { Nothing = 0, Function, Global, Local, Journal, Item, Dead, NotId, NotFaction, NotClass, NotRace, NotCell, NotLocal }
 
         // TES3: 0 = [=], 1 = [!=], 2 = [>], 3 = [>=], 4 = [<], 5 = [<=]
         // TES4: 0 = [=], 2 = [!=], 4 = [>], 6 = [>=], 8 = [<], 10 = [<=]
@@ -4441,7 +4430,7 @@ public class SCPTRecord : Record {
             r.ReadUInt32(); // Unknown
             Type = r.ReadUInt32();
             r.ReadUInt32(); // Unknown
-                            // SCVRField
+            // SCVRField
             VariableName = null;
         }
         public object SCVRField(Header r, int dataSize) => VariableName = r.ReadFUString(dataSize);
@@ -4450,29 +4439,27 @@ public class SCPTRecord : Record {
     public override string ToString() => $"SCPT: {EDID.Value ?? SCHD.Name}";
     public BYTVField SCDA; // Compiled Script
     public STRVField SCTX; // Script Source
-                           // TES3
+    // TES3
     public SCHDField SCHD; // Script Data
-                           // TES4
+    // TES4
     public SCHRField SCHR; // Script Data
     public List<SLSDField> SLSDs = []; // Variable data
     public List<SLSDField> SCRVs = []; // Ref variable data (one for each ref declared)
     public List<RefField<Record>> SCROs = []; // Global variable reference
 
-    public override object CreateField(Header r, FieldType type, int dataSize) {
-        return type switch {
-            FieldType.EDID => EDID = r.ReadSTRV(dataSize),
-            FieldType.SCHD => SCHD = new SCHDField(r, dataSize),
-            FieldType.SCVR => r.Format != TES3 ? SLSDs.Last().SCVRField(r, dataSize) : SCHD.SCVRField(r, dataSize),
-            FieldType.SCDA or FieldType.SCDT => SCDA = r.ReadBYTV(dataSize),
-            FieldType.SCTX => SCTX = r.ReadSTRV(dataSize),
-            // TES4
-            FieldType.SCHR => SCHR = new SCHRField(r, dataSize),
-            FieldType.SLSD => SLSDs.AddX(new SLSDField(r, dataSize)),
-            FieldType.SCRO => SCROs.AddX(new RefField<Record>(r, dataSize)),
-            FieldType.SCRV => SCRVs.AddX(this.Then(r.ReadUInt32(), idx => SLSDs.Single(x => x.Idx == idx))),
-            _ => Empty,
-        };
-    }
+    public override object CreateField(Header r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadSTRV(dataSize),
+        FieldType.SCHD => SCHD = new SCHDField(r, dataSize),
+        FieldType.SCVR => r.Format != TES3 ? SLSDs.Last().SCVRField(r, dataSize) : SCHD.SCVRField(r, dataSize),
+        FieldType.SCDA or FieldType.SCDT => SCDA = r.ReadBYTV(dataSize),
+        FieldType.SCTX => SCTX = r.ReadSTRV(dataSize),
+        // TES4
+        FieldType.SCHR => SCHR = new SCHRField(r, dataSize),
+        FieldType.SLSD => SLSDs.AddX(new SLSDField(r, dataSize)),
+        FieldType.SCRO => SCROs.AddX(new RefField<Record>(r, dataSize)),
+        FieldType.SCRV => SCRVs.AddX(this.Then(r.ReadUInt32(), idx => SLSDs.Single(x => x.Idx == idx))),
+        _ => Empty,
+    };
 }
 
 /// <summary>

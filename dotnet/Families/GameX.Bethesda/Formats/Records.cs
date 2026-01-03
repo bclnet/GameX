@@ -3,11 +3,11 @@ using OpenStack;
 using OpenStack.Gfx;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using static GameX.Bethesda.Formats.Records.Header;
 using static GameX.Bethesda.Formats.Records.FormType;
 using static System.IO.Polyfill;
 #pragma warning disable CS9113
@@ -1015,7 +1015,7 @@ public class ALCHRecord : Record, IHaveMODL {
     public class DATAField {
         public float Weight;
         public int Value;
-        public int Flags; //: AutoCalc
+        public int Flags; // AutoCalc
 
         public DATAField(Header r, int dataSize) {
             Weight = r.ReadSingle();
@@ -1343,8 +1343,8 @@ public class BODYRecord : Record, IHaveMODL {
 /// </summary>
 public class BOOKRecord : Record, IHaveMODL {
     public struct DATAField {
-        public byte Flags; //: Scroll - (1 is scroll, 0 not)
-        public byte Teaches; //: SkillId - (-1 is no skill)
+        public byte Flags; // Scroll - (1 is scroll, 0 not)
+        public byte Teaches; // SkillId - (-1 is no skill)
         public int Value;
         public float Weight;
         // TES3
@@ -1423,8 +1423,8 @@ public unsafe class CELLRecord : Record, ICellRecord {
     public enum CELLFlags : ushort {
         Interior = 0x0001,
         HasWater = 0x0002,
-        InvertFastTravel = 0x0004, //: IllegalToSleepHere
-        BehaveLikeExterior = 0x0008, //: BehaveLikeExterior (Tribunal), Force hide land (exterior cell) / Oblivion interior (interior cell)
+        InvertFastTravel = 0x0004, // IllegalToSleepHere
+        BehaveLikeExterior = 0x0008, // BehaveLikeExterior (Tribunal), Force hide land (exterior cell) / Oblivion interior (interior cell)
         Unknown1 = 0x0010,
         PublicArea = 0x0020, // Public place
         HandChanged = 0x0040,
@@ -2268,8 +2268,8 @@ public class ENCHRecord : Record {
         // TES4: 0 = Scroll, 1 = Staff, 2 = Weapon, 3 = Apparel
         public int Type;
         public int EnchantCost;
-        public int ChargeAmount; //: Charge
-        public int Flags; //: AutoCalc
+        public int ChargeAmount; // Charge
+        public int Flags; // AutoCalc
 
         public ENITField(Header r, int dataSize) {
             Type = r.ReadInt32();
@@ -2287,7 +2287,7 @@ public class ENCHRecord : Record {
 
     public class EFITField {
         public string EffectId;
-        public int Type; //:RangeType - 0 = Self, 1 = Touch, 2 = Target
+        public int Type; // RangeType - 0 = Self, 1 = Touch, 2 = Target
         public int Area;
         public int Duration;
         public int MagnitudeMin;
@@ -2750,8 +2750,8 @@ public class INGRRecord : Record, IHaveMODL {
 
     public MODLGroup MODL { get; set; } // Model Name
     public STRVField FULL; // Item Name
-    public IRDTField IRDT; // Ingrediant Data //: TES3
-    public DATAField DATA; // Ingrediant Data //: TES4
+    public IRDTField IRDT; // Ingrediant Data // TES3
+    public DATAField DATA; // Ingrediant Data // TES4
     public FILEField ICON; // Inventory Icon
     public RefField<SCPTRecord> SCRI; // Script Name
     // TES4
@@ -3789,7 +3789,7 @@ public class RACERecord : Record {
         public struct RaceStats {
             public float Height;
             public float Weight;
-            // Attributes;
+            // Attributes
             public byte Strength;
             public byte Intelligence;
             public byte Willpower;
@@ -3800,14 +3800,14 @@ public class RACERecord : Record {
             public byte Luck;
         }
 
-        public SkillBoost[] SkillBoosts = new SkillBoost[7]; // Skill Boosts
+        public SkillBoost[] SkillBoosts; // Skill Boosts
         public RaceStats Male = new();
         public RaceStats Female = new();
         public uint Flags; // 1 = Playable 2 = Beast Race
 
         public DATAField(Header r, int dataSize) {
             if (r.Format == TES3) {
-                for (var i = 0; i < SkillBoosts.Length; i++) SkillBoosts[i] = new SkillBoost(r, 8);
+                SkillBoosts = r.ReadFArray(z => new SkillBoost(r, 8), 7);
                 Male.Strength = (byte)r.ReadInt32(); Female.Strength = (byte)r.ReadInt32();
                 Male.Intelligence = (byte)r.ReadInt32(); Female.Intelligence = (byte)r.ReadInt32();
                 Male.Willpower = (byte)r.ReadInt32(); Female.Willpower = (byte)r.ReadInt32();
@@ -3821,7 +3821,7 @@ public class RACERecord : Record {
                 Flags = r.ReadUInt32();
                 return;
             }
-            for (var i = 0; i < SkillBoosts.Length; i++) SkillBoosts[i] = new SkillBoost(r, 2);
+            SkillBoosts = r.ReadFArray(z => new SkillBoost(r, 2), 7);
             r.ReadInt16(); // padding
             Male.Height = r.ReadSingle(); Female.Height = r.ReadSingle();
             Male.Weight = r.ReadSingle(); Female.Weight = r.ReadSingle();
@@ -3851,7 +3851,7 @@ public class RACERecord : Record {
 
     // TES4
     public class FacePartGroup {
-        public enum Indx : uint { Head, Ear_Male, Ear_Female, Mouth, Teeth_Lower, Teeth_Upper, Tongue, Eye_Left, Eye_Right, }
+        public enum Indx : uint { Head, Ear_Male, Ear_Female, Mouth, Teeth_Lower, Teeth_Upper, Tongue, Eye_Left, Eye_Right }
         public UI32Field INDX;
         public MODLGroup MODL;
         public FILEField ICON;
@@ -3993,13 +3993,13 @@ public class REPARecord : Record, IHaveMODL {
 public class REFRRecord : Record {
     public struct XTELField(Header r, int dataSize) {
         public Ref<REFRRecord> Door = new(r.ReadUInt32());
-        public Vector3 Position = new(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
-        public Vector3 Rotation = new(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
+        public Vector3 Position = r.ReadVector3();
+        public Vector3 Rotation = r.ReadVector3();
     }
 
     public struct DATAField(Header r, int dataSize) {
-        public Vector3 Position = new(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
-        public Vector3 Rotation = new(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
+        public Vector3 Position = r.ReadVector3();
+        public Vector3 Rotation = r.ReadVector3();
     }
 
     public struct XLOCField {
@@ -4085,13 +4085,13 @@ public class REFRRecord : Record {
         FieldType.XLOD => XLOD = r.ReadBYTV(dataSize),
         FieldType.XCHG => XCHG = r.ReadS<FLTVField>(dataSize),
         FieldType.XHLT => XCHG = r.ReadS<FLTVField>(dataSize),
-        FieldType.XPCI => (_nextFull = 1, XPCI = new RefField<CELLRecord>(r, dataSize)),
+        FieldType.XPCI => (XPCI = new RefField<CELLRecord>(r, dataSize), _nextFull = 1).Item1,
         FieldType.FULL => _nextFull == 1 ? XPCI.Value.SetName(r.ReadFAString(dataSize)) : _nextFull == 2 ? XMRKs.Last().FULL = r.ReadSTRV(dataSize) : _nextFull = 0,
         FieldType.XLCM => XLCM = r.ReadS<IN32Field>(dataSize),
         FieldType.XRTM => XRTM = new RefField<REFRRecord>(r, dataSize),
         FieldType.XACT => XACT = r.ReadS<UI32Field>(dataSize),
         FieldType.XCNT => XCNT = r.ReadS<IN32Field>(dataSize),
-        FieldType.XMRK => (_nextFull = 2, (XMRKs ??= []).AddX(new XMRKGroup())),
+        FieldType.XMRK => ((XMRKs ??= []).AddX(new XMRKGroup()), _nextFull = 2).Item1,
         FieldType.FNAM => XMRKs.Last().FNAM = r.ReadS<BYTEField>(dataSize),
         FieldType.TNAM => XMRKs.Last().TNAM = r.ReadS<BYTEField>(dataSize),
         FieldType.ONAM => true,
@@ -4109,7 +4109,6 @@ public class REGNRecord : Record {
     // TESX
     public class RDATField {
         public enum REGNType : byte { Objects = 2, Weather, Map, Landscape, Grass, Sound }
-
         public uint Type;
         public REGNType Flags;
         public byte Priority;
@@ -4121,8 +4120,8 @@ public class REGNRecord : Record {
         public RDSDField[] RDSDs; // Sounds
         public RDWTField[] RDWTs; // Weather Types
 
-        public RDATField() { }
-        public RDATField(Header r, int dataSize) {
+        public RDATField(Header r = null, int dataSize = 0) {
+            if (r != null) return;
             Type = r.ReadUInt32();
             Flags = (REGNType)r.ReadByte();
             Priority = r.ReadByte();
@@ -4196,13 +4195,13 @@ public class REGNRecord : Record {
             }
             Sound = new Ref<SOUNRecord>(r.ReadUInt32());
             Flags = r.ReadUInt32();
-            Chance = r.ReadUInt32(); //: float with TES5
+            Chance = r.ReadUInt32(); // float with TES5
         }
     }
 
     public struct RDWTField(Header r, int dataSize) {
         public override readonly string ToString() => $"{Weather}";
-        public static byte SizeOf(FormType format) => format == TES4 ? (byte)8 : (byte)12;
+        public static int SizeOf(FormType format) => format == TES4 ? 8 : 12;
         public Ref<WTHRRecord> Weather = new(r.ReadUInt32());
         public uint Chance = r.ReadUInt32();
         public Ref<GLOBRecord> Global = r.Format == TES5 ? new Ref<GLOBRecord>(r.ReadUInt32()) : new Ref<GLOBRecord>();
@@ -4229,8 +4228,7 @@ public class REGNRecord : Record {
             Ash = r.ReadByte();
             Blight = r.ReadByte();
             // v1.3 ESM files add 2 bytes to WEAT subrecords.
-            if (dataSize == 10)
-                r.Skip(2);
+            if (dataSize == 10) r.Skip(2);
         }
     }
 
@@ -4238,12 +4236,7 @@ public class REGNRecord : Record {
     public class RPLIField(Header r, int dataSize) {
         public uint EdgeFalloff = r.ReadUInt32(); // (World Units)
         public Vector2[] Points; // Region Point List Data
-
-        public object RPLDField(Header r, int dataSize) {
-            Points = new Vector2[dataSize >> 3];
-            for (var i = 0; i < Points.Length; i++) Points[i] = new Vector2(r.ReadSingle(), r.ReadSingle());
-            return Points;
-        }
+        public object RPLDField(Header r, int dataSize) => Points = r.ReadFArray(z => r.ReadVector2(), dataSize >> 3);
     }
 
     public STRVField ICON; // Icon / Sleep creature
@@ -4258,7 +4251,7 @@ public class REGNRecord : Record {
     public override object CreateField(Header r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadSTRV(dataSize),
         FieldType.WNAM or FieldType.FNAM => WNAM = new RefField<WRLDRecord>(r, dataSize),
-        FieldType.WEAT => WEAT = new WEATField(r, dataSize),//: TES3
+        FieldType.WEAT => WEAT = new WEATField(r, dataSize), // TES3
         FieldType.ICON or FieldType.BNAM => ICON = r.ReadSTRV(dataSize),
         FieldType.RCLR or FieldType.CNAM => RCLR = r.ReadS<CREFField>(dataSize),
         FieldType.SNAM => RDATs.AddX(new RDATField { RDSDs = [new RDSDField(r, dataSize)] }),
@@ -4315,7 +4308,6 @@ public class SCPTRecord : Record {
     // TESX
     public struct CTDAField {
         public enum INFOType : byte { Nothing = 0, Function, Global, Local, Journal, Item, Dead, NotId, NotFaction, NotClass, NotRace, NotCell, NotLocal }
-
         // TES3: 0 = [=], 1 = [!=], 2 = [>], 3 = [>=], 4 = [<], 5 = [<=]
         // TES4: 0 = [=], 2 = [!=], 4 = [>], 6 = [>=], 8 = [<], 10 = [<=]
         public byte CompareOp;
@@ -4363,7 +4355,7 @@ public class SCPTRecord : Record {
         public int ScriptDataSize = r.ReadInt32();
         public int LocalVarSize = r.ReadInt32();
         public string[] Variables = null;
-        public object SCVRField(Header r, int dataSize) => Variables = r.ReadZAStringList(dataSize).ToArray();
+        public object SCVRField(Header r, int dataSize) => Variables = [.. r.ReadZAStringList(dataSize)];
     }
 
     // TES4
@@ -4479,8 +4471,7 @@ public class SKILRecord : Record {
             Action = r.Format == TES3 ? 0 : r.ReadInt32();
             Attribute = r.ReadInt32();
             Specialization = r.ReadUInt32();
-            UseValue = new float[r.Format == TES3 ? 4 : 2];
-            for (var i = 0; i < UseValue.Length; i++) UseValue[i] = r.ReadSingle();
+            UseValue = r.ReadPArray<float>("f", r.Format == TES3 ? 4 : 2);
         }
     }
 
@@ -4545,16 +4536,7 @@ public class SLGMRecord : Record, IHaveMODL {
 /// SNDG.Sound Generator - 3000
 /// </summary>
 public class SNDGRecord : Record {
-    public enum SNDGType : uint {
-        LeftFoot = 0,
-        RightFoot = 1,
-        SwimLeft = 2,
-        SwimRight = 3,
-        Moan = 4,
-        Roar = 5,
-        Scream = 6,
-        Land = 7,
-    }
+    public enum SNDGType : uint { LeftFoot = 0, RightFoot = 1, SwimLeft = 2, SwimRight = 3, Moan = 4, Roar = 5, Scream = 6, Land = 7 }
 
     public IN32Field DATA; // Sound Type Data
     public STRVField SNAM; // Sound ID
@@ -4772,14 +4754,8 @@ public unsafe class TES4Record : Record {
 /// TREE.Tree - 0450
 /// </summary>
 public class TREERecord : Record, IHaveMODL {
-    public struct SNAMField {
-        public int[] Values;
-
-        public SNAMField(Header r, int dataSize) {
-            Values = new int[dataSize >> 2];
-            for (var i = 0; i < Values.Length; i++)
-                Values[i] = r.ReadInt32();
-        }
+    public struct SNAMField(Header r, int dataSize) {
+        public int[] Values = r.ReadPArray<int>("i", dataSize >> 2);
     }
 
     public struct CNAMField(Header r, int dataSize) {
@@ -4922,14 +4898,13 @@ public class WATRRecord : Record {
 public class WEAPRecord : Record, IHaveMODL {
     public struct DATAField {
         public enum WEAPType { ShortBladeOneHand = 0, LongBladeOneHand, LongBladeTwoClose, BluntOneHand, BluntTwoClose, BluntTwoWide, SpearTwoWide, AxeOneHand, AxeTwoHand, MarksmanBow, MarksmanCrossbow, MarksmanThrown, Arrow, Bolt, }
-
         public float Weight;
         public int Value;
-        public ushort Type;
-        public short Health;
+        public uint Type;
+        public int Health;
         public float Speed;
         public float Reach;
-        public short Damage; //: EnchantPts;
+        public short Damage; // EnchantPts
         public byte ChopMin;
         public byte ChopMax;
         public byte SlashMin;
@@ -4956,12 +4931,12 @@ public class WEAPRecord : Record, IHaveMODL {
                 Flags = r.ReadInt32();
                 return;
             }
-            Type = (ushort)r.ReadUInt32();
+            Type = r.ReadUInt32();
             Speed = r.ReadSingle();
             Reach = r.ReadSingle();
             Flags = r.ReadInt32();
             Value = r.ReadInt32();
-            Health = (short)r.ReadInt32();
+            Health = r.ReadInt32();
             Weight = r.ReadSingle();
             Damage = r.ReadInt16();
             ChopMin = ChopMax = SlashMin = SlashMax = ThrustMin = ThrustMax = 0;
@@ -4997,7 +4972,7 @@ public class WEAPRecord : Record, IHaveMODL {
 /// </summary>
 public unsafe class WRLDRecord : Record {
     public struct MNAMField {
-        public static (string, int) Struct = ($"<2i4h", 16);
+        public static (string, int) Struct = ("<2i4h", 16);
         public Int2 UsableDimensions;
         // Cell Coordinates
         public short NWCell_X;
@@ -5017,6 +4992,7 @@ public unsafe class WRLDRecord : Record {
     // TES5
     public struct RNAMField {
         public struct Reference {
+            public static (string, int) Struct = ("<I2h", 8);
             public RefId<REFRRecord> Ref;
             public short X;
             public short Y;
@@ -5028,10 +5004,8 @@ public unsafe class WRLDRecord : Record {
         public RNAMField(Header r, int dataSize) {
             GridX = r.ReadInt16();
             GridY = r.ReadInt16();
-            var referenceCount = r.ReadUInt32();
-            var referenceSize = dataSize - 8;
-            Log.Assert(referenceSize >> 3 == referenceCount);
-            GridReferences = r.ReadSArray<Reference>(referenceSize >> 3);
+            GridReferences = r.ReadL32SArray<Reference>();
+            Debug.Assert((dataSize - 8) >> 3 == GridReferences.Length);
         }
     }
 

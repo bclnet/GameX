@@ -1881,7 +1881,7 @@ class CSTYRecord(Record):
         flags2: int
 
         def __init__(self, r: Header, dataSize: int):
-            #if (dataSize != 124 && dataSize != 120 && dataSize != 112 && dataSize != 104 && dataSize != 92 && dataSize != 84) self.dodgePercentChance = 0;
+            # if (dataSize != 124 && dataSize != 120 && dataSize != 112 && dataSize != 104 && dataSize != 92 && dataSize != 84) self.dodgePercentChance = 0;
             self.dodgePercentChance = r.readByte()
             self.leftRightPercentChance = r.readByte()
             r.skip(2) # Unused
@@ -2630,8 +2630,8 @@ class INGRRecord(Record, IHaveMODL):
 
     MODL: MODLGroup # Model Name
     FULL: STRVField # Item Name
-    IRDT: IRDTField # Ingrediant Data #: TES3
-    DATA: DATAField # Ingrediant Data #: TES4
+    IRDT: IRDTField # Ingrediant Data # TES3
+    DATA: DATAField # Ingrediant Data # TES4
     ICON: FILEField # Inventory Icon
     SCRI: RefField[SCPTRecord] # Script Name
     # TES4
@@ -3426,7 +3426,7 @@ class PACKRecord(Record):
         return z
 # end::PACK[]
 
-# PGRD.Path grid - 3400 - tag::XXXX[]
+# PGRD.Path grid - 3400 - tag::PGRD[]
 class PGRDRecord(Record):
     class DATAField:
         x: int
@@ -3490,50 +3490,50 @@ class PGRDRecord(Record):
         return z
 # end::PGRD[]
 
-# PROB.Probe - 3000 - tag::XXXX[]
-public class PROBRecord : Record, IHaveMODL {
-    public struct PBDTField(Header r, int dataSize) {
-        public float Weight = r.readSingle();
-        public int Value = r.readInt32();
-        public float Quality = r.readSingle();
-        public int Uses = r.readInt32();
-    }
+# PROB.Probe - 3000 - tag::PROB[]
+class PROBRecord(Record, IHaveMODL):
+    class PBDTField:
+        def __init__(self, r: Header, dataSize: int):
+            self.weight: float = r.readSingle()
+            self.value: int = r.readInt32()
+            self.quality: float = r.readSingle()
+            self.uses: int = r.readInt32()
 
-    public MODLGroup MODL { get; set; } # Model Name
-    public STRVField FNAM; # Item Name
-    public PBDTField PBDT; # Probe Data
-    public FILEField ICON; # Inventory Icon
-    public RefField[SCPTRecord] SCRI; # Script Name
+    MODL: MODLGroup # Model Name
+    FNAM: STRVField # Item Name
+    PBDT: PBDTField # Probe Data
+    ICON: FILEField # Inventory Icon
+    SCRI: RefField[SCPTRecord] # Script Name
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         if r.format == FormType.TES3:
             match type:
-                case FieldType.NAME: z = self.EDID = r.readSTRV(dataSize),
-                case FieldType.MODL: z = self.MODL = MODLGroup(r, dataSize),
-                case FieldType.FNAM: z = self.FNAM = r.readSTRV(dataSize),
-                case FieldType.PBDT: z = self.PBDT = PBDTField(r, dataSize),
-                case FieldType.ITEX: z = self.ICON = r.readFILE(dataSize),
-                case FieldType.SCRI: z = self.SCRI = RefField[SCPTRecord](r, dataSize),
+                case FieldType.NAME: z = self.EDID = r.readSTRV(dataSize)
+                case FieldType.MODL: z = self.MODL = MODLGroup(r, dataSize)
+                case FieldType.FNAM: z = self.FNAM = r.readSTRV(dataSize)
+                case FieldType.PBDT: z = self.PBDT = PBDTField(r, dataSize)
+                case FieldType.ITEX: z = self.ICON = r.readFILE(dataSize)
+                case FieldType.SCRI: z = self.SCRI = RefField[SCPTRecord](r, dataSize)
                 case _: z = Record.empty
             return z
         return None
 # end::PROB[]
 
-# QUST.Quest - 0450 - tag::XXXX[]
-public class QUSTRecord : Record {
-    public struct DATAField(Header r, int dataSize) {
-        public byte Flags = r.readByte();
-        public byte Priority = r.readByte();
-    }
+# QUST.Quest - 0450 - tag::QUST[]
+class QUSTRecord(Record):
+    class DATAField:
+        def __init__(self, r: Header, dataSize: int):
+            self.flags: int = r.readByte()
+            self.priority: int = r.readByte()
 
-    public STRVField FULL; # Item Name
-    public FILEField ICON; # Icon
-    public DATAField DATA; # Icon
-    public RefField[SCPTRecord] SCRI; # Script Name
-    public SCPTRecord.SCHRField SCHR; # Script Data
-    public BYTVField SCDA; # Compiled Script
-    public STRVField SCTX; # Script Source
-    public list[RefField[Record]] SCROs = []; # Global variable reference
+    FULL: STRVField # Item Name
+    ICON: FILEField # Icon
+    DATA: DATAField # Icon
+    SCRI: RefField[SCPTRecord] # Script Name
+    SCHR: SCPTRecord.SCHRField # Script Data
+    SCDA: BYTVField # Compiled Script
+    SCTX: STRVField # Script Source
+    SCROs: list[RefField[Record]] = [] # Global variable reference
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -3555,168 +3555,156 @@ public class QUSTRecord : Record {
         return z
 # end::QUST[]
 
-# RACE.Race_Creature type - 3450 - tag::XXXX[]
-public class RACERecord : Record {
+# RACE.Race_Creature type - 3450 - tag::RACE[]
+class RACERecord(Record):
     # TESX
-    public class DATAField {
-        public enum RaceFlag : uint {
-            Playable = 0x00000001,
-            FaceGenHead = 0x00000002,
-            Child = 0x00000004,
-            TiltFrontBack = 0x00000008,
-            TiltLeftRight = 0x00000010,
-            NoShadow = 0x00000020,
-            Swims = 0x00000040,
-            Flies = 0x00000080,
-            Walks = 0x00000100,
-            Immobile = 0x00000200,
-            NotPushable = 0x00000400,
-            NoCombatInWater = 0x00000800,
-            NoRotatingToHeadTrack = 0x00001000,
-            DontShowBloodSpray = 0x00002000,
-            DontShowBloodDecal = 0x00004000,
-            UsesHeadTrackAnims = 0x00008000,
-            SpellsAlignWMagicNode = 0x00010000,
-            UseWorldRaycastsForFootIK = 0x00020000,
-            AllowRagdollCollision = 0x00040000,
-            RegenHPInCombat = 0x00080000,
-            CantOpenDoors = 0x00100000,
-            AllowPCDialogue = 0x00200000,
-            NoKnockdowns = 0x00400000,
-            AllowPickpocket = 0x00800000,
-            AlwaysUseProxyController = 0x01000000,
-            DontShowWeaponBlood = 0x02000000,
-            OverlayHeadPartList = 0x04000000, #{> Only one can be active <}
-            OverrideHeadPartList = 0x08000000, #{> Only one can be active <}
-            CanPickupItems = 0x10000000,
-            AllowMultipleMembraneShaders = 0x20000000,
-            CanDualWield = 0x40000000,
-            AvoidsRoads = 0x80000000,
-        }
+    class DATAField:
+        class RaceFlag(Flag):
+            Playable = 0x00000001
+            FaceGenHead = 0x00000002
+            Child = 0x00000004
+            TiltFrontBack = 0x00000008
+            TiltLeftRight = 0x00000010
+            NoShadow = 0x00000020
+            Swims = 0x00000040
+            Flies = 0x00000080
+            Walks = 0x00000100
+            Immobile = 0x00000200
+            NotPushable = 0x00000400
+            NoCombatInWater = 0x00000800
+            NoRotatingToHeadTrack = 0x00001000
+            DontShowBloodSpray = 0x00002000
+            DontShowBloodDecal = 0x00004000
+            UsesHeadTrackAnims = 0x00008000
+            SpellsAlignWMagicNode = 0x00010000
+            UseWorldRaycastsForFootIK = 0x00020000
+            AllowRagdollCollision = 0x00040000
+            RegenHPInCombat = 0x00080000
+            CantOpenDoors = 0x00100000
+            AllowPCDialogue = 0x00200000
+            NoKnockdowns = 0x00400000
+            AllowPickpocket = 0x00800000
+            AlwaysUseProxyController = 0x01000000
+            DontShowWeaponBlood = 0x02000000
+            OverlayHeadPartList = 0x04000000 #{> Only one can be active <}
+            OverrideHeadPartList = 0x08000000 #{> Only one can be active <}
+            CanPickupItems = 0x10000000
+            AllowMultipleMembraneShaders = 0x20000000
+            CanDualWield = 0x40000000
+            AvoidsRoads = 0x80000000
 
-        public struct SkillBoost {
-            public byte SkillId;
-            public sbyte Bonus;
+        class SkillBoost:
+            skillId: int
+            bonus: int
 
-            public SkillBoost(Header r, int dataSize) {
-                if (r.format == FormType.TES3) {
-                    SkillId = (byte)r.readInt32();
-                    Bonus = (sbyte)r.readInt32();
-                    return;
-                }
-                SkillId = r.readByte();
-                Bonus = r.ReadSByte();
-            }
-        }
+            def __init__(self, r: Header, dataSize: int):
+                if r.format == FormType.TES3:
+                    self.skillId = r.readInt32() & 0xFF
+                    self.bonus = r.readInt32() & 0xFF
+                    return
+                self.skillId = r.readByte()
+                self.bonus = r.readSByte()
 
-        public struct RaceStats {
-            public float Height;
-            public float Weight;
-            # Attributes;
-            public byte Strength;
-            public byte Intelligence;
-            public byte Willpower;
-            public byte Agility;
-            public byte Speed;
-            public byte Endurance;
-            public byte Personality;
-            public byte Luck;
-        }
+        class RaceStats:
+            height: float
+            weight: float
+            # Attributes
+            strength: int
+            intelligence: int
+            willpower: int
+            agility: int
+            speed: int
+            endurance: int
+            personality: int
+            luck: int
 
-        public SkillBoost[] SkillBoosts = SkillBoost[7]; # Skill Boosts
-        public RaceStats Male = new();
-        public RaceStats Female = new();
-        public uint Flags; # 1 = Playable 2 = Beast Race
+        skillBoosts: SkillBoost[] # Skill Boosts
+        male: RaceStats = RaceStats()
+        female: RaceStats = RaceStats()
+        flags: int # 1 = Playable 2 = Beast Race
 
-        public DATAField(Header r, int dataSize) {
-            if (r.format == FormType.TES3) {
-                for (var i = 0; i < SkillBoosts.Length; i++) SkillBoosts[i] = SkillBoost(r, 8);
-                Male.Strength = (byte)r.readInt32(); Female.Strength = (byte)r.readInt32();
-                Male.Intelligence = (byte)r.readInt32(); Female.Intelligence = (byte)r.readInt32();
-                Male.Willpower = (byte)r.readInt32(); Female.Willpower = (byte)r.readInt32();
-                Male.Agility = (byte)r.readInt32(); Female.Agility = (byte)r.readInt32();
-                Male.Speed = (byte)r.readInt32(); Female.Speed = (byte)r.readInt32();
-                Male.Endurance = (byte)r.readInt32(); Female.Endurance = (byte)r.readInt32();
-                Male.Personality = (byte)r.readInt32(); Female.Personality = (byte)r.readInt32();
-                Male.Luck = (byte)r.readInt32(); Female.Luck = (byte)r.readInt32();
-                Male.Height = r.readSingle(); Female.Height = r.readSingle();
-                Male.Weight = r.readSingle(); Female.Weight = r.readSingle();
-                Flags = r.readUInt32();
-                return;
-            }
-            for (var i = 0; i < SkillBoosts.Length; i++) SkillBoosts[i] = SkillBoost(r, 2);
-            r.readInt16(); # padding
-            Male.Height = r.readSingle(); Female.Height = r.readSingle();
-            Male.Weight = r.readSingle(); Female.Weight = r.readSingle();
-            Flags = r.readUInt32();
-        }
+        def __init__(self, r: Header, dataSize: int):
+            if r.format == FormType.TES3:
+                self.skillBoosts = r.readFArray(lambda z: SkillBoost(r, 8), 7)
+                self.Male.strength = r.readInt32() & 0xFF; self.female.strength = r.readInt32() & 0xFF
+                self.Male.intelligence = r.readInt32() & 0xFF; self.female.intelligence = r.readInt32() & 0xFF
+                self.Male.willpower = r.readInt32() & 0xFF; self.female.willpower = r.readInt32() & 0xFF
+                self.Male.agility = r.readInt32() & 0xFF; self.female.agility = r.readInt32() & 0xFF
+                self.Male.speed = r.readInt32() & 0xFF; self.female.speed = r.readInt32() & 0xFF
+                self.Male.endurance = r.readInt32() & 0xFF; self.female.endurance = r.readInt32() & 0xFF
+                self.Male.personality = r.readInt32() & 0xFF; self.female.personality = r.readInt32() & 0xFF
+                self.Male.luck = r.readInt32(); self.female.luck = r.readInt32() & 0xFF
+                self.Male.height = r.readSingle(); self.female.height = r.readSingle()
+                self.Male.weight = r.readSingle(); self.female.weight = r.readSingle()
+                self.flags = r.readUInt32()
+                return
+            self.skillBoosts = r.readFArray(lambda z: SkillBoost(r, 2), 7)
+            r.readInt16() # padding
+            self.male.height = r.readSingle(); self.female.height = r.readSingle()
+            self.male.weight = r.readSingle(); self.female.weight = r.readSingle()
+            self.flags = r.readUInt32()
 
-        public object ATTRField(Header r, int dataSize) {
-            Male.Strength = r.readByte();
-            Male.Intelligence = r.readByte();
-            Male.Willpower = r.readByte();
-            Male.Agility = r.readByte();
-            Male.Speed = r.readByte();
-            Male.Endurance = r.readByte();
-            Male.Personality = r.readByte();
-            Male.Luck = r.readByte();
-            Female.Strength = r.readByte();
-            Female.Intelligence = r.readByte();
-            Female.Willpower = r.readByte();
-            Female.Agility = r.readByte();
-            Female.Speed = r.readByte();
-            Female.Endurance = r.readByte();
-            Female.Personality = r.readByte();
-            Female.Luck = r.readByte();
-            return this;
-        }
-    }
+        def ATTRField(self, r: Header, dataSize: int):
+            self.male.Strength = r.readByte()
+            self.male.Intelligence = r.readByte()
+            self.male.Willpower = r.readByte()
+            self.male.Agility = r.readByte()
+            self.male.Speed = r.readByte()
+            self.male.Endurance = r.readByte()
+            self.male.Personality = r.readByte()
+            self.male.Luck = r.readByte()
+            self.female.Strength = r.readByte()
+            self.female.Intelligence = r.readByte()
+            self.female.Willpower = r.readByte()
+            self.female.Agility = r.readByte()
+            self.female.Speed = r.readByte()
+            self.female.Endurance = r.readByte()
+            self.female.Personality = r.readByte()
+            self.female.Luck = r.readByte()
+            return self
 
     # TES4
-    public class FacePartGroup {
-        public enum Indx : uint { Head, Ear_Male, Ear_Female, Mouth, Teeth_Lower, Teeth_Upper, Tongue, Eye_Left, Eye_Right, }
-        public UI32Field INDX;
-        public MODLGroup MODL;
-        public FILEField ICON;
-    }
+    class FacePartGroup:
+        class Indx(Enum): Head = 0; Ear_Male = 1; Ear_Female = 2; Mouth = 3; Teeth_Lower = 4; Teeth_Upper = 5; Tongue = 6; Eye_Left = 7; Eye_Right = 8
+        INDX: UI32Field 
+        MODL: MODLGroup 
+        ICON: FILEField 
 
-    public class BodyPartGroup {
-        public enum Indx : uint { UpperBody, LowerBody, Hand, Foot, Tail }
-        public UI32Field INDX;
-        public FILEField ICON;
-    }
+    class BodyPartGroup:
+        class Indx(Enum): UpperBody = 0; LowerBody = 1; Hand = 2; Foot = 3; Tail = 4
+        INDX: UI32Field
+        ICON: FILEField
 
-    public class BodyGroup {
-        public FILEField MODL;
-        public FLTVField MODB;
-        public list[BodyPartGroup] BodyParts = [];
-    }
+    class BodyGroup:
+        MODL: FILEField
+        MODB: FLTVField
+        BodyParts: list[BodyPartGroup] = []
 
-    public STRVField FULL; # Race name
-    public STRVField DESC; # Race description
-    public list[STRVField] SPLOs = []; # NPCs: Special power/ability name
+    FULL: STRVField # Race name
+    DESC: STRVField # Race description
+    SPLOs: list[STRVField] = [] # NPCs: Special power/ability name
     # TESX
-    public DATAField DATA; # RADT:DATA/ATTR: Race data/Base Attributes
+    DATA: DATAField # RADT:DATA/ATTR: Race data/Base Attributes
     # TES4
-    public Ref2Field<RACERecord> VNAM; # Voice
-    public Ref2Field<HAIRRecord> DNAM; # Default Hair
-    public BYTEField CNAM; # Default Hair Color
-    public FLTVField PNAM; # FaceGen - Main clamp
-    public FLTVField UNAM; # FaceGen - Face clamp
-    public UNKNField XNAM; # Unknown
+    VNAM: Ref2Field[RACERecord] # Voice
+    DNAM: Ref2Field[HAIRRecord] # Default Hair
+    CNAM: BYTEField # Default Hair Color
+    PNAM: FLTVField # FaceGen - Main clamp
+    UNAM: FLTVField # FaceGen - Face clamp
+    XNAM: UNKNField # Unknown
     #
-    public list[RefField[HAIRRecord]] HNAMs = [];
-    public list[RefField[EYESRecord]] ENAMs = [];
-    public BYTVField FGGS; # FaceGen Geometry-Symmetric
-    public BYTVField FGGA; # FaceGen Geometry-Asymmetric
-    public BYTVField FGTS; # FaceGen Texture-Symmetric
-    public UNKNField SNAM; # Unknown
+    HNAMs: list[RefField[HAIRRecord]] = []
+    ENAMs: list[RefField[EYESRecord]] = []
+    FGGS: BYTVField # FaceGen Geometry-Symmetric
+    FGGA: BYTVField # FaceGen Geometry-Asymmetric
+    FGTS: BYTVField # FaceGen Texture-Symmetric
+    SNAM: UNKNField # Unknown
 
     # Parts
-    public list[FacePartGroup] FaceParts = [];
-    public BodyGroup[] Bodys = [BodyGroup(), BodyGroup()];
-    sbyte _nameState;
-    sbyte _genderState;
+    FaceParts: list[FacePartGroup] = []
+    Bodys: BodyGroup[] = [BodyGroup(), BodyGroup()]
+    _nameState: int
+    _genderState: int
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         if r.format == FormType.TES3:
@@ -3727,400 +3715,373 @@ public class RACERecord : Record {
                 case FieldType.NPCS: z = self.SPLOs.addX(r.readSTRV(dataSize))
                 case FieldType.DESC: z = self.DESC = r.readSTRV(dataSize)
                 case _: z = Record.empty
-        }
-        : r.Format == TES4 ? _nameState switch {
-            # preamble
-            0 => type switch {
-                FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
-                FieldType.FULL: z = self.FULL = r.readSTRV(dataSize)
-                FieldType.DESC: z = self.DESC = r.readSTRV(dataSize)
-                FieldType.DATA: z = self.DATA = DATAField(r, dataSize)
-                FieldType.SPLO: z = self.SPLOs.addX(r.readSTRV(dataSize))
-                FieldType.VNAM: z = self.VNAM = Ref2Field<RACERecord>(r, dataSize)
-                FieldType.DNAM: z = self.DNAM = Ref2Field<HAIRRecord>(r, dataSize)
-                FieldType.CNAM: z = self.CNAM = r.readS(BYTEField, dataSize)
-                FieldType.PNAM: z = self.PNAM = r.readS(FLTVField, dataSize)
-                FieldType.UNAM: z = self.UNAM = r.readS(FLTVField, dataSize)
-                FieldType.XNAM: z = self.XNAM = r.ReadUNKN(dataSize)
-                FieldType.ATTR: z = self.DATA.ATTRField(r, dataSize)
-                FieldType.NAM0: z = self._nameState += 1
-                z = Record.empty
-            },
-            # face data
-            1 => type switch {
-                FieldType.INDX: z = self.FaceParts.addX(FacePartGroup { INDX = r.readS(UI32Field, dataSize) }),
-                FieldType.MODL: z = self.FaceParts.last().MODL = MODLGroup(r, dataSize),
-                FieldType.ICON: z = self.FaceParts.last().ICON = r.readFILE(dataSize),
-                FieldType.MODB: z = self.FaceParts.last().MODL.MODBField(r, dataSize),
-                FieldType.NAM1: z = self._nameState++,
-                _ => Empty,
-            },
-            # body data
-            2 => type switch {
-                FieldType.MNAM: z = self._genderState = 0,
-                FieldType.FNAM: z = self._genderState = 1,
-                FieldType.MODL: z = self.Bodys[_genderState].MODL = r.readFILE(dataSize),
-                FieldType.MODB: z = self.Bodys[_genderState].MODB = r.readS(FLTVField, dataSize),
-                FieldType.INDX: z = self.Bodys[_genderState].BodyParts.addX(BodyPartGroup { INDX = r.readS(UI32Field, dataSize) }),
-                FieldType.ICON: z = self.Bodys[_genderState].BodyParts.last().ICON = r.readFILE(dataSize),
-                FieldType.HNAM: z = self.(_nameState++, HNAMs.AddRangeX(Enumerable.Range(0, dataSize >> 2).Select(x => RefField[HAIRRecord](r, 4)))),
-                FieldType.HNAM: z = (self.HNAMs.addRangeX(r.readFArray(lambda z: RefField[HAIRRecord](r, 4), dataSize >> 2)), _nameState++).Item1,
-                _ => Empty,
-            },
-            # postamble
-            3 => type switch {
-                    FieldType.HNAM: z = self.HNAMs.addRangeX(r.readFArray(lambda z: RefField[HAIRRecord](r, 4), dataSize >> 2))
-                    FieldType.ENAM: z = self.ENAMs.addRangeX(r.readFArray(lambda z: RefField[EYESRecord](r, 4), dataSize >> 2))
-                    FieldType.FGGS: z = self.FGGS = r.readBYTV(dataSize),
-                    FieldType.FGGA: z = self.FGGA = r.readBYTV(dataSize),
-                    FieldType.FGTS: z = self.FGTS = r.readBYTV(dataSize),
-                    FieldType.SNAM: z = self.SNAM = r.ReadUNKN(dataSize),
-                    case _: z = Record.empty
-                return z
-            },
-            _ => Empty,
-        }
-        : null;
+            return z
+        if r.format == FormType.TES4:
+            match _nameState:
+                # preamble
+                case 0:
+                    match type:
+                        case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
+                        case FieldType.FULL: z = self.FULL = r.readSTRV(dataSize)
+                        case FieldType.DESC: z = self.DESC = r.readSTRV(dataSize)
+                        case FieldType.DATA: z = self.DATA = DATAField(r, dataSize)
+                        case FieldType.SPLO: z = self.SPLOs.addX(r.readSTRV(dataSize))
+                        case FieldType.VNAM: z = self.VNAM = Ref2Field[RACERecord](r, dataSize)
+                        case FieldType.DNAM: z = self.DNAM = Ref2Field[HAIRRecord](r, dataSize)
+                        case FieldType.CNAM: z = self.CNAM = r.readS(BYTEField, dataSize)
+                        case FieldType.PNAM: z = self.PNAM = r.readS(FLTVField, dataSize)
+                        case FieldType.UNAM: z = self.UNAM = r.readS(FLTVField, dataSize)
+                        case FieldType.XNAM: z = self.XNAM = r.ReadUNKN(dataSize)
+                        case FieldType.ATTR: z = self.DATA.ATTRField(r, dataSize)
+                        case FieldType.NAM0: z = self._nameState += 1
+                        case _: z = Record.empty
+                # face data
+                case 1:
+                    match type:
+                        case FieldType.INDX: z = self.FaceParts.addX(FacePartGroup(INDX = r.readS(UI32Field, dataSize)))
+                        case FieldType.MODL: z = self.FaceParts.last().MODL = MODLGroup(r, dataSize)
+                        case FieldType.ICON: z = self.FaceParts.last().ICON = r.readFILE(dataSize)
+                        case FieldType.MODB: z = self.FaceParts.last().MODL.MODBField(r, dataSize)
+                        case FieldType.NAM1: z = self._nameState += 1
+                        case _: z = Record.empty,
+                # body data
+                case 2:
+                    match type:
+                        case FieldType.MNAM: z = self._genderState = 0
+                        case FieldType.FNAM: z = self._genderState = 1
+                        case FieldType.MODL: z = self.Bodys[_genderState].MODL = r.readFILE(dataSize)
+                        case FieldType.MODB: z = self.Bodys[_genderState].MODB = r.readS(FLTVField, dataSize)
+                        case FieldType.INDX: z = self.Bodys[_genderState].BodyParts.addX(BodyPartGroup(INDX = r.readS(UI32Field, dataSize)))
+                        case FieldType.ICON: z = self.Bodys[_genderState].BodyParts.last().ICON = r.readFILE(dataSize)
+                        case FieldType.HNAM: z = (self.HNAMs.addRangeX(r.readFArray(lambda z: RefField[HAIRRecord](r, 4), dataSize >> 2)), _nameState += 1)[0]
+                        case _: z = Record.empty,
+                # postamble
+                case 3:
+                    match type:
+                        case FieldType.HNAM: z = self.HNAMs.addRangeX(r.readFArray(lambda z: RefField[HAIRRecord](r, 4), dataSize >> 2))
+                        case FieldType.ENAM: z = self.ENAMs.addRangeX(r.readFArray(lambda z: RefField[EYESRecord](r, 4), dataSize >> 2))
+                        case FieldType.FGGS: z = self.FGGS = r.readBYTV(dataSize)
+                        case FieldType.FGGA: z = self.FGGA = r.readBYTV(dataSize)
+                        case FieldType.FGTS: z = self.FGTS = r.readBYTV(dataSize)
+                        case FieldType.SNAM: z = self.SNAM = r.ReadUNKN(dataSize)
+                        case _: z = Record.empty,
+                case _: z = Record.empty
+            return z
+        return None
 # end::RACE[]
 
-# REPA.Repair Item - 3000 - tag::XXXX[]
-public class REPARecord : Record, IHaveMODL {
-    public struct RIDTField(Header r, int dataSize) {
-        public float Weight = r.readSingle();
-        public int Value = r.readInt32();
-        public int Uses = r.readInt32();
-        public float Quality = r.readSingle();
-    }
+# REPA.Repair Item - 3000 - tag::REPA[]
+class REPARecord(Record, IHaveMODL):
+    class RIDTField:
+        def __init__(self, r: Header, dataSize: int):
+            self.weight: float = r.readSingle()
+            self.value: int = r.readInt32()
+            self.uses: int = r.readInt32()
+            self.quality: float = r.readSingle()
 
-    public MODLGroup MODL { get; set; } # Model Name
-    public STRVField FNAM; # Item Name
-    public RIDTField RIDT; # Repair Data
-    public FILEField ICON; # Inventory Icon
-    public RefField[SCPTRecord] SCRI; # Script Name
+    MODL: MODLGroup # Model Name
+    FNAM: STRVField # Item Name
+    RIDT: RIDTField # Repair Data
+    ICON: FILEField # Inventory Icon
+    SCRI: RefField[SCPTRecord] # Script Name
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         if r.format == FormType.TES3:
             match type:
-                case FieldType.NAME: z = self.EDID = r.readSTRV(dataSize),
-                case FieldType.MODL: z = self.MODL = MODLGroup(r, dataSize),
-                case FieldType.FNAM: z = self.FNAM = r.readSTRV(dataSize),
-                case FieldType.RIDT: z = self.RIDT = RIDTField(r, dataSize),
-                case FieldType.ITEX: z = self.ICON = r.readFILE(dataSize),
-                case FieldType.SCRI: z = self.SCRI = RefField[SCPTRecord](r, dataSize),
+                case FieldType.NAME: z = self.EDID = r.readSTRV(dataSize)
+                case FieldType.MODL: z = self.MODL = MODLGroup(r, dataSize)
+                case FieldType.FNAM: z = self.FNAM = r.readSTRV(dataSize)
+                case FieldType.RIDT: z = self.RIDT = RIDTField(r, dataSize)
+                case FieldType.ITEX: z = self.ICON = r.readFILE(dataSize)
+                case FieldType.SCRI: z = self.SCRI = RefField[SCPTRecord](r, dataSize)
                 case _: z = Record.empty
             return z
         return None
 # end::REPA[]
 
-# REFR.Placed Object - 0450 - tag::XXXX[]
-public class REFRRecord : Record {
-    public struct XTELField(Header r, int dataSize) {
-        public Ref[REFRRecord] Door = new(r.readUInt32());
-        public Vector3 Position = new(r.readSingle(), r.readSingle(), r.readSingle());
-        public Vector3 Rotation = new(r.readSingle(), r.readSingle(), r.readSingle());
-    }
+# REFR.Placed Object - 0450 - tag::REFR[]
+class REFRRecord(Record):
+    class XTELField:
+        def __init__(self, r: Header, dataSize: int):
+            self.door: Ref[REFRRecord] = Ref[REFRRecord](r.readUInt32())
+            self.position: Vector3 = r.readVector3()
+            self.rotation: Vector3 = r.readVector3()
 
-    public struct DATAField(Header r, int dataSize) {
-        public Vector3 Position = new(r.readSingle(), r.readSingle(), r.readSingle());
-        public Vector3 Rotation = new(r.readSingle(), r.readSingle(), r.readSingle());
-    }
+    class DATAField:
+        def __init__(self, r: Header, dataSize: int):
+            self.position: Vector3 = r.readVector3()
+            self.rotation: Vector3 = r.readVector3()
 
-    public struct XLOCField {
-        public override readonly string ToString() => $"{Key}";
-        public byte LockLevel;
-        public Ref[KEYMRecord] Key;
-        public byte Flags;
+    class XLOCField:
+        def __repr__(self): return f'{self.key}'
+        lockLevel: int
+        key: Ref[KEYMRecord] 
+        flags: int
+        def __init__(self, r: Header, dataSize: int):
+            self.lockLevel = r.readByte()
+            r.skip(3); # Unused
+            self.key = Ref[KEYMRecord](r.readUInt32())
+            if dataSize == 16: r.skip(4) # Unused
+            self.flags = r.readByte()
+            r.skip(3) # Unused
 
-        public XLOCField(Header r, int dataSize) {
-            LockLevel = r.readByte();
-            r.Skip(3); # Unused
-            Key = Ref[KEYMRecord](r.readUInt32());
-            if (dataSize == 16) r.Skip(4); # Unused
-            Flags = r.readByte();
-            r.Skip(3); # Unused
-        }
-    }
+    class XESPField:
+        def __repr__(self): return f'{self.reference}'
+        reference: Ref[Record]
+        flags: byte
 
-    public struct XESPField {
-        public override readonly string ToString() => $"{Reference}";
-        public Ref[Record] Reference;
-        public byte Flags;
+        def __init__(self, r: Header, dataSize: int):
+            self.reference = Ref[Record](r.readUInt32())
+            self.flags = r.readByte()
+            r.skip(3) # Unused
 
-        public XESPField(Header r, int dataSize) {
-            Reference = Ref[Record](r.readUInt32());
-            Flags = r.readByte();
-            r.Skip(3); # Unused
-        }
-    }
+    class XSEDField:
+        def __repr__(self): return f'{self.seed}'
+        Seed: int
 
-    public struct XSEDField {
-        public override readonly string ToString() => $"{Seed}";
-        public byte Seed;
+        def __init__(self, r: Header, dataSize: int):
+            self.seed = r.readByte()
+            if dataSize == 4: r.skip(3) # Unused
 
-        public XSEDField(Header r, int dataSize) {
-            Seed = r.readByte();
-            if (dataSize == 4) r.Skip(3); # Unused
-        }
-    }
+    class XMRKGroup:
+        def __repr__(self): return f'{self.FULL.value}'
+        FNAM: BYTEField # Map Flags
+        FULL: STRVField # Name
+        TNAM: BYTEField # Type
 
-    public class XMRKGroup {
-        public override string ToString() => $"{FULL.Value}";
-        public BYTEField FNAM; # Map Flags
-        public STRVField FULL; # Name
-        public BYTEField TNAM; # Type
-    }
-
-    public RefField[Record] NAME; # Base
-    public XTELField? XTEL; # Teleport Destination (optional)
-    public DATAField DATA; # Position/Rotation
-    public XLOCField? XLOC; # Lock information (optional)
-    public list[CELLRecord.XOWNGroup] XOWNs; # Ownership (optional)
-    public XESPField? XESP; # Enable Parent (optional)
-    public RefField[Record]? XTRG; # Target (optional)
-    public XSEDField? XSED; # SpeedTree (optional)
-    public BYTVField? XLOD; # Distant LOD Data (optional)
-    public FLTVField? XCHG; # Charge (optional)
-    public FLTVField? XHLT; # Health (optional)
-    public RefField[CELLRecord]? XPCI; # Unused (optional)
-    public IN32Field? XLCM; # Level Modifier (optional)
-    public RefField[REFRRecord]? XRTM; # Unknown (optional)
-    public UI32Field? XACT; # Action Flag (optional)
-    public IN32Field? XCNT; # Count (optional)
-    public list[XMRKGroup] XMRKs; # Ownership (optional)
-    #public bool? ONAM; # Open by Default
-    public BYTVField? XRGD; # Ragdoll Data (optional)
-    public FLTVField? XSCL; # Scale (optional)
-    public BYTEField? XSOL; # Contained Soul (optional)
-    int _nextFull;
+    NAME: RefField[Record] # Base
+    XTEL: XTELField # Teleport Destination (optional)
+    DATA: DATAField # Position/Rotation
+    XLOC: XLOCField # Lock information (optional)
+    XOWNs: list[CELLRecord.XOWNGroup] # Ownership (optional)
+    XESP: XESPField # Enable Parent (optional)
+    XTRG: RefField[Record] # Target (optional)
+    XSED: XSEDField # SpeedTree (optional)
+    XLOD: BYTVField # Distant LOD Data (optional)
+    XCHG: FLTVField # Charge (optional)
+    XHLT: FLTVField # Health (optional)
+    XPCI: RefField[CELLRecord] # Unused (optional)
+    XLCM: IN32Field # Level Modifier (optional)
+    XRTM: RefField[REFRRecord] # Unknown (optional)
+    XACT: UI32Field # Action Flag (optional)
+    XCNT: IN32Field # Count (optional)
+    XMRKs: list[XMRKGroup] # Ownership (optional)
+    #ONAM: bool # Open by Default
+    XRGD: BYTVField # Ragdoll Data (optional)
+    XSCL: FLTVField # Scale (optional)
+    XSOL: BYTEField # Contained Soul (optional)
+    _nextFull: int
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
-            case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize),
-            case FieldType.NAME: z = self.NAME = RefField[Record](r, dataSize),
-            case FieldType.XTEL: z = self.XTEL = XTELField(r, dataSize),
-            case FieldType.DATA: z = self.DATA = DATAField(r, dataSize),
-            case FieldType.XLOC: z = self.XLOC = XLOCField(r, dataSize),
-            case FieldType.XOWN: z = self.(XOWNs ??= []).addX(CELLRecord.XOWNGroup { XOWN = RefField[Record](r, dataSize) }),
-            case FieldType.XRNK: z = self.XOWNs.last().XRNK = r.readS(IN32Field, dataSize),
-            case FieldType.XGLB: z = self.XOWNs.last().XGLB = RefField[Record](r, dataSize),
-            case FieldType.XESP: z = self.XESP = XESPField(r, dataSize),
-            case FieldType.XTRG: z = self.XTRG = RefField[Record](r, dataSize),
-            case FieldType.XSED: z = self.XSED = XSEDField(r, dataSize),
-            case FieldType.XLOD: z = self.XLOD = r.readBYTV(dataSize),
-            case FieldType.XCHG: z = self.XCHG = r.readS(FLTVField, dataSize),
-            case FieldType.XHLT: z = self.XCHG = r.readS(FLTVField, dataSize),
-            case FieldType.XPCI: z = self.(_nextFull = 1, XPCI = RefField[CELLRecord](r, dataSize)),
-            case FieldType.FULL: z = self._nextFull == 1 ? XPCI.Value.SetName(r.ReadFAString(dataSize)) : _nextFull == 2 ? XMRKs.last().FULL = r.readSTRV(dataSize) : _nextFull = 0,
-            case FieldType.XLCM: z = self.XLCM = r.readS(IN32Field, dataSize),
-            case FieldType.XRTM: z = self.XRTM = RefField[REFRRecord](r, dataSize),
-            case FieldType.XACT: z = self.XACT = r.readS(UI32Field, dataSize),
-            case FieldType.XCNT: z = self.XCNT = r.readS(IN32Field, dataSize),
-            case FieldType.XMRK: z = self.(_nextFull = 2, (XMRKs ??= []).addX(XMRKGroup())),
-            case FieldType.FNAM: z = self.XMRKs.last().FNAM = r.readS(BYTEField, dataSize),
-            case FieldType.TNAM: z = self.XMRKs.last().TNAM = r.readS(BYTEField, dataSize),
-            case FieldType.ONAM: z = self.true,
-            case FieldType.XRGD: z = self.XRGD = r.readBYTV(dataSize),
-            case FieldType.XSCL: z = self.XSCL = r.readS(FLTVField, dataSize),
-            case FieldType.XSOL: z = self.XSOL = r.readS(BYTEField, dataSize),
+            case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
+            case FieldType.NAME: z = self.NAME = RefField[Record](r, dataSize)
+            case FieldType.XTEL: z = self.XTEL = XTELField(r, dataSize)
+            case FieldType.DATA: z = self.DATA = DATAField(r, dataSize)
+            case FieldType.XLOC: z = self.XLOC = XLOCField(r, dataSize)
+            case FieldType.XOWN: z = (self.XOWNs or self.XOWNs := []).addX(CELLRecord.XOWNGroup(XOWN = RefField[Record](r, dataSize)))
+            case FieldType.XRNK: z = self.XOWNs.last().XRNK = r.readS(IN32Field, dataSize)
+            case FieldType.XGLB: z = self.XOWNs.last().XGLB = RefField[Record](r, dataSize)
+            case FieldType.XESP: z = self.XESP = XESPField(r, dataSize)
+            case FieldType.XTRG: z = self.XTRG = RefField[Record](r, dataSize)
+            case FieldType.XSED: z = self.XSED = XSEDField(r, dataSize)
+            case FieldType.XLOD: z = self.XLOD = r.readBYTV(dataSize)
+            case FieldType.XCHG: z = self.XCHG = r.readS(FLTVField, dataSize)
+            case FieldType.XHLT: z = self.XCHG = r.readS(FLTVField, dataSize)
+            case FieldType.XPCI: z = (self.XPCI = RefField[CELLRecord](r, dataSize), self._nextFull = 1)[0]
+            case FieldType.FULL: z = self.XPCI.value.setName(r.readFAString(dataSize)) if self._nextFull == 1 else self.XMRKs.last().FULL = r.readSTRV(dataSize) if self._nextFull == 2 else self._nextFull = 0
+            case FieldType.XLCM: z = self.XLCM = r.readS(IN32Field, dataSize)
+            case FieldType.XRTM: z = self.XRTM = RefField[REFRRecord](r, dataSize)
+            case FieldType.XACT: z = self.XACT = r.readS(UI32Field, dataSize)
+            case FieldType.XCNT: z = self.XCNT = r.readS(IN32Field, dataSize)
+            case FieldType.XMRK: z = ((self.XMRKs or self.XMRKs := []).addX(XMRKGroup()), _nextFull = 2)[0]
+            case FieldType.FNAM: z = self.XMRKs.last().FNAM = r.readS(BYTEField, dataSize)
+            case FieldType.TNAM: z = self.XMRKs.last().TNAM = r.readS(BYTEField, dataSize)
+            case FieldType.ONAM: z = True
+            case FieldType.XRGD: z = self.XRGD = r.readBYTV(dataSize)
+            case FieldType.XSCL: z = self.XSCL = r.readS(FLTVField, dataSize)
+            case FieldType.XSOL: z = self.XSOL = r.readS(BYTEField, dataSize)
             case _: z = Record.empty
         return z
 # end::REFR[]
 
-# REGN.Region - 3450 - tag::XXXX[]
-public class REGNRecord : Record {
+# REGN.Region - 3450 - tag::REGN[]
+class REGNRecord(Record):
     # TESX
-    public class RDATField {
-        public enum REGNType : byte { Objects = 2, Weather, Map, Landscape, Grass, Sound }
-
-        public uint Type;
-        public REGNType Flags;
-        public byte Priority;
+    class RDATField:
+        class REGNType(Enum): Objects = 2; Weather = 3; Map = 4; Landscape = 5; Grass = 6; Sound = 7
+        type: int
+        flags: REGNType
+        priority: int
         # groups
-        public RDOTField[] RDOTs; # Objects
-        public STRVField RDMP; # MapName
-        public RDGSField[] RDGSs; # Grasses
-        public UI32Field RDMD; # Music Type
-        public RDSDField[] RDSDs; # Sounds
-        public RDWTField[] RDWTs; # Weather Types
+        RDOTs: RDOTField[] # Objects
+        RDMP: STRVField # MapName
+        RDGSs: RDGSField[] # Grasses
+        RDMD: UI32Field # Music Type
+        RDSDs: RDSDField[] # Sounds
+        RDWTs: RDWTField[] # Weather Types
 
-        public RDATField() { }
-        public RDATField(Header r, int dataSize) {
-            Type = r.readUInt32();
-            Flags = (REGNType)r.readByte();
-            Priority = r.readByte();
-            r.Skip(2); # Unused
-        }
-    }
+        def __init__(self, r: Header = None, dataSize: int = 0):
+            if not r: return
+            self.type = r.readUInt32()
+            self.flags = REGNType(r.readByte())
+            self.priority = r.readByte()
+            r.skip(2) # Unused
 
-    public struct RDOTField {
-        public override readonly string ToString() => $"{Object}";
-        public Ref[Record] Object;
-        public ushort ParentIdx;
-        public float Density;
-        public byte Clustering;
-        public byte MinSlope; # (degrees)
-        public byte MaxSlope; # (degrees)
-        public byte Flags;
-        public ushort RadiusWrtParent;
-        public ushort Radius;
-        public float MinHeight;
-        public float MaxHeight;
-        public float Sink;
-        public float SinkVariance;
-        public float SizeVariance;
-        public Int3 AngleVariance;
-        public ByteColor4 VertexShading; # RGB + Shading radius (0 - 200) %
+    class RDOTField:
+        def __repr__(self): return f'{self.object}'
+        object: Ref[Record]
+        parentIdx: int
+        density: float
+        clustering: int
+        minSlope: int # (degrees)
+        maxSlope: int # (degrees)
+        flags: int
+        radiusWrtParent: int
+        radius: int
+        minHeight: float
+        maxHeight: float
+        sink: float
+        sinkVariance: float
+        sizeVariance: float
+        angleVariance: Int3
+        vertexShading: ByteColor4 # RGB + Shading radius (0 - 200) %
 
-        public RDOTField(Header r, int dataSize) {
-            Object = Ref[Record](r.readUInt32());
-            ParentIdx = r.ReadUInt16();
-            r.Skip(2); # Unused
-            Density = r.readSingle();
-            Clustering = r.readByte();
-            MinSlope = r.readByte();
-            MaxSlope = r.readByte();
-            Flags = r.readByte();
-            RadiusWrtParent = r.ReadUInt16();
-            Radius = r.ReadUInt16();
-            MinHeight = r.readSingle();
-            MaxHeight = r.readSingle();
-            Sink = r.readSingle();
-            SinkVariance = r.readSingle();
-            SizeVariance = r.readSingle();
-            AngleVariance = Int3(r.ReadUInt16(), r.ReadUInt16(), r.ReadUInt16());
-            r.Skip(2); # Unused
-            VertexShading = r.readS(ByteColor4, dataSize);
-        }
-    }
+        def __init__(self, r: Header, dataSize: int):
+            self.object = Ref[Record](r.readUInt32())
+            self.parentIdx = r.ReadUInt16()
+            r.skip(2) # Unused
+            self.density = r.readSingle()
+            self.clustering = r.readByte()
+            self.minSlope = r.readByte()
+            self.maxSlope = r.readByte()
+            self.flags = r.readByte()
+            self.radiusWrtParent = r.ReadUInt16()
+            self.radius = r.ReadUInt16()
+            self.minHeight = r.readSingle()
+            self.maxHeight = r.readSingle()
+            self.sink = r.readSingle()
+            self.sinkVariance = r.readSingle()
+            self.sizeVariance = r.readSingle()
+            self.angleVariance = Int3(r.ReadUInt16(), r.ReadUInt16(), r.ReadUInt16())
+            r.skip(2) # Unused
+            self.vertexShading = r.readS(ByteColor4, dataSize)
 
-    public struct RDGSField {
-        public override readonly string ToString() => $"{Grass}";
-        public Ref[GRASRecord] Grass;
+    class RDGSField:
+        def __repr__(self): return f'{self.grass}'
+        grass: Ref[GRASRecord] 
 
-        public RDGSField(Header r, int dataSize) {
-            Grass = Ref[GRASRecord](r.readUInt32());
-            r.Skip(4); # Unused
-        }
-    }
+        def __init__(self, r: Header, dataSize: int):
+            self.grass = Ref[GRASRecord](r.readUInt32())
+            r.skip(4) # Unused
 
-    public struct RDSDField {
-        public override readonly string ToString() => $"{Sound}";
-        public Ref[SOUNRecord] Sound;
-        public uint Flags;
-        public uint Chance;
+    class RDSDField:
+        def __repr__(self): return f'{self.sound}'
+        sound: Ref[SOUNRecord]
+        flags: int
+        chance: int
 
-        public RDSDField(Header r, int dataSize) {
-            if (r.format == FormType.TES3) {
-                Sound = Ref[SOUNRecord](r.ReadFAString(32));
-                Flags = 0;
-                Chance = r.readByte();
-                return;
-            }
-            Sound = Ref[SOUNRecord](r.readUInt32());
-            Flags = r.readUInt32();
-            Chance = r.readUInt32(); #: float with TES5
-        }
-    }
+        def __init__(self, r: Header, dataSize: int):
+            if r.format == FormType.TES3:
+                self.sound = Ref[SOUNRecord](r.readFAString(32))
+                self.flags = 0
+                self.chance = r.readByte()
+                return
+            self.sound = Ref[SOUNRecord](r.readUInt32())
+            self.flags = r.readUInt32()
+            self.chance = r.readUInt32() # float with TES5
 
-    public struct RDWTField(Header r, int dataSize) {
-        public override readonly string ToString() => $"{Weather}";
-        public static byte SizeOf(FormType format) => format == TES4 ? (byte)8 : (byte)12;
-        public Ref[WTHRRecord] Weather = new(r.readUInt32());
-        public uint Chance = r.readUInt32();
-        public Ref[GLOBRecord] Global = r.Format == TES5 ? Ref[GLOBRecord](r.readUInt32()) : Ref[GLOBRecord]();
-    }
+    class RDWTField:
+        def __repr__(self): return f'{self.weather}'
+        @staticmethod
+        def sizeOf(format: FormType) -> int: 8 if format == FormType.TES4 else 12
+        def __init__(self, r: Header, dataSize: int):
+            self.weather: Ref[WTHRRecord] = Ref[WTHRRecord](r.readUInt32())
+            self.chance: int = r.readUInt32()
+            self.global: Ref[GLOBRecord] = Ref[GLOBRecord](r.readUInt32()) if r.format == FormType.TES5 else Ref[GLOBRecord]()
 
     # TES3
-    public struct WEATField {
-        public byte Clear;
-        public byte Cloudy;
-        public byte Foggy;
-        public byte Overcast;
-        public byte Rain;
-        public byte Thunder;
-        public byte Ash;
-        public byte Blight;
+    class WEATField:
+        clear: int
+        cloudy: int
+        foggy: int
+        overcast: int
+        rain: int
+        thunder: int
+        ash: int
+        blight: int
 
-        public WEATField(Header r, int dataSize) {
-            Clear = r.readByte();
-            Cloudy = r.readByte();
-            Foggy = r.readByte();
-            Overcast = r.readByte();
-            Rain = r.readByte();
-            Thunder = r.readByte();
-            Ash = r.readByte();
-            Blight = r.readByte();
+        def __init__(self, r: Header, dataSize: int):
+            self.clear = r.readByte()
+            self.cloudy = r.readByte()
+            self.foggy = r.readByte()
+            self.overcast = r.readByte()
+            self.rain = r.readByte()
+            self.thunder = r.readByte()
+            self.ash = r.readByte()
+            self.blight = r.readByte()
             # v1.3 ESM files add 2 bytes to WEAT subrecords.
-            if (dataSize == 10)
-                r.Skip(2);
-        }
-    }
+            if dataSize == 10: r.skip(2)
 
     # TES4
-    public class RPLIField(Header r, int dataSize) {
-        public uint EdgeFalloff = r.readUInt32(); # (World Units)
-        public Vector2[] Points; # Region Point List Data
+    class RPLIField:
+        def __init__(self, r: Header, dataSize: int):
+            self.edgeFalloff: int = r.readUInt32() # (World Units)
+            self.points: Vector2[] = None # Region Point List Data
+        def RPLDField(self, r: Header, dataSize: int) -> object: z = self.points = r.readFArray(lambda z: r.readVector2(), dataSize >> 3); return z
 
-        public object RPLDField(Header r, int dataSize) {
-            Points = Vector2[dataSize >> 3];
-            for (var i = 0; i < Points.Length; i++) Points[i] = Vector2(r.readSingle(), r.readSingle());
-            return Points;
-        }
-    }
-
-    public STRVField ICON; # Icon / Sleep creature
-    public RefField[WRLDRecord] WNAM; # Worldspace - Region name
-    public CREFField RCLR; # Map Color (COLORREF)
-    public list[RDATField] RDATs = []; # Region Data Entries / TES3: Sound Record (order determines the sound priority)
+    ICON: STRVField # Icon / Sleep creature
+    WNAM: RefField[WRLDRecord] # Worldspace - Region name
+    RCLR: CREFField # Map Color (COLORREF)
+    RDATs: list[RDATField] = [] # Region Data Entries / TES3: Sound Record (order determines the sound priority)
     # TES3
-    public WEATField? WEAT; # Weather Data
+    WEAT: WEATField # Weather Data
     # TES4
-    public list[RPLIField] RPLIs = []; # Region Areas
+    RPLIs: list[RPLIField] = [] # Region Areas
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.EDID or FieldType.NAME: z = self.EDID = r.readSTRV(dataSize)
             case FieldType.WNAM or FieldType.FNAM: z = self.WNAM = RefField[WRLDRecord](r, dataSize)
-            case FieldType.WEAT: z = self.WEAT = WEATField(r, dataSize) #TES3
+            case FieldType.WEAT: z = self.WEAT = WEATField(r, dataSize) # TES3
             case FieldType.ICON or FieldType.BNAM: z = self.ICON = r.readSTRV(dataSize)
             case FieldType.RCLR or FieldType.CNAM: z = self.RCLR = r.readS(CREFField, dataSize)
             case FieldType.SNAM: z = self.RDATs.addX(RDATField(RDSDs = [RDSDField(r, dataSize)]))
             case FieldType.RPLI: z = self.RPLIs.addX(RPLIField(r, dataSize))
             case FieldType.RPLD: z = self.RPLIs.last().RPLDField(r, dataSize)
             case FieldType.RDAT: z = self.RDATs.addX(RDATField(r, dataSize))
-            case FieldType.RDOT: z = self.RDATs.last().RDOTs = r.readFArray(lambda z: RDOTField(r, dataSize), dataSize / 52)
+            case FieldType.RDOT: z = self.RDATs.last().RDOTs = r.readFArray(lambda z: RDOTField(r, dataSize), dataSize // 52)
             case FieldType.RDMP: z = self.RDATs.last().RDMP = r.readSTRV(dataSize)
-            case FieldType.RDGS: z = self.RDATs.last().RDGSs = r.readFArray(lambda z: RDGSField(r, dataSize), dataSize / 8)
+            case FieldType.RDGS: z = self.RDATs.last().RDGSs = r.readFArray(lambda z: RDGSField(r, dataSize), dataSize // 8)
             case FieldType.RDMD: z = self.RDATs.last().RDMD = r.readS(UI32Field, dataSize)
-            case FieldType.RDSD: z = self.RDATs.last().RDSDs = r.readFArray(lambda z: RDSDField(r, dataSize), dataSize / 12)
-            case FieldType.RDWT: z = self.RDATs.last().RDWTs = r.readFArray(lambda z: RDWTField(r, dataSize), dataSize / RDWTField.SizeOf(r.format))
+            case FieldType.RDSD: z = self.RDATs.last().RDSDs = r.readFArray(lambda z: RDSDField(r, dataSize), dataSize // 12)
+            case FieldType.RDWT: z = self.RDATs.last().RDWTs = r.readFArray(lambda z: RDWTField(r, dataSize), dataSize // RDWTField.sizeOf(r.format))
             case _: z = Record.empty
         return z
 # end::REGN[]
 
-# ROAD.Road - 0400 - tag::XXXX[]
-public class ROADRecord : Record {
-    public PGRDRecord.PGRPField[] PGRPs;
-    public UNKNField PGRR;
+# ROAD.Road - 0400 - tag::ROAD[]
+class ROADRecord(Record):
+    PGRPs: PGRDRecord.PGRPField[]
+    PGRR: UNKNField
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.PGRP: z = self.PGRPs = r.readFArray(lambda z: PGRDRecord.PGRPField(r, dataSize), dataSize >> 4)
-            case FieldType.PGRR: z = self.PGRR = r.ReadUNKN(dataSize),
+            case FieldType.PGRR: z = self.PGRR = r.ReadUNKN(dataSize)
             case _: z = Record.empty
         return z
 # end::ROAD[]
 
+# SBSP.Subspace - 0400 - tag::SBSP[]
+class SBSPRecord(Record):
+    class DNAMField:
+        def __init__(self, r: Header, dataSize: int):
+            self.x: float = r.readSingle() # X dimension
+            self.y: float = r.readSingle() # Y dimension
+            self.z: float = r.readSingle() # Z dimension
 
-# SBSP.Subspace - 0400 - tag::XXXX[]
-public class SBSPRecord : Record {
-    public struct DNAMField(Header r, int dataSize) {
-        public float X = r.readSingle(); # X dimension
-        public float Y = r.readSingle(); # Y dimension
-        public float Z = r.readSingle(); # Z dimension
-    }
-
-    public DNAMField DNAM;
+    DNAM: DNAMField
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -4130,143 +4091,134 @@ public class SBSPRecord : Record {
         return z
 # end::SBSP[]
 
-# SCPT.Script - 3400 - tag::XXXX[]
+# SCPT.Script - 3400 - tag::SCPT[]
 class SCPTRecord(Record):
     # TESX
     class CTDAField:
         class INFOType(Enum): Nothing = 0; Function = 1; Global = 2; Local = 3; Journal = 4; Item = 5; Dead = 6; NotId = 7; NotFaction = 8; NotClass = 9; NotRace = 10; NotCell = 11; NotLocal = 12
-
         # TES3: 0 = [=], 1 = [!=], 2 = [>], 3 = [>=], 4 = [<], 5 = [<=]
         # TES4: 0 = [=], 2 = [!=], 4 = [>], 6 = [>=], 8 = [<], 10 = [<=]
-        public byte CompareOp;
+        compareOp: int
         # (00-71) - sX = Global/Local/Not Local types, JX = Journal type, IX = Item Type, DX = Dead Type, XX = Not ID Type, FX = Not Faction, CX = Not Class, RX = Not Race, LX = Not Cell
-        public string FunctionId;
+        functionId: str
         # TES3
-        public byte Index; # (0-5)
-        public byte Type;
+        index: int # (0-5)
+        type: int
         # Except for the function type, this is the ID for the global/local/etc. Is not nessecarily NULL terminated.The function type SCVR sub-record has
-        public string Name;
+        name: str
         # TES4
-        public float ComparisonValue;
-        public int Parameter1; # Parameter #1
-        public int Parameter2; # Parameter #2
+        comparisonValue: float
+        parameter1: int # Parameter #1
+        parameter2: int # Parameter #2
 
-        public CTDAField(Header r, int dataSize) {
-            if (r.format == FormType.TES3) {
-                Index = r.readByte();
-                Type = r.readByte();
-                FunctionId = r.ReadFAString(2);
-                CompareOp = (byte)(r.readByte() << 1);
-                Name = r.ReadFAString(dataSize - 5);
-                ComparisonValue = Parameter1 = Parameter2 = 0;
-                return;
-            }
-            CompareOp = r.readByte();
-            r.Skip(3); # Unused
-            ComparisonValue = r.readSingle();
-            FunctionId = r.ReadFAString(4);
-            Parameter1 = r.readInt32();
-            Parameter2 = r.readInt32();
-            if (dataSize != 24) r.Skip(4); # Unused
-            Index = Type = 0;
-            Name = null;
-        }
-    }
+        def __init__(self, r: Header, dataSize: int):
+            if r.format == FormType.TES3:
+                self.index = r.readByte()
+                self.type = r.readByte()
+                self.functionId = r.readFAString(2)
+                self.compareOp = (r.readByte() << 1) & 0xFF
+                self.name = r.readFAString(dataSize - 5)
+                self.comparisonValue = self.parameter1 = self.parameter2 = 0
+                return
+            self.compareOp = r.readByte()
+            r.skip(3); # Unused
+            self.comparisonValue = r.readSingle()
+            self.functionId = r.readFAString(4)
+            self.parameter1 = r.readInt32()
+            self.parameter2 = r.readInt32()
+            if dataSize != 24: r.skip(4) # Unused
+            self.index = self.type = 0
+            self.name = None
 
     # TES3
-    public class SCHDField(Header r, int dataSize) {
-        public override string ToString() => $"{Name}";
-        public string Name = r.ReadFAString(32);
-        public int NumShorts = r.readInt32();
-        public int NumLongs = r.readInt32();
-        public int NumFloats = r.readInt32();
-        public int ScriptDataSize = r.readInt32();
-        public int LocalVarSize = r.readInt32();
-        public string[] Variables = null;
-        public object SCVRField(Header r, int dataSize) => Variables = r.ReadZAStringList(dataSize).ToArray();
-    }
+    class SCHDField:
+        def __repr__(self): return f'{self.name}'
+        def __init__(self, r: Header, dataSize: int):
+            self.name: str = r.readFAString(32)
+            self.numShorts: int = r.readInt32()
+            self.numLongs: int = r.readInt32()
+            self.numFloats: int = r.readInt32()
+            self.scriptDataSize: int = r.readInt32()
+            self.localVarSize: int = r.readInt32()
+            self.variables: str[] = None
+        def SCVRField(self, r: Header, dataSize: int) -> object: z = self.variables = r.readZAStringList(dataSize); return z
 
     # TES4
-    public struct SCHRField {
-        public override readonly string ToString() => $"{RefCount}";
-        public uint RefCount;
-        public uint CompiledSize;
-        public uint VariableCount;
-        public uint Type; # 0x000 = Object, 0x001 = Quest, 0x100 = Magic Effect
+    class SCHRField:
+        def __repr__(self): return f'{self.refCount}'
+        refCount: int
+        compiledSize: int
+        variableCount: int
+        type: int # 0x000 = Object, 0x001 = Quest, 0x100 = Magic Effect
 
-        public SCHRField(Header r, int dataSize) {
-            r.Skip(4); # Unused
-            RefCount = r.readUInt32();
-            CompiledSize = r.readUInt32();
-            VariableCount = r.readUInt32();
-            Type = r.readUInt32();
-            if (dataSize == 20) return;
-            r.Skip(dataSize - 20);
-        }
-    }
+        def __init__(self, r: Header, dataSize: int):
+            r.skip(4) # Unused
+            self.refCount = r.readUInt32()
+            self.compiledSize = r.readUInt32()
+            self.variableCount = r.readUInt32()
+            self.type = r.readUInt32()
+            if dataSize == 20: return
+            r.skip(dataSize - 20)
 
-    public class SLSDField {
-        public override string ToString() => $"{Idx}:{VariableName}";
-        public uint Idx;
-        public uint Type;
-        public string VariableName;
+    class SLSDField:
+        def __repr__(self): return f'{self.idx}:{self.variableName}'
+        idx: int
+        type: int
+        variableName: str
 
-        public SLSDField(Header r, int dataSize) {
-            Idx = r.readUInt32();
-            r.readUInt32(); # Unknown
-            r.readUInt32(); # Unknown
-            r.readUInt32(); # Unknown
-            Type = r.readUInt32();
-            r.readUInt32(); # Unknown
-                            # SCVRField
-            VariableName = null;
-        }
-        public object SCVRField(Header r, int dataSize) => VariableName = r.ReadFUString(dataSize);
-    }
+        def __init__(self, r: Header, dataSize: int):
+            self.idx = r.readUInt32()
+            r.readUInt32() # Unknown
+            r.readUInt32() # Unknown
+            r.readUInt32() # Unknown
+            self.type = r.readUInt32()
+            r.readUInt32() # Unknown
+            # SCVRField
+            self.variableName = None
+        def SCVRField(self, r: Header, dataSize: int) -> object: z = self.variableName = r.readFUString(dataSize); return z
 
-    public override string ToString() => $"SCPT: {EDID.Value ?? SCHD.Name}";
-    public BYTVField SCDA; # Compiled Script
-    public STRVField SCTX; # Script Source
-                           # TES3
-    public SCHDField SCHD; # Script Data
-                           # TES4
-    public SCHRField SCHR; # Script Data
-    public list[SLSDField] SLSDs = []; # Variable data
-    public list[SLSDField] SCRVs = []; # Ref variable data (one for each ref declared)
-    public list[RefField[Record]] SCROs = []; # Global variable reference
+    def __repr__(self): return f'SCPT: {self.EDID.value or self.SCHD.name}'
+    SCDA: BYTVField # Compiled Script
+    SCTX: STRVField # Script Source
+    # TES3
+    SCHD: SCHDField # Script Data
+    # TES4
+    SCHR: SCHRField # Script Data
+    SLSDs: list[SLSDField] = [] # Variable data
+    SCRVs: list[SLSDField] = [] # Ref variable data (one for each ref declared)
+    SCROs: list[RefField[Record]] = [] # Global variable reference
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
-            case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize),
-            case FieldType.SCHD: z = self.SCHD = SCHDField(r, dataSize),
-            case FieldType.SCVR: z = self.r.Format != TES3 ? SLSDs.last().SCVRField(r, dataSize) : SCHD.SCVRField(r, dataSize),
-            case FieldType.SCDA or FieldType.SCDT: z = self.SCDA = r.readBYTV(dataSize),
-            case FieldType.SCTX: z = self.SCTX = r.readSTRV(dataSize),
+            case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
+            case FieldType.SCHD: z = self.SCHD = SCHDField(r, dataSize)
+            case FieldType.SCVR: z = self.SLSDs.last().SCVRField(r, dataSize) if r.Format != FormType.TES3 else self.SCHD.SCVRField(r, dataSize)
+            case FieldType.SCDA or FieldType.SCDT: z = self.SCDA = r.readBYTV(dataSize)
+            case FieldType.SCTX: z = self.SCTX = r.readSTRV(dataSize)
             # TES4
-            case FieldType.SCHR: z = self.SCHR = SCHRField(r, dataSize),
-            case FieldType.SLSD: z = self.SLSDs.addX(SLSDField(r, dataSize)),
-            case FieldType.SCRO: z = self.SCROs.addX(RefField[Record](r, dataSize)),
-            case FieldType.SCRV: z = self.SCRVs.addX(this.Then(r.readUInt32(), idx => SLSDs.Single(x => x.Idx == idx))),
+            case FieldType.SCHR: z = self.SCHR = SCHRField(r, dataSize)
+            case FieldType.SLSD: z = self.SLSDs.addX(SLSDField(r, dataSize))
+            case FieldType.SCRO: z = self.SCROs.addX(RefField[Record](r, dataSize))
+            case FieldType.SCRV: z = self.SCRVs.addX(this.Then(r.readUInt32(), idx => SLSDs.Single(x => x.Idx == idx)))
             case _: z = Record.empty
         return z
-    }
 # end::SCPT[]
 
-# SGST.Sigil Stone - 0400 - tag::XXXX[]
-public class SGSTRecord : Record, IHaveMODL {
-    public struct DATAField(Header r, int dataSize) {
-        public byte Uses = r.readByte();
-        public int Value = r.readInt32();
-        public float Weight = r.readSingle();
-    }
+# SGST.Sigil Stone - 0400 - tag::SGST[]
+class SGSTRecord(Record, IHaveMODL):
+    class DATAField:
+    def __init__(self, r: Header, dataSize: int):
+        self.uses: int = r.readByte()
+        self.value: int = r.readInt32()
+        self.weight: float = r.readSingle()
 
-    public MODLGroup MODL { get; set; } # Model
-    public STRVField FULL; # Item Name
-    public DATAField DATA; # Sigil Stone Data
-    public FILEField ICON; # Icon
-    public RefField[SCPTRecord]? SCRI; # Script (optional)
-    public list[ENCHRecord.EFITField] EFITs = []; # Effect Data
-    public list[ENCHRecord.SCITField] SCITs = []; # Script Effect Data
+    MODL: MODLGroup # Model
+    FULL: STRVField # Item Name
+    DATA: DATAField # Sigil Stone Data
+    ICON: FILEField # Icon
+    SCRI: RefField[SCPTRecord] # Script (optional)
+    EFITs: list[ENCHRecord.EFITField] = [] # Effect Data
+    SCITs: list[ENCHRecord.SCITField] = [] # Script Effect Data
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -4274,7 +4226,7 @@ public class SGSTRecord : Record, IHaveMODL {
             case FieldType.MODL: z = self.MODL = MODLGroup(r, dataSize)
             case FieldType.MODB: z = self.MODL.MODBField(r, dataSize)
             case FieldType.MODT: z = self.MODL.MODTField(r, dataSize)
-            case FieldType.FULL: z = self.SCITs.Count == 0 ? FULL = r.readSTRV(dataSize) : SCITs.last().FULLField(r, dataSize)
+            case FieldType.FULL: z = self.FULL = r.readSTRV(dataSize) if len(self.SCITs) == 0 else self.SCITs.last().FULLField(r, dataSize)
             case FieldType.DATA: z = self.DATA = DATAField(r, dataSize)
             case FieldType.ICON: z = self.ICON = r.readFILE(dataSize)
             case FieldType.SCRI: z = self.SCRI = RefField[SCPTRecord](r, dataSize)
@@ -4285,191 +4237,174 @@ public class SGSTRecord : Record, IHaveMODL {
         return z
 # end::SGST[]
 
-# SKIL.Skill - 3450 - tag::XXXX[]
-public class SKILRecord : Record {
+# SKIL.Skill - 3450 - tag::SKIL[]
+class SKILRecord(Record):
     # TESX
-    public struct DATAField {
-        public int Action;
-        public int Attribute;
-        public uint Specialization; # 0 = Combat, 1 = Magic, 2 = Stealth
-        public float[] UseValue; # The use types for each skill are hard-coded.
+    class DATAField:
+        action: int
+        attribute: int
+        specialization: int # 0 = Combat, 1 = Magic, 2 = Stealth
+        useValue: float[] # The use types for each skill are hard-coded.
 
-        public DATAField(Header r, int dataSize) {
-            Action = r.format == FormType.TES3 ? 0 : r.readInt32();
-            Attribute = r.readInt32();
-            Specialization = r.readUInt32();
-            UseValue = float[r.format == FormType.TES3 ? 4 : 2];
-            for (var i = 0; i < UseValue.Length; i++) UseValue[i] = r.readSingle();
-        }
-    }
+        def __init__(self, r: Header, dataSize: int):
+            self.action = 0 r.format == FormType.TES3 else r.readInt32()
+            self.attribute = r.readInt32()
+            self.specialization = r.readUInt32()
+            self.useValue = r.readPArray(None, 'f', 4 if r.format == FormType.TES3 else 2)
 
-    public override string ToString() => $"SKIL: {INDX.Value}:{EDID.Value}";
-    public IN32Field INDX; # Skill ID
-    public DATAField DATA; # Skill Data
-    public STRVField DESC; # Skill description
+    def __repr__(self): return f'SKIL: {self.INDX.value}:{self.EDID.value}'
+    INDX: IN32Field # Skill ID
+    DATA: DATAField # Skill Data
+    DESC: STRVField # Skill description
     # TES4
-    public FILEField ICON; # Icon
-    public STRVField ANAM; # Apprentice Text
-    public STRVField JNAM; # Journeyman Text
-    public STRVField ENAM; # Expert Text
-    public STRVField MNAM; # Master Text
+    ICON: FILEField # Icon
+    ANAM: STRVField # Apprentice Text
+    JNAM: STRVField # Journeyman Text
+    ENAM: STRVField # Expert Text
+    MNAM: STRVField # Master Text
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
-            case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize),
-            case FieldType.INDX: z = self.INDX = r.readS(IN32Field, dataSize),
-            case FieldType.DATA or FieldType.SKDT: z = self.DATA = DATAField(r, dataSize),
-            case FieldType.DESC: z = self.DESC = r.readSTRV(dataSize),
-            case FieldType.ICON: z = self.ICON = r.readFILE(dataSize),
-            case FieldType.ANAM: z = self.ANAM = r.readSTRV(dataSize),
-            case FieldType.JNAM: z = self.JNAM = r.readSTRV(dataSize),
-            case FieldType.ENAM: z = self.ENAM = r.readSTRV(dataSize),
-            case FieldType.MNAM: z = self.MNAM = r.readSTRV(dataSize),
+            case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
+            case FieldType.INDX: z = self.INDX = r.readS(IN32Field, dataSize)
+            case FieldType.DATA or FieldType.SKDT: z = self.DATA = DATAField(r, dataSize)
+            case FieldType.DESC: z = self.DESC = r.readSTRV(dataSize)
+            case FieldType.ICON: z = self.ICON = r.readFILE(dataSize)
+            case FieldType.ANAM: z = self.ANAM = r.readSTRV(dataSize)
+            case FieldType.JNAM: z = self.JNAM = r.readSTRV(dataSize)
+            case FieldType.ENAM: z = self.ENAM = r.readSTRV(dataSize)
+            case FieldType.MNAM: z = self.MNAM = r.readSTRV(dataSize)
             case _: z = Record.empty
         return z
 # end::SKIL[]
 
-# SLGM.Soul Gem - 0450 - tag::XXXX[]
-public class SLGMRecord : Record, IHaveMODL {
-    public struct DATAField(Header r, int dataSize) {
-        public int Value = r.readInt32();
-        public float Weight = r.readSingle();
-    }
+# SLGM.Soul Gem - 0450 - tag::SLGM[]
+class SLGMRecord(Record, IHaveMODL):
+    class DATAField:
+        def __init__(self, r: Header, dataSize: int):
+            self.value: int = r.readInt32()
+            self.weight: float = r.readSingle()
 
-    public MODLGroup MODL { get; set; } # Model
-    public STRVField FULL; # Item Name
-    public RefField[SCPTRecord] SCRI; # Script (optional)
-    public DATAField DATA; # Type of soul contained in the gem
-    public FILEField ICON; # Icon (optional)
-    public BYTEField SOUL; # Type of soul contained in the gem
-    public BYTEField SLCP; # Soul gem maximum capacity
+    MODL: MODLGroup # Model
+    FULL: STRVField # Item Name
+    SCRI: RefField[SCPTRecord] # Script (optional)
+    DATA: DATAField # Type of soul contained in the gem
+    ICON: FILEField # Icon (optional)
+    SOUL: BYTEField # Type of soul contained in the gem
+    SLCP: BYTEField # Soul gem maximum capacity
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
-            case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize),
-            case FieldType.MODL: z = self.MODL = MODLGroup(r, dataSize),
-            case FieldType.MODB: z = self.MODL.MODBField(r, dataSize),
-            case FieldType.MODT: z = self.MODL.MODTField(r, dataSize),
-            case FieldType.FULL: z = self.FULL = r.readSTRV(dataSize),
-            case FieldType.SCRI: z = self.SCRI = RefField[SCPTRecord](r, dataSize),
-            case FieldType.DATA: z = self.DATA = DATAField(r, dataSize),
-            case FieldType.ICON: z = self.ICON = r.readFILE(dataSize),
-            case FieldType.SOUL: z = self.SOUL = r.readS(BYTEField, dataSize),
-            case FieldType.SLCP: z = self.SLCP = r.readS(BYTEField, dataSize),
+            case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
+            case FieldType.MODL: z = self.MODL = MODLGroup(r, dataSize)
+            case FieldType.MODB: z = self.MODL.MODBField(r, dataSize)
+            case FieldType.MODT: z = self.MODL.MODTField(r, dataSize)
+            case FieldType.FULL: z = self.FULL = r.readSTRV(dataSize)
+            case FieldType.SCRI: z = self.SCRI = RefField[SCPTRecord](r, dataSize)
+            case FieldType.DATA: z = self.DATA = DATAField(r, dataSize)
+            case FieldType.ICON: z = self.ICON = r.readFILE(dataSize)
+            case FieldType.SOUL: z = self.SOUL = r.readS(BYTEField, dataSize)
+            case FieldType.SLCP: z = self.SLCP = r.readS(BYTEField, dataSize)
             case _: z = Record.empty
         return z
 # end::SLGM[]
 
-# SNDG.Sound Generator - 3000 - tag::XXXX[]
-public class SNDGRecord : Record {
-    public enum SNDGType : uint {
-        LeftFoot = 0,
-        RightFoot = 1,
-        SwimLeft = 2,
-        SwimRight = 3,
-        Moan = 4,
-        Roar = 5,
-        Scream = 6,
-        Land = 7,
-    }
-
-    public IN32Field DATA; # Sound Type Data
-    public STRVField SNAM; # Sound ID
-    public STRVField? CNAM; # Creature name (optional)
+# SNDG.Sound Generator - 3000 - tag::SNDG[]
+class SNDGRecord(Record):
+    class SNDGType(Enum): LeftFoot = 0; RightFoot = 1; SwimLeft = 2; SwimRight = 3; Moan = 4; Roar = 5; Scream = 6; Land = 7
+    DATA: IN32Field # Sound Type Data
+    SNAM: STRVField # Sound ID
+    CNAM: STRVField # Creature name (optional)
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         if r.format == FormType.TES3:
             match type:
-                case FieldType.NAME: z = self.EDID = r.readSTRV(dataSize),
-                case FieldType.DATA: z = self.DATA = r.readS(IN32Field, dataSize),
-                case FieldType.SNAM: z = self.SNAM = r.readSTRV(dataSize),
-                case FieldType.CNAM: z = self.CNAM = r.readSTRV(dataSize),
+                case FieldType.NAME: z = self.EDID = r.readSTRV(dataSize)
+                case FieldType.DATA: z = self.DATA = r.readS(IN32Field, dataSize)
+                case FieldType.SNAM: z = self.SNAM = r.readSTRV(dataSize)
+                case FieldType.CNAM: z = self.CNAM = r.readSTRV(dataSize)
                 case _: z = Record.empty
             return z
         return None
 # end::SNDG[]
 
-# SNDR.Sound Reference - 0050 - tag::XXXX[]
-public class SNDRRecord : Record {
-    public CREFField CNAM; # RGB color
+# SNDR.Sound Reference - 0050 - tag::SNDR[]
+class SNDRRecord(Record):
+    CNAM: CREFField # RGB color
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
-            case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize),
-            case FieldType.CNAM: z = self.CNAM = r.readS(CREFField, dataSize),
+            case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
+            case FieldType.CNAM: z = self.CNAM = r.readS(CREFField, dataSize)
             case _: z = Record.empty
         return z
 # end::SNDR[]
 
-# SOUN.Sound - 3450 - tag::XXXX[]
-public class SOUNRecord : Record {
-    [Flags]
-    public enum SOUNFlags : ushort {
-        RandomFrequencyShift = 0x0001,
-        PlayAtRandom = 0x0002,
-        EnvironmentIgnored = 0x0004,
-        RandomLocation = 0x0008,
-        Loop = 0x0010,
-        MenuSound = 0x0020,
-        _2D = 0x0040,
-        _360LFE = 0x0080,
-    }
+# SOUN.Sound - 3450 - tag::SOUN[]
+class SOUNRecord(Record):
+    class SOUNFlags(Flag):
+        RandomFrequencyShift = 0x0001
+        PlayAtRandom = 0x0002
+        EnvironmentIgnored = 0x0004
+        RandomLocation = 0x0008
+        Loop = 0x0010
+        MenuSound = 0x0020
+        _2D = 0x0040
+        _360LFE = 0x0080
 
     # TESX
-    public class DATAField {
-        public byte Volume; # (0=0.00, 255=1.00)
-        public byte MinRange; # Minimum attenuation distance
-        public byte MaxRange; # Maximum attenuation distance
+    class DATAField:
+        volume: int # (0=0.00, 255=1.00)
+        minRange: int # Minimum attenuation distance
+        maxRange: int # Maximum attenuation distance
         # Bethesda4
-        public sbyte FrequencyAdjustment; # Frequency adjustment %
-        public ushort Flags; # Flags
-        public ushort StaticAttenuation; # Static Attenuation (db)
-        public byte StopTime; # Stop time
-        public byte StartTime; # Start time
+        frequencyAdjustment: int # Frequency adjustment %
+        flags: int # Flags
+        staticAttenuation: int # Static Attenuation (db)
+        stopTime: int # Stop time
+        startTime: int # Start time
 
-        public DATAField(Header r, int dataSize) {
-            Volume = r.format == FormType.TES3 ? r.readByte() : (byte)0;
-            MinRange = r.readByte();
-            MaxRange = r.readByte();
-            if (r.format == FormType.TES3) return;
-            FrequencyAdjustment = r.ReadSByte();
-            r.readByte(); # Unused
-            Flags = r.ReadUInt16();
-            r.ReadUInt16(); # Unused
-            if (dataSize == 8) return;
-            StaticAttenuation = r.ReadUInt16();
-            StopTime = r.readByte();
-            StartTime = r.readByte();
-        }
-    }
+        def __init__(self, r: Header, dataSize: int):
+            self.volume = r.readByte() if r.format == FormType.TES3 else 0
+            self.minRange = r.readByte()
+            self.maxRange = r.readByte()
+            if r.format == FormType.TES3: return
+            self.frequencyAdjustment = r.readSByte()
+            r.readByte() # Unused
+            self.flags = r.readUInt16()
+            r.readUInt16() # Unused
+            if dataSize == 8: return
+            self.staticAttenuation = r.readUInt16()
+            self.stopTime = r.readByte()
+            self.startTime = r.readByte()
 
-    public FILEField FNAM; # Sound Filename (relative to Sounds\)
-    public DATAField DATA; # Sound Data
+    FNAM: FILEField # Sound Filename (relative to Sounds\)
+    DATA: DATAField # Sound Data
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
-            case FieldType.EDID or FieldType.NAME: z = self.EDID = r.readSTRV(dataSize),
-            case FieldType.FNAM: z = self.FNAM = r.readFILE(dataSize),
-            case FieldType.SNDX: z = self.DATA = DATAField(r, dataSize),
-            case FieldType.SNDD: z = self.DATA = DATAField(r, dataSize),
-            case FieldType.DATA: z = self.DATA = DATAField(r, dataSize),
+            case FieldType.EDID or FieldType.NAME: z = self.EDID = r.readSTRV(dataSize)
+            case FieldType.FNAM: z = self.FNAM = r.readFILE(dataSize)
+            case FieldType.SNDX: z = self.DATA = DATAField(r, dataSize)
+            case FieldType.SNDD: z = self.DATA = DATAField(r, dataSize)
+            case FieldType.DATA: z = self.DATA = DATAField(r, dataSize)
             case _: z = Record.empty
         return z
 # end::SOUN[]
 
-# SPEL.Spell - 3450 - tag::XXXX[]
-public class SPELRecord : Record {
+# SPEL.Spell - 3450 - tag::SPEL[]
+class SPELRecord(Record):
     # TESX
-    public struct SPITField(Header r, int dataSize) {
-        public override readonly string ToString() => $"{Type}";
-        # TES3: 0 = Spell, 1 = Ability, 2 = Blight, 3 = Disease, 4 = Curse, 5 = Power
-        # TES4: 0 = Spell, 1 = Disease, 2 = Power, 3 = Lesser Power, 4 = Ability, 5 = Poison
-        public uint Type = r.readUInt32();
-        public int SpellCost = r.readInt32();
-        public uint Flags = r.readUInt32(); # 0x0001 = AutoCalc, 0x0002 = PC Start, 0x0004 = Always Succeeds
-        # TES4
-        public int SpellLevel = r.Format != TES3 ? r.readInt32() : 0;
-    }
+    class SPITField:
+        def __repr__(self): return f'{self.type}'
+        def __init__(self, r: Header, dataSize: int):
+            # TES3: 0 = Spell, 1 = Ability, 2 = Blight, 3 = Disease, 4 = Curse, 5 = Power
+            # TES4: 0 = Spell, 1 = Disease, 2 = Power, 3 = Lesser Power, 4 = Ability, 5 = Poison
+            self.type: int = r.readUInt32()
+            self.spellCost: int = r.readInt32()
+            self.flags: int = r.readUInt32() # 0x0001 = AutoCalc, 0x0002 = PC Start, 0x0004 = Always Succeeds
+            # TES4
+            SpellLevel: int = r.readInt32() if r.format != FormType.TES3 else 0
 
     FULL: STRVField # Spell name
     SPIT: SPITField # Spell data
@@ -4581,278 +4516,257 @@ class TES4Record(Record):
 
 # TREE.Tree - 0450 - tag::TREE[]
 class TREERecord(Record, IHaveMODL)
-    public struct SNAMField {
-        public int[] Values;
+    class SNAMField:
+        def __init__(self, r: Header, dataSize: int):
+            self.values: int[] = r.readPArray(None, 'i', dataSize >> 2)
 
-        public SNAMField(Header r, int dataSize) {
-            Values = int[dataSize >> 2];
-            for (var i = 0; i < Values.Length; i++)
-                Values[i] = r.readInt32();
-        }
-    }
+    class CNAMField:
+        def __init__(self, r: Header, dataSize: int):
+            self.leafCurvature: float = r.readSingle()
+            self.minimumLeafAngle: float = r.readSingle()
+            self.maximumLeafAngle: float = r.readSingle()
+            self.branchDimmingValue: float = r.readSingle()
+            self.leafDimmingValue: float = r.readSingle()
+            self.shadowRadius: int = r.readInt32()
+            self.rockSpeed: float = r.readSingle()
+            self.rustleSpeed: float = r.readSingle()
 
-    public struct CNAMField(Header r, int dataSize) {
-        public float LeafCurvature = r.readSingle();
-        public float MinimumLeafAngle = r.readSingle();
-        public float MaximumLeafAngle = r.readSingle();
-        public float BranchDimmingValue = r.readSingle();
-        public float LeafDimmingValue = r.readSingle();
-        public int ShadowRadius = r.readInt32();
-        public float RockSpeed = r.readSingle();
-        public float RustleSpeed = r.readSingle();
-    }
+    class BNAMField:
+        def __init__(self, r: Header, dataSize: int):
+            self.width: float = r.readSingle()
+            self.height: float = r.readSingle()
 
-    public struct BNAMField(Header r, int dataSize) {
-        public float Width = r.readSingle();
-        public float Height = r.readSingle();
-    }
-
-    public MODLGroup MODL { get; set; } # Model
-    public FILEField ICON; # Leaf Texture
-    public SNAMField SNAM; # SpeedTree Seeds, array of ints
-    public CNAMField CNAM; # Tree Parameters
-    public BNAMField BNAM; # Billboard Dimensions
+    MODL: MODLGroup # Model
+    ICON: FILEField # Leaf Texture
+    SNAM: SNAMField # SpeedTree Seeds, array of ints
+    CNAM: CNAMField # Tree Parameters
+    BNAM: BNAMField # Billboard Dimensions
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
-            case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize),
-            case FieldType.MODL: z = self.MODL = MODLGroup(r, dataSize),
-            case FieldType.MODB: z = self.MODL.MODBField(r, dataSize),
-            case FieldType.MODT: z = self.MODL.MODTField(r, dataSize),
-            case FieldType.ICON: z = self.ICON = r.readFILE(dataSize),
-            case FieldType.SNAM: z = self.SNAM = SNAMField(r, dataSize),
-            case FieldType.CNAM: z = self.CNAM = CNAMField(r, dataSize),
-            case FieldType.BNAM: z = self.BNAM = BNAMField(r, dataSize),
+            case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
+            case FieldType.MODL: z = self.MODL = MODLGroup(r, dataSize)
+            case FieldType.MODB: z = self.MODL.MODBField(r, dataSize)
+            case FieldType.MODT: z = self.MODL.MODTField(r, dataSize)
+            case FieldType.ICON: z = self.ICON = r.readFILE(dataSize)
+            case FieldType.SNAM: z = self.SNAM = SNAMField(r, dataSize)
+            case FieldType.CNAM: z = self.CNAM = CNAMField(r, dataSize)
+            case FieldType.BNAM: z = self.BNAM = BNAMField(r, dataSize)
             case _: z = Record.empty
         return z
 # end::TREE[]
 
 # WATR.Water Type - 0450 - tag::WATR[]
-public class WATRRecord : Record {
-    public class DATAField {
-        public float WindVelocity;
-        public float WindDirection;
-        public float WaveAmplitude;
-        public float WaveFrequency;
-        public float SunPower;
-        public float ReflectivityAmount;
-        public float FresnelAmount;
-        public float ScrollXSpeed;
-        public float ScrollYSpeed;
-        public float FogDistance_NearPlane;
-        public float FogDistance_FarPlane;
-        public ByteColor4 ShallowColor;
-        public ByteColor4 DeepColor;
-        public ByteColor4 ReflectionColor;
-        public byte TextureBlend;
-        public float RainSimulator_Force;
-        public float RainSimulator_Velocity;
-        public float RainSimulator_Falloff;
-        public float RainSimulator_Dampner;
-        public float RainSimulator_StartingSize;
-        public float DisplacementSimulator_Force;
-        public float DisplacementSimulator_Velocity;
-        public float DisplacementSimulator_Falloff;
-        public float DisplacementSimulator_Dampner;
-        public float DisplacementSimulator_StartingSize;
-        public ushort Damage;
+class WATRRecord(Record):
+    class DATAField:
+        windVelocity: float
+        windDirection: float
+        waveAmplitude: float
+        waveFrequency: float
+        sunPower: float
+        reflectivityAmount: float
+        fresnelAmount: float
+        scrollXSpeed: float
+        scrollYSpeed: float
+        fogDistance_NearPlane: float
+        fogDistance_FarPlane: float
+        shallowColor: ByteColor4
+        deepColor: ByteColor4
+        reflectionColor: ByteColor4
+        textureBlend: int
+        rainSimulator_Force: float
+        rainSimulator_Velocity: float
+        rainSimulator_Falloff: float
+        rainSimulator_Dampner: float
+        rainSimulator_StartingSize: float
+        displacementSimulator_Force: float
+        displacementSimulator_Velocity: float
+        displacementSimulator_Falloff: float
+        displacementSimulator_Dampner: float
+        displacementSimulator_StartingSize: float
+        damage: int
 
-        public DATAField(Header r, int dataSize) {
-            if (dataSize != 102 && dataSize != 86 && dataSize != 62 && dataSize != 42 && dataSize != 2) WindVelocity = 1;
-            if (dataSize == 2) { Damage = r.ReadUInt16(); return; }
-            WindVelocity = r.readSingle();
-            WindDirection = r.readSingle();
-            WaveAmplitude = r.readSingle();
-            WaveFrequency = r.readSingle();
-            SunPower = r.readSingle();
-            ReflectivityAmount = r.readSingle();
-            FresnelAmount = r.readSingle();
-            ScrollXSpeed = r.readSingle();
-            ScrollYSpeed = r.readSingle();
-            FogDistance_NearPlane = r.readSingle();
+        def __init__(self, r: Header, dataSize: int):
+            if dataSize != 102 and dataSize != 86 and dataSize != 62 and dataSize != 42 and dataSize != 2: self.windVelocity = 1
+            if dataSize == 2: self.damage = r.readUInt16(); return
+            self.windVelocity = r.readSingle()
+            self.windDirection = r.readSingle()
+            self.waveAmplitude = r.readSingle()
+            self.waveFrequency = r.readSingle()
+            self.sunPower = r.readSingle()
+            self.reflectivityAmount = r.readSingle()
+            self.fresnelAmount = r.readSingle()
+            self.scrollXSpeed = r.readSingle()
+            self.scrollYSpeed = r.readSingle()
+            self.fogDistance_NearPlane = r.readSingle()
             if dataSize == 42: self.damage = r.readUInt16(); return
-            FogDistance_FarPlane = r.readSingle();
-            ShallowColor = r.readS(ByteColor4, dataSize);
-            DeepColor = r.readS(ByteColor4, dataSize);
-            ReflectionColor = r.readS(ByteColor4, dataSize);
-            TextureBlend = r.readByte();
-            r.Skip(3); # Unused
-            if (dataSize == 62) { Damage = r.ReadUInt16(); return; }
-            RainSimulator_Force = r.readSingle();
-            RainSimulator_Velocity = r.readSingle();
-            RainSimulator_Falloff = r.readSingle();
-            RainSimulator_Dampner = r.readSingle();
-            RainSimulator_StartingSize = r.readSingle();
-            DisplacementSimulator_Force = r.readSingle();
-            if (dataSize == 86) {
-                #DisplacementSimulator_Velocity = DisplacementSimulator_Falloff = DisplacementSimulator_Dampner = DisplacementSimulator_StartingSize = 0F;
-                Damage = r.ReadUInt16();
-                return;
-            }
-            DisplacementSimulator_Velocity = r.readSingle();
-            DisplacementSimulator_Falloff = r.readSingle();
-            DisplacementSimulator_Dampner = r.readSingle();
-            DisplacementSimulator_StartingSize = r.readSingle();
-            Damage = r.ReadUInt16();
-        }
-    }
+            self.fogDistance_FarPlane = r.readSingle()
+            self.shallowColor = r.readS(ByteColor4, dataSize)
+            self.deepColor = r.readS(ByteColor4, dataSize)
+            self.reflectionColor = r.readS(ByteColor4, dataSize)
+            self.textureBlend = r.readByte()
+            r.skip(3) # Unused
+            if dataSize == 62: self.damage = r.readUInt16(); return
+            self.rainSimulator_Force = r.readSingle()
+            self.rainSimulator_Velocity = r.readSingle()
+            self.rainSimulator_Falloff = r.readSingle()
+            self.rainSimulator_Dampner = r.readSingle()
+            self.rainSimulator_StartingSize = r.readSingle()
+            self.displacementSimulator_Force = r.readSingle()
+            if dataSize == 86:
+                # DisplacementSimulator_Velocity = DisplacementSimulator_Falloff = DisplacementSimulator_Dampner = DisplacementSimulator_StartingSize = 0F
+                self.damage = r.readUInt16()
+                return
+            self.displacementSimulator_Velocity = r.readSingle()
+            self.displacementSimulator_Falloff = r.readSingle()
+            self.displacementSimulator_Dampner = r.readSingle()
+            self.displacementSimulator_StartingSize = r.readSingle()
+            self.damage = r.readUInt16()
 
     class GNAMField:
         def __init__(self, r: Header, dataSize: int):
-        self.daytime: Ref[WATRRecord] = Ref[WATRRecord](r.readUInt32());
-        self.nighttime: Ref[WATRRecord] = Ref[WATRRecord](r.readUInt32());
-        self.underwater: Ref[WATRRecord] = Ref[WATRRecord](r.readUInt32());
-    }
+            self.daytime: Ref[WATRRecord] = Ref[WATRRecord](r.readUInt32())
+            self.nighttime: Ref[WATRRecord] = Ref[WATRRecord](r.readUInt32())
+            self.underwater: Ref[WATRRecord] = Ref[WATRRecord](r.readUInt32())
 
-    public STRVField TNAM; # Texture
-    public BYTEField ANAM; # Opacity
-    public BYTEField FNAM; # Flags
-    public STRVField MNAM; # Material ID
-    public RefField[SOUNRecord] SNAM; # Sound
-    public DATAField DATA; # DATA
-    public GNAMField GNAM; # GNAM
+    TNAM: STRVField # Texture
+    ANAM: BYTEField # Opacity
+    FNAM: BYTEField # Flags
+    MNAM: STRVField # Material ID
+    SNAM: RefField[SOUNRecord] # Sound
+    DATA: DATAField # DATA
+    GNAM: GNAMField # GNAM
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
-            case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize),
-            case FieldType.TNAM: z = self.TNAM = r.readSTRV(dataSize),
-            case FieldType.ANAM: z = self.ANAM = r.readS(BYTEField, dataSize),
-            case FieldType.FNAM: z = self.FNAM = r.readS(BYTEField, dataSize),
-            case FieldType.MNAM: z = self.MNAM = r.readSTRV(dataSize),
-            case FieldType.SNAM: z = self.SNAM = RefField[SOUNRecord](r, dataSize),
-            case FieldType.DATA: z = self.DATA = DATAField(r, dataSize),
-            case FieldType.GNAM: z = self.GNAM = GNAMField(r, dataSize),
+            case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
+            case FieldType.TNAM: z = self.TNAM = r.readSTRV(dataSize)
+            case FieldType.ANAM: z = self.ANAM = r.readS(BYTEField, dataSize)
+            case FieldType.FNAM: z = self.FNAM = r.readS(BYTEField, dataSize)
+            case FieldType.MNAM: z = self.MNAM = r.readSTRV(dataSize)
+            case FieldType.SNAM: z = self.SNAM = RefField[SOUNRecord](r, dataSize)
+            case FieldType.DATA: z = self.DATA = DATAField(r, dataSize)
+            case FieldType.GNAM: z = self.GNAM = GNAMField(r, dataSize)
             case _: z = Record.empty
         return z
 # end::WATR[]
 
 # WEAP.Weapon - 3450 - tag::WEAP[]
-public class WEAPRecord : Record, IHaveMODL {
-    public struct DATAField {
-        public enum WEAPType { ShortBladeOneHand = 0, LongBladeOneHand, LongBladeTwoClose, BluntOneHand, BluntTwoClose, BluntTwoWide, SpearTwoWide, AxeOneHand, AxeTwoHand, MarksmanBow, MarksmanCrossbow, MarksmanThrown, Arrow, Bolt, }
+class WEAPRecord(Record, IHaveMODL):
+    class DATAField:
+        class WEAPType(Enum): ShortBladeOneHand = 0; LongBladeOneHand = 1; LongBladeTwoClose = 2; BluntOneHand = 3; BluntTwoClose = 4; BluntTwoWide = 5; SpearTwoWide = 6; AxeOneHand = 7; AxeTwoHand = 8; MarksmanBow = 9; MarksmanCrossbow = 10; MarksmanThrown = 11; Arrow = 12 Bolt = 13
+        weight: float
+        value: int
+        type: int
+        health: int
+        speed: float
+        reach: float
+        damage: int # EnchantPts
+        chopMin: int
+        chopMax: int
+        slashMin: int
+        slashMax: int
+        thrustMin: int
+        thrustMax: int
+        flags: int # 0 = ?, 1 = Ignore Normal Weapon Resistance?
 
-        public float Weight;
-        public int Value;
-        public ushort Type;
-        public short Health;
-        public float Speed;
-        public float Reach;
-        public short Damage; #: EnchantPts;
-        public byte ChopMin;
-        public byte ChopMax;
-        public byte SlashMin;
-        public byte SlashMax;
-        public byte ThrustMin;
-        public byte ThrustMax;
-        public int Flags; # 0 = ?, 1 = Ignore Normal Weapon Resistance?
+        def __init__(self, r: Header, dataSize: int):
+            if r.format == FormType.TES3: 
+                self.weight = r.readSingle()
+                self.value = r.readInt32()
+                self.type = r.ReadUInt16()
+                self.health = r.readInt16()
+                self.speed = r.readSingle()
+                self.reach = r.readSingle()
+                self.damage = r.readInt16()
+                self.chopMin = r.readByte()
+                self.chopMax = r.readByte()
+                self.slashMin = r.readByte()
+                self.slashMax = r.readByte()
+                self.thrustMin = r.readByte()
+                self.thrustMax = r.readByte()
+                self.flags = r.readInt32()
+                return
+            self.type = r.readUInt32()
+            self.speed = r.readSingle()
+            self.reach = r.readSingle()
+            self.flags = r.readInt32()
+            self.value = r.readInt32()
+            self.health = r.readInt32()
+            self.weight = r.readSingle()
+            self.damage = r.readInt16()
+            self.chopMin = self.chopMax = self.slashMin = self.slashMax = self.thrustMin = self.thrustMax = 0
 
-        public DATAField(Header r, int dataSize) {
-            if (r.format == FormType.TES3) {
-                Weight = r.readSingle();
-                Value = r.readInt32();
-                Type = r.ReadUInt16();
-                Health = r.readInt16();
-                Speed = r.readSingle();
-                Reach = r.readSingle();
-                Damage = r.readInt16();
-                ChopMin = r.readByte();
-                ChopMax = r.readByte();
-                SlashMin = r.readByte();
-                SlashMax = r.readByte();
-                ThrustMin = r.readByte();
-                ThrustMax = r.readByte();
-                Flags = r.readInt32();
-                return;
-            }
-            Type = (ushort)r.readUInt32();
-            Speed = r.readSingle();
-            Reach = r.readSingle();
-            Flags = r.readInt32();
-            Value = r.readInt32();
-            Health = (short)r.readInt32();
-            Weight = r.readSingle();
-            Damage = r.readInt16();
-            ChopMin = ChopMax = SlashMin = SlashMax = ThrustMin = ThrustMax = 0;
-        }
-    }
-
-    public MODLGroup MODL { get; set; } # Model
-    public STRVField FULL; # Item Name
-    public DATAField DATA; # Weapon Data
-    public FILEField ICON; # Male Icon (optional)
-    public RefField[ENCHRecord] ENAM; # Enchantment ID
-    public RefField[SCPTRecord] SCRI; # Script (optional)
-                                      # TES4
-    public IN16Field? ANAM; # Enchantment points (optional)
+    MODL: MODLGroup # Model
+    FULL: STRVField # Item Name
+    DATA: DATAField # Weapon Data
+    ICON: FILEField # Male Icon (optional)
+    ENAM: RefField[ENCHRecord] # Enchantment ID
+    SCRI: RefField[SCPTRecord] # Script (optional)
+    # TES4
+    ANAM: IN16Field # Enchantment points (optional)
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
-            case FieldType.EDID or FieldType.NAME: z = self.EDID = r.readSTRV(dataSize),
-            case FieldType.MODL: z = self.MODL = MODLGroup(r, dataSize),
-            case FieldType.MODB: z = self.MODL.MODBField(r, dataSize),
-            case FieldType.MODT: z = self.MODL.MODTField(r, dataSize),
-            case FieldType.FULL or FieldType.FNAM: z = self.FULL = r.readSTRV(dataSize),
-            case FieldType.DATA or FieldType.WPDT: z = self.DATA = DATAField(r, dataSize),
-            case FieldType.ICON or FieldType.ITEX: z = self.ICON = r.readFILE(dataSize),
-            case FieldType.ENAM: z = self.ENAM = RefField[ENCHRecord](r, dataSize),
-            case FieldType.SCRI: z = self.SCRI = RefField[SCPTRecord](r, dataSize),
-            case FieldType.ANAM: z = self.ANAM = r.readS(IN16Field, dataSize),
+            case FieldType.EDID or FieldType.NAME: z = self.EDID = r.readSTRV(dataSize)
+            case FieldType.MODL: z = self.MODL = MODLGroup(r, dataSize)
+            case FieldType.MODB: z = self.MODL.MODBField(r, dataSize)
+            case FieldType.MODT: z = self.MODL.MODTField(r, dataSize)
+            case FieldType.FULL or FieldType.FNAM: z = self.FULL = r.readSTRV(dataSize)
+            case FieldType.DATA or FieldType.WPDT: z = self.DATA = DATAField(r, dataSize)
+            case FieldType.ICON or FieldType.ITEX: z = self.ICON = r.readFILE(dataSize)
+            case FieldType.ENAM: z = self.ENAM = RefField[ENCHRecord](r, dataSize)
+            case FieldType.SCRI: z = self.SCRI = RefField[SCPTRecord](r, dataSize)
+            case FieldType.ANAM: z = self.ANAM = r.readS(IN16Field, dataSize)
             case _: z = Record.empty
         return z
 # end::WEAP[]
 
 # WRLD.Worldspace - 0450 - tag::WRLD[]
-public unsafe class WRLDRecord : Record {
-    public struct MNAMField {
-        public static (string, int) Struct = ($"<2i4h", 16);
-        public Int2 UsableDimensions;
-        # Cell Coordinates
-        public short NWCell_X;
-        public short NWCell_Y;
-        public short SECell_X;
-        public short SECell_Y;
-    }
+class WRLDRecord(Record):
+    class MNAMField:
+        _struct = ('<2i4h', 16)
+        def __init__(self, tuple)
+            self.usableDimensions: Int2, \
+            '''Cell Coordinates''' \
+            self.nwCell_X: int, \
+            self.nwCell_Y: int, \
+            self.seCell_X: int, \
+            self.seCell_Y: int = tuple
 
-    public struct NAM0Field(Header r, int dataSize) {
-        #public static (string, int) Struct = ("<2f", 8);
-        #public static (string, int) Struct = ("<4f", 16);
-        public Vector2 Min = new(r.readSingle(), r.readSingle());
-        public Vector2 Max = Vector2.Zero;
-        public object NAM9Field(Header r, int dataSize) => Max = Vector2(r.readSingle(), r.readSingle());
-    }
+    class NAM0Field:
+        # _struct = ('<4f', 16)
+        def __init__(self, r: Header, dataSize: int)
+            self.min: Vector2 = r.readVector2()
+            self.max: Vector2 = Vector2.Zero
+        def NAM9Field(self, r: Header, dataSize: int) -> object: z = self.max = r.readVector2(); return z
 
     # TES5
-    public struct RNAMField {
-        public struct Reference {
-            public RefId<REFRRecord> Ref;
-            public short X;
-            public short Y;
-        }
-        public short GridX;
-        public short GridY;
-        public Reference[] GridReferences;
+    class RNAMField:
+        class Reference:
+            _struct = ('<I2h', 16)
+            def __init__(self, tuple):
+                self.ref, \
+                self.x: int, \
+                self.y: int = tuple
+                self.ref: RefId[REFRRecord] = RefId[REFRRecord](self.ref)
+        def __init__(self, r: Header, dataSize: int):
+            self.gridX: int = r.readInt16()
+            self.gridY: int = r.readInt16()
+            self.gridReferences: Reference[] = r.readL32SArray(Reference, referenceSize >> 3)
+            assert((dataSize - 8) >> 3 == len(self.gridReferences))
 
-        public RNAMField(Header r, int dataSize) {
-            GridX = r.readInt16();
-            GridY = r.readInt16();
-            var referenceCount = r.readUInt32();
-            var referenceSize = dataSize - 8;
-            Log.Assert(referenceSize >> 3 == referenceCount);
-            GridReferences = r.ReadSArray<Reference>(referenceSize >> 3);
-        }
-    }
-
-    public STRVField FULL;
-    public RefField[WRLDRecord]? WNAM; # Parent Worldspace
-    public RefField[CLMTRecord]? CNAM; # Climate
-    public RefField[WATRRecord]? NAM2; # Water
-    public FILEField? ICON; # Icon
-    public MNAMField? MNAM; # Map Data
-    public BYTEField? DATA; # Flags
-    public NAM0Field NAM0; # Object Bounds
-    public UI32Field? SNAM; # Music
+    FULL: STRVField
+    WNAM: RefField[WRLDRecord] # Parent Worldspace
+    CNAM: RefField[CLMTRecord] # Climate
+    NAM2: RefField[WATRRecord] # Water
+    ICON: FILEField # Icon
+    MNAM: MNAMField # Map Data
+    DATA: BYTEField # Flags
+    NAM0: NAM0Field # Object Bounds
+    SNAM: UI32Field # Music
     # TES5
-    public list[RNAMField] RNAMs = []; # Large References
+    RNAMs: list[RNAMField] = [] # Large References
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -4875,87 +4789,75 @@ public unsafe class WRLDRecord : Record {
 # end::WRLD[]
 
 # WTHR.Weather - 0450 - tag::WTHR[]
-public class WTHRRecord : Record, IHaveMODL {
-    public struct FNAMField(Header r, int dataSize) {
-        public float DayNear = r.readSingle();
-        public float DayFar = r.readSingle();
-        public float NightNear = r.readSingle();
-        public float NightFar = r.readSingle();
-    }
+class WTHRRecord(Record, IHaveMODL):
+    class FNAMField:
+        def __init__(self, r: Header, dataSize: int):
+            self.dayNear: float = r.readSingle()
+            self.dayFar: float = r.readSingle()
+            self.nightNear: float = r.readSingle()
+            self.nightFar: float = r.readSingle()
 
-    public struct HNAMField(Header r, int dataSize) {
-        public float EyeAdaptSpeed = r.readSingle();
-        public float BlurRadius = r.readSingle();
-        public float BlurPasses = r.readSingle();
-        public float EmissiveMult = r.readSingle();
-        public float TargetLUM = r.readSingle();
-        public float UpperLUMClamp = r.readSingle();
-        public float BrightScale = r.readSingle();
-        public float BrightClamp = r.readSingle();
-        public float LUMRampNoTex = r.readSingle();
-        public float LUMRampMin = r.readSingle();
-        public float LUMRampMax = r.readSingle();
-        public float SunlightDimmer = r.readSingle();
-        public float GrassDimmer = r.readSingle();
-        public float TreeDimmer = r.readSingle();
-    }
+    class HNAMField:
+        def __init__(self, r: Header, dataSize: int):
+            self.eyeAdaptSpeed: float = r.readSingle()
+            self.blurRadius: float = r.readSingle()
+            self.blurPasses: float = r.readSingle()
+            self.emissiveMult: float = r.readSingle()
+            self.targetLUM: float = r.readSingle()
+            self.upperLUMClamp: float = r.readSingle()
+            self.brightScale: float = r.readSingle()
+            self.brightClamp: float = r.readSingle()
+            self.lumRampNoTex: float = r.readSingle()
+            self.lumRampMin: float = r.readSingle()
+            self.lumRampMax: float = r.readSingle()
+            self.sunlightDimmer: float = r.readSingle()
+            self.grassDimmer: float = r.readSingle()
+            self.treeDimmer: float = r.readSingle()
 
-    public struct DATAField(Header r, int dataSize) {
-        public byte WindSpeed = r.readByte();
-        public byte CloudSpeed_Lower = r.readByte();
-        public byte CloudSpeed_Upper = r.readByte();
-        public byte TransDelta = r.readByte();
-        public byte SunGlare = r.readByte();
-        public byte SunDamage = r.readByte();
-        public byte Precipitation_BeginFadeIn = r.readByte();
-        public byte Precipitation_EndFadeOut = r.readByte();
-        public byte ThunderLightning_BeginFadeIn = r.readByte();
-        public byte ThunderLightning_EndFadeOut = r.readByte();
-        public byte ThunderLightning_Frequency = r.readByte();
-        public byte WeatherClassification = r.readByte();
-        public ByteColor4 LightningColor = new(r.readByte(), r.readByte(), r.readByte(), 255);
-    }
+    class DATAField:
+        def __init__(self, r: Header, dataSize: int):
+            self.windSpeed: int = r.readByte()
+            self.cloudSpeed_Lower: int = r.readByte()
+            self.cloudSpeed_Upper: int = r.readByte()
+            self.transDelta: int = r.readByte()
+            self.sunGlare: int = r.readByte()
+            self.sunDamage: int = r.readByte()
+            self.precipitation_BeginFadeIn: int = r.readByte()
+            self.precipitation_EndFadeOut: int = r.readByte()
+            self.thunderLightning_BeginFadeIn: int = r.readByte()
+            self.thunderLightning_EndFadeOut: int = r.readByte()
+            self.thunderLightning_Frequency: int = r.readByte()
+            self.weatherClassification: int = r.readByte()
+            self.lightningColor: ByteColor4 = ByteColor4(r.readByte(), r.readByte(), r.readByte(), 255)
 
-    public struct SNAMField(Header r, int dataSize) {
-        public Ref[SOUNRecord] Sound = new(r.readUInt32()); # Sound FormId
-        public uint Type = r.readUInt32(); # Sound Type - 0=Default, 1=Precipitation, 2=Wind, 3=Thunder
-    }
+    class SNAMField:
+        def __init__(self, r: Header, dataSize: int):
+            self.sound: Ref[SOUNRecord] = Ref[SOUNRecord](r.readUInt32()) # Sound FormId
+            self.type: int  = r.readUInt32() # Sound Type - 0=Default, 1=Precipitation, 2=Wind, 3=Thunder
 
-    public MODLGroup MODL { get; set; } # Model
-    public FILEField CNAM; # Lower Cloud Layer
-    public FILEField DNAM; # Upper Cloud Layer
-    public BYTVField NAM0; # Colors by Types/Times
-    public FNAMField FNAM; # Fog Distance
-    public HNAMField HNAM; # HDR Data
-    public DATAField DATA; # Weather Data
-    public list[SNAMField] SNAMs = []; # Sounds
+    MODL: MODLGroup # Model
+    CNAM: FILEField # Lower Cloud Layer
+    DNAM: FILEField # Upper Cloud Layer
+    NAM0: BYTVField # Colors by Types/Times
+    FNAM: FNAMField # Fog Distance
+    HNAM: HNAMField # HDR Data
+    DATA: DATAField # Weather Data
+    SNAMs: list[SNAMField] = [] # Sounds
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
-            case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize),
-            case FieldType.MODL: z = self.MODL = MODLGroup(r, dataSize),
-            case FieldType.MODB: z = self.MODL.MODBField(r, dataSize),
-            case FieldType.CNAM: z = self.CNAM = r.readFILE(dataSize),
-            case FieldType.DNAM: z = self.DNAM = r.readFILE(dataSize),
-            case FieldType.NAM0: z = self.NAM0 = r.readBYTV(dataSize),
-            case FieldType.FNAM: z = self.FNAM = FNAMField(r, dataSize),
-            case FieldType.HNAM: z = self.HNAM = HNAMField(r, dataSize),
-            case FieldType.DATA: z = self.DATA = DATAField(r, dataSize),
-            case FieldType.SNAM: z = self.SNAMs.addX(SNAMField(r, dataSize)),
+            case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
+            case FieldType.MODL: z = self.MODL = MODLGroup(r, dataSize)
+            case FieldType.MODB: z = self.MODL.MODBField(r, dataSize)
+            case FieldType.CNAM: z = self.CNAM = r.readFILE(dataSize)
+            case FieldType.DNAM: z = self.DNAM = r.readFILE(dataSize)
+            case FieldType.NAM0: z = self.NAM0 = r.readBYTV(dataSize)
+            case FieldType.FNAM: z = self.FNAM = FNAMField(r, dataSize)
+            case FieldType.HNAM: z = self.HNAM = HNAMField(r, dataSize)
+            case FieldType.DATA: z = self.DATA = DATAField(r, dataSize)
+            case FieldType.SNAM: z = self.SNAMs.addX(SNAMField(r, dataSize))
             case _: z = Record.empty
         return z
 # end::WTHR[]
-
-
-
-
-
-
-
-
-
-
-
-
 
 #endregion

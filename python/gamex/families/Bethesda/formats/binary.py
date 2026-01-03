@@ -31,65 +31,65 @@ class Binary_Ba2(ArcBinaryT):
     class F4_Header:
         _struct = ('<3IQ', 20)
         def __init__(self, tuple):
-            self.version, \
-            self.type, \
-            self.numFiles, \
-            self.nameTableOffset = tuple
+            (self.version,
+            self.type,
+            self.numFiles,
+            self.nameTableOffset) = tuple
             self.type = Binary_Ba2.F4_HeaderType(self.type)
 
     class F4_File:
         _struct = ('<4IQ3I', 36)
         def __init__(self, tuple):
-            self.nameHash, \
-            self.ext, \
-            self.dirHash, \
-            self.flags, \
-            self.offset, \
-            self.packedSize, \
-            self.fileSize, \
-            self.align = tuple
+            (self.nameHash,
+            self.ext,
+            self.dirHash,
+            self.flags,
+            self.offset,
+            self.packedSize,
+            self.fileSize,
+            self.align) = tuple
 
     class F4_Texture:
         _struct = ('<3I2B3H4B', 24)
         def __init__(self, tuple):
-            self.nameHash, \
-            self.ext, \
-            self.dirHash, \
-            self.unk0C, \
-            self.numChunks, \
-            self.chunkHeaderSize, \
-            self.height, \
-            self.width, \
-            self.numMips, \
-            self.format, \
-            self.isCubemap, \
-            self.tileMode = tuple
+            (self.nameHash,
+            self.ext,
+            self.dirHash,
+            self.unk0C,
+            self.numChunks,
+            self.chunkHeaderSize,
+            self.height,
+            self.width,
+            self.numMips,
+            self.format,
+            self.isCubemap,
+            self.tileMode) = tuple
 
     class F4_TextureChunk:
         _struct = ('<Q2I2HI', 24)
         def __init__(self, tuple):
-            self.offset, \
-            self.packedSize, \
-            self.fileSize, \
-            self.startMip, \
-            self.endMip, \
-            self.align = tuple
+            (self.offset,
+            self.packedSize,
+            self.fileSize,
+            self.startMip,
+            self.endMip,
+            self.align) = tuple
 
     class F4_GNMF:
         _struct = ('<3I2BH32sQ4I', 72)
         def __init__(self, tuple):
-            self.nameHash, \
-            self.ext, \
-            self.dirHash, \
-            self.unk0C, \
-            self.numChunks, \
-            self.unk0E, \
-            self.header, \
-            self.offset, \
-            self.packedSize, \
-            self.fileSize, \
-            self.unk40, \
-            self.align = tuple
+            (self.nameHash,
+            self.ext,
+            self.dirHash,
+            self.unk0C,
+            self.numChunks,
+            self.unk0E,
+            self.header,
+            self.offset,
+            self.packedSize,
+            self.fileSize,
+            self.unk40,
+            self.align) = tuple
 
     #endregion
 
@@ -197,36 +197,36 @@ class Binary_Bsa(ArcBinaryT):
     class OB_Header:
         _struct = ('<8I', 32)
         def __init__(self, tuple):
-            self.version, \
-            self.folderRecordOffset, \
-            self.archiveFlags, \
-            self.folderCount, \
-            self.fileCount, \
-            self.folderNameLength, \
-            self.fileNameLength, \
-            self.fileFlags = tuple
+            (self.version,
+            self.folderRecordOffset,
+            self.archiveFlags,
+            self.folderCount,
+            self.fileCount,
+            self.folderNameLength,
+            self.fileNameLength,
+            self.fileFlags) = tuple
 
     class OB_Folder:
         _struct = ('<Q2I', 16)
         def __init__(self, tuple):
-            self.hash, \
-            self.fileCount, \
-            self.offset = tuple
+            (self.hash,
+            self.fileCount,
+            self.offset) = tuple
 
     class OB_FolderSSE:
         _struct = ('<Q2IQ', 24)
         def __init__(self, tuple):
-            self.hash, \
-            self.fileCount, \
-            self.unk, \
-            self.offset = tuple
+            (self.hash,
+            self.fileCount,
+            self.unk,
+            self.offset) = tuple
 
     class OB_File:
         _struct = ('<Q2I', 16)
         def __init__(self, tuple):
-            self.hash, \
-            self.size, \
-            self.offset = tuple
+            (self.hash,
+            self.size,
+            self.offset) = tuple
 
     #endregion
 
@@ -237,14 +237,14 @@ class Binary_Bsa(ArcBinaryT):
     class MW_Header:
         _struct = ('<2I', 8)
         def __init__(self, tuple):
-            self.hashOffset, \
-            self.fileCount = tuple
+            (self.hashOffset,
+            self.fileCount) = tuple
 
     class MW_File:
         _struct = ('<2I', 8)
         def __init__(self, tuple):
-            self.fileSize, \
-            self.fileOffset = tuple
+            (self.fileSize,
+            self.fileOffset) = tuple
         @property
         def size(self): return self.fileSize & 0x3FFFFFFF if self.fileSize > 0 else 0
 

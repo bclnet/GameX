@@ -29,13 +29,13 @@ class Binary_Mpk(ArcBinaryT):
     class MPK_File:
         _struct = ('<256sQ5I', 284)
         def __init__(self, tuple):
-            self.fileName, \
-            self.createdDate, \
-            self.unknown1, \
-            self.fileSize, \
-            self.offset, \
-            self.packedSize, \
-            self.unknown2 = tuple
+            (self.fileName,
+            self.createdDate,
+            self.unknown1,
+            self.fileSize,
+            self.offset,
+            self.packedSize,
+            self.unknown2) = tuple
 
     #endregion
 

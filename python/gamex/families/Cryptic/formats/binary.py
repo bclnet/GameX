@@ -20,40 +20,40 @@ class Binary_Hogg(ArcBinaryT):
     class Header:
         _struct = ('<IHHIIII', 24)
         def __init__(self, tuple):
-            self.magic, \
-            self.version, \
-            self.operationJournalSection, \
-            self.fileEntrySection, \
-            self.attributeEntrySection, \
-            self.dataFileNumber, \
-            self.fileJournalSection = tuple
+            (self.magic,
+            self.version,
+            self.operationJournalSection,
+            self.fileEntrySection,
+            self.attributeEntrySection,
+            self.dataFileNumber,
+            self.fileJournalSection) = tuple
 
     class FileJournalHeader:
         _struct = ('<III', 12)
         def __init__(self, tuple):
-            self.unknown1, \
-            self.size, \
-            self.size2 = tuple
+            (self.unknown1,
+            self.size,
+            self.size2) = tuple
 
     class FileEntry:
         _struct = ('<qiIIIHHi', 32)
         def __init__(self, tuple):
-            self.offset, \
-            self.fileSize, \
-            self.timestamp, \
-            self.checksum, \
-            self.unknown4, \
-            self.unknown5, \
-            self.unknown6, \
-            self.id = tuple
+            (self.offset,
+            self.fileSize,
+            self.timestamp,
+            self.checksum,
+            self.unknown4,
+            self.unknown5,
+            self.unknown6,
+            self.id) = tuple
 
     class AttributeEntry:
         _struct = ('<iiII', 16)
         def __init__(self, tuple):
-            self.pathId, \
-            self.excerptId, \
-            self.uncompressedSize, \
-            self.flags = tuple
+            (self.pathId,
+            self.excerptId,
+            self.uncompressedSize,
+            self.flags) = tuple
 
     #endregion
 

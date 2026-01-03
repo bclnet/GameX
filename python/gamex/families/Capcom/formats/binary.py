@@ -21,16 +21,16 @@ class Binary_Arc(ArcBinaryT):
     class K_Header:
         _struct = ('<HH', 4)
         def __init__(self, tuple):
-            self.version, \
-            self.numFiles = tuple
+            (self.version,
+            self.numFiles) = tuple
     class K_File:
         _struct = ('<64sIIII', 80)
         def __init__(self, tuple):
-            self.path, \
-            self.compress, \
-            self.zsize, \
-            self.size, \
-            self.offset = tuple
+            (self.path,
+            self.compress,
+            self.zsize,
+            self.size,
+            self.offset) = tuple
 
     #endregion
 
@@ -101,12 +101,10 @@ Modulus = int.from_bytes([
     0x1C, 0x7B, 0xBA, 0xC4, 0xB6, 0x2D, 0xD6, 0xD2, 0x4B, 0x62, 0xD6, 0x26, 0xFC, 0x74, 0x20, 0x07,
     0xEC, 0xE3, 0x59, 0x9A, 0xE6, 0xAF, 0xB9, 0xA8, 0x35, 0x8B, 0xE0, 0xE8, 0xD3, 0xCD, 0x45, 0x65,
     0xB0, 0x91, 0xC4, 0x95, 0x1B, 0xF3, 0x23, 0x1E, 0xC6, 0x71, 0xCF, 0x3E, 0x35, 0x2D, 0x6B, 0xE3,
-    0x00
-    ])
+    0x00])
 
 Exponent = int.from_bytes([
-    0x01, 0x00, 0x01, 0x00
-    ])
+    0x01, 0x00, 0x01, 0x00])
 
 # Binary_Kpka
 class Binary_Kpka(ArcBinaryT):
@@ -117,26 +115,26 @@ class Binary_Kpka(ArcBinaryT):
     class K_Header:
         _struct = ('<BBhiI', 12)
         def __init__(self, tuple):
-            self.majorVersion, \
-            self.minorVersion, \
-            self.feature, \
-            self.numFiles, \
-            self.hash = tuple
+            (self.majorVersion,
+            self.minorVersion,
+            self.feature,
+            self.numFiles,
+            self.hash) = tuple
     class K_FileV2:
         _struct = ('<qqQ', 24)
         def __init__(self, tuple):
-            self.offset, \
-            self.fileSize, \
-            self.hashName = tuple
+            (self.offset,
+            self.fileSize,
+            self.hashName) = tuple
     class K_FileV4:
         _struct = ('<QqqqqQ', 48)
         def __init__(self, tuple):
-            self.hashName, \
-            self.offset, \
-            self.packedSize, \
-            self.fileSize, \
-            self.flag, \
-            self.checksum = tuple
+            (self.hashName,
+            self.offset,
+            self.packedSize,
+            self.fileSize,
+            self.flag,
+            self.checksum) = tuple
 
     #endregion
 

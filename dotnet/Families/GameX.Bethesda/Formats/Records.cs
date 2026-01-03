@@ -1550,7 +1550,7 @@ public unsafe class CELLRecord : Record, ICellRecord {
         // Referenced Object Data Grouping
         return type switch {
             // RefObjDataGroup sub-records
-            FieldType.FRMR => RefObjs.AddX(_lastRef = new RefObj()).FRMR = r.ReadS<UI32Field>(dataSize),
+            FieldType.FRMR => (_lastRef = RefObjs.AddX(new RefObj())).FRMR = r.ReadS<UI32Field>(dataSize),
             FieldType.NAME => _lastRef.EDID = r.ReadSTRV(dataSize),
             FieldType.XSCL => _lastRef.XSCL = r.ReadS<FLTVField>(dataSize),
             FieldType.DODT => _lastRef.DODT = r.ReadS<XYZAField>(dataSize),
@@ -2917,8 +2917,8 @@ public unsafe class LANDRecord : Record {
         FieldType.INTV => INTV = r.ReadS<CORDField>(dataSize),
         FieldType.WNAM => WNAM = new WNAMField(r, dataSize),
         // TES4
-        FieldType.BTXT => this.Then(r.ReadS<BTXTField>(dataSize), btxt => BTXTs[btxt.Quadrant] = btxt),
-        FieldType.ATXT => (ATXTs ??= new ATXTGroup[4], this.Then(r.ReadS<BTXTField>(dataSize), atxt => _lastATXT = ATXTs[atxt.Quadrant] = new ATXTGroup { ATXT = atxt })),
+        FieldType.BTXT => this.Then(r.ReadS<BTXTField>(dataSize), v => BTXTs[v.Quadrant] = v),
+        FieldType.ATXT => (ATXTs ??= new ATXTGroup[4], this.Then(r.ReadS<BTXTField>(dataSize), v => _lastATXT = ATXTs[v.Quadrant] = new ATXTGroup { ATXT = v })),
         FieldType.VTXT => _lastATXT.VTXTs = r.ReadSArray<VTXTField>(dataSize >> 3),
         _ => Empty,
     };
@@ -4417,7 +4417,7 @@ public class SCPTRecord : Record {
         FieldType.SCHR => SCHR = new SCHRField(r, dataSize),
         FieldType.SLSD => SLSDs.AddX(new SLSDField(r, dataSize)),
         FieldType.SCRO => SCROs.AddX(new RefField<Record>(r, dataSize)),
-        FieldType.SCRV => SCRVs.AddX(this.Then(r.ReadUInt32(), idx => SLSDs.Single(x => x.Idx == idx))),
+        FieldType.SCRV => SCRVs.AddX(this.Then(r.ReadUInt32(), v => SLSDs.Single(x => x.Idx == v))),
         _ => Empty,
     };
 }

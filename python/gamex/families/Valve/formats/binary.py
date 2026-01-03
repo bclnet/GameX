@@ -37,32 +37,32 @@ class Binary_Bsp30(ArcBinaryT):
             edges = self.edges = X_LumpON()
             surfEdges = self.surfEdges = X_LumpON()
             models = self.models = X_LumpON()
-            self.version, \
-            entities.offset, entities.length, \
-            planes.offset, planes.length, \
-            textures.offset, textures.length, \
-            vertices.offset, vertices.length, \
-            visibility.offset, visibility.length, \
-            nodes.offset, nodes.length, \
-            texInfo.offset, texInfo.length, \
-            faces.offset, faces.length, \
-            lighting.offset, lighting.length, \
-            clipNodes.offset, clipNodes.length, \
-            leaves.offset, leaves.length, \
-            markSurfaces.offset, markSurfaces.length, \
-            edges.offset, edges.length, \
-            surfEdges.offset, surfEdges.length, \
-            models.offset, models.length = tuple
+            (self.version,
+            entities.offset, entities.length,
+            planes.offset, planes.length,
+            textures.offset, textures.length,
+            vertices.offset, vertices.length,
+            visibility.offset, visibility.length,
+            nodes.offset, nodes.length,
+            texInfo.offset, texInfo.length,
+            faces.offset, faces.length,
+            lighting.offset, lighting.length,
+            clipNodes.offset, clipNodes.length,
+            leaves.offset, leaves.length,
+            markSurfaces.offset, markSurfaces.length,
+            edges.offset, edges.length,
+            surfEdges.offset, surfEdges.length,
+            models.offset, models.length) = tuple
         def forGameId(self, id: str) -> None:
             if id == 'HL:BS': (self.entities, self.planes) = (self.planes, self.entities)
 
     class B_Texture:
         _struct = ('<16s6I', 20)
         def __init__(self, tuple):
-            self.name, \
-            self.width, \
-            self.height, \
-            self.offsets = tuple
+            (self.name,
+            self.width,
+            self.height,
+            self.offsets) = tuple
 
     # MAX_MAP_HULLS = 4
     # MAX_MAP_MODELS = 400
@@ -166,25 +166,25 @@ class Binary_Spr(IHaveMetaInfo, ITextureFrames):
     class S_Header:
         _struct = ('<I3if3ifi', 40)
         def __init__(self, tuple):
-            self.magic, \
-            self.version, \
-            self.type, \
-            self.textFormat, \
-            self.boundingRadius, \
-            self.maxWidth, \
-            self.maxHeight, \
-            self.numFrames, \
-            self.beamLen, \
-            self.synchType = tuple
+            (self.magic,
+            self.version,
+            self.type,
+            self.textFormat,
+            self.boundingRadius,
+            self.maxWidth,
+            self.maxHeight,
+            self.numFrames,
+            self.beamLen,
+            self.synchType) = tuple
 
     class S_Frame:
         _struct = ('<5i', 20)
         def __init__(self, tuple):
-            self.group, \
-            self.originX, \
-            self.originY, \
-            self.width, \
-            self.height = tuple
+            (self.group,
+            self.originX,
+            self.originY,
+            self.width,
+            self.height) = tuple
 
     #endregion
 
@@ -317,10 +317,10 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
     class M_SeqHeader:
         _struct = ('<2i64si', 76)
         def __init__(self, tuple):
-            self.magic, \
-            self.version, \
-            self.name, \
-            self.length = tuple
+            (self.magic,
+            self.version,
+            self.name,
+            self.length) = tuple
 
     # bones
     class M_Bone:
@@ -329,12 +329,12 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
             boneController = self.boneController = np.array([0,0,0,0,0,0])
             value = self.value = np.array([0,0,0,0,0,0])
             scale = self.scale = np.array([0,0,0,0,0,0])
-            self.name, \
-            self.parent, \
-            self.flags, \
-            boneController[0], boneController[1], boneController[2], boneController[3], boneController[4], boneController[5], \
-            value[0], value[1], value[2], value[3], value[4], value[5], \
-            scale[0], scale[1], scale[2], scale[3], scale[4], scale[5] = tuple
+            (self.name,
+            self.parent,
+            self.flags,
+            boneController[0], boneController[1], boneController[2], boneController[3], boneController[4], boneController[5],
+            value[0], value[1], value[2], value[3], value[4], value[5],
+            scale[0], scale[1], scale[2], scale[3], scale[4], scale[5]) = tuple
 
     class BoneAxis:
         def __init__(self, controller: BoneController, value: float, scale: float):
@@ -364,11 +364,11 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
     class M_BoneController:
         _struct = ('<2i2f2i', 24)
         def __init__(self, tuple):
-            self.bone, \
-            self.type, \
-            self.start, self.end, \
-            self.rest, \
-            self.index = tuple
+            (self.bone,
+            self.type,
+            self.start, self.end,
+            self.rest,
+            self.index) = tuple
 
     class BoneController:
         def __init__(self, s: M_BoneController, id: int):
@@ -383,9 +383,9 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
         _struct = ('<2i6f', 32)
         def __init__(self, tuple):
             bbMin = self.bbMin = np.array([0,0,0]); bbMax = self.bbMax = np.array([0,0,0])
-            self.bone, \
-            self.group, \
-            bbMin[0], bbMin[1], bbMin[2], bbMax[0], bbMax[1], bbMax[2] = tuple
+            (self.bone,
+            self.group,
+            bbMin[0], bbMin[1], bbMin[2], bbMax[0], bbMax[1], bbMax[2]) = tuple
 
     class BBox:
         def __init__(self, s: M_BBox, bones: list[Bone]):
@@ -397,10 +397,10 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
     class M_SeqGroup:
         _struct = ('<32s64s2i', 104)
         def __init__(self, tuple):
-            self.label, \
-            self.name, \
-            self.unused1, \
-            self.unused2 = tuple
+            (self.label,
+            self.name,
+            self.unused1,
+            self.unused2) = tuple
 
     class SeqGroup:
         def __init__(self, s: M_SeqGroup):
@@ -419,31 +419,31 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
             blendType = self.blendType = np.array([0,0])
             blendStart = self.blendStart = np.array([0,0])
             blendEnd = self.blendEnd = np.array([0,0])
-            self.label, \
-            self.fps, \
-            self.flags, \
-            self.activity, \
-            self.actWeight, \
-            events.num, events.offset, \
-            self.numFrames, \
-            pivots.num, pivots.offset, \
-            self.motionType, \
-            self.motionBone, \
-            linearMovement[0], linearMovement[1], linearMovement[2], \
-            self.automovePosIndex, \
-            self.automoveAngleIndex, \
-            bbMin[0], bbMin[1], bbMin[2], bbMax[0], bbMax[1], bbMax[2], \
-            self.numBlends, \
-            self.animIndex, \
-            blendType[0], blendType[1], \
-            blendStart[0], blendStart[1], \
-            blendEnd[0], blendEnd[1], \
-            self.blendParent, \
-            self.seqGroup, \
-            self.entryNode, \
-            self.exitNode, \
-            self.nodeFlags, \
-            self.nextSeq = tuple
+            (self.label,
+            self.fps,
+            self.flags,
+            self.activity,
+            self.actWeight,
+            events.num, events.offset,
+            self.numFrames,
+            pivots.num, pivots.offset,
+            self.motionType,
+            self.motionBone,
+            linearMovement[0], linearMovement[1], linearMovement[2],
+            self.automovePosIndex,
+            self.automoveAngleIndex,
+            bbMin[0], bbMin[1], bbMin[2], bbMax[0], bbMax[1], bbMax[2],
+            self.numBlends,
+            self.animIndex,
+            blendType[0], blendType[1],
+            blendStart[0], blendStart[1],
+            blendEnd[0], blendEnd[1],
+            self.blendParent,
+            self.seqGroup,
+            self.entryNode,
+            self.exitNode,
+            self.nodeFlags,
+            self.nextSeq) = tuple
 
     class SeqBlend:
         def __init__(self, type: int, start: float, end: float):
@@ -511,17 +511,17 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
     class M_Event:
         _struct = ('<3i64s', 76)
         def __init__(self, tuple):
-            self.frame, \
-            self.event, \
-            self.type, \
-            self.options = tuple
+            (self.frame,
+            self.event,
+            self.type,
+            self.options) = tuple
 
     # pivots
     class M_Pivot:
         _struct = ('<3f2i', 4)
         def __init__(self, tuple):
-            self.org, \
-            self.start, self.end = tuple
+            (self.org,
+            self.start, self.end) = tuple
 
     # attachments
     class M_Attachment:
@@ -531,13 +531,13 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
             vector1 = self.vector1 = np.array([0,0,0])
             vector2 = self.vector2 = np.array([0,0,0])
             org = self.org = np.array([0,0,0])
-            self.name, \
-            self.type, \
-            self.bone, \
-            org[0], org[1], org[2], \
-            vector0[0], vector0[1], vector0[2], \
-            vector1[0], vector1[1], vector1[2], \
-            vector2[0], vector2[1], vector2[2] = tuple
+            (self.name,
+            self.type,
+            self.bone,
+            org[0], org[1], org[2],
+            vector0[0], vector0[1], vector0[2],
+            vector1[0], vector1[1], vector1[2],
+            vector2[0], vector2[1], vector2[2]) = tuple
 
     class Attachment:
         def __init__(self, s: M_Attachment, bones: list[Bone]):
@@ -557,16 +557,16 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
     class M_AnimValue:
         _struct = ('<2B', 2)
         def __init__(self, tuple):
-            self.valid, \
-            self.total = tuple
+            (self.valid,
+            self.total) = tuple
 
     # body part index
     class M_Bodypart:
         _struct = ('<64s3i', 76)
         def __init__(self, tuple):
             models = self.models = X_LumpNO2()
-            self.name, \
-            models.num, models.offset, models.offset2 = tuple
+            (self.name,
+            models.num, models.offset, models.offset2) = tuple
 
     class Bodypart:
         def __init__(self, r: BinaryReader, s: M_Bodypart, bones: list[Bone]):
@@ -578,10 +578,10 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
     class M_Texture:
         _struct = ('<64s4i', 80)
         def __init__(self, tuple):
-            self.name, \
-            self.flags, \
-            self.width, self.height, \
-            self.index = tuple
+            (self.name,
+            self.flags,
+            self.width, self.height,
+            self.index) = tuple
 
     class Texture:
         def __init__(self, r: BinaryReader, s: M_Texture):
@@ -599,13 +599,13 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
             verts = self.verts = X_LumpNO2()
             norms = self.norms = X_LumpNO2()
             groups = self.groups = X_LumpNO()
-            self.name, \
-            self.type, \
-            self.boundingRadius, \
-            meshs.num, meshs.offset, \
-            verts.num, verts.offset, verts.offset2, \
-            norms.num, norms.offset, norms.offset2, \
-            groups.num, groups.offset = tuple
+            (self.name,
+            self.type,
+            self.boundingRadius,
+            meshs.num, meshs.offset,
+            verts.num, verts.offset, verts.offset2,
+            norms.num, norms.offset, norms.offset2,
+            groups.num, groups.offset) = tuple
 
     class ModelVertex:
         def __init__(self, bone: Bone, vertex: np.ndarray):
@@ -632,9 +632,9 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
         def __init__(self, tuple):
             tris = self.tris = X_LumpNO()
             norms = self.norms = X_LumpNO()
-            tris.num, tris.offset, \
-            self.skinRef, \
-            norms.num, norms.offset = tuple
+            (tris.num, tris.offset,
+            self.skinRef,
+            norms.num, norms.offset) = tuple
 
     class Mesh:
         def __init__(self, r: BinaryReader, s: M_Mesh):
@@ -662,27 +662,27 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
             sounds = self.sounds = X_LumpNO()
             soundGroups = self.soundGroups = X_LumpNO()
             transitions = self.transitions = X_LumpNO()
-            self.magic, \
-            self.version, \
-            self.name, \
-            self.length, \
-            eyePosition[0], eyePosition[1], eyePosition[2], \
-            min[0], min[1], min[2], max[0], max[1], max[2], \
-            bbMin[0], bbMin[1], bbMin[2], bbMax[0], bbMax[1], bbMax[2], \
-            self.flags, \
-            bones.num, bones.offset, \
-            boneControllers.num, boneControllers.offset, \
-            hitboxs.num, hitboxs.offset, \
-            seqs.num, seqs.offset, \
-            seqGroups.num, seqGroups.offset, \
-            textures.num, textures.offset, textures.offset2, \
-            self.numSkinRef, \
-            skinFamilies.num, skinFamilies.offset, \
-            bodyparts.num, bodyparts.offset, \
-            attachments.num, attachments.offset, \
-            sounds.num, sounds.offset, \
-            soundGroups.num, soundGroups.offset, \
-            transitions.num, transitions.offset = tuple
+            (self.magic,
+            self.version,
+            self.name,
+            self.length,
+            eyePosition[0], eyePosition[1], eyePosition[2],
+            min[0], min[1], min[2], max[0], max[1], max[2],
+            bbMin[0], bbMin[1], bbMin[2], bbMax[0], bbMax[1], bbMax[2],
+            self.flags,
+            bones.num, bones.offset,
+            boneControllers.num, boneControllers.offset,
+            hitboxs.num, hitboxs.offset,
+            seqs.num, seqs.offset,
+            seqGroups.num, seqGroups.offset,
+            textures.num, textures.offset, textures.offset2,
+            self.numSkinRef,
+            skinFamilies.num, skinFamilies.offset,
+            bodyparts.num, bodyparts.offset,
+            attachments.num, attachments.offset,
+            sounds.num, sounds.offset,
+            soundGroups.num, soundGroups.offset,
+            transitions.num, transitions.offset) = tuple
             self.flags = Binary_Mdl10.HeaderFlags(self.flags)
 
     #endregion
@@ -843,13 +843,13 @@ class Binary_Mdl40(IHaveMetaInfo):
     class M_Texture:
         _struct = ('<6i10s', 80)
         def __init__(self, tuple):
-            self.nameOffset, \
-            self.flags, \
-            self.used, \
-            self.unused, \
-            self.material, \
-            self.clientMaterial, \
-            self.unused2 = tuple
+            (self.nameOffset,
+            self.flags,
+            self.used,
+            self.unused,
+            self.material,
+            self.clientMaterial,
+            self.unused2) = tuple
 
     class M_Header:
         _struct = ('<3i64si18f44if11i4B3if3i', 408)
@@ -881,68 +881,68 @@ class Binary_Mdl40(IHaveMetaInfo):
             includeModel = self.includeModel = X_LumpNO()
             animBlocks = self.animBlocks = X_LumpNO()
             flexControllerUI = self.flexControllerUI = X_LumpNO()
-            self.magic, \
-            self.version, \
-            self.checksum, \
-            self.name, \
-            self.length, \
-            eyePosition[0], eyePosition[1], eyePosition[2], \
-            illumPosition[0], illumPosition[1], illumPosition[2], \
-            min[0], min[1], min[2], max[0], max[1], max[2], \
-            bbMin[0], bbMin[1], bbMin[2], bbMax[0], bbMax[1], bbMax[2], \
-            self.flags, \
-            bones.num, bones.offset, \
-            boneControllers.num, boneControllers.offset, \
-            hitboxs.num, hitboxs.offset, \
-            localAnims.num, localAnims.offset, \
-            localSeqs.num, localSeqs.offset, \
-            events.num, events.offset, \
-            textures.num, textures.offset, \
-            texturesDirs.num, texturesDirs.offset, \
-            skinFamilies.num, skinFamilies.offset, skinFamilies.offset2, \
-            bodyparts.num, bodyparts.offset, \
-            attachments.num, attachments.offset, \
-            localNodes.num, localNodes.offset, localNodes.offset2, \
-            flexs.num, flexs.offset, \
-            flexControllers.num, flexControllers.offset, \
-            flexRules.num, flexRules.offset, \
-            ikChains.num, ikChains.offset, \
-            mouths.num, mouths.offset, \
-            localPoseParams.num, localPoseParams.offset, \
-            self.surfacePropIndex, \
-            keyValues.num, keyValues.offset, \
-            ikLocks.num, ikLocks.offset, \
-            self.mass, \
-            self.contents, \
-            includeModel.num, includeModel.offset, \
-            self.virtualModel, \
-            self.animBlockNameIndex, \
-            animBlocks.num, animBlocks.offset, \
-            self.animBlockModel, \
-            self.boneNameIndex, \
-            self.vertexBase, \
-            self.offsetBase, \
-            self.directionalDotProduct, \
-            self.rootLod, \
-            self.numAllowedRootLods, \
-            self.unused0, \
-            self.unused1, \
-            flexControllerUI.num, flexControllerUI.offset, \
-            self.vertAnimFixedPointScale, \
-            self.unused2, \
-            self.header2Index, \
-            self.unused3 = tuple
+            (self.magic,
+            self.version,
+            self.checksum,
+            self.name,
+            self.length,
+            eyePosition[0], eyePosition[1], eyePosition[2],
+            illumPosition[0], illumPosition[1], illumPosition[2],
+            min[0], min[1], min[2], max[0], max[1], max[2],
+            bbMin[0], bbMin[1], bbMin[2], bbMax[0], bbMax[1], bbMax[2],
+            self.flags,
+            bones.num, bones.offset,
+            boneControllers.num, boneControllers.offset,
+            hitboxs.num, hitboxs.offset,
+            localAnims.num, localAnims.offset,
+            localSeqs.num, localSeqs.offset,
+            events.num, events.offset,
+            textures.num, textures.offset,
+            texturesDirs.num, texturesDirs.offset,
+            skinFamilies.num, skinFamilies.offset, skinFamilies.offset2,
+            bodyparts.num, bodyparts.offset,
+            attachments.num, attachments.offset,
+            localNodes.num, localNodes.offset, localNodes.offset2,
+            flexs.num, flexs.offset,
+            flexControllers.num, flexControllers.offset,
+            flexRules.num, flexRules.offset,
+            ikChains.num, ikChains.offset,
+            mouths.num, mouths.offset,
+            localPoseParams.num, localPoseParams.offset,
+            self.surfacePropIndex,
+            keyValues.num, keyValues.offset,
+            ikLocks.num, ikLocks.offset,
+            self.mass,
+            self.contents,
+            includeModel.num, includeModel.offset,
+            self.virtualModel,
+            self.animBlockNameIndex,
+            animBlocks.num, animBlocks.offset,
+            self.animBlockModel,
+            self.boneNameIndex,
+            self.vertexBase,
+            self.offsetBase,
+            self.directionalDotProduct,
+            self.rootLod,
+            self.numAllowedRootLods,
+            self.unused0,
+            self.unused1,
+            flexControllerUI.num, flexControllerUI.offset,
+            self.vertAnimFixedPointScale,
+            self.unused2,
+            self.header2Index,
+            self.unused3) = tuple
             self.flags = Binary_Mdl40.HeaderFlags(self.flags)
 
     class M_Header2:
         _struct = ('<3ifi64s', 244)
         def __init__(self, tuple):
             srcBoneTransform = self.srcBoneTransform = X_LumpNO()
-            srcBoneTransform.num, srcBoneTransform.offset, \
-            self.illumPositionAttachmentIndex, \
-            self.maxEyeDeflection, \
-            self.linearBoneIndex, \
-            self.unknown = tuple
+            (srcBoneTransform.num, srcBoneTransform.offset,
+            self.illumPositionAttachmentIndex,
+            self.maxEyeDeflection,
+            self.linearBoneIndex,
+            self.unknown) = tuple
 
     #endregion
 
@@ -1040,18 +1040,18 @@ class Binary_Vpk(ArcBinaryT):
     class V_HeaderV2:
         _struct = ('<4I', 16)
         def __init__(self, tuple):
-            self.fileDataSectionSize, \
-            self.archiveMd5SectionSize, \
-            self.otherMd5SectionSize, \
-            self.signatureSectionSize = tuple
+            (self.fileDataSectionSize,
+            self.archiveMd5SectionSize,
+            self.otherMd5SectionSize,
+            self.signatureSectionSize) = tuple
 
     class V_ArchiveMd5:
         _struct = ('<3I16s', 28)
         def __init__(self, tuple):
-            self.archiveIndex, \
-            self.offset, \
-            self.length, \
-            self.checksum = tuple
+            (self.archiveIndex,
+            self.offset,
+            self.length,
+            self.checksum) = tuple
 
     class Verification:
         archiveMd5s: tuple = (0, bytearray())                  # Gets the archive MD5 checksum section entries. Also known as cache line hashes.
@@ -1195,27 +1195,27 @@ class Binary_Wad3(ArcBinaryT):
     class W_Header:
         _struct = ('<3I', 12)
         def __init__(self, tuple):
-            self.magic, \
-            self.lumpCount, \
-            self.lumpOffset = tuple
+            (self.magic,
+            self.lumpCount,
+            self.lumpOffset) = tuple
 
     class W_Lump:
         _struct = ('<3I2bH16s', 32)
         def __init__(self, tuple):
-            self.offset, \
-            self.diskSize, \
-            self.size, \
-            self.type, \
-            self.compression, \
-            self.padding, \
-            self.name = tuple
+            (self.offset,
+            self.diskSize,
+            self.size,
+            self.type,
+            self.compression,
+            self.padding,
+            self.name) = tuple
 
     class W_LumpInfo:
         _struct = ('<3I', 12)
         def __init__(self, tuple):
-            self.width, \
-            self.height, \
-            self.paletteSize = tuple
+            (self.width,
+            self.height,
+            self.paletteSize) = tuple
 
     #endregion
 
@@ -1265,15 +1265,10 @@ class Binary_Wad3X(IHaveMetaInfo, ITexture):
     class CharInfo:
         _struct = ('<2H', 4)
         def __init__(self, tuple):
-            self.startOffset, \
-            self.charWidth = tuple
+            (self.startOffset,
+            self.charWidth) = tuple
 
-    class Formats(Enum):
-        Nonex = 0
-        Tex2 = 0x40
-        Pic = 0x42
-        Tex = 0x43
-        Fnt = 0x46
+    class Formats(Enum): Nonex = 0; Tex2 = 0x40; Pic = 0x42; Tex = 0x43; Fnt = 0x46
 
     #endregion
 

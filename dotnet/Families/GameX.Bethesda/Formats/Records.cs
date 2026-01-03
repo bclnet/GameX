@@ -718,7 +718,7 @@ public struct RefField<TRecord>(Header r, int dataSize) where TRecord : Record {
 }
 
 public struct Ref2Field<TRecord>(Header r, int dataSize) where TRecord : Record {
-    public override readonly string ToString() => $"{Value1}x{Value2}";
+    public override readonly string ToString() => $"{Value1}z{Value2}";
     public Ref<TRecord> Value1 = new(r.ReadUInt32());
     public Ref<TRecord> Value2 = new(r.ReadUInt32());
 }
@@ -1434,7 +1434,7 @@ public unsafe class CELLRecord : Record, ICellRecord {
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct XCLCField {
-        public override readonly string ToString() => $"{GridX}x{GridY}";
+        public override readonly string ToString() => $"{GridX}z{GridY}";
         public static Dictionary<int, string> Struct = new() { [8] = "<2i", [12] = "<2iI" };
         public int GridX;
         public int GridY;
@@ -1538,7 +1538,7 @@ public unsafe class CELLRecord : Record, ICellRecord {
                 FieldType.INTV => INTV = r.ReadINTV(dataSize),
                 FieldType.NAM5 => NAM5 = r.ReadS<CREFField>(dataSize),
                 // TES4
-                FieldType.XCLR => XCLRs = [.. Enumerable.Range(0, dataSize >> 2).Select(x => new RefField<REGNRecord>(r, 4))],
+                FieldType.XCLR => XCLRs = r.ReadFArray(z => new RefField<REGNRecord>(r, 4), dataSize >> 2),
                 FieldType.XCMT => XCMT = r.ReadS<BYTEField>(dataSize),
                 FieldType.XCCM => XCCM = new RefField<CLMTRecord>(r, dataSize),
                 FieldType.XCWT => XCWT = new RefField<WATRRecord>(r, dataSize),
@@ -1719,7 +1719,7 @@ public class CLMTRecord : Record, IHaveMODL {
         FieldType.MODB => MODL.MODBField(r, dataSize),
         FieldType.FNAM => FNAM = r.ReadFILE(dataSize),
         FieldType.GNAM => GNAM = r.ReadFILE(dataSize),
-        FieldType.WLST => WLSTs.AddRangeX(Enumerable.Range(0, dataSize >> 3).Select(x => new WLSTField(r, dataSize))),
+        FieldType.WLST => WLSTs.AddRangeX(r.ReadFArray(z => new WLSTField(r, dataSize), dataSize >> 3)),
         FieldType.TNAM => TNAM = new TNAMField(r, dataSize),
         _ => Empty,
     };
@@ -1779,7 +1779,7 @@ public class CREARecord : Record, IHaveMODL {
         Biped = 0x0001,
         Respawn = 0x0002,
         WeaponAndShield = 0x0004,
-        None = 0x0008,
+        None_ = 0x0008,
         Swims = 0x0010,
         Flies = 0x0020,
         Walks = 0x0040,
@@ -2049,16 +2049,14 @@ public class CSTYRecord : Record {
 /// </summary>
 public class DIALRecord : Record {
     internal static DIALRecord LastRecord;
-
     public enum DIALType : byte { RegularTopic = 0, Voice, Greeting, Persuasion, Journal }
-
     public STRVField FULL; // Dialogue Name
     public BYTEField DATA; // Dialogue Type
     public List<RefField<QUSTRecord>> QSTIs; // Quests (optional)
     public List<INFORecord> INFOs = []; // Info Records
 
     public override object CreateField(Header r, FieldType type, int dataSize) => type switch {
-        FieldType.EDID or FieldType.NAME => (LastRecord = this, EDID = r.ReadSTRV(dataSize)),
+        FieldType.EDID or FieldType.NAME => (EDID = r.ReadSTRV(dataSize), LastRecord = this),
         FieldType.FULL => FULL = r.ReadSTRV(dataSize),
         FieldType.DATA => DATA = r.ReadS<BYTEField>(dataSize),
         FieldType.QSTI or FieldType.QSTR => (QSTIs ??= []).AddX(new RefField<QUSTRecord>(r, dataSize)),
@@ -2603,7 +2601,7 @@ public class IDLERecord : Record, IHaveMODL {
         FieldType.MODB => MODL.MODBField(r, dataSize),
         FieldType.CTDA or FieldType.CTDT => CTDAs.AddX(new SCPTRecord.CTDAField(r, dataSize)),
         FieldType.ANAM => ANAM = r.ReadS<BYTEField>(dataSize),
-        FieldType.DATA => DATAs = [.. Enumerable.Range(0, dataSize >> 2).Select(x => new RefField<IDLERecord>(r, 4))],
+        FieldType.DATA => DATAs = r.ReadFArray(z => new RefField<IDLERecord>(r, 4), dataSize >> 2),
         _ => Empty,
     };
 }
@@ -2733,23 +2731,12 @@ public class INFORecord : Record {
 /// </summary>
 public class INGRRecord : Record, IHaveMODL {
     // TES3
-    public struct IRDTField {
-        public float Weight;
-        public int Value;
-        public int[] EffectId; // 0 or -1 means no effect
-        public int[] SkillId; // only for Skill related effects, 0 or -1 otherwise
-        public int[] AttributeId; // only for Attribute related effects, 0 or -1 otherwise
-
-        public IRDTField(Header r, int dataSize) {
-            Weight = r.ReadSingle();
-            Value = r.ReadInt32();
-            EffectId = new int[4];
-            for (var i = 0; i < EffectId.Length; i++) EffectId[i] = r.ReadInt32();
-            SkillId = new int[4];
-            for (var i = 0; i < SkillId.Length; i++) SkillId[i] = r.ReadInt32();
-            AttributeId = new int[4];
-            for (var i = 0; i < AttributeId.Length; i++) AttributeId[i] = r.ReadInt32();
-        }
+    public struct IRDTField(Header r, int dataSize) {
+        public float Weight = r.ReadSingle();
+        public int Value = r.ReadInt32();
+        public int[] EffectId = [r.ReadInt32(), r.ReadInt32(), r.ReadInt32(), r.ReadInt32()]; // 0 or -1 means no effect
+        public int[] SkillId = [r.ReadInt32(), r.ReadInt32(), r.ReadInt32(), r.ReadInt32()]; // only for Skill related effects, 0 or -1 otherwise
+        public int[] AttributeId = [r.ReadInt32(), r.ReadInt32(), r.ReadInt32(), r.ReadInt32()]; // only for Attribute related effects, 0 or -1 otherwise
     }
 
     // TES4
@@ -2758,11 +2745,7 @@ public class INGRRecord : Record, IHaveMODL {
         public int Value;
         public uint Flags;
 
-        public object ENITField(Header r, int dataSize) {
-            Value = r.ReadInt32();
-            Flags = r.ReadUInt32();
-            return Value;
-        }
+        public object ENITField(Header r, int dataSize) { var z = Value = r.ReadInt32(); Flags = r.ReadUInt32(); return z; }
     }
 
     public MODLGroup MODL { get; set; } // Model Name
@@ -2866,10 +2849,10 @@ public unsafe class LANDRecord : Record {
     // TES3
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct CORDField {
+        public override readonly string ToString() => $"{CellX},{CellY}";
         public static (string, int) Struct = ("<2i", 8);
         public int CellX;
         public int CellY;
-        public override readonly string ToString() => $"{CellX},{CellY}";
     }
 
     public struct WNAMField {
@@ -2893,6 +2876,7 @@ public unsafe class LANDRecord : Record {
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct VTXTField {
+        public static (string, int) Struct = ("<2Hf", 8);
         public ushort Position;
         public ushort Pad01;
         public float Opacity;
@@ -2994,6 +2978,7 @@ public class LEVIRecord : Record {
 public class LIGHRecord : Record, IHaveMODL {
     // TESX
     public struct DATAField {
+        [Flags]
         public enum ColorFlags {
             Dynamic = 0x0001,
             CanCarry = 0x0002,
@@ -3309,8 +3294,7 @@ public class MGEFRecord : Record {
             Light = new Ref<LIGHRecord>(r.ReadUInt32());
             ProjectileSpeed = r.ReadSingle();
             EffectShader = new Ref<EFSHRecord>(r.ReadUInt32());
-            if (dataSize == 36)
-                return;
+            if (dataSize == 36) return;
             EnchantEffect = new Ref<EFSHRecord>(r.ReadUInt32());
             CastingSound = new Ref<SOUNRecord>(r.ReadUInt32());
             BoltSound = new Ref<SOUNRecord>(r.ReadUInt32());
@@ -3367,7 +3351,7 @@ public class MGEFRecord : Record {
             FieldType.MODL => MODL = new MODLGroup(r, dataSize),
             FieldType.MODB => MODL.MODBField(r, dataSize),
             FieldType.DATA => DATA = new DATAField(r, dataSize),
-            FieldType.ESCE => ESCEs = [.. Enumerable.Range(0, dataSize >> 2).Select(x => r.ReadSTRV(4))],
+            FieldType.ESCE => ESCEs = r.ReadFArray(z => r.ReadSTRV(4), dataSize >> 2),
             _ => Empty,
         };
 }
@@ -3426,7 +3410,7 @@ public class NPC_Record : Record, IHaveMODL {
         Female = 0x0001,
         Essential = 0x0002,
         Respawn = 0x0004,
-        None = 0x0008,
+        None_ = 0x0008,
         Autocalc = 0x0010,
         BloodSkel = 0x0400,
         BloodMetal = 0x0800,
@@ -3452,16 +3436,15 @@ public class NPC_Record : Record, IHaveMODL {
         public byte Rank;
         public byte Unknown1;
         public int Gold;
-
         // 12 byte version
-        //public short Level;
-        //public byte Disposition;
-        //public byte FactionId;
-        //public byte Rank;
-        //public byte Unknown1;
+        // public short Level;
+        // public byte Disposition;
+        // public byte FactionId;
+        // public byte Rank;
+        // public byte Unknown1;
         public byte Unknown2;
         public byte Unknown3;
-        //public int Gold;
+        // public int Gold;
 
         public NPDTField(Header r, int dataSize) {
             if (dataSize == 52) {
@@ -3516,8 +3499,8 @@ public class NPC_Record : Record, IHaveMODL {
     public STRVField KNAM; // Hair model
     public NPDTField NPDT; // NPC Data
     public INTVField FLAG; // NPC Flags
-    public List<CNTOField> NPCOs = new List<CNTOField>(); // NPC item
-    public List<STRVField> NPCSs = new List<STRVField>(); // NPC spell
+    public List<CNTOField> NPCOs = []; // NPC item
+    public List<STRVField> NPCSs = []; // NPC spell
     public CREARecord.AIDTField AIDT; // AI data
     public CREARecord.AI_WField? AI_W; // AI
     public CREARecord.AI_TField? AI_T; // AI Travel
@@ -3584,7 +3567,7 @@ public class PACKRecord : Record {
         public byte Month = r.ReadByte();
         public byte DayOfWeek = r.ReadByte();
         public byte Date = r.ReadByte();
-        public sbyte Time = (sbyte)r.ReadByte();
+        public sbyte Time = r.ReadSByte();
         public int Duration = r.ReadInt32();
     }
 
@@ -3639,7 +3622,7 @@ public class PGRDRecord : Record {
         public byte Connections;
 
         public PGRPField(Header r, int dataSize) {
-            Point = new Vector3(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
+            Point = r.ReadVector3();
             Connections = r.ReadByte();
             r.Skip(3); // Unused
         }
@@ -3650,29 +3633,14 @@ public class PGRDRecord : Record {
         public short EndPointId = r.ReadInt16();
     }
 
-    public struct PGRIField {
-        public short PointId;
-        public Vector3 ForeignNode;
-
-        public PGRIField(Header r, int dataSize) {
-            PointId = r.ReadInt16();
-            r.Skip(2); // Unused (can merge back)
-            ForeignNode = new Vector3(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
-        }
+    public struct PGRIField(Header r, int dataSize) {
+        public short PointId = r.ReadInt16();
+        public Vector3 ForeignNode = r.Skip(2).ReadVector3(); // 2:Unused (can merge back)
     }
 
-    public struct PGRLField {
-        public Ref<REFRRecord> Reference;
-        public short[] PointIds;
-
-        public PGRLField(Header r, int dataSize) {
-            Reference = new Ref<REFRRecord>(r.ReadUInt32());
-            PointIds = new short[(dataSize - 4) >> 2];
-            for (var i = 0; i < PointIds.Length; i++) {
-                PointIds[i] = r.ReadInt16();
-                r.Skip(2); // Unused (can merge back)
-            }
-        }
+    public struct PGRLField(Header r, int dataSize) {
+        public Ref<REFRRecord> Reference = new(r.ReadUInt32());
+        public short[] PointIds = r.ReadFArray(z => (r.ReadInt16(), r.Skip(2)).Item1, (dataSize - 4) >> 2); // 2:Unused (can merge back)
     }
 
     public DATAField DATA; // Number of nodes
@@ -3686,12 +3654,12 @@ public class PGRDRecord : Record {
     public override object CreateField(Header r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadSTRV(dataSize),
         FieldType.DATA => DATA = new DATAField(r, dataSize),
-        FieldType.PGRP => PGRPs = [.. Enumerable.Range(0, dataSize >> 4).Select(x => new PGRPField(r, 16))],
+        FieldType.PGRP => PGRPs = r.ReadFArray(z => new PGRPField(r, 16), dataSize >> 4),
         FieldType.PGRC => PGRC = r.ReadUNKN(dataSize),
         FieldType.PGAG => PGAG = r.ReadUNKN(dataSize),
-        FieldType.PGRR => (PGRRs = [.. Enumerable.Range(0, dataSize >> 2).Select(x => new PGRRField(r, 4))], r.Skip(dataSize % 4)),
+        FieldType.PGRR => (PGRRs = r.ReadFArray(z => new PGRRField(r, 4), dataSize >> 2), r.Skip(dataSize % 4)).Item1,
         FieldType.PGRL => (PGRLs ??= []).AddX(new PGRLField(r, dataSize)),
-        FieldType.PGRI => PGRIs = [.. Enumerable.Range(0, dataSize >> 4).Select(x => new PGRIField(r, 16))],
+        FieldType.PGRI => PGRIs = r.ReadFArray(z => new PGRIField(r, 16), dataSize >> 4),
         _ => Empty,
     };
 }
@@ -3971,13 +3939,13 @@ public class RACERecord : Record {
                 FieldType.MODB => Bodys[_genderState].MODB = r.ReadS<FLTVField>(dataSize),
                 FieldType.INDX => Bodys[_genderState].BodyParts.AddX(new BodyPartGroup { INDX = r.ReadS<UI32Field>(dataSize) }),
                 FieldType.ICON => Bodys[_genderState].BodyParts.Last().ICON = r.ReadFILE(dataSize),
-                FieldType.HNAM => (_nameState++, HNAMs.AddRangeX(Enumerable.Range(0, dataSize >> 2).Select(x => new RefField<HAIRRecord>(r, 4)))),
+                FieldType.HNAM => (HNAMs.AddRangeX(r.ReadFArray(z => new RefField<HAIRRecord>(r, 4), dataSize >> 2)), _nameState++).Item1,
                 _ => Empty,
             },
             // postamble
             3 => type switch {
-                FieldType.HNAM => HNAMs.AddRangeX(Enumerable.Range(0, dataSize >> 2).Select(x => new RefField<HAIRRecord>(r, 4))),
-                FieldType.ENAM => ENAMs.AddRangeX(Enumerable.Range(0, dataSize >> 2).Select(x => new RefField<EYESRecord>(r, 4))),
+                FieldType.HNAM => HNAMs.AddRangeX(r.ReadFArray(z => new RefField<HAIRRecord>(r, 4), dataSize >> 2)),
+                FieldType.ENAM => ENAMs.AddRangeX(r.ReadFArray(z => new RefField<EYESRecord>(r, 4), dataSize >> 2)),
                 FieldType.FGGS => FGGS = r.ReadBYTV(dataSize),
                 FieldType.FGGA => FGGA = r.ReadBYTV(dataSize),
                 FieldType.FGTS => FGTS = r.ReadBYTV(dataSize),
@@ -4297,12 +4265,12 @@ public class REGNRecord : Record {
         FieldType.RPLI => RPLIs.AddX(new RPLIField(r, dataSize)),
         FieldType.RPLD => RPLIs.Last().RPLDField(r, dataSize),
         FieldType.RDAT => RDATs.AddX(new RDATField(r, dataSize)),
-        FieldType.RDOT => RDATs.Last().RDOTs = [.. Enumerable.Range(0, dataSize / 52).Select(x => new RDOTField(r, dataSize))],
+        FieldType.RDOT => RDATs.Last().RDOTs = r.ReadFArray(z => new RDOTField(r, dataSize), dataSize / 52),
         FieldType.RDMP => RDATs.Last().RDMP = r.ReadSTRV(dataSize),
-        FieldType.RDGS => RDATs.Last().RDGSs = [.. Enumerable.Range(0, dataSize / 8).Select(x => new RDGSField(r, dataSize))],
+        FieldType.RDGS => RDATs.Last().RDGSs = r.ReadFArray(z => new RDGSField(r, dataSize), dataSize / 8),
         FieldType.RDMD => RDATs.Last().RDMD = r.ReadS<UI32Field>(dataSize),
-        FieldType.RDSD => RDATs.Last().RDSDs = [.. Enumerable.Range(0, dataSize / 12).Select(x => new RDSDField(r, dataSize))],
-        FieldType.RDWT => RDATs.Last().RDWTs = [.. Enumerable.Range(0, dataSize / RDWTField.SizeOf(r.Format)).Select(x => new RDWTField(r, dataSize))],
+        FieldType.RDSD => RDATs.Last().RDSDs = r.ReadFArray(z => new RDSDField(r, dataSize), dataSize / 12),
+        FieldType.RDWT => RDATs.Last().RDWTs = r.ReadFArray(z => new RDWTField(r, dataSize), dataSize / RDWTField.SizeOf(r.Format)),
         _ => Empty,
     };
 }
@@ -4315,7 +4283,7 @@ public class ROADRecord : Record {
     public UNKNField PGRR;
 
     public override object CreateField(Header r, FieldType type, int dataSize) => type switch {
-        FieldType.PGRP => PGRPs = [.. Enumerable.Range(0, dataSize >> 4).Select(x => new PGRDRecord.PGRPField(r, dataSize))],
+        FieldType.PGRP => PGRPs = r.ReadFArray(z => new PGRDRecord.PGRPField(r, dataSize), dataSize >> 4),
         FieldType.PGRR => PGRR = r.ReadUNKN(dataSize),
         _ => Empty,
     };

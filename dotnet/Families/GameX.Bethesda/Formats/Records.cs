@@ -4086,7 +4086,9 @@ public class REFRRecord : Record {
         FieldType.XCHG => XCHG = r.ReadS<FLTVField>(dataSize),
         FieldType.XHLT => XCHG = r.ReadS<FLTVField>(dataSize),
         FieldType.XPCI => (XPCI = new RefField<CELLRecord>(r, dataSize), _nextFull = 1).Item1,
-        FieldType.FULL => _nextFull == 1 ? XPCI.Value.SetName(r.ReadFAString(dataSize)) : _nextFull == 2 ? XMRKs.Last().FULL = r.ReadSTRV(dataSize) : _nextFull = 0,
+        FieldType.FULL when _nextFull == 1 => XPCI.Value.SetName(r.ReadFAString(dataSize)), //:matchif
+        FieldType.FULL when _nextFull == 2 => XMRKs.Last().FULL = r.ReadSTRV(dataSize), //:matchif
+        FieldType.FULL when _nextFull != 1 && _nextFull != 2 => _nextFull = 0, //:matchif
         FieldType.XLCM => XLCM = r.ReadS<IN32Field>(dataSize),
         FieldType.XRTM => XRTM = new RefField<REFRRecord>(r, dataSize),
         FieldType.XACT => XACT = r.ReadS<UI32Field>(dataSize),

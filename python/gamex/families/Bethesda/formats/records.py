@@ -827,6 +827,8 @@ class RecordGroup:
 def __nca(self, name, value):
     if getattr(self, name) == None: setattr(self, name, value)
 def then[T, TResult](s: Record, value: T, then: callable) -> TResult: return then(value)
+def last[T](s: list[T]) -> T: return None
+def single[T](s: list[T], func: callable) -> T: return None
 def addX[T](s: list[T], value: T) -> T: s.append(value); return value
 def addRangeX[T](s: list[T], value: iter) -> iter: s.extend(value); return value
 def readINTV(r: Header, length: int) -> INTVField:
@@ -849,10 +851,14 @@ def readFILE(r: Header, length: int) -> FILEField: return FILEField(value=r.read
 def readBYTV(r: Header, length: int) -> BYTVField: return BYTVField(value=r.readBytes(length))
 def readUNKN(r: Header, length: int) -> UNKNField: return UNKNField(value=r.readBytes(length))
 
+def listx(s):
+    s.addX = list_addX
+    s.addRangeX = list_addRangeX
+    s.last = last
+    s.single = single
+
 # monkey patch
 Record.then = then
-list.addX = addX
-list.addRangeX = addRangeX
 Header.readINTV = readINTV
 Header.readDATV = readDATV
 Header.readSTRV = readSTRV
@@ -2035,8 +2041,8 @@ class DOORRecord(Record, IHaveMODL):
         match type:
             case FieldType.EDID | FieldType.NAME: z = self.DID = r.readSTRV(dataSize)
             case FieldType.FULL: z = self.FULL = r.readSTRV(dataSize)
-            case FieldType.FNAM if r.format != FormType.TES3: z = self.FNAM = r.readS(BYTEField, dataSize) #matchif
-            case FieldType.FNAM if r.format == FormType.TES3: z = self.FULL = r.readSTRV(dataSize) #matchif
+            case FieldType.FNAM if r.format != FormType.TES3: z = self.FNAM = r.readS(BYTEField, dataSize) #:matchif
+            case FieldType.FNAM if r.format == FormType.TES3: z = self.FULL = r.readSTRV(dataSize) #:matchif
             case FieldType.MODL: z = self.MODL = MODLGroup(r, dataSize)
             case FieldType.MODB: z = self.MODL.MODBField(r, dataSize)
             case FieldType.MODT: z = self.MODL.MODTField(r, dataSize)
@@ -2262,8 +2268,8 @@ class ENCHRecord(Record):
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.EDID | FieldType.NAME: z = self.EDID = r.readSTRV(dataSize)
-            case FieldType.FULL if len(self.SCITs) == 0: z = self.FULL = r.readSTRV(dataSize) #matchif
-            case FieldType.FULL if len(self.SCITs) != 0: z = self.SCITs.last().FULLField(r, dataSize) #matchif
+            case FieldType.FULL if len(self.SCITs) == 0: z = self.FULL = r.readSTRV(dataSize) #:matchif
+            case FieldType.FULL if len(self.SCITs) != 0: z = self.SCITs.last().FULLField(r, dataSize) #:matchif
             case FieldType.ENIT | FieldType.ENDT: z = self.ENIT = ENITField(r, dataSize)
             case FieldType.EFID: r.skip(dataSize)
             case FieldType.EFIT | FieldType.ENAM: z = self.EFITs.addX(EFITField(r, dataSize))
@@ -2660,8 +2666,8 @@ class INGRRecord(Record, IHaveMODL):
             case FieldType.MODL: z = self.MODL = MODLGroup(r, dataSize)
             case FieldType.MODB: z = self.MODL.MODBField(r, dataSize)
             case FieldType.MODT: z = self.MODL.MODTField(r, dataSize)
-            case FieldType.FULL if len(self.SCITs) == 0: z = self.FULL = r.readSTRV(dataSize) #matchif
-            case FieldType.FULL if len(self.SCITs) != 0: z = self.SCITs.last().FULLField(r, dataSize) #matchif
+            case FieldType.FULL if len(self.SCITs) == 0: z = self.FULL = r.readSTRV(dataSize) #:matchif
+            case FieldType.FULL if len(self.SCITs) != 0: z = self.SCITs.last().FULLField(r, dataSize) #:matchif
             case FieldType.FNAM: z = self.FULL = r.readSTRV(dataSize)
             case FieldType.DATA: z = self.DATA = DATAField(r, dataSize)
             case FieldType.IRDT: z = self.IRDT = IRDTField(r, dataSize)
@@ -2913,7 +2919,8 @@ class LIGHRecord(Record, IHaveMODL):
         match type:
             case FieldType.EDID | FieldType.NAME: z = self.EDID = r.readSTRV(dataSize)
             case FieldType.FULL: z = self.FULL = r.readSTRV(dataSize)
-            case FieldType.FNAM: z = self.FNAM := r.readS(FLTVField, dataSize) if self.r.Format != TES3 else self.FULL := r.readSTRV(dataSize)
+            case FieldType.FNAM if r.Format != TES3: z = self.FNAM = r.readS(FLTVField, dataSize) #:matchif
+            case FieldType.FNAM if r.Format == TES3: z = self.FULL = r.readSTRV(dataSize) #:matchif
             case FieldType.DATA | FieldType.LHDT: z = self.DATA = DATAField(r, dataSize)
             case FieldType.SCPT: z = self.SCPT = r.readSTRV(dataSize)
             case FieldType.SCRI: z = self.SCRI = RefField[SCPTRecord](r, dataSize)
@@ -3079,7 +3086,7 @@ class LVSPRecord(Record):
 class MGEFRecord(Record):
     # TES3
     class MEDTField:
-        def __init__(self, r: Header, dataSize: int)
+        def __init__(self, r: Header, dataSize: int):
             self.spellSchool: int = r.readInt32() # 0 = Alteration, 1 = Conjuration, 2 = Destruction, 3 = Illusion, 4 = Mysticism, 5 = Restoration
             self.baseCost: float = r.readSingle()
             self.flags: int = r.readInt32() # 0x0200 = Spellmaking, 0x0400 = Enchanting, 0x0800 = Negative
@@ -3186,7 +3193,7 @@ class MGEFRecord(Record):
     FULL: STRVField
     MODL: MODLGroup
     DATA: DATAField
-    ESCEs: STRVField[]
+    ESCEs: list[STRVField]
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         if r.format == FormType.TES3:
@@ -3486,12 +3493,12 @@ class PGRDRecord(Record):
             self.pointIds: list[int] = r.readFArray(lambda z: (r.readInt16(), r.skip(2))[0], (dataSize - 4) >> 2) # 2:Unused (can merge back)
 
     DATA: DATAField # Number of nodes
-    PGRPs: PGRPField[]
+    PGRPs: list[PGRPField]
     PGRC: UNKNField
     PGAG: UNKNField
-    PGRRs: PGRRField[] # Point-to-Point Connections
+    PGRRs: list[PGRRField] # Point-to-Point Connections
     PGRLs: list[PGRLField] # Point-to-Reference Mappings
-    PGRIs: PGRIField[] # Inter-Cell Connections
+    PGRIs: list[PGRIField] # Inter-Cell Connections
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -3635,7 +3642,7 @@ class RACERecord(Record):
             personality: int
             luck: int
 
-        skillBoosts: SkillBoost[] # Skill Boosts
+        skillBoosts: list[SkillBoost] # Skill Boosts
         male: RaceStats = RaceStats()
         female: RaceStats = RaceStats()
         flags: int # 1 = Playable 2 = Beast Race
@@ -3719,7 +3726,7 @@ class RACERecord(Record):
 
     # Parts
     FaceParts: list[FacePartGroup] = []
-    Bodys: BodyGroup[] = [BodyGroup(), BodyGroup()]
+    Bodys: list[BodyGroup] = [BodyGroup(), BodyGroup()]
     _nameState: int
     _genderState: int
 
@@ -3734,7 +3741,7 @@ class RACERecord(Record):
                 case _: z = Record.empty
             return z
         if r.format == FormType.TES4:
-            match _nameState:
+            match self._nameState:
                 # preamble
                 case 0:
                     match type:
@@ -3750,7 +3757,7 @@ class RACERecord(Record):
                         case FieldType.UNAM: z = self.UNAM = r.readS(FLTVField, dataSize)
                         case FieldType.XNAM: z = self.XNAM = r.ReadUNKN(dataSize)
                         case FieldType.ATTR: z = self.DATA.ATTRField(r, dataSize)
-                        case FieldType.NAM0: z = self._nameState += 1
+                        case FieldType.NAM0: self._nameState += 1
                         case _: z = Record.empty
                 # face data
                 case 1:
@@ -3759,7 +3766,7 @@ class RACERecord(Record):
                         case FieldType.MODL: z = self.FaceParts.last().MODL = MODLGroup(r, dataSize)
                         case FieldType.ICON: z = self.FaceParts.last().ICON = r.readFILE(dataSize)
                         case FieldType.MODB: z = self.FaceParts.last().MODL.MODBField(r, dataSize)
-                        case FieldType.NAM1: z = self._nameState += 1
+                        case FieldType.NAM1: self._nameState += 1
                         case _: z = Record.empty,
                 # body data
                 case 2:
@@ -3770,7 +3777,7 @@ class RACERecord(Record):
                         case FieldType.MODB: z = self.Bodys[_genderState].MODB = r.readS(FLTVField, dataSize)
                         case FieldType.INDX: z = self.Bodys[_genderState].BodyParts.addX(BodyPartGroup(INDX = r.readS(UI32Field, dataSize)))
                         case FieldType.ICON: z = self.Bodys[_genderState].BodyParts.last().ICON = r.readFILE(dataSize)
-                        case FieldType.HNAM: z = (self.HNAMs.addRangeX(r.readFArray(lambda z: RefField[HAIRRecord](r, 4), dataSize >> 2)), _nameState += 1)[0]
+                        case FieldType.HNAM: z = self.HNAMs.addRangeX(r.readFArray(lambda z: RefField[HAIRRecord](r, 4), dataSize >> 2)); self._nameState += 1
                         case _: z = Record.empty,
                 # postamble
                 case 3:
@@ -3905,13 +3912,15 @@ class REFRRecord(Record):
             case FieldType.XLOD: z = self.XLOD = r.readBYTV(dataSize)
             case FieldType.XCHG: z = self.XCHG = r.readS(FLTVField, dataSize)
             case FieldType.XHLT: z = self.XCHG = r.readS(FLTVField, dataSize)
-            case FieldType.XPCI: z = (self.XPCI = RefField[CELLRecord](r, dataSize), self._nextFull = 1)[0]
-            case FieldType.FULL: z = self.XPCI.value.setName(r.readFAString(dataSize)) if self._nextFull == 1 else self.XMRKs.last().FULL = r.readSTRV(dataSize) if self._nextFull == 2 else self._nextFull = 0
+            case FieldType.XPCI: z = self.XPCI = RefField[CELLRecord](r, dataSize); self._nextFull = 1
+            case FieldType.FULL if self._nextFull == 1: z = self.XPCI.value.setName(r.readFAString(dataSize)) #:matchif
+            case FieldType.FULL if self._nextFull == 2: z = self.XMRKs.last().FULL = r.readSTRV(dataSize) #:matchif
+            case FieldType.FULL if self._nextFull != 1 and self._nextFull != 2: self._nextFull = 0 #:matchif
             case FieldType.XLCM: z = self.XLCM = r.readS(IN32Field, dataSize)
             case FieldType.XRTM: z = self.XRTM = RefField[REFRRecord](r, dataSize)
             case FieldType.XACT: z = self.XACT = r.readS(UI32Field, dataSize)
             case FieldType.XCNT: z = self.XCNT = r.readS(IN32Field, dataSize)
-            case FieldType.XMRK: z = (__nca(self, 'XMRKs', []).addX(XMRKGroup()), _nextFull = 2)[0]
+            case FieldType.XMRK: z = __nca(self, 'XMRKs', []).addX(XMRKGroup()); self._nextFull = 2
             case FieldType.FNAM: z = self.XMRKs.last().FNAM = r.readS(BYTEField, dataSize)
             case FieldType.TNAM: z = self.XMRKs.last().TNAM = r.readS(BYTEField, dataSize)
             case FieldType.ONAM: z = True
@@ -3931,12 +3940,12 @@ class REGNRecord(Record):
         flags: REGNType
         priority: int
         # groups
-        RDOTs: RDOTField[] # Objects
+        RDOTs: list[RDOTField] # Objects
         RDMP: STRVField # MapName
-        RDGSs: RDGSField[] # Grasses
+        RDGSs: list[RDGSField] # Grasses
         RDMD: UI32Field # Music Type
-        RDSDs: RDSDField[] # Sounds
-        RDWTs: RDWTField[] # Weather Types
+        RDSDs: list[RDSDField] # Sounds
+        RDWTs: list[RDWTField] # Weather Types
 
         def __init__(self, r: Header = None, dataSize: int = 0):
             if not r: return
@@ -4015,7 +4024,7 @@ class REGNRecord(Record):
         def __init__(self, r: Header, dataSize: int):
             self.weather: Ref[WTHRRecord] = Ref[WTHRRecord](r.readUInt32())
             self.chance: int = r.readUInt32()
-            self.global: Ref[GLOBRecord] = Ref[GLOBRecord](r.readUInt32()) if r.format == FormType.TES5 else Ref[GLOBRecord]()
+            self.global_: Ref[GLOBRecord] = Ref[GLOBRecord](r.readUInt32()) if r.format == FormType.TES5 else Ref[GLOBRecord]()
 
     # TES3
     class WEATField:
@@ -4044,7 +4053,7 @@ class REGNRecord(Record):
     class RPLIField:
         def __init__(self, r: Header, dataSize: int):
             self.edgeFalloff: int = r.readUInt32() # (World Units)
-            self.points: Vector2[] = None # Region Point List Data
+            self.points: list[Vector2] # Region Point List Data
         def RPLDField(self, r: Header, dataSize: int) -> object: z = self.points = r.readFArray(lambda z: r.readVector2(), dataSize >> 3); return z
 
     ICON: STRVField # Icon / Sleep creature
@@ -4079,7 +4088,7 @@ class REGNRecord(Record):
 
 # ROAD.Road - 0400 - tag::ROAD[]
 class ROADRecord(Record):
-    PGRPs: PGRDRecord.PGRPField[]
+    PGRPs: list[PGRDRecord.PGRPField]
     PGRR: UNKNField
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
@@ -4157,7 +4166,7 @@ class SCPTRecord(Record):
             self.numFloats: int = r.readInt32()
             self.scriptDataSize: int = r.readInt32()
             self.localVarSize: int = r.readInt32()
-            self.variables: str[] = None
+            self.variables: list[str] = None
         def SCVRField(self, r: Header, dataSize: int) -> object: z = self.variables = r.readZAStringList(dataSize); return z
 
     # TES4
@@ -4216,7 +4225,7 @@ class SCPTRecord(Record):
             case FieldType.SCHR: z = self.SCHR = SCHRField(r, dataSize)
             case FieldType.SLSD: z = self.SLSDs.addX(SLSDField(r, dataSize))
             case FieldType.SCRO: z = self.SCROs.addX(RefField[Record](r, dataSize))
-            case FieldType.SCRV: z = self.SCRVs.addX(this.Then(r.readUInt32(), idx => SLSDs.Single(x => x.Idx == idx)))
+            case FieldType.SCRV: z = self.SCRVs.addX(self.then(r.readUInt32(), lambda v: self.SLSDs.single(lambda s: s.idx == idx)))
             case _: z = Record.empty
         return z
 # end::SCPT[]
@@ -4224,10 +4233,10 @@ class SCPTRecord(Record):
 # SGST.Sigil Stone - 0400 - tag::SGST[]
 class SGSTRecord(Record, IHaveMODL):
     class DATAField:
-    def __init__(self, r: Header, dataSize: int):
-        self.uses: int = r.readByte()
-        self.value: int = r.readInt32()
-        self.weight: float = r.readSingle()
+        def __init__(self, r: Header, dataSize: int):
+            self.uses: int = r.readByte()
+            self.value: int = r.readInt32()
+            self.weight: float = r.readSingle()
 
     MODL: MODLGroup # Model
     FULL: STRVField # Item Name
@@ -4261,10 +4270,10 @@ class SKILRecord(Record):
         action: int
         attribute: int
         specialization: int # 0 = Combat, 1 = Magic, 2 = Stealth
-        useValue: float[] # The use types for each skill are hard-coded.
+        useValue: list[float] # The use types for each skill are hard-coded.
 
         def __init__(self, r: Header, dataSize: int):
-            self.action = 0 r.format == FormType.TES3 else r.readInt32()
+            self.action = 0 if r.format == FormType.TES3 else r.readInt32()
             self.attribute = r.readInt32()
             self.specialization = r.readUInt32()
             self.useValue = r.readPArray(None, 'f', 4 if r.format == FormType.TES3 else 2)
@@ -4432,7 +4441,8 @@ class SPELRecord(Record):
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.EDID | FieldType.NAME: z = self.EDID = r.readSTRV(dataSize)
-            case FieldType.FULL: z = self.FULL := r.readSTRV(dataSize) if self.SCITs.Count == 0 else self.SCITs.last().FULLField(r, dataSize)
+            case FieldType.FULL if len(self.SCITs) == 0: z = self.FULL = r.readSTRV(dataSize) #:matchif
+            case FieldType.FULL if len(self.SCITs) != 0: z = self.SCITs.last().FULLField(r, dataSize) #:matchif
             case FieldType.FNAM: z = self.FULL = r.readSTRV(dataSize)
             case FieldType.SPIT | FieldType.SPDT: z = self.SPIT = SPITField(r, dataSize)
             case FieldType.EFID: r.skip(dataSize)
@@ -4443,7 +4453,7 @@ class SPELRecord(Record):
 # end::SPEL[]
 
 # SSCR.Start Script - 3000 - tag::XXXX[]
-class SSCRRecord(Record)
+class SSCRRecord(Record):
     DATA: STRVField # Digits
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
@@ -4498,9 +4508,9 @@ class TES4Record(Record):
     class HEDRField:
         _struct = ('<fiI', 12)
         def __init__(self, tuple):
-            (self.version: float,
-            self.numRecords: int, # Number of records and groups (not including TES4 record itself).
-            self.nextObjectId: int) = tuple #Next available object ID.
+            (self.version,
+            self.numRecords, # Number of records and groups (not including TES4 record itself).
+            self.nextObjectId) = tuple #Next available object ID.
 
     HEDR: HEDRField
     CNAM: STRVField # author (Optional)
@@ -4532,7 +4542,7 @@ class TES4Record(Record):
 # end::TES4[]
 
 # TREE.Tree - 0450 - tag::TREE[]
-class TREERecord(Record, IHaveMODL)
+class TREERecord(Record, IHaveMODL):
     class SNAMField:
         def __init__(self, r: Header, dataSize: int):
             self.values: list[int] = r.readPArray(None, 'i', dataSize >> 2)
@@ -4671,7 +4681,7 @@ class WATRRecord(Record):
 # WEAP.Weapon - 3450 - tag::WEAP[]
 class WEAPRecord(Record, IHaveMODL):
     class DATAField:
-        class WEAPType(Enum): ShortBladeOneHand = 0; LongBladeOneHand = 1; LongBladeTwoClose = 2; BluntOneHand = 3; BluntTwoClose = 4; BluntTwoWide = 5; SpearTwoWide = 6; AxeOneHand = 7; AxeTwoHand = 8; MarksmanBow = 9; MarksmanCrossbow = 10; MarksmanThrown = 11; Arrow = 12 Bolt = 13
+        class WEAPType(Enum): ShortBladeOneHand = 0; LongBladeOneHand = 1; LongBladeTwoClose = 2; BluntOneHand = 3; BluntTwoClose = 4; BluntTwoWide = 5; SpearTwoWide = 6; AxeOneHand = 7; AxeTwoHand = 8; MarksmanBow = 9; MarksmanCrossbow = 10; MarksmanThrown = 11; Arrow = 12; Bolt = 13
         weight: float
         value: int
         type: int
@@ -4743,17 +4753,17 @@ class WEAPRecord(Record, IHaveMODL):
 class WRLDRecord(Record):
     class MNAMField:
         _struct = ('<2i4h', 16)
-        def __init__(self, tuple)
-            (self.usableDimensions: Int2,
+        def __init__(self, tuple):
+            (self.usableDimensions,
             # Cell Coordinates
-            self.nwCell_X: int,
-            self.nwCell_Y: int,
-            self.seCell_X: int,
-            self.seCell_Y: int) = tuple
+            self.nwCell_X,
+            self.nwCell_Y,
+            self.seCell_X,
+            self.seCell_Y) = tuple
 
     class NAM0Field:
         # _struct = ('<4f', 16)
-        def __init__(self, r: Header, dataSize: int)
+        def __init__(self, r: Header, dataSize: int):
             self.min: Vector2 = r.readVector2()
             self.max: Vector2 = Vector2.Zero
         def NAM9Field(self, r: Header, dataSize: int) -> object: z = self.max = r.readVector2(); return z
@@ -4764,13 +4774,13 @@ class WRLDRecord(Record):
             _struct = ('<I2h', 16)
             def __init__(self, tuple):
                 (self.ref,
-                self.x: int,
-                self.y: int) = tuple
+                self.x,
+                self.y) = tuple
                 self.ref: RefId[REFRRecord] = RefId[REFRRecord](self.ref)
         def __init__(self, r: Header, dataSize: int):
             self.gridX: int = r.readInt16()
             self.gridY: int = r.readInt16()
-            self.gridReferences: Reference[] = r.readL32SArray(Reference, referenceSize >> 3)
+            self.gridReferences: list[Reference] = r.readL32SArray(Reference, referenceSize >> 3)
             assert((dataSize - 8) >> 3 == len(self.gridReferences))
 
     FULL: STRVField

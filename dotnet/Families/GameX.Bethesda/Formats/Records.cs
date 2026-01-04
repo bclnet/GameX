@@ -1,3 +1,4 @@
+using GameX.Gamebryo.Formats;
 using GameX.Uncore.Formats;
 using OpenStack;
 using OpenStack.Gfx;
@@ -424,6 +425,7 @@ public interface IHaveMODL {
 public class Header : BinaryReader {
     [Flags]
     public enum EsmFlags : uint {
+        None_ = 0x00000000,                 // None
         EsmFile = 0x00000001,               // ESM file. (TES4.HEDR record only.)
         Deleted = 0x00000020,               // Deleted
         R00 = 0x00000040,                   // Constant / (REFR) Hidden From Local Map (Needs Confirmation: Related to shields)
@@ -437,7 +439,7 @@ public class Header : BinaryReader {
         R05 = 0x00020000,                   // (ACTI) Dangerous / Off limits (Interior cell) Dangerous Can't be set withough Ignore Object Interaction
         Compressed = 0x00040000,            // Data is compressed
         CantWait = 0x00080000,              // Can't wait
-                                            // tes5
+        // tes5
         R06 = 0x00100000,                   // (ACTI) Ignore Object Interaction Ignore Object Interaction Sets Dangerous Automatically
         IsMarker = 0x00800000,              // Is Marker
         R07 = 0x02000000,                   // (ACTI) Obstacle / (REFR) No AI Acquire
@@ -528,8 +530,8 @@ public class FieldHeader(Header r) {
 
 #region Fields
 
-public struct STRVField { public override readonly string ToString() => Value; public string Value; }
-public struct FILEField { public override readonly string ToString() => Value; public string Value; }
+public struct STRVField(string value) { public override readonly string ToString() => Value; public string Value = value; }
+public struct FILEField(string value) { public override readonly string ToString() => Value; public string Value = value; }
 public struct DATVField { public override readonly string ToString() => "DATV"; public bool B; public int I; public float F; public string S; }
 public struct FLTVField { public override readonly string ToString() => $"{Value}"; public static (string, int) Struct = ("<f", 4); public float Value; }
 public struct BYTEField { public override readonly string ToString() => $"{Value}"; public static (string, int) Struct = ("<C", 1); public byte Value; }
@@ -539,16 +541,8 @@ public struct IN32Field { public override readonly string ToString() => $"{Value
 public struct UI32Field { public override readonly string ToString() => $"{Value}"; public static (string, int) Struct = ("<I", 4); public uint Value; }
 public struct INTVField { public override readonly string ToString() => $"{Value}"; public static (string, int) Struct = ("<q", 8); public long Value; public UI16Field AsUI16Field => new() { Value = (ushort)Value }; }
 public struct CREFField { public override readonly string ToString() => $"{Color}"; public static (string, int) Struct = ("<4c", 4); public ByteColor4 Color; }
-public struct BYTVField { public override readonly string ToString() => $"BYTS"; public byte[] Value; }
-public struct UNKNField { public override readonly string ToString() => $"UNKN"; public byte[] Value; }
-public class MODLGroup(Header r, int dataSize) {
-    public override string ToString() => $"{Value}";
-    public string Value = r.ReadFUString(dataSize);
-    public float Bound;
-    public byte[] Textures; // Texture Files Hashes
-    public object MODBField(Header r, int dataSize) => Bound = r.ReadSingle();
-    public object MODTField(Header r, int dataSize) => Textures = r.ReadBytes(dataSize);
-}
+public struct BYTVField(byte[] value) { public override readonly string ToString() => $"BYTS"; public byte[] Value = value; }
+public struct UNKNField(byte[] value) { public override readonly string ToString() => $"UNKN"; public byte[] Value = value; }
 public struct CNTOField {
     public override readonly string ToString() => $"{Item}";
     public uint ItemCount; // Number of the item
@@ -558,12 +552,20 @@ public struct CNTOField {
         Item = new Ref<Record>(r.ReadUInt32()); ItemCount = r.ReadUInt32();
     }
 }
+public class MODLGroup(Header r, int dataSize) {
+    public override string ToString() => $"{Value}";
+    public string Value = r.ReadFUString(dataSize);
+    public float Bound;
+    public byte[] Textures; // Texture Files Hashes
+    public object MODBField(Header r, int dataSize) => Bound = r.ReadSingle();
+    public object MODTField(Header r, int dataSize) => Textures = r.ReadBytes(dataSize);
+}
 
 #endregion
 
 #region Record
 
-public class Record : IRecord {
+public class Record {
     public static readonly Record Empty = new();
     static readonly Dictionary<FormType, (Func<Record> f, Func<int, bool> l)> Map = new() {
         { TES3, (() => new TES3Record(), x => true) },
@@ -687,7 +689,7 @@ public class Record : IRecord {
 
     public static Record Factory(Header r, int level) {
         if (!Map.TryGetValue(r.Type, out var z)) { Log.Info($"Unsupported ESM record type: {r.Type}"); return null; }
-        if (!z.l(level)) return null;
+        //if (!z.l(level)) return null;
         var record = z.f();
         record.Header = r;
         return record;
@@ -727,9 +729,10 @@ public struct Ref2Field<TRecord>(Header r, int dataSize) where TRecord : Record 
 
 #region Record Group
 
-public partial class RecordGroup(int level) {
+public partial class RecordGroup(int level) : IHaveMetaInfo, IWriteToStream {
     static int cellsLoaded = 0;
-    public override string ToString() => Headers.First.Value.ToString();
+    //public override string ToString() => Headers.First.Value.ToString();
+    public string FirstName => Headers.First.Value.ToString();
     public FormType Label => Headers.First.Value.Label;
     public LinkedList<GroupHeader> Headers = [];
     public List<Record> Records = [];
@@ -808,6 +811,18 @@ public partial class RecordGroup(int level) {
         record.Header.DataSize = newDataSize;
         using var r2 = new Header(new BinaryReader(new MemoryStream(newData)), r.BinPath, r.Format); record.Read(r2);
     }
+
+    public void WriteToStream(Stream stream) => this.Serialize(stream);
+
+    public override string ToString() => this.Serialize();
+
+    // IHaveMetaInfo
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
+        new (null, new MetaContent { Type = "Data", Name = Path.GetFileName(file.Path), Value = this }),
+        new (FirstName, items: [
+            new($"Level: {Level}"),
+        ])
+    ];
 }
 
 // RecordGroup+WrldAndCell
@@ -824,9 +839,7 @@ partial class RecordGroup {
         Buffer.BlockCopy(BitConverter.GetBytes(cellBlockX), 0, cellBlockIdx, 2, 2);
         Load();
         var cellBlockId = BitConverter.ToUInt32(cellBlockIdx);
-        if (GroupsByLabel.TryGetValue(cellBlockId, out var cellBlocks))
-            return cellBlocks.Select(x => x.EnsureCell(cellId)).ToArray();
-        return null;
+        return GroupsByLabel.TryGetValue(cellBlockId, out var z) ? [.. z.Select(x => x.EnsureCell(cellId))] : null;
     }
 
     //= nxn[nbits] + 4x4[2bits] + 8x8[3bit]
@@ -892,11 +905,11 @@ public static class Extensions {
             's' => new DATVField { S = r.ReadFUString(length) },
             _ => throw new InvalidOperationException($"{type}"),
         };
-    public static STRVField ReadSTRV(this Header r, int length) => new() { Value = r.ReadFUString(length) };
-    public static STRVField ReadSTRV_ZPad(this Header r, int length) => new() { Value = r.ReadFAString(length) };
-    public static FILEField ReadFILE(this Header r, int length) => new() { Value = r.ReadFUString(length) };
-    public static BYTVField ReadBYTV(this Header r, int length) => new() { Value = r.ReadBytes(length) };
-    public static UNKNField ReadUNKN(this Header r, int length) => new() { Value = r.ReadBytes(length) };
+    public static STRVField ReadSTRV(this Header r, int length) => new(value: r.ReadFUString(length));
+    public static STRVField ReadSTRV_ZPad(this Header r, int length) => new(value: r.ReadFAString(length));
+    public static FILEField ReadFILE(this Header r, int length) => new(value: r.ReadFUString(length));
+    public static BYTVField ReadBYTV(this Header r, int length) => new(value: r.ReadBytes(length));
+    public static UNKNField ReadUNKN(this Header r, int length) => new(value: r.ReadBytes(length));
 }
 
 #endregion
@@ -1418,7 +1431,7 @@ public class BSGNRecord : Record {
 /// <summary>
 /// CELL.Cell - 3450
 /// </summary>
-public unsafe class CELLRecord : Record, ICellRecord {
+public unsafe class CELLRecord : Record {
     [Flags]
     public enum CELLFlags : ushort {
         Interior = 0x0001,
@@ -3730,6 +3743,7 @@ public class QUSTRecord : Record {
         _ => Empty,
     };
 }
+
 /// <summary>
 /// RACE.Race_Creature type - 3450
 /// </summary>
@@ -4123,7 +4137,7 @@ public class REGNRecord : Record {
         public RDWTField[] RDWTs; // Weather Types
 
         public RDATField(Header r = null, int dataSize = 0) {
-            if (r != null) return;
+            if (r == null) return;
             Type = r.ReadUInt32();
             Flags = (REGNType)r.ReadByte();
             Priority = r.ReadByte();

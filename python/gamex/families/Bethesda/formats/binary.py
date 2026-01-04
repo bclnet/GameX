@@ -1,5 +1,6 @@
 import os
 from io import BytesIO
+from itertools import groupby
 from enum import Enum
 from openstk import log, IWriteToStream
 from gamex import FileSource, ArcBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo, DesSer
@@ -376,6 +377,7 @@ class Binary_Esm(ArcBinaryT):
         r = Header(b, binPath, format)
         record = Record.factory(r, level)
         record.read(r)
+        files = source.files = []
 
         # morrowind hack
         if format == FormType.TES3:
@@ -383,10 +385,13 @@ class Binary_Esm(ArcBinaryT):
             group.addHeader(GroupHeader(header = r, label = 0, dataSize = r.length - r.tell(), position = r.tell()))
             group.load()
             groups = self.groups = {}
-            for s, g in groupby(group.records, lambda s: s.header.type):
+            for k, g in groupby(group.records, lambda s: s.header.type):
                 t = RecordGroup(level); t.records = list(g)
-                t.addHeader(GroupHeader(header = r, label = s.key), load = False)
-                groups.add(s.key, t)
+                t.addHeader(GroupHeader(header = r, label = k), load = False)
+                groups[k] = t
+            files.extend([FileSource(
+                path = f'{k}',
+                tag = s) for k, s in groups.items()])
             return
         
         # read groups

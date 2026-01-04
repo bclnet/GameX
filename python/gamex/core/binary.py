@@ -1,5 +1,6 @@
 from __future__ import annotations
-import sys, os, re, time, itertools
+import sys, os, re, time
+from itertools import groupby
 from enum import Enum, Flag
 from io import BytesIO
 from openstk import _throw, BinaryReader, GenericPool, SinglePool, StaticPool
@@ -213,7 +214,7 @@ class BinaryArchive(Archive):
 
     def process(self) -> None:
         if self.useFileId and self.files: self.filesById = { x.id:x for x in self.files if x }
-        if self.files: self.filesByPath = { k:list(g) for k,g in itertools.groupby(self.files, lambda x: x.path) }
+        if self.files: self.filesByPath = { k:list(g) for k,g in groupby(self.files, lambda x: x.path) }
         if self.arcBinary: self.arcBinary.process(self)
 
     def _findPath(self, path: str) -> tuple[object, str]:
@@ -388,10 +389,5 @@ class ITransformAsset:
     def transformAsset(self, transformTo: Archive, source: object) -> object: pass
 
 # IDatabase
-class IDatabase: pass
-
-# IRecord
-class IRecord: pass
-
-# ICellRecord
-class ICellRecord(IRecord): pass
+class IDatabase:
+    def query(self, source: object) -> list[object]: pass

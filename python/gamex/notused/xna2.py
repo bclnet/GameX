@@ -1,5 +1,6 @@
 from __future__ import annotations
-import os, itertools
+import os
+from itertools import groupby
 from io import BytesIO
 from enum import Enum
 from numpy import ndarray, array
@@ -154,7 +155,7 @@ class TypeManager:
         TypeReader['Video']('VideoReader', 'Media.Video', lambda r, o: Video(r))]
     readersByName: dict[str, TypeReader] = { x.name:x for x in readers }
     readersByType: dict[str, TypeReader] = {}
-    for k, g in itertools.groupby(sorted(readers, key=lambda x: x.type), key=lambda x: x.type): v = next(g); readersByType[v.type] = v
+    for k, g in groupby(sorted(readers, key=lambda x: x.type), key=lambda x: x.type): v = next(g); readersByType[v.type] = v
     @staticmethod
     def add(reader: TypeReader) -> TypeReader:
         TypeManager.readers.append(reader)

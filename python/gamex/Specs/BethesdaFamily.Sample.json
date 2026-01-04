@@ -3,7 +3,7 @@
     "name": "The Elder Scrolls III: Morrowind",
     "files": [
       {
-        "path": "Morrowind.esm",
+        "path": "Morrowind.esm:ACTI",
         "type": "Database"
       },
       {

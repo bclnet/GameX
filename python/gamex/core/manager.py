@@ -12,7 +12,7 @@ class CellManager:
     defaultLandTexturePath: str = 'textures/_land_default.dds'
 
     class Cell:
-        def __init__(self, obj: object, container: object, record: IRecord, action: Enumerator):
+        def __init__(self, obj: object, container: object, record: object, action: Enumerator):
             self.obj = obj
             self.container = container
             self.record = record
@@ -25,7 +25,7 @@ class CellManager:
             #     if self.container.activeSelf: self.container.setActive(False)
 
     class Reference:
-        def __init__(self, obj: object, record: IRecord, path: str):
+        def __init__(self, obj: object, record: object, path: str):
             self.obj = obj
             self.record = record
             self.path = path

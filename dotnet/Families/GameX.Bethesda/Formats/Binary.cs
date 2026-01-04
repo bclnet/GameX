@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace GameX.Bethesda.Formats;
@@ -564,6 +565,24 @@ public unsafe class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
             _ => throw new ArgumentOutOfRangeException(nameof(game), game),
         };
 
+    //class SubEsm : BinaryArchive {
+    //    Binary_Esm Arc;
+
+    //    public SubEsm(BinaryArchive source, Binary_Esm arc, string path, object tag) : base(new BinaryState(source.Vfx, source.Game, source.Edition, path, tag), Current) {
+    //        Arc = arc;
+    //        AssetFactoryFunc = source.AssetFactoryFunc;
+    //        UseReader = false;
+    //        Open();
+    //    }
+
+    //    public async override Task Read(object tag) {
+    //        //var entry = (P4kEntry)Tag;
+    //        //var stream = Arc.GetInputStream(entry.ZipFileIndex);
+    //        //using var r2 = new BinaryReader(stream);
+    //        //await ArcBinary.Read(this, r2, tag);
+    //    }
+    //}
+
     /// <summary>
     /// Reads the asynchronous.
     /// </summary>
@@ -579,6 +598,7 @@ public unsafe class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
         var r = new Header(b, binPath, format);
         var record = Record.Factory(r, level);
         record.Read(r);
+        List<FileSource> files = []; source.Files = files;
 
         // morrowind hack
         if (Format == FormType.TES3) {
@@ -590,6 +610,11 @@ public unsafe class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
                 t.AddHeader(new GroupHeader { Header = r, Label = s.Key }, load: false);
                 return t;
             });
+            //new FileSource { Path = "Group", Arc = new SubEsm(source, this, null, null) }
+            files.AddRange(Groups.Select(s => new FileSource {
+                Path = Encoding.ASCII.GetString(BitConverter.GetBytes((uint)s.Key)),
+                Tag = s.Value
+            }));
             return Task.CompletedTask;
         }
 
@@ -608,7 +633,7 @@ public unsafe class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
     //var poolAction = (GenericPoolAction<BinaryReader>)source.GetReader().Action; //: Leak
 
     // TES3
-    Dictionary<string, IRecord> MANYsById;
+    Dictionary<string, Record> MANYsById;
     Dictionary<long, LTEXRecord> LTEXsById;
     Dictionary<Int3, LANDRecord> LANDsById;
     Dictionary<Int3, CELLRecord> CELLsById;
@@ -621,7 +646,7 @@ public unsafe class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
     public override Task Process(BinaryArchive source) {
         if (Format == FormType.TES3) {
             var statGroups = new List<Record>[] { Groups.ContainsKey(FormType.STAT) ? Groups[FormType.STAT].Load() : null };
-            MANYsById = statGroups.SelectMany(s => s).Where(s => s != null).ToDictionary(s => s.EDID.Value, s => (IRecord)s);
+            MANYsById = statGroups.SelectMany(s => s).Where(s => s != null).ToDictionary(s => s.EDID.Value, s => (Record)s);
             LTEXsById = Groups[FormType.LTEX].Load().Cast<LTEXRecord>().ToDictionary(s => s.INTV.Value);
             var lands = Groups[FormType.LAND].Load().Cast<LANDRecord>().ToList();
             foreach (var land in lands) land.GridId = new Int3(land.INTV.CellX, land.INTV.CellY, 0);
@@ -641,11 +666,11 @@ public unsafe class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
     #region Query
 
     public class FindLTEX(int index) {
-        public IRecord Tes3(Binary_Esm _) => _.LTEXsById.TryGetValue(index, out var z) ? z : default;
+        public object Tes3(Binary_Esm _) => _.LTEXsById.TryGetValue(index, out var z) ? z : default;
     }
     public class FindLAND(Int3 cell) {
-        public IRecord Tes3(Binary_Esm _) => _.LANDsById.TryGetValue(cell, out var z) ? z : default;
-        public IRecord Else(Binary_Esm _) {
+        public object Tes3(Binary_Esm _) => _.LANDsById.TryGetValue(cell, out var z) ? z : default;
+        public object Else(Binary_Esm _) {
             var world = _.WRLDsById[(uint)cell.Z];
             foreach (var wrld in world.Item2)
                 foreach (var cellBlock in wrld.EnsureWrldAndCell(cell))
@@ -654,8 +679,8 @@ public unsafe class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
         }
     }
     public class FindCELL(Int3 cell) {
-        public IRecord Tes3(Binary_Esm _) => _.CELLsById.TryGetValue(cell, out var z) ? z : default;
-        public IRecord Else(Binary_Esm _) {
+        public object Tes3(Binary_Esm _) => _.CELLsById.TryGetValue(cell, out var z) ? z : default;
+        public object Else(Binary_Esm _) {
             var world = _.WRLDsById[(uint)cell.Z];
             foreach (var wrld in world.Item2)
                 foreach (var cellBlock in wrld.EnsureWrldAndCell(cell))
@@ -664,11 +689,11 @@ public unsafe class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
         }
     }
     public class FindCELLByName(string name) {
-        public IRecord Tes3(Binary_Esm _) => _.CELLsByName.TryGetValue(name, out var z) ? z : default;
+        public object Tes3(Binary_Esm _) => _.CELLsByName.TryGetValue(name, out var z) ? z : default;
     }
 
-    public IEnumerable<IRecord> Query(object s) => throw new NotImplementedException();
-    public IRecord QuerySingle(object source) => source switch {
+    public object Query(object source) => source switch {
+        FileSource s => s.Tag,
         FindLTEX s => Format == FormType.TES3 ? s.Tes3(this) : throw new NotImplementedException(),
         FindLAND s => Format == FormType.TES3 ? s.Tes3(this) : s.Else(this),
         FindCELL s => Format == FormType.TES3 ? s.Tes3(this) : s.Else(this),

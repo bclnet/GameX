@@ -34,7 +34,7 @@ public class PakBinary_P4k : ArcBinary<PakBinary_P4k> {
 
     public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         source.UseReader = false;
-        var files = source.Files = new List<FileSource>();
+        var files = source.Files = [];
 
         var arc = (P4kFile)(source.Tag = new P4kFile(r.BaseStream, Key));
         var parentByPath = new Dictionary<string, FileSource>();

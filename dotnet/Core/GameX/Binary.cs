@@ -613,6 +613,10 @@ public abstract class BinaryArchive(BinaryState state, ArcBinary arcBinary) : Ar
         }
         var f = (FileSource)path;
         if (Game.IsArcPath(f.Path)) return default;
+        if (ArcBinary is IDatabase db) {
+            var res = db.Query(f);
+            if (res != null) return (T)res;
+        }
         var type = typeof(T);
         var data = await GetData(f, option, throwOnError);
         if (data == null) return default;
@@ -734,7 +738,7 @@ public abstract class BinaryArchive(BinaryState state, ArcBinary arcBinary) : Ar
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
     public override List<MetaItem> GetMetaItems(MetaManager manager)
-        => Valid ? MetaManager.GetMetaItems(manager, this) : new List<MetaItem>();
+        => Valid ? MetaManager.GetMetaItems(manager, this) : [];
 
     #endregion
 }
@@ -1060,12 +1064,7 @@ public interface ITransformAsset<T> {
 #region Database
 
 public interface IDatabase {
-    IEnumerable<IRecord> Query(object s);
-    IRecord QuerySingle(object s);
+    object Query(object s);
 }
-
-public interface IRecord { }
-
-public interface ICellRecord : IRecord { }
 
 #endregion

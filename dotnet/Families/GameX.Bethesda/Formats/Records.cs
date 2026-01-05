@@ -567,6 +567,7 @@ public class MODLGroup(Header r, int dataSize) {
 
 public class Record {
     public static readonly Record Empty = new();
+    public override string ToString() => $"{GetType().Name[..4]}: {EDID.Value}";
     static readonly Dictionary<FormType, (Func<Record> f, Func<int, bool> l)> Map = new() {
         { TES3, (() => new TES3Record(), x => true) },
         { TES4, (() => new TES4Record(), x => true) },
@@ -659,7 +660,6 @@ public class Record {
         { DLVW, (() => new DLVWRecord(), x => x > 5) },
         { SNDR, (() => new SNDRRecord(), x => x > 5) },
     };
-    public override string ToString() => $"{GetType().Name[..4]}: {EDID.Value}";
     internal Header Header;
     public uint Id => Header.Id;
     public STRVField EDID; // Editor ID
@@ -687,9 +687,11 @@ public class Record {
         r.EnsureAtEnd(end, $"Failed reading {Header.Type} record data at offset {start} in {r.BinPath}");
     }
 
+    static readonly HashSet<FormType> FactorySet = [TES3, ACTI];
     public static Record Factory(Header r, int level) {
         if (!Map.TryGetValue(r.Type, out var z)) { Log.Info($"Unsupported ESM record type: {r.Type}"); return null; }
         //if (!z.l(level)) return null;
+        //if (!FactorySet.Contains(r.Type)) return null;
         var record = z.f();
         record.Header = r;
         return record;
@@ -730,8 +732,8 @@ public struct Ref2Field<TRecord>(Header r, int dataSize) where TRecord : Record 
 #region Record Group
 
 public partial class RecordGroup(int level) : IHaveMetaInfo, IWriteToStream {
-    static int cellsLoaded = 0;
     //public override string ToString() => Headers.First.Value.ToString();
+    static int cellsLoaded = 0;
     public string FirstName => Headers.First.Value.ToString();
     public FormType Label => Headers.First.Value.Label;
     public LinkedList<GroupHeader> Headers = [];
@@ -1414,8 +1416,8 @@ public class BSGNRecord : Record {
     public STRVField FULL; // Sign Name
     public FILEField ICON; // Texture
     public STRVField DESC; // Description
-    public List<STRVField> NPCSs = []; // TES3: Spell/ability
-    public List<RefField<Record>> SPLOs = []; // TES4: (points to a SPEL or LVSP record)
+    public List<STRVField> NPCSs; // TES3: Spell/ability
+    public List<RefField<Record>> SPLOs; // TES4: (points to a SPEL or LVSP record)
 
     public override object CreateField(Header r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadSTRV(dataSize),
@@ -1456,7 +1458,7 @@ public unsafe class CELLRecord : Record {
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct XCLLField {
-        public static Dictionary<int, string> Struct = new() { [16] = "<4c4c4cf", [36] = "<4c4c4cc2f2i2f", [40] = "<4c4c4c2f2i3f" };
+        public static Dictionary<int, string> Struct = new() { [16] = "<12cf", [36] = "<12c2f2i2f", [40] = "<12c2f2i3f" };
         public ByteColor4 AmbientColor;
         public ByteColor4 DirectionalColor; // SunlightColor
         public ByteColor4 FogColor;
@@ -4371,7 +4373,7 @@ public class SCPTRecord : Record {
         public int ScriptDataSize = r.ReadInt32();
         public int LocalVarSize = r.ReadInt32();
         public string[] Variables = null;
-        public object SCVRField(Header r, int dataSize) => Variables = [.. r.ReadZAStringList(dataSize)];
+        public object SCVRField(Header r, int dataSize) => Variables = [.. r.ReadVAStringList(dataSize)];
     }
 
     // TES4

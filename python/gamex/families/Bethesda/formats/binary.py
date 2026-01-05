@@ -390,7 +390,8 @@ class Binary_Esm(ArcBinaryT):
                 t.addHeader(GroupHeader(header = r, label = k), load = False)
                 groups[k] = t
             files.extend([FileSource(
-                path = f'{k}',
+                path = f'{k.name}',
+                fileSize = 0,
                 tag = s) for k, s in groups.items()])
             return
         
@@ -403,5 +404,10 @@ class Binary_Esm(ArcBinaryT):
             if not (group := groups.get(r.label)): group = RecordGroup(level); groups.add(r.label, group)
             group.addHeader(r.group)
             b.seek(nextPosition)
+
+    def process(self, source: BinaryArchive) -> None:
+        if self.format == FormType.TES3:
+            pass
+        pass
     
 #endregion - end::Binary_Esm[]

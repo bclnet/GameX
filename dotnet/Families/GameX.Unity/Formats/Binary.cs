@@ -325,7 +325,7 @@ public unsafe class Binary_Unity : ArcBinary<Binary_Unity> {
                 // read strings
                 var appendNullTerminator = typeTreeLen == 0 || treeBuffer[typeTreeLen - 1] != 0;
                 tr.Seek(variableFieldsLen);
-                var stringTable = tr.ReadZAStringList();
+                var stringTable = tr.ReadVAStringList();
                 if (appendNullTerminator) stringTable.Add(null);
                 Strings = stringTable.ToArray();
 
@@ -333,7 +333,7 @@ public unsafe class Binary_Unity : ArcBinary<Binary_Unity> {
                 if (version >= 0x15) {
                     //var depListLen = (int)r.ReadUInt32E(endian); Deps = depListLen >= 0 ? r.ReadPArray("I" => r.ReadUInt32E(endian)), depListLen) : new uint[0];
                     if (!secondaryTypeTree) Deps = r.ReadL32PArray<uint>("I", endian: endian);
-                    else Headers = r.ReadZAStringList().ToArray();
+                    else Headers = r.ReadVAStringList().ToArray();
                 }
             }
         }

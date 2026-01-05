@@ -645,16 +645,16 @@ public unsafe class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
 
     public override Task Process(BinaryArchive source) {
         if (Format == FormType.TES3) {
-            var statGroups = new List<Record>[] { Groups.ContainsKey(FormType.STAT) ? Groups[FormType.STAT].Load() : null };
-            MANYsById = statGroups.SelectMany(s => s).Where(s => s != null).ToDictionary(s => s.EDID.Value, s => (Record)s);
-            LTEXsById = Groups[FormType.LTEX].Load().Cast<LTEXRecord>().ToDictionary(s => s.INTV.Value);
-            var lands = Groups[FormType.LAND].Load().Cast<LANDRecord>().ToList();
-            foreach (var land in lands) land.GridId = new Int3(land.INTV.CellX, land.INTV.CellY, 0);
-            LANDsById = lands.ToDictionary(s => s.GridId);
-            var cells = Groups[FormType.CELL].Load().Cast<CELLRecord>().ToList();
-            foreach (var cell in cells) cell.GridId = new Int3(cell.XCLC.Value.GridX, cell.XCLC.Value.GridY, !cell.IsInterior ? 0 : -1);
-            CELLsById = cells.Where(x => !x.IsInterior).ToDictionary(s => s.GridId);
-            CELLsByName = cells.Where(x => x.IsInterior).ToDictionary(s => s.EDID.Value);
+            //var statGroups = new List<Record>[] { Groups.ContainsKey(FormType.STAT) ? Groups[FormType.STAT].Load() : null };
+            //MANYsById = statGroups.SelectMany(s => s).Where(s => s != null).ToDictionary(s => s.EDID.Value, s => (Record)s);
+            //LTEXsById = Groups[FormType.LTEX].Load().Cast<LTEXRecord>().ToDictionary(s => s.INTV.Value);
+            //var lands = Groups[FormType.LAND].Load().Cast<LANDRecord>().ToList();
+            //foreach (var land in lands) land.GridId = new Int3(land.INTV.CellX, land.INTV.CellY, 0);
+            //LANDsById = lands.ToDictionary(s => s.GridId);
+            //var cells = Groups[FormType.CELL].Load().Cast<CELLRecord>().ToList();
+            //foreach (var cell in cells) cell.GridId = new Int3(cell.XCLC.Value.GridX, cell.XCLC.Value.GridY, !cell.IsInterior ? 0 : -1);
+            //CELLsById = cells.Where(x => !x.IsInterior).ToDictionary(s => s.GridId);
+            //CELLsByName = cells.Where(x => x.IsInterior).ToDictionary(s => s.EDID.Value);
             return Task.CompletedTask;
         }
         var wrldsByLabel = Groups[FormType.WRLD].GroupsByLabel;

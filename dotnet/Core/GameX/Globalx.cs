@@ -1,5 +1,4 @@
 ﻿using OpenStack.Gfx;
-using Org.BouncyCastle.Ocsp;
 using System.Drawing;
 using System.IO;
 
@@ -16,13 +15,13 @@ public struct Color3 { //:M
     public float B; // Blue color component.
 
     public Color3() { }
-    public Color3(double r, double g, double b) { R = (float)r; G = (float)g; B = (float)b; }
     public Color3(byte[] s) { R = s[0]; G = s[1]; B = s[2]; }
     public Color3(BinaryReader r) {
         R = r.ReadSingle();
         G = r.ReadSingle();
         B = r.ReadSingle();
     }
+    public Color3(double r, double g, double b) { R = (float)r; G = (float)g; B = (float)b; }
     public readonly Color AsColor => Color.FromArgb((int)(R * 255f), (int)(G * 255f), (int)(B * 255f));
 }
 
@@ -37,12 +36,12 @@ public struct ByteColor3 { //:X
     public byte B;   // Blue color component.
 
     public ByteColor3() { }
-    public ByteColor3(byte r, byte g, byte b) { R = r; G = g; B = b; }
     public ByteColor3(BinaryReader r) {
         R = r.ReadByte();
         G = r.ReadByte();
         B = r.ReadByte();
     }
+    public ByteColor3(byte r, byte g, byte b) { R = r; G = g; B = b; }
     public readonly Color AsColor => Color.FromArgb(R, G, B);
 }
 
@@ -58,7 +57,6 @@ public struct Color4 { //:M
     public float A; // Alpha.
 
     public Color4() { }
-    public Color4(double r, double g, double b, double a) { R = (float)r; G = (float)g; B = (float)b; A = (float)a; }
     public Color4(byte[] s) { R = s[0]; G = s[1]; B = s[2]; A = s[3]; }
     public Color4(BinaryReader r) {
         R = r.ReadSingle();
@@ -66,6 +64,7 @@ public struct Color4 { //:M
         B = r.ReadSingle();
         A = r.ReadSingle();
     }
+    public Color4(double r, double g, double b, double a) { R = (float)r; G = (float)g; B = (float)b; A = (float)a; }
 }
 
 /// <summary>

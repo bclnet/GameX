@@ -21,6 +21,12 @@ namespace GameX.Uncore.Formats;
 
 #region Binary_Bik
 
+/// <summary>
+/// The file format for Bik Video
+/// </summary>
+/// <see cref="https://en.wikipedia.org/wiki/Bink_Video"/>
+/// <param name="r"></param>
+/// <param name="fileSize"></param>
 public class Binary_Bik(BinaryReader r, int fileSize) : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Bik(r, (int)f.FileSize));
 
@@ -36,15 +42,19 @@ public class Binary_Bik(BinaryReader r, int fileSize) : IHaveMetaInfo {
 #region Binary_Dds
 
 // https://github.com/paroj/nv_dds/blob/master/nv_dds.cpp
+/// <summary>
+/// The file format for DirectDraw Surface
+/// </summary>
+/// <see cref="https://en.wikipedia.org/wiki/DirectDraw"/>
 public class Binary_Dds : IHaveMetaInfo, ITexture {
     public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Dds(r));
 
     public Binary_Dds(BinaryReader r, bool readMagic = true) {
-        (Header, HeaderDXT10, Format, Bytes) = DDS_HEADER.Read(r, readMagic);
-        var mipMaps = Math.Max(1, (int)Header.dwMipMapCount);
+        (HDR, DXT10, Format, Bytes) = DDS_HEADER.Read(r, readMagic);
+        var mipMaps = Math.Max(1, (int)HDR.dwMipMapCount);
         var offset = 0;
         Spans = new Range[mipMaps];
-        int width = (int)Header.dwWidth, height = (int)Header.dwHeight;
+        int width = (int)HDR.dwWidth, height = (int)HDR.dwHeight;
         for (var i = 0; i < mipMaps; i++) {
             int w = width >> i, h = height >> i;
             if (w == 0 || h == 0) { Spans[i] = -1..; continue; }
@@ -58,8 +68,8 @@ public class Binary_Dds : IHaveMetaInfo, ITexture {
         MipMaps = mipMaps;
     }
 
-    readonly DDS_HEADER Header;
-    readonly DDS_HEADER_DXT10? HeaderDXT10;
+    readonly DDS_HEADER HDR;
+    readonly DDS_HEADER_DXT10? DXT10;
     readonly byte[] Bytes;
     readonly Range[] Spans;
 
@@ -90,6 +100,12 @@ public class Binary_Dds : IHaveMetaInfo, ITexture {
 
 #region Binary_Fsb
 
+/// <summary>
+/// The file format for FSB Audio from FMOD sound fx archives
+/// </summary>
+/// <see cref="https://en.wikipedia.org/wiki/FMOD"/>
+/// <param name="r"></param>
+/// <param name="fileSize"></param>
 public class Binary_Fsb(BinaryReader r, int fileSize) : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Fsb(r, (int)f.FileSize));
 
@@ -105,6 +121,9 @@ public class Binary_Fsb(BinaryReader r, int fileSize) : IHaveMetaInfo {
 #region Binary_Iif
 
 // https://en.wikipedia.org/wiki/Interchange_File_Format
+/// <summary>
+/// The file format for Interchange File Format
+/// </summary>
 public unsafe class Binary_Iif : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Iif(r, (int)f.FileSize));
 
@@ -514,6 +533,10 @@ public unsafe class Binary_Iif : IHaveMetaInfo {
 
 #region Binary_Img
 
+/// <summary>
+/// The file format for Image
+/// </summary>
+/// <see cref="https://en.wikipedia.org/wiki/Image"/>
 public unsafe class Binary_Img : IHaveMetaInfo, ITexture {
     public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Img(r, f));
 
@@ -604,6 +627,10 @@ public unsafe class Binary_Img : IHaveMetaInfo, ITexture {
 
 #region Binary_Msg
 
+/// <summary>
+/// The file format for MSG
+/// </summary>
+/// <param name="message"></param>
 public class Binary_Msg(string message) : IHaveMetaInfo {
     public static Func<BinaryReader, FileSource, Archive, Task<object>> Factory(string message) => (BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Msg(message));
 
@@ -618,6 +645,12 @@ public class Binary_Msg(string message) : IHaveMetaInfo {
 
 #region Binary_Pal
 
+/// <summary>
+/// The file format for Palette (computing)
+/// </summary>
+/// <see cref="https://en.wikipedia.org/wiki/Palette_(computing)"/>
+/// <param name="r"></param>
+/// <param name="bpp"></param>
 public unsafe class Binary_Pal(BinaryReader r, byte bpp) : IHaveMetaInfo {
     public static Task<object> Factory_3(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Pal(r, 3));
     public static Task<object> Factory_4(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Pal(r, 4));
@@ -663,9 +696,12 @@ public unsafe class Binary_Pal(BinaryReader r, byte bpp) : IHaveMetaInfo {
 #endregion
 
 #region Binary_Pcx
-// https://en.wikipedia.org/wiki/PCX
 // https://github.com/warpdesign/pcx-js/blob/master/js/pcx.js
 
+/// <summary>
+/// The file format for PiCture eXchange
+/// </summary>
+/// <see cref="https://en.wikipedia.org/wiki/PCX"/>
 public unsafe class Binary_Pcx : IHaveMetaInfo, ITexture {
     public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Pcx(r));
 
@@ -853,6 +889,9 @@ public unsafe class Binary_Pcx : IHaveMetaInfo, ITexture {
 
 #region Binary_Plist
 
+/// <summary>
+/// The file format for XXX
+/// </summary>
 public unsafe class Binary_Plist : ArcBinary<Binary_Plist> {
     public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         source.Files = [.. ((Dictionary<object, object>)new PlistReader().ReadObject(r.BaseStream)).Select(x => new FileSource {
@@ -871,6 +910,9 @@ public unsafe class Binary_Plist : ArcBinary<Binary_Plist> {
 
 #region Binary_Raw
 
+/// <summary>
+/// The file format for XXX
+/// </summary>
 public class Binary_Raw : IHaveMetaInfo, ITexture {
     public static Func<BinaryReader, FileSource, Archive, Task<object>> FactoryMethod(Action<Binary_Raw, BinaryReader, FileSource> action, Func<string, string, Binary_Pal> palleteFunc)
         => (BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Raw(r, s.Game, f, action, palleteFunc));
@@ -944,6 +986,9 @@ public class Binary_Raw : IHaveMetaInfo, ITexture {
 
 #region Binary_Snd
 
+/// <summary>
+/// The file format for XXX
+/// </summary>
 public unsafe class Binary_Snd(BinaryReader r, int fileSize, object tag) : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Snd(r, (int)f.FileSize, null));
     public static Task<object> Factory_Wav(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Snd(r, (int)f.FileSize, ".wav"));
@@ -995,11 +1040,14 @@ public unsafe class Binary_Snd(BinaryReader r, int fileSize, object tag) : IHave
 #endregion
 
 #region Binary_Tga
-// https://en.wikipedia.org/wiki/Truevision_TGA
 // https://github.com/cadenji/tgafunc/blob/main/tgafunc.c
 // https://www.dca.fee.unicamp.br/~martino/disciplinas/ea978/tgaffs.pdf
 // https://www.conholdate.app/viewer/view/rVqTeZPLAL/tga-file-format-specifications.pdf?default=view&preview=
 
+/// <summary>
+/// The file format for XXX
+/// </summary>
+/// <see cref="https://en.wikipedia.org/wiki/Truevision_TGA"/>
 public unsafe class Binary_Tga : IHaveMetaInfo, ITexture {
     public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Tga(r, f));
 
@@ -1315,6 +1363,11 @@ public unsafe class Binary_Tga : IHaveMetaInfo, ITexture {
 
 #region Binary_Txt
 
+/// <summary>
+/// The file format for XXX
+/// </summary>
+/// <param name="r"></param>
+/// <param name="fileSize"></param>
 public class Binary_Txt(BinaryReader r, int fileSize) : IHaveMetaInfo {
     public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Txt(r, (int)f.FileSize));
 

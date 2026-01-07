@@ -189,6 +189,9 @@ class BinaryArchive(Archive):
             return p.getAsset(type, next_, option, throwOnError) if p else None
         f = path
         if self.game._isArcPath(f.path): return None
+        if isinstance(self.arcBinary, IDatabase) and (db := self.arcBinary):
+            res = db.query(f)
+            if res: return res
         data = self.getData(f, option, throwOnError)
         if not data: return None
         assetFactory = self.ensureCachedObjectFactory(f)

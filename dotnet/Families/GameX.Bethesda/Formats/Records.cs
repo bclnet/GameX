@@ -1,4 +1,3 @@
-using GameX.Gamebryo.Formats;
 using GameX.Uncore.Formats;
 using OpenStack;
 using OpenStack.Gfx;
@@ -662,6 +661,7 @@ public class Record {
     };
     internal Header Header;
     public uint Id => Header.Id;
+    public Header.EsmFlags Flags => Header.Flags;
     public STRVField EDID; // Editor ID
 
     /// <summary>
@@ -688,12 +688,11 @@ public class Record {
     }
 
     static readonly HashSet<FormType> FactorySet = [TES3, ACTI];
-    public static Record Factory(Header r, int level) {
-        if (!Map.TryGetValue(r.Type, out var z)) { Log.Info($"Unsupported ESM record type: {r.Type}"); return null; }
+    public static Record Factory(Header r, FormType type, int level = int.MaxValue) {
+        if (!Map.TryGetValue(type, out var z)) { Log.Info($"Unsupported ESM record type: {type}"); return null; }
         //if (!z.l(level)) return null;
         //if (!FactorySet.Contains(r.Type)) return null;
-        var record = z.f();
-        record.Header = r;
+        var record = z.f(); record.Header = r;
         return record;
     }
 }
@@ -731,7 +730,7 @@ public struct Ref2Field<TRecord>(Header r, int dataSize) where TRecord : Record 
 
 #region Record Group
 
-public partial class RecordGroup(int level) : IHaveMetaInfo, IWriteToStream {
+public partial class RecordGroup(int level) {  //} : IHaveMetaInfo, IWriteToStream {
     //public override string ToString() => Headers.First.Value.ToString();
     static int cellsLoaded = 0;
     public string FirstName => Headers.First.Value.ToString();
@@ -775,7 +774,7 @@ public partial class RecordGroup(int level) : IHaveMetaInfo, IWriteToStream {
             }
             // HACK to limit cells loading
             if (r2.Type == CELL && cellsLoaded > int.MaxValue) { r.Skip(r2.DataSize); continue; }
-            var record = Record.Factory(r2, Level);
+            var record = Record.Factory(r2, r2.Type, Level);
             if (record == null) { r.Skip(r2.DataSize); continue; }
             ReadRecord(r, record, r2.Compressed);
             Records.Add(record);
@@ -814,17 +813,17 @@ public partial class RecordGroup(int level) : IHaveMetaInfo, IWriteToStream {
         using var r2 = new Header(new BinaryReader(new MemoryStream(newData)), r.BinPath, r.Format); record.Read(r2);
     }
 
-    public void WriteToStream(Stream stream) => this.Serialize(stream);
+    //public void WriteToStream(Stream stream) => this.Serialize(stream);
 
-    public override string ToString() => this.Serialize();
+    //public override string ToString() => this.Serialize();
 
-    // IHaveMetaInfo
-    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new (null, new MetaContent { Type = "Data", Name = Path.GetFileName(file.Path), Value = this }),
-        new (FirstName, items: [
-            new($"Level: {Level}"),
-        ])
-    ];
+    //// IHaveMetaInfo
+    //List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
+    //    new (null, new MetaContent { Type = "Data", Name = Path.GetFileName(file.Path), Value = this }),
+    //    new (FirstName, items: [
+    //        new($"Level: {Level}"),
+    //    ])
+    //];
 }
 
 // RecordGroup+WrldAndCell

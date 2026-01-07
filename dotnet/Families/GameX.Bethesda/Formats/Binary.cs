@@ -596,7 +596,7 @@ public unsafe class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
         var level = 1;
         var binPath = source.BinPath;
         var r = new Header(b, binPath, format);
-        var record = Record.Factory(r, level);
+        var record = Record.Factory(r, r.Type, level);
         record.Read(r);
         List<FileSource> files = []; source.Files = files;
 
@@ -613,6 +613,7 @@ public unsafe class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
             //new FileSource { Path = "Group", Arc = new SubEsm(source, this, null, null) }
             files.AddRange(Groups.Select(s => new FileSource {
                 Path = Encoding.ASCII.GetString(BitConverter.GetBytes((uint)s.Key)),
+                Flags = (int)s.Key,
                 Tag = s.Value
             }));
             return Task.CompletedTask;
@@ -665,6 +666,18 @@ public unsafe class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
 
     #region Query
 
+    public static object FindTAGFactory(FormType type, RecordGroup group) => Activator.CreateInstance(typeof(FindTAG<>).MakeGenericType(Record.Factory(null, type).GetType()), group.Records);
+    public class FindTAG<T>(List<Record> s) : List<T>(s.Cast<T>()), IHaveMetaInfo, IWriteToStream {
+        public void WriteToStream(Stream stream) => this.Serialize(stream);
+        public override string ToString() => this.Serialize();
+
+        // IHaveMetaInfo
+        List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
+            new (null, new MetaContent { Type = "Data", Name = Path.GetFileName(file.Path), Value = this }),
+            new ("NAME", items: [
+            ])
+        ];
+    }
     public class FindLTEX(int index) {
         public object Tes3(Binary_Esm _) => _.LTEXsById.TryGetValue(index, out var z) ? z : default;
     }
@@ -691,9 +704,8 @@ public unsafe class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
     public class FindCELLByName(string name) {
         public object Tes3(Binary_Esm _) => _.CELLsByName.TryGetValue(name, out var z) ? z : default;
     }
-
     public object Query(object source) => source switch {
-        FileSource s => s.Tag,
+        FileSource s => FindTAGFactory((FormType)s.Flags, (RecordGroup)s.Tag),
         FindLTEX s => Format == FormType.TES3 ? s.Tes3(this) : throw new NotImplementedException(),
         FindLAND s => Format == FormType.TES3 ? s.Tes3(this) : s.Else(this),
         FindCELL s => Format == FormType.TES3 ? s.Tes3(this) : s.Else(this),

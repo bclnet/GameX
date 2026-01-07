@@ -2,8 +2,8 @@ import os
 from io import BytesIO
 from itertools import groupby
 from enum import Enum
-from openstk import log, IWriteToStream
-from gamex import FileSource, ArcBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo, DesSer
+from openstk import log, Int3, IWriteToStream
+from gamex import FileSource, ArcBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo, DesSer, IDatabase
 from gamex.families.Uncore.formats.compression import decompressLz4, decompressZlib
 from gamex.families.Bethesda.formats.records import FormType, Header, GroupHeader, Record, RecordGroup
 
@@ -85,7 +85,7 @@ class Binary_Ba2(ArcBinaryT):
             self.unk0C,
             self.numChunks,
             self.unk0E,
-            self.header,
+            self._header,
             self.offset,
             self.packedSize,
             self.fileSize,
@@ -351,7 +351,7 @@ class Binary_Bsa(ArcBinaryT):
 #region Binary_Esm - tag::Binary_Esm[]
 
 # Binary_Esm
-class Binary_Esm(ArcBinaryT):
+class Binary_Esm(ArcBinaryT, IDatabase):
     RecordHeaderSizeInBytes: int = 16
     format: FormType
     groups: dict[FormType, RecordGroup]
@@ -375,7 +375,7 @@ class Binary_Esm(ArcBinaryT):
         level = 1
         binPath = source.binPath
         r = Header(b, binPath, format)
-        record = Record.factory(r, level)
+        record = Record.factory(r, r.type, level)
         record.read(r)
         files = source.files = []
 
@@ -385,13 +385,13 @@ class Binary_Esm(ArcBinaryT):
             group.addHeader(GroupHeader(header = r, label = 0, dataSize = r.length - r.tell(), position = r.tell()))
             group.load()
             groups = self.groups = {}
-            for k, g in groupby(group.records, lambda s: s.header.type):
+            for k, g in groupby(group.records, lambda s: s._header.type):
                 t = RecordGroup(level); t.records = list(g)
                 t.addHeader(GroupHeader(header = r, label = k), load = False)
                 groups[k] = t
             files.extend([FileSource(
                 path = f'{k.name}',
-                fileSize = 0,
+                flags = k,
                 tag = s) for k, s in groups.items()])
             return
         
@@ -409,5 +409,53 @@ class Binary_Esm(ArcBinaryT):
         if self.format == FormType.TES3:
             pass
         pass
+
+    #region Query
+    @staticmethod
+    def findTAGFactory(type: FormType, group: RecordGroup) -> object: return Binary_Esm.FindTAG[Record](group.records) #z = Record.factory(None, type);
+    class FindTAG[T](list, IHaveMetaInfo, IWriteToStream):
+        def __init__(self, source: list): super().__init__(source)
+        def writeToStream(self, stream: object): return DesSer.serialize(self, stream)
+        def __repr__(self): return DesSer.serialize(self)
+
+        # IHaveMetaInfo
+        def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
+            MetaInfo(None, MetaContent(type = 'Data', name = os.path.basename(file.path), value = self))
+        ]
+    class FindLTEX:
+        def __init__(self, index: int): self.index = index
+        def tes3(self, _: 'Binary_Esm') -> object: return None #z if _.LTEXsById.TryGetValue(index, out var z) else None
+    class FindLAND:
+        def __init__(self, cell: Int3): self.cell = cell
+        def tes3(self, _: 'Binary_Esm') -> object: return None #z if _.LANDsById.TryGetValue(cell, out var z) else None
+        def else_(self, _: 'Binary_Esm') -> object:
+            # world = _.WRLDsById[(uint)cell.Z]
+            # foreach (var wrld in world.Item2)
+            #     foreach (var cellBlock in wrld.EnsureWrldAndCell(cell))
+            #         if (cellBlock.LANDsById.TryGetValue(cell, out var z)) return z;
+            return None
+    class FindCELL:
+        def __init__(self, cell: Int3): self.cell = cell
+        def tes3(self, _: 'Binary_Esm') -> object: return None #z if _.CELLsById.TryGetValue(cell, out var z) else None
+        def else_(self, _: 'Binary_Esm') -> object:
+            # var world = _.WRLDsById[(uint)cell.Z];
+            # foreach (var wrld in world.Item2)
+            #     foreach (var cellBlock in wrld.EnsureWrldAndCell(cell))
+            #         if (cellBlock.CELLsById.TryGetValue(cell, out var z)) return z;
+            return None
+    class FindCELLByName:
+        def __init__(self, name: str): self.name = name
+        def tes3(self, _: 'Binary_Esm') -> object: return None #z if _.CELLsByName.TryGetValue(cell, out var z) else None
+    def query(self, s: object) -> object:
+        match s:
+            case FileSource(): return self.findTAGFactory(s.flags, s.tag)
+            case FindLTEX(): s.tes3(self) if self.format == FormType.TES3 else _throw('NotImplemented')
+            case FindLAND(): s.tes3(self) if self.format == FormType.TES3 else s.else_(self)
+            case FindCELL(): s.tes3(self) if self.format == FormType.TES3 else s.else_(self)
+            case FindCELLByName(): s.tes3(self) if self.format == FormType.TES3 else _throw('NotImplemented')
+            case _: _throw('OutOfRange')
+
+    #endregion
+        
     
 #endregion - end::Binary_Esm[]

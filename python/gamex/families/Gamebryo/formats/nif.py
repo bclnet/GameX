@@ -104,10 +104,10 @@ class Z:
 class Flags(IntFlag):
     Hidden = 0x1
 
-def RefJsonConverter(s): return f'{s.v}'
-def TexCoordJsonConverter(s): return f'{s.u:.9g} {s.v:.9g}'
-def TriangleJsonConverter(s): return f'{s.v1} {s.v2} {s.v3}'
-DesSer.add({'Ref':RefJsonConverter, 'TexCoord':TexCoordJsonConverter, 'Triangle':TriangleJsonConverter})
+# def RefJsonConverter(s): return f'{s.v}'
+# def TexCoordJsonConverter(s): return f'{s.u:.9g} {s.v:.9g}'
+# def TriangleJsonConverter(s): return f'{s.v1} {s.v2} {s.v3}'
+# DesSer.add({'Ref':RefJsonConverter, 'TexCoord':TexCoordJsonConverter, 'Triangle':TriangleJsonConverter})
 
 #endregion
 

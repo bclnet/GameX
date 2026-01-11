@@ -66,9 +66,9 @@ class ExportManager:
     @staticmethod
     async def exportFileAsync(file: FileSource, source: BinaryArchive, newPath: str, option: object) -> None:
         fo = option if isinstance(option, FileOption) else FileOption.Default
-        if file.fileSize == 0 and file.packedSize == 0: return
-        oo = file.cachedObjectOption if isinstance(file.cachedObjectOption, FileOption) else FileOption.Default
-        if file.cachedObjectOption and bool(fo & oo):
+        if (file.fileSize or 0) == 0 and (file.packedSize or 0) == 0: return
+        oo = file.cachedObjectOption if isinstance(file.cachedObjectOption, FileOption) else fo
+        if file.cachedObjectOption != None and bool(fo & oo):
             if FileOption.UnknownFileModel in oo:
                 model = source.getAsset(IUnknownFileModel, file, FamilyManager.UncoreArchive)
                 # UnknownFileWriter.Factory('default', model).Write(newPath, false)
@@ -84,7 +84,7 @@ class ExportManager:
             elif FileOption.StreamObject in oo:
                 obj = source.getAsset(object, file)
                 if isinstance(obj, IWriteToStream):
-                    with open(newPath, 'w') if newPath else io.BytesIO() as s2:
+                    with open(newPath, 'w', encoding='utf-8') if newPath else io.BytesIO() as s2:
                         obj.writeToStream(s2)
                     return
                 ArcBinary.handleException(None, option, f'StreamObject: {file.Path} @ {file.FileSize}')

@@ -613,6 +613,7 @@ public unsafe class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
             //new FileSource { Path = "Group", Arc = new SubEsm(source, this, null, null) }
             files.AddRange(Groups.Select(s => new FileSource {
                 Path = Encoding.ASCII.GetString(BitConverter.GetBytes((uint)s.Key)),
+                FileSize = 1,
                 Flags = (int)s.Key,
                 Tag = s.Value
             }));
@@ -659,7 +660,7 @@ public unsafe class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
             return Task.CompletedTask;
         }
         var wrldsByLabel = Groups[FormType.WRLD].GroupsByLabel;
-        WRLDsById = Groups[FormType.WRLD].Load().Cast<WRLDRecord>().ToDictionary(s => s.Id, s => { wrldsByLabel.TryGetValue(s.Id, out var wrlds); return new Tuple<WRLDRecord, RecordGroup[]>(s, wrlds); });
+        WRLDsById = Groups[FormType.WRLD].Load().Cast<WRLDRecord>().ToDictionary(s => s.Header.Id, s => { wrldsByLabel.TryGetValue(s.Header.Id, out var wrlds); return new Tuple<WRLDRecord, RecordGroup[]>(s, wrlds); });
         LTEXsByEid = Groups[FormType.LTEX].Load().Cast<LTEXRecord>().ToDictionary(s => s.EDID.Value);
         return Task.CompletedTask;
     }

@@ -660,8 +660,6 @@ public class Record {
         { SNDR, (() => new SNDRRecord(), x => x > 5) },
     };
     internal Header Header;
-    public uint Id => Header.Id;
-    public Header.EsmFlags Flags => Header.Flags;
     public STRVField EDID; // Editor ID
 
     /// <summary>
@@ -687,11 +685,12 @@ public class Record {
         r.EnsureAtEnd(end, $"Failed reading {Header.Type} record data at offset {start} in {r.BinPath}");
     }
 
-    static readonly HashSet<FormType> FactorySet = [TES3, ACTI];
+    static readonly HashSet<FormType> FactorySet = [TES3, APPA];
+    //static readonly HashSet<FormType> FactorySet = [TES3, ACTI];
     public static Record Factory(Header r, FormType type, int level = int.MaxValue) {
         if (!Map.TryGetValue(type, out var z)) { Log.Info($"Unsupported ESM record type: {type}"); return null; }
         //if (!z.l(level)) return null;
-        //if (!FactorySet.Contains(r.Type)) return null;
+        if (!FactorySet.Contains(type)) return null;
         var record = z.f(); record.Header = r;
         return record;
     }
@@ -707,7 +706,7 @@ public readonly struct Ref<TRecord> where TRecord : Record {
     public override string ToString() => $"{Type}:{Name}{Id}";
     public readonly uint Id;
     public readonly string Name;
-    public string Type => typeof(TRecord).Name[..4];
+    public readonly string Type => typeof(TRecord).Name[..4];
     public Ref(uint id) { Id = id; Name = null; }
     public Ref(string name) { Id = 0; Name = name; }
     Ref(uint id, string name) { Id = id; Name = name; }
@@ -717,7 +716,7 @@ public readonly struct Ref<TRecord> where TRecord : Record {
 public struct RefField<TRecord>(Header r, int dataSize) where TRecord : Record {
     public override readonly string ToString() => $"{Value}";
     public Ref<TRecord> Value = dataSize == 4 ? new Ref<TRecord>(r.ReadUInt32()) : new Ref<TRecord>(r.ReadFAString(dataSize));
-    public Ref<TRecord> SetName(string name) => Value = Value.SetName(name);
+    public string SetName(string name) => (Value = Value.SetName(name)).Name;
 }
 
 public struct Ref2Field<TRecord>(Header r, int dataSize) where TRecord : Record {
@@ -866,7 +865,7 @@ partial class RecordGroup {
                 cell.GridId = new Int3(cell.XCLC.Value.GridX, cell.XCLC.Value.GridY, !cell.IsInterior ? cellId.Z : -1);
                 CELLsById.Add(cell.GridId, cell);
                 // find children
-                if (cellSubBlock.GroupsByLabel.TryGetValue(cell.Id, out var cellChildren)) {
+                if (cellSubBlock.GroupsByLabel.TryGetValue(cell.Header.Id, out var cellChildren)) {
                     var cellChild = cellChildren.Single();
                     var cellTemporaryChildren = cellChild.Groups.Single(s => s.Headers.First().Type == GroupHeader.GroupType.CellTemporaryChildren);
                     foreach (var land in cellTemporaryChildren.Records.Cast<LANDRecord>()) {
@@ -991,9 +990,9 @@ public class ACHRRecord : Record {
 public class ACTIRecord : Record, IHaveMODL {
     public MODLGroup MODL { get; set; } // Model Name
     public STRVField FULL; // Item Name
-    public RefField<SCPTRecord> SCRI; // Script (Optional)
+    public RefField<SCPTRecord>? SCRI; // Script (Optional)
     // TES4
-    public RefField<SOUNRecord> SNAM; // Sound (Optional)
+    public RefField<SOUNRecord>? SNAM; // Sound (Optional)
 
     public override object CreateField(Header r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadSTRV(dataSize),
@@ -1166,7 +1165,7 @@ public class APPARecord : Record, IHaveMODL {
     public STRVField FULL; // Item Name
     public DATAField DATA; // Alchemy Data
     public FILEField ICON; // Inventory Icon
-    public RefField<SCPTRecord> SCRI; // Script Name
+    public RefField<SCPTRecord>? SCRI; // Script Name
 
     public override object CreateField(Header r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadSTRV(dataSize),

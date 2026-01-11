@@ -5,6 +5,19 @@ from numpy import ndarray, array
 from quaternion import quaternion
 from gamex.core.globalx import Color3, Color4
 
+def jsonKey(s: str) -> str: # CamelCase
+    if not s: return s
+    cs = [c for c in s]; clen = len(cs)
+    for i in range(clen):
+        if i == 1 and not cs[i].isupper(): break
+        if i > 0 and i + 1 < clen and not cs[i + 1].isupper(): # stop when next char is already lowercase.
+            if cs[i + 1] == ' ': cs[i] = cs[i].lower() # if the next char is a space, lowercase current char before exiting.
+            break
+        cs[i] = cs[i].lower()
+    s = ''.join(cs)
+    return s
+def jsonValue(s: object) -> object: return s #return s.replace('\'', TICK) if isinstance(s, str) else s
+
 class FloatEncoder(float):
     def __repr__(self): return format(self, '.9g')
 
@@ -38,10 +51,10 @@ class CustomEncoder(json.JSONEncoder):
                     case _: raise Exception('Unknown mapping')
             case Color3(): return f'{s.r:.9g} {s.g:.9g} {s.b:.9g}' #color3
             case Color4(): return f'{s.r:.9g} {s.g:.9g} {s.b:.9g} {s.a:.9g}' #color4
-        n = type(s).__name__; c = {k:getattr(s, k) for k in dir(s) if not k.startswith('_')}; d = {k:v for k,v in c.items() if not callable(v)}
+        n = type(s).__name__; c = {jsonKey(k):jsonValue(getattr(s, k)) for k in dir(s) if not k.startswith('_')}; d = {k:v for k,v in c.items() if not callable(v)}
         match n:
             case 'mappingproxy': return None
-            case 'Binary_Nif': return {k:v for k,v in d.items() if not k in ['f', 'length']}
+            case 'Binary_Nif': return {jsonKey(k):jsonValue(v) for k,v in d.items() if not k in ['f', 'length']}
         if n in DesSer.adds: return DesSer.adds[n](s)
         return d #super().default(s)
 

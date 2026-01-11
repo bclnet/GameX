@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
@@ -29,6 +30,7 @@ public static class DesSer {
         IncludeFields = true,
         IndentSize = 2,
         //DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
         NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         TypeInfoResolver = new TypeInfoResolver {

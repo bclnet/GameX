@@ -391,6 +391,7 @@ class Binary_Esm(ArcBinaryT, IDatabase):
                 groups[k] = t
             files.extend([FileSource(
                 path = f'{k.name}',
+                fileSize = 1,
                 flags = k,
                 tag = s) for k, s in groups.items()])
             return

@@ -54,7 +54,6 @@ class ExportManager:
             if FileOption.Object in fo: source.ensureCachedObjectFactory(file)
             # extract file
             try:
-                print(source)
                 await ExportManager.exportFileAsync(file, source, newPath, option)
                 if file.parts != None and FileOption.Raw in fo:
                     for part in file.parts: await ExportManager.exportFileAsync(part, source, os.path.join(filePath, part.path), option)

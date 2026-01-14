@@ -450,11 +450,11 @@ class Binary_Esm(ArcBinaryT, IDatabase):
     def query(self, s: object) -> object:
         match s:
             case FileSource(): return self.findTAGFactory(s.flags, s.tag)
-            case FindLTEX(): s.tes3(self) if self.format == FormType.TES3 else _throw('NotImplemented')
-            case FindLAND(): s.tes3(self) if self.format == FormType.TES3 else s.else_(self)
-            case FindCELL(): s.tes3(self) if self.format == FormType.TES3 else s.else_(self)
-            case FindCELLByName(): s.tes3(self) if self.format == FormType.TES3 else _throw('NotImplemented')
-            case _: _throw('OutOfRange')
+            case FindLTEX(): return s.tes3(self) if self.format == FormType.TES3 else _throw('NotImplementedError')
+            case FindLAND(): return s.tes3(self) if self.format == FormType.TES3 else s.else_(self)
+            case FindCELL(): return s.tes3(self) if self.format == FormType.TES3 else s.else_(self)
+            case FindCELLByName(): return s.tes3(self) if self.format == FormType.TES3 else _throw('NotImplementedError')
+            case _: return _throw('OutOfRange')
 
     #endregion
         

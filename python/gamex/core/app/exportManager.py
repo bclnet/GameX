@@ -54,6 +54,7 @@ class ExportManager:
             if FileOption.Object in fo: source.ensureCachedObjectFactory(file)
             # extract file
             try:
+                print(source)
                 await ExportManager.exportFileAsync(file, source, newPath, option)
                 if file.parts != None and FileOption.Raw in fo:
                     for part in file.parts: await ExportManager.exportFileAsync(part, source, os.path.join(filePath, part.path), option)
@@ -84,6 +85,7 @@ class ExportManager:
             elif FileOption.StreamObject in oo:
                 obj = source.getAsset(object, file)
                 if isinstance(obj, IWriteToStream):
+                    print(newPath)
                     with open(newPath, 'w', encoding='utf-8') if newPath else io.BytesIO() as s2:
                         obj.writeToStream(s2)
                     return

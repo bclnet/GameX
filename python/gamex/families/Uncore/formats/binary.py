@@ -644,7 +644,7 @@ class Binary_Zip(ArcBinaryT):
         match self.key:
             case None: pass
             case s if isinstance(key, str): arc.setpassword(s)
-            case z if isinstance(key, bytes): raise NotImplementedError()
+            case z if isinstance(key, bytes): raise NotImplementedError('Binary_Zip')
         source.files = [FileSource(
             path = s.filename, #.replace('\\', '/'),
             packedSize = s.compress_size,

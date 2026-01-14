@@ -88,7 +88,7 @@ class Archive(Binary):
     def getSource(self, path: FileSource | str | int, throwOnError: bool = True) -> tuple[Archive, FileSource]: pass
     def getData(self, path: FileSource | str | int, option: object = None, throwOnError: bool = True) -> bytes: pass
     def getAsset(self, path: FileSource | str | int, option: object = None, throwOnError: bool = True) -> object: pass
-    def getArchive(self, res: object, throwOnError: bool = True) -> Archive: raise Exception('Not Implemented')
+    def getArchive(self, res: object, throwOnError: bool = True) -> Archive: raise NotImplementedError('getArchive')
     #region Transform
     def loadAsset2(self, transformTo: object, source: object): pass
     def transformAsset(self, transformTo: object, source: object): pass
@@ -97,8 +97,8 @@ class Archive(Binary):
     def getMetaFilters(self, manager: MetaManager) -> list[MetaItem.Filter]:
         return [MetaItem.Filter(name = k, description = v) for k,v in self.game.filters.items()] \
             if self.game.filters else None
-    def getMetaInfos(self, manager: MetaManager, item: MetaItem) -> list[MetaItem]: raise NotImplementedError()
-    def getMetaItems(self, manager: MetaManager) -> list[MetaInfo]: raise NotImplementedError()
+    def getMetaInfos(self, manager: MetaManager, item: MetaItem) -> list[MetaItem]: raise NotImplementedError('getMetaInfos')
+    def getMetaItems(self, manager: MetaManager) -> list[MetaInfo]: raise NotImplementedError('getMetaItems')
     #endregion
 # end::Archive[]
 

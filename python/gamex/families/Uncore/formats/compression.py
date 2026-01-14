@@ -2,7 +2,7 @@ from __future__ import annotations
 from io import BytesIO
 from zstandard import ZstdDecompressor
 
-def decompressUnknown(r: BinaryReader, length: int, newLength: int) -> bytes: raise NotImplementedError()
+def decompressUnknown(r: BinaryReader, length: int, newLength: int) -> bytes: raise NotImplementedError('decompressUnknown')
 def decompressZlibStream(r: BinaryReader, noHeader: bool = False) -> bytes: 
     import zlib
     z = zlib.decompressobj(wbits = (-15 if noHeader else 0))
@@ -31,8 +31,8 @@ def decompressBlast(r: BinaryReader, length: int, newLength: int) -> bytes:
     res = bytearray(newLength)
     z.decompress(data, res)
     return res
-def decompressLz4(r: BinaryReader, length: int, newLength: int) -> bytes: raise NotImplementedError()
-# def decompressZlib2(r: BinaryReader, length: int, newLength: int) -> bytes: raise NotImplementedError()
+def decompressLz4(r: BinaryReader, length: int, newLength: int) -> bytes: raise NotImplementedError('decompressLz4')
+# def decompressZlib2(r: BinaryReader, length: int, newLength: int) -> bytes: raise NotImplementedError('decompressZlib2')
 
 def decompressXbox(r: BinaryReader, length: int, newLength: int, codec: int = 1) -> bytes:
     from ...._LIB.compression.xcompress import XMEMCODEC, DecompressionContext

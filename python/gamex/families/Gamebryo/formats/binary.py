@@ -28,14 +28,14 @@ class Binary_Nif(NiReader, IHaveMetaInfo, IWriteToStream):
     #region IModel
 
     def create(platform: str, func: callable):
-        raise NotImplementedError()
+        raise NotImplementedError('create')
 
     #endregion
 
-    def isSkinnedMesh(self) -> bool: raise NotImplementedError() #return Blocks.Any(b => b is NiSkinInstance)
+    def isSkinnedMesh(self) -> bool: raise NotImplementedError('isSkinnedMesh') #return Blocks.Any(b => b is NiSkinInstance)
 
     def getTexturePaths(self) -> list[str]:
-        raise NotImplementedError()
+        raise NotImplementedError('getTexturePaths')
         # foreach (var niObject in Blocks)
         #     if (niObject is NiSourceTexture niSourceTexture && !string.IsNullOrEmpty(niSourceTexture.FileName))
         #         yield return niSourceTexture.FileName;

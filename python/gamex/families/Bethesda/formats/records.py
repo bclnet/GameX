@@ -5,15 +5,13 @@ from typing import TypeVar, get_args
 from enum import Enum, Flag, IntEnum, IntFlag
 from numpy import ndarray, array
 from openstk import log, Int3, Byte3, Float3
+from openstk.core.drawing import Color
 from gamex import FileSource, BinaryReader, ArcBinaryT
 from gamex.core.globalx import ByteColor4
 from gamex.families.Uncore.formats.compression import decompressLz4, decompressZlib
 
 # types
 type Vector3 = ndarray
-
-class Colorf:
-    pass
 
 #region Enums
 
@@ -558,32 +556,32 @@ class DATVField:
 class FLTVField:
     _struct = ('<f', 4)
     def __repr__(self) -> str: return f'{self.value}'
-    def __init__(self, tuple = None, value = None): self.value = tuple[0] if tuple else value
+    def __init__(self, tuple = None, value = 0): self.value = tuple[0] if tuple else value
 class BYTEField: 
     _struct = ('<c', 1)
     def __repr__(self) -> str: return f'{self.value}'
-    def __init__(self, tuple = None, value = None): self.value = tuple[0] if tuple else value
+    def __init__(self, tuple = None, value = 0): self.value = tuple[0] if tuple else value
 class IN16Field: 
     _struct = ('<h', 2)
     def __repr__(self) -> str: return f'{self.value}'
-    def __init__(self, tuple = None, value = None): self.value = tuple[0] if tuple else value
+    def __init__(self, tuple = None, value = 0): self.value = tuple[0] if tuple else value
 class UI16Field: 
     def __repr__(self) -> str: return f'{self.value}'
     _struct = ('<H', 2)
-    def __init__(self, tuple = None, value = None): self.value = tuple[0] if tuple else value
+    def __init__(self, tuple = None, value = 0): self.value = tuple[0] if tuple else value
 class IN32Field: 
     _struct = ('<i', 4)
     def __repr__(self) -> str: return f'{self.value}'
-    def __init__(self, tuple = None, value = None): self.value = tuple[0] if tuple else value
+    def __init__(self, tuple = None, value = 0): self.value = tuple[0] if tuple else value
 class UI32Field: 
     _struct = ('<I', 4)
     def __repr__(self) -> str: return f'{self.value}'
-    def __init__(self, tuple = None, value = None): self.value = tuple[0] if tuple else value
+    def __init__(self, tuple = None, value = 0): self.value = tuple[0] if tuple else value
 class INTVField:
     def __repr__(self) -> str: return f'{self.value}'
     _struct = ('<q', 8)
-    def __init__(self, tuple = None, value = None): self.value = tuple[0] if tuple else value
-    def asUI16Field(self) -> UI16Field: return UI16Field(value=self.value)
+    def __init__(self, tuple = None, value = 0): self.value = tuple[0] if tuple else value
+    def _asUI16Field(self) -> UI16Field: return UI16Field(value=self.value)
 class CREFField:
     _struct = ('<4c', 4)
     def __repr__(self) -> str: return f'{self.color}'
@@ -709,7 +707,10 @@ class Record:
     }
     _empty: 'Record'
     _header: Header = None
-    EDID: STRVField = None # Editor ID
+    EDID: STRVField # Editor ID
+
+    def __init__(self):
+        self.EDID = STRVField()
 
     # Return an uninitialized subrecord to deserialize, or null to skip.
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object: return Record._empty
@@ -728,7 +729,7 @@ class Record:
             r.ensureAtEnd(tell + field.dataSize, f'Failed reading {self._header.type}:{field.type} field data at offset {tell} in {r.binPath} of {r.tell() - tell - field.dataSize}')
         r.ensureAtEnd(end, f'Failed reading {self._header.type} record data at offset {start} in {r.binPath}')
 
-    _factorySet = { FormType.TES3, FormType.APPA }
+    # _factorySet = { FormType.TES3, FormType.MGEF, FormType.REGN, FormType.LIGH, FormType.CELL, FormType.DIAL }
     # _factorySet = { FormType.TES3, FormType.ACTI }
     @staticmethod
     def factory(r: Header, type: FieldType, level: int = 1000) -> 'Record':
@@ -747,12 +748,13 @@ class RefId[T: Record]:
 class Ref[T: Record]:
     def __repr__(self) -> str: return f'{self.type}:{self.name}{self.id}'
     def __init__(self, *args): 
-        self.type = (args[0] if isinstance(args[0], str) else args[0].__name__)[:4]
         match len(args):
-            case 1: self.id: int = 0; self.name: str = None
-            case 2 if isinstance(args[1], int): self.id: int = args[1]; self.name: str = None
-            case 2 if isinstance(args[1], str): self.id: int = 0; self.name: str = args[1]
-            case 3: self.id: int = args[1]; self.name: str = args[2]
+            case 1: self.type, self.id, self.name = (args[0], 0, None)
+            case 2 if isinstance(args[1], int): self.type, self.id, self.name = (args[0], args[1], None)
+            case 2 if isinstance(args[1], str): self.type, self.id, self.name = (args[0], 0, args[1])
+            case 3: self.type, self.id, self.name = args
+            case _: raise NotImplementedError('Ref')
+        self.type = (self.type if isinstance(self.type, str) else self.type.__name__)[:4]
     def setName(self, name: str) -> 'Ref': z = self.name = name; return z
 
 class RefField[T: Record]:
@@ -765,6 +767,8 @@ class Ref2Field[T: Record]:
     def __init__(self, t: type, r: Header, dataSize: int): self.value1 = Ref[T](t, r.readUInt32()); self.value2 = Ref[T](t, r.readUInt32())
 
 #endregion
+# Record._factorySet = { FormType.TES3, FormType.ACTI, FormType.ALCH, FormType.APPA, FormType.ARMO, FormType.BODY }
+Record._factorySet = { FormType.TES3, FormType.ACTI, FormType.BODY }
 
 #region Record Group
 
@@ -891,6 +895,7 @@ Header.readUNKN = readUNKN
 # dep: None
 class AACTRecord(Record):
     CNAM: CREFField # RGB Color
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -906,9 +911,10 @@ class ACRERecord(Record):
     NAME: RefField[Record] # Base
     DATA: 'REFRRecord.DATAField' # Position/Rotation
     XOWNs: list['CELLRecord.XOWNGroup'] # Ownership (optional)
-    XESP: 'REFRRecord.XESPField' # Enable Parent (optional)
+    XESP: 'REFRRecord.XESPField' = None # Enable Parent (optional)
     XSCL: FLTVField # Scale (optional)
-    XRGD: BYTVField # Ragdoll Data (optional)
+    XRGD: BYTVField = None # Ragdoll Data (optional)
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -930,13 +936,14 @@ class ACRERecord(Record):
 class ACHRRecord(Record):
     NAME: RefField[Record] # Base
     DATA: 'REFRRecord.DATAField' # Position/Rotation
-    XPCI: RefField['CELLRecord'] # Unused (optional)
-    XLOD: BYTVField # Distant LOD Data (optional)
-    XESP: 'REFRRecord.XESPField' # Enable Parent (optional)
-    XMRC: RefField['REFRRecord'] # Merchant Container (optional)
-    XHRS: RefField[ACRERecord] # Horse (optional)
-    XSCL: FLTVField # Scale (optional)
-    XRGD: BYTVField # Ragdoll Data (optional)
+    XPCI: RefField['CELLRecord'] = None # Unused (optional)
+    XLOD: BYTVField = None # Distant LOD Data (optional)
+    XESP: 'REFRRecord.XESPField' = None # Enable Parent (optional)
+    XMRC: RefField['REFRRecord'] = None # Merchant Container (optional)
+    XHRS: RefField[ACRERecord] = None # Horse (optional)
+    XSCL: FLTVField = None # Scale (optional)
+    XRGD: BYTVField = None # Ragdoll Data (optional)
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -963,6 +970,7 @@ class ACTIRecord(Record, IHaveMODL):
     SCRI: RefField['SCPTRecord'] = None # Script (Optional)
     # TES4
     SNAM: RefField['SOUNRecord'] = None # Sound (Optional)
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -982,6 +990,7 @@ class ACTIRecord(Record, IHaveMODL):
 # dep: None
 class ADDNRecord(Record):
     CNAM: CREFField # RGB Color
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -999,7 +1008,6 @@ class ALCHRecord(Record, IHaveMODL):
         Weight: float
         Value: int
         Flags: int # AutoCalc
-
         def __init__(self, r: Header, dataSize: int):
             self.weight = r.readSingle()
             if r.format == FormType.TES3:
@@ -1023,14 +1031,15 @@ class ALCHRecord(Record, IHaveMODL):
             self.unknown4: int = r.readInt32()
 
     MODL: MODLGroup # Model
-    FULL: STRVField  # Item Name
-    DATA: DATAField  # Alchemy Data
-    ENAM: ENAMField # Enchantment
-    ICON: FILEField  # Icon
+    FULL: STRVField # Item Name
+    DATA: DATAField # Alchemy Data
+    ENAM: ENAMField = None # Enchantment
+    ICON: FILEField # Icon
     SCRI: RefField['SCPTRecord'] = None # Script (optional)
     # TES4
-    EFITs: list['ENCHRecord.EFITField'] = listx() # Effect Data
-    SCITs: list['ENCHRecord.SCITField'] = listx() # Script Effect Data
+    EFITs: list['ENCHRecord.EFITField'] = [] # Effect Data
+    SCITs: list['ENCHRecord.SCITField'] = [] # Script Effect Data
+    def __init__(self): super().__init__(); self.EFITs = listx(); self.SCITs = listx()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -1066,10 +1075,11 @@ class AMMORecord(Record, IHaveMODL):
 
     MODL: MODLGroup # Model
     FULL: STRVField # Item Name
-    ICON: FILEField  # Male Icon (optional)
-    ENAM: RefField['ENCHRecord'] # Enchantment ID (optional)
-    ANAM: IN16Field # Enchantment Points (optional)
+    ICON: FILEField = None # Male Icon (optional)
+    ENAM: RefField['ENCHRecord'] = None # Enchantment ID (optional)
+    ANAM: IN16Field = None # Enchantment Points (optional)
     DATA: DATAField # Ammo Data
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -1091,6 +1101,7 @@ class AMMORecord(Record, IHaveMODL):
 class ANIORecord(Record, IHaveMODL):
     MODL: MODLGroup # Model
     DATA: RefField['IDLERecord'] # IDLE Animation
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -1111,7 +1122,6 @@ class APPARecord(Record, IHaveMODL):
         value: int
         weight: float
         quality: float
-
         def __init__(self, r: Header, dataSize: int):
             if r.format == FormType.TES3:
                 self.type = r.readInt32() & 0xFF
@@ -1129,6 +1139,7 @@ class APPARecord(Record, IHaveMODL):
     DATA: DATAField # Alchemy Data
     ICON: FILEField # Inventory Icon
     SCRI: RefField['SCPTRecord'] = None # Script Name
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -1147,6 +1158,8 @@ class APPARecord(Record, IHaveMODL):
 # ARMA.Armature (Model) - 0050 - tag::ARMA[]
 # dep: None
 class ARMARecord(Record):
+    def __init__(self): super().__init__()
+
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
@@ -1167,7 +1180,6 @@ class ARMORecord(Record, IHaveMODL):
         # TES3
         type: int
         enchantPts: int
-
         def __init__(self, r: Header, dataSize: int):
             if r.format == FormType.TES3:
                 self.type = r.readInt32()
@@ -1190,17 +1202,18 @@ class ARMORecord(Record, IHaveMODL):
     FULL: STRVField # Item Name
     ICON: FILEField # Male Icon
     DATA: DATAField # Armour Data
-    SCRI: RefField['SCPTRecord'] # Script Name (optional)
-    ENAM: RefField['ENCHRecord'] # Enchantment FormId (optional)
+    SCRI: RefField['SCPTRecord'] = None # Script Name (optional)
+    ENAM: RefField['ENCHRecord'] = None # Enchantment FormId (optional)
     # TES3
-    INDXs: list['CLOTRecord.INDXFieldGroup'] = listx() # Body Part Index
+    INDXs: list['CLOTRecord.INDXFieldGroup'] = [] # Body Part Index
     # TES4
-    BMDT: UI32Field # Flags
-    MOD2: MODLGroup # Male World Model (optional)
-    MOD3: MODLGroup # Female Biped Model (optional)
-    MOD4: MODLGroup # Female World Model (optional)
-    ICO2: FILEField # Female Icon (optional)
-    ANAM: IN16Field # Enchantment Points (optional)
+    BMDT: UI32Field = UI32Field() #! Flags
+    MOD2: MODLGroup = None #! Male World Model (optional)
+    MOD3: MODLGroup = None #! Female Biped Model (optional)
+    MOD4: MODLGroup = None #! Female World Model (optional)
+    ICO2: FILEField = None # Female Icon (optional)
+    ANAM: IN16Field = None # Enchantment Points (optional)
+    def __init__(self): super().__init__(); self.INDXs = listx()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -1238,6 +1251,7 @@ class ARMORecord(Record, IHaveMODL):
 # dep: None
 class ARTORecord(Record):
     CNAM: CREFField # RGB Color
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -1251,6 +1265,7 @@ class ARTORecord(Record):
 # dep: None
 class ASPCRecord(Record):
     CNAM: CREFField # RGB Color
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -1264,6 +1279,7 @@ class ASPCRecord(Record):
 # dep: None
 class ASTPRecord(Record):
     CNAM: CREFField # RGB Color
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -1277,6 +1293,7 @@ class ASTPRecord(Record):
 # dep: None
 class AVIFRecord(Record):
     CNAM: CREFField # RGB Color
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -1299,6 +1316,7 @@ class BODYRecord(Record, IHaveMODL):
     MODL: MODLGroup # NIF Model
     FNAM: STRVField # Body Name
     BYDT: BYDTField
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         if r.format == FormType.TES3:
@@ -1322,7 +1340,6 @@ class BOOKRecord(Record, IHaveMODL):
         weight: float
         # TES3
         enchantPts: int
-
         def __init__(self, r: Header, dataSize: int):
             if r.format == FormType.TES3:
                 self.weight = r.readSingle()
@@ -1345,7 +1362,8 @@ class BOOKRecord(Record, IHaveMODL):
     SCRI: RefField['SCPTRecord'] # Script Name (optional)
     ENAM: RefField['ENCHRecord'] # Enchantment FormId (optional)
     # TES4
-    ANAM: IN16Field # Enchantment points (optional)
+    ANAM: IN16Field = None # Enchantment points (optional)
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -1373,6 +1391,7 @@ class BSGNRecord(Record):
     DESC: STRVField # Description
     NPCSs: list[STRVField] # TES3: Spell/ability
     SPLOs: list[RefField[Record]] # TES4: (points to a SPEL or LVSP record)
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -1465,55 +1484,55 @@ class CELLRecord(Record): #ICellRecord
             
     class RefObj:
         def __repr__(self): return f'CREF: {self.EDID.value}'
-        FRMR: UI32Field # Object Index (starts at 1)
+        FRMR: UI32Field = None # Object Index (starts at 1)
         # This is used to uniquely identify objects in the cell. For files the index starts at 1 and is incremented for each object added. For modified objects the index is kept the same.
         EDID: STRVField # Object ID
-        XSCL: FLTVField # Scale (Static)
-        DELE: IN32Field # Indicates that the reference is deleted.
-        DODT: 'XYZAField' # XYZ Pos, XYZ Rotation of exit
+        XSCL: FLTVField = None # Scale (Static)
+        DELE: IN32Field = None # Indicates that the reference is deleted.
+        DODT: 'XYZAField' = None # XYZ Pos, XYZ Rotation of exit
         DNAM: STRVField # Door exit name (Door objects)
-        FLTV: FLTVField # Follows the DNAM optionally, lock level
+        FLTV: FLTVField = None # Follows the DNAM optionally, lock level
         KNAM: STRVField # Door key
         TNAM: STRVField # Trap name
-        UNAM: BYTEField # Reference Blocked (only occurs once in MORROWIND.ESM)
+        UNAM: BYTEField = None # Reference Blocked (only occurs once in MORROWIND.ESM)
         ANAM: STRVField # Owner ID string
         BNAM: STRVField # Global variable/rank ID
-        INTV: IN32Field # Number of uses, occurs even for objects that don't use it
-        NAM9: UI32Field # Unknown
+        INTV: IN32Field = None # Number of uses, occurs even for objects that don't use it
+        NAM9: UI32Field = None # Unknown
         XSOL: STRVField # Soul Extra Data (ID string of creature)
         DATA: 'XYZAField' # Ref Position Data
         # TES?
         CNAM: STRVField # Unknown
-        NAM0: UI32Field # Unknown
-        XCHG: IN32Field # Unknown
-        INDX: IN32Field # Unknown
+        NAM0: UI32Field = None # Unknown
+        XCHG: IN32Field = None # Unknown
+        INDX: IN32Field = None # Unknown
 
     FULL: STRVField # Full Name / TES3:RGNN - Region name
     DATA: UI16Field # Flags
-    XCLC: XCLCField # Cell Data (only used for exterior cells)
-    XCLL: XCLLField # Lighting (only used for interior cells)
-    XCLW: FLTVField # Water Height
+    XCLC: XCLCField = None # Cell Data (only used for exterior cells)
+    XCLL: XCLLField = None # Lighting (only used for interior cells)
+    XCLW: FLTVField = None # Water Height
     # TES3
-    NAM0: UI32Field # Number of objects in cell in current file (Optional)
+    NAM0: UI32Field = None # Number of objects in cell in current file (Optional)
     INTV: INTVField # Unknown
-    NAM5: CREFField # Map Color (COLORREF)
+    NAM5: CREFField = None # Map Color (COLORREF)
     # TES4
     XCLRs: list[RefField['REGNRecord']] # Regions
-    XCMT: BYTEField # Music (optional)
-    XCCM: RefField['CLMTRecord'] # Climate
-    XCWT: RefField['WATRRecord'] # Water
-    XOWNs: list[XOWNGroup] = listx() # Ownership
-
+    XCMT: BYTEField = None # Music (optional)
+    XCCM: RefField['CLMTRecord'] = None # Climate
+    XCWT: RefField['WATRRecord'] = None # Water
+    XOWNs: list[XOWNGroup] = [] # Ownership
     # Referenced Object Data Grouping
     inFRMR: bool = False
-    refObjs: list[RefObj] = listx()
+    refObjs: list[RefObj] = []
     _lastRef: RefObj
-
+    # Grid
     @property
     def isInterior(self) -> bool: return (self.DATA.value & 0x01) == 0x01
     gridId: Int3 # => Int3(XCLC.Value.GridX, XCLC.Value.GridY, !IsInterior ? 0 : -1);
     @property
-    def ambientLight(self) -> Colorf: return Colorf(self.XCLL.value.ambientColor.asColor32) if self.XCLL else None
+    def ambientLight(self) -> Color: return Color(self.XCLL.value.ambientColor.asColor) if self.XCLL else None
+    def __init__(self): super().__init__(); self.XOWNs = listx(); self.refObjs = listx()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         # print(f'   {type}')
@@ -1523,7 +1542,7 @@ class CELLRecord(Record): #ICellRecord
                 case FieldType.EDID | FieldType.NAME: z = self.EDID = r.readSTRV(dataSize)
                 case FieldType.FULL | FieldType.RGNN: z = self.FULL = r.readSTRV(dataSize)
                 case FieldType.DATA:
-                    z = self.DATA = r.readINTV(4 if r.format == FormType.TES3 else dataSize).asUI16Field
+                    z = self.DATA = r.readINTV(4 if r.format == FormType.TES3 else dataSize)._asUI16Field
                     if r.format == FormType.TES3: self.XCLC = r.readS(self.XCLCField, 8 if r.format == FormType.TES3 else dataSize)
                 case FieldType.XCLC: z = self.XCLC = r.readS(self.XCLCField, 8 if r.format == FormType.TES3 else dataSize)
                 case FieldType.XCLL | FieldType.AMBI: z = self.XCLL = r.readS(self.XCLLField, dataSize)
@@ -1587,8 +1606,9 @@ class CLASRecord(Record):
     FULL: STRVField # Name
     DESC: STRVField # Description
     # TES4
-    ICON: STRVField # Icon (Optional)
+    ICON: STRVField = None # Icon (Optional)
     DATA: DATAField # Data
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -1614,7 +1634,6 @@ class CLOTRecord(Record, IHaveMODL):
         # TES3
         type: int
         enchantPts: int
-
         def __init__(self, r: Header, dataSize: int):
             if r.format == FormType.TES3:
                 self.type = r.readInt32()
@@ -1629,10 +1648,10 @@ class CLOTRecord(Record, IHaveMODL):
 
     class INDXFieldGroup:
         def __repr__(self): return f'{self.INDX.value}: {self.BNAM.value}'
-        def __init__(self, INDX: INTVField = None):
+        def __init__(self, INDX: INTVField = INTVField()):
             self.INDX: INTVField = INDX
-            self.BNAM: STRVField = None
-            self.CNAM: STRVField = None
+            self.BNAM: STRVField = STRVField()
+            self.CNAM: STRVField = STRVField()
 
     MODL: MODLGroup # Model Name
     FULL: STRVField # Item Name
@@ -1641,14 +1660,15 @@ class CLOTRecord(Record, IHaveMODL):
     ENAM: STRVField # Enchantment Name
     SCRI: RefField['SCPTRecord'] # Script Name
     # TES3
-    INDXs: list[INDXFieldGroup] = listx() # Body Part Index (Moved to Race)
+    INDXs: list[INDXFieldGroup] = [] # Body Part Index (Moved to Race)
     # TES4
     BMDT: UI32Field # Clothing Flags
     MOD2: MODLGroup # Male world model (optional)
     MOD3: MODLGroup # Female biped (optional)
     MOD4: MODLGroup # Female world model (optional)
-    ICO2: FILEField # Female icon (optional)
-    ANAM: IN16Field # Enchantment points (optional)
+    ICO2: FILEField = None # Female icon (optional)
+    ANAM: IN16Field = None # Enchantment points (optional)
+    def __init__(self): super().__init__(); self.INDXs = listx()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -1700,9 +1720,10 @@ class CLMTRecord(Record, IHaveMODL):
     MODL: MODLGroup # Model
     FNAM: FILEField # Sun Texture
     GNAM: FILEField # Sun Glare Texture
-    WLSTs: list[WLSTField] = listx() # Climate
+    WLSTs: list[WLSTField] = [] # Climate
     TNAM: TNAMField # Timing
-
+    def __init__(self): super().__init__(); self.WLSTs = listx() 
+    
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
@@ -1723,7 +1744,6 @@ class CONTRecord(Record, IHaveMODL):
     class DATAField:
         flags: int # flags 0x0001 = Organic, 0x0002 = Respawns, organic only, 0x0008 = Default, unknown
         weight: float
-
         def __init__(self, r: Header, dataSize: int):
             if r.format == FormType.TES3:
                 self.weight = r.readSingle()
@@ -1735,12 +1755,13 @@ class CONTRecord(Record, IHaveMODL):
     MODL: MODLGroup # Model
     FULL: STRVField # Container Name
     DATA: DATAField # Container Data
-    SCRI: RefField['SCPTRecord']
-    CNTOs: list[CNTOField] = listx()
+    SCRI: RefField['SCPTRecord'] = None
+    CNTOs: list[CNTOField] = []
     # TES4
     SNAM: RefField['SOUNRecord'] # Open sound
     QNAM: RefField['SOUNRecord'] # Close sound
-
+    def __init__(self): super().__init__(); self.CNTOs = listx()
+    
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.EDID | FieldType.NAME: z = self.EDID = r.readSTRV(dataSize)
@@ -1868,15 +1889,16 @@ class CREARecord(Record, IHaveMODL):
     SCRI: RefField['SCPTRecord'] # Script
     NPCO: CNTOField # Item record
     AIDT: AIDTField # AI data
-    AI_W: AI_WField # AI Wander
-    AI_T: AI_TField # AI Travel
-    AI_F: AI_FField # AI Follow
-    AI_E: AI_FField # AI Escort
-    AI_A: AI_AField # AI Activate
-    XSCL: FLTVField # Scale (optional), Only present if the scale is not 1.0
-    CNAM: STRVField
-    NPCSs: list[STRVField] = listx()
-
+    AI_W: AI_WField = None # AI Wander
+    AI_T: AI_TField = None # AI Travel
+    AI_F: AI_FField = None # AI Follow
+    AI_E: AI_FField = None # AI Escort
+    AI_A: AI_AField = None # AI Activate
+    XSCL: FLTVField = None # Scale (optional), Only present if the scale is not 1.0
+    CNAM: STRVField = None
+    NPCSs: list[STRVField] = []
+    def __init__(self): super().__init__(); self.NPCSs = listx()
+    
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         if r.format == FormType.TES3:
             match type:
@@ -1942,7 +1964,6 @@ class CSTYRecord(Record):
         rushingAttackPercentChance: int
         rushingAttackDistanceMult: float
         flags2: int
-
         def __init__(self, r: Header, dataSize: int):
             # if (dataSize != 124 && dataSize != 120 && dataSize != 112 && dataSize != 104 && dataSize != 92 && dataSize != 84) self.dodgePercentChance = 0;
             self.dodgePercentChance = r.readByte()
@@ -2015,7 +2036,8 @@ class CSTYRecord(Record):
 
     CSTD: CSTDField # Standard
     CSAD: CSADField # Advanced
-
+    def __init__(self): super().__init__()
+    
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
@@ -2033,8 +2055,9 @@ class DIALRecord(Record):
     FULL: STRVField # Dialogue Name
     DATA: BYTEField # Dialogue Type
     QSTIs: list[RefField['QUSTRecord']] # Quests (optional)
-    INFOs: list['INFORecord'] = listx() # Info Records
-
+    INFOs: list['INFORecord'] = [] # Info Records
+    def __init__(self): super().__init__(); self.INFOs = listx()
+    
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.EDID | FieldType.NAME: z = self.EDID = r.readSTRV(dataSize); DIALRecord.lastRecord = self
@@ -2049,6 +2072,7 @@ class DIALRecord(Record):
 # dep: None
 class DLBRRecord(Record):
     CNAM: CREFField # RGB color
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -2062,6 +2086,7 @@ class DLBRRecord(Record):
 # dep: None
 class DLVWRecord(Record):
     CNAM: CREFField # RGB color
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -2076,13 +2101,14 @@ class DLVWRecord(Record):
 class DOORRecord(Record, IHaveMODL):
     FULL: STRVField # Door name
     MODL: MODLGroup # NIF model filename
-    SCRI: RefField['SCPTRecord'] # Script (optional)
+    SCRI: RefField['SCPTRecord'] = None # Script (optional)
     SNAM: RefField['SOUNRecord'] # Open Sound
     ANAM: RefField['SOUNRecord'] # Close Sound
     # TES4
     BNAM: RefField['SOUNRecord'] # Loop Sound
     FNAM: BYTEField # Flags
     TNAM: RefField[Record] # Random teleport destination
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -2162,7 +2188,6 @@ class EFSHRecord(Record):
         colorKey1_ColorKeyTime: float
         colorKey2_ColorKeyTime: float
         colorKey3_ColorKeyTime: float
-
         def __init__(self, r: Header, dataSize: int):
             if dataSize != 224 and dataSize != 96: self.flags = 0
             self.flags = r.readByte()
@@ -2227,6 +2252,7 @@ class EFSHRecord(Record):
     ICON: FILEField # Fill Texture
     ICO2: FILEField # Particle Shader Texture
     DATA: DATAField # Data
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -2249,7 +2275,6 @@ class ENCHRecord(Record):
         enchantCost: int
         chargeAmount: int # Charge
         flags: int # AutoCalc
-
         def __init__(self, r: Header, dataSize: int):
             self.type = r.readInt32()
             if r.format == FormType.TES3:
@@ -2272,7 +2297,6 @@ class ENCHRecord(Record):
         magnitudeMax: int
         # TES4
         actorValue: int
-
         def __init__(self, r: Header, dataSize: int):
             if r.format == FormType.TES3:
                 self.effectId = r.readFAString(2)
@@ -2298,7 +2322,6 @@ class ENCHRecord(Record):
         school: int # 0 = Alteration, 1 = Conjuration, 2 = Destruction, 3 = Illusion, 4 = Mysticism, 5 = Restoration
         visualEffect: str
         flags: int
-
         def __init__(self, r: Header, dataSize: int):
             self.name = 'Script Effect'
             self.scriptFormId = r.readInt32()
@@ -2310,9 +2333,10 @@ class ENCHRecord(Record):
 
     FULL: STRVField # Enchant name
     ENIT: ENITField # Enchant Data
-    EFITs: list[EFITField] = listx() # Effect Data
+    EFITs: list[EFITField] = [] # Effect Data
     # TES4
-    SCITs: list[SCITField] = listx() # Script effect data
+    SCITs: list[SCITField] = [] # Script effect data
+    def __init__(self): super().__init__(); self.EFITs = listx(); self.SCITs = listx()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -2333,6 +2357,7 @@ class EYESRecord(Record):
     FULL: STRVField
     ICON: FILEField
     DATA: BYTEField # Playable
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -2369,15 +2394,16 @@ class FACTRecord(Record):
             self.combat: int = r.readInt32() if r.format > FormType.TES4 else 0
 
     FNAM: STRVField # Faction name
-    RNAMs: list[RNAMGroup] = listx() # Rank Name
+    RNAMs: list[RNAMGroup] = [] # Rank Name
     FADT: FADTField # Faction data
-    ANAMs: list[STRVField] = listx() # Faction name
-    INTVs: list[INTVField] = listx() # Faction reaction
+    ANAMs: list[STRVField] = [] # Faction name
+    INTVs: list[INTVField] = [] # Faction reaction
     # TES4
     XNAM: XNAMField # Interfaction Relations
     DATA: INTVField # Flags (byte, uint32)
     CNAM: UI32Field
-
+    def __init__(self): super().__init__(); self.RNAMs = listx(); self.ANAMs = listx(); self.INTVs = listx()
+    
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         if r.format == FormType.TES3:
             match type:
@@ -2411,6 +2437,7 @@ class FLORRecord(Record, IHaveMODL):
     SCRI: RefField['SCPTRecord'] # Script (optional)
     PFIG: RefField['INGRRecord'] # The ingredient the plant produces (optional)
     PFPC: BYTVField # Spring, Summer, Fall, Winter Ingredient Production (byte)
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -2433,7 +2460,8 @@ class FURNRecord(Record, IHaveMODL):
     FULL: STRVField # Furniture Name
     SCRI: RefField['SCPTRecord'] # Script (optional)
     MNAM: IN32Field # Active marker flags, required. A bit field with a bit value of 1 indicating that the matching marker position in the NIF file is active.
-
+    def __init__(self): super().__init__()
+    
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
@@ -2450,9 +2478,10 @@ class FURNRecord(Record, IHaveMODL):
 # GLOB.Global - 3450 - tag::GLOB[]
 # dep: None
 class GLOBRecord(Record):
-    FNAM: BYTEField # Type of global (s, l, f)
-    FLTV: FLTVField # Float data
-
+    FNAM: BYTEField = None # Type of global (s, l, f)
+    FLTV: FLTVField = None # Float data
+    def __init__(self): super().__init__()
+    
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.EDID | FieldType.NAME: z = self.EDID = r.readSTRV(dataSize)
@@ -2466,7 +2495,8 @@ class GLOBRecord(Record):
 # dep: None
 class GMSTRecord(Record):
     DATA: DATVField # Data
-
+    def __init__(self): super().__init__()
+    
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         if r.format == FormType.TES3:
             match type:
@@ -2505,7 +2535,6 @@ class GRASRecord(Record):
         colorRange: float
         wavePeriod: float
         flags: int
-
         def __init__(self, r: Header, dataSize: int):
             self.density = r.readByte()
             self.minSlope = r.readByte()
@@ -2523,7 +2552,8 @@ class GRASRecord(Record):
 
     MODL: MODLGroup 
     DATA: DATAField 
-
+    def __init__(self): super().__init__()
+    
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
@@ -2542,7 +2572,8 @@ class HAIRRecord(Record, IHaveMODL):
     MODL: MODLGroup
     ICON: FILEField
     DATA: BYTEField # Playable, Not Male, Not Female, Fixed
-
+    def __init__(self): super().__init__()
+    
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
@@ -2562,7 +2593,8 @@ class IDLERecord(Record, IHaveMODL):
     CTDAs: list['SCPTRecord.CTDAField'] = [] # Conditions
     ANAM: BYTEField
     DATAs: list[RefField['IDLERecord']]
-
+    def __init__(self): super().__init__()
+    
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
@@ -2620,7 +2652,6 @@ class INFORecord(Record):
         responseNumber: int
         responseText: str
         actorNotes: str
-
         def __init(self, r: Header, dataSize: int):
             self.emotionType = r.readUInt32()
             self.emotionValue = r.readInt32()
@@ -2634,20 +2665,22 @@ class INFORecord(Record):
         DATA: 'DATA4Field' # Info data
         QSTI: RefField['QUSTRecord'] # Quest
         TPIC: RefField[DIALRecord] # Topic
-        NAMEs: list[RefField[DIALRecord]] = listx() # Topics
-        TRDTs: list['TRDTField'] = listx() # Responses
-        CTDAs: list['SCPTRecord.CTDAField'] = listx() # Conditions
-        TCLTs: list[RefField[DIALRecord]] = listx() # Choices
-        TCLFs: list[RefField[DIALRecord]] = listx() # Link From Topics
+        NAMEs: list[RefField[DIALRecord]] = [] # Topics
+        TRDTs: list['TRDTField'] = [] # Responses
+        CTDAs: list['SCPTRecord.CTDAField'] = [] # Conditions
+        TCLTs: list[RefField[DIALRecord]] = [] # Choices
+        TCLFs: list[RefField[DIALRecord]] = [] # Link From Topics
         SCHR: 'SCPTRecord.SCHRField' # Script Data
         SCDA: BYTVField # Compiled Script
         SCTX: STRVField # Script Source
-        SCROs: list[RefField[Record]] = listx() # Global variable reference
+        SCROs: list[RefField[Record]] = [] # Global variable reference
+        def __init__(self): self.NAMEs = listx(); self.TRDTs = listx(); self.CTDAs = listx(); self.TCLTs = listx(); self.TCLFs = listx(); self.SCROs = listx()
 
     PNAM: RefField['INFORecord'] # Previous info ID
     TES3: TES3Group = TES3Group()
     TES4: TES4Group = TES4Group()
-
+    def __init__(self): super().__init__(); self.TES3 = TES3Group(); self.TES4 = TES3Group()
+    
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         if r.format == FormType.TES3:
             match type:
@@ -2718,8 +2751,9 @@ class INGRRecord(Record, IHaveMODL):
     ICON: FILEField # Inventory Icon
     SCRI: RefField['SCPTRecord'] # Script Name
     # TES4
-    EFITs: list[ENCHRecord.EFITField] = listx() # Effect Data
-    SCITs: list[ENCHRecord.SCITField] = listx() # Script effect data
+    EFITs: list[ENCHRecord.EFITField] = [] # Effect Data
+    SCITs: list[ENCHRecord.SCITField] = [] # Script effect data
+    def __init__(self): super().__init__(); self.EFITs = listx(); self.SCITs = listx()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -2756,6 +2790,7 @@ class KEYMRecord(Record, IHaveMODL):
     SCRI: RefField['SCPTRecord'] # Script (optional)
     DATA: DATAField # Type of soul contained in the gem
     ICON: FILEField # Icon (optional)
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -2782,7 +2817,6 @@ class LANDRecord(Record):
     class VHGTField:
         referenceHeight: float # A height offset for the entire cell. Decreasing this value will shift the entire cell land down.
         heightData: list[int] # HeightData
-
         def __init__(self, r: Header, dataSize: int):
             self.referenceHeight = r.readSingle()
             count = dataSize - 4 - 3
@@ -2796,7 +2830,6 @@ class LANDRecord(Record):
     class VTEXField:
         textureIndicesT3: list[int]
         textureIndicesT4: list[int]
-
         def __init__(self, r: Header, dataSize: int):
             if r.format == FormType.TES3:
                 self.textureIndicesT3 = r.readPArray(None, 'H', dataSize >> 1)
@@ -2848,8 +2881,8 @@ class LANDRecord(Record):
     # the y-direction of the data is from the bottom up.
     VNML: VNMLField
     VHGT: VHGTField # Height data
-    VCLR: VNMLField # Vertex color array, looks like another RBG image 65x65 pixels in size. (Optional)
-    VTEX: VTEXField # A 16x16 array of short texture indices. (Optional)
+    VCLR: VNMLField = None # Vertex color array, looks like another RBG image 65x65 pixels in size. (Optional)
+    VTEX: VTEXField = None # A 16x16 array of short texture indices. (Optional)
     # TES3
     INTV: CORDField # The cell coordinates of the cell
     WNAM: WNAMField # Unknown byte data.
@@ -2857,8 +2890,9 @@ class LANDRecord(Record):
     BTXTs: list[BTXTField] = [None]*4 # Base Layer
     ATXTs: list[ATXTGroup] # Alpha Layer
     _lastATXT: ATXTGroup
-
+    # Grid
     gridId: Int3 # => Int3(INTV.CellX, INTV.CellY, 0);
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -2884,9 +2918,10 @@ class LEVCRecord(Record):
     DATA: IN32Field # List data - 1 = Calc from all levels <= PC level
     NNAM: BYTEField # Chance None?
     INDX: IN32Field # Number of items in list
-    CNAMs: list[STRVField] = listx() # ID string of list item
-    INTVs: list[IN16Field] = listx() # PC level for previous CNAM
+    CNAMs: list[STRVField] = [] # ID string of list item
+    INTVs: list[IN16Field] = [] # PC level for previous CNAM
     # The CNAM/INTV can occur many times in pairs
+    def __init__(self): super().__init__(); self.CNAMs = listx(); self.INTVs = listx()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         if r.format == FormType.TES3:
@@ -2908,9 +2943,10 @@ class LEVIRecord(Record):
     DATA: IN32Field # List data - 1 = Calc from all levels <= PC level, 2 = Calc for each item
     NNAM: BYTEField # Chance None?
     INDX: IN32Field # Number of items in list
-    INAMs: list[STRVField] = listx() # ID string of list item
-    INTVs: list[IN16Field] = listx() # PC level for previous INAM
+    INAMs: list[STRVField] = [] # ID string of list item
+    INTVs: list[IN16Field] = [] # PC level for previous INAM
     # The CNAM/INTV can occur many times in pairs
+    def __init__(self): super().__init__(); self.INAMs = listx(); self.INTVs = listx()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         if r.format == FormType.TES3:
@@ -2941,7 +2977,6 @@ class LIGHRecord(Record, IHaveMODL):
             FlickerSlow = 0x0040
             Pulse = 0x0080
             PulseSlow = 0x0100
-
         weight: float
         value: int
         time: int
@@ -2951,7 +2986,6 @@ class LIGHRecord(Record, IHaveMODL):
         # TES4
         falloffExponent: float
         fov: float
-
         def __init__(self, r: Header, dataSize: int):
             if r.format == FormType.TES3:
                 self.weight = r.readSingle()
@@ -2973,13 +3007,14 @@ class LIGHRecord(Record, IHaveMODL):
             self.weight = r.readSingle()
 
     MODL: MODLGroup # Model
-    FULL: STRVField # Item Name (optional)
+    FULL: STRVField = None # Item Name (optional)
     DATA: DATAField # Light Data
-    SCPT: STRVField # Script Name (optional)??
-    SCRI: RefField['SCPTRecord'] # Script FormId (optional)
-    ICON: FILEField # Male Icon (optional)
+    SCPT: STRVField = None # Script Name (optional)??
+    SCRI: RefField['SCPTRecord'] = None # Script FormId (optional)
+    ICON: FILEField = None # Male Icon (optional)
     FNAM: FLTVField # Fade Value
     SNAM: RefField['SOUNRecord'] # Sound FormId (optional)
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -3014,6 +3049,7 @@ class LOCKRecord(Record, IHaveMODL):
     LKDT: LKDTField # Lock Data
     ICON: FILEField # Inventory Icon
     SCRI: RefField['SCPTRecord'] # Script Name
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         if r.format == FormType.TES3:
@@ -3042,6 +3078,7 @@ class LSCRRecord(Record):
     ICON: FILEField # Icon
     DESC: STRVField # Description
     LNAMs: list[LNAMField] # LoadForm
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -3068,7 +3105,8 @@ class LTEXRecord(Record):
     # TES4
     HNAM: HNAMField # Havok data
     SNAM: BYTEField # Texture specular exponent
-    GNAMs: list[RefField[GRASRecord]] = listx() # Potential grass
+    GNAMs: list[RefField[GRASRecord]] = [] # Potential grass
+    def __init__(self): super().__init__(); self.GNAMs = listx()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -3090,7 +3128,8 @@ class LVLCRecord(Record):
     LVLF: BYTEField # Flags - 0x01 = Calculate from all levels <= player's level, 0x02 = Calculate for each item in count
     SCRI: RefField['SCPTRecord'] # Script (optional)
     TNAM: RefField[CREARecord] # Creature Template (optional)
-    LVLOs: list['LVLIRecord.LVLOField'] = listx()
+    LVLOs: list['LVLIRecord.LVLOField'] = []
+    def __init__(self): super().__init__(); self.LVLOs = listx()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -3111,7 +3150,6 @@ class LVLIRecord(Record):
         level: int
         itemFormId: Ref[Record]
         count: int
-
         def __init__(self, r: Header, dataSize: int):
             self.level = r.readInt16()
             r.skip(2) # Unused
@@ -3123,8 +3161,9 @@ class LVLIRecord(Record):
 
     LVLD: BYTEField # Chance
     LVLF: BYTEField # Flags - 0x01 = Calculate from all levels <= player's level, 0x02 = Calculate for each item in count
-    DATA: BYTEField # Data (optional)
-    LVLOs: list[LVLOField] = listx()
+    DATA: BYTEField = None # Data (optional)
+    LVLOs: list[LVLOField] = []
+    def __init__(self): super().__init__(); self.LVLOs = listx()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -3142,7 +3181,8 @@ class LVLIRecord(Record):
 class LVSPRecord(Record):
     LVLD: BYTEField # Chance
     LVLF: BYTEField # Flags
-    LVLOs: list[LVLIRecord.LVLOField] = listx() # Number of items in list
+    LVLOs: list[LVLIRecord.LVLOField] = [] # Number of items in list
+    def __init__(self): super().__init__(); self.LVLOs = listx()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -3220,7 +3260,6 @@ class MGEFRecord(Record):
         areaSound: Ref['SOUNRecord']
         constantEffectEnchantmentFactor: float
         constantEffectBarterFactor: float
-
         def __init__(self, r: Header, dataSize: int):
             self.flags = r.readUInt32()
             self.baseCost = r.readSingle()
@@ -3258,15 +3297,18 @@ class MGEFRecord(Record):
     BVFX: STRVField # Bolt visual
     HVFX: STRVField # Hit visual
     AVFX: STRVField # Area visual
-    CSND: STRVField # Cast sound (optional)
-    BSND: STRVField # Bolt sound (optional)
-    HSND: STRVField # Hit sound (optional)
-    ASND: STRVField # Area sound (optional)
+    CSND: STRVField = None # Cast sound (optional)
+    BSND: STRVField = None # Bolt sound (optional)
+    HSND: STRVField = None # Hit sound (optional)
+    ASND: STRVField = None # Area sound (optional)
     # TES4
     FULL: STRVField
     MODL: MODLGroup
     DATA: DATAField
     ESCEs: list[STRVField]
+    def __init__(self):
+        super().__init__()
+        self.DATA = self.ESCEs = self.MODL = None; self.FULL = self.AVFX = self.BVFX = self.HVFX = self.CVFX = self.DESC = STRVField()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         if r.format == FormType.TES3:
@@ -3307,7 +3349,6 @@ class MISCRecord(Record, IHaveMODL):
         weight: float
         value: int
         unknown: int
-
         def __init__(self, r: Header, dataSize: int):
             if r.format == FormType.TES3:
                 self.weight = r.readSingle()
@@ -3325,6 +3366,7 @@ class MISCRecord(Record, IHaveMODL):
     SCRI: RefField['SCPTRecord'] # Script FormID (optional)
     # TES3
     ENAM: RefField[ENCHRecord] # enchantment ID
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -3382,7 +3424,6 @@ class NPC_Record(Record, IHaveMODL):
         Unknown2: int
         Unknown3: int
         # gold: int
-
         def __init__(self, r: Header, dataSize: int):
             if dataSize == 52:
                 self.level = r.readInt16()
@@ -3432,19 +3473,20 @@ class NPC_Record(Record, IHaveMODL):
     KNAM: STRVField # Hair model
     NPDT: NPDTField # NPC Data
     FLAG: INTVField # NPC Flags
-    NPCOs: list[CNTOField] = listx() # NPC item
-    NPCSs: list[STRVField] = listx() # NPC spell
+    NPCOs: list[CNTOField] = [] # NPC item
+    NPCSs: list[STRVField] = [] # NPC spell
     AIDT: CREARecord.AIDTField # AI data
-    AI_W: CREARecord.AI_WField # AI
-    AI_T: CREARecord.AI_TField # AI Travel
-    AI_F: CREARecord.AI_FField # AI Follow
-    AI_E: CREARecord.AI_FField # AI Escort
-    CNDT: STRVField # Cell escort/follow to string (optional)
-    AI_A: CREARecord.AI_AField # AI Activate
+    AI_W: CREARecord.AI_WField = None # AI
+    AI_T: CREARecord.AI_TField = None # AI Travel
+    AI_F: CREARecord.AI_FField = None # AI Follow
+    AI_E: CREARecord.AI_FField = None # AI Escort
+    CNDT: STRVField = None # Cell escort/follow to string (optional)
+    AI_A: CREARecord.AI_AField = None # AI Activate
     DODT: DODTField # Cell Travel Destination
     DNAM: STRVField # Cell name for previous DODT, if interior
-    XSCL: FLTVField # Scale (optional) Only present if the scale is not 1.0
-    SCRI: RefField['SCPTRecord'] # Unknown
+    XSCL: FLTVField = None # Scale (optional) Only present if the scale is not 1.0
+    SCRI: RefField['SCPTRecord'] = None # Unknown
+    def __init__(self): super().__init__(); self.NPCOs = listx(); self.NPCSs = listx()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -3482,7 +3524,6 @@ class PACKRecord(Record):
     class PKDTField:
         flags: int
         type: int
-
         def __init__(self, r: Header, dataSize: int):
             self.flags = r.ReadUInt16()
             self.type = r.readByte()
@@ -3512,7 +3553,8 @@ class PACKRecord(Record):
     PLDT: PLDTField # Location
     PSDT: PSDTField # Schedule
     PTDT: PTDTField # Target
-    CTDAs: list['SCPTRecord.CTDAField'] = listx() # Conditions
+    CTDAs: list['SCPTRecord.CTDAField'] = [] # Conditions
+    def __init__(self): super().__init__(); self.CTDAs = listx()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -3534,7 +3576,6 @@ class PGRDRecord(Record):
         y: int
         granularity: int
         pointCount: int
-
         def __init__(self, r: Header, dataSize: int):
             if r.format != FormType.TES3:
                 self.x = self.y = self.granularity = 0
@@ -3548,7 +3589,6 @@ class PGRDRecord(Record):
     class PGRPField:
         point: Vector3
         connections: int
-
         def __init__(self, r: Header, dataSize: int):
             self.point = r.readVector3()
             self.Connections = r.readByte()
@@ -3576,6 +3616,7 @@ class PGRDRecord(Record):
     PGRRs: list[PGRRField] # Point-to-Point Connections
     PGRLs: list[PGRLField] # Point-to-Reference Mappings
     PGRIs: list[PGRIField] # Inter-Cell Connections
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -3606,6 +3647,7 @@ class PROBRecord(Record, IHaveMODL):
     PBDT: PBDTField # Probe Data
     ICON: FILEField # Inventory Icon
     SCRI: RefField['SCPTRecord'] # Script Name
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         if r.format == FormType.TES3:
@@ -3636,7 +3678,8 @@ class QUSTRecord(Record):
     SCHR: 'SCPTRecord.SCHRField' # Script Data
     SCDA: BYTVField # Compiled Script
     SCTX: STRVField # Script Source
-    SCROs: list[RefField[Record]] = listx() # Global variable reference
+    SCROs: list[RefField[Record]] = [] # Global variable reference
+    def __init__(self): super().__init__(); self.SCROs = listx()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -3700,7 +3743,6 @@ class RACERecord(Record):
         class SkillBoost:
             skillId: int
             bonus: int
-
             def __init__(self, r: Header, dataSize: int):
                 if r.format == FormType.TES3:
                     self.skillId = r.readInt32() & 0xFF
@@ -3726,7 +3768,6 @@ class RACERecord(Record):
         male: RaceStats = RaceStats()
         female: RaceStats = RaceStats()
         flags: int # 1 = Playable 2 = Beast Race
-
         def __init__(self, r: Header, dataSize: int):
             if r.format == FormType.TES3:
                 self.skillBoosts = r.readFArray(lambda z: self.SkillBoost(r, 8), 7)
@@ -3747,7 +3788,6 @@ class RACERecord(Record):
             self.male.height = r.readSingle(); self.female.height = r.readSingle()
             self.male.weight = r.readSingle(); self.female.weight = r.readSingle()
             self.flags = r.readUInt32()
-
         def ATTRField(self, r: Header, dataSize: int):
             self.male.Strength = r.readByte()
             self.male.Intelligence = r.readByte()
@@ -3784,11 +3824,12 @@ class RACERecord(Record):
     class BodyGroup:
         MODL: FILEField
         MODB: FLTVField
-        BodyParts: list['BodyPartGroup'] = listx()
+        BodyParts: list['BodyPartGroup'] = []
+        def __init__(self): self.BodyParts = listx()
 
     FULL: STRVField # Race name
     DESC: STRVField # Race description
-    SPLOs: list[STRVField] = listx() # NPCs: Special power/ability name
+    SPLOs: list[STRVField] = [] # NPCs: Special power/ability name
     # TESX
     DATA: DATAField # RADT:DATA/ATTR: Race data/Base Attributes
     # TES4
@@ -3799,18 +3840,18 @@ class RACERecord(Record):
     UNAM: FLTVField # FaceGen - Face clamp
     XNAM: UNKNField # Unknown
     #
-    HNAMs: list[RefField[HAIRRecord]] = listx()
-    ENAMs: list[RefField[EYESRecord]] = listx()
+    HNAMs: list[RefField[HAIRRecord]] = []
+    ENAMs: list[RefField[EYESRecord]] = []
     FGGS: BYTVField # FaceGen Geometry-Symmetric
     FGGA: BYTVField # FaceGen Geometry-Asymmetric
     FGTS: BYTVField # FaceGen Texture-Symmetric
     SNAM: UNKNField # Unknown
-
     # Parts
-    FaceParts: list[FacePartGroup] = listx()
+    FaceParts: list[FacePartGroup] = []
     Bodys: list[BodyGroup] = [BodyGroup(), BodyGroup()]
     _nameState: int
     _genderState: int
+    def __init__(self): super().__init__(); self.SPLOs = listx(); self.HNAMs = listx(); self.ENAMs = listx(); self.FaceParts = listx()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         if r.format == FormType.TES3:
@@ -3891,6 +3932,7 @@ class REPARecord(Record, IHaveMODL):
     RIDT: RIDTField # Repair Data
     ICON: FILEField # Inventory Icon
     SCRI: RefField['SCPTRecord'] # Script Name
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         if r.format == FormType.TES3:
@@ -3937,7 +3979,6 @@ class REFRRecord(Record):
         def __repr__(self): return f'{self.reference}'
         reference: Ref[Record]
         flags: int
-
         def __init__(self, r: Header, dataSize: int):
             self.reference = Ref[Record](Record, r.readUInt32())
             self.flags = r.readByte()
@@ -3946,7 +3987,6 @@ class REFRRecord(Record):
     class XSEDField:
         def __repr__(self): return f'{self.seed}'
         Seed: int
-
         def __init__(self, r: Header, dataSize: int):
             self.seed = r.readByte()
             if dataSize == 4: r.skip(3) # Unused
@@ -3958,27 +3998,28 @@ class REFRRecord(Record):
         TNAM: BYTEField # Type
 
     NAME: RefField[Record] # Base
-    XTEL: XTELField # Teleport Destination (optional)
+    XTEL: XTELField = None # Teleport Destination (optional)
     DATA: DATAField # Position/Rotation
-    XLOC: XLOCField # Lock information (optional)
+    XLOC: XLOCField = None # Lock information (optional)
     XOWNs: list['CELLRecord.XOWNGroup'] # Ownership (optional)
-    XESP: XESPField # Enable Parent (optional)
-    XTRG: RefField[Record] # Target (optional)
-    XSED: XSEDField # SpeedTree (optional)
-    XLOD: BYTVField # Distant LOD Data (optional)
-    XCHG: FLTVField # Charge (optional)
-    XHLT: FLTVField # Health (optional)
-    XPCI: RefField['CELLRecord'] # Unused (optional)
-    XLCM: IN32Field # Level Modifier (optional)
-    XRTM: RefField['REFRRecord'] # Unknown (optional)
-    XACT: UI32Field # Action Flag (optional)
-    XCNT: IN32Field # Count (optional)
+    XESP: XESPField = None # Enable Parent (optional)
+    XTRG: RefField[Record] = None # Target (optional)
+    XSED: XSEDField = None # SpeedTree (optional)
+    XLOD: BYTVField = None # Distant LOD Data (optional)
+    XCHG: FLTVField = None # Charge (optional)
+    XHLT: FLTVField = None # Health (optional)
+    XPCI: RefField['CELLRecord'] = None # Unused (optional)
+    XLCM: IN32Field = None # Level Modifier (optional)
+    XRTM: RefField['REFRRecord'] = None # Unknown (optional)
+    XACT: UI32Field = None # Action Flag (optional)
+    XCNT: IN32Field = None # Count (optional)
     XMRKs: list[XMRKGroup] # Ownership (optional)
-    #ONAM: bool # Open by Default
-    XRGD: BYTVField # Ragdoll Data (optional)
-    XSCL: FLTVField # Scale (optional)
-    XSOL: BYTEField # Contained Soul (optional)
+    #ONAM: bool = None # Open by Default
+    XRGD: BYTVField = None # Ragdoll Data (optional)
+    XSCL: FLTVField = None # Scale (optional)
+    XSOL: BYTEField = None # Contained Soul (optional)
     _nextFull: int
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -4056,7 +4097,6 @@ class REGNRecord(Record):
         sizeVariance: float
         angleVariance: Int3
         vertexShading: ByteColor4 # RGB + Shading radius (0 - 200) %
-
         def __init__(self, r: Header, dataSize: int):
             self.object = Ref[Record](Record, r.readUInt32())
             self.parentIdx = r.ReadUInt16()
@@ -4080,7 +4120,6 @@ class REGNRecord(Record):
     class RDGSField:
         def __repr__(self): return f'{self.grass}'
         grass: Ref[GRASRecord] 
-
         def __init__(self, r: Header, dataSize: int):
             self.grass = Ref[GRASRecord](GRASRecord, r.readUInt32())
             r.skip(4) # Unused
@@ -4090,7 +4129,6 @@ class REGNRecord(Record):
         sound: Ref['SOUNRecord']
         flags: int
         chance: int
-
         def __init__(self, r: Header, dataSize: int):
             if r.format == FormType.TES3:
                 self.sound = Ref[SOUNRecord](SOUNRecord, r.readFAString(32))
@@ -4120,7 +4158,6 @@ class REGNRecord(Record):
         thunder: int
         ash: int
         blight: int
-
         def __init__(self, r: Header, dataSize: int):
             self.clear = r.readByte()
             self.cloudy = r.readByte()
@@ -4143,11 +4180,12 @@ class REGNRecord(Record):
     ICON: STRVField # Icon / Sleep creature
     WNAM: RefField['WRLDRecord'] # Worldspace - Region name
     RCLR: CREFField # Map Color (COLORREF)
-    RDATs: list[RDATField] = listx() # Region Data Entries / TES3: Sound Record (order determines the sound priority)
+    RDATs: list[RDATField] = [] # Region Data Entries / TES3: Sound Record (order determines the sound priority)
     # TES3
-    WEAT: WEATField # Weather Data
+    WEAT: WEATField = None # Weather Data
     # TES4
-    RPLIs: list[RPLIField] = listx() # Region Areas
+    RPLIs: list[RPLIField] = [] # Region Areas
+    def __init__(self): super().__init__(); self.RDATs = listx(); self.RPLIs = listx()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -4175,6 +4213,7 @@ class REGNRecord(Record):
 class ROADRecord(Record):
     PGRPs: list[PGRDRecord.PGRPField]
     PGRR: UNKNField
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -4194,6 +4233,7 @@ class SBSPRecord(Record):
             self.z: float = r.readSingle() # Z dimension
 
     DNAM: DNAMField
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -4223,7 +4263,6 @@ class SCPTRecord(Record):
         comparisonValue: float
         parameter1: int # Parameter #1
         parameter2: int # Parameter #2
-
         def __init__(self, r: Header, dataSize: int):
             if r.format == FormType.TES3:
                 self.index = r.readByte()
@@ -4263,7 +4302,6 @@ class SCPTRecord(Record):
         compiledSize: int
         variableCount: int
         type: int # 0x000 = Object, 0x001 = Quest, 0x100 = Magic Effect
-
         def __init__(self, r: Header, dataSize: int):
             r.skip(4) # Unused
             self.refCount = r.readUInt32()
@@ -4278,7 +4316,6 @@ class SCPTRecord(Record):
         idx: int
         type: int
         variableName: str
-
         def __init__(self, r: Header, dataSize: int):
             self.idx = r.readUInt32()
             r.readUInt32() # Unknown
@@ -4297,9 +4334,10 @@ class SCPTRecord(Record):
     SCHD: SCHDField # Script Data
     # TES4
     SCHR: SCHRField # Script Data
-    SLSDs: list[SLSDField] = listx() # Variable data
-    SCRVs: list[SLSDField] = listx() # Ref variable data (one for each ref declared)
-    SCROs: list[RefField[Record]] = listx() # Global variable reference
+    SLSDs: list[SLSDField] = [] # Variable data
+    SCRVs: list[SLSDField] = [] # Ref variable data (one for each ref declared)
+    SCROs: list[RefField[Record]] = [] # Global variable reference
+    def __init__(self): super().__init__(); self.SLSDs = listx(); self.SCRVs = listx(); self.SCROs = listx()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -4330,9 +4368,10 @@ class SGSTRecord(Record, IHaveMODL):
     FULL: STRVField # Item Name
     DATA: DATAField # Sigil Stone Data
     ICON: FILEField # Icon
-    SCRI: RefField[SCPTRecord] # Script (optional)
-    EFITs: list[ENCHRecord.EFITField] = listx() # Effect Data
-    SCITs: list[ENCHRecord.SCITField] = listx() # Script Effect Data
+    SCRI: RefField[SCPTRecord] = None # Script (optional)
+    EFITs: list[ENCHRecord.EFITField] = [] # Effect Data
+    SCITs: list[ENCHRecord.SCITField] = [] # Script Effect Data
+    def __init__(self): super().__init__(); self.EFITs = listx(); self.SCITs = listx()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -4356,16 +4395,11 @@ class SGSTRecord(Record, IHaveMODL):
 class SKILRecord(Record):
     # TESX
     class DATAField:
-        action: int
-        attribute: int
-        specialization: int # 0 = Combat, 1 = Magic, 2 = Stealth
-        useValue: list[float] # The use types for each skill are hard-coded.
-
         def __init__(self, r: Header, dataSize: int):
-            self.action = 0 if r.format == FormType.TES3 else r.readInt32()
-            self.attribute = r.readInt32()
-            self.specialization = r.readUInt32()
-            self.useValue = r.readPArray(None, 'f', 4 if r.format == FormType.TES3 else 2)
+            self.action: int = 0 if r.format == FormType.TES3 else r.readInt32()
+            self.attribute: int = r.readInt32()
+            self.specialization: int = r.readUInt32() # 0 = Combat, 1 = Magic, 2 = Stealth
+            self.useValue: list[float] = r.readPArray(None, 'f', 4 if r.format == FormType.TES3 else 2) # The use types for each skill are hard-coded
 
     def __repr__(self): return f'SKIL: {self.INDX.value}:{self.EDID.value}'
     INDX: IN32Field # Skill ID
@@ -4377,6 +4411,7 @@ class SKILRecord(Record):
     JNAM: STRVField # Journeyman Text
     ENAM: STRVField # Expert Text
     MNAM: STRVField # Master Text
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -4408,6 +4443,7 @@ class SLGMRecord(Record, IHaveMODL):
     ICON: FILEField # Icon (optional)
     SOUL: BYTEField # Type of soul contained in the gem
     SLCP: BYTEField # Soul gem maximum capacity
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -4431,7 +4467,8 @@ class SNDGRecord(Record):
     class SNDGType(Enum): LeftFoot = 0; RightFoot = 1; SwimLeft = 2; SwimRight = 3; Moan = 4; Roar = 5; Scream = 6; Land = 7
     DATA: IN32Field # Sound Type Data
     SNAM: STRVField # Sound ID
-    CNAM: STRVField # Creature name (optional)
+    CNAM: STRVField = None # Creature name (optional)
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         if r.format == FormType.TES3:
@@ -4449,6 +4486,7 @@ class SNDGRecord(Record):
 # dep: None
 class SNDRRecord(Record):
     CNAM: CREFField # RGB color
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -4482,7 +4520,6 @@ class SOUNRecord(Record):
         staticAttenuation: int # Static Attenuation (db)
         stopTime: int # Stop time
         startTime: int # Start time
-
         def __init__(self, r: Header, dataSize: int):
             self.volume = r.readByte() if r.format == FormType.TES3 else 0
             self.minRange = r.readByte()
@@ -4499,6 +4536,7 @@ class SOUNRecord(Record):
 
     FNAM: FILEField # Sound Filename (relative to Sounds\)
     DATA: DATAField # Sound Data
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -4528,9 +4566,10 @@ class SPELRecord(Record):
 
     FULL: STRVField # Spell name
     SPIT: SPITField # Spell data
-    EFITs: list[ENCHRecord.EFITField] = listx() # Effect Data
+    EFITs: list[ENCHRecord.EFITField] = [] # Effect Data
     # TES4
-    SCITs: list[ENCHRecord.SCITField] = listx() # Script effect data
+    SCITs: list[ENCHRecord.SCITField] = [] # Script effect data
+    def __init__(self): super().__init__(); self.EFITs = listx(); self.SCITs = listx()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -4550,6 +4589,7 @@ class SPELRecord(Record):
 # dep: None
 class SSCRRecord(Record):
     DATA: STRVField # Digits
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         if r.format == FormType.TES3:
@@ -4565,6 +4605,7 @@ class SSCRRecord(Record):
 # dep: None
 class STATRecord(Record, IHaveMODL):
     MODL: MODLGroup # Model
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -4590,6 +4631,7 @@ class TES3Record(Record):
     HEDR: HEDRField
     MASTs: list[STRVField]
     DATAs: list[INTVField]
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -4611,15 +4653,16 @@ class TES4Record(Record):
             self.nextObjectId) = tuple #Next available object ID.
 
     HEDR: HEDRField
-    CNAM: STRVField # author (Optional)
-    SNAM: STRVField # description (Optional)
+    CNAM: STRVField = None # author (Optional)
+    SNAM: STRVField = None # description (Optional)
     MASTs: list[STRVField] # master
     DATAs: list[INTVField] # fileSize
-    ONAM: UNKNField # overrides (Optional)
+    ONAM: UNKNField = None # overrides (Optional)
     INTV: IN32Field # unknown
-    INCC: IN32Field # unknown (Optional)
+    INCC: IN32Field = None # unknown (Optional)
     # TES5
-    TNAM: UNKNField # overrides (Optional)
+    TNAM: UNKNField = None # overrides (Optional)
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -4667,6 +4710,7 @@ class TREERecord(Record, IHaveMODL):
     SNAM: SNAMField # SpeedTree Seeds, array of ints
     CNAM: CNAMField # Tree Parameters
     BNAM: BNAMField # Billboard Dimensions
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -4712,7 +4756,6 @@ class WATRRecord(Record):
         displacementSimulator_Dampner: float
         displacementSimulator_StartingSize: float
         damage: int
-
         def __init__(self, r: Header, dataSize: int):
             if dataSize != 102 and dataSize != 86 and dataSize != 62 and dataSize != 42 and dataSize != 2: self.windVelocity = 1
             if dataSize == 2: self.damage = r.readUInt16(); return
@@ -4763,6 +4806,7 @@ class WATRRecord(Record):
     SNAM: RefField[SOUNRecord] # Sound
     DATA: DATAField # DATA
     GNAM: GNAMField # GNAM
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -4797,7 +4841,6 @@ class WEAPRecord(Record, IHaveMODL):
         thrustMin: int
         thrustMax: int
         flags: int # 0 = ?, 1 = Ignore Normal Weapon Resistance?
-
         def __init__(self, r: Header, dataSize: int):
             if r.format == FormType.TES3: 
                 self.weight = r.readSingle()
@@ -4832,7 +4875,8 @@ class WEAPRecord(Record, IHaveMODL):
     ENAM: RefField[ENCHRecord] # Enchantment ID
     SCRI: RefField[SCPTRecord] # Script (optional)
     # TES4
-    ANAM: IN16Field # Enchantment points (optional)
+    ANAM: IN16Field = None # Enchantment points (optional)
+    def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -4886,16 +4930,17 @@ class WRLDRecord(Record):
             assert((dataSize - 8) >> 3 == len(self.gridReferences))
 
     FULL: STRVField
-    WNAM: RefField['WRLDRecord'] # Parent Worldspace
-    CNAM: RefField[CLMTRecord] # Climate
-    NAM2: RefField[WATRRecord] # Water
-    ICON: FILEField # Icon
-    MNAM: MNAMField # Map Data
-    DATA: BYTEField # Flags
+    WNAM: RefField['WRLDRecord'] = None # Parent Worldspace
+    CNAM: RefField[CLMTRecord] = None # Climate
+    NAM2: RefField[WATRRecord] = None # Water
+    ICON: FILEField = None # Icon
+    MNAM: MNAMField = None # Map Data
+    DATA: BYTEField = None # Flags
     NAM0: NAM0Field # Object Bounds
-    SNAM: UI32Field # Music
+    SNAM: UI32Field = None # Music
     # TES5
-    RNAMs: list[RNAMField] = listx() # Large References
+    RNAMs: list[RNAMField] = [] # Large References
+    def __init__(self): super().__init__(); self.RNAMs = listx()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
@@ -4972,7 +5017,8 @@ class WTHRRecord(Record, IHaveMODL):
     FNAM: FNAMField # Fog Distance
     HNAM: HNAMField # HDR Data
     DATA: DATAField # Weather Data
-    SNAMs: list[SNAMField] = listx() # Sounds
+    SNAMs: list[SNAMField] = [] # Sounds
+    def __init__(self): super().__init__(); self.SNAMs = listx()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:

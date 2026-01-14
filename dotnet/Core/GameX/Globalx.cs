@@ -65,6 +65,7 @@ public struct Color4 { //:M
         A = r.ReadSingle();
     }
     public Color4(double r, double g, double b, double a) { R = (float)r; G = (float)g; B = (float)b; A = (float)a; }
+    public readonly Color AsColor => Color.FromArgb((int)(A * 255f), (int)(R * 255f), (int)(G * 255f), (int)(B * 255f));
 }
 
 /// <summary>
@@ -86,5 +87,5 @@ public struct ByteColor4 { //:X
         B = r.ReadByte();
         A = r.ReadByte();
     }
-    public readonly Color32 AsColor32 => new(R, G, B, A);
+    public readonly Color AsColor => Color.FromArgb(A, R, G, B);
 }

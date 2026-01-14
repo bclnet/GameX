@@ -271,7 +271,7 @@ class FamilyApp:
     def __repr__(self): return f'\n  {self.id}: {self.name}'
     def openAsync(self, explorerType: Type, manager: MetaManager):
         #TODO:
-        raise Exception('Not Implemented')
+        raise NotImplementedError('FamilyApp')
 # end::FamilyApp[]
 
 #endregion

@@ -14,6 +14,6 @@ class Binary_Unity(ArcBinaryT):
 
     # read
     def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
-        raise NotImplementedError()
+        raise NotImplementedError('Binary_Unity')
 
 #endregion

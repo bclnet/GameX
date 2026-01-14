@@ -418,7 +418,7 @@ class store_winreg:
         if not os.fileExists(path): return None
         with open(path, 'r') as f: content = f.read()
         match ext:
-            case 'xml': raise NotImplementedError() #return XDocument.Parse(content).XPathSelectElement(select)?.Value,
+            case 'xml': raise NotImplementedError('store_winreg.getSingleFileValue.xml') #return XDocument.Parse(content).XPathSelectElement(select)?.Value,
             case _: raise Exception(f'Unknown {ext}')
         return os.path.basename(value) if value else None
 

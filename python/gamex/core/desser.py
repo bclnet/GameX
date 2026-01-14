@@ -23,6 +23,7 @@ class FloatEncoder(float):
 
 class CustomEncoder(json.JSONEncoder):
     def default(self, s):
+        if hasattr(s, '_repr'): return repr(s)
         match s:
             # case float(): return f'{s:.9g}' #float
             case Enum(): return s.value #enum
@@ -49,8 +50,8 @@ class CustomEncoder(json.JSONEncoder):
                         f'{s[2][0]:.9g} {s[2][1]:.9g} {s[2][2]:.9g} {s[2][3]:.9g}',
                         f'{s[3][0]:.9g} {s[3][1]:.9g} {s[3][2]:.9g} {s[3][3]:.9g}']  #matrix4x4
                     case _: raise Exception('Unknown mapping')
-            case Color3(): return f'{s.r:.9g} {s.g:.9g} {s.b:.9g}' #color3
-            case Color4(): return f'{s.r:.9g} {s.g:.9g} {s.b:.9g} {s.a:.9g}' #color4
+            # case Color3(): return f'{s.r:.9g} {s.g:.9g} {s.b:.9g}' #color3
+            # case Color4(): return f'{s.r:.9g} {s.g:.9g} {s.b:.9g} {s.a:.9g}' #color4
         n = type(s).__name__; c = {jsonKey(k):jsonValue(getattr(s, k)) for k in dir(s) if not k.startswith('_')}; d = {k:v for k,v in c.items() if not callable(v)}
         match n:
             case 'mappingproxy': return None

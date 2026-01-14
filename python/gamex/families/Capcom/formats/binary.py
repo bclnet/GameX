@@ -75,7 +75,7 @@ class Binary_Big(ArcBinaryT):
 
     # read
     def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
-        raise NotImplementedError()
+        raise NotImplementedError('Binary_Big')
 
 #endregion
 
@@ -86,7 +86,7 @@ class Binary_Bundle(ArcBinaryT):
 
     # read
     def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
-        raise NotImplementedError()
+        raise NotImplementedError('Binary_Bundle')
 
 #endregion
 
@@ -209,6 +209,6 @@ class Binary_Plist(ArcBinaryT):
 
     # read
     def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
-        raise NotImplementedError()
+        raise NotImplementedError('Binary_Plist')
 
 #endregion

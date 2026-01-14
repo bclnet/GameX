@@ -716,7 +716,7 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
         if not self.name: raise Exception(f'The file "{self.name}" is not a model main header file')
         path = f.path; pathExt = _pathExtension(path); pathName = path[:-len(pathExt)]
         self.isDol = pathExt == '.dol'
-        if self.isDol: raise Exception('Not Implemented')
+        if self.isDol: raise NotImplementedError('Binary_Mdl10')
         # Xash models store the offset to the second header in this variable.
         self.isXashModel = header.sounds.num != 0 # If it's not zero this is a Xash model.
         self.hasTextureFile = header.textures.offset == 0

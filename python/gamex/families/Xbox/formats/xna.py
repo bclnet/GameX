@@ -94,13 +94,13 @@ class DictionaryReader[TKey, TValue](TypeReader[dict[TKey, TValue]]):
 # class MultiArrayReader[T](TypeReader[T]):
 #     def __init__(self, t: type): super().__init__(t)
 #     def init(self, manager: TypeManager) -> None: pass
-#     def read(self, r: ContentReader, o: T) -> T: raise Exception('Not Implemented')
+#     def read(self, r: ContentReader, o: T) -> T: raise NotImplementedError('MultiArrayReader')
 class TimeSpanReader(TypeReader[object]):
     def __init__(self, t: type): super().__init__(TimeSpan, valueType=True)
-    def read(self, r: ContentReader, o: object) -> object: raise Exception('Not Implemented')
+    def read(self, r: ContentReader, o: object) -> object: raise NotImplementedError('TimeSpanReader')
 class DateTimeReader(TypeReader[object]):
     def __init__(self, t: type): super().__init__(DateTime, valueType=True)
-    def read(self, r: ContentReader, o: object) -> object: raise Exception('Not Implemented')
+    def read(self, r: ContentReader, o: object) -> object: raise NotImplementedError('DateTimeReader')
 class DecimalReader(TypeReader[Decimal]):
     def __init__(self, t: type): super().__init__(Decimal, valueType=True)
     def read(self, r: ContentReader, o: Decimal) -> Decimal: return r.readDecimal()
@@ -382,11 +382,11 @@ class ContentReader(BinaryReader):
                 if not isinstance(args[0], TypeReader): obj = args[0]; return self.innerReadObject(None)
                 else: reader = args[0]; s = reader.read(self, None); self.recordDisposable(s); return s
             case 2:
-                reader = args[0]; obj = args[1]
+                reader, obj = args
                 # if reader.valueType != reader.type.isValueType: raise Exception('valueType mismatch')
                 if not reader.valueType: return self.readObject(obj)
                 s = reader.read(self, obj); self.recordDisposable(s); return s
-            case _: raise Exception('tomany params')
+            case _: raise NotImplementedError('readObject')
 
     def innerReadObject[T](self, obj: T) -> T:
         idx = self.readIntV7()
@@ -404,8 +404,8 @@ class ContentReader(BinaryReader):
                         if reader.type == type: return self.readRawObject(reader, obj)
                     raise Exception('Not Supported')
                 else: reader = args[0]; return self.readRawObject(reader, None)
-            case 2: reader = args[0]; obj = args[1]; return reader.read(self, obj)
-            case _: raise Exception('to many params')
+            case 2: reader, obj = args; return reader.read(self, obj)
+            case _: raise NotImplementedError('readRawObject')
 
     def readSharedResources(self) -> None:
         if self.sharedResourceCount <= 0: return

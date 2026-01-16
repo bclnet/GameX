@@ -153,9 +153,9 @@ class TypeManager:
         TypeReader['SoundEffect']('SoundEffectReader', 'Audio.SoundEffect', lambda r, o: SoundEffect(r)),
         TypeReader['Song']('SongReader', 'Media.Song', lambda r, o: Song(r)),
         TypeReader['Video']('VideoReader', 'Media.Video', lambda r, o: Video(r))]
-    readersByName: dict[str, TypeReader] = { x.name:x for x in readers }
+    readersByName: dict[str, TypeReader] = { s.name:s for s in readers }
     readersByType: dict[str, TypeReader] = {}
-    for k, g in groupby(sorted(readers, key=lambda x: x.type), key=lambda x: x.type): v = next(g); readersByType[v.type] = v
+    for k, g in groupby(sorted(readers, key=lambda s: s.type), key=lambda s: s.type): v = next(g); readersByType[v.type] = v
     @staticmethod
     def add(reader: TypeReader) -> TypeReader:
         TypeManager.readers.append(reader)

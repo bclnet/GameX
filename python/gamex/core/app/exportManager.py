@@ -84,7 +84,6 @@ class ExportManager:
             elif FileOption.StreamObject in oo:
                 obj = source.getAsset(object, file)
                 if isinstance(obj, IWriteToStream):
-                    print(newPath)
                     with open(newPath, 'w', encoding='utf-8') if newPath else io.BytesIO() as s2:
                         obj.writeToStream(s2)
                     return

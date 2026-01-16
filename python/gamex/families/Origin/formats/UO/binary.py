@@ -1057,8 +1057,8 @@ class Binary_Verdata(IHaveMetaInfo):
 
     def __init__(self, r: BinaryReader, s: BinaryArchive):
         self.archive = s
-        patches = r.readL32SArray(self.Patch); print(patches); patches.sort()
-        self.patches = { k: list(g) for k, g in groupby(patches) }
+        patches = r.readL32SArray(self.Patch)
+        self.patches = { k: list(g) for k, g in groupby(sorted(patches)) }
         Binary_Verdata.instance = self
 
     def readData(self, offset: int, fileSize: int): return Archive.ReaderT(lambda r: BytesIO(r.seek(offset).readBytes(fileSize)))

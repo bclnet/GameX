@@ -385,7 +385,7 @@ class Binary_Esm(ArcBinaryT, IDatabase):
             group.addHeader(GroupHeader(header = r, label = 0, dataSize = r.length - r.tell(), position = r.tell()))
             group.load()
             groups = self.groups = {}
-            for k, g in groupby(group.records, lambda s: s._header.type):
+            for k, g in groupby(sorted(group.records, key=lambda s: int(s._header.type)), lambda s: s._header.type):
                 t = RecordGroup(level); t.records = list(g)
                 t.addHeader(GroupHeader(header = r, label = k), load = False)
                 groups[k] = t

@@ -15,7 +15,7 @@ type Vector3 = ndarray
 
 #region Enums
 
-class FormType(Enum):
+class FormType(IntEnum):
     APPA = 0x41505041
     ARMA = 0x414D5241
     AACT = 0x54434141
@@ -481,7 +481,7 @@ class Header(BinaryReader):
     position: int
 
     def __init__(self, b: BinaryReader, binPath: str, format: FormType, parent: 'Header' = None):
-        super().__init__(b.f); r = self
+        super().__init__(b.f, b.length); r = self
         self.binPath = binPath
         self.format = format
         self.parent = parent
@@ -708,9 +708,11 @@ class Record:
     _empty: 'Record'
     _header: Header = None
     EDID: STRVField # Editor ID
+    def __init__(self, fill: bool = False): self.EDID = STRVField(); self._fill = fill
 
-    def __init__(self):
-        self.EDID = STRVField()
+    def tes3(self): pass
+    def tes4(self): pass
+    def tes5(self): pass
 
     # Return an uninitialized subrecord to deserialize, or null to skip.
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object: return Record._empty
@@ -729,8 +731,6 @@ class Record:
             r.ensureAtEnd(tell + field.dataSize, f'Failed reading {self._header.type}:{field.type} field data at offset {tell} in {r.binPath} of {r.tell() - tell - field.dataSize}')
         r.ensureAtEnd(end, f'Failed reading {self._header.type} record data at offset {start} in {r.binPath}')
 
-    # _factorySet = { FormType.TES3, FormType.MGEF, FormType.REGN, FormType.LIGH, FormType.CELL, FormType.DIAL }
-    # _factorySet = { FormType.TES3, FormType.ACTI }
     @staticmethod
     def factory(r: Header, type: FieldType, level: int = 1000) -> 'Record':
         if not (z := Record._mapx.get(type)): print(f'Unsupported ESM record type: {type}'); return None
@@ -767,8 +767,9 @@ class Ref2Field[T: Record]:
     def __init__(self, t: type, r: Header, dataSize: int): self.value1 = Ref[T](t, r.readUInt32()); self.value2 = Ref[T](t, r.readUInt32())
 
 #endregion
-# Record._factorySet = { FormType.TES3, FormType.ACTI, FormType.ALCH, FormType.APPA, FormType.ARMO, FormType.BODY }
-Record._factorySet = { FormType.TES3, FormType.ACTI, FormType.BODY }
+Record._factorySet = { FormType.TES3, FormType.ACTI, FormType.ALCH, FormType.APPA, FormType.ARMO, FormType.BODY }
+# Record._factorySet = { FormType.TES3, FormType.ACTI, FormType.ALCH } #}, FormType.APPA }
+# Record._factorySet = { FormType.TES3, FormType.MGEF, FormType.REGN, FormType.LIGH, FormType.CELL, FormType.DIAL }
 
 #region Record Group
 
@@ -814,7 +815,7 @@ class RecordGroup:
             self.readRecord(r, record, r2.compressed)
             self.records.append(record)
             if r2.type == FormType.CELL: RecordGroup.cellsLoaded += 1
-            self.groupsByLabel = { s.key:list(g) for s, g in groupby(self.groups, lambda s: s.label) } if self.groups else None
+            self.groupsByLabel = { s.key:list(g) for s, g in groupby(sorted(self.groups, key=lambda s: s.label), lambda s: s.label) } if self.groups else None
 
     def readGRUP(self, r: Header, h: GroupHeader) -> 'RecordGroup':
         nextPosition = r.tell() + h.dataSize
@@ -835,7 +836,7 @@ class RecordGroup:
     #     return b
 
     def readRecord(self, r: Header, record: Record, compressed: bool) -> None:
-        # log.info(f'Recd: {record._header.type}')
+        # log.info(f'Recd: {record._header.type}:{compressed}')
         if not compressed: record.read(r); return
         newDataSize = r.readUInt32()
         newData = decompressZlib2(r, record._header.dataSize - 4, newDataSize)

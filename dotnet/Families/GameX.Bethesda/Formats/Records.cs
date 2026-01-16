@@ -726,8 +726,9 @@ public struct Ref2Field<TRecord>(Header r, int dataSize) where TRecord : Record 
 
 #endregion
 
-partial class Record { static readonly HashSet<FormType> FactorySet = [FormType.TES3, FormType.ACTI, FormType.ALCH, FormType.APPA, FormType.ARMO, FormType.BODY]; }
+//partial class Record { static readonly HashSet<FormType> FactorySet = [FormType.TES3, FormType.ACTI, FormType.ALCH, FormType.APPA, FormType.ARMO, FormType.BODY]; }
 //partial class Record { static readonly HashSet<FormType> FactorySet = [TES3, ARMO]; }
+partial class Record { static readonly HashSet<FormType> FactorySet = [TES3, ACTI, ALCH]; }
 
 #region Record Group
 

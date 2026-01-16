@@ -891,8 +891,8 @@ Header.readUNKN = readUNKN
 
 #region Records
 
-# AACT.Action - 0050 - tag::AACT[]
 # dep: None
+# AACT.Action - 0050 - tag::AACT[]
 class AACTRecord(Record):
     CNAM: CREFField # RGB Color
     def __init__(self): super().__init__()
@@ -905,8 +905,8 @@ class AACTRecord(Record):
         return z
 # end::AACT[]
 
-# ACRE.Placed creature - 0400 - tag::ACRE[]
 # dep: CELLRecord, REFRRecord
+# ACRE.Placed creature - 0400 - tag::ACRE[]
 class ACRERecord(Record):
     NAME: RefField[Record] # Base
     DATA: 'REFRRecord.DATAField' # Position/Rotation
@@ -931,8 +931,8 @@ class ACRERecord(Record):
         return z
 # end::ACRE[]
 
-# ACHR.Actor Reference - 0450 - tag::ACHR[]
 # dep: ACRERecord, CELLRecord, REFRRecord, 
+# ACHR.Actor Reference - 0450 - tag::ACHR[]
 class ACHRRecord(Record):
     NAME: RefField[Record] # Base
     DATA: 'REFRRecord.DATAField' # Position/Rotation
@@ -962,8 +962,8 @@ class ACHRRecord(Record):
         return z
 # end::ACHR[]
 
-# ACTI.Activator - 3450 - tag::ACTI[]
 # dep: SCPTRecord, SOUNRecord
+# ACTI.Activator - 3450 - tag::ACTI[]
 class ACTIRecord(Record, IHaveMODL):
     MODL: MODLGroup # Model Name
     FULL: STRVField # Item Name
@@ -986,8 +986,8 @@ class ACTIRecord(Record, IHaveMODL):
         return z
 # end::ACTI[]
 
-# ADDN-Addon Node - 0050 - tag::ADDN[]
 # dep: None
+# ADDN-Addon Node - 0050 - tag::ADDN[]
 class ADDNRecord(Record):
     CNAM: CREFField # RGB Color
     def __init__(self): super().__init__()
@@ -1000,8 +1000,8 @@ class ADDNRecord(Record):
         return z
 # end::ADDN[]
 
-# ALCH.Potion - 3450 - tag::ALCH[]
 # dep: ENCHRecord, SCPTRecord 
+# ALCH.Potion - 3450 - tag::ALCH[]
 class ALCHRecord(Record, IHaveMODL):
     # TESX
     class DATAField:
@@ -1062,8 +1062,8 @@ class ALCHRecord(Record, IHaveMODL):
         return z
 # end::ALCH[]
 
-# AMMO.Ammo - 0450 - tag::AMMO[]
 # dep: ENCHRecord
+# AMMO.Ammo - 0450 - tag::AMMO[]
 class AMMORecord(Record, IHaveMODL):
     class DATAField:
         def __init__(self, r: Header, dataSize: int):
@@ -1096,8 +1096,8 @@ class AMMORecord(Record, IHaveMODL):
         return z
 # end::AMMO[]
 
-# ANIO.Animated Object - 0450 - tag::ANIO[]
 # dep: IDLERecord
+# ANIO.Animated Object - 0450 - tag::ANIO[]
 class ANIORecord(Record, IHaveMODL):
     MODL: MODLGroup # Model
     DATA: RefField['IDLERecord'] # IDLE Animation
@@ -1113,8 +1113,8 @@ class ANIORecord(Record, IHaveMODL):
         return z
 # end::ANIO[]
 
-# APPA.Alchem Apparatus - 3450 - tag::APPA[]
 # dep: SCPTRecord
+# APPA.Alchem Apparatus - 3450 - tag::APPA[]
 class APPARecord(Record, IHaveMODL):
     # TESX
     class DATAField:
@@ -1155,8 +1155,8 @@ class APPARecord(Record, IHaveMODL):
         return z
 # end::APPA[]
 
-# ARMA.Armature (Model) - 0050 - tag::ARMA[]
 # dep: None
+# ARMA.Armature (Model) - 0050 - tag::ARMA[]
 class ARMARecord(Record):
     def __init__(self): super().__init__()
 
@@ -1167,8 +1167,8 @@ class ARMARecord(Record):
         return z
 # end::ARMA[]
 
-# ARMO.Armor - 3450 - tag::ARMA[]
 # dep: CLOTRecord, ENCHRecord, SCPTRecord
+# ARMO.Armor - 3450 - tag::ARMA[]
 class ARMORecord(Record, IHaveMODL):
     # TESX
     class DATAField:
@@ -1247,8 +1247,8 @@ class ARMORecord(Record, IHaveMODL):
         return z
 # end::ARMO[]
 
-# ARTO.Art Object - 0050 - tag::ARTO[]
 # dep: None
+# ARTO.Art Object - 0050 - tag::ARTO[]
 class ARTORecord(Record):
     CNAM: CREFField # RGB Color
     def __init__(self): super().__init__()
@@ -1261,8 +1261,8 @@ class ARTORecord(Record):
         return z
 # end::ARTO[]
 
-# ASPC.Acoustic Space - 0050 - tag::ASPC[]
 # dep: None
+# ASPC.Acoustic Space - 0050 - tag::ASPC[]
 class ASPCRecord(Record):
     CNAM: CREFField # RGB Color
     def __init__(self): super().__init__()
@@ -1275,8 +1275,8 @@ class ASPCRecord(Record):
         return z
 # end::ASPC[]
 
-# ASTP.Association Type - 0050 - tag::ASTP[]
 # dep: None
+# ASTP.Association Type - 0050 - tag::ASTP[]
 class ASTPRecord(Record):
     CNAM: CREFField # RGB Color
     def __init__(self): super().__init__()
@@ -1289,8 +1289,8 @@ class ASTPRecord(Record):
         return z
 # end::ASTP[]
 
-# AVIF.Actor Values_Perk Tree Graphics - 0050 - tag::ASTP[]
 # dep: None
+# AVIF.Actor Values_Perk Tree Graphics - 0050 - tag::ASTP[]
 class AVIFRecord(Record):
     CNAM: CREFField # RGB Color
     def __init__(self): super().__init__()
@@ -1303,8 +1303,8 @@ class AVIFRecord(Record):
         return z
 # end::AVIF[]
 
-# BODY.Body - 3000 - tag::ASTP[]
 # dep: None
+# BODY.Body - 3000 - tag::ASTP[]
 class BODYRecord(Record, IHaveMODL):
     class BYDTField:
         def __init__(self, r: Header, dataSize: int):
@@ -1330,8 +1330,8 @@ class BODYRecord(Record, IHaveMODL):
         return None
 # end::BODY[]
 
-# BOOK.Book - 3450 - tag::BOOK[]
 # dep: ENCHRecord, SCPTRecord
+# BOOK.Book - 3450 - tag::BOOK[]
 class BOOKRecord(Record, IHaveMODL):
     class DATAField:
         flags: int # Scroll - (1 is scroll, 0 not)
@@ -1383,8 +1383,8 @@ class BOOKRecord(Record, IHaveMODL):
         return z
 # end::BODY[]
 
-# BSGN.Birthsign - 3400 - tag::BSGN[]
 # dep: None
+# BSGN.Birthsign - 3400 - tag::BSGN[]
 class BSGNRecord(Record):
     FULL: STRVField # Sign Name
     ICON: FILEField # Texture
@@ -1405,8 +1405,8 @@ class BSGNRecord(Record):
         return z
 # end::BSGN[]
 
-# CELL.Cell - 3450 - tag::CELL[]
 # dep: REGNRecord, CLMTRecord, WATRRecord
+# CELL.Cell - 3450 - tag::CELL[]
 class CELLRecord(Record): #ICellRecord
     class CELLFlags(Flag):
         Interior = 0x0001
@@ -1588,8 +1588,8 @@ class CELLRecord(Record): #ICellRecord
         return z
 # end::CELL[]
 
-# CLAS.Class - 3450 - tag::CLAS[]
 # dep: None
+# CLAS.Class - 3450 - tag::CLAS[]
 class CLASRecord(Record):
     class DATAField:
         #wbArrayS('Primary Attributes', wbInteger('Primary Attribute', itS32, wbActorValueEnum), 2),
@@ -1623,8 +1623,8 @@ class CLASRecord(Record):
         return z
 # end::CLAS[]
 
-# CLOT.Clothing - 3450 - tag::CLOT[]
 # dep: SCPTRecord
+# CLOT.Clothing - 3450 - tag::CLOT[]
 class CLOTRecord(Record, IHaveMODL):
     # TESX
     class DATAField:
@@ -1700,8 +1700,8 @@ class CLOTRecord(Record, IHaveMODL):
         return z
 # end::CLOT[]
 
-# CLMT.Climate - 0450 - tag::CLMT[]
 # dep: ^WTHRRecord
+# CLMT.Climate - 0450 - tag::CLMT[]
 class CLMTRecord(Record, IHaveMODL):
     class WLSTField:
         def __init__(self, r: Header, dataSize: int):
@@ -1737,8 +1737,8 @@ class CLMTRecord(Record, IHaveMODL):
         return z
 # end::CLMT[]
 
-# CONT.Container - 3450 - tag::CONT[]
 # dep: SCPTRecord, SOUNRecord
+# CONT.Container - 3450 - tag::CONT[]
 class CONTRecord(Record, IHaveMODL):
     # TESX
     class DATAField:
@@ -1779,8 +1779,8 @@ class CONTRecord(Record, IHaveMODL):
         return z
 # end::CONT[]
 
-# CREA.Creature - 3450 - tag::CREA[]
 # dep: SCPTRecord
+# CREA.Creature - 3450 - tag::CREA[]
 class CREARecord(Record, IHaveMODL):
     class CREAFlags(Flag):
         Biped = 0x0001
@@ -1923,8 +1923,8 @@ class CREARecord(Record, IHaveMODL):
         return None
 # end::CREA[]
 
-# CSTY.Combat Style - 0450 - tag::CSTY[]
 # dep: None
+# CSTY.Combat Style - 0450 - tag::CSTY[]
 class CSTYRecord(Record):
     class CSTDField:
         dodgePercentChance: int
@@ -2047,8 +2047,8 @@ class CSTYRecord(Record):
         return z
 # end::CSTY[]
 
-# DIAL.Dialog Topic - 3450 - tag::DIAL[]
 # dep: INFORecord, QUSTRecord
+# DIAL.Dialog Topic - 3450 - tag::DIAL[]
 class DIALRecord(Record):
     lastRecord: 'DIALRecord'
     class DIALType(Enum): RegularTopic = 0; Voice = 1; Greeting = 2; Persuasion = 3; Journal = 4
@@ -2068,8 +2068,8 @@ class DIALRecord(Record):
         return z
 # end::DIAL[]
 
-# DLBR.Dialog Branch - 0050 - tag::DIAL[]
 # dep: None
+# DLBR.Dialog Branch - 0050 - tag::DIAL[]
 class DLBRRecord(Record):
     CNAM: CREFField # RGB color
     def __init__(self): super().__init__()
@@ -2082,8 +2082,8 @@ class DLBRRecord(Record):
         return z
 # end::DLBR[]
 
-# DLVW.Dialog View - 0050 - tag::DLVW[]
 # dep: None
+# DLVW.Dialog View - 0050 - tag::DLVW[]
 class DLVWRecord(Record):
     CNAM: CREFField # RGB color
     def __init__(self): super().__init__()
@@ -2096,8 +2096,8 @@ class DLVWRecord(Record):
         return z
 # end::DLVW[]
 
-# DOOR.Door - 3450 - tag::DOOR[]
 # dep: SCPTRecord, SOUNRecord
+# DOOR.Door - 3450 - tag::DOOR[]
 class DOORRecord(Record, IHaveMODL):
     FULL: STRVField # Door name
     MODL: MODLGroup # NIF model filename
@@ -2128,8 +2128,8 @@ class DOORRecord(Record, IHaveMODL):
         return z
 # end::DOOR[]
 
-# EFSH.Effect Shader - 0450 - tag::EFSH[]
 # dep: None
+# EFSH.Effect Shader - 0450 - tag::EFSH[]
 class EFSHRecord(Record):
     class DATAField:
         flags: int
@@ -2264,8 +2264,8 @@ class EFSHRecord(Record):
         return z
 # end::EFSH[]
 
-# ENCH.Enchantment - 3450 - tag::ENCH[]
 # dep: None
+# ENCH.Enchantment - 3450 - tag::ENCH[]
 class ENCHRecord(Record):
     # TESX
     class ENITField:
@@ -2351,8 +2351,8 @@ class ENCHRecord(Record):
         return z
 # end::ENCH[]
 
-# EYES.Eyes - 0450 - tag::EYES[]
 # dep: None
+# EYES.Eyes - 0450 - tag::EYES[]
 class EYESRecord(Record):
     FULL: STRVField
     ICON: FILEField
@@ -2369,8 +2369,8 @@ class EYESRecord(Record):
         return z
 # end::EYES[]
 
-# FACT.Faction - 3450 - tag::FACT[]
 # dep: None
+# FACT.Faction - 3450 - tag::FACT[]
 class FACTRecord(Record):
     # TESX
     class RNAMGroup:
@@ -2429,8 +2429,8 @@ class FACTRecord(Record):
         return z
 # end::FACT[]
 
-# FLOR.Flora - 0450 - tag::FLOR[]
 # dep: INGRRecord, SCPTRecord
+# FLOR.Flora - 0450 - tag::FLOR[]
 class FLORRecord(Record, IHaveMODL):
     MODL: MODLGroup # Model
     FULL: STRVField # Plant Name
@@ -2453,8 +2453,8 @@ class FLORRecord(Record, IHaveMODL):
         return z
 # end::FLOR[]
 
-# FURN.Furniture - 0450 - tag::FURN[]
 # dep: SCPTRecord
+# FURN.Furniture - 0450 - tag::FURN[]
 class FURNRecord(Record, IHaveMODL):
     MODL: MODLGroup # Model
     FULL: STRVField # Furniture Name
@@ -2475,8 +2475,8 @@ class FURNRecord(Record, IHaveMODL):
         return z
 # end::FURN[]
 
-# GLOB.Global - 3450 - tag::GLOB[]
 # dep: None
+# GLOB.Global - 3450 - tag::GLOB[]
 class GLOBRecord(Record):
     FNAM: BYTEField = None # Type of global (s, l, f)
     FLTV: FLTVField = None # Float data
@@ -2491,8 +2491,8 @@ class GLOBRecord(Record):
         return z
 # end::GLOB[]
 
-# GMST.Game Setting - 3450 - tag::GMST[]
 # dep: None
+# GMST.Game Setting - 3450 - tag::GMST[]
 class GMSTRecord(Record):
     DATA: DATVField # Data
     def __init__(self): super().__init__()
@@ -2513,8 +2513,8 @@ class GMSTRecord(Record):
         return z
 # end::GMST[]
 
-# GRAS.Grass - 0450 - tag::GRAS[]
 # dep: None
+# GRAS.Grass - 0450 - tag::GRAS[]
 class GRASRecord(Record):
     class DATAField:
         density: int
@@ -2565,8 +2565,8 @@ class GRASRecord(Record):
         return z
 # end::GRAS[]
 
-# HAIR.Hair - 0400 - tag::HAIR[]
 # dep: None
+# HAIR.Hair - 0400 - tag::HAIR[]
 class HAIRRecord(Record, IHaveMODL):
     FULL: STRVField
     MODL: MODLGroup
@@ -2586,8 +2586,8 @@ class HAIRRecord(Record, IHaveMODL):
         return z
 # end::HAIR[]
 
-# IDLE.Idle Animations - 0450 - tag::IDLE[]
 # dep: SCPTRecord
+# IDLE.Idle Animations - 0450 - tag::IDLE[]
 class IDLERecord(Record, IHaveMODL):
     MODL: MODLGroup
     CTDAs: list['SCPTRecord.CTDAField'] = [] # Conditions
@@ -2607,8 +2607,8 @@ class IDLERecord(Record, IHaveMODL):
         return z
 # end::IDLE[]
 
-# INFO.Dialog Topic Info - 3450 - tag::INFO[]
 # dep: QUSTRecord, DIALRecord, SCPTRecord
+# INFO.Dialog Topic Info - 3450 - tag::INFO[]
 class INFORecord(Record):
     # TES3
     class DATA3Field:
@@ -2724,8 +2724,8 @@ class INFORecord(Record):
         return z
 # end::INFO[]
 
-# INGR.Ingredient - 3450 - tag::INGR[]
 # dep: ENCHRecord, SCPTRecord
+# INGR.Ingredient - 3450 - tag::INGR[]
 class INGRRecord(Record, IHaveMODL):
     # TES3
     class IRDTField:
@@ -2777,8 +2777,8 @@ class INGRRecord(Record, IHaveMODL):
         return z
 # end::INGR[]
 
-# KEYM.Key - 0400 - tag::KEYM[]
 # dep: SCPTRecord
+# KEYM.Key - 0400 - tag::KEYM[]
 class KEYMRecord(Record, IHaveMODL):
     class DATAField:
         def __init__(self, r: Header, dataSize: int):
@@ -2806,8 +2806,8 @@ class KEYMRecord(Record, IHaveMODL):
         return z
 # end::KEYM[]
 
-# LAND.Land - 3450 - tag::LAND[]
 # dep: None
+# LAND.Land - 3450 - tag::LAND[]
 class LANDRecord(Record):
     # TESX
     class VNMLField:
@@ -2912,8 +2912,8 @@ class LANDRecord(Record):
         return z
 # end::LAND[]
 
-# LEVC.Leveled Creature - 3000 - tag::LEVC[]
 # dep: None
+# LEVC.Leveled Creature - 3000 - tag::LEVC[]
 class LEVCRecord(Record):
     DATA: IN32Field # List data - 1 = Calc from all levels <= PC level
     NNAM: BYTEField # Chance None?
@@ -2962,8 +2962,8 @@ class LEVIRecord(Record):
         return None
 # end::LEVI[]
 
-# LIGH.Light - 3450 - tag::LIGH[]
 # dep: SCPTRecord, SOUNRecord
+# LIGH.Light - 3450 - tag::LIGH[]
 class LIGHRecord(Record, IHaveMODL):
     # TESX
     class DATAField:
@@ -3034,8 +3034,8 @@ class LIGHRecord(Record, IHaveMODL):
         return z
 # end::LIGH[]
 
-# LOCK.Lock - 3450 - tag::LOCK[]
 # dep: SCPTRecord
+# LOCK.Lock - 3450 - tag::LOCK[]
 class LOCKRecord(Record, IHaveMODL):
     class LKDTField:
         def __init__(self, r: Header, dataSize: int):
@@ -3065,8 +3065,8 @@ class LOCKRecord(Record, IHaveMODL):
         return None
 # end::LOCK[]
 
-# LSCR.Load Screen - 0450 - tag::LSCR[]
 # dep: WRLDRecord
+# LSCR.Load Screen - 0450 - tag::LSCR[]
 class LSCRRecord(Record):
     class LNAMField:
         def __init__(self, r: Header, dataSize: int):
@@ -3090,8 +3090,8 @@ class LSCRRecord(Record):
         return z
 # end::LSCR[]
 
-# LTEX.Land Texture - 3450 - tag::LTEX[]
 # dep: GRASRecord
+# LTEX.Land Texture - 3450 - tag::LTEX[]
 class LTEXRecord(Record):
     class HNAMField:
         def __init__(self, r: Header, dataSize: int):
@@ -3121,8 +3121,8 @@ class LTEXRecord(Record):
         return z
 # end::LTEX[]
 
-# LVLC.Leveled Creature - 0400 - tag::LVLC[]
 # dep: CREARecord, LVLIRecord, SCPTRecord
+# LVLC.Leveled Creature - 0400 - tag::LVLC[]
 class LVLCRecord(Record):
     LVLD: BYTEField # Chance
     LVLF: BYTEField # Flags - 0x01 = Calculate from all levels <= player's level, 0x02 = Calculate for each item in count
@@ -3143,8 +3143,8 @@ class LVLCRecord(Record):
         return z
 # end::LVLC[]
 
-# LVLI.Leveled Item - 0400 - tag::LVLI[]
 # dep: None
+# LVLI.Leveled Item - 0400 - tag::LVLI[]
 class LVLIRecord(Record):
     class LVLOField:
         level: int
@@ -3194,8 +3194,8 @@ class LVSPRecord(Record):
         return z
 # end::LVSP[]
 
-# MGEF.Magic Effect - 3400 - tag::MGEF[]
 # dep: ^EFSHRecord, LIGHRecord, SOUNRecord
+# MGEF.Magic Effect - 3400 - tag::MGEF[]
 class MGEFRecord(Record):
     # TES3
     class MEDTField:
@@ -3341,8 +3341,8 @@ class MGEFRecord(Record):
         return z
 # end::MGEF[]
 
-# MISC.Misc Item - 3450 - tag::MISC[]
 # dep: ENCHRecord, SCPTRecord
+# MISC.Misc Item - 3450 - tag::MISC[]
 class MISCRecord(Record, IHaveMODL):
     # TESX
     class DATAField:
@@ -3383,8 +3383,8 @@ class MISCRecord(Record, IHaveMODL):
         return z
 # end::MISC[]
 
-# NPC_.Non-Player Character - 3450 - tag::NPC_[]
 # dep: CREARecord, SCPTRecord
+# NPC_.Non-Player Character - 3450 - tag::NPC_[]
 class NPC_Record(Record, IHaveMODL):
     class NPC_Flags(Flag):
         Female = 0x0001
@@ -3518,8 +3518,8 @@ class NPC_Record(Record, IHaveMODL):
         return z
 # end::NPC_[]
 
-# PACK.AI Package - 0450 - tag::PACK[]
 # dep: SCPTRecord
+# PACK.AI Package - 0450 - tag::PACK[]
 class PACKRecord(Record):
     class PKDTField:
         flags: int
@@ -3568,8 +3568,8 @@ class PACKRecord(Record):
         return z
 # end::PACK[]
 
-# PGRD.Path grid - 3400 - tag::PGRD[]
 # dep: REFRRecord
+# PGRD.Path grid - 3400 - tag::PGRD[]
 class PGRDRecord(Record):
     class DATAField:
         x: int
@@ -3632,8 +3632,8 @@ class PGRDRecord(Record):
         return z
 # end::PGRD[]
 
-# PROB.Probe - 3000 - tag::PROB[]
 # dep: SCPTRecord
+# PROB.Probe - 3000 - tag::PROB[]
 class PROBRecord(Record, IHaveMODL):
     class PBDTField:
         def __init__(self, r: Header, dataSize: int):
@@ -3663,8 +3663,8 @@ class PROBRecord(Record, IHaveMODL):
         return None
 # end::PROB[]
 
-# QUST.Quest - 0450 - tag::QUST[]
 # dep: SCPTRecord
+# QUST.Quest - 0450 - tag::QUST[]
 class QUSTRecord(Record):
     class DATAField:
         def __init__(self, r: Header, dataSize: int):
@@ -3701,8 +3701,8 @@ class QUSTRecord(Record):
         return z
 # end::QUST[]
 
-# RACE.Race_Creature type - 3450 - tag::RACE[]
 # dep: EYESRecord, HAIRRecord
+# RACE.Race_Creature type - 3450 - tag::RACE[]
 class RACERecord(Record):
     # TESX
     class DATAField:
@@ -3917,8 +3917,8 @@ class RACERecord(Record):
         return None
 # end::RACE[]
 
-# REPA.Repair Item - 3000 - tag::REPA[]
 # dep: SCPTRecord
+# REPA.Repair Item - 3000 - tag::REPA[]
 class REPARecord(Record, IHaveMODL):
     class RIDTField:
         def __init__(self, r: Header, dataSize: int):
@@ -3948,8 +3948,8 @@ class REPARecord(Record, IHaveMODL):
         return None
 # end::REPA[]
 
-# REFR.Placed Object - 0450 - tag::REFR[]
 # dep: CELLRecord, ^KEYMRecord
+# REFR.Placed Object - 0450 - tag::REFR[]
 class REFRRecord(Record):
     class XTELField:
         def __init__(self, r: Header, dataSize: int):
@@ -4056,8 +4056,8 @@ class REFRRecord(Record):
         return z
 # end::REFR[]
 
-# REGN.Region - 3450 - tag::REGN[]
 # dep: WRLDRecord, ^GRASRecord, GLOBRecord, SOUNRecord, WTHRRecord
+# REGN.Region - 3450 - tag::REGN[]
 class REGNRecord(Record):
     # TESX
     class RDATField:
@@ -4208,8 +4208,8 @@ class REGNRecord(Record):
         return z
 # end::REGN[]
 
-# ROAD.Road - 0400 - tag::ROAD[]
 # dep: PGRDRecord
+# ROAD.Road - 0400 - tag::ROAD[]
 class ROADRecord(Record):
     PGRPs: list[PGRDRecord.PGRPField]
     PGRR: UNKNField
@@ -4223,8 +4223,8 @@ class ROADRecord(Record):
         return z
 # end::ROAD[]
 
-# SBSP.Subspace - 0400 - tag::SBSP[]
 # dep: None
+# SBSP.Subspace - 0400 - tag::SBSP[]
 class SBSPRecord(Record):
     class DNAMField:
         def __init__(self, r: Header, dataSize: int):
@@ -4243,8 +4243,8 @@ class SBSPRecord(Record):
         return z
 # end::SBSP[]
 
-# SCPT.Script - 3400 - tag::SCPT[]
 # dep: None
+# SCPT.Script - 3400 - tag::SCPT[]
 class SCPTRecord(Record):
     # TESX
     class CTDAField:
@@ -4355,8 +4355,8 @@ class SCPTRecord(Record):
         return z
 # end::SCPT[]
 
-# SGST.Sigil Stone - 0400 - tag::SGST[]
 # dep: ENCHRecord, SCPTRecord
+# SGST.Sigil Stone - 0400 - tag::SGST[]
 class SGSTRecord(Record, IHaveMODL):
     class DATAField:
         def __init__(self, r: Header, dataSize: int):
@@ -4390,8 +4390,8 @@ class SGSTRecord(Record, IHaveMODL):
         return z
 # end::SGST[]
 
-# SKIL.Skill - 3450 - tag::SKIL[]
 # dep: None
+# SKIL.Skill - 3450 - tag::SKIL[]
 class SKILRecord(Record):
     # TESX
     class DATAField:
@@ -4428,8 +4428,8 @@ class SKILRecord(Record):
         return z
 # end::SKIL[]
 
-# SLGM.Soul Gem - 0450 - tag::SLGM[]
 # dep: SCPTRecord
+# SLGM.Soul Gem - 0450 - tag::SLGM[]
 class SLGMRecord(Record, IHaveMODL):
     class DATAField:
         def __init__(self, r: Header, dataSize: int):
@@ -4461,8 +4461,8 @@ class SLGMRecord(Record, IHaveMODL):
         return z
 # end::SLGM[]
 
-# SNDG.Sound Generator - 3000 - tag::SNDG[]
 # dep: None
+# SNDG.Sound Generator - 3000 - tag::SNDG[]
 class SNDGRecord(Record):
     class SNDGType(Enum): LeftFoot = 0; RightFoot = 1; SwimLeft = 2; SwimRight = 3; Moan = 4; Roar = 5; Scream = 6; Land = 7
     DATA: IN32Field # Sound Type Data
@@ -4482,8 +4482,8 @@ class SNDGRecord(Record):
         return None
 # end::SNDG[]
 
-# SNDR.Sound Reference - 0050 - tag::SNDR[]
 # dep: None
+# SNDR.Sound Reference - 0050 - tag::SNDR[]
 class SNDRRecord(Record):
     CNAM: CREFField # RGB color
     def __init__(self): super().__init__()
@@ -4496,8 +4496,8 @@ class SNDRRecord(Record):
         return z
 # end::SNDR[]
 
-# SOUN.Sound - 3450 - tag::SOUN[]
 # dep: None
+# SOUN.Sound - 3450 - tag::SOUN[]
 class SOUNRecord(Record):
     class SOUNFlags(Flag):
         RandomFrequencyShift = 0x0001
@@ -4549,8 +4549,8 @@ class SOUNRecord(Record):
         return z
 # end::SOUN[]
 
-# SPEL.Spell - 3450 - tag::SPEL[]
 # dep: ENCHRecord
+# SPEL.Spell - 3450 - tag::SPEL[]
 class SPELRecord(Record):
     # TESX
     class SPITField:
@@ -4585,8 +4585,8 @@ class SPELRecord(Record):
         return z
 # end::SPEL[]
 
-# SSCR.Start Script - 3000 - tag::XXXX[]
 # dep: None
+# SSCR.Start Script - 3000 - tag::XXXX[]
 class SSCRRecord(Record):
     DATA: STRVField # Digits
     def __init__(self): super().__init__()
@@ -4601,8 +4601,8 @@ class SSCRRecord(Record):
         return None
 # end::SSCR[]
 
-# STAT.Static - 3450 - tag::STAT[]
 # dep: None
+# STAT.Static - 3450 - tag::STAT[]
 class STATRecord(Record, IHaveMODL):
     MODL: MODLGroup # Model
     def __init__(self): super().__init__()
@@ -4617,8 +4617,8 @@ class STATRecord(Record, IHaveMODL):
         return z
 # end::STAT[]
 
-# TES3.Plugin Info - 3000 - tag::TES3[]
 # dep: None
+# TES3.Plugin Info - 3000 - tag::TES3[]
 class TES3Record(Record):
     class HEDRField:
         def __init__(self, r: Header, dataSize: int):
@@ -4642,8 +4642,8 @@ class TES3Record(Record):
         return z
 # end::TES3[]
 
-# TES4.Plugin Info - 0450 - tag::TES4[]
 # dep: None
+# TES4.Plugin Info - 0450 - tag::TES4[]
 class TES4Record(Record):
     class HEDRField:
         _struct = ('<fiI', 12)
@@ -4682,8 +4682,8 @@ class TES4Record(Record):
         return z
 # end::TES4[]
 
-# TREE.Tree - 0450 - tag::TREE[]
 # dep: None
+# TREE.Tree - 0450 - tag::TREE[]
 class TREERecord(Record, IHaveMODL):
     class SNAMField:
         def __init__(self, r: Header, dataSize: int):
@@ -4726,8 +4726,8 @@ class TREERecord(Record, IHaveMODL):
         return z
 # end::TREE[]
 
-# WATR.Water Type - 0450 - tag::WATR[]
 # dep: SOUNRecord
+# WATR.Water Type - 0450 - tag::WATR[]
 class WATRRecord(Record):
     class DATAField:
         windVelocity: float
@@ -4822,8 +4822,8 @@ class WATRRecord(Record):
         return z
 # end::WATR[]
 
-# WEAP.Weapon - 3450 - tag::WEAP[]
 # dep: ENCHRecord, SCPTRecord
+# WEAP.Weapon - 3450 - tag::WEAP[]
 class WEAPRecord(Record, IHaveMODL):
     class DATAField:
         class WEAPType(Enum): ShortBladeOneHand = 0; LongBladeOneHand = 1; LongBladeTwoClose = 2; BluntOneHand = 3; BluntTwoClose = 4; BluntTwoWide = 5; SpearTwoWide = 6; AxeOneHand = 7; AxeTwoHand = 8; MarksmanBow = 9; MarksmanCrossbow = 10; MarksmanThrown = 11; Arrow = 12; Bolt = 13
@@ -4894,8 +4894,8 @@ class WEAPRecord(Record, IHaveMODL):
         return z
 # end::WEAP[]
 
-# WRLD.Worldspace - 0450 - tag::WRLD[]
 # dep: CLMTRecord, WATRRecord, WRLDRecord, ^REFRRecord
+# WRLD.Worldspace - 0450 - tag::WRLD[]
 class WRLDRecord(Record):
     class MNAMField:
         _struct = ('<2i4h', 16)
@@ -4962,8 +4962,8 @@ class WRLDRecord(Record):
         return z
 # end::WRLD[]
 
-# WTHR.Weather - 0450 - tag::WTHR[]
 # dep: ^SOUNRecord
+# WTHR.Weather - 0450 - tag::WTHR[]
 class WTHRRecord(Record, IHaveMODL):
     class FNAMField:
         def __init__(self, r: Header, dataSize: int):

@@ -175,6 +175,8 @@ class FormType(IntEnum):
     SOPM = 0x4D504F53
     SCCO = 0x4F434353
     SCSN = 0x4E534353
+    STDT = 0x54445453
+    SUNP = 0x504E5553
     STAG = 0x47415453
     SGST = 0x54534753
     SSCR = 0x52435353
@@ -188,6 +190,7 @@ class FormType(IntEnum):
     TES4 = 0x34534554
     TES5 = 0x35534554
     TES6 = 0x36534554
+    TMLM = 0x4D4C4D54
     TRNS = 0x534E5254
     TXST = 0x54535854
     TACT = 0x54434154
@@ -559,7 +562,7 @@ class FLTVField:
     def __repr__(self) -> str: return f'{self.value}'
     def __init__(self, tuple = None, value = 0): self.value = tuple[0] if tuple else value
 class BYTEField: 
-    _struct = ('<c', 1)
+    _struct = ('<B', 1)
     def __repr__(self) -> str: return f'{self.value}'
     def __init__(self, tuple = None, value = 0): self.value = tuple[0] if tuple else value
 class IN16Field: 
@@ -598,7 +601,8 @@ class CNTOField:
     def __repr__(self) -> str: return f'{self.item}'
     itemCount: int # Number of the item
     item: 'Ref[Record]' # The ID of the item
-    def __init__(self, r: Header, dataSize: int):
+    def __init__(self, r: Header = None, dataSize: int = 0):
+        if not r: self.itemCount = 0; self.item = Ref[Record](Record); return
         if r.format == FormType.TES3: self.itemCount = r.readUInt32(); self.item = Ref[Record](Record, r.readFAString(32)); return
         self.item = Ref[Record](Record, r.readUInt32()); self.itemCount = r.readUInt32()
 class MODLGroup:
@@ -723,7 +727,7 @@ class Record:
     # def tes5(self): pass
 
     # Completes a record.
-    def complete(self) -> None: pass
+    def complete(self, r: Header) -> None: pass
 
     # Return an uninitialized subrecord to deserialize, or null to skip.
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object: return Record._empty
@@ -741,7 +745,7 @@ class Record:
             if self.createField(r, field.type, field.dataSize) == Record._empty: print(f'Unsupported ESM record type: {self._header.type}:{field.type}'); r.skip(field.dataSize); continue
             r.ensureAtEnd(tell + field.dataSize, f'Failed reading {self._header.type}:{field.type} field data at offset {tell} in {r.binPath} of {r.tell() - tell - field.dataSize}')
         r.ensureAtEnd(end, f'Failed reading {self._header.type} record data at offset {start} in {r.binPath}')
-        self.complete()
+        self.complete(r)
 
     @staticmethod
     def factory(r: Header, type: FieldType, level: int = 1000) -> 'Record':
@@ -779,9 +783,10 @@ class Ref2Field[T: Record]:
     def __init__(self, t: type, r: Header, dataSize: int): self.value1 = Ref[T](t, r.readUInt32()); self.value2 = Ref[T](t, r.readUInt32())
 
 #endregion
+
 # Record._factorySet = { FormType.TES3, FormType.ACTI, FormType.ALCH, FormType.APPA, FormType.ARMO, FormType.BODY, FormType.BSGN, FormType.CELL, FormType.CLAS }
 # Record._factorySet = { FormType.TES3, FormType.MGEF, FormType.REGN, FormType.LIGH, FormType.DIAL }
-Record._factorySet = { FormType.TES3, FormType.CONT }
+Record._factorySet = { FormType.TES3, FormType.DIAL, FormType.INFO }
 
 #region Record Group
 
@@ -1587,7 +1592,7 @@ class CELLRecord(Record): #ICellRecord
     ambientLight: Color
     def __init__(self): super().__init__(); self.XOWNs = listx(); self.refObjs = listx()
 
-    def complete(self) -> None:
+    def complete(self, r: Header) -> None:
         self.isInterior = (self.DATA.value & 0x01) == 0x01
         self.gridId = Int3(self.XCLC.gridX, self.XCLC.gridY, -1 if self.isInterior else 0)
         self.ambientLight = Color(self.XCLL.ambientColor.asColor) if self.XCLL else None
@@ -1981,7 +1986,7 @@ class CREARecord(Record, IHaveMODL):
             (self.distance,
             self.duration,
             self.timeOfDay,
-            self.idle,
+            self.idles,
             self.unknown) = tuple
 
     class AI_TField:
@@ -2012,8 +2017,8 @@ class CREARecord(Record, IHaveMODL):
     FNAM: STRVField # Creature name
     NPDT: NPDTField # Creature data
     FLAG: IN32Field # Creature Flags
-    SCRI: RefField['SCPTRecord'] # Script
-    NPCO: CNTOField # Item record
+    SCRI: RefField['SCPTRecord'] = None # Script
+    NPCO: CNTOField = CNTOField() #! Item record
     AIDT: AIDTField # AI data
     AI_W: AI_WField = None # AI Wander
     AI_T: AI_TField = None # AI Travel
@@ -2181,13 +2186,13 @@ class DIALRecord(Record):
     class DIALType(Enum): RegularTopic = 0; Voice = 1; Greeting = 2; Persuasion = 3; Journal = 4
     FULL: STRVField # Dialogue Name
     DATA: BYTEField # Dialogue Type
-    QSTIs: list[RefField['QUSTRecord']] # Quests (optional)
+    QSTIs: list[RefField['QUSTRecord']] = None #! Quests (optional)
     INFOs: list['INFORecord'] = [] # Info Records
     def __init__(self): super().__init__(); self.INFOs = listx()
     
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
-            case FieldType.EDID | FieldType.NAME: z = self.EDID = r.readSTRV(dataSize); DIALRecord._lastRecord = self
+            case FieldType.EDID | FieldType.NAME: z = self.EDID = self.FULL = r.readSTRV(dataSize); DIALRecord._lastRecord = self
             case FieldType.FULL: z = self.FULL = r.readSTRV(dataSize)
             case FieldType.DATA: z = self.DATA = r.readS(BYTEField, dataSize)
             case FieldType.QSTI | FieldType.QSTR: z = _nca(self, 'QSTIs', listx()).addX(RefField[QUSTRecord](QUSTRecord, r, dataSize))
@@ -2757,26 +2762,26 @@ class INFORecord(Record):
             self.rank, # (0-10)
             self.gender, # 0xFF = None, 0x00 = Male, 0x01 = Female
             self.pcRank, # (0-10)
-            self.unknown2) = typle
+            self.unknown2) = tuple
 
     class TES3Group:
-        NNAM: STRVField # Next info ID (form a linked list of INFOs for the DIAL). First INFO has an empty PNAM, last has an empty NNAM.
+        NNAM: STRVField = None # Next info ID (form a linked list of INFOs for the DIAL). First INFO has an empty PNAM, last has an empty NNAM.
         DATA: 'DATA3Field' # Info data
-        ONAM: STRVField # Actor
-        RNAM: STRVField # Race
-        CNAM: STRVField # Class
-        FNAM: STRVField # Faction 
-        ANAM: STRVField # Cell
-        DNAM: STRVField # PC Faction
-        NAME: STRVField # The info response string (512 max)
-        SNAM: FILEField # Sound
-        QSTN: BYTEField # Journal Name
-        QSTF: BYTEField # Journal Finished
-        QSTR: BYTEField # Journal Restart
-        SCVR: 'SCPTRecord.CTDAField' # String for the function/variable choice
-        INTV: UNKNField #
-        FLTV: UNKNField # The function/variable result for the previous SCVR
-        BNAM: STRVField # Result text (not compiled)
+        ONAM: STRVField = None # Actor
+        RNAM: STRVField = None # Race
+        CNAM: STRVField = None # Class
+        FNAM: STRVField = None # Faction 
+        ANAM: STRVField = None # Cell
+        DNAM: STRVField = None # PC Faction
+        NAME: STRVField = STRVField() #! The info response string (512 max)
+        SNAM: FILEField = None # Sound
+        QSTN: BYTEField = None # Journal Name
+        QSTF: BYTEField = None # Journal Finished
+        QSTR: BYTEField = None # Journal Restart
+        SCVR: 'SCPTRecord.CTDAField' = None # String for the function/variable choice
+        INTV: UNKNField = None #
+        FLTV: UNKNField = None # The function/variable result for the previous SCVR
+        BNAM: STRVField = None # Result text (not compiled)
 
     # TES4
     class DATA4Field:
@@ -2820,6 +2825,10 @@ class INFORecord(Record):
     TES4: TES4Group = TES4Group()
     def __init__(self): super().__init__(); self.TES3 = self.TES3Group(); self.TES4 = self.TES3Group()
     
+    def complete(self, r: Header) -> None:
+        if r.format == FormType.TES3: self.TES4 = None
+        else: self.TES3 = None
+
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         if r.format == FormType.TES3:
             match type:
@@ -2833,7 +2842,7 @@ class INFORecord(Record):
                 case FieldType.FNAM: z = self.TES3.FNAM = r.readSTRV(dataSize)
                 case FieldType.ANAM: z = self.TES3.ANAM = r.readSTRV(dataSize)
                 case FieldType.DNAM: z = self.TES3.DNAM = r.readSTRV(dataSize)
-                case FieldType.NAME: z = self.TES3.NAME = r.readSTRV(dataSize)
+                case FieldType.NAME: z = self.TES3.NAME = r.readSTRV(dataSize) #; self.TES3.NAME.value = self.TES3.NAME.value.replace('\ufffd', '\1')
                 case FieldType.SNAM: z = self.TES3.SNAM = r.readFILE(dataSize)
                 case FieldType.QSTN: z = self.TES3.QSTN = r.readS(BYTEField, dataSize)
                 case FieldType.QSTF: z = self.TES3.QSTF = r.readS(BYTEField, dataSize)
@@ -4784,6 +4793,28 @@ class STATRecord(Record, IHaveMODL):
 # end::STAT[]
 
 # dep: None
+# STDT.xx - 000S0 - tag::STDT[]
+class STDTRecord(Record):
+    def __init__(self): super().__init__()
+
+    def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
+        match type:
+            case _: z = Record._empty
+        return z
+# end::STDT[]
+
+# dep: None
+# SUNP.xx - 000S0 - tag::SUNP[]
+class SUNPRecord(Record):
+    def __init__(self): super().__init__()
+
+    def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
+        match type:
+            case _: z = Record._empty
+        return z
+# end::SUNP[]
+
+# dep: None
 # TES3.Plugin Info - 3000 - tag::TES3[]
 class TES3Record(Record):
     class HEDRField:
@@ -4850,6 +4881,28 @@ class TES4Record(Record):
             case _: z = Record._empty
         return z
 # end::TES4[]
+
+# dep: None
+# TERM.Computer Terminals - 000S0 - tag::TERM[]
+class TERMRecord(Record):
+    def __init__(self): super().__init__()
+
+    def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
+        match type:
+            case _: z = Record._empty
+        return z
+# end::TERM[]
+
+# dep: None
+# TMLM.Terminal Menus - 000S0 - tag::TMLM[]
+class TMLMRecord(Record):
+    def __init__(self): super().__init__()
+
+    def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
+        match type:
+            case _: z = Record._empty
+        return z
+# end::TMLM[]
 
 # dep: None
 # TREE.Tree - 0450 - tag::TREE[]

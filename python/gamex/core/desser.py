@@ -1,5 +1,6 @@
 from __future__ import annotations
 import os, io, json
+from pybase64 import b64encode_as_string
 from enum import Enum, Flag, IntFlag
 from numpy import ndarray, array
 from quaternion import quaternion
@@ -26,6 +27,7 @@ class CustomEncoder(json.JSONEncoder):
         if hasattr(s, '_repr'): return repr(s)
         match s:
             # case float(): return f'{s:.9g}' #float
+            case bytes(): return b64encode_as_string(s)
             case Enum(): return s.value #enum
             case quaternion(): return f'{s.x:.9g} {s.y:.9g} {s.z:.9g} {s.w:.9g}' #quaternion
             case ndarray():
@@ -35,20 +37,20 @@ class CustomEncoder(json.JSONEncoder):
                     case (1, 4): return f'{s[0]:.9g} {s[1]:.9g} {s[2]:.9g} {s[3]:.9g}' #vector4
                     case (2, 2): return [
                         f'{s[0][0]:.9g} {s[0][1]:.9g}',
-                        f'{s[1][0]:.9g} {s[1][1]:.9g}']  #matrix2x2
+                        f'{s[1][0]:.9g} {s[1][1]:.9g}'] #matrix2x2
                     case (2, 3): return [
                         f'{s[0][0]:.9g} {s[0][1]:.9g} {s[0][2]:.9g}',
                         f'{s[1][0]:.9g} {s[1][1]:.9g} {s[1][2]:.9g}',
-                        f'{s[2][0]:.9g} {s[2][1]:.9g} {s[2][2]:.9g}']  #matrix3x3
+                        f'{s[2][0]:.9g} {s[2][1]:.9g} {s[2][2]:.9g}'] #matrix3x3
                     # case (2, 3): return [
                     #     f'{s[0][0]:.9g} {s[0][1]:.9g} {s[0][2]:.9g}',
                     #     f'{s[1][0]:.9g} {s[1][1]:.9g} {s[1][2]:.9g}',
-                    #     f'{s[2][0]:.9g} {s[2][1]:.9g} {s[2][2]:.9g}']  #matrix3x4
+                    #     f'{s[2][0]:.9g} {s[2][1]:.9g} {s[2][2]:.9g}'] #matrix3x4
                     case (2, 4): return [
                         f'{s[0][0]:.9g} {s[0][1]:.9g} {s[0][2]:.9g} {s[0][3]:.9g}',
                         f'{s[1][0]:.9g} {s[1][1]:.9g} {s[1][2]:.9g} {s[1][3]:.9g}',
                         f'{s[2][0]:.9g} {s[2][1]:.9g} {s[2][2]:.9g} {s[2][3]:.9g}',
-                        f'{s[3][0]:.9g} {s[3][1]:.9g} {s[3][2]:.9g} {s[3][3]:.9g}']  #matrix4x4
+                        f'{s[3][0]:.9g} {s[3][1]:.9g} {s[3][2]:.9g} {s[3][3]:.9g}'] #matrix4x4
                     case _: raise Exception('Unknown mapping')
             # case Color3(): return f'{s.r:.9g} {s.g:.9g} {s.b:.9g}' #color3
             # case Color4(): return f'{s.r:.9g} {s.g:.9g} {s.b:.9g} {s.a:.9g}' #color4

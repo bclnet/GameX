@@ -750,7 +750,7 @@ class Record:
     @staticmethod
     def factory(r: Header, type: FieldType, level: int = 1000) -> 'Record':
         if not (z := Record._mapx.get(type)): print(f'Unsupported ESM record type: {type}'); return None
-        if type not in Record._factorySet: return None
+        if type != FormType.TES3 and type != FormType.TES4 and type not in Record._factorySet: return None
         # if not z[1](level): return None
         record = z[0](); record._header = r
         return record
@@ -784,9 +784,9 @@ class Ref2Field[T: Record]:
 
 #endregion
 
-# Record._factorySet = { FormType.TES3, FormType.ACTI, FormType.ALCH, FormType.APPA, FormType.ARMO, FormType.BODY, FormType.BSGN, FormType.CELL, FormType.CLAS }
-# Record._factorySet = { FormType.TES3, FormType.MGEF, FormType.REGN, FormType.LIGH, FormType.DIAL }
-Record._factorySet = { FormType.TES3, FormType.DIAL, FormType.INFO }
+# Record._factorySet = { FormType.ACTI, FormType.ALCH, FormType.APPA, FormType.ARMO, FormType.BODY, FormType.BSGN, FormType.CELL, FormType.CLAS }
+# Record._factorySet = { FormType.MGEF, FormType.REGN, FormType.LIGH, FormType.DIAL }
+Record._factorySet = { FormType.DIAL, FormType.INFO }
 
 #region Record Group
 

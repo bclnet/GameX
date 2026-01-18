@@ -17,6 +17,20 @@ namespace GameX.Bethesda.Formats.Records;
 
 #region Links
 
+// TES3
+//https://en.uesp.net/wiki/Bethesda3Mod:File_Format
+//https://github.com/TES5Edit/TES5Edit/blob/dev/wbDefinitionsTES3.pas
+//https://en.uesp.net/morrow/tech/mw_esm.txt
+//https://github.com/mlox/mlox/blob/master/util/tes3cmd/tes3cmd
+// TES4
+//https://github.com/WrinklyNinja/esplugin/tree/master/src
+//https://en.uesp.net/wiki/Bethesda4Mod:Mod_File_Format
+//https://github.com/TES5Edit/TES5Edit/blob/dev/wbDefinitionsTES4.pas 
+// TES5
+//https://en.uesp.net/wiki/Bethesda5Mod:Mod_File_Format
+//https://github.com/TES5Edit/TES5Edit/blob/dev/wbDefinitionsTES5.pas 
+
+
 //https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format
 //https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format
 //https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format
@@ -512,9 +526,11 @@ public class Header : BinaryReader {
         while (true) {
             Flags = (EsmFlags)r.ReadUInt32();
             if (Format == TES3) break;
+            // tes4
             Id = r.ReadUInt32();
             r.ReadUInt32();
             if (Format == TES4) break;
+            // tes5
             r.ReadUInt32();
             if (Format == TES5) break;
         }
@@ -733,7 +749,7 @@ public partial class Record {
     public static Record Factory(Header r, FormType type, int level = int.MaxValue) {
         if (!Map.TryGetValue(type, out var z)) { Log.Info($"Unsupported ESM record type: {type}"); return null; }
         //if (!z.l(level)) return null;
-        if (!_factorySet.Contains(type)) return null;
+        if (type != TES3 && type != TES4 && !_factorySet.Contains(type)) return null;
         var record = z.f(); record.Header = r;
         return record;
     }
@@ -770,9 +786,9 @@ public struct Ref2Field<TRecord>(Header r, int dataSize) where TRecord : Record 
 
 #endregion
 
-//partial class Record { static readonly HashSet<FormType> _factorySet = [FormType.TES3, FormType.ACTI, FormType.ALCH, FormType.APPA, FormType.ARMO, FormType.BODY, FormType.BSGN, FormType.CELL]; }
-//partial class Record { static readonly HashSet<FormType> _factorySet = [TES3, ARMO]; }
-partial class Record { static readonly HashSet<FormType> _factorySet = [TES3, DIAL, INFO]; }
+//partial class Record { static readonly HashSet<FormType> _factorySet = [FormType.ACTI, FormType.ALCH, FormType.APPA, FormType.ARMO, FormType.BODY, FormType.BSGN, FormType.CELL]; }
+//partial class Record { static readonly HashSet<FormType> _factorySet = [ARMO]; }
+partial class Record { static readonly HashSet<FormType> _factorySet = [DIAL, INFO]; }
 
 #region Record Group
 
@@ -3046,7 +3062,7 @@ public class INFORecord : Record {
             FieldType.FNAM => TES3.FNAM = r.ReadSTRV(dataSize),
             FieldType.ANAM => TES3.ANAM = r.ReadSTRV(dataSize),
             FieldType.DNAM => TES3.DNAM = r.ReadSTRV(dataSize),
-            FieldType.NAME => (TES3.NAME = r.ReadSTRV(dataSize), TES3.NAME.Value = TES3.NAME.Value.Replace('\ufffd', '\x1')).Item1,
+            FieldType.NAME => TES3.NAME = r.ReadSTRV(dataSize), //TES3.NAME.Value = TES3.NAME.Value.Replace('\ufffd', '\x1')).Item1,
             FieldType.SNAM => TES3.SNAM = r.ReadFILE(dataSize),
             FieldType.QSTN => TES3.QSTN = r.ReadS<BYTEField>(dataSize),
             FieldType.QSTF => TES3.QSTF = r.ReadS<BYTEField>(dataSize),

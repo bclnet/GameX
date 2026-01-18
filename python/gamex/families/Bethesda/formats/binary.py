@@ -20,25 +20,22 @@ class Binary_Ba2(ArcBinaryT):
     #region Headers : TES5
 
     # Default header data
-    F4_BSAHEADER_FILEID = 0x58445442    # Magic for Fallout 4 BA2, the literal string "BTDX".
-    F4_BSAHEADER_VERSION1 = 0x01        # Version number of a Fallout 4 BA2
-    F4_BSAHEADER_VERSION2 = 0x02        # Version number of a Starfield BA2
+    F4_MAGIC = 0x58445442    # Magic for Fallout 4 BA2, the literal string "BTDX".
+    F4_VERSION1 = 0x01        # Version number of a Fallout 4 BA2
+    F4_VERSION2 = 0x02        # Version number of a Starfield BA2
+    
+    class HDR5Type(Enum): GNRL = 0x4c524e47; DX10 = 0x30315844; GNMF = 0x464d4e47
 
-    class F4_HeaderType(Enum):
-        GNRL = 0x4c524e47
-        DX10 = 0x30315844
-        GNMF = 0x464d4e47
-
-    class F4_Header:
+    class HDR5:
         _struct = ('<3IQ', 20)
         def __init__(self, tuple):
             (self.version,
             self.type,
             self.numFiles,
             self.nameTableOffset) = tuple
-            self.type = Binary_Ba2.F4_HeaderType(self.type)
+            self.type = Binary_Ba2.HDR5Type(self.type)
 
-    class F4_File:
+    class FILE5:
         _struct = ('<4IQ3I', 36)
         def __init__(self, tuple):
             (self.nameHash,
@@ -50,7 +47,7 @@ class Binary_Ba2(ArcBinaryT):
             self.fileSize,
             self.align) = tuple
 
-    class F4_Texture:
+    class TEX5:
         _struct = ('<3I2B3H4B', 24)
         def __init__(self, tuple):
             (self.nameHash,
@@ -66,7 +63,7 @@ class Binary_Ba2(ArcBinaryT):
             self.isCubemap,
             self.tileMode) = tuple
 
-    class F4_TextureChunk:
+    class TEXCHUNK5:
         _struct = ('<Q2I2HI', 24)
         def __init__(self, tuple):
             (self.offset,
@@ -76,7 +73,7 @@ class Binary_Ba2(ArcBinaryT):
             self.endMip,
             self.align) = tuple
 
-    class F4_GNMF:
+    class GNMF5:
         _struct = ('<3I2BH32sQ4I', 72)
         def __init__(self, tuple):
             (self.nameHash,
@@ -99,20 +96,19 @@ class Binary_Ba2(ArcBinaryT):
         source.magic = magic = r.readUInt32()
 
         # Fallout 4 - Starfield
-        if magic == self.F4_BSAHEADER_FILEID:
-            header = r.readS(self.F4_Header)
-            if header.version > self.F4_BSAHEADER_VERSION2:
-                raise Exception('BAD MAGIC')
+        if magic == self.F4_MAGIC:
+            header = r.readS(self.HDR5)
+            if header.version > self.F4_VERSION2: raise Exception('BAD MAGIC')
             source.version = header.version
             source.files = files = [None] * header.numFiles
             # version2
-            # if header.version == self.F4_BSAHEADER_VERSION2: r.skip(8)
+            # if header.version == self.F4_VERSION2: r.skip(8)
 
             # General BA2 Format
             match header.type:
                 # General BA2 Format
-                case self.F4_HeaderType.GNRL:
-                    headerFiles = r.readTArray(self.F4_File, header.numFiles)
+                case self.HDR5Type.GNRL:
+                    headerFiles = r.readTArray(self.FILE5, header.numFiles)
                     for i in range(header.numFiles):
                         headerFile = headerFiles[i]
                         files[i] = FileSource(
@@ -121,10 +117,10 @@ class Binary_Ba2(ArcBinaryT):
                             fileSize = headerFile.fileSize,
                             offset = headerFile.offset)
                 # Texture BA2 Format
-                case self.F4_HeaderType.DX10:
+                case self.HDR5Type.DX10:
                     for i in range(header.numFiles):
-                        headerTexture = r.readS(self.F4_Texture)
-                        headerTextureChunks = r.readTArray(self.F4_TextureChunk, headerTexture.numChunks)
+                        headerTexture = r.readS(self.TEX5)
+                        headerTextureChunks = r.readTArray(self.TEXCHUNK5, headerTexture.numChunks)
                         firstChunk = headerTextureChunks[0]
                         files[i] = FileSource(
                             fileInfo = headerTexture,
@@ -133,10 +129,10 @@ class Binary_Ba2(ArcBinaryT):
                             offset = firstChunk.offset,
                             tag = headerTextureChunks)
                 # GNMF BA2 Format
-                case self.F4_HeaderType.GNMF:
+                case self.HDR5Type.GNMF:
                     for i in range(header.numFiles):
-                        headerGNMF = r.readS(self.F4_GNMF)
-                        headerTextureChunks = r.readTArray(self.F4_TextureChunk, headerGNMF.numChunks)
+                        headerGNMF = r.readS(self.GNMF5)
+                        headerTextureChunks = r.readTArray(self.TEXCHUNK5, headerGNMF.numChunks)
                         files[i] = FileSource(
                             fileInfo = headerGNMF,
                             packedSize = headerGNMF.packedSize,
@@ -162,11 +158,11 @@ class Binary_Ba2(ArcBinaryT):
                 r.readBytes(file.fileSize))
 
         # Texture BA2 Format
-        elif file.fileInfo is self.F4_Texture:
+        elif file.fileInfo is self.TEX5:
             pass
 
         # GNMF BA2 Format
-        elif file.fileInfo is self.F4_GNMF:
+        elif file.fileInfo is self.GNMF5:
             pass
 
         else: raise Exception(f'Unknown fileInfo: {file.fileInfo}')
@@ -180,22 +176,22 @@ class Binary_Bsa(ArcBinaryT):
 
     #region Headers : TES4
 
-    OB_BSAHEADER_FILEID = 0x00415342    # Magic for Oblivion BSA, the literal string "BSA\0".
-    OB_BSAHEADER_VERSION = 0x67         # Version number of an Oblivion BSA
-    F3_BSAHEADER_VERSION = 0x68         # Version number of a Fallout 3 BSA
-    SSE_BSAHEADER_VERSION = 0x69        # Version number of a Skyrim SE BSA
+    OB_MAGIC = 0x00415342       # Magic for Oblivion BSA, the literal string "BSA\0".
+    OB_VERSION = 0x67           # Version number of an Oblivion BSA
+    F3_VERSION = 0x68           # Version number of a Fallout 3 BSA
+    SE_VERSION = 0x69           # Version number of a Skyrim SE BSA
 
     # Archive flags
-    OB_BSAARCHIVE_PATHNAMES = 0x0001    # Whether the BSA has names for paths
-    OB_BSAARCHIVE_FILENAMES = 0x0002    # Whether the BSA has names for files
-    OB_BSAARCHIVE_COMPRESSFILES = 0x0004 # Whether the files are compressed
-    F3_BSAARCHIVE_PREFIXFULLFILENAMES = 0x0100 # Whether the name is prefixed to the data?
+    FLAG4_PATHNAMES = 0x0001    # Whether the BSA has names for paths
+    FLAG4_FILENAMES = 0x0002    # Whether the BSA has names for files
+    FLAG4_COMPRESSFILES = 0x0004 # Whether the files are compressed
+    FLAG4_PREFIXS = 0x0100      # Whether the name is prefixed to the data?
 
     # Bitmasks for the size field in the header
-    OB_BSAFILE_SIZEMASK = 0x3fffffff    # Bit mask with OB_HeaderFile:SizeFlags to get the compression status
-    OB_BSAFILE_SIZECOMPRESS = 0xC0000000 # Bit mask with OB_HeaderFile:SizeFlags to get the compression status
+    FILE4_SIZEMASK = 0x3fffffff     # Bit mask with OB_HeaderFile:SizeFlags to get the compression status
+    FILE4_SIZECOMPRESS = 0xC0000000 # Bit mask with OB_HeaderFile:SizeFlags to get the compression status
 
-    class OB_Header:
+    class HDR4:
         _struct = ('<8I', 32)
         def __init__(self, tuple):
             (self.version,
@@ -207,14 +203,14 @@ class Binary_Bsa(ArcBinaryT):
             self.fileNameLength,
             self.fileFlags) = tuple
 
-    class OB_Folder:
+    class DIR4:
         _struct = ('<Q2I', 16)
         def __init__(self, tuple):
             (self.hash,
             self.fileCount,
             self.offset) = tuple
 
-    class OB_FolderSSE:
+    class DIR4SE:
         _struct = ('<Q2IQ', 24)
         def __init__(self, tuple):
             (self.hash,
@@ -222,7 +218,7 @@ class Binary_Bsa(ArcBinaryT):
             self.unk,
             self.offset) = tuple
 
-    class OB_File:
+    class FILE4:
         _struct = ('<Q2I', 16)
         def __init__(self, tuple):
             (self.hash,
@@ -233,15 +229,15 @@ class Binary_Bsa(ArcBinaryT):
 
     #region Headers : TES3
 
-    MW_BSAHEADER_FILEID = 0x00000100    # Magic for Morrowind BSA
+    MW_MAGIC = 0x00000100    # Magic for Morrowind BSA
 
-    class MW_Header:
+    class HDR3:
         _struct = ('<2I', 8)
         def __init__(self, tuple):
             (self.hashOffset,
             self.fileCount) = tuple
 
-    class MW_File:
+    class FILE3:
         _struct = ('<2I', 8)
         def __init__(self, tuple):
             (self.fileSize,
@@ -257,56 +253,51 @@ class Binary_Bsa(ArcBinaryT):
         magic = source.magic = r.readUInt32()
 
         # Oblivion - Skyrim
-        if magic == self.OB_BSAHEADER_FILEID:
-            header = r.readS(self.OB_Header)
-            if header.version != self.OB_BSAHEADER_VERSION \
-                and header.version != self.F3_BSAHEADER_VERSION \
-                and header.version != self.SSE_BSAHEADER_VERSION:
-                raise Exception('BAD MAGIC')
-            if (header.archiveFlags & self.OB_BSAARCHIVE_PATHNAMES) == 0 \
-                or (header.archiveFlags & self.OB_BSAARCHIVE_FILENAMES) == 0:
-                raise Exception('HEADER FLAGS')
+        if magic == self.OB_MAGIC:
+            header = r.readS(self.HDR4)
+            if header.version != self.OB_VERSION and header.version != self.F3_VERSION and header.version != self.SE_VERSION: raise Exception('BAD MAGIC')
+            if (header.archiveFlags & self.FLAG4_PATHNAMES) == 0 or (header.archiveFlags & self.FLAG4_FILENAMES) == 0: raise Exception('HEADER FLAGS')
             source.version = header.version
 
             # calculate some useful values
-            compressedToggle = (header.archiveFlags & self.OB_BSAARCHIVE_COMPRESSFILES) > 0
-            if header.version == self.F3_BSAHEADER_VERSION \
-                or header.version == self.SSE_BSAHEADER_VERSION:
-                source.tag = (header.archiveFlags & self.F3_BSAARCHIVE_PREFIXFULLFILENAMES) > 0
+            compressedToggle = (header.archiveFlags & self.FLAG4_COMPRESSFILES) > 0
+            if header.version == self.F3_VERSION or header.version == self.SE_VERSION:
+                source.tag = (header.archiveFlags & self.FLAG4_PREFIXS) > 0
 
             # read-all folders
-            foldersFiles = [x.fileCount for x in r.readSArray(self.OB_FolderSSE, header.folderCount)] if header.version == self.SSE_BSAHEADER_VERSION else \
-                [x.fileCount for x in r.readSArray(self.OB_Folder, header.folderCount)]
+            foldersFiles = \
+                [x.fileCount for x in r.readSArray(self.DIR4SE, header.folderCount)] if header.version == self.SE_VERSION else \
+                [x.fileCount for x in r.readSArray(self.DIR4, header.folderCount)]
 
             # read-all folder files
-            fileX = 0
+            j = 0
             source.files = files = [None] * header.fileCount
             for i in range(header.folderCount):
                 folderName = r.readFAString(r.readByte() - 1).replace('\\', '/')
                 r.skip(1)
-                headerFiles = r.readSArray(self.OB_File, foldersFiles[i])
+                headerFiles = r.readSArray(self.FILE4, foldersFiles[i])
                 for headerFile in headerFiles:
-                    compressed = (headerFile.size & self.OB_BSAFILE_SIZECOMPRESS) != 0
-                    packedSize = headerFile.size ^ self.OB_BSAFILE_SIZECOMPRESS if compressed else headerFile.size
-                    files[fileX] = FileSource(
+                    compressed = (headerFile.size & self.FILE4_SIZECOMPRESS) != 0
+                    packedSize = headerFile.size ^ self.FILE4_SIZECOMPRESS if compressed else headerFile.size
+                    files[j] = FileSource(
                         path = folderName,
                         offset = headerFile.offset,
                         compressed = 1 if compressed ^ compressedToggle else 0,
                         packedSize = packedSize,
-                        fileSize = packedSize & self.OB_BSAFILE_SIZEMASK if source.version == self.SSE_BSAHEADER_VERSION else packedSize)
-                    fileX += 1
+                        fileSize = packedSize & self.FILE4_SIZEMASK if source.version == self.SE_VERSION else packedSize)
+                    j += 1
 
             # read-all names
             for file in files: file.path = f'{file.path}/{r.readVWString()}'
 
         # Morrowind
-        elif magic == self.MW_BSAHEADER_FILEID:
-            header = r.readS(self.MW_Header)
+        elif magic == self.MW_MAGIC:
+            header = r.readS(self.HDR3)
             dataOffset = 12 + header.hashOffset + (header.fileCount << 3)
 
             # create filesources
             source.files = files = [None] * header.fileCount
-            headerFiles = r.readSArray(self.MW_File, header.fileCount)
+            headerFiles = r.readSArray(self.FILE3, header.fileCount)
             for i in range(header.fileCount):
                 headerFile = headerFiles[i]
                 size = headerFile.size
@@ -333,7 +324,7 @@ class Binary_Bsa(ArcBinaryT):
         r.seek(file.offset)
         if source.tag:
             prefixLength = r.readByte() + 1
-            if source.version == self.SSE_BSAHEADER_VERSION: fileSize -= prefixLength
+            if source.version == self.SE_VERSION: fileSize -= prefixLength
             r.seek(file.offset + prefixLength)
 
         # not compressed
@@ -343,7 +334,7 @@ class Binary_Bsa(ArcBinaryT):
         # compressed
         newFileSize = r.readUInt32(); fileSize -= 4
         return BytesIO(
-            decompressLz4(r, fileSize, newFileSize) if source.version == self.SSE_BSAHEADER_VERSION else \
+            decompressLz4(r, fileSize, newFileSize) if source.version == self.SE_VERSION else \
             decompressZlib(r, fileSize, newFileSize))
 
 #endregion - end::Binary_Bsa[]
@@ -389,6 +380,7 @@ class Binary_Esm(ArcBinaryT, IDatabase):
                 t = RecordGroup(level); t.records = list(g)
                 t.addHeader(GroupHeader(header = r, label = k), load = False)
                 groups[k] = t
+            # add items
             files.extend([FileSource(
                 path = f'{k.name}',
                 fileSize = 1,
@@ -405,7 +397,12 @@ class Binary_Esm(ArcBinaryT, IDatabase):
             if not (group := groups.get(r.label)): group = RecordGroup(level); groups.add(r.label, group)
             group.addHeader(r.group)
             b.seek(nextPosition)
-
+        # add items
+        files.extend([FileSource(
+            path = f'{k.name}',
+            fileSize = 1,
+            flags = k,
+            tag = s) for k, s in groups.items()])
     def process(self, source: BinaryArchive) -> None:
         if self.format == FormType.TES3:
             pass

@@ -80,7 +80,9 @@ partial class Program {
         //args = ["list", "-f", "Lith", "-u", @"game:/FEAR_1.Arch00#FEAR"];
 
         // GET
-        args = ["get", "-f", "Bethesda", "-u", "game:/Morrowind.esm#Morrowind", "-m", "*", "-o", "StreamObject", "-p", @"D:\T_\MorrowindEC"];
+        //args = ["get", "-f", "Bethesda", "-u", "game:/Morrowind.esm#Morrowind", "-m", "*", "-o", "StreamObject", "-p", @"D:\T_\MorrowindEC"];
+        args = ["get", "-f", "Bethesda", "-u", "game:/Oblivion.esm#Oblivion", "-m", "*", "-o", "StreamObject", "-p", @"D:\T_\OblivionEC"];
+
         //args = ["get", "-f", "Bethesda", "-u", "game:/Morrowind.bsa#Morrowind", "-m", "*.nif", "-o", "StreamObject", "-p", @"D:\T_\MorrowindC"];
         //args = ["get", "-f", "Bethesda", "-u", "game:/Morrowind.bsa#Morrowind", "-m", "meshes/l/light_com_candle_04.nif", "-o", "StreamObject", "-p", @"D:\T_\MorrowindC"];
         //args = ["get", "-f", "Bethesda", "-u", "game:/Morrowind.bsa#Morrowind", "-m", "meshes/b/b_n_breton_f_head_02.nif", "-o", "StreamObject", "-p", @"D:\T_\MorrowindC"];

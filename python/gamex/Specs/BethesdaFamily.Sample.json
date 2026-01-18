@@ -48,6 +48,10 @@
     "name": "The Elder Scrolls IV: Oblivion",
     "files": [
       {
+        "path": "Oblivion.esm:ACTI",
+        "type": "Database"
+      },
+      {
         "path": "Oblivion - Meshes.bsa:trees/treecottonwoodsu.spt",
         "size": 6329,
         "type": "Test"
@@ -62,6 +66,10 @@
   "Fallout3": {
     "name": "Fallout 3",
     "files": [
+      {
+        "path": "Fallout3.esm:ACTI",
+        "type": "Database"
+      },
       {
         "path": "Fallout - Textures.bsa:textures/interface/main/main_background.dds",
         "type": "Texture"
@@ -80,6 +88,10 @@
     "name": "Fallout New Vegas",
     "files": [
       {
+        "path": "FalloutNV.esm:ACTI",
+        "type": "Database"
+      },
+      {
         "path": "Fallout - Textures2.bsa:textures/interface/main/main_background.dds",
         "type": "Texture"
       },
@@ -96,6 +108,10 @@
   "Skyrim": {
     "name": "The Elder Scrolls V: Skyrim",
     "files": [
+      {
+        "path": "Skyrim.esm:ACTI",
+        "type": "Database"
+      },
       {
         "path": "Skyrim - Textures.bsa:textures/clutter/birthsignapprentice01.dds",
         "type": "Texture"
@@ -118,6 +134,10 @@
     "name": "Fallout 4",
     "files": [
       {
+        "path": "Fallout4.esm:ACTI",
+        "type": "Database"
+      },
+      {
         "path": "Fallout4 - Textures7.ba2:Textures/Terrain/Commonwealth/Commonwealth.4.-56.16_msn.DDS",
         "type": "Texture"
       },
@@ -136,6 +156,10 @@
   "SkyrimSE": {
     "name": "The Elder Scrolls V: Skyrim - Special Edition",
     "files": [
+      {
+        "path": "Skyrim.esm:ACTI",
+        "type": "Database"
+      },
       {
         "path": "Skyrim - Meshes0.bsa:meshes/scalegizmo.nif",
         "size": 8137,
@@ -156,6 +180,10 @@
     "name": "Fallout 4 VR",
     "files": [
       {
+        "path": "Fallout4.esm:ACTI",
+        "type": "Database"
+      },
+      {
         "path": "Fallout4 - Textures7.ba2:Textures/Terrain/Commonwealth/Commonwealth.4.-56.16_msn.DDS",
         "type": "Texture"
       },
@@ -175,6 +203,10 @@
     "name": "The Elder Scrolls V: Skyrim VR",
     "files": [
       {
+        "path": "Skyrim.esm:ACTI",
+        "type": "Database"
+      },
+      {
         "path": "Skyrim - Textures.bsa:textures/clutter/birthsignapprentice01.dds",
         "type": "Texture"
       },
@@ -186,10 +218,36 @@
   },
   "Fallout76": {
     "name": "Fallout 76",
-    "files": []
+    "files": [
+      {
+        "path": "SeventySix.esm:ACTI",
+        "type": "Database"
+      }
+    ]
   },
   "Starfield": {
     "name": "Starfield",
+    "files": [
+      {
+        "path": "Starfield.esm:ACTI",
+        "type": "Database"
+      }
+    ]
+  },
+  "TES:C": {
+    "name": "The Elder Scrolls: Castles",
+    "files": []
+  },
+  "Oblivion:R": {
+    "name": "The Elder Scrolls IV: Oblivion Remastered",
+    "files": []
+  },
+  "TES6": {
+    "name": "The Elder Scrolls VI (future)",
+    "files": []
+  },
+  "Fallout5": {
+    "name": "Fallout 5 (future)",
     "files": []
   }
 }

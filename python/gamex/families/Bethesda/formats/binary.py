@@ -352,11 +352,13 @@ class Binary_Esm(ArcBinaryT, IDatabase):
         match game:
             # tes
             case 'Morrowind': return FormType.TES3
-            case 'Oblivion': return FormType.TES4
+            case 'Oblivion' | 'Oblivion:R': return FormType.TES4
             case 'Skyrim' | 'SkyrimSE' | 'SkyrimVR': return FormType.TES5
             # fallout
             case 'Fallout3' | 'FalloutNV': return FormType.TES4
             case 'Fallout4' | 'Fallout4VR': return FormType.TES5
+            case 'Fallout76' : return FormType.TES5
+            # starfield
             case 'Starfield': return FormType.TES6
             case _: raise Exception(f'Unknown: {game}')
 
@@ -367,6 +369,7 @@ class Binary_Esm(ArcBinaryT, IDatabase):
         binPath = source.binPath
         r = Header(b, binPath, format)
         record = Record.factory(r, r.type, level)
+        if source.game.id == 'Fallout3' or source.game.id == 'FalloutNV': r.skip(4)
         record.read(r)
         files = source.files = []
 

@@ -481,6 +481,7 @@ class Header(BinaryReader):
     @property
     def compressed(self) -> bool: return Header.EsmFlags.Compressed in self.flags
     id: int = 0
+    version: int = 0
     group: 'GroupHeader' = None
     position: int
 
@@ -507,9 +508,10 @@ class Header(BinaryReader):
             self.flags = Header.EsmFlags(r.readUInt32())
             if format == FormType.TES3: break
             self.id = r.readUInt32()
-            r.readUInt32()
+            r.skip(4)
             if format == FormType.TES4: break
-            r.readUInt32()
+            self.version = r.readUInt16()
+            r.skip(2)
             if format == FormType.TES5: break
         self.position = r.tell()
 
@@ -740,7 +742,7 @@ class Record:
                 if field.dataSize != 4: raise Exception()
                 field.dataSize = r.readUInt32()
                 continue
-            elif field.type == FieldType.OFST and self._header.Type == FormType.WRLD: r.seek(end); continue
+            elif field.type == FieldType.OFST and self._header.type == FormType.WRLD: r.seek(end); continue
             tell = r.tell()
             if self.createField(r, field.type, field.dataSize) == Record._empty: print(f'Unsupported ESM record type: {self._header.type}:{field.type}'); r.skip(field.dataSize); continue
             r.ensureAtEnd(tell + field.dataSize, f'Failed reading {self._header.type}:{field.type} field data at offset {tell} in {r.binPath} of {r.tell() - tell - field.dataSize}')

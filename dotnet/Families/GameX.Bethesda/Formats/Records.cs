@@ -29,7 +29,7 @@ namespace GameX.Bethesda.Formats.Records;
 // TES5
 //https://en.uesp.net/wiki/Bethesda5Mod:Mod_File_Format
 //https://github.com/TES5Edit/TES5Edit/blob/dev/wbDefinitionsTES5.pas 
-
+//https://en.uesp.net/wiki/Tes5Mod:Mod_File_Format
 
 //https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format
 //https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format
@@ -461,6 +461,12 @@ public interface IHaveMODL {
     MODLGroup MODL { get; }
 }
 
+/// <summary>
+/// Header
+/// </summary>
+/// <see cref="https://en.uesp.net/wiki/Tes3Mod:Mod_File_Format#Records"/>
+/// <see cref="https://en.uesp.net/wiki/Tes4Mod:Mod_File_Format#Records"/>
+/// <see cref="https://en.uesp.net/wiki/Tes5Mod:Mod_File_Format#Records"/>
 public class Header : BinaryReader {
     [Flags]
     public enum EsmFlags : uint {
@@ -499,6 +505,7 @@ public class Header : BinaryReader {
     public EsmFlags Flags;
     public bool Compressed => (Flags & EsmFlags.Compressed) != 0;
     public uint Id;
+    public ushort Version;
     public GroupHeader Group;
     public long Position;
 
@@ -528,10 +535,11 @@ public class Header : BinaryReader {
             if (Format == TES3) break;
             // tes4
             Id = r.ReadUInt32();
-            r.ReadUInt32();
+            r.Skip(4);
             if (Format == TES4) break;
             // tes5
-            r.ReadUInt32();
+            Version = r.ReadUInt16();
+            r.Skip(2);
             if (Format == TES5) break;
         }
         Position = r.Tell();

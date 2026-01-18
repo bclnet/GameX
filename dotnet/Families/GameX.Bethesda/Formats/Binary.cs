@@ -518,11 +518,13 @@ public unsafe class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
         => game switch {
             // tes
             "Morrowind" => FormType.TES3,
-            "Oblivion" => FormType.TES4,
+            "Oblivion" or "Oblivion:R" => FormType.TES4,
             "Skyrim" or "SkyrimSE" or "SkyrimVR" => FormType.TES5,
             // fallout
             "Fallout3" or "FalloutNV" => FormType.TES4,
             "Fallout4" or "Fallout4VR" => FormType.TES5,
+            "Fallout76" => FormType.TES5,
+            // starfield
             "Starfield" => FormType.TES6,
             _ => throw new ArgumentOutOfRangeException(nameof(game), game),
         };
@@ -558,6 +560,7 @@ public unsafe class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
         var level = 1;
         var binPath = source.BinPath;
         var r = new Header(b, binPath, format);
+        if (source.Game.Id == "Fallout3" || source.Game.Id == "FalloutNV") r.Skip(4);
         var record = Record.Factory(r, r.Type, level);
         record.Read(r);
         List<FileSource> files = []; source.Files = files;

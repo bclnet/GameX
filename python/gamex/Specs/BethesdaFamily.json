@@ -32,12 +32,7 @@
         ".bsa",
         ".esm"
       ],
-      "_paky": "game:/Morrowind.esm",
       "_pakz": "game:/Morrowind.bsa",
-      "_pakx": [
-        "game:/Morrowind.bsa",
-        "game:/Morrowind.esm"
-      ],
       "files": {
         "key": [
           "Steam:22320",
@@ -71,7 +66,6 @@
       ],
       "_arcx": "game:/Oblivion*.bsa",
       "_pakx": "game:/Oblivion - Meshes.bsa",
-      "_datx": "game:/Oblivion.esm",
       "files": {
         "key": [
           "Steam:22330",
@@ -92,7 +86,6 @@
         ".esm"
       ],
       "_arc": "game:/Fallout*.bsa",
-      "_dat": "game:/Fallout3.esm",
       "files": {
         "key": [
           "Steam:22370",
@@ -113,7 +106,6 @@
         ".esm"
       ],
       "_arc": "game:/Fallout*.bsa",
-      "_dat": "game:/FalloutNV.esm",
       "files": {
         "key": [
           "Steam:22380",
@@ -134,7 +126,6 @@
         ".esm"
       ],
       "_arc": "game:/Skyrim*.bsa",
-      "_dat": "game:/Skyrim.esm",
       "files": {
         "key": [
           "Steam:72850",
@@ -155,7 +146,6 @@
         ".esm"
       ],
       "_arc": "game:/Fallout4*.ba2",
-      "_dat": "game:/Fallout4.esm",
       "files": {
         "key": [
           "Steam:377160",
@@ -176,7 +166,6 @@
         ".esm"
       ],
       "_arc": "game:/Skyrim*.bsa",
-      "_dat": "game:/Skyrim.esm",
       "files": {
         "key": [
           "Steam:489830",
@@ -211,7 +200,6 @@
         ".esm"
       ],
       "_arc": "game:/Fallout4*.ba2",
-      "_dat": "game:/Fallout4.esm",
       "files": {
         "key": [
           "Steam:611660",
@@ -232,7 +220,6 @@
         ".esm"
       ],
       "_arc": "game:/Skyrim*.bsa",
-      "_dat": "game:/Skyrim.esm",
       "files": {
         "key": [
           "Steam:611670",
@@ -253,7 +240,6 @@
         ".esm"
       ],
       "_arc": "game:/SeventySix.ba2",
-      "_dat": "game:/SeventySix.esm",
       "files": {
         "key": [
           "Steam:1151340",
@@ -279,7 +265,6 @@
         ".esm"
       ],
       "_arc": "game:/Starfield*.ba2",
-      "_dat": "game:/Starfield.esm",
       "files": {
         "key": [
           "Steam:1716740",
@@ -303,18 +288,17 @@
       ],
       "date": "2025-04-22",
       "engine": "Unreal:5",
-      "arcExt": ".bsa",
-      "datExt": ".esm",
-      "zpak": "game:/Oblivion*.bsa",
-      "zpakx": "game:/Oblivion - Meshes.bsa",
-      "zdat": "game:/Oblivion.esm",
+      "arcExt": [
+        ".ba2",
+        ".esm"
+      ],
       "files": {
         "key": [
           "Steam:2623190",
           "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 2623190",
           "Local:Oblivion Remastered"
         ],
-        "path": "OblivionRemastered/Content"
+        "path": "OblivionRemastered/Content/dev/ObvData/Data"
       }
     },
     "TES6": {

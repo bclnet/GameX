@@ -240,7 +240,12 @@
   },
   "Oblivion:R": {
     "name": "The Elder Scrolls IV: Oblivion Remastered",
-    "files": []
+    "files": [
+      {
+        "path": "Oblivion.esm:ACTI",
+        "type": "Database"
+      }
+    ]
   },
   "TES6": {
     "name": "The Elder Scrolls VI (future)",

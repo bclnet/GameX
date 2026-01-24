@@ -3,6 +3,7 @@ from io import BytesIO
 from itertools import groupby
 from typing import TypeVar, get_args
 from enum import Enum, Flag, IntEnum, IntFlag
+from struct import unpack
 from numpy import ndarray, array
 from openstk import log, Int3, Byte3, Float3
 from openstk.core.drawing import Color
@@ -425,6 +426,16 @@ class FieldType(Enum):
         print(f'_missing_: {s}')
         return s
 
+class ActorValue(IntEnum):
+    None_ = -1
+    Strength = 0; Intelligence = 1; Willpower = 2; Agility = 3; Speed = 4; Endurance = 5; Personality = 6; Luck = 7; Health = 8; Magicka = 9; Fatigue = 10; Encumbrance = 11
+    Armorer = 12; Athletics = 13; Blade = 14; Block = 15; Blunt = 16; HandToHand = 17; HeavyArmor = 18; Alchemy = 19; Alteration = 20; Conjuration = 21; Destruction = 22; Illusion = 23
+    Mysticism = 24; Restoration = 25; Acrobatics = 26; LightArmor = 27; Marksman = 28; Mercantile = 29; Security = 30; Sneak = 31; Speechcraft = 32
+    # Extra Actor Values
+    Aggression = 33; Confidence = 34; Energy = 35; Responsibility = 36; Bounty = 37; Fame = 38; Infamy = 39; MagickaMultiplier = 40; NightEyeBonus = 41; AttackBonus = 42; DefendBonus = 43; CastingPenalty = 44; Blindness = 45
+    Chameleon = 46; Invisibility = 47; Paralysis = 48; Silence = 49; Confusion = 50; DetectItemRange = 51; SpellAbsorbChance = 52; SpellReflectChance = 53; SwimSpeedMultiplier = 54; WaterBreathing = 55; WaterWalking = 56; StuntedMagicka = 57; DetectLifeRange = 58
+    ReflectDamage = 59; Telekinesis = 60; ResistFire = 61; ResistFrost = 62; ResistDisease = 63; ResistMagic = 64; ResistNormalWeapons = 65; ResistParalysis = 66; ResistPoison = 67; ResistShock = 68; Vampirism = 69; Darkness = 70; ResistWaterDamage = 71
+
 #endregion
 
 #region Header
@@ -437,7 +448,7 @@ class IHaveMODL:
 # Header
 class Header(BinaryReader):
     # EsmFlags
-    class EsmFlags(Flag):
+    class EsmFlags(IntFlag):
         None_ = 0x00000000                  # None
         EsmFile = 0x00000001                # ESM file. (TES4.HEDR record only.)
         Deleted = 0x00000020                # Deleted
@@ -563,6 +574,10 @@ class FLTVField:
     _struct = ('<f', 4)
     def __repr__(self) -> str: return f'{self.value}'
     def __init__(self, tuple = None, value = 0): self.value = tuple[0] if tuple else value
+class CHARField: 
+    _struct = ('<c', 1)
+    def __repr__(self) -> str: return f'{self.value}'
+    def __init__(self, tuple = None, value = '\0'): self.value = chr(tuple[0][0]) if tuple else value
 class BYTEField: 
     _struct = ('<B', 1)
     def __repr__(self) -> str: return f'{self.value}'
@@ -620,7 +635,6 @@ class MODLGroup:
 #region Record
 
 class Record:
-    def __repr__(self) -> str: return f'{self.__class__.__name__[:4]}:{self.EDID.value if self.EDID else None}'
     _mapx: dict[FormType, (callable, callable)] = {
         FormType.TES3: (lambda: TES3Record(), lambda x: True),
         FormType.TES4: (lambda: TES4Record(), lambda x: True),
@@ -719,14 +733,11 @@ class Record:
         FormType.TRNS: (lambda: TRNSRecord(), lambda x: x > 5),
         FormType.TXST: (lambda: TXSTRecord(), lambda x: x > 5)
     }
+    def __repr__(self) -> str: return f'{self.__class__.__name__[:4]}:{self.EDID.value if self.EDID else None}'
     _empty: 'Record'
     _header: Header = None
     EDID: STRVField # Editor ID
     def __init__(self, fill: bool = False): self.EDID = STRVField(); self._fill = fill
-
-    # def tes3(self): pass
-    # def tes4(self): pass
-    # def tes5(self): pass
 
     # Completes a record.
     def complete(self, r: Header) -> None: pass
@@ -752,7 +763,7 @@ class Record:
     @staticmethod
     def factory(r: Header, type: FieldType, level: int = 1000) -> 'Record':
         if not (z := Record._mapx.get(type)): print(f'Unsupported ESM record type: {type}'); return None
-        if type != FormType.TES3 and type != FormType.TES4 and type not in Record._factorySet: return None
+        # if type != FormType.TES3 and type != FormType.TES4 and type not in Record._factorySet: return None
         # if not z[1](level): return None
         record = z[0](); record._header = r
         return record
@@ -786,9 +797,10 @@ class Ref2Field[T: Record]:
 
 #endregion
 
-# Record._factorySet = { FormType.ACTI, FormType.ALCH, FormType.APPA, FormType.ARMO, FormType.BODY, FormType.BSGN, FormType.CELL, FormType.CLAS }
+# Record._factorySet = { FormType.ACTI, FormType.ALCH, FormType.APPA, FormType.ARMO, FormType.BODY, FormType.BSGN, FormType.CELL, FormType.CLAS, FormType.CLOT, FormType.CONT, FormType.CREA }
+# Record._factorySet = { FormType.DIAL, FormType.INFO, FormType.DOOR, FormType.ENCH, FormType.FACT, FormType.GLOB }
 # Record._factorySet = { FormType.MGEF, FormType.REGN, FormType.LIGH, FormType.DIAL }
-Record._factorySet = { FormType.DIAL, FormType.INFO }
+Record._factorySet = { FormType.GLOB }
 
 #region Record Group
 
@@ -1032,16 +1044,16 @@ class ALCHRecord(Record, IHaveMODL):
             self.weight = r.readSingle()
             if r.format == FormType.TES3:
                 self.value = r.readInt32()
-                self.flags = self.Flag(r.readInt32())
+                self.flags = ALCHRecord.DATAField.Flag(r.readInt32())
         def ENITField(self, r: Header, dataSize: int) -> object:
             self.value = r.readInt32()
-            self.flags = self.Flag(r.readByte())
+            self.flags = ALCHRecord.DATAField.Flag(r.readByte())
             r.skip(3) # Unknown
             return True
     # TES3
     class ENAMField:
-        _struct = ('<h2B5I', 24)
         class Range(Enum): Self = 0; Touch = 1; Target = 2
+        _struct = ('<h2B5I', 24)
         def __init__(self, tuple):
             (self.effectId,
             self.skillId, # for skill related effects, -1/0 otherwise
@@ -1051,7 +1063,7 @@ class ALCHRecord(Record, IHaveMODL):
             self.duration,
             self.magnitudeMin,
             self.magnitudeMax) = tuple
-            self.range = self.Range(self.range)
+            self.range = ALCHRecord.ENAMField.Range(self.range)
 
 
     MODL: MODLGroup # Model
@@ -1090,6 +1102,7 @@ class ALCHRecord(Record, IHaveMODL):
 # AMMO.Ammo - 0450 - tag::AMMO[]
 class AMMORecord(Record, IHaveMODL):
     class DATAField:
+        class Flag(Flag): IgnoresNormalWeaponResistance = 0x1
         _struct = ('<f2IfH', 18)
         def __init__(self, tuple):
             (self.speed,
@@ -1097,6 +1110,7 @@ class AMMORecord(Record, IHaveMODL):
             self.value,
             self.weight,
             self.damage) = tuple
+            self.flag = AMMORecord.DATAField.Flag(self.flag)
 
     MODL: MODLGroup # Model
     FULL: STRVField # Item Name
@@ -1141,20 +1155,20 @@ class ANIORecord(Record, IHaveMODL):
 # dep: SCPTRecord
 # APPA.Alchem Apparatus - 3450 - tag::APPA[]
 class APPARecord(Record, IHaveMODL):
-    # TESX
     class DATAField:
-        type: int # 0 = Mortar and Pestle, 1 = Albemic, 2 = Calcinator, 3 = Retort
+        class Type_(Enum): MortarAndPestle = 0; Albemic = 1; Calcinator = 2; Retort = 3
+        type: Type_
         value: int
         weight: float
         quality: float
         def __init__(self, r: Header, dataSize: int):
             if r.format == FormType.TES3:
-                self.type = r.readInt32() & 0xFF
+                self.type = APPARecord.DATAField.Type_(r.readInt32() & 0xFF)
                 self.quality = r.readSingle()
                 self.weight = r.readSingle()
                 self.value = r.readInt32()
                 return
-            self.type = r.readByte()
+            self.type = APPARecord.DATAField.Type_(r.readByte())
             self.value = r.readInt32()
             self.weight = r.readSingle()
             self.quality = r.readSingle()
@@ -1195,7 +1209,7 @@ class ARMARecord(Record):
 # dep: CLOTRecord, ENCHRecord, SCPTRecord
 # ARMO.Armor - 3450 - tag::ARMA[]
 class ARMORecord(Record, IHaveMODL):
-    # TESX
+    
     class DATAField:
         class ARMOType(Enum): Helmet = 0; Cuirass = 2; L_Pauldron = 3; R_Pauldron = 4; Greaves = 5; Boots = 6; L_Gauntlet = 7; R_Gauntlet = 8; Shield = 9; L_Bracer = 10; R_Bracer = 11
         armour: int
@@ -1392,26 +1406,26 @@ class BOIMRecord(Record):
 # dep: ENCHRecord, SCPTRecord
 # BOOK.Book - 3450 - tag::BOOK[]
 class BOOKRecord(Record, IHaveMODL):
+    class Flag(Flag): Scroll = 0x01; CantBeTaken = 0x02
     class DATAField:
-        flags: int # Scroll - (1 is scroll, 0 not)
+        flags: Flag
         teaches: int # SkillId - (-1 is no skill)
         value: int
         weight: float
         # TES3
-        enchantPts: int
+        enchantPts: int = 0
         def __init__(self, r: Header, dataSize: int):
             if r.format == FormType.TES3:
                 self.weight = r.readSingle()
                 self.value = r.readInt32()
-                self.flags = r.readInt32() & 0xFF
-                self.teaches = r.readInt32() & 0xFF
+                self.flags = BOOKRecord.Flag(r.readInt32())
+                self.teaches = ActorValue(r.readInt32())
                 self.enchantPts = r.readInt32()
                 return
-            self.flags = r.readByte()
-            self.teaches = r.readByte()
+            self.flags = BOOKRecord.Flag(r.readByte())
+            self.teaches = ActorValue(r.readSByte())
             self.value = r.readInt32()
             self.weight = r.readSingle()
-            self.enchantPts = 0
 
     MODL: MODLGroup # Model (optional)
     FULL: STRVField # Item Name
@@ -1656,79 +1670,49 @@ class CELLRecord(Record): #ICellRecord
 # dep: None
 # CLAS.Class - 3450 - tag::CLAS[]
 class CLASRecord(Record):
-    class ActorValue(Enum):
-        Strength = 0; Intelligence = 1; Willpower = 2; Agility = 3; Speed = 4; Endurance = 5; Personality = 6; Luck = 7; Health = 8; Magicka = 9; Fatigue = 10; Encumbrance = 11
-        Armorer = 12; Athletics = 13; Blade = 14; Block = 15; Blunt = 16; HandToHand = 17; HeavyArmor = 18; Alchemy = 19; Alteration = 20; Conjuration = 21; Destruction = 22; Illusion = 23
-        Mysticism = 24; Restoration = 25; Acrobatics = 26; LightArmor = 27; Marksman = 28; Mercantile = 29; Security = 30; Sneak = 31; Speechcraft = 32
-        # Extra Actor Values
-        Aggression = 33; Confidence = 34; Energy = 35; Responsibility = 36; Bounty = 37; Fame = 38; Infamy = 39; MagickaMultiplier = 40; NightEyeBonus = 41; AttackBonus = 42; DefendBonus = 43; CastingPenalty = 44; Blindness = 45
-        Chameleon = 46; Invisibility = 47; Paralysis = 48; Silence = 49; Confusion = 50; DetectItemRange = 51; SpellAbsorbChance = 52; SpellReflectChance = 53; SwimSpeedMultiplier = 54; WaterBreathing = 55; WaterWalking = 56; StuntedMagicka = 57; DetectLifeRange = 58
-        ReflectDamage = 59; Telekinesis = 60; ResistFire = 61; ResistFrost = 62; ResistDisease = 63; ResistMagic = 64; ResistNormalWeapons = 65; ResistParalysis = 66; ResistPoison = 67; ResistShock = 68; Vampirism = 69; Darkness = 70; ResistWaterDamage = 71
-    class Specialization(Enum): Combat = 0; Magic = 1; Stealth = 2
-    class Flags(Flag): Playable = 0x00000001; Guard = 0x00000002
-    class Services(Flag):
-        Weapon = 0x00001
-        Armor = 0x00002
-        Clothing = 0x00004
-        Books = 0x00008
-        Ingredients = 0x00010
-        Picks = 0x00020
-        Probes = 0x00040
-        Lights = 0x00080
-        Apparatus = 0x00100
-        RepairItems = 0x00200
-        Misc = 0x00400
-        Spells = 0x00800
-        MagicItems = 0x01000
-        Potions = 0x02000
-        Training = 0x04000
-        Spellmaking = 0x08000
-        Enchanting = 0x10000
-        Repair = 0x20000
-    class Skill(Enum):
-        None_ = -1
-        Armorer = 0
-        Athletics = 1
-        Blade = 2
-        Block = 3
-        Blunt = 4
-        HandToHand = 5
-        HeavyArmor = 6
-        Alchemy = 7
-        Alteration = 8
-        Conjuration = 9
-        Destruction = 10
-        Illusion = 11
-        Mysticism = 12
-        Restoration = 13
-        Acrobatics = 14
-        LightArmor = 15
-        Marksman = 16
-        Mercantile = 17
-        Security = 18
-        Sneak = 19
-        Speechcraft = 20
     class DATAField:
+        class Specialization_(Enum): Combat = 0; Magic = 1; Stealth = 2
+        class Flag(Flag): Playable = 0x00000001; Guard = 0x00000002
+        class Service(IntFlag):
+            Weapon = 0x00001
+            Armor = 0x00002
+            Clothing = 0x00004
+            Books = 0x00008
+            Ingredients = 0x00010
+            Picks = 0x00020
+            Probes = 0x00040
+            Lights = 0x00080
+            Apparatus = 0x00100
+            RepairItems = 0x00200
+            Misc = 0x00400
+            Spells = 0x00800
+            MagicItems = 0x01000
+            Potions = 0x02000
+            Training = 0x04000
+            Spellmaking = 0x08000
+            Enchanting = 0x10000
+            Repair = 0x20000
+        skillTrained: ActorValue = ActorValue.None_
+        maximumTrainingLevel: int = 0
+        unused: int = 0
         def __init__(self, r: Header, dataSize: int):
             if r.format == FormType.TES3:
-                self.primaryAttributes = [CLASRecord.ActorValue(r.readUInt32()), CLASRecord.ActorValue(r.readUInt32())]
-                self.specialization = CLASRecord.Specialization(r.readUInt32())
-                self.majorSkills = r.readPArray(lambda s: CLASRecord.ActorValue(s[0]), 'I', 10)
-                self.flags = CLASRecord.Flags(r.readUInt32())
-                self.services = CLASRecord.Services(r.readUInt32()) # Buys/Sells and Services
-                self.teaches = 0
-                self.maximumTrainingLevel = 0
-                self.unused = 0
+                self.primaryAttributes = [ActorValue(r.readUInt32()), ActorValue(r.readUInt32())]
+                self.specialization = CLASRecord.DATAField.Specialization_(r.readUInt32())
+                self.majorSkills = r.readPArray(lambda s: ActorValue(s[0]), 'I', 10)
+                self.flags = CLASRecord.DATAField.Flag(r.readUInt32())
+                self.services = CLASRecord.DATAField.Service(r.readUInt32()) # Buys/Sells and Services
                 return
             elif r.format == FormType.TES4:
-                self.primaryAttributes = [CLASRecord.ActorValue(r.readUInt32()), CLASRecord.ActorValue(r.readUInt32())]
-                self.specialization = CLASRecord.Specialization(r.readUInt32())
+                self.primaryAttributes = [ActorValue(r.readUInt32()), ActorValue(r.readUInt32())]
+                self.specialization = CLASRecord.DATAField.Specialization_(r.readUInt32())
                 self.majorSkills = r.readPArray(ActorValue, 'I', 7)
-                self.flags = CLASRecord.Flags(r.readUInt32())
-                self.services = CLASRecord.Services(r.readUInt32()) # Buys/Sells and Services
-                self.teaches = CLASRecord.Skill(r.readSByte())
+                self.flags = CLASRecord.DATAField.Flag(r.readUInt32())
+                self.services = CLASRecord.DATAField.Service(r.readUInt32()) # Buys/Sells and Services
+                self.skillTrained = ActorValue(r.readSByte())
                 self.maximumTrainingLevel = r.readByte() # (0-100)
                 self.unused = r.readUInt16()
+                if self.skillTrained != ActorValue.None_: self.skillTrained += 12
                 return
             raise NotImplementedError('CLASRecord')
             # r.skip(dataSize)
@@ -1867,7 +1851,7 @@ class CLMTRecord(Record, IHaveMODL):
 # dep: SCPTRecord, SOUNRecord
 # CONT.Container - 3450 - tag::CONT[]
 class CONTRecord(Record, IHaveMODL):
-    # TESX
+    
     class DATAField:
         flags: int # flags 0x0001 = Organic, 0x0002 = Respawns, organic only, 0x0008 = Default, unknown
         weight: float
@@ -2247,17 +2231,17 @@ class DOORRecord(Record, IHaveMODL):
     FULL: STRVField # Door name
     MODL: MODLGroup # NIF model filename
     SCRI: RefField['SCPTRecord'] = None # Script (optional)
-    SNAM: RefField['SOUNRecord'] # Open Sound
-    ANAM: RefField['SOUNRecord'] # Close Sound
+    SNAM: RefField['SOUNRecord'] = None # Open Sound
+    ANAM: RefField['SOUNRecord'] = None # Close Sound
     # TES4
-    BNAM: RefField['SOUNRecord'] # Loop Sound
-    FNAM: BYTEField # Flags
-    TNAM: RefField[Record] # Random teleport destination
+    BNAM: RefField['SOUNRecord'] = None # Loop Sound
+    FNAM: BYTEField = BYTEField() #! Flags
+    TNAM: RefField[Record] = None # Random teleport destination
     def __init__(self): super().__init__()
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
-            case FieldType.EDID | FieldType.NAME: z = self.DID = r.readSTRV(dataSize)
+            case FieldType.EDID | FieldType.NAME: z = self.EDID = self.FULL = r.readSTRV(dataSize)
             case FieldType.FULL: z = self.FULL = r.readSTRV(dataSize)
             case FieldType.FNAM if r.format != FormType.TES3: z = self.FNAM = r.readS(BYTEField, dataSize) #:matchif
             case FieldType.FNAM if r.format == FormType.TES3: z = self.FULL = r.readSTRV(dataSize) #:matchif
@@ -2412,14 +2396,14 @@ class EFSHRecord(Record):
 # dep: None
 # ENCH.Enchantment - 3450 - tag::ENCH[]
 class ENCHRecord(Record):
-    # TESX
     class ENITField:
-        # TES3: 0 = Cast Once, 1 = Cast Strikes, 2 = Cast when Used, 3 = Constant Effect
-        # TES4: 0 = Scroll, 1 = Staff, 2 = Weapon, 3 = Apparel
+        class Type3(Enum): CastOnce = 0; CastStrikes = 1; CastWhenUsed = 2; ConstantEffect = 3
+        class Type4(Enum): Scroll = 0; Staff = 1; Weapon = 2; Apparel = 3
+        class Flag(Flag): AutoCalc = 0x01
         type: int
         enchantCost: int
         chargeAmount: int # Charge
-        flags: int # AutoCalc
+        flags: int
         def __init__(self, r: Header, dataSize: int):
             self.type = r.readInt32()
             if r.format == FormType.TES3:
@@ -2431,8 +2415,9 @@ class ENCHRecord(Record):
             self.flags = r.readInt32()
 
     class EFITField:
+        class Type_(Enum): Self = 0; Touch = 1; Target = 2
         effectId: str
-        type: int # RangeType - 0 = Self, 1 = Touch, 2 = Target
+        type: Type_
         area: int
         duration: int
         magnitudeMin: int
@@ -2441,13 +2426,13 @@ class ENCHRecord(Record):
         attributeId: int # (-1 if NA)
         magnitudeMax: int
         # TES4
-        actorValue: int
+        actorValue: ActorValue = ActorValue.None_
         def __init__(self, r: Header, dataSize: int):
             if r.format == FormType.TES3:
-                self.effectId = r.readFAString(2)
-                self.skillId = r.readByte()
-                self.attributeId = r.readByte()
-                self.type = r.readInt32()
+                self.effectId = str(r.readUInt16())
+                self.skillId = r.readSByte()
+                self.attributeId = r.readSByte()
+                self.type = self.Type_(r.readInt32())
                 self.area = r.readInt32()
                 self.duration = r.readInt32()
                 self.magnitudeMin = r.readInt32()
@@ -2457,8 +2442,8 @@ class ENCHRecord(Record):
             self.magnitudeMin = r.readInt32()
             self.area = r.readInt32()
             self.duration = r.readInt32()
-            self.type = r.readInt32()
-            self.actorValue = r.readInt32()
+            self.type = self.Type_(r.readInt32())
+            self.actorValue = ActorValue(r.readInt32())
 
     # TES4
     class SCITField:
@@ -2485,7 +2470,7 @@ class ENCHRecord(Record):
 
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
-            case FieldType.EDID | FieldType.NAME: z = self.EDID = r.readSTRV(dataSize)
+            case FieldType.EDID | FieldType.NAME: z = self.EDID = self.FULL = r.readSTRV(dataSize)
             case FieldType.FULL if len(self.SCITs) == 0: z = self.FULL = r.readSTRV(dataSize) #:matchif
             case FieldType.FULL if len(self.SCITs) != 0: z = self.SCITs.last().FULLField(r, dataSize) #:matchif
             case FieldType.ENIT | FieldType.ENDT: z = self.ENIT = self.ENITField(r, dataSize)
@@ -2517,7 +2502,6 @@ class EYESRecord(Record):
 # dep: None
 # FACT.Faction - 3450 - tag::FACT[]
 class FACTRecord(Record):
-    # TESX
     class RNAMGroup:
         def __repr__(self): return f'{self.RNAM.value}:{self.MNAM.value}'
         def __init__(self, RNAM: IN32Field = None, MNAM: STRVField = None):
@@ -2527,42 +2511,67 @@ class FACTRecord(Record):
             self.INAM: STRVField = None # insignia
 
     # TES3
+    class RankModifier:
+        _struct = ('5I', 20)
+        def __init__(self, tuple):
+            attributes = self.attributes = [None]*2
+            (attributes[0], attributes[1],
+            self.primarySkill,
+            self.favoredSkill,
+            self.factionReaction) = tuple
     class FADTField:
-        def __init__(self, r: Header, dataSize: int): r.skip(dataSize)
+        class Flag(Flag): HiddenFromPlayer = 0x1
+        _struct = ('2I20s20s20s20s20s20s20s20s20s20s7iI', 240)
+        def __init__(self, tuple):
+            attributes = self.attributes = [None]*2
+            rankModifiers = self.rankModifiers = [None]*10
+            skills = self.skills = [None]*7
+            (attributes[0], attributes[1],
+            rankModifiers[0], rankModifiers[1], rankModifiers[2], rankModifiers[3], rankModifiers[4], rankModifiers[5], rankModifiers[6], rankModifiers[7], rankModifiers[8], rankModifiers[9],
+            skills[0], skills[1], skills[2], skills[3], skills[4], skills[5], skills[6],
+            self.flags) = tuple
+            self.rankModifiers = [FACTRecord.RankModifier(unpack(FACTRecord.RankModifier._struct[0], s)) for s in self.rankModifiers]
+
+    class ANAMGroup:
+        def __repr__(self): return f'{self.ANAM.value}:{self.INTV.value}'
+        def __init__(self, ANAM: STRVField = None, INTV: INTVField = None):
+            self.ANAM: STRVField = ANAM # rank
+            self.INTV: INTVField = INTV # male
 
     # TES4
     class XNAMField:
         def __repr__(self): return f'{self.formId}'
-        def __init__(self, r: Header, dataSize: int):
+        def __init__(self, r: Header = None, dataSize: int = None):
+            if not r: self.formId = self.mod = self.combat = 0; return
             self.formId: int = r.readInt32()
             self.mod: int = r.readInt32()
             self.combat: int = r.readInt32() if r.format > FormType.TES4 else 0
 
-    FNAM: STRVField # Faction name
-    RNAMs: list[RNAMGroup] = [] # Rank Name
-    FADT: FADTField # Faction data
-    ANAMs: list[STRVField] = [] # Faction name
-    INTVs: list[INTVField] = [] # Faction reaction
+    FULL: STRVField # Faction name
+    RNAM: STRVField = None # Rank name
+    FADT: FADTField = None # Faction data
+    ANAMs: list[STRVField] = [] # Factions
     # TES4
-    XNAM: XNAMField # Interfaction Relations
-    DATA: INTVField # Flags (byte, uint32)
-    CNAM: UI32Field
-    def __init__(self): super().__init__(); self.RNAMs = listx(); self.ANAMs = listx(); self.INTVs = listx()
+    XNAM: XNAMField = XNAMField() #! Interfaction Relations
+    RNAMs: list[RNAMGroup] = [] # Ranks
+    DATA: INTVField = INTVField() #! Flags (byte, uint32)
+    CNAM: UI32Field = UI32Field() #!
+    def __init__(self): super().__init__(); self.ANAMs = listx(); self.RNAMs = listx()
     
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         if r.format == FormType.TES3:
             match type:
                 case FieldType.NAME: z = self.EDID = r.readSTRV(dataSize)
-                case FieldType.FNAM: z = self.FNAM = r.readSTRV(dataSize)
-                case FieldType.RNAM: z = self.RNAMs.addX(self.RNAMGroup(MNAM = r.readSTRV(dataSize)))
-                case FieldType.FADT: z = self.FADT = self.FADTField(r, dataSize)
-                case FieldType.ANAM: z = self.ANAMs.addX(r.readSTRV(dataSize))
-                case FieldType.INTV: z = self.INTVs.addX(r.readINTV(dataSize))
+                case FieldType.FNAM: z = self.FULL = r.readSTRV(dataSize)
+                case FieldType.RNAM: z = self.RNAM = r.readSTRV(dataSize)
+                case FieldType.FADT: z = self.FADT = r.readS(self.FADTField, dataSize)
+                case FieldType.ANAM: z = self.ANAMs.addX(self.ANAMGroup(ANAM = r.readSTRV(dataSize)))
+                case FieldType.INTV: z = self.ANAMs.last().INTV = r.readINTV(dataSize)
                 case _: z = Record._empty
             return z
         match type:
             case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
-            case FieldType.FULL: z = self.FNAM = r.readSTRV(dataSize)
+            case FieldType.FULL: z = self.FULL = r.readSTRV(dataSize)
             case FieldType.XNAM: z = self.XNAM = self.XNAMField(r, dataSize)
             case FieldType.DATA: z = self.DATA = r.readINTV(dataSize)
             case FieldType.CNAM: z = self.CNAM = r.readS(UI32Field, dataSize)
@@ -2623,14 +2632,14 @@ class FURNRecord(Record, IHaveMODL):
 # dep: None
 # GLOB.Global - 3450 - tag::GLOB[]
 class GLOBRecord(Record):
-    FNAM: BYTEField = None # Type of global (s, l, f)
+    FNAM: CHARField = None # Type of global (s, l, f)
     FLTV: FLTVField = None # Float data
     def __init__(self): super().__init__()
     
     def createField(self, r: Header, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.EDID | FieldType.NAME: z = self.EDID = r.readSTRV(dataSize)
-            case FieldType.FNAM: z = self.FNAM = r.readS(BYTEField, dataSize)
+            case FieldType.FNAM: z = self.FNAM = r.readS(CHARField, dataSize)
             case FieldType.FLTV: z = self.FLTV = r.readS(FLTVField, dataSize)
             case _: z = Record._empty
         return z
@@ -2960,7 +2969,6 @@ class KEYMRecord(Record, IHaveMODL):
 # dep: None
 # LAND.Land - 3450 - tag::LAND[]
 class LANDRecord(Record):
-    # TESX
     class VNMLField:
         def __init__(self, r: Header, dataSize: int):
             self.vertexs: list[Byte3] = r.readPArray(Byte3, '3B', dataSize // 3) # XYZ 8 bit floats
@@ -3116,7 +3124,7 @@ class LEVIRecord(Record):
 # dep: SCPTRecord, SOUNRecord
 # LIGH.Light - 3450 - tag::LIGH[]
 class LIGHRecord(Record, IHaveMODL):
-    # TESX
+    
     class DATAField:
         class ColorFlags(Flag):
             Dynamic = 0x0001
@@ -3190,7 +3198,7 @@ class LIGHRecord(Record, IHaveMODL):
 class LOCKRecord(Record, IHaveMODL):
     class LKDTField:
         _struct = ('<fifi', 16)
-        def __init__(self, r: Header, dataSize: int):
+        def __init__(self, tuple):
             (self.weight,
             self.value,
             self.quality,
@@ -3497,7 +3505,7 @@ class MGEFRecord(Record):
 # dep: ENCHRecord, SCPTRecord
 # MISC.Misc Item - 3450 - tag::MISC[]
 class MISCRecord(Record, IHaveMODL):
-    # TESX
+    
     class DATAField:
         weight: float
         value: int
@@ -3746,10 +3754,10 @@ class PGRDRecord(Record):
     class PGRPField:
         _struct = ('<3fB3s', 16)
         def __init__(self, tuple):
-            (point_x, point_y, point_z,
+            point = self.point = Vector3()
+            (point[0], point[1], point[2],
             self.connections,
             self.unused) = tuple
-            self.point = Vector3(point_x, point_y, point_z)
 
     class PGRRField:
         _struct = ('<2h', 4)
@@ -3867,7 +3875,6 @@ class QUSTRecord(Record):
 # dep: EYESRecord, HAIRRecord
 # RACE.Race_Creature type - 3450 - tag::RACE[]
 class RACERecord(Record):
-    # TESX
     class DATAField:
         class RaceFlag(Flag):
             Playable = 0x00000001
@@ -3993,7 +4000,7 @@ class RACERecord(Record):
     FULL: STRVField # Race name
     DESC: STRVField # Race description
     SPLOs: list[STRVField] = [] # NPCs: Special power/ability name
-    # TESX
+    
     DATA: DATAField # RADT:DATA/ATTR: Race data/Base Attributes
     # TES4
     VNAM: Ref2Field['RACERecord'] # Voice
@@ -4084,7 +4091,7 @@ class RACERecord(Record):
 # REPA.Repair Item - 3000 - tag::REPA[]
 class REPARecord(Record, IHaveMODL):
     class RIDTField:
-        _struct = ('<B3c6f', 24)
+        _struct = ('<f2if', 16)
         def __init__(self, tuple):
             (self.weight,
             self.value,
@@ -4240,7 +4247,6 @@ class REFRRecord(Record):
 # dep: WRLDRecord, ^GRASRecord, GLOBRecord, SOUNRecord, WTHRRecord
 # REGN.Region - 3450 - tag::REGN[]
 class REGNRecord(Record):
-    # TESX
     class RDATField:
         class REGNType(Enum): Objects = 2; Weather = 3; Map = 4; Landscape = 5; Grass = 6; Sound = 7
         def __init__(self, r: Header = None, dataSize: int = 0, RDSDs: list['RDGSField'] = None):
@@ -4421,7 +4427,6 @@ class SBSPRecord(Record):
 # dep: None
 # SCPT.Script - 3400 - tag::SCPT[]
 class SCPTRecord(Record):
-    # TESX
     class CTDAField:
         class INFOType(Enum): Nothing = 0; Function = 1; Global = 2; Local = 3; Journal = 4; Item = 5; Dead = 6; NotId = 7; NotFaction = 8; NotClass = 9; NotRace = 10; NotCell = 11; NotLocal = 12
         # TES3: 0 = [=], 1 = [!=], 2 = [>], 3 = [>=], 4 = [<], 5 = [<=]
@@ -4569,7 +4574,7 @@ class SGSTRecord(Record, IHaveMODL):
 # dep: None
 # SKIL.Skill - 3450 - tag::SKIL[]
 class SKILRecord(Record):
-    # TESX
+    
     class DATAField:
         def __init__(self, r: Header, dataSize: int):
             self.action: int = 0 if r.format == FormType.TES3 else r.readInt32()
@@ -4686,7 +4691,7 @@ class SOUNRecord(Record):
         _2D = 0x0040
         _360LFE = 0x0080
 
-    # TESX
+    
     class DATAField:
         volume: int # (0=0.00, 255=1.00)
         minRange: int # Minimum attenuation distance
@@ -4729,7 +4734,7 @@ class SOUNRecord(Record):
 # dep: ENCHRecord
 # SPEL.Spell - 3450 - tag::SPEL[]
 class SPELRecord(Record):
-    # TESX
+    
     class SPITField:
         def __repr__(self): return f'{self.type}'
         def __init__(self, r: Header, dataSize: int):

@@ -31,9 +31,9 @@ namespace GameX.Bethesda.Formats.Records;
 //https://github.com/TES5Edit/TES5Edit/blob/dev/wbDefinitionsTES5.pas 
 //https://en.uesp.net/wiki/Tes5Mod:Mod_File_Format
 
-//https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format
-//https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format
-//https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format
+//https://en.uesp.net/wiki/TES3Mod:Mod_File_Format
+//https://en.uesp.net/wiki/TES4Mod:Mod_File_Format
+//https://en.uesp.net/wiki/TES5Mod:Mod_File_Format
 
 //https://tes5edit.github.io/fopdoc/Fallout3/Records.html
 //https://tes5edit.github.io/fopdoc/FalloutNV/Records.html
@@ -453,6 +453,17 @@ public enum FieldType : uint {
     XNAM = 0x4D414E58,
 }
 
+public enum ActorValue : int {
+    None_ = -1,
+    Strength = 0, Intelligence, Willpower, Agility, Speed, Endurance, Personality, Luck, Health, Magicka, Fatigue, Encumbrance,
+    Armorer, Athletics, Blade, Block, Blunt, HandToHand, HeavyArmor, Alchemy, Alteration, Conjuration, Destruction, Illusion,
+    Mysticism, Restoration, Acrobatics, LightArmor, Marksman, Mercantile, Security, Sneak, Speechcraft,
+    // Extra Actor Values
+    Aggression, Confidence, Energy, Responsibility, Bounty, Fame, Infamy, MagickaMultiplier, NightEyeBonus, AttackBonus, DefendBonus, CastingPenalty, Blindness,
+    Chameleon, Invisibility, Paralysis, Silence, Confusion, DetectItemRange, SpellAbsorbChance, SpellReflectChance, SwimSpeedMultiplier, WaterBreathing, WaterWalking, StuntedMagicka, DetectLifeRange,
+    ReflectDamage, Telekinesis, ResistFire, ResistFrost, ResistDisease, ResistMagic, ResistNormalWeapons, ResistParalysis, ResistPoison, ResistShock, Vampirism, Darkness, ResistWaterDamage,
+}
+
 #endregion
 
 #region Header
@@ -583,7 +594,8 @@ public struct STRVField(string value) { public string Value = value; }
 public struct FILEField(string value) { public override readonly string ToString() => Value; public string Value = value; }
 public struct DATVField { public override readonly string ToString() => "DATV"; public bool B; public int I; public float F; public string S; }
 public struct FLTVField { public override readonly string ToString() => $"{Value}"; public static (string, int) Struct = ("<f", 4); public float Value; }
-public struct BYTEField { public override readonly string ToString() => $"{Value}"; public static (string, int) Struct = ("<C", 1); public byte Value; }
+public struct CHARField { public override readonly string ToString() => $"{Value}"; public static (string, int) Struct = ("<C", 1); public char Value; }
+public struct BYTEField { public override readonly string ToString() => $"{Value}"; public static (string, int) Struct = ("<B", 1); public byte Value; }
 public struct IN16Field { public override readonly string ToString() => $"{Value}"; public static (string, int) Struct = ("<h", 2); public short Value; }
 public struct UI16Field { public override readonly string ToString() => $"{Value}"; public static (string, int) Struct = ("<H", 2); public ushort Value; }
 public struct IN32Field { public override readonly string ToString() => $"{Value}"; public static (string, int) Struct = ("<i", 4); public int Value; }
@@ -615,8 +627,6 @@ public class MODLGroup(Header r, int dataSize) {
 #region Record
 
 public partial class Record {
-    public static readonly Record Empty = new();
-    public override string ToString() => $"{GetType().Name[..4]}: {EDID.Value}";
     static readonly Dictionary<FormType, (Func<Record> f, Func<int, bool> l)> Map = new() {
         { TES3, (() => new TES3Record(), x => true) },
         { TES4, (() => new TES4Record(), x => true) },
@@ -722,6 +732,8 @@ public partial class Record {
         { BNDS, (() => new BNDSRecord(), x => x > 5) },
         { DMGT, (() => new DMGTRecord(), x => x > 5) },
     };
+    public static readonly Record Empty = new();
+    public override string ToString() => $"{GetType().Name[..4]}: {EDID.Value}";
     internal Header Header;
     public STRVField EDID; // Editor ID
 
@@ -794,9 +806,9 @@ public struct Ref2Field<TRecord>(Header r, int dataSize) where TRecord : Record 
 
 #endregion
 
-//partial class Record { static readonly HashSet<FormType> _factorySet = [FormType.ACTI, FormType.ALCH, FormType.APPA, FormType.ARMO, FormType.BODY, FormType.BSGN, FormType.CELL]; }
-//partial class Record { static readonly HashSet<FormType> _factorySet = [ARMO]; }
-partial class Record { static readonly HashSet<FormType> _factorySet = [DIAL, INFO]; }
+//partial class Record { static readonly HashSet<FormType> _factorySet = [FormType.ACTI, FormType.ALCH, FormType.APPA, FormType.ARMO, FormType.BODY, FormType.BSGN, FormType.CELL, FormType.CLAS, FormType.CLOT, FormType.CONT, FormType.CREA]; }
+//partial class Record { static readonly HashSet<FormType> _factorySet = [FormType.DIAL, FormType.INFO, FormType.DOOR, FormType.ENCH, FormType.FACT, FormType.GLOB]; }
+partial class Record { static readonly HashSet<FormType> _factorySet = [GLOB]; }
 
 #region Record Group
 
@@ -990,7 +1002,7 @@ public static class Extensions {
 /// <summary>
 /// AACT.Action - 00500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/AACT"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/AACT"/>
 /// <see cref="https://tes5edit.github.io/fopdoc/Fallout4/Records/AACT.html"/>
 public class AACTRecord : Record {
     public CREFField CNAM; // RGB Color
@@ -1005,7 +1017,7 @@ public class AACTRecord : Record {
 /// <summary>
 /// ACRE.Placed creature - 04000
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/ACRE"/>
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/ACRE"/>
 /// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/ACHR.html"/>
 public class ACRERecord : Record {
     public RefField<Record> NAME; // Base
@@ -1032,8 +1044,8 @@ public class ACRERecord : Record {
 /// <summary>
 /// ACHR.Actor Reference - 04050
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/ACHR"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/ACHR"/>
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/ACHR"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/ACHR"/>
 /// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/ACHR.html"/>
 public class ACHRRecord : Record {
     public RefField<Record> NAME; // Base
@@ -1065,9 +1077,9 @@ public class ACHRRecord : Record {
 /// <summary>
 /// ACTI.Activator - 34500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/ACTI">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/ACTI"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/ACTI"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/ACTI">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/ACTI"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/ACTI"/>
 /// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/ACTI.html"/>
 public class ACTIRecord : Record, IHaveMODL {
     public STRVField FULL; // Item Name
@@ -1092,7 +1104,7 @@ public class ACTIRecord : Record, IHaveMODL {
 /// <summary>
 /// ADDN-Addon Node - 00500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/ADDN"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/ADDN"/>
 /// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/ADDN.html"/>
 public class ADDNRecord : Record {
     public CREFField CNAM; // RGB Color
@@ -1107,9 +1119,9 @@ public class ADDNRecord : Record {
 /// <summary>
 /// ALCH.Potion - 345S0
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/ALCH">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/ALCH"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/ALCH"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/ALCH">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/ALCH"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/ALCH"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/ALCH">
 /// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/ALCH.html"/>
 public class ALCHRecord : Record, IHaveMODL {
@@ -1181,16 +1193,17 @@ public class ALCHRecord : Record, IHaveMODL {
 /// <summary>
 /// AMMO.Ammo - 045S0
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/AMMO"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/AMMO"/>
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/AMMO"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/AMMO"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/AMMO">
 /// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/AMMO.html"/>
 public class AMMORecord : Record, IHaveMODL {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct DATAField {
+        [Flags] public enum Flag : uint { IgnoresNormalWeaponResistance = 0x1 }
         public static (string, int) Struct = ("<f2IfH", 18);
         public float Speed;
-        public uint Flags;
+        public Flag Flags;
         public uint Value;
         public float Weight;
         public ushort Damage;
@@ -1220,8 +1233,8 @@ public class AMMORecord : Record, IHaveMODL {
 /// <summary>
 /// ANIO.Animated Object - 04500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/ANIO"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/ANIO"/>
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/ANIO"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/ANIO"/>
 /// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/ANIO.html"/>
 public class ANIORecord : Record, IHaveMODL {
     public MODLGroup MODL { get; set; } // Model
@@ -1239,25 +1252,25 @@ public class ANIORecord : Record, IHaveMODL {
 /// <summary>
 /// APPA.Alchem Apparatus - 34500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/APPA">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/APPA"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/APPA"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/APPA">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/APPA"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/APPA"/>
 public class APPARecord : Record, IHaveMODL {
-    // TESX
     public struct DATAField {
-        public byte Type; // 0 = Mortar and Pestle, 1 = Albemic, 2 = Calcinator, 3 = Retort
+        public enum Type_ : byte { MortarAndPestle = 0, Albemic, Calcinator, Retort }
+        public Type_ Type;
         public int Value;
         public float Weight;
         public float Quality;
         public DATAField(Header r, int dataSize) {
             if (r.Format == TES3) {
-                Type = (byte)r.ReadInt32();
+                Type = (Type_)r.ReadInt32();
                 Quality = r.ReadSingle();
                 Weight = r.ReadSingle();
                 Value = r.ReadInt32();
                 return;
             }
-            Type = r.ReadByte();
+            Type = (Type_)r.ReadByte();
             Value = r.ReadInt32();
             Weight = r.ReadSingle();
             Quality = r.ReadSingle();
@@ -1286,7 +1299,7 @@ public class APPARecord : Record, IHaveMODL {
 /// <summary>
 /// ARMA.Armature (Model) - 00500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/ARMA"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/ARMA"/>
 public class ARMARecord : Record {
     public override object CreateField(Header r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
@@ -1297,12 +1310,12 @@ public class ARMARecord : Record {
 /// <summary>
 /// ARMO.Armor - 345S0
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/ARMO">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/ARMO"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/ARMO"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/ARMO">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/ARMO"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/ARMO"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/ARMO">
 public class ARMORecord : Record, IHaveMODL {
-    // TESX
+    
     public struct DATAField {
         public enum ARMOType { Helmet = 0, Cuirass, L_Pauldron, R_Pauldron, Greaves, Boots, L_Gauntlet, R_Gauntlet, Shield, L_Bracer, R_Bracer, }
         public short Armour;
@@ -1383,7 +1396,7 @@ public class ARMORecord : Record, IHaveMODL {
 /// <summary>
 /// ARTO.Art Object - 00500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/ARTO"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/ARTO"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/ARTO">
 public class ARTORecord : Record {
     public CREFField CNAM; // RGB Color
@@ -1398,7 +1411,7 @@ public class ARTORecord : Record {
 /// <summary>
 /// ASPC.Acoustic Space - 00500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/ASPC"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/ASPC"/>
 public class ASPCRecord : Record {
     public CREFField CNAM; // RGB Color
 
@@ -1412,7 +1425,7 @@ public class ASPCRecord : Record {
 /// <summary>
 /// ASTP.Association Type - 00500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/ASTP"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/ASTP"/>
 public class ASTPRecord : Record {
     public CREFField CNAM; // RGB Color
 
@@ -1426,7 +1439,7 @@ public class ASTPRecord : Record {
 /// <summary>
 /// AVIF.Actor Values_Perk Tree Graphics - 005S0
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/AVIF"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/AVIF"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/AVIF">
 public class AVIFRecord : Record {
     public CREFField CNAM; // RGB Color
@@ -1448,7 +1461,7 @@ public class BNDSRecord : Record {
 /// <summary>
 /// BODY.Body - 30000
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/BODY"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/BODY"/>
 public class BODYRecord : Record, IHaveMODL {
     public enum Part : byte { Head, Hair, Neck, Chest, Groin, Hand, Wrist, Forearm, Upperarm, Foot, Ankle, Knee, Upperleg, Clavicle, Tail }
     [Flags] public enum Flag : byte { Female = 1, Playable = 2 }
@@ -1496,14 +1509,15 @@ public class BOIMRecord : Record {
 /// <summary>
 /// BOOK.Book - 345S0
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/BOOK">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/BOOK"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/BOOK"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/BOOK">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/BOOK"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/BOOK"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/BOOK">
 public class BOOKRecord : Record, IHaveMODL {
+    [Flags] public enum Flag : byte { Scroll = 0x01, CantBeTaken = 0x02 }
     public struct DATAField {
-        public byte Flags; // Scroll - (1 is scroll, 0 not)
-        public byte Teaches; // SkillId - (-1 is no skill)
+        public Flag Flags;
+        public ActorValue Teaches; // SkillId - (-1 is no skill)
         public int Value;
         public float Weight;
         // TES3
@@ -1512,16 +1526,15 @@ public class BOOKRecord : Record, IHaveMODL {
             if (r.Format == TES3) {
                 Weight = r.ReadSingle();
                 Value = r.ReadInt32();
-                Flags = (byte)r.ReadInt32();
-                Teaches = (byte)r.ReadInt32();
+                Flags = (Flag)r.ReadUInt32();
+                Teaches = (ActorValue)r.ReadInt32();
                 EnchantPts = r.ReadInt32();
                 return;
             }
-            Flags = r.ReadByte();
-            Teaches = r.ReadByte();
+            Flags = (Flag)r.ReadByte();
+            Teaches = (ActorValue)r.ReadSByte();
             Value = r.ReadInt32();
             Weight = r.ReadSingle();
-            EnchantPts = default;
         }
     }
 
@@ -1555,7 +1568,7 @@ public class BOOKRecord : Record, IHaveMODL {
 /// <summary>
 /// BPTD.Body Part Data - 00500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/BPTD"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/BPTD"/>
 public class BPTDRecord : Record {
     public STRVField FULL; // Item Name
 
@@ -1568,8 +1581,8 @@ public class BPTDRecord : Record {
 /// <summary>
 /// BSGN.Birthsign - 34000
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/BSGN">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/BSGN"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/BSGN">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/BSGN"/>
 public class BSGNRecord : Record {
     public STRVField FULL; // Sign Name
     public FILEField ICON; // Texture
@@ -1591,7 +1604,7 @@ public class BSGNRecord : Record {
 /// <summary>
 /// CAMS.Camera Shot - 00500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/CAMS"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/CAMS"/>
 public class CAMSRecord : Record {
     public STRVField FULL; // Item Name
 
@@ -1604,9 +1617,9 @@ public class CAMSRecord : Record {
 /// <summary>
 /// CELL.Cell - 345S0
 /// </summary>
-/// <see>https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/CELL</see>
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/CELL"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/CELL"/>
+/// <see>https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/CELL</see>
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/CELL"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/CELL"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/CELL">
 public unsafe class CELLRecord : Record {
     [Flags]
@@ -1773,75 +1786,42 @@ public unsafe class CELLRecord : Record {
 /// <summary>
 /// CLAS.Class - 345S0
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/CLAS">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/CLAS"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/CLAS"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/CLAS">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/CLAS"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/CLAS"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/CLAS">
 /// <see cref="https://tes5edit.github.io/fopdoc/Fallout4/Records/CLAS.html"/>
 public class CLASRecord : Record {
-    public enum ActorValue : uint {
-        Strength = 0, Intelligence, Willpower, Agility, Speed, Endurance, Personality, Luck, Health, Magicka, Fatigue, Encumbrance,
-        Armorer, Athletics, Blade, Block, Blunt, HandToHand, HeavyArmor, Alchemy, Alteration, Conjuration, Destruction, Illusion,
-        Mysticism, Restoration, Acrobatics, LightArmor, Marksman, Mercantile, Security, Sneak, Speechcraft,
-        // Extra Actor Values
-        Aggression, Confidence, Energy, Responsibility, Bounty, Fame, Infamy, MagickaMultiplier, NightEyeBonus, AttackBonus, DefendBonus, CastingPenalty, Blindness,
-        Chameleon, Invisibility, Paralysis, Silence, Confusion, DetectItemRange, SpellAbsorbChance, SpellReflectChance, SwimSpeedMultiplier, WaterBreathing, WaterWalking, StuntedMagicka, DetectLifeRange,
-        ReflectDamage, Telekinesis, ResistFire, ResistFrost, ResistDisease, ResistMagic, ResistNormalWeapons, ResistParalysis, ResistPoison, ResistShock, Vampirism, Darkness, ResistWaterDamage,
-    }
-    public enum Specialization : uint { Combat = 0, Magic, Stealth }
-    [Flags] public enum Flags : uint { Playable = 0x00000001, Guard = 0x00000002 }
-    [Flags]
-    public enum Services : uint {
-        Weapon = 0x00001,
-        Armor = 0x00002,
-        Clothing = 0x00004,
-        Books = 0x00008,
-        Ingredients = 0x00010,
-        Picks = 0x00020,
-        Probes = 0x00040,
-        Lights = 0x00080,
-        Apparatus = 0x00100,
-        RepairItems = 0x00200,
-        Misc = 0x00400,
-        Spells = 0x00800,
-        MagicItems = 0x01000,
-        Potions = 0x02000,
-        Training = 0x04000,
-        Spellmaking = 0x08000,
-        Enchanting = 0x10000,
-        Repair = 0x20000
-    }
-    public enum Skill : sbyte {
-        None_ = -1,
-        Armorer = 0,
-        Athletics = 1,
-        Blade = 2,
-        Block = 3,
-        Blunt = 4,
-        HandToHand = 5,
-        HeavyArmor = 6,
-        Alchemy = 7,
-        Alteration = 8,
-        Conjuration = 9,
-        Destruction = 10,
-        Illusion = 11,
-        Mysticism = 12,
-        Restoration = 13,
-        Acrobatics = 14,
-        LightArmor = 15,
-        Marksman = 16,
-        Mercantile = 17,
-        Security = 18,
-        Sneak = 19,
-        Speechcraft = 20
-    }
     public struct DATAField {
+        public enum Specialization_ : uint { Combat = 0, Magic, Stealth }
+        [Flags] public enum Flag : uint { Playable = 0x00000001, Guard = 0x00000002 }
+        [Flags]
+        public enum Service : uint {
+            Weapon = 0x00001,
+            Armor = 0x00002,
+            Clothing = 0x00004,
+            Books = 0x00008,
+            Ingredients = 0x00010,
+            Picks = 0x00020,
+            Probes = 0x00040,
+            Lights = 0x00080,
+            Apparatus = 0x00100,
+            RepairItems = 0x00200,
+            Misc = 0x00400,
+            Spells = 0x00800,
+            MagicItems = 0x01000,
+            Potions = 0x02000,
+            Training = 0x04000,
+            Spellmaking = 0x08000,
+            Enchanting = 0x10000,
+            Repair = 0x20000
+        }
         public ActorValue[] PrimaryAttributes;
-        public Specialization Specialization;
+        public Specialization_ Specialization;
         public ActorValue[] MajorSkills;
-        public Flags Flags;
-        public Services Services;
-        public Skill Teaches;
+        public Flag Flags;
+        public Service Services;
+        public ActorValue SkillTrained = ActorValue.None_;
         public byte MaximumTrainingLevel;
         public ushort Unused;
         public DATAField(Header r, int dataSize) {
@@ -1856,12 +1836,13 @@ public class CLASRecord : Record {
             else if (r.Format == TES4) {
                 PrimaryAttributes = [(ActorValue)r.ReadUInt32(), (ActorValue)r.ReadUInt32()];
                 Specialization = (Specialization)r.ReadUInt32();
-                MajorSkills = r.ReadPArray<ActorValue>("I", 7);
+                MajorSkills = r.ReadPArray<ActorValue>("i", 7);
                 Flags = (Flags)r.ReadUInt32();
                 Services = (Services)r.ReadUInt32(); // Buys/Sells and Services
-                Teaches = (Skill)r.ReadSByte();
+                SkillTrained = (ActorValue)r.ReadSByte();
                 MaximumTrainingLevel = r.ReadByte(); // (0-100)
                 Unused = r.ReadUInt16();
+                if (SkillTrained != ActorValue.None_) SkillTrained += 12;
                 return;
             }
             throw new NotImplementedException();
@@ -1889,7 +1870,7 @@ public class CLASRecord : Record {
 /// <summary>
 /// CLFM.Color - 00500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/CLFM"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/CLFM"/>
 public class CLFMRecord : Record {
     public STRVField FULL; // Item Name
 
@@ -1902,8 +1883,8 @@ public class CLFMRecord : Record {
 /// <summary>
 /// CLMT.Climate - 04500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/CLMT"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/CLMT"/>
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/CLMT"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/CLMT"/>
 public class CLMTRecord : Record, IHaveMODL {
     public struct WLSTField(Header r, int dataSize) {
         public Ref<WTHRRecord> Weather = new(r.ReadUInt32());
@@ -1942,8 +1923,8 @@ public class CLMTRecord : Record, IHaveMODL {
 /// <summary>
 /// CLOT.Clothing - 34000
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/CLOT">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/CLOT"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/CLOT">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/CLOT"/>
 public class CLOTRecord : Record, IHaveMODL {
     public struct DATAField {
         public enum Type_ : uint { Pants = 0, Shoes, Shirt, Belt, Robe, R_Glove, L_Glove, Skirt, Ring, Amulet }
@@ -2020,11 +2001,11 @@ public class CLOTRecord : Record, IHaveMODL {
 /// <summary>
 /// CONT.Container - 34500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/CONT">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/CONT"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/CONT"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/CONT">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/CONT"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/CONT"/>
 public class CONTRecord : Record, IHaveMODL {
-    // TESX
+    
     public class DATAField {
         public byte Flags; // flags 0x0001 = Organic, 0x0002 = Respawns, organic only, 0x0008 = Default, unknown
         public float Weight;
@@ -2067,8 +2048,8 @@ public class CONTRecord : Record, IHaveMODL {
 /// <summary>
 /// CREA.Creature - 34000
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/CREA">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/CREA"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/CREA">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/CREA"/>
 public unsafe class CREARecord : Record, IHaveMODL {
     [Flags]
     public enum CREAFlags : uint {
@@ -2228,7 +2209,7 @@ public unsafe class CREARecord : Record, IHaveMODL {
 /// <summary>
 /// CSTY.Combat Style - 00500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/CSTY"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/CSTY"/>
 public class CSTYRecord : Record {
     public class CSTDField {
         public byte DodgePercentChance;
@@ -2356,9 +2337,9 @@ public class CSTYRecord : Record {
 /// <summary>
 /// DIAL.Dialog Topic - 34500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/DIAL">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/DIAL"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/DIAL"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/DIAL">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/DIAL"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/DIAL"/>
 public class DIALRecord : Record {
     internal static DIALRecord _lastRecord;
     public enum Type3 : byte { Topic = 0, Voice, Greeting, Persuasion, Journal }
@@ -2380,7 +2361,7 @@ public class DIALRecord : Record {
 /// <summary>
 /// DLBR.Dialog Branch - 00500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/DLBR"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/DLBR"/>
 public class DLBRRecord : Record {
     public CREFField CNAM; // RGB color
 
@@ -2394,7 +2375,7 @@ public class DLBRRecord : Record {
 /// <summary>
 /// DLVW.Dialog View - 00500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/DLVW"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/DLVW"/>
 public class DLVWRecord : Record {
     public CREFField CNAM; // RGB color
 
@@ -2415,22 +2396,22 @@ public class DMGTRecord : Record {
 /// <summary>
 /// DOOR.Door - 34500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/DOOR">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/DOOR"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/DOOR"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/DOOR">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/DOOR"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/DOOR"/>
 public class DOORRecord : Record, IHaveMODL {
     public STRVField FULL; // Door name
     public MODLGroup MODL { get; set; } // NIF model filename
     public RefField<SCPTRecord>? SCRI; // Script (optional)
-    public RefField<SOUNRecord> SNAM; // Open Sound
-    public RefField<SOUNRecord> ANAM; // Close Sound
+    public RefField<SOUNRecord>? SNAM; // Open Sound
+    public RefField<SOUNRecord>? ANAM; // Close Sound
     // TES4
-    public RefField<SOUNRecord> BNAM; // Loop Sound
+    public RefField<SOUNRecord>? BNAM; // Loop Sound
     public BYTEField FNAM; // Flags
-    public RefField<Record> TNAM; // Random teleport destination
+    public RefField<Record>? TNAM; // Random teleport destination
 
     public override object CreateField(Header r, FieldType type, int dataSize) => type switch {
-        FieldType.EDID or FieldType.NAME => EDID = r.ReadSTRV(dataSize),
+        FieldType.EDID or FieldType.NAME => EDID = FULL = r.ReadSTRV(dataSize),
         FieldType.FULL => FULL = r.ReadSTRV(dataSize),
         FieldType.FNAM => r.Format != TES3 ? FNAM = r.ReadS<BYTEField>(dataSize) : FULL = r.ReadSTRV(dataSize),
         FieldType.MODL => MODL = new MODLGroup(r, dataSize),
@@ -2448,7 +2429,7 @@ public class DOORRecord : Record, IHaveMODL {
 /// <summary>
 /// EFSH.Effect Shader - 04500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/EFSH"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/EFSH"/>
 public class EFSHRecord : Record {
     public class DATAField {
         public byte Flags;
@@ -2586,19 +2567,19 @@ public class EFSHRecord : Record {
 /// <summary>
 /// ENCH.Enchantment - 345S0
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/ENCH">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/ENCH"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/ENCH"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/ENCH">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/ENCH"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/ENCH"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/ENCH">
 public class ENCHRecord : Record {
-    // TESX
     public struct ENITField {
-        // TES3: 0 = Cast Once, 1 = Cast Strikes, 2 = Cast when Used, 3 = Constant Effect
-        // TES4: 0 = Scroll, 1 = Staff, 2 = Weapon, 3 = Apparel
+        public enum Type3 : int { CastOnce = 0, CastStrikes, CastWhenUsed, ConstantEffect }
+        public enum Type4 : int { Scroll = 0, Staff, Weapon, Apparel }
+        [Flags] public enum Flag : int { AutoCalc = 0x01 }
         public int Type;
         public int EnchantCost;
         public int ChargeAmount; // Charge
-        public int Flags; // AutoCalc
+        public Flag Flags;
         public ENITField(Header r, int dataSize) {
             Type = r.ReadInt32();
             if (r.Format == TES3) {
@@ -2609,28 +2590,29 @@ public class ENCHRecord : Record {
                 ChargeAmount = r.ReadInt32();
                 EnchantCost = r.ReadInt32();
             }
-            Flags = r.ReadInt32();
+            Flags = (Flag)r.ReadInt32();
         }
     }
 
     public class EFITField {
+        public enum Type_ : int { Self = 0, Touch, Target }
         public string EffectId;
-        public int Type; // RangeType - 0 = Self, 1 = Touch, 2 = Target
+        public Type_ Type;
         public int Area;
         public int Duration;
         public int MagnitudeMin;
         // TES3
-        public byte SkillId; // (-1 if NA)
-        public byte AttributeId; // (-1 if NA)
+        public sbyte SkillId; // (-1 if NA)
+        public sbyte AttributeId; // (-1 if NA)
         public int MagnitudeMax;
         // TES4
-        public int ActorValue;
+        public ActorValue ActorValue = ActorValue.None_;
         public EFITField(Header r, int dataSize) {
             if (r.Format == TES3) {
-                EffectId = r.ReadFAString(2);
-                SkillId = r.ReadByte();
-                AttributeId = r.ReadByte();
-                Type = r.ReadInt32();
+                EffectId = r.ReadUInt16().ToString();
+                SkillId = r.ReadSByte();
+                AttributeId = r.ReadSByte();
+                Type = (Type_)r.ReadInt32();
                 Area = r.ReadInt32();
                 Duration = r.ReadInt32();
                 MagnitudeMin = r.ReadInt32();
@@ -2641,8 +2623,8 @@ public class ENCHRecord : Record {
             MagnitudeMin = r.ReadInt32();
             Area = r.ReadInt32();
             Duration = r.ReadInt32();
-            Type = r.ReadInt32();
-            ActorValue = r.ReadInt32();
+            Type = (Type_)r.ReadInt32();
+            ActorValue = (ActorValue)r.ReadInt32();
         }
     }
 
@@ -2671,7 +2653,7 @@ public class ENCHRecord : Record {
     public List<SCITField> SCITs = []; // Script effect data
 
     public override object CreateField(Header r, FieldType type, int dataSize) => type switch {
-        FieldType.EDID or FieldType.NAME => EDID = r.ReadSTRV(dataSize),
+        FieldType.EDID or FieldType.NAME => EDID = FULL = r.ReadSTRV(dataSize),
         FieldType.FULL => SCITs.Count == 0 ? FULL = r.ReadSTRV(dataSize) : SCITs.Last().FULLField(r, dataSize),
         FieldType.ENIT or FieldType.ENDT => ENIT = new ENITField(r, dataSize),
         FieldType.EFID => r.Skip(dataSize),
@@ -2684,7 +2666,7 @@ public class ENCHRecord : Record {
 /// <summary>
 /// EQUP.Equip Slots - 005S0
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/EQUP"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/EQUP"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/EQUP">
 public class EQUPRecord : Record {
     public STRVField FULL;
@@ -2700,8 +2682,8 @@ public class EQUPRecord : Record {
 /// <summary>
 /// EYES.Eyes - 04500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/EYES"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/EYES"/>
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/EYES"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/EYES"/>
 public class EYESRecord : Record {
     public STRVField FULL;
     public FILEField ICON;
@@ -2719,12 +2701,11 @@ public class EYESRecord : Record {
 /// <summary>
 /// FACT.Faction - 345S0
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/FACT">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/FACT"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/FACT"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/FACT">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/FACT"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/FACT"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/FACT">
 public class FACTRecord : Record {
-    // TESX
     public class RNAMGroup {
         public override string ToString() => $"{RNAM.Value}:{MNAM.Value}";
         public IN32Field RNAM; // rank
@@ -2734,8 +2715,28 @@ public class FACTRecord : Record {
     }
 
     // TES3
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public struct RankModifier {
+        public static (string, int) Struct = ("<5I", 20);
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)] public uint[] Attributes; // Attribute modifiers
+        public uint PrimarySkill; // Primary skill modifier
+        public uint FavoredSkill; // Favored skill modifier
+        public uint FactionReaction; // Faction reaction modifier
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct FADTField {
-        public FADTField(Header r, int dataSize) => r.Skip(dataSize);
+        [Flags] public enum Flag : uint { HiddenFromPlayer = 0x1 }
+        public static (string, int) Struct = ("<2I20I20I20I20I52I7iI", 240);
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)] public uint[] Attributes;
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 10)] public RankModifier[] RankModifiers;
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 7)] public ActorValue[] Skills;
+        public Flag Flags;
+    }
+    public class ANAMGroup {
+        public override string ToString() => $"{ANAM.Value}:{INTV.Value}";
+        public STRVField ANAM; // Faction name
+        public INTVField INTV; // Faction reaction
     }
 
     // TES4
@@ -2746,12 +2747,12 @@ public class FACTRecord : Record {
         public int Combat = r.Format > TES4 ? r.ReadInt32() : 0;
     }
 
-    public STRVField FNAM; // Faction name
-    public List<RNAMGroup> RNAMs = []; // Rank Name
-    public FADTField FADT; // Faction data
-    public List<STRVField> ANAMs = []; // Faction name
-    public List<INTVField> INTVs = []; // Faction reaction
+    public STRVField FULL; // Faction name
+    public STRVField? RNAM; // Rank Name
+    public FADTField? FADT; // Faction data
+    public List<ANAMGroup> ANAMs = []; // Factions
     // TES4
+    public List<RNAMGroup> RNAMs = []; // Ranks
     public XNAMField XNAM; // Interfaction Relations
     public INTVField DATA; // Flags (byte, uint32)
     public UI32Field CNAM;
@@ -2759,16 +2760,16 @@ public class FACTRecord : Record {
     public override object CreateField(Header r, FieldType type, int dataSize) => r.Format == TES3
         ? type switch {
             FieldType.NAME => EDID = r.ReadSTRV(dataSize),
-            FieldType.FNAM => FNAM = r.ReadSTRV(dataSize),
-            FieldType.RNAM => RNAMs.AddX(new RNAMGroup { MNAM = r.ReadSTRV(dataSize) }),
-            FieldType.FADT => FADT = new FADTField(r, dataSize),
-            FieldType.ANAM => ANAMs.AddX(r.ReadSTRV(dataSize)),
-            FieldType.INTV => INTVs.AddX(r.ReadINTV(dataSize)),
+            FieldType.FNAM => FULL = r.ReadSTRV(dataSize),
+            FieldType.RNAM => RNAM = r.ReadSTRV(dataSize),
+            FieldType.FADT => FADT = r.ReadS<FADTField>(dataSize),
+            FieldType.ANAM => ANAMs.AddX(new ANAMGroup { ANAM = r.ReadSTRV(dataSize) }),
+            FieldType.INTV => ANAMs.Last().INTV = r.ReadINTV(dataSize),
             _ => Empty,
         }
         : type switch {
             FieldType.EDID => EDID = r.ReadSTRV(dataSize),
-            FieldType.FULL => FNAM = r.ReadSTRV(dataSize),
+            FieldType.FULL => FULL = r.ReadSTRV(dataSize),
             FieldType.XNAM => XNAM = new XNAMField(r, dataSize),
             FieldType.DATA => DATA = r.ReadINTV(dataSize),
             FieldType.CNAM => CNAM = r.ReadS<UI32Field>(dataSize),
@@ -2782,8 +2783,8 @@ public class FACTRecord : Record {
 
 /// <summary>
 /// FLOR.Flora - 045S0
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/FLOR"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/FLOR"/>
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/FLOR"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/FLOR"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/FLOR">
 /// </summary>
 public class FLORRecord : Record, IHaveMODL {
@@ -2809,8 +2810,8 @@ public class FLORRecord : Record, IHaveMODL {
 /// <summary>
 /// FURN.Furniture - 04500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/FURN"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/FURN"/>
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/FURN"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/FURN"/>
 public class FURNRecord : Record, IHaveMODL {
     public MODLGroup MODL { get; set; } // Model
     public STRVField FULL; // Furniture Name
@@ -2832,16 +2833,16 @@ public class FURNRecord : Record, IHaveMODL {
 /// <summary>
 /// GLOB.Global - 34500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/GLOB">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/GLOB"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/GLOB"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/GLOB">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/GLOB"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/GLOB"/>
 public class GLOBRecord : Record {
-    public BYTEField? FNAM; // Type of global (s, l, f)
-    public FLTVField? FLTV; // Float data
+    public CHARField FNAM; // Type of global (s, l, f)
+    public FLTVField FLTV; // Float data
 
     public override object CreateField(Header r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadSTRV(dataSize),
-        FieldType.FNAM => FNAM = r.ReadS<BYTEField>(dataSize),
+        FieldType.FNAM => FNAM = r.ReadS<CHARField>(dataSize),
         FieldType.FLTV => FLTV = r.ReadS<FLTVField>(dataSize),
         _ => Empty,
     };
@@ -2850,9 +2851,9 @@ public class GLOBRecord : Record {
 /// <summary>
 /// GMST.Game Setting - 345S0
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/GMST">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/GMST"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/GMST"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/GMST">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/GMST"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/GMST"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/GMST">
 public class GMSTRecord : Record {
     public DATVField DATA; // Data
@@ -2875,8 +2876,8 @@ public class GMSTRecord : Record {
 /// <summary>
 /// GRAS.Grass - 04500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/GRAS"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/GRAS"/>
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/GRAS"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/GRAS"/>
 public class GRASRecord : Record {
     public struct DATAField {
         public byte Density;
@@ -2930,8 +2931,8 @@ public class GRASRecord : Record {
 /// <summary>
 /// HAIR.Hair - 04500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/HAIR"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/HAIR"/>
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/HAIR"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/HAIR"/>
 public class HAIRRecord : Record, IHaveMODL {
     public STRVField FULL;
     public MODLGroup MODL { get; set; }
@@ -2952,8 +2953,8 @@ public class HAIRRecord : Record, IHaveMODL {
 /// <summary>
 /// IDLE.Idle Animations - 04500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/IDLE"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/IDLE"/>
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/IDLE"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/IDLE"/>
 public class IDLERecord : Record, IHaveMODL {
     public MODLGroup MODL { get; set; }
     public List<SCPTRecord.CTDAField> CTDAs = []; // Conditions
@@ -2974,9 +2975,9 @@ public class IDLERecord : Record, IHaveMODL {
 /// <summary>
 /// INFO.Dialog Topic Info - 34500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/INFO">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/INFO"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/INFO"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/INFO">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/INFO"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/INFO"/>
 public class INFORecord : Record {
     // TES3
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -3103,9 +3104,9 @@ public class INFORecord : Record {
 /// <summary>
 /// INGR.Ingredient - 34500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/INGR">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/INGR"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/INGR"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/INGR">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/INGR"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/INGR"/>
 public class INGRRecord : Record, IHaveMODL {
     // TES3
     public struct IRDTField(Header r, int dataSize) {
@@ -3157,8 +3158,8 @@ public class INGRRecord : Record, IHaveMODL {
 /// <summary>
 /// KEYM.Key - 04500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/KEYM"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/KEYM"/>
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/KEYM"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/KEYM"/>
 public class KEYMRecord : Record, IHaveMODL {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct DATAField {
@@ -3189,11 +3190,11 @@ public class KEYMRecord : Record, IHaveMODL {
 /// <summary>
 /// LAND.Land - 34500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/LAND">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/LAND"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/LAND"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/LAND">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/LAND"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/LAND"/>
 public unsafe class LANDRecord : Record {
-    // TESX
+    
     public struct VNMLField(Header r, int dataSize) {
         public Byte3[] Vertexs = r.ReadPArray<Byte3>("3B", dataSize / 3); // XYZ 8 bit floats
     }
@@ -3308,7 +3309,7 @@ public unsafe class LANDRecord : Record {
 /// <summary>
 /// LEVC.Leveled Creature - 30000
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/LEVC">
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/LEVC">
 public class LEVCRecord : Record {
     public IN32Field DATA; // List data - 1 = Calc from all levels <= PC level
     public BYTEField NNAM; // Chance None?
@@ -3333,7 +3334,7 @@ public class LEVCRecord : Record {
 /// <summary>
 /// LEVI.Leveled item - 30000
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/LEVI">
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/LEVI">
 public class LEVIRecord : Record {
     public IN32Field DATA; // List data - 1 = Calc from all levels <= PC level, 2 = Calc for each item
     public BYTEField NNAM; // Chance None?
@@ -3358,12 +3359,12 @@ public class LEVIRecord : Record {
 /// <summary>
 /// LIGH.Light - 34500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/GMST">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/GMST"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/GMST"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/GMST">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/GMST"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/GMST"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/GMST">
 public class LIGHRecord : Record, IHaveMODL {
-    // TESX
+    
     public struct DATAField {
         [Flags]
         public enum ColorFlags {
@@ -3437,9 +3438,9 @@ public class LIGHRecord : Record, IHaveMODL {
 /// <summary>
 /// LOCK.Lock - 34500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/GMST">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/GMST"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/GMST"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/GMST">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/GMST"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/GMST"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/GMST">
 public class LOCKRecord : Record, IHaveMODL {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -3473,9 +3474,9 @@ public class LOCKRecord : Record, IHaveMODL {
 /// <summary>
 /// LSCR.Load Screen - 04500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/GMST">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/GMST"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/GMST"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/GMST">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/GMST"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/GMST"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/GMST">
 public class LSCRRecord : Record {
     public struct LNAMField(Header r, int dataSize) {
@@ -3501,9 +3502,9 @@ public class LSCRRecord : Record {
 /// <summary>
 /// LTEX.Land Texture - 34500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/GMST">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/GMST"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/GMST"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/GMST">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/GMST"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/GMST"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/GMST">
 public class LTEXRecord : Record {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -3537,9 +3538,9 @@ public class LTEXRecord : Record {
 /// <summary>
 /// LVLC.Leveled Creature - 04000
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/GMST">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/GMST"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/GMST"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/GMST">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/GMST"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/GMST"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/GMST">
 public class LVLCRecord : Record {
     public BYTEField LVLD; // Chance
@@ -3562,9 +3563,9 @@ public class LVLCRecord : Record {
 /// <summary>
 /// LVLI.Leveled Item - 04000
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/GMST">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/GMST"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/GMST"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/GMST">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/GMST"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/GMST"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/GMST">
 public class LVLIRecord : Record {
     public struct LVLOField {
@@ -3601,9 +3602,9 @@ public class LVLIRecord : Record {
 /// <summary>
 /// LVSP.Leveled Spell - 04000
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/GMST">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/GMST"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/GMST"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/GMST">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/GMST"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/GMST"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/GMST">
 public class LVSPRecord : Record {
     public BYTEField LVLD; // Chance
@@ -3622,9 +3623,9 @@ public class LVSPRecord : Record {
 /// <summary>
 /// MGEF.Magic Effect - 34000
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/GMST">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/GMST"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/GMST"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/GMST">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/GMST"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/GMST"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/GMST">
 public class MGEFRecord : Record {
     // TES3
@@ -3774,12 +3775,12 @@ public class MGEFRecord : Record {
 /// <summary>
 /// MISC.Misc Item - 34500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/GMST">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/GMST"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/GMST"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/GMST">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/GMST"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/GMST"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/GMST">
 public class MISCRecord : Record, IHaveMODL {
-    // TESX
+    
     public struct DATAField {
         public float Weight;
         public uint Value;
@@ -3822,9 +3823,9 @@ public class MISCRecord : Record, IHaveMODL {
 /// <summary>
 /// NPC_.Non-Player Character - 34500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/GMST">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/GMST"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/GMST"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/GMST">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/GMST"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/GMST"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/GMST">
 public class NPC_Record : Record, IHaveMODL {
     [Flags]
@@ -3967,9 +3968,9 @@ public class NPC_Record : Record, IHaveMODL {
 /// <summary>
 /// PACK.AI Package - 04500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/GMST">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/GMST"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/GMST"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/GMST">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/GMST"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/GMST"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/GMST">
 public class PACKRecord : Record {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -4026,9 +4027,9 @@ public class PACKRecord : Record {
 /// <summary>
 /// PGRD.Path grid - 34000
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/GMST">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/GMST"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/GMST"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/GMST">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/GMST"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/GMST"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/GMST">
 public unsafe class PGRDRecord : Record {
     public struct DATAField {
@@ -4101,9 +4102,9 @@ public unsafe class PGRDRecord : Record {
 /// <summary>
 /// PROB.Probe - 30000
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/GMST">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/GMST"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/GMST"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/GMST">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/GMST"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/GMST"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/GMST">
 public class PROBRecord : Record, IHaveMODL {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -4137,9 +4138,9 @@ public class PROBRecord : Record, IHaveMODL {
 /// <summary>
 /// QUST.Quest - 04500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/QUST">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/QUST"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/QUST"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/QUST">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/QUST"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/QUST"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/QUST">
 public class QUSTRecord : Record {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -4180,12 +4181,12 @@ public class QUSTRecord : Record {
 /// <summary>
 /// RACE.Race_Creature type - 345S0
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/RACE">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/RACE"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/RACE"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/RACE">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/RACE"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/RACE"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/RACE">
 public class RACERecord : Record {
-    // TESX
+    
     public class DATAField {
         public enum RaceFlag : uint {
             Playable = 0x00000001,
@@ -4320,7 +4321,7 @@ public class RACERecord : Record {
     public STRVField FULL; // Race name
     public STRVField DESC; // Race description
     public List<STRVField> SPLOs = []; // NPCs: Special power/ability name
-    // TESX
+    
     public DATAField DATA; // RADT:DATA/ATTR: Race data/Base Attributes
     // TES4
     public Ref2Field<RACERecord> VNAM; // Voice
@@ -4407,7 +4408,7 @@ public class RACERecord : Record {
 /// <summary>
 /// REPA.Repair Item - 30000
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/REPA">
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/REPA">
 public class REPARecord : Record, IHaveMODL {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct RIDTField {
@@ -4440,8 +4441,8 @@ public class REPARecord : Record, IHaveMODL {
 /// <summary>
 /// REFR.Placed Object - 04500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/REFR"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/REFR"/>
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/REFR"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/REFR"/>
 public unsafe class REFRRecord : Record {
     /// <summary>
     /// Teleport Destination
@@ -4575,11 +4576,11 @@ public unsafe class REFRRecord : Record {
 /// <summary>
 /// REGN.Region - 34500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/REGN">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/REGN"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/REGN"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/REGN">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/REGN"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/REGN"/>
 public class REGNRecord : Record {
-    // TESX
+    
     public class RDATField {
         public enum REGNType : byte { Objects = 2, Weather, Map, Landscape, Grass, Sound }
         public uint Type;
@@ -4731,8 +4732,8 @@ public class REGNRecord : Record {
 /// <summary>
 /// ROAD.Road - 44000
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/ROAD">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/ROAD"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/ROAD">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/ROAD"/>
 public class ROADRecord : Record {
     public PGRDRecord.PGRPField[] PGRPs;
     public UNKNField PGRR;
@@ -4747,8 +4748,8 @@ public class ROADRecord : Record {
 /// <summary>
 /// SBSP.Subspace - 0400
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/SBSP"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/SBSP"/>
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/SBSP"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/SBSP"/>
 public class SBSPRecord : Record {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct DNAMField {
@@ -4770,11 +4771,11 @@ public class SBSPRecord : Record {
 /// <summary>
 /// SCPT.Script - 34000
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/GMST">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/GMST"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/GMST"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/GMST">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/GMST"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/GMST"/>
 public class SCPTRecord : Record {
-    // TESX
+    
     public struct CTDAField {
         public enum INFOType : byte { Nothing = 0, Function, Global, Local, Journal, Item, Dead, NotId, NotFaction, NotClass, NotRace, NotCell, NotLocal }
         // TES3: 0 = [=], 1 = [!=], 2 = [>], 3 = [>=], 4 = [<], 5 = [<=]
@@ -4927,12 +4928,12 @@ public class SGSTRecord : Record, IHaveMODL {
 /// <summary>
 /// SKIL.Skill - 34500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/SKIL">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/SKIL"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/SKIL"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/SKIL">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/SKIL"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/SKIL"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/SKIL">
 public class SKILRecord : Record {
-    // TESX
+    
     public struct DATAField(Header r, int dataSize) {
         public int Action = r.Format == TES3 ? 0 : r.ReadInt32();
         public int Attribute = r.ReadInt32();
@@ -4968,8 +4969,8 @@ public class SKILRecord : Record {
 /// <summary>
 /// SLGM.Soul Gem - 04500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/SLGM"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/SLGM"/>
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/SLGM"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/SLGM"/>
 public class SLGMRecord : Record, IHaveMODL {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct DATAField {
@@ -5004,7 +5005,7 @@ public class SLGMRecord : Record, IHaveMODL {
 /// <summary>
 /// SNDG.Sound Generator - 30000
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/SNDG">
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/SNDG">
 public class SNDGRecord : Record {
     public enum SNDGType : uint { LeftFoot = 0, RightFoot, SwimLeft, SwimRight, Moan, Roar, Scream, Land }
 
@@ -5026,7 +5027,7 @@ public class SNDGRecord : Record {
 /// <summary>
 /// SNDR.Sound Reference - 00500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/SNDR"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/SNDR"/>
 public class SNDRRecord : Record {
     public CREFField CNAM; // RGB color
 
@@ -5040,9 +5041,9 @@ public class SNDRRecord : Record {
 /// <summary>
 /// SOUN.Sound - 34500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/SOUN">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/SOUN"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/SOUN"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/SOUN">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/SOUN"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/SOUN"/>
 public class SOUNRecord : Record {
     [Flags]
     public enum SOUNFlags : ushort {
@@ -5056,7 +5057,7 @@ public class SOUNRecord : Record {
         _360LFE = 0x0080,
     }
 
-    // TESX
+    
     public class DATAField {
         public byte Volume; // (0=0.00, 255=1.00)
         public byte MinRange; // Minimum attenuation distance
@@ -5099,12 +5100,12 @@ public class SOUNRecord : Record {
 /// <summary>
 /// SPEL.Spell - 345S0
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/SPEL">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/SPEL"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/SPEL"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/SPEL">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/SPEL"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/SPEL"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/SPEL">
 public class SPELRecord : Record {
-    // TESX
+    
     public struct SPITField(Header r, int dataSize) {
         public override readonly string ToString() => $"{Type}";
         // TES3: 0 = Spell, 1 = Ability, 2 = Blight, 3 = Disease, 4 = Curse, 5 = Power
@@ -5137,7 +5138,7 @@ public class SPELRecord : Record {
 /// <summary>
 /// SSCR.Start Script - 30000
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/SSCR">
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/SSCR">
 public class SSCRRecord : Record {
     public STRVField DATA; // Digits
 
@@ -5153,9 +5154,9 @@ public class SSCRRecord : Record {
 /// <summary>
 /// STAT.Static - 3450
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/STAT">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/STAT"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/STAT"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/STAT">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/STAT"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/STAT"/>
 public class STATRecord : Record, IHaveMODL {
     public MODLGroup MODL { get; set; } // Model
 
@@ -5185,7 +5186,7 @@ public class SUNPRecord : Record {
 /// <summary>
 /// TES3.Plugin Info - 30000
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/TES3"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/TES3"/>
 public class TES3Record : Record {
     [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
     public struct HEDRField {
@@ -5212,8 +5213,8 @@ public class TES3Record : Record {
 /// <summary>
 /// TES4.Plugin Info - 04500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/TES4"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/TES4"/>
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/TES4"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/TES4"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/TES4">
 public unsafe class TES4Record : Record {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -5269,8 +5270,8 @@ public class TMLMRecord : Record {
 /// <summary>
 /// TREE.Tree - 04500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/TREE"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/TREE"/>
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/TREE"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/TREE"/>
 public class TREERecord : Record, IHaveMODL {
     public struct SNAMField(Header r, int dataSize) {
         public int[] Values = r.ReadPArray<int>("i", dataSize >> 2);
@@ -5332,8 +5333,8 @@ public class TXSTRecord : Record {
 /// <summary>
 /// WATR.Water Type - 04500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/WATR"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/WATR"/>
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/WATR"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/WATR"/>
 public class WATRRecord : Record {
     public class DATAField {
         public float WindVelocity;
@@ -5432,9 +5433,9 @@ public class WATRRecord : Record {
 /// <summary>
 /// WEAP.Weapon - 345S0
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Morrowind_Mod:Mod_File_Format/WEAP">
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/WEAP"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/WEAP"/>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/WEAP">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/WEAP"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/WEAP"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/WEAP">
 public class WEAPRecord : Record, IHaveMODL {
     public struct DATAField {
@@ -5510,8 +5511,8 @@ public class WEAPRecord : Record, IHaveMODL {
 /// <summary>
 /// WRLD.Worldspace - 045S0
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/WRLD"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/WRLD"/>
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/WRLD"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/WRLD"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/WRLD">
 public unsafe class WRLDRecord : Record {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -5587,8 +5588,8 @@ public unsafe class WRLDRecord : Record {
 /// <summary>
 /// WTHR.Weather - 04500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/Oblivion_Mod:Mod_File_Format/WTHR"/>
-/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/WTHR"/>
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/WTHR"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/WTHR"/>
 public class WTHRRecord : Record, IHaveMODL {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct FNAMField {

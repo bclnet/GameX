@@ -5,18 +5,16 @@ from enum import Enum
 from openstk import log, Int3, IWriteToStream
 from gamex import FileSource, ArcBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo, DesSer, IDatabase
 from gamex.families.Uncore.formats.compression import decompressLz4, decompressZlib
-from gamex.families.Bethesda.formats.records import FormType, Header, GroupHeader, Record, RecordGroup
+from gamex.families.Bethesda.formats.records import FormType, Reader, Record, RecordGroup
 
 # typedefs
 class BinaryReader: pass
-class Archive: pass
 class BinaryArchive: pass
 
 #region Binary_Ba2 - tag::Binary_Ba2[]
 
 # Binary_Ba2
 class Binary_Ba2(ArcBinaryT):
-
     #region Headers : TES5
 
     # Default header data
@@ -173,7 +171,6 @@ class Binary_Ba2(ArcBinaryT):
 
 # Binary_Bsa
 class Binary_Bsa(ArcBinaryT):
-
     #region Headers : TES4
 
     OB_MAGIC = 0x00415342       # Magic for Oblivion BSA, the literal string "BSA\0".
@@ -343,7 +340,6 @@ class Binary_Bsa(ArcBinaryT):
 
 # Binary_Esm
 class Binary_Esm(ArcBinaryT, IDatabase):
-    RecordHeaderSizeInBytes: int = 16
     format: FormType
     groups: dict[FormType, RecordGroup]
 
@@ -364,56 +360,24 @@ class Binary_Esm(ArcBinaryT, IDatabase):
 
     # read
     def read(self, source: BinaryArchive, b: BinaryReader, tag: object = None) -> None:
-        format = self.format = self.getFormat(source.game.id)
-        level = 1
-        binPath = source.binPath
-        r = Header(b, binPath, format)
-        record = Record.factory(r, r.type, level)
-        if source.game.id == 'Fallout3' or source.game.id == 'FalloutNV': r.skip(4)
+        self.format = self.getFormat(source.game.id)
+        r = Reader(b, source.binPath, self.format, source.game.id in ['Fallout3', 'FalloutNV'])
+        record = self.record = Record.factory(r, FormType(r.readUInt32()))
         record.read(r)
-        files = source.files = []
+        files = source.files = [FileSource(path = f'{str(record.type)[9:]}', tag = record)]
+        for s in RecordGroup.readAll(r):
+            if s.preload: s.read(r, files)
+            else: r.seek(r.tell() + s.dataSize)
 
-        # morrowind hack
-        if format == FormType.TES3:
-            group = RecordGroup(level)
-            group.addHeader(GroupHeader(header = r, label = 0, dataSize = r.length - r.tell(), position = r.tell()))
-            group.load()
-            groups = self.groups = {}
-            for k, g in groupby(sorted(group.records, key=lambda s: int(s._header.type)), lambda s: s._header.type):
-                t = RecordGroup(level); t.records = list(g)
-                t.addHeader(GroupHeader(header = r, label = k), load = False)
-                groups[k] = t
-            # add items
-            files.extend([FileSource(
-                path = f'{k.name}',
-                fileSize = 1,
-                flags = k,
-                tag = s) for k, s in groups.items()])
-            return
-        
-        # read groups
-        groups = self.groups = {}
-        while not b.atEnd():
-            r = Header(b, binPath, format)
-            if r.type != FormType.GRUP: raise Exception(f'{header.type} not GRUP')
-            nextPosition = b.tell() + r.dataSize
-            if not (group := groups.get(r.label)): group = RecordGroup(level); groups.add(r.label, group)
-            group.addHeader(r.group)
-            b.seek(nextPosition)
-        # add items
-        files.extend([FileSource(
-            path = f'{k.name}',
-            fileSize = 1,
-            flags = k,
-            tag = s) for k, s in groups.items()])
     def process(self, source: BinaryArchive) -> None:
         if self.format == FormType.TES3:
             pass
         pass
 
     #region Query
+
     @staticmethod
-    def findTAGFactory(type: FormType, group: RecordGroup) -> object: return Binary_Esm.FindTAG[Record](group.records) #z = Record.factory(None, type);
+    def findTAGFactory(type: FormType, group: RecordGroup) -> object: return None #Binary_Esm.FindTAG[Record](group.records) #z = Record.factory(None, type);
     class FindTAG[T](list, IHaveMetaInfo, IWriteToStream):
         def __init__(self, source: list): super().__init__(source)
         def writeToStream(self, stream: object): return DesSer.serialize(self, stream)
@@ -457,6 +421,5 @@ class Binary_Esm(ArcBinaryT, IDatabase):
             case _: return _throw('OutOfRange')
 
     #endregion
-        
     
 #endregion - end::Binary_Esm[]

@@ -7,9 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading.Tasks;
-using static GameX.Formats.IUnknown.UnknownMesh;
 
 namespace GameX.Bethesda.Formats;
 
@@ -510,8 +508,8 @@ public unsafe class Binary_Bsa : ArcBinary<Binary_Bsa> {
 /// </summary>
 /// <seealso cref="GameX.Formats._Packages.PakBinaryBethesdaEsm" />
 public unsafe class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
-    const int RecordHeaderSizeInBytes = 16;
     public FormType Format;
+    public Record Record;
     public Dictionary<FormType, RecordGroup> Groups;
 
     static FormType GetFormat(string game)
@@ -556,54 +554,15 @@ public unsafe class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
     /// <returns></returns>
     /// <exception cref="ArgumentOutOfRangeException">stage</exception>
     public override Task Read(BinaryArchive source, BinaryReader b, object tag) {
-        var format = Format = GetFormat(source.Game.Id);
-        var level = 1;
-        var binPath = source.BinPath;
-        var r = new Header(b, binPath, format);
-        if (source.Game.Id == "Fallout3" || source.Game.Id == "FalloutNV") r.Skip(4);
-        var record = Record.Factory(r, r.Type, level);
-        record.Read(r);
-        List<FileSource> files = []; source.Files = files;
-
-        // morrowind hack
-        if (Format == FormType.TES3) {
-            var group = new RecordGroup(level);
-            group.AddHeader(new GroupHeader { Header = r, Label = 0, DataSize = (uint)(b.BaseStream.Length - b.Tell()), Position = b.Tell() });
-            group.Load();
-            Groups = group.Records.GroupBy(s => s.Header.Type).ToDictionary(s => s.Key, s => {
-                var t = new RecordGroup(level) { Records = [.. s] };
-                t.AddHeader(new GroupHeader { Header = r, Label = s.Key }, load: false);
-                return t;
-            });
-            //new FileSource { Path = "Group", Arc = new SubEsm(source, this, null, null) }
-            // add items
-            files.AddRange(Groups.Select(s => new FileSource {
-                Path = Encoding.ASCII.GetString(BitConverter.GetBytes((uint)s.Key)),
-                FileSize = 1,
-                Flags = (int)s.Key,
-                Tag = s.Value
-            }));
-            return Task.CompletedTask;
-        }
-
-        // read groups
-        var groups = Groups = [];
-        while (!b.AtEnd()) {
-            r = new Header(b, binPath, format);
-            if (r.Type != FormType.GRUP) throw new InvalidOperationException($"{r.Type} not GRUP");
-            var nextPosition = b.Tell() + r.DataSize;
-            if (!groups.TryGetValue(r.Group.Label, out var group)) { group = new RecordGroup(level); groups.Add(r.Group.Label, group); }
-            group.AddHeader(r.Group);
-            b.Seek(nextPosition);
-        }
-        // add items
-        files.AddRange(Groups.Select(s => new FileSource {
-            Path = Encoding.ASCII.GetString(BitConverter.GetBytes((uint)s.Key)),
-            Arc = new SubEsm(source, this, null, null),
-            FileSize = 1,
-            Flags = (int)s.Key,
-            Tag = s.Value
-        }));
+        Format = GetFormat(source.Game.Id);
+        var r = new Reader(b, source.BinPath, Format, new[] { "Fallout3", "FalloutNV" }.Contains(source.Game.Id));
+        var record = Record = Record.Factory(r, (FormType)r.ReadUInt32());
+        record.ReadFields(r);
+        var files = (List<FileSource>)(source.Files = [new FileSource { Path = $"{record.Type}", Tag = record }]);
+        foreach (var s in RecordGroup.ReadAll(r))
+            if (s.Preload) s.Read(r, files);
+            else r.Seek(r.Tell() + s.DataSize);
+        //if (r.Format == FormType.TES3) Groups = [.. Records.GroupBy(s => s.Type).Select(s => new RecordGroup(null) { Records = [.. s], Label = s.Key })];
         return Task.CompletedTask;
     }
     //var poolAction = (GenericPoolAction<BinaryReader>)source.GetReader().Action; //: Leak
@@ -633,9 +592,9 @@ public unsafe class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
             //CELLsByName = cells.Where(x => x.IsInterior).ToDictionary(s => s.EDID.Value);
             return Task.CompletedTask;
         }
-        var wrldsByLabel = Groups[FormType.WRLD].GroupsByLabel;
-        WRLDsById = Groups[FormType.WRLD].Load().Cast<WRLDRecord>().ToDictionary(s => s.Header.Id, s => { wrldsByLabel.TryGetValue(s.Header.Id, out var wrlds); return new Tuple<WRLDRecord, RecordGroup[]>(s, wrlds); });
-        LTEXsByEid = Groups[FormType.LTEX].Load().Cast<LTEXRecord>().ToDictionary(s => s.EDID.Value);
+        //var wrldsByLabel = Groups[FormType.WRLD].GroupsByLabel;
+        //WRLDsById = Groups[FormType.WRLD].Load().Cast<WRLDRecord>().ToDictionary(s => s.Id, s => { wrldsByLabel.TryGetValue(s.Id, out var wrlds); return new Tuple<WRLDRecord, RecordGroup[]>(s, wrlds); });
+        //LTEXsByEid = Groups[FormType.LTEX].Load().Cast<LTEXRecord>().ToDictionary(s => s.EDID.Value);
         return Task.CompletedTask;
     }
 

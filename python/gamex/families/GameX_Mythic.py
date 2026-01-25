@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os
 from openstk import _pathExtension
-from gamex import BinaryArchive
+from gamex import ArcBinary, BinaryArchive
 from gamex.families.GameX_Uncore import UncoreArchive
 from gamex.families.Mythic.formats.binary import Binary_Mpk, Binary_Crf
 from gamex.families.Bioware.formats.binary import Binary_Myp

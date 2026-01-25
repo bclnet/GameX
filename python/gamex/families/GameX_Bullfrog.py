@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os
 from openstk import _pathExtension
-from gamex import Family, FamilyGame, BinaryArchive
+from gamex import Family, FamilyGame, ArcBinary, BinaryArchive
 from gamex.families.Bullfrog.formats.binary import Binary_Bullfrog, Binary_Populus, Binary_Syndicate
 from gamex.families.GameX_Uncore import UncoreArchive
 

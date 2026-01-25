@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os
 from openstk import log, _pathExtension
-from gamex import FamilyGame, BinaryArchive
+from gamex import FamilyGame, ArcBinary, BinaryArchive
 from gamex.families.Origin.formats.UO.binary import Binary_Animdata, Binary_AsciiFont, Binary_BodyConverter, Binary_BodyTable, Binary_CalibrationInfo, Binary_Gump, Binary_GumpDef, Binary_Hues, Binary_Land, Binary_Light, Binary_MobType, Binary_MultiMap, Binary_MusicDef, Binary_Multi, Binary_RadarColor, Binary_SkillGroups, Binary_Skills, Binary_Sound, Binary_SpeechList, Binary_Art, Binary_StringTable, Binary_TileData, Binary_UnicodeFont, Binary_Verdata
 from gamex.families.Origin.formats.UO.utility import ClientVersion, ClientVersionHelper
 from gamex.families.Origin.formats.binary import Binary_U8, Binary_U9, Binary_UO

@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os
 from openstk import _pathExtension
-from gamex import BinaryArchive
+from gamex import ArcBinary, BinaryArchive
 from gamex.families.GameX_Uncore import UncoreArchive
 
 # BohemiaArchive

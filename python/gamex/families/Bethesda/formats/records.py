@@ -533,6 +533,7 @@ class IHaveMODL:
     # MODL: MODLGroup
     pass
 
+
 class Record:
     _mapx: dict[FormType, callable] = {
         FormType.TES3: lambda: TES3Record(),
@@ -632,6 +633,14 @@ class Record:
         FormType.TRNS: lambda: TRNSRecord(),
         FormType.TXST: lambda: TXSTRecord(),
     }
+    cellsLoaded: int = 0
+    @staticmethod
+    def factory(r: Reader, type: FieldType) -> 'Record':
+        if type == FormType.CELL and Record.cellsLoaded > 100: Record.cellsLoaded += 1; return None # hack to limit cells loading
+        if not (z := Record._mapx.get(type)): print(f'Unsupported ESM record type: {type}'); return None
+        # if type != FormType.TES3 and type != FormType.TES4 and type not in Record._factorySet: return None
+        record = z(); record.type = type
+        return record
     class EsmFlags(IntFlag):
         None_ = 0x00000000                  # None
         EsmFile = 0x00000001                # ESM file. (TES4.HEDR record only.)
@@ -665,6 +674,7 @@ class Record:
         #     s = int.__new__(cls); s._value_ = value; s._name_ = f'_{hex(value)}'
         #     print(f'_missing_: {hex(value)}')
         #     return s
+    # tag::Record[]
     _empty: 'Record'
     # def __repr__(self) -> str: return f'{self.__class__.__name__[:4]}:{self.EDID.value if self.EDID else None}'
     def __repr__(self) -> str: return f'{str(self.type)[9:]}: {self.EDID.value if self.EDID else None}'
@@ -710,15 +720,7 @@ class Record:
             r.ensureAtEnd(tell + fieldDataSize, f'Failed reading {self.type}:{fieldType} field data at offset {tell} in {r.binPath} of {r.tell() - tell - fieldDataSize}')
         r.ensureAtEnd(end, f'Failed reading {self.type} record data at offset {start} in {r.binPath}')
         self.complete(r)
-
-    cellsLoaded: int = 0
-    @staticmethod
-    def factory(r: Reader, type: FieldType) -> 'Record':
-        if type == FormType.CELL and Record.cellsLoaded > 100: Record.cellsLoaded += 1; return None # hack to limit cells loading
-        if not (z := Record._mapx.get(type)): print(f'Unsupported ESM record type: {type}'); return None
-        # if type != FormType.TES3 and type != FormType.TES4 and type not in Record._factorySet: return None
-        record = z(); record.type = type
-        return record
+    # end::Record[]
 Record._empty = Record()
 
 class RefId[T: Record]:

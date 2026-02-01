@@ -341,6 +341,7 @@ class Binary_Bsa(ArcBinaryT):
 # Binary_Esm
 class Binary_Esm(ArcBinaryT, IDatabase):
     format: FormType
+    record: Record
     groups: dict[FormType, RecordGroup]
 
     @staticmethod
@@ -363,11 +364,16 @@ class Binary_Esm(ArcBinaryT, IDatabase):
         self.format = self.getFormat(source.game.id)
         r = Reader(b, source.binPath, self.format, source.game.id in ['Fallout3', 'FalloutNV'])
         record = self.record = Record.factory(r, FormType(r.readUInt32()))
-        record.read(r)
+        record.readFields(r)
         files = source.files = [FileSource(path = f'{str(record.type)[9:]}', tag = record)]
         for s in RecordGroup.readAll(r):
-            if s.preload: s.read(r, files)
-            else: r.seek(r.tell() + s.dataSize)
+            if s.preload: print(f'read: {s}'); s.read(r, files)
+            else: print(f'skip: {s}'); r.seek(r.tell() + s.dataSize)
+        print('HERE')
+        # if r.format == FormType.TES3:
+        #     for k, g in groupby(sorted(self.records, key=lambda s: int(s.type)), lambda s: s.type):
+        #         t = RecordGroup(None); t.label = k; t.records = list(g)
+        #         groups[k] = t
 
     def process(self, source: BinaryArchive) -> None:
         if self.format == FormType.TES3:

@@ -8,6 +8,7 @@ class Color3:
     def __repr__(self) -> str: return f'{self.r:.9g} {self.g:.9g} {self.b:.9g}'
     def __init__(self, *args):
         match len(args):
+            case 0: self.r = self.g = self.b = 0.
             case 1 if isinstance(args[0], tuple): r = args[0]; self.r, self.g, self.b = r
             case 1: r = args[0]; self.r, self.g, self.b = (r.readSingle(), r.readSingle(), r.readSingle())
             case 3: self.r, self.g, self.b = args
@@ -21,6 +22,7 @@ class ByteColor3:
     def __repr__(self) -> str: return f'{self.r} {self.g} {self.b}'
     def __init__(self, *args):
         match len(args):
+            case 0: self.r = self.g = self.b = 0
             case 1 if isinstance(args[0], tuple): r = args[0]; self.r, self.g, self.b = r
             case 1: r = args[0]; self.r, self.g, self.b = (r.readByte(), r.readByte(), r.readByte())
             case 3: self.r, self.g, self.b = args
@@ -34,6 +36,7 @@ class Color4:
     def __repr__(self) -> str: return f'{self.r:.9g} {self.g:.9g} {self.b:.9g} {self.a:.9g}'
     def __init__(self, *args):
         match len(args):
+            case 0: self.r = self.g = self.b = self.a = 0.
             case 1 if isinstance(args[0], tuple): r = args[0]; self.r, self.g, self.b, self.a = r
             case 1: r = args[0]; self.r, self.g, self.b, self.a = (r.readSingle(), r.readSingle(), r.readSingle(), r.readSingle())
             case 4: self.r, self.g, self.b, self.a = args
@@ -47,6 +50,7 @@ class ByteColor4:
     def __repr__(self) -> str: return f'{self.r} {self.g} {self.b} {self.a}'
     def __init__(self, *args):
         match len(args):
+            case 0: self.r = self.g = self.b = self.a = 0
             case 1 if isinstance(args[0], tuple): r = args[0]; self.r, self.g, self.b, self.a = r
             case 1: r = args[0]; self.r, self.g, self.b, self.a = (r.readByte(), r.readByte(), r.readByte(), r.readByte())
             case 4: self.r, self.g, self.b, self.a = args

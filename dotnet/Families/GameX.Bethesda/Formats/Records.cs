@@ -676,11 +676,15 @@ public partial class Record {
     public virtual void Complete(Reader r) { }
 
     /// <summary>
-    /// Return an uninitialized subrecord to deserialize, or null to skip.
+    /// Reads an uninitialized subrecord to deserialize, or null to skip.
     /// </summary>
     /// <returns>Return an uninitialized subrecord to deserialize, or null to skip.</returns>
     public virtual object ReadField(Reader r, FieldType type, int dataSize) => Empty;
 
+    /// <summary>
+    /// Reads a record
+    /// </summary>
+    /// <param name="r"></param>
     public void Read(Reader r) {
         DataSize = r.ReadUInt32();
         if (r.Format == TES3) r.ReadUInt32(); // unknown
@@ -699,6 +703,11 @@ public partial class Record {
         if (r.Tes4a) r.Skip(4);
     }
 
+    /// <summary>
+    /// Reads a records fields
+    /// </summary>
+    /// <param name="r"></param>
+    /// <exception cref="InvalidOperationException"></exception>
     public void ReadFields(Reader r) {
         //Log.Info($"Recd: {record.Type}:{record.Compressed}");
         if (Compressed) {
@@ -722,8 +731,8 @@ public partial class Record {
             r.EnsureAtEnd(tell + fieldDataSize, $"Failed reading {Type}:{fieldType} field data at offset {tell} in {r.BinPath} of {r.Tell() - tell - fieldDataSize}");
         }
         r.EnsureAtEnd(end, $"Failed reading {Type} record data at offset {start} in {r.BinPath}");
-        Complete(r);
         if (Compressed) r.Dispose();
+        Complete(r);
     }
 
     static int CellsLoaded = 0;
@@ -769,11 +778,6 @@ public struct Ref2Field<TRecord>(Reader r, int dataSize) where TRecord : Record 
 
 #endregion
 
-//partial class Record { static readonly HashSet<FormType> _factorySet = [FormType.ACTI, FormType.ALCH, FormType.APPA, FormType.ARMO, FormType.BODY, FormType.BSGN, FormType.CELL, FormType.CLAS, FormType.CLOT, FormType.CONT, FormType.CREA]; }
-//partial class Record { static readonly HashSet<FormType> _factorySet = [FormType.DIAL, FormType.INFO, FormType.DOOR, FormType.ENCH, FormType.FACT, FormType.GLOB]; }
-partial class Record { static readonly HashSet<FormType> _factorySet = null; }
-partial class RecordGroup { static readonly HashSet<FormType> _factorySet = [NPC_]; }
-
 #region Record Group
 
 public partial class RecordGroup {  //} : IHaveMetaInfo, IWriteToStream {
@@ -799,7 +803,7 @@ public partial class RecordGroup {  //} : IHaveMetaInfo, IWriteToStream {
     public List<Record> Records = [];
     public List<RecordGroup> Groups;
     public Dictionary<uint, RecordGroup[]> GroupsByLabel;
-    public bool Preload => (Label == 0 || Type == GroupType.Top) && _factorySet.Contains(Label);
+    public bool Preload => Label == 0 || Type == GroupType.Top || _factorySet.Contains(Label);
 
     public RecordGroup(Reader r, string path = null) {
         if (r == null) return;
@@ -862,7 +866,6 @@ public partial class RecordGroup {  //} : IHaveMetaInfo, IWriteToStream {
     //}
 
     // read groups
-    //while (!r.AtEnd()) {
     //    if (groups.TryGetValue(group.Label, out var z)) throw new IndexOutOfRangeException($"Here {z}");
     //    groups.Add(group.Label, group);
     //    // add item
@@ -882,9 +885,6 @@ public partial class RecordGroup {  //} : IHaveMetaInfo, IWriteToStream {
     //    Flags = (int)s.Key,
     //    Tag = s.Value
     //}));
-
-
-
 
     //public void WriteToStream(Stream stream) => this.Serialize(stream);
 
@@ -989,6 +989,11 @@ public static class Extensions {
 #endregion
 
 #region Records
+
+//partial class Record { static readonly HashSet<FormType> _factorySet = [FormType.ACTI, FormType.ALCH, FormType.APPA, FormType.ARMO, FormType.BODY, FormType.BSGN, FormType.CELL, FormType.CLAS, FormType.CLOT, FormType.CONT, FormType.CREA]; }
+//partial class Record { static readonly HashSet<FormType> _factorySet = [FormType.DIAL, FormType.INFO, FormType.DOOR, FormType.ENCH, FormType.FACT, FormType.GLOB]; }
+partial class Record { static readonly HashSet<FormType> _factorySet = null; }
+partial class RecordGroup { static readonly HashSet<FormType> _factorySet = [NPC_]; }
 
 /// <summary>
 /// AACT.Action - 00500
@@ -1824,7 +1829,6 @@ public class CLASRecord : Record {
                 return;
             }
             else if (r.Format == TES4) {
-                if (dataSize != 48 && dataSize != 52) return;
                 PrimaryAttributes = [(ActorValue)r.ReadUInt32(), (ActorValue)r.ReadUInt32()];
                 Specialization = (Specialization_)r.ReadUInt32();
                 MajorSkills = r.ReadPArray<ActorValue>("i", 7);
@@ -3772,7 +3776,6 @@ public class MGEFRecord : Record {
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/GMST"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/GMST">
 public class MISCRecord : Record, IHaveMODL {
-
     public struct DATAField {
         public float Weight;
         public uint Value;
@@ -4784,7 +4787,6 @@ public class SBSPRecord : Record {
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/GMST"/>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/GMST"/>
 public class SCPTRecord : Record {
-
     public struct CTDAField {
         public enum INFOType : byte { Nothing = 0, Function, Global, Local, Journal, Item, Dead, NotId, NotFaction, NotClass, NotRace, NotCell, NotLocal }
         // TES3: 0 = [=], 1 = [!=], 2 = [>], 3 = [>=], 4 = [<], 5 = [<=]

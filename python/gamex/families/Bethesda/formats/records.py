@@ -537,110 +537,112 @@ class IHaveMODL:
 
 class Record:
     _mapx: dict[FormType, callable] = {
-        FormType.TES3: lambda: TES3Record(),
-        FormType.TES4: lambda: TES4Record(),
+        FormType.TES3: lambda f: TES3Record(),
+        FormType.TES4: lambda f: TES4Record(),
         # 0
-        FormType.LTEX: lambda: LTEXRecord(),
-        FormType.STAT: lambda: STATRecord(),
-        FormType.CELL: lambda: CELLRecord(),
-        FormType.LAND: lambda: LANDRecord(),
+        FormType.LTEX: lambda f: LTEXRecord(),
+        FormType.STAT: lambda f: STATRecord(),
+        FormType.CELL: lambda f: CELLRecord(),
+        FormType.LAND: lambda f: LANDRecord(),
         # 1
-        FormType.DOOR: lambda: DOORRecord(),
-        FormType.MISC: lambda: MISCRecord(),
-        FormType.WEAP: lambda: WEAPRecord(),
-        FormType.CONT: lambda: CONTRecord(),
-        FormType.LIGH: lambda: LIGHRecord(),
-        FormType.ARMO: lambda: ARMORecord(),
-        FormType.CLOT: lambda: CLOTRecord(),
-        FormType.REPA: lambda: REPARecord(),
-        FormType.ACTI: lambda: ACTIRecord(),
-        FormType.APPA: lambda: APPARecord(),
-        FormType.LOCK: lambda: LOCKRecord(),
-        FormType.PROB: lambda: PROBRecord(),
-        FormType.INGR: lambda: INGRRecord(),
-        FormType.BOOK: lambda: BOOKRecord(),
-        FormType.ALCH: lambda: ALCHRecord(),
-        FormType.CREA: lambda: CREARecord(),
-        FormType.NPC_: lambda: NPC_Record(),
+        FormType.DOOR: lambda f: DOORRecord(),
+        FormType.MISC: lambda f: MISCRecord(),
+        FormType.WEAP: lambda f: WEAPRecord(),
+        FormType.CONT: lambda f: CONTRecord(),
+        FormType.LIGH: lambda f: LIGHRecord(),
+        FormType.ARMO: lambda f: ARMORecord(),
+        FormType.CLOT: lambda f: CLOTRecord(),
+        FormType.REPA: lambda f: REPARecord(),
+        FormType.ACTI: lambda f: ACTIRecord(),
+        FormType.APPA: lambda f: APPARecord(),
+        FormType.LOCK: lambda f: LOCKRecord(),
+        FormType.PROB: lambda f: PROBRecord(),
+        FormType.INGR: lambda f: INGRRecord(),
+        FormType.BOOK: lambda f: BOOKRecord(),
+        FormType.ALCH: lambda f: ALCHRecord(),
+        FormType.CREA: lambda f: CREARecord(),
+        FormType.NPC_: lambda f: NPC_Record(),
         # 2
-        FormType.GMST: lambda: GMSTRecord(),
-        FormType.GLOB: lambda: GLOBRecord(),
-        FormType.SOUN: lambda: SOUNRecord(),
-        FormType.REGN: lambda: REGNRecord(),
+        FormType.GMST: lambda f: GMSTRecord(),
+        FormType.GLOB: lambda f: GLOBRecord(),
+        FormType.SOUN: lambda f: SOUNRecord(),
+        FormType.REGN: lambda f: REGNRecord(),
         # 3
-        FormType.CLAS: lambda: CLASRecord(),
-        FormType.SPEL: lambda: SPELRecord(),
-        FormType.BODY: lambda: BODYRecord(),
-        FormType.PGRD: lambda: PGRDRecord(),
-        FormType.INFO: lambda: INFORecord(),
-        FormType.DIAL: lambda: DIALRecord(),
-        FormType.SNDG: lambda: SNDGRecord(),
-        FormType.ENCH: lambda: ENCHRecord(),
-        FormType.SCPT: lambda: SCPTRecord(),
-        FormType.SKIL: lambda: SKILRecord(),
-        FormType.RACE: lambda: RACERecord(),
-        FormType.MGEF: lambda: MGEFRecord(),
-        FormType.LEVI: lambda: LEVIRecord(),
-        FormType.LEVC: lambda: LEVCRecord(),
-        FormType.BSGN: lambda: BSGNRecord(),
-        FormType.FACT: lambda: FACTRecord(),
-        FormType.SSCR: lambda: SSCRRecord(),
+        FormType.CLAS: lambda f: CLASRecord(),
+        FormType.SPEL: lambda f: SPELRecord(),
+        FormType.BODY: lambda f: BODYRecord(),
+        FormType.PGRD: lambda f: PGRDRecord(),
+        FormType.INFO: lambda f: INFORecord(),
+        FormType.DIAL: lambda f: DIALRecord(),
+        FormType.SNDG: lambda f: SNDGRecord(),
+        FormType.ENCH: lambda f: ENCHRecord(),
+        FormType.SCPT: lambda f: SCPTRecord(),
+        FormType.SKIL: lambda f: SKILRecord(),
+        FormType.RACE: lambda f: RACERecord(),
+        FormType.MGEF: lambda f: MGEFRecord(),
+        FormType.LEVI: lambda f: LEVIRecord(),
+        FormType.LEVC: lambda f: LEVCRecord(),
+        FormType.BSGN: lambda f: BSGNRecord(),
+        FormType.FACT: lambda f: FACTRecord(),
+        FormType.SSCR: lambda f: SSCRRecord(),
         # 4 - Oblivion                      ,
-        FormType.WRLD: lambda: WRLDRecord(),
-        FormType.ACRE: lambda: ACRERecord(),
-        FormType.ACHR: lambda: ACHRRecord(),
-        FormType.REFR: lambda: REFRRecord(),
+        FormType.WRLD: lambda f: WRLDRecord(),
+        FormType.ACRE: lambda f: ACRERecord(),
+        FormType.ACHR: lambda f: ACHRRecord(),
+        FormType.REFR: lambda f: REFRRecord(),
         #                                   ,
-        FormType.AMMO: lambda: AMMORecord(),
-        FormType.ANIO: lambda: ANIORecord(),
-        FormType.CLMT: lambda: CLMTRecord(),
-        FormType.CSTY: lambda: CSTYRecord(),
-        FormType.EFSH: lambda: EFSHRecord(),
-        FormType.EYES: lambda: EYESRecord(),
-        FormType.FLOR: lambda: FLORRecord(),
-        FormType.FURN: lambda: FURNRecord(),
-        FormType.GRAS: lambda: GRASRecord(),
-        FormType.HAIR: lambda: HAIRRecord(),
-        FormType.IDLE: lambda: IDLERecord(),
-        FormType.KEYM: lambda: KEYMRecord(),
-        FormType.LSCR: lambda: LSCRRecord(),
-        FormType.LVLC: lambda: LVLCRecord(),
-        FormType.LVLI: lambda: LVLIRecord(),
-        FormType.LVSP: lambda: LVSPRecord(),
-        FormType.PACK: lambda: PACKRecord(),
-        FormType.QUST: lambda: QUSTRecord(),
-        FormType.ROAD: lambda: ROADRecord(),
-        FormType.SBSP: lambda: SBSPRecord(),
-        FormType.SGST: lambda: SGSTRecord(),
-        FormType.SLGM: lambda: SLGMRecord(),
-        FormType.TREE: lambda: TREERecord(),
-        FormType.WATR: lambda: WATRRecord(),
-        FormType.WTHR: lambda: WTHRRecord(),
+        FormType.AMMO: lambda f: AMMORecord(),
+        FormType.ANIO: lambda f: ANIORecord(),
+        FormType.CLMT: lambda f: CLMTRecord(),
+        FormType.CSTY: lambda f: CSTYRecord(),
+        FormType.EFSH: lambda f: EFSHRecord(),
+        FormType.EYES: lambda f: EYESRecord(),
+        FormType.FLOR: lambda f: FLORRecord(),
+        FormType.FURN: lambda f: FURNRecord(),
+        FormType.GRAS: lambda f: GRASRecord(),
+        FormType.HAIR: lambda f: HAIRRecord(),
+        FormType.IDLE: lambda f: IDLERecord(),
+        FormType.KEYM: lambda f: KEYMRecord(),
+        FormType.LSCR: lambda f: LSCRRecord(),
+        FormType.LVLC: lambda f: LVLCRecord(),
+        FormType.LVLI: lambda f: LVLIRecord(),
+        FormType.LVSP: lambda f: LVSPRecord(),
+        FormType.PACK: lambda f: PACKRecord(),
+        FormType.QUST: lambda f: QUSTRecord(),
+        FormType.ROAD: lambda f: ROADRecord(),
+        FormType.SBSP: lambda f: SBSPRecord(),
+        FormType.SGST: lambda f: SGSTRecord(),
+        FormType.SLGM: lambda f: SLGMRecord(),
+        FormType.TREE: lambda f: TREERecord(),
+        FormType.WATR: lambda f: WATRRecord(),
+        FormType.WTHR: lambda f: WTHRRecord(),
         # 5 - Skyrim
-        FormType.AACT: lambda: AACTRecord(),
-        FormType.ADDN: lambda: ADDNRecord(),
-        FormType.ARMA: lambda: ARMARecord(),
-        FormType.ARTO: lambda: ARTORecord(),
-        FormType.ASPC: lambda: ASPCRecord(),
-        FormType.ASTP: lambda: ASTPRecord(),
-        FormType.AVIF: lambda: AVIFRecord(),
-        FormType.DLBR: lambda: DLBRRecord(),
-        FormType.DLVW: lambda: DLVWRecord(),
-        FormType.SNDR: lambda: SNDRRecord(),
+        FormType.AACT: lambda f: AACTRecord(),
+        FormType.ADDN: lambda f: ADDNRecord(),
+        FormType.ARMA: lambda f: ARMARecord(),
+        FormType.ARTO: lambda f: ARTORecord(),
+        FormType.ASPC: lambda f: ASPCRecord(),
+        FormType.ASTP: lambda f: ASTPRecord(),
+        FormType.AVIF: lambda f: AVIFRecord(),
+        FormType.DLBR: lambda f: DLBRRecord(),
+        FormType.DLVW: lambda f: DLVWRecord(),
+        FormType.SNDR: lambda f: SNDRRecord(),
         # Unknown
-        FormType.BOIM: lambda: BOIMRecord(),
-        FormType.BNDS: lambda: BNDSRecord(),
-        FormType.DMGT: lambda: DMGTRecord(),
-        FormType.TRNS: lambda: TRNSRecord(),
-        FormType.TXST: lambda: TXSTRecord(),
+        FormType.BOIM: lambda f: BOIMRecord(),
+        FormType.BNDS: lambda f: BNDSRecord(),
+        FormType.DMGT: lambda f: DMGTRecord(),
+        FormType.TRNS: lambda f: TRNSRecord(),
+        FormType.TXST: lambda f: TXSTRecord(),
     }
     cellsLoaded: int = 0
     @staticmethod
     def factory(r: Reader, type: FieldType) -> 'Record':
-        if type == FormType.CELL and Record.cellsLoaded > 100: Record.cellsLoaded += 1; return None # hack to limit cells loading
-        if not (z := Record._mapx.get(type)): print(f'Unsupported ESM record type: {type}'); return None
-        # if type != FormType.TES3 and type != FormType.TES4 and type not in Record._factorySet: return None
-        record = z(); record.type = type
+        record = None
+        if type == FormType.CELL and Record.cellsLoaded > 100: Record.cellsLoaded += 1; record = Record() # hack to limit cells loading
+        if not (z := Record._mapx.get(type)): print(f'Unsupported ESM record type: {type}'); record = Record()
+        # if type != FormType.TES3 and type != FormType.TES4 and type not in Record._factorySet: record = Record()
+        else: record = z(r.format); record.type = type
+        record.read(r)
         return record
     class EsmFlags(IntFlag):
         None_ = 0x00000000                  # None
@@ -677,12 +679,11 @@ class Record:
         #     return s
     # tag::Record[]
     _empty: 'Record'
-    # def __repr__(self) -> str: return f'{self.__class__.__name__[:4]}:{self.EDID.value if self.EDID else None}'
-    def __repr__(self) -> str: return f'{str(self.type)[9:]}: {self.EDID.value if self.EDID else None}'
+    def __repr__(self) -> str: return f'{self.type}: {self.EDID.value if self.EDID else None}'
     # def __repr__(self) -> str: return f'{self.type}: {self.groupType}'
     type: FormType = 0
     dataSize: int 
-    flags: EsmFlags 
+    flags: EsmFlags
     @property
     def compressed(self) -> bool: return Record.EsmFlags.Compressed in self.flags
     id: int = 0
@@ -694,10 +695,10 @@ class Record:
     # Reads an uninitialized subrecord to deserialize, or null to skip.
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object: return Record._empty
 
-    # Reads a record
+    # Reads a record - tag::Record.read[]
     def read(self, r: Reader) -> None:
         self.dataSize = r.readUInt32()
-        if r.format == FormType.TES3: r.readUInt32() # unknown
+        if r.format == FormType.TES3: r.skip(4) # unknown
         while True:
             self.flags = Record.EsmFlags(r.readUInt32())
             if r.format == FormType.TES3: break
@@ -708,15 +709,16 @@ class Record:
             if r.format == FormType.TES5: break
             break
         if r.tes4a: r.skip(4)
+    # end::Record.read[]
 
-    # Reads a records fields
+    # Reads a records fields - tag::Record.readFields[]
     def readFields(self, r: Reader) -> None:
         # log.info(f'Recd: {record.type}:{record.compressed}')
         if self.compressed:
-            newDataSize = r.readUInt32()
-            newData = decompressZlib2(r, self.dataSize - 4, newDataSize)
-            self.dataSize = newDataSize
-            r = Reader(BinaryReader(BytesIO(newData)), r.binPath, r.format, r.tes4a)
+            lastSize = self.dataSize
+            self.dataSize = r.readUInt32()
+            data = decompressZlib2(r, lastSize - 4, self.dataSize)
+            r = Reader(BinaryReader(BytesIO(data)), r.binPath, r.format, r.tes4a)
         start = r.tell(); end = start + self.dataSize
         while not r.atEnd(end):
             fieldType = FieldType(r.readUInt32())
@@ -731,8 +733,7 @@ class Record:
             r.ensureAtEnd(tell + fieldDataSize, f'Failed reading {self.type}:{fieldType} field data at offset {tell} in {r.binPath} of {r.tell() - tell - fieldDataSize}')
         r.ensureAtEnd(end, f'Failed reading {self.type} record data at offset {start} in {r.binPath}')
         if self.compressed: r.dispose()
-        self.complete(r)
-    # end::Record[]
+    # end::Record.readFields[]
 Record._empty = Record()
 
 class RefId[T: Record]:
@@ -826,6 +827,7 @@ class RecordGroup:
             record = Record.factory(r, type)
             if record.type == 0: r.skip(record.dataSize); continue
             record.readFields(r)
+            record.complete(r)
             self.records.append(record)
         self.groupsByLabel = { s.key:list(g) for s, g in groupby(sorted(self.groups, key=lambda s: s.label), lambda s: s.label) } if self.groups else None
 
@@ -1444,8 +1446,8 @@ class BSGNRecord(Record):
             case FieldType.FULL | FieldType.FNAM: z = self.FULL = r.readSTRV(dataSize)
             case FieldType.ICON | FieldType.TNAM: z = self.ICON = r.readFILE(dataSize)
             case FieldType.DESC: z = self.DESC = r.readSTRV(dataSize)
-            case FieldType.SPLO: z = _nca(self, 'SPLOs', listx()).addX(RefField[Record](Record, r, dataSize))
-            case FieldType.NPCS: z = _nca(self, 'NPCSs', listx()).addX(r.readSTRV(dataSize))
+            case FieldType.SPLO | FieldType.NPCS: z = _nca(self, 'SPLOs', listx()).addX(RefField[Record](Record, r, dataSize))
+            # case FieldType.NPCS: z = _nca(self, 'NPCSs', listx()).addX(r.readSTRV(dataSize))
             case _: z = Record._empty
         return z
 # end::BSGN[]
@@ -1977,7 +1979,7 @@ class CREARecord(Record, IHaveMODL):
     NPDT: NPDTField # Creature data
     FLAG: IN32Field # Creature Flags
     SCRI: RefField['SCPTRecord'] = None # Script
-    NPCO: CNTOField = CNTOField() #! Item record
+    NPCOs: list[CNTOField] = [] # Item record
     AIDT: AIDTField # AI data
     AI_W: AI_WField = None # AI Wander
     AI_T: AI_TField = None # AI Travel
@@ -1998,7 +2000,7 @@ class CREARecord(Record, IHaveMODL):
                 case FieldType.NPDT: z = self.NPDT = r.readS(self.NPDTField, dataSize)
                 case FieldType.FLAG: z = self.FLAG = r.readS(IN32Field, dataSize)
                 case FieldType.SCRI: z = self.SCRI = RefField[SCPTRecord](SCPTRecord, r, dataSize)
-                case FieldType.NPCO: z = self.NPCO = CNTOField(r, dataSize)
+                case FieldType.NPCO: z = self.NPCOs.addX(CNTOField(r, dataSize))
                 case FieldType.AIDT: z = self.AIDT = r.readS(self.AIDTField, dataSize)
                 case FieldType.AI_W: z = self.AI_W = r.readS(self.AI_WField, dataSize)
                 case FieldType.AI_T: z = self.AI_T = r.readS(self.AI_TField, dataSize)
@@ -3518,7 +3520,7 @@ class MISCRecord(Record, IHaveMODL):
 
 # dep: CREARecord, SCPTRecord
 # NPC_.Non-Player Character - 3450 - tag::NPC_[]
-class NPC_Record(Record, IHaveMODL):
+class NPC3Record(Record, IHaveMODL):
     class NPC_Flags(Flag):
         Female = 0x0001
         Essential = 0x0002
@@ -3590,6 +3592,7 @@ class NPC_Record(Record, IHaveMODL):
 
     class DODTField:
         _struct = ('<6f', 24)
+        DNAM: STRVField # Cell name for previous DODT, if interior
         def __init__(self, tuple):
             (self.xPos,
             self.yPos,
@@ -3616,8 +3619,7 @@ class NPC_Record(Record, IHaveMODL):
     AI_E: CREARecord.AI_FField = None # AI Escort
     CNDT: STRVField = None # Cell escort/follow to string (optional)
     AI_A: CREARecord.AI_AField = None # AI Activate
-    DODT: DODTField # Cell Travel Destination
-    DNAM: STRVField # Cell name for previous DODT, if interior
+    DODTs: list[DODTField] = [] # Cell Travel Destination
     XSCL: FLTVField = None # Scale (optional) Only present if the scale is not 1.0
     SCRI: RefField['SCPTRecord'] = None # Unknown
     def __init__(self): super().__init__(); self.NPCOs = listx(); self.NPCSs = listx()
@@ -3644,8 +3646,8 @@ class NPC_Record(Record, IHaveMODL):
             case FieldType.AI_E: z = self.AI_E = r.readS(CREARecord.AI_FField, dataSize)
             case FieldType.CNDT: z = self.CNDT = r.readSTRV(dataSize)
             case FieldType.AI_A: z = self.AI_A = r.readS(CREARecord.AI_AField, dataSize)
-            case FieldType.DODT: z = self.DODT = r.readS(self.DODTField, dataSize)
-            case FieldType.DNAM: z = self.DNAM = r.readSTRV(dataSize)
+            case FieldType.DODT: z = self.DODTs.addX(r.readS(self.DODTField, dataSize))
+            case FieldType.DNAM: z = self.DODTs.last().DNAM = r.readSTRV(dataSize)
             case FieldType.XSCL: z = self.XSCL = r.readS(FLTVField, dataSize)
             case FieldType.SCRI: z = self.SCRI = RefField[SCPTRecord](SCPTRecord, r, dataSize)
             case _: z = Record._empty
@@ -4309,7 +4311,8 @@ class REGNRecord(Record):
 
     # TES3
     class WEATField:
-        _struct = ('<8B', 8)
+        # v1.3 ESM files add 2 bytes to WEAT subrecords.
+        _struct = { 8: '<8B', 10: '<8B2x' }
         def __init__(self, tuple):
             (self.clear,
             self.cloudy,
@@ -4319,8 +4322,6 @@ class REGNRecord(Record):
             self.thunder,
             self.ash,
             self.blight) = tuple
-        # v1.3 ESM files add 2 bytes to WEAT subrecords.
-        def skip(r: Reader, dataSize: int) -> any: return r.skip(2) if dataSize == 10 else None
 
     # TES4
     class RPLIField:
@@ -4343,7 +4344,7 @@ class REGNRecord(Record):
         match type:
             case FieldType.EDID | FieldType.NAME: z = self.EDID = r.readSTRV(dataSize)
             case FieldType.WNAM | FieldType.FNAM: z = self.WNAM = RefField[WRLDRecord](WRLDRecord, r, dataSize)
-            case FieldType.WEAT: z = self.WEAT = r.readS(self.WEATField, dataSize); self.WEATField.skip(r, dataSize) # TES3
+            case FieldType.WEAT: z = self.WEAT = r.readS(self.WEATField, dataSize)
             case FieldType.ICON | FieldType.BNAM: z = self.ICON = r.readSTRV(dataSize)
             case FieldType.RCLR | FieldType.CNAM: z = self.RCLR = r.readS(CREFField, dataSize)
             case FieldType.SNAM: z = self.RDATs.addX(self.RDATField(RDSDs = [self.RDSDField(r, dataSize)]))

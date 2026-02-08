@@ -63,8 +63,8 @@ public unsafe class Binary_Ba2 : ArcBinary<Binary_Ba2> {
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct TEXCHUNK5 {
-        public static (string, int) Struct = ("<Q2I2HI", sizeof(TEXCHUNK5));
+    struct TEXC5 {
+        public static (string, int) Struct = ("<Q2I2HI", sizeof(TEXC5));
         public ulong Offset;            // 00
         public uint PackedSize;         // 08
         public uint FileSize;           // 0C
@@ -98,60 +98,58 @@ public unsafe class Binary_Ba2 : ArcBinary<Binary_Ba2> {
         // Fallout 4 - Starfield
         var magic = source.Magic = r.ReadUInt32();
         if (magic == F4_MAGIC) {
-            var header = r.ReadS<HDR5>();
-            if (header.Version > F4_VERSION2) throw new FormatException("BAD MAGIC");
-            source.Version = header.Version;
-            source.Files = files = new FileSource[header.NumFiles];
+            var hdr5 = r.ReadS<HDR5>();
+            if (hdr5.Version > F4_VERSION2) throw new FormatException("BAD MAGIC");
+            source.Version = hdr5.Version;
+            source.Files = files = new FileSource[hdr5.NumFiles];
             // version2
             //if (header.Version == F4_VERSION2) r.Skip(8);
 
-            switch (header.Type) {
+            var i = 0;
+            switch (hdr5.Type) {
                 // General BA2 Format
                 case HDR5Type.GNRL:
-                    var headerFiles = r.ReadSArray<FILE5>((int)header.NumFiles);
-                    for (var i = 0; i < headerFiles.Length; i++) {
-                        ref FILE5 headerFile = ref headerFiles[i];
-                        files[i] = new FileSource {
-                            Compressed = headerFile.PackedSize != 0 ? 1 : 0,
-                            PackedSize = headerFile.PackedSize,
-                            FileSize = headerFile.FileSize,
-                            Offset = (long)headerFile.Offset,
+                    foreach (var s in r.ReadSArray<FILE5>((int)hdr5.NumFiles))
+                        files[i++] = new FileSource {
+                            Compressed = s.PackedSize != 0 ? 1 : 0,
+                            PackedSize = s.PackedSize,
+                            FileSize = s.FileSize,
+                            Offset = (long)s.Offset,
                         };
-                    }
                     break;
                 // Texture BA2 Format
                 case HDR5Type.DX10:
-                    for (var i = 0; i < header.NumFiles; i++) {
-                        var headerTexture = r.ReadS<TEX5>();
-                        var headerTextureChunks = r.ReadSArray<TEXCHUNK5>(headerTexture.NumChunks);
-                        ref TEXCHUNK5 firstChunk = ref headerTextureChunks[0];
+                    for (i = 0; i < hdr5.NumFiles; i++) {
+                        var tex5 = r.ReadS<TEX5>();
+                        var texc5s = r.ReadSArray<TEXC5>(tex5.NumChunks);
+                        ref TEXC5 texc5 = ref texc5s[0];
                         files[i] = new FileSource {
-                            PackedSize = firstChunk.PackedSize,
-                            FileSize = firstChunk.FileSize,
-                            Offset = (long)firstChunk.Offset,
-                            Tag = ((object)headerTexture, headerTextureChunks),
+                            PackedSize = texc5.PackedSize,
+                            FileSize = texc5.FileSize,
+                            Offset = (long)texc5.Offset,
+                            Tag = ((object)tex5, texc5s),
                         };
                     }
                     break;
                 // GNMF BA2 Format
                 case HDR5Type.GNMF:
-                    for (var i = 0; i < header.NumFiles; i++) {
-                        var headerGNMF = r.ReadS<GNMF5>();
-                        var headerTextureChunks = r.ReadSArray<TEXCHUNK5>(headerGNMF.NumChunks);
+                    for (i = 0; i < hdr5.NumFiles; i++) {
+                        var gnmf5 = r.ReadS<GNMF5>();
+                        var texc5s = r.ReadSArray<TEXC5>(gnmf5.NumChunks);
                         files[i] = new FileSource {
-                            PackedSize = headerGNMF.PackedSize,
-                            FileSize = headerGNMF.FileSize,
-                            Offset = (long)headerGNMF.Offset,
-                            Tag = ((object)headerGNMF, headerTextureChunks),
+                            PackedSize = gnmf5.PackedSize,
+                            FileSize = gnmf5.FileSize,
+                            Offset = (long)gnmf5.Offset,
+                            Tag = ((object)gnmf5, texc5s),
                         };
                     }
                     break;
-                default: throw new ArgumentOutOfRangeException(nameof(header.Type), header.Type.ToString());
+                default: throw new ArgumentOutOfRangeException(nameof(hdr5.Type), hdr5.Type.ToString());
             }
 
             // assign full names to each file
-            if (header.NameTableOffset > 0) {
-                r.Seek((long)header.NameTableOffset);
+            if (hdr5.NameTableOffset > 0) {
+                r.Seek((long)hdr5.NameTableOffset);
                 var path = r.ReadL16UString().Replace('\\', '/');
                 foreach (var file in files) file.Path = path;
             }
@@ -173,7 +171,7 @@ public unsafe class Binary_Ba2 : ArcBinary<Binary_Ba2> {
                 ? new MemoryStream(r.DecompressZlib2((int)file.PackedSize, (int)file.FileSize))
                 : new MemoryStream(r.ReadBytes((int)file.FileSize)));
 
-        var tag = ((object tex, TEXCHUNK5[] chunks))file.Tag;
+        var tag = ((object tex, TEXC5[] chunks))file.Tag;
 
         // Texture BA2 Format
         if (tag.tex is TEX5 tex) {
@@ -325,15 +323,15 @@ public unsafe class Binary_Bsa : ArcBinary<Binary_Bsa> {
 
     // Default header data
     const uint OB_MAGIC = 0x00415342;    // Magic for Oblivion BSA, the literal string "BSA\0".
-    const uint OB_VERSION = 0x67;         // Version number of an Oblivion BSA
-    const uint F3_VERSION = 0x68;         // Version number of a Fallout 3 BSA
+    const uint OB_VERSION = 0x67;        // Version number of an Oblivion BSA
+    const uint F3_VERSION = 0x68;        // Version number of a Fallout 3 BSA
     const uint SE_VERSION = 0x69;        // Version number of a Skyrim SE BSA
 
     // Archive flags
     const ushort FLAG4_PATHNAMES = 0x0001;  // Whether the BSA has names for paths
     const ushort FLAG4_FILENAMES = 0x0002;  // Whether the BSA has names for files
     const ushort FLAG4_COMPRESSFILES = 0x0004; // Whether the files are compressed
-    const ushort FLAG4_PREFIXS = 0x0100; // Whether the name is prefixed to the data?
+    const ushort FLAG4_PREFIXS = 0x0100; // Whether the name is prefixed to the data
 
     // Bitmasks for the size field in the header
     const uint FILE4_SIZEMASK = 0x3fffffff; // Bit mask with OB_HeaderFile:SizeFlags to get the compression status
@@ -407,34 +405,33 @@ public unsafe class Binary_Bsa : ArcBinary<Binary_Bsa> {
 
         // Oblivion - Skyrim
         if (magic == OB_MAGIC) {
-            var header = r.ReadS<HDR4>();
-            if (header.Version != OB_VERSION && header.Version != F3_VERSION && header.Version != SE_VERSION) throw new FormatException("BAD MAGIC");
-            if ((header.ArchiveFlags & FLAG4_PATHNAMES) == 0 || (header.ArchiveFlags & FLAG4_FILENAMES) == 0) throw new FormatException("HEADER FLAGS");
-            source.Version = header.Version;
+            var hdr4 = r.ReadS<HDR4>();
+            if (hdr4.Version != OB_VERSION && hdr4.Version != F3_VERSION && hdr4.Version != SE_VERSION) throw new FormatException("BAD MAGIC");
+            if ((hdr4.ArchiveFlags & FLAG4_PATHNAMES) == 0 || (hdr4.ArchiveFlags & FLAG4_FILENAMES) == 0) throw new FormatException("HEADER FLAGS");
+            source.Version = hdr4.Version;
 
             // calculate some useful values
-            var compressedToggle = (header.ArchiveFlags & FLAG4_COMPRESSFILES) > 0;
-            if (header.Version == F3_VERSION || header.Version == SE_VERSION)
-                source.Tag = (header.ArchiveFlags & FLAG4_PREFIXS) > 0;
+            var compressedToggle = (hdr4.ArchiveFlags & FLAG4_COMPRESSFILES) > 0;
+            if (hdr4.Version == F3_VERSION || hdr4.Version == SE_VERSION)
+                source.Tag = (hdr4.ArchiveFlags & FLAG4_PREFIXS) > 0;
 
             // read-all folders
-            var foldersFiles = header.Version == SE_VERSION
-                ? r.ReadSArray<DIR4SE>((int)header.FolderCount).Select(x => x.FileCount).ToArray()
-                : r.ReadSArray<DIR4>((int)header.FolderCount).Select(x => x.FileCount).ToArray();
+            uint[] foldersFiles = hdr4.Version == SE_VERSION
+                ? [.. r.ReadSArray<DIR4SE>((int)hdr4.FolderCount).Select(x => x.FileCount)]
+                : [.. r.ReadSArray<DIR4>((int)hdr4.FolderCount).Select(x => x.FileCount)];
 
             // read-all folder files
-            var j = 0U;
-            source.Files = files = new FileSource[header.FileCount];
-            for (var i = 0; i < header.FolderCount; i++) {
+            var i = 0;
+            source.Files = files = new FileSource[hdr4.FileCount];
+            for (var f = 0; f < hdr4.FolderCount; f++) {
                 var folderName = r.ReadFAString(r.ReadByte() - 1).Replace('\\', '/');
                 r.Skip(1);
-                var headerFiles = r.ReadSArray<FILE4>((int)foldersFiles[i]);
-                foreach (var headerFile in headerFiles) {
-                    var compressed = (headerFile.Size & FILE4_SIZECOMPRESS) != 0;
-                    var packedSize = compressed ? headerFile.Size ^ FILE4_SIZECOMPRESS : headerFile.Size;
-                    files[j++] = new FileSource {
+                foreach (var s in r.ReadSArray<FILE4>((int)foldersFiles[f])) {
+                    var compressed = (s.Size & FILE4_SIZECOMPRESS) != 0;
+                    var packedSize = compressed ? s.Size ^ FILE4_SIZECOMPRESS : s.Size;
+                    files[i++] = new FileSource {
                         Path = folderName,
-                        Offset = headerFile.Offset,
+                        Offset = s.Offset,
                         Compressed = compressed ^ compressedToggle ? 1 : 0,
                         PackedSize = packedSize,
                         FileSize = source.Version == SE_VERSION ? packedSize & FILE4_SIZEMASK : packedSize,
@@ -447,31 +444,26 @@ public unsafe class Binary_Bsa : ArcBinary<Binary_Bsa> {
         }
         // Morrowind
         else if (magic == MW_MAGIC) {
-            var header = r.ReadS<HDR3>();
-            var dataOffset = 12 + header.HashOffset + (header.FileCount << 3);
+            var hdr3 = r.ReadS<HDR3>();
+            var dataOffset = 12 + hdr3.HashOffset + (hdr3.FileCount << 3);
 
             // create filesources
-            source.Files = files = new FileSource[header.FileCount];
-            var headerFiles = r.ReadSArray<FILE3>((int)header.FileCount);
-            for (var i = 0; i < headerFiles.Length; i++) {
-                ref FILE3 headerFile = ref headerFiles[i];
-                var size = headerFile.Size;
-                files[i] = new FileSource {
-                    Offset = dataOffset + headerFile.FileOffset,
-                    FileSize = size,
-                    PackedSize = size,
+            var i = 0;
+            source.Files = files = new FileSource[hdr3.FileCount];
+            foreach (var s in r.ReadSArray<FILE3>((int)hdr3.FileCount)) {
+                files[i++] = new FileSource {
+                    Offset = dataOffset + s.FileOffset,
+                    FileSize = s.Size,
+                    PackedSize = s.Size,
                 };
             }
 
             // read filename offsets
-            var filenameOffsets = r.ReadPArray<uint>("I", (int)header.FileCount); // relative offset in filenames section
+            var fnof3s = r.ReadPArray<uint>("I", (int)hdr3.FileCount); // relative offset in filenames section
 
             // read filenames
-            var filenamesPosition = r.Tell();
-            for (var i = 0; i < files.Length; i++) {
-                r.Seek(filenamesPosition + filenameOffsets[i]);
-                files[i].Path = r.ReadVAString(1000).Replace('\\', '/');
-            }
+            var tell = r.Tell();
+            for (i = 0; i < files.Length; i++) { r.Seek(tell + fnof3s[i]); files[i].Path = r.ReadVAString(1000).Replace('\\', '/'); }
         }
         else throw new InvalidOperationException("BAD MAGIC");
         return Task.CompletedTask;
@@ -488,8 +480,7 @@ public unsafe class Binary_Bsa : ArcBinary<Binary_Bsa> {
         }
 
         // not compressed
-        if (fileSize <= 0 || file.Compressed == 0)
-            return Task.FromResult<Stream>(new MemoryStream(r.ReadBytes(fileSize)));
+        if (fileSize <= 0 || file.Compressed == 0) return Task.FromResult<Stream>(new MemoryStream(r.ReadBytes(fileSize)));
 
         // compressed
         var newFileSize = (int)r.ReadUInt32(); fileSize -= 4;
@@ -558,6 +549,7 @@ public unsafe class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
         var r = new Reader(b, source.BinPath, Format, new[] { "Fallout3", "FalloutNV" }.Contains(source.Game.Id));
         var record = Record = Record.Factory(r, (FormType)r.ReadUInt32());
         record.ReadFields(r);
+        record.Complete(r);
         var files = (List<FileSource>)(source.Files = [new FileSource { Path = $"{record.Type}", Tag = record }]);
         foreach (var s in RecordGroup.ReadAll(r))
             if (s.Preload) s.Read(r, files);

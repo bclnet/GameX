@@ -11,8 +11,6 @@ from gamex.families.Bethesda.formats.records import FormType, Reader, Record, Re
 class BinaryReader: pass
 class BinaryArchive: pass
 
-#region Binary_Ba2 - tag::Binary_Ba2[]
-
 # Binary_Ba2
 class Binary_Ba2(ArcBinaryT):
     #region Headers : TES5
@@ -21,9 +19,10 @@ class Binary_Ba2(ArcBinaryT):
     F4_MAGIC = 0x58445442    # Magic for Fallout 4 BA2, the literal string "BTDX".
     F4_VERSION1 = 0x01        # Version number of a Fallout 4 BA2
     F4_VERSION2 = 0x02        # Version number of a Starfield BA2
-    
+
     class HDR5Type(Enum): GNRL = 0x4c524e47; DX10 = 0x30315844; GNMF = 0x464d4e47
 
+    # tag::Binary_Ba2.HDR5[]
     class HDR5:
         _struct = ('<3IQ', 20)
         def __init__(self, tuple):
@@ -32,7 +31,9 @@ class Binary_Ba2(ArcBinaryT):
             self.numFiles,
             self.nameTableOffset) = tuple
             self.type = Binary_Ba2.HDR5Type(self.type)
+    # end::Binary_Ba2.HDR5[]
 
+    # tag::Binary_Ba2.FILE5[]
     class FILE5:
         _struct = ('<4IQ3I', 36)
         def __init__(self, tuple):
@@ -44,7 +45,9 @@ class Binary_Ba2(ArcBinaryT):
             self.packedSize,
             self.fileSize,
             self.align) = tuple
+    # end::Binary_Ba2.FILE5[]
 
+    # tag::Binary_Ba2.TEX5[]
     class TEX5:
         _struct = ('<3I2B3H4B', 24)
         def __init__(self, tuple):
@@ -60,8 +63,10 @@ class Binary_Ba2(ArcBinaryT):
             self.format,
             self.isCubemap,
             self.tileMode) = tuple
+    # end::Binary_Ba2.TEX5[]
 
-    class TEXCHUNK5:
+    # tag::Binary_Ba2.TEXC5[]
+    class TEXC5:
         _struct = ('<Q2I2HI', 24)
         def __init__(self, tuple):
             (self.offset,
@@ -70,7 +75,9 @@ class Binary_Ba2(ArcBinaryT):
             self.startMip,
             self.endMip,
             self.align) = tuple
+    # end::Binary_Ba2.TEXC5[]
 
+    # tag::Binary_Ba2.GNMF5[]
     class GNMF5:
         _struct = ('<3I2BH32sQ4I', 72)
         def __init__(self, tuple):
@@ -86,66 +93,69 @@ class Binary_Ba2(ArcBinaryT):
             self.fileSize,
             self.unk40,
             self.align) = tuple
+    # end::Binary_Ba2.GNMF5[]
 
     #endregion
 
-    # read
+    # read - tag::Binary_Ba2.read[]
     def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
         source.magic = magic = r.readUInt32()
 
         # Fallout 4 - Starfield
         if magic == self.F4_MAGIC:
-            header = r.readS(self.HDR5)
-            if header.version > self.F4_VERSION2: raise Exception('BAD MAGIC')
-            source.version = header.version
-            source.files = files = [None] * header.numFiles
+            hdr5 = r.readS(self.HDR5)
+            if hdr5.version > self.F4_VERSION2: raise Exception('BAD MAGIC')
+            source.version = hdr5.version
+            source.files = files = [None] * hdr5.numFiles
             # version2
-            # if header.version == self.F4_VERSION2: r.skip(8)
+            # if hdr5.version == self.F4_VERSION2: r.skip(8)
 
-            # General BA2 Format
-            match header.type:
+            i = 0
+            match hdr5.type:
                 # General BA2 Format
                 case self.HDR5Type.GNRL:
-                    headerFiles = r.readTArray(self.FILE5, header.numFiles)
-                    for i in range(header.numFiles):
-                        headerFile = headerFiles[i]
+                    for s in r.readSArray(self.FILE5, hdr5.numFiles):
                         files[i] = FileSource(
-                            compressed = 1 if headerFile.packedSize != 0 else 0,
-                            packedSize = headerFile.packedSize,
-                            fileSize = headerFile.fileSize,
-                            offset = headerFile.offset)
+                            compressed = 1 if s.packedSize != 0 else 0,
+                            packedSize = s.packedSize,
+                            fileSize = s.fileSize,
+                            offset = s.offset)
+                        i += 1
                 # Texture BA2 Format
                 case self.HDR5Type.DX10:
-                    for i in range(header.numFiles):
-                        headerTexture = r.readS(self.TEX5)
-                        headerTextureChunks = r.readTArray(self.TEXCHUNK5, headerTexture.numChunks)
-                        firstChunk = headerTextureChunks[0]
+                    for i in range(hdr5.numFiles):
+                        tex5 = r.readS(self.TEX5)
+                        texc5s = r.readSArray(self.TEXC5, tex5.numChunks)
+                        texc5 = texc5s[0]
                         files[i] = FileSource(
-                            fileInfo = headerTexture,
-                            packedSize = firstChunk.packedSize,
-                            fileSize = firstChunk.fileSize,
-                            offset = firstChunk.offset,
-                            tag = headerTextureChunks)
+                            fileInfo = tex5,
+                            packedSize = texc5.packedSize,
+                            fileSize = texc5.fileSize,
+                            offset = texc5s.offset,
+                            tag = (tex5, texc5s))
+                        i += 1
                 # GNMF BA2 Format
                 case self.HDR5Type.GNMF:
-                    for i in range(header.numFiles):
-                        headerGNMF = r.readS(self.GNMF5)
-                        headerTextureChunks = r.readTArray(self.TEXCHUNK5, headerGNMF.numChunks)
+                    for i in range(hdr5.numFiles):
+                        gnmf5 = r.readS(self.GNMF5)
+                        texc5s = r.readSArray(self.TEXC5, gnmf5.numChunks)
                         files[i] = FileSource(
-                            fileInfo = headerGNMF,
-                            packedSize = headerGNMF.packedSize,
-                            fileSize = headerGNMF.fileSize,
-                            offset = headerGNMF.offset,
-                            tag = headerTextureChunks)
-                case _: raise Exception(f'Unknown: {header.type}')
+                            fileInfo = gnmf5,
+                            packedSize = gnmf5.packedSize,
+                            fileSize = gnmf5.fileSize,
+                            offset = gnmf5.offset,
+                            tag = (gnmf5, texc5s))
+                        i += 1
+                case _: raise Exception(f'Unknown: {hdr5.type}')
 
             # assign full names to each file
-            if header.nameTableOffset > 0:
-                r.seek(header.nameTableOffset)
+            if hdr5.nameTableOffset > 0:
+                r.seek(hdr5.nameTableOffset)
                 path = r.readL16Encoding().replace('\\', '/')
                 for file in files: file.path = path
+    # end::Binary_Ba2.read[]
 
-    # readData
+    # readData - tag::Binary_Ba2.readData[]
     def readData(self, source: BinaryArchive, r: BinaryReader, file: FileSource, option: object = None) -> BytesIO:
         r.seek(file.offset)
 
@@ -164,10 +174,7 @@ class Binary_Ba2(ArcBinaryT):
             pass
 
         else: raise Exception(f'Unknown fileInfo: {file.fileInfo}')
-
-#endregion - end::Binary_Ba2[]
-
-#region Binary_Bsa - tag::Binary_Bsa[]
+    # end::Binary_Ba2.readData[]
 
 # Binary_Bsa
 class Binary_Bsa(ArcBinaryT):
@@ -182,12 +189,13 @@ class Binary_Bsa(ArcBinaryT):
     FLAG4_PATHNAMES = 0x0001    # Whether the BSA has names for paths
     FLAG4_FILENAMES = 0x0002    # Whether the BSA has names for files
     FLAG4_COMPRESSFILES = 0x0004 # Whether the files are compressed
-    FLAG4_PREFIXS = 0x0100      # Whether the name is prefixed to the data?
+    FLAG4_PREFIXS = 0x0100      # Whether the name is prefixed to the data
 
     # Bitmasks for the size field in the header
     FILE4_SIZEMASK = 0x3fffffff     # Bit mask with OB_HeaderFile:SizeFlags to get the compression status
     FILE4_SIZECOMPRESS = 0xC0000000 # Bit mask with OB_HeaderFile:SizeFlags to get the compression status
 
+    # tag::Binary_Bsa.HDR4[]
     class HDR4:
         _struct = ('<8I', 32)
         def __init__(self, tuple):
@@ -199,14 +207,18 @@ class Binary_Bsa(ArcBinaryT):
             self.folderNameLength,
             self.fileNameLength,
             self.fileFlags) = tuple
+    # end::Binary_Bsa.HDR4[]
 
+    # tag::Binary_Bsa.DIR4[]
     class DIR4:
         _struct = ('<Q2I', 16)
         def __init__(self, tuple):
             (self.hash,
             self.fileCount,
             self.offset) = tuple
+    # end::Binary_Bsa.DIR4[]
 
+    # tag::Binary_Bsa.DIR4SE[]
     class DIR4SE:
         _struct = ('<Q2IQ', 24)
         def __init__(self, tuple):
@@ -214,13 +226,16 @@ class Binary_Bsa(ArcBinaryT):
             self.fileCount,
             self.unk,
             self.offset) = tuple
+    # end::Binary_Bsa.DIR4SE[]
 
+    # tag::Binary_Bsa.FILE4[]
     class FILE4:
         _struct = ('<Q2I', 16)
         def __init__(self, tuple):
             (self.hash,
             self.size,
             self.offset) = tuple
+    # end::Binary_Bsa.FILE4[]
 
     #endregion
 
@@ -228,12 +243,15 @@ class Binary_Bsa(ArcBinaryT):
 
     MW_MAGIC = 0x00000100    # Magic for Morrowind BSA
 
+    # tag::Binary_Bsa.HDR3[]
     class HDR3:
         _struct = ('<2I', 8)
         def __init__(self, tuple):
             (self.hashOffset,
             self.fileCount) = tuple
+    # end::Binary_Bsa.HDR3[]
 
+    # tag::Binary_Bsa.FILE3[]
     class FILE3:
         _struct = ('<2I', 8)
         def __init__(self, tuple):
@@ -241,80 +259,78 @@ class Binary_Bsa(ArcBinaryT):
             self.fileOffset) = tuple
         @property
         def size(self): return self.fileSize & 0x3FFFFFFF if self.fileSize > 0 else 0
+    # end::Binary_Bsa.FILE3[]
 
     #endregion
 
-    # read
+    # read - tag::Binary_Bsa.read[]
     def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
         files: list[FileSource]
         magic = source.magic = r.readUInt32()
 
         # Oblivion - Skyrim
         if magic == self.OB_MAGIC:
-            header = r.readS(self.HDR4)
-            if header.version != self.OB_VERSION and header.version != self.F3_VERSION and header.version != self.SE_VERSION: raise Exception('BAD MAGIC')
-            if (header.archiveFlags & self.FLAG4_PATHNAMES) == 0 or (header.archiveFlags & self.FLAG4_FILENAMES) == 0: raise Exception('HEADER FLAGS')
-            source.version = header.version
+            hdr4 = r.readS(self.HDR4)
+            if hdr4.version != self.OB_VERSION and hdr4.version != self.F3_VERSION and hdr4.version != self.SE_VERSION: raise Exception('BAD MAGIC')
+            if (hdr4.archiveFlags & self.FLAG4_PATHNAMES) == 0 or (hdr4.archiveFlags & self.FLAG4_FILENAMES) == 0: raise Exception('HEADER FLAGS')
+            source.version = hdr4.version
 
             # calculate some useful values
-            compressedToggle = (header.archiveFlags & self.FLAG4_COMPRESSFILES) > 0
-            if header.version == self.F3_VERSION or header.version == self.SE_VERSION:
-                source.tag = (header.archiveFlags & self.FLAG4_PREFIXS) > 0
+            compressedToggle = (hdr4.archiveFlags & self.FLAG4_COMPRESSFILES) > 0
+            if hdr4.version == self.F3_VERSION or hdr4.version == self.SE_VERSION:
+                source.tag = (hdr4.archiveFlags & self.FLAG4_PREFIXS) > 0
 
             # read-all folders
             foldersFiles = \
-                [x.fileCount for x in r.readSArray(self.DIR4SE, header.folderCount)] if header.version == self.SE_VERSION else \
-                [x.fileCount for x in r.readSArray(self.DIR4, header.folderCount)]
+                [x.fileCount for x in r.readSArray(self.DIR4SE, hdr4.folderCount)] if hdr4.version == self.SE_VERSION else \
+                [x.fileCount for x in r.readSArray(self.DIR4, hdr4.folderCount)]
 
             # read-all folder files
-            j = 0
-            source.files = files = [None] * header.fileCount
-            for i in range(header.folderCount):
+            i = 0
+            source.files = files = [None] * hdr4.fileCount
+            for f in range(hdr4.folderCount):
                 folderName = r.readFAString(r.readByte() - 1).replace('\\', '/')
                 r.skip(1)
-                headerFiles = r.readSArray(self.FILE4, foldersFiles[i])
-                for headerFile in headerFiles:
-                    compressed = (headerFile.size & self.FILE4_SIZECOMPRESS) != 0
-                    packedSize = headerFile.size ^ self.FILE4_SIZECOMPRESS if compressed else headerFile.size
-                    files[j] = FileSource(
+                for s in r.readSArray(self.FILE4, foldersFiles[f]):
+                    compressed = (s.size & self.FILE4_SIZECOMPRESS) != 0
+                    packedSize = s.size ^ self.FILE4_SIZECOMPRESS if compressed else s.size
+                    files[i] = FileSource(
                         path = folderName,
-                        offset = headerFile.offset,
+                        offset = s.offset,
                         compressed = 1 if compressed ^ compressedToggle else 0,
                         packedSize = packedSize,
                         fileSize = packedSize & self.FILE4_SIZEMASK if source.version == self.SE_VERSION else packedSize)
-                    j += 1
+                    i += 1
 
             # read-all names
             for file in files: file.path = f'{file.path}/{r.readVWString()}'
 
         # Morrowind
         elif magic == self.MW_MAGIC:
-            header = r.readS(self.HDR3)
-            dataOffset = 12 + header.hashOffset + (header.fileCount << 3)
+            hdr3 = r.readS(self.HDR3)
+            dataOffset = 12 + hdr3.hashOffset + (hdr3.fileCount << 3)
 
             # create filesources
-            source.files = files = [None] * header.fileCount
-            headerFiles = r.readSArray(self.FILE3, header.fileCount)
-            for i in range(header.fileCount):
-                headerFile = headerFiles[i]
-                size = headerFile.size
+            i = 0
+            source.files = files = [None] * hdr3.fileCount
+            for s in r.readSArray(self.FILE3, hdr3.fileCount):
                 files[i] = FileSource(
-                    offset = dataOffset + headerFile.fileOffset,
+                    offset = dataOffset + s.fileOffset,
                     compressed = 0,
-                    fileSize = size,
-                    packedSize = size)
+                    fileSize = s.size,
+                    packedSize = s.size)
+                i += 1
 
             # read filename offsets
-            filenameOffsets = r.readPArray(None, 'I', header.fileCount) # relative offset in filenames section
+            fnof3s = r.readPArray(None, 'I', hdr3.fileCount) # relative offset in filenames section
 
             # read filenames
-            filenamesPosition = r.tell()
-            for i in range(header.fileCount):
-                r.seek(filenamesPosition + filenameOffsets[i])
-                files[i].path = r.readVAString(1000).replace('\\', '/')
+            tell = r.tell()
+            for i in range(hdr3.fileCount): r.seek(tell + fnof3s[i]); files[i].path = r.readVAString(1000).replace('\\', '/')
         else: raise Exception('BAD MAGIC')
-    
-    # readData
+    # end::Binary_Bsa.read[]
+
+    # readData - tag::Binary_Bsa.readData[]
     def readData(self, source: BinaryArchive, r: BinaryReader, file: FileSource, option: object = None) -> BytesIO:
         # position
         fileSize = file.fileSize
@@ -325,18 +341,14 @@ class Binary_Bsa(ArcBinaryT):
             r.seek(file.offset + prefixLength)
 
         # not compressed
-        if fileSize <= 0 or file.compressed == 0:
-            return BytesIO(r.readBytes(fileSize))
+        if fileSize <= 0 or file.compressed == 0: return BytesIO(r.readBytes(fileSize))
 
         # compressed
         newFileSize = r.readUInt32(); fileSize -= 4
         return BytesIO(
             decompressLz4(r, fileSize, newFileSize) if source.version == self.SE_VERSION else \
             decompressZlib(r, fileSize, newFileSize))
-
-#endregion - end::Binary_Bsa[]
-
-#region Binary_Esm - tag::Binary_Esm[]
+    # end::Binary_Bsa.readData[]
 
 # Binary_Esm
 class Binary_Esm(ArcBinaryT, IDatabase):
@@ -359,28 +371,31 @@ class Binary_Esm(ArcBinaryT, IDatabase):
             case 'Starfield': return FormType.TES6
             case _: raise Exception(f'Unknown: {game}')
 
-    # read
+    # read - tag::Binary_Esm.read[]
     def read(self, source: BinaryArchive, b: BinaryReader, tag: object = None) -> None:
         self.format = self.getFormat(source.game.id)
         r = Reader(b, source.binPath, self.format, source.game.id in ['Fallout3', 'FalloutNV'])
         record = self.record = Record.factory(r, FormType(r.readUInt32()))
         record.readFields(r)
+        record.complete(r)
         files = source.files = [FileSource(path = f'{str(record.type)[9:]}', tag = record)]
         for s in RecordGroup.readAll(r):
-            if s.preload: print(f'read: {s}'); s.read(r, files)
-            else: print(f'skip: {s}'); r.seek(r.tell() + s.dataSize)
-        print('HERE')
+            if s.preload: s.read(r, files)
+            else: r.seek(r.tell() + s.dataSize)
         # if r.format == FormType.TES3:
         #     for k, g in groupby(sorted(self.records, key=lambda s: int(s.type)), lambda s: s.type):
         #         t = RecordGroup(None); t.label = k; t.records = list(g)
         #         groups[k] = t
+    # end::Binary_Esm.read[]
 
+    # process - tag::Binary_Esm.process[]
     def process(self, source: BinaryArchive) -> None:
         if self.format == FormType.TES3:
             pass
         pass
+    # end::Binary_Esm.process[]
 
-    #region Query
+    #region Query - tag::Binary_Esm.query[]
 
     @staticmethod
     def findTAGFactory(type: FormType, group: RecordGroup) -> object: return None #Binary_Esm.FindTAG[Record](group.records) #z = Record.factory(None, type);
@@ -426,6 +441,5 @@ class Binary_Esm(ArcBinaryT, IDatabase):
             case FindCELLByName(): return s.tes3(self) if self.format == FormType.TES3 else _throw('NotImplementedError')
             case _: return _throw('OutOfRange')
 
-    #endregion
+    #endregion - end::Binary_Esm.query[]
     
-#endregion - end::Binary_Esm[]

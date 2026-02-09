@@ -12,6 +12,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using static GameX.Bethesda.Formats.Records.CREARecord.AIDTField;
 using static GameX.Bethesda.Formats.Records.FormType;
+using static GameX.Bethesda.Formats.Records.NPC3Record;
 using static System.IO.Polyfill;
 #pragma warning disable CS9113
 
@@ -726,7 +727,7 @@ public partial class Record {
         var dfields = DF3;
         while (!r.AtEnd(end)) {
             var fieldType = (FieldType)r.ReadUInt32();
-            if (!dfields.Contains(fieldType) && Ds.Contains(fieldType)) throw new Exception($"d: {Type}Record.{fieldType}");
+            if (dfields != null && !dfields.Contains(fieldType) && Ds.Contains(fieldType)) throw new Exception($"d: {Type}Record.{fieldType}");
             Ds.Add(fieldType);
             //Log.Info($" - {fieldType}");
             var fieldDataSize = (int)(r.Format == TES3 ? r.ReadUInt32() : r.ReadUInt16());
@@ -1169,13 +1170,14 @@ public class ALCHRecord : Record, IHaveMODL {
     public MODLGroup MODL { get; set; } // Model
     public STRVField FULL; // Item Name
     public DATAField DATA; // Alchemy Data
-    public ENAMField? ENAM; // Enchantment
+    public List<ENAMField> ENAMs = []; // Enchantment
     public FILEField ICON; // Icon
     public RefField<SCPTRecord>? SCRI; // Script (optional)
     // TES4
     public List<ENCHRecord.EFITField> EFITs = []; // Effect Data
     public List<ENCHRecord.SCITField> SCITs = []; // Script Effect Data
 
+    protected override HashSet<FieldType> DF3 => [FieldType.ENAM];
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadSTRV(dataSize),
         FieldType.MODL => MODL = new MODLGroup(r, dataSize),
@@ -1184,7 +1186,7 @@ public class ALCHRecord : Record, IHaveMODL {
         FieldType.FULL => SCITs.Count == 0 ? FULL = r.ReadSTRV(dataSize) : SCITs.Last().FULLField(r, dataSize),
         FieldType.FNAM => FULL = r.ReadSTRV(dataSize),
         FieldType.DATA or FieldType.ALDT => DATA = new DATAField(r, dataSize),
-        FieldType.ENAM => ENAM = r.ReadS<ENAMField>(dataSize),
+        FieldType.ENAM => ENAMs.AddX(r.ReadS<ENAMField>(dataSize)),
         FieldType.ICON or FieldType.TEXT => ICON = r.ReadFILE(dataSize),
         FieldType.SCRI => SCRI = new RefField<SCPTRecord>(r, dataSize),
         // TES4
@@ -1360,7 +1362,7 @@ public class ARMORecord : Record, IHaveMODL {
     public RefField<SCPTRecord>? SCRI; // Script Name (optional)
     public RefField<ENCHRecord>? ENAM; // Enchantment FormId (optional)
     // TES3
-    public List<CLOTRecord.INDXFieldGroup> INDXs = []; // Body Part Index
+    public List<CLOTRecord.INDXGroup> INDXs = []; // Body Part Index
     // TES4
     public UI32Field BMDT; // Flags
     public MODLGroup MOD2; // Male World Model (optional)
@@ -1381,7 +1383,7 @@ public class ARMORecord : Record, IHaveMODL {
         FieldType.SCRI => SCRI = new RefField<SCPTRecord>(r, dataSize),
         FieldType.ENAM => ENAM = new RefField<ENCHRecord>(r, dataSize),
         // TES3
-        FieldType.INDX => INDXs.AddX(new CLOTRecord.INDXFieldGroup { INDX = r.ReadINTV(dataSize) }),
+        FieldType.INDX => INDXs.AddX(new CLOTRecord.INDXGroup { INDX = r.ReadINTV(dataSize) }),
         FieldType.BNAM => INDXs.Last().BNAM = r.ReadSTRV(dataSize),
         FieldType.CNAM => INDXs.Last().CNAM = r.ReadSTRV(dataSize),
         // TES4
@@ -1739,6 +1741,7 @@ public unsafe class CELLRecord : Record {
         AmbientLight = XCLL?.AmbientColor.AsColor;
     }
 
+    protected override HashSet<FieldType> DF3 => null;
     public override object ReadField(Reader r, FieldType type, int dataSize) {
         //Console.WriteLine($"   {type}");
         if (!_inFRMR && type == FieldType.FRMR) _inFRMR = true;
@@ -1956,7 +1959,7 @@ public class CLOTRecord : Record, IHaveMODL {
         }
     }
 
-    public class INDXFieldGroup {
+    public class INDXGroup {
         public override string ToString() => $"{INDX.Value}: {BNAM.Value}";
         public INTVField INDX;
         public STRVField BNAM;
@@ -1970,7 +1973,7 @@ public class CLOTRecord : Record, IHaveMODL {
     public STRVField? ENAM; // Enchantment Name
     public RefField<SCPTRecord>? SCRI; // Script Name
     // TES3
-    public List<INDXFieldGroup> INDXs = []; // Body Part Index (Moved to Race)
+    public List<INDXGroup> INDXs = []; // Body Part Index (Moved to Race)
     // TES4
     public UI32Field BMDT; // Clothing Flags
     public MODLGroup MOD2; // Male world model (optional)
@@ -1979,6 +1982,7 @@ public class CLOTRecord : Record, IHaveMODL {
     public FILEField? ICO2; // Female icon (optional)
     public IN16Field? ANAM; // Enchantment points (optional)
 
+    protected override HashSet<FieldType> DF3 => [FieldType.INDX, FieldType.BNAM, FieldType.CNAM];
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadSTRV(dataSize),
         FieldType.MODL => MODL = new MODLGroup(r, dataSize),
@@ -1987,7 +1991,7 @@ public class CLOTRecord : Record, IHaveMODL {
         FieldType.FULL or FieldType.FNAM => FULL = r.ReadSTRV(dataSize),
         FieldType.DATA or FieldType.CTDT => DATA = new DATAField(r, dataSize),
         FieldType.ICON or FieldType.ITEX => ICON = r.ReadFILE(dataSize),
-        FieldType.INDX => INDXs.AddX(new INDXFieldGroup { INDX = r.ReadINTV(dataSize) }),
+        FieldType.INDX => INDXs.AddX(new INDXGroup { INDX = r.ReadINTV(dataSize) }),
         FieldType.BNAM => INDXs.Last().BNAM = r.ReadSTRV(dataSize),
         FieldType.CNAM => INDXs.Last().CNAM = r.ReadSTRV(dataSize),
         FieldType.ENAM => ENAM = r.ReadSTRV(dataSize),
@@ -2015,7 +2019,6 @@ public class CLOTRecord : Record, IHaveMODL {
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/CONT"/>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/CONT"/>
 public class CONTRecord : Record, IHaveMODL {
-
     public class DATAField {
         public byte Flags; // flags 0x0001 = Organic, 0x0002 = Respawns, organic only, 0x0008 = Default, unknown
         public float Weight;
@@ -2039,6 +2042,7 @@ public class CONTRecord : Record, IHaveMODL {
     public RefField<SOUNRecord> SNAM; // Open sound
     public RefField<SOUNRecord> QNAM; // Close sound
 
+    protected override HashSet<FieldType> DF3 => [FieldType.NPCO];
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadSTRV(dataSize),
         FieldType.MODL => MODL = new MODLGroup(r, dataSize),
@@ -2140,25 +2144,33 @@ public unsafe class CREARecord : Record, IHaveMODL {
         public uint Flags;
     }
 
+    /// <summary>
+    /// Activate package
+    /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct AI_WField {
-        public static (string, int) Struct = ("<2hB8sB", 14);
-        public short Distance;
-        public short Duration;
-        public byte TimeOfDay;
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 8)] public byte[] Idles;
+    public struct AI_AField {
+        public static (string, int) Struct = ("<32sB", 33);
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)] internal byte[] Name_; public readonly string Name => Encoding.ASCII.GetString(Name_).TrimEnd('\0');
         public byte Unknown;
     }
 
+    /// <summary>
+    /// Escort package
+    /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct AI_TField {
-        public static (string, int) Struct = ("<4f", 16);
+    public struct AI_EField {
+        public static (string, int) Struct = ("<3fh32sh", 48);
         public float X;
         public float Y;
         public float Z;
-        public float Unknown;
+        public short Duration;
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)] public byte[] Id;
+        public short Unknown;
     }
 
+    /// <summary>
+    /// Follow package
+    /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct AI_FField {
         public static (string, int) Struct = ("<3fh32sh", 48);
@@ -2170,47 +2182,70 @@ public unsafe class CREARecord : Record, IHaveMODL {
         public short Unknown;
     }
 
+    /// <summary>
+    /// Travel package
+    /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct AI_AField {
-        public static (string, int) Struct = ("<32sB", 33);
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)] internal byte[] Name_; public readonly string Name => Encoding.ASCII.GetString(Name_).TrimEnd('\0');
+    public struct AI_TField {
+        public static (string, int) Struct = ("<4f", 16);
+        public float X;
+        public float Y;
+        public float Z;
+        public float Unknown;
+    }
+
+    /// <summary>
+    /// Wander package
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public struct AI_WField {
+        public static (string, int) Struct = ("<2hB8sB", 14);
+        public short Distance;
+        public short Duration;
+        public byte TimeOfDay;
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 8)] public byte[] Idles;
         public byte Unknown;
     }
 
+    public class AIGroup(Reader r, int dataSize, FieldType type) {
+        public override string ToString() => $"{AI}";
+        public object AI = type switch {
+            FieldType.AI_A => r.ReadS<AI_AField>(dataSize), // AI Activate
+            FieldType.AI_E => r.ReadS<AI_EField>(dataSize), // AI Escort
+            FieldType.AI_F => r.ReadS<AI_FField>(dataSize), // AI Follow
+            FieldType.AI_T => r.ReadS<AI_TField>(dataSize), // AI Travel
+            FieldType.AI_W => r.ReadS<AI_WField>(dataSize), // AI Wander
+        }; // AI
+        public STRVField? CNDT; // Cell escort/follow to string (optional)
+    }
+
     public MODLGroup MODL { get; set; } // NIF Model
+    public STRVField CNAM; // Sound Gen Creature
     public STRVField FNAM; // Creature name
     public NPDTField NPDT; // Creature data
     public IN32Field FLAG; // Creature Flags
     public RefField<SCPTRecord>? SCRI; // Script
     public List<CNTOField> NPCOs = []; // Item record
     public AIDTField AIDT; // AI data
-    public AI_WField? AI_W; // AI Wander
-    public AI_TField? AI_T; // AI Travel
-    public AI_FField? AI_F; // AI Follow
-    public AI_FField? AI_E; // AI Escort
-    public AI_AField? AI_A; // AI Activate
+    public List<AIGroup> AIs = []; // AI packages
     public FLTVField? XSCL; // Scale (optional), Only present if the scale is not 1.0
-    public STRVField? CNAM;
     public List<STRVField> NPCSs = [];
 
-    protected override HashSet<FieldType> DF3 => [FieldType.NPCO, FieldType.NPCS];
+    protected override HashSet<FieldType> DF3 => [FieldType.NPCO, FieldType.NPCS, FieldType.AI_A, FieldType.AI_E, FieldType.AI_F, FieldType.AI_T, FieldType.AI_W, FieldType.CNDT];
     public override object ReadField(Reader r, FieldType type, int dataSize) => r.Format == TES3
         ? type switch {
             FieldType.NAME => EDID = r.ReadSTRV(dataSize),
             FieldType.MODL => MODL = new MODLGroup(r, dataSize),
+            FieldType.CNAM => CNAM = r.ReadSTRV(dataSize),
             FieldType.FNAM => FNAM = r.ReadSTRV(dataSize),
             FieldType.NPDT => NPDT = r.ReadS<NPDTField>(dataSize),
             FieldType.FLAG => FLAG = r.ReadS<IN32Field>(dataSize),
             FieldType.SCRI => SCRI = new RefField<SCPTRecord>(r, dataSize),
             FieldType.NPCO => NPCOs.AddX(new CNTOField(r, dataSize)),
             FieldType.AIDT => AIDT = r.ReadS<AIDTField>(dataSize),
-            FieldType.AI_W => AI_W = r.ReadS<AI_WField>(dataSize),
-            FieldType.AI_T => AI_T = r.ReadS<AI_TField>(dataSize),
-            FieldType.AI_F => AI_F = r.ReadS<AI_FField>(dataSize),
-            FieldType.AI_E => AI_E = r.ReadS<AI_FField>(dataSize),
-            FieldType.AI_A => AI_A = r.ReadS<AI_AField>(dataSize),
+            FieldType.AI_A or FieldType.AI_E or FieldType.AI_F or FieldType.AI_T or FieldType.AI_W => AIs.AddX(new AIGroup(r, dataSize, type)),
+            FieldType.CNDT => AIs.Last().CNDT = r.ReadSTRV(dataSize),
             FieldType.XSCL => XSCL = r.ReadS<FLTVField>(dataSize),
-            FieldType.CNAM => CNAM = r.ReadSTRV(dataSize),
             FieldType.NPCS => NPCSs.AddX(r.ReadSTRV_ZPad(dataSize)),
             _ => Empty,
         }
@@ -3018,9 +3053,7 @@ public class INFORecord : Record {
         public BYTEField? QSTN; // Journal Name
         public BYTEField? QSTF; // Journal Finished
         public BYTEField? QSTR; // Journal Restart
-        public SCPTRecord.CTDAField? SCVR; // String for the function/variable choice
-        public UNKNField? INTV; //
-        public UNKNField? FLTV; // The function/variable result for the previous SCVR
+        public List<SCPTRecord.SCVRGroup> SCVRs = []; // String for the function/variable choice
         public STRVField? BNAM; // Result text (not compiled)
     }
 
@@ -3072,6 +3105,7 @@ public class INFORecord : Record {
         else TES3 = null;
     }
 
+    protected override HashSet<FieldType> DF3 => [FieldType.SCVR, FieldType.INTV, FieldType.FLTV];
     public override object ReadField(Reader r, FieldType type, int dataSize) => r.Format == FormType.TES3
         ? type switch {
             FieldType.INAM => (DIALRecord._lastRecord?.INFOs.AddX(this), EDID = r.ReadSTRV(dataSize)).Item1,
@@ -3089,9 +3123,9 @@ public class INFORecord : Record {
             FieldType.QSTN => TES3.QSTN = r.ReadS<BYTEField>(dataSize),
             FieldType.QSTF => TES3.QSTF = r.ReadS<BYTEField>(dataSize),
             FieldType.QSTR => TES3.QSTR = r.ReadS<BYTEField>(dataSize),
-            FieldType.SCVR => TES3.SCVR = new SCPTRecord.CTDAField(r, dataSize),
-            FieldType.INTV => TES3.INTV = r.ReadUNKN(dataSize),
-            FieldType.FLTV => TES3.FLTV = r.ReadUNKN(dataSize),
+            FieldType.SCVR => TES3.SCVRs.AddX(new SCPTRecord.SCVRGroup { SCVR = new SCPTRecord.CTDAField(r, dataSize) }),
+            FieldType.INTV => TES3.SCVRs.Last().INTV = r.ReadINTV(dataSize),
+            FieldType.FLTV => TES3.SCVRs.Last().FLTV = r.ReadS<FLTVField>(dataSize),
             FieldType.BNAM => TES3.BNAM = r.ReadSTRV(dataSize),
             _ => Empty,
         }
@@ -3331,6 +3365,7 @@ public class LEVCRecord : Record {
     public List<IN16Field> INTVs = []; // PC level for previous CNAM
     // The CNAM/INTV can occur many times in pairs
 
+    protected override HashSet<FieldType> DF3 => [FieldType.CNAM, FieldType.INTV];
     public override object ReadField(Reader r, FieldType type, int dataSize) => r.Format == TES3
         ? type switch {
             FieldType.NAME => EDID = r.ReadSTRV(dataSize),
@@ -3356,6 +3391,7 @@ public class LEVIRecord : Record {
     public List<IN16Field> INTVs = []; // PC level for previous INAM
     // The CNAM/INTV can occur many times in pairs
 
+    protected override HashSet<FieldType> DF3 => [FieldType.INAM, FieldType.INTV];
     public override object ReadField(Reader r, FieldType type, int dataSize) => r.Format == TES3
         ? type switch {
             FieldType.NAME => EDID = r.ReadSTRV(dataSize),
@@ -3914,6 +3950,7 @@ public class NPC3Record : Record, IHaveMODL {
             }
         }
     }
+
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct DODTField {
         public static (string, int) Struct = ("<6f", 24);
@@ -3923,6 +3960,10 @@ public class NPC3Record : Record, IHaveMODL {
         public float XRot;
         public float YRot;
         public float ZRot;
+    }
+
+    public class DODTGroup {
+        public DODTField DODT; // Cell Travel Destination
         public STRVField DNAM; // Cell name for previous DODT, if interior
     }
 
@@ -3938,17 +3979,12 @@ public class NPC3Record : Record, IHaveMODL {
     public List<CNTOField> NPCOs = []; // NPC item
     public List<STRVField> NPCSs = []; // NPC spell
     public CREARecord.AIDTField AIDT; // AI data
-    public CREARecord.AI_WField? AI_W; // AI
-    public CREARecord.AI_TField? AI_T; // AI Travel
-    public CREARecord.AI_FField? AI_F; // AI Follow
-    public CREARecord.AI_FField? AI_E; // AI Escort
-    public STRVField? CNDT; // Cell escort/follow to string (optional)
-    public CREARecord.AI_AField? AI_A; // AI Activate
-    public List<DODTField> DODTs = []; // Cell Travel Destination
+    public List<CREARecord.AIGroup> AIs = []; // AI packages
+    public List<DODTGroup> DODTs = []; // Cell Travel Destination
     public FLTVField? XSCL; // Scale (optional) Only present if the scale is not 1.0
     public RefField<SCPTRecord>? SCRI; // Unknown
 
-    protected override HashSet<FieldType> DF3 => [FieldType.NPCO, FieldType.NPCS, FieldType.DODT];
+    protected override HashSet<FieldType> DF3 => [FieldType.NPCO, FieldType.NPCS, FieldType.DODT, FieldType.DNAM, FieldType.AI_A, FieldType.AI_E, FieldType.AI_F, FieldType.AI_T, FieldType.AI_W, FieldType.CNDT];
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.NAME => EDID = r.ReadSTRV(dataSize),
         FieldType.FNAM => FULL = r.ReadSTRV(dataSize),
@@ -3964,13 +4000,9 @@ public class NPC3Record : Record, IHaveMODL {
         FieldType.NPCO => NPCOs.AddX(new CNTOField(r, dataSize)),
         FieldType.NPCS => NPCSs.AddX(r.ReadSTRV_ZPad(dataSize)),
         FieldType.AIDT => AIDT = r.ReadS<CREARecord.AIDTField>(dataSize),
-        FieldType.AI_W => AI_W = r.ReadS<CREARecord.AI_WField>(dataSize),
-        FieldType.AI_T => AI_T = r.ReadS<CREARecord.AI_TField>(dataSize),
-        FieldType.AI_F => AI_F = r.ReadS<CREARecord.AI_FField>(dataSize),
-        FieldType.AI_E => AI_E = r.ReadS<CREARecord.AI_FField>(dataSize),
-        FieldType.CNDT => CNDT = r.ReadSTRV(dataSize),
-        FieldType.AI_A => AI_A = r.ReadS<CREARecord.AI_AField>(dataSize),
-        FieldType.DODT => DODTs.AddX(r.ReadS<DODTField>(dataSize)),
+        FieldType.AI_A | FieldType.AI_E | FieldType.AI_F | FieldType.AI_T | FieldType.AI_W => AIs.AddX(new CREARecord.AIGroup(r, dataSize, type)),
+        FieldType.CNDT => AIs.Last().CNDT = r.ReadSTRV(dataSize),
+        FieldType.DODT => DODTs.AddX(new DODTGroup { DODT = r.ReadS<DODTField>(dataSize) }),
         FieldType.DNAM => DODTs.Last().DNAM = r.ReadSTRV(dataSize),
         FieldType.XSCL => XSCL = r.ReadS<FLTVField>(dataSize),
         FieldType.SCRI => SCRI = new RefField<SCPTRecord>(r, dataSize),
@@ -4958,6 +4990,12 @@ public class SCPTRecord : Record {
             Index = Type = 0;
             Name = null;
         }
+    }
+
+    public class SCVRGroup {
+        public CTDAField SCVR;
+        public INTVField? INTV; //
+        public FLTVField? FLTV; // The function/variable result for the previous SCVR
     }
 
     // TES3

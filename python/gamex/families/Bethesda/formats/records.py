@@ -501,7 +501,7 @@ class Record:
         FormType.INGR: lambda f: INGRRecord(),
         FormType.BOOK: lambda f: BOOKRecord(),
         FormType.ALCH: lambda f: ALCHRecord(),
-        FormType.CREA: lambda f: CREA3Record() if f == FormType.TES3 else CREA4Record()
+        FormType.CREA: lambda f: CREA3Record() if f == FormType.TES3 else CREA4Record(),
         FormType.NPC_: lambda f: NPC_3Record() if f == FormType.TES3 else NPC_4Record(),
         # 2
         FormType.GMST: lambda f: GMSTRecord(),
@@ -628,7 +628,6 @@ class Record:
     @property
     def compressed(self) -> bool: return Record.EsmFlags.Compressed in self.flags
     id: int = 0
-    EDID: STRVField = STRVField() # Editor ID
 
     # Completes a record.
     def complete(self, r: Reader) -> None: pass
@@ -670,9 +669,9 @@ class Record:
                 continue
             elif fieldType == FieldType.OFST and self.type == FormType.WRLD: r.seek(end); continue
             tell = r.tell()
-            if self.readField(r, fieldType, fieldDataSize) == Record._empty: print(f'Unsupported ESM record type: {self.type}:{fieldType}'); r.skip(fieldDataSize); continue
-            r.ensureAtEnd(tell + fieldDataSize, f'Failed reading {self.type}:{fieldType} field data at offset {tell} in {r.binPath} of {r.tell() - tell - fieldDataSize}')
-        r.ensureAtEnd(end, f'Failed reading {self.type} record data at offset {start} in {r.binPath}')
+            if self.readField(r, fieldType, fieldDataSize) == Record._empty: print(f'Unsupported ESM record type: {self.type}Record:{fieldType}'); r.skip(fieldDataSize); continue
+            r.ensureAtEnd(tell + fieldDataSize, f'Failed reading {self.type}Record:{fieldType} field data at offset {tell} in {r.binPath} of {r.tell() - tell - fieldDataSize}')
+        r.ensureAtEnd(end, f'Failed reading {self.type}Record record data at offset {start} in {r.binPath}')
         if self.compressed: r.dispose()
     # end::Record.readFields[]
 Record._empty = Record()
@@ -680,8 +679,10 @@ Record._empty = Record()
 class Ref[T: Record]:
     _struct = ('<I', 4)
     def __repr__(self) -> str: return f'{self.type}:{self.id}'
-    def __init__(self, t: type, tuple): self.type = (t if isinstance(t, str) else t.__name__)[:4]; self.id: int = tuple
-
+    def __init__(self, t: type, tuple = None): self.type = (t if isinstance(t, str) else t.__name__)[:4]; self.id: int = tuple
+class RefS[T: Record]:
+    def __repr__(self) -> str: return f'{self.type}:{self.id}'
+    def __init__(self, t: type, name: str = None): self.type = (t if isinstance(t, str) else t.__name__)[:4]; self.name: str = name
 class RefX[T: Record]:
     def __repr__(self) -> str: return f'{self.type}:{self.name}{self.id}'
     def __init__(self, *args): 
@@ -779,7 +780,6 @@ class RecordGroup:
 
 #endregion
 
-
 #region Fields
 
 class STRVField:
@@ -835,24 +835,36 @@ class BYTVField:
 class UNKNField: 
     def __repr__(self) -> str: return f'UNKN'
     def __init__(self, value: bytes = None): self.value: bytes = value
-class CNTOField:
-    def __repr__(self) -> str: return f'{self.item}'
-    itemCount: int # Number of the item
-    item: 'RefX[Record]' # The ID of the item
-    def __init__(self, r: Reader = None, dataSize: int = 0):
-        if not r: self.itemCount = 0; self.item = RefX[Record](Record); return
-        if r.format == FormType.TES3: self.itemCount = r.readUInt32(); self.item = RefX[Record](Record, r.readFAString(32)); return
-        self.item = RefX[Record](Record, r.readUInt32()); self.itemCount = r.readUInt32()
+
 class REF1Field[T: Record]:
-    def __repr__(self) -> str: return f'{self.value}'
-    def __init__(self, t: type, r: Reader = None, dataSize: int = 0): self.value = RefX[T](t, r.readUInt32())
+    def __repr__(self) -> str: return f'{self.item}'
+    def __init__(self, t: type, r: Reader, dataSize: int): self.item = Ref[T](t, r.readUInt32())
 class REF2Field[T: Record]:
-    def __repr__(self) -> str: return f'{self.value1}x{self.value2}'
-    def __init__(self, t: type, r: Reader = None, dataSize: int = 0): self.value1 = RefX[T](t, r.readUInt32()); self.value2 = RefX[T](t, r.readUInt32())
+    def __repr__(self) -> str: return f'{self.item1}x{self.item2}'
+    def __init__(self, t: type, r: Reader, dataSize: int): self.item1 = Ref[T](t, r.readUInt32()); self.item2 = Ref[T](t, r.readUInt32())
+class REFSField[T: Record]:
+    def __repr__(self) -> str: return f'{self.item}'
+    def __init__(self, t: type, r: Reader, dataSize: int): self.item = RefS[T](t, r.readFUString(dataSize))
 class REFXField[T: Record]:
-    def __repr__(self) -> str: return f'{self.value}'
-    def __init__(self, t: type, r: Reader = None, dataSize: int = 0): self.value = RefX[T](t, r.readUInt32()) if dataSize == 4 else RefX[T](t, r.readFAString(dataSize)) if r else RefX[T](t)
-    def setName(self, name: str) -> str: z = self.value.name = name; return z
+    def __repr__(self) -> str: return f'{self.item}'
+    def __init__(self, t: type, r: Reader = None, dataSize: int = 0): self.item = RefX[T](t, r.readUInt32()) if dataSize == 4 else RefX[T](t, r.readFAString(dataSize)) if r else RefX[T](t)
+    def setName(self, name: str) -> str: z = self.item.name = name; return z
+class REFVField[T: Record]:
+    def __repr__(self) -> str: return f'{self.item}:{self.value}'
+    def __init__(self, t: type, r: Reader, dataSize: int): self.item = RefX[T](t, r.readUInt32()); self.value = r.readByte(); r.skip(3)
+class CNTOField[T: Record]:
+    def __repr__(self) -> str: return f'{self.item}:{self.count}'
+    def __init__(self, t: type, r: Reader, dataSize: int): self.item = RefX[T](t, r.readUInt32()); self.count = r.readUInt32()
+class CNTOXField[T: Record]:
+    def __repr__(self) -> str: return f'{self.item}'
+    item: 'RefX[Record]' # The ID of the item
+    count: int # Number of the item
+    def __init__(self, t: type, r: Reader = None, dataSize: int = 0):
+        if not r: self.count = 0; self.item = RefX[Record](Record); return
+        if r.format == FormType.TES3: self.count = r.readUInt32(); self.item = RefX[Record](Record, r.readFAString(32)); return
+        self.item = RefX[Record](Record, r.readUInt32()); self.count = r.readUInt32()
+
+Record.EDID: STRVField = STRVField() # Editor ID
 
 #endregion
 
@@ -923,7 +935,7 @@ class AACTRecord(Record):
 # dep: CELLRecord, REFRRecord
 # ACRE.Placed creature - 0400 - tag::ACRE[]
 class ACRERecord(Record):
-    NAME: REFXField[Record] # Base
+    NAME: REF1Field[Record] # Base
     DATA: 'REFRRecord.DATAField' # Position/Rotation
     XRGDs: list['REFRRecord.XRGDField'] = None # Ragdoll Data (optional)
     XESP: 'REFRRecord.XESPField' = None # Enable Parent (optional)
@@ -934,7 +946,7 @@ class ACRERecord(Record):
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
-            case FieldType.NAME: z = self.NAME = REFXField[Record](Record, r, dataSize)
+            case FieldType.NAME: z = self.NAME = REF1Field[Record](Record, r, dataSize)
             case FieldType.DATA: z = self.DATA = r.readS(REFRRecord.DATAField, dataSize)
             case FieldType.XRGD: z = self.XRGDs = r.readSArray(REFRRecord.XRGDField, dataSize // 28)
             case FieldType.XESP: z = self.XESP = REFRRecord.XESPField(r, dataSize)
@@ -1065,7 +1077,7 @@ class ALCHRecord(Record, IHaveMODL):
             case FieldType.MODL: z = self.MODL = MODLGroup(r, dataSize)
             case FieldType.MODB: z = self.MODL.MODBField(r, dataSize)
             case FieldType.MODT: z = self.MODL.MODTField(r, dataSize)
-            case FieldType.FULL: z = FULL = r.readSTRV(dataSize) if len(self.SCITs) == 0 else SCITs.last().FULLField(r, dataSize)
+            case FieldType.FULL: z = FULL = r.readSTRV(dataSize) if len(self.SCITs) == 0 else self.SCITs.last().FULLField(r, dataSize)
             case FieldType.FNAM: z = self.FULL = r.readSTRV(dataSize)
             case FieldType.DATA | FieldType.ALDT: z = self.DATA = self.DATAField(r, dataSize)
             case FieldType.ENAM: z = self.ENAMs.addX(r.readS(self.ENAMField, dataSize))
@@ -1834,7 +1846,6 @@ class CLMTRecord(Record, IHaveMODL):
 # dep: SCPTRecord, SOUNRecord
 # CONT.Container - 3450 - tag::CONT[]
 class CONTRecord(Record, IHaveMODL):
-    
     class DATAField:
         flags: int # flags 0x0001 = Organic, 0x0002 = Respawns, organic only, 0x0008 = Default, unknown
         weight: float
@@ -1850,7 +1861,7 @@ class CONTRecord(Record, IHaveMODL):
     FULL: STRVField # Container Name
     DATA: DATAField # Container Data
     SCRI: REFXField['SCPTRecord'] = None
-    CNTOs: list[CNTOField] = []
+    CNTOs: list[CNTOXField[Record]] = []
     # TES4
     SNAM: REFXField['SOUNRecord'] # Open sound
     QNAM: REFXField['SOUNRecord'] # Close sound
@@ -1865,7 +1876,7 @@ class CONTRecord(Record, IHaveMODL):
             case FieldType.FULL | FieldType.FNAM: z = self.FULL = r.readSTRV(dataSize)
             case FieldType.DATA | FieldType.CNDT: z = self.DATA = self.DATAField(r, dataSize)
             case FieldType.FLAG: z = self.DATA.FLAGField(r, dataSize)
-            case FieldType.CNTO | FieldType.NPCO: z = self.CNTOs.addX(CNTOField(r, dataSize))
+            case FieldType.CNTO | FieldType.NPCO: z = self.CNTOs.addX(CNTOXField(Record, r, dataSize))
             case FieldType.SCRI: z = self.SCRI = REFXField[SCPTRecord](SCPTRecord, r, dataSize)
             case FieldType.SNAM: z = self.SNAM = REFXField[SOUNRecord](SOUNRecord, r, dataSize)
             case FieldType.QNAM: z = self.QNAM = REFXField[SOUNRecord](SOUNRecord, r, dataSize)
@@ -1952,26 +1963,27 @@ class CREA3Record(Record, IHaveMODL):
             self.unknown3,
             self.gold) = tuple
 
+    class AIFlags(IntFlag):
+        Weapon = 0x00001
+        Armor = 0x00002
+        Clothing = 0x00004
+        Books = 0x00008
+        Ingrediant = 0x00010
+        Picks = 0x00020
+        Probes = 0x00040
+        Lights = 0x00080
+        Apparatus = 0x00100
+        Repair = 0x00200
+        Misc = 0x00400 # Miscellaneous
+        Spells = 0x00800
+        MagicItems = 0x01000
+        Potions = 0x02000
+        Training = 0x04000
+        Spellmaking = 0x08000
+        Recharge = 0x10000 # Enchanting
+        RepairItem = 0x20000
+
     class AIDTField:
-        class AIFlags(Flag):
-            Weapon = 0x00001
-            Armor = 0x00002
-            Clothing = 0x00004
-            Books = 0x00008
-            Ingrediant = 0x00010
-            Picks = 0x00020
-            Probes = 0x00040
-            Lights = 0x00080
-            Apparatus = 0x00100
-            Repair = 0x00200
-            Misc = 0x00400
-            Spells = 0x00800
-            MagicItems = 0x01000
-            Potions = 0x02000
-            Training = 0x04000
-            Spellmaking = 0x08000
-            Enchanting = 0x10000
-            RepairItem = 0x20000
         _struct = ('<8BI', 12)
         def __init__(self, tuple):
             (self.hello,
@@ -1983,6 +1995,7 @@ class CREA3Record(Record, IHaveMODL):
             self.unknown3,
             self.unknown4,
             self.flags) = tuple
+            self.flags = CREA3Record.AIFlags(self.flags)
 
     # Activate package
     class AI_AField:
@@ -2033,8 +2046,6 @@ class CREA3Record(Record, IHaveMODL):
             self.unknown) = tuple
 
     class AIGroup:
-        AI: object = None # AI
-        CNAM: STRVField = None # Cell escort/follow to string (optional)
         def __repr__(self) -> str: return f'{self.ai}'
         def __init__(self, r: Reader, dataSize: int, type: FieldType):
             match type:
@@ -2043,14 +2054,16 @@ class CREA3Record(Record, IHaveMODL):
                 case FieldType.AI_F: self.AI = r.readS(CREA3Record.AI_FField, dataSize) # AI Follow
                 case FieldType.AI_T: self.AI = r.readS(CREA3Record.AI_TField, dataSize) # AI Travel
                 case FieldType.AI_W: self.AI = r.readS(CREA3Record.AI_WField, dataSize) # AI Wander
+            self.AI: object = None # AI
+            self.CNAM: STRVField = None # Cell escort/follow to string (optional)
 
     MODL: MODLGroup # NIF Model
     CNAM: STRVField # Sound Gen Creature
     FULL: STRVField # Creature name
-    NPDT: NPDTField # Creature data
+    NPDT: object # Creature data
     FLAG: IN32Field # Creature Flags
     SCRI: REFXField['SCPTRecord'] = None # Script
-    NPCOs: list[CNTOField] = [] # Item record
+    NPCOs: list[CNTOXField[Record]] = [] # Item record
     AIDT: AIDTField # AI data
     AIs: list[AIGroup] = [] # AI packages
     XSCL: FLTVField = None # Scale (optional), Only present if the scale is not 1.0
@@ -2066,7 +2079,7 @@ class CREA3Record(Record, IHaveMODL):
             case FieldType.NPDT: z = self.NPDT = r.readS(self.NPDT96Field, dataSize)
             case FieldType.FLAG: z = self.FLAG = r.readS(IN32Field, dataSize)
             case FieldType.SCRI: z = self.SCRI = REFXField[SCPTRecord](SCPTRecord, r, dataSize)
-            case FieldType.NPCO: z = self.NPCOs.addX(CNTOField(r, dataSize))
+            case FieldType.NPCO: z = self.NPCOs.addX(CNTOXField(Record, r, dataSize))
             case FieldType.AIDT: z = self.AIDT = r.readS(self.AIDTField, dataSize)
             case FieldType.AI_A | FieldType.AI_E | FieldType.AI_F | FieldType.AI_T | FieldType.AI_W: z = self.AIs.addX(CREA3Record.AIGroup(r, dataSize, type))
             case FieldType.CNDT: z = self.AIs.last().CNDT = r.readSTRV(dataSize)
@@ -2079,38 +2092,91 @@ class CREA3Record(Record, IHaveMODL):
 # dep: SCPTRecord
 # CREA.Creature - 3450 - tag::CREA4[]
 class CREA4Record(Record, IHaveMODL):
+    class ACBSField:
+        _struct = ('<I3Hh2H', 16)
+        def __init__(self, tuple):
+            (self.flags,     # Flags
+            self.baseSpell,  # Base spell points
+            self.fatigue,    # Fatigue
+            self.barterGold, # Barter gold
+            self.level,      # Level/Offset level
+            self.calcMin,    # Calc Min
+            self.calcMax) = tuple # Calc Max
+
+    class AIDTField:
+        _struct = ('<4BI2BH', 12)
+        def __init__(self, tuple):
+            (self.aggression,# Aggression
+            self.confidence, # Confidence
+            self.energyLevel,# Energy Level
+            self.barterGold, # Barter gold
+            self.aiFlags,    # Flags
+            self.trainSkill, # Training skill
+            self.trainLevel, # Training level - Value is same as index into skills array below.
+            self.aiUnknown) = tuple # Unused?
+            self.aiFlags = CREA3Record.AIFlags(self.aiFlags)
+
+    class CSDTGroup:
+        def __init__(self, CSDT: IN32Field):
+            self.CSDT: IN32Field = CSDT # Soundtype
+            self.CSDI: REF1Field[SOUNRecord] = None # TESSound
+            self.CSDC: BYTEField = None # Chance
+
     MODL: MODLGroup # NIF Model
-    CNAM: STRVField # Sound Gen Creature
-    FNAM: STRVField # Creature name
-    NPDT: NPDTField # Creature data
-    FLAG: IN32Field # Creature Flags
-    SCRI: REFXField['SCPTRecord'] = None # Script
-    NPCOs: list[CNTOField] = [] # Item record
-    AIDT: AIDTField # AI data
-    AIs: list[AIGroup] = [] # AI packages
-    XSCL: FLTVField = None # Scale (optional), Only present if the scale is not 1.0
-    NPCSs: list[STRVField] = []
-    def __init__(self): super().__init__(); self.NPCOs = listx(); self.AIs = listx(); self.NPCSs = listx()
+    ACBS: STRVField # Configuration
+    FULL: STRVField # Full name
+    NIFZ: STRVField # NIF-files used by the creature
+    ACBS: ACBSField # Configuration
+    SNAMs: list[REFVField['FACTRecord']] = [] # Factions
+    INAM: REF1Field['LVLIRecord'] # Death Item
+    RNAM: BYTEField # Attack reach
+    SPLOs: list[STRVField] = [] # Spells
+    SCRI: REF1Field['SCPTRecord'] # Script
+    CNTOs: list[CNTOField[Record]] = [] # Items
+    PKIDs: list[REFSField['PACKRecord']] = [] # AI Packages
+    CSCR: REF1Field['CSTYRecord'] # Combat Style
+    CSCR: REF1Field['CREA4Record'] # Inherits Sounds from
+    CSDTs: list[CSDTGroup] = [] # Soundtypes
+    BNAM: FLTVField # Base Scale
+    TNAM: FLTVField # Turning Speed
+    WNAM: FLTVField # Foot Weight
+    NAM0: STRVField # Blood Spray
+    NAM1: STRVField # Blood Decal
+    KFFZ: STRVField # Optional Animation List
+    def __init__(self): super().__init__(); self.SNAMs = listx(); self.SPLOs = listx(); self.CNTOs = listx(); self.PKIDs = listx(); self.CSDTs = listx()
     
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
-        if r.format == FormType.TES3:
-            match type:
-                case FieldType.NAME: z = self.EDID = r.readSTRV(dataSize)
-                case FieldType.MODL: z = self.MODL = MODLGroup(r, dataSize)
-                case FieldType.CNAM: z = self.CNAM = r.readSTRV(dataSize)
-                case FieldType.FNAM: z = self.FNAM = r.readSTRV(dataSize)
-                case FieldType.NPDT: z = self.NPDT = r.readS(self.NPDTField, dataSize)
-                case FieldType.FLAG: z = self.FLAG = r.readS(IN32Field, dataSize)
-                case FieldType.SCRI: z = self.SCRI = REFXField[SCPTRecord](SCPTRecord, r, dataSize)
-                case FieldType.NPCO: z = self.NPCOs.addX(CNTOField(r, dataSize))
-                case FieldType.AIDT: z = self.AIDT = r.readS(self.AIDTField, dataSize)
-                case FieldType.AI_A | FieldType.AI_E | FieldType.AI_F | FieldType.AI_T | FieldType.AI_W: z = self.AIs.addX(CREA4Record.AIGroup(r, dataSize, type))
-                case FieldType.CNDT: z = self.AIs.last().CNDT = r.readSTRV(dataSize)
-                case FieldType.XSCL: z = self.XSCL = r.readS(FLTVField, dataSize)
-                case FieldType.NPCS: z = self.NPCSs.addX(r.readSTRV_ZPad(dataSize))
-                case _: z = Record._empty
-            return z
-        return None
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
+            case FieldType.FULL: z = self.FULL = r.readSTRV(dataSize)
+            case FieldType.MODL: z = self.MODL = MODLGroup(r, dataSize)
+            case FieldType.MODB: z = self.MODL.MODBField(r, dataSize)
+            case FieldType.MODT: z = self.MODL.MODTField(r, dataSize)
+            case FieldType.NIFZ: z = self.NIFZ = r.readSTRV(dataSize)
+            case FieldType.ACBS: z = self.ACBS = r.readS(self.ACBSField, dataSize)
+            case FieldType.SNAM: z = self.SNAMs.addX(REFVField[FACTRecord](FACTRecord, r, dataSize))
+            case FieldType.INAM: z = self.INAM = REF1Field[LVLIRecord](LVLIRecord, r, dataSize)
+            case FieldType.RNAM: z = self.RNAM = r.readS(BYTEField, dataSize)
+            case FieldType.SPLO: z = self.SPLOs.addX(r.readSTRV(dataSize))
+            case FieldType.SCRI: z = self.SCRI = REF1Field[SCPTRecord](SCPTRecord, r, dataSize)
+            case FieldType.CNTO: z = self.CNTOs.addX(CNTOField[Record](Record, r, dataSize))
+            case FieldType.PKID: z = self.PKIDs.addX(REFSField[PACKRecord](PACKRecord, r, dataSize))
+            case FieldType.ZNAM: z = self.ZNAM = REF1Field[CSTYRecord](CSTYRecord, r, dataSize)
+            case FieldType.CSCR: z = self.CSCR = REF1Field[CSTYRecord](CSTYRecord, r, dataSize)
+            case FieldType.CSDT: z = self.CSDTs.addX(CREA4Record.CSDTGroup(CSDT = r.readS(IN32Field, dataSize)))
+            case FieldType.CSDI: z = self.CSDTs.last().CSDI = REF1Field[SOUNRecord](SOUNRecord, r, dataSize)
+            case FieldType.CSDC: z = self.CSDTs.last().CSDC = r.readS(BYTEField, dataSize)
+            case FieldType.BNAM: z = self.BNAM = r.readS(FLTVField, dataSize)
+            case FieldType.TNAM: z = self.TNAM = r.readS(FLTVField, dataSize)
+            case FieldType.WNAM: z = self.WNAM = r.readS(FLTVField, dataSize)
+            case FieldType.NAM0: z = self.NAM0 = r.readSTRV(dataSize)
+            case FieldType.NAM1: z = self.NAM1 = r.readSTRV(dataSize)
+            case FieldType.KFFZ: z = self.KFFZ = r.readSTRV(dataSize)
+            case FieldType.NIFT: z = r.skip(dataSize) #TODO
+            case FieldType.AIDT: z = r.skip(dataSize) #TODO
+            case FieldType.DATA: z = r.skip(dataSize) #TODO
+            case _: z = Record._empty
+        return z
 # end::CREA4[]
 
 # dep: None
@@ -2397,7 +2463,7 @@ class EFSHRecord(Record):
             self.membraneShader_SourceBlendMode = r.readUInt32()
             self.membraneShader_BlendOperation = r.readUInt32()
             self.membraneShader_ZTestFunction = r.readUInt32()
-            self.fillTextureEffect_Color = r.readS(ByteColor4, dataSize)
+            self.fillTextureEffect_Color = r.readS(ByteColor4, 4)
             self.fillTextureEffect_AlphaFadeInTime = r.readSingle()
             self.fillTextureEffect_FullAlphaTime = r.readSingle()
             self.fillTextureEffect_AlphaFadeOutTime = r.readSingle()
@@ -2407,7 +2473,7 @@ class EFSHRecord(Record):
             self.fillTextureEffect_TextureAnimationSpeed_U = r.readSingle()
             self.fillTextureEffect_TextureAnimationSpeed_V = r.readSingle()
             self.edgeEffect_FallOff = r.readSingle()
-            self.edgeEffect_Color = r.readS(ByteColor4, dataSize)
+            self.edgeEffect_Color = r.readS(ByteColor4, 4)
             self.edgeEffect_AlphaFadeInTime = r.readSingle()
             self.edgeEffect_FullAlphaTime = r.readSingle()
             self.edgeEffect_AlphaFadeOutTime = r.readSingle()
@@ -2441,9 +2507,9 @@ class EFSHRecord(Record):
             self.particleShader_ScaleKey2 = r.readSingle()
             self.particleShader_ScaleKey1Time = r.readSingle()
             self.particleShader_ScaleKey2Time = r.readSingle()
-            self.colorKey1_Color = r.readS(ByteColor4, dataSize)
-            self.colorKey2_Color = r.readS(ByteColor4, dataSize)
-            self.colorKey3_Color = r.readS(ByteColor4, dataSize)
+            self.colorKey1_Color = r.readS(ByteColor4, 4)
+            self.colorKey2_Color = r.readS(ByteColor4, 4)
+            self.colorKey3_Color = r.readS(ByteColor4, 4)
             self.colorKey1_ColorAlpha = r.readSingle()
             self.colorKey2_ColorAlpha = r.readSingle()
             self.colorKey3_ColorAlpha = r.readSingle()
@@ -3295,8 +3361,8 @@ class LOCKRecord(Record, IHaveMODL):
 class LSCRRecord(Record):
     class LNAMField:
         def __init__(self, r: Reader, dataSize: int):
-            self.direct: RefX[Record] = RefX[Record](Record, r.readUInt32())
-            self.indirectWorld: RefX[WRLDRecord] = RefX[WRLDRecord](WRLDRecord, r.readUInt32())
+            self.direct: Ref[Record] = Ref[Record](Record, r.readUInt32())
+            self.indirectWorld: Ref[WRLDRecord] = Ref[WRLDRecord](WRLDRecord, r.readUInt32())
             self.indirectGridX: int = r.readInt16()
             self.indirectGridY: int = r.readInt16()
 
@@ -3610,8 +3676,8 @@ class MISCRecord(Record, IHaveMODL):
 
 # dep: CREA3Record, SCPTRecord
 # NPC_.Non-Player Character - 3450 - tag::NPC_3[]
-class NPC_3Record(Record, IHaveMODL):
-    class NPC_Flags(Flag):
+class NPC_3Record(CREA3Record):
+    class NPC_3Flags(Flag):
         Female = 0x0001
         Essential = 0x0002
         Respawn = 0x0004
@@ -3636,28 +3702,17 @@ class NPC_3Record(Record, IHaveMODL):
             self.DODT: c = DODT # Cell Travel Destination
             self.DNAM: STRVField = None # Cell name for previous DODT, if interior
 
-    FULL: STRVField # NPC name
-    MODL: MODLGroup # Animation
     RNAM: STRVField # Race Name
     ANAM: STRVField # Faction name
     BNAM: STRVField # Head model
-    CNAM: STRVField # Class name
     KNAM: STRVField # Hair model
-    NPDT: NPDTField # NPC Data
-    FLAG: INTVField # NPC Flags
-    NPCOs: list[CREA3Record.CNTOField] = [] # NPC item
-    NPCSs: list[STRVField] = [] # NPC spell
-    AIDT: CREA3Record.AIDTField # AI data
-    AIs: list[CREA3Record.AIGroup] = [] # AI packages
     DODTs: list[DODTGroup] = [] # Cell Travel Destination
-    XSCL: FLTVField = None # Scale (optional) Only present if the scale is not 1.0
-    SCRI: REFXField['SCPTRecord'] = None # Unknown
-    def __init__(self): super().__init__(); self.NPCOs = listx(); self.NPCSs = listx(); self.AIs = listx(); self.DODTs = listx()
+    def __init__(self): super().__init__(); self.DODTs = listx()
 
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
-            case FieldType.EDID | FieldType.NAME: z = self.EDID = r.readSTRV(dataSize)
-            case FieldType.FULL | FieldType.FNAM: z = self.FULL = r.readSTRV(dataSize)
+            case FieldType.NAME: z = self.EDID = r.readSTRV(dataSize)
+            case FieldType.FNAM: z = self.FULL = r.readSTRV(dataSize)
             case FieldType.MODL: z = self.MODL = MODLGroup(r, dataSize)
             case FieldType.MODB: z = self.MODL.MODBField(r, dataSize)
             case FieldType.RNAM: z = self.RNAM = r.readSTRV(dataSize)
@@ -3665,9 +3720,9 @@ class NPC_3Record(Record, IHaveMODL):
             case FieldType.BNAM: z = self.BNAM = r.readSTRV(dataSize)
             case FieldType.CNAM: z = self.CNAM = r.readSTRV(dataSize)
             case FieldType.KNAM: z = self.KNAM = r.readSTRV(dataSize)
-            case FieldType.NPDT: z = self.NPDT = self.NPDTField(r, dataSize)
-            case FieldType.FLAG: z = self.FLAG = r.readINTV(dataSize)
-            case FieldType.NPCO: z = self.NPCOs.addX(CREA3Record.CNTOField(r, dataSize))
+            case FieldType.NPDT: z = self.NPDT = r.readS(self.NPDT52Field, dataSize) if dataSize == 52 else (r.readS(self.NPDT12Field, dataSize) if dataSize == 12 else None)
+            case FieldType.FLAG: z = self.FLAG = r.readS(IN32Field, dataSize)
+            case FieldType.NPCO: z = self.NPCOs.addX(CNTOXField(Record, r, dataSize))
             case FieldType.NPCS: z = self.NPCSs.addX(r.readSTRV_ZPad(dataSize))
             case FieldType.AIDT: z = self.AIDT = r.readS(CREA3Record.AIDTField, dataSize)
             case FieldType.AI_A | FieldType.AI_E | FieldType.AI_F | FieldType.AI_T | FieldType.AI_W: z = self.AIs.addX(CREA3Record.AIGroup(r, dataSize, type))
@@ -3680,23 +3735,105 @@ class NPC_3Record(Record, IHaveMODL):
         return z
 # end::NPC_3[]
 
+# NPC_.Non-Player Character - 3450 - tag::NPC_4[]
+class NPC_4Record(CREA4Record):
+    class NPC_4Flags(Flag):
+        Female = 0x0001
+        Essential = 0x0002
+        Respawn = 0x0008
+        Autocalc = 0x0010
+        PCLevelOffset = 0x000080
+        NoLowLevelProcessing = 0x000200
+        NoRumors = 0x002000
+        Summonable = 0x004000
+        NoPersuasion = 0x008000
+        CanCorpseCheck = 0x100000
+
+    class DATAField:
+        _struct = ('<21si8s', 33)
+        def __init__(self, tuple):
+            (self.skills,
+            self.health,
+            self.attributes) = tuple
+
+    class HCLRField:
+        _struct = ('<4B', 4)
+        def __init__(self, tuple):
+            (self.red,
+            self.green,
+            self.blue,
+            self.custom) = tuple
+
+    RNAM: REF1Field['RACERecord'] # Race
+    AIDT: CREA4Record.AIDTField # AI Data
+    CNAM: REFXField[CLASRecord] # Class
+    DATA: DATAField # Stats
+    HNAM: REFXField[HAIRRecord] # Hair
+    LNAM: FLTVField # Hair length
+    ENAM: REFXField[EYESRecord] # Eyes
+    HCLR: HCLRField # Hair color
+    FGGS: BYTVField # FaceGen Geometry-Symmetric
+    FGGA: BYTVField # FaceGen Geometry-Asymmetric
+    FGTS: BYTVField # FaceGen Texture-Symmetic
+    FNAM: FLTVField # FaceGen Texture-Symmetic
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
+            case FieldType.FULL: z = self.FULL = r.readSTRV(dataSize)
+            case FieldType.MODL: z = self.MODL = MODLGroup(r, dataSize)
+            case FieldType.MODB: z = self.MODL.MODBField(r, dataSize)
+            case FieldType.ACBS: z = self.ACBS = r.readS(CREA4Record.ACBSField, dataSize)
+            case FieldType.SNAM: z = self.SNAMs.addX(REFVField(FACTRecord, r, dataSize))
+            case FieldType.INAM: z = self.INAM = REF1Field(LVLIRecord, r, dataSize)
+            case FieldType.RNAM: z = self.RNAM = REF1Field(RACERecord, r, dataSize)
+            case FieldType.SPLO: z = self.SPLOs.addX(r.readSTRV(dataSize))
+            case FieldType.SCRI: z = self.SCRI = REF1Field[SCPTRecord](SCPTRecord, r, dataSize)
+            case FieldType.CNTO: z = self.CNTOs.addX(CNTOField(Record, r, dataSize))
+            case FieldType.AIDT: z = self.AIDT = r.readS(CREA4Record.AIDTField, dataSize)
+            case FieldType.PKID: z = self.PKIDs.addX(REFSField[PACKRecord](PACKRecord, r, dataSize))
+            case FieldType.CNAM: z = self.CNAM = REFXField[CLASRecord](CLASRecord, r, dataSize)
+            case FieldType.AIDT: z = self.DATA = r.readS(DATAField, dataSize)
+            case FieldType.HNAM: z = self.HNAM = REFXField[HAIRRecord](HAIRRecord, r, dataSize)
+            case FieldType.LNAM: z = self.LNAM = r.readS(FLTVField, dataSize)
+            case FieldType.ENAM: z = self.ENAM = REFXField[EYESRecord](EYESRecord, r, dataSize)
+            case FieldType.HCLR: z = self.HCLR = r.readS(NPC_4Record.HCLRField, dataSize)
+            case FieldType.ZNAM: z = self.ZNAM = REF1Field[CSTYRecord](CSTYRecord, r, dataSize)
+            case FieldType.FGGS: z = self.FGGS = r.readBYTV(dataSize)
+            case FieldType.FGGA: z = self.FGGA = r.readBYTV(dataSize)
+            case FieldType.FGTS: z = self.FGTS = r.readBYTV(dataSize)
+            case FieldType.FNAM: z = self.FNAM = r.readS(UI16Field, dataSize)
+            case FieldType.KFFZ: z = self.KFFZ = r.readSTRV(dataSize)
+            case FieldType.NIFT: z = r.skip(dataSize) #TODO
+            case FieldType.AIDT: z = r.skip(dataSize) #TODO
+            case FieldType.DATA: z = r.skip(dataSize) #TODO
+            case _: z = Record._empty
+        return z
+# end::NPC_4[]
+
 # dep: SCPTRecord
 # PACK.AI Package - 0450 - tag::PACK[]
 class PACKRecord(Record):
-    _struct = ('<HB', 3)
     class PKDTField:
+        _struct = { 4: '<I', 8: '<I4B', 16: '<I4BI' }
         def __init__(self, tuple):
-            (self.flags,
-            self.type) = tuple
-        @staticmethod
-        def skip(r: Reader, dataSize: int) -> any: return r.skip(dataSize - 3) # Unused
-
-    class PLDTField:
-        _struct = ('<iIi', 12)
-        def __init__(self, r: Reader, dataSize: int):
-            (self.type,
-            self.target,
-            self.radius) = tuple
+            match len(tuple):
+                case 1:
+                    self.flags = tuple
+                case 5:
+                    (self.flags,
+                    self.packageType,
+                    self.interruptOverride,
+                    self.preferredSpeed,
+                    self.unknown) = tuple
+                case 6:
+                    (self.flags,
+                    self.packageType,
+                    self.interruptOverride,
+                    self.preferredSpeed,
+                    self.unknown,
+                    self.interruptFlags) = tuple
 
     class PSDTField:
         _struct = ('<3Bbi', 8)
@@ -3706,6 +3843,13 @@ class PACKRecord(Record):
             self.date,
             self.time,
             self.duration) = tuple
+
+    class PLDTField:
+        _struct = ('<iIi', 12)
+        def __init__(self, r: Reader, dataSize: int):
+            (self.type,
+            self.target,
+            self.radius) = tuple
 
     class PTDTField:
         _struct = ('<iIi', 12)
@@ -3724,7 +3868,7 @@ class PACKRecord(Record):
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
-            case FieldType.PKDT: z = self.PKDT = r.readS(self.PKDTField, dataSize); PKDTField.skip(r, dataSize)
+            case FieldType.PKDT: z = self.PKDT = r.readS(self.PKDTField, dataSize)
             case FieldType.PLDT: z = self.PLDT = r.readS(self.PLDTField, dataSize)
             case FieldType.PSDT: z = self.PSDT = r.readS(self.PSDTField, dataSize)
             case FieldType.PTDT: z = self.PTDT = r.readS(self.PTDTField, dataSize)
@@ -3847,10 +3991,10 @@ class QUSTRecord(Record):
     DATA: DATAField # Icon
     SCRI: REFXField['SCPTRecord'] # Script Name
     SCHRs: list['SCPTRecord.SCHRField'] = [] # Script Data
-    SCDA: BYTVField # Compiled Script
-    SCTX: STRVField # Script Source
+    SCDAs: list['SCPTRecord.SCDAField'] = [] # Compiled Script
+    SCTXs: list[STRVField] = [] # Script Source
     SCROs: list[REFXField[Record]] = [] # Global variable reference
-    def __init__(self): super().__init__(); self.SCHRs = listx() self.SCROs = listx()
+    def __init__(self): super().__init__(); self.SCHRs = listx(); self.SCDAs = listx(); self.SCTXs = listx(); self.SCROs = listx()
 
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
@@ -3865,8 +4009,8 @@ class QUSTRecord(Record):
             case FieldType.CNAM: z = r.skip(dataSize)
             case FieldType.QSTA: z = r.skip(dataSize)
             case FieldType.SCHR: z = self.SCHRs.addX(SCPTRecord.SCHRField(r, dataSize))
-            case FieldType.SCDA: z = self.SCDA = r.readBYTV(dataSize)
-            case FieldType.SCTX: z = self.SCTX = r.readSTRV(dataSize)
+            case FieldType.SCDA: z = self.SCDAs.addX(SCPTRecord.SCDAField(r, dataSize))
+            case FieldType.SCTX: z = self.SCTXs.addX(r.readSTRV(dataSize))
             case FieldType.SCRO: z = self.SCROs.addX(REFXField[Record](Record, r, dataSize))
             case _: z = Record._empty
         return z
@@ -4244,8 +4388,9 @@ class REFRRecord(Record):
 # dep: WRLDRecord, ^GRASRecord, GLOBRecord, SOUNRecord, WTHRRecord
 # REGN.Region - 3450 - tag::REGN[]
 class REGNRecord(Record):
+    class REGNType(Enum): None_ = 0; One = 1; Objects = 2; Weather = 3; Map = 4; Landscape = 5; Grass = 6; Sound = 7
+
     class RDATField:
-        class REGNType(Enum): Objects = 2; Weather = 3; Map = 4; Landscape = 5; Grass = 6; Sound = 7
         def __init__(self, r: Reader = None, dataSize: int = 0, RDSDs: list['RDGSField'] = None):
             self.type: int = None
             self.flags: REGNType = None
@@ -4259,7 +4404,7 @@ class REGNRecord(Record):
             self.RDWTs: list['RDWTField'] = None # Weather Types
             if not r: return
             self.type = r.readUInt32()
-            self.flags = REGNType(r.readByte())
+            self.flags = REGNRecord.REGNType(r.readByte())
             self.priority = r.readByte()
             r.skip(2) # Unused
 
@@ -4282,7 +4427,7 @@ class REGNRecord(Record):
         angleVariance: Int3
         vertexShading: ByteColor4 # RGB + Shading radius (0 - 200) %
         def __init__(self, r: Reader, dataSize: int):
-            self.object = RefX[Record](Record, r.readUInt32())
+            self.object = Ref[Record](Record, r.readUInt32())
             self.parentIdx = r.ReadUInt16()
             r.skip(2) # Unused
             self.density = r.readSingle()
@@ -4303,9 +4448,9 @@ class REGNRecord(Record):
 
     class RDGSField:
         def __repr__(self): return f'{self.grass}'
-        grass: RefX[GRASRecord] 
+        grass: Ref[GRASRecord] 
         def __init__(self, r: Reader, dataSize: int):
-            self.grass = RefX[GRASRecord](GRASRecord, r.readUInt32())
+            self.grass = Ref[GRASRecord](GRASRecord, r.readUInt32())
             r.skip(4) # Unused
 
     class RDSDField:
@@ -4325,12 +4470,10 @@ class REGNRecord(Record):
 
     class RDWTField:
         def __repr__(self): return f'{self.weather}'
-        @staticmethod
-        def sizeOf(format: FormType) -> int: 8 if format == FormType.TES4 else 12
         def __init__(self, r: Reader, dataSize: int):
-            self.weather: RefX[WTHRRecord] = RefX[WTHRRecord](WTHRRecord, r.readUInt32())
+            self.weather: Ref[WTHRRecord] = Ref[WTHRRecord](WTHRRecord, r.readUInt32())
             self.chance: int = r.readUInt32()
-            self.global_: RefX[GLOBRecord] = RefX[GLOBRecord](GLOBRecord, r.readUInt32()) if r.format == FormType.TES5 else RefX[GLOBRecord](GLOBRecord)
+            self.global_: Ref[GLOBRecord] = Ref[GLOBRecord](GLOBRecord, r.readUInt32()) if r.format == FormType.TES5 else Ref[GLOBRecord](GLOBRecord)
 
     # TES3
     class WEATField:
@@ -4371,7 +4514,7 @@ class REGNRecord(Record):
             case FieldType.ICON | FieldType.BNAM: z = self.ICON = r.readSTRV(dataSize)
             case FieldType.RCLR | FieldType.CNAM: z = self.RCLR = r.readS(CREFField, dataSize)
             case FieldType.SNAM: z = self.RDATs.addX(self.RDATField(RDSDs = [self.RDSDField(r, dataSize)]))
-            case FieldType.RPLI: z = self.RPLIs.addX(RPLIField(r, dataSize))
+            case FieldType.RPLI: z = self.RPLIs.addX(REGNRecord.RPLIField(r, dataSize))
             case FieldType.RPLD: z = self.RPLIs.last().RPLDField(r, dataSize)
             case FieldType.RDAT: z = self.RDATs.addX(self.RDATField(r, dataSize))
             case FieldType.RDOT: z = self.RDATs.last().RDOTs = r.readFArray(lambda z: self.RDOTField(r, dataSize), dataSize // 52)
@@ -4379,7 +4522,7 @@ class REGNRecord(Record):
             case FieldType.RDGS: z = self.RDATs.last().RDGSs = r.readFArray(lambda z: self.RDGSField(r, dataSize), dataSize // 8)
             case FieldType.RDMD: z = self.RDATs.last().RDMD = r.readS(UI32Field, dataSize)
             case FieldType.RDSD: z = self.RDATs.last().RDSDs = r.readFArray(lambda z: self.RDSDField(r, dataSize), dataSize // 12)
-            case FieldType.RDWT: z = self.RDATs.last().RDWTs = r.readFArray(lambda z: self.RDWTField(r, dataSize), dataSize // self.RDWTField.sizeOf(r.format))
+            case FieldType.RDWT: z = self.RDATs.last().RDWTs = r.readFArray(lambda z: self.RDWTField(r, dataSize), dataSize // (8 if format == FormType.TES4 else 12))
             case _: z = Record._empty
         return z
 # end::REGN[]
@@ -4478,18 +4621,17 @@ class SCPTRecord(Record):
     # TES4
     class SCHRField:
         def __repr__(self): return f'{self.refCount}'
-        refCount: int
-        compiledSize: int
-        variableCount: int
-        type: int # 0x000 = Object, 0x001 = Quest, 0x100 = Magic Effect
         def __init__(self, r: Reader, dataSize: int):
-            r.skip(4) # Unused
-            self.refCount = r.readUInt32()
-            self.compiledSize = r.readUInt32()
-            self.variableCount = r.readUInt32()
-            self.type = r.readUInt32()
-            if dataSize == 20: return
-            r.skip(dataSize - 20)
+            self.refCount: int = r.skip(4).readUInt32() # 4:Unused
+            self.compiledSize: int = r.readUInt32()
+            self.variableCount: int = r.readUInt32()
+            self.type: int = r.readUInt32() # 0x000 = Object, 0x001 = Quest, 0x100 = Magic Effect
+            r.skip(dataSize - 20 if dataSize > 20 else 0)
+            
+    class SCDAField:
+        def __repr__(self): return f'{self.data}'
+        def __init__(self, r: Reader, dataSize: int):
+            self.data = r.readBytes(dataSize)
 
     class SLSDField:
         def __repr__(self): return f'{self.idx}:{self.variableName}'
@@ -5024,9 +5166,9 @@ class WATRRecord(Record):
             self.fogDistance_NearPlane = r.readSingle()
             if dataSize == 42: self.damage = r.readUInt16(); return
             self.fogDistance_FarPlane = r.readSingle()
-            self.shallowColor = r.readS(ByteColor4, dataSize)
-            self.deepColor = r.readS(ByteColor4, dataSize)
-            self.reflectionColor = r.readS(ByteColor4, dataSize)
+            self.shallowColor = r.readS(ByteColor4)
+            self.deepColor = r.readS(ByteColor4)
+            self.reflectionColor = r.readS(ByteColor4)
             self.textureBlend = r.readByte()
             r.skip(3) # Unused
             if dataSize == 62: self.damage = r.readUInt16(); return
@@ -5246,7 +5388,7 @@ class WTHRRecord(Record, IHaveMODL):
             self.treeDimmer) = tuple
 
     class DATAField:
-        _struct = ('<B3c6f', 24)
+        _struct = ('<15B', 15)
         def __init__(self, tuple):
             lightningColor = self.lightningColor = ByteColor4()
             (self.windSpeed,
@@ -5261,8 +5403,8 @@ class WTHRRecord(Record, IHaveMODL):
             self.thunderLightning_EndFadeOut,
             self.thunderLightning_Frequency,
             self.weatherClassification,
-            lightningColor.x, lightningColor.y) = tuple
-        def fill(self) -> None: self. lightningColor.a = 255
+            lightningColor.x, lightningColor.y, lightningColor.z) = tuple
+        def fill(self) -> None: self.lightningColor.a = 255
 
     class SNAMField:
         def __init__(self, r: Reader, dataSize: int):
@@ -5290,7 +5432,7 @@ class WTHRRecord(Record, IHaveMODL):
             case FieldType.FNAM: z = self.FNAM = r.readS(self.FNAMField, dataSize)
             case FieldType.HNAM: z = self.HNAM = r.readS(self.HNAMField, dataSize)
             case FieldType.DATA: z = self.DATA = r.readS(self.DATAField, dataSize); self.DATA.fill()
-            case FieldType.SNAM: z = self.SNAMs.addX(SNAMField(r, dataSize))
+            case FieldType.SNAM: z = self.SNAMs.addX(WTHRRecord.SNAMField(r, dataSize))
             case _: z = Record._empty
         return z
 # end::WTHR[]

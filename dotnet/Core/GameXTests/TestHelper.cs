@@ -15,7 +15,7 @@ public static class TestHelper {
     static readonly Family familyCyanide = GetFamily("Cyanide");
     static readonly Family familyFrontier = GetFamily("Frontier");
     static readonly Family familyHpl = GetFamily("Hpl");
-    static readonly Family familyId = GetFamily("Id");
+    static readonly Family familyId = GetFamily("Item");
     static readonly Family familyIW = GetFamily("IW");
     static readonly Family familyLith = GetFamily("Lith");
     static readonly Family familyOrigin = GetFamily("Origin");

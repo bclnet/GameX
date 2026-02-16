@@ -647,7 +647,6 @@ public partial class Record {
     public EsmFlags Flags;
     public bool Compressed => (Flags & EsmFlags.Compressed) != 0;
     public uint Id;
-    public STRVField EDID; // Editor ID
 
     HashSet<FieldType> Ds = [];
     protected virtual HashSet<FieldType> DF3 => [];
@@ -715,8 +714,8 @@ public partial class Record {
             }
             else if (fieldType == FieldType.OFST && Type == WRLD) { r.Seek(end); continue; }
             var tell = r.Tell();
-            if (ReadField(r, fieldType, fieldDataSize) == Empty) { Log.Info($"Unsupported ESM record type: {Type}:{fieldType}"); r.Skip(fieldDataSize); continue; }
-            r.EnsureAtEnd(tell + fieldDataSize, $"Failed reading {Type}:{fieldType} field data at offset {tell} in {r.BinPath} of {r.Tell() - tell - fieldDataSize}");
+            if (ReadField(r, fieldType, fieldDataSize) == Empty) { Log.Info($"Unsupported ESM record type: {Type}Record:{fieldType}"); r.Skip(fieldDataSize); continue; }
+            r.EnsureAtEnd(tell + fieldDataSize, $"Failed reading {Type}Record:{fieldType} field data at offset {tell} in {r.BinPath} of {r.Tell() - tell - fieldDataSize}");
         }
         //Log.Info($"END");
         r.EnsureAtEnd(end, $"Failed reading {Type} record data at offset {start} in {r.BinPath}");
@@ -735,14 +734,18 @@ public partial class Record {
     }
 }
 
-[StructLayout(LayoutKind.Sequential, Pack = 1)]
+//[StructLayout(LayoutKind.Sequential, Pack = 1)]
 public readonly struct Ref<TRecord>(uint id) where TRecord : Record {
     public override readonly string ToString() => $"{Type}:{Id}";
     public static (string, int) Struct = ("<I", 4);
     public readonly uint Id = id;
     public readonly string Type => typeof(TRecord).Name[..4];
 }
-
+public readonly struct RefS<TRecord>(string name) where TRecord : Record {
+    public override readonly string ToString() => $"{Type}:{Name}";
+    public readonly string Name = name;
+    public readonly string Type => typeof(TRecord).Name[..4];
+}
 public readonly struct RefX<TRecord> where TRecord : Record {
     public override string ToString() => $"{Type}:{Name}{Id}";
     public readonly uint Id;
@@ -952,18 +955,26 @@ public struct INTVField { public override readonly string ToString() => $"{Value
 public struct CREFField { public override readonly string ToString() => $"{Color}"; public static (string, int) Struct = ("<4c", 4); public ByteColor4 Color; }
 public struct BYTVField(byte[] value) { public override readonly string ToString() => $"BYTS"; public byte[] Value = value; }
 public struct UNKNField(byte[] value) { public override readonly string ToString() => $"UNKN"; public byte[] Value = value; }
-public struct CNTOField {
+
+public struct REF1Field<TRecord>(Reader r, int dataSize) where TRecord : Record { public override readonly string ToString() => $"{Item}"; public Ref<TRecord> Item = new(r.ReadUInt32()); }
+public struct REF2Field<TRecord>(Reader r, int dataSize) where TRecord : Record { public override readonly string ToString() => $"{Item1}z{Item2}"; public Ref<TRecord> Item1 = new(r.ReadUInt32()); public Ref<TRecord> Item2 = new(r.ReadUInt32()); }
+public struct REFSField<TRecord>(Reader r, int dataSize) where TRecord : Record { public override readonly string ToString() => $"{Item}"; public RefS<TRecord> Item = new(r.ReadFUString(dataSize)); }
+public struct REFXField<TRecord>(Reader r, int dataSize) where TRecord : Record { public override readonly string ToString() => $"{Item}"; public RefX<TRecord> Item = dataSize == 4 ? new RefX<TRecord>(r.ReadUInt32()) : new RefX<TRecord>(r.ReadFAString(dataSize)); public string SetName(string name) => (Item = Item.SetName(name)).Name; }
+public struct REFVField<TRecord>(Reader r, int dataSize) where TRecord : Record { public override readonly string ToString() => $"{Item}:{Value}"; public Ref<TRecord> Item = new(r.ReadUInt32()); public byte Value = (z: r.ReadByte(), r.Skip(3)).z; }
+public struct CNTOField<TRecord>(Reader r, int dataSize) where TRecord : Record { public override readonly string ToString() => $"{Item}:{Count}"; public Ref<TRecord> Item = new(r.ReadUInt32()); public uint Count = r.ReadUInt32(); }
+public struct CNTOXField<TRecord> {
     public override readonly string ToString() => $"{Item}";
-    public uint ItemCount; // Number of the item
     public RefX<Record> Item; // The ID of the item
-    public CNTOField(Reader r, int dataSize) {
-        if (r.Format == TES3) { ItemCount = r.ReadUInt32(); Item = new RefX<Record>(r.ReadFAString(32)); }
-        else { Item = new RefX<Record>(r.ReadUInt32()); ItemCount = r.ReadUInt32(); }
+    public uint Count; // Number of the item
+    public CNTOXField(Reader r, int dataSize) {
+        if (r.Format == TES3) { Count = r.ReadUInt32(); Item = new RefX<Record>(r.ReadFAString(32)); }
+        else { Item = new RefX<Record>(r.ReadUInt32()); Count = r.ReadUInt32(); }
     }
 }
-public struct REF1Field<TRecord>(Reader r, int dataSize) where TRecord : Record { public override readonly string ToString() => $"{Value}"; public Ref<TRecord> Value = new(r.ReadUInt32()); }
-public struct REF2Field<TRecord>(Reader r, int dataSize) where TRecord : Record { public override readonly string ToString() => $"{Value1}z{Value2}"; public Ref<TRecord> Value1 = new(r.ReadUInt32()); public Ref<TRecord> Value2 = new(r.ReadUInt32()); }
-public struct REFXField<TRecord>(Reader r, int dataSize) where TRecord : Record { public override readonly string ToString() => $"{Value}"; public RefX<TRecord> Value = dataSize == 4 ? new RefX<TRecord>(r.ReadUInt32()) : new RefX<TRecord>(r.ReadFAString(dataSize)); public string SetName(string name) => (Value = Value.SetName(name)).Name; }
+
+partial class Record {
+    public STRVField EDID; // Editor ID
+}
 
 #endregion
 
@@ -1026,7 +1037,7 @@ public class AACTRecord : Record {
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/ACRE"/>
 /// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/ACHR.html"/>
 public class ACRERecord : Record {
-    public REFXField<Record> NAME; // Base
+    public REF1Field<Record> NAME; // Base
     public REFRRecord.DATAField DATA; // Position/Rotation
     public REFRRecord.XRGDField[] XRGDs; // Ragdoll Data (optional)
     public REFRRecord.XESPField? XESP; // Enable Parent (optional)
@@ -1035,7 +1046,7 @@ public class ACRERecord : Record {
 
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
-        FieldType.NAME => NAME = new REFXField<Record>(r, dataSize),
+        FieldType.NAME => NAME = new REF1Field<Record>(r, dataSize),
         FieldType.DATA => DATA = r.ReadS<REFRRecord.DATAField>(dataSize),
         FieldType.XRGD => XRGDs = r.ReadSArray<REFRRecord.XRGDField>(dataSize / 28),
         FieldType.XESP => XESP = new REFRRecord.XESPField(r, dataSize),
@@ -1054,27 +1065,27 @@ public class ACRERecord : Record {
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/ACHR"/>
 /// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/ACHR.html"/>
 public class ACHRRecord : Record {
-    public REFXField<Record> NAME; // Base
+    public REF1Field<Record> NAME; // Base
     public REFRRecord.DATAField DATA; // Position/Rotation
     public REFRRecord.XRGDField[] XRGDs; // Ragdoll Data (optional)
     public REFRRecord.XESPField? XESP; // Enable Parent (optional)
     public REFXField<CELLRecord>? XPCI; // Unused (optional)
     public BYTVField? XLOD; // Distant LOD Data (optional)
-    public REFXField<REFRRecord>? XMRC; // Merchant Container (optional)
-    public REFXField<ACRERecord>? XHRS; // Horse (optional)
+    public REF1Field<REFRRecord>? XMRC; // Merchant Container (optional)
+    public REF1Field<ACRERecord>? XHRS; // Horse (optional)
     public FLTVField? XSCL; // Scale (optional)
 
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
-        FieldType.NAME => NAME = new REFXField<Record>(r, dataSize),
+        FieldType.NAME => NAME = new REF1Field<Record>(r, dataSize),
         FieldType.DATA => DATA = r.ReadS<REFRRecord.DATAField>(dataSize),
         FieldType.XRGD => XRGDs = r.ReadSArray<REFRRecord.XRGDField>(dataSize / 28),
         FieldType.XESP => XESP = new REFRRecord.XESPField(r, dataSize),
         FieldType.XPCI => XPCI = new REFXField<CELLRecord>(r, dataSize),
         FieldType.FULL => XPCI.Value.SetName(r.ReadFAString(dataSize)),
         FieldType.XLOD => XLOD = r.ReadBYTV(dataSize),
-        FieldType.XMRC => XMRC = new REFXField<REFRRecord>(r, dataSize),
-        FieldType.XHRS => XHRS = new REFXField<ACRERecord>(r, dataSize),
+        FieldType.XMRC => XMRC = new REF1Field<REFRRecord>(r, dataSize),
+        FieldType.XHRS => XHRS = new REF1Field<ACRERecord>(r, dataSize),
         FieldType.XSCL => XSCL = r.ReadS<FLTVField>(dataSize),
         _ => Empty,
     };
@@ -1221,7 +1232,7 @@ public class AMMORecord : Record, IHaveMODL {
     public MODLGroup MODL { get; set; } // Model
     public STRVField FULL; // Item Name
     public FILEField? ICON; // Male Icon (optional)
-    public REFXField<ENCHRecord>? ENAM; // Enchantment ID (optional)
+    public REF1Field<ENCHRecord>? ENAM; // Enchantment ID (optional)
     public IN16Field? ANAM; // Enchantment Points (optional)
     public DATAField DATA; // Ammo Data
 
@@ -1232,7 +1243,7 @@ public class AMMORecord : Record, IHaveMODL {
         FieldType.MODT => MODL.MODTField(r, dataSize),
         FieldType.FULL => FULL = r.ReadSTRV(dataSize),
         FieldType.ICON => ICON = r.ReadFILE(dataSize),
-        FieldType.ENAM => ENAM = new REFXField<ENCHRecord>(r, dataSize),
+        FieldType.ENAM => ENAM = new REF1Field<ENCHRecord>(r, dataSize),
         FieldType.ANAM => ANAM = r.ReadS<IN16Field>(dataSize),
         FieldType.DATA => DATA = r.ReadS<DATAField>(dataSize),
         _ => Empty,
@@ -1247,13 +1258,13 @@ public class AMMORecord : Record, IHaveMODL {
 /// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/ANIO.html"/>
 public class ANIORecord : Record, IHaveMODL {
     public MODLGroup MODL { get; set; } // Model
-    public REFXField<IDLERecord>? DATA; // IDLE Animation
+    public REF1Field<IDLERecord>? DATA; // IDLE Animation
 
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.MODL => MODL = new MODLGroup(r, dataSize),
         FieldType.MODB => MODL.MODBField(r, dataSize),
-        FieldType.DATA => DATA = new REFXField<IDLERecord>(r, dataSize),
+        FieldType.DATA => DATA = new REF1Field<IDLERecord>(r, dataSize),
         _ => Empty,
     };
 }
@@ -2038,7 +2049,7 @@ public class CONTRecord : Record, IHaveMODL {
     public STRVField FULL; // Container Name
     public DATAField DATA; // Container Data
     public REFXField<SCPTRecord>? SCRI;
-    public List<CNTOField> CNTOs = [];
+    public List<CNTOXField<Record>> CNTOs = [];
     // TES4
     public REFXField<SOUNRecord> SNAM; // Open sound
     public REFXField<SOUNRecord> QNAM; // Close sound
@@ -2053,7 +2064,7 @@ public class CONTRecord : Record, IHaveMODL {
         FieldType.FULL or FieldType.FNAM => FULL = r.ReadSTRV(dataSize),
         FieldType.DATA or FieldType.CNDT => DATA = new DATAField(r, dataSize),
         FieldType.FLAG => DATA.FLAGField(r, dataSize),
-        FieldType.CNTO or FieldType.NPCO => CNTOs.AddX(new CNTOField(r, dataSize)),
+        FieldType.CNTO or FieldType.NPCO => CNTOs.AddX(new CNTOXField<Record>(r, dataSize)),
         FieldType.SCRI => SCRI = new REFXField<SCPTRecord>(r, dataSize),
         FieldType.SNAM => SNAM = new REFXField<SOUNRecord>(r, dataSize),
         FieldType.QNAM => QNAM = new REFXField<SOUNRecord>(r, dataSize),
@@ -2122,7 +2133,7 @@ public unsafe class CREA3Record : Record, IHaveMODL {
         public byte Endurance;
         public byte Personality;
         public byte Luck;
-        public byte[] Skills;
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 27)] public byte[] Skills;
         public byte Reputation;
         public short Health;
         public short SpellPts;
@@ -2147,29 +2158,30 @@ public unsafe class CREA3Record : Record, IHaveMODL {
         public int Gold;
     }
 
+    [Flags]
+    public enum AIFlags : uint {
+        Weapons = 0x00001,
+        Armor = 0x00002,
+        Clothing = 0x00004,
+        Books = 0x00008,
+        Ingrediant = 0x00010,
+        Picks = 0x00020,
+        Probes = 0x00040,
+        Lights = 0x00080,
+        Apparatus = 0x00100,
+        Repair = 0x00200,
+        Misc = 0x00400, // Miscellaneous
+        Spells = 0x00800,
+        MagicItems = 0x01000,
+        Potions = 0x02000,
+        Training = 0x04000,
+        Spellmaking = 0x08000,
+        Recharge = 0x10000, // Enchanting
+        RepairItem = 0x20000
+    }
+
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct AIDTField {
-        [Flags]
-        public enum AIFlags : uint {
-            Weapon = 0x00001,
-            Armor = 0x00002,
-            Clothing = 0x00004,
-            Books = 0x00008,
-            Ingrediant = 0x00010,
-            Picks = 0x00020,
-            Probes = 0x00040,
-            Lights = 0x00080,
-            Apparatus = 0x00100,
-            Repair = 0x00200,
-            Misc = 0x00400,
-            Spells = 0x00800,
-            MagicItems = 0x01000,
-            Potions = 0x02000,
-            Training = 0x04000,
-            Spellmaking = 0x08000,
-            Enchanting = 0x10000,
-            RepairItem = 0x20000
-        }
         public static (string, int) Struct = ("<8BI", 12);
         public byte Hello;
         public byte Unknown1;
@@ -2179,7 +2191,7 @@ public unsafe class CREA3Record : Record, IHaveMODL {
         public byte Unknown2;
         public byte Unknown3;
         public byte Unknown4;
-        public uint Flags;
+        public AIFlags Flags;
     }
 
     /// <summary>
@@ -2263,7 +2275,7 @@ public unsafe class CREA3Record : Record, IHaveMODL {
     public object NPDT; // Creature data
     public IN32Field FLAG; // Creature Flags
     public REFXField<SCPTRecord>? SCRI; // Script
-    public List<CNTOField> NPCOs = []; // Item record
+    public List<CNTOXField<Record>> NPCOs = []; // Item record
     public AIDTField AIDT; // AI data
     public List<AIGroup> AIs = []; // AI packages
     public FLTVField? XSCL; // Scale (optional), Only present if the scale is not 1.0
@@ -2278,7 +2290,7 @@ public unsafe class CREA3Record : Record, IHaveMODL {
         FieldType.NPDT => NPDT = r.ReadS<NPDT96Field>(dataSize),
         FieldType.FLAG => FLAG = r.ReadS<IN32Field>(dataSize),
         FieldType.SCRI => SCRI = new REFXField<SCPTRecord>(r, dataSize),
-        FieldType.NPCO => NPCOs.AddX(new CNTOField(r, dataSize)),
+        FieldType.NPCO => NPCOs.AddX(new CNTOXField<Record>(r, dataSize)),
         FieldType.AIDT => AIDT = r.ReadS<AIDTField>(dataSize),
         FieldType.AI_A or FieldType.AI_E or FieldType.AI_F or FieldType.AI_T or FieldType.AI_W => AIs.AddX(new AIGroup(r, dataSize, type)),
         FieldType.CNDT => AIs.Last().CNDT = r.ReadSTRV(dataSize),
@@ -2294,14 +2306,6 @@ public unsafe class CREA3Record : Record, IHaveMODL {
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/CREA"/>
 public unsafe class CREA4Record : Record, IHaveMODL {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct SNAMField {
-        public static (string, int) Struct = ("<Ib3B", 8);
-        public Ref<FACTRecord> Id; // FACT
-        public sbyte Rank; // Rank
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)] public byte[] Flag; // ?Always '0x0DB'? Some sort of faction flag?
-    }
-
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct ACBSField {
         public static (string, int) Struct = ("<I3Hh2H", 16);
         public uint Flags;          // Flags
@@ -2313,37 +2317,14 @@ public unsafe class CREA4Record : Record, IHaveMODL {
         public ushort CalcMax;      // Calc Max
     }
 
-    //public struct CNTOField(Reader r, int dataSize) {
-    //    public Ref<Record> Id = new(r.ReadUInt32()); // Item
-    //    public int Count = r.ReadInt32(); // Count
-    //}
-
-    [Flags]
-    public enum AiFlags : uint {
-        Weapons = 0x000001,
-        Armor = 0x000002,
-        Clothing = 0x000004,
-        Books = 0x000008,
-        Ingredients = 0x000010,
-        Lights = 0x000080,
-        Apparatus = 0x000100,
-        Miscellaneous = 0x000400,
-        Spells = 0x000800,
-        MagicItems = 0x001000,
-        Potions = 0x002000,
-        Training = 0x004000,
-        Recharge = 0x010000,
-        Repair = 0x020000,
-    }
-
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct AIDTField {
         public static (string, int) Struct = ("<4BI2BH", 12);
         public byte Aggression;  // Aggression
         public byte Confidence;  // Confidence
         public byte EnergyLevel; // Energy Level
-        public byte BarterGold;  // Responsibility
-        public AiFlags AiFlags; // Flags
+        public byte BarterGold;  // Barter gold
+        public CREA3Record.AIFlags AiFlags; // Flags
         public byte TrainSkill;  // Training skill
         public byte TrainLevel;  // Training level - Value is same as index into skills array below.
         public ushort AiUnknown; // Unused?
@@ -2351,7 +2332,7 @@ public unsafe class CREA4Record : Record, IHaveMODL {
 
     public class CSDTGroup {
         public IN32Field CSDT; // Soundtype
-        public REFXField<SOUNRecord> CSDI; // TESSound
+        public REF1Field<SOUNRecord> CSDI; // TESSound
         public BYTEField CSDC; // Chance
     }
 
@@ -2359,15 +2340,15 @@ public unsafe class CREA4Record : Record, IHaveMODL {
     public STRVField FULL; // Full name
     public STRVField NIFZ; // NIF-files used by the creature
     public ACBSField ACBS; // Configuration
-    public List<SNAMField> SNAMs = []; // Factions
-    public REFXField<LVLIRecord>? INAM; // Death Item
+    public List<REFVField<FACTRecord>> SNAMs = []; // Factions
+    public REF1Field<LVLIRecord>? INAM; // Death Item
     public BYTEField RNAM; // Attack reach
     public List<STRVField> SPLOs = []; // Spells
-    public REFXField<SCPTRecord>? SCRI; // Script
-    public List<CNTOField> CNTOs = []; // Items
-    public List<REFXField<PACKRecord>> PKIDs = []; // AI Packages
-    public REFXField<CSTYRecord> ZNAM; // Combat Style
-    public REFXField<CREA4Record> CSCR; // Inherits Sounds from
+    public REF1Field<SCPTRecord>? SCRI; // Script
+    public List<CNTOField<Record>> CNTOs = []; // Items
+    public List<REFSField<PACKRecord>> PKIDs = []; // AI Packages
+    public REF1Field<CSTYRecord> ZNAM; // Combat Style
+    public REF1Field<CREA4Record> CSCR; // Inherits Sounds from
     public List<CSDTGroup> CSDTs = []; // Soundtypes
     public FLTVField BNAM; // Base Scale
     public FLTVField TNAM; // Turning Speed
@@ -2385,17 +2366,17 @@ public unsafe class CREA4Record : Record, IHaveMODL {
         FieldType.MODT => MODL.MODTField(r, dataSize),
         FieldType.NIFZ => NIFZ = r.ReadSTRV(dataSize),
         FieldType.ACBS => ACBS = r.ReadS<ACBSField>(dataSize),
-        FieldType.SNAM => SNAMs.AddX(r.ReadS<SNAMField>(dataSize)),
-        FieldType.INAM => INAM = new REFXField<LVLIRecord>(r, dataSize),
+        FieldType.SNAM => SNAMs.AddX(new REFVField<FACTRecord>(r, dataSize)),
+        FieldType.INAM => INAM = new REF1Field<LVLIRecord>(r, dataSize),
         FieldType.RNAM => RNAM = r.ReadS<BYTEField>(dataSize),
         FieldType.SPLO => SPLOs.AddX(r.ReadSTRV(dataSize)),
-        FieldType.SCRI => SCRI = new REFXField<SCPTRecord>(r, dataSize),
-        FieldType.CNTO => CNTOs.AddX(new CNTOField(r, dataSize)),
-        FieldType.PKID => PKIDs.AddX(new REFXField<PACKRecord>(r, dataSize)),
-        FieldType.ZNAM => ZNAM = new REFXField<CSTYRecord>(r, dataSize),
-        FieldType.CSCR => CSCR = new REFXField<CREA4Record>(r, dataSize),
+        FieldType.SCRI => SCRI = new REF1Field<SCPTRecord>(r, dataSize),
+        FieldType.CNTO => CNTOs.AddX(new CNTOField<Record>(r, dataSize)),
+        FieldType.PKID => PKIDs.AddX(new REFSField<PACKRecord>(r, dataSize)),
+        FieldType.ZNAM => ZNAM = new REF1Field<CSTYRecord>(r, dataSize),
+        FieldType.CSCR => CSCR = new REF1Field<CREA4Record>(r, dataSize),
         FieldType.CSDT => CSDTs.AddX(new CSDTGroup { CSDT = r.ReadS<IN32Field>(dataSize) }),
-        FieldType.CSDI => CSDTs.Last().CSDI = new REFXField<SOUNRecord>(r, dataSize),
+        FieldType.CSDI => CSDTs.Last().CSDI = new REF1Field<SOUNRecord>(r, dataSize),
         FieldType.CSDC => CSDTs.Last().CSDC = r.ReadS<BYTEField>(dataSize),
         FieldType.BNAM => BNAM = r.ReadS<FLTVField>(dataSize),
         FieldType.TNAM => TNAM = r.ReadS<FLTVField>(dataSize),
@@ -2701,7 +2682,7 @@ public class EFSHRecord : Record {
             MembraneShader_SourceBlendMode = r.ReadUInt32();
             MembraneShader_BlendOperation = r.ReadUInt32();
             MembraneShader_ZTestFunction = r.ReadUInt32();
-            FillTextureEffect_Color = r.ReadS<ByteColor4>(dataSize);
+            FillTextureEffect_Color = r.ReadS<ByteColor4>(4);
             FillTextureEffect_AlphaFadeInTime = r.ReadSingle();
             FillTextureEffect_FullAlphaTime = r.ReadSingle();
             FillTextureEffect_AlphaFadeOutTime = r.ReadSingle();
@@ -2711,7 +2692,7 @@ public class EFSHRecord : Record {
             FillTextureEffect_TextureAnimationSpeed_U = r.ReadSingle();
             FillTextureEffect_TextureAnimationSpeed_V = r.ReadSingle();
             EdgeEffect_FallOff = r.ReadSingle();
-            EdgeEffect_Color = r.ReadS<ByteColor4>(dataSize);
+            EdgeEffect_Color = r.ReadS<ByteColor4>(4);
             EdgeEffect_AlphaFadeInTime = r.ReadSingle();
             EdgeEffect_FullAlphaTime = r.ReadSingle();
             EdgeEffect_AlphaFadeOutTime = r.ReadSingle();
@@ -2745,9 +2726,9 @@ public class EFSHRecord : Record {
             ParticleShader_ScaleKey2 = r.ReadSingle();
             ParticleShader_ScaleKey1Time = r.ReadSingle();
             ParticleShader_ScaleKey2Time = r.ReadSingle();
-            ColorKey1_Color = r.ReadS<ByteColor4>(dataSize);
-            ColorKey2_Color = r.ReadS<ByteColor4>(dataSize);
-            ColorKey3_Color = r.ReadS<ByteColor4>(dataSize);
+            ColorKey1_Color = r.ReadS<ByteColor4>(4);
+            ColorKey2_Color = r.ReadS<ByteColor4>(4);
+            ColorKey3_Color = r.ReadS<ByteColor4>(4);
             ColorKey1_ColorAlpha = r.ReadSingle();
             ColorKey2_ColorAlpha = r.ReadSingle();
             ColorKey3_ColorAlpha = r.ReadSingle();
@@ -3169,15 +3150,16 @@ public class IDLERecord : Record, IHaveMODL {
     public MODLGroup MODL { get; set; }
     public List<SCPTRecord.CTDAField> CTDAs = []; // Conditions
     public BYTEField ANAM;
-    public REFXField<IDLERecord>[] DATAs;
+    public REF1Field<IDLERecord>[] DATAs;
 
+    protected override HashSet<FieldType> DF4 => [FieldType.CTDA, FieldType.CTDT];
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.MODL => MODL = new MODLGroup(r, dataSize),
         FieldType.MODB => MODL.MODBField(r, dataSize),
         FieldType.CTDA or FieldType.CTDT => CTDAs.AddX(new SCPTRecord.CTDAField(r, dataSize)),
         FieldType.ANAM => ANAM = r.ReadS<BYTEField>(dataSize),
-        FieldType.DATA => DATAs = r.ReadFArray(z => new REFXField<IDLERecord>(r, 4), dataSize >> 2),
+        FieldType.DATA => DATAs = r.ReadFArray(z => new REF1Field<IDLERecord>(r, 4), dataSize >> 2),
         _ => Empty,
     };
 }
@@ -3681,8 +3663,8 @@ public class LOCKRecord : Record, IHaveMODL {
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/GMST">
 public class LSCRRecord : Record {
     public struct LNAMField(Reader r, int dataSize) {
-        public RefX<Record> Direct = new(r.ReadUInt32());
-        public RefX<WRLDRecord> IndirectWorld = new(r.ReadUInt32());
+        public Ref<Record> Direct = new(r.ReadUInt32());
+        public Ref<WRLDRecord> IndirectWorld = new(r.ReadUInt32());
         public short IndirectGridX = r.ReadInt16();
         public short IndirectGridY = r.ReadInt16();
     }
@@ -3691,6 +3673,7 @@ public class LSCRRecord : Record {
     public STRVField DESC; // Description
     public List<LNAMField> LNAMs; // LoadForm
 
+    protected override HashSet<FieldType> DF4 => [FieldType.LNAM];
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.ICON => ICON = r.ReadFILE(dataSize),
@@ -3804,17 +3787,16 @@ public class LVLIRecord : Record {
 }
 
 /// <summary>
-/// LVSP.Leveled Spell - 04000
+/// LVSP.Leveled Spell - 04500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/GMST">
-/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/GMST"/>
-/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/GMST"/>
-/// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/GMST">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/LVSP"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/LVSP"/>
 public class LVSPRecord : Record {
     public BYTEField LVLD; // Chance
     public BYTEField LVLF; // Flags
     public List<LVLIRecord.LVLOField> LVLOs = []; // Number of items in list
 
+    protected override HashSet<FieldType> DF4 => [FieldType.LVLO];
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.LVLD => LVLD = r.ReadS<BYTEField>(dataSize),
@@ -4027,9 +4009,6 @@ public class MISCRecord : Record, IHaveMODL {
 /// NPC_.Non-Player Character - 34500
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/NPC_">
-/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/NPC_"/>
-/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/NPC_"/>
-/// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/NPC_">
 public class NPC_3Record : CREA3Record {
     [Flags]
     public enum NPC_3Flags : uint {
@@ -4075,15 +4054,12 @@ public class NPC_3Record : CREA3Record {
         FieldType.BNAM => BNAM = r.ReadSTRV(dataSize),
         FieldType.CNAM => CNAM = r.ReadSTRV(dataSize),
         FieldType.KNAM => KNAM = r.ReadSTRV(dataSize),
-        FieldType.NPDT => NPDT = dataSize switch {
-            52 => r.ReadS<NPDT52Field>(dataSize),
-            12 => r.ReadS<NPDT12Field>(dataSize),
-        },
+        FieldType.NPDT => NPDT = dataSize switch { 52 => r.ReadS<NPDT52Field>(dataSize), 12 => r.ReadS<NPDT12Field>(dataSize) },
         FieldType.FLAG => FLAG = r.ReadS<IN32Field>(dataSize),
-        FieldType.NPCO => NPCOs.AddX(new CNTOField(r, dataSize)),
+        FieldType.NPCO => NPCOs.AddX(new CNTOXField<Record>(r, dataSize)),
         FieldType.NPCS => NPCSs.AddX(r.ReadSTRV_ZPad(dataSize)),
-        FieldType.AIDT => AIDT = r.ReadS<CREA3Record.AIDTField>(dataSize),
-        FieldType.AI_A or FieldType.AI_E or FieldType.AI_F or FieldType.AI_T or FieldType.AI_W => AIs.AddX(new CREA3Record.AIGroup(r, dataSize, type)),
+        FieldType.AIDT => AIDT = r.ReadS<AIDTField>(dataSize),
+        FieldType.AI_A or FieldType.AI_E or FieldType.AI_F or FieldType.AI_T or FieldType.AI_W => AIs.AddX(new AIGroup(r, dataSize, type)),
         FieldType.CNDT => AIs.Last().CNDT = r.ReadSTRV(dataSize),
         FieldType.DODT => DODTs.AddX(new DODTGroup { DODT = r.ReadS<DODTField>(dataSize) }),
         FieldType.DNAM => DODTs.Last().DNAM = r.ReadSTRV(dataSize),
@@ -4093,6 +4069,12 @@ public class NPC_3Record : CREA3Record {
     };
 }
 
+/// <summary>
+/// NPC_.Non-Player Character - 34500
+/// </summary>
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/NPC_"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/NPC_"/>
+/// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/NPC_">
 public class NPC_4Record : CREA4Record {
     [Flags]
     public enum NPC_4Flags : uint {
@@ -4108,10 +4090,12 @@ public class NPC_4Record : CREA4Record {
         CanCorpseCheck = 0x100000,
     }
 
-    public struct DATAField(Reader r, int dataSize) {
-        public byte[] Skills = r.ReadBytes(21);  // Skills
-        public int Health = r.ReadInt32();  // Health. (Fatigue and Base Spell Points are stored in ACBS.)
-        public byte[] Attributes = r.ReadBytes(8);  // Skills
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public struct DATAField {
+        public static (string, int) Struct = ("<21si8s", 33);
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 21)] public byte[] Skills;  // Skills
+        public int Health; // Health. (Fatigue and Base Spell Points are stored in ACBS.)
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 8)] public byte[] Attributes;  // Skills
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -4123,24 +4107,14 @@ public class NPC_4Record : CREA4Record {
         public byte Custom; // ?Custom color flag?
     }
 
-    public STRVField FULL; // NPC name
-    public MODLGroup MODL { get; set; } // Skeletal nif model
-    public ACBSField ACBS; // Configuration
-    public List<SNAMField> SNAMs = []; // Faction
-    public REFXField<RACERecord> RNAM; // Race
-    public REFXField<Record> INAM; // Death item
-    public List<STRVField> SPLOs = []; // Spells
-    public REFXField<SCPTRecord>? SCRI; // Script
-    public List<CNTOField> CNTOs = []; // Inventory items
-    public AIDTField AIDT; // AI Data1
-    public List<STRVField> PKIDs = []; // AI package
+    public new REF1Field<RACERecord> RNAM; // Race
+    public AIDTField AIDT; // AI Data
     public REFXField<CLASRecord> CNAM; // Class
     public DATAField DATA; // Stats
     public REFXField<HAIRRecord> HNAM; // Hair
     public FLTVField LNAM; // Hair length
     public REFXField<EYESRecord> ENAM; // Eyes
     public HCLRField HCLR; // Hair color
-    public REFXField<Record> ZNAM; // Combat style
     public BYTVField FGGS; // FaceGen Geometry-Symmetric
     public BYTVField FGGA; // FaceGen Geometry-Asymmetric
     public BYTVField FGTS; // FaceGen Texture-Symmetic
@@ -4153,26 +4127,26 @@ public class NPC_4Record : CREA4Record {
         FieldType.MODL => MODL = new MODLGroup(r, dataSize),
         FieldType.MODB => MODL.MODBField(r, dataSize),
         FieldType.ACBS => ACBS = r.ReadS<ACBSField>(dataSize),
-        FieldType.SNAM => SNAMs.AddX(r.ReadS<SNAMField>(dataSize)),
-        FieldType.INAM => INAM = new REFXField<Record>(r, dataSize),
-        FieldType.RNAM => RNAM = new REFXField<RACERecord>(r, dataSize),
+        FieldType.SNAM => SNAMs.AddX(new REFVField<FACTRecord>(r, dataSize)),
+        FieldType.INAM => INAM = new REF1Field<LVLIRecord>(r, dataSize),
+        FieldType.RNAM => RNAM = new REF1Field<RACERecord>(r, dataSize),
         FieldType.SPLO => SPLOs.AddX(r.ReadSTRV(dataSize)),
-        FieldType.SCRI => SCRI = new REFXField<SCPTRecord>(r, dataSize),
-        FieldType.CNTO => CNTOs.AddX(new CNTOField(r, dataSize)),
+        FieldType.SCRI => SCRI = new REF1Field<SCPTRecord>(r, dataSize),
+        FieldType.CNTO => CNTOs.AddX(new CNTOField<Record>(r, dataSize)),
         FieldType.AIDT => AIDT = r.ReadS<AIDTField>(dataSize),
-        FieldType.PKID => PKIDs.AddX(r.ReadSTRV(dataSize)),
+        FieldType.PKID => PKIDs.AddX(new REFSField<PACKRecord>(r, dataSize)),
         FieldType.CNAM => CNAM = new REFXField<CLASRecord>(r, dataSize),
-        FieldType.DATA => DATA = new DATAField(r, dataSize),
+        FieldType.DATA => DATA = r.ReadS<DATAField>(dataSize),
         FieldType.HNAM => HNAM = new REFXField<HAIRRecord>(r, dataSize),
         FieldType.LNAM => LNAM = r.ReadS<FLTVField>(dataSize),
         FieldType.ENAM => ENAM = new REFXField<EYESRecord>(r, dataSize),
         FieldType.HCLR => HCLR = r.ReadS<HCLRField>(dataSize),
-        FieldType.ZNAM => ZNAM = new REFXField<Record>(r, dataSize),
+        FieldType.ZNAM => ZNAM = new REF1Field<CSTYRecord>(r, dataSize),
         FieldType.FGGS => r.ReadBYTV(dataSize),
         FieldType.FGGA => r.ReadBYTV(dataSize),
         FieldType.FGTS => r.ReadBYTV(dataSize),
         FieldType.FNAM => FNAM = r.ReadS<UI16Field>(dataSize),
-        FieldType.KFFZ => r.Skip(dataSize),
+        FieldType.KFFZ => r.Skip(dataSize), //TODO
         _ => Empty,
     };
 }
@@ -4180,25 +4154,18 @@ public class NPC_4Record : CREA4Record {
 /// <summary>
 /// PACK.AI Package - 04500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/GMST">
-/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/GMST"/>
-/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/GMST"/>
-/// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/GMST">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/PACK"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/PACK"/>
 public class PACKRecord : Record {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct PKDTField {
-        public static (string, int) Struct = ("<HB", 3);
-        public ushort Flags;
-        public byte Type;
-        public static object Skip(Reader r, int dataSize) => r.Skip(dataSize - 3); // Unused
-    }
-
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct PLDTField {
-        public static (string, int) Struct = ("<iIi", 12);
-        public int Type;
-        public uint Target;
-        public int Radius;
+        public static Dictionary<int, string> Struct = new() { [4] = "<I", [8] = "<I4B", [16] = "<I4BI" };
+        public uint Flags;
+        public byte PackageType;
+        public byte InterruptOverride; // Only observed values are 0 (None) and 4 (Combat)
+        public byte PreferredSpeed; // This value is only relevant if the Preferred Speed Misc Flag is set (0x2000 above)
+        public byte Unknown; // Possibly padding
+        public uint InterruptFlags;
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -4209,6 +4176,14 @@ public class PACKRecord : Record {
         public byte Date;
         public sbyte Time;
         public int Duration;
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public struct PLDTField {
+        public static (string, int) Struct = ("<iIi", 12);
+        public int Type;
+        public uint Target;
+        public int Radius;
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -4225,9 +4200,10 @@ public class PACKRecord : Record {
     public PTDTField PTDT; // Target
     public List<SCPTRecord.CTDAField> CTDAs = []; // Conditions
 
+    protected override HashSet<FieldType> DF4 => [FieldType.CTDA, FieldType.CTDT];
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
-        FieldType.PKDT => (PKDT = r.ReadS<PKDTField>(dataSize), PKDTField.Skip(r, dataSize)),
+        FieldType.PKDT => PKDT = r.ReadS<PKDTField>(dataSize),
         FieldType.PLDT => PLDT = r.ReadS<PLDTField>(dataSize),
         FieldType.PSDT => PSDT = r.ReadS<PSDTField>(dataSize),
         FieldType.PTDT => PTDT = r.ReadS<PTDTField>(dataSize),
@@ -4367,12 +4343,12 @@ public class QUSTRecord : Record {
     public FILEField ICON; // Icon
     public DATAField DATA; // Icon
     public REFXField<SCPTRecord> SCRI; // Script Name
-    public List<SCPTRecord.SCHRField> SCHRs = []; // Script Data
-    public BYTVField SCDA; // Compiled Script
-    public STRVField SCTX; // Script Source
+    public List<SCPTRecord.SCHRField> SCHRs = []; // Script Data //TODO Group?
+    public List<SCPTRecord.SCDAField> SCDAs = []; // Compiled Script //TODO Group?
+    public List<STRVField> SCTXs = []; // Script Source //TODO Group?
     public List<REFXField<Record>> SCROs = []; // Global variable reference
 
-    protected override HashSet<FieldType> DF4 => [FieldType.CTDA, FieldType.INDX, FieldType.QSDT, FieldType.CNAM, FieldType.SCHR];
+    protected override HashSet<FieldType> DF4 => [FieldType.CTDA, FieldType.INDX, FieldType.QSDT, FieldType.CNAM, FieldType.QSTA, FieldType.SCHR, FieldType.SCDA, FieldType.SCTX, FieldType.SCRO];
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.FULL => FULL = r.ReadSTRV(dataSize),
@@ -4385,8 +4361,8 @@ public class QUSTRecord : Record {
         FieldType.CNAM => r.Skip(dataSize), //TODO multi
         FieldType.QSTA => r.Skip(dataSize), //TODO
         FieldType.SCHR => SCHRs.AddX(new SCPTRecord.SCHRField(r, dataSize)),
-        FieldType.SCDA => SCDA = r.ReadBYTV(dataSize),
-        FieldType.SCTX => SCTX = r.ReadSTRV(dataSize),
+        FieldType.SCDA => SCDAs.AddX(new SCPTRecord.SCDAField(r, dataSize)),
+        FieldType.SCTX => SCTXs.AddX(r.ReadSTRV(dataSize)),
         FieldType.SCRO => SCROs.AddX(new REFXField<Record>(r, dataSize)),
         _ => Empty,
     };
@@ -4794,8 +4770,9 @@ public unsafe class REFRRecord : Record {
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/REGN"/>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/REGN"/>
 public class REGNRecord : Record {
+    public enum REGNType : byte { None_ = 0, One, Objects, Weather, Map, Landscape, Grass, Sound }
+
     public class RDATField {
-        public enum REGNType : byte { Objects = 2, Weather, Map, Landscape, Grass, Sound }
         public uint Type;
         public REGNType Flags;
         public byte Priority;
@@ -4858,9 +4835,9 @@ public class REGNRecord : Record {
 
     public struct RDGSField {
         public override readonly string ToString() => $"{Grass}";
-        public RefX<GRASRecord> Grass;
+        public Ref<GRASRecord> Grass;
         public RDGSField(Reader r, int dataSize) {
-            Grass = new RefX<GRASRecord>(r.ReadUInt32());
+            Grass = new Ref<GRASRecord>(r.ReadUInt32());
             r.Skip(4); // Unused
         }
     }
@@ -4885,10 +4862,9 @@ public class REGNRecord : Record {
 
     public struct RDWTField(Reader r, int dataSize) {
         public override readonly string ToString() => $"{Weather}";
-        public static int SizeOf(FormType format) => format == TES4 ? 8 : 12;
-        public RefX<WTHRRecord> Weather = new(r.ReadUInt32());
+        public Ref<WTHRRecord> Weather = new(r.ReadUInt32());
         public uint Chance = r.ReadUInt32();
-        public RefX<GLOBRecord> Global = r.Format == TES5 ? new RefX<GLOBRecord>(r.ReadUInt32()) : new RefX<GLOBRecord>();
+        public Ref<GLOBRecord> Global = r.Format == TES5 ? new Ref<GLOBRecord>(r.ReadUInt32()) : new Ref<GLOBRecord>();
     }
 
     // TES3
@@ -4939,7 +4915,7 @@ public class REGNRecord : Record {
         FieldType.RDGS => RDATs.Last().RDGSs = r.ReadFArray(z => new RDGSField(r, dataSize), dataSize / 8),
         FieldType.RDMD => RDATs.Last().RDMD = r.ReadS<UI32Field>(dataSize),
         FieldType.RDSD => RDATs.Last().RDSDs = r.ReadFArray(z => new RDSDField(r, dataSize), dataSize / 12),
-        FieldType.RDWT => RDATs.Last().RDWTs = r.ReadFArray(z => new RDWTField(r, dataSize), dataSize / RDWTField.SizeOf(r.Format)),
+        FieldType.RDWT => RDATs.Last().RDWTs = r.ReadFArray(z => new RDWTField(r, dataSize), dataSize / (r.Format == TES4 ? 8 : 12)),
         _ => Empty,
     };
 }
@@ -5045,21 +5021,17 @@ public class SCPTRecord : Record {
     }
 
     // TES4
-    public struct SCHRField {
+    public struct SCHRField(Reader r, int dataSize) {
         public override readonly string ToString() => $"{RefCount}";
-        public uint RefCount;
-        public uint CompiledSize;
-        public uint VariableCount;
-        public uint Type; // 0x000 = Object, 0x001 = Quest, 0x100 = Magic Effect
-        public SCHRField(Reader r, int dataSize) {
-            r.Skip(4); // Unused
-            RefCount = r.ReadUInt32();
-            CompiledSize = r.ReadUInt32();
-            VariableCount = r.ReadUInt32();
-            Type = r.ReadUInt32();
-            if (dataSize == 20) return;
-            r.Skip(dataSize - 20);
-        }
+        public uint RefCount = r.Skip(4).ReadUInt32(); // 4:Unused
+        public uint CompiledSize = r.ReadUInt32();
+        public uint VariableCount = r.ReadUInt32();
+        public uint Type = (r.ReadUInt32(), r.Skip(dataSize > 20 ? dataSize - 20 : 0)).Item1; // 0x000 = Object, 0x001 = Quest, 0x100 = Magic Effect
+    }
+
+    public struct SCDAField(Reader r, int dataSize) {
+        public override readonly string ToString() => $"{Data}";
+        public byte[] Data = r.ReadBytes(dataSize);
     }
 
     public class SLSDField {
@@ -5598,9 +5570,9 @@ public class WATRRecord : Record {
             FogDistance_NearPlane = r.ReadSingle();
             if (dataSize == 42) { Damage = r.ReadUInt16(); return; }
             FogDistance_FarPlane = r.ReadSingle();
-            ShallowColor = r.ReadS<ByteColor4>(dataSize);
-            DeepColor = r.ReadS<ByteColor4>(dataSize);
-            ReflectionColor = r.ReadS<ByteColor4>(dataSize);
+            ShallowColor = r.ReadS<ByteColor4>(4);
+            DeepColor = r.ReadS<ByteColor4>(4);
+            ReflectionColor = r.ReadS<ByteColor4>(4);
             TextureBlend = r.ReadByte();
             r.Skip(3); // Unused
             if (dataSize == 62) { Damage = r.ReadUInt16(); return; }

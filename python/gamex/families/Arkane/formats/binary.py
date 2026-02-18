@@ -88,13 +88,13 @@ class Binary_Void(ArcBinaryT):
 
     class V_File:
         _struct = ('>Q4IH', 26)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.offset,
             self.fileSize,
             self.packedSize,
             self.unknown1,
             self.flags,
-            self.flags2) = tuple
+            self.flags2) = t
 
     #endregion
 

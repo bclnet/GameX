@@ -19,25 +19,25 @@ class Binary_Hogg(ArcBinaryT):
 
     class Header:
         _struct = ('<IHHIIII', 24)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.magic,
             self.version,
             self.operationJournalSection,
             self.fileEntrySection,
             self.attributeEntrySection,
             self.dataFileNumber,
-            self.fileJournalSection) = tuple
+            self.fileJournalSection) = t
 
     class FileJournalHeader:
         _struct = ('<III', 12)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.unknown1,
             self.size,
-            self.size2) = tuple
+            self.size2) = t
 
     class FileEntry:
         _struct = ('<qiIIIHHi', 32)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.offset,
             self.fileSize,
             self.timestamp,
@@ -45,15 +45,15 @@ class Binary_Hogg(ArcBinaryT):
             self.unknown4,
             self.unknown5,
             self.unknown6,
-            self.id) = tuple
+            self.id) = t
 
     class AttributeEntry:
         _struct = ('<iiII', 16)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.pathId,
             self.excerptId,
             self.uncompressedSize,
-            self.flags) = tuple
+            self.flags) = t
 
     #endregion
 

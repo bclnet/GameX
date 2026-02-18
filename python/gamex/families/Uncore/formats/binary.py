@@ -169,7 +169,7 @@ class Binary_Pcx(IHaveMetaInfo, ITexture):
 
     class X_Header:
         _struct = ('<4B6H48s2B4H54s', 128)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.manufacturer,
             self.version,
             self.encoding,
@@ -187,7 +187,7 @@ class Binary_Pcx(IHaveMetaInfo, ITexture):
             self.mode,
             self.hres,
             self.vres,
-            self.reserved2) = tuple
+            self.reserved2) = t
 
     #endregion
 
@@ -383,7 +383,7 @@ class Binary_Tga(IHaveMetaInfo, ITexture):
 
     class X_Header:
         _struct = ('<3b2Hb4H2b', 18)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.idLength,
             self.mapType,
             self.imageType,
@@ -395,7 +395,7 @@ class Binary_Tga(IHaveMetaInfo, ITexture):
             self.imageWidth,
             self.imageHeight,
             self.pixelDepth,
-            self.imageDescriptor) = tuple
+            self.imageDescriptor) = t
             # remap
             self.imageType = Binary_Tga.TYPE(self.imageType)
 

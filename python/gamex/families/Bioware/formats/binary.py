@@ -26,7 +26,7 @@ class Binary_Myp(ArcBinaryT):
 
     class MYP_Header:
         _struct = ('<3IQ4I', 36)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.magic,
             self.version,
             self.bom,
@@ -34,7 +34,7 @@ class Binary_Myp(ArcBinaryT):
             self.tableCapacity,
             self.totalFiles,
             self.unk1,
-            self.unk2) = tuple
+            self.unk2) = t
         def verify(self):
             if self.magic != Binary_Myp.MYP_MAGIC: raise Exception('Not a .tor file (Wrong file header)')
             if self.version != 5 and self.version != 6: raise Exception(f'Only versions 5 and 6 are supported, file has {self.version}')
@@ -43,14 +43,14 @@ class Binary_Myp(ArcBinaryT):
 
     class MYP_HeaderFile:
         _struct = ('<Q3IQIH', 34)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.offset,
             self.headerSize,
             self.packedSize,
             self.fileSize,
             self.digest,
             self.crc,
-            self.compressed) = tuple
+            self.compressed) = t
 
     #endregion
 

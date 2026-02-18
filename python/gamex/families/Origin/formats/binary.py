@@ -120,30 +120,30 @@ class Binary_UO(ArcBinaryT):
 
     class IdxFile:
         _struct = ('<3i', 12)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.offset,
             self.fileSize,
-            self.extra) = tuple
+            self.extra) = t
 
     class UopHeader:
         _struct = ('<i2q2i', 28)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.magic,
             self.versionSignature,
             self.nextBlock,
             self.blockCapacity,
-            self.count) = tuple
+            self.count) = t
 
     class UopRecord:
         _struct = ('<q3iQIh', 34)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.offset,
             self.headerLength,
             self.compressedLength,
             self.decompressedLength,
             self.hash,
             self.adler32,
-            self.flag) = tuple
+            self.flag) = t
         @property
         def fileSize(self) -> int: return self.compressedLength if self.flag == 1 else self.decompressedLength
 

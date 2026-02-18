@@ -21,7 +21,7 @@ class Binary_Bsp30(ArcBinaryT):
 
     class B_Header:
         _struct = ('<31i', 124)
-        def __init__(self, tuple):
+        def __init__(self, t):
             entities = self.entities = X_LumpON()
             planes = self.planes = X_LumpON()
             textures = self.textures = X_LumpON()
@@ -52,17 +52,17 @@ class Binary_Bsp30(ArcBinaryT):
             markSurfaces.offset, markSurfaces.length,
             edges.offset, edges.length,
             surfEdges.offset, surfEdges.length,
-            models.offset, models.length) = tuple
+            models.offset, models.length) = t
         def forGameId(self, id: str) -> None:
             if id == 'HL:BS': (self.entities, self.planes) = (self.planes, self.entities)
 
     class B_Texture:
         _struct = ('<16s6I', 20)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.name,
             self.width,
             self.height,
-            self.offsets) = tuple
+            self.offsets) = t
 
     # MAX_MAP_HULLS = 4
     # MAX_MAP_MODELS = 400
@@ -165,7 +165,7 @@ class Binary_Spr(IHaveMetaInfo, ITextureFrames):
 
     class S_Header:
         _struct = ('<I3if3ifi', 40)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.magic,
             self.version,
             self.type,
@@ -175,16 +175,16 @@ class Binary_Spr(IHaveMetaInfo, ITextureFrames):
             self.maxHeight,
             self.numFrames,
             self.beamLen,
-            self.synchType) = tuple
+            self.synchType) = t
 
     class S_Frame:
         _struct = ('<5i', 20)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.group,
             self.originX,
             self.originY,
             self.width,
-            self.height) = tuple
+            self.height) = t
 
     #endregion
 
@@ -316,16 +316,16 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
     # sequence header
     class M_SeqHeader:
         _struct = ('<2i64si', 76)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.magic,
             self.version,
             self.name,
-            self.length) = tuple
+            self.length) = t
 
     # bones
     class M_Bone:
         _struct = ('<32s8i12f', 112)
-        def __init__(self, tuple):
+        def __init__(self, t):
             boneController = self.boneController = np.array([0,0,0,0,0,0])
             value = self.value = np.array([0,0,0,0,0,0])
             scale = self.scale = np.array([0,0,0,0,0,0])
@@ -334,7 +334,7 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
             self.flags,
             boneController[0], boneController[1], boneController[2], boneController[3], boneController[4], boneController[5],
             value[0], value[1], value[2], value[3], value[4], value[5],
-            scale[0], scale[1], scale[2], scale[3], scale[4], scale[5]) = tuple
+            scale[0], scale[1], scale[2], scale[3], scale[4], scale[5]) = t
 
     class BoneAxis:
         def __init__(self, controller: BoneController, value: float, scale: float):
@@ -363,12 +363,12 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
     # bone controllers
     class M_BoneController:
         _struct = ('<2i2f2i', 24)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.bone,
             self.type,
             self.start, self.end,
             self.rest,
-            self.index) = tuple
+            self.index) = t
 
     class BoneController:
         def __init__(self, s: M_BoneController, id: int):
@@ -381,11 +381,11 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
     # intersection boxes
     class M_BBox:
         _struct = ('<2i6f', 32)
-        def __init__(self, tuple):
+        def __init__(self, t):
             bbMin = self.bbMin = np.array([0,0,0]); bbMax = self.bbMax = np.array([0,0,0])
             (self.bone,
             self.group,
-            bbMin[0], bbMin[1], bbMin[2], bbMax[0], bbMax[1], bbMax[2]) = tuple
+            bbMin[0], bbMin[1], bbMin[2], bbMax[0], bbMax[1], bbMax[2]) = t
 
     class BBox:
         def __init__(self, s: M_BBox, bones: list[Bone]):
@@ -396,11 +396,11 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
     # sequence groups
     class M_SeqGroup:
         _struct = ('<32s64s2i', 104)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.label,
             self.name,
             self.unused1,
-            self.unused2) = tuple
+            self.unused2) = t
 
     class SeqGroup:
         def __init__(self, s: M_SeqGroup):
@@ -411,7 +411,7 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
     # sequence descriptions
     class M_Seq:
         _struct = ('<32sf10i3f2i6f4i4f6i', 176)
-        def __init__(self, tuple):
+        def __init__(self, t):
             linearMovement = self.linearMovement = np.array([0,0,0])
             bbMin = self.bbMin = np.array([0,0,0]); bbMax = self.bbMax = np.array([0,0,0])
             events = self.events = X_LumpNO()
@@ -443,7 +443,7 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
             self.entryNode,
             self.exitNode,
             self.nodeFlags,
-            self.nextSeq) = tuple
+            self.nextSeq) = t
 
     class SeqBlend:
         def __init__(self, type: int, start: float, end: float):
@@ -510,23 +510,23 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
     # events
     class M_Event:
         _struct = ('<3i64s', 76)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.frame,
             self.event,
             self.type,
-            self.options) = tuple
+            self.options) = t
 
     # pivots
     class M_Pivot:
         _struct = ('<3f2i', 4)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.org,
-            self.start, self.end) = tuple
+            self.start, self.end) = t
 
     # attachments
     class M_Attachment:
         _struct = ('<32s2i12f', 88)
-        def __init__(self, tuple):
+        def __init__(self, t):
             vector0 = self.vector0 = np.array([0,0,0])
             vector1 = self.vector1 = np.array([0,0,0])
             vector2 = self.vector2 = np.array([0,0,0])
@@ -537,7 +537,7 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
             org[0], org[1], org[2],
             vector0[0], vector0[1], vector0[2],
             vector1[0], vector1[1], vector1[2],
-            vector2[0], vector2[1], vector2[2]) = tuple
+            vector2[0], vector2[1], vector2[2]) = t
 
     class Attachment:
         def __init__(self, s: M_Attachment, bones: list[Bone]):
@@ -556,17 +556,17 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
 
     class M_AnimValue:
         _struct = ('<2B', 2)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.valid,
-            self.total) = tuple
+            self.total) = t
 
     # body part index
     class M_Bodypart:
         _struct = ('<64s3i', 76)
-        def __init__(self, tuple):
+        def __init__(self, t):
             models = self.models = X_LumpNO2()
             (self.name,
-            models.num, models.offset, models.offset2) = tuple
+            models.num, models.offset, models.offset2) = t
 
     class Bodypart:
         def __init__(self, r: BinaryReader, s: M_Bodypart, bones: list[Bone]):
@@ -577,11 +577,11 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
     # skin info
     class M_Texture:
         _struct = ('<64s4i', 80)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.name,
             self.flags,
             self.width, self.height,
-            self.index) = tuple
+            self.index) = t
 
     class Texture:
         def __init__(self, r: BinaryReader, s: M_Texture):
@@ -594,7 +594,7 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
     # studio models
     class M_Model:
         _struct = ('<64sif10i', 112)
-        def __init__(self, tuple):
+        def __init__(self, t):
             meshs = self.meshs = X_LumpNO()
             verts = self.verts = X_LumpNO2()
             norms = self.norms = X_LumpNO2()
@@ -605,7 +605,7 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
             meshs.num, meshs.offset,
             verts.num, verts.offset, verts.offset2,
             norms.num, norms.offset, norms.offset2,
-            groups.num, groups.offset) = tuple
+            groups.num, groups.offset) = t
 
     class ModelVertex:
         def __init__(self, bone: Bone, vertex: np.ndarray):
@@ -629,12 +629,12 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
     # meshes
     class M_Mesh:
         _struct = ('<5i', 20)
-        def __init__(self, tuple):
+        def __init__(self, t):
             tris = self.tris = X_LumpNO()
             norms = self.norms = X_LumpNO()
             (tris.num, tris.offset,
             self.skinRef,
-            norms.num, norms.offset) = tuple
+            norms.num, norms.offset) = t
 
     class Mesh:
         def __init__(self, r: BinaryReader, s: M_Mesh):
@@ -646,7 +646,7 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
     # header
     class M_Header:
         _struct = ('<2I64sI15f27I', 244)
-        def __init__(self, tuple):
+        def __init__(self, t):
             eyePosition = self.eyePosition = np.array([0,0,0])
             min = self.min = np.array([0,0,0]); max = self.max = np.array([0,0,0])
             bbMin = self.bbMin = np.array([0,0,0]); bbMax = self.bbMax = np.array([0,0,0])
@@ -682,7 +682,7 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
             attachments.num, attachments.offset,
             sounds.num, sounds.offset,
             soundGroups.num, soundGroups.offset,
-            transitions.num, transitions.offset) = tuple
+            transitions.num, transitions.offset) = t
             self.flags = Binary_Mdl10.HeaderFlags(self.flags)
 
     #endregion
@@ -842,18 +842,18 @@ class Binary_Mdl40(IHaveMetaInfo):
 
     class M_Texture:
         _struct = ('<6i10s', 80)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.nameOffset,
             self.flags,
             self.used,
             self.unused,
             self.material,
             self.clientMaterial,
-            self.unused2) = tuple
+            self.unused2) = t
 
     class M_Header:
         _struct = ('<3i64si18f44if11i4B3if3i', 408)
-        def __init__(self, tuple):
+        def __init__(self, t):
             eyePosition = self.eyePosition = np.array([0,0,0])
             illumPosition = self.illumPosition = np.array([0,0,0])
             min = self.min = np.array([0,0,0]); max = self.max = np.array([0,0,0])
@@ -931,18 +931,18 @@ class Binary_Mdl40(IHaveMetaInfo):
             self.vertAnimFixedPointScale,
             self.unused2,
             self.header2Index,
-            self.unused3) = tuple
+            self.unused3) = t
             self.flags = Binary_Mdl40.HeaderFlags(self.flags)
 
     class M_Header2:
         _struct = ('<3ifi64s', 244)
-        def __init__(self, tuple):
+        def __init__(self, t):
             srcBoneTransform = self.srcBoneTransform = X_LumpNO()
             (srcBoneTransform.num, srcBoneTransform.offset,
             self.illumPositionAttachmentIndex,
             self.maxEyeDeflection,
             self.linearBoneIndex,
-            self.unknown) = tuple
+            self.unknown) = t
 
     #endregion
 
@@ -1039,19 +1039,19 @@ class Binary_Vpk(ArcBinaryT):
 
     class V_HeaderV2:
         _struct = ('<4I', 16)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.fileDataSectionSize,
             self.archiveMd5SectionSize,
             self.otherMd5SectionSize,
-            self.signatureSectionSize) = tuple
+            self.signatureSectionSize) = t
 
     class V_ArchiveMd5:
         _struct = ('<3I16s', 28)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.archiveIndex,
             self.offset,
             self.length,
-            self.checksum) = tuple
+            self.checksum) = t
 
     class Verification:
         archiveMd5s: tuple = (0, bytearray())                  # Gets the archive MD5 checksum section entries. Also known as cache line hashes.
@@ -1194,28 +1194,28 @@ class Binary_Wad3(ArcBinaryT):
 
     class W_Header:
         _struct = ('<3I', 12)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.magic,
             self.lumpCount,
-            self.lumpOffset) = tuple
+            self.lumpOffset) = t
 
     class W_Lump:
         _struct = ('<3I2bH16s', 32)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.offset,
             self.diskSize,
             self.size,
             self.type,
             self.compression,
             self.padding,
-            self.name) = tuple
+            self.name) = t
 
     class W_LumpInfo:
         _struct = ('<3I', 12)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.width,
             self.height,
-            self.paletteSize) = tuple
+            self.paletteSize) = t
 
     #endregion
 
@@ -1264,9 +1264,9 @@ class Binary_Wad3X(IHaveMetaInfo, ITexture):
 
     class CharInfo:
         _struct = ('<2H', 4)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.startOffset,
-            self.charWidth) = tuple
+            self.charWidth) = t
 
     class Formats(Enum): Nonex = 0; Tex2 = 0x40; Pic = 0x42; Tex = 0x43; Fnt = 0x46
 

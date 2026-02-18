@@ -19,13 +19,13 @@ class Binary_Bullfrog(ArcBinaryT):
 
     class V_File:
         _struct = ('>QIIIIH', 26)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.offset,
             self.fileSize,
             self.packedSize,
             self.unknown1,
             self.flags,
-            self.flags2) = tuple
+            self.flags2) = t
 
     #endregion
 
@@ -111,12 +111,12 @@ class Binary_Fli(IHaveMetaInfo, ITextureFrames):
 
     class X_Header:
         _struct = ('<I4H', 12)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.size,
             self.type,
             self.numFrames,
             self.width,
-            self.height) = tuple
+            self.height) = t
 
     class ChunkType(Enum):
         COLOR_256 = 0x4     # COLOR_256
@@ -126,21 +126,21 @@ class Binary_Fli(IHaveMetaInfo, ITextureFrames):
 
     class X_ChunkHeader:
         _struct = ('<IH', 6)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.size,
-            self.type) = tuple
+            self.type) = t
             # remap
             self.type = Binary_Fli.ChunkType(self.type)
         def isValid(self) -> bool: return self.type == ChunkType.COLOR_256 or self.Type == ChunkType.DELTA_FLC or self.Type == ChunkType.BYTE_RUN
 
     class X_FrameHeader:
         _struct = ('<5H', 10)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.numChunks,
             self.delay,
             self.reserved,
             self.widthOverride,
-            self.heightOverride) = tuple
+            self.heightOverride) = t
 
     class OpCode(Enum):
         PACKETCOUNT = 0
@@ -307,18 +307,18 @@ class Binary_Populus(ArcBinaryT):
 
     class SPR_Record:
         _struct = ('<2HI', 12)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.width,
             self.height,
-            self.offset) = tuple
+            self.offset) = t
 
     class DAT_Sprite:
         _struct = ('<2bI', 10)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.width,
             self.height,
             self.unknown,
-            self.offset) = tuple
+            self.offset) = t
 
     #endregion
 

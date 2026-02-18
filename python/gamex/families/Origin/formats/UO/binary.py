@@ -42,12 +42,12 @@ class Binary_Animdata(IHaveMetaInfo):
 
     class AnimRecord:
         _struct = ('<64s4B', 68)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.frames,
             self.unknown,
             self.frameCount,
             self.frameInterval,
-            self.startInterval) = tuple
+            self.startInterval) = t
             self.frames = struct.unpack('<64B', self.frames)
 
     class Record:
@@ -516,11 +516,11 @@ class Binary_Hues(IHaveMetaInfo):
 
     class HueRecord:
         _struct = ('<64s2h20s', 88)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.colors,
             self.tableStart,
             self.tableEnd,
-            self.name) = tuple
+            self.name) = t
 
     class Record:
         def __init__(self, id: str, s: object = None):
@@ -1046,12 +1046,12 @@ class Binary_Verdata(IHaveMetaInfo):
 
     class Patch:
         _struct = ('<5i ', 20)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.file,
             self.index,
             self.offset,
             self.fileSize,
-            self.extra) = tuple
+            self.extra) = t
 
     #endregion
 

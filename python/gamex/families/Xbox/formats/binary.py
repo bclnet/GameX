@@ -26,11 +26,11 @@ class Binary_Xnb(IHaveMetaInfo, IWriteToStream):
 
     class Header:
         _struct = ('<I2bI', 10)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.magic,
             self.version,
             self.flags,
-            self.sizeOnDisk) = tuple
+            self.sizeOnDisk) = t
         @property
         def compressed(self) -> bool: return (self.flags & 0x80) != 0
         @property

@@ -18,39 +18,39 @@ class Binary_Dat(ArcBinaryT):
     F1_HEADER_FILEID = 0x000000001
     class F1_Header:
         _struct = ('>4I', 16)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.directoryCount,
             self.unknown1,
             self.unknown2,
-            self.unknown3) = tuple
+            self.unknown3) = t
     class F1_Directory:
         _struct = ('>4I', 16)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.fileCount,
             self.unknown1,
             self.unknown2,
-            self.unknown3) = tuple
+            self.unknown3) = t
     class F1_File:
         _struct = ('>4I', 16)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.attributes,
             self.offset,
             self.size,
-            self.packedSize) = tuple
+            self.packedSize) = t
 
     F2_HEADER_FILEID = 0x000000011
     class F2_Header:
         _struct = ('<2I', 8)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.treeSize,
-            self.dataSize) = tuple
+            self.dataSize) = t
     class F2_File:
         _struct = ('<B3I', 13)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.type,
             self.realSize,
             self.packedSize,
-            self.offset) = tuple
+            self.offset) = t
 
     #endregion
 

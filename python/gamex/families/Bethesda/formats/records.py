@@ -1045,7 +1045,7 @@ class ALCHRecord(Record, IHaveMODL):
     class ENAMField:
         class Range(Enum): Self = 0; Touch = 1; Target = 2
         _struct = ('<h2B5I', 24)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.effectId,
             self.skillId, # for skill related effects, -1/0 otherwise
             self.attributeId, # for attribute related effects, -1/0 otherwise
@@ -1053,7 +1053,7 @@ class ALCHRecord(Record, IHaveMODL):
             self.area,
             self.duration,
             self.magnitudeMin,
-            self.magnitudeMax) = tuple
+            self.magnitudeMax) = t
             self.range = ALCHRecord.ENAMField.Range(self.range)
 
     MODL: MODLGroup # Model
@@ -1093,12 +1093,12 @@ class AMMORecord(Record, IHaveMODL):
     class DATAField:
         class Flag(Flag): IgnoresNormalWeaponResistance = 0x1
         _struct = ('<f2IfH', 18)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.speed,
             self.flags,
             self.value,
             self.weight,
-            self.damage) = tuple
+            self.damage) = t
             self.flags = AMMORecord.DATAField.Flag(self.flags)
 
     MODL: MODLGroup # Model
@@ -1340,11 +1340,11 @@ class BODYRecord(Record, IHaveMODL):
 
     class BYDTField:
         _struct = ('<4B', 4)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.part,
             self.vampire,
             self.flags,
-            self.partType) = tuple
+            self.partType) = t
             self.part = BODYRecord.Part(self.part)
             self.flags = BODYRecord.Flag(self.flags)
             self.partType = BODYRecord.PartType(self.partType)
@@ -1469,30 +1469,30 @@ class CELLRecord(Record): #ICellRecord
     class XCLCField:
         def __repr__(self): return f'{self.gridX}x{self.gridY}'
         _struct = { 8: '<2i', 12: '<2iI' }
-        def __init__(self, tuple):
-            match len(tuple):
+        def __init__(self, t):
+            match len(t):
                 case 2:
                     (self.gridX,
-                    self.gridY) = tuple
+                    self.gridY) = t
                     self.flags = 0
                 case 3:
                     (self.gridX,
                     self.gridY,
-                    self.flags) = tuple
+                    self.flags) = t
                 case _: raise NotImplementedError('XCLCField')
 
     class XCLLField:
         _struct = { 16: '<12cf', 36: '<12c2f2i2f', 40: '<12c2f2i3f' }
-        def __init__(self, tuple):
+        def __init__(self, t):
             ambientColor = self.ambientColor = ByteColor4()
             directionalColor = self.directionalColor = ByteColor4()
             fogColor = self.fogColor = ByteColor4()
-            match len(tuple):
+            match len(t):
                 case 13:
                     (ambientColor.r, ambientColor.g, ambientColor.b, ambientColor.a,
                     directionalColor.r, directionalColor.g, directionalColor.b, directionalColor.a, # SunlightColor
                     fogColor.r, fogColor.g, fogColor.b, fogColor.a,
-                    self.fogNear) = tuple # FogDensity
+                    self.fogNear) = t # FogDensity
                 case 18:
                     (ambientColor.r, ambientColor.g, ambientColor.b, ambientColor.a,
                     directionalColor.r, directionalColor.g, directionalColor.b, directionalColor.a, # SunlightColor
@@ -1503,7 +1503,7 @@ class CELLRecord(Record): #ICellRecord
                     self.directionalRotationXY,
                     self.directionalRotationZ,
                     self.directionalFade,
-                    self.fogClipDist) = tuple
+                    self.fogClipDist) = t
                 case 19:
                     (ambientColor.r, ambientColor.g, ambientColor.b, ambientColor.a,
                     directionalColor.r, directionalColor.g, directionalColor.b, directionalColor.a, # SunlightColor
@@ -1516,7 +1516,7 @@ class CELLRecord(Record): #ICellRecord
                     self.directionalFade,
                     self.fogClipDist,
                     # TES5
-                    self.fogPow) = tuple
+                    self.fogPow) = t
                 case _: raise NotImplementedError('XCLLField')
 
     class XOWNGroup:
@@ -1527,11 +1527,11 @@ class CELLRecord(Record): #ICellRecord
 
     class XYZAField:
         _struct = ('<3f3f', 24)
-        def __init__(self, tuple):
+        def __init__(self, t):
             position = self.position = Float3()
             eulerAngles = self.eulerAngles = Float3()
             (position.x, position.y, position.z,
-            eulerAngles.x, eulerAngles.y, eulerAngles.z) = tuple
+            eulerAngles.x, eulerAngles.y, eulerAngles.z) = t
             
     class RefObj:
         def __repr__(self): return f'CREF: {self.EDID.value}'
@@ -1793,13 +1793,13 @@ class CLMTRecord(Record, IHaveMODL):
 
     class TNAMField:
         _struct = ('<6B', 6)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.sunriseBegin,
             self.sunriseEnd,
             self.sunsetBegin,
             self.sunsetEnd,
             self.volatility,
-            self.moonsPhaseLength) = tuple
+            self.moonsPhaseLength) = t
 
     MODL: MODLGroup # Model
     FNAM: FILEField # Sun Texture
@@ -1878,7 +1878,7 @@ class CREA3Record(Record, IHaveMODL):
 
     class NPDT96Field:
         _struct = ('<24i', 96)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.type, # 0 = Creature, 1 = Daedra, 2 = Undead, 3 = Humanoid
             self.level,
             self.strength,
@@ -1902,11 +1902,11 @@ class CREA3Record(Record, IHaveMODL):
             self.attackMax2,
             self.attackMin3,
             self.attackMax3,
-            self.gold) = tuple
+            self.gold) = t
 
     class NPDT52Field:
         _struct = ('<h8B27sB3h4Bi', 52)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.level,
             self.strength,
             self.intelligence,
@@ -1925,11 +1925,11 @@ class CREA3Record(Record, IHaveMODL):
             self.factionId,
             self.rank,
             self.unknown1,
-            self.gold) = tuple
+            self.gold) = t
 
     class NPDT12Field:
         _struct = ('<h6Bi', 12)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.level,
             self.disposition,
             self.factionId,
@@ -1937,7 +1937,7 @@ class CREA3Record(Record, IHaveMODL):
             self.unknown1,
             self.unknown2,
             self.unknown3,
-            self.gold) = tuple
+            self.gold) = t
 
     class AIFlags(IntFlag):
         Weapon = 0x00001
@@ -1961,7 +1961,7 @@ class CREA3Record(Record, IHaveMODL):
 
     class AIDTField:
         _struct = ('<8BI', 12)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.hello,
             self.unknown1,
             self.fight,
@@ -1970,56 +1970,56 @@ class CREA3Record(Record, IHaveMODL):
             self.unknown2,
             self.unknown3,
             self.unknown4,
-            self.flags) = tuple
+            self.flags) = t
             self.flags = CREA3Record.AIFlags(self.flags)
 
     # Activate package
     class AI_AField:
         _struct = ('<32sB', 33)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.name,
-            self.unknown) = tuple
+            self.unknown) = t
 
     # Escort package
     class AI_EField:
         _struct = ('<3fh32sh', 48)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.x,
             self.y,
             self.z,
             self.duration,
             self.id,
-            self.unknown) = tuple
+            self.unknown) = t
 
     # Follow package
     class AI_FField:
         _struct = ('<3fh32sh', 48)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.x,
             self.y,
             self.z,
             self.duration,
             self.id,
-            self.unknown) = tuple
+            self.unknown) = t
 
     # Travel package
     class AI_TField:
         _struct = ('<4f', 16)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.x,
             self.y,
             self.z,
-            self.unknown) = tuple
+            self.unknown) = t
 
     # Wander package
     class AI_WField:
         _struct = ('<2hB8sB', 14)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.distance,
             self.duration,
             self.timeOfDay,
             self.idles,
-            self.unknown) = tuple
+            self.unknown) = t
 
     class AIGroup:
         def __repr__(self) -> str: return f'{self.ai}'
@@ -2069,18 +2069,18 @@ class CREA3Record(Record, IHaveMODL):
 class CREA4Record(Record, IHaveMODL):
     class ACBSField:
         _struct = ('<I3Hh2H', 16)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.flags,     # Flags
             self.baseSpell,  # Base spell points
             self.fatigue,    # Fatigue
             self.barterGold, # Barter gold
             self.level,      # Level/Offset level
             self.calcMin,    # Calc Min
-            self.calcMax) = tuple # Calc Max
+            self.calcMax) = t # Calc Max
 
     class AIDTField:
         _struct = ('<4BI2BH', 12)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.aggression,# Aggression
             self.confidence, # Confidence
             self.energyLevel,# Energy Level
@@ -2088,7 +2088,7 @@ class CREA4Record(Record, IHaveMODL):
             self.aiFlags,    # Flags
             self.trainSkill, # Training skill
             self.trainLevel, # Training level - Value is same as index into skills array below.
-            self.aiUnknown) = tuple # Unused?
+            self.aiUnknown) = t # Unused?
             self.aiFlags = CREA3Record.AIFlags(self.aiFlags)
 
     class CSDTGroup:
@@ -2242,7 +2242,7 @@ class CSTYRecord(Record):
 
     class CSADField:
         _struct = ('<21f', 84)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.dodgeFatigueModMult,
             self.dodgeFatigueModBase,
             self.encumbSpeedModBase,
@@ -2263,7 +2263,7 @@ class CSTYRecord(Record):
             self.attackNotUnderAttackMult,
             self.attackDuringBlockMult,
             self.powerAttFatigueModBase,
-            self.powerAttFatigueModMult) = tuple
+            self.powerAttFatigueModMult) = t
 
     CSTD: CSTDField # Standard
     CSAD: CSADField # Advanced
@@ -2272,8 +2272,8 @@ class CSTYRecord(Record):
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
-            case FieldType.CSTD: z = self.CSTD = EFSHRecord.CSTDField(r, dataSize)
-            case FieldType.CSAD: z = self.CSAD = r.readS(EFSHRecord.CSADField, dataSize)
+            case FieldType.CSTD: z = self.CSTD = CSTYRecord.CSTDField(r, dataSize)
+            case FieldType.CSAD: z = self.CSAD = r.readS(CSTYRecord.CSADField, dataSize)
             case _: z = Record._empty
         return z
 # end::CSTY[]
@@ -2617,24 +2617,24 @@ class FACTRecord(Record):
     # TES3
     class RankModifier:
         _struct = ('5I', 20)
-        def __init__(self, tuple):
+        def __init__(self, t):
             attributes = self.attributes = [None]*2
             (attributes[0], attributes[1],
             self.primarySkill,
             self.favoredSkill,
-            self.factionReaction) = tuple
+            self.factionReaction) = t
 
     class FADTField:
         class Flag(Flag): HiddenFromPlayer = 0x1
         _struct = ('2I20s20s20s20s20s20s20s20s20s20s7iI', 240)
-        def __init__(self, tuple):
+        def __init__(self, t):
             attributes = self.attributes = [None]*2
             rankModifiers = self.rankModifiers = [None]*10
             skills = self.skills = [None]*7
             (attributes[0], attributes[1],
             rankModifiers[0], rankModifiers[1], rankModifiers[2], rankModifiers[3], rankModifiers[4], rankModifiers[5], rankModifiers[6], rankModifiers[7], rankModifiers[8], rankModifiers[9],
             skills[0], skills[1], skills[2], skills[3], skills[4], skills[5], skills[6],
-            self.flags) = tuple
+            self.flags) = t
             self.rankModifiers = [FACTRecord.RankModifier(unpack(FACTRecord.RankModifier._struct[0], s)) for s in self.rankModifiers]
 
     class ANAMGroup:
@@ -2863,13 +2863,13 @@ class IDLERecord(Record, IHaveMODL):
 class INFO3Record(Record):
     class DATAField:
         _struct = ('<2i4B', 12)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.unknown1,
             self.disposition,
             self.rank, # (0-10)
             self.gender, # 0xFF = None, 0x00 = Male, 0x01 = Female
             self.pcRank, # (0-10)
-            self.unknown2) = tuple
+            self.unknown2) = t
 
     PNAM: REFXField['INFO3Record'] # Previous info ID
     NNAM: STRVField = None # Next info ID (form a linked list of INFOs for the DIAL). First INFO has an empty PNAM, last has an empty NNAM.
@@ -3027,9 +3027,9 @@ class INGRRecord(Record, IHaveMODL):
 class KEYMRecord(Record, IHaveMODL):
     class DATAField:
         _struct = ('<if', 8)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.value,
-            self.weight) = tuple
+            self.weight) = t
 
     MODL: MODLGroup # Model
     FULL: STRVField # Item Name
@@ -3086,9 +3086,9 @@ class LANDRecord(Record):
     class CORDField:
         def __repr__(self): return f'{self.cellX},{self.cellY}'
         _struct = ('<2i', 8)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.cellX,
-            self.cellY) = tuple
+            self.cellY) = t
 
     class WNAMField:
         # Low-LOD heightmap (signed chars)
@@ -3100,18 +3100,18 @@ class LANDRecord(Record):
     # TES4
     class BTXTField:
         _struct = ('<I2Bh', 8)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.texture,
             self.quadrant,
             self.pad01,
-            self.layer) = tuple
+            self.layer) = t
 
     class VTXTField:
         _struct = ('<2Hf', 8)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.position,
             self.pad01,
-            self.opacity) = tuple
+            self.opacity) = t
 
     class ATXTGroup:
         def __init__(self, ATXT: 'BTXTField'):
@@ -3279,11 +3279,11 @@ class LIGHRecord(Record, IHaveMODL):
 class LOCKRecord(Record, IHaveMODL):
     class LKDTField:
         _struct = ('<fifi', 16)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.weight,
             self.value,
             self.quality,
-            self.uses) = tuple
+            self.uses) = t
 
     MODL: MODLGroup # Model Name
     FNAM: STRVField # Item Name
@@ -3334,10 +3334,10 @@ class LSCRRecord(Record):
 class LTEXRecord(Record):
     class HNAMField:
         _struct = ('<3B', 3)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.materialType,
             self.friction,
-            self.restitution) = tuple
+            self.restitution) = t
 
     ICON: FILEField # Texture
     # TES3
@@ -3630,13 +3630,13 @@ class NPC_3Record(CREA3Record):
 
     class DODTField:
         _struct = ('<6f', 24)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.xPos,
             self.yPos,
             self.zPos,
             self.xRot,
             self.yRot,
-            self.zRot) = tuple
+            self.zRot) = t
 
     class DODTGroup:
         def __repr__(self): return f'{self.DODT}'
@@ -3693,18 +3693,18 @@ class NPC_4Record(CREA4Record):
 
     class DATAField:
         _struct = ('<21si8s', 33)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.skills,
             self.health,
-            self.attributes) = tuple
+            self.attributes) = t
 
     class HCLRField:
         _struct = ('<4B', 4)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.red,
             self.green,
             self.blue,
-            self.custom) = tuple
+            self.custom) = t
 
     RNAM: REF1Field['RACERecord'] # Race
     AIDT: CREA4Record.AIDTField # AI Data
@@ -3758,45 +3758,46 @@ class NPC_4Record(CREA4Record):
 class PACKRecord(Record):
     class PKDTField:
         _struct = { 4: '<I', 8: '<I4B', 16: '<I4BI' }
-        def __init__(self, tuple):
-            if not isinstance(tuple, tuple): self.flags = tuple; return
-            match len(tuple):
+        def __init__(self, t):
+            if not isinstance(t, tuple): self.flags = t; return
+            match len(t):
                 case 5:
                     (self.flags,
                     self.packageType,
                     self.interruptOverride,
                     self.preferredSpeed,
-                    self.unknown) = tuple
+                    self.unknown) = t
                 case 6:
                     (self.flags,
                     self.packageType,
                     self.interruptOverride,
                     self.preferredSpeed,
                     self.unknown,
-                    self.interruptFlags) = tuple
+                    self.interruptFlags) = t
+                case _: raise NotImplementedError('PKDTField')
 
     class PSDTField:
         _struct = ('<3Bbi', 8)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.month,
             self.dayOfWeek,
             self.date,
             self.time,
-            self.duration) = tuple
+            self.duration) = t
 
     class PLDTField:
         _struct = ('<iIi', 12)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.type,
             self.target,
-            self.radius) = tuple
+            self.radius) = t
 
     class PTDTField:
         _struct = ('<iIi', 12)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.type,
             self.target,
-            self.count) = tuple
+            self.count) = t
 
     PKDT: PKDTField # General
     PLDT: PLDTField # Location
@@ -3836,25 +3837,25 @@ class PGRDRecord(Record):
 
     class PGRPField:
         _struct = ('<3fB3s', 16)
-        def __init__(self, tuple):
+        def __init__(self, t):
             point = self.point = array([None]*3)
             (point[0], point[1], point[2],
             self.connections,
-            self.unused) = tuple
+            self.unused) = t
 
     class PGRRField:
         _struct = ('<2h', 4)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.startPointId,
-            self.endPointId) = tuple
+            self.endPointId) = t
 
     class PGRIField:
         _struct = ('<hH3f', 16)
-        def __init__(self, tuple):
+        def __init__(self, t):
             foreignNode = self.foreignNode = array([None]*3)
             (self.pointId,
             self.unused,
-            foreignNode[0], foreignNode[1], foreignNode[2]) = tuple
+            foreignNode[0], foreignNode[1], foreignNode[2]) = t
 
     class PGRLField:
         def __init__(self, r: Reader, dataSize: int):
@@ -3888,11 +3889,11 @@ class PGRDRecord(Record):
 class PROBRecord(Record, IHaveMODL):
     class PBDTField:
         _struct = ('<fifi', 16)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.weight,
             self.value,
             self.quality,
-            self.uses) = tuple
+            self.uses) = t
 
     MODL: MODLGroup # Model Name
     FNAM: STRVField # Item Name
@@ -3919,9 +3920,9 @@ class PROBRecord(Record, IHaveMODL):
 class QUSTRecord(Record):
     class DATAField:
         _struct = ('<2B', 2)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.flags,
-            self.priority) = tuple
+            self.priority) = t
 
     FULL: STRVField # Item Name
     ICON: FILEField # Icon
@@ -4172,11 +4173,11 @@ class RACERecord(Record):
 class REPARecord(Record, IHaveMODL):
     class RIDTField:
         _struct = ('<f2if', 16)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.weight,
             self.value,
             self.uses,
-            self.quality) = tuple
+            self.quality) = t
 
     MODL: MODLGroup # Model Name
     FNAM: STRVField # Item Name
@@ -4214,23 +4215,23 @@ class REFRRecord(Record):
     # Coords
     class DATAField:
         _struct = ('<6f', 24)
-        def __init__(self, tuple):
+        def __init__(self, t):
             position = self.position = array([None]*3)
             rotation = self.rotation = array([None]*3)
             (position[0], position[1], position[2],
-            rotation[0], rotation[1], rotation[2]) = tuple
+            rotation[0], rotation[1], rotation[2]) = t
 
     # Ragdoll Data
     class XRGDField:
         _struct = ('<B3c6f', 28)
-        def __init__(self, tuple):
+        def __init__(self, t):
             unused = self.unused = [None]*3
             position = self.position = array([None]*3)
             rotation = self.rotation = array([None]*3)
             (self.boneId,
             unused[0], unused[1], unused[2],
             position[0], position[1], position[2],
-            rotation[0], rotation[1], rotation[2]) = tuple
+            rotation[0], rotation[1], rotation[2]) = t
 
     class XLOCField:
         def __repr__(self): return f'{self.key}'
@@ -4257,7 +4258,7 @@ class REFRRecord(Record):
     class XSEDField:
         def __repr__(self): return f'{self.seed}'
         _struct = { 1: '<B', 4: '<B3x' }
-        def __init__(self, tuple): self.seed = tuple
+        def __init__(self, t): self.seed = tuple
 
     class XMRKGroup:
         def __repr__(self): return f'{self.FULL.value}'
@@ -4417,7 +4418,7 @@ class REGNRecord(Record):
     class WEATField:
         # v1.3 ESM files add 2 bytes to WEAT subrecords.
         _struct = { 8: '<8B', 10: '<8B2x' }
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.clear,
             self.cloudy,
             self.foggy,
@@ -4425,7 +4426,7 @@ class REGNRecord(Record):
             self.rain,
             self.thunder,
             self.ash,
-            self.blight) = tuple
+            self.blight) = t
 
     # TES4
     class RPLIField:
@@ -4483,10 +4484,10 @@ class ROADRecord(Record):
 class SBSPRecord(Record):
     class DNAMField:
         _struct = ('<3f', 12)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.x, # X dimension
             self.y, # Y dimension
-            self.z) = tuple # Z dimension
+            self.z) = t # Z dimension
 
     DNAM: DNAMField
     def __init__(self): super().__init__()
@@ -4616,10 +4617,10 @@ class SCPTRecord(Record):
 class SGSTRecord(Record, IHaveMODL):
     class DATAField:
         _struct = ('<Bif', 9)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.uses,
             self.value,
-            self.weight) = tuple
+            self.weight) = t
 
     MODL: MODLGroup # Model
     FULL: STRVField # Item Name
@@ -4687,9 +4688,9 @@ class SKILRecord(Record):
 class SLGMRecord(Record, IHaveMODL):
     class DATAField:
         _struct = ('<if', 8)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.value,
-            self.weight) = tuple
+            self.weight) = t
 
     MODL: MODLGroup # Model
     FULL: STRVField # Item Name
@@ -4888,12 +4889,12 @@ class SUNPRecord(Record):
 class TES3Record(Record):
     class HEDRField:
         _struct = ('<fI32s256sI', 300)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.version,
             self.fileType,
             self.companyName,
             self.fileDescription,
-            self.numRecords) = tuple
+            self.numRecords) = t
             self.companyName = self.companyName.decode('ascii')
             self.fileDescription = self.fileDescription.decode('ascii')
 
@@ -4915,10 +4916,10 @@ class TES3Record(Record):
 class TES4Record(Record):
     class HEDRField:
         _struct = ('<fiI', 12)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.version,
             self.numRecords, # Number of records and groups (not including TES4 record itself).
-            self.nextObjectId) = tuple # Next available object ID.
+            self.nextObjectId) = t # Next available object ID.
 
     HEDR: HEDRField
     CNAM: STRVField = None # author (Optional)
@@ -4978,7 +4979,7 @@ class TREERecord(Record, IHaveMODL):
 
     class CNAMField:
         _struct = ('<5fi2f', 32)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.leafCurvature,
             self.minimumLeafAngle,
             self.maximumLeafAngle,
@@ -4986,13 +4987,13 @@ class TREERecord(Record, IHaveMODL):
             self.leafDimmingValue,
             self.shadowRadius,
             self.rockSpeed,
-            self.rustleSpeed) = tuple
+            self.rustleSpeed) = t
 
     class BNAMField:
         _struct = ('<2f', 8)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.width,
-            self.height) = tuple
+            self.height) = t
 
     MODL: MODLGroup # Model
     ICON: FILEField # Leaf Texture
@@ -5206,14 +5207,14 @@ class WEAPRecord(Record, IHaveMODL):
 class WRLDRecord(Record):
     class MNAMField:
         _struct = ('<2i4h', 16)
-        def __init__(self, tuple):
+        def __init__(self, t):
             usableDimensions = self.usableDimensions = Int2()
             (usableDimensions.x, usableDimensions.y,
             # Cell Coordinates
             self.nwCell_X,
             self.nwCell_Y,
             self.seCell_X,
-            self.seCell_Y) = tuple
+            self.seCell_Y) = t
 
     class NAM0Field:
         def __init__(self, r: Reader, dataSize: int):
@@ -5225,10 +5226,10 @@ class WRLDRecord(Record):
     class RNAMField:
         class Reference:
             _struct = ('<I2h', 16)
-            def __init__(self, tuple):
+            def __init__(self, t):
                 (self.ref,
                 self.x,
-                self.y) = tuple
+                self.y) = t
                 self.ref: Ref[REFRRecord] = Ref[REFRRecord](REFRRecord, self.ref)
         def __init__(self, r: Reader, dataSize: int):
             self.gridX: int = r.readInt16()
@@ -5273,15 +5274,15 @@ class WRLDRecord(Record):
 class WTHRRecord(Record, IHaveMODL):
     class FNAMField:
         _struct = ('<4f', 16)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.dayNear,
             self.dayFar,
             self.nightNear,
-            self.nightFar) = tuple
+            self.nightFar) = t
 
     class HNAMField:
         _struct = ('<14f', 56)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.eyeAdaptSpeed,
             self.blurRadius,
             self.blurPasses,
@@ -5295,11 +5296,11 @@ class WTHRRecord(Record, IHaveMODL):
             self.lumRampMax,
             self.sunlightDimmer,
             self.grassDimmer,
-            self.treeDimmer) = tuple
+            self.treeDimmer) = t
 
     class DATAField:
         _struct = ('<15B', 15)
-        def __init__(self, tuple):
+        def __init__(self, t):
             lightningColor = self.lightningColor = ByteColor4()
             (self.windSpeed,
             self.cloudSpeed_Lower,
@@ -5313,7 +5314,7 @@ class WTHRRecord(Record, IHaveMODL):
             self.thunderLightning_EndFadeOut,
             self.thunderLightning_Frequency,
             self.weatherClassification,
-            lightningColor.x, lightningColor.y, lightningColor.z) = tuple
+            lightningColor.x, lightningColor.y, lightningColor.z) = t
         def fill(self) -> None: self.lightningColor.a = 255
 
     class SNAMField:

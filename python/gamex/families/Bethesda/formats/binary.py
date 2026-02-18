@@ -25,18 +25,18 @@ class Binary_Ba2(ArcBinaryT):
     # tag::Binary_Ba2.HDR5[]
     class HDR5:
         _struct = ('<3IQ', 20)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.version,
             self.type,
             self.numFiles,
-            self.nameTableOffset) = tuple
+            self.nameTableOffset) = t
             self.type = Binary_Ba2.HDR5Type(self.type)
     # end::Binary_Ba2.HDR5[]
 
     # tag::Binary_Ba2.FILE5[]
     class FILE5:
         _struct = ('<4IQ3I', 36)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.nameHash,
             self.ext,
             self.dirHash,
@@ -44,13 +44,13 @@ class Binary_Ba2(ArcBinaryT):
             self.offset,
             self.packedSize,
             self.fileSize,
-            self.align) = tuple
+            self.align) = t
     # end::Binary_Ba2.FILE5[]
 
     # tag::Binary_Ba2.TEX5[]
     class TEX5:
         _struct = ('<3I2B3H4B', 24)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.nameHash,
             self.ext,
             self.dirHash,
@@ -62,25 +62,25 @@ class Binary_Ba2(ArcBinaryT):
             self.numMips,
             self.format,
             self.isCubemap,
-            self.tileMode) = tuple
+            self.tileMode) = t
     # end::Binary_Ba2.TEX5[]
 
     # tag::Binary_Ba2.TEXC5[]
     class TEXC5:
         _struct = ('<Q2I2HI', 24)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.offset,
             self.packedSize,
             self.fileSize,
             self.startMip,
             self.endMip,
-            self.align) = tuple
+            self.align) = t
     # end::Binary_Ba2.TEXC5[]
 
     # tag::Binary_Ba2.GNMF5[]
     class GNMF5:
         _struct = ('<3I2BH32sQ4I', 72)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.nameHash,
             self.ext,
             self.dirHash,
@@ -92,7 +92,7 @@ class Binary_Ba2(ArcBinaryT):
             self.packedSize,
             self.fileSize,
             self.unk40,
-            self.align) = tuple
+            self.align) = t
     # end::Binary_Ba2.GNMF5[]
 
     #endregion
@@ -198,7 +198,7 @@ class Binary_Bsa(ArcBinaryT):
     # tag::Binary_Bsa.HDR4[]
     class HDR4:
         _struct = ('<8I', 32)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.version,
             self.folderRecordOffset,
             self.archiveFlags,
@@ -206,35 +206,35 @@ class Binary_Bsa(ArcBinaryT):
             self.fileCount,
             self.folderNameLength,
             self.fileNameLength,
-            self.fileFlags) = tuple
+            self.fileFlags) = t
     # end::Binary_Bsa.HDR4[]
 
     # tag::Binary_Bsa.DIR4[]
     class DIR4:
         _struct = ('<Q2I', 16)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.hash,
             self.fileCount,
-            self.offset) = tuple
+            self.offset) = t
     # end::Binary_Bsa.DIR4[]
 
     # tag::Binary_Bsa.DIR4SE[]
     class DIR4SE:
         _struct = ('<Q2IQ', 24)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.hash,
             self.fileCount,
             self.unk,
-            self.offset) = tuple
+            self.offset) = t
     # end::Binary_Bsa.DIR4SE[]
 
     # tag::Binary_Bsa.FILE4[]
     class FILE4:
         _struct = ('<Q2I', 16)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.hash,
             self.size,
-            self.offset) = tuple
+            self.offset) = t
     # end::Binary_Bsa.FILE4[]
 
     #endregion
@@ -246,17 +246,17 @@ class Binary_Bsa(ArcBinaryT):
     # tag::Binary_Bsa.HDR3[]
     class HDR3:
         _struct = ('<2I', 8)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.hashOffset,
-            self.fileCount) = tuple
+            self.fileCount) = t
     # end::Binary_Bsa.HDR3[]
 
     # tag::Binary_Bsa.FILE3[]
     class FILE3:
         _struct = ('<2I', 8)
-        def __init__(self, tuple):
+        def __init__(self, t):
             (self.fileSize,
-            self.fileOffset) = tuple
+            self.fileOffset) = t
         @property
         def size(self): return self.fileSize & 0x3FFFFFFF if self.fileSize > 0 else 0
     # end::Binary_Bsa.FILE3[]

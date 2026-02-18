@@ -1,4 +1,4 @@
-import os
+import os, sys
 from io import BytesIO
 from itertools import groupby
 from typing import TypeVar, get_args
@@ -11,6 +11,8 @@ from openstk.core.drawing import Color
 from gamex import FileSource, BinaryReader, ArcBinaryT
 from gamex.core.globalx import ByteColor4
 from gamex.families.Uncore.formats.compression import decompressZlib2
+
+sys.setrecursionlimit(1500)
 
 # types
 type Vector3 = ndarray
@@ -838,7 +840,7 @@ class UNKNField:
 
 class REF1Field[T: Record]:
     def __repr__(self) -> str: return f'{self.item}'
-    def __init__(self, t: type, r: Reader, dataSize: int): self.item = Ref[Record](t, r.readUInt32())
+    def __init__(self, t: type, r: Reader, dataSize: int): self.item = Ref[T](t, r.readUInt32())
 class REF2Field[T: Record]:
     def __repr__(self) -> str: return f'{self.item1}x{self.item2}'
     def __init__(self, t: type, r: Reader, dataSize: int): self.item1 = Ref[T](t, r.readUInt32()); self.item2 = Ref[T](t, r.readUInt32())
@@ -977,7 +979,7 @@ class ACHRRecord(Record):
             case FieldType.XRGD: z = self.XRGDs = r.readSArray(REFRRecord.XRGDField, dataSize // 28)
             case FieldType.XESP: z = self.XESP = REFRRecord.XESPField(r, dataSize)
             case FieldType.XPCI: z = self.XPCI = REFXField[CELLRecord](CELLRecord, r, dataSize)
-            case FieldType.FULL: z = self.XPCI.value.setName(r.readFAString(dataSize))
+            case FieldType.FULL: z = self.XPCI.setName(r.readFAString(dataSize))
             case FieldType.XLOD: z = self.XLOD = r.readBYTV(dataSize)
             case FieldType.XMRC: z = self.XMRC = REFXField[REFRRecord](REFRRecord, r, dataSize)
             case FieldType.XHRS: z = self.XHRS = REFXField[ACRERecord](ACRERecord, r, dataSize)
@@ -1073,8 +1075,8 @@ class ALCHRecord(Record, IHaveMODL):
             case FieldType.MODT: z = self.MODL.MODTField(r, dataSize)
             case FieldType.FULL: z = FULL = r.readSTRV(dataSize) if len(self.SCITs) == 0 else self.SCITs.last().FULLField(r, dataSize)
             case FieldType.FNAM: z = self.FULL = r.readSTRV(dataSize)
-            case FieldType.DATA | FieldType.ALDT: z = self.DATA = self.DATAField(r, dataSize)
-            case FieldType.ENAM: z = self.ENAMs.addX(r.readS(self.ENAMField, dataSize))
+            case FieldType.DATA | FieldType.ALDT: z = self.DATA = ALCHRecord.DATAField(r, dataSize)
+            case FieldType.ENAM: z = self.ENAMs.addX(r.readS(ALCHRecord.ENAMField, dataSize))
             case FieldType.ICON | FieldType.TEXT: z = self.ICON = r.readFILE(dataSize)
             case FieldType.SCRI: z = self.SCRI = REFXField[SCPTRecord](SCPTRecord, r, dataSize)
             # TES4
@@ -1117,7 +1119,7 @@ class AMMORecord(Record, IHaveMODL):
             case FieldType.ICON: z = self.ICON = r.readFILE(dataSize)
             case FieldType.ENAM: z = self.ENAM = REFXField[ENCHRecord](ENCHRecord, r, dataSize)
             case FieldType.ANAM: z = self.ANAM = r.readS(IN16Field, dataSize)
-            case FieldType.DATA: z = self.DATA = r.readS(self.DATAField, dataSize)
+            case FieldType.DATA: z = self.DATA = r.readS(AMMORecord.DATAField, dataSize)
             case _: z = Record._empty
         return z
 # end::AMMO[]
@@ -1172,7 +1174,7 @@ class APPARecord(Record, IHaveMODL):
             case FieldType.MODB: z = self.MODL.MODBField(r, dataSize)
             case FieldType.MODT: z = self.MODL.MODTField(r, dataSize)
             case FieldType.FULL | FieldType.FNAM: z = self.FULL = r.readSTRV(dataSize)
-            case FieldType.DATA | FieldType.AADT: z = self.DATA = self.DATAField(r, dataSize)
+            case FieldType.DATA | FieldType.AADT: z = self.DATA = APPARecord.DATAField(r, dataSize)
             case FieldType.ICON | FieldType.ITEX: z = self.ICON = r.readFILE(dataSize)
             case FieldType.SCRI: z = self.SCRI = REFXField[SCPTRecord](SCPTRecord, r, dataSize)
             case _: z = Record._empty
@@ -1243,7 +1245,7 @@ class ARMORecord(Record, IHaveMODL):
             case FieldType.MODB: z = self.MODL.MODBField(r, dataSize)
             case FieldType.MODT: z = self.MODL.MODTField(r, dataSize)
             case FieldType.FULL | FieldType.FNAM: z = self.FULL = r.readSTRV(dataSize)
-            case FieldType.DATA | FieldType.AODT: z = self.DATA = self.DATAField(r, dataSize)
+            case FieldType.DATA | FieldType.AODT: z = self.DATA = ARMORecord.DATAField(r, dataSize)
             case FieldType.ICON | FieldType.ITEX: z = self.ICON = r.readFILE(dataSize)
             case FieldType.SCRI: z = self.SCRI = REFXField[SCPTRecord](SCPTRecord, r, dataSize)
             case FieldType.ENAM: z = self.ENAM = REFXField[ENCHRecord](ENCHRecord, r, dataSize)
@@ -1358,7 +1360,7 @@ class BODYRecord(Record, IHaveMODL):
                 case FieldType.NAME: z = self.EDID = r.readSTRV(dataSize)
                 case FieldType.MODL: z = self.MODL = MODLGroup(r, dataSize)
                 case FieldType.FNAM: z = self.FNAM = r.readSTRV(dataSize)
-                case FieldType.BYDT: z = self.BYDT = r.readS(self.BYDTField, dataSize)
+                case FieldType.BYDT: z = self.BYDT = r.readS(BODYRecord.BYDTField, dataSize)
                 case _: z = Record._empty
             return z
         return None
@@ -1419,7 +1421,7 @@ class BOOKRecord(Record, IHaveMODL):
             case FieldType.MODB: z = self.MODL.MODBField(r, dataSize)
             case FieldType.MODT: z = self.MODL.MODTField(r, dataSize)
             case FieldType.FULL | FieldType.FNAM: z = self.FULL = r.readSTRV(dataSize)
-            case FieldType.DATA | FieldType.BKDT: z = self.DATA = self.DATAField(r, dataSize)
+            case FieldType.DATA | FieldType.BKDT: z = self.DATA = BOOKRecord.DATAField(r, dataSize)
             case FieldType.ICON | FieldType.ITEX: z = self.ICON = r.readFILE(dataSize)
             case FieldType.SCRI: z = self.SCRI = REFXField[SCPTRecord](SCPTRecord, r, dataSize)
             case FieldType.DESC | FieldType.TEXT: z = self.DESC = STRVField(r.readFUString(dataSize).replace('\ufffd', '\1'))
@@ -1595,9 +1597,9 @@ class CELLRecord(Record): #ICellRecord
                 case FieldType.FULL | FieldType.RGNN: z = self.FULL = r.readSTRV(dataSize)
                 case FieldType.DATA:
                     z = self.DATA = r.readINTV(4 if r.format == FormType.TES3 else dataSize)._asUI16Field
-                    if r.format == FormType.TES3: self.XCLC = r.readS(self.XCLCField, 8)
-                case FieldType.XCLC: z = self.XCLC = r.readS(self.XCLCField, dataSize)
-                case FieldType.XCLL | FieldType.AMBI: z = self.XCLL = r.readS(self.XCLLField, dataSize)
+                    if r.format == FormType.TES3: self.XCLC = r.readS(CELLRecord.XCLCField, 8)
+                case FieldType.XCLC: z = self.XCLC = r.readS(CELLRecord.XCLCField, dataSize)
+                case FieldType.XCLL | FieldType.AMBI: z = self.XCLL = r.readS(CELLRecord.XCLLField, dataSize)
                 case FieldType.XCLW | FieldType.WHGT: z = self.XCLW = r.readS(FLTVField, dataSize)
                 # TES3
                 case FieldType.NAM0: z = self.NAM0 = r.readS(UI32Field, dataSize)
@@ -1608,7 +1610,7 @@ class CELLRecord(Record): #ICellRecord
                 case FieldType.XCMT: z = self.XCMT = r.readS(BYTEField, dataSize)
                 case FieldType.XCCM: z = self.XCCM = REFXField[CLMTRecord](CLMTRecord, r, dataSize)
                 case FieldType.XCWT: z = self.XCWT = REFXField[WATRRecord](WATRRecord, r, dataSize)
-                case FieldType.XOWN: z = self.XOWNs.addX(self.XOWNGroup(XOWN = REFXField(Record, r, dataSize)))
+                case FieldType.XOWN: z = self.XOWNs.addX(CELLRecord.XOWNGroup(XOWN = REFXField(Record, r, dataSize)))
                 case FieldType.XRNK: z = self.XOWNs.last().XRNK = r.readS(IN32Field, dataSize)
                 case FieldType.XGLB: z = self.XOWNs.last().XGLB = REFXField(Record, r, dataSize)
                 case _: z = Record._empty
@@ -1616,10 +1618,10 @@ class CELLRecord(Record): #ICellRecord
         # Referenced Object Data Grouping
         match type:
             # RefObjDataGroup sub-records
-            case FieldType.FRMR: self._lastRef = self.refObjs.addX(self.RefObj()); z = self._lastRef.FRMR = r.readS(UI32Field, dataSize)
+            case FieldType.FRMR: self._lastRef = self.refObjs.addX(CELLRecord.RefObj()); z = self._lastRef.FRMR = r.readS(UI32Field, dataSize)
             case FieldType.NAME: z = self._lastRef.EDID = r.readSTRV(dataSize)
             case FieldType.XSCL: z = self._lastRef.XSCL = r.readS(FLTVField, dataSize)
-            case FieldType.DODT: z = self._lastRef.DODT = r.readS(self.XYZAField, dataSize)
+            case FieldType.DODT: z = self._lastRef.DODT = r.readS(CELLRecord.XYZAField, dataSize)
             case FieldType.DNAM: z = self._lastRef.DNAM = r.readSTRV(dataSize)
             case FieldType.FLTV: z = self._lastRef.FLTV = r.readS(FLTVField, dataSize)
             case FieldType.KNAM: z = self._lastRef.KNAM = r.readSTRV(dataSize)
@@ -1630,7 +1632,7 @@ class CELLRecord(Record): #ICellRecord
             case FieldType.INTV: z = self._lastRef.INTV = r.readS(IN32Field, dataSize)
             case FieldType.NAM9: z = self._lastRef.NAM9 = r.readS(UI32Field, dataSize)
             case FieldType.XSOL: z = self._lastRef.XSOL = r.readSTRV(dataSize)
-            case FieldType.DATA: z = self._lastRef.DATA = r.readS(self.XYZAField, dataSize)
+            case FieldType.DATA: z = self._lastRef.DATA = r.readS(CELLRecord.XYZAField, dataSize)
             # TES
             case FieldType.CNAM: z = self._lastRef.CNAM = r.readSTRV(dataSize)
             case FieldType.NAM0: z = self._lastRef.NAM0 = r.readS(UI32Field, dataSize)
@@ -1701,7 +1703,7 @@ class CLASRecord(Record):
         match type:
             case FieldType.EDID | FieldType.NAME: z = self.EDID = r.readSTRV(dataSize)
             case FieldType.FULL | FieldType.FNAM: z = self.FULL = r.readSTRV(dataSize)
-            case FieldType.CLDT | FieldType.DATA: z = self.DATA = self.DATAField(r, dataSize)
+            case FieldType.CLDT | FieldType.DATA: z = self.DATA = CLASRecord.DATAField(r, dataSize)
             case FieldType.DESC: z = self.DESC = r.readSTRV(dataSize)
             # TES4
             case FieldType.ICON: z = self.ICON = r.readSTRV(dataSize)
@@ -1759,7 +1761,7 @@ class CLOTRecord(Record, IHaveMODL):
             case FieldType.MODB: z = self.MODL.MODBField(r, dataSize)
             case FieldType.MODT: z = self.MODL.MODTField(r, dataSize)
             case FieldType.FULL | FieldType.FNAM: z = self.FULL = r.readSTRV(dataSize)
-            case FieldType.DATA | FieldType.CTDT: z = self.DATA = self.DATAField(r, dataSize)
+            case FieldType.DATA | FieldType.CTDT: z = self.DATA = CLOTRecord.DATAField(r, dataSize)
             case FieldType.ICON | FieldType.ITEX: z = self.ICON = r.readFILE(dataSize)
             case FieldType.INDX: z = self.INDXs.addX(self.INDXGroup(INDX = r.readINTV(dataSize)))
             case FieldType.BNAM: z = self.INDXs.last().BNAM = r.readSTRV(dataSize)
@@ -1813,7 +1815,7 @@ class CLMTRecord(Record, IHaveMODL):
             case FieldType.MODB: z = self.MODL.MODBField(r, dataSize)
             case FieldType.FNAM: z = self.FNAM = r.readFILE(dataSize)
             case FieldType.GNAM: z = self.GNAM = r.readFILE(dataSize)
-            case FieldType.WLST: z = self.WLSTs.addRangeX(r.readFArray(lambda z: self.WLSTField(r, dataSize), dataSize >> 3))
+            case FieldType.WLST: z = self.WLSTs.addRangeX(r.readFArray(lambda z: CLMTRecord.WLSTField(r, dataSize), dataSize >> 3))
             case FieldType.TNAM: z = self.TNAM = r.readS(self.TNAMField, dataSize)
             case _: z = Record._empty
         return z
@@ -2050,11 +2052,11 @@ class CREA3Record(Record, IHaveMODL):
             case FieldType.MODL: z = self.MODL = MODLGroup(r, dataSize)
             case FieldType.CNAM: z = self.CNAM = r.readSTRV(dataSize)
             case FieldType.FNAM: z = self.FULL = r.readSTRV(dataSize)
-            case FieldType.NPDT: z = self.NPDT = r.readS(self.NPDT96Field, dataSize)
+            case FieldType.NPDT: z = self.NPDT = r.readS(CREA3Record.NPDT96Field, dataSize)
             case FieldType.FLAG: z = self.FLAG = r.readS(IN32Field, dataSize)
             case FieldType.SCRI: z = self.SCRI = REFXField[SCPTRecord](SCPTRecord, r, dataSize)
             case FieldType.NPCO: z = self.NPCOs.addX(CNTOXField(Record, r, dataSize))
-            case FieldType.AIDT: z = self.AIDT = r.readS(self.AIDTField, dataSize)
+            case FieldType.AIDT: z = self.AIDT = r.readS(CREA3Record.AIDTField, dataSize)
             case FieldType.AI_A | FieldType.AI_E | FieldType.AI_F | FieldType.AI_T | FieldType.AI_W: z = self.AIs.addX(CREA3Record.AIGroup(r, dataSize, type))
             case FieldType.CNDT: z = self.AIs.last().CNDT = r.readSTRV(dataSize)
             case FieldType.XSCL: z = self.XSCL = r.readS(FLTVField, dataSize)
@@ -2126,7 +2128,7 @@ class CREA4Record(Record, IHaveMODL):
             case FieldType.MODB: z = self.MODL.MODBField(r, dataSize)
             case FieldType.MODT: z = self.MODL.MODTField(r, dataSize)
             case FieldType.NIFZ: z = self.NIFZ = r.readSTRV(dataSize)
-            case FieldType.ACBS: z = self.ACBS = r.readS(self.ACBSField, dataSize)
+            case FieldType.ACBS: z = self.ACBS = r.readS(CREA4Record.ACBSField, dataSize)
             case FieldType.SNAM: z = self.SNAMs.addX(REFVField[FACTRecord](FACTRecord, r, dataSize))
             case FieldType.INAM: z = self.INAM = REF1Field[LVLIRecord](LVLIRecord, r, dataSize)
             case FieldType.RNAM: z = self.RNAM = r.readS(BYTEField, dataSize)
@@ -2270,8 +2272,8 @@ class CSTYRecord(Record):
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
-            case FieldType.CSTD: z = self.CSTD = self.CSTDField(r, dataSize)
-            case FieldType.CSAD: z = self.CSAD = r.readS(self.CSADField, dataSize)
+            case FieldType.CSTD: z = self.CSTD = EFSHRecord.CSTDField(r, dataSize)
+            case FieldType.CSAD: z = self.CSAD = r.readS(EFSHRecord.CSADField, dataSize)
             case _: z = Record._empty
         return z
 # end::CSTY[]
@@ -2493,7 +2495,7 @@ class EFSHRecord(Record):
             case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
             case FieldType.ICON: z = self.ICON = r.readFILE(dataSize)
             case FieldType.ICO2: z = self.ICO2 = r.readFILE(dataSize)
-            case FieldType.DATA: z = self.DATA = self.DATAField(r, dataSize)
+            case FieldType.DATA: z = self.DATA = EFSHRecord.DATAField(r, dataSize)
             case _: z = Record._empty
         return z
 # end::EFSH[]
@@ -2577,10 +2579,10 @@ class ENCHRecord(Record):
             case FieldType.EDID | FieldType.NAME: z = self.EDID = self.FULL = r.readSTRV(dataSize)
             case FieldType.FULL if len(self.SCITs) == 0: z = self.FULL = r.readSTRV(dataSize) #:matchif
             case FieldType.FULL if len(self.SCITs) != 0: z = self.SCITs.last().FULLField(r, dataSize) #:matchif
-            case FieldType.ENIT | FieldType.ENDT: z = self.ENIT = self.ENITField(r, dataSize)
+            case FieldType.ENIT | FieldType.ENDT: z = self.ENIT = ENCHRecord.ENITField(r, dataSize)
             case FieldType.EFID: z = r.skip(dataSize)
-            case FieldType.EFIT | FieldType.ENAM: z = self.EFITs.addX(self.EFITField(r, dataSize))
-            case FieldType.SCIT: z = self.SCITs.addX(self.SCITField(r, dataSize))
+            case FieldType.EFIT | FieldType.ENAM: z = self.EFITs.addX(ENCHRecord.EFITField(r, dataSize))
+            case FieldType.SCIT: z = self.SCITs.addX(ENCHRecord.SCITField(r, dataSize))
             case _: z = Record._empty
         return z
 # end::ENCH[]
@@ -2621,6 +2623,7 @@ class FACTRecord(Record):
             self.primarySkill,
             self.favoredSkill,
             self.factionReaction) = tuple
+
     class FADTField:
         class Flag(Flag): HiddenFromPlayer = 0x1
         _struct = ('2I20s20s20s20s20s20s20s20s20s20s7iI', 240)
@@ -2666,18 +2669,18 @@ class FACTRecord(Record):
                 case FieldType.NAME: z = self.EDID = r.readSTRV(dataSize)
                 case FieldType.FNAM: z = self.FULL = r.readSTRV(dataSize)
                 case FieldType.RNAM: z = self.RNAM = r.readSTRV(dataSize)
-                case FieldType.FADT: z = self.FADT = r.readS(self.FADTField, dataSize)
-                case FieldType.ANAM: z = self.ANAMs.addX(self.ANAMGroup(ANAM = r.readSTRV(dataSize)))
+                case FieldType.FADT: z = self.FADT = r.readS(FACTRecord.FADTField, dataSize)
+                case FieldType.ANAM: z = self.ANAMs.addX(FACTRecord.ANAMGroup(ANAM = r.readSTRV(dataSize)))
                 case FieldType.INTV: z = self.ANAMs.last().INTV = r.readINTV(dataSize)
                 case _: z = Record._empty
             return z
         match type:
             case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
             case FieldType.FULL: z = self.FULL = r.readSTRV(dataSize)
-            case FieldType.XNAM: z = self.XNAMs.addX(self.XNAMField(r, dataSize))
+            case FieldType.XNAM: z = self.XNAMs.addX(FACTRecord.XNAMField(r, dataSize))
             case FieldType.DATA: z = self.DATA = r.readINTV(dataSize)
             case FieldType.CNAM: z = self.CNAM = r.readS(UI32Field, dataSize)
-            case FieldType.RNAM: z = self.RNAMs.addX(self.RNAMGroup(RNAM = r.readS(IN32Field, dataSize)))
+            case FieldType.RNAM: z = self.RNAMs.addX(FACTRecord.RNAMGroup(RNAM = r.readS(IN32Field, dataSize)))
             case FieldType.MNAM: z = self.RNAMs.last().MNAM = r.readSTRV(dataSize)
             case FieldType.FNAM: z = self.RNAMs.last().FNAM = r.readSTRV(dataSize)
             case FieldType.INAM: z = self.RNAMs.last().INAM = r.readSTRV(dataSize)
@@ -2811,7 +2814,7 @@ class GRASRecord(Record):
             case FieldType.MODL: z = self.MODL = MODLGroup(r, dataSize)
             case FieldType.MODB: z = self.MODL.MODBField(r, dataSize)
             case FieldType.MODT: z = self.MODL.MODTField(r, dataSize)
-            case FieldType.DATA: z = self.DATA = self.DATAField(r, dataSize)
+            case FieldType.DATA: z = self.DATA = GRASRecord.DATAField(r, dataSize)
             case _: z = Record._empty
         return z
 # end::GRAS[]
@@ -2842,7 +2845,7 @@ class IDLERecord(Record, IHaveMODL):
     CTDAs: list['SCPTRecord.CTDAField'] = [] # Conditions
     ANAM: BYTEField
     DATAs: list[REFXField['IDLERecord']]
-    def __init__(self): super().__init__()
+    def __init__(self): super().__init__(); self.CTDAs = listx()
     
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
@@ -2891,7 +2894,7 @@ class INFO3Record(Record):
             case FieldType.INAM: z = DIALRecord._lastRecord.INFOs.addX(self) if DIALRecord._lastRecord else None; self.EDID = r.readSTRV(dataSize)
             case FieldType.PNAM: z = self.PNAM = REFXField[INFO3Record](INFO3Record, r, dataSize)
             case FieldType.NNAM: z = self.NNAM = r.readSTRV(dataSize)
-            case FieldType.DATA: z = self.DATA = r.readS(self.DATAField, dataSize)
+            case FieldType.DATA: z = self.DATA = r.readS(INFO3Record.DATAField, dataSize)
             case FieldType.ONAM: z = self.ONAM = r.readSTRV(dataSize)
             case FieldType.RNAM: z = self.RNAM = r.readSTRV(dataSize)
             case FieldType.CNAM: z = self.CNAM = r.readSTRV(dataSize)
@@ -2925,7 +2928,7 @@ class INFO4Record(Record):
         responseNumber: int
         responseText: str
         actorNotes: str
-        def __init(self, r: Reader, dataSize: int):
+        def __init__(self, r: Reader, dataSize: int):
             self.emotionType = r.readUInt32()
             self.emotionValue = r.readInt32()
             r.skip(4) # Unused
@@ -2950,11 +2953,11 @@ class INFO4Record(Record):
     
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
-            case FieldType.DATA: z = self.DATA = self.DATA4Field(r, dataSize)
+            case FieldType.DATA: z = self.DATA = INFO4Record.DATAField(r, dataSize)
             case FieldType.QSTI: z = self.QSTI = REFXField[QUSTRecord](QUSTRecord, r, dataSize)
             case FieldType.TPIC: z = self.TPIC = REFXField[DIALRecord](DIALRecord, r, dataSize)
             case FieldType.NAME: z = self.NAMEs.addX(REFXField[DIALRecord](DIALRecord, r, dataSize))
-            case FieldType.TRDT: z = self.TRDTs.addX(self.TRDTField(r, dataSize))
+            case FieldType.TRDT: z = self.TRDTs.addX(INFO4Record.TRDTField(r, dataSize))
             case FieldType.NAM1: z = self.TRDTs.last().NAM1Field(r, dataSize)
             case FieldType.NAM2: z = self.TRDTs.last().NAM2Field(r, dataSize)
             case FieldType.CTDA | FieldType.CTDT: z = self.CTDAs.addX(SCPTRecord.CTDAField(r, dataSize))
@@ -3007,8 +3010,8 @@ class INGRRecord(Record, IHaveMODL):
             case FieldType.FULL if len(self.SCITs) == 0: z = self.FULL = r.readSTRV(dataSize) #:matchif
             case FieldType.FULL if len(self.SCITs) != 0: z = self.SCITs.last().FULLField(r, dataSize) #:matchif
             case FieldType.FNAM: z = self.FULL = r.readSTRV(dataSize)
-            case FieldType.DATA: z = self.DATA = self.DATAField(r, dataSize)
-            case FieldType.IRDT: z = self.IRDT = self.IRDTField(r, dataSize)
+            case FieldType.DATA: z = self.DATA = INGRRecord.DATAField(r, dataSize)
+            case FieldType.IRDT: z = self.IRDT = INGRRecord.IRDTField(r, dataSize)
             case FieldType.ICON | FieldType.ITEX: z = self.ICON = r.readFILE(dataSize)
             case FieldType.SCRI: z = self.SCRI = REFXField[SCPTRecord](SCPTRecord, r, dataSize)
             #
@@ -3043,7 +3046,7 @@ class KEYMRecord(Record, IHaveMODL):
             case FieldType.MODT: z = self.MODL.MODTField(r, dataSize)
             case FieldType.FULL: z = self.FULL = r.readSTRV(dataSize)
             case FieldType.SCRI: z = self.SCRI = REFXField[SCPTRecord](SCPTRecord, r, dataSize)
-            case FieldType.DATA: z = self.DATA = r.readS(self.DATAField, dataSize)
+            case FieldType.DATA: z = self.DATA = r.readS(KEYMRecord.DATAField, dataSize)
             case FieldType.ICON: z = self.ICON = r.readFILE(dataSize)
             case _: z = Record._empty
         return z
@@ -3260,7 +3263,7 @@ class LIGHRecord(Record, IHaveMODL):
             case FieldType.FULL: z = self.FULL = r.readSTRV(dataSize)
             case FieldType.FNAM if r.format != FormType.TES3: z = self.FNAM = r.readS(FLTVField, dataSize) #:matchif
             case FieldType.FNAM if r.format == FormType.TES3: z = self.FULL = r.readSTRV(dataSize) #:matchif
-            case FieldType.DATA | FieldType.LHDT: z = self.DATA = self.DATAField(r, dataSize)
+            case FieldType.DATA | FieldType.LHDT: z = self.DATA = LIGHRecord.DATAField(r, dataSize)
             case FieldType.SCPT: z = self.SCPT = r.readSTRV(dataSize)
             case FieldType.SCRI: z = self.SCRI = REFXField[SCPTRecord](SCPTRecord, r, dataSize)
             case FieldType.ICON | FieldType.ITEX: z = self.ICON = r.readFILE(dataSize)
@@ -3295,7 +3298,7 @@ class LOCKRecord(Record, IHaveMODL):
                 case FieldType.NAME: z = self.EDID = r.readSTRV(dataSize)
                 case FieldType.MODL: z = self.MODL = MODLGroup(r, dataSize)
                 case FieldType.FNAM: z = self.FNAM = r.readSTRV(dataSize)
-                case FieldType.LKDT: z = self.LKDT = r.readS(self.LKDTField, dataSize)
+                case FieldType.LKDT: z = self.LKDT = r.readS(LOCKRecord.LKDTField, dataSize)
                 case FieldType.ITEX: z = self.ICON = r.readFILE(dataSize)
                 case FieldType.SCRI: z = self.SCRI = REFXField[SCPTRecord](SCPTRecord, r, dataSize)
                 case _: z = Record._empty
@@ -3322,7 +3325,7 @@ class LSCRRecord(Record):
             case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
             case FieldType.ICON: z = self.ICON = r.readFILE(dataSize)
             case FieldType.DESC: z = self.DESC = r.readSTRV(dataSize)
-            case FieldType.LNAM: z = _nca(self, 'LNAMs', listx()).addX(self.LNAMField(r, dataSize))
+            case FieldType.LNAM: z = _nca(self, 'LNAMs', listx()).addX(LSCRRecord.LNAMField(r, dataSize))
             case _: z = Record._empty
         return z
 # end::LSCR[]
@@ -3351,7 +3354,7 @@ class LTEXRecord(Record):
             case FieldType.INTV: z = self.INTV = r.readINTV(dataSize),
             case FieldType.ICON | FieldType.DATA: z = self.ICON = r.readFILE(dataSize),
             # TES4
-            case FieldType.HNAM: z = self.HNAM = r.readS(self.HNAMField, dataSize),
+            case FieldType.HNAM: z = self.HNAM = r.readS(LTEXRecord.HNAMField, dataSize),
             case FieldType.SNAM: z = self.SNAM = r.readS(BYTEField, dataSize),
             case FieldType.GNAM: z = self.GNAMs.addX(REFXField[GRASRecord](GRASRecord, r, dataSize)),
             case _: z = Record._empty
@@ -3547,7 +3550,7 @@ class MGEFRecord(Record):
         if r.format == FormType.TES3:
             match type:
                 case FieldType.INDX: z = self.INDX = r.readINTV(dataSize)
-                case FieldType.MEDT: z = self.MEDT = self.MEDTField(r, dataSize)
+                case FieldType.MEDT: z = self.MEDT = MGEFRecord.MEDTField(r, dataSize)
                 case FieldType.ITEX: z = self.ICON = r.readFILE(dataSize)
                 case FieldType.PTEX: z = self.PTEX = r.readSTRV(dataSize)
                 case FieldType.CVFX: z = self.CVFX = r.readSTRV(dataSize)
@@ -3568,7 +3571,7 @@ class MGEFRecord(Record):
             case FieldType.ICON: z = self.ICON = r.readFILE(dataSize)
             case FieldType.MODL: z = self.MODL = MODLGroup(r, dataSize)
             case FieldType.MODB: z = self.MODL.MODBField(r, dataSize)
-            case FieldType.DATA: z = self.DATA = self.DATAField(r, dataSize)
+            case FieldType.DATA: z = self.DATA = MGEFRecord.DATAField(r, dataSize)
             case FieldType.ESCE: z = self.ESCEs = r.readFArray(lambda z: r.readSTRV(4), dataSize >> 2)
             case _: z = Record._empty
         return z
@@ -3606,7 +3609,7 @@ class MISCRecord(Record, IHaveMODL):
             case FieldType.MODB: z = self.MODL.MODBField(r, dataSize)
             case FieldType.MODT: z = self.MODL.MODTField(r, dataSize)
             case FieldType.FULL | FieldType.FNAM: z = self.FULL = r.readSTRV(dataSize)
-            case FieldType.DATA | FieldType.MCDT: z = self.DATA = self.DATAField(r, dataSize)
+            case FieldType.DATA | FieldType.MCDT: z = self.DATA = MISCRecord.DATAField(r, dataSize)
             case FieldType.ICON | FieldType.ITEX: z = self.ICON = r.readFILE(dataSize)
             case FieldType.ENAM: z = self.ENAM = REFXField[ENCHRecord](ENCHRecord, r, dataSize)
             case FieldType.SCRI: z = self.SCRI = REFXField[SCPTRecord](SCPTRecord, r, dataSize)
@@ -3659,14 +3662,14 @@ class NPC_3Record(CREA3Record):
             case FieldType.BNAM: z = self.BNAM = r.readSTRV(dataSize)
             case FieldType.CNAM: z = self.CNAM = r.readSTRV(dataSize)
             case FieldType.KNAM: z = self.KNAM = r.readSTRV(dataSize)
-            case FieldType.NPDT: z = self.NPDT = r.readS(self.NPDT52Field, dataSize) if dataSize == 52 else (r.readS(self.NPDT12Field, dataSize) if dataSize == 12 else None)
+            case FieldType.NPDT: z = self.NPDT = r.readS(NPC_3Record.NPDT52Field, dataSize) if dataSize == 52 else (r.readS(NPC_3Record.NPDT12Field, dataSize) if dataSize == 12 else None)
             case FieldType.FLAG: z = self.FLAG = r.readS(IN32Field, dataSize)
             case FieldType.NPCO: z = self.NPCOs.addX(CNTOXField(Record, r, dataSize))
             case FieldType.NPCS: z = self.NPCSs.addX(r.readSTRV_ZPad(dataSize))
             case FieldType.AIDT: z = self.AIDT = r.readS(CREA3Record.AIDTField, dataSize)
             case FieldType.AI_A | FieldType.AI_E | FieldType.AI_F | FieldType.AI_T | FieldType.AI_W: z = self.AIs.addX(CREA3Record.AIGroup(r, dataSize, type))
             case FieldType.CNDT: z = self.AIs.last().CNDT = r.readSTRV(dataSize)
-            case FieldType.DODT: z = self.DODTs.addX(self.DODTGroup(DODT = r.readS(self.DODTField, dataSize)))
+            case FieldType.DODT: z = self.DODTs.addX(NPC_3Record.DODTGroup(DODT = r.readS(NPC_3Record.DODTField, dataSize)))
             case FieldType.DNAM: z = self.DODTs.last().DNAM = r.readSTRV(dataSize)
             case FieldType.XSCL: z = self.XSCL = r.readS(FLTVField, dataSize)
             case FieldType.SCRI: z = self.SCRI = REFXField[SCPTRecord](SCPTRecord, r, dataSize)
@@ -3806,10 +3809,10 @@ class PACKRecord(Record):
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
-            case FieldType.PKDT: z = self.PKDT = r.readS(self.PKDTField, dataSize)
-            case FieldType.PLDT: z = self.PLDT = r.readS(self.PLDTField, dataSize)
-            case FieldType.PSDT: z = self.PSDT = r.readS(self.PSDTField, dataSize)
-            case FieldType.PTDT: z = self.PTDT = r.readS(self.PTDTField, dataSize)
+            case FieldType.PKDT: z = self.PKDT = r.readS(PACKRecord.PKDTField, dataSize)
+            case FieldType.PLDT: z = self.PLDT = r.readS(PACKRecord.PLDTField, dataSize)
+            case FieldType.PSDT: z = self.PSDT = r.readS(PACKRecord.PSDTField, dataSize)
+            case FieldType.PTDT: z = self.PTDT = r.readS(PACKRecord.PTDTField, dataSize)
             case FieldType.CTDA | FieldType.CTDT: z = self.CTDAs.addX(SCPTRecord.CTDAField(r, dataSize))
             case _: z = Record._empty
         return z
@@ -3872,12 +3875,12 @@ class PGRDRecord(Record):
         match type:
             case FieldType.EDID | FieldType.NAME: z = self.EDID = r.readSTRV(dataSize)
             case FieldType.DATA: z = self.DATA = self.DATAField(r, dataSize)
-            case FieldType.PGRP: z = self.PGRPs = r.readSArray(self.PGRPField, dataSize >> 4)
+            case FieldType.PGRP: z = self.PGRPs = r.readSArray(PGRDRecord.PGRPField, dataSize >> 4)
             case FieldType.PGRC: z = self.PGRC = r.readUNKN(dataSize)
             case FieldType.PGAG: z = self.PGAG = r.readUNKN(dataSize)
-            case FieldType.PGRR: z = self.PGRRs = r.readSArray(self.PGRRField, dataSize >> 2); r.skip(dataSize % 4)
-            case FieldType.PGRL: z = _nca(self, 'PGRLs', listx()).addX(self.PGRLField(r, dataSize))
-            case FieldType.PGRI: z = self.PGRIs = r.readSArray(self.PGRIField, dataSize >> 4)
+            case FieldType.PGRR: z = self.PGRRs = r.readSArray(PGRDRecord.PGRRField, dataSize >> 2); r.skip(dataSize % 4)
+            case FieldType.PGRL: z = _nca(self, 'PGRLs', listx()).addX(PGRDRecord.PGRLField(r, dataSize))
+            case FieldType.PGRI: z = self.PGRIs = r.readSArray(PGRDRecord.PGRIField, dataSize >> 4)
             case _: z = Record._empty
         return z
 # end::PGRD[]
@@ -3905,7 +3908,7 @@ class PROBRecord(Record, IHaveMODL):
                 case FieldType.NAME: z = self.EDID = r.readSTRV(dataSize)
                 case FieldType.MODL: z = self.MODL = MODLGroup(r, dataSize)
                 case FieldType.FNAM: z = self.FNAM = r.readSTRV(dataSize)
-                case FieldType.PBDT: z = self.PBDT = r.readS(self.PBDTField, dataSize)
+                case FieldType.PBDT: z = self.PBDT = r.readS(PROBRecord.PBDTField, dataSize)
                 case FieldType.ITEX: z = self.ICON = r.readFILE(dataSize)
                 case FieldType.SCRI: z = self.SCRI = REFXField[SCPTRecord](SCPTRecord, r, dataSize)
                 case _: z = Record._empty
@@ -3913,7 +3916,6 @@ class PROBRecord(Record, IHaveMODL):
         return None
 # end::PROB[]
 
-# 
 # QUST.Quest - 0450 - tag::QUST[]
 class QUSTRecord(Record):
     class DATAField:
@@ -3937,7 +3939,7 @@ class QUSTRecord(Record):
             case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
             case FieldType.FULL: z = self.FULL = r.readSTRV(dataSize)
             case FieldType.ICON: z = self.ICON = r.readFILE(dataSize)
-            case FieldType.DATA: z = self.DATA = r.readS(self.DATAField, dataSize)
+            case FieldType.DATA: z = self.DATA = r.readS(QUSTRecord.DATAField, dataSize)
             case FieldType.SCRI: z = self.SCRI = REFXField[SCPTRecord](SCPTRecord, r, dataSize)
             case FieldType.CTDA: z = r.skip(dataSize)
             case FieldType.INDX: z = r.skip(dataSize)
@@ -4019,7 +4021,7 @@ class RACERecord(Record):
         flags: int # 1 = Playable 2 = Beast Race
         def __init__(self, r: Reader, dataSize: int):
             if r.format == FormType.TES3:
-                self.skillBoosts = r.readFArray(lambda z: self.SkillBoost(r, 8), 7)
+                self.skillBoosts = r.readFArray(lambda z: RACERecord.DATAField.SkillBoost(r, 8), 7)
                 self.male.strength = r.readInt32() & 0xFF; self.female.strength = r.readInt32() & 0xFF
                 self.male.intelligence = r.readInt32() & 0xFF; self.female.intelligence = r.readInt32() & 0xFF
                 self.male.willpower = r.readInt32() & 0xFF; self.female.willpower = r.readInt32() & 0xFF
@@ -4032,7 +4034,7 @@ class RACERecord(Record):
                 self.male.weight = r.readSingle(); self.female.weight = r.readSingle()
                 self.flags = r.readUInt32()
                 return
-            self.skillBoosts = r.readFArray(lambda z: self.SkillBoost(r, 2), 7)
+            self.skillBoosts = r.readFArray(lambda z: RACERecord.DATAField.SkillBoost(r, 2), 7)
             r.readInt16() # padding
             self.male.height = r.readSingle(); self.female.height = r.readSingle()
             self.male.weight = r.readSingle(); self.female.weight = r.readSingle()
@@ -4108,7 +4110,7 @@ class RACERecord(Record):
             match type:
                 case FieldType.NAME: z = self.EDID = r.readSTRV(dataSize)
                 case FieldType.FNAM: z = self.FULL = r.readSTRV(dataSize)
-                case FieldType.RADT: z = self.DATA = self.DATAField(r, dataSize)
+                case FieldType.RADT: z = self.DATA = RACERecord.DATAField(r, dataSize)
                 case FieldType.NPCS: z = self.SPLOs.addX(r.readSTRV(dataSize))
                 case FieldType.DESC: z = self.DESC = r.readSTRV(dataSize)
                 case _: z = Record._empty
@@ -4121,7 +4123,7 @@ class RACERecord(Record):
                         case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
                         case FieldType.FULL: z = self.FULL = r.readSTRV(dataSize)
                         case FieldType.DESC: z = self.DESC = r.readSTRV(dataSize)
-                        case FieldType.DATA: z = self.DATA = self.DATAField(r, dataSize)
+                        case FieldType.DATA: z = self.DATA = RACERecord.DATAField(r, dataSize)
                         case FieldType.SPLO: z = self.SPLOs.addX(r.readSTRV(dataSize))
                         case FieldType.VNAM: z = self.VNAM = REF2Field[RACERecord](RACERecord, r, dataSize)
                         case FieldType.DNAM: z = self.DNAM = REF2Field[HAIRRecord](HAIRRecord, r, dataSize)
@@ -4135,7 +4137,7 @@ class RACERecord(Record):
                 # face data
                 case 1:
                     match type:
-                        case FieldType.INDX: z = self.FaceParts.addX(self.FacePartGroup(INDX = r.readS(UI32Field, dataSize)))
+                        case FieldType.INDX: z = self.FaceParts.addX(RACERecord.FacePartGroup(INDX = r.readS(UI32Field, dataSize)))
                         case FieldType.MODL: z = self.FaceParts.last().MODL = MODLGroup(r, dataSize)
                         case FieldType.ICON: z = self.FaceParts.last().ICON = r.readFILE(dataSize)
                         case FieldType.MODB: z = self.FaceParts.last().MODL.MODBField(r, dataSize)
@@ -4148,7 +4150,7 @@ class RACERecord(Record):
                         case FieldType.FNAM: z = self._genderState = 1
                         case FieldType.MODL: z = self.Bodys[self._genderState].MODL = r.readFILE(dataSize)
                         case FieldType.MODB: z = self.Bodys[self._genderState].MODB = r.readS(FLTVField, dataSize)
-                        case FieldType.INDX: z = self.Bodys[self._genderState].BodyParts.addX(self.BodyPartGroup(INDX = r.readS(UI32Field, dataSize)))
+                        case FieldType.INDX: z = self.Bodys[self._genderState].BodyParts.addX(RACERecord.BodyPartGroup(INDX = r.readS(UI32Field, dataSize)))
                         case FieldType.ICON: z = self.Bodys[self._genderState].BodyParts.last().ICON = r.readFILE(dataSize)
                         case FieldType.HNAM: z = self.HNAMs.addRangeX(r.readFArray(lambda z: REFXField[HAIRRecord](HAIRRecord, r, 4), dataSize >> 2)); self._nameState += 1
                         case _: z = Record._empty,
@@ -4190,7 +4192,7 @@ class REPARecord(Record, IHaveMODL):
                 case FieldType.NAME: z = self.EDID = r.readSTRV(dataSize)
                 case FieldType.MODL: z = self.MODL = MODLGroup(r, dataSize)
                 case FieldType.FNAM: z = self.FNAM = r.readSTRV(dataSize)
-                case FieldType.RIDT: z = self.RIDT = r.readS(self.RIDTField, dataSize)
+                case FieldType.RIDT: z = self.RIDT = r.readS(REPARecord.RIDTField, dataSize)
                 case FieldType.ITEX: z = self.ICON = r.readFILE(dataSize)
                 case FieldType.SCRI: z = self.SCRI = REFXField[SCPTRecord](SCPTRecord, r, dataSize)
                 case _: z = Record._empty
@@ -4293,7 +4295,7 @@ class REFRRecord(Record):
             case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
             case FieldType.NAME: z = self.NAME = REFXField[Record](Record, r, dataSize)
             case FieldType.XTEL: z = self.XTEL = self.XTELField(r, dataSize)
-            case FieldType.DATA: z = self.DATA = r.readS(self.DATAField, dataSize)
+            case FieldType.DATA: z = self.DATA = r.readS(REFRRecord.DATAField, dataSize)
             case FieldType.XLOC: z = self.XLOC = self.XLOCField(r, dataSize)
             case FieldType.XOWN: z = _nca(self, 'XOWNs', listx()).addX(CELLRecord.XOWNGroup(XOWN = REFXField[Record](Record, r, dataSize)))
             case FieldType.XRNK: z = self.XOWNs.last().XRNK = r.readS(IN32Field, dataSize)
@@ -4305,14 +4307,14 @@ class REFRRecord(Record):
             case FieldType.XCHG: z = self.XCHG = r.readS(FLTVField, dataSize)
             case FieldType.XHLT: z = self.XCHG = r.readS(FLTVField, dataSize)
             case FieldType.XPCI: z = self.XPCI = REFXField[CELLRecord](CELLRecord, r, dataSize); self._nextFull = 1
-            case FieldType.FULL if self._nextFull == 1: z = self.XPCI.value.setName(r.readFAString(dataSize)) #:matchif
+            case FieldType.FULL if self._nextFull == 1: z = self.XPCI.setName(r.readFAString(dataSize)) #:matchif
             case FieldType.FULL if self._nextFull == 2: z = self.XMRKs.last().FULL = r.readSTRV(dataSize) #:matchif
             case FieldType.FULL if self._nextFull != 1 and self._nextFull != 2: self._nextFull = 0 #:matchif
             case FieldType.XLCM: z = self.XLCM = r.readS(IN32Field, dataSize)
             case FieldType.XRTM: z = self.XRTM = REFXField[REFRRecord](REFRRecord, r, dataSize)
             case FieldType.XACT: z = self.XACT = r.readS(UI32Field, dataSize)
             case FieldType.XCNT: z = self.XCNT = r.readS(IN32Field, dataSize)
-            case FieldType.XMRK: z = _nca(self, 'XMRKs', listx()).addX(self.XMRKGroup()); self._nextFull = 2
+            case FieldType.XMRK: z = _nca(self, 'XMRKs', listx()).addX(REFRRecord.XMRKGroup()); self._nextFull = 2
             case FieldType.FNAM: z = self.XMRKs.last().FNAM = r.readS(BYTEField, dataSize)
             case FieldType.TNAM: z = self.XMRKs.last().TNAM = r.readS(UI16Field, dataSize)
             case FieldType.ONAM: z = True
@@ -4447,19 +4449,19 @@ class REGNRecord(Record):
         match type:
             case FieldType.EDID | FieldType.NAME: z = self.EDID = r.readSTRV(dataSize)
             case FieldType.WNAM | FieldType.FNAM: z = self.WNAM = REFXField[WRLDRecord](WRLDRecord, r, dataSize)
-            case FieldType.WEAT: z = self.WEAT = r.readS(self.WEATField, dataSize)
+            case FieldType.WEAT: z = self.WEAT = r.readS(REGNRecord.WEATField, dataSize)
             case FieldType.ICON | FieldType.BNAM: z = self.ICON = r.readSTRV(dataSize)
             case FieldType.RCLR | FieldType.CNAM: z = self.RCLR = r.readS(CREFField, dataSize)
-            case FieldType.SNAM: z = self.RDATs.addX(self.RDATField(RDSDs = [self.RDSDField(r, dataSize)]))
+            case FieldType.SNAM: z = self.RDATs.addX(self.RDATField(RDSDs = [REGNRecord.RDSDField(r, dataSize)]))
             case FieldType.RPLI: z = self.RPLIs.addX(REGNRecord.RPLIField(r, dataSize))
             case FieldType.RPLD: z = self.RPLIs.last().RPLDField(r, dataSize)
-            case FieldType.RDAT: z = self.RDATs.addX(self.RDATField(r, dataSize))
-            case FieldType.RDOT: z = self.RDATs.last().RDOTs = r.readFArray(lambda z: self.RDOTField(r, dataSize), dataSize // 52)
+            case FieldType.RDAT: z = self.RDATs.addX(REGNRecord.RDATField(r, dataSize))
+            case FieldType.RDOT: z = self.RDATs.last().RDOTs = r.readFArray(lambda z: REGNRecord.RDOTField(r, dataSize), dataSize // 52)
             case FieldType.RDMP: z = self.RDATs.last().RDMP = r.readSTRV(dataSize)
-            case FieldType.RDGS: z = self.RDATs.last().RDGSs = r.readFArray(lambda z: self.RDGSField(r, dataSize), dataSize // 8)
+            case FieldType.RDGS: z = self.RDATs.last().RDGSs = r.readFArray(lambda z: REGNRecord.RDGSField(r, dataSize), dataSize // 8)
             case FieldType.RDMD: z = self.RDATs.last().RDMD = r.readS(UI32Field, dataSize)
-            case FieldType.RDSD: z = self.RDATs.last().RDSDs = r.readFArray(lambda z: self.RDSDField(r, dataSize), dataSize // 12)
-            case FieldType.RDWT: z = self.RDATs.last().RDWTs = r.readFArray(lambda z: self.RDWTField(r, dataSize), dataSize // (8 if r.format == FormType.TES4 else 12))
+            case FieldType.RDSD: z = self.RDATs.last().RDSDs = r.readFArray(lambda z: REGNRecord.RDSDField(r, dataSize), dataSize // 12)
+            case FieldType.RDWT: z = self.RDATs.last().RDWTs = r.readFArray(lambda z: REGNRecord.RDWTField(r, dataSize), dataSize // (8 if r.format == FormType.TES4 else 12))
             case _: z = Record._empty
         return z
 # end::REGN[]
@@ -4493,7 +4495,7 @@ class SBSPRecord(Record):
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
-            case FieldType.DNAM: z = self.DNAM = r.readS(self.DNAMField, dataSize)
+            case FieldType.DNAM: z = self.DNAM = r.readS(SBSPRecord.DNAMField, dataSize)
             case _: z = Record._empty
         return z
 # end::SBSP[]
@@ -4598,13 +4600,13 @@ class SCPTRecord(Record):
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
-            case FieldType.SCHD: z = self.SCHD = self.SCHDField(r, dataSize)
+            case FieldType.SCHD: z = self.SCHD = SCPTRecord.SCHDField(r, dataSize)
             case FieldType.SCVR: z = self.SLSDs.last().SCVRField(r, dataSize) if r.format != FormType.TES3 else self.SCHD.SCVRField(r, dataSize)
             case FieldType.SCDA | FieldType.SCDT: z = self.SCDA = r.readBYTV(dataSize)
             case FieldType.SCTX: z = self.SCTX = r.readSTRV(dataSize)
             # TES4
-            case FieldType.SCHR: z = self.SCHR = self.SCHRField(r, dataSize)
-            case FieldType.SLSD: z = self.SLSDs.addX(self.SLSDField(r, dataSize))
+            case FieldType.SCHR: z = self.SCHR = SCPTRecord.SCHRField(r, dataSize)
+            case FieldType.SLSD: z = self.SLSDs.addX(SCPTRecord.SLSDField(r, dataSize))
             case FieldType.SCRO: z = self.SCROs.addX(REFXField[Record](Record, r, dataSize))
             case FieldType.SCRV: z = self.SCRVs.addX(self.then(r.readUInt32(), lambda v: self.SLSDs.single(lambda s: s.idx == v)))
             case _: z = Record._empty
@@ -4636,7 +4638,7 @@ class SGSTRecord(Record, IHaveMODL):
             case FieldType.MODB: z = self.MODL.MODBField(r, dataSize)
             case FieldType.MODT: z = self.MODL.MODTField(r, dataSize)
             case FieldType.FULL: z = self.FULL = r.readSTRV(dataSize) if len(self.SCITs) == 0 else self.SCITs.last().FULLField(r, dataSize)
-            case FieldType.DATA: z = self.DATA = r.readS(self.DATAField, dataSize)
+            case FieldType.DATA: z = self.DATA = r.readS(SGSTRecord.DATAField, dataSize)
             case FieldType.ICON: z = self.ICON = r.readFILE(dataSize)
             case FieldType.SCRI: z = self.SCRI = REFXField[SCPTRecord](SCPTRecord, r, dataSize)
             case FieldType.EFID: z = r.skip(dataSize)
@@ -4671,7 +4673,7 @@ class SKILRecord(Record):
         match type:
             case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
             case FieldType.INDX: z = self.INDX = r.readS(IN32Field, dataSize)
-            case FieldType.DATA | FieldType.SKDT: z = self.DATA = self.DATAField(r, dataSize)
+            case FieldType.DATA | FieldType.SKDT: z = self.DATA = SKILRecord.DATAField(r, dataSize)
             case FieldType.DESC: z = self.DESC = r.readSTRV(dataSize)
             case FieldType.ICON: z = self.ICON = r.readFILE(dataSize)
             case FieldType.ANAM: z = self.ANAM = r.readSTRV(dataSize)
@@ -4707,7 +4709,7 @@ class SLGMRecord(Record, IHaveMODL):
             case FieldType.MODT: z = self.MODL.MODTField(r, dataSize)
             case FieldType.FULL: z = self.FULL = r.readSTRV(dataSize)
             case FieldType.SCRI: z = self.SCRI = REFXField[SCPTRecord](SCPTRecord, r, dataSize)
-            case FieldType.DATA: z = self.DATA = r.readS(self.DATAField, dataSize)
+            case FieldType.DATA: z = self.DATA = r.readS(SLGMRecord.DATAField, dataSize)
             case FieldType.ICON: z = self.ICON = r.readFILE(dataSize)
             case FieldType.SOUL: z = self.SOUL = r.readS(BYTEField, dataSize)
             case FieldType.SLCP: z = self.SLCP = r.readS(BYTEField, dataSize)
@@ -4792,9 +4794,9 @@ class SOUNRecord(Record):
         match type:
             case FieldType.EDID | FieldType.NAME: z = self.EDID = r.readSTRV(dataSize)
             case FieldType.FNAM: z = self.FNAM = r.readFILE(dataSize)
-            case FieldType.SNDX: z = self.DATA = self.DATAField(r, dataSize)
-            case FieldType.SNDD: z = self.DATA = self.DATAField(r, dataSize)
-            case FieldType.DATA: z = self.DATA = self.DATAField(r, dataSize)
+            case FieldType.SNDX: z = self.DATA = SOUNRecord.DATAField(r, dataSize)
+            case FieldType.SNDD: z = self.DATA = SOUNRecord.DATAField(r, dataSize)
+            case FieldType.DATA: z = self.DATA = SOUNRecord.DATAField(r, dataSize)
             case _: z = Record._empty
         return z
 # end::SOUN[]
@@ -4903,7 +4905,7 @@ class TES3Record(Record):
 
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
-            case FieldType.HEDR: z = self.HEDR = r.readS(self.HEDRField, dataSize)
+            case FieldType.HEDR: z = self.HEDR = r.readS(TES3Record.HEDRField, dataSize)
             case FieldType.MAST: z = _nca(self, 'MASTs', listx()).addX(r.readSTRV(dataSize))
             case FieldType.DATA: z = _nca(self, 'DATAs', listx()).addX(r.readINTV(dataSize))
             case _: z = Record._empty
@@ -4933,7 +4935,7 @@ class TES4Record(Record):
 
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
-            case FieldType.HEDR: z = self.HEDR = r.readS(self.HEDRField, dataSize)
+            case FieldType.HEDR: z = self.HEDR = r.readS(TES4Record.HEDRField, dataSize)
             case FieldType.OFST: z = r.skip(dataSize)
             case FieldType.DELE: z = r.skip(dataSize)
             case FieldType.CNAM: z = self.CNAM = r.readSTRV(dataSize)
@@ -5008,8 +5010,8 @@ class TREERecord(Record, IHaveMODL):
             case FieldType.MODT: z = self.MODL.MODTField(r, dataSize)
             case FieldType.ICON: z = self.ICON = r.readFILE(dataSize)
             case FieldType.SNAM: z = self.SNAM = self.SNAMField(r, dataSize)
-            case FieldType.CNAM: z = self.CNAM = r.readS(self.CNAMField, dataSize)
-            case FieldType.BNAM: z = self.BNAM = r.readS(self.BNAMField, dataSize)
+            case FieldType.CNAM: z = self.CNAM = r.readS(TREERecord.CNAMField, dataSize)
+            case FieldType.BNAM: z = self.BNAM = r.readS(TREERecord.BNAMField, dataSize)
             case _: z = Record._empty
         return z
 # end::TREE[]
@@ -5192,7 +5194,7 @@ class WEAPRecord(Record, IHaveMODL):
             case FieldType.MODB: z = self.MODL.MODBField(r, dataSize)
             case FieldType.MODT: z = self.MODL.MODTField(r, dataSize)
             case FieldType.FULL | FieldType.FNAM: z = self.FULL = r.readSTRV(dataSize)
-            case FieldType.DATA | FieldType.WPDT: z = self.DATA = self.DATAField(r, dataSize)
+            case FieldType.DATA | FieldType.WPDT: z = self.DATA = WEAPRecord.DATAField(r, dataSize)
             case FieldType.ICON | FieldType.ITEX: z = self.ICON = r.readFILE(dataSize)
             case FieldType.ENAM: z = self.ENAM = REFXField[ENCHRecord](ENCHRecord, r, dataSize)
             case FieldType.SCRI: z = self.SCRI = REFXField[SCPTRecord](SCPTRecord, r, dataSize)
@@ -5338,9 +5340,9 @@ class WTHRRecord(Record, IHaveMODL):
             case FieldType.CNAM: z = self.CNAM = r.readFILE(dataSize)
             case FieldType.DNAM: z = self.DNAM = r.readFILE(dataSize)
             case FieldType.NAM0: z = self.NAM0 = r.readBYTV(dataSize)
-            case FieldType.FNAM: z = self.FNAM = r.readS(self.FNAMField, dataSize)
-            case FieldType.HNAM: z = self.HNAM = r.readS(self.HNAMField, dataSize)
-            case FieldType.DATA: z = self.DATA = r.readS(self.DATAField, dataSize); self.DATA.fill()
+            case FieldType.FNAM: z = self.FNAM = r.readS(WTHRRecord.FNAMField, dataSize)
+            case FieldType.HNAM: z = self.HNAM = r.readS(WTHRRecord.HNAMField, dataSize)
+            case FieldType.DATA: z = self.DATA = r.readS(WTHRRecord.DATAField, dataSize); self.DATA.fill()
             case FieldType.SNAM: z = self.SNAMs.addX(WTHRRecord.SNAMField(r, dataSize))
             case _: z = Record._empty
         return z

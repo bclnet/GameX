@@ -691,7 +691,7 @@ public partial class Record {
     /// <param name="r"></param>
     /// <exception cref="InvalidOperationException"></exception>
     public void ReadFields(Reader r) {
-        //Log.Info($"Recd: {record.Type}:{record.Compressed}");
+        //Log.Info($"Fields: {Type}");
         if (Compressed) {
             var lastSize = DataSize;
             DataSize = r.ReadUInt32();
@@ -777,20 +777,20 @@ public partial class RecordGroup {  //} : IHaveMetaInfo, IWriteToStream {
     }
     public override string ToString() => $"{Label}";
     public uint DataSize;
-    public FormType Label;
+    public uint Label;
     public GroupType Type;
     public long Position;
     public string Path;
     public List<Record> Records = [];
     public List<RecordGroup> Groups;
     public Dictionary<uint, RecordGroup[]> GroupsByLabel;
-    public bool Preload => Label == 0 || Type == GroupType.Top || _factorySet.Contains(Label);
+    public bool Preload => Label == 0 || Type == GroupType.Top || _factorySet.Contains((FormType)Label);
 
     public RecordGroup(Reader r, string path = null) {
         if (r == null) return;
         else if (r.Format == TES3) { DataSize = (uint)(r.BaseStream.Length - r.Tell()); Label = 0; Type = GroupType.Top; Position = r.Tell(); Path = path; return; }
         DataSize = (uint)(r.ReadUInt32() - (r.Format != TES4 ? 16 : 20));
-        Label = (FormType)r.ReadUInt32();
+        Label = r.ReadUInt32();
         Type = (GroupType)r.ReadUInt32();
         r.Skip(4); // stamp + version
         if (r.Format != TES4) r.Skip(4); // unknown
@@ -826,7 +826,7 @@ public partial class RecordGroup {  //} : IHaveMetaInfo, IWriteToStream {
             record.Complete(r);
             Records.Add(record);
         }
-        GroupsByLabel = Groups?.GroupBy(s => (uint)s.Label).ToDictionary(s => s.Key, s => s.ToArray());
+        GroupsByLabel = Groups?.GroupBy(s => s.Label).ToDictionary(s => s.Key, s => s.ToArray());
         // add items
         //files.AddRange(Groups.Select(s => new FileSource {
         //    Path = Encoding.ASCII.GetString(BitConverter.GetBytes((uint)s.Key)),
@@ -981,7 +981,7 @@ partial class Record {
 #region Extensions
 
 public static class Extensions {
-    public static TResult Then<T, TResult>(this Record s, T value, Func<T, TResult> then) => then(value);
+    public static TResult Then<T, TResult>(this Record s, T value, Func<T, TResult> func) => func(value);
     public static T AddX<T>(this IList<T> s, T value) { s.Add(value); return value; }
     public static IEnumerable<T> AddRangeX<T>(this List<T> s, IEnumerable<T> value) { s.AddRange(value); return value; }
     public static INTVField ReadINTV(this Reader r, int length)
@@ -1732,7 +1732,7 @@ public unsafe class CELLRecord : Record {
     public INTVField INTV; // Unknown
     public CREFField? NAM5; // Map Color (COLORREF)
     // TES4
-    public REFXField<REGNRecord>[] XCLRs; // Regions
+    public REF1Field<REGNRecord>[] XCLRs; // Regions
     public BYTEField? XCMT; // Music (optional)
     public REFXField<CLMTRecord>? XCCM; // Climate
     public REFXField<WATRRecord>? XCWT; // Water
@@ -1770,7 +1770,7 @@ public unsafe class CELLRecord : Record {
                 FieldType.INTV => INTV = r.ReadINTV(dataSize),
                 FieldType.NAM5 => NAM5 = r.ReadS<CREFField>(dataSize),
                 // TES4
-                FieldType.XCLR => XCLRs = r.ReadFArray(z => new REFXField<REGNRecord>(r, 4), dataSize >> 2),
+                FieldType.XCLR => XCLRs = r.ReadFArray(z => new REF1Field<REGNRecord>(r, 4), dataSize >> 2),
                 FieldType.XCMT => XCMT = r.ReadS<BYTEField>(dataSize),
                 FieldType.XCCM => XCCM = new REFXField<CLMTRecord>(r, dataSize),
                 FieldType.XCWT => XCWT = new REFXField<WATRRecord>(r, dataSize),
@@ -3429,7 +3429,7 @@ public unsafe class LANDRecord : Record {
     // TES4
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct BTXTField {
-        public static (string, int) Struct = ("<I2ch", 8);
+        public static (string, int) Struct = ("<I2Bh", 8);
         public uint Texture;
         public byte Quadrant;
         public byte Pad01;
@@ -3481,7 +3481,7 @@ public unsafe class LANDRecord : Record {
         FieldType.WNAM => WNAM = new WNAMField(r, dataSize),
         // TES4
         FieldType.BTXT => this.Then(r.ReadS<BTXTField>(dataSize), v => BTXTs[v.Quadrant] = v),
-        FieldType.ATXT => (ATXTs ??= new ATXTGroup[4], this.Then(r.ReadS<BTXTField>(dataSize), v => _lastATXT = ATXTs[v.Quadrant] = new ATXTGroup { ATXT = v })),
+        FieldType.ATXT => (z: ATXTs ??= new ATXTGroup[4], this.Then(r.ReadS<BTXTField>(dataSize), v => ATXTs[v.Quadrant] = _lastATXT = new ATXTGroup { ATXT = v })).z,
         FieldType.VTXT => _lastATXT.VTXTs = r.ReadSArray<VTXTField>(dataSize >> 3),
         _ => Empty,
     };
@@ -4666,7 +4666,7 @@ public unsafe class REFRRecord : Record {
     public struct XRGDField {
         public static (string, int) Struct = ("<B3c6f", 28);
         public byte BoneId;
-        public fixed byte Unused[3];
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)] public byte[] Unused;
         public Vector3 Position;
         public Vector3 Rotation;
     }
@@ -4829,7 +4829,7 @@ public class REGNRecord : Record {
             SizeVariance = r.ReadSingle();
             AngleVariance = new Int3(r.ReadUInt16(), r.ReadUInt16(), r.ReadUInt16());
             r.Skip(2); // Unused
-            VertexShading = r.ReadS<ByteColor4>();
+            VertexShading = r.ReadS<ByteColor4>(4);
         }
     }
 
@@ -5719,8 +5719,6 @@ public unsafe class WRLDRecord : Record {
     }
 
     public struct NAM0Field(Reader r, int dataSize) {
-        //public static (string, int) Struct = ("<2f", 8);
-        //public static (string, int) Struct = ("<4f", 16);
         public Vector2 Min = new(r.ReadSingle(), r.ReadSingle());
         public Vector2 Max = Vector2.Zero;
         public object NAM9Field(Reader r, int dataSize) => Max = new Vector2(r.ReadSingle(), r.ReadSingle());

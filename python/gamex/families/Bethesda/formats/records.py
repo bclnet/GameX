@@ -6,7 +6,7 @@ from enum import Enum, Flag, IntEnum, IntFlag
 from struct import unpack
 from numpy import ndarray, array
 from collections.abc import Iterator
-from openstk import log, Int3, Byte3, Float3
+from openstk import log, Int2, Int3, Byte3, Float3
 from openstk.core.drawing import Color
 from gamex import FileSource, BinaryReader, ArcBinaryT
 from gamex.core.globalx import ByteColor4
@@ -653,7 +653,7 @@ class Record:
 
     # Reads a records fields - tag::Record.readFields[]
     def readFields(self, r: Reader) -> None:
-        # log.info(f'Recd: {record.type}:{record.compressed}')
+        # log.info(f'Fields: {self.type}')
         if self.compressed:
             lastSize = self.dataSize
             self.dataSize = r.readUInt32()
@@ -713,7 +713,7 @@ class RecordGroup:
         CellTemporaryChildren = 9       # Label: Parent (CELL)
         CellVisibleDistantChildren = 10 # Label: Parent (CELL)
     dataSize: int
-    label: FormType
+    label: int
     type: GroupType
     position: int
     path: str
@@ -729,7 +729,7 @@ class RecordGroup:
         if not r: return
         if r.format == FormType.TES3: self.dataSize = r.length - r.tell(); self.label = 0; self.type = RecordGroup.GroupType.Top; self.position = r.tell(); self.path = path; return
         self.dataSize: int = r.readUInt32() - (16 if r.format == FormType.TES4 else 20)
-        self.label: FormType = FormType(r.readUInt32())
+        self.label: int = r.readUInt32()
         self.type: GroupType = RecordGroup.GroupType(r.readInt32())
         r.skip(4) # stamp + version
         if r.format != FormType.TES4: r.skip(4) # unknown
@@ -762,7 +762,7 @@ class RecordGroup:
             record.readFields(r)
             record.complete(r)
             self.records.append(record)
-        self.groupsByLabel = { s.key:list(g) for s, g in groupby(sorted(self.groups, key=lambda s: s.label), lambda s: s.label) } if self.groups else None
+        self.groupsByLabel = { s:list(g) for s, g in groupby(sorted(self.groups, key=lambda s: s.label), lambda s: s.label) } if self.groups else None
 
         # add items
         # files.extend([FileSource(
@@ -838,7 +838,7 @@ class UNKNField:
 
 class REF1Field[T: Record]:
     def __repr__(self) -> str: return f'{self.item}'
-    def __init__(self, t: type, r: Reader, dataSize: int): self.item = Ref[T](t, r.readUInt32())
+    def __init__(self, t: type, r: Reader, dataSize: int): self.item = Ref[Record](t, r.readUInt32())
 class REF2Field[T: Record]:
     def __repr__(self) -> str: return f'{self.item1}x{self.item2}'
     def __init__(self, t: type, r: Reader, dataSize: int): self.item1 = Ref[T](t, r.readUInt32()); self.item2 = Ref[T](t, r.readUInt32())
@@ -851,18 +851,18 @@ class REFXField[T: Record]:
     def setName(self, name: str) -> str: z = self.item.name = name; return z
 class REFVField[T: Record]:
     def __repr__(self) -> str: return f'{self.item}:{self.value}'
-    def __init__(self, t: type, r: Reader, dataSize: int): self.item = RefX[T](t, r.readUInt32()); self.value = r.readByte(); r.skip(3)
+    def __init__(self, t: type, r: Reader, dataSize: int): self.item = RefX(t, r.readUInt32()); self.value = r.readByte(); r.skip(3)
 class CNTOField[T: Record]:
     def __repr__(self) -> str: return f'{self.item}:{self.count}'
-    def __init__(self, t: type, r: Reader, dataSize: int): self.item = RefX[T](t, r.readUInt32()); self.count = r.readUInt32()
+    def __init__(self, t: type, r: Reader, dataSize: int): self.item = RefX(t, r.readUInt32()); self.count = r.readUInt32()
 class CNTOXField[T: Record]:
     def __repr__(self) -> str: return f'{self.item}'
     item: 'RefX[Record]' # The ID of the item
     count: int # Number of the item
     def __init__(self, t: type, r: Reader = None, dataSize: int = 0):
-        if not r: self.count = 0; self.item = RefX[Record](Record); return
-        if r.format == FormType.TES3: self.count = r.readUInt32(); self.item = RefX[Record](Record, r.readFAString(32)); return
-        self.item = RefX[Record](Record, r.readUInt32()); self.count = r.readUInt32()
+        if not r: self.count = 0; self.item = RefX(Record); return
+        if r.format == FormType.TES3: self.count = r.readUInt32(); self.item = RefX(Record, r.readFAString(32)); return
+        self.item = RefX(Record, r.readUInt32()); self.count = r.readUInt32()
 
 Record.EDID: STRVField = STRVField() # Editor ID
 
@@ -871,7 +871,7 @@ Record.EDID: STRVField = STRVField() # Editor ID
 #region Extensions
 
 def _nca(self, name, value): return getattr(self, name, None) or (setattr(self, name, value), getattr(self, name))[1]
-def then[T, TResult](s: Record, value: T, then: callable) -> TResult: return then(value)
+def then[T, TResult](s: Record, value: T, func: callable) -> TResult: return func(value)
 class EList[T](list[T]):
     def last[T](s: list[T]) -> T: return s[-1]
     def single[T](s: list[T], func: callable) -> T: return next(iter([x for x in s if func(x)]), None)
@@ -918,7 +918,6 @@ Reader.readUNKN = readUNKN
 Record._factorySet = None #{ FormType.GLOB }
 RecordGroup._factorySet = { FormType.NPC_ }
 
-# dep: None
 # AACT.Action - 0050 - tag::AACT[]
 class AACTRecord(Record):
     CNAM: CREFField # RGB Color
@@ -932,7 +931,6 @@ class AACTRecord(Record):
         return z
 # end::AACT[]
 
-# dep: CELLRecord, REFRRecord
 # ACRE.Placed creature - 0400 - tag::ACRE[]
 class ACRERecord(Record):
     NAME: REF1Field[Record] # Base
@@ -958,7 +956,6 @@ class ACRERecord(Record):
         return z
 # end::ACRE[]
 
-# dep: ACRERecord, CELLRecord, REFRRecord, 
 # ACHR.Actor Reference - 0450 - tag::ACHR[]
 class ACHRRecord(Record):
     NAME: REFXField[Record] # Base
@@ -989,7 +986,6 @@ class ACHRRecord(Record):
         return z
 # end::ACHR[]
 
-# dep: SCPTRecord, SOUNRecord
 # ACTI.Activator - 3450 - tag::ACTI[]
 class ACTIRecord(Record, IHaveMODL):
     MODL: MODLGroup # Model Name
@@ -1013,7 +1009,6 @@ class ACTIRecord(Record, IHaveMODL):
         return z
 # end::ACTI[]
 
-# dep: None
 # ADDN-Addon Node - 0050 - tag::ADDN[]
 class ADDNRecord(Record):
     CNAM: CREFField # RGB Color
@@ -1027,7 +1022,6 @@ class ADDNRecord(Record):
         return z
 # end::ADDN[]
 
-# dep: ENCHRecord, SCPTRecord 
 # ALCH.Potion - 3450 - tag::ALCH[]
 class ALCHRecord(Record, IHaveMODL):
     class DATAField:
@@ -1092,7 +1086,6 @@ class ALCHRecord(Record, IHaveMODL):
         return z
 # end::ALCH[]
 
-# dep: ENCHRecord
 # AMMO.Ammo - 0450 - tag::AMMO[]
 class AMMORecord(Record, IHaveMODL):
     class DATAField:
@@ -1129,7 +1122,6 @@ class AMMORecord(Record, IHaveMODL):
         return z
 # end::AMMO[]
 
-# dep: IDLERecord
 # ANIO.Animated Object - 0450 - tag::ANIO[]
 class ANIORecord(Record, IHaveMODL):
     MODL: MODLGroup # Model
@@ -1146,7 +1138,6 @@ class ANIORecord(Record, IHaveMODL):
         return z
 # end::ANIO[]
 
-# dep: SCPTRecord
 # APPA.Alchem Apparatus - 3450 - tag::APPA[]
 class APPARecord(Record, IHaveMODL):
     class DATAField:
@@ -1188,7 +1179,6 @@ class APPARecord(Record, IHaveMODL):
         return z
 # end::APPA[]
 
-# dep: None
 # ARMA.Armature (Model) - 0050 - tag::ARMA[]
 class ARMARecord(Record):
     def __init__(self): super().__init__()
@@ -1200,10 +1190,8 @@ class ARMARecord(Record):
         return z
 # end::ARMA[]
 
-# dep: CLOTRecord, ENCHRecord, SCPTRecord
 # ARMO.Armor - 3450 - tag::ARMA[]
 class ARMORecord(Record, IHaveMODL):
-    
     class DATAField:
         class ARMOType(Enum): Helmet = 0; Cuirass = 2; L_Pauldron = 3; R_Pauldron = 4; Greaves = 5; Boots = 6; L_Gauntlet = 7; R_Gauntlet = 8; Shield = 9; L_Bracer = 10; R_Bracer = 11
         armour: int
@@ -1280,7 +1268,6 @@ class ARMORecord(Record, IHaveMODL):
         return z
 # end::ARMO[]
 
-# dep: None
 # ARTO.Art Object - 0050 - tag::ARTO[]
 class ARTORecord(Record):
     CNAM: CREFField # RGB Color
@@ -1294,7 +1281,6 @@ class ARTORecord(Record):
         return z
 # end::ARTO[]
 
-# dep: None
 # ASPC.Acoustic Space - 0050 - tag::ASPC[]
 class ASPCRecord(Record):
     CNAM: CREFField # RGB Color
@@ -1308,7 +1294,6 @@ class ASPCRecord(Record):
         return z
 # end::ASPC[]
 
-# dep: None
 # ASTP.Association Type - 0050 - tag::ASTP[]
 class ASTPRecord(Record):
     CNAM: CREFField # RGB Color
@@ -1322,7 +1307,6 @@ class ASTPRecord(Record):
         return z
 # end::ASTP[]
 
-# dep: None
 # AVIF.Actor Values_Perk Tree Graphics - 0050 - tag::ASTP[]
 class AVIFRecord(Record):
     CNAM: CREFField # RGB Color
@@ -1336,7 +1320,6 @@ class AVIFRecord(Record):
         return z
 # end::AVIF[]
 
-# dep: None
 # BNDS.Bendable Spline - 0400 #F4 - tag::BNDS[]
 class BNDSRecord(Record):
     def __init__(self): super().__init__()
@@ -1347,7 +1330,6 @@ class BNDSRecord(Record):
         return z
 # end::BNDS[]
 
-# dep: None
 # BODY.Body - 3000 - tag::ASTP[]
 class BODYRecord(Record, IHaveMODL):
     class Part(Enum): Head = 0; Hair = 1; Neck = 2; Chest = 3; Groin = 4; Hand = 5; Wrist = 6; Forearm = 7; Upperarm = 8; Foot = 9; Ankle = 10; Knee = 11; Upperleg = 12; Clavicle = 13; Tail = 14
@@ -1382,7 +1364,6 @@ class BODYRecord(Record, IHaveMODL):
         return None
 # end::BODY[]
 
-# dep: None
 # BOIM.Biome - 0050 - tag::BOIM[]
 class BOIMRecord(Record):
     FULL: STRVField # Item Name
@@ -1397,7 +1378,6 @@ class BOIMRecord(Record):
         return z
 # end::BODY[]
 
-# dep: ENCHRecord, SCPTRecord
 # BOOK.Book - 3450 - tag::BOOK[]
 class BOOKRecord(Record, IHaveMODL):
     class Flag(Flag): Scroll = 0x01; CantBeTaken = 0x02
@@ -1450,7 +1430,6 @@ class BOOKRecord(Record, IHaveMODL):
         return z
 # end::BODY[]
 
-# dep: None
 # BSGN.Birthsign - 3400 - tag::BSGN[]
 class BSGNRecord(Record):
     FULL: STRVField # Sign Name
@@ -1472,7 +1451,6 @@ class BSGNRecord(Record):
         return z
 # end::BSGN[]
 
-# dep: REGNRecord, CLMTRecord, WATRRecord
 # CELL.Cell - 3450 - tag::CELL[]
 class CELLRecord(Record): #ICellRecord
     class CELLFlags(Flag):
@@ -1540,9 +1518,10 @@ class CELLRecord(Record): #ICellRecord
                 case _: raise NotImplementedError('XCLLField')
 
     class XOWNGroup:
-        XOWN: REFXField[Record]
-        XRNK: IN32Field # Faction rank
-        XGLB: REFXField[Record]
+        def __init__(self, XOWN: REFXField[Record]):
+            self.XOWN: REFXField[Record] = XOWN
+            self.XRNK: IN32Field = None # Faction rank
+            self.XGLB: REFXField[Record] = None
 
     class XYZAField:
         _struct = ('<3f3f', 24)
@@ -1587,7 +1566,7 @@ class CELLRecord(Record): #ICellRecord
     INTV: INTVField = INTVField() #! Unknown
     NAM5: CREFField = None # Map Color (COLORREF)
     # TES4
-    XCLRs: list[REFXField['REGNRecord']] = None #! Regions
+    XCLRs: list[REF1Field['REGNRecord']] = None #! Regions
     XCMT: BYTEField = None # Music (optional)
     XCCM: REFXField['CLMTRecord'] = None # Climate
     XCWT: REFXField['WATRRecord'] = None # Water
@@ -1604,7 +1583,7 @@ class CELLRecord(Record): #ICellRecord
 
     def complete(self, r: Reader) -> None:
         self.isInterior = (self.DATA.value & 0x01) == 0x01
-        self.gridId = Int3(self.XCLC.gridX, self.XCLC.gridY, -1 if self.isInterior else 0)
+        self.gridId = None #Int3(self.XCLC.gridX, self.XCLC.gridY, -1 if self.isInterior else 0)
         self.ambientLight = self.XCLL.ambientColor.asColor if self.XCLL else None
 
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
@@ -1625,13 +1604,13 @@ class CELLRecord(Record): #ICellRecord
                 case FieldType.INTV: z = self.INTV = r.readINTV(dataSize)
                 case FieldType.NAM5: z = self.NAM5 = r.readS(CREFField, dataSize)
                 # TES4
-                case FieldType.XCLR: z = self.XCLRs = r.readFArray(lambda z: REFXField[REGNRecord](REGNRecord, r, 4), dataSize >> 2)
+                case FieldType.XCLR: z = self.XCLRs = r.readFArray(lambda z: REF1Field(REGNRecord, r, 4), dataSize >> 2)
                 case FieldType.XCMT: z = self.XCMT = r.readS(BYTEField, dataSize)
                 case FieldType.XCCM: z = self.XCCM = REFXField[CLMTRecord](CLMTRecord, r, dataSize)
                 case FieldType.XCWT: z = self.XCWT = REFXField[WATRRecord](WATRRecord, r, dataSize)
-                case FieldType.XOWN: z = self.XOWNs.addX(self.XOWNGroup(XOWN = REFXField[Record](Record, r, dataSize)))
+                case FieldType.XOWN: z = self.XOWNs.addX(self.XOWNGroup(XOWN = REFXField(Record, r, dataSize)))
                 case FieldType.XRNK: z = self.XOWNs.last().XRNK = r.readS(IN32Field, dataSize)
-                case FieldType.XGLB: z = self.XOWNs.last().XGLB = REFXField[Record](Record, r, dataSize)
+                case FieldType.XGLB: z = self.XOWNs.last().XGLB = REFXField(Record, r, dataSize)
                 case _: z = Record._empty
             return z
         # Referenced Object Data Grouping
@@ -1661,7 +1640,6 @@ class CELLRecord(Record): #ICellRecord
         return z
 # end::CELL[]
 
-# dep: None
 # CLAS.Class - 3450 - tag::CLAS[]
 class CLASRecord(Record):
     class DATAField:
@@ -1731,7 +1709,6 @@ class CLASRecord(Record):
         return z
 # end::CLAS[]
 
-# dep: SCPTRecord
 # CLOT.Clothing - 3450 - tag::CLOT[]
 class CLOTRecord(Record, IHaveMODL):
     class DATAField:
@@ -1805,7 +1782,6 @@ class CLOTRecord(Record, IHaveMODL):
         return z
 # end::CLOT[]
 
-# dep: ^WTHRRecord
 # CLMT.Climate - 0450 - tag::CLMT[]
 class CLMTRecord(Record, IHaveMODL):
     class WLSTField:
@@ -1843,7 +1819,6 @@ class CLMTRecord(Record, IHaveMODL):
         return z
 # end::CLMT[]
 
-# dep: SCPTRecord, SOUNRecord
 # CONT.Container - 3450 - tag::CONT[]
 class CONTRecord(Record, IHaveMODL):
     class DATAField:
@@ -1884,7 +1859,6 @@ class CONTRecord(Record, IHaveMODL):
         return z
 # end::CONT[]
 
-# dep: SCPTRecord
 # CREA.Creature - 3450 - tag::CREA3[]
 class CREA3Record(Record, IHaveMODL):
     class CREAFlags(Flag):
@@ -2089,7 +2063,6 @@ class CREA3Record(Record, IHaveMODL):
         return z
 # end::CREA3[]
 
-# dep: SCPTRecord
 # CREA.Creature - 3450 - tag::CREA4[]
 class CREA4Record(Record, IHaveMODL):
     class ACBSField:
@@ -2179,7 +2152,6 @@ class CREA4Record(Record, IHaveMODL):
         return z
 # end::CREA4[]
 
-# dep: None
 # CSTY.Combat Style - 0450 - tag::CSTY[]
 class CSTYRecord(Record):
     class CSTDField:
@@ -2304,7 +2276,6 @@ class CSTYRecord(Record):
         return z
 # end::CSTY[]
 
-# dep: INFORecord, QUSTRecord
 # DIAL.Dialog Topic - 3450 - tag::DIAL[]
 class DIALRecord(Record):
     _lastRecord: 'DIALRecord'
@@ -2325,7 +2296,6 @@ class DIALRecord(Record):
         return z
 # end::DIAL[]
 
-# dep: None
 # DLBR.Dialog Branch - 0050 - tag::DIAL[]
 class DLBRRecord(Record):
     CNAM: CREFField # RGB color
@@ -2339,7 +2309,6 @@ class DLBRRecord(Record):
         return z
 # end::DLBR[]
 
-# dep: None
 # DLVW.Dialog View - 0050 - tag::DLVW[]
 class DLVWRecord(Record):
     CNAM: CREFField # RGB color
@@ -2353,7 +2322,6 @@ class DLVWRecord(Record):
         return z
 # end::DLVW[]
 
-# dep: None
 # DMGT.Damage Type - 0400 #F4 - tag::DMGT[]
 class DMGTRecord(Record):
     def __init__(self): super().__init__()
@@ -2364,7 +2332,6 @@ class DMGTRecord(Record):
         return z
 # end::DMGT[]
 
-# dep: SCPTRecord, SOUNRecord
 # DOOR.Door - 3450 - tag::DOOR[]
 class DOORRecord(Record, IHaveMODL):
     FULL: STRVField # Door name
@@ -2396,7 +2363,6 @@ class DOORRecord(Record, IHaveMODL):
         return z
 # end::DOOR[]
 
-# dep: None
 # EFSH.Effect Shader - 0450 - tag::EFSH[]
 class EFSHRecord(Record):
     class DATAField:
@@ -2532,7 +2498,6 @@ class EFSHRecord(Record):
         return z
 # end::EFSH[]
 
-# dep: None
 # ENCH.Enchantment - 3450 - tag::ENCH[]
 class ENCHRecord(Record):
     class ENITField:
@@ -2620,7 +2585,6 @@ class ENCHRecord(Record):
         return z
 # end::ENCH[]
 
-# dep: None
 # EYES.Eyes - 0450 - tag::EYES[]
 class EYESRecord(Record):
     FULL: STRVField
@@ -2638,7 +2602,6 @@ class EYESRecord(Record):
         return z
 # end::EYES[]
 
-# dep: None
 # FACT.Faction - 3450 - tag::FACT[]
 class FACTRecord(Record):
     class RNAMGroup:
@@ -2722,7 +2685,6 @@ class FACTRecord(Record):
         return z
 # end::FACT[]
 
-# dep: INGRRecord, SCPTRecord
 # FLOR.Flora - 0450 - tag::FLOR[]
 class FLORRecord(Record, IHaveMODL):
     MODL: MODLGroup # Model
@@ -2746,7 +2708,6 @@ class FLORRecord(Record, IHaveMODL):
         return z
 # end::FLOR[]
 
-# dep: SCPTRecord
 # FURN.Furniture - 0450 - tag::FURN[]
 class FURNRecord(Record, IHaveMODL):
     MODL: MODLGroup # Model
@@ -2768,7 +2729,6 @@ class FURNRecord(Record, IHaveMODL):
         return z
 # end::FURN[]
 
-# dep: None
 # GLOB.Global - 3450 - tag::GLOB[]
 class GLOBRecord(Record):
     FNAM: CHARField = None # Type of global (s, l, f)
@@ -2784,7 +2744,6 @@ class GLOBRecord(Record):
         return z
 # end::GLOB[]
 
-# dep: None
 # GMST.Game Setting - 3450 - tag::GMST[]
 class GMSTRecord(Record):
     DATA: DATVField # Data
@@ -2806,7 +2765,6 @@ class GMSTRecord(Record):
         return z
 # end::GMST[]
 
-# dep: None
 # GRAS.Grass - 0450 - tag::GRAS[]
 class GRASRecord(Record):
     class DATAField:
@@ -2858,7 +2816,6 @@ class GRASRecord(Record):
         return z
 # end::GRAS[]
 
-# dep: None
 # HAIR.Hair - 0400 - tag::HAIR[]
 class HAIRRecord(Record, IHaveMODL):
     FULL: STRVField
@@ -2879,7 +2836,6 @@ class HAIRRecord(Record, IHaveMODL):
         return z
 # end::HAIR[]
 
-# dep: SCPTRecord
 # IDLE.Idle Animations - 0450 - tag::IDLE[]
 class IDLERecord(Record, IHaveMODL):
     MODL: MODLGroup
@@ -2900,7 +2856,6 @@ class IDLERecord(Record, IHaveMODL):
         return z
 # end::IDLE[]
 
-# dep: QUSTRecord, DIALRecord, SCPTRecord
 # INFO.Dialog Topic Info - 3450 - tag::INFO3[]
 class INFO3Record(Record):
     class DATAField:
@@ -2956,7 +2911,6 @@ class INFO3Record(Record):
         return z
 # end::INFO3[]
 
-# dep: QUSTRecord, DIALRecord, SCPTRecord
 # INFO.Dialog Topic Info - 3450 - tag::INFO[]
 class INFO4Record(Record):
     class DATAField:
@@ -3014,7 +2968,6 @@ class INFO4Record(Record):
         return z
 # end::INFO4[]
 
-# dep: ENCHRecord, SCPTRecord
 # INGR.Ingredient - 3450 - tag::INGR[]
 class INGRRecord(Record, IHaveMODL):
     # TES3
@@ -3067,7 +3020,6 @@ class INGRRecord(Record, IHaveMODL):
         return z
 # end::INGR[]
 
-# dep: SCPTRecord
 # KEYM.Key - 0400 - tag::KEYM[]
 class KEYMRecord(Record, IHaveMODL):
     class DATAField:
@@ -3097,7 +3049,6 @@ class KEYMRecord(Record, IHaveMODL):
         return z
 # end::KEYM[]
 
-# dep: None
 # LAND.Land - 3450 - tag::LAND[]
 class LANDRecord(Record):
     class VNMLField:
@@ -3145,7 +3096,7 @@ class LANDRecord(Record):
 
     # TES4
     class BTXTField:
-        _struct = ('<I2ch', 8)
+        _struct = ('<I2Bh', 8)
         def __init__(self, tuple):
             (self.texture,
             self.quadrant,
@@ -3160,8 +3111,9 @@ class LANDRecord(Record):
             self.opacity) = tuple
 
     class ATXTGroup:
-        ATXT: 'BTXTField'
-        VTXTs: list['VTXTField']
+        def __init__(self, ATXT: 'BTXTField'):
+            self.ATXT: 'BTXTField' = ATXT
+            self.VTXTs: list['VTXTField'] = None
 
     def __repr__(self): return f'LAND: {self.INTV}'
     DATA: IN32Field # Unknown (default of 0x09) Changing this value makes the land 'disappear' in the editor.
@@ -3187,22 +3139,21 @@ class LANDRecord(Record):
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.DATA: z = self.DATA = r.readS(IN32Field, dataSize)
-            case FieldType.VNML: z = self.VNML = self.VNMLField(r, dataSize)
-            case FieldType.VHGT: z = self.VHGT = self.VHGTField(r, dataSize)
-            case FieldType.VCLR: z = self.VCLR = self.VNMLField(r, dataSize)
-            case FieldType.VTEX: z = self.VTEX = self.VTEXField(r, dataSize)
+            case FieldType.VNML: z = self.VNML = LANDRecord.VNMLField(r, dataSize)
+            case FieldType.VHGT: z = self.VHGT = LANDRecord.VHGTField(r, dataSize)
+            case FieldType.VCLR: z = self.VCLR = LANDRecord.VNMLField(r, dataSize)
+            case FieldType.VTEX: z = self.VTEX = LANDRecord.VTEXField(r, dataSize)
             # TES3
-            case FieldType.INTV: z = self.INTV = r.readS(self.CORDField, dataSize)
-            case FieldType.WNAM: z = self.WNAM = self.WNAMField(r, dataSize)
+            case FieldType.INTV: z = self.INTV = r.readS(LANDRecord.CORDField, dataSize)
+            case FieldType.WNAM: z = self.WNAM = LANDRecord.WNAMField(r, dataSize)
             # TES4
-            case FieldType.BTXT: z = self.then(r.readS(self.BTXTField, dataSize), lambda v: self.BTXTs.__setitem__(v.quadrant, v))
-            case FieldType.ATXT: z = _nca(self, 'ATXTs', listx([None]*4)); self.then(r.readS(self.BTXTField, dataSize), lambda v: ((z := self.ATXTGroup(ATXT = v), setattr(self, '_lastATXT', z), self.ATXTs.__setitem__(v.quadrant, z))))
-            case FieldType.VTXT: z = self._lastATXT.VTXTs = r.readSArray(self.VTXTField, dataSize >> 3)
+            case FieldType.BTXT: z = self.then(r.readS(LANDRecord.BTXTField, dataSize), lambda v: self.BTXTs.__setitem__(v.quadrant, v))
+            case FieldType.ATXT: z = _nca(self, 'ATXTs', listx([None]*4)); self.then(r.readS(LANDRecord.BTXTField, dataSize), lambda v: ((z := LANDRecord.ATXTGroup(ATXT = v), setattr(self, '_lastATXT', z))))
+            case FieldType.VTXT: z = self._lastATXT.VTXTs = r.readSArray(LANDRecord.VTXTField, dataSize >> 3)
             case _: z = Record._empty
         return z
 # end::LAND[]
 
-# dep: None
 # LEVC.Leveled Creature - 3000 - tag::LEVC[]
 class LEVCRecord(Record):
     DATA: IN32Field # List data - 1 = Calc from all levels <= PC level
@@ -3228,7 +3179,6 @@ class LEVCRecord(Record):
 # end::LEVC[]
 
 # LEVI.Leveled item - 3000 - tag::LEVI[]
-# dep: None
 class LEVIRecord(Record):
     DATA: IN32Field # List data - 1 = Calc from all levels <= PC level, 2 = Calc for each item
     NNAM: BYTEField # Chance None?
@@ -3252,10 +3202,8 @@ class LEVIRecord(Record):
         return None
 # end::LEVI[]
 
-# dep: SCPTRecord, SOUNRecord
 # LIGH.Light - 3450 - tag::LIGH[]
 class LIGHRecord(Record, IHaveMODL):
-    
     class DATAField:
         class ColorFlags(Flag):
             Dynamic = 0x0001
@@ -3324,7 +3272,6 @@ class LIGHRecord(Record, IHaveMODL):
         return z
 # end::LIGH[]
 
-# dep: SCPTRecord
 # LOCK.Lock - 3450 - tag::LOCK[]
 class LOCKRecord(Record, IHaveMODL):
     class LKDTField:
@@ -3356,7 +3303,6 @@ class LOCKRecord(Record, IHaveMODL):
         return None
 # end::LOCK[]
 
-# dep: WRLDRecord
 # LSCR.Load Screen - 0450 - tag::LSCR[]
 class LSCRRecord(Record):
     class LNAMField:
@@ -3381,7 +3327,6 @@ class LSCRRecord(Record):
         return z
 # end::LSCR[]
 
-# dep: GRASRecord
 # LTEX.Land Texture - 3450 - tag::LTEX[]
 class LTEXRecord(Record):
     class HNAMField:
@@ -3413,7 +3358,6 @@ class LTEXRecord(Record):
         return z
 # end::LTEX[]
 
-# dep: CREA4Record, LVLIRecord, SCPTRecord
 # LVLC.Leveled Creature - 0400 - tag::LVLC[]
 class LVLCRecord(Record):
     LVLD: BYTEField # Chance
@@ -3435,7 +3379,6 @@ class LVLCRecord(Record):
         return z
 # end::LVLC[]
 
-# dep: None
 # LVLI.Leveled Item - 0400 - tag::LVLI[]
 class LVLIRecord(Record):
     class LVLOField:
@@ -3469,7 +3412,6 @@ class LVLIRecord(Record):
 # end::LVLI[]
 
 # LVSP.Leveled Spell - 0400 - tag::LVSP[]
-# dep: LVLIRecord
 class LVSPRecord(Record):
     LVLD: BYTEField # Chance
     LVLF: BYTEField # Flags
@@ -3486,7 +3428,6 @@ class LVSPRecord(Record):
         return z
 # end::LVSP[]
 
-# dep: ^EFSHRecord, LIGHRecord, SOUNRecord
 # MGEF.Magic Effect - 3400 - tag::MGEF[]
 class MGEFRecord(Record):
     # TES3
@@ -3633,7 +3574,6 @@ class MGEFRecord(Record):
         return z
 # end::MGEF[]
 
-# dep: ENCHRecord, SCPTRecord
 # MISC.Misc Item - 3450 - tag::MISC[]
 class MISCRecord(Record, IHaveMODL):
     class DATAField:
@@ -3674,7 +3614,6 @@ class MISCRecord(Record, IHaveMODL):
         return z
 # end::MISC[]
 
-# dep: CREA3Record, SCPTRecord
 # NPC_.Non-Player Character - 3450 - tag::NPC_3[]
 class NPC_3Record(CREA3Record):
     class NPC_3Flags(Flag):
@@ -3812,7 +3751,6 @@ class NPC_4Record(CREA4Record):
         return z
 # end::NPC_4[]
 
-# dep: SCPTRecord
 # PACK.AI Package - 0450 - tag::PACK[]
 class PACKRecord(Record):
     class PKDTField:
@@ -3877,7 +3815,6 @@ class PACKRecord(Record):
         return z
 # end::PACK[]
 
-# dep: REFRRecord
 # PGRD.Path grid - 3400 - tag::PGRD[]
 class PGRDRecord(Record):
     class DATAField:
@@ -3945,7 +3882,6 @@ class PGRDRecord(Record):
         return z
 # end::PGRD[]
 
-# dep: SCPTRecord
 # PROB.Probe - 3000 - tag::PROB[]
 class PROBRecord(Record, IHaveMODL):
     class PBDTField:
@@ -3977,7 +3913,7 @@ class PROBRecord(Record, IHaveMODL):
         return None
 # end::PROB[]
 
-# dep: SCPTRecord
+# 
 # QUST.Quest - 0450 - tag::QUST[]
 class QUSTRecord(Record):
     class DATAField:
@@ -4016,7 +3952,6 @@ class QUSTRecord(Record):
         return z
 # end::QUST[]
 
-# dep: EYESRecord, HAIRRecord
 # RACE.Race_Creature type - 3450 - tag::RACE[]
 class RACERecord(Record):
     class DATAField:
@@ -4232,7 +4167,6 @@ class RACERecord(Record):
         return None
 # end::RACE[]
 
-# dep: SCPTRecord
 # REPA.Repair Item - 3000 - tag::REPA[]
 class REPARecord(Record, IHaveMODL):
     class RIDTField:
@@ -4264,7 +4198,6 @@ class REPARecord(Record, IHaveMODL):
         return None
 # end::REPA[]
 
-# dep: CELLRecord, ^KEYMRecord
 # REFR.Placed Object - 0450 - tag::REFR[]
 class REFRRecord(Record):
     # Teleport Destination
@@ -4280,18 +4213,23 @@ class REFRRecord(Record):
     # Coords
     class DATAField:
         _struct = ('<6f', 24)
-        def __init__(self, tupple):
-            (self.position,
-            self.rotation) = tuple
+        def __init__(self, tuple):
+            position = self.position = array([None]*3)
+            rotation = self.rotation = array([None]*3)
+            (position[0], position[1], position[2],
+            rotation[0], rotation[1], rotation[2]) = tuple
 
     # Ragdoll Data
     class XRGDField:
-        _struct = ('<B3c6f', 24)
-        def __init__(self, tupple):
+        _struct = ('<B3c6f', 28)
+        def __init__(self, tuple):
+            unused = self.unused = [None]*3
+            position = self.position = array([None]*3)
+            rotation = self.rotation = array([None]*3)
             (self.boneId,
-            self.unused,
-            self.position,
-            self.rotation) = tuple
+            unused[0], unused[1], unused[2],
+            position[0], position[1], position[2],
+            rotation[0], rotation[1], rotation[2]) = tuple
 
     class XLOCField:
         def __repr__(self): return f'{self.key}'
@@ -4385,7 +4323,6 @@ class REFRRecord(Record):
         return z
 # end::REFR[]
 
-# dep: WRLDRecord, ^GRASRecord, GLOBRecord, SOUNRecord, WTHRRecord
 # REGN.Region - 3450 - tag::REGN[]
 class REGNRecord(Record):
     class REGNType(Enum): None_ = 0; One = 1; Objects = 2; Weather = 3; Map = 4; Landscape = 5; Grass = 6; Sound = 7
@@ -4428,23 +4365,23 @@ class REGNRecord(Record):
         vertexShading: ByteColor4 # RGB + Shading radius (0 - 200) %
         def __init__(self, r: Reader, dataSize: int):
             self.object = Ref[Record](Record, r.readUInt32())
-            self.parentIdx = r.ReadUInt16()
+            self.parentIdx = r.readUInt16()
             r.skip(2) # Unused
             self.density = r.readSingle()
             self.clustering = r.readByte()
             self.minSlope = r.readByte()
             self.maxSlope = r.readByte()
             self.flags = r.readByte()
-            self.radiusWrtParent = r.ReadUInt16()
-            self.radius = r.ReadUInt16()
+            self.radiusWrtParent = r.readUInt16()
+            self.radius = r.readUInt16()
             self.minHeight = r.readSingle()
             self.maxHeight = r.readSingle()
             self.sink = r.readSingle()
             self.sinkVariance = r.readSingle()
             self.sizeVariance = r.readSingle()
-            self.angleVariance = Int3(r.ReadUInt16(), r.ReadUInt16(), r.ReadUInt16())
+            self.angleVariance = Int3(r.readUInt16(), r.readUInt16(), r.readUInt16())
             r.skip(2) # Unused
-            self.vertexShading = r.readS(ByteColor4)
+            self.vertexShading = r.readS(ByteColor4, 4)
 
     class RDGSField:
         def __repr__(self): return f'{self.grass}'
@@ -4522,12 +4459,11 @@ class REGNRecord(Record):
             case FieldType.RDGS: z = self.RDATs.last().RDGSs = r.readFArray(lambda z: self.RDGSField(r, dataSize), dataSize // 8)
             case FieldType.RDMD: z = self.RDATs.last().RDMD = r.readS(UI32Field, dataSize)
             case FieldType.RDSD: z = self.RDATs.last().RDSDs = r.readFArray(lambda z: self.RDSDField(r, dataSize), dataSize // 12)
-            case FieldType.RDWT: z = self.RDATs.last().RDWTs = r.readFArray(lambda z: self.RDWTField(r, dataSize), dataSize // (8 if format == FormType.TES4 else 12))
+            case FieldType.RDWT: z = self.RDATs.last().RDWTs = r.readFArray(lambda z: self.RDWTField(r, dataSize), dataSize // (8 if r.format == FormType.TES4 else 12))
             case _: z = Record._empty
         return z
 # end::REGN[]
 
-# dep: PGRDRecord
 # ROAD.Road - 0400 - tag::ROAD[]
 class ROADRecord(Record):
     PGRPs: list[PGRDRecord.PGRPField]
@@ -4536,13 +4472,12 @@ class ROADRecord(Record):
 
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
-            case FieldType.PGRP: z = self.PGRPs = r.readSArray(PGRDRecord.PGRPField(r, dataSize), dataSize >> 4)
+            case FieldType.PGRP: z = self.PGRPs = r.readSArray(PGRDRecord.PGRPField, dataSize >> 4)
             case FieldType.PGRR: z = self.PGRR = r.readUNKN(dataSize)
             case _: z = Record._empty
         return z
 # end::ROAD[]
 
-# dep: None
 # SBSP.Subspace - 0400 - tag::SBSP[]
 class SBSPRecord(Record):
     class DNAMField:
@@ -4563,7 +4498,6 @@ class SBSPRecord(Record):
         return z
 # end::SBSP[]
 
-# dep: None
 # SCPT.Script - 3400 - tag::SCPT[]
 class SCPTRecord(Record):
     class CTDAField:
@@ -4677,7 +4611,6 @@ class SCPTRecord(Record):
         return z
 # end::SCPT[]
 
-# dep: ENCHRecord, SCPTRecord
 # SGST.Sigil Stone - 0400 - tag::SGST[]
 class SGSTRecord(Record, IHaveMODL):
     class DATAField:
@@ -4713,10 +4646,8 @@ class SGSTRecord(Record, IHaveMODL):
         return z
 # end::SGST[]
 
-# dep: None
 # SKIL.Skill - 3450 - tag::SKIL[]
 class SKILRecord(Record):
-    
     class DATAField:
         def __init__(self, r: Reader, dataSize: int):
             self.action: int = 0 if r.format == FormType.TES3 else r.readInt32()
@@ -4751,7 +4682,6 @@ class SKILRecord(Record):
         return z
 # end::SKIL[]
 
-# dep: SCPTRecord
 # SLGM.Soul Gem - 0450 - tag::SLGM[]
 class SLGMRecord(Record, IHaveMODL):
     class DATAField:
@@ -4785,7 +4715,6 @@ class SLGMRecord(Record, IHaveMODL):
         return z
 # end::SLGM[]
 
-# dep: None
 # SNDG.Sound Generator - 3000 - tag::SNDG[]
 class SNDGRecord(Record):
     class SNDGType(Enum): LeftFoot = 0; RightFoot = 1; SwimLeft = 2; SwimRight = 3; Moan = 4; Roar = 5; Scream = 6; Land = 7
@@ -4806,7 +4735,6 @@ class SNDGRecord(Record):
         return None
 # end::SNDG[]
 
-# dep: None
 # SNDR.Sound Reference - 0050 - tag::SNDR[]
 class SNDRRecord(Record):
     CNAM: CREFField # RGB color
@@ -4820,7 +4748,6 @@ class SNDRRecord(Record):
         return z
 # end::SNDR[]
 
-# dep: None
 # SOUN.Sound - 3450 - tag::SOUN[]
 class SOUNRecord(Record):
     class SOUNFlags(Flag):
@@ -4832,7 +4759,6 @@ class SOUNRecord(Record):
         MenuSound = 0x0020
         _2D = 0x0040
         _360LFE = 0x0080
-
     
     class DATAField:
         volume: int # (0=0.00, 255=1.00)
@@ -4873,10 +4799,8 @@ class SOUNRecord(Record):
         return z
 # end::SOUN[]
 
-# dep: ENCHRecord
 # SPEL.Spell - 3450 - tag::SPEL[]
 class SPELRecord(Record):
-    
     class SPITField:
         def __repr__(self): return f'{self.type}'
         def __init__(self, r: Reader, dataSize: int):
@@ -4909,7 +4833,6 @@ class SPELRecord(Record):
         return z
 # end::SPEL[]
 
-# dep: None
 # SSCR.Start Script - 3000 - tag::XXXX[]
 class SSCRRecord(Record):
     DATA: STRVField # Digits
@@ -4925,7 +4848,6 @@ class SSCRRecord(Record):
         return None
 # end::SSCR[]
 
-# dep: None
 # STAT.Static - 3450 - tag::STAT[]
 class STATRecord(Record, IHaveMODL):
     MODL: MODLGroup # Model
@@ -4941,7 +4863,6 @@ class STATRecord(Record, IHaveMODL):
         return z
 # end::STAT[]
 
-# dep: None
 # STDT.xx - 000S0 - tag::STDT[]
 class STDTRecord(Record):
     def __init__(self): super().__init__()
@@ -4952,7 +4873,6 @@ class STDTRecord(Record):
         return z
 # end::STDT[]
 
-# dep: None
 # SUNP.xx - 000S0 - tag::SUNP[]
 class SUNPRecord(Record):
     def __init__(self): super().__init__()
@@ -4963,7 +4883,6 @@ class SUNPRecord(Record):
         return z
 # end::SUNP[]
 
-# dep: None
 # TES3.Plugin Info - 3000 - tag::TES3[]
 class TES3Record(Record):
     class HEDRField:
@@ -4991,7 +4910,6 @@ class TES3Record(Record):
         return z
 # end::TES3[]
 
-# dep: None
 # TES4.Plugin Info - 0450 - tag::TES4[]
 class TES4Record(Record):
     class HEDRField:
@@ -5031,7 +4949,6 @@ class TES4Record(Record):
         return z
 # end::TES4[]
 
-# dep: None
 # TERM.Computer Terminals - 000S0 - tag::TERM[]
 class TERMRecord(Record):
     def __init__(self): super().__init__()
@@ -5042,7 +4959,6 @@ class TERMRecord(Record):
         return z
 # end::TERM[]
 
-# dep: None
 # TMLM.Terminal Menus - 000S0 - tag::TMLM[]
 class TMLMRecord(Record):
     def __init__(self): super().__init__()
@@ -5053,7 +4969,6 @@ class TMLMRecord(Record):
         return z
 # end::TMLM[]
 
-# dep: None
 # TREE.Tree - 0450 - tag::TREE[]
 class TREERecord(Record, IHaveMODL):
     class SNAMField:
@@ -5110,7 +5025,6 @@ class TRNSRecord(Record):
         return z
 # end::TRNS[]
 
-# dep: None
 # TXST.Texture Set - 0400 #F4 - tag::TXST[]
 class TXSTRecord(Record):
     def __init__(self): super().__init__()
@@ -5121,7 +5035,6 @@ class TXSTRecord(Record):
         return z
 # end::TXST[]
 
-# dep: SOUNRecord
 # WATR.Water Type - 0450 - tag::WATR[]
 class WATRRecord(Record):
     class DATAField:
@@ -5217,7 +5130,6 @@ class WATRRecord(Record):
         return z
 # end::WATR[]
 
-# dep: ENCHRecord, SCPTRecord
 # WEAP.Weapon - 3450 - tag::WEAP[]
 class WEAPRecord(Record, IHaveMODL):
     class DATAField:
@@ -5289,7 +5201,6 @@ class WEAPRecord(Record, IHaveMODL):
         return z
 # end::WEAP[]
 
-# dep: CLMTRecord, WATRRecord, WRLDRecord, ^REFRRecord
 # WRLD.Worldspace - 0450 - tag::WRLD[]
 class WRLDRecord(Record):
     class MNAMField:
@@ -5304,10 +5215,9 @@ class WRLDRecord(Record):
             self.seCell_Y) = tuple
 
     class NAM0Field:
-        # _struct = ('<4f', 16)
         def __init__(self, r: Reader, dataSize: int):
             self.min: Vector2 = r.readVector2()
-            self.max: Vector2 = Vector2.Zero
+            self.max: Vector2 = array([0]*2)
         def NAM9Field(self, r: Reader, dataSize: int) -> object: z = self.max = r.readVector2(); return z
 
     # TES5
@@ -5346,19 +5256,18 @@ class WRLDRecord(Record):
             case FieldType.CNAM: z = self.CNAM = REFXField[CLMTRecord](CLMTRecord, r, dataSize)
             case FieldType.NAM2: z = self.NAM2 = REFXField[WATRRecord](WATRRecord, r, dataSize)
             case FieldType.ICON: z = self.ICON = r.readFILE(dataSize)
-            case FieldType.MNAM: z = self.MNAM = r.readS(self.MNAMField, dataSize)
+            case FieldType.MNAM: z = self.MNAM = r.readS(WRLDRecord.MNAMField, dataSize)
             case FieldType.DATA: z = self.DATA = r.readS(BYTEField, dataSize)
-            case FieldType.NAM0: z = self.NAM0 = self.NAM0Field(r, dataSize)
-            case FieldType.NAM9: z = self.NAM0.NAM9Field(r, dataSize)
+            case FieldType.NAM0: z = self.NAM0 = WRLDRecord.NAM0Field(r, dataSize)
+            case FieldType.NAM9: z = r; self.NAM0.NAM9Field(r, dataSize)
             case FieldType.SNAM: z = self.SNAM = r.readS(UI32Field, dataSize)
             case FieldType.OFST: z = r.skip(dataSize)
             # TES5
-            case FieldType.RNAM: z = self.RNAMs.addX(self.RNAMField(r, dataSize))
+            case FieldType.RNAM: z = self.RNAMs.addX(WRLDRecord.RNAMField(r, dataSize))
             case _: z = Record._empty
         return z
 # end::WRLD[]
 
-# dep: ^SOUNRecord
 # WTHR.Weather - 0450 - tag::WTHR[]
 class WTHRRecord(Record, IHaveMODL):
     class FNAMField:

@@ -3759,9 +3759,8 @@ class PACKRecord(Record):
     class PKDTField:
         _struct = { 4: '<I', 8: '<I4B', 16: '<I4BI' }
         def __init__(self, tuple):
+            if not isinstance(tuple, tuple): self.flags = tuple; return
             match len(tuple):
-                case 1:
-                    self.flags = tuple
                 case 5:
                     (self.flags,
                     self.packageType,
@@ -3787,7 +3786,7 @@ class PACKRecord(Record):
 
     class PLDTField:
         _struct = ('<iIi', 12)
-        def __init__(self, r: Reader, dataSize: int):
+        def __init__(self, tuple):
             (self.type,
             self.target,
             self.radius) = tuple

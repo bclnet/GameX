@@ -2228,17 +2228,22 @@ class CSTYRecord(Record):
             self.flags1 = r.readByte()
             self.acrobaticDodgePercentChance = r.readByte()
             r.skip(2) # Unused
-            if dataSize == 84: return; self.rangeMult_Optimal = r.readSingle()
+            if dataSize == 84: return
+            self.rangeMult_Optimal = r.readSingle()
             self.RangeMult_Max = r.readSingle()
-            if dataSize == 92: return; self.switchDistance_Melee = r.readSingle()
+            if dataSize == 92: return
+            self.switchDistance_Melee = r.readSingle()
             self.switchDistance_Ranged = r.readSingle()
             self.buffStandoffDistance = r.readSingle()
-            if dataSize == 104: return; self.rangedStandoffDistance = r.readSingle()
+            if dataSize == 104: return
+            self.rangedStandoffDistance = r.readSingle()
             self.GroupStandoffDistance = r.readSingle()
-            if dataSize == 112: return; self.rushingAttackPercentChance = r.readByte()
+            if dataSize == 112: return
+            self.rushingAttackPercentChance = r.readByte()
             r.skip(3) # Unused
             self.rushingAttackDistanceMult = r.readSingle()
-            if dataSize == 120: return; self.flags2 = r.readUInt32()
+            if dataSize == 120: return
+            self.flags2 = r.readUInt32()
 
     class CSADField:
         _struct = ('<21f', 84)

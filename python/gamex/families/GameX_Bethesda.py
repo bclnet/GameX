@@ -32,7 +32,7 @@ class BethesdaArchive(BinaryArchive):
             case '': return None
             case '.bsa': return Binary_Bsa()
             case '.ba2': return Binary_Ba2()
-            case '.esm': return Binary_Esm()
+            case '.esm' | '.esp': return Binary_Esm()
             case _: raise Exception(f'Unknown: {extension}')
 
     @staticmethod

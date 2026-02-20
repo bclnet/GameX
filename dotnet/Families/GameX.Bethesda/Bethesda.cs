@@ -73,7 +73,7 @@ public class BethesdaArchive : BinaryArchive, ITransformAsset<IUnknownFileModel>
             "" => null,
             ".bsa" => Binary_Bsa.Current,
             ".ba2" => Binary_Ba2.Current,
-            ".esm" => Binary_Esm.Current,
+            ".esm" or ".esp" => Binary_Esm.Current,
             _ => throw new ArgumentOutOfRangeException(nameof(extension)),
         };
 

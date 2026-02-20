@@ -21,6 +21,8 @@ type Vector3 = ndarray
 
 class FormType(IntEnum):
     def __str__(self): return self.to_bytes(4, byteorder='little').decode('ascii')
+    ZERO = 0x00000000
+    ONE_ = 0x00000001
     APPA = 0x41505041
     ARMA = 0x414D5241
     AACT = 0x54434141
@@ -325,6 +327,7 @@ class FieldType(Enum):
     NPCO = 0x4F43504E
     NPCS = 0x5343504E
     NPDT = 0x5444504E
+    OBND = 0x444E424F
     OFST = 0x5453464F
     ONAM = 0x4D414E4F
     PKID = 0x44494b50
@@ -386,12 +389,20 @@ class FieldType(Enum):
     SNDD = 0x44444E53
     SPIT = 0x54495053
     SPDT = 0x54445053
+    TCLF = 0x464C4354
+    TCLT = 0x544C4354
+    TEXT = 0x54584554
     TNAM = 0x4D414E54
     TPIC = 0x43495054
     TRDT = 0x54445254
-    TCLT = 0x544C4354
-    TCLF = 0x464C4354
-    TEXT = 0x54584554
+    TX00 = 0x30305854
+    TX01 = 0x31305854
+    TX02 = 0x32305854
+    TX03 = 0x33305854
+    TX04 = 0x34305854
+    TX05 = 0x35305854
+    TX06 = 0x36305854
+    TX07 = 0x37305854
     UNAM = 0x4D414E55
     VNAM = 0x4D414E56
     VTXT = 0x54585456
@@ -576,13 +587,16 @@ class Record:
         FormType.DMGT: lambda f: DMGTRecord(),
         FormType.TRNS: lambda f: TRNSRecord(),
         FormType.TXST: lambda f: TXSTRecord(),
+        #
+        FormType.KYWD: lambda f: KYWDRecord(),
+        FormType.LCRT: lambda f: LCRTRecord(),
     }
     cellsLoaded: int = 0
     @staticmethod
     def factory(r: Reader, type: FieldType) -> 'Record':
         record = None
         if type == FormType.CELL and Record.cellsLoaded > 100: Record.cellsLoaded += 1; record = Record() # hack to limit cells loading
-        if not (z := Record._mapx.get(type)): print(f'Unsupported ESM record type: {type}'); record = Record()
+        if not (z := Record._mapx.get(type)): print(f'Unsupported record type: {type}'); record = Record()
         # if type != FormType.TES3 and type != FormType.TES4 and type not in Record._factorySet: record = Record()
         else: record = z(r.format); record.type = type
         record.read(r)
@@ -3057,6 +3071,19 @@ class KEYMRecord(Record, IHaveMODL):
         return z
 # end::KEYM[]
 
+# KYWD.Keyword - 00500 - tag::KYWD[]
+class KEYMRecord(Record):
+    CNAM: CREFField # Used to identify keywords in the editor.
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
+            case FieldType.CNAM: z = self.CNAM = r.readS(CREFField, dataSize)
+            case _: z = Record._empty
+        return z
+# end::KYWD[]
+
 # LAND.Land - 3450 - tag::LAND[]
 class LANDRecord(Record):
     class VNMLField:
@@ -5032,12 +5059,72 @@ class TRNSRecord(Record):
         return z
 # end::TRNS[]
 
-# TXST.Texture Set - 0400 #F4 - tag::TXST[]
+# TXST.Texture Set - 0450 #F4 - tag::TXST[]
 class TXSTRecord(Record):
+    class OBNDField:
+        _struct = ('<6h', 12)
+        def __init__(self, t):
+            (self.x1,
+            self.y1,
+            self.z1,
+            self.x2,
+            self.y2,
+            self.z2) = t
+
+    class DNAMFlag(Flag):
+        NotHasSpecularMap = 0x01 # not Has specular map
+        FacegenTextures = 0x02 # Facegen Textures
+        HasModelSpaceNormalMap = 0x04 # Has model space normal map
+
+    class DODTField:
+        class Flag(Flag):
+            Parallax = 0x01 # Parallax (enables the Scale and Passes values in the CK)
+            AlphaBlending = 0x02 # Alpha Blending
+            AlphaTesting = 0x04 # Alpha Testing
+            Not4Subtextures = 0x08 # not 4 Subtextures
+        _struct = ('<7f8B', 36)
+        def __init__(self, t):
+            unknown = self.unknown = [None]*2
+            color = self.color = ByteColor3()
+            (self.minWidth,         # Min Width
+            self.maxWidth,          # Max Width
+            self.minHeight,         # Min Height
+            self.maxHeight,         # Max Height
+            self.depth,             # Depth
+            self.shininess,         # Shininess
+            self.parallaxScale,     # Parallax Scale
+            self.parallaxPasses,    # Parallax Passes
+            self.flags,             # Flags
+            unknown[0], unknown[1], # Unknown but not neverused
+            color[0], color[1], color[2], color[3]) = t # Color
+
+    OBND: OBNDField # Object Boundary
+    TX00: STRVField # Texture path, color map
+    TX01: STRVField # Texture path, normal map (tangent- or model-space)
+    TX02: STRVField # Texture path, mask (environment or light)
+    TX03: STRVField # Texture path, tone map (for skins) or glow map (for things)
+    TX04: STRVField # Texture path, detail map (roughness, complexion, age)
+    TX05: STRVField # Texture path, environment map (cubemaps mostly)
+    TX06: STRVField # Texture path Multilayer (does not occur in Skyrim.esm)
+    TX07: STRVField # Texture path, specularity map (for skinny bodies, and for furry bodies)
+    DODT: DODTField # Decal Data
+    DNAM: UI16Field # Flags
     def __init__(self): super().__init__()
 
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
+            case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
+            case FieldType.OBND: z = self.OBND = r.readS(TXSTRecord.OBNDField, dataSize)
+            case FieldType.TX00: z = self.TX00 = r.readSTRV(dataSize)
+            case FieldType.TX01: z = self.TX01 = r.readSTRV(dataSize)
+            case FieldType.TX02: z = self.TX02 = r.readSTRV(dataSize)
+            case FieldType.TX03: z = self.TX03 = r.readSTRV(dataSize)
+            case FieldType.TX04: z = self.TX04 = r.readSTRV(dataSize)
+            case FieldType.TX05: z = self.TX05 = r.readSTRV(dataSize)
+            case FieldType.TX06: z = self.TX06 = r.readSTRV(dataSize)
+            case FieldType.TX07: z = self.TX07 = r.readSTRV(dataSize)
+            case FieldType.DODT: z = self.DODT = r.readS(TXSTRecord.DODTField, dataSize)
+            case FieldType.DNAM: z = self.DNAM = r.readS(UI16Field, dataSize)
             case _: z = Record._empty
         return z
 # end::TXST[]
@@ -5361,3 +5448,16 @@ CONTRecord.SNAM = REFXField[SOUNRecord](SOUNRecord)
 CONTRecord.QNAM = REFXField[SOUNRecord](SOUNRecord)
 
 #endregion
+
+# LCRT.Location Reference Type - 00500 - tag::LCRT[]
+class LCRTRecord(Record):
+    CNAM: CREFField # RGB Hex color code, last byte always 0x00
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
+            case FieldType.CNAM: z = self.CNAM = r.readS(CREFField, dataSize)
+            case _: z = Record._empty
+        return z
+# end::LCRT[]

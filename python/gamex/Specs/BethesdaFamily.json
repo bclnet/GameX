@@ -62,7 +62,8 @@
       "engine": "Gamebryo",
       "arcExt": [
         ".bsa",
-        ".esm"
+        ".esm",
+        ".esp"
       ],
       "_arcx": "game:/Oblivion*.bsa",
       "_pakx": "game:/Oblivion - Meshes.bsa",

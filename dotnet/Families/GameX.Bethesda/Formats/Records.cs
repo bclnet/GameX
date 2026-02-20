@@ -53,6 +53,8 @@ namespace GameX.Bethesda.Formats.Records;
 #region Enums
 
 public enum FormType : uint {
+    ZERO = 0x00000000,
+    ONE_ = 0x00000001,
     APPA = 0x41505041,
     ARMA = 0x414D5241,
     AACT = 0x54434141,
@@ -354,6 +356,7 @@ public enum FieldType : uint {
     NPCO = 0x4F43504E,
     NPCS = 0x5343504E,
     NPDT = 0x5444504E,
+    OBND = 0x444E424F,
     OFST = 0x5453464F,
     ONAM = 0x4D414E4F,
     PKID = 0x44494b50,
@@ -415,12 +418,20 @@ public enum FieldType : uint {
     SNDD = 0x44444E53,
     SPIT = 0x54495053,
     SPDT = 0x54445053,
+    TCLF = 0x464C4354,
+    TCLT = 0x544C4354,
+    TEXT = 0x54584554,
     TNAM = 0x4D414E54,
     TPIC = 0x43495054,
     TRDT = 0x54445254,
-    TCLT = 0x544C4354,
-    TCLF = 0x464C4354,
-    TEXT = 0x54584554,
+    TX00 = 0x30305854,
+    TX01 = 0x31305854,
+    TX02 = 0x32305854,
+    TX03 = 0x33305854,
+    TX04 = 0x34305854,
+    TX05 = 0x35305854,
+    TX06 = 0x36305854,
+    TX07 = 0x37305854,
     UNAM = 0x4D414E55,
     VNAM = 0x4D414E56,
     VTXT = 0x54585456,
@@ -612,7 +623,22 @@ public partial class Record {
         { TXST, f => new TXSTRecord() },
         { BNDS, f => new BNDSRecord() },
         { DMGT, f => new DMGTRecord() },
+        //
+        { KYWD, f => new KYWDRecord() },
+        { LCRT, f => new LCRTRecord() },
     };
+
+    static int CellsLoaded = 0;
+    public static Record Factory(Reader r, FormType type) {
+        Record record;
+        if (type == CELL && CellsLoaded++ > 100) record = new Record(); // hack to limit cells loading
+        else if (!Map.TryGetValue(type, out var z)) { Log.Info($"Unsupported record type: {type}"); record = new Record(); }
+        else if (_factorySet != null && type != TES3 && type != TES4 && !_factorySet.Contains(type)) record = new Record();
+        else { record = z(r.Format); record.Type = type; }
+        record.Read(r);
+        return record;
+    }
+
     [Flags]
     public enum EsmFlags : uint {
         None_ = 0x00000000,                 // None
@@ -651,6 +677,7 @@ public partial class Record {
     HashSet<FieldType> Ds = [];
     protected virtual HashSet<FieldType> DF3 => [];
     protected virtual HashSet<FieldType> DF4 => [];
+    protected virtual HashSet<FieldType> DF5 => [];
 
     /// <summary>
     /// Completes a record.
@@ -700,7 +727,7 @@ public partial class Record {
         }
         long start = r.Tell(), end = start + DataSize;
         //Log.Info($"{Type}");
-        var dfields = r.Format == TES3 ? DF3 : DF4;
+        var dfields = r.Format == TES3 ? DF3 : r.Format == TES4 ? DF4 : r.Format == TES5 ? DF5 : throw new Exception();
         while (!r.AtEnd(end)) {
             var fieldType = (FieldType)r.ReadUInt32();
             if (dfields != null && !dfields.Contains(fieldType) && Ds.Contains(fieldType)) throw new Exception($"d: {Type}Record.{fieldType}");
@@ -714,23 +741,12 @@ public partial class Record {
             }
             else if (fieldType == FieldType.OFST && Type == WRLD) { r.Seek(end); continue; }
             var tell = r.Tell();
-            if (ReadField(r, fieldType, fieldDataSize) == Empty) { Log.Info($"Unsupported ESM record type: {Type}Record:{fieldType}"); r.Skip(fieldDataSize); continue; }
+            if (ReadField(r, fieldType, fieldDataSize) == Empty) { Log.Info($"Unsupported field type: {Type}Record:{fieldType}"); r.Skip(fieldDataSize); continue; }
             r.EnsureAtEnd(tell + fieldDataSize, $"Failed reading {Type}Record:{fieldType} field data at offset {tell} in {r.BinPath} of {r.Tell() - tell - fieldDataSize}");
         }
         //Log.Info($"END");
         r.EnsureAtEnd(end, $"Failed reading {Type} record data at offset {start} in {r.BinPath}");
         if (Compressed) r.Dispose();
-    }
-
-    static int CellsLoaded = 0;
-    public static Record Factory(Reader r, FormType type) {
-        Record record;
-        if (type == CELL && CellsLoaded++ > 100) record = new Record(); // hack to limit cells loading
-        else if (!Map.TryGetValue(type, out var z)) { Log.Info($"Unsupported ESM record type: {type}"); record = new Record(); }
-        else if (_factorySet != null && type != TES3 && type != TES4 && !_factorySet.Contains(type)) record = new Record();
-        else { record = z(r.Format); record.Type = type; }
-        record.Read(r);
-        return record;
     }
 }
 
@@ -1855,7 +1871,6 @@ public class CLASRecord : Record {
                 MajorSkills = r.ReadPArray<ActorValue>("I", 10);
                 Flags = (Flag)r.ReadUInt32();
                 Services = (Service)r.ReadUInt32(); // Buys/Sells and Services
-                return;
             }
             else if (r.Format == TES4) {
                 PrimaryAttributes = [(ActorValue)r.ReadUInt32(), (ActorValue)r.ReadUInt32()];
@@ -1868,10 +1883,11 @@ public class CLASRecord : Record {
                 MaximumTrainingLevel = r.ReadByte(); // (0-100)
                 Unused = r.ReadUInt16();
                 if (SkillTrained != ActorValue.None_) SkillTrained += 12;
-                return;
             }
-            throw new NotImplementedException();
-            //r.Skip(dataSize);
+            else if (r.Format == TES5) {
+                r.Skip(dataSize); // TODO
+            }
+            else throw new NotImplementedException("CLASRecord");
         }
     }
 
@@ -2945,6 +2961,13 @@ public class FACTRecord : Record {
     public List<XNAMField> XNAMs = []; // Interfaction Relations
     public INTVField DATA; // Flags (byte, uint32)
     public UI32Field CNAM;
+    // TES5
+    public REF1Field<REFRRecord> JAIL; // Prison Marker
+    public REF1Field<REFRRecord> WAIT; // Follower Wait Marker
+    public REF1Field<REFRRecord> STOL; // Evidence Chest
+    public REF1Field<REFRRecord> PLCN; // Player Belongings Chest
+    public REF1Field<FLSTRecord> CRGR; // Crime Group
+    public REF1Field<OTFTRecord> JOUT; // Jail outfit the player is given.
 
     protected override HashSet<FieldType> DF3 => [FieldType.RNAM, FieldType.ANAM, FieldType.INTV];
     protected override HashSet<FieldType> DF4 => [FieldType.XNAM, FieldType.RNAM, FieldType.MNAM, FieldType.FNAM, FieldType.INAM];
@@ -2963,11 +2986,18 @@ public class FACTRecord : Record {
             FieldType.FULL => FULL = r.ReadSTRV(dataSize),
             FieldType.XNAM => XNAMs.AddX(new XNAMField(r, dataSize)),
             FieldType.DATA => DATA = r.ReadINTV(dataSize),
-            FieldType.CNAM => CNAM = r.ReadS<UI32Field>(dataSize),
+            FieldType.JAIL => JAIL = new REF1Field<REFRRecord>(), //TES5
+            FieldType.WAIT => WAIT = new REF1Field<REFRRecord>(), //TES5
+            FieldType.STOL => STOL = new REF1Field<REFRRecord>(), //TES5
+            FieldType.PLCN => PLCN = new REF1Field<REFRRecord>(), //TES5
+
+
+
+            FieldType.CNAM => CNAM = r.ReadS<UI32Field>(dataSize), //TES4
             FieldType.RNAM => RNAMs.AddX(new RNAMGroup { RNAM = r.ReadS<IN32Field>(dataSize) }),
             FieldType.MNAM => RNAMs.Last().MNAM = r.ReadSTRV(dataSize),
             FieldType.FNAM => RNAMs.Last().FNAM = r.ReadSTRV(dataSize),
-            FieldType.INAM => RNAMs.Last().INAM = r.ReadSTRV(dataSize),
+            FieldType.INAM => RNAMs.Last().INAM = r.ReadSTRV(dataSize), //TES4
             _ => Empty,
         };
 }
@@ -3364,6 +3394,20 @@ public class KEYMRecord : Record, IHaveMODL {
         FieldType.SCRI => SCRI = new REFXField<SCPTRecord>(r, dataSize),
         FieldType.DATA => DATA = r.ReadS<DATAField>(dataSize),
         FieldType.ICON => ICON = r.ReadFILE(dataSize),
+        _ => false,
+    };
+}
+
+/// <summary>
+/// KYWD.Keyword - 00500
+/// </summary>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/KYWD"/>
+public class KYWDRecord : Record {
+    public CREFField CNAM; // Used to identify keywords in the editor.
+
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadSTRV(dataSize),
+        FieldType.CNAM => CNAM = r.ReadS<CREFField>(dataSize),
         _ => false,
     };
 }
@@ -4666,7 +4710,7 @@ public unsafe class REFRRecord : Record {
     public struct XRGDField {
         public static (string, int) Struct = ("<B3c6f", 28);
         public byte BoneId;
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)] public byte[] Unused;
+        public fixed byte Unused[3];
         public Vector3 Position;
         public Vector3 Rotation;
     }
@@ -5516,10 +5560,79 @@ public class TRNSRecord : Record {
 }
 
 /// <summary>
-/// TXST.Texture Set - 04000 #F4
+/// TXST.Texture Set - 04500 #F4
 /// </summary>
 /// <see cref="https://tes5edit.github.io/fopdoc/Fallout4/Records/TXST.html"/>
+/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/TXST"/>
 public class TXSTRecord : Record {
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public struct OBNDField {
+        public static (string, int) Struct = ("<6h", 12);
+        public short X1;
+        public short Y1;
+        public short Z1;
+        public short X2;
+        public short Y2;
+        public short Z2;
+    }
+
+    [Flags]
+    public enum DNAMFlag : ushort {
+        NotHasSpecularMap = 0x01, // not Has specular map
+        FacegenTextures = 0x02, // Facegen Textures
+        HasModelSpaceNormalMap = 0x04, // Has model space normal map
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public unsafe struct DODTField {
+        [Flags]
+        public enum Flag : byte {
+            Parallax = 0x01, // Parallax (enables the Scale and Passes values in the CK)
+            AlphaBlending = 0x02, // Alpha Blending
+            AlphaTesting = 0x04, // Alpha Testing
+            Not4Subtextures = 0x08, // not 4 Subtextures
+        }
+        public static (string, int) Struct = ("<7f8B", 36);
+        public float MinWidth;          // Min Width
+        public float MaxWidth;          // Max Width
+        public float MinHeight;         // Min Height
+        public float MaxHeight;         // Max Height
+        public float Depth;             // Depth
+        public float Shininess;         // Shininess
+        public float ParallaxScale;     // Parallax Scale
+        public byte ParallaxPasses;     // Parallax Passes
+        public Flag Flags;              // Flags
+        public fixed byte Unknown[2];   // Unknown but not neverused
+        public ByteColor4 Color;        // Color
+    }
+
+    public OBNDField OBND; // Object Boundary
+    public STRVField TX00; // Texture path, color map
+    public STRVField TX01; // Texture path, normal map (tangent- or model-space)
+    public STRVField TX02; // Texture path, mask (environment or light)
+    public STRVField TX03; // Texture path, tone map (for skins) or glow map (for things)
+    public STRVField TX04; // Texture path, detail map (roughness, complexion, age)
+    public STRVField TX05; // Texture path, environment map (cubemaps mostly)
+    public STRVField TX06; // Texture path Multilayer (does not occur in Skyrim.esm)
+    public STRVField TX07; // Texture path, specularity map (for skinny bodies, and for furry bodies)
+    public DODTField DODT; // Decal Data
+    public UI16Field DNAM; // Flags
+
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadSTRV(dataSize),
+        FieldType.OBND => OBND = r.ReadS<OBNDField>(dataSize),
+        FieldType.TX00 => TX00 = r.ReadSTRV(dataSize),
+        FieldType.TX01 => TX01 = r.ReadSTRV(dataSize),
+        FieldType.TX02 => TX02 = r.ReadSTRV(dataSize),
+        FieldType.TX03 => TX03 = r.ReadSTRV(dataSize),
+        FieldType.TX04 => TX04 = r.ReadSTRV(dataSize),
+        FieldType.TX05 => TX05 = r.ReadSTRV(dataSize),
+        FieldType.TX06 => TX06 = r.ReadSTRV(dataSize),
+        FieldType.TX07 => TX07 = r.ReadSTRV(dataSize),
+        FieldType.DODT => DODT = r.ReadS<DODTField>(dataSize),
+        FieldType.DNAM => r.ReadS<UI16Field>(dataSize),
+        _ => Empty,
+    };
 }
 
 /// <summary>
@@ -5859,3 +5972,17 @@ public class WTHRRecord : Record, IHaveMODL {
 }
 
 #endregion
+
+/// <summary>
+/// LCRT.Location Reference Type - 00500
+/// </summary>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/LCRT"/>
+public class LCRTRecord : Record {
+    public CREFField CNAM; // RGB Hex color code, last byte always 0x00
+
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadSTRV(dataSize),
+        FieldType.CNAM => CNAM = r.ReadS<CREFField>(dataSize),
+        _ => false,
+    };
+}

@@ -377,8 +377,7 @@ class Binary_Esm(ArcBinaryT, IDatabase):
         r = Reader(b, source.binPath, self.format, source.game.id in ['Fallout3', 'FalloutNV'])
         record = self.record = Record.factory(r, FormType(r.readUInt32()))
         record.readFields(r)
-        record.complete(r)
-        files = source.files = [FileSource(path = f'{str(record.type)[9:]}', tag = record)]
+        files = source.files = [FileSource(path = str(record.type), tag = record)]
         for s in RecordGroup.readAll(r):
             if s.preload: s.read(r, files)
             else: r.seek(r.tell() + s.dataSize)

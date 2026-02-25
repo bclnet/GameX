@@ -498,7 +498,7 @@ public unsafe class Binary_Bsa : ArcBinary<Binary_Bsa> {
 /// Binary_Esm
 /// </summary>
 /// <seealso cref="GameX.Formats._Packages.PakBinaryBethesdaEsm" />
-public unsafe class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
+public class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
     public FormType Format;
     public Record Record;
     public Dictionary<FormType, RecordGroup> Groups;
@@ -549,7 +549,6 @@ public unsafe class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
         var r = new Reader(b, source.BinPath, Format, new[] { "Fallout3", "FalloutNV" }.Contains(source.Game.Id));
         var record = Record = Record.Factory(r, (FormType)r.ReadUInt32());
         record.ReadFields(r);
-        record.Complete(r);
         var files = (List<FileSource>)(source.Files = [new FileSource { Path = $"{record.Type}", Tag = record }]);
         foreach (var s in RecordGroup.ReadAll(r))
             if (s.Preload) s.Read(r, files);
@@ -592,7 +591,7 @@ public unsafe class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
 
     #region Query
 
-    public static object FindTAGFactory(FormType type, RecordGroup group) => Activator.CreateInstance(typeof(FindTAG<>).MakeGenericType(Record.Factory(null, type).GetType()), group.Records);
+    public static object FindTAGFactory(FormType type, RecordGroup group) => Activator.CreateInstance(typeof(FindTAG<>).MakeGenericType(Record.Factory(null, type).GetType()), group.RecordsByType[type]);
     public class FindTAG<T>(List<Record> s) : List<T>(s.Cast<T>()), IHaveMetaInfo, IWriteToStream {
         public void WriteToStream(Stream stream) => this.Serialize(stream);
         public override string ToString() => this.Serialize();

@@ -334,6 +334,7 @@ class FieldType(Enum):
     MAST = 0x5453414D
     MCDT = 0x5444434D
     MEDT = 0x5444454D
+    MICO = 0x4F43494D
     MNAM = 0x4D414E4D
     MO2B = 0x42324F4D
     MO2T = 0x54324F4D
@@ -346,6 +347,7 @@ class FieldType(Enum):
     MOD4 = 0x34444F4D
     MODB = 0x42444F4D
     MODL = 0x4C444F4D
+    MODS = 0x53444F4D
     MODT = 0x54444F4D
     MPAI = 0x4941504D
     MPAV = 0x5641504D
@@ -526,13 +528,9 @@ class FieldType(Enum):
     XTRG = 0x47525458
     XXXX = 0x58585858
     
-    ZNAM = 0x4D414E5A
+    YNAM = 0x4D414E59
 
-    # @classmethod
-    # def _missing_(cls, value):
-    #     s = object.__new__(cls); s._value_ = value; s._name_ = f'_{hex(value)}'
-    #     print(f'_missing_: {s}')
-    #     return s
+    ZNAM = 0x4D414E5A
 
 class ActorValue(IntEnum):
     None_ = -1
@@ -558,12 +556,22 @@ class Reader(BinaryReader):
         self.version = 0
 
 class MODLGroup:
+    class MODDFlag(Flag): Head = 0x01; Torso = 0x02; RightHand = 0x04; LeftHand = 0x08 #Fallout
+    class MODS:
+        def __init__(self, r: Reader, dataSize: int):
+            self.x3dName: str = r.readL32UString()
+            self.newTexture: Ref[TXSTRecord] = Ref[TXSTRecord](TXSTRecord, r.readUInt32())
+            self.x3dIndex: int = r.readUInt32()
     def __repr__(self) -> str: return f'{self.value}'
     def __init__(self, r: Reader, dataSize: int): self.value: str = r.readFUString(dataSize)
     bound: float = 0
     textures: bytes = None # Texture Files Hashes
+    altTextures: list[MODS] = None # Alternate Textures
+    faceGenModelFlags: MODDFlag = None # FaceGen Model Flags
     def MODBField(self, r: Reader, dataSize: int) -> object: z = self.bound = r.readSingle(); return z
-    def MODTField(self, r: Reader, dataSize: int) -> object: z = self.textures = r.readBytes(dataSize); return z
+    def MODTField(self, r: Reader, dataSize: int) -> object: z = self.textures = r.readBytes(dataSize); return z # Texture File Hashes
+    def MODSField(self, r: Reader, dataSize: int) -> object: z = self.altTextures = r.readL32FArray(lambda z: MODLGroup.MODS(r, dataSize)); return z # Alternate Textures
+    def MODDField(self, r: Reader, dataSize: int) -> object: z = self.faceGenModelFlags = MODLGroup.MODDFlag(r.readByte()); return z # FaceGen Model Flags
 
 # IHaveMODL
 class IHaveMODL:
@@ -613,7 +621,7 @@ class Record:
         FormType.ENCH: lambda f: ENCHRecord(),
         FormType.SCPT: lambda f: SCPTRecord(),
         FormType.SKIL: lambda f: SKILRecord(),
-        FormType.RACE: lambda f: RACERecord(),
+        FormType.RACE: lambda f: RACE3Record() if f == FormType.TES3 else RACE4Record() if f == FormType.TES5 else RACE5Record(),
         FormType.MGEF: lambda f: MGEFRecord(),
         FormType.LEVI: lambda f: LEVIRecord(),
         FormType.LEVC: lambda f: LEVCRecord(),
@@ -673,6 +681,8 @@ class Record:
         FormType.LCRT: lambda f: LCRTRecord(),
         FormType.FLST: lambda f: FLSTRecord(),
         FormType.OTFT: lambda f: OTFTRecord(),
+        FormType.HDPT: lambda f: HDPTRecord(),
+        FormType.MICN: lambda f: MICNRecord(),
     }
     cellsLoaded: int = 0
     @staticmethod
@@ -828,7 +838,7 @@ class RecordGroup:
         self.label: FormType = FormType(r.readUInt32())
         self.type: GroupType = RecordGroup.GroupType(r.readInt32())
         r.skip(4) # stamp + version
-        if r.format != FormType.TES4: r.skip(4) # unknown
+        if r.tes4a or r.format != FormType.TES4: r.skip(4) # unknown
         self.position = r.tell()
         self.path = f'{path}{str(self.label)}/'
 
@@ -1786,7 +1796,7 @@ class CELLRecord(Record): #ICellRecord
 class CLASRecord(Record):
     class DATAField:
         class Specialization_(Enum): Combat = 0; Magic = 1; Stealth = 2
-        class Flag(Flag): Playable = 0x00000001; Guard = 0x00000002
+        class Flag(IntFlag): Playable = 0x00000001; Guard = 0x00000002
         class Service(IntFlag):
             Weapon = 0x00001
             Armor = 0x00002
@@ -1817,12 +1827,15 @@ class CLASRecord(Record):
                 self.flags = CLASRecord.DATAField.Flag(r.readUInt32())
                 self.services = CLASRecord.DATAField.Service(r.readUInt32()) # Buys/Sells and Services
             elif r.format == FormType.TES4:
-                self.primaryAttributes = [ActorValue(r.readUInt32()), ActorValue(r.readUInt32())]
-                self.specialization = CLASRecord.DATAField.Specialization_(r.readUInt32())
-                self.majorSkills = r.readPArray(ActorValue, 'I', 7)
+                if not r.tes4a:
+                    self.primaryAttributes = [ActorValue(r.readUInt32()), ActorValue(r.readUInt32())]
+                    self.specialization = CLASRecord.DATAField.Specialization_(r.readUInt32())
+                    self.majorSkills = r.readPArray(ActorValue, 'i', 7)
+                else:
+                    self.majorSkills = r.readPArray(ActorValue, 'i', 4)
                 self.flags = CLASRecord.DATAField.Flag(r.readUInt32())
                 self.services = CLASRecord.DATAField.Service(r.readUInt32()) # Buys/Sells and Services
-                if dataSize == 48: return
+                if not r.tes4a and r.dataSize == 48: return
                 self.skillTrained = ActorValue(r.readSByte())
                 self.maximumTrainingLevel = r.readByte() # (0-100)
                 self.unused = r.readUInt16()
@@ -1831,11 +1844,25 @@ class CLASRecord(Record):
                 r.skip(dataSize) # TODO
             else: raise NotImplementedError('CLASRecord')
 
+    class ATTRField:
+        _struct = ('<7B', 7)
+        def __repr__(self): return f'SPECIAL'
+        def __init__(self, t):
+            (self.strength,
+            self.perception,
+            self.endurance,
+            self.charisma,
+            self.intelligence,
+            self.agility,
+            self.luck) = t
+
     FULL: STRVField # Name
     DESC: STRVField = STRVField() #! Description
     DATA: DATAField # Data
     # TES4
-    ICON: STRVField = None # Icon (Optional)
+    ICON: STRVField = None # Large icon filename (Optional)
+    MICO: STRVField = None # Small icon filename (Optional)
+    ATTR: ATTRField = None # SPECIAL (Fallout)
     def __init__(self): super().__init__()
 
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
@@ -1846,6 +1873,8 @@ class CLASRecord(Record):
             case FieldType.DESC: z = self.DESC = r.readSTRV(dataSize)
             # TES4
             case FieldType.ICON: z = self.ICON = r.readSTRV(dataSize)
+            case FieldType.MICO: z = self.MICO = r.readSTRV(dataSize)
+            case FieldType.ATTR: z = self.ATTR = r.readS(CLASRecord.ATTRField, dataSize)
             case _: z = Record._empty
         return z
 # end::CLAS[]
@@ -2797,7 +2826,7 @@ class FACTRecord(Record):
             if not r: self.formId = self.mod = self.combat = 0; return
             self.formId: int = r.readInt32()
             self.mod: int = r.readInt32()
-            self.combat: int = r.readInt32() if r.format > FormType.TES4 else 0
+            self.combat: int = r.readInt32() if r.tes4a or r.format > FormType.TES4 else 0
 
     # TES5
     class CRVAField:
@@ -3078,6 +3107,7 @@ class HAIRRecord(Record, IHaveMODL):
             case FieldType.FULL: z = self.FULL = r.readSTRV(dataSize)
             case FieldType.MODL: z = self.MODL = MODLGroup(r, dataSize)
             case FieldType.MODB: z = self.MODL.MODBField(r, dataSize)
+            case FieldType.MODT: z = self.MODL.MODTField(r, dataSize)
             case FieldType.ICON: z = self.ICON = r.readFILE(dataSize)
             case FieldType.DATA: z = self.DATA = r.readS(BYTEField, dataSize)
             case _: z = Record._empty
@@ -3109,6 +3139,7 @@ class HDPTRecord(Record):
             case FieldType.FULL: z = self.FULL = r.readSTRV(dataSize)
             case FieldType.MODL: z = self.MODL = MODLGroup(r, dataSize)
             case FieldType.MODT: z = self.MODL.MODTField(r, dataSize)
+            case FieldType.MODS: z = self.MODL.MODSField(r, dataSize)
             case FieldType.DATA: z = self.DATA = r.readS(BYTEField, dataSize)
             case FieldType.PNAM: z = self.PNAM = r.readS(UI32Field, dataSize)
             case FieldType.HNAM: z = self.HNAMs.addX(REF1Field[HDPTRecord](HDPTRecord, r, dataSize))
@@ -3892,6 +3923,21 @@ class MGEFRecord(Record):
         return z
 # end::MGEF[]
 
+# MICN.Menu Icon - 0050 - tag::MICN[]
+class MICNRecord(Record):
+    ICON: STRVField # Large icon filename
+    MICO: STRVField # Small icon filename
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readSTRV(dataSize)
+            case FieldType.ICON: z = self.ICON = r.readSTRV(dataSize)
+            case FieldType.MICO: z = self.MICO = r.readSTRV(dataSize)
+            case _: z = Record._empty
+        return z
+# end::MICN[]
+
 # MISC.Misc Item - 3450 - tag::MISC[]
 class MISCRecord(Record, IHaveMODL):
     class DATAField:
@@ -4393,7 +4439,6 @@ class RACERecord(Record):
             else:
                 self.skillBoosts = r.readSArray(RACERecord.DATAField.SkillBoost, 7)
                 r.readInt16() # padding
-
             self.male.height = r.readSingle(); self.female.height = r.readSingle()
             self.male.weight = r.readSingle(); self.female.weight = r.readSingle()
             self.flags = DataFlag(r.readUInt32())

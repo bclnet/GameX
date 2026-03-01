@@ -88,9 +88,9 @@ public partial class FamilyManager {
         ForceOpen = true,
         ForcePath = "sample:0",
         Family = "Bethesda",
-        Game = "Morrowind", // The Elder Scrolls III: Morrowind
+        //Game = "Morrowind", // The Elder Scrolls III: Morrowind
         //Game = "Oblivion", // The Elder Scrolls IV: Oblivion
-        //Game = "Fallout3", // Fallout 3
+        Game = "Fallout3", // Fallout 3
         //Game = "FalloutNV", // Fallout New Vegas
         //Game = "Skyrim", // The Elder Scrolls V: Skyrim
         //Game = "Fallout4", // Fallout 4

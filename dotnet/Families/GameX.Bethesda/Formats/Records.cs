@@ -10,6 +10,7 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
 using static GameX.Bethesda.Formats.Records.FormType;
+using static GameX.Bethesda.Formats.Records.MODLGroup;
 using static System.IO.Polyfill;
 #pragma warning disable CS9113
 
@@ -361,6 +362,7 @@ public enum FieldType : uint {
     MAST = 0x5453414D,
     MCDT = 0x5444434D,
     MEDT = 0x5444454D,
+    MICO = 0x4F43494D,
     MNAM = 0x4D414E4D,
     MO2B = 0x42324F4D,
     MO2T = 0x54324F4D,
@@ -373,6 +375,7 @@ public enum FieldType : uint {
     MOD4 = 0x34444F4D,
     MODB = 0x42444F4D,
     MODL = 0x4C444F4D,
+    MODS = 0x53444F4D,
     MODT = 0x54444F4D,
     MPAI = 0x4941504D,
     MPAV = 0x5641504D,
@@ -553,6 +556,8 @@ public enum FieldType : uint {
     XTRG = 0x47525458,
     XXXX = 0x58585858,
 
+    YNAM = 0x4D414E59,
+
     ZNAM = 0x4D414E5A,
 }
 
@@ -582,12 +587,22 @@ public class Reader(BinaryReader r, string binPath, FormType format, bool tes4a)
 }
 
 public class MODLGroup(Reader r, int dataSize) {
+    [Flags] public enum MODDFlag { Head = 0x01, Torso = 0x02, RightHand = 0x04, LeftHand = 0x08 } // #Fallout
+    public class MODS(Reader r, int dataSize) {
+        public string X3dName = r.ReadL32UString();
+        public Ref<TXSTRecord> NewTexture = new(r.ReadUInt32());
+        public uint X3dIndex = r.ReadUInt32();
+    }
     public override string ToString() => $"{Value}";
     public string Value = r.ReadFUString(dataSize);
     public float Bound;
     public byte[] Textures; // Texture Files Hashes
+    public MODS[] AltTextures; // Alternate Textures
+    public MODDFlag FaceGenModelFlags; // FaceGen Model Flags
     public object MODBField(Reader r, int dataSize) => Bound = r.ReadSingle();
-    public object MODTField(Reader r, int dataSize) => Textures = r.ReadBytes(dataSize);
+    public object MODTField(Reader r, int dataSize) => Textures = r.ReadBytes(dataSize); // Texture File Hashes
+    public object MODSField(Reader r, int dataSize) => AltTextures = r.ReadL32FArray(z => new MODS(r, dataSize)); // Alternate Textures
+    public object MODDField(Reader r, int dataSize) => FaceGenModelFlags = (MODDFlag)(r.ReadByte()); // FaceGen Model Flags
 }
 
 public interface IHaveMODL {
@@ -708,6 +723,7 @@ public partial class Record {
         { FLST, f => new FLSTRecord() },
         { OTFT, f => new OTFTRecord() },
         { HDPT, f => new HDPTRecord() },
+        { MICN, f => new MICNRecord() },
     };
 
     static int CellsLoaded = 0;
@@ -887,7 +903,7 @@ public partial class RecordGroup {
         Label = (FormType)r.ReadUInt32();
         Type = (GroupType)r.ReadUInt32();
         r.Skip(4); // stamp + version
-        if (r.Format != TES4) r.Skip(4); // unknown
+        if (r.Tes4a || r.Format != TES4) r.Skip(4); // unknown
         Position = r.Tell();
         Path = $"{path}{Label}/";
     }
@@ -1957,12 +1973,16 @@ public class CLASRecord : Record {
                 Services = (Service)r.ReadUInt32(); // Buys/Sells and Services
             }
             else if (r.Format == TES4) {
-                PrimaryAttributes = [(ActorValue)r.ReadUInt32(), (ActorValue)r.ReadUInt32()];
-                Specialization = (Specialization_)r.ReadUInt32();
-                MajorSkills = r.ReadPArray<ActorValue>("i", 7);
+                if (!r.Tes4a) {
+                    PrimaryAttributes = [(ActorValue)r.ReadUInt32(), (ActorValue)r.ReadUInt32()];
+                    Specialization = (Specialization_)r.ReadUInt32();
+                    MajorSkills = r.ReadPArray<ActorValue>("i", 7);
+                }
+                else
+                    MajorSkills = r.ReadPArray<ActorValue>("i", 4);
                 Flags = (Flag)r.ReadUInt32();
                 Services = (Service)r.ReadUInt32(); // Buys/Sells and Services
-                if (dataSize == 48) return;
+                if (!r.Tes4a && dataSize == 48) return;
                 SkillTrained = (ActorValue)r.ReadSByte();
                 MaximumTrainingLevel = r.ReadByte(); // (0-100)
                 Unused = r.ReadUInt16();
@@ -1975,11 +1995,26 @@ public class CLASRecord : Record {
         }
     }
 
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public struct ATTRField {
+        public override readonly string ToString() => $"SPECIAL";
+        public static (string, int) Struct = ("<7B", 7);
+        public byte Strength;
+        public byte Perception;
+        public byte Endurance;
+        public byte Charisma;
+        public byte Intelligence;
+        public byte Agility;
+        public byte Luck;
+    }
+
     public STRVField FULL; // Name
     public STRVField DESC; // Description
     public DATAField DATA; // Data
     // TES4
-    public STRVField? ICON; // Icon (Optional)
+    public STRVField? ICON; // Large icon filename (Optional)
+    public STRVField? MICO; // Small icon filename (Optional)
+    public ATTRField? ATTR; // SPECIAL (Fallout)
 
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadSTRV(dataSize),
@@ -1988,6 +2023,8 @@ public class CLASRecord : Record {
         FieldType.DESC => DESC = r.ReadSTRV(dataSize),
         // TES4
         FieldType.ICON => ICON = r.ReadSTRV(dataSize),
+        FieldType.MICO => MICO = r.ReadSTRV(dataSize),
+        FieldType.ATTR => ATTR = r.ReadS<ATTRField>(dataSize),
         _ => Empty,
     };
 }
@@ -2084,9 +2121,9 @@ public class CLOTRecord : Record, IHaveMODL {
     public FILEField ICON; // Male Icon
     public STRVField? ENAM; // Enchantment Name
     public REFXField<SCPTRecord>? SCRI; // Script Name
-    // TES3
+                                        // TES3
     public List<INDXGroup> INDXs = []; // Body Part Index (Moved to Race)
-    // TES4
+                                       // TES4
     public UI32Field BMDT; // Clothing Flags
     public MODLGroup MOD2; // Male world model (optional)
     public MODLGroup MOD3; // Female biped (optional)
@@ -2694,7 +2731,7 @@ public class DOORRecord : Record, IHaveMODL {
     public REFXField<SCPTRecord>? SCRI; // Script (optional)
     public REFXField<SOUNRecord>? SNAM; // Open Sound
     public REFXField<SOUNRecord>? ANAM; // Close Sound
-    // TES4
+                                        // TES4
     public REFXField<SOUNRecord>? BNAM; // Loop Sound
     public BYTEField FNAM; // Flags
     public List<REFXField<Record>> TNAMs = []; // Random teleport destination
@@ -2939,7 +2976,7 @@ public class ENCHRecord : Record {
     public STRVField FULL; // Enchant name
     public ENITField ENIT; // Enchant Data
     public List<EFITField> EFITs = []; // Effect Data
-    // TES4
+                                       // TES4
     public List<SCITField> SCITs = []; // Script effect data
 
     protected override HashSet<FieldType> DF3 => [FieldType.ENAM];
@@ -3037,7 +3074,7 @@ public class FACTRecord : Record {
         public override readonly string ToString() => $"{FormId}";
         public int FormId = r.ReadInt32();
         public int Mod = r.ReadInt32();
-        public int Combat = r.Format > TES4 ? r.ReadInt32() : 0;
+        public int Combat = r.Tes4a || r.Format > TES4 ? r.ReadInt32() : 0;
     }
 
     // TES5
@@ -3088,7 +3125,7 @@ public class FACTRecord : Record {
     public STRVField? RNAM; // Rank Name
     public FADTField? FADT; // Faction data
     public List<ANAMGroup> ANAMs = []; // Factions
-    // TES4
+                                       // TES4
     public List<XNAMField> XNAMs = []; // Interfaction Relations
     public INTVField DATA; // Flags (byte, uint32)
     public UI32Field CNAM;
@@ -3131,7 +3168,7 @@ public class FACTRecord : Record {
             FieldType.CRGR => CRGR = new REF1Field<FLSTRecord>(r, dataSize), //TES5
             FieldType.JOUT => JOUT = new REF1Field<OTFTRecord>(r, dataSize), //TES5
             FieldType.CRVA => CRVA = r.ReadS<CRVAField>(dataSize), //TES5
-            // ??
+                                                                   // ??
             FieldType.RNAM => RNAMs.AddX(new RNAMGroup { RNAM = r.ReadS<IN32Field>(dataSize) }),
             FieldType.MNAM => RNAMs.Last().MNAM = r.ReadSTRV(dataSize),
             FieldType.FNAM => RNAMs.Last().FNAM = r.ReadSTRV(dataSize),
@@ -3324,6 +3361,7 @@ public class HAIRRecord : Record, IHaveMODL {
         FieldType.FULL => FULL = r.ReadSTRV(dataSize),
         FieldType.MODL => MODL = new MODLGroup(r, dataSize),
         FieldType.MODB => MODL.MODBField(r, dataSize),
+        FieldType.MODT => MODL.MODTField(r, dataSize),
         FieldType.ICON => ICON = r.ReadFILE(dataSize),
         FieldType.DATA => DATA = r.ReadS<BYTEField>(dataSize),
         _ => Empty,
@@ -3334,6 +3372,7 @@ public class HAIRRecord : Record, IHaveMODL {
 /// HDPT.Head Part - 00500
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/HDPT"/>
+/// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/HDPT.html"/>
 public class HDPTRecord : Record, IHaveMODL {
     public class NAM0Group {
         public UI32Field NAM0; // Option type
@@ -3350,12 +3389,14 @@ public class HDPTRecord : Record, IHaveMODL {
     public REF1Field<FLSTRecord>? RNAM; // Resource list
     public REF1Field<Record>? CNAM; // Color (seen in Dawnguard.esm)
 
+    protected override HashSet<FieldType> DF4 => [FieldType.HNAM];
     protected override HashSet<FieldType> DF5 => [FieldType.HNAM, FieldType.NAM0, FieldType.NAM1];
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadSTRV(dataSize),
         FieldType.FULL => FULL = r.ReadSTRV(dataSize),
         FieldType.MODL => MODL = new MODLGroup(r, dataSize),
         FieldType.MODT => MODL.MODTField(r, dataSize),
+        FieldType.MODS => MODL.MODSField(r, dataSize),
         FieldType.DATA => DATA = r.ReadS<BYTEField>(dataSize),
         FieldType.PNAM => PNAM = r.ReadS<UI32Field>(dataSize),
         FieldType.HNAM => HNAMs.AddX(new REF1Field<HDPTRecord>(r, dataSize)),
@@ -3543,7 +3584,7 @@ public class INGRRecord : Record, IHaveMODL {
     public DATAField DATA; // Ingrediant Data // TES4
     public FILEField ICON; // Inventory Icon
     public REFXField<SCPTRecord> SCRI; // Script Name
-    // TES4
+                                       // TES4
     public List<ENCHRecord.EFITField> EFITs = []; // Effect Data
     public List<ENCHRecord.SCITField> SCITs = []; // Script effect data
 
@@ -3697,18 +3738,18 @@ public class LANDRecord : Record {
 
     public override string ToString() => $"LAND: {INTV}";
     public IN32Field DATA; // Unknown (default of 0x09) Changing this value makes the land 'disappear' in the editor.
-    // A RGB color map 65x65 pixels in size representing the land normal vectors.
-    // The signed value of the 'color' represents the vector's component. Blue
-    // is vertical(Z), Red the X direction and Green the Y direction.Note that
-    // the y-direction of the data is from the bottom up.
+                           // A RGB color map 65x65 pixels in size representing the land normal vectors.
+                           // The signed value of the 'color' represents the vector's component. Blue
+                           // is vertical(Z), Red the X direction and Green the Y direction.Note that
+                           // the y-direction of the data is from the bottom up.
     public VNMLField VNML;
     public VHGTField VHGT; // Height data
     public VNMLField? VCLR; // Vertex color array, looks like another RBG image 65x65 pixels in size. (Optional)
     public VTEXField? VTEX; // A 16x16 array of short texture indices. (Optional)
-    // TES3
+                            // TES3
     public CORDField INTV; // The cell coordinates of the cell
     public WNAMField WNAM; // Unknown byte data.
-    // TES4
+                           // TES4
     public BTXTField[] BTXTs = new BTXTField[4]; // Base Layer
     public ATXTGroup[] ATXTs; // Alpha Layer
     ATXTGroup _lastATXT;
@@ -3757,7 +3798,7 @@ public class LEVCRecord : Record {
     public IN32Field INDX; // Number of items in list
     public List<STRVField> CNAMs = []; // ID string of list item
     public List<IN16Field> INTVs = []; // PC level for previous CNAM
-    // The CNAM/INTV can occur many times in pairs
+                                       // The CNAM/INTV can occur many times in pairs
 
     protected override HashSet<FieldType> DF3 => [FieldType.CNAM, FieldType.INTV];
     public override object ReadField(Reader r, FieldType type, int dataSize) => r.Format == TES3
@@ -3783,7 +3824,7 @@ public class LEVIRecord : Record {
     public IN32Field INDX; // Number of items in list
     public List<STRVField> INAMs = []; // ID string of list item
     public List<IN16Field> INTVs = []; // PC level for previous INAM
-    // The CNAM/INTV can occur many times in pairs
+                                       // The CNAM/INTV can occur many times in pairs
 
     protected override HashSet<FieldType> DF3 => [FieldType.INAM, FieldType.INTV];
     public override object ReadField(Reader r, FieldType type, int dataSize) => r.Format == TES3
@@ -3959,7 +4000,7 @@ public class LTEXRecord : Record {
     }
 
     public FILEField ICON; // Texture
-    // TES3
+                           // TES3
     public INTVField INTV;
     // TES4
     public HNAMField HNAM; // Havok data
@@ -4168,7 +4209,7 @@ public class MGEFRecord : Record {
 
     public override string ToString() => $"MGEF: {INDX.Value}:{EDID.Value}";
     public STRVField DESC; // Description
-    // TES3
+                           // TES3
     public INTVField INDX; // The Effect ID (0 to 137)
     public MEDTField MEDT; // Effect Data
     public FILEField ICON; // Effect Icon
@@ -4181,7 +4222,7 @@ public class MGEFRecord : Record {
     public STRVField? BSND; // Bolt sound (optional)
     public STRVField? HSND; // Hit sound (optional)
     public STRVField? ASND; // Area sound (optional)
-    // TES4
+                            // TES4
     public STRVField FULL;
     public MODLGroup MODL;
     public DATAField DATA;
@@ -4218,6 +4259,22 @@ public class MGEFRecord : Record {
 }
 
 /// <summary>
+/// MICN.Menu Icon - 00500
+/// </summary>
+/// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/MICN.html"/>
+public class MICNRecord : Record {
+    public STRVField ICON; // Large icon filename
+    public STRVField MICO; // Small icon filename
+
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadSTRV(dataSize),
+        FieldType.ICON => ICON = r.ReadSTRV(dataSize),
+        FieldType.MICO => MICO = r.ReadSTRV(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// MISC.Misc Item - 34500
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/GMST">
@@ -4247,7 +4304,7 @@ public class MISCRecord : Record, IHaveMODL {
     public DATAField DATA; // Misc Item Data
     public FILEField ICON; // Icon (optional)
     public REFXField<SCPTRecord> SCRI; // Script FormID (optional)
-    // TES3
+                                       // TES3
     public REFXField<ENCHRecord> ENAM; // enchantment ID
 
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
@@ -4830,14 +4887,14 @@ public class RACE4Record : RACERecord {
     public FLTVField PNAM; // FaceGen - Main clamp
     public FLTVField UNAM; // FaceGen - Face clamp
     public UNKNField XNAM; // Unknown
-    //
+                           //
     public List<REFXField<HAIRRecord>> HNAMs = [];
     public List<REFXField<EYESRecord>> ENAMs = [];
     public BYTVField FGGS; // FaceGen Geometry-Symmetric
     public BYTVField FGGA; // FaceGen Geometry-Asymmetric
     public BYTVField FGTS; // FaceGen Texture-Symmetric
     public UNKNField SNAM; // Unknown
-    // Parts
+                           // Parts
     public List<FacePartGroup> FaceParts = [];
     public BodyGroup[] Bodys = [new BodyGroup(), new BodyGroup()];
 
@@ -5112,7 +5169,7 @@ public unsafe class REFRRecord : Record {
     public UI32Field? XACT; // Action Flag (optional)
     public IN32Field? XCNT; // Count (optional)
     public List<XMRKGroup> XMRKs; // Ownership (optional)
-    //public bool? ONAM; // Open by Default
+                                  //public bool? ONAM; // Open by Default
     public XRGDField? XRGD; // Ragdoll Data (optional)
     public FLTVField? XSCL; // Scale (optional)
     public BYTEField? XSOL; // Contained Soul (optional)
@@ -5282,9 +5339,9 @@ public class REGNRecord : Record {
     public REFXField<WRLDRecord> WNAM; // Worldspace - Region name
     public CREFField RCLR; // Map Color (COLORREF)
     public List<RDATField> RDATs = []; // Region Data Entries / TES3: Sound Record (order determines the sound priority)
-    // TES3
+                                       // TES3
     public WEATField? WEAT; // Weather Data
-    // TES4
+                            // TES4
     public List<RPLIField> RPLIs = []; // Region Areas
 
     protected override HashSet<FieldType> DF3 => [FieldType.SNAM, FieldType.RPLI, FieldType.RPLD, FieldType.RDAT, FieldType.RDOT, FieldType.RDMP, FieldType.RDGS, FieldType.RDGS, FieldType.RDMD, FieldType.RDSD, FieldType.RDWT];
@@ -5435,7 +5492,7 @@ public class SCPTRecord : Record {
             r.ReadUInt32(); // Unknown
             Type = r.ReadUInt32();
             r.ReadUInt32(); // Unknown
-            // SCVRField
+                            // SCVRField
             VariableName = null;
         }
         public object SCVRField(Reader r, int dataSize) => VariableName = r.ReadFUString(dataSize);
@@ -5444,9 +5501,9 @@ public class SCPTRecord : Record {
     public override string ToString() => $"SCPT: {EDID.Value ?? SCHD.Name}";
     public BYTVField SCDA; // Compiled Script
     public STRVField SCTX; // Script Source
-    // TES3
+                           // TES3
     public SCHDField SCHD; // Script Data
-    // TES4
+                           // TES4
     public SCHRField SCHR; // Script Data
     public List<SLSDField> SLSDs = []; // Variable data
     public List<SLSDField> SCRVs = []; // Ref variable data (one for each ref declared)
@@ -5524,7 +5581,7 @@ public class SKILRecord : Record {
     public IN32Field INDX; // Skill ID
     public DATAField DATA; // Skill Data
     public STRVField DESC; // Skill description
-    // TES4
+                           // TES4
     public FILEField ICON; // Icon
     public STRVField ANAM; // Apprentice Text
     public STRVField JNAM; // Journeyman Text
@@ -5641,7 +5698,7 @@ public class SOUNRecord : Record {
         public byte Volume; // (0=0.00, 255=1.00)
         public byte MinRange; // Minimum attenuation distance
         public byte MaxRange; // Maximum attenuation distance
-        // Bethesda4
+                              // Bethesda4
         public sbyte FrequencyAdjustment; // Frequency adjustment %
         public ushort Flags; // Flags
         public ushort StaticAttenuation; // Static Attenuation (db)
@@ -5691,14 +5748,14 @@ public class SPELRecord : Record {
         public uint Type = r.ReadUInt32();
         public int SpellCost = r.ReadInt32();
         public uint Flags = r.ReadUInt32(); // 0x0001 = AutoCalc, 0x0002 = PC Start, 0x0004 = Always Succeeds
-        // TES4
+                                            // TES4
         public int SpellLevel = r.Format != TES3 ? r.ReadInt32() : 0;
     }
 
     public STRVField FULL; // Spell name
     public SPITField SPIT; // Spell data
     public List<ENCHRecord.EFITField> EFITs = []; // Effect Data
-    // TES4
+                                                  // TES4
     public List<ENCHRecord.SCITField> SCITs = []; // Script effect data
 
     protected override HashSet<FieldType> DF3 => [FieldType.ENAM];
@@ -5813,7 +5870,7 @@ public class TES4Record : Record {
     public UNKNField? ONAM; // overrides (Optional)
     public IN32Field INTV; // unknown
     public IN32Field? INCC; // unknown (Optional)
-    // TES5
+                            // TES5
     public UNKNField? TNAM; // overrides (Optional)
 
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
@@ -6139,7 +6196,7 @@ public class WEAPRecord : Record, IHaveMODL {
     public FILEField ICON; // Male Icon (optional)
     public REFXField<ENCHRecord> ENAM; // Enchantment ID
     public REFXField<SCPTRecord> SCRI; // Script (optional)
-    // TES4
+                                       // TES4
     public IN16Field? ANAM; // Enchantment points (optional)
 
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
@@ -6210,7 +6267,7 @@ public class WRLDRecord : Record {
     public BYTEField? DATA; // Flags
     public NAM0Field NAM0; // Object Bounds
     public UI32Field? SNAM; // Music
-    // TES5
+                            // TES5
     public List<RNAMField> RNAMs = []; // Large References
 
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {

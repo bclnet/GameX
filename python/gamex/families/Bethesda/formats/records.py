@@ -888,6 +888,16 @@ class RecordGroup:
 
 #region Fields
 
+class Obnd:
+    _struct = ('<6h', 12)
+    def __init__(self, t):
+        (self.x1,
+        self.y1,
+        self.z1,
+        self.x2,
+        self.y2,
+        self.z2) = t
+
 class Modl:
     class ModdFlag(Flag): Head = 0x01; Torso = 0x02; RightHand = 0x04; LeftHand = 0x08 #Fallout
     class Mods:
@@ -1050,8 +1060,9 @@ class ACHRRecord(Record):
 
 # ACTI.Activator - 3450 - tag::ACTI[]
 class ACTIRecord(Record, IHaveMODL):
-    MODL: Modl # Model Name
     FULL: str # Item Name
+    OBND: Obnd # Object Boundary
+    MODL: Modl # Model Name
     SCRI: RefX['SCPTRecord'] = None # Script (Optional)
     # TES4
     SNAM: RefX['SOUNRecord'] = None # Sound (Optional)
@@ -1060,10 +1071,11 @@ class ACTIRecord(Record, IHaveMODL):
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.EDID | FieldType.NAME: z = self.EDID = r.readFUString(dataSize)
+            case FieldType.FULL | FieldType.FNAM: z = self.FULL = r.readFUString(dataSize)
+            case FieldType.OBND: z = self.OBND = r.readS(Obnd, dataSize)
             case FieldType.MODL: z = self.MODL = Modl(r, dataSize)
             case FieldType.MODB: z = self.MODL.MODB(r, dataSize)
             case FieldType.MODT: z = self.MODL.MODT(r, dataSize)
-            case FieldType.FULL | FieldType.FNAM: z = self.FULL = r.readFUString(dataSize)
             case FieldType.SCRI: z = self.SCRI = RefX[SCPTRecord](SCPTRecord, r, dataSize)
             # TES4
             case FieldType.SNAM: z = self.SNAM = RefX[SOUNRecord](SOUNRecord, r, dataSize)
@@ -1073,12 +1085,14 @@ class ACTIRecord(Record, IHaveMODL):
 
 # ADDN-Addon Node - 0050 - tag::ADDN[]
 class ADDNRecord(Record):
+    OBND: Obnd # Object Boundary
     CNAM: ByteColor4 # RGB Color
     def __init__(self): super().__init__()
 
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case FieldType.OBND: z = self.OBND = r.readS(Obnd, dataSize)
             case FieldType.CNAM: z = self.CNAM = r.readS(ByteColor4, dataSize)
             case _: z = Record._empty
         return z
@@ -5253,40 +5267,70 @@ class SOUNRecord(Record):
         _360LFE = 0x0080
     
     class Data:
-        volume: int # (0=0.00, 255=1.00)
+        _struct = { 8: '<IB3s', 12: '<IB3sI' }
         minRange: int # Minimum attenuation distance
         maxRange: int # Maximum attenuation distance
-        # Bethesda4
+        # TES4
         frequencyAdjustment: int # Frequency adjustment %
-        flags: int # Flags
+        unused: int # Unused
+        flags: int # Flags #TODO might need to clip was ushort/ushort
+        # 12
         staticAttenuation: int # Static Attenuation (db)
         stopTime: int # Stop time
         startTime: int # Start time
-        def __init__(self, r: Reader, dataSize: int):
-            self.volume = r.readByte() if r.format == FormType.TES3 else 0
-            self.minRange = r.readByte()
-            self.maxRange = r.readByte()
-            if r.format == FormType.TES3: return
-            self.frequencyAdjustment = r.readSByte()
-            r.readByte() # Unused
-            self.flags = r.readUInt16()
-            r.readUInt16() # Unused
-            if dataSize == 8: return
-            self.staticAttenuation = r.readUInt16()
-            self.stopTime = r.readByte()
-            self.startTime = r.readByte()
+        # 36
+        attenuationPoint1: int # The first point on the attenuation curve.
+        attenuationPoint2: int # The second point on the attenuation curve.
+        attenuationPoint3: int # The third point on the attenuation curve.
+        attenuationPoint4: int # The fourth point on the attenuation curve.
+        attenuationPoint5: int # The fifth point on the attenuation curve.
+        reverbAttenuationControl: int
+        priority: int
+        unknown: int
+        def __init__(self, t):
+            match len(t):
+                case 2:
+                    (self.minRange,
+                    self.maxRange) = t
+                case 5:
+                    (self.minRange,
+                    self.maxRange,
+                    self.frequencyAdjustment,
+                    self.unused,
+                    self.flags) = t
+               case 5:
+                    (self.minRange,
+                    self.maxRange,
+                    self.frequencyAdjustment,
+                    self.unused,
+                    self.flags) = t
 
-    FNAM: str # Sound Filename (relative to Sounds\)
+
+        # def __init__(self, r: Reader, dataSize: int):
+        #     self.volume = r.readByte() if r.format == FormType.TES3 else 0
+        #     self.minRange = r.readByte()
+        #     self.maxRange = r.readByte()
+        #     if r.format == FormType.TES3: return
+        #     self.frequencyAdjustment = r.readSByte()
+        #     r.readByte() # Unused
+        #     self.flags = r.readUInt16()
+        #     r.readUInt16() # Unused
+        #     if dataSize == 8: return
+        #     self.staticAttenuation = r.readUInt16()
+        #     self.stopTime = r.readByte()
+        #     self.startTime = r.readByte()
+
+    FULL: str # Sound Filename (relative to Sounds\)
+    OBND: Obnd # Object Boundary
     DATA: Data # Sound Data
     def __init__(self): super().__init__()
 
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.EDID | FieldType.NAME: z = self.EDID = r.readFUString(dataSize)
-            case FieldType.FNAM: z = self.FNAM = r.readFUString(dataSize)
-            case FieldType.SNDX: z = self.DATA = SOUNRecord.Data(r, dataSize)
-            case FieldType.SNDD: z = self.DATA = SOUNRecord.Data(r, dataSize)
-            case FieldType.DATA: z = self.DATA = SOUNRecord.Data(r, dataSize)
+            case FieldType.FNAM: z = self.FULL = r.readFUString(dataSize)
+            case FieldType.OBND: z = self.OBND = r.readS(Obnd, dataSize)
+            case FieldType.DATA | FieldType.SNDX | FieldType.SNDD: z = self.DATA = SOUNRecord.Data(r, dataSize)
             case _: z = Record._empty
         return z
 # end::SOUN[]
@@ -5523,16 +5567,6 @@ class TRNSRecord(Record):
 
 # TXST.Texture Set - 0450 #F4 - tag::TXST[]
 class TXSTRecord(Record):
-    class Obnd:
-        _struct = ('<6h', 12)
-        def __init__(self, t):
-            (self.x1,
-            self.y1,
-            self.z1,
-            self.x2,
-            self.y2,
-            self.z2) = t
-
     class DnamFlag(Flag):
         NotHasSpecularMap = 0x01 # not Has specular map
         FacegenTextures = 0x02 # Facegen Textures
@@ -5576,7 +5610,7 @@ class TXSTRecord(Record):
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
-            case FieldType.OBND: z = self.OBND = r.readS(TXSTRecord.Obnd, dataSize)
+            case FieldType.OBND: z = self.OBND = r.readS(Obnd, dataSize)
             case FieldType.TX00: z = self.TX00 = r.readFUString(dataSize)
             case FieldType.TX01: z = self.TX01 = r.readFUString(dataSize)
             case FieldType.TX02: z = self.TX02 = r.readFUString(dataSize)

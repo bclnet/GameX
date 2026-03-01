@@ -10,6 +10,7 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
 using static GameX.Bethesda.Formats.Records.FormType;
+using static GameX.Bethesda.Formats.Records.TXSTRecord;
 using static System.IO.Polyfill;
 #pragma warning disable CS9113
 
@@ -1012,6 +1013,17 @@ partial class RecordGroup {
 
 #region Fields
 
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct Obnd {
+    public static (string, int) Struct = ("<6h", 12);
+    public short X1;
+    public short Y1;
+    public short Z1;
+    public short X2;
+    public short Y2;
+    public short Z2;
+}
+
 public class Modl(Reader r, int dataSize) {
     [Flags] public enum ModdFlag { Head = 0x01, Torso = 0x02, RightHand = 0x04, LeftHand = 0x08 } // #Fallout
     public class Mods(Reader r, int dataSize) {
@@ -1191,6 +1203,7 @@ public class ACHRRecord : Record {
 /// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/ACTI.html"/>
 public class ACTIRecord : Record, IHaveMODL {
     public string FULL; // Item Name
+    public Obnd OBND; // Object Boundary
     public Modl MODL { get; set; } // Model Name
     public RefX<SCPTRecord>? SCRI; // Script (Optional)
     // TES4
@@ -1199,6 +1212,7 @@ public class ACTIRecord : Record, IHaveMODL {
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadFUString(dataSize),
         FieldType.FULL or FieldType.FNAM => FULL = r.ReadFUString(dataSize),
+        FieldType.OBND => OBND = r.ReadS<Obnd>(dataSize),
         FieldType.MODL => MODL = new Modl(r, dataSize),
         FieldType.MODB => MODL.MODB(r, dataSize),
         FieldType.MODT => MODL.MODT(r, dataSize),
@@ -1215,10 +1229,12 @@ public class ACTIRecord : Record, IHaveMODL {
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/ADDN"/>
 /// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/ADDN.html"/>
 public class ADDNRecord : Record {
+    public Obnd OBND; // Object Boundary
     public ByteColor4 CNAM; // RGB Color
 
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        FieldType.OBND => OBND = r.ReadS<Obnd>(dataSize),
         FieldType.CNAM => CNAM = r.ReadS<ByteColor4>(dataSize),
         _ => Empty,
     };
@@ -5034,7 +5050,7 @@ public class RACE5Record : RACERecord {
         FieldType.MNAM => _state2 = 0,
         FieldType.FNAM => _state2 = 1,
         FieldType.MODL => Bodys[_state2].ANAM = r.ReadFUString(dataSize),
-        FieldType.MODT => Bodys[_state2].MODT = new Modt(r, dataSize),
+        //FieldType.MODT => Bodys[_state2].MODT = new Modt(r, dataSize),
         //FieldType.VNAM => VNAM = new REF2Field<RACERecord>(r, dataSize),
         //FieldType.DNAM => DNAM = new REF2Field<HAIRRecord>(r, dataSize),
         //FieldType.CNAM => CNAM = r.ReadByte(dataSize),
@@ -5683,6 +5699,8 @@ public class SNDRRecord : Record {
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/SOUN">
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/SOUN"/>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/SOUN"/>
+/// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/SOUN.html"/>
+
 public class SOUNRecord : Record {
     [Flags]
     public enum Flag : ushort {
@@ -5696,41 +5714,40 @@ public class SOUNRecord : Record {
         _360LFE = 0x0080,
     }
 
-    public class Data {
-        public byte Volume; // (0=0.00, 255=1.00)
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public struct Data {
+        public static Dictionary<int, string> Struct = new() { [2] = "<2B", [8] = "<2BbBI", [12] = "<2BbBIH2B", [36] = "<2BbBIH2B6hiQ" };
         public byte MinRange; // Minimum attenuation distance
         public byte MaxRange; // Maximum attenuation distance
-        // Bethesda4
+        // TES4
         public sbyte FrequencyAdjustment; // Frequency adjustment %
-        public ushort Flags; // Flags
+        public byte Unused; // Unused
+        public uint Flags; // Flags #TODO might need to clip was ushort/ushort
+        // 12
         public ushort StaticAttenuation; // Static Attenuation (db)
         public byte StopTime; // Stop time
         public byte StartTime; // Start time
-        public Data(Reader r, int dataSize) {
-            Volume = r.Format == TES3 ? r.ReadByte() : (byte)0;
-            MinRange = r.ReadByte();
-            MaxRange = r.ReadByte();
-            if (r.Format == TES3) return;
-            FrequencyAdjustment = r.ReadSByte();
-            r.ReadByte(); // Unused
-            Flags = r.ReadUInt16();
-            r.ReadUInt16(); // Unused
-            if (dataSize == 8) return;
-            StaticAttenuation = r.ReadUInt16();
-            StopTime = r.ReadByte();
-            StartTime = r.ReadByte();
-        }
+        // 36
+        public short AttenuationPoint1; // The first point on the attenuation curve.
+        public short AttenuationPoint2; // The second point on the attenuation curve.
+        public short AttenuationPoint3; // The third point on the attenuation curve.
+        public short AttenuationPoint4; // The fourth point on the attenuation curve.
+        public short AttenuationPoint5; // The fifth point on the attenuation curve.
+        public short ReverbAttenuationControl;
+        public int Priority;
+        public ulong Unknown;
     }
 
-    public string FNAM; // Sound Filename (relative to Sounds\)
+    public string FULL; // Sound Filename (relative to Sounds\)
+    public Obnd OBND; // Object Boundary
     public Data DATA; // Sound Data
+    public byte DATA_Volume; // Sound Data #TES3 // (0=0.00, 255=1.00)
 
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadFUString(dataSize),
-        FieldType.FNAM => FNAM = r.ReadFUString(dataSize),
-        FieldType.SNDX => DATA = new Data(r, dataSize),
-        FieldType.SNDD => DATA = new Data(r, dataSize),
-        FieldType.DATA => DATA = new Data(r, dataSize),
+        FieldType.FNAM => FULL = r.ReadFUString(dataSize),
+        FieldType.OBND => OBND = r.ReadS<Obnd>(dataSize),
+        FieldType.DATA or FieldType.SNDX or FieldType.SNDD => (z: DATA_Volume = r.Format == TES3 ? r.ReadByte() : (byte)0, DATA = r.ReadS<Data>(dataSize)).z,
         _ => Empty,
     };
 }
@@ -5987,17 +6004,6 @@ public class TRNSRecord : Record {
 /// <see cref="https://tes5edit.github.io/fopdoc/Fallout4/Records/TXST.html"/>
 /// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/TXST"/>
 public class TXSTRecord : Record {
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct Obnd {
-        public static (string, int) Struct = ("<6h", 12);
-        public short X1;
-        public short Y1;
-        public short Z1;
-        public short X2;
-        public short Y2;
-        public short Z2;
-    }
-
     [Flags]
     public enum DnamFlag : ushort {
         NotHasSpecularMap = 0x01, // not Has specular map

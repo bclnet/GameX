@@ -591,7 +591,7 @@ public class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
 
     #region Query
 
-    public static object FindTAGFactory(FormType type, RecordGroup group) => Activator.CreateInstance(typeof(FindTAG<>).MakeGenericType(Record.Factory(null, type).GetType()), group.RecordsByType[type]);
+    public static object FindTAGFactory(FormType type, RecordGroup group) => null; // Activator.CreateInstance(typeof(FindTAG<>).MakeGenericType(Record.Factory(null, type).GetType()), group.RecordsByType[type]);
     public class FindTAG<T>(List<Record> s) : List<T>(s.Cast<T>()), IHaveMetaInfo, IWriteToStream {
         public void WriteToStream(Stream stream) => this.Serialize(stream);
         public override string ToString() => this.Serialize();

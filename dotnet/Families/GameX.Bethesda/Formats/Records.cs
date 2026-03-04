@@ -5747,7 +5747,7 @@ public class SOUNRecord : Record {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadFUString(dataSize),
         FieldType.FNAM => FULL = r.ReadFUString(dataSize),
         FieldType.OBND => OBND = r.ReadS<Obnd>(dataSize),
-        FieldType.DATA or FieldType.SNDX or FieldType.SNDD => (z: DATA_Volume = r.Format == TES3 ? r.ReadByte() : (byte)0, DATA = r.ReadS<Data>(dataSize)).z,
+        FieldType.DATA or FieldType.SNDX or FieldType.SNDD => (z: DATA_Volume = r.Format == TES3 ? r.ReadByte() : (byte)0, DATA = r.ReadS<Data>(dataSize - 1)).z,
         _ => Empty,
     };
 }

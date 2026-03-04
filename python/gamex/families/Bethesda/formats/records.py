@@ -4641,7 +4641,7 @@ class RACE4Record(RACERecord):
 class RACE5Record(RACERecord):
     class Body:
         ANAM: str
-        MODT: Modt
+        MODT: object
     
     _state: int
     _state2: int
@@ -5267,7 +5267,7 @@ class SOUNRecord(Record):
         _360LFE = 0x0080
     
     class Data:
-        _struct = { 8: '<IB3s', 12: '<IB3sI' }
+        _struct = { 2: '<2B', 8: '<2BbBI', 12: '<2BbBIH2B', 36: '<2BbBIH2B6hiQ' }
         minRange: int # Minimum attenuation distance
         maxRange: int # Maximum attenuation distance
         # TES4
@@ -5298,27 +5298,32 @@ class SOUNRecord(Record):
                     self.frequencyAdjustment,
                     self.unused,
                     self.flags) = t
-               case 5:
+                case 8:
                     (self.minRange,
                     self.maxRange,
                     self.frequencyAdjustment,
                     self.unused,
-                    self.flags) = t
-
-
-        # def __init__(self, r: Reader, dataSize: int):
-        #     self.volume = r.readByte() if r.format == FormType.TES3 else 0
-        #     self.minRange = r.readByte()
-        #     self.maxRange = r.readByte()
-        #     if r.format == FormType.TES3: return
-        #     self.frequencyAdjustment = r.readSByte()
-        #     r.readByte() # Unused
-        #     self.flags = r.readUInt16()
-        #     r.readUInt16() # Unused
-        #     if dataSize == 8: return
-        #     self.staticAttenuation = r.readUInt16()
-        #     self.stopTime = r.readByte()
-        #     self.startTime = r.readByte()
+                    self.flags,
+                    self.staticAttenuation,
+                    self.stopTime,
+                    self.startTime) = t
+                case 16:
+                    (self.minRange,
+                    self.maxRange,
+                    self.frequencyAdjustment,
+                    self.unused,
+                    self.flags,
+                    self.staticAttenuation,
+                    self.stopTime,
+                    self.startTime,
+                    self.attenuationPoint1,
+                    self.attenuationPoint2,
+                    self.attenuationPoint3,
+                    self.attenuationPoint4,
+                    self.attenuationPoint5,
+                    self.reverbAttenuationControl,
+                    self.priority,
+                    self.unknown) = t
 
     FULL: str # Sound Filename (relative to Sounds\)
     OBND: Obnd # Object Boundary
@@ -5330,7 +5335,7 @@ class SOUNRecord(Record):
             case FieldType.EDID | FieldType.NAME: z = self.EDID = r.readFUString(dataSize)
             case FieldType.FNAM: z = self.FULL = r.readFUString(dataSize)
             case FieldType.OBND: z = self.OBND = r.readS(Obnd, dataSize)
-            case FieldType.DATA | FieldType.SNDX | FieldType.SNDD: z = self.DATA = SOUNRecord.Data(r, dataSize)
+            case FieldType.DATA | FieldType.SNDX | FieldType.SNDD: self.DATA_Volume = r.readByte() if r.format == FormType.TES3 else 0; z = self.DATA = r.readS(SOUNRecord.Data, dataSize - 1)
             case _: z = Record._empty
         return z
 # end::SOUN[]

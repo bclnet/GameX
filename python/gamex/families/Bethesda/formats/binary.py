@@ -397,7 +397,7 @@ class Binary_Esm(ArcBinaryT, IDatabase):
     #region Query - tag::Binary_Esm.query[]
 
     @staticmethod
-    def findTAGFactory(type: FormType, group: RecordGroup) -> object: return None #Binary_Esm.FindTAG[Record](group.records) #z = Record.factory(None, type);
+    def findTAGFactory(type: FormType, tag: object) -> object: return Binary_Esm.FindTAG[Record]([tag] if isinstance(tag, Record) else tag)
     class FindTAG[T](list, IHaveMetaInfo, IWriteToStream):
         def __init__(self, source: list): super().__init__(source)
         def writeToStream(self, stream: object): return DesSer.serialize(self, stream)

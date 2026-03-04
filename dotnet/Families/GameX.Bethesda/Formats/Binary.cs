@@ -591,7 +591,7 @@ public class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
 
     #region Query
 
-    public static object FindTAGFactory(FormType type, RecordGroup group) => null; // Activator.CreateInstance(typeof(FindTAG<>).MakeGenericType(Record.Factory(null, type).GetType()), group.RecordsByType[type]);
+    public static object FindTAGFactory(FormType type, RecordGroup group) => Activator.CreateInstance(typeof(FindTAG<>).MakeGenericType(Record.Factory(null, type).GetType()), group.RecordsByType[type]);
     public class FindTAG<T>(List<Record> s) : List<T>(s.Cast<T>()), IHaveMetaInfo, IWriteToStream {
         public void WriteToStream(Stream stream) => this.Serialize(stream);
         public override string ToString() => this.Serialize();
@@ -630,7 +630,7 @@ public class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
         public object Tes3(Binary_Esm _) => _.CELLsByName.TryGetValue(name, out var z) ? z : default;
     }
     public object Query(object source) => source switch {
-        FileSource s => s.Arc == null ? FindTAGFactory((FormType)s.Flags, (RecordGroup)s.Tag) : null,
+        FileSource s => s.Tag is Record ? s.Tag : FindTAGFactory((FormType)s.Flags, (RecordGroup)s.Tag),
         FindLTEX s => Format == FormType.TES3 ? s.Tes3(this) : throw new NotImplementedException(),
         FindLAND s => Format == FormType.TES3 ? s.Tes3(this) : s.Else(this),
         FindCELL s => Format == FormType.TES3 ? s.Tes3(this) : s.Else(this),

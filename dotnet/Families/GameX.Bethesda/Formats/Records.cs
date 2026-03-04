@@ -927,11 +927,10 @@ public partial class RecordGroup {
         while (!r.AtEnd(end)) {
             var type = (FormType)r.ReadUInt32();
             if (type == GRUP) {
-                Groups ??= [];
                 var s = new RecordGroup(r, Path);
                 if (s.Preload || true) s.Read(r, files);
                 else r.Seek(r.Tell() + s.DataSize);
-                Groups.Add(s);
+                (Groups ??= []).Add(s);
                 continue;
             }
             var record = Record.Factory(r, type);
@@ -1024,7 +1023,7 @@ public struct Obnd {
     public short Z2;
 }
 
-public class Modl(Reader r, int dataSize) {
+public class Modl(Reader r = null, int dataSize = 0) {
     [Flags] public enum ModdFlag { Head = 0x01, Torso = 0x02, RightHand = 0x04, LeftHand = 0x08 } // #Fallout
     public class Mods(Reader r, int dataSize) {
         public string X3dName = r.ReadL32UString();
@@ -1032,7 +1031,7 @@ public class Modl(Reader r, int dataSize) {
         public uint X3dIndex = r.ReadUInt32();
     }
     public override string ToString() => $"{Value}";
-    public string Value = r.ReadFUString(dataSize);
+    public string Value = r?.ReadFUString(dataSize);
     public float Bound;
     public byte[] Textures; // Texture Files Hashes
     public Mods[] AltTextures; // Alternate Textures
@@ -4340,7 +4339,7 @@ public class MGEFRecord : Record {
             FieldType.DESC => DESC = r.ReadFUString(dataSize),
             FieldType.MODL => MODL = new Modl(r, dataSize),
             FieldType.MODB => MODL.MODB(r, dataSize),
-            FieldType.ICON => MODL.ICON(r, dataSize),
+            FieldType.ICON => ICON = r.ReadFUString(dataSize),
             FieldType.DATA => DATA = new Data(r, dataSize),
             FieldType.ESCE => ESCEs = r.ReadFArray(z => r.ReadFUString(4), dataSize >> 2),
             _ => Empty,
@@ -4366,10 +4365,10 @@ public class MICNRecord : Record {
 /// <summary>
 /// MISC.Misc Item - 34500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/GMST">
-/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/GMST"/>
-/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/GMST"/>
-/// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/GMST">
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/MISC">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/MISC"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/MISC"/>
+/// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/MISC">
 public class MISCRecord : Record, IHaveMODL {
     public struct Data {
         public float Weight;
@@ -4397,11 +4396,11 @@ public class MISCRecord : Record, IHaveMODL {
 
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadFUString(dataSize),
+        FieldType.FULL or FieldType.FNAM => FULL = r.ReadFUString(dataSize),
         FieldType.MODL => MODL = new Modl(r, dataSize),
         FieldType.MODB => MODL.MODB(r, dataSize),
         FieldType.MODT => MODL.MODT(r, dataSize),
-        FieldType.ICON or FieldType.ITEX => MODL.ICON(r, dataSize),
-        FieldType.FULL or FieldType.FNAM => FULL = r.ReadFUString(dataSize),
+        FieldType.ICON or FieldType.ITEX => (MODL ??= new Modl()).ICON(r, dataSize),
         FieldType.DATA or FieldType.MCDT => DATA = new Data(r, dataSize),
         FieldType.ENAM => ENAM = new RefX<ENCHRecord>(r, dataSize),
         FieldType.SCRI => SCRI = new RefX<SCPTRecord>(r, dataSize),
@@ -4996,8 +4995,8 @@ public class RACE4Record : RACERecord {
         FieldType.NAM0 => _nam = 0,
         FieldType.NAM1 => _nam = 1,
         FieldType.NAM2 => _nam = 2,
-        FieldType.MNAM => _nam2 = 0,
-        FieldType.FNAM => _nam2 = 1,
+        FieldType.MNAM => (z: _nam2 = 0, _index = 0).z,
+        FieldType.FNAM => (z: _nam2 = 1, _index = 0).z,
         FieldType.INDX => _index = (int)r.ReadUInt32(),
         FieldType.MODL => _last = _nam == 0 ? FACEs[_index] = new Modl(r, dataSize) : BODYs[_nam2][_index] = new Modl(r, dataSize),
         FieldType.MODB => _last.MODB(r, dataSize),
@@ -5747,7 +5746,7 @@ public class SOUNRecord : Record {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadFUString(dataSize),
         FieldType.FNAM => FULL = r.ReadFUString(dataSize),
         FieldType.OBND => OBND = r.ReadS<Obnd>(dataSize),
-        FieldType.DATA or FieldType.SNDX or FieldType.SNDD => (z: DATA_Volume = r.Format == TES3 ? r.ReadByte() : (byte)0, DATA = r.ReadS<Data>(dataSize - 1)).z,
+        FieldType.DATA or FieldType.SNDX or FieldType.SNDD => (z: DATA_Volume = r.Format == TES3 ? r.ReadByte() : (byte)0, DATA = r.ReadS<Data>(r.Format == TES3 ? dataSize - 1 : dataSize)).z,
         _ => Empty,
     };
 }

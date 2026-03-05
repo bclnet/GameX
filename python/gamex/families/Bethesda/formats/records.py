@@ -668,15 +668,14 @@ class Record:
         FormType.HDPT: lambda f: HDPTRecord(),
         FormType.MICN: lambda f: MICNRecord(),
     }
-    cellsLoaded: int = 0
+    _cellsLoaded: int = 0
     @staticmethod
-    def factory(r: Reader, type: FieldType) -> 'Record':
+    def factory(format: FormType, type: FieldType) -> 'Record':
         record = None
-        if type == FormType.CELL and Record.cellsLoaded > 100: Record.cellsLoaded += 1; record = Record() # hack to limit cells loading
-        if not (z := Record._mapx.get(type)): print(f'Unsupported record type: {type}'); record = Record()
-        # if type != FormType.TES3 and type != FormType.TES4 and type not in Record._factorySet: record = Record()
-        else: record = z(r.format); record.type = type
-        record.read(r)
+        if type == FormType.CELL and Record._cellsLoaded > 100: Record._cellsLoaded += 1; record = Record() # hack to limit cells loading
+        elif not (z := Record._mapx.get(type)): print(f'Unsupported record type: {type}'); record = Record()
+        elif Record._factorySet and type != FormType.TES3 and type != FormType.TES4 and type not in Record._factorySet: record = Record()
+        else: record = z(format); record.type = type
         return record
     class EsmFlags(IntFlag):
         None_ = 0x00000000                  # None
@@ -719,7 +718,7 @@ class Record:
     dataSize: int 
     flags: EsmFlags
     @property
-    def compressed(self) -> bool: return Record.EsmFlags.Compressed in self.flags
+    def _compressed(self) -> bool: return Record.EsmFlags.Compressed in self.flags
     id: int = 0
 
     # Reads an uninitialized subrecord to deserialize, or null to skip.
@@ -743,7 +742,7 @@ class Record:
 
     # Reads a records fields - tag::Record.readFields[]
     def readFields(self, r: Reader) -> None:
-        if self.compressed:
+        if self._compressed:
             lastSize = self.dataSize
             self.dataSize = r.readUInt32()
             data = decompressZlib2(r, lastSize - 4, self.dataSize)
@@ -759,10 +758,10 @@ class Record:
                 continue
             elif fieldType == FieldType.OFST and self.type == FormType.WRLD: r.seek(end); continue
             tell = r.tell()
-            if self.readField(r, fieldType, fieldDataSize) == Record._empty: print(f'Unsupported ESM record type: {self.type}Record:{fieldType}'); r.skip(fieldDataSize); continue
-            r.ensureAtEnd(tell + fieldDataSize, f'Failed reading {self.type}Record:{fieldType} field data at offset {tell} in {r.binPath} of {r.tell() - tell - fieldDataSize}')
-        r.ensureAtEnd(end, f'Failed reading {self.type}Record record data at offset {start} in {r.binPath}')
-        if self.compressed: r.dispose()
+            if self.readField(r, fieldType, fieldDataSize) == Record._empty: print(f'Unsupported field type: {self.type}.{fieldType}'); r.skip(fieldDataSize); continue
+            r.ensureAtEnd(tell + fieldDataSize, f'Failed reading {self.type}.{fieldType} field data at offset {tell} in {r.binPath} of {r.tell() - tell - fieldDataSize}')
+        r.ensureAtEnd(end, f'Failed reading {self.type} record data at offset {start} in {r.binPath}')
+        if self._compressed: r.dispose()
     # end::Record.readFields[]
 Record._empty = Record()
 
@@ -864,14 +863,15 @@ class RecordGroup:
         end = self.position + self.dataSize
         while not r.atEnd(end):
             type = FormType(r.readUInt32())
-            print(f'{self.path}{type}')
+            # print(f'{self.path}{type}')
             if type == FormType.GRUP:
                 s = RecordGroup(r, self.path)
                 if s.preload or True: s.read(r, files)
                 else: r.Seek(r.tell() + s.dataSize)
                 _nca(self, 'groups', lambda: []).append(s)
                 continue
-            record = Record.factory(r, type)
+            record = Record.factory(r.format, type)
+            record.read(r)
             if record.type == 0: r.skip(record.dataSize); continue
             record.readFields(r)
             self.records.append(record)
@@ -1785,8 +1785,8 @@ class CELLRecord(Record): #ICellRecord
     XOWNs: list[Xown] = [] # Ownership
     # Referenced Object Data Grouping
     refObjs: list[Ref_] = []
-    _inFRMR: bool = False
-    _lastRef: Ref_
+    _frmr: bool = False
+    _last: Ref_
     # Grid
     isInterior: bool
     gridId: Int3
@@ -1799,9 +1799,9 @@ class CELLRecord(Record): #ICellRecord
         self.ambientLight = self.XCLL.ambientColor.asColor if self.XCLL else None
 
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
-        # print(f'   {type}')
-        if not self._inFRMR and type == FieldType.FRMR: self._inFRMR = True
-        if not self._inFRMR:
+        # print(f'- {type}')
+        if not self._frmr and type == FieldType.FRMR: self._frmr = True
+        if not self._frmr:
             match type:
                 case FieldType.EDID | FieldType.NAME: z = self.EDID = r.readFUString(dataSize)
                 case FieldType.FULL | FieldType.RGNN: z = self.FULL = r.readFUString(dataSize)
@@ -1828,26 +1828,26 @@ class CELLRecord(Record): #ICellRecord
         # Referenced Object Data Grouping
         match type:
             # RefObjDataGroup sub-records
-            case FieldType.FRMR: self._lastRef = self.refObjs.addX(CELLRecord.Ref_()); z = self._lastRef.FRMR = r.readUInt32()
-            case FieldType.NAME: z = self._lastRef.EDID = r.readFUString(dataSize)
-            case FieldType.XSCL: z = self._lastRef.XSCL = r.readSingle()
-            case FieldType.DODT: z = self._lastRef.DODT = r.readS(CELLRecord.Xyza, dataSize)
-            case FieldType.DNAM: z = self._lastRef.DNAM = r.readFUString(dataSize)
-            case FieldType.FLTV: z = self._lastRef.FLTV = r.readSingle()
-            case FieldType.KNAM: z = self._lastRef.KNAM = r.readFUString(dataSize)
-            case FieldType.TNAM: z = self._lastRef.TNAM = r.readFUString(dataSize)
-            case FieldType.UNAM: z = self._lastRef.UNAM = r.readByte()
-            case FieldType.ANAM: z = self._lastRef.ANAM = r.readFUString(dataSize)
-            case FieldType.BNAM: z = self._lastRef.BNAM = r.readFUString(dataSize)
-            case FieldType.INTV: z = self._lastRef.INTV = r.readInt32()
-            case FieldType.NAM9: z = self._lastRef.NAM9 = r.readUInt32()
-            case FieldType.XSOL: z = self._lastRef.XSOL = r.readFUString(dataSize)
-            case FieldType.DATA: z = self._lastRef.DATA = r.readS(CELLRecord.Xyza, dataSize)
-            # TES
-            case FieldType.CNAM: z = self._lastRef.CNAM = r.readFUString(dataSize)
-            case FieldType.NAM0: z = self._lastRef.NAM0 = r.readUInt32()
-            case FieldType.XCHG: z = self._lastRef.XCHG = r.readInt32()
-            case FieldType.INDX: z = self._lastRef.INDX = r.readInt32()
+            case FieldType.FRMR: self._last = self.refObjs.addX(CELLRecord.Ref_()); z = self._last.FRMR = r.readUInt32()
+            case FieldType.NAME: z = self._last.EDID = r.readFUString(dataSize)
+            case FieldType.XSCL: z = self._last.XSCL = r.readSingle()
+            case FieldType.DODT: z = self._last.DODT = r.readS(CELLRecord.Xyza, dataSize)
+            case FieldType.DNAM: z = self._last.DNAM = r.readFUString(dataSize)
+            case FieldType.FLTV: z = self._last.FLTV = r.readSingle()
+            case FieldType.KNAM: z = self._last.KNAM = r.readFUString(dataSize)
+            case FieldType.TNAM: z = self._last.TNAM = r.readFUString(dataSize)
+            case FieldType.UNAM: z = self._last.UNAM = r.readByte()
+            case FieldType.ANAM: z = self._last.ANAM = r.readFUString(dataSize)
+            case FieldType.BNAM: z = self._last.BNAM = r.readFUString(dataSize)
+            case FieldType.INTV: z = self._last.INTV = r.readInt32()
+            case FieldType.NAM9: z = self._last.NAM9 = r.readUInt32()
+            case FieldType.XSOL: z = self._last.XSOL = r.readFUString(dataSize)
+            case FieldType.DATA: z = self._last.DATA = r.readS(CELLRecord.Xyza, dataSize)
+            # TES?
+            case FieldType.CNAM: z = self._last.CNAM = r.readFUString(dataSize)
+            case FieldType.NAM0: z = self._last.NAM0 = r.readUInt32()
+            case FieldType.XCHG: z = self._last.XCHG = r.readInt32()
+            case FieldType.INDX: z = self._last.INDX = r.readInt32()
             case _: z = Record._empty
         return z
 # end::CELL[]

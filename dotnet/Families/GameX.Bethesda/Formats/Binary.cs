@@ -547,7 +547,8 @@ public class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
     public override Task Read(BinaryArchive source, BinaryReader b, object tag) {
         Format = GetFormat(source.Game.Id);
         var r = new Reader(b, source.BinPath, Format, new[] { "Fallout3", "FalloutNV" }.Contains(source.Game.Id));
-        var record = Record = Record.Factory(r, (FormType)r.ReadUInt32());
+        var record = Record = Record.Factory(r.Format, (FormType)r.ReadUInt32());
+        record.Read(r);
         record.ReadFields(r);
         var files = (List<FileSource>)(source.Files = [new FileSource { Path = $"{record.Type}", Tag = record }]);
         foreach (var s in RecordGroup.ReadAll(r))
@@ -591,8 +592,9 @@ public class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
 
     #region Query
 
-    public static object FindTAGFactory(FormType type, RecordGroup group) => Activator.CreateInstance(typeof(FindTAG<>).MakeGenericType(Record.Factory(null, type).GetType()), group.RecordsByType[type]);
-    public class FindTAG<T>(List<Record> s) : List<T>(s.Cast<T>()), IHaveMetaInfo, IWriteToStream {
+    public class FindTAG<T> : List<T>, IHaveMetaInfo, IWriteToStream {
+        public FindTAG(Record s) : base([(T)(object)s]) { }
+        public FindTAG(List<Record> s) : base(s.Cast<T>()) { }
         public void WriteToStream(Stream stream) => this.Serialize(stream);
         public override string ToString() => this.Serialize();
 
@@ -630,7 +632,7 @@ public class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
         public object Tes3(Binary_Esm _) => _.CELLsByName.TryGetValue(name, out var z) ? z : default;
     }
     public object Query(object source) => source switch {
-        FileSource s => s.Tag is Record ? s.Tag : FindTAGFactory((FormType)s.Flags, (RecordGroup)s.Tag),
+        FileSource s => Activator.CreateInstance(typeof(FindTAG<>).MakeGenericType(Record.Factory(Format, (FormType)s.Flags).GetType()), s.Tag),
         FindLTEX s => Format == FormType.TES3 ? s.Tes3(this) : throw new NotImplementedException(),
         FindLAND s => Format == FormType.TES3 ? s.Tes3(this) : s.Else(this),
         FindCELL s => Format == FormType.TES3 ? s.Tes3(this) : s.Else(this),

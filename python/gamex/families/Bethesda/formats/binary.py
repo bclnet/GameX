@@ -375,7 +375,8 @@ class Binary_Esm(ArcBinaryT, IDatabase):
     def read(self, source: BinaryArchive, b: BinaryReader, tag: object = None) -> None:
         self.format = self.getFormat(source.game.id)
         r = Reader(b, source.binPath, self.format, source.game.id in ['Fallout3', 'FalloutNV'])
-        record = self.record = Record.factory(r, FormType(r.readUInt32()))
+        record = self.record = Record.factory(r.format, FormType(r.readUInt32()))
+        record.read(r)
         record.readFields(r)
         files = source.files = [FileSource(path = str(record.type), tag = record)]
         for s in RecordGroup.readAll(r):
@@ -396,10 +397,8 @@ class Binary_Esm(ArcBinaryT, IDatabase):
 
     #region Query - tag::Binary_Esm.query[]
 
-    @staticmethod
-    def findTAGFactory(type: FormType, tag: object) -> object: return Binary_Esm.FindTAG[Record]([tag] if isinstance(tag, Record) else tag)
     class FindTAG[T](list, IHaveMetaInfo, IWriteToStream):
-        def __init__(self, source: list): super().__init__(source)
+        def __init__(self, source: list): super().__init__(source if isinstance(source, list) else [source])
         def writeToStream(self, stream: object): return DesSer.serialize(self, stream)
         def __repr__(self): return DesSer.serialize(self)
 
@@ -433,7 +432,7 @@ class Binary_Esm(ArcBinaryT, IDatabase):
         def tes3(self, _: 'Binary_Esm') -> object: return None #z if _.CELLsByName.TryGetValue(cell, out var z) else None
     def query(self, s: object) -> object:
         match s:
-            case FileSource(): return self.findTAGFactory(s.flags, s.tag)
+            case FileSource(): return Binary_Esm.FindTAG[Record](s.tag)
             case FindLTEX(): return s.tes3(self) if self.format == FormType.TES3 else _throw('NotImplementedError')
             case FindLAND(): return s.tes3(self) if self.format == FormType.TES3 else s.else_(self)
             case FindCELL(): return s.tes3(self) if self.format == FormType.TES3 else s.else_(self)

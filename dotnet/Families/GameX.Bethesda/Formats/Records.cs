@@ -10,41 +10,10 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
 using static GameX.Bethesda.Formats.Records.FormType;
-using static GameX.Bethesda.Formats.Records.TXSTRecord;
 using static System.IO.Polyfill;
 #pragma warning disable CS9113
 
 namespace GameX.Bethesda.Formats.Records;
-
-#region Links
-
-// TES3
-//https://github.com/TES5Edit/TES5Edit/blob/dev/wbDefinitionsTES3.pas
-//https://en.uesp.net/morrow/tech/mw_esm.txt
-//https://github.com/mlox/mlox/blob/master/util/tes3cmd/tes3cmd
-// TES4
-//https://github.com/WrinklyNinja/esplugin/tree/master/src
-//https://github.com/TES5Edit/TES5Edit/blob/dev/wbDefinitionsTES4.pas 
-// TES5
-//https://github.com/TES5Edit/TES5Edit/blob/dev/wbDefinitionsTES5.pas 
-//https://en.uesp.net/wiki/TES3Mod:Mod_File_Format
-//https://en.uesp.net/wiki/TES4Mod:Mod_File_Format
-//https://en.uesp.net/wiki/TES5Mod:Mod_File_Format
-
-//https://tes5edit.github.io/fopdoc/Fallout3/Records.html
-//https://tes5edit.github.io/fopdoc/FalloutNV/Records.html
-//https://tes5edit.github.io/fopdoc/Fallout4/Records.html
-
-//https://github.com/TES5Edit/TES5Edit/blob/dev-4.1.6/Core/wbDefinitionsFNV.pas
-//https://github.com/TES5Edit/TES5Edit/blob/dev-4.1.6/Core/wbDefinitionsFO3.pas
-//https://github.com/TES5Edit/TES5Edit/blob/dev-4.1.6/Core/wbDefinitionsFO4.pas
-//https://github.com/TES5Edit/TES5Edit/blob/dev-4.1.6/Core/wbDefinitionsFO76.pas
-//https://github.com/TES5Edit/TES5Edit/blob/dev-4.1.6/Core/wbDefinitionsSF1.pas
-//https://github.com/TES5Edit/TES5Edit/blob/dev-4.1.6/Core/wbDefinitionsTES3.pas
-//https://github.com/TES5Edit/TES5Edit/blob/dev-4.1.6/Core/wbDefinitionsTES4.pas
-//https://github.com/TES5Edit/TES5Edit/blob/dev-4.1.6/Core/wbDefinitionsTES5.pas
-
-#endregion
 
 #region Enums
 
@@ -706,13 +675,12 @@ public partial class Record {
     };
 
     static int CellsLoaded = 0;
-    public static Record Factory(Reader r, FormType type) {
+    public static Record Factory(FormType format, FormType type) {
         Record record;
         if (type == CELL && CellsLoaded++ > 100) record = new Record(); // hack to limit cells loading
         else if (!Map.TryGetValue(type, out var z)) { Log.Info($"Unsupported record type: {type}"); record = new Record(); }
         else if (_factorySet != null && type != TES3 && type != TES4 && !_factorySet.Contains(type)) record = new Record();
-        else { record = z(r.Format); record.Type = type; }
-        record.Read(r);
+        else { record = z(format); record.Type = type; }
         return record;
     }
 
@@ -748,7 +716,7 @@ public partial class Record {
     public FormType Type;
     public uint DataSize;
     public EsmFlags Flags;
-    public bool Compressed => (Flags & EsmFlags.Compressed) != 0;
+    bool Compressed => (Flags & EsmFlags.Compressed) != 0;
     public uint Id;
 
     HashSet<FieldType> Ds = [];
@@ -812,8 +780,8 @@ public partial class Record {
             }
             else if (fieldType == FieldType.OFST && Type == WRLD) { r.Seek(end); continue; }
             var tell = r.Tell();
-            if (ReadField(r, fieldType, fieldDataSize) == Empty) { Log.Info($"Unsupported field type: {Type}Record:{fieldType}"); r.Skip(fieldDataSize); continue; }
-            r.EnsureAtEnd(tell + fieldDataSize, $"Failed reading {Type}Record:{fieldType} field data at offset {tell} in {r.BinPath} of {r.Tell() - tell - fieldDataSize}");
+            if (ReadField(r, fieldType, fieldDataSize) == Empty) { Log.Info($"Unsupported field type: {Type}.{fieldType}"); r.Skip(fieldDataSize); continue; }
+            r.EnsureAtEnd(tell + fieldDataSize, $"Failed reading {Type}.{fieldType} field data at offset {tell} in {r.BinPath} of {r.Tell() - tell - fieldDataSize}");
         }
         //Log.Info($"END");
         r.EnsureAtEnd(end, $"Failed reading {Type} record data at offset {start} in {r.BinPath}");
@@ -933,7 +901,8 @@ public partial class RecordGroup {
                 (Groups ??= []).Add(s);
                 continue;
             }
-            var record = Record.Factory(r, type);
+            var record = Record.Factory(r.Format, type);
+            record.Read(r);
             if (record.Type == 0) { r.Skip(record.DataSize); continue; }
             record.ReadFields(r);
             Records.Add(record);
@@ -941,13 +910,12 @@ public partial class RecordGroup {
         RecordsByType = Records.GroupBy(s => s.Type).ToDictionary(s => s.Key, s => s.ToArray());
         GroupsByLabel = Groups?.GroupBy(s => s.Label).ToDictionary(s => s.Key, s => s.ToArray());
         // add items
-        //$"{group.Label}"
         files.AddRange(RecordsByType.Select(s => new FileSource {
             Path = Path + Encoding.ASCII.GetString(BitConverter.GetBytes((uint)s.Key)),
             //Arc = new SubEsm(source, this, null, null),
             FileSize = 1,
             Flags = (int)s.Key,
-            Tag = this
+            Tag = s.Value
         }));
     }
 }
@@ -1947,8 +1915,8 @@ public class CELLRecord : Record {
     public List<Xown> XOWNs = []; // Ownership
     // Referenced Object Data Grouping
     public List<Ref_> RefObjs = [];
-    bool _inFRMR = false;
-    Ref_ _lastRef;
+    bool _frmr = false;
+    Ref_ _last;
     // Grid
     public bool IsInterior; // => (DATA & 0x01) == 0x01;
     public Int3 GridId; // => new Int3(XCLC.Value.GridX, XCLC.Value.GridY, !IsInterior ? 0 : -1);
@@ -1963,9 +1931,8 @@ public class CELLRecord : Record {
     protected override HashSet<FieldType> DF3 => null;
     protected override HashSet<FieldType> DF4 => null;
     public override object ReadField(Reader r, FieldType type, int dataSize) {
-        //Console.WriteLine($"   {type}");
-        if (!_inFRMR && type == FieldType.FRMR) _inFRMR = true;
-        if (!_inFRMR)
+        if (!_frmr && type == FieldType.FRMR) _frmr = true;
+        if (!_frmr)
             return type switch {
                 FieldType.EDID or FieldType.NAME => EDID = r.ReadFUString(dataSize),
                 FieldType.FULL or FieldType.RGNN => FULL = r.ReadFUString(dataSize),
@@ -1990,26 +1957,26 @@ public class CELLRecord : Record {
         // Referenced Object Data Grouping
         return type switch {
             // RefObjDataGroup sub-records
-            FieldType.FRMR => (_lastRef = RefObjs.AddX(new Ref_())).FRMR = r.ReadUInt32(),
-            FieldType.NAME => _lastRef.EDID = r.ReadFUString(dataSize),
-            FieldType.XSCL => _lastRef.XSCL = r.ReadSingle(),
-            FieldType.DODT => _lastRef.DODT = r.ReadS<Xyza>(dataSize),
-            FieldType.DNAM => _lastRef.DNAM = r.ReadFUString(dataSize),
-            FieldType.FLTV => _lastRef.FLTV = r.ReadSingle(),
-            FieldType.KNAM => _lastRef.KNAM = r.ReadFUString(dataSize),
-            FieldType.TNAM => _lastRef.TNAM = r.ReadFUString(dataSize),
-            FieldType.UNAM => _lastRef.UNAM = r.ReadByte(),
-            FieldType.ANAM => _lastRef.ANAM = r.ReadFUString(dataSize),
-            FieldType.BNAM => _lastRef.BNAM = r.ReadFUString(dataSize),
-            FieldType.INTV => _lastRef.INTV = r.ReadInt32(),
-            FieldType.NAM9 => _lastRef.NAM9 = r.ReadUInt32(),
-            FieldType.XSOL => _lastRef.XSOL = r.ReadFUString(dataSize),
-            FieldType.DATA => _lastRef.DATA = r.ReadS<Xyza>(dataSize),
+            FieldType.FRMR => (_last = RefObjs.AddX(new Ref_())).FRMR = r.ReadUInt32(),
+            FieldType.NAME => _last.EDID = r.ReadFUString(dataSize),
+            FieldType.XSCL => _last.XSCL = r.ReadSingle(),
+            FieldType.DODT => _last.DODT = r.ReadS<Xyza>(dataSize),
+            FieldType.DNAM => _last.DNAM = r.ReadFUString(dataSize),
+            FieldType.FLTV => _last.FLTV = r.ReadSingle(),
+            FieldType.KNAM => _last.KNAM = r.ReadFUString(dataSize),
+            FieldType.TNAM => _last.TNAM = r.ReadFUString(dataSize),
+            FieldType.UNAM => _last.UNAM = r.ReadByte(),
+            FieldType.ANAM => _last.ANAM = r.ReadFUString(dataSize),
+            FieldType.BNAM => _last.BNAM = r.ReadFUString(dataSize),
+            FieldType.INTV => _last.INTV = r.ReadInt32(),
+            FieldType.NAM9 => _last.NAM9 = r.ReadUInt32(),
+            FieldType.XSOL => _last.XSOL = r.ReadFUString(dataSize),
+            FieldType.DATA => _last.DATA = r.ReadS<Xyza>(dataSize),
             // TES?
-            FieldType.CNAM => _lastRef.CNAM = r.ReadFUString(dataSize),
-            FieldType.NAM0 => _lastRef.NAM0 = r.ReadUInt32(),
-            FieldType.XCHG => _lastRef.XCHG = r.ReadInt32(),
-            FieldType.INDX => _lastRef.INDX = r.ReadInt32(),
+            FieldType.CNAM => _last.CNAM = r.ReadFUString(dataSize),
+            FieldType.NAM0 => _last.NAM0 = r.ReadUInt32(),
+            FieldType.XCHG => _last.XCHG = r.ReadInt32(),
+            FieldType.INDX => _last.INDX = r.ReadInt32(),
             _ => Empty,
         };
     }

@@ -884,7 +884,7 @@ public partial class RecordGroup {
         if (r.Format == TES3) { yield return new RecordGroup(r, ""); yield break; }
         while (!r.AtEnd()) {
             var type = (FormType)r.ReadUInt32();
-            if (type != GRUP) throw new InvalidOperationException($"{type} not GRUP");
+            //if (type != GRUP) throw new InvalidOperationException($"{type} not GRUP");
             yield return new RecordGroup(r, "");
         }
     }
@@ -4927,7 +4927,7 @@ public class RACE4Record : RACERecord {
     public float PNAM; // FaceGen - Main clamp
     public float UNAM; // FaceGen - Face clamp
     public byte[] XNAM; // Unknown
-    public Modl[] FACEs = new Modl[8];
+    public Modl[] FACEs = new Modl[9];
     public Modl[][] BODYs = [new Modl[5], new Modl[5]];
     public List<RefX<HAIRRecord>> HNAMs = [];
     public List<RefX<EYESRecord>> ENAMs = [];

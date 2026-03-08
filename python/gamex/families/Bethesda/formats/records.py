@@ -855,7 +855,7 @@ class RecordGroup:
          if r.format == FormType.TES3: yield RecordGroup(r, ''); return
          while not r.atEnd():
             type = FormType(r.readUInt32())
-            if type != FormType.GRUP: raise Exception(f'{type} not GRUP')
+            # if type != FormType.GRUP: raise Exception(f'{type} not GRUP')
             yield RecordGroup(r, '')
 
     def read(self, r: Reader, files: list[FileSource]) -> None:
@@ -863,11 +863,11 @@ class RecordGroup:
         end = self.position + self.dataSize
         while not r.atEnd(end):
             type = FormType(r.readUInt32())
-            # print(f'{self.path}{type}')
             if type == FormType.GRUP:
+                print(f'HERE: {self.path}'); exit(1)
                 s = RecordGroup(r, self.path)
                 if s.preload or True: s.read(r, files)
-                else: r.Seek(r.tell() + s.dataSize)
+                else: r.seek(r.tell() + s.dataSize)
                 _nca(self, 'groups', lambda: []).append(s)
                 continue
             record = Record.factory(r.format, type)
@@ -875,6 +875,7 @@ class RecordGroup:
             if record.type == 0: r.skip(record.dataSize); continue
             record.readFields(r)
             self.records.append(record)
+        print('DONE')
         self.recordsByType = { s:list(g) for s, g in groupby(sorted(self.records, key=lambda s: s.type), lambda s: s.type) }
         self.groupsByLabel = { s:list(g) for s, g in groupby(sorted(self.groups, key=lambda s: s.label), lambda s: s.label) } if self.groups else None
         # add items

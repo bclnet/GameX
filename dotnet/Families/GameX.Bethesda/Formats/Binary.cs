@@ -592,9 +592,7 @@ public class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
 
     #region Query
 
-    public class FindTAG<T> : List<T>, IHaveMetaInfo, IWriteToStream {
-        public FindTAG(Record s) : base([(T)(object)s]) { }
-        public FindTAG(List<Record> s) : base(s.Cast<T>()) { }
+    public class FindTAG<T>(object obj) : List<T>(obj is Record[] s ? s.Cast<T>() : [(T)obj]), IHaveMetaInfo, IWriteToStream {
         public void WriteToStream(Stream stream) => this.Serialize(stream);
         public override string ToString() => this.Serialize();
 

@@ -6,7 +6,7 @@ from enum import Enum, Flag, IntEnum, IntFlag
 from struct import unpack
 from numpy import ndarray, array
 from collections.abc import Iterator
-from openstk import log, Int2, Int3, Byte3, Float3
+from openstk import log, Byte2, Int2, Byte3, Int3, Float3
 from openstk.core.drawing import Color
 from gamex import FileSource, BinaryReader, ArcBinaryT
 from gamex.core.globalx import ByteColor4
@@ -758,7 +758,7 @@ class Record:
                 continue
             elif fieldType == FieldType.OFST and self.type == FormType.WRLD: r.seek(end); continue
             tell = r.tell()
-            if self.readField(r, fieldType, fieldDataSize) == Record._empty: print(f'Unsupported field type: {self.type}.{fieldType}'); r.skip(fieldDataSize); continue
+            if self.readField(r, fieldType, fieldDataSize) == Record._empty: print(f'Unsupported field type: {self.type}.{fieldType}'); r.skip(fieldDataSize); exit(0); continue
             r.ensureAtEnd(tell + fieldDataSize, f'Failed reading {self.type}.{fieldType} field data at offset {tell} in {r.binPath} of {r.tell() - tell - fieldDataSize}')
         r.ensureAtEnd(end, f'Failed reading {self.type} record data at offset {start} in {r.binPath}')
         if self._compressed: r.dispose()
@@ -864,7 +864,7 @@ class RecordGroup:
         while not r.atEnd(end):
             type = FormType(r.readUInt32())
             if type == FormType.GRUP:
-                print(f'HERE: {self.path}'); exit(1)
+                # print(f'HERE: {self.path}'); exit(1)
                 s = RecordGroup(r, self.path)
                 if s.preload or True: s.read(r, files)
                 else: r.seek(r.tell() + s.dataSize)
@@ -875,7 +875,6 @@ class RecordGroup:
             if record.type == 0: r.skip(record.dataSize); continue
             record.readFields(r)
             self.records.append(record)
-        print('DONE')
         self.recordsByType = { s:list(g) for s, g in groupby(sorted(self.records, key=lambda s: s.type), lambda s: s.type) }
         self.groupsByLabel = { s:list(g) for s, g in groupby(sorted(self.groups, key=lambda s: s.label), lambda s: s.label) } if self.groups else None
         # add items
@@ -1003,31 +1002,6 @@ class AACTRecord(Record):
         return z
 # end::AACT[]
 
-# ACRE.Placed creature - 0400 - tag::ACRE[]
-class ACRERecord(Record):
-    NAME: Ref[Record] # Base
-    DATA: 'REFRRecord.Data' # Position/Rotation
-    XRGDs: list['REFRRecord.Xrgd'] = None # Ragdoll Data (optional)
-    XESP: 'REFRRecord.Xesp' = None # Enable Parent (optional)
-    XOWNs: list['CELLRecord.Xown'] # Ownership (optional)
-    XSCL: float # Scale (optional)
-    def __init__(self): super().__init__()
-
-    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
-        match type:
-            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
-            case FieldType.NAME: z = self.NAME = Ref[Record](Record, r, dataSize)
-            case FieldType.DATA: z = self.DATA = r.readS(REFRRecord.Data, dataSize)
-            case FieldType.XRGD: z = self.XRGDs = r.readSArray(REFRRecord.Xrgd, dataSize // 28)
-            case FieldType.XESP: z = self.XESP = REFRRecord.Xesp(r, dataSize)
-            case FieldType.XOWN: z = _nca(self, 'XOWNs', lambda: listx()).addX(CELLRecord.Xown(XOWN = RefX[Record](Record, r, dataSize)))
-            case FieldType.XRNK: z = self.XOWNs.last().XRNK = r.readInt32()
-            case FieldType.XGLB: z = self.XOWNs.last().XGLB = RefX[Record](Record, r, dataSize)
-            case FieldType.XSCL: z = self.XSCL = r.readSingle()
-            case _: z = Record._empty
-        return z
-# end::ACRE[]
-
 # ACHR.Actor Reference - 0450 - tag::ACHR[]
 class ACHRRecord(Record):
     NAME: RefX[Record] # Base
@@ -1058,6 +1032,31 @@ class ACHRRecord(Record):
         return z
 # end::ACHR[]
 
+# ACRE.Placed creature - 0400 - tag::ACRE[]
+class ACRERecord(Record):
+    NAME: Ref[Record] # Base
+    DATA: 'REFRRecord.Data' # Position/Rotation
+    XRGDs: list['REFRRecord.Xrgd'] = None # Ragdoll Data (optional)
+    XESP: 'REFRRecord.Xesp' = None # Enable Parent (optional)
+    XOWNs: list['CELLRecord.Xown'] # Ownership (optional)
+    XSCL: float # Scale (optional)
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case FieldType.NAME: z = self.NAME = Ref[Record](Record, r, dataSize)
+            case FieldType.DATA: z = self.DATA = r.readS(REFRRecord.Data, dataSize)
+            case FieldType.XRGD: z = self.XRGDs = r.readSArray(REFRRecord.Xrgd, dataSize // 28)
+            case FieldType.XESP: z = self.XESP = REFRRecord.Xesp(r, dataSize)
+            case FieldType.XOWN: z = _nca(self, 'XOWNs', lambda: listx()).addX(CELLRecord.Xown(XOWN = RefX[Record](Record, r, dataSize)))
+            case FieldType.XRNK: z = self.XOWNs.last().XRNK = r.readInt32()
+            case FieldType.XGLB: z = self.XOWNs.last().XGLB = RefX[Record](Record, r, dataSize)
+            case FieldType.XSCL: z = self.XSCL = r.readSingle()
+            case _: z = Record._empty
+        return z
+# end::ACRE[]
+
 # ACTI.Activator - 3450 - tag::ACTI[]
 class ACTIRecord(Record, IHaveMODL):
     FULL: str # Item Name
@@ -1083,7 +1082,7 @@ class ACTIRecord(Record, IHaveMODL):
         return z
 # end::ACTI[]
 
-# ADDN-Addon Node - 0050 - tag::ADDN[]
+# ADDN.Addon Node - 0050 - tag::ADDN[]
 class ADDNRecord(Record):
     OBND: Obnd # Object Boundary
     CNAM: ByteColor4 # RGB Color
@@ -1409,13 +1408,19 @@ class ARTORecord(Record):
 
 # ASPC.Acoustic Space - 0050 - tag::ASPC[]
 class ASPCRecord(Record):
-    CNAM: ByteColor4 # RGB Color
+    OBND: Obnd # Object Bounds
+    SNAM: Ref[SNDRRecord] # Ambient
+    RDAT: Ref[REGNRecord] # Region Data
+    BNAM: Ref[REVBRecord] # Reverb
     def __init__(self): super().__init__()
 
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
-            case FieldType.CNAM: z = self.CNAM = r.readS(ByteColor4, dataSize)
+            case FieldType.OBND: z = self.OBND = r.readS(Obnd, dataSize)
+            case FieldType.SNAM: z = self.SNAM = Ref[SNDRRecord](SNDRRecord, r, dataSize)
+            case FieldType.RDAT: z = self.RDAT = Ref[REGNRecord](REGNRecord, r, dataSize)
+            case FieldType.BNAM: z = self.BNAM = Ref[REVBRecord](REVBRecord, r, dataSize)
             case _: z = Record._empty
         return z
 # end::ASPC[]
@@ -1988,7 +1993,6 @@ class CLMTRecord(Record, IHaveMODL):
         return z
 # end::CLMT[]
 
-
 # CLOT.Clothing - 3450 - tag::CLOT[]
 class CLOTRecord(Record, IHaveMODL):
     class Data:
@@ -2060,6 +2064,28 @@ class CLOTRecord(Record, IHaveMODL):
         return z
 # end::CLOT[]
 
+# COBJ.Constructible Object (recipes) - 0050 - tag::COBJ[]
+class COBJRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::COBJ[]
+
+# COLL.Collision Layer - 0050 - tag::COLL[]
+class COLLRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::COLL[]
+
 # CONT.Container - 3450 - tag::CONT[]
 class CONTRecord(Record, IHaveMODL):
     class Data:
@@ -2099,6 +2125,17 @@ class CONTRecord(Record, IHaveMODL):
             case _: z = Record._empty
         return z
 # end::CONT[]
+
+# CPTH.Camera Path - 0050 - tag::CPTH[]
+class CPTHRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::CPTH[]
 
 # CREA.Creature - 3450 - tag::CREA[]
 class CREARecord(Record, IHaveMODL):
@@ -2525,6 +2562,17 @@ class CSTYRecord(Record):
         return z
 # end::CSTY[]
 
+# DEBR.Debris - 0050 - tag::DEBR[]
+class DEBRRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::DEBR[]
+
 # DIAL.Dialog Topic - 3450 - tag::DIAL[]
 class DIALRecord(Record):
     _lastRecord: 'DIALRecord'
@@ -2571,6 +2619,17 @@ class DLVWRecord(Record):
         return z
 # end::DLVW[]
 
+# DOBJ.Default Object Manager - 0050 - tag::DOBJ[]
+class DOBJRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::DOBJ[]
+
 # DMGT.Damage Type - 0400 #F4 - tag::DMGT[]
 class DMGTRecord(Record):
     def __init__(self): super().__init__()
@@ -2612,6 +2671,28 @@ class DOORRecord(Record, IHaveMODL):
             case _: z = Record._empty
         return z
 # end::DOOR[]
+
+# DUEL.Dual Cast Data (possibly unused) - 0050 - tag::DUEL[]
+class DUELRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::DUEL[]
+
+# ECZN.Encounter Zone - 0050 - tag::ECZN[]
+class ECZNRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::ECZN[]
 
 # EFSH.Effect Shader - 0450 - tag::EFSH[]
 class EFSHRecord(Record):
@@ -2849,6 +2930,17 @@ class EQUPRecord(Record):
         return z
 # end::EQUP[]
 
+# EXLP.Explosion - 0050 - tag::EXLP[]
+class EXLPRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::EXLP[]
+
 # EYES.Eyes - 0450 - tag::EYES[]
 class EYESRecord(Record):
     FULL: str
@@ -3071,6 +3163,28 @@ class FLSTRecord(Record):
         return z
 # end::FLST[]
 
+# FSTP.Footstep - 0050 - tag::FSTP[]
+class FSTPRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::FSTP[]
+
+# FSTS.Footstep Set - 0050 - tag::FSTS[]
+class FSTSRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::FSTS[]
+
 # FURN.Furniture - 0450 - tag::FURN[]
 class FURNRecord(Record, IHaveMODL):
     MODL: Modl # Model
@@ -3179,6 +3293,17 @@ class GRASRecord(Record):
         return z
 # end::GRAS[]
 
+# GRUP.Form Group - 0050 - tag::GRUP[]
+class GRUPRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::GRUP[]
+
 # HAIR.Hair - 0400 - tag::HAIR[]
 class HAIRRecord(Record, IHaveMODL):
     FULL: str
@@ -3198,6 +3323,17 @@ class HAIRRecord(Record, IHaveMODL):
             case _: z = Record._empty
         return z
 # end::HAIR[]
+
+# HAZD.Hazard - 0050 - tag::HAZD[]
+class HAZDRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::HAZD[]
 
 # HDPT.Head Part - 00500 - tag::HDPT[]
 class HDPTRecord(Record):
@@ -3257,6 +3393,39 @@ class IDLERecord(Record, IHaveMODL):
             case _: z = Record._empty
         return z
 # end::IDLE[]
+
+# IDLM.Idle Marker - 0050 - tag::IDLM[]
+class HAZDRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::IDLM[]
+
+# IMAD.Image Space Modifier - 0050 - tag::IMAD[]
+class IMADRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::IMAD[]
+
+# IMGS.Image Space - 0050 - tag::IMGS[]
+class IMGSRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::IMGS[]
 
 # INFO.Dialog Topic Info - 3450 - tag::INFO[]
 class INFORecord(Record):
@@ -3428,6 +3597,28 @@ class INGRRecord(Record, IHaveMODL):
         return z
 # end::INGR[]
 
+# IPCT.Impact Data - 0050 - tag::IPCT[]
+class IPCTRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::IPCT[]
+
+# IPDS.Impact Data Set - 0050 - tag::IPDS[]
+class IPDSRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::IPDS[]
+
 # KEYM.Key - 0450 - tag::KEYM[]
 class KEYMRecord(Record, IHaveMODL):
     class Data:
@@ -3587,6 +3778,17 @@ class LCRTRecord(Record):
         return z
 # end::LCRT[]
 
+# LCTN.Location - 0050 - tag::LCTN[]
+class LCTNRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::LCTN[]
+
 # LEVC.Leveled Creature - 3000 - tag::LEVC[]
 class LEVCRecord(Record):
     DATA: int # List data - 1 = Calc from all levels <= PC level
@@ -3634,6 +3836,17 @@ class LEVIRecord(Record):
             return z
         return None
 # end::LEVI[]
+
+# LGTM.Lighting Template - 0050 - tag::LGTM[]
+class LGTMRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::LGTM[]
 
 # LIGH.Light - 3450 - tag::LIGH[]
 class LIGHRecord(Record, IHaveMODL):
@@ -3842,6 +4055,17 @@ class LVLIRecord(Record):
         return z
 # end::LVLI[]
 
+# LVLN.Leveled Actor - 0050 - tag::LVLN[]
+class LVLNRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::LVLN[]
+
 # LVSP.Leveled Spell - 0400 - tag::LVSP[]
 class LVSPRecord(Record):
     LVLD: int # Chance
@@ -3858,6 +4082,39 @@ class LVSPRecord(Record):
             case _: z = Record._empty
         return z
 # end::LVSP[]
+
+# MATO.Material Object - 0050 - tag::MATO[]
+class MATORecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::MATO[]
+
+# MATT.Material Type - 0050 - tag::MATT[]
+class MATTRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::MATT[]
+
+# MESG.Message - 0050 - tag::MESG[]
+class MESGRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::MESG[]
 
 # MGEF.Magic Effect - 3400 - tag::MGEF[]
 class MGEFRecord(Record):
@@ -4058,6 +4315,83 @@ class MISCRecord(Record, IHaveMODL):
             case _: z = Record._empty
         return z
 # end::MISC[]
+
+# MOVT.Movement Type - 0050 - tag::MOVT[]
+class MOVTRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::MOVT[]
+
+# MSTT.Movable Static - 0050 - tag::MSTT[]
+class MSTTRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::MSTT[]
+
+# MUSC.Music Type - 0050 - tag::MUSC[]
+class MUSCRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::MUSC[]
+
+# MUST.Music Track - 0050 - tag::MUST[]
+class MUSTRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::MUST[]
+
+# NAVI.Navigation (master data) - 0050 - tag::NAVI[]
+class NAVIRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::NAVI[]
+
+# NAVM.NavMesh - 0050 - tag::NAVM[]
+class NAVMRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::NAVM[]
+
+# NOTE.Note - 0050 - tag::NOTE[]
+class NOTERecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::NOTE[]
 
 # NPC_.Non-Player Character - 3450 - tag::NPC_3[]
 class NPC_3Record(CREA3Record):
@@ -4272,6 +4606,31 @@ class PACKRecord(Record):
             case _: z = Record._empty
         return z
 # end::PACK[]
+
+# PERK.Perk - 0050 - tag::PERK[]
+class PERKRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::PERK[]
+
+# PGRE.Placed grenade - 0050 - tag::PGRE[]
+class PGRERecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::PGRE[]
+
+
+
 
 # PGRD.Path grid - 3400 - tag::PGRD[]
 class PGRDRecord(Record):
@@ -4625,6 +4984,7 @@ class RACE4Record(RACERecord):
                 else: self.BODYs[self._nam2][self._index] = self._last
             case FieldType.MODB: z = self._last.MODB(r, dataSize)
             case FieldType.MODT: z = self._last.MODT(r, dataSize)
+            case FieldType.MODD: z = self._last.MODD(r, dataSize)
             case FieldType.ICON: z = self._last.ICON(r, dataSize)
             # section: end
             case FieldType.HNAM: z = self.HNAMs.addRangeX(r.readFArray(lambda z: RefX[HAIRRecord](HAIRRecord, r, 4), dataSize >> 2))
@@ -4977,6 +5337,19 @@ class REGNRecord(Record):
         return z
 # end::REGN[]
 
+# REVB.Reverb Parameters - 0050 - tag::REVB[]
+class REVBRecord(Record):
+    DATA: Data # Data
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case FieldType.DATA: z = self.DATA = r.readS(Data, dataSize)
+            case _: z = Record._empty
+        return z
+# end::REVB[]
+
 # ROAD.Road - 0400 - tag::ROAD[]
 class ROADRecord(Record):
     PGRPs: list[PGRDRecord.Pgrp]
@@ -5263,14 +5636,19 @@ class SNDRRecord(Record):
 # SOUN.Sound - 3450 - tag::SOUN[]
 class SOUNRecord(Record):
     class SOUNFlags(Flag):
-        RandomFrequencyShift = 0x0001
-        PlayAtRandom = 0x0002
-        EnvironmentIgnored = 0x0004
-        RandomLocation = 0x0008
-        Loop = 0x0010
-        MenuSound = 0x0020
-        _2D = 0x0040
-        _360LFE = 0x0080
+        RandomFrequencyShift = 1 << 1
+        PlayAtRandom = 1 << 2
+        EnvironmentIgnored = 1 << 3
+        RandomLocation = 1 << 4
+        Loop = 1 << 5
+        MenuSound = 1 << 6
+        _2D = 1 << 7
+        _360LFE = 1 << 8
+        DialogueSound = 1 << 9
+        EnvelopeFast = 1 << 10
+        EnvelopeSlow = 1 << 11
+        _2DRadius = 1 << 12
+        MuteWhenSubmerged = 1 << 13
     
     class Data:
         _struct = { 2: '<2B', 8: '<2BbBI', 11: '<2BbBIHB', 12: '<2BbBIH2B', 36: '<2BbBIH2B6hiQ' }
@@ -5334,6 +5712,10 @@ class SOUNRecord(Record):
     FULL: str # Sound Filename (relative to Sounds\)
     OBND: Obnd # Object Boundary
     DATA: Data # Sound Data
+    # fallout
+    ANAM: list[Byte2] # Attenuation Curve
+    GNAM: int # Reverb Attenuation Control
+    HNAM: int # Priority
     def __init__(self): super().__init__()
 
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
@@ -5342,6 +5724,10 @@ class SOUNRecord(Record):
             case FieldType.FNAM: z = self.FULL = r.readFUString(dataSize)
             case FieldType.OBND: z = self.OBND = r.readS(Obnd, dataSize)
             case FieldType.DATA | FieldType.SNDX | FieldType.SNDD: self.DATA_Volume = r.readByte() if r.format == FormType.TES3 else 0; z = self.DATA = r.readS(SOUNRecord.Data, dataSize - 1 if r.format == FormType.TES3 else dataSize)
+            # fallout
+            case FieldType.ANAM: z = self.ANAM = r.readPArray(Byte2, '2B', 5)
+            case FieldType.GNAM: z = self.GNAM = r.readInt16()
+            case FieldType.HNAM: z = self.HNAM = r.readInt32()
             case _: z = Record._empty
         return z
 # end::SOUN[]
@@ -5564,7 +5950,6 @@ class TREERecord(Record, IHaveMODL):
         return z
 # end::TREE[]
 
-# dep: None
 # TRNS.TRNS Record - 0400 #F4 - tag::TRNS[]
 class TRNSRecord(Record):
     def __init__(self): super().__init__()

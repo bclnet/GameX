@@ -22,194 +22,196 @@ type Vector3 = ndarray
 class FormType(IntEnum):
     def __str__(self): return self.to_bytes(4, byteorder='little').decode('ascii')
     ZERO = 0x00000000
-    ONE_ = 0x00000001
+    # ONE_ = 0x00000001
+    AACT = 0x54434141
+    ACHR = 0x52484341
+    ACRE = 0x45524341
+    ACTI = 0x49544341
+    ADDN = 0x4E444441
+    ALCH = 0x48434C41
+    AMMO = 0x4F4D4D41
+    ANIO = 0x4F494E41
     APPA = 0x41505041
     ARMA = 0x414D5241
-    AACT = 0x54434141
-    ASPC = 0x43505341
-    ACTI = 0x49544341
     ARMO = 0x4F4D5241
-    AMMO = 0x4F4D4D41
-    ASTP = 0x50545341
     ARTO = 0x4F545241
-    AMDL = 0x4C444D41
-    AECH = 0x48434541
-    ACRE = 0x45524341
-    AORU = 0x55524F41
-    ALCH = 0x48434C41
-    ACHR = 0x52484341
-    ANIO = 0x4F494E41
+    ASPC = 0x43505341
+    ASTP = 0x50545341
     AVIF = 0x46495641
-    ADDN = 0x4E444441
+    # AMDL = 0x4C444D41
+    # AECH = 0x48434541
+    # AORU = 0x55524F41
+    BNDS = 0x53444E42
+    BODY = 0x59444F42
     BOIM = 0x4D494F42
     BOOK = 0x4B4F4F42
-    BSGN = 0x4E475342
-    BODY = 0x59444F42
-    BNDS = 0x53444E42
     BPTD = 0x44545042
-    CMPO = 0x4F504D43
-    CLAS = 0x53414C43
-    CSTY = 0x59545343
-    CONT = 0x544E4F43
-    CLMT = 0x544D4C43
-    CELL = 0x4C4C4543
+    BSGN = 0x4E475342
     CAMS = 0x534D4143
-    CPTH = 0x48545043
-    CREA = 0x41455243
+    CELL = 0x4C4C4543
+    CLAS = 0x53414C43
     CLFM = 0x4D464C43
-    COLL = 0x4C4C4F43
+    CLMT = 0x544D4C43
     CLOT = 0x544F4C43
     COBJ = 0x4A424F43
+    COLL = 0x4C4C4F43
+    CONT = 0x544E4F43
+    CPTH = 0x48545043
+    CREA = 0x41455243
+    CSTY = 0x59545343
+    # CMPO = 0x4F504D43
+    DEBR = 0x52424544
+    DIAL = 0x4C414944
+    DLBR = 0x52424C44
+    DLVW = 0x57564C44
+    DOBJ = 0x4A424F44
     DMGT = 0x54474D44
     DOOR = 0x524F4F44
-    DOBJ = 0x4A424F44
-    DFOB = 0x424F4644
-    DUAL = 0x4C415544
-    DLBR = 0x52424C44
-    DEBR = 0x52424544
-    DLVW = 0x57564C44
-    DIAL = 0x4C414944
-    EQUP = 0x50555145
-    EYES = 0x53455945
-    EFSH = 0x48534645
+    DUEL = 0x4C455544
+    # DFOB = 0x424F4644
+    # DUAL = 0x4C415544
     ECZN = 0x4E5A4345
-    EXPL = 0x4C505845
+    EFSH = 0x48534645
     ENCH = 0x48434E45
+    EQUP = 0x50555145
+    EXPL = 0x4C505845
+    EYES = 0x53455945
     FACT = 0x54434146
-    FURN = 0x4E525546
     FLOR = 0x524F4C46
+    FLST = 0x54534C46
     FSTP = 0x50545346
     FSTS = 0x53545346
-    FLST = 0x54534C46
-    GRUP = 0x50555247
-    GMST = 0x54534D47
+    FURN = 0x4E525546
     GLOB = 0x424F4C47
+    GMST = 0x54534D47
     GRAS = 0x53415247
-    GDRY = 0x59524447
+    GRUP = 0x50555247
+    # GDRY = 0x59524447
+    HAIR = 0x52494148
     HAZD = 0x445A4148
     HDPT = 0x54504448
-    HAIR = 0x52494148
-    INGR = 0x52474E49
-    IDLM = 0x4D4C4449
-    INFO = 0x4F464E49
     IDLE = 0x454C4449
+    IDLM = 0x4D4C4449
+    IMAD = 0x44414D49
+    IMGS = 0x53474D49
+    INFO = 0x4F464E49
+    INGR = 0x52474E49
     IPCT = 0x54435049
     IPDS = 0x53445049
-    IMGS = 0x53474D49
-    IMAD = 0x44414D49
-    INNR = 0x524E4E49
-    KYWD = 0x4457594B
+    # INNR = 0x524E4E49
     KEYM = 0x4D59454B
-    KSSM = 0x4D53534B
-    LIGH = 0x4847494C
-    LCTN = 0x4E54434C
-    LCRT = 0x5452434C
-    LTEX = 0x5845544C
-    LVLN = 0x4E4C564C
-    LVLI = 0x494C564C
+    KYWD = 0x4457594B
+    # KSSM = 0x4D53534B
     LAND = 0x444E414C
-    LSCR = 0x5243534C
-    LVSP = 0x5053564C
-    LGTM = 0x4D54474C
-    LVLC = 0x434C564C
+    LCRT = 0x5452434C
+    LCTN = 0x4E54434C
     LEVC = 0x4356454C
-    LOCK = 0x4B434F4C
-    LENS = 0x534E454C
-    LSPR = 0x5250534C
     LEVI = 0x4956454C
-    LAYR = 0x5259414C
+    LGTM = 0x4D54474C
+    LIGH = 0x4847494C
+    LOCK = 0x4B434F4C
+    LSCR = 0x5243534C
+    LTEX = 0x5845544C
+    LVLC = 0x434C564C
+    LVLI = 0x494C564C
+    LVLN = 0x4E4C564C
+    LVSP = 0x5053564C
+    # LENS = 0x534E454C
+    # LSPR = 0x5250534C
+    # LAYR = 0x5259414C
+    MATO = 0x4F54414D
     MATT = 0x5454414D
-    MSTT = 0x5454534D
+    MESG = 0x4753454D
     MGEF = 0x4645474D
     MICN = 0x4E43494D
     MISC = 0x4353494D
-    MESG = 0x4753454D
-    MUSC = 0x4353554D
-    MUST = 0x5453554D
     MOVT = 0x54564F4D
-    MATO = 0x4F54414D
-    MSWP = 0x5057534D
-    NONE = 0x454E4F4E
-    NPC_ = 0x5F43504E
-    NOTE = 0x45544F4E
+    MSTT = 0x5454534D
+    MUSC = 0x4353554D
+    # MUST = 0x5453554D
+    # MSWP = 0x5057534D
     NAVI = 0x4956414E
     NAVM = 0x4D56414E
-    NOCM = 0x4D434F4E
+    NOTE = 0x45544F4E
+    NPC_ = 0x5F43504E
+    # NONE = 0x454E4F4E
+    # NOCM = 0x4D434F4E
     OTFT = 0x5446544F
-    OMOD = 0x444F4D4F
-    OVIS = 0x5349564F
-    PROJ = 0x4A4F5250
-    PMIS = 0x53494D50
-    PARW = 0x57524150
-    PGRE = 0x45524750
-    PBEA = 0x41454250
-    PFLA = 0x414C4650
-    PCON = 0x4E4F4350
-    PBAR = 0x52414250
-    PHZD = 0x445A4850
+    # OMOD = 0x444F4D4F
+    # OVIS = 0x5349564F
     PACK = 0x4B434150
     PERK = 0x4B524550
-    PKIN = 0x4E494B50
-    PROB = 0x424F5250
     PGRD = 0x44524750
-    PWAT = 0x54415750
+    PGRE = 0x45524750
+    PHZD = 0x445A4850
+    PROB = 0x424F5250
+    PROJ = 0x4A4F5250
+    # PMIS = 0x53494D50
+    # PARW = 0x57524150
+    # PBEA = 0x41454250
+    # PFLA = 0x414C4650
+    # PCON = 0x4E4F4350
+    # PBAR = 0x52414250
+    # PKIN = 0x4E494B50
+    # PWAT = 0x54415750
     QUST = 0x54535551
-    RFCT = 0x54434652
-    REGN = 0x4E474552
     RACE = 0x45434152
-    RADS = 0x53444152
     REFR = 0x52464552
-    RGDL = 0x4C444752
-    REVB = 0x42564552
-    ROAD = 0x44414F52
-    REPA = 0x41504552
-    RFGP = 0x50474652
+    REGN = 0x4E474552
     RELA = 0x414C4552
-    SPGD = 0x44475053
-    SLGM = 0x4D474C53
-    STAT = 0x54415453
-    SCOL = 0x4C4F4353
-    SOUN = 0x4E554F53
-    SKIL = 0x4C494B53
-    SCPT = 0x54504353
-    SPEL = 0x4C455053
-    SCRL = 0x4C524353
-    SMBN = 0x4E424D53
-    SMQN = 0x4E514D53
-    SMEN = 0x4E454D53
-    SHOU = 0x554F4853
+    REPA = 0x41504552
+    REVB = 0x42564552
+    RFCT = 0x54434652
+    ROAD = 0x44414F52
+    # RADS = 0x53444152
+    # RGDL = 0x4C444752
+    # RFGP = 0x50474652
     SBSP = 0x50534253
-    SNDR = 0x52444E53
+    SCEN = 0x4E454353
+    SCPT = 0x54504353
+    SCRL = 0x4C524353
+    SGST = 0x54534753
+    SHOU = 0x554F4853
+    SKIL = 0x4C494B53
+    SLGM = 0x4D474C53
+    SMBN = 0x4E424D53
+    SMEN = 0x4E454D53
+    SMNQ = 0x514E4D53
     SNCT = 0x54434E53
+    SNDG = 0x47444E53
+    SNDR = 0x52444E53
     SOPM = 0x4D504F53
-    SCCO = 0x4F434353
-    SCSN = 0x4E534353
+    SOUN = 0x4E554F53
+    SPEL = 0x4C455053
+    SPGD = 0x44475053
+    SSCR = 0x52435353
+    STAT = 0x54415453
     STDT = 0x54445453
     SUNP = 0x504E5553
-    STAG = 0x47415453
-    SGST = 0x54534753
-    SSCR = 0x52435353
-    SCEN = 0x4E454353
-    SNDG = 0x47444E53
-    TOFT = 0x54464F54
-    TERM = 0x4D524554
-    TREE = 0x45455254
-    TLOD = 0x444F4C54
+    # SCOL = 0x4C4F4353
+    # SMQN = 0x4E514D53
+    # SCCO = 0x4F434353
+    # SCSN = 0x4E534353
+    # STAG = 0x47415453
+    TACT = 0x54434154
     TES3 = 0x33534554
     TES4 = 0x34534554
     TES5 = 0x35534554
     TES6 = 0x36534554
+    TERM = 0x4D524554
     TMLM = 0x4D4C4D54
+    TREE = 0x45455254
     TRNS = 0x534E5254
     TXST = 0x54535854
-    TACT = 0x54434154
+    # TOFT = 0x54464F54
+    # TLOD = 0x444F4C54
     VTYP = 0x50595456
-    WRLD = 0x444C5257
-    WEAP = 0x50414557
-    WTHR = 0x52485457
     WATR = 0x52544157
+    WEAP = 0x50414557
     WOOP = 0x504F4F57
-    ZOOM = 0x4D4F4F5A
+    WRLD = 0x444C5257
+    WTHR = 0x52485457
+    # ZOOM = 0x4D4F4F5A
 
     @classmethod
     def _missing_(cls, value):
@@ -238,7 +240,6 @@ class FieldType(Enum):
     ATTR = 0x52545441
     ATXT = 0x54585441
     AVFX = 0x58465641
-
     BKDT = 0x54444B42
     BMDT = 0x54444D42
     BNAM = 0x4D414E42
@@ -252,7 +253,6 @@ class FieldType(Enum):
     BTXT = 0x54585442
     BVFX = 0x58465642
     BYDT = 0x54445942
-
     CIS2 = 0x32534943
     CITC = 0x43544943
     CLDT = 0x54444C43
@@ -271,7 +271,6 @@ class FieldType(Enum):
     CTDA = 0x41445443
     CTDT = 0x54445443
     CVFX = 0x58465643
-
     DATA = 0x41544144
     DELE = 0x454C4544
     DESC = 0x43534544
@@ -279,7 +278,6 @@ class FieldType(Enum):
     DFTM = 0x4D544644
     DNAM = 0x4D414E44
     DODT = 0x54444F44
-
     EDID = 0x44494445
     EFID = 0x44494645
     EFIT = 0x54494645
@@ -287,7 +285,6 @@ class FieldType(Enum):
     ENDT = 0x54444E45
     ENIT = 0x54494E45
     ESCE = 0x45435345
-
     FADT = 0x54444146
     FGGA = 0x41474746
     FGGS = 0x53474746
@@ -300,9 +297,7 @@ class FieldType(Enum):
     FTSF = 0x46535446
     FTSM = 0x4D535446
     FULL = 0x4C4C5546
-
     GNAM = 0x4D414E47
-
     HCLF = 0x464C4348
     HCLR = 0x524C4348
     HEAD = 0x44414548
@@ -310,7 +305,6 @@ class FieldType(Enum):
     HNAM = 0x4D414E48
     HSND = 0x444E5348
     HVFX = 0x58465648
-    
     ICON = 0x4E4F4349
     ICO2 = 0x324F4349
     INAM = 0x4D414E49
@@ -319,23 +313,19 @@ class FieldType(Enum):
     INTV = 0x56544E49
     IRDT = 0x54445249
     ITEX = 0x58455449
-    
     JAIL = 0x4C49414A
     JNAM = 0x4D414E4A
     JOUT = 0x54554F4A
-
     KFFZ = 0x5A46464B
     KNAM = 0x4D414E4B
     KSIZ = 0x5A49534B
     KWDA = 0x4144574B
-
     LHDT = 0x5444484C
     LKDT = 0x54444B4C
     LNAM = 0x4D414E4C
     LVLD = 0x444C564C
     LVLF = 0x464C564C
     LVLO = 0x4F4C564C
-
     MAST = 0x5453414D
     MCDT = 0x5444434D
     MEDT = 0x5444454D
@@ -359,7 +349,6 @@ class FieldType(Enum):
     MPAV = 0x5641504D
     MTNM = 0x4D4E544D
     MTYP = 0x5059544D
-
     NAM0 = 0x304D414E
     NAM1 = 0x314D414E
     NAM2 = 0x324D414E
@@ -376,11 +365,9 @@ class FieldType(Enum):
     NPCO = 0x4F43504E
     NPCS = 0x5343504E
     NPDT = 0x5444504E
-
     OBND = 0x444E424F
     OFST = 0x5453464F
     ONAM = 0x4D414E4F
-
     PBDT = 0x54444250
     PFIG = 0x47494650
     PFPC = 0x43504650
@@ -401,7 +388,6 @@ class FieldType(Enum):
     PSDT = 0x54445350
     PTDT = 0x54445450
     PTEX = 0x58455450
-
     QNAM = 0x4D414E51
     QSDT = 0x54445351
     QSTA = 0x41545351
@@ -409,7 +395,6 @@ class FieldType(Enum):
     QSTI = 0x49545351
     QSTN = 0x4E545351
     QSTR = 0x52545351
-    
     RADT = 0x54444152
     RAGA = 0x41474152
     RCLR = 0x524C4352
@@ -428,7 +413,6 @@ class FieldType(Enum):
     RPLI = 0x494C5052
     RPRF = 0x46525052
     RPRM = 0x4D525052
-
     SCDA = 0x41444353
     SCDT = 0x54444353
     SCHD = 0x44484353
@@ -457,7 +441,6 @@ class FieldType(Enum):
     STOL = 0x4C4F5453
     STRV = 0x56525453
     SWMV = 0x564D5753
-
     TCLF = 0x464C4354
     TCLT = 0x544C4354
     TEXT = 0x54584554
@@ -480,10 +463,8 @@ class FieldType(Enum):
     TX05 = 0x35305854
     TX06 = 0x36305854
     TX07 = 0x37305854
-
     UNAM = 0x4D414E55
     UNES = 0x53454E55
-
     VCLR = 0x524C4356
     VENC = 0x434E4556
     VEND = 0x444E4556
@@ -494,7 +475,6 @@ class FieldType(Enum):
     VTCK = 0x4B435456
     VTEX = 0x58455456
     VTXT = 0x54585456
-    
     WAIT = 0x54494157
     WEAT = 0x54414557
     WHGT = 0x54474857
@@ -502,7 +482,6 @@ class FieldType(Enum):
     WLST = 0x54534C57
     WNAM = 0x4D414E57
     WPDT = 0x54445057
-
     XACT = 0x54434158
     XCCM = 0x4D434358
     XCHG = 0x47484358
@@ -534,9 +513,7 @@ class FieldType(Enum):
     XTEL = 0x4C455458
     XTRG = 0x47525458
     XXXX = 0x58585858
-    
     YNAM = 0x4D414E59
-
     ZNAM = 0x4D414E5A
 
 class ActorValue(IntEnum):
@@ -564,109 +541,156 @@ class Reader(BinaryReader):
 
 class Record:
     _mapx: dict[FormType, callable] = {
-        FormType.TES3: lambda f: TES3Record(),
-        FormType.TES4: lambda f: TES4Record(),
-        # 0
-        FormType.LTEX: lambda f: LTEXRecord(),
-        FormType.STAT: lambda f: STATRecord(),
-        FormType.CELL: lambda f: CELLRecord(),
-        FormType.LAND: lambda f: LANDRecord(),
-        # 1
-        FormType.DOOR: lambda f: DOORRecord(),
-        FormType.MISC: lambda f: MISCRecord(),
-        FormType.WEAP: lambda f: WEAPRecord(),
-        FormType.CONT: lambda f: CONTRecord(),
-        FormType.LIGH: lambda f: LIGHRecord(),
-        FormType.ARMO: lambda f: ARMORecord(),
-        FormType.CLOT: lambda f: CLOTRecord(),
-        FormType.REPA: lambda f: REPARecord(),
-        FormType.ACTI: lambda f: ACTIRecord(),
-        FormType.APPA: lambda f: APPARecord(),
-        FormType.LOCK: lambda f: LOCKRecord(),
-        FormType.PROB: lambda f: PROBRecord(),
-        FormType.INGR: lambda f: INGRRecord(),
-        FormType.BOOK: lambda f: BOOKRecord(),
-        FormType.ALCH: lambda f: ALCHRecord(),
-        FormType.CREA: lambda f: CREA3Record() if f == FormType.TES3 else CREA4Record(),
-        FormType.NPC_: lambda f: NPC_3Record() if f == FormType.TES3 else NPC_4Record(),
-        # 2
-        FormType.GMST: lambda f: GMSTRecord(),
-        FormType.GLOB: lambda f: GLOBRecord(),
-        FormType.SOUN: lambda f: SOUNRecord(),
-        FormType.REGN: lambda f: REGNRecord(),
-        # 3
-        FormType.CLAS: lambda f: CLASRecord(),
-        FormType.SPEL: lambda f: SPELRecord(),
-        FormType.BODY: lambda f: BODYRecord(),
-        FormType.PGRD: lambda f: PGRDRecord(),
-        FormType.INFO: lambda f: INFO3Record() if f == FormType.TES3 else INFO4Record(),
-        FormType.DIAL: lambda f: DIALRecord(),
-        FormType.SNDG: lambda f: SNDGRecord(),
-        FormType.ENCH: lambda f: ENCHRecord(),
-        FormType.SCPT: lambda f: SCPTRecord(),
-        FormType.SKIL: lambda f: SKILRecord(),
-        FormType.RACE: lambda f: RACE3Record() if f == FormType.TES3 else RACE4Record() if f == FormType.TES4 else RACE5Record(),
-        FormType.MGEF: lambda f: MGEFRecord(),
-        FormType.LEVI: lambda f: LEVIRecord(),
-        FormType.LEVC: lambda f: LEVCRecord(),
-        FormType.BSGN: lambda f: BSGNRecord(),
-        FormType.FACT: lambda f: FACTRecord(),
-        FormType.SSCR: lambda f: SSCRRecord(),
-        # 4 - Oblivion                      ,
-        FormType.WRLD: lambda f: WRLDRecord(),
-        FormType.ACRE: lambda f: ACRERecord(),
+        FormType.AACT: lambda f: AACTRecord(),
         FormType.ACHR: lambda f: ACHRRecord(),
-        FormType.REFR: lambda f: REFRRecord(),
-        #                                   ,
+        FormType.ACRE: lambda f: ACRERecord(),
+        FormType.ACTI: lambda f: ACTIRecord(),
+        FormType.ADDN: lambda f: ADDNRecord(),
+        FormType.ALCH: lambda f: ALCHRecord(),
         FormType.AMMO: lambda f: AMMORecord(),
         FormType.ANIO: lambda f: ANIORecord(),
-        FormType.CLMT: lambda f: CLMTRecord(),
-        FormType.CSTY: lambda f: CSTYRecord(),
-        FormType.EFSH: lambda f: EFSHRecord(),
-        FormType.EYES: lambda f: EYESRecord(),
-        FormType.FLOR: lambda f: FLORRecord(),
-        FormType.FURN: lambda f: FURNRecord(),
-        FormType.GRAS: lambda f: GRASRecord(),
-        FormType.HAIR: lambda f: HAIRRecord(),
-        FormType.IDLE: lambda f: IDLERecord(),
-        FormType.KEYM: lambda f: KEYMRecord(),
-        FormType.LSCR: lambda f: LSCRRecord(),
-        FormType.LVLC: lambda f: LVLCRecord(),
-        FormType.LVLI: lambda f: LVLIRecord(),
-        FormType.LVSP: lambda f: LVSPRecord(),
-        FormType.PACK: lambda f: PACKRecord(),
-        FormType.QUST: lambda f: QUSTRecord(),
-        FormType.ROAD: lambda f: ROADRecord(),
-        FormType.SBSP: lambda f: SBSPRecord(),
-        FormType.SGST: lambda f: SGSTRecord(),
-        FormType.SLGM: lambda f: SLGMRecord(),
-        FormType.TREE: lambda f: TREERecord(),
-        FormType.WATR: lambda f: WATRRecord(),
-        FormType.WTHR: lambda f: WTHRRecord(),
-        # 5 - Skyrim
-        FormType.AACT: lambda f: AACTRecord(),
-        FormType.ADDN: lambda f: ADDNRecord(),
+        FormType.APPA: lambda f: APPARecord(),
         FormType.ARMA: lambda f: ARMARecord(),
+        FormType.ARMO: lambda f: ARMORecord(),
         FormType.ARTO: lambda f: ARTORecord(),
         FormType.ASPC: lambda f: ASPCRecord(),
         FormType.ASTP: lambda f: ASTPRecord(),
         FormType.AVIF: lambda f: AVIFRecord(),
+        FormType.BNDS: lambda f: BNDSRecord(),
+        FormType.BODY: lambda f: BODYRecord(),
+        FormType.BOIM: lambda f: BOIMRecord(),
+        FormType.BOOK: lambda f: BOOKRecord(),
+        FormType.BPTD: lambda f: BPTDRecord(),
+        FormType.BSGN: lambda f: BSGNRecord(),
+        FormType.CAMS: lambda f: CAMSRecord(),
+        FormType.CELL: lambda f: CELLRecord(),
+        FormType.CLAS: lambda f: CLASRecord(),
+        FormType.CLFM: lambda f: CLFMRecord(),
+        FormType.CLMT: lambda f: CLMTRecord(),
+        FormType.CLOT: lambda f: CLOTRecord(),
+        FormType.COBJ: lambda f: COBJRecord(),
+        FormType.COLL: lambda f: COLLRecord(),
+        FormType.CONT: lambda f: CONTRecord(),
+        FormType.CPTH: lambda f: CPTHRecord(),
+        FormType.CREA: lambda f: CREA3Record() if f == FormType.TES3 else CREA4Record(),
+        FormType.CSTY: lambda f: CSTYRecord(),
+        FormType.DEBR: lambda f: DEBRRecord(),
+        FormType.DIAL: lambda f: DIALRecord(),
         FormType.DLBR: lambda f: DLBRRecord(),
         FormType.DLVW: lambda f: DLVWRecord(),
-        FormType.SNDR: lambda f: SNDRRecord(),
-        # Unknown
-        FormType.BOIM: lambda f: BOIMRecord(),
-        FormType.BNDS: lambda f: BNDSRecord(),
+        FormType.DOBJ: lambda f: DOBJRecord(),
         FormType.DMGT: lambda f: DMGTRecord(),
+        FormType.DOOR: lambda f: DOORRecord(),
+        FormType.DUEL: lambda f: DUELRecord(),
+        FormType.ECZN: lambda f: ECZNRecord(),
+        FormType.EFSH: lambda f: EFSHRecord(),
+        FormType.ENCH: lambda f: ENCHRecord(),
+        FormType.EQUP: lambda f: EQUPRecord(),
+        FormType.EXPL: lambda f: EXPLRecord(),
+        FormType.EYES: lambda f: EYESRecord(),
+        FormType.FACT: lambda f: FACTRecord(),
+        FormType.FLOR: lambda f: FLORRecord(),
+        FormType.FLST: lambda f: FLSTRecord(),
+        FormType.FSTP: lambda f: FSTPRecord(),
+        FormType.FSTS: lambda f: FSTSRecord(),
+        FormType.FURN: lambda f: FURNRecord(),
+        FormType.GLOB: lambda f: GLOBRecord(),
+        FormType.GMST: lambda f: GMSTRecord(),
+        FormType.GRAS: lambda f: GRASRecord(),
+        FormType.GRUP: lambda f: GRUPRecord(),
+        FormType.HAIR: lambda f: HAIRRecord(),
+        FormType.HAZD: lambda f: HAZDRecord(),
+        FormType.HDPT: lambda f: HDPTRecord(),
+        FormType.IDLE: lambda f: IDLERecord(),
+        FormType.IDLM: lambda f: IDLMRecord(),
+        FormType.IMAD: lambda f: IMADRecord(),
+        FormType.IMGS: lambda f: IMGSRecord(),
+        FormType.INFO: lambda f: INFO3Record() if f == FormType.TES3 else INFO4Record(),
+        FormType.INGR: lambda f: INGRRecord(),
+        FormType.IPCT: lambda f: IPCTRecord(),
+        FormType.IPDS: lambda f: IPDSRecord(),
+        FormType.KEYM: lambda f: KEYMRecord(),
+        FormType.KYWD: lambda f: KYWDRecord(),
+        FormType.LAND: lambda f: LANDRecord(),
+        FormType.LCRT: lambda f: LCRTRecord(),
+        FormType.LCTN: lambda f: LCTNRecord(),
+        FormType.LEVC: lambda f: LEVCRecord(),
+        FormType.LEVI: lambda f: LEVIRecord(),
+        FormType.LGTM: lambda f: LGTMRecord(),
+        FormType.LIGH: lambda f: LIGHRecord(),
+        FormType.LOCK: lambda f: LOCKRecord(),
+        FormType.LSCR: lambda f: LSCRRecord(),
+        FormType.LTEX: lambda f: LTEXRecord(),
+        FormType.LVLC: lambda f: LVLCRecord(),
+        FormType.LVLI: lambda f: LVLIRecord(),
+        FormType.LVLN: lambda f: LVLNRecord(),
+        FormType.LVSP: lambda f: LVSPRecord(),
+        FormType.MATO: lambda f: MATORecord(),
+        FormType.MATT: lambda f: MATTRecord(),
+        FormType.MESG: lambda f: MESGRecord(),
+        FormType.MGEF: lambda f: MGEFRecord(),
+        FormType.MICN: lambda f: MICNRecord(),
+        FormType.MISC: lambda f: MISCRecord(),
+        FormType.MOVT: lambda f: MOVTRecord(),
+        FormType.MSTT: lambda f: MSTTRecord(),
+        FormType.MUSC: lambda f: MUSCRecord(),
+        FormType.NAVI: lambda f: NAVIRecord(),
+        FormType.NAVM: lambda f: NAVMRecord(),
+        FormType.NOTE: lambda f: NOTERecord(),
+        FormType.NPC_: lambda f: NPC_3Record() if f == FormType.TES3 else NPC_4Record(),
+        FormType.OTFT: lambda f: OTFTRecord(),
+        FormType.PACK: lambda f: PACKRecord(),
+        FormType.PERK: lambda f: PERKRecord(),
+        FormType.PGRD: lambda f: PGRDRecord(),
+        FormType.PGRE: lambda f: PGRERecord(),
+        FormType.PHZD: lambda f: PHZDRecord(),
+        FormType.PROB: lambda f: PROBRecord(),
+        FormType.PROJ: lambda f: PROJRecord(),
+        FormType.QUST: lambda f: QUSTRecord(),
+        FormType.RACE: lambda f: RACE3Record() if f == FormType.TES3 else RACE4Record() if f == FormType.TES4 else RACE5Record(),
+        FormType.REFR: lambda f: REFRRecord(),
+        FormType.REGN: lambda f: REGNRecord(),
+        FormType.RELA: lambda f: RELARecord(),
+        FormType.REPA: lambda f: REPARecord(),
+        FormType.REVB: lambda f: REVBRecord(),
+        FormType.RFCT: lambda f: RFCTRecord(),
+        FormType.ROAD: lambda f: ROADRecord(),
+        FormType.SBSP: lambda f: SBSPRecord(),
+        FormType.SCEN: lambda f: SCENRecord(),
+        FormType.SCPT: lambda f: SCPTRecord(),
+        FormType.SCRL: lambda f: SCRLRecord(),
+        FormType.SGST: lambda f: SGSTRecord(),
+        FormType.SHOU: lambda f: SHOURecord(),
+        FormType.SKIL: lambda f: SKILRecord(),
+        FormType.SLGM: lambda f: SLGMRecord(),
+        FormType.SMBN: lambda f: SMBNRecord(),
+        FormType.SMEN: lambda f: SMENRecord(),
+        FormType.SMNQ: lambda f: SMNQRecord(),
+        FormType.SNCT: lambda f: SNCTRecord(),
+        FormType.SNDG: lambda f: SNDGRecord(),
+        FormType.SNDR: lambda f: SNDRRecord(),
+        FormType.SOPM: lambda f: SOPMRecord(),
+        FormType.SOUN: lambda f: SOUNRecord(),
+        FormType.SPEL: lambda f: SPELRecord(),
+        FormType.SPGD: lambda f: SPGDRecord(),
+        FormType.SSCR: lambda f: SSCRRecord(),
+        FormType.STAT: lambda f: STATRecord(),
+        FormType.STDT: lambda f: STDTRecord(),
+        FormType.SUNP: lambda f: SUNPRecord(),
+        FormType.TACT: lambda f: TACTRecord(),
+        FormType.TES3: lambda f: TES3Record(),
+        FormType.TES4: lambda f: TES4Record(),
+        FormType.TERM: lambda f: TERMRecord(),
+        FormType.TMLM: lambda f: TMLMRecord(),
+        FormType.TREE: lambda f: TREERecord(),
         FormType.TRNS: lambda f: TRNSRecord(),
         FormType.TXST: lambda f: TXSTRecord(),
-        #
-        FormType.KYWD: lambda f: KYWDRecord(),
-        FormType.LCRT: lambda f: LCRTRecord(),
-        FormType.FLST: lambda f: FLSTRecord(),
-        FormType.OTFT: lambda f: OTFTRecord(),
-        FormType.HDPT: lambda f: HDPTRecord(),
-        FormType.MICN: lambda f: MICNRecord(),
+        FormType.VTYP: lambda f: VTYPRecord(),
+        FormType.WATR: lambda f: WATRRecord(),
+        FormType.WEAP: lambda f: WEAPRecord(),
+        FormType.WOOP: lambda f: WOOPRecord(),
+        FormType.WRLD: lambda f: WRLDRecord(),
+        FormType.WTHR: lambda f: WTHRRecord(),
     }
     _cellsLoaded: int = 0
     @staticmethod
@@ -1011,7 +1035,7 @@ class ACHRRecord(Record):
     XPCI: RefX['CELLRecord'] = None # Unused (optional)
     XLOD: bytes = None # Distant LOD Data (optional)
     XMRC: RefX['REFRRecord'] = None # Merchant Container (optional)
-    XHRS: RefX[ACRERecord] = None # Horse (optional)
+    XHRS: RefX['ACRERecord'] = None # Horse (optional)
     XSCL: float = None # Scale (optional)
     def __init__(self): super().__init__()
 
@@ -1409,9 +1433,9 @@ class ARTORecord(Record):
 # ASPC.Acoustic Space - 0050 - tag::ASPC[]
 class ASPCRecord(Record):
     OBND: Obnd # Object Bounds
-    SNAM: Ref[SNDRRecord] # Ambient
-    RDAT: Ref[REGNRecord] # Region Data
-    BNAM: Ref[REVBRecord] # Reverb
+    SNAM: Ref['SNDRRecord'] # Ambient
+    RDAT: Ref['REGNRecord'] # Region Data
+    BNAM: Ref['REVBRecord'] # Reverb
     def __init__(self): super().__init__()
 
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
@@ -1602,12 +1626,12 @@ class BPTDRecord(Record):
             self.flags = BPTDRecord.Bpnd.Flag(self.flags)
             self.partType = BPTDRecord.Bpnd.PartType_(self.partType)
             self.actorValue = ActorValue(self.actorValue)
-            self.explodable_Debris = Ref[Record](self.explodable_Debris)
-            self.explodable_Explosion = Ref[Record](self.explodable_Explosion)
-            self.severable_Debris = Ref[Record](self.severable_Debris)
-            self.severable_Explosion = Ref[Record](self.severable_Explosion)
-            self.severable_ImpactDataSet = Ref[Record](self.severable_ImpactDataSet)
-            self.explodable_ImpactDataSet = Ref[Record](self.explodable_ImpactDataSet)
+            self.explodable_Debris = Ref[DEBRRecord](self.explodable_Debris)
+            self.explodable_Explosion = Ref[EXPLRecord](self.explodable_Explosion)
+            self.severable_Debris = Ref[DEBRRecord](self.severable_Debris)
+            self.severable_Explosion = Ref[EXPLRecord](self.severable_Explosion)
+            self.severable_ImpactDataSet = Ref[IPDSRecord](self.severable_ImpactDataSet)
+            self.explodable_ImpactDataSet = Ref[IPDSRecord](self.explodable_ImpactDataSet)
 
     MODL: Modl # Model
     BPTN: str # Body part name
@@ -1618,7 +1642,7 @@ class BPTDRecord(Record):
     NAM1: str # Limb Replacement Model
     NAM4: str # Gore Effects
     NAM5: str # Hashes
-    RAGA: Ref[Record] # Hashes //TODO RGDLRecord
+    RAGA: Ref[Record] # Hashes TODO RGDLRecord
 
     def __init__(self): super().__init__()
 
@@ -1630,7 +1654,7 @@ class BPTDRecord(Record):
             case FieldType.BPNN: z = self.BPNN = r.readFUString(dataSize)
             case FieldType.BPNT: z = self.BPNT = r.readFUString(dataSize)
             case FieldType.BPNI: z = self.BPNI = r.readFUString(dataSize)
-            case FieldType.BPND: z = self.BPND = r.readS(BPTDRecord,Bpnd, dataSize)
+            case FieldType.BPND: z = self.BPND = r.readS(Bpnd, dataSize)
             case FieldType.NAM1: z = self.NAM1 = r.readFUString(dataSize)
             case FieldType.NAM4: z = self.NAM4 = r.readFUString(dataSize)
             case FieldType.NAM5: z = self.NAM5 = r.readFUString(dataSize)
@@ -2930,8 +2954,8 @@ class EQUPRecord(Record):
         return z
 # end::EQUP[]
 
-# EXLP.Explosion - 0050 - tag::EXLP[]
-class EXLPRecord(Record):
+# EXPL.Explosion - 0050 - tag::EXPL[]
+class EXPLRecord(Record):
     def __init__(self): super().__init__()
 
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
@@ -2939,7 +2963,7 @@ class EXLPRecord(Record):
             case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
             case _: z = Record._empty
         return z
-# end::EXLP[]
+# end::EXPL[]
 
 # EYES.Eyes - 0450 - tag::EYES[]
 class EYESRecord(Record):
@@ -3395,7 +3419,7 @@ class IDLERecord(Record, IHaveMODL):
 # end::IDLE[]
 
 # IDLM.Idle Marker - 0050 - tag::IDLM[]
-class HAZDRecord(Record):
+class IDLMRecord(Record):
     def __init__(self): super().__init__()
 
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
@@ -4023,7 +4047,7 @@ class LVLCRecord(Record):
         return z
 # end::LVLC[]
 
-# LVLI.Leveled Item - 0400 - tag::LVLI[]
+# LVLI.Leveled Item - 0450 - tag::LVLI[]
 class LVLIRecord(Record):
     class Lvlo:
         level: int
@@ -4262,7 +4286,7 @@ class MGEFRecord(Record):
         return z
 # end::MGEF[]
 
-# MICN.Menu Icon - 0050 - tag::MICN[]
+# MICN.Menu Icon - 0400 - tag::MICN[]
 class MICNRecord(Record):
     ICON: str # Large icon filename
     MICO: str # Small icon filename
@@ -4618,20 +4642,6 @@ class PERKRecord(Record):
         return z
 # end::PERK[]
 
-# PGRE.Placed grenade - 0050 - tag::PGRE[]
-class PGRERecord(Record):
-    def __init__(self): super().__init__()
-
-    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
-        match type:
-            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
-            case _: z = Record._empty
-        return z
-# end::PGRE[]
-
-
-
-
 # PGRD.Path grid - 3400 - tag::PGRD[]
 class PGRDRecord(Record):
     class Data:
@@ -4699,6 +4709,28 @@ class PGRDRecord(Record):
         return z
 # end::PGRD[]
 
+# PGRE.Placed grenade - 0050 - tag::PGRE[]
+class PGRERecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::PGRE[]
+
+# PHZD.Placed hazard - 000S0 - tag::PHZD[]
+class PHZDRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::PHZD[]
+
 # PROB.Probe - 3000 - tag::PROB[]
 class PROBRecord(Record, IHaveMODL):
     class Pbdt:
@@ -4728,6 +4760,17 @@ class PROBRecord(Record, IHaveMODL):
             return z
         return None
 # end::PROB[]
+
+# PROJ.Projectile - 000S0 - tag::PROJ[]
+class PROJRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::PROJ[]
 
 # QUST.Quest - 0450 - tag::QUST[]
 class QUSTRecord(Record):
@@ -5040,36 +5083,6 @@ class RACE5Record(RACERecord):
         return z
 # end::RACE5[]
 
-# REPA.Repair Item - 3000 - tag::REPA[]
-class REPARecord(Record, IHaveMODL):
-    class Ridt:
-        _struct = ('<f2if', 16)
-        def __init__(self, t):
-            (self.weight,
-            self.value,
-            self.uses,
-            self.quality) = t
-
-    MODL: Modl # Model Name
-    FNAM: str # Item Name
-    RIDT: Ridt # Repair Data
-    SCRI: RefX['SCPTRecord'] # Script Name
-    def __init__(self): super().__init__()
-
-    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
-        if r.format == FormType.TES3:
-            match type:
-                case FieldType.NAME: z = self.EDID = r.readFUString(dataSize)
-                case FieldType.MODL: z = self.MODL = Modl(r, dataSize)
-                case FieldType.ITEX: z = self.MODL.ICON(r, dataSize)
-                case FieldType.FNAM: z = self.FNAM = r.readFUString(dataSize)
-                case FieldType.RIDT: z = self.RIDT = r.readS(REPARecord.Ridt, dataSize)
-                case FieldType.SCRI: z = self.SCRI = RefX[SCPTRecord](SCPTRecord, r, dataSize)
-                case _: z = Record._empty
-            return z
-        return None
-# end::REPA[]
-
 # REFR.Placed Object - 0450 - tag::REFR[]
 class REFRRecord(Record):
     # Teleport Destination
@@ -5337,8 +5350,65 @@ class REGNRecord(Record):
         return z
 # end::REGN[]
 
+# RELA.Relationship - 000S0 - tag::RELA[]
+class RELARecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::RELA[]
+
+# REPA.Repair Item - 3000 - tag::REPA[]
+class REPARecord(Record, IHaveMODL):
+    class Ridt:
+        _struct = ('<f2if', 16)
+        def __init__(self, t):
+            (self.weight,
+            self.value,
+            self.uses,
+            self.quality) = t
+
+    MODL: Modl # Model Name
+    FNAM: str # Item Name
+    RIDT: Ridt # Repair Data
+    SCRI: RefX['SCPTRecord'] # Script Name
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        if r.format == FormType.TES3:
+            match type:
+                case FieldType.NAME: z = self.EDID = r.readFUString(dataSize)
+                case FieldType.MODL: z = self.MODL = Modl(r, dataSize)
+                case FieldType.ITEX: z = self.MODL.ICON(r, dataSize)
+                case FieldType.FNAM: z = self.FNAM = r.readFUString(dataSize)
+                case FieldType.RIDT: z = self.RIDT = r.readS(REPARecord.Ridt, dataSize)
+                case FieldType.SCRI: z = self.SCRI = RefX[SCPTRecord](SCPTRecord, r, dataSize)
+                case _: z = Record._empty
+            return z
+        return None
+# end::REPA[]
+
 # REVB.Reverb Parameters - 0050 - tag::REVB[]
 class REVBRecord(Record):
+    class Data:
+        _struct = ('<2H4b6B', 14)
+        def __init__(self, t):
+            (self.decayTime, # milliseconds
+            self.hfReference, # Hertz
+            self.roomFilter,
+            self.roomHFFilter,
+            self.reflections,
+            self.reverbAmp,
+            self.decayHFRatio, # x100, real value is actually one hundreth of that, e.g. a value of 123 means 1.23
+            self.scaledReflectDelay, # scaled by approx. 0.83 - value 0x00 maps to 0, 0xF9 maps to 300
+            self.reverbDelay, # milliseconds
+            self.diffusion, # %
+            self.densitiy, # %
+            self.unknown) = t # seems to be zero in most cases, probably unused?
+
     DATA: Data # Data
     def __init__(self): super().__init__()
 
@@ -5349,6 +5419,17 @@ class REVBRecord(Record):
             case _: z = Record._empty
         return z
 # end::REVB[]
+
+# RFCT.Visual Effect - 000S0 - tag::RFCT[]
+class RFCTRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::RFCT[]
 
 # ROAD.Road - 0400 - tag::ROAD[]
 class ROADRecord(Record):
@@ -5383,6 +5464,17 @@ class SBSPRecord(Record):
             case _: z = Record._empty
         return z
 # end::SBSP[]
+
+# SCEN.Scene - 000S0 - tag::SCEN[]
+class SCENRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::SCEN[]
 
 # SCPT.Script - 3400 - tag::SCPT[]
 class SCPTRecord(Record):
@@ -5498,6 +5590,17 @@ class SCPTRecord(Record):
         return z
 # end::SCPT[]
 
+# SCRL.Scroll - 000S0 - tag::SCRL[]
+class SCRLRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::SCRL[]
+
 # SGST.Sigil Stone - 0400 - tag::SGST[]
 class SGSTRecord(Record, IHaveMODL):
     class Data:
@@ -5531,6 +5634,17 @@ class SGSTRecord(Record, IHaveMODL):
             case _: z = Record._empty
         return z
 # end::SGST[]
+
+# SHOU.Shout - 000S0 - tag::SHOU[]
+class SHOURecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::SHOU[]
 
 # SKIL.Skill - 3450 - tag::SKIL[]
 class SKILRecord(Record):
@@ -5600,6 +5714,50 @@ class SLGMRecord(Record, IHaveMODL):
         return z
 # end::SLGM[]
 
+# SMBN.Story Manager Branch Node - 000S0 - tag::SMBN[]
+class SMBNRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::SMBN[]
+
+# SMEN.Story Manager Event Node - 000S0 - tag::SMEN[]
+class SMENRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::SMEN[]
+
+# SMNQ.Story Manager Quest Node - 000S0 - tag::SMNQ[]
+class SMNQRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::SMNQ[]
+
+# SNCT.Sound Category - 000S0 - tag::SNCT[]
+class SNCTRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::SNCT[]
+
 # SNDG.Sound Generator - 3000 - tag::SNDG[]
 class SNDGRecord(Record):
     class SNDGType(Enum): LeftFoot = 0; RightFoot = 1; SwimLeft = 2; SwimRight = 3; Moan = 4; Roar = 5; Scream = 6; Land = 7
@@ -5632,6 +5790,17 @@ class SNDRRecord(Record):
             case _: z = Record._empty
         return z
 # end::SNDR[]
+
+# SOPM.Sound Output Model - 000S0 - tag::SOPM[]
+class SOPMRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::SOPM[]
 
 # SOUN.Sound - 3450 - tag::SOUN[]
 class SOUNRecord(Record):
@@ -5766,6 +5935,17 @@ class SPELRecord(Record):
         return z
 # end::SPEL[]
 
+# SPGD.Shader Particle Geometry - 000S0 - tag::SPGD[]
+class SPGDRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::SPGD[]
+
 # SSCR.Start Script - 3000 - tag::XXXX[]
 class SSCRRecord(Record):
     DATA: str # Digits
@@ -5817,6 +5997,17 @@ class SUNPRecord(Record):
             case _: z = Record._empty
         return z
 # end::SUNP[]
+
+# TACT.Talking Activator - 000S0 - tag::TACT[]
+class TACTRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::TACT[]
 
 # TES3.Plugin Info - 3000 - tag::TES3[]
 class TES3Record(Record):
@@ -6021,6 +6212,17 @@ class TXSTRecord(Record):
         return z
 # end::TXST[]
 
+# VTYP.Voice Type - 000S0 - tag::VTYP[]
+class VTYPRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::VTYP[]
+
 # WATR.Water Type - 0450 - tag::WATR[]
 class WATRRecord(Record):
     class Data:
@@ -6186,6 +6388,17 @@ class WEAPRecord(Record, IHaveMODL):
         return z
 # end::WEAP[]
 
+# WOOP.Word Of Power - 000S0 - tag::WOOP[]
+class WOOPRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::WOOP[]
+
 # WRLD.Worldspace - 0450 - tag::WRLD[]
 class WRLDRecord(Record):
     class Mnam:
@@ -6330,10 +6543,6 @@ class WTHRRecord(Record, IHaveMODL):
             case _: z = Record._empty
         return z
 # end::WTHR[]
-
-#endregion
-
-#region Backfill
 
 CONTRecord.SNAM = RefX[SOUNRecord](SOUNRecord)
 CONTRecord.QNAM = RefX[SOUNRecord](SOUNRecord)

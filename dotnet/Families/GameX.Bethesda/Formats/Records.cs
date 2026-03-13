@@ -16,199 +16,200 @@ using static System.IO.Polyfill;
 namespace GameX.Bethesda.Formats.Records;
 
 #region Enums
+// $"0x{BitConverter.ToUInt32(Encoding.ASCII.GetBytes("FULL")):X}" : Encoding.ASCII.GetString(BitConverter.GetBytes(0x53424341))
 
 public enum FormType : uint {
+    AACT = 0x54434141,
+    ACHR = 0x52484341,
+    ACRE = 0x45524341,
+    ACTI = 0x49544341,
+    ADDN = 0x4E444441,
+    ALCH = 0x48434C41,
+    AMMO = 0x4F4D4D41,
+    ANIO = 0x4F494E41,
     APPA = 0x41505041,
     ARMA = 0x414D5241,
-    AACT = 0x54434141,
-    ASPC = 0x43505341,
-    ACTI = 0x49544341,
     ARMO = 0x4F4D5241,
-    AMMO = 0x4F4D4D41,
-    ASTP = 0x50545341,
     ARTO = 0x4F545241,
-    AMDL = 0x4C444D41,
-    AECH = 0x48434541,
-    ACRE = 0x45524341,
-    AORU = 0x55524F41,
-    ALCH = 0x48434C41,
-    ACHR = 0x52484341,
-    ANIO = 0x4F494E41,
+    ASPC = 0x43505341,
+    ASTP = 0x50545341,
     AVIF = 0x46495641,
-    ADDN = 0x4E444441,
+    //AMDL = 0x4C444D41,
+    //AECH = 0x48434541,
+    //AORU = 0x55524F41,
+    BNDS = 0x53444E42,
+    BODY = 0x59444F42,
     BOIM = 0x4D494F42,
     BOOK = 0x4B4F4F42,
-    BSGN = 0x4E475342,
-    BODY = 0x59444F42,
-    BNDS = 0x53444E42,
     BPTD = 0x44545042,
-    CMPO = 0x4F504D43,
-    CLAS = 0x53414C43,
-    CSTY = 0x59545343,
-    CONT = 0x544E4F43,
-    CLMT = 0x544D4C43,
-    CELL = 0x4C4C4543,
+    BSGN = 0x4E475342,
     CAMS = 0x534D4143,
-    CPTH = 0x48545043,
-    CREA = 0x41455243,
+    CELL = 0x4C4C4543,
+    CLAS = 0x53414C43,
     CLFM = 0x4D464C43,
-    COLL = 0x4C4C4F43,
+    CLMT = 0x544D4C43,
     CLOT = 0x544F4C43,
     COBJ = 0x4A424F43,
+    COLL = 0x4C4C4F43,
+    CONT = 0x544E4F43,
+    CPTH = 0x48545043,
+    CREA = 0x41455243,
+    CSTY = 0x59545343,
+    //CMPO = 0x4F504D43,
+    DEBR = 0x52424544,
+    DIAL = 0x4C414944,
+    DLBR = 0x52424C44,
+    DLVW = 0x57564C44,
+    DOBJ = 0x4A424F44,
     DMGT = 0x54474D44,
     DOOR = 0x524F4F44,
-    DOBJ = 0x4A424F44,
-    DFOB = 0x424F4644,
-    DUAL = 0x4C415544,
-    DLBR = 0x52424C44,
-    DEBR = 0x52424544,
-    DLVW = 0x57564C44,
-    DIAL = 0x4C414944,
-    EQUP = 0x50555145,
-    EYES = 0x53455945,
-    EFSH = 0x48534645,
+    DUEL = 0x4C455544,
+    //DFOB = 0x424F4644,
+    //DUAL = 0x4C415544,
     ECZN = 0x4E5A4345,
-    EXPL = 0x4C505845,
+    EFSH = 0x48534645,
     ENCH = 0x48434E45,
+    EQUP = 0x50555145,
+    EXPL = 0x4C505845,
+    EYES = 0x53455945,
     FACT = 0x54434146,
-    FURN = 0x4E525546,
     FLOR = 0x524F4C46,
+    FLST = 0x54534C46,
     FSTP = 0x50545346,
     FSTS = 0x53545346,
-    FLST = 0x54534C46,
-    GRUP = 0x50555247,
-    GMST = 0x54534D47,
+    FURN = 0x4E525546,
     GLOB = 0x424F4C47,
+    GMST = 0x54534D47,
     GRAS = 0x53415247,
-    GDRY = 0x59524447,
+    GRUP = 0x50555247,
+    //GDRY = 0x59524447,
+    HAIR = 0x52494148,
     HAZD = 0x445A4148,
     HDPT = 0x54504448,
-    HAIR = 0x52494148,
-    INGR = 0x52474E49,
-    IDLM = 0x4D4C4449,
-    INFO = 0x4F464E49,
     IDLE = 0x454C4449,
+    IDLM = 0x4D4C4449,
+    IMAD = 0x44414D49,
+    IMGS = 0x53474D49,
+    INFO = 0x4F464E49,
+    INGR = 0x52474E49,
     IPCT = 0x54435049,
     IPDS = 0x53445049,
-    IMGS = 0x53474D49,
-    IMAD = 0x44414D49,
-    INNR = 0x524E4E49,
-    KYWD = 0x4457594B,
+    //INNR = 0x524E4E49,
     KEYM = 0x4D59454B,
-    KSSM = 0x4D53534B,
-    LIGH = 0x4847494C,
-    LCTN = 0x4E54434C,
-    LCRT = 0x5452434C,
-    LTEX = 0x5845544C,
-    LVLN = 0x4E4C564C,
-    LVLI = 0x494C564C,
+    KYWD = 0x4457594B,
+    //KSSM = 0x4D53534B,
     LAND = 0x444E414C,
-    LSCR = 0x5243534C,
-    LVSP = 0x5053564C,
-    LGTM = 0x4D54474C,
-    LVLC = 0x434C564C,
+    LCRT = 0x5452434C,
+    LCTN = 0x4E54434C,
     LEVC = 0x4356454C,
-    LOCK = 0x4B434F4C,
-    LENS = 0x534E454C,
-    LSPR = 0x5250534C,
     LEVI = 0x4956454C,
-    LAYR = 0x5259414C,
+    LGTM = 0x4D54474C,
+    LIGH = 0x4847494C,
+    LOCK = 0x4B434F4C,
+    LSCR = 0x5243534C,
+    LTEX = 0x5845544C,
+    LVLC = 0x434C564C,
+    LVLI = 0x494C564C,
+    LVLN = 0x4E4C564C,
+    LVSP = 0x5053564C,
+    //LENS = 0x534E454C,
+    //LSPR = 0x5250534C,
+    //LAYR = 0x5259414C,
+    MATO = 0x4F54414D,
     MATT = 0x5454414D,
-    MSTT = 0x5454534D,
+    MESG = 0x4753454D,
     MGEF = 0x4645474D,
     MICN = 0x4E43494D,
     MISC = 0x4353494D,
-    MESG = 0x4753454D,
-    MUSC = 0x4353554D,
-    MUST = 0x5453554D,
     MOVT = 0x54564F4D,
-    MATO = 0x4F54414D,
-    MSWP = 0x5057534D,
-    NONE = 0x454E4F4E,
-    NPC_ = 0x5F43504E,
-    NOTE = 0x45544F4E,
+    MSTT = 0x5454534D,
+    MUSC = 0x4353554D,
+    //MUST = 0x5453554D,
+    //MSWP = 0x5057534D,
     NAVI = 0x4956414E,
     NAVM = 0x4D56414E,
-    NOCM = 0x4D434F4E,
+    NOTE = 0x45544F4E,
+    NPC_ = 0x5F43504E,
+    //NONE = 0x454E4F4E,
+    //NOCM = 0x4D434F4E,
     OTFT = 0x5446544F,
-    OMOD = 0x444F4D4F,
-    OVIS = 0x5349564F,
-    PROJ = 0x4A4F5250,
-    PMIS = 0x53494D50,
-    PARW = 0x57524150,
-    PGRE = 0x45524750,
-    PBEA = 0x41454250,
-    PFLA = 0x414C4650,
-    PCON = 0x4E4F4350,
-    PBAR = 0x52414250,
-    PHZD = 0x445A4850,
+    //OMOD = 0x444F4D4F,
+    //OVIS = 0x5349564F,
     PACK = 0x4B434150,
     PERK = 0x4B524550,
-    PKIN = 0x4E494B50,
-    PROB = 0x424F5250,
     PGRD = 0x44524750,
-    PWAT = 0x54415750,
+    PGRE = 0x45524750,
+    PHZD = 0x445A4850,
+    PROB = 0x424F5250,
+    PROJ = 0x4A4F5250,
+    //PMIS = 0x53494D50,
+    //PARW = 0x57524150,
+    //PBEA = 0x41454250,
+    //PFLA = 0x414C4650,
+    //PCON = 0x4E4F4350,
+    //PBAR = 0x52414250,
+    //PKIN = 0x4E494B50,
+    //PWAT = 0x54415750,
     QUST = 0x54535551,
-    RFCT = 0x54434652,
-    REGN = 0x4E474552,
     RACE = 0x45434152,
-    RADS = 0x53444152,
     REFR = 0x52464552,
-    RGDL = 0x4C444752,
-    REVB = 0x42564552,
-    ROAD = 0x44414F52,
-    REPA = 0x41504552,
-    RFGP = 0x50474652,
+    REGN = 0x4E474552,
     RELA = 0x414C4552,
-    SPGD = 0x44475053,
-    SLGM = 0x4D474C53,
-    STAT = 0x54415453,
-    SCOL = 0x4C4F4353,
-    SOUN = 0x4E554F53,
-    SKIL = 0x4C494B53,
-    SCPT = 0x54504353,
-    SPEL = 0x4C455053,
-    SCRL = 0x4C524353,
-    SMBN = 0x4E424D53,
-    SMQN = 0x4E514D53,
-    SMEN = 0x4E454D53,
-    SHOU = 0x554F4853,
+    REPA = 0x41504552,
+    REVB = 0x42564552,
+    RFCT = 0x54434652,
+    ROAD = 0x44414F52,
+    //RADS = 0x53444152,
+    //RGDL = 0x4C444752,
+    //RFGP = 0x50474652,
     SBSP = 0x50534253,
-    SNDR = 0x52444E53,
+    SCEN = 0x4E454353,
+    SCPT = 0x54504353,
+    SCRL = 0x4C524353,
+    SGST = 0x54534753,
+    SHOU = 0x554F4853,
+    SKIL = 0x4C494B53,
+    SLGM = 0x4D474C53,
+    SMBN = 0x4E424D53,
+    SMEN = 0x4E454D53,
+    SMNQ = 0x514E4D53,
     SNCT = 0x54434E53,
+    SNDG = 0x47444E53,
+    SNDR = 0x52444E53,
     SOPM = 0x4D504F53,
-    SCCO = 0x4F434353,
-    SCSN = 0x4E534353,
+    SOUN = 0x4E554F53,
+    SPEL = 0x4C455053,
+    SPGD = 0x44475053,
+    SSCR = 0x52435353,
+    STAT = 0x54415453,
     STDT = 0x54445453,
     SUNP = 0x504E5553,
-    STAG = 0x47415453,
-    SGST = 0x54534753,
-    SSCR = 0x52435353,
-    SCEN = 0x4E454353,
-    SNDG = 0x47444E53,
-    TOFT = 0x54464F54,
-    TERM = 0x4D524554,
-    TREE = 0x45455254,
-    TLOD = 0x444F4C54,
+    //SCOL = 0x4C4F4353,
+    //SMQN = 0x4E514D53,
+    //SCCO = 0x4F434353,
+    //SCSN = 0x4E534353,
+    //STAG = 0x47415453,
+    TACT = 0x54434154,
     TES3 = 0x33534554,
     TES4 = 0x34534554,
     TES5 = 0x35534554,
     TES6 = 0x36534554,
+    TERM = 0x4D524554,
     TMLM = 0x4D4C4D54,
+    TREE = 0x45455254,
     TRNS = 0x534E5254,
     TXST = 0x54535854,
-    TACT = 0x54434154,
+    //TOFT = 0x54464F54,
+    //TLOD = 0x444F4C54,
     VTYP = 0x50595456,
-    WRLD = 0x444C5257,
-    WEAP = 0x50414557,
-    WTHR = 0x52485457,
     WATR = 0x52544157,
+    WEAP = 0x50414557,
     WOOP = 0x504F4F57,
-    ZOOM = 0x4D4F4F5A,
+    WRLD = 0x444C5257,
+    WTHR = 0x52485457,
+    //ZOOM = 0x4D4F4F5A,
 }
 
-// $"0x{BitConverter.ToUInt32(Encoding.ASCII.GetBytes("FULL")):X}"
-// Encoding.ASCII.GetString(BitConverter.GetBytes(0x53424341))
 public enum FieldType : uint {
     AADT = 0x54444141,
     ACBS = 0x53424341,
@@ -230,7 +231,6 @@ public enum FieldType : uint {
     ATTR = 0x52545441,
     ATXT = 0x54585441,
     AVFX = 0x58465641,
-
     BKDT = 0x54444B42,
     BMDT = 0x54444D42,
     BNAM = 0x4D414E42,
@@ -244,7 +244,6 @@ public enum FieldType : uint {
     BTXT = 0x54585442,
     BVFX = 0x58465642,
     BYDT = 0x54445942,
-
     CIS2 = 0x32534943,
     CITC = 0x43544943,
     CLDT = 0x54444C43,
@@ -263,7 +262,6 @@ public enum FieldType : uint {
     CTDA = 0x41445443,
     CTDT = 0x54445443,
     CVFX = 0x58465643,
-
     DATA = 0x41544144,
     DELE = 0x454C4544,
     DESC = 0x43534544,
@@ -271,7 +269,6 @@ public enum FieldType : uint {
     DFTM = 0x4D544644,
     DNAM = 0x4D414E44,
     DODT = 0x54444F44,
-
     EDID = 0x44494445,
     EFID = 0x44494645,
     EFIT = 0x54494645,
@@ -279,7 +276,6 @@ public enum FieldType : uint {
     ENDT = 0x54444E45,
     ENIT = 0x54494E45,
     ESCE = 0x45435345,
-
     FADT = 0x54444146,
     FGGA = 0x41474746,
     FGGS = 0x53474746,
@@ -292,9 +288,7 @@ public enum FieldType : uint {
     FTSF = 0x46535446,
     FTSM = 0x4D535446,
     FULL = 0x4C4C5546,
-
     GNAM = 0x4D414E47,
-
     HCLF = 0x464C4348,
     HCLR = 0x524C4348,
     HEAD = 0x44414548,
@@ -302,7 +296,6 @@ public enum FieldType : uint {
     HNAM = 0x4D414E48,
     HSND = 0x444E5348,
     HVFX = 0x58465648,
-
     ICON = 0x4E4F4349,
     ICO2 = 0x324F4349,
     INAM = 0x4D414E49,
@@ -311,23 +304,19 @@ public enum FieldType : uint {
     INTV = 0x56544E49,
     IRDT = 0x54445249,
     ITEX = 0x58455449,
-
     JAIL = 0x4C49414A,
     JNAM = 0x4D414E4A,
     JOUT = 0x54554F4A,
-
     KFFZ = 0x5A46464B,
     KNAM = 0x4D414E4B,
     KSIZ = 0x5A49534B,
     KWDA = 0x4144574B,
-
     LHDT = 0x5444484C,
     LKDT = 0x54444B4C,
     LNAM = 0x4D414E4C,
     LVLD = 0x444C564C,
     LVLF = 0x464C564C,
     LVLO = 0x4F4C564C,
-
     MAST = 0x5453414D,
     MCDT = 0x5444434D,
     MEDT = 0x5444454D,
@@ -351,7 +340,6 @@ public enum FieldType : uint {
     MPAV = 0x5641504D,
     MTNM = 0x4D4E544D,
     MTYP = 0x5059544D,
-
     NAM0 = 0x304D414E,
     NAM1 = 0x314D414E,
     NAM2 = 0x324D414E,
@@ -368,11 +356,9 @@ public enum FieldType : uint {
     NPCO = 0x4F43504E,
     NPCS = 0x5343504E,
     NPDT = 0x5444504E,
-
     OBND = 0x444E424F,
     OFST = 0x5453464F,
     ONAM = 0x4D414E4F,
-
     PBDT = 0x54444250,
     PFIG = 0x47494650,
     PFPC = 0x43504650,
@@ -393,7 +379,6 @@ public enum FieldType : uint {
     PSDT = 0x54445350,
     PTDT = 0x54445450,
     PTEX = 0x58455450,
-
     QNAM = 0x4D414E51,
     QSDT = 0x54445351,
     QSTA = 0x41545351,
@@ -401,7 +386,6 @@ public enum FieldType : uint {
     QSTI = 0x49545351,
     QSTN = 0x4E545351,
     QSTR = 0x52545351,
-
     RADT = 0x54444152,
     RAGA = 0x41474152,
     RCLR = 0x524C4352,
@@ -420,7 +404,6 @@ public enum FieldType : uint {
     RPLI = 0x494C5052,
     RPRF = 0x46525052,
     RPRM = 0x4D525052,
-
     SCDA = 0x41444353,
     SCDT = 0x54444353,
     SCHD = 0x44484353,
@@ -449,7 +432,6 @@ public enum FieldType : uint {
     STOL = 0x4C4F5453,
     STRV = 0x56525453,
     SWMV = 0x564D5753,
-
     TCLF = 0x464C4354,
     TCLT = 0x544C4354,
     TEXT = 0x54584554,
@@ -472,10 +454,8 @@ public enum FieldType : uint {
     TX05 = 0x35305854,
     TX06 = 0x36305854,
     TX07 = 0x37305854,
-
     UNAM = 0x4D414E55,
     UNES = 0x53454E55,
-
     VCLR = 0x524C4356,
     VENC = 0x434E4556,
     VEND = 0x444E4556,
@@ -486,7 +466,6 @@ public enum FieldType : uint {
     VTCK = 0x4B435456,
     VTEX = 0x58455456,
     VTXT = 0x54585456,
-
     WAIT = 0x54494157,
     WEAT = 0x54414557,
     WHGT = 0x54474857,
@@ -494,7 +473,6 @@ public enum FieldType : uint {
     WLST = 0x54534C57,
     WNAM = 0x4D414E57,
     WPDT = 0x54445057,
-
     XACT = 0x54434158,
     XCCM = 0x4D434358,
     XCHG = 0x47484358,
@@ -526,9 +504,7 @@ public enum FieldType : uint {
     XTEL = 0x4C455458,
     XTRG = 0x47525458,
     XXXX = 0x58585858,
-
     YNAM = 0x4D414E59,
-
     ZNAM = 0x4D414E5A,
 }
 
@@ -562,116 +538,156 @@ public class Reader(BinaryReader r, string binPath, FormType format, bool tes4a)
 /// <see cref="https://en.uesp.net/wiki/Tes5Mod:Mod_File_Format#Records"/>
 public partial class Record {
     static readonly Dictionary<FormType, Func<FormType, Record>> Map = new() {
-        { TES3, f => new TES3Record() },
-        { TES4, f => new TES4Record() },
-        // 0
-        { LTEX, f => new LTEXRecord() },
-        { STAT, f => new STATRecord() },
-        { CELL, f => new CELLRecord() },
-        { LAND, f => new LANDRecord() },
-        // 1
-        { DOOR, f => new DOORRecord() },
-        { MISC, f => new MISCRecord() },
-        { WEAP, f => new WEAPRecord() },
-        { CONT, f => new CONTRecord() },
-        { LIGH, f => new LIGHRecord() },
-        { ARMO, f => new ARMORecord() },
-        { CLOT, f => new CLOTRecord() },
-        { REPA, f => new REPARecord() },
-        { ACTI, f => new ACTIRecord() },
-        { APPA, f => new APPARecord() },
-        { LOCK, f => new LOCKRecord() },
-        { PROB, f => new PROBRecord() },
-        { INGR, f => new INGRRecord() },
-        { BOOK, f => new BOOKRecord() },
-        { ALCH, f => new ALCHRecord() },
-        { CREA, f => f == TES3 ? new CREA3Record() : new CREA4Record() },
-        { NPC_, f => f == TES3 ? new NPC_3Record() : new NPC_4Record() },
-        // 2
-        { GMST, f => new GMSTRecord() },
-        { GLOB, f => new GLOBRecord() },
-        { SOUN, f => new SOUNRecord() },
-        { REGN, f => new REGNRecord() },
-        // 3
-        { CLAS, f => new CLASRecord() },
-        { SPEL, f => new SPELRecord() },
-        { BODY, f => new BODYRecord() },
-        { PGRD, f => new PGRDRecord() },
-        { INFO, f => f == TES3 ? new INFO3Record() : new INFO4Record() },
-        { DIAL, f => new DIALRecord() },
-        { SNDG, f => new SNDGRecord() },
-        { ENCH, f => new ENCHRecord() },
-        { SCPT, f => new SCPTRecord() },
-        { SKIL, f => new SKILRecord() },
-        { RACE, f => f == TES3 ? new RACE3Record() : f == TES4 ? new RACE4Record() : new RACE5Record() },
-        { MGEF, f => new MGEFRecord() },
-        { LEVI, f => new LEVIRecord() },
-        { LEVC, f => new LEVCRecord() },
-        { BSGN, f => new BSGNRecord() },
-        { FACT, f => new FACTRecord() },
-        { SSCR, f => new SSCRRecord() },
-        // 4 - Oblivion
-        { WRLD, f => new WRLDRecord() },
-        { ACRE, f => new ACRERecord() },
+        { AACT, f => new AACTRecord() },
         { ACHR, f => new ACHRRecord() },
-        { REFR, f => new REFRRecord() },
-        //
+        { ACRE, f => new ACRERecord() },
+        { ACTI, f => new ACTIRecord() },
+        { ADDN, f => new ADDNRecord() },
+        { ALCH, f => new ALCHRecord() },
         { AMMO, f => new AMMORecord() },
         { ANIO, f => new ANIORecord() },
-        { CLMT, f => new CLMTRecord() },
-        { CSTY, f => new CSTYRecord() },
-        { EFSH, f => new EFSHRecord() },
-        { EYES, f => new EYESRecord() },
-        { FLOR, f => new FLORRecord() },
-        { FURN, f => new FURNRecord() },
-        { GRAS, f => new GRASRecord() },
-        { HAIR, f => new HAIRRecord() },
-        { IDLE, f => new IDLERecord() },
-        { KEYM, f => new KEYMRecord() },
-        { LSCR, f => new LSCRRecord() },
-        { LVLC, f => new LVLCRecord() },
-        { LVLI, f => new LVLIRecord() },
-        { LVSP, f => new LVSPRecord() },
-        { PACK, f => new PACKRecord() },
-        { QUST, f => new QUSTRecord() },
-        { ROAD, f => new ROADRecord() },
-        { SBSP, f => new SBSPRecord() },
-        { SGST, f => new SGSTRecord() },
-        { SLGM, f => new SLGMRecord() },
-        { TREE, f => new TREERecord() },
-        { WATR, f => new WATRRecord() },
-        { WTHR, f => new WTHRRecord() },
-        // 5 - Skyrim
-        { AACT, f => new AACTRecord() },
-        { ADDN, f => new ADDNRecord() },
+        { APPA, f => new APPARecord() },
         { ARMA, f => new ARMARecord() },
+        { ARMO, f => new ARMORecord() },
         { ARTO, f => new ARTORecord() },
         { ASPC, f => new ASPCRecord() },
         { ASTP, f => new ASTPRecord() },
         { AVIF, f => new AVIFRecord() },
+        { BNDS, f => new BNDSRecord() },
+        { BODY, f => new BODYRecord() },
+        { BOIM, f => new BOIMRecord() },
+        { BOOK, f => new BOOKRecord() },
+        { BPTD, f => new BPTDRecord() },
+        { BSGN, f => new BSGNRecord() },
+        { CAMS, f => new CAMSRecord() },
+        { CELL, f => new CELLRecord() },
+        { CLAS, f => new CLASRecord() },
+        { CLFM, f => new CLFMRecord() },
+        { CLMT, f => new CLMTRecord() },
+        { CLOT, f => new CLOTRecord() },
+        { COBJ, f => new COBJRecord() },
+        { COLL, f => new COLLRecord() },
+        { CONT, f => new CONTRecord() },
+        { CPTH, f => new CPTHRecord() },
+        { CREA, f => f == TES3 ? new CREA3Record() : new CREA4Record() },
+        { CSTY, f => new CSTYRecord() },
+        { DEBR, f => new DEBRRecord() },
+        { DIAL, f => new DIALRecord() },
         { DLBR, f => new DLBRRecord() },
         { DLVW, f => new DLVWRecord() },
+        { DOBJ, f => new DOBJRecord() },
+        { DMGT, f => new DMGTRecord() },
+        { DOOR, f => new DOORRecord() },
+        { DUEL, f => new DUELRecord() },
+        { ECZN, f => new ECZNRecord() },
+        { EFSH, f => new EFSHRecord() },
+        { ENCH, f => new ENCHRecord() },
+        { EQUP, f => new EQUPRecord() },
+        { EXPL, f => new EXPLRecord() },
+        { EYES, f => new EYESRecord() },
+        { FACT, f => new FACTRecord() },
+        { FLOR, f => new FLORRecord() },
+        { FLST, f => new FLSTRecord() },
+        { FSTP, f => new FSTPRecord() },
+        { FSTS, f => new FSTSRecord() },
+        { FURN, f => new FURNRecord() },
+        { GLOB, f => new GLOBRecord() },
+        { GMST, f => new GMSTRecord() },
+        { GRAS, f => new GRASRecord() },
+        { GRUP, f => new GRUPRecord() },
+        { HAIR, f => new HAIRRecord() },
+        { HAZD, f => new HAZDRecord() },
+        { HDPT, f => new HDPTRecord() },
+        { IDLE, f => new IDLERecord() },
+        { IDLM, f => new IDLMRecord() },
+        { IMAD, f => new IMADRecord() },
+        { IMGS, f => new IMGSRecord() },
+        { INFO, f => f == TES3 ? new INFO3Record() : new INFO4Record() },
+        { INGR, f => new INGRRecord() },
+        { IPCT, f => new IPCTRecord() },
+        { IPDS, f => new IPDSRecord() },
+        { KEYM, f => new KEYMRecord() },
+        { KYWD, f => new KYWDRecord() },
+        { LAND, f => new LANDRecord() },
+        { LCRT, f => new LCRTRecord() },
+        { LCTN, f => new LCTNRecord() },
+        { LEVC, f => new LEVCRecord() },
+        { LEVI, f => new LEVIRecord() },
+        { LGTM, f => new LGTMRecord() },
+        { LIGH, f => new LIGHRecord() },
+        { LOCK, f => new LOCKRecord() },
+        { LSCR, f => new LSCRRecord() },
+        { LTEX, f => new LTEXRecord() },
+        { LVLC, f => new LVLCRecord() },
+        { LVLI, f => new LVLIRecord() },
+        { LVLN, f => new LVLNRecord() },
+        { LVSP, f => new LVSPRecord() },
+        { MATO, f => new MATORecord() },
+        { MATT, f => new MATTRecord() },
+        { MESG, f => new MESGRecord() },
+        { MGEF, f => new MGEFRecord() },
+        { MICN, f => new MICNRecord() },
+        { MISC, f => new MISCRecord() },
+        { MOVT, f => new MOVTRecord() },
+        { MSTT, f => new MSTTRecord() },
+        { MUSC, f => new MUSCRecord() },
+        { NAVI, f => new NAVIRecord() },
+        { NAVM, f => new NAVMRecord() },
+        { NOTE, f => new NOTERecord() },
+        { NPC_, f => f == TES3 ? new NPC_3Record() : new NPC_4Record() },
+        { OTFT, f => new OTFTRecord() },
+        { PACK, f => new PACKRecord() },
+        { PERK, f => new PERKRecord() },
+        { PGRD, f => new PGRDRecord() },
+        { PGRE, f => new PGRERecord() },
+        { PHZD, f => new PHZDRecord() },
+        { PROB, f => new PROBRecord() },
+        { PROJ, f => new PROJRecord() },
+        { QUST, f => new QUSTRecord() },
+        { RACE, f => f == TES3 ? new RACE3Record() : f == TES4 ? new RACE4Record() : new RACE5Record() },
+        { REFR, f => new REFRRecord() },
+        { REGN, f => new REGNRecord() },
+        { RELA, f => new RELARecord() },
+        { REPA, f => new REPARecord() },
+        { REVB, f => new REVBRecord() },
+        { RFCT, f => new RFCTRecord() },
+        { ROAD, f => new ROADRecord() },
+        { SBSP, f => new SBSPRecord() },
+        { SCEN, f => new SCENRecord() },
+        { SCPT, f => new SCPTRecord() },
+        { SCRL, f => new SCRLRecord() },
+        { SGST, f => new SGSTRecord() },
+        { SHOU, f => new SHOURecord() },
+        { SKIL, f => new SKILRecord() },
+        { SLGM, f => new SLGMRecord() },
+        { SMBN, f => new SMBNRecord() },
+        { SMEN, f => new SMENRecord() },
+        { SMNQ, f => new SMNQRecord() },
+        { SNCT, f => new SNCTRecord() },
+        { SNDG, f => new SNDGRecord() },
         { SNDR, f => new SNDRRecord() },
-        // Unknown
-        { BPTD, f => new BPTDRecord() },
-        { CAMS, f => new CAMSRecord() },
-        { CLFM, f => new CLFMRecord() },
+        { SOPM, f => new SOPMRecord() },
+        { SOUN, f => new SOUNRecord() },
+        { SPEL, f => new SPELRecord() },
+        { SPGD, f => new SPGDRecord() },
+        { SSCR, f => new SSCRRecord() },
+        { STAT, f => new STATRecord() },
         { STDT, f => new STDTRecord() },
         { SUNP, f => new SUNPRecord() },
-        { BOIM, f => new BOIMRecord() },
+        { TACT, f => new TACTRecord() },
+        { TES3, f => new TES3Record() },
+        { TES4, f => new TES4Record() },
         { TERM, f => new TERMRecord() },
         { TMLM, f => new TMLMRecord() },
+        { TREE, f => new TREERecord() },
         { TRNS, f => new TRNSRecord() },
         { TXST, f => new TXSTRecord() },
-        { BNDS, f => new BNDSRecord() },
-        { DMGT, f => new DMGTRecord() },
-        //
-        { KYWD, f => new KYWDRecord() },
-        { LCRT, f => new LCRTRecord() },
-        { FLST, f => new FLSTRecord() },
-        { OTFT, f => new OTFTRecord() },
-        { HDPT, f => new HDPTRecord() },
-        { MICN, f => new MICNRecord() },
+        { VTYP, f => new VTYPRecord() },
+        { WATR, f => new WATRRecord() },
+        { WEAP, f => new WEAPRecord() },
+        { WOOP, f => new WOOPRecord() },
+        { WRLD, f => new WRLDRecord() },
+        { WTHR, f => new WTHRRecord() },
     };
 
     static int CellsLoaded = 0;
@@ -1281,8 +1297,6 @@ public class ALCHRecord : Record, IHaveMODL {
     };
 }
 
-/// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/ADDN.html"/>
-
 /// <summary>
 /// AMMO.Ammo - 045S0
 /// </summary>
@@ -1738,17 +1752,17 @@ public class BPTDRecord : Record {
         public byte ToHitChance;
         public byte Explodable_ExplosionChance;
         public ushort Explodable_DebrisCount;
-        public Ref<Record> Explodable_Debris; //TODO DEBRRecord
-        public Ref<Record> Explodable_Explosion; //TODO EXPLRecord
+        public Ref<DEBRRecord> Explodable_Debris;
+        public Ref<EXPLRecord> Explodable_Explosion;
         public float TrackingMaxAngle;
         public float Explodable_DebrisScale;
         public int Severable_DebrisCount;
-        public Ref<Record> Severable_Debris; //TODO DEBRRecord
-        public Ref<Record> Severable_Explosion; //TODO EXPLRecord
+        public Ref<DEBRRecord> Severable_Debris;
+        public Ref<EXPLRecord> Severable_Explosion;
         public float Severable_DebrisScale;
         public Position GoreEffectsPositioning;
-        public Ref<Record> Severable_ImpactDataSet; //TODO IPDSRecord
-        public Ref<Record> Explodable_ImpactDataSet; //TODO IPDSRecord
+        public Ref<IPDSRecord> Severable_ImpactDataSet;
+        public Ref<IPDSRecord> Explodable_ImpactDataSet;
         public byte Severable_DecalCount;
         public byte Explodable_DecalCount;
         public ushort Unknown;
@@ -3145,9 +3159,9 @@ public class EQUPRecord : Record {
 }
 
 /// <summary>
-/// EXLP.Explosion - 05000
+/// EXPL.Explosion - 05000
 /// </summary>
-public class EXLPRecord : Record {
+public class EXPLRecord : Record {
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
         _ => Empty,
@@ -4298,7 +4312,7 @@ public class LVLCRecord : Record {
 }
 
 /// <summary>
-/// LVLI.Leveled Item - 04000
+/// LVLI.Leveled Item - 04500
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/GMST">
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/GMST"/>
@@ -4550,7 +4564,7 @@ public class MGEFRecord : Record {
 }
 
 /// <summary>
-/// MICN.Menu Icon - 00500
+/// MICN.Menu Icon - 04000
 /// </summary>
 /// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/MICN.html"/>
 public class MICNRecord : Record {
@@ -4913,19 +4927,6 @@ public class PERKRecord : Record {
 }
 
 /// <summary>
-/// PGRE.Placed grenad - 05000
-/// </summary>
-public class PGRERecord : Record {
-    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
-        FieldType.EDID => EDID = r.ReadFUString(dataSize),
-        _ => Empty,
-    };
-}
-
-
-
-
-/// <summary>
 /// PGRD.Path grid - 34000
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/GMST">
@@ -5002,6 +5003,27 @@ public unsafe class PGRDRecord : Record {
 }
 
 /// <summary>
+/// PGRE.Placed grenade - 05000
+/// </summary>
+public class PGRERecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// PHZD.Placed hazard - 00500
+/// </summary>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/PHZD"/>
+public class PHZDRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// PROB.Probe - 30000
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/GMST">
@@ -5034,6 +5056,17 @@ public class PROBRecord : Record, IHaveMODL {
             _ => Empty,
         }
         : Empty;
+}
+
+/// <summary>
+/// PROJ.Projectile - 00500
+/// </summary>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/PROJ"/>
+public class PROJRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
 }
 
 /// <summary>
@@ -5358,37 +5391,6 @@ public class RACE5Record : RACERecord {
     };
 }
 
-/// <summary>
-/// REPA.Repair Item - 30000
-/// </summary>
-/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/REPA">
-public class REPARecord : Record, IHaveMODL {
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct Ridt {
-        public static (string, int) Struct = ("<f2if", 16);
-        public float Weight;
-        public int Value;
-        public int Uses;
-        public float Quality;
-    }
-
-    public Modl MODL { get; set; } // Model Name
-    public string FNAM; // Item Name
-    public Ridt RIDT; // Repair Data
-    public RefX<SCPTRecord> SCRI; // Script Name
-
-    public override object ReadField(Reader r, FieldType type, int dataSize) => r.Format == TES3
-        ? type switch {
-            FieldType.NAME => EDID = r.ReadFUString(dataSize),
-            FieldType.MODL => MODL = new Modl(r, dataSize),
-            FieldType.ITEX => MODL.ICON(r, dataSize),
-            FieldType.FNAM => FNAM = r.ReadFUString(dataSize),
-            FieldType.RIDT => RIDT = r.ReadS<Ridt>(dataSize),
-            FieldType.SCRI => SCRI = new RefX<SCPTRecord>(r, dataSize),
-            _ => Empty,
-        }
-        : Empty;
-}
 
 /// <summary>
 /// REFR.Placed Object - 04500
@@ -5683,15 +5685,86 @@ public class REGNRecord : Record {
 }
 
 /// <summary>
+/// RELA.Relationship - 00500
+/// </summary>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/RELA"/>
+public class RELARecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// REPA.Repair Item - 30000
+/// </summary>
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/REPA">
+public class REPARecord : Record, IHaveMODL {
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public struct Ridt {
+        public static (string, int) Struct = ("<f2if", 16);
+        public float Weight;
+        public int Value;
+        public int Uses;
+        public float Quality;
+    }
+
+    public Modl MODL { get; set; } // Model Name
+    public string FNAM; // Item Name
+    public Ridt RIDT; // Repair Data
+    public RefX<SCPTRecord> SCRI; // Script Name
+
+    public override object ReadField(Reader r, FieldType type, int dataSize) => r.Format == TES3
+        ? type switch {
+            FieldType.NAME => EDID = r.ReadFUString(dataSize),
+            FieldType.MODL => MODL = new Modl(r, dataSize),
+            FieldType.ITEX => MODL.ICON(r, dataSize),
+            FieldType.FNAM => FNAM = r.ReadFUString(dataSize),
+            FieldType.RIDT => RIDT = r.ReadS<Ridt>(dataSize),
+            FieldType.SCRI => SCRI = new RefX<SCPTRecord>(r, dataSize),
+            _ => Empty,
+        }
+        : Empty;
+}
+
+/// <summary>
 /// REVB.Reverb Parameters - 00500
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/REVB"/>
 public class REVBRecord : Record {
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public struct Data {
+        public static (string, int) Struct = ("<2H4b6B", 14);
+        public ushort DecayTime; // milliseconds
+        public ushort HRReference; // Hertz
+        public sbyte RoomFilter;
+        public sbyte RoomHFFilter;
+        public sbyte Reflections;
+        public sbyte ReverbAmp;
+        public byte DecayHFRatio; // x100, real value is actually one hundreth of that, e.g. a value of 123 means 1.23
+        public byte ScaledReflectDelay; // scaled by approx. 0.83 - value 0x00 maps to 0, 0xF9 maps to 300
+        public byte ReverbDelay; // milliseconds
+        public byte Diffusion; // %
+        public byte Densitiy; // %
+        public byte Unknown; // seems to be zero in most cases, probably unused?
+    }
+
     public Data DATA; // Data
 
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
         FieldType.DATA => DATA = r.ReadS<Data>(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// RFCT.Visual Effect - 00500
+/// </summary>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/RFCT"/>
+public class RFCTRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
         _ => Empty,
     };
 }
@@ -5731,6 +5804,17 @@ public class SBSPRecord : Record {
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
         FieldType.DNAM => DNAM = r.ReadS<Dnam>(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// SCEN.Scene - 00500
+/// </summary>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/SCEN"/>
+public class SCENRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
         _ => Empty,
     };
 }
@@ -5856,6 +5940,17 @@ public class SCPTRecord : Record {
 }
 
 /// <summary>
+/// SCRL.Scroll - 00500
+/// </summary>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/SCRL"/>
+public class SCRLRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// SGST.Sigil Stone - 04000
 /// </summary>
 public class SGSTRecord : Record, IHaveMODL {
@@ -5887,6 +5982,17 @@ public class SGSTRecord : Record, IHaveMODL {
         FieldType.EFID => r.Skip(dataSize),
         FieldType.EFIT => EFITs.AddX(new ENCHRecord.Efit(r, dataSize)),
         FieldType.SCIT => SCITs.AddX(new ENCHRecord.Scit(r, dataSize)),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// SHOU.Shout - 00500
+/// </summary>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/SHOU"/>
+public class SHOURecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
         _ => Empty,
     };
 }
@@ -5967,6 +6073,50 @@ public class SLGMRecord : Record, IHaveMODL {
 }
 
 /// <summary>
+/// SMBN.Story Manager Branch Node - 00500
+/// </summary>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/SMBN"/>
+public class SMBNRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// SMEN.Story Manager Event Node - 00500
+/// </summary>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/SMEN"/>
+public class SMENRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// SMNQ.Story Manager Quest Node - 00500
+/// </summary>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/SMNQ"/>
+public class SMNQRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// SNCT.Sound Category - 00500
+/// </summary>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/SNCT"/>
+public class SNCTRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// SNDG.Sound Generator - 30000
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/SNDG">
@@ -6003,13 +6153,23 @@ public class SNDRRecord : Record {
 }
 
 /// <summary>
+/// SOPM.Sound Output Model - 00500
+/// </summary>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/SOPM"/>
+public class SOPMRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// SOUN.Sound - 34500
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/SOUN">
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/SOUN"/>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/SOUN"/>
 /// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/SOUN.html"/>
-
 public class SOUNRecord : Record {
     [Flags]
     public enum Flag : ushort {
@@ -6114,6 +6274,17 @@ public class SPELRecord : Record {
 }
 
 /// <summary>
+/// SPGD.Shader Particle Geometry - 00500
+/// </summary>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/SPGD"/>
+public class SPGDRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// SSCR.Start Script - 30000
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/SSCR">
@@ -6163,6 +6334,17 @@ public class STDTRecord : Record {
 /// </summary>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/SUNP">
 public class SUNPRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// TACT.Talking Activator - 00500
+/// </summary>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/TACT"/>
+public class TACTRecord : Record {
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
         _ => Empty,
@@ -6386,6 +6568,17 @@ public class TXSTRecord : Record {
 }
 
 /// <summary>
+/// VTYP.Voice Type - 00500
+/// </summary>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/VTYP"/>
+public class VTYPRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// WATR.Water Type - 04500
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/WATR"/>
@@ -6558,6 +6751,17 @@ public class WEAPRecord : Record, IHaveMODL {
         FieldType.ENAM => ENAM = new RefX<ENCHRecord>(r, dataSize),
         FieldType.SCRI => SCRI = new RefX<SCPTRecord>(r, dataSize),
         FieldType.ANAM => ANAM = r.ReadInt16(),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// WOOP.Word Of Power - 00500
+/// </summary>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/WOOP"/>
+public class WOOPRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
         _ => Empty,
     };
 }

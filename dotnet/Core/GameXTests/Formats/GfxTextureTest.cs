@@ -8,8 +8,8 @@ public class GfxTextureTest {
     [TestMethod]
     [DataRow("AC:AC", "client_highres.dat:Texture/060043BE.tex")]
     [DataRow("Cry:MWO", "GameData.arc:GameModeObjects.xml")]
-    [DataRow("Rsi:StarCitizen", "Sbi/Hashes/references/color.dds")] //: Single
-    [DataRow("Rsi:StarCitizen", "Sbi/Hashes/asteroids/asteroid_dmg_brown_organic_01_ddn.dds")] //: Multiple
+    [DataRow("Rsi:StarCitizen", "Sbi/Textures/references/color.dds")] //: Single
+    [DataRow("Rsi:StarCitizen", "Sbi/Textures/asteroids/asteroid_dmg_brown_organic_01_ddn.dds")] //: Multiple
     //[DataRow("Rsi:StarCitizen", "Data/Textures/colors/224x.dds")] //: "Engine/default_cch.dds"
     //[DataRow("Rsi:StarCitizen", "Data/Textures/colors/224x.dds")] //: "Engine/default_cch.dds"
     [DataRow("Origin:UltimaIX", "static/activity.flx:Engine/default_cch.dds")]
@@ -21,11 +21,11 @@ public class GfxTextureTest {
     [DataRow("Red:Witcher3", "content0/dep.cache:engine/physics/apexclothmaterialpresets.xml")]
     [DataRow("Tes:Morrowind", "textures/vfx_poison03.dds")]
     [DataRow("Tes:Oblivion", "Oblivion - Meshes.bsa:trees/treecottonwoodsu.spt")]
-    [DataRow("Tes:Oblivion", "Oblivion - Hashes - Compressed.bsa:textures/trees/canopyshadow.dds")]
+    [DataRow("Tes:Oblivion", "Oblivion - Textures - Compressed.bsa:textures/trees/canopyshadow.dds")]
     [DataRow("Tes:SkyrimSE", "Skyrim - Meshes0.bsa:meshes/scalegizmo.nif")]
-    [DataRow("Tes:SkyrimSE", "Skyrim - Hashes.bsa:textures/actors/dog/dog.dds")]
-    [DataRow("Tes:Fallout4VR", "Fallout4 - Startup.ba2:Hashes/Water/WaterRainRipples.dds")]
-    [DataRow("Tes:Fallout4VR", "Fallout4 - Textures8.ba2:Hashes/Terrain/DiamondCity/DiamondCity.16.-2.-2.DDS")]
+    [DataRow("Tes:SkyrimSE", "Skyrim - Textures.bsa:textures/actors/dog/dog.dds")]
+    [DataRow("Tes:Fallout4VR", "Fallout4 - Startup.ba2:Textures/Water/WaterRainRipples.dds")]
+    [DataRow("Tes:Fallout4VR", "Fallout4 - Textures8.ba2:Textures/Terrain/DiamondCity/DiamondCity.16.-2.-2.DDS")]
     [DataRow("Valve:Dota2", "dota/pak01_dir.vpk:stringtokendatabase.txt")]
     public async Task LoadGfxTexture(string arc, string sampleFile) {
         var source = TestHelper.Paks[arc].Value;

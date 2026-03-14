@@ -74,7 +74,7 @@ public static class ExportManager {
 
     static async Task ExportFileAsync(FileSource file, BinaryArchive source, string newPath, object option) {
         var fo = option as FileOption? ?? FileOption.Default;
-        if (file.FileSize == 0 && file.PackedSize == 0) return;
+        //if (file.FileSize == 0 && file.PackedSize == 0) return;
         var oo = (file.CachedObjectOption as FileOption?) ?? fo;
         if (file.CachedObjectOption != null && (fo & oo) != 0) {
             if (oo.HasFlag(FileOption.UnknownFileModel)) {

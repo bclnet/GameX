@@ -66,7 +66,7 @@ class ExportManager:
     @staticmethod
     async def exportFileAsync(file: FileSource, source: BinaryArchive, newPath: str, option: object) -> None:
         fo = option if isinstance(option, FileOption) else FileOption.Default
-        if (file.fileSize or 0) == 0 and (file.packedSize or 0) == 0: return
+        # if (file.fileSize or 0) == 0 and (file.packedSize or 0) == 0: return
         oo = file.cachedObjectOption if isinstance(file.cachedObjectOption, FileOption) else fo
         if file.cachedObjectOption != None and bool(fo & oo):
             if FileOption.UnknownFileModel in oo:

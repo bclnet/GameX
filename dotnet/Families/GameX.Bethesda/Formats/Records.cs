@@ -1131,10 +1131,10 @@ public class Dest(Reader r = null, int dataSize = 0) {
 /// Effect Subrecord Collection
 /// </summary>
 /// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/Subrecords/Effect.html"/>
-public class Efid(Reader r, int dataSize) {
+public class Efid(Reader r = null, int dataSize = 0) {
     public enum Type_ : int { Self = 0, Touch, Target }
-    public Ref<MGEFRecord> Value = new(r, dataSize);
-    public string EffectId;
+    public Ref<MGEFRecord> Value = r != null ? new(r, dataSize) : default;
+    public string EffectId; // Same as Value above
     public Type_ Type;
     public int Area;
     public int Duration;
@@ -3370,7 +3370,8 @@ public class ENCHRecord : Record {
         FieldType.FULL => SCITs.Count == 0 ? FULL = r.ReadFUString(dataSize) : SCITs.Last().FULL(r, dataSize),
         FieldType.ENIT or FieldType.ENDT => ENIT = new Enit(r, dataSize),
         FieldType.EFID => EFIDs.AddX(new Efid(r, dataSize)),
-        FieldType.EFIT or FieldType.ENAM => EFIDs.Last().EFIT(r, dataSize),
+        FieldType.EFIT => EFIDs.Last().EFIT(r, dataSize),
+        FieldType.ENAM => EFIDs.AddX(new Efid()).EFIT(r, dataSize),
         FieldType.CTDA => EFIDs.Last().CTDA(r, dataSize),
         FieldType.SCIT => SCITs.AddX(new Scit(r, dataSize)),
         _ => Empty,
@@ -4658,7 +4659,7 @@ public class MGEFRecord : Record {
     // TES3
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct Medt {
-        public static (string, int) Struct = ("<if4i3f", 40);
+        public static (string, int) Struct = ("<if4i3f", 36);
         public int SpellSchool; // 0 = Alteration, 1 = Conjuration, 2 = Destruction, 3 = Illusion, 4 = Mysticism, 5 = Restoration
         public float BaseCost;
         public int Flags; // 0x0200 = Spellmaking, 0x0400 = Enchanting, 0x0800 = Negative
@@ -6427,6 +6428,7 @@ public class SPELRecord : Record {
     public List<Efid> EFIDs = []; // Effect Data
     // TES4
     public List<Scit> SCITs = []; // Script effect data
+    string Z;
 
     protected override HashSet<FieldType> DF3 => [FieldType.ENAM];
     protected override HashSet<FieldType> DF4 => [FieldType.FULL, FieldType.EFID, FieldType.EFIT, FieldType.CTDA];
@@ -6436,7 +6438,8 @@ public class SPELRecord : Record {
         FieldType.FNAM => FULL = r.ReadFUString(dataSize),
         FieldType.SPIT or FieldType.SPDT => SPIT = new Spit(r, dataSize),
         FieldType.EFID => EFIDs.AddX(new Efid(r, dataSize)),
-        FieldType.EFIT or FieldType.ENAM => EFIDs.Last().EFIT(r, dataSize),
+        FieldType.EFIT => EFIDs.Last().EFIT(r, dataSize),
+        FieldType.ENAM => EFIDs.AddX(new Efid()).EFIT(r, dataSize),
         FieldType.CTDA => EFIDs.Last().CTDA(r, dataSize),
         FieldType.SCIT => SCITs.AddX(new Scit(r, dataSize)),
         _ => Empty,

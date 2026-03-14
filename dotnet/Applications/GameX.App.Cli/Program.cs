@@ -81,8 +81,8 @@ partial class Program {
 
         // GET
         //args = ["get", "-f", "Bethesda", "-u", "game:/Morrowind.esm#Morrowind", "-m", "*", "-o", "StreamObject", "-p", @"D:\T_\MorrowindEC"];
-        //args = ["get", "-f", "Bethesda", "-u", "game:/Oblivion.esm#Oblivion", "-m", "*", "-o", "StreamObject", "-p", @"D:\T_\OblivionEC"];
-        args = ["get", "-f", "Bethesda", "-u", "game:/Fallout3.esm#Fallout3", "-m", "*", "-o", "StreamObject", "-p", @"D:\T_\Fallout3EC"];
+        args = ["get", "-f", "Bethesda", "-u", "game:/Oblivion.esm#Oblivion", "-m", "*", "-o", "StreamObject", "-p", @"D:\T_\OblivionEC"];
+        //args = ["get", "-f", "Bethesda", "-u", "game:/Fallout3.esm#Fallout3", "-m", "*", "-o", "StreamObject", "-p", @"D:\T_\Fallout3EC"];
 
         //args = ["get", "-f", "Bethesda", "-u", "game:/Morrowind.bsa#Morrowind", "-m", "*.nif", "-o", "StreamObject", "-p", @"D:\T_\MorrowindC"];
         //args = ["get", "-f", "Bethesda", "-u", "game:/Morrowind.bsa#Morrowind", "-m", "meshes/l/light_com_candle_04.nif", "-o", "StreamObject", "-p", @"D:\T_\MorrowindC"];

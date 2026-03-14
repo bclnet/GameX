@@ -382,10 +382,6 @@ class Binary_Esm(ArcBinaryT, IDatabase):
         for s in RecordGroup.readAll(r):
             if s.preload: s.read(r, files)
             else: r.seek(r.tell() + s.dataSize)
-        # if r.format == FormType.TES3:
-        #     for k, g in groupby(sorted(self.records, key=lambda s: int(s.type)), lambda s: s.type):
-        #         t = RecordGroup(None); t.label = k; t.records = list(g)
-        #         groups[k] = t
     # end::Binary_Esm.read[]
 
     # process - tag::Binary_Esm.process[]
@@ -441,3 +437,8 @@ class Binary_Esm(ArcBinaryT, IDatabase):
 
     #endregion - end::Binary_Esm.query[]
     
+
+# if r.format == FormType.TES3:
+#     for k, g in groupby(sorted(self.records, key=lambda s: int(s.type)), lambda s: s.type):
+#         t = RecordGroup(None); t.label = k; t.records = list(g)
+#         groups[k] = t

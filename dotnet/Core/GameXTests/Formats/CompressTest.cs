@@ -48,7 +48,7 @@ public class CompressTests {
     [DataRow("Arkane:D2:1", "strings/english_m.lang", 968)]
     [DataRow("Red:Witcher3", "content0/bundles/xml.bundle:engine/io/priority_table.xml", 8596)] // 1
     [DataRow("Tes:Oblivion", "Oblivion - Meshes.bsa:trees/treecottonwoodsu.spt", 62296)]
-    [DataRow("Tes:Skyrim", "Skyrim - Textures.bsa:textures/actors/dog/dog.dds", 1398256)]
+    [DataRow("Tes:Skyrim", "Skyrim - Hashes.bsa:textures/actors/dog/dog.dds", 1398256)]
     [DataRow("Tes:Fallout4", "Fallout4 - Meshes.ba2:Meshes/Marker_Error.NIF", 2334)]
     public async Task DecompressZlib(string arc, string sampleFile, int sampleFileSize) => await LoadDataAync(TestHelper.Paks[arc].Value, sampleFile, sampleFileSize);
 

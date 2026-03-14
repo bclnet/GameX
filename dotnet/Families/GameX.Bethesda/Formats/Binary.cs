@@ -518,23 +518,7 @@ public class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
             _ => throw new ArgumentOutOfRangeException(nameof(game), game),
         };
 
-    class SubEsm : BinaryArchive {
-        Binary_Esm Arc;
 
-        public SubEsm(BinaryArchive source, Binary_Esm arc, string path, object tag) : base(new BinaryState(source.Vfx, source.Game, source.Edition, path, tag), Current) {
-            Arc = arc;
-            //AssetFactoryFunc = source.AssetFactoryFunc;
-            //UseReader = false;
-            //Open();
-        }
-
-        public async override Task Read(object tag) {
-            //var entry = (P4kEntry)Tag;
-            //var stream = Arc.GetInputStream(entry.ZipFileIndex);
-            //using var r2 = new BinaryReader(stream);
-            //await ArcBinary.Read(this, r2, tag);
-        }
-    }
 
     /// <summary>
     /// Reads the asynchronous.
@@ -554,10 +538,8 @@ public class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
         foreach (var s in RecordGroup.ReadAll(r))
             if (s.Preload) s.Read(r, files);
             else r.Seek(r.Tell() + s.DataSize);
-        //if (r.Format == FormType.TES3) Groups = [.. Records.GroupBy(s => s.Type).Select(s => new RecordGroup(null) { Records = [.. s], Label = s.Key })];
         return Task.CompletedTask;
     }
-    //var poolAction = (GenericPoolAction<BinaryReader>)source.GetReader().Action; //: Leak
 
     // TES3
     Dictionary<string, Record> MANYsById;
@@ -642,3 +624,14 @@ public class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
 }
 
 #endregion
+
+//if (r.Format == FormType.TES3) Groups = [.. Records.GroupBy(s => s.Type).Select(s => new RecordGroup(null) { Records = [.. s], Label = s.Key })];
+//class SubEsm(BinaryArchive source, Binary_Esm arc, string path, object tag) : BinaryArchive(new BinaryState(source.Vfx, source.Game, source.Edition, path, tag), Current) {
+//    Binary_Esm Arc = arc;
+//    public async override Task Read(object tag) {
+//        //var entry = (P4kEntry)Tag;
+//        //var stream = Arc.GetInputStream(entry.ZipFileIndex);
+//        //using var r2 = new BinaryReader(stream);
+//        //await ArcBinary.Read(this, r2, tag);
+//    }
+//}

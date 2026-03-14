@@ -1,5 +1,8 @@
+using GameX.Gamebryo.Formats.Nif;
 using GameX.Uncore.Formats;
+using MathNet.Numerics;
 using OpenStack;
+using Org.BouncyCastle.Asn1.X500;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,7 +12,11 @@ using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
+using static GameX.Bethesda.Formats.Records.Dest;
 using static GameX.Bethesda.Formats.Records.FormType;
+using static GameX.Bethesda.Formats.Records.SCPTRecord;
+using static GameX.Bethesda.Formats.Records.WRLDRecord.Rnam;
+using static GameX.FamilyGame;
 using static System.IO.Polyfill;
 #pragma warning disable CS9113
 
@@ -231,7 +238,9 @@ public enum FieldType : uint {
     ATTR = 0x52545441,
     ATXT = 0x54585441,
     AVFX = 0x58465641,
+    BIPL = 0x4C504942,
     BKDT = 0x54444B42,
+    BMCT = 0x54434D42,
     BMDT = 0x54444D42,
     BNAM = 0x4D414E42,
     BODT = 0x54444F42,
@@ -265,17 +274,24 @@ public enum FieldType : uint {
     DATA = 0x41544144,
     DELE = 0x454C4544,
     DESC = 0x43534544,
+    DEST = 0x54534544,
     DFTF = 0x46544644,
     DFTM = 0x4D544644,
+    DMDL = 0x4C444D44,
+    DMDT = 0x54444D44,
     DNAM = 0x4D414E44,
     DODT = 0x54444F44,
+    DSTD = 0x44545344,
+    DSTF = 0x46545344,
     EDID = 0x44494445,
     EFID = 0x44494645,
     EFIT = 0x54494645,
+    EITM = 0x4D544945,
     ENAM = 0x4D414E45,
     ENDT = 0x54444E45,
     ENIT = 0x54494E45,
     ESCE = 0x45435345,
+    ETYP = 0x50595445,
     FADT = 0x54444146,
     FGGA = 0x41474746,
     FGGS = 0x53474746,
@@ -304,6 +320,7 @@ public enum FieldType : uint {
     INTV = 0x56544E49,
     IRDT = 0x54445249,
     ITEX = 0x58455449,
+    ITXT = 0x54585449,
     JAIL = 0x4C49414A,
     JNAM = 0x4D414E4A,
     JOUT = 0x54554F4A,
@@ -323,10 +340,13 @@ public enum FieldType : uint {
     MICO = 0x4F43494D,
     MNAM = 0x4D414E4D,
     MO2B = 0x42324F4D,
+    MO2S = 0x53324F4D,
     MO2T = 0x54324F4D,
     MO3B = 0x42334F4D,
+    MO3S = 0x53334F4D,
     MO3T = 0x54334F4D,
     MO4B = 0x42344F4D,
+    MO4S = 0x53344F4D,
     MO4T = 0x54344F4D,
     MOD2 = 0x32444F4D,
     MOD3 = 0x33444F4D,
@@ -336,6 +356,7 @@ public enum FieldType : uint {
     MODL = 0x4C444F4D,
     MODS = 0x53444F4D,
     MODT = 0x54444F4D,
+    MOSD = 0x44534F4D,
     MPAI = 0x4941504D,
     MPAV = 0x5641504D,
     MTNM = 0x4D4E544D,
@@ -396,6 +417,7 @@ public enum FieldType : uint {
     RDOT = 0x544F4452,
     RDSD = 0x44534452,
     RDWT = 0x54574452,
+    REPL = 0x4C504552,
     RGNN = 0x4E4E4752,
     RIDT = 0x54444952,
     RNAM = 0x4D414E52,
@@ -885,8 +907,7 @@ public partial class RecordGroup {
     public bool Preload => Label == 0 || Type == GroupType.Top || _factorySet.Contains(Label);
 
     public RecordGroup(Reader r, string path) {
-        if (r == null) return;
-        else if (r.Format == TES3) { DataSize = (uint)(r.BaseStream.Length - r.Tell()); Label = 0; Type = GroupType.Top; Position = r.Tell(); Path = path; return; }
+        if (r.Format == TES3) { DataSize = (uint)(r.BaseStream.Length - r.Tell()); Label = 0; Type = GroupType.Top; Position = r.Tell(); Path = path; return; }
         DataSize = (uint)(r.ReadUInt32() - (r.Format != TES4 ? 16 : 20));
         Label = (FormType)r.ReadUInt32();
         Type = (GroupType)r.ReadUInt32();
@@ -996,6 +1017,9 @@ partial class RecordGroup {
 
 #region Fields
 
+/// <summary>
+/// Object Bounds
+/// </summary>
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct Obnd {
     public static (string, int) Struct = ("<6h", 12);
@@ -1007,6 +1031,27 @@ public struct Obnd {
     public short Z2;
 }
 
+/// <summary>
+/// BMDT Subrecord
+/// </summary>
+/// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/Subrecords/BMDT.html"/>
+public class Bmdt(Reader r, int dataSize) {
+    [Flags]
+    public enum BipedFlag : uint {
+        Head = 0x00000001, Hair = 0x00000002, UpperBody = 0x00000004, LeftHand = 0x00000008, RightHand = 0x00000010, Weapon = 0x00000020, PipBoy = 0x00000040, Backpack = 0x00000080,
+        Necklace = 0x00000100, Headband = 0x00000200, Hat = 0x00000400, EyeGlasses = 0x00000800, NoseRing = 0x00001000, Earrings = 0x00002000, Mask = 0x00004000, Choker = 0x00008000,
+        MouthObject = 0x00010000, BodyAddOn1 = 0x00020000, BodyAddOn2 = 0x00040000, BodyAddOn3 = 0x00080000
+    }
+    [Flags] public enum GeneralFlag : byte { X1 = 0x01, Z2 = 0x02, X3 = 0x04, X4 = 0x08, X5 = 0x10, PowerArmor = 0x20, NonPlayable = 0x40, Heavy = 0x80 }
+    public BipedFlag BipedFlags = (BipedFlag)r.ReadUInt32();
+    public GeneralFlag GeneralFlags = (GeneralFlag)(dataSize > 4 ? r.ReadByte() : 0);
+    public byte[] Unused = dataSize > 4 ? r.ReadBytes(3) : null;
+}
+
+/// <summary>
+/// Model Subrecord Collection
+/// </summary>
+/// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/Subrecords/Model.html"/>
 public class Modl(Reader r = null, int dataSize = 0) {
     [Flags] public enum ModdFlag { Head = 0x01, Torso = 0x02, RightHand = 0x04, LeftHand = 0x08 } // #Fallout
     public class Mods(Reader r, int dataSize) {
@@ -1017,12 +1062,12 @@ public class Modl(Reader r = null, int dataSize = 0) {
     public override string ToString() => $"{Value}";
     public string Value = r?.ReadFUString(dataSize);
     public float Bound;
-    public byte[] Textures; // Texture Files Hashes
+    public byte[] Hashes; // Texture Files Hashes
     public Mods[] AltTextures; // Alternate Textures
     public ModdFlag FaceGenModelFlags; // FaceGen Model Flags
     public string Icon; // Icon
     public object MODB(Reader r, int dataSize) => Bound = r.ReadSingle();
-    public object MODT(Reader r, int dataSize) => Textures = r.ReadBytes(dataSize); // Texture File Hashes
+    public object MODT(Reader r, int dataSize) => Hashes = r.ReadBytes(dataSize); // Texture File Hashes
     public object MODS(Reader r, int dataSize) => AltTextures = r.ReadL32FArray(z => new Mods(r, dataSize)); // Alternate Textures
     public object MODD(Reader r, int dataSize) => FaceGenModelFlags = (ModdFlag)(r.ReadByte()); // FaceGen Model Flags
     public object ICON(Reader r, int dataSize) => Icon = r.ReadFUString(dataSize); // Icon
@@ -1041,11 +1086,189 @@ public class Modl(Reader r = null, int dataSize = 0) {
 //    }
 //}
 
-public interface IHaveMODL {
-    Modl MODL { get; }
+public interface IHaveMODL { Modl MODL { get; } }
+
+/// <summary>
+/// Destruction Subrecord Collection
+/// </summary>
+/// <param name="r"></param>
+/// <param name="dataSize"></param>
+// https://tes5edit.github.io/fopdoc/Fallout3/Records/Subrecords/Destruction.html
+public class Dest(Reader r = null, int dataSize = 0) {
+    [Flags] public enum DestFlag : byte { VATSTargetable = 0x01 }
+    [Flags] public enum DstdFlag : byte { CapDamage = 0x01, Disable = 0x02, Destroy = 0x04 }
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public struct Dstd {
+        public static (string, int) Struct = ("<4Bi2Ii", 20);
+        public byte HealthPercentage;
+        public byte Index;
+        public byte DamageStage;
+        public DstdFlag Flags;
+        public int SelfDamagePerSecond;
+        public Ref<EXPLRecord> Explosion;
+        public Ref<DEBRRecord> Debris;
+        public int DebrisCount;
+    }
+    public class Stage {
+        public Dstd Data;
+        public string Model;
+        public byte[] Hashes;
+    }
+    public override string ToString() => $"{Health}";
+    public int Health = r.ReadInt32();
+    public byte Count = r.ReadByte();
+    public DestFlag Flags = (DestFlag)r.ReadByte();
+    public ushort Unknown = r.ReadUInt16();
+    public List<Stage> Stages = []; // Stages
+    Stage _last;
+    public object DSTD(Reader r, int dataSize) => _last = Stages.AddX(new Stage { Data = r.ReadS<Dstd>(dataSize) }); // Stage Data
+    public object DMDL(Reader r, int dataSize) => _last.Model = r.ReadFUString(dataSize); // Stage Model Filename
+    public object DMDT(Reader r, int dataSize) => _last.Hashes = r.ReadBytes(dataSize); // Stage Model Texture Files Hashes
+    public object DSTF(Reader r, int dataSize) => _last = null; // Stage End Marker
 }
 
+/// <summary>
+/// Effect Subrecord Collection
+/// </summary>
+/// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/Subrecords/Effect.html"/>
+public class Efid(Reader r, int dataSize) {
+    public enum Type_ : int { Self = 0, Touch, Target }
+    public Ref<MGEFRecord> Value = new(r, dataSize);
+    public string EffectId;
+    public Type_ Type;
+    public int Area;
+    public int Duration;
+    public int MagnitudeMin;
+    // TES3
+    public sbyte SkillId; // (-1 if NA)
+    public sbyte AttributeId; // (-1 if NA)
+    public int MagnitudeMax;
+    // TES4
+    public ActorValue ActorValue = ActorValue.None_;
+    public object EFIT(Reader r, int dataSize) {
+        if (r.Format == TES3) {
+            EffectId = r.ReadUInt16().ToString();
+            SkillId = r.ReadSByte();
+            AttributeId = r.ReadSByte();
+            Type = (Type_)r.ReadInt32();
+            Area = r.ReadInt32();
+            Duration = r.ReadInt32();
+            MagnitudeMin = r.ReadInt32();
+            MagnitudeMax = r.ReadInt32();
+            return this;
+        }
+        if (!r.Tes4a) EffectId = r.ReadFAString(4);
+        MagnitudeMin = r.ReadInt32();
+        Area = r.ReadInt32();
+        Duration = r.ReadInt32();
+        Type = (Type_)r.ReadInt32();
+        ActorValue = (ActorValue)r.ReadInt32();
+        return this;
+    }
+    public object CTDA(Reader r, int dataSize) => r.Skip(dataSize); // TODO
+}
+
+/// <summary>
+/// CTDA Subrecord
+/// </summary>
+/// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/Subrecords/CTDA.html"/>
+public struct Ctda {
+    public enum INFOType : byte { Nothing = 0, Function, Global, Local, Journal, Item, Dead, NotId, NotFaction, NotClass, NotRace, NotCell, NotLocal }
+    // TES3: 0 = [=], 1 = [!=], 2 = [>], 3 = [>=], 4 = [<], 5 = [<=]
+    // TES4: 0 = [=], 2 = [!=], 4 = [>], 6 = [>=], 8 = [<], 10 = [<=]
+    public byte CompareOp;
+    // (00-71) - sX = Global/Local/Not Local types, JX = Journal type, IX = Item Type, DX = Dead Type, XX = Not ID Type, FX = Not Faction, CX = Not Class, RX = Not Race, LX = Not Cell
+    public string Function;
+    // TES3
+    public byte Index; // (0-5)
+    public byte Type;
+    // Except for the function type, this is the ID for the global/local/etc. Is not nessecarily NULL terminated.The function type SCVR sub-record has
+    public string Name;
+    // TES4
+    public float ComparisonValue;
+    public int Parameter1; // Parameter #1
+    public int Parameter2; // Parameter #2
+    public int RunOn; // Run On
+    public Ref<Record> Reference; // Reference
+    public Ctda(Reader r, int dataSize) {
+        if (r.Format == TES3) {
+            Index = r.ReadByte();
+            Type = r.ReadByte();
+            Function = r.ReadFAString(2);
+            CompareOp = (byte)(r.ReadByte() << 1);
+            Name = r.ReadFAString(dataSize - 5);
+            return;
+        }
+        CompareOp = r.ReadByte();
+        ComparisonValue = r.Skip(3).ReadSingle();
+        Function = r.ReadFAString(4);
+        Parameter1 = r.ReadInt32();
+        Parameter2 = r.ReadInt32();
+        if (dataSize == 20) return;
+        RunOn = r.ReadInt32();
+        if (dataSize == 24) return;
+        Reference = new Ref<Record>(r, 4);
+    }
+}
+
+/// <summary>
+/// XX
+/// </summary>
+public class Scit {
+    public string Name;
+    public int ScriptFormId;
+    public int School; // 0 = Alteration, 1 = Conjuration, 2 = Destruction, 3 = Illusion, 4 = Mysticism, 5 = Restoration
+    public string VisualEffect;
+    public uint Flags;
+    public Scit(Reader r, int dataSize) {
+        Name = "Script Effect";
+        ScriptFormId = r.ReadInt32();
+        if (dataSize == 4) return;
+        School = r.ReadInt32();
+        VisualEffect = r.ReadFAString(4);
+        Flags = dataSize > 12 ? r.ReadUInt32() : 0;
+    }
+    public object FULL(Reader r, int dataSize) => Name = r.ReadFUString(dataSize);
+}
+
+/// <summary>
+/// Script Subrecord Collection
+/// </summary>
+/// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/Subrecords/Script.html"/>
+public unsafe struct Schr(Reader r, int dataSize) {
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public struct Slsd {
+        public static (string, int) Struct = ("<I12sB7s", 24);
+        public uint Index;
+        public fixed byte Unused[12];
+        public byte Flags;
+        public fixed byte Unused2[7];
+    }
+    public override readonly string ToString() => $"{RefCount}";
+    public uint RefCount = r.Skip(4).ReadUInt32();
+    public uint CompiledSize = r.ReadUInt32();
+    public uint VariableCount = r.ReadUInt32();
+    public uint Type = (z: r.ReadUInt32(), r.Skip(dataSize > 20 ? dataSize - 20 : 0)).z; // 0x000 = Object, 0x001 = Quest, 0x100 = Magic Effect
+    public byte[] CompiledScriptSource; // Compiled Script Source
+    public string ScriptSource; // Script Source
+    public Slsd LocalVariableData;
+    public string LocalVariableData_Name;
+    public Ref<Record> Reference;
+    public object SCDA(Reader r, int dataSize) => CompiledScriptSource = r.ReadBytes(dataSize);
+    public object SCTX(Reader r, int dataSize) => ScriptSource = r.ReadFUString(dataSize);
+    public object SLSD(Reader r, int dataSize) => LocalVariableData = r.ReadS<Slsd>(dataSize);
+    public object SCVR(Reader r, int dataSize) => LocalVariableData_Name = r.ReadFUString(dataSize);
+    public object SCRO(Reader r, int dataSize) => Reference = new Ref<Record>(r, dataSize);
+}
+
+/// <summary>
+/// DATV
+/// </summary>
 public struct Datv { public override readonly string ToString() => "Datv"; public bool B; public int I; public float F; public string S; }
+
+/// <summary>
+/// CNTO
+/// </summary>
 public struct Cnto<TRecord>(Reader r, int dataSize) where TRecord : Record { public override readonly string ToString() => $"{Item}:{Count}"; public Ref<TRecord> Item = new(r, dataSize); public uint Count = r.ReadUInt32(); }
 public struct CntoX<TRecord> {
     public override readonly string ToString() => $"{Item}";
@@ -1056,6 +1279,7 @@ public struct CntoX<TRecord> {
         else { Item = new RefX<Record>(r.ReadUInt32(), null); Count = r.ReadUInt32(); }
     }
 }
+
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct Position {
     public Vector3 Translate;
@@ -1103,7 +1327,7 @@ partial class Record { static readonly HashSet<FormType> _factorySet = null; }
 partial class RecordGroup { static readonly HashSet<FormType> _factorySet = [NPC_]; }
 
 /// <summary>
-/// AACT.Action - 00500
+/// AACT.Action - 00500^
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/AACT"/>
 /// <see cref="https://tes5edit.github.io/fopdoc/Fallout4/Records/AACT.html"/>
@@ -1124,7 +1348,7 @@ public class AACTRecord : Record {
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/ACHR"/>
 /// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/ACHR.html"/>
 public class ACHRRecord : Record {
-    public Ref<Record> NAME; // Base
+    public Ref<NPC_4Record> NAME; // Base
     public REFRRecord.Data DATA; // Position/Rotation
     public REFRRecord.Xrgd[] XRGDs; // Ragdoll Data (optional)
     public REFRRecord.Xesp? XESP; // Enable Parent (optional)
@@ -1136,7 +1360,7 @@ public class ACHRRecord : Record {
 
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
-        FieldType.NAME => NAME = new Ref<Record>(r, dataSize),
+        FieldType.NAME => NAME = new Ref<NPC_4Record>(r, dataSize),
         FieldType.DATA => DATA = r.ReadS<REFRRecord.Data>(dataSize),
         FieldType.XRGD => XRGDs = r.ReadSArray<REFRRecord.Xrgd>(dataSize / 28),
         FieldType.XESP => XESP = new REFRRecord.Xesp(r, dataSize),
@@ -1146,6 +1370,9 @@ public class ACHRRecord : Record {
         FieldType.XMRC => XMRC = new Ref<REFRRecord>(r, dataSize),
         FieldType.XHRS => XHRS = new Ref<ACRERecord>(r, dataSize),
         FieldType.XSCL => XSCL = r.ReadSingle(),
+        //
+        //FieldType.VNAM => VNAM = r.ReadS<Vnam>(dataSize),
+        //FieldType.XEZN => XEZN = new Ref<ECZNRecord>(r, dataSize),
         _ => Empty,
     };
 }
@@ -1190,8 +1417,14 @@ public class ACTIRecord : Record, IHaveMODL {
     public Modl MODL { get; set; } // Model Name
     public RefX<SCPTRecord>? SCRI; // Script (Optional)
     // TES4
-    public RefX<SOUNRecord>? SNAM; // Sound (Optional)
+    public Ref<SOUNRecord>? SNAM; // Sound (Optional)
+    // fallout
+    public Dest DEST; // Destruction
+    public Ref<SOUNRecord>? VNAM; // Sound - Activation
+    public Ref<TACTRecord>? RNAM; // Radio Station
+    public Ref<WATRRecord>? WNAM; // Water Type
 
+    protected override HashSet<FieldType> DF4 => [FieldType.DSTD, FieldType.DSTF];
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadFUString(dataSize),
         FieldType.FULL or FieldType.FNAM => FULL = r.ReadFUString(dataSize),
@@ -1201,24 +1434,45 @@ public class ACTIRecord : Record, IHaveMODL {
         FieldType.MODT => MODL.MODT(r, dataSize),
         FieldType.SCRI => SCRI = new RefX<SCPTRecord>(r, dataSize),
         // TES4
-        FieldType.SNAM => SNAM = new RefX<SOUNRecord>(r, dataSize),
+        FieldType.SNAM => SNAM = new Ref<SOUNRecord>(r, dataSize),
+        FieldType.DEST => DEST = new Dest(r, dataSize),
+        FieldType.DSTD => DEST.DSTD(r, dataSize),
+        FieldType.DMDL => DEST.DMDL(r, dataSize),
+        FieldType.DMDT => DEST.DMDT(r, dataSize),
+        FieldType.DSTF => DEST.DSTF(r, dataSize),
+        FieldType.VNAM => VNAM = new Ref<SOUNRecord>(r, dataSize),
+        FieldType.RNAM => RNAM = new Ref<TACTRecord>(r, dataSize),
+        FieldType.WNAM => WNAM = new Ref<WATRRecord>(r, dataSize),
         _ => Empty,
     };
 }
 
 /// <summary>
-/// ADDN.Addon Node - 00500
+/// ADDN.Addon Node - 00500^
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/ADDN"/>
 /// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/ADDN.html"/>
 public class ADDNRecord : Record {
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public struct Dnam {
+        public static (string, int) Struct = ("<2H", 4);
+        public ushort MasterParticleSystemCap;
+        public ushort Flags;
+    }
+
     public Obnd OBND; // Object Boundary
-    public ByteColor4 CNAM; // RGB Color
+    public Modl MODL; // Model Name
+    public uint DATA; // Addon Node Index
+    public Ref<SOUNRecord> SNAM; // Ambient Sound
+    public Dnam DNAM; // Flags
 
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
         FieldType.OBND => OBND = r.ReadS<Obnd>(dataSize),
-        FieldType.CNAM => CNAM = r.ReadS<ByteColor4>(dataSize),
+        FieldType.MODL => MODL = new Modl(r, dataSize),
+        FieldType.MODT => MODL.MODT(r, dataSize),
+        FieldType.SNAM => SNAM = new Ref<SOUNRecord>(r, dataSize),
+        FieldType.DNAM => DNAM = r.ReadS<Dnam>(dataSize),
         _ => Empty,
     };
 }
@@ -1251,6 +1505,7 @@ public class ALCHRecord : Record, IHaveMODL {
             return true;
         }
     }
+
     // TES3
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct Enam {
@@ -1272,8 +1527,8 @@ public class ALCHRecord : Record, IHaveMODL {
     public List<Enam> ENAMs = []; // Enchantment
     public RefX<SCPTRecord>? SCRI; // Script (optional)
     // TES4
-    public List<ENCHRecord.Efit> EFITs = []; // Effect Data
-    public List<ENCHRecord.Scit> SCITs = []; // Script Effect Data
+    public List<Efid> EFIDs = []; // Effect Data
+    public List<Scit> SCITs = []; // Script Effect Data
 
     protected override HashSet<FieldType> DF3 => [FieldType.ENAM];
     protected override HashSet<FieldType> DF4 => [FieldType.FULL, FieldType.EFID, FieldType.EFIT];
@@ -1290,9 +1545,9 @@ public class ALCHRecord : Record, IHaveMODL {
         FieldType.SCRI => SCRI = new RefX<SCPTRecord>(r, dataSize),
         // TES4
         FieldType.ENIT => DATA.ENIT(r, dataSize),
-        FieldType.EFID => r.Skip(dataSize), // ignored
-        FieldType.EFIT => EFITs.AddX(new ENCHRecord.Efit(r, dataSize)),
-        FieldType.SCIT => SCITs.AddX(new ENCHRecord.Scit(r, dataSize)),
+        FieldType.EFID => EFIDs.AddX(new Efid(r, dataSize)),
+        FieldType.EFIT => EFIDs.Last().EFIT(r, dataSize),
+        FieldType.SCIT => SCITs.AddX(new Scit(r, dataSize)),
         _ => Empty,
     };
 }
@@ -1405,9 +1660,35 @@ public class APPARecord : Record, IHaveMODL {
 /// ARMA.Armature (Model) - 00500
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/ARMA"/>
+/// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/ARMA.html"/>
 public class ARMARecord : Record {
+    public string FULL; // Name
+    public Obnd OBND; // Object Bounds
+    public Ref<SCPTRecord> SCRI; // Script
+    public Bmdt BMDT; // Biped Data
+    public Modl MODL { get; set; } // Male Biped Model
+    public Modl MOD2; // Male World Model (optional)
+    public Modl MOD3; // Female Biped Model (optional)
+    public Modl MOD4; // Female World Model (optional)
+
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        FieldType.FULL => FULL = r.ReadFUString(dataSize),
+        FieldType.OBND => OBND = r.ReadS<Obnd>(dataSize),
+        FieldType.SCRI => SCRI = new Ref<SCPTRecord>(r, dataSize),
+        FieldType.BMDT => BMDT = new Bmdt(r, dataSize),
+        FieldType.MODL => MODL = new Modl(r, dataSize),
+        FieldType.MODT => MODL.MODT(r, dataSize),
+        FieldType.MOD2 => MOD2 = new Modl(r, dataSize),
+        FieldType.MO2T => MOD2.MODT(r, dataSize),
+        FieldType.ICON => MODL.ICON(r, dataSize),
+        //FieldType.MICO => MODL.MICO(r, dataSize),
+        FieldType.MOD3 => MOD3 = new Modl(r, dataSize),
+        FieldType.MO3T => MOD3.MODT(r, dataSize),
+        FieldType.MOD4 => MOD4 = new Modl(r, dataSize),
+        FieldType.MO4T => MOD4.MODT(r, dataSize),
+        FieldType.ICO2 => MOD3.ICON(r, dataSize),
+        //FieldType.MIC2 => MOD3.MICO(r, dataSize),
         _ => Empty,
     };
 }
@@ -1418,6 +1699,7 @@ public class ARMARecord : Record {
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/ARMO">
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/ARMO"/>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/ARMO"/>
+/// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/ARMO.html"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/ARMO">
 public class ARMORecord : Record, IHaveMODL {
     public struct Data {
@@ -1438,15 +1720,13 @@ public class ARMORecord : Record, IHaveMODL {
                 // TES3
                 EnchantPts = r.ReadInt32();
                 Armour = (short)r.ReadInt32();
-                return;
             }
-            Armour = r.ReadInt16();
-            Value = r.ReadInt32();
-            Health = r.ReadInt32();
-            Weight = r.ReadSingle();
-            // TES3
-            Type = default;
-            EnchantPts = default;
+            else if (r.Format == TES4) {
+                if (!r.Tes4a) Armour = r.ReadInt16();
+                Value = r.ReadInt32();
+                Health = r.ReadInt32();
+                Weight = r.ReadSingle();
+            }
         }
     }
 
@@ -1498,7 +1778,6 @@ public class ARMORecord : Record, IHaveMODL {
         public SkillType Skill;
     }
 
-    public Modl MODL { get; set; } // Male Biped Model
     public string FULL; // Item Name
     public Data DATA; // Armour Data
     public RefX<SCPTRecord>? SCRI; // Script Name (optional)
@@ -1506,7 +1785,8 @@ public class ARMORecord : Record, IHaveMODL {
     // TES3
     public List<CLOTRecord.Indx> INDXs = []; // Body Part Index
     // TES4
-    public uint BMDT; // Flags
+    public Bmdt BMDT; // Flags
+    public Modl MODL { get; set; } // Male Biped Model
     public Modl MOD2; // Male World Model (optional)
     public Modl MOD3; // Female Biped Model (optional)
     public Modl MOD4; // Female World Model (optional)
@@ -1528,7 +1808,7 @@ public class ARMORecord : Record, IHaveMODL {
         FieldType.BNAM => INDXs.Last().BNAM = r.ReadFUString(dataSize),
         FieldType.CNAM => INDXs.Last().CNAM = r.ReadFUString(dataSize),
         // TES4
-        FieldType.BMDT => BMDT = r.ReadUInt32(),
+        FieldType.BMDT => BMDT = new Bmdt(r, dataSize),
         FieldType.MOD2 => MOD2 = new Modl(r, dataSize),
         FieldType.MO2B => MOD2.MODB(r, dataSize),
         FieldType.MO2T => MOD2.MODT(r, dataSize),
@@ -1563,11 +1843,15 @@ public class ARTORecord : Record {
 /// ASPC.Acoustic Space - 00500
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/ASPC"/>
+/// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/ASPC.html"/>
 public class ASPCRecord : Record {
+    public enum Anam : uint { None_, Default, Generic, PaddedCell, Room, Bathroom, Livingroom, StoneRoom, Auditorium, Concerthall, Cave, Arena, Hangar, CarpetedHallway, Hallway, StoneCorridor, Alley, Forest, City, Mountains, Quarry, Plain, Parkinglot, Sewerpipe, Underwater, SmallRoom, MediumRoom, LargeRoom, MediumHall, LargeHall, Plate }
     public Obnd OBND; // Object Bounds
     public Ref<SNDRRecord> SNAM; // Ambient
     public Ref<REGNRecord> RDAT; // Region Data
     public Ref<REVBRecord> BNAM; // Reverb
+    // fallout
+    public Anam ANAM; // Environment Type
 
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
@@ -1575,6 +1859,7 @@ public class ASPCRecord : Record {
         FieldType.SNAM => SNAM = new Ref<SNDRRecord>(r, dataSize),
         FieldType.RDAT => RDAT = new Ref<REGNRecord>(r, dataSize),
         FieldType.BNAM => BNAM = new Ref<REVBRecord>(r, dataSize),
+        FieldType.ANAM => ANAM = (Anam)r.ReadUInt32(),
         _ => Empty,
     };
 }
@@ -3047,6 +3332,7 @@ public class EFSHRecord : Record {
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/ENCH">
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/ENCH"/>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/ENCH"/>
+/// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/ENCH.html"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/ENCH">
 public class ENCHRecord : Record {
     public struct Enit {
@@ -3071,72 +3357,21 @@ public class ENCHRecord : Record {
         }
     }
 
-    public class Efit {
-        public enum Type_ : int { Self = 0, Touch, Target }
-        public string EffectId;
-        public Type_ Type;
-        public int Area;
-        public int Duration;
-        public int MagnitudeMin;
-        // TES3
-        public sbyte SkillId; // (-1 if NA)
-        public sbyte AttributeId; // (-1 if NA)
-        public int MagnitudeMax;
-        // TES4
-        public ActorValue ActorValue = ActorValue.None_;
-        public Efit(Reader r, int dataSize) {
-            if (r.Format == TES3) {
-                EffectId = r.ReadUInt16().ToString();
-                SkillId = r.ReadSByte();
-                AttributeId = r.ReadSByte();
-                Type = (Type_)r.ReadInt32();
-                Area = r.ReadInt32();
-                Duration = r.ReadInt32();
-                MagnitudeMin = r.ReadInt32();
-                MagnitudeMax = r.ReadInt32();
-                return;
-            }
-            EffectId = r.ReadFAString(4);
-            MagnitudeMin = r.ReadInt32();
-            Area = r.ReadInt32();
-            Duration = r.ReadInt32();
-            Type = (Type_)r.ReadInt32();
-            ActorValue = (ActorValue)r.ReadInt32();
-        }
-    }
-
-    // TES4
-    public class Scit {
-        public string Name;
-        public int ScriptFormId;
-        public int School; // 0 = Alteration, 1 = Conjuration, 2 = Destruction, 3 = Illusion, 4 = Mysticism, 5 = Restoration
-        public string VisualEffect;
-        public uint Flags;
-        public Scit(Reader r, int dataSize) {
-            Name = "Script Effect";
-            ScriptFormId = r.ReadInt32();
-            if (dataSize == 4) return;
-            School = r.ReadInt32();
-            VisualEffect = r.ReadFAString(4);
-            Flags = dataSize > 12 ? r.ReadUInt32() : 0;
-        }
-        public object FULL(Reader r, int dataSize) => Name = r.ReadFUString(dataSize);
-    }
-
     public string FULL; // Enchant name
     public Enit ENIT; // Enchant Data
-    public List<Efit> EFITs = []; // Effect Data
-                                  // TES4
+    public List<Efid> EFIDs = []; // Effect Data
+    // TES4
     public List<Scit> SCITs = []; // Script effect data
 
     protected override HashSet<FieldType> DF3 => [FieldType.ENAM];
-    protected override HashSet<FieldType> DF4 => [FieldType.EFID, FieldType.EFIT];
+    protected override HashSet<FieldType> DF4 => [FieldType.EFID, FieldType.EFIT, FieldType.CTDA];
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = FULL = r.ReadFUString(dataSize),
         FieldType.FULL => SCITs.Count == 0 ? FULL = r.ReadFUString(dataSize) : SCITs.Last().FULL(r, dataSize),
         FieldType.ENIT or FieldType.ENDT => ENIT = new Enit(r, dataSize),
-        FieldType.EFID => r.Skip(dataSize),
-        FieldType.EFIT or FieldType.ENAM => EFITs.AddX(new Efit(r, dataSize)),
+        FieldType.EFID => EFIDs.AddX(new Efid(r, dataSize)),
+        FieldType.EFIT or FieldType.ENAM => EFIDs.Last().EFIT(r, dataSize),
+        FieldType.CTDA => EFIDs.Last().CTDA(r, dataSize),
         FieldType.SCIT => SCITs.AddX(new Scit(r, dataSize)),
         _ => Empty,
     };
@@ -3614,7 +3849,7 @@ public class HDPTRecord : Record, IHaveMODL {
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/IDLE"/>
 public class IDLERecord : Record, IHaveMODL {
     public Modl MODL { get; set; }
-    public List<SCPTRecord.Ctda> CTDAs = []; // Conditions
+    public List<Ctda> CTDAs = []; // Conditions
     public byte ANAM;
     public Ref<IDLERecord>[] DATAs;
 
@@ -3624,7 +3859,7 @@ public class IDLERecord : Record, IHaveMODL {
         FieldType.MODL => MODL = new Modl(r, dataSize),
         FieldType.MODB => MODL.MODB(r, dataSize),
         FieldType.MODT => MODL.MODT(r, dataSize),
-        FieldType.CTDA or FieldType.CTDT => CTDAs.AddX(new SCPTRecord.Ctda(r, dataSize)),
+        FieldType.CTDA or FieldType.CTDT => CTDAs.AddX(new Ctda(r, dataSize)),
         FieldType.ANAM => ANAM = r.ReadByte(),
         FieldType.DATA => DATAs = r.ReadFArray(z => new Ref<IDLERecord>(r, 4), dataSize >> 2),
         _ => Empty,
@@ -3716,7 +3951,7 @@ public class INFO3Record : INFORecord {
         FieldType.QSTN => QSTN = r.ReadByte(),
         FieldType.QSTF => QSTF = r.ReadByte(),
         FieldType.QSTR => QSTR = r.ReadByte(),
-        FieldType.SCVR => SCVRs.AddX(new SCPTRecord.Scvr { SCVR = new SCPTRecord.Ctda(r, dataSize) }),
+        FieldType.SCVR => SCVRs.AddX(new SCPTRecord.Scvr { SCVR = new Ctda(r, dataSize) }),
         FieldType.INTV => SCVRs.Last().INTV = r.ReadINTV(dataSize),
         FieldType.FLTV => SCVRs.Last().FLTV = r.ReadSingle(),
         FieldType.BNAM => BNAM = r.ReadFUString(dataSize),
@@ -3753,10 +3988,10 @@ public class INFO4Record : INFORecord {
     public RefX<DIALRecord> TPIC; // Topic
     public List<RefX<DIALRecord>> NAMEs = []; // Topics
     public List<Trdt> TRDTs = []; // Responses
-    public List<SCPTRecord.Ctda> CTDAs = []; // Conditions
+    public List<Ctda> CTDAs = []; // Conditions
     public List<RefX<DIALRecord>> TCLTs = []; // Choices
     public List<RefX<DIALRecord>> TCLFs = []; // Link From Topics
-    public SCPTRecord.Schr SCHR; // Script Data
+    public Schr SCHR; // Script Data
     public byte[] SCDA; // Compiled Script
     public string SCTX; // Script Source
     public List<RefX<Record>> SCROs = []; // Global variable reference
@@ -3771,10 +4006,10 @@ public class INFO4Record : INFORecord {
         FieldType.TRDT => TRDTs.AddX(new Trdt(r, dataSize)),
         FieldType.NAM1 => TRDTs.Last().NAM1(r, dataSize),
         FieldType.NAM2 => TRDTs.Last().NAM2(r, dataSize),
-        FieldType.CTDA or FieldType.CTDT => CTDAs.AddX(new SCPTRecord.Ctda(r, dataSize)),
+        FieldType.CTDA or FieldType.CTDT => CTDAs.AddX(new Ctda(r, dataSize)),
         FieldType.TCLT => TCLTs.AddX(new RefX<DIALRecord>(r, dataSize)),
         FieldType.TCLF => TCLFs.AddX(new RefX<DIALRecord>(r, dataSize)),
-        FieldType.SCHR or FieldType.SCHD => SCHR = new SCPTRecord.Schr(r, dataSize),
+        FieldType.SCHR or FieldType.SCHD => SCHR = new Schr(r, dataSize),
         FieldType.SCDA => SCDA = r.ReadBytes(dataSize),
         FieldType.SCTX => SCTX = r.ReadFUString(dataSize),
         FieldType.SCRO => SCROs.AddX(new RefX<Record>(r, dataSize)),
@@ -3813,8 +4048,8 @@ public class INGRRecord : Record, IHaveMODL {
     public Data DATA; // Ingrediant Data // TES4
     public RefX<SCPTRecord> SCRI; // Script Name
     // TES4
-    public List<ENCHRecord.Efit> EFITs = []; // Effect Data
-    public List<ENCHRecord.Scit> SCITs = []; // Script effect data
+    public List<Efid> EFIDs = []; // Effect Data
+    public List<Scit> SCITs = []; // Script effect data
 
     protected override HashSet<FieldType> DF4 => [FieldType.FULL, FieldType.EFID, FieldType.EFIT];
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
@@ -3830,9 +4065,9 @@ public class INGRRecord : Record, IHaveMODL {
         FieldType.SCRI => SCRI = new RefX<SCPTRecord>(r, dataSize),
         //
         FieldType.ENIT => DATA.ENIT(r, dataSize),
-        FieldType.EFID => r.Skip(dataSize),
-        FieldType.EFIT => EFITs.AddX(new ENCHRecord.Efit(r, dataSize)),
-        FieldType.SCIT => SCITs.AddX(new ENCHRecord.Scit(r, dataSize)),
+        FieldType.EFID => EFIDs.AddX(new Efid(r, dataSize)),
+        FieldType.EFIT => EFIDs.Last().EFIT(r, dataSize),
+        FieldType.SCIT => SCITs.AddX(new Scit(r, dataSize)),
         _ => Empty,
     };
 }
@@ -4187,10 +4422,7 @@ public class LIGHRecord : Record, IHaveMODL {
 /// <summary>
 /// LOCK.Lock - 34500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/GMST">
-/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/GMST"/>
-/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/GMST"/>
-/// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/GMST">
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/LOCK">
 public class LOCKRecord : Record, IHaveMODL {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct Lkdt {
@@ -4222,10 +4454,9 @@ public class LOCKRecord : Record, IHaveMODL {
 /// <summary>
 /// LSCR.Load Screen - 04500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/GMST">
-/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/GMST"/>
-/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/GMST"/>
-/// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/GMST">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/LSCR"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/LSCR"/>
+/// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/LSCR">
 public class LSCRRecord : Record {
     public struct Lnam(Reader r, int dataSize) {
         public Ref<Record> Direct = new(r.ReadUInt32());
@@ -4251,10 +4482,11 @@ public class LSCRRecord : Record {
 /// <summary>
 /// LTEX.Land Texture - 34500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/GMST">
-/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/GMST"/>
-/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/GMST"/>
-/// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/GMST">
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/LTEX">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/LTEX"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/LTEX"/>
+/// /// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/LTEX.html"/>
+/// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/LTEX">
 public class LTEXRecord : Record {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct Hnam {
@@ -4271,6 +4503,8 @@ public class LTEXRecord : Record {
     public Hnam HNAM; // Havok data
     public byte SNAM; // Texture specular exponent
     public List<RefX<GRASRecord>> GNAMs = []; // Potential grass
+    // fallout
+    public Ref<TXSTRecord> TNAM; // Texture
 
     protected override HashSet<FieldType> DF4 => [FieldType.GNAM];
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
@@ -4281,6 +4515,7 @@ public class LTEXRecord : Record {
         FieldType.HNAM => HNAM = r.ReadS<Hnam>(dataSize),
         FieldType.SNAM => SNAM = r.ReadByte(),
         FieldType.GNAM => GNAMs.AddX(new RefX<GRASRecord>(r, dataSize)),
+        FieldType.TNAM => new Ref<TXSTRecord>(r, dataSize),
         _ => Empty,
     };
 }
@@ -4414,20 +4649,23 @@ public class MESGRecord : Record {
 /// <summary>
 /// MGEF.Magic Effect - 34000
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/GMST">
-/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/GMST"/>
-/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/GMST"/>
-/// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/GMST">
+/// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/MGEF">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/MGEF"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/MGEF"/>
+/// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/MGEF.html"/>
+/// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/MGEF">
 public class MGEFRecord : Record {
     // TES3
-    public struct Medt(Reader r, int dataSize) {
-        public int SpellSchool = r.ReadInt32(); // 0 = Alteration, 1 = Conjuration, 2 = Destruction, 3 = Illusion, 4 = Mysticism, 5 = Restoration
-        public float BaseCost = r.ReadSingle();
-        public int Flags = r.ReadInt32(); // 0x0200 = Spellmaking, 0x0400 = Enchanting, 0x0800 = Negative
-        public ByteColor4 Color = new((byte)r.ReadInt32(), (byte)r.ReadInt32(), (byte)r.ReadInt32(), 255);
-        public float SpeedX = r.ReadSingle();
-        public float SizeX = r.ReadSingle();
-        public float SizeCap = r.ReadSingle();
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public struct Medt {
+        public static (string, int) Struct = ("<if4i3f", 40);
+        public int SpellSchool; // 0 = Alteration, 1 = Conjuration, 2 = Destruction, 3 = Illusion, 4 = Mysticism, 5 = Restoration
+        public float BaseCost;
+        public int Flags; // 0x0200 = Spellmaking, 0x0400 = Enchanting, 0x0800 = Negative
+        public Int3 Color;
+        public float SpeedX;
+        public float SizeX;
+        public float SizeCap;
     }
 
     // TES4
@@ -4467,49 +4705,30 @@ public class MGEFRecord : Record {
         Unknown31 = 0x80000000,
     }
 
-    public class Data {
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public struct Data {
+        public static Dictionary<int, string> Struct = new() { [36] = "<If3i2HIfI", [64] = "<If3i2HIf6I2f", [72] = "<If3i2HIf6I2fIi" };
         public uint Flags;
         public float BaseCost;
-        public int AssocItem;
+        public Ref<Record> AssocItem; // wbMGEFFAssocItemDecider: wbFormIDCk('Unused', [NULL]), wbFormIDCk('Assoc. Weapon', [WEAP]), wbFormIDCk('Assoc. Armor', [ARMO, NULL{?}]), wbFormIDCk('Assoc. Creature', [CREA, LVLC, NPC_]), wbInteger('Assoc. Actor Value', itS32, wbActorValueEnum)
         public int MagicSchool;
         public int ResistValue;
-        public uint CounterEffectCount; // Must be updated automatically when ESCE length changes!
-        public RefX<LIGHRecord> Light;
+        public ushort CounterEffectCount; // Must be updated automatically when ESCE length changes!
+        public ushort Unused;
+        public Ref<LIGHRecord> Light;
         public float ProjectileSpeed;
-        public RefX<EFSHRecord> EffectShader;
-        public RefX<EFSHRecord> EnchantEffect;
-        public RefX<SOUNRecord> CastingSound;
-        public RefX<SOUNRecord> BoltSound;
-        public RefX<SOUNRecord> HitSound;
-        public RefX<SOUNRecord> AreaSound;
+        public Ref<EFSHRecord> EffectShader;
+        // 64
+        public Ref<EFSHRecord> EnchantEffect;
+        public Ref<SOUNRecord> CastingSound;
+        public Ref<SOUNRecord> BoltSound;
+        public Ref<SOUNRecord> HitSound;
+        public Ref<SOUNRecord> AreaSound;
         public float ConstantEffectEnchantmentFactor;
         public float ConstantEffectBarterFactor;
-        public Data(Reader r, int dataSize) {
-            Flags = r.ReadUInt32();
-            BaseCost = r.ReadSingle();
-            AssocItem = r.ReadInt32();
-            //wbUnion('Assoc. Item', wbMGEFFAssocItemDecider, [
-            //  wbFormIDCk('Unused', [NULL]),
-            //  wbFormIDCk('Assoc. Weapon', [WEAP]),
-            //  wbFormIDCk('Assoc. Armor', [ARMO, NULL{?}]),
-            //  wbFormIDCk('Assoc. Creature', [CREA, LVLC, NPC_]),
-            //  wbInteger('Assoc. Actor Value', itS32, wbActorValueEnum)
-            MagicSchool = r.ReadInt32();
-            ResistValue = r.ReadInt32();
-            CounterEffectCount = r.ReadUInt16();
-            r.Skip(2); // Unused
-            Light = new RefX<LIGHRecord>(r.ReadUInt32());
-            ProjectileSpeed = r.ReadSingle();
-            EffectShader = new RefX<EFSHRecord>(r.ReadUInt32());
-            if (dataSize == 36) return;
-            EnchantEffect = new RefX<EFSHRecord>(r.ReadUInt32());
-            CastingSound = new RefX<SOUNRecord>(r.ReadUInt32());
-            BoltSound = new RefX<SOUNRecord>(r.ReadUInt32());
-            HitSound = new RefX<SOUNRecord>(r.ReadUInt32());
-            AreaSound = new RefX<SOUNRecord>(r.ReadUInt32());
-            ConstantEffectEnchantmentFactor = r.ReadSingle();
-            ConstantEffectBarterFactor = r.ReadSingle();
-        }
+        // 72
+        public uint Archtype; // enum
+        public int ActorValue;
     }
 
     public override string ToString() => $"MGEF: {INDX}:{EDID}";
@@ -4536,7 +4755,7 @@ public class MGEFRecord : Record {
     public override object ReadField(Reader r, FieldType type, int dataSize) => r.Format == TES3
         ? type switch {
             FieldType.INDX => INDX = r.ReadINTV(dataSize),
-            FieldType.MEDT => MEDT = new Medt(r, dataSize),
+            FieldType.MEDT => MEDT = r.ReadS<Medt>(dataSize),
             FieldType.ITEX => ICON = r.ReadFUString(dataSize),
             FieldType.PTEX => PTEX = r.ReadFUString(dataSize),
             FieldType.CVFX => CVFX = r.ReadFUString(dataSize),
@@ -4557,7 +4776,7 @@ public class MGEFRecord : Record {
             FieldType.MODL => MODL = new Modl(r, dataSize),
             FieldType.MODB => MODL.MODB(r, dataSize),
             FieldType.ICON => ICON = r.ReadFUString(dataSize),
-            FieldType.DATA => DATA = new Data(r, dataSize),
+            FieldType.DATA => DATA = r.ReadS<Data>(dataSize),
             FieldType.ESCE => ESCEs = r.ReadFArray(z => r.ReadFUString(4), dataSize >> 2),
             _ => Empty,
         };
@@ -4699,6 +4918,10 @@ public class NOTERecord : Record {
 /// NPC_.Non-Player Character - 34500
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/NPC_">
+/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/NPC_"/>
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/NPC_"/>
+/// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/NPC_">
+
 public class NPC_3Record : CREA3Record {
     [Flags]
     public enum NPC_3Flags : uint {
@@ -4759,12 +4982,6 @@ public class NPC_3Record : CREA3Record {
     };
 }
 
-/// <summary>
-/// NPC_.Non-Player Character - 34500
-/// </summary>
-/// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/NPC_"/>
-/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/NPC_"/>
-/// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/NPC_">
 public class NPC_4Record : CREA4Record {
     [Flags]
     public enum NPC_4Flags : uint {
@@ -4902,7 +5119,7 @@ public class PACKRecord : Record {
     public Pldt PLDT; // Location
     public Psdt PSDT; // Schedule
     public Ptdt PTDT; // Target
-    public List<SCPTRecord.Ctda> CTDAs = []; // Conditions
+    public List<Ctda> CTDAs = []; // Conditions
 
     protected override HashSet<FieldType> DF4 => [FieldType.CTDA, FieldType.CTDT];
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
@@ -4911,7 +5128,7 @@ public class PACKRecord : Record {
         FieldType.PLDT => PLDT = r.ReadS<Pldt>(dataSize),
         FieldType.PSDT => PSDT = r.ReadS<Psdt>(dataSize),
         FieldType.PTDT => PTDT = r.ReadS<Ptdt>(dataSize),
-        FieldType.CTDA or FieldType.CTDT => CTDAs.AddX(new SCPTRecord.Ctda(r, dataSize)),
+        FieldType.CTDA or FieldType.CTDT => CTDAs.AddX(new Ctda(r, dataSize)),
         _ => Empty,
     };
 }
@@ -5088,10 +5305,10 @@ public class QUSTRecord : Record {
     public string ICON; // Icon
     public Data DATA; // Icon
     public RefX<SCPTRecord> SCRI; // Script Name
-    public List<SCPTRecord.Schr> SCHRs = []; // Script Data //TODO Group?
-    public List<SCPTRecord.Scda> SCDAs = []; // Compiled Script //TODO Group?
+    public List<Schr> SCHRs = []; // Script Data
     public List<string> SCTXs = []; // Script Source //TODO Group?
     public List<RefX<Record>> SCROs = []; // Global variable reference
+    Schr _last;
 
     protected override HashSet<FieldType> DF4 => [FieldType.CTDA, FieldType.INDX, FieldType.QSDT, FieldType.CNAM, FieldType.QSTA, FieldType.SCHR, FieldType.SCDA, FieldType.SCTX, FieldType.SCRO];
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
@@ -5105,8 +5322,8 @@ public class QUSTRecord : Record {
         FieldType.QSDT => r.Skip(dataSize), //TODO multi
         FieldType.CNAM => r.Skip(dataSize), //TODO multi
         FieldType.QSTA => r.Skip(dataSize), //TODO
-        FieldType.SCHR => SCHRs.AddX(new SCPTRecord.Schr(r, dataSize)),
-        FieldType.SCDA => SCDAs.AddX(new SCPTRecord.Scda(r, dataSize)),
+        FieldType.SCHR => _last = SCHRs.AddX(new Schr(r, dataSize)),
+        FieldType.SCDA => _last.SCDA(r, dataSize),
         FieldType.SCTX => SCTXs.AddX(r.ReadFUString(dataSize)),
         FieldType.SCRO => SCROs.AddX(new RefX<Record>(r, dataSize)),
         _ => Empty,
@@ -5826,41 +6043,6 @@ public class SCENRecord : Record {
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/SCPT"/>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/SCPT"/>
 public class SCPTRecord : Record {
-    public struct Ctda {
-        public enum INFOType : byte { Nothing = 0, Function, Global, Local, Journal, Item, Dead, NotId, NotFaction, NotClass, NotRace, NotCell, NotLocal }
-        // TES3: 0 = [=], 1 = [!=], 2 = [>], 3 = [>=], 4 = [<], 5 = [<=]
-        // TES4: 0 = [=], 2 = [!=], 4 = [>], 6 = [>=], 8 = [<], 10 = [<=]
-        public byte CompareOp;
-        // (00-71) - sX = Global/Local/Not Local types, JX = Journal type, IX = Item Type, DX = Dead Type, XX = Not ID Type, FX = Not Faction, CX = Not Class, RX = Not Race, LX = Not Cell
-        public string FunctionId;
-        // TES3
-        public byte Index; // (0-5)
-        public byte Type;
-        // Except for the function type, this is the ID for the global/local/etc. Is not nessecarily NULL terminated.The function type SCVR sub-record has
-        public string Name;
-        // TES4
-        public float ComparisonValue;
-        public int Parameter1; // Parameter #1
-        public int Parameter2; // Parameter #2
-        public Ctda(Reader r, int dataSize) {
-            if (r.Format == TES3) {
-                Index = r.ReadByte();
-                Type = r.ReadByte();
-                FunctionId = r.ReadFAString(2);
-                CompareOp = (byte)(r.ReadByte() << 1);
-                Name = r.ReadFAString(dataSize - 5);
-                return;
-            }
-            CompareOp = r.ReadByte();
-            r.Skip(3); // Unused
-            ComparisonValue = r.ReadSingle();
-            FunctionId = r.ReadFAString(4);
-            Parameter1 = r.ReadInt32();
-            Parameter2 = r.ReadInt32();
-            if (dataSize == 24) r.Skip(4); // Unused
-        }
-    }
-
     public class Scvr {
         public Ctda SCVR;
         public long? INTV; //
@@ -5881,19 +6063,6 @@ public class SCPTRecord : Record {
     }
 
     // TES4
-    public struct Schr(Reader r, int dataSize) {
-        public override readonly string ToString() => $"{RefCount}";
-        public uint RefCount = r.Skip(4).ReadUInt32(); // 4:Unused
-        public uint CompiledSize = r.ReadUInt32();
-        public uint VariableCount = r.ReadUInt32();
-        public uint Type = (z: r.ReadUInt32(), r.Skip(dataSize > 20 ? dataSize - 20 : 0)).z; // 0x000 = Object, 0x001 = Quest, 0x100 = Magic Effect
-    }
-
-    public struct Scda(Reader r, int dataSize) {
-        public override readonly string ToString() => $"{Data}";
-        public byte[] Data = r.ReadBytes(dataSize);
-    }
-
     public class Slsd {
         public override string ToString() => $"{Idx}:{VariableName}";
         public uint Idx;
@@ -5966,8 +6135,8 @@ public class SGSTRecord : Record, IHaveMODL {
     public string FULL; // Item Name
     public Data DATA; // Sigil Stone Data
     public RefX<SCPTRecord>? SCRI; // Script (optional)
-    public List<ENCHRecord.Efit> EFITs = []; // Effect Data
-    public List<ENCHRecord.Scit> SCITs = []; // Script Effect Data
+    public List<Efid> EFIDs = []; // Effect Data
+    public List<Scit> SCITs = []; // Script Effect Data
 
     protected override HashSet<FieldType> DF4 => [FieldType.FULL, FieldType.EFID, FieldType.EFIT];
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
@@ -5979,9 +6148,9 @@ public class SGSTRecord : Record, IHaveMODL {
         FieldType.FULL => SCITs.Count == 0 ? FULL = r.ReadFUString(dataSize) : SCITs.Last().FULL(r, dataSize),
         FieldType.DATA => DATA = r.ReadS<Data>(dataSize),
         FieldType.SCRI => SCRI = new RefX<SCPTRecord>(r, dataSize),
-        FieldType.EFID => r.Skip(dataSize),
-        FieldType.EFIT => EFITs.AddX(new ENCHRecord.Efit(r, dataSize)),
-        FieldType.SCIT => SCITs.AddX(new ENCHRecord.Scit(r, dataSize)),
+        FieldType.EFID => EFIDs.AddX(new Efid(r, dataSize)),
+        FieldType.EFIT => EFIDs.Last().EFIT(r, dataSize),
+        FieldType.SCIT => SCITs.AddX(new Scit(r, dataSize)),
         _ => Empty,
     };
 }
@@ -6255,20 +6424,21 @@ public class SPELRecord : Record {
 
     public string FULL; // Spell name
     public Spit SPIT; // Spell data
-    public List<ENCHRecord.Efit> EFITs = []; // Effect Data
+    public List<Efid> EFIDs = []; // Effect Data
     // TES4
-    public List<ENCHRecord.Scit> SCITs = []; // Script effect data
+    public List<Scit> SCITs = []; // Script effect data
 
     protected override HashSet<FieldType> DF3 => [FieldType.ENAM];
-    protected override HashSet<FieldType> DF4 => [FieldType.FULL, FieldType.EFID, FieldType.EFIT];
+    protected override HashSet<FieldType> DF4 => [FieldType.FULL, FieldType.EFID, FieldType.EFIT, FieldType.CTDA];
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadFUString(dataSize),
         FieldType.FULL => SCITs.Count == 0 ? FULL = r.ReadFUString(dataSize) : SCITs.Last().FULL(r, dataSize),
         FieldType.FNAM => FULL = r.ReadFUString(dataSize),
         FieldType.SPIT or FieldType.SPDT => SPIT = new Spit(r, dataSize),
-        FieldType.EFID => r.Skip(dataSize),
-        FieldType.EFIT or FieldType.ENAM => EFITs.AddX(new ENCHRecord.Efit(r, dataSize)),
-        FieldType.SCIT => SCITs.AddX(new ENCHRecord.Scit(r, dataSize)),
+        FieldType.EFID => EFIDs.AddX(new Efid(r, dataSize)),
+        FieldType.EFIT or FieldType.ENAM => EFIDs.Last().EFIT(r, dataSize),
+        FieldType.CTDA => EFIDs.Last().CTDA(r, dataSize),
+        FieldType.SCIT => SCITs.AddX(new Scit(r, dataSize)),
         _ => Empty,
     };
 }
@@ -6345,8 +6515,37 @@ public class SUNPRecord : Record {
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/TACT"/>
 public class TACTRecord : Record {
+    public string FULL; // Full Name
+    public Obnd OBND; // Object Bounds
+    public Modl MODL; // Model
+    public Ref<SCPTRecord> SCRI; // Script
+    public Dest DEST; // Destruction
+    public uint KSIZ; // Keyword count
+    public Ref<KYWDRecord>[] KWDAs; // Keywords
+    public byte[] PNAM; // RESET to 0 by CK, assumed legacy
+    public Ref<SOUNRecord> SNAM; // Looping Sound
+    public byte[] FNAM; // Unknown, assumed legacy
+    public Ref<VTYPRecord> VNAM; // Voice Type
+
+    protected override HashSet<FieldType> DF4 => [FieldType.DSTD, FieldType.DSTF];
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        FieldType.FULL => FULL = r.ReadFUString(dataSize),
+        FieldType.OBND => OBND = r.ReadS<Obnd>(dataSize),
+        FieldType.MODL => MODL = new Modl(r, dataSize),
+        FieldType.MODB => MODL.MODB(r, dataSize),
+        FieldType.MODT => MODL.MODT(r, dataSize),
+        FieldType.SCRI => SCRI = new Ref<SCPTRecord>(r, dataSize),
+        FieldType.DEST => DEST = new Dest(r, dataSize),
+        FieldType.DSTD => DEST.DSTD(r, dataSize),
+        FieldType.DMDL => DEST.DMDL(r, dataSize),
+        FieldType.DSTF => DEST.DSTF(r, dataSize),
+        FieldType.KSIZ => KSIZ = r.ReadUInt32(),
+        FieldType.KWDA => KWDAs = r.ReadFArray(z => new Ref<KYWDRecord>(r, 4), KSIZ),
+        FieldType.PNAM => PNAM = r.ReadBytes(dataSize),
+        FieldType.SNAM => SNAM = new Ref<SOUNRecord>(r, dataSize),
+        FieldType.FNAM => FNAM = r.ReadBytes(dataSize),
+        FieldType.VNAM => VNAM = new Ref<VTYPRecord>(r, dataSize),
         _ => Empty,
     };
 }
@@ -6424,10 +6623,77 @@ public class TES4Record : Record {
 /// <summary>
 /// TERM.Computer Terminals - 000S0
 /// </summary>
-/// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/TERM">
+/// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/TERM.html">
 public class TERMRecord : Record {
+    public enum DnamDifficulty : byte { VeryEasy, Easy, Average, Hard, VeryHard, RequiresKey }
+    [Flags] public enum DnamFlag : byte { Leveled = 0x01, Unlocked = 0x02, AlternateColors = 0x04, HideWelcomeTextWhenDisplayingText = 0x08 }
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public struct Dnam {
+        public static Dictionary<int, string> Struct = new() { [3] = "<3B", [4] = "<4B" };
+        public DnamDifficulty BaseHackingDifficulty;
+        public DnamFlag Flags;
+        public byte ServerType;
+        public byte Unused;
+    }
+
+    public class Itxt(Reader r, int dataSize) {
+        public string ItemText = r.ReadFUString(dataSize); // Item Text
+        public string ResultText; // Result Text
+        public byte Flags; // Flags
+        public Ref<NOTERecord> DisplayNote; // Display Note
+        public Ref<TERMRecord> SubMenu; // Sub Menu
+        public List<Schr> SCHRs = []; // Embedded Script
+        public List<Ctda> CTDAs = []; // Condition
+        public object RNAM(Reader r, int dataSize) => ResultText = r.ReadFUString(dataSize);
+        public object ANAM(Reader r, int dataSize) => Flags = r.ReadByte();
+        public object INAM(Reader r, int dataSize) => DisplayNote = new Ref<NOTERecord>(r, dataSize);
+        public object TNAM(Reader r, int dataSize) => SubMenu = new Ref<TERMRecord>(r, dataSize);
+    }
+
+    public string FULL; // Full Name
+    public Obnd OBND; // Object bounds
+    public Modl MODL; // Model
+    public Ref<SCPTRecord> SCRI; // Script
+    public Dest DEST; // Destruction
+    public string DESC; // Description
+    public Ref<SOUNRecord> SNAM; // Sound - Looping
+    public Ref<NOTERecord> PNAM; // Password Note
+    public Dnam DNAM;
+    public List<Itxt> ITXTs = [];
+    Itxt _last;
+    Schr _last2;
+
+    protected override HashSet<FieldType> DF4 => [FieldType.ITXT, FieldType.RNAM, FieldType.ANAM, FieldType.INAM, FieldType.TNAM, FieldType.SCHR, FieldType.SCDA, FieldType.SCTX, FieldType.SLSD, FieldType.SCVR, FieldType.CTDA, FieldType.SCRO, FieldType.SCRV];
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        FieldType.FULL => FULL = r.ReadFUString(dataSize),
+        FieldType.OBND => OBND = r.ReadS<Obnd>(dataSize),
+        FieldType.MODL => MODL = new Modl(r, dataSize),
+        FieldType.MODB => MODL.MODB(r, dataSize),
+        FieldType.MODT => MODL.MODT(r, dataSize),
+        FieldType.SCRI => SCRI = new Ref<SCPTRecord>(r, dataSize),
+        FieldType.DEST => DEST = new Dest(r, dataSize),
+        FieldType.DSTD => DEST.DSTD(r, dataSize),
+        FieldType.DMDL => DEST.DMDL(r, dataSize),
+        FieldType.DSTF => DEST.DSTF(r, dataSize),
+        FieldType.DESC => DESC = r.ReadFUString(dataSize),
+        FieldType.SNAM => SNAM = new Ref<SOUNRecord>(r, dataSize),
+        FieldType.PNAM => PNAM = new Ref<NOTERecord>(r, dataSize),
+        FieldType.DNAM => DNAM = r.ReadS<Dnam>(dataSize),
+        // term
+        FieldType.ITXT => _last = ITXTs.AddX(new Itxt(r, dataSize)),
+        FieldType.RNAM => _last.RNAM(r, dataSize),
+        FieldType.ANAM => _last.ANAM(r, dataSize),
+        FieldType.INAM => _last.INAM(r, dataSize),
+        FieldType.TNAM => _last.TNAM(r, dataSize),
+        FieldType.SCHR => _last2 = _last.SCHRs.AddX(new Schr(r, dataSize)),
+        FieldType.SCDA => _last2.SCDA(r, dataSize),
+        FieldType.SCTX => _last2.SCTX(r, dataSize),
+        FieldType.SLSD => _last2.SLSD(r, dataSize),
+        FieldType.SCVR => _last2.SCVR(r, dataSize),
+        FieldType.SCRO => _last2.SCRO(r, dataSize),
+        FieldType.SCRV => r.Skip(dataSize), //TODO
+        FieldType.CTDA => _last.CTDAs.AddX(new Ctda(r, dataSize)),
         _ => Empty,
     };
 }

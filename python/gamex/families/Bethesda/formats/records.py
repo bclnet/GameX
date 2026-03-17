@@ -20,7 +20,7 @@ type Vector3 = ndarray
 #region Enums
 
 class FormType(IntEnum):
-    def __str__(self): return self.to_bytes(4, byteorder='little').decode('ascii')
+    # def __str__(self): return self.to_bytes(4, byteorder='little').decode('ascii')
     ZERO = 0x00000000
     # ONE_ = 0x00000001
     AACT = 0x54434141
@@ -261,6 +261,7 @@ class FieldType(Enum):
     CNAM = 0x4D414E43
     CNDT = 0x54444E43
     CNTO = 0x4F544E43
+    COED = 0x44454F43
     CRGR = 0x52475243
     CRVA = 0x41565243
     CSAD = 0x44415343
@@ -295,6 +296,7 @@ class FieldType(Enum):
     ESCE = 0x45435345
     ETYP = 0x50595445
     FADT = 0x54444146
+    FCHT = 0x54484346
     FGGA = 0x41474746
     FGGS = 0x53474746
     FGTS = 0x53544746
@@ -302,6 +304,7 @@ class FieldType(Enum):
     FLMV = 0x564D4C46
     FLTV = 0x56544C46
     FNAM = 0x4D414E46
+    FPRT = 0x54525046
     FRMR = 0x524D5246
     FTSF = 0x46535446
     FTSM = 0x4D535446
@@ -338,7 +341,9 @@ class FieldType(Enum):
     LVLO = 0x4F4C564C
     MAST = 0x5453414D
     MCDT = 0x5444434D
+    MCHT = 0x5448434D
     MEDT = 0x5444454D
+    MIC2 = 0x3243494D
     MICO = 0x4F43494D
     MNAM = 0x4D414E4D
     MO2B = 0x42324F4D
@@ -361,6 +366,7 @@ class FieldType(Enum):
     MOSD = 0x44534F4D
     MPAI = 0x4941504D
     MPAV = 0x5641504D
+    MPRT = 0x5452504D
     MTNM = 0x4D4E544D
     MTYP = 0x5059544D
     NAM0 = 0x304D414E
@@ -941,6 +947,16 @@ class Obnd:
         self.y2,
         self.z2) = t
 
+# Coed
+class Coed:
+    _struct = ('<2If', 12)
+    def __init__(self, t):
+        (self.owner,
+        self.value,
+        self.itemCondition) = t
+        self.owner = Ref[Record](Record, self.owner)
+        self.value = Ref[Record](Record, self.value)
+
 # BMDT Subrecord
 class Bmdt:
     class BipedFlag(IntFlag):
@@ -968,11 +984,13 @@ class Modl:
     altTextures: list[Mods] = None # Alternate Textures
     faceGenModelFlags: ModdFlag = None # FaceGen Model Flags
     icon: str = None # Icon
+    mico: str = None # Mico
     def MODB(self, r: Reader, dataSize: int) -> object: z = self.bound = r.readSingle(); return z
     def MODT(self, r: Reader, dataSize: int) -> object: z = self.hashes = r.readBytes(dataSize); return z # Texture File Hashes
     def MODS(self, r: Reader, dataSize: int) -> object: z = self.altTextures = r.readL32FArray(lambda z: Modl.Mods(r, dataSize)); return z # Alternate Textures
     def MODD(self, r: Reader, dataSize: int) -> object: z = self.faceGenModelFlags = Modl.ModdFlag(r.readByte()); return z # FaceGen Model Flags
     def ICON(self, r: Reader, dataSize: int) -> object: z = self.icon = r.readFUString(dataSize); return z # Icon
+    def MICO(self, r: Reader, dataSize: int) -> object: z = self.mico = r.readFUString(dataSize); return z # Mico
 
 # class Modt:
 #     def __init__(self, r: Reader, dataSize: int):
@@ -1199,6 +1217,7 @@ Record._factorySet = None #{ FormType.GLOB }
 RecordGroup._factorySet = { FormType.NPC_ }
 
 # AACT.Action - 0050^ - tag::AACT[]
+# AACT records hold information about Actions
 class AACTRecord(Record):
     CNAM: ByteColor4 # RGB Color
     def __init__(self): super().__init__()
@@ -1211,7 +1230,8 @@ class AACTRecord(Record):
         return z
 # end::AACT[]
 
-# ACHR.Actor Reference - 0450 - tag::ACHR[]
+# ACHR.Placed NPC - 0450 - tag::ACHR[]
+# An ACHR record represents an NPC placed in a cell.
 class ACHRRecord(Record):
     NAME: Ref['NPC_4Record'] # Base
     DATA: 'REFRRecord.Data' # Position/Rotation
@@ -1241,7 +1261,8 @@ class ACHRRecord(Record):
         return z
 # end::ACHR[]
 
-# ACRE.Placed creature - 0400 - tag::ACRE[]
+# ACRE.Placed Creature - 0400 - tag::ACRE[]
+# An ACRE record represents a creature placed in a cell.
 class ACRERecord(Record):
     NAME: Ref[Record] # Base
     DATA: 'REFRRecord.Data' # Position/Rotation
@@ -1267,9 +1288,10 @@ class ACRERecord(Record):
 # end::ACRE[]
 
 # ACTI.Activator - 3450 - tag::ACTI[]
+# ACTI records contain information about activators.
 class ACTIRecord(Record, IHaveMODL):
-    FULL: str # Item Name
     OBND: Obnd # Object Boundary
+    FULL: str # Item Name
     MODL: Modl # Model Name
     SCRI: RefX['SCPTRecord'] = None # Script (Optional)
     # TES4
@@ -1284,8 +1306,8 @@ class ACTIRecord(Record, IHaveMODL):
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.EDID | FieldType.NAME: z = self.EDID = r.readFUString(dataSize)
-            case FieldType.FULL | FieldType.FNAM: z = self.FULL = r.readFUString(dataSize)
             case FieldType.OBND: z = self.OBND = r.readS(Obnd, dataSize)
+            case FieldType.FULL | FieldType.FNAM: z = self.FULL = r.readFUString(dataSize)
             case FieldType.MODL: z = self.MODL = Modl(r, dataSize)
             case FieldType.MODB: z = self.MODL.MODB(r, dataSize)
             case FieldType.MODT: z = self.MODL.MODT(r, dataSize)
@@ -1305,6 +1327,7 @@ class ACTIRecord(Record, IHaveMODL):
 # end::ACTI[]
 
 # ADDN.Addon Node - 0050^ - tag::ADDN[]
+# ADDN records contain information on "addon nodes".
 class ADDNRecord(Record):
     class Dnam:
         _struct = ('<2H', 4)
@@ -1332,6 +1355,7 @@ class ADDNRecord(Record):
 # end::ADDN[]
 
 # ALCH.Potion - 3450 - tag::ALCH[]
+# ALCH records contain information about alchemy items (potions and beverages).
 class ALCHRecord(Record, IHaveMODL):
     class Data:
         class Flag(Flag): NoAutoCalculate = 0x01; FoodItem = 0x02 
@@ -1395,6 +1419,7 @@ class ALCHRecord(Record, IHaveMODL):
 # end::ALCH[]
 
 # AMMO.Ammo - 0450 - tag::AMMO[]
+# An AMMO record contains data for an arrow, the only form of ranged ammunition that comes with the game.
 class AMMORecord(Record, IHaveMODL):
     class Data:
         class Flag(Flag): IgnoresNormalWeaponResistance = 0x1
@@ -1445,7 +1470,8 @@ class ANIORecord(Record, IHaveMODL):
         return z
 # end::ANIO[]
 
-# APPA.Alchem Apparatus - 3450 - tag::APPA[]
+# APPA.Apparatus - 3450 - tag::APPA[]
+# APPA records contain information about alchemy apparatus.
 class APPARecord(Record, IHaveMODL):
     class Data:
         class Type_(Enum): MortarAndPestle = 0; Albemic = 1; Calcinator = 2; Retort = 3
@@ -1486,9 +1512,10 @@ class APPARecord(Record, IHaveMODL):
 # end::APPA[]
 
 # ARMA.Armature (Model) - 0050 - tag::ARMA[]
+# ARMA records contain armature data, which is how armor (or similar) is displayed on a model.
 class ARMARecord(Record):
-    FULL: str # Item Name
     OBND: Obnd # Object Bounds
+    FULL: str # Item Name
     SCRI: RefX['SCPTRecord'] = None # Script
     BMDT: Bmdt = None # Biped Data
     MODL: Modl # Male Biped Model
@@ -1500,8 +1527,8 @@ class ARMARecord(Record):
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
-            case FieldType.FULL: z = self.FULL = r.readFUString(dataSize)
             case FieldType.OBND: z = self.OBND = r.readS(Obnd, dataSize)
+            case FieldType.FULL: z = self.FULL = r.readFUString(dataSize)
             case FieldType.SCRI: z = self.SCRI = Ref[SCPTRecord](SCPTRecord, r, dataSize)
             case FieldType.BMDT: z = self.BMDT = Bmdt(r, dataSize)
             case FieldType.MODL: z = self.MODL = Modl(r, dataSize)
@@ -1521,6 +1548,7 @@ class ARMARecord(Record):
 # end::ARMA[]
 
 # ARMO.Armor - 3450 - tag::ARMA[]
+# ARMO records contain information about armor.
 class ARMORecord(Record, IHaveMODL):
     class Data:
         class ARMOType(Enum): Helmet = 0; Cuirass = 2; L_Pauldron = 3; R_Pauldron = 4; Greaves = 5; Boots = 6; L_Gauntlet = 7; R_Gauntlet = 8; Shield = 9; L_Bracer = 10; R_Bracer = 11
@@ -1619,10 +1647,12 @@ class ARMORecord(Record, IHaveMODL):
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.EDID | FieldType.NAME: z = self.EDID = r.readFUString(dataSize)
+            case FieldType.OBND: z = self.OBND = r.readS(Obnd, dataSize)
             case FieldType.MODL: z = self.MODL = Modl(r, dataSize)
             case FieldType.MODB: z = self.MODL.MODB(r, dataSize)
             case FieldType.MODT: z = self.MODL.MODT(r, dataSize)
             case FieldType.ICON | FieldType.ITEX: z = self.MODL.ICON(r, dataSize)
+            case FieldType.MICO: z = self.MODL.MICO(r, dataSize)
             case FieldType.FULL | FieldType.FNAM: z = self.FULL = r.readFUString(dataSize)
             case FieldType.DATA | FieldType.AODT: z = self.DATA = ARMORecord.Data(r, dataSize)
             case FieldType.SCRI: z = self.SCRI = RefX[SCPTRecord](SCPTRecord, r, dataSize)
@@ -1636,10 +1666,10 @@ class ARMORecord(Record, IHaveMODL):
             case FieldType.MOD2: z = self.MOD2 = Modl(r, dataSize)
             case FieldType.MO2B: z = self.MOD2.MODB(r, dataSize)
             case FieldType.MO2T: z = self.MOD2.MODT(r, dataSize)
-            case FieldType.ICO2: z = self.MOD2.ICON(r, dataSize)
             case FieldType.MOD3: z = self.MOD3 = Modl(r, dataSize)
             case FieldType.MO3B: z = self.MOD3.MODB(r, dataSize)
             case FieldType.MO3T: z = self.MOD3.MODT(r, dataSize)
+            case FieldType.ICO2: z = _nca(self, 'MOD3', lambda: Modl()).ICON(r, dataSize)
             case FieldType.MOD4: z = self.MOD4 = Modl(r, dataSize)
             case FieldType.MO4B: z = self.MOD4.MODB(r, dataSize)
             case FieldType.MO4T: z = self.MOD4.MODT(r, dataSize)
@@ -1649,19 +1679,30 @@ class ARMORecord(Record, IHaveMODL):
 # end::ARMO[]
 
 # ARTO.Art Object - 0050 - tag::ARTO[]
+# ARTO records contain information on "art" (effects) objects.
 class ARTORecord(Record):
-    CNAM: ByteColor4 # RGB Color
+    class DnamFlag(Flag): MagicCasting = 0x00000000; MagicHitEffect = 0x00000001; EnchantmentEffect = 0x00000002
+    OBND: Obnd # Object Bounds
+    MODL: Modl # Model
+    DNAM: DnamFlag # Art Type
     def __init__(self): super().__init__()
 
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
-            case FieldType.CNAM: z = self.CNAM = r.readS(ByteColor4, dataSize)
+            case FieldType.OBND: z = self.OBND = r.readS(Obnd, dataSize)
+            case FieldType.MODL: z = self.MODL = Modl(r, dataSize)
+            case FieldType.MODB: z = self.MODL.MODB(r, dataSize)
+            case FieldType.MODT: z = self.MODL.MODT(r, dataSize)
+            case FieldType.MODS: z = self.MODL.MODS(r, dataSize)
+            case FieldType.MODD: z = self.MODL.MODD(r, dataSize)
+            case FieldType.DNAM: z = ARTORecord.DnamFlag(r.readUInt32())
             case _: z = Record._empty
         return z
 # end::ARTO[]
 
-# ASPC.Acoustic Space - 0050 - tag::ASPC[]
+# ASPC.Acoustic Space^ - 0050 - tag::ASPC[]
+# ASPC contains the data used for ambient and other sounds for an interior cell.
 class ASPCRecord(Record):
     class Anam(Enum): None_ = 0; Default = 1; Generic = 2; PaddedCell = 3; Room = 4; Bathroom = 5; Livingroom = 6; StoneRoom = 7; Auditorium = 8; Concerthall = 9; Cave = 10; Arena = 11; Hangar = 12; CarpetedHallway = 13; Hallway = 14; StoneCorridor = 15; Alley = 16; Forest = 17; City = 18; Mountains = 19; Quarry = 20; Plain = 21; Parkinglot = 22; Sewerpipe = 23; Underwater = 24; SmallRoom = 25; MediumRoom = 26; LargeRoom = 27; MediumHall = 28; LargeHall = 29; Plate = 30
     OBND: Obnd # Object Bounds
@@ -1684,20 +1725,31 @@ class ASPCRecord(Record):
         return z
 # end::ASPC[]
 
-# ASTP.Association Type - 0050 - tag::ASTP[]
+# ASTP.Association Type^ - 0050 - tag::ASTP[]
+# ASPC contains the data used for ambient and other sounds for an interior cell.
 class ASTPRecord(Record):
-    CNAM: ByteColor4 # RGB Color
+    class DataFlag(Flag): FamilyAssociation = 0x01
+    MPRT: str # Male Parent Label
+    FPRT: str # Female Parent Label
+    MCHT: str # Male Child Label
+    FCHT: str # Female Child Label
+    DATA: DataFlag # Flags
     def __init__(self): super().__init__()
 
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
-            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize),
-            case FieldType.CNAM: z = self.CNAM = r.readS(ByteColor4, dataSize),
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case FieldType.MPRT: z = self.MPRT = r.readFUString(dataSize)
+            case FieldType.FPRT: z = self.FPRT = r.readFUString(dataSize)
+            case FieldType.MCHT: z = self.MCHT = r.readFUString(dataSize)
+            case FieldType.FCHT: z = self.FCHT = r.readFUString(dataSize)
+            case FieldType.DATA: z = self.DATA = ASTPRecord.DataFlag(r.readUInt32())
             case _: z = Record._empty
         return z
 # end::ASTP[]
 
-# AVIF.Actor Values_Perk Tree Graphics - 0050 - tag::ASTP[]
+# AVIF.Actor Values / Perk Tree Graphics - 0050 - tag::AVIF[]
+# The AVIF record is Actor Value information.
 class AVIFRecord(Record):
     CNAM: ByteColor4 # RGB Color
     def __init__(self): super().__init__()
@@ -1711,6 +1763,7 @@ class AVIFRecord(Record):
 # end::AVIF[]
 
 # BNDS.Bendable Spline - 0400 #F4 - tag::BNDS[]
+# Bendable Spline
 class BNDSRecord(Record):
     def __init__(self): super().__init__()
 
@@ -1721,7 +1774,8 @@ class BNDSRecord(Record):
         return z
 # end::BNDS[]
 
-# BODY.Body - 3000 - tag::ASTP[]
+# BODY.Body Part - 3000 - tag::BODY[]
+# BODY records contain information about body parts.
 class BODYRecord(Record, IHaveMODL):
     class Part(Enum): Head = 0; Hair = 1; Neck = 2; Chest = 3; Groin = 4; Hand = 5; Wrist = 6; Forearm = 7; Upperarm = 8; Foot = 9; Ankle = 10; Knee = 11; Upperleg = 12; Clavicle = 13; Tail = 14
     class Flag(Flag): Female = 1; Playable = 2
@@ -1792,6 +1846,7 @@ class BOOKRecord(Record, IHaveMODL):
             self.value = r.readInt32()
             self.weight = r.readSingle()
 
+    OBND: Obnd # Object Bounds
     MODL: Modl # Model (optional)
     FULL: str # Item Name
     DATA: Data # Book Data
@@ -1805,6 +1860,7 @@ class BOOKRecord(Record, IHaveMODL):
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.EDID | FieldType.NAME: z = self.EDID = r.readFUString(dataSize)
+            case FieldType.OBND: z = self.OBND = r.readS(Obnd, dataSize)
             case FieldType.MODL: z = self.MODL = Modl(r, dataSize)
             case FieldType.MODB: z = self.MODL.MODB(r, dataSize)
             case FieldType.MODT: z = self.MODL.MODT(r, dataSize)
@@ -2366,7 +2422,9 @@ class CONTRecord(Record, IHaveMODL):
     # TES4
     SNAM: RefX['SOUNRecord'] # Open sound
     QNAM: RefX['SOUNRecord'] # Close sound
-    def __init__(self): super().__init__(); self.CNTOs = listx()
+    # fallout
+    COEDs: list[Coed] = []
+    def __init__(self): super().__init__(); self.CNTOs = listx(); self.COEDs = listx()
     
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
@@ -2381,6 +2439,7 @@ class CONTRecord(Record, IHaveMODL):
             case FieldType.SCRI: z = self.SCRI = RefX[SCPTRecord](SCPTRecord, r, dataSize)
             case FieldType.SNAM: z = self.SNAM = RefX[SOUNRecord](SOUNRecord, r, dataSize)
             case FieldType.QNAM: z = self.QNAM = RefX[SOUNRecord](SOUNRecord, r, dataSize)
+            case FieldType.COED: z = self.COEDs.addX(r.readS(Coed, dataSize))
             case _: z = Record._empty
         return z
 # end::CONT[]
@@ -2902,6 +2961,7 @@ class DMGTRecord(Record):
 
 # DOOR.Door - 3450 - tag::DOOR[]
 class DOORRecord(Record, IHaveMODL):
+    OBND: Obnd # Object Bounds
     FULL: str # Door name
     MODL: Modl # NIF model filename
     SCRI: RefX['SCPTRecord'] = None # Script (optional)
@@ -2916,6 +2976,7 @@ class DOORRecord(Record, IHaveMODL):
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.EDID | FieldType.NAME: z = self.EDID = self.FULL = r.readFUString(dataSize)
+            case FieldType.OBND: z = self.OBND = r.readS(Obnd, dataSize)
             case FieldType.FULL: z = self.FULL = r.readFUString(dataSize)
             case FieldType.FNAM if r.format != FormType.TES3: z = self.FNAM = r.readByte() #:matchif
             case FieldType.FNAM if r.format == FormType.TES3: z = self.FULL = r.readFUString(dataSize) #:matchif
@@ -2931,7 +2992,7 @@ class DOORRecord(Record, IHaveMODL):
         return z
 # end::DOOR[]
 
-# DUEL.Dual Cast Data (possibly unused) - 0050 - tag::DUEL[]
+# DUEL.Dual Cast Data - 0050 - tag::DUEL[]
 class DUELRecord(Record):
     def __init__(self): super().__init__()
 
@@ -4027,7 +4088,7 @@ class LEVCRecord(Record):
         return None
 # end::LEVC[]
 
-# LEVI.Leveled item - 3000 - tag::LEVI[]
+# LEVI.Leveled Item - 3000 - tag::LEVI[]
 class LEVIRecord(Record):
     DATA: int # List data - 1 = Calc from all levels <= PC level, 2 = Calc for each item
     NNAM: int # Chance None?
@@ -4263,11 +4324,11 @@ class LVLIRecord(Record):
 
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
-            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize),
-            case FieldType.LVLD: z = self.LVLD = r.readByte(),
-            case FieldType.LVLF: z = self.LVLF = r.readByte(),
-            case FieldType.DATA: z = self.DATA = r.readByte(),
-            case FieldType.LVLO: z = self.LVLOs.addX(self.Lvlo(r, dataSize)),
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case FieldType.LVLD: z = self.LVLD = r.readByte()
+            case FieldType.LVLF: z = self.LVLF = r.readByte()
+            case FieldType.DATA: z = self.DATA = r.readByte()
+            case FieldType.LVLO: z = self.LVLOs.addX(self.Lvlo(r, dataSize))
             case _: z = Record._empty
         return z
 # end::LVLI[]
@@ -4292,10 +4353,10 @@ class LVSPRecord(Record):
 
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
-            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize),
-            case FieldType.LVLD: z = self.LVLD = r.readByte(),
-            case FieldType.LVLF: z = self.LVLF = r.readByte(),
-            case FieldType.LVLO: z = self.LVLOs.addX(LVLIRecord.Lvlo(r, dataSize)),
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case FieldType.LVLD: z = self.LVLD = r.readByte()
+            case FieldType.LVLF: z = self.LVLF = r.readByte()
+            case FieldType.LVLO: z = self.LVLOs.addX(LVLIRecord.Lvlo(r, dataSize))
             case _: z = Record._empty
         return z
 # end::LVSP[]
@@ -4862,7 +4923,7 @@ class PERKRecord(Record):
         return z
 # end::PERK[]
 
-# PGRD.Path grid - 3400 - tag::PGRD[]
+# PGRD.Path Grid - 3400 - tag::PGRD[]
 class PGRDRecord(Record):
     class Data:
         x: int
@@ -4929,7 +4990,7 @@ class PGRDRecord(Record):
         return z
 # end::PGRD[]
 
-# PGRE.Placed grenade - 0050 - tag::PGRE[]
+# PGRE.Placed Grenade - 0050 - tag::PGRE[]
 class PGRERecord(Record):
     def __init__(self): super().__init__()
 
@@ -4940,7 +5001,7 @@ class PGRERecord(Record):
         return z
 # end::PGRE[]
 
-# PHZD.Placed hazard - 000S0 - tag::PHZD[]
+# PHZD.Placed Hazard - 000S0 - tag::PHZD[]
 class PHZDRecord(Record):
     def __init__(self): super().__init__()
 
@@ -4950,6 +5011,17 @@ class PHZDRecord(Record):
             case _: z = Record._empty
         return z
 # end::PHZD[]
+
+# PLYR.Player Reference - 0400 (No Reference) - tag::PLYR[]
+class PLYRRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::PLYR[]
 
 # PROB.Probe - 3000 - tag::PROB[]
 class PROBRecord(Record, IHaveMODL):
@@ -5030,7 +5102,7 @@ class QUSTRecord(Record):
         return z
 # end::QUST[]
 
-# RACE.Race_Creature type - 3450 - tag::RACE[]
+# RACE.Race - 3450 - tag::RACE[]
 class RACERecord(Record):
     class DataFlag(Flag):
         Playable = 0x00000001
@@ -6052,8 +6124,8 @@ class SOUNRecord(Record):
                     self.priority,
                     self.unknown) = t
 
-    FULL: str # Sound Filename (relative to Sounds\)
     OBND: Obnd # Object Boundary
+    FULL: str # Sound Filename (relative to Sounds\)
     DATA: Data # Sound Data
     # fallout
     ANAM: list[Byte2] # Attenuation Curve
@@ -6064,8 +6136,8 @@ class SOUNRecord(Record):
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.EDID | FieldType.NAME: z = self.EDID = r.readFUString(dataSize)
-            case FieldType.FNAM: z = self.FULL = r.readFUString(dataSize)
             case FieldType.OBND: z = self.OBND = r.readS(Obnd, dataSize)
+            case FieldType.FNAM: z = self.FULL = r.readFUString(dataSize)
             case FieldType.DATA | FieldType.SNDX | FieldType.SNDD: self.DATA_Volume = r.readByte() if r.format == FormType.TES3 else 0; z = self.DATA = r.readS(SOUNRecord.Data, dataSize - 1 if r.format == FormType.TES3 else dataSize)
             # fallout
             case FieldType.ANAM: z = self.ANAM = r.readPArray(Byte2, '2B', 5)
@@ -6130,8 +6202,8 @@ class SSCRRecord(Record):
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         if r.format == FormType.TES3:
             match type:
-                case FieldType.NAME: z = self.EDID = r.readFUString(dataSize),
-                case FieldType.DATA: z = self.DATA = r.readFUString(dataSize),
+                case FieldType.NAME: z = self.EDID = r.readFUString(dataSize)
+                case FieldType.DATA: z = self.DATA = r.readFUString(dataSize)
                 case _: z = Record._empty
             return z
         return None
@@ -6176,8 +6248,8 @@ class SUNPRecord(Record):
 
 # TACT.Talking Activator - 000S0 - tag::TACT[]
 class TACTRecord(Record):
-    FULL: str # Full Name
     OBND: Obnd = None # Object bounds
+    FULL: str # Full Name
     MODL: Modl = None # Model
     SCRI: Ref[SCPTRecord] # Script
     DEST: Dest = None # Destruction
@@ -6192,8 +6264,8 @@ class TACTRecord(Record):
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
-            case FieldType.FULL: z = self.FULL = r.readFUString(dataSize)
             case FieldType.OBND: z = self.OBND = r.readS(Obnd, dataSize)
+            case FieldType.FULL: z = self.FULL = r.readFUString(dataSize)
             case FieldType.MODL: z = self.MODL = Modl(r, dataSize)
             case FieldType.MODB: z = self.MODL.MODB(r, dataSize)
             case FieldType.MODT: z = self.MODL.MODT(r, dataSize)
@@ -6315,8 +6387,8 @@ class TERMRecord(Record):
         def INAM(self, r: Reader, dataSize: int) -> object: z = self.displayNote = Ref[NOTERecord](NOTERecord, r, dataSize); return z
         def TNAM(self, r: Reader, dataSize: int) -> object: z = self.subMenu = Ref[TERMRecord](TERMRecord, r, dataSize); return z
 
-    FULL: str # Full Name
     OBND: Obnd = None # Object bounds
+    FULL: str # Full Name
     MODL: Modl = None # Model
     SCRI: Ref[SCPTRecord] # Script
     DEST: Dest = None # Destruction
@@ -6332,8 +6404,8 @@ class TERMRecord(Record):
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
-            case FieldType.FULL: z = self.FULL = r.readFUString(dataSize)
             case FieldType.OBND: z = self.OBND = r.readS(Obnd, dataSize)
+            case FieldType.FULL: z = self.FULL = r.readFUString(dataSize)
             case FieldType.MODL: z = self.MODL = Modl(r, dataSize)
             case FieldType.MODB: z = self.MODL.MODB(r, dataSize)
             case FieldType.MODT: z = self.MODL.MODT(r, dataSize)

@@ -1,8 +1,6 @@
 using GameX.Gamebryo.Formats.Nif;
 using GameX.Uncore.Formats;
-using MathNet.Numerics;
 using OpenStack;
-using Org.BouncyCastle.Asn1.X500;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,11 +10,7 @@ using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
-using static GameX.Bethesda.Formats.Records.Dest;
 using static GameX.Bethesda.Formats.Records.FormType;
-using static GameX.Bethesda.Formats.Records.SCPTRecord;
-using static GameX.Bethesda.Formats.Records.WRLDRecord.Rnam;
-using static GameX.FamilyGame;
 using static System.IO.Polyfill;
 #pragma warning disable CS9113
 
@@ -259,6 +253,7 @@ public enum FieldType : uint {
     CNAM = 0x4D414E43,
     CNDT = 0x54444E43,
     CNTO = 0x4F544E43,
+    COED = 0x44454F43,
     CRGR = 0x52475243,
     CRVA = 0x41565243,
     CSAD = 0x44415343,
@@ -293,6 +288,7 @@ public enum FieldType : uint {
     ESCE = 0x45435345,
     ETYP = 0x50595445,
     FADT = 0x54444146,
+    FCHT = 0x54484346,
     FGGA = 0x41474746,
     FGGS = 0x53474746,
     FGTS = 0x53544746,
@@ -300,6 +296,7 @@ public enum FieldType : uint {
     FLMV = 0x564D4C46,
     FLTV = 0x56544C46,
     FNAM = 0x4D414E46,
+    FPRT = 0x54525046,
     FRMR = 0x524D5246,
     FTSF = 0x46535446,
     FTSM = 0x4D535446,
@@ -336,7 +333,9 @@ public enum FieldType : uint {
     LVLO = 0x4F4C564C,
     MAST = 0x5453414D,
     MCDT = 0x5444434D,
+    MCHT = 0x5448434D,
     MEDT = 0x5444454D,
+    MIC2 = 0x3243494D,
     MICO = 0x4F43494D,
     MNAM = 0x4D414E4D,
     MO2B = 0x42324F4D,
@@ -359,6 +358,7 @@ public enum FieldType : uint {
     MOSD = 0x44534F4D,
     MPAI = 0x4941504D,
     MPAV = 0x5641504D,
+    MPRT = 0x5452504D,
     MTNM = 0x4D4E544D,
     MTYP = 0x5059544D,
     NAM0 = 0x304D414E,
@@ -1032,6 +1032,18 @@ public struct Obnd {
 }
 
 /// <summary>
+/// Coed
+/// </summary>
+/// <see cref="https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/COED_Field"/>
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct Coed {
+    public static (string, int) Struct = ("<2If", 12);
+    public Ref<Record> Owner;
+    public Ref<Record> Value;
+    public float ItemCondition;
+}
+
+/// <summary>
 /// BMDT Subrecord
 /// </summary>
 /// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/Subrecords/BMDT.html"/>
@@ -1066,11 +1078,13 @@ public class Modl(Reader r = null, int dataSize = 0) {
     public Mods[] AltTextures; // Alternate Textures
     public ModdFlag FaceGenModelFlags; // FaceGen Model Flags
     public string Icon; // Icon
+    public string Mico; // Mico
     public object MODB(Reader r, int dataSize) => Bound = r.ReadSingle();
     public object MODT(Reader r, int dataSize) => Hashes = r.ReadBytes(dataSize); // Texture File Hashes
     public object MODS(Reader r, int dataSize) => AltTextures = r.ReadL32FArray(z => new Mods(r, dataSize)); // Alternate Textures
     public object MODD(Reader r, int dataSize) => FaceGenModelFlags = (ModdFlag)(r.ReadByte()); // FaceGen Model Flags
     public object ICON(Reader r, int dataSize) => Icon = r.ReadFUString(dataSize); // Icon
+    public object MICO(Reader r, int dataSize) => Mico = r.ReadFUString(dataSize); // Mico
 }
 
 // https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/Model_Textures_Field
@@ -1328,21 +1342,28 @@ partial class RecordGroup { static readonly HashSet<FormType> _factorySet = [NPC
 
 /// <summary>
 /// AACT.Action - 00500^
+/// AACT records hold information about Actions
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/AACT"/>
 /// <see cref="https://tes5edit.github.io/fopdoc/Fallout4/Records/AACT.html"/>
 public class AACTRecord : Record {
     public ByteColor4 CNAM; // RGB Color
+    public string DNAM; // Notes
+    public uint TNAM; // Type
+    //public Ref<AORURecord> DATA; // Attraction Rule
 
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
         FieldType.CNAM => CNAM = r.ReadS<ByteColor4>(dataSize),
+        FieldType.DNAM => DNAM = r.ReadFUString(dataSize),
+        FieldType.TNAM => TNAM = r.ReadUInt32(),
         _ => Empty,
     };
 }
 
 /// <summary>
-/// ACHR.Actor Reference - 04050
+/// ACHR.Placed NPC - 04050
+/// An ACHR record represents an NPC placed in a cell.
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/ACHR"/>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/ACHR"/>
@@ -1378,7 +1399,8 @@ public class ACHRRecord : Record {
 }
 
 /// <summary>
-/// ACRE.Placed creature - 04000
+/// ACRE.Placed Creature - 04000
+/// An ACRE record represents a creature placed in a cell.
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/ACRE"/>
 /// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/ACHR.html"/>
@@ -1406,14 +1428,15 @@ public class ACRERecord : Record {
 
 /// <summary>
 /// ACTI.Activator - 34500
+/// ACTI records contain information about activators.
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/ACTI">
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/ACTI"/>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/ACTI"/>
 /// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/ACTI.html"/>
 public class ACTIRecord : Record, IHaveMODL {
-    public string FULL; // Item Name
     public Obnd OBND; // Object Boundary
+    public string FULL; // Item Name
     public Modl MODL { get; set; } // Model Name
     public RefX<SCPTRecord>? SCRI; // Script (Optional)
     // TES4
@@ -1427,8 +1450,8 @@ public class ACTIRecord : Record, IHaveMODL {
     protected override HashSet<FieldType> DF4 => [FieldType.DSTD, FieldType.DSTF];
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadFUString(dataSize),
-        FieldType.FULL or FieldType.FNAM => FULL = r.ReadFUString(dataSize),
         FieldType.OBND => OBND = r.ReadS<Obnd>(dataSize),
+        FieldType.FULL or FieldType.FNAM => FULL = r.ReadFUString(dataSize),
         FieldType.MODL => MODL = new Modl(r, dataSize),
         FieldType.MODB => MODL.MODB(r, dataSize),
         FieldType.MODT => MODL.MODT(r, dataSize),
@@ -1449,6 +1472,7 @@ public class ACTIRecord : Record, IHaveMODL {
 
 /// <summary>
 /// ADDN.Addon Node - 00500^
+/// ADDN records contain information on "addon nodes".
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/ADDN"/>
 /// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/ADDN.html"/>
@@ -1478,7 +1502,8 @@ public class ADDNRecord : Record {
 }
 
 /// <summary>
-/// ALCH.Potion - 345S0
+/// ALCH.Alchemy - 345S0 : MagicItem
+/// ALCH records contain information about alchemy items (potions and beverages).
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/ALCH">
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/ALCH"/>
@@ -1554,6 +1579,7 @@ public class ALCHRecord : Record, IHaveMODL {
 
 /// <summary>
 /// AMMO.Ammo - 045S0
+/// An AMMO record contains data for an arrow, the only form of ranged ammunition that comes with the game.
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/AMMO"/>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/AMMO"/>
@@ -1611,7 +1637,8 @@ public class ANIORecord : Record, IHaveMODL {
 }
 
 /// <summary>
-/// APPA.Alchem Apparatus - 34500
+/// APPA.Apparatus - 34500
+/// APPA records contain information about alchemy apparatus.
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/APPA">
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/APPA"/>
@@ -1658,12 +1685,13 @@ public class APPARecord : Record, IHaveMODL {
 
 /// <summary>
 /// ARMA.Armature (Model) - 00500
+/// ARMA records contain armature data, which is how armor (or similar) is displayed on a model.
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/ARMA"/>
 /// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/ARMA.html"/>
 public class ARMARecord : Record {
-    public string FULL; // Name
     public Obnd OBND; // Object Bounds
+    public string FULL; // Name
     public Ref<SCPTRecord> SCRI; // Script
     public Bmdt BMDT; // Biped Data
     public Modl MODL { get; set; } // Male Biped Model
@@ -1673,8 +1701,8 @@ public class ARMARecord : Record {
 
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
-        FieldType.FULL => FULL = r.ReadFUString(dataSize),
         FieldType.OBND => OBND = r.ReadS<Obnd>(dataSize),
+        FieldType.FULL => FULL = r.ReadFUString(dataSize),
         FieldType.SCRI => SCRI = new Ref<SCPTRecord>(r, dataSize),
         FieldType.BMDT => BMDT = new Bmdt(r, dataSize),
         FieldType.MODL => MODL = new Modl(r, dataSize),
@@ -1695,6 +1723,7 @@ public class ARMARecord : Record {
 
 /// <summary>
 /// ARMO.Armor - 345S0
+/// ARMO records contain information about armor.
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/ARMO">
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/ARMO"/>
@@ -1778,6 +1807,7 @@ public class ARMORecord : Record, IHaveMODL {
         public SkillType Skill;
     }
 
+    public Obnd OBND; // Object Bounds
     public string FULL; // Item Name
     public Data DATA; // Armour Data
     public RefX<SCPTRecord>? SCRI; // Script Name (optional)
@@ -1791,14 +1821,23 @@ public class ARMORecord : Record, IHaveMODL {
     public Modl MOD3; // Female Biped Model (optional)
     public Modl MOD4; // Female World Model (optional)
     public short? ANAM; // Enchantment Points (optional)
+    // fallout
+    public string BMCT; // Ragdoll Constraint Template
+    public Ref<FLSTRecord>? REPL; // Repair List
+    public Ref<FLSTRecord>? BIPL; // Biped Model List
+    public int ETYP; // Equipment Type
+    public Ref<SOUNRecord>? YNAM; // Sound - Pick Up
+    public Ref<SOUNRecord>? ZNAM; // Sound - Drop
 
     protected override HashSet<FieldType> DF3 => [FieldType.INDX, FieldType.BNAM, FieldType.CNAM];
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadFUString(dataSize),
+        FieldType.OBND => OBND = r.ReadS<Obnd>(dataSize),
         FieldType.MODL => MODL = new Modl(r, dataSize),
         FieldType.MODB => MODL.MODB(r, dataSize),
         FieldType.MODT => MODL.MODT(r, dataSize),
         FieldType.ICON or FieldType.ITEX => MODL.ICON(r, dataSize),
+        FieldType.MICO => MODL.MICO(r, dataSize),
         FieldType.FULL or FieldType.FNAM => FULL = r.ReadFUString(dataSize),
         FieldType.DATA or FieldType.AODT => DATA = new Data(r, dataSize),
         FieldType.SCRI => SCRI = new RefX<SCPTRecord>(r, dataSize),
@@ -1810,37 +1849,64 @@ public class ARMORecord : Record, IHaveMODL {
         // TES4
         FieldType.BMDT => BMDT = new Bmdt(r, dataSize),
         FieldType.MOD2 => MOD2 = new Modl(r, dataSize),
-        FieldType.MO2B => MOD2.MODB(r, dataSize),
+        //FieldType.MO2B => MOD2.MODB(r, dataSize),
         FieldType.MO2T => MOD2.MODT(r, dataSize),
-        FieldType.ICO2 => MOD2.ICON(r, dataSize),
         FieldType.MOD3 => MOD3 = new Modl(r, dataSize),
-        FieldType.MO3B => MOD3.MODB(r, dataSize),
+        //FieldType.MO3B => MOD3.MODB(r, dataSize),
         FieldType.MO3T => MOD3.MODT(r, dataSize),
+        FieldType.ICO2 => (MOD3 ??= new Modl()).ICON(r, dataSize),
+        FieldType.MIC2 => MOD3.MICO(r, dataSize),
         FieldType.MOD4 => MOD4 = new Modl(r, dataSize),
-        FieldType.MO4B => MOD4.MODB(r, dataSize),
+        //FieldType.MO4B => MOD4.MODB(r, dataSize),
         FieldType.MO4T => MOD4.MODT(r, dataSize),
         FieldType.ANAM => ANAM = r.ReadInt16(),
+        // fallout
+        FieldType.BMCT => BMCT = r.ReadFUString(dataSize),
+        FieldType.REPL => REPL = new Ref<FLSTRecord>(r, dataSize),
+        FieldType.BIPL => BIPL = new Ref<FLSTRecord>(r, dataSize),
+        FieldType.ETYP => ETYP = r.ReadInt32(),
+        FieldType.YNAM => YNAM = new Ref<SOUNRecord>(r, dataSize),
+        FieldType.ZNAM => ZNAM = new Ref<SOUNRecord>(r, dataSize),
+        FieldType.DNAM => r.Skip(dataSize),
+        FieldType.MODD => r.Skip(dataSize),
+        FieldType.MOSD => r.Skip(dataSize),
+        FieldType.MO2S => r.Skip(dataSize),
+        FieldType.MODS => r.Skip(dataSize),
+        FieldType.EITM => r.Skip(dataSize),
+        FieldType.MO3S => r.Skip(dataSize),
+        FieldType.MO4S => r.Skip(dataSize),
         _ => Empty,
     };
 }
 
 /// <summary>
-/// ARTO.Art Object - 00500
+/// ARTO.Art Object^ - 00500
+/// ARTO records contain information on "art" (effects) objects.
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/ARTO"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/ARTO">
 public class ARTORecord : Record {
-    public ByteColor4 CNAM; // RGB Color
+    [Flags] public enum DnamFlag : uint { MagicCasting = 0x00000000, MagicHitEffect = 0x00000001, EnchantmentEffect = 0x00000002 }
+    public Obnd OBND; // Object Bounds
+    public Modl MODL; // Model
+    public DnamFlag DNAM; // Art Type
 
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
-        FieldType.CNAM => CNAM = r.ReadS<ByteColor4>(dataSize),
+        FieldType.OBND => OBND = r.ReadS<Obnd>(dataSize),
+        FieldType.MODL => MODL = new Modl(r, dataSize),
+        FieldType.MODB => MODL.MODB(r, dataSize),
+        FieldType.MODT => MODL.MODT(r, dataSize),
+        FieldType.MODS => MODL.MODS(r, dataSize),
+        FieldType.MODD => MODL.MODD(r, dataSize),
+        FieldType.DNAM => DNAM = (DnamFlag)r.ReadUInt32(),
         _ => Empty,
     };
 }
 
 /// <summary>
-/// ASPC.Acoustic Space - 00500
+/// ASPC.Acoustic Space^ - 00500
+/// ASPC contains the data used for ambient and other sounds for an interior cell.
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/ASPC"/>
 /// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/ASPC.html"/>
@@ -1865,21 +1931,32 @@ public class ASPCRecord : Record {
 }
 
 /// <summary>
-/// ASTP.Association Type - 00500
+/// ASTP.Association Type^ - 00500
+/// ASTP defines a relationship between 2 people.
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/ASTP"/>
 public class ASTPRecord : Record {
-    public ByteColor4 CNAM; // RGB Color
+    [Flags] public enum DataFlag : uint { FamilyAssociation = 0x01 }
+    public string MPRT; // Male Parent Label
+    public string FPRT; // Female Parent Label
+    public string MCHT; // Male Child Label
+    public string FCHT; // Female Child Label
+    public DataFlag DATA; // Flags
 
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
-        FieldType.CNAM => CNAM = r.ReadS<ByteColor4>(dataSize),
+        FieldType.MPRT => MPRT = r.ReadFUString(dataSize),
+        FieldType.FPRT => FPRT = r.ReadFUString(dataSize),
+        FieldType.MCHT => MCHT = r.ReadFUString(dataSize),
+        FieldType.FCHT => FCHT = r.ReadFUString(dataSize),
+        FieldType.DATA => DATA = (DataFlag)r.ReadUInt32(),
         _ => Empty,
     };
 }
 
 /// <summary>
-/// AVIF.Actor Values_Perk Tree Graphics - 005S0
+/// AVIF.Actor Values / Perk Tree Graphics - 005S0
+/// The AVIF record is Actor Value information.
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/AVIF"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/AVIF">
@@ -1895,6 +1972,7 @@ public class AVIFRecord : Record {
 
 /// <summary>
 /// BNDS.Bendable Spline - 04000 #F4
+/// Bendable Spline
 /// </summary>
 /// <see cref="https://tes5edit.github.io/fopdoc/Fallout4/Records/BNDS.html"/>
 public class BNDSRecord : Record {
@@ -1905,7 +1983,8 @@ public class BNDSRecord : Record {
 }
 
 /// <summary>
-/// BODY.Body - 30000
+/// BODY.Body Part - 30000
+/// BODY records contain information about body parts.
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/BODY"/>
 public class BODYRecord : Record, IHaveMODL {
@@ -1984,6 +2063,7 @@ public class BOOKRecord : Record, IHaveMODL {
         }
     }
 
+    public Obnd OBND; // Object Bounds
     public Modl MODL { get; set; } // Model (optional)
     public string FULL; // Item Name
     public Data DATA; // Book Data
@@ -1995,6 +2075,7 @@ public class BOOKRecord : Record, IHaveMODL {
 
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadFUString(dataSize),
+        FieldType.OBND => OBND = r.ReadS<Obnd>(dataSize),
         FieldType.MODL => MODL = new Modl(r, dataSize),
         FieldType.MODB => MODL.MODB(r, dataSize),
         FieldType.MODT => MODL.MODT(r, dataSize),
@@ -2522,7 +2603,7 @@ public class CLOTRecord : Record, IHaveMODL {
 }
 
 /// <summary>
-/// COBJ.Constructible Object (recipes) - 05000
+/// COBJ.Constructible Object - 05000
 /// </summary>
 public class COBJRecord : Record {
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
@@ -2547,6 +2628,7 @@ public class COLLRecord : Record {
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/CONT">
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/CONT"/>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/CONT"/>
+/// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/CONT.html"/>
 public class CONTRecord : Record, IHaveMODL {
     public class Data {
         public byte Flags; // flags 0x0001 = Organic, 0x0002 = Respawns, organic only, 0x0008 = Default, unknown
@@ -2562,6 +2644,7 @@ public class CONTRecord : Record, IHaveMODL {
         public object FLAG(Reader r, int dataSize) => Flags = (byte)r.ReadUInt32();
     }
 
+    public Obnd OBND; // Object Bounds
     public Modl MODL { get; set; } // Model
     public string FULL; // Container Name
     public Data DATA; // Container Data
@@ -2570,11 +2653,14 @@ public class CONTRecord : Record, IHaveMODL {
     // TES4
     public RefX<SOUNRecord> SNAM; // Open sound
     public RefX<SOUNRecord> QNAM; // Close sound
+    // fallout
+    public List<Coed> COEDs = [];
 
     protected override HashSet<FieldType> DF3 => [FieldType.NPCO];
-    protected override HashSet<FieldType> DF4 => [FieldType.CNTO];
+    protected override HashSet<FieldType> DF4 => [FieldType.CNTO, FieldType.COED];
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadFUString(dataSize),
+        FieldType.OBND => OBND = r.ReadS<Obnd>(dataSize),
         FieldType.MODL => MODL = new Modl(r, dataSize),
         FieldType.MODB => MODL.MODB(r, dataSize),
         FieldType.MODT => MODL.MODT(r, dataSize),
@@ -2585,6 +2671,7 @@ public class CONTRecord : Record, IHaveMODL {
         FieldType.SCRI => SCRI = new RefX<SCPTRecord>(r, dataSize),
         FieldType.SNAM => SNAM = new RefX<SOUNRecord>(r, dataSize),
         FieldType.QNAM => QNAM = new RefX<SOUNRecord>(r, dataSize),
+        FieldType.COED => COEDs.AddX(r.ReadS<Coed>(dataSize)),
         _ => Empty,
     };
 }
@@ -3141,6 +3228,7 @@ public class DMGTRecord : Record {
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/DOOR"/>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/DOOR"/>
 public class DOORRecord : Record, IHaveMODL {
+    public Obnd OBND; // Object Bounds
     public string FULL; // Door name
     public Modl MODL { get; set; } // NIF model filename
     public RefX<SCPTRecord>? SCRI; // Script (optional)
@@ -3154,6 +3242,7 @@ public class DOORRecord : Record, IHaveMODL {
     protected override HashSet<FieldType> DF4 => [FieldType.TNAM];
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = FULL = r.ReadFUString(dataSize),
+        FieldType.OBND => OBND = r.ReadS<Obnd>(dataSize),
         FieldType.FULL => FULL = r.ReadFUString(dataSize),
         FieldType.FNAM => r.Format != TES3 ? FNAM = r.ReadByte() : FULL = r.ReadFUString(dataSize),
         FieldType.MODL => MODL = new Modl(r, dataSize),
@@ -3169,7 +3258,7 @@ public class DOORRecord : Record, IHaveMODL {
 }
 
 /// <summary>
-/// DUEL.Dual Cast Data (possibly unused) - 05000
+/// DUEL.Dual Cast Data - 05000
 /// </summary>
 public class DUELRecord : Record {
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
@@ -3327,7 +3416,7 @@ public class EFSHRecord : Record {
 }
 
 /// <summary>
-/// ENCH.Enchantment - 345S0
+/// ENCH.Enchantment - 345S0 : MagicItem
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/ENCH">
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/ENCH"/>
@@ -4308,7 +4397,7 @@ public class LEVCRecord : Record {
 }
 
 /// <summary>
-/// LEVI.Leveled item - 30000
+/// LEVI.Leveled Item - 30000
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/LEVI">
 public class LEVIRecord : Record {
@@ -4845,7 +4934,7 @@ public class MISCRecord : Record, IHaveMODL {
     };
 }
 
-// <summary>
+/// <summary>
 /// MOVT.Movement Type - 05000
 /// </summary>
 public class MOVTRecord : Record {
@@ -4855,7 +4944,7 @@ public class MOVTRecord : Record {
     };
 }
 
-// <summary>
+/// <summary>
 /// MSTT.Movable Static - 05000
 /// </summary>
 public class MSTTRecord : Record {
@@ -4865,7 +4954,7 @@ public class MSTTRecord : Record {
     };
 }
 
-// <summary>
+/// <summary>
 /// MUSC.Music Type - 05000
 /// </summary>
 public class MUSCRecord : Record {
@@ -4875,7 +4964,7 @@ public class MUSCRecord : Record {
     };
 }
 
-// <summary>
+/// <summary>
 /// MUST.Music Track - 05000
 /// </summary>
 public class MUSTRecord : Record {
@@ -4885,7 +4974,7 @@ public class MUSTRecord : Record {
     };
 }
 
-// <summary>
+/// <summary>
 /// NAVI.Navigation (master data) - 05000
 /// </summary>
 public class NAVIRecord : Record {
@@ -4895,7 +4984,7 @@ public class NAVIRecord : Record {
     };
 }
 
-// <summary>
+/// <summary>
 /// NAVM.NavMesh - 05000
 /// </summary>
 public class NAVMRecord : Record {
@@ -4922,7 +5011,6 @@ public class NOTERecord : Record {
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/NPC_"/>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/NPC_"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/NPC_">
-
 public class NPC_3Record : CREA3Record {
     [Flags]
     public enum NPC_3Flags : uint {
@@ -5145,7 +5233,7 @@ public class PERKRecord : Record {
 }
 
 /// <summary>
-/// PGRD.Path grid - 34000
+/// PGRD.Path Grid - 34000
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/GMST">
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/GMST"/>
@@ -5221,7 +5309,7 @@ public unsafe class PGRDRecord : Record {
 }
 
 /// <summary>
-/// PGRE.Placed grenade - 05000
+/// PGRE.Placed Grenade - 05000
 /// </summary>
 public class PGRERecord : Record {
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
@@ -5231,10 +5319,20 @@ public class PGRERecord : Record {
 }
 
 /// <summary>
-/// PHZD.Placed hazard - 00500
+/// PHZD.Placed Hazard - 00500
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/PHZD"/>
 public class PHZDRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// PLYR.Player Reference - 04000 (No Reference)
+/// </summary>
+public class PLYRRecord : Record {
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
         _ => Empty,
@@ -5332,7 +5430,7 @@ public class QUSTRecord : Record {
 }
 
 /// <summary>
-/// RACE.Race_Creature type - 345S0
+/// RACE.Race - 345S0
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/RACE">
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/RACE"/>
@@ -5608,7 +5706,6 @@ public class RACE5Record : RACERecord {
         _ => Empty,
     };
 }
-
 
 /// <summary>
 /// REFR.Placed Object - 04500
@@ -6110,7 +6207,7 @@ public class SCPTRecord : Record {
 }
 
 /// <summary>
-/// SCRL.Scroll - 00500
+/// SCRL.Scroll - 00500 : MagicItem
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/SCRL"/>
 public class SCRLRecord : Record {
@@ -6382,8 +6479,8 @@ public class SOUNRecord : Record {
         public ulong Unknown;
     }
 
-    public string FULL; // Sound Filename (relative to Sounds\)
     public Obnd OBND; // Object Boundary
+    public string FULL; // Sound Filename (relative to Sounds\)
     public Data DATA; // Sound Data
     public byte DATA_Volume; // Sound Data #TES3 // (0=0.00, 255=1.00)
     // fallout
@@ -6393,8 +6490,8 @@ public class SOUNRecord : Record {
 
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadFUString(dataSize),
-        FieldType.FNAM => FULL = r.ReadFUString(dataSize),
         FieldType.OBND => OBND = r.ReadS<Obnd>(dataSize),
+        FieldType.FNAM => FULL = r.ReadFUString(dataSize),
         FieldType.DATA or FieldType.SNDX or FieldType.SNDD => (z: DATA_Volume = r.Format == TES3 ? r.ReadByte() : (byte)0, DATA = r.ReadS<Data>(r.Format == TES3 ? dataSize - 1 : dataSize)).z,
         // fallout
         FieldType.ANAM => ANAM = r.ReadPArray<Byte2>("2B", 5),
@@ -6405,7 +6502,7 @@ public class SOUNRecord : Record {
 }
 
 /// <summary>
-/// SPEL.Spell - 345S0
+/// SPEL.Spell - 345S0 : MagicItem
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/SPEL">
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/SPEL"/>
@@ -6518,8 +6615,8 @@ public class SUNPRecord : Record {
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/TACT"/>
 public class TACTRecord : Record {
-    public string FULL; // Full Name
     public Obnd OBND; // Object Bounds
+    public string FULL; // Full Name
     public Modl MODL; // Model
     public Ref<SCPTRecord> SCRI; // Script
     public Dest DEST; // Destruction
@@ -6533,8 +6630,8 @@ public class TACTRecord : Record {
     protected override HashSet<FieldType> DF4 => [FieldType.DSTD, FieldType.DSTF];
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
-        FieldType.FULL => FULL = r.ReadFUString(dataSize),
         FieldType.OBND => OBND = r.ReadS<Obnd>(dataSize),
+        FieldType.FULL => FULL = r.ReadFUString(dataSize),
         FieldType.MODL => MODL = new Modl(r, dataSize),
         FieldType.MODB => MODL.MODB(r, dataSize),
         FieldType.MODT => MODL.MODT(r, dataSize),
@@ -6653,8 +6750,8 @@ public class TERMRecord : Record {
         public object TNAM(Reader r, int dataSize) => SubMenu = new Ref<TERMRecord>(r, dataSize);
     }
 
-    public string FULL; // Full Name
     public Obnd OBND; // Object bounds
+    public string FULL; // Full Name
     public Modl MODL; // Model
     public Ref<SCPTRecord> SCRI; // Script
     public Dest DEST; // Destruction
@@ -6669,8 +6766,8 @@ public class TERMRecord : Record {
     protected override HashSet<FieldType> DF4 => [FieldType.ITXT, FieldType.RNAM, FieldType.ANAM, FieldType.INAM, FieldType.TNAM, FieldType.SCHR, FieldType.SCDA, FieldType.SCTX, FieldType.SLSD, FieldType.SCVR, FieldType.CTDA, FieldType.SCRO, FieldType.SCRV];
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
-        FieldType.FULL => FULL = r.ReadFUString(dataSize),
         FieldType.OBND => OBND = r.ReadS<Obnd>(dataSize),
+        FieldType.FULL => FULL = r.ReadFUString(dataSize),
         FieldType.MODL => MODL = new Modl(r, dataSize),
         FieldType.MODB => MODL.MODB(r, dataSize),
         FieldType.MODT => MODL.MODT(r, dataSize),

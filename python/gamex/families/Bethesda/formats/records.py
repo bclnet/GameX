@@ -2,7 +2,7 @@ import os, sys
 from io import BytesIO
 from itertools import groupby
 from typing import TypeVar, get_args
-from enum import Enum, Flag, IntEnum, IntFlag
+from enum import IntEnum, IntFlag
 from struct import unpack
 from numpy import ndarray, array
 from collections.abc import Iterator
@@ -20,9 +20,9 @@ type Vector3 = ndarray
 #region Enums
 
 class FormType(IntEnum):
-    # def __str__(self): return self.to_bytes(4, byteorder='little').decode('ascii')
-    ZERO = 0x00000000
-    # ONE_ = 0x00000001
+    def __repr__(self): return self.value.to_bytes(4, byteorder='little').decode('ascii', errors='replace')
+    def __str__(self): return self.value.to_bytes(4, byteorder='little').decode('ascii', errors='replace')
+    # ZERO = 0x00000000
     AACT = 0x54434141
     ACHR = 0x52484341
     ACRE = 0x45524341
@@ -140,20 +140,20 @@ class FormType(IntEnum):
     # OMOD = 0x444F4D4F
     # OVIS = 0x5349564F
     PACK = 0x4B434150
+    PARW = 0x57524150
+    PBAR = 0x52414250
+    PBEA = 0x41454250
+    PCON = 0x4E4F4350
     PERK = 0x4B524550
+    PFLA = 0x414C4650
     PGRD = 0x44524750
     PGRE = 0x45524750
     PHZD = 0x445A4850
+    PMIS = 0x53494D50
     PROB = 0x424F5250
     PROJ = 0x4A4F5250
-    # PMIS = 0x53494D50
-    # PARW = 0x57524150
-    # PBEA = 0x41454250
-    # PFLA = 0x414C4650
-    # PCON = 0x4E4F4350
-    # PBAR = 0x52414250
     # PKIN = 0x4E494B50
-    # PWAT = 0x54415750
+    PWAT = 0x54415750
     QUST = 0x54535551
     RACE = 0x45434152
     REFR = 0x52464552
@@ -213,13 +213,13 @@ class FormType(IntEnum):
     WTHR = 0x52485457
     # ZOOM = 0x4D4F4F5A
 
-    @classmethod
-    def _missing_(cls, value):
-        s = int.__new__(cls); s._value_ = value; s._name_ = f'_{hex(value)}'
-        # print(f'_missing_: {s}')
-        return s
+    # @classmethod
+    # def _missing_(cls, value):
+    #     s = int.__new__(cls); s._value_ = value; s._name_ = f'_{hex(value)}'
+    #     # print(f'_missing_: {s}')
+    #     return s
 
-class FieldType(Enum):
+class FieldType(IntEnum):
     AADT = 0x54444141
     ACBS = 0x53424341
     AHCF = 0x46434841
@@ -546,6 +546,7 @@ class ActorValue(IntEnum):
     Aggression = 33; Confidence = 34; Energy = 35; Responsibility = 36; Bounty = 37; Fame = 38; Infamy = 39; MagickaMultiplier = 40; NightEyeBonus = 41; AttackBonus = 42; DefendBonus = 43; CastingPenalty = 44; Blindness = 45
     Chameleon = 46; Invisibility = 47; Paralysis = 48; Silence = 49; Confusion = 50; DetectItemRange = 51; SpellAbsorbChance = 52; SpellReflectChance = 53; SwimSpeedMultiplier = 54; WaterBreathing = 55; WaterWalking = 56; StuntedMagicka = 57; DetectLifeRange = 58
     ReflectDamage = 59; Telekinesis = 60; ResistFire = 61; ResistFrost = 62; ResistDisease = 63; ResistMagic = 64; ResistNormalWeapons = 65; ResistParalysis = 66; ResistPoison = 67; ResistShock = 68; Vampirism = 69; Darkness = 70; ResistWaterDamage = 71
+    Unknown72 = 72
     
     @classmethod
     def _missing_(cls, value):
@@ -667,12 +668,19 @@ class Record:
         FormType.NPC_: lambda f: NPC_3Record() if f == FormType.TES3 else NPC_4Record(),
         FormType.OTFT: lambda f: OTFTRecord(),
         FormType.PACK: lambda f: PACKRecord(),
+        FormType.PARW: lambda f: PARWRecord(),
+        FormType.PBAR: lambda f: PBARRecord(),
+        FormType.PBEA: lambda f: PBEARecord(),
+        FormType.PCON: lambda f: PCONRecord(),
         FormType.PERK: lambda f: PERKRecord(),
+        FormType.PFLA: lambda f: PFLARecord(),
         FormType.PGRD: lambda f: PGRDRecord(),
         FormType.PGRE: lambda f: PGRERecord(),
         FormType.PHZD: lambda f: PHZDRecord(),
+        FormType.PMIS: lambda f: PMISRecord(),
         FormType.PROB: lambda f: PROBRecord(),
         FormType.PROJ: lambda f: PROJRecord(),
+        FormType.PWAT: lambda f: PWATRecord(),
         FormType.QUST: lambda f: QUSTRecord(),
         FormType.RACE: lambda f: RACE3Record() if f == FormType.TES3 else RACE4Record() if f == FormType.TES4 else RACE5Record(),
         FormType.REFR: lambda f: REFRRecord(),
@@ -755,7 +763,6 @@ class Record:
         R09 = 0x20000000                    # (FURN/IDLM) Child Can Use / (REFR) Don't Havok Settle
         R10 = 0x40000000                    # NavMesh Gen - Ground / (REFR) NoRespawn
         R11 = 0x80000000                    # (REFR) MultiBound
-
         # @classmethod
         # def _missing_(cls, value):
         #     s = int.__new__(cls); s._value_ = value; s._name_ = f'_{hex(value)}'
@@ -763,8 +770,7 @@ class Record:
         #     return s
     # tag::Record[]
     _empty: 'Record'
-    def __repr__(self) -> str: return f'{self.type}: {self.EDID}'
-    # def __repr__(self) -> str: return f'{self.type}: {self.groupType}'
+    # def __repr__(self) -> str: return f'{self.type}: {self.EDID}'
     type: FormType = 0
     dataSize: int 
     flags: EsmFlags
@@ -865,7 +871,7 @@ class RefX[T: Record]:
 #region Record Group
 
 class RecordGroup:
-    class GroupType(Enum):
+    class GroupType(IntEnum):
         Top = 0                         # Label: Record type
         WorldChildren = 1               # Label: Parent (WRLD)
         InteriorCellBlock = 2           # Label: Block number
@@ -893,12 +899,13 @@ class RecordGroup:
         self.records = []
         if r.format == FormType.TES3: self.dataSize = r.length - r.tell(); self.label = 0; self.type = RecordGroup.GroupType.Top; self.position = r.tell(); self.path = path; return
         self.dataSize: int = r.readUInt32() - (16 if r.format != FormType.TES4 else 20)
-        self.label: FormType = FormType(r.readUInt32())
+        z = r.readUInt32(); self.label: FormType = FormType(z) if z in FormType else z
         self.type: GroupType = RecordGroup.GroupType(r.readInt32())
         r.skip(4) # stamp + version
         if r.tes4a or r.format != FormType.TES4: r.skip(4) # unknown
         self.position = r.tell()
-        self.path = f'{path}{str(self.label)}/'
+        self.path = f'{path}{self.label}/'
+        # self.path = f'{path}{str(self.label) if self.label in FormType else int(self.label)}/'
 
     @staticmethod
     def readAll(r: Reader) -> Iterator['RecordGroup']:
@@ -924,7 +931,7 @@ class RecordGroup:
             if record.type == 0: r.skip(record.dataSize); continue
             record.readFields(r)
             self.records.append(record)
-        self.recordsByType = { s:list(g) for s, g in groupby(sorted(self.records, key=lambda s: s.type), lambda s: s.type) }
+        self.recordsByType = { s:list(g) for s, g in groupby(sorted(self.records, key=lambda s: s.type.value), lambda s: s.type) }
         self.groupsByLabel = { s:list(g) for s, g in groupby(sorted(self.groups, key=lambda s: s.label), lambda s: s.label) } if self.groups else None
         # add items
         files.extend([FileSource(
@@ -971,7 +978,7 @@ class Bmdt:
 
 # Model Subrecord Collection
 class Modl:
-    class ModdFlag(Flag): Head = 0x01; Torso = 0x02; RightHand = 0x04; LeftHand = 0x08 #Fallout
+    class ModdFlag(IntFlag): Head = 0x01; Torso = 0x02; RightHand = 0x04; LeftHand = 0x08 #Fallout
     class Mods:
         def __init__(self, r: Reader, dataSize: int):
             self.x3dName: str = r.readL32UString()
@@ -1039,7 +1046,7 @@ class Dest:
 
 # Effect Subrecord Collection
 class Efid:
-    class Type_(Enum): Self = 0; Touch = 1; Target = 2
+    class Type_(IntEnum): Self = 0; Touch = 1; Target = 2
     value: Ref['MGEFRecord']
     effectId: str
     type: Type_
@@ -1076,7 +1083,7 @@ class Efid:
 
 # CTDA Subrecord
 class Ctda:
-    class INFOType(Enum): Nothing = 0; Function = 1; Global = 2; Local = 3; Journal = 4; Item = 5; Dead = 6; NotId = 7; NotFaction = 8; NotClass = 9; NotRace = 10; NotCell = 11; NotLocal = 12
+    class INFOType(IntEnum): Nothing = 0; Function = 1; Global = 2; Local = 3; Journal = 4; Item = 5; Dead = 6; NotId = 7; NotFaction = 8; NotClass = 9; NotRace = 10; NotCell = 11; NotLocal = 12
     # TES3: 0 = [=], 1 = [!=], 2 = [>], 3 = [>=], 4 = [<], 5 = [<=]
     # TES4: 0 = [=], 2 = [!=], 4 = [>], 6 = [>=], 8 = [<], 10 = [<=]
     compareOp: int
@@ -1173,6 +1180,15 @@ class CntoX[T: Record]:
         self.item = RefX(Record, r.readUInt32()); self.count = r.readUInt32()
 
 Record.EDID: str = str() # Editor ID
+
+class ReferenceRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
 
 #endregion
 
@@ -1358,7 +1374,7 @@ class ADDNRecord(Record):
 # ALCH records contain information about alchemy items (potions and beverages).
 class ALCHRecord(Record, IHaveMODL):
     class Data:
-        class Flag(Flag): NoAutoCalculate = 0x01; FoodItem = 0x02 
+        class Flag(IntFlag): NoAutoCalculate = 0x01; FoodItem = 0x02 
         Weight: float
         Value: int
         Flags: Flag
@@ -1374,7 +1390,7 @@ class ALCHRecord(Record, IHaveMODL):
             return True
     # TES3
     class Enam:
-        class Range(Enum): Self = 0; Touch = 1; Target = 2
+        class Range(IntEnum): Self = 0; Touch = 1; Target = 2
         _struct = ('<h2B5I', 24)
         def __init__(self, t):
             (self.effectId,
@@ -1418,11 +1434,33 @@ class ALCHRecord(Record, IHaveMODL):
         return z
 # end::ALCH[]
 
+# ALOC.Media Location Controller - 0400 - tag::ALOC[]
+class ALOCRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::ALOC[]
+
+# AMEF.Ammo Effect - 0400 - tag::AMEF[]
+class AMEFRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::AMEF[]
+
 # AMMO.Ammo - 0450 - tag::AMMO[]
 # An AMMO record contains data for an arrow, the only form of ranged ammunition that comes with the game.
 class AMMORecord(Record, IHaveMODL):
     class Data:
-        class Flag(Flag): IgnoresNormalWeaponResistance = 0x1
+        class Flag(IntFlag): IgnoresNormalWeaponResistance = 0x1
         _struct = ('<f2IfH', 18)
         def __init__(self, t):
             (self.speed,
@@ -1474,7 +1512,7 @@ class ANIORecord(Record, IHaveMODL):
 # APPA records contain information about alchemy apparatus.
 class APPARecord(Record, IHaveMODL):
     class Data:
-        class Type_(Enum): MortarAndPestle = 0; Albemic = 1; Calcinator = 2; Retort = 3
+        class Type_(IntEnum): MortarAndPestle = 0; Albemic = 1; Calcinator = 2; Retort = 3
         type: Type_
         value: int
         weight: float
@@ -1551,7 +1589,7 @@ class ARMARecord(Record):
 # ARMO records contain information about armor.
 class ARMORecord(Record, IHaveMODL):
     class Data:
-        class ARMOType(Enum): Helmet = 0; Cuirass = 2; L_Pauldron = 3; R_Pauldron = 4; Greaves = 5; Boots = 6; L_Gauntlet = 7; R_Gauntlet = 8; Shield = 9; L_Bracer = 10; R_Bracer = 11
+        class ARMOType(IntEnum): Helmet = 0; Cuirass = 2; L_Pauldron = 3; R_Pauldron = 4; Greaves = 5; Boots = 6; L_Gauntlet = 7; R_Gauntlet = 8; Shield = 9; L_Bracer = 10; R_Bracer = 11
         armour: int
         value: int
         health: int
@@ -1575,7 +1613,7 @@ class ARMORecord(Record, IHaveMODL):
                 self.weight = r.readSingle()
 
     class Bodt:
-        class NodeFlag(Flag):
+        class NodeFlag(IntFlag):
             Head = 0x00000001
             Hair = 0x00000002
             Body = 0x00000004
@@ -1608,8 +1646,8 @@ class ARMORecord(Record, IHaveMODL):
             BodyAddOn16 = 0x20000000
             BodyAddOn17 = 0x40000000
             FX01 = 0x80000000
-        class Flag(Flag): ModulatesVoice = 0x00000001; NonPlayable = 0x00000010
-        class SkillType(Enum): LightArmor = 0; HeavyArmor = 1; None_ = 2
+        class Flag(IntFlag): ModulatesVoice = 0x00000001; NonPlayable = 0x00000010
+        class SkillType(IntEnum): LightArmor = 0; HeavyArmor = 1; None_ = 2
         _struct = { 8: '<IB3s', 12: '<IB3sI' }
         def __init__(self, t):
             match len(t):
@@ -1681,7 +1719,7 @@ class ARMORecord(Record, IHaveMODL):
 # ARTO.Art Object - 0050 - tag::ARTO[]
 # ARTO records contain information on "art" (effects) objects.
 class ARTORecord(Record):
-    class DnamFlag(Flag): MagicCasting = 0x00000000; MagicHitEffect = 0x00000001; EnchantmentEffect = 0x00000002
+    class DnamFlag(IntFlag): MagicCasting = 0x00000000; MagicHitEffect = 0x00000001; EnchantmentEffect = 0x00000002
     OBND: Obnd # Object Bounds
     MODL: Modl # Model
     DNAM: DnamFlag # Art Type
@@ -1704,7 +1742,7 @@ class ARTORecord(Record):
 # ASPC.Acoustic Space^ - 0050 - tag::ASPC[]
 # ASPC contains the data used for ambient and other sounds for an interior cell.
 class ASPCRecord(Record):
-    class Anam(Enum): None_ = 0; Default = 1; Generic = 2; PaddedCell = 3; Room = 4; Bathroom = 5; Livingroom = 6; StoneRoom = 7; Auditorium = 8; Concerthall = 9; Cave = 10; Arena = 11; Hangar = 12; CarpetedHallway = 13; Hallway = 14; StoneCorridor = 15; Alley = 16; Forest = 17; City = 18; Mountains = 19; Quarry = 20; Plain = 21; Parkinglot = 22; Sewerpipe = 23; Underwater = 24; SmallRoom = 25; MediumRoom = 26; LargeRoom = 27; MediumHall = 28; LargeHall = 29; Plate = 30
+    class Anam(IntEnum): None_ = 0; Default = 1; Generic = 2; PaddedCell = 3; Room = 4; Bathroom = 5; Livingroom = 6; StoneRoom = 7; Auditorium = 8; Concerthall = 9; Cave = 10; Arena = 11; Hangar = 12; CarpetedHallway = 13; Hallway = 14; StoneCorridor = 15; Alley = 16; Forest = 17; City = 18; Mountains = 19; Quarry = 20; Plain = 21; Parkinglot = 22; Sewerpipe = 23; Underwater = 24; SmallRoom = 25; MediumRoom = 26; LargeRoom = 27; MediumHall = 28; LargeHall = 29; Plate = 30
     OBND: Obnd # Object Bounds
     SNAM: Ref['SNDRRecord'] # Ambient
     RDAT: Ref['REGNRecord'] # Region Data
@@ -1728,7 +1766,7 @@ class ASPCRecord(Record):
 # ASTP.Association Type^ - 0050 - tag::ASTP[]
 # ASPC contains the data used for ambient and other sounds for an interior cell.
 class ASTPRecord(Record):
-    class DataFlag(Flag): FamilyAssociation = 0x01
+    class DataFlag(IntFlag): FamilyAssociation = 0x01
     MPRT: str # Male Parent Label
     FPRT: str # Female Parent Label
     MCHT: str # Male Child Label
@@ -1777,9 +1815,9 @@ class BNDSRecord(Record):
 # BODY.Body Part - 3000 - tag::BODY[]
 # BODY records contain information about body parts.
 class BODYRecord(Record, IHaveMODL):
-    class Part(Enum): Head = 0; Hair = 1; Neck = 2; Chest = 3; Groin = 4; Hand = 5; Wrist = 6; Forearm = 7; Upperarm = 8; Foot = 9; Ankle = 10; Knee = 11; Upperleg = 12; Clavicle = 13; Tail = 14
-    class Flag(Flag): Female = 1; Playable = 2
-    class PartType(Enum): Skin = 0; Clothing = 1; Armor = 2
+    class Part(IntEnum): Head = 0; Hair = 1; Neck = 2; Chest = 3; Groin = 4; Hand = 5; Wrist = 6; Forearm = 7; Upperarm = 8; Foot = 9; Ankle = 10; Knee = 11; Upperleg = 12; Clavicle = 13; Tail = 14
+    class Flag(IntFlag): Female = 1; Playable = 2
+    class PartType(IntEnum): Skin = 0; Clothing = 1; Armor = 2
 
     class Bydt:
         _struct = ('<4B', 4)
@@ -1818,16 +1856,17 @@ class BOIMRecord(Record):
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case FieldType.FULL: z = self.FULL = r.readFUString(dataSize)
             case FieldType.SNAM: z = self.SNAM = r.readFUString(dataSize)
             case _: z = Record._empty
         return z
-# end::BODY[]
+# end::BOIM[]
 
 # BOOK.Book - 3450 - tag::BOOK[]
 class BOOKRecord(Record, IHaveMODL):
-    class Flag(Flag): Scroll = 0x01; CantBeTaken = 0x02
+    class Flag(IntFlag): Scroll = 0x01; CantBeTaken = 0x02
     class Data:
-        flags: Flag
+        flags: 'Flag'
         teaches: int # SkillId - (-1 is no skill)
         value: int
         weight: float
@@ -1879,7 +1918,7 @@ class BOOKRecord(Record, IHaveMODL):
 # BPTD.Body Part Data - 00500 - tag::BPTD[]
 class BPTDRecord(Record):
     class Bpnd:
-        class Flag(Flag):
+        class Flag(IntFlag):
             Severable = 1 << 0
             IKData = 1 << 1
             IKData_BipedData = 1 << 2
@@ -1887,7 +1926,7 @@ class BPTDRecord(Record):
             IKData_IsHead = 1 << 4
             IKData_Headtracking = 1 << 5
             ToHitChance_Absolute = 1 << 6
-        class PartType_(Enum): Torso = 0; Head = 1; Eye = 2; LookAt = 3; FlyGrab = 4; Saddle = 5
+        class PartType_(IntEnum): Torso = 0; Head = 1; Eye = 2; LookAt = 3; FlyGrab = 4; Saddle = 5
         _struct = ('<f3Bb2BH2I2fi2If6f2I2BHf', 84)
         def __init__(self, t):
             goreEffectsPositioning = self.goreEffectsPositioning = Position()
@@ -1986,9 +2025,31 @@ class CAMSRecord(Record):
         return z
 # end::CAMS[]
 
+# CCRD.Caravan Card - 0400 - tag::CCRD[]
+class CCRDRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::CCRD[]
+
+# CDCK.Caravan Deck - 0400 - tag::CDCK[]
+class CDCKRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::CDCK[]
+
 # CELL.Cell - 3450 - tag::CELL[]
 class CELLRecord(Record): #ICellRecord
-    class Flag(Flag):
+    class Flag(IntFlag):
         Interior = 0x0001
         HasWater = 0x0002
         InvertFastTravel = 0x0004 # IllegalToSleepHere
@@ -2173,10 +2234,32 @@ class CELLRecord(Record): #ICellRecord
         return z
 # end::CELL[]
 
+# CHAL.Challenge - 0400 - tag::CHAL[]
+class CHALRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::CHAL[]
+
+# CHIP.Casino Chip - 0400 - tag::CHIP[]
+class CHIPRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::CHIP[]
+
 # CLAS.Class - 3450 - tag::CLAS[]
 class CLASRecord(Record):
     class Data:
-        class Specialization_(Enum): Combat = 0; Magic = 1; Stealth = 2
+        class Specialization_(IntEnum): Combat = 0; Magic = 1; Stealth = 2
         class Flag(IntFlag): Playable = 0x00000001; Guard = 0x00000002
         class Service(IntFlag):
             Weapon = 0x00001
@@ -2217,10 +2300,10 @@ class CLASRecord(Record):
                 self.flags = CLASRecord.Data.Flag(r.readUInt32())
                 self.services = CLASRecord.Data.Service(r.readUInt32()) # Buys/Sells and Services
                 if not r.tes4a and dataSize == 48: return
-                self.skillTrained = ActorValue(r.readSByte())
+                self.skillTrained = ActorValue(r.readSByte() + 12)
                 self.maximumTrainingLevel = r.readByte() # (0-100)
                 self.unused = r.readUInt16()
-                if self.skillTrained != ActorValue.None_: self.skillTrained += 12
+                if self.skillTrained <= ActorValue.Encumbrance: self.skillTrained = ActorValue.None_
             elif r.format == FormType.TES5:
                 r.skip(dataSize) # TODO
             else: raise NotImplementedError('CLASRecord')
@@ -2311,7 +2394,7 @@ class CLMTRecord(Record, IHaveMODL):
 # CLOT.Clothing - 3450 - tag::CLOT[]
 class CLOTRecord(Record, IHaveMODL):
     class Data:
-        class Type(Enum): Pants = 0; Shoes = 1; Shirt = 2; Belt = 3; Robe = 4; R_Glove = 5; L_Glove = 6; Skirt = 7; Ring = 8; Amulet = 9
+        class Type(IntEnum): Pants = 0; Shoes = 1; Shirt = 2; Belt = 3; Robe = 4; R_Glove = 5; L_Glove = 6; Skirt = 7; Ring = 8; Amulet = 9
         value: int
         weight: float
         # TES3
@@ -2378,6 +2461,17 @@ class CLOTRecord(Record, IHaveMODL):
             case _: z = Record._empty
         return z
 # end::CLOT[]
+
+# CMNY.Caravan Money - 0400 - tag::CMNY[]
+class CMNYRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::CMNY[]
 
 # COBJ.Constructible Object (recipes) - 0050 - tag::COBJ[]
 class COBJRecord(Record):
@@ -2457,7 +2551,7 @@ class CPTHRecord(Record):
 
 # CREA.Creature - 3450 - tag::CREA[]
 class CREARecord(Record, IHaveMODL):
-    class Flag(Flag):
+    class Flag(IntFlag):
         Biped = 0x0001
         Respawn = 0x0002
         WeaponAndShield = 0x0004
@@ -2751,6 +2845,17 @@ class CREA4Record(Record, IHaveMODL):
         return z
 # end::CREA4[]
 
+# CSNO.Casino - 0400 - tag::CSNO[]
+class CSNORecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::CSNO[]
+
 # CSTY.Combat Style - 0450 - tag::CSTY[]
 class CSTYRecord(Record):
     class Cstd:
@@ -2891,10 +2996,32 @@ class DEBRRecord(Record):
         return z
 # end::DEBR[]
 
+# DEHY.Dehydration Stage - 0400 - tag::DEHY[]
+class DEHYRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::DEHY[]
+
+# HUNG.Hunger Stage - 0400 - tag::HUNG[]
+class HUNGRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::HUNG[]
+
 # DIAL.Dialog Topic - 3450 - tag::DIAL[]
 class DIALRecord(Record):
     _lastRecord: 'DIALRecord'
-    class DIALType(Enum): RegularTopic = 0; Voice = 1; Greeting = 2; Persuasion = 3; Journal = 4
+    class DIALType(IntEnum): RegularTopic = 0; Voice = 1; Greeting = 2; Persuasion = 3; Journal = 4
     FULL: str # Dialogue Name
     DATA: int # Dialogue Type
     QSTIs: list[RefX['QUSTRecord']] = None #! Quests (optional)
@@ -3152,9 +3279,9 @@ class EFSHRecord(Record):
 # ENCH.Enchantment - 3450 - tag::ENCH[]
 class ENCHRecord(Record):
     class Enit:
-        class Type3(Enum): CastOnce = 0; CastStrikes = 1; CastWhenUsed = 2; ConstantEffect = 3
-        class Type4(Enum): Scroll = 0; Staff = 1; Weapon = 2; Apparel = 3
-        class Flag(Flag): AutoCalc = 0x01
+        class Type3(IntEnum): CastOnce = 0; CastStrikes = 1; CastWhenUsed = 2; ConstantEffect = 3
+        class Type4(IntEnum): Scroll = 0; Staff = 1; Weapon = 2; Apparel = 3
+        class Flag(IntFlag): AutoCalc = 0x01
         type: int
         enchantCost: int
         chargeAmount: int # Charge
@@ -3254,7 +3381,7 @@ class FACTRecord(Record):
             self.factionReaction) = t
 
     class Fadt:
-        class Flag(Flag): HiddenFromPlayer = 0x1
+        class Flag(IntFlag): HiddenFromPlayer = 0x1
         _struct = ('2I20s20s20s20s20s20s20s20s20s20s7iI', 240)
         def __init__(self, t):
             attributes = self.attributes = [None]*2
@@ -3326,7 +3453,7 @@ class FACTRecord(Record):
             self.unused) = t
 
     class Plvd:
-        class SpecType(Enum):
+        class SpecType(IntEnum):
             NearReference = 0 # REFR formID follows
             InCell = 1 # CELL formID follows
             NearPackageStartLocation = 2 # Not used in original files
@@ -3701,6 +3828,17 @@ class IMGSRecord(Record):
             case _: z = Record._empty
         return z
 # end::IMGS[]
+
+# IMOD.Item Mod - 0400 - tag::IMOD[]
+class IMODRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::IMOD[]
 
 # INFO.Dialog Topic Info - 3450 - tag::INFO[]
 class INFORecord(Record):
@@ -4126,7 +4264,7 @@ class LGTMRecord(Record):
 # LIGH.Light - 3450 - tag::LIGH[]
 class LIGHRecord(Record, IHaveMODL):
     class Data:
-        class ColorFlags(Flag):
+        class ColorFlags(IntFlag):
             Dynamic = 0x0001
             CanCarry = 0x0002
             Negative = 0x0004
@@ -4245,6 +4383,17 @@ class LSCRRecord(Record):
             case _: z = Record._empty
         return z
 # end::LSCR[]
+
+# LSCT.Load Screen Type - 0400 - tag::LSCT[]
+class LSCTRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::LSCT[]
 
 # LTEX.Land Texture - 3450 - tag::LTEX[]
 class LTEXRecord(Record):
@@ -4410,7 +4559,7 @@ class MGEFRecord(Record):
             self.sizeCap) = t
 
     # TES4
-    class MFEGFlag(Flag):
+    class MFEGFlag(IntFlag):
         Hostile = 0x00000001
         Recover = 0x00000002
         Detrimental = 0x00000004
@@ -4632,6 +4781,17 @@ class MOVTRecord(Record):
         return z
 # end::MOVT[]
 
+# MSET.Media Set - 0400 - tag::MSET[]
+class MSETRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::MSET[]
+
 # MSTT.Movable Static - 0050 - tag::MSTT[]
 class MSTTRecord(Record):
     def __init__(self): super().__init__()
@@ -4700,7 +4860,7 @@ class NOTERecord(Record):
 
 # NPC_.Non-Player Character - 3450 - tag::NPC_3[]
 class NPC_3Record(CREA3Record):
-    class NPC_3Flags(Flag):
+    class NPC_3Flags(IntFlag):
         Female = 0x0001
         Essential = 0x0002
         Respawn = 0x0004
@@ -4760,7 +4920,7 @@ class NPC_3Record(CREA3Record):
 
 # NPC_.Non-Player Character - 3450 - tag::NPC_4[]
 class NPC_4Record(CREA4Record):
-    class NPC_4Flags(Flag):
+    class NPC_4Flags(IntFlag):
         Female = 0x0001
         Essential = 0x0002
         Respawn = 0x0008
@@ -4912,6 +5072,26 @@ class PACKRecord(Record):
         return z
 # end::PACK[]
 
+# PARW.Placed Arrow - 0040 - tag::PARW[]
+class PARWRecord(ReferenceRecord):
+    def __init__(self): super().__init__()
+# end::PARW[]
+
+# PBAR.Placed Barrier - 0040 - tag::PBAR[]
+class PBARRecord(ReferenceRecord):
+    def __init__(self): super().__init__()
+# end::PBAR[]
+
+# PBEA.Placed Beam - 0040 - tag::PBEA[]
+class PBEARecord(ReferenceRecord):
+    def __init__(self): super().__init__()
+# end::PBEA[]
+
+# PCON.Placed Cone/Voice - 0040 - tag::PCON[]
+class PCONRecord(ReferenceRecord):
+    def __init__(self): super().__init__()
+# end::PCON[]
+
 # PERK.Perk - 0050 - tag::PERK[]
 class PERKRecord(Record):
     def __init__(self): super().__init__()
@@ -4922,6 +5102,11 @@ class PERKRecord(Record):
             case _: z = Record._empty
         return z
 # end::PERK[]
+
+# PFLA.Placed Flame - 0040 - tag::PFLA[]
+class PFLARecord(ReferenceRecord):
+    def __init__(self): super().__init__()
+# end::PFLA[]
 
 # PGRD.Path Grid - 3400 - tag::PGRD[]
 class PGRDRecord(Record):
@@ -5002,14 +5187,8 @@ class PGRERecord(Record):
 # end::PGRE[]
 
 # PHZD.Placed Hazard - 000S0 - tag::PHZD[]
-class PHZDRecord(Record):
+class PHZDRecord(ReferenceRecord):
     def __init__(self): super().__init__()
-
-    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
-        match type:
-            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
-            case _: z = Record._empty
-        return z
 # end::PHZD[]
 
 # PLYR.Player Reference - 0400 (No Reference) - tag::PLYR[]
@@ -5022,6 +5201,11 @@ class PLYRRecord(Record):
             case _: z = Record._empty
         return z
 # end::PLYR[]
+
+# PMIS.Placed Missile - 00450 - tag::PMIS[]
+class PMISRecord(ReferenceRecord):
+    def __init__(self): super().__init__()
+# end::PMIS[]
 
 # PROB.Probe - 3000 - tag::PROB[]
 class PROBRecord(Record, IHaveMODL):
@@ -5064,6 +5248,17 @@ class PROJRecord(Record):
         return z
 # end::PROJ[]
 
+# PWAT.Placeable Water - 00450 - tag::PWAT[]
+class PWATRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::PWAT[]
+
 # QUST.Quest - 0450 - tag::QUST[]
 class QUSTRecord(Record):
     class Data:
@@ -5104,7 +5299,7 @@ class QUSTRecord(Record):
 
 # RACE.Race - 3450 - tag::RACE[]
 class RACERecord(Record):
-    class DataFlag(Flag):
+    class DataFlag(IntFlag):
         Playable = 0x00000001
         FaceGenHead = 0x00000002
         Child = 0x00000004
@@ -5264,8 +5459,8 @@ class RACE3Record(RACERecord):
 
 # tag::RACE4[]
 class RACE4Record(RACERecord):
-    class FaceIndx(Enum): Head = 0; Ear_Male = 1; Ear_Female = 2; Mouth = 3; Teeth_Lower = 4; Teeth_Upper = 5; Tongue = 6; Eye_Left = 7; Eye_Right = 8
-    class BodyIndx(Enum): UpperBody = 0; LowerBody = 1; Hand = 2; Foot = 3; Tail = 4
+    class FaceIndx(IntEnum): Head = 0; Ear_Male = 1; Ear_Female = 2; Mouth = 3; Teeth_Lower = 4; Teeth_Upper = 5; Tongue = 6; Eye_Left = 7; Eye_Right = 8
+    class BodyIndx(IntEnum): UpperBody = 0; LowerBody = 1; Hand = 2; Foot = 3; Tail = 4
 
     VNAM: Ref2['RACERecord'] # Voice
     DNAM: Ref2[HAIRRecord] # Default Hair
@@ -5375,11 +5570,44 @@ class RACE5Record(RACERecord):
         return z
 # end::RACE5[]
 
+# RADS.Relationship - 0040 - tag::RADS[]
+class RADSRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::RADS[]
+
+# RCCT.Recipe Category - 0400 - tag::RCCT[]
+class RCCTRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::RCCT[]
+
+# RCPE.Recipe - 0400 - tag::RCPE[]
+class RCPERecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::RCPE[]
+
 # REFR.Placed Object - 0450 - tag::REFR[]
 class REFRRecord(Record):
     # Teleport Destination
     class Xtel:
-        class Flag(Flag): NoAlarm = 0x00; NoLoadScreen = 0x01; RelativePosition = 0x02
+        class Flag(IntFlag): NoAlarm = 0x00; NoLoadScreen = 0x01; RelativePosition = 0x02
         def __init__(self, r: Reader, dataSize: int):
             self.door: Ref[REFRRecord] = Ref[REFRRecord](REFRRecord, r.readUInt32())
             self.position: Vector3 = r.readVector3()
@@ -5502,7 +5730,7 @@ class REFRRecord(Record):
 
 # REGN.Region - 3450 - tag::REGN[]
 class REGNRecord(Record):
-    class REGNType(Enum): None_ = 0; One = 1; Objects = 2; Weather = 3; Map = 4; Landscape = 5; Grass = 6; Sound = 7
+    class REGNType(IntEnum): None_ = 0; One = 1; Objects = 2; Weather = 3; Map = 4; Landscape = 5; Grass = 6; Sound = 7
 
     class Rdat:
         def __init__(self, r: Reader = None, dataSize: int = 0, RDSDs: list['RDGSField'] = None):
@@ -5683,6 +5911,17 @@ class REPARecord(Record, IHaveMODL):
         return None
 # end::REPA[]
 
+# REPU.Reputation - 0400 - tag::REPU[]
+class REPURecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::REPU[]
+
 # REVB.Reverb Parameters - 0050 - tag::REVB[]
 class REVBRecord(Record):
     class Data:
@@ -5722,6 +5961,17 @@ class RFCTRecord(Record):
             case _: z = Record._empty
         return z
 # end::RFCT[]
+
+# RGDL.Ragdoll - 00400 - tag::RGDL[]
+class RGDLRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::RGDL[]
 
 # ROAD.Road - 0400 - tag::ROAD[]
 class ROADRecord(Record):
@@ -5767,6 +6017,17 @@ class SCENRecord(Record):
             case _: z = Record._empty
         return z
 # end::SCEN[]
+
+# SCOL.Static Collection - 00400 - tag::SCOL[]
+class SCOLRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::SCOL[]
 
 # SCPT.Script - 3400 - tag::SCPT[]
 class SCPTRecord(Record):
@@ -5960,6 +6221,17 @@ class SLGMRecord(Record, IHaveMODL):
         return z
 # end::SLGM[]
 
+# SLPD.Sleep Deprivation Stage - 0400 - tag::SLPD[]
+class SLPDRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::SLPD[]
+
 # SMBN.Story Manager Branch Node - 000S0 - tag::SMBN[]
 class SMBNRecord(Record):
     def __init__(self): super().__init__()
@@ -6006,7 +6278,7 @@ class SNCTRecord(Record):
 
 # SNDG.Sound Generator - 3000 - tag::SNDG[]
 class SNDGRecord(Record):
-    class SNDGType(Enum): LeftFoot = 0; RightFoot = 1; SwimLeft = 2; SwimRight = 3; Moan = 4; Roar = 5; Scream = 6; Land = 7
+    class SNDGType(IntEnum): LeftFoot = 0; RightFoot = 1; SwimLeft = 2; SwimRight = 3; Moan = 4; Roar = 5; Scream = 6; Land = 7
     DATA: int # Sound Type Data
     SNAM: str # Sound ID
     CNAM: str = None # Creature name (optional)
@@ -6050,7 +6322,7 @@ class SOPMRecord(Record):
 
 # SOUN.Sound - 3450 - tag::SOUN[]
 class SOUNRecord(Record):
-    class SOUNFlags(Flag):
+    class SOUNFlags(IntFlag):
         RandomFrequencyShift = 1 << 1
         PlayAtRandom = 1 << 2
         EnvironmentIgnored = 1 << 3
@@ -6352,8 +6624,8 @@ class TES4Record(Record):
 
 # TERM.Computer Terminals - 000S0 - tag::TERM[]
 class TERMRecord(Record):
-    class DnamDifficulty(Enum): VeryEasy = 0; Easy = 1; Average = 2; Hard = 3; VeryHard = 4; RequiresKey = 5
-    class DnamFlag(Flag): Leveled = 0x01; Unlocked = 0x02; AlternateColors = 0x04; HideWelcomeTextWhenDisplayingText = 0x08
+    class DnamDifficulty(IntEnum): VeryEasy = 0; Easy = 1; Average = 2; Hard = 3; VeryHard = 4; RequiresKey = 5
+    class DnamFlag(IntFlag): Leveled = 0x01; Unlocked = 0x02; AlternateColors = 0x04; HideWelcomeTextWhenDisplayingText = 0x08
     class Dnam:
         _struct = { 3: '<3B', 4: '<4B' }
         def __init__(self, t):
@@ -6504,13 +6776,13 @@ class TRNSRecord(Record):
 
 # TXST.Texture Set - 0450 #F4 - tag::TXST[]
 class TXSTRecord(Record):
-    class DnamFlag(Flag):
+    class DnamFlag(IntFlag):
         NotHasSpecularMap = 0x01 # not Has specular map
         FacegenTextures = 0x02 # Facegen Textures
         HasModelSpaceNormalMap = 0x04 # Has model space normal map
 
     class Dodt:
-        class Flag(Flag):
+        class Flag(IntFlag):
             Parallax = 0x01 # Parallax (enables the Scale and Passes values in the CK)
             AlphaBlending = 0x02 # Alpha Blending
             AlphaTesting = 0x04 # Alpha Testing
@@ -6671,7 +6943,7 @@ class WATRRecord(Record):
 # WEAP.Weapon - 3450 - tag::WEAP[]
 class WEAPRecord(Record, IHaveMODL):
     class Data:
-        class WEAPType(Enum): ShortBladeOneHand = 0; LongBladeOneHand = 1; LongBladeTwoClose = 2; BluntOneHand = 3; BluntTwoClose = 4; BluntTwoWide = 5; SpearTwoWide = 6; AxeOneHand = 7; AxeTwoHand = 8; MarksmanBow = 9; MarksmanCrossbow = 10; MarksmanThrown = 11; Arrow = 12; Bolt = 13
+        class WEAPType(IntEnum): ShortBladeOneHand = 0; LongBladeOneHand = 1; LongBladeTwoClose = 2; BluntOneHand = 3; BluntTwoClose = 4; BluntTwoWide = 5; SpearTwoWide = 6; AxeOneHand = 7; AxeTwoHand = 8; MarksmanBow = 9; MarksmanCrossbow = 10; MarksmanThrown = 11; Arrow = 12; Bolt = 13
         weight: float
         value: int
         type: int

@@ -67,9 +67,8 @@ class FormType(IntEnum):
     DOBJ = 0x4A424F44
     DMGT = 0x54474D44
     DOOR = 0x524F4F44
-    DUEL = 0x4C455544
+    DUAL = 0x4C415544
     # DFOB = 0x424F4644
-    # DUAL = 0x4C415544
     ECZN = 0x4E5A4345
     EFSH = 0x48534645
     ENCH = 0x48434E45
@@ -176,7 +175,7 @@ class FormType(IntEnum):
     SLGM = 0x4D474C53
     SMBN = 0x4E424D53
     SMEN = 0x4E454D53
-    SMNQ = 0x514E4D53
+    SMQN = 0x4E514D53
     SNCT = 0x54434E53
     SNDG = 0x47444E53
     SNDR = 0x52444E53
@@ -189,7 +188,6 @@ class FormType(IntEnum):
     STDT = 0x54445453
     SUNP = 0x504E5553
     # SCOL = 0x4C4F4353
-    # SMQN = 0x4E514D53
     # SCCO = 0x4F434353
     # SCSN = 0x4E534353
     # STAG = 0x47415453
@@ -570,162 +568,299 @@ class Reader(BinaryReader):
 class Record:
     _mapx: dict[FormType, callable] = {
         FormType.AACT: lambda f: AACTRecord(),
+        FormType.AAPD: lambda f: AAPDRecord(),
+        FormType.AAMD: lambda f: AAMDRecord(),
         FormType.ACHR: lambda f: ACHRRecord(),
         FormType.ACRE: lambda f: ACRERecord(),
         FormType.ACTI: lambda f: ACTIRecord(),
         FormType.ADDN: lambda f: ADDNRecord(),
+        FormType.AECH: lambda f: AECHRecord(),
+        FormType.AFFE: lambda f: AFFERecord(),
         FormType.ALCH: lambda f: ALCHRecord(),
+        FormType.ALOC: lambda f: ALOCRecord(),
+        FormType.AMBS: lambda f: AMBSRecord(),
+        FormType.AMDL: lambda f: AMDLRecord(),
+        FormType.AMEF: lambda f: AMEFRecord(),
         FormType.AMMO: lambda f: AMMORecord(),
         FormType.ANIO: lambda f: ANIORecord(),
+        FormType.AOPF: lambda f: AOPFRecord(),
+        FormType.AOPS: lambda f: AOPSRecord(),
+        FormType.AORU: lambda f: AORURecord(),
         FormType.APPA: lambda f: APPARecord(),
         FormType.ARMA: lambda f: ARMARecord(),
         FormType.ARMO: lambda f: ARMORecord(),
         FormType.ARTO: lambda f: ARTORecord(),
         FormType.ASPC: lambda f: ASPCRecord(),
+        FormType.ASTM: lambda f: ASTMRecord(),
         FormType.ASTP: lambda f: ASTPRecord(),
+        FormType.ATMO: lambda f: ATMORecord(),
+        FormType.ATXO: lambda f: ATXORecord(),
+        FormType.AUVF: lambda f: AUVFRecord(),
         FormType.AVIF: lambda f: AVIFRecord(),
+        FormType.AVMD: lambda f: AVMDRecord(),
+        FormType.AVTR: lambda f: AVTRRecord(),
+        FormType.BIOM: lambda f: BIOMRecord(),
+        FormType.BMOD: lambda f: BMODRecord(),
         FormType.BNDS: lambda f: BNDSRecord(),
         FormType.BODY: lambda f: BODYRecord(),
-        FormType.BOIM: lambda f: BOIMRecord(),
         FormType.BOOK: lambda f: BOOKRecord(),
         FormType.BPTD: lambda f: BPTDRecord(),
         FormType.BSGN: lambda f: BSGNRecord(),
         FormType.CAMS: lambda f: CAMSRecord(),
+        FormType.CCRD: lambda f: CCRDRecord(),
+        FormType.CDCK: lambda f: CDCKRecord(),
         FormType.CELL: lambda f: CELLRecord(),
+        FormType.CHAL: lambda f: CHALRecord(),
+        FormType.CHIP: lambda f: CHIPRecord(),
         FormType.CLAS: lambda f: CLASRecord(),
+        FormType.CLDC: lambda f: CLDCRecord(),
+        FormType.CLDF: lambda f: CLDFRecord(),
         FormType.CLFM: lambda f: CLFMRecord(),
         FormType.CLMT: lambda f: CLMTRecord(),
         FormType.CLOT: lambda f: CLOTRecord(),
+        FormType.CMNY: lambda f: CMNYRecord(),
+        FormType.CMPO: lambda f: CMPORecord(),
+        FormType.CNCY: lambda f: CNCYRecord(),
+        FormType.CNDF: lambda f: CNDFRecord(),
         FormType.COBJ: lambda f: COBJRecord(),
+        FormType.COEN: lambda f: COENRecord(),
         FormType.COLL: lambda f: COLLRecord(),
         FormType.CONT: lambda f: CONTRecord(),
+        FormType.CPRD: lambda f: CPRDRecord(),
         FormType.CPTH: lambda f: CPTHRecord(),
         FormType.CREA: lambda f: CREA3Record() if f == FormType.TES3 else CREA4Record(),
+        FormType.CSEN: lambda f: CSENRecord(),
+        FormType.CSNO: lambda f: CSNORecord(),
         FormType.CSTY: lambda f: CSTYRecord(),
+        FormType.CUR3: lambda f: CUR3Record(),
+        FormType.CURV: lambda f: CURVRecord(),
+        FormType.DCGF: lambda f: DCGFRecord(),
         FormType.DEBR: lambda f: DEBRRecord(),
+        FormType.DEHY: lambda f: DEHYRecord(),
+        FormType.DFOB: lambda f: DFOBRecord(),
         FormType.DIAL: lambda f: DIALRecord(),
+        FormType.DIST: lambda f: DISTRecord(),
         FormType.DLBR: lambda f: DLBRRecord(),
         FormType.DLVW: lambda f: DLVWRecord(),
         FormType.DOBJ: lambda f: DOBJRecord(),
         FormType.DMGT: lambda f: DMGTRecord(),
         FormType.DOOR: lambda f: DOORRecord(),
-        FormType.DUEL: lambda f: DUELRecord(),
+        FormType.DUAL: lambda f: DUALRecord(),
+        FormType.ECAT: lambda f: ECATRecord(),
         FormType.ECZN: lambda f: ECZNRecord(),
         FormType.EFSH: lambda f: EFSHRecord(),
+        FormType.EFSQ: lambda f: EFSQRecord(),
+        FormType.EMOT: lambda f: EMOTRecord(),
         FormType.ENCH: lambda f: ENCHRecord(),
+        FormType.ENTM: lambda f: ENTMRecord(),
         FormType.EQUP: lambda f: EQUPRecord(),
+        FormType.EQWG: lambda f: EQWGRecord(),
         FormType.EXPL: lambda f: EXPLRecord(),
         FormType.EYES: lambda f: EYESRecord(),
         FormType.FACT: lambda f: FACTRecord(),
+        FormType.FFKW: lambda f: FFKWRecord(),
+        FormType.FISH: lambda f: FISHRecord(),
         FormType.FLOR: lambda f: FLORRecord(),
         FormType.FLST: lambda f: FLSTRecord(),
+        FormType.FOGV: lambda f: FOGVRecord(),
+        FormType.FORC: lambda f: FORCRecord(),
         FormType.FSTP: lambda f: FSTPRecord(),
         FormType.FSTS: lambda f: FSTSRecord(),
         FormType.FURN: lambda f: FURNRecord(),
+        FormType.FXPD: lambda f: FXPDRecord(),
+        FormType.GBFT: lambda f: GBFTRecord(),
+        FormType.GBFM: lambda f: GBFMRecord(),
+        FormType.GCVR: lambda f: GCVRRecord(),
+        FormType.GDRY: lambda f: GDRYRecord(),
         FormType.GLOB: lambda f: GLOBRecord(),
+        FormType.GMRW: lambda f: GMRWRecord(),
         FormType.GMST: lambda f: GMSTRecord(),
+        FormType.GPOF: lambda f: GPOFRecord(),
+        FormType.GPOG: lambda f: GPOGRecord(),
         FormType.GRAS: lambda f: GRASRecord(),
         FormType.GRUP: lambda f: GRUPRecord(),
         FormType.HAIR: lambda f: HAIRRecord(),
         FormType.HAZD: lambda f: HAZDRecord(),
         FormType.HDPT: lambda f: HDPTRecord(),
+        FormType.HUNG: lambda f: HUNGRecord(),
         FormType.IDLE: lambda f: IDLERecord(),
         FormType.IDLM: lambda f: IDLMRecord(),
         FormType.IMAD: lambda f: IMADRecord(),
         FormType.IMGS: lambda f: IMGSRecord(),
+        FormType.IMOD: lambda f: IMODRecord(),
         FormType.INFO: lambda f: INFO3Record() if f == FormType.TES3 else INFO4Record(),
         FormType.INGR: lambda f: INGRRecord(),
         FormType.IPCT: lambda f: IPCTRecord(),
         FormType.IPDS: lambda f: IPDSRecord(),
+        FormType.IRES: lambda f: IRESRecord(),
         FormType.KEYM: lambda f: KEYMRecord(),
+        FormType.KSSM: lambda f: KSSMRecord(),
         FormType.KYWD: lambda f: KYWDRecord(),
         FormType.LAND: lambda f: LANDRecord(),
+        FormType.LAYR: lambda f: LAYRRecord(),
         FormType.LCRT: lambda f: LCRTRecord(),
         FormType.LCTN: lambda f: LCTNRecord(),
         FormType.LEVC: lambda f: LEVCRecord(),
         FormType.LEVI: lambda f: LEVIRecord(),
+        FormType.LGDI: lambda f: LGDIRecord(),
         FormType.LGTM: lambda f: LGTMRecord(),
         FormType.LIGH: lambda f: LIGHRecord(),
+        FormType.LMSW: lambda f: LMSWRecord(),
         FormType.LOCK: lambda f: LOCKRecord(),
+        FormType.LOUT: lambda f: LOUTRecord(),
         FormType.LSCR: lambda f: LSCRRecord(),
+        FormType.LSCT: lambda f: LSCTRecord(),
+        FormType.LSPR: lambda f: LSPRRecord(),
         FormType.LTEX: lambda f: LTEXRecord(),
+        FormType.LVLB: lambda f: LVLBRecord(),
         FormType.LVLC: lambda f: LVLCRecord(),
         FormType.LVLI: lambda f: LVLIRecord(),
         FormType.LVLN: lambda f: LVLNRecord(),
+        FormType.LVLP: lambda f: LVLPRecord(),
+        FormType.LVPC: lambda f: LVPCRecord(),
+        FormType.LVSC: lambda f: LVSCRecord(),
         FormType.LVSP: lambda f: LVSPRecord(),
+        FormType.MAAM: lambda f: MAAMRecord(),
         FormType.MATO: lambda f: MATORecord(),
         FormType.MATT: lambda f: MATTRecord(),
+        FormType.MDSP: lambda f: MDSPRecord(),
         FormType.MESG: lambda f: MESGRecord(),
         FormType.MGEF: lambda f: MGEFRecord(),
         FormType.MICN: lambda f: MICNRecord(),
         FormType.MISC: lambda f: MISCRecord(),
         FormType.MOVT: lambda f: MOVTRecord(),
+        FormType.MRPH: lambda f: MRPHRecord(),
+        FormType.MSCS: lambda f: MSCSRecord(),
+        FormType.MSET: lambda f: MSETRecord(),
         FormType.MSTT: lambda f: MSTTRecord(),
+        FormType.MSWP: lambda f: MSWPRecord(),
+        FormType.MTPT: lambda f: MTPTRecord(),
         FormType.MUSC: lambda f: MUSCRecord(),
+        FormType.MUST: lambda f: MUSTRecord(),
         FormType.NAVI: lambda f: NAVIRecord(),
         FormType.NAVM: lambda f: NAVMRecord(),
+        FormType.NOCM: lambda f: NOCMRecord(),
         FormType.NOTE: lambda f: NOTERecord(),
         FormType.NPC_: lambda f: NPC_3Record() if f == FormType.TES3 else NPC_4Record(),
+        FormType.OMOD: lambda f: OMODRecord(),
+        FormType.OSWP: lambda f: OSWPRecord(),
         FormType.OTFT: lambda f: OTFTRecord(),
+        FormType.OVIS: lambda f: OVISRecord(),
+        FormType.PACH: lambda f: PACHRecord(),
         FormType.PACK: lambda f: PACKRecord(),
         FormType.PARW: lambda f: PARWRecord(),
         FormType.PBAR: lambda f: PBARRecord(),
         FormType.PBEA: lambda f: PBEARecord(),
+        FormType.PCBN: lambda f: PCBNRecord(),
+        FormType.PCCN: lambda f: PCCNRecord(),
+        FormType.PCMT: lambda f: PCMTRecord(),
         FormType.PCON: lambda f: PCONRecord(),
+        FormType.PCRD: lambda f: PCRDRecord(),
+        FormType.PDCL: lambda f: PDCLRecord(),
+        FormType.PEPF: lambda f: PEPFRecord(),
         FormType.PERK: lambda f: PERKRecord(),
+        FormType.PERS: lambda f: PERSRecord(),
         FormType.PFLA: lambda f: PFLARecord(),
         FormType.PGRD: lambda f: PGRDRecord(),
         FormType.PGRE: lambda f: PGRERecord(),
         FormType.PHZD: lambda f: PHZDRecord(),
+        FormType.PKIN: lambda f: PKINRecord(),
+        FormType.PLYR: lambda f: PLYRRecord(),
+        FormType.PLYT: lambda f: PLYTRecord(),
+        FormType.PMFT: lambda f: PMFTRecord(),
         FormType.PMIS: lambda f: PMISRecord(),
+        FormType.PNDT: lambda f: PNDTRecord(),
+        FormType.PPAK: lambda f: PPAKRecord(),
         FormType.PROB: lambda f: PROBRecord(),
         FormType.PROJ: lambda f: PROJRecord(),
+        FormType.PSDC: lambda f: PSDCRecord(),
+        FormType.PTST: lambda f: PTSTRecord(),
         FormType.PWAT: lambda f: PWATRecord(),
+        FormType.QMDL: lambda f: QMDLRecord(),
         FormType.QUST: lambda f: QUSTRecord(),
         FormType.RACE: lambda f: RACE3Record() if f == FormType.TES3 else RACE4Record() if f == FormType.TES4 else RACE5Record(),
+        FormType.RADS: lambda f: RADSRecord(),
+        FormType.RCCT: lambda f: RCCTRecord(),
+        FormType.RCPE: lambda f: RCPERecord(),
         FormType.REFR: lambda f: REFRRecord(),
         FormType.REGN: lambda f: REGNRecord(),
         FormType.RELA: lambda f: RELARecord(),
         FormType.REPA: lambda f: REPARecord(),
+        FormType.REPU: lambda f: REPURecord(),
+        FormType.RESO: lambda f: RESORecord(),
         FormType.REVB: lambda f: REVBRecord(),
         FormType.RFCT: lambda f: RFCTRecord(),
+        FormType.RFGP: lambda f: RFGPRecord(),
+        FormType.RGDL: lambda f: RGDLRecord(),
         FormType.ROAD: lambda f: ROADRecord(),
+        FormType.RSGD: lambda f: RSGDRecord(),
+        FormType.RSPJ: lambda f: RSPJRecord(),
         FormType.SBSP: lambda f: SBSPRecord(),
+        FormType.SCCO: lambda f: SCCORecord(),
         FormType.SCEN: lambda f: SCENRecord(),
+        FormType.SCOL: lambda f: SCOLRecord(),
         FormType.SCPT: lambda f: SCPTRecord(),
         FormType.SCRL: lambda f: SCRLRecord(),
+        FormType.SCSN: lambda f: SCSNRecord(),
+        FormType.SDLT: lambda f: SDLTRecord(),
+        FormType.SECH: lambda f: SECHRecord(),
+        FormType.SFBK: lambda f: SFBKRecord(),
+        FormType.SFPC: lambda f: SFPCRecord(),
+        FormType.SFPT: lambda f: SFPTRecord(),
+        FormType.SFTR: lambda f: SFTRRecord(),
         FormType.SGST: lambda f: SGSTRecord(),
         FormType.SHOU: lambda f: SHOURecord(),
         FormType.SKIL: lambda f: SKILRecord(),
         FormType.SLGM: lambda f: SLGMRecord(),
         FormType.SMBN: lambda f: SMBNRecord(),
+        FormType.SLPD: lambda f: SLPDRecord(),
+        FormType.SMBN: lambda f: SMBNRecord(),
         FormType.SMEN: lambda f: SMENRecord(),
-        FormType.SMNQ: lambda f: SMNQRecord(),
+        FormType.SMQN: lambda f: SMQNRecord(),
         FormType.SNCT: lambda f: SNCTRecord(),
         FormType.SNDG: lambda f: SNDGRecord(),
         FormType.SNDR: lambda f: SNDRRecord(),
         FormType.SOPM: lambda f: SOPMRecord(),
         FormType.SOUN: lambda f: SOUNRecord(),
+        FormType.SPCH: lambda f: SPCHRecord(),
         FormType.SPEL: lambda f: SPELRecord(),
         FormType.SPGD: lambda f: SPGDRecord(),
         FormType.SSCR: lambda f: SSCRRecord(),
+        FormType.STAG: lambda f: STAGRecord(),
         FormType.STAT: lambda f: STATRecord(),
+        FormType.STBH: lambda f: STBHRecord(),
         FormType.STDT: lambda f: STDTRecord(),
+        FormType.STHD: lambda f: STHDRecord(),
+        FormType.STMP: lambda f: STMPRecord(),
+        FormType.STND: lambda f: STNDRecord(),
         FormType.SUNP: lambda f: SUNPRecord(),
         FormType.TACT: lambda f: TACTRecord(),
         FormType.TES3: lambda f: TES3Record(),
         FormType.TES4: lambda f: TES4Record(),
         FormType.TERM: lambda f: TERMRecord(),
+        FormType.TLOD: lambda f: TLODRecord(),
         FormType.TMLM: lambda f: TMLMRecord(),
+        FormType.TODD: lambda f: TODDRecord(),
+        FormType.TOFT: lambda f: TOFTRecord(),
+        FormType.TRAV: lambda f: TRAVRecord(),
         FormType.TREE: lambda f: TREERecord(),
         FormType.TRNS: lambda f: TRNSRecord(),
         FormType.TXST: lambda f: TXSTRecord(),
+        FormType.UTIL: lambda f: UTILRecord(),
         FormType.VTYP: lambda f: VTYPRecord(),
+        FormType.VOLI: lambda f: VOLIRecord(),
         FormType.WATR: lambda f: WATRRecord(),
+        FormType.WAVE: lambda f: WAVERecord(),
+        FormType.WBAR: lambda f: WBARRecord(),
         FormType.WEAP: lambda f: WEAPRecord(),
+        FormType.WKMF: lambda f: WKMFRecord(),
         FormType.WOOP: lambda f: WOOPRecord(),
         FormType.WRLD: lambda f: WRLDRecord(),
+        FormType.WSPR: lambda f: WSPRRecord(),
         FormType.WTHR: lambda f: WTHRRecord(),
+        FormType.WTHS: lambda f: WTHSRecord(),
+        FormType.WWED: lambda f: WWEDRecord(),
+        FormType.ZOOM: lambda f: ZOOMRecord(),
     }
     _cellsLoaded: int = 0
     @staticmethod
@@ -1246,6 +1381,28 @@ class AACTRecord(Record):
         return z
 # end::AACT[]
 
+# AAPD.Aim Assist Pose Data - 0050 - tag::AAPD[]
+class AAPDRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::AAPD[]
+
+# AAMD.Aim Assist Model Data - 0050 - tag::AAMD[]
+class AAMDRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::AAMD[]
+
 # ACHR.Placed NPC - 0450 - tag::ACHR[]
 # An ACHR record represents an NPC placed in a cell.
 class ACHRRecord(Record):
@@ -1370,6 +1527,28 @@ class ADDNRecord(Record):
         return z
 # end::ADDN[]
 
+# AECH.Audio Effect Chain - 0050 - tag::AECH[]
+class AECHRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::AECH[]
+
+# AFFE.Affinity Event - 0050 - tag::AFFE[]
+class AFFERecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::AFFE[]
+
 # ALCH.Potion - 3450 - tag::ALCH[]
 # ALCH records contain information about alchemy items (potions and beverages).
 class ALCHRecord(Record, IHaveMODL):
@@ -1445,6 +1624,28 @@ class ALOCRecord(Record):
         return z
 # end::ALOC[]
 
+# AMBS.Ambience Set - 0050 - tag::AMBS[]
+class AMBSRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::AMBS[]
+
+# AMDL.Aim Model - 0050 - tag::AMDL[]
+class AMDLRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::AMDL[]
+
 # AMEF.Ammo Effect - 0400 - tag::AMEF[]
 class AMEFRecord(Record):
     def __init__(self): super().__init__()
@@ -1507,6 +1708,39 @@ class ANIORecord(Record, IHaveMODL):
             case _: z = Record._empty
         return z
 # end::ANIO[]
+
+# AOPF.Audio Occlusion Primitive - 0050 - tag::AOPF[]
+class AOPFRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::AOPF[]
+
+# AOPS.Aim Optical Sight Marker - 0050 - tag::AOPS[]
+class AOPSRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::AOPS[]
+
+# AORU.Attraction Rule - 0050 - tag::AORU[]
+class AORURecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::AORU[]
 
 # APPA.Apparatus - 3450 - tag::APPA[]
 # APPA records contain information about alchemy apparatus.
@@ -1763,6 +1997,17 @@ class ASPCRecord(Record):
         return z
 # end::ASPC[]
 
+# ASTM.ASTM - 0050 - tag::ASTM[]
+class ASTMRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::ASTM[]
+
 # ASTP.Association Type^ - 0050 - tag::ASTP[]
 # ASPC contains the data used for ambient and other sounds for an interior cell.
 class ASTPRecord(Record):
@@ -1786,6 +2031,39 @@ class ASTPRecord(Record):
         return z
 # end::ASTP[]
 
+# ATMO.Atmosphere - 0050 - tag::ATMO[]
+class ATMORecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::ATMO[]
+
+# ATXO.ATX Default Object - 0050 - tag::ATXO[]
+class ATXORecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::ATXO[]
+
+# AUVF.AUVF - 0050 - tag::AUVF[]
+class AUVFRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::AUVF[]
+
 # AVIF.Actor Values / Perk Tree Graphics - 0050 - tag::AVIF[]
 # The AVIF record is Actor Value information.
 class AVIFRecord(Record):
@@ -1799,6 +2077,65 @@ class AVIFRecord(Record):
             case _: z = Record._empty
         return z
 # end::AVIF[]
+
+# AVMD.AVMS Data - 0050 - tag::AVMD[]
+class AVMDRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::AVMD[]
+
+# AVTR.Avatar - 0050 - tag::AVTR[]
+class AVTRRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::AVTR[]
+
+# BIOM.Biome - 0050 - tag::BIOM[]
+class BIOMRecord(Record):
+    FULL: str # Item Name
+    SNAM: str # Sub Name
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case FieldType.FULL: z = self.FULL = r.readFUString(dataSize)
+            case FieldType.SNAM: z = self.SNAM = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::BIOM[]
+
+# BMMO.Biome Marker - 0050 - tag::BMMO[]
+class BMMORecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::BMMO[]
+
+# BMOD.Bone Modifier - 0050 - tag::BMOD[]
+class BMODRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::BMOD[]
 
 # BNDS.Bendable Spline - 0400 #F4 - tag::BNDS[]
 # Bendable Spline
@@ -1846,21 +2183,6 @@ class BODYRecord(Record, IHaveMODL):
             return z
         return None
 # end::BODY[]
-
-# BOIM.Biome - 0050 - tag::BOIM[]
-class BOIMRecord(Record):
-    FULL: str # Item Name
-    SNAM: str # Sub Name
-    def __init__(self): super().__init__()
-
-    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
-        match type:
-            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
-            case FieldType.FULL: z = self.FULL = r.readFUString(dataSize)
-            case FieldType.SNAM: z = self.SNAM = r.readFUString(dataSize)
-            case _: z = Record._empty
-        return z
-# end::BOIM[]
 
 # BOOK.Book - 3450 - tag::BOOK[]
 class BOOKRecord(Record, IHaveMODL):
@@ -2343,6 +2665,28 @@ class CLASRecord(Record):
         return z
 # end::CLAS[]
 
+# CLDC.Unknown - 0050 - tag::CLDC[]
+class CLDCRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::CLDC[]
+
+# CLDF.Clouds - 0050 - tag::CLDF[]
+class CLDFRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::CLDF[]
+
 # CLFM.Color - 00500 - tag::CLFM[]
 class CLFMRecord(Record):
     def __init__(self): super().__init__()
@@ -2473,6 +2817,39 @@ class CMNYRecord(Record):
         return z
 # end::CMNY[]
 
+# CMPO.Component - 0050 - tag::CMPO[]
+class CMPORecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::CMPO[]
+
+# CNCY.Currency - 0050 - tag::CNCY[]
+class CNCYRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::CNCY[]
+
+# CNDF.Condition Form - 0050 - tag::CNDF[]
+class CNDFRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::CNDF[]
+
 # COBJ.Constructible Object (recipes) - 0050 - tag::COBJ[]
 class COBJRecord(Record):
     def __init__(self): super().__init__()
@@ -2483,6 +2860,17 @@ class COBJRecord(Record):
             case _: z = Record._empty
         return z
 # end::COBJ[]
+
+# COEN.Consumable Entitlement - 0050 - tag::COEN[]
+class COENRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::COEN[]
 
 # COLL.Collision Layer - 0050 - tag::COLL[]
 class COLLRecord(Record):
@@ -2548,6 +2936,17 @@ class CPTHRecord(Record):
             case _: z = Record._empty
         return z
 # end::CPTH[]
+
+# CPRD.Challenge Pass Reward Data - 0050 - tag::CPRD[]
+class CPRDRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::CPRD[]
 
 # CREA.Creature - 3450 - tag::CREA[]
 class CREARecord(Record, IHaveMODL):
@@ -2845,6 +3244,17 @@ class CREA4Record(Record, IHaveMODL):
         return z
 # end::CREA4[]
 
+# CSEN.Crate Service Entitlement - 0050 - tag::CSEN[]
+class CSENRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::CSEN[]
+
 # CSNO.Casino - 0400 - tag::CSNO[]
 class CSNORecord(Record):
     def __init__(self): super().__init__()
@@ -2985,6 +3395,39 @@ class CSTYRecord(Record):
         return z
 # end::CSTY[]
 
+# CUR3.Curve 3D - 0050 - tag::CUR3[]
+class CUR3Record(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::CUR3[]
+
+# CURV.Curve Table - 0050 - tag::CURV[]
+class CURVRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::CURV[]
+
+# DCGF.Daily Content Group - 0050 - tag::DCGF[]
+class DCGFRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::DCGF[]
+
 # DEBR.Debris - 0050 - tag::DEBR[]
 class DEBRRecord(Record):
     def __init__(self): super().__init__()
@@ -3007,8 +3450,8 @@ class DEHYRecord(Record):
         return z
 # end::DEHY[]
 
-# HUNG.Hunger Stage - 0400 - tag::HUNG[]
-class HUNGRecord(Record):
+# DFOB.Default Object - 0050 - tag::DFOB[]
+class DFOBRecord(Record):
     def __init__(self): super().__init__()
 
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
@@ -3016,7 +3459,7 @@ class HUNGRecord(Record):
             case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
             case _: z = Record._empty
         return z
-# end::HUNG[]
+# end::DFOB[]
 
 # DIAL.Dialog Topic - 3450 - tag::DIAL[]
 class DIALRecord(Record):
@@ -3037,6 +3480,17 @@ class DIALRecord(Record):
             case _: z = Record._empty
         return z
 # end::DIAL[]
+
+# DIST.District - 0050 - tag::DIST[]
+class DISTRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::DIST[]
 
 # DLBR.Dialog Branch - 0050 - tag::DIAL[]
 class DLBRRecord(Record):
@@ -3119,8 +3573,8 @@ class DOORRecord(Record, IHaveMODL):
         return z
 # end::DOOR[]
 
-# DUEL.Dual Cast Data - 0050 - tag::DUEL[]
-class DUELRecord(Record):
+# DUAL.Dual Cast Data - 0050 - tag::DUAL[]
+class DUALRecord(Record):
     def __init__(self): super().__init__()
 
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
@@ -3128,7 +3582,18 @@ class DUELRecord(Record):
             case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
             case _: z = Record._empty
         return z
-# end::DUEL[]
+# end::DUAL[]
+
+# ECAT.Emote Category - 0050 - tag::ECAT[]
+class ECATRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::ECAT[]
 
 # ECZN.Encounter Zone - 0050 - tag::ECZN[]
 class ECZNRecord(Record):
@@ -3276,6 +3741,28 @@ class EFSHRecord(Record):
         return z
 # end::EFSH[]
 
+# EFSQ.Effect Sequence - 0050 - tag::EFSQ[]
+class EFSQRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::EFSQ[]
+
+# EMOT.Emote - 0050 - tag::EMOT[]
+class EMOTRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::EMOT[]
+
 # ENCH.Enchantment - 3450 - tag::ENCH[]
 class ENCHRecord(Record):
     class Enit:
@@ -3318,6 +3805,17 @@ class ENCHRecord(Record):
         return z
 # end::ENCH[]
 
+# ENTM.Entitlemen - 0050 - tag::ENTM[]
+class ENTMRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::ENTM[]
+
 # EQUP.Equip Slots - 005S0 - tag::EQUP[]
 class EQUPRecord(Record):
     FULL: str
@@ -3331,6 +3829,17 @@ class EQUPRecord(Record):
             case _: z = Record._empty
         return z
 # end::EQUP[]
+
+# EQWG.Event Quest Widget - 0050 - tag::EQWG[]
+class EQWGRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::EQWG[]
 
 # EXPL.Explosion - 0050 - tag::EXPL[]
 class EXPLRecord(Record):
@@ -3529,6 +4038,28 @@ class FACTRecord(Record):
         return z
 # end::FACT[]
 
+# FFKW.Form Folder Keyword List - 0050 - tag::FFKW[]
+class FFKWRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::FFKW[]
+
+# FISH.Fish - 000S0 - tag::FISH[]
+class FISHRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::FISH[]
+
 # FLOR.Flora - 0450 - tag::FLOR[]
 class FLORRecord(Record, IHaveMODL):
     MODL: Modl # Model
@@ -3564,6 +4095,28 @@ class FLSTRecord(Record):
             case _: z = Record._empty
         return z
 # end::FLST[]
+
+# FOGV.Fog Volume - 0050 - tag::FOGV[]
+class FOGVRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::FOGV[]
+
+# FORC.Force Data - 0050 - tag::FORC[]
+class FORCRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::FORC[]
 
 # FSTP.Footstep - 0050 - tag::FSTP[]
 class FSTPRecord(Record):
@@ -3608,6 +4161,61 @@ class FURNRecord(Record, IHaveMODL):
         return z
 # end::FURN[]
 
+# FXPD.Facial Expression - 0050 - tag::XXXX[]
+class FXPDRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::FXPD[]
+
+# GBFT.Generic Base Form Template - 0050 - tag::GBFT[]
+class GBFTRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::GBFT[]
+
+# GBFM.Generic Base Form - 0050 - tag::GBFM[]
+class GBFMRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::GBFM[]
+
+# GCVR.Ground Cover - 0050 - tag::GCVR[]
+class GCVRRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::GCVR[]
+
+# GDRY.God Rays - 0050 - tag::GDRY[]
+class GDRYRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::GDRY[]
+
 # GLOB.Global - 3450 - tag::GLOB[]
 class GLOBRecord(Record):
     FNAM: str = None # Type of global (s, l, f)
@@ -3622,6 +4230,17 @@ class GLOBRecord(Record):
             case _: z = Record._empty
         return z
 # end::GLOB[]
+
+# GMRW.Gameplay Reward - 0050 - tag::GMRW[]
+class GMRWRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::GMRW[]
 
 # GMST.Game Setting - 3450 - tag::GMST[]
 class GMSTRecord(Record):
@@ -3643,6 +4262,28 @@ class GMSTRecord(Record):
             case _: z = Record._empty
         return z
 # end::GMST[]
+
+# GPOF.Gameplay Option - 0050 - tag::GPOF[]
+class GPOFRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::GPOF[]
+
+# GPOG.Gameplay Options Group - 0050 - tag::GPOG[]
+class GPOGRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::GPOG[]
 
 # GRAS.Grass - 0450 - tag::GRAS[]
 class GRASRecord(Record):
@@ -3774,6 +4415,17 @@ class HDPTRecord(Record):
             case _: z = Record._empty
         return z
 # end::HDPT[]
+
+# HUNG.Hunger Stage - 0400 - tag::HUNG[]
+class HUNGRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::HUNG[]
 
 # IDLE.Idle Animations - 0450 - tag::IDLE[]
 class IDLERecord(Record, IHaveMODL):
@@ -4010,6 +4662,17 @@ class INGRRecord(Record, IHaveMODL):
         return z
 # end::INGR[]
 
+# INNR.Instance Naming Rules - 0050 - tag::INNR[]
+class GDRYRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::INNR[]
+
 # IPCT.Impact Data - 0050 - tag::IPCT[]
 class IPCTRecord(Record):
     def __init__(self): super().__init__()
@@ -4031,6 +4694,17 @@ class IPDSRecord(Record):
             case _: z = Record._empty
         return z
 # end::IPDS[]
+
+# IRES.Resource - 0050 - tag::IRES[]
+class IRESRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::IRES[]
 
 # KEYM.Key - 0450 - tag::KEYM[]
 class KEYMRecord(Record, IHaveMODL):
@@ -4059,6 +4733,17 @@ class KEYMRecord(Record, IHaveMODL):
             case _: z = Record._empty
         return z
 # end::KEYM[]
+
+# KSSM.Sound Keyword Mapping - 0050 - tag::KSSM[]
+class KSSMRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::KSSM[]
 
 # KYWD.Keyword - 00500 - tag::KYWD[]
 class KYWDRecord(Record):
@@ -4178,6 +4863,17 @@ class LANDRecord(Record):
         return z
 # end::LAND[]
 
+# LAYR.Layer - 0050 - tag::LAYR[]
+class LAYRRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::LAYR[]
+
 # LCRT.Location Reference Type - 00500 - tag::LCRT[]
 class LCRTRecord(Record):
     CNAM: ByteColor4 # RGB Hex color code, last byte always 0x00
@@ -4201,6 +4897,17 @@ class LCTNRecord(Record):
             case _: z = Record._empty
         return z
 # end::LCTN[]
+
+# LENS.Volumetric Lighting - 000S0 #SSE - tag::LENS[]
+class LENSRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::LENS[]
 
 # LEVC.Leveled Creature - 3000 - tag::LEVC[]
 class LEVCRecord(Record):
@@ -4249,6 +4956,17 @@ class LEVIRecord(Record):
             return z
         return None
 # end::LEVI[]
+
+# LGDI.Legendary Item - 000S0 - tag::LGDI[]
+class LGDIRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::LGDI[]
 
 # LGTM.Lighting Template - 0050 - tag::LGTM[]
 class LGTMRecord(Record):
@@ -4330,6 +5048,17 @@ class LIGHRecord(Record, IHaveMODL):
         return z
 # end::LIGH[]
 
+# LMSW.Layered Material Swap - 0050 - tag::LMSW[]
+class LMSWRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::LMSW[]
+
 # LOCK.Lock - 3450 - tag::LOCK[]
 class LOCKRecord(Record, IHaveMODL):
     class Lkdt:
@@ -4359,6 +5088,17 @@ class LOCKRecord(Record, IHaveMODL):
             return z
         return None
 # end::LOCK[]
+
+# LOUT.Loadout - 0050 - tag::LOUT[]
+class LOUTRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::LOUT[]
 
 # LSCR.Load Screen - 0450 - tag::LSCR[]
 class LSCRRecord(Record):
@@ -4395,6 +5135,17 @@ class LSCTRecord(Record):
         return z
 # end::LSCT[]
 
+# LSPR.LSPR - 0050 - tag::LSPR[]
+class LSPRRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::LSPR[]
+
 # LTEX.Land Texture - 3450 - tag::LTEX[]
 class LTEXRecord(Record):
     class Hnam:
@@ -4428,6 +5179,17 @@ class LTEXRecord(Record):
             case _: z = Record._empty
         return z
 # end::LTEX[]
+
+# LVLB.Leveled Base Form - 0050 - tag::LVLB[]
+class LVLBRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::LVLB[]
 
 # LVLC.Leveled Creature - 0400 - tag::LVLC[]
 class LVLCRecord(Record):
@@ -4493,6 +5255,39 @@ class LVLNRecord(Record):
         return z
 # end::LVLN[]
 
+# LVLP.Leveled Pack In - 0050 - tag::LVLP[]
+class LVLPRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::LVLP[]
+
+# LVPC.Leveled Perk Card - 0050 - tag::LVPC[]
+class LVPCRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::LVPC[]
+
+# LVSC.Leveled Space Cell - 0050 - tag::LVSC[]
+class LVSCRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::LVSC[]
+
 # LVSP.Leveled Spell - 0400 - tag::LVSP[]
 class LVSPRecord(Record):
     LVLD: int # Chance
@@ -4509,6 +5304,17 @@ class LVSPRecord(Record):
             case _: z = Record._empty
         return z
 # end::LVSP[]
+
+# MAAM.Melee Aim Assist Model - 0050 - tag::MAAM[]
+class MAAMRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::MAAM[]
 
 # MATO.Material Object - 0050 - tag::MATO[]
 class MATORecord(Record):
@@ -4531,6 +5337,17 @@ class MATTRecord(Record):
             case _: z = Record._empty
         return z
 # end::MATT[]
+
+# MDSP.Model Swap - 0050 - tag::MDSP[]
+class MDSPRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::MDSP[]
 
 # MESG.Message - 0050 - tag::MESG[]
 class MESGRecord(Record):
@@ -4781,6 +5598,28 @@ class MOVTRecord(Record):
         return z
 # end::MOVT[]
 
+# MRPH.Morphable Object - 0050 - tag::MRPH[]
+class MRPHRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::MRPH[]
+
+# MSCS.Misc Item Spawner - 0050 - tag::MSCS[]
+class MSCSRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::MSCS[]
+
 # MSET.Media Set - 0400 - tag::MSET[]
 class MSETRecord(Record):
     def __init__(self): super().__init__()
@@ -4802,6 +5641,28 @@ class MSTTRecord(Record):
             case _: z = Record._empty
         return z
 # end::MSTT[]
+
+# MSWP.Material Swap - 0050 - tag::MSWP[]
+class MSWPRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::MSWP[]
+
+# MTPT.Material Path - 0050 - tag::MTPT[]
+class MTPTRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::MTPT[]
 
 # MUSC.Music Type - 0050 - tag::MUSC[]
 class MUSCRecord(Record):
@@ -4846,6 +5707,17 @@ class NAVMRecord(Record):
             case _: z = Record._empty
         return z
 # end::NAVM[]
+
+# NOCM.Navmesh Obstacle Manager - 0050 - tag::NOCM[]
+class NOCMRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::NOCM[]
 
 # NOTE.Note - 0050 - tag::NOTE[]
 class NOTERecord(Record):
@@ -4995,6 +5867,28 @@ class NPC_4Record(CREA4Record):
         return z
 # end::NPC_4[]
 
+# OMOD.Object Modification - 0050 - tag::OMOD[]
+class OMODRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::OMOD[]
+
+# OSWP.Object Swap - 0050 - tag::OSWP[]
+class OSWPRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::OSWP[]
+
 # OTFT.Outfit - 00500 - tag::OTFT[]
 class OTFTRecord(Record):
     INAM: list[Ref[Record]] # Inventory list - Array of ARMO or LVLI
@@ -5007,6 +5901,28 @@ class OTFTRecord(Record):
             case _: z = Record._empty
         return z
 # end::OTFT[]
+
+# OVIS.Object Visibility Manager - 0050 - tag::OVIS[]
+class OVISRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::OVIS[]
+
+# PACH.Power Armor Chassis - 0050 - tag::PACH[]
+class PACHRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::PACH[]
 
 # PACK.AI Package - 0450 - tag::PACK[]
 class PACKRecord(Record):
@@ -5087,10 +6003,76 @@ class PBEARecord(ReferenceRecord):
     def __init__(self): super().__init__()
 # end::PBEA[]
 
+# PCBN.Planet Content Manager Branch Node - 0050 - tag::PCBN[]
+class PCBNRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::PCBN[]
+
+# PCCN.Planet Content Manager Content Node - 0050 - tag::PCCN[]
+class PCCNRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::PCCN[]
+
+# PCMT.Planet Content Manager Tree - 0050 - tag::PCMT[]
+class PCMTRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::PCMT[]
+
 # PCON.Placed Cone/Voice - 0040 - tag::PCON[]
 class PCONRecord(ReferenceRecord):
     def __init__(self): super().__init__()
 # end::PCON[]
+
+# PCRD.Perk Card - 0050 - tag::PCRD[]
+class PCRDRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::PCRD[]
+
+# PDCL.Projected Decal - 0050 - tag::XXXX[]
+class PDCLRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::PDCL[]
+
+# PEPF.Event Playlist - 0050 - tag::PEPF[]
+class PEPFRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::PEPF[]
 
 # PERK.Perk - 0050 - tag::PERK[]
 class PERKRecord(Record):
@@ -5102,6 +6084,17 @@ class PERKRecord(Record):
             case _: z = Record._empty
         return z
 # end::PERK[]
+
+# PERS.Unknown - 0050 - tag::PERS[]
+class PERSRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::PERS[]
 
 # PFLA.Placed Flame - 0040 - tag::PFLA[]
 class PFLARecord(ReferenceRecord):
@@ -5191,6 +6184,17 @@ class PHZDRecord(ReferenceRecord):
     def __init__(self): super().__init__()
 # end::PHZD[]
 
+# PKIN.Pack-In - 0050 - tag::PKIN[]
+class PKINRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::PKIN[]
+
 # PLYR.Player Reference - 0400 (No Reference) - tag::PLYR[]
 class PLYRRecord(Record):
     def __init__(self): super().__init__()
@@ -5202,10 +6206,54 @@ class PLYRRecord(Record):
         return z
 # end::PLYR[]
 
+# PLYT.Player Title - 0050 - tag::PLYT[]
+class PLYTRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::PLYT[]
+
+# PMFT.Photo Mode Feature - 0050 - tag::PMFT[]
+class PMFTRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::PMFT[]
+
 # PMIS.Placed Missile - 00450 - tag::PMIS[]
 class PMISRecord(ReferenceRecord):
     def __init__(self): super().__init__()
 # end::PMIS[]
+
+# PNDT.Planet - 0050 - tag::PNDT[]
+class PNDTRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::PNDT[]
+
+# PPAK.Perk Card Pack - 0050 - tag::PPAK[]
+class PPAKRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::PPAK[]
 
 # PROB.Probe - 3000 - tag::PROB[]
 class PROBRecord(Record, IHaveMODL):
@@ -5248,6 +6296,28 @@ class PROJRecord(Record):
         return z
 # end::PROJ[]
 
+# PSDC.Particle System Define Collection - 0050 - tag::PSDC[]
+class PSDCRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::PSDC[]
+
+# PTST.Surface Pattern Style - 0050 - tag::PTST[]
+class PTSTRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::PTST[]
+
 # PWAT.Placeable Water - 00450 - tag::PWAT[]
 class PWATRecord(Record):
     def __init__(self): super().__init__()
@@ -5258,6 +6328,17 @@ class PWATRecord(Record):
             case _: z = Record._empty
         return z
 # end::PWAT[]
+
+# QMDL.Quest Module - 0050 - tag::QMDL[]
+class QMDLRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::QMDL[]
 
 # QUST.Quest - 0450 - tag::QUST[]
 class QUSTRecord(Record):
@@ -5922,6 +7003,17 @@ class REPURecord(Record):
         return z
 # end::REPU[]
 
+# RESO.Resource - 0050 - tag::RESO[]
+class RESORecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::RESO[]
+
 # REVB.Reverb Parameters - 0050 - tag::REVB[]
 class REVBRecord(Record):
     class Data:
@@ -5962,6 +7054,17 @@ class RFCTRecord(Record):
         return z
 # end::RFCT[]
 
+# RFGP.Reference Group - 000S0 - tag::RFGP[]
+class RFCTRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::RFGP[]
+
 # RGDL.Ragdoll - 00400 - tag::RGDL[]
 class RGDLRecord(Record):
     def __init__(self): super().__init__()
@@ -5987,6 +7090,28 @@ class ROADRecord(Record):
         return z
 # end::ROAD[]
 
+# RSGD.Resource Generation Data - 0050 - tag::RSGD[]
+class RSGDRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::RSGD[]
+
+# RSPJ.Research Project - 0050 - tag::RSPJ[]
+class RSPJRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::RSPJ[]
+
 # SBSP.Subspace - 0400 - tag::SBSP[]
 class SBSPRecord(Record):
     class Dnam:
@@ -6006,6 +7131,17 @@ class SBSPRecord(Record):
             case _: z = Record._empty
         return z
 # end::SBSP[]
+
+# SCCO.Scene Collection - 000S0 - tag::SCCO[]
+class SCCORecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::SCCO[]
 
 # SCEN.Scene - 000S0 - tag::SCEN[]
 class SCENRecord(Record):
@@ -6107,6 +7243,83 @@ class SCRLRecord(Record):
             case _: z = Record._empty
         return z
 # end::SCRL[]
+
+# SCSN.Audio Category Snapshot - 000S0 - tag::SCSN[]
+class SCSNRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::SCSN[]
+
+# SDLT.Secondary Damage List - 0050 - tag::SDLT[]
+class SDLTRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::SDLT[]
+
+# SECH.Sound Echo Marker - 0050 - tag::SECH[]
+class SECHRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::SECH[]
+
+# SFBK.Surface Block - 0050 - tag::SFBK[]
+class SFBKRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::SFBK[]
+
+# SFPC.Surface Pattern Config - 0050 - tag::SFPC[]
+class SFPCRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::SFPC[]
+
+# SFPT.Surface Pattern - 0050 - tag::SFPT[]
+class SFPTRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::SFPT[]
+
+# SFTR.Surface Tree - 0050 - tag::SFTR[]
+class SFTRRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::SFTR[]
 
 # SGST.Sigil Stone - 0400 - tag::SGST[]
 class SGSTRecord(Record, IHaveMODL):
@@ -6254,8 +7467,8 @@ class SMENRecord(Record):
         return z
 # end::SMEN[]
 
-# SMNQ.Story Manager Quest Node - 000S0 - tag::SMNQ[]
-class SMNQRecord(Record):
+# SMQN.Story Manager Quest Node - 000S0 - tag::SMQN[]
+class SMQNRecord(Record):
     def __init__(self): super().__init__()
 
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
@@ -6263,7 +7476,7 @@ class SMNQRecord(Record):
             case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
             case _: z = Record._empty
         return z
-# end::SMNQ[]
+# end::SMQN[]
 
 # SNCT.Sound Category - 000S0 - tag::SNCT[]
 class SNCTRecord(Record):
@@ -6419,6 +7632,17 @@ class SOUNRecord(Record):
         return z
 # end::SOUN[]
 
+# SPCH.Speech Challenge - 0050 - tag::SPCH[]
+class SPCHRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::SPCH[]
+
 # SPEL.Spell - 3450 - tag::SPEL[]
 class SPELRecord(Record):
     class Spit:
@@ -6481,6 +7705,17 @@ class SSCRRecord(Record):
         return None
 # end::SSCR[]
 
+# STAG.Animation Sound Tag Set - 000S0 - tag::STAG[]
+class STAGRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::STAG[]
+
 # STAT.Static - 3450 - tag::STAT[]
 class STATRecord(Record, IHaveMODL):
     MODL: Modl # Model
@@ -6496,7 +7731,18 @@ class STATRecord(Record, IHaveMODL):
         return z
 # end::STAT[]
 
-# STDT.xx - 000S0 - tag::STDT[]
+# STBH.Snap Template Behavior - 0050 - tag::STBH[]
+class STBHRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::STBH[]
+
+# STDT.Star - 000S0 - tag::STDT[]
 class STDTRecord(Record):
     def __init__(self): super().__init__()
 
@@ -6507,7 +7753,40 @@ class STDTRecord(Record):
         return z
 # end::STDT[]
 
-# SUNP.xx - 000S0 - tag::SUNP[]
+# STHD.Spell Threshold Data - 0050 - tag::STHD[]
+class STHDRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::STHD[]
+
+# STMP.Snap Template - 0050 - tag::STMP[]
+class STMPRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::STMP[]
+
+# STND.Snap Template Node - 0050 - tag::STND[]
+class STNDRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::STND[]
+
+# SUNP.Sun Preset - 000S0 - tag::SUNP[]
 class SUNPRecord(Record):
     def __init__(self): super().__init__()
 
@@ -6708,6 +7987,17 @@ class TERMRecord(Record):
         return z
 # end::TERM[]
 
+# TLOD.TLOD - 000S0 - tag::TLOD[]
+class TLODRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::TLOD[]
+
 # TMLM.Terminal Menus - 000S0 - tag::TMLM[]
 class TMLMRecord(Record):
     def __init__(self): super().__init__()
@@ -6718,6 +8008,39 @@ class TMLMRecord(Record):
             case _: z = Record._empty
         return z
 # end::TMLM[]
+
+# TODD.Time Of Day Data - 0050 - tag::TODD[]
+class TODDRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::TODD[]
+
+# TOFT.TOFT - 000S0 - tag::TOFT[]
+class TOFTRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::TOFT[]
+
+# TRAV.Traversal - 0050 - tag::TRAV[]
+class TRAVRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::TRAV[]
 
 # TREE.Tree - 0450 - tag::TREE[]
 class TREERecord(Record, IHaveMODL):
@@ -6834,6 +8157,17 @@ class TXSTRecord(Record):
         return z
 # end::TXST[]
 
+# UTIL.Utility - 000S0 - tag::UTIL[]
+class UTILRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::UTIL[]
+
 # VTYP.Voice Type - 000S0 - tag::VTYP[]
 class VTYPRecord(Record):
     def __init__(self): super().__init__()
@@ -6844,6 +8178,17 @@ class VTYPRecord(Record):
             case _: z = Record._empty
         return z
 # end::VTYP[]
+
+# VOLI.Volumetric Lighting - 000S0 #SSE - tag::VOLI[]
+class VOLIRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::VOLI[]
 
 # WATR.Water Type - 0450 - tag::WATR[]
 class WATRRecord(Record):
@@ -6940,6 +8285,28 @@ class WATRRecord(Record):
         return z
 # end::WATR[]
 
+# WAVE.Wave Encounter - 0050 - tag::WAVE[]
+class WAVERecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::WAVE[]
+
+# WBAR.Weapon Barrel Model - 0050 - tag::XWBARXXX[]
+class WBARRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::WBAR[]
+
 # WEAP.Weapon - 3450 - tag::WEAP[]
 class WEAPRecord(Record, IHaveMODL):
     class Data:
@@ -7010,7 +8377,18 @@ class WEAPRecord(Record, IHaveMODL):
         return z
 # end::WEAP[]
 
-# WOOP.Word Of Power - 000S0 - tag::WOOP[]
+# WKMF.Wwise Keyword Mapping - 0050 - tag::WKMF[]
+class WKMFRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::WKMF[]
+
+# WOOP.Word of Power - 000S0 - tag::WOOP[]
 class WOOPRecord(Record):
     def __init__(self): super().__init__()
 
@@ -7087,6 +8465,17 @@ class WRLDRecord(Record):
             case _: z = Record._empty
         return z
 # end::WRLD[]
+
+# WSPR.Workshop Permissions - 0050 - tag::WSPR[]
+class WSPRRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::WSPR[]
 
 # WTHR.Weather - 0450 - tag::WTHR[]
 class WTHRRecord(Record, IHaveMODL):
@@ -7165,6 +8554,39 @@ class WTHRRecord(Record, IHaveMODL):
             case _: z = Record._empty
         return z
 # end::WTHR[]
+
+# WTHS.Weather Settings - 0050 - tag::WTHS[]
+class WTHSRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::WTHS[]
+
+# WWED.Wwise Event Data - 0050 - tag::WWED[]
+class WWEDRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::WWED[]cs
+
+# ZOOM.Zoom - 000S0 - tag::ZOOM[]
+class ZOOMRecord(Record):
+    def __init__(self): super().__init__()
+
+    def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
+        match type:
+            case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
+            case _: z = Record._empty
+        return z
+# end::ZOOM[]
 
 CONTRecord.SNAM = RefX[SOUNRecord](SOUNRecord)
 CONTRecord.QNAM = RefX[SOUNRecord](SOUNRecord)

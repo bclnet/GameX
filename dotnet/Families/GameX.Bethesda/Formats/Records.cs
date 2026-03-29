@@ -1,16 +1,25 @@
 using GameX.Gamebryo.Formats.Nif;
 using GameX.Uncore.Formats;
+using MathNet.Numerics.Providers.LinearAlgebra;
 using OpenStack;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
+using static GameX.Bethesda.Formats.Records.CREA4Record;
 using static GameX.Bethesda.Formats.Records.FormType;
+using static GameX.Bethesda.Formats.Records.LVLIRecord;
+using static GameX.Bethesda.Formats.Records.PACKRecord;
+using static GameX.Bethesda.Formats.Records.WRLDRecord;
+using static GameX.Binary;
+using static Org.BouncyCastle.Math.EC.ECCurve;
 using static System.IO.Polyfill;
 #pragma warning disable CS9113
 
@@ -64,9 +73,8 @@ public enum FormType : uint {
     DOBJ = 0x4A424F44,
     DMGT = 0x54474D44,
     DOOR = 0x524F4F44,
-    DUEL = 0x4C455544,
+    DUAL = 0x4C415544,
     //DFOB = 0x424F4644,
-    //DUAL = 0x4C415544,
     ECZN = 0x4E5A4345,
     EFSH = 0x48534645,
     ENCH = 0x48434E45,
@@ -173,7 +181,7 @@ public enum FormType : uint {
     SLGM = 0x4D474C53,
     SMBN = 0x4E424D53,
     SMEN = 0x4E454D53,
-    SMNQ = 0x514E4D53,
+    SMQN = 0x4E514D53,
     SNCT = 0x54434E53,
     SNDG = 0x47444E53,
     SNDR = 0x52444E53,
@@ -186,7 +194,6 @@ public enum FormType : uint {
     STDT = 0x54445453,
     SUNP = 0x504E5553,
     //SCOL = 0x4C4F4353,
-    //SMQN = 0x4E514D53,
     //SCCO = 0x4F434353,
     //SCSN = 0x4E534353,
     //STAG = 0x47415453,
@@ -577,7 +584,7 @@ public partial class Record {
         { AVIF, f => new AVIFRecord() },
         { BNDS, f => new BNDSRecord() },
         { BODY, f => new BODYRecord() },
-        { BOIM, f => new BOIMRecord() },
+        { BOIM, f => new BIOMRecord() },
         { BOOK, f => new BOOKRecord() },
         { BPTD, f => new BPTDRecord() },
         { BSGN, f => new BSGNRecord() },
@@ -600,7 +607,7 @@ public partial class Record {
         { DOBJ, f => new DOBJRecord() },
         { DMGT, f => new DMGTRecord() },
         { DOOR, f => new DOORRecord() },
-        { DUEL, f => new DUELRecord() },
+        { DUAL, f => new DUALRecord() },
         { ECZN, f => new ECZNRecord() },
         { EFSH, f => new EFSHRecord() },
         { ENCH, f => new ENCHRecord() },
@@ -691,7 +698,7 @@ public partial class Record {
         { SLGM, f => new SLGMRecord() },
         { SMBN, f => new SMBNRecord() },
         { SMEN, f => new SMENRecord() },
-        { SMNQ, f => new SMNQRecord() },
+        { SMQN, f => new SMQNRecord() },
         { SNCT, f => new SNCTRecord() },
         { SNDG, f => new SNDGRecord() },
         { SNDR, f => new SNDRRecord() },
@@ -1375,6 +1382,26 @@ public class AACTRecord : Record {
 }
 
 /// <summary>
+/// AAPD.Aim Assist Pose Data - 00500
+/// </summary>
+public class AAPDRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// AAMD.Aim Assist Model Data - 00500
+/// </summary>
+public class AAMDRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// ACHR.Placed NPC - 04050
 /// An ACHR record represents an NPC placed in a cell.
 /// </summary>
@@ -1515,6 +1542,26 @@ public class ADDNRecord : Record {
 }
 
 /// <summary>
+/// AECH.Audio Effect Chain - 00500
+/// </summary>
+public class AECHRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// AFFE.Affinity Event - 00500
+/// </summary>
+public class AFFERecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// ALCH.Alchemy - 345S0 : MagicItem
 /// ALCH records contain information about alchemy items (potions and beverages).
 /// </summary>
@@ -1601,6 +1648,26 @@ public class ALOCRecord : Record {
 }
 
 /// <summary>
+/// AMBS.Ambience Set - 00500
+/// </summary>
+public class AMBSRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// AMDL.Aim Model - 00500
+/// </summary>
+public class AMDLRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// AMEF.Ammo Effect - 04000
 /// </summary>
 public class AMEFRecord : Record {
@@ -1665,6 +1732,36 @@ public class ANIORecord : Record, IHaveMODL {
         FieldType.MODL => MODL = new Modl(r, dataSize),
         FieldType.MODB => MODL.MODB(r, dataSize),
         FieldType.DATA => DATA = new Ref<IDLERecord>(r, dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// AOPF.Audio Occlusion Primitive - 00500
+/// </summary>
+public class AOPFRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// AOPS.Aim Optical Sight Marker - 00500
+/// </summary>
+public class AOPSRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// AORU.Attraction Rule - 00500
+/// </summary>
+public class AORURecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
         _ => Empty,
     };
 }
@@ -1964,6 +2061,16 @@ public class ASPCRecord : Record {
 }
 
 /// <summary>
+/// ASTM.ASTM - 00500
+/// </summary>
+public class ASTMRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// ASTP.Association Type^ - 00500
 /// ASTP defines a relationship between 2 people.
 /// </summary>
@@ -1988,6 +2095,36 @@ public class ASTPRecord : Record {
 }
 
 /// <summary>
+/// ATMO.Atmosphere - 00500
+/// </summary>
+public class ATMORecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// ATXO.ATX Default Object - 00500
+/// </summary>
+public class ATXORecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// AUVF.AUVF - 00500
+/// </summary>
+public class AUVFRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// AVIF.Actor Values / Perk Tree Graphics - 005S0
 /// The AVIF record is Actor Value information.
 /// </summary>
@@ -1999,6 +2136,62 @@ public class AVIFRecord : Record {
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
         FieldType.CNAM => CNAM = r.ReadS<ByteColor4>(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// AVMD.AVMS Data - 00500
+/// </summary>
+public class AVMDRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// AVTR.Avatar - 00500
+/// </summary>
+public class AVTRRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// BIOM.Biome - 00500
+/// </summary>
+/// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/BOIM">
+public class BIOMRecord : Record {
+    public string FULL; // Item Name
+    public string SNAM; // Sub Name 
+
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        FieldType.FULL => FULL = r.ReadFUString(dataSize),
+        FieldType.SNAM => SNAM = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// BMMO.Biome Marker - 00500
+/// </summary>
+public class BMMORecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// BMOD.Bone Modifier - 00500
+/// </summary>
+public class BMODRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
         _ => Empty,
     };
 }
@@ -2047,22 +2240,6 @@ public class BODYRecord : Record, IHaveMODL {
             _ => Empty,
         }
         : Empty;
-}
-
-/// <summary>
-/// BOIM.Biome - 000S0
-/// </summary>
-/// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/BOIM">
-public class BOIMRecord : Record {
-    public string FULL; // Item Name
-    public string SNAM; // Sub Name 
-
-    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
-        FieldType.EDID => EDID = r.ReadFUString(dataSize),
-        FieldType.FULL => FULL = r.ReadFUString(dataSize),
-        FieldType.SNAM => SNAM = r.ReadFUString(dataSize),
-        _ => Empty,
-    };
 }
 
 /// <summary>
@@ -2178,7 +2355,7 @@ public class BPTDRecord : Record {
     public string NAM1; // Limb Replacement Model
     public string NAM4; // Gore Effects
     public string NAM5; // Hashes
-    public Ref<Record> RAGA; // Hashes //TODO RGDLRecord
+    public Ref<RGDLRecord> RAGA; // Hashes
 
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
@@ -2191,7 +2368,7 @@ public class BPTDRecord : Record {
         FieldType.NAM1 => NAM1 = r.ReadFUString(dataSize),
         FieldType.NAM4 => NAM4 = r.ReadFUString(dataSize),
         FieldType.NAM5 => NAM5 = r.ReadFUString(dataSize),
-        FieldType.RAGA => RAGA = new Ref<Record>(r, dataSize),
+        FieldType.RAGA => RAGA = new Ref<RGDLRecord>(r, dataSize),
         _ => Empty,
     };
 }
@@ -2549,6 +2726,26 @@ public class CLASRecord : Record {
 }
 
 /// <summary>
+/// CLDC.Unknown - 00500
+/// </summary>
+public class CLDCRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// CLDF.Clouds - 00500
+/// </summary>
+public class CLDFRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// CLFM.Color - 00500
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/CLFM"/>
@@ -2687,9 +2884,49 @@ public class CMNYRecord : Record {
 }
 
 /// <summary>
+/// CMPO.Component - 00500
+/// </summary>
+public class CMPORecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// CNCY.Currency - 00500
+/// </summary>
+public class CNCYRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// CNDF.Condition Form - 00500
+/// </summary>
+public class CNDFRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// COBJ.Constructible Object - 05000
 /// </summary>
 public class COBJRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// COEN.Consumable Entitlement - 00500
+/// </summary>
+public class COENRecord : Record {
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
         _ => Empty,
@@ -2756,6 +2993,16 @@ public class CONTRecord : Record, IHaveMODL {
         FieldType.SNAM => SNAM = new RefX<SOUNRecord>(r, dataSize),
         FieldType.QNAM => QNAM = new RefX<SOUNRecord>(r, dataSize),
         FieldType.COED => COEDs.AddX(r.ReadS<Coed>(dataSize)),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// CPRD.Challenge Pass Reward Data - 00500
+/// </summary>
+public class CPRDRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
         _ => Empty,
     };
 }
@@ -3089,6 +3336,16 @@ public class CREA4Record : CREARecord {
 }
 
 /// <summary>
+/// CSEN.Crate Service Entitlement - 00500
+/// </summary>
+public class CSENRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// CSNO.Casino - 04000
 /// </summary>
 public class CSNORecord : Record {
@@ -3232,6 +3489,36 @@ public class CSTYRecord : Record {
 }
 
 /// <summary>
+/// CUR3.Curve 3D - 00500
+/// </summary>
+public class CUR3Record : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// CURV.Curve Table - 00500
+/// </summary>
+public class CURVRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// DCGF.Daily Content Group - 05000
+/// </summary>
+public class DCGFRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// DEBR.Debris - 05000
 /// </summary>
 public class DEBRRecord : Record {
@@ -3252,9 +3539,9 @@ public class DEHYRecord : Record {
 }
 
 /// <summary>
-/// HUNG.Hunger Stage - 04000
+/// DFOB.Default Object - 00500
 /// </summary>
-public class HUNGRecord : Record {
+public class DFOBRecord : Record {
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
         _ => Empty,
@@ -3282,6 +3569,16 @@ public class DIALRecord : Record {
         FieldType.FULL => FULL = r.ReadFUString(dataSize),
         FieldType.DATA => DATA = r.ReadByte(),
         FieldType.QSTI or FieldType.QSTR => (QSTIs ??= []).AddX(new RefX<QUSTRecord>(r, dataSize)),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// DIST.District - 05000
+/// </summary>
+public class DISTRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
         _ => Empty,
     };
 }
@@ -3372,9 +3669,19 @@ public class DOORRecord : Record, IHaveMODL {
 }
 
 /// <summary>
-/// DUEL.Dual Cast Data - 05000
+/// DUAL.Dual Cast Data - 05000
 /// </summary>
-public class DUELRecord : Record {
+public class DUALRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// ECAT.Emote Category - 05000
+/// </summary>
+public class ECATRecord : Record {
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
         _ => Empty,
@@ -3530,6 +3837,26 @@ public class EFSHRecord : Record {
 }
 
 /// <summary>
+/// EFSQ.Effect Sequence - 00500
+/// </summary>
+public class EFSQRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// EMOT.Emote - 05000
+/// </summary>
+public class EMOTRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// ENCH.Enchantment - 345S0 : MagicItem
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/ENCH">
@@ -3582,6 +3909,17 @@ public class ENCHRecord : Record {
 }
 
 /// <summary>
+/// ENTM.Entitlement - 05000
+/// </summary>
+public class ENTMRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+/// <summary>
+
+/// <summary>
 /// EQUP.Equip Slots - 005S0
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/EQUP"/>
@@ -3593,6 +3931,15 @@ public class EQUPRecord : Record {
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
         FieldType.DATA => DATA = r.ReadByte(),
+        _ => Empty,
+    };
+}
+
+/// EQWG.Event Quest Widget - 05000
+/// </summary>
+public class EQWGRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
         _ => Empty,
     };
 }
@@ -3783,6 +4130,26 @@ public class FACTRecord : Record {
 }
 
 /// <summary>
+/// FFKW.Form Folder Keyword List - 00500
+/// </summary>
+public class FFKWRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// FISH.Fish - 00500
+/// </summary>
+public class FISHRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// FLOR.Flora - 045S0
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/FLOR"/>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/FLOR"/>
@@ -3819,6 +4186,26 @@ public class FLSTRecord : Record {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
         FieldType.LNAM => LNAM = new Ref<Record>(r, dataSize),
         _ => false,
+    };
+}
+
+/// <summary>
+/// FOGV.Fog Volume - 00500
+/// </summary>
+public class FOGVRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// FORC.Force Data - 00500
+/// </summary>
+public class FORCRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
     };
 }
 
@@ -3866,6 +4253,55 @@ public class FURNRecord : Record, IHaveMODL {
 }
 
 /// <summary>
+/// FXPD.Facial Expression - 00500
+/// </summary>
+public class FXPDRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// GBFT.Generic Base Form Template - 00500
+/// </summary>
+public class GBFTRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// GBFM.Generic Base Form - 00500
+/// </summary>
+public class GBFMRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// GCVR.Ground Cover - 00500
+/// </summary>
+public class GCVRRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// GDRY.God Rays - 00500
+/// </summary>
+public class GDRYRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// GLOB.Global - 34500
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/GLOB">
@@ -3879,6 +4315,15 @@ public class GLOBRecord : Record {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadFUString(dataSize),
         FieldType.FNAM => FNAM = (char)r.ReadByte(),
         FieldType.FLTV => FLTV = r.ReadSingle(),
+        _ => Empty,
+    };
+}
+
+/// GMRW.Gameplay Reward - 00500
+/// </summary>
+public class GMRWRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
         _ => Empty,
     };
 }
@@ -3906,6 +4351,26 @@ public class GMSTRecord : Record {
             FieldType.DATA => DATA = r.ReadDATV(dataSize, EDID[0]),
             _ => Empty,
         };
+}
+
+/// <summary>
+/// GPOF.Gameplay Option - 00500
+/// </summary>
+public class GPOFRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// GPOG.Gameplay Options Group - 00500
+/// </summary>
+public class GPOGRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
 }
 
 /// <summary>
@@ -4043,6 +4508,16 @@ public class HDPTRecord : Record, IHaveMODL {
         FieldType.RNAM => RNAM = new Ref<FLSTRecord>(r, dataSize),
         FieldType.CNAM => CNAM = new Ref<Record>(r, dataSize),
         _ => false,
+    };
+}
+
+/// <summary>
+/// HUNG.Hunger Stage - 04000
+/// </summary>
+public class HUNGRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
     };
 }
 
@@ -4287,6 +4762,16 @@ public class INGRRecord : Record, IHaveMODL {
 }
 
 /// <summary>
+/// INNR.Instance Naming Rules - 00500
+/// </summary>
+public class INNRRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// IPCT.Impact Data - 05000
 /// </summary>
 public class IPCTRecord : Record {
@@ -4300,6 +4785,16 @@ public class IPCTRecord : Record {
 /// IPDS.Impact Data Set - 05000
 /// </summary>
 public class IPDSRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// IRES.Resource - 00500
+/// </summary>
+public class IRESRecord : Record {
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
         _ => Empty,
@@ -4334,6 +4829,16 @@ public class KEYMRecord : Record, IHaveMODL {
         FieldType.SCRI => SCRI = new RefX<SCPTRecord>(r, dataSize),
         FieldType.DATA => DATA = r.ReadS<Data>(dataSize),
         _ => false,
+    };
+}
+
+/// <summary>
+/// KSSM.Sound Keyword Mapping - 00500
+/// </summary>
+public class KSSMRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
     };
 }
 
@@ -4471,6 +4976,16 @@ public class LANDRecord : Record {
 }
 
 /// <summary>
+/// LAYR.Layer - 00500
+/// </summary>
+public class LAYRRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// LCRT.Location Reference Type - 00500
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/LCRT"/>
@@ -4488,6 +5003,16 @@ public class LCRTRecord : Record {
 /// LCTN.Location - 05000
 /// </summary>
 public class LCTNRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// LENS.Lens Flare - 00500 #SSE
+/// </summary>
+public class LENSRecord : Record {
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
         _ => Empty,
@@ -4544,6 +5069,16 @@ public class LEVIRecord : Record {
             _ => Empty,
         }
         : Empty;
+}
+
+/// <summary>
+/// LGDI.Legendary Item - 00500
+/// </summary>
+public class LGDIRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
 }
 
 /// <summary>
@@ -4634,6 +5169,16 @@ public class LIGHRecord : Record, IHaveMODL {
 }
 
 /// <summary>
+/// LMSW.Layered Material Swap - 00500
+/// </summary>
+public class LMSWRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// LOCK.Lock - 34500
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/LOCK">
@@ -4663,6 +5208,16 @@ public class LOCKRecord : Record, IHaveMODL {
             _ => Empty,
         }
         : Empty;
+}
+
+/// <summary>
+/// LOUT.Loadout - 00500
+/// </summary>
+public class LOUTRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
 }
 
 /// <summary>
@@ -4697,6 +5252,16 @@ public class LSCRRecord : Record {
 /// LSCT.Load Screen Type - 04000
 /// </summary>
 public class LSCTRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// LSPR.LSPR - 00500
+/// </summary>
+public class LSPRRecord : Record {
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
         _ => Empty,
@@ -4740,6 +5305,16 @@ public class LTEXRecord : Record {
         FieldType.SNAM => SNAM = r.ReadByte(),
         FieldType.GNAM => GNAMs.AddX(new RefX<GRASRecord>(r, dataSize)),
         FieldType.TNAM => new Ref<TXSTRecord>(r, dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// LVLB.Leveled Base Form - 00500
+/// </summary>
+public class LVLBRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
         _ => Empty,
     };
 }
@@ -4821,6 +5396,36 @@ public class LVLNRecord : Record {
 }
 
 /// <summary>
+/// LVLP.Leveled Pack In - 05000
+/// </summary>
+public class LVLPRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// LVPC.Leveled Perk Card - 00500
+/// </summary>
+public class LVPCRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// LVSC.Leveled Space Cell - 00500
+/// </summary>
+public class LVSCRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// LVSP.Leveled Spell - 04500
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/LVSP"/>
@@ -4841,6 +5446,16 @@ public class LVSPRecord : Record {
 }
 
 /// <summary>
+/// MAAM.Melee Aim Assist Model - 00500
+/// </summary>
+public class MAAMRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// MATO.Material Object - 05000
 /// </summary>
 public class MATORecord : Record {
@@ -4854,6 +5469,16 @@ public class MATORecord : Record {
 /// MATT.Material Type - 05000
 /// </summary>
 public class MATTRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// MDSP.Model Swap - 00500
+/// </summary>
+public class MDSPRecord : Record {
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
         _ => Empty,
@@ -5079,6 +5704,26 @@ public class MOVTRecord : Record {
 }
 
 /// <summary>
+/// MRPH.Morphable Object - 00500
+/// </summary>
+public class MRPHXRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// MSCS.Misc Item Spawner - 00500
+/// </summary>
+public class MSCSRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// MSET.Media Set - 04000
 /// </summary>
 public class MSETRecord : Record {
@@ -5092,6 +5737,26 @@ public class MSETRecord : Record {
 /// MSTT.Movable Static - 05000
 /// </summary>
 public class MSTTRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// MSWP.Material Swap - 00500
+/// </summary>
+public class MSWPRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// MTPT.Material Path - 00500
+/// </summary>
+public class MTPTRecord : Record {
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
         _ => Empty,
@@ -5132,6 +5797,16 @@ public class NAVIRecord : Record {
 /// NAVM.NavMesh - 05000
 /// </summary>
 public class NAVMRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// NOCM.Navmesh Obstacle Manager - 00500
+/// </summary>
+public class NOCMRecord : Record {
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
         _ => Empty,
@@ -5292,6 +5967,26 @@ public class NPC_4Record : CREA4Record {
 }
 
 /// <summary>
+/// OMOD.Object Modification - 00500
+/// </summary>
+public class OMODRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// OSWP.Object Swap - 00500
+/// </summary>
+public class OSWPRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// OTFT.Outfit - 00500
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/OTFT"/>
@@ -5302,6 +5997,26 @@ public class OTFTRecord : Record {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
         FieldType.INAM => INAM = r.ReadFArray(z => new Ref<Record>(r, 4), dataSize >> 2),
         _ => false,
+    };
+}
+
+/// <summary>
+/// OVIS.Object Visibility Manager - 00500
+/// </summary>
+public class OVISRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// PACH.Power Armor Chassis - 00500
+/// </summary>
+public class PACHRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
     };
 }
 
@@ -5382,14 +6097,84 @@ public class PBARRecord : ReferenceRecord { }
 public class PBEARecord : ReferenceRecord { }
 
 /// <summary>
+/// PCBN.Planet Content Manager Branch Node - 00500
+/// </summary>
+public class PCBNRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// PCCN.Planet Content Manager Content Node - 00500
+/// </summary>
+public class PCCNRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// PCMT.Planet Content Manager Tree - 00500
+/// </summary>
+public class PCMTRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// PCON.Placed Cone/Voice - 04000
 /// </summary>
 public class PCONRecord : ReferenceRecord { }
 
 /// <summary>
+/// PCRD.Perk Card - 00500
+/// </summary>
+public class PCRDRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// PDCL.Projected Decal - 00500
+/// </summary>
+public class PDCLRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// PEPF.Event Playlist - 00500
+/// </summary>
+public class PEPFRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// PERK.Perk - 05000
 /// </summary>
 public class PERKRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// PERS.Unknown - 00500
+/// </summary>
+public class PERSRecord : Record {
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
         _ => Empty,
@@ -5489,6 +6274,16 @@ public class PGRERecord : ReferenceRecord { }
 public class PHZDRecord : ReferenceRecord { }
 
 /// <summary>
+/// PKIN.Pack-In - 00500
+/// </summary>
+public class PKINRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// PLYR.Player Reference - 04000 (No Reference)
 /// </summary>
 public class PLYRRecord : Record {
@@ -5499,9 +6294,49 @@ public class PLYRRecord : Record {
 }
 
 /// <summary>
+/// PLYT.Player Title - 00500
+/// </summary>
+public class PLYTRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// PMFT.Photo Mode Feature - 00500
+/// </summary>
+public class PMFTRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// PMIS.Placed Missile - 00400
 /// </summary>
 public class PMISRecord : ReferenceRecord { }
+
+/// <summary>
+/// PNDT.Planet - 00500
+/// </summary>
+public class PNDTRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// PPAK.Perk Card Pack - 00500
+/// </summary>
+public class PPAKRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
 
 /// <summary>
 /// PROB.Probe - 30000
@@ -5550,9 +6385,39 @@ public class PROJRecord : Record {
 }
 
 /// <summary>
+/// PSDC.Particle System Define Collection - 00500
+/// </summary>
+public class PSDCRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// PTST.Surface Pattern Style - 00500
+/// </summary>
+public class PTSTRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// PWAT.Placeable Water - 00400
 /// </summary>
 public class PWATRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// QMDL.Quest Module - 00500
+/// </summary>
+public class QMDLRecord : Record {
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
         _ => Empty,
@@ -6258,6 +7123,16 @@ public class REPURecord : Record {
 }
 
 /// <summary>
+/// RESO.Resource - 00500
+/// </summary>
+public class RESORecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// REVB.Reverb Parameters - 00500
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/REVB"/>
@@ -6300,6 +7175,16 @@ public class RFCTRecord : Record {
 }
 
 /// <summary>
+/// RFGP.Reference Group - 00500
+/// </summary>
+public class RFGPRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// RGDL.Ragdoll - 00400
 /// </summary>
 public class RGDLRecord : Record {
@@ -6326,6 +7211,26 @@ public class ROADRecord : Record {
 }
 
 /// <summary>
+/// RSGD.Resource Generation Data - 00500
+/// </summary>
+public class RSGDRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// RSPJ.Research Project - 00500
+/// </summary>
+public class RSPJRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// SBSP.Subspace - 0400
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/SBSP"/>
@@ -6344,6 +7249,16 @@ public class SBSPRecord : Record {
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
         FieldType.DNAM => DNAM = r.ReadS<Dnam>(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// SCCO.Scene Collection - 00500
+/// </summary>
+public class SCCORecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
         _ => Empty,
     };
 }
@@ -6446,6 +7361,76 @@ public class SCPTRecord : Record {
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/SCRL"/>
 public class SCRLRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// SCSN.Audio Category Snapshot - 00500
+/// </summary>
+public class SCSNRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// SDLT.Secondary Damage List - 00500
+/// </summary>
+public class SDLTRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// SECH.Sound Echo Marker - 00500
+/// </summary>
+public class SECHRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// SFBK.Surface Block - 00500
+/// </summary>
+public class SFBKRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// SFPC.Surface Pattern Config - 00500
+/// </summary>
+public class SFPCRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// SFPT.Surface Pattern - 00500
+/// </summary>
+public class SFPTRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// SFTR.Surface Tree - 00500
+/// </summary>
+public class SFTRRecord : Record {
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
         _ => Empty,
@@ -6607,10 +7592,10 @@ public class SMENRecord : Record {
 }
 
 /// <summary>
-/// SMNQ.Story Manager Quest Node - 00500
+/// SMQN.Story Manager Quest Node - 00500
 /// </summary>
-/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/SMNQ"/>
-public class SMNQRecord : Record {
+/// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/SMQN"/>
+public class SMQNRecord : Record {
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
         _ => Empty,
@@ -6747,6 +7732,16 @@ public class SOUNRecord : Record {
 }
 
 /// <summary>
+/// SPCH.Speech Challenge - 00500
+/// </summary>
+public class SPCHRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// SPEL.Spell - 345S0 : MagicItem
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/SPEL">
@@ -6816,6 +7811,16 @@ public class SSCRRecord : Record {
 }
 
 /// <summary>
+/// STAG.Animation Sound Tag Set - 00500
+/// </summary>
+public class STAGRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// STAT.Static - 3450
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/STAT">
@@ -6834,7 +7839,17 @@ public class STATRecord : Record, IHaveMODL {
 }
 
 /// <summary>
-/// STDT.xx - 000S0
+/// STBH.Snap Template Behavior - 00500
+/// </summary>
+public class STBHRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// STDT.Star - 000S0
 /// </summary>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/STDT">
 public class STDTRecord : Record {
@@ -6845,7 +7860,37 @@ public class STDTRecord : Record {
 }
 
 /// <summary>
-/// SUNP.xx - 000S0
+/// STHD.Spell Threshold Data - 00500
+/// </summary>
+public class STHDRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// STMP.Snap Template - 00500
+/// </summary>
+public class STMPRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// STND.Snap Template Node - 00500
+/// </summary>
+public class STNDRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// SUNP.Sun Preset - 000S0
 /// </summary>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/SUNP">
 public class SUNPRecord : Record {
@@ -7044,10 +8089,50 @@ public class TERMRecord : Record {
 }
 
 /// <summary>
+/// TLOD.TLOD - 00500
+/// </summary>
+public class TLODRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// TMLM.Terminal Menus - 000S0
 /// </summary>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/TMLM">
 public class TMLMRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// TODD.Time Of Day Data - 00500
+/// </summary>
+public class TODDRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// TOFT.TOFT - 00500
+/// </summary>
+public class TOFTRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// TRAV.Traversal - 00500
+/// </summary>
+public class TRAVRecord : Record {
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
         _ => Empty,
@@ -7103,7 +8188,7 @@ public class TREERecord : Record, IHaveMODL {
 }
 
 /// <summary>
-/// TRNS.TRNS Record - 04000 #F4
+/// TRNS.Transform - 04000 #F4
 /// </summary>
 /// <see cref="https://tes5edit.github.io/fopdoc/Fallout4/Records/TRNS.html"/>
 public class TRNSRecord : Record {
@@ -7179,10 +8264,30 @@ public class TXSTRecord : Record {
 }
 
 /// <summary>
+/// UTIL.Utility - 00500
+/// </summary>
+public class UTILRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// VTYP.Voice Type - 00500
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/VTYP"/>
 public class VTYPRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// VOLI.Volumetric Lighting - 00500 #SSE
+/// </summary>
+public class VOLIRecord : Record {
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
         _ => Empty,
@@ -7290,6 +8395,26 @@ public class WATRRecord : Record {
 }
 
 /// <summary>
+/// WAVE.Wave Encounter - 00500
+/// </summary>
+public class WAVERecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// WBAR.Weapon Barrel Model - 00500
+/// </summary>
+public class WBARRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// WEAP.Weapon - 345S0
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/WEAP">
@@ -7367,7 +8492,17 @@ public class WEAPRecord : Record, IHaveMODL {
 }
 
 /// <summary>
-/// WOOP.Word Of Power - 00500
+/// WKMF.Wwise Keyword Mapping - 00500
+/// </summary>
+public class WKMFRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// WOOP.Word of Power - 00500
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/WOOP"/>
 public class WOOPRecord : Record {
@@ -7453,6 +8588,16 @@ public class WRLDRecord : Record {
 }
 
 /// <summary>
+/// WSPR.Workshop Permissions - 00500
+/// </summary>
+public class WSPRRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
 /// WTHR.Weather - 04500
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/WTHR"/>
@@ -7531,6 +8676,36 @@ public class WTHRRecord : Record, IHaveMODL {
         FieldType.HNAM => HNAM = r.ReadS<Hnam>(dataSize),
         FieldType.DATA => (DATA = r.ReadS<Data>(dataSize), DATA.Fill()),
         FieldType.SNAM => SNAMs.AddX(new Snam(r, dataSize)),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// WTHS.Weather Settings - 00500
+/// </summary>
+public class WTHSRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// WWED.Wwise Event Data - 00500
+/// </summary>
+public class WWEDRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
+        _ => Empty,
+    };
+}
+
+/// <summary>
+/// ZOOM.Zoom - 00500
+/// </summary>
+public class ZOOMRecord : Record {
+    public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
+        FieldType.EDID => EDID = r.ReadFUString(dataSize),
         _ => Empty,
     };
 }

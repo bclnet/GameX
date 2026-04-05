@@ -1250,15 +1250,15 @@ class RecordGroup:
         self.position = r.tell()
         self.path = f'{path}{self.label}/'
         # self.path = f'{path}{str(self.label) if self.label in FormType else int(self.label)}/'
-
+    
     @staticmethod
     def readAll(r: Reader) -> Iterator['RecordGroup']:
          if r.format == FormType.TES3: yield RecordGroup(r, ''); return
          while not r.atEnd():
             type = FormType(r.readUInt32())
-            # if type != FormType.GRUP: raise Exception(f'{type} not GRUP')
+            if type != FormType.GRUP: raise Exception(f'{type} not GRUP')
             yield RecordGroup(r, '')
-
+    
     def read(self, r: Reader, files: list[FileSource]) -> None:
         r.seek(self.position)
         end = self.position + self.dataSize
@@ -1282,6 +1282,8 @@ class RecordGroup:
             path = self.path + str(k),
             flags = k,
             tag = v) for k, v in self.recordsByType.items()])
+    
+    def open(self) -> RecordGroup: return self
 
 #endregion
 
@@ -1723,9 +1725,9 @@ class ACRERecord(Record):
             case FieldType.DATA: z = self.DATA = r.readS(REFRRecord.Data, dataSize)
             case FieldType.XRGD: z = self.XRGDs = r.readSArray(REFRRecord.Xrgd, dataSize // 28)
             case FieldType.XESP: z = self.XESP = REFRRecord.Xesp(r, dataSize)
-            case FieldType.XOWN: z = _nca(self, 'XOWNs', lambda: listx()).addX(CELLRecord.Xown(XOWN = RefX[Record](Record, r, dataSize)))
+            case FieldType.XOWN: z = _nca(self, 'XOWNs', lambda: listx()).addX(CELLRecord.Xown(XOWN = Ref[Record](Record, r, dataSize)))
             case FieldType.XRNK: z = self.XOWNs.last().XRNK = r.readInt32()
-            case FieldType.XGLB: z = self.XOWNs.last().XGLB = RefX[Record](Record, r, dataSize)
+            case FieldType.XGLB: z = self.XOWNs.last().XGLB = Ref[Record](Record, r, dataSize)
             case FieldType.XSCL: z = self.XSCL = r.readSingle()
             case _: z = Record._empty
         return z
@@ -1948,7 +1950,7 @@ class AMMORecord(Record, IHaveMODL):
     MODL: Modl # Model
     ICON: str # Inventory Image
     FULL: str # Item Name
-    ENAM: RefX['ENCHRecord'] = None # Enchantment ID (optional)
+    ENAM: Ref['ENCHRecord'] = None # Enchantment ID (optional)
     ANAM: int = None # Enchantment Points (optional)
     DATA: Data # Ammo Data
     def __init__(self): super().__init__()
@@ -1961,7 +1963,7 @@ class AMMORecord(Record, IHaveMODL):
             case FieldType.MODT: z = self.MODL.MODT(r, dataSize)
             case FieldType.ICON: z = self.ICON = r.readFUString(dataSize)
             case FieldType.FULL: z = self.FULL = r.readFUString(dataSize)
-            case FieldType.ENAM: z = self.ENAM = RefX[ENCHRecord](ENCHRecord, r, dataSize)
+            case FieldType.ENAM: z = self.ENAM = Ref[ENCHRecord](ENCHRecord, r, dataSize)
             case FieldType.ANAM: z = self.ANAM = r.readInt16()
             case FieldType.DATA: z = self.DATA = r.readS(AMMORecord.Data, dataSize)
             case _: z = Record._empty
@@ -1971,7 +1973,7 @@ class AMMORecord(Record, IHaveMODL):
 # ANIO.Animated Object - 0450 - tag::ANIO[]
 class ANIORecord(Record, IHaveMODL):
     MODL: Modl # Model
-    DATA: RefX['IDLERecord'] = None # IDLE Animation
+    DATA: Ref['IDLERecord'] = None # IDLE Animation
     def __init__(self): super().__init__()
 
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
@@ -1979,7 +1981,7 @@ class ANIORecord(Record, IHaveMODL):
             case FieldType.EDID: z = self.EDID = r.readFUString(dataSize)
             case FieldType.MODL: z = self.MODL = Modl(r, dataSize)
             case FieldType.MODB: z = self.MODL.MODB(r, dataSize)
-            case FieldType.DATA: z = self.DATA = RefX[IDLERecord](IDLERecord, r, dataSize)
+            case FieldType.DATA: z = self.DATA = Ref[IDLERecord](IDLERecord, r, dataSize)
             case _: z = Record._empty
         return z
 # end::ANIO[]
@@ -2043,7 +2045,7 @@ class APPARecord(Record, IHaveMODL):
     MICO: str = None # Message Image
     FULL: str # Item Name
     DATA: Data # Alchemy Data
-    SCRI: RefX['SCPTRecord'] = None # Script Name
+    SCRI: RefV['SCPTRecord'] = None # Script Name
     def __init__(self): super().__init__()
 
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
@@ -2056,7 +2058,7 @@ class APPARecord(Record, IHaveMODL):
             case FieldType.MICO: z = self.MICO = r.readFUString(dataSize)
             case FieldType.FULL | FieldType.FNAM: z = self.FULL = r.readFUString(dataSize)
             case FieldType.DATA | FieldType.AADT: z = self.DATA = APPARecord.Data(r, dataSize)
-            case FieldType.SCRI: z = self.SCRI = RefX[SCPTRecord](SCPTRecord, r, dataSize)
+            case FieldType.SCRI: z = self.SCRI = RefV[SCPTRecord](SCPTRecord, r, dataSize)
             case _: z = Record._empty
         return z
 # end::APPA[]
@@ -2066,7 +2068,7 @@ class APPARecord(Record, IHaveMODL):
 class ARMARecord(Record):
     OBND: Obnd # Object Bounds
     FULL: str # Item Name
-    SCRI: RefX['SCPTRecord'] = None # Script
+    SCRI: Ref['SCPTRecord'] = None # Script
     BMDT: Bmdt = None # Biped Data
     MODL: Modl # Male Biped Model
     MOD2: Modl = None #! Male World Model (optional)
@@ -2184,8 +2186,8 @@ class ARMORecord(Record, IHaveMODL):
     OBND: Obnd = None # Object Bounds
     FULL: str # Item Name
     DATA: Data # Armour Data
-    SCRI: RefX['SCPTRecord'] = None # Script Name (optional)
-    ENAM: RefX['ENCHRecord'] = None # Enchantment FormId (optional)
+    SCRI: RefV['SCPTRecord'] = None # Script Name (optional)
+    ENAM: RefV['ENCHRecord'] = None # Enchantment FormId (optional)
     # TES3
     INDXs: list['CLOTRecord.Indx'] = [] # Body Part Index
     # TES4
@@ -2219,8 +2221,8 @@ class ARMORecord(Record, IHaveMODL):
             case FieldType.MICO: z = self.MICO = r.readFUString(dataSize)
             case FieldType.FULL | FieldType.FNAM: z = self.FULL = r.readFUString(dataSize)
             case FieldType.DATA | FieldType.AODT: z = self.DATA = ARMORecord.Data(r, dataSize)
-            case FieldType.SCRI: z = self.SCRI = RefX[SCPTRecord](SCPTRecord, r, dataSize)
-            case FieldType.ENAM: z = self.ENAM = RefX[ENCHRecord](ENCHRecord, r, dataSize)
+            case FieldType.SCRI: z = self.SCRI = RefV[SCPTRecord](SCPTRecord, r, dataSize)
+            case FieldType.ENAM: z = self.ENAM = RefV[ENCHRecord](ENCHRecord, r, dataSize)
             # TES3
             case FieldType.INDX: z = self.INDXs.addX(CLOTRecord.Indx(INDX = r.readINTV(dataSize)))
             case FieldType.BNAM: z = self.INDXs.last().BNAM = r.readFUString(dataSize)
@@ -2744,9 +2746,9 @@ class CELLRecord(Record): #ICellRecord
 
     class Xown:
         def __init__(self, XOWN: RefX[Record]):
-            self.XOWN: RefX[Record] = XOWN
+            self.XOWN: Ref[Record] = XOWN
             self.XRNK: int = None # Faction rank
-            self.XGLB: RefX[Record] = None
+            self.XGLB: Ref[Record] = None
 
     class Xyza:
         _struct = ('<3f3f', 24)
@@ -2833,9 +2835,9 @@ class CELLRecord(Record): #ICellRecord
                 case FieldType.XCMT: z = self.XCMT = r.readByte()
                 case FieldType.XCCM: z = self.XCCM = RefX[CLMTRecord](CLMTRecord, r, dataSize)
                 case FieldType.XCWT: z = self.XCWT = RefX[WATRRecord](WATRRecord, r, dataSize)
-                case FieldType.XOWN: z = self.XOWNs.addX(CELLRecord.Xown(XOWN = RefX(Record, r, dataSize)))
+                case FieldType.XOWN: z = self.XOWNs.addX(CELLRecord.Xown(XOWN = Ref(Record, r, dataSize)))
                 case FieldType.XRNK: z = self.XOWNs.last().XRNK = r.readInt32()
-                case FieldType.XGLB: z = self.XOWNs.last().XGLB = RefX(Record, r, dataSize)
+                case FieldType.XGLB: z = self.XOWNs.last().XGLB = Ref(Record, r, dataSize)
                 case _: z = Record._empty
             return z
         # Referenced Object Data Grouping
@@ -7095,9 +7097,9 @@ class REFRRecord(Record):
             case FieldType.XTEL: z = self.XTEL = REFRRecord.Xtel(r, dataSize)
             case FieldType.DATA: z = self.DATA = r.readS(REFRRecord.Data, dataSize)
             case FieldType.XLOC: z = self.XLOC = REFRRecord.Xloc(r, dataSize)
-            case FieldType.XOWN: z = _nca(self, 'XOWNs', lambda: listx()).addX(CELLRecord.Xown(XOWN = RefX[Record](Record, r, dataSize)))
+            case FieldType.XOWN: z = _nca(self, 'XOWNs', lambda: listx()).addX(CELLRecord.Xown(XOWN = Ref[Record](Record, r, dataSize)))
             case FieldType.XRNK: z = self.XOWNs.last().XRNK = r.readInt32()
-            case FieldType.XGLB: z = self.XOWNs.last().XGLB = RefX[Record](Record, r, dataSize)
+            case FieldType.XGLB: z = self.XOWNs.last().XGLB = Ref[Record](Record, r, dataSize)
             case FieldType.XESP: z = self.XESP = REFRRecord.Xesp(r, dataSize)
             case FieldType.XTRG: z = self.XTRG = RefX[Record](Record, r, dataSize)
             case FieldType.XSED: z = self.XSED = r.readS(REFRRecord.Xsed, dataSize)
@@ -7290,7 +7292,7 @@ class REPARecord(Record, IHaveMODL):
     ICON: str # Icon
     FNAM: str # Item Name
     RIDT: Ridt # Repair Data
-    SCRI: RefX['SCPTRecord'] # Script Name
+    SCRI: RefV['SCPTRecord'] = None # Script Name
     def __init__(self): super().__init__()
 
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
@@ -7301,7 +7303,7 @@ class REPARecord(Record, IHaveMODL):
                 case FieldType.ITEX: z = self.ICON = r.readFUString(dataSize)
                 case FieldType.FNAM: z = self.FNAM = r.readFUString(dataSize)
                 case FieldType.RIDT: z = self.RIDT = r.readS(REPARecord.Ridt, dataSize)
-                case FieldType.SCRI: z = self.SCRI = RefX[SCPTRecord](SCPTRecord, r, dataSize)
+                case FieldType.SCRI: z = self.SCRI = RefV[SCPTRecord](SCPTRecord, r, dataSize)
                 case _: z = Record._empty
             return z
         return None
@@ -7526,7 +7528,7 @@ class SCPTRecord(Record):
     # TES3
     SCHD: Schd # Script Data
     # TES4
-    SCHR: Schr # Script Data
+    SCHR: Schr = None # Script Data
     SLSDs: list[Slsd] = [] # Variable data
     SCRVs: list[Slsd] = [] # RefX variable data (one for each ref declared)
     SCROs: list[RefX[Record]] = [] # Global variable reference
@@ -7696,11 +7698,11 @@ class SKILRecord(Record):
     DATA: Data # Skill Data
     DESC: str # Skill description
     # TES4
-    ICON: str # Icon
-    ANAM: str # Apprentice Text
-    JNAM: str # Journeyman Text
-    ENAM: str # Expert Text
-    MNAM: str # Master Text
+    ICON: str = None # Icon
+    ANAM: str = None # Apprentice Text
+    JNAM: str = None # Journeyman Text
+    ENAM: str = None # Expert Text
+    MNAM: str = None # Master Text
     def __init__(self): super().__init__()
 
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
@@ -7872,22 +7874,22 @@ class SOUNRecord(Record):
         minRange: int # Minimum attenuation distance
         maxRange: int # Maximum attenuation distance
         # TES4
-        frequencyAdjustment: int # Frequency adjustment %
-        unused: int # Unused
-        flags: int # Flags #TODO might need to clip was ushort/ushort
+        frequencyAdjustment: int = 0 # Frequency adjustment %
+        unused: int = 0 # Unused
+        flags: int = 0 # Flags #TODO might need to clip was ushort/ushort
         # 12
-        staticAttenuation: int # Static Attenuation (db)
-        stopTime: int # Stop time
-        startTime: int # Start time
+        staticAttenuation: int = 0 # Static Attenuation (db)
+        stopTime: int = 0 # Stop time
+        startTime: int = 0 # Start time
         # 36
-        attenuationPoint1: int # The first point on the attenuation curve.
-        attenuationPoint2: int # The second point on the attenuation curve.
-        attenuationPoint3: int # The third point on the attenuation curve.
-        attenuationPoint4: int # The fourth point on the attenuation curve.
-        attenuationPoint5: int # The fifth point on the attenuation curve.
-        reverbAttenuationControl: int
-        priority: int
-        unknown: int
+        attenuationPoint1: int = 0 # The first point on the attenuation curve.
+        attenuationPoint2: int = 0 # The second point on the attenuation curve.
+        attenuationPoint3: int = 0 # The third point on the attenuation curve.
+        attenuationPoint4: int = 0 # The fourth point on the attenuation curve.
+        attenuationPoint5: int = 0 # The fifth point on the attenuation curve.
+        reverbAttenuationControl: int = 0
+        priority: int = 0
+        unknown: int = 0
         def __init__(self, t):
             match len(t):
                 case 2:
@@ -7926,13 +7928,13 @@ class SOUNRecord(Record):
                     self.priority,
                     self.unknown) = t
 
-    OBND: Obnd # Object Boundary
+    OBND: Obnd = None # Object Boundary
     FULL: str # Sound Filename (relative to Sounds\)
     DATA: Data # Sound Data
     # fallout
     ANAM: list[Byte2] # Attenuation Curve
-    GNAM: int # Reverb Attenuation Control
-    HNAM: int # Priority
+    GNAM: int = 0 # Reverb Attenuation Control
+    HNAM: int = 0 # Priority
     def __init__(self): super().__init__()
 
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
@@ -7971,7 +7973,7 @@ class SPELRecord(Record):
             self.spellCost: int = r.readInt32()
             self.flags: int = r.readUInt32() # 0x0001 = AutoCalc, 0x0002 = PC Start, 0x0004 = Always Succeeds
             # TES4
-            SpellLevel: int = r.readInt32() if r.format != FormType.TES3 else 0
+            self.spellLevel: int = r.readInt32() if r.format != FormType.TES3 else 0
 
     FULL: str # Spell name
     SPIT: Spit # Spell data
@@ -8671,11 +8673,11 @@ class WEAPRecord(Record, IHaveMODL):
             self.chopMin = self.chopMax = self.slashMin = self.slashMax = self.thrustMin = self.thrustMax = 0
 
     MODL: Modl # Model
-    ICON: str # Icon
-    FULL: str # Item Name
+    ICON: str = None # Icon
+    FULL: str = None # Item Name
     DATA: Data # Weapon Data
-    ENAM: RefX[ENCHRecord] # Enchantment ID
-    SCRI: RefX[SCPTRecord] # Script (optional)
+    ENAM: RefV[ENCHRecord] = None # Enchantment ID
+    SCRI: RefV[SCPTRecord] = None # Script (optional)
     # TES4
     ANAM: int = None # Enchantment points (optional)
     def __init__(self): super().__init__()
@@ -8689,8 +8691,8 @@ class WEAPRecord(Record, IHaveMODL):
             case FieldType.ICON | FieldType.ITEX: z = self.ICON = r.readFUString(dataSize)
             case FieldType.FULL | FieldType.FNAM: z = self.FULL = r.readFUString(dataSize)
             case FieldType.DATA | FieldType.WPDT: z = self.DATA = WEAPRecord.Data(r, dataSize)
-            case FieldType.ENAM: z = self.ENAM = RefX[ENCHRecord](ENCHRecord, r, dataSize)
-            case FieldType.SCRI: z = self.SCRI = RefX[SCPTRecord](SCPTRecord, r, dataSize)
+            case FieldType.ENAM: z = self.ENAM = RefV[ENCHRecord](ENCHRecord, r, dataSize)
+            case FieldType.SCRI: z = self.SCRI = RefV[SCPTRecord](SCPTRecord, r, dataSize)
             case FieldType.ANAM: z = self.ANAM = r.readInt16()
             case _: z = Record._empty
         return z

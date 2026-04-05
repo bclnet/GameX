@@ -501,7 +501,7 @@ public unsafe class Binary_Bsa : ArcBinary<Binary_Bsa> {
 public class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
     public FormType Format;
     public Record Record;
-    public Dictionary<FormType, RecordGroup> Groups;
+    public Dictionary<FormType, RecordGroup> Groups = [];
 
     static FormType GetFormat(string game)
         => game switch {
@@ -533,9 +533,11 @@ public class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
         record.Read(r);
         record.ReadFields(r);
         var files = (List<FileSource>)(source.Files = [new FileSource { Path = $"{record.Type}", Flags = (int)record.Type, Tag = record }]);
-        foreach (var s in RecordGroup.ReadAll(r))
+        foreach (var s in RecordGroup.ReadAll(r)) {
+            Groups[s.Label] = s;
             if (s.Preload) s.Read(r, files);
             else r.Seek(r.Tell() + s.DataSize);
+        }
         return Task.CompletedTask;
     }
 
@@ -552,21 +554,20 @@ public class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
 
     public override Task Process(BinaryArchive source) {
         if (Format == FormType.TES3) {
-            //var statGroups = new List<Record>[] { Groups.ContainsKey(FormType.STAT) ? Groups[FormType.STAT].Load() : null };
-            //MANYsById = statGroups.SelectMany(s => s).Where(s => s != null).ToDictionary(s => s.EDID.Value, s => (Record)s);
-            //LTEXsById = Groups[FormType.LTEX].Load().Cast<LTEXRecord>().ToDictionary(s => s.INTV.Value);
-            //var lands = Groups[FormType.LAND].Load().Cast<LANDRecord>().ToList();
-            //foreach (var land in lands) land.GridId = new Int3(land.INTV.CellX, land.INTV.CellY, 0);
-            //LANDsById = lands.ToDictionary(s => s.GridId);
-            //var cells = Groups[FormType.CELL].Load().Cast<CELLRecord>().ToList();
-            //foreach (var cell in cells) cell.GridId = new Int3(cell.XCLC.Value.GridX, cell.XCLC.Value.GridY, !cell.IsInterior ? 0 : -1);
-            //CELLsById = cells.Where(x => !x.IsInterior).ToDictionary(s => s.GridId);
-            //CELLsByName = cells.Where(x => x.IsInterior).ToDictionary(s => s.EDID.Value);
+            var g = Groups[0].RecordsByType;
+            foreach (var land in g[FormType.LAND].Cast<LANDRecord>()) land.GridId = new Int3(land.INTV.CellX, land.INTV.CellY, 0);
+            MANYsById = g[FormType.STAT].ToDictionary(s => s.EDID);
+            LTEXsById = g[FormType.LTEX].Cast<LTEXRecord>().ToDictionary(s => s.INTV);
+            LANDsById = g[FormType.LAND].Cast<LANDRecord>().ToDictionary(s => s.GridId);
+            var cells = g[FormType.CELL].Cast<CELLRecord>().ToList();
+            foreach (var cell in cells) cell.GridId = new Int3(cell.XCLC.Value.GridX, cell.XCLC.Value.GridY, !cell.IsInterior ? 0 : -1);
+            CELLsById = cells.Where(x => !x.IsInterior).ToDictionary(s => s.GridId);
+            CELLsByName = cells.Where(x => x.IsInterior).ToDictionary(s => s.EDID);
             return Task.CompletedTask;
         }
-        //var wrldsByLabel = Groups[FormType.WRLD].GroupsByLabel;
-        //WRLDsById = Groups[FormType.WRLD].Load().Cast<WRLDRecord>().ToDictionary(s => s.Id, s => { wrldsByLabel.TryGetValue(s.Id, out var wrlds); return new Tuple<WRLDRecord, RecordGroup[]>(s, wrlds); });
-        //LTEXsByEid = Groups[FormType.LTEX].Load().Cast<LTEXRecord>().ToDictionary(s => s.EDID.Value);
+        var wrldsByLabel = Groups[FormType.WRLD].GroupsByLabel;
+        WRLDsById = Groups[FormType.WRLD].Open().Records.Cast<WRLDRecord>().ToDictionary(s => s.Id, s => { wrldsByLabel.TryGetValue((FormType)s.Id, out var wrlds); return new Tuple<WRLDRecord, RecordGroup[]>(s, wrlds); });
+        LTEXsByEid = Groups[FormType.LTEX].Open().Records.Cast<LTEXRecord>().ToDictionary(s => s.EDID);
         return Task.CompletedTask;
     }
 

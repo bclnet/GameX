@@ -1269,7 +1269,7 @@ public partial class RecordGroup {
         if (r.Format == TES3) { yield return new RecordGroup(r, ""); yield break; }
         while (!r.AtEnd()) {
             var type = (FormType)r.ReadUInt32();
-            //if (type != GRUP) throw new InvalidOperationException($"{type} not GRUP");
+            if (type != GRUP) throw new InvalidOperationException($"{type} not GRUP");
             yield return new RecordGroup(r, "");
         }
     }
@@ -1303,6 +1303,8 @@ public partial class RecordGroup {
             Tag = s.Value
         }));
     }
+    
+    public RecordGroup Open() => this;
 }
 
 // RecordGroup+WrldAndCell
@@ -1908,8 +1910,8 @@ public class ACRERecord : Record {
         FieldType.DATA => DATA = r.ReadS<REFRRecord.Data>(dataSize),
         FieldType.XRGD => XRGDs = r.ReadSArray<REFRRecord.Xrgd>(dataSize / 28),
         FieldType.XESP => XESP = new REFRRecord.Xesp(r, dataSize),
-        FieldType.XOWN => (XOWNs ??= []).AddX(new CELLRecord.Xown { XOWN = new RefX<Record>(r, dataSize) }),
-        FieldType.XGLB => XOWNs.Last().XGLB = new RefX<Record>(r, dataSize),
+        FieldType.XOWN => (XOWNs ??= []).AddX(new CELLRecord.Xown { XOWN = new Ref<Record>(r, dataSize) }),
+        FieldType.XGLB => XOWNs.Last().XGLB = new Ref<Record>(r, dataSize),
         FieldType.XRNK => XOWNs.Last().XRNK = r.ReadInt32(),
         FieldType.XSCL => XSCL = r.ReadSingle(),
         _ => Empty,
@@ -2254,7 +2256,7 @@ public class APPARecord : Record, IHaveMODL {
     public string MICO; // Message Image
     public string FULL; // Item Name
     public Data DATA; // Alchemy Data
-    public RefX<SCPTRecord>? SCRI; // Script Name
+    public RefV<SCPTRecord>? SCRI; // Script Name
 
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadFUString(dataSize),
@@ -2265,7 +2267,7 @@ public class APPARecord : Record, IHaveMODL {
         FieldType.MICO => MICO = r.ReadFUString(dataSize),
         FieldType.FULL or FieldType.FNAM => FULL = r.ReadFUString(dataSize),
         FieldType.DATA or FieldType.AADT => DATA = new Data(r, dataSize),
-        FieldType.SCRI => SCRI = new RefX<SCPTRecord>(r, dataSize),
+        FieldType.SCRI => SCRI = new RefV<SCPTRecord>(r, dataSize),
         _ => Empty,
     };
 }
@@ -2399,8 +2401,8 @@ public class ARMORecord : Record, IHaveMODL {
     public Obnd? OBND; // Object Bounds
     public string FULL; // Item Name
     public Data DATA; // Armour Data
-    public RefX<SCPTRecord>? SCRI; // Script Name (optional)
-    public RefX<ENCHRecord>? ENAM; // Enchantment FormId (optional)
+    public RefV<SCPTRecord>? SCRI; // Script Name (optional)
+    public RefV<ENCHRecord>? ENAM; // Enchantment FormId (optional)
     // TES3
     public List<CLOTRecord.Indx> INDXs = []; // Body Part Index
     // TES4
@@ -2433,8 +2435,8 @@ public class ARMORecord : Record, IHaveMODL {
         FieldType.MICO => MICO = r.ReadFUString(dataSize),
         FieldType.FULL or FieldType.FNAM => FULL = r.ReadFUString(dataSize),
         FieldType.DATA or FieldType.AODT => DATA = new Data(r, dataSize),
-        FieldType.SCRI => SCRI = new RefX<SCPTRecord>(r, dataSize),
-        FieldType.ENAM => ENAM = new RefX<ENCHRecord>(r, dataSize),
+        FieldType.SCRI => SCRI = new RefV<SCPTRecord>(r, dataSize),
+        FieldType.ENAM => ENAM = new RefV<ENCHRecord>(r, dataSize),
         // TES3
         FieldType.INDX => INDXs.AddX(new CLOTRecord.Indx { INDX = r.ReadINTV(dataSize) }),
         FieldType.BNAM => INDXs.Last().BNAM = r.ReadFUString(dataSize),
@@ -2941,9 +2943,9 @@ public class CELLRecord : Record {
     }
 
     public class Xown {
-        public RefX<Record> XOWN;
+        public Ref<Record> XOWN;
         public int XRNK; // Faction rank
-        public RefX<Record> XGLB;
+        public Ref<Record> XGLB;
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -3030,9 +3032,9 @@ public class CELLRecord : Record {
                 FieldType.XCMT => XCMT = r.ReadByte(),
                 FieldType.XCCM => XCCM = new RefX<CLMTRecord>(r, dataSize),
                 FieldType.XCWT => XCWT = new RefX<WATRRecord>(r, dataSize),
-                FieldType.XOWN => XOWNs.AddX(new Xown { XOWN = new RefX<Record>(r, dataSize) }),
+                FieldType.XOWN => XOWNs.AddX(new Xown { XOWN = new Ref<Record>(r, dataSize) }),
                 FieldType.XRNK => XOWNs.Last().XRNK = r.ReadInt32(),
-                FieldType.XGLB => XOWNs.Last().XGLB = new RefX<Record>(r, dataSize),
+                FieldType.XGLB => XOWNs.Last().XGLB = new Ref<Record>(r, dataSize),
                 _ => Empty,
             };
         // Referenced Object Data Grouping
@@ -7350,9 +7352,9 @@ public unsafe class REFRRecord : Record {
         FieldType.XTEL => XTEL = new Xtel(r, dataSize),
         FieldType.DATA => DATA = r.ReadS<Data>(dataSize),
         FieldType.XLOC => XLOC = new Xloc(r, dataSize),
-        FieldType.XOWN => (XOWNs ??= []).AddX(new CELLRecord.Xown { XOWN = new RefX<Record>(r, dataSize) }),
+        FieldType.XOWN => (XOWNs ??= []).AddX(new CELLRecord.Xown { XOWN = new Ref<Record>(r, dataSize) }),
         FieldType.XRNK => XOWNs.Last().XRNK = r.ReadInt32(),
-        FieldType.XGLB => XOWNs.Last().XGLB = new RefX<Record>(r, dataSize),
+        FieldType.XGLB => XOWNs.Last().XGLB = new Ref<Record>(r, dataSize),
         FieldType.XESP => XESP = new Xesp(r, dataSize),
         FieldType.XTRG => XTRG = new RefX<Record>(r, dataSize),
         FieldType.XSED => XSED = r.ReadS<Xsed>(dataSize),
@@ -7565,7 +7567,7 @@ public class REPARecord : Record, IHaveMODL {
     public string ICON; // Icon
     public string FNAM; // Item Name
     public Ridt RIDT; // Repair Data
-    public RefX<SCPTRecord> SCRI; // Script Name
+    public RefV<SCPTRecord>? SCRI; // Script Name
 
     public override object ReadField(Reader r, FieldType type, int dataSize) => r.Format == TES3
         ? type switch {
@@ -7574,7 +7576,7 @@ public class REPARecord : Record, IHaveMODL {
             FieldType.ITEX => ICON = r.ReadFUString(dataSize),
             FieldType.FNAM => FNAM = r.ReadFUString(dataSize),
             FieldType.RIDT => RIDT = r.ReadS<Ridt>(dataSize),
-            FieldType.SCRI => SCRI = new RefX<SCPTRecord>(r, dataSize),
+            FieldType.SCRI => SCRI = new RefV<SCPTRecord>(r, dataSize),
             _ => Empty,
         }
         : Empty;
@@ -7803,7 +7805,7 @@ public class SCPTRecord : Record {
     // TES3
     public Schd SCHD; // Script Data
     // TES4
-    public Schr SCHR; // Script Data
+    public Schr? SCHR; // Script Data
     public List<Slsd> SLSDs = []; // Variable data
     public List<Slsd> SCRVs = []; // Ref variable data (one for each ref declared)
     public List<RefX<Record>> SCROs = []; // Global variable reference
@@ -8179,7 +8181,7 @@ public class SOUNRecord : Record {
         public ulong Unknown;
     }
 
-    public Obnd OBND; // Object Boundary
+    public Obnd? OBND; // Object Boundary
     public string FULL; // Sound Filename (relative to Sounds\)
     public Data DATA; // Sound Data
     public byte DATA_Volume; // Sound Data #TES3 // (0=0.00, 255=1.00)
@@ -8943,8 +8945,8 @@ public class WEAPRecord : Record, IHaveMODL {
     public string ICON; // Icon
     public string FULL; // Item Name
     public Data DATA; // Weapon Data
-    public RefX<ENCHRecord> ENAM; // Enchantment ID
-    public RefX<SCPTRecord> SCRI; // Script (optional)
+    public RefV<ENCHRecord>? ENAM; // Enchantment ID
+    public RefV<SCPTRecord>? SCRI; // Script (optional)
     // TES4
     public short? ANAM; // Enchantment points (optional)
 
@@ -8956,8 +8958,8 @@ public class WEAPRecord : Record, IHaveMODL {
         FieldType.ICON or FieldType.ITEX => ICON = r.ReadFUString(dataSize),
         FieldType.FULL or FieldType.FNAM => FULL = r.ReadFUString(dataSize),
         FieldType.DATA or FieldType.WPDT => DATA = new Data(r, dataSize),
-        FieldType.ENAM => ENAM = new RefX<ENCHRecord>(r, dataSize),
-        FieldType.SCRI => SCRI = new RefX<SCPTRecord>(r, dataSize),
+        FieldType.ENAM => ENAM = new RefV<ENCHRecord>(r, dataSize),
+        FieldType.SCRI => SCRI = new RefV<SCPTRecord>(r, dataSize),
         FieldType.ANAM => ANAM = r.ReadInt16(),
         _ => Empty,
     };

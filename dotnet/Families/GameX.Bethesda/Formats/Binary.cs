@@ -518,8 +518,6 @@ public class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
             _ => throw new ArgumentOutOfRangeException(nameof(game), game),
         };
 
-
-
     /// <summary>
     /// Reads the asynchronous.
     /// </summary>
@@ -534,7 +532,7 @@ public class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
         var record = Record = Record.Factory(r.Format, (FormType)r.ReadUInt32());
         record.Read(r);
         record.ReadFields(r);
-        var files = (List<FileSource>)(source.Files = [new FileSource { Path = $"{record.Type}", Tag = record }]);
+        var files = (List<FileSource>)(source.Files = [new FileSource { Path = $"{record.Type}", Flags = (int)record.Type, Tag = record }]);
         foreach (var s in RecordGroup.ReadAll(r))
             if (s.Preload) s.Read(r, files);
             else r.Seek(r.Tell() + s.DataSize);

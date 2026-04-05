@@ -10,6 +10,7 @@ Thumbs.db.meta
 .gradle
 *.zip
 *.tar.gz
+.sfdx
 
 # Visual Studio files
 *.cachefile

@@ -1,10 +1,13 @@
-# AACT.Action
+# AACT.Action - 5G7S
 TES5:
+  <!-- #region -->
   wbRecord(AACT, 'Action', [
     wbEDID,
     wbByteRGBA(CNAM).SetRequired
   ]);
+  <!-- #endregion -->
 FO4:
+  <!-- #region -->
   wbRecord(AACT, 'Action',
     wbFlags(wbFlagsList([
       {0x00080000} {15} 15, 'Restricted'
@@ -18,7 +21,9 @@ FO4:
     wbFormIDCk(DATA, 'Attraction Rule', [AORU]),
     wbFULL
   ]);
+  <!-- #endregion -->
 FO76:
+  <!-- #region -->
   wbRecord(AACT, 'Action',
     wbFlags(wbFlagsList([
       {0x00080000} {15} 15, 'Restricted'
@@ -31,7 +36,9 @@ FO76:
     wbFormIDCk(DATA, 'Attraction Rule', [AORU]),
     wbFULL
   ]);
+  <!-- #endregion -->
 SF1:
+  <!-- #region -->
   wbRecord(AACT, 'Action',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable',
@@ -61,9 +68,11 @@ SF1:
     wbFormIDCk(DATA, 'AttractionRule', [NULL, AORU]),
     wbString(ENAM, 'Flash Linkage Name')
   ]).SetSummaryKey([2]);
+  <!-- #endregion -->
 
-# AAPD.Aim Assist Pose Data
+# AAPD.Aim Assist Pose Data - 7S
 FO76:
+  <!-- #region -->
   wbRecord(AAPD, 'Aim Assist Pose Data', [
     wbEDID,
     wbRStruct('Attach Point', [
@@ -81,7 +90,9 @@ FO76:
       wbFloat(WTMX)
     ])
   ]);
+  <!-- #endregion -->
 SF1:
+  <!-- #region -->
   wbRecord(AAPD, 'Aim Assist Pose Data',
     wbFlags(wbFlagsList([
     2, 'Non-Playable',
@@ -116,9 +127,11 @@ SF1:
       wbFloat(WTMX, 'Weight')
     ]).SetCountPath(AAPS)
   ]);
+  <!-- #endregion -->
 
-# AAMD.Aim Assist Model Data
+# AAMD.Aim Assist Model Data - 7S
 FO76:
+  <!-- #region -->
   wbRecord(AAMD, 'Aim Assist Model Data', [
     wbEDID,
     wbFloat(ANAM, 'Inner Cone Angle Degrees'),
@@ -144,7 +157,9 @@ FO76:
     wbFloat(UNAM, 'ADS Multiplier Steering Degrees Per Sec'),
     wbFloat(VNAM, 'Aim Assist Enabled')
   ]);
+  <!-- #endregion -->
 SF1:
+  <!-- #region -->
   wbRecord(AAMD, 'Aim Assist Model Data',
     wbFlags(wbFlagsList([
     2, 'Non-Playable',
@@ -189,9 +204,11 @@ SF1:
       wbInteger('Aim Assist Enabled', itU8, wbBoolEnum).SetDefaultEditValue('True')
     ])
   ]);
+  <!-- #endregion -->
 
-# ACHR.Placed NPC
+# ACHR.Placed NPC - 4S
 TES4:
+  <!-- #region -->
   wbRefRecord(ACHR, 'Placed NPC',
     wbFlags(wbFlagsList([
       10, 'Persistent',
@@ -213,7 +230,9 @@ TES4:
     wbDATAPosRot
   ], True).SetAddInfo(wbPlacedAddInfo)
           .SetAfterLoad(wbREFRAfterLoad);
+  <!-- #endregion -->
 SF1:
+  <!-- #region -->
   wbRefRecord(ACHR, 'Placed NPC',
     wbFlags(wbFlagsList([ {not checked for Starfield}
       {0x00000200}  9, 'Starts Dead',
@@ -295,9 +314,11 @@ SF1:
     wbDATAPosRot,
     wbString(MNAM, 'Comments')
   ], True).SetAddInfo(wbPlacedAddInfo);
+  <!-- #endregion -->
 
-# ACRE.Placed Creature
+# ACRE.Placed Creature - 4
 TES4:
+  <!-- #region -->
   wbRefRecord(ACRE, 'Placed Creature',
     wbFlags(wbFlagsList([
       10, 'Persistent',
@@ -313,9 +334,11 @@ TES4:
     wbXSCL,
     wbDATAPosRot
   ], True).SetAddInfo(wbPlacedAddInfo);
+  <!-- #endregion -->
 
-# ACTI.Activator
+# ACTI.Activator - 34FV5G7S
 TES3:
+  <!-- #region -->
   wbRecord(ACTI, 'Activator',
     wbFlags(wbFlagsList([
       10, 'References Persist',
@@ -327,7 +350,9 @@ TES3:
     wbFullName.SetRequired,
     wbScript //[SCPT]
   ]).SetFormIDBase($40);
+  <!-- #endregion -->
 TES4:
+  <!-- #region -->
   wbRecord(ACTI, 'Activator',
     wbFlags(wbFlagsList([
       10, 'Quest Item',
@@ -339,7 +364,9 @@ TES4:
     wbSCRI,
     wbFormIDCk(SNAM, 'Sound', [SOUN])
   ]);
+  <!-- #endregion -->
 FO3:
+  <!-- #region -->
   wbRecord(ACTI, 'Activator',
     wbFlags(wbFlagsList([
       6, 'Has Tree LOD',
@@ -368,7 +395,9 @@ FO3:
     wbFormIDCk(RNAM, 'Radio Station', [TACT]),
     wbFormIDCk(WNAM, 'Water Type', [WATR])
   ]);
+  <!-- #endregion -->
 FNV:
+  <!-- #region -->
   wbRecord(ACTI, 'Activator',
     wbFlags(wbFlagsList([
       6, 'Has Tree LOD',
@@ -399,7 +428,9 @@ FNV:
     wbFormIDCk(WNAM, 'Water Type', [WATR]),
     wbStringKC(XATO, 'Activation Prompt')
   ]);
+  <!-- #endregion -->
 TES5:
+  <!-- #region -->
   wbRecord(ACTI, 'Activator',
     wbFlags(wbFlagsList([
       6, 'Has Tree LOD',
@@ -436,7 +467,9 @@ TES5:
     ])).SetRequired.IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbFormIDCk(KNAM, 'Interaction Keyword', [KYWD])
   ]);
+  <!-- #endregion -->
 FO4:
+  <!-- #region -->
   wbRecord(ACTI, 'Activator',
     wbFlags(wbFlagsList([
       2, 'Never Fades',
@@ -497,7 +530,9 @@ FO4:
     wbConditions,
     wbNVNM
   ]);
+  <!-- #endregion -->
 FO76:
+  <!-- #region -->
   wbRecord(ACTI, 'Activator',
     wbFlags(wbFlagsList([
        2, 'Never Fades',
@@ -589,7 +624,9 @@ FO76:
     wbUnknown(MNAM),
     wbNAM1LODP
   ]);
+  <!-- #endregion -->
 SF1:
+  <!-- #region -->
   wbRecord(ACTI, 'Activator',
     wbFlags(wbFlagsList([
        2, 'Heading Marker',
@@ -666,9 +703,11 @@ SF1:
     ]),
     wbNVNM
   ]);
+  <!-- #endregion -->
 
-# ADDN.Addon Node
+# ADDN.Addon Node - FV5G7S
 FO3:
+  <!-- #region -->
   wbRecord(ADDN, 'Addon Node', [
     wbEDIDReq,
     wbOBND(True),
@@ -680,7 +719,9 @@ FO3:
       wbByteArray('Unknown', 2)
     ]).SetRequired
   ]);
+  <!-- #endregion -->
 FNV:
+  <!-- #region -->
   wbRecord(ADDN, 'Addon Node', [
     wbEDIDReq,
     wbOBND(True),
@@ -692,7 +733,9 @@ FNV:
       wbByteArray('Unknown', 2)
     ], cpNormal, True)
   ]);
+  <!-- #endregion -->
 TES5:
+  <!-- #region -->
   wbRecord(ADDN, 'Addon Node', [
     wbEDID,
     wbOBND(True),
@@ -719,7 +762,9 @@ TES5:
       aIndexKeys.Keys[wbIdxAddonNode] := lDATA;
     end)
     .SetSummaryKey([2]);
+  <!-- #endregion -->
 FO4:
+  <!-- #region -->
   wbRecord(ADDN, 'Addon Node', [
     wbEDID,
     wbOBND(True),
@@ -749,7 +794,9 @@ FO4:
 
       aIndexKeys.Keys[wbIdxAddonNode] := lDATA;
     end);
+  <!-- #endregion -->
 FO76:
+  <!-- #region -->
   wbRecord(ADDN, 'Addon Node',
     wbFlags(wbFlagsList([
       2, 'Unknown 2',
@@ -795,7 +842,9 @@ FO76:
 
       aIndexKeys.Keys[wbIdxAddonNode] := lIndex;
     end);
+  <!-- #endregion -->
 SF1:
+  <!-- #region -->
   wbRecord(ADDN, 'Addon Node', [
     wbEDID,
     wbVMAD,
@@ -837,6 +886,7 @@ SF1:
 
       aIndexKeys.Keys[wbIdxAddonNode] := lDATA;
     end);
+  <!-- #endregion -->
 
 # AECH.Audio Effect Chain
 FO4:

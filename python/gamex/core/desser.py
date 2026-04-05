@@ -54,7 +54,7 @@ class CustomEncoder(json.JSONEncoder):
                     case _: raise Exception('Unknown mapping')
             # case Color3(): return f'{s.r:.9g} {s.g:.9g} {s.b:.9g}' #color3
             # case Color4(): return f'{s.r:.9g} {s.g:.9g} {s.b:.9g} {s.a:.9g}' #color4
-        n = type(s).__name__; c = {jsonKey(k):jsonValue(getattr(s, k)) for k in dir(s) if not k.startswith('_')}; d = {k:v for k,v in c.items() if not callable(v)}
+        n = type(s).__name__; c = {jsonKey(k):jsonValue(getattr(s, k)) for k in dir(s) if not k.startswith('_') and not callable(getattr(s, k))}; d = {k:v for k,v in c.items() if not callable(v)}
         match n:
             case 'mappingproxy': return None
             case 'Binary_Nif': return {jsonKey(k):jsonValue(v) for k,v in d.items() if not k in ['f', 'length']}

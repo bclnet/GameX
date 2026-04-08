@@ -1303,7 +1303,7 @@ public partial class RecordGroup {
             Tag = s.Value
         }));
     }
-    
+
     public RecordGroup Open() => this;
 }
 
@@ -2982,9 +2982,9 @@ public class CELLRecord : Record {
     }
 
     public string FULL; // Full Name / TES3:RGNN - Region name
-    public ushort DATA; // Flags
-    public Xclc? XCLC; // Cell Data (only used for exterior cells)
-    public Xcll? XCLL; // Lighting (only used for interior cells)
+    public ushort DATA; public bool IsInterior; // Flags
+    public Xclc? XCLC; public Int3 GridId; // Cell Data (only used for exterior cells)
+    public Xcll? XCLL; public Color? AmbientLight; // Lighting (only used for interior cells)
     public float? XCLW; // Water Height
     // TES3
     public uint? NAM0; // Number of objects in cell in current file (Optional)
@@ -3000,16 +3000,6 @@ public class CELLRecord : Record {
     public List<Ref_> RefObjs = [];
     bool _frmr = false;
     Ref_ _last;
-    // Grid
-    public bool IsInterior; // => (DATA & 0x01) == 0x01;
-    public Int3 GridId; // => new Int3(XCLC.Value.GridX, XCLC.Value.GridY, !IsInterior ? 0 : -1);
-    public Color? AmbientLight; // => XCLL?.AmbientColor.AsColor;
-
-    public void Complete(Reader r) {
-        IsInterior = (DATA & 0x01) == 0x01;
-        GridId = r.Format == TES3 ? new Int3(XCLC.Value.GridX, XCLC.Value.GridY, IsInterior ? -1 : 0) : default;
-        AmbientLight = XCLL?.AmbientColor.AsColor;
-    }
 
     protected override HashSet<FieldType> DF3 => null;
     protected override HashSet<FieldType> DF4 => null;
@@ -3019,9 +3009,9 @@ public class CELLRecord : Record {
             return type switch {
                 FieldType.EDID or FieldType.NAME => EDID = r.ReadFUString(dataSize),
                 FieldType.FULL or FieldType.RGNN => FULL = r.ReadFUString(dataSize),
-                FieldType.DATA => (DATA = (ushort)r.ReadINTV(r.Format == TES3 ? 4 : dataSize), r.Format == TES3 ? XCLC = r.ReadS<Xclc>(8) : null),
-                FieldType.XCLC => XCLC = r.ReadS<Xclc>(dataSize),
-                FieldType.XCLL or FieldType.AMBI => XCLL = r.ReadS<Xcll>(dataSize),
+                FieldType.DATA => (z: DATA = (ushort)r.ReadINTV(r.Format == TES3 ? 4 : dataSize), IsInterior = (DATA & 0x01) == 0x01, r.Format == TES3 ? (z: XCLC = r.ReadS<Xclc>(8), GridId = new Int3(XCLC.Value.GridX, XCLC.Value.GridY, IsInterior ? -1 : 0)).z : null).z,
+                FieldType.XCLC => (z: XCLC = r.ReadS<Xclc>(dataSize), GridId = new Int3(XCLC.Value.GridX, XCLC.Value.GridY, IsInterior ? -1 : 0)).z,
+                FieldType.XCLL or FieldType.AMBI => (z: XCLL = r.ReadS<Xcll>(dataSize), AmbientLight => XCLL?.AmbientColor.AsColor).z,
                 FieldType.XCLW or FieldType.WHGT => XCLW = r.ReadSingle(),
                 // TES3
                 FieldType.NAM0 => NAM0 = r.ReadUInt32(),
@@ -5413,14 +5403,12 @@ public class LANDRecord : Record {
     public Vnml? VCLR; // Vertex color array, looks like another RBG image 65x65 pixels in size. (Optional)
     public Vtex? VTEX; // A 16x16 array of short texture indices. (Optional)
                        // TES3
-    public Cord INTV; // The cell coordinates of the cell
+    public Cord INTV; public Int3 GridId; // The cell coordinates of the cell
     public Wnam WNAM; // Unknown byte data.
     // TES4
     public Btxt[] BTXTs = new Btxt[4]; // Base Layer
     public Atxt[] ATXTs; // Alpha Layer
     Atxt _lastATXT;
-    // Grid
-    public Int3 GridId; // => new Int3(INTV.CellX, INTV.CellY, 0);
 
     protected override HashSet<FieldType> DF4 => [FieldType.BTXT, FieldType.ATXT, FieldType.VTXT];
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
@@ -5430,7 +5418,7 @@ public class LANDRecord : Record {
         FieldType.VCLR => VCLR = new Vnml(r, dataSize),
         FieldType.VTEX => VTEX = new Vtex(r, dataSize),
         // TES3
-        FieldType.INTV => INTV = r.ReadS<Cord>(dataSize),
+        FieldType.INTV => (z: INTV = r.ReadS<Cord>(dataSize), GridId = new Int3(INTV.CellX, INTV.CellY, 0)).z,
         FieldType.WNAM => WNAM = new Wnam(r, dataSize),
         // TES4
         FieldType.BTXT => this.Then(r.ReadS<Btxt>(dataSize), v => BTXTs[v.Quadrant] = v),

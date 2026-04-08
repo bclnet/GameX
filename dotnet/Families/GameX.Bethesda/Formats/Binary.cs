@@ -555,12 +555,10 @@ public class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
     public override Task Process(BinaryArchive source) {
         if (Format == FormType.TES3) {
             var g = Groups[0].RecordsByType;
-            foreach (var land in g[FormType.LAND].Cast<LANDRecord>()) land.GridId = new Int3(land.INTV.CellX, land.INTV.CellY, 0);
-            MANYsById = g[FormType.STAT].ToDictionary(s => s.EDID);
-            LTEXsById = g[FormType.LTEX].Cast<LTEXRecord>().ToDictionary(s => s.INTV);
-            LANDsById = g[FormType.LAND].Cast<LANDRecord>().ToDictionary(s => s.GridId);
-            var cells = g[FormType.CELL].Cast<CELLRecord>().ToList();
-            foreach (var cell in cells) cell.GridId = new Int3(cell.XCLC.Value.GridX, cell.XCLC.Value.GridY, !cell.IsInterior ? 0 : -1);
+            MANYsById = g.TryGetValue(FormType.STAT, out var z) ? z.ToDictionary(s => s.EDID) : [];
+            LTEXsById = g.TryGetValue(FormType.LTEX, out z) ? z.Cast<LTEXRecord>().ToDictionary(s => s.INTV) : [];
+            LANDsById = g.TryGetValue(FormType.LAND, out z) ? z.Cast<LANDRecord>().ToDictionary(s => s.GridId) : [];
+            var cells = g.TryGetValue(FormType.CELL, out z) ? z.Cast<CELLRecord>().ToList() : [];
             CELLsById = cells.Where(x => !x.IsInterior).ToDictionary(s => s.GridId);
             CELLsByName = cells.Where(x => x.IsInterior).ToDictionary(s => s.EDID);
             return Task.CompletedTask;

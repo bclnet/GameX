@@ -2784,9 +2784,9 @@ class CELLRecord(Record): #ICellRecord
         INDX: int = None # Unknown
 
     FULL: str # Full Name / TES3:RGNN - Region name
-    DATA: int # Flags
-    XCLC: Xclc = None # Cell Data (only used for exterior cells)
-    XCLL: Xcll = None # Lighting (only used for interior cells)
+    DATA: int; isInterior: bool= false # Flags
+    XCLC: Xclc = None; gridId: Int3 = None # Cell Data (only used for exterior cells)
+    XCLL: Xcll = None; ambientLight: Color = None # Lighting (only used for interior cells)
     XCLW: float = None # Water Height
     # TES3
     NAM0: int = None # Number of objects in cell in current file (Optional)
@@ -2802,10 +2802,7 @@ class CELLRecord(Record): #ICellRecord
     refObjs: list[Ref_] = []
     _frmr: bool = False
     _last: Ref_
-    # Grid
-    isInterior: bool
-    gridId: Int3
-    ambientLight: Color
+    
     def __init__(self): super().__init__(); self.XOWNs = listx(); self.refObjs = listx()
 
     def complete(self, r: Reader) -> None:
@@ -2821,9 +2818,9 @@ class CELLRecord(Record): #ICellRecord
                 case FieldType.EDID | FieldType.NAME: z = self.EDID = r.readFUString(dataSize)
                 case FieldType.FULL | FieldType.RGNN: z = self.FULL = r.readFUString(dataSize)
                 case FieldType.DATA:
-                    z = self.DATA = r.readINTV(4 if r.format == FormType.TES3 else dataSize)
-                    if r.format == FormType.TES3: self.XCLC = r.readS(CELLRecord.Xclc, 8)
-                case FieldType.XCLC: z = self.XCLC = r.readS(CELLRecord.Xclc, dataSize)
+                    z = self.DATA = r.readINTV(4 if r.format == FormType.TES3 else dataSize); self.isInterior = (self.DATA & 0x01) == 0x01
+                    if r.format == FormType.TES3: self.XCLC = r.readS(CELLRecord.Xclc, 8); self.gridId = Int3(self.XCLC.gridX, self.XCLC.gridY, -1 if self.isInterior else 0)
+                case FieldType.XCLC: z = self.XCLC = r.readS(CELLRecord.Xclc, dataSize); self.gridId = Int3(self.XCLC.gridX, self.XCLC.gridY, -1 if self.isInterior else 0)
                 case FieldType.XCLL | FieldType.AMBI: z = self.XCLL = r.readS(CELLRecord.Xcll, dataSize)
                 case FieldType.XCLW | FieldType.WHGT: z = self.XCLW = r.readSingle()
                 # TES3
@@ -5148,14 +5145,13 @@ class LANDRecord(Record):
     VCLR: Vnml = None # Vertex color array, looks like another RBG image 65x65 pixels in size. (Optional)
     VTEX: Vtex = None # A 16x16 array of short texture indices. (Optional)
     # TES3
-    INTV: Cord # The cell coordinates of the cell
+    INTV: Cord; gridId: Int3 # The cell coordinates of the cell
     WNAM: Wnam # Unknown byte data.
     # TES4
     BTXTs: list[Btxt] = [None]*4 # Base Layer
     ATXTs: list[Atxt] # Alpha Layer
     _lastATXT: Atxt
-    # Grid
-    gridId: Int3 # => Int3(INTV.CellX, INTV.CellY, 0);
+    
     def __init__(self): super().__init__()
 
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
@@ -5166,7 +5162,7 @@ class LANDRecord(Record):
             case FieldType.VCLR: z = self.VCLR = LANDRecord.Vnml(r, dataSize)
             case FieldType.VTEX: z = self.VTEX = LANDRecord.Vtex(r, dataSize)
             # TES3
-            case FieldType.INTV: z = self.INTV = r.readS(LANDRecord.Cord, dataSize)
+            case FieldType.INTV: z = self.INTV = r.readS(LANDRecord.Cord, dataSize); self.gridId = Int3(self.INTV.cellX, self.INTV.cellY, 0)
             case FieldType.WNAM: z = self.WNAM = LANDRecord.Wnam(r, dataSize)
             # TES4
             case FieldType.BTXT: z = self.then(r.readS(LANDRecord.Btxt, dataSize), lambda v: self.BTXTs.__setitem__(v.quadrant, v))

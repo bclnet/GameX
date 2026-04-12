@@ -613,8 +613,8 @@ public abstract class BinaryArchive(BinaryState state, ArcBinary arcBinary) : Ar
         }
         var f = (FileSource)path;
         if (Game.IsArcPath(f.Path)) return default;
-        if (ArcBinary is IDatabase db) {
-            var res = db.Query(f);
+        if (ArcBinary is IDatabase s) {
+            var res = s.Query(f);
             if (res != null) return (T)res;
         }
         var type = typeof(T);
@@ -1064,6 +1064,7 @@ public interface ITransformAsset<T> {
 #region Database
 
 public interface IDatabase {
+    object Convert(object s);
     object Query(object s);
 }
 

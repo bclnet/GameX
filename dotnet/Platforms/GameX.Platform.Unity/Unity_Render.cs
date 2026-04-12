@@ -51,10 +51,10 @@ public class ViewInfo : UnityEngine.MonoBehaviour {
         var args = Environment.GetCommandLineArgs();
         ShellState s;
         if (args.Length > 1 && (s = ShellState.Parse(args[1])) != null) { FamilyId = s.FamilyId; ArcUri = s.ArcUri; Type = s.Type; Path = s.Path; }
-        Log.Info($"FamilyId: '{FamilyId}'");
-        Log.Info($"ArcUri: '{ArcUri}'");
-        Log.Info($"Type: '{Type}'");
-        Log.Info($"Path: '{Path}'");
+        //Log.Info($"FamilyId: '{FamilyId}'");
+        //Log.Info($"ArcUri: '{ArcUri}'");
+        //Log.Info($"Type: '{Type}'");
+        //Log.Info($"Path: '{Path}'");
 
         // awake
         if (string.IsNullOrEmpty(FamilyId)) return;

@@ -85,7 +85,7 @@ public class MetaItem(object source, string name, object icon, object tag = null
     public object Tag { get; } = tag;
     public Archive Archive { get; } = archive;
     public List<MetaItem> Items { get; private set; } = items ?? [];
-    public string Path => Source is FileSource z ? z.Path : "?";
+    public string Path => Source is FileSource z ? $"Morrowind.bsa:{z.Path}" : null;
 
     public MetaItem Search(Func<MetaItem, bool> predicate) {
         // if node is a leaf

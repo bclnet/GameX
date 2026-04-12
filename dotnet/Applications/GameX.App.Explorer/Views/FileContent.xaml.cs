@@ -57,7 +57,7 @@ public partial class FileContent : UserControl, INotifyPropertyChanged {
         if (ContentTabs != null) foreach (var dispose in ContentTabs.Where(s => s.Dispose != null).Select(s => s.Dispose)) dispose.Dispose();
         Gfx = archive.Gfx;
         Sfx = archive.Sfx;
-        Path = "PATH";
+        Path = item;
         ContentTabs = infos?.Select(s => s.Tag as MetaContent).Where(s => s != null).ToList();
         ContentTab.SelectedIndex = ContentTabs != null ? 0 : -1;
     }

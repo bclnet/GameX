@@ -42,7 +42,7 @@
         "path": "Data Files"
       },
       "virtuals": {
-        "Morrowind.cell": "asc:-2,-9",
+        // "Morrowind.cell": "asc:-2,-9",
         "Morrowind.start": "asc:-137.94f,2.30f,-1037.6f"
       }
     },

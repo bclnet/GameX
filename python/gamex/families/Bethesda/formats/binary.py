@@ -5,7 +5,7 @@ from enum import Enum
 from openstk import log, Int3, IWriteToStream
 from gamex import FileSource, ArcBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo, DesSer, IDatabase
 from gamex.families.Uncore.formats.compression import decompressLz4, decompressZlib
-from gamex.families.Bethesda.formats.records import FormType, Reader, Record, RecordGroup
+from gamex.families.Bethesda.formats.records import FormType, Reader, Record, RecordGroup, LTEXRecord, LANDRecord, CELLRecord
 
 # typedefs
 class BinaryReader: pass
@@ -373,7 +373,7 @@ class Binary_Esm(ArcBinaryT, IDatabase):
 
     # read - tag::Binary_Esm.read[]
     def read(self, source: BinaryArchive, b: BinaryReader, tag: object = None) -> None:
-        self.groups = []
+        self.groups = {}
         self.format = self.getFormat(source.game.id)
         r = Reader(b, source.binPath, self.format, source.game.id in ['Fallout3', 'FalloutNV'])
         record = self.record = Record.factory(r.format, FormType(r.readUInt32()))
@@ -381,16 +381,33 @@ class Binary_Esm(ArcBinaryT, IDatabase):
         record.readFields(r)
         files = source.files = [FileSource(path = str(record.type), tag = record)]
         for s in RecordGroup.readAll(r):
-            groups[s.label] = s
+            self.groups[s.label] = s
             if s.preload: s.read(r, files)
             else: r.seek(r.tell() + s.dataSize)
     # end::Binary_Esm.read[]
 
     # process - tag::Binary_Esm.process[]
+    MANYsById: dict[str, Record]
+    LTEXsById: dict[int, LTEXRecord]
+    LANDsById: dict[Int3, LANDRecord]
+    CELLsById: dict[Int3, CELLRecord]
+    CELLsByName: dict[str, CELLRecord]
+    WRLDsById: dict[int, tuple]
+    LTEXsByEid: dict[str, LTEXRecord]
+
     def process(self, source: BinaryArchive) -> None:
         if self.format == FormType.TES3:
-            pass
-        pass
+            g = self.groups[0].recordsByType
+            self.MANYsById = {s.EDID:s for s in g[FormType.STAT]} if FormType.STAT in g else {}
+            self.LTEXsById = {s.INTV:s for s in g[FormType.LTEX]} if FormType.LTEX in g else {}
+            self.LANDsById = {s.gridId:s for s in g[FormType.LAND]} if FormType.LAND in g else {}
+            cells = g[FormType.CELL] if FormType.CELL in g else []
+            self.CELLsById = {s.gridId:s for s in cells if not s.isInterior}
+            self.CELLsByName = {s.EDID:s for s in cells if s.isInterior}
+            return
+        wrldsByLabel = self.groups[FormType.WRLD].groupsByLabel
+        self.WRLDsById = {s.id:None for s in self.groups[FormType.WRLD].open().records}
+        self.LTEXsByEid = {s.EDID:(s, wrldsByLabel[s.id]) for s in self.groups[FormType.LTEX].open().records}
     # end::Binary_Esm.process[]
 
     #region Query - tag::Binary_Esm.query[]

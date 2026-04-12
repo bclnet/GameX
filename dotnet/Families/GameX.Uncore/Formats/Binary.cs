@@ -1527,3 +1527,17 @@ public class Binary_TestTri : IHaveMetaInfo {
 }
 
 #endregion
+
+#region Binary_Engine
+
+public class Binary_Engine : IHaveMetaInfo {
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Engine());
+
+    // IHaveMetaInfo
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
+        => [
+            new(null, new MetaContent { Type = "Engine", Name = Path.GetFileName(file.Path), Value = this }),
+        ];
+}
+
+#endregion

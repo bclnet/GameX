@@ -2,7 +2,7 @@ from __future__ import annotations
 import os
 from openstk import _pathExtension
 from gamex import Family, Archive, FileSource, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
-from gamex.families.Uncore.formats.binary import Binary_Dds, Binary_Img, Binary_Pcx, Binary_Snd, Binary_Tga, Binary_Txt, Binary_TestTri
+from gamex.families.Uncore.formats.binary import Binary_Dds, Binary_Img, Binary_Pcx, Binary_Snd, Binary_Tga, Binary_Txt, Binary_Engine, Binary_TestTri
 
 # UncoreFamily
 class UncoreFamily(Family):
@@ -27,6 +27,7 @@ class UncoreArchive(Archive):
             case '.pcx': return (0, Binary_Pcx.factory)
             case '.tga': return (0, Binary_Tga.factory)
             case '.dds': return (0, Binary_Dds.factory)
+            case '.start': return (0, Binary_Engine.factory)
             case _:
                 match source.path:
                     case 'testtri.gfx': return (0, Binary_TestTri.factory)

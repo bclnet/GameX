@@ -3,6 +3,10 @@
     "name": "The Elder Scrolls III: Morrowind",
     "files": [
       {
+        "path": "Morrowind.start",
+        "type": "Engine"
+      },
+      {
         "path": "Morrowind.esm:ACTI",
         "type": "Database"
       },

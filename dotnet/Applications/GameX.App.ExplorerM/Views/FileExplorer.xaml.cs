@@ -81,7 +81,7 @@ public partial class FileExplorer : ContentView {
         set {
             if (_selectedItem == value) return;
             _selectedItem = value;
-            if (value == null) { OnInfo(); return; }
+            if (value == null) { OnInfo(value, null); return; }
             var src = (value.Source as FileSource)?.Fix();
             var arc = src?.Arc;
             try {
@@ -90,10 +90,10 @@ public partial class FileExplorer : ContentView {
                     arc.Open(value.Items, Resource);
                     //OnFilterKeyUp(null, null); //value.Items.AddRange(arc.GetMetaItemsAsync(Resource).Result);
                 }
-                OnInfo(value.Archive?.GetMetaInfos(Resource, value).Result);
+                OnInfo(value, value.Archive?.GetMetaInfos(Resource, value).Result);
             }
             catch (Exception ex) {
-                OnInfo([
+                OnInfo(value, [
                     new MetaInfo($"EXCEPTION: {ex.Message}"),
                         new MetaInfo(ex.StackTrace),
                     ]);
@@ -104,8 +104,8 @@ public partial class FileExplorer : ContentView {
     public void OnInfoUpdated() {
     }
 
-    public void OnInfo(IEnumerable<MetaInfo> infos = null) {
-        FileContent.Current.OnInfo(Archive, infos?.Where(s => s.Name == null).ToList());
+    public void OnInfo(MetaItem item, IEnumerable<MetaInfo> infos) {
+        FileContent.Current.OnInfo(item, Archive, infos?.Where(s => s.Name == null).ToList());
         Infos = infos?.Where(x => x.Name != null).ToList();
     }
 

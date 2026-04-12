@@ -49,6 +49,7 @@ public class UncoreArchive : Archive {
             ".pcx" => (0, Binary_Pcx.Factory),
             ".tga" => (0, Binary_Tga.Factory),
             ".dds" => (0, Binary_Dds.Factory),
+            ".start" => (0, Binary_Engine.Factory),
             _ => source.Path switch {
                 "testtri.gfx" => (0, Binary_TestTri.Factory),
                 _ => (0, null),

@@ -14,9 +14,9 @@ public partial class FileContent : ContentView {
     }
 
     public void SetPlatform(Platform platform) {
-        //var res = ((Grid)Content).Resources;
-        //var plat = platform?.Id ?? "UK";
-        //res["TViewGfx"] = res[$"TViewGfx:{plat}"] ?? res["THex"];
+        var res = ((Grid)Content).Resources;
+        var plat = platform?.Id ?? "UK";
+        res["TViewGfx"] = res[$"TViewGfx:{plat}"] ?? res["THex"];
     }
 
     void ContentTab_Changed(object sender, CheckedChangedEventArgs e) => ContentTabContent.BindingContext = ((RadioButton)sender).BindingContext;
@@ -33,16 +33,23 @@ public partial class FileContent : ContentView {
         set { _sfx = value; OnPropertyChanged(); }
     }
 
+    object _path;
+    public object Path {
+        get => _path;
+        set { _path = value; OnPropertyChanged(); }
+    }
+
     IList<MetaContent> _contentTabs;
     public IList<MetaContent> ContentTabs {
         get => _contentTabs;
         set { _contentTabs = value; OnPropertyChanged(); }
     }
 
-    public void OnInfo(Archive archive, List<MetaInfo> infos) {
+    public void OnInfo(MetaItem item, Archive archive, List<MetaInfo> infos) {
         if (ContentTabs != null) foreach (var dispose in ContentTabs.Where(s => s.Dispose != null).Select(s => s.Dispose)) dispose.Dispose();
         Gfx = archive.Gfx;
         Sfx = archive.Sfx;
+        Path = item.Path;
         ContentTabs = infos?.Select(s => s.Tag as MetaContent).Where(s => s != null).ToList();
         //ContentTab.CurrentItem = ContentTabs != null ? ContentTabs.FirstOrDefault() : null;
     }

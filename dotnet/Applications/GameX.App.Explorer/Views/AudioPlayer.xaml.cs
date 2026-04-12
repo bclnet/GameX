@@ -31,27 +31,32 @@ public partial class AudioPlayer : UserControl, INotifyPropertyChanged {
     public event PropertyChangedEventHandler PropertyChanged;
     void OnPropertyChanged([CallerMemberName] string propertyName = "") => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
-    public static readonly DependencyProperty SourceProperty = DependencyProperty.Register(nameof(Source), typeof(Stream), typeof(AudioPlayer),
-        new PropertyMetadata((d, e) => (d as AudioPlayer).Load()));
-    public Stream Source {
-        get => GetValue(SourceProperty) as Stream;
+    public static readonly DependencyProperty SourceProperty = DependencyProperty.Register(nameof(Source), typeof(Stream), typeof(AudioPlayer), new PropertyMetadata((d, e) => (d as AudioPlayer).Load()));
+    public static readonly DependencyProperty ValueProperty = DependencyProperty.Register(nameof(Value), typeof(object), typeof(AudioPlayer), new PropertyMetadata((d, e) => (d as AudioPlayer).Load()));
+    public static readonly DependencyProperty FormatProperty = DependencyProperty.Register(nameof(Format), typeof(string), typeof(AudioPlayer), new PropertyMetadata((d, e) => (d as AudioPlayer).Load()));
+
+    public object Source {
+        get => GetValue(SourceProperty);
         set => SetValue(SourceProperty, value);
     }
 
-    public static readonly DependencyProperty FormatProperty = DependencyProperty.Register(nameof(Format), typeof(string), typeof(AudioPlayer),
-         new PropertyMetadata((d, e) => (d as AudioPlayer).Load()));
+    public Stream Value {
+        get => GetValue(ValueProperty) as Stream;
+        set => SetValue(ValueProperty, value);
+    }
+
     public string Format {
         get => GetValue(FormatProperty) as string;
         set => SetValue(FormatProperty, value);
     }
 
     void Load() {
-        if (Format != null && Source != null)
+        if (Format != null && Value != null)
             try {
                 WaveStream = Format.ToLowerInvariant() switch {
-                    ".wav" => new WaveFileReader(Source),
-                    ".mp3" => new Mp3FileReader(Source, wf => new Mp3FrameDecompressor(wf)),
-                    ".aac" => new StreamMediaFoundationReader(Source),
+                    ".wav" => new WaveFileReader(Value),
+                    ".mp3" => new Mp3FileReader(Value, wf => new Mp3FrameDecompressor(wf)),
+                    ".aac" => new StreamMediaFoundationReader(Value),
                     _ => throw new ArgumentOutOfRangeException(nameof(Format), Format),
                 };
                 WaveOut.Init(WaveStream);

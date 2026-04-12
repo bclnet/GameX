@@ -672,3 +672,17 @@ class Binary_TestTri(IHaveMetaInfo):
         ]
 
 #endregion
+
+#region Binary_Engine
+
+class Binary_Engine(IHaveMetaInfo):
+    @staticmethod
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Engine(r)
+
+    def __init__(self, r: BinaryReader): pass
+
+    def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
+        MetaInfo(None, MetaContent(type = 'Engine', name = os.path.basename(file.path), value = self))
+        ]
+
+#endregion

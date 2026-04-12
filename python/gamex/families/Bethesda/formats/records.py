@@ -1283,7 +1283,7 @@ class RecordGroup:
             flags = k,
             tag = v) for k, v in self.recordsByType.items()])
     
-    def open(self) -> RecordGroup: return self
+    def open(self) -> 'RecordGroup': return self
 
 #endregion
 
@@ -2784,7 +2784,7 @@ class CELLRecord(Record): #ICellRecord
         INDX: int = None # Unknown
 
     FULL: str # Full Name / TES3:RGNN - Region name
-    DATA: int; isInterior: bool= false # Flags
+    DATA: int; isInterior: bool = False # Flags
     XCLC: Xclc = None; gridId: Int3 = None # Cell Data (only used for exterior cells)
     XCLL: Xcll = None; ambientLight: Color = None # Lighting (only used for interior cells)
     XCLW: float = None # Water Height
@@ -3774,8 +3774,8 @@ class DIALRecord(Record):
     FULL: str # Dialogue Name
     DATA: int # Dialogue Type
     QSTIs: list[RefV['QUSTRecord']] = None #! Quests (optional)
-    INFOs: list['INFO3Record'] = [] # Info Records
-    def __init__(self): super().__init__(); self.INFOs = listx()
+    _INFOs: list['INFO3Record'] = [] # Info Records
+    def __init__(self): super().__init__(); self._INFOs = listx()
     
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
@@ -4817,7 +4817,7 @@ class INFO3Record(INFORecord):
             self.pcRank, # (0-10)
             self.unknown2) = t
 
-    PNAM: RefX['INFO3Record'] # Previous info ID
+    PNAM: RefV['INFO3Record'] # Previous info ID
     NNAM: str = None # Next info ID (form a linked list of INFOs for the DIAL). First INFO has an empty PNAM, last has an empty NNAM.
     DATA: 'DATA3Field' # Info data
     ONAM: str = None # Actor
@@ -4837,8 +4837,8 @@ class INFO3Record(INFORecord):
     
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
-            case FieldType.INAM: z = DIALRecord._lastRecord.INFOs.addX(self) if DIALRecord._lastRecord else None; self.EDID = r.readFUString(dataSize)
-            case FieldType.PNAM: z = self.PNAM = RefX[INFO3Record](INFO3Record, r, dataSize)
+            case FieldType.INAM: z = DIALRecord._lastRecord._INFOs.addX(self) if DIALRecord._lastRecord else None; self.EDID = r.readFUString(dataSize)
+            case FieldType.PNAM: z = self.PNAM = RefV[INFO3Record](INFO3Record, r, dataSize)
             case FieldType.NNAM: z = self.NNAM = r.readFUString(dataSize)
             case FieldType.DATA: z = self.DATA = r.readS(INFO3Record.Data, dataSize)
             case FieldType.ONAM: z = self.ONAM = r.readFUString(dataSize)
@@ -6663,10 +6663,10 @@ class QUSTRecord(Record):
     FULL: str # Item Name
     ICON: str # Icon
     DATA: Data # Icon
-    SCRI: RefX['SCPTRecord'] # Script Name
+    SCRI: Ref['SCPTRecord'] # Script Name
     SCHRs: list[Schr] = [] # Script Data
     SCTXs: list[str] = [] # Script Source
-    SCROs: list[RefX[Record]] = [] # Global variable reference
+    SCROs: list[Ref[Record]] = [] # Global variable reference
     _last: Schr
     def __init__(self): super().__init__(); self.SCHRs = listx(); self.SCTXs = listx(); self.SCROs = listx()
 
@@ -6676,7 +6676,7 @@ class QUSTRecord(Record):
             case FieldType.FULL: z = self.FULL = r.readFUString(dataSize)
             case FieldType.ICON: z = self.ICON = r.readFUString(dataSize)
             case FieldType.DATA: z = self.DATA = r.readS(QUSTRecord.Data, dataSize)
-            case FieldType.SCRI: z = self.SCRI = RefX[SCPTRecord](SCPTRecord, r, dataSize)
+            case FieldType.SCRI: z = self.SCRI = Ref[SCPTRecord](SCPTRecord, r, dataSize)
             case FieldType.CTDA: z = r.skip(dataSize)
             case FieldType.INDX: z = r.skip(dataSize)
             case FieldType.QSDT: z = r.skip(dataSize)
@@ -6685,7 +6685,7 @@ class QUSTRecord(Record):
             case FieldType.SCHR: z = self._last = self.SCHRs.addX(Schr(r, dataSize))
             case FieldType.SCDA: z = self._last.SCDA(r, dataSize)
             case FieldType.SCTX: z = self.SCTXs.addX(r.readFUString(dataSize))
-            case FieldType.SCRO: z = self.SCROs.addX(RefX[Record](Record, r, dataSize))
+            case FieldType.SCRO: z = self.SCROs.addX(Ref[Record](Record, r, dataSize))
             case _: z = Record._empty
         return z
 # end::QUST[]

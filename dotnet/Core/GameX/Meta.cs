@@ -76,7 +76,6 @@ public class MetaItem(object source, string name, object icon, object tag = null
     public class Filter(string name, string description = "") {
         public string Name = name;
         public string Description = description;
-
         public override string ToString() => Name;
     }
 
@@ -86,6 +85,7 @@ public class MetaItem(object source, string name, object icon, object tag = null
     public object Tag { get; } = tag;
     public Archive Archive { get; } = archive;
     public List<MetaItem> Items { get; private set; } = items ?? [];
+    public string Path => Source is FileSource z ? z.Path : "?";
 
     public MetaItem Search(Func<MetaItem, bool> predicate) {
         // if node is a leaf

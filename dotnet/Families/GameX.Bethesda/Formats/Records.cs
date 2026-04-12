@@ -1309,7 +1309,7 @@ public partial class RecordGroup {
 
 // RecordGroup+WrldAndCell
 partial class RecordGroup {
-    internal HashSet<uint> EnsureCELLsByLabel;
+    internal HashSet<FormType> EnsureCELLsByLabel;
     internal Dictionary<Int3, CELLRecord> CELLsById;
     internal Dictionary<Int3, LANDRecord> LANDsById;
 
@@ -1334,31 +1334,29 @@ partial class RecordGroup {
         var cellSubBlockIdx = new byte[4];
         Buffer.BlockCopy(BitConverter.GetBytes(cellSubBlockY), 0, cellSubBlockIdx, 0, 2);
         Buffer.BlockCopy(BitConverter.GetBytes(cellSubBlockX), 0, cellSubBlockIdx, 2, 2);
-        var cellSubBlockId = BitConverter.ToUInt32(cellSubBlockIdx);
+        var cellSubBlockId = (FormType)BitConverter.ToUInt32(cellSubBlockIdx);
         if (EnsureCELLsByLabel.Contains(cellSubBlockId)) return this;
         //Load();
         CELLsById ??= [];
         LANDsById ??= cellId.Z >= 0 ? [] : null;
-        //if (GroupsByLabel.TryGetValue(cellSubBlockId, out var cellSubBlocks)) {
-        //    // find cell
-        //    var cellSubBlock = cellSubBlocks.Single();
-        //    cellSubBlock.Load(true);
-        //    foreach (var cell in cellSubBlock.Records.Cast<CELLRecord>()) {
-        //        cell.GridId = new Int3(cell.XCLC.Value.GridX, cell.XCLC.Value.GridY, !cell.IsInterior ? cellId.Z : -1);
-        //        CELLsById.Add(cell.GridId, cell);
-        //        // find children
-        //        if (cellSubBlock.GroupsByLabel.TryGetValue(cell.Header.Id, out var cellChildren)) {
-        //            var cellChild = cellChildren.Single();
-        //            var cellTemporaryChildren = cellChild.Groups.Single(s => s.Headers.First().Type == GroupHeader.GroupType.CellTemporaryChildren);
-        //            foreach (var land in cellTemporaryChildren.Records.Cast<LANDRecord>()) {
-        //                land.GridId = new Int3(cell.XCLC.Value.GridX, cell.XCLC.Value.GridY, !cell.IsInterior ? cellId.Z : -1);
-        //                LANDsById.Add(land.GridId, land);
-        //            }
-        //        }
-        //    }
-        //    EnsureCELLsByLabel.Add(cellSubBlockId);
-        //    return this;
-        //}
+        if (GroupsByLabel.TryGetValue(cellSubBlockId, out var cellSubBlocks)) {
+            // find cell
+            var cellSubBlock = cellSubBlocks.Single();
+            cellSubBlock.Open();
+            foreach (var cell in cellSubBlock.Records.Cast<CELLRecord>()) {
+                //cell.GridId = new Int3(cell.XCLC.Value.GridX, cell.XCLC.Value.GridY, cell.IsInterior ? -1 : cellId.Z);
+                CELLsById.Add(cell.GridId, cell);
+                // find children
+                if (cellSubBlock.GroupsByLabel.TryGetValue((FormType)cell.Id, out var cellChildren)) {
+                    var cellChild = cellChildren.Single();
+                    var cellTemporaryChildren = cellChild.Groups.Single(s => s.Type == GroupType.CellTemporaryChildren);
+                    foreach (var land in cellTemporaryChildren.Records.Cast<LANDRecord>()) LANDsById.Add(land.GridId, land);
+                    //land.GridId = new Int3(cell.XCLC.Value.GridX, cell.XCLC.Value.GridY, !cell.IsInterior ? cellId.Z : -1);
+                }
+            }
+            EnsureCELLsByLabel.Add(cellSubBlockId);
+            return this;
+        }
         return null;
     }
 }
@@ -3011,7 +3009,7 @@ public class CELLRecord : Record {
                 FieldType.FULL or FieldType.RGNN => FULL = r.ReadFUString(dataSize),
                 FieldType.DATA => (z: DATA = (ushort)r.ReadINTV(r.Format == TES3 ? 4 : dataSize), IsInterior = (DATA & 0x01) == 0x01, r.Format == TES3 ? (z: XCLC = r.ReadS<Xclc>(8), GridId = new Int3(XCLC.Value.GridX, XCLC.Value.GridY, IsInterior ? -1 : 0)).z : null).z,
                 FieldType.XCLC => (z: XCLC = r.ReadS<Xclc>(dataSize), GridId = new Int3(XCLC.Value.GridX, XCLC.Value.GridY, IsInterior ? -1 : 0)).z,
-                FieldType.XCLL or FieldType.AMBI => (z: XCLL = r.ReadS<Xcll>(dataSize), AmbientLight => XCLL?.AmbientColor.AsColor).z,
+                FieldType.XCLL or FieldType.AMBI => (z: XCLL = r.ReadS<Xcll>(dataSize), AmbientLight = XCLL?.AmbientColor.AsColor).z,
                 FieldType.XCLW or FieldType.WHGT => XCLW = r.ReadSingle(),
                 // TES3
                 FieldType.NAM0 => NAM0 = r.ReadUInt32(),
@@ -4012,15 +4010,15 @@ public class DIALRecord : Record {
     public enum Type4 : byte { Topic = 0, Conversation, Combat, Persuasion, Detection, Service, Miscellaneous, Radio }
     public string FULL; // Dialogue Name
     public byte DATA; // Dialogue Type
-    public List<RefX<QUSTRecord>> QSTIs; // Quests (optional)
-    public List<INFO3Record> INFOs = []; // Info Records
+    public List<RefV<QUSTRecord>> QSTIs; // Quests (optional)
+    internal List<INFO3Record> _INFOs = []; // Info Records
 
     protected override HashSet<FieldType> DF4 => [FieldType.QSTI];
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => (EDID = FULL = r.ReadFUString(dataSize), _lastRecord = this),
         FieldType.FULL => FULL = r.ReadFUString(dataSize),
         FieldType.DATA => DATA = r.ReadByte(),
-        FieldType.QSTI or FieldType.QSTR => (QSTIs ??= []).AddX(new RefX<QUSTRecord>(r, dataSize)),
+        FieldType.QSTI or FieldType.QSTR => (QSTIs ??= []).AddX(new RefV<QUSTRecord>(r, dataSize)),
         _ => Empty,
     };
 }
@@ -5059,7 +5057,7 @@ public class INFO3Record : INFORecord {
         public byte Unknown2;
     }
 
-    public RefX<INFO3Record> PNAM; // Previous info ID
+    public RefV<INFO3Record> PNAM; // Previous info ID
     public string NNAM; // Next info ID (form a linked list of INFOs for the DIAL). First INFO has an empty PNAM, last has an empty NNAM.
     public Data DATA; // Info data
     public string ONAM; // Actor
@@ -5078,8 +5076,8 @@ public class INFO3Record : INFORecord {
 
     protected override HashSet<FieldType> DF3 => [FieldType.SCVR, FieldType.INTV, FieldType.FLTV];
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
-        FieldType.INAM => (z: DIALRecord._lastRecord?.INFOs.AddX(this), EDID = r.ReadFUString(dataSize)).z,
-        FieldType.PNAM => PNAM = new RefX<INFO3Record>(r, dataSize),
+        FieldType.INAM => (z: DIALRecord._lastRecord._INFOs.AddX(this), EDID = r.ReadFUString(dataSize)).z,
+        FieldType.PNAM => PNAM = new RefV<INFO3Record>(r, dataSize),
         FieldType.NNAM => NNAM = r.ReadFUString(dataSize),
         FieldType.DATA => DATA = r.ReadS<Data>(dataSize),
         FieldType.ONAM => ONAM = r.ReadFUString(dataSize),
@@ -6899,10 +6897,10 @@ public class QUSTRecord : Record {
     public string FULL; // Item Name
     public string ICON; // Icon
     public Data DATA; // Icon
-    public RefX<SCPTRecord> SCRI; // Script Name
+    public Ref<SCPTRecord> SCRI; // Script Name
     public List<Schr> SCHRs = []; // Script Data
     public List<string> SCTXs = []; // Script Source //TODO Group?
-    public List<RefX<Record>> SCROs = []; // Global variable reference
+    public List<Ref<Record>> SCROs = []; // Global variable reference
     Schr _last;
 
     protected override HashSet<FieldType> DF4 => [FieldType.CTDA, FieldType.INDX, FieldType.QSDT, FieldType.CNAM, FieldType.QSTA, FieldType.SCHR, FieldType.SCDA, FieldType.SCTX, FieldType.SCRO];
@@ -6911,16 +6909,16 @@ public class QUSTRecord : Record {
         FieldType.FULL => FULL = r.ReadFUString(dataSize),
         FieldType.ICON => ICON = r.ReadFUString(dataSize),
         FieldType.DATA => DATA = r.ReadS<Data>(dataSize),
-        FieldType.SCRI => SCRI = new RefX<SCPTRecord>(r, dataSize),
+        FieldType.SCRI => SCRI = new Ref<SCPTRecord>(r, dataSize),
         FieldType.CTDA => r.Skip(dataSize), //TODO multi
         FieldType.INDX => r.Skip(dataSize), //TODO multi
         FieldType.QSDT => r.Skip(dataSize), //TODO multi
         FieldType.CNAM => r.Skip(dataSize), //TODO multi
-        FieldType.QSTA => r.Skip(dataSize), //TODO
+        FieldType.QSTA => r.Skip(dataSize), //TODO multi
         FieldType.SCHR => _last = SCHRs.AddX(new Schr(r, dataSize)),
         FieldType.SCDA => _last.SCDA(r, dataSize),
         FieldType.SCTX => SCTXs.AddX(r.ReadFUString(dataSize)),
-        FieldType.SCRO => SCROs.AddX(new RefX<Record>(r, dataSize)),
+        FieldType.SCRO => SCROs.AddX(new Ref<Record>(r, dataSize)),
         _ => Empty,
     };
 }

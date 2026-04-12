@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace GameX.Bethesda.Formats;
@@ -541,14 +542,11 @@ public class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
         return Task.CompletedTask;
     }
 
-    // TES3
     Dictionary<string, Record> MANYsById;
     Dictionary<long, LTEXRecord> LTEXsById;
     Dictionary<Int3, LANDRecord> LANDsById;
     Dictionary<Int3, CELLRecord> CELLsById;
     Dictionary<string, CELLRecord> CELLsByName;
-
-    // TES4
     Dictionary<uint, Tuple<WRLDRecord, RecordGroup[]>> WRLDsById;
     Dictionary<string, LTEXRecord> LTEXsByEid;
 
@@ -570,6 +568,16 @@ public class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
     }
 
     #region Query
+
+    const int yardInUnits = 64;
+    const float meterInYards = 1.09361f;
+    const float MeterInUnits = meterInYards * yardInUnits;
+    const int exteriorCellSideLengthInUnits = 128 * yardInUnits;
+    const float ExteriorCellSideLengthInMeters = exteriorCellSideLengthInUnits / MeterInUnits;
+
+    public static Int3 GetCellId(Vector3 point, int world) => new((int)Math.Floor(point.X / ExteriorCellSideLengthInMeters), (int)Math.Floor(point.Z / ExteriorCellSideLengthInMeters), world);
+
+    public object Convert(object source) => null;
 
     public class FindTAG<T>(object obj) : List<T>(obj is Record[] s ? s.Cast<T>() : [(T)obj]), IHaveMetaInfo, IWriteToStream {
         public void WriteToStream(Stream stream) => this.Serialize(stream);

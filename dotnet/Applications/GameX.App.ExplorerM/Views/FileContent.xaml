@@ -48,14 +48,14 @@
                 <!--<DataGrid VerticalAlignment="Top" ItemsSource="{Binding Value}" Margin="5,5,5,5" />-->
             </ControlTemplate>
             <ControlTemplate x:Key="TAudioPlayer" x:DataType="{x:Type model:MetaContent}">
-                <views:AudioPlayer Stream="{Binding Value}" Format="{Binding Tag}" />
+                <views:AudioPlayer Source="{Binding}" Value="{Binding Value}" Format="{Binding Tag}" />
             </ControlTemplate>
             <ControlTemplate x:Key="TImage" x:DataType="{x:Type model:MetaContent}">
                 <Image MaximumWidthRequest="{Binding MaxWidth}" MaximumHeightRequest="{Binding MaxHeight}" Margin="5,5,5,5" />
             </ControlTemplate>
             <ControlTemplate x:Key="TViewGfx" x:DataType="{x:Type model:MetaContent}">
                 <Label Text="ViewGfx" />
-                <!--<controls:ViewMaterial Source="{Binding Value}" Gfx="{Binding Gfx, RelativeSource={RelativeSource AncestorType={x:Type views:FileContent}}}" Margin="3,3,3,3" />-->
+                <!--<controls:ViewMaterial Source="{Binding}" Value="{Binding Value}" Gfx="{Binding Gfx, RelativeSource={RelativeSource AncestorType={x:Type views:FileContent}}}" Margin="3,3,3,3" />-->
             </ControlTemplate>
         </Grid.Resources>
         <HorizontalStackLayout x:Name="ContentTab" Grid.Row="0" BindableLayout.ItemsSource="{Binding ContentTabs, x:DataType=views:FileContent}" VerticalOptions="StartAndExpand" RadioButtonGroup.GroupName="Tabs" BackgroundColor="LightGrey">

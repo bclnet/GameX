@@ -77,4 +77,8 @@
     <PackageReference Include="ZstdNet" Version="1.5.7" />
   </ItemGroup>
 
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' == 'Windows_NT'">
+    <Exec Command="xcopy /Y &quot;$(TargetDir)GameX.Resource*.dll&quot; &quot;$(SolutionDir)..\platforms\Plugins\GameX.Resource\$(Configuration)\&quot;" />
+  </Target>
+
 </Project>

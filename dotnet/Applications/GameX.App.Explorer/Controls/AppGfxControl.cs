@@ -11,34 +11,34 @@ using OpenStack.Wpf.Control;
 
 namespace GameX.App.Explorer.Controls;
 
-public class AppOpenGLControl : OpenGLControl {
+public class AppOpenGLControl() : OpenGLControl(ShellState.Create) {
     protected override Renderer CreateRenderer() => OpenGLRenderer.CreateRenderer(this, Gfx, Source, Type);
 }
 
-public class AppGodotControl : GodotControl {
+public class AppGodotControl() : GodotControl(ShellState.Create) {
     protected override Renderer CreateRenderer() => GodotRenderer.CreateRenderer(this, Gfx, Source, Type);
 }
 
-public class AppO3deControl : O3deControl {
+public class AppO3deControl() : O3deControl(ShellState.Create) {
     protected override Renderer CreateRenderer() => O3deRenderer.CreateRenderer(this, Gfx, Source, Type);
 }
 
-public class AppOgreControl : OgreControl {
+public class AppOgreControl() : OgreControl(ShellState.Create) {
     protected override Renderer CreateRenderer() => OgreRenderer.CreateRenderer(this, Gfx, Source, Type);
 }
 
-public class AppSdlControl : SdlControl {
+public class AppSdlControl() : SdlControl(ShellState.Create) {
     protected override Renderer CreateRenderer() => SdlRenderer.CreateRenderer(this, Gfx, Source, Type);
 }
 
-public class AppStrideControl : StrideControl {
+public class AppStrideControl() : StrideControl(ShellState.Create) {
     protected override Renderer CreateRenderer() => StrideRenderer.CreateRenderer(this, Gfx, Source, Type);
 }
 
-public class AppUnityControl : UnityControl {
+public class AppUnityControl() : UnityControl(ShellState.Create) {
     protected override Renderer CreateRenderer() => UnityRenderer.CreateRenderer(this, Gfx, Source, Type);
 }
 
-public class AppUnrealControl : UnrealControl {
+public class AppUnrealControl() : UnrealControl(ShellState.Create) {
     protected override Renderer CreateRenderer() => UnrealRenderer.CreateRenderer(this, Gfx, Source, Type);
 }

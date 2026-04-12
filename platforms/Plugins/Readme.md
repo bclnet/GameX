@@ -2,6 +2,7 @@
 mklink /D System ..\..\..\..\..\OpenStack\dotnet\Platform\Unity\Plugins\System
 mklink /D GameX ..\..\..\..\Plugins\GameX\Debug
 mklink /D GameX.Platform.Unity ..\..\..\..\Plugins\GameX.Platform.Unity\Debug
+mklink /D GameX.Resource ..\..\..\..\Plugins\GameX.Resource\Debug
 
 
 

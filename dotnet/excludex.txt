@@ -3,7 +3,7 @@ GameX.All.
 GameX.Platform.
 GameX.Arkane.
 #GameX.Bethesda.
-GameX.Bioware.
+#GameX.Bioware.
 GameX.Black.
 GameX.Blizzard.
 GameX.Bohemia.

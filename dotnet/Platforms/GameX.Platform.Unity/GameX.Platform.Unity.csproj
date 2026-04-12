@@ -38,7 +38,7 @@
     </Reference>
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' == 'Windows_NT'">
     <Exec Command="xcopy /Y &quot;$(TargetDir)GameX.Platform.Unity*.dll&quot; &quot;$(SolutionDir)..\platforms\Plugins\GameX.Platform.Unity\$(Configuration)\&quot;&#xD;&#xA;xcopy /Y &quot;$(TargetDir)OpenStack.Unity*.dll&quot; &quot;$(SolutionDir)..\platforms\Plugins\GameX.Platform.Unity\$(Configuration)\&quot;" />
   </Target>
 

@@ -66,7 +66,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' == 'Windows_NT'">
-    <Exec Command="xcopy /Y &quot;$(TargetDir)GameX*.dll&quot; &quot;$(SolutionDir)..\platforms\Plugins\GameX\$(Configuration)\&quot; /EXCLUDE:$(SolutionDir)excludex.txt&#xD;&#xA;xcopy /Y &quot;$(TargetDir)OpenStack*.dll&quot; &quot;$(SolutionDir)..\platforms\Plugins\GameX\$(Configuration)\&quot; /EXCLUDE:$(SolutionDir)excludes.txt" />
+    <Exec Command="xcopy /Y &quot;$(TargetDir)GameX*.dll&quot; &quot;$(SolutionDir)..\platforms\Plugins\GameX\$(Configuration)\&quot; /EXCLUDE:$(SolutionDir)excludex.txt&#xD;&#xA;xcopy /Y &quot;$(TargetDir)GameX*.dll&quot; &quot;C:\T_\junk\Shell3D_Data\Managed\&quot; /EXCLUDE:$(SolutionDir)excludex.txt&#xD;&#xA;xcopy /Y &quot;$(TargetDir)OpenStack*.dll&quot; &quot;$(SolutionDir)..\platforms\Plugins\GameX\$(Configuration)\&quot; /EXCLUDE:$(SolutionDir)excludes.txt&#xD;&#xA;xcopy /Y &quot;$(TargetDir)OpenStack*.dll&quot; &quot;C:\T_\junk\Shell3D_Data\Managed\&quot; /EXCLUDE:$(SolutionDir)excludes.txt" />
   </Target>
 
 </Project>

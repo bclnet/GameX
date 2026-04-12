@@ -1355,3 +1355,30 @@ public partial class FamilyManager {
 }
 
 #endregion
+
+#region ShellState
+
+public class ShellState {
+    public string FamilyId;
+    public string ArcUri;
+    public string Path;
+    public string Type;
+    public override string ToString() => string.Join('|', ["ST", FamilyId, ArcUri, Path, Type]);
+
+    public static ShellState Create(object source, object path, object value, string type) {
+        var i = (MetaItem)path;
+        var a = i.Archive;
+        return new ShellState {
+            FamilyId = a.Family.Id,
+            ArcUri = a.Game.ToUris(a.Edition?.Id).FirstOrDefault()?.ToString(),
+            Path = i.Path,
+            Type = type,
+        };
+    }
+    public static ShellState Parse(string state) {
+        var p = state?.Split('|');
+        return p != null && p[0] == "ST" ? new() { FamilyId = p[1], ArcUri = p[2], Path = p[3], Type = p[4] } : null;
+    }
+}
+
+#endregion

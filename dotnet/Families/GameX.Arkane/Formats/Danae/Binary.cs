@@ -290,7 +290,7 @@ public unsafe class Binary_Ftl : IHaveMetaInfo {
     // IHaveMetaInfo
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new("BinaryFTL", items: [
-            new($"Obj: {Obj}"),
+            new($"CellObj: {Obj}"),
         ])
     ];
 }

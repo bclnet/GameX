@@ -99,8 +99,8 @@ public unsafe class ServerBinary_Container : IHaveMetaInfo {
     // IHaveMetaInfo
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
         var nodes = new List<MetaInfo> {
-            new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "Container File" }),
-            new MetaInfo("Container", items: new List<MetaInfo> {
+            new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "ContObj File" }),
+            new MetaInfo("ContObj", items: new List<MetaInfo> {
                 new MetaInfo($"Default: {Default.GumpID}"),
                 new MetaInfo($"Table: {Records.Count}"),
             })

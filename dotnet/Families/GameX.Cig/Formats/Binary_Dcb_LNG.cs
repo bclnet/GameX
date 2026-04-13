@@ -160,7 +160,7 @@ public partial class Binary_Dcb_LNG : IHaveMetaInfo {
         public Guid Value { get; set; }
         public Reference_(Binary_Dcb_LNG root) : base(root) { Item1 = r.ReadUInt32(); Value = ReadGuid().Value; }
         public override string ToString() => string.Format("0x{0:X8} 0x{1}", Item1, Value);
-        public XmlElement Read() => Root.CreateElement("Reference", Root.CreateAttribute("item1", string.Format("{0:X4}", Item1)),
+        public XmlElement Read() => Root.CreateElement("CellRef", Root.CreateAttribute("item1", string.Format("{0:X4}", Item1)),
             Root.CreateAttribute("value", Value.ToString()));
     }
 

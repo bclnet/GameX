@@ -347,7 +347,7 @@ public struct E_GROUPLIST {
     public float Size;
 }
 
-[DebuggerDisplay("Action: {Name}")]
+[DebuggerDisplay("Task: {Name}")]
 public struct E_ACTIONLIST {
     public string Name;
     public int Idx; //index vertex;
@@ -464,14 +464,14 @@ public unsafe struct E_SELECTIONS {
 //float w;
 //} EERIE_3DPAD;
 
-[DebuggerDisplay("Texture: {Path}")]
+[DebuggerDisplay("Texture: {ModelPath}")]
 public class E_TEXTURE {
     public int Id;
     public string Path;
     public POLY Poly;
 }
 
-[DebuggerDisplay("Obj: {File}")]
+[DebuggerDisplay("CellObj: {File}")]
 public class E_3DOBJ {
     //public string Name;
     public string File;

@@ -1734,7 +1734,7 @@ public class SkyObjectReplace(BinaryReader r) : IHaveMetaInfo
     public readonly float MaxBright = (r.ReadSingle(), r.Align()).Item1;
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new($"Obj Idx: {ObjectIndex}"),
+        new($"CellObj Idx: {ObjectIndex}"),
         GFXObjId != 0 ? new($"GfxObj ID: {GFXObjId:X8}", clickable: true) : null,
         Rotate != 0 ? new($"Rotate: {Rotate}") : null,
         Transparent != 0 ? new($"Transparent: {Transparent}") : null,

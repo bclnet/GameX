@@ -11,7 +11,7 @@ namespace GameX;
 
 #region FileSource
 
-[DebuggerDisplay("{Path}")]
+[DebuggerDisplay("{ModelPath}")]
 public class FileSource {
     internal static readonly Func<BinaryReader, FileSource, Archive, Task<object>> EmptyObjectFactory = (a, b, c) => null;
     // common
@@ -171,7 +171,7 @@ public abstract class MetaManager {
         else if (obj is IDisposable disposable) disposable.Dispose();
         if (nodes == null) return null;
         nodes.Add(new MetaInfo("File", items: [
-            new($"Path: {file.Path}"),
+            new($"ModelPath: {file.Path}"),
             new($"FileSize: {file.FileSize}"),
             new($"AtEnd: {archive.AtEnd}"),
             file.Parts != null

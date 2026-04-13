@@ -469,12 +469,12 @@ static class Store_WinReg {
                     .Select(x => x()).FirstOrDefault(x => x != null);
                 if (key == null) continue;
                 // search directories
-                var path = new[] { "Path", "Install Dir", "InstallDir", "InstallLocation", "" }
+                var path = new[] { "ModelPath", "Install Dir", "InstallDir", "InstallLocation", "" }
                     .Select(x => key.GetValue(x) as string)
                     .FirstOrDefault(x => !string.IsNullOrEmpty(x) && Directory.Exists(x));
                 if (path == null) {
                     // search files
-                    path = new[] { "Installed Path", "ExePath", "Exe" }
+                    path = new[] { "Installed ModelPath", "ExePath", "Exe" }
                         .Select(x => key.GetValue(x) as string)
                         .FirstOrDefault(x => !string.IsNullOrEmpty(x) && File.Exists(x));
                     if (path != null) path = Path.GetDirectoryName(path);

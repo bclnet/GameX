@@ -1060,12 +1060,3 @@ public interface ITransformAsset<T> {
 }
 
 #endregion
-
-#region Database
-
-public interface IDatabase {
-    object Convert(object s);
-    object Query(object s);
-}
-
-#endregion

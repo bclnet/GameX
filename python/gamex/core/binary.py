@@ -3,7 +3,7 @@ import sys, os, re, time
 from itertools import groupby
 from enum import Enum, Flag
 from io import BytesIO
-from openstk import _throw, BinaryReader, GenericPool, SinglePool, StaticPool
+from openstk import _throw, BinaryReader, GenericPool, SinglePool, StaticPool, IDatabase
 from gamex.core.meta import FileSource, MetaManager, MetaItem, MetaInfo
 
 # FileOption
@@ -390,8 +390,3 @@ class ArcBinaryT(ArcBinary):
 class ITransformAsset:
     def canTransformAsset(self, transformTo: Archive, source: object) -> bool: pass
     def transformAsset(self, transformTo: Archive, source: object) -> object: pass
-
-# IDatabase
-class IDatabase:
-    def convert(self, source: object) -> object: pass
-    def query(self, source: object) -> list[object]: pass

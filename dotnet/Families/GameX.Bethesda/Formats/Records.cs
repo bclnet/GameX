@@ -12,6 +12,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using static GameX.Bethesda.Formats.Records.FormType;
 using static System.IO.Polyfill;
+using static OpenStack.CellManager;
 #pragma warning disable CS9113
 
 namespace GameX.Bethesda.Formats.Records;
@@ -1310,8 +1311,8 @@ public partial class RecordGroup {
 // RecordGroup+WrldAndCell
 partial class RecordGroup {
     internal HashSet<FormType> EnsureCELLsByLabel;
-    internal Dictionary<Int3, CELLRecord> CELLsById;
-    internal Dictionary<Int3, LANDRecord> LANDsById;
+    internal Dictionary<Int3, ICell> CELLsById;
+    internal Dictionary<Int3, ILand> LANDsById;
 
     public RecordGroup[] EnsureWrldAndCell(Int3 cellId) {
         var cellBlockX = (short)(cellId.X >> 5);
@@ -1343,15 +1344,13 @@ partial class RecordGroup {
             // find cell
             var cellSubBlock = cellSubBlocks.Single();
             cellSubBlock.Open();
-            foreach (var cell in cellSubBlock.Records.Cast<CELLRecord>()) {
-                //cell.GridId = new Int3(cell.XCLC.Value.GridX, cell.XCLC.Value.GridY, cell.IsInterior ? -1 : cellId.Z);
+            foreach (var cell in cellSubBlock.Records.Cast<ICell>()) {
                 CELLsById.Add(cell.GridId, cell);
                 // find children
                 if (cellSubBlock.GroupsByLabel.TryGetValue((FormType)cell.Id, out var cellChildren)) {
                     var cellChild = cellChildren.Single();
                     var cellTemporaryChildren = cellChild.Groups.Single(s => s.Type == GroupType.CellTemporaryChildren);
-                    foreach (var land in cellTemporaryChildren.Records.Cast<LANDRecord>()) LANDsById.Add(land.GridId, land);
-                    //land.GridId = new Int3(cell.XCLC.Value.GridX, cell.XCLC.Value.GridY, !cell.IsInterior ? cellId.Z : -1);
+                    foreach (var land in cellTemporaryChildren.Records.Cast<ILand>()) LANDsById.Add(land.GridId, land);
                 }
             }
             EnsureCELLsByLabel.Add(cellSubBlockId);
@@ -2900,7 +2899,7 @@ public class CDCKRecord : Record {
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/CELL"/>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/CELL"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/CELL">
-public class CELLRecord : Record {
+public class CELLRecord : Record, ICell {
     [Flags]
     public enum Flag : ushort {
         Interior = 0x0001,
@@ -2998,6 +2997,13 @@ public class CELLRecord : Record {
     public List<Ref_> RefObjs = [];
     bool _frmr = false;
     Ref_ _last;
+
+    uint ICell.Id => Id;
+    bool ICell.IsInterior => IsInterior;
+    Int3 ICell.GridId => GridId;
+    string ICell.EDID => EDID;
+
+    //cell.GridId = new Int3(cell.XCLC.Value.GridX, cell.XCLC.Value.GridY, cell.IsInterior ? -1 : cellId.Z);
 
     protected override HashSet<FieldType> DF3 => null;
     protected override HashSet<FieldType> DF4 => null;
@@ -5315,7 +5321,7 @@ public class KYWDRecord : Record {
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/LAND">
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/LAND"/>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/LAND"/>
-public class LANDRecord : Record {
+public class LANDRecord : Record, ILand {
     public struct Vnml(Reader r, int dataSize) {
         public Byte3[] Vertexs = r.ReadPArray<Byte3>("3B", dataSize / 3); // XYZ 8 bit floats
     }
@@ -5400,13 +5406,18 @@ public class LANDRecord : Record {
     public Vhgt VHGT; // Height data
     public Vnml? VCLR; // Vertex color array, looks like another RBG image 65x65 pixels in size. (Optional)
     public Vtex? VTEX; // A 16x16 array of short texture indices. (Optional)
-                       // TES3
+    // TES3
     public Cord INTV; public Int3 GridId; // The cell coordinates of the cell
     public Wnam WNAM; // Unknown byte data.
     // TES4
     public Btxt[] BTXTs = new Btxt[4]; // Base Layer
     public Atxt[] ATXTs; // Alpha Layer
     Atxt _lastATXT;
+
+    Int3 ILand.GridId => GridId;
+    ushort[] ILand.VTEX => VTEX.Value.TextureIndicesT3;
+
+    //land.GridId = new Int3(cell.XCLC.Value.GridX, cell.XCLC.Value.GridY, !cell.IsInterior ? cellId.Z : -1);
 
     protected override HashSet<FieldType> DF4 => [FieldType.BTXT, FieldType.ATXT, FieldType.VTXT];
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
@@ -5549,7 +5560,7 @@ public class LGTMRecord : Record {
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/GMST"/>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/GMST"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/GMST">
-public class LIGHRecord : Record, IHaveMODL {
+public class LIGHRecord : Record, IHaveMODL, ILigh {
     public struct Data {
         [Flags]
         public enum ColorFlags {
@@ -5729,7 +5740,7 @@ public class LSPRRecord : Record {
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/LTEX"/>
 /// /// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/LTEX.html"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/LTEX">
-public class LTEXRecord : Record {
+public class LTEXRecord : Record, ILtex {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct Hnam {
         public static (string, int) Struct = ("<3B", 3);
@@ -5747,6 +5758,9 @@ public class LTEXRecord : Record {
     public List<RefX<GRASRecord>> GNAMs = []; // Potential grass
     // fallout
     public Ref<TXSTRecord> TNAM; // Texture
+
+    long ILtex.INTV => INTV;
+    string ILtex.ICON => ICON;
 
     protected override HashSet<FieldType> DF4 => [FieldType.GNAM];
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
@@ -7317,7 +7331,7 @@ public unsafe class REFRRecord : Record {
     public Xesp? XESP; // Enable Parent (optional)
     public RefX<Record>? XTRG; // Target (optional)
     public Xsed? XSED; // SpeedTree (optional)
-    public byte[]? XLOD; // Distant LOD Data (optional)
+    public byte[] XLOD; // Distant LOD Data (optional)
     public float? XCHG; // Charge (optional)
     public float? XHLT; // Health (optional)
     public RefX<CELLRecord>? XPCI; // Unused (optional)
@@ -8223,7 +8237,7 @@ public class SPELRecord : Record {
     public List<Efid> EFIDs = []; // Effect Data
     // TES4
     public List<Scit> SCITs = []; // Script effect data
-    string Z;
+    //string Z;
 
     protected override HashSet<FieldType> DF3 => [FieldType.ENAM];
     protected override HashSet<FieldType> DF4 => [FieldType.FULL, FieldType.EFID, FieldType.EFIT, FieldType.CTDA];

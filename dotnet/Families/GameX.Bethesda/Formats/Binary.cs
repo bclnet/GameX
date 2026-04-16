@@ -9,6 +9,7 @@ using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using static OpenStack.CellManager;
 
 namespace GameX.Bethesda.Formats;
 
@@ -543,31 +544,31 @@ public class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
     }
 
     Dictionary<string, Record> MANYsById;
-    Dictionary<long, LTEXRecord> LTEXsById;
-    Dictionary<Int3, LANDRecord> LANDsById;
-    Dictionary<Int3, CELLRecord> CELLsById;
-    Dictionary<string, CELLRecord> CELLsByName;
+    Dictionary<long, ILtex> LTEXsById;
+    Dictionary<Int3, ILand> LANDsById;
+    Dictionary<Int3, ICell> CELLsById;
+    Dictionary<string, ICell> CELLsByName;
     Dictionary<uint, Tuple<WRLDRecord, RecordGroup[]>> WRLDsById;
-    Dictionary<string, LTEXRecord> LTEXsByEid;
+    // Dictionary<string, LTEXRecord> LTEXsByEid;
 
     public override Task Process(BinaryArchive source) {
         if (Format == FormType.TES3) {
             var g = Groups[0].RecordsByType;
             MANYsById = g.TryGetValue(FormType.STAT, out var z) ? z.ToDictionary(s => s.EDID) : [];
-            LTEXsById = g.TryGetValue(FormType.LTEX, out z) ? z.Cast<LTEXRecord>().ToDictionary(s => s.INTV) : [];
-            LANDsById = g.TryGetValue(FormType.LAND, out z) ? z.Cast<LANDRecord>().ToDictionary(s => s.GridId) : [];
-            var cells = g.TryGetValue(FormType.CELL, out z) ? z.Cast<CELLRecord>().ToList() : [];
+            LTEXsById = g.TryGetValue(FormType.LTEX, out z) ? z.Cast<ILtex>().ToDictionary(s => s.INTV) : [];
+            LANDsById = g.TryGetValue(FormType.LAND, out z) ? z.Cast<ILand>().ToDictionary(s => s.GridId) : [];
+            var cells = g.TryGetValue(FormType.CELL, out z) ? z.Cast<ICell>().ToList() : [];
             CELLsById = cells.Where(x => !x.IsInterior).ToDictionary(s => s.GridId);
             CELLsByName = cells.Where(x => x.IsInterior).ToDictionary(s => s.EDID);
             return Task.CompletedTask;
         }
         var wrldsByLabel = Groups[FormType.WRLD].GroupsByLabel;
         WRLDsById = Groups[FormType.WRLD].Open().Records.Cast<WRLDRecord>().ToDictionary(s => s.Id, s => { wrldsByLabel.TryGetValue((FormType)s.Id, out var wrlds); return new Tuple<WRLDRecord, RecordGroup[]>(s, wrlds); });
-        LTEXsByEid = Groups[FormType.LTEX].Open().Records.Cast<LTEXRecord>().ToDictionary(s => s.EDID);
+        // LTEXsByEid = Groups[FormType.LTEX].Open().Records.Cast<LTEXRecord>().ToDictionary(s => s.EDID);
         return Task.CompletedTask;
     }
 
-    #region Query
+    #region CellQuery
 
     const int yardInUnits = 64;
     const float meterInYards = 1.09361f;
@@ -575,9 +576,41 @@ public class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
     const int exteriorCellSideLengthInUnits = 128 * yardInUnits;
     const float ExteriorCellSideLengthInMeters = exteriorCellSideLengthInUnits / MeterInUnits;
 
-    public static Int3 GetCellId(Vector3 point, int world) => new((int)Math.Floor(point.X / ExteriorCellSideLengthInMeters), (int)Math.Floor(point.Z / ExteriorCellSideLengthInMeters), world);
+    public class Tes3CellQuery(Binary_Esm _) : IQuery {
+        const float PointFactor = 0.5f;
+        public Int3 GetCellId(Vector3 point, int world) => new((int)Math.Floor(point.X / PointFactor), (int)Math.Floor(point.Z / PointFactor), world);
+        // public static Int3 GetCellId(Vector3 point, int world) => new((int)Math.Floor(point.X / ExteriorCellSideLengthInMeters), (int)Math.Floor(point.Z / ExteriorCellSideLengthInMeters), world);
+        public ILtex FindLtex(int index) => _.LTEXsById.TryGetValue(index, out var z) ? z : default;
+        public ILand FindLand(Int3 cell) => _.LANDsById.TryGetValue(cell, out var z) ? z : default;
+        public ICell FindCell(Int3 cell) => _.CELLsById.TryGetValue(cell, out var z) ? z : default;
+        public ICell FindCellByName(string name, int a, int b) => _.CELLsByName.TryGetValue(name, out var z) ? z : default;
+    }
 
-    public object Convert(object source) => null;
+    public class ElseCellQuery(Binary_Esm _) : IQuery {
+        const float PointFactor = 0.5f;
+        public Int3 GetCellId(Vector3 point, int world) => new((int)Math.Floor(point.X / PointFactor), (int)Math.Floor(point.Z / PointFactor), world);
+        // public static Int3 GetCellId(Vector3 point, int world) => new((int)Math.Floor(point.X / ExteriorCellSideLengthInMeters), (int)Math.Floor(point.Z / ExteriorCellSideLengthInMeters), world);
+        public ILtex FindLtex(int index) => throw new NotImplementedException();
+        public ILand FindLand(Int3 cell) {
+            var world = _.WRLDsById[(uint)cell.Z];
+            foreach (var wrld in world.Item2)
+                foreach (var cellBlock in wrld.EnsureWrldAndCell(cell))
+                    if (cellBlock.LANDsById.TryGetValue(cell, out var z)) return z;
+            return null;
+        }
+        public ICell FindCell(Int3 cell) {
+            var world = _.WRLDsById[(uint)cell.Z];
+            foreach (var wrld in world.Item2)
+                foreach (var cellBlock in wrld.EnsureWrldAndCell(cell))
+                    if (cellBlock.CELLsById.TryGetValue(cell, out var z)) return z;
+            return null;
+        }
+        public ICell FindCellByName(string name, int a, int b) => throw new NotImplementedException();
+    }
+
+    #endregion
+
+    #region Query
 
     public class FindTAG<T>(object obj) : List<T>(obj is Record[] s ? s.Cast<T>() : [(T)obj]), IHaveMetaInfo, IWriteToStream {
         public void WriteToStream(Stream stream) => this.Serialize(stream);
@@ -590,38 +623,10 @@ public class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
             ])
         ];
     }
-    public class FindLTEX(int index) {
-        public object Tes3(Binary_Esm _) => _.LTEXsById.TryGetValue(index, out var z) ? z : default;
-    }
-    public class FindLAND(Int3 cell) {
-        public object Tes3(Binary_Esm _) => _.LANDsById.TryGetValue(cell, out var z) ? z : default;
-        public object Else(Binary_Esm _) {
-            var world = _.WRLDsById[(uint)cell.Z];
-            foreach (var wrld in world.Item2)
-                foreach (var cellBlock in wrld.EnsureWrldAndCell(cell))
-                    if (cellBlock.LANDsById.TryGetValue(cell, out var z)) return z;
-            return null;
-        }
-    }
-    public class FindCELL(Int3 cell) {
-        public object Tes3(Binary_Esm _) => _.CELLsById.TryGetValue(cell, out var z) ? z : default;
-        public object Else(Binary_Esm _) {
-            var world = _.WRLDsById[(uint)cell.Z];
-            foreach (var wrld in world.Item2)
-                foreach (var cellBlock in wrld.EnsureWrldAndCell(cell))
-                    if (cellBlock.CELLsById.TryGetValue(cell, out var z)) return z;
-            return null;
-        }
-    }
-    public class FindCELLByName(string name) {
-        public object Tes3(Binary_Esm _) => _.CELLsByName.TryGetValue(name, out var z) ? z : default;
-    }
+
+    public object Convert(object source) => null;
     public object Query(object source) => source switch {
         FileSource s => Activator.CreateInstance(typeof(FindTAG<>).MakeGenericType(Record.Factory(Format, (FormType)s.Flags).GetType()), s.Tag),
-        FindLTEX s => Format == FormType.TES3 ? s.Tes3(this) : throw new NotImplementedException(),
-        FindLAND s => Format == FormType.TES3 ? s.Tes3(this) : s.Else(this),
-        FindCELL s => Format == FormType.TES3 ? s.Tes3(this) : s.Else(this),
-        FindCELLByName s => Format == FormType.TES3 ? s.Tes3(this) : throw new NotImplementedException(),
         _ => throw new ArgumentOutOfRangeException(),
     };
 

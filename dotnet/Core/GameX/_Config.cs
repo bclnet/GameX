@@ -84,9 +84,9 @@ public partial class FamilyManager {
     };
 #elif Bethesda
     public static GlobalOption Option = new() {
-        Platform = "UN",
+        Platform = "UK",
         ForceOpen = true,
-        ForcePath = "sample:2",
+        ForcePath = "sample:0",
         Family = "Bethesda",
         Game = "Morrowind", // The Elder Scrolls III: Morrowind
         //Game = "Oblivion", // The Elder Scrolls IV: Oblivion

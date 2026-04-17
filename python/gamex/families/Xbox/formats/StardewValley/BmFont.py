@@ -1,6 +1,6 @@
 from __future__ import annotations
 import os
-from openstk.core.typex import *
+from openstk.sys.typex import *
 from gamex.families.Xbox.formats.xna import TypeReader
 
 @RType('BmFont.XmlSourceReader')

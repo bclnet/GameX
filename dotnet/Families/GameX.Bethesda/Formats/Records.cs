@@ -11,6 +11,7 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
 using static GameX.Bethesda.Formats.Records.FormType;
+using static OpenStack.CellManager;
 using static System.IO.Polyfill;
 #pragma warning disable CS9113
 
@@ -2900,7 +2901,7 @@ public class CDCKRecord : Record {
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/CELL"/>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/CELL"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/CELL">
-public class CELLRecord : Record {
+public class CELLRecord : Record, ICellRecord {
     [Flags]
     public enum Flag : ushort {
         Interior = 0x0001,
@@ -2998,6 +2999,11 @@ public class CELLRecord : Record {
     public List<Ref_> RefObjs = [];
     bool _frmr = false;
     Ref_ _last;
+
+    bool ICellRecord.IsInterior => IsInterior;
+    Int3 ICellRecord.GridId => GridId;
+    string ICellRecord.EDID => EDID;
+    Color? ICellRecord.AmbientLight => AmbientLight;
 
     protected override HashSet<FieldType> DF3 => null;
     protected override HashSet<FieldType> DF4 => null;

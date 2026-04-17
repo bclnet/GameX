@@ -390,8 +390,3 @@ class ArcBinaryT(ArcBinary):
 class ITransformAsset:
     def canTransformAsset(self, transformTo: Archive, source: object) -> bool: pass
     def transformAsset(self, transformTo: Archive, source: object) -> object: pass
-
-# IDatabase
-class IDatabase:
-    def convert(self, source: object) -> object: pass
-    def query(self, source: object) -> list[object]: pass

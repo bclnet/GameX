@@ -3,8 +3,8 @@ import os
 from enum import Enum, Flag
 from decimal import Decimal
 from numpy import ndarray, array, empty
-from openstk.core.drawing import Point, Rectangle
-from openstk.core.typex import *
+from openstk.sys.drawing import Point, Rectangle
+from openstk.sys.typex import *
 
 # types
 # type Vector2 = ndarray

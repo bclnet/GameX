@@ -1,6 +1,6 @@
 from __future__ import annotations
 import os
-from openstk.core.drawing import Color
+from openstk.sys.drawing import Color
 
 class Color3:
     _struct = ('<3f', 12)

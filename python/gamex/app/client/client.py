@@ -1,10 +1,10 @@
 import sys
 from dataclasses import dataclass
 from openstk import log
-from openstk.core.client import IClientHost
+from openstk.client import IClientHost
+from openstk.platforms.platform_ex import ExClientHost
 from gamex import getFamily, FamilyGame, option
 from gamex.core.client import ClientState
-from openstk.platforms.client_ex import ExClientHost
 
 @dataclass
 class RunArgs:

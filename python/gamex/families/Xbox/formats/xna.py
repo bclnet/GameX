@@ -6,12 +6,12 @@ from decimal import Decimal
 from numpy import ndarray, array
 from openstk import _throw, BinaryReader
 from openstk.gfx import Raster, Texture_Bytes, ITexture, TextureFormat, TexturePixel
-from openstk.core.drawing import Plane, Point, Rectangle, BoundingBox, BoundingSphere, BoundingFrustum, Ray, Curve
-from openstk.core.typex import *
+from openstk.sys.drawing import Plane, Point, Rectangle, BoundingBox, BoundingSphere, BoundingFrustum, Ray, Curve
+from openstk.sys.typex import *
+from openstk.sys.mscorlib.System import *
 from gamex import MetaInfo, MetaManager, MetaContent, IHaveMetaInfo
 from gamex.core.globalx import ByteColor4
 from gamex.families.Uncore.formats.compression import decompressXbox
-from openstk.core.mscorlib.System import *
 
 #region Type Manager
 

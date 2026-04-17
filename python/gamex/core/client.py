@@ -1,6 +1,6 @@
 from __future__ import annotations
 import os
-from openstk.core.client import ClientBase
+from openstk.client import ClientBase
 from gamex import ClientState
 
 # GameClient

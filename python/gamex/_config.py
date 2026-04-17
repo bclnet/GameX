@@ -83,7 +83,7 @@ match __current__:
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
-            ForcePath = "sample:1",
+            ForcePath = "sample:2",
             Family = "Bethesda",
             Game = "Morrowind", # The Elder Scrolls III: Morrowind
             # Game = "Oblivion", # The Elder Scrolls IV: Oblivion

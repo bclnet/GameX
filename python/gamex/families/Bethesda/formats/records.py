@@ -7,7 +7,7 @@ from struct import unpack
 from numpy import ndarray, array
 from collections.abc import Iterator
 from openstk import log, Byte2, Int2, Byte3, Int3, Float3
-from openstk.core.drawing import Color
+from openstk.sys.drawing import Color
 from gamex import FileSource, BinaryReader, ArcBinaryT
 from gamex.core.globalx import ByteColor4
 from gamex.families.Uncore.formats.compression import decompressZlib2

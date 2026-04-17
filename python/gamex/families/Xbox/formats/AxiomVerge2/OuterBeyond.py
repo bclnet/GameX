@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os
 from enum import Enum, IntFlag
-from openstk.core.typex import *
+from openstk.sys.typex import *
 from gamex.families.Xbox.formats.xna import TypeReader
 
 class THTileMap:

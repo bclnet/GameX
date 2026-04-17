@@ -2,8 +2,8 @@ import os
 from io import BytesIO
 from itertools import groupby
 from enum import Enum
-from openstk import log, Int3, IWriteToStream
-from gamex import FileSource, ArcBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo, DesSer, IDatabase
+from openstk import log, Int3, IWriteToStream, CellManager, IDatabase
+from gamex import FileSource, ArcBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo, DesSer
 from gamex.families.Uncore.formats.compression import decompressLz4, decompressZlib
 from gamex.families.Bethesda.formats.records import FormType, Reader, Record, RecordGroup, LTEXRecord, LANDRecord, CELLRecord
 
@@ -388,12 +388,12 @@ class Binary_Esm(ArcBinaryT, IDatabase):
 
     # process - tag::Binary_Esm.process[]
     MANYsById: dict[str, Record]
-    LTEXsById: dict[int, LTEXRecord]
-    LANDsById: dict[Int3, LANDRecord]
-    CELLsById: dict[Int3, CELLRecord]
-    CELLsByName: dict[str, CELLRecord]
+    LTEXsById: dict[int, CellManager.ILtex]
+    LANDsById: dict[Int3, CellManager.ILand]
+    CELLsById: dict[Int3, CellManager.ICell]
+    CELLsByName: dict[str, CellManager.ICell]
     WRLDsById: dict[int, tuple]
-    LTEXsByEid: dict[str, LTEXRecord]
+    # LTEXsByEid: dict[str, CellManager.ILtex]
 
     def process(self, source: BinaryArchive) -> None:
         if self.format == FormType.TES3:
@@ -406,9 +406,37 @@ class Binary_Esm(ArcBinaryT, IDatabase):
             self.CELLsByName = {s.EDID:s for s in cells if s.isInterior}
             return
         wrldsByLabel = self.groups[FormType.WRLD].groupsByLabel
-        self.WRLDsById = {s.id:None for s in self.groups[FormType.WRLD].open().records}
-        self.LTEXsByEid = {s.EDID:(s, wrldsByLabel[s.id]) for s in self.groups[FormType.LTEX].open().records}
+        self.WRLDsById = {s.id:wrldsByLabel[s.id] for s in self.groups[FormType.WRLD].open().records}
+        # self.LTEXsByEid = {s.EDID:(s, wrldsByLabel[s.id]) for s in self.groups[FormType.LTEX].open().records}
     # end::Binary_Esm.process[]
+
+    #region CellQuery - tag::Binary_Esm.cellQuery[]
+
+    class Tes3CellQuery(CellManager.IQuery):
+        def __init__(self, _: 'Binary_Esm'): self._ = _
+        def FindLtex(self, index: int) -> object: return self._.LTEXsById[index]
+        def FindLand(self, cell: Int3) -> object: return self._.LANDsById[cell]
+        def FindCell(self, cell: Int3) -> object: return self._.CELLsById[cell]
+        def FindCellByName(self, name: str, a: int, b: int) -> object: return self._.CELLsByName[name]
+    
+    class ElseCellQuery(CellManager.IQuery):
+        def __init__(self, _: 'Binary_Esm'): self._ = _
+        def FindLtex(self, index: int) -> object: raise Exception()
+        def FindLand(self, cell: Int3) -> object:
+            world = self._.WRLDsById[cell.Z]
+            for wrld in world.Item2:
+                for cellBlock in wrld.ensureWrldAndCell(cell):
+                    if cell in cellBlock.LANDsById: return cellBlock.LANDsById[cell]
+            return None
+        def FindCell(self, cell: Int3) -> object:
+            world = self._.WRLDsById[cell.Z]
+            for wrld in world.Item2:
+                for cellBlock in wrld.ensureWrldAndCell(cell):
+                    if cell in cellBlock.CELLsById: return cellBlock.CELLsById[cell]
+            return None
+        def FindCellByName(self, name: str, a: int, b: int) -> object: raise Exception()
+
+    #endregion - end::Binary_Esm.cellQuery[]
 
     #region Query - tag::Binary_Esm.query[]
 
@@ -421,37 +449,10 @@ class Binary_Esm(ArcBinaryT, IDatabase):
         def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
             MetaInfo(None, MetaContent(type = 'Data', name = os.path.basename(file.path), value = self))
         ]
-    class FindLTEX:
-        def __init__(self, index: int): self.index = index
-        def tes3(self, _: 'Binary_Esm') -> object: return None #z if _.LTEXsById.TryGetValue(index, out var z) else None
-    class FindLAND:
-        def __init__(self, cell: Int3): self.cell = cell
-        def tes3(self, _: 'Binary_Esm') -> object: return None #z if _.LANDsById.TryGetValue(cell, out var z) else None
-        def else_(self, _: 'Binary_Esm') -> object:
-            # world = _.WRLDsById[(uint)cell.Z]
-            # foreach (var wrld in world.Item2)
-            #     foreach (var cellBlock in wrld.EnsureWrldAndCell(cell))
-            #         if (cellBlock.LANDsById.TryGetValue(cell, out var z)) return z;
-            return None
-    class FindCELL:
-        def __init__(self, cell: Int3): self.cell = cell
-        def tes3(self, _: 'Binary_Esm') -> object: return None #z if _.CELLsById.TryGetValue(cell, out var z) else None
-        def else_(self, _: 'Binary_Esm') -> object:
-            # var world = _.WRLDsById[(uint)cell.Z];
-            # foreach (var wrld in world.Item2)
-            #     foreach (var cellBlock in wrld.EnsureWrldAndCell(cell))
-            #         if (cellBlock.CELLsById.TryGetValue(cell, out var z)) return z;
-            return None
-    class FindCELLByName:
-        def __init__(self, name: str): self.name = name
-        def tes3(self, _: 'Binary_Esm') -> object: return None #z if _.CELLsByName.TryGetValue(cell, out var z) else None
+    
     def query(self, s: object) -> object:
         match s:
             case FileSource(): return Binary_Esm.FindTAG[Record](s.tag)
-            case FindLTEX(): return s.tes3(self) if self.format == FormType.TES3 else _throw('NotImplementedError')
-            case FindLAND(): return s.tes3(self) if self.format == FormType.TES3 else s.else_(self)
-            case FindCELL(): return s.tes3(self) if self.format == FormType.TES3 else s.else_(self)
-            case FindCELLByName(): return s.tes3(self) if self.format == FormType.TES3 else _throw('NotImplementedError')
             case _: return _throw('OutOfRange')
 
     #endregion - end::Binary_Esm.query[]

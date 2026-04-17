@@ -11,8 +11,8 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
 using static GameX.Bethesda.Formats.Records.FormType;
-using static OpenStack.CellManager;
 using static System.IO.Polyfill;
+using static OpenStack.CellManager;
 #pragma warning disable CS9113
 
 namespace GameX.Bethesda.Formats.Records;
@@ -3002,7 +3002,6 @@ public class CELLRecord : Record, ICell {
     bool ICell.IsInterior => IsInterior;
     Int3 ICell.GridId => GridId;
     string ICell.EDID => EDID;
-    Color? ICellRecord.AmbientLight => AmbientLight;
 
     //cell.GridId = new Int3(cell.XCLC.Value.GridX, cell.XCLC.Value.GridY, cell.IsInterior ? -1 : cellId.Z);
 

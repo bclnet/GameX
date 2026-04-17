@@ -13,6 +13,7 @@ using System.Text;
 using static GameX.Bethesda.Formats.Records.FormType;
 using static OpenStack.CellManager;
 using static System.IO.Polyfill;
+using static OpenStack.CellManager;
 #pragma warning disable CS9113
 
 namespace GameX.Bethesda.Formats.Records;
@@ -2899,7 +2900,11 @@ public class CDCKRecord : Record {
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/CELL"/>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/CELL"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/CELL">
+<<<<<<< HEAD
+public class CELLRecord : Record, ICellRecord {
+=======
 public class CELLRecord : Record, ICell {
+>>>>>>> 8499144e0310089328cd09c18799f0c3a5dcbeb2
     [Flags]
     public enum Flag : ushort {
         Interior = 0x0001,
@@ -2998,13 +3003,19 @@ public class CELLRecord : Record, ICell {
     bool _frmr = false;
     Ref_ _last;
 
+<<<<<<< HEAD
+    bool ICellRecord.IsInterior => IsInterior;
+    Int3 ICellRecord.GridId => GridId;
+    string ICellRecord.EDID => EDID;
+    Color? ICellRecord.AmbientLight => AmbientLight;
+=======
     uint ICell.Id => Id;
     bool ICell.IsInterior => IsInterior;
     Int3 ICell.GridId => GridId;
     string ICell.EDID => EDID;
-    Color? ICellRecord.AmbientLight => AmbientLight;
 
     //cell.GridId = new Int3(cell.XCLC.Value.GridX, cell.XCLC.Value.GridY, cell.IsInterior ? -1 : cellId.Z);
+>>>>>>> 8499144e0310089328cd09c18799f0c3a5dcbeb2
 
     protected override HashSet<FieldType> DF3 => null;
     protected override HashSet<FieldType> DF4 => null;

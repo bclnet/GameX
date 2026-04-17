@@ -3,7 +3,7 @@ import sys, os, re, time
 from itertools import groupby
 from enum import Enum, Flag
 from io import BytesIO
-from openstk import _throw, BinaryReader, GenericPool, SinglePool, StaticPool
+from openstk import _throw, BinaryReader, GenericPool, SinglePool, StaticPool, IDatabase
 from gamex.core.meta import FileSource, MetaManager, MetaItem, MetaInfo
 
 # FileOption

@@ -55,7 +55,7 @@ namespace GameX.Gamebryo.Formats.Nif;
 from io import BytesIO
 from enum import Enum, Flag, IntFlag
 from numpy import ndarray, array
-from openstk import log, BinaryReader
+from openstk.core import log, BinaryReader
 from gamex import FileSource, ArcBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
 from gamex.core.globalx import Color3, Color4
 from gamex.core.desser import DesSer

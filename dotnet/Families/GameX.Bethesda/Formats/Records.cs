@@ -3002,7 +3002,7 @@ public class CELLRecord : Record, ICell {
     bool ICell.IsInterior => IsInterior;
     Int3 ICell.GridId => GridId;
     string ICell.EDID => EDID;
-    Color? ICellRecord.AmbientLight => AmbientLight;
+    Color? ICell.AmbientLight => AmbientLight;
 
     //cell.GridId = new Int3(cell.XCLC.Value.GridX, cell.XCLC.Value.GridY, cell.IsInterior ? -1 : cellId.Z);
 
@@ -5323,10 +5323,6 @@ public class KYWDRecord : Record {
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/LAND"/>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/LAND"/>
 public class LANDRecord : Record, ILand {
-    public struct Vnml(Reader r, int dataSize) {
-        public Byte3[] Vertexs = r.ReadPArray<Byte3>("3B", dataSize / 3); // XYZ 8 bit floats
-    }
-
     public struct Vhgt {
         public float ReferenceHeight; // A height offset for the entire cell. Decreasing this value will shift the entire cell land down.
         public sbyte[] HeightData; // HeightData
@@ -5335,24 +5331,6 @@ public class LANDRecord : Record, ILand {
             var count = dataSize - 4 - 3;
             HeightData = r.ReadPArray<sbyte>("B", count);
             r.Skip(3); // Unused
-        }
-    }
-
-    public struct Vclr(Reader r, int dataSize) {
-        public ByteColor3[] Colors = r.ReadSArray<ByteColor3>(dataSize / 24); // 24-bit RGB
-    }
-
-    public struct Vtex {
-        public ushort[] TextureIndicesT3;
-        public uint[] TextureIndicesT4;
-        public Vtex(Reader r, int dataSize) {
-            if (r.Format == TES3) {
-                TextureIndicesT3 = r.ReadPArray<ushort>("H", dataSize >> 1);
-                TextureIndicesT4 = null;
-                return;
-            }
-            TextureIndicesT3 = null;
-            TextureIndicesT4 = r.ReadPArray<uint>("I", dataSize >> 2);
         }
     }
 
@@ -5403,10 +5381,10 @@ public class LANDRecord : Record, ILand {
                      // The signed value of the 'color' represents the vector's component. Blue
                      // is vertical(Z), Red the X direction and Green the Y direction.Note that
                      // the y-direction of the data is from the bottom up.
-    public Vnml VNML;
+    public Byte3[] VNML; // XYZ 8 bit floats (Vertexs)
     public Vhgt VHGT; // Height data
-    public Vnml? VCLR; // Vertex color array, looks like another RBG image 65x65 pixels in size. (Optional)
-    public Vtex? VTEX; // A 16x16 array of short texture indices. (Optional)
+    public ByteColor3[] VCLR; // 24-bit RGB (Colors), Vertex color array, looks like another RBG image 65x65 pixels in size. (Optional)
+    public object VTEX; // A 16x16 array of short texture indices. (Optional)
     // TES3
     public Cord INTV; public Int3 GridId; // The cell coordinates of the cell
     public Wnam WNAM; // Unknown byte data.
@@ -5416,17 +5394,17 @@ public class LANDRecord : Record, ILand {
     Atxt _lastATXT;
 
     Int3 ILand.GridId => GridId;
-    ushort[] ILand.VTEX => VTEX.Value.TextureIndicesT3;
+    object ILand.VTEX => VTEX;
 
     //land.GridId = new Int3(cell.XCLC.Value.GridX, cell.XCLC.Value.GridY, !cell.IsInterior ? cellId.Z : -1);
 
     protected override HashSet<FieldType> DF4 => [FieldType.BTXT, FieldType.ATXT, FieldType.VTXT];
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.DATA => DATA = r.ReadInt32(),
-        FieldType.VNML => VNML = new Vnml(r, dataSize),
+        FieldType.VNML => VNML = r.ReadPArray<Byte3>("3B", dataSize / 3),
         FieldType.VHGT => VHGT = new Vhgt(r, dataSize),
-        FieldType.VCLR => VCLR = new Vnml(r, dataSize),
-        FieldType.VTEX => VTEX = new Vtex(r, dataSize),
+        FieldType.VCLR => VCLR = r.ReadSArray<ByteColor3>(dataSize / 24),
+        FieldType.VTEX => VTEX = r.Format == TES3 ? r.ReadPArray<ushort>("H", dataSize >> 1) : r.ReadPArray<uint>("I", dataSize >> 2),
         // TES3
         FieldType.INTV => (z: INTV = r.ReadS<Cord>(dataSize), GridId = new Int3(INTV.CellX, INTV.CellY, 0)).z,
         FieldType.WNAM => WNAM = new Wnam(r, dataSize),
@@ -5615,6 +5593,9 @@ public class LIGHRecord : Record, IHaveMODL, ILigh {
     public RefX<SCPTRecord>? SCRI; // Script FormId (optional)
     public float FNAM; // Fade Value
     public RefX<SOUNRecord> SNAM; // Sound FormId (optional)
+
+    float ILigh.Radius => DATA.Radius / Binary_Esm.MeterInUnits;
+    Color ILigh.LightColor => DATA.LightColor.AsColor;
 
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID or FieldType.NAME => EDID = r.ReadFUString(dataSize),

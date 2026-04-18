@@ -2,7 +2,7 @@ import os
 from io import BytesIO
 from itertools import groupby
 from enum import Enum
-from openstk import log, Int3, IWriteToStream, CellManager, IDatabase
+from openstk.core import log, Int3, IWriteToStream, CellManager, IDatabase
 from gamex import FileSource, ArcBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo, DesSer
 from gamex.families.Uncore.formats.compression import decompressLz4, decompressZlib
 from gamex.families.Bethesda.formats.records import FormType, Reader, Record, RecordGroup, LTEXRecord, LANDRecord, CELLRecord

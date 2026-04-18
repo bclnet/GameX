@@ -4,7 +4,7 @@ from enum import Enum
 from datetime import datetime
 from urllib.parse import urlparse
 from importlib import resources
-from openstk import findType, _throw, YamlDict, PlatformX
+from openstk.core import findType, _throw, YamlDict, PlatformX
 from openstk.vfx import FileSystem, AggregateFileSystem, NetworkFileSystem, DirectoryFileSystem, VirtualFileSystem
 from gamex import option, familyIds 
 from gamex.core.binary import BinaryState, ManyArchive, MultiArchive

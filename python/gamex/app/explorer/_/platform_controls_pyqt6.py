@@ -6,18 +6,18 @@ from openstk.gfx import ITextureSelect, MouseState, KeyboardState
 # opengl
 from OpenGL.GL import *
 from openstk.gfx.gl_view import OpenGLView
-# from gamex.platform_opengl import OpenGLPlatform
-from gamex.platform_opengl_views import createView as openGLCreateView
+# from gamex.platforms.opengl import OpenGLPlatform
+from gamex.platforms.opengl_views import createView as openGLCreateView
 # panda3d
 from panda3d.core import loadPrcFileData, WindowProperties, FrameBufferProperties
 from direct.showbase.ShowBase import ShowBase
-# from gamex.platform_panda3d import Panda3dPlatform
-from gamex.platform_panda3d_views import createView as panda3dCreateView
+# from gamex.platforms.panda3d import Panda3dPlatform
+from gamex.platforms.panda3d_views import createView as panda3dCreateView
 # pygame
 import pygame
 # from pygame.locals import *
-# from gamex.platform_pygame import PygamePlatform
-from gamex.platform_pygame_views import createView as pygameCreateView
+# from gamex.platforms.pygame import PygamePlatform
+from gamex.platforms.pygame_views import createView as pygameCreateView
 
 # typedefs
 class GLCamera: pass

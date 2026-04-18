@@ -1,6 +1,6 @@
 from __future__ import annotations
 import os
-from openstk import _pathExtension
+from openstk.core import _pathExtension
 from gamex import BinaryArchive
 from gamex.families.Arkane.formats.danae.binary import Binary_Ftl, Binary_Fts, Binary_Tea
 from gamex.families.Arkane.formats.binary import Binary_Danae, Binary_Void

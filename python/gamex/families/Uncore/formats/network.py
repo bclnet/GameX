@@ -1,6 +1,6 @@
 from __future__ import annotations
 import os
-from openstk import LogFile
+from openstk.core import LogFile
 
 # PacketLogger
 class PacketLogger:

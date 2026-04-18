@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os, itertools
 from io import BytesIO
-from openstk import _throw, _pathExtension, BinaryReader, IWriteToStream
+from openstk.core import _throw, _pathExtension, BinaryReader, IWriteToStream
 from gamex import Archive, BinaryArchive, ArcBinary, ArcBinaryT, FileSource, MetaInfo, MetaManager, MetaContent, IHaveMetaInfo, DesSer
 from gamex.families.Uncore.formats.compression import decompressXbox
 from gamex.families.Xbox.formats.xna import ContentReader

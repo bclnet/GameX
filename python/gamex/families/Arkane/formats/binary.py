@@ -1,6 +1,6 @@
 import os
 from io import BytesIO
-from openstk import _pathExtension
+from openstk.core import _pathExtension
 from gamex import FileSource, ArcBinaryT
 from gamex.families.Uncore.formats.compression import decompressBlast
 

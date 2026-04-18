@@ -1,6 +1,6 @@
 import os
 from enum import IntFlag
-from openstk import _int_tryParse
+from openstk.core import _int_tryParse
 
 #region ClientVersion
 

@@ -4,7 +4,7 @@ from io import BytesIO
 from enum import IntEnum
 from decimal import Decimal
 from numpy import ndarray, array
-from openstk import _throw, BinaryReader
+from openstk.core import _throw, BinaryReader
 from openstk.gfx import Raster, Texture_Bytes, ITexture, TextureFormat, TexturePixel
 from openstk.sys.drawing import Plane, Point, Rectangle, BoundingBox, BoundingSphere, BoundingFrustum, Ray, Curve
 from openstk.sys.typex import *

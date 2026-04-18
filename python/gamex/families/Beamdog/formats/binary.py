@@ -1,6 +1,6 @@
 import os
 from io import BytesIO
-from openstk import BinaryReader
+from openstk.core import BinaryReader
 from gamex.core.binary import ArcBinaryT
 from gamex.core.meta import FileSource
 from gamex.families.Uncore.formats.compression import decompressLzss, decompressZlib

@@ -2,7 +2,7 @@ import os, re, struct, numpy as np
 # from io import BytesIO
 from enum import Enum, Flag
 from itertools import groupby
-from openstk import unsafe
+from openstk.core import unsafe
 from openstk.gfx import Texture_Bytes, ITexture, TextureFormat, TexturePixel
 from gamex import FileSource, MetaInfo, MetaContent, IHaveMetaInfo, DesSer
 

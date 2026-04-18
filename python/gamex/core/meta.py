@@ -1,7 +1,7 @@
 from __future__ import annotations
 import sys, os, re, pathlib
 from io import BytesIO
-from openstk import _throw
+from openstk.core import _throw
 
 # FileSource
 class FileSource:

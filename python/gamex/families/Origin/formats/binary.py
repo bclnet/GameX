@@ -2,7 +2,7 @@ import os, numpy as np
 from pathlib import Path
 from ctypes import c_ulong, c_ulonglong
 from io import BytesIO
-from openstk import _pathExtension
+from openstk.core import _pathExtension
 from gamex import BinaryArchive, ArcBinaryT, FileSource, DesSer
 from gamex.families.Origin.formats.UO.binary import *
 from gamex.families.Xbox.formats.binary import Binary_Xnb

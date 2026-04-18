@@ -6,7 +6,7 @@ from enum import IntEnum, IntFlag
 from struct import unpack
 from numpy import ndarray, array
 from collections.abc import Iterator
-from openstk import log, Byte2, Int2, Byte3, Int3, Float3
+from openstk.core import log, Byte2, Int2, Byte3, Int3, Float3
 from openstk.sys.drawing import Color
 from gamex import FileSource, BinaryReader, ArcBinaryT
 from gamex.core.globalx import ByteColor4
@@ -5070,10 +5070,6 @@ class KYWDRecord(Record):
 
 # LAND.Land - 3450 - tag::LAND[]
 class LANDRecord(Record):
-    class Vnml:
-        def __init__(self, r: Reader, dataSize: int):
-            self.vertexs: list[Byte3] = r.readPArray(Byte3, '3B', dataSize // 3) # XYZ 8 bit floats
-
     class Vhgt:
         referenceHeight: float # A height offset for the entire cell. Decreasing this value will shift the entire cell land down.
         heightData: list[int] # HeightData
@@ -5082,21 +5078,6 @@ class LANDRecord(Record):
             count = dataSize - 4 - 3
             self.heightData = r.readPArray(None, 'b', count)
             r.skip(3) # Unused
-
-    class Vclr:
-        def __init__(self, r: Reader, dataSize: int):
-            self.colors: list[ByteColor3] = r.readSArray(ByteColor3, dataSize // 24) # 24-bit RGB
-
-    class Vtex:
-        textureIndicesT3: list[int]
-        textureIndicesT4: list[int]
-        def __init__(self, r: Reader, dataSize: int):
-            if r.format == FormType.TES3:
-                self.textureIndicesT3 = r.readPArray(None, 'H', dataSize >> 1)
-                self.textureIndicesT4 = None
-                return
-            self.textureIndicesT3 = None
-            self.textureIndicesT4 = r.readPArray(None, 'I', dataSize >> 2)
 
     # TES3
     class Cord:
@@ -5140,10 +5121,10 @@ class LANDRecord(Record):
     # The signed value of the 'color' represents the vector's component. Blue
     # is vertical(Z), Red the X direction and Green the Y direction.Note that
     # the y-direction of the data is from the bottom up.
-    VNML: Vnml
+    VNML: list[Byte3] # XYZ 8 bit floats (vertexs)
     VHGT: Vhgt # Height data
-    VCLR: Vnml = None # Vertex color array, looks like another RBG image 65x65 pixels in size. (Optional)
-    VTEX: Vtex = None # A 16x16 array of short texture indices. (Optional)
+    VCLR: list[ByteColor3] = None # 24-bit RGB (colors), Vertex color array, looks like another RBG image 65x65 pixels in size. (Optional)
+    VTEX: object = None # A 16x16 array of short texture indices. (Optional)
     # TES3
     INTV: Cord; gridId: Int3 # The cell coordinates of the cell
     WNAM: Wnam # Unknown byte data.
@@ -5157,10 +5138,10 @@ class LANDRecord(Record):
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         match type:
             case FieldType.DATA: z = self.DATA = r.readInt32()
-            case FieldType.VNML: z = self.VNML = LANDRecord.Vnml(r, dataSize)
+            case FieldType.VNML: z = self.VNML = r.readPArray(Byte3, '3B', dataSize // 3)
             case FieldType.VHGT: z = self.VHGT = LANDRecord.Vhgt(r, dataSize)
-            case FieldType.VCLR: z = self.VCLR = LANDRecord.Vnml(r, dataSize)
-            case FieldType.VTEX: z = self.VTEX = LANDRecord.Vtex(r, dataSize)
+            case FieldType.VCLR: z = self.VCLR = r.readSArray(ByteColor3, dataSize // 24)
+            case FieldType.VTEX: z = self.VTEX = r.readPArray(None, 'H', dataSize >> 1) if r.format == FormType.TES3 else r.readPArray(None, 'I', dataSize >> 2)
             # TES3
             case FieldType.INTV: z = self.INTV = r.readS(LANDRecord.Cord, dataSize); self.gridId = Int3(self.INTV.cellX, self.INTV.cellY, 0)
             case FieldType.WNAM: z = self.WNAM = LANDRecord.Wnam(r, dataSize)

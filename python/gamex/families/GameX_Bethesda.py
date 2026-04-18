@@ -1,6 +1,6 @@
 from __future__ import annotations
 import os
-from openstk import _pathExtension
+from openstk.core import _pathExtension
 from gamex import Family, FamilyGame, BinaryArchive, FileOption
 from gamex.families.Uncore.formats.binary import Binary_Dds
 from gamex.families.Bethesda.formats.binary import Binary_Ba2, Binary_Bsa, Binary_Esm

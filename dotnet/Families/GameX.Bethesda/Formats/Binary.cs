@@ -570,11 +570,11 @@ public class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
 
     #region CellQuery
 
-    const int yardInUnits = 64;
-    const float meterInYards = 1.09361f;
-    const float MeterInUnits = meterInYards * yardInUnits;
-    const int exteriorCellSideLengthInUnits = 128 * yardInUnits;
-    const float ExteriorCellSideLengthInMeters = exteriorCellSideLengthInUnits / MeterInUnits;
+    const int YardInUnits = 64;
+    const float MeterInYards = 1.09361f;
+    internal const float MeterInUnits = MeterInYards * YardInUnits;
+    const int ExteriorCellSideLengthInUnits = 128 * YardInUnits;
+    const float ExteriorCellSideLengthInMeters = ExteriorCellSideLengthInUnits / MeterInUnits;
 
     public class Tes3CellQuery(Binary_Esm _) : IQuery {
         const float PointFactor = 0.5f;

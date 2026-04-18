@@ -1,8 +1,8 @@
 import sys
 from dataclasses import dataclass
-from openstk import log
+from openstk.core import log
 from openstk.client import IClientHost
-from openstk.platforms.platform_ex import ExClientHost
+from openstk.platforms.ex import ExClientHost
 from gamex import getFamily, FamilyGame, option
 from gamex.core.client import ClientState
 

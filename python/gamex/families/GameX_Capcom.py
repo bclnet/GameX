@@ -1,6 +1,6 @@
 from __future__ import annotations
 import os
-from openstk import _pathExtension
+from openstk.core import _pathExtension
 from gamex import ArcBinary, BinaryArchive
 from gamex.families.Uncore.formats.binary import Binary_Zip
 from gamex.families.Capcom.formats.binary import Binary_Arc, Binary_Big, Binary_Bundle, Binary_Kpka, Binary_Plist

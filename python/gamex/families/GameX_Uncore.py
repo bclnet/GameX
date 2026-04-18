@@ -1,6 +1,6 @@
 from __future__ import annotations
 import os
-from openstk import _pathExtension
+from openstk.core import _pathExtension
 from gamex import Family, Archive, FileSource, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
 from gamex.families.Uncore.formats.binary import Binary_Dds, Binary_Img, Binary_Pcx, Binary_Snd, Binary_Tga, Binary_Txt, Binary_Engine, Binary_TestTri
 

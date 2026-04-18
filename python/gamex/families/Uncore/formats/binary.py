@@ -3,7 +3,7 @@ import os, numpy as np
 from io import BytesIO
 from PIL import Image
 from enum import Enum
-from openstk import _pathExtension
+from openstk.core import _pathExtension
 from openstk.gfx import Raster, DDS_HEADER, Texture_Bytes, ITexture, TextureFormat, TexturePixel
 from gamex import ArcBinary, ArcBinaryT, FileSource, BinaryArchive, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
 from zipfile import ZipFile

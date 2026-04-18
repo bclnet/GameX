@@ -2,7 +2,7 @@ from __future__ import annotations
 import os, ctypes
 from enum import Enum
 from io import BytesIO
-from openstk import _pathExtension
+from openstk.core import _pathExtension
 from openstk.gfx import Raster, ITextureFrames, TextureFormat, TexturePixel
 from gamex import ArcBinary, ArcBinaryT, FileSource, MetaInfo, MetaContent, IHaveMetaInfo
 

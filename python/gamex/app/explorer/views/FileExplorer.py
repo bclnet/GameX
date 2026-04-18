@@ -121,7 +121,7 @@ class FileExplorer(QWidget):
     def selectedItem(self, value):
         if self._selectedItem == value: return
         self._selectedItem = value
-        if not value: self.onInfo(); return
+        if not value: self.onInfo(value, None); return
         src = value.source.fix() if isinstance(value.source, FileSource) else None
         arc = src.arc if src else None
         try:
@@ -130,10 +130,10 @@ class FileExplorer(QWidget):
                 arc.open(value.items, self.resource)
                 self.updateNodes()
                 self.onFilterKeyUp(None, None)
-            self.onInfo(value.archive.getMetaInfos(self.resource, value) if value.archive else None)
+            self.onInfo(value, value.archive.getMetaInfos(self.resource, value) if value.archive else None)
         except:
             print(traceback.format_exc())
-            self.onInfo([
+            self.onInfo(value, [
                 MetaInfo(f'EXCEPTION: {sys.exc_info()[1]}'),
                 MetaInfo(traceback.format_exc())])
 
@@ -153,8 +153,8 @@ class FileExplorer(QWidget):
     def onFilterKeyUp(self, a, b):
         pass
 
-    def onInfo(self, infos: list[MetaInfo] = None):
-        self.parent.contentBlock.onInfo(self.archive, [s for s in infos if not s.name] if infos else None)
+    def onInfo(self, item: MetaItem, infos: list[MetaInfo] = None):
+        self.parent.contentBlock.onInfo(item, self.archive, [s for s in infos if not s.name] if infos else None)
         self.infos = [s for s in infos if s.name] if infos else None
 
     def ready(self, archive):

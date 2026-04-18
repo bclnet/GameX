@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os
 from openstk.gfx import GfX
-from openstk.gfx.panda3d import Panda3dTextureRenderer, Panda3dObjectRenderer, Panda3dMaterialRenderer, Panda3dParticleRenderer, Panda3dCellRenderer, Panda3dWorldRenderer, Panda3dTestTriRenderer
+from openstk.platforms.panda3d.gfx import Panda3dTextureRenderer, Panda3dObjectRenderer, Panda3dMaterialRenderer, Panda3dParticleRenderer, Panda3dCellRenderer, Panda3dWorldRenderer, Panda3dTestTriRenderer
 
 # typedefs
 class IOpenGfx: pass

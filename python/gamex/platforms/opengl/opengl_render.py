@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os
 from openstk.gfx import GfX
-from openstk.gfx.opengl import OpenGLTextureRenderer, OpenGLObjectRenderer, OpenGLMaterialRenderer, OpenGLParticleRenderer, OpenGLCellRenderer, OpenGLWorldRenderer, OpenGLTestTriRenderer
+from openstk.platforms.opengl.gfx import OpenGLTextureRenderer, OpenGLObjectRenderer, OpenGLMaterialRenderer, OpenGLParticleRenderer, OpenGLCellRenderer, OpenGLWorldRenderer, OpenGLTestTriRenderer
 
 # typedefs
 class IOpenGfx: pass

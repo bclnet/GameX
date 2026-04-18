@@ -1,25 +1,49 @@
-from openstk.platforms.platform_qt_widget import OpenGLWidget, Panda3dWidget, PygameWidget
-from gamex.platform_opengl_render import OpenGLRenderer
-from gamex.platform_panda3d_render import Panda3dRenderer
-from gamex.platform_pygame_render import PygameRenderer
+from openstk.platforms.opengl.gfx.qt_widget import OpenGLWidget
+from openstk.platforms.panda3d.gfx.qt_widget import Panda3dWidget
+from openstk.platforms.pyengine3d.gfx.qt_widget import PyEngine3dWidget
+from openstk.platforms.pygame.gfx.qt_widget import PygameWidget
+from gamex.platforms.ex import ExRenderer
+from gamex.platforms.opengl import OpenGLRenderer
+from gamex.platforms.panda3d import Panda3dRenderer
+from gamex.platforms.pyengine3d import PyEngine3dRenderer
+from gamex.platforms.pygame import PygameRenderer
+from gamex.platforms.tiny3dgame import Tiny3dRenderer
+from gamex.platforms.vanilla3dgame import Vanilla3dRenderer
 
 # typedefs
 class Renderer: pass
 
+# AppExWidget
+class AppExWidget(OpenGLWidget):
+    def __init__(self, parent: object, tab: object): super().__init__(parent, tab)
+    def createRenderer(self) -> Renderer: return ExRenderer.createRenderer(self, self.gfx, self.value, self.type)
+
 # AppOpenGLWidget
 class AppOpenGLWidget(OpenGLWidget):
-    def __init__(self, parent: object, tab: object):
-        super().__init__(parent, tab)
-    def createRenderer(self) -> Renderer: return OpenGLRenderer.createRenderer(self, self.gfx, self.source, self.type)
+    def __init__(self, parent: object, tab: object): super().__init__(parent, tab)
+    def createRenderer(self) -> Renderer: return OpenGLRenderer.createRenderer(self, self.gfx, self.value, self.type)
 
 # AppPanda3dWidget
 class AppPanda3dWidget(Panda3dWidget):
-    def __init__(self, parent: object, tab: object):
-        super().__init__(parent, tab)
-    def createRenderer(self) -> Renderer: return Panda3dRenderer.createRenderer(self, self.gfx, self.source, self.type)
+    def __init__(self, parent: object, tab: object): super().__init__(parent, tab)
+    def createRenderer(self) -> Renderer: return Panda3dRenderer.createRenderer(self, self.gfx, self.value, self.type)
+
+# AppPyEngine3dWidget
+class AppPyEngine3dWidget(PyEngine3dWidget):
+    def __init__(self, parent: object, tab: object): super().__init__(parent, tab)
+    def createRenderer(self) -> Renderer: return PyEngine3dRenderer.createRenderer(self, self.gfx, self.value, self.type)
 
 # AppPygameWidget
 class AppPygameWidget(PygameWidget):
-    def __init__(self, parent: object, tab: object):
-        super().__init__(parent, tab)
-    def createRenderer(self) -> Renderer: return PygameRenderer.createRenderer(self, self.gfx, self.source, self.type)
+    def __init__(self, parent: object, tab: object): super().__init__(parent, tab)
+    def createRenderer(self) -> Renderer: return PygameRenderer.createRenderer(self, self.gfx, self.value, self.type)
+
+# AppTiny3dWidget
+class AppTiny3dWidget(OpenGLWidget):
+    def __init__(self, parent: object, tab: object): super().__init__(parent, tab)
+    def createRenderer(self) -> Renderer: return Tiny3dRenderer.createRenderer(self, self.gfx, self.value, self.type)
+
+# AppVanilla3dWidget
+class AppVanilla3dWidget(OpenGLWidget):
+    def __init__(self, parent: object, tab: object): super().__init__(parent, tab)
+    def createRenderer(self) -> Renderer: return Vanilla3dRenderer.createRenderer(self, self.gfx, self.value, self.type)

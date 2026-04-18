@@ -6,7 +6,7 @@ from PyQt6.QtMultimedia import QMediaPlayer
 from PyQt6.QtMultimediaWidgets import QVideoWidget
 from PyQt6 import QtCore, QtMultimedia
 from gamex.core.binary import Archive
-from gamex.core.meta import MetaContent, MetaInfo
+from gamex.core.meta import MetaItem, MetaContent, MetaInfo
 from .AppHexWidget import AppHexWidget
 from .AppGfxWidget import AppOpenGLWidget, AppPanda3dWidget, AppPygameWidget
 
@@ -115,11 +115,11 @@ class FileContent(QTabWidget):
         self._contentTabs = value
         self.updateTabs()
 
-    def onInfo(self, archive: Archive, infos: list[MetaInfo] = None):
+    def onInfo(self, item: MetaItem, archive: Archive, infos: list[MetaInfo] = None):
         # dispose?
         # if (ContentTabs != null) foreach (var dispose in ContentTabs.Where(s => s.Dispose != null).Select(s => s.Dispose)) dispose.Dispose();
         self.gfx = archive.gfx
         self.sfx = archive.sfx
-        self.path = 'PATH'
+        self.path = item
         self.contentTabs = [s.tag for s in infos if isinstance(s.tag, MetaContent)] if infos else None
         self.contentTab.selectedIndex = 0 if infos else -1

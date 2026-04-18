@@ -5403,7 +5403,7 @@ public class LANDRecord : Record, ILand {
         FieldType.DATA => DATA = r.ReadInt32(),
         FieldType.VNML => VNML = r.ReadPArray<Byte3>("3B", dataSize / 3),
         FieldType.VHGT => VHGT = new Vhgt(r, dataSize),
-        FieldType.VCLR => VCLR = r.ReadSArray<ByteColor3>(dataSize / 24),
+        FieldType.VCLR => VCLR = r.ReadSArray<ByteColor3>(dataSize / 3),
         FieldType.VTEX => VTEX = r.Format == TES3 ? r.ReadPArray<ushort>("H", dataSize >> 1) : r.ReadPArray<uint>("I", dataSize >> 2),
         // TES3
         FieldType.INTV => (z: INTV = r.ReadS<Cord>(dataSize), GridId = new Int3(INTV.CellX, INTV.CellY, 0)).z,

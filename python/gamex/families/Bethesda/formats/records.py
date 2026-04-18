@@ -9,7 +9,7 @@ from collections.abc import Iterator
 from openstk.core import log, Byte2, Int2, Byte3, Int3, Float3
 from openstk.sys.drawing import Color
 from gamex import FileSource, BinaryReader, ArcBinaryT
-from gamex.core.globalx import ByteColor4
+from gamex.core.globalx import ByteColor3, ByteColor4
 from gamex.families.Uncore.formats.compression import decompressZlib2
 
 # sys.setrecursionlimit(1500)
@@ -5140,7 +5140,7 @@ class LANDRecord(Record):
             case FieldType.DATA: z = self.DATA = r.readInt32()
             case FieldType.VNML: z = self.VNML = r.readPArray(Byte3, '3B', dataSize // 3)
             case FieldType.VHGT: z = self.VHGT = LANDRecord.Vhgt(r, dataSize)
-            case FieldType.VCLR: z = self.VCLR = r.readSArray(ByteColor3, dataSize // 24)
+            case FieldType.VCLR: z = self.VCLR = r.readSArray(ByteColor3, dataSize // 3)
             case FieldType.VTEX: z = self.VTEX = r.readPArray(None, 'H', dataSize >> 1) if r.format == FormType.TES3 else r.readPArray(None, 'I', dataSize >> 2)
             # TES3
             case FieldType.INTV: z = self.INTV = r.readS(LANDRecord.Cord, dataSize); self.gridId = Int3(self.INTV.cellX, self.INTV.cellY, 0)

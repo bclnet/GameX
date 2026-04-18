@@ -81,9 +81,9 @@ match __current__:
         )
     case 'Bethesda':
         option = GlobalOption(
-            Platform = "UK",
+            Platform = "GL",
             ForceOpen = True,
-            ForcePath = "sample:0",
+            ForcePath = "sample:2",
             Family = "Bethesda",
             Game = "Morrowind", # The Elder Scrolls III: Morrowind
             # Game = "Oblivion", # The Elder Scrolls IV: Oblivion

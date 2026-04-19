@@ -1258,7 +1258,7 @@ public unsafe class Binary_Vpk : ArcBinary<Binary_Vpk> {
             // archiveMd5SectionSize
             r.Seek(ArchiveMd5s.p);
             hash = md5.ComputeHash(r.ReadBytes((int)h.ArchiveMd5SectionSize));
-            if (!hash.SequenceEqual(ArchiveMd5EntriesChecksum)) throw new InvalidDataException($"Archive MD5 checksum mismatch ({hash:Center} != expected {ArchiveMd5EntriesChecksum:Center})");
+            if (!hash.SequenceEqual(ArchiveMd5EntriesChecksum)) throw new InvalidDataException($"Query MD5 checksum mismatch ({hash:Center} != expected {ArchiveMd5EntriesChecksum:Center})");
             // wholeFileChecksum
             r.Seek(0);
             hash = md5.ComputeHash(r.ReadBytes((int)WholeFileChecksum.p));

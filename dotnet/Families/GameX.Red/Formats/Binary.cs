@@ -594,7 +594,7 @@ public unsafe class Binary_Red : ArcBinary<Binary_Red> {
                     for (var i = 0; i < headerFiles.Length; i++) {
                         var headerFile = headerFiles[i];
                         var hash = headerFile.NameHash64;
-                        if (nameHashs.Contains(hash)) { Console.WriteLine($"File already added in Archive {source.BinPath}: hash {hash}, idx {i}"); continue; }
+                        if (nameHashs.Contains(hash)) { Console.WriteLine($"File already added in Query {source.BinPath}: hash {hash}, idx {i}"); continue; }
                         nameHashs.Add(hash);
                         files2.Add(new FileSource {
                             Path = hashLookup.TryGetValue(hash, out var z) ? z.Replace('\\', '/') : $"{hash:X2}.bin",

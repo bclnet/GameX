@@ -8,7 +8,7 @@ from PyQt6 import QtCore, QtMultimedia
 from gamex.core.binary import Archive
 from gamex.core.meta import MetaItem, MetaContent, MetaInfo
 from .AppHexWidget import AppHexWidget
-from .AppGfxWidget import AppOpenGLWidget, AppPanda3dWidget, AppPygameWidget
+from .AppGfxWidget import AppExWidget, AppOpenGLWidget, AppPanda3dWidget, AppPyEngine3dWidget, AppPygameWidget, AppTiny3dWidget, AppVanilla3dWidget
 
 # AppTextWidget
 class AppTextWidget(QWidget):
@@ -59,9 +59,13 @@ class FileContent(QTabWidget):
     def setPlatform(self, platform: object):
         plat = platform.id if platform else 'UK'
         self.gfxWidget = \
+            AppExWidget if plat == 'EX' else \
             AppOpenGLWidget if plat == 'GL' else \
             AppPanda3dWidget if plat == 'PD' else \
+            AppPyEngine3dWidget if plat == 'P3' else \
             AppPygameWidget if plat == 'PG' else \
+            AppTiny3dWidget if plat == 'T3' else \
+            AppVanilla3dWidget if plat == 'V3' else \
             None #AppNullWidget
         if len(self.contentTab) > 0: self.updateTabs()
 
@@ -74,12 +78,13 @@ class FileContent(QTabWidget):
                 'TText' if tab.type == 'Text' else \
                 'TDataGrid' if tab.type == 'DataGrid' else \
                 'TAudioPlayer' if tab.type == 'AudioPlayer' else \
+                'TViewGfx' if tab.type == 'TestTri' else \
                 'TViewGfx' if tab.type == 'Material' else \
                 'TViewGfx' if tab.type == 'Particle' else \
-                'TViewGfx' if tab.type == 'TestTri' else \
                 'TViewGfx' if tab.type == 'Texture' else \
                 'TViewGfx' if tab.type == 'VideoTexture' else \
                 'TViewGfx' if tab.type == 'Object' else \
+                'TViewGfx' if tab.type == 'Engine' else \
                 'TViewGfx' if tab.type == 'World' else \
                 'TNull' if tab.type == None else \
                 'TText'

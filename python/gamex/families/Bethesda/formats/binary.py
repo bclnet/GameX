@@ -2,10 +2,14 @@ import os
 from io import BytesIO
 from itertools import groupby
 from enum import Enum
+from numpy import ndarray
 from openstk.core import log, Int3, IWriteToStream, CellManager, IDatabase
 from gamex import FileSource, ArcBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo, DesSer
 from gamex.families.Uncore.formats.compression import decompressLz4, decompressZlib
 from gamex.families.Bethesda.formats.records import FormType, Reader, Record, RecordGroup, LTEXRecord, LANDRecord, CELLRecord
+
+# types
+type Vector3 = ndarray
 
 # typedefs
 class BinaryReader: pass
@@ -351,7 +355,7 @@ class Binary_Bsa(ArcBinaryT):
     # end::Binary_Bsa.readData[]
 
 # Binary_Esm
-class Binary_Esm(ArcBinaryT, IDatabase):
+class Binary_Esm(ArcBinaryT, IDatabase, CellManager.IQueryFunc):
     format: FormType
     record: Record
     groups: dict[FormType, RecordGroup]
@@ -412,29 +416,45 @@ class Binary_Esm(ArcBinaryT, IDatabase):
 
     #region CellQuery - tag::Binary_Esm.cellQuery[]
 
+    _yardInUnits: int = 64
+    _meterInYards: float = 1.09361
+    _meterInUnits: float = _meterInYards * _yardInUnits
+    _cellLengthInUnits: int = 128 * _yardInUnits
+    _cellLengthInMeters: float = _cellLengthInUnits / _meterInUnits
+
+    def getQuery(self) -> CellManager.IQuery: return Binary_Esm.Tes3CellQuery(self) if self.format == FormType.TES3 else Binary_Esm.ElseCellQuery(self)
+
     class Tes3CellQuery(CellManager.IQuery):
-        def __init__(self, _: 'Binary_Esm'): self._ = _
-        def FindLtex(self, index: int) -> object: return self._.LTEXsById[index]
-        def FindLand(self, cell: Int3) -> object: return self._.LANDsById[cell]
-        def FindCell(self, cell: Int3) -> object: return self._.CELLsById[cell]
-        def FindCellByName(self, name: str, a: int, b: int) -> object: return self._.CELLsByName[name]
+        def __init__(self, _: 'Binary_Esm'):
+            self._ = _
+            self.meterInUnits: float = Binary_Esm._meterInUnits
+            self.cellLengthInMeters: float = Binary_Esm._cellLengthInMeters
+        def getCellId(self, point: Vector3, world: int) -> Int3: return Int3(int(point[0] // Binary_Esm._cellLengthInMeters), int(point[2] // Binary_Esm._cellLengthInMeters), world)
+        def findLtex(self, index: int) -> object: return self._.LTEXsById.get(index)
+        def findLand(self, cell: Int3) -> object: return self._.LANDsById.get(cell)
+        def findCell(self, cell: Int3) -> object: return self._.CELLsById.get(cell)
+        def findCellByName(self, name: str, a: int, b: int) -> object: return self._.CELLsByName.get(name)
     
     class ElseCellQuery(CellManager.IQuery):
-        def __init__(self, _: 'Binary_Esm'): self._ = _
-        def FindLtex(self, index: int) -> object: raise Exception()
-        def FindLand(self, cell: Int3) -> object:
+        def __init__(self, _: 'Binary_Esm'):
+            self._ = _
+            self.meterInUnits: float = Binary_Esm._meterInUnits
+            self.cellLengthInMeters: float = Binary_Esm._cellLengthInMeters
+        def getCellId(self, point: Vector3, world: int) -> Int3: return Int3(int(point[0] // Binary_Esm._cellLengthInMeters), int(point[2] // Binary_Esm._cellLengthInMeters), world)
+        def findLtex(self, index: int) -> object: raise Exception()
+        def findLand(self, cell: Int3) -> object:
             world = self._.WRLDsById[cell.Z]
             for wrld in world.Item2:
                 for cellBlock in wrld.ensureWrldAndCell(cell):
                     if cell in cellBlock.LANDsById: return cellBlock.LANDsById[cell]
             return None
-        def FindCell(self, cell: Int3) -> object:
+        def findCell(self, cell: Int3) -> object:
             world = self._.WRLDsById[cell.Z]
             for wrld in world.Item2:
                 for cellBlock in wrld.ensureWrldAndCell(cell):
                     if cell in cellBlock.CELLsById: return cellBlock.CELLsById[cell]
             return None
-        def FindCellByName(self, name: str, a: int, b: int) -> object: raise Exception()
+        def findCellByName(self, name: str, a: int, b: int) -> object: raise Exception()
 
     #endregion - end::Binary_Esm.cellQuery[]
 
@@ -456,9 +476,4 @@ class Binary_Esm(ArcBinaryT, IDatabase):
             case _: return _throw('OutOfRange')
 
     #endregion - end::Binary_Esm.query[]
-    
-
-# if r.format == FormType.TES3:
-#     for k, g in groupby(sorted(self.records, key=lambda s: int(s.type)), lambda s: s.type):
-#         t = RecordGroup(None); t.label = k; t.records = list(g)
-#         groups[k] = t
+  

@@ -1,5 +1,6 @@
 from __future__ import annotations
-import os, numpy as np
+import os
+from numpy import array
 from io import BytesIO
 from PIL import Image
 from enum import Enum
@@ -677,12 +678,23 @@ class Binary_TestTri(IHaveMetaInfo):
 
 class Binary_Engine(IHaveMetaInfo):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Engine(r)
+    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Engine(r, s)
 
-    def __init__(self, r: BinaryReader): pass
+    def __init__(self, r: BinaryReader, s: Archive):
+        values = r.readToEnd().decode('ascii').split(':')
+        ar = values[0]; qa = values[1]; st = [float(s) for s in values[2].split(',')]
+        self.archive = s.getArchive(ar)
+        self.queryArchive = s.getArchive(qa)
+        self.query = self.queryArchive.arcBinary.getQuery()
+        self.start = array([st[0], st[1], st[2]], dtype=float)
 
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        MetaInfo(None, MetaContent(type = 'Engine', name = os.path.basename(file.path), value = self))
+        MetaInfo(None, MetaContent(type = 'Engine', name = os.path.basename(file.path), value = self)),
+        MetaInfo('Binary_Engine', items = [
+            MetaInfo(f'Archive: {self.archive}'),
+            MetaInfo(f'Query: {self.query}'),
+            MetaInfo(f'Start: {self.start}')
+            ])
         ]
 
 #endregion

@@ -1,10 +1,8 @@
-﻿using MathNet.Numerics;
-using OpenStack;
+﻿using OpenStack;
 using OpenStack.Gfx;
 using OpenStack.Gfx.Unity;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using static OpenStack.Gfx.GfX;
 #pragma warning disable CS9113
 
@@ -13,24 +11,27 @@ namespace GameX.Platforms.Unity;
 public static class UnityRenderer {
     public static Renderer CreateRenderer(object parent, IList<IOpenGfx> gfx, object obj, string type)
         => type switch {
-            "TestTri" => new UnityTestTriRenderer(gfx[XModel] as UnityGfxModel, obj),
-            "Material" => new UnityMaterialRenderer(gfx[XModel] as UnityGfxModel, obj),
-            "Particle" => new UnityParticleRenderer(gfx[XModel] as UnityGfxModel, obj),
-            "Texture" or "VideoTexture" => new UnityTextureRenderer(gfx[XModel] as UnityGfxModel, obj),
-            "Object" => new UnityObjectRenderer(gfx[XModel] as UnityGfxModel, obj),
-            "Cell" => new UnityCellRenderer(gfx[XModel] as UnityGfxModel, obj),
-            "Engine" => new UnityEngineRenderer(gfx[XModel] as UnityGfxModel, obj),
-            _ => new UnityObjectRenderer(gfx[XModel] as UnityGfxModel, obj),
+            "TestTri" => new TestTriRenderer(gfx[XModel] as UnityGfxModel, obj),
+            "Material" => new MaterialRenderer(gfx[XModel] as UnityGfxModel, obj),
+            "Particle" => new ParticleRenderer(gfx[XModel] as UnityGfxModel, obj),
+            "Texture" or "VideoTexture" => new TextureRenderer(gfx[XModel] as UnityGfxModel, obj),
+            "Object" => new ObjectRenderer(gfx[XModel] as UnityGfxModel, obj),
+            //"Cell" => new CellRenderer(gfx[XModel] as UnityGfxModel, obj),
+            "Engine" => new EngineRenderer(gfx[XModel] as UnityGfxModel, obj),
+            _ => new ObjectRenderer(gfx[XModel] as UnityGfxModel, obj),
         };
 }
 
-public class UnityTestTriRenderer(UnityGfxModel gfx, object obj) : TestTriRenderer(gfx, obj) { }
-public class UnityCellRenderer(UnityGfxModel gfx, object obj) : CellRenderer(gfx, obj) { }
-public class UnityMaterialRenderer(UnityGfxModel gfx, object obj) : Renderer { }
-public class UnityParticleRenderer(UnityGfxModel gfx, object obj) : Renderer { }
-public class UnityEngineRenderer(UnityGfxModel gfx, object obj) : EngineRenderer(gfx, obj) { }
-public class UnityObjectRenderer(UnityGfxModel gfx, object obj) : ObjectRenderer(gfx, obj) { }
-public class UnityTextureRenderer(UnityGfxModel gfx, object obj) : TextureRenderer(gfx, obj) { }
+public class MaterialRenderer(UnityGfxModel gfx, object obj) : Renderer { }
+public class ParticleRenderer(UnityGfxModel gfx, object obj) : Renderer { }
+
+//public class UnityTestTriRenderer(UnityGfxModel gfx, object obj) : TestTriRenderer(gfx, obj) { }
+//public class UnityCellRenderer(UnityGfxModel gfx, object obj) : CellRenderer(gfx, obj) { }
+//public class UnityMaterialRenderer(UnityGfxModel gfx, object obj) : Renderer { }
+//public class UnityParticleRenderer(UnityGfxModel gfx, object obj) : Renderer { }
+//public class UnityEngineRenderer(UnityGfxModel gfx, object obj) : EngineRenderer(gfx, obj) { }
+//public class UnityObjectRenderer(UnityGfxModel gfx, object obj) : ObjectRenderer(gfx, obj) { }
+//public class UnityTextureRenderer(UnityGfxModel gfx, object obj) : TextureRenderer(gfx, obj) { }
 
 public class ViewInfo : UnityEngine.MonoBehaviour {
     static ViewInfo() => PlatformX.Activate(UnityPlatform.This);

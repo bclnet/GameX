@@ -9562,7 +9562,7 @@ public class D_Texture : DATA, ITexture {
 
     public override string ToString() {
         using var w = new IndentedTextWriter();
-        w.WriteLine($"{"VTEX Version",-12} = {Version}");
+        w.WriteLine($"{"Vtex Version",-12} = {Version}");
         w.WriteLine($"{"Width",-12} = {Width}");
         w.WriteLine($"{"Height",-12} = {Height}");
         w.WriteLine($"{"Depth",-12} = {Depth}");

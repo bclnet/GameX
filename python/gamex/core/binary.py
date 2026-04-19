@@ -3,7 +3,7 @@ import sys, os, re, time
 from itertools import groupby
 from enum import Enum, Flag
 from io import BytesIO
-from openstk.core import _throw, BinaryReader, GenericPool, SinglePool, StaticPool, IDatabase
+from openstk.core import _throw, ISourceWithPlatform, BinaryReader, GenericPool, SinglePool, StaticPool, IDatabase
 from gamex.core.meta import FileSource, MetaManager, MetaItem, MetaInfo
 
 # FileOption
@@ -67,10 +67,11 @@ class Binary:
 # end::Binary[]
 
 # tag::Archive[]
-class Archive(Binary):
+class Archive(Binary, ISourceWithPlatform):
     class FuncObjectFactoryFactory: pass
     def __init__(self, state: BinaryState):
         super().__init__(state)
+        self.pathFinders = {}
         self.assetFactoryFunc = None
         self.gfx = None
         self.sfx = None
@@ -80,6 +81,10 @@ class Archive(Binary):
         if items != None:
             for item in self.getMetaItems(manager): items.append(item)
         return self
+    def findPath(self, t: type, path: object) -> object:
+        if len(self.pathFinders) != 1: z = self.pathFinders.get(t); return z(path) if z else path
+        first = next(iter(self.pathFinders.items()), None)
+        return first[1](path) if first[0] == t or first[0] == None else path
     def setPlatform(self, platform: Platform) -> Archive:
         self.gfx = platform.gfxFactory(self) if platform and platform.gfxFactory else None
         self.sfx = platform.sfxFactory(self) if platform and platform.sfxFactory else None
@@ -88,9 +93,13 @@ class Archive(Binary):
     def getSource(self, path: FileSource | str | int, throwOnError: bool = True) -> tuple[Archive, FileSource]: pass
     def getData(self, path: FileSource | str | int, option: object = None, throwOnError: bool = True) -> bytes: pass
     def getAsset(self, path: FileSource | str | int, option: object = None, throwOnError: bool = True) -> object: pass
-    def getArchive(self, res: object, throwOnError: bool = True) -> Archive: raise NotImplementedError('getArchive')
+    def getArchive(self, path: object, throwOnError: bool = True) -> Archive:
+        match path:
+            case str(): z = self.game._getArchive(self.vfx, self.edition, path, throwOnError); return z.open() if z else None
+            case _: raise Exception('path')
+
     #region Transform
-    def loadAsset2(self, transformTo: object, source: object): pass
+    def getAsset2(self, transformTo: object, source: object): pass
     def transformAsset(self, transformTo: object, source: object): pass
     #endregion
     #region Metadata
@@ -147,11 +156,8 @@ class BinaryArchive(Archive):
     def contains(self, path: FileSource | str | int) -> bool:
         match path:
             case None: raise Exception('Null')
-            case s if isinstance(path, str):
-                arc, next_ = self._findPath(s)
-                return arc.contains(next_) if arc else self.filesByPath and s.replace('\\', '/') in self.filesByPath
-            case i if isinstance(path, int):
-                return self.filesById and i in self.filesById
+            case s if isinstance(path, str): arc, next_ = self._findPath(s); return arc.contains(next_) if arc else self.filesByPath and s.replace('\\', '/').lower() in self.filesByPath
+            case i if isinstance(path, int): return self.filesById and i in self.filesById
             case _: raise Exception(f'Unknown: {path}')
 
     def getSource(self, path: FileSource | str | int, throwOnError: bool = True) -> (Archive, FileSource):
@@ -161,7 +167,7 @@ class BinaryArchive(Archive):
             case s if isinstance(path, str):
                 arc, next_ = self._findPath(s)
                 if arc: return arc.getSource(next_) if next_ else (arc, next_)
-                files = self.filesByPath[s] if self.filesByPath and (s := s.replace('\\', '/')) in self.filesByPath else []
+                files = self.filesByPath[s] if self.filesByPath and (s := s.replace('\\', '/').lower()) in self.filesByPath else []
                 if len(files) == 1: return (self, files[0])
                 print(f'ERROR.LoadFileData: {s} @ {len(files)}')
                 if throwOnError: raise Exception(f'File not found: {s}' if len(files) == 0 else f'More then one file found: {s}')
@@ -217,12 +223,12 @@ class BinaryArchive(Archive):
 
     def process(self) -> None:
         if self.useFileId and self.files: self.filesById = { x.id:x for x in self.files if x }
-        if self.files: self.filesByPath = { k:list(g) for k,g in groupby(sorted(self.files, key=lambda s: s.path), lambda s: s.path) }
+        if self.files: self.filesByPath = { k.lower():list(g) for k,g in groupby(sorted(self.files, key=lambda s: s.path), lambda s: s.path) }
         if self.arcBinary: self.arcBinary.process(self)
 
     def _findPath(self, path: str) -> tuple[object, str]:
         paths = path.split(':', 1)
-        p = paths[0].replace('\\', '/')
+        p = paths[0].replace('\\', '/').lower()
         first = next(iter(self.filesByPath[p]), None) if self.filesByPath and p in self.filesByPath else None
         arc = first.arc if first else None
         if arc: arc.open()
@@ -267,8 +273,9 @@ class ManyArchive(BinaryArchive):
             for s in self.paths]
 
     def readData(self, file: FileSource, option: object = None) -> BytesIO:
-        return file.arc.readData(file, option) if file.arc else \
-            BytesIO(BinaryReader(self.vfx.open(file.path)).readBytes(file.fileSize))
+        if file.arc: file.arc.readData(file, option)
+        data = self.vfx.open(file.path)
+        return data if isinstance(data, BytesIO) else BytesIO(data.readall()) # .readBytes(file.fileSize))
     #endregion
 
 # MultiArchive

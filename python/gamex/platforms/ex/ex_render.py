@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os
 from openstk.gfx import GfX
-from openstk.platforms.Ex.gfx import ExTestAnimRenderer, ExTestTriRenderer
+from openstk.platforms.ex.gfx import TestTriRenderer
 
 # typedefs
 class IOpenGfx: pass
@@ -13,6 +13,5 @@ class ExRenderer:
     def createRenderer(parent: object, gfx: list[IOpenGfx], obj: object, type: str) -> Renderer:
         surf = parent.surface
         match type:
-            case 'TestAnim' | 'TestTri': return ExTestAnimRenderer(gfx[GfX.XModel], obj, surf)
-            # case 'TestTri': return ExTestTriRenderer(gfx[GfX.XModel], obj, surf)
+            case 'TestTri': return TestTriRenderer(gfx[GfX.XModel], obj, surf)
             case _: return None

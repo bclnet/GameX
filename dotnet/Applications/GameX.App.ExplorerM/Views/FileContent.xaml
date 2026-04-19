@@ -106,6 +106,9 @@
                         <DataTrigger TargetType="ContentView" Binding="{Binding Type, x:DataType=model:MetaContent}" Value="World">
                             <Setter Property="ControlTemplate" Value="{StaticResource TViewGfx}" />
                         </DataTrigger>
+                        <DataTrigger TargetType="ContentView" Binding="{Binding Type, x:DataType=model:MetaContent}" Value="Engine">
+                            <Setter Property="ControlTemplate" Value="{StaticResource TViewGfx}" />
+                        </DataTrigger>
                         <DataTrigger TargetType="ContentView" Binding="{Binding Value, x:DataType=model:MetaContent}" Value="{x:Null}">
                             <Setter Property="ControlTemplate" Value="{StaticResource TNull}" />
                         </DataTrigger>

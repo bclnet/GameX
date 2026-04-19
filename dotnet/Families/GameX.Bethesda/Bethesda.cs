@@ -23,14 +23,14 @@ public class BethesdaFamily(JsonElement elem) : Family(elem) { }
 /// </summary>
 /// <seealso cref="GameX.FamilyGame" />
 public class MorrowindGame(Family family, string id, JsonElement elem, FamilyGame dgame) : FamilyGame(family, id, elem, dgame) {
-    /// <summary>
-    /// Ensures this instance.
-    /// </summary>
-    /// <returns></returns>
-    public override void Loaded() {
-        base.Loaded();
-        DatabaseManager.Loaded(this);
-    }
+    ///// <summary>
+    ///// Ensures this instance.
+    ///// </summary>
+    ///// <returns></returns>
+    //public override void Loaded() {
+    //    base.Loaded();
+    //    DatabaseManager.Loaded(this);
+    //}
 }
 
 /// <summary>
@@ -57,10 +57,11 @@ public class BethesdaArchive : BinaryArchive, ITransformAsset<IUnknownFileModel>
         var textureName = Path.GetFileNameWithoutExtension(p);
         var textureNameInTexturesDir = $"textures/{textureName}";
         var texturePathWithoutExtension = $"{Path.GetDirectoryName(p)}/{textureName}";
-        if (Contains(p = $"{textureNameInTexturesDir}.dds")) return p;
-        else if (Contains(p = $"{texturePathWithoutExtension}.dds")) return p;
-        else if (Contains(p = $"{textureNameInTexturesDir}.tga")) return p;
-        else if (Contains(p = $"{texturePathWithoutExtension}.tga")) return p;
+        string z;
+        if (Contains(z = $"{textureNameInTexturesDir}.dds")) return z;
+        else if (Contains(z = $"{texturePathWithoutExtension}.dds")) return z;
+        else if (Contains(z = $"{textureNameInTexturesDir}.tga")) return z;
+        else if (Contains(z = $"{texturePathWithoutExtension}.tga")) return z;
         else { Log.Info($"Could not find file '{p}' in an arc file."); return null; }
     }
 

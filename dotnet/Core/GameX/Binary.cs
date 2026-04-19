@@ -196,7 +196,7 @@ public abstract class Binary : IDisposable {
 /// Initializes a new instance of the <see cref="Archive" /> class.
 /// </summary>
 /// <param name="state">The state.</param>
-public abstract class Archive(BinaryState state) : Binary(state), ISource {
+public abstract class Archive(BinaryState state) : Binary(state), ISourceWithPlatform {
     class EmptyArchive(BinaryState state) : Archive(state) {
         public override int Count => 0;
         public override bool Contains(object path) => false;
@@ -524,12 +524,7 @@ public abstract class BinaryArchive(BinaryState state, ArcBinary arcBinary) : Ar
     public override bool Contains(object path) {
         switch (path) {
             case null: throw new ArgumentNullException(nameof(path));
-            case string s: {
-                    var (arc, s2) = FindPath(s);
-                    return arc != null
-                    ? arc.Contains(s2)
-                    : FilesByPath != null && FilesByPath.Contains(s.Replace('\\', '/'));
-                }
+            case string s: var (arc, next_) = FindPath(s); return arc != null ? arc.Contains(next_) : FilesByPath != null && FilesByPath.Contains(s.Replace('\\', '/'));
             case int i: return FilesById != null && FilesById.Contains(i);
             default: throw new ArgumentOutOfRangeException(nameof(path));
         }
@@ -728,8 +723,7 @@ public abstract class BinaryArchive(BinaryState state, ArcBinary arcBinary) : Ar
     /// <param name="item">The item.</param>
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
-    public override Task<List<MetaInfo>> GetMetaInfos(MetaManager manager, MetaItem item)
-        => Valid ? MetaManager.GetMetaInfos(manager, this, item.Source as FileSource) : Task.FromResult(new List<MetaInfo>());
+    public override Task<List<MetaInfo>> GetMetaInfos(MetaManager manager, MetaItem item) => Valid ? MetaManager.GetMetaInfos(manager, this, item.Source as FileSource) : Task.FromResult(new List<MetaInfo>());
 
     /// <summary>
     /// Gets the explorer item nodes.
@@ -737,8 +731,7 @@ public abstract class BinaryArchive(BinaryState state, ArcBinary arcBinary) : Ar
     /// <param name="manager">The resource.</param>
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
-    public override List<MetaItem> GetMetaItems(MetaManager manager)
-        => Valid ? MetaManager.GetMetaItems(manager, this) : [];
+    public override List<MetaItem> GetMetaItems(MetaManager manager) => Valid ? MetaManager.GetMetaItems(manager, this) : [];
 
     #endregion
 }
@@ -785,10 +778,11 @@ public class ManyArchive : BinaryArchive {
         return Task.CompletedTask;
     }
 
-    public override Task<Stream> ReadData(FileSource file, object option = default)
-        => file.Arc != null
-            ? file.Arc.ReadData(file, option)
-            : Task.FromResult<Stream>(new MemoryStream(new BinaryReader(Vfx.Open(file.Path, null)).ReadBytes((int)file.FileSize)));
+    public override Task<Stream> ReadData(FileSource file, object option = default) {
+        if (file.Arc != null) return file.Arc.ReadData(file, option);
+        var data = Vfx.Open(file.Path, null);
+        return Task.FromResult<Stream>(data is MemoryStream d ? d : new MemoryStream(data.ReadAllBytes())); //.ReadBytes((int)file.FileSize)));
+    }
 
     #endregion
 }

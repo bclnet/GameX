@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os
 from openstk.gfx import GfX
-from openstk.platforms.panda3d.gfx import Panda3dTextureRenderer, Panda3dObjectRenderer, Panda3dMaterialRenderer, Panda3dParticleRenderer, Panda3dCellRenderer, Panda3dWorldRenderer, Panda3dTestTriRenderer
+from openstk.platforms.panda3d.gfx import TestTriRenderer, TextureRenderer, ObjectRenderer, MaterialRenderer, ParticleRenderer, CellRenderer, EngineRenderer, WorldRenderer
 
 # typedefs
 class IOpenGfx: pass
@@ -12,11 +12,12 @@ class Panda3dRenderer:
     @staticmethod
     def createRenderer(parent: object, gfx: list[IOpenGfx], obj: object, type: str) -> Renderer:
         match type:
-            case 'Texture' | 'VideoTexture': return Panda3dTextureRenderer(gfx[GfX.XModel], obj)
-            case 'Object': return Panda3dObjectRenderer(gfx[GfX.XModel], obj)
-            case 'Material': return Panda3dMaterialRenderer(gfx[GfX.XModel], obj)
-            case 'Particle': return Panda3dParticleRenderer(gfx[GfX.XModel], obj)
-            case 'Cell': return Panda3dCellRenderer(gfx[GfX.XModel], obj)
-            case 'World': return Panda3dWorldRenderer(gfx[GfX.XModel], obj)
-            case 'TestTri': return Panda3dTestTriRenderer(gfx[GfX.XModel], obj)
+            case 'TestTri': return TestTriRenderer(gfx[GfX.XModel], obj)
+            case 'Texture' | 'VideoTexture': return TextureRenderer(gfx[GfX.XModel], obj)
+            case 'Object': return ObjectRenderer(gfx[GfX.XModel], obj)
+            case 'Material': return MaterialRenderer(gfx[GfX.XModel], obj)
+            case 'Particle': return ParticleRenderer(gfx[GfX.XModel], obj)
+            case 'Cell': return CellRenderer(gfx[GfX.XModel], obj)
+            case 'Engine': return EngineRenderer(gfx[GfX.XModel], obj)
+            case 'World': return WorldRenderer(gfx[GfX.XModel], obj)
             case _: return None

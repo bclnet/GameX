@@ -40,7 +40,7 @@ public static class Store {
             "Epic" => Store_Epic.Paths.TryGetValue(v, out var z) ? z : null,
             "Ubisoft" => Store_Ubisoft.Paths.TryGetValue(v, out var z) ? z : null,
             "Abandon" => Store_Abandon.Paths.TryGetValue($"{family}/{v}", out var z) ? z : null,
-            "Archive" => Store_Archive.Paths.TryGetValue($"{family}/{v}", out var z) ? z : null,
+            "Query" => Store_Archive.Paths.TryGetValue($"{family}/{v}", out var z) ? z : null,
             "WinReg" => Store_WinReg.GetPathByKey(v, elem),
             "Local" => Store_Local.Paths.TryGetValue(v, out var z) ? z : null,
             "Direct" => Store_Direct.GetPathByKey(v),
@@ -407,7 +407,7 @@ static class Store_Ubisoft {
         IEnumerable<string> paths;
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
             var home = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            string[] search = ["Ubisoft Archive Launcher"];
+            string[] search = ["Ubisoft Query Launcher"];
             paths = search.Select(path => Path.Join(home, path));
         }
         else if (RuntimeInformation.OSDescription.StartsWith("android-")) return null;

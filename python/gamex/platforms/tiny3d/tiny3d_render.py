@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os
 from openstk.gfx import GfX
-from openstk.platforms.Tiny3d.gfx import Tiny3dTestAnimRenderer, Tiny3dTestTriRenderer
+from openstk.platforms.tiny3d.gfx import TestTriRenderer
 
 # typedefs
 class IOpenGfx: pass
@@ -13,6 +13,5 @@ class Tiny3dRenderer:
     def createRenderer(parent: object, gfx: list[IOpenGfx], obj: object, type: str) -> Renderer:
         surf = parent.surface
         match type:
-            case 'TestAnim' | 'TestTri': return Tiny3dTestAnimRenderer(gfx[GfX.XModel], obj, surf)
-            # case 'TestTri': return Tiny3dTestTriRenderer(gfx[GfX.XModel], obj, surf)
+            case 'TestTri': return TestTriRenderer(gfx[GfX.XModel], obj, surf)
             case _: return None

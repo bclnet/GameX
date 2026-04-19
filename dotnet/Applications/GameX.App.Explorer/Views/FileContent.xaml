@@ -143,6 +143,9 @@
                                     <DataTrigger Binding="{Binding Type}" Value="World">
                                         <Setter Property="ContentTemplate" Value="{DynamicResource TViewGfx}" />
                                     </DataTrigger>
+                                    <DataTrigger Binding="{Binding Type}" Value="Engine">
+                                        <Setter Property="ContentTemplate" Value="{DynamicResource TViewGfx}" />
+                                    </DataTrigger>
                                     <DataTrigger Binding="{Binding EngineType}" Value="{x:Type sys:ICustomFormatter}">
                                         <Setter Property="ContentTemplate" Value="{StaticResource TCustom}" />
                                     </DataTrigger>

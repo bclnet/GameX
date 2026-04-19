@@ -136,8 +136,7 @@ class Detector:
                 case _: return v
         return { k:data_(k,v) for k,v in elem.items() }
     def __repr__(self): return f'detector#{self.game}'
-    def getHash(self, r: BinaryReader) -> str:
-        pass
+    def getHash(self, r: BinaryReader) -> str: pass
     #TODO:Needsmore
 # end::Detector[]
 
@@ -449,7 +448,11 @@ class FamilyGame:
 
     # Converts the game to a uri
     @staticmethod
-    def toUri(id: str, edition: str = None, prefix: str = None) -> list[str]: return f'{prefix or 'game:/'}#{id}{'.' + edition if edition else ''}'
+    def toUri(id: str, edition: str = None, prefix: str = None) -> str: return f'{prefix or 'game:/'}#{FamilyGame.toId(id, edition)}'
+
+    # Converts the game to an id
+    @staticmethod
+    def toId(id: str, edition: str = None) -> str: return f'{id}{'.' + edition if edition else ''}'
 
     # gets a client
     def getClient(self, state: ClientState) -> object: return self.createClient(state)

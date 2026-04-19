@@ -1,6 +1,7 @@
 from __future__ import annotations
 import os
-from openstk.core import _pathExtension
+from openstk.core import _pathExtension, log
+from openstk.gfx import ITexture
 from gamex import Family, FamilyGame, BinaryArchive, FileOption
 from gamex.families.Uncore.formats.binary import Binary_Dds
 from gamex.families.Bethesda.formats.binary import Binary_Ba2, Binary_Bsa, Binary_Esm
@@ -23,6 +24,24 @@ class BethesdaArchive(BinaryArchive):
     def __init__(self, state: BinaryState):
         super().__init__(state, self.getArcBinary(state.game, _pathExtension(state.path).lower()))
         self.assetFactoryFunc = self.assetFactory
+        self.pathFinders[type(ITexture)] = self.findTexture
+
+    #region PathFinders
+
+    # Finds the actual path of a texture.
+    def findTexture(self, path: object) -> object:
+        p = path
+        if not isinstance(p, str): return path
+        textureName = os.path.splitext(os.path.basename(p))[0]
+        textureNameInTexturesDir = f'textures/{textureName}'
+        texturePathWithoutExtension = f'{os.path.dirname(p)}/{textureName}'
+        if self.contains(z := f'{textureNameInTexturesDir}.dds'): return z
+        elif self.contains(z := f'{texturePathWithoutExtension}.dds'): return z
+        elif self.contains(z := f'{textureNameInTexturesDir}.tga'): return z
+        elif self.contains(z := f'{texturePathWithoutExtension}.tga'): return z
+        else: log.info(f'Could not find file "{p}" in an arc file.'); return None
+
+    #endregion
 
     #region Factories
 

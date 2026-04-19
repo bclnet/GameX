@@ -500,7 +500,7 @@ public unsafe class Binary_Bsa : ArcBinary<Binary_Bsa> {
 /// Binary_Esm
 /// </summary>
 /// <seealso cref="GameX.Formats._Packages.PakBinaryBethesdaEsm" />
-public class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
+public class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase, IQueryFunc {
     public FormType Format;
     public Record Record;
     public Dictionary<FormType, RecordGroup> Groups = [];
@@ -555,11 +555,11 @@ public class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
         if (Format == FormType.TES3) {
             var g = Groups[0].RecordsByType;
             MANYsById = g.TryGetValue(FormType.STAT, out var z) ? z.ToDictionary(s => s.EDID) : [];
-            LTEXsById = g.TryGetValue(FormType.LTEX, out z) ? z.Cast<ILtex>().ToDictionary(s => s.INTV) : [];
+            LTEXsById = g.TryGetValue(FormType.LTEX, out z) ? z.Cast<ILtex>().ToDictionary(s => s.Intv) : [];
             LANDsById = g.TryGetValue(FormType.LAND, out z) ? z.Cast<ILand>().ToDictionary(s => s.GridId) : [];
             var cells = g.TryGetValue(FormType.CELL, out z) ? z.Cast<ICell>().ToList() : [];
             CELLsById = cells.Where(x => !x.IsInterior).ToDictionary(s => s.GridId);
-            CELLsByName = cells.Where(x => x.IsInterior).ToDictionary(s => s.EDID);
+            CELLsByName = cells.Where(x => x.IsInterior).ToDictionary(s => s.Name);
             return Task.CompletedTask;
         }
         var wrldsByLabel = Groups[FormType.WRLD].GroupsByLabel;
@@ -570,16 +570,21 @@ public class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
 
     #region CellQuery
 
-    const int YardInUnits = 64;
-    const float MeterInYards = 1.09361f;
-    internal const float MeterInUnits = MeterInYards * YardInUnits;
-    const int ExteriorCellSideLengthInUnits = 128 * YardInUnits;
-    const float ExteriorCellSideLengthInMeters = ExteriorCellSideLengthInUnits / MeterInUnits;
+    const int _YardInUnits = 64;
+    const float _MeterInYards = 1.09361f;
+    internal const float _MeterInUnits = _MeterInYards * _YardInUnits;
+    const int _CellLengthInUnits = 128 * _YardInUnits;
+    const float _CellLengthInMeters = _CellLengthInUnits / _MeterInUnits;
+
+    IQuery IQueryFunc.GetQuery() => Format == FormType.TES3 ? new Tes3CellQuery(this) : new ElseCellQuery(this);
 
     public class Tes3CellQuery(Binary_Esm _) : IQuery {
-        const float PointFactor = 0.5f;
-        public Int3 GetCellId(Vector3 point, int world) => new((int)Math.Floor(point.X / PointFactor), (int)Math.Floor(point.Z / PointFactor), world);
-        // public static Int3 GetCellId(Vector3 point, int world) => new((int)Math.Floor(point.X / ExteriorCellSideLengthInMeters), (int)Math.Floor(point.Z / ExteriorCellSideLengthInMeters), world);
+        //const float PointFactor = 0.5f;
+        //public Int3 GetCellId(Vector3 point, int world) => new((int)Math.Floor(point.X / PointFactor), (int)Math.Floor(point.Z / PointFactor), world);
+        public float MeterInUnits => _MeterInUnits;
+        public float CellLengthInMeters => _CellLengthInMeters;
+        public Int3 GetCellId(Vector3 point, int world) => new((int)Math.Floor(point.X / CellLengthInMeters), (int)Math.Floor(point.Z / CellLengthInMeters), world);
+        public object FindByName(string name) => _.MANYsById.TryGetValue(name, out var z) ? z : default;
         public ILtex FindLtex(int index) => _.LTEXsById.TryGetValue(index, out var z) ? z : default;
         public ILand FindLand(Int3 cell) => _.LANDsById.TryGetValue(cell, out var z) ? z : default;
         public ICell FindCell(Int3 cell) => _.CELLsById.TryGetValue(cell, out var z) ? z : default;
@@ -587,9 +592,10 @@ public class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase {
     }
 
     public class ElseCellQuery(Binary_Esm _) : IQuery {
-        const float PointFactor = 0.5f;
-        public Int3 GetCellId(Vector3 point, int world) => new((int)Math.Floor(point.X / PointFactor), (int)Math.Floor(point.Z / PointFactor), world);
-        // public static Int3 GetCellId(Vector3 point, int world) => new((int)Math.Floor(point.X / ExteriorCellSideLengthInMeters), (int)Math.Floor(point.Z / ExteriorCellSideLengthInMeters), world);
+        public float MeterInUnits => _MeterInUnits;
+        public float CellLengthInMeters => _CellLengthInMeters;
+        public Int3 GetCellId(Vector3 point, int world) => new((int)Math.Floor(point.X / CellLengthInMeters), (int)Math.Floor(point.Z / CellLengthInMeters), world);
+        public object FindByName(string name) => _.MANYsById.TryGetValue(name, out var z) ? z : default;
         public ILtex FindLtex(int index) => throw new NotImplementedException();
         public ILand FindLand(Int3 cell) {
             var world = _.WRLDsById[(uint)cell.Z];

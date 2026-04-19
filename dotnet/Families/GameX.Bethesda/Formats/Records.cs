@@ -1056,7 +1056,7 @@ public partial class Record {
     static int CellsLoaded = 0;
     public static Record Factory(FormType format, FormType type) {
         Record record;
-        if (type == CELL && ++CellsLoaded > 10) record = new Record(); // hack to limit cells loading
+        if (type == CELL && ++CellsLoaded > 1000) record = new Record(); // hack to limit cells loading
         else if (!Map.TryGetValue(type, out var z)) { Log.Info($"Unsupported record type: {type}"); record = new Record(); }
         else if (_factorySet != null && type != TES3 && type != TES4 && !_factorySet.Contains(type)) record = new Record();
         else { record = z(format); record.Type = type; }
@@ -2952,7 +2952,7 @@ public class CELLRecord : Record, ICell {
         public Float3 EulerAngles;
     }
 
-    public class Ref_ {
+    public class Xref : ICellXref {
         public override string ToString() => $"CREF: {EDID}";
         public uint? FRMR; // Object Index (starts at 1)
         // This is used to uniquely identify objects in the cell. For new files the index starts at 1 and is incremented for each new object added. For modified objects the index is kept the same.
@@ -2976,6 +2976,8 @@ public class CELLRecord : Record, ICell {
         public uint? NAM0; // Unknown
         public int? XCHG; // Unknown
         public int? INDX; // Unknown
+        
+        string ICellXref.Name => EDID;
     }
 
     public string FULL; // Full Name / TES3:RGNN - Region name
@@ -2990,21 +2992,20 @@ public class CELLRecord : Record, ICell {
     // TES4
     public Ref<REGNRecord>[] XCLRs; // Regions
     public byte? XCMT; // Music (optional)
-    public RefX<CLMTRecord>? XCCM; // Climate
-    public RefX<WATRRecord>? XCWT; // Water
+    public Ref<CLMTRecord>? XCCM; // Climate
+    public Ref<WATRRecord>? XCWT; // Water
     public List<Xown> XOWNs = []; // Ownership
     // Referenced Object Data Grouping
-    public List<Ref_> RefObjs = [];
+    public List<ICellXref> XREFs = [];
     bool _frmr = false;
-    Ref_ _last;
+    Xref _last;
 
     uint ICell.Id => Id;
     bool ICell.IsInterior => IsInterior;
     Int3 ICell.GridId => GridId;
-    string ICell.EDID => EDID;
+    string ICell.Name => EDID;
     Color? ICell.AmbientLight => AmbientLight;
-
-    //cell.GridId = new Int3(cell.XCLC.Value.GridX, cell.XCLC.Value.GridY, cell.IsInterior ? -1 : cellId.Z);
+    List<ICellXref> ICell.Xrefs => XREFs;
 
     protected override HashSet<FieldType> DF3 => null;
     protected override HashSet<FieldType> DF4 => null;
@@ -3025,8 +3026,8 @@ public class CELLRecord : Record, ICell {
                 // TES4
                 FieldType.XCLR => XCLRs = r.ReadFArray(z => new Ref<REGNRecord>(r, 4), dataSize >> 2),
                 FieldType.XCMT => XCMT = r.ReadByte(),
-                FieldType.XCCM => XCCM = new RefX<CLMTRecord>(r, dataSize),
-                FieldType.XCWT => XCWT = new RefX<WATRRecord>(r, dataSize),
+                FieldType.XCCM => XCCM = new Ref<CLMTRecord>(r, dataSize),
+                FieldType.XCWT => XCWT = new Ref<WATRRecord>(r, dataSize),
                 FieldType.XOWN => XOWNs.AddX(new Xown { XOWN = new Ref<Record>(r, dataSize) }),
                 FieldType.XRNK => XOWNs.Last().XRNK = r.ReadInt32(),
                 FieldType.XGLB => XOWNs.Last().XGLB = new Ref<Record>(r, dataSize),
@@ -3035,7 +3036,7 @@ public class CELLRecord : Record, ICell {
         // Referenced Object Data Grouping
         return type switch {
             // RefObjDataGroup sub-records
-            FieldType.FRMR => (_last = RefObjs.AddX(new Ref_())).FRMR = r.ReadUInt32(),
+            FieldType.FRMR => (_last = (Xref)XREFs.AddX(new Xref())).FRMR = r.ReadUInt32(),
             FieldType.NAME => _last.EDID = r.ReadFUString(dataSize),
             FieldType.XSCL => _last.XSCL = r.ReadSingle(),
             FieldType.DODT => _last.DODT = r.ReadS<Xyza>(dataSize),
@@ -5384,7 +5385,7 @@ public class LANDRecord : Record, ILand {
     public Byte3[] VNML; // XYZ 8 bit floats (Vertexs)
     public Vhgt VHGT; // Height data
     public ByteColor3[] VCLR; // 24-bit RGB (Colors), Vertex color array, looks like another RBG image 65x65 pixels in size. (Optional)
-    public object VTEX; // A 16x16 array of short texture indices. (Optional)
+    public uint[] VTEX; // A 16x16 array of short texture indices. (Optional)
     // TES3
     public Cord INTV; public Int3 GridId; // The cell coordinates of the cell
     public Wnam WNAM; // Unknown byte data.
@@ -5394,9 +5395,9 @@ public class LANDRecord : Record, ILand {
     Atxt _lastATXT;
 
     Int3 ILand.GridId => GridId;
-    object ILand.VTEX => VTEX;
-
-    //land.GridId = new Int3(cell.XCLC.Value.GridX, cell.XCLC.Value.GridY, !cell.IsInterior ? cellId.Z : -1);
+    uint[] ILand.Vtex => VTEX;
+    float ILand.HeightOffset => VHGT.ReferenceHeight;
+    sbyte[] ILand.Heights => VHGT.HeightData;
 
     protected override HashSet<FieldType> DF4 => [FieldType.BTXT, FieldType.ATXT, FieldType.VTXT];
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
@@ -5404,7 +5405,7 @@ public class LANDRecord : Record, ILand {
         FieldType.VNML => VNML = r.ReadPArray<Byte3>("3B", dataSize / 3),
         FieldType.VHGT => VHGT = new Vhgt(r, dataSize),
         FieldType.VCLR => VCLR = r.ReadSArray<ByteColor3>(dataSize / 3),
-        FieldType.VTEX => VTEX = r.Format == TES3 ? r.ReadPArray<ushort>("H", dataSize >> 1) : r.ReadPArray<uint>("I", dataSize >> 2),
+        FieldType.VTEX => VTEX = r.Format == TES3 ? [.. r.ReadPArray<ushort>("H", dataSize >> 1).Select(s => (uint)s)] : r.ReadPArray<uint>("I", dataSize >> 2),
         // TES3
         FieldType.INTV => (z: INTV = r.ReadS<Cord>(dataSize), GridId = new Int3(INTV.CellX, INTV.CellY, 0)).z,
         FieldType.WNAM => WNAM = new Wnam(r, dataSize),
@@ -5594,7 +5595,7 @@ public class LIGHRecord : Record, IHaveMODL, ILigh {
     public float FNAM; // Fade Value
     public RefX<SOUNRecord> SNAM; // Sound FormId (optional)
 
-    float ILigh.Radius => DATA.Radius / Binary_Esm.MeterInUnits;
+    float ILigh.Radius => DATA.Radius / Binary_Esm._MeterInUnits;
     Color ILigh.LightColor => DATA.LightColor.AsColor;
 
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
@@ -5741,8 +5742,8 @@ public class LTEXRecord : Record, ILtex {
     // fallout
     public Ref<TXSTRecord> TNAM; // Texture
 
-    long ILtex.INTV => INTV;
-    string ILtex.ICON => ICON;
+    long ILtex.Intv => INTV;
+    string ILtex.Path => ICON;
 
     protected override HashSet<FieldType> DF4 => [FieldType.GNAM];
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {

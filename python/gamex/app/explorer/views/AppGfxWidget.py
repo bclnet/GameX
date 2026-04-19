@@ -1,20 +1,23 @@
+from openstk.platforms.ex.gfx.qt_widget import ExWidget
 from openstk.platforms.opengl.gfx.qt_widget import OpenGLWidget
 from openstk.platforms.panda3d.gfx.qt_widget import Panda3dWidget
 from openstk.platforms.pyengine3d.gfx.qt_widget import PyEngine3dWidget
 from openstk.platforms.pygame.gfx.qt_widget import PygameWidget
+from openstk.platforms.tiny3d.gfx.qt_widget import Tiny3dWidget
+from openstk.platforms.vanilla3d.gfx.qt_widget import Vanilla3dWidget
 from gamex.platforms.ex import ExRenderer
 from gamex.platforms.opengl import OpenGLRenderer
 from gamex.platforms.panda3d import Panda3dRenderer
 from gamex.platforms.pyengine3d import PyEngine3dRenderer
 from gamex.platforms.pygame import PygameRenderer
-from gamex.platforms.tiny3dgame import Tiny3dRenderer
-from gamex.platforms.vanilla3dgame import Vanilla3dRenderer
+from gamex.platforms.tiny3d import Tiny3dRenderer
+from gamex.platforms.vanilla3d import Vanilla3dRenderer
 
 # typedefs
 class Renderer: pass
 
 # AppExWidget
-class AppExWidget(OpenGLWidget):
+class AppExWidget(ExWidget):
     def __init__(self, parent: object, tab: object): super().__init__(parent, tab)
     def createRenderer(self) -> Renderer: return ExRenderer.createRenderer(self, self.gfx, self.value, self.type)
 
@@ -39,11 +42,11 @@ class AppPygameWidget(PygameWidget):
     def createRenderer(self) -> Renderer: return PygameRenderer.createRenderer(self, self.gfx, self.value, self.type)
 
 # AppTiny3dWidget
-class AppTiny3dWidget(OpenGLWidget):
+class AppTiny3dWidget(Tiny3dWidget):
     def __init__(self, parent: object, tab: object): super().__init__(parent, tab)
     def createRenderer(self) -> Renderer: return Tiny3dRenderer.createRenderer(self, self.gfx, self.value, self.type)
 
 # AppVanilla3dWidget
-class AppVanilla3dWidget(OpenGLWidget):
+class AppVanilla3dWidget(Vanilla3dWidget):
     def __init__(self, parent: object, tab: object): super().__init__(parent, tab)
     def createRenderer(self) -> Renderer: return Vanilla3dRenderer.createRenderer(self, self.gfx, self.value, self.type)

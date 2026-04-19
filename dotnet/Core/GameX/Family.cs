@@ -1137,7 +1137,7 @@ public class FamilyGame {
     /// <param name="edition"></param>
     /// <param name="prefix"></param>
     /// </summary>
-    public static Uri ToUri(string id, string edition = null, Uri prefix = null) => new($"{prefix ?? new("game:/")}#{id}{(string.IsNullOrEmpty(edition) ? "" : $".{edition}")}");
+    public static Uri ToUri(string id, string edition = null, Uri prefix = null) => new($"{prefix ?? new("game:/")}#{ToId(id, edition)}");
 
     /// <summary>
     /// Converts the game to an id

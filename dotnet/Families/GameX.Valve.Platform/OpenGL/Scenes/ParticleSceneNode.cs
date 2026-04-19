@@ -18,20 +18,20 @@ public class ParticleSceneNode : SceneNode {
         IEnumerable<string> IParticleSystem.GetChildParticleNames(bool enabledOnly) => _source.GetChildParticleNames(enabledOnly);
     }
 
-    OpenGLParticleRenderer.ParticleRenderer ParticleRenderer;
+    ParticleRenderer.ChildRenderer ChildRenderer;
 
     public ParticleSceneNode(Scene scene, D_ParticleSystem particleSystem) : base(scene) {
-        ParticleRenderer = new OpenGLParticleRenderer.ParticleRenderer(Scene.Gfx as OpenGLGfxModel, new ParticleSystemWrapper(particleSystem));
-        LocalBoundingBox = ParticleRenderer.BoundingBox;
+        ChildRenderer = new ParticleRenderer.ChildRenderer(Scene.Gfx as OpenGLGfxModel, new ParticleSystemWrapper(particleSystem));
+        LocalBoundingBox = ChildRenderer.BoundingBox;
     }
 
     public override void Update(Scene.UpdateContext context) {
-        ParticleRenderer.Position = Transform.Translation;
-        ParticleRenderer.Update(context.Timestep);
-        LocalBoundingBox = ParticleRenderer.BoundingBox.Translate(-ParticleRenderer.Position);
+        ChildRenderer.Position = Transform.Translation;
+        ChildRenderer.Update(context.Timestep);
+        LocalBoundingBox = ChildRenderer.BoundingBox.Translate(-ChildRenderer.Position);
     }
 
-    public override void Render(Scene.RenderContext context) => ParticleRenderer.Render(context.Camera, context.Pass);
+    public override void Render(Scene.RenderContext context) => ChildRenderer.Render(context.Camera, context.Pass);
 
-    public override IEnumerable<string> GetSupportedRenderModes() => ParticleRenderer.GetSupportedRenderModes();
+    public override IEnumerable<string> GetSupportedRenderModes() => ChildRenderer.GetSupportedRenderModes();
 }

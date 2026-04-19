@@ -54,7 +54,7 @@ public class Database {
     public async Task OpenAsync(MetaManager manager) {
         family = FamilyManager.GetFamily("Cig");
         archive = family.GetArchive(new Uri("game:/#StarCitizen"));
-        var obj = await archive.GetAsset<Binary_Dcb>($"Sbi/Archive.dcb");
+        var obj = await archive.GetAsset<Binary_Dcb>($"Sbi/Query.dcb");
         foreach (var value in obj.RecordTable)
             Node.CreateNode(manager, Nodes, value);
     }

@@ -6,12 +6,11 @@ from enum import IntEnum, IntFlag
 from struct import unpack
 from numpy import ndarray, array
 from collections.abc import Iterator
-from openstk.core import log, Byte2, Int2, Byte3, Int3, Float3
+from openstk.core import log, Byte2, Int2, Byte3, Int3, Float3, CellManager
 from openstk.sys.drawing import Color
 from gamex import FileSource, BinaryReader, ArcBinaryT
 from gamex.core.globalx import ByteColor3, ByteColor4
 from gamex.families.Uncore.formats.compression import decompressZlib2
-
 # sys.setrecursionlimit(1500)
 
 # types
@@ -1061,7 +1060,7 @@ class Record:
     def factory(format: FormType, type: FieldType) -> 'Record':
         record = None
         if type == FormType.CELL: Record._cellsLoaded += 1
-        if type == FormType.CELL and Record._cellsLoaded > 10: record = Record() # hack to limit cells loading
+        if type == FormType.CELL and Record._cellsLoaded > 1000: record = Record() # hack to limit cells loading
         elif not (z := Record._mapx.get(type)): print(f'Unsupported record type: {type}'); record = Record()
         elif Record._factorySet and type != FormType.TES3 and type != FormType.TES4 and type not in Record._factorySet: record = Record()
         else: record = z(format); record.type = type
@@ -2681,7 +2680,7 @@ class CDCKRecord(Record):
 # end::CDCK[]
 
 # CELL.Cell - 3450 - tag::CELL[]
-class CELLRecord(Record): #ICellRecord
+class CELLRecord(Record, CellManager.ICell):
     class Flag(IntFlag):
         Interior = 0x0001
         HasWater = 0x0002
@@ -2758,7 +2757,7 @@ class CELLRecord(Record): #ICellRecord
             (position.x, position.y, position.z,
             eulerAngles.x, eulerAngles.y, eulerAngles.z) = t
             
-    class Ref_:
+    class Xref(CellManager.ICellXref):
         def __repr__(self): return f'CREF: {self.EDID}'
         FRMR: int = None # Object Index (starts at 1)
         # This is used to uniquely identify objects in the cell. For files the index starts at 1 and is incremented for each object added. For modified objects the index is kept the same.
@@ -2783,6 +2782,9 @@ class CELLRecord(Record): #ICellRecord
         XCHG: int = None # Unknown
         INDX: int = None # Unknown
 
+        @property
+        def name(self) -> str: return self.EDID
+
     FULL: str # Full Name / TES3:RGNN - Region name
     DATA: int; isInterior: bool = False # Flags
     XCLC: Xclc = None; gridId: Int3 = None # Cell Data (only used for exterior cells)
@@ -2795,20 +2797,29 @@ class CELLRecord(Record): #ICellRecord
     # TES4
     XCLRs: list[Ref['REGNRecord']] = None #! Regions
     XCMT: int = None # Music (optional)
-    XCCM: RefX['CLMTRecord'] = None # Climate
-    XCWT: RefX['WATRRecord'] = None # Water
+    XCCM: Ref['CLMTRecord'] = None # Climate
+    XCWT: Ref['WATRRecord'] = None # Water
     XOWNs: list[Xown] = [] # Ownership
     # Referenced Object Data Grouping
-    refObjs: list[Ref_] = []
+    XREFs: list[CellManager.ICellXref] = []
     _frmr: bool = False
-    _last: Ref_
+    _last: Xref
     
-    def __init__(self): super().__init__(); self.XOWNs = listx(); self.refObjs = listx()
+    # @property
+    # def id(self) -> int: return self.id
+    # @property
+    # def isInterior(self) -> bool: return self.isInterior
+    # @property
+    # def gridId(self) -> Int3: return self.gridId
+    @property
+    def name(self) -> str: return self.EDID
+    # @property
+    # def ambientLight(self) -> Color: return self.ambientLight
+    # @property
+    # def XREFs(self) -> list[CellManager.ICellXref]: return self.XREFs
 
-    def complete(self, r: Reader) -> None:
-        self.isInterior = (self.DATA & 0x01) == 0x01
-        self.gridId = None #Int3(self.XCLC.gridX, self.XCLC.gridY, -1 if self.isInterior else 0)
-        self.ambientLight = self.XCLL.ambientColor.asColor if self.XCLL else None
+    def __repr__(self): return f'C[{self.gridId}:{self.EDID}]'
+    def __init__(self): super().__init__(); self.XOWNs = listx(); self.XREFs = listx()
 
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
         # print(f'- {type}')
@@ -2830,8 +2841,8 @@ class CELLRecord(Record): #ICellRecord
                 # TES4
                 case FieldType.XCLR: z = self.XCLRs = r.readFArray(lambda z: Ref(REGNRecord, r, 4), dataSize >> 2)
                 case FieldType.XCMT: z = self.XCMT = r.readByte()
-                case FieldType.XCCM: z = self.XCCM = RefX[CLMTRecord](CLMTRecord, r, dataSize)
-                case FieldType.XCWT: z = self.XCWT = RefX[WATRRecord](WATRRecord, r, dataSize)
+                case FieldType.XCCM: z = self.XCCM = Ref[CLMTRecord](CLMTRecord, r, dataSize)
+                case FieldType.XCWT: z = self.XCWT = Ref[WATRRecord](WATRRecord, r, dataSize)
                 case FieldType.XOWN: z = self.XOWNs.addX(CELLRecord.Xown(XOWN = Ref(Record, r, dataSize)))
                 case FieldType.XRNK: z = self.XOWNs.last().XRNK = r.readInt32()
                 case FieldType.XGLB: z = self.XOWNs.last().XGLB = Ref(Record, r, dataSize)
@@ -2840,7 +2851,7 @@ class CELLRecord(Record): #ICellRecord
         # Referenced Object Data Grouping
         match type:
             # RefObjDataGroup sub-records
-            case FieldType.FRMR: self._last = self.refObjs.addX(CELLRecord.Ref_()); z = self._last.FRMR = r.readUInt32()
+            case FieldType.FRMR: self._last = self.XREFs.addX(CELLRecord.Xref()); z = self._last.FRMR = r.readUInt32()
             case FieldType.NAME: z = self._last.EDID = r.readFUString(dataSize)
             case FieldType.XSCL: z = self._last.XSCL = r.readSingle()
             case FieldType.DODT: z = self._last.DODT = r.readS(CELLRecord.Xyza, dataSize)
@@ -5069,7 +5080,7 @@ class KYWDRecord(Record):
 # end::KYWD[]
 
 # LAND.Land - 3450 - tag::LAND[]
-class LANDRecord(Record):
+class LANDRecord(Record, CellManager.ILand):
     class Vhgt:
         referenceHeight: float # A height offset for the entire cell. Decreasing this value will shift the entire cell land down.
         heightData: list[int] # HeightData
@@ -5115,7 +5126,6 @@ class LANDRecord(Record):
             self.ATXT: 'Btxt' = ATXT
             self.VTXTs: list['Vtxt'] = None
 
-    def __repr__(self): return f'LAND: {self.INTV}'
     DATA: int # Unknown (default of 0x09) Changing this value makes the land 'disappear' in the editor.
     # A RGB color map 65x65 pixels in size representing the land normal vectors.
     # The signed value of the 'color' represents the vector's component. Blue
@@ -5133,6 +5143,16 @@ class LANDRecord(Record):
     ATXTs: list[Atxt] # Alpha Layer
     _lastATXT: Atxt
     
+    # @property
+    # def gridId(self) -> Int3: return self.gridId
+    @property
+    def vtex(self) -> list[int]: return self.VTEX
+    @property
+    def heightOffset(self) -> float: return self.VHGT.referenceHeight
+    @property
+    def heights(self) -> list[int]: return self.VHGT.heightData
+
+    def __repr__(self): return f'L[{self.gridId}:{self.EDID}]'
     def __init__(self): super().__init__()
 
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
@@ -5270,7 +5290,7 @@ class LGTMRecord(Record):
 # end::LGTM[]
 
 # LIGH.Light - 3450 - tag::LIGH[]
-class LIGHRecord(Record, IHaveMODL):
+class LIGHRecord(Record, IHaveMODL, CellManager.ILigh):
     class Data:
         class ColorFlags(IntFlag):
             Dynamic = 0x0001
@@ -5319,6 +5339,10 @@ class LIGHRecord(Record, IHaveMODL):
     SCRI: RefX['SCPTRecord'] = None # Script FormId (optional)
     FNAM: float # Fade Value
     SNAM: RefX['SOUNRecord'] # Sound FormId (optional)
+
+    def radius(self) -> float: return self.DATA.radius // Binary_Esm._meterInUnits
+    def lightColor(self) -> Color: return self.DATA.lightColor.asColor
+
     def __init__(self): super().__init__()
 
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:
@@ -5439,7 +5463,7 @@ class LSPRRecord(Record):
 # end::LSPR[]
 
 # LTEX.Land Texture - 3450 - tag::LTEX[]
-class LTEXRecord(Record):
+class LTEXRecord(Record, CellManager.ILtex):
     class Hnam:
         _struct = ('<3B', 3)
         def __init__(self, t):
@@ -5456,6 +5480,12 @@ class LTEXRecord(Record):
     GNAMs: list[RefX[GRASRecord]] = [] # Potential grass
     # fallout
     TNAM: Ref['TXSTRecord'] # Texture
+
+    @property
+    def intv(self) -> int: return self.INTV
+    @property
+    def path(self) -> str: return self.ICON
+
     def __init__(self): super().__init__(); self.GNAMs = listx()
 
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object:

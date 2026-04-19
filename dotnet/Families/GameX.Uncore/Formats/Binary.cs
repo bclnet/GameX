@@ -1,5 +1,6 @@
 using GameX.Uncore.Formats.Apple;
 using ICSharpCode.SharpZipLib.Zip;
+using Microsoft.Extensions.FileSystemGlobbing;
 using OpenStack;
 using OpenStack.Gfx;
 using System;
@@ -10,9 +11,11 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading.Tasks;
 using ZipFile = ICSharpCode.SharpZipLib.Zip.ZipFile;
 #pragma warning disable CS9113
@@ -1530,13 +1533,34 @@ public class Binary_TestTri : IHaveMetaInfo {
 
 #region Binary_Engine
 
-public class Binary_Engine : IHaveMetaInfo {
-    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Engine());
+public class Binary_Engine : IHaveMetaInfo, ICellDatabase {
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Engine(r, s));
+    public BinaryArchive Archive;
+    public BinaryArchive QueryArchive;
+    public CellManager.IQuery Query;
+    public Vector3 Start;
+    public Binary_Engine(BinaryReader r, Archive s) {
+        var values = Encoding.ASCII.GetString(r.ReadToEnd()).Split(':');
+        var ar = values[0]; var qa = values[1]; var st = values[2].Split(',').Select(float.Parse).ToArray();
+        Archive = (BinaryArchive)s.GetArchive(ar);
+        QueryArchive = (BinaryArchive)s.GetArchive(qa);
+        Query = ((CellManager.IQueryFunc)QueryArchive.ArcBinary).GetQuery();
+        Start = new Vector3(st[0], st[1], st[2]);
+    }
+
+    ISource ICellDatabase.Archive => Archive;
+    CellManager.IQuery ICellDatabase.Query => Query;
+    Vector3 ICellDatabase.Start => Start;
 
     // IHaveMetaInfo
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
         => [
             new(null, new MetaContent { Type = "Engine", Name = Path.GetFileName(file.Path), Value = this }),
+            new($"{nameof(Binary_Engine)}", items: [
+                new($"Archive: {Archive}"),
+                new($"Query: {Query}"),
+                new($"Start: {Start}"),
+            ])
         ];
 }
 

@@ -11,22 +11,22 @@ namespace GameX.Platforms.O3de;
 public static class O3deRenderer {
     public static Renderer CreateRenderer(object parent, IList<IOpenGfx> gfx, object obj, string type)
         => type switch {
-            "TestTri" => new O3deTestTriRenderer(gfx[XModel] as O3deGfxModel, obj),
-            "Texture" => new O3deTextureRenderer(gfx[XModel] as O3deGfxModel, obj),
-            "Object" => new O3deObjectRenderer(gfx[XModel] as O3deGfxModel, obj),
-            "Cell" => new O3deCellRenderer(gfx[XModel] as O3deGfxModel, obj),
-            "Engine" => new O3deEngineRenderer(gfx[XModel] as O3deGfxModel, obj),
-            _ => new O3deObjectRenderer(gfx[XModel] as O3deGfxModel, obj),
+            "TestTri" => new TestTriRenderer(gfx[XModel] as O3deGfxModel, obj),
+            "Texture" => new TextureRenderer(gfx[XModel] as O3deGfxModel, obj, 0..),
+            //"Object" => new ObjectRenderer(gfx[XModel] as O3deGfxModel, obj),
+            //"Cell" => new CellRenderer(gfx[XModel] as O3deGfxModel, obj),
+            //"Engine" => new EngineRenderer(gfx[XModel] as O3deGfxModel, obj),
+            _ => default
         };
 }
 
-public class O3deTestTriRenderer(O3deGfxModel gfx, object obj) : TestTriRenderer(gfx, obj) { }
-public class O3deCellRenderer(O3deGfxModel gfx, object obj) : Renderer { }
-public class O3deEngineRenderer(O3deGfxModel gfx, object obj) : Renderer { }
-public class O3deObjectRenderer(O3deGfxModel gfx, object obj) : Renderer { }
-public class O3deTextureRenderer(O3deGfxModel gfx, object obj) : TextureRenderer(gfx, obj, Level) {
-    static Range Level = 0..;
-}
+//public class O3deTestTriRenderer(O3deGfxModel gfx, object obj) : TestTriRenderer(gfx, obj) { }
+//public class O3deCellRenderer(O3deGfxModel gfx, object obj) : Renderer { }
+//public class O3deEngineRenderer(O3deGfxModel gfx, object obj) : Renderer { }
+//public class O3deObjectRenderer(O3deGfxModel gfx, object obj) : Renderer { }
+//public class O3deTextureRenderer(O3deGfxModel gfx, object obj) : TextureRenderer(gfx, obj, Level) {
+//    static Range Level = 0..;
+//}
 
 public class ViewInfo {
     static ViewInfo() => PlatformX.Activate(O3dePlatform.This);

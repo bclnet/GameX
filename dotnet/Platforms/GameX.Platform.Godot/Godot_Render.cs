@@ -12,22 +12,22 @@ namespace GameX.Platforms.Godot;
 public static class GodotRenderer {
     public static Renderer CreateRenderer(object parent, IList<IOpenGfx> gfx, object obj, string type)
         => type switch {
-            "TestTri" => new GodotTestTriRenderer(parent as Node, gfx[XModel] as GodotGfxModel, obj),
-            "Texture" => new GodotTextureRenderer(parent as Node, gfx[XModel] as GodotGfxModel, obj),
-            "Object" => new GodotObjectRenderer(parent as Node, gfx[XModel] as GodotGfxModel, obj),
-            "Cell" => new GodotCellRenderer(parent as Node, gfx[XModel] as GodotGfxModel, obj),
-            "Engine" => new GodotEngineRenderer(parent as Node, gfx[XModel] as GodotGfxModel, obj),
-            _ => new GodotObjectRenderer(parent as Node, gfx[XModel] as GodotGfxModel, obj),
+            "TestTri" => new TestTriRenderer(parent as Node, gfx[XModel] as GodotGfxModel, obj),
+            "Texture" => new TextureRenderer(parent as Node, gfx[XModel] as GodotGfxModel, obj, 0..),
+            //"Object" => new ObjectRenderer(parent as Node, gfx[XModel] as GodotGfxModel, obj),
+            //"Cell" => new CellRenderer(parent as Node, gfx[XModel] as GodotGfxModel, obj),
+            //"Engine" => new EngineRenderer(parent as Node, gfx[XModel] as GodotGfxModel, obj),
+            _ => default
         };
 }
 
-public class GodotTestTriRenderer(Node parent, GodotGfxModel gfx, object obj) : TestTriRenderer(parent, gfx, obj) { }
-public class GodotCellRenderer(Node parent, GodotGfxModel gfx, object obj) : Renderer { }
-public class GodotEngineRenderer(Node parent, GodotGfxModel gfx, object obj) : Renderer { }
-public class GodotObjectRenderer(Node parent, GodotGfxModel gfx, object obj) : Renderer { }
-public class GodotTextureRenderer(Node parent, GodotGfxModel gfx, object obj) : TextureRenderer(parent, gfx, obj, Level) {
-    static System.Range Level = 0..;
-}
+//public class GodotTestTriRenderer(Node parent, GodotGfxModel gfx, object obj) : TestTriRenderer(parent, gfx, obj) { }
+//public class GodotCellRenderer(Node parent, GodotGfxModel gfx, object obj) : Renderer { }
+//public class GodotEngineRenderer(Node parent, GodotGfxModel gfx, object obj) : Renderer { }
+//public class GodotObjectRenderer(Node parent, GodotGfxModel gfx, object obj) : Renderer { }
+//public class GodotTextureRenderer(Node parent, GodotGfxModel gfx, object obj) : TextureRenderer(parent, gfx, obj, Level) {
+//    static System.Range Level = 0..;
+//}
 
 public class ViewInfo : Node {
     static ViewInfo() => PlatformX.Activate(GodotPlatform.This);

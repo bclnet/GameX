@@ -3,6 +3,7 @@ using OpenStack.Gfx;
 using OpenStack.Gfx.Unity;
 using System;
 using System.Collections.Generic;
+using static GameX.Formats.IUnknown.IUnknownFileObject;
 using static OpenStack.Gfx.GfX;
 #pragma warning disable CS9113
 
@@ -40,7 +41,8 @@ public class ViewInfo : UnityEngine.MonoBehaviour {
     public string FamilyId = "Bethesda";
     public string ArcUri = "game:/#Morrowind";
     public string Type = "Texture";
-    public string Path = "Morrowind.bsa:bookart/boethiah_256.dds";
+    public string Path = "Morrowind.start";
+    //public string Path = "Morrowind.bsa:bookart/boethiah_256.dds";
     //public string Path = "Morrowind.bsa:meshes/x/ex_common_balcony_01.nif";
 
     protected Family Family;
@@ -61,7 +63,8 @@ public class ViewInfo : UnityEngine.MonoBehaviour {
         if (string.IsNullOrEmpty(FamilyId)) return;
         Family = FamilyManager.GetFamily(FamilyId);
         if (!string.IsNullOrEmpty(ArcUri)) Source = Family.GetArchive(new Uri(ArcUri));
-        Renderer = UnityRenderer.CreateRenderer(this, Source?.Gfx, Path, Type);
+        var value = Source.GetAsset<object>(Path).Result;
+        Renderer = UnityRenderer.CreateRenderer(this, Source?.Gfx, value, Type);
     }
 
     public void OnDestroy() {

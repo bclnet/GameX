@@ -11,6 +11,7 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
 using static GameX.Bethesda.Formats.Records.FormType;
+using static GameX.Bethesda.Formats.Records.Modl;
 using static OpenStack.CellManager;
 using static System.IO.Polyfill;
 #pragma warning disable CS9113
@@ -1420,14 +1421,10 @@ public class Modl(Reader r = null, int dataSize = 0) {
     public byte[] Hashes; // Texture Files Hashes
     public Mods[] AltTextures; // Alternate Textures
     public ModdFlag FaceGenModelFlags; // FaceGen Model Flags
-    //public string Icon; // Icon
-    //public string Mico; // Mico
     public object MODB(Reader r, int dataSize) => Bound = r.ReadSingle();
     public object MODT(Reader r, int dataSize) => Hashes = r.ReadBytes(dataSize); // Texture File Hashes
     public object MODS(Reader r, int dataSize) => AltTextures = r.ReadL32FArray(z => new Mods(r, dataSize)); // Alternate Textures
     public object MODD(Reader r, int dataSize) => FaceGenModelFlags = (ModdFlag)(r.ReadByte()); // FaceGen Model Flags
-    //public object ICON(Reader r, int dataSize) => Icon = r.ReadFUString(dataSize); // Icon
-    //public object MICO(Reader r, int dataSize) => Mico = r.ReadFUString(dataSize); // Mico
 }
 
 // https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format/Model_Textures_Field
@@ -1443,7 +1440,10 @@ public class Modl(Reader r = null, int dataSize = 0) {
 //    }
 //}
 
-public interface IHaveMODL { Modl MODL { get; } }
+public interface IHaveMODL : ICellXrefModel {
+    Modl MODL { get; }
+    string ICellXrefModel.ModelPath => !string.IsNullOrEmpty(MODL.Value) ? $"meshes\\{MODL.Value}" : null;
+}
 
 /// <summary>
 /// Destruction Subrecord Collection
@@ -2976,8 +2976,11 @@ public class CELLRecord : Record, ICell {
         public uint? NAM0; // Unknown
         public int? XCHG; // Unknown
         public int? INDX; // Unknown
-        
+
         string ICellXref.Name => EDID;
+        float? ICellXref.Scale => XSCL;
+        Float3 ICellXref.Position => DATA.Position;
+        Float3 ICellXref.EulerAngles => DATA.EulerAngles;
     }
 
     public string FULL; // Full Name / TES3:RGNN - Region name

@@ -1891,7 +1891,7 @@ public abstract class NiObject(NiReader r) { // X
 
     public static NiObject Read(NiReader r, string nodeType) {
         Console.WriteLine($"{nodeType}: {r.Tell()}");
-        if (nodeType.StartsWith("NiDataStream\x01")) nodeType = Z.ExtractRTTIArgs(r, nodeType);
+        if (nodeType?.StartsWith("NiDataStream\x01") == true) nodeType = Z.ExtractRTTIArgs(r, nodeType);
         switch (nodeType) {
             case "NiNode": return new NiNode(r);
             case "NiTriShape": return new NiTriShape(r);

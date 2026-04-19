@@ -2784,6 +2784,12 @@ class CELLRecord(Record, CellManager.ICell):
 
         @property
         def name(self) -> str: return self.EDID
+        @property
+        def scale(self) -> float: return self.XSCL
+        @property
+        def position(self) -> Float3: return self.DATA.position
+        @property
+        def eulerAngles(self) -> Float3: return self.DATA.eulerAngles
 
     FULL: str # Full Name / TES3:RGNN - Region name
     DATA: int; isInterior: bool = False # Flags

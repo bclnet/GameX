@@ -11,22 +11,22 @@ namespace GameX.Platforms.Ogre;
 public static class OgreRenderer {
     public static Renderer CreateRenderer(object parent, IList<IOpenGfx> gfx, object obj, string type)
         => type switch {
-            "TestTri" => new OgreTestTriRenderer(gfx[XModel] as OgreGfxModel, obj),
-            "Texture" => new OgreTextureRenderer(gfx[XModel] as OgreGfxModel, obj),
-            "Object" => new OgreObjectRenderer(gfx[XModel] as OgreGfxModel, obj),
-            "Cell" => new OgreCellRenderer(gfx[XModel] as OgreGfxModel, obj),
-            "Engine" => new OgreEngineRenderer(gfx[XModel] as OgreGfxModel, obj),
-            _ => new OgreObjectRenderer(gfx[XModel] as OgreGfxModel, obj),
+            "TestTri" => new TestTriRenderer(gfx[XModel] as OgreGfxModel, obj),
+            "Texture" => new TextureRenderer(gfx[XModel] as OgreGfxModel, obj, 0..),
+            //"Object" => new ObjectRenderer(gfx[XModel] as OgreGfxModel, obj),
+            //"Cell" => new CellRenderer(gfx[XModel] as OgreGfxModel, obj),
+            //"Engine" => new EngineRenderer(gfx[XModel] as OgreGfxModel, obj),
+            _ => default,
         };
 }
 
-public class OgreTestTriRenderer(OgreGfxModel gfx, object obj) : TestTriRenderer(gfx, obj) { }
-public class OgreCellRenderer(OgreGfxModel gfx, object obj) : Renderer { }
-public class OgreEngineRenderer(OgreGfxModel gfx, object obj) : Renderer { }
-public class OgreObjectRenderer(OgreGfxModel gfx, object obj) : Renderer { }
-public class OgreTextureRenderer(OgreGfxModel gfx, object obj) : TextureRenderer(gfx, obj, Level) {
-    static Range Level = 0..;
-}
+//public class OgreTestTriRenderer(OgreGfxModel gfx, object obj) : TestTriRenderer(gfx, obj) { }
+//public class OgreCellRenderer(OgreGfxModel gfx, object obj) : Renderer { }
+//public class OgreEngineRenderer(OgreGfxModel gfx, object obj) : Renderer { }
+//public class OgreObjectRenderer(OgreGfxModel gfx, object obj) : Renderer { }
+//public class OgreTextureRenderer(OgreGfxModel gfx, object obj) : TextureRenderer(gfx, obj, Level) {
+//    static Range Level = 0..;
+//}
 
 public class ViewInfo {
     static ViewInfo() => PlatformX.Activate(OgrePlatform.This);

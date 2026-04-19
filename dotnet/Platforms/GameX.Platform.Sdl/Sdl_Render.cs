@@ -10,13 +10,13 @@ namespace GameX.Platforms.Sdl;
 public static class SdlRenderer {
     public static Renderer CreateRenderer(object parent, IList<IOpenGfx> gfx, object obj, string type)
         => type switch {
-            "TestTri" => new SdlTestTriRenderer(gfx[XSprite2D] as SdlGfxSprite2D, obj),
-            "Texture" => new SdlSpriteRenderer(gfx[XSprite2D] as SdlGfxSprite2D, obj),
-            "Object" => new SdlObjectRenderer(gfx[XSprite2D] as SdlGfxSprite2D, obj),
-            _ => new SdlObjectRenderer(gfx[XSprite2D] as SdlGfxSprite2D, obj),
+            "TestTri" => new TestTriRenderer(gfx[XSprite2D] as SdlGfxSprite2D, obj),
+            "Texture" => new SpriteRenderer(gfx[XSprite2D] as SdlGfxSprite2D, obj),
+            //"Object" => new ObjectRenderer(gfx[XSprite2D] as SdlGfxSprite2D, obj),
+            _ => default,
         };
 }
 
-public class SdlTestTriRenderer(SdlGfxSprite2D gfx, object obj) : TestTriRenderer(gfx, obj) { }
-public class SdlSpriteRenderer(SdlGfxSprite2D gfx, object obj) : SpriteRenderer(gfx, obj) { }
-public class SdlObjectRenderer(SdlGfxSprite2D gfx, object obj) : Renderer { }
+//public class SdlTestTriRenderer(SdlGfxSprite2D gfx, object obj) : TestTriRenderer(gfx, obj) { }
+//public class SdlSpriteRenderer(SdlGfxSprite2D gfx, object obj) : SpriteRenderer(gfx, obj) { }
+//public class SdlObjectRenderer(SdlGfxSprite2D gfx, object obj) : Renderer { }

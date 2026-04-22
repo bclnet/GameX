@@ -2948,8 +2948,8 @@ public class CELLRecord : Record, ICell {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct Xyza {
         public static (string, int) Struct = ("<3f3f", 24);
-        public Float3 Position;
-        public Float3 EulerAngles;
+        public Vector3 Position;
+        public Vector3 EulerAngles;
     }
 
     public class Xref : ICellXref {
@@ -2979,8 +2979,8 @@ public class CELLRecord : Record, ICell {
 
         string ICellXref.Name => EDID;
         float? ICellXref.Scale => XSCL;
-        Float3 ICellXref.Position => DATA.Position;
-        Float3 ICellXref.EulerAngles => DATA.EulerAngles;
+        Vector3 ICellXref.Position => DATA.Position;
+        Vector3 ICellXref.EulerAngles => DATA.EulerAngles;
     }
 
     public string FULL; // Full Name / TES3:RGNN - Region name

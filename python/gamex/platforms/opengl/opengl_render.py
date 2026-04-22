@@ -12,12 +12,12 @@ class OpenGLRenderer:
     @staticmethod
     def createRenderer(parent: object, gfx: list[IOpenGfx], obj: object, type: str) -> Renderer:
         match type:
-            case 'TestTri': return TestTriRenderer(gfx[GfX.XModel], obj)
-            case 'Texture' | 'VideoTexture': return TextureRenderer(gfx[GfX.XModel], obj, None, False)
-            case 'Object': return ObjectRenderer(gfx[GfX.XModel], obj)
-            case 'Material': return MaterialRenderer(gfx[GfX.XModel], obj)
-            case 'Particle': return ParticleRenderer(gfx[GfX.XModel], obj)
-            case 'Cell': return CellRenderer(gfx[GfX.XModel], obj)
-            case 'Engine': return EngineRenderer(gfx[GfX.XModel], obj)
-            case 'World': return WorldRenderer(gfx[GfX.XModel], obj)
+            case 'TestTri': return TestTriRenderer(gfx, obj)
+            case 'Texture' | 'VideoTexture': return TextureRenderer(gfx, obj, None, False)
+            case 'Object': return ObjectRenderer(gfx, obj)
+            case 'Material': return MaterialRenderer(gfx, obj)
+            case 'Particle': return ParticleRenderer(gfx, obj)
+            case 'Cell': return CellRenderer(gfx, obj)
+            case 'Engine': return EngineRenderer(gfx, obj)
+            case 'World': return WorldRenderer(gfx, obj)
             case _: return None

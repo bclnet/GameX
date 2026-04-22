@@ -2752,10 +2752,10 @@ class CELLRecord(Record, CellManager.ICell):
     class Xyza:
         _struct = ('<3f3f', 24)
         def __init__(self, t):
-            position = self.position = Float3()
-            eulerAngles = self.eulerAngles = Float3()
-            (position.x, position.y, position.z,
-            eulerAngles.x, eulerAngles.y, eulerAngles.z) = t
+            position = self.position = Vector3()
+            eulerAngles = self.eulerAngles = Vector3()
+            (position[0], position[1], position[2],
+            eulerAngles[0], eulerAngles[1], eulerAngles[2]) = t
             
     class Xref(CellManager.ICellXref):
         def __repr__(self): return f'CREF: {self.EDID}'

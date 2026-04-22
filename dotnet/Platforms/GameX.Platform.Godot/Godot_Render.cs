@@ -3,31 +3,21 @@ using OpenStack;
 using OpenStack.Gfx;
 using OpenStack.Gfx.Godot;
 using System;
-using System.Collections.Generic;
-using static OpenStack.Gfx.GfX;
 #pragma warning disable CS9113
 
 namespace GameX.Platforms.Godot;
 
 public static class GodotRenderer {
-    public static Renderer CreateRenderer(object parent, IList<IOpenGfx> gfx, object obj, string type)
+    public static Renderer CreateRenderer(object parent, IOpenGfx[] gfx, object obj, string type)
         => type switch {
-            "TestTri" => new TestTriRenderer(parent as Node, gfx[XModel] as GodotGfxModel, obj),
-            "Texture" => new TextureRenderer(parent as Node, gfx[XModel] as GodotGfxModel, obj, 0..),
-            //"Object" => new ObjectRenderer(parent as Node, gfx[XModel] as GodotGfxModel, obj),
-            //"Cell" => new CellRenderer(parent as Node, gfx[XModel] as GodotGfxModel, obj),
-            //"Engine" => new EngineRenderer(parent as Node, gfx[XModel] as GodotGfxModel, obj),
+            "TestTri" => new TestTriRenderer(parent as Node, gfx, obj),
+            "Texture" => new TextureRenderer(parent as Node, gfx, obj, 0..),
+            //"Object" => new ObjectRenderer(parent as Node, gfx, obj),
+            //"Cell" => new CellRenderer(parent as Node, gfx, obj),
+            //"Engine" => new EngineRenderer(parent as Node, gfx, obj),
             _ => default
         };
 }
-
-//public class GodotTestTriRenderer(Node parent, GodotGfxModel gfx, object obj) : TestTriRenderer(parent, gfx, obj) { }
-//public class GodotCellRenderer(Node parent, GodotGfxModel gfx, object obj) : Renderer { }
-//public class GodotEngineRenderer(Node parent, GodotGfxModel gfx, object obj) : Renderer { }
-//public class GodotObjectRenderer(Node parent, GodotGfxModel gfx, object obj) : Renderer { }
-//public class GodotTextureRenderer(Node parent, GodotGfxModel gfx, object obj) : TextureRenderer(parent, gfx, obj, Level) {
-//    static System.Range Level = 0..;
-//}
 
 public class ViewInfo : Node {
     static ViewInfo() => PlatformX.Activate(GodotPlatform.This);

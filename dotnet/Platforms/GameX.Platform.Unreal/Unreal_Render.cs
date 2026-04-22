@@ -1,31 +1,21 @@
 ﻿using OpenStack;
 using OpenStack.Gfx;
 using OpenStack.Gfx.Unreal;
-using System;
 using System.Collections.Generic;
-using static OpenStack.Gfx.GfX;
 #pragma warning disable CS9113, CS0169
 
 namespace GameX.Platforms.Unreal;
 
 public static class UnrealRenderer {
-    public static Renderer CreateRenderer(object parent, IList<IOpenGfx> gfx, object obj, string type)
+    public static Renderer CreateRenderer(object parent, IOpenGfx[] gfx, object obj, string type)
         => type switch {
-            "TestTri" => new OgreTestTriRenderer(gfx[XModel] as UnrealGfxModel, obj),
-            "Texture" => new OgreTextureRenderer(gfx[XModel] as UnrealGfxModel, obj),
-            "Object" => new OgreObjectRenderer(gfx[XModel] as UnrealGfxModel, obj),
-            "Cell" => new OgreCellRenderer(gfx[XModel] as UnrealGfxModel, obj),
-            "Engine" => new OgreEngineRenderer(gfx[XModel] as UnrealGfxModel, obj),
-            _ => new OgreObjectRenderer(gfx[XModel] as UnrealGfxModel, obj),
+            "TestTri" => new TestTriRenderer(gfx, obj),
+            "Texture" => new TextureRenderer(gfx, obj, 0..),
+            //"Object" => new ObjectRenderer(gfx, obj),
+            //"Cell" => new CellRenderer(gfx, obj),
+            //"Engine" => new EngineRenderer(gfx, obj),
+            _ => default
         };
-}
-
-public class OgreTestTriRenderer(UnrealGfxModel gfx, object obj) : TestTriRenderer(gfx, obj) { }
-public class OgreCellRenderer(UnrealGfxModel gfx, object obj) : Renderer { }
-public class OgreEngineRenderer(UnrealGfxModel gfx, object obj) : Renderer { }
-public class OgreObjectRenderer(UnrealGfxModel gfx, object obj) : Renderer { }
-public class OgreTextureRenderer(UnrealGfxModel gfx, object obj) : TextureRenderer(gfx, obj, Level) {
-    static Range Level = 0..;
 }
 
 public class ViewInfo {

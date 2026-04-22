@@ -1,32 +1,21 @@
 ﻿using OpenStack;
 using OpenStack.Gfx;
 using OpenStack.Gfx.O3de;
-using System;
-using System.Collections.Generic;
-using static OpenStack.Gfx.GfX;
 #pragma warning disable CS9113, CS0169
 
 namespace GameX.Platforms.O3de;
 
 public static class O3deRenderer {
-    public static Renderer CreateRenderer(object parent, IList<IOpenGfx> gfx, object obj, string type)
+    public static Renderer CreateRenderer(object parent, IOpenGfx[] gfx, object obj, string type)
         => type switch {
-            "TestTri" => new TestTriRenderer(gfx[XModel] as O3deGfxModel, obj),
-            "Texture" => new TextureRenderer(gfx[XModel] as O3deGfxModel, obj, 0..),
-            //"Object" => new ObjectRenderer(gfx[XModel] as O3deGfxModel, obj),
-            //"Cell" => new CellRenderer(gfx[XModel] as O3deGfxModel, obj),
-            //"Engine" => new EngineRenderer(gfx[XModel] as O3deGfxModel, obj),
+            "TestTri" => new TestTriRenderer(gfx, obj),
+            "Texture" => new TextureRenderer(gfx, obj, 0..),
+            //"Object" => new ObjectRenderer(gfx, obj),
+            //"Cell" => new CellRenderer(gfx, obj),
+            //"Engine" => new EngineRenderer(gfx, obj),
             _ => default
         };
 }
-
-//public class O3deTestTriRenderer(O3deGfxModel gfx, object obj) : TestTriRenderer(gfx, obj) { }
-//public class O3deCellRenderer(O3deGfxModel gfx, object obj) : Renderer { }
-//public class O3deEngineRenderer(O3deGfxModel gfx, object obj) : Renderer { }
-//public class O3deObjectRenderer(O3deGfxModel gfx, object obj) : Renderer { }
-//public class O3deTextureRenderer(O3deGfxModel gfx, object obj) : TextureRenderer(gfx, obj, Level) {
-//    static Range Level = 0..;
-//}
 
 public class ViewInfo {
     static ViewInfo() => PlatformX.Activate(O3dePlatform.This);

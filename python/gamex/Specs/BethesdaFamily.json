@@ -42,7 +42,7 @@
         "path": "Data Files"
       },
       "virtuals": {
-        "Morrowind.start": "asc:Morrowind.bsa:Morrowind.esm:-137.94,2.30,-1037.6"
+        "Morrowind.start": "asc:Morrowind.bsa:Morrowind.esm:-137.94,-1037.6,2.30"
       }
     },
     "IHRA": {

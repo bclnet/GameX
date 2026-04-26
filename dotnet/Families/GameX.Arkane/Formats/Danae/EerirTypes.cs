@@ -471,7 +471,7 @@ public class E_TEXTURE {
     public POLY Poly;
 }
 
-[DebuggerDisplay("CellObj: {File}")]
+[DebuggerDisplay("Obj: {File}")]
 public class E_3DOBJ {
     //public string Name;
     public string File;

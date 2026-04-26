@@ -421,6 +421,7 @@ class Binary_Esm(ArcBinaryT, IDatabase, CellManager.IQueryFunc):
     _meterInUnits: float = _meterInYards * _yardInUnits
     _cellLengthInUnits: int = 128 * _yardInUnits
     _cellLengthInMeters: float = _cellLengthInUnits / _meterInUnits
+    _radius: list[int] = [4, 3]
 
     def getQuery(self) -> CellManager.IQuery: return Binary_Esm.Tes3CellQuery(self) if self.format == FormType.TES3 else Binary_Esm.ElseCellQuery(self)
 
@@ -429,7 +430,10 @@ class Binary_Esm(ArcBinaryT, IDatabase, CellManager.IQueryFunc):
             self._ = _
             self.meterInUnits: float = Binary_Esm._meterInUnits
             self.cellLengthInMeters: float = Binary_Esm._cellLengthInMeters
-        def getCellId(self, point: Vector3, world: int) -> Int3: return Int3(int(point[0] // Binary_Esm._cellLengthInMeters), int(point[2] // Binary_Esm._cellLengthInMeters), world)
+            self.radius: list[int] = Binary_Esm._radius
+            self.world: int = 0
+        def setWorld(self, world: int) -> None: pass
+        def getCellId(self, point: Vector3, world: int) -> Int3: return Int3(int(point[0] // Binary_Esm._cellLengthInMeters), int(point[2] // Binary_Esm._cellLengthInMeters), 0)
         def findLtex(self, index: int) -> object: return self._.LTEXsById.get(index)
         def findLand(self, cell: Int3) -> object: return self._.LANDsById.get(cell)
         def findCell(self, cell: Int3) -> object: return self._.CELLsById.get(cell)
@@ -440,7 +444,10 @@ class Binary_Esm(ArcBinaryT, IDatabase, CellManager.IQueryFunc):
             self._ = _
             self.meterInUnits: float = Binary_Esm._meterInUnits
             self.cellLengthInMeters: float = Binary_Esm._cellLengthInMeters
-        def getCellId(self, point: Vector3, world: int) -> Int3: return Int3(int(point[0] // Binary_Esm._cellLengthInMeters), int(point[2] // Binary_Esm._cellLengthInMeters), world)
+            self.radius: list[int] = Binary_Esm._radius
+            self.world: int = 0
+        def setWorld(self, world: int) -> None: self.world = world
+        def getCellId(self, point: Vector3, world: int) -> Int3: return Int3(int(point[0] // Binary_Esm._cellLengthInMeters), int(point[2] // Binary_Esm._cellLengthInMeters), self.world)
         def findLtex(self, index: int) -> object: raise Exception()
         def findLand(self, cell: Int3) -> object:
             world = self._.WRLDsById[cell.Z]

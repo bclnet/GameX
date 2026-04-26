@@ -4,7 +4,7 @@ from itertools import groupby
 from typing import TypeVar, get_args
 from enum import IntEnum, IntFlag
 from struct import unpack
-from numpy import ndarray, array
+from numpy import ndarray, array, zeros
 from collections.abc import Iterator
 from openstk.core import log, Byte2, Int2, Byte3, Int3, Float3, CellManager
 from openstk.sys.drawing import Color
@@ -758,7 +758,6 @@ class Reader(BinaryReader):
         if name not in Reader.names: Reader.names[name] = len(Reader.names)
         return Reader.names.get(name)
 
-
 class Record:
     _mapx: dict[FormType, callable] = {
         FormType.AACT: lambda f: AACTRecord(),
@@ -1348,7 +1347,9 @@ class Modl:
 #         self.unknown3 = r.readPArray<uint>('I', self.count - 2) if self.unknown4Count > 0 else None
 #         self.unknown4 = r.readPArray<uint>('I', self.unknown5Count) if self.unknown5Count > 0 else None
 
-class IHaveMODL: pass # MODL: Modl
+class IHaveMODL(CellManager.ICellXrefModel):
+    MODL: Modl
+    def modelPath(self) -> str: return f'meshes\\{self.MODL.value}' if self.MODL.value else None
 
 # Destruction Subrecord Collection
 class Dest:
@@ -2752,8 +2753,8 @@ class CELLRecord(Record, CellManager.ICell):
     class Xyza:
         _struct = ('<3f3f', 24)
         def __init__(self, t):
-            position = self.position = Vector3()
-            eulerAngles = self.eulerAngles = Vector3()
+            position = self.position = zeros(3)
+            eulerAngles = self.eulerAngles = zeros(3)
             (position[0], position[1], position[2],
             eulerAngles[0], eulerAngles[1], eulerAngles[2]) = t
             

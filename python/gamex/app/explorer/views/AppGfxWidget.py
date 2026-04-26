@@ -3,15 +3,11 @@ from openstk.platforms.opengl.gfx.qt_widget import OpenGLWidget
 from openstk.platforms.panda3d.gfx.qt_widget import Panda3dWidget
 from openstk.platforms.pyengine3d.gfx.qt_widget import PyEngine3dWidget
 from openstk.platforms.pygame.gfx.qt_widget import PygameWidget
-from openstk.platforms.tiny3d.gfx.qt_widget import Tiny3dWidget
-from openstk.platforms.vanilla3d.gfx.qt_widget import Vanilla3dWidget
 from gamex.platforms.ex import ExRenderer
 from gamex.platforms.opengl import OpenGLRenderer
 from gamex.platforms.panda3d import Panda3dRenderer
 from gamex.platforms.pyengine3d import PyEngine3dRenderer
 from gamex.platforms.pygame import PygameRenderer
-from gamex.platforms.tiny3d import Tiny3dRenderer
-from gamex.platforms.vanilla3d import Vanilla3dRenderer
 
 # typedefs
 class Renderer: pass
@@ -40,13 +36,3 @@ class AppPyEngine3dWidget(PyEngine3dWidget):
 class AppPygameWidget(PygameWidget):
     def __init__(self, parent: object, tab: object): super().__init__(parent, tab)
     def createRenderer(self) -> Renderer: return PygameRenderer.createRenderer(self, self.gfx, self.value, self.type)
-
-# AppTiny3dWidget
-class AppTiny3dWidget(Tiny3dWidget):
-    def __init__(self, parent: object, tab: object): super().__init__(parent, tab)
-    def createRenderer(self) -> Renderer: return Tiny3dRenderer.createRenderer(self, self.gfx, self.value, self.type)
-
-# AppVanilla3dWidget
-class AppVanilla3dWidget(Vanilla3dWidget):
-    def __init__(self, parent: object, tab: object): super().__init__(parent, tab)
-    def createRenderer(self) -> Renderer: return Vanilla3dRenderer.createRenderer(self, self.gfx, self.value, self.type)

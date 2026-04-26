@@ -575,27 +575,32 @@ public class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase, IQueryFunc {
     internal const float _MeterInUnits = _MeterInYards * _YardInUnits;
     const int _CellLengthInUnits = 128 * _YardInUnits;
     const float _CellLengthInMeters = _CellLengthInUnits / _MeterInUnits;
+    static int[] _Radius = { 4, 3 };
 
     IQuery IQueryFunc.GetQuery() => Format == FormType.TES3 ? new Tes3CellQuery(this) : new ElseCellQuery(this);
 
     public class Tes3CellQuery(Binary_Esm _) : IQuery {
-        //const float PointFactor = 0.5f;
-        //public Int3 GetCellId(Vector3 point, int world) => new((int)Math.Floor(point.X / PointFactor), (int)Math.Floor(point.Z / PointFactor), world);
         public float MeterInUnits => _MeterInUnits;
         public float CellLengthInMeters => _CellLengthInMeters;
-        public Int3 GetCellId(Vector3 point, int world) => new((int)Math.Floor(point.X / CellLengthInMeters), (int)Math.Floor(point.Z / CellLengthInMeters), world);
-        public object FindByName(string name) => _.MANYsById.TryGetValue(name, out var z) ? z : default;
+        public int[] Radius => _Radius;
+        public int World => 0;
+        public void SetWorld(int world) { }
+        public Int3 GetCellId(Vector3 point) => new((int)Math.Floor(point.X / CellLengthInMeters), (int)Math.Floor(point.Z / CellLengthInMeters), 0);
+        public object FindAnyByName(string name) => _.MANYsById.TryGetValue(name, out var z) ? z : default;
         public ILtex FindLtex(int index) => _.LTEXsById.TryGetValue(index, out var z) ? z : default;
         public ILand FindLand(Int3 cell) => _.LANDsById.TryGetValue(cell, out var z) ? z : default;
         public ICell FindCell(Int3 cell) => _.CELLsById.TryGetValue(cell, out var z) ? z : default;
-        public ICell FindCellByName(string name, int a, int b) => _.CELLsByName.TryGetValue(name, out var z) ? z : default;
+        public ICell FindCellByName(string name) => _.CELLsByName.TryGetValue(name, out var z) ? z : default;
     }
 
     public class ElseCellQuery(Binary_Esm _) : IQuery {
         public float MeterInUnits => _MeterInUnits;
         public float CellLengthInMeters => _CellLengthInMeters;
-        public Int3 GetCellId(Vector3 point, int world) => new((int)Math.Floor(point.X / CellLengthInMeters), (int)Math.Floor(point.Z / CellLengthInMeters), world);
-        public object FindByName(string name) => _.MANYsById.TryGetValue(name, out var z) ? z : default;
+        public int[] Radius => _Radius;
+        public int World { get; private set; } = 0;
+        public void SetWorld(int world) => World = world;
+        public Int3 GetCellId(Vector3 point) => new((int)Math.Floor(point.X / CellLengthInMeters), (int)Math.Floor(point.Z / CellLengthInMeters), World);
+        public object FindAnyByName(string name) => _.MANYsById.TryGetValue(name, out var z) ? z : default;
         public ILtex FindLtex(int index) => throw new NotImplementedException();
         public ILand FindLand(Int3 cell) {
             var world = _.WRLDsById[(uint)cell.Z];
@@ -611,7 +616,7 @@ public class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase, IQueryFunc {
                     if (cellBlock.CELLsById.TryGetValue(cell, out var z)) return z;
             return null;
         }
-        public ICell FindCellByName(string name, int a, int b) => throw new NotImplementedException();
+        public ICell FindCellByName(string name) => throw new NotImplementedException();
     }
 
     #endregion

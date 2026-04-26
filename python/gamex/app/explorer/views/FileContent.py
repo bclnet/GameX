@@ -8,7 +8,7 @@ from PyQt6 import QtCore, QtMultimedia
 from gamex.core.binary import Archive
 from gamex.core.meta import MetaItem, MetaContent, MetaInfo
 from .AppHexWidget import AppHexWidget
-from .AppGfxWidget import AppExWidget, AppOpenGLWidget, AppPanda3dWidget, AppPyEngine3dWidget, AppPygameWidget, AppTiny3dWidget, AppVanilla3dWidget
+from .AppGfxWidget import AppExWidget, AppOpenGLWidget, AppPanda3dWidget, AppPyEngine3dWidget, AppPygameWidget
 
 # AppTextWidget
 class AppTextWidget(QWidget):
@@ -64,8 +64,6 @@ class FileContent(QTabWidget):
             AppPanda3dWidget if plat == 'PD' else \
             AppPyEngine3dWidget if plat == 'P3' else \
             AppPygameWidget if plat == 'PG' else \
-            AppTiny3dWidget if plat == 'T3' else \
-            AppVanilla3dWidget if plat == 'V3' else \
             None #AppNullWidget
         if len(self.contentTab) > 0: self.updateTabs()
 

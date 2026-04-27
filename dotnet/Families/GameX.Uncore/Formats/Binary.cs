@@ -1538,19 +1538,33 @@ public class Binary_Engine : IHaveMetaInfo, ICellDatabase {
     public BinaryArchive Archive;
     public BinaryArchive QueryArchive;
     public CellManager.IQuery Query;
-    public Vector3 Start;
+    public Int3 CellId;
+    public bool CellInterior;
+    public Vector3 PlayerPosition;
+    public Quaternion PlayerRotation;
     public Binary_Engine(BinaryReader r, Archive s) {
         var values = Encoding.ASCII.GetString(r.ReadToEnd()).Split(':');
-        var ar = values[0]; var qa = values[1]; var st = values[2].Split(',').Select(float.Parse).ToArray();
+        var ar = values[0];
+        var qa = values[1];
+        var ci = values[2].Split(',').Select(int.Parse).ToArray();
+        var cb = bool.Parse(values[3]);
+        var pp = values[4].Split(',').Select(float.Parse).ToArray();
+        var pr = values[5].Split(',').Select(float.Parse).ToArray();
         Archive = (BinaryArchive)s.GetArchive(ar);
         QueryArchive = (BinaryArchive)s.GetArchive(qa);
         Query = ((CellManager.IQueryFunc)QueryArchive.ArcBinary).GetQuery();
-        Start = new Vector3(st[0], st[1], st[2]);
+        CellId = new Int3(ci[0], ci[1], ci[2]);
+        CellInterior = cb;
+        PlayerPosition = new Vector3(pp[0], pp[1], pp[2]);
+        PlayerRotation = pr.Length <= 3 ? Quaternion.Identity : new Quaternion(pr[0], pr[1], pr[2], pr[3]);
     }
 
     ISource ICellDatabase.Archive => Archive;
     CellManager.IQuery ICellDatabase.Query => Query;
-    Vector3 ICellDatabase.Start => Start;
+    Int3 ICellDatabase.CellId => CellId;
+    bool ICellDatabase.CellInterior => CellInterior;
+    Vector3 ICellDatabase.PlayerPosition => PlayerPosition;
+    Quaternion ICellDatabase.PlayerRotation => PlayerRotation;
 
     // IHaveMetaInfo
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
@@ -1559,7 +1573,8 @@ public class Binary_Engine : IHaveMetaInfo, ICellDatabase {
             new($"{nameof(Binary_Engine)}", items: [
                 new($"Archive: {Archive}"),
                 new($"Query: {Query}"),
-                new($"Start: {Start}"),
+                new($"CellId: {CellId}"),
+                new($"PlayerPosition: {PlayerPosition}"),
             ])
         ];
 }

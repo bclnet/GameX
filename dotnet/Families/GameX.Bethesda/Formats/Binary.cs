@@ -575,7 +575,7 @@ public class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase, IQueryFunc {
     internal const float _MeterInUnits = _MeterInYards * _YardInUnits;
     const int _CellLengthInUnits = 128 * _YardInUnits;
     const float _CellLengthInMeters = _CellLengthInUnits / _MeterInUnits;
-    static int[] _Radius = { 4, 3 };
+    static int[] _Radius = { 1, 1 }; //{ 4, 3 };
 
     IQuery IQueryFunc.GetQuery() => Format == FormType.TES3 ? new Tes3CellQuery(this) : new ElseCellQuery(this);
 

@@ -4,7 +4,8 @@ from numpy import array
 from io import BytesIO
 from PIL import Image
 from enum import Enum
-from openstk.core import _pathExtension
+from quaternion import quaternion
+from openstk.core import _pathExtension, Int3, ICellDatabase
 from openstk.gfx import Raster, DDS_HEADER, Texture_Bytes, ITexture, TextureFormat, TexturePixel
 from gamex import ArcBinary, ArcBinaryT, FileSource, BinaryArchive, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
 from zipfile import ZipFile
@@ -676,24 +677,33 @@ class Binary_TestTri(IHaveMetaInfo):
 
 #region Binary_Engine
 
-class Binary_Engine(IHaveMetaInfo):
+class Binary_Engine(IHaveMetaInfo, ICellDatabase):
     @staticmethod
     def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Engine(r, s)
 
     def __init__(self, r: BinaryReader, s: Archive):
         values = r.readToEnd().decode('ascii').split(':')
-        ar = values[0]; qa = values[1]; st = [float(s) for s in values[2].split(',')]
+        ar = values[0]
+        qa = values[1]
+        ci = [int(s) for s in values[2].split(',')]
+        cb = bool(values[3])
+        pp = [float(s) for s in values[4].split(',')]
+        pr = [float(s) for s in values[5].split(',')]
         self.archive = s.getArchive(ar)
         self.queryArchive = s.getArchive(qa)
         self.query = self.queryArchive.arcBinary.getQuery()
-        self.start = array([st[0], st[1], st[2]], dtype=float)
+        self.cellId = Int3(ci[0], ci[1], ci[2])
+        self.cellInterior = cb
+        self.playerPosition = array([pp[0], pp[1], pp[2]], dtype=float)
+        self.playerRotation = quaternion() if len(pr) == 1 else quaternion(pr[0], pr[1], pr[2], pr[3])
 
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
         MetaInfo(None, MetaContent(type = 'Engine', name = os.path.basename(file.path), value = self)),
         MetaInfo('Binary_Engine', items = [
             MetaInfo(f'Archive: {self.archive}'),
             MetaInfo(f'Query: {self.query}'),
-            MetaInfo(f'Start: {self.start}')
+            MetaInfo(f'CellId: {self.cellId}'),
+            MetaInfo(f'PlayerPosition: {self.playerPosition}')
             ])
         ]
 

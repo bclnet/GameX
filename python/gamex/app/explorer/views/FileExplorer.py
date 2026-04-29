@@ -1,4 +1,4 @@
-import sys, os, re, traceback
+import sys, traceback, asyncio
 from PyQt6.QtWidgets import QMainWindow, QApplication, QWidget, QProgressBar, QTreeView, QTableView, QTableWidget, QTableWidgetItem, QGridLayout, QHeaderView, QAbstractItemView, QLabel, QComboBox, QTextEdit, QHBoxLayout, QMenu, QFileDialog, QSplitter, QTabWidget
 from PyQt6.QtGui import QIcon, QFont, QDrag, QPixmap, QPainter, QColor, QBrush, QAction, QStandardItem, QStandardItemModel
 from PyQt6.QtCore import Qt, QObject, QBuffer, QByteArray, QUrl, QMimeData, pyqtSignal, QItemSelectionModel
@@ -130,7 +130,7 @@ class FileExplorer(QWidget):
                 arc.open(value.items, self.resource)
                 self.updateNodes()
                 self.onFilterKeyUp(None, None)
-            self.onInfo(value, value.archive.getMetaInfos(self.resource, value) if value.archive else None)
+            self.onInfo(value, asyncio.run(value.archive.getMetaInfos(self.resource, value)) if value.archive else None)
         except:
             print(traceback.format_exc())
             self.onInfo(value, [

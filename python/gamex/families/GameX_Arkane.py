@@ -35,7 +35,7 @@ class ArkaneArchive(BinaryArchive):
             case _: raise Exception(f'Unknown: {game.engine[0]}')
 
     @staticmethod
-    def assetFactory(source: FileSource, game: FamilyGame) -> (object, callable):
+    def assetFactory(source: FileSource, game: FamilyGame) -> tuple[object, callable]:
         match _pathExtension(source.path).lower():
             case '.asl': return (0, Binary_Txt.factory)
             # Danae (AF)

@@ -16,7 +16,7 @@ public static class ExportManager {
         using var arc = family.GetArchive(res);
         // single
         if (arc is not MultiArchive multi) { await ExportPakAsync(filePath, match, from, option, arc); return; }
-        // write paks
+        // write arcs
         if ((fo & FileOption.Marker) != 0) {
             if (!string.IsNullOrEmpty(filePath) && !Directory.Exists(filePath)) Directory.CreateDirectory(filePath);
             var setPath = Path.Combine(filePath, ".set");
@@ -30,7 +30,7 @@ public static class ExportManager {
     }
 
     static async Task ExportPakAsync(string filePath, Func<string, bool> match, int from, object option, Archive _) {
-        if (_ is not BinaryArchive arc) throw new InvalidOperationException("s not a BinaryArchive");
+        if (_ is not BinaryArchive arc) throw new InvalidOperationException("not a BinaryArchive");
         var newPath = filePath != null ? Path.Combine(filePath, Path.GetFileName(arc.BinPath)) : null;
         // write arc
         await ExportPak2Async(arc, newPath, match, from, option,
@@ -57,7 +57,7 @@ public static class ExportManager {
             if (file.Arc != null) { await ExportPak2Async(file.Arc, newPath, match, 0, option, next, error); return; }
 
             // ensure cached object factory
-            if ((fo & FileOption.Object) != 0) source.EnsureCachedObjectFactory(file);
+            if ((fo & FileOption.Object) != 0) source.EnsureCachedAssetFactory(file);
 
             // extract file
             try {

@@ -1,5 +1,5 @@
 from __future__ import annotations
-import os
+import os, asyncio
 from typing import TYPE_CHECKING, Any, Optional, cast
 from argparse import ArgumentParser, _SubParsersAction
 from pydantic import BaseModel
@@ -11,14 +11,15 @@ def register(subparser: _SubParsersAction[ArgumentParser]) -> None:
     # optional
     sub.add_argument("-f", "--family", type=str, help="Family")
     sub.add_argument("-u", "--uri", type=str, help="Uri to list")
-    sub.set_defaults(func=list, args_model=CLIListArgs)
+    def func(args: CLIListArgs) -> None: asyncio.run(listAsync(args))
+    sub.set_defaults(func=func, args_model=CLIListArgs)
 
 class CLIListArgs(BaseModel):
     family: Optional[str] = None
     uri: Optional[str] = None
 
 @staticmethod
-def list(args: CLIListArgs) -> None:
+async def listAsync(args: CLIListArgs) -> None:
     # list families
     if not args.family:
         print('Families installed:')

@@ -20,7 +20,7 @@ class GamebryoArchive(BinaryArchive):
             case _: raise Exception(f'Unknown: {extension}')
 
     @staticmethod
-    def assetFactory(source: FileSource, game: FamilyGame) -> (object, callable):
+    def assetFactory(source: FileSource, game: FamilyGame) -> tuple[object, callable]:
         match _pathExtension(source.path).lower():
             case '.nif': return (FileOption.StreamObject, Binary_Nif.factory)
             case _: return UncoreArchive.assetFactory(source, game)

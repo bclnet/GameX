@@ -24,7 +24,7 @@ class WBArchive(BinaryArchive):
         pass
 
     @staticmethod
-    def assetFactory(source: FileSource, game: FamilyGame) -> (object, callable):
+    def assetFactory(source: FileSource, game: FamilyGame) -> tuple[object, callable]:
         match _pathExtension(source.path).lower():
             case _: return UncoreArchive.assetFactory(source, game)
 

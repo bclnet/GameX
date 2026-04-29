@@ -15,7 +15,7 @@ from zipfile import ZipFile
 # Binary_Bik
 class Binary_Bik(IHaveMetaInfo):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Bik(r, f.fileSize)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Bik(r, f.fileSize)
 
     def __init__(self, r: BinaryReader, fileSize: int):
         self.data = r.readBytes(fileSize)
@@ -31,7 +31,7 @@ class Binary_Bik(IHaveMetaInfo):
 # Binary_Dds
 class Binary_Dds(IHaveMetaInfo, ITexture):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Dds(r)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Dds(r)
 
     def __init__(self, r: BinaryReader, readMagic: bool = True):
         self.header, self.headerDXT10, self.format, self.bytes = DDS_HEADER.read(r, readMagic)
@@ -78,7 +78,7 @@ class Binary_Dds(IHaveMetaInfo, ITexture):
 # Binary_Fsb
 class Binary_Fsb(IHaveMetaInfo):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Fsb(r, f.fileSize)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Fsb(r, f.fileSize)
 
     def __init__(self, r: BinaryReader, fileSize: int):
         self.data = r.readBytes(fileSize)
@@ -94,7 +94,7 @@ class Binary_Fsb(IHaveMetaInfo):
 # Binary_Img
 class Binary_Img(IHaveMetaInfo, ITexture):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Img(r, f)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Img(r, f)
 
     def __init__(self, r: BinaryReader, f: FileSource):
         self.image = Image.open(r.f)
@@ -149,7 +149,7 @@ class Binary_Img(IHaveMetaInfo, ITexture):
 # Binary_Msg
 class Binary_Msg(IHaveMetaInfo):
     @staticmethod
-    def factory(message: str): return Binary_Msg(message)
+    async def factory(message: str): return Binary_Msg(message)
 
     def __init__(self, message: str):
         self.message = message
@@ -165,7 +165,7 @@ class Binary_Msg(IHaveMetaInfo):
 # Binary_Pcx
 class Binary_Pcx(IHaveMetaInfo, ITexture):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Pcx(r, f.fileSize)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Pcx(r, f.fileSize)
 
     #region Headers
 
@@ -312,7 +312,7 @@ class Binary_Pcx(IHaveMetaInfo, ITexture):
 # Binary_Snd
 class Binary_Snd(IHaveMetaInfo):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Snd(r, f.fileSize)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Snd(r, f.fileSize)
 
     def __init__(self, r: BinaryReader, fileSize: int):
         self.data = r.readBytes(fileSize)
@@ -329,7 +329,7 @@ class Binary_Snd(IHaveMetaInfo):
 class Binary_Tga(IHaveMetaInfo, ITexture):
 
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Tga(r, f)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Tga(r, f)
 
     #region Headers
 
@@ -620,7 +620,7 @@ class Binary_Tga(IHaveMetaInfo, ITexture):
 # Binary_Txt
 class Binary_Txt(IHaveMetaInfo):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Txt(r, f.fileSize)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Txt(r, f.fileSize)
 
     def __init__(self, r: BinaryReader, fileSize: int):
         self.data = r.readBytes(fileSize).decode('utf8', 'ignore')
@@ -665,7 +665,7 @@ class Binary_Zip(ArcBinaryT):
 
 class Binary_TestTri(IHaveMetaInfo):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_TestTri(r)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_TestTri(r)
 
     def __init__(self, r: BinaryReader): pass
 
@@ -679,7 +679,7 @@ class Binary_TestTri(IHaveMetaInfo):
 
 class Binary_Engine(IHaveMetaInfo, ICellDatabase):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Engine(r, s)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Engine(r, s)
 
     def __init__(self, r: BinaryReader, s: Archive):
         values = r.readToEnd().decode('ascii').split(':')

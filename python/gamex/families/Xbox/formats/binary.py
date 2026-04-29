@@ -18,7 +18,7 @@ type Quaternion = ndarray
 # Binary_Xnb
 class Binary_Xnb(IHaveMetaInfo, IWriteToStream):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Xnb(r, f)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Xnb(r, f)
 
     #region Headers
 

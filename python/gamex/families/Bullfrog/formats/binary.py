@@ -103,7 +103,7 @@ class Binary_Bullfrog(ArcBinaryT):
 # Binary_Fli
 class Binary_Fli(IHaveMetaInfo, ITextureFrames):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Fli(r, f)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Fli(r, f)
 
     #region Headers
 
@@ -131,7 +131,7 @@ class Binary_Fli(IHaveMetaInfo, ITextureFrames):
             self.type) = t
             # remap
             self.type = Binary_Fli.ChunkType(self.type)
-        def isValid(self) -> bool: return self.type == ChunkType.COLOR_256 or self.Type == ChunkType.DELTA_FLC or self.Type == ChunkType.BYTE_RUN
+            self.valid = self.type == ChunkType.COLOR_256 or self.Type == ChunkType.DELTA_FLC or self.Type == ChunkType.BYTE_RUN
 
     class X_FrameHeader:
         _struct = ('<5H', 10)
@@ -202,10 +202,10 @@ class Binary_Fli(IHaveMetaInfo, ITextureFrames):
                 case _: print(f'Unknown Type: {header.type}'); r.skip(header.size)
             if header.type != self.ChunkType.FRAME and r.tell() != nextPosition: r.seek(nextPosition)
             header = r.readS(self.X_ChunkHeader)
-            if not header.isValid or header.type == self.ChunkType.FRAME: break
+            if not header.valid or header.type == self.ChunkType.FRAME: break
         Raster.blitByPalette(self.bytes, 3, self.pixels, self.palette, 3)
         if header.type == self.ChunkType.FRAME: r.skip(-self.X_ChunkHeader.struct[1])
-        return header.isValid
+        return header.valid
 
     def setPalette(self, r: BinaryReader) -> None:
         palette = self.palette
@@ -364,7 +364,7 @@ class Binary_Syndicate(ArcBinaryT):
 # Binary_SyndicateX
 class Binary_SyndicateX(IHaveMetaInfo):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Ftl(r)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Ftl(r)
 
     def __init__(self, r: BinaryReader):
         pass

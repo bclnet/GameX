@@ -60,7 +60,7 @@ class BullfrogArchive(BinaryArchive):
             case _: raise Exception(f'Unknown: {game.id}')
 
     @staticmethod
-    def assetFactory(source: FileSource, game: FamilyGame) -> (object, callable):
+    def assetFactory(source: FileSource, game: FamilyGame) -> tuple[object, callable]:
         match game.id:
             case 'DK' | 'DK2': return Binary_Bullfrog.assetFactory(source, game)
             case 'P' | 'P2' | 'P3': return Binary_Populus.assetFactory(source, game)

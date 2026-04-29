@@ -223,11 +223,15 @@ public unsafe class Binary_Fli : IDisposable, ITextureFrames, IHaveMetaInfo {
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public unsafe struct X_ChunkHeader {
+    public struct X_ChunkHeader {
         public static (string, int) Struct = ("<IH", sizeof(X_ChunkHeader));
         public uint Size;
         public ChunkType Type;
-        public bool IsValid => Type == ChunkType.COLOR_256 || Type == ChunkType.DELTA_FLC || Type == ChunkType.BYTE_RUN || Type == ChunkType.FRAME;
+        public bool Valid;
+        public static ref X_ChunkHeader Run(ref X_ChunkHeader s) {
+            s.Valid = s.Type == ChunkType.COLOR_256 || s.Type == ChunkType.DELTA_FLC || s.Type == ChunkType.BYTE_RUN || s.Type == ChunkType.FRAME;
+            return ref s;
+        }
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -299,7 +303,7 @@ public unsafe class Binary_Fli : IDisposable, ITextureFrames, IHaveMetaInfo {
     public bool DecodeFrame() {
         var r = R;
         X_FrameHeader frameHeader;
-        var header = r.ReadS<X_ChunkHeader>();
+        var header = r.ReadS<X_ChunkHeader>(); header = X_ChunkHeader.Run(ref header);
         do {
             var nextPosition = r.BaseStream.Position + (header.Size - 6);
             switch (header.Type) {
@@ -319,10 +323,10 @@ public unsafe class Binary_Fli : IDisposable, ITextureFrames, IHaveMetaInfo {
             if (header.Type != ChunkType.FRAME && r.BaseStream.Position != nextPosition) r.Seek(nextPosition);
             header = r.ReadS<X_ChunkHeader>();
         }
-        while (header.IsValid && header.Type != ChunkType.FRAME);
+        while (header.Valid && header.Type != ChunkType.FRAME);
         Raster.BlitByPalette(Bytes, 3, Pixels, Palette, 3);
         if (header.Type == ChunkType.FRAME) r.Skip(-sizeof(X_ChunkHeader));
-        return header.IsValid;
+        return header.Valid;
     }
 
     void SetPalette(BinaryReader r) {

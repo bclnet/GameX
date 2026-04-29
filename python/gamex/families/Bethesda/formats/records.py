@@ -2822,8 +2822,8 @@ class CELLRecord(Record, CellManager.ICell):
     def name(self) -> str: return self.EDID
     # @property
     # def ambientLight(self) -> Color: return self.ambientLight
-    # @property
-    # def XREFs(self) -> list[CellManager.ICellXref]: return self.XREFs
+    @property
+    def Xrefs(self) -> list[CellManager.ICellXref]: return self.XREFs
 
     def __repr__(self): return f'C[{self.gridId}:{self.EDID}]'
     def __init__(self): super().__init__(); self.XOWNs = listx(); self.XREFs = listx()

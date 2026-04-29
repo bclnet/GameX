@@ -434,6 +434,7 @@ class Binary_Esm(ArcBinaryT, IDatabase, CellManager.IQueryFunc):
             self.world: int = 0
         def setWorld(self, world: int) -> None: pass
         def getCellId(self, point: Vector3) -> Int3: return Int3(int(point[0] // Binary_Esm._cellLengthInMeters), int(point[2] // Binary_Esm._cellLengthInMeters), 0)
+        def findAnyByName(self, name: str) -> object: return self._.MANYsById.get(name)
         def findLtex(self, index: int) -> object: return self._.LTEXsById.get(index)
         def findLand(self, cell: Int3) -> object: return self._.LANDsById.get(cell)
         def findCell(self, cell: Int3) -> object: return self._.CELLsById.get(cell)
@@ -448,6 +449,7 @@ class Binary_Esm(ArcBinaryT, IDatabase, CellManager.IQueryFunc):
             self.world: int = 0
         def setWorld(self, world: int) -> None: self.world = world
         def getCellId(self, point: Vector3) -> Int3: return Int3(int(point[0] // Binary_Esm._cellLengthInMeters), int(point[2] // Binary_Esm._cellLengthInMeters), self.world)
+        def findAnyByName(self, name: str) -> object: return self._.MANYsById.get(name)
         def findLtex(self, index: int) -> object: raise Exception()
         def findLand(self, cell: Int3) -> object:
             world = self._.WRLDsById[cell.Z]

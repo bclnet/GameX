@@ -13,7 +13,7 @@ namespace GameX;
 
 [DebuggerDisplay("{ModelPath}")]
 public class FileSource {
-    internal static readonly Func<BinaryReader, FileSource, Archive, Task<object>> EmptyObjectFactory = (a, b, c) => null;
+    internal static readonly Func<BinaryReader, FileSource, Archive, Task<object>> EmptyAssetFactory = (a, b, c) => null;
     // common
     public int Id;
     public string Path;

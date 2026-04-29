@@ -48,7 +48,7 @@ public class FormatTests {
             var (fileType, ext) = WBArchive.GetFileType(file, PakType.Cell);
             Assert.IsNotNull(ext, $"Key: 0x{key:X8}, ObjectID: 0x{file.Id:X8}, FileSize: {file.FileSize}");
 
-            var factory = source.EnsureCachedObjectFactory(file);
+            var factory = source.EnsureCachedAssetFactory(file);
             if (factory == null) throw new Exception($"Class for fileType: {fileType} does not implement an AssetFactory.");
 
             using var r = new BinaryReader(await source.GetData(file));
@@ -76,7 +76,7 @@ public class FormatTests {
             if (fileType == ArchiveType.MasterProperty) continue;
             if (fileType == ArchiveType.DbProperties) continue;
 
-            var factory = source.EnsureCachedObjectFactory(file);
+            var factory = source.EnsureCachedAssetFactory(file);
             if (factory == null) throw new Exception($"Class for fileType: {fileType} does not implement an AssetFactory.");
 
             using var r = new BinaryReader(await source.GetData(file));
@@ -98,7 +98,7 @@ public class FormatTests {
             // These file types aren't converted yet
             if (fileType == ArchiveType.UILayout) continue;
 
-            var factory = source.EnsureCachedObjectFactory(file);
+            var factory = source.EnsureCachedAssetFactory(file);
             if (factory == null) throw new Exception($"Class for fileType: {fileType} does not implement an AssetFactory.");
 
             using var r = new BinaryReader(await source.GetData(file));

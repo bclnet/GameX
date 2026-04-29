@@ -29,7 +29,6 @@ public class UncoreArchive : Archive {
     #region Base
 
     //public override void Dispose() { }
-    public override int Count => 0;
     public override void Closing() { }
     public override void Opening() { }
     public override bool Contains(object path) => false;

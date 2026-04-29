@@ -14,7 +14,7 @@ partial class Program {
         [Option('u', "uri", HelpText = "Uri to list")] public Uri Uri { get; set; }
     }
 
-    static Task<int> RunListAsync(ListOptions args) {
+    static Task<int> ListAsync(ListOptions args) {
         // list families
         if (string.IsNullOrEmpty(args.Family)) {
             Console.WriteLine("Families installed:\n");

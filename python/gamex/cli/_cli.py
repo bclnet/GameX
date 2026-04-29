@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 import sys, logging, argparse, httpx
 from typing import Any, List, Type, Optional
 from typing_extensions import ClassVar
@@ -30,8 +29,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("-v", "--verbose", action="count", dest="verbosity", default=0, help="set verbosity")
     parser.add_argument("-V", "--version", action="version", version="%(prog)s " + __version__)
     parser.add_argument("-p", "--proxy", nargs="+", help="set proxy to use")
-    def help() -> None: parser.print_help()
-    parser.set_defaults(func=help)
+    parser.set_defaults(func=parser.print_help)
     register_commands(parser)
     return parser
 
@@ -71,7 +69,7 @@ def _parse_args(parser: argparse.ArgumentParser) -> tuple[argparse.Namespace, Ar
 
 def _main() -> None:
     
-    sys.argv = ['gamex', 'get', '-f', 'Bethesda', '-u', 'game:/Morrowind.esm#Morrowind', '-m', '*', '-o', 'StreamObject', '-p', 'D:/T_/MorrowindEP']
+    # sys.argv = ['gamex', 'get', '-f', 'Bethesda', '-u', 'game:/Morrowind.esm#Morrowind', '-m', '*', '-o', 'StreamObject', '-p', 'D:/T_/MorrowindEP']
     # sys.argv = ['gamex', 'get', '-f', 'Bethesda', '-u', 'game:/Oblivion.esm#Oblivion', '-m', '*', '-o', 'StreamObject', '-p', 'D:/T_/OblivionEP']
     # sys.argv = ['gamex', 'get', '-f', 'Bethesda', '-u', 'game:/Fallout3.esm#Fallout3', '-m', '*', '-o', 'StreamObject', '-p', 'D:/T_/Fallout3EP']
 

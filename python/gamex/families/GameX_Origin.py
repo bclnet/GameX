@@ -65,7 +65,7 @@ class OriginArchive(BinaryArchive):
             case _: raise Exception(f'Unknown: {game.id}')
         
     @staticmethod
-    def assetFactory(source: FileSource, game: FamilyGame) -> (object, callable):
+    def assetFactory(source: FileSource, game: FamilyGame) -> tuple[object, callable]:
         match game.id:
             case 'U8': return Binary_U8.assetFactory(source, game)
             case 'UO': return Binary_UO.assetFactory(source, game)

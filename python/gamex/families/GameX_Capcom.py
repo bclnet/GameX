@@ -5,6 +5,7 @@ from gamex import ArcBinary, BinaryArchive
 from gamex.families.Uncore.formats.binary import Binary_Zip
 from gamex.families.Capcom.formats.binary import Binary_Arc, Binary_Big, Binary_Bundle, Binary_Kpka, Binary_Plist
 from gamex.families.Unity.formats.binary import Binary_Unity
+from gamex.families.GameX_Uncore import UncoreArchive
 
 # CapcomArchive
 class CapcomArchive(BinaryArchive):
@@ -27,5 +28,10 @@ class CapcomArchive(BinaryArchive):
             case '.bundle': return Binary_Bundle()
             case '.mbundle': return Binary_Plist()
             case _: raise Exception(f'Unknown: {extension}')
+
+    @staticmethod
+    def assetFactory(source: FileSource, game: FamilyGame) -> tuple[object, callable]:
+        match _pathExtension(source.path).lower():
+            case _: return UncoreArchive.assetFactory(source, game)
 
     #endregion

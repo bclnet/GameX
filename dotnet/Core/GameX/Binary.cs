@@ -119,6 +119,11 @@ public abstract class Binary : IDisposable {
     public object Tag;
 
     /// <summary>
+    /// Determines whether this instance is valid.
+    /// </summary>
+    public bool Valid;
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="Binary" /> class.
     /// </summary>
     /// <param name="state">The state.</param>
@@ -134,12 +139,8 @@ public abstract class Binary : IDisposable {
         Name = string.IsNullOrEmpty(state.Path) ? ""
             : !string.IsNullOrEmpty(z = Path.GetFileName(state.Path)) ? z : Path.GetFileName(Path.GetDirectoryName(state.Path));
         Tag = state.Tag;
+        Valid = true;
     }
-
-    /// <summary>
-    /// Determines whether this instance is valid.
-    /// </summary>
-    public virtual bool Valid => true;
 
     /// <summary>
     /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
@@ -198,14 +199,13 @@ public abstract class Binary : IDisposable {
 /// <param name="state">The state.</param>
 public abstract class Archive(BinaryState state) : Binary(state), ISourceWithPlatform {
     class EmptyArchive(BinaryState state) : Archive(state) {
-        public override int Count => 0;
         public override bool Contains(object path) => false;
         public override (Archive, FileSource) GetSource(object path, bool throwOnError = true) => throw new NotImplementedException();
         public override Task<Stream> GetData(object path, object option = default, bool throwOnError = true) => throw new NotImplementedException();
         public override Task<T> GetAsset<T>(object path, object option = default, bool throwOnError = true) => throw new NotImplementedException();
     }
 
-    public delegate (object option, Func<BinaryReader, FileSource, Archive, Task<object>> factory) FuncObjectFactory(FileSource source, FamilyGame game);
+    public delegate (object option, Func<BinaryReader, FileSource, Archive, Task<object>> factory) FuncAssetFactory(FileSource source, FamilyGame game);
 
     /// <summary>
     /// An empty family.
@@ -220,12 +220,18 @@ public abstract class Archive(BinaryState state) : Binary(state), ISourceWithPla
     /// <summary>
     /// The arc path finders.
     /// </summary>
-    public FuncObjectFactory AssetFactoryFunc = null;
+    public FuncAssetFactory AssetFactoryFunc = null;
+
+    /// <summary>
+    /// The arc item count.
+    /// </summary>
+    public int Count;
 
     /// <summary>
     /// Opens this instance.
     /// </summary>
     public virtual Archive Open(List<MetaItem> items = null, MetaManager manager = null) {
+        if (Status != Stat.Closed) return this;
         base.Open();
         items?.AddRange(GetMetaItems(manager));
         return this;
@@ -239,14 +245,6 @@ public abstract class Archive(BinaryState state) : Binary(state), ISourceWithPla
     ///   <c>true</c> if [contains] [the specified file path]; otherwise, <c>false</c>.
     /// </returns>
     public abstract bool Contains(object path);
-
-    /// <summary>
-    /// Gets the arc item count.
-    /// </summary>
-    /// <value>
-    /// The count.
-    /// </value>
-    public abstract int Count { get; }
 
     /// <summary>
     /// Finds the path.
@@ -335,7 +333,7 @@ public abstract class Archive(BinaryState state) : Binary(state), ISourceWithPla
     /// <param name="path">The file path.</param>
     /// <param name="transformTo">The transformTo.</param>
     /// <returns></returns>
-    public async Task<T> GetAsset<T>(object path, Archive transformTo) => await TransformAsset<T>(transformTo, await GetAsset<object>(path));
+    public async Task<T> GetAsset<T>(object path, Archive transformTo) => await TransformAsset<T>(await GetAsset<object>(path), transformTo);
 
     /// <summary>
     /// Transforms the file object asynchronous.
@@ -344,9 +342,9 @@ public abstract class Archive(BinaryState state) : Binary(state), ISourceWithPla
     /// <param name="transformTo">The transformTo.</param>
     /// <param name="source">The source.</param>
     /// <returns></returns>
-    Task<T> TransformAsset<T>(Archive transformTo, object source) {
-        if (this is ITransformAsset<T> left && left.CanTransformAsset(transformTo, source)) return left.TransformAsset(transformTo, source);
-        else if (transformTo is ITransformAsset<T> right && right.CanTransformAsset(transformTo, source)) return right.TransformAsset(transformTo, source);
+    Task<T> TransformAsset<T>(object source, Archive transformTo) {
+        if (this is ITransformAsset<T> left && left.CanTransformAsset(source, transformTo)) return left.TransformAsset(source, transformTo);
+        else if (transformTo is ITransformAsset<T> right && right.CanTransformAsset(source, transformTo)) return right.TransformAsset(source, transformTo);
         else throw new ArgumentOutOfRangeException(nameof(transformTo));
     }
 
@@ -412,16 +410,10 @@ public abstract class BinaryArchive(BinaryState state, ArcBinary arcBinary) : Ar
     public ILookup<string, FileSource> FilesByPath { get; private set; }
     public int PathSkip;
     public bool AtEnd;
-
-    /// <summary>
-    /// Valid
-    /// </summary>
-    public override bool Valid => Files != null;
-
-    #region Pool
-
     readonly ConcurrentDictionary<string, GenericPoolX<BinaryReader>> Readers = new();
     readonly ConcurrentDictionary<string, GenericPoolX<BinaryWriter>> Writers = new();
+
+    #region Pool
 
     /// <summary>
     /// Gets the binary reader.
@@ -500,12 +492,16 @@ public abstract class BinaryArchive(BinaryState state, ArcBinary arcBinary) : Ar
     public async override void Opening() {
         await Read(Tag);
         await Process();
+        Valid = Files != null;
+        Count = FilesByPath.Count;
     }
 
     /// <summary>
     /// Closes this instance.
     /// </summary>
     public override void Closing() {
+        Valid = false;
+        Count = 0;
         Files = null;
         FilesRawSet = null;
         FilesById = null;
@@ -529,10 +525,6 @@ public abstract class BinaryArchive(BinaryState state, ArcBinary arcBinary) : Ar
             default: throw new ArgumentOutOfRangeException(nameof(path));
         }
     }
-
-    /// <summary>Gets the count.</summary>
-    /// <value>The count.</value>
-    public override int Count => FilesByPath.Count;
 
     /// <summary>
     /// Finds the texture.
@@ -558,14 +550,14 @@ public abstract class BinaryArchive(BinaryState state, ArcBinary arcBinary) : Ar
                     if (arc != null) return next != null ? arc.GetSource(next) : (arc, null);
                     var files = FilesByPath[s.Replace('\\', '/')].ToArray();
                     if (files.Length == 1) return (this, files[0]);
-                    Log.Info($"ERROR.GetData: {s} @ {files.Length}");
+                    Log.Info($"ERROR.GetSource: {s} @ {files.Length}");
                     if (throwOnError) throw new FileNotFoundException(files.Length == 0 ? $"File not found: {s}" : $"More then one file found: {s}");
                     return (null, null);
                 }
             case int i: {
                     var files = FilesById[i].ToArray();
                     if (files.Length == 1) return (this, files[0]);
-                    Log.Info($"ERROR.GetData: {i} @ {files.Length}");
+                    Log.Info($"ERROR.GetSource: {i} @ {files.Length}");
                     if (throwOnError) throw new FileNotFoundException(files.Length == 0 ? $"File not found: {i}" : $"More then one file found: {i}");
                     return (null, null);
                 }
@@ -615,14 +607,17 @@ public abstract class BinaryArchive(BinaryState state, ArcBinary arcBinary) : Ar
         var type = typeof(T);
         var data = await GetData(f, option, throwOnError);
         if (data == null) return default;
-        var objectFactory = EnsureCachedObjectFactory(f);
-        if (objectFactory != FileSource.EmptyObjectFactory) {
+        var assetFactory = EnsureCachedAssetFactory(f);
+        if (assetFactory != FileSource.EmptyAssetFactory) {
             var r = new BinaryReader(data);
             object value = null;
             Task<object> task = null;
             try {
-                task = objectFactory(r, f, this);
-                if (task != null) return (value = await task) is T z ? z : value is Indirect<T> y ? y.Value : throw new InvalidCastException();
+                task = assetFactory(r, f, this);
+                if (task != null) {
+                    value = await task;
+                    return value is T z ? z : value is Indirect<T> y ? y.Value : throw new InvalidCastException();
+                }
             }
             catch (Exception e) { Log.Error(e.Message); throw e; }
             finally {
@@ -640,12 +635,12 @@ public abstract class BinaryArchive(BinaryState state, ArcBinary arcBinary) : Ar
     /// </summary>
     /// <param name="file">The file.</param>
     /// <returns></returns>
-    public Func<BinaryReader, FileSource, Archive, Task<object>> EnsureCachedObjectFactory(FileSource file) {
-        if (AssetFactoryFunc == null) return FileSource.EmptyObjectFactory;
+    public Func<BinaryReader, FileSource, Archive, Task<object>> EnsureCachedAssetFactory(FileSource file) {
+        if (AssetFactoryFunc == null) return FileSource.EmptyAssetFactory;
         if (file.CachedObjectFactory != null) return file.CachedObjectFactory;
-        var factory = AssetFactoryFunc(file, Game);
-        file.CachedObjectOption = factory.option;
-        file.CachedObjectFactory = factory.factory ?? FileSource.EmptyObjectFactory;
+        var (option, factory) = AssetFactoryFunc(file, Game);
+        file.CachedObjectOption = option;
+        file.CachedObjectFactory = factory ?? FileSource.EmptyAssetFactory;
         return file.CachedObjectFactory;
     }
 
@@ -811,17 +806,22 @@ public class MultiArchive : Archive {
     }
 
     /// <summary>
+    /// Opens this instance.
+    /// </summary>
+    public override void Opening() {
+        var count = 0;
+        foreach (var s in Archives) { s.Open(); count += s.Count; }
+        Valid = true;
+        Count = count;
+    }
+
+    /// <summary>
     /// Closes this instance.
     /// </summary>
     public override void Closing() {
         foreach (var s in Archives) s.Close();
-    }
-
-    /// <summary>
-    /// Opens this instance.
-    /// </summary>
-    public override void Opening() {
-        foreach (var s in Archives) s.Open();
+        Valid = false;
+        Count = 0;
     }
 
     /// <summary>
@@ -838,16 +838,6 @@ public class MultiArchive : Archive {
             int i => Archives.Any(s => s.Valid && s.Contains(i)),
             _ => throw new ArgumentOutOfRangeException(nameof(path)),
         };
-
-    /// <summary>
-    /// Gets the count.
-    /// </summary>
-    /// <value>
-    /// The count.
-    /// </value>
-    public override int Count {
-        get { var count = 0; foreach (var s in Archives) count += s.Count; return count; }
-    }
 
     IList<Archive> FindArchives(string path, out string next) {
         var paths = path.Split(['\\', '/', ':'], 2);
@@ -886,10 +876,8 @@ public class MultiArchive : Archive {
     public override Task<Stream> GetData(object path, object option = default, bool throwOnError = true)
         => path switch {
             null => throw new ArgumentNullException(nameof(path)),
-            string s => (FindArchives(s, out var s2).FirstOrDefault(s => s.Valid && s.Contains(s2)) ?? throw new FileNotFoundException($"Could not find file \"{s}\"."))
-                .GetData(s2, option, throwOnError),
-            int i => (Archives.FirstOrDefault(s => s.Valid && s.Contains(i)) ?? throw new FileNotFoundException($"Could not find file \"{i}\"."))
-                .GetData(i, option, throwOnError),
+            string s => (FindArchives(s, out var s2).FirstOrDefault(s => s.Valid && s.Contains(s2)) ?? throw new FileNotFoundException($"Could not find file \"{s}\".")).GetData(s2, option, throwOnError),
+            int i => (Archives.FirstOrDefault(s => s.Valid && s.Contains(i)) ?? throw new FileNotFoundException($"Could not find file \"{i}\".")).GetData(i, option, throwOnError),
             _ => throw new ArgumentOutOfRangeException(nameof(path)),
         };
 
@@ -904,10 +892,8 @@ public class MultiArchive : Archive {
     public override Task<T> GetAsset<T>(object path, object option = default, bool throwOnError = true)
         => path switch {
             null => throw new ArgumentNullException(nameof(path)),
-            string s => (FindArchives(s, out var s2).FirstOrDefault(s => s.Valid && s.Contains(s2)) ?? throw new FileNotFoundException($"Could not find file \"{s}\"."))
-                .GetAsset<T>(s2, option, throwOnError),
-            int i => (Archives.FirstOrDefault(s => s.Valid && s.Contains(i)) ?? throw new FileNotFoundException($"Could not find file \"{i}\"."))
-                .GetAsset<T>(i, option, throwOnError),
+            string s => (FindArchives(s, out var s2).FirstOrDefault(s => s.Valid && s.Contains(s2)) ?? throw new FileNotFoundException($"Could not find file \"{s}\".")).GetAsset<T>(s2, option, throwOnError),
+            int i => (Archives.FirstOrDefault(s => s.Valid && s.Contains(i)) ?? throw new FileNotFoundException($"Could not find file \"{i}\".")).GetAsset<T>(i, option, throwOnError),
             _ => throw new ArgumentOutOfRangeException(nameof(path)),
         };
 
@@ -919,11 +905,7 @@ public class MultiArchive : Archive {
     /// <param name="manager">The resource.</param>
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
-    public override List<MetaItem> GetMetaItems(MetaManager manager) {
-        var r = new List<MetaItem>();
-        foreach (var s in Archives.Where(t => t.Valid)) r.Add(new MetaItem(s, s.Name, manager.PackageIcon, archive: s, items: s.GetMetaItems(manager)));
-        return r;
-    }
+    public override List<MetaItem> GetMetaItems(MetaManager manager) => [.. Archives.Where(t => t.Valid).Select(s => new MetaItem(s, s.Name, manager.PackageIcon, archive: s, items: s.GetMetaItems(manager)))];
 
     #endregion
 }
@@ -1038,19 +1020,19 @@ public interface ITransformAsset<T> {
     /// <summary>
     /// Determines whether this instance [can transform file object] the specified transform to.
     /// </summary>
+    /// <param name="src">The source.</param>
     /// <param name="transformTo">The transform to.</param>
-    /// <param name="source">The source.</param>
     /// <returns>
     ///   <c>true</c> if this instance [can transform file object] the specified transform to; otherwise, <c>false</c>.
     /// </returns>
-    bool CanTransformAsset(Archive transformTo, object source);
+    bool CanTransformAsset(object src, Archive transformTo);
     /// <summary>
     /// Transforms the file object asynchronous.
     /// </summary>
+    /// <param name="src">The source.</param>
     /// <param name="transformTo">The transform to.</param>
-    /// <param name="source">The source.</param>
     /// <returns></returns>
-    Task<T> TransformAsset(Archive transformTo, object source);
+    Task<T> TransformAsset(object src, Archive transformTo);
 }
 
 #endregion

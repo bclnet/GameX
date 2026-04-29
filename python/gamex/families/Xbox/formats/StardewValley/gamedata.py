@@ -3305,7 +3305,7 @@ class Shops:
             # else: self._nameImpl = value; self.type = ShopOwnerType.NamedNpc
         # Get whether an NPC name matches this entry.
         # <param name='npcName'>The NPC name to check.</param>
-        def isValid(self, npcName: str) -> bool:
+        def valid(self, npcName: str) -> bool:
             match self.type:
                 case ShopOwnerType.Any: return not string.IsNullOrWhiteSpace(npcName)
                 case ShopOwnerType.AnyOrNone: return True

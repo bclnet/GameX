@@ -5,7 +5,7 @@ from openstk.core import _throw
 
 # FileSource
 class FileSource:
-    emptyObjectFactory = lambda a, b, c: None
+    emptyAssetFactory = lambda a, b, c: None
     def __init__(self, id = None, path = None, offset = None, fileSize = None, packedSize = None, compressed = None, flags = None, hash = None, date = None, arc = None, parts = None, data = None, tag = None, lazy = None):
         self.id = id
         self.path = path
@@ -99,9 +99,9 @@ class MetaManager:
         return stream
 
     @staticmethod
-    def getMetaInfos(manager: MetaManager, archive: BinaryArchive, file: FileSource) -> list[MetaInfo]:
+    async def getMetaInfos(manager: MetaManager, archive: BinaryArchive, file: FileSource) -> list[MetaInfo]:
         nodes = None
-        obj = archive.getAsset(object, file)
+        obj = await archive.getAsset(object, file)
         match obj:
             case None: return None
             case s if isinstance(obj, IHaveMetaInfo): nodes = s.getInfoNodes(manager, file)

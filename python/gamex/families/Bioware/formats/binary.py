@@ -79,8 +79,6 @@ class Binary_Myp(ArcBinaryT):
                 headerFile = headerFiles[i]
                 if headerFile.offset == 0: continue
                 hash = headerFile.digest
-                print(hash)
-                exit(0)
                 path = hashLookup[hash].replace('\\', '/') if hash in hashLookup else f'{hash:02X}.bin'
                 files.append(FileSource(
                     id = i,

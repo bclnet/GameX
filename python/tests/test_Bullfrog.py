@@ -1,3 +1,4 @@
+import asyncio
 from gamex import family
 
 # get family
@@ -20,5 +21,5 @@ print(f'arc: {archive}, {sample}')
 # print(f'dat: {data}')
 
 # get file
-obj = archive.getAsset(object, sample)
+obj = asyncio.run(archive.getAsset(object, sample))
 print(f'obj: {obj}')

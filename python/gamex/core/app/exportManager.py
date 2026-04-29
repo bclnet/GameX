@@ -27,7 +27,7 @@ class ExportManager:
     @staticmethod
     async def exportPakAsync(filePath: str, match: callable, from_: int, option: object, _: Archive) -> None:
         arc = _
-        if not isinstance(arc, BinaryArchive): raise Exception('s not a BinaryArchive')
+        if not isinstance(arc, BinaryArchive): raise Exception('not a BinaryArchive')
         newPath = os.path.join(filePath, os.path.basename(arc.binPath)) if filePath else None
         # write arc
         await ExportManager.exportPak2Async(arc, newPath, match, from_, option, \
@@ -49,9 +49,9 @@ class ExportManager:
             directory = os.path.dirname(newPath) if newPath else None
             if directory and not os.path.isdir(directory): os.makedirs(directory)
             # recursive extract arc, and exit
-            if file.arc: await exportPak2Async(file.arc, newPath, match, 0, option, next, error); return
+            if file.arc: await ExportManager.exportPak2Async(file.arc, newPath, match, 0, option, next, error); return
             # ensure cached object factory
-            if FileOption.Object in fo: source.ensureCachedObjectFactory(file)
+            if FileOption.Object in fo: source.ensureCachedAssetFactory(file)
             # extract file
             try:
                 await ExportManager.exportFileAsync(file, source, newPath, option)
@@ -70,11 +70,11 @@ class ExportManager:
         oo = file.cachedObjectOption if isinstance(file.cachedObjectOption, FileOption) else fo
         if file.cachedObjectOption != None and bool(fo & oo):
             if FileOption.UnknownFileModel in oo:
-                model = source.getAsset(IUnknownFileModel, file, FamilyManager.UncoreArchive)
+                model = await source.getAsset(IUnknownFileModel, file, FamilyManager.UncoreArchive)
                 # UnknownFileWriter.Factory('default', model).Write(newPath, false)
                 return
             elif FileOption.BinaryObject in oo:
-                obj = source.getAsset(object, file)
+                obj = await source.getAsset(object, file)
                 if isinstance(obj, IStream):
                     with obj.getStream() as b2, open(newPath, 'wb') if newPath else io.BytesIO() as s2:
                         shutil.copyfileobj(b2, s2)
@@ -82,14 +82,14 @@ class ExportManager:
                 ArcBinary.handleException(None, option, f'BinaryObject: {file.Path} @ {file.FileSize}')
                 raise Exception()
             elif FileOption.StreamObject in oo:
-                obj = source.getAsset(object, file)
+                obj = await source.getAsset(object, file)
                 if isinstance(obj, IWriteToStream):
                     with open(newPath, 'w', encoding='utf-8') if newPath else io.BytesIO() as s2:
                         obj.writeToStream(s2)
                     return
                 ArcBinary.handleException(None, option, f'StreamObject: {file.Path} @ {file.FileSize}')
                 raise Exception()
-        with source.getData(file, option) as b, open(newPath, 'wb') if newPath else io.BytesIO() as s:
+        with await source.getData(file, option) as b, open(newPath, 'wb') if newPath else io.BytesIO() as s:
             shutil.copyfileobj(b, s)
             if file.parts and FileOption.Raw not in fo:
                 for part in file.parts:

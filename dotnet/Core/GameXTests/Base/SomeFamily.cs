@@ -33,7 +33,6 @@ internal static class Some {
 
     public class SomeArchive : Archive {
         public SomeArchive(BinaryState state) : base(state) { Name = "Some Name"; }
-        public override int Count => 0;
         public override void Closing() { }
         public override void Opening() { }
         public override bool Contains(object path) => false;
@@ -42,7 +41,5 @@ internal static class Some {
         public override Task<T> GetAsset<T>(object path, object option = default, bool throwOnError = true) => throw new NotImplementedException();
     }
 
-    public const string FileManagerJson =
-@"{
-}";
+    public const string FileManagerJson = @"{}";
 }

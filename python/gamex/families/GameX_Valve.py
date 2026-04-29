@@ -24,7 +24,7 @@ class ValveArchive(BinaryArchive):
             case _: raise Exception(f'Unknown: {game.engine[0]}')
 
     @staticmethod
-    def assetFactory(source: FileSource, game: FamilyGame) -> (object, callable):
+    def assetFactory(source: FileSource, game: FamilyGame) -> tuple[object, callable]:
         match game.engine[0]:
             case 'GoldSrc':
                 match _pathExtension(source.path).lower():

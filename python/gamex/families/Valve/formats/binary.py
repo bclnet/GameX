@@ -123,7 +123,7 @@ class Binary_Bsp30(ArcBinaryT):
 # Binary_Src
 class Binary_Src(IHaveMetaInfo):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive):
+    async def factory(r: BinaryReader, f: FileSource, s: Archive):
         pass
         
     def __init__(self, r: BinaryReader):
@@ -140,7 +140,7 @@ class Binary_Src(IHaveMetaInfo):
 # Binary_Spr
 class Binary_Spr(IHaveMetaInfo, ITextureFrames):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Spr(r)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Spr(r)
 
     #region Headers
 
@@ -245,7 +245,7 @@ class Binary_Spr(IHaveMetaInfo, ITextureFrames):
 # Binary_Mdl10
 class Binary_Mdl10(IHaveMetaInfo, ITexture):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Mdl10(r, f, s)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Mdl10(r, f, s)
 
     #region Headers
 
@@ -809,7 +809,7 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
 # Binary_Mdl40
 class Binary_Mdl40(IHaveMetaInfo):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Mdl40(r, f, s)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Mdl40(r, f, s)
 
     #region Headers
 
@@ -1258,7 +1258,7 @@ class Binary_Wad3(ArcBinaryT):
 # Binary_Wad3X
 class Binary_Wad3X(IHaveMetaInfo, ITexture):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Wad3X(r, f)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Wad3X(r, f)
 
     #region Headers
 

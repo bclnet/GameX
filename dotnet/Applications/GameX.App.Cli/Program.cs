@@ -112,8 +112,8 @@ partial class Program {
         Parser.Default.ParseArguments<TestOptions, ListOptions, GetOptions, SetOptions>(args)
         .MapResult(
             (TestOptions opts) => RunTestAsync(opts).GetAwaiter().GetResult(),
-            (ListOptions opts) => RunListAsync(opts).GetAwaiter().GetResult(),
-            (GetOptions opts) => RunGetAsync(opts).GetAwaiter().GetResult(),
+            (ListOptions opts) => ListAsync(opts).GetAwaiter().GetResult(),
+            (GetOptions opts) => GetAsync(opts).GetAwaiter().GetResult(),
             (SetOptions opts) => RunSetAsync(opts).GetAwaiter().GetResult(),
             errs => 1);
     }

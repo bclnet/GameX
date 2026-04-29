@@ -16,7 +16,7 @@ partial class Program {
         [Option('p', "path", Default = @".\out", HelpText = "Output folder")] public string Path { get; set; }
     }
 
-    static async Task<int> RunGetAsync(GetOptions args) {
+    static async Task<int> GetAsync(GetOptions args) {
         var from = ProgramState.Load(Convert.ToInt32, 0);
 
         // get family

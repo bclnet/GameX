@@ -1,5 +1,5 @@
 from __future__ import annotations
-import asyncio
+import os, asyncio
 from typing import TYPE_CHECKING, Any, Optional, cast
 from argparse import ArgumentParser, _SubParsersAction
 from pydantic import BaseModel
@@ -37,9 +37,10 @@ def register(subparser: _SubParsersAction[ArgumentParser]) -> None:
     sub.add_argument("-m", "--match", type=str, help="Match")
     sub.add_argument("-o", "--option", type=str, default="Default", help="Option")
     sub.add_argument("-p", "--path", type=str, default="./out", help="Output folder")
-    sub.set_defaults(func=get, args_model=CLIExportArgs)
+    def func(args: CLIGetArgs) -> None: asyncio.run(getAsync(args))
+    sub.set_defaults(func=func, args_model=CLIGetArgs)
 
-class CLIExportArgs(BaseModel):
+class CLIGetArgs(BaseModel):
     family: str
     uri: str
     path: Optional[str] = None
@@ -47,7 +48,7 @@ class CLIExportArgs(BaseModel):
     option: Optional[str] = None
 
 @staticmethod
-def get(args: CLIExportArgs) -> None:
+async def getAsync(args: CLIGetArgs) -> None:
     args.option = FileOption[args.option]
     from_ = ProgramState.load(lambda x: x, 0)
     
@@ -61,6 +62,6 @@ def get(args: CLIExportArgs) -> None:
     match = FileSystem.createMatcher(args.match) if args.match else None
 
     # export
-    asyncio.run(ExportManager.exportAsync(family, res, path, match, from_, args.option))
+    await ExportManager.exportAsync(family, res, path, match, from_, args.option)
 
     ProgramState.clear()

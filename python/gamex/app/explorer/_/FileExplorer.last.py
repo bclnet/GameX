@@ -244,7 +244,7 @@ class FileExplorer(QWidget):
 
     def show_hexview_for_item(self, item, force_type=None):
         size = item.file_data.fileSize
-        data = self.archive.getData(item.file_data)
+        data = await self.archive.getData(item.file_data)
         if not data: return
         w = HexViewWidget(self.parent)
         w.viewFile(item.text, data.read(), size, force_type)

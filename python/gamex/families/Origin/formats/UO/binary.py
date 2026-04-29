@@ -16,7 +16,7 @@ class TextureFlags: pass
 # Binary_Anim
 class Binary_Anim(IHaveMetaInfo):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Anim(r)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Anim(r)
 
     #region Headers
     #endregion
@@ -36,7 +36,7 @@ class Binary_Anim(IHaveMetaInfo):
 # Binary_Animdata
 class Binary_Animdata(IHaveMetaInfo):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Animdata(r)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Animdata(r)
 
     #region Headers
 
@@ -85,7 +85,7 @@ class Binary_Animdata(IHaveMetaInfo):
 # Binary_AsciiFont
 class Binary_AsciiFont(IHaveMetaInfo):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_AsciiFont(r)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_AsciiFont(r)
 
     #region Headers
 
@@ -125,7 +125,7 @@ class Binary_AsciiFont(IHaveMetaInfo):
 # Binary_BodyConverter
 class Binary_BodyConverter(IHaveMetaInfo):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_BodyConverter(r)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_BodyConverter(r)
 
     #region Headers
 
@@ -239,7 +239,7 @@ class Binary_BodyConverter(IHaveMetaInfo):
 # Binary_BodyTable
 class Binary_BodyTable(IHaveMetaInfo):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_BodyTable(r)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_BodyTable(r)
 
     #region Headers
 
@@ -287,7 +287,7 @@ class Binary_BodyTable(IHaveMetaInfo):
 # Binary_CalibrationInfo
 class Binary_CalibrationInfo(IHaveMetaInfo):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_CalibrationInfo(r)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_CalibrationInfo(r)
 
     #region Headers
 
@@ -426,7 +426,7 @@ class Binary_CalibrationInfo(IHaveMetaInfo):
 # Binary_Gump
 class Binary_Gump(IHaveMetaInfo, ITexture):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Gump(r, f.fileSize, f.compressed)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Gump(r, f.fileSize, f.compressed)
 
     def __init__(self, r: BinaryReader, length: int, extra: int):
         width = self.width = (extra >> 16) & 0xFFFF
@@ -478,7 +478,7 @@ class Binary_Gump(IHaveMetaInfo, ITexture):
 # Binary_GumpDef
 class Binary_GumpDef(IHaveMetaInfo):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_GumpDef(r)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_GumpDef(r)
 
     def __init__(self, r: BinaryReader):
         line: str
@@ -510,7 +510,7 @@ class Binary_GumpDef(IHaveMetaInfo):
 # Binary_Hues
 class Binary_Hues(IHaveMetaInfo):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Hues(r)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Hues(r)
 
     #region Headers
 
@@ -557,7 +557,7 @@ class Binary_Hues(IHaveMetaInfo):
 # Binary_Land
 class Binary_Land(IHaveMetaInfo, ITexture):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Land(r, f.fileSize)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Land(r, f.fileSize)
 
     def __init__(self, r: BinaryReader, length: int):
         bdata = np.frombuffer(r.readBytes(length), dtype = np.uint16); bdata_ = 0
@@ -601,7 +601,7 @@ class Binary_Land(IHaveMetaInfo, ITexture):
 # Binary_Light
 class Binary_Light(IHaveMetaInfo, ITexture):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Light(r, f.fileSize, f.compressed)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Light(r, f.fileSize, f.compressed)
 
     def __init__(self, r: BinaryReader, length: int, extra: int):
         bdata = np.frombuffer(r.readBytes(length), dtype = np.int8); bdata_ = 0
@@ -639,7 +639,7 @@ class Binary_Light(IHaveMetaInfo, ITexture):
 # Binary_MobType
 class Binary_MobType(IHaveMetaInfo):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_MobType(r)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_MobType(r)
 
     #region Headers
 
@@ -685,7 +685,7 @@ class Binary_MobType(IHaveMetaInfo):
 # Binary_MultiMap
 class Binary_MultiMap(IHaveMetaInfo, ITexture):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_MultiMap(r, f)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_MultiMap(r, f)
 
     def __init__(self, r: BinaryReader, f: FileSource):
         if f.path.startswith('facet'):
@@ -749,7 +749,7 @@ class Binary_MultiMap(IHaveMetaInfo, ITexture):
 # Binary_MusicDef
 class Binary_MusicDef(IHaveMetaInfo):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_MusicDef(r)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_MusicDef(r)
 
     def __init__(self, r: BinaryReader):
         line: str
@@ -775,7 +775,7 @@ class Binary_MusicDef(IHaveMetaInfo):
 # Binary_Multi
 class Binary_Multi(IHaveMetaInfo):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Multi(r)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Multi(r)
 
     #region Headers
 
@@ -796,7 +796,7 @@ class Binary_Multi(IHaveMetaInfo):
 # Binary_RadarColor
 class Binary_RadarColor(IHaveMetaInfo):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_RadarColor(r)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_RadarColor(r)
 
     #region Headers
 
@@ -817,7 +817,7 @@ class Binary_RadarColor(IHaveMetaInfo):
 # Binary_SkillGroups
 class Binary_SkillGroups(IHaveMetaInfo):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_SkillGroups(r)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_SkillGroups(r)
 
     #region Headers
 
@@ -838,7 +838,7 @@ class Binary_SkillGroups(IHaveMetaInfo):
 # Binary_Skills
 class Binary_Skills(IHaveMetaInfo):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Skills(r)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Skills(r)
 
     #region Headers
 
@@ -859,7 +859,7 @@ class Binary_Skills(IHaveMetaInfo):
 # Binary_Sound
 class Binary_Sound(IHaveMetaInfo):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Sound(r)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Sound(r)
 
     #region Headers
 
@@ -880,7 +880,7 @@ class Binary_Sound(IHaveMetaInfo):
 # Binary_SpeechList
 class Binary_SpeechList(IHaveMetaInfo):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_SpeechList(r)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_SpeechList(r)
 
     #region Headers
 
@@ -901,7 +901,7 @@ class Binary_SpeechList(IHaveMetaInfo):
 # Binary_Art
 class Binary_Art(IHaveMetaInfo, ITexture):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Art(r, f.fileSize)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Art(r, f.fileSize)
 
     def __init__(self, r: BinaryReader, length: int):
         bdata = np.frombuffer(r.readBytes(length), dtype = np.uint16); bdata_ = 0
@@ -953,7 +953,7 @@ class Binary_Art(IHaveMetaInfo, ITexture):
 # Binary_StringTable
 class Binary_StringTable(IHaveMetaInfo):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_StringTable(r, f)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_StringTable(r, f)
     _current: dict[str, 'Binary_StringTable'] = {}
 
     #region Headers
@@ -997,7 +997,7 @@ class Binary_StringTable(IHaveMetaInfo):
 # Binary_TileData
 class Binary_TileData(IHaveMetaInfo):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_TileData(r)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_TileData(r)
 
     #region Headers
 
@@ -1018,7 +1018,7 @@ class Binary_TileData(IHaveMetaInfo):
 # Binary_UnicodeFont
 class Binary_UnicodeFont(IHaveMetaInfo):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_UnicodeFont(r)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_UnicodeFont(r)
 
     #region Headers
 
@@ -1039,7 +1039,7 @@ class Binary_UnicodeFont(IHaveMetaInfo):
 # Binary_Verdata
 class Binary_Verdata(IHaveMetaInfo):
     @staticmethod
-    def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Verdata(r, s)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Verdata(r, s)
     instance: object = None
 
     #region Headers

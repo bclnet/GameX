@@ -1442,7 +1442,7 @@ public class Modl(Reader r = null, int dataSize = 0) {
 
 public interface IHaveMODL : ICellXrefModel {
     Modl MODL { get; }
-    string ICellXrefModel.ModelPath => !string.IsNullOrEmpty(MODL.Value) ? $"meshes\\{MODL.Value}" : null;
+    string ICellXrefModel.ModelPath => MODL != null && !string.IsNullOrEmpty(MODL.Value) ? $"meshes\\{MODL.Value}" : null;
 }
 
 /// <summary>
@@ -1710,6 +1710,8 @@ partial class Record {
     public string EDID; // Editor ID
 }
 
+public interface ITes3Name { }
+
 public class ReferenceRecord : Record {
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
         FieldType.EDID => EDID = r.ReadFUString(dataSize),
@@ -1923,7 +1925,7 @@ public class ACRERecord : Record {
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/ACTI"/>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/ACTI"/>
 /// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/ACTI.html"/>
-public class ACTIRecord : Record, IHaveMODL {
+public class ACTIRecord : Record, ITes3Name, IHaveMODL {
     public Obnd? OBND; // Object Boundary
     public string FULL; // Item Name
     public Modl MODL { get; set; } // Model Name
@@ -2019,7 +2021,7 @@ public class AFFERecord : Record {
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/ALCH"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/ALCH">
 /// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/ALCH.html"/>
-public class ALCHRecord : Record, IHaveMODL {
+public class ALCHRecord : Record, ITes3Name, IHaveMODL {
     public class Data {
         [Flags] public enum Flag : byte { NoAutoCalculate = 0x01, FoodItem = 0x02 }
         public float Weight;
@@ -2226,7 +2228,7 @@ public class AORURecord : Record {
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/APPA">
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/APPA"/>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/APPA"/>
-public class APPARecord : Record, IHaveMODL {
+public class APPARecord : Record, ITes3Name, IHaveMODL {
     public struct Data {
         public enum Type_ : byte { MortarAndPestle = 0, Albemic, Calcinator, Retort }
         public Type_ Type;
@@ -2318,7 +2320,7 @@ public class ARMARecord : Record {
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/ARMO"/>
 /// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/ARMO.html"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/ARMO">
-public class ARMORecord : Record, IHaveMODL {
+public class ARMORecord : Record, ITes3Name, IHaveMODL {
     public struct Data {
         public enum ARMOType { Helmet = 0, Cuirass, L_Pauldron, R_Pauldron, Greaves, Boots, L_Gauntlet, R_Gauntlet, Shield, L_Bracer, R_Bracer, }
         public short Armour;
@@ -2675,7 +2677,7 @@ public class BNDSRecord : Record {
 /// BODY records contain information about body parts.
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/BODY"/>
-public class BODYRecord : Record, IHaveMODL {
+public class BODYRecord : Record, ITes3Name, IHaveMODL {
     public enum Part : byte { Head, Hair, Neck, Chest, Groin, Hand, Wrist, Forearm, Upperarm, Foot, Ankle, Knee, Upperleg, Clavicle, Tail }
     [Flags] public enum Flag : byte { Female = 1, Playable = 2 }
     public enum PartType : byte { Skin, Clothing, Armor }
@@ -2711,7 +2713,7 @@ public class BODYRecord : Record, IHaveMODL {
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/BOOK"/>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/BOOK"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/BOOK">
-public class BOOKRecord : Record, IHaveMODL {
+public class BOOKRecord : Record, ITes3Name, IHaveMODL {
     [Flags] public enum Flag : byte { Scroll = 0x01, CantBeTaken = 0x02 }
     public struct Data {
         public Flag Flags;
@@ -3266,7 +3268,7 @@ public class CLMTRecord : Record, IHaveMODL {
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/CLOT">
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/CLOT"/>
-public class CLOTRecord : Record, IHaveMODL {
+public class CLOTRecord : Record, ITes3Name, IHaveMODL {
     public struct Data {
         public enum Type_ : uint { Pants = 0, Shoes, Shirt, Belt, Robe, R_Glove, L_Glove, Skirt, Ring, Amulet }
         public int Value;
@@ -3489,7 +3491,7 @@ public class CPTHRecord : Record {
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/CREA">
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/CREA"/>
-public abstract class CREARecord : Record, IHaveMODL {
+public abstract class CREARecord : Record, ITes3Name, IHaveMODL {
     [Flags]
     public enum Flag : uint {
         Biped = 0x0001,
@@ -4099,7 +4101,7 @@ public class DMGTRecord : Record {
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/DOOR">
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/DOOR"/>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/DOOR"/>
-public class DOORRecord : Record, IHaveMODL {
+public class DOORRecord : Record, ITes3Name, IHaveMODL {
     public Obnd? OBND; // Object Bounds
     public string FULL; // Door name
     public Modl MODL { get; set; } // NIF model filename
@@ -4768,7 +4770,7 @@ public class GDRYRecord : Record {
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/GLOB">
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/GLOB"/>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/GLOB"/>
-public class GLOBRecord : Record {
+public class GLOBRecord : Record, ITes3Name {
     public char FNAM; // Type of global (s, l, f)
     public float FLTV; // Float data
 
@@ -4796,7 +4798,7 @@ public class GMRWRecord : Record {
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/GMST"/>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/GMST"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/GMST">
-public class GMSTRecord : Record {
+public class GMSTRecord : Record, ITes3Name {
     public Datv DATA; // Data
 
     public override object ReadField(Reader r, FieldType type, int dataSize) => r.Format == TES3
@@ -5175,7 +5177,7 @@ public class INFO4Record : INFORecord {
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/INGR">
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/INGR"/>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/INGR"/>
-public class INGRRecord : Record, IHaveMODL {
+public class INGRRecord : Record, ITes3Name, IHaveMODL {
     // TES3
     public struct Irdt(Reader r, int dataSize) {
         public float Weight = r.ReadSingle();
@@ -5543,7 +5545,7 @@ public class LGTMRecord : Record {
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/GMST"/>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/GMST"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/GMST">
-public class LIGHRecord : Record, IHaveMODL, ILigh {
+public class LIGHRecord : Record, ITes3Name, IHaveMODL, ILigh {
     public struct Data {
         [Flags]
         public enum ColorFlags {
@@ -5631,7 +5633,7 @@ public class LMSWRecord : Record {
 /// LOCK.Lock - 34500
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/LOCK">
-public class LOCKRecord : Record, IHaveMODL {
+public class LOCKRecord : Record, ITes3Name, IHaveMODL {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct Lkdt {
         public static (string, int) Struct = ("<fifi", 16);
@@ -5726,7 +5728,7 @@ public class LSPRRecord : Record {
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/LTEX"/>
 /// /// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/LTEX.html"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/LTEX">
-public class LTEXRecord : Record, ILtex {
+public class LTEXRecord : Record, ITes3Name, ILtex {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct Hnam {
         public static (string, int) Struct = ("<3B", 3);
@@ -6107,7 +6109,7 @@ public class MICNRecord : Record {
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/MISC"/>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/MISC"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/MISC">
-public class MISCRecord : Record, IHaveMODL {
+public class MISCRecord : Record, ITes3Name, IHaveMODL {
     public struct Data {
         public float Weight;
         public uint Value;
@@ -6799,7 +6801,7 @@ public class PPAKRecord : Record {
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/GMST"/>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/GMST"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/GMST">
-public class PROBRecord : Record, IHaveMODL {
+public class PROBRecord : Record, ITes3Name, IHaveMODL {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct Pbdt {
         public static (string, int) Struct = ("<fifi", 16);
@@ -7372,7 +7374,7 @@ public unsafe class REFRRecord : Record {
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/REGN">
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/REGN"/>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/REGN"/>
-public class REGNRecord : Record {
+public class REGNRecord : Record, ITes3Name {
     public enum REGNType : byte { None_ = 0, One, Objects, Weather, Map, Landscape, Grass, Sound }
 
     public class Rdat {
@@ -7539,7 +7541,7 @@ public class RELARecord : Record {
 /// REPA.Repair Item - 30000
 /// </summary>
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/REPA">
-public class REPARecord : Record, IHaveMODL {
+public class REPARecord : Record, ITes3Name, IHaveMODL {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct Ridt {
         public static (string, int) Struct = ("<f2if", 16);
@@ -8125,7 +8127,7 @@ public class SOPMRecord : Record {
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/SOUN"/>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/SOUN"/>
 /// <see cref="https://tes5edit.github.io/fopdoc/Fallout3/Records/SOUN.html"/>
-public class SOUNRecord : Record {
+public class SOUNRecord : Record, ITes3Name {
     [Flags]
     public enum Flag : ushort {
         RandomFrequencyShift = 1 << 1,
@@ -8284,7 +8286,7 @@ public class STAGRecord : Record {
 /// <see cref="https://en.uesp.net/wiki/TES3Mod:Mod_File_Format/STAT">
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/STAT"/>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/STAT"/>
-public class STATRecord : Record, IHaveMODL {
+public class STATRecord : Record, ITes3Name, IHaveMODL {
     public Modl MODL { get; set; } // Model
 
     public override object ReadField(Reader r, FieldType type, int dataSize) => type switch {
@@ -8880,7 +8882,7 @@ public class WBARRecord : Record {
 /// <see cref="https://en.uesp.net/wiki/TES4Mod:Mod_File_Format/WEAP"/>
 /// <see cref="https://en.uesp.net/wiki/TES5Mod:Mod_File_Format/WEAP"/>
 /// <see cref="https://starfieldwiki.net/wiki/Starfield_Mod:Mod_File_Format/WEAP">
-public class WEAPRecord : Record, IHaveMODL {
+public class WEAPRecord : Record, ITes3Name, IHaveMODL {
     public struct Data {
         public enum WEAPType { ShortBladeOneHand = 0, LongBladeOneHand, LongBladeTwoClose, BluntOneHand, BluntTwoClose, BluntTwoWide, SpearTwoWide, AxeOneHand, AxeTwoHand, MarksmanBow, MarksmanCrossbow, MarksmanThrown, Arrow, Bolt, }
         public float Weight;

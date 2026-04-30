@@ -6,7 +6,7 @@ from numpy import ndarray
 from openstk.core import log, Int3, IWriteToStream, CellManager, IDatabase
 from gamex import FileSource, ArcBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo, DesSer
 from gamex.families.Uncore.formats.compression import decompressLz4, decompressZlib
-from gamex.families.Bethesda.formats.records import FormType, Reader, Record, RecordGroup, LTEXRecord, LANDRecord, CELLRecord
+from gamex.families.Bethesda.formats.records import ITes3Name, FormType, Reader, Record, RecordGroup, LTEXRecord, LANDRecord, CELLRecord
 
 # types
 type Vector3 = ndarray
@@ -401,8 +401,8 @@ class Binary_Esm(ArcBinaryT, IDatabase, CellManager.IQueryFunc):
 
     def process(self, source: BinaryArchive) -> None:
         if self.format == FormType.TES3:
-            g = self.groups[0].recordsByType
-            self.MANYsById = {s.EDID:s for s in g[FormType.STAT]} if FormType.STAT in g else {}
+            g0 = self.groups[0]; a = g0.records; g = g0.recordsByType
+            self.MANYsById = {s.EDID:s for s in a if s.EDID if isinstance(s, ITes3Name)}
             self.LTEXsById = {s.INTV:s for s in g[FormType.LTEX]} if FormType.LTEX in g else {}
             self.LANDsById = {s.gridId:s for s in g[FormType.LAND]} if FormType.LAND in g else {}
             cells = g[FormType.CELL] if FormType.CELL in g else []

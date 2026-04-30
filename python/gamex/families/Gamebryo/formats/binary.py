@@ -3,7 +3,7 @@ from io import BytesIO
 from enum import Enum
 from openstk.core import IWriteToStream
 from gamex import FileSource, ArcBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo, DesSer
-from gamex.families.Gamebryo.formats.nif import NiReader
+from gamex.families.Gamebryo.formats.nif import NiReader, NiSkinInstance, NiSourceTexture
 
 # typedefs
 class BinaryReader: pass
@@ -32,13 +32,9 @@ class Binary_Nif(NiReader, IHaveMetaInfo, IWriteToStream):
 
     #endregion
 
-    def isSkinnedMesh(self) -> bool: raise NotImplementedError('isSkinnedMesh') #return Blocks.Any(b => b is NiSkinInstance)
+    def isSkinnedMesh(self) -> bool: return any((s for s in self.blocks if isinstance(s, NiSkinInstance)))
 
-    def getTexturePaths(self) -> list[str]:
-        raise NotImplementedError('getTexturePaths')
-        # foreach (var niObject in Blocks)
-        #     if (niObject is NiSourceTexture niSourceTexture && !string.IsNullOrEmpty(niSourceTexture.FileName))
-        #         yield return niSourceTexture.FileName;
+    def getTexturePaths(self) -> list[str]: return (s.fileName for s in self.blocks if isinstance(s, NiSourceTexture) and s.fileName) 
 
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
         MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),

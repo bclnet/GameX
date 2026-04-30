@@ -1107,8 +1107,6 @@ class Record:
     id: int = 0
     _tes3Id: int = 1
 
-    EDID: str = None # Editor ID
-
     # Reads an uninitialized subrecord to deserialize, or null to skip.
     def readField(self, r: Reader, type: FieldType, dataSize: int) -> object: return Record._empty
 
@@ -1349,7 +1347,8 @@ class Modl:
 
 class IHaveMODL(CellManager.ICellXrefModel):
     MODL: Modl
-    def modelPath(self) -> str: return f'meshes\\{self.MODL.value}' if self.MODL.value else None
+    @property
+    def modelPath(self) -> str: return f'meshes\\{self.MODL.value}' if self.MODL and self.MODL.value else None
 
 # Destruction Subrecord Collection
 class Dest:
@@ -1563,6 +1562,10 @@ class CntoX[T: Record]:
         if r.format == FormType.TES3: self.count = r.readUInt32(); self.item = RefV(t, r, 32); return
         self.item = RefV(t, r.readUInt32()); self.count = r.readUInt32()
 
+Record.EDID: str = None # Editor ID
+
+class ITes3Name: pass
+
 class ReferenceRecord(Record):
     def __init__(self): super().__init__()
 
@@ -1735,7 +1738,7 @@ class ACRERecord(Record):
 
 # ACTI.Activator - 3450 - tag::ACTI[]
 # ACTI records contain information about activators.
-class ACTIRecord(Record, IHaveMODL):
+class ACTIRecord(Record, ITes3Name, IHaveMODL):
     OBND: Obnd = None # Object Boundary
     FULL: str # Item Name
     MODL: Modl # Model Name
@@ -1824,7 +1827,7 @@ class AFFERecord(Record):
 
 # ALCH.Potion - 3450 - tag::ALCH[]
 # ALCH records contain information about alchemy items (potions and beverages).
-class ALCHRecord(Record, IHaveMODL):
+class ALCHRecord(Record, ITes3Name, IHaveMODL):
     class Data:
         class Flag(IntFlag): NoAutoCalculate = 0x01; FoodItem = 0x02 
         weight: float
@@ -2021,7 +2024,7 @@ class AORURecord(Record):
 
 # APPA.Apparatus - 3450 - tag::APPA[]
 # APPA records contain information about alchemy apparatus.
-class APPARecord(Record, IHaveMODL):
+class APPARecord(Record, ITes3Name, IHaveMODL):
     class Data:
         class Type_(IntEnum): MortarAndPestle = 0; Albemic = 1; Calcinator = 2; Retort = 3
         type: Type_
@@ -2103,7 +2106,7 @@ class ARMARecord(Record):
 
 # ARMO.Armor - 3450 - tag::ARMA[]
 # ARMO records contain information about armor.
-class ARMORecord(Record, IHaveMODL):
+class ARMORecord(Record, ITes3Name, IHaveMODL):
     class Data:
         class ARMOType(IntEnum): Helmet = 0; Cuirass = 2; L_Pauldron = 3; R_Pauldron = 4; Greaves = 5; Boots = 6; L_Gauntlet = 7; R_Gauntlet = 8; Shield = 9; L_Bracer = 10; R_Bracer = 11
         armour: int
@@ -2461,7 +2464,7 @@ class BNDSRecord(Record):
 
 # BODY.Body Part - 3000 - tag::BODY[]
 # BODY records contain information about body parts.
-class BODYRecord(Record, IHaveMODL):
+class BODYRecord(Record, ITes3Name, IHaveMODL):
     class Part(IntEnum): Head = 0; Hair = 1; Neck = 2; Chest = 3; Groin = 4; Hand = 5; Wrist = 6; Forearm = 7; Upperarm = 8; Foot = 9; Ankle = 10; Knee = 11; Upperleg = 12; Clavicle = 13; Tail = 14
     class Flag(IntFlag): Female = 1; Playable = 2
     class PartType(IntEnum): Skin = 0; Clothing = 1; Armor = 2
@@ -2495,7 +2498,7 @@ class BODYRecord(Record, IHaveMODL):
 # end::BODY[]
 
 # BOOK.Book - 3450 - tag::BOOK[]
-class BOOKRecord(Record, IHaveMODL):
+class BOOKRecord(Record, ITes3Name, IHaveMODL):
     class Flag(IntFlag): Scroll = 0x01; CantBeTaken = 0x02
     class Data:
         flags: 'Flag'
@@ -3062,7 +3065,7 @@ class CLMTRecord(Record, IHaveMODL):
 # end::CLMT[]
 
 # CLOT.Clothing - 3450 - tag::CLOT[]
-class CLOTRecord(Record, IHaveMODL):
+class CLOTRecord(Record, ITes3Name, IHaveMODL):
     class Data:
         class Type(IntEnum): Pants = 0; Shoes = 1; Shirt = 2; Belt = 3; Robe = 4; R_Glove = 5; L_Glove = 6; Skirt = 7; Ring = 8; Amulet = 9
         value: int
@@ -3279,7 +3282,7 @@ class CPRDRecord(Record):
 # end::CPRD[]
 
 # CREA.Creature - 3450 - tag::CREA[]
-class CREARecord(Record, IHaveMODL):
+class CREARecord(Record, ITes3Name, IHaveMODL):
     class Flag(IntFlag):
         Biped = 0x0001
         Respawn = 0x0002
@@ -3293,7 +3296,7 @@ class CREARecord(Record, IHaveMODL):
         SkeletonBlood = 0x0400
         MetalBlood = 0x0800
 
-    MODL: Modl # NIF Model
+    MODL: Modl = None # NIF Model
     FULL: str # Full name
     def __init__(self): super().__init__()
 # end::CREA[]
@@ -3865,7 +3868,7 @@ class DMGTRecord(Record):
 # end::DMGT[]
 
 # DOOR.Door - 3450 - tag::DOOR[]
-class DOORRecord(Record, IHaveMODL):
+class DOORRecord(Record, ITes3Name, IHaveMODL):
     OBND: Obnd = None # Object Bounds
     FULL: str # Door name
     MODL: Modl # NIF model filename
@@ -4542,7 +4545,7 @@ class GDRYRecord(Record):
 # end::GDRY[]
 
 # GLOB.Global - 3450 - tag::GLOB[]
-class GLOBRecord(Record):
+class GLOBRecord(Record, ITes3Name):
     FNAM: str = None # Type of global (s, l, f)
     FLTV: float = None # Float data
     def __init__(self): super().__init__()
@@ -4568,7 +4571,7 @@ class GMRWRecord(Record):
 # end::GMRW[]
 
 # GMST.Game Setting - 3450 - tag::GMST[]
-class GMSTRecord(Record):
+class GMSTRecord(Record, ITes3Name):
     DATA: Datv # Data
     def __init__(self): super().__init__()
     
@@ -4938,7 +4941,7 @@ class INFO4Record(INFORecord):
 # end::INFO4[]
 
 # INGR.Ingredient - 3450 - tag::INGR[]
-class INGRRecord(Record, IHaveMODL):
+class INGRRecord(Record, ITes3Name, IHaveMODL):
     # TES3
     class Irdt:
         def __init__(self, r: Reader, dataSize: int):
@@ -5297,7 +5300,7 @@ class LGTMRecord(Record):
 # end::LGTM[]
 
 # LIGH.Light - 3450 - tag::LIGH[]
-class LIGHRecord(Record, IHaveMODL, CellManager.ILigh):
+class LIGHRecord(Record, ITes3Name, IHaveMODL, CellManager.ILigh):
     class Data:
         class ColorFlags(IntFlag):
             Dynamic = 0x0001
@@ -5382,7 +5385,7 @@ class LMSWRecord(Record):
 # end::LMSW[]
 
 # LOCK.Lock - 3450 - tag::LOCK[]
-class LOCKRecord(Record, IHaveMODL):
+class LOCKRecord(Record, ITes3Name, IHaveMODL):
     class Lkdt:
         _struct = ('<fifi', 16)
         def __init__(self, t):
@@ -5470,7 +5473,7 @@ class LSPRRecord(Record):
 # end::LSPR[]
 
 # LTEX.Land Texture - 3450 - tag::LTEX[]
-class LTEXRecord(Record, CellManager.ILtex):
+class LTEXRecord(Record, ITes3Name, CellManager.ILtex):
     class Hnam:
         _struct = ('<3B', 3)
         def __init__(self, t):
@@ -5878,7 +5881,7 @@ class MICNRecord(Record):
 # end::MICN[]
 
 # MISC.Misc Item - 3450 - tag::MISC[]
-class MISCRecord(Record, IHaveMODL):
+class MISCRecord(Record, ITes3Name, IHaveMODL):
     class Data:
         weight: float
         value: int
@@ -6585,7 +6588,7 @@ class PPAKRecord(Record):
 # end::PPAK[]
 
 # PROB.Probe - 3000 - tag::PROB[]
-class PROBRecord(Record, IHaveMODL):
+class PROBRecord(Record, ITes3Name, IHaveMODL):
     class Pbdt:
         _struct = ('<fifi', 16)
         def __init__(self, t):
@@ -7140,7 +7143,7 @@ class REFRRecord(Record):
 # end::REFR[]
 
 # REGN.Region - 3450 - tag::REGN[]
-class REGNRecord(Record):
+class REGNRecord(Record, ITes3Name):
     class REGNType(IntEnum): None_ = 0; One = 1; Objects = 2; Weather = 3; Map = 4; Landscape = 5; Grass = 6; Sound = 7
 
     class Rdat:
@@ -7293,7 +7296,7 @@ class RELARecord(Record):
 # end::RELA[]
 
 # REPA.Repair Item - 3000 - tag::REPA[]
-class REPARecord(Record, IHaveMODL):
+class REPARecord(Record, ITes3Name, IHaveMODL):
     class Ridt:
         _struct = ('<f2if', 16)
         def __init__(self, t):
@@ -7867,7 +7870,7 @@ class SOPMRecord(Record):
 # end::SOPM[]
 
 # SOUN.Sound - 3450 - tag::SOUN[]
-class SOUNRecord(Record):
+class SOUNRecord(Record, ITes3Name):
     class SOUNFlags(IntFlag):
         RandomFrequencyShift = 1 << 1
         PlayAtRandom = 1 << 2
@@ -8050,7 +8053,7 @@ class STAGRecord(Record):
 # end::STAG[]
 
 # STAT.Static - 3450 - tag::STAT[]
-class STATRecord(Record, IHaveMODL):
+class STATRecord(Record, ITes3Name, IHaveMODL):
     MODL: Modl # Model
     def __init__(self): super().__init__()
 
@@ -8642,7 +8645,7 @@ class WBARRecord(Record):
 # end::WBAR[]
 
 # WEAP.Weapon - 3450 - tag::WEAP[]
-class WEAPRecord(Record, IHaveMODL):
+class WEAPRecord(Record, ITes3Name, IHaveMODL):
     class Data:
         class WEAPType(IntEnum): ShortBladeOneHand = 0; LongBladeOneHand = 1; LongBladeTwoClose = 2; BluntOneHand = 3; BluntTwoClose = 4; BluntTwoWide = 5; SpearTwoWide = 6; AxeOneHand = 7; AxeTwoHand = 8; MarksmanBow = 9; MarksmanCrossbow = 10; MarksmanThrown = 11; Arrow = 12; Bolt = 13
         weight: float

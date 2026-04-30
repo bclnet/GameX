@@ -553,13 +553,13 @@ public class Binary_Esm : ArcBinary<Binary_Esm>, IDatabase, IQueryFunc {
 
     public override Task Process(BinaryArchive source) {
         if (Format == FormType.TES3) {
-            var g = Groups[0].RecordsByType;
-            MANYsById = g.TryGetValue(FormType.STAT, out var z) ? z.Where(s => !string.IsNullOrEmpty(s.EDID)).ToDictionary(s => s.EDID, StringComparer.OrdinalIgnoreCase) : [];
-            LTEXsById = g.TryGetValue(FormType.LTEX, out z) ? z.Cast<ILtex>().ToDictionary(s => s.Intv) : [];
+            var g0 = Groups[0]; var a = g0.Records; var g = g0.RecordsByType;
+            MANYsById = a.Where(s => s is ITes3Name && !string.IsNullOrEmpty(s.EDID)).ToDictionary(s => s.EDID);
+            LTEXsById = g.TryGetValue(FormType.LTEX, out var z) ? z.Cast<ILtex>().ToDictionary(s => s.Intv) : [];
             LANDsById = g.TryGetValue(FormType.LAND, out z) ? z.Cast<ILand>().ToDictionary(s => s.GridId) : [];
             var cells = g.TryGetValue(FormType.CELL, out z) ? z.Cast<ICell>().ToList() : [];
             CELLsById = cells.Where(x => !x.IsInterior).ToDictionary(s => s.GridId);
-            CELLsByName = cells.Where(x => x.IsInterior).ToDictionary(s => s.Name, StringComparer.OrdinalIgnoreCase);
+            CELLsByName = cells.Where(x => x.IsInterior).ToDictionary(s => s.Name);
             return Task.CompletedTask;
         }
         var wrldsByLabel = Groups[FormType.WRLD].GroupsByLabel;

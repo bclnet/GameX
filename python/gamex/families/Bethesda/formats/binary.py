@@ -421,7 +421,7 @@ class Binary_Esm(ArcBinaryT, IDatabase, CellManager.IQueryFunc):
     _meterInUnits: float = _meterInYards * _yardInUnits
     _cellLengthInUnits: int = 128 * _yardInUnits
     _cellLengthInMeters: float = _cellLengthInUnits / _meterInUnits
-    _radius: list[int] = [0, 0] # [4, 3]
+    _radius: list[int] = [1, 1] #[0, 0] # [4, 3]
 
     def getQuery(self) -> CellManager.IQuery: return Binary_Esm.Tes3CellQuery(self) if self.format == FormType.TES3 else Binary_Esm.ElseCellQuery(self)
 

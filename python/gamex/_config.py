@@ -81,7 +81,7 @@ match __current__:
         )
     case 'Bethesda':
         option = GlobalOption(
-            Platform = "GL",
+            Platform = "PD",
             ForceOpen = True,
             ForcePath = "sample:0",
             Family = "Bethesda",

@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os
 from openstk.gfx import GfX
-from openstk.platforms.opengl.gfx import TestTriRenderer, TextureRenderer, ObjectRenderer, MaterialRenderer, ParticleRenderer, CellRenderer, EngineRenderer, WorldRenderer
+from openstk.platforms.opengl.gfx import TestTriRenderer, TextureRenderer, ObjectRenderer, MaterialRenderer, ParticleRenderer, EngineRenderer, WorldRenderer
 
 # typedefs
 class IOpenGfx: pass
@@ -17,7 +17,6 @@ class OpenGLRenderer:
             case 'Object': return ObjectRenderer(gfx, obj)
             case 'Material': return MaterialRenderer(gfx, obj)
             case 'Particle': return ParticleRenderer(gfx, obj)
-            case 'Cell': return CellRenderer(gfx, obj)
             case 'Engine': return EngineRenderer(gfx, obj)
             case 'World': return WorldRenderer(gfx, obj)
             case _: return None

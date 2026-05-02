@@ -53,6 +53,7 @@ public class BethesdaArchive : BinaryArchive, ITransformAsset<IUnknownFileModel>
     /// Finds the actual path of a texture.
     /// </summary>
     public object FindTexture(object path) {
+        Log.Info($"FindTexture: {path}");
         if (path is not string p) return path;
         var textureName = Path.GetFileNameWithoutExtension(p);
         var textureNameInTexturesDir = $"textures/{textureName}";

@@ -171,7 +171,7 @@ public class PhysSceneNode : SceneNode {
             //Console.WriteLine($"Phys mesh verts {verts.Count} inds {inds.Count}");
         }
 
-        (shader, _) = (Scene.Gfx as OpenGLGfxModel).ShaderManager.CreateShader("vrf.grid", new Dictionary<string, bool>());
+        (shader, _) = (Scene.GfxModel as OpenGLGfxModel).ShaderManager.CreateShader("vrf.grid", new Dictionary<string, bool>());
         GL.UseProgram(shader.Program);
 
         vaoHandle = GL.GenVertexArray();

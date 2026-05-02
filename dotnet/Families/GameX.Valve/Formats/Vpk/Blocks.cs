@@ -8263,7 +8263,7 @@ public class D_Model : XKV3_NTRO, IValveModel {
         return Animation.FromData(animationDataBlock.Data, decodeKey, Skeleton);
     }
 
-    public IEnumerable<Animation> GetAllAnimations(IOpenGfxModel gfx) {
+    public IEnumerable<Animation> GetAllAnimations(IOpenGfxModel gfxModel) {
         if (CachedAnimations != null) return CachedAnimations;
 
         var animGroupPaths = GetReferencedAnimationGroupNames();
@@ -8271,8 +8271,8 @@ public class D_Model : XKV3_NTRO, IValveModel {
 
         // Load animations from referenced animation groups
         foreach (var animGroupPath in animGroupPaths) {
-            var animGroup = gfx.GetAsset<Binary_Src>($"{animGroupPath}_c").Result;
-            if (animGroup != default) animations.AddRange(AnimationGroupLoader.LoadAnimationGroup(animGroup, gfx, Skeleton));
+            var animGroup = gfxModel.Source.GetAsset<Binary_Src>($"{animGroupPath}_c").Result;
+            if (animGroup != default) animations.AddRange(AnimationGroupLoader.LoadAnimationGroup(animGroup, gfxModel, Skeleton));
         }
 
         CachedAnimations = animations.ToList();

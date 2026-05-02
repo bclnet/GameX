@@ -20,7 +20,7 @@ public class SpriteSceneNode : SceneNode {
     readonly float size;
 
     public SpriteSceneNode(Scene scene, Binary_Src resource, Vector3 position) : base(scene) {
-        var gfx = scene.Gfx as OpenGLGfxModel;
+        var gfx = scene.GfxModel as OpenGLGfxModel;
         (material, _) = gfx.MaterialManager.CreateMaterial(resource);
         (shader, _) = gfx.ShaderManager.CreateShader(material.Material.ShaderName, material.Material.ShaderArgs);
 

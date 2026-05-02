@@ -37,7 +37,7 @@ class Binary_Nif(NiReader, IHaveMetaInfo, IWriteToStream):
     def getTexturePaths(self) -> list[str]: return (s.fileName for s in self.blocks if isinstance(s, NiSourceTexture) and s.fileName) 
 
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
+        MetaInfo(None, MetaContent(type = 'Object', name = os.path.basename(file.path), value = self)),
         MetaInfo('NIF', items = [
             MetaInfo(f'NumBlocks: {self.numBlocks}')
             ])

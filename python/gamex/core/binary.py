@@ -88,7 +88,7 @@ class Archive(Binary, ISourceWithPlatform):
         return self
     def getSource(self, path: FileSource | str | int, throwOnError: bool = True) -> tuple[Archive, FileSource]: pass
     async def getData(self, path: FileSource | str | int, option: object = None, throwOnError: bool = True) -> bytes: pass
-    async def getAsset(self, path: FileSource | str | int, option: object = None, throwOnError: bool = True) -> object: pass
+    async def getAsset(self, t: type, path: FileSource | str | int | object, option: object = None, throwOnError: bool = True) -> object: pass
     def getArchive(self, path: object, throwOnError: bool = True) -> Archive:
         match path:
             case str(): z = self.game._getArchive(self.vfx, self.edition, path, throwOnError); return z.open() if z else None
@@ -184,21 +184,23 @@ class BinaryArchive(Archive):
                 print(f'ERROR.LoadFileData: {i} @ {len(files)}')
                 if throwOnError: raise Exception(f'File not found: {i}' if len(files) == 0 else f'More then one file found: {i}')
                 return (None, None)
-            case _: raise Exception(f'Unknown: {path}')
+            case _: return (self, None)
 
     async def getData(self, path: FileSource | str | int, option: object = None, throwOnError: bool = True) -> bytes:
         if not path: return None
         elif not isinstance(path, FileSource):
+            path = self.findPath(type(BytesIO), path)
             (arc, next_) = self.getSource(path, throwOnError)
             return arc.getData(next_, option, throwOnError) if arc else None
         f = path
         return self.readData(f.fix(), option)
 
-    async def getAsset(self, type: type, path: FileSource | str | int, option: object = None, throwOnError: bool = True) -> object:
+    async def getAsset(self, t: type, path: FileSource | str | int | object, option: object = None, throwOnError: bool = True) -> object:
         if not path: return None
         elif not isinstance(path, FileSource):
+            path = self.findPath(t, path)
             (arc, next_) = self.getSource(path, throwOnError)
-            return await arc.getAsset(type, next_, option, throwOnError)
+            return await arc.getAsset(t, next_, option, throwOnError) if next else path
         f = path
         if self.game._isArcPath(f.path): return None
         if isinstance(self.arcBinary, IDatabase) and (s := self.arcBinary):
@@ -218,7 +220,7 @@ class BinaryArchive(Archive):
             finally:
                 self.atEnd = r.atEnd()
                 # if task and not (value and isinstance(value, IDisposable)): r.dispose()
-        return data if type == BytesIO or type == object else \
+        return data if t == BytesIO or t == object else \
             _throw(f'Stream not returned for {f.path} with {type}')
 
     def ensureCachedAssetFactory(self, file: FileSource) -> callable:
@@ -349,7 +351,7 @@ class MultiArchive(Archive):
                 return z.getData(i, option, throwOnError)
             case _: raise Exception(f'Unknown: {path}')
 
-    def getAsset(self, t: type, path: FileSource | str | int, option: object = None, throwOnError: bool = True) -> object:
+    def getAsset(self, t: type, path: FileSource | str | int | object, option: object = None, throwOnError: bool = True) -> object:
         match path:
             case None: raise Exception('Null')
             case s if isinstance(path, str):
@@ -361,7 +363,7 @@ class MultiArchive(Archive):
                 z = next(iter([s for s in self.archives if s.valid and s.contains(i)]), None)
                 if not z: raise Exception(f'Could not find file {path}')
                 return z.getAsset(t, i, option, throwOnError)
-            case _: raise Exception(f'Unknown: {path}')
+            case _: (self, None)
 
     #region Metadata
     def getMetaItems(self, manager: MetaManager) -> list[MetaInfo]: return [MetaItem(s, s.name, manager.packageIcon, archive=s, items=s.getMetaItems(manager)) for s in self.archives if s.valid]

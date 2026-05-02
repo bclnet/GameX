@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using static GameX.Formats.IUnknown.IUnknownFileObject;
 using static GameX.MetaItem;
 
 namespace GameX;
@@ -191,6 +192,10 @@ public abstract class Binary : IDisposable {
 #endregion
 
 #region Archive
+
+public interface IHaveArchive {
+    Archive Archive { get; }
+}
 
 /// <summary>
 /// Archive
@@ -561,7 +566,7 @@ public abstract class BinaryArchive(BinaryState state, ArcBinary arcBinary) : Ar
                     if (throwOnError) throw new FileNotFoundException(files.Length == 0 ? $"File not found: {i}" : $"More then one file found: {i}");
                     return (null, null);
                 }
-            default: throw new ArgumentOutOfRangeException(nameof(path));
+            default: return (this, null);
         }
     }
 
@@ -577,6 +582,7 @@ public abstract class BinaryArchive(BinaryState state, ArcBinary arcBinary) : Ar
     public override Task<Stream> GetData(object path, object option = default, bool throwOnError = true) {
         if (path == null) return default;
         else if (path is not FileSource) {
+            path = FindPath<Stream>(path);
             var (arc, next) = GetSource(path, throwOnError);
             return arc?.GetData(next, option, throwOnError);
         }
@@ -595,8 +601,9 @@ public abstract class BinaryArchive(BinaryState state, ArcBinary arcBinary) : Ar
     public override async Task<T> GetAsset<T>(object path, object option = default, bool throwOnError = true) {
         if (path == null) return default;
         else if (path is not FileSource) {
+            path = FindPath<T>(path);
             var (arc, next) = GetSource(path, throwOnError);
-            return await arc.GetAsset<T>(next, option, throwOnError);
+            return next != null ? await arc.GetAsset<T>(next, option, throwOnError) : (T)path;
         }
         var f = (FileSource)path;
         if (Game.IsArcPath(f.Path)) return default;
@@ -858,11 +865,9 @@ public class MultiArchive : Archive {
     public override (Archive, FileSource) GetSource(object path, bool throwOnError = true)
         => path switch {
             null => throw new ArgumentNullException(nameof(path)),
-            string s => (FindArchives(s, out var s2).FirstOrDefault(s => s.Valid && s.Contains(s2)) ?? throw new FileNotFoundException($"Could not find file \"{s}\"."))
-                .GetSource(s2, throwOnError),
-            int i => (Archives.FirstOrDefault(s => s.Valid && s.Contains(i)) ?? throw new FileNotFoundException($"Could not find file \"{i}\"."))
-                .GetSource(i, throwOnError),
-            _ => throw new ArgumentOutOfRangeException(nameof(path)),
+            string s => (FindArchives(s, out var s2).FirstOrDefault(s => s.Valid && s.Contains(s2)) ?? throw new FileNotFoundException($"Could not find file \"{s}\".")).GetSource(s2, throwOnError),
+            int i => (Archives.FirstOrDefault(s => s.Valid && s.Contains(i)) ?? throw new FileNotFoundException($"Could not find file \"{i}\".")).GetSource(i, throwOnError),
+            _ => (this, null),
         };
 
     /// <summary>

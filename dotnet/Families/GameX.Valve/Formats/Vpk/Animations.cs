@@ -216,7 +216,7 @@ public class AnimationFrameBlock(IDictionary<string, object> frameBlock) {
 //was:Resource/ResourceTypes/ModelAnimation/AnimationGroupLoader
 
 public static class AnimationGroupLoader {
-    public static IEnumerable<Animation> LoadAnimationGroup(Binary_Src resource, IOpenGfxModel gfx, Skeleton skeleton) {
+    public static IEnumerable<Animation> LoadAnimationGroup(Binary_Src resource, IOpenGfxModel gfxModel, Skeleton skeleton) {
         var data = resource.DATA.AsKeyValue();
         var decodeKey = data.GetSub("m_decodeKey"); // Get the key to decode the animations
 
@@ -229,7 +229,7 @@ public static class AnimationGroupLoader {
         }
         var animArray = data.Get<string[]>("m_localHAnimArray").Where(a => a != null); // Get the list of animation files
         foreach (var animationFile in animArray) {
-            var animResource = gfx.GetAsset<Binary_Src>($"{animationFile}_c").Result;
+            var animResource = gfxModel.Source.GetAsset<Binary_Src>($"{animationFile}_c").Result;
             if (animResource != null) animationList.AddRange(Animation.FromResource(animResource, decodeKey, skeleton)); // Build animation classes
         }
         return animationList;

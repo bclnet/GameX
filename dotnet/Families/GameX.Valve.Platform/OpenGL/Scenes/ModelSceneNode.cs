@@ -109,16 +109,16 @@ public class ModelSceneNode : SceneNode, IMeshCollection {
     void LoadMeshes() {
         // Get embedded meshes
         foreach (var embeddedMesh in Model.GetEmbeddedMeshesAndLoD().Where(m => (m.LoDMask & 1) != 0))
-            MeshRenderers.Add(new GLRenderableMesh(Scene.Gfx as OpenGLGfxModel, embeddedMesh.Mesh, embeddedMesh.MeshIndex, SkinMaterials, Model));
+            MeshRenderers.Add(new GLRenderableMesh(Scene.GfxModel as OpenGLGfxModel, embeddedMesh.Mesh, embeddedMesh.MeshIndex, SkinMaterials, Model));
 
         // Load referred meshes from file (only load meshes with LoD 1)
         foreach (var refMesh in GetLod1RefMeshes()) {
-            var newResource = Scene.Gfx.GetAsset<Binary_Src>($"{refMesh.MeshName}_c").Result;
+            var newResource = Scene.GfxModel.Source.GetAsset<Binary_Src>($"{refMesh.MeshName}_c").Result;
             if (newResource == null) continue;
 
             if (!newResource.ContainsBlockType<VBIB>()) { Console.WriteLine("Old style model, no VBIB!"); continue; }
 
-            MeshRenderers.Add(new GLRenderableMesh(Scene.Gfx as OpenGLGfxModel, (D_Mesh)newResource.DATA, refMesh.MeshIndex, SkinMaterials, Model));
+            MeshRenderers.Add(new GLRenderableMesh(Scene.GfxModel as OpenGLGfxModel, (D_Mesh)newResource.DATA, refMesh.MeshIndex, SkinMaterials, Model));
         }
 
         // Set active meshes to default

@@ -28,7 +28,7 @@ public class ViewInfo : UnityEngine.MonoBehaviour {
     [UnityEngine.Header("View")]
     public string FamilyId = "Bethesda";
     public string ArcUri = "game:/#Morrowind";
-    public string Type = "Texture";
+    public string Type = "Engine";
     public string Path = "Morrowind.start";
     //public string Path = "Morrowind.bsa:bookart/boethiah_256.dds";
     //public string Path = "Morrowind.bsa:meshes/x/ex_common_balcony_01.nif";

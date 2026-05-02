@@ -23,9 +23,9 @@ public class ViewInfo : Node {
     static ViewInfo() => PlatformX.Activate(GodotPlatform.This);
 
     public string FamilyId = "Bethesda";
-    public string ArcUri = "game:/Morrowind.bsa#Morrowind";
+    public string ArcUri = "game:/#Morrowind";
     public string Type = "Texture";
-    public string Path = "bookart/boethiah_256.dds";
+    public string Path = "Morrowind.bsa:bookart/boethiah_256.dds";
     //public string Path = "meshes/x/ex_common_balcony_01.nif";
 
     protected Family Family;
@@ -33,10 +33,20 @@ public class ViewInfo : Node {
     Renderer Renderer;
 
     public override void _Ready() {
+        // parse args
+        var args = System.Environment.GetCommandLineArgs();
+        ShellState s;
+        if (args.Length > 1 && (s = ShellState.Parse(args[1])) != null) { FamilyId = s.FamilyId; ArcUri = s.ArcUri; Type = s.Type; Path = s.Path; }
+        //Log.Info($"FamilyId: '{FamilyId}'");
+        //Log.Info($"ArcUri: '{ArcUri}'");
+        //Log.Info($"Type: '{Type}'");
+        //Log.Info($"Path: '{Path}'");
+
         if (string.IsNullOrEmpty(FamilyId)) return;
         Family = FamilyManager.GetFamily(FamilyId);
         if (!string.IsNullOrEmpty(ArcUri)) Source = Family.GetArchive(new Uri(ArcUri));
-        Renderer = GodotRenderer.CreateRenderer(this, Source?.Gfx, Path, Type);
+        var value = Source.GetAsset<object>(Path).Result;
+        Renderer = GodotRenderer.CreateRenderer(this, Source?.Gfx, value, Type);
         Renderer?.Start();
     }
 

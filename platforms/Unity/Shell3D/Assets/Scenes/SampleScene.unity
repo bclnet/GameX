@@ -403,13 +403,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 330585543}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: -1546406650, guid: ab13ae74c960e684882943c6846c8c77, type: 3}
+  m_Script: {fileID: -1546406650, guid: 48f9829f31687fc49ae8af4865d38604, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   FamilyId: Bethesda
   ArcUri: game:/#Morrowind
-  Type: Engine
-  Path: Morrowind.start
+  Type: Texture
+  Path: Morrowind.bsa:bookart/boethiah_256.dds
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0

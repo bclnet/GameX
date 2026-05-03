@@ -7,8 +7,9 @@ using System.Collections.Generic;
 namespace GameX.Platforms.Unreal;
 
 public static class UnrealRenderer {
-    public static Renderer CreateRenderer(object parent, IOpenGfx[] gfx, object obj, string type)
-        => type switch {
+    public static Renderer CreateRenderer(object parent, IOpenGfx[] gfx, object obj, string type) {
+        if (obj is IHaveOpenGfx z) gfx = z.Gfx;
+        return type switch {
             "TestTri" => new TestTriRenderer(gfx, obj),
             "Texture" => new TextureRenderer(gfx, obj, 0..),
             //"Object" => new ObjectRenderer(gfx, obj),
@@ -16,6 +17,7 @@ public static class UnrealRenderer {
             //"Engine" => new EngineRenderer(gfx, obj),
             _ => default
         };
+    }
 }
 
 public class ViewInfo {

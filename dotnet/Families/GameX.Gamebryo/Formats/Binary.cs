@@ -1,4 +1,5 @@
 ﻿using GameX.Gamebryo.Formats.Nif;
+using OpenStack;
 using OpenStack.Gfx;
 using System;
 using System.Collections.Generic;
@@ -10,10 +11,10 @@ namespace GameX.Gamebryo.Formats;
 
 #region Binary_Nif
 
-public class Binary_Nif(BinaryReader r, FileSource f, Archive s) : NiReader(r), IHaveMetaInfo, IHaveArchive, IModel, IWriteToStream {
+public class Binary_Nif(BinaryReader r, FileSource f, Archive s) : NiReader(r), IHaveMetaInfo, IHaveOpenGfx, IModel, IWriteToStream {
     public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Nif(r, f, s));
     public string Name = Path.GetFileNameWithoutExtension(f.Path);
-    Archive IHaveArchive.Archive => s;
+    IOpenGfx[] IHaveOpenGfx.Gfx => s.Gfx;
 
     #region IModel
 

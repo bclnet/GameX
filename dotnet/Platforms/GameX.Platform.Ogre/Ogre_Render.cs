@@ -6,8 +6,9 @@ using OpenStack.Gfx.Ogre;
 namespace GameX.Platforms.Ogre;
 
 public static class OgreRenderer {
-    public static Renderer CreateRenderer(object parent, IOpenGfx[] gfx, object obj, string type)
-        => type switch {
+    public static Renderer CreateRenderer(object parent, IOpenGfx[] gfx, object obj, string type) {
+        if (obj is IHaveOpenGfx z) gfx = z.Gfx;
+        return type switch {
             "TestTri" => new TestTriRenderer(gfx, obj),
             "Texture" => new TextureRenderer(gfx, obj, 0..),
             //"Object" => new ObjectRenderer(gfx, obj),
@@ -15,6 +16,7 @@ public static class OgreRenderer {
             //"Engine" => new EngineRenderer(gfx, obj),
             _ => default,
         };
+    }
 }
 
 public class ViewInfo {

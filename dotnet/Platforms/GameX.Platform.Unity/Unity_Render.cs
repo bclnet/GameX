@@ -7,8 +7,9 @@ using System;
 namespace GameX.Platforms.Unity;
 
 public static class UnityRenderer {
-    public static Renderer CreateRenderer(object parent, IOpenGfx[] gfx, object obj, string type)
-        => type switch {
+    public static Renderer CreateRenderer(object parent, IOpenGfx[] gfx, object obj, string type) {
+        if (obj is IHaveOpenGfx z) gfx = z.Gfx;
+        return type switch {
             "TestTri" => new TestTriRenderer(gfx, obj),
             "Material" => new MaterialRenderer(gfx, obj),
             "Particle" => new ParticleRenderer(gfx, obj),
@@ -17,6 +18,7 @@ public static class UnityRenderer {
             "Engine" => new EngineRenderer(gfx, obj),
             _ => new ObjectRenderer(gfx, obj),
         };
+    }
 }
 
 public class MaterialRenderer(IOpenGfx[] gfx, object obj) : Renderer { }

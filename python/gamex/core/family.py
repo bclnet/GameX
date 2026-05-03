@@ -503,26 +503,28 @@ class FamilyGame:
             for p in self._findPaths(vfx, edition, self.dlcs[key] if key else None, searchPattern):
                 if self.searchBy == SearchBy.Arc:
                     for path in p[1]:
-                        if self._isArcPath(path): archives.append(self._getArchiveObj(vfx, edition, path))
+                        if self._isArcPath(path): archives.append(self._getArchiveRecursive(vfx, edition, path))
                 else:
-                    archives.append(self._getArchiveObj(vfx, edition,
+                    archives.append(self._getArchiveRecursive(vfx, edition,
                         (p[0], [x for x in p[1] if x.find(slash) >= 0]) if self.searchBy == SearchBy.DirDown else p))
-        return (archives[0] if len(archives) == 1 else self._getArchiveObj(vfx, edition, archives)).setPlatform(PlatformX.current)
+        return (archives[0] if len(archives) == 1 else self._getArchiveRecursive(vfx, edition, archives)).setPlatform(PlatformX.current)
 
-    # get ArchiveObj
-    def _getArchiveObj(self, vfx: FileSystem, edition: Edition, value: object, tag: object = None) -> Archive:
+    # get ArchiveRecursive
+    def _getArchiveRecursive(self, vfx: FileSystem, edition: Edition, value: object, tag: object = None, parent: Archive = None) -> Archive:
         state = BinaryState(vfx, self, edition, value if isinstance(value, str) else None, tag)
         match value:
-            case s if isinstance(value, str): return self.createArchive(state) if self._isArcPath(s) else _throw(f'{self.id} missing {s}')
+            case s if isinstance(value, str): arc = self.createArchive(state) if self._isArcPath(s) else _throw(f'{self.id} missing {s}')
             case p, l if isinstance(value, tuple):
-                return self._getArchiveObj(vfx, edition, l[0], tag) if len(l) == 1 and self._isArcPath(l[0]) \
+                arc = self._getArchiveRecursive(vfx, edition, l[0], tag) if len(l) == 1 and self._isArcPath(l[0]) \
                     else ManyArchive(
                         self.createArchive(state), state,
                         p if len(p) > 0 else 'Many', l,
                         pathSkip = len(p) + 1 if len(p) > 0 else 0)
-            case s if isinstance(value, list): return s[0] if len(s) == 1 else MultiArchive(state, 'Multi', s)
-            case None: return None
+            case s if isinstance(value, list): arc = s[0] if len(s) == 1 else MultiArchive(state, 'Multi', s)
+            case None: arc = None
             case _: raise Exception(f'Unknown: {value}')
+        if parent and arc: parent.children.append(arc)
+        return arc
 
     # find Paths
     def _findPaths(self, vfx: FileSystem, edition: Edition, dlc: DownloadableContent, searchPattern: str):

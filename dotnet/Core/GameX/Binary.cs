@@ -10,7 +10,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using static GameX.Formats.IUnknown.IUnknownFileObject;
 using static GameX.MetaItem;
 
 namespace GameX;
@@ -193,10 +192,6 @@ public abstract class Binary : IDisposable {
 
 #region Archive
 
-public interface IHaveArchive {
-    Archive Archive { get; }
-}
-
 /// <summary>
 /// Archive
 /// Initializes a new instance of the <see cref="Archive" /> class.
@@ -231,6 +226,11 @@ public abstract class Archive(BinaryState state) : Binary(state), ISourceWithPla
     /// The arc item count.
     /// </summary>
     public int Count;
+
+    /// <summary>
+    /// The arc children.
+    /// </summary>
+    public List<Archive> Children = [];
 
     /// <summary>
     /// Opens this instance.
@@ -270,6 +270,7 @@ public abstract class Archive(BinaryState state) : Binary(state), ISourceWithPla
     public Archive SetPlatform(Platform platform) {
         Gfx = platform?.GfxFactory?.Invoke(this);
         Sfx = platform?.SfxFactory?.Invoke(this);
+        foreach (var s in Children) s.SetPlatform(platform);
         return this;
     }
 

@@ -67,11 +67,12 @@ class Archive(Binary, ISourceWithPlatform):
     # class FuncObjectFactoryFactory: pass
     def __init__(self, state: BinaryState):
         super().__init__(state)
-        self.pathFinders = {}
-        self.assetFactoryFunc = None
-        self.gfx = None
-        self.sfx = None
-        self.count = 0
+        self.pathFinders: list[object] = {}
+        self.assetFactoryFunc: callable = None
+        self.gfx: list[IOpenGfx] = None
+        self.sfx: list[IOpenSfx] = None
+        self.count: int = 0
+        self.children: list[Archive] = []
     def open(self, items: list[MetaItem] = None, manager: MetaManager = None) -> None:
         if self.status != self.Stat.Closed: return self
         super().open()
@@ -85,6 +86,7 @@ class Archive(Binary, ISourceWithPlatform):
     def setPlatform(self, platform: Platform) -> Archive:
         self.gfx = platform.gfxFactory(self) if platform and platform.gfxFactory else None
         self.sfx = platform.sfxFactory(self) if platform and platform.sfxFactory else None
+        for s in self.children: s.setPlatform(platform)
         return self
     def getSource(self, path: FileSource | str | int, throwOnError: bool = True) -> tuple[Archive, FileSource]: pass
     async def getData(self, path: FileSource | str | int, option: object = None, throwOnError: bool = True) -> bytes: pass
@@ -200,7 +202,7 @@ class BinaryArchive(Archive):
         elif not isinstance(path, FileSource):
             path = self.findPath(t, path)
             (arc, next_) = self.getSource(path, throwOnError)
-            return await arc.getAsset(t, next_, option, throwOnError) if next else path
+            return await arc.getAsset(t, next_, option, throwOnError) if next_ else path
         f = path
         if self.game._isArcPath(f.path): return None
         if isinstance(self.arcBinary, IDatabase) and (s := self.arcBinary):

@@ -1,5 +1,6 @@
 from __future__ import annotations
 import os
+from openstk.gfx import IHaveOpenGfx
 from openstk.platforms.panda3d.gfx import TestTriRenderer, TextureRenderer, ObjectRenderer, MaterialRenderer, ParticleRenderer, EngineRenderer, WorldRenderer
 
 # typedefs
@@ -10,6 +11,7 @@ class Renderer: pass
 class Panda3dRenderer:
     @staticmethod
     def createRenderer(parent: object, gfx: list[IOpenGfx], obj: object, type: str) -> Renderer:
+        if isinstance(obj, IHaveOpenGfx): gfx = obj.gfx
         match type:
             case 'TestTri': return TestTriRenderer(gfx, obj)
             case 'Texture' | 'VideoTexture': return TextureRenderer(gfx, obj)

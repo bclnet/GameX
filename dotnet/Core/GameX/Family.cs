@@ -1238,15 +1238,15 @@ public class FamilyGame {
                 switch (SearchBy) {
                     case SearchBy.Arc:
                         foreach (var path in p.paths)
-                            if (IsArcPath(path)) archives.Add(GetArchiveObj(vfx, edition, path));
+                            if (IsArcPath(path)) archives.Add(GetArchiveRecursive(vfx, edition, path));
                         break;
                     default:
-                        archives.Add(GetArchiveObj(vfx, edition,
+                        archives.Add(GetArchiveRecursive(vfx, edition,
                             SearchBy == SearchBy.DirDown ? (p.root, p.paths.Where(x => x.Contains(slash)).ToArray())
                             : p));
                         break;
                 }
-        return (archives.Count == 1 ? archives[0] : GetArchiveObj(vfx, edition, archives))?.SetPlatform(PlatformX.Current);
+        return (archives.Count == 1 ? archives[0] : GetArchiveRecursive(vfx, edition, archives))?.SetPlatform(PlatformX.Current);
     }
 
     /// <summary>
@@ -1256,13 +1256,14 @@ public class FamilyGame {
     /// <param name="edition">The edition.</param>
     /// <param name="value">The value.</param>
     /// <param name="tag">The tag.</param>
+    /// <param name="parent">The parent.</param>
     /// <returns></returns>
-    Archive GetArchiveObj(FileSystem vfx, Edition edition, object value, object tag = null) {
+    Archive GetArchiveRecursive(FileSystem vfx, Edition edition, object value, object tag = null, Archive parent = null) {
         var state = new BinaryState(vfx, this, edition, value as string, tag);
-        return value switch {
+        var arc = value switch {
             string s => IsArcPath(s) ? CreateArchive(state) : throw new InvalidOperationException($"{Id} missing {s}"),
             ValueTuple<string, string[]> s => s.Item2.Length == 1 && IsArcPath(s.Item2[0])
-                ? GetArchiveObj(vfx, edition, s.Item2[0], tag)
+                ? GetArchiveRecursive(vfx, edition, s.Item2[0], tag)
                 : new ManyArchive(
                     CreateArchive(state), state,
                     s.Item1.Length > 0 ? s.Item1 : "Many", s.Item2,
@@ -1271,6 +1272,8 @@ public class FamilyGame {
             null => null,
             _ => throw new ArgumentOutOfRangeException(nameof(value), $"{value}"),
         };
+        if (parent != null && arc != null) parent.Children.Add(arc);
+        return arc;
     }
 
     /// <summary>

@@ -36,8 +36,9 @@ public class WBArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="WBArchive" /> class.
     /// </summary>
+    /// <param name="parent">The parent.</param>
     /// <param name="state">The state.</param>
-    public WBArchive(BinaryState state) : base(state, Binary_AC.Current) {
+    public WBArchive(Archive parent, BinaryState state) : base(parent, state, Binary_AC.Current) {
         AssetFactoryFunc = AssetFactory;
         UseFileId = true;
     }

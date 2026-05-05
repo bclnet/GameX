@@ -11,8 +11,8 @@ class UncoreFamily(Family):
 
 # UncoreArchive
 class UncoreArchive(Archive):
-    def __init__(self, state: BinaryState):
-        super().__init__(state)
+    def __init__(self, parent: Archive, state: BinaryState):
+        super().__init__(parent, state)
         self.name = 'Uncore'
         self.assetFactoryFunc = self.assetFactory
 

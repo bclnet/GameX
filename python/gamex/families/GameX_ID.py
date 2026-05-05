@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os
 from openstk.core import _pathExtension
-from gamex import Family, FamilyGame, BinaryArchive
+from gamex import Family, FamilyGame, Archive, BinaryArchive
 from gamex.families.GameX_Uncore import UncoreArchive
 
 # QGame
@@ -11,8 +11,8 @@ class QGame(FamilyGame):
 
 # IDArchive
 class IDArchive(BinaryArchive):
-    def __init__(self, state: BinaryState):
-        super().__init__(state, self.getArcBinary(state.game, _pathExtension(state.path).lower()))
+    def __init__(self, parent: Archive, state: BinaryState):
+        super().__init__(parent, state, self.getArcBinary(state.game, _pathExtension(state.path).lower()))
         self.assetFactoryFunc = self.assetFactory
 
     #region Factories

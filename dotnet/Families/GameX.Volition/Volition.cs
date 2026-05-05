@@ -49,8 +49,9 @@ public class VolitionArchive : BinaryArchive, ITransformAsset<IUnknownFileModel>
     /// <summary>
     /// Initializes a new instance of the <see cref="VolitionArchive" /> class.
     /// </summary>
+    /// <param name="parent">The parent.</param>
     /// <param name="state">The state.</param>
-    public VolitionArchive(BinaryState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+    public VolitionArchive(Archive parent, BinaryState state) : base(parent, state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         AssetFactoryFunc = AssetFactory;
     }
 

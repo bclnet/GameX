@@ -20,8 +20,9 @@ public class CrytekArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="CrytekArchive" /> class.
     /// </summary>
+    /// <param name="parent">The parent.</param>
     /// <param name="state">The state.</param>
-    public CrytekArchive(BinaryState state) : base(state, GetArcBinary(state.Game)) {
+    public CrytekArchive(Archive parent, BinaryState state) : base(parent, state, GetArcBinary(state.Game)) {
         AssetFactoryFunc = AssetFactory;
     }
 

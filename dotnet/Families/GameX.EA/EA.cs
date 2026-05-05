@@ -16,8 +16,9 @@ public class EAArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="EAArchive" /> class.
     /// </summary>
+    /// <param name="parent">The parent.</param>
     /// <param name="state">The state.</param>
-    public EAArchive(BinaryState state) : base(state, Binary_Hpl.Current) {
+    public EAArchive(Archive parent, BinaryState state) : base(parent, state, Binary_Hpl.Current) {
         AssetFactoryFunc = AssetFactory;
     }
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os
 from openstk.core import _pathExtension
-from gamex import BinaryArchive
+from gamex import Archive, BinaryArchive
 from gamex.families.Arkane.formats.danae.binary import Binary_Ftl, Binary_Fts, Binary_Tea
 from gamex.families.Arkane.formats.binary import Binary_Danae, Binary_Void
 from gamex.families.Valve.formats.binary import Binary_Vpk
@@ -11,8 +11,8 @@ from gamex.families.GameX_Uncore import UncoreArchive
 
 # ArkaneArchive
 class ArkaneArchive(BinaryArchive):
-    def __init__(self, state: BinaryState):
-        super().__init__(state, self.getArcBinary(state.game, _pathExtension(state.path).lower()))
+    def __init__(self, parent: Archive, state: BinaryState):
+        super().__init__(parent, state, self.getArcBinary(state.game, _pathExtension(state.path).lower()))
         match state.game.engine[0]:
             # case 'CryEngine': self.assetFactoryFunc = Crytek.CrytekArchive.AssetFactory
             # case 'Unreal': self.assetFactoryFunc = Epic.EpicArchive.AssetFactory

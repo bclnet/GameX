@@ -196,9 +196,8 @@ public abstract class Binary : IDisposable {
 /// Archive
 /// Initializes a new instance of the <see cref="Archive" /> class.
 /// </summary>
-/// <param name="state">The state.</param>
-public abstract class Archive(BinaryState state) : Binary(state), ISourceWithPlatform {
-    class EmptyArchive(BinaryState state) : Archive(state) {
+public abstract class Archive : Binary, ISourceWithPlatform {
+    class EmptyArchive(BinaryState state) : Archive(null, state) {
         public override bool Contains(object path) => false;
         public override (Archive, FileSource) GetSource(object path, bool throwOnError = true) => throw new NotImplementedException();
         public override Task<Stream> GetData(object path, object option = default, bool throwOnError = true) => throw new NotImplementedException();
@@ -231,6 +230,10 @@ public abstract class Archive(BinaryState state) : Binary(state), ISourceWithPla
     /// The arc children.
     /// </summary>
     public List<Archive> Children = [];
+
+    /// <param name="parent">The parent.</param>
+    /// <param name="state">The state.</param>
+    public Archive(Archive parent, BinaryState state) : base(state) => parent?.Children.Add(this);
 
     /// <summary>
     /// Opens this instance.
@@ -390,11 +393,12 @@ public abstract class Archive(BinaryState state) : Binary(state), ISourceWithPla
 /// <summary>
 /// Initializes a new instance of the <see cref="BinaryArchive" /> class.
 /// </summary>
+/// <param name="parent">The parent.</param>
 /// <param name="state">The state.</param>
 /// <param name="name">The name.</param>
 /// <param name="arcBinary">The arc binary.</param>
 [DebuggerDisplay("{Name}")]
-public abstract class BinaryArchive(BinaryState state, ArcBinary arcBinary) : Archive(state) {
+public abstract class BinaryArchive(Archive parent, BinaryState state, ArcBinary arcBinary) : Archive(parent, state) {
     public readonly ArcBinary ArcBinary = arcBinary;
     // options
     public int RetainInPool = 10;
@@ -753,11 +757,12 @@ public class ManyArchive : BinaryArchive {
     /// Initializes a new instance of the <see cref="MultiArchive" /> class.
     /// </summary>
     /// <param name="basis">The basis.</param>
+    /// <param name="parent">The basis.</param>
     /// <param name="state">The state.</param>
     /// <param name="name">The name.</param>
     /// <param name="paths">The paths.</param>
     /// <param name="pathSkip">The pathSkip.</param>
-    public ManyArchive(Archive basis, BinaryState state, string name, string[] paths, int pathSkip = 0) : base(state, null) {
+    public ManyArchive(Archive basis, Archive parent, BinaryState state, string name, string[] paths, int pathSkip = 0) : base(parent, state, null) {
         AssetFactoryFunc = basis.AssetFactoryFunc;
         Name = name;
         Paths = paths;
@@ -775,9 +780,10 @@ public class ManyArchive : BinaryArchive {
     public override Task Read(object tag = default) {
         Files = [.. Paths.Select(s => new FileSource {
             Path = s.Replace('\\', '/'),
-            Arc = Game.IsArcPath(s) ? (BinaryArchive)Game.CreateArchive(new BinaryState(Vfx, Game, Edition, s)) : default,
+            Arc = Game.IsArcPath(s) ? (BinaryArchive)Game.CreateArchive(this, new BinaryState(Vfx, Game, Edition, s)) : default,
             Lazy = x => { x.FileSize = Vfx.FileInfo(s).length; x.Lazy = null; }
         })];
+        SetPlatform(PlatformX.Current);
         return Task.CompletedTask;
     }
 
@@ -804,11 +810,11 @@ public class MultiArchive : Archive {
     /// <summary>
     /// Initializes a new instance of the <see cref="MultiArchive" /> class.
     /// </summary>
+    /// <param name="parent">The parent.</param>
     /// <param name="state">The state.</param>
     /// <param name="name">The name.</param>
     /// <param name="archives">The archives.</param>
-    /// <param name="tag">The tag.</param>
-    public MultiArchive(BinaryState state, string name, IList<Archive> archives) : base(state) {
+    public MultiArchive(Archive parent, BinaryState state, string name, IList<Archive> archives) : base(parent, state) {
         Name = name;
         Archives = archives ?? throw new ArgumentNullException(nameof(archives));
     }
@@ -998,18 +1004,18 @@ public class ArcBinary<Self> : ArcBinary where Self : ArcBinary, new() {
 
     protected class SubArchive : BinaryArchive {
         readonly FileSource File;
-        readonly BinaryArchive Source;
+        readonly BinaryArchive Parent;
         StaticPool<BinaryReader> Pool;
         BinaryReader R;
 
-        public SubArchive(BinaryArchive source, FileSource file, string path, object tag = null, ArcBinary instance = null) : base(new BinaryState(source.Vfx, source.Game, source.Edition, path, tag), instance ?? Current) {
+        public SubArchive(BinaryArchive parent, FileSource file, string path, object tag = null, ArcBinary source = null) : base(parent, new BinaryState(parent.Vfx, parent.Game, parent.Edition, path, tag), source ?? Current) {
+            AssetFactoryFunc = parent.AssetFactoryFunc;
+            Parent = parent;
             File = file;
-            Source = source;
-            AssetFactoryFunc = source.AssetFactoryFunc;
             Open();
         }
 
-        public async override void Opening() { R = new BinaryReader(await Source.ReadData(File)); Pool = new StaticPool<BinaryReader>(R); base.Opening(); }
+        public async override void Opening() { R = new BinaryReader(await Parent.ReadData(File)); Pool = new StaticPool<BinaryReader>(R); base.Opening(); }
         public override void Closing() { R?.Dispose(); base.Closing(); }
         public override IGenericPool<BinaryReader> GetReader(string path = null, bool pooled = true) => Pool;
     }

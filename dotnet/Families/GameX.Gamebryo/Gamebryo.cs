@@ -18,8 +18,9 @@ public class GamebryoArchive : BinaryArchive, ITransformAsset<IUnknownFileModel>
     /// <summary>
     /// Initializes a new instance of the <see cref="GamebryoArchive" /> class.
     /// </summary>
+    /// <param name="parent">The parent.</param>
     /// <param name="state">The state.</param>
-    public GamebryoArchive(BinaryState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+    public GamebryoArchive(Archive parent, BinaryState state) : base(parent, state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         AssetFactoryFunc = AssetFactory;
         PathFinders.Add(typeof(ITexture), FindTexture);
     }

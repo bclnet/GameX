@@ -18,8 +18,9 @@ public class CapcomArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="CapcomArchive" /> class.
     /// </summary>
+    /// <param name="parent">The parent.</param>
     /// <param name="state">The state.</param>
-    public CapcomArchive(BinaryState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+    public CapcomArchive(Archive parent, BinaryState state) : base(parent, state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         AssetFactoryFunc = state.Game.Engine.n switch {
             "Unity" => Unity.UnityArchive.AssetFactory,
             _ => AssetFactory,

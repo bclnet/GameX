@@ -16,8 +16,9 @@ public class FrictionalArchive : BinaryArchive, ITransformAsset<IUnknownFileMode
     /// <summary>
     /// Initializes a new instance of the <see cref="FrictionalArchive" /> class.
     /// </summary>
+    /// <param name="parent">The parent.</param>
     /// <param name="state">The state.</param>
-    public FrictionalArchive(BinaryState state) : base(state, Binary_Hpl.Current) {
+    public FrictionalArchive(Archive parent, BinaryState state) : base(parent, state, Binary_Hpl.Current) {
         AssetFactoryFunc = AssetFactory;
     }
 

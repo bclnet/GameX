@@ -16,8 +16,9 @@ public class EpicArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="EpicArchive" /> class.
     /// </summary>
+    /// <param name="parent">The parent.</param>
     /// <param name="state">The state.</param>
-    public EpicArchive(BinaryState state) : base(state, Binary_Pck.Current) {
+    public EpicArchive(Archive parent, BinaryState state) : base(parent, state, Binary_Pck.Current) {
         AssetFactoryFunc = AssetFactory;
     }
 

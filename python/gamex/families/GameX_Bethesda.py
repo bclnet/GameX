@@ -2,7 +2,7 @@ from __future__ import annotations
 import os
 from openstk.core import _pathExtension, log
 from openstk.gfx import ITexture
-from gamex import Family, FamilyGame, BinaryArchive, FileOption
+from gamex import Family, FamilyGame, Archive, BinaryArchive, FileOption
 from gamex.families.Uncore.formats.binary import Binary_Dds
 from gamex.families.Bethesda.formats.binary import Binary_Ba2, Binary_Bsa, Binary_Esm
 from gamex.families.Gamebryo.formats.binary import Binary_Nif
@@ -21,8 +21,8 @@ class MorrowindGame(FamilyGame):
 
 # BethesdaArchive
 class BethesdaArchive(BinaryArchive):
-    def __init__(self, state: BinaryState):
-        super().__init__(state, self.getArcBinary(state.game, _pathExtension(state.path).lower()))
+    def __init__(self, parent: Archive, state: BinaryState):
+        super().__init__(parent, state, self.getArcBinary(state.game, _pathExtension(state.path).lower()))
         self.assetFactoryFunc = self.assetFactory
         self.pathFinders[type(ITexture)] = self.findTexture
 

@@ -16,8 +16,9 @@ public class CyanideArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> 
     /// <summary>
     /// Initializes a new instance of the <see cref="CyanideArchive" /> class.
     /// </summary>
+    /// <param name="parent">The parent.</param>
     /// <param name="state">The state.</param>
-    public CyanideArchive(BinaryState state) : base(state, Binary_Cpk.Current) {
+    public CyanideArchive(Archive parent, BinaryState state) : base(parent, state, Binary_Cpk.Current) {
         AssetFactoryFunc = AssetFactory;
     }
 

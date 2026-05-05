@@ -17,9 +17,9 @@ public class PakBinary_P4k : ArcBinary<PakBinary_P4k> {
     protected class SubArchiveP4k : BinaryArchive {
         P4kFile Arc;
 
-        public SubArchiveP4k(BinaryArchive source, P4kFile arc, string path, object tag) : base(new BinaryState(source.Vfx, source.Game, source.Edition, path, tag), Current) {
+        public SubArchiveP4k(BinaryArchive parent, P4kFile arc, string path, object tag) : base(parent, new BinaryState(parent.Vfx, parent.Game, parent.Edition, path, tag), Current) {
+            AssetFactoryFunc = parent.AssetFactoryFunc;
             Arc = arc;
-            AssetFactoryFunc = source.AssetFactoryFunc;
             UseReader = false;
             //Open();
         }

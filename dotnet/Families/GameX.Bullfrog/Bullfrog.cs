@@ -76,8 +76,9 @@ public class BullfrogArchive : BinaryArchive, ITransformAsset<IUnknownFileModel>
     /// <summary>
     /// Initializes a new instance of the <see cref="BullfrogArchive" /> class.
     /// </summary>
+    /// <param name="parent">The parent.</param>
     /// <param name="state">The state.</param>
-    public BullfrogArchive(BinaryState state) : base(state, GetArcBinary(state.Game, state.Path))
+    public BullfrogArchive(Archive parent, BinaryState state) : base(parent, state, GetArcBinary(state.Game, state.Path))
         => AssetFactoryFunc = AssetFactory;
 
     #region Factories

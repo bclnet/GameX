@@ -18,9 +18,9 @@ class ExportManager:
                 if filePath and not os.path.isdir(filePath): os.makedirs(filePath)
                 setPath = os.path.join(filePath, '.set')
             #     using var w = new BinaryWriter(new FileStream(setPath, FileMode.Create, FileAccess.Write));
-            #     await ArcBinary.Stream.Write(new StreamArchive(NetworkHost.Factory, new BinaryState(null, null, null, "Root")) {
+            #     await ArcBinary.Stream.Write(new StreamArchive(NetworkHost.Factory, None, new BinaryState(None, None, None, 'Root')) {
             #         Files = [.. multi.Archives.Select(x => new FileSource { Path = x.Name })]
-            #     }, w, "Set");
+            #     }, w, 'Set');
             # multi
             for _ in arc.archives: await ExportManager.exportPakAsync(filePath, match, from_, option, _)
 

@@ -1042,10 +1042,10 @@ public class FamilyGame {
     /// <summary>
     /// Create archive
     /// </summary>
-    /// <param name="game">The game.</param>
+    /// <param name="parent">The parent.</param>
     /// <param name="state">The state.</param>
     /// <returns></returns>
-    internal Archive CreateArchive(BinaryState state) => (Archive)Activator.CreateInstance(ArchiveType ?? throw new InvalidOperationException($"{Id} missing ArchiveType"), state);
+    internal Archive CreateArchive(Archive parent, BinaryState state) => (Archive)Activator.CreateInstance(ArchiveType ?? throw new InvalidOperationException($"{Id} missing ArchiveType"), parent, state);
 
     /// <summary>
     /// Create client
@@ -1238,42 +1238,39 @@ public class FamilyGame {
                 switch (SearchBy) {
                     case SearchBy.Arc:
                         foreach (var path in p.paths)
-                            if (IsArcPath(path)) archives.Add(GetArchiveRecursive(vfx, edition, path));
+                            if (IsArcPath(path)) archives.Add(GetArchiveRecursive(null, vfx, edition, path));
                         break;
                     default:
-                        archives.Add(GetArchiveRecursive(vfx, edition,
+                        archives.Add(GetArchiveRecursive(null, vfx, edition,
                             SearchBy == SearchBy.DirDown ? (p.root, p.paths.Where(x => x.Contains(slash)).ToArray())
                             : p));
                         break;
                 }
-        return (archives.Count == 1 ? archives[0] : GetArchiveRecursive(vfx, edition, archives))?.SetPlatform(PlatformX.Current);
+        return archives.Count == 1 ? archives[0] : GetArchiveRecursive(null, vfx, edition, archives);
     }
 
     /// <summary>
     /// Create the archive.
     /// </summary>
+    /// <param name="parent">The parent.</param>
     /// <param name="vfx">The vfx.</param>
     /// <param name="edition">The edition.</param>
     /// <param name="value">The value.</param>
     /// <param name="tag">The tag.</param>
-    /// <param name="parent">The parent.</param>
     /// <returns></returns>
-    Archive GetArchiveRecursive(FileSystem vfx, Edition edition, object value, object tag = null, Archive parent = null) {
+    Archive GetArchiveRecursive(Archive parent, FileSystem vfx, Edition edition, object value, object tag = null) {
         var state = new BinaryState(vfx, this, edition, value as string, tag);
-        var arc = value switch {
-            string s => IsArcPath(s) ? CreateArchive(state) : throw new InvalidOperationException($"{Id} missing {s}"),
+        return value switch {
+            string s => IsArcPath(s) ? CreateArchive(parent, state) : throw new InvalidOperationException($"{Id} missing {s}"),
             ValueTuple<string, string[]> s => s.Item2.Length == 1 && IsArcPath(s.Item2[0])
-                ? GetArchiveRecursive(vfx, edition, s.Item2[0], tag)
-                : new ManyArchive(
-                    CreateArchive(state), state,
+                ? GetArchiveRecursive(parent, vfx, edition, s.Item2[0], tag)
+                : new ManyArchive(CreateArchive(null, state), parent, state,
                     s.Item1.Length > 0 ? s.Item1 : "Many", s.Item2,
                     pathSkip: s.Item1.Length > 0 ? s.Item1.Length + 1 : 0),
-            IList<Archive> s => s.Count == 1 ? s[0] : new MultiArchive(state, "Multi", s),
+            IList<Archive> s => s.Count == 1 ? s[0] : new MultiArchive(parent, state, "Multi", s),
             null => null,
             _ => throw new ArgumentOutOfRangeException(nameof(value), $"{value}"),
         };
-        if (parent != null && arc != null) parent.Children.Add(arc);
-        return arc;
     }
 
     /// <summary>

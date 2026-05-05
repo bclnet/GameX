@@ -16,8 +16,9 @@ public class MonolithArchive : BinaryArchive, ITransformAsset<IUnknownFileModel>
     /// <summary>
     /// Initializes a new instance of the <see cref="MonolithArchive" /> class.
     /// </summary>
+    /// <param name="parent">The parent.</param>
     /// <param name="state">The state.</param>
-    public MonolithArchive(BinaryState state) : base(state, GetArcBinary(state.Game, state.Path)) {
+    public MonolithArchive(Archive parent, BinaryState state) : base(parent, state, GetArcBinary(state.Game, state.Path)) {
         AssetFactoryFunc = AssetFactory;
     }
 

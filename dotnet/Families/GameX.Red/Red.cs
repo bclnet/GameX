@@ -17,8 +17,9 @@ public class RedArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="RedArchive" /> class.
     /// </summary>
+    /// <param name="parent">The parent.</param>
     /// <param name="state">The state.</param>
-    public RedArchive(BinaryState state) : base(state, Binary_Red.Current) {
+    public RedArchive(Archive parent, BinaryState state) : base(parent, state, Binary_Red.Current) {
         AssetFactoryFunc = AssetFactory;
     }
 

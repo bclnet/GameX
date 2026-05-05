@@ -16,8 +16,9 @@ public class FrontierArchive : BinaryArchive, ITransformAsset<IUnknownFileModel>
     /// <summary>
     /// Initializes a new instance of the <see cref="FrontierArchive" /> class.
     /// </summary>
+    /// <param name="parent">The parent.</param>
     /// <param name="state">The state.</param>
-    public FrontierArchive(BinaryState state) : base(state, Binary_Frontier.Current) {
+    public FrontierArchive(Archive parent, BinaryState state) : base(parent, state, Binary_Frontier.Current) {
         AssetFactoryFunc = AssetFactory;
     }
 

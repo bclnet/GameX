@@ -908,7 +908,7 @@ public unsafe class Binary_Pak : ArcBinary<Binary_Pak> {
                 Offset = s.Offset,
                 FileSize = s.FileSize,
             };
-            if (file.Path.EndsWith(".wad", StringComparison.OrdinalIgnoreCase)) file.Arc = new SubArchive(source, file, file.Path, instance: Binary_Wad.Current);
+            if (file.Path.EndsWith(".wad", StringComparison.OrdinalIgnoreCase)) file.Arc = new SubArchive(source, file, file.Path, source: Binary_Wad.Current);
             return file;
         }).ToArray();
         return Task.CompletedTask;

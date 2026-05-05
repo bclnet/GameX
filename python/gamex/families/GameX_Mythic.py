@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os
 from openstk.core import _pathExtension
-from gamex import ArcBinary, BinaryArchive
+from gamex import ArcBinary, Archive, BinaryArchive
 from gamex.families.GameX_Uncore import UncoreArchive
 from gamex.families.Mythic.formats.binary import Binary_Mpk, Binary_Crf
 from gamex.families.Bioware.formats.binary import Binary_Myp
@@ -11,8 +11,8 @@ from gamex.families.GameX_Origin import OriginArchive
 
 # MythicArchive
 class MythicArchive(BinaryArchive):
-    def __init__(self, state: BinaryState):
-        super().__init__(state, self.getArcBinary(state.game, _pathExtension(state.path).lower()))
+    def __init__(self, parent: Archive, state: BinaryState):
+        super().__init__(parent, state, self.getArcBinary(state.game, _pathExtension(state.path).lower()))
         match state.game.id:
             case 'UO': self.assetFactoryFunc = OriginArchive.assetFactory
             case 'DA2': self.assetFactoryFunc = BiowareArchive.assetFactory

@@ -16,8 +16,9 @@ public class UnityArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="UnityArchive" /> class.
     /// </summary>
+    /// <param name="parent">The parent.</param>
     /// <param name="state">The state.</param>
-    public UnityArchive(BinaryState state) : base(state, Binary_Unity.Current) {
+    public UnityArchive(Archive parent, BinaryState state) : base(parent, state, Binary_Unity.Current) {
         AssetFactoryFunc = AssetFactory;
     }
 

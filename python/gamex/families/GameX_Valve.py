@@ -1,14 +1,14 @@
 from __future__ import annotations
 import os
 from openstk.core import _pathExtension
-from gamex import BinaryArchive
+from gamex import Archive, BinaryArchive
 from gamex.families.Valve.formats.binary import Binary_Bsp30, Binary_Src, Binary_Spr, Binary_Mdl10, Binary_Mdl40, Binary_Vpk, Binary_Wad3, Binary_Wad3X
 from gamex.families.GameX_Uncore import UncoreArchive
 
 # ValveArchive
 class ValveArchive(BinaryArchive):
-    def __init__(self, state: BinaryState):
-        super().__init__(state, self.getArcBinary(state.game, _pathExtension(state.path).lower()))
+    def __init__(self, parent: Archive, state: BinaryState):
+        super().__init__(parent, state, self.getArcBinary(state.game, _pathExtension(state.path).lower()))
         self.assetFactoryFunc = self.assetFactory
         # self.pathFinders.add(typeof(object), FindBinary)
 

@@ -21,7 +21,7 @@ public static class ExportManager {
             if (!string.IsNullOrEmpty(filePath) && !Directory.Exists(filePath)) Directory.CreateDirectory(filePath);
             var setPath = Path.Combine(filePath, ".set");
             using var w = new BinaryWriter(new FileStream(setPath, FileMode.Create, FileAccess.Write));
-            await ArcBinary.Stream.Write(new StreamArchive(NetworkHost.Factory, new BinaryState(null, null, null, "Root")) {
+            await ArcBinary.Stream.Write(new StreamArchive(NetworkHost.Factory, null, new BinaryState(null, null, null, "Root")) {
                 Files = [.. multi.Archives.Select(x => new FileSource { Path = x.Name })]
             }, w, "Set");
         }

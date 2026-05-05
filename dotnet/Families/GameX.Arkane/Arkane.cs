@@ -19,8 +19,9 @@ public class ArkaneArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="Arkane" /> class.
     /// </summary>
+    /// <param name="parent">The parent.</param>
     /// <param name="state">The state.</param>
-    public ArkaneArchive(BinaryState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+    public ArkaneArchive(Archive parent, BinaryState state) : base(parent, state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         AssetFactoryFunc = state.Game.Engine.n switch {
             "CryEngine" => Crytek.CrytekArchive.AssetFactory,
             "Unreal" => Epic.EpicArchive.AssetFactory,

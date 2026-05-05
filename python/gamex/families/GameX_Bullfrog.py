@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os
 from openstk.core import _pathExtension
-from gamex import Family, FamilyGame, ArcBinary, BinaryArchive
+from gamex import Family, FamilyGame, ArcBinary, Archive, BinaryArchive
 from gamex.families.Bullfrog.formats.binary import Binary_Bullfrog, Binary_Populus, Binary_Syndicate
 from gamex.families.GameX_Uncore import UncoreArchive
 
@@ -43,8 +43,8 @@ class SGame(FamilyGame):
 
 # BullfrogArchive
 class BullfrogArchive(BinaryArchive):
-    def __init__(self, state: BinaryState):
-        super().__init__(state, self.getArcBinary(state.game, state.path))
+    def __init__(self, parent: Archive, state: BinaryState):
+        super().__init__(parent, state, self.getArcBinary(state.game, state.path))
         self.assetFactoryFunc = self.assetFactory
 
     #region Factories

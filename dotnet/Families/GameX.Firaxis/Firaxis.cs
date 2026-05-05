@@ -16,8 +16,9 @@ public class FiraxisArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> 
     /// <summary>
     /// Initializes a new instance of the <see cref="FiraxisArchive" /> class.
     /// </summary>
+    /// <param name="parent">The parent.</param>
     /// <param name="state">The state.</param>
-    public FiraxisArchive(BinaryState state) : base(state, Binary_Hpl.Current) {
+    public FiraxisArchive(Archive parent, BinaryState state) : base(parent, state, Binary_Hpl.Current) {
         AssetFactoryFunc = AssetFactory;
     }
 

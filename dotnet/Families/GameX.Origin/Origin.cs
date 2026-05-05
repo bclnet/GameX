@@ -85,8 +85,9 @@ public class OriginArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="OriginArchive" /> class.
     /// </summary>
+    /// <param name="parent">The parent.</param>
     /// <param name="state">The state.</param>
-    public OriginArchive(BinaryState state) : base(state, GetArcBinary(state.Game)) {
+    public OriginArchive(Archive parent, BinaryState state) : base(parent, state, GetArcBinary(state.Game)) {
         AssetFactoryFunc = AssetFactory;
     }
 

@@ -1,13 +1,13 @@
 from __future__ import annotations
 import os
 from openstk.core import _pathExtension
-from gamex import ArcBinary, BinaryArchive
+from gamex import ArcBinary, Archive, BinaryArchive
 from gamex.families.GameX_Uncore import UncoreArchive
 
 # UbisoftArchive
 class UbisoftArchive(BinaryArchive):
-    def __init__(self, state: BinaryState):
-        super().__init__(state, self.getArcBinary(state, _pathExtension(state.path).lower()))
+    def __init__(self, parent: Archive, state: BinaryState):
+        super().__init__(parent, state, self.getArcBinary(state, _pathExtension(state.path).lower()))
         self.assetFactoryFunc = self.assetFactory
 
     #region Factories

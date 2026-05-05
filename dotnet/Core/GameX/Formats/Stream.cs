@@ -153,9 +153,10 @@ public class StreamArchive : BinaryArchive {
     /// Initializes a new instance of the <see cref="StreamArchive" /> class.
     /// </summary>
     /// <param name="factory">The factory.</param>
+    /// <param name="parent">The parent.</param>
     /// <param name="state">The state.</param>
     /// <param name="address">The host.</param>
-    public StreamArchive(Func<Uri, string, NetworkHost> factory, BinaryState state, Uri address = null) : base(state, new PakBinaryCanStream()) {
+    public StreamArchive(Func<Uri, string, NetworkHost> factory, Archive parent, BinaryState state, Uri address = null) : base(parent, state, new PakBinaryCanStream()) {
         UseReader = false;
         if (address != null) Host = factory(address, state.Path);
     }
@@ -164,7 +165,7 @@ public class StreamArchive : BinaryArchive {
     /// </summary>
     /// <param name="parent">The parent.</param>
     /// <param name="state">The state.</param>
-    public StreamArchive(BinaryArchive parent, BinaryState state) : base(state, new PakBinaryCanStream()) {
+    public StreamArchive(BinaryArchive parent, BinaryState state) : base(parent, state, new PakBinaryCanStream()) {
         UseReader = false;
         Files = parent.Files;
     }

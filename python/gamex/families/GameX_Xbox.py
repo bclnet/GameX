@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os
 from openstk.core import _pathExtension, TypeX
-from gamex import FamilyGame, BinaryArchive
+from gamex import FamilyGame, Archive, BinaryArchive
 from gamex.families.GameX_Uncore import UncoreArchive
 from gamex.families.Xbox.formats.binary import Binary_Xnb
 # scan types
@@ -19,8 +19,8 @@ class StardewValleyGame(FamilyGame):
 
 # XboxArchive
 class XboxArchive(BinaryArchive):
-    def __init__(self, state: BinaryState):
-        super().__init__(state, self.getArcBinary(state.game, _pathExtension(state.path).lower()))
+    def __init__(self, parent: Archive, state: BinaryState):
+        super().__init__(parent, state, self.getArcBinary(state.game, _pathExtension(state.path).lower()))
         self.assetFactoryFunc = self.assetFactory
         TypeX.scanTypes(typesToScan)
         

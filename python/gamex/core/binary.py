@@ -3,7 +3,7 @@ import sys, os, re, time
 from itertools import groupby
 from enum import Enum, Flag
 from io import BytesIO
-from openstk.core import _throw, ISourceWithPlatform, BinaryReader, GenericPool, SinglePool, StaticPool, IDatabase
+from openstk.core import _throw, ISourceWithPlatform, PlatformX, BinaryReader, GenericPool, SinglePool, StaticPool, IDatabase
 from gamex.core.meta import FileSource, MetaManager, MetaItem, MetaInfo
 
 # FileOption
@@ -65,7 +65,7 @@ class Binary:
 # tag::Archive[]
 class Archive(Binary, ISourceWithPlatform):
     # class FuncObjectFactoryFactory: pass
-    def __init__(self, state: BinaryState):
+    def __init__(self, parent: Archive, state: BinaryState):
         super().__init__(state)
         self.pathFinders: list[object] = {}
         self.assetFactoryFunc: callable = None
@@ -73,6 +73,7 @@ class Archive(Binary, ISourceWithPlatform):
         self.sfx: list[IOpenSfx] = None
         self.count: int = 0
         self.children: list[Archive] = []
+        if parent: parent.children.append(self)
     def open(self, items: list[MetaItem] = None, manager: MetaManager = None) -> None:
         if self.status != self.Stat.Closed: return self
         super().open()
@@ -108,8 +109,8 @@ class Archive(Binary, ISourceWithPlatform):
 
 # BinaryArchive
 class BinaryArchive(Archive):
-    def __init__(self, state: BinaryState, arcBinary: ArcBinary):
-        super().__init__(state)
+    def __init__(self, parent: Archive, state: BinaryState, arcBinary: ArcBinary):
+        super().__init__(parent, state)
         self.arcBinary = arcBinary
         # options
         self.retainInPool = 10
@@ -266,8 +267,8 @@ class BinaryArchive(Archive):
 
 # ManyArchive
 class ManyArchive(BinaryArchive):
-    def __init__(self, basis: Archive, state: BinaryState, name: str, paths: list[str], pathSkip: int = 0):
-        super().__init__(state, None)
+    def __init__(self, basis: Archive, parent: Archive, state: BinaryState, name: str, paths: list[str], pathSkip: int = 0):
+        super().__init__(parent, state, None)
         self.assetFactoryFunc = basis.assetFactoryFunc
         self.name = name
         self.paths = paths
@@ -279,10 +280,11 @@ class ManyArchive(BinaryArchive):
         def lambdax(x, s): x.fileSize = self.vfx.fileInfo(s)[1]; x.lazy = None
         self.files = [FileSource(
             path = s.replace('\\', '/'),
-            arc = self.game.createArchive(BinaryState(self.vfx, self.game, self.edition, s)) if self.game._isArcPath(s) else None,
+            arc = self.game.createArchive(self, BinaryState(self.vfx, self.game, self.edition, s)) if self.game._isArcPath(s) else None,
             fileSize = 0,
             lazy = lambda x, _s=s: lambdax(x, _s))
             for s in self.paths]
+        self.setPlatform(PlatformX.current)
 
     def readData(self, file: FileSource, option: object = None) -> BytesIO:
         if file.arc: file.arc.readData(file, option)
@@ -292,8 +294,8 @@ class ManyArchive(BinaryArchive):
 
 # MultiArchive
 class MultiArchive(Archive):
-    def __init__(self, state: BinaryState, name: str, archives: list[Archive]):
-        super().__init__(state)
+    def __init__(self, parent: Archive, state: BinaryState, name: str, archives: list[Archive]):
+        super().__init__(parent, state)
         self.name = name
         self.archives = archives or _throw('Empty archives')
 
@@ -383,20 +385,20 @@ class ArcBinary:
 
 # ArcBinaryT
 class ArcBinaryT(ArcBinary):
-    _instance = None
+    current  = None
     def __new__(cls):
-        if cls._instance is None: cls._instance = super().__new__(cls)
-        return cls._instance
+        if cls.current is None: cls.current = super().__new__(cls)
+        return cls.current
 
     class SubArchive(BinaryArchive):
-        def __init__(self, parent: ArcBinary, state: BinaryState, file: FileSource, source: BinaryArchive):
-            super().__init__(state, parent._instance)
-            self.file = file
-            self.source = source
-            self.assetFactoryFunc = source.assetFactoryFunc
+        def __init__(self, parent: BinaryArchive, file: FileSource, path: str, tag: object = None, source: BinaryArchive = None):
+            super().__init__(parent, BinaryState(parent.vfx, parent.game, parent.edition, path, tag), source or self.current)
+            self.assetFactoryFunc: callable = parent.assetFactoryFunc
+            self.parent: BinaryArchive = parent
+            self.file: FileSource = file
             # self.open()
 
-        def opening(self) -> None: self.r = BinaryReader(self.source.readData(file)); self.pool = StaticPool[BinaryReader](self.r); super().opening()
+        def opening(self) -> None: self.r = BinaryReader(self.parent.readData(file)); self.pool = StaticPool[BinaryReader](self.r); super().opening()
         def closing(self) -> None: self.r.__exit__(); super().closing()
         def getReader(path: str, pooled: bool) -> IGenericPool[BinaryReader]: return self.pool
 

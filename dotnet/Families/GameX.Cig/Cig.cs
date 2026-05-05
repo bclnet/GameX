@@ -17,8 +17,9 @@ public class CigArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     /// <summary>
     /// Initializes a new instance of the <see cref="CigArchive" /> class.
     /// </summary>
+    /// <param name="parent">The parent.</param>
     /// <param name="state">The state.</param>
-    public CigArchive(BinaryState state) : base(state, PakBinary_P4k.Current) {
+    public CigArchive(Archive parent, BinaryState state) : base(parent, state, PakBinary_P4k.Current) {
         AssetFactoryFunc = AssetFactory;
     }
 

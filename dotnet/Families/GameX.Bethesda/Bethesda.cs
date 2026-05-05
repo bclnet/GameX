@@ -41,8 +41,9 @@ public class BethesdaArchive : BinaryArchive, ITransformAsset<IUnknownFileModel>
     /// <summary>
     /// Initializes a new instance of the <see cref="BethesdaArchive" /> class.
     /// </summary>
+    /// <param name="parent">The parent.</param>
     /// <param name="state">The state.</param>
-    public BethesdaArchive(BinaryState state) : base(state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
+    public BethesdaArchive(Archive parent, BinaryState state) : base(parent, state, GetArcBinary(state.Game, Path.GetExtension(state.Path).ToLowerInvariant())) {
         AssetFactoryFunc = AssetFactory;
         PathFinders.Add(typeof(ITexture), FindTexture);
     }
@@ -53,7 +54,6 @@ public class BethesdaArchive : BinaryArchive, ITransformAsset<IUnknownFileModel>
     /// Finds the actual path of a texture.
     /// </summary>
     public object FindTexture(object path) {
-        Log.Info($"FindTexture: {path}");
         if (path is not string p) return path;
         var textureName = Path.GetFileNameWithoutExtension(p);
         var textureNameInTexturesDir = $"textures/{textureName}";

@@ -30,8 +30,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\OpenStack\dotnet\Platform\OpenStack.Wpf.Control\OpenStack.Wpf.Control.csproj" />
-    <ProjectReference Include="..\..\..\OpenStack\dotnet\Platform\OpenStack.Wpf.Stride\OpenStack.Wpf.Stride.csproj" />
+    <ProjectReference Include="..\..\..\OpenStack\dotnet\Platforms\OpenStack.Wpf.Control\OpenStack.Wpf.Control.csproj" />
+    <ProjectReference Include="..\..\..\OpenStack\dotnet\Platforms\OpenStack.Wpf.Stride\OpenStack.Wpf.Stride.csproj" />
     <ProjectReference Include="..\..\Families\GameX.Cig.Explorer\GameX.Cig.Explorer.csproj" />
     <ProjectReference Include="..\..\Core\GameX.All\GameX.All.csproj" />
     <ProjectReference Include="..\..\Platforms\GameX.Platform.Godot\GameX.Platform.Godot.csproj" />

@@ -19,13 +19,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\OpenStack\dotnet\Platform\OpenStack.Godot\OpenStack.Godot.csproj" />
+    <ProjectReference Include="..\..\..\OpenStack\dotnet\Platforms\OpenStack.Godot\OpenStack.Godot.csproj" />
     <ProjectReference Include="..\..\Core\GameX\GameX.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Reference Include="GodotSharp">
-      <HintPath>..\..\..\OpenStack\dotnet\Platform\Godot\4.6.2\Debug\GodotSharp.dll</HintPath>
+      <HintPath>..\..\..\OpenStack\dotnet\Platforms\Godot\4.6.2\Debug\GodotSharp.dll</HintPath>
     </Reference>
   </ItemGroup>
 

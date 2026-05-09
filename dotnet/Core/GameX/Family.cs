@@ -1181,19 +1181,6 @@ public class FamilyGame {
     #region Arc
 
     /// <summary>
-    /// Adds the platform.
-    /// </summary>
-    /// <param name="archive">The arc file.</param>
-    /// <returns></returns>
-    //public static Archive SetPlatform(Archive archive, Platform platform)
-    //{
-    //    if (archive == null) { return null; }
-    //    archive.Gfx = platform.GfxFactory?.Invoke(archive);
-    //    archive.Sfx = platform.SfxFactory?.Invoke(archive);
-    //    return archive;
-    //}
-
-    /// <summary>
     /// Creates the search patterns.
     /// </summary>
     /// <param name="searchPattern">The search pattern.</param>
@@ -1246,7 +1233,8 @@ public class FamilyGame {
                             : p));
                         break;
                 }
-        return archives.Count == 1 ? archives[0] : GetArchiveRecursive(null, vfx, edition, archives);
+        var arc = archives.Count == 1 ? archives[0] : GetArchiveRecursive(null, vfx, edition, archives);
+        return arc?.SetPlatform(PlatformX.Current);
     }
 
     /// <summary>

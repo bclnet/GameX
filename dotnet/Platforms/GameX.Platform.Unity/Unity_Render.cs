@@ -1,4 +1,5 @@
-﻿using OpenStack;
+﻿using GameX.Gamebryo.Formats;
+using OpenStack;
 using OpenStack.Gfx;
 using OpenStack.Gfx.Unity;
 using System;
@@ -7,6 +8,9 @@ using System;
 namespace GameX.Platforms.Unity;
 
 public static class UnityRenderer {
+    static UnityRenderer() {
+        UnityPlatform.BuildersByType[typeof(Binary_Nif)] = (src, isStatic, materialManager) => UnityNifObjectBuilder.BuildObject((Binary_Nif)src, isStatic, (MaterialManager<UnityEngine.Material, UnityEngine.Texture2D>)materialManager);
+    }
     public static Renderer CreateRenderer(object parent, IOpenGfx[] gfx, object obj, string type) {
         if (obj is IHaveOpenGfx z) gfx = z.Gfx;
         return type switch {

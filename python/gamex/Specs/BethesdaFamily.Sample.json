@@ -19,28 +19,28 @@
         "type": "Texture"
       },
       {
+        "path": "Morrowind.bsa:meshes/x/ex_common_balcony_01.nif",
+        "type": "Object"
+      },
+      {
         "path": "Morrowind.bsa:meshes/i/in_dae_room_l_floor_01.nif",
         "type": "Object"
       },
       {
-        "path": "Morrowind.bsa:meshes/x/ex_common_balcony_01.nif",
-        "type": "Model"
-      },
-      {
         "path": "Morrowind.bsa:meshes/w/w_arrow01.nif",
-        "type": "Model"
+        "type": "Object"
       },
       {
         "path": "Morrowind.bsa:meshes/a/a_apostle_boots_f.nif",
-        "type": "Model"
+        "type": "Object"
       },
       {
         "path": "Morrowind.bsa:meshes/a/a_iron_hands.1st.nif",
-        "type": "Model"
+        "type": "Object"
       },
       {
         "path": "Morrowind.bsa:meshes/xbase_anim.nif",
-        "type": "Model"
+        "type": "Object"
       },
       {
         "path": "Morrowind.bsa:meshes/box.nif",

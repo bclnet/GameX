@@ -11,13 +11,13 @@ public static class NifObjectBuilder {
     public const int MarkerLayer = 0;
     public const bool KinematicRigidbody = false;
 
-    public static MaterialStd2Prop NiAVObjectToMaterialProp(NiAVObject s) {
+    public static MaterialStd2Prop ToMaterialProp(NiAVObject s) {
         // find relevant properties.
         NiTexturingProperty tex = null;
         NiMaterialProperty mat = null;
         NiAlphaProperty alpha = null;
-        foreach (var propRef in s.Properties) {
-            var prop = propRef.Value;
+        foreach (var t in s.Properties) {
+            var prop = t.Value;
             if (prop is NiTexturingProperty tp) tex = tp;
             else if (prop is NiMaterialProperty mp2) mat = mp2;
             else if (prop is NiAlphaProperty ap) alpha = ap;
@@ -26,24 +26,23 @@ public static class NifObjectBuilder {
         // create the material properties.
         var mp = new MaterialStd2Prop();
 
-        /*
-        14 bits used:
-        1 bit for alpha blend bool
-        4 bits for src blend mode
-        4 bits for dest blend mode
-        1 bit for alpha test bool
-        3 bits for alpha test mode
-        1 bit for zwrite bool ( opposite value )
-        Bit 0 : alpha blending enable
-        Bits 1-4 : source blend mode 
-        Bits 5-8 : destination blend mode
-        Bit 9 : alpha test enable
-        Bit 10-12 : alpha test mode
-        Bit 13 : no sorter flag ( disables triangle sorting ) ( Unity ZWrite )
-        */
-
         // apply alphaProperty
         if (alpha != null) {
+            /*
+            14 bits used:
+            1 bit for alpha blend bool
+            4 bits for src blend mode
+            4 bits for dest blend mode
+            1 bit for alpha test bool
+            3 bits for alpha test mode
+            1 bit for zwrite bool ( opposite value )
+            Bit 0 : alpha blending enable
+            Bits 1-4 : source blend mode 
+            Bits 5-8 : destination blend mode
+            Bit 9 : alpha test enable
+            Bit 10-12 : alpha test mode
+            Bit 13 : no sorter flag ( disables triangle sorting ) ( Unity ZWrite )
+            */
             var flags = (ushort)alpha.Flags;
             var srcbm = (byte)(BitConverter.GetBytes(flags >> 1)[0] & 15);
             var dstbm = (byte)(BitConverter.GetBytes(flags >> 5)[0] & 15);

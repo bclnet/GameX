@@ -3,11 +3,13 @@ from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QSurfaceFormat
 from gamex import PlatformX
+from openstk.platforms.eginx import EginXPlatform
 from openstk.platforms.opengl import OpenGLPlatform
 from openstk.platforms.panda3d import Panda3dPlatform
+from openstk.platforms.pyengine3d import PyEngine3dPlatform
 from openstk.platforms.pygame import PygamePlatform
 
-PlatformX.platforms = PlatformX.platforms.union({OpenGLPlatform.This, Panda3dPlatform.This, PygamePlatform.This})
+PlatformX.platforms = PlatformX.platforms.union({EginXPlatform.this, OpenGLPlatform.this, Panda3dPlatform.this, PyEngine3dPlatform.this, PygamePlatform.this})
 from gamex.app.explorer.views.MainPage import MainPage
 
 if __name__ == '__main__':

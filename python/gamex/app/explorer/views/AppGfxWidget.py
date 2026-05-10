@@ -1,9 +1,9 @@
-from openstk.platforms.ex.gfx.qt_widget import ExWidget
+from openstk.platforms.eginx.gfx.qt_widget import EginXWidget
 from openstk.platforms.opengl.gfx.qt_widget import OpenGLWidget
 from openstk.platforms.panda3d.gfx.qt_widget import Panda3dWidget
 from openstk.platforms.pyengine3d.gfx.qt_widget import PyEngine3dWidget
 from openstk.platforms.pygame.gfx.qt_widget import PygameWidget
-from gamex.platforms.ex import ExRenderer
+from gamex.platforms.eginx import EginXRenderer
 from gamex.platforms.opengl import OpenGLRenderer
 from gamex.platforms.panda3d import Panda3dRenderer
 from gamex.platforms.pyengine3d import PyEngine3dRenderer
@@ -12,10 +12,10 @@ from gamex.platforms.pygame import PygameRenderer
 # typedefs
 class Renderer: pass
 
-# AppExWidget
-class AppExWidget(ExWidget):
+# AppEginXWidget
+class AppEginXWidget(EginXWidget):
     def __init__(self, parent: object, tab: object): super().__init__(parent, tab)
-    def createRenderer(self) -> Renderer: return ExRenderer.createRenderer(self, self.gfx, self.value, self.type)
+    def createRenderer(self) -> Renderer: return EginXRenderer.createRenderer(self, self.gfx, self.value, self.type)
 
 # AppOpenGLWidget
 class AppOpenGLWidget(OpenGLWidget):

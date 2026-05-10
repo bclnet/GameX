@@ -48,6 +48,12 @@ public static class UnityNifObjectBuilder {
         }
     }
 
+    static void ApplyNiAVObject(Object obj, NiAVObject s) {
+        obj.transform.position = s.Translation.ToUnity() / MeterInUnits;
+        obj.transform.rotation = s.Rotation.ToUnityQuaternionAsRotation();
+        obj.transform.localScale = s.Scale * Vector3.one;
+    }
+
     static Object InstantiateRootNiObject(Binary_Nif src, bool isStatic, MaterialManager<Material, Texture2D> materialManager, NiObject s) {
         var gobj = InstantiateNiObject(isStatic, materialManager, s);
         var (shouldAddMissingColliders, isMarker) = ProcessExtraData(s);
@@ -135,7 +141,7 @@ public static class UnityNifObjectBuilder {
         var obj = new Object(s.Name);
         if (visual) {
             obj.AddComponent<MeshFilter>().mesh = mesh;
-            var materialProps = NiAVObjectToMaterialProp(s);
+            var materialProps = ToMaterialProp(s);
             var meshRenderer = obj.AddComponent<MeshRenderer>();
             meshRenderer.material = materialManager.CreateMaterial(materialProps).mat;
             if (materialProps.Textures == null || s.Flags.HasFlag(Flags.Hidden)) meshRenderer.enabled = false;
@@ -150,12 +156,6 @@ public static class UnityNifObjectBuilder {
         }
         ApplyNiAVObject(obj, s);
         return obj;
-    }
-
-    static void ApplyNiAVObject(Object obj, NiAVObject s) {
-        obj.transform.position = s.Translation.ToUnity() / MeterInUnits;
-        obj.transform.rotation = s.Rotation.ToUnityQuaternionAsRotation();
-        obj.transform.localScale = s.Scale * Vector3.one;
     }
 
     static Mesh NiTriShapeDataToMesh(NiTriShapeData s) {

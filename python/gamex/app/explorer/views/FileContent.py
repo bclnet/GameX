@@ -8,7 +8,7 @@ from PyQt6 import QtCore, QtMultimedia
 from gamex.core.binary import Archive
 from gamex.core.meta import MetaItem, MetaContent, MetaInfo
 from .AppHexWidget import AppHexWidget
-from .AppGfxWidget import AppExWidget, AppOpenGLWidget, AppPanda3dWidget, AppPyEngine3dWidget, AppPygameWidget
+from .AppGfxWidget import AppEginXWidget, AppOpenGLWidget, AppPanda3dWidget, AppPyEngine3dWidget, AppPygameWidget
 
 # AppTextWidget
 class AppTextWidget(QWidget):
@@ -59,7 +59,7 @@ class FileContent(QTabWidget):
     def setPlatform(self, platform: object):
         plat = platform.id if platform else 'UK'
         self.gfxWidget = \
-            AppExWidget if plat == 'EX' else \
+            AppEginXWidget if plat == 'EX' else \
             AppOpenGLWidget if plat == 'GL' else \
             AppPanda3dWidget if plat == 'PD' else \
             AppPyEngine3dWidget if plat == 'P3' else \

@@ -16,7 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Core\GameX.All\GameX.All.csproj" />
-    <ProjectReference Include="..\..\Platforms\GameX.Platform.Ex\GameX.Platform.Ex.csproj" />
+    <ProjectReference Include="..\..\Platforms\GameX.Platform.EginX\GameX.Platform.EginX.csproj" />
     <ProjectReference Include="..\..\Platforms\GameX.Platform.Mg\GameX.Platform.Mg.csproj" />
   </ItemGroup>
 

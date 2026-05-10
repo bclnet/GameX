@@ -203,9 +203,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Platform.Mg", "Platfo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStack.Mg", "..\OpenStack\dotnet\Platforms\OpenStack.Mg\OpenStack.Mg.csproj", "{2C2892A1-A02A-568A-1B15-BA242F8D39DE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Platform.Ex", "Platforms\GameX.Platform.Ex\GameX.Platform.Ex.csproj", "{9C3B8908-FF34-5E99-0021-7B222317FF2C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Platform.EginX", "Platforms\GameX.Platform.EginX\GameX.Platform.EginX.csproj", "{9C3B8908-FF34-5E99-0021-7B222317FF2C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStack.Ex", "..\OpenStack\dotnet\Platforms\OpenStack.Ex\OpenStack.Ex.csproj", "{6282AC60-C92E-7E65-9534-C28949C62AE8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStack.EginX", "..\OpenStack\dotnet\Platforms\OpenStack.EginX\OpenStack.EginX.csproj", "{6282AC60-C92E-7E65-9534-C28949C62AE8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Uncore", "Families\GameX.Uncore\GameX.Uncore.csproj", "{D40525EE-4EA0-DDE2-1B36-AF8E4A793E58}"
 EndProject

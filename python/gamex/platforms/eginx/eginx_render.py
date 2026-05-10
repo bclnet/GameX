@@ -1,14 +1,14 @@
 from __future__ import annotations
 import os
 from openstk.gfx import IHaveOpenGfx
-from openstk.platforms.ex.gfx import TestTriRenderer
+from openstk.platforms.eginx.gfx import TestTriRenderer
 
 # typedefs
 class IOpenGfx: pass
 class Renderer: pass
 
-# ExRenderer
-class ExRenderer:
+# EginXRenderer
+class EginXRenderer:
     @staticmethod
     def createRenderer(parent: object, gfx: list[IOpenGfx], obj: object, type: str) -> Renderer:
         if isinstance(obj, IHaveOpenGfx): gfx = obj.gfx

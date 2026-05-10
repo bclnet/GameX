@@ -48,6 +48,12 @@ public static class OpenGLNifObjectBuilder {
         }
     }
 
+    static void ApplyNiAVObject(Object obj, NiAVObject s) {
+        //obj.transform.position = s.Translation.ToUnity() / MeterInUnits;
+        //obj.transform.rotation = s.Rotation.ToUnityQuaternionAsRotation();
+        //obj.transform.localScale = s.Scale * Vector3.one;
+    }
+
     static Object InstantiateRootNiObject(Binary_Nif src, bool isStatic, MaterialManager<GLRenderMaterial, int> materialManager, NiObject s) {
         var gobj = InstantiateNiObject(isStatic, materialManager, s);
         var (shouldAddMissingColliders, isMarker) = ProcessExtraData(s);
@@ -150,12 +156,6 @@ public static class OpenGLNifObjectBuilder {
         //}
         ApplyNiAVObject(obj, s);
         return obj;
-    }
-
-    static void ApplyNiAVObject(Object obj, NiAVObject s) {
-        //obj.transform.position = s.Translation.ToUnity() / MeterInUnits;
-        //obj.transform.rotation = s.Rotation.ToUnityQuaternionAsRotation();
-        //obj.transform.localScale = s.Scale * Vector3.one;
     }
 
     static object NiTriShapeDataToMesh(NiTriShapeData s) {

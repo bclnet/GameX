@@ -14,6 +14,8 @@ class BinaryArchive: pass
 
 # Binary_Nif
 class Binary_Nif(NiReader, IHaveMetaInfo, IWriteToStream):
+    type: str = 'Binary_Nif'
+
     @staticmethod
     async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Nif(r, f)
 

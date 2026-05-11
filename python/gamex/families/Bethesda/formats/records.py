@@ -1159,6 +1159,7 @@ class RefV[T: Record]:
         r = args[0]
         if isinstance(r, Reader): self.id = r.readUInt32() if r.format != FormType.TES3 else r.getNamedId(r.readFUString(args[1]))
         else: self.id: int = r
+    def value(self) -> object: return 'OBJECT'
 class Ref[T: Record]:
     _struct = ('<I', 4)
     def __repr__(self) -> str: return f'{self.type}:{self.id}'
@@ -1167,6 +1168,7 @@ class Ref[T: Record]:
         r = args[0]
         if isinstance(r, Reader): self.id = r.readUInt32()
         else: self.id: int = r
+    def xvalue(self) -> object: return 'OBJECT'
 class Ref2[T: Record]:
     _struct = ('<2I', 8)
     def __repr__(self) -> str: return f'{self.type}:{self.id}x{self.id2}'
@@ -1175,6 +1177,7 @@ class Ref2[T: Record]:
         r = args[0]
         if isinstance(r, Reader): self.id = r.readUInt32(); self.id2 = r.readUInt32()
         else: self.id: int = r; self.id2: int = args[1]
+    def value(self) -> object: return 'OBJECT'
 class RefB[T: Record]:
     _struct = ('<IB3x', 8)
     def __repr__(self) -> str: return f'{self.type}:{self.id}x{self.value}'
@@ -1183,12 +1186,14 @@ class RefB[T: Record]:
         r = args[0]
         if isinstance(r, Reader): self.id = r.readUInt32(); self.value = r.readByte(); r.skip(3)
         else: self.id: int = r; self.value: int = args[1]
+    def value(self) -> object: return 'OBJECT'
 class RefS[T: Record]:
     def __repr__(self) -> str: return f'{self.type}:{self.id}'
     def __init__(self, t: type, *args):
         self.type = (t if isinstance(t, str) else t.__name__)[:4]
         if isinstance(args[0], Reader): r = args[0]; dataSize = args[1]; self.name = r.readFUString(dataSize)
         else: self.name: str = args[0]
+    def value(self) -> object: return 'OBJECT'
 class RefX[T: Record]:
     def __repr__(self) -> str: return f'{self.type}:{self.name}{self.id}'
     def __init__(self, t: type, *args): 
@@ -1204,6 +1209,7 @@ class RefX[T: Record]:
                     else: self.id = 0; self.name = r.readFUString(dataSize)
                 else: self.id, self.name = args
             case _: raise NotImplementedError('RefX')
+    def value(self) -> object: return 'OBJECT'
     def setName(self, name: str) -> 'RefX': z = self.name = name; return z
 
 #endregion

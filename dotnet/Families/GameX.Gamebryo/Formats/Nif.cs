@@ -22,7 +22,7 @@ static class X<T> where T : NiObject {
 static class Z {
     static Dictionary<uint, string> BlockHashes = [];
     public static NiObject[] ReadBlocks(NiReader r) {
-        var v = r.V; var pos = r.Tell();
+        var v = r.V;
         var blocks = new NiObject[r.NumBlocks];
         if (v >= 0x0303000d) {
             // block types are stored in the header for versions above 10.x.x.x
@@ -43,7 +43,7 @@ static class Z {
                     // these four bytes on the havok blocks (see for instance meshes/architecture/basementsections/ungrdltraphingedoor.nif)
                     if (v < 0x0a020000 && !type.StartsWith("bhk")) {
                         var dummy = r.ReadUInt32();
-                        if (dummy != 0) { var msg = $"non-zero block separator ({dummy}) preceeding block {type}"; Console.WriteLine(msg); }
+                        if (dummy != 0) { var msg = $"non-zero block separator ({dummy}) preceeding block {type}"; Log.Info(msg); }
                     }
                     // for version 20.2.0.? and above the block size is stored in the header
                     if (hasSize) size = r.BlockSize[index];
@@ -1890,7 +1890,7 @@ public class MorphWeight(NiReader r) { // Y
 public abstract class NiObject(NiReader r) { // X
 
     public static NiObject Read(NiReader r, string nodeType) {
-        Console.WriteLine($"{nodeType}: {r.Tell()}");
+        Log.Info($"{nodeType}: {r.Tell()}");
         if (nodeType?.StartsWith("NiDataStream\x01") == true) nodeType = Z.ExtractRTTIArgs(r, nodeType);
         switch (nodeType) {
             case "NiNode": return new NiNode(r);

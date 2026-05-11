@@ -108,7 +108,7 @@ static class Z {
                     // these four bytes on the havok blocks (see for instance meshes/architecture/basementsections/ungrdltraphingedoor.nif)
                     if (v < 0x0a020000 && !type.StartsWith("bhk")) {
                         var dummy = r.ReadUInt32();
-                        if (dummy != 0) { var msg = $"non-zero block separator ({dummy}) preceeding block {type}"; Console.WriteLine(msg); }
+                        if (dummy != 0) { var msg = $"non-zero block separator ({dummy}) preceeding block {type}"; Log.Info(msg); }
                     }
                     // for version 20.2.0.? and above the block size is stored in the header
                     if (hasSize) size = r.BlockSize[index];
@@ -329,9 +329,9 @@ class Z:
             case '[Color4]': return Color4(r)
             case _: raise NotImplementedError(f'Tried to read an unsupported type: {s.t}')
     @staticmethod
-    def readBool8(r: NiReader) -> int: r.readByte() if r.v > 0x04000002 else r.readUInt32()
+    def readBool8(r: NiReader) -> int: return r.readByte() if r.v > 0x04000002 else r.readUInt32()
     @staticmethod
-    def readBool(r: NiReader) -> bool: r.readByte() != 0 if r.v > 0x04000002 else r.readUInt32() != 0
+    def readBool(r: NiReader) -> bool: return r.readByte() != 0 if r.v > 0x04000002 else r.readUInt32() != 0
     @staticmethod
     def string(r: NiReader) -> str: return r.readL32AString() if r.v < 0x14010003 else None
     @staticmethod
@@ -630,7 +630,7 @@ DesSer.add({'Ref':RefJsonConverter, 'TexCoord':TexCoordJsonConverter, 'Triangle'
                 body = '\n'.join([f'            case "{x}": return new {x}(r);' for x in self.nodes])
                 s.methods.append(Class.Method('''
     public static NiObject Read(NiReader r, string nodeType) {
-        // Console.WriteLine($"{nodeType}: {r.Tell()}");
+        // Log.Info($"{nodeType}: {r.Tell()}");
         if (nodeType.StartsWith("NiDataStream\\x01")) nodeType = Z.ExtractRTTIArgs(r, nodeType);
         switch (nodeType) {
 BODY

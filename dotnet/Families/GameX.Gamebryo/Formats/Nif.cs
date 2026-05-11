@@ -20,10 +20,10 @@ static class X<T> where T : NiObject {
 }
 
 static class Z {
-    static Dictionary<uint, string> BlockHashes = new();
+    static Dictionary<uint, string> BlockHashes = [];
     public static NiObject[] ReadBlocks(NiReader r) {
         var v = r.V; var pos = r.Tell();
-        var Blocks = new NiObject[r.NumBlocks];
+        var blocks = new NiObject[r.NumBlocks];
         if (v >= 0x0303000d) {
             // block types are stored in the header for versions above 10.x.x.x
             if (v >= 0x0a000000) {
@@ -47,13 +47,13 @@ static class Z {
                     }
                     // for version 20.2.0.? and above the block size is stored in the header
                     if (hasSize) size = r.BlockSize[index];
-                    Blocks[i] = NiObject.Read(r, type);
+                    blocks[i] = NiObject.Read(r, type);
                 }
-                return Blocks;
+                return blocks;
             }
             // < 0x05000001
-            for (var i = 0; i < r.NumBlocks; i++) Blocks[i] = NiObject.Read(r, r.ReadL32AString());
-            return Blocks;
+            for (var i = 0; i < r.NumBlocks; i++) blocks[i] = NiObject.Read(r, r.ReadL32AString());
+            return blocks;
         }
         // < 0x0303000d
         for (var i = 0; ; i++) {
@@ -72,7 +72,7 @@ static class Z {
                 //else throw Exception($"encountered unknown block ({blockType})");
             }
         }
-        return Blocks;
+        return blocks;
     }
     public static string ExtractRTTIArgs(NiReader r, string nodeType) {
         var nameAndArgs = nodeType.Split("\x01");

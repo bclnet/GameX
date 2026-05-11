@@ -85,10 +85,10 @@ static class X<T> where T : NiObject {
 }
 
 static class Z {
-    static Dictionary<uint, string> BlockHashes = new();
+    static Dictionary<uint, string> BlockHashes = [];
     public static NiObject[] ReadBlocks(NiReader r) {
         var v = r.V; var pos = r.Tell();
-        var Blocks = new NiObject[r.NumBlocks];
+        var blocks = new NiObject[r.NumBlocks];
         if (v >= 0x0303000d) {
             // block types are stored in the header for versions above 10.x.x.x
             if (v >= 0x0a000000) {
@@ -112,13 +112,13 @@ static class Z {
                     }
                     // for version 20.2.0.? and above the block size is stored in the header
                     if (hasSize) size = r.BlockSize[index];
-                    Blocks[i] = NiObject.Read(r, type);
+                    blocks[i] = NiObject.Read(r, type);
                 }
-                return Blocks;
+                return blocks;
             }
             // < 0x05000001
-            for (var i = 0; i < r.NumBlocks; i++) Blocks[i] = NiObject.Read(r, r.ReadL32AString());
-            return Blocks;
+            for (var i = 0; i < r.NumBlocks; i++) blocks[i] = NiObject.Read(r, r.ReadL32AString());
+            return blocks;
         }
         // < 0x0303000d
         for (var i = 0; ; i++) {
@@ -137,7 +137,7 @@ static class Z {
                 //else throw Exception($"encountered unknown block ({blockType})");
             }
         }
-        return Blocks;
+        return blocks;
     }
     public static string ExtractRTTIArgs(NiReader r, string nodeType) {
         var nameAndArgs = nodeType.Split("\\x01");
@@ -259,17 +259,65 @@ public class TriangleJsonConverter : JsonConverter<Triangle> {
 }
 ''',
 '''class Ref[T]:
-    def __init__(self, r: NiReader, v: int): self.v: int = v; self.val: T = None
-    def value() -> T: return self.val
+    def __init__(self, r: NiReader, v: int): self.r: NiReader = r; self.v: int = v; self.val: T = None
+    @property
+    def value(self) -> T:
+        if not self.val: self.val = self.r.blocks[self.v]
+        return self.val
 class X[T]:
     @staticmethod # Refers to an object before the current one in the hierarchy.
     def ptr(r: BinaryReader): return None if (v := r.readInt32()) < 0 else Ref(r, v)
     @staticmethod # Refers to an object after the current one in the hierarchy.
     def ref(r: BinaryReader): return None if (v := r.readInt32()) < 0 else Ref(r, v)
 class Z:
+    blockHashes: dict[int, str] = {}
     @staticmethod
-    def readBlocks(s, r: NiReader) -> list[object]:
-        pass
+    def readBlocks(r: NiReader) -> list[object]:
+        v = r.v; pos = r.tell()
+        blocks: list[NiObject] = [None]*r.numBlocks
+        if v >= 0x0303000d:
+            # block types are stored in the header for versions above 10.x.x.x
+            if v >= 0x0a000000:
+                hasSize = v >= 0x14020000 and True #ignoreSize
+                for i in range (r.numBlocks):
+                    if r.atEnd(): raise Exception('unexpected EOF during load')
+                    size = 4294967295
+                    index = r.blockTypeIndex[i] & 0x7FFF # the upper bit or the blocktypeindex seems to be related to PhysX
+                    type = r.blockTypes[index]
+                    # 20.3.1.2 Custom Version
+                    if v == 0x14030102:
+                        hash = r.blockTypeHashes[index]
+                        if hash in Z.blockHashes: type = Z.blockHashes[hash]
+                        else: raise Exception('Block Hash not found.')
+                    # note: some 10.0.1.0 version nifs from Oblivion in certain distributions seem to be missing
+                    # these four bytes on the havok blocks (see for instance meshes/architecture/basementsections/ungrdltraphingedoor.nif)
+                    if v < 0x0a020000 and not type.startswith('bhk'):
+                        dummy = r.readUInt32()
+                        if dummy != 0: msg = f'non-zero block separator ({dummy}) preceeding block {type}'; print(msg)
+                    # for version 20.2.0.? and above the block size is stored in the header
+                    if hasSize: size = r.blockSize[index]
+                    blocks[i] = NiObject.read(r, type)
+                return blocks
+            # < 0x05000001
+            for i in range(r.numBlocks): blocks[i] = NiObject.read(r, r.readL32AString())
+            return blocks
+        # < 0x0303000d
+        i = 0
+        while True:
+            if r.atEnd(): raise Exception('unexpected EOF during load')
+            type = r.readL32AString(80)
+            if type == 'End Of File': break
+            elif type == 'Top Level Object':
+                type = r.readL32AString(80)
+                p = r.readInt32() - 1
+                #if p != i: linkMap.insert(p, i);
+                #if isNiBlock(blockType):
+                #    //qDebug() << "loading block" << c << ":" << blockType );
+                #    insertNiBlock(blockType, -1);
+                #    if (!loadItem(root->child(c + 1), stream)) throw Exception($"failed to load block number {i} ({blockType}) previous block was {root->child(c)->name()}");
+                #else throw Exception($"encountered unknown block ({blockType})");
+            i += 1
+        return blocks
     @staticmethod
     def read(s, r: NiReader) -> object:
         match s.t:
@@ -385,7 +433,7 @@ DesSer.add({'Ref':RefJsonConverter, 'TexCoord':TexCoordJsonConverter, 'Triangle'
             # read blocks
             values.insert(18, Class.Comment(s, 'read blocks'))
             values.insert(19, vx0 := Class.Value(s, Elem({ 'name': 'Blocks', 'type': 'NiObject', 'arr1': 'x' })))
-            vx0.initcw = ('Blocks = Z.ReadBlocks(r);', 'self.blocks: list[NiObject] = [None]*self.numBlocks')
+            vx0.initcw = ('Blocks = Z.ReadBlocks(r);', 'self.blocks: list[NiObject] = Z.readBlocks(r)')
             values.insert(20, vx1 := Class.Value(s, Elem({ 'name': 'Roots', 'type': 'Ref', 'template': 'NiObject', 'arr1': 'x' })))
             vx1.initcw = ('Roots = new Footer(r).Roots;', 'self.roots = Footer(r).roots')
         def Header_code(s):

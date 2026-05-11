@@ -25,17 +25,67 @@ class NiObject: pass
 #region X
 
 class Ref[T]:
-    def __init__(self, r: NiReader, v: int): self.v: int = v; self.val: T = None
-    def value() -> T: return self.val
+    def __init__(self, r: NiReader, v: int): self.r: NiReader = r; self.v: int = v; self.val: T = None
+    @property
+    def value(self) -> T:
+        print(self.r.blocks)
+        print(self.v)
+        if not self.val: self.val = self.r.blocks[self.v]
+        return self.val
 class X[T]:
     @staticmethod # Refers to an object before the current one in the hierarchy.
     def ptr(r: BinaryReader): return None if (v := r.readInt32()) < 0 else Ref(r, v)
     @staticmethod # Refers to an object after the current one in the hierarchy.
     def ref(r: BinaryReader): return None if (v := r.readInt32()) < 0 else Ref(r, v)
 class Z:
+    blockHashes: dict[int, str] = {}
     @staticmethod
-    def readBlocks(s, r: NiReader) -> list[object]:
-        pass
+    def readBlocks(r: NiReader) -> list[object]:
+        v = r.v; pos = r.tell()
+        blocks: list[NiObject] = [None]*r.numBlocks
+        if v >= 0x0303000d:
+            # block types are stored in the header for versions above 10.x.x.x
+            if v >= 0x0a000000:
+                hasSize = v >= 0x14020000 and True #ignoreSize
+                for i in range (r.numBlocks):
+                    if r.atEnd(): raise Exception('unexpected EOF during load')
+                    size = 4294967295
+                    index = r.blockTypeIndex[i] & 0x7FFF # the upper bit or the blocktypeindex seems to be related to PhysX
+                    type = r.blockTypes[index]
+                    # 20.3.1.2 Custom Version
+                    if v == 0x14030102:
+                        hash = r.blockTypeHashes[index]
+                        if hash in Z.blockHashes: type = Z.blockHashes[hash]
+                        else: raise Exception('Block Hash not found.')
+                    # note: some 10.0.1.0 version nifs from Oblivion in certain distributions seem to be missing
+                    # these four bytes on the havok blocks (see for instance meshes/architecture/basementsections/ungrdltraphingedoor.nif)
+                    if v < 0x0a020000 and not type.startswith('bhk'):
+                        dummy = r.readUInt32()
+                        if dummy != 0: msg = f'non-zero block separator ({dummy}) preceeding block {type}'; print(msg)
+                    # for version 20.2.0.? and above the block size is stored in the header
+                    if hasSize: size = r.blockSize[index]
+                    blocks[i] = NiObject.read(r, type)
+                return blocks
+            # < 0x05000001
+            for i in range(r.numBlocks): blocks[i] = NiObject.read(r, r.readL32AString())
+            return blocks
+        # < 0x0303000d
+        i = 0
+        while True:
+            if r.atEnd(): raise Exception('unexpected EOF during load')
+            type = r.readL32AString(80)
+            if type == 'End Of File': break
+            elif type == 'Top Level Object':
+                type = r.readL32AString(80)
+                p = r.readInt32() - 1
+                #if p != i: linkMap.insert(p, i);
+                #if isNiBlock(blockType):
+                #    //qDebug() << "loading block" << c << ":" << blockType );
+                #    insertNiBlock(blockType, -1);
+                #    if (!loadItem(root->child(c + 1), stream)) throw Exception($"failed to load block number {i} ({blockType}) previous block was {root->child(c)->name()}");
+                #else throw Exception($"encountered unknown block ({blockType})");
+            i += 1
+        return blocks
     @staticmethod
     def read(s, r: NiReader) -> object:
         match s.t:
@@ -1006,7 +1056,7 @@ class NiReader(BinaryReader): # X
             self.strings = r.readFArray(lambda z: r.readL32AString(), self.numStrings)
         if r.v >= 0x05000006: self.groups = r.readL32PArray(None, 'I')
         # read blocks
-        self.blocks: list[NiObject] = [None]*self.numBlocks
+        self.blocks: list[NiObject] = Z.readBlocks(r)
         self.roots = Footer(r).roots
 
 # A list of \\0 terminated strings.

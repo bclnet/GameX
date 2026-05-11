@@ -42,7 +42,6 @@ class Panda3dNifObjectBuilder:
             nobj = GeomNode(src.name)
             gobj = render.attachNewNode(nobj)
             for rootRef in src.roots:
-                print(rootRef.id)
                 child = Panda3dNifObjectBuilder.instantiateRootNiObject(src, isStatic, materialManager, rootRef.value)
                 print(f'child: {child}')
                 if child: child.reparentTo(gobj)

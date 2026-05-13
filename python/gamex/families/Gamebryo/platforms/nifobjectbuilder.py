@@ -63,7 +63,7 @@ class NifObjectBuilder:
         # apply texturingProperty
         if tex and tex.textureCount > 0:
             mt = mp.textures
-            if tex.gaseTexture: mt['Main'] = tex.baseTexture.source.value.fileName
+            if tex.baseTexture: mt['Main'] = tex.baseTexture.source.value.fileName
             if tex.darkTexture: mt['Dark'] = tex.darkTexture.source.value.fileName
             if tex.detailTexture: mt['Detail'] = tex.detailTexture.source.value.fileName
             if tex.glossTexture: mt['Gloss'] = tex.glossTexture.source.value.fileName
@@ -72,7 +72,7 @@ class NifObjectBuilder:
         return mp
 
     @staticmethod
-    def isMarkerFileName(self, name: str) -> bool:
+    def isMarkerFileName(name: str) -> bool:
         match name.lower():
             case 'marker_light' | 'marker_north' | 'marker_error' | 'marker_arrow' | 'editormarker' | 'marker_creature' | 'marker_travel' | 'marker_temple' | 'marker_prison' | 'marker_radius' | 'marker_divine' | 'editormarker_box_01': return True
             case _: return False

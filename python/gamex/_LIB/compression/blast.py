@@ -223,9 +223,8 @@ class Blast:
 
         # return if bits() or decode() tries to read past available input
         err = 0
-        try:
-            err = self.decomp() # decompress
-        except: err = 2         # if came back here via longjmp(), then skip decomp(), return error
+        try: err = self.decomp() # decompress
+        except: err = 2 # if came back here via longjmp(), then skip decomp(), return error
 
         # write any leftover output and update the error code if needed
         outx = self.outx; out_ = 0

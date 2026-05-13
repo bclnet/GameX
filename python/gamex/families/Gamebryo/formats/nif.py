@@ -28,8 +28,6 @@ class Ref[T]:
     def __init__(self, r: NiReader, v: int): self.r: NiReader = r; self.v: int = v; self.val: T = None
     @property
     def value(self) -> T:
-        print(self.r.blocks)
-        print(self.v)
         if not self.val: self.val = self.r.blocks[self.v]
         return self.val
 class X[T]:

@@ -22,15 +22,15 @@ public static class UnityNifObjectBuilder {
         // If there is only one root, instantiate that directly.
         // If there are multiple roots, create a container Object and parent it to the roots.
         if (src.Roots.Length == 1) {
-            var rootNiObject = src.Roots[0].Value;
-            var gobj = InstantiateRootNiObject(src, isStatic, materialManager, rootNiObject);
+            var s = src.Roots[0].Value;
+            var gobj = InstantiateRootNiObject(src, isStatic, materialManager, s);
             // If the file doesn't contain any NiObjects we are looking for, return an empty Object.
             if (gobj == null) {
                 Log.Info($"{src.Name} resulted in a null Object when instantiated.");
                 gobj = new Object(src.Name);
             }
             // If gobj != null and the root NiObject is an NiNode, discard any transformations (Morrowind apparently does).
-            else if (rootNiObject is NiNode) {
+            else if (s is NiNode) {
                 gobj.transform.position = Vector3.zero;
                 gobj.transform.rotation = Quaternion.identity;
                 gobj.transform.localScale = Vector3.one;
@@ -40,8 +40,8 @@ public static class UnityNifObjectBuilder {
         else {
             Log.Info($"{src.Name} has multiple roots.");
             var gobj = new Object(src.Name);
-            foreach (var rootRef in src.Roots) {
-                var child = InstantiateRootNiObject(src, isStatic, materialManager, rootRef.Value);
+            foreach (var s in src.Roots) {
+                var child = InstantiateRootNiObject(src, isStatic, materialManager, s.Value);
                 child?.transform.SetParent(gobj.transform, false);
             }
             return gobj;
@@ -137,7 +137,7 @@ public static class UnityNifObjectBuilder {
     //}
 
     static Object InstantiateNiTriShape(bool isStatic, MaterialManager<Material, Texture2D> materialManager, NiTriShape s, bool visual, bool collidable) {
-        var mesh = NiTriShapeDataToMesh((NiTriShapeData)s.Data.Value);
+        var mesh = ToGeometry((NiTriShapeData)s.Data.Value);
         var obj = new Object(s.Name);
         if (visual) {
             obj.AddComponent<MeshFilter>().mesh = mesh;
@@ -158,7 +158,7 @@ public static class UnityNifObjectBuilder {
         return obj;
     }
 
-    static Mesh NiTriShapeDataToMesh(NiTriShapeData s) {
+    static Mesh ToGeometry(NiTriShapeData s) {
         var length = s.Vertices.Length;
         // vertex positions
         var vertices = new Vector3[length];
@@ -179,11 +179,8 @@ public static class UnityNifObjectBuilder {
         // triangle vertex indices
         var triangles = new int[s.NumTrianglePoints];
         for (var i = 0; i < s.Triangles.Length; i++) {
-            var baseI = 3 * i;
-            // Reverse triangle winding order.
-            triangles[baseI] = s.Triangles[i].v1;
-            triangles[baseI + 1] = s.Triangles[i].v3;
-            triangles[baseI + 2] = s.Triangles[i].v2;
+            ref var z = ref s.Triangles[i];
+            var baseI = 3 * i; triangles[baseI] = z.v1; triangles[baseI + 1] = z.v3; triangles[baseI + 2] = z.v2; // Reverse triangle winding order.
         }
 
         // create the mesh.

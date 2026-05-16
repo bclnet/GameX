@@ -143,7 +143,7 @@ public static class UnityNifObjectBuilder {
             obj.AddComponent<MeshFilter>().mesh = mesh;
             var materialProps = ToMaterialProp(s);
             var meshRenderer = obj.AddComponent<MeshRenderer>();
-            meshRenderer.material = materialManager.CreateMaterial(materialProps).mat;
+            (meshRenderer.material, _) = materialManager.CreateMaterial(materialProps).Result;
             if (materialProps.Textures == null || s.Flags.HasFlag(Flags.Hidden)) meshRenderer.enabled = false;
             obj.isStatic = isStatic;
         }

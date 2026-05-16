@@ -1,5 +1,5 @@
 ﻿using OpenStack.Gfx;
-using OpenStack.Gfx.Ex;
+using OpenStack.Gfx.EginX;
 #pragma warning disable CS9113
 
 namespace GameX.Platforms.EginX;

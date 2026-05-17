@@ -36,8 +36,7 @@ class FileContent(QTabWidget):
     def __init__(self, parent):
         super().__init__()
         self.parent = parent
-        self._gfx = []
-        self._sfx = []
+        self._source = None
         self._path = None
         self._contentTabs = []
         self.initUI()
@@ -97,18 +96,13 @@ class FileContent(QTabWidget):
             self.contentTab.addTab(control, tab.name)
 
     @property
-    def gfx(self): return self._gfx
-    @gfx.setter
-    def gfx(self, value): self._gfx = value
-
-    @property
-    def sfx(self): return self._sfx
-    @sfx.setter
-    def sfx(self, value): self._sfx = value
+    def source(self): return self._source
+    @source.setter
+    def source(self, value): self._source = value
 
     @property
     def path(self): return self._path
-    @sfx.setter
+    @path.setter
     def path(self, value): self._path = value
 
     @property

@@ -192,7 +192,7 @@ class BinaryArchive(Archive):
         return self.readData(f.fix(), option)
 
     async def getAsset(self, t: type, path: FileSource | str | int | object, option: object = None, throwOnError: bool = True) -> object:
-        print(f'getAsset: {t} - {path}')
+        #print(f'getAsset: {t} - {path}')
         if not path: return None
         elif not isinstance(path, FileSource):
             print(f'FIND PATH: {t} - {path}')

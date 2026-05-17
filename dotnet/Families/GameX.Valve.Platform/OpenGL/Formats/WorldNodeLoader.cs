@@ -11,14 +11,13 @@ using System.Numerics;
 namespace GameX.Valve.OpenGL.Formats;
 
 //was:Renderer/WorldLoader
-public class WorldNodeLoader(OpenGLGfxModel gfx, D_WorldNode node) {
+public class WorldNodeLoader(D_WorldNode node) {
     readonly D_WorldNode Node = node;
-    readonly OpenGLGfxModel Gfx = gfx;
 
-    public void Load(Scene scene) {
+    public void Load(Scene scene, ISource source) {
         var data = Node.Data;
 
-        var worldLayers = data.ContainsKey("m_layerNames") ? data.Get<string[]>("m_layerNames") : Array.Empty<string>();
+        var worldLayers = data.ContainsKey("m_layerNames") ? data.Get<string[]>("m_layerNames") : [];
         var sceneObjectLayerIndices = data.ContainsKey("m_sceneObjectLayerIndices") ? data.GetInt64Array("m_sceneObjectLayerIndices") : null;
         var sceneObjects = data.GetArray("m_sceneObjects");
         var i = 0;
@@ -35,9 +34,9 @@ public class WorldNodeLoader(OpenGLGfxModel gfx, D_WorldNode node) {
             var tintColor = tintColorVector.W == 0 ? Vector4.One : tintColorVector;
 
             if (renderableModel != null) {
-                var newResource = Gfx.Source.GetAsset<Binary_Src>($"{renderableModel}_c").Result;
+                var newResource = source.GetAsset<Binary_Src>($"{renderableModel}_c").Result;
                 if (newResource == null) continue;
-                var modelNode = new ModelSceneNode(scene, (IValveModel)newResource.DATA, null, false) {
+                var modelNode = new ModelSceneNode(scene, source, (IValveModel)newResource.DATA, null, false) {
                     Transform = matrix,
                     Tint = tintColor,
                     LayerName = worldLayers[layerIndex],
@@ -48,9 +47,9 @@ public class WorldNodeLoader(OpenGLGfxModel gfx, D_WorldNode node) {
 
             var renderable = sceneObject.Get<string>("m_renderable");
             if (renderable != null) {
-                var newResource = Gfx.Source.GetAsset<Binary_Src>($"{renderable}_c").Result;
+                var newResource = source.GetAsset<Binary_Src>($"{renderable}_c").Result;
                 if (newResource == null) continue;
-                var meshNode = new MeshSceneNode(scene, new D_Mesh(newResource), 0) {
+                var meshNode = new MeshSceneNode(scene, source, new D_Mesh(newResource), 0) {
                     Transform = matrix,
                     Tint = tintColor,
                     LayerName = worldLayers[layerIndex],
@@ -66,11 +65,11 @@ public class WorldNodeLoader(OpenGLGfxModel gfx, D_WorldNode node) {
         foreach (var sceneObject in aggregateSceneObjects) {
             var renderableModel = sceneObject.Get<string>("m_renderableModel");
             if (renderableModel != null) {
-                var newResource = Gfx.Source.GetAsset<Binary_Src>($"{renderableModel}_c").Result;
+                var newResource = source.GetAsset<Binary_Src>($"{renderableModel}_c").Result;
                 if (newResource == null) continue;
 
                 var layerIndex = sceneObject.Get<int>("m_nLayer");
-                var modelNode = new ModelSceneNode(scene, (IValveModel)newResource.DATA, null, false) {
+                var modelNode = new ModelSceneNode(scene, source, (IValveModel)newResource.DATA, null, false) {
                     LayerName = worldLayers[layerIndex],
                     Name = renderableModel,
                 };

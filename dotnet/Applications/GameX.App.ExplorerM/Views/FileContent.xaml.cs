@@ -1,5 +1,4 @@
-﻿using OpenStack.Gfx;
-using OpenStack.Sfx;
+﻿using OpenStack;
 using Platform = OpenStack.Platform;
 
 namespace GameX.App.Explorer.Views;
@@ -21,16 +20,10 @@ public partial class FileContent : ContentView {
 
     void ContentTab_Changed(object sender, CheckedChangedEventArgs e) => ContentTabContent.BindingContext = ((RadioButton)sender).BindingContext;
 
-    IList<IOpenGfx> _gfx;
-    public IList<IOpenGfx> Gfx {
-        get => _gfx;
-        set { _gfx = value; OnPropertyChanged(); }
-    }
-
-    IList<IOpenSfx> _sfx;
-    public IList<IOpenSfx> Sfx {
-        get => _sfx;
-        set { _sfx = value; OnPropertyChanged(); }
+    ISource _source;
+    public ISource Source {
+        get => _source;
+        set { _source = value; OnPropertyChanged(); }
     }
 
     object _path;
@@ -45,10 +38,9 @@ public partial class FileContent : ContentView {
         set { _contentTabs = value; OnPropertyChanged(); }
     }
 
-    public void OnInfo(MetaItem item, Archive archive, List<MetaInfo> infos) {
+    public void OnInfo(MetaItem item, ISource source, List<MetaInfo> infos) {
         if (ContentTabs != null) foreach (var dispose in ContentTabs.Where(s => s.Dispose != null).Select(s => s.Dispose)) dispose.Dispose();
-        Gfx = archive.Gfx;
-        Sfx = archive.Sfx;
+        Source = source;
         Path = item.Path;
         ContentTabs = infos?.Select(s => s.Tag as MetaContent).Where(s => s != null).ToList();
         //ContentTab.CurrentItem = ContentTabs != null ? ContentTabs.FirstOrDefault() : null;

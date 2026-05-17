@@ -54,7 +54,6 @@ public partial class MainPage : Window, INotifyPropertyChanged {
 
     public void SetPlatform(Platform platform) {
         PlatformX.Activate(platform);
-        foreach (var s in Archives) s.SetPlatform(platform);
         FileContent.SetPlatform(platform);
     }
 

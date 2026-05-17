@@ -6,14 +6,14 @@ using OpenStack.Gfx.O3de;
 namespace GameX.Platforms.O3de;
 
 public static class O3deRenderer {
-    public static Renderer CreateRenderer(object parent, IOpenGfx[] gfx, object obj, string type) {
-        if (obj is IHaveOpenGfx z) gfx = z.Gfx;
+    public static Renderer CreateRenderer(object parent, IOpenGfx[] gfx, ISource source, object obj, string type) {
+        if (obj is IHaveSource z) source = z.Source;
         return type switch {
-            "TestTri" => new TestTriRenderer(gfx, obj),
-            "Texture" => new TextureRenderer(gfx, obj, 0..),
-            //"Object" => new ObjectRenderer(gfx, obj),
-            //"Cell" => new CellRenderer(gfx, obj),
-            //"Engine" => new EngineRenderer(gfx, obj),
+            "TestTri" => new TestTriRenderer(gfx, source, obj),
+            "Texture" => new TextureRenderer(gfx, source, obj, 0..),
+            //"Object" => new ObjectRenderer(gfx, source, obj),
+            //"Cell" => new CellRenderer(gfx, source, obj),
+            //"Engine" => new EngineRenderer(gfx, source, obj),
             _ => default
         };
     }

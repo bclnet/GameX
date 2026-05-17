@@ -128,7 +128,6 @@ class MainPage(QMainWindow):
 
     def setPlatform(self, platform):
         PlatformX.activate(platform)
-        for s in self.archives: s.setPlatform(platform)
         self.contentBlock.setPlatform(platform)
 
     def platform_change(self, index):

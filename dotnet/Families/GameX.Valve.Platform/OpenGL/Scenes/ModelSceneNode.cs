@@ -1,6 +1,7 @@
 using GameX.Valve.Formats;
 using GameX.Valve.Formats.Vpk;
 using OpenStack;
+using OpenStack.Gfx;
 using OpenStack.Gfx.Egin;
 using OpenStack.Gfx.OpenGL;
 using OpenTK.Graphics.OpenGL;
@@ -13,6 +14,7 @@ namespace GameX.Valve.OpenGL.Scenes;
 
 //was:Renderer/ModelSceneNode
 public class ModelSceneNode : SceneNode, IMeshCollection {
+    ISource Source;
     IValveModel Model { get; }
 
     public Vector4 Tint {
@@ -34,7 +36,8 @@ public class ModelSceneNode : SceneNode, IMeshCollection {
 
     bool LoadedAnimations;
 
-    public ModelSceneNode(Scene scene, IValveModel model, string skin = null, bool loadAnimations = true) : base(scene) {
+    public ModelSceneNode(Scene scene, ISource source, IValveModel model, string skin = null, bool loadAnimations = true) : base(scene) {
+        Source = source;
         Model = model;
         AnimationController = new AnimationController(model.Skeleton);
 
@@ -109,16 +112,16 @@ public class ModelSceneNode : SceneNode, IMeshCollection {
     void LoadMeshes() {
         // Get embedded meshes
         foreach (var embeddedMesh in Model.GetEmbeddedMeshesAndLoD().Where(m => (m.LoDMask & 1) != 0))
-            MeshRenderers.Add(new GLRenderableMesh(Scene.GfxModel as OpenGLGfxModel, embeddedMesh.Mesh, embeddedMesh.MeshIndex, SkinMaterials, Model));
+            MeshRenderers.Add(new GLRenderableMesh(Scene.Gfx, Source, embeddedMesh.Mesh, embeddedMesh.MeshIndex, SkinMaterials, Model));
 
         // Load referred meshes from file (only load meshes with LoD 1)
         foreach (var refMesh in GetLod1RefMeshes()) {
-            var newResource = Scene.GfxModel.Source.GetAsset<Binary_Src>($"{refMesh.MeshName}_c").Result;
+            var newResource = Source.GetAsset<Binary_Src>($"{refMesh.MeshName}_c").Result;
             if (newResource == null) continue;
 
             if (!newResource.ContainsBlockType<VBIB>()) { Console.WriteLine("Old style model, no VBIB!"); continue; }
 
-            MeshRenderers.Add(new GLRenderableMesh(Scene.GfxModel as OpenGLGfxModel, (D_Mesh)newResource.DATA, refMesh.MeshIndex, SkinMaterials, Model));
+            MeshRenderers.Add(new GLRenderableMesh(Scene.Gfx, Source, (D_Mesh)newResource.DATA, refMesh.MeshIndex, SkinMaterials, Model));
         }
 
         // Set active meshes to default

@@ -7,18 +7,18 @@ namespace GameX.Platforms.OpenGL;
 
 public static class OpenGLRenderer {
     static OpenGLRenderer() {
-        OpenGLPlatform.BuildersByType[typeof(Binary_Nif)] = (src, isStatic, materialManager) => OpenGLNifObjectBuilder.BuildObject((Binary_Nif)src, isStatic, (MaterialManager<GLRenderMaterial, int>)materialManager);
+        OpenGLPlatform.BuildersByType[typeof(Binary_Nif)] = OpenGLNifObjectBuilder.BuildObject;
     }
-    public static Renderer CreateRenderer(object parent, IOpenGfx[] gfx, object obj, string type) {
-        if (obj is IHaveOpenGfx z) gfx = z.Gfx;
+    public static Renderer CreateRenderer(object parent, IOpenGfx[] gfx, ISource source, object obj, string type) {
+        if (obj is IHaveSource z) source = z.Source;
         return type switch {
-            "TestTri" => new TestTriRenderer(gfx, obj),
-            "Texture" or "VideoTexture" => new TextureRenderer(gfx, obj, 0.., false),
-            "Object" => new ObjectRenderer(gfx, obj),
-            "Material" => new MaterialRenderer(gfx, obj),
-            "Particle" => new ParticleRenderer(gfx, obj),
-            //"World" => new OpenGLWorldRenderer(gfx, obj),
-            "Engine" => new EngineRenderer(gfx, obj),
+            "TestTri" => new TestTriRenderer(gfx, source, obj),
+            "Texture" or "VideoTexture" => new TextureRenderer(gfx, source, obj, 0.., false),
+            "Object" => new ObjectRenderer(gfx, source, obj),
+            "Material" => new MaterialRenderer(gfx, source, obj),
+            "Particle" => new ParticleRenderer(gfx, source, obj),
+            //"World" => new OpenGLWorldRenderer(gfx, source,obj),
+            "Engine" => new EngineRenderer(gfx, source, obj),
             _ => default,
         };
     }

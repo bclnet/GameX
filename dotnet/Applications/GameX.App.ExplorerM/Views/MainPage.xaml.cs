@@ -47,7 +47,6 @@ public partial class MainPage : ContentPage {
 
     public void SetPlatform(Platform platform) {
         PlatformX.Activate(platform);
-        foreach (var s in Archives) s.SetPlatform(platform);
         FileContent.SetPlatform(platform);
     }
 

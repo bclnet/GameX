@@ -5,29 +5,31 @@ using OpenStack.Gfx;
 using OpenStack.Gfx.OpenGL;
 using System;
 using System.Numerics;
+using System.Threading.Tasks;
 using static GameX.Gamebryo.Platforms.NifObjectBuilder;
 using Object = object;
 
 namespace GameX.Platforms.OpenGL;
 
 public static class OpenGLNifObjectBuilder {
-    public static Object BuildObject(Binary_Nif src, bool isStatic, MaterialManager<GLRenderMaterial, int> materialManager) {
-        Log.Assert(src.Name != null && src.Roots.Length > 0);
+    public static async Task<Object> BuildObject(ISource source, object path, bool isStatic, MaterialManager<GLRenderMaterial, int> materialManager) {
+        var o = (Binary_Nif)path; var name = o.Name;
+        Log.Assert(name != null && o.Roots.Length > 0);
 
         // preload textures
         var textureManager = materialManager.TextureManager;
-        foreach (var texturePath in src.GetTexturePaths()) textureManager.PreloadTexture(texturePath);
+        foreach (var texturePath in o.GetTexturePaths()) textureManager.PreloadTexture(source, texturePath);
 
         // NIF files can have any number of root NiObjects.
         // If there is only one root, instantiate that directly.
         // If there are multiple roots, create a container Object and parent it to the roots.
-        if (src.Roots.Length == 1) {
-            var rootNiObject = src.Roots[0].Value;
-            var gobj = InstantiateRootNiObject(src, isStatic, materialManager, rootNiObject);
+        if (o.Roots.Length == 1) {
+            var rootNiObject = o.Roots[0].Value;
+            var gobj = await InstantiateRootNiObject(name, source, isStatic, materialManager, rootNiObject);
             // If the file doesn't contain any NiObjects we are looking for, return an empty Object.
             if (gobj == null) {
-                Log.Info($"{src.Name} resulted in a null Object when instantiated.");
-                gobj = new Object(); // src.Name);
+                Log.Info($"{name} resulted in a null Object when instantiated.");
+                gobj = new Object(); // name);
             }
             // If gobj != null and the root NiObject is an NiNode, discard any transformations (Morrowind apparently does).
             else if (rootNiObject is NiNode) {
@@ -38,10 +40,10 @@ public static class OpenGLNifObjectBuilder {
             return gobj;
         }
         else {
-            Log.Info($"{src.Name} has multiple roots.");
-            var gobj = new Object(); // src.Name);
-            foreach (var rootRef in src.Roots) {
-                var child = InstantiateRootNiObject(src, isStatic, materialManager, rootRef.Value);
+            Log.Info($"{name} has multiple roots.");
+            var gobj = new Object(); // name);
+            foreach (var rootRef in o.Roots) {
+                var child = await InstantiateRootNiObject(name, source, isStatic, materialManager, rootRef.Value);
                 //child?.transform.SetParent(gobj.transform, false);
             }
             return gobj;
@@ -54,10 +56,10 @@ public static class OpenGLNifObjectBuilder {
         //obj.transform.localScale = s.Scale * Vector3.one;
     }
 
-    static Object InstantiateRootNiObject(Binary_Nif src, bool isStatic, MaterialManager<GLRenderMaterial, int> materialManager, NiObject s) {
-        var gobj = InstantiateNiObject(isStatic, materialManager, s);
+    static async Task<Object> InstantiateRootNiObject(string name, ISource source, bool isStatic, MaterialManager<GLRenderMaterial, int> materialManager, NiObject s) {
+        var gobj = await InstantiateNiObject(source, isStatic, materialManager, s);
         var (shouldAddMissingColliders, isMarker) = ProcessExtraData(s);
-        if (src.Name != null && IsMarkerFileName(src.Name)) { shouldAddMissingColliders = false; isMarker = true; }
+        if (name != null && IsMarkerFileName(name)) { shouldAddMissingColliders = false; isMarker = true; }
         // Add colliders to the object if it doesn't already contain one.
         //if (shouldAddMissingColliders && gobj.GetComponentInChildren<Collider>() == null && isStatic) gobj.AddMissingMeshCollidersRecursively();
         //if (isMarker) gobj.SetLayerRecursively(MarkerLayer);
@@ -83,12 +85,12 @@ public static class OpenGLNifObjectBuilder {
     /// Creates a Object representation of an NiObject.
     /// </summary>
     /// <returns>Returns the created Object, or null if the NiObject does not need its own Object.</returns>
-    static Object InstantiateNiObject(bool isStatic, MaterialManager<GLRenderMaterial, int> materialManager, NiObject s)
+    static Task<Object> InstantiateNiObject(ISource source, bool isStatic, MaterialManager<GLRenderMaterial, int> materialManager, NiObject s)
         => s switch {
-            NiTriShape z => InstantiateNiTriShape(isStatic, materialManager, z, true, false),
-            RootCollisionNode z => InstantiateRcnNode(isStatic, materialManager, z),
-            //NiBSAnimationNode z => InstantiateNiNode(isStatic, materialManager, z),
-            NiNode z => InstantiateNiNode(isStatic, materialManager, z),
+            NiTriShape z => InstantiateNiTriShape(source, isStatic, materialManager, z, true, false),
+            RootCollisionNode z => InstantiateRcnNode(source, isStatic, materialManager, z),
+            //NiBSAnimationNode z => InstantiateNiNode(source, isStatic, materialManager, z),
+            NiNode z => InstantiateNiNode(source, isStatic, materialManager, z),
             NiTextureEffect _ => default,
             //NiBSParticleNode _ => default,
             NiRotatingParticles _ => default,
@@ -97,20 +99,20 @@ public static class OpenGLNifObjectBuilder {
             _ => throw new NotImplementedException($"Tried to instantiate an unsupported NiObject ({s.GetType().Name}).")
         };
 
-    static Object InstantiateNiNode(bool isStatic, MaterialManager<GLRenderMaterial, int> materialManager, NiNode s) {
+    static async Task<Object> InstantiateNiNode(ISource source, bool isStatic, MaterialManager<GLRenderMaterial, int> materialManager, NiNode s) {
         var obj = new Object(); // s.Name);
         foreach (var t in s.Children)
-            if (t != null) InstantiateNiObject(isStatic, materialManager, t.Value); //?.transform.SetParent(obj.transform, false);
+            if (t != null) await InstantiateNiObject(source, isStatic, materialManager, t.Value); //?.transform.SetParent(obj.transform, false);
         ApplyNiAVObject(obj, s);
         return obj;
     }
 
-    static Object InstantiateRcnNode(bool isStatic, MaterialManager<GLRenderMaterial, int> materialManager, RootCollisionNode s) {
+    static async Task<Object> InstantiateRcnNode(ISource source, bool isStatic, MaterialManager<GLRenderMaterial, int> materialManager, RootCollisionNode s) {
         var obj = new Object(); // $"Root Collision Node{s.Name}");
         foreach (var t in s.Children)
             if (t != null)
                 switch (t.Value) {
-                    case NiTriShape z: InstantiateNiTriShape(isStatic, materialManager, z, false, true); break; //.transform.SetParent(obj.transform, false); break;
+                    case NiTriShape z: await InstantiateNiTriShape(source, isStatic, materialManager, z, false, true); break; //.transform.SetParent(obj.transform, false); break;
                     case AvoidNode: break;
                     default: Log.Info($"Unsupported collider NiObject: {t.Value.GetType().Name}"); break;
                 }
@@ -136,8 +138,8 @@ public static class OpenGLNifObjectBuilder {
     //    obj.isStatic = IsStatic;
     //}
 
-    static Object InstantiateNiTriShape(bool isStatic, MaterialManager<GLRenderMaterial, int> materialManager, NiTriShape s, bool visual, bool collidable) {
-        var mesh = NiTriShapeDataToMesh((NiTriShapeData)s.Data.Value);
+    static async Task<Object> InstantiateNiTriShape(ISource source, bool isStatic, MaterialManager<GLRenderMaterial, int> materialManager, NiTriShape s, bool visual, bool collidable) {
+        var mesh = ToGeometry((NiTriShapeData)s.Data.Value);
         var obj = new Object();// s.Name);
         //if (visual) {
         //    obj.AddComponent<MeshFilter>().mesh = mesh;
@@ -158,7 +160,7 @@ public static class OpenGLNifObjectBuilder {
         return obj;
     }
 
-    static object NiTriShapeDataToMesh(NiTriShapeData s) {
+    static object ToGeometry(NiTriShapeData s) {
         var length = s.Vertices.Length;
         // vertex positions
         var vertices = new Vector3[length];
@@ -185,7 +187,6 @@ public static class OpenGLNifObjectBuilder {
             triangles[baseI + 1] = s.Triangles[i].v3;
             triangles[baseI + 2] = s.Triangles[i].v2;
         }
-
         // create the mesh.
         return null;
         //var mesh = new Mesh { vertices = vertices, normals = normals, uv = UVs, triangles = triangles };

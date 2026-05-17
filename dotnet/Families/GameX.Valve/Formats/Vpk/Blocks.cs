@@ -2,6 +2,7 @@ using GameX.Uncore.Formats;
 using GameX.Valve.Algorithms;
 using K4os.Compression.LZ4;
 using K4os.Compression.LZ4.Encoders;
+using OpenStack;
 using OpenStack.Algorithms;
 using OpenStack.Gfx;
 using OpenStack.Gfx.Egin;
@@ -8263,7 +8264,7 @@ public class D_Model : XKV3_NTRO, IValveModel {
         return Animation.FromData(animationDataBlock.Data, decodeKey, Skeleton);
     }
 
-    public IEnumerable<Animation> GetAllAnimations(IOpenGfxModel gfxModel) {
+    public IEnumerable<Animation> GetAllAnimations(ISource source) {
         if (CachedAnimations != null) return CachedAnimations;
 
         var animGroupPaths = GetReferencedAnimationGroupNames();
@@ -8271,8 +8272,8 @@ public class D_Model : XKV3_NTRO, IValveModel {
 
         // Load animations from referenced animation groups
         foreach (var animGroupPath in animGroupPaths) {
-            var animGroup = gfxModel.Source.GetAsset<Binary_Src>($"{animGroupPath}_c").Result;
-            if (animGroup != default) animations.AddRange(AnimationGroupLoader.LoadAnimationGroup(animGroup, gfxModel, Skeleton));
+            var animGroup = source.GetAsset<Binary_Src>($"{animGroupPath}_c").Result;
+            if (animGroup != default) animations.AddRange(AnimationGroupLoader.LoadAnimationGroup(animGroup, source, Skeleton));
         }
 
         CachedAnimations = animations.ToList();

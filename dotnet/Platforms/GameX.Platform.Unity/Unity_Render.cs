@@ -9,24 +9,22 @@ namespace GameX.Platforms.Unity;
 
 public static class UnityRenderer {
     static UnityRenderer() {
-        UnityPlatform.BuildersByType[typeof(Binary_Nif)] = (src, isStatic, materialManager) => UnityNifObjectBuilder.BuildObject((Binary_Nif)src, isStatic, (MaterialManager<UnityEngine.Material, UnityEngine.Texture2D>)materialManager);
+        UnityPlatform.BuildersByType[typeof(Binary_Nif)] = UnityNifObjectBuilder.BuildObject; // (source, path, isStatic, materialManager) => UnityNifObjectBuilder.BuildObject(source, (Binary_Nif)path, isStatic, (MaterialManager<UnityEngine.Material, UnityEngine.Texture2D>)materialManager);
     }
-    public static Renderer CreateRenderer(object parent, IOpenGfx[] gfx, object obj, string type) {
-        if (obj is IHaveOpenGfx z) gfx = z.Gfx;
+    public static Renderer CreateRenderer(object parent, IOpenGfx[] gfx, ISource source, object obj, string type) {
+        if (obj is IHaveSource z) source = z.Source;
         return type switch {
-            "TestTri" => new TestTriRenderer(gfx, obj),
-            "Material" => new MaterialRenderer(gfx, obj),
-            "Particle" => new ParticleRenderer(gfx, obj),
-            "Texture" or "VideoTexture" => new TextureRenderer(gfx, obj),
-            "Object" => new ObjectRenderer(gfx, obj),
-            "Engine" => new EngineRenderer(gfx, obj),
-            _ => new ObjectRenderer(gfx, obj),
+            "TestTri" => new TestTriRenderer(gfx, source, obj),
+            //"Material" => new MaterialRenderer(gfx, source, obj),
+            //"Particle" => new ParticleRenderer(gfx, source, obj),
+            "Texture" or "VideoTexture" => new TextureRenderer(gfx, source, obj),
+            "Object" => new ObjectRenderer(gfx, source, obj),
+            "Engine" => new EngineRenderer(gfx, source, obj),
+            _ => new ObjectRenderer(gfx, source, obj),
         };
     }
 }
 
-public class MaterialRenderer(IOpenGfx[] gfx, object obj) : Renderer { }
-public class ParticleRenderer(IOpenGfx[] gfx, object obj) : Renderer { }
 
 public class ViewInfo : UnityEngine.MonoBehaviour {
     static ViewInfo() => PlatformX.Activate(UnityPlatform.This);
@@ -58,7 +56,7 @@ public class ViewInfo : UnityEngine.MonoBehaviour {
         Family = FamilyManager.GetFamily(FamilyId);
         if (!string.IsNullOrEmpty(ArcUri)) Source = Family.GetArchive(new Uri(ArcUri));
         var value = Source.GetAsset<object>(Path).Result;
-        Renderer = UnityRenderer.CreateRenderer(this, Source?.Gfx, value, Type);
+        Renderer = UnityRenderer.CreateRenderer(this, PlatformX.Gfx, Source, value, Type);
     }
 
     public void OnDestroy() {

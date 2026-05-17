@@ -1233,8 +1233,7 @@ public class FamilyGame {
                             : p));
                         break;
                 }
-        var arc = archives.Count == 1 ? archives[0] : GetArchiveRecursive(null, vfx, edition, archives);
-        return arc?.SetPlatform(PlatformX.Current);
+        return archives.Count == 1 ? archives[0] : GetArchiveRecursive(null, vfx, edition, archives);
     }
 
     /// <summary>

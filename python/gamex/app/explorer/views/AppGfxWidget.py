@@ -1,3 +1,4 @@
+from openstk.core import PlatformX
 from openstk.platforms.eginx.gfx.qt_widget import EginXWidget
 from openstk.platforms.opengl.gfx.qt_widget import OpenGLWidget
 from openstk.platforms.panda3d.gfx.qt_widget import Panda3dWidget
@@ -15,24 +16,24 @@ class Renderer: pass
 # AppEginXWidget
 class AppEginXWidget(EginXWidget):
     def __init__(self, parent: object, tab: object): super().__init__(parent, tab)
-    def createRenderer(self) -> Renderer: return EginXRenderer.createRenderer(self, self.gfx, self.value, self.type)
+    def createRenderer(self) -> Renderer: return EginXRenderer.createRenderer(self, PlatformX.gfx, self.source, self.value, self.type)
 
 # AppOpenGLWidget
 class AppOpenGLWidget(OpenGLWidget):
     def __init__(self, parent: object, tab: object): super().__init__(parent, tab)
-    def createRenderer(self) -> Renderer: return OpenGLRenderer.createRenderer(self, self.gfx, self.value, self.type)
+    def createRenderer(self) -> Renderer: return OpenGLRenderer.createRenderer(self, PlatformX.gfx, self.source, self.value, self.type)
 
 # AppPanda3dWidget
 class AppPanda3dWidget(Panda3dWidget):
     def __init__(self, parent: object, tab: object): super().__init__(parent, tab)
-    def createRenderer(self) -> Renderer: return Panda3dRenderer.createRenderer(self, self.gfx, self.value, self.type)
+    def createRenderer(self) -> Renderer: return Panda3dRenderer.createRenderer(self, PlatformX.gfx, self.source, self.value, self.type)
 
 # AppPyEngine3dWidget
 class AppPyEngine3dWidget(PyEngine3dWidget):
     def __init__(self, parent: object, tab: object): super().__init__(parent, tab)
-    def createRenderer(self) -> Renderer: return PyEngine3dRenderer.createRenderer(self, self.gfx, self.value, self.type)
+    def createRenderer(self) -> Renderer: return PyEngine3dRenderer.createRenderer(self, PlatformX.gfx, self.source, self.value, self.type)
 
 # AppPygameWidget
 class AppPygameWidget(PygameWidget):
     def __init__(self, parent: object, tab: object): super().__init__(parent, tab)
-    def createRenderer(self) -> Renderer: return PygameRenderer.createRenderer(self, self.gfx, self.value, self.type)
+    def createRenderer(self) -> Renderer: return PygameRenderer.createRenderer(self, PlatformX.gfx, self.source, self.value, self.type)

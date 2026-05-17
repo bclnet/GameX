@@ -3,7 +3,7 @@ import sys, os, re, time
 from itertools import groupby
 from enum import Enum, Flag
 from io import BytesIO
-from openstk.core import _throw, ISourceWithPlatform, PlatformX, BinaryReader, GenericPool, SinglePool, StaticPool, IDatabase
+from openstk.core import _throw, ISource, PlatformX, BinaryReader, GenericPool, SinglePool, StaticPool, IDatabase
 from gamex.core.meta import FileSource, MetaManager, MetaItem, MetaInfo
 
 # FileOption
@@ -63,17 +63,15 @@ class Binary:
 # end::Binary[]
 
 # tag::Archive[]
-class Archive(Binary, ISourceWithPlatform):
+class Archive(Binary, ISource):
     # class FuncObjectFactoryFactory: pass
     def __init__(self, parent: Archive, state: BinaryState):
         super().__init__(state)
         self.pathFinders: list[object] = {}
         self.assetFactoryFunc: callable = None
-        self.gfx: list[IOpenGfx] = None
-        self.sfx: list[IOpenSfx] = None
         self.count: int = 0
-        self.children: list[Archive] = []
-        if parent: parent.children.append(self)
+        # self.children: list[Archive] = []
+        # if parent: parent.children.append(self)
     def open(self, items: list[MetaItem] = None, manager: MetaManager = None) -> None:
         if self.status != self.Stat.Closed: return self
         super().open()
@@ -84,11 +82,6 @@ class Archive(Binary, ISourceWithPlatform):
         if len(self.pathFinders) != 1: z = self.pathFinders.get(t); return z(path) if z else path
         first = next(iter(self.pathFinders.items()), None)
         return first[1](path) if first[0] == t or first[0] == None else path
-    def setPlatform(self, platform: Platform) -> Archive:
-        self.gfx = platform.gfxFactory(self) if platform and platform.gfxFactory else None
-        self.sfx = platform.sfxFactory(self) if platform and platform.sfxFactory else None
-        for s in self.children: s.setPlatform(platform)
-        return self
     def getSource(self, path: FileSource | str | int, throwOnError: bool = True) -> tuple[Archive, FileSource]: pass
     async def getData(self, path: FileSource | str | int, option: object = None, throwOnError: bool = True) -> bytes: pass
     async def getAsset(self, t: type, path: FileSource | str | int | object, option: object = None, throwOnError: bool = True) -> object: pass
@@ -287,7 +280,6 @@ class ManyArchive(BinaryArchive):
             fileSize = 0,
             lazy = lambda x, _s=s: lambdax(x, _s))
             for s in self.paths]
-        self.setPlatform(PlatformX.current)
 
     def readData(self, file: FileSource, option: object = None) -> BytesIO:
         if file.arc: file.arc.readData(file, option)

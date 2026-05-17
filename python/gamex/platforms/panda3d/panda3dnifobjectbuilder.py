@@ -17,7 +17,7 @@ class Panda3dNifObjectBuilder:
 
         # preload texture
         textureManager = materialManager._textureManager
-        for texturePath in src.getTexturePaths(): textureManager.preloadTexture(texturePath)
+        for texturePath in src.getTexturePaths(): textureManager.preloadTexture(None, texturePath)
 
         # NIF files can have any number of root NiObjects.
         # If there is only one root, instantiate that directly.
@@ -122,7 +122,7 @@ class Panda3dNifObjectBuilder:
         if visual:
             node.addGeom(geom)
             materialProps = NifObjectBuilder.toMaterialProp(s)
-            obj.setMaterial(materialManager.createMaterial(materialProps).mat)
+            obj.setMaterial(materialManager.createMaterial(None, materialProps).mat)
             if not materialProps.textures or Flags.Hidden in triShape.flags: node.hide()
         elif collidable:
             if not isStatic:

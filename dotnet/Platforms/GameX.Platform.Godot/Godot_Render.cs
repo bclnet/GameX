@@ -8,14 +8,14 @@ using System;
 namespace GameX.Platforms.Godot;
 
 public static class GodotRenderer {
-    public static Renderer CreateRenderer(object parent, IOpenGfx[] gfx, object obj, string type) {
-        if (obj is IHaveOpenGfx z) gfx = z.Gfx;
+    public static Renderer CreateRenderer(object parent, IOpenGfx[] gfx, ISource source, object obj, string type) {
+        if (obj is IHaveSource z) source = z.Source;
         return type switch {
-            "TestTri" => new TestTriRenderer(parent as Node, gfx, obj),
-            "Texture" => new TextureRenderer(parent as Node, gfx, obj, 0..),
-            //"Object" => new ObjectRenderer(parent as Node, gfx, obj),
-            //"Cell" => new CellRenderer(parent as Node, gfx, obj),
-            //"Engine" => new EngineRenderer(parent as Node, gfx, obj),
+            "TestTri" => new TestTriRenderer(parent as Node, gfx, source, obj),
+            "Texture" => new TextureRenderer(parent as Node, gfx, source, obj, 0..),
+            //"Object" => new ObjectRenderer(parent as Node, gfx, source, obj),
+            //"Cell" => new CellRenderer(parent as Node, gfx, source, obj),
+            //"Engine" => new EngineRenderer(parent as Node, gfx, source, obj),
             _ => default
         };
     }
@@ -48,7 +48,7 @@ public class ViewInfo : Node {
         Family = FamilyManager.GetFamily(FamilyId);
         if (!string.IsNullOrEmpty(ArcUri)) Source = Family.GetArchive(new Uri(ArcUri));
         var value = Source.GetAsset<object>(Path).Result;
-        Renderer = GodotRenderer.CreateRenderer(this, Source?.Gfx, value, Type);
+        Renderer = GodotRenderer.CreateRenderer(this, PlatformX.Gfx, Source, value, Type);
         Renderer?.Start();
     }
 

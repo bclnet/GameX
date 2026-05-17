@@ -17,20 +17,22 @@ namespace GameX.Valve.OpenGL.Formats;
 public class WorldLoader {
     readonly D_World World;
     readonly OpenGLGfxModel GfxModel;
+    public ISource Source;
 
     // Contains metadata that can't be captured by manipulating the scene itself. Returned from Load().
     public class LoadResult {
-        public readonly HashSet<string> DefaultEnabledLayers = new HashSet<string>();
-        public readonly IDictionary<string, Matrix4x4> CameraMatrices = new Dictionary<string, Matrix4x4>();
+        public readonly HashSet<string> DefaultEnabledLayers = [];
+        public readonly Dictionary<string, Matrix4x4> CameraMatrices = [];
         public Vector3? GlobalLightPosition;
         public D_World Skybox;
         public float SkyboxScale = 1.0f;
         public Vector3 SkyboxOrigin = Vector3.Zero;
     }
 
-    public WorldLoader(OpenGLGfxModel gfx, D_World world) {
-        World = world;
+    public WorldLoader(OpenGLGfxModel gfx, ISource source, D_World world) {
         GfxModel = gfx;
+        Source = source;
+        World = world;
     }
 
     public LoadResult Load(Scene scene) {
@@ -40,16 +42,16 @@ public class WorldLoader {
         // Output is World_t we need to iterate m_worldNodes inside it.
         foreach (var worldNode in World.GetWorldNodeNames())
             if (worldNode != null) {
-                var newResource = GfxModel.Source.GetAsset<Binary_Src>($"{worldNode}.vwnod_c").Result;
+                var newResource = Source.GetAsset<Binary_Src>($"{worldNode}.vwnod_c").Result;
                 if (newResource == null) continue;
-                var subloader = new WorldNodeLoader(GfxModel, (D_WorldNode)newResource.DATA);
-                subloader.Load(scene);
+                var subloader = new WorldNodeLoader((D_WorldNode)newResource.DATA);
+                subloader.Load(scene, Source);
             }
 
         foreach (var lumpName in World.GetEntityLumpNames()) {
             if (lumpName == null) continue;
 
-            var newResource = GfxModel.Source.GetAsset<Binary_Src>("{lumpName}_c").Result;
+            var newResource = Source.GetAsset<Binary_Src>("{lumpName}_c").Result;
             if (newResource == null) continue;
 
             var entityLump = (D_EntityLump)newResource.DATA;
@@ -60,7 +62,7 @@ public class WorldLoader {
 
     void LoadEntitiesFromLump(Scene scene, LoadResult result, D_EntityLump entityLump, string layerName = null) {
         foreach (var childEntityName in entityLump.GetChildEntityNames()) {
-            var newResource = GfxModel.Source.GetAsset<Binary_Src>(childEntityName).Result;
+            var newResource = Source.GetAsset<Binary_Src>(childEntityName).Result;
             if (newResource == null) continue;
 
             var childLump = (D_EntityLump)newResource.DATA;
@@ -86,7 +88,7 @@ public class WorldLoader {
                 var targetmapname = entity.Get<string>("targetmapname");
 
                 var skyboxWorldPath = $"maps/{Path.GetFileNameWithoutExtension(targetmapname)}/world.vwrld_c";
-                var skyboxPackage = GfxModel.Source.GetAsset<Binary_Src>(skyboxWorldPath).Result;
+                var skyboxPackage = Source.GetAsset<Binary_Src>(skyboxWorldPath).Result;
                 if (skyboxPackage != null) result.Skybox = (D_World)skyboxPackage.DATA;
             }
 
@@ -112,11 +114,11 @@ public class WorldLoader {
             }
 
             if (particle != null) {
-                var particleResource = GfxModel.Source.GetAsset<Binary_Src>(particle).Result;
+                var particleResource = Source.GetAsset<Binary_Src>(particle).Result;
                 if (particleResource != null) {
                     var particleSystem = (D_ParticleSystem)particleResource.DATA;
                     try {
-                        var particleNode = new ParticleSceneNode(scene, particleSystem) {
+                        var particleNode = new ParticleSceneNode(scene, Source, particleSystem) {
                             Transform = Matrix4x4.CreateTranslation(origin),
                             LayerName = layerName,
                         };
@@ -157,11 +159,11 @@ public class WorldLoader {
                 continue;
             }
 
-            var newEntity = GfxModel.Source.GetAsset<Binary_Src>($"{model}_c").Result;
+            var newEntity = Source.GetAsset<Binary_Src>($"{model}_c").Result;
             if (newEntity == null) {
-                var errorModelResource = GfxModel.Source.GetAsset<Binary_Src>("models/dev/error.vmdl_c").Result;
+                var errorModelResource = Source.GetAsset<Binary_Src>("models/dev/error.vmdl_c").Result;
                 if (errorModelResource != null) {
-                    var errorModel = new ModelSceneNode(scene, (IValveModel)errorModelResource.DATA, skin, false) {
+                    var errorModel = new ModelSceneNode(scene, Source, (IValveModel)errorModelResource.DATA, skin, false) {
                         Transform = transformationMatrix,
                         LayerName = layerName,
                     };
@@ -172,7 +174,7 @@ public class WorldLoader {
             }
 
             var newModel = (IValveModel)newEntity.DATA;
-            var modelNode = new ModelSceneNode(scene, newModel, skin, false) {
+            var modelNode = new ModelSceneNode(scene, Source, newModel, skin, false) {
                 Transform = transformationMatrix,
                 Tint = objColor,
                 LayerName = layerName,
@@ -204,13 +206,13 @@ public class WorldLoader {
             if (phys == null) {
                 var refPhysicsPaths = newModel.GetReferencedPhysNames();
                 if (refPhysicsPaths.Any()) {
-                    var newResource = GfxModel.Source.GetAsset<Binary_Src>($"{refPhysicsPaths.First()}_c").Result;
+                    var newResource = Source.GetAsset<Binary_Src>($"{refPhysicsPaths.First()}_c").Result;
                     if (newResource != null) phys = (D_PhysAggregateData)newResource.DATA;
                 }
             }
 
             if (phys != null) {
-                var physSceneNode = new PhysSceneNode(scene, phys) {
+                var physSceneNode = new PhysSceneNode(scene, Source, phys) {
                     Transform = transformationMatrix,
                     IsTrigger = isTrigger,
                     LayerName = layerName
@@ -222,22 +224,22 @@ public class WorldLoader {
 
     void AddToolModel(Scene scene, string classname, Matrix4x4 transformationMatrix, Vector3 position) {
         var filename = HammerEntities.GetToolModel(classname);
-        var resource = GfxModel.Source.GetAsset<Binary_Src>($"{filename}_c").Result;
+        var resource = Source.GetAsset<Binary_Src>($"{filename}_c").Result;
         if (resource == null) {
             // TODO: Create a 16x16x16 box to emulate how Hammer draws them
-            resource = GfxModel.Source.GetAsset<Binary_Src>("materials/editor/obsolete.vmat_c").Result;
+            resource = Source.GetAsset<Binary_Src>("materials/editor/obsolete.vmat_c").Result;
             if (resource == null) return;
         }
 
         if (resource.DATA is D_Model model) {
-            var modelNode = new ModelSceneNode(scene, (IValveModel)model, null, false) {
+            var modelNode = new ModelSceneNode(scene, Source, (IValveModel)model, null, false) {
                 Transform = transformationMatrix,
                 LayerName = "Entities",
             };
             scene.Add(modelNode, false);
         }
         else if (resource.DATA is D_Material) {
-            var spriteNode = new SpriteSceneNode(scene, resource, position) {
+            var spriteNode = new SpriteSceneNode(scene, Source, resource, position) {
                 LayerName = "Entities",
             };
             scene.Add(spriteNode, false);

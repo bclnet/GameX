@@ -1,6 +1,4 @@
 ﻿using OpenStack;
-using OpenStack.Gfx;
-using OpenStack.Sfx;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Controls;
@@ -29,16 +27,10 @@ public partial class FileContent : UserControl, INotifyPropertyChanged {
     public event PropertyChangedEventHandler PropertyChanged;
     void OnPropertyChanged([CallerMemberName] string propertyName = "") => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
-    IList<IOpenGfx> _gfx;
-    public IList<IOpenGfx> Gfx {
-        get => _gfx;
-        set { _gfx = value; OnPropertyChanged(); }
-    }
-
-    IList<IOpenSfx> _sfx;
-    public IList<IOpenSfx> Sfx {
-        get => _sfx;
-        set { _sfx = value; OnPropertyChanged(); }
+    ISource _source;
+    public ISource Source {
+        get => _source;
+        set { _source = value; OnPropertyChanged(); }
     }
 
     object _path;
@@ -53,10 +45,9 @@ public partial class FileContent : UserControl, INotifyPropertyChanged {
         set { _contentTabs = value; OnPropertyChanged(); }
     }
 
-    public void OnInfo(MetaItem item, Archive archive, List<MetaInfo> infos) {
+    public void OnInfo(MetaItem item, ISource source, List<MetaInfo> infos) {
         if (ContentTabs != null) foreach (var dispose in ContentTabs.Where(s => s.Dispose != null).Select(s => s.Dispose)) dispose.Dispose();
-        Gfx = archive.Gfx;
-        Sfx = archive.Sfx;
+        Source = source;
         Path = item;
         ContentTabs = infos?.Select(s => s.Tag as MetaContent).Where(s => s != null).ToList();
         ContentTab.SelectedIndex = ContentTabs != null ? 0 : -1;

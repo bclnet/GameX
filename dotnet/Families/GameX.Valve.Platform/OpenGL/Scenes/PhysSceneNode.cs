@@ -22,7 +22,7 @@ public class PhysSceneNode : SceneNode {
     readonly int iboHandle;
     readonly int vaoHandle;
 
-    public PhysSceneNode(Scene scene, D_PhysAggregateData phys) : base(scene) {
+    public PhysSceneNode(Scene scene, ISource source, D_PhysAggregateData phys) : base(scene) {
         var verts = new List<float>();
         var inds = new List<int>();
 
@@ -171,7 +171,7 @@ public class PhysSceneNode : SceneNode {
             //Console.WriteLine($"Phys mesh verts {verts.Count} inds {inds.Count}");
         }
 
-        (shader, _) = (Scene.GfxModel as OpenGLGfxModel).ShaderManager.CreateShader("vrf.grid", new Dictionary<string, bool>()).Result;
+        (shader, _) = ((OpenGLGfxModel)Scene.Gfx[GfX.XModel]).ShaderManager.CreateShader(source, "vrf.grid", new Dictionary<string, bool>()).Result;
         GL.UseProgram(shader.Program);
 
         vaoHandle = GL.GenVertexArray();

@@ -19,10 +19,10 @@ public class SpriteSceneNode : SceneNode {
     readonly Vector3 position;
     readonly float size;
 
-    public SpriteSceneNode(Scene scene, Binary_Src resource, Vector3 position) : base(scene) {
-        var gfx = scene.GfxModel as OpenGLGfxModel;
-        (material, _) = gfx.MaterialManager.CreateMaterial(resource).Result;
-        (shader, _) = gfx.ShaderManager.CreateShader(material.Material.ShaderName, material.Material.ShaderArgs).Result;
+    public SpriteSceneNode(Scene scene, ISource source, Binary_Src resource, Vector3 position) : base(scene) {
+        var gfxModel = (OpenGLGfxModel)scene.Gfx[GfX.XModel];
+        (material, _) = gfxModel.MaterialManager.CreateMaterial(source, resource).Result;
+        (shader, _) = gfxModel.ShaderManager.CreateShader(source, material.Material.ShaderName, material.Material.ShaderArgs).Result;
 
         if (quadVao == 0) quadVao = SetupQuadBuffer();
 

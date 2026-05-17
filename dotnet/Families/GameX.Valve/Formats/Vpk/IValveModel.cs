@@ -1,4 +1,5 @@
-﻿using OpenStack.Gfx;
+﻿using OpenStack;
+using OpenStack.Gfx;
 using OpenStack.Gfx.Egin;
 using System.Collections.Generic;
 
@@ -16,7 +17,7 @@ public interface IValveModel : IEginModel {
     IEnumerable<bool> GetActiveMeshMaskForGroup(string groupName);
     IEnumerable<string> GetMeshGroups();
     IEnumerable<string> GetDefaultMeshGroups();
-    IEnumerable<Animation> GetAllAnimations(IOpenGfxModel gfx);
+    IEnumerable<Animation> GetAllAnimations(ISource source);
     D_PhysAggregateData GetEmbeddedPhys();
     IEnumerable<string> GetReferencedPhysNames();
 }

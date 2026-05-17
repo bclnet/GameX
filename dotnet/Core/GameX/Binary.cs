@@ -196,7 +196,7 @@ public abstract class Binary : IDisposable {
 /// Archive
 /// Initializes a new instance of the <see cref="Archive" /> class.
 /// </summary>
-public abstract class Archive : Binary, ISourceWithPlatform {
+public abstract class Archive : Binary, ISource {
     class EmptyArchive(BinaryState state) : Archive(null, state) {
         public override bool Contains(object path) => false;
         public override (Archive, FileSource) GetSource(object path, bool throwOnError = true) => throw new NotImplementedException();
@@ -229,11 +229,11 @@ public abstract class Archive : Binary, ISourceWithPlatform {
     /// <summary>
     /// The arc children.
     /// </summary>
-    public List<Archive> Children = [];
+    //public List<Archive> Children = [];
 
     /// <param name="parent">The parent.</param>
     /// <param name="state">The state.</param>
-    public Archive(Archive parent, BinaryState state) : base(state) => parent?.Children.Add(this);
+    public Archive(Archive parent, BinaryState state) : base(state) { } // => parent?.Children.Add(this);
 
     /// <summary>
     /// Opens this instance.
@@ -264,34 +264,6 @@ public abstract class Archive : Binary, ISourceWithPlatform {
         var first = PathFinders.First();
         return first.Key == typeof(T) || first.Key == typeof(object) ? first.Value(path) : path;
     }
-
-    /// <summary>
-    /// Sets the platform.
-    /// </summary>
-    /// <param name="archive">The arc file.</param>
-    /// <returns></returns>
-    public Archive SetPlatform(Platform platform) {
-        Gfx = platform?.GfxFactory?.Invoke(this);
-        Sfx = platform?.SfxFactory?.Invoke(this);
-        foreach (var s in Children) s.SetPlatform(platform);
-        return this;
-    }
-
-    /// <summary>
-    /// Gets the gfx.
-    /// </summary>
-    /// <value>
-    /// The gfx.
-    /// </value>
-    public IOpenGfx[] Gfx { get; internal set; } = null;
-
-    /// <summary>
-    /// Gets the gfx.
-    /// </summary>
-    /// <value>
-    /// The sfx.
-    /// </value>
-    public IOpenSfx[] Sfx { get; internal set; } = null;
 
     /// <summary>
     /// Gets the file source.
@@ -783,7 +755,6 @@ public class ManyArchive : BinaryArchive {
             Arc = Game.IsArcPath(s) ? (BinaryArchive)Game.CreateArchive(this, new BinaryState(Vfx, Game, Edition, s)) : default,
             Lazy = x => { x.FileSize = Vfx.FileInfo(s).length; x.Lazy = null; }
         })];
-        SetPlatform(PlatformX.Current);
         return Task.CompletedTask;
     }
 

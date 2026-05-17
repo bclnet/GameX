@@ -1,22 +1,22 @@
-﻿using OpenStack.Gfx;
+﻿using OpenStack;
+using OpenStack.Gfx;
 using OpenStack.Gfx.Stride;
-using System;
 #pragma warning disable CS9113
 
 namespace GameX.Platforms.Stride;
 
 public static class StrideRenderer {
-    public static Renderer CreateRenderer(object parent, IOpenGfx[] gfx, object obj, string type) {
-        if (obj is IHaveOpenGfx z) gfx = z.Gfx;
+    public static Renderer CreateRenderer(object parent, IOpenGfx[] gfx, ISource source, object obj, string type) {
+        if (obj is IHaveSource z) source = z.Source;
         return type switch {
-            "TestTri" => new TestTriRenderer(gfx, obj),
-            //"Material" => new MaterialRenderer(gfx, obj),
-            //"Particle" => new ParticleRenderer(gfx, obj),
-            "Texture" or "VideoTexture" => new TextureRenderer(gfx, obj, 0..),
-            //"Object" => new ObjectRenderer(gfx, obj),
-            //"Cell" => new CellRenderer(gfx, obj),
-            "World" => throw new NotImplementedException(),
-            //"Engine" => new EngineRenderer(gfx, obj),
+            "TestTri" => new TestTriRenderer(gfx, source, obj),
+            //"Material" => new MaterialRenderer(gfx, source, obj),
+            //"Particle" => new ParticleRenderer(gfx, source, obj),
+            "Texture" or "VideoTexture" => new TextureRenderer(gfx, source, obj, 0..),
+            //"Object" => new ObjectRenderer(gfx, source, obj),
+            //"Cell" => new CellRenderer(gfx, source, obj),
+            //"World" => throw new NotImplementedException(),
+            //"Engine" => new EngineRenderer(gfx, source, obj),
             _ => default,
         };
     }

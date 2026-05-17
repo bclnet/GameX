@@ -1,6 +1,6 @@
 from __future__ import annotations
 import os
-from openstk.gfx import IHaveOpenGfx
+from openstk.core import ISource, IHaveSource
 from openstk.platforms.eginx.gfx import TestTriRenderer
 
 # typedefs
@@ -10,9 +10,9 @@ class Renderer: pass
 # EginXRenderer
 class EginXRenderer:
     @staticmethod
-    def createRenderer(parent: object, gfx: list[IOpenGfx], obj: object, type: str) -> Renderer:
-        if isinstance(obj, IHaveOpenGfx): gfx = obj.gfx
+    def createRenderer(parent: object, gfx: list[IOpenGfx], source: ISource, obj: object, type: str) -> Renderer:
         surf = parent.surface
+        if isinstance(obj, IHaveSource): source = obj.source
         match type:
-            case 'TestTri': return TestTriRenderer(gfx, obj, surf)
+            case 'TestTri': return TestTriRenderer(gfx, source, obj, surf)
             case _: return None

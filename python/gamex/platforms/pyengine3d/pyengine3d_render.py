@@ -11,7 +11,7 @@ class Renderer: pass
 class PyEngine3dRenderer:
     @staticmethod
     def createRenderer(parent: object, gfx: list[IOpenGfx], source: ISource, obj: object, type: str) -> Renderer:
-        surf = parent.surface
+        # surf = parent.surface
         if isinstance(obj, IHaveSource): source = obj.source
         match type:
             case 'TestTri': return TestTriRenderer(gfx, source, obj, surf)

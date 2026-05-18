@@ -1,6 +1,5 @@
 using GameX.Uncore.Formats.Apple;
 using ICSharpCode.SharpZipLib.Zip;
-using Microsoft.Extensions.FileSystemGlobbing;
 using OpenStack;
 using OpenStack.Gfx;
 using System;
@@ -50,9 +49,11 @@ public class Binary_Bik(BinaryReader r, int fileSize) : IHaveMetaInfo {
 /// </summary>
 /// <see cref="https://en.wikipedia.org/wiki/DirectDraw"/>
 public class Binary_Dds : IHaveMetaInfo, ITexture {
-    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Dds(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Dds(r, f));
 
-    public Binary_Dds(BinaryReader r, bool readMagic = true) {
+    public Binary_Dds(BinaryReader r, FileSource f, bool readMagic = true) {
+        CapsReadDds = PlatformX.Current.Caps.HasFlag(PlatformX.Caps.ReadDds);
+        if (CapsReadDds) { Bytes = r.ReadBytes((int)f.FileSize); return; }
         (HDR, DXT10, Format, Bytes) = DDS_HEADER.Read(r, readMagic);
         var mipMaps = Math.Max(1, (int)HDR.dwMipMapCount);
         var offset = 0;
@@ -71,6 +72,7 @@ public class Binary_Dds : IHaveMetaInfo, ITexture {
         MipMaps = mipMaps;
     }
 
+    readonly bool CapsReadDds;
     readonly DDS_HEADER HDR;
     readonly DDS_HEADER_DXT10? DXT10;
     readonly byte[] Bytes;
@@ -84,7 +86,7 @@ public class Binary_Dds : IHaveMetaInfo, ITexture {
     public int Depth => 0;
     public int MipMaps { get; }
     public TextureFlags TexFlags => 0;
-    public T Create<T>(string platform, Func<object, T> func) => func(new Texture_Bytes(Bytes, Format.value, Spans));
+    public T Create<T>(string platform, Func<object, T> func) => func(CapsReadDds ? new Texture_Dds(Bytes) : new Texture_Bytes(Bytes, Format.value, Spans));
 
     #endregion
 
@@ -654,7 +656,7 @@ public class Binary_Msg(string message) : IHaveMetaInfo {
 /// <see cref="https://en.wikipedia.org/wiki/Palette_(computing)"/>
 /// <param name="r"></param>
 /// <param name="bpp"></param>
-public unsafe class Binary_Pal(BinaryReader r, byte bpp) : IHaveMetaInfo {
+public class Binary_Pal(BinaryReader r, byte bpp) : IHaveMetaInfo {
     public static Task<object> Factory_3(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Pal(r, 3));
     public static Task<object> Factory_4(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Pal(r, 4));
 

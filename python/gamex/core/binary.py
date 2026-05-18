@@ -195,9 +195,7 @@ class BinaryArchive(Archive):
         #print(f'getAsset: {t} - {path}')
         if not path: return None
         elif not isinstance(path, FileSource):
-            print(f'FIND PATH: {t} - {path}')
             path = self.findPath(t, path)
-            exit(0)
             (arc, next_) = self.getSource(path, throwOnError)
             return await arc.getAsset(t, next_, option, throwOnError) if next_ else path
         f = path

@@ -25,6 +25,8 @@ class NiObject: pass
 #region X
 
 class Ref[T]:
+    _repr = True
+    def __repr__(self) -> str: return f'{self.v}'
     def __init__(self, r: NiReader, v: int): self.r: NiReader = r; self.v: int = v; self.val: T = None
     @property
     def value(self) -> T:
@@ -923,7 +925,7 @@ class MatchGroup: # X
 class MipMap: # X
     _struct = ('<3i', 12)
     def __init__(self, r: NiReader):
-        if isinstance(r, tuple): self.width, self.height, self.offset = tuple; return
+        if isinstance(r, tuple): self.width, self.height, self.offset = r; return
         self.width: int = r.readUInt32()                # Width of the mipmap image.
         self.height: int = r.readUInt32()               # Height of the mipmap image.
         self.offset: int = r.readUInt32()               # Offset into the pixel data array where this mipmap starts.
@@ -932,7 +934,7 @@ class MipMap: # X
 class BoneVertData: # X
     _struct = ('<Hf', 6)
     def __init__(self, r: NiReader, half: bool = None):
-        if isinstance(r, tuple): self.index, self.weight = tuple; return
+        if isinstance(r, tuple): self.index, self.weight = r; return
         if half: self.index = r.readUInt16(); self.weight = r.readHalf(); return
         self.index: int = r.readUInt16()                # The vertex index, in the mesh.
         self.weight: float = r.readSingle() if full else r.readHalf() # The vertex weight - between 0.0 and 1.0
@@ -1099,7 +1101,7 @@ class KeyGroup[T]: # X
         self.t = t
         self.numKeys = r.readUInt32()
         if self.numKeys != 0: self.interpolation = KeyType(r.readUInt32())
-        self.keys = r.readFArray(lambda z: Key[T]('[T]', r, Interpolation), self.numKeys)
+        self.keys = r.readFArray(lambda z: Key[T](t, r, self.interpolation), self.numKeys)
 
 # A special version of the key type used for quaternions.  Never has tangents.
 class QuatKey[T]: # X
@@ -1379,7 +1381,7 @@ class Morph: # X
         if r.v <= 0x0A010000:
             numKeys = r.readUInt32()
             self.interpolation = KeyType(r.readUInt32())
-            self.keys = r.readFArray(lambda z: Key[float]('[float]', r, Interpolation), self.numKeys)
+            self.keys = r.readFArray(lambda z: Key[float]('[float]', r, self.interpolation), self.numKeys)
         if r.v >= 0x0A010068 and r.v <= 0x14010002 and r.uv2 < 10: self.legacyWeight = r.readSingle()
         self.vectors = r.readPArray(array, '3f', numVertices)
 
@@ -2745,7 +2747,7 @@ class NiKeyframeData(NiObject): # X
         super().__init__(r)
         self.numRotationKeys = r.readUInt32()
         if self.numRotationKeys != 0: self.rotationType = KeyType(r.readUInt32())
-        if RotationType != KeyType.XYZ_ROTATION_KEY: self.quaternionKeys = r.readFArray(lambda z: QuatKey[Quaternion]('[Quaternion]', r, self.rotationType), self.numRotationKeys)
+        if self.rotationType != KeyType.XYZ_ROTATION_KEY: self.quaternionKeys = r.readFArray(lambda z: QuatKey[Quaternion]('[Quaternion]', r, self.rotationType), self.numRotationKeys)
         else:
             if r.v <= 0x0A010000: self.order = r.readSingle()
             self.xyzRotations = r.readFArray(lambda z: KeyGroup[float]('[float]', r), 3)

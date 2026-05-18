@@ -259,6 +259,8 @@ public class TriangleJsonConverter : JsonConverter<Triangle> {
 }
 ''',
 '''class Ref[T]:
+    _repr = True
+    def __repr__(self) -> str: return f'{self.v}'
     def __init__(self, r: NiReader, v: int): self.r: NiReader = r; self.v: int = v; self.val: T = None
     @property
     def value(self) -> T:
@@ -688,8 +690,8 @@ BODY
             values[25].arr1 = values[26].arr1 = '((NumUVSets & 63) | ((int)VectorFlags & 63) | ((int)BSVectorFlags & 1))' if self.ex == CS else '((self.numUvSets & 63) | (self.vectorFlags & 63) | (self.bsVectorFlags & 1))'
             values[20].kind = values[11].kind = values[5].kind = 'var?'
         def NiKeyframeData_values(s, values):
-            values[2].cond = 'RotationType != KeyType.XYZ_ROTATION_KEY'
-            values[4].cond = values[3].cond = 'RotationType == KeyType.XYZ_ROTATION_KEY'
+            values[2].cond = 'RotationType != KeyType.XYZ_ROTATION_KEY' if self.ex == CS else 'self.rotationType != KeyType.XYZ_ROTATION_KEY'
+            values[4].cond = values[3].cond = 'RotationType == KeyType.XYZ_ROTATION_KEY' if self.ex == CS else 'self.rotationType == KeyType.XYZ_ROTATION_KEY'
         def NiSourceTexture_values(s, values):
             values[8].default = 'true'; values[9].default = 'false'
         def NiTexturingProperty_values(s, values):

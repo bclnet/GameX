@@ -11,10 +11,10 @@ namespace GameX.Gamebryo.Formats;
 
 #region Binary_Nif
 
-public class Binary_Nif(BinaryReader r, FileSource f, Archive s) : NiReader(r), IHaveMetaInfo, IObjectModel, IWriteToStream {
+public class Binary_Nif(BinaryReader r, FileSource f, Archive s) : NiReader(r), IHaveMetaInfo, IHaveSource, IObjectModel, IWriteToStream {
     public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Nif(r, f, s));
     public string Name = Path.GetFileNameWithoutExtension(f.Path);
-    public ISource Source = s;
+    public ISource Source => s;
 
     #region IObjectModel
 

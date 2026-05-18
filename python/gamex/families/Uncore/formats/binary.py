@@ -5,8 +5,8 @@ from io import BytesIO
 from PIL import Image
 from enum import Enum
 from quaternion import quaternion
-from openstk.core import _pathExtension, Int3, ICellDatabase
-from openstk.gfx import Raster, DDS_HEADER, Texture_Bytes, ITexture, TextureFormat, TexturePixel
+from openstk.core import _pathExtension, PlatformX, Int3, ICellDatabase
+from openstk.gfx import Raster, DDS_HEADER, Texture_Dds, Texture_Bytes, ITexture, TextureFormat, TexturePixel
 from gamex import ArcBinary, ArcBinaryT, FileSource, BinaryArchive, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
 from zipfile import ZipFile
 
@@ -31,9 +31,11 @@ class Binary_Bik(IHaveMetaInfo):
 # Binary_Dds
 class Binary_Dds(IHaveMetaInfo, ITexture):
     @staticmethod
-    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Dds(r)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Dds(r, f)
 
-    def __init__(self, r: BinaryReader, readMagic: bool = True):
+    def __init__(self, r: BinaryReader, f: FileSource, readMagic: bool = True):
+        self.capsReadDds = PlatformX.Caps.ReadDds in PlatformX.current.caps
+        if self.capsReadDds: self.bytes = r.readBytes(f.fileSize); return
         self.header, self.headerDXT10, self.format, self.bytes = DDS_HEADER.read(r, readMagic)
         width = self.header.dwWidth; height = self.header.dwHeight; mipMaps = max(1, self.header.dwMipMapCount)
         offset = 0
@@ -52,12 +54,13 @@ class Binary_Dds(IHaveMetaInfo, ITexture):
 
     #region ITexture
 
+    format: tuple = (0, 0, 0)
     width: int = 0
     height: int = 0
     depth: int = 0
     mipMaps: int = 1
     texFlags: TextureFlags = 0
-    def create(self, platform: str, func: callable): return func(Texture_Bytes(self.bytes, self.format[2], self.spans))
+    def create(self, platform: str, func: callable): return func(Texture_Dds(self.bytes) if self.capsReadDds else Texture_Bytes(self.bytes, self.format[2], self.spans))
 
     #endregion
 

@@ -1,7 +1,7 @@
 import os
 from io import BytesIO
 from enum import Enum
-from openstk.core import IWriteToStream
+from openstk.core import ISource, IHaveSource, IWriteToStream
 from gamex import FileSource, ArcBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo, DesSer
 from gamex.families.Gamebryo.formats.nif import NiReader, NiSkinInstance, NiSourceTexture
 
@@ -13,13 +13,14 @@ class BinaryArchive: pass
 #region Binary_Nif
 
 # Binary_Nif
-class Binary_Nif(NiReader, IHaveMetaInfo, IWriteToStream):
+class Binary_Nif(NiReader, IHaveMetaInfo, IHaveSource, IWriteToStream):
     @staticmethod
-    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Nif(r, f)
+    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Nif(r, f, s)
 
-    def __init__(self, r: BinaryReader, f: FileSource):
+    def __init__(self, r: BinaryReader, f: FileSource, s: Archive):
         super().__init__(r)
         self.name = os.path.splitext(os.path.basename(f.path))[0]
+        self.source: ISource = s
 
     def writeToStream(self, stream: object): return DesSer.serialize(self, stream)
 
@@ -27,8 +28,7 @@ class Binary_Nif(NiReader, IHaveMetaInfo, IWriteToStream):
 
     #region IModel
 
-    def create(platform: str, func: callable):
-        raise NotImplementedError('create')
+    def create(platform: str, func: callable): raise NotImplementedError('create')
 
     #endregion
 

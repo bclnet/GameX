@@ -84,7 +84,7 @@ public partial class FamilyManager {
     };
 #elif Bethesda
     public static GlobalOption Option = new() {
-        Platform = "GL",
+        Platform = "UN",
         ForceOpen = true,
         ForcePath = "sample:3",
         Family = "Bethesda",

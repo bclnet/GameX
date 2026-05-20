@@ -9,9 +9,10 @@ namespace GameX.Platforms.Unity;
 
 public static class UnityRenderer {
     static UnityRenderer() {
-        UnityPlatform.BuildersByType[typeof(Binary_Nif)] = UnityNifObjectBuilder.BuildObject; // (source, path, isStatic, materialManager) => UnityNifObjectBuilder.BuildObject(source, (Binary_Nif)path, isStatic, (MaterialManager<UnityEngine.Material, UnityEngine.Texture2D>)materialManager);
+        UnityX.BuildersByType[typeof(Binary_Nif)] = UnityNifObjectBuilder.BuildObject;
     }
     public static Renderer CreateRenderer(object parent, IOpenGfx[] gfx, ISource source, object obj, string type) {
+        if (gfx == null) return null;
         if (obj is IHaveSource z) source = z.Source;
         return type switch {
             "TestTri" => new TestTriRenderer(gfx, source, obj),

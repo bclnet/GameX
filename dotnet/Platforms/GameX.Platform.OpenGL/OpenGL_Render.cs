@@ -7,7 +7,7 @@ namespace GameX.Platforms.OpenGL;
 
 public static class OpenGLRenderer {
     static OpenGLRenderer() {
-        OpenGLPlatform.BuildersByType[typeof(Binary_Nif)] = OpenGLNifObjectBuilder.BuildObject;
+        OpenGLX.BuildersByType[typeof(Binary_Nif)] = OpenGLNifObjectBuilder.BuildObject;
     }
     public static Renderer CreateRenderer(object parent, IOpenGfx[] gfx, ISource source, object obj, string type) {
         if (obj is IHaveSource z) source = z.Source;

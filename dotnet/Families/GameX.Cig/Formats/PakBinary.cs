@@ -1,7 +1,7 @@
-﻿using ICSharpCode.SharpZipLib.Zip;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -15,9 +15,9 @@ public class PakBinary_P4k : ArcBinary<PakBinary_P4k> {
     readonly byte[] Key = [0x5E, 0x7A, 0x20, 0x02, 0x30, 0x2E, 0xEB, 0x1A, 0x3B, 0xB6, 0x17, 0xC3, 0x0F, 0xDE, 0x1E, 0x47];
 
     protected class SubArchiveP4k : BinaryArchive {
-        P4kFile Arc;
+        P4kArchive Arc;
 
-        public SubArchiveP4k(BinaryArchive parent, P4kFile arc, string path, object tag) : base(parent, new BinaryState(parent.Vfx, parent.Game, parent.Edition, path, tag), Current) {
+        public SubArchiveP4k(BinaryArchive parent, P4kArchive arc, string path, object tag) : base(parent, new BinaryState(parent.Vfx, parent.Game, parent.Edition, path, tag), Current) {
             AssetFactoryFunc = parent.AssetFactoryFunc;
             Arc = arc;
             UseReader = false;
@@ -25,8 +25,8 @@ public class PakBinary_P4k : ArcBinary<PakBinary_P4k> {
         }
 
         public async override Task Read(object tag) {
-            var entry = (P4kEntry)Tag;
-            var stream = Arc.GetInputStream(entry.ZipFileIndex);
+            var entry = (ZipArchiveEntry)Tag;
+            var stream = entry.Open2();
             using var r2 = new BinaryReader(stream);
             await ArcBinary.Read(this, r2, tag);
         }
@@ -36,15 +36,15 @@ public class PakBinary_P4k : ArcBinary<PakBinary_P4k> {
         source.UseReader = false;
         var files = source.Files = [];
 
-        var arc = (P4kFile)(source.Tag = new P4kFile(r.BaseStream, Key));
+        var arc = (P4kArchive)(source.Tag = new P4kArchive(r.BaseStream, source.BinPath, Key));
         var parentByPath = new Dictionary<string, FileSource>();
         var partsByPath = new Dictionary<string, SortedList<string, FileSource>>();
-        foreach (ZipEntry entry in arc) {
+        foreach (var entry in arc.Entries) {
             var metadata = new FileSource {
                 Path = entry.Name.Replace('\\', '/'),
-                Flags = entry.Flags,
-                PackedSize = entry.CompressedSize,
-                FileSize = entry.Size,
+                //Flags = entry.Flags,
+                PackedSize = entry.CompressedLength,
+                FileSize = entry.Length,
                 Tag = entry,
             };
             var metadataPath = metadata.Path;
@@ -68,17 +68,17 @@ public class PakBinary_P4k : ArcBinary<PakBinary_P4k> {
     }
 
     public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
-        var arc = (P4kFile)source.Tag;
-        var entry = (ZipEntry)file.Tag;
+        var arc = (P4kArchive)source.Tag;
+        var entry = (ZipArchiveEntry)file.Tag;
         try {
-            using var input = arc.GetInputStream(entry.ZipFileIndex);
+            using var input = entry.Open2();
             if (!input.CanRead) { HandleException(file, option, $"Unable to read stream for file: {file.Path}"); return Task.FromResult(System.IO.Stream.Null); }
             var s = new MemoryStream();
             input.CopyTo(s);
             if (file.Parts != null)
                 foreach (var part in file.Parts.Reverse()) {
-                    var entry2 = (ZipEntry)part.Tag;
-                    using var input2 = arc.GetInputStream(entry2.ZipFileIndex);
+                    var entry2 = (ZipArchiveEntry)part.Tag;
+                    using var input2 = entry2.Open2();
                     if (!input2.CanRead) { HandleException(file, option, $"Unable to read stream for file: {part.Path}"); return Task.FromResult(System.IO.Stream.Null); }
                     input2.CopyTo(s);
                 }
@@ -90,37 +90,37 @@ public class PakBinary_P4k : ArcBinary<PakBinary_P4k> {
 
     #region Write
 
-    public override Task Write(BinaryArchive source, BinaryWriter w, object tag) {
-        source.UseReader = false;
-        var files = source.Files;
+    //public override Task Write(BinaryArchive source, BinaryWriter w, object tag) {
+    //    source.UseReader = false;
+    //    var files = source.Files;
 
-        var arc = (P4kFile)(source.Tag = new P4kFile(w.BaseStream, Key));
-        arc.BeginUpdate();
-        foreach (var file in files) {
-            var entry = (ZipEntry)(file.Tag = new ZipEntry(Path.GetFileName(file.Path)));
-            arc.Add(entry);
-            source.ArcBinary.WriteData(source, w, file, null);
-        }
-        arc.CommitUpdate();
-        return Task.CompletedTask;
-    }
+    //    var arc = (P4kArchive)(source.Tag = new P4kArchive(w.BaseStream, source.BinPath, Key));
+    //    arc.BeginUpdate();
+    //    foreach (var file in files) {
+    //        var entry = (ZipArchiveEntry)(file.Tag = new ZipArchiveEntry(Path.GetFileName(file.Path)));
+    //        arc.Add(entry);
+    //        source.ArcBinary.WriteData(source, w, file, null);
+    //    }
+    //    arc.CommitUpdate();
+    //    return Task.CompletedTask;
+    //}
 
-    public override Task WriteData(BinaryArchive source, BinaryWriter w, FileSource file, Stream data, object option = default) {
-        var arc = (P4kFile)source.Tag;
-        var entry = (ZipEntry)file.Tag;
-        try {
-            using var s = arc.GetInputStream(entry);
-            data.CopyTo(s);
-            if (file.Parts != null)
-                foreach (var part in file.Parts.Reverse()) {
-                    var entry2 = (ZipEntry)part.Tag;
-                    using var s2 = arc.GetInputStream(entry);
-                    data.CopyTo(s2);
-                }
-        }
-        catch (Exception e) { HandleException(file, option, $"Exception: {e.Message}"); }
-        return Task.CompletedTask;
-    }
+    //public override Task WriteData(BinaryArchive source, BinaryWriter w, FileSource file, Stream data, object option = default) {
+    //    var arc = (P4kArchive)source.Tag;
+    //    var entry = (ZipArchiveEntry)file.Tag;
+    //    try {
+    //        using var s = entry.Open2();
+    //        data.CopyTo(s);
+    //        if (file.Parts != null)
+    //            foreach (var part in file.Parts.Reverse()) {
+    //                var entry2 = (ZipArchiveEntry)part.Tag;
+    //                using var s2 = entry2.Open2();
+    //                data.CopyTo(s2);
+    //            }
+    //    }
+    //    catch (Exception e) { HandleException(file, option, $"Exception: {e.Message}"); }
+    //    return Task.CompletedTask;
+    //}
 
     #endregion
 }

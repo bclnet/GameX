@@ -119,8 +119,6 @@
     <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.11" />
     <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3.osx" Version="1.1.14" />
     <PackageReference Include="SQLitePCLRaw.provider.e_sqlite3" Version="3.0.3" />
-    <PackageReference Include="SharpZipLib.P4k" Version="1.0.3" />
-    <PackageReference Include="SharpZipLib.Cry3" Version="1.0.3" />
   </ItemGroup>
 
   <ItemGroup>

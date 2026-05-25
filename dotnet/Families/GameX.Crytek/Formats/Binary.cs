@@ -1,7 +1,7 @@
-﻿using ICSharpCode.SharpZipLib.Zip;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
@@ -101,18 +101,18 @@ public unsafe class Binary_Cry3 : ArcBinary<Binary_Cry3> {
     public Binary_Cry3(byte[] key = null) => Key = key;
 
     public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
-        var files = source.Files = new List<FileSource>();
+        var files = source.Files = [];
         source.UseReader = false;
 
-        var arc = (Cry3File)(source.Tag = new Cry3File(r.BaseStream, Key));
+        var arc = (Cry3Archive)(source.Tag = new Cry3Archive(r.BaseStream, source.BinPath, Key));
         var parentByPath = new Dictionary<string, FileSource>();
         var partByPath = new Dictionary<string, SortedList<string, FileSource>>();
-        foreach (ZipEntry entry in arc) {
+        foreach (var entry in arc.Entries) {
             var metadata = new FileSource {
                 Path = entry.Name.Replace('\\', '/'),
-                Flags = entry.Flags,
-                PackedSize = entry.CompressedSize,
-                FileSize = entry.Size,
+                //Flags = entry.Flags,
+                PackedSize = entry.CompressedLength,
+                FileSize = entry.Length,
                 Tag = entry,
             };
             var metadataPath = metadata.Path;
@@ -133,25 +133,25 @@ public unsafe class Binary_Cry3 : ArcBinary<Binary_Cry3> {
         return Task.CompletedTask;
     }
 
-    public override Task Write(BinaryArchive source, BinaryWriter w, object tag) {
-        source.UseReader = false;
-        var files = source.Files;
-        var arc = (Cry3File)(source.Tag = new Cry3File(w.BaseStream, Key));
-        arc.BeginUpdate();
-        foreach (var file in files) {
-            var entry = (ZipEntry)(file.Tag = new ZipEntry(Path.GetFileName(file.Path)));
-            arc.Add(entry);
-            source.ArcBinary.WriteData(source, w, file, null);
-        }
-        arc.CommitUpdate();
-        return Task.CompletedTask;
-    }
+    //public override Task Write(BinaryArchive source, BinaryWriter w, object tag) {
+    //    source.UseReader = false;
+    //    var files = source.Files;
+    //    var arc = (Cry3Archive)(source.Tag = new Cry3Archive(w.BaseStream, source.BinPath, Key));
+    //    //arc.BeginUpdate();
+    //    foreach (var file in files) {
+    //        //var entry = (ZipEntry)(file.Tag = new ZipEntry(Path.GetFileName(file.Path)));
+    //        //arc.Add(entry);
+    //        source.ArcBinary.WriteData(source, w, file, null);
+    //    }
+    //    //arc.CommitUpdate();
+    //    return Task.CompletedTask;
+    //}
 
     public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
-        var arc = (Cry3File)source.Tag;
-        var entry = (ZipEntry)file.Tag;
+        var arc = (Cry3Archive)source.Tag;
+        var entry = (ZipArchiveEntry)file.Tag;
         try {
-            using var input = arc.GetInputStream(entry);
+            using var input = entry.Open2();
             if (!input.CanRead) { HandleException(file, option, $"Unable to read stream for file: {file.Path}"); return Task.FromResult(System.IO.Stream.Null); }
             var s = new MemoryStream();
             input.CopyTo(s);
@@ -161,16 +161,16 @@ public unsafe class Binary_Cry3 : ArcBinary<Binary_Cry3> {
         catch (Exception e) { HandleException(file, option, $"{file.Path} - Exception: {e.Message}"); return Task.FromResult(System.IO.Stream.Null); }
     }
 
-    public override Task WriteData(BinaryArchive source, BinaryWriter w, FileSource file, Stream data, object option = default) {
-        var arc = (Cry3File)source.Tag;
-        var entry = (ZipEntry)file.Tag;
-        try {
-            using var s = arc.GetInputStream(entry);
-            data.CopyTo(s);
-        }
-        catch (Exception e) { HandleException(file, option, $"Exception: {e.Message}"); }
-        return Task.CompletedTask;
-    }
+    //public override Task WriteData(BinaryArchive source, BinaryWriter w, FileSource file, Stream data, object option = default) {
+    //    var arc = (Cry3Archive)source.Tag;
+    //    var entry = (ZipEntry)file.Tag;
+    //    try {
+    //        using var s = arc.GetInputStream(entry);
+    //        data.CopyTo(s);
+    //    }
+    //    catch (Exception e) { HandleException(file, option, $"Exception: {e.Message}"); }
+    //    return Task.CompletedTask;
+    //}
 }
 
 #endregion

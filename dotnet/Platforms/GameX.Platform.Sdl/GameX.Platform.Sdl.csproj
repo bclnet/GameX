@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="ppy.SDL3-CS" Version="2026.429.0" />
+    <PackageReference Include="ppy.SDL3-CS" Version="2026.520.0" />
   </ItemGroup>
 
   <ItemGroup>

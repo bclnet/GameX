@@ -1,7 +1,6 @@
 from __future__ import annotations
 from openstk.core import ISource, IHaveSource
-from openstk.platforms.panda3d import Panda3dPlatform
-from openstk.platforms.panda3d.gfx import TestTriRenderer, TextureRenderer, ObjectRenderer, EngineRenderer
+from openstk.platforms.panda3d.gfx import Panda3dX, TestTriRenderer, TextureRenderer, ObjectRenderer, EngineRenderer
 from gamex.platforms.panda3d.panda3dnifobjectbuilder import Panda3dNifObjectBuilder
 
 # typedefs
@@ -9,7 +8,7 @@ class IOpenGfx: pass
 class Renderer: pass
 
 # Panda3dRenderer
-Panda3dPlatform.buildersByType['Binary_Nif'] = Panda3dNifObjectBuilder.buildObject
+Panda3dX.buildersByType['Binary_Nif'] = Panda3dNifObjectBuilder.buildObject
 class Panda3dRenderer:
     @staticmethod
     def createRenderer(parent: object, gfx: list[IOpenGfx], source: ISource, obj: object, type: str) -> Renderer:

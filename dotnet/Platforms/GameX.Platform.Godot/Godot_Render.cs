@@ -13,8 +13,7 @@ public static class GodotRenderer {
         return type switch {
             "TestTri" => new TestTriRenderer(parent as Node, gfx, source, obj),
             "Texture" => new TextureRenderer(parent as Node, gfx, source, obj, 0..),
-            //"Object" => new ObjectRenderer(parent as Node, gfx, source, obj),
-            //"Cell" => new CellRenderer(parent as Node, gfx, source, obj),
+            "Object" => new ObjectRenderer(parent as Node, gfx, source, obj),
             //"Engine" => new EngineRenderer(parent as Node, gfx, source, obj),
             _ => default
         };
@@ -24,32 +23,40 @@ public static class GodotRenderer {
 public class ViewInfo : Node {
     static ViewInfo() => PlatformX.Activate(GodotPlatform.This);
 
-    public string FamilyId = "Bethesda";
-    public string ArcUri = "game:/#Morrowind";
+    public string FamilyId = "Arkane";
+    public string ArcUri = "game:/#AF";
     public string Type = "Texture";
-    public string Path = "Morrowind.bsa:bookart/boethiah_256.dds";
-    //public string Path = "meshes/x/ex_common_balcony_01.nif";
+    public string Path = "Graph/interface/misc/quit1.bmp";
+
+    //public string FamilyId = "Bethesda";
+    //public string ArcUri = "game:/#Morrowind";
+    //public string Type = "Texture";
+    //public string Path = "Morrowind.bsa:bookart/boethiah_256.dds";
+    ////public string Path = "meshes/x/ex_common_balcony_01.nif";
 
     protected Family Family;
     protected Archive Source;
     Renderer Renderer;
 
     public override void _Ready() {
-        // parse args
-        var args = System.Environment.GetCommandLineArgs();
-        ShellState s;
-        if (args.Length > 1 && (s = ShellState.Parse(args[1])) != null) { FamilyId = s.FamilyId; ArcUri = s.ArcUri; Type = s.Type; Path = s.Path; }
-        //Log.Info($"FamilyId: '{FamilyId}'");
-        //Log.Info($"ArcUri: '{ArcUri}'");
-        //Log.Info($"Type: '{Type}'");
-        //Log.Info($"Path: '{Path}'");
+        try {
+            // parse args
+            var args = System.Environment.GetCommandLineArgs();
+            ShellState s;
+            if (args.Length > 1 && (s = ShellState.Parse(args[1])) != null) { FamilyId = s.FamilyId; ArcUri = s.ArcUri; Type = s.Type; Path = s.Path; }
+            //Log.Info($"FamilyId: '{FamilyId}'");
+            //Log.Info($"ArcUri: '{ArcUri}'");
+            //Log.Info($"Type: '{Type}'");
+            //Log.Info($"Path: '{Path}'");
 
-        if (string.IsNullOrEmpty(FamilyId)) return;
-        Family = FamilyManager.GetFamily(FamilyId);
-        if (!string.IsNullOrEmpty(ArcUri)) Source = Family.GetArchive(new Uri(ArcUri));
-        var value = Source.GetAsset<object>(Path).Result;
-        Renderer = GodotRenderer.CreateRenderer(this, PlatformX.Gfx, Source, value, Type);
-        Renderer?.Start();
+            if (string.IsNullOrEmpty(FamilyId)) return;
+            Family = FamilyManager.GetFamily(FamilyId);
+            if (!string.IsNullOrEmpty(ArcUri)) Source = Family.GetArchive(new Uri(ArcUri));
+            var value = Source.GetAsset<object>(Path).Result;
+            Renderer = GodotRenderer.CreateRenderer(this, PlatformX.Gfx, Source, value, Type);
+            Renderer?.Start();
+        }
+        catch (Exception e) { Log.Exception(e); }
     }
 
     public override void _Process(double delta) => Renderer?.Update((float)delta);

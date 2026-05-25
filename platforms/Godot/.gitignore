@@ -16,5 +16,6 @@ data_*/
 mono_crash.*.json
 
 # GameX Simlinks
-**/assets/GameX/*
+**/Assets/Plugins/GameX*/*
+**/Assets/Plugins/System*/*
 **/assets/Packages/*

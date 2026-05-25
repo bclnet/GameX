@@ -26,7 +26,6 @@ public static class UnityRenderer {
     }
 }
 
-
 public class ViewInfo : UnityEngine.MonoBehaviour {
     static ViewInfo() => PlatformX.Activate(UnityPlatform.This);
 

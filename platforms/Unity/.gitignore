@@ -20,5 +20,5 @@ UIElementsSchema/
 **/Assets/Plugins/**/*
 
 # GameX Simlinks
-**/Assets/Plugins/GameX/*
-**/Assets/Plugins/System/*
+**/Assets/Plugins/GameX*/*
+**/Assets/Plugins/System*/*

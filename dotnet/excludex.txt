@@ -1,7 +1,7 @@
 ﻿# Header
 GameX.All.
 GameX.Platform.
-GameX.Arkane.
+#_GameX.Arkane.
 #GameX.Bethesda.
 #GameX.Bioware.
 GameX.Black.
@@ -11,13 +11,13 @@ GameX.Bullfrog.
 GameX.Capcom.
 GameX.Cig.
 GameX.Cryptic.
-GameX.Crytek.
+#_GameX.Crytek.
 GameX.Cyanide.
 GameX.EA.
-GameX.Epic.
+#_GameX.Epic.
 GameX.Frictional.
 GameX.Frontier.
-GameX.ID.
+#_GameX.ID.
 GameX.IW.
 GameX.Lucas.
 GameX.Monolith.
@@ -26,7 +26,7 @@ GameX.Red.
 GameX.Rockstar.
 GameX.Ubisoft.
 GameX.Unity.
-GameX.Valve.
+#_GameX.Valve.
 GameX.Volition.
 GameX.WB.
 GameX.X2X.

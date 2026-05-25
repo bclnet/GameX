@@ -282,7 +282,7 @@ class ManyArchive(BinaryArchive):
     def readData(self, file: FileSource, option: object = None) -> BytesIO:
         if file.arc: file.arc.readData(file, option)
         data = self.vfx.open(file.path)
-        return data if isinstance(data, BytesIO) else BytesIO(data.readall()) # .readBytes(file.fileSize))
+        return data if isinstance(data, BytesIO) else BytesIO(data.read(-1)) # .readBytes(file.fileSize)) #data.readall()
     #endregion
 
 # MultiArchive

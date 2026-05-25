@@ -1,4 +1,6 @@
 O3de
 ===============
 
-TBD
+https://o3de.org/download/
+version 25.10.2
+

@@ -1,6 +1,6 @@
-﻿//#define Arkane
+﻿#define Arkane
 //#define Beamdog
-#define Bethesda
+//#define Bethesda
 //#define Bioware
 //#define Black
 //#define Blizzard
@@ -55,7 +55,7 @@ public partial class FamilyManager {
     {
         Platform = "GL",
         ForceOpen = true,
-        ForcePath = "sample:4",
+        ForcePath = "sample:1",
         Family = "Arkane",
         Game = "AF", // Arx Fatalis
         //Game = "DOM", // Dark Messiah of Might and Magic [source]

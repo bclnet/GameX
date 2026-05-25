@@ -1,0 +1,9 @@
+[Bb]uild/
+[Cc]ache/
+[Uu]ser/
+_savebackup/
+CMakeUserPresets.json
+
+# GameX Simlinks
+**/Assets/Plugins/GameX*/*
+**/Assets/Plugins/System*/*

@@ -406,10 +406,10 @@ MonoBehaviour:
   m_Script: {fileID: -1546406650, guid: 48f9829f31687fc49ae8af4865d38604, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  FamilyId: Bethesda
-  ArcUri: game:/#Morrowind
-  Type: Engine
-  Path: Morrowind.start
+  FamilyId: Arkane
+  ArcUri: game:/#AF
+  Type: Texture
+  Path: Graph/interface/misc/quit1.bmp
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0

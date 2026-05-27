@@ -2,6 +2,7 @@ using GameX.Uncore.Formats.Apple;
 using ICSharpCode.SharpZipLib.Zip;
 using OpenStack;
 using OpenStack.Gfx;
+using SkiaSharp;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -575,34 +576,40 @@ public unsafe class Binary_Img : IHaveMetaInfo, ITexture {
 
     #endregion
 
-    //enum Formats { Bmp, Gif, Exif, Jpg, Png, Tiff }
-
+    readonly bool CapsDrawing;
     readonly byte[] Bytes;
-    readonly Bitmap Image;
+    readonly IDisposable Image; // Bmp, Gif, Exif, Jpg, Png, Tiff
 
     public Binary_Img(BinaryReader r, FileSource f) {
-        Image = new Bitmap(new MemoryStream(r.ReadBytes((int)f.FileSize)));
-        Width = Image.Width; Height = Image.Height;
-        var data = Image.LockBits(new Rectangle(0, 0, Image.Width, Image.Height), ImageLockMode.ReadOnly, Image.PixelFormat);
-        var bytes = new byte[data.Stride * data.Height];
-        Marshal.Copy(data.Scan0, bytes, 0, bytes.Length);
-        Image.UnlockBits(data);
-        var palette = Image.Palette?.Entries;
-        Format = Image.PixelFormat switch {
-            PixelFormat.Format16bppGrayScale => ((string type, object value))(Image.RawFormat.ToString(), (TextureFormat.L8, TexturePixel.Unknown)),
-            PixelFormat.Format8bppIndexed => ((string type, object value))(Image.RawFormat.ToString(), (TextureFormat.RGB24, TexturePixel.Unknown)),
-            PixelFormat.Format24bppRgb => ((string type, object value))(Image.RawFormat.ToString(), (TextureFormat.RGB24, TexturePixel.Unknown)),
-            PixelFormat.Format32bppRgb => ((string type, object value))(Image.RawFormat.ToString(), (TextureFormat.RGBA32, TexturePixel.Unknown)),
-            PixelFormat.Format32bppArgb => ((string type, object value))(Image.RawFormat.ToString(), (TextureFormat.ARGB32, TexturePixel.Unknown)),
-            _ => throw new ArgumentOutOfRangeException($"Unknown format: {Image.PixelFormat}"),
-        };
-
-        // decode
-        if (palette == null || palette.Length == 0) Bytes = bytes;
+        CapsDrawing = PlatformX.Current.Caps.HasFlag(PlatformX.Caps.Drawing);
+        if (CapsDrawing) {
+            var image = (Bitmap)(Image = new Bitmap(new MemoryStream(r.ReadBytes((int)f.FileSize))));
+            Width = image.Width; Height = image.Height;
+            var data = image.LockBits(new Rectangle(0, 0, image.Width, image.Height), ImageLockMode.ReadOnly, image.PixelFormat);
+            var bytes = new byte[data.Stride * data.Height];
+            Marshal.Copy(data.Scan0, bytes, 0, bytes.Length);
+            image.UnlockBits(data);
+            var palette = image.Palette?.Entries;
+            Format = image.PixelFormat switch {
+                PixelFormat.Format16bppGrayScale => ((string type, object value))(image.RawFormat.ToString(), (TextureFormat.L8, TexturePixel.Unknown)),
+                PixelFormat.Format8bppIndexed => ((string type, object value))(image.RawFormat.ToString(), (TextureFormat.RGB24, TexturePixel.Unknown)),
+                PixelFormat.Format24bppRgb => ((string type, object value))(image.RawFormat.ToString(), (TextureFormat.RGB24, TexturePixel.Unknown)),
+                PixelFormat.Format32bppRgb => ((string type, object value))(image.RawFormat.ToString(), (TextureFormat.RGBA32, TexturePixel.Unknown)),
+                PixelFormat.Format32bppArgb => ((string type, object value))(image.RawFormat.ToString(), (TextureFormat.ARGB32, TexturePixel.Unknown)),
+                _ => throw new ArgumentOutOfRangeException($"Unknown format: {image.PixelFormat}"),
+            };
+            // decode
+            if (palette == null || palette.Length == 0) Bytes = bytes;
+            else {
+                var pal = palette.SelectMany<Color, byte>(x => [x.R, x.G, x.B]).ToArray();
+                Bytes = new byte[Width * Height * 3];
+                Raster.BlitByPalette(Bytes, 3, bytes, pal, 3);
+            }
+        }
         else {
-            var pal = palette.SelectMany<Color, byte>(x => [x.R, x.G, x.B]).ToArray();
-            Bytes = new byte[Width * Height * 3];
-            Raster.BlitByPalette(Bytes, 3, bytes, pal, 3);
+            var image = (SKBitmap)(Image = SKBitmap.Decode(new MemoryStream(r.ReadBytes((int)f.FileSize))));
+            Width = image.Width; Height = image.Height;
+            throw new NotImplementedException("Binary_Img");
         }
     }
 

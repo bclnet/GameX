@@ -237,7 +237,7 @@ static class Store_Gog {
         return paths.FirstOrDefault(Directory.Exists);
     }
     static Store_Gog() {
-        SetProvider(new SQLite3Provider_e_sqlite3());
+        Batteries.Init(); //SetProvider(new SQLite3Provider_e_sqlite3());
         string dbPath;
         var paths = Paths;
         var root = GetPath();

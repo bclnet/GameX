@@ -1,8 +1,9 @@
 
-mklink /D System ..\..\..\..\..\OpenStack\dotnet\Platforms\Unity\Plugins\System
 mklink /D GameX ..\..\..\..\Plugins\GameX\Debug
 mklink /D GameX.Platform.Unity ..\..\..\..\Plugins\GameX.Platform.Unity\Debug
 mklink /D GameX.Resource ..\..\..\..\Plugins\GameX.Resource\Debug
+mklink /D System ..\..\..\..\..\OpenStack\dotnet\Platforms\Unity\Plugins\System
+mklink /D Packages ..\..\..\..\Plugins\Packages
 
 OpenTK
 

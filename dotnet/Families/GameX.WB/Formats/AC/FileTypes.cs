@@ -2,16 +2,18 @@ using GameX.WB.Formats.AC.AnimationHooks;
 using GameX.WB.Formats.AC.Entity;
 using GameX.WB.Formats.AC.Props;
 using OpenStack.Gfx;
+using SkiaSharp;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text;
+using System.Drawing.Imaging;
 using static GameX.WB.Formats.AC.Props.SurfacePixelFormat;
+using OpenStack;
 
 namespace GameX.WB.Formats.AC.FileTypes;
 
@@ -2103,6 +2105,7 @@ public class TabooTable : FileType, IHaveMetaInfo {
 #region Texture
 [ArchiveType(ArchiveType.Texture)]
 public unsafe class Texture : FileType, IHaveMetaInfo, ITexture {
+    readonly bool CapsDrawing;
     public readonly int Unknown;
     public readonly SurfacePixelFormat PixFormat;
     public readonly int Length;
@@ -2110,6 +2113,7 @@ public unsafe class Texture : FileType, IHaveMetaInfo, ITexture {
     public readonly uint[] Palette;
 
     public Texture(BinaryReader r, FamilyGame game) {
+        CapsDrawing = PlatformX.Current.Caps.HasFlag(PlatformX.Caps.Drawing);
         Id = r.ReadUInt32();
         Unknown = r.ReadInt32();
         Width = r.ReadInt32();
@@ -2120,9 +2124,16 @@ public unsafe class Texture : FileType, IHaveMetaInfo, ITexture {
         var hasPalette = PixFormat == PFID_INDEX16 || PixFormat == PFID_P8;
         Palette = hasPalette ? DatabaseManager.Portal.GetFile<Palette>(r.ReadUInt32()).Colors : null;
         if (PixFormat == PFID_CUSTOM_RAW_JPEG) {
-            using var image = new Bitmap(new MemoryStream(SourceData));
-            Width = image.Width;
-            Height = image.Height;
+            if (CapsDrawing) {
+                using var image = new Bitmap(new MemoryStream(SourceData));
+                Width = image.Width;
+                Height = image.Height;
+            }
+            else {
+                using var image = SKBitmap.Decode(new MemoryStream(SourceData));
+                Width = image.Width;
+                Height = image.Height;
+            }
         }
         Format = PixFormat switch {
             //PFID_DXT1 => (PixFormat, TextureGLFormat.CompressedRgbaS3tcDxt1Ext, TextureGLFormat.CompressedRgbaS3tcDxt1Ext, TextureUnityFormat.DXT1, TextureUnityFormat.DXT1),
@@ -2153,11 +2164,21 @@ public unsafe class Texture : FileType, IHaveMetaInfo, ITexture {
             switch (PixFormat) {
                 case PFID_CUSTOM_RAW_JPEG: {
                         var d = new byte[Width * Height * 3];
-                        using var image = new Bitmap(new MemoryStream(SourceData));
-                        var data = image.LockBits(new Rectangle(0, 0, image.Width, image.Height), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
-                        var s = (byte*)data.Scan0.ToPointer();
-                        for (var i = 0; i < d.Length; i += 3) { d[i + 0] = s[i + 0]; d[i + 1] = s[i + 1]; d[i + 2] = s[i + 2]; }
-                        image.UnlockBits(data);
+                        if (CapsDrawing) {
+                            using var image = new Bitmap(new MemoryStream(SourceData));
+                            var data = image.LockBits(new Rectangle(0, 0, image.Width, image.Height), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
+                            var s = (byte*)data.Scan0.ToPointer();
+                            for (var i = 0; i < d.Length; i += 3) { d[i + 0] = s[i + 0]; d[i + 1] = s[i + 1]; d[i + 2] = s[i + 2]; }
+                            image.UnlockBits(data);
+                        }
+                        else {
+                            using var image = SKBitmap.Decode(new MemoryStream(SourceData));
+                            throw new NotImplementedException();
+                            //var data = image.Dat.LockBits(new Rectangle(0, 0, image.Width, image.Height), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
+                            //var s = (byte*)data.Scan0.ToPointer();
+                            //for (var i = 0; i < d.Length; i += 3) { d[i + 0] = s[i + 0]; d[i + 1] = s[i + 1]; d[i + 2] = s[i + 2]; }
+                            //image.UnlockBits(data);
+                        }
                         return d;
                     }
                 case PFID_DXT1:

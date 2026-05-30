@@ -36,7 +36,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' == 'Windows_NT'">
-	<Exec Command="xcopy /Y &quot;$(TargetDir)GameX.Platform.Godot*.dll&quot; &quot;$(SolutionDir)..\platforms\Plugins\GameX.Platform.Godot\$(Configuration)\&quot;&#xD;&#xA;xcopy /Y &quot;$(TargetDir)OpenStack.Godot*.dll&quot; &quot;$(SolutionDir)..\platforms\Plugins\GameX.Platform.Godot\$(Configuration)\&quot;" />
+	<Exec Command="xcopy /Y &quot;$(TargetDir)GameX.Platform.Godot*.dll&quot; &quot;$(SolutionDir)..\platforms\Plugins\GameX.Platform.Godot\$(Configuration)\&quot; /EXCLUDE:$(SolutionDir)exclude-platform-godot.txt&#xD;&#xA;xcopy /Y &quot;$(TargetDir)OpenStack.Godot*.dll&quot; &quot;$(SolutionDir)..\platforms\Plugins\GameX.Platform.Godot\$(Configuration)\&quot; /EXCLUDE:$(SolutionDir)exclude-platform-godot.txt" />
   </Target>
 
 </Project>

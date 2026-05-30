@@ -1,0 +1,3 @@
+﻿# Header
+GameX.Platform.Unity.dll
+OpenStack.Unity.dll

@@ -1,5 +1,4 @@
-﻿# Header
-GameX.All.
+﻿GameX.All.
 GameX.Platform.
 #_GameX.Arkane.
 #GameX.Bethesda.

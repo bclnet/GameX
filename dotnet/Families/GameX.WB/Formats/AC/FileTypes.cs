@@ -2,7 +2,6 @@ using GameX.WB.Formats.AC.AnimationHooks;
 using GameX.WB.Formats.AC.Entity;
 using GameX.WB.Formats.AC.Props;
 using OpenStack.Gfx;
-using SkiaSharp;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -2130,9 +2129,10 @@ public unsafe class Texture : FileType, IHaveMetaInfo, ITexture {
                 Height = image.Height;
             }
             else {
-                using var image = SKBitmap.Decode(new MemoryStream(SourceData));
-                Width = image.Width;
-                Height = image.Height;
+                //using var image = SKBitmap.Decode(new MemoryStream(SourceData));
+                //Width = image.Width;
+                //Height = image.Height;
+                throw new NotImplementedException();
             }
         }
         Format = PixFormat switch {
@@ -2172,7 +2172,7 @@ public unsafe class Texture : FileType, IHaveMetaInfo, ITexture {
                             image.UnlockBits(data);
                         }
                         else {
-                            using var image = SKBitmap.Decode(new MemoryStream(SourceData));
+                            //using var image = SKBitmap.Decode(new MemoryStream(SourceData));
                             throw new NotImplementedException();
                             //var data = image.Dat.LockBits(new Rectangle(0, 0, image.Width, image.Height), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
                             //var s = (byte*)data.Scan0.ToPointer();

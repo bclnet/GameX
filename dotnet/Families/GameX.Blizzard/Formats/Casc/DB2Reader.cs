@@ -182,10 +182,7 @@ public abstract class DB2Reader<T> : IEnumerable<KeyValuePair<int, T>> where T :
 
     public bool HasRow(int id) => _Records.ContainsKey(id);
 
-    public T GetRow(int id) {
-        _Records.TryGetValue(id, out T row);
-        return row;
-    }
+    public T GetRow(int id) { _Records.TryGetValue(id, out T row); return row; }
 
     public IEnumerator<KeyValuePair<int, T>> GetEnumerator() => _Records.GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
@@ -198,20 +195,13 @@ public struct FieldMetaData {
 
 [StructLayout(LayoutKind.Explicit)]
 public struct ColumnMetaData {
-    [FieldOffset(0)]
-    public ushort RecordOffset;
-    [FieldOffset(2)]
-    public ushort Size;
-    [FieldOffset(4)]
-    public uint AdditionalDataSize;
-    [FieldOffset(8)]
-    public CompressionType CompressionType;
-    [FieldOffset(12)]
-    public ColumnCompressionData_Immediate Immediate;
-    [FieldOffset(12)]
-    public ColumnCompressionData_Pallet Pallet;
-    [FieldOffset(12)]
-    public ColumnCompressionData_Common Common;
+    [FieldOffset(0)] public ushort RecordOffset;
+    [FieldOffset(2)] public ushort Size;
+    [FieldOffset(4)] public uint AdditionalDataSize;
+    [FieldOffset(8)] public CompressionType CompressionType;
+    [FieldOffset(12)] public ColumnCompressionData_Immediate Immediate;
+    [FieldOffset(12)] public ColumnCompressionData_Pallet Pallet;
+    [FieldOffset(12)] public ColumnCompressionData_Common Common;
 }
 
 public struct ColumnCompressionData_Immediate {
@@ -233,11 +223,8 @@ public struct ColumnCompressionData_Common {
 }
 
 public struct Value32 {
-    private uint Value;
-
-    public T As<T>() where T : unmanaged {
-        return Unsafe.As<uint, T>(ref Value);
-    }
+    uint Value;
+    public T As<T>() where T : unmanaged => Unsafe.As<uint, T>(ref Value);
 }
 
 public enum CompressionType {
@@ -303,45 +290,36 @@ public struct SectionHeader_WDC3 {
 }
 
 public class BitReader {
-    private byte[] m_data;
-    private int m_bitPosition;
-    private int m_offset;
+    byte[] _data;
+    int _bitPosition;
+    int _offset;
 
-    public int Position { get => m_bitPosition; set => m_bitPosition = value; }
-    public int Offset { get => m_offset; set => m_offset = value; }
-    public byte[] Data { get => m_data; set => m_data = value; }
+    public int Position { get => _bitPosition; set => _bitPosition = value; }
+    public int Offset { get => _offset; set => _offset = value; }
+    public byte[] Data { get => _data; set => _data = value; }
 
-    public BitReader(byte[] data) {
-        m_data = data;
-    }
-
-    public BitReader(byte[] data, int offset) {
-        m_data = data;
-        m_offset = offset;
-    }
+    public BitReader(byte[] data) { _data = data; }
+    public BitReader(byte[] data, int offset) { _data = data; _offset = offset; }
 
     public T Read<T>(int numBits) where T : unmanaged {
-        ulong result = Unsafe.As<byte, ulong>(ref m_data[m_offset + (m_bitPosition >> 3)]) << (64 - numBits - (m_bitPosition & 7)) >> (64 - numBits);
-        m_bitPosition += numBits;
+        var result = Unsafe.As<byte, ulong>(ref _data[_offset + (_bitPosition >> 3)]) << (64 - numBits - (_bitPosition & 7)) >> (64 - numBits);
+        _bitPosition += numBits;
         return Unsafe.As<ulong, T>(ref result);
     }
 
     public T ReadSigned<T>(int numBits) where T : unmanaged {
-        ulong result = Unsafe.As<byte, ulong>(ref m_data[m_offset + (m_bitPosition >> 3)]) << (64 - numBits - (m_bitPosition & 7)) >> (64 - numBits);
-        m_bitPosition += numBits;
-        ulong signedShift = (1UL << (numBits - 1));
+        var result = Unsafe.As<byte, ulong>(ref _data[_offset + (_bitPosition >> 3)]) << (64 - numBits - (_bitPosition & 7)) >> (64 - numBits);
+        _bitPosition += numBits;
+        var signedShift = (1UL << (numBits - 1));
         result = (signedShift ^ result) - signedShift;
         return Unsafe.As<ulong, T>(ref result);
     }
 
     public string ReadCString() {
-        int start = m_bitPosition;
-
-        while (m_data[m_offset + (m_bitPosition >> 3)] != 0)
-            m_bitPosition += 8;
-
-        string result = Encoding.UTF8.GetString(m_data, m_offset + (start >> 3), (m_bitPosition - start) >> 3);
-        m_bitPosition += 8;
+        var start = _bitPosition;
+        while (_data[_offset + (_bitPosition >> 3)] != 0) _bitPosition += 8;
+        var result = Encoding.UTF8.GetString(_data, _offset + (start >> 3), (_bitPosition - start) >> 3);
+        _bitPosition += 8;
         return result;
     }
 }
@@ -349,91 +327,50 @@ public class BitReader {
 public class FieldReader {
     public static T GetFieldValue<T>(int id, BitReader r, FieldMetaData fieldMeta, ColumnMetaData columnMeta, Value32[] palletData, Dictionary<int, Value32> commonData) where T : unmanaged {
         switch (columnMeta.CompressionType) {
-            case CompressionType.None:
-                int bitSize = 32 - fieldMeta.Bits;
-                if (bitSize > 0)
-                    return r.Read<T>(bitSize);
-                else
-                    return r.Read<T>(columnMeta.Immediate.BitWidth);
-            case CompressionType.Immediate:
-                return r.Read<T>(columnMeta.Immediate.BitWidth);
-            case CompressionType.SignedImmediate:
-                return r.ReadSigned<T>(columnMeta.Immediate.BitWidth);
-            case CompressionType.Common:
-                if (commonData.TryGetValue(id, out Value32 val))
-                    return val.As<T>();
-                else
-                    return columnMeta.Common.DefaultValue.As<T>();
-            case CompressionType.Pallet:
-                uint palletIndex = r.Read<uint>(columnMeta.Pallet.BitWidth);
-                return palletData[palletIndex].As<T>();
+            case CompressionType.None: var bitSize = 32 - fieldMeta.Bits; return r.Read<T>(bitSize > 0 ? bitSize : columnMeta.Immediate.BitWidth);
+            case CompressionType.Immediate: return r.Read<T>(columnMeta.Immediate.BitWidth);
+            case CompressionType.SignedImmediate: return r.ReadSigned<T>(columnMeta.Immediate.BitWidth);
+            case CompressionType.Common: return commonData.TryGetValue(id, out var val) ? val.As<T>() : columnMeta.Common.DefaultValue.As<T>();
+            case CompressionType.Pallet: var palletIndex = r.Read<uint>(columnMeta.Pallet.BitWidth); return palletData[palletIndex].As<T>();
+            default: throw new Exception($"Unexpected compression type {columnMeta.CompressionType}");
         }
-        throw new Exception(string.Format("Unexpected compression type {0}", columnMeta.CompressionType));
     }
 
     public static T[] GetFieldValueArray<T>(BitReader r, FieldMetaData fieldMeta, ColumnMetaData columnMeta, Value32[] palletData, Dictionary<int, Value32> commonData, int arraySize) where T : unmanaged {
         switch (columnMeta.CompressionType) {
             case CompressionType.None:
-                int bitSize = 32 - fieldMeta.Bits;
-
-                T[] arr1 = new T[arraySize];
-
-                for (int i = 0; i < arr1.Length; i++) {
-                    if (bitSize > 0)
-                        arr1[i] = r.Read<T>(bitSize);
-                    else
-                        arr1[i] = r.Read<T>(columnMeta.Immediate.BitWidth);
-                }
-
+                var bitSize = 32 - fieldMeta.Bits;
+                var arr1 = new T[arraySize];
+                for (var i = 0; i < arr1.Length; i++) arr1[i] = r.Read<T>(bitSize > 0 ? bitSize : columnMeta.Immediate.BitWidth);
                 return arr1;
             case CompressionType.Immediate:
-                T[] arr2 = new T[arraySize];
-
-                for (int i = 0; i < arr2.Length; i++)
-                    arr2[i] = r.Read<T>(columnMeta.Immediate.BitWidth);
-
+                var arr2 = new T[arraySize];
+                for (var i = 0; i < arr2.Length; i++) arr2[i] = r.Read<T>(columnMeta.Immediate.BitWidth);
                 return arr2;
             case CompressionType.SignedImmediate:
-                T[] arr3 = new T[arraySize];
-
-                for (int i = 0; i < arr3.Length; i++)
-                    arr3[i] = r.ReadSigned<T>(columnMeta.Immediate.BitWidth);
-
+                var arr3 = new T[arraySize];
+                for (var i = 0; i < arr3.Length; i++) arr3[i] = r.ReadSigned<T>(columnMeta.Immediate.BitWidth);
                 return arr3;
             case CompressionType.PalletArray:
-                int cardinality = columnMeta.Pallet.Cardinality;
-
-                if (arraySize != cardinality)
-                    throw new Exception("Struct missmatch for pallet array field?");
-
-                uint palletArrayIndex = r.Read<uint>(columnMeta.Pallet.BitWidth);
-
-                T[] arr4 = new T[cardinality];
-
-                for (int i = 0; i < arr4.Length; i++)
-                    arr4[i] = palletData[i + cardinality * (int)palletArrayIndex].As<T>();
-
+                var cardinality = columnMeta.Pallet.Cardinality;
+                if (arraySize != cardinality) throw new Exception("Struct missmatch for pallet array field?");
+                var palletArrayIndex = r.Read<uint>(columnMeta.Pallet.BitWidth);
+                var arr4 = new T[cardinality];
+                for (var i = 0; i < arr4.Length; i++) arr4[i] = palletData[i + cardinality * (int)palletArrayIndex].As<T>();
                 return arr4;
+            default: throw new Exception($"Unexpected compression type {columnMeta.CompressionType}");
         }
-        throw new Exception(string.Format("Unexpected compression type {0}", columnMeta.CompressionType));
     }
 
     public static string[] GetFieldValueStringsArray(BitReader r, FieldMetaData fieldMeta, ColumnMetaData columnMeta, Value32[] palletData, Dictionary<int, Value32> commonData, Dictionary<long, string> stringsTable, bool isSparse, int recordOffset, int arraySize) {
-        string[] array = new string[arraySize];
-
-        if (isSparse) {
-            for (int i = 0; i < array.Length; i++)
-                array[i] = r.ReadCString();
-        }
+        var array = new string[arraySize];
+        if (isSparse)
+            for (var i = 0; i < array.Length; i++) array[i] = r.ReadCString();
         else {
             var pos = recordOffset + (r.Position >> 3);
-
-            int[] strIdx = GetFieldValueArray<int>(r, fieldMeta, columnMeta, palletData, commonData, arraySize);
-
-            for (int i = 0; i < array.Length; i++)
-                array[i] = stringsTable[pos + i * 4 + strIdx[i]];
+            var strIdx = GetFieldValueArray<int>(r, fieldMeta, columnMeta, palletData, commonData, arraySize);
+            for (var i = 0; i < array.Length; i++) array[i] = stringsTable[pos + i * 4 + strIdx[i]];
         }
-
         return array;
     }
 }
@@ -446,8 +383,7 @@ public class FieldsCache<T> {
 
         fieldsCache = new FieldCache[fields.Length];
 
-        for (int i = 0; i < fields.Length; i++)
-            fieldsCache[i] = (FieldCache)Activator.CreateInstance(typeof(FieldCache<,>).MakeGenericType(typeof(T), fields[i].FieldType), fields[i]);
+        for (var i = 0; i < fields.Length; i++) fieldsCache[i] = (FieldCache)Activator.CreateInstance(typeof(FieldCache<,>).MakeGenericType(typeof(T), fields[i].FieldType), fields[i]);
 
         //Console.WriteLine($"FieldsCache<{typeof(T).Name}> created");
     }

@@ -1100,7 +1100,7 @@ public struct MipMap(NiReader r) { // X
 public struct BoneVertData(NiReader r, bool full) { // X
     public static (string, int) Struct = ("<Hf", 6);
     public ushort Index = r.ReadUInt16();               // The vertex index, in the mesh.
-    public float Weight = full ? r.ReadSingle() : r.ReadHalf(); // The vertex weight - between 0.0 and 1.0
+    public float Weight = full ? r.ReadSingle() : (float)r.ReadHalf(); // The vertex weight - between 0.0 and 1.0
 }
 
 /// <summary>
@@ -1328,7 +1328,7 @@ public struct TexCoord { // X
         v = r.ReadSingle();
     }
     public TexCoord(double u, double v) { this.u = (float)u; this.v = (float)v; }
-    public TexCoord(NiReader r, bool half) { u = half ? r.ReadHalf() : r.ReadSingle(); v = half ? r.ReadHalf() : r.ReadSingle(); }
+    public TexCoord(NiReader r, bool half) { u = half ? (float)r.ReadHalf() : r.ReadSingle(); v = half ? (float)r.ReadHalf() : r.ReadSingle(); }
 }
 
 /// <summary>
@@ -1449,7 +1449,7 @@ public class BSVertexData { // Z
         if (arg.HasFlag(VertexFlags.Vertex)) {
             Vertex = full ? r.ReadVector3() : r.ReadHalfVector3();
             if (tangents) {
-                BitangentX = full ? r.ReadSingle() : r.ReadHalf();
+                BitangentX = full ? r.ReadSingle() : (float)r.ReadHalf();
             }
             else {
                 UnknownInt = full ? r.ReadUInt32() : r.ReadUInt16();
@@ -1464,7 +1464,7 @@ public class BSVertexData { // Z
         }
         if (arg.HasFlag(VertexFlags.Vertex_Colors)) VertexColors = new Color4(r.ReadBytes(4));
         if (arg.HasFlag(VertexFlags.Skinned)) {
-            BoneWeights = [r.ReadHalf(), r.ReadHalf(), r.ReadHalf(), r.ReadHalf()];
+            BoneWeights = [(float)r.ReadHalf(), (float)r.ReadHalf(), (float)r.ReadHalf(), (float)r.ReadHalf()];
             BoneIndices = r.ReadBytes(4);
         }
         if (arg.HasFlag(VertexFlags.Eye_Data)) EyeData = r.ReadSingle();
@@ -1523,7 +1523,7 @@ public class SkinPartition { // Y
             if (Z.ReadBool(r)) VertexMap = r.ReadPArray<ushort>("H", NumVertices);
             var HasVertexWeights = Z.ReadBool8(r);
             if (HasVertexWeights == 1) VertexWeights = r.ReadFArray(k => r.ReadPArray<float>("f", NumWeightsPerVertex), NumVertices);
-            if (HasVertexWeights == 15) VertexWeights = r.ReadFArray(k => r.ReadFArray(z => r.ReadHalf(), NumWeightsPerVertex), NumVertices);
+            if (HasVertexWeights == 15) VertexWeights = r.ReadFArray(k => r.ReadFArray(z => (float)r.ReadHalf(), NumWeightsPerVertex), NumVertices);
             StripLengths = r.ReadPArray<ushort>("H", NumStrips);
             if (Z.ReadBool(r)) {
                 if (NumStrips != 0) Strips = r.ReadFIArray((k, i) => r.ReadPArray<ushort>("H", StripLengths[i]), NumStrips);
@@ -2891,7 +2891,7 @@ public abstract class NiGeometryData : NiObject { // X
         }
         var HasVertices = Z.ReadBool8(r);
         if ((HasVertices > 0) && (HasVertices != 15)) Vertices = r.ReadPArray<Vector3>("3f", NumVertices);
-        if (r.V >= 0x14030101 && HasVertices == 15) Vertices = r.ReadFArray(z => new Vector3(r.ReadHalf(), r.ReadHalf(), r.ReadHalf()), NumVertices);
+        if (r.V >= 0x14030101 && HasVertices == 15) Vertices = r.ReadFArray(z => new Vector3((float)r.ReadHalf(), (float)r.ReadHalf(), (float)r.ReadHalf()), NumVertices);
         if (r.V >= 0x0A000100 && !((r.V == 0x14020007) && (r.UV2 > 0))) VectorFlags = (VectorFlags)r.ReadUInt16();
         if (((r.V == 0x14020007) && (r.UV2 > 0))) BSVectorFlags = (BSVectorFlags)r.ReadUInt16();
         if (r.V == 0x14020007 && (r.UV == 12)) MaterialCRC = r.ReadUInt32();

@@ -63,7 +63,7 @@ public class ModelSceneNode : SceneNode, IMeshCollection {
 
         // Update animation texture
         GL.BindTexture(TextureTarget.Texture2D, AnimationTexture);
-        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba32f, 4, skeleton.Bones.Length, 0, PixelFormat.Rgba, PixelType.Float, animationMatrices);
+        GL.TexImage2D(TextureTarget.Texture2D, 0, InternalFormat.Rgba32f, 4, skeleton.Bones.Length, 0, PixelFormat.Rgba, PixelType.Float, animationMatrices);
         GL.BindTexture(TextureTarget.Texture2D, 0);
 
         var first = true;
@@ -134,11 +134,11 @@ public class ModelSceneNode : SceneNode, IMeshCollection {
             AnimationTexture = GL.GenTexture();
             GL.BindTexture(TextureTarget.Texture2D, AnimationTexture);
             // Set clamping to edges
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
+            GL.TexParameteri(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
+            GL.TexParameteri(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
             // Set nearest-neighbor sampling since we don't want to interpolate matrix rows
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMinFilter.Nearest);
+            GL.TexParameteri(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
+            GL.TexParameteri(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMinFilter.Nearest);
             //Unbind texture again
             GL.BindTexture(TextureTarget.Texture2D, 0);
         }

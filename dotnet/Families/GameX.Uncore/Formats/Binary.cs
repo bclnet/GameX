@@ -2,7 +2,6 @@ using GameX.Uncore.Formats.Apple;
 using ICSharpCode.SharpZipLib.Zip;
 using OpenStack;
 using OpenStack.Gfx;
-using SkiaSharp;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -607,8 +606,8 @@ public unsafe class Binary_Img : IHaveMetaInfo, ITexture {
             }
         }
         else {
-            var image = (SKBitmap)(Image = SKBitmap.Decode(new MemoryStream(r.ReadBytes((int)f.FileSize))));
-            Width = image.Width; Height = image.Height;
+            //var image = (SKBitmap)(Image = SKBitmap.Decode(new MemoryStream(r.ReadBytes((int)f.FileSize))));
+            //Width = image.Width; Height = image.Height;
             throw new NotImplementedException("Binary_Img");
         }
     }

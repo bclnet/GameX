@@ -15,9 +15,9 @@ public class PakBinary_P4k : ArcBinary<PakBinary_P4k> {
     readonly byte[] Key = [0x5E, 0x7A, 0x20, 0x02, 0x30, 0x2E, 0xEB, 0x1A, 0x3B, 0xB6, 0x17, 0xC3, 0x0F, 0xDE, 0x1E, 0x47];
 
     protected class SubArchiveP4k : BinaryArchive {
-        P4kArchive Arc;
+        ZipArchiveX Arc;
 
-        public SubArchiveP4k(BinaryArchive parent, P4kArchive arc, string path, object tag) : base(parent, new BinaryState(parent.Vfx, parent.Game, parent.Edition, path, tag), Current) {
+        public SubArchiveP4k(BinaryArchive parent, ZipArchiveX arc, string path, object tag) : base(parent, new BinaryState(parent.Vfx, parent.Game, parent.Edition, path, tag), Current) {
             AssetFactoryFunc = parent.AssetFactoryFunc;
             Arc = arc;
             UseReader = false;
@@ -26,7 +26,7 @@ public class PakBinary_P4k : ArcBinary<PakBinary_P4k> {
 
         public async override Task Read(object tag) {
             var entry = (ZipArchiveEntry)Tag;
-            var stream = entry.Open2();
+            var stream = entry.OpenX();
             using var r2 = new BinaryReader(stream);
             await ArcBinary.Read(this, r2, tag);
         }
@@ -36,7 +36,7 @@ public class PakBinary_P4k : ArcBinary<PakBinary_P4k> {
         source.UseReader = false;
         var files = source.Files = [];
 
-        var arc = (P4kArchive)(source.Tag = new P4kArchive(r.BaseStream, source.BinPath, Key));
+        var arc = (ZipArchiveX)(source.Tag = new ZipArchiveX(ZipArchiveKind.P4k, r.BaseStream, source.BinPath, Key));
         var parentByPath = new Dictionary<string, FileSource>();
         var partsByPath = new Dictionary<string, SortedList<string, FileSource>>();
         foreach (var entry in arc.Entries) {
@@ -68,17 +68,17 @@ public class PakBinary_P4k : ArcBinary<PakBinary_P4k> {
     }
 
     public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
-        var arc = (P4kArchive)source.Tag;
+        var arc = (ZipArchiveX)source.Tag;
         var entry = (ZipArchiveEntry)file.Tag;
         try {
-            using var input = entry.Open2();
+            using var input = entry.OpenX();
             if (!input.CanRead) { HandleException(file, option, $"Unable to read stream for file: {file.Path}"); return Task.FromResult(System.IO.Stream.Null); }
             var s = new MemoryStream();
             input.CopyTo(s);
             if (file.Parts != null)
                 foreach (var part in file.Parts.Reverse()) {
                     var entry2 = (ZipArchiveEntry)part.Tag;
-                    using var input2 = entry2.Open2();
+                    using var input2 = entry2.OpenX();
                     if (!input2.CanRead) { HandleException(file, option, $"Unable to read stream for file: {part.Path}"); return Task.FromResult(System.IO.Stream.Null); }
                     input2.CopyTo(s);
                 }

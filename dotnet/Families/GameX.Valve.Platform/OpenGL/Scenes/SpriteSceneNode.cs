@@ -52,7 +52,7 @@ public class SpriteSceneNode : SceneNode {
             1.0f, 1.0f, 0.0f,    1.0f, 0.0f,
         };
 
-        GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.DynamicDraw);
+        GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsage.DynamicDraw);
 
         var attributes = new List<(string Name, int Size)>
         {
@@ -92,10 +92,10 @@ public class SpriteSceneNode : SceneNode {
         var test = billboardMatrix * scaleMatrix * translationMatrix;
         var test2 = test.ToOpenTK();
 
-        GL.UniformMatrix4(shader.GetUniformLocation("uProjectionViewMatrix"), false, ref viewProjectionMatrix);
+        GL.UniformMatrix4f(shader.GetUniformLocation("uProjectionViewMatrix"), 1, false, in viewProjectionMatrix);
 
         var transformTk = Transform;
-        GL.UniformMatrix4(shader.GetUniformLocation("transform"), false, ref test2);
+        GL.UniformMatrix4f(shader.GetUniformLocation("transform"), 1, false, in test2);
 
         material.Render(shader);
 

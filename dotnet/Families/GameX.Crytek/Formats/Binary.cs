@@ -104,7 +104,7 @@ public unsafe class Binary_Cry3 : ArcBinary<Binary_Cry3> {
         var files = source.Files = [];
         source.UseReader = false;
 
-        var arc = (Cry3Archive)(source.Tag = new Cry3Archive(r.BaseStream, source.BinPath, Key));
+        var arc = (ZipArchiveX)(source.Tag = new ZipArchiveX(ZipArchiveKind.Cry3, r.BaseStream, source.BinPath, Key));
         var parentByPath = new Dictionary<string, FileSource>();
         var partByPath = new Dictionary<string, SortedList<string, FileSource>>();
         foreach (var entry in arc.Entries) {
@@ -148,10 +148,10 @@ public unsafe class Binary_Cry3 : ArcBinary<Binary_Cry3> {
     //}
 
     public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
-        var arc = (Cry3Archive)source.Tag;
+        var arc = (ZipArchiveX)source.Tag;
         var entry = (ZipArchiveEntry)file.Tag;
         try {
-            using var input = entry.Open2();
+            using var input = entry.OpenX();
             if (!input.CanRead) { HandleException(file, option, $"Unable to read stream for file: {file.Path}"); return Task.FromResult(System.IO.Stream.Null); }
             var s = new MemoryStream();
             input.CopyTo(s);

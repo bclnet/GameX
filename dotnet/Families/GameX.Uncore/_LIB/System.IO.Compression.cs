@@ -591,8 +591,8 @@ internal class ZipHelper {
 }
 
 internal static class SR {
-    public static T CreateDelegate<T>(this MethodInfo s) where T : Delegate => (T)s.CreateDelegate(typeof(T));
-    public static int ReadAtLeast(this Stream s, Span<byte> buffer, int minimumBytes, bool throwOnEndOfStream = true) => throw new NotImplementedException();
+    //public static T CreateDelegate<T>(this MethodInfo s) where T : Delegate => (T)s.CreateDelegate(typeof(T));
+    //public static int ReadAtLeast(this Stream s, Span<byte> buffer, int minimumBytes, bool throwOnEndOfStream = true) => throw new NotImplementedException();
     public static string CDCorrupt = (string)SRType.GetProperty("CDCorrupt", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null);
     public static string EOCDNotFound = (string)SRType.GetProperty("EOCDNotFound", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null);
     public static string FieldTooBigOffsetToCD = (string)SRType.GetProperty("FieldTooBigOffsetToCD", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null);

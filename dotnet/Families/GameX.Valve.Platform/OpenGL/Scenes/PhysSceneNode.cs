@@ -179,12 +179,12 @@ public class PhysSceneNode : SceneNode {
 
         vboHandle = GL.GenBuffer();
         GL.BindBuffer(BufferTarget.ArrayBuffer, vboHandle);
-        GL.BufferData(BufferTarget.ArrayBuffer, verts.Count * sizeof(float), verts.ToArray(), BufferUsageHint.StaticDraw);
+        GL.BufferData(BufferTarget.ArrayBuffer, verts.Count * sizeof(float), verts.ToArray(), BufferUsage.StaticDraw);
 
         iboHandle = GL.GenBuffer();
         indexCount = inds.Count;
         GL.BindBuffer(BufferTarget.ElementArrayBuffer, iboHandle);
-        GL.BufferData(BufferTarget.ElementArrayBuffer, inds.Count * sizeof(int), inds.ToArray(), BufferUsageHint.StaticDraw);
+        GL.BufferData(BufferTarget.ElementArrayBuffer, inds.Count * sizeof(int), inds.ToArray(), BufferUsage.StaticDraw);
 
         const int stride = sizeof(float) * 7;
         var positionAttributeLocation = shader.GetAttribLocation("aVertexPosition");
@@ -255,18 +255,13 @@ public class PhysSceneNode : SceneNode {
 
     public override void Render(Scene.RenderContext context) {
         if (!Enabled) return;
-
         var viewProjectionMatrix = (Transform * context.Camera.ViewProjectionMatrix).ToOpenTK();
-
         GL.UseProgram(shader.Program);
-
-        GL.UniformMatrix4(shader.GetUniformLocation("uProjectionViewMatrix"), false, ref viewProjectionMatrix);
+        GL.UniformMatrix4f(shader.GetUniformLocation("uProjectionViewMatrix"), 1, false, in viewProjectionMatrix);
         GL.DepthMask(false);
-
         GL.BindVertexArray(vaoHandle);
         GL.DrawElements(PrimitiveType.Lines, indexCount, DrawElementsType.UnsignedInt, 0);
         GL.BindVertexArray(0);
-
         GL.DepthMask(true);
     }
 

@@ -113,7 +113,7 @@ class ReflectiveReader<T>() : TypeReader(typeof(T)) {
         return (r, p) => setter(p, r.ReadObject(reader, construct(p)));
     }
     public override object Read(ContentReader r, object o) {
-        var obj = o != null ? (T)o : (Constructor == null ? (T)Activator.CreateInstance(typeof(T)) : (T)Constructor.Invoke(null));
+        var obj = o != null ? (T)o : (Constructor == null ? Activator.CreateInstance<T>() : (T)Constructor.Invoke(null));
         BaseTypeReader?.Read(r, obj);
         var b = (object)obj; foreach (var reader in Readers) reader(r, b); obj = (T)b;
         return obj;

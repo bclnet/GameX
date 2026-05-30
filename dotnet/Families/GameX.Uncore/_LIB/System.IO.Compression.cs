@@ -378,6 +378,7 @@ public class ZipArchiveEntryX(ZipArchiveEntry source) {
     //long _uncompressedSize => (long)_uncompressedSizeField.GetValue(this_);
     //uint _crc32 => (uint)_crc32Field.GetValue(this_);
 
+    public bool IsEncrypted => false; // Flags
     public bool IsAesCrypted => false; // ExtraData != null && ExtraData.Length >= 168 && ExtraData[168] > 0x00;
 
     internal void ThrowIfNotOpenable(bool needToUncompress, bool needToLoadIntoMemory) => ThrowIfNotOpenableMethod.Invoke(this_, [needToUncompress, needToLoadIntoMemory]);
@@ -442,7 +443,7 @@ public class ZipArchiveEntryX(ZipArchiveEntry source) {
 
     Stream OpenInReadModeGetDataCompressor(long offsetOfCompressedData) {
         Stream compressedStream = (Stream)Activator.CreateInstance(SubReadStreamType, _archive.ArchiveStream, offsetOfCompressedData, _compressedSize);
-        if (this_.IsEncrypted) compressedStream = _archive.CreateAndInitDecryptionStream(compressedStream, this_) ?? throw new InvalidDataException("Unable to decrypt this entry");
+        if (IsEncrypted) compressedStream = _archive.CreateAndInitDecryptionStream(compressedStream, this_) ?? throw new InvalidDataException("Unable to decrypt this entry");
         if (_kind == ZipArchiveKind.P4k && IsAesCrypted) compressedStream = _archive.CreateAndInitAesDecryptionStream(compressedStream, this_) ?? throw new InvalidDataException("Unable to decrypt this entry");
         Stream decompressedStream = GetDataDecompressor(compressedStream);
         return decompressedStream;
@@ -591,8 +592,6 @@ internal class ZipHelper {
 }
 
 internal static class SR {
-    //public static T CreateDelegate<T>(this MethodInfo s) where T : Delegate => (T)s.CreateDelegate(typeof(T));
-    //public static int ReadAtLeast(this Stream s, Span<byte> buffer, int minimumBytes, bool throwOnEndOfStream = true) => throw new NotImplementedException();
     public static string CDCorrupt = (string)SRType.GetProperty("CDCorrupt", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null);
     public static string EOCDNotFound = (string)SRType.GetProperty("EOCDNotFound", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null);
     public static string FieldTooBigOffsetToCD = (string)SRType.GetProperty("FieldTooBigOffsetToCD", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null);

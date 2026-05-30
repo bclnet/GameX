@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <LangVersion>latest</LangVersion>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
@@ -46,7 +46,6 @@
 	<ProjectReference Include="..\..\Families\GameX.Ubisoft\GameX.Ubisoft.csproj" />
 	<ProjectReference Include="..\..\Families\GameX.Uncore\GameX.Uncore.csproj" />
     <ProjectReference Include="..\..\Families\GameX.Unity\GameX.Unity.csproj" />
-    <ProjectReference Include="..\..\Families\GameX.Valve.Platform\GameX.Valve.Platform.csproj" />
     <ProjectReference Include="..\..\Families\GameX.Valve\GameX.Valve.csproj" />
     <ProjectReference Include="..\..\Families\GameX.Volition\GameX.Volition.csproj" />
     <ProjectReference Include="..\..\Families\GameX.WB\GameX.WB.csproj" />

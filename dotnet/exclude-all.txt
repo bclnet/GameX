@@ -17,7 +17,7 @@ GameX.Epic.dll
 GameX.Firaxis.dll
 GameX.Frictional.dll
 GameX.Frontier.dll
-GameX.Gamebryo.dll
+#GameX.Gamebryo.dll
 GameX.ID.dll
 GameX.IW.dll
 GameX.Lucas.dll

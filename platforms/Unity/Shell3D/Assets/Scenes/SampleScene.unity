@@ -403,13 +403,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 330585543}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: -1546406650, guid: 48f9829f31687fc49ae8af4865d38604, type: 3}
+  m_Script: {fileID: -1546406650, guid: cef62d075cbf34c42984e557ab63adce, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  FamilyId: Arkane
-  ArcUri: game:/#AF
+  FamilyId: Bethesda
+  ArcUri: game:/#Morrowind
   Type: Texture
-  Path: Graph/interface/misc/quit1.bmp
+  Path: Morrowind.bsa:bookart/boethiah_256.dds
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0

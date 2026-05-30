@@ -1474,7 +1474,7 @@ public class VBIB : Block, IVBIB {
                     return result;
                 }
             case DXGI_FORMAT.R16G16_FLOAT: {
-                    result = [(float)BitConverter.ToHalf(vertexBuffer.Data, offset), (float)BitConverter.ToHalf(vertexBuffer.Data, offset + 2)];
+                    result = [(float)BitConverterX.ToHalf(vertexBuffer.Data, offset), (float)BitConverterX.ToHalf(vertexBuffer.Data, offset + 2)];
                     return result;
                 }
             case DXGI_FORMAT.R32_FLOAT: {

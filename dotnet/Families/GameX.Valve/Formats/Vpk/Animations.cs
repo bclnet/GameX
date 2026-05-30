@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using SystemX;
 
 namespace GameX.Valve.Formats.Vpk;
 
@@ -336,7 +337,7 @@ public class CCompressedAnimVector3 : AnimationSegmentDecoder {
         var pos = 0;
         for (var i = 0; i < elements; i++)
             foreach (var j in wantedElements)
-                Data[pos++] = BitConverter.ToHalf(data.Slice(i * stride + j * elementSize, elementSize));
+                Data[pos++] = BitConverterX.ToHalf(data.Slice(i * stride + j * elementSize, elementSize));
     }
 
     public override void Read(int frameIndex, Frame outFrame) {
@@ -388,7 +389,7 @@ public class CCompressedDeltaVector3 : AnimationSegmentDecoder {
         pos = 0;
         for (var i = 0; i < elements; i++)
             foreach (var j in wantedElements)
-                DeltaData[pos++] = BitConverter.ToHalf(deltaData.Slice(i * stride + j * deltaElementSize, deltaElementSize));
+                DeltaData[pos++] = BitConverterX.ToHalf(deltaData.Slice(i * stride + j * deltaElementSize, deltaElementSize));
     }
 
     public override void Read(int frameIndex, Frame outFrame) {
@@ -546,9 +547,9 @@ public class CCompressedStaticVector3(ArraySegment<byte> data, int[] wantedEleme
     readonly Vector3[] Data = wantedElements.Select(i => {
         var offset = i * (3 * 2);
         return new Vector3(
-            (float)BitConverter.ToHalf(data.Slice(offset + (0 * 2))),
-            (float)BitConverter.ToHalf(data.Slice(offset + (1 * 2))),
-            (float)BitConverter.ToHalf(data.Slice(offset + (2 * 2)))
+            (float)BitConverterX.ToHalf(data.Slice(offset + (0 * 2))),
+            (float)BitConverterX.ToHalf(data.Slice(offset + (1 * 2))),
+            (float)BitConverterX.ToHalf(data.Slice(offset + (2 * 2)))
         );
     }).ToArray();
 

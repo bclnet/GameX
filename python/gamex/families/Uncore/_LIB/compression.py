@@ -115,7 +115,11 @@ RsaKey = [
     0xD2, 0xE6, 0xF0, 0x22, 0x3B, 0xC3, 0xE7, 0xDD, 0x17, 0x1A, 0x8C, 0xF8, 0xE1, 0x02, 0x03, 0x01,
     0x00, 0x01 ]
 
-def _GetPublicKey(keyInfoData: bytes) -> object: return RSA.import_key(keyInfoData)
+def _GetPublicKey(keyInfoData: bytes) -> object:
+    key = RSA.import_key(keyInfoData)
+    n = key.n; e = key.e
+    return RSA.construct((n, e, e))
+
     # sequence = DerSequence()
     # if not sequence.decode(keyInfoData): raise BadZipFile('Invalid PrivateKey Data')
     # # algId = None; keyData = None
@@ -145,7 +149,7 @@ def _GetPublicKey(keyInfoData: bytes) -> object: return RSA.import_key(keyInfoDa
     # n = rsa_components[0], e = rsa_components[1]
     # return RSA.construct((n, e))
 
-def _DecryptKeysTable(aesKey: bytes, CDR_IV: bytes, keys_table: bytes, digestSize: int) -> tuple[bool, bytes, list[bytes]]:
+def _DecryptKeysTable(aesKey: bytes, CDR_IV: bytes, KEYS_TABLE: bytes, digestSize: int) -> tuple[bool, bytes, list[bytes]]:
     digest = BLAKE2b if digestSize == 257 else SHA25 if digestSize == 256 else SHA1
     try:
         publicKey = _GetPublicKey(aesKey or RsaKey) #;print(publicKey.n, publicKey.e)
@@ -154,83 +158,58 @@ def _DecryptKeysTable(aesKey: bytes, CDR_IV: bytes, keys_table: bytes, digestSiz
         # cdr iv
         cipher = cipher_init()
         cdrIV = cipher.decrypt(CDR_IV)
-        print(cdrIV.hex())
+        # print(cdrIV.hex())
 
-        exit(1)
-
-    except: print(sys.exc_info()[1]); raise
-    exit(1)
-
-#     try {
-#         var publicKey = GetPublicKey(aesKey ?? RsaKey);
-#         var cipher = new OaepEncoding(new RsaEngine(), digest);
-
-#         // cdr iv
-#         cipher.Init(false, publicKey);
-#         cdrIV = cipher.ProcessBlock(CDR_IV, 0, RSA_KEY_MESSAGE_LENGTH);
-
-#         // Decrypt the table of cipher keys.
-#         keysTable = new byte[BLOCK_CIPHER_NUM_KEYS][];
-#         for (int i = 0, offset = 0; i < BLOCK_CIPHER_NUM_KEYS; i++, offset += RSA_KEY_MESSAGE_LENGTH) {
-#             cipher.Init(false, publicKey);
-#             keysTable[i] = cipher.ProcessBlock(keys_table, offset, RSA_KEY_MESSAGE_LENGTH);
-#         }
-#         return true;
-#     }
-#     catch (Exception e) {
-#         Console.WriteLine(e.Message);
-#         cdrIV = default;
-#         keysTable = default;
-#         return false;
-#     }
+        # Decrypt the table of cipher keys.
+        keysTable = [bytes()]*BLOCK_CIPHER_NUM_KEYS
+        offset = 0
+        for i in range(BLOCK_CIPHER_NUM_KEYS):
+            cipher = cipher_init()
+            keysTable[i] = cipher.decrypt(KEYS_TABLE[offset::RSA_KEY_MESSAGE_LENGTH])
+            offset += RSA_KEY_MESSAGE_LENGTH
+        return (True, cdrIV, keysTable)
+    except:
+        print(sys.exc_info()[1])
+        return (False, None, None)
 
 #endregion
 
 #region TEA
 
-TEA_DEFAULTKEY = [ 0xc968fb67, 0x8f9b4267, 0x85399e84, 0xf9b99dc4 ]
+TEA_DEFAULTKEY = [0xc968fb67, 0x8f9b4267, 0x85399e84, 0xf9b99dc4]
 TEA_DELTA = 0x9e3779b9
 TEA_DELTA2 = 0x61C88647
 
 def btea(v: object, n: int, k: list[int]) -> None:
-    # uint y, z, sum;
-    # uint p, rounds, e;
-    # uint MX() => ((z >> 5 ^ y << 2) + (y >> 3 ^ z << 4)) ^ ((sum ^ y) + (k[(p & 3) ^ e] ^ z));
+    y, z, sum
+    p, rounds, e
+    def MX() -> int: return ((z >> 5 ^ y << 2) + (y >> 3 ^ z << 4)) ^ ((sum ^ y) + (k[(p & 3) ^ e] ^ z)) & 0xFFFFFFFF
 
-    # if (n > 1) // Coding Part
-    # {
-    #     rounds = (uint)(6 + 52 / n);
-    #     sum = 0;
-    #     z = v[n - 1];
-    #     do {
-    #         sum += TEA_DELTA;
-    #         e = (sum >> 2) & 3;
-    #         for (p = 0; p < (uint)(n - 1); p++) {
-    #             y = v[p + 1];
-    #             z = v[p] += MX();
-    #         }
-    #         y = v[0];
-    #         z = v[n - 1] += MX();
-    #     } while (--rounds != 0);
-    # }
-    # else if (n < -1) // Decoding Part
-    # {
-    #     n = -n;
-    #     rounds = (uint)(6 + 52 / n);
-    #     sum = rounds * TEA_DELTA;
-    #     y = v[0];
-    #     do {
-    #         e = (sum >> 2) & 3;
-    #         for (p = (uint)(n - 1); p > 0; p--) {
-    #             z = v[p - 1];
-    #             y = v[p] -= MX();
-    #         }
-    #         z = v[n - 1];
-    #         y = v[0] -= MX();
-    #         sum -= TEA_DELTA;
-    #     } while (--rounds != 0);
-    # }
-    pass
+    if n > 1: # Coding Part
+        rounds = 6 + 52 // n
+        sum = 0
+        z = v[n - 1]
+        for _ in range(rounds):
+            sum += TEA_DELTA
+            e = (sum >> 2) & 3
+            for p in range(n - 1):
+                y = v[p + 1]
+                z = v[p] = v[p] + MX()
+            y = v[0]
+            z = v[n - 1] = v[n - 1] + MX()
+    elif n < -1: # Decoding Part
+        n = -n
+        rounds = 6 + 52 // n
+        sum = rounds * TEA_DELTA
+        y = v[0]
+        for _ in range(rounds):
+            e = (sum >> 2) & 3
+            for p in range(n - 1, -1):
+                z = v[p - 1]
+                y = v[p] = v[p] - MX()
+            z = v[n - 1];
+            y = v[0] = v[0] - MX()
+            sum -= TEA_DELTA
 
 # static void SwapByteOrder(uint* values, int count) {
 #     for (uint* w = values, e = values + count; w != e; ++w) *w = (*w >> 24) | ((*w >> 8) & 0xff00) | ((*w & 0xff00) << 8) | (*w << 24);

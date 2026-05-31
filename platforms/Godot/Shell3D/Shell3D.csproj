@@ -31,8 +31,8 @@
     <Reference Include="GameX.Platform.Godot">
       <HintPath>..\..\Plugins\GameX.Platform.Godot\Debug\GameX.Platform.Godot.dll</HintPath>
     </Reference>
-    <Reference Include="OpenStack.Godot">
-      <HintPath>..\..\Plugins\GameX.Platform.Godot\Debug\OpenStack.Godot.dll</HintPath>
+    <Reference Include="OpenStack.Platform.Godot">
+      <HintPath>..\..\Plugins\GameX.Platform.Godot\Debug\OpenStack.Platform.Godot.dll</HintPath>
     </Reference>
   </ItemGroup>
 	

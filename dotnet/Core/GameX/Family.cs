@@ -59,7 +59,7 @@ public partial class FamilyManager {
     /// <exception cref="ArgumentOutOfRangeException"></exception>
     internal static object ParseKey(JsonElement elem) {
         var str = elem.ToString();
-        if (string.IsNullOrEmpty(str)) { return null; }
+        if (string.IsNullOrEmpty(str)) return null;
         else if (str.StartsWith("b64:", StringComparison.Ordinal)) return Convert.FromBase64String(str[4..]);
         else if (str.StartsWith("hex:", StringComparison.Ordinal)) return (str = str[4..]).StartsWith("/")
             ? Enumerable.Range(0, str.Length >> 2).Select(x => byte.Parse(str.Substring((x << 2) + 2, 2), NumberStyles.HexNumber)).ToArray()
@@ -899,6 +899,7 @@ public class FamilyGame {
     /// The game files.
     /// </summary>
     public class FileSet(JsonElement elem) {
+        public JsonElement Elem = elem;
         public string[] Keys = _list(elem, "key");
         public string[] Paths = _list(elem, "path", []);
     }
@@ -1173,6 +1174,8 @@ public class FamilyGame {
             if (string.IsNullOrEmpty(path)) continue;
             path = Path.GetFullPath(PlatformX.DecodePath(path));
             if (!Directory.Exists(path) && !File.Exists(path)) continue;
+            var subPath = _valueF(Files.Elem, k, s => _list(s, "path"));
+            if (subPath != null) path = Path.GetFullPath(subPath[0].Replace("%path%", path));
             return new SystemPath { Root = path, Type = v, Paths = Files.Paths };
         }
         return default;

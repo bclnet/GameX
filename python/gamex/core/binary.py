@@ -225,7 +225,7 @@ class BinaryArchive(Archive):
         if file.cachedObjectFactory: return file.cachedObjectFactory
         option, factory = self.assetFactoryFunc(file, self.game)
         file.cachedObjectOption = option
-        file.cachedObjectFactory = factory or FileSource.emptyAssetsFactory
+        file.cachedObjectFactory = factory or FileSource.emptyAssetFactory
         return file.cachedObjectFactory
 
     def process(self) -> None:

@@ -25,13 +25,10 @@ class SearchBy(Enum):
 
 # tag::FoundPath[]
 class SystemPath:
-    root: str
-    type: str
-    paths: list[str]
     def __init__(self, root: str, type: str, paths: list[str]):
-        self.root = root
-        self.type = type
-        self.paths = paths
+        self.root: str = root
+        self.type: str = type
+        self.paths: list[str] = paths
 # tag::FoundPath[]
 
 # TODO: HostFactory = HttpHost.Factory
@@ -147,10 +144,10 @@ class Detector:
 # tag::Resource[]
 class Resource:
     def __init__(self, vfx: FileSystem, game: FamilyGame, edition: Edition, searchPattern: str):
-        self.vfx = vfx
-        self.game = game
-        self.edition = edition
-        self.searchPattern = searchPattern
+        self.vfx: FileSystem = vfx
+        self.game: FamilyGame = game
+        self.edition: Edition = edition
+        self.searchPattern: str = searchPattern
     def __repr__(self): return f'res:/{self.searchPattern}#{self.game}'
 # end::Resource[]
 
@@ -256,7 +253,7 @@ games: {[x for x in self.games.values()]}'''
 # tag::FamilyApp[]
 class FamilyApp:
     def __init__(self, family: Family, id: str, elem: dict[str, object]):
-        self.family = family
+        self.family: Family = family
         self.id = self.name = id
         def switch(k,v):
             match k:
@@ -279,7 +276,7 @@ class FamilyApp:
 # tag::FamilyEngine[]
 class FamilyEngine:
     def __init__(self, family: Family, id: str, elem: dict[str, object]):
-        self.family = family
+        self.family: Family = family
         self.id = self.name = id
         def switch(k,v):
             match k:
@@ -319,9 +316,9 @@ class FamilySample:
 # The client state.
 class ClientState:
     def __init__(self, archive: Archive, args: list[str] = None, tag: object = None):
-        self.archive = archive
-        self.args = args or []
-        self.tag = tag
+        self.archive: Archive = archive
+        self.args: list[str] = args or []
+        self.tag: object = tag
 
 # tag::FamilyGame[]
 class FamilyGame:
@@ -329,7 +326,7 @@ class FamilyGame:
     class Edition:
         def __init__(self, id: str, elem: dict[str, object]):
             self.id = self.name = id
-            self.path = None
+            self.path: str = None
             self.ignores = None
             def switch(k,v):
                 match k:
@@ -345,7 +342,7 @@ class FamilyGame:
     class DownloadableContent:
         def __init__(self, id: str, elem: dict[str, object]):
             self.id = self.name = id
-            self.path = None
+            self.path: str = None
             def switch(k,v):
                 match k:
                     case 'name': self.name = v; return v
@@ -369,11 +366,10 @@ class FamilyGame:
 
     # The game files.
     class FileSet:
-        keys: list[str]
-        paths: list[str]
         def __init__(self, elem: dict[str, object]):
-            self.keys = _list(elem, 'key')
-            self.paths = _list(elem, 'path', [])
+            self.elem: dict[str, object] = elem
+            self.keys: list[str] = _list(elem, 'key')
+            self.paths: list[str] = _list(elem, 'path', [])
 
     # create Detector
     def createDetector(self, id: str, elem: dict[str, object]) -> Detector:
@@ -474,6 +470,8 @@ class FamilyGame:
             if not path: continue
             path = os.path.abspath(PlatformX.decodePath(path))
             if not os.path.exists(path): continue
+            subPath = _valueF(self.files.elem, k, lambda s: _list(s, 'path'))
+            if subPath: path = os.path.abspath(subPath[0].replace('%path%', path))
             return SystemPath(root = path, type = None, paths = self.files.paths)
         return None
 

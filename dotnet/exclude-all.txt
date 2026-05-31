@@ -47,6 +47,6 @@ GameX.Platform.
 #OpenStack.Gfx.dll
 OpenStack.Gfx.Gl.dll
 OpenStack.Gfx.Egin.dll
-OpenStack.OpenGL.dll
+OpenStack.Platform.OpenGL.dll
 #OpenStack.Sfx.dll
 #OpenStack.Vfx.dll

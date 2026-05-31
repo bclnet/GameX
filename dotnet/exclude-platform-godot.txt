@@ -1,3 +1,3 @@
 ﻿# Header
 GameX.Platform.Godot.dll
-OpenStack.Godot.dll
+OpenStack.Platform.Godot.dll

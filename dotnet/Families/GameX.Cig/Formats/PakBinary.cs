@@ -41,7 +41,7 @@ public class PakBinary_P4k : ArcBinary<PakBinary_P4k> {
         var partsByPath = new Dictionary<string, SortedList<string, FileSource>>();
         foreach (var entry in arc.Entries) {
             var metadata = new FileSource {
-                Path = entry.Name.Replace('\\', '/'),
+                Path = entry.FullName.Replace('\\', '/'),
                 //Flags = entry.Flags,
                 PackedSize = entry.CompressedLength,
                 FileSize = entry.Length,

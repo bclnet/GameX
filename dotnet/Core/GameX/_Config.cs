@@ -1,6 +1,6 @@
-﻿#define Arkane
+﻿//#define Arkane
 //#define Beamdog
-//#define Bethesda
+#define Bethesda
 //#define Bioware
 //#define Black
 //#define Blizzard
@@ -84,7 +84,7 @@ public partial class FamilyManager {
     };
 #elif Bethesda
     public static GlobalOption Option = new() {
-        Platform = "UN",
+        Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:3",
         Family = "Bethesda",

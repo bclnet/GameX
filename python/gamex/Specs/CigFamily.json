@@ -22,10 +22,9 @@
       ],
       "key": "hex:5E7A2002302EEB1A3BB617C30FDE1E47",
       "engine": "StarEngine",
-      "arcExt": "Data.p4k",
+      "arcExt": ".p4k",
       "files": {
         "key": [
-          "Unknown:StarCitizen",
           "WinReg:81bfc699-f883-50c7-b674-2483b6baae23",
           "Local:StarCitizen/LIVE"
         ],

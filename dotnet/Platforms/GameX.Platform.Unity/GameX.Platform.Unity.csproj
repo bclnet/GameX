@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <LangVersion>latest</LangVersion>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\OpenStack\dotnet\Platforms\OpenStack.Unity\OpenStack.Unity.csproj" />
+    <ProjectReference Include="..\..\..\OpenStack\dotnet\Platforms\OpenStack.Platform.Unity\OpenStack.Platform.Unity.csproj" />
     <ProjectReference Include="..\..\Core\GameX\GameX.csproj" />
     <ProjectReference Include="..\..\Families\GameX.Gamebryo\GameX.Gamebryo.csproj" />
   </ItemGroup>
@@ -40,7 +40,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' == 'Windows_NT'">
-    <Exec Command="xcopy /Y &quot;$(TargetDir)GameX.Platform.Unity*.dll&quot; &quot;$(SolutionDir)..\platforms\Plugins\GameX.Platform.Unity\$(Configuration)\&quot; /EXCLUDE:$(SolutionDir)exclude-platform-unity.txt&#xD;&#xA;xcopy /Y &quot;$(TargetDir)OpenStack.Unity*.dll&quot; &quot;$(SolutionDir)..\platforms\Plugins\GameX.Platform.Unity\$(Configuration)\&quot; /EXCLUDE:$(SolutionDir)exclude-platform-unity.txt" />
+    <Exec Command="xcopy /Y &quot;$(TargetDir)GameX.Platform.Unity*.dll&quot; &quot;$(SolutionDir)..\platforms\Plugins\GameX.Platform.Unity\$(Configuration)\&quot; /EXCLUDE:$(SolutionDir)exclude-platform-unity.txt&#xD;&#xA;xcopy /Y &quot;$(TargetDir)OpenStack.Platform.Unity*.dll&quot; &quot;$(SolutionDir)..\platforms\Plugins\GameX.Platform.Unity\$(Configuration)\&quot; /EXCLUDE:$(SolutionDir)exclude-platform-unity.txt" />
   </Target>
 
 </Project>

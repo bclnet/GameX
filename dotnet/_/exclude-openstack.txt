@@ -2,6 +2,6 @@
 OpenStack.Gfx
 OpenStack.Gfx.Gl
 OpenStack.Gfx.Egin
-OpenStack.OpenGL
+OpenStack.Platform.OpenGL
 OpenStack.Sfx
 OpenStack.Vfx

@@ -348,7 +348,7 @@ public class ZipArchiveEntryX(ZipArchiveEntry source) {
     readonly ZipArchiveEntry this_ = source;
     ZipArchiveKind _kind = ((ZipArchiveX)source.Archive)._kind;
 
-    internal enum CompressionMethodValues : ushort {
+    public enum CompressionMethodValues : ushort {
         Stored = 0,
         Deflate = 8,
         Deflate64 = 9,
@@ -395,7 +395,7 @@ public class ZipArchiveEntryX(ZipArchiveEntry source) {
         return _storedOffsetOfCompressedData.Value;
     }
 
-    internal CompressionMethodValues CompressionMethod => (CompressionMethodValues)CompressionMethodProperty.GetValue(this_);
+    public CompressionMethodValues CompressionMethod => (CompressionMethodValues)CompressionMethodProperty.GetValue(this_);
 
     public Stream Open() {
         ThrowIfInvalidArchive();

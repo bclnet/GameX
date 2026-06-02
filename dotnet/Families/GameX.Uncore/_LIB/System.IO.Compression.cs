@@ -18,7 +18,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using static System.IO.Compression.CompressionX;
-using static System.IO.Compression.Cry3Encrypt;
+using static System.IO.Compression.ZipEncrypt;
 using static System.IO.Compression.ZipEndOfCentralDirectoryBlock;
 
 namespace System.IO.Compression;
@@ -661,9 +661,9 @@ internal class SicRevBlockCipher : IBlockCipherMode {
 }
 
 /// <summary>
-/// Cry3Encrypt
+/// ZipEncrypt
 /// </summary>
-internal unsafe static class Cry3Encrypt {
+internal unsafe static class ZipEncrypt {
     public const int BLOCK_CIPHER_NUM_KEYS = 16;
     public const int BLOCK_CIPHER_KEY_LENGTH = 16;
     public const int RSA_KEY_MESSAGE_LENGTH = 128;         // The modulus of our private/public key pair for signing, verification, encryption and decryption
@@ -702,13 +702,13 @@ internal unsafe static class Cry3Encrypt {
     public struct CrySignedCDRHeader {
         public const ushort SizeOf = 4 + RSA_KEY_MESSAGE_LENGTH;
         public uint nHeaderSize; // Size of the extended header.
-        public byte[] CDR_signed/*[RSA_KEY_MESSAGE_LENGTH]*/;
+        public byte[] CDR_signed /*[RSA_KEY_MESSAGE_LENGTH]*/;
     }
 
     public struct CryCustomTeaEncryptionHeader {
         public const ushort SizeOf = 4 + 172;
         public uint nHeaderSize; // Size of the extended header.
-        public byte[] Unknown1/*[172]*/;
+        public byte[] Unknown1 /*[172]*/;
     }
 
     // Header for HEADERS_ENCRYPTED_CRYCUSTOM technique. Paired with a CrySignedCDRHeader to allow for signing as well as encryption.
@@ -720,8 +720,8 @@ internal unsafe static class Cry3Encrypt {
         public uint nHeaderSize; // Size of the extended header.
         public uint Unknown1; // Hunt: Shadow
         public uint Unknown2; // Hunt: Shadow
-        public byte[] CDR_IV/*[RSA_KEY_MESSAGE_LENGTH]*/; // Initial Vector is actually BLOCK_CIPHER_KEY_LENGTH bytes in length, but is encrypted as a RSA_KEY_MESSAGE_LENGTH byte message.
-        public byte[] Keys_Table/*[BLOCK_CIPHER_NUM_KEYS * RSA_KEY_MESSAGE_LENGTH]*/; // As above, actually BLOCK_CIPHER_KEY_LENGTH but encrypted.
+        public byte[] CDR_IV /*[RSA_KEY_MESSAGE_LENGTH]*/; // Initial Vector is actually BLOCK_CIPHER_KEY_LENGTH bytes in length, but is encrypted as a RSA_KEY_MESSAGE_LENGTH byte message.
+        public byte[] Keys_Table /*[BLOCK_CIPHER_NUM_KEYS * RSA_KEY_MESSAGE_LENGTH]*/; // As above, actually BLOCK_CIPHER_KEY_LENGTH but encrypted.
     }
 
     #region StreamCipher
@@ -781,7 +781,7 @@ internal unsafe static class Cry3Encrypt {
         AlgorithmIdentifier algId = null; DerBitString keyData = null;
         foreach (var value in sequence) {
             if (value is AlgorithmIdentifier || value is DerSequence) algId = AlgorithmIdentifier.GetInstance(value);
-            else if (value is DerBitString || value is byte[]) keyData = DerBitString.GetInstance(value);
+            else if (value is DerBitString) keyData = DerBitString.GetInstance(value);
             else if (value is DerInteger && keyData == null) keyData = new DerBitString(sequence);
         }
         if (keyData == null) throw new Exception("Invalid PrivateKey Data");

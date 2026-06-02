@@ -13,41 +13,41 @@ public class ZipArchiveXTest {
     [TestMethod]
     //// None (OK)
     //[DataRow("",
-    //    @"G:\SteamLibrary\steamapps\common\Wolcen\Game\Textures_decals.pak", @"Textures/decals/blood/blood_decal_1.dds")]
+    //    @"G:\SteamLibrary\steamapps\common\Wolcen\Game\Textures_decals.pak", [@"Textures/decals/blood/blood_decal_1.dds"])]
 
     //// TEA, comments:TEA (ERROR)
     //[DataRow("hex:308189028181009B606931DCF7027A4DC0E5263B4AD0D8F4A492A16E4B5EC0850F074B4C3DA627FF96676D2379F89062DE6C917F268CBD822404D26D9D79BCB0182D4C96EEAF2B918A0300BFB81619622D1556B4E02D16FE0C7ED72C01EE429C4C849C6A786BCEC44D6C50CB914648BB662D0BA235680002D4605058D1C30DA11237822A01F2EF0203010001",
-    //    @"G:\SteamLibrary\steamapps\common\Warface\13_2000076\Game\GameInfo.pak", @"paklist.txt")]
+    //    @"G:\SteamLibrary\steamapps\common\Warface\13_2000076\Game\GameInfo.pak", [@"paklist.txt"])]
     //[DataRow("hex:308189028181009B606931DCF7027A4DC0E5263B4AD0D8F4A492A16E4B5EC0850F074B4C3DA627FF96676D2379F89062DE6C917F268CBD822404D26D9D79BCB0182D4C96EEAF2B918A0300BFB81619622D1556B4E02D16FE0C7ED72C01EE429C4C849C6A786BCEC44D6C50CB914648BB662D0BA235680002D4605058D1C30DA11237822A01F2EF0203010001",
-    //    @"G:\SteamLibrary\steamapps\common\Warface\13_2000076\Game\Textures_Other.pak", @"xxx")]
+    //    @"G:\SteamLibrary\steamapps\common\Warface\13_2000076\Game\Textures_Other.pak", [@"xxx"])]
 
     //// Comments: NEWHUNT | NEWHUNT (OK)
     //[DataRow("hex:30818902818100affd71ca741c1aa5895becf596e8732d290453d275cf6ff0bb214324ebab7eedd7f39deebc2708d88b6d536a58da5683137fafec478e41e6f8b0882e5eba236b9d2a150ee513ae562ce56b6aaf982c27a8c317281afa0f84f546ecb825ccf2217519c84ed0ceab179ee5ccdab0cb40a95d5442120f25a61e7da79d30c7d7d8a70203010001",
-    //    @"G:\SteamLibrary\steamapps\common\Hunt Showdown\game_hunt\gamedata.pak", @"xxx")]
+    //    @"G:\SteamLibrary\steamapps\common\Hunt Showdown\game_hunt\gamedata.pak", [@"xxx"])]
     //[DataRow("hex:30818902818100affd71ca741c1aa5895becf596e8732d290453d275cf6ff0bb214324ebab7eedd7f39deebc2708d88b6d536a58da5683137fafec478e41e6f8b0882e5eba236b9d2a150ee513ae562ce56b6aaf982c27a8c317281afa0f84f546ecb825ccf2217519c84ed0ceab179ee5ccdab0cb40a95d5442120f25a61e7da79d30c7d7d8a70203010001",
-    //    @"G:\SteamLibrary\steamapps\common\Hunt Showdown\game_hunt\audio.pak", @"xxx")]
+    //    @"G:\SteamLibrary\steamapps\common\Hunt Showdown\game_hunt\audio.pak", [@"xxx"])]
 
     //// Comments:STREAMCIPHER_KEYTABLE|CDR_SIGNED (OK)
     //[DataRow("hex:30818902818100D51E1D3810C4A112B2F2504B83E2F124009C0AC9CD1661913421D4E94623AD7014599DAFB0DC9F8366D164AD072B3DC5AA3D4CD24542D5F684E6A4F7473102DE2ACA11F6524015ECBD564248FC712B3A69B15B78EFAA06748259DDE77A75757E513F7AC21A0151F53C78FF45ABCC45C3F54BC6305F420981F7119AF03E6438D70203010001",
-    //    @"G:\SteamLibrary\steamapps\common\SNOW\Assets\GameData.pak", @"xxx")]
+    //    @"G:\SteamLibrary\steamapps\common\SNOW\Assets\GameData.pak", [@"xxx"])]
     //[DataRow("hex:30818902818100D51E1D3810C4A112B2F2504B83E2F124009C0AC9CD1661913421D4E94623AD7014599DAFB0DC9F8366D164AD072B3DC5AA3D4CD24542D5F684E6A4F7473102DE2ACA11F6524015ECBD564248FC712B3A69B15B78EFAA06748259DDE77A75757E513F7AC21A0151F53C78FF45ABCC45C3F54BC6305F420981F7119AF03E6438D70203010001",
-    //    @"G:\SteamLibrary\steamapps\common\SNOW\Assets\Sounds.pak", @"xxx")]
+    //    @"G:\SteamLibrary\steamapps\common\SNOW\Assets\Sounds.pak", [@"xxx"])]
 
     //// TEA (OK)
     //[DataRow(null,
-    //    @"G:\SteamLibrary\steamapps\common\Ryse Son of Rome\GameRyse\GameData.pak", @"xxx")]
+    //    @"G:\SteamLibrary\steamapps\common\Ryse Son of Rome\GameRyse\GameData.pak", [@"xxx"])]
     //[DataRow(null,
-    //    @"G:\SteamLibrary\steamapps\common\Ryse Son of Rome\GameRyse\Music.pak", @"xxx")]
+    //    @"G:\SteamLibrary\steamapps\common\Ryse Son of Rome\GameRyse\Music.pak", [@"xxx"])]
 
     //// Comments:CDR_SIGNED (OK)
     //[DataRow(null,
-    //    @"G:\SteamLibrary\steamapps\common\Robinson The Journey\game_robinson\gamedata.pak", @"xxx")]
+    //    @"G:\SteamLibrary\steamapps\common\Robinson The Journey\game_robinson\gamedata.pak", [@"xxx"])]
     //[DataRow(null,
-    //    @"G:\SteamLibrary\steamapps\common\Robinson The Journey\game_robinson\audio.pak", @"xxx")]
+    //    @"G:\SteamLibrary\steamapps\common\Robinson The Journey\game_robinson\audio.pak", [@"xxx"])]
 
     //// None (OK)
     //[DataRow(null,
-    //    @"G:\SteamLibrary\steamapps\common\Crysis Remastered\Game\gamedata.pak", @"xxx")]
+    //    @"G:\SteamLibrary\steamapps\common\Crysis Remastered\Game\gamedata.pak", [@"xxx"])]
 
     // P4K (OK)
     [DataRow("hex:5E7A2002302EEB1A3BB617C30FDE1E47",

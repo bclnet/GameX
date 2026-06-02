@@ -1,11 +1,15 @@
 from __future__ import annotations
 import sys, io, struct
 from enum import Enum
-from zipfile import ZipFile, _EndRecData, _ECD_DISK_NUMBER, _ECD_COMMENT, _ECD_SIZE, _ECD_OFFSET, _ECD_LOCATION, _CD_SIGNATURE, _CD_FILENAME_LENGTH, _CD_FLAG_BITS, _MASK_UTF_FILENAME, _CD_EXTRA_FIELD_LENGTH, _CD_COMMENT_LENGTH, _CD_LOCAL_HEADER_OFFSET, MAX_EXTRACT_VERSION, sizeCentralDir, structCentralDir, stringCentralDir, BadZipFile
+from zipfile import crc32, ZipInfo, ZipFile, _EndRecData, _ECD_SIGNATURE, _ECD_DISK_NUMBER, _ECD_COMMENT, _ECD_SIZE, _ECD_OFFSET, _ECD_LOCATION, _CD_SIGNATURE, _CD_FILENAME_LENGTH, _CD_FLAG_BITS, _MASK_UTF_FILENAME, _CD_EXTRA_FIELD_LENGTH, _CD_COMMENT_LENGTH, _CD_LOCAL_HEADER_OFFSET, MAX_EXTRACT_VERSION, sizeCentralDir, structCentralDir, stringCentralDir, stringEndArchive64, sizeEndCentDir64, sizeEndCentDir64Locator, BadZipFile
+
+p4kStringCentralDir = b"PK\x03\x04"
+p4kStringCentralDirEncrypted = b"PK\x03\x14"
 
 # see: https://github.com/python/cpython/tree/main/Lib/zipfile
+# local: C:\Users\smorey2\AppData\Local\Python\pythoncore-3.13-64\Lib\zipfile
 
-#region Cry3Encrypt
+#region ZipFileEncrypt
 
 BLOCK_CIPHER_NUM_KEYS = 16
 BLOCK_CIPHER_KEY_LENGTH = 16
@@ -60,7 +64,7 @@ _CCEH_KEYS_TABLE = 4                        # As above, actually BLOCK_CIPHER_KE
 
 #region StreamCipher
 
-def decryptBufferWithStreamCipher(engineId: char, data: bytes, size: int, key: bytes, iv: bytes) -> bool:
+def _DecryptBufferWithStreamCipher(engineId: char, data: bytes, size: int, key: bytes, iv: bytes) -> bool:
     # try {
     #     var cipher = new BufferedBlockCipher(new SicRevBlockCipher(engineId == 'A' ? new AesEngine() : new TwofishEngine()));
     #     cipher.Init(false, new ParametersWithIV(new KeyParameter(key), iv));
@@ -69,9 +73,9 @@ def decryptBufferWithStreamCipher(engineId: char, data: bytes, size: int, key: b
     # catch (CryptoException ex) { Console.WriteLine(ex.Message); return false; }
     return True
 
-def getEncryptionKeyIndex(entry: object) -> int: return 0 # => (int)unchecked(~(entry.Crc32 >> 2) & 0xF)
+def _GetEncryptionKeyIndex(entry: object) -> int: return 0 # => (int)unchecked(~(entry.Crc32 >> 2) & 0xF)
 
-def getEncryptionInitialVector(entry: object) -> bytes:
+def _GetEncryptionInitialVector(entry: object) -> bytes:
     # unchecked {
     #     var intIV = new[] {
     #         (uint)(entry.Length ^ (entry.CompressedLength << 12)),
@@ -97,7 +101,7 @@ def getEncryptionInitialVector(entry: object) -> bytes:
 
 from Crypto.PublicKey import RSA
 # from Crypto.Util.asn1 import DerObjectId, DerSequence, DerInteger, DerBitString
-from Crypto.Cipher import PKCS1_OAEP
+from Crypto.Cipher import AES, PKCS1_OAEP
 from Crypto.Hash import BLAKE2b, SHA256, SHA1
 # see: https://github.com/Legrandin/pycryptodome
 
@@ -116,56 +120,48 @@ RsaKey = [
     0x00, 0x01 ]
 
 def _GetPublicKey(keyInfoData: bytes) -> object:
-    key = RSA.import_key(keyInfoData)
-    n = key.n; e = key.e
-    return RSA.construct((n, e, e))
-
+    key = RSA.importKey(keyInfoData)
+    return key
+    
     # sequence = DerSequence()
-    # if not sequence.decode(keyInfoData): raise BadZipFile('Invalid PrivateKey Data')
+    # if not sequence.decode(keyInfoData): raise BadZipFile("Invalid PrivateKey Data")
     # # algId = None; keyData = None
     # # for value in sequence:
     # #     if not keyData: keyData = DerBitString(sequence)
-    # # if not keyData: raise BadZipFile('Invalid PrivateKey Data')
+    # # if not keyData: raise BadZipFile("Invalid PrivateKey Data")
     # # pack = (algId or DerObjectId('1.2.840.113549.1.1.1'), keyData.value)
     # n = sequence[0]; e = sequence[1]
     # return RSA.construct((n, e))
     # # Assuming 'spki_der' is the raw DER bytes of a SubjectPublicKeyInfo sequence
     # spki = DerSequence().decode(keyInfoData)
     # # 1. Parse the AlgorithmIdentifier sequence
-    # print(spki[0])
-    # exit(1)
     # algoIdent = DerSequence().decode(spki[1].to_bytes())
-    # print(len(algoIdent))
     # algoOid = DerObjectId().decode(algoIdent[0]).value
-    # print(algoOid)
-    # exit(1)
     # # Validate that the OID corresponds to rsaEncryption (1.2.840.113549.1.1.1)
     # if algoOid != '1.2.840.113549.1.1.1': raise ValueError('Not an RSA key identifier!')
     # # 2. Extract the actual RSA public key BitString
     # subject_public_key = DerBitString().decode(spki[1]).value
     # # 3. Parse the isolated RSAPublicKey structure (modulus 'n' and exponent 'e')
     # rsa_components = DerSequence().decode(subject_public_key)
-
     # n = rsa_components[0], e = rsa_components[1]
     # return RSA.construct((n, e))
 
 def _DecryptKeysTable(aesKey: bytes, CDR_IV: bytes, KEYS_TABLE: bytes, digestSize: int) -> tuple[bool, bytes, list[bytes]]:
-    digest = BLAKE2b if digestSize == 257 else SHA25 if digestSize == 256 else SHA1
+    digest = BLAKE2b if digestSize == 257 else SHA256 if digestSize == 256 else SHA1
     try:
-        publicKey = _GetPublicKey(aesKey or RsaKey) #;print(publicKey.n, publicKey.e)
-        def cipher_init() -> object: return PKCS1_OAEP.new(key=publicKey, hashAlgo=digest)
-        
+        key = _GetPublicKey(aesKey or RsaKey)
+        def cipher_init() -> object: return PKCS1_OAEP.new(key, hashAlgo=digest)
+
         # cdr iv
         cipher = cipher_init()
         cdrIV = cipher.decrypt(CDR_IV)
-        # print(cdrIV.hex())
 
         # Decrypt the table of cipher keys.
         keysTable = [bytes()]*BLOCK_CIPHER_NUM_KEYS
         offset = 0
         for i in range(BLOCK_CIPHER_NUM_KEYS):
             cipher = cipher_init()
-            keysTable[i] = cipher.decrypt(KEYS_TABLE[offset::RSA_KEY_MESSAGE_LENGTH])
+            keysTable[i] = cipher.decrypt(KEYS_TABLE[offset:offset+RSA_KEY_MESSAGE_LENGTH])
             offset += RSA_KEY_MESSAGE_LENGTH
         return (True, cdrIV, keysTable)
     except:
@@ -239,14 +235,15 @@ def btea(v: object, n: int, k: list[int]) -> None:
 
 #region ZipFileX
 
-class ZipFileKind(Enum): Cry3 = 0; P4k = 1
-
 def _handle_prepended_data(endrec, debug=0):
     size_cd = endrec[_ECD_SIZE]             # bytes in central directory
     offset_cd = endrec[_ECD_OFFSET]         # offset of central directory
 
     # "concat" is zero, unless zip was concatenated to another file
     concat = endrec[_ECD_LOCATION] - size_cd - offset_cd
+    if endrec[_ECD_SIGNATURE] == stringEndArchive64:
+        # If Zip64 extension structures are present, account for them
+        concat -= (sizeEndCentDir64 + sizeEndCentDir64Locator)
 
     if debug > 2:
         inferred = concat + offset_cd
@@ -254,16 +251,35 @@ def _handle_prepended_data(endrec, debug=0):
 
     return offset_cd, concat
 
+def _GetReferenceCRCForPak() -> int: return 0
+
+class ZipFileKind(Enum): Cry3 = 0; P4k = 1
+
+class ZipInfoX(ZipInfo):
+    def __init__(self, filename='NoName', date_time=(1980,1,1,0,0,0)): super().__init__(filename, date_time)
+    # def _decodeExtra(self, filename_crc): pass
+    #     # super()._decodeExtra(filename_crc)
+
+DEFAULT_CUSTOMIV = [0x70, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 EndOfCentralRecordBaseSize = 22
 class ZipFileX(ZipFile):
+    _encryptedHeaders: EHeaderEncryptionType = 0
+    _signedHeaders: EHeaderSignatureType = 0
+    _headerSignature = [0, None]
+    _headerExtended = [0, 0, 0]
+    _headerEncryption = [0, 0, 0, None, None]
+    _headerTeaEncryption = [0, None]
+    _customIV: bytes = None
+    _customKeys: list[bytes] = None
+    _offsetOfFirstEntry: int = 0
     def __init__(self, kind: ZipFileKind, file: object, name: str, key: bytes, mode: str='r'):
-        self.debug = 1
         self._kind = kind
         self._name = name
         self._key = key
         super().__init__(file, mode)
 
-    def _DecodeHeader(self, fp, endrec):
+    def _decodeHeader(self, endrec):
+        fp = self.fp
         # Earlier pak file encryption techniques stored the encryption type in the disk number of the CDREnd.
         # This works, but can't be used by the more recent techniques that require signed paks to be readable by 7-Zip during dev.
         headerEnc = EHeaderEncryptionType(endrec[_ECD_DISK_NUMBER] >> 14)
@@ -276,7 +292,7 @@ class ZipFileX(ZipFile):
         if commentSize >= CryCustomExtendedHeader[1]:
             fp.seek(endrec[_ECD_OFFSET] + endrec[_ECD_SIZE] + EndOfCentralRecordBaseSize)
             self._headerExtended = struct.unpack(CryCustomExtendedHeader[0], fp.read(CryCustomExtendedHeader[1]))
-            if self._headerExtended[_CCXH_HEADER_SIZE] != CryCustomExtendedHeader[1]: raise BadZipFile('Bad extended header')
+            if self._headerExtended[_CCXH_HEADER_SIZE] != CryCustomExtendedHeader[1]: raise BadZipFile("Bad extended header")
 
             # We have the header, so read the encryption and signing techniques
             self._signedHeaders = EHeaderSignatureType(self._headerExtended[_CCXH_SIGNING])
@@ -286,7 +302,7 @@ class ZipFileX(ZipFile):
             expectedCommentLength = CryCustomExtendedHeader[1]
 
             # Encryption technique has been specified in both the disk number (old technique) and the custom header (new technique).
-            if self._encryptedHeaders != EHeaderEncryptionType.HEADERS_ENCRYPTED_TEA and self._headerExtended[_CCXH_ENCRYPTION] != int(EHeaderEncryptionType.HEADERS_NOT_ENCRYPTED) and self._encryptedHeaders != 0: raise BadZipFile('Unexpected encryption technique in header')
+            if self._encryptedHeaders != EHeaderEncryptionType.HEADERS_ENCRYPTED_TEA and self._headerExtended[_CCXH_ENCRYPTION] != EHeaderEncryptionType.HEADERS_NOT_ENCRYPTED.value and self._encryptedHeaders != 0: raise BadZipFile("Unexpected encryption technique in header")
             else:
                 # The encryption technique has been specified only in the custom header
                 self._encryptedHeaders = EHeaderEncryptionType(self._headerExtended[_CCXH_ENCRYPTION])
@@ -297,40 +313,81 @@ class ZipFileX(ZipFile):
                         hasSize2 = self._encryptedHeaders == EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE2
                         expectedCommentLength += CryCustomEncryptionHeader[1]
                         if hasSize2: expectedCommentLength += CryCustomEncryptionHeader[2]
-                    case _: raise BadZipFile('Unexpected encryption technique in header')
+                    case _: raise BadZipFile("Unexpected encryption technique in header")
 
             # Add the signature header to the expected size
             match self._signedHeaders:
                 case EHeaderSignatureType.HEADERS_NOT_SIGNED: pass
                 case EHeaderSignatureType.HEADERS_CDR_SIGNED | EHeaderSignatureType.HEADERS_CDR_SIGNED2: expectedCommentLength += CrySignedCDRHeader[1]
-                case _: raise BadZipFile('Bad signing technique in header')
+                case _: raise BadZipFile("Bad signing technique in header")
             
             if commentSize == expectedCommentLength:
                 if self._signedHeaders == EHeaderSignatureType.HEADERS_CDR_SIGNED or self._signedHeaders == EHeaderSignatureType.HEADERS_CDR_SIGNED2:
                     self._headerSignature = struct.unpack(CrySignedCDRHeader[0], fp.read(CrySignedCDRHeader[1]))
-                    if self._headerSignature[_CSCH_HEADER_SIZE] != CrySignedCDRHeader[1]: raise BadZipFile('Bad signature header')
+                    if self._headerSignature[_CSCH_HEADER_SIZE] != CrySignedCDRHeader[1]: raise BadZipFile("Bad signature header")
                 if self._encryptedHeaders == EHeaderEncryptionType.HEADERS_ENCRYPTED_TEA:
                     self._headerTeaEncryption = struct.unpack(CryCustomTeaEncryptionHeader[0], fp.read(CryCustomTeaEncryptionHeader[1]))
-                    if self._headerTeaEncryption[_CCTEH_HEADER_SIZE] != CryCustomTeaEncryptionHeader[1] + CryCustomEncryptionHeader[1]: raise BadZipFile('Bad encryption header')
+                    if self._headerTeaEncryption[_CCTEH_HEADER_SIZE] != CryCustomTeaEncryptionHeader[1] + CryCustomEncryptionHeader[1]: raise BadZipFile("Bad encryption header")
                     self._encryptedHeaders = EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE
-                if self._encryptedHeaders == EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE or _encryptedHeaders == EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE2:
+                if self._encryptedHeaders == EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE or self._encryptedHeaders == EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE2:
                     hasSize2 = self._encryptedHeaders == EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE2
                     self._headerEncryption = struct.unpack(CryCustomEncryptionHeader[0][0] if hasSize2 else CryCustomEncryptionHeader[0][1], fp.read(CryCustomEncryptionHeader[1] + (CryCustomEncryptionHeader[2] if hasSize2 else 0)))
                     if not hasSize2: self._headerEncryption = (self._headerEncryption[0], 0, 0, self._headerEncryption[1], self._headerEncryption[2])
-                    if self._headerEncryption[_CCEH_HEADER_SIZE] != 0 and self._headerEncryption[_CCEH_HEADER_SIZE] != CryCustomEncryptionHeader[1] + (CryCustomEncryptionHeader[2] if hasSize2 else 0): raise BadZipFile('Bad encryption header')
+                    if self._headerEncryption[_CCEH_HEADER_SIZE] != 0 and self._headerEncryption[_CCEH_HEADER_SIZE] != CryCustomEncryptionHeader[1] + (CryCustomEncryptionHeader[2] if hasSize2 else 0): raise BadZipFile("Bad encryption header")
                     # We have a table of symmetric keys to decrypt
                     digestSize = 1 if self._headerTeaEncryption[_CCTEH_HEADER_SIZE] != 0 else 256
-                    (_customIV, _customKeys) = _DecryptKeysTable(self._key, self._headerEncryption[_CCEH_CDR_IV], self._headerEncryption[_CCEH_KEYS_TABLE], digestSize)
-            else: raise BadZipFile('Comment field is the wrong length')
-        print('HERE')
-        exit(1)
+                    (_, self._customIV, self._customKeys) = _DecryptKeysTable(self._key, self._headerEncryption[_CCEH_CDR_IV], self._headerEncryption[_CCEH_KEYS_TABLE], digestSize)
+            else: raise BadZipFile("Comment field is the wrong length")
 
         # HACK: Hardcoded check for PAK location before enforcing encryption requirement. For C2 Mod SDK Release.
         if self._encryptedHeaders == EHeaderEncryptionType.HEADERS_NOT_ENCRYPTED:
-            if self.getReferenceCRCForPak() != 0: self._encryptedHeaders = EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER
+            if _GetReferenceCRCForPak() != 0: self._encryptedHeaders = EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER
+
+    def _trySfxEmbedded(self, s, eocdStart: int) -> None:
+        # SFX/embedded support, find the offset of the first entry vis the start of the stream
+        # This applies to Zip files that are appended to the end of an SFX stub.
+        # Or are appended as a resource to an executable.
+        # Zip files created by some archivers have the offsets altered to reflect the true offsets
+        # and so dont require any adjustment here...
+        # TODO: Difficulty with Zip64 and SFX offset handling needs resolution - maths?
+        isZip64 = False
+        if not isZip64 and (s[_ECD_OFFSET] < eocdStart - (4 + s[_ECD_SIZE])):
+            self._offsetOfFirstEntry = eocdStart - (4 + s[_ECD_SIZE] + s[_ECD_OFFSET])
+            if self._offsetOfFirstEntry <= 0: raise BadZipError("Invalid embedded zip archive")
+
+    def _decodeHeaderData(self, s) -> bool:
+        fp = self.fp
+        nSize = s[_ECD_SIZE]
+        fp.seek(self._offsetOfFirstEntry + s[_ECD_OFFSET])
+        if self._encryptedHeaders != EHeaderEncryptionType.HEADERS_NOT_ENCRYPTED:
+            bytes = fp.read(nSize)
+            match self._encryptedHeaders:
+                case EHeaderEncryptionType.HEADERS_ENCRYPTED_TEA: XXTeaDecrypt(bytes, nSize)
+                case EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER: StreamCipher(bytes, nSize, GetReferenceCRCForPak())
+                case EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE | EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE2:
+                    engineId = self._encryptedHeaders == 'A' if EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE2 else '2'
+                    iv = DEFAULT_CUSTOMIV if self._headerTeaEncryption[_CCTEH_HEADER_SIZE] != 0 else self._customIV
+                    if not _DecryptBufferWithStreamCipher(engineId, bytes, nSize, self._customKeys[0], iv): print('Failed to decrypt pak header'); return False
+                case _: print('Attempting to load encrypted pak by unsupported method'); return False
+            fp = io.BytesIO(bytes)
+            self.start_dir = 0
+        match self._signedHeaders:
+            # case EHeaderSignatureType.HEADERS_CDR_SIGNED | EHeaderSignatureType.HEADERS_CDR_SIGNED2:
+            #     if self._name == None: break
+            #     # Verify CDR signature & pak name
+            #     pathSepIdx = Math.Max(_name.LastIndexOf('\\'), _name.LastIndexOf('/'));
+            #     pathSep = _name[(pathSepIdx + 1)..];
+            #     position = stream.Position; var bytes = new byte[nSize]; stream.ReadAtLeast(bytes, nSize); stream.Position = position;
+            #     dataToVerify = new byte[][] { bytes, Encoding.ASCII.GetBytes(pathSep) };
+            #     sizesToVerify = new int[] { nSize, pathSep.Length };
+            #     # Could not verify signature
+            #     if not RsaVerifyData(dataToVerify, sizesToVerify, 2, _headerSignature[_CCEH_CDR_SIGNED], 128, self._key): print('Failed to verify RSA signature of pak header'); return False
+            case EHeaderSignatureType.HEADERS_NOT_SIGNED: pass
+        return True
 
     def _RealGetContents(self):
         """Read in the table of contents for the ZIP file."""
+        self.debug = 3
         fp = self.fp
         try:
             endrec = _EndRecData(fp)
@@ -340,14 +397,20 @@ class ZipFileX(ZipFile):
             raise BadZipFile("File is not a zip file")
         if self.debug > 1:
             print(endrec)
+        eocdStart = fp.tell()
         self._comment = endrec[_ECD_COMMENT]    # archive comment
 
-        if self._kind == ZipFileKind.Cry3: self._DecodeHeader(fp, endrec)
+        if self._kind == ZipFileKind.Cry3: self._decodeHeader(endrec)
 
         offset_cd, concat = _handle_prepended_data(endrec, self.debug)
 
         # self.start_dir:  Position of start of central directory
         self.start_dir = offset_cd + concat
+        self.start_dir = 148029440
+
+        if self._kind == ZipFileKind.Cry3:
+            self._trySfxEmbedded(endrec, eocdStart)
+            self._decodeHeaderData(endrec)
 
         if self.start_dir < 0:
             raise BadZipFile("Bad offset for central directory")
@@ -361,8 +424,12 @@ class ZipFileX(ZipFile):
             if len(centdir) != sizeCentralDir:
                 raise BadZipFile("Truncated central directory")
             centdir = struct.unpack(structCentralDir, centdir)
-            if centdir[_CD_SIGNATURE] != stringCentralDir:
-                raise BadZipFile("Bad magic number for central directory")
+            if self._kind == ZipFileKind.P4k:
+                if centdir[_CD_SIGNATURE] != p4kStringCentralDir and centdir[_CD_SIGNATURE] != p4kStringCentralDirEncrypted:
+                    raise BadZipFile("Bad magic number for central directory")
+            else:
+                if centdir[_CD_SIGNATURE] != stringCentralDir:
+                    raise BadZipFile("Bad magic number for central directory")
             if self.debug > 2:
                 print(centdir)
             filename = fp.read(centdir[_CD_FILENAME_LENGTH])
@@ -374,14 +441,16 @@ class ZipFileX(ZipFile):
             else:
                 # Historical ZIP filename encoding
                 filename = filename.decode(self.metadata_encoding or 'cp437')
+            print(filename)
             # Create ZipInfo instance to store file information
-            x = ZipInfo(filename)
+            x = ZipInfoX(filename)
             x.extra = fp.read(centdir[_CD_EXTRA_FIELD_LENGTH])
             x.comment = fp.read(centdir[_CD_COMMENT_LENGTH])
             x.header_offset = centdir[_CD_LOCAL_HEADER_OFFSET]
             (x.create_version, x.create_system, x.extract_version, x.reserved,
              x.flag_bits, x.compress_type, t, d,
              x.CRC, x.compress_size, x.file_size) = centdir[1:12]
+            print(x.file_size)
             if x.extract_version > MAX_EXTRACT_VERSION:
                 raise NotImplementedError("zip file version %.1f" %
                                           (x.extract_version / 10))

@@ -18,7 +18,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using static System.IO.Compression.CompressionX;
-using static System.IO.Compression.ZipEncrypt;
+using static System.IO.Compression.ZipArchiveEncrypt;
 using static System.IO.Compression.ZipEndOfCentralDirectoryBlock;
 
 namespace System.IO.Compression;
@@ -88,6 +88,7 @@ public partial class ZipArchiveX : ZipArchive {
                     }
                     break;
             }
+            //_mode = ZipArchiveMode.Update;
         }
         catch (Exception) { extraTempStream?.Dispose(); throw; }
     }
@@ -152,9 +153,8 @@ public partial class ZipArchiveX : ZipArchive {
                 _encryptedHeaders = (EHeaderEncryptionType)_headerExtended.nEncryption;
                 switch (_encryptedHeaders) {
                     case EHeaderEncryptionType.HEADERS_NOT_ENCRYPTED: break;
-                    case EHeaderEncryptionType.HEADERS_ENCRYPTED_TEA: expectedCommentLength += CryCustomTeaEncryptionHeader.SizeOf; goto case EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE;
-                    case EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE:
-                    case EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE2:
+                    case EHeaderEncryptionType.HEADERS_ENCRYPTED_TEA or EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE or EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE2:
+                        if (_encryptedHeaders == EHeaderEncryptionType.HEADERS_ENCRYPTED_TEA) expectedCommentLength += CryCustomTeaEncryptionHeader.SizeOf;
                         var hasSize2 = _encryptedHeaders == EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE2;
                         expectedCommentLength += CryCustomEncryptionHeader.SizeOf;
                         if (hasSize2) expectedCommentLength += CryCustomEncryptionHeader.SizeOf2;
@@ -166,13 +166,12 @@ public partial class ZipArchiveX : ZipArchive {
             // Add the signature header to the expected size
             switch (_signedHeaders) {
                 case EHeaderSignatureType.HEADERS_NOT_SIGNED: break;
-                case EHeaderSignatureType.HEADERS_CDR_SIGNED: case EHeaderSignatureType.HEADERS_CDR_SIGNED2: expectedCommentLength += CrySignedCDRHeader.SizeOf; break;
+                case EHeaderSignatureType.HEADERS_CDR_SIGNED or EHeaderSignatureType.HEADERS_CDR_SIGNED2: expectedCommentLength += CrySignedCDRHeader.SizeOf; break;
                 default: throw new InvalidDataException("Bad signing technique in header");
             }
 
             if (commentSize == expectedCommentLength) {
-                if (_signedHeaders == EHeaderSignatureType.HEADERS_CDR_SIGNED ||
-                    _signedHeaders == EHeaderSignatureType.HEADERS_CDR_SIGNED2) {
+                if (_signedHeaders == EHeaderSignatureType.HEADERS_CDR_SIGNED || _signedHeaders == EHeaderSignatureType.HEADERS_CDR_SIGNED2) {
                     _headerSignature = new CrySignedCDRHeader {
                         nHeaderSize = r.ReadUInt32(),
                         CDR_signed = r.ReadBytes(RSA_KEY_MESSAGE_LENGTH)
@@ -187,8 +186,7 @@ public partial class ZipArchiveX : ZipArchive {
                     if (_headerTeaEncryption.nHeaderSize != CryCustomTeaEncryptionHeader.SizeOf + CryCustomEncryptionHeader.SizeOf) throw new InvalidDataException("Bad encryption header");
                     _encryptedHeaders = EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE;
                 }
-                if (_encryptedHeaders == EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE ||
-                    _encryptedHeaders == EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE2) {
+                if (_encryptedHeaders == EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE || _encryptedHeaders == EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE2) {
                     var hasSize2 = _encryptedHeaders == EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE2;
                     _headerEncryption = new CryCustomEncryptionHeader {
                         nHeaderSize = r.ReadUInt32(),
@@ -212,7 +210,7 @@ public partial class ZipArchiveX : ZipArchive {
         }
     }
 
-    static void TrySfxEmbedded(ZipEndOfCentralDirectoryBlock s, long eocdStart) {
+    void TrySfxEmbedded(ZipEndOfCentralDirectoryBlock s, long eocdStart) {
         // SFX/embedded support, find the offset of the first entry vis the start of the stream
         // This applies to Zip files that are appended to the end of an SFX stub.
         // Or are appended as a resource to an executable.
@@ -221,7 +219,7 @@ public partial class ZipArchiveX : ZipArchive {
         // TODO: Difficulty with Zip64 and SFX offset handling needs resolution - maths?
         var isZip64 = false;
         if (!isZip64 && (s.OffsetOfStartOfCentralDirectoryWithRespectToTheStartingDiskNumber < eocdStart - (4 + (long)s.SizeOfCentralDirectory))) {
-            var _offsetOfFirstEntry = eocdStart - (4 + (long)s.SizeOfCentralDirectory + s.OffsetOfStartOfCentralDirectoryWithRespectToTheStartingDiskNumber);
+            _offsetOfFirstEntry = eocdStart - (4 + (long)s.SizeOfCentralDirectory + s.OffsetOfStartOfCentralDirectoryWithRespectToTheStartingDiskNumber);
             if (_offsetOfFirstEntry <= 0) throw new InvalidDataException("Invalid embedded zip archive");
         }
     }
@@ -234,8 +232,7 @@ public partial class ZipArchiveX : ZipArchive {
             switch (_encryptedHeaders) {
                 case EHeaderEncryptionType.HEADERS_ENCRYPTED_TEA: XXTeaDecrypt(ref bytes, nSize); break;
                 case EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER: StreamCipher(ref bytes, nSize, GetReferenceCRCForPak()); break;
-                case EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE:
-                case EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE2:
+                case EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE or EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE2:
                     var engineId = _encryptedHeaders == EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE2 ? 'A' : '2';
                     var iv = _headerTeaEncryption.nHeaderSize != 0 ? DEFAULT_CUSTOMIV : _customIV;
                     if (!DecryptBufferWithStreamCipher(engineId, ref bytes, nSize, _customKeys[0], iv)) { Console.WriteLine("Failed to decrypt pak header"); return false; }
@@ -247,8 +244,7 @@ public partial class ZipArchiveX : ZipArchive {
         }
         var stream = _archiveStream;
         switch (_signedHeaders) {
-            case EHeaderSignatureType.HEADERS_CDR_SIGNED:
-            case EHeaderSignatureType.HEADERS_CDR_SIGNED2:
+            case EHeaderSignatureType.HEADERS_CDR_SIGNED or EHeaderSignatureType.HEADERS_CDR_SIGNED2:
                 if (_name == null) break;
                 // Verify CDR signature & pak name
                 var pathSepIdx = Math.Max(_name.LastIndexOf('\\'), _name.LastIndexOf('/'));
@@ -394,6 +390,8 @@ public class ZipArchiveEntryX(ZipArchiveEntry source) {
         }
         return _storedOffsetOfCompressedData.Value;
     }
+
+    //internal byte[] ExtraData => (CompressionMethodValues)CompressionMethodProperty.GetValue(this_);
 
     public CompressionMethodValues CompressionMethod => (CompressionMethodValues)CompressionMethodProperty.GetValue(this_);
 
@@ -661,9 +659,9 @@ internal class SicRevBlockCipher : IBlockCipherMode {
 }
 
 /// <summary>
-/// ZipEncrypt
+/// ZipArchiveEncrypt
 /// </summary>
-internal unsafe static class ZipEncrypt {
+internal unsafe static class ZipArchiveEncrypt {
     public const int BLOCK_CIPHER_NUM_KEYS = 16;
     public const int BLOCK_CIPHER_KEY_LENGTH = 16;
     public const int RSA_KEY_MESSAGE_LENGTH = 128;         // The modulus of our private/public key pair for signing, verification, encryption and decryption
@@ -702,13 +700,13 @@ internal unsafe static class ZipEncrypt {
     public struct CrySignedCDRHeader {
         public const ushort SizeOf = 4 + RSA_KEY_MESSAGE_LENGTH;
         public uint nHeaderSize; // Size of the extended header.
-        public byte[] CDR_signed /*[RSA_KEY_MESSAGE_LENGTH]*/;
+        public byte[] CDR_signed; //[RSA_KEY_MESSAGE_LENGTH]
     }
 
     public struct CryCustomTeaEncryptionHeader {
         public const ushort SizeOf = 4 + 172;
         public uint nHeaderSize; // Size of the extended header.
-        public byte[] Unknown1 /*[172]*/;
+        public byte[] Unknown1; //[172]
     }
 
     // Header for HEADERS_ENCRYPTED_CRYCUSTOM technique. Paired with a CrySignedCDRHeader to allow for signing as well as encryption.
@@ -720,8 +718,8 @@ internal unsafe static class ZipEncrypt {
         public uint nHeaderSize; // Size of the extended header.
         public uint Unknown1; // Hunt: Shadow
         public uint Unknown2; // Hunt: Shadow
-        public byte[] CDR_IV /*[RSA_KEY_MESSAGE_LENGTH]*/; // Initial Vector is actually BLOCK_CIPHER_KEY_LENGTH bytes in length, but is encrypted as a RSA_KEY_MESSAGE_LENGTH byte message.
-        public byte[] Keys_Table /*[BLOCK_CIPHER_NUM_KEYS * RSA_KEY_MESSAGE_LENGTH]*/; // As above, actually BLOCK_CIPHER_KEY_LENGTH but encrypted.
+        public byte[] CDR_IV; //[RSA_KEY_MESSAGE_LENGTH] Initial Vector is actually BLOCK_CIPHER_KEY_LENGTH bytes in length, but is encrypted as a RSA_KEY_MESSAGE_LENGTH byte message.
+        public byte[] Keys_Table; //[BLOCK_CIPHER_NUM_KEYS * RSA_KEY_MESSAGE_LENGTH] As above, actually BLOCK_CIPHER_KEY_LENGTH but encrypted.
     }
 
     #region StreamCipher

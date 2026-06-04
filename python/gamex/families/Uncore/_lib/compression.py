@@ -1,13 +1,8 @@
 from __future__ import annotations
 import sys, io, struct
 from enum import Enum
-from zipfile import crc32, ZipInfo, ZipFile, _EndRecData, _ECD_SIGNATURE, _ECD_DISK_NUMBER, _ECD_COMMENT, _ECD_SIZE, _ECD_OFFSET, _ECD_LOCATION, _CD_SIGNATURE, _CD_FILENAME_LENGTH, _CD_FLAG_BITS, _MASK_UTF_FILENAME, _CD_EXTRA_FIELD_LENGTH, _CD_COMMENT_LENGTH, _CD_LOCAL_HEADER_OFFSET, MAX_EXTRACT_VERSION, sizeCentralDir, structCentralDir, stringCentralDir, stringEndArchive64, sizeEndCentDir64, sizeEndCentDir64Locator, BadZipFile
-
-p4kStringCentralDir = b"PK\x03\x04"
-p4kStringCentralDirEncrypted = b"PK\x03\x14"
-
-# see: https://github.com/python/cpython/tree/main/Lib/zipfile
-# local: C:\Users\smorey2\AppData\Local\Python\pythoncore-3.13-64\Lib\zipfile
+major, minor = sys.version_info.major, sys.version_info.minor
+if major != 3 and minor < 12: raise Exception('Only vetted for Python 3.12+')
 
 #region ZipFileEncrypt
 
@@ -99,8 +94,8 @@ def _GetEncryptionInitialVector(entry: object) -> bytes:
 
 #region RSA
 
+from Crypto.Util.asn1 import DerObjectId, DerSequence, DerInteger, DerBitString
 from Crypto.PublicKey import RSA
-# from Crypto.Util.asn1 import DerObjectId, DerSequence, DerInteger, DerBitString
 from Crypto.Cipher import AES, PKCS1_OAEP
 from Crypto.Hash import BLAKE2b, SHA256, SHA1
 # see: https://github.com/Legrandin/pycryptodome
@@ -119,10 +114,11 @@ RsaKey = [
     0xD2, 0xE6, 0xF0, 0x22, 0x3B, 0xC3, 0xE7, 0xDD, 0x17, 0x1A, 0x8C, 0xF8, 0xE1, 0x02, 0x03, 0x01,
     0x00, 0x01 ]
 
-def _GetPublicKey(keyInfoData: bytes) -> object:
-    key = RSA.importKey(keyInfoData)
+def _GetPublicKey2(keyInfoData: bytes) -> object:
+    key = DerSequence().decode(keyInfoData)
+    #key = RSA.importKey(keyInfoData)
     return key
-    
+
     # sequence = DerSequence()
     # if not sequence.decode(keyInfoData): raise BadZipFile("Invalid PrivateKey Data")
     # # algId = None; keyData = None
@@ -146,7 +142,7 @@ def _GetPublicKey(keyInfoData: bytes) -> object:
     # n = rsa_components[0], e = rsa_components[1]
     # return RSA.construct((n, e))
 
-def _DecryptKeysTable(aesKey: bytes, CDR_IV: bytes, KEYS_TABLE: bytes, digestSize: int) -> tuple[bool, bytes, list[bytes]]:
+def _DecryptKeysTable2(aesKey: bytes, CDR_IV: bytes, KEYS_TABLE: bytes, digestSize: int) -> tuple[bool, bytes, list[bytes]]:
     digest = BLAKE2b if digestSize == 257 else SHA256 if digestSize == 256 else SHA1
     try:
         key = _GetPublicKey(aesKey or RsaKey)
@@ -168,6 +164,40 @@ def _DecryptKeysTable(aesKey: bytes, CDR_IV: bytes, KEYS_TABLE: bytes, digestSiz
         print(sys.exc_info()[1])
         return (False, None, None)
 
+    
+# from cryptography.hazmat import asn1
+from cryptography.hazmat.primitives import serialization, hashes
+from cryptography.hazmat.primitives.asymmetric import padding
+# from cryptography.hazmat.primitives.serialization import 
+# see: https://github.com/pyca/cryptography
+
+def _GetPublicKey(keyInfoData: bytes) -> object:
+    key = serialization.load_der_private_key(keyInfoData, password=None)
+    return key
+
+def _DecryptKeysTable(aesKey: bytes, CDR_IV: bytes, KEYS_TABLE: bytes, digestSize: int) -> tuple[bool, bytes, list[bytes]]:
+    digest = hashes.BLAKE2b() if digestSize == 257 else hashes.SHA256() if digestSize == 256 else hashes.SHA1()
+    try:
+        key = _GetPublicKey(aesKey or RsaKey)
+        def cipher_init() -> object: return padding.OAEP(mgf=padding.MGF1(algorithm=digest), algorithm=digest, label=None)
+
+        # cdr iv
+        cipher = cipher_init()
+
+        cdrIV = key.decrypt(CDR_IV, cipher)
+
+        # Decrypt the table of cipher keys.
+        keysTable = [bytes()]*BLOCK_CIPHER_NUM_KEYS
+        offset = 0
+        for i in range(BLOCK_CIPHER_NUM_KEYS):
+            cipher = cipher_init()
+            keysTable[i] = key.decrypt(KEYS_TABLE[offset:offset+RSA_KEY_MESSAGE_LENGTH], cipher)
+            offset += RSA_KEY_MESSAGE_LENGTH
+        return (True, cdrIV, keysTable)
+    except:
+        print(sys.exc_info()[1])
+        raise #return (False, None, None)
+    
 #endregion
 
 #region TEA
@@ -235,21 +265,36 @@ def btea(v: object, n: int, k: list[int]) -> None:
 
 #region ZipFileX
 
-def _handle_prepended_data(endrec, debug=0):
-    size_cd = endrec[_ECD_SIZE]             # bytes in central directory
-    offset_cd = endrec[_ECD_OFFSET]         # offset of central directory
+from zipfile import x, crc32, ZipInfo, ZipFile, _EndRecData, _ECD_SIGNATURE, _ECD_DISK_NUMBER, _ECD_COMMENT, _ECD_SIZE, _ECD_OFFSET, _ECD_LOCATION, _CD_SIGNATURE, _CD_FILENAME_LENGTH, _CD_FLAG_BITS, _MASK_UTF_FILENAME, _CD_EXTRA_FIELD_LENGTH, _CD_COMMENT_LENGTH, _CD_LOCAL_HEADER_OFFSET, MAX_EXTRACT_VERSION, sizeCentralDir, structCentralDir, stringCentralDir, stringEndArchive64, sizeEndCentDir64, sizeEndCentDir64Locator, BadZipFile
 
-    # "concat" is zero, unless zip was concatenated to another file
-    concat = endrec[_ECD_LOCATION] - size_cd - offset_cd
-    if endrec[_ECD_SIGNATURE] == stringEndArchive64:
-        # If Zip64 extension structures are present, account for them
-        concat -= (sizeEndCentDir64 + sizeEndCentDir64Locator)
+# see: https://github.com/python/cpython/tree/main/Lib/zipfile
+# local: C:\Users\smorey2\AppData\Local\Python\pythoncore-3.13-64\Lib\zipfile
+# local: C:\Users\smorey01\AppData\Local\Programs\Python\Python312\Lib\zipfile\__init__.py)
 
-    if debug > 2:
-        inferred = concat + offset_cd
-        print("given, inferred, offset", offset_cd, inferred, concat)
+p4kStringCentralDir = b"PK\x03\x04"
+p4kStringCentralDirEncrypted = b"PK\x03\x14"
 
-    return offset_cd, concat
+print(minor)
+exit(1)
+if minor > 13: from zipfile import _handle_prepended_data
+else:
+    def _handle_prepended_data(endrec, debug=0):
+        size_cd = endrec[_ECD_SIZE]             # bytes in central directory
+        offset_cd = endrec[_ECD_OFFSET]         # offset of central directory
+
+        # "concat" is zero, unless zip was concatenated to another file
+        concat = endrec[_ECD_LOCATION] - size_cd - offset_cd
+   
+        if debug > 2:
+            inferred = concat + offset_cd
+            print("given, inferred, offset", offset_cd, inferred, concat)
+
+        return offset_cd, concat
+
+# if endrec[_ECD_SIGNATURE] == stringEndArchive64:
+#     # If Zip64 extension structures are present, account for them
+#     concat -= (sizeEndCentDir64 + sizeEndCentDir64Locator)
+
 
 def _GetReferenceCRCForPak() -> int: return 0
 
@@ -387,7 +432,7 @@ class ZipFileX(ZipFile):
 
     def _RealGetContents(self):
         """Read in the table of contents for the ZIP file."""
-        self.debug = 3
+        self.debug = 0
         fp = self.fp
         try:
             endrec = _EndRecData(fp)

@@ -172,7 +172,7 @@ from cryptography.hazmat.primitives.asymmetric import padding
 # see: https://github.com/pyca/cryptography
 
 def _GetPublicKey(keyInfoData: bytes) -> object:
-    key = serialization.load_der_private_key(keyInfoData, password=None)
+    key = serialization.load_der_public_key(keyInfoData)
     return key
 
 def _DecryptKeysTable(aesKey: bytes, CDR_IV: bytes, KEYS_TABLE: bytes, digestSize: int) -> tuple[bool, bytes, list[bytes]]:
@@ -184,7 +184,7 @@ def _DecryptKeysTable(aesKey: bytes, CDR_IV: bytes, KEYS_TABLE: bytes, digestSiz
         # cdr iv
         cipher = cipher_init()
 
-        cdrIV = key.decrypt(CDR_IV, cipher)
+        cdrIV = key.encrypt(CDR_IV, cipher)
 
         # Decrypt the table of cipher keys.
         keysTable = [bytes()]*BLOCK_CIPHER_NUM_KEYS
@@ -265,7 +265,7 @@ def btea(v: object, n: int, k: list[int]) -> None:
 
 #region ZipFileX
 
-from zipfile import x, crc32, ZipInfo, ZipFile, _EndRecData, _ECD_SIGNATURE, _ECD_DISK_NUMBER, _ECD_COMMENT, _ECD_SIZE, _ECD_OFFSET, _ECD_LOCATION, _CD_SIGNATURE, _CD_FILENAME_LENGTH, _CD_FLAG_BITS, _MASK_UTF_FILENAME, _CD_EXTRA_FIELD_LENGTH, _CD_COMMENT_LENGTH, _CD_LOCAL_HEADER_OFFSET, MAX_EXTRACT_VERSION, sizeCentralDir, structCentralDir, stringCentralDir, stringEndArchive64, sizeEndCentDir64, sizeEndCentDir64Locator, BadZipFile
+from zipfile import crc32, ZipInfo, ZipFile, _EndRecData, _ECD_SIGNATURE, _ECD_DISK_NUMBER, _ECD_COMMENT, _ECD_SIZE, _ECD_OFFSET, _ECD_LOCATION, _CD_SIGNATURE, _CD_FILENAME_LENGTH, _CD_FLAG_BITS, _MASK_UTF_FILENAME, _CD_EXTRA_FIELD_LENGTH, _CD_COMMENT_LENGTH, _CD_LOCAL_HEADER_OFFSET, MAX_EXTRACT_VERSION, sizeCentralDir, structCentralDir, stringCentralDir, stringEndArchive64, sizeEndCentDir64, sizeEndCentDir64Locator, BadZipFile
 
 # see: https://github.com/python/cpython/tree/main/Lib/zipfile
 # local: C:\Users\smorey2\AppData\Local\Python\pythoncore-3.13-64\Lib\zipfile
@@ -274,9 +274,7 @@ from zipfile import x, crc32, ZipInfo, ZipFile, _EndRecData, _ECD_SIGNATURE, _EC
 p4kStringCentralDir = b"PK\x03\x04"
 p4kStringCentralDirEncrypted = b"PK\x03\x14"
 
-print(minor)
-exit(1)
-if minor > 13: from zipfile import _handle_prepended_data
+if minor >= 14: from zipfile import _handle_prepended_data
 else:
     def _handle_prepended_data(endrec, debug=0):
         size_cd = endrec[_ECD_SIZE]             # bytes in central directory
@@ -284,17 +282,15 @@ else:
 
         # "concat" is zero, unless zip was concatenated to another file
         concat = endrec[_ECD_LOCATION] - size_cd - offset_cd
-   
+        if endrec[_ECD_SIGNATURE] == stringEndArchive64:
+            # If Zip64 extension structures are present, account for them
+            concat -= (sizeEndCentDir64 + sizeEndCentDir64Locator)
+
         if debug > 2:
             inferred = concat + offset_cd
             print("given, inferred, offset", offset_cd, inferred, concat)
 
         return offset_cd, concat
-
-# if endrec[_ECD_SIGNATURE] == stringEndArchive64:
-#     # If Zip64 extension structures are present, account for them
-#     concat -= (sizeEndCentDir64 + sizeEndCentDir64Locator)
-
 
 def _GetReferenceCRCForPak() -> int: return 0
 
@@ -398,7 +394,7 @@ class ZipFileX(ZipFile):
         isZip64 = False
         if not isZip64 and (s[_ECD_OFFSET] < eocdStart - (4 + s[_ECD_SIZE])):
             self._offsetOfFirstEntry = eocdStart - (4 + s[_ECD_SIZE] + s[_ECD_OFFSET])
-            if self._offsetOfFirstEntry <= 0: raise BadZipError("Invalid embedded zip archive")
+            if self._offsetOfFirstEntry <= 0: raise BadZipFile("Invalid embedded zip archive")
 
     def _decodeHeaderData(self, s) -> bool:
         fp = self.fp
@@ -451,7 +447,6 @@ class ZipFileX(ZipFile):
 
         # self.start_dir:  Position of start of central directory
         self.start_dir = offset_cd + concat
-        self.start_dir = 148029440
 
         if self._kind == ZipFileKind.Cry3:
             self._trySfxEmbedded(endrec, eocdStart)

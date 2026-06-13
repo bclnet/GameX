@@ -1,6 +1,10 @@
 from __future__ import annotations
 import sys, io, struct
 from enum import Enum
+# from cryptography.hazmat import asn1
+from cryptography.hazmat.primitives import padding
+from cryptography.hazmat.primitives import serialization, hashes
+from cryptography.hazmat.primitives.asymmetric import rsa, padding as padding2
 
 # test
 major, minor = sys.version_info.major, sys.version_info.minor
@@ -76,116 +80,14 @@ _CCEH_KEYS_TABLE = 4                        # As above, actually BLOCK_CIPHER_KE
 
 #region StreamCipher
 
-from Crypto.PublicKey import RSA
-from Crypto.Cipher import AES, PKCS1_OAEP
-from Crypto.Hash import BLAKE2b, SHA256, SHA1
-from Crypto.Math.Numbers import Integer
-import Crypto.Util.number
-from Crypto.Util.number import ceil_div, bytes_to_long, long_to_bytes
-from Crypto.Util.strxor import strxor
-from Crypto.Cipher._pkcs1_oaep_decode import oaep_decode
-from Crypto.Util.Padding import pad, unpad
-import pycryptodome_twofish as Twofish
-
-# see: C:\Users\smorey2\AppData\Local\Python\pythoncore-3.13-64\Lib\site-packages\Crypto\PublicKey\RSA.py
-class RsaKeyX(RSA.RsaKey):
-    def __init__(self, base: RsaKey):
-        if not self.has_private(): super().__init__(n=base.n, e=base.e)
-        else: super().__init__(n=base.n, e=base.e, d=base.d, p=base.p, q=base.q, u=base.u)
-    def _decrypt_to_bytes(self, ciphertext):
-        if not self.has_private(): return (pow(Integer(ciphertext), self._e, self._n) % self._n).to_bytes()
-        return super()._decrypt_to_bytes(ciphertext)
-
-# see: C:\Users\smorey2\AppData\Local\Python\pythoncore-3.13-64\Lib\site-packages\Crypto\Cipher\PKCS1_OAEP.py
-class PKCS1OAEP_CipherX(PKCS1_OAEP.PKCS1OAEP_Cipher):
-    def __init__(self, base: PKCS1OAEP_Cipher): super().__init__(base._key, base._hashObj, base._mgf, base._label, base._randfunc)
-    def decrypt(self, ciphertext):
-        # See 7.1.2 in RFC3447
-        modBits = Crypto.Util.number.size(self._key.n)
-        k = ceil_div(modBits, 8)            # Convert from bits to bytes
-        hLen = self._hashObj.digest_size
-
-        # Step 1b and 1c
-        if len(ciphertext) != k or k < hLen+2:
-            raise ValueError("Ciphertext with incorrect length.")
-        # Step 2a (O2SIP)
-        ct_int = bytes_to_long(ciphertext)
-        # Step 2b (RSADP) and step 2c (I2OSP)
-        em = self._key._decrypt_to_bytes(ct_int)
-        # Step 3a
-        lHash = self._hashObj.new(self._label).digest()
-        # y must be 0, but we MUST NOT check it here in order not to
-        # allow attacks like Manger's (http://dl.acm.org/citation.cfm?id=704143)
-        maskedSeed = em[0:hLen]
-        maskedDB = em[hLen:]
-        # Step 3c
-        seedMask = self._mgf(maskedDB, hLen)
-        # Step 3d
-        seed = strxor(maskedSeed, seedMask)
-        # Step 3e
-        dbMask = self._mgf(seed, k-hLen-1)
-        # Step 3f
-        db = strxor(maskedDB, dbMask)
-        # Step 4
-        return db[-16:]
-
-
-# # Decrypt the ciphertext
-# decrypted_padded_data = b""
-# for i in range(0, len(ciphertext), 16): block = ciphertext[i:i+16]; decrypted_padded_data += t.decrypt(block)
-# # Unpad the decrypted data
-# unpadder = PKCS7_Padding.PKCS7Padding(16)
-# decrypted_text = unpadder.unpad(decrypted_padded_data)
-
-
-# class SicRevBlockCipher:
-#     def __init__(self, cipher):
-#         self.cipher = cipher
-#         self.blockSize = cipher.block_size()
-#         self.counter = bytes(blockSize)
-#         self.counterOut = bytes(blockSize)
-#         self.iv = bytes(blockSize)
-
-#     def decrypt(self, data):
-#         pass
-#         # # 1. Decode and split Outer Encryption parameters
-#         # payload_bytes = base64.b64decode(encrypted_payload.encode('utf-8'))
-#         # nonce2 = payload_bytes[:8]  # ChaCha20 default nonce size
-#         # outer_ciphertext = payload_bytes[8:]
-
-#         # # 2. Outer Decryption
-#         # cipher2 = ChaCha20.new(key=self.key2, nonce=nonce2)
-#         # base_payload = cipher2.decrypt(outer_ciphertext)
-
-#         # # 3. Extract base components from the base payload
-#         # nonce1 = base_payload[:16]  # AES EAX default nonce size
-#         # tag = base_payload[16:32]  # AES EAX default tag size
-#         # base_ciphertext = base_payload[32:]
-
-#         # # 4. Base Decryption
-#         # cipher1 = AES.new(self.key1, AES.MODE_EAX, nonce=nonce1)
-#         # padded_text = cipher1.decrypt_and_verify(base_ciphertext, tag)
-        
-#         # # 5. Unpad and decode
-#         # plaintext = unpad(padded_text, AES.block_size)
-#         # return plaintext.decode('utf-8')
-
-
 def _DecryptBufferWithStreamCipher(engineId: char, data: bytes, size: int, key: bytes, iv: bytes) -> bool:
-    BLOCK_SIZE = 16
-    # try:
-    data = pad(data, BLOCK_SIZE)
-    cipher = AES.new(key, AES.MODE_CBC, iv) if engineId == 'A' else Twofish.new(key, Twofish.MODE_CBC, iv)
-    abc = cipher.decrypt(data)
-    print(abc)
-
-    # newdata = b''
-    # for i in range(0, len(data), BLOCK_SIZE): block = data[i:i+BLOCK_SIZE]; print(block); newdata += cipher.decrypt(block)
-    # data = unpad(newdata, BLOCK_SIZE)
-    # print(newdata)
-    # exit(1)
-    # except: print(sys.exc_info()[1]); return  None
-    # return data
+    # try {
+    #     var cipher = new BufferedBlockCipher(new SicRevBlockCipher(engineId == 'A' ? new AesEngine() : new TwofishEngine()));
+    #     cipher.Init(false, new ParametersWithIV(new KeyParameter(key), iv));
+    #     data = cipher.DoFinal(data, 0, size);
+    # }
+    # catch (CryptoException ex) { Console.WriteLine(ex.Message); return false; }
+    return True
 
 def _GetEncryptionKeyIndex(entry: object) -> int: return 0 # => (int)unchecked(~(entry.Crc32 >> 2) & 0xF)
 
@@ -206,7 +108,165 @@ def _RsaVerifyData(data: list[bytes], sizes: list[int], numBuffers: int, signedH
 def _StreamCipher(data: bytes, size: int, inKey: int) -> bytes:
     pass
 
-def _CustomRsaDecryptKeyEx(inBytes: bytes, inOff: int, inLen: int, cipher: object) -> bytes: return cipher.decrypt(inBytes[inOff:inOff+inLen])
+
+# see: "C:\_GITHUB\_ref\cryptography\src\cryptography\hazmat\backends\openssl\backend.py"
+
+def _CustomRsaDecryptKeyEx(inBytes: bytes, inOff: int, inLen: int, cipher: object, key: object) -> bytes:
+    mgf1HashA = cipher.algorithm; mgf = cipher.mgf; nums = key.public_numbers()
+    # mgf1NoMemoLimit = GetMgf1NoMemoLimit(mgf1Hash)
+
+    def getReducedBlockSize(blockSize: int) -> int: return blockSize - 1 - 2 * mgf1HashA.digest_size
+
+    def xorTo(len: int, x: bytes, xOff: int, z: bytes, zOff: int) -> None:
+        for i in range(len): z[zOff + i] ^= x[xOff + i]
+
+    def mgf1(seed: bytes, length: int) -> bytes:
+        """
+        Mask Generation Function 1 (MGF1) as described in PKCS#1 v2.
+        """
+        h_len = mgf1HashA.digest_size
+        t = b''
+    
+        # Counter must be four octets, big-endian
+        for counter in range(0, (length + h_len - 1) // h_len):
+            c_bytes = counter.to_bytes(4, byteorder='big')
+            t += mgf1HashA(seed + c_bytes).digest()
+            
+        return t[:length]
+
+    def mgf1(seed: bytes, length: int, algorithm: hashes.HashAlgorithm) -> bytes:
+        """
+        Mask Generation Function 1 (MGF1) as defined in PKCS #1 v2.2.
+        """
+        hash_len = algorithm.digest_size
+        T = b""
+        
+        # Counter must not exceed the maximum allowed iterations
+        max_count = math.ceil(length / hash_len)
+        if max_count > 0xFFFFFFFF:
+            raise ValueError("Mask length is too long for the chosen hash algorithm.")
+
+        # Loop until the mask reaches or exceeds the requested length
+        for counter in range(max_count):
+            # Convert counter to a 4-byte big-endian binary string
+            c_bytes = counter.to_bytes(4, byteorder='big')
+            
+            # Initialize a new hash context per iteration
+            digest = hashes.Hash(algorithm)
+            digest.update(seed)
+            digest.update(c_bytes)
+            T += digest.finalize()
+            
+        # Return the mask truncated to the exact requested length
+        return T[:length]
+
+
+    # def maskGeneratorFunction(mgf1Hash: Hash, z: bytes, zOff: int, zLen: int, mask: bytes, maskOff: int, maskLen: int) -> None:
+    #     digestSize = mgf1HashA.digest_size
+    #     hash: bytes = bytes(digestSize)
+    #     counter = 0
+
+    #     maskEnd = maskOff + maskLen
+    #     maskLimit = maskEnd - digestSize
+    #     maskPos = maskOff
+
+    #     mgf1Hash.update(z[zOff:zOff+zLen])
+
+    #     # if zLen > mgf1NoMemoLimit:
+
+    #     memo = mgf1Hash.copy()
+    #     while maskPos < maskLimit:
+    #         C = counter.to_bytes(4, byteorder='big'); counter += 1
+    #         mgf1Hash.update(C)
+    #         hash = mgf1Hash.finalize()
+    #         mgf1Hash = memo.copy()
+    #         xorTo(digestSize, hash, 0, mask, maskPos)
+    #         maskPos += digestSize
+
+    #     # # else:
+    #     # while maskPos < maskLimit:
+    #     #     C = counter.to_bytes(4, byteorder='big'); counter += 1
+    #     #     mgf1Hash.update(C)
+    #     #     hash = mgf1Hash.finalize()
+    #     #     mgf1Hash.update(z[zOff:zOff+zLen])
+    #     #     xorTo(digestSize, hash, 0, mask, maskPos)
+    #     #     maskPos += digestSize
+
+    #     C = counter.to_bytes(4, byteorder='big')
+    #     mgf1Hash.update(C)
+    #     hash = mgf1Hash.finalize()
+    #     xorTo(maskEnd - maskPos, hash, 0, mask, maskPos)
+
+    defHash = bytearray(mgf1HashA.digest_size); defHashLength = len(defHash)
+
+    outBlockSize = (nums.n.bit_length() - 1) // 8
+
+    # i.e. wrong when block.length < (2 * defHash.length) + 1
+    wrongMask = getReducedBlockSize(outBlockSize) >> 31
+
+    # as we may have zeros in our leading bytes for the block we produced
+    # on encryption, we need to make sure our decrypted block comes back
+    # the same size.
+    block = bytearray(outBlockSize); blockLength = len(block)
+    
+    # data = engine.processBlock(inBytes, inOff, inLen)
+    i = int.from_bytes(inBytes[inOff:inOff+inLen], 'big')
+    r = pow(i, nums.e, nums.n)
+    data = r.to_bytes((r.bit_length() + 7) // 8, 'big')
+    wrongMask |= (len(block) - len(data)) >> 31
+    
+    copyLen = int(min(len(block), len(data)))
+
+    off = len(block) - copyLen
+    block[off:off+copyLen] = data[:copyLen]
+    
+    mgf1Hash: Hash = hashes.Hash(mgf1HashA)
+
+    # unmask the seed.
+    mfg1(mgf1Hash, block, defHashLength, blockLength - defHashLength, block, 0, defHashLength)
+    maskGeneratorFunction(mgf1Hash, block, defHashLength, blockLength - defHashLength, block, 0, defHashLength)
+
+    
+    mgf2 = padding2.MGF1(algorithm=mgf1HashA)
+    print(f'HERE: {mgf}')
+    print(f'HERE: {mgf2}')
+    exit(1)
+
+    # unmask the message block.
+    maskGeneratorFunction(mgf1Hash, block, 0, defHashLength, block, defHashLength, blockLength - defHashLength)
+
+    # check the hash of the encoding params.
+    # long check to try to avoid this been a source of a timing attack.
+    for i in range(defHashLength):
+        wrongMask |= defHash[i] ^ block[defHashLength + i]
+
+    # find the data block
+    start = -1
+
+    for index in range(2 * defHashLength, blockLength):
+        octet = block[index]
+
+        # i.e. mask will be 0xFFFFFFFF if octet is non-zero and start is (still) negative, else 0.
+        shouldSetMask = (-octet & start) >> 31
+
+        start += index & shouldSetMask
+
+    wrongMask |= start >> 31
+    start += 1
+    wrongMask |= block[start] ^ 1
+
+    if wrongMask != 0: raise ValueError('data wrong')
+
+    start += 1
+
+    # extract the data block
+    output = bytearray(blockLength - start)
+
+    # Array.Copy(block, start, output, 0, output.Length);
+    # Array.Clear(block, 0, block.Length);
+
+    return output
+
 
 def _GetReferenceCRCForPak() -> int: return 0
 
@@ -280,7 +340,7 @@ def btea(v: object, n: int, k: list[int]) -> None:
 # local: C:\Users\smorey2\AppData\Local\Python\pythoncore-3.13-64\Lib\zipfile
 # local: C:\Users\smorey01\AppData\Local\Programs\Python\Python312\Lib\zipfile\__init__.py)
 
-from zipfile import crc32, ZipInfo, ZipFile, _EndRecData, _ECD_SIGNATURE, _ECD_DISK_NUMBER, _ECD_COMMENT, _ECD_SIZE, _ECD_OFFSET, _ECD_LOCATION, _CD_SIGNATURE, _CD_FILENAME_LENGTH, _CD_FLAG_BITS, _MASK_UTF_FILENAME, _CD_EXTRA_FIELD_LENGTH, _CD_COMMENT_LENGTH, _CD_LOCAL_HEADER_OFFSET, MAX_EXTRACT_VERSION, ZIP_MAX_COMMENT, sizeCentralDir, structCentralDir, stringCentralDir, stringEndArchive, stringEndArchive64, sizeEndCentDir64, sizeEndCentDir64Locator, BadZipFile
+from zipfile import crc32, ZipInfo, ZipFile, _EndRecData, _ECD_SIGNATURE, _ECD_DISK_NUMBER, _ECD_COMMENT, _ECD_SIZE, _ECD_OFFSET, _ECD_LOCATION, _CD_SIGNATURE, _CD_FILENAME_LENGTH, _CD_FLAG_BITS, _MASK_UTF_FILENAME, _CD_EXTRA_FIELD_LENGTH, _CD_COMMENT_LENGTH, _CD_LOCAL_HEADER_OFFSET, MAX_EXTRACT_VERSION, sizeCentralDir, structCentralDir, stringCentralDir, stringEndArchive64, sizeEndCentDir64, sizeEndCentDir64Locator, BadZipFile
 
 p4kStringCentralDir = b"PK\x03\x04"
 p4kStringCentralDirEncrypted = b"PK\x03\x14"
@@ -310,7 +370,7 @@ class ZipInfoX(ZipInfo):
     # def _decodeExtra(self, filename_crc): pass
     #     # super()._decodeExtra(filename_crc)
 
-DEFAULT_CUSTOMIV = bytes([0x70, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+DEFAULT_CUSTOMIV = [0x70, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 EndOfCentralRecordBaseSize = 22
 class ZipFileX(ZipFile):
     _encryptedHeaders: EHeaderEncryptionType = 0
@@ -322,7 +382,11 @@ class ZipFileX(ZipFile):
     _customIV: bytes = None
     _customKeys: list[bytes] = None
     _offsetOfFirstEntry: int = 0
-    def __init__(self, kind: ZipFileKind, file: object, name: str, key: bytes, mode: str='r'): self._kind = kind; self._name = name; self._key = key; super().__init__(file, mode)
+    def __init__(self, kind: ZipFileKind, file: object, name: str, key: bytes, mode: str='r'):
+        self._kind = kind
+        self._name = name
+        self._key = key
+        super().__init__(file, mode)
 
     # ZipDirCacheFactory::Prepare
     def _prepare(self, endrec):
@@ -405,97 +469,58 @@ class ZipFileX(ZipFile):
     def _readHeaderData(self, s) -> bool:
         fp = self.fp
         nSize = s[_ECD_SIZE]
-        fp.seek(self._offsetOfFirstEntry + s[_ECD_OFFSET], 0)
+        fp.seek(self._offsetOfFirstEntry + s[_ECD_OFFSET])
         if self._encryptedHeaders != EHeaderEncryptionType.HEADERS_NOT_ENCRYPTED:
-            data = fp.read(nSize)
+            bytes = fp.read(nSize)
             match self._encryptedHeaders:
-                case EHeaderEncryptionType.HEADERS_ENCRYPTED_TEA: data = XXTeaDecrypt(data, nSize)
-                case EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER: data = StreamCipher(data, nSize, GetReferenceCRCForPak())
+                case EHeaderEncryptionType.HEADERS_ENCRYPTED_TEA: XXTeaDecrypt(bytes, nSize)
+                case EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER: StreamCipher(bytes, nSize, GetReferenceCRCForPak())
                 case EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE | EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE2:
-                    engineId = self._encryptedHeaders = 'A' if EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE2 else '2'
+                    engineId = self._encryptedHeaders == 'A' if EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE2 else '2'
                     iv = DEFAULT_CUSTOMIV if self._headerTeaEncryption[_CCTEH_HEADER_SIZE] != 0 else self._customIV
-                    if not (data := _DecryptBufferWithStreamCipher(engineId, data, nSize, self._customKeys[0], iv)): print('Failed to decrypt pak header'); return False
+                    if not _DecryptBufferWithStreamCipher(engineId, bytes, nSize, self._customKeys[0], iv): print('Failed to decrypt pak header'); return False
                 case _: print('Attempting to load encrypted pak by unsupported method'); return False
-            fp = io.BytesIO(data)
+            fp = io.BytesIO(bytes)
             self.start_dir = 0
         match self._signedHeaders:
-            case EHeaderSignatureType.HEADERS_CDR_SIGNED | EHeaderSignatureType.HEADERS_CDR_SIGNED2:
-                if self._name == None: return True
-                # Verify CDR signature & pak name
-                pathSepIdx = max(self._name.rfind('\\'), self._name.rfind('/'))
-                pathSep = self._name[pathSepIdx + 1:]
-                position = fp.tell(); data = bytes(nSize); stream.readinto(data); fp.seek(position, 0)
-                dataToVerify = [data, pathSep.decode('ascii')]
-                sizesToVerify = [nSize, len(pathSep)]
-                # Could not verify signature
-                if not _RsaVerifyData(dataToVerify, sizesToVerify, 2, _headerSignature[_CCEH_CDR_SIGNED], 128, self._key): print('Failed to verify RSA signature of pak header'); return False
+            # case EHeaderSignatureType.HEADERS_CDR_SIGNED | EHeaderSignatureType.HEADERS_CDR_SIGNED2:
+            #     if self._name == None: break
+            #     # Verify CDR signature & pak name
+            #     pathSepIdx = Math.Max(_name.LastIndexOf('\\'), _name.LastIndexOf('/'));
+            #     pathSep = _name[(pathSepIdx + 1)..];
+            #     position = stream.Position; var bytes = new byte[nSize]; stream.ReadAtLeast(bytes, nSize); stream.Position = position;
+            #     dataToVerify = new byte[][] { bytes, Encoding.ASCII.GetBytes(pathSep) };
+            #     sizesToVerify = new int[] { nSize, pathSep.Length };
+            #     # Could not verify signature
+            #     if not RsaVerifyData(dataToVerify, sizesToVerify, 2, _headerSignature[_CCEH_CDR_SIGNED], 128, self._key): print('Failed to verify RSA signature of pak header'); return False
             case EHeaderSignatureType.HEADERS_NOT_SIGNED: pass
         return True
 
     # ZipDirCacheFactory::DecryptKeysTable
     def _decryptKeysTable(self):
         digestSize = 1 if self._headerTeaEncryption[_CCTEH_HEADER_SIZE] != 0 else 256
-        rsaKey = RsaKeyX(RSA.importKey(self._key or DefaultRsaKey, digestSize))
-        hashAlgo = BLAKE2b if digestSize == 257 else SHA256 if digestSize == 256 else SHA1
-        cipher = PKCS1OAEP_CipherX(PKCS1_OAEP.new(rsaKey, hashAlgo=hashAlgo))
+        rsaKey = serialization.load_der_public_key(self._key or DefaultRsaKey)
+        hash = hashes.BLAKE2b() if digestSize == 257 else hashes.SHA256() if digestSize == 256 else hashes.SHA1()
+        def cipher(): return padding2.OAEP(mgf=padding2.MGF1(algorithm=hash), algorithm=hash, label=None)
 
         # Decrypt CDR initial Vector
-        self._customIV = _CustomRsaDecryptKeyEx(self._headerEncryption[_CCEH_CDR_IV], 0, RSA_KEY_MESSAGE_LENGTH, cipher)
-        # print(self._customIV.hex())
+        self._customIV = _CustomRsaDecryptKeyEx(self._headerEncryption[_CCEH_CDR_IV], 0, RSA_KEY_MESSAGE_LENGTH, cipher(), rsaKey)
+        print(self._customIV.hex())
+        exit(1)
 
         # Decrypt the table of cipher keys.
         self._customKeys = [bytes()]*BLOCK_CIPHER_NUM_KEYS
         offset = 0
         for i in range(BLOCK_CIPHER_NUM_KEYS):
-            self._customKeys[i] = _CustomRsaDecryptKeyEx(self._headerEncryption[_CCEH_KEYS_TABLE], offset, RSA_KEY_MESSAGE_LENGTH, cipher)
-            # print(self._customKeys[i].hex())
+            self._customKeys[i] = _CustomRsaDecryptKeyEx(self._headerEncryption[_CCEH_KEYS_TABLE], offset, RSA_KEY_MESSAGE_LENGTH, cipher(), rsaKey)
             offset += RSA_KEY_MESSAGE_LENGTH
 
-    @staticmethod
-    def seekBackwardsAndRead(stream: BufferedReader, buffer: memoryview, overlap: int)-> int:
-        bytesRead = 0; bufferLength = len(buffer)
-        if stream.tell() >= bufferLength:
-            assert(overlap <= bufferLength)
-            stream.seek(-(bufferLength - overlap), 1)
-            bytesRead = stream.readinto(buffer)
-            stream.seek(-bufferLength, 1)
-        else:
-            bytesToRead = stream.tell()
-            stream.seek(0, 0)
-            bytesRead = stream.readinto(buffer)
-            stream.seek(0, 0)
-        return bytesRead
-
-    @staticmethod
-    def seekBackwardsToSignature(stream: io.BytesIO, signatureToFind: bytes, maxBytesToRead: int) -> bool:
-        assert(len(signatureToFind) != 0 and maxBytesToRead > 0)
-
-        # This method reads blocks of BackwardsSeekingBufferSize bytes, searching each block for signatureToFind.
-        # A simple LastIndexOf(signatureToFind) doesn't account for cases where signatureToFind is split, starting in
-        # one block and ending in another.
-        # To account for this, we read blocks of BackwardsSeekingBufferSize bytes, but seek backwards by
-        # [4096 - signatureToFind.Length] bytes. This guarantees that signatureToFind will not be
-        # split between two consecutive blocks, at the cost of reading [signatureToFind.Length] duplicate bytes in each iteration.
-        bufferPointer = 0; buffer = bytearray(4096); bufferSpan = memoryview(buffer)
-
-        outOfBytes = False; signatureFound = False; totalBytesRead = 0
-        while not signatureFound and not outOfBytes and totalBytesRead < maxBytesToRead:
-            overlap = 0 if totalBytesRead == 0 else len(signatureToFind)
-            if maxBytesToRead - totalBytesRead + overlap < len(bufferSpan): bufferSpan = bufferSpan[:maxBytesToRead - totalBytesRead + overlap]
-            bytesRead = ZipFileX.seekBackwardsAndRead(stream, bufferSpan, overlap)
-            outOfBytes = bytesRead < len(bufferSpan)
-            if bytesRead < len(bufferSpan): bufferSpan = bufferSpan[:bytesRead]
-            bufferPointer = bytes(bufferSpan).rfind(signatureToFind)
-            assert(bufferPointer < len(bufferSpan))
-            totalBytesRead += bytesRead - overlap
-            if bufferPointer != -1: signatureFound = True; break;
-
-        if not signatureFound: return False
-        else: stream.seek(bufferPointer, 1); return True
+        # try:
+        # except: print(sys.exc_info()[1])
 
     def _RealGetContents(self):
         """Read in the table of contents for the ZIP file."""
-        self.debug = 1
+        self.debug = 0
         fp = self.fp
         try:
             endrec = _EndRecData(fp)
@@ -505,19 +530,15 @@ class ZipFileX(ZipFile):
             raise BadZipFile("File is not a zip file")
         if self.debug > 1:
             print(endrec)
+        eocdStart = fp.tell()
         self._comment = endrec[_ECD_COMMENT]    # archive comment
 
-        if self._kind == ZipFileKind.Cry3:
-            fp.seek(-18, 2)
-            if not ZipFileX.seekBackwardsToSignature(fp, stringEndArchive, ZIP_MAX_COMMENT + 4): raise BadZipFile("File is not a zip file")
-            eocdStart = fp.tell()
-            self._prepare(endrec)
+        if self._kind == ZipFileKind.Cry3: self._prepare(endrec)
 
         offset_cd, concat = _handle_prepended_data(endrec, self.debug)
 
         # self.start_dir:  Position of start of central directory
         self.start_dir = offset_cd + concat
-        print(f'start: {self.start_dir}')
 
         if self._kind == ZipFileKind.Cry3:
             self._trySfxEmbedded(endrec, eocdStart)
@@ -532,7 +553,6 @@ class ZipFileX(ZipFile):
         total = 0
         while total < size_cd:
             centdir = fp.read(sizeCentralDir)
-            print(centdir)
             if len(centdir) != sizeCentralDir:
                 raise BadZipFile("Truncated central directory")
             centdir = struct.unpack(structCentralDir, centdir)

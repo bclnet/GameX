@@ -18,8 +18,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using static System.IO.Compression.CompressionX;
-using static System.IO.Compression.ZipArchiveEncrypt;
-using static System.IO.Compression.ZipEndOfCentralDirectoryBlock;
+using static System.IO.Compression.ZipEncrypt;
 
 namespace System.IO.Compression;
 
@@ -51,6 +50,9 @@ public partial class ZipArchiveX : ZipArchive {
     public ZipArchiveX(ZipArchiveKind kind, Stream stream, string name, byte[] key, ZipArchiveMode mode) : this(kind, stream, name, key, mode, leaveOpen: false, entryNameEncoding: null) { }
     public ZipArchiveX(ZipArchiveKind kind, Stream stream, string name, byte[] key, ZipArchiveMode mode, bool leaveOpen) : this(kind, stream, name, key, mode, leaveOpen, entryNameEncoding: null) { }
     public ZipArchiveX(ZipArchiveKind kind, Stream stream, string name, byte[] key, ZipArchiveMode mode, bool leaveOpen, Encoding entryNameEncoding) : base(new MemoryStream(), ZipArchiveMode.Create, leaveOpen, entryNameEncoding) {
+
+        var cipher = new SicRevBlockCipher(new AesEngine());
+
         _readEntries = false;
         _kind = kind;
         _archiveStream = DecideArchiveStream(mode, stream);
@@ -103,26 +105,28 @@ public partial class ZipArchiveX : ZipArchive {
             // If the EOCD has the minimum possible size (no zip file comment), then exactly the previous 4 bytes will contain the signature
             // But if the EOCD has max possible size, the signature should be found somewhere in the previous 64K + 4 bytes
             if (!ZipHelper.SeekBackwardsToSignature(_archiveStream, ZipEndOfCentralDirectoryBlock.SignatureConstantBytes, ZipEndOfCentralDirectoryBlock.ZipFileCommentMaxLength + ZipEndOfCentralDirectoryBlock.FieldLengths.Signature)) throw new InvalidDataException(SR.EOCDNotFound);
-            var eocdStart = _archiveStream.Position;
             // read the EOCD
+            var eocdStart = _archiveStream.Position;
             var eocd = ZipEndOfCentralDirectoryBlock.ReadBlock(_archiveStream); var eocd2 = new ZipEndOfCentralDirectoryBlock(eocd);
-            if (_kind == ZipArchiveKind.Cry3) DecodeHeader(eocd2);
+            if (_kind == ZipArchiveKind.Cry3) Prepare(eocd2);
             ReadEndOfCentralDirectoryInnerWork(eocd);
             TryReadZip64EndOfCentralDirectory(eocd, eocdStart);
             if (_centralDirectoryStart > _archiveStream.Length) throw new InvalidDataException(SR.FieldTooBigOffsetToCD);
+            Console.WriteLine($"start: {_centralDirectoryStart}");
             if (_kind == ZipArchiveKind.Cry3) {
                 TrySfxEmbedded(eocd2, eocdStart);
-                DecodeHeaderData(eocd2);
+                ReadHeaderData(eocd2);
             }
         }
         catch (EndOfStreamException ex) { throw new InvalidDataException(SR.CDCorrupt, ex); }
         catch (IOException ex) { throw new InvalidDataException(SR.CDCorrupt, ex); }
     }
 
-    void DecodeHeader(ZipEndOfCentralDirectoryBlock s) {
+    // ZipDirCacheFactory::Prepare
+    void Prepare(ZipEndOfCentralDirectoryBlock s) {
         // Earlier pak file encryption techniques stored the encryption type in the disk number of the CDREnd.
         // This works, but can't be used by the more recent techniques that require signed paks to be readable by 7-Zip during dev.
-        var headerEnc = (EHeaderEncryptionType)(s.NumberOfThisDisk >> 14);
+        var headerEnc = (EHeaderEncryptionType)((s.NumberOfThisDisk & 0xC000) >> 14);
         if (headerEnc == EHeaderEncryptionType.HEADERS_ENCRYPTED_TEA || headerEnc == EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER) _encryptedHeaders = headerEnc;
         s.NumberOfThisDisk &= 0x3fff;
 
@@ -197,8 +201,7 @@ public partial class ZipArchiveX : ZipArchive {
                     };
                     if (_headerEncryption.nHeaderSize != 0 && _headerEncryption.nHeaderSize != CryCustomEncryptionHeader.SizeOf + (hasSize2 ? CryCustomEncryptionHeader.SizeOf2 : 0)) throw new InvalidDataException("Bad encryption header");
                     // We have a table of symmetric keys to decrypt
-                    var digestSize = _headerTeaEncryption.nHeaderSize != 0 ? 1 : 256;
-                    DecryptKeysTable(_key, _headerEncryption.CDR_IV, _headerEncryption.Keys_Table, digestSize, out _customIV, out _customKeys);
+                    DecryptKeysTable();
                 }
             }
             else throw new InvalidDataException("Comment field is the wrong length");
@@ -217,29 +220,30 @@ public partial class ZipArchiveX : ZipArchive {
         // Zip files created by some archivers have the offsets altered to reflect the true offsets
         // and so dont require any adjustment here...
         // TODO: Difficulty with Zip64 and SFX offset handling needs resolution - maths?
-        var isZip64 = false;
+        var isZip64 = s.Signature == ZipEndOfCentralDirectoryBlock.Signature64ConstantUInt;
         if (!isZip64 && (s.OffsetOfStartOfCentralDirectoryWithRespectToTheStartingDiskNumber < eocdStart - (4 + (long)s.SizeOfCentralDirectory))) {
             _offsetOfFirstEntry = eocdStart - (4 + (long)s.SizeOfCentralDirectory + s.OffsetOfStartOfCentralDirectoryWithRespectToTheStartingDiskNumber);
             if (_offsetOfFirstEntry <= 0) throw new InvalidDataException("Invalid embedded zip archive");
         }
     }
 
-    bool DecodeHeaderData(ZipEndOfCentralDirectoryBlock s) {
+    // ZipDirCacheFactory::ReadHeaderData
+    bool ReadHeaderData(ZipEndOfCentralDirectoryBlock s) {
         var nSize = (int)s.SizeOfCentralDirectory;
         _archiveStream.Seek(_offsetOfFirstEntry + s.OffsetOfStartOfCentralDirectoryWithRespectToTheStartingDiskNumber, SeekOrigin.Begin);
         if (_encryptedHeaders != EHeaderEncryptionType.HEADERS_NOT_ENCRYPTED) {
-            var bytes = new byte[nSize]; _archiveStream.ReadAtLeast(bytes, nSize);
+            var data = new byte[nSize]; _archiveStream.ReadAtLeast(data, nSize);
             switch (_encryptedHeaders) {
-                case EHeaderEncryptionType.HEADERS_ENCRYPTED_TEA: XXTeaDecrypt(ref bytes, nSize); break;
-                case EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER: StreamCipher(ref bytes, nSize, GetReferenceCRCForPak()); break;
+                case EHeaderEncryptionType.HEADERS_ENCRYPTED_TEA: XXTeaDecrypt(ref data, nSize); break;
+                case EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER: StreamCipher(ref data, nSize, GetReferenceCRCForPak()); break;
                 case EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE or EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE2:
                     var engineId = _encryptedHeaders == EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE2 ? 'A' : '2';
                     var iv = _headerTeaEncryption.nHeaderSize != 0 ? DEFAULT_CUSTOMIV : _customIV;
-                    if (!DecryptBufferWithStreamCipher(engineId, ref bytes, nSize, _customKeys[0], iv)) { Console.WriteLine("Failed to decrypt pak header"); return false; }
+                    if (!DecryptBufferWithStreamCipher(engineId, ref data, nSize, _customKeys[0], iv)) { Console.WriteLine("Failed to decrypt pak header"); return false; }
                     break;
                 default: Console.WriteLine("Attempting to load encrypted pak by unsupported method"); return false;
             }
-            _archiveStream = new MemoryStream(bytes);
+            _archiveStream = new MemoryStream(data);
             _centralDirectoryStart = 0;
         }
         var stream = _archiveStream;
@@ -249,13 +253,45 @@ public partial class ZipArchiveX : ZipArchive {
                 // Verify CDR signature & pak name
                 var pathSepIdx = Math.Max(_name.LastIndexOf('\\'), _name.LastIndexOf('/'));
                 var pathSep = _name[(pathSepIdx + 1)..];
-                var position = stream.Position; var bytes = new byte[nSize]; stream.ReadAtLeast(bytes, nSize); stream.Position = position;
-                var dataToVerify = new byte[][] { bytes, Encoding.ASCII.GetBytes(pathSep) };
+                var position = stream.Position; var data = new byte[nSize]; stream.ReadAtLeast(data, nSize); stream.Position = position;
+                var dataToVerify = new byte[][] { data, Encoding.ASCII.GetBytes(pathSep) };
                 var sizesToVerify = new int[] { nSize, pathSep.Length };
                 // Could not verify signature
                 if (!RsaVerifyData(dataToVerify, sizesToVerify, 2, _headerSignature.CDR_signed, 128, _key)) { Console.WriteLine("Failed to verify RSA signature of pak header"); return false; }
                 break;
             case EHeaderSignatureType.HEADERS_NOT_SIGNED: break;
+        }
+        return true;
+    }
+
+    // ZipDirCacheFactory::DecryptKeysTable
+    public bool DecryptKeysTable() {
+        static AsymmetricKeyParameter GetPublicKey(byte[] s) {
+            if (new Asn1InputStream(s).ReadObject() is not DerSequence sequence) throw new Exception("Invalid PrivateKey Data");
+            AlgorithmIdentifier algId = null; DerBitString keyData = null;
+            foreach (var value in sequence) {
+                if (value is AlgorithmIdentifier || value is DerSequence) algId = AlgorithmIdentifier.GetInstance(value);
+                else if (value is DerBitString) keyData = DerBitString.GetInstance(value);
+                else if (value is DerInteger && keyData == null) keyData = new DerBitString(sequence);
+            }
+            if (keyData == null) throw new Exception("Invalid PrivateKey Data");
+            return PublicKeyFactory.CreateKey(new SubjectPublicKeyInfo(algId ?? new AlgorithmIdentifier(PkcsObjectIdentifiers.RsaEncryption), keyData.GetBytes()));
+        }
+
+        var digestSize = _headerTeaEncryption.nHeaderSize != 0 ? 1 : 256;
+        var digest = digestSize == 257 ? new Blake2bDigest() : digestSize == 256 ? (IDigest)new Sha256Digest() : new Sha1Digest();
+        var cipher = new OaepEncoding(new RsaEngine(), digest);
+        var rsaKey = GetPublicKey(_key ?? DefaultRsaKey);
+
+        // Decrypt CDR initial Vector
+        _customIV = CustomRsaDecryptKeyEx(_headerEncryption.CDR_IV, 0, RSA_KEY_MESSAGE_LENGTH, cipher, rsaKey);
+        //Console.WriteLine(_customIV.Hex());
+
+        // Decrypt the table of cipher keys.
+        _customKeys = new byte[BLOCK_CIPHER_NUM_KEYS][];
+        for (int i = 0, offset = 0; i < BLOCK_CIPHER_NUM_KEYS; i++, offset += RSA_KEY_MESSAGE_LENGTH) {
+            _customKeys[i] = CustomRsaDecryptKeyEx(_headerEncryption.Keys_Table, offset, RSA_KEY_MESSAGE_LENGTH, cipher, rsaKey);
+            //Console.WriteLine(_customKeys[i].Hex());
         }
         return true;
     }
@@ -491,9 +527,12 @@ internal struct ZipLocalFileHeader {
 
     public static readonly TrySkipBlockFinalizeDelegate TrySkipBlockFinalize = TrySkipBlockFinalizeMethod.CreateDelegate<TrySkipBlockFinalizeDelegate>();
 
+    public static readonly byte[] SignatureP4kConstantBytes = [0x50, 0x4B, 0x03, 0x4];
+    public static readonly byte[] SignatureP4kEncryptedConstantBytes = [0x50, 0x4B, 0x03, 0x14];
+
     static bool TrySkipBlockCore(ZipArchiveKind kind, Stream stream, Span<byte> blockBytes, int bytesRead, long currPosition) {
-        if (kind == ZipArchiveKind.P4k) { if (bytesRead != FieldLengths.Signature || !(blockBytes.SequenceEqual(P4kSignatureConstantBytes) || blockBytes.SequenceEqual(P4kSignatureConstantEncryptedBytes))) return false; }
-        else { if (bytesRead != FieldLengths.Signature || !blockBytes.SequenceEqual(SignatureConstantBytes)) return false; }
+        if (kind == ZipArchiveKind.P4k) { if (bytesRead != FieldLengths.Signature || !(blockBytes.SequenceEqual(SignatureP4kConstantBytes) || blockBytes.SequenceEqual(SignatureP4kEncryptedConstantBytes))) return false; }
+        else { if (bytesRead != FieldLengths.Signature || !blockBytes.SequenceEqual(ZipEndOfCentralDirectoryBlock.SignatureConstantBytes)) return false; }
         if (stream.Length < currPosition + FieldLocations.FilenameLength) return false;
         // Already read the signature, so make the filename length field location relative to that
         stream.Seek(FieldLocations.FilenameLength - FieldLengths.Signature, SeekOrigin.Current);
@@ -540,9 +579,7 @@ internal class ZipEndOfCentralDirectoryBlock(object source) {
     // The Zip File Format Specification references 0x06054B50, this is a big endian representation.
     // ZIP files store values in little endian, so this is reversed.
     public static readonly byte[] SignatureConstantBytes = [0x50, 0x4B, 0x05, 0x06];
-    public static readonly byte[] P4kSignatureConstantBytes = [0x50, 0x4B, 0x03, 0x4];
-    public static readonly byte[] P4kSignatureConstantEncryptedBytes = [0x50, 0x4B, 0x03, 0x14];
-
+    public static readonly uint Signature64ConstantUInt = 0x06064B50;
 
     // This also assumes a zero-length comment.
     public const int TotalSize = FieldLocations.ArchiveCommentLength + FieldLengths.ArchiveCommentLength;
@@ -555,31 +592,25 @@ internal class ZipEndOfCentralDirectoryBlock(object source) {
     public const int ZipFileCommentMaxLength = ushort.MaxValue;
 
     readonly object this_ = source;
+    internal static readonly FieldInfo SignatureField = ZipEndOfCentralDirectoryBlockType.GetField("Signature", BindingFlags.Public | BindingFlags.Instance);
     internal static readonly FieldInfo NumberOfThisDiskField = ZipEndOfCentralDirectoryBlockType.GetField("NumberOfThisDisk", BindingFlags.Public | BindingFlags.Instance);
     internal static readonly FieldInfo SizeOfCentralDirectoryField = ZipEndOfCentralDirectoryBlockType.GetField("SizeOfCentralDirectory", BindingFlags.Public | BindingFlags.Instance);
     internal static readonly FieldInfo OffsetOfStartOfCentralDirectoryWithRespectToTheStartingDiskNumberField = ZipEndOfCentralDirectoryBlockType.GetField("OffsetOfStartOfCentralDirectoryWithRespectToTheStartingDiskNumber", BindingFlags.Public | BindingFlags.Instance);
     internal static readonly FieldInfo _archiveCommentField = ZipEndOfCentralDirectoryBlockType.GetField("_archiveComment", BindingFlags.NonPublic | BindingFlags.Instance);
     internal static readonly MethodInfo ReadBlockMethod = ZipEndOfCentralDirectoryBlockType.GetMethod("ReadBlock", BindingFlags.Public | BindingFlags.Static); public delegate object ReadBlockDelegate(Stream stream);
 
+    public uint Signature => (uint)SignatureField.GetValue(this_);
+
     public ushort NumberOfThisDisk {
         get => (ushort)NumberOfThisDiskField.GetValue(this_);
         set => NumberOfThisDiskField.SetValue(this_, value);
     }
 
-    public uint SizeOfCentralDirectory {
-        get => (uint)SizeOfCentralDirectoryField.GetValue(this_);
-        set => SizeOfCentralDirectoryField.SetValue(this_, value);
-    }
+    public uint SizeOfCentralDirectory => (uint)SizeOfCentralDirectoryField.GetValue(this_);
 
-    public uint OffsetOfStartOfCentralDirectoryWithRespectToTheStartingDiskNumber {
-        get => (uint)OffsetOfStartOfCentralDirectoryWithRespectToTheStartingDiskNumberField.GetValue(this_);
-        set => OffsetOfStartOfCentralDirectoryWithRespectToTheStartingDiskNumberField.SetValue(this_, value);
-    }
+    public uint OffsetOfStartOfCentralDirectoryWithRespectToTheStartingDiskNumber => (uint)OffsetOfStartOfCentralDirectoryWithRespectToTheStartingDiskNumberField.GetValue(this_);
 
-    internal byte[] _archiveComment {
-        get => (byte[])_archiveCommentField.GetValue(this_);
-        set => _archiveCommentField.SetValue(this_, value);
-    }
+    internal byte[] _archiveComment => (byte[])_archiveCommentField.GetValue(this_);
 
     public static readonly ReadBlockDelegate ReadBlock = ReadBlockMethod.CreateDelegate<ReadBlockDelegate>();
 }
@@ -659,9 +690,23 @@ internal class SicRevBlockCipher : IBlockCipherMode {
 }
 
 /// <summary>
-/// ZipArchiveEncrypt
+/// ZipEncrypt
 /// </summary>
-internal unsafe static class ZipArchiveEncrypt {
+internal unsafe static class ZipEncrypt {
+    // cry
+    internal static readonly byte[] DefaultRsaKey = [
+        0x30, 0x81, 0x9F, 0x30, 0x0D, 0x06, 0x09, 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x01, 0x01,
+        0x05, 0x00, 0x03, 0x81, 0x8D, 0x00, 0x30, 0x81, 0x89, 0x02, 0x81, 0x81, 0x00, 0xA9, 0xD5, 0x90,
+        0xA4, 0xBC, 0x92, 0xDB, 0x8C, 0xF1, 0xFC, 0x5A, 0xD5, 0x8F, 0x46, 0x05, 0x52, 0x16, 0xEE, 0xF3,
+        0xC3, 0xBE, 0x86, 0xDE, 0x70, 0x1F, 0x4E, 0x2D, 0x18, 0xD3, 0x01, 0x92, 0x46, 0xBE, 0xFA, 0xAD,
+        0x66, 0x04, 0x7B, 0x8C, 0xDD, 0x0D, 0x24, 0x8D, 0xA7, 0x23, 0xCA, 0x52, 0xC8, 0xE5, 0x01, 0xE0,
+        0xB7, 0x2B, 0xEB, 0x55, 0xCF, 0x0D, 0xF7, 0x97, 0x77, 0xDC, 0x11, 0xE8, 0x7B, 0x18, 0xCC, 0xDB,
+        0x90, 0x07, 0x2D, 0x9D, 0xC4, 0xAD, 0x80, 0x7C, 0x50, 0x23, 0x85, 0x46, 0xF3, 0xE9, 0x2C, 0x54,
+        0x81, 0x11, 0x7B, 0x6D, 0xE2, 0x57, 0x87, 0x8E, 0x65, 0xE1, 0xD3, 0x16, 0xC4, 0x54, 0xED, 0x29,
+        0xED, 0x51, 0xFD, 0xB1, 0xEF, 0xE4, 0x95, 0x01, 0x24, 0xAE, 0xC0, 0x6A, 0xFA, 0xE0, 0x5B, 0x19,
+        0xD2, 0xE6, 0xF0, 0x22, 0x3B, 0xC3, 0xE7, 0xDD, 0x17, 0x1A, 0x8C, 0xF8, 0xE1, 0x02, 0x03, 0x01,
+        0x00, 0x01 ];
+
     public const int BLOCK_CIPHER_NUM_KEYS = 16;
     public const int BLOCK_CIPHER_KEY_LENGTH = 16;
     public const int RSA_KEY_MESSAGE_LENGTH = 128;         // The modulus of our private/public key pair for signing, verification, encryption and decryption
@@ -748,7 +793,8 @@ internal unsafe static class ZipArchiveEncrypt {
         }
     }
 
-    public static bool RsaVerifyData(byte[][] data, int[] sizes, int numBuffers, byte[] signedHash, int signedHashSize, byte[] publicKey) => true;
+    // ZipEncrypt::RSA_VerifyData
+    public static bool RsaVerifyData(byte[][] data, int[] sizes, int numBuffers, byte[] signedHash, int signedHashSize, byte[] publicKey) => true; //TODO
 
     internal static void StreamCipher(ref byte[] data, int size, uint inKey = 0) {
         //    StreamCipherState cipher;
@@ -756,62 +802,10 @@ internal unsafe static class ZipArchiveEncrypt {
         //    gEnv->pSystem->GetCrypto()->GetStreamCipher()->EncryptStream(cipher, (uint8*)buffer, size, (uint8*)buffer);
     }
 
-    #endregion
-
-    #region RSA
-
-    // cry
-    static readonly byte[] RsaKey = [
-        0x30, 0x81, 0x9F, 0x30, 0x0D, 0x06, 0x09, 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x01, 0x01,
-        0x05, 0x00, 0x03, 0x81, 0x8D, 0x00, 0x30, 0x81, 0x89, 0x02, 0x81, 0x81, 0x00, 0xA9, 0xD5, 0x90,
-        0xA4, 0xBC, 0x92, 0xDB, 0x8C, 0xF1, 0xFC, 0x5A, 0xD5, 0x8F, 0x46, 0x05, 0x52, 0x16, 0xEE, 0xF3,
-        0xC3, 0xBE, 0x86, 0xDE, 0x70, 0x1F, 0x4E, 0x2D, 0x18, 0xD3, 0x01, 0x92, 0x46, 0xBE, 0xFA, 0xAD,
-        0x66, 0x04, 0x7B, 0x8C, 0xDD, 0x0D, 0x24, 0x8D, 0xA7, 0x23, 0xCA, 0x52, 0xC8, 0xE5, 0x01, 0xE0,
-        0xB7, 0x2B, 0xEB, 0x55, 0xCF, 0x0D, 0xF7, 0x97, 0x77, 0xDC, 0x11, 0xE8, 0x7B, 0x18, 0xCC, 0xDB,
-        0x90, 0x07, 0x2D, 0x9D, 0xC4, 0xAD, 0x80, 0x7C, 0x50, 0x23, 0x85, 0x46, 0xF3, 0xE9, 0x2C, 0x54,
-        0x81, 0x11, 0x7B, 0x6D, 0xE2, 0x57, 0x87, 0x8E, 0x65, 0xE1, 0xD3, 0x16, 0xC4, 0x54, 0xED, 0x29,
-        0xED, 0x51, 0xFD, 0xB1, 0xEF, 0xE4, 0x95, 0x01, 0x24, 0xAE, 0xC0, 0x6A, 0xFA, 0xE0, 0x5B, 0x19,
-        0xD2, 0xE6, 0xF0, 0x22, 0x3B, 0xC3, 0xE7, 0xDD, 0x17, 0x1A, 0x8C, 0xF8, 0xE1, 0x02, 0x03, 0x01,
-        0x00, 0x01 ];
-
-    static AsymmetricKeyParameter GetPublicKey(byte[] keyInfoData) {
-        if (new Asn1InputStream(keyInfoData).ReadObject() is not DerSequence sequence) throw new Exception("Invalid PrivateKey Data");
-        AlgorithmIdentifier algId = null; DerBitString keyData = null;
-        foreach (var value in sequence) {
-            if (value is AlgorithmIdentifier || value is DerSequence) algId = AlgorithmIdentifier.GetInstance(value);
-            else if (value is DerBitString) keyData = DerBitString.GetInstance(value);
-            else if (value is DerInteger && keyData == null) keyData = new DerBitString(sequence);
-        }
-        if (keyData == null) throw new Exception("Invalid PrivateKey Data");
-        return PublicKeyFactory.CreateKey(new SubjectPublicKeyInfo(algId ?? new AlgorithmIdentifier(PkcsObjectIdentifiers.RsaEncryption), keyData.GetBytes()));
-    }
-
-    public static bool DecryptKeysTable(byte[] aesKey, byte[] CDR_IV, byte[] keys_table, int digestSize, out byte[] cdrIV, out byte[][] keysTable) {
-        var digest = digestSize == 257 ? new Blake2bDigest()
-            : digestSize == 256 ? (IDigest)new Sha256Digest()
-            : new Sha1Digest();
-        try {
-            var publicKey = GetPublicKey(aesKey ?? RsaKey);
-            var cipher = new OaepEncoding(new RsaEngine(), digest);
-
-            // cdr iv
-            cipher.Init(false, publicKey);
-            cdrIV = cipher.ProcessBlock(CDR_IV, 0, RSA_KEY_MESSAGE_LENGTH);
-
-            // Decrypt the table of cipher keys.
-            keysTable = new byte[BLOCK_CIPHER_NUM_KEYS][];
-            for (int i = 0, offset = 0; i < BLOCK_CIPHER_NUM_KEYS; i++, offset += RSA_KEY_MESSAGE_LENGTH) {
-                cipher.Init(false, publicKey);
-                keysTable[i] = cipher.ProcessBlock(keys_table, offset, RSA_KEY_MESSAGE_LENGTH);
-            }
-            return true;
-        }
-        catch (Exception e) {
-            Console.WriteLine(e.Message);
-            cdrIV = default;
-            keysTable = default;
-            return false;
-        }
+    // ZipEncrypt::custom_rsa_decrypt_key_ex
+    internal static byte[] CustomRsaDecryptKeyEx(byte[] inBytes, int inOff, int inLen, OaepEncoding cipher, ICipherParameters key) {
+        cipher.Init(false, key);
+        return cipher.ProcessBlock(inBytes, inOff, inLen);
     }
 
     #endregion

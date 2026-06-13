@@ -1,4 +1,6 @@
-﻿using System.Globalization;
+﻿using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Engines;
+using System.Globalization;
 using System.IO.Compression;
 
 //// None (OK)
@@ -6,8 +8,8 @@ using System.IO.Compression;
 //    @"G:\SteamLibrary\steamapps\common\Wolcen\Game\Textures_decals.pak", [@"Textures/decals/blood/blood_decal_1.dds"])
 
 // TEA, comments:TEA (ERROR)
-//DataRow("hex:308189028181009B606931DCF7027A4DC0E5263B4AD0D8F4A492A16E4B5EC0850F074B4C3DA627FF96676D2379F89062DE6C917F268CBD822404D26D9D79BCB0182D4C96EEAF2B918A0300BFB81619622D1556B4E02D16FE0C7ED72C01EE429C4C849C6A786BCEC44D6C50CB914648BB662D0BA235680002D4605058D1C30DA11237822A01F2EF0203010001",
-//    @"G:\SteamLibrary\steamapps\common\Warface\13_2000076\Game\GameInfo.pak", [@"paklist.txt"]);
+DataRow("hex:308189028181009B606931DCF7027A4DC0E5263B4AD0D8F4A492A16E4B5EC0850F074B4C3DA627FF96676D2379F89062DE6C917F268CBD822404D26D9D79BCB0182D4C96EEAF2B918A0300BFB81619622D1556B4E02D16FE0C7ED72C01EE429C4C849C6A786BCEC44D6C50CB914648BB662D0BA235680002D4605058D1C30DA11237822A01F2EF0203010001",
+    @"G:\SteamLibrary\steamapps\common\Warface\13_2000076\Game\GameInfo.pak", [@"paklist.txt"]);
 //DataRow("hex:308189028181009B606931DCF7027A4DC0E5263B4AD0D8F4A492A16E4B5EC0850F074B4C3DA627FF96676D2379F89062DE6C917F268CBD822404D26D9D79BCB0182D4C96EEAF2B918A0300BFB81619622D1556B4E02D16FE0C7ED72C01EE429C4C849C6A786BCEC44D6C50CB914648BB662D0BA235680002D4605058D1C30DA11237822A01F2EF0203010001",
 //    @"G:\SteamLibrary\steamapps\common\Warface\13_2000076\Game\Textures_Other.pak", [@"xxx"]);
 
@@ -40,8 +42,8 @@ using System.IO.Compression;
 //    @"G:\SteamLibrary\steamapps\common\Crysis Remastered\Game\gamedata.pak", [@"entities/AdvancedDoor.ent"]);
 
 //// P4K (OK)
-DataRow("hex:5E7A2002302EEB1A3BB617C30FDE1E47",
-    @"D:\Roberts Space Industries\StarCitizen\LIVE\Data.p4k", [@"Data\Textures\planets\surface\ground\architecture\city\city_suburbs_02_displ.dds.6", @"Data\Prefabs\shops\admin\admin.xml", @"Data\Objects\buildingsets\hangar\deluxe\deluxe_elevator_shaft_02m.cgfm"]);
+//DataRow("hex:5E7A2002302EEB1A3BB617C30FDE1E47",
+//    @"D:\Roberts Space Industries\StarCitizen\LIVE\Data.p4k", [@"Data\Textures\planets\surface\ground\architecture\city\city_suburbs_02_displ.dds.6", @"Data\Prefabs\shops\admin\admin.xml", @"Data\Objects\buildingsets\hangar\deluxe\deluxe_elevator_shaft_02m.cgfm"]);
 
 static void DataRow(string key, string path, string[] files) {
     static void log(string x) => Console.WriteLine(x);
@@ -73,7 +75,7 @@ static void DataRow(string key, string path, string[] files) {
 }
 
 static byte[] ParseKey(string str) {
-    if (string.IsNullOrEmpty(str)) return null;
+    if (string.IsNullOrEmpty(str)) return null!;
     else if (str.StartsWith("hex:", StringComparison.OrdinalIgnoreCase)) {
         var keyStr = str[4..];
         var key = keyStr.StartsWith('/')

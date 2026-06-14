@@ -85,7 +85,13 @@ from Crypto.Util.number import ceil_div, bytes_to_long, long_to_bytes
 from Crypto.Util.strxor import strxor
 from Crypto.Cipher._pkcs1_oaep_decode import oaep_decode
 from Crypto.Util.Padding import pad, unpad
-import pycryptodome_twofish as Twofish
+from Crypto.Util import Counter
+from TwoFish import TwoFish_encrypt, TwoFish_decrypt
+
+class TwofishX:
+    def __init__(self, key, mode): self.key = key.hex(); self.mode = mode
+    def encrypt(self, plaintext): return bytes.fromhex(TwoFish_encrypt(plaintext.hex(), self.key, self.mode))
+    def decrypt(self, ciphertext): return bytes.fromhex(TwoFish_decrypt(ciphertext.hex(), self.key, self.mode))
 
 # see: C:\Users\smorey2\AppData\Local\Python\pythoncore-3.13-64\Lib\site-packages\Crypto\PublicKey\RSA.py
 class RsaKeyX(RSA.RsaKey):
@@ -149,14 +155,14 @@ class BufferedBlockCipher:
         blockSizeMask = blockSize - 1
         return totalSize & ~blockSizeMask if (blockSize & blockSizeMask) == 0 else totalSize - totalSize % blockSize
     def getUpdateOutputSize(self, length: int) -> int: return BufferedBlockCipher.getFullBlocksSize(self.bufOff + length, len(self.buf))
-    def processBytes(self, input: bytearray, inOff: int, length: int) -> bytes:
-        if not input: raise ValueError('input')
-        if length < 1: return None
-        updateOutputSize = self.getUpdateOutputSize(length)
-        output = bytearray(updateOutputSize) if updateOutputSize > 0 else None
-        outLen = self.processBytes2(memoryview(input), inOff, length, memoryview(output), 0)
-        return output[:outLen] if updateOutputSize > 0 and outLen < updateOutputSize else output
-    def processBytes2(self, input: memoryview, inOff: int, length: int, output: memoryview, outOff: int) -> int:
+    # def processBytes(self, input: bytearray, inOff: int, length: int) -> bytes:
+    #     if not input: raise ValueError('input')
+    #     if length < 1: return None
+    #     updateOutputSize = self.getUpdateOutputSize(length)
+    #     output = bytearray(updateOutputSize) if updateOutputSize > 0 else None
+    #     outLen = self.processBytes2(memoryview(input), inOff, length, memoryview(output), 0)
+    #     return output[:outLen] if updateOutputSize > 0 and outLen < updateOutputSize else output
+    def processBytes(self, input: memoryview, inOff: int, length: int, output: memoryview, outOff: int) -> int:
         if length < 1:
             if length < 0: raise ValueError('Can\'t have a negative input length!')
             return 0
@@ -185,17 +191,18 @@ class BufferedBlockCipher:
         self.bufOff += length
         return resultLen
     def doFinal(self, input: bytes, inOff: int, inLen: int) -> bytes:
-        if input == None: raise ValueError('input')
-        input = bytearray(input)
+        if not input: raise ValueError('input')
         outputSize = self.bufOff + inLen
         if outputSize < 1: self.reset(); return b''
-        output = bytearray(outputSize)
-        outLen = self.processBytes2(memoryview(input), inOff, inLen, memoryview(output), 0) if inLen > 0 else 0
+        input = memoryview(bytearray(input))
+        output = memoryview(bytearray(outputSize))
+        outLen = self.processBytes(input, inOff, inLen, output, 0) if inLen > 0 else 0
         outLen += self.doFinal2(output, outLen)
         return output[:outLen] if outLen < outputSize else output
     def doFinal2(self, output: bytearray, outOff: int) -> int:
         buf = self.buf; bufOff = self.bufOff
-        if bufOff:
+        print(f'doFinal2 {bufOff}: {buf.hex()}')
+        if bufOff != 0:
             # NB: Can't copy directly, or we may write too much output
             self._cipherMode.processBlock(buf, 0, buf, 0)
             output[outOff:outOff+bufOff] = buf[:bufOff]
@@ -218,10 +225,15 @@ class SicRevBlockCipher:
         self.reset()
     def processBlock(self, input: memoryview, inOff: int, output: memoryview, outOff: int) -> None:
         counter = self.counter; counterOut = self.counterOut
+        # print('Block')
+        # print(counter.hex())
         counterOut[:] = self.cipher.encrypt(counter)
+        # print(counterOut.hex())
         # XOR the counterOut with the plaintext producing the cipher text
+        # print(input[inOff:].hex())
         for i in range(len(counterOut)):
             output[outOff + i] = (counterOut[i] ^ input[inOff + i]) & 0xFF
+        # print(output[outOff:].hex())
         # Increment the counter
         j = 0
         while j <= len(counter):
@@ -236,10 +248,10 @@ class SicRevBlockCipher:
 
 def _DecryptBufferWithStreamCipher(engineId: char, data: bytes, size: int, key: bytes, iv: bytes) -> bool:
     # try:
-    cipher = BufferedBlockCipher(SicRevBlockCipher(AES.new(key, AES.MODE_ECB) if engineId == 'A' else Twofish.new(key, Twofish.MODE_ECB)))
+    cipher = BufferedBlockCipher(SicRevBlockCipher(AES.new(key, AES.MODE_ECB) if engineId == 'A' else TwofishX(key, 'ECB')))
     cipher.init(False, {'iv': iv})
     data = cipher.doFinal(data, 0, size)
-    # print(data[:100].hex())
+    # print(data.hex())
     # except: print(sys.exc_info()[1]); return None
     return data
 
@@ -468,7 +480,7 @@ class ZipFileX(ZipFile):
                 case EHeaderEncryptionType.HEADERS_ENCRYPTED_TEA: data = XXTeaDecrypt(data, nSize)
                 case EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER: data = StreamCipher(data, nSize, GetReferenceCRCForPak())
                 case EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE | EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE2:
-                    engineId = self._encryptedHeaders = 'A' if EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE2 else '2'
+                    engineId = 'A' if self._encryptedHeaders == EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE2 else '2'
                     iv = DEFAULT_CUSTOMIV if self._headerTeaEncryption[_CCTEH_HEADER_SIZE] != 0 else self._customIV
                     if not (data := _DecryptBufferWithStreamCipher(engineId, data, nSize, self._customKeys[0], iv)): print('Failed to decrypt pak header'); return False
                 case _: print('Attempting to load encrypted pak by unsupported method'); return False

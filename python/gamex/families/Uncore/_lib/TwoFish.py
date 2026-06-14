@@ -680,6 +680,7 @@ def TwoFish_encrypt(Plaintext, Raw_Key, mode):
 #   result - plaintext (hex in string)
 
 def TwoFish_decrypt(Ciphertext, Raw_Key, mode):
+    print('TwoFish_decrypt')
     try:
         int(Raw_Key, 16)  
     except ValueError:

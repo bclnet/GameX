@@ -27,7 +27,7 @@ namespace System.IO.Compression;
 public enum ZipArchiveKind { Cry3, P4k }
 
 public partial class ZipArchiveX : ZipArchive {
-    static readonly byte[] DEFAULT_CUSTOMIV = { 0x70, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    static readonly byte[] DEFAULT_CUSTOMIV = [0x70, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     EHeaderEncryptionType _encryptedHeaders;
     EHeaderSignatureType _signedHeaders;
     CrySignedCDRHeader _headerSignature;
@@ -50,9 +50,6 @@ public partial class ZipArchiveX : ZipArchive {
     public ZipArchiveX(ZipArchiveKind kind, Stream stream, string name, byte[] key, ZipArchiveMode mode) : this(kind, stream, name, key, mode, leaveOpen: false, entryNameEncoding: null) { }
     public ZipArchiveX(ZipArchiveKind kind, Stream stream, string name, byte[] key, ZipArchiveMode mode, bool leaveOpen) : this(kind, stream, name, key, mode, leaveOpen, entryNameEncoding: null) { }
     public ZipArchiveX(ZipArchiveKind kind, Stream stream, string name, byte[] key, ZipArchiveMode mode, bool leaveOpen, Encoding entryNameEncoding) : base(new MemoryStream(), ZipArchiveMode.Create, leaveOpen, entryNameEncoding) {
-
-        var cipher = new SicRevBlockCipher(new AesEngine());
-
         _readEntries = false;
         _kind = kind;
         _archiveStream = DecideArchiveStream(mode, stream);
@@ -112,7 +109,7 @@ public partial class ZipArchiveX : ZipArchive {
             ReadEndOfCentralDirectoryInnerWork(eocd);
             TryReadZip64EndOfCentralDirectory(eocd, eocdStart);
             if (_centralDirectoryStart > _archiveStream.Length) throw new InvalidDataException(SR.FieldTooBigOffsetToCD);
-            Console.WriteLine($"start: {_centralDirectoryStart}");
+            //Console.WriteLine($"start: {_centralDirectoryStart}");
             if (_kind == ZipArchiveKind.Cry3) {
                 TrySfxEmbedded(eocd2, eocdStart);
                 ReadHeaderData(eocd2);
@@ -631,62 +628,124 @@ internal static class SR {
 
 #region Encrypt
 
-/// <summary>
-/// Implements the Segmented Integer Counter (SIC) mode on top of a simple block cipher.
-/// </summary>
-internal class SicRevBlockCipher : IBlockCipherMode {
+#region NetStandard2x Fix
+
+internal class BufferedBlockCipherX : BufferedBlockCipher {
+    internal byte[] buf;
+    internal int bufOff;
+    internal IBlockCipherMode m_cipherMode;
+    public BufferedBlockCipherX(IBlockCipherMode cipherMode) : base(cipherMode) {
+        buf = (byte[])typeof(BufferedBlockCipher).GetField("buf", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(this);
+        bufOff = (int)typeof(BufferedBlockCipher).GetField("bufOff", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(this);
+        m_cipherMode = (IBlockCipherMode)typeof(BufferedBlockCipher).GetField("m_cipherMode", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(this);
+    }
+
+    public override int ProcessBytes(byte[] input, int inOff, int length, byte[] output, int outOff) {
+        if (length < 1) {
+            if (length < 0) throw new ArgumentException("Can't have a negative input length!");
+            return 0;
+        }
+
+        int resultLen = 0;
+        int blockSize = buf.Length;
+        int available = blockSize - bufOff;
+
+        if (length >= available) {
+            int updateOutputSize = GetUpdateOutputSize(length);
+            Debug.Assert(updateOutputSize >= blockSize);
+
+            Array.Copy(input, inOff, buf, bufOff, available);
+            inOff += available;
+            length -= available;
+
+            // Handle destructive overlap by copying the remaining input
+            if (output == input && Arrays.SegmentsOverlap(outOff, blockSize, inOff, length)) {
+                input = new byte[length];
+                Array.Copy(output, inOff, input, 0, length);
+                inOff = 0;
+            }
+
+            resultLen = m_cipherMode.ProcessBlock(buf, 0, output, outOff);
+            //Console.WriteLine(output[outOff..(outOff + resultLen)].Hex());
+            bufOff = 0;
+
+            while (length >= blockSize) {
+                resultLen += m_cipherMode.ProcessBlock(input, inOff, output, outOff + resultLen);
+                inOff += blockSize;
+                length -= blockSize;
+            }
+        }
+
+        Array.Copy(input, inOff, buf, bufOff, length);
+        bufOff += length;
+        return resultLen;
+    }
+
+    public override int DoFinal(byte[] output, int outOff) {
+        try {
+            if (bufOff != 0) {
+                // NB: Can't copy directly, or we may write too much output
+                m_cipherMode.ProcessBlock(buf, 0, buf, 0);
+                Array.Copy(buf, 0, output, outOff, bufOff);
+            }
+            return bufOff;
+        }
+        finally { Reset(); }
+    }
+}
+
+#endregion
+
+internal class SicRevBlockCipherX : SicBlockCipher {
     readonly IBlockCipher cipher;
-    readonly int blockSize;
     readonly byte[] counter;
     readonly byte[] counterOut;
-    byte[] IV;
 
-    /// <summary>
-    /// Basic constructor.
-    /// </summary>
-    /// <param name="cipher">the block cipher to be used.</param>
-    public SicRevBlockCipher(IBlockCipher cipher) {
+    public SicRevBlockCipherX(IBlockCipher cipher) : base(cipher) {
         this.cipher = cipher;
-        blockSize = cipher.GetBlockSize();
-        counter = new byte[blockSize];
-        counterOut = new byte[blockSize];
-        IV = new byte[blockSize];
+        counter = (byte[])typeof(SicBlockCipher).GetField("counter", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(this);
+        counterOut = (byte[])typeof(SicBlockCipher).GetField("counterOut", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(this);
     }
 
-    /// <summary>
-    /// return the underlying block cipher that we are wrapping.
-    /// </summary>
-    /// <returns>the underlying block cipher that we are wrapping.</returns>
-    public IBlockCipher UnderlyingCipher => cipher;
-    public void Init(bool forEncryption, ICipherParameters parameters) {
-        ParametersWithIV ivParam = parameters as ParametersWithIV ?? throw new ArgumentException("CTR/SIC mode requires ParametersWithIV", nameof(parameters));
-        IV = Arrays.Clone(ivParam.GetIV()); // Arrays.Fill(counter, 0); Array.Copy(IV, 0, counter, 0, IV.Length);
-        if (blockSize < IV.Length) throw new ArgumentException($"CTR/SIC mode requires IV no greater than: {blockSize} bytes.");
-        var maxCounterSize = Math.Min(8, blockSize / 2);
-        if (blockSize - IV.Length > maxCounterSize) throw new ArgumentException($"CTR/SIC mode requires IV of at least: {blockSize - maxCounterSize} bytes.");
-        if (ivParam.Parameters != null) cipher.Init(true, ivParam.Parameters); // if null it's an IV changed only.
-        Reset();
-    }
-    public string AlgorithmName => cipher.AlgorithmName + "/SIC";
-    public bool IsPartialBlockOkay => true;
-    public int GetBlockSize() => blockSize;
-    public int ProcessBlock(byte[] input, int inOff, byte[] output, int outOff) {
+    //public byte[] IV {
+    //    get => (byte[])typeof(SicBlockCipher).GetField("IV", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(this);
+    //    set => typeof(SicBlockCipher).GetField("IV", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(this, value);
+    //}
+
+    //public override void Init(bool forEncryption, ICipherParameters parameters) {
+    //    if (parameters is not ParametersWithIV ivParam) throw new ArgumentException("CTR/SIC mode requires ParametersWithIV", "parameters");
+    //    IV = Arrays.Clone(ivParam.GetIV());
+    //    Reset();
+    //    if (ivParam.Parameters != null) cipher.Init(true, ivParam.Parameters);
+    //}
+
+    public override int ProcessBlock(byte[] input, int inOff, byte[] output, int outOff) {
+        Console.WriteLine("Block");
+        Console.WriteLine(counter.Hex());
         cipher.ProcessBlock(counter, 0, counterOut, 0);
-        for (var i = 0; i < counterOut.Length; i++) output[outOff + i] = (byte)(counterOut[i] ^ input[inOff + i]); // XOR the counterOut with the plaintext producing the cipher text
-        var j = 0; while (j <= counter.Length && ++counter[j++] == 0) { } // Increment the counter
+        Console.WriteLine(counterOut.Hex());
+        //Console.WriteLine(input.Hex());
+        // XOR the counterOut with the plaintext producing the cipher text
+        for (var i = 0; i < counterOut.Length; i++)
+            output[outOff + i] = (byte)(counterOut[i] ^ input[inOff + i]);
+        Console.WriteLine(output[outOff..(outOff + 16)].Hex());
+        // Increment the counter
+        var j = 0;
+        while (j <= counter.Length && ++counter[j++] == 0) { }
         return counter.Length;
     }
-    public int ProcessBlock(ReadOnlySpan<byte> input, Span<byte> output) {
-        cipher.ProcessBlock(counter, 0, counterOut, 0);
-        for (var i = 0; i < counterOut.Length; i++) output[i] = (byte)(counterOut[i] ^ input[i]); // XOR the counterOut with the plaintext producing the cipher text
-        var j = 0; while (j <= counter.Length && ++counter[j++] == 0) { } // Increment the counter
-        return counter.Length;
-    }
-    public void Reset() {
-        Arrays.Fill(counter, 0);
-        Array.Copy(IV, 0, counter, 0, IV.Length);
-        //cipher.Reset();
-    }
+#if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+    //public int ProcessBlock(ReadOnlySpan<byte> input, Span<byte> output) {
+    //    cipher.ProcessBlock(counter, 0, counterOut, 0);
+    //    // XOR the counterOut with the plaintext producing the cipher text
+    //    for (var i = 0; i < counterOut.Length; i++)
+    //        output[i] = (byte)(counterOut[i] ^ input[i]);
+    //    // Increment the counter
+    //    var j = 0;
+    //    while (j <= counter.Length && ++counter[j++] == 0) { } // Increment the counter
+    //    return counter.Length;
+    //}
+#endif
 }
 
 /// <summary>
@@ -770,10 +829,14 @@ internal unsafe static class ZipEncrypt {
     #region StreamCipher
 
     public static bool DecryptBufferWithStreamCipher(char engineId, ref byte[] data, int size, byte[] key, byte[] iv) {
+        //Console.WriteLine(key.Hex());
+        //Console.WriteLine(iv.Hex());
         try {
-            var cipher = new BufferedBlockCipher(new SicRevBlockCipher(engineId == 'A' ? new AesEngine() : new TwofishEngine()));
+            var cipher = new BufferedBlockCipherX(new SicRevBlockCipherX(engineId == 'A' ? new AesEngine() : new TwofishEngine()));
             cipher.Init(false, new ParametersWithIV(new KeyParameter(key), iv));
+            Console.WriteLine(data[..30].Hex());
             data = cipher.DoFinal(data, 0, size);
+            //Console.WriteLine(data.Hex());
         }
         catch (CryptoException ex) { Console.WriteLine(ex.Message); return false; }
         return true;

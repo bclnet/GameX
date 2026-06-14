@@ -129,63 +129,128 @@ class PKCS1OAEP_CipherX(PKCS1_OAEP.PKCS1OAEP_Cipher):
         # Step 4
         return db[-16:]
 
+def _segmentsOverlap(aOff: int, aLen: int, bOff: int, bLen: int) -> bool: return aLen > 0 and bLen > 0 and aOff - bOff < bLen and bOff - aOff < aLen
 
-# # Decrypt the ciphertext
-# decrypted_padded_data = b""
-# for i in range(0, len(ciphertext), 16): block = ciphertext[i:i+16]; decrypted_padded_data += t.decrypt(block)
-# # Unpad the decrypted data
-# unpadder = PKCS7_Padding.PKCS7Padding(16)
-# decrypted_text = unpadder.unpad(decrypted_padded_data)
+class BufferedBlockCipher:
+    def __init__(self, cipherMode):
+        if not cipherMode: raise ValueError('cipherMode')
+        block_size = cipherMode.block_size
+        if block_size < 1: raise ValueError('cipherMode: must have a positive block size')
+        self._cipherMode = cipherMode
+        self.buf = bytearray(block_size)
+        self.bufOff = 0
+    def init(self, forEncryption: bool, parameters: dict):
+        self.forEncryption = forEncryption
+        self.reset()
+        self._cipherMode.init(forEncryption, parameters)
+    @staticmethod
+    def getFullBlocksSize(totalSize: int, blockSize: int) -> int:
+        assert(blockSize > 0)
+        if totalSize < 0: return 0
+        blockSizeMask = blockSize - 1
+        return totalSize & ~blockSizeMask if (blockSize & blockSizeMask) == 0 else totalSize - totalSize % blockSize
+    def getUpdateOutputSize(self, length: int) -> int: return BufferedBlockCipher.getFullBlocksSize(self.bufOff + length, len(self.buf))
+    def processBytes(self, input: bytes, inOff: int, length: int) -> bytes:
+        if not input: raise ValueError('input')
+        if length < 1: return None
+        updateOutputSize = self.getUpdateOutputSize(length)
+        output = bytearray(updateOutputSize) if updateOutputSize > 0 else None
+        outLen = self.processBytes2(memoryview(input), inOff, length, memoryview(output), 0)
+        return output[:outLen] if updateOutputSize > 0 and outLen < updateOutputSize else output
+    def processBytes2(self, input: memoryview, inOff: int, length: int, output: memoryview, outOff: int) -> int:
+        if length < 1:
+            if length < 0: raise ValueError('Can\'t have a negative input length!')
+            return 0
+        buf = self.buf
+        resultLen = 0
+        blockSize = len(buf)
+        available = blockSize - self.bufOff
+        if length >= available:
+            updateOutputSize = self.getUpdateOutputSize(length)
+            assert(updateOutputSize >= blockSize)
+            buf[self.bufOff:self.bufOff+available] = input[inOff:inOff+available]
+            inOff += available
+            length -= available
+            # Handle destructive overlap by copying the remaining input
+            if output == input and _segmentsOverlap(outOff, blockSize, inOff, length):
+                input = memoryview(bytearray(length))
+                input[:length] = output[inOff:inOff+length]
+                inOff = 0
+            resultLen = self._cipherMode.processBlock(buf, 0, output, outOff)
+            self.bufOff = 0
+            while length >= blockSize:
+                resultLen += self._cipherMode.processBlock(input, inOff, output, outOff + resultLen)
+                inOff += blockSize
+                length -= blockSize
+        input[inOff:inOff+length] = buf[self.bufOff:self.bufOff+length]
+        self.bufOff += length
+        return resultLen
+    def doFinal(self, input: bytes, inOff: int, inLen: int) -> bytes:
+        if input == None: raise ValueError('input')
+        outputSize = self.bufOff + inLen
+        if outputSize < 1: self.reset(); return b''
+        output = bytearray(outputSize)
+        outLen = self.processBytes2(memoryview(input), inOff, inLen, memoryview(output), 0) if inLen > 0 else 0
+        outLen += self.doFinal2(output, outLen)
+        return output[:outLen] if outLen < outputSize else output
+    def doFinal2(self, output: bytes, outOff: int) -> int:
+        if self.bufOff:
+            # NB: Can't copy directly, or we may write too much output
+            self._cipherMode.processBlock(buf, 0, buf, 0)
+            output[outOff:outOff+bufOff] = buf[:bufOff]
+        return self.bufOff
+        self.reset()
+    def reset(self) -> None:
+        self.buf[:] = [0] * len(self.buf)
+        self.bufOff = 0
+        self._cipherMode.reset()
 
-
-# class SicRevBlockCipher:
-#     def __init__(self, cipher):
-#         self.cipher = cipher
-#         self.blockSize = cipher.block_size()
-#         self.counter = bytes(blockSize)
-#         self.counterOut = bytes(blockSize)
-#         self.iv = bytes(blockSize)
-
-#     def decrypt(self, data):
-#         pass
-#         # # 1. Decode and split Outer Encryption parameters
-#         # payload_bytes = base64.b64decode(encrypted_payload.encode('utf-8'))
-#         # nonce2 = payload_bytes[:8]  # ChaCha20 default nonce size
-#         # outer_ciphertext = payload_bytes[8:]
-
-#         # # 2. Outer Decryption
-#         # cipher2 = ChaCha20.new(key=self.key2, nonce=nonce2)
-#         # base_payload = cipher2.decrypt(outer_ciphertext)
-
-#         # # 3. Extract base components from the base payload
-#         # nonce1 = base_payload[:16]  # AES EAX default nonce size
-#         # tag = base_payload[16:32]  # AES EAX default tag size
-#         # base_ciphertext = base_payload[32:]
-
-#         # # 4. Base Decryption
-#         # cipher1 = AES.new(self.key1, AES.MODE_EAX, nonce=nonce1)
-#         # padded_text = cipher1.decrypt_and_verify(base_ciphertext, tag)
-        
-#         # # 5. Unpad and decode
-#         # plaintext = unpad(padded_text, AES.block_size)
-#         # return plaintext.decode('utf-8')
-
+class SicRevBlockCipher:
+    def __init__(self, cipher, iv):
+        self.cipher = cipher
+        block_size = self.block_size = 16
+        self.counter = bytearray(block_size)
+        self.counterOut = bytearray(block_size)
+        self.iv = bytearray(block_size)
+    def init(self, forEncryption: bool, parameters: dict):
+        self.iv[:] = parameters['iv']
+        self.reset()
+        self.cipher.forEncryption = True
+        if 'key' in parameters: self.cipher.iv = parameters['key']
+    def processBlock(self, input: memoryview, inOff: int, output: memoryview, outOff: int) -> None:
+        counter = self.counter; counterOut = self.counterOut
+        print('Block')
+        print(counter.hex())
+        counterOut[:] = self.cipher.encrypt(counter) if self.cipher.forEncryption else self.cipher.decrypt(counter)
+        print(counterOut.hex())
+        # XOR the counterOut with the plaintext producing the cipher text
+        for i in range(len(counterOut)):
+            output[outOff + i] = (counterOut[i] ^ input[inOff + i]) & 0xFF
+        # print(output[outOff:outOff+16].hex())
+        # Increment the counter
+        exit(1)
+        j = 0
+        while j <= len(counter):
+            counter[j] += 1
+            if counter[j] != 0: break
+            j += 1
+        exit(1)
+        return len(counter)
+    def reset(self) -> None:
+        self.counter[:] = self.iv
+        # self.counter[:] = [0]*len(self.counter)
+        # self.counter[:len(self.iv)] = self.iv[:len(self.iv)]
 
 def _DecryptBufferWithStreamCipher(engineId: char, data: bytes, size: int, key: bytes, iv: bytes) -> bool:
-    BLOCK_SIZE = 16
+    # print(key.hex())
+    # print(iv.hex())
+    cipher = BufferedBlockCipher(SicRevBlockCipher(AES.new(key, AES.MODE_CBC, iv) if engineId == 'A' else Twofish.new(key, Twofish.MODE_CBC, iv), iv))
+    cipher.init(False, {'key': key, 'iv': iv})
+    # print(data[:30].hex())
+    data = cipher.doFinal(data, 0, size)
     # try:
-    data = pad(data, BLOCK_SIZE)
-    cipher = AES.new(key, AES.MODE_CBC, iv) if engineId == 'A' else Twofish.new(key, Twofish.MODE_CBC, iv)
-    abc = cipher.decrypt(data)
-    print(abc)
-
-    # newdata = b''
-    # for i in range(0, len(data), BLOCK_SIZE): block = data[i:i+BLOCK_SIZE]; print(block); newdata += cipher.decrypt(block)
-    # data = unpad(newdata, BLOCK_SIZE)
-    # print(newdata)
-    # exit(1)
     # except: print(sys.exc_info()[1]); return  None
-    # return data
+    return data
 
 def _GetEncryptionKeyIndex(entry: object) -> int: return 0 # => (int)unchecked(~(entry.Crc32 >> 2) & 0xF)
 
@@ -435,7 +500,7 @@ class ZipFileX(ZipFile):
     # ZipDirCacheFactory::DecryptKeysTable
     def _decryptKeysTable(self):
         digestSize = 1 if self._headerTeaEncryption[_CCTEH_HEADER_SIZE] != 0 else 256
-        rsaKey = RsaKeyX(RSA.importKey(self._key or DefaultRsaKey, digestSize))
+        rsaKey = RsaKeyX(RSA.importKey(self._key or DefaultRsaKey))
         hashAlgo = BLAKE2b if digestSize == 257 else SHA256 if digestSize == 256 else SHA1
         cipher = PKCS1OAEP_CipherX(PKCS1_OAEP.new(rsaKey, hashAlgo=hashAlgo))
 
@@ -517,7 +582,7 @@ class ZipFileX(ZipFile):
 
         # self.start_dir:  Position of start of central directory
         self.start_dir = offset_cd + concat
-        print(f'start: {self.start_dir}')
+        # print(f'start: {self.start_dir}')
 
         if self._kind == ZipFileKind.Cry3:
             self._trySfxEmbedded(endrec, eocdStart)
@@ -532,7 +597,6 @@ class ZipFileX(ZipFile):
         total = 0
         while total < size_cd:
             centdir = fp.read(sizeCentralDir)
-            print(centdir)
             if len(centdir) != sizeCentralDir:
                 raise BadZipFile("Truncated central directory")
             centdir = struct.unpack(structCentralDir, centdir)
@@ -553,7 +617,7 @@ class ZipFileX(ZipFile):
             else:
                 # Historical ZIP filename encoding
                 filename = filename.decode(self.metadata_encoding or 'cp437')
-            print(filename)
+            # print(filename)
             # Create ZipInfo instance to store file information
             x = ZipInfoX(filename)
             x.extra = fp.read(centdir[_CD_EXTRA_FIELD_LENGTH])
@@ -562,7 +626,7 @@ class ZipFileX(ZipFile):
             (x.create_version, x.create_system, x.extract_version, x.reserved,
              x.flag_bits, x.compress_type, t, d,
              x.CRC, x.compress_size, x.file_size) = centdir[1:12]
-            print(x.file_size)
+            # print(x.file_size)
             if x.extract_version > MAX_EXTRACT_VERSION:
                 raise NotImplementedError("zip file version %.1f" %
                                           (x.extract_version / 10))

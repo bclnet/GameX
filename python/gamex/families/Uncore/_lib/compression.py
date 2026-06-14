@@ -104,7 +104,6 @@ class PKCS1OAEP_CipherX(PKCS1_OAEP.PKCS1OAEP_Cipher):
         modBits = Crypto.Util.number.size(self._key.n)
         k = ceil_div(modBits, 8)            # Convert from bits to bytes
         hLen = self._hashObj.digest_size
-
         # Step 1b and 1c
         if len(ciphertext) != k or k < hLen+2:
             raise ValueError("Ciphertext with incorrect length.")
@@ -150,7 +149,7 @@ class BufferedBlockCipher:
         blockSizeMask = blockSize - 1
         return totalSize & ~blockSizeMask if (blockSize & blockSizeMask) == 0 else totalSize - totalSize % blockSize
     def getUpdateOutputSize(self, length: int) -> int: return BufferedBlockCipher.getFullBlocksSize(self.bufOff + length, len(self.buf))
-    def processBytes(self, input: bytes, inOff: int, length: int) -> bytes:
+    def processBytes(self, input: bytearray, inOff: int, length: int) -> bytes:
         if not input: raise ValueError('input')
         if length < 1: return None
         updateOutputSize = self.getUpdateOutputSize(length)
@@ -187,18 +186,20 @@ class BufferedBlockCipher:
         return resultLen
     def doFinal(self, input: bytes, inOff: int, inLen: int) -> bytes:
         if input == None: raise ValueError('input')
+        input = bytearray(input)
         outputSize = self.bufOff + inLen
         if outputSize < 1: self.reset(); return b''
         output = bytearray(outputSize)
         outLen = self.processBytes2(memoryview(input), inOff, inLen, memoryview(output), 0) if inLen > 0 else 0
         outLen += self.doFinal2(output, outLen)
         return output[:outLen] if outLen < outputSize else output
-    def doFinal2(self, output: bytes, outOff: int) -> int:
-        if self.bufOff:
+    def doFinal2(self, output: bytearray, outOff: int) -> int:
+        buf = self.buf; bufOff = self.bufOff
+        if bufOff:
             # NB: Can't copy directly, or we may write too much output
             self._cipherMode.processBlock(buf, 0, buf, 0)
             output[outOff:outOff+bufOff] = buf[:bufOff]
-        return self.bufOff
+        return bufOff
         self.reset()
     def reset(self) -> None:
         self.buf[:] = [0] * len(self.buf)
@@ -206,7 +207,7 @@ class BufferedBlockCipher:
         self._cipherMode.reset()
 
 class SicRevBlockCipher:
-    def __init__(self, cipher, iv):
+    def __init__(self, cipher):
         self.cipher = cipher
         block_size = self.block_size = 16
         self.counter = bytearray(block_size)
@@ -215,26 +216,18 @@ class SicRevBlockCipher:
     def init(self, forEncryption: bool, parameters: dict):
         self.iv[:] = parameters['iv']
         self.reset()
-        self.cipher.forEncryption = True
-        if 'key' in parameters: self.cipher.iv = parameters['key']
     def processBlock(self, input: memoryview, inOff: int, output: memoryview, outOff: int) -> None:
         counter = self.counter; counterOut = self.counterOut
-        print('Block')
-        print(counter.hex())
-        counterOut[:] = self.cipher.encrypt(counter) if self.cipher.forEncryption else self.cipher.decrypt(counter)
-        print(counterOut.hex())
+        counterOut[:] = self.cipher.encrypt(counter)
         # XOR the counterOut with the plaintext producing the cipher text
         for i in range(len(counterOut)):
             output[outOff + i] = (counterOut[i] ^ input[inOff + i]) & 0xFF
-        # print(output[outOff:outOff+16].hex())
         # Increment the counter
-        exit(1)
         j = 0
         while j <= len(counter):
-            counter[j] += 1
+            counter[j] = (counter[j] + 1) & 0xFF
             if counter[j] != 0: break
             j += 1
-        exit(1)
         return len(counter)
     def reset(self) -> None:
         self.counter[:] = self.iv
@@ -242,14 +235,12 @@ class SicRevBlockCipher:
         # self.counter[:len(self.iv)] = self.iv[:len(self.iv)]
 
 def _DecryptBufferWithStreamCipher(engineId: char, data: bytes, size: int, key: bytes, iv: bytes) -> bool:
-    # print(key.hex())
-    # print(iv.hex())
-    cipher = BufferedBlockCipher(SicRevBlockCipher(AES.new(key, AES.MODE_CBC, iv) if engineId == 'A' else Twofish.new(key, Twofish.MODE_CBC, iv), iv))
-    cipher.init(False, {'key': key, 'iv': iv})
-    # print(data[:30].hex())
-    data = cipher.doFinal(data, 0, size)
     # try:
-    # except: print(sys.exc_info()[1]); return  None
+    cipher = BufferedBlockCipher(SicRevBlockCipher(AES.new(key, AES.MODE_ECB) if engineId == 'A' else Twofish.new(key, Twofish.MODE_ECB)))
+    cipher.init(False, {'iv': iv})
+    data = cipher.doFinal(data, 0, size)
+    # print(data[:100].hex())
+    # except: print(sys.exc_info()[1]); return None
     return data
 
 def _GetEncryptionKeyIndex(entry: object) -> int: return 0 # => (int)unchecked(~(entry.Crc32 >> 2) & 0xF)
@@ -481,7 +472,7 @@ class ZipFileX(ZipFile):
                     iv = DEFAULT_CUSTOMIV if self._headerTeaEncryption[_CCTEH_HEADER_SIZE] != 0 else self._customIV
                     if not (data := _DecryptBufferWithStreamCipher(engineId, data, nSize, self._customKeys[0], iv)): print('Failed to decrypt pak header'); return False
                 case _: print('Attempting to load encrypted pak by unsupported method'); return False
-            fp = io.BytesIO(data)
+            fp = self.fp = io.BytesIO(data)
             self.start_dir = 0
         match self._signedHeaders:
             case EHeaderSignatureType.HEADERS_CDR_SIGNED | EHeaderSignatureType.HEADERS_CDR_SIGNED2:
@@ -489,11 +480,11 @@ class ZipFileX(ZipFile):
                 # Verify CDR signature & pak name
                 pathSepIdx = max(self._name.rfind('\\'), self._name.rfind('/'))
                 pathSep = self._name[pathSepIdx + 1:]
-                position = fp.tell(); data = bytes(nSize); stream.readinto(data); fp.seek(position, 0)
-                dataToVerify = [data, pathSep.decode('ascii')]
+                position = fp.tell(); data = bytearray(nSize); fp.readinto(data); fp.seek(position, 0)
+                dataToVerify = [data, pathSep.encode('ascii')]
                 sizesToVerify = [nSize, len(pathSep)]
                 # Could not verify signature
-                if not _RsaVerifyData(dataToVerify, sizesToVerify, 2, _headerSignature[_CCEH_CDR_SIGNED], 128, self._key): print('Failed to verify RSA signature of pak header'); return False
+                if not _RsaVerifyData(dataToVerify, sizesToVerify, 2, self._headerSignature[_CCEH_CDR_SIGNED], 128, self._key): print('Failed to verify RSA signature of pak header'); return False
             case EHeaderSignatureType.HEADERS_NOT_SIGNED: pass
         return True
 
@@ -587,9 +578,11 @@ class ZipFileX(ZipFile):
         if self._kind == ZipFileKind.Cry3:
             self._trySfxEmbedded(endrec, eocdStart)
             self._readHeaderData(endrec)
+        fp = self.fp
 
         if self.start_dir < 0:
             raise BadZipFile("Bad offset for central directory")
+
         fp.seek(self.start_dir, 0)
         size_cd = endrec[_ECD_SIZE]
         data = fp.read(size_cd)

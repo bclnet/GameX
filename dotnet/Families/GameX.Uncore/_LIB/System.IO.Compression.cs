@@ -720,15 +720,10 @@ internal class SicRevBlockCipherX : SicBlockCipher {
     //}
 
     public override int ProcessBlock(byte[] input, int inOff, byte[] output, int outOff) {
-        Console.WriteLine("Block");
-        Console.WriteLine(counter.Hex());
         cipher.ProcessBlock(counter, 0, counterOut, 0);
-        Console.WriteLine(counterOut.Hex());
-        //Console.WriteLine(input.Hex());
         // XOR the counterOut with the plaintext producing the cipher text
         for (var i = 0; i < counterOut.Length; i++)
             output[outOff + i] = (byte)(counterOut[i] ^ input[inOff + i]);
-        Console.WriteLine(output[outOff..(outOff + 16)].Hex());
         // Increment the counter
         var j = 0;
         while (j <= counter.Length && ++counter[j++] == 0) { }
@@ -829,14 +824,11 @@ internal unsafe static class ZipEncrypt {
     #region StreamCipher
 
     public static bool DecryptBufferWithStreamCipher(char engineId, ref byte[] data, int size, byte[] key, byte[] iv) {
-        //Console.WriteLine(key.Hex());
-        //Console.WriteLine(iv.Hex());
         try {
             var cipher = new BufferedBlockCipherX(new SicRevBlockCipherX(engineId == 'A' ? new AesEngine() : new TwofishEngine()));
             cipher.Init(false, new ParametersWithIV(new KeyParameter(key), iv));
-            Console.WriteLine(data[..30].Hex());
             data = cipher.DoFinal(data, 0, size);
-            //Console.WriteLine(data.Hex());
+            //Console.WriteLine(data[..100].Hex());
         }
         catch (CryptoException ex) { Console.WriteLine(ex.Message); return false; }
         return true;

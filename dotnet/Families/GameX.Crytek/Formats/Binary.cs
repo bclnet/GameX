@@ -104,7 +104,7 @@ public unsafe class Binary_Cry3 : ArcBinary<Binary_Cry3> {
         var files = source.Files = [];
         source.UseReader = false;
 
-        var arc = (ZipArchiveX)(source.Tag = new ZipArchiveX(ZipArchiveKind.Cry3, r.BaseStream, source.BinPath, Key));
+        var arc = (ZipArchiveX)(source.Tag = new ZipArchiveX(r.BaseStream, path: source.BinPath, key: Key, kind: ZipKind.Cry3));
         var parentByPath = new Dictionary<string, FileSource>();
         var partByPath = new Dictionary<string, SortedList<string, FileSource>>();
         foreach (var entry in arc.Entries) {

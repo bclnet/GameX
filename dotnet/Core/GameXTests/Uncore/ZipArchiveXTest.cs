@@ -11,6 +11,13 @@ namespace GameX.Uncore;
 [TestClass]
 public class ZipArchiveXTest {
     [TestMethod]
+
+    // None (OK)
+    //[DataRow("",
+    //    @"G:\T_\Samples64.zip", [@"Sample1.py"])]
+    //[DataRow("",
+    //    @"G:\T_\SamplesPwd.zip", [@"Sample1.py"])]
+
     //// None (OK)
     //[DataRow("",
     //    @"G:\SteamLibrary\steamapps\common\Wolcen\Game\Textures_decals.pak", [@"Textures/decals/blood/blood_decal_1.dds"])]
@@ -50,15 +57,15 @@ public class ZipArchiveXTest {
     //    @"G:\SteamLibrary\steamapps\common\Crysis Remastered\Game\gamedata.pak", [@"xxx"])]
 
     // P4K (OK)
-    [DataRow("hex:5E7A2002302EEB1A3BB617C30FDE1E47",
-        @"D:\Roberts Space Industries\StarCitizen\LIVE\Data.p4k", @"Data\Prefabs\shops\admin\admin.xml")]
-    [DataRow("hex:5E7A2002302EEB1A3BB617C30FDE1E47",
-        @"D:\Roberts Space Industries\StarCitizen\LIVE\Data.p4k", @"Data\Objects\buildingsets\hangar\deluxe\deluxe_elevator_shaft_02m.cgfm")]
+    //[DataRow("hex:5E7A2002302EEB1A3BB617C30FDE1E47",
+    //    @"D:\Roberts Space Industries\StarCitizen\LIVE\Data.p4k", @"Data\Prefabs\shops\admin\admin.xml")]
+    //[DataRow("hex:5E7A2002302EEB1A3BB617C30FDE1E47",
+    //    @"D:\Roberts Space Industries\StarCitizen\LIVE\Data.p4k", @"Data\Objects\buildingsets\hangar\deluxe\deluxe_elevator_shaft_02m.cgfm")]
 
     public void ShouldUnzip(string key, string path, string file) {
         static void log(string x) => Debugger.Log(0, null, x);
         using var fs = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-        var pak = new ZipArchiveX(path.EndsWith(".p4k") ? ZipArchiveKind.P4k : ZipArchiveKind.Cry3, fs, fs.Name, ParseKey(key));
+        var pak = new ZipArchiveX(fs, key: ParseKey(key));
         foreach (var ent in pak.Entries.Take(10)) log($"{ent.FullName} - {new ZipArchiveEntryX(ent).CompressionMethod}");
         if (file != null) {
             var entry = pak.GetEntry(file) ?? throw new FileNotFoundException();

@@ -1,4 +1,5 @@
-﻿using Org.BouncyCastle.Asn1;
+﻿using ICSharpCode.SharpZipLib.Zip;
+using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Asn1.Pkcs;
 using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Crypto;
@@ -24,36 +25,39 @@ namespace System.IO.Compression;
 
 #region ZipArchiveX
 
-public enum ZipArchiveKind { Cry3, P4k }
+public enum ZipKind { Zip, Cry3, P4k }
 
 public partial class ZipArchiveX : ZipArchive {
     static readonly byte[] DEFAULT_CUSTOMIV = [0x70, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-    EHeaderEncryptionType _encryptedHeaders;
+    internal Stream _baseStream;
+    internal EHeaderEncryptionType _encryptedHeaders;
     EHeaderSignatureType _signedHeaders;
     CrySignedCDRHeader _headerSignature;
     CryCustomExtendedHeader _headerExtended;
     CryCustomEncryptionHeader _headerEncryption;
-    CryCustomTeaEncryptionHeader _headerTeaEncryption;
+    internal CryCustomTeaEncryptionHeader _headerTeaEncryption;
     byte[] _customIV;
-    byte[][] _customKeys;
-    long _offsetOfFirstEntry = 0L;
+    internal byte[][] _customKeys;
+    internal long _offsetOfFirstEntry = 0L;
 
     /// <summary>
     /// Size of end of central record (excluding variable fields)
     /// </summary>
     const int EndOfCentralRecordBaseSize = 22;
 
-    internal readonly ZipArchiveKind _kind;
-    readonly string _name;
+    internal readonly ZipKind _kind;
+    readonly string _path;
     readonly byte[] _key;
-    public ZipArchiveX(ZipArchiveKind kind, Stream stream, string name, byte[] key) : this(kind, stream, name, key, ZipArchiveMode.Read, leaveOpen: false, entryNameEncoding: null) { }
-    public ZipArchiveX(ZipArchiveKind kind, Stream stream, string name, byte[] key, ZipArchiveMode mode) : this(kind, stream, name, key, mode, leaveOpen: false, entryNameEncoding: null) { }
-    public ZipArchiveX(ZipArchiveKind kind, Stream stream, string name, byte[] key, ZipArchiveMode mode, bool leaveOpen) : this(kind, stream, name, key, mode, leaveOpen, entryNameEncoding: null) { }
-    public ZipArchiveX(ZipArchiveKind kind, Stream stream, string name, byte[] key, ZipArchiveMode mode, bool leaveOpen, Encoding entryNameEncoding) : base(new MemoryStream(), ZipArchiveMode.Create, leaveOpen, entryNameEncoding) {
+    //public ZipArchiveX(Stream stream, string name, byte[] key, ZipKind? kind = null) : this(kind, stream, name, key, ZipArchiveMode.Read, leaveOpen: false, entryNameEncoding: null) { }
+    //public ZipArchiveX(Stream stream, string name, byte[] key, ZipKind? kind = null, ZipArchiveMode mode) : this(kind, stream, name, key, mode, leaveOpen: false, entryNameEncoding: null) { }
+    //public ZipArchiveX(Stream stream, string name, byte[] key, ZipKind? kind = null, ZipArchiveMode mode, bool leaveOpen=false) : this(kind, stream, name, key, mode, leaveOpen, entryNameEncoding: null) { }
+    public ZipArchiveX(Stream stream, ZipArchiveMode mode = ZipArchiveMode.Read, bool leaveOpen = false, Encoding entryNameEncoding = null, string path = null, byte[] key = null, ZipKind? kind = null) : base(new MemoryStream(), ZipArchiveMode.Create, leaveOpen, entryNameEncoding) {
         _readEntries = false;
-        _kind = kind;
-        _archiveStream = DecideArchiveStream(mode, stream);
-        _name = name;
+        _path = path ?? (stream is FileStream z ? z.Name : null);
+        _kind = _path.EndsWith(".p4k", StringComparison.OrdinalIgnoreCase) ? ZipKind.P4k
+            : _path.EndsWith(".p4k", StringComparison.OrdinalIgnoreCase) ? ZipKind.Cry3
+            : ZipKind.Zip;
+        _archiveStream = _baseStream = DecideArchiveStream(mode, stream);
         _key = key;
         _mode = mode;
         //ArgumentNullException.ThrowIfNull(stream);
@@ -105,15 +109,13 @@ public partial class ZipArchiveX : ZipArchive {
             // read the EOCD
             var eocdStart = _archiveStream.Position;
             var eocd = ZipEndOfCentralDirectoryBlock.ReadBlock(_archiveStream); var eocd2 = new ZipEndOfCentralDirectoryBlock(eocd);
-            if (_kind == ZipArchiveKind.Cry3) Prepare(eocd2);
+            if (_kind == ZipKind.Cry3) Prepare(eocd2);
             ReadEndOfCentralDirectoryInnerWork(eocd);
             TryReadZip64EndOfCentralDirectory(eocd, eocdStart);
             if (_centralDirectoryStart > _archiveStream.Length) throw new InvalidDataException(SR.FieldTooBigOffsetToCD);
             //Console.WriteLine($"start: {_centralDirectoryStart}");
-            if (_kind == ZipArchiveKind.Cry3) {
-                TrySfxEmbedded(eocd2, eocdStart);
-                ReadHeaderData(eocd2);
-            }
+            TrySfxEmbedded(eocd2, eocdStart);
+            if (_kind == ZipKind.Cry3) ReadHeaderData(eocd2);
         }
         catch (EndOfStreamException ex) { throw new InvalidDataException(SR.CDCorrupt, ex); }
         catch (IOException ex) { throw new InvalidDataException(SR.CDCorrupt, ex); }
@@ -148,7 +150,7 @@ public partial class ZipArchiveX : ZipArchive {
             var expectedCommentLength = CryCustomExtendedHeader.SizeOf;
 
             // Encryption technique has been specified in both the disk number (old technique) and the custom header (new technique).
-            if (_encryptedHeaders != EHeaderEncryptionType.HEADERS_ENCRYPTED_TEA && _headerExtended.nEncryption != (ushort)EHeaderEncryptionType.HEADERS_NOT_ENCRYPTED && _encryptedHeaders != 0) throw new InvalidDataException("Unexpected encryption technique in header");
+            if (_encryptedHeaders != EHeaderEncryptionType.HEADERS_ENCRYPTED_TEA && _headerExtended.nEncryption != (ushort)EHeaderEncryptionType.HEADERS_NOT_ENCRYPTED && _encryptedHeaders != EHeaderEncryptionType.HEADERS_NOT_ENCRYPTED) throw new InvalidDataException("Unexpected encryption technique in header");
             else {
                 // The encryption technique has been specified only in the custom header
                 _encryptedHeaders = (EHeaderEncryptionType)_headerExtended.nEncryption;
@@ -218,7 +220,7 @@ public partial class ZipArchiveX : ZipArchive {
         // and so dont require any adjustment here...
         // TODO: Difficulty with Zip64 and SFX offset handling needs resolution - maths?
         var isZip64 = s.Signature == ZipEndOfCentralDirectoryBlock.Signature64ConstantUInt;
-        if (!isZip64 && (s.OffsetOfStartOfCentralDirectoryWithRespectToTheStartingDiskNumber < eocdStart - (4 + (long)s.SizeOfCentralDirectory))) {
+        if (false && !isZip64 && (s.OffsetOfStartOfCentralDirectoryWithRespectToTheStartingDiskNumber < eocdStart - (4 + (long)s.SizeOfCentralDirectory))) {
             _offsetOfFirstEntry = eocdStart - (4 + (long)s.SizeOfCentralDirectory + s.OffsetOfStartOfCentralDirectoryWithRespectToTheStartingDiskNumber);
             if (_offsetOfFirstEntry <= 0) throw new InvalidDataException("Invalid embedded zip archive");
         }
@@ -246,10 +248,10 @@ public partial class ZipArchiveX : ZipArchive {
         var stream = _archiveStream;
         switch (_signedHeaders) {
             case EHeaderSignatureType.HEADERS_CDR_SIGNED or EHeaderSignatureType.HEADERS_CDR_SIGNED2:
-                if (_name == null) break;
+                if (_path == null) break;
                 // Verify CDR signature & pak name
-                var pathSepIdx = Math.Max(_name.LastIndexOf('\\'), _name.LastIndexOf('/'));
-                var pathSep = _name[(pathSepIdx + 1)..];
+                var pathSepIdx = Math.Max(_path.LastIndexOf('\\'), _path.LastIndexOf('/'));
+                var pathSep = _path[(pathSepIdx + 1)..];
                 var position = stream.Position; var data = new byte[nSize]; stream.ReadAtLeast(data, nSize); stream.Position = position;
                 var dataToVerify = new byte[][] { data, Encoding.ASCII.GetBytes(pathSep) };
                 var sizesToVerify = new int[] { nSize, pathSep.Length };
@@ -282,14 +284,11 @@ public partial class ZipArchiveX : ZipArchive {
 
         // Decrypt CDR initial Vector
         _customIV = CustomRsaDecryptKeyEx(_headerEncryption.CDR_IV, 0, RSA_KEY_MESSAGE_LENGTH, cipher, rsaKey);
-        //Console.WriteLine(_customIV.Hex());
 
         // Decrypt the table of cipher keys.
         _customKeys = new byte[BLOCK_CIPHER_NUM_KEYS][];
-        for (int i = 0, offset = 0; i < BLOCK_CIPHER_NUM_KEYS; i++, offset += RSA_KEY_MESSAGE_LENGTH) {
+        for (int i = 0, offset = 0; i < BLOCK_CIPHER_NUM_KEYS; i++, offset += RSA_KEY_MESSAGE_LENGTH)
             _customKeys[i] = CustomRsaDecryptKeyEx(_headerEncryption.Keys_Table, offset, RSA_KEY_MESSAGE_LENGTH, cipher, rsaKey);
-            //Console.WriteLine(_customKeys[i].Hex());
-        }
         return true;
     }
 }
@@ -303,6 +302,9 @@ internal class CompressionX {
     public static readonly Type DeflateStreamType = typeof(ZipArchive).Assembly.GetType("System.IO.Compression.DeflateStream");
     public static readonly Type DeflateManagedStreamType = typeof(ZipArchive).Assembly.GetType("System.IO.Compression.DeflateManagedStream");
     public static readonly Type ZipLocalFileHeaderType = typeof(ZipArchive).Assembly.GetType("System.IO.Compression.ZipLocalFileHeader");
+    public static readonly Type CompressionMethodValuesType = typeof(ZipArchiveEntry).Assembly.GetType("System.IO.Compression.ZipArchiveEntry+CompressionMethodValues");
+    public static readonly ConstructorInfo DeflateStreamConst = DeflateStreamType.GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic, null, [typeof(Stream), typeof(CompressionMode), typeof(long)], null);
+    public static readonly ConstructorInfo DeflateManagedStreamConst = DeflateManagedStreamType.GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic, null, [typeof(Stream), CompressionMethodValuesType, typeof(long)], null);
 }
 
 public static class ZipArchiveX2 {
@@ -323,12 +325,12 @@ public partial class ZipArchiveX {
     internal static readonly MethodInfo TryReadZip64EndOfCentralDirectoryMethod = typeof(ZipArchive).GetMethod("TryReadZip64EndOfCentralDirectory", BindingFlags.NonPublic | BindingFlags.Instance);
     internal static readonly MethodInfo EnsureCentralDirectoryReadMethod = typeof(ZipArchive).GetMethod("EnsureCentralDirectoryRead", BindingFlags.NonPublic | BindingFlags.Instance);
 
-    Stream _archiveStream {
+    internal Stream _archiveStream {
         get => (Stream)_archiveStreamField.GetValue(this);
         set => _archiveStreamField.SetValue(this, value);
     }
 
-    Stream _backingStream {
+    internal Stream _backingStream {
         get => (Stream)_backingStreamField.GetValue(this);
         set => _backingStreamField.SetValue(this, value);
     }
@@ -375,7 +377,7 @@ public partial class ZipArchiveX {
 
 public class ZipArchiveEntryX(ZipArchiveEntry source) {
     readonly ZipArchiveEntry this_ = source;
-    ZipArchiveKind _kind = ((ZipArchiveX)source.Archive)._kind;
+    ZipKind _kind = ((ZipArchiveX)source.Archive)._kind;
 
     public enum CompressionMethodValues : ushort {
         Stored = 0,
@@ -383,13 +385,20 @@ public class ZipArchiveEntryX(ZipArchiveEntry source) {
         Deflate64 = 9,
         BZip2 = 12, // 0x000C
         LZMA = 14, // 0x000E
-        ZStd = 100,
+        // NEW
+        Zstd93 = 93,
+        DEFLATE_AND_ENCRYPT = 11, // Deflate + Custom encryption (TEA)
+        DEFLATE_AND_STREAMCIPHER = 12, // Deflate + stream cipher encryption on a per file basis
+        STORE_AND_STREAMCIPHER_KEYTABLE = 13, // Store + Timur's encryption technique on a per file basis
+        DEFLATE_AND_STREAMCIPHER_KEYTABLE = 14, // Deflate + Timur's encryption technique on a per file basis
     }
 
+    //internal static readonly FieldInfo _generalPurposeBitFlagField = typeof(ZipArchiveEntry).GetField("_generalPurposeBitFlag", BindingFlags.NonPublic | BindingFlags.Instance);
+    internal static readonly FieldInfo _isEncryptedField = typeof(ZipArchiveEntry).GetField("_isEncrypted", BindingFlags.NonPublic | BindingFlags.Instance);
     internal static readonly FieldInfo _archiveField = typeof(ZipArchiveEntry).GetField("_archive", BindingFlags.NonPublic | BindingFlags.Instance);
     internal static readonly FieldInfo _compressedSizeField = typeof(ZipArchiveEntry).GetField("_compressedSize", BindingFlags.NonPublic | BindingFlags.Instance);
     internal static readonly FieldInfo _uncompressedSizeField = typeof(ZipArchiveEntry).GetField("_uncompressedSize", BindingFlags.NonPublic | BindingFlags.Instance);
-    internal static readonly FieldInfo _crc32Field = typeof(ZipArchiveEntry).GetField("_crc32", BindingFlags.NonPublic | BindingFlags.Instance);
+    //internal static readonly FieldInfo _crc32Field = typeof(ZipArchiveEntry).GetField("_crc32", BindingFlags.NonPublic | BindingFlags.Instance);
     internal static readonly FieldInfo _offsetOfLocalHeaderField = typeof(ZipArchiveEntry).GetField("_offsetOfLocalHeader", BindingFlags.NonPublic | BindingFlags.Instance);
     internal static readonly FieldInfo _storedOffsetOfCompressedDataField = typeof(ZipArchiveEntry).GetField("_storedOffsetOfCompressedData", BindingFlags.NonPublic | BindingFlags.Instance);
     internal static readonly PropertyInfo CompressionMethodProperty = typeof(ZipArchiveEntry).GetProperty("CompressionMethod", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -399,6 +408,7 @@ public class ZipArchiveEntryX(ZipArchiveEntry source) {
 
     ZipArchiveX _archive => (ZipArchiveX)_archiveField.GetValue(this_);
     long _compressedSize => (long)_compressedSizeField.GetValue(this_);
+    long _uncompressedSize => (long)_uncompressedSizeField.GetValue(this_);
     long _offsetOfLocalHeader => (long)_offsetOfLocalHeaderField.GetValue(this_);
     long? _storedOffsetOfCompressedData {
         get => (long?)_storedOffsetOfCompressedDataField.GetValue(this_);
@@ -407,63 +417,63 @@ public class ZipArchiveEntryX(ZipArchiveEntry source) {
     //long _uncompressedSize => (long)_uncompressedSizeField.GetValue(this_);
     //uint _crc32 => (uint)_crc32Field.GetValue(this_);
 
-    public bool IsEncrypted => false; // Flags
+    public bool IsEncrypted => (bool)_isEncryptedField.GetValue(this_);
     public bool IsAesCrypted => false; // ExtraData != null && ExtraData.Length >= 168 && ExtraData[168] > 0x00;
 
     internal void ThrowIfNotOpenable(bool needToUncompress, bool needToLoadIntoMemory) => ThrowIfNotOpenableMethod.Invoke(this_, [needToUncompress, needToLoadIntoMemory]);
     internal void ThrowIfInvalidArchive() => ThrowIfInvalidArchiveMethod.Invoke(this_, null);
     internal long GetOffsetOfCompressedData() {
-        if (_kind == ZipArchiveKind.Cry3) return (long)GetOffsetOfCompressedDataMethod.Invoke(this_, null);
-        if (_storedOffsetOfCompressedData == null) {
-            _archive.ArchiveStream.Seek(_offsetOfLocalHeader, SeekOrigin.Begin);
-            // by calling this, we are using local header _storedEntryNameBytes.Length and extraFieldLength
-            // to find start of data, but still using central directory size information
-            if (!ZipLocalFileHeader.TrySkipBlock(_kind, _archive.ArchiveStream)) throw new InvalidDataException(SR.LocalFileHeaderCorrupt);
-            _storedOffsetOfCompressedData = _archive.ArchiveStream.Position;
+        if (_kind == ZipKind.P4k) {
+            if (_storedOffsetOfCompressedData == null) {
+                _archive.ArchiveStream.Seek(_offsetOfLocalHeader, SeekOrigin.Begin);
+                // by calling this, we are using local header _storedEntryNameBytes.Length and extraFieldLength
+                // to find start of data, but still using central directory size information
+                if (!ZipLocalFileHeader.TrySkipBlock(_kind, _archive.ArchiveStream)) throw new InvalidDataException(SR.LocalFileHeaderCorrupt);
+                _storedOffsetOfCompressedData = _archive.ArchiveStream.Position;
+            }
+            return _storedOffsetOfCompressedData.Value;
         }
-        return _storedOffsetOfCompressedData.Value;
+        else if (_kind == ZipKind.Zip || _archive._encryptedHeaders == EHeaderEncryptionType.HEADERS_NOT_ENCRYPTED) return _storedOffsetOfCompressedData ??= (long)GetOffsetOfCompressedDataMethod.Invoke(this_, null);
+        // use CDR instead of local header
+        // The pak encryption tool asserts that there is no extra data at the end of the local file header, so don't add any extra data from the CDR header.
+        else return _storedOffsetOfCompressedData ??= _archive._offsetOfFirstEntry + _offsetOfLocalHeader + this_.FullName.Length + 30;
     }
 
     //internal byte[] ExtraData => (CompressionMethodValues)CompressionMethodProperty.GetValue(this_);
 
+    CompressionMethodValues? NextCompressionMethod;
     public CompressionMethodValues CompressionMethod => (CompressionMethodValues)CompressionMethodProperty.GetValue(this_);
 
     public Stream Open() {
         ThrowIfInvalidArchive();
         switch (_archive.Mode) {
-            case ZipArchiveMode.Read:
-                return OpenInReadMode(checkOpenable: true);
-            case ZipArchiveMode.Create:
-                return OpenInWriteMode();
+            case ZipArchiveMode.Read: return OpenInReadMode(checkOpenable: true);
+            case ZipArchiveMode.Create: return OpenInWriteMode();
             case ZipArchiveMode.Update:
-            default:
-                Debug.Assert(_archive.Mode == ZipArchiveMode.Update);
-                return OpenInUpdateMode();
+            default: Debug.Assert(_archive.Mode == ZipArchiveMode.Update); return OpenInUpdateMode();
         }
     }
 
     //0xFD2FB528 LE
-    static bool IsZstdStream(byte[] bytes, long length) => bytes.Length > 3 && bytes[0] == 0x28 && bytes[1] == 0xB5 && bytes[2] == 0x2F && bytes[3] == 0xFD;
+    static bool IsZstdStream(byte[] s) => s.Length > 3 && s[0] == 0x28 && s[1] == 0xB5 && s[2] == 0x2F && s[3] == 0xFD;
 
+    internal static readonly FieldInfo _startInSuperStreamMethod = SubReadStreamType.GetField("_startInSuperStream", BindingFlags.NonPublic | BindingFlags.Instance);
+    internal static readonly FieldInfo _superStreamField = SubReadStreamType.GetField("_superStream", BindingFlags.NonPublic | BindingFlags.Instance);
     Stream GetDataDecompressor(Stream compressedStreamToRead) {
         Stream uncompressedStream;
-        switch (CompressionMethod) {
+        switch (NextCompressionMethod ?? CompressionMethod) {
             case CompressionMethodValues.Stored: uncompressedStream = compressedStreamToRead; break;
-            case CompressionMethodValues.Deflate:
-                uncompressedStream = (Stream)Activator.CreateInstance(DeflateStreamType, compressedStreamToRead, CompressionMode.Decompress); //_uncompressedSize
-                break;
-            case CompressionMethodValues.Deflate64:
-                uncompressedStream = (Stream)Activator.CreateInstance(DeflateManagedStreamType, compressedStreamToRead, CompressionMethodValues.Deflate64); //_uncompressedSize
-                break;
-            case CompressionMethodValues.BZip2: uncompressedStream = new CBZip2InputStream(compressedStreamToRead); break; // new BZip2InputStream(compressedStreamToRead); break;
-            case CompressionMethodValues.ZStd:
-                var b = new byte[4];
-                if (compressedStreamToRead.CanSeek && compressedStreamToRead.Read(b, 0, 4) > 0) {
-                    if (IsZstdStream(b, compressedStreamToRead.Length)) {
-                        compressedStreamToRead.Seek(-4, SeekOrigin.Current);
-                        uncompressedStream = new ZstdNet.DecompressionStream(compressedStreamToRead);
-                    }
-                    else (uncompressedStream = compressedStreamToRead).Seek(-4, SeekOrigin.Current);
+            case CompressionMethodValues.Deflate: uncompressedStream = (Stream)DeflateStreamConst.Invoke([compressedStreamToRead, CompressionMode.Decompress, _uncompressedSize]); break;
+            case CompressionMethodValues.Deflate64: uncompressedStream = (Stream)DeflateManagedStreamConst.Invoke([compressedStreamToRead, CompressionMethodValues.Deflate64, _uncompressedSize]); break;
+            case CompressionMethodValues.BZip2: uncompressedStream = new CBZip2InputStream(compressedStreamToRead); break;
+            case CompressionMethodValues.Zstd93:
+                var buf = new byte[4];
+                var bs = (Stream)_superStreamField.GetValue(compressedStreamToRead);
+                var pos = (long)_startInSuperStreamMethod.GetValue(compressedStreamToRead);
+                bs.Seek(pos, SeekOrigin.Begin);
+                if (bs.Read(buf, 0, 4) > 0) {
+                    if (IsZstdStream(buf)) uncompressedStream = new ZstdNet.DecompressionStream(compressedStreamToRead);
+                    else uncompressedStream = compressedStreamToRead;
                 }
                 else uncompressedStream = new ZstdNet.DecompressionStream(compressedStreamToRead);
                 break;
@@ -473,9 +483,45 @@ public class ZipArchiveEntryX(ZipArchiveEntry source) {
     }
 
     Stream OpenInReadModeGetDataCompressor(long offsetOfCompressedData) {
-        Stream compressedStream = (Stream)Activator.CreateInstance(SubReadStreamType, _archive.ArchiveStream, offsetOfCompressedData, _compressedSize);
+        var method = CompressionMethod;
+        if (_kind == ZipKind.Cry3 && ((method >= CompressionMethodValues.DEFLATE_AND_ENCRYPT && method <= CompressionMethodValues.DEFLATE_AND_STREAMCIPHER_KEYTABLE) || _archive._encryptedHeaders == EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE2)) {
+            var teaEncryption = _archive._headerTeaEncryption.nHeaderSize != 0;
+            _archive._baseStream.Seek(offsetOfCompressedData, SeekOrigin.Begin);
+            var compressed = _archive._baseStream.ReadBytes((int)_compressedSize);
+            //Console.WriteLine(compressed[..50].Hex());
+            switch (method) {
+                case CompressionMethodValues.STORE_AND_STREAMCIPHER_KEYTABLE:
+                    StreamCipher(ref compressed, 0);
+                    NextCompressionMethod = CompressionMethodValues.Stored;
+                    break;
+                case CompressionMethodValues.DEFLATE_AND_ENCRYPT or CompressionMethodValues.DEFLATE_AND_STREAMCIPHER or CompressionMethodValues.DEFLATE_AND_STREAMCIPHER_KEYTABLE:
+                    if (method == CompressionMethodValues.DEFLATE_AND_ENCRYPT && !teaEncryption) {
+                        XXTeaDecrypt(ref compressed, (int)_compressedSize);
+                        NextCompressionMethod = CompressionMethodValues.Deflate;
+                    }
+                    else {
+                        var keyIndex = GetEncryptionKeyIndex(this_);
+                        GetEncryptionInitialVector(this_, out var iv);
+                        if (!DecryptBufferWithStreamCipher('2', ref compressed, (int)_compressedSize, _archive._customKeys[keyIndex], iv)) throw new ZipException("Data is corrupt");
+                        NextCompressionMethod = teaEncryption && method == CompressionMethodValues.DEFLATE_AND_STREAMCIPHER ? CompressionMethodValues.Stored : CompressionMethodValues.Deflate;
+                    }
+                    break;
+                default:
+                    if (_archive._encryptedHeaders == EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE2) {
+                        var keyIndex = GetEncryptionKeyIndex(this_);
+                        GetEncryptionInitialVector(this_, out var iv);
+                        if (!DecryptBufferWithStreamCipher('A', ref compressed, (int)_compressedSize, _archive._customKeys[keyIndex], iv)) throw new ZipException("Data is corrupt");
+                    }
+                    break;
+            }
+            _archive._archiveStream = new MemoryStream(compressed);
+            offsetOfCompressedData = 0;
+        }
+        else if (_kind == ZipKind.P4k && method == (CompressionMethodValues)100) NextCompressionMethod = CompressionMethodValues.Zstd93;
+        Stream compressedStream = (Stream)Activator.CreateInstance(SubReadStreamType, _archive._archiveStream, offsetOfCompressedData, _compressedSize);
         if (IsEncrypted) compressedStream = _archive.CreateAndInitDecryptionStream(compressedStream, this_) ?? throw new InvalidDataException("Unable to decrypt this entry");
-        if (_kind == ZipArchiveKind.P4k && IsAesCrypted) compressedStream = _archive.CreateAndInitAesDecryptionStream(compressedStream, this_) ?? throw new InvalidDataException("Unable to decrypt this entry");
+        if (_kind == ZipKind.P4k && IsAesCrypted) compressedStream = _archive.CreateAndInitAesDecryptionStream(compressedStream, this_) ?? throw new InvalidDataException("Unable to decrypt this entry");
+        //var buf = new byte[100]; compressedStream.Read(buf, 0, 100); Console.WriteLine(buf.Hex());
         Stream decompressedStream = GetDataDecompressor(compressedStream);
         return decompressedStream;
         //return (Stream)Activator.CreateInstance(CrcValidatingReadStreamType, decompressedStream, _crc32, _uncompressedSize);
@@ -527,8 +573,8 @@ internal struct ZipLocalFileHeader {
     public static readonly byte[] SignatureP4kConstantBytes = [0x50, 0x4B, 0x03, 0x4];
     public static readonly byte[] SignatureP4kEncryptedConstantBytes = [0x50, 0x4B, 0x03, 0x14];
 
-    static bool TrySkipBlockCore(ZipArchiveKind kind, Stream stream, Span<byte> blockBytes, int bytesRead, long currPosition) {
-        if (kind == ZipArchiveKind.P4k) { if (bytesRead != FieldLengths.Signature || !(blockBytes.SequenceEqual(SignatureP4kConstantBytes) || blockBytes.SequenceEqual(SignatureP4kEncryptedConstantBytes))) return false; }
+    static bool TrySkipBlockCore(ZipKind kind, Stream stream, Span<byte> blockBytes, int bytesRead, long currPosition) {
+        if (kind == ZipKind.P4k) { if (bytesRead != FieldLengths.Signature || !(blockBytes.SequenceEqual(SignatureP4kConstantBytes) || blockBytes.SequenceEqual(SignatureP4kEncryptedConstantBytes))) return false; }
         else { if (bytesRead != FieldLengths.Signature || !blockBytes.SequenceEqual(ZipEndOfCentralDirectoryBlock.SignatureConstantBytes)) return false; }
         if (stream.Length < currPosition + FieldLocations.FilenameLength) return false;
         // Already read the signature, so make the filename length field location relative to that
@@ -538,7 +584,7 @@ internal struct ZipLocalFileHeader {
         return true;
     }
 
-    internal static bool TrySkipBlock(ZipArchiveKind kind, Stream stream) {
+    internal static bool TrySkipBlock(ZipKind kind, Stream stream) {
         Span<byte> blockBytes = stackalloc byte[FieldLengths.Signature];
         var currPosition = stream.Position;
         var bytesRead = stream.ReadAtLeast(blockBytes, blockBytes.Length, throwOnEndOfStream: false);
@@ -674,7 +720,6 @@ internal class BufferedBlockCipherX : BufferedBlockCipher {
     }
 
     public override int DoFinal(byte[] output, int outOff) {
-        Console.WriteLine($"DoFinal2 {bufOff}: {buf.Hex()}");
         try {
             if (bufOff != 0) {
                 // NB: Can't copy directly, or we may write too much output
@@ -715,18 +760,18 @@ internal class SicRevBlockCipherX : SicBlockCipher {
         while (j <= counter.Length && ++counter[j++] == 0) { }
         return counter.Length;
     }
-//#if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
-//    public int ProcessBlock(ReadOnlySpan<byte> input, Span<byte> output) {
-//        cipher.ProcessBlock(counter, 0, counterOut, 0);
-//        // XOR the counterOut with the plaintext producing the cipher text
-//        for (var i = 0; i < counterOut.Length; i++)
-//            output[i] = (byte)(counterOut[i] ^ input[i]);
-//        // Increment the counter
-//        var j = 0;
-//        while (j <= counter.Length && ++counter[j++] == 0) { } // Increment the counter
-//        return counter.Length;
-//    }
-//#endif
+    //#if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+    //    public int ProcessBlock(ReadOnlySpan<byte> input, Span<byte> output) {
+    //        cipher.ProcessBlock(counter, 0, counterOut, 0);
+    //        // XOR the counterOut with the plaintext producing the cipher text
+    //        for (var i = 0; i < counterOut.Length; i++)
+    //            output[i] = (byte)(counterOut[i] ^ input[i]);
+    //        // Increment the counter
+    //        var j = 0;
+    //        while (j <= counter.Length && ++counter[j++] == 0) { } // Increment the counter
+    //        return counter.Length;
+    //    }
+    //#endif
 }
 
 /// <summary>
@@ -750,11 +795,6 @@ internal unsafe static class ZipEncrypt {
     public const int BLOCK_CIPHER_NUM_KEYS = 16;
     public const int BLOCK_CIPHER_KEY_LENGTH = 16;
     public const int RSA_KEY_MESSAGE_LENGTH = 128;         // The modulus of our private/public key pair for signing, verification, encryption and decryption
-
-    public const int METHOD_DEFLATE_AND_ENCRYPT = 11; // Deflate + Custom encryption (TEA)
-    public const int METHOD_DEFLATE_AND_STREAMCIPHER = 12; // Deflate + stream cipher encryption on a per file basis
-    public const int METHOD_STORE_AND_STREAMCIPHER_KEYTABLE = 13; // Store + Timur's encryption technique on a per file basis
-    public const int METHOD_DEFLATE_AND_STREAMCIPHER_KEYTABLE = 14; // Deflate + Timur's encryption technique on a per file basis
 
     // encryption settings for zip header - stored in m_headerExtended struct
     public enum EHeaderEncryptionType {
@@ -814,7 +854,6 @@ internal unsafe static class ZipEncrypt {
             var cipher = new BufferedBlockCipherX(new SicRevBlockCipherX(engineId == 'A' ? new AesEngine() : new TwofishEngine()));
             cipher.Init(false, new ParametersWithIV(new KeyParameter(key), iv));
             data = cipher.DoFinal(data, 0, size);
-            //Console.WriteLine(data.Hex());
         }
         catch (CryptoException ex) { Console.WriteLine(ex.Message); return false; }
         return true;
@@ -829,8 +868,7 @@ internal unsafe static class ZipEncrypt {
                 (uint)(entry.CompressedLength != 0 ? 0 : 1),
                 (uint)(entry.Crc32 ^ (entry.CompressedLength << 12)),
                 (uint)((entry.Length != 0 ? 0 : 1) ^ entry.CompressedLength)};
-            iv = new byte[16];
-            fixed (uint* ptr = intIV) Marshal.Copy((IntPtr)ptr, iv, 0, 16);
+            iv = new byte[16]; fixed (uint* ptr = intIV) Marshal.Copy((IntPtr)ptr, iv, 0, 16);
         }
     }
 
@@ -838,6 +876,7 @@ internal unsafe static class ZipEncrypt {
     public static bool RsaVerifyData(byte[][] data, int[] sizes, int numBuffers, byte[] signedHash, int signedHashSize, byte[] publicKey) => true; //TODO
 
     internal static void StreamCipher(ref byte[] data, int size, uint inKey = 0) {
+        throw new NotImplementedException();
         //    StreamCipherState cipher;
         //    gEnv->pSystem->GetCrypto()->GetStreamCipher()->Init(cipher, (const uint8*)&inKey, sizeof(inKey));
         //    gEnv->pSystem->GetCrypto()->GetStreamCipher()->EncryptStream(cipher, (uint8*)buffer, size, (uint8*)buffer);
@@ -858,10 +897,8 @@ internal unsafe static class ZipEncrypt {
     const uint TEA_DELTA2 = 0x61C88647;
 
     static void Btea(uint* v, int n, uint[] k) {
-        uint y, z, sum;
-        uint p, rounds, e;
-        uint MX() => ((z >> 5 ^ y << 2) + (y >> 3 ^ z << 4)) ^ ((sum ^ y) + (k[(p & 3) ^ e] ^ z));
-
+        uint y, z, sum, p = 0, rounds, e;
+        uint MX() { return ((z >> 5 ^ y << 2) + (y >> 3 ^ z << 4)) ^ ((sum ^ y) + (k[(p & 3) ^ e] ^ z)); }
         if (n > 1) // Coding Part
         {
             rounds = (uint)(6 + 52 / n);
@@ -870,10 +907,7 @@ internal unsafe static class ZipEncrypt {
             do {
                 sum += TEA_DELTA;
                 e = (sum >> 2) & 3;
-                for (p = 0; p < (uint)(n - 1); p++) {
-                    y = v[p + 1];
-                    z = v[p] += MX();
-                }
+                for (p = 0; p < (uint)(n - 1); p++) { y = v[p + 1]; z = v[p] += MX(); }
                 y = v[0];
                 z = v[n - 1] += MX();
             } while (--rounds != 0);
@@ -886,10 +920,7 @@ internal unsafe static class ZipEncrypt {
             y = v[0];
             do {
                 e = (sum >> 2) & 3;
-                for (p = (uint)(n - 1); p > 0; p--) {
-                    z = v[p - 1];
-                    y = v[p] -= MX();
-                }
+                for (p = (uint)(n - 1); p > 0; p--) { z = v[p - 1]; y = v[p] -= MX(); }
                 z = v[n - 1];
                 y = v[0] -= MX();
                 sum -= TEA_DELTA;
@@ -903,21 +934,21 @@ internal unsafe static class ZipEncrypt {
 
     internal static void XXTeaEncrypt(ref byte[] data, int size) {
         fixed (byte* dataPtr = data) {
-            var intBuffer = (uint*)dataPtr;
+            var values = (uint*)dataPtr;
             var encryptedLen = size >> 2;
-            SwapByteOrder(intBuffer, encryptedLen);
-            Btea(intBuffer, encryptedLen, TEA_DEFAULTKEY);
-            SwapByteOrder(intBuffer, encryptedLen);
+            SwapByteOrder(values, encryptedLen);
+            Btea(values, encryptedLen, TEA_DEFAULTKEY);
+            SwapByteOrder(values, encryptedLen);
         }
     }
 
     internal static void XXTeaDecrypt(ref byte[] data, int size) {
         fixed (byte* dataPtr = data) {
-            var intBuffer = (uint*)dataPtr;
+            var values = (uint*)dataPtr;
             var encryptedLen = size >> 2;
-            SwapByteOrder(intBuffer, encryptedLen);
-            Btea(intBuffer, -encryptedLen, TEA_DEFAULTKEY);
-            SwapByteOrder(intBuffer, encryptedLen);
+            SwapByteOrder(values, encryptedLen);
+            Btea(values, -encryptedLen, TEA_DEFAULTKEY);
+            SwapByteOrder(values, encryptedLen);
         }
     }
 
@@ -925,3 +956,5 @@ internal unsafe static class ZipEncrypt {
 }
 
 #endregion
+
+//foreach (var x in Enumerable.Range(0, encryptedLen).Select(i => values[i])) Console.Write($"{x} "); Console.WriteLine();

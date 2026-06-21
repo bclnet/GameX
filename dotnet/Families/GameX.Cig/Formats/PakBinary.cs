@@ -36,7 +36,7 @@ public class PakBinary_P4k : ArcBinary<PakBinary_P4k> {
         source.UseReader = false;
         var files = source.Files = [];
 
-        var arc = (ZipArchiveX)(source.Tag = new ZipArchiveX(ZipArchiveKind.P4k, r.BaseStream, source.BinPath, Key));
+        var arc = (ZipArchiveX)(source.Tag = new ZipArchiveX(r.BaseStream, path: source.BinPath, key: Key, kind: ZipKind.P4k));
         var parentByPath = new Dictionary<string, FileSource>();
         var partsByPath = new Dictionary<string, SortedList<string, FileSource>>();
         foreach (var entry in arc.Entries) {

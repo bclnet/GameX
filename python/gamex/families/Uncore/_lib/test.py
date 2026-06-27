@@ -40,8 +40,8 @@ def dataRow(key: str, path: str, files: list[str]) -> None:
 # Zip
 # dataRow("",
 #    r"G:\T_\Samples64.zip", [r"Sample1.py"])
-# dataRow("",
-#    r"G:\T_\SamplesPwd.zip", [r"Sample1.py"])
+dataRow("", #ERRR
+   r"G:\T_\SamplesPwd.zip", [r"Sample1.py"])
 
 # None
 # dataRow("",
@@ -80,7 +80,7 @@ def dataRow(key: str, path: str, files: list[str]) -> None:
 #    r"G:\SteamLibrary\steamapps\common\Robinson The Journey\game_robinson\audio.pak", [r"audio/ace/c_beetle.xml"])
 
 # P4K
-dataRow("hex:5E7A2002302EEB1A3BB617C30FDE1E47",
-    r"D:\Roberts Space Industries\StarCitizen\LIVE\Data.p4k", [r"Engine/EngineAssets/Textures/scratch.dds"])
-#     r"D:\Roberts Space Industries\StarCitizen\LIVE\Data.p4k", [r"Data/Scripts/FeatureTests/FeatureTests.xml"])
+# dataRow("hex:5E7A2002302EEB1A3BB617C30FDE1E47",
+#     r"D:\Roberts Space Industries\StarCitizen\LIVE\Data.p4k", [r"Engine/EngineAssets/Textures/scratch.dds"])
+    # r"D:\Roberts Space Industries\StarCitizen\LIVE\Data.p4k", [r"Data/Scripts/FeatureTests/FeatureTests.xml"])
 # #     r"D:\Roberts Space Industries\StarCitizen\LIVE\Data.p4k", [r"Data\Textures\planets\surface\ground\architecture\city\city_suburbs_02_displ.dds.6"]) #, r"Data\Prefabs\shops\admin\admin.xml", r"Data\Objects\buildingsets\hangar\deluxe\deluxe_elevator_shaft_02m.cgfm"])

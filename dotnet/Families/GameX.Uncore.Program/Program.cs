@@ -4,7 +4,7 @@ using System.IO.Compression;
 // Zip
 //DataRow("",
 //    @"G:\T_\Samples64.zip", [@"Sample1.py"]);
-//DataRow("",
+//DataRow("", // BAD
 //    @"G:\T_\SamplesPwd.zip", [@"Sample1.py"]);
 
 // None
@@ -44,9 +44,9 @@ using System.IO.Compression;
 //    @"G:\SteamLibrary\steamapps\common\Robinson The Journey\game_robinson\audio.pak", [@"audio/ace/c_beetle.xml"]);
 
 // P4K
-//DataRow("hex:5E7A2002302EEB1A3BB617C30FDE1E47",
+DataRow("hex:5E7A2002302EEB1A3BB617C30FDE1E47",
 //    @"D:\Roberts Space Industries\StarCitizen\LIVE\Data.p4k", [@"Engine\EngineAssets\Textures\scratch.dds"]);
-//@"D:\Roberts Space Industries\StarCitizen\LIVE\Data.p4k", [@"Data\Scripts\FeatureTests\FeatureTests.xml"]);
+    @"D:\Roberts Space Industries\StarCitizen\LIVE\Data.p4k", [@"Data\Scripts\FeatureTests\FeatureTests.xml"]);
 //    @"D:\Roberts Space Industries\StarCitizen\LIVE\Data.p4k", [@"Data\Textures\planets\surface\ground\architecture\city\city_suburbs_02_displ.dds.6", @"Data\Prefabs\shops\admin\admin.xml", @"Data\Objects\buildingsets\hangar\deluxe\deluxe_elevator_shaft_02m.cgfm"]);
 
 static void DataRow(string key, string path, string[] files) {

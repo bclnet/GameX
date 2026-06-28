@@ -1,7 +1,7 @@
 ﻿# Header
 GameX.Arkane.dll
 GameX.Beamdog.dll
-GameX.Bethesda.dll
+#GameX.Bethesda.dll
 GameX.Bioware.dll
 GameX.Black.dll
 GameX.Blizzard.dll

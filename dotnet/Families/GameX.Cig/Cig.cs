@@ -28,10 +28,10 @@ public class CigArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     internal static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) AssetFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch {
             //".cfg" => (0, BinaryDcb.Factory),
-            ".mtl" or ".xml" => (0, CryXmlFile.Factory),
+            ".mtl" or ".xml" => (0, Binary_CryXml.Factory),
             ".a" => (0, Binary_DdsA.Factory),
             ".dcb" => (0, Binary_Dcb.Factory),
-            ".soc" or ".cgf" or ".cga" or ".chr" or ".skin" or ".anim" => (0, CryFile.Factory),
+            ".soc" or ".cgf" or ".cga" or ".chr" or ".skin" or ".anim" => (0, Binary_CryFile.Factory),
             _ => UncoreArchive.AssetFactory(source, game),
         };
 

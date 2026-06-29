@@ -16,6 +16,6 @@ public class CryXmlFileTest {
 
     public async Task GetAsset(Archive source, string sampleFile) {
         Assert.IsTrue(source.Contains(sampleFile));
-        var file = await source.GetAsset<CryXmlFile>(sampleFile);
+        var file = await source.GetAsset<Binary_CryXml>(sampleFile);
     }
 }

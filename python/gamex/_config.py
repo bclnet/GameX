@@ -9,9 +9,9 @@ __version__ = "0.0.1"
 # __current__ = "Bohemia"
 # __current__ = "Bullfrog"
 # __current__ = "Capcom"
-__current__ = "Cig"
+# __current__ = "Cig"
 # __current__ = "Cryptic"
-# __current__ = "Crytek"
+__current__ = "Crytek"
 # __current__ = "Cyanide"
 # __current__ = "EA"
 # __current__ = "Epic"
@@ -81,9 +81,9 @@ match __current__:
         )
     case 'Bethesda':
         option = GlobalOption(
-            Platform = "P3",
+            Platform = "GL",
             ForceOpen = True,
-            ForcePath = "sample:3",
+            ForcePath = "sample:2",
             Family = "Bethesda",
             Game = "Morrowind", # The Elder Scrolls III: Morrowind
             # Game = "Oblivion", # The Elder Scrolls IV: Oblivion
@@ -262,9 +262,9 @@ match __current__:
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
-            ForcePath = "sample:*",
+            ForcePath = "sample:0",
             Family = "Crytek",
-            # Game = "ArcheAge", # ArcheAge
+            Game = "ArcheAge", # ArcheAge
             # Game = "Hunt", # Hunt: Showdown
             # Game = "MWO", # MechWarrior Online
             # Game = "Warface", # Warface

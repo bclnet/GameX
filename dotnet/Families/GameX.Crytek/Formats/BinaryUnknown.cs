@@ -8,7 +8,9 @@ using System.Numerics;
 
 namespace GameX.Crytek.Formats;
 
-partial class CryFile : IUnknownFileModel {
+#region Binary_CryFile
+
+partial class Binary_CryFile : IUnknownFileModel {
     IEnumerable<string> IUnknownFileModel.RootNodes => NodeMap.Values.Where(x => x.ParentNode == null).Select(x => x.Name);
     IEnumerable<IUnknownModel> IUnknownFileModel.Models => throw new NotImplementedException();
     IEnumerable<UnknownMesh> IUnknownFileModel.Meshes {
@@ -17,7 +19,7 @@ partial class CryFile : IUnknownFileModel {
                 if (node.ObjectChunk == null) { Log.Info($"Skipped node with missing Object {node.Name}"); continue; }
                 if (node.ObjectChunk.ChunkType == ChunkType.Helper) { continue; }
                 if (node.ObjectChunk.ChunkType != ChunkType.Mesh) { Log.Info($"Skipped a {node.ObjectChunk.ChunkType} chunk"); continue; }
-                if (!(node.ObjectChunk is ChunkMesh chunk)) { Log.Info($"Invalid ChunkMesh in {node.Name}"); continue; }
+                if (node.ObjectChunk is not ChunkMesh chunk) { Log.Info($"Invalid ChunkMesh in {node.Name}"); continue; }
 
                 // Get the Transform here. It's the node chunk Transform.m(41/42/42) divided by 100, added to the parent transform. The transform of a child has to add the transforms of ALL the parents.
                 if (node.ParentNode != null && node.ParentNode.ChunkType != ChunkType.Node) Log.Info($"Rendering {node.Name} to parent {node.ParentNode.Name}");
@@ -41,15 +43,15 @@ partial class CryFile : IUnknownFileModel {
                     Name = node.Name,
                     MaxBound = chunk.MaxBound,
                     MinBound = chunk.MinBound,
-                    Subsets = meshSubsets.MeshSubsets.Select(s => new UnknownMesh.Subset {
-                        Vertexs = new Range((int)s.FirstVertex, (int)(s.NumVertices + s.FirstVertex)),
-                        Indexs = new Range((int)s.FirstVertex, (int)(s.NumIndices + s.FirstVertex)),
+                    Subsets = [.. meshSubsets.MeshSubsets.Select(s => new UnknownMesh.Subset {
+                        Vertexs = new Range(s.FirstVertex, s.NumVertices + s.FirstVertex),
+                        Indexs = new Range(s.FirstVertex, s.NumIndices + s.FirstVertex),
                         MatId = (int)s.MatID,
-                    }).ToArray(),
+                    })],
                     Vertexs = chunk.VerticesData == 0 ? vertsUVs.Vertices : vertexes?.Vertices,
                     UVs = chunk.VerticesData == 0 ? vertsUVs.UVs : uvs.UVs,
                     Normals = chunk.NormalsData != 0 ? normals.Normals : null,
-                    Indexs = indexs.Indices.Cast<int>().ToArray(),
+                    Indexs = [.. indexs.Indices.Cast<int>()],
                 };
 
                 // Let's try this using this node chunk's rotation matrix, and the transform is the sum of all the transforms.
@@ -80,3 +82,5 @@ partial class CryFile : IUnknownFileModel {
         return new IUnknownFileObject.Source { Author = s.Author, SourceFile = s.SourceFile };
     });
 }
+
+#endregion

@@ -408,8 +408,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   FamilyId: Bethesda
   ArcUri: game:/#Morrowind
-  Type: Texture
-  Path: Morrowind.bsa:bookart/boethiah_256.dds
+  Type: Engine
+  Path: Morrowind.start
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0

@@ -19,7 +19,6 @@ class Binary_Aurora(ArcBinaryT):
 
 # Binary_Myp
 class Binary_Myp(ArcBinaryT):
-
     #region Headers
 
     MYP_MAGIC = 0x0050594d

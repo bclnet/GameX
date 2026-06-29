@@ -26,21 +26,18 @@ public class BiowareArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> 
 
     #region Factories
 
-    static readonly ConcurrentDictionary<string, ArcBinary> ArcBinarys = new ConcurrentDictionary<string, ArcBinary>();
+    static readonly ConcurrentDictionary<string, ArcBinary> ArcBinarys = new();
 
     static ArcBinary GetArcBinary(FamilyGame game, string extension)
         => extension != ".zip"
-            ? ArcBinarys.GetOrAdd(game.Id, _ => PakBinaryFactory(game))
+            ? ArcBinarys.GetOrAdd(game.Id, _ => game.Engine.n switch {
+                //"Infinity" => PakBinary_Infinity.Instance,
+                "Aurora" => Binary_Aurora.Current,
+                "Hero" => Binary_Myp.Current,
+                "Odyssey" => Binary_Myp.Current,
+                _ => throw new ArgumentOutOfRangeException(nameof(game.Engine))
+            })
             : Binary_Zip.GetArcBinary(game);
-
-    static ArcBinary PakBinaryFactory(FamilyGame game)
-        => game.Engine.n switch {
-            //"Infinity" => PakBinary_Infinity.Instance,
-            "Aurora" => Binary_Aurora.Current,
-            "Hero" => Binary_Myp.Current,
-            "Odyssey" => Binary_Myp.Current,
-            _ => throw new ArgumentOutOfRangeException(nameof(game.Engine))
-        };
 
     static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) AssetFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch {

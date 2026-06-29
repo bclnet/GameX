@@ -16,6 +16,6 @@ public class CryFileTest {
 
     public async Task GetAsset(Archive source, string sampleFile) {
         Assert.IsTrue(source.Contains(sampleFile));
-        var file = await source.GetAsset<CryFile>(sampleFile);
+        var file = await source.GetAsset<Binary_CryFile>(sampleFile);
     }
 }

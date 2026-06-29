@@ -3,6 +3,7 @@ import os
 from openstk.core import _pathExtension
 from gamex import ArcBinary, Archive, BinaryArchive
 from gamex.families.GameX_Uncore import UncoreArchive
+from gamex.families.Crytek.formats.binary import Binary_ArcheAge, Binary_Cry3 #, Binary_CryXml, Binary_CryFile
 
 # CrytekArchive
 class CrytekArchive(BinaryArchive):
@@ -14,11 +15,16 @@ class CrytekArchive(BinaryArchive):
 
     @staticmethod
     def getArcBinary(game: FamilyGame, extension: str) -> ArcBinary:
-        pass
+        match game.engine[0]:
+            case 'ArcheAge': return Binary_ArcheAge(game.key)
+            case _: return Binary_Cry3(game.key)
 
     @staticmethod
     def assetFactory(source: FileSource, game: FamilyGame) -> tuple[object, callable]:
         match _pathExtension(source.path).lower():
+            case '': return None
+            # case '.xml': : return (FileOption.StreamObject, Binary_CryXml.factory)
+            # case '.cgf' | '.cga' | '.chr' | '.skin' | '.anim': return (FileOption.StreamObject, Binary_CryFile.factory)
             case _: return UncoreArchive.assetFactory(source, game)
 
     #endregion

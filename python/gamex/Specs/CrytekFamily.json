@@ -20,7 +20,7 @@
       "engine": "ArcheAge",
       "url": "https://store.steampowered.com/app/304030",
       "key": "hex:321F2AEEAA584AB49A6C9E09D59E9C6F",
-      "arcExt": "",
+      "arcExt": "game_pak",
       "arc": "game:/game_pak",
       "files": {
         "key": [

@@ -31,21 +31,18 @@ public class CapcomArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
 
     static readonly ConcurrentDictionary<string, ArcBinary> ArcBinarys = new();
 
-    static ArcBinary GetArcBinary(FamilyGame game, string extension) => ArcBinarys.GetOrAdd(game.Id, _ => PakBinaryFactory(game, extension));
-
-    static ArcBinary PakBinaryFactory(FamilyGame game, string extension)
-        => game.Engine.n switch {
-            "Zip" => Binary_Zip.GetArcBinary(game),
-            "Unity" => Unity.Formats.Binary_Unity.Current,
-            _ => extension switch {
-                ".kpka" => Binary_Kpka.Current,
-                ".arc" => Binary_Arc.Current,
-                ".big" => Binary_Big.Current,
-                ".bundle" => Binary_Bundle.Current,
-                ".mbundle" => Binary_Plist.Current,
-                _ => null, //throw new ArgumentOutOfRangeException(nameof(extension)),
-            },
-        };
+    static ArcBinary GetArcBinary(FamilyGame game, string extension) => ArcBinarys.GetOrAdd(game.Id, _ => game.Engine.n switch {
+        "Zip" => Binary_Zip.GetArcBinary(game),
+        "Unity" => Unity.Formats.Binary_Unity.Current,
+        _ => extension switch {
+            ".kpka" => Binary_Kpka.Current,
+            ".arc" => Binary_Arc.Current,
+            ".big" => Binary_Big.Current,
+            ".bundle" => Binary_Bundle.Current,
+            ".mbundle" => Binary_Plist.Current,
+            _ => null, //throw new ArgumentOutOfRangeException(nameof(extension)),
+        },
+    });
 
     static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) AssetFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch {

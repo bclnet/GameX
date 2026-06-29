@@ -12,7 +12,6 @@ class BinaryArchive: pass
 
 # Binary_Dat
 class Binary_Dat(ArcBinaryT):
-
     #region F1/F2
 
     F1_HEADER_FILEID = 0x000000001

@@ -21,7 +21,6 @@ class Binary_Crf:
 
 # Binary_Mpk
 class Binary_Mpk(ArcBinaryT):
-
     #region Headers
 
     MAGIC = 0x4b41504d

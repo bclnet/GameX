@@ -44,7 +44,6 @@ class Binary_U8(ArcBinaryT):
 
 # Binary_U9
 class Binary_U9(ArcBinaryT):
-
     #region Factories
 
     @staticmethod
@@ -78,7 +77,6 @@ class Binary_U9(ArcBinaryT):
 
 # Binary_UO
 class Binary_UO(ArcBinaryT):
-
     #region Factories
 
     @staticmethod

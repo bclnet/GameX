@@ -464,7 +464,7 @@ public unsafe struct E_SELECTIONS {
 //float w;
 //} EERIE_3DPAD;
 
-[DebuggerDisplay("Texture: {ModelPath}")]
+[DebuggerDisplay("Texture: {Path}")]
 public class E_TEXTURE {
     public int Id;
     public string Path;

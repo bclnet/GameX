@@ -12,7 +12,6 @@ class BinaryArchive: pass
 
 # Binary_Hogg
 class Binary_Hogg(ArcBinaryT):
-
     #region Headers
 
     MAGIC = 0xDEADF00D

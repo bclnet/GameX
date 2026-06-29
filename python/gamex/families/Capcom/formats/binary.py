@@ -14,7 +14,6 @@ class BinaryArchive: pass
 
 # Binary_Arc
 class Binary_Arc(ArcBinaryT):
-
     #region K
 
     K_MAGIC = 0x00435241
@@ -108,7 +107,6 @@ Exponent = int.from_bytes([
 
 # Binary_Kpka
 class Binary_Kpka(ArcBinaryT):
-
     #region K
 
     K_MAGIC = 0x414b504b

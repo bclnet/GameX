@@ -203,7 +203,7 @@ public class ChunkBinaryXmlData_3 : ChunkBinaryXmlData {
         //var buffer = r.ReadBytes(bytesToRead);
         //using var memoryStream = new MemoryStream(buffer);
         //Data = new CryXmlFile(memoryStream);
-        Data = new CryXmlFile(r, true);
+        Data = new Binary_CryXml(r, true);
     }
 }
 

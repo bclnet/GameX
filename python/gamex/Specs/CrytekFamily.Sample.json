@@ -1,7 +1,12 @@
 ﻿{
   "ArcheAge": {
     "name": "ArcheAge",
-    "files": []
+    "files": [
+      {
+        "path": "game/version.txt",
+        "type": "Text"
+      }
+    ]
   },
   "Hunt": {
     "name": "Hunt: Showdown",

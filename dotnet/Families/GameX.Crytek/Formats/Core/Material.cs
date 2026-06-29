@@ -180,7 +180,7 @@ public partial class Material {
     public static Material FromFile((string fileName, Stream stream) file) {
         if (file.stream == null) return null;
         try {
-            var fileData = CryXmlFile.Deserialize<Material>(file.stream);
+            var fileData = Binary_CryXml.Deserialize<Material>(file.stream);
             fileData.SourceFileName = file.fileName.Replace('.', '_');
             return fileData;
         }

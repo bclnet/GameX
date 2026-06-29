@@ -1,6 +1,6 @@
 ﻿//#define Arkane
 //#define Beamdog
-#define Bethesda
+//#define Bethesda
 //#define Bioware
 //#define Black
 //#define Blizzard
@@ -9,7 +9,7 @@
 //#define Capcom
 //#define Cig
 //#define Cryptic
-//#define Crytek
+#define Crytek
 //#define Cyanide
 //#define EA
 //#define Epic
@@ -294,9 +294,9 @@ public partial class FamilyManager {
     {
         Platform = "GL",
         ForceOpen = true,
-        ForcePath = "sample:*",
+        ForcePath = "sample:0",
         Family = "Crytek",
-        //Game = "ArcheAge", // ArcheAge
+        Game = "ArcheAge", // ArcheAge
         //Game = "Hunt", // Hunt: Showdown
         //Game = "MWO", // MechWarrior Online
         //Game = "Warface", // Warface

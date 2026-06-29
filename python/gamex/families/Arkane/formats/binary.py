@@ -83,7 +83,6 @@ class Binary_Danae(ArcBinaryT):
 
 # Binary_Void
 class Binary_Void(ArcBinaryT):
-
     #region Headers
 
     class V_File:

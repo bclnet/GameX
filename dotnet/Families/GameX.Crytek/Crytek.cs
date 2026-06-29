@@ -28,21 +28,18 @@ public class CrytekArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
 
     #region Factories
 
-    static readonly ConcurrentDictionary<string, ArcBinary> ArcBinarys = new ConcurrentDictionary<string, ArcBinary>();
+    static readonly ConcurrentDictionary<string, ArcBinary> ArcBinarys = new();
 
     static ArcBinary GetArcBinary(FamilyGame game)
-        => ArcBinarys.GetOrAdd(game.Id, _ => PakBinaryFactory(game));
-
-    static ArcBinary PakBinaryFactory(FamilyGame game)
-        => game.Engine.n switch {
+        => ArcBinarys.GetOrAdd(game.Id, _ => game.Engine.n switch {
             "ArcheAge" => new Binary_ArcheAge((byte[])game.Key),
             _ => new Binary_Cry3((byte[])game.Key),
-        };
+        });
 
     public static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) AssetFactory(FileSource source, FamilyGame game)
         => Path.GetExtension(source.Path).ToLowerInvariant() switch {
-            ".xml" => (0, CryXmlFile.Factory),
-            ".cgf" or ".cga" or ".chr" or ".skin" or ".anim" => (0, CryFile.Factory),
+            ".xml" => (0, Binary_CryXml.Factory),
+            ".cgf" or ".cga" or ".chr" or ".skin" or ".anim" => (0, Binary_CryFile.Factory),
             _ => UncoreArchive.AssetFactory(source, game),
         };
 

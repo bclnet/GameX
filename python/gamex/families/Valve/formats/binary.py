@@ -16,7 +16,6 @@ from cryptography.hazmat.primitives import serialization
 
 # Binary_Bsp30
 class Binary_Bsp30(ArcBinaryT):
-
     #region Headers
 
     class B_Header:
@@ -1032,7 +1031,6 @@ class Binary_Mdl40(IHaveMetaInfo):
 
 # Binary_Vpk
 class Binary_Vpk(ArcBinaryT):
-
     #region Headers
 
     MAGIC = 0x55AA1234
@@ -1187,7 +1185,6 @@ class Binary_Vpk(ArcBinaryT):
 
 # Binary_Wad3
 class Binary_Wad3(ArcBinaryT):
-
     #region Headers
 
     W_MAGIC = 0x33444157 #: WAD3

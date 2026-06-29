@@ -379,7 +379,7 @@ class ArcBinary:
 # ArcBinaryT
 class ArcBinaryT(ArcBinary):
     current  = None
-    def __new__(cls):
+    def __new__(cls, *args):
         if cls.current is None: cls.current = super().__new__(cls)
         return cls.current
 

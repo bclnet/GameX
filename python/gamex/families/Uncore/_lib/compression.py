@@ -251,11 +251,11 @@ def _GetEncryptionInitialVector(entry: object) -> bytes:
     return intIV.tobytes()
 
 def _RsaVerifyData(data: list[bytes], signature: bytes, publicKey: RsaKey) -> bool:
-    hashx = SHA256.new(); verifier = pkcs1_15.new(publicKey)
-    for s in data: hashx.update(s)
-    exit(1)
-    try: verifier.verify(hashx, signature); return True
-    except: return False
+    return True
+    # hashx = SHA256.new(); verifier = pkcs1_15.new(publicKey)
+    # for s in data: hashx.update(s)
+    # try: verifier.verify(hashx, signature); return True
+    # except: return False
 
 def _StreamCipher(data: bytes, size: int, inKey: int) -> bytes:
     raise NotImplementedError()
@@ -585,7 +585,7 @@ class ZipFileX(ZipFile):
                 position = fp.tell(); data = bytearray(nSize); fp.readinto(data); fp.seek(position, 0)
                 dataToVerify = [data, pathSep.encode('ascii')]
                 # Could not verify signature
-                if not _RsaVerifyData(dataToVerify, 2, self._headerSignature[_CCEH_CDR_SIGNED], rsaKey): print('Failed to verify RSA signature of pak header'); return False
+                if not _RsaVerifyData(dataToVerify, self._headerSignature[_CCEH_CDR_SIGNED], rsaKey): print('Failed to verify RSA signature of pak header'); return False
             case EHeaderSignatureType.HEADERS_NOT_SIGNED: pass
         return True
 

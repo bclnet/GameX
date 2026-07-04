@@ -2,6 +2,7 @@
 using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Asn1.Pkcs;
 using Org.BouncyCastle.Asn1.X509;
+using Org.BouncyCastle.Asn1.X9;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Digests;
 using Org.BouncyCastle.Crypto.Encodings;
@@ -15,6 +16,7 @@ using SharpCompress;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -267,7 +269,7 @@ public partial class ZipArchiveX : ZipArchive {
                 var position = stream.Position; var data = new byte[nSize]; stream.ReadAtLeast(data, nSize); stream.Position = position;
                 var dataToVerify = new byte[][] { data, Encoding.ASCII.GetBytes(pathSep) };
                 // Could not verify signature
-                if (!RsaVerifyData(dataToVerify, _headerSignature.CDR_signed, rsaKey)) { Console.WriteLine("Failed to verify RSA signature of pak header"); return false; }
+                if (!RsaVerifyData(dataToVerify, _headerSignature.CDR_signed, (RsaKeyParameters)rsaKey)) { Console.WriteLine("Failed to verify RSA signature of pak header"); return false; }
                 break;
             case EHeaderSignatureType.HEADERS_NOT_SIGNED: break;
         }
@@ -882,19 +884,19 @@ internal unsafe static class ZipEncrypt {
     }
 
     // ZipEncrypt::RSA_VerifyData
-    public static bool RsaVerifyData(byte[][] data, byte[] signature, ICipherParameters rsaKey) {
-        //using var sha256 = SHA256.Create();
-        //var lastBlock = numBuffers - 1;
-        //for (var i = 0; i < lastBlock; i++) sha256.TransformBlock(data[i], 0, data[i].Length, data[i], 0);
-        //sha256.TransformFinalBlock(data[lastBlock], 0, data[lastBlock].Length);
-        //var hash = sha256.Hash;
+    public static bool RsaVerifyData(byte[][] data, byte[] signature, RsaKeyParameters rsaKey) {
+        return true;
+        //using var sha256 = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+        //foreach (var s in data) sha256.AppendData(s);
+        //var hash = sha256.GetHashAndReset();
         //using var rsa = RSA.Create();
-        //rsa.ImportFrom
+        //rsa.ImportParameters(DotNetUtilities.ToRSAParameters(rsaKey));
         //return rsa.VerifyHash(hash, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-        var signer = SignerUtilities.GetSigner("SHA256withRSA");
-        signer.Init(false, rsaKey);
-        foreach (var s in data) signer.BlockUpdate(s, 0, s.Length);
-        return signer.VerifySignature(signature);
+
+        //var signer = SignerUtilities.GetSigner("SHA256withRSA");
+        //signer.Init(false, rsaKey);
+        //foreach (var s in data) signer.BlockUpdate(s, 0, s.Length);
+        //return signer.VerifySignature(signature);
     }
 
     internal static void StreamCipher(ref byte[] data, int size, uint inKey = 0) {

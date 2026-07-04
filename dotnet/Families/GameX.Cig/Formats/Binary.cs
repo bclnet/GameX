@@ -48,7 +48,7 @@ public class PakBinary_P4k : ArcBinary<PakBinary_P4k> {
                 Tag = entry,
             };
             var metadataPath = metadata.Path;
-            if (metadataPath.EndsWith(".arc", StringComparison.OrdinalIgnoreCase) || metadataPath.EndsWith(".socpak", StringComparison.OrdinalIgnoreCase)) metadata.Arc = new SubArchiveP4k(source, arc, metadataPath, metadata.Tag);
+            if (metadataPath.EndsWith(".pak", StringComparison.OrdinalIgnoreCase) || metadataPath.EndsWith(".socpak", StringComparison.OrdinalIgnoreCase)) metadata.Arc = new SubArchiveP4k(source, arc, metadataPath, metadata.Tag);
             else if (metadataPath.EndsWith(".dds", StringComparison.OrdinalIgnoreCase) || metadataPath.EndsWith(".dds.a", StringComparison.OrdinalIgnoreCase)) parentByPath.Add(metadataPath, metadata);
             else if (metadataPath.Length > 8 && metadataPath[^8..].Contains(".dds.", StringComparison.OrdinalIgnoreCase)) {
                 var parentPath = metadataPath[..(metadataPath.IndexOf(".dds", StringComparison.OrdinalIgnoreCase) + 4)];

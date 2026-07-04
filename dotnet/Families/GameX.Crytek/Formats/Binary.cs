@@ -35,16 +35,14 @@ public class Binary_ArcheAge(byte[] key) : ArcBinary {
     #endregion
 
     public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
-        FileSource[] files;
-
         var fs = r.BaseStream; var fsLength = fs.Length;
         using var aes = new AesManaged { Key = Key, IV = new byte[16], Mode = CipherMode.CBC };
         r = new BinaryReader(new CryptoStream(fs, aes.CreateDecryptor(), CryptoStreamMode.Read));
-        fs.Seek(fsLength - 0x200, SeekOrigin.Begin);
 
+        // read hdr & skip
+        fs.Seek(fsLength - 0x200, SeekOrigin.Begin);
         var hdr = r.ReadS<HDR>();
         if (hdr.Magic != MAGIC) throw new FormatException("BAD MAGIC");
-
         var totalSize = (hdr.FileCount + hdr.ExtraFiles) * 0x150;
         var infoOffset = fsLength - 0x200 - totalSize;
         while (infoOffset >= 0)
@@ -52,10 +50,11 @@ public class Binary_ArcheAge(byte[] key) : ArcBinary {
             else break;
 
         // read-all files
+        FileSource[] files;
         source.Files = files = new FileSource[hdr.FileCount];
         for (var i = 0; i < hdr.FileCount; i++) {
-            fs.Seek(infoOffset, SeekOrigin.Begin);
             r = new BinaryReader(new CryptoStream(fs, aes.CreateDecryptor(), CryptoStreamMode.Read));
+            fs.Seek(infoOffset, SeekOrigin.Begin);
             files[i] = new FileSource {
                 Path = r.ReadFAString(0x108), //: name //.Replace('\\', '/')
                 Offset = r.ReadInt64(),       //: offset
@@ -89,23 +88,23 @@ public class Binary_Cry3 : ArcBinary<Binary_Cry3> {
     public Binary_Cry3(byte[] key = null) => Key = key;
 
     public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
-        var files = source.Files = [];
         source.UseReader = false;
+        var files = source.Files = [];
 
         var arc = (ZipArchiveX)(source.Tag = new ZipArchiveX(r.BaseStream, path: source.BinPath, key: Key, kind: ZipKind.Cry3));
         var parentByPath = new Dictionary<string, FileSource>();
         var partByPath = new Dictionary<string, SortedList<string, FileSource>>();
         foreach (var entry in arc.Entries) {
             var metadata = new FileSource {
-                Path = entry.Name.Replace('\\', '/'),
+                Path = entry.FullName.Replace('\\', '/'),
                 //Flags = entry.Flags,
                 PackedSize = entry.CompressedLength,
                 FileSize = entry.Length,
-                Tag = entry,
+                Tag = entry
             };
             var metadataPath = metadata.Path;
             if (metadataPath.EndsWith(".dds", StringComparison.OrdinalIgnoreCase)) parentByPath.Add(metadataPath, metadata);
-            else if (metadataPath[^8..].Contains(".dds.", StringComparison.OrdinalIgnoreCase)) {
+            else if (metadataPath.Length > 8 && metadataPath[^8..].Contains(".dds.", StringComparison.OrdinalIgnoreCase)) {
                 var parentPath = metadataPath[..(metadataPath.IndexOf(".dds", StringComparison.OrdinalIgnoreCase) + 4)];
                 var parts = partByPath.TryGetValue(parentPath, out var z) ? z : null;
                 if (parts == null) partByPath.Add(parentPath, parts = []);
@@ -121,6 +120,19 @@ public class Binary_Cry3 : ArcBinary<Binary_Cry3> {
         return Task.CompletedTask;
     }
 
+    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
+        var entry = (ZipArchiveEntry)file.Tag;
+        try {
+            using var input = entry.OpenX();
+            //if (!input.CanRead) { HandleException(file, option, $"Unable to read fs for file: {file.Path}"); return Task.FromResult(System.IO.Stream.Null); }
+            var s = new MemoryStream();
+            input.CopyTo(s);
+            s.Position = 0;
+            return Task.FromResult((Stream)s);
+        }
+        catch (Exception e) { HandleException(file, option, $"{file.Path} - Exception: {e.Message}"); return Task.FromResult(System.IO.Stream.Null); }
+    }
+
     //public override Task Write(BinaryArchive source, BinaryWriter w, object tag) {
     //    source.UseReader = false;
     //    var files = source.Files;
@@ -134,21 +146,6 @@ public class Binary_Cry3 : ArcBinary<Binary_Cry3> {
     //    //arc.CommitUpdate();
     //    return Task.CompletedTask;
     //}
-
-    public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
-        var arc = (ZipArchiveX)source.Tag;
-        var entry = (ZipArchiveEntry)file.Tag;
-        try {
-            using var input = entry.OpenX();
-            if (!input.CanRead) { HandleException(file, option, $"Unable to read fs for file: {file.Path}"); return Task.FromResult(System.IO.Stream.Null); }
-            var s = new MemoryStream();
-            input.CopyTo(s);
-            s.Position = 0;
-            return Task.FromResult((Stream)s);
-        }
-        catch (Exception e) { HandleException(file, option, $"{file.Path} - Exception: {e.Message}"); return Task.FromResult(System.IO.Stream.Null); }
-    }
-
     //public override Task WriteData(BinaryArchive source, BinaryWriter w, FileSource file, Stream data, object option = default) {
     //    var arc = (Cry3Archive)source.Tag;
     //    var entry = (ZipEntry)file.Tag;

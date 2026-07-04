@@ -102,8 +102,9 @@ def createFileSystem(vfxType: str, path: SystemPath, subPath: str, host: str = N
     if vfx: return vfx.next()
     baseRoot = path.root if not subPath else os.path.join(path.root, subPath)
     if baseRoot.endswith('/') or baseRoot.endswith('\\'): baseRoot = baseRoot[:-1]
-    basePath = next(iter(path.paths), None) if path else None
-    vfx = DirectoryFileSystem(baseRoot, basePath)
+    basePaths = path.paths if path else None
+    vfx = DirectoryFileSystem(baseRoot, next(iter(basePaths), None) if path else None) if not basePaths or len(basePaths) <= 1 else \
+        AggregateFileSystem([DirectoryFileSystem(baseRoot, s) for s in basePaths])
     return vfx.next()
 
 #endregion
@@ -388,10 +389,10 @@ class FamilyGame:
             self.family = family
             self.id = id
             if not dgame:
-                self.searchBy = SearchBy.Default; self.arcs = ['game:/']
-                self.gameType = self.engine = self.resource = \
-                self.paths = self.key = self.detector = self.clientType = self.vfxType = \
-                self.archiveType = self.arcExts = None
+                self.engine = (None, None); self.searchBy = SearchBy.Default; self.arcs = ['game:/']
+                self.gameType = self.resource = \
+                    self.paths = self.key = self.detector = self.clientType = self.vfxType = \
+                    self.archiveType = self.arcExts = None
                 return
             self.name = _value(elem, 'name')
             self.engine = _valueF(elem, 'engine', parseEngine, dgame.engine)

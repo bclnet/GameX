@@ -296,8 +296,8 @@ public partial class FamilyManager {
         ForceOpen = true,
         ForcePath = "sample:0",
         Family = "Crytek",
-        Game = "ArcheAge", // ArcheAge
-        //Game = "Hunt", // Hunt: Showdown
+        //Game = "ArcheAge", // ArcheAge
+        Game = "Hunt", // Hunt: Showdown
         //Game = "MWO", // MechWarrior Online
         //Game = "Warface", // Warface
         //Game = "Wolcen", // Wolcen: Lords of Mayhem

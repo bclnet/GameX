@@ -8,6 +8,8 @@ from PyQt6 import QtCore, QtMultimedia
 from gamex import option
 from gamex.core.binary import Binary
 from gamex.core.meta import FileSource, MetaItem, MetaInfo
+# from openstk.core.profiler import funcProfiler
+# from typing import NamedTuple
 
 # https://doc.qt.io/qt-6/qtreeview.html
 # https://gist.github.com/skriticos/5415869
@@ -27,6 +29,20 @@ class MetaItemToViewModel:
             modelMap[s] = item
             model.appendRow(item)
             if s.items: MetaItemToViewModel.toTreeNodes(item, modelMap, s.items)
+        # class Call(NamedTuple):
+        #     model: object
+        #     source: list[MetaItem]
+        # stack = [Call(model, source)] if source else None
+        # while stack:
+        #     q = stack.pop()
+        #     if not q.source: continue
+        #     for s in q.source:
+        #         if not s: continue
+        #         item = QStandardItem(s.icon, s.name) if isinstance(s.icon, QIcon) else QStandardItem(s.name)
+        #         item.setData(s, Qt.ItemDataRole.UserRole)
+        #         modelMap[s] = item
+        #         q.model.appendRow(item)
+        #         if s.items: stack.append(Call(item, s.items))
 
 # MetaInfoToViewModel
 class MetaInfoToViewModel:
@@ -100,11 +116,15 @@ class FileExplorer(QWidget):
     def nodes(self, value):
         self._nodes = value
         self.updateNodes()
-        
+
+    # @funcProfiler
     def updateNodes(self):
         self.nodeModel.clear()
         self.nodeModelMap.clear()
+        self.nodeModel.blockSignals(True)
         MetaItemToViewModel.toTreeNodes(self.nodeModel, self.nodeModelMap, self._nodes)
+        self.nodeModel.blockSignals(False)
+        self.nodeModel.layoutChanged.emit()
 
     @property
     def infos(self): return self._infos
@@ -112,7 +132,10 @@ class FileExplorer(QWidget):
     def infos(self, value):
         self._infos = value
         self.infoModel.clear()
+        self.infoModel.blockSignals(True)
         MetaInfoToViewModel.toTreeNodes(self.infoModel, value)
+        self.infoModel.blockSignals(False)
+        self.infoModel.layoutChanged.emit()
         self.infoView.expandAll()
 
     @property

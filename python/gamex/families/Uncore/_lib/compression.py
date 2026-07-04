@@ -75,6 +75,7 @@ _CCEH_KEYS_TABLE = 4                        # As above, actually BLOCK_CIPHER_KE
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import AES, PKCS1_OAEP
 from Crypto.Hash import BLAKE2b, SHA256, SHA1
+from Crypto.Signature import pkcs1_15
 from Crypto.Math.Numbers import Integer
 import Crypto.Util.number
 from Crypto.Util.number import ceil_div, bytes_to_long, long_to_bytes
@@ -82,7 +83,7 @@ from Crypto.Util.strxor import strxor
 from Crypto.Cipher._pkcs1_oaep_decode import oaep_decode
 from Crypto.Util.Padding import pad, unpad
 from Crypto.Util import Counter
-from TwoFish import TwoFish_encrypt, TwoFish_decrypt
+from gamex.families.Uncore._lib.TwoFish import TwoFish_encrypt, TwoFish_decrypt
 
 def _segmentsOverlap(aOff: int, aLen: int, bOff: int, bLen: int) -> bool: return aLen > 0 and bLen > 0 and aOff - bOff < bLen and bOff - aOff < aLen
 
@@ -249,7 +250,12 @@ def _GetEncryptionInitialVector(entry: object) -> bytes:
         ((0 if entry.file_size != 0 else 1) ^ entry.compress_size) & 0xFFFFFFFF])
     return intIV.tobytes()
 
-def _RsaVerifyData(data: list[bytes], sizes: list[int], numBuffers: int, signedHash: bytes, signedHashSize: int, publicKey: bytes) -> bool: return True
+def _RsaVerifyData(data: list[bytes], signature: bytes, publicKey: RsaKey) -> bool:
+    hashx = SHA256.new(); verifier = pkcs1_15.new(publicKey)
+    for s in data: hashx.update(s)
+    exit(1)
+    try: verifier.verify(hashx, signature); return True
+    except: return False
 
 def _StreamCipher(data: bytes, size: int, inKey: int) -> bytes:
     raise NotImplementedError()
@@ -260,18 +266,15 @@ def _GetReferenceCRCForPak() -> int: return 0
 
 def _AesDecrypter(key: bytes):
     cipher = AES.new(key, AES.MODE_CBC, bytes(16))
-    def decrypter(data): return cipher.decrypt(data)
+    def decrypter(data):
+        data = cipher.decrypt(data)
+        #??TODO trim leading 0
+        # b.Seek(-1, SeekOrigin.End); // Trim NULL off end of stream
+        # while (b.Position > 1 && b.ReadByte() == 0) b.Seek(-2, SeekOrigin.Current);
+        # b.SetLength(b.Position);
+        # b.Seek(0, SeekOrigin.Begin);
+        return data
     return decrypter
-
-    # using var aes = new AesManaged { Key = _key, IV = new byte[16], Mode = CipherMode.CBC, Padding = PaddingMode.None };
-    # var crypto = new CryptoStream(baseStream, aes.CreateDecryptor(), CryptoStreamMode.Read);
-    # var b = new MemoryStream();
-    # crypto.CopyTo(b);
-    # b.Seek(-1, SeekOrigin.End); // Trim NULL off end of stream
-    # while (b.Position > 1 && b.ReadByte() == 0) b.Seek(-2, SeekOrigin.Current);
-    # b.SetLength(b.Position);
-    # b.Seek(0, SeekOrigin.Begin);
-    # return b;
 
 #endregion
 
@@ -480,7 +483,7 @@ class ZipFileX(ZipFile):
         super().__init__(file, mode)
 
     # ZipDirCacheFactory::Prepare
-    def _prepare(self, endrec):
+    def _prepare(self, endrec, rsaKey: RsaKey):
         fp = self.fp
         # Earlier pak file encryption techniques stored the encryption type in the disk number of the CDREnd.
         # This works, but can't be used by the more recent techniques that require signed paks to be readable by 7-Zip during dev.
@@ -537,7 +540,7 @@ class ZipFileX(ZipFile):
                     if not hasSize2: self._headerEncryption = (self._headerEncryption[0], 0, 0, self._headerEncryption[1], self._headerEncryption[2])
                     if self._headerEncryption[_CCEH_HEADER_SIZE] != 0 and self._headerEncryption[_CCEH_HEADER_SIZE] != CryCustomEncryptionHeader[1] + (CryCustomEncryptionHeader[2] if hasSize2 else 0): raise BadZipFile("Bad encryption header")
                     # We have a table of symmetric keys to decrypt
-                    self._decryptKeysTable()
+                    self._decryptKeysTable(rsaKey)
             else: raise BadZipFile("Comment field is the wrong length")
 
         # HACK: Hardcoded check for PAK location before enforcing encryption requirement. For C2 Mod SDK Release.
@@ -557,7 +560,7 @@ class ZipFileX(ZipFile):
             if self._offsetOfFirstEntry <= 0: raise BadZipFile('Invalid embedded zip archive')
 
     # ZipDirCacheFactory::ReadHeaderData
-    def _readHeaderData(self, s) -> bool:
+    def _readHeaderData(self, s, rsaKey: RsaKey) -> bool:
         fp = self.fp
         nSize = s[_ECD_SIZE]
         fp.seek(self._offsetOfFirstEntry + s[_ECD_OFFSET], 0)
@@ -581,16 +584,14 @@ class ZipFileX(ZipFile):
                 pathSep = self._path[pathSepIdx + 1:]
                 position = fp.tell(); data = bytearray(nSize); fp.readinto(data); fp.seek(position, 0)
                 dataToVerify = [data, pathSep.encode('ascii')]
-                sizesToVerify = [nSize, len(pathSep)]
                 # Could not verify signature
-                if not _RsaVerifyData(dataToVerify, sizesToVerify, 2, self._headerSignature[_CCEH_CDR_SIGNED], 128, self._key): print('Failed to verify RSA signature of pak header'); return False
+                if not _RsaVerifyData(dataToVerify, 2, self._headerSignature[_CCEH_CDR_SIGNED], rsaKey): print('Failed to verify RSA signature of pak header'); return False
             case EHeaderSignatureType.HEADERS_NOT_SIGNED: pass
         return True
 
     # ZipDirCacheFactory::DecryptKeysTable
-    def _decryptKeysTable(self):
+    def _decryptKeysTable(self, rsaKey: RsaKey):
         digestSize = 1 if self._headerTeaEncryption[_CCTEH_HEADER_SIZE] != 0 else 256
-        rsaKey = RsaKeyX(RSA.importKey(self._key or DefaultRsaKey))
         hashAlgo = BLAKE2b if digestSize == 257 else SHA256 if digestSize == 256 else SHA1
         cipher = PKCS1OAEP_CipherX(PKCS1_OAEP.new(rsaKey, hashAlgo=hashAlgo))
 
@@ -620,7 +621,8 @@ class ZipFileX(ZipFile):
         if not _SeekBackwardsToSignature(fp, stringEndArchive, ZIP_MAX_COMMENT + 4): raise BadZipFile('File is not a zip file')
         eocdStart = fp.tell()
 
-        if self._kind == ZipKind.Cry3: self._prepare(endrec)
+        rsaKey = RsaKeyX(RSA.importKey(self._key or DefaultRsaKey)) if self._kind == ZipKind.Cry3 else None
+        if self._kind == ZipKind.Cry3: self._prepare(endrec, rsaKey)
 
         offset_cd, concat = _handle_prepended_data(endrec, self.debug)
 
@@ -628,7 +630,7 @@ class ZipFileX(ZipFile):
         self.start_dir = offset_cd + concat
 
         self._trySfxEmbedded(endrec, eocdStart)
-        if self._kind == ZipKind.Cry3: self._readHeaderData(endrec)
+        if self._kind == ZipKind.Cry3: self._readHeaderData(endrec, rsaKey)
         fp = self.fp
 
         if self.start_dir < 0: raise BadZipFile('Bad offset for central directory')
@@ -716,7 +718,8 @@ class ZipFileX(ZipFile):
         if self._encryptedHeaders != EHeaderEncryptionType.HEADERS_NOT_ENCRYPTED:
             fileOffset += sizeFileHeader + len(zinfo.filename)
             zipTest = False
-            if kind == ZipKind.Cry3 and ((compress_type >= ZIP_DEFLATE_AND_ENCRYPT and compress_type <= ZIP_DEFLATE_AND_STREAMCIPHER_KEYTABLE) or self._encryptedHeaders == EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE2):
+            cry3Encrypted = compress_type >= ZIP_DEFLATE_AND_ENCRYPT and compress_type <= ZIP_DEFLATE_AND_STREAMCIPHER_KEYTABLE
+            if kind == ZipKind.Cry3 and (cry3Encrypted or self._encryptedHeaders == EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE2):
                 teaEncryption = self._headerTeaEncryption[_CCTEH_HEADER_SIZE] != 0
                 fp.seek(fileOffset, 0)
                 compressed = fp.read(zinfo.compress_size)

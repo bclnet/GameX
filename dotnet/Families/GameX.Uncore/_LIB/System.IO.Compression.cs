@@ -19,6 +19,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using static System.IO.Compression.CompressionX;
 using static System.IO.Compression.ZipEncrypt;
@@ -108,19 +109,32 @@ public partial class ZipArchiveX : ZipArchive {
             // read the EOCD
             var eocdStart = _archiveStream.Position;
             var eocd = ZipEndOfCentralDirectoryBlock.ReadBlock(_archiveStream); var eocd2 = new ZipEndOfCentralDirectoryBlock(eocd);
-            if (_kind == ZipKind.Cry3) Prepare(eocd2);
+            var rsaKey = _kind == ZipKind.Cry3 ? GetRsaPublicKey(_key ?? DefaultRsaKey) : null;
+            if (_kind == ZipKind.Cry3) Prepare(eocd2, rsaKey);
             ReadEndOfCentralDirectoryInnerWork(eocd);
             TryReadZip64EndOfCentralDirectory(eocd, eocdStart);
             if (_centralDirectoryStart > _archiveStream.Length) throw new InvalidDataException(SR.FieldTooBigOffsetToCD);
             TrySfxEmbedded(eocd2, eocdStart);
-            if (_kind == ZipKind.Cry3) ReadHeaderData(eocd2);
+            if (_kind == ZipKind.Cry3) ReadHeaderData(eocd2, rsaKey);
         }
         catch (EndOfStreamException ex) { throw new InvalidDataException(SR.CDCorrupt, ex); }
         catch (IOException ex) { throw new InvalidDataException(SR.CDCorrupt, ex); }
     }
 
+    static ICipherParameters GetRsaPublicKey(byte[] s) {
+        if (new Asn1InputStream(s).ReadObject() is not DerSequence sequence) throw new Exception("Invalid PrivateKey Data");
+        AlgorithmIdentifier algId = null; DerBitString keyData = null;
+        foreach (var value in sequence) {
+            if (value is AlgorithmIdentifier || value is DerSequence) algId = AlgorithmIdentifier.GetInstance(value);
+            else if (value is DerBitString) keyData = DerBitString.GetInstance(value);
+            else if (value is DerInteger && keyData == null) keyData = new DerBitString(sequence);
+        }
+        if (keyData == null) throw new Exception("Invalid PrivateKey Data");
+        return PublicKeyFactory.CreateKey(new SubjectPublicKeyInfo(algId ?? new AlgorithmIdentifier(PkcsObjectIdentifiers.RsaEncryption), keyData.GetBytes()));
+    }
+
     // ZipDirCacheFactory::Prepare
-    void Prepare(ZipEndOfCentralDirectoryBlock s) {
+    void Prepare(ZipEndOfCentralDirectoryBlock s, ICipherParameters rsaKey) {
         // Earlier pak file encryption techniques stored the encryption type in the disk number of the CDREnd.
         // This works, but can't be used by the more recent techniques that require signed paks to be readable by 7-Zip during dev.
         var headerEnc = (EHeaderEncryptionType)((s.NumberOfThisDisk & 0xC000) >> 14);
@@ -198,7 +212,7 @@ public partial class ZipArchiveX : ZipArchive {
                     };
                     if (_headerEncryption.nHeaderSize != 0 && _headerEncryption.nHeaderSize != CryCustomEncryptionHeader.SizeOf + (hasSize2 ? CryCustomEncryptionHeader.SizeOf2 : 0)) throw new InvalidDataException("Bad encryption header");
                     // We have a table of symmetric keys to decrypt
-                    DecryptKeysTable();
+                    DecryptKeysTable(rsaKey);
                 }
             }
             else throw new InvalidDataException("Comment field is the wrong length");
@@ -225,7 +239,7 @@ public partial class ZipArchiveX : ZipArchive {
     }
 
     // ZipDirCacheFactory::ReadHeaderData
-    bool ReadHeaderData(ZipEndOfCentralDirectoryBlock s) {
+    bool ReadHeaderData(ZipEndOfCentralDirectoryBlock s, ICipherParameters rsaKey) {
         var nSize = (int)s.SizeOfCentralDirectory;
         _archiveStream.Seek(_offsetOfFirstEntry + s.OffsetOfStartOfCentralDirectoryWithRespectToTheStartingDiskNumber, SeekOrigin.Begin);
         if (_encryptedHeaders != EHeaderEncryptionType.HEADERS_NOT_ENCRYPTED) {
@@ -252,9 +266,8 @@ public partial class ZipArchiveX : ZipArchive {
                 var pathSep = _path[(pathSepIdx + 1)..];
                 var position = stream.Position; var data = new byte[nSize]; stream.ReadAtLeast(data, nSize); stream.Position = position;
                 var dataToVerify = new byte[][] { data, Encoding.ASCII.GetBytes(pathSep) };
-                var sizesToVerify = new int[] { nSize, pathSep.Length };
                 // Could not verify signature
-                if (!RsaVerifyData(dataToVerify, sizesToVerify, 2, _headerSignature.CDR_signed, 128, _key)) { Console.WriteLine("Failed to verify RSA signature of pak header"); return false; }
+                if (!RsaVerifyData(dataToVerify, _headerSignature.CDR_signed, rsaKey)) { Console.WriteLine("Failed to verify RSA signature of pak header"); return false; }
                 break;
             case EHeaderSignatureType.HEADERS_NOT_SIGNED: break;
         }
@@ -262,23 +275,10 @@ public partial class ZipArchiveX : ZipArchive {
     }
 
     // ZipDirCacheFactory::DecryptKeysTable
-    public bool DecryptKeysTable() {
-        static AsymmetricKeyParameter GetPublicKey(byte[] s) {
-            if (new Asn1InputStream(s).ReadObject() is not DerSequence sequence) throw new Exception("Invalid PrivateKey Data");
-            AlgorithmIdentifier algId = null; DerBitString keyData = null;
-            foreach (var value in sequence) {
-                if (value is AlgorithmIdentifier || value is DerSequence) algId = AlgorithmIdentifier.GetInstance(value);
-                else if (value is DerBitString) keyData = DerBitString.GetInstance(value);
-                else if (value is DerInteger && keyData == null) keyData = new DerBitString(sequence);
-            }
-            if (keyData == null) throw new Exception("Invalid PrivateKey Data");
-            return PublicKeyFactory.CreateKey(new SubjectPublicKeyInfo(algId ?? new AlgorithmIdentifier(PkcsObjectIdentifiers.RsaEncryption), keyData.GetBytes()));
-        }
-
+    public bool DecryptKeysTable(ICipherParameters rsaKey) {
         var digestSize = _headerTeaEncryption.nHeaderSize != 0 ? 1 : 256;
         var digest = digestSize == 257 ? new Blake2bDigest() : digestSize == 256 ? (IDigest)new Sha256Digest() : new Sha1Digest();
         var cipher = new OaepEncoding(new RsaEngine(), digest);
-        var rsaKey = GetPublicKey(_key ?? DefaultRsaKey);
 
         // Decrypt CDR initial Vector
         _customIV = CustomRsaDecryptKeyEx(_headerEncryption.CDR_IV, 0, RSA_KEY_MESSAGE_LENGTH, cipher, rsaKey);
@@ -440,13 +440,10 @@ public class ZipArchiveEntryX(ZipArchiveEntry source) {
         else return _storedOffsetOfCompressedData ??= _archive._offsetOfFirstEntry + _offsetOfLocalHeader + this_.FullName.Length + 30;
     }
 
-    //internal byte[] ExtraData => (CompressionMethodValues)CompressionMethodProperty.GetValue(this_);
-
     CompressionMethodValues? NextCompressionMethod;
     public CompressionMethodValues CompressionMethod => (CompressionMethodValues)CompressionMethodProperty.GetValue(this_);
 
     public Stream Open() {
-        var abc = this_;
         ThrowIfInvalidArchive();
         switch (_archive.Mode) {
             case ZipArchiveMode.Read: return OpenInReadMode(checkOpenable: true);
@@ -468,7 +465,7 @@ public class ZipArchiveEntryX(ZipArchiveEntry source) {
             case CompressionMethodValues.Deflate64: uncompressedStream = (Stream)DeflateManagedStreamConst.Invoke([compressedStreamToRead, CompressionMethodValues.Deflate64, _uncompressedSize]); break;
             case CompressionMethodValues.BZip2: uncompressedStream = new CBZip2InputStream(compressedStreamToRead); break;
             case CompressionMethodValues.Zstd93:
-                var buf = new byte[4]; var isZstdStream = true;
+                var buf = new byte[4]; bool isZstdStream;
                 if (compressedStreamToRead is MemoryStream && compressedStreamToRead.Read(buf, 0, 4) > 0) {
                     compressedStreamToRead.Seek(-4, SeekOrigin.Current);
                     isZstdStream = IsZstdStream(buf);
@@ -487,7 +484,8 @@ public class ZipArchiveEntryX(ZipArchiveEntry source) {
 
     Stream OpenInReadModeGetDataCompressor(long offsetOfCompressedData) {
         var method = CompressionMethod;
-        if (_kind == ZipKind.Cry3 && ((method >= CompressionMethodValues.DEFLATE_AND_ENCRYPT && method <= CompressionMethodValues.DEFLATE_AND_STREAMCIPHER_KEYTABLE) || _archive._encryptedHeaders == EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE2)) {
+        var cry3Encrypted = method >= CompressionMethodValues.DEFLATE_AND_ENCRYPT && method <= CompressionMethodValues.DEFLATE_AND_STREAMCIPHER_KEYTABLE;
+        if (_kind == ZipKind.Cry3 && (cry3Encrypted || _archive._encryptedHeaders == EHeaderEncryptionType.HEADERS_ENCRYPTED_STREAMCIPHER_KEYTABLE2)) {
             var teaEncryption = _archive._headerTeaEncryption.nHeaderSize != 0;
             _archive._baseStream.Seek(offsetOfCompressedData, SeekOrigin.Begin);
             var compressed = _archive._baseStream.ReadBytes((int)_compressedSize);
@@ -884,7 +882,20 @@ internal unsafe static class ZipEncrypt {
     }
 
     // ZipEncrypt::RSA_VerifyData
-    public static bool RsaVerifyData(byte[][] data, int[] sizes, int numBuffers, byte[] signedHash, int signedHashSize, byte[] publicKey) => true; //TODO
+    public static bool RsaVerifyData(byte[][] data, byte[] signature, ICipherParameters rsaKey) {
+        //using var sha256 = SHA256.Create();
+        //var lastBlock = numBuffers - 1;
+        //for (var i = 0; i < lastBlock; i++) sha256.TransformBlock(data[i], 0, data[i].Length, data[i], 0);
+        //sha256.TransformFinalBlock(data[lastBlock], 0, data[lastBlock].Length);
+        //var hash = sha256.Hash;
+        //using var rsa = RSA.Create();
+        //rsa.ImportFrom
+        //return rsa.VerifyHash(hash, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+        var signer = SignerUtilities.GetSigner("SHA256withRSA");
+        signer.Init(false, rsaKey);
+        foreach (var s in data) signer.BlockUpdate(s, 0, s.Length);
+        return signer.VerifySignature(signature);
+    }
 
     internal static void StreamCipher(ref byte[] data, int size, uint inKey = 0) {
         throw new NotImplementedException();

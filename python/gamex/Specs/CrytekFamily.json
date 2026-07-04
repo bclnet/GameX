@@ -13,7 +13,7 @@
   "games": {
     "*": {
       "archiveType": "GameX.Crytek.CrytekArchive, GameX.Crytek",
-      "arcExt": ".arc"
+      "arcExt": ".pak"
     },
     "ArcheAge": {
       "name": "ArcheAge",

@@ -20,10 +20,13 @@ using System.IO.Compression;
 //    @"G:\SteamLibrary\steamapps\common\Warface\13_2000076\Game\Textures_Other.pak", [@"levels/africa/africa_base/africa_base.xml"]);
 
 // Comments: NEWHUNT | NEWHUNT
-//DataRow("hex:30818902818100affd71ca741c1aa5895becf596e8732d290453d275cf6ff0bb214324ebab7eedd7f39deebc2708d88b6d536a58da5683137fafec478e41e6f8b0882e5eba236b9d2a150ee513ae562ce56b6aaf982c27a8c317281afa0f84f546ecb825ccf2217519c84ed0ceab179ee5ccdab0cb40a95d5442120f25a61e7da79d30c7d7d8a70203010001",
-//    @"G:\SteamLibrary\steamapps\common\Hunt Showdown\game_hunt\gamedata.pak", [@"difficulty/easy.cfg"]); // , @"difficulty/delta.cfg"
+DataRow("hex:30818902818100affd71ca741c1aa5895becf596e8732d290453d275cf6ff0bb214324ebab7eedd7f39deebc2708d88b6d536a58da5683137fafec478e41e6f8b0882e5eba236b9d2a150ee513ae562ce56b6aaf982c27a8c317281afa0f84f546ecb825ccf2217519c84ed0ceab179ee5ccdab0cb40a95d5442120f25a61e7da79d30c7d7d8a70203010001",
+    @"G:\SteamLibrary\steamapps\common\Hunt Showdown\game_hunt\gamedata.pak", [@"difficulty/easy.cfg"]); // , @"difficulty/delta.cfg"
+    //@"G:\SteamLibrary\steamapps\common\Hunt Showdown\game_hunt\gamedata.pak", [@"difficulty/easy.cfg"]); // , @"difficulty/delta.cfg"
 //DataRow("hex:30818902818100affd71ca741c1aa5895becf596e8732d290453d275cf6ff0bb214324ebab7eedd7f39deebc2708d88b6d536a58da5683137fafec478e41e6f8b0882e5eba236b9d2a150ee513ae562ce56b6aaf982c27a8c317281afa0f84f546ecb825ccf2217519c84ed0ceab179ee5ccdab0cb40a95d5442120f25a61e7da79d30c7d7d8a70203010001",
 //    @"G:\SteamLibrary\steamapps\common\Hunt Showdown\game_hunt\audio-part0.pak", [@"audio/initdata.xml"]);
+//DataRow("hex:30818902818100affd71ca741c1aa5895becf596e8732d290453d275cf6ff0bb214324ebab7eedd7f39deebc2708d88b6d536a58da5683137fafec478e41e6f8b0882e5eba236b9d2a150ee513ae562ce56b6aaf982c27a8c317281afa0f84f546ecb825ccf2217519c84ed0ceab179ee5ccdab0cb40a95d5442120f25a61e7da79d30c7d7d8a70203010001",
+//    @"G:\SteamLibrary\steamapps\common\Hunt Showdown\engine\engine.pak", [@"Config/AutoTestChain.cfg"]); //Config/durango.cfg
 
 // Comments:STREAMCIPHER_KEYTABLE|CDR_SIGNED
 //DataRow("hex:30818902818100D51E1D3810C4A112B2F2504B83E2F124009C0AC9CD1661913421D4E94623AD7014599DAFB0DC9F8366D164AD072B3DC5AA3D4CD24542D5F684E6A4F7473102DE2ACA11F6524015ECBD564248FC712B3A69B15B78EFAA06748259DDE77A75757E513F7AC21A0151F53C78FF45ABCC45C3F54BC6305F420981F7119AF03E6438D70203010001",
@@ -44,9 +47,9 @@ using System.IO.Compression;
 //    @"G:\SteamLibrary\steamapps\common\Robinson The Journey\game_robinson\audio.pak", [@"audio/ace/c_beetle.xml"]);
 
 // P4K
-DataRow("hex:5E7A2002302EEB1A3BB617C30FDE1E47",
+//DataRow("hex:5E7A2002302EEB1A3BB617C30FDE1E47",
 //    @"D:\Roberts Space Industries\StarCitizen\LIVE\Data.p4k", [@"Engine\EngineAssets\Textures\scratch.dds"]);
-    @"D:\Roberts Space Industries\StarCitizen\LIVE\Data.p4k", [@"Data\Scripts\FeatureTests\FeatureTests.xml"]);
+//@"D:\Roberts Space Industries\StarCitizen\LIVE\Data.p4k", [@"Data\Scripts\FeatureTests\FeatureTests.xml"]);
 //    @"D:\Roberts Space Industries\StarCitizen\LIVE\Data.p4k", [@"Data\Textures\planets\surface\ground\architecture\city\city_suburbs_02_displ.dds.6", @"Data\Prefabs\shops\admin\admin.xml", @"Data\Objects\buildingsets\hangar\deluxe\deluxe_elevator_shaft_02m.cgfm"]);
 
 static void DataRow(string key, string path, string[] files) {

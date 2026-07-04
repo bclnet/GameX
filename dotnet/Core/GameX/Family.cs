@@ -182,8 +182,9 @@ public partial class FamilyManager {
         if (vfx != null) return vfx.Next();
         var baseRoot = string.IsNullOrEmpty(subPath) ? path.Root : Path.Combine(path.Root, subPath);
         if (baseRoot.EndsWith("/") || baseRoot.EndsWith("\\")) baseRoot = baseRoot[..^1];
-        var basePath = path?.Paths?.FirstOrDefault();
-        vfx = new DirectoryFileSystem(baseRoot, basePath);
+        var basePaths = path?.Paths;
+        vfx = basePaths == null || basePaths.Length <= 1 ? new DirectoryFileSystem(baseRoot, basePaths.FirstOrDefault())
+            : new AggregateFileSystem([.. basePaths.Select(s => new DirectoryFileSystem(baseRoot, s))]);
         return vfx.Next();
     }
 }

@@ -12,7 +12,7 @@
     "name": "Hunt: Showdown",
     "files": [
       {
-        "path": "Data/Textures/asteroids/asteroid_dmg_brown_organic_01_ddn.dds",
+        "path": "engine/engine.pak:EngineAssets/Textures/startscreen_eaas.dds",
         "type": "Texture"
       }
     ]

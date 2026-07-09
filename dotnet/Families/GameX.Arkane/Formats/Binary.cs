@@ -102,7 +102,6 @@ public unsafe class Binary_Void : ArcBinary<Binary_Void> {
     #endregion
 
     public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
-        // must be .index file
         if (!source.BinPath.EndsWith(".index")) throw new FormatException("must be a .index file");
 
         var files = source.Files = [];

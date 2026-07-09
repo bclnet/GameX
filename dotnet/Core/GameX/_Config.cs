@@ -51,8 +51,7 @@ public partial class FamilyManager {
     }
 
 #if Arkane
-    public static GlobalOption Option = new()
-    {
+    public static GlobalOption Option = new() {
         Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:1",
@@ -69,8 +68,7 @@ public partial class FamilyManager {
         //Missing: Game = "RF", // Redfall (future)
     };
 #elif Beamdog
-    public static GlobalOption Option = new()
-    {
+    public static GlobalOption Option = new() {
         Platform = "UK",
         ForceOpen = true,
         ForcePath = "sample:0",
@@ -103,8 +101,7 @@ public partial class FamilyManager {
         //Game = "Oblivion:R", // The Elder Scrolls IV: Oblivion Remastered
     };
 #elif Bioware
-    public static GlobalOption Option = new()
-    {
+    public static GlobalOption Option = new() {
         Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:0",
@@ -129,8 +126,7 @@ public partial class FamilyManager {
         //Game = "ME:LE", // Mass Effect: Legendary Edition
     };
 #elif Black
-    public static GlobalOption Option = new()
-    {
+    public static GlobalOption Option = new() {
         Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:*",
@@ -139,8 +135,7 @@ public partial class FamilyManager {
         //Game = "Fallout2", // Fallout 2
     };
 #elif Blizzard
-    public static GlobalOption Option = new()
-    {
+    public static GlobalOption Option = new() {
         Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:*",
@@ -159,8 +154,7 @@ public partial class FamilyManager {
         //Game = "D4", // Diablo IV
     };
 #elif Bohemia
-    public static GlobalOption Option = new()
-    {
+    public static GlobalOption Option = new() {
         Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:*",
@@ -184,8 +178,7 @@ public partial class FamilyManager {
         //Game = "SL", // Silica
     };
 #elif Bullfrog
-    public static GlobalOption Option = new()
-    {
+    public static GlobalOption Option = new() {
         Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:0",
@@ -203,8 +196,7 @@ public partial class FamilyManager {
         //Game = "DK2", // Dungeon Keeper 2
     };
 #elif Capcom
-    public static GlobalOption Option = new()
-    {
+    public static GlobalOption Option = new() {
         Platform = "GL",
         //ForceOpen = true,
         ForcePath = "sample:*",
@@ -267,8 +259,7 @@ public partial class FamilyManager {
         //Game = "USF4", // Ultra Street Fighter IV
     };
 #elif Cig
-    public static GlobalOption Option = new()
-    {
+    public static GlobalOption Option = new() {
         //ForcePath = "app:DataForge",
         //ForcePath = "app:StarWords",
         //ForcePath = "app:Subsumption",
@@ -279,8 +270,7 @@ public partial class FamilyManager {
         Game = "StarCitizen", // Star Citizen
     };
 #elif Cryptic
-    public static GlobalOption Option = new()
-    {
+    public static GlobalOption Option = new() {
         Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:1",
@@ -290,25 +280,35 @@ public partial class FamilyManager {
         //Game = "NVW", // Neverwinter [open, read]
     };
 #elif Crytek
-    public static GlobalOption Option = new()
-    {
+    public static GlobalOption Option = new() {
         Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:0",
         Family = "Crytek",
+        //Game = "FarCry", // Far Cry
+        //Game = "CrysisWarhead", // Crysis Warhead
+        //Game = "FarCry2", // Far Cry 2 #ISSUE
+        //Game = "Warface", // Warface: Clutch
+        Game = "FarCry3", // Far Cry 3
+        //Game = "FarCry3:BD", // ^Far Cry 3 - Blood Dragon
+        //Game = "Ryse", // Ryse: Son of Rome
+        //Game = "FarCry4", // ^Far Cry 4
         //Game = "ArcheAge", // ArcheAge
-        Game = "Hunt", // Hunt: Showdown
         //Game = "MWO", // MechWarrior Online
-        //Game = "Warface", // Warface
+        //Game = "FarCryP", // ^Far Cry Primal
+        //Game = "Robinson", // Robinson: The Journey
+        //Game = "FarCry5", // ^Far Cry 5
+        //Game = "Snow", // SNOW - The Ultimate Edition
+        //Game = "FarCryND", // ^Far Cry New Dawn
+        //Game = "Hunt", // Hunt: Showdown 1896
         //Game = "Wolcen", // Wolcen: Lords of Mayhem
         //Game = "Crysis", // Crysis Remastered
-        //Game = "Ryse", // Ryse: Son of Rome
-        //Game = "Robinson", // Robinson: The Journey
-        //Game = "Snow", // SNOW - The Ultimate Edition
+        //Game = "Crysis2", // Crysis 2 Remastered
+        //Game = "Crysis3", // Crysis 3 Remastered
+        //Game = "FarCry6", // ^Far Cry 6
     };
 #elif Cyanide
-    public static GlobalOption Option = new()
-    {
+    public static GlobalOption Option = new() {
         Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:*",
@@ -317,8 +317,7 @@ public partial class FamilyManager {
         //Game = "Werewolf:TA", // Werewolf: The Apocalypse - Earthblood
     };
 #elif EA
-    public static GlobalOption Option = new()
-    {
+    public static GlobalOption Option = new() {
         Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:*",
@@ -326,8 +325,7 @@ public partial class FamilyManager {
         Game = "xx", // xx
     };
 #elif Epic
-    public static GlobalOption Option = new()
-    {
+    public static GlobalOption Option = new() {
         Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:*",
@@ -340,8 +338,7 @@ public partial class FamilyManager {
         //Game = "BioShock:Inf", // BioShock Infinite
     };
 #elif Firaxis
-    public static GlobalOption Option = new()
-    {
+    public static GlobalOption Option = new() {
         Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:*",
@@ -354,8 +351,7 @@ public partial class FamilyManager {
         //Game = "BioShock:Inf", // BioShock Infinite
     };
 #elif Frictional
-    public static GlobalOption Option = new()
-    {
+    public static GlobalOption Option = new() {
         Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:*",
@@ -369,8 +365,7 @@ public partial class FamilyManager {
         //Game = "A:R", // Amnesia: Rebirth
     };
 #elif Frontier
-    public static GlobalOption Option = new()
-    {
+    public static GlobalOption Option = new() {
         Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:*",
@@ -378,8 +373,7 @@ public partial class FamilyManager {
         Game = "ED"
     };
 #elif Gamebryo
-    public static GlobalOption Option = new()
-    {
+    public static GlobalOption Option = new() {
         Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:*",
@@ -387,8 +381,7 @@ public partial class FamilyManager {
         Game = "XX"
     };
 #elif ID
-    public static GlobalOption Option = new()
-    {
+    public static GlobalOption Option = new() {
         Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:1",
@@ -406,8 +399,7 @@ public partial class FamilyManager {
         //Game = "Q:C", // Quake Champions [7]
     };
 #elif IW
-    public static GlobalOption Option = new()
-    {
+    public static GlobalOption Option = new() {
         Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:*",
@@ -429,8 +421,7 @@ public partial class FamilyManager {
         //Game = "Vanguard", // Call of Duty Vanguard
     };
 #elif Lucas
-    public static GlobalOption Option = new()
-    {
+    public static GlobalOption Option = new() {
         //Edition = "enhanced",
         Platform = "GL",
         ForceOpen = true,
@@ -515,8 +506,7 @@ public partial class FamilyManager {
         //Game = "SW:TOR", // Star Wars: The Old Republic
     };
 #elif Monolith
-    public static GlobalOption Option = new()
-    {
+    public static GlobalOption Option = new() {
         Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:*",
@@ -528,8 +518,7 @@ public partial class FamilyManager {
         //Game = "FEAR3", // F.E.A.R. 3
     };
 #elif Mythic
-    public static GlobalOption Option = new()
-    {
+    public static GlobalOption Option = new() {
         Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:0",
@@ -543,8 +532,7 @@ public partial class FamilyManager {
         //Game = "DA2", // Dragon Age II
     };
 #elif Nintendo
-    public static GlobalOption Option = new()
-    {
+    public static GlobalOption Option = new() {
         Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:0",
@@ -568,8 +556,7 @@ public partial class FamilyManager {
         //Game = "XX", // XX
     };
 #elif Origin
-    public static GlobalOption Option = new()
-    {
+    public static GlobalOption Option = new() {
         Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:0",
@@ -579,8 +566,7 @@ public partial class FamilyManager {
         //Game = "U9", // Ultima IX
     };
 #elif Red
-    public static GlobalOption Option = new()
-    {
+    public static GlobalOption Option = new() {
         Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:*",
@@ -592,8 +578,7 @@ public partial class FamilyManager {
         //Game = "Witcher4", // The Witcher 4 Polaris (future)
     };
 #elif Rockstar
-    public static GlobalOption Option = new()
-    {
+    public static GlobalOption Option = new() {
         Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:0",
@@ -648,8 +633,7 @@ public partial class FamilyManager {
         //Game = "RDO", // Red Dead Online
     };
 #elif Ubisoft
-    public static GlobalOption Option = new()
-    {
+    public static GlobalOption Option = new() {
         Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:*",
@@ -657,8 +641,7 @@ public partial class FamilyManager {
         //Game = "XX", // xx
     };
 #elif Uncore
-    public static GlobalOption Option = new()
-    {
+    public static GlobalOption Option = new() {
         Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:0",
@@ -666,8 +649,7 @@ public partial class FamilyManager {
         Game = "APP", // Application
     };
 #elif Unity
-    public static GlobalOption Option = new()
-    {
+    public static GlobalOption Option = new() {
         Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:*",
@@ -679,8 +661,7 @@ public partial class FamilyManager {
         //Game = "7D2D", // 7 Days to Die
     };
 #elif Valve
-    public static GlobalOption Option = new()
-    {
+    public static GlobalOption Option = new() {
         Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:0",
@@ -727,8 +708,7 @@ public partial class FamilyManager {
         //Game = "Aperture:HL", // Aperture Hand Lab [!unity]
     };
 #elif Volition
-    public static GlobalOption Option = new()
-    {
+    public static GlobalOption Option = new() {
         Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:0",
@@ -755,8 +735,7 @@ public partial class FamilyManager {
         //Game = "SR", // Saints Row
     };
 #elif WB
-    public static GlobalOption Option = new()
-    {
+    public static GlobalOption Option = new() {
         Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:0",
@@ -764,8 +743,7 @@ public partial class FamilyManager {
         Game = "AC", // Asheron's Call [open, read, texture:GL]
     };
 #elif X2K
-    public static GlobalOption Option = new()
-    {
+    public static GlobalOption Option = new() {
         Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:0",
@@ -773,8 +751,7 @@ public partial class FamilyManager {
         Game = "XX", // XX
     };
 #elif Xbox
-    public static GlobalOption Option = new()
-    {
+    public static GlobalOption Option = new() {
         Platform = "GL",
         ForceOpen = true,
         ForcePath = "sample:5",

@@ -284,7 +284,7 @@ public unsafe class Binary_Aurora : ArcBinary<Binary_Aurora> {
 
 #region Binary_Myp
 
-public unsafe class Binary_Myp : ArcBinary<Binary_Myp> {
+public class Binary_Myp : ArcBinary<Binary_Myp> {
     #region Headers
 
     const uint MYP_MAGIC = 0x0050594d;

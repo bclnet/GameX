@@ -33,6 +33,7 @@ public class CrytekArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     static ArcBinary GetArcBinary(FamilyGame game)
         => ArcBinarys.GetOrAdd(game.Id, _ => game.Engine.n switch {
             "ArcheAge" => new Binary_ArcheAge((byte[])game.Key),
+            "Dunia" => Binary_Dunia.Current,
             _ => new Binary_Cry3((byte[])game.Key),
         });
 

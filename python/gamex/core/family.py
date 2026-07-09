@@ -104,7 +104,7 @@ def createFileSystem(vfxType: str, path: SystemPath, subPath: str, host: str = N
     if baseRoot.endswith('/') or baseRoot.endswith('\\'): baseRoot = baseRoot[:-1]
     basePaths = path.paths if path else None
     vfx = DirectoryFileSystem(baseRoot, next(iter(basePaths), None) if path else None) if not basePaths or len(basePaths) <= 1 else \
-        AggregateFileSystem([DirectoryFileSystem(baseRoot, s) for s in basePaths])
+        AggregateFileSystem([DirectoryFileSystem(baseRoot, s).next() for s in basePaths])
     return vfx.next()
 
 #endregion

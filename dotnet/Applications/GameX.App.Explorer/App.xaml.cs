@@ -40,9 +40,7 @@ public partial class App : Application {
 
     void Application_Startup(object sender, StartupEventArgs e) {
         LoadFamilies(Option.Family != null ? [Option.Family] : null);
-        //PlatformX.Activate(OpenGLPlatform.This);
-        //OpenStack.Wpf.Control.GLControl.ShowConsole = true;
-        OpenTK.ConsoleManager.Show();
+        //OpenTK.ConsoleManager.Show();
         _ = new AppShell();
         Parser.Default.ParseArguments<DefaultOptions, TestOptions, OpenOptions>(args ?? e.Args)
         .MapResult(
@@ -51,6 +49,8 @@ public partial class App : Application {
             (OpenOptions opts) => RunOpen(opts),
             RunError);
     }
+    //PlatformX.Activate(OpenGLPlatform.This);
+    //OpenStack.Wpf.Control.GLControl.ShowConsole = true;
 
     #region Options
 

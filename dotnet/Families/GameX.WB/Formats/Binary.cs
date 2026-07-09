@@ -60,7 +60,7 @@ public unsafe class Binary_AC : ArcBinary<Binary_AC> {
 
     class Directory {
         public readonly DirectoryHeader Header;
-        public readonly List<Directory> Directories = new List<Directory>();
+        public readonly List<Directory> Directories = [];
 
         public Directory(BinaryReader r, long offset, int blockSize) {
             Header = ReadT<DirectoryHeader>(r, offset, DirectoryHeader.SizeOf, blockSize);

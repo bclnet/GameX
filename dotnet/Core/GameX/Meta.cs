@@ -175,7 +175,7 @@ public abstract class MetaManager {
             new($"FileSize: {file.FileSize}"),
             new($"AtEnd: {archive.AtEnd}"),
             file.Parts != null
-                ? new MetaInfo("Parts", items: file.Parts.Select(part => new MetaInfo($"{part.FileSize}@{part.Path}")))
+                ? new MetaInfo("Parts", items: file.Parts.Select(s => new MetaInfo($"{s.FileSize}@{s.Path}")))
                 : null
         ]));
         //nodes.Add(new MetaInfo(null, new MetaContent { Type = "Hex", Name = "TEST", Value = new MemoryStream() }));

@@ -184,7 +184,7 @@ public partial class FamilyManager {
         if (baseRoot.EndsWith("/") || baseRoot.EndsWith("\\")) baseRoot = baseRoot[..^1];
         var basePaths = path?.Paths;
         vfx = basePaths == null || basePaths.Length <= 1 ? new DirectoryFileSystem(baseRoot, basePaths.FirstOrDefault())
-            : new AggregateFileSystem([.. basePaths.Select(s => new DirectoryFileSystem(baseRoot, s))]);
+            : new AggregateFileSystem([.. basePaths.Select(s => new DirectoryFileSystem(baseRoot, s).Next())]);
         return vfx.Next();
     }
 }

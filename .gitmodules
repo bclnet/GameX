@@ -1,3 +1,18 @@
 [submodule "OpenStack"]
 	path = OpenStack
 	url = git@github.com:bclnet/OpenStack.git
+[submodule "resources/Crytek/FarCry2-File-Lists"]
+	path = resources/Crytek/FarCry2-File-Lists
+	url = git@github.com:gibbed/FarCry2-File-Lists.git
+[submodule "resources/Crytek/FarCry5-File-Lists"]
+	path = resources/Crytek/FarCry5-File-Lists
+	url = git@github.com:gibbed/FarCry5-File-Lists.git
+[submodule "resources/Crytek/FarCryNewDawn-File-Lists"]
+	path = resources/Crytek/FarCryNewDawn-File-Lists
+	url = git@github.com:gibbed/FarCryNewDawn-File-Lists.git
+[submodule "resources/Crytek/FarCryPrimal-File-Lists"]
+	path = resources/Crytek/FarCryPrimal-File-Lists
+	url = git@github.com:gibbed/FarCryPrimal-File-Lists.git
+[submodule "resources/Crytek/FarCry6-File-Lists"]
+	path = resources/Crytek/FarCry6-File-Lists
+	url = git@github.com:gibbed/FarCry6-File-Lists.git

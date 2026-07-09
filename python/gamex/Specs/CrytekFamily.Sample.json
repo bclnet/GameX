@@ -1,19 +1,61 @@
 ﻿{
+  "FarCry": {
+    "name": "Far Cry",
+    "files": [
+      {
+        "path": "FCData/Textures.pak:Textures/bfly.dds"
+      }
+    ]
+  },
+  "CrysisWarhead": {
+    "name": "Crysis Warhead",
+    "files": [
+      {
+        "path": "Textures.pak:Textures/Gui/leipzigsplash.dds"
+      }
+    ]
+  },
+  "FarCry2": {
+    "name": "Far Cry 2",
+    "files": [
+      {
+        "path": "common.fat:xxx"
+      }
+    ]
+  },
+  "Warface": {
+    "name": "Warface: Clutch",
+    "files": [
+      {
+        "path": "Textures_Textures.pak:textures/screen_07.dds"
+      }
+    ]
+  },
+  "FarCry3": {
+    "name": "Far Cry 3",
+    "files": [
+      {
+        "path": "common.fat:xxx"
+      }
+    ]
+  },
+  "FarCry3:BD": {
+    "name": "Far Cry 3 - Blood Dragon",
+    "files": []
+  },
+  "Ryse": {
+    "name": "Ryse: Son of Rome",
+    "files": []
+  },
+  "FarCry4": {
+    "name": "Far Cry 4",
+    "files": []
+  },
   "ArcheAge": {
     "name": "ArcheAge",
     "files": [
       {
-        "path": "game/version.txt",
-        "type": "Text"
-      }
-    ]
-  },
-  "Hunt": {
-    "name": "Hunt: Showdown",
-    "files": [
-      {
-        "path": "engine/engine.pak:EngineAssets/Textures/startscreen_eaas.dds",
-        "type": "Texture"
+        "path": "game/version.txt"
       }
     ]
   },
@@ -21,15 +63,40 @@
     "name": "MechWarrior Online",
     "files": [
       {
-        "path": "GameData.arc:GameModeObjects.xml",
-        "size": 153832,
-        "type": "Test"
+        "path": "Engine.pak:EngineAssets/Production/UV.dds"
+      },
+      {
+        "path": "GameData.pak:Fonts/console.xml"
       }
     ]
   },
-  "Warface": {
-    "name": "Warface",
+  "FarCryP": {
+    "name": "Far Cry Primal",
     "files": []
+  },
+  "Robinson": {
+    "name": "Robinson: The Journey",
+    "files": []
+  },
+  "FarCry5": {
+    "name": "Far Cry 5",
+    "files": []
+  },
+  "Snow": {
+    "name": "SNOW - The Ultimate Edition",
+    "files": []
+  },
+  "FarCryND": {
+    "name": "Far Cry New Dawn",
+    "files": []
+  },
+  "Hunt": {
+    "name": "Hunt: Showdown 1896",
+    "files": [
+      {
+        "path": "engine.pak:EngineAssets/Textures/startscreen_eaas.dds"
+      }
+    ]
   },
   "Wolcen": {
     "name": "Wolcen: Lords of Mayhem",
@@ -39,16 +106,16 @@
     "name": "Crysis Remastered",
     "files": []
   },
-  "Ryse": {
-    "name": "Ryse: Son of Rome",
+  "Crysis2": {
+    "name": "Crysis 2 Remastered",
     "files": []
   },
-  "Robinson": {
-    "name": "Robinson: The Journey",
+  "Crysis3": {
+    "name": "Crysis 3 Remastered",
     "files": []
   },
-  "Snow": {
-    "name": "SNOW - The Ultimate Edition",
+  "FarCry6": {
+    "name": "Far Cry 6",
     "files": []
   }
 }

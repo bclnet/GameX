@@ -8,60 +8,60 @@
     "CrytekFamily.Sample.json"
   ],
   "engines": {
-    "CryEngine": {}
+    "CryEngine": {},
+    "Dunia": {}
   },
   "games": {
     "*": {
       "archiveType": "GameX.Crytek.CrytekArchive, GameX.Crytek",
       "arcExt": ".pak"
     },
-    "ArcheAge": {
-      "name": "ArcheAge",
-      "engine": "ArcheAge",
-      "url": "https://store.steampowered.com/app/304030",
-      "key": "hex:321F2AEEAA584AB49A6C9E09D59E9C6F",
-      "arcExt": "game_pak",
-      "arc": "game:/game_pak",
+    "FarCry": {
+      "name": "Far Cry",
+      "url": "https://store.steampowered.com/app/13520/Far_Cry/",
+      "date": "Mar 23, 2004",
+      "dev": "Ubisoft",
       "files": {
         "key": [
-          "Steam:304030",
-          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 304030",
-          "Local:ArcheAge"
+          "Steam:13520",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 13520",
+          "Local:FarCry"
         ]
       }
     },
-    "Hunt": {
-      "name": "Hunt: Showdown",
-      "description": "Hunt: Showdown is a competitive first-person PvP bounty hunting game with heavy PvE elements, from the makers of Crysis. Set in the darkest corners of the world, it packs the thrill of survival games into a match-based format.",
-      "url": "https://store.steampowered.com/app/594650",
-      "key": "hex:30818902818100affd71ca741c1aa5895becf596e8732d290453d275cf6ff0bb214324ebab7eedd7f39deebc2708d88b6d536a58da5683137fafec478e41e6f8b0882e5eba236b9d2a150ee513ae562ce56b6aaf982c27a8c317281afa0f84f546ecb825ccf2217519c84ed0ceab179ee5ccdab0cb40a95d5442120f25a61e7da79d30c7d7d8a70203010001",
+    "CrysisWarhead": {
+      "name": "Crysis Warhead",
+      "url": "https://store.steampowered.com/app/17330/Crysis_Warhead/",
+      "date": "Sep 17, 2008",
       "files": {
         "key": [
-          "Steam:594650",
-          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 594650",
-          "Local:Hunt Showdown"
-        ],
-        "path": [
-          "engine",
-          "game_hunt"
-        ]
-      }
-    },
-    "MWO": {
-      "name": "MechWarrior Online",
-      "url": "https://store.steampowered.com/app/342200",
-      "files": {
-        "key": [
-          "Steam:342200",
-          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 342200",
-          "Local:MechWarrior Online"
+          "Steam:17330",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 17330",
+          "Local:Crysis Warhead"
         ],
         "path": "Game"
       }
     },
+    "FarCry2": {
+      "name": "Far Cry 2",
+      "url": "https://store.steampowered.com/app/19900/Far_Cry_2/",
+      "date": "Oct 22, 2008",
+      "dev": "Ubisoft",
+      "engine": "Dunia:1",
+      "arcExt": ".fat",
+      "files": {
+        "key": [
+          "Steam:19900",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 171519900130",
+          "Local:Far Cry 2"
+        ],
+        "path": "Data_Win32"
+      }
+    },
     "Warface": {
-      "name": "Warface",
-      "url": "https://store.steampowered.com/app/291480",
+      "name": "Warface: Clutch",
+      "url": "https://store.steampowered.com/app/291480/Warface_Clutch/",
+      "date": "Apr 12, 2012",
       "key": "hex:308189028181009B606931DCF7027A4DC0E5263B4AD0D8F4A492A16E4B5EC0850F074B4C3DA627FF96676D2379F89062DE6C917F268CBD822404D26D9D79BCB0182D4C96EEAF2B918A0300BFB81619622D1556B4E02D16FE0C7ED72C01EE429C4C849C6A786BCEC44D6C50CB914648BB662D0BA235680002D4605058D1C30DA11237822A01F2EF0203010001",
       "files": {
         "key": [
@@ -75,9 +75,204 @@
         ]
       }
     },
+    "FarCry3": {
+      "name": "Far Cry 3",
+      "url": "https://store.steampowered.com/app/220240/Far_Cry_3/",
+      "date": "Dec 4, 2012",
+      "dev": "Ubisoft",
+      "engine": "Dunia:2",
+      "arcExt": ".fat",
+      "files": {
+        "key": [
+          "Steam:220240",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 220240",
+          "Local:Far Cry 3"
+        ],
+        "path": "data_Win32"
+      }
+    },
+    "FarCry3:BD": {
+      "name": "Far Cry 3 - Blood Dragon",
+      "url": "https://store.steampowered.com/app/233270/Far_Cry_3__Blood_Dragon/",
+      "date": "May 1, 2013",
+      "dev": "Ubisoft",
+      "engine": "Dunia:2",
+      "arcExt": ".fat",
+      "files": {
+        "key": [
+          "Steam:233270",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 233270",
+          "Local:Far Cry 3 Blood Dragon"
+        ],
+        "path": "data_Win32"
+      }
+    },
+    "Ryse": {
+      "name": "Ryse: Son of Rome",
+      "description": "“Ryse: Son of Rome” tells the story of Marius Titus, a young Roman soldier who witnesses the murder of his family at the hands of barbarian bandits, then travels with the Roman army to Britannia to seek revenge.",
+      "url": "https://store.steampowered.com/app/302510/Ryse_Son_of_Rome/",
+      "date": "Oct 10, 2014",
+      "files": {
+        "key": [
+          "Steam:302510",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 302510",
+          "Local:Ryse Son of Rome"
+        ],
+        "path": [
+          "Engine",
+          "GameRyse"
+        ]
+      }
+    },
+    "FarCry4": {
+      "name": "Far Cry 4",
+      "url": "https://store.steampowered.com/app/298110/Far_Cry_4/",
+      "date": "Nov 18, 2014",
+      "dev": "Ubisoft",
+      "files": {
+        "key": [
+          "Steam:298110",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 298110",
+          "Local:Far Cry 4"
+        ],
+        "path": "data_Win32"
+      }
+    },
+    "ArcheAge": {
+      "name": "ArcheAge",
+      "engine": "ArcheAge",
+      "url": "https://store.steampowered.com/app/304030/ArcheAge/",
+      "date": "Mar 26, 2015",
+      "key": "hex:321F2AEEAA584AB49A6C9E09D59E9C6F",
+      "arcExt": "game_pak",
+      "arc": "game:/game_pak",
+      "files": {
+        "key": [
+          "Steam:304030",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 304030",
+          "Local:ArcheAge"
+        ]
+      }
+    },
+    "MWO": {
+      "name": "MechWarrior Online",
+      "url": "https://store.steampowered.com/app/342200/MechWarrior_Online_Legends/",
+      "date": "Dec 10, 2015",
+      "files": {
+        "key": [
+          "Steam:342200",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 342200",
+          "Local:MechWarrior Online"
+        ],
+        "path": [
+          "engine",
+          "Game"
+        ]
+      }
+    },
+    "FarCryP": {
+      "name": "Far Cry Primal",
+      "url": "https://store.steampowered.com/app/371660/Far_Cry_Primal/",
+      "date": "Feb 29, 2016",
+      "dev": "Ubisoft",
+      "engine": "Dunia:2",
+      "arcExt": ".fat",
+      "files": {
+        "key": [
+          "Steam:371660",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 371660",
+          "Local:Far Cry Primal"
+        ],
+        "path": "data_Win32"
+      }
+    },
+    "Robinson": {
+      "name": "Robinson: The Journey",
+      "description": "When the Esmeralda crashes on Tyson III, Robin is left stranded. He must rely on his wits and HIGS, an AI unit from the ship to survive. As he searches for the lost crew and comes face-to-face with dinosaurs, Robin discovers that Tyson III is not the paradise once promised.",
+      "url": "https://store.steampowered.com/app/579820/Robinson_The_Journey/",
+      "date": "Feb 7, 2017",
+      "files": {
+        "key": [
+          "Steam:579820",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 579820",
+          "Local:Robinson The Journey"
+        ],
+        "path": [
+          "engine",
+          "game_robinson"
+        ]
+      }
+    },
+    "FarCry5": {
+      "name": "Far Cry 5",
+      "url": "https://store.steampowered.com/app/552520/Far_Cry_5/",
+      "date": "Mar 26, 2018",
+      "dev": "Ubisoft",
+      "engine": "Dunia:2",
+      "arcExt": ".fat",
+      "files": {
+        "key": [
+          "Steam:552520",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 552520",
+          "Local:FarCry4"
+        ],
+        "path": "data_final"
+      }
+    },
+    "Snow": {
+      "name": "SNOW - The Ultimate Edition",
+      "description": "SNOW - The Ultimate Edition is the only open world, winter sports game. Explore a massive mountain, customize your character with clothing and equipment, compete in events to be the best. Access to all mountains, tracks, events as well including all cosmetics, ski, snowboard, drone, and snowmobile.",
+      "url": "https://store.steampowered.com/app/244930/SNOW__The_Ultimate_Edition/",
+      "date": "Feb 14, 2019",
+      "key": "hex:30818902818100D51E1D3810C4A112B2F2504B83E2F124009C0AC9CD1661913421D4E94623AD7014599DAFB0DC9F8366D164AD072B3DC5AA3D4CD24542D5F684E6A4F7473102DE2ACA11F6524015ECBD564248FC712B3A69B15B78EFAA06748259DDE77A75757E513F7AC21A0151F53C78FF45ABCC45C3F54BC6305F420981F7119AF03E6438D70203010001",
+      "files": {
+        "key": [
+          "Steam:244930",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 244930",
+          "Local:SNOW"
+        ],
+        "path": "Assets"
+      }
+    },
+    "FarCryND": {
+      "name": "Far Cry New Dawn",
+      "url": "https://store.steampowered.com/app/939960/Far_Cry_New_Dawn/",
+      "date": "Feb 15, 2019",
+      "dev": "Ubisoft",
+      "engine": "Dunia:2",
+      "arcExt": ".fat",
+      "files": {
+        "key": [
+          "Steam:939960",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 939960",
+          "Local:Far Cry New Dawn"
+        ],
+        "path": "data_final"
+      }
+    },
+    "Hunt": {
+      "name": "Hunt: Showdown 1896",
+      "description": "Hunt: Showdown is a competitive first-person PvP bounty hunting game with heavy PvE elements, from the makers of Crysis. Set in the darkest corners of the world, it packs the thrill of survival games into a match-based format.",
+      "url": "https://store.steampowered.com/app/594650/Hunt_Showdown_1896/",
+      "date": "Aug 27, 2019",
+      "key": "hex:30818902818100affd71ca741c1aa5895becf596e8732d290453d275cf6ff0bb214324ebab7eedd7f39deebc2708d88b6d536a58da5683137fafec478e41e6f8b0882e5eba236b9d2a150ee513ae562ce56b6aaf982c27a8c317281afa0f84f546ecb825ccf2217519c84ed0ceab179ee5ccdab0cb40a95d5442120f25a61e7da79d30c7d7d8a70203010001",
+      "files": {
+        "key": [
+          "Steam:594650",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 594650",
+          "Local:Hunt Showdown"
+        ],
+        "path": [
+          "engine",
+          "game_hunt"
+        ]
+      }
+    },
     "Wolcen": {
       "name": "Wolcen: Lords of Mayhem",
-      "url": "https://store.steampowered.com/app/424370",
+      "url": "https://store.steampowered.com/app/424370/Wolcen_Lords_of_Mayhem/",
+      "date": "Feb 13, 2020",
+      "dev": "WOLCEN Studio",
       "files": {
         "key": [
           "Steam:424370",
@@ -93,7 +288,8 @@
     "Crysis": {
       "name": "Crysis Remastered",
       "description": "The classic first person shooter from Crytek is back with the action-packed gameplay, sandbox world, and thrilling epic battles you loved the first time around now with remastered graphics optimized for a new generation of hardware.",
-      "url": "https://store.steampowered.com/app/1715130",
+      "url": "https://store.steampowered.com/app/1715130/Crysis_Remastered/",
+      "date": "Sep 17, 2021",
       "files": {
         "key": [
           "Steam:1715130",
@@ -106,50 +302,54 @@
         ]
       }
     },
-    "Ryse": {
-      "name": "Ryse: Son of Rome",
-      "description": "“Ryse: Son of Rome” tells the story of Marius Titus, a young Roman soldier who witnesses the murder of his family at the hands of barbarian bandits, then travels with the Roman army to Britannia to seek revenge.",
-      "url": "https://store.steampowered.com/app/302510",
+    "Crysis2": {
+      "name": "Crysis 2 Remastered",
+      "url": "https://store.steampowered.com/app/2096600/Crysis_2_Remastered/",
+      "date": "Nov 17, 2022",
       "files": {
         "key": [
-          "Steam:302510",
-          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 302510",
-          "Local:Ryse Son of Rome"
+          "Steam:2096600",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 2096600",
+          "Local:Crysis2Remastered"
         ],
         "path": [
           "Engine",
-          "GameRyse"
+          "GameCrysis2",
+          "Patch"
         ]
       }
     },
-    "Robinson": {
-      "name": "Robinson: The Journey",
-      "description": "When the Esmeralda crashes on Tyson III, Robin is left stranded. He must rely on his wits and HIGS, an AI unit from the ship to survive. As he searches for the lost crew and comes face-to-face with dinosaurs, Robin discovers that Tyson III is not the paradise once promised.",
-      "url": "https://store.steampowered.com/app/579820",
+    "Crysis3": {
+      "name": "Crysis 3 Remastered",
+      "url": "https://store.steampowered.com/app/2096610/Crysis_3_Remastered/",
+      "date": "Nov 17, 2022",
       "files": {
         "key": [
-          "Steam:579820",
-          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 579820",
-          "Local:Robinson The Journey"
+          "Steam:2096610",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 2096610",
+          "Local:Crysis3Remastered"
         ],
         "path": [
-          "engine",
-          "game_robinson"
+          "Engine",
+          "C3",
+          "Localization",
+          "Patch"
         ]
       }
     },
-    "Snow": {
-      "name": "SNOW - The Ultimate Edition",
-      "description": "SNOW - The Ultimate Edition is the only open world, winter sports game. Explore a massive mountain, customize your character with clothing and equipment, compete in events to be the best. Access to all mountains, tracks, events as well including all cosmetics, ski, snowboard, drone, and snowmobile.",
-      "url": "https://store.steampowered.com/app/244930",
-      "key": "hex:30818902818100D51E1D3810C4A112B2F2504B83E2F124009C0AC9CD1661913421D4E94623AD7014599DAFB0DC9F8366D164AD072B3DC5AA3D4CD24542D5F684E6A4F7473102DE2ACA11F6524015ECBD564248FC712B3A69B15B78EFAA06748259DDE77A75757E513F7AC21A0151F53C78FF45ABCC45C3F54BC6305F420981F7119AF03E6438D70203010001",
+    "FarCry6": {
+      "name": "Far Cry 6",
+      "url": "https://store.steampowered.com/app/2369390/Far_Cry_6/",
+      "date": "May 11, 2023",
+      "dev": "Ubisoft",
+      "engine": "Dunia:2",
+      "arcExt": ".fat",
       "files": {
         "key": [
-          "Steam:244930",
-          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 244930",
-          "Local:SNOW"
-        ],
-        "path": "Assets"
+          "Steam:2369390",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 2369390",
+          "Local:Far Cry 6"
+        ]
       }
     }
   }

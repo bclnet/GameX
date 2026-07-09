@@ -77,18 +77,20 @@ class Binary_Cry3(ArcBinaryT):
     def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
         source.useReader = False
         files = source.files = []
+        r.leaveOpen = True
 
         arc = source.tag = ZipFileX(r.f, path=source.binPath, key=self.key, kind=ZipKind.Cry3)
         parentByPath: dict[str, FileSource] = {}
         partsByPath: dict[str, list[FileSource]] = {}
 
-        for entry in arc.infolist():
+        for s in arc.infolist():
+            if s.is_dir(): continue
             metadata = FileSource(
-                path = entry.filename.replace('\\', '/'),
-                #flags = entry.flags,
-                packedSize = entry.compress_size,
-                fileSize = entry.file_size,
-                tag = entry)
+                path = s.filename.replace('\\', '/'),
+                #flags = s.flags,
+                packedSize = s.compress_size,
+                fileSize = s.file_size,
+                tag = s)
             metadataPath = metadata.path.lower()
             if metadataPath.endswith('.dds'): parentByPath[metadataPath] = metadata
             elif len(metadataPath) > 8 and '.dds.' in metadataPath[-8:]:
@@ -108,7 +110,7 @@ class Binary_Cry3(ArcBinaryT):
 
     # readData - tag::Binary_Cry3.readData[]
     def readData(self, source: BinaryArchive, r: BinaryReader, file: FileSource, option: object = None) -> io.BytesIO:
-        arc = source.tag
+        arc: ZipFileX = source.tag
         entry = file.tag
         with arc.open(entry) as input:
             return io.BytesIO(input.read())

@@ -123,7 +123,7 @@ class MetaManager:
             MetaInfo(f'Path: {file.path}'),
             MetaInfo(f'FileSize: {file.fileSize}'),
             MetaInfo(f'AtEnd: {archive.atEnd}'),
-            MetaInfo('Parts', items = [MetaInfo(f'{part.fileSize}@{part.path}') for x in file.parts]) if file.parts else None
+            MetaInfo('Parts', items = [MetaInfo(f'{s.fileSize}@{s.path}') for s in file.parts]) if file.parts else None
             ]))
         # nodes.append(MetaInfo(None, MetaContent(type='Hex',name='TEST',value=BytesIO())))
         return nodes

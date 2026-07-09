@@ -11,7 +11,7 @@ if major != 3 and minor < 12: raise Exception('Only vetted for Python 3.12+')
 # ref: CryEngine\Code\CryEngine\CrySystem\ZipDirCacheFactory.cpp
 
 # cry
-DefaultRsaKey = [
+DefaultRsaKey = bytes([
     0x30, 0x81, 0x9F, 0x30, 0x0D, 0x06, 0x09, 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x01, 0x01,
     0x05, 0x00, 0x03, 0x81, 0x8D, 0x00, 0x30, 0x81, 0x89, 0x02, 0x81, 0x81, 0x00, 0xA9, 0xD5, 0x90,
     0xA4, 0xBC, 0x92, 0xDB, 0x8C, 0xF1, 0xFC, 0x5A, 0xD5, 0x8F, 0x46, 0x05, 0x52, 0x16, 0xEE, 0xF3,
@@ -22,7 +22,7 @@ DefaultRsaKey = [
     0x81, 0x11, 0x7B, 0x6D, 0xE2, 0x57, 0x87, 0x8E, 0x65, 0xE1, 0xD3, 0x16, 0xC4, 0x54, 0xED, 0x29,
     0xED, 0x51, 0xFD, 0xB1, 0xEF, 0xE4, 0x95, 0x01, 0x24, 0xAE, 0xC0, 0x6A, 0xFA, 0xE0, 0x5B, 0x19,
     0xD2, 0xE6, 0xF0, 0x22, 0x3B, 0xC3, 0xE7, 0xDD, 0x17, 0x1A, 0x8C, 0xF8, 0xE1, 0x02, 0x03, 0x01,
-    0x00, 0x01 ]
+    0x00, 0x01 ])
 
 BLOCK_CIPHER_NUM_KEYS = 16
 BLOCK_CIPHER_KEY_LENGTH = 16
@@ -695,7 +695,7 @@ class ZipFileX(ZipFile):
         pass a ZipInfo instance for name, with zinfo.file_size set.
         """
         kind = self._kind
-        if kind == ZipKind.Zip: return super().open(name, mode=mode, pwd=pwd, force_zip64=force_zip64) # , allowZip64=True
+        if kind == ZipKind.Zip: return super().open(name, mode=mode, pwd=pwd, force_zip64=force_zip64)
         if mode not in {'r', 'w'}: raise ValueError('open() requires mode "r" or "w"')
         if pwd and (mode == 'w'): raise ValueError('pwd is only supported for reading files')
         if not self.fp: raise ValueError('Attempt to use ZIP archive that was already closed')
@@ -829,43 +829,5 @@ class ZipFileX(ZipFile):
 
 # class ZipExtFileX(ZipExtFile):
 #     def __init__(self, fileobj, mode, zipinfo, pwd=None, close_fileobj=False): super().__init__(fileobj, mode, zipinfo, pwd, close_fileobj)
-
-#     def _read1x(self, n):
-#         # Read up to n compressed bytes with at most one read() system call,
-#         # decrypt and decompress them.
-#         if self._eof or n <= 0:
-#             return b''
-
-#         # Read from file.
-#         # print(compressor_names.get(self._compress_type))
-#         # print(self._decompressor)
-#         if self._compress_type == ZIP_DEFLATED:
-#             ## Handle unconsumed data.
-#             data = self._decompressor.unconsumed_tail
-#             if n > len(data):
-#                 data += self._read2(n - len(data))
-#         else:
-#             data = self._read2(n)
-
-#         if self._compress_type == ZIP_STORED:
-#             self._eof = self._compress_left <= 0
-#         elif self._compress_type == ZIP_DEFLATED:
-#             n = max(n, self.MIN_READ_SIZE)
-#             data = self._decompressor.decompress(data, n)
-#             self._eof = (self._decompressor.eof or
-#                          self._compress_left <= 0 and
-#                          not self._decompressor.unconsumed_tail)
-#             if self._eof:
-#                 data += self._decompressor.flush()
-#         else:
-#             data = self._decompressor.decompress(data)
-#             self._eof = self._decompressor.eof or self._compress_left <= 0
-
-#         data = data[:self._left]
-#         self._left -= len(data)
-#         if self._left <= 0:
-#             self._eof = True
-#         self._update_crc(data)
-#         return data
 
 #endregion

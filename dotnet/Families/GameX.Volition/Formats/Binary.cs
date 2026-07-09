@@ -28,7 +28,7 @@ public class Binary_Abc : IHaveMetaInfo {
 
 #region Binary_Ctg
 
-public unsafe class Binary_Ctg : ArcBinary<Binary_Ctg> {
+public class Binary_Ctg : ArcBinary<Binary_Ctg> {
     public override Task Read(BinaryArchive source, BinaryReader r, object tag) {
         var files = source.Files = [];
 

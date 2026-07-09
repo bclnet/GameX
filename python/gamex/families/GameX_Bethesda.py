@@ -49,9 +49,9 @@ class BethesdaArchive(BinaryArchive):
     def getArcBinary(game: FamilyGame, extension: str) -> ArcBinary:
         match extension:
             case '': return None
-            case '.bsa': return Binary_Bsa()
-            case '.ba2': return Binary_Ba2()
-            case '.esm' | '.esp': return Binary_Esm()
+            case '.bsa': return Binary_Bsa.current
+            case '.ba2': return Binary_Ba2.current
+            case '.esm' | '.esp': return Binary_Esm.current
             case _: raise Exception(f'Unknown: {extension}')
 
     @staticmethod

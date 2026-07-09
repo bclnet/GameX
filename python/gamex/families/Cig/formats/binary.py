@@ -33,18 +33,20 @@ class Binary_P4k(ArcBinaryT):
     def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
         source.useReader = False
         files = source.files = []
+        r.leaveOpen = True
 
         arc = source.tag = ZipFileX(r.f, path=source.binPath, key=self.key, kind=ZipKind.P4k)
         parentByPath: dict[str, FileSource] = {}
         partsByPath: dict[str, list[FileSource]] = {}
 
-        for entry in arc.infolist():
+        for s in arc.infolist():
+            if s.is_dir(): continue
             metadata = FileSource(
-                path = entry.filename.replace('\\', '/'),
-                #flags = entry.flags,
-                packedSize = entry.compress_size,
-                fileSize = entry.file_size,
-                tag = entry)
+                path = s.filename.replace('\\', '/'),
+                #flags = s.flags,
+                packedSize = s.compress_size,
+                fileSize = s.file_size,
+                tag = s)
         metadataPath = metadata.path.lower()
         if metadataPath.endswith('.pak') or metadataPath.endswith('.socpak'): metadata.arc = SubArchiveP4k(source, arc, metadataPath, metadata.tag)
         elif metadataPath.endswith('.dds') or metadataPath.endswith('.dds.a'): parentByPath[metadataPath] = metadata

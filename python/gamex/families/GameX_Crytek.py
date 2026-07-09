@@ -17,6 +17,7 @@ class CrytekArchive(BinaryArchive):
     def getArcBinary(game: FamilyGame, extension: str) -> ArcBinary:
         match game.engine[0]:
             case 'ArcheAge': return Binary_ArcheAge(game.key)
+            case 'Dunia': return Binary_Dunia.current
             case _: return Binary_Cry3(game.key)
 
     @staticmethod

@@ -644,8 +644,7 @@ class Binary_Zip(ArcBinaryT):
     # read
     def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
         source.useReader = False
-        arc: ZipFile
-        source.tag = arc = ZipFile(r.f)
+        arc = source.tag = ZipFile(r.f)
         match self.key:
             case None: pass
             case s if isinstance(key, str): arc.setpassword(s)
@@ -654,13 +653,12 @@ class Binary_Zip(ArcBinaryT):
             path = s.filename, #.replace('\\', '/'),
             packedSize = s.compress_size,
             fileSize = s.file_size,
-            tag = s
-            ) for s in arc.infolist() if not s.is_dir()]
+            tag = s) for s in arc.infolist() if not s.is_dir()]
 
     # readData
     def readData(self, source: BinaryArchive, r: BinaryReader, file: FileSource, option: object = None) -> BytesIO:
         arc: ZipFile = source.tag
-        print(arc.read(file.path))
+        return BytesIO(arc.read(file.path))
 
 #endregion
 

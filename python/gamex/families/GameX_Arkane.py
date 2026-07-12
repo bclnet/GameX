@@ -26,12 +26,12 @@ class ArkaneArchive(BinaryArchive):
     @staticmethod
     def getArcBinary(game: FamilyGame, extension: str) -> ArcBinary:
         match game.engine[0]:
-            case 'Danae': return Binary_Danae.current
-            case 'Void': return Binary_Void.current
-            # case 'CryEngine': return Binary_Void.current
-            # case 'Unreal': return Binary_Void.current
-            case 'Valve': return Binary_Vpk.current
-            # case 'idTech7': return Binary_Void.current
+            case 'Danae': return Binary_Danae()
+            case 'Void': return Binary_Void()
+            # case 'CryEngine': return Binary_Void()
+            # case 'Unreal': return Binary_Void()
+            case 'Valve': return Binary_Vpk()
+            # case 'idTech7': return Binary_Void()
             case _: raise Exception(f'Unknown: {game.engine[0]}')
 
     @staticmethod

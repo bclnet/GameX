@@ -1,13 +1,13 @@
-import os, pathlib
 from zipfile import ZipFile
-from io import BytesIO
 from importlib import resources
+from .FarCryX import hashFilelist64
 
-with resources.files().joinpath('FarCryPrimal.zip').open('rb') as f:
-    arc: ZipFile = ZipFile(f, 'r')
-hashEntries: dict[str, object] = { x.filename:x for x in arc.infolist() }
-
-hashLookup: dict[str, dict[int, str]] = {}
+f = resources.files().joinpath('FarCryPrimal.zip').open('rb')
+arc: ZipFile = ZipFile(f, 'r')
+hashFiles: dict[str, object] = { s.filename:s for s in arc.infolist() }
+hashes: dict[str, dict[int, str]] = {}
 @staticmethod
-def getHashLookup(path: str) -> dict[int, str]:
-    pass
+def getHashes(path: str) -> dict[int, str]:
+    if path in hashes: return hashes[path]
+    hashes[path] = hashFilelist64(arc, hashFiles[path]) if path in hashFiles else []
+    return hashes[path]

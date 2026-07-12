@@ -1,4 +1,5 @@
 ﻿using GameX.Crytek.Formats;
+using GameX.Crytek.Formats.Dunia;
 using GameX.Crytek.Transforms;
 using GameX.Formats.IUnknown;
 using GameX.Uncore;
@@ -38,10 +39,16 @@ public class CrytekArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
         });
 
     public static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) AssetFactory(FileSource source, FamilyGame game)
-        => Path.GetExtension(source.Path).ToLowerInvariant() switch {
-            ".xml" => (0, Binary_CryXml.Factory),
-            ".cgf" or ".cga" or ".chr" or ".skin" or ".anim" => (0, Binary_CryFile.Factory),
-            _ => UncoreArchive.AssetFactory(source, game),
+        => game.Engine.n switch {
+            "Dunia" => Path.GetExtension(source.Path).ToLowerInvariant() switch {
+                ".xml" => (0, Binary_Xml.Factory),
+                _ => UncoreArchive.AssetFactory(source, game),
+            },
+            _ => Path.GetExtension(source.Path).ToLowerInvariant() switch {
+                ".xml" => (0, Binary_CryXml.Factory),
+                ".cgf" or ".cga" or ".chr" or ".skin" or ".anim" => (0, Binary_CryFile.Factory),
+                _ => UncoreArchive.AssetFactory(source, game),
+            }
         };
 
     #endregion

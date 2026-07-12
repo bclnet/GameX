@@ -20,6 +20,7 @@
     <EmbeddedResource Include="..\..\..\python\gamex\resources\Bullfrog\S.zip" Link="Bullfrog\S.zip" />
     <EmbeddedResource Include="..\..\..\python\gamex\resources\Capcom\RE.zip" Link="Capcom\RE.zip" />
     <EmbeddedResource Include="..\..\..\python\gamex\resources\Crytek\FarCry2.zip" Link="Crytek\FarCry2.zip" />
+    <EmbeddedResource Include="..\..\..\python\gamex\resources\Crytek\FarCry3.zip" Link="Crytek\FarCry3.zip" />	  
     <EmbeddedResource Include="..\..\..\python\gamex\resources\Crytek\FarCry5.zip" Link="Crytek\FarCry5.zip" />
     <EmbeddedResource Include="..\..\..\python\gamex\resources\Crytek\FarCry6.zip" Link="Crytek\FarCry6.zip" />
     <EmbeddedResource Include="..\..\..\python\gamex\resources\Crytek\FarCryNewDawn.zip" Link="Crytek\FarCryNewDawn.zip" />

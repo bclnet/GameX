@@ -49,6 +49,7 @@
       "dev": "Ubisoft",
       "engine": "Dunia:1",
       "arcExt": ".fat",
+      "arc": "game:/**/*.fat",
       "files": {
         "key": [
           "Steam:19900",
@@ -82,6 +83,7 @@
       "dev": "Ubisoft",
       "engine": "Dunia:2",
       "arcExt": ".fat",
+      "arc": "game:/**/*.fat",
       "files": {
         "key": [
           "Steam:220240",
@@ -98,6 +100,7 @@
       "dev": "Ubisoft",
       "engine": "Dunia:2",
       "arcExt": ".fat",
+      "arc": "game:/**/*.fat",
       "files": {
         "key": [
           "Steam:233270",
@@ -129,6 +132,9 @@
       "url": "https://store.steampowered.com/app/298110/Far_Cry_4/",
       "date": "Nov 18, 2014",
       "dev": "Ubisoft",
+      "engine": "Dunia:2",
+      "arcExt": ".fat",
+      "arc": "game:/**/*.fat",
       "files": {
         "key": [
           "Steam:298110",
@@ -177,6 +183,7 @@
       "dev": "Ubisoft",
       "engine": "Dunia:2",
       "arcExt": ".fat",
+      "arc": "game:/**/*.fat",
       "files": {
         "key": [
           "Steam:371660",
@@ -210,13 +217,14 @@
       "dev": "Ubisoft",
       "engine": "Dunia:2",
       "arcExt": ".fat",
+      "arc": "game:/**/*.fat",
       "files": {
         "key": [
           "Steam:552520",
           "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 552520",
           "Local:FarCry4"
         ],
-        "path": "data_final"
+        "path": "data_final/pc"
       }
     },
     "Snow": {
@@ -241,13 +249,14 @@
       "dev": "Ubisoft",
       "engine": "Dunia:2",
       "arcExt": ".fat",
+      "arc": "game:/**/*.fat",
       "files": {
         "key": [
           "Steam:939960",
           "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 939960",
           "Local:Far Cry New Dawn"
         ],
-        "path": "data_final"
+        "path": "data_final/pc"
       }
     },
     "Hunt": {
@@ -344,6 +353,7 @@
       "dev": "Ubisoft",
       "engine": "Dunia:2",
       "arcExt": ".fat",
+      "arc": "game:/**/*.fat",
       "files": {
         "key": [
           "Steam:2369390",

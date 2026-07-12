@@ -15,7 +15,7 @@ class BlackArchive(BinaryArchive):
 
     @staticmethod
     def getArcBinary(game: FamilyGame, extension: str) -> ArcBinary:
-        return Binary_Dat.current
+        return Binary_Dat()
 
     @staticmethod
     def assetFactory(source: FileSource, game: FamilyGame) -> tuple[object, callable]:

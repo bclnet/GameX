@@ -19,9 +19,9 @@ class BiowareArchive(BinaryArchive):
         if extension == '.zip': return Binary_Zip()
         # print(game.engine)
         match game.engine[0]:
-            case 'Aurora': return Binary_Aurora.current
-            case 'Hero': return Binary_Myp.current
-            case 'Odyssey': return Binary_Myp.current
+            case 'Aurora': return Binary_Aurora()
+            case 'Hero': return Binary_Myp()
+            case 'Odyssey': return Binary_Myp()
             case _: raise Exception(f'Unknown: {game.engine[0]}')
 
     @staticmethod

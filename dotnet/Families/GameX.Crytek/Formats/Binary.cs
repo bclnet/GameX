@@ -98,13 +98,13 @@ public class Binary_Dunia : ArcBinary<Binary_Dunia> {
     }
 
     static readonly ReadOnlyCollection<Version> KnownVersions = new([
-        // ## 32 ##
+        // 32
         (5, Platform.Any, 0),       // Far Cry 2
         (5, Platform.Windows, 3),   // Far Cry 2
         (5, Platform.PS3, 4),       // Far Cry 2
         (9, Platform.Any, 3),       // Far Cry 3
         (9, Platform.Windows, 3),   // Far Cry 3
-        // ## 64 ##
+        // 64
         (9, Platform.Any, 0),       // Far Cry 3, Far Cry 3 Blood Dragon, Far Cry 4, Far Cry Primal
         (9, Platform.Windows, 3),   // Far Cry 3, Far Cry 3 Blood Dragon, Far Cry 4
         (9, Platform.Windows, 4),   // Far Cry Primal
@@ -126,22 +126,11 @@ public class Binary_Dunia : ArcBinary<Binary_Dunia> {
         public static bool operator !=(Version left, Version right) => !left.Equals(right);
     }
 
-    static Platform ToPlatform(byte id) => id switch {
-        0 => Platform.Any,
-        1 => Platform.Windows,
-        _ => throw new NotSupportedException("unknown platform"),
-    };
-
+    static readonly byte[] TEAXors = [0x76, 0x41, 0x74, 0x1E, 0x4E, 0x16, 0x1E, 0x02, 0x6A, 0x5B, 0x72, 0x0B, 0x60, 0x4F, 0x72, 0x25];
     static uint[] MakeXTEAKey(uint value) {
-        var xorBytes = new byte[] {
-            0x76, 0x41, 0x74, 0x1E,
-            0x4E, 0x16, 0x1E, 0x02,
-            0x6A, 0x5B, 0x72, 0x0B,
-            0x60, 0x4F, 0x72, 0x25};
         var key = new byte[16];
         for (var i = 0; i < 16; i++) {
-            var b = (byte)((value >> i) + 0x39);
-            var x = xorBytes[i];
+            byte b = (byte)((value >> i) + 0x39), x = TEAXors[i];
             key[i] = b != x ? (byte)(b ^ x) : (byte)0xFF;
         }
         return [BitConverter.ToUInt32(key, 0), BitConverter.ToUInt32(key, 4), BitConverter.ToUInt32(key, 8), BitConverter.ToUInt32(key, 12)];
@@ -163,167 +152,149 @@ public class Binary_Dunia : ArcBinary<Binary_Dunia> {
         var indexIsEncrypted = (fileVersionAndEncryptionFlag & 0x80000000u) != 0;
         if (indexIsEncrypted && fileVersion < 11) throw new FormatException("encryption flag set when unsupported");
         if (fileVersion > 11) throw new FormatException("unsupported version");
-        var flags = fileVersion >= 3 ? r.ReadUInt32() : 0U;
-        var unknown0C = fileVersion >= 9 ? r.ReadUInt32() : 0U;
-        var unknown10 = fileVersion >= 9 ? r.ReadUInt32() : 0U;
-        var platform = ToPlatform((byte)(flags >> 0));
+        var flags = fileVersion >= 3 ? r.ReadUInt32() : 0u;
+        var unknown0C = fileVersion >= 9 ? r.ReadUInt32() : 0u;
+        var unknown10 = fileVersion >= 9 ? r.ReadUInt32() : 0u;
+        var platform = (Platform)(byte)(flags >> 0);
         var compressionVersion = (byte)(flags >> 8);
         if ((flags & 0xFFFF0000u) != 0) throw new FormatException("unknown flags");
         var version = new Version(fileVersion, platform, compressionVersion);
         if (!KnownVersions.Contains(version)) throw new FormatException("unknown version/platform/CV combination");
         if (unknown0C != 0 || unknown10 != 0) throw new NotImplementedException();
 
+        // get hashes
+        var filelist = Path.ChangeExtension(source.BinPath, ".filelist").Replace('\\', '/');
+        var hashes = source.Game.Id switch {
+            "FarCry2" => FarCry2.GetHashes(filelist),
+            "FarCry3" or "FarCry3:BD" or "FarCry4" => FarCry3.GetHashes(filelist),
+            "FarCry5" => FarCry5.GetHashes(filelist),
+            "FarCry6" => FarCry6.GetHashes(filelist),
+            "FarCryND" => FarCryNewDawn.GetHashes(filelist),
+            "FarCryP" => FarCryPrimal.GetHashes(filelist),
+            _ => throw new NotImplementedException($"{source.Game.Id}")
+        };
+
         // read files
+        source.BinPath = Path.ChangeExtension(source.BinPath, ".dat");
         var entryCount = r.ReadInt32();
         if (entryCount < 0) throw new FormatException();
-        var files = new FileSource[entryCount]; source.Files = files;
+        FileSource[] files; source.Files = files = new FileSource[entryCount]; ulong hash;
         switch (fileVersion) {
-            //case 1:
-            //    if (indexIsEncrypted) r = DecryptIndex(r.ReadBytes(entryCount * 24));
-            //    for (var i = 0; i < files.Length; i++) {
-            //        var a = r.ReadUInt32();
-            //        r.ReadUInt32();
-            //        var c = r.ReadUInt32();
-            //        var d = r.ReadUInt32();
-            //        var e = r.ReadUInt32();
-            //        r.ReadUInt32();
-            //        files[i] = new() {
-            //            Hash = a,
-            //            FileSize = (int)((e >> 2) & 0x3FFFFFFFu),
-            //            Compressed = (byte)((e >> 0) & 0x3u),
-            //            Offset = (long)(((ulong)d << 2) | ((c >> 30) & 0x3u)),
-            //            PackedSize = (int)((c >> 0) & 0x3FFFFFFFu),
-            //        };
-            //    }
-            //    break;
-            //case 6 or 8:
-            //    if (indexIsEncrypted) r = DecryptIndex(r.ReadBytes(entryCount * 20));
-            //    for (var i = 0; i < files.Length; i++) {
-            //        var a = r.ReadUInt64();
-            //        var c = r.ReadUInt32();
-            //        var d = r.ReadUInt32();
-            //        var e = r.ReadUInt32();
-            //        files[i] = new() {
-            //            Hash = a,
-            //            FileSize = (int)((c >> 2) & 0x3FFFFFFFu),
-            //            Compressed = (byte)((c >> 0) & 0x3u),
-            //            Offset = (long)((ulong)(d << 2) | ((e >> 30) & 0x3u)),
-            //            PackedSize = (int)((e >> 0) & 0x3FFFFFFFul),
-            //        };
-            //    }
-            //    break;
-            //case 7:
-            //    if (indexIsEncrypted) r = DecryptIndex(r.ReadBytes(entryCount * 24));
-            //    for (var i = 0; i < files.Length; i++) {
-            //        var a = r.ReadUInt32();
-            //        var b = r.ReadUInt32();
-            //        var c = r.ReadUInt32();
-            //        r.ReadUInt32();
-            //        var e = r.ReadUInt32();
-            //        var f = r.ReadUInt32();
-            //        files[i] = new() {
-            //            Hash = ((ulong)a << 32) | b,
-            //            FileSize = (int)((c >> 2) & 0x3FFFFFFFu),
-            //            Compressed = (byte)((c >> 0) & 0x3u),
-            //            Offset = (long)((ulong)(f << 2) | ((e >> 30) & 0x3u)),
-            //            PackedSize = (int)((e >> 0) & 0x3FFFFFFFu),
-            //        };
-            //    }
-            //    break;
-            case 5:
-                if (indexIsEncrypted) r = DecryptIndex(r.ReadBytes(entryCount * 16));
+            case 1: // NOTUSED
+                if (indexIsEncrypted) r = DecryptIndex(r.ReadBytes(entryCount * 24));
                 for (var i = 0; i < files.Length; i++) {
-                    var a = r.ReadUInt32();
-                    var b = r.ReadUInt32();
-                    var c = r.ReadUInt32();
-                    var d = r.ReadUInt32();
+                    uint a = r.ReadUInt32(), _ = r.ReadUInt32(), c = r.ReadUInt32(), d = r.ReadUInt32(), e = r.ReadUInt32(), _2 = r.ReadUInt32();
                     files[i] = new() {
-                        Hash = a,
-                        FileSize = (int)((b >> 2) & 0x3FFFFFFFu),
-                        Compressed = (byte)((b >> 0) & 0x3u),
+                        Hash = hash = a,
+                        Path = hashes.TryGetValue(hash, out var z) ? z : hash.ToString(),
+                        FileSize = (int)((e >> 2) & 0x3FFFFFFFu),
+                        Compressed = (byte)((e >> 0) & 0x3u),
+                        Offset = (long)(((ulong)d << 2) | ((c >> 30) & 0x3u)),
                         PackedSize = (int)((c >> 0) & 0x3FFFFFFFu),
-                        Offset = (long)(((c >> 30) & 0x3u) | (ulong)d << 2),
                     };
-                    files[i].Path = $"{files[i].Hash}";
                 }
                 break;
-            case 9:
+            case 6 or 8: // NOTUSED
                 if (indexIsEncrypted) r = DecryptIndex(r.ReadBytes(entryCount * 20));
                 for (var i = 0; i < files.Length; i++) {
-                    var a = r.ReadUInt32();
-                    var b = r.ReadUInt32();
-                    var c = r.ReadUInt32();
-                    var d = r.ReadUInt32();
-                    var e = r.ReadUInt32();
+                    ulong a = r.ReadUInt64(); uint c = r.ReadUInt32(), d = r.ReadUInt32(), e = r.ReadUInt32();
                     files[i] = new() {
-                        Hash = ((ulong)a << 32) | b,
+                        Hash = hash = a,
+                        Path = hashes.TryGetValue(hash, out var z) ? z : hash.ToString(),
                         FileSize = (int)((c >> 2) & 0x3FFFFFFFu),
                         Compressed = (byte)((c >> 0) & 0x3u),
                         Offset = (long)((ulong)(d << 2) | ((e >> 30) & 0x3u)),
                         PackedSize = (int)((e >> 0) & 0x3FFFFFFFul),
                     };
-                    files[i].Path = $"{files[i].Hash}";
+                }
+                break;
+            case 7: // NOTUSED
+                if (indexIsEncrypted) r = DecryptIndex(r.ReadBytes(entryCount * 24));
+                for (var i = 0; i < files.Length; i++) {
+                    uint a = r.ReadUInt32(), b = r.ReadUInt32(), c = r.ReadUInt32(), _ = r.ReadUInt32(), e = r.ReadUInt32(), f = r.ReadUInt32();
+                    files[i] = new() {
+                        Hash = hash = ((ulong)a << 32) | b,
+                        Path = hashes.TryGetValue(hash, out var z) ? z : hash.ToString(),
+                        FileSize = (int)((c >> 2) & 0x3FFFFFFFu),
+                        Compressed = (byte)((c >> 0) & 0x3u),
+                        Offset = (long)((ulong)(f << 2) | ((e >> 30) & 0x3u)),
+                        PackedSize = (int)((e >> 0) & 0x3FFFFFFFu),
+                    };
+                }
+                break;
+            case 5:
+                if (indexIsEncrypted) r = DecryptIndex(r.ReadBytes(entryCount * 16));
+                for (var i = 0; i < files.Length; i++) {
+                    uint a = r.ReadUInt32(), b = r.ReadUInt32(), c = r.ReadUInt32(), d = r.ReadUInt32();
+                    files[i] = new() {
+                        Hash = hash = a,
+                        Path = hashes.TryGetValue(hash, out var z) ? z : hash.ToString(),
+                        FileSize = (int)((b >> 2) & 0x3FFFFFFFu),
+                        Compressed = (byte)((b >> 0) & 0x3u),
+                        PackedSize = (int)((c >> 0) & 0x3FFFFFFFu),
+                        Offset = (long)(((c >> 30) & 0x3u) | (ulong)d << 2),
+                    };
+                }
+                break;
+            case 9:
+                if (indexIsEncrypted) r = DecryptIndex(r.ReadBytes(entryCount * 20));
+                for (var i = 0; i < files.Length; i++) {
+                    uint a = r.ReadUInt32(), b = r.ReadUInt32(), c = r.ReadUInt32(), d = r.ReadUInt32(), e = r.ReadUInt32();
+                    files[i] = new() {
+                        Hash = hash = ((ulong)a << 32) | b,
+                        Path = hashes.TryGetValue(hash, out var z) ? z : hash.ToString(),
+                        FileSize = (int)((c >> 2) & 0x3FFFFFFFu),
+                        Compressed = (byte)((c >> 0) & 0x3u),
+                        Offset = (long)((ulong)(d << 2) | ((e >> 30) & 0x3u)),
+                        PackedSize = (int)((e >> 0) & 0x3FFFFFFFul),
+                    };
                 }
                 break;
             case 10:
                 if (indexIsEncrypted) r = DecryptIndex(r.ReadBytes(entryCount * 20));
                 for (var i = 0; i < files.Length; i++) {
-                    var a = r.ReadUInt32();
-                    var b = r.ReadUInt32();
-                    var c = r.ReadUInt32();
-                    var d = r.ReadUInt32();
-                    var e = r.ReadUInt32();
+                    uint a = r.ReadUInt32(), b = r.ReadUInt32(), c = r.ReadUInt32(), d = r.ReadUInt32(), e = r.ReadUInt32();
                     files[i] = new() {
-                        Hash = ((ulong)a << 32) | b,
+                        Hash = hash = ((ulong)a << 32) | b,
+                        Path = hashes.TryGetValue(hash, out var z) ? z : hash.ToString(),
                         FileSize = (int)((c >> 2) & 0x3FFFFFFFu),
                         Flags = ((c >> 0) & 0x1u) != 0 ? 1 : 0,
                         Compressed = (byte)((c >> 1) & 0x1u),
                         Offset = (long)(((ulong)d << 3) | (e >> 29)),
                         PackedSize = (int)((e >> 0) & 0x1FFFFFFFu),
                     };
-                    files[i].Path = $"{files[i].Hash}";
                 }
                 break;
             case 11:
                 if (indexIsEncrypted) r = DecryptIndex(r.ReadBytes(entryCount * 20));
                 for (var i = 0; i < files.Length; i++) {
-                    var a = r.ReadUInt32();
-                    var b = r.ReadUInt32();
-                    var c = r.ReadUInt32();
-                    var d = r.ReadUInt32();
-                    var e = r.ReadUInt32();
+                    uint a = r.ReadUInt32(), b = r.ReadUInt32(), c = r.ReadUInt32(), d = r.ReadUInt32(), e = r.ReadUInt32();
                     files[i] = new() {
-                        Hash = ((ulong)a << 32) | b,
+                        Hash = hash = ((ulong)a << 32) | b,
+                        Path = hashes.TryGetValue(hash, out var z) ? z : hash.ToString(),
                         FileSize = (int)((c >> 2) & 0x3FFFFFFFu),
                         Flags = ((c >> 0) & 0x1u) != 0 ? 1 : 0,
                         Compressed = (byte)((c >> 1) & 0x1u),
                         Offset = (long)(((ulong)d << 7) | ((e >> 25) & 0x70)),
                         PackedSize = (int)((e >> 0) & 0x1FFFFFFFu),
                     };
-                    files[i].Path = $"{files[i].Hash}";
                 }
                 break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(version), version, null);
+            default: throw new ArgumentOutOfRangeException("fileVersion", fileVersion, null);
         }
-        var localizationCount = r.ReadUInt32();
-        for (var i = 0U; i < localizationCount; i++) {
-            var nameLength = r.ReadUInt32();
-            if (nameLength > 32) throw new FormatException("bad length for localization name");
-            var name = r.ReadFAString((int)nameLength);
-            var unknownValue = r.ReadUInt64();
-        }
-        //foreach (var entry in this.Entries)  SanityCheckEntry(entry, version);
+
+        // read localization
+        var localization = r.ReadL32FArray(_ => (r.ReadL32AString(32), r.ReadUInt64()));
         return Task.CompletedTask;
     }
 
     public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
-        return null;
+        r.Seek(file.Offset);
+        return Task.FromResult((Stream)new MemoryStream(r.ReadBytes((int)file.FileSize)));
     }
 }
 
 #endregion
-
 
 #region Binary_Cry3
 
@@ -426,8 +397,7 @@ public class Binary_CryXml : XmlDocument, IHaveMetaInfo, IStream {
         public int Reserved { get; set; }
     }
 
-    public static Task<object> Factory(BinaryReader r, FileSource m, Archive s)
-        => Task.FromResult((object)new Binary_CryXml(r, false));
+    public static Task<object> Factory(BinaryReader r, FileSource m, Archive s) => Task.FromResult((object)new Binary_CryXml(r, false));
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = this }),

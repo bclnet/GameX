@@ -268,7 +268,7 @@ match __current__:
             # Game = "CrysisWarhead", # Crysis Warhead
             # Game = "FarCry2", # Far Cry 2
             # Game = "Warface", # Warface: Clutch
-            Game = "FarCry3", # Far Cry 3
+            # Game = "FarCry3", # Far Cry 3
             # Game = "FarCry3:BD", # Far Cry 3 - Blood Dragon
             # Game = "Ryse", # Ryse: Son of Rome
             # Game = "FarCry4", # Far Cry 4
@@ -278,7 +278,7 @@ match __current__:
             # Game = "Robinson", # Robinson: The Journey
             # Game = "FarCry5", # Far Cry 5
             # Game = "Snow", # SNOW - The Ultimate Edition
-            # Game = "FarCryND", # Far Cry New Dawn
+            Game = "FarCryND", # Far Cry New Dawn
             # Game = "Hunt", # Hunt: Showdown 1896
             # Game = "Wolcen", # Wolcen: Lords of Mayhem
             # Game = "Crysis", # Crysis Remastered

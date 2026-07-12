@@ -19,7 +19,7 @@
     "name": "Far Cry 2",
     "files": [
       {
-        "path": "common.fat:xxx"
+        "path": "common.fat:config/alwaysloaded.xml"
       }
     ]
   },
@@ -35,13 +35,17 @@
     "name": "Far Cry 3",
     "files": [
       {
-        "path": "common.fat:xxx"
+        "path": "common.fat:version.xml"
       }
     ]
   },
   "FarCry3:BD": {
     "name": "Far Cry 3 - Blood Dragon",
-    "files": []
+    "files": [
+      {
+        "path": "common.fat:version.xml"
+      }
+    ]
   },
   "Ryse": {
     "name": "Ryse: Son of Rome",
@@ -49,7 +53,11 @@
   },
   "FarCry4": {
     "name": "Far Cry 4",
-    "files": []
+    "files": [
+      {
+        "path": "common.fat:version.xml"
+      }
+    ]
   },
   "ArcheAge": {
     "name": "ArcheAge",
@@ -72,7 +80,11 @@
   },
   "FarCryP": {
     "name": "Far Cry Primal",
-    "files": []
+    "files": [
+      {
+        "path": "common.fat:ui/singleplayer/textures/tx_loadingbar.xbt"
+      }
+    ]
   },
   "Robinson": {
     "name": "Robinson: The Journey",
@@ -88,7 +100,11 @@
   },
   "FarCryND": {
     "name": "Far Cry New Dawn",
-    "files": []
+    "files": [
+      {
+        "path": "common.fat:version.xml"
+      }
+    ]
   },
   "Hunt": {
     "name": "Hunt: Showdown 1896",
@@ -116,6 +132,10 @@
   },
   "FarCry6": {
     "name": "Far Cry 6",
-    "files": []
+    "files": [
+      {
+        "path": "common.fat:version.xml"
+      }
+    ]
   }
 }

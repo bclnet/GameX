@@ -453,8 +453,7 @@ public unsafe class Binary_Red : ArcBinary<Binary_Red> {
         var magic = source.Magic = r.ReadUInt32();
         // KEY
         switch (magic) {
-            case KEY_MAGIC: // Signature("KEY ")
-                {
+            case KEY_MAGIC: { // Signature("KEY ")
                     var header = r.ReadS<KEY_Header>();
                     if (header.Version != KEY_VERSION) throw new FormatException("BAD MAGIC");
                     source.Version = header.Version;
@@ -462,9 +461,9 @@ public unsafe class Binary_Red : ArcBinary<Binary_Red> {
 
                     // parts
                     r.Seek(header.FilesOffset);
-                    var headerFiles = r.ReadSArray<KEY_HeaderFile>((int)header.NumFiles).Select(x => { r.Seek(x.FileNameOffset); return (file: x, path: r.ReadFAString((int)x.FileNameSize)); }).ToArray();
+                    var headerFiles = r.ReadSArray<KEY_HeaderFile>((int)header.NumFiles).Select(s => { r.Seek(s.FileNameOffset); return (file: s, path: r.ReadFAString((int)s.FileNameSize)); }).ToArray();
                     r.Seek(header.KeysOffset);
-                    var headerKeys = r.ReadSArray<KEY_HeaderKey>((int)header.NumKeys).ToDictionary(x => (x.Id, x.ResourceId), x => UnsafeX.FixedAString(x.Name, 0x10));
+                    var headerKeys = r.ReadSArray<KEY_HeaderKey>((int)header.NumKeys).ToDictionary(s => (s.Id, s.ResourceId), s => UnsafeX.FixedAString(s.Name, 0x10));
 
                     // combine
                     var sourceName = source.Name;
@@ -483,14 +482,13 @@ public unsafe class Binary_Red : ArcBinary<Binary_Red> {
                 }
                 return Task.CompletedTask;
             // BIFF
-            case BIFF_MAGIC: // Signature("BIFF")
-                {
+            case BIFF_MAGIC: { // Signature("BIFF")
                     if (source.Tag == null) throw new FormatException("BIFF files can only be processed through KEY files");
                     var (keys, bifId) = ((Dictionary<(uint, uint), string> keys, uint bifId))source.Tag;
                     var header = r.ReadS<BIFF_Header>();
                     if (header.Version != BIFF_VERSION) throw new FormatException("BAD MAGIC");
                     source.Version = header.Version;
-                    source.Files = files2 = new List<FileSource>();
+                    source.Files = files2 = [];
 
                     // files
                     var fileTypes = BIFF_FileTypes;
@@ -510,8 +508,7 @@ public unsafe class Binary_Red : ArcBinary<Binary_Red> {
                 }
                 return Task.CompletedTask;
             // DZIP
-            case DZIP_MAGIC: // Signature("DZIP")
-                {
+            case DZIP_MAGIC: { // Signature("DZIP")
                     var header = r.ReadS<DZIP_Header>();
                     if (header.Version < 2) throw new FormatException("unsupported version");
                     source.Version = DZIP_VERSION;
@@ -539,24 +536,18 @@ public unsafe class Binary_Red : ArcBinary<Binary_Red> {
                         // build digest
                         if (!string.IsNullOrEmpty(path)) {
                             for (var j = 0; j < path.Length; j++) { hash ^= (byte)path[j]; hash *= 0x00000100000001B3UL; }
-                            hash ^= (ulong)path.Length;
-                            hash *= 0x00000100000001B3UL;
+                            hash ^= (ulong)path.Length; hash *= 0x00000100000001B3UL;
                         }
-                        hash ^= headerFile.Timestamp;
-                        hash *= 0x00000100000001B3UL;
-                        hash ^= headerFile.FileSize;
-                        hash *= 0x00000100000001B3UL;
-                        hash ^= headerFile.Position;
-                        hash *= 0x00000100000001B3UL;
-                        hash ^= headerFile.PackedSize;
-                        hash *= 0x00000100000001B3UL;
+                        hash ^= headerFile.Timestamp; hash *= 0x00000100000001B3UL;
+                        hash ^= headerFile.FileSize; hash *= 0x00000100000001B3UL;
+                        hash ^= headerFile.Position; hash *= 0x00000100000001B3UL;
+                        hash ^= headerFile.PackedSize; hash *= 0x00000100000001B3UL;
                     }
                     if (hash != header.Hash) throw new FormatException("bad entry table hash (wrong cdkey for DLC archives?)");
                 }
                 return Task.CompletedTask;
             // BUNDLE
-            case BUNDLE_MAGIC: // Signature("POTATO70")
-                {
+            case BUNDLE_MAGIC: { // Signature("POTATO70")
                     if (r.ReadUInt32() != BUNDLE_MAGIC2) throw new FormatException("BAD MAGIC");
                     var header = r.ReadS<BUNDLE_Header>();
                     source.Version = BUNDLE_MAGIC;
@@ -578,9 +569,8 @@ public unsafe class Binary_Red : ArcBinary<Binary_Red> {
                 }
                 return Task.CompletedTask;
             // RDAR (.archive)
-            case RDAR_MAGIC: // Signature("RDAR")
-                {
-                    var hashLookup = CP77.HashLookup;
+            case RDAR_MAGIC: { // Signature("RDAR")
+                    var hashLookup = CP77.Hashes;
                     var header = r.ReadS<RDAR_Header>();
                     if (header.Version != 12) throw new FormatException("unsupported version");
                     source.Version = RDAR_MAGIC;

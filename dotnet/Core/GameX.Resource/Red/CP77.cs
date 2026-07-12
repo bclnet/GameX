@@ -19,8 +19,8 @@ public static class CP77 {
         var arc = new ZipArchive(s, ZipArchiveMode.Read);
         using var r = new StreamReader(arc.GetEntry("CP77/hashes.csv")?.Open());
         using var csv = new CsvReader(r, CultureInfo.InvariantCulture);
-        HashLookup = csv.GetRecords<HashRecord>().ToDictionary(x => ulong.Parse(x.Hash), x => x.String);
+        Hashes = csv.GetRecords<HashRecord>().ToDictionary(s => ulong.Parse(s.Hash), s => s.String);
     }
 
-    public static readonly IDictionary<ulong, string> HashLookup;
+    public static readonly IDictionary<ulong, string> Hashes;
 }

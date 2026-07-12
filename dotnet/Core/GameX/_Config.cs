@@ -287,25 +287,25 @@ public partial class FamilyManager {
         Family = "Crytek",
         //Game = "FarCry", // Far Cry
         //Game = "CrysisWarhead", // Crysis Warhead
-        //Game = "FarCry2", // Far Cry 2 #ISSUE
+        Game = "FarCry2", // Far Cry 2
         //Game = "Warface", // Warface: Clutch
-        Game = "FarCry3", // Far Cry 3
-        //Game = "FarCry3:BD", // ^Far Cry 3 - Blood Dragon
+        //Game = "FarCry3", // Far Cry 3
+        //Game = "FarCry3:BD", // Far Cry 3 - Blood Dragon
         //Game = "Ryse", // Ryse: Son of Rome
-        //Game = "FarCry4", // ^Far Cry 4
+        //Game = "FarCry4", // Far Cry 4
         //Game = "ArcheAge", // ArcheAge
         //Game = "MWO", // MechWarrior Online
-        //Game = "FarCryP", // ^Far Cry Primal
+        //Game = "FarCryP", // Far Cry Primal
         //Game = "Robinson", // Robinson: The Journey
-        //Game = "FarCry5", // ^Far Cry 5
+        //Game = "FarCry5", // Far Cry 5
         //Game = "Snow", // SNOW - The Ultimate Edition
-        //Game = "FarCryND", // ^Far Cry New Dawn
+        //Game = "FarCryND", // Far Cry New Dawn
         //Game = "Hunt", // Hunt: Showdown 1896
         //Game = "Wolcen", // Wolcen: Lords of Mayhem
         //Game = "Crysis", // Crysis Remastered
         //Game = "Crysis2", // Crysis 2 Remastered
         //Game = "Crysis3", // Crysis 3 Remastered
-        //Game = "FarCry6", // ^Far Cry 6
+        //Game = "FarCry6", // Far Cry 6
     };
 #elif Cyanide
     public static GlobalOption Option = new() {

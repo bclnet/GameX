@@ -4,6 +4,10 @@ pushd FarCry2-File-Lists
 7z a -r ../../../python/gamex/resources/Crytek/FarCry2.zip -ir!*.filelist*
 popd
 
+pushd FarCry3-File-Lists
+7z a -r ../../../python/gamex/resources/Crytek/FarCry3.zip -ir!*.filelist*
+popd
+
 pushd FarCry5-File-Lists\pc
 7z a -r ../../../../python/gamex/resources/Crytek/FarCry5.zip -ir!*.filelist*
 popd

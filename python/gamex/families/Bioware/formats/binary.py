@@ -3,7 +3,6 @@ from io import BytesIO
 from gamex.core.binary import ArcBinaryT
 from gamex.core.meta import FileSource
 from gamex.families.Uncore.formats.compression import decompressZstd, decompressZlib
-from ....resources.Bioware import TOR, WAR
 
 # typedefs
 class BinaryReader: pass
@@ -57,8 +56,12 @@ class Binary_Myp(ArcBinaryT):
     def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
         files = source.files = []
         match source.game.id:
-            case 'SWTOR': hashLookup = TOR.hashLookup
-            case 'WAR': hashLookup = WAR.hashLookup
+            case 'SWTOR':
+                from ....resources.Bioware import TOR
+                hashLookup = TOR.hashLookup
+            case 'WAR':
+                from ....resources.Bioware import WAR
+                hashLookup = WAR.hashLookup
             case _: hashLookup = {}
 
         header = r.readS(self.MYP_Header)

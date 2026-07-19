@@ -1,118 +1,194 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using GameX;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
+using System.Linq;
 using System.Threading.Tasks;
-using System.Xml;
-using System.Xml.Serialization;
 
 namespace GameX.Crytek.Formats.Dunia;
 
-
 #region Binary_AIWorkspace
 
-//public class AIWorkspaceResourceFile {
-//    public List<UnknownData0> Unknown0 = new List<UnknownData0>();
-//    public byte[] Unknown1;
-//    public List<uint> VariableNameHashes = new List<uint>();
-//    public List<UnknownData3> Unknown3 = new List<UnknownData3>();
-//    public XmlResourceFile XmlResource;
+public class Binary_AIWorkspace : IHaveMetaInfo {
+    public class UnknownData0 {
+        public uint TypeHash;
+        public Binary_Xml Xml;
+    }
 
-//    public void Deserialize(Stream input) {
-//        var version = input.ReadValueU32(Endian.Little);
-//        if (version < 1 || version > 4) {
-//            throw new FormatException();
-//        }
-//        var endian = Endian.Little;
+    public class UnknownData3 {
+        public uint NameHash;
+        public string Name;
+        public uint IndexIntoUnknown0;
+        public uint IndexIntoUnknown1;
+        public uint Unknown4;
+    }
 
-//        var unknownLength = input.ReadValueU32(endian);
-//        var rmlLength = input.ReadValueU32(endian);
+    public UnknownData0[] Unknown0;
+    public byte[] Unknown1;
+    public uint[] VariableNameHashes;
+    public UnknownData3[] Unknown3;
+    public Binary_Xml Xml;
 
-//        if (input.Position + unknownLength + rmlLength > input.Length) {
-//            throw new FormatException();
-//        }
+    public static Task<object> Factory(BinaryReader r, FileSource m, Archive s) => Task.FromResult((object)new Binary_AIWorkspace(r));
 
-//        using (var data = input.ReadToMemoryStream((int)unknownLength)) {
-//            var unk0count = data.ReadValueU32(endian);
-//            this.Unknown0.Clear();
-//            for (uint i = 0; i < unk0count; i++) {
-//                var id = data.ReadValueU32(endian);
-//                var length = data.ReadValueU32(endian);
-//                var xml = new XmlResourceFile();
-//                using (var data2 = data.ReadToMemoryStream((int)length)) {
-//                    xml.Deserialize(data2);
-//                }
-//                this.Unknown0.Add(new UnknownData0() {
-//                    TypeHash = id,
-//                    XmlResource = xml,
-//                });
-//            }
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
+        new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = this }),
+    ];
 
-//            var unk1length = data.ReadValueU32(endian);
-//            this.Unknown1 = new byte[unk1length];
-//            if (data.Read(this.Unknown1, 0, this.Unknown1.Length) != this.Unknown1.Length) {
-//                throw new FormatException();
-//            }
+    public Binary_AIWorkspace(BinaryReader r) {
+        var version = r.ReadUInt32();
+        if (version < 1 || version > 4) throw new FormatException();
+        uint unknownLength = r.ReadUInt32(), rmlLength = r.ReadUInt32();
+        if (r.BaseStream.Position + unknownLength + rmlLength > r.BaseStream.Length) throw new FormatException();
 
-//            this.VariableNameHashes.Clear();
-//            var variableNameCount = data.ReadValueU32(endian);
-//            for (uint i = 0; i < variableNameCount; i++) {
-//                this.VariableNameHashes.Add(data.ReadValueU32(endian));
-//            }
+        using (var r2 = r.ReadBytesToReader((int)unknownLength)) {
+            Unknown0 = r2.ReadL32FArray(z => {
+                var id = r2.ReadUInt32();
+                using var r2a = r2.ReadL32BytesToReader();
+                return new UnknownData0 { TypeHash = id, Xml = new Binary_Xml(r2a) };
+            });
+            Unknown1 = r2.ReadL32Bytes();
+            VariableNameHashes = r2.ReadL32PArray<uint>("u");
+            Unknown3 = r2.ReadL32FArray(z => new UnknownData3 {
+                NameHash = r2.ReadUInt32(),
+                Name = r2.ReadL32UString(),
+                IndexIntoUnknown0 = r2.ReadUInt32(),
+                IndexIntoUnknown1 = r2.ReadUInt32(),
+                Unknown4 = r2.ReadUInt32()
+            });
+        }
 
-//            this.Unknown3.Clear();
-//            var unk3count = data.ReadValueU32(endian);
-//            for (uint i = 0; i < unk3count; i++) {
-//                var unknown3 = new UnknownData3();
-//                unknown3.NameHash = data.ReadValueU32(endian);
-//                var unk1 = data.ReadValueU32(endian);
-//                unknown3.Name = data.ReadString((int)unk1, Encoding.UTF8);
-//                unknown3.IndexIntoUnknown0 = data.ReadValueU32(endian);
-//                unknown3.IndexIntoUnknown1 = data.ReadValueU32(endian);
-//                unknown3.Unknown4 = data.ReadValueU32(endian);
-//                this.Unknown3.Add(unknown3);
-//            }
-//        }
+        using var r3 = r.ReadBytesToReader((int)rmlLength);
+        Xml = new Binary_Xml(r3);
+        if (!r3.AtEnd()) throw new FormatException();
 
-//        this.XmlResource = new XmlResourceFile();
-//        using (var data = input.ReadToMemoryStream((int)rmlLength)) {
-//            this.XmlResource.Deserialize(data);
-//            if (data.Position != data.Length) {
-//                throw new FormatException();
-//            }
-//        }
-
-//        var test_u2 = this.Unknown3.Max(u => u.IndexIntoUnknown0);
-//        var test_u3 = this.Unknown3.Max(u => u.IndexIntoUnknown1);
-//        var test_u4 = this.Unknown3.Max(u => u.Unknown4);
-//    }
-
-//    public class UnknownData0 {
-//        public uint TypeHash;
-//        public XmlResourceFile XmlResource;
-//    }
-
-//    public class UnknownData3 {
-//        public uint NameHash;
-//        public string Name;
-//        public uint IndexIntoUnknown0;
-//        public uint IndexIntoUnknown1;
-//        public uint Unknown4;
-//    }
-//}
+        var test_u2 = Unknown3.Max(u => u.IndexIntoUnknown0);
+        var test_u3 = Unknown3.Max(u => u.IndexIntoUnknown1);
+        var test_u4 = Unknown3.Max(u => u.Unknown4);
+    }
+}
 
 #endregion
 
 #region Binary_Resource
 
+public class Binary_Resource : IHaveMetaInfo {
+    public class Object {
+        public long Position;
+        public uint TypeHash;
+        public Dictionary<uint, byte[]> Values = [];
+        public List<Object> Children = [];
+
+        public static Object Deserialize(BinaryReader r, List<Object> pointers) {
+            var position = r.Tell();
+            var childCount = r.ReadUIntV8a();
+            if (childCount == 0xFF) return pointers[(int)childCount];
+            var child = new Object { Position = position };
+            pointers.Add(child);
+            child.Deserialize(r, childCount, pointers);
+            return child;
+        }
+
+        void Deserialize(BinaryReader r, uint childCount, List<Object> pointers) {
+            TypeHash = r.ReadUInt32();
+            var valueCount = r.ReadUIntV8a();
+            if (valueCount == 0xFF) throw new NotImplementedException();
+
+            long position; byte[] value;
+            for (var i = 0; i < valueCount; i++) {
+                var nameHash = r.ReadUInt32();
+                position = r.Tell();
+                var size = r.ReadUIntV8a();
+                if (size == 0xFF) {
+                    r.Seek(position - size);
+                    size = r.ReadUIntV8a();
+                    if (size == 0xFF) throw new FormatException();
+                    value = new byte[size]; r.Read(value, 0, value.Length);
+                    r.Seek(position);
+                    r.ReadUIntV8a();
+                }
+                else { value = new byte[size]; r.Read(value, 0, value.Length); }
+                Values.Add(nameHash, value);
+            }
+            for (var i = 0; i < childCount; i++) Children.Add(Deserialize(r, pointers));
+        }
+    }
+
+    public static Task<object> Factory(BinaryReader r, FileSource m, Archive s) => Task.FromResult((object)new Binary_Resource(r));
+
+    List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
+        new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = this }),
+    ];
+
+    public ushort Flags;
+    public Object Root;
+
+    public Binary_Resource(BinaryReader r) {
+        r.ReadBytes(2);
+        var magic = r.ReadUInt32();
+        if (magic != 0x4643626E) throw new FormatException(); // FCbn
+        var version = r.ReadUInt16();
+        if (version != 2) throw new FormatException();
+        Flags = r.ReadUInt16();
+        if (Flags != 0) throw new FormatException();
+        var totalObjectCount = r.ReadUInt32();
+        var totalValueCount = r.ReadUInt32();
+        Root = Object.Deserialize(r, []);
+    }
+}
+
 #endregion
 
 #region Binary_Geometry
+
+//public class Binary_Geometry {
+//    public ushort MajorVersion;
+//    public ushort MinorVersion;
+//    public uint Unknown08;
+//    public Geometry.Root Root;
+
+//public static Task<object> Factory(BinaryReader r, FileSource m, Archive s) => Task.FromResult((object)new Binary_Geometry(r));
+
+//List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
+//    new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = this }),
+//];
+
+//    public void Binary_Geometry(BinaryReader r) {
+//        if (r.BaseStream.Position + 32 > r.BaseStream.Length) throw new FormatException();
+//        if (r.ReadUInt32() != 0x4D455348) throw new FormatException();
+//        MajorVersion = r.ReadUInt16();
+//        if (MajorVersion != 42) throw new FormatException();
+//        MinorVersion = r.ReadUInt16();
+//        Unknown08 = r.ReadUInt32();
+//        Root = (Geometry.Root)DeserializeBlock(r, null, this);
+//    }
+
+//    static Geometry.IBlock DeserializeBlock(BinaryReader r, Geometry.IBlock parent, Geometry.IBlockFactory factory) {
+//        var baseOffset = r.Tell();
+//        var type = (Geometry.BlockType)r.ReadUInt32();
+//        var block = factory.CreateBlock(type);
+//        if (block == null || block.Type != type) throw new FormatException();
+//        var unknown04 = r.ReadUInt32();
+//        var size = r.ReadUInt32();
+//        var dataSize = r.ReadUInt32();
+//        var childCount = r.ReadUInt32();
+//        if (dataSize > size) throw new FormatException();
+//        var childOffset = r.Tell();
+//        var childEnd = childOffset + (size - dataSize - 20);
+//        var blockOffset = childEnd;
+//        var blockEnd = blockOffset + dataSize;
+//        if (blockEnd != baseOffset + size) throw new FormatException();
+//        r.Seek(blockOffset);
+//        block.Deserialize(parent, r);
+//        if (!r.AtEnd(blockEnd)) throw new FormatException();
+//        r.Seek(childOffset);
+//        for (var i = 0U; i < childCount; i++) {
+//            block.AddChild(DeserializeBlock(block, block, r));
+//        }
+//        if (!r.AtEnd(childEnd)) throw new FormatException();
+//        r.Seek(blockEnd);
+//        return block;
+//    }
+//}
 
 #endregion
 

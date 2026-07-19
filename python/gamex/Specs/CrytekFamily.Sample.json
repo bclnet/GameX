@@ -19,6 +19,9 @@
     "name": "Far Cry 2",
     "files": [
       {
+        "path": "patch.fat:worlds/tmpla/generated/entitylibrary.fcb"
+      },
+      {
         "path": "common.fat:config/alwaysloaded.xml"
       }
     ]

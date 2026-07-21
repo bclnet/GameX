@@ -1,9 +1,10 @@
 from __future__ import annotations
 import os
 from openstk.core import _pathExtension
-from gamex import ArcBinary, Archive, BinaryArchive
+from gamex import ArcBinary, Archive, BinaryArchive, FileOption
 from gamex.families.GameX_Uncore import UncoreArchive
-from gamex.families.Crytek.formats.binary import Binary_ArcheAge, Binary_Dunia, Binary_Cry3 #, Binary_CryXml, Binary_CryFile
+from gamex.families.Crytek.formats.binary import Binary_ArcheAge, Binary_Dunia, Binary_Cry3
+from gamex.families.Crytek.formats.dunia.binary import Binary_Xbt
 
 # CrytekArchive
 class CrytekArchive(BinaryArchive):
@@ -22,10 +23,15 @@ class CrytekArchive(BinaryArchive):
 
     @staticmethod
     def assetFactory(source: FileSource, game: FamilyGame) -> tuple[object, callable]:
-        match _pathExtension(source.path).lower():
-            case '': return None
-            # case '.xml': : return (FileOption.StreamObject, Binary_CryXml.factory)
-            # case '.cgf' | '.cga' | '.chr' | '.skin' | '.anim': return (FileOption.StreamObject, Binary_CryFile.factory)
-            case _: return UncoreArchive.assetFactory(source, game)
+        match game.engine[0]:
+            case 'Dunia':
+                match _pathExtension(source.path).lower():
+                    # case '.xbt': return (FileOption.StreamObject, Binary_Xbt.factory)
+                    case _: return UncoreArchive.assetFactory(source, game)
+            case _:
+                match _pathExtension(source.path).lower():
+                    # case '.xml': : return (FileOption.StreamObject, Binary_CryXml.factory)
+                    # case '.cgf' | '.cga' | '.chr' | '.skin' | '.anim': return (FileOption.StreamObject, Binary_CryFile.factory)
+                    case _: return UncoreArchive.assetFactory(source, game)
 
     #endregion

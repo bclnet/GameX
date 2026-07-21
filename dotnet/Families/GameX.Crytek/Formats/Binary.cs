@@ -103,7 +103,7 @@ public class Binary_Dunia : ArcBinary<Binary_Dunia> {
     }
 
     enum Compression : byte {
-        None = 0,
+        None_ = 0,
         LZO1x,
         Zlib,
         XMemCompress, // Xbox 360
@@ -317,7 +317,7 @@ public class Binary_Dunia : ArcBinary<Binary_Dunia> {
             }
         }
         Action<BinaryReader, FileSource, Stream> decompress = (Compression)file.Compressed switch {
-            Compression.None => DecompressNone,
+            Compression.None_ => DecompressNone,
             Compression.LZO1x => DecompressLZO1x,
             Compression.Zlib => DecompressZlib,
             Compression.LZ4 => DecompressLZ4,

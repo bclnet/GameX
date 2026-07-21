@@ -47,7 +47,7 @@ public class CrytekArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
                 ".xbt" => (0, Binary_Xbt.Factory), // Textures
                 //".xbg" => (0, Binary_Xbg.Factory), // 3D Models
                 ".fcb" => (0, Binary_Resource.Factory), // Binary
-                ".xml" or ".rml" => (0, Binary_Xml.Factory), // Xml
+                //".xml" or ".rml" => (0, Binary_Xml.Factory), // Xml
                 // ".mab" => Animation
                 // ".hkx" => Havok physics
                 // ".vcs" => Vistas

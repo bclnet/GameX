@@ -85,6 +85,16 @@ class Binary_Dunia(ArcBinaryT):
         Prospero = 8 # data_prospero (PS5)
         Yeti = 9 # data_yeti (Stadia)
 
+    class Compression(Enum):
+        None_ = 0
+        LZO1x = 1
+        Zlib = 2
+        XMemCompress = 3 # Xbox 360
+        LZMA = 4
+        LZ4 = 5
+        LZ4LW = 6
+        Oodle = 7
+
     @dataclass(frozen=True)
     class Version:
         fileVersion: int
@@ -108,7 +118,7 @@ class Binary_Dunia(ArcBinaryT):
     TEAXors = [0x76, 0x41, 0x74, 0x1E, 0x4E, 0x16, 0x1E, 0x02, 0x6A, 0x5B, 0x72, 0x0B, 0x60, 0x4F, 0x72, 0x25]
     @staticmethod
     def makeXTEAKey(value: int) -> list[int]:
-        key = bytes(16)
+        key = bytearray(16)
         for i in range(16):
             b = ((value >> i) + 0x39) & 0xFF; x = Binary_Dunia.TEAXors[i]
             key[i] = (b ^ x) & 0xFF if b != x else 0xFF
@@ -129,7 +139,7 @@ class Binary_Dunia(ArcBinaryT):
         if not source.binPath.endswith('.fat'): raise Exception('must be a .fat file')
         magic = r.readUInt32()
         if magic != Binary_Dunia.MAGIC: raise Exception('BAD MAGIC')
-        fileVersionAndEncryptionFlag = r.readUInt32();
+        fileVersionAndEncryptionFlag = r.readUInt32()
         fileVersion = fileVersionAndEncryptionFlag & ~0x80000000
         indexIsEncrypted = (fileVersionAndEncryptionFlag & 0x80000000) != 0
         if indexIsEncrypted and fileVersion < 11: raise Exception('encryption flag set when unsupported')
@@ -269,8 +279,41 @@ class Binary_Dunia(ArcBinaryT):
     # readData - tag::Binary_Dunia.readData[]
     def readData(self, source: BinaryArchive, r: BinaryReader, file: FileSource, option: object = None) -> io.BytesIO:
         r.seek(file.offset)
-        return io.BytesIO(r.readBytes(file.fileSize))
+        if file.flags != 0:
+            entrySize = file.packedSize if file.compressed != 0 else file.fileSize
+            encryptedSize = min(0x100000, entrySize)
+            encryptedSize &= ~7
+            if encryptedSize > 0:
+                data = r.readBytes(entrySize)
+                key = Binary_Dunia.makeXTEAKey(encryptedSize)
+                # XTEA.Decrypt(data, 0, encryptedSize, key)
+                r = BinaryReader(io.BytesIO(data))
+        match Binary_Dunia.Compression(file.compressed):
+            case Binary_Dunia.Compression.None_: decompress = Binary_Dunia.decompressNone
+            case Binary_Dunia.Compression.LZO1x: decompress = Binary_Dunia.decompressLZO1x
+            case Binary_Dunia.Compression.Zlib: decompress = Binary_Dunia.decompressZlib
+            case Binary_Dunia.Compression.LZ4: decompress = Binary_Dunia.decompressLZ4
+            case _: raise Exception('unsupported compression scheme')
+        s = io.BytesIO()
+        decompress(r, file, s)
+        s.seek(0)
+        return s
     # end::Binary_Dunia.readData[]
+
+    @staticmethod
+    def decompressNone(r: BinaryReader, f: FileSource, o: io.BytesIO) -> None:
+        import shutil
+        shutil.copyfileobj(r.f, o, f.fileSize) # r.copyTo(o, f.fileSize)
+
+    @staticmethod
+    def decompressLZO1x(r: BinaryReader, f: FileSource, o: io.BytesIO) -> None:
+        from ...._LIB.compression.lzo import Lzo1xDecompressor
+        compressedBytes = bytearray(f.packedSize)
+        if r.f.readinto(compressedBytes) != f.packedSize: raise Exception('could not read all compressed bytes')
+        uncompressedBytes = bytearray(f.fileSize)
+        result = Lzo1xDecompressor(compressedBytes, uncompressedBytes).decompress()
+        if result != 0: raise Exception(f'LZO decompression failure ({result})')
+        o.write(uncompressedBytes)
 
 # Binary_Cry3
 class Binary_Cry3(ArcBinaryT):

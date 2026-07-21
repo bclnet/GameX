@@ -283,7 +283,7 @@ public partial class FamilyManager {
     public static GlobalOption Option = new() {
         Platform = "GL",
         ForceOpen = true,
-        ForcePath = "sample:2",
+        ForcePath = "sample:0",
         Family = "Crytek",
         //Game = "FarCry", // Far Cry
         //Game = "CrysisWarhead", // Crysis Warhead

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GameX.Uncore.Formats;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -28,7 +29,7 @@ public class Binary_AIWorkspace : IHaveMetaInfo {
     public UnknownData3[] Unknown3;
     public Binary_Xml Xml;
 
-    public static Task<object> Factory(BinaryReader r, FileSource m, Archive s) => Task.FromResult((object)new Binary_AIWorkspace(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_AIWorkspace(r));
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = this }),
@@ -113,7 +114,7 @@ public class Binary_Resource : IHaveMetaInfo {
         }
     }
 
-    public static Task<object> Factory(BinaryReader r, FileSource m, Archive s) => Task.FromResult((object)new Binary_Resource(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Resource(r));
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = this }),
@@ -146,7 +147,7 @@ public class Binary_Resource : IHaveMetaInfo {
 //    public uint Unknown08;
 //    public Geometry.Root Root;
 
-//public static Task<object> Factory(BinaryReader r, FileSource m, Archive s) => Task.FromResult((object)new Binary_Geometry(r));
+//public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Geometry(r));
 
 //List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
 //    new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = this }),
@@ -189,6 +190,21 @@ public class Binary_Resource : IHaveMetaInfo {
 //        return block;
 //    }
 //}
+
+#endregion
+
+#region Binary_Xbt
+
+public class Binary_Xbt(BinaryReader r, FileSource f) : Binary_Dds(Pre(r), f, true) {
+    public static new Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Xbt(r, f));
+
+    static BinaryReader Pre(BinaryReader r) {
+        var magic = r.ReadUInt32() << 8;
+        if (magic != 0x58425400) throw new FormatException("BAD MAGIC");
+        r.Seek(r.Skip(4).ReadUInt32());
+        return r;
+    }
+}
 
 #endregion
 

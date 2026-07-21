@@ -41,9 +41,17 @@ public class CrytekArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
     public static (object, Func<BinaryReader, FileSource, Archive, Task<object>>) AssetFactory(FileSource source, FamilyGame game)
         => game.Engine.n switch {
             "Dunia" => Path.GetExtension(source.Path).ToLowerInvariant() switch {
-                ".aiw" => (0, Binary_AIWorkspace.Factory),
-                ".fcb" => (0, Binary_Resource.Factory),
-                ".xml" => (0, Binary_Xml.Factory),
+                ".aiw" => (0, Binary_AIWorkspace.Factory), // ??
+                //".lua" => (0, Binary_Lua.Factory), // Lua scripts
+                //".spk" or ".sbao" => (0, Binary_Spk.Factory), // Sound files
+                ".xbt" => (0, Binary_Xbt.Factory), // Textures
+                //".xbg" => (0, Binary_Xbg.Factory), // 3D Models
+                ".fcb" => (0, Binary_Resource.Factory), // Binary
+                ".xml" or ".rml" => (0, Binary_Xml.Factory), // Xml
+                // ".mab" => Animation
+                // ".hkx" => Havok physics
+                // ".vcs" => Vistas
+                // ".rnv" => Rnv Maps
                 _ => UncoreArchive.AssetFactory(source, game),
             },
             _ => Path.GetExtension(source.Path).ToLowerInvariant() switch {

@@ -19,6 +19,9 @@
     "name": "Far Cry 2",
     "files": [
       {
+        "path": "common.fat:ui/textures/avatars/avatar_andre.xbt"
+      },
+      {
         "path": "patch.fat:worlds/tmpla/generated/entitylibrary.fcb"
       },
       {
@@ -37,6 +40,9 @@
   "FarCry3": {
     "name": "Far Cry 3",
     "files": [
+      {
+        "path": "common.fat:graphics/__fc3_graphics/multiplayer/_textures/tattoo/arrow.xbt"
+      },
       {
         "path": "common.fat:version.xml"
       }

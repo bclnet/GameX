@@ -1,6 +1,11 @@
-﻿using GameX.Crytek.Formats.Core;
+﻿using Compression;
+using GameX.Crytek.Formats.Core;
 using GameX.Crytek.Formats.Core.Chunks;
+using ICSharpCode.SharpZipLib.Zip.Compression;
+using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
+using K4os.Compression.LZ4;
 using OpenStack;
+using SharpCompress.Common;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -97,6 +102,17 @@ public class Binary_Dunia : ArcBinary<Binary_Dunia> {
         Yeti, // data_yeti (Stadia)
     }
 
+    enum Compression : byte {
+        None = 0,
+        LZO1x,
+        Zlib,
+        XMemCompress, // Xbox 360
+        LZMA,
+        LZ4,
+        LZ4LW,
+        Oodle,
+    }
+
     static readonly ReadOnlyCollection<Version> KnownVersions = new([
         // 32
         (5, Platform.Any, 0),       // Far Cry 2
@@ -176,8 +192,7 @@ public class Binary_Dunia : ArcBinary<Binary_Dunia> {
 
         // read files
         source.BinPath = Path.ChangeExtension(source.BinPath, ".dat");
-        var entryCount = r.ReadInt32();
-        if (entryCount < 0) throw new FormatException();
+        var entryCount = r.ReadUInt32();
         FileSource[] files; source.Files = files = new FileSource[entryCount]; ulong hash;
         switch (fileVersion) {
             case 1: // NOTUSED
@@ -290,7 +305,86 @@ public class Binary_Dunia : ArcBinary<Binary_Dunia> {
 
     public override Task<Stream> ReadData(BinaryArchive source, BinaryReader r, FileSource file, object option = default) {
         r.Seek(file.Offset);
-        return Task.FromResult((Stream)new MemoryStream(r.ReadBytes((int)file.FileSize)));
+        if (file.Flags != 0) {
+            var entrySize = (int)(file.Compressed != 0 ? file.PackedSize : file.FileSize);
+            var encryptedSize = Math.Min(0x100000, entrySize);
+            encryptedSize &= ~7;
+            if (encryptedSize > 0) {
+                var data = r.ReadBytes(entrySize);
+                var key = MakeXTEAKey((uint)encryptedSize);
+                XTEA.Decrypt(data, 0, encryptedSize, key);
+                r = new BinaryReader(new MemoryStream(data, false));
+            }
+        }
+        Action<BinaryReader, FileSource, Stream> decompress = (Compression)file.Compressed switch {
+            Compression.None => DecompressNone,
+            Compression.LZO1x => DecompressLZO1x,
+            Compression.Zlib => DecompressZlib,
+            Compression.LZ4 => DecompressLZ4,
+            _ => throw new NotSupportedException("unsupported compression scheme"),
+        };
+        var s = (Stream)new MemoryStream();
+        decompress(r, file, s);
+        s.Position = 0;
+        return Task.FromResult(s);
+    }
+
+    static void DecompressNone(BinaryReader r, FileSource f, Stream o) {
+        r.BaseStream.CopyTo(o, f.FileSize);
+    }
+
+    static void DecompressLZO1x(BinaryReader r, FileSource f, Stream o) {
+        var compressedBytes = new byte[f.PackedSize];
+        if (r.Read(compressedBytes, 0, compressedBytes.Length) != compressedBytes.Length) throw new EndOfStreamException("could not read all compressed bytes");
+        var uncompressedBytes = new byte[f.FileSize];
+        var result = new Lzo1xDecompressor(compressedBytes, uncompressedBytes).Decompress();
+        if (result != 0) throw new InvalidOperationException($"LZO decompression failure ({result})");
+        o.Write(uncompressedBytes, 0, uncompressedBytes.Length);
+    }
+
+    static void DecompressZlib(BinaryReader r, FileSource f, Stream o) {
+        if (f.PackedSize < 16) throw new EndOfStreamException("not enough data for zlib compressed data");
+        var sizes = new ushort[8];
+        for (var i = 0; i < 8; i++) sizes[i] = r.ReadUInt16();
+        var blockCount = sizes[0];
+        var maximumUncompressedBlockSize = 16 * (sizes[1] + 1);
+        var left = f.FileSize;
+        for (int i = 0, c = 2; i < blockCount; i++, c++) {
+            if (c == 8) { for (var j = 0; j < 8; j++) sizes[j] = r.ReadUInt16(); c = 0; }
+            var compressedBlockSize = sizes[c];
+            if (compressedBlockSize != 0) {
+                var uncompressedBlockSize = i + 1 < blockCount ? Math.Min(maximumUncompressedBlockSize, left) : left;
+                using (var t = new MemoryStream(r.ReadBytes(compressedBlockSize))) {
+                    var s = new InflaterInputStream(t, new Inflater(true));
+                    s.CopyTo(o, uncompressedBlockSize);
+                    left -= uncompressedBlockSize;
+                }
+                var padding = (16 - (compressedBlockSize % 16)) % 16;
+                if (padding > 0) r.Skip(padding);
+            }
+            else throw new NotImplementedException();
+        }
+        if (left > 0) throw new InvalidOperationException("did not decompress enough data");
+    }
+
+    static void DecompressLZ4(BinaryReader r, FileSource f, Stream o) {
+        // K4os.Compression.LZ4 does not currently support partial decoding.
+        // https://github.com/MiloszKrajewski/K4os.Compression.LZ4/issues/61
+#if K4OS_WAS_FIXED
+            var uncompressedSize = f.FileSize;
+            var compressedBytes = input.ReadBytes((int)f.PackedSize);
+            var uncompressedBytes = new byte[uncompressedSize];
+            var decoded = LZ4Codec.Decode(compressedBytes, uncompressedBytes);
+            if (decoded != uncompressedSize) throw new InvalidOperationException();
+            o.WriteBytes(uncompressedBytes);
+#else
+        var uncompressedSize = f.FileSize;
+        var compressedBytes = r.ReadBytes((int)f.PackedSize);
+        var uncompressedBytes = new byte[f.FileSize];
+        var decoded = LZ4Codec.Decode(compressedBytes, uncompressedBytes);
+        if (decoded != f.FileSize) throw new InvalidOperationException();
+        o.Write(uncompressedBytes, 0, (int)uncompressedSize);
+#endif
     }
 }
 

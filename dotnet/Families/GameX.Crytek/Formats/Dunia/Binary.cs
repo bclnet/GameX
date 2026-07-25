@@ -70,51 +70,48 @@ public class Binary_AIWorkspace : IHaveMetaInfo {
 
 #endregion
 
-#region Binary_Resource
+#region Binary_Fcb
 
-public class Binary_Resource : IHaveMetaInfo {
+public class Binary_Fcb : IHaveMetaInfo {
     public class Object {
-        public long Position;
         public uint TypeHash;
         public Dictionary<uint, byte[]> Values = [];
         public List<Object> Children = [];
 
         public static Object Deserialize(BinaryReader r, List<Object> pointers) {
-            var position = r.Tell();
-            var childCount = r.ReadUIntV8a();
-            if (childCount == 0xFF) return pointers[(int)childCount];
-            var child = new Object { Position = position };
+            var (v, o) = r.ReadUIntV8a2();
+            if (o) return pointers[(int)v];
+            var child = new Object();
             pointers.Add(child);
-            child.Deserialize(r, childCount, pointers);
+            child.Deserialize(r, v, pointers);
             return child;
         }
 
         void Deserialize(BinaryReader r, uint childCount, List<Object> pointers) {
             TypeHash = r.ReadUInt32();
-            var valueCount = r.ReadUIntV8a();
-            if (valueCount == 0xFF) throw new NotImplementedException();
-
+            var (count, c) = r.ReadUIntV8a2();
+            if (c) throw new NotImplementedException();
             long position; byte[] value;
-            for (var i = 0; i < valueCount; i++) {
+            for (var i = 0; i < count; i++) {
                 var nameHash = r.ReadUInt32();
                 position = r.Tell();
-                var size = r.ReadUIntV8a();
-                if (size == 0xFF) {
-                    r.Seek(position - size);
-                    size = r.ReadUIntV8a();
-                    if (size == 0xFF) throw new FormatException();
-                    value = new byte[size]; r.Read(value, 0, value.Length);
+                var (v, o) = r.ReadUIntV8a2();
+                if (o) {
+                    r.Seek(position - v);
+                    (v, o) = r.ReadUIntV8a2();
+                    if (o) throw new FormatException();
+                    value = r.ReadBytes(v);
                     r.Seek(position);
-                    r.ReadUIntV8a();
+                    r.ReadUIntV8a2();
                 }
-                else { value = new byte[size]; r.Read(value, 0, value.Length); }
+                else value = r.ReadBytes(v);
                 Values.Add(nameHash, value);
             }
             for (var i = 0; i < childCount; i++) Children.Add(Deserialize(r, pointers));
         }
     }
 
-    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Resource(r));
+    public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Fcb(r, s));
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = this }),
@@ -123,18 +120,34 @@ public class Binary_Resource : IHaveMetaInfo {
     public ushort Flags;
     public Object Root;
 
-    public Binary_Resource(BinaryReader r) {
-        r.ReadBytes(2);
+    public Binary_Fcb(BinaryReader r, Archive s) {
         var magic = r.ReadUInt32();
-        if (magic != 0x4643626E) throw new FormatException(); // FCbn
+        if (magic != 0x4643626E) throw new FormatException("BAD MAGIC"); // FCbn
         var version = r.ReadUInt16();
         if (version != 2) throw new FormatException();
         Flags = r.ReadUInt16();
         if (Flags != 0) throw new FormatException();
+
+        // get hashes
+        //var filelist = Path.ChangeExtension(source.BinPath, ".filelist").Replace('\\', '/');
+        var hashes = s.Game.Id switch {
+            "FarCry2" => FarCry2.GetObjHashes("binary_classes.xml"),
+            "FarCry3" or "FarCry3:BD" or "FarCry4" => FarCry2.GetObjHashes("binary_classes.xml"),
+            "FarCry5" => FarCry2.GetObjHashes("binary_classes.xml"),
+            "FarCry6" => FarCry2.GetObjHashes("binary_classes.xml"),
+            "FarCryND" => FarCry2.GetObjHashes("binary_classes.xml"),
+            "FarCryP" => FarCry2.GetObjHashes("binary_classes.xml"),
+            _ => throw new NotImplementedException($"{s.Game.Id}")
+        };
+
+        // read
         var totalObjectCount = r.ReadUInt32();
         var totalValueCount = r.ReadUInt32();
         Root = Object.Deserialize(r, []);
     }
+
+    //public void WriteToStream(Stream stream) => this.Serialize(stream);
+    //public override string ToString() => this.Serialize();
 }
 
 #endregion
@@ -195,7 +208,7 @@ public class Binary_Resource : IHaveMetaInfo {
 
 #region Binary_Xbt
 
-public class Binary_Xbt(BinaryReader r, FileSource f) : Binary_Dds(Pre(r), f, true) {
+public class Binary_Xbt(BinaryReader r, FileSource f) : Binary_Dds(Pre(r), f) {
     public static new Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Xbt(r, f));
 
     static BinaryReader Pre(BinaryReader r) {

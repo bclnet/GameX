@@ -6,14 +6,16 @@ using System.Linq;
 namespace GameX.Crytek;
 
 public static class FarCry2 {
-    static readonly Dictionary<string, ZipArchiveEntry> HashFiles;
+    static readonly Dictionary<string, ZipArchiveEntry> Files;
     static FarCry2() {
         var assembly = typeof(FarCry2).Assembly;
         var s = assembly.GetManifestResourceStream("GameX.Resource.Crytek.FarCry2.zip");
         var arc = new ZipArchive(s, ZipArchiveMode.Read);
-        HashFiles = arc.Entries.ToDictionary(s => s.FullName);
+        Files = arc.Entries.ToDictionary(s => s.FullName);
     }
 
-    static readonly ConcurrentDictionary<string, Dictionary<ulong, string>> Hashes = new();
-    public static Dictionary<ulong, string> GetHashes(string path) => Hashes.GetOrAdd(path, s => HashFiles.TryGetValue(s, out var z) ? FarCryX.HashFilelist32(z) : []);
+    static readonly ConcurrentDictionary<string, Dictionary<ulong, string>> FileHashes = new();
+    static readonly ConcurrentDictionary<string, Dictionary<ulong, string>> ObjHashes = new();
+    public static Dictionary<ulong, string> GetFileHashes(string path) => FileHashes.GetOrAdd(path, s => Files.TryGetValue(s, out var z) ? FarCryX.HashFilelist32(z) : []);
+    public static Dictionary<ulong, string> GetObjHashes(string path) => ObjHashes.GetOrAdd(path, s => Files.TryGetValue(s, out var z) ? FarCryX.HashObj32(z) : []);
 }

@@ -159,22 +159,22 @@ class Binary_Dunia(ArcBinaryT):
         match source.game.id:
             case 'FarCry2':
                 from ....resources.Crytek import FarCry2
-                hashes = FarCry2.getHashes(filelist)
+                hashes = FarCry2.getFileHashes(filelist)
             case 'FarCry3' | 'FarCry3:BD' | 'FarCry4':
                 from ....resources.Crytek import FarCry3
-                hashes = FarCry3.getHashes(filelist)
+                hashes = FarCry3.getFileHashes(filelist)
             case 'FarCry5':
                 from ....resources.Crytek import FarCry5
-                hashes = FarCry5.getHashes(filelist)
+                hashes = FarCry5.getFileHashes(filelist)
             case 'FarCry6':
                 from ....resources.Crytek import FarCry6
-                hashes = FarCry6.getHashes(filelist)
+                hashes = FarCry6.getFileHashes(filelist)
             case 'FarCryND':
                 from ....resources.Crytek import FarCryNewDawn
-                hashes = FarCryNewDawn.getHashes(filelist)
+                hashes = FarCryNewDawn.getFileHashes(filelist)
             case 'FarCryP':
                 from ....resources.Crytek import FarCryPrimal
-                hashes = FarCryPrimal.getHashes(filelist)
+                hashes = FarCryPrimal.getFileHashes(filelist)
             case _: raise Exception(f'Not Implemented {source.game.id}')
 
         # read files

@@ -4,7 +4,7 @@ from openstk.core import _pathExtension
 from gamex import ArcBinary, Archive, BinaryArchive, FileOption
 from gamex.families.GameX_Uncore import UncoreArchive
 from gamex.families.Crytek.formats.binary import Binary_ArcheAge, Binary_Dunia, Binary_Cry3
-from gamex.families.Crytek.formats.dunia.binary import Binary_Xbt
+from gamex.families.Crytek.formats.dunia.binary import Binary_Fcb, Binary_Xbt
 
 # CrytekArchive
 class CrytekArchive(BinaryArchive):
@@ -26,7 +26,8 @@ class CrytekArchive(BinaryArchive):
         match game.engine[0]:
             case 'Dunia':
                 match _pathExtension(source.path).lower():
-                    # case '.xbt': return (FileOption.StreamObject, Binary_Xbt.factory)
+                    case '.xbt': return (FileOption.StreamObject, Binary_Xbt.factory)
+                    case '.fcb': return (FileOption.StreamObject, Binary_Fcb.factory)
                     case _: return UncoreArchive.assetFactory(source, game)
             case _:
                 match _pathExtension(source.path).lower():

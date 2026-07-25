@@ -1,5 +1,7 @@
 import os
 
+#region CRC
+
 Table32 = [
     0x00000000, 0x77073096, 0xEE0E612C, 0x990951BA,
     0x076DC419, 0x706AF48F, 0xE963A535, 0x9E6495A3,
@@ -144,6 +146,8 @@ def compute64(value: str) -> int:
         for i in range(len(value)): hash = Table64[(hash&0xFF) ^ (ord(value[i])&0xFF)] ^ (hash >> 8)
     return hash & 0xFFFFFFFFFFFFFFFF
 
+#endregion
+
 def hashPath32(s: str) -> int: return 0xFFFFFFFF if not s or len(s) == 0 else compute32(s.lower())
     
 def hashPath64(s: str) -> int: return 0xFFFFFFFFFFFFFFFF if not s or len(s) == 0 else compute64(s.lower())
@@ -170,6 +174,19 @@ def hashFilelist64(arc, entry) -> dict[int, str]:
             elif line.startswith(';') or len(line := line.strip()) <= 0: continue
             source = line
             hash = hashPath64(source)
+            if hash in hashes and otherSource != source: raise Exception(f'hash collision ("{source}" vs "{otherSource}")')
+            hashes[hash] = source.replace('\\', '/')
+    return hashes
+
+def hashObj32(arc, entry) -> dict[int, str]:
+    hashes = {}
+    with arc.open(entry) as r:
+        while True:
+            line = r.readline().decode('utf-8')
+            if not line: break
+            elif line.startswith(';') or len(line := line.strip()) <= 0: continue
+            source = line
+            hash = hashPath32(source)
             if hash in hashes and otherSource != source: raise Exception(f'hash collision ("{source}" vs "{otherSource}")')
             hashes[hash] = source.replace('\\', '/')
     return hashes

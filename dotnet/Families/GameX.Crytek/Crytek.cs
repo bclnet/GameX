@@ -46,7 +46,7 @@ public class CrytekArchive : BinaryArchive, ITransformAsset<IUnknownFileModel> {
                 //".spk" or ".sbao" => (0, Binary_Spk.Factory), // Sound files
                 ".xbt" => (0, Binary_Xbt.Factory), // Textures
                 //".xbg" => (0, Binary_Xbg.Factory), // 3D Models
-                ".fcb" => (0, Binary_Resource.Factory), // Binary
+                ".fcb" => (0, Binary_Fcb.Factory), // Binary
                 //".xml" or ".rml" => (0, Binary_Xml.Factory), // Xml
                 // ".mab" => Animation
                 // ".hkx" => Havok physics

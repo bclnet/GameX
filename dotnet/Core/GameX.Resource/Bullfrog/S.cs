@@ -7,12 +7,12 @@ using System.Linq;
 namespace GameX.Bullfrog;
 
 public static class S {
-    static readonly IDictionary<string, ZipArchiveEntry> Entries;
+    static readonly IDictionary<string, ZipArchiveEntry> Files;
     static S() {
         var assembly = typeof(S).Assembly;
         var s = assembly.GetManifestResourceStream("GameX.Resource.Bullfrog.S.zip");
         var arc = new ZipArchive(s, ZipArchiveMode.Read);
-        Entries = arc.Entries.ToDictionary(x => x.Name, x => x);
+        Files = arc.Entries.ToDictionary(x => x.Name, x => x);
     }
 
     public struct Event {
@@ -24,7 +24,7 @@ public static class S {
 
     static readonly ConcurrentDictionary<string, Event[]> Events = new();
     public static Event[] GetEvents(string path) => Events.GetOrAdd(path, x => {
-        if (!Entries.TryGetValue(path, out var entry)) return null;
+        if (!Files.TryGetValue(path, out var entry)) return null;
         var value = new List<Event>();
         string line;
         using var r = new StreamReader(entry.Open());

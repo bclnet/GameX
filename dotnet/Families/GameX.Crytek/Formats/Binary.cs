@@ -181,12 +181,12 @@ public class Binary_Dunia : ArcBinary<Binary_Dunia> {
         // get hashes
         var filelist = Path.ChangeExtension(source.BinPath, ".filelist").Replace('\\', '/');
         var hashes = source.Game.Id switch {
-            "FarCry2" => FarCry2.GetHashes(filelist),
-            "FarCry3" or "FarCry3:BD" or "FarCry4" => FarCry3.GetHashes(filelist),
-            "FarCry5" => FarCry5.GetHashes(filelist),
-            "FarCry6" => FarCry6.GetHashes(filelist),
-            "FarCryND" => FarCryNewDawn.GetHashes(filelist),
-            "FarCryP" => FarCryPrimal.GetHashes(filelist),
+            "FarCry2" => FarCry2.GetFileHashes(filelist),
+            "FarCry3" or "FarCry3:BD" or "FarCry4" => FarCry3.GetFileHashes(filelist),
+            "FarCry5" => FarCry5.GetFileHashes(filelist),
+            "FarCry6" => FarCry6.GetFileHashes(filelist),
+            "FarCryND" => FarCryNewDawn.GetFileHashes(filelist),
+            "FarCryP" => FarCryPrimal.GetFileHashes(filelist),
             _ => throw new NotImplementedException($"{source.Game.Id}")
         };
 

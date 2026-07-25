@@ -262,7 +262,7 @@ match __current__:
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
-            ForcePath = "sample:0",
+            ForcePath = "sample:1",
             Family = "Crytek",
             # Game = "FarCry", # Far Cry
             # Game = "CrysisWarhead", # Crysis Warhead

@@ -41,12 +41,12 @@ public class Lzo1xDecompressor(byte[] input, byte[] output) {
             gotoMatchdone = true;
         _match:
             while (true) {
-                if (gotoMatchdone) { gotoMatchdone = false; goto _match_done; }
+                if (gotoMatchdone) { gotoMatchdone = false; goto _matchDone; }
                 if (t >= 64) {
                     OutputPointer2 = OutputPointer - 1 - ((t >> 2) & 7) - ((uint)Read() << 3);
                     t = (t >> 5) - 1;
                     CopyBytes(Math.Max(3, t + 2), fromOutput: true);
-                    goto _match_done;
+                    goto _matchDone;
                 }
                 else if (t >= 32) {
                     t &= 31;
@@ -64,11 +64,11 @@ public class Lzo1xDecompressor(byte[] input, byte[] output) {
                 else {
                     OutputPointer2 = OutputPointer - 1 - (t >> 2) - ((uint)Read() << 2);
                     CopyBytes(2, fromOutput: true);
-                    goto _match_done;
+                    goto _matchDone;
                 }
                 if (t >= 2 * 4 - (3 - 1) && (OutputPointer - OutputPointer2) >= 4) { t += 4 - (3 - 1); CopyBytes(t, fromOutput: true); }
                 else CopyBytes(Math.Max(3, t + 2), fromOutput: true);
-            _match_done:
+            _matchDone:
                 t = (uint)(Input[InputPointer - 2] & 3);
                 if (t == 0) break;
                 CopyBytes(t);

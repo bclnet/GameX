@@ -6,6 +6,8 @@ using System.IO.Compression;
 namespace GameX.Crytek;
 
 public static class FarCryX {
+    #region CRC
+
     static class CRC32 {
         static readonly uint[] Table = [
             0x00000000u, 0x77073096u, 0xEE0E612Cu, 0x990951BAu,
@@ -164,8 +166,10 @@ public static class FarCryX {
         }
     }
 
+    #endregion
+
     static uint HashPath32(string s) => s == null || s.Length == 0 ? 0xFFFFFFFFu : CRC32.Compute(s.ToLowerInvariant());
-    
+
     static ulong HashPath64(string s) => s == null || s.Length == 0 ? 0xFFFFFFFFFFFFFFFFul : CRC64.Compute(s.ToLowerInvariant());
 
     public static Dictionary<ulong, string> HashFilelist32(ZipArchiveEntry entry) {
@@ -192,6 +196,21 @@ public static class FarCryX {
             else if (line.StartsWith(";") || (line = line.Trim()).Length <= 0) continue;
             var source = line;
             var hash = HashPath64(line);
+            if (hashes.TryGetValue(hash, out var otherSource) && otherSource != source) throw new InvalidOperationException($"hash collision ('{source}' vs '{otherSource}')");
+            hashes[hash] = source.Replace('\\', '/');
+        }
+        return hashes;
+    }
+
+    public static Dictionary<ulong, string> HashObj32(ZipArchiveEntry entry) {
+        var hashes = new Dictionary<ulong, string>();
+        using var r = new StreamReader(entry.Open());
+        while (true) {
+            var line = r.ReadLine();
+            if (line == null) break;
+            else if (line.StartsWith(";") || (line = line.Trim()).Length <= 0) continue;
+            var source = line;
+            var hash = HashPath32(source);
             if (hashes.TryGetValue(hash, out var otherSource) && otherSource != source) throw new InvalidOperationException($"hash collision ('{source}' vs '{otherSource}')");
             hashes[hash] = source.Replace('\\', '/');
         }

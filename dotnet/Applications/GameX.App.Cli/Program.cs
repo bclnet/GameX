@@ -80,7 +80,7 @@ partial class Program {
         //args = ["list", "-f", "Lith", "-u", @"game:/FEAR_1.Arch00#FEAR"];
 
         // GET
-        args = ["get", "-f", "Bethesda", "-u", "game:/Morrowind.esm#Morrowind", "-m", "*", "-o", "StreamObject", "-p", @"D:\T_\MorrowindEC"];
+        //args = ["get", "-f", "Bethesda", "-u", "game:/Morrowind.esm#Morrowind", "-m", "*", "-o", "StreamObject", "-p", @"D:\T_\MorrowindEC"];
         //args = ["get", "-f", "Bethesda", "-u", "game:/Oblivion.esm#Oblivion", "-m", "*", "-o", "StreamObject", "-p", @"D:\T_\OblivionEC"];
         //args = ["get", "-f", "Bethesda", "-u", "game:/Fallout3.esm#Fallout3", "-m", "*", "-o", "StreamObject", "-p", @"D:\T_\Fallout3EC"];
 
@@ -91,12 +91,14 @@ partial class Program {
         //args = ["get", "-f", "Bethesda", "-u", "game:/Oblivion - Meshes.bsa#Oblivion", "-m", "meshes/furniture/middleclass/middlewolfrug01.nif", "-o", "StreamObject", "-p", @"D:\T_\OblivionC"];
         //args = ["get", "-f", "Bethesda", "-u", "game:/Oblivion - Meshes.bsa#Oblivion", "-m", "*/bearskinrug01.nif", "-o", "StreamObject", "-p", @"D:\T_\OblivionC"];
         //args = ["get", "-f", "Bethesda", "-u", "game:/#Oblivion", "-m", "*.nif", "--path", @"D:\T_\Oblivion"];
+
         //args = ["get", "-f", "Rsi", "-u", "game:/Data.p4k#StarCitizen", "--path", @"D:\T_\StarCitizen"];
         //args = ["get", "-f", "Tes", "-u", "game:/Oblivion*.bsa#Oblivion", "--path", @"D:\T_\Oblivion"];
         //args = ["get", "-f", "Red", "-u", "game:/main.key#Witcher", "--path", @"D:\T_\Witcher"];
         //args = ["get", "-f", "Red", "-u", "game:/krbr.dzip#Witcher2", "--path", @"D:\T_\Witcher2"];
-
         //args = ["get", "-f", "Red", "-u", "game:/main.key#Witcher", "--path", @"~/T_/Witcher"];
+
+        args = ["get", "-f", "Crytek", "-u", "game:/patch.fat#FarCry2", "-m", "*", "-p", @"D:\T_\FarCry2C"];
 
         //args = ["list", "-f", "Arkane"];
         //args = ["get", "-f", "Arkane", "-u", "game:/*.pak#AF", "--path", @"C:\T_\AF"];

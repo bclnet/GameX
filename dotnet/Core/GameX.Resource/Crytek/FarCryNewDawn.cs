@@ -6,14 +6,14 @@ using System.Linq;
 namespace GameX.Crytek;
 
 public static class FarCryNewDawn {
-    static readonly IDictionary<string, ZipArchiveEntry> HashFiles;
+    static readonly IDictionary<string, ZipArchiveEntry> Files;
     static FarCryNewDawn() {
         var assembly = typeof(FarCryNewDawn).Assembly;
         var s = assembly.GetManifestResourceStream("GameX.Resource.Crytek.FarCryNewDawn.zip");
         var arc = new ZipArchive(s, ZipArchiveMode.Read);
-        HashFiles = arc.Entries.ToDictionary(s => s.FullName);
+        Files = arc.Entries.ToDictionary(s => s.FullName);
     }
 
-    static readonly ConcurrentDictionary<string, Dictionary<ulong, string>> Hashes = new();
-    public static Dictionary<ulong, string> GetHashes(string path) => Hashes.GetOrAdd(path, s => HashFiles.TryGetValue(s, out var z) ? FarCryX.HashFilelist64(z) : []);
+    static readonly ConcurrentDictionary<string, Dictionary<ulong, string>> FileHashes = new();
+    public static Dictionary<ulong, string> GetFileHashes(string path) => FileHashes.GetOrAdd(path, s => Files.TryGetValue(s, out var z) ? FarCryX.HashFilelist64(z) : []);
 }

@@ -983,7 +983,7 @@ public class ArcBinary<Self> : ArcBinary where Self : ArcBinary, new() {
             AssetFactoryFunc = parent.AssetFactoryFunc;
             Parent = parent;
             File = file;
-            Open();
+            //Open();
         }
 
         public async override void Opening() { R = new BinaryReader(await Parent.ReadData(File)); Pool = new StaticPool<BinaryReader>(R); base.Opening(); }

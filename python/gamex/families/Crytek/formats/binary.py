@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from openstk.core import log, BinaryReader, StreamIterators, ForwardStream
 from gamex import FileSource, ArcBinaryT, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
 from gamex.families.Uncore._lib.compression import ZipFileX, ZipKind
+from gamex.families.Crytek.formats.dunia.binary import Binary_Spk
 from Crypto.Cipher import AES
 
 # types
@@ -153,7 +154,6 @@ class Binary_Dunia(ArcBinaryT):
         version = Binary_Dunia.Version(fileVersion, platform, compressionVersion)
         if version not in Binary_Dunia.KnownVersions: raise Exception('unknown version/platform/CV combination')
         if unknown0C != 0 or unknown10 != 0: raise Exception('Not Implemented')
-
         # read files
         filelist = source.binPath.replace('.fat', '.filelist').replace('\\', '/')
         match source.game.id:
@@ -176,79 +176,86 @@ class Binary_Dunia(ArcBinaryT):
                 from ....resources.Crytek import FarCryPrimal
                 hashes = FarCryPrimal.getFileHashes(filelist)
             case _: raise Exception(f'Not Implemented {source.game.id}')
-
         # read files
         source.binPath = source.binPath.replace('.fat', '.dat')
         entryCount = r.readInt32()
         if entryCount < 0: raise Exception()
         source.files = files = [FileSource] * entryCount; hash = 0
+        def post(f: FileSource):
+            if f.fileSize == 0: f.fileSize = f.packedSize
+            if f.path.endswith('.spk') or f.path.endswith('.sbao'): f.arc = Binary_Spk.SubArchive(source, f, f.path)
         match fileVersion:
             case 1:  # NOTUSED
                 if indexIsEncrypted: r = decryptIndex(r.readBytes(entryCount * 24))
                 for i in range(len(files)):
                     a = r.readUInt32(); _ = r.readUInt32(); c = r.readUInt32(); d = r.readUInt32(); e = r.readUInt32(); _2 = r.readUInt32()
                     hash = a
-                    files[i] = FileSource(
+                    f = files[i] = FileSource(
                         hash = hash,
                         path = hashes.get(hash) or str(hash),
                         fileSize = (e >> 2) & 0x3FFFFFFF,
                         compressed = (e >> 0) & 0x3,
                         offset = (d << 2) | ((c >> 30) & 0x3),
                         packedSize = (c >> 0) & 0x3FFFFFFF)
+                    post(f)
             case 6 | 8: # NOTUSED
                 if indexIsEncrypted: r = decryptIndex(r.readBytes(entryCount * 20))
                 for i in range(len(files)):
                     a = r.readUInt64(); c = r.readUInt32(); d = r.readUInt32(); e = r.readUInt32()
                     hash = a
-                    files[i] = FileSource(
+                    f = files[i] = FileSource(
                         hash = hash,
                         path = hashes.get(hash) or str(hash),
                         fileSize = (c >> 2) & 0x3FFFFFFF,
                         compressed = (c >> 0) & 0x3,
                         offset = (d << 2) | ((e >> 30) & 0x3),
                         packedSize = (e >> 0) & 0x3FFFFFFF)
+                    post(f)
             case 7: # NOTUSED
                 if indexIsEncrypted: r = decryptIndex(r.readBytes(entryCount * 24))
                 for i in range(len(files)):
                     a = r.readUInt32(); b = r.readUInt32(); c = r.readUInt32(); _ = r.readUInt32(); e = r.readUInt32(); f = r.readUInt32()
                     hash = (a << 32) | b
-                    files[i] = FileSource(
+                    f = files[i] = FileSource(
                         hash = hash,
                         path = hashes.get(hash) or str(hash),
                         fileSize = (c >> 2) & 0x3FFFFFFF,
                         compressed = (c >> 0) & 0x3,
                         offset = (f << 2) | ((e >> 30) & 0x3),
                         packedSize = (e >> 0) & 0x3FFFFFFF)
+                    post(f)
             case 5:
                 if indexIsEncrypted: r = decryptIndex(r.readBytes(entryCount * 16))
                 for i in range(len(files)):
                     a = r.readUInt32(); b = r.readUInt32(); c = r.readUInt32(); d = r.readUInt32()
                     hash = a
-                    files[i] = FileSource(
+                    f = files[i] = FileSource(
                         hash = hash,
                         path = hashes.get(hash) or str(hash),
                         fileSize = (b >> 2) & 0x3FFFFFFF,
                         compressed = (b >> 0) & 0x3,
                         packedSize = (c >> 0) & 0x3FFFFFFF,
                         offset = ((c >> 30) & 0x3) | d << 2)
+                    post(f)
             case 9:
                 if indexIsEncrypted: r = decryptIndex(r.readBytes(entryCount * 20))
                 for i in range(len(files)):
                     a = r.readUInt32(); b = r.readUInt32(); c = r.readUInt32(); d = r.readUInt32(); e = r.readUInt32()
                     hash = (a << 32) | b
-                    files[i] = FileSource(
+                    f = files[i] = FileSource(
                         hash = hash,
                         path = hashes.get(hash) or str(hash),
                         fileSize = (c >> 2) & 0x3FFFFFFF,
                         compressed = (c >> 0) & 0x3,
                         offset = (d << 2) | ((e >> 30) & 0x3),
                         packedSize = (e >> 0) & 0x3FFFFFFF)
+                    post(f)
             case 10:
                 if indexIsEncrypted: r = decryptIndex(r.readBytes(entryCount * 20))
                 for i in range(len(files)):
                     a = r.readUInt32(); b = r.readUInt32(); c = r.readUInt32(); d = r.readUInt32(); e = r.readUInt32()
                     hash = (a << 32) | b
-                    files[i] = FileSource(
+                    f = files[i] = FileSource(
                         hash = hash,
                         path = hashes.get(hash) or str(hash),
                         fileSize = (c >> 2) & 0x3FFFFFFF,
@@ -256,19 +263,21 @@ class Binary_Dunia(ArcBinaryT):
                         compressed = (c >> 1) & 0x1,
                         offset = (d << 3) | (e >> 29),
                         packedSize = (e >> 0) & 0x1FFFFFFF)
+                    post(f)
             case 11:
                 if indexIsEncrypted: r = decryptIndex(r.readBytes(entryCount * 20))
                 for i in range(len(files)):
                     a = r.readUInt32(); b = r.readUInt32(); c = r.readUInt32(); d = r.readUInt32(); e = r.readUInt32()
                     hash = (a << 32) | b
-                    files[i] = FileSource(
+                    f = files[i] = FileSource(
                         hash = hash,
                         path = hashes.get(hash) or str(hash),
                         fileSize = (c >> 2) & 0x3FFFFFFF,
                         flags = 1 if (c >> 0) & 0x1 != 0 else 0,
                         compressed = (c >> 1) & 0x1,
                         offset = (d << 7) | ((e >> 25) & 0x70),
-                        packedSize = (e >> 0) & 0x1FFFFFFF),
+                        packedSize = (e >> 0) & 0x1FFFFFFF)
+                    post(f)
             case _: raise Exception(f'fileVersion: out of range {fileVersion}')
 
         # read localization

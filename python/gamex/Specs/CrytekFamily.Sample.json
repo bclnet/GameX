@@ -22,7 +22,19 @@
         "path": "common.fat:ui/textures/avatars/avatar_andre.xbt"
       },
       {
+        "path": "common.fat/graphics/editor/blueteam.xbg"
+      },
+      {
+        "path": "common.fat:soundbinary/004b1789.spk"
+      },
+      {
+        "path": "patch.fat:generated/entitylibrarypatchoverride.fcb"
+      },
+      {
         "path": "patch.fat:worlds/tmpla/generated/entitylibrary.fcb"
+      },
+      {
+        "path": "_maps/factory.fc2map"
       },
       {
         "path": "common.fat:config/alwaysloaded.xml"

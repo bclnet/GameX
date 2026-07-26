@@ -15,7 +15,7 @@ public static class FarCry2 {
     }
 
     static readonly ConcurrentDictionary<string, Dictionary<ulong, string>> FileHashes = new();
-    static readonly ConcurrentDictionary<string, Dictionary<ulong, string>> ObjHashes = new();
+    static readonly ConcurrentDictionary<string, Definition> ObjDefs = new();
     public static Dictionary<ulong, string> GetFileHashes(string path) => FileHashes.GetOrAdd(path, s => Files.TryGetValue(s, out var z) ? FarCryX.HashFilelist32(z) : []);
-    public static Dictionary<ulong, string> GetObjHashes(string path) => ObjHashes.GetOrAdd(path, s => Files.TryGetValue(s, out var z) ? FarCryX.HashObj32(z) : []);
+    public static Definition GetObjDef(string path) => ObjDefs.GetOrAdd(path, s => Files.TryGetValue(s, out var z) ? FarCryX.HashObj32(z) : null);
 }

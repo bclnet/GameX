@@ -1,4 +1,7 @@
 import os
+from collections import deque
+from enum import Enum
+import xml.etree.ElementTree as ET
 
 #region CRC
 
@@ -148,9 +151,9 @@ def compute64(value: str) -> int:
 
 #endregion
 
-def hashPath32(s: str) -> int: return 0xFFFFFFFF if not s or len(s) == 0 else compute32(s.lower())
+def hash32(s: str) -> int: return 0xFFFFFFFF if not s or len(s) == 0 else compute32(s.lower())
     
-def hashPath64(s: str) -> int: return 0xFFFFFFFFFFFFFFFF if not s or len(s) == 0 else compute64(s.lower())
+def hash64(s: str) -> int: return 0xFFFFFFFFFFFFFFFF if not s or len(s) == 0 else compute64(s.lower())
 
 def hashFilelist32(arc, entry) -> dict[int, str]:
     hashes = {}
@@ -160,7 +163,7 @@ def hashFilelist32(arc, entry) -> dict[int, str]:
             if not line: break
             elif line.startswith(';') or len(line := line.strip()) <= 0: continue
             source = line
-            hash = hashPath32(source)
+            hash = hash32(source)
             if hash in hashes and otherSource != source: raise Exception(f'hash collision ("{source}" vs "{otherSource}")')
             hashes[hash] = source.replace('\\', '/')
     return hashes
@@ -173,20 +176,139 @@ def hashFilelist64(arc, entry) -> dict[int, str]:
             if not line: break
             elif line.startswith(';') or len(line := line.strip()) <= 0: continue
             source = line
-            hash = hashPath64(source)
+            hash = hash64(source)
             if hash in hashes and otherSource != source: raise Exception(f'hash collision ("{source}" vs "{otherSource}")')
             hashes[hash] = source.replace('\\', '/')
     return hashes
 
-def hashObj32(arc, entry) -> dict[int, str]:
-    hashes = {}
+def hashObj32(arc, entry) -> 'Definition':
     with arc.open(entry) as r:
-        while True:
-            line = r.readline().decode('utf-8')
-            if not line: break
-            elif line.startswith(';') or len(line := line.strip()) <= 0: continue
-            source = line
-            hash = hashPath32(source)
-            if hash in hashes and otherSource != source: raise Exception(f'hash collision ("{source}" vs "{otherSource}")')
-            hashes[hash] = source.replace('\\', '/')
-    return hashes
+        doc: ET.ElementTree = ET.parse(r)
+        nav: ET.Element = doc.getroot()
+        return Definition(nav)
+
+#region Definition
+
+class Definition:
+    class MemberType(Enum):
+        BinHex = 0
+        String = 1
+        Enum = 2
+        Bool = 3
+        Float = 4
+        Int32 = 5
+        UInt32 = 6
+        Int64 = 7
+        UInt64 = 8
+        Vector2 = 9
+        Vector3 = 10
+        Vector4 = 11
+        Hash = 12
+        UInt32Array = 13
+        HashArray = 14
+        Rml = 15
+
+    class ValueType(Enum):
+        BinHex = 0
+        String = 1
+        Bool = 2
+        Float = 3
+        Int32 = 4
+        UInt32 = 5
+        Int64 = 6
+        UInt64 = 7
+        Vector2 = 8
+        Vector3 = 9
+        Vector4 = 10
+        Hash = 11
+        Rml = 12
+
+    class Class:
+        def __init__(self, master: 'Definition', parent: 'Class'):
+            self.master: Definition = master
+            self.parent: Class = parent
+            self.name: str = None
+            self.super: Class = None
+            self.superName: str = None
+            self.members: dict[int, Member] = {}
+            self.children: dict[int, Class] = {}
+
+        def getClassDefinition(self, hash: int) -> 'Class':
+            if hash in self.children: return self.children[hash]
+            current = self.super
+            while current:
+                defx = current.getClassDefinition(hash)
+                if defx: return defx
+                current = current.super
+            return self.master.getClassDefinition(hash)
+
+        def getMemberDefinition(self, hash: int) -> 'Member':
+            if hash in self.members: return self.members[hash]
+            current = self.super
+            while current:
+                member = current.getMemberDefinition(hash)
+                if member: return member
+                current = current.super
+            return None
+
+    class Member:
+        def __init__(self, name: str, type: 'MemberType'):
+            self.name = name
+            self.type = type
+        def deserialize(value: bytes) -> str: raise Exception('Not Implemented')
+        def serialize(value: str) -> bytes: raise Exception('Not Implemented')
+
+    def __init__(self, nav: ET.Element):
+        self.emptyClass: Class = Definition.Class(self, None)
+        classes = nav.findall('class')
+        self.classes: dict[int, Class] = self.loadClasses(classes, None)
+        self.resolveSupers()
+
+    def getClassDefinition(self, type: int) -> Class: return self.classes.get(type) or self.emptyClass
+
+    @staticmethod
+    def loadNameAndHash(node) -> (str, int):
+        _name = node.get('name')
+        _hash = node.get('hash')
+        if not _name and not _hash: raise Exception('Format')
+        name = None if not _name else _name
+        hash = hash32(name) if name else int(_hash, 16)
+        return (name, hash)
+
+    def loadClasses(self, nodes: object, parent: Class) -> dict[int, Class]:
+        defs = {}
+        for node in nodes:
+            classDef = Definition.Class(self, parent)
+            (className, classHash) = self.loadNameAndHash(node)
+            classDef.name = className
+            classParent = node.get('extends')
+            classDef.superName = None if not classParent else classParent
+            members = node.findall('member')
+            for member in members:
+                (memberName, memberHash) = self.loadNameAndHash(member)
+                type = member.text
+                classDef.members[memberHash] = Definition.Member(name=memberName, type=Definition.MemberType[type])
+            children = node.findall('class')
+            classDef.children = self.loadClasses(children, classDef)
+            defs[classHash] = classDef
+        return defs
+
+    def resolveSupers(self) -> None:
+        queue = deque()
+        processed = []
+        for v in self.classes.values(): queue.append(v)
+        while len(queue) > 0:
+            defx = queue.popleft()
+            processed.append(defx)
+            if defx.superName:
+                superHash = hash32(defx.superName)
+                current = defx.parent
+                while current:
+                    if superHash in current.children: defx.super = current.children[superHash]; break
+                    current = current.parent
+                if not defx.super and superHash in self.classes: defx.super = self.classes[superHash]
+            for v in defx.children.values():
+                if v in queue or v in processed: continue
+                queue.append(v)
+
+#endregion

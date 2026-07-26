@@ -48,8 +48,12 @@
       "date": "Oct 22, 2008",
       "dev": "Ubisoft",
       "engine": "Dunia:1",
-      "arcExt": ".fat",
-      "arc": "game:/**/*.fat",
+      "arcExt": [
+        ".dat",
+        ".fat",
+        ".spk"
+      ],
+      "arcx": "game:/**/*.fat",
       "files": {
         "key": [
           "Steam:19900",

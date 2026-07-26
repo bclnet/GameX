@@ -384,6 +384,11 @@ class ArcBinaryT(ArcBinary):
         return cls.current
 
     class SubArchive(BinaryArchive):
+        current  = None
+        def __new__(cls, *args):
+            if cls.current is None: cls.current = super().__new__(cls)
+            return cls.current
+
         def __init__(self, parent: BinaryArchive, file: FileSource, path: str, tag: object = None, source: BinaryArchive = None):
             super().__init__(parent, BinaryState(parent.vfx, parent.game, parent.edition, path, tag), source or self.current)
             self.assetFactoryFunc: callable = parent.assetFactoryFunc

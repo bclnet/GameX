@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Security;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -25,7 +27,7 @@ public static class DesSer {
             }
         };
     }
-    readonly static JsonSerializerOptions Options = new() {
+    static readonly JsonSerializerOptions Options = new() {
         WriteIndented = true,
         IncludeFields = true,
         IndentSize = 2,
@@ -37,6 +39,7 @@ public static class DesSer {
             Modifiers = { AlphabetizeProperties() }
         }
     };
+    internal static readonly Dictionary<Type, Action<JsonPropertyInfo>> Rules = [];
     static DesSer() {
         Add(new Color3JsonConverter(),
             new ByteColor3JsonConverter(),
@@ -53,6 +56,7 @@ public static class DesSer {
             new QuaternionJsonConverter());
     }
 
+    public static void Add(Dictionary<Type, Action<JsonPropertyInfo>> rules) { foreach (var s in rules) Rules[s.Key] = s.Value; }
     public static void Add(params JsonConverter[] converters) { foreach (var s in converters) Options.Converters.Add(s); }
 
     public static string Serialize<T>(this T source) => JsonSerializer.Serialize(source, Options);
@@ -76,7 +80,8 @@ public class TypeInfoResolver : DefaultJsonTypeInfoResolver {
         var typeInfo = base.GetTypeInfo(type, options);
         if (typeInfo.Kind == JsonTypeInfoKind.Object)
             foreach (var i in typeInfo.Properties)
-                if (i.Name == "baseStream") i.ShouldSerialize = (instance, value) => false;
+                if (DesSer.Rules.TryGetValue(i.PropertyType, out var z)) z(i);
+                else if (i.Name == "baseStream") i.ShouldSerialize = (instance, value) => false;
         return typeInfo;
     }
 }

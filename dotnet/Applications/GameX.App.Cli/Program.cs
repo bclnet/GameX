@@ -98,7 +98,10 @@ partial class Program {
         //args = ["get", "-f", "Red", "-u", "game:/krbr.dzip#Witcher2", "--path", @"D:\T_\Witcher2"];
         //args = ["get", "-f", "Red", "-u", "game:/main.key#Witcher", "--path", @"~/T_/Witcher"];
 
-        args = ["get", "-f", "Crytek", "-u", "game:/patch.fat#FarCry2", "-m", "*", "-p", @"D:\T_\FarCry2C"];
+        args = ["get", "-f", "Crytek", "-u", "game:/common.fat#FarCry2", "-m", "*", "-p", @"D:\T_\FarCry2C"];
+        //args = ["get", "-f", "Crytek", "-u", "game:/patch.fat#FarCry2", "-m", "*", "-p", @"D:\T_\FarCry2C"];
+        //args = ["get", "-f", "Crytek", "-u", "game:/sound.fat#FarCry2", "-m", "*", "-p", @"D:\T_\FarCry2C"];
+        //args = ["get", "-f", "Crytek", "-u", "game:/worlds/worlds.fat#FarCry2", "-m", "*", "-p", @"D:\T_\FarCry2C"];
 
         //args = ["list", "-f", "Arkane"];
         //args = ["get", "-f", "Arkane", "-u", "game:/*.pak#AF", "--path", @"C:\T_\AF"];

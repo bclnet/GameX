@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
+using System.Xml.XPath;
 
 namespace GameX.Crytek;
 
@@ -168,9 +170,9 @@ public static class FarCryX {
 
     #endregion
 
-    static uint HashPath32(string s) => s == null || s.Length == 0 ? 0xFFFFFFFFu : CRC32.Compute(s.ToLowerInvariant());
+    internal static uint Hash32(string s) => s == null || s.Length == 0 ? 0xFFFFFFFFu : CRC32.Compute(s.ToLowerInvariant());
 
-    static ulong HashPath64(string s) => s == null || s.Length == 0 ? 0xFFFFFFFFFFFFFFFFul : CRC64.Compute(s.ToLowerInvariant());
+    internal static ulong Hash64(string s) => s == null || s.Length == 0 ? 0xFFFFFFFFFFFFFFFFul : CRC64.Compute(s.ToLowerInvariant());
 
     public static Dictionary<ulong, string> HashFilelist32(ZipArchiveEntry entry) {
         var hashes = new Dictionary<ulong, string>();
@@ -180,7 +182,7 @@ public static class FarCryX {
             if (line == null) break;
             else if (line.StartsWith(";") || (line = line.Trim()).Length <= 0) continue;
             var source = line;
-            var hash = HashPath32(source);
+            var hash = Hash32(source);
             if (hashes.TryGetValue(hash, out var otherSource) && otherSource != source) throw new InvalidOperationException($"hash collision ('{source}' vs '{otherSource}')");
             hashes[hash] = source.Replace('\\', '/');
         }
@@ -195,25 +197,169 @@ public static class FarCryX {
             if (line == null) break;
             else if (line.StartsWith(";") || (line = line.Trim()).Length <= 0) continue;
             var source = line;
-            var hash = HashPath64(line);
+            var hash = Hash64(line);
             if (hashes.TryGetValue(hash, out var otherSource) && otherSource != source) throw new InvalidOperationException($"hash collision ('{source}' vs '{otherSource}')");
             hashes[hash] = source.Replace('\\', '/');
         }
         return hashes;
     }
 
-    public static Dictionary<ulong, string> HashObj32(ZipArchiveEntry entry) {
-        var hashes = new Dictionary<ulong, string>();
+    public static Definition HashObj32(ZipArchiveEntry entry) {
         using var r = new StreamReader(entry.Open());
-        while (true) {
-            var line = r.ReadLine();
-            if (line == null) break;
-            else if (line.StartsWith(";") || (line = line.Trim()).Length <= 0) continue;
-            var source = line;
-            var hash = HashPath32(source);
-            if (hashes.TryGetValue(hash, out var otherSource) && otherSource != source) throw new InvalidOperationException($"hash collision ('{source}' vs '{otherSource}')");
-            hashes[hash] = source.Replace('\\', '/');
-        }
-        return hashes;
+        var doc = new XPathDocument(r);
+        var nav = doc.CreateNavigator();
+        return new Definition(nav);
     }
 }
+
+#region Definition
+
+public class Definition {
+    internal enum MemberType {
+        BinHex,
+        String,
+        Enum,
+        Bool,
+        Float,
+        Int32,
+        UInt32,
+        Int64,
+        UInt64,
+        Vector2,
+        Vector3,
+        Vector4,
+        Hash,
+        UInt32Array,
+        HashArray,
+        Rml,
+    }
+
+    internal enum ValueType {
+        BinHex,
+        String,
+        Bool,
+        Float,
+        Int32,
+        UInt32,
+        Int64,
+        UInt64,
+        Vector2,
+        Vector3,
+        Vector4,
+        Hash,
+        Rml,
+    }
+
+    class Class(Definition master, Class parent) {
+        public Definition Master = master;
+        public Class Parent = parent;
+        public string Name;
+        public Class Super;
+        public string SuperName;
+        public Dictionary<uint, Member> Members = [];
+        public Dictionary<uint, Class> Children = [];
+
+        public Class GetClassDefinition(uint hash) {
+            if (Children.TryGetValue(hash, out var z)) return z;
+            var current = Super;
+            while (current != null) {
+                var def = current.GetClassDefinition(hash);
+                if (def != null) return def;
+                current = current.Super;
+            }
+            return Master.GetClassDefinition(hash);
+        }
+
+        public Member GetMemberDefinition(uint hash) {
+            if (Members.TryGetValue(hash, out var z)) return z;
+            var current = Super;
+            while (current != null) {
+                var member = current.GetMemberDefinition(hash);
+                if (member != null) return member;
+                current = current.Super;
+            }
+            return null;
+        }
+    }
+
+    class Member {
+        public string Name;
+        public MemberType Type;
+        public string Deserialize(byte[] value) => throw new NotImplementedException();
+        public byte[] Serialize(string value) => throw new NotImplementedException();
+    }
+
+    readonly Dictionary<uint, Class> Classes;
+    readonly Class EmptyClass;
+
+    public Definition(XPathNavigator nav) {
+        EmptyClass = new Class(this, null);
+        var classes = nav.Select("/classes/class");
+        Classes = LoadClasses(classes, null);
+        ResolveSupers();
+    }
+
+    Class GetClassDefinition(uint type) => Classes.TryGetValue(type, out var z) ? z : EmptyClass;
+
+    static void LoadNameAndHash(XPathNavigator node, out string name, out uint hash) {
+        var _name = node.GetAttribute("name", "");
+        var _hash = node.GetAttribute("hash", "");
+        if (string.IsNullOrWhiteSpace(_name) && string.IsNullOrWhiteSpace(_hash)) throw new FormatException();
+        name = string.IsNullOrWhiteSpace(_name) ? null : _name;
+        hash = name != null ? FarCryX.Hash32(name) : uint.Parse(_hash, NumberStyles.AllowHexSpecifier);
+    }
+
+    //static void LoadTypeAndHash(XPathNavigator node, out string type, out uint hash) {
+    //    var _type = node.GetAttribute("type", "");
+    //    var _hash = node.GetAttribute("hash", "");
+    //    if (string.IsNullOrWhiteSpace(_type) && string.IsNullOrWhiteSpace(_hash)) throw new FormatException();
+    //    type = string.IsNullOrWhiteSpace(_type) ? null : _type;
+    //    hash = type != null ? FarCryX.Hash32(type) : uint.Parse(_hash, NumberStyles.AllowHexSpecifier);
+    //}
+
+    Dictionary<uint, Class> LoadClasses(XPathNodeIterator nodes, Class parent) {
+        var defs = new Dictionary<uint, Class>();
+        while (nodes.MoveNext()) {
+            var classDef = new Class(this, parent);
+            LoadNameAndHash(nodes.Current, out var className, out var classHash);
+            classDef.Name = className;
+            var classParent = nodes.Current.GetAttribute("extends", "");
+            classDef.SuperName = string.IsNullOrWhiteSpace(classParent) ? null : classParent;
+            var members = nodes.Current.Select("member");
+            while (members.MoveNext()) {
+                LoadNameAndHash(members.Current, out var memberName, out var memberHash);
+                var type = members.Current.Value;
+                classDef.Members.Add(memberHash, new Member { Name = memberName, Type = Enum.Parse<MemberType>(type) });
+            }
+            var children = nodes.Current.Select("class");
+            classDef.Children = LoadClasses(children, classDef);
+            defs.Add(classHash, classDef);
+        }
+        return defs;
+    }
+
+    void ResolveSupers() {
+        var queue = new Queue<Class>();
+        var processed = new List<Class>();
+        foreach (var v in Classes.Values) queue.Enqueue(v);
+        while (queue.Count > 0) {
+            var def = queue.Dequeue();
+            processed.Add(def);
+            if (!string.IsNullOrWhiteSpace(def.SuperName)) {
+                var superHash = FarCryX.Hash32(def.SuperName);
+                var current = def.Parent;
+                while (current != null) {
+                    if (current.Children.TryGetValue(superHash, out var y)) { def.Super = y; break; }
+                    current = current.Parent;
+                }
+                if (def.Super == null && Classes.TryGetValue(superHash, out var z)) def.Super = z;
+            }
+            foreach (var v in def.Children.Values) {
+                if (queue.Contains(v) || processed.Contains(v)) continue;
+                queue.Enqueue(v);
+            }
+        }
+    }
+}
+
+#endregion

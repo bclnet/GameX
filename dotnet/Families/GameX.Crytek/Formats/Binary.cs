@@ -1,11 +1,12 @@
 ﻿using Compression;
 using GameX.Crytek.Formats.Core;
 using GameX.Crytek.Formats.Core.Chunks;
+using GameX.Crytek.Formats.Dunia;
 using ICSharpCode.SharpZipLib.Zip.Compression;
 using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 using K4os.Compression.LZ4;
 using OpenStack;
-using SharpCompress.Common;
+using Org.BouncyCastle.Asn1.Cms;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -194,82 +195,86 @@ public class Binary_Dunia : ArcBinary<Binary_Dunia> {
         source.BinPath = Path.ChangeExtension(source.BinPath, ".dat");
         var entryCount = r.ReadUInt32();
         FileSource[] files; source.Files = files = new FileSource[entryCount]; ulong hash;
+        void post(FileSource f) {
+            if (f.FileSize == 0) f.FileSize = f.PackedSize;
+            if (f.Path.EndsWith(".spk", StringComparison.OrdinalIgnoreCase) || f.Path.EndsWith(".sbao", StringComparison.OrdinalIgnoreCase)) f.Arc = new Binary_Spk.SubArchive(source, f, f.Path);
+        }
         switch (fileVersion) {
             case 1: // NOTUSED
                 if (indexIsEncrypted) r = DecryptIndex(r.ReadBytes(entryCount * 24));
                 for (var i = 0; i < files.Length; i++) {
                     uint a = r.ReadUInt32(), _ = r.ReadUInt32(), c = r.ReadUInt32(), d = r.ReadUInt32(), e = r.ReadUInt32(), _2 = r.ReadUInt32();
-                    files[i] = new() {
+                    post(files[i] = new() {
                         Hash = hash = a,
                         Path = hashes.TryGetValue(hash, out var z) ? z : hash.ToString(),
                         FileSize = (int)((e >> 2) & 0x3FFFFFFFu),
                         Compressed = (byte)((e >> 0) & 0x3u),
                         Offset = (long)(((ulong)d << 2) | ((c >> 30) & 0x3u)),
                         PackedSize = (int)((c >> 0) & 0x3FFFFFFFu),
-                    };
+                    });
                 }
                 break;
             case 6 or 8: // NOTUSED
                 if (indexIsEncrypted) r = DecryptIndex(r.ReadBytes(entryCount * 20));
                 for (var i = 0; i < files.Length; i++) {
                     ulong a = r.ReadUInt64(); uint c = r.ReadUInt32(), d = r.ReadUInt32(), e = r.ReadUInt32();
-                    files[i] = new() {
+                    post(files[i] = new() {
                         Hash = hash = a,
                         Path = hashes.TryGetValue(hash, out var z) ? z : hash.ToString(),
                         FileSize = (int)((c >> 2) & 0x3FFFFFFFu),
                         Compressed = (byte)((c >> 0) & 0x3u),
                         Offset = (long)((ulong)(d << 2) | ((e >> 30) & 0x3u)),
                         PackedSize = (int)((e >> 0) & 0x3FFFFFFFul),
-                    };
+                    });
                 }
                 break;
             case 7: // NOTUSED
                 if (indexIsEncrypted) r = DecryptIndex(r.ReadBytes(entryCount * 24));
                 for (var i = 0; i < files.Length; i++) {
                     uint a = r.ReadUInt32(), b = r.ReadUInt32(), c = r.ReadUInt32(), _ = r.ReadUInt32(), e = r.ReadUInt32(), f = r.ReadUInt32();
-                    files[i] = new() {
+                    post(files[i] = new() {
                         Hash = hash = ((ulong)a << 32) | b,
                         Path = hashes.TryGetValue(hash, out var z) ? z : hash.ToString(),
                         FileSize = (int)((c >> 2) & 0x3FFFFFFFu),
                         Compressed = (byte)((c >> 0) & 0x3u),
                         Offset = (long)((ulong)(f << 2) | ((e >> 30) & 0x3u)),
                         PackedSize = (int)((e >> 0) & 0x3FFFFFFFu),
-                    };
+                    });
                 }
                 break;
             case 5:
                 if (indexIsEncrypted) r = DecryptIndex(r.ReadBytes(entryCount * 16));
                 for (var i = 0; i < files.Length; i++) {
                     uint a = r.ReadUInt32(), b = r.ReadUInt32(), c = r.ReadUInt32(), d = r.ReadUInt32();
-                    files[i] = new() {
+                    post(files[i] = new() {
                         Hash = hash = a,
                         Path = hashes.TryGetValue(hash, out var z) ? z : hash.ToString(),
                         FileSize = (int)((b >> 2) & 0x3FFFFFFFu),
                         Compressed = (byte)((b >> 0) & 0x3u),
                         PackedSize = (int)((c >> 0) & 0x3FFFFFFFu),
                         Offset = (long)(((c >> 30) & 0x3u) | (ulong)d << 2),
-                    };
+                    });
                 }
                 break;
             case 9:
                 if (indexIsEncrypted) r = DecryptIndex(r.ReadBytes(entryCount * 20));
                 for (var i = 0; i < files.Length; i++) {
                     uint a = r.ReadUInt32(), b = r.ReadUInt32(), c = r.ReadUInt32(), d = r.ReadUInt32(), e = r.ReadUInt32();
-                    files[i] = new() {
+                    post(files[i] = new() {
                         Hash = hash = ((ulong)a << 32) | b,
                         Path = hashes.TryGetValue(hash, out var z) ? z : hash.ToString(),
                         FileSize = (int)((c >> 2) & 0x3FFFFFFFu),
                         Compressed = (byte)((c >> 0) & 0x3u),
                         Offset = (long)((ulong)(d << 2) | ((e >> 30) & 0x3u)),
                         PackedSize = (int)((e >> 0) & 0x3FFFFFFFul),
-                    };
+                    });
                 }
                 break;
             case 10:
                 if (indexIsEncrypted) r = DecryptIndex(r.ReadBytes(entryCount * 20));
                 for (var i = 0; i < files.Length; i++) {
                     uint a = r.ReadUInt32(), b = r.ReadUInt32(), c = r.ReadUInt32(), d = r.ReadUInt32(), e = r.ReadUInt32();
-                    files[i] = new() {
+                    post(files[i] = new() {
                         Hash = hash = ((ulong)a << 32) | b,
                         Path = hashes.TryGetValue(hash, out var z) ? z : hash.ToString(),
                         FileSize = (int)((c >> 2) & 0x3FFFFFFFu),
@@ -277,14 +282,14 @@ public class Binary_Dunia : ArcBinary<Binary_Dunia> {
                         Compressed = (byte)((c >> 1) & 0x1u),
                         Offset = (long)(((ulong)d << 3) | (e >> 29)),
                         PackedSize = (int)((e >> 0) & 0x1FFFFFFFu),
-                    };
+                    });
                 }
                 break;
             case 11:
                 if (indexIsEncrypted) r = DecryptIndex(r.ReadBytes(entryCount * 20));
                 for (var i = 0; i < files.Length; i++) {
                     uint a = r.ReadUInt32(), b = r.ReadUInt32(), c = r.ReadUInt32(), d = r.ReadUInt32(), e = r.ReadUInt32();
-                    files[i] = new() {
+                    post(files[i] = new() {
                         Hash = hash = ((ulong)a << 32) | b,
                         Path = hashes.TryGetValue(hash, out var z) ? z : hash.ToString(),
                         FileSize = (int)((c >> 2) & 0x3FFFFFFFu),
@@ -292,7 +297,7 @@ public class Binary_Dunia : ArcBinary<Binary_Dunia> {
                         Compressed = (byte)((c >> 1) & 0x1u),
                         Offset = (long)(((ulong)d << 7) | ((e >> 25) & 0x70)),
                         PackedSize = (int)((e >> 0) & 0x1FFFFFFFu),
-                    };
+                    });
                 }
                 break;
             default: throw new ArgumentOutOfRangeException("fileVersion", fileVersion, null);
@@ -666,15 +671,15 @@ public partial class Binary_CryFile {
     /// <summary>
     /// File extensions processed by CryEngine
     /// </summary>
-    static HashSet<string> _validExtensions = new HashSet<string>
-    {
+    static readonly HashSet<string> _validExtensions =
+    [
         ".soc",
         ".cgf",
         ".cga",
         ".chr",
         ".skin",
         ".anim"
-    };
+    ];
 
     public Binary_CryFile(string fileName) {
         // Validate file extension - handles .cgam / skinm
@@ -736,11 +741,11 @@ public partial class Binary_CryFile {
 
     public async Task LoadAsync(Archive arc, IEnumerable<(string, Stream)> files, Func<Archive, string, string, string, string> getMaterialPath, Func<string, Task<(string, Stream)>> getFileAsync) {
         try {
-            Models = new List<Model> { };
+            Models = [];
             foreach (var file in files) {
                 // Each file (.cga and .cgam if applicable) will have its own RootNode.  This can cause problems.  .cga files with a .cgam files won't have geometry for the one root node.
                 var model = new Model(file);
-                if (RootNode == null) RootNode = model.RootNode; // This makes the assumption that we read the .cga file before the .cgam file.
+                RootNode ??= model.RootNode; // This makes the assumption that we read the .cga file before the .cgam file.
                 Bones ??= model.Bones;
                 Models.Add(model);
             }

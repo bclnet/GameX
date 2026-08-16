@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
 
-namespace GameX.Crytek.Formats.Dunia;
+namespace GameX.Crytek.Formats.Dunia.Classes;
 
 #region Pre
 // Base classes referenced via 'extends' that are not themselves defined in the XML
@@ -42,68 +42,9 @@ public class INetEvent { }
 public class IOperation { }
 public class IPlayer { }
 
-/// <summary>
-/// x
-/// </summary>
-
-public class IAuthorizationService : IGameModeService { }
-public class ICountersService : IGameModeService { }
-public class IGameModeService : CNomadObject { }
-public class IGameMessageService : IGameModeService { }
-public class IGameSoundService : IGameModeService { }
-public class IGameStatsService : IGameModeService { }
-public class IHostAdminService : IGameModeService { }
-public class IMagmaDebugTextService : IGameModeService { }
-public class IPlayerService : IGameModeService { }
-public class IShapeEntity : COmniMapEntity { }
-public class IShapeComponent : CEntityComponent { }
-public class ISpawnPointService : IGameModeService { }
-
-
-public class CPlan : CAction { }
-public class CPersonality : CNomadObject { }
-public class CPhysComponent : CEntityComponent {
-    public string X_527E7674;
-    public uint hidResourceId;
-}
-public class CPhysNetworkComponent : CNetworkComponent { }
-public class CPickupNetworkComponent : CPhysNetworkComponent { }
-public class CPlayer : IPlayer { }
-public class CPlayerService : IPlayerService { }
-
-public class CResourceContainer : CResource { }
-public class CRenderBaseConfig : CNomadConfigObject { }
-public class CRenderableComponent : CEntityComponent { }
-public class CRandomPathFollower : CPathFollower { }
-public class CResourceNotifier : CResourceContainer { }
-public class CRendezVousOperation : CSessionOperation { }
-
-public class CScanner : CTask { }
-public class CScriptEvent : CEntityEvent { }
-public class CScoreboardService : IGameModeService { }
-public class CSectorSpawnCategory : CResourceNotifier { }
-public class CSessionOperation : COperation { }
-public class CSettingsPage : CListMenuPage { }
-public class CSingletonEntity : COmniEntity { }
-public class CSmartTerrain : CGameAIObject { }
-public class CSoundEvent : CEntityEvent { }
-public class CSpawnPointService : ISpawnPointService { }
-
-public class CTaskRoot : CNomadObject { }
-public class CTask : CTaskRoot { }
-public class CTDMSpawnPointService : CDMSpawnPointService { }
-public class CTrackingService : IGameModeService { }
-
-
-public class CValueListSettingbool : CGenericUISettingbool { }
-public class CValueListSettingCryString : CGenericUISettingCryString { }
-public class CValueListSettingunsigned_long : CGenericUISettingunsigned_long { }
-
-public class CWorldSector : CResource { }
-public class CWeapon : CEquipmentBase { }
-public class CWeaponsService : IGameModeService { }
-
 #endregion
+
+#region Move
 
 public class X_256A1FF9 {
     public string Name;
@@ -474,6 +415,8 @@ public class curveCurve {
     }
 }
 
+#endregion
+
 // Native classes
 
 public class CAABBPartitionManager : CSingletonEntity { }
@@ -631,7 +574,6 @@ public class CCameraComponent : CEntityComponent {
     public float fNearDistance;
     public float fFarDistance;
     public float fFOV;
-
     // FocusEntityID
     // Active
 }
@@ -650,7 +592,6 @@ public class CCameraPawnComponent : CCameraGameComponent {
     public string X_920A6E7C;
     public uint Bone;
     public Vector3 DebugOffset;
-
     // NoiseFOVEnabled
     // NoiseFOVTimeCount
     // NoiseFOVTarget
@@ -712,7 +653,6 @@ public class CClientDescriptor_Agora : CClientDescriptor { }
 public class CClientInfo_Agora : CClientInfo { }
 public class CClusterComponent : CRenderableComponent { }
 public class CCollectionComponent : CEntityComponent { }
-public class ICollectionIgnitorComponent : CEntityComponent { }
 public class CCollectionIgnitorComponent : ICollectionIgnitorComponent { }
 public class CCollectionManager : CSingletonEntity { }
 public class CCollective : CAIObject { }
@@ -891,7 +831,6 @@ public class CFactunsigned_long_long : CBaseFact { }
 public class CFactunsigned_long : CBaseFact { }
 public class CFakeWeapon : CEntityComponent { }
 public class CFanComponent : CEntityComponent { }
-
 public class CFCXActivatePresenceOperation : CFCXGameOperation { }
 public class CFCXAIBehaviorService : IGameModeService { }
 public class CFCXAIComponent : CAIComponent { }
@@ -953,8 +892,8 @@ public class CFCXGameSettingsService : CGameSettingsService { }
 public class CFCXGameSoundService : CGameSoundService { }
 public class CFCXGameStartOperation : CFCXGameOperation { }
 public class CFCXGameStatsSynchronize : CFCXGameOperation { }
-public class CFCXGOBuilderCommon : CGameOperationBuilder { }
 public class CFCXGOBuilderBenchmark : CFCXGOBuilderCommon { }
+public class CFCXGOBuilderCommon : CGameOperationBuilder { }
 public class CFCXGOBuilderConsole : CGameOperationBuilder { }
 public class CFCXGOBuilderEditor : CFCXGOBuilderCommon { }
 public class CFCXGOBuilderInGameConsole : CGameOperationBuilder { }
@@ -1569,11 +1508,11 @@ public class CParticlesEmitterParamResource : CResourceContainer { }
 public class CParticlesSystemParamResource : CResourceContainer { }
 public class CPartyService : IGameModeService { }
 public class CPathFindTester : CAgent { }
-public class CPatrolBrain : CBrain { }
 public class CPathFollower : CNomadObject { }
+public class CPatrolBrain : CBrain { }
 
 public class CPawn : CGameObject {
-    // public byte[] Implementation;
+    // Implementation
     public bool bIsAI;
     // Skills
     public string X_502D1B6A;
@@ -1821,64 +1760,33 @@ public class CPersistComponent : CEntityComponent {
     public uint selLevel;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-public class SInventoryViewPawnImpl : CNomadObject {
-    public string X_8C965C28;
-    public uint packInventoryPack;
-    public byte[] archGPSVehicleArchetype;
-    public bool bUnlimitedAmmo;
-    public bool bAutoReload;
-    public bool bAutoDraw;
-    public string X_130CDED8;
-    public uint sInitialWeaponCategory;
-}
-
 public class CPersistenceMgr : IGameModeService { }
+public class CPersonality : CNomadObject { }
 public class CPhoneCallEvent : CEntityEvent { }
-public class CPhysStim : CEntityEventStims { }
 public class CPhysBulletHitStim : CPhysStim { }
 public class CPhysCollisionStim : CPhysStim { }
+
+public class CPhysComponent : CEntityComponent {
+    public string X_527E7674;
+    public uint hidResourceId;
+    // PartType
+    // Velocity
+    // CollisionSystemGroup
+    // Enable
+}
+
 public class CPhysEntityCreateParams : CNomadObject { }
 public class CPhysExplosionStim : CPhysStim { }
 public class CPhysicalFile : IFile { }
 public class CPhysicConfig : CNomadConfigObject { }
+public class CPhysNetworkComponent : CNetworkComponent { }
 public class CPhysOutOfWorldEvent : CEntityEvent { }
 public class CPhysPhantomComponent : CEntityComponent { }
 public class CPhysRayPhantomComponent : CEntityComponent { }
 public class CPhysResource : CResource { }
-public class CPhysSimulationEntityCreateParams : CPhysEntityCreateParams { }
 public class CPhysRigidEntityCreateParams : CPhysSimulationEntityCreateParams { }
+public class CPhysSimulationEntityCreateParams : CPhysEntityCreateParams { }
+public class CPhysStim : CEntityEventStims { }
 public class CPhysVehicleEntityCreateParams : CPhysRigidEntityCreateParams { }
 public class CPhysWheeledVehicleEntityCreateParams : CPhysVehicleEntityCreateParams { }
 public class CPickAmmoEvent : CEntityEvent { }
@@ -1892,6 +1800,7 @@ public class CPickupGadget : CPickup { }
 public class CPickupHealth : CPickup { }
 public class CPickupMissionItem : CPickup { }
 public class CPickupMultipleAmmo : CPickup { }
+public class CPickupNetworkComponent : CPhysNetworkComponent { }
 public class CPickupPile : CPickup { }
 public class CPickupPileNetworkComponent : CCompoundPhysNetworkComponent { }
 public class CPickupScoutedEvent : CEntityEvent { }
@@ -1914,111 +1823,66 @@ public class CPickupWeapon : CPickup {
 }
 
 public class CPierAnchor : CGameAIObject { }
-
+public class CPlan : CAction { }
 public class CPlayActionBrain : CBrain { }
-
 public class CPlaybackComponent : CEntityComponent { }
-
+public class CPlayer : IPlayer { }
 public class CPlayerPopupMenu : CGameMessageBoxList { }
-
+public class CPlayerService : IPlayerService { }
 public class CPlayerSoundAndFXComponent : CPawnSoundAndFXComponent { }
-
 public class CPlayerSoundEvent : CEntityEvent { }
-
 public class CPositionLoggerComponent : CEntityComponent { }
-
 public class CPostFxDatabase : CEntityComponent { }
-
 public class CPostFxManager : CSingletonEntity { }
-
 public class CPostFxService : IGameModeService { }
-
 public class CPostLoginOperation : CSessionOperation { }
-
 public class CPrefabDescription : CNomadObject { }
-
 public class CPrefabEntity : CEntity { }
-
 public class CPrefabManager : CSingletonEntity { }
-
 public class CProjectileNetworkComponent : CNetworkComponent { }
-
 public class CProximityTriggerComponent : CBaseTriggerComponent { }
-
 public class CPusher : CEntityComponent { }
-
 public class CQueryProjectileSynchroEvent : CBaseEvent { }
-
 public class CQuickMatchGatherOpCtn : CGameOperationContainer { }
-
 public class CQuickMatchJoinCandidateOp : CGameOperation { }
-
 public class CQuickMatchJoinOpCtn : CGameOperationContainer { }
-
 public class CQuickMatchPingCandidatesOp : CGameOperation { }
-
 public class CQuickMatchRetrieveCandidatesOp : CGameOperation { }
-
 public class CQuickMatchSelectCandidateOp : CGameOperation { }
-
 public class CRadio : CEntityComponent { }
-
 public class CRadioManager : CSingletonEntity { }
-
 public class CRainComponent : CEntityComponent { }
-
+public class CRandomPathFollower : CPathFollower { }
 public class CRandomShooterComponent : CEntityComponent { }
-
 public class CReadNetMemento : CNetObjectProtocolEvent { }
-
 public class CRealtreeClusterComponent : CClusterComponent { }
-
 public class CRealtreeComponent : CRenderableComponent { }
-
 public class CRealtreeFx : CNomadDbObject { }
-
 public class CRealtreeFxManager : CSingletonEntity { }
-
 public class CRealtreeResource : CResourceContainer { }
-
 public class CReinforcementEntityLoadedEvent : CEntityEvent { }
-
 public class CReinforcementMercLoadedEvent : CReinforcementEntityLoadedEvent { }
-
 public class CReinforcementPoint : CGameAIObject { }
-
 public class CRelayTriggerComponent : CBaseTriggerComponent { }
-
 public class CRemoveSEFactEvent : CEntityEvent { }
-
+public class CRenderableComponent : CEntityComponent { }
 public class CRenderAmbientConfig : CRenderBaseConfig { }
-
+public class CRenderBaseConfig : CNomadConfigObject { }
 public class CRenderConfig : CNomadConfigObject { }
-
 public class CRenderEnvironmentConfig : CRenderBaseConfig { }
-
 public class CRenderGeometryConfig : CRenderBaseConfig { }
-
 public class CRenderPostFxConfig : CRenderBaseConfig { }
-
 public class CRenderQualityConfig : CRenderBaseConfig { }
-
 public class CRenderShadowConfig : CRenderBaseConfig { }
-
 public class CRenderTerrainConfig : CRenderBaseConfig { }
-
 public class CRenderTextureConfig : CRenderBaseConfig { }
-
 public class CRenderVegetationConfig : CRenderBaseConfig { }
-
 public class CRenderWaterConfig : CRenderBaseConfig { }
-
+public class CRendezVousOperation : CSessionOperation { }
 public class CRescueManager : IGameModeService { }
-
+public class CResourceContainer : CResource { }
+public class CResourceNotifier : CResourceContainer { }
 public class CResourceWatch : CResourceNotifier { }
-
-public class CStaticGraphicComponent : CBaseGraphicComponent { }
-
 public class CRigidGraphicComponent : CStaticGraphicComponent { }
 
 public class CRigidPhysComponent : CPhysComponent {
@@ -2042,13 +1906,9 @@ public class CRigidPhysComponent : CPhysComponent {
 }
 
 public class CRigidPhysOnDamageEvent : CEntityEvent { }
-
 public class CRigidPhysOnDieEvent : CEntityEvent { }
-
 public class CRigidPhysOnStateChangeEvent : CEntityEvent { }
-
 public class CRoadSign : CEntityComponent { }
-
 public class CRoadSignManager : CSingletonEntity { }
 
 public class CRocket : CGameObject {
@@ -2056,248 +1916,153 @@ public class CRocket : CGameObject {
 }
 
 public class CSafeHouseComponent : CEntityComponent { }
-
 public class CSaveAtNextUpdateEvent : CEntityEvent { }
-
 public class CSaveGamePage : CGameFilesListPage { }
-
 public class CSavePointCheckPage : CMenuPage { }
-
 public class CSavePointSaveGamePage : CSaveGamePage { }
-
+public class CScanner : CTask { }
 public class CScannerAgentAimingAt : CPawnScanner { }
-
 public class CScannerAgentHasRaisedWeapon : CPawnScanner { }
-
 public class CScannerAgentIsVisible : CPawnScanner { }
-
 public class CScannerAgentSocialProximity : CPawnScanner { }
-
 public class CScannerAgentStaredown : CPawnScanner { }
-
 public class CScannerAimStrategy : CPawnScanner { }
-
 public class CScannerAnimalObstacleAhead : CAgentScanner { }
-
 public class CScannerAnimalThreatChanged : CAgentScanner { }
-
 public class CScannerAnimalThreatened : CAgentScanner { }
-
 public class CScannerArmyMemberRole : CPawnScanner { }
-
 public class CScannerArmyMemberState : CPawnScanner { }
-
 public class CScannerBestTargetChangedPos : CPawnScanner { }
-
 public class CScannerBlackboardFact : CAgentScanner { }
-
 public class CScannerCanDisableSTPDynamicAvoidance : CPawnScanner { }
-
 public class CScannerCheckValue : CAgentScanner { }
-
 public class CScannerDead : CAgentScanner { }
-
 public class CScannerDominoEvent : CPawnScanner { }
-
 public class CScannerEmotionStrategy : CPawnScanner { }
-
 public class CScannerFactExist : CAgentScanner { }
-
 public class CScannerFireProximity : CAgentScanner { }
-
 public class CScannerFireStrategy : CPawnScanner { }
-
 public class CScannerInFOV : CPawnScanner { }
-
 public class CScannerInterestLookAtType : CPawnScanner { }
-
 public class CScannerIsAIShootMeObjectValid : CPawnScanner { }
-
 public class CScannerIsInBuilding : CPawnScanner { }
-
 public class CScannerIsInDistance : CPawnScanner { }
-
 public class CScannerIsInVehicle : CPawnScanner { }
-
 public class CScannerIsPosOnBarge : CAgentScanner { }
-
 public class CScannerIsRotatedTowardsPos : CPawnScanner { }
-
 public class CScannerIsUnderFire : CPawnScanner { }
-
 public class CScannerLookStrategy : CPawnScanner { }
-
 public class CScannerMovingPosition : CAgentScanner { }
-
 public class CScannerMutualGreeting : CPawnScanner { }
-
 public class CScannerNewTargetNeeded : CPawnScanner { }
-
 public class CScannerPawnSenses : CPawnScanner { }
-
 public class CScannerRiskPoint : CPawnScanner { }
-
 public class CScannerSideLookOpening : CPawnScanner { }
-
 public class CScannerSocialBehavior : CPawnScanner { }
-
 public class CScannerSocialRegion : CPawnScanner { }
-
 public class CScannerSpecialStrategy : CPawnScanner { }
-
 public class CScannerTargetVisible : CPawnScanner { }
-
 public class CScannerThresholdCross : CPawnScanner { }
-
-public class CVehicleScanner : CAgentScanner { }
-
 public class CScannerVehicleIntruderAboard : CVehicleScanner { }
-
 public class CScannerVehicleIsFunctional : CVehicleScanner { }
-
 public class CScannerVehicleMergePosReached : CVehicleScanner { }
-
 public class CScannerVehiclePierAnchor : CVehicleScanner { }
-
 public class CScannerVehicleStandBy : CAgentScanner { }
-
 public class CScannerVisualThreat : CPawnScanner { }
-
 public class CScannerWalkDistance : CAgentScanner { }
-
 public class CSceneObjectComponentCSceneAdaptiveBloom : CEntityComponent { }
-
 public class CSceneObjectComponentCScenePostFxDepthOfField : CEntityComponent { }
-
+public class CScoreboardService : IGameModeService { }
 public class CScoutIntelsManager : CSingletonEntity { }
-
 public class CScriptCallbackComponent : CEntityComponent { }
-
 public class CScriptedScenePrefabEntity : CPrefabEntity { }
-
+public class CScriptEvent : CEntityEvent { }
 public class CScriptService : IGameModeService { }
-
 public class CSectorDataResource : CResource { }
-
 public class CSectorDescriptorResource : CResource { }
-
 public class CSectorEntity : CEntity { }
-
 public class CSectorPreloadResource : CResource { }
-
 public class CSectorResource : CResourceContainer { }
-public class CSensorySystem : CNomadObject { }
+public class CSectorSpawnCategory : CResourceNotifier { }
 
-// nested under: CSensorySystem
-public class CSensorySystem_FOVParameters { }
+public class CSensorySystem : CNomadObject {
+    public class FOVParameters {
+        public class FOVMultipliers {
+            public float fPreCombatMultiplier;
+            public float fCombatMultiplier;
+            public float fPostCombatMultiplier;
+            public float fPlayerInVehicleMultiplier;
+            public float fNightTimeMultiplier;
+            public float fSniperLengthMultiplier;
+            public float fSniperAngleMultiplier;
+        }
 
-// nested under: CSensorySystem_FOVParameters
-public class CSensorySystem_FOVParameters_FOVMultipliers {
-    public float fPreCombatMultiplier;
-    public float fCombatMultiplier;
-    public float fPostCombatMultiplier;
-    public float fPlayerInVehicleMultiplier;
-    public float fNightTimeMultiplier;
-    public float fSniperLengthMultiplier;
-    public float fSniperAngleMultiplier;
-}
+        public class _RegionFOV {
+            public class _FOV {
+                public float fLength;
+                public float fAngle;
+            }
 
-// nested under: CSensorySystem_FOVParameters
-public class CSensorySystem_FOVParameters__RegionFOV { }
+            public class FocusFOV : _FOV { }
+            public class PeripheralFOV : _FOV { }
+        }
 
-// nested under: CSensorySystem_FOVParameters__RegionFOV
-public class CSensorySystem_FOVParameters__RegionFOV__FOV {
-    public float fLength;
-    public float fAngle;
-}
+        public class DesertFOV : _RegionFOV { }
+        public class SavannahFOV : _RegionFOV { }
+        public class JungleFOV : _RegionFOV { }
+    }
 
-// nested under: CSensorySystem_FOVParameters__RegionFOV
-public class CSensorySystem_FOVParameters__RegionFOV_FocusFOV : CSensorySystem_FOVParameters__RegionFOV__FOV { }
+    public class VisibilityEvaluatorParameters {
+        public class Weights {
+            public float fDistanceEvaluatorWeight;
+            public float fFOVEvaluatorWeight;
+            public float fPawnSamplingEvaluatorWeight;
+            public float fOcclusionEvaluatorWeight;
+            public float fVegetationEvaluatorWeight;
+            public float fStanceEvaluatorWeight;
+            public float fSpeedEvaluatorWeight;
+            public float fAmbientLightEvaluatorWeight;
+        }
+        public class InternalValues {
+            public float fDistanceEvaluator_FullVisibilityRatio;
+            public float fDistanceEvaluator_MinVisibilityAtMaxFOVRange;
+            public float fSpeedEvaluator_StandingStillVisibilityFactor;
+            public float fFOVEvaluator_VisibilityFactorAtFOVLimit;
+        }
+    }
 
-// nested under: CSensorySystem_FOVParameters__RegionFOV
-public class CSensorySystem_FOVParameters__RegionFOV_PeripheralFOV : CSensorySystem_FOVParameters__RegionFOV__FOV { }
-
-// nested under: CSensorySystem_FOVParameters
-public class CSensorySystem_FOVParameters_DesertFOV : CSensorySystem_FOVParameters__RegionFOV { }
-
-// nested under: CSensorySystem_FOVParameters
-public class CSensorySystem_FOVParameters_SavannahFOV : CSensorySystem_FOVParameters__RegionFOV { }
-
-// nested under: CSensorySystem_FOVParameters
-public class CSensorySystem_FOVParameters_JungleFOV : CSensorySystem_FOVParameters__RegionFOV { }
-
-// nested under: CSensorySystem
-public class CSensorySystem_VisibilityEvaluatorParameters { }
-
-// nested under: CSensorySystem_VisibilityEvaluatorParameters
-public class CSensorySystem_VisibilityEvaluatorParameters_Weights {
-    public float fDistanceEvaluatorWeight;
-    public float fFOVEvaluatorWeight;
-    public float fPawnSamplingEvaluatorWeight;
-    public float fOcclusionEvaluatorWeight;
-    public float fVegetationEvaluatorWeight;
-    public float fStanceEvaluatorWeight;
-    public float fSpeedEvaluatorWeight;
-    public float fAmbientLightEvaluatorWeight;
-}
-
-// nested under: CSensorySystem_VisibilityEvaluatorParameters
-public class CSensorySystem_VisibilityEvaluatorParameters_InternalValues {
-    public float fDistanceEvaluator_FullVisibilityRatio;
-    public float fDistanceEvaluator_MinVisibilityAtMaxFOVRange;
-    public float fSpeedEvaluator_StandingStillVisibilityFactor;
-    public float fFOVEvaluator_VisibilityFactorAtFOVLimit;
-}
-
-// nested under: CSensorySystem
-public class CSensorySystem_SocialMechanic {
-    public float fStareDetectionTime;
-    public float fAimAtDetectionTime;
-    public float fIntrusionDistanceInnerRing;
-    public float fIntrusionDistanceMidRing;
-    public float fIntrusionDistanceOuterRing;
-    public float fMaxChargingDistance;
-    public float fMaxChargingAngle;
+    public class SocialMechanic {
+        public float fStareDetectionTime;
+        public float fAimAtDetectionTime;
+        public float fIntrusionDistanceInnerRing;
+        public float fIntrusionDistanceMidRing;
+        public float fIntrusionDistanceOuterRing;
+        public float fMaxChargingDistance;
+        public float fMaxChargingAngle;
+    }
 }
 
 public class CSessionCreateGameOperation : CSessionOperation { }
-
 public class CSessionCreateOperation : CSessionOperation { }
-
-public class CSessionCreateServiceOperation : CSessionOperation { }
-
 public class CSessionCreateOperation_Agora : CSessionCreateServiceOperation { }
-
+public class CSessionCreateServiceOperation : CSessionOperation { }
 public class CSessionDeleteGameOperation : CSessionOperation { }
-
 public class CSessionDeleteOperation : CSessionOperation { }
-
 public class CSessionDeleteServiceOperation : CSessionOperation { }
-
 public class CSessionDescriptor : CNetDescriptor { }
-
 public class CSessionDescriptor_Agora : CSessionDescriptor { }
-
 public class CSessionFetchOnlineConfigOperation : CRendezVousOperation { }
-
 public class CSessionInfo_Agora : CSessionInfo { }
-
 public class CSessionJoinGameOperation : CSessionOperation { }
-
 public class CSessionJoinOperation : CSessionOperation { }
-
 public class CSessionJoinServiceOperation : CSessionOperation { }
-
 public class CSessionLoginOperation : CSessionOperation { }
-
 public class CSessionLogoutOperation : CSessionOperation { }
-
+public class CSessionOperation : COperation { }
 public class CSessionUpdateOperation : CSessionOperation { }
-
 public class CSetInvincibleEvent : CEntityEvent { }
-
 public class CSetNetInstanceIdEvent : CBaseEvent { }
-
+public class CSettingsPage : CListMenuPage { }
 public class CShortRangeResource : CSectorResource { }
 
 public class CSimpleAnimationComponent : CEntityComponent {
@@ -2307,543 +2072,283 @@ public class CSimpleAnimationComponent : CEntityComponent {
 }
 
 public class CSimpleEntityEvent : CEntityEvent { }
-
 public class CSimpleNetworkComponent : CNetworkComponent { }
-
 public class CSimplePrimitiveComponent : CRenderableComponent { }
-
 public class CSimpleSettingCMapCycle : CGenericUISettingCMapCycle { }
-
+public class CSingletonEntity : COmniEntity { }
 public class CSkeletonResource : CResource { }
-
+public class CSmartTerrain : CGameAIObject { }
 public class CSmartTerrainEvent : CEntityEvent { }
-
 public class CSmartTerrainManager : CSingletonEntity { }
-
 public class CSniperPoint : CGameAIObject { }
-
 public class CSocialRegion : CBasicRegionEntity { }
-
 public class CSomeoneTalked : CEntityEvent { }
 
 public class CSoundComponent : CEntityComponent {
     public uint sndptSoundPoint;
 }
 
+public class CSoundEvent : CEntityEvent { }
 public class CSoundLineComponent : CBasicShapeComponent { }
-
 public class CSoundManager : CSingletonEntity { }
-
 public class CSoundResource : CResourceContainer { }
-
 public class CSoundShapeComponent : IShapeComponent { }
-
 public class CSpawnPointBlueStart : CSpawnPointBlue { }
-
 public class CSpawnPointBuddy : CSpawnPoint { }
-
 public class CSpawnPointRedStart : CSpawnPointRed { }
-
+public class CSpawnPointService : ISpawnPointService { }
 public class CSpawnPointSpectator : CSpawnPoint { }
-
 public class CSpecialEventPoint : CEntity { }
-
 public class CSpectatorPlayer : IPlayer { }
-
 public class CSplinePrimitiveComponent : CRenderableComponent { }
-
 public class CSRLResource : CResource { }
-
 public class CStateMachineBlobResource : CResourceContainer { }
-
 public class CStateMachineResource : CResourceContainer { }
-
 public class CStaticClusterPhysComponent : CPhysComponent { }
-
 public class CStaticDecalComponent : CRenderableComponent { }
-
+public class CStaticGraphicComponent : CBaseGraphicComponent { }
 public class CStaticPhysComponent : CPhysComponent { }
-
 public class CStealthComponent : CEntityComponent { }
-
 public class CStickyFlameEvent : CEntityEvent { }
-
 public class CStimArray : CNomadObject { }
-
 public class CStimEffectTable : CBaseEntity { }
-
 public class CStimsEmitterComponent : CEntityComponent { }
-
 public class CStopDialogEvent : CEntityEvent { }
-
-public class CTagPoint : CEntity { }
-
 public class CStrategicPoint : CTagPoint { }
-
 public class CSuicideComponent : CEntityComponent { }
-
+public class CTagPoint : CEntity { }
+public class CTask : CTaskRoot { }
 public class CTaskActivateInfamyPose : CPawnAction { }
-
 public class CTaskActivateSocialSTP : CAgentAction { }
-
 public class CTaskAimAt : CAgentAction { }
-
 public class CTaskAnimalPathFollow : CAgentAction { }
-
 public class CTaskAttackStrategy : CPawnDecision { }
-
 public class CTaskBreakSocialPair : CPawnAction { }
-
 public class CTaskBroadcastStims : CAgentAction { }
-
 public class CTaskBuddyDown : CPawnDecision { }
-
 public class CTaskCalcLineDist : CAgentAction { }
-
 public class CTaskChase : CAgentAction { }
-
 public class CTaskCheckActionSignal : CAgentAction { }
-
 public class CTaskCheckAimStrategy : CPawnDecision { }
-
 public class CTaskCheckAmmoStatus : CPawnDecision { }
-
 public class CTaskCheckAnimalCanTryAnotherRunAwayDestination : CAgentDecision { }
-
 public class CTaskCheckAnimalThreaten : CAgentDecision { }
-
 public class CTaskCheckArmyRole : CPawnDecision { }
-
 public class CTaskCheckArmyRoleAction : CPawnDecision { }
-
 public class CTaskCheckBargeSide : CAgentDecision { }
-
 public class CTaskCheckBlindCombatLevel : CPawnDecision { }
-
 public class CTaskCheckBuildingEntry : CAgentDecision { }
-
 public class CTaskCheckCanRescue : CPawnDecision { }
-
 public class CTaskCheckCombatMercInRadius : CPawnDecision { }
-
 public class CTaskCheckCoverDist : CPawnDecision { }
-
 public class CTaskCheckCurrentSocialOccupation : CPawnDecision { }
-
 public class CTaskCheckCurrentWeapon : CPawnDecision { }
-
 public class CTaskCheckDifficultyLevel : CAgentDecision { }
-
 public class CTaskCheckDisturbanceType : CPawnDecision { }
-
 public class CTaskCheckDominoData : CPawnDecision { }
-
 public class CTaskCheckEmotionStrategy : CPawnDecision { }
-
 public class CTaskCheckFactExist : CAgentDecision { }
-
 public class CTaskCheckFireProximity : CAgentDecision { }
-
 public class CTaskCheckFireRange : CPawnDecision { }
-
 public class CTaskCheckFireStrategy : CPawnDecision { }
-
 public class CTaskCheckIdleBehavior : CPawnDecision { }
-
 public class CTaskCheckInterestLookAtType : CPawnDecision { }
-
 public class CTaskCheckIsInBuilding : CPawnDecision { }
-
 public class CTaskCheckIsInDistance : CPawnDecision { }
-
 public class CTaskCheckIsInFOV : CPawnAction { }
-
 public class CTaskCheckIsPlayingBark : CPawnAction { }
-
 public class CTaskCheckLookStrategy : CPawnDecision { }
-
 public class CTaskCheckMovingFire : CPawnDecision { }
-
 public class CTaskCheckObjectBlockingPath : CAgentDecision { }
-
 public class CTaskCheckObstaclesInRegion : CAgentDecision { }
-
 public class CTaskCheckODUType : CPawnDecision { }
-
 public class CTaskCheckPillarDepleted : CPawnDecision { }
-
 public class CTaskCheckPillarThreshold : CPawnDecision { }
-
 public class CTaskCheckPlayerAction : CPawnDecision { }
-
 public class CTaskCheckPlayerInfamy : CPawnDecision { }
-
 public class CTaskCheckPosInLoadedSector : CAgentDecision { }
-
 public class CTaskCheckPosOnSpline : CAgentDecision { }
-
 public class CTaskCheckProjEscapeType : CPawnDecision { }
-
 public class CTaskCheckProximity : CAgentAction { }
-
 public class CTaskCheckQueryRange : CPawnDecision { }
-
 public class CTaskCheckRegionTransition : CPawnDecision { }
-
 public class CTaskCheckRegionType : CPawnDecision { }
-
 public class CTaskCheckRelativeInfamy : CPawnDecision { }
-
 public class CTaskCheckRescueState : CPawnDecision { }
-
 public class CTaskCheckSawSomethingLevel : CPawnDecision { }
-
 public class CTaskCheckSeeFriendNearby : CPawnDecision { }
-
 public class CTaskCheckSmartTerrainType : CAgentDecision { }
-
 public class CTaskCheckSocialProximity : CPawnDecision { }
-
 public class CTaskCheckSpecialMissionBehaviour : CPawnDecision { }
-
 public class CTaskCheckSpecialStrategy : CPawnDecision { }
-
 public class CTaskCheckSquadAction : CPawnDecision { }
-
 public class CTaskCheckSquadRole : CPawnDecision { }
-
 public class CTaskCheckStressLevel : CPawnDecision { }
-
 public class CTaskCheckTargetHeightDiff : CPawnDecision { }
-
 public class CTaskCheckTargetRange : CPawnDecision { }
-
 public class CTaskCheckTargetType : CPawnDecision { }
-
 public class CTaskCheckTargetVisible : CPawnDecision { }
-
 public class CTaskCheckThreatDistance : CAgentDecision { }
-
 public class CTaskCheckThresholdLevel : CPawnDecision { }
-
 public class CTaskCheckUnderFire : CPawnDecision { }
-
 public class CTaskCheckUsingCover : CPawnDecision { }
-
 public class CTaskCheckViewBlocked : CPawnDecision { }
-
 public class CTaskCheckVisibleByPlayer : CPawnDecision { }
-
 public class CTaskChooseCoverAttack : CPawnDecision { }
-
 public class CTaskChurchAssault : CPawnAction { }
-
 public class CTaskCleanBriefingAnim : CPawnAction { }
-
 public class CTaskClearMoveToDynamics : CPawnAction { }
-
 public class CTaskComputeInterpolatedPos : CAgentAction { }
-
 public class CTaskComputeLeapFrogStep : CAgentAction { }
-
 public class CTaskComputeProjectileTrajectory : CPawnAction { }
-
 public class CTaskComputeSynchActionPosition : CPawnAction { }
-
 public class CTaskCoverAttack : CPawnAction { }
-
 public class CTaskDebugSetCurrentBehavior : CPawnAction { }
-
 public class CTaskDisableSTPDynamicAvoidance : CPawnAction { }
-
 public class CTaskDisplayError : CAgentAction { }
-
 public class CTaskDisplaySTPClippingError : CAgentAction { }
-
 public class CTaskDropItem : CPawnAction { }
-
 public class CTaskEmitBark : CPawnAction { }
-
 public class CTaskFindAIShootMeObject : CPawnDecision { }
-
 public class CTaskFindCover : CAgentAction { }
-
 public class CTaskFindCoverAttack : CAgentAction { }
-
 public class CTaskFindEscapePos : CAgentAction { }
-
 public class CTaskFindInterestLookAt : CPawnAction { }
-
 public class CTaskFindLeapFrogStep : CAgentDecision { }
-
 public class CTaskFindMountedWeapon : CPawnAction { }
-
 public class CTaskFindProtectionPoint : CAgentAction { }
-
 public class CTaskFindRandomDest : CAgentAction { }
-
 public class CTaskFindRescueDest : CAgentAction { }
-
 public class CTaskFindRiskPoints : CPawnAction { }
-
 public class CTaskFindSocialFleePos : CPawnAction { }
-
 public class CTaskFindStrategicPoint : CPawnDecision { }
-
 public class CTaskFindVisualThreat : CPawnAction { }
-
 public class CTaskFindWorldEntity : CAgentAction { }
-
 public class CTaskFireStrategySelector : CPawnDecision { }
-
 public class CTaskFuzzyChoice : CPawnDecision { }
-
 public class CTaskGetBuildingEntry : CPawnAction { }
-
 public class CTaskGetClosestSplinePos : CAgentAction { }
-
 public class CTaskGetNextPathPos : CAgentAction { }
-
 public class CTaskGetPatrolPath : CAgentAction { }
-
 public class CTaskGetPosOnNavMesh : CAgentAction { }
-
 public class CTaskGetRescuePositions : CPawnAction { }
-
 public class CTaskGetSniperPoint : CPawnAction { }
-
 public class CTaskGetStraightPath : CAgentAction { }
-
 public class CTaskHighTargetAttackPos : CPawnDecision { }
-
 public class CTaskIncreaseSawSomethingLevel : CPawnAction { }
-
 public class CTaskIncrementPathPos : CAgentAction { }
-
 public class CTaskLookAround : CPawnAction { }
-
 public class CTaskLookAroundTarget : CPawnAction { }
-
 public class CTaskLookAt : CAgentAction { }
-
 public class CTaskLookAtVehicle : CPawnAction { }
-
 public class CTaskLookRandom : CPawnAction { }
-
 public class CTaskManageAnchor : CAgentAction { }
-
 public class CTaskManageArmy : CPawnAction { }
-
 public class CTaskMoveStrategy : CPawnDecision { }
-
 public class CTaskMoveTo : CAgentAction { }
-
 public class CTaskNextWeapon : CPawnAction { }
-
 public class CTaskNotifyUnreachablePos : CPawnAction { }
-
 public class CTaskOperateOnFlagField : CAgentDecision { }
-
 public class CTaskOrientToward : CPawnAction { }
-
 public class CTaskPathAnalyzer : CPawnDecision { }
-
 public class CTaskPathFind : CAgentAction { }
-
 public class CTaskPathFindAndMoveTo : CAgentAction { }
-
 public class CTaskPathFollow : CAgentAction { }
-
 public class CTaskPatrol : CAgentAction { }
-
 public class CTaskPlayAnim : CAgentAction { }
-
 public class CTaskPlayBriefingAnim : CPawnAction { }
-
 public class CTaskPlaySound : CAgentAction { }
-
 public class CTaskPredictImpactPos : CPawnAction { }
-
 public class CTaskPrepareSynchActionPosition : CPawnAction { }
-
 public class CTaskPushPlayer : CPawnAction { }
-
 public class CTaskRequestVehicle : CPawnAction { }
-
 public class CTaskReserveProtectionPoint : CAgentAction { }
-
 public class CTaskReserveSniperPoint : CPawnAction { }
-
 public class CTaskResourceManager : CAgentAction { }
-
+public class CTaskRoot : CNomadObject { }
 public class CTaskSavePosInFact : CAgentAction { }
-
 public class CTaskSearchOpponents : CPawnAction { }
-
 public class CTaskSelectBestOpponents : CPawnDecision { }
-
 public class CTaskSelectBestTarget : CPawnDecision { }
-
 public class CTaskSelectRiskPoint : CPawnDecision { }
-
 public class CTaskSelectWeapon : CPawnAction { }
-
 public class CTaskSendActionSignal : CAgentAction { }
-
 public class CTaskSendBrainEvent : CAgentAction { }
-
 public class CTaskSendDominoEvent : CPawnAction { }
-
 public class CTaskSendHMREvent : CPawnAction { }
-
 public class CTaskSendReport : CAgentAction { }
-
 public class CTaskSendSocialReport : CPawnAction { }
-
 public class CTaskSetAimStrategy : CPawnAction { }
-
 public class CTaskSetCurrentState : CPawnAction { }
-
 public class CTaskSetEmotionStrategy : CPawnAction { }
-
 public class CTaskSetFacialEmotion : CPawnAction { }
-
 public class CTaskSetFireStrategy : CPawnAction { }
-
 public class CTaskSetForcedLookAtEntity : CPawnAction { }
-
 public class CTaskSetLookStrategy : CPawnAction { }
-
 public class CTaskSetPathPointPosition : CAgentAction { }
-
 public class CTaskSetPawnAttribute : CPawnAction { }
-
 public class CTaskSetPawnTarget : CPawnAction { }
-
 public class CTaskSetPostureAttribute : CPawnAction { }
-
 public class CTaskSetPostureIntention : CPawnAction { }
-
 public class CTaskSetSocialEngageMode : CPawnAction { }
-
 public class CTaskSetSpecialStrategy : CPawnAction { }
-
 public class CTaskSetSpeed : CAgentAction { }
-
 public class CTaskSetStanceOnSniperPoint : CPawnAction { }
-
 public class CTaskSetSyncState : CPawnAction { }
-
 public class CTaskShoot : CPawnAction { }
-
 public class CTaskShootMortar : CPawnAction { }
-
 public class CTaskShootMountedWeapon : CPawnAction { }
-
 public class CTaskSmartTerrainExecutor : CAgentAction { }
-
 public class CTaskSmartTerrainFinder : CAgentAction { }
-
 public class CTaskSpecialVehicleDetach : CPawnAction { }
-
 public class CTaskSplinePathFind : CAgentAction { }
-
 public class CTaskStopBark : CPawnAction { }
-
 public class CTaskStopBarkGesture : CPawnAction { }
-
 public class CTaskSwitchWeapon : CPawnAction { }
-
 public class CTaskTeleportInVehicleSeat : CPawnAction { }
-
 public class CTaskUnReserveCover : CAgentAction { }
-
 public class CTaskUpdateBlackboard : CAgentAction { }
-
 public class CTaskUpdateBuddyAiming : CPawnAction { }
-
 public class CTaskUpdatePathPos : CAgentAction { }
-
 public class CTaskUseAIBuilding : CPawnAction { }
-
 public class CTaskUseMountedWeapon : CPawnAction { }
-
 public class CTaskUseSniperPoint : CPawnAction { }
-
-public class CVehicleAction : CAgentAction { }
-
 public class CTaskVehicleAccost : CVehicleAction { }
-
 public class CTaskVehicleAggressiveMove : CVehicleAction { }
-
 public class CTaskVehicleBoostFactor : CVehicleAction { }
-
 public class CTaskVehicleChase : CVehicleAction { }
-
-public class CVehicleDecision : CAgentDecision { }
-
 public class CTaskVehicleCheckExitOnLand : CVehicleDecision { }
-
 public class CTaskVehicleCheckSpeed : CVehicleDecision { }
-
 public class CTaskVehicleCheckUserPriority : CVehicleDecision { }
-
 public class CTaskVehicleEnableSteeringEngine : CVehicleAction { }
-
 public class CTaskVehicleEscapeProjectile : CVehicleAction { }
-
 public class CTaskVehicleGetBargePos : CVehicleAction { }
-
 public class CTaskVehicleGetMergePos : CVehicleAction { }
-
 public class CTaskVehicleGetPierAnchor : CVehicleAction { }
-
 public class CTaskVehicleOrientToward : CVehicleAction { }
-
 public class CTaskVehiclePathFollow : CVehicleAction { }
-
 public class CTaskVehicleSetUserRolePriority : CVehicleAction { }
-
 public class CTaskVehicleSink : CVehicleAction { }
-
 public class CTaskVehicleStop : CVehicleAction { }
-
 public class CTaskVehicleTurnAround : CVehicleAction { }
-
 public class CTaskVehicleTurnCheat : CVehicleAction { }
-
 public class CTaskVehicleUpdatePathFollow : CVehicleAction { }
-
 public class CTaskWait : CAgentAction { }
-
 public class CTaskWaitFactExist : CAgentAction { }
-
 public class CTaskWatchFlyingProjectile : CPawnAction { }
-
-public class ITeamManager : IGameModeService { }
-
+public class CTDMSpawnPointService : CDMSpawnPointService { }
 public class CTeamManager : ITeamManager { }
-
 public class CTerm : CNomadObject { }
-
 public class CTermFactList : CTerm { }
-
 public class CTermSingleFact : CTerm { }
-
 public class CTextureMipResource : CResource { }
-
 public class CTextureResource : CResource { }
-
 public class CThinPropaneTank : CEntityComponent { }
-
 public class CThreadingConfig : CNomadConfigObject { }
-
 public class CTimeOfDayTriggerComponent : CBaseTriggerComponent { }
-
+public class CTrackingService : IGameModeService { }
 public class CTravelStartOperation : CGameOperation { }
-
 public class CTravelStopOperation : CGameOperation { }
-
 public class CTriggerChangeCountEvent : CEntityEvent { }
 
 public class CTriggerComponent : CEntityComponent {
@@ -2851,109 +2356,66 @@ public class CTriggerComponent : CEntityComponent {
 }
 
 public class CTriggerEnableEvent : CEntityEvent { }
-
 public class CTriggerEvent : CEntityEvent { }
-
 public class CTriggerSimpleEvent : CEntityEvent { }
-
 public class CTutorial : CChallenge { }
-
 public class CUbisoftLoginOperation : CRendezVousOperation { }
-
 public class CUGCLoginOperation : CLoginOperation { }
-
 public class CUnreachableLocationsManager : CSingletonEntity { }
-
 public class CUsableComponent : CEntityComponent { }
-
 public class CValidEntityToAttachExplosive : CEntityEvent { }
-
+public class CValueListSettingbool : CGenericUISettingbool { }
+public class CValueListSettingCryString : CGenericUISettingCryString { }
+public class CValueListSettingunsigned_long : CGenericUISettingunsigned_long { }
 public class CVegetationObstructionEvent : CEntityEvent { }
-
 public class CVegetationSlowdownComponent : CEntityComponent { }
-
 public class CVehicle : CGameObject { }
-
+public class CVehicleAction : CAgentAction { }
 public class CVehicleAgent : CGameAgent { }
-
 public class CVehicleDamagedPartEvent : CEntityEvent { }
-
+public class CVehicleDecision : CAgentDecision { }
 public class CVehicleEngineFloodedEvent : CEntityEvent { }
-
 public class CVehicleEventExplosion : CEntityEvent { }
-
 public class CVehicleEventIsDestructable : CEntityEvent { }
-
 public class CVehicleEventSetEngineBroken : CEntityEvent { }
-
-public class CVehiclePhysComponent : CPhysComponent { }
-
 public class CVehicleFloatingPhysComponent : CVehiclePhysComponent { }
-
 public class CVehicleMaterialComponent : CCustomMaterialComponent { }
-
 public class CVehicleNetworkComponent : CNetworkComponent { }
-
 public class CVehicleParagliderPhysComponent : CVehiclePhysComponent { }
-
+public class CVehiclePhysComponent : CPhysComponent { }
+public class CVehicleScanner : CAgentScanner { }
 public class CVehicleSmartTerrain : CSmartTerrain { }
-
 public class CVehicleSoundAndFXComponent : CObjectSoundAndFXComponent { }
-
 public class CVehicleStateChangeEvent : CEntityEvent { }
-
 public class CVehicleUserAccepted : CEntityEvent { }
-
 public class CVehicleWheeledPhysComponent : CVehiclePhysComponent { }
-
 public class CVisibilityOcclusionVolumeComponent : CEntityComponent { }
-
 public class CVisibleObject : CGameAIObject { }
-
 public class CVolumeCheckManager : CSingletonEntity { }
-
 public class CVotingService : IGameModeService { }
-
 public class CWagerRegion : CBasicRegionEntity { }
-
 public class CWaterSoundManager : CSingletonEntity { }
-
+public class CWeapon : CEquipmentBase { }
 public class CWeaponBazaar : IGameModeService { }
-
 public class CWeaponEventBulletShot : CEntityEvent { }
-
 public class CWeaponEventFireBullet : CEntityEvent { }
-
 public class CWeaponEventReload : CEntityEvent { }
-
-public class CWeaponFireProperties : CNomadObject { }
-
 public class CWeaponFireBulletProperties : CWeaponFireProperties { }
-
-public class CWeaponFireStrategy : CEquipmentUseStrategy { }
-
 public class CWeaponFireBulletStrategy : CWeaponFireStrategy { }
-
 public class CWeaponFireFlameProperties : CWeaponFireProperties { }
-
 public class CWeaponFireFlameStrategy : CWeaponFireStrategy { }
-
 public class CWeaponFireMeleeProperties : CWeaponFireProperties { }
-
 public class CWeaponFireMeleeStrategy : CWeaponFireStrategy { }
-
 public class CWeaponFireProjectileProperties : CWeaponFireBulletProperties { }
-
 public class CWeaponFireProjectileStrategy : CWeaponFireBulletStrategy { }
-
+public class CWeaponFireProperties : CNomadObject { }
+public class CWeaponFireStrategy : CEquipmentUseStrategy { }
 public class CWeaponNetworkComponent : CNetworkComponent { }
-
 public class CWeaponProperties : CEntityComponent { }
-
+public class CWeaponsService : IGameModeService { }
 public class CWeaponStimsCEntityEventStims : CEntityEventStims { }
-
 public class CWeaponUsedEvent : CEntityEvent { }
-
+public class CWorldSector : CResource { }
 public class CXmlResource : CResource { }
 
 public class CZoneInfoComponent : CEntityComponent {
@@ -2965,19 +2427,35 @@ public class CZoneInfoComponent : CEntityComponent {
 }
 
 public class CZoneLogicManager : CSingletonEntity { }
-
 public class CZoneLogicRegion : CBasicRegionEntity { }
-
 public class CZoneSectorResource : CResource { }
-
+public class IAuthorizationService : IGameModeService { }
+public class ICollectionIgnitorComponent : CEntityComponent { }
+public class ICountersService : IGameModeService { }
+public class IGameMessageService : IGameModeService { }
+public class IGameModeService : CNomadObject { }
+public class IGameSoundService : IGameModeService { }
+public class IGameStatsService : IGameModeService { }
+public class IHostAdminService : IGameModeService { }
+public class IMagmaDebugTextService : IGameModeService { }
+public class IPlayerService : IGameModeService { }
+public class IShapeComponent : CEntityComponent { }
+public class IShapeEntity : COmniMapEntity { }
+public class ISpawnPointService : IGameModeService { }
+public class ITeamManager : IGameModeService { }
 public class SDecalDescription : CNomadDbObjectNamed { }
-
+public class SInventoryViewPawnImpl : CNomadObject {
+    public string X_8C965C28;
+    public uint packInventoryPack;
+    public byte[] archGPSVehicleArchetype;
+    public bool bUnlimitedAmmo;
+    public bool bAutoReload;
+    public bool bAutoDraw;
+    public string X_130CDED8;
+    public uint sInitialWeaponCategory;
+}
 public class SMixingPreset : CNomadObject { }
-
 public class SPhysMaterial : CNomadDbObjectNamed { }
-
 public class SSettings : CNomadDbObjectNamed { }
-
 public class SSoundPoint : CNomadDbObject { }
-
 public class StCollectionResInfo : CNomadObject { }

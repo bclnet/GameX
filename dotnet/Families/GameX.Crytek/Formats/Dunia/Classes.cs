@@ -2,7 +2,7 @@
 
 namespace GameX.Crytek.Formats.Dunia.Classes;
 
-#region Pre
+#region Base classes
 // Base classes referenced via 'extends' that are not themselves defined in the XML
 
 public class CAIEvent { }
@@ -44,7 +44,7 @@ public class IPlayer { }
 
 #endregion
 
-#region Move
+#region Move later
 
 public class X_256A1FF9 {
     public string Name;
@@ -417,7 +417,7 @@ public class curveCurve {
 
 #endregion
 
-// Native classes
+#region Native classes
 
 public class CAABBPartitionManager : CSingletonEntity { }
 public class CAccountService : IGameModeService { }
@@ -2459,3 +2459,11 @@ public class SPhysMaterial : CNomadDbObjectNamed { }
 public class SSettings : CNomadDbObjectNamed { }
 public class SSoundPoint : CNomadDbObject { }
 public class StCollectionResInfo : CNomadObject { }
+
+#endregion
+
+public class ClassesX {
+    static ClassesX() {
+
+    }
+}

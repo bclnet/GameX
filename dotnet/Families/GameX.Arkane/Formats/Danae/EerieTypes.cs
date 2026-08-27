@@ -8,27 +8,23 @@ namespace GameX.Arkane.Formats.Danae;
 
 //struct
 //{
-
 //    Vector3 v[3];
 //} EERIE_TRI; // Aligned 1 2 4
 
 //struct
 //{
-
 //    EERIE_2D min;
 //EERIE_2D max;
 //} EERIE_2D_BBOX; // Aligned 1 2 4 8
 
 //struct
 //{
-
 //    Vector3 min;
 //Vector3 max;
 //} EERIE_3D_BBOX; // Aligned 1 2 4
 
 //struct
 //{
-
 //    char exist;
 //char type;
 //char treat;
@@ -600,10 +596,8 @@ public class E_3DOBJ {
 public unsafe struct SAVE_EERIEPOLY {
     public static (string, int) Struct = ("<?", sizeof(SAVE_EERIEPOLY));
     public POLY Type;  // at least 16 bits
-    public Vector3 Min;
-    public Vector3 Max;
-    public Vector3 Norm;
-    public Vector3 Norm2;
+    public Vector3 Min; public Vector3 Max;
+    public Vector3 Norm; public Vector3 Norm2;
     public TLVERTEX V0; public TLVERTEX V1; public TLVERTEX V2; public TLVERTEX V3;
     public TLVERTEX Tv0; public TLVERTEX Tv1; public TLVERTEX Tv2; public TLVERTEX Tv3;
     public Vector3 Nrml0; public Vector3 Nrml1; public Vector3 Nrml2; public Vector3 Nrml3;

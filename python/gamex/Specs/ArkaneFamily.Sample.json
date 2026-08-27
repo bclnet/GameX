@@ -11,15 +11,15 @@
         "type": "Texture"
       },
       {
-        "path": "data.arc:GRAPH/particles/DEFAULT.jpg",
+        "path": "data.pak:GRAPH/particles/DEFAULT.jpg",
         "type": "Texture"
       },
       {
-        "path": "data.arc:GRAPH/particles/Boom.bmp",
+        "path": "data.pak:GRAPH/particles/Boom.bmp",
         "type": "Texture"
       },
       {
-        "path": "data.arc:GAME/GRAPH/INTERFACE/BOOK/RUNES/LACET.FTL",
+        "path": "data.pak:GAME/GRAPH/INTERFACE/BOOK/RUNES/LACET.FTL",
         "type": "Model"
       },
       {

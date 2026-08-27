@@ -1,6 +1,6 @@
 __title__ = "gamex"
 __version__ = "0.0.1"
-# __current__ = "Arkane"
+__current__ = "Arkane"
 # __current__ = "Beamdog"
 # __current__ = "Bethesda"
 # __current__ = "Bioware"
@@ -11,7 +11,7 @@ __version__ = "0.0.1"
 # __current__ = "Capcom"
 # __current__ = "Cig"
 # __current__ = "Cryptic"
-__current__ = "Crytek"
+# __current__ = "Crytek"
 # __current__ = "Cyanide"
 # __current__ = "EA"
 # __current__ = "Epic"
@@ -53,7 +53,7 @@ match __current__:
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
-            ForcePath = "sample:1",
+            ForcePath = "sample:4",
             Family = "Arkane",
             Game = "AF", # Arx Fatalis
             # Game = "DOM", # Dark Messiah of Might and Magic [source]

@@ -2,6 +2,7 @@ using GameX.Uncore.Formats;
 using OpenStack;
 using System;
 using System.Collections.Generic;
+using System.Drawing.Printing;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -125,7 +126,7 @@ public unsafe class Binary_Ftl : IHaveMetaInfo {
             Ov = s.Ov,
             TransVal = s.TransVal,
             Norm = s.Norm,
-            Nrmls = new[] { s.Nrmls0, s.Nrmls1, s.Nrmls2 },
+            Nrmls = [s.Nrmls0, s.Nrmls1, s.Nrmls2],
             Temp = s.Temp,
         };
     }

@@ -1,6 +1,7 @@
 from __future__ import annotations
 import os
-from openstk.core import _pathExtension, TypeX
+from openstk.core import _pathExtension
+from openstk.sys.typex import TypeX
 from gamex import FamilyGame, Archive, BinaryArchive
 from gamex.families.GameX_Uncore import UncoreArchive
 from gamex.families.Xbox.formats.binary import Binary_Xnb

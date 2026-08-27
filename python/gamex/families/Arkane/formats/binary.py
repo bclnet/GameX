@@ -76,6 +76,8 @@ class Binary_Danae(ArcBinaryT):
     def readData(self, source: BinaryArchive, r: BinaryReader, file: FileSource, option: object = None) -> BytesIO:
         # tag::Binary_Danae.readData[]
         r.seek(file.offset)
+        print(file.compressed, file.packedSize, file.fileSize)
+        exit(0)
         return BytesIO(
             decompressBlast(r, file.packedSize, file.fileSize) if (file.compressed & 1) != 0 else \
             r.readBytes(file.packedSize))

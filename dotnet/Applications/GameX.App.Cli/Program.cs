@@ -98,13 +98,13 @@ partial class Program {
         //args = ["get", "-f", "Red", "-u", "game:/krbr.dzip#Witcher2", "--path", @"D:\T_\Witcher2"];
         //args = ["get", "-f", "Red", "-u", "game:/main.key#Witcher", "--path", @"~/T_/Witcher"];
 
-        args = ["get", "-f", "Crytek", "-u", "game:/common.fat#FarCry2", "-m", "*", "-p", @"D:\T_\FarCry2C"];
+        // args = ["get", "-f", "Crytek", "-u", "game:/common.fat#FarCry2", "-m", "*", "-p", @"D:\T_\FarCry2C"];
         //args = ["get", "-f", "Crytek", "-u", "game:/patch.fat#FarCry2", "-m", "*", "-p", @"D:\T_\FarCry2C"];
         //args = ["get", "-f", "Crytek", "-u", "game:/sound.fat#FarCry2", "-m", "*", "-p", @"D:\T_\FarCry2C"];
         //args = ["get", "-f", "Crytek", "-u", "game:/worlds/worlds.fat#FarCry2", "-m", "*", "-p", @"D:\T_\FarCry2C"];
 
         //args = ["list", "-f", "Arkane"];
-        //args = ["get", "-f", "Arkane", "-u", "game:/*.pak#AF", "--path", @"C:\T_\AF"];
+        args = ["get", "-f", "Arkane", "-u", "game:/data.pak#AF", "-m", "GAME/GRAPH/INTERFACE/BOOK/RUNES/LACET.FTL", "-p", @"~/T_/AF"];
         //args = ["list", "-f", "Blizzard"];
         //args = ["list", "-f", "Bioware"];
         //args = ["list", "-f", "Valve"];

@@ -123,7 +123,7 @@ Bully SE - rockstar
 https://store.steampowered.com/app/12200/Bully_Scholarship_Edition/
 
 LEGO Universe - Netdevil
-https://thelegouniverse.com
+https://en.wikipedia.org/wiki/Lego_Universe
 
 Warhammer - maybe??
 https://store.steampowered.comSave 75% on Total War: WARHAMMER on Steam

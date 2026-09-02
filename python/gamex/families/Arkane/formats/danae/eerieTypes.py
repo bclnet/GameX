@@ -79,6 +79,7 @@ type Vector3 = ndarray
 ## EERIE Types
 ##*************************************************************************************
 
+#struct E_MATRIX
 
 class MATERIAL(Enum):
     NONE = 0
@@ -132,20 +133,20 @@ class POLY(Flag):
     LATE_MIP = 1 << 27
 
 class TLVERTEX:
-    _struct = ('<4f2I3f', 44)
+    _struct = ('<4f2I2f', 32)
     s: Vector3           # Screen coordinates
     rhw: float           # Reciprocal of homogeneous w
     color: int          # Vertex color
     specular: int       # Specular component of vertex
     t: Vector2           # Texture coordinates
-
-#struct E_MATRIX
-#{
-#    D3DVALUE _11, _12, _13, _14;
-#    D3DVALUE _21, _22, _23, _24;
-#    D3DVALUE _31, _32, _33, _34;
-#    D3DVALUE _41, _42, _43, _44;
-#}
+    def __init__(self, t):
+        s = self.s = array([None]*3)
+        t_ = self.t = array([None]*2)
+        (s[0], s[1], s[2],
+        self.rhw,
+        self.color,
+        self.specular,
+        t_[0], t_[1]) = t
 
 class E_CYLINDER:
     _struct = ('<5f', 20)
@@ -162,6 +163,10 @@ class E_TEXTURE:
     id: int
     path: str
     poly: POLY
+    def __init__(self, id: int=None, path: str=None, poly: POLY=None):
+        self.id = id
+        self.path = path
+        self.poly = poly
 
 class E_POLY:
     type: POLY # at least 16 bits
@@ -188,6 +193,11 @@ class E_VERTEX:
     v: Vector3
     norm: Vector3
     vworld: Vector3
+    def __init__(self, vert: TLVERTEX=None, v: Vector3=None, norm: Vector3=None, vworld: Vector3=None):
+        self.vert = vert
+        self.v = v
+        self.norm = norm
+        self.vworld = vworld
 
 class E_FACE:
     faceType: int;  # 0 = flat, 1 = text, 2 = Double-Side
@@ -195,15 +205,26 @@ class E_FACE:
     vid: Vector3
     u: Vector3
     v: Vector3
-
     transVal: float
     norm: Vector3
     nrmls: list[Vector3]
     temp: float
-
     ou: Vector3
     ov: Vector3
     color: list[Vector2]
+    def __init__(self, faceType: int=None, texId: int=None, vid: Vector3=None, u: Vector3=None, v: Vector3=None, transVal: float=None, norm: Vector3=None, nrmls: list[Vector3]=None, temp: float=None, ou: Vector3=None, ov: Vector3=None, color: list[Vector2]=None):
+        self.faceType = faceType
+        self.texId = texId
+        self.vid = vid
+        self.u = u
+        self.v = v
+        self.transVal = transVal
+        self.norm = norm
+        self.nrmls = nrmls
+        self.temp = temp
+        self.ou = ou
+        self.ov = ov
+        self.color = color
 
 ##define MAX_PFACE 16
 #struct E_PFACE
@@ -224,7 +245,6 @@ class E_FACE:
 ##***********************************************************************
 #struct
 #{
-
 #    short nb_Nvertex;
 #short nb_Nfaces;
 #short* Nvertex;
@@ -232,6 +252,7 @@ class E_FACE:
 #} NEIGHBOURS_DATA; # Aligned 1 2 4
 
 class PROGRESSIVE_DATA: # Aligned 1 2 4
+    _struct = (None, 16)
     # ingame data
     actualCollapse: int # -1 = no collapse
     needComputing: int
@@ -319,12 +340,23 @@ class E_GROUPLIST:
     numIndex: int
     indexes: list[int]
     size: float
+    def __init__(self, name: str=None, origin: int=None, numIndex: int=None, indexes: list[int]=None, size: float=None):
+        self.name = name
+        self.origin = origin
+        self.numIndex = numIndex
+        self.indexes = indexes
+        self.size = size
 
 class E_ACTIONLIST:
     name: str
     idx: int #index vertex;
     act: int #action
     sfx: int #sfx
+    def __init__(self, name: str=None, idx: int=None, act: int=None, sfx: int=None):
+        self.name = name
+        self.idx = idx
+        self.act = act
+        self.sfx = sfx
 
 #struct
 #{
@@ -359,6 +391,10 @@ class E_SELECTIONS:
     name: str
     numSelected: int
     selected: list[int]
+    def __init__(self, name: str=None, numSelected: int=None, selected: list[int]=None):
+        self.name = name
+        self.numSelected = numSelected
+        self.selected = selected
 
 ##define DRAWFLAG_HIGHLIGHT	1
 

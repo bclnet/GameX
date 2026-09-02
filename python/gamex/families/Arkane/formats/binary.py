@@ -66,7 +66,7 @@ class Binary_Danae(ArcBinaryT):
                     fileSize = readInt32(),
                     packedSize = readInt32())
                 # special case
-                if file.path.endswith('.FTL'): file.compressed = 1
+                if file.path[-4:].lower().endswith('.ftl'): file.compressed = 1
                 elif file.compressed == 0: file.fileSize = file.packedSize
                 # add file
                 files.append(file)
@@ -76,8 +76,6 @@ class Binary_Danae(ArcBinaryT):
     def readData(self, source: BinaryArchive, r: BinaryReader, file: FileSource, option: object = None) -> BytesIO:
         # tag::Binary_Danae.readData[]
         r.seek(file.offset)
-        print(file.compressed, file.packedSize, file.fileSize)
-        exit(0)
         return BytesIO(
             decompressBlast(r, file.packedSize, file.fileSize) if (file.compressed & 1) != 0 else \
             r.readBytes(file.packedSize))

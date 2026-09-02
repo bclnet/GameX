@@ -81,54 +81,6 @@ namespace GameX.Arkane.Formats.Danae;
 ////*************************************************************************************
 
 //struct E_MATRIX
-//{
-//    D3DVALUE _11, _12, _13, _14;
-//    D3DVALUE _21, _22, _23, _24;
-//    D3DVALUE _31, _32, _33, _34;
-//    D3DVALUE _41, _42, _43, _44;
-//}
-
-public unsafe struct E_CYLINDER {
-    public static (string, int) Struct = ("<5f", sizeof(E_CYLINDER));
-    public Vector3 origin;
-    public float radius;
-    public float height;
-}
-
-public unsafe struct E_SPHERE {
-    public static (string, int) Struct = ("<4f", sizeof(E_SPHERE));
-    public Vector3 Origin;
-    public float Radius;
-}
-
-public unsafe struct E_POLY {
-    public POLY Type;  // at least 16 bits
-    public Vector3 Min;
-    public Vector3 Max;
-    public Vector3 Norm;
-    public Vector3 Norm2;
-    public TLVERTEX[] V; // new TLVERTEX[4];
-    public TLVERTEX[] Tv; // new TLVERTEX[4];
-    public Vector3[] Nrml; // new Vector3[4];
-    public E_TEXTURE Tex;
-    public Vector3 Center;
-    public float TransVal;
-    public float Area;
-    public short Room;
-    public short Misc;
-    //public float DistBump;
-    //public ushort[] UslInd;// new ushort[4];
-    internal void memset() {
-        Misc = 0;
-    }
-}
-
-public unsafe struct E_VERTEX {
-    public TLVERTEX Vert;
-    public Vector3 V;
-    public Vector3 Norm;
-    public Vector3 VWorld;
-}
 
 public enum MATERIAL {
     NONE = 0,
@@ -184,7 +136,65 @@ public enum POLY {
     LATE_MIP = 1 << 27,
 }
 
-[DebuggerDisplay("FACE: {FaceType}")]
+[StructLayout(LayoutKind.Sequential)]
+public struct TLVERTEX {
+    public static (string, int) Struct = ("<4f2I2f", 32);
+    public Vector3 S;           // Screen coordinates
+    public float Rhw;           // Reciprocal of homogeneous w
+    public uint Color;          // Vertex color
+    public uint Specular;       // Specular component of vertex
+    public Vector2 T;           // Texture coordinates
+}
+
+public struct E_CYLINDER {
+    public static (string, int) Struct = ("<5f", 20);
+    public Vector3 origin;
+    public float radius;
+    public float height;
+}
+
+public struct E_SPHERE {
+    public static (string, int) Struct = ("<4f", 16);
+    public Vector3 Origin;
+    public float Radius;
+}
+
+[DebuggerDisplay("Texture: {Path}")]
+public class E_TEXTURE {
+    public int Id;
+    public string Path;
+    public POLY Poly;
+}
+
+public struct E_POLY {
+    public POLY Type;  // at least 16 bits
+    public Vector3 Min;
+    public Vector3 Max;
+    public Vector3 Norm;
+    public Vector3 Norm2;
+    public TLVERTEX[] V; // new TLVERTEX[4];
+    public TLVERTEX[] Tv; // new TLVERTEX[4];
+    public Vector3[] Nrml; // new Vector3[4];
+    public E_TEXTURE Tex;
+    public Vector3 Center;
+    public float TransVal;
+    public float Area;
+    public short Room;
+    public short Misc;
+    //public float DistBump;
+    //public ushort[] UslInd;// new ushort[4];
+    internal void memset() {
+        Misc = 0;
+    }
+}
+
+public struct E_VERTEX {
+    public TLVERTEX Vert;
+    public Vector3 V;
+    public Vector3 Norm;
+    public Vector3 VWorld;
+}
+
 public struct E_FACE {
     public int FaceType;  // 0 = flat, 1 = text, 2 = Double-Side
     public short TexId;
@@ -216,15 +226,7 @@ public struct E_FACE {
 //    //D3DCOLOR color[MAX_PFACE];
 //}
 
-[StructLayout(LayoutKind.Sequential)]
-public unsafe struct TLVERTEX {
-    public static (string, int) Struct = ("4f2I3f", sizeof(TLVERTEX));
-    public Vector3 S;           // Screen coordinates
-    public float Rhw;           // Reciprocal of homogeneous w
-    public uint Color;          // Vertex color
-    public uint Specular;       // Specular component of vertex
-    public Vector2 T;           // Texture coordinates
-}
+
 
 ////***********************************************************************
 ////*		BEGIN EERIE OBJECT STRUCTURES									*
@@ -238,8 +240,8 @@ public unsafe struct TLVERTEX {
 //short* Nfaces;
 //} NEIGHBOURS_DATA; // Aligned 1 2 4
 
-public struct PROGRESSIVE_DATA // Aligned 1 2 4
-{
+public struct PROGRESSIVE_DATA { // Aligned 1 2 4
+    public static (string, int) Struct = (null, 16);
     // ingame data
     public short ActualCollapse; // -1 = no collapse
     public short NeedComputing;
@@ -385,7 +387,7 @@ public struct E_ACTIONLIST {
 
 
 [DebuggerDisplay("Selection: {Name}")]
-public unsafe struct E_SELECTIONS {
+public struct E_SELECTIONS {
     public string Name;
     public int NumSelected;
     public int[] Selected;
@@ -460,12 +462,7 @@ public unsafe struct E_SELECTIONS {
 //float w;
 //} EERIE_3DPAD;
 
-[DebuggerDisplay("Texture: {Path}")]
-public class E_TEXTURE {
-    public int Id;
-    public string Path;
-    public POLY Poly;
-}
+
 
 [DebuggerDisplay("Obj: {File}")]
 public class E_3DOBJ {
@@ -508,6 +505,18 @@ public class E_3DOBJ {
     //public NEIGHBOURS_DATA Ndata;
     public CLOTHES_DATA Cdata;
     public COLLISION_SPHERES_DATA Sdata;
+
+    internal void CenterObjectCoordinates() {
+    }
+
+    internal void CreateCedricData() {
+    }
+
+    internal void CreatePFaces() {
+    }
+
+    internal void PrecomputeFastAccess() {
+    }
     //public EERIE_FASTACCESS FastAccess;
     //public EERIE_C_DATA* C_data;
 }

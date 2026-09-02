@@ -78,6 +78,8 @@ def _main() -> None:
     # sys.argv = ['gamex', 'get', '-f', 'Bethesda', '-u', 'game:/Morrowind.bsa#Morrowind', '-m', 'meshes/b/b_n_breton_f_head_02.nif', '-o', 'StreamObject', '-p', 'D:/T_/MorrowindP']
     # sys.argv = ['gamex', 'get', '-f', 'Bethesda', '-u', 'game:/Oblivion - Meshes.bsa#Oblivion', '-m', '*/bearskinrug01.nif', '-o', 'StreamObject', '-p', 'D:/T_/OblivionP']
 
+    sys.argv = ['gamex', 'get', '-f', 'Arkane', '-u', 'game:/data.pak#AF', '-m', 'GAME/GRAPH/INTERFACE/BOOK/RUNES/LACET.FTL', '-o', 'StreamObject', '-p', 'D:/T_/AFP']
+
     parser = _build_parser()
     parsed, args, unknown = _parse_args(parser)
 

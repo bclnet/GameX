@@ -246,7 +246,7 @@ class Blast:
             return lenx
         def outf(how: object, buf: bytes, bufPtr: int, length: int) -> int:
             nonlocal outputLen, outputPtr
-            if outputLen <= 0: return 0
+            # if outputLen <= 0: return 0
             output[outputPtr:outputPtr+length] = buf[bufPtr:bufPtr+length]
             outputPtr += length
             outputLen -= length

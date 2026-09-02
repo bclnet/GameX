@@ -1,5 +1,4 @@
 ﻿using GameX.Uncore.Formats;
-using OpenStack;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -64,7 +63,7 @@ public unsafe class Binary_Danae : ArcBinary<Binary_Danae> {
                         PackedSize = readInt32(ref c),
                     };
                     // special case
-                    if (file.Path.EndsWith(".FTL")) file.Compressed = 1;
+                    if (file.Path.EndsWith(".ftl", StringComparison.OrdinalIgnoreCase)) file.Compressed = 1;
                     else if (file.Compressed == 0) file.FileSize = file.PackedSize;
                     // add file
                     files.Add(file);
@@ -155,12 +154,6 @@ public unsafe class Binary_Void : ArcBinary<Binary_Void> {
             var tag2 = r.ReadL32UString();
             var path = (r.ReadL32UString() ?? "").Replace('\\', '/');
             var file = r.ReadS<V_File>();
-            //var position = r.ReadUInt64E();
-            //var fileSize = r.ReadUInt32E();
-            //var packedSize = r.ReadUInt32E();
-            //r.Skip(4);
-            //var flags = r.ReadUInt32E();
-            //var flags2 = r.ReadUInt16E();
             var useSharedResources = (file.Flags & 0x20) != 0 && file.Flags2 == 0x8000;
             if (useSharedResources && sharedResourcePath == null) throw new FormatException("sharedResourcePath not available");
             var newPath = useSharedResources ? sharedResourcePath : resourcePath;

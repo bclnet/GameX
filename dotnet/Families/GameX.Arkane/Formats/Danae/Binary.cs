@@ -2,7 +2,6 @@ using GameX.Uncore.Formats;
 using OpenStack;
 using System;
 using System.Collections.Generic;
-using System.Drawing.Printing;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -14,7 +13,7 @@ namespace GameX.Arkane.Formats.Danae;
 
 #region Binary_Ftl
 
-public unsafe class Binary_Ftl : IHaveMetaInfo {
+public class Binary_Ftl : IHaveMetaInfo,IWriteToStream {
     public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Ftl(r));
 
     #region Headers
@@ -24,7 +23,7 @@ public unsafe class Binary_Ftl : IHaveMetaInfo {
 
     [StructLayout(LayoutKind.Sequential)]
     struct FTL_HEADER {
-        public static (string, int) Struct = ("<6i", sizeof(FTL_HEADER));
+        public static (string, int) Struct = ("<6i", 24);
         public int Offset3Ddata;                // -1 = no
         public int OffsetCylinder;              // -1 = no
         public int OffsetProgressiveData;       // -1 = no
@@ -35,20 +34,20 @@ public unsafe class Binary_Ftl : IHaveMetaInfo {
 
     [StructLayout(LayoutKind.Sequential)]
     struct FTL_PROGRESSIVEHEADER {
-        public static (string, int) Struct = ("<i", sizeof(FTL_PROGRESSIVEHEADER));
+        public static (string, int) Struct = ("<i", 4);
         public int NumVertex;
     }
 
     [StructLayout(LayoutKind.Sequential)]
     struct FTL_CLOTHESHEADER {
-        public static (string, int) Struct = ("<2i", sizeof(FTL_CLOTHESHEADER));
+        public static (string, int) Struct = ("<2i", 8);
         public int NumCvert;
         public int NumSprings;
     }
 
     [StructLayout(LayoutKind.Sequential)]
     struct FTL_COLLISIONSPHERESHEADER {
-        public static (string, int) Struct = ("<i", sizeof(FTL_COLLISIONSPHERESHEADER));
+        public static (string, int) Struct = ("<i", 4);
         public int NumSpheres;
     }
 
@@ -67,7 +66,7 @@ public unsafe class Binary_Ftl : IHaveMetaInfo {
 
     [StructLayout(LayoutKind.Sequential)]
     struct FTL_VERTEX {
-        public static (string, int) Struct = ($"<{TLVERTEX.Struct.Item1}6f", sizeof(FTL_VERTEX));
+        public static (string, int) Struct = ($"{TLVERTEX.Struct.Item1}6f", 32 + 24);
         public TLVERTEX Vert;
         public Vector3 V;
         public Vector3 Norm;
@@ -82,7 +81,6 @@ public unsafe class Binary_Ftl : IHaveMetaInfo {
     [StructLayout(LayoutKind.Sequential)]
     struct FTL_TEXTURE {
         public static (string, int) Struct = ("<256s", 256);
-        public const int SizeOf = 256;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)] public string Name;
         public static implicit operator E_TEXTURE(FTL_TEXTURE s) {
             var name = s.Name;
@@ -104,7 +102,7 @@ public unsafe class Binary_Ftl : IHaveMetaInfo {
 
     [StructLayout(LayoutKind.Sequential)]
     struct FTL_FACE {
-        public static (string, int) Struct = ("<4i3Hh6f6h14f", sizeof(FTL_FACE));
+        public static (string, int) Struct = ("<4i3Hh6f6h14f", 116);
         public int FaceType;  // 0 = flat, 1 = text, 2 = Double-Side
         public Vector3<int> Rgb;
         public Vector3<ushort> Vid;
@@ -134,7 +132,6 @@ public unsafe class Binary_Ftl : IHaveMetaInfo {
     [StructLayout(LayoutKind.Sequential)]
     struct FTL_GROUPLIST {
         public static (string, int) Struct = ("<256s3if", 256 + 16);
-        public const int SizeOf = 256 + 16;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)] public string Name;
         public int Origin;
         public int NumIndex;
@@ -181,7 +178,7 @@ public unsafe class Binary_Ftl : IHaveMetaInfo {
 
     // https://github.com/OpenSourcedGames/Arx-Fatalis/blob/master/Sources/DANAE/ARX_FTL.cpp#L575
     public Binary_Ftl(BinaryReader r) {
-        Obj = new E_3DOBJ();
+        var obj = Obj = new E_3DOBJ();
         var magic = r.ReadUInt32();
         if (magic != FTL_MAGIC) throw new FormatException($"Invalid FTL magic: \"{magic}\".");
         var version = r.ReadSingle();
@@ -192,68 +189,68 @@ public unsafe class Binary_Ftl : IHaveMetaInfo {
         // Check For & Load 3D Data
         if (header.Offset3Ddata != -1) {
             r.Seek(header.Offset3Ddata);
-            var _3Dh = r.ReadS<FTL_3DHEADER>();
-            Obj.NumVertex = _3Dh.NumVertex;
-            Obj.NumFaces = _3Dh.NumFaces;
-            Obj.NumMaps = _3Dh.NumMaps;
-            Obj.NumGroups = _3Dh.NumGroups;
-            Obj.NumAction = _3Dh.NumAction;
-            Obj.NumSelections = _3Dh.NumSelections;
-            Obj.Origin = _3Dh.Origin;
-            Obj.File = _3Dh.Name;
+            var s = r.ReadS<FTL_3DHEADER>();
+            obj.NumVertex = s.NumVertex;
+            obj.NumFaces = s.NumFaces;
+            obj.NumMaps = s.NumMaps;
+            obj.NumGroups = s.NumGroups;
+            obj.NumAction = s.NumAction;
+            obj.NumSelections = s.NumSelections;
+            obj.Origin = s.Origin;
+            obj.File = s.Name;
 
             // Alloc'n'Copy vertices
-            if (_3Dh.NumVertex > 0) {
-                var vertexList = r.ReadSArray<FTL_VERTEX>(_3Dh.NumVertex);
-                Obj.VertexList = new E_VERTEX[_3Dh.NumVertex];
-                for (var i = 0; i < Obj.VertexList.Length; i++) {
-                    Obj.VertexList[i] = vertexList[i];
-                    Obj.VertexList[i].Vert.Color = 0xFF000000;
+            if (s.NumVertex > 0) {
+                var vertexList = r.ReadSArray<FTL_VERTEX>(s.NumVertex);
+                obj.VertexList = new E_VERTEX[s.NumVertex];
+                for (var i = 0; i < obj.VertexList.Length; i++) {
+                    obj.VertexList[i] = vertexList[i];
+                    obj.VertexList[i].Vert.Color = 0xFF000000;
                 }
-                Obj.Point0 = Obj.VertexList[Obj.Origin].V;
+                obj.Point0 = obj.VertexList[obj.Origin].V;
             }
 
             // Alloc'n'Copy faces
-            if (_3Dh.NumFaces > 0) {
-                var faceList = r.ReadSArray<FTL_FACE>(_3Dh.NumFaces);
-                Obj.FaceList = new E_FACE[_3Dh.NumFaces];
-                for (var i = 0; i < Obj.FaceList.Length; i++)
-                    Obj.FaceList[i] = faceList[i];
+            if (s.NumFaces > 0) {
+                var faceList = r.ReadSArray<FTL_FACE>(s.NumFaces);
+                obj.FaceList = new E_FACE[s.NumFaces];
+                for (var i = 0; i < obj.FaceList.Length; i++)
+                    obj.FaceList[i] = faceList[i];
             }
 
             // Alloc'n'Copy textures
-            if (_3Dh.NumMaps > 0) {
-                var textures = r.ReadTEach<FTL_TEXTURE>(FTL_TEXTURE.SizeOf, _3Dh.NumMaps);
-                Obj.Textures = new E_TEXTURE[_3Dh.NumMaps];
-                for (var i = 0; i < Obj.Textures.Length; i++)
-                    Obj.Textures[i] = textures[i];
+            if (s.NumMaps > 0) {
+                var textures = r.ReadSEach<FTL_TEXTURE>(s.NumMaps);
+                obj.Textures = new E_TEXTURE[s.NumMaps];
+                for (var i = 0; i < obj.Textures.Length; i++)
+                    obj.Textures[i] = textures[i];
             }
 
             // Alloc'n'Copy groups
-            if (_3Dh.NumGroups > 0) {
-                var groupList = r.ReadTEach<FTL_GROUPLIST>(FTL_GROUPLIST.SizeOf, _3Dh.NumGroups);
-                Obj.GroupList = new E_GROUPLIST[_3Dh.NumGroups];
-                for (var i = 0; i < Obj.GroupList.Length; i++) {
-                    Obj.GroupList[i] = groupList[i];
-                    if (Obj.GroupList[i].NumIndex > 0) Obj.GroupList[i].Indexes = r.ReadPArray<int>("i", Obj.GroupList[i].NumIndex);
+            if (s.NumGroups > 0) {
+                var groupList = r.ReadSEach<FTL_GROUPLIST>(s.NumGroups);
+                obj.GroupList = new E_GROUPLIST[s.NumGroups];
+                for (var i = 0; i < obj.GroupList.Length; i++) {
+                    obj.GroupList[i] = groupList[i];
+                    if (obj.GroupList[i].NumIndex > 0) obj.GroupList[i].Indexes = r.ReadPArray<int>("i", obj.GroupList[i].NumIndex);
                 }
             }
 
             // Alloc'n'Copy action points
-            if (_3Dh.NumAction > 0) {
-                var actionList = r.ReadTEach<FTL_ACTIONLIST>(FTL_ACTIONLIST.Struct.Item2, _3Dh.NumAction);
-                Obj.ActionList = new E_ACTIONLIST[_3Dh.NumAction];
-                for (var i = 0; i < Obj.ActionList.Length; i++)
-                    Obj.ActionList[i] = actionList[i];
+            if (s.NumAction > 0) {
+                var actionList = r.ReadSEach<FTL_ACTIONLIST>(s.NumAction);
+                obj.ActionList = new E_ACTIONLIST[s.NumAction];
+                for (var i = 0; i < obj.ActionList.Length; i++)
+                    obj.ActionList[i] = actionList[i];
             }
 
             // Alloc'n'Copy selections
-            if (_3Dh.NumSelections > 0) {
-                var selections = r.ReadFArray(x => r.ReadS<FTL_SELECTIONS>(), _3Dh.NumSelections);
-                Obj.Selections = new E_SELECTIONS[_3Dh.NumSelections];
-                for (var i = 0; i < Obj.Selections.Length; i++) {
-                    Obj.Selections[i] = selections[i];
-                    Obj.Selections[i].Selected = r.ReadPArray<int>("i", Obj.Selections[i].NumSelected);
+            if (s.NumSelections > 0) {
+                var selections = r.ReadSEach<FTL_SELECTIONS>(s.NumSelections);
+                obj.Selections = new E_SELECTIONS[s.NumSelections];
+                for (var i = 0; i < obj.Selections.Length; i++) {
+                    obj.Selections[i] = selections[i];
+                    obj.Selections[i].Selected = r.ReadPArray<int>("i", obj.Selections[i].NumSelected);
                 }
             }
         }
@@ -262,7 +259,7 @@ public unsafe class Binary_Ftl : IHaveMetaInfo {
         if (header.OffsetCollisionSpheres != -1) {
             r.Seek(header.OffsetCollisionSpheres);
             var csh = r.ReadS<FTL_COLLISIONSPHERESHEADER>();
-            Obj.Sdata = new COLLISION_SPHERES_DATA {
+            obj.Sdata = new COLLISION_SPHERES_DATA {
                 NumSpheres = csh.NumSpheres,
                 Spheres = r.ReadSArray<COLLISION_SPHERE>(csh.NumSpheres),
             };
@@ -272,21 +269,30 @@ public unsafe class Binary_Ftl : IHaveMetaInfo {
         if (header.OffsetProgressiveData != -1) {
             r.Seek(header.OffsetProgressiveData);
             var ph = r.ReadS<FTL_PROGRESSIVEHEADER>();
-            r.Skip(sizeof(PROGRESSIVE_DATA) * ph.NumVertex);
+            r.Skip(PROGRESSIVE_DATA.Struct.Item2 * ph.NumVertex);
         }
 
         // Alloc'n'Copy Clothes DATA
         if (header.OffsetClothesData != -1) {
             r.Seek(header.OffsetClothesData);
             var ch = r.ReadS<FTL_CLOTHESHEADER>();
-            Obj.Cdata = new CLOTHES_DATA {
+            obj.Cdata = new CLOTHES_DATA {
                 NumCvert = (short)ch.NumCvert,
                 NumSprings = (short)ch.NumSprings,
                 Cvert = r.ReadSArray<CLOTHESVERTEX>(ch.NumCvert),
                 Springs = r.ReadSArray<E_SPRINGS>(ch.NumSprings),
             };
         }
+
+        // process
+        obj.CenterObjectCoordinates();
+        obj.CreateCedricData();
+        obj.CreatePFaces();
+        obj.PrecomputeFastAccess();
     }
+
+    public void WriteToStream(Stream stream) => this.Serialize(stream);
+    public override string ToString() => this.Serialize();
 
     // IHaveMetaInfo
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [

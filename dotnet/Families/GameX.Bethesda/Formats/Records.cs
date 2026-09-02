@@ -11,7 +11,6 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
 using static GameX.Bethesda.Formats.Records.FormType;
-using static GameX.Bethesda.Formats.Records.Modl;
 using static OpenStack.CellManager;
 using static System.IO.Polyfill;
 #pragma warning disable CS9113

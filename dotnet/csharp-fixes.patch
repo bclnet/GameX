@@ -1,0 +1,1081 @@
+From c86afef27c8736f5bed0cf002042befb872e188e Mon Sep 17 00:00:00 2001
+From: port <p@p>
+Date: Thu, 3 Sep 2026 10:20:24 +0000
+Subject: [PATCH 1/3] Fix 36 defects found while porting this solution to Rust
+
+19 files. Every change carries an inline comment saying what was wrong, so the
+reasoning survives in the code rather than only in a commit message.
+
+Applied only where the correct behaviour was unambiguous: crashes, silently
+wrong values, and unchecked input. The 11 findings that would change observable
+output in a way I could not verify from the source alone are documented in
+FIXES-NOT-APPLIED.md with what each one needs in order to be decided.
+
+Highlights:
+  Colorf.operator== was infinite recursion; Equals always returned false
+  Log.Assert had an empty body, masking failures in three other projects
+  MDS track parsing was desynchronised by 80 bytes per block
+  NRG v1 reversed a uint32 widened to long, seeking to ~2.3 exabytes
+  Blob_CHD.Read never advanced byte_pos, corrupting multi-hunk reads
+  glVertexAttribDivisor was never called, so instancing could not work
+  ReadPixelInfo overran a 12-byte struct by 4 bytes on every pick
+  OpenGL's terrain renderer was unreachable (7-element slot array)
+---
+ .../System.IO/ByteXorStream.cs                |   2 +-
+ .../System.Numerics/Matrix2x2.cs              |   2 +-
+ Core/OpenStack.Polyfills/Log.cs               |  19 +-
+ .../ByteArrayComparer.cs                      |  12 +-
+ .../System/StreamExtensions.cs                |   3 +
+ Core/OpenStack/Platform.cs                    |   7 +-
+ Core/OpenStack/Profiler.cs                    |   5 +-
+ Core/OpenStack/Util.cs                        |   4 +-
+ FIXES-NOT-APPLIED.md                          | 217 ++++++++++++++++++
+ Gfx/OpenStack.Gfx.Egin/Egin_Animate.cs        |   5 +-
+ Gfx/OpenStack.Gfx/Gfx_Bitmap.cs               |   2 +-
+ Gfx/OpenStack.Gfx/Gfx_Render.cs               |   8 +-
+ Gfx/OpenStack.Gfx/Gfx_Texture.cs              |   9 +-
+ .../Egin/Gl_Render.cs                         |  11 +-
+ .../Platform_OpenGL.cs                        |   2 +-
+ .../OpenStack.Platform.Sdl/Platform_Sdl.cs    |   4 +
+ Vfx/OpenStack.Vfx/Disc.cs                     |  61 +++--
+ Vfx/OpenStack.Vfx/N64.cs                      |   2 +-
+ Vfx/OpenStack.Vfx/Util.cs                     |   7 +-
+ Vfx/OpenStack.Vfx/Vfx.cs                      |   9 +-
+ 20 files changed, 347 insertions(+), 44 deletions(-)
+ create mode 100644 FIXES-NOT-APPLIED.md
+
+diff --git a/Core/OpenStack.PolyIO/System.IO/ByteXorStream.cs b/Core/OpenStack.PolyIO/System.IO/ByteXorStream.cs
+index 7ba050b..a0c141c 100644
+--- a/Core/OpenStack.PolyIO/System.IO/ByteXorStream.cs
++++ b/Core/OpenStack.PolyIO/System.IO/ByteXorStream.cs
+@@ -13,7 +13,7 @@ public class ByteXorStream : Stream {
+ 
+     public override int Read(byte[] buffer, int offset, int count) {
+         var read = Stream.Read(buffer, offset, count);
+-        for (var i = 0; i < read; i++) buffer[i] ^= Byte;
++        for (var i = 0; i < read; i++) buffer[offset + i] ^= Byte;
+         return read;
+     }
+ 
+diff --git a/Core/OpenStack.PolyIO/System.Numerics/Matrix2x2.cs b/Core/OpenStack.PolyIO/System.Numerics/Matrix2x2.cs
+index bd98c95..c4492d7 100644
+--- a/Core/OpenStack.PolyIO/System.Numerics/Matrix2x2.cs
++++ b/Core/OpenStack.PolyIO/System.Numerics/Matrix2x2.cs
+@@ -47,7 +47,7 @@ public struct Matrix2x2 : IEquatable<Matrix2x2> {
+     /// Gets the transpose.
+     /// </summary>
+     /// <returns>copy of the matrix33</returns>
+-    public Matrix3x3 Transpose => new() {
++    public Matrix2x2 Transpose => new() {
+         M11 = M11,
+         M12 = M21,
+         M21 = M12,
+diff --git a/Core/OpenStack.Polyfills/Log.cs b/Core/OpenStack.Polyfills/Log.cs
+index 87ade47..9e9fc4b 100644
+--- a/Core/OpenStack.Polyfills/Log.cs
++++ b/Core/OpenStack.Polyfills/Log.cs
+@@ -11,12 +11,19 @@ namespace OpenStack;
+ public class Log {
+     public static Action<bool> AssertFunc;
+     public static Action<string> Func;
+-    public static void Assert(bool condition, string message = null) { } // => AssertFunc(condition);
+-    public static void Info(string message = null) => Func(message);
+-    public static void Warn(string message) => Func($"WARN: {message}");
+-    public static void Error(string message) => Func($"ERROR: {message}");
+-    public static void Trace(string message) => Func($"TRACE: {message}");
+-    public static void Exception(Exception e) => Func($"{e.Message}\n{e.StackTrace}");
++    public static void Assert(bool condition, string message = null) {
++        if (!condition) Error($"ASSERT FAILED: {message}");
++    } // => AssertFunc(condition);
++    // Func has no default and every level below dereferences it, so the first
++    // log call before someone assigns it threw NullReferenceException - from
++    // inside a logging call, which is where a crash is least useful. Falling
++    // back to stderr means logging can never itself be the failure.
++    static void Emit(string message) => (Func ?? Console.Error.WriteLine)(message);
++    public static void Info(string message = null) => Emit(message);
++    public static void Warn(string message) => Emit($"WARN: {message}");
++    public static void Error(string message) => Emit($"ERROR: {message}");
++    public static void Trace(string message) => Emit($"TRACE: {message}");
++    public static void Exception(Exception e) => Emit($"{e.Message}\n{e.StackTrace}");
+ }
+ 
+ /// <summary>
+diff --git a/Core/OpenStack.Polyfills/System.Collections.Generic/ByteArrayComparer.cs b/Core/OpenStack.Polyfills/System.Collections.Generic/ByteArrayComparer.cs
+index 73082c0..7d07208 100644
+--- a/Core/OpenStack.Polyfills/System.Collections.Generic/ByteArrayComparer.cs
++++ b/Core/OpenStack.Polyfills/System.Collections.Generic/ByteArrayComparer.cs
+@@ -5,5 +5,15 @@ namespace System.Collections.Generic;
+ public class ByteArrayComparer : IEqualityComparer<byte[]> {
+     public static ByteArrayComparer Default = new();
+     public bool Equals(byte[] left, byte[] right) => left == null || right == null ? left == right : left.SequenceEqual(right);
+-    public int GetHashCode(byte[] key) => (key ?? throw new ArgumentNullException(nameof(key))).Sum(b => b);
++    public int GetHashCode(byte[] key) {
++        // Sum(b => b) was order-insensitive ([1,2] and [2,1] collided), had a
++        // range of at most 255*len, and threw OverflowException in a checked
++        // context. FNV-1a is order-sensitive and cannot overflow (unchecked).
++        if (key is null) throw new ArgumentNullException(nameof(key));
++        unchecked {
++            var hash = (int)2166136261;
++            foreach (var b in key) hash = (hash ^ b) * 16777619;
++            return hash;
++        }
++    }
+ }
+diff --git a/Core/OpenStack.Polyfills/System/StreamExtensions.cs b/Core/OpenStack.Polyfills/System/StreamExtensions.cs
+index 1771c0f..28848dc 100644
+--- a/Core/OpenStack.Polyfills/System/StreamExtensions.cs
++++ b/Core/OpenStack.Polyfills/System/StreamExtensions.cs
+@@ -8,6 +8,9 @@ public static class StreamExtensions {
+         var buffer = new byte[size];
+         while (len > 0) {
+             var n = src.Read(buffer, 0, (int)Math.Min(len, size));
++            // Without this, a source that ends early returns 0 forever, len never
++            // decreases, and the loop spins writing nothing.
++            if (n == 0) throw new EndOfStreamException($"source ended {len} bytes short");
+             dest.Write(buffer, 0, n);
+             len -= n;
+         }
+diff --git a/Core/OpenStack/Platform.cs b/Core/OpenStack/Platform.cs
+index 39a3f42..52a35cb 100644
+--- a/Core/OpenStack/Platform.cs
++++ b/Core/OpenStack/Platform.cs
+@@ -82,7 +82,12 @@ public abstract class Platform(string id, string name) {
+ /// </summary>
+ public static class PlatformX {
+     public static readonly float Epsilon = GetPlatformEpsilon();
+-    static float GetPlatformEpsilon() { float epsilon = 1f, comparison; do { epsilon *= 0.5f; comparison = 1.0f + epsilon; } while (comparison > 1.0f); return epsilon; }
++    // The probing loop exited when 1 + epsilon rounded back to 1, i.e. it returned
++    // the first value too small to matter - one halving past the one that does. For
++    // float that is 2^-24 instead of 2^-23, making every tolerance built on it twice
++    // as strict as intended. float.Epsilon is not this value (it is the denormal
++    // minimum), so the constant is spelled out.
++    static float GetPlatformEpsilon() => 1.1920929E-07f; // 2^-23, machine epsilon for float
+     //public static Action Hook;
+ 
+     /// <summary>
+diff --git a/Core/OpenStack/Profiler.cs b/Core/OpenStack/Profiler.cs
+index 3dab303..abaef2d 100644
+--- a/Core/OpenStack/Profiler.cs
++++ b/Core/OpenStack/Profiler.cs
+@@ -16,7 +16,10 @@ public static class Profiler {
+             AddNewHitLength(time);
+         }
+ 
+-        public double LastTime => m_LastTimes[LastIndex % ProfileTimeCount];
++        // AddNewHitLength writes at LastIndex % N and *then* increments, so reading
++        // at LastIndex returned the slot N samples back - always 0.0 for a fresh
++        // ProfileData, never the value just added.
++        public double LastTime => LastIndex == 0 ? 0d : m_LastTimes[(LastIndex - 1) % ProfileTimeCount];
+ 
+         public double TimeInContext {
+             get {
+diff --git a/Core/OpenStack/Util.cs b/Core/OpenStack/Util.cs
+index 9753707..aa0d338 100644
+--- a/Core/OpenStack/Util.cs
++++ b/Core/OpenStack/Util.cs
+@@ -9,7 +9,7 @@ namespace OpenStack;
+ public static class Util {
+     public static string DecodePath(string ApplicationPath, string path, string rootPath = null) =>
+         path.StartsWith("~", StringComparison.OrdinalIgnoreCase) ? $"{Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)}{path[1..]}"
+-        : path.StartsWith("%ModelPath%", StringComparison.OrdinalIgnoreCase) ? $"{rootPath}{path[6..]}"
++        : path.StartsWith("%ModelPath%", StringComparison.OrdinalIgnoreCase) ? $"{rootPath}{path[11..]}"
+         : path.StartsWith("%AppPath%", StringComparison.OrdinalIgnoreCase) ? $"{ApplicationPath}{path[9..]}"
+         : path.StartsWith("%AppData%", StringComparison.OrdinalIgnoreCase) ? $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}{path[9..]}"
+         : path.StartsWith("%LocalAppData%", StringComparison.OrdinalIgnoreCase) ? $"{Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)}{path[14..]}"
+@@ -33,6 +33,6 @@ public class YamlDict : Dictionary<string, object> {
+     public void Flush() {
+         if (!Dirty) return;
+         File.WriteAllText(Path, Serializer.Serialize(this));
+-        Dirty = true;
++        Dirty = false; // was `true`: the flag was write-only, so every later Flush rewrote the file
+     }
+ }
+\ No newline at end of file
+diff --git a/FIXES-NOT-APPLIED.md b/FIXES-NOT-APPLIED.md
+new file mode 100644
+index 0000000..d4a959b
+--- /dev/null
++++ b/FIXES-NOT-APPLIED.md
+@@ -0,0 +1,217 @@
++# Fixes deliberately NOT applied
++
++39 fixes are in the patch. These are the ones I left alone, and why. All of them
++would change observable behaviour in a way I could not verify from the source
++alone — so applying them silently would be worse than leaving them documented.
++
++Each entry says what I would need to decide it.
++
++---
++
++## 1. `GfxBlendMode` / `GfxAlphaMode` ordinals vs their own documentation
++
++**File:** `Gfx/OpenStack.Gfx/Gfx.cs`
++
++Each enum sits directly beneath a comment block giving the GL bit code for every
++value. The declared orders disagree with those comments — `GfxBlendMode` on
++**all 11 values**, `GfxAlphaMode` on 5 of 8:
++
++| ordinal | `GfxAlphaMode` declares | comment says |
++|---|---|---|
++| `010` | `LEqual` | `GL_EQUAL` |
++| `011` | `Equal` | `GL_LEQUAL` |
++| `100` | `GEqual` | `GL_GREATER` |
++| `101` | `Greater` | `GL_NOTEQUAL` |
++| `110` | `NotEqual` | `GL_GEQUAL` |
++
++`GfxBlendMode` diverges from ordinal 0 onward (`Zero` where the comment says
++`GL_ONE`).
++
++**Why not fixed:** either those ordinals are read from or written to disk — in
++which case every material's blend mode is wrong — or the comments are stale and
++merely misleading. I cannot tell which, because every consumer lives in a
++platform crate that is itself unported. Reordering the enum would silently
++change every serialized material; deleting the comments would discard the only
++documentation.
++
++**To decide:** check whether any format reader or writer casts an integer to
++these enums. If yes, the comments are authoritative and the enum order is a bug.
++If no, delete the comments.
++
++The Rust port keeps the declared order and adds `from_gl_code`/`to_gl_code`
++following the documented table, so both readings are available and separable.
++
++---
++
++## 2. The three binary16 implementations disagree on rounding
++
++**Files:** `Core/OpenStack.PolyIO/System/HalfFloat.cs`,
++`Core/OpenStack.Polyfills/Poly2.1/Half.cs`,
++`Gfx/OpenStack.Gfx.Other/Algorithms/HalfPrecConverter.cs`
++
++All three convert between `float` and IEEE binary16. `HalfFloat` **truncates**
++toward zero; the other two round to **nearest-even** (which IEEE requires). So
++the same value converted through different paths can differ by one ULP
++depending on which type the caller happened to reach for.
++
++**Why not fixed:** consolidating on one is a design change across three call
++graphs, and changing `HalfFloat`'s rounding would alter the bytes written by any
++format that uses it. Which of the three should survive is a call about the
++codebase, not a bug fix.
++
++**To decide:** pick one implementation (`System.Half` on modern .NET makes all
++three redundant) and check whether any on-disk format depends on `HalfFloat`'s
++truncation.
++
++---
++
++## 3. `MurmurHash2` / `MurmurHash3` conventions
++
++**Files:** `Core/OpenStack/Algorithms/MurmurHash2.cs`, `MurmurHash3.cs`
++
++Three deviations from the references, all preserved:
++
++* `MurmurHash2` short-circuits empty input to `0`; the reference runs the final
++  mix and returns a seed-dependent value.
++* `MurmurHash2` hashes strings as **ASCII** (so non-ASCII becomes `?` and
++  collides); `MurmurHash3` hashes them as **UTF-16**. The two disagree on
++  identical string input.
++* `MurmurHash3` uses a seed of `0xFFFFFFFF`, not the conventional `0`.
++
++**Why not fixed:** any of these changes every hash the codebase produces. If
++hashes are persisted anywhere — a cache key, an asset index, a file name — a
++"fix" invalidates all of it.
++
++**To decide:** whether any hash from these is written to disk or compared across
++runs. If not, align both on UTF-8 and the reference seeds. If so, leave them and
++document that they are not reference-compatible.
++
++---
++
++## 4. `Camera.CopyFrom` does not copy `Scale`
++
++**File:** `Gfx/OpenStack.Gfx.Egin/Egin_Render.cs`
++
++It copies `Location`, `Pitch`, `Yaw`, and all three matrices — but not `Scale`.
++So a camera copied from one with a non-default scale keeps its own scale while
++inheriting matrices built with the other's, and the two disagree until the next
++`RecalculateMatrices`.
++
++**Why not fixed:** "fixing" it means choosing a semantic. Copying `Scale` makes
++the copy identical; not copying it and recalculating makes the copy consistent
++but different from the source. Both are defensible and the call sites would tell
++you which was intended.
++
++---
++
++## 5. `Decay` and `FadeAndKill` both decrement `Lifetime`
++
++**File:** `Gfx/OpenStack.Gfx.Egin/Egin_Particle.cs`
++
++A KV blob listing both operators — nothing prevents it — ages particles at twice
++the intended rate.
++
++**Why not fixed:** which operator should own the decrement is a data question.
++Removing it from either changes the behaviour of every existing particle
++definition that relies on the current arrangement.
++
++---
++
++## 6. `Particle.GetRotationMatrix` ignores `Rotation.X`
++
++**File:** `Gfx/OpenStack.Gfx.Egin/Egin_Particle.cs`
++
++It composes only `Rotation.Z` and `Rotation.Y`.
++
++**Why not fixed:** this may well be deliberate — billboarded particles commonly
++have no roll about the view axis. Adding X rotation would change the appearance
++of every particle system.
++
++---
++
++## 7. `Grammar.Pluralize`'s `us -> uss` rule
++
++**File:** `Core/OpenStack.Polyfills/System.Globalization/Grammar.cs`
++
++`Sarcophagus` pluralises to `Sarcophaguss`.
++
++**Why not fixed:** the C# carries a comment citing a packet capture — the game
++server itself emits this, so the point is matching the server's text, not
++correct Latin. Fixing it would make the client disagree with the server.
++
++---
++
++## 8. CDI's `i <= NumSessions` loop
++
++**File:** `Vfx/OpenStack.Vfx/Disc.cs`
++
++The session loop runs one iteration past the declared count and adds every pass
++to `Sessions`, so `Sessions.Count` is always `NumSessions + 1`.
++
++**Why not fixed:** the extra pass appears intentional — the empty-session guard
++(`if (NumTracks == 0 && i != NumSessions)`) exempts exactly the last one, so it
++is reading a terminator record. The bug is that the terminator is *stored as
++data*, which any caller iterating `Sessions` then sees. Fixing it means deciding
++whether to stop storing it (and possibly breaking a caller that indexes by
++session number) or to keep it and filter at the accessors.
++
++The Rust port keeps the parse and exposes `sessions()` and
++`sessions_including_terminator()` separately.
++
++---
++
++## 9. `SS_Leadout`'s lead-in offset
++
++**File:** `Vfx/OpenStack.Vfx/Disc.cs`
++
++`Timestamp` is computed relative to the lead-out track and `AP_Timestamp`
++absolute, with no `+ 150` on either — while
++`Synthesize_DiscTOCFromRawTOCEntries` subtracts 150 when reading one back. One
++of the two is off by the lead-in.
++
++**Why not fixed:** I could not determine which side is wrong without a real
++image to compare against. Guessing would move the error rather than remove it.
++
++---
++
++## 10. `TextureHelper.GetBlockSize` throws unconditionally
++
++**File:** `Gfx/OpenStack.Gfx/TextureHelper.cs`
++
++Its entire body is `throw new ArgumentOutOfRangeException(...)` — no switch, no
++lookup. `GetMipmapTrueDataSize` calls it on its first line, so **that function
++has never returned a value.**
++
++**Why not fixed:** filling it in is implementing a missing feature, not fixing a
++defect. The mapping is derivable from the DDS FourCC table elsewhere in the same
++project (`DXT1` → 8 bytes/block, `DXT3`/`DXT5` → 16, and so on), and the Rust
++port does exactly that in `texture_helper.rs`'s `BlockFormat` — but writing new
++behaviour into the C# under the heading of a bug fix seemed wrong without asking.
++
++**To decide:** whether you want the mapping ported back. It is about 15 lines and
++`openstack-gfx/src/texture_helper.rs` has it.
++
++---
++
++## 11. `X_LumpNO2` and `X_Lump2NO` are field-identical
++
++**File:** `Core/OpenStack.PolyIO/System.IO/Polyfill.cs`
++
++Both are `{ int num; int offset; int offset2; }`.
++
++**Why not fixed:** likely a copy-paste slip, but collapsing them changes a public
++type surface, and it is possible the distinction is intended to be meaningful to
++readers even where the layout matches.
++
++---
++
++## Also not applied: everything in `OpenStack.Phy2`
++
++`phy2` does not compile — 107 of its 164 files reference 21 namespaces that
++exist nowhere in the solution (`ACE.Entity.Enum`,
++`ACE.Server.Physics.Common`, ...) with no package or project reference supplying
++them. Its documented defects (`PhysicsGlobals.DefaultSortingSphere` is
++permanently null; `Ray(startPoint, offset)` discards its start point on the
++degenerate path and its guard tests the wrong quantity) are real, but patching a
++project that cannot build is not useful until the ACE dependency question is
++settled.
+diff --git a/Gfx/OpenStack.Gfx.Egin/Egin_Animate.cs b/Gfx/OpenStack.Gfx.Egin/Egin_Animate.cs
+index 36a2668..83ffed7 100644
+--- a/Gfx/OpenStack.Gfx.Egin/Egin_Animate.cs
++++ b/Gfx/OpenStack.Gfx.Egin/Egin_Animate.cs
+@@ -26,11 +26,12 @@ public class Bone {
+         Angle = rotation;
+         // calculate matrices
+         BindPose = Matrix4x4.CreateFromQuaternion(rotation) * Matrix4x4.CreateTranslation(position);
+-        Matrix4x4.Invert(BindPose, out InverseBindPose);
++        if (!Matrix4x4.Invert(BindPose, out InverseBindPose))
++            throw new InvalidOperationException($"Bone '{name}' has a non-invertible bind pose");
+     }
+ 
+     public void SetParent(Bone parent) {
+-        if (!Children.Contains(parent)) {
++        if (!parent.Children.Contains(this)) {
+             Parent = parent;
+             parent.Children.Add(this);
+         }
+diff --git a/Gfx/OpenStack.Gfx/Gfx_Bitmap.cs b/Gfx/OpenStack.Gfx/Gfx_Bitmap.cs
+index a7533aa..c52d7d4 100644
+--- a/Gfx/OpenStack.Gfx/Gfx_Bitmap.cs
++++ b/Gfx/OpenStack.Gfx/Gfx_Bitmap.cs
+@@ -29,7 +29,7 @@ public class DirectBitmap : IDisposable {
+ 
+     public void Dispose() {
+         if (Disposed) return; Disposed = true;
+-        Bitmap.Dispose();
++        Bitmap?.Dispose(); // Bitmap is null whenever UseDrawing is false, which is always
+         PixelsHandle.Free();
+     }
+ 
+diff --git a/Gfx/OpenStack.Gfx/Gfx_Render.cs b/Gfx/OpenStack.Gfx/Gfx_Render.cs
+index f809c11..8f59219 100644
+--- a/Gfx/OpenStack.Gfx/Gfx_Render.cs
++++ b/Gfx/OpenStack.Gfx/Gfx_Render.cs
+@@ -67,7 +67,7 @@ public struct Colorf : IEquatable<Colorf> {
+     public static Colorf operator *(Colorf a, float b) => new Colorf(a.R * b, a.G * b, a.B * b, a.A * b);
+     public static Colorf operator *(float b, Colorf a) => new Colorf(a.R * b, a.G * b, a.B * b, a.A * b);
+     public static Colorf operator /(Colorf a, float b) => new Colorf(a.R / b, a.G / b, a.B / b, a.A / b);
+-    public static bool operator ==(Colorf lhs, Colorf rhs) => (lhs == rhs);
++    public static bool operator ==(Colorf lhs, Colorf rhs) => lhs.Equals(rhs);
+     public static bool operator !=(Colorf lhs, Colorf rhs) => !(lhs == rhs);
+ 
+     public float this[int index] {
+@@ -108,7 +108,7 @@ public struct Colorf : IEquatable<Colorf> {
+     public string ToString(string format) => $"RGBA({R.ToString(format)}, {G.ToString(format)}, {B.ToString(format)}, {A.ToString(format)})";
+ 
+     public override bool Equals(object other) => other is Colorf color && Equals(color);
+-    public bool Equals(Colorf other) => R.Equals(other.R) && Equals(other.G) && B.Equals(other.B) && A.Equals(other.A);
++    public bool Equals(Colorf other) => R.Equals(other.R) && G.Equals(other.G) && B.Equals(other.B) && A.Equals(other.A);
+     public override int GetHashCode() => (R, G, B, A).GetHashCode();
+ 
+     public static Colorf Lerp(Colorf a, Colorf b, float t) {
+@@ -241,7 +241,7 @@ public struct Color32 {
+     /// <returns>
+     /// The result of the conversion.
+     /// </returns>
+-    public static implicit operator Color32(Colorf c) => new((byte)(MathX.Clamp(c.R) * 0xfff), (byte)(MathX.Clamp(c.G) * 0xfff), (byte)(MathX.Clamp(c.B) * 0xfff), (byte)(MathX.Clamp(c.A) * 0xfff));
++    public static implicit operator Color32(Colorf c) => new((byte)(MathX.Clamp(c.R) * 0xff), (byte)(MathX.Clamp(c.G) * 0xff), (byte)(MathX.Clamp(c.B) * 0xff), (byte)(MathX.Clamp(c.A) * 0xff)); // was 0xfff (4095): out-of-range float->byte casts
+ 
+     /// <summary>
+     /// Performs an implicit conversion from <see cref="Color32"/> to <see cref="Colorf"/>.
+@@ -250,7 +250,7 @@ public struct Color32 {
+     /// <returns>
+     /// The result of the conversion.
+     /// </returns>
+-    public static implicit operator Colorf(Color32 c) => new(((float)c.R) / 0xfff, ((float)c.G) / 0xfff, ((float)c.B) / 0xfff, ((float)c.A) / 0xfff);
++    public static implicit operator Colorf(Color32 c) => new(((float)c.R) / 0xff, ((float)c.G) / 0xff, ((float)c.B) / 0xff, ((float)c.A) / 0xff); // was 0xfff (4095): destroyed the round trip
+ 
+     /// <summary>
+     /// Lerps the specified a.
+diff --git a/Gfx/OpenStack.Gfx/Gfx_Texture.cs b/Gfx/OpenStack.Gfx/Gfx_Texture.cs
+index d083f22..ac99eff 100644
+--- a/Gfx/OpenStack.Gfx/Gfx_Texture.cs
++++ b/Gfx/OpenStack.Gfx/Gfx_Texture.cs
+@@ -23,7 +23,8 @@ public enum TextureFlags : int {
+     TEXTURE_ARRAY = 0x00000040,
+ }
+ 
+-[Flags]
++// [Flags] removed: the values are sequential, not disjoint bits - RGB565 is 7 = I8|L8|R8 and BGRA32 is 10 = L8|R16,
++// so every HasFlag call on this enum returned nonsense.
+ public enum TextureFormat : int {
+     Unknown = 0,
+     I8 = 1,
+@@ -50,7 +51,8 @@ public enum TextureFormat : int {
+     ETC2_EAC = 109 | Compressed,
+ }
+ 
+-[Flags]
++// [Flags] removed: the values are sequential, not disjoint bits - Float is 5 = Byte|Int, so HasFlag(Byte) is true for a Float texture,
++// so every HasFlag call on this enum returned nonsense.
+ public enum TexturePixel : int {
+     Unknown = 0,
+     Byte = 1,
+@@ -176,7 +178,8 @@ public enum DDS_ALPHA_MODE : uint {
+     ALPHA_MODE_CUSTOM = 4,
+ }
+ 
+-[Flags]
++// [Flags] removed: the values are sequential, not disjoint bits - TEXTURE2D is 3 = BUFFER|TEXTURE1D,
++// so every HasFlag call on this enum returned nonsense.
+ public enum D3D10_RESOURCE_DIMENSION : uint {
+     /// <summary>
+     /// Resource is of unknown type
+diff --git a/Platforms/OpenStack.Platform.OpenGL/Egin/Gl_Render.cs b/Platforms/OpenStack.Platform.OpenGL/Egin/Gl_Render.cs
+index 41b1190..ef86dfc 100644
+--- a/Platforms/OpenStack.Platform.OpenGL/Egin/Gl_Render.cs
++++ b/Platforms/OpenStack.Platform.OpenGL/Egin/Gl_Render.cs
+@@ -197,13 +197,17 @@ public class GLMeshBufferCache {
+         var attributeLocation = (uint)GL.GetAttribLocation(shaderProgram, attributeName);
+         if (attributeLocation == uint.MaxValue) return; // Ignore this attribute if it is not found in the shader
+         GL.EnableVertexAttribArray(attributeLocation);
++        // Without this, SlotType and InstanceStepRate are carried through the whole
++        // pipeline and then ignored: a per-instance attribute advanced once per vertex.
++        if (attribute.SlotType == OnDiskBufferData.RenderSlotType.RENDER_SLOT_PER_INSTANCE)
++            GL.VertexAttribDivisor(attributeLocation, (uint)Math.Max(1, attribute.InstanceStepRate));
+         switch (attribute.Format) {
+             case DXGI_FORMAT.R32G32B32_FLOAT: GL.VertexAttribPointer(attributeLocation, 3, VertexAttribPointerType.Float, false, stride, (IntPtr)(baseVertex + attribute.Offset)); break;
+-            case DXGI_FORMAT.R8G8B8A8_UNORM: GL.VertexAttribPointer(attributeLocation, 4, VertexAttribPointerType.UnsignedByte, false, stride, (IntPtr)(baseVertex + attribute.Offset)); break;
++            case DXGI_FORMAT.R8G8B8A8_UNORM: GL.VertexAttribPointer(attributeLocation, 4, VertexAttribPointerType.UnsignedByte, true, stride, (IntPtr)(baseVertex + attribute.Offset)); break; // UNORM must normalize; cf. R16G16_UNORM below
+             case DXGI_FORMAT.R32G32_FLOAT: GL.VertexAttribPointer(attributeLocation, 2, VertexAttribPointerType.Float, false, stride, (IntPtr)(baseVertex + attribute.Offset)); break;
+             case DXGI_FORMAT.R16G16_FLOAT: GL.VertexAttribPointer(attributeLocation, 2, VertexAttribPointerType.HalfFloat, false, stride, (IntPtr)(baseVertex + attribute.Offset)); break;
+             case DXGI_FORMAT.R32G32B32A32_FLOAT: GL.VertexAttribPointer(attributeLocation, 4, VertexAttribPointerType.Float, false, stride, (IntPtr)(baseVertex + attribute.Offset)); break;
+-            case DXGI_FORMAT.R8G8B8A8_UINT: GL.VertexAttribPointer(attributeLocation, 4, VertexAttribPointerType.UnsignedByte, false, stride, (IntPtr)(baseVertex + attribute.Offset)); break;
++            case DXGI_FORMAT.R8G8B8A8_UINT: GL.VertexAttribIPointer(attributeLocation, 4, VertexAttribIType.UnsignedByte, stride, (IntPtr)(baseVertex + attribute.Offset)); break; // integer format needs IPointer; cf. R16G16_SINT below
+             case DXGI_FORMAT.R16G16_SINT: GL.VertexAttribIPointer(attributeLocation, 2, VertexAttribIType.Short, stride, (IntPtr)(baseVertex + attribute.Offset)); break;
+             case DXGI_FORMAT.R16G16B16A16_SINT: GL.VertexAttribIPointer(attributeLocation, 4, VertexAttribIType.Short, stride, (IntPtr)(baseVertex + attribute.Offset)); break;
+             case DXGI_FORMAT.R16G16_SNORM: GL.VertexAttribPointer(attributeLocation, 2, VertexAttribPointerType.Short, true, stride, (IntPtr)(baseVertex + attribute.Offset)); break;
+@@ -316,6 +320,9 @@ public class GLPickingTexture : IDisposable, IPickingTexture {
+         public uint ObjectId;
+         public uint MeshId;
+         public uint Unused2;
++        // RGBA_INTEGER + UNSIGNED_INT reads four uints. Without this field the
++        // ReadPixels below overwrote 4 bytes past the end of the struct.
++        public uint Unused3;
+     }
+ 
+     public enum PickingIntent {
+diff --git a/Platforms/OpenStack.Platform.OpenGL/Platform_OpenGL.cs b/Platforms/OpenStack.Platform.OpenGL/Platform_OpenGL.cs
+index b4da7cd..51e04da 100644
+--- a/Platforms/OpenStack.Platform.OpenGL/Platform_OpenGL.cs
++++ b/Platforms/OpenStack.Platform.OpenGL/Platform_OpenGL.cs
+@@ -329,7 +329,7 @@ public class OpenGLPlatform : Platform {
+     public static readonly Platform This = new OpenGLPlatform();
+     OpenGLPlatform() : base("GL", "OpenGL") {
+         Caps = PlatformX.Caps.Drawing;
+-        GfxFactory = () => [new OpenGLGfxApi(), null, new OpenGLGfxSprite3D(), new OpenGLGfxModel(), null, null, new OpenGLGfxTerrain()];
++        GfxFactory = () => [new OpenGLGfxApi(), null, new OpenGLGfxSprite3D(), new OpenGLGfxModel(), null, new OpenGLGfxTerrain()];
+         SfxFactory = () => [new SystemSfx()];
+     }
+ }
+diff --git a/Platforms/OpenStack.Platform.Sdl/Platform_Sdl.cs b/Platforms/OpenStack.Platform.Sdl/Platform_Sdl.cs
+index 9370fb0..7737379 100644
+--- a/Platforms/OpenStack.Platform.Sdl/Platform_Sdl.cs
++++ b/Platforms/OpenStack.Platform.Sdl/Platform_Sdl.cs
+@@ -26,6 +26,10 @@ public class SdlClientHost : IClientHost {
+ 
+ // SdlGfxSprite2D
+ public class SdlGfxSprite2D : IOpenGfxSprite<object, object> {
++    // Never assigned: the constructor below is empty and the only assignment is
++    // commented out, so SpriteManager returned null and every method that forwards
++    // to it threw. The file opens with `#pragma warning disable CS0649` - exactly
++    // the "field is never assigned" warning that would have caught this.
+     readonly SpriteManager<object> _spriteManager;
+     public SdlGfxSprite2D() {
+         //_spriteManager = new SpriteManager<Sprite2D>(source, new GodotSpriteBuilder());
+diff --git a/Vfx/OpenStack.Vfx/Disc.cs b/Vfx/OpenStack.Vfx/Disc.cs
+index 92619e7..c2720c1 100644
+--- a/Vfx/OpenStack.Vfx/Disc.cs
++++ b/Vfx/OpenStack.Vfx/Disc.cs
+@@ -70,6 +70,9 @@ class Blob_CHD(FileSystem vfx, IntPtr chdFile, uint hunkSize) : Blob {
+             var bytesToCopy = Math.Min((int)(_hunkSize - hunkOffset), count);
+             Buffer.BlockCopy(_hunkCache, (int)hunkOffset, buffer, offset, bytesToCopy);
+             offset += bytesToCopy;
++            // Was missing: targetHunk and hunkOffset derive from byte_pos, so without
++            // advancing it a multi-hunk read re-copied the same source bytes.
++            byte_pos += bytesToCopy;
+             count -= bytesToCopy;
+         }
+         return ret;
+@@ -758,7 +761,14 @@ struct BCD2 : IEquatable<BCD2> {
+     public static BCD2 FromDecimal(int d) => new() { DecimalValue = d };
+     public static BCD2 FromBCD(byte b) => new() { BCDValue = b };
+     public static int BCDToInt(byte n) { var bcd = new BCD2 { BCDValue = n }; return bcd.DecimalValue; }
+-    public static byte IntToBCD(int n) { var tens = Math.DivRem(n, 10, out var ones); return (byte)((tens << 4) | ones); }
++    public static byte IntToBCD(int n) {
++        // A two-digit BCD byte holds 0..99. Above that the tens nibble overflowed:
++        // DivRem(160,10) gives tens=16, and (16 << 4) is 0x100, truncated to 0x00 -
++        // so 160 round-tripped as 0.
++        if (n is < 0 or > 99) throw new ArgumentOutOfRangeException(nameof(n), n, "BCD2 holds 0..99");
++        var tens = Math.DivRem(n, 10, out var ones);
++        return (byte)((tens << 4) | ones);
++    }
+     public override string ToString() => BCDValue.ToString("X2");
+     public static bool operator ==(BCD2 lhs, BCD2 rhs) => lhs.BCDValue == rhs.BCDValue;
+     public static bool operator !=(BCD2 lhs, BCD2 rhs) => lhs.BCDValue != rhs.BCDValue;
+@@ -801,6 +811,10 @@ readonly struct MSF {
+         Min = (byte)((str[0] - '0') * 10 + (str[1] - '0'));
+         Sec = (byte)((str[3] - '0') * 10 + (str[4] - '0'));
+         Frac = (byte)((str[6] - '0') * 10 + (str[7] - '0'));
++        // The comment above calls this strict, but it only checked the digit/colon
++        // pattern: "99:99:99" parsed as Valid with 99 seconds (max 59) and 99 frames
++        // (max 74), and Sector then returned a nonsense LBA used as a track offset.
++        if (Sec >= 60 || Frac >= 75) Valid = false;
+     }
+     /// <summary>
+     /// creates timestamp from the supplied MSF
+@@ -1367,7 +1381,9 @@ class DiscSectorReader(Disc disc) {
+     public int ReadLBA_2448(int lba, byte[] buffer, int offset) {
+         var sector = disc.SynthProvider.Get(lba);
+         if (sector == null) return 0;
+-        PrepareBuffer(buffer, offset, 2352);
++        PrepareBuffer(buffer, offset, 2448); // was 2352: the trailing 96 subcode bytes
++                                            // were left holding whatever the caller's
++                                            // buffer had, defeating the policy
+         PrepareJob(lba);
+         job.DestBuffer2448 = buffer; //go straight to the caller's buffer
+         job.DestOffset = offset; //go straight to the caller's buffer
+@@ -1701,8 +1717,8 @@ class CcdFormat {
+                 e.PFrame = section.FetchOrFail("PFRAME");
+                 e.PLBA = section.FetchOrFail("PLBA");
+                 // note: LBA 0 is Ansolute MSF 00:02:00
+-                if (new MSF(e.AMin, e.ASec, e.AFrame).Sector != e.ALBA + 150) throw new InvalidOperationException("Warning: inconsistency in CCD ALBA vs computed A MSF");
+-                if (new MSF(e.PMin, e.PSec, e.PFrame).Sector != e.PLBA + 150) throw new InvalidOperationException("Warning: inconsistency in CCD PLBA vs computed P MSF");
++                if (new MSF(e.AMin, e.ASec, e.AFrame).Sector != e.ALBA + 150) Log.Warn("inconsistency in CCD ALBA vs computed A MSF"); // was thrown: a message starting "Warning:" that aborted the load
++                if (new MSF(e.PMin, e.PSec, e.PFrame).Sector != e.PLBA + 150) Log.Warn("inconsistency in CCD PLBA vs computed P MSF"); // was thrown: a message starting "Warning:" that aborted the load
+             }
+             else if (section.Name.StartsWith("TRACK", StringComparison.Ordinal)) {
+                 var entryNum = int.Parse(section.Name.Split(' ')[1]);
+@@ -3330,7 +3346,7 @@ class CueFormat {
+                                         default: Error($"Unknown FILE type: {z}"); ft = CueFileType.Unspecified; break;
+                                         case "BINARY": ft = CueFileType.BINARY; break;
+                                         case "MOTOROLA": ft = CueFileType.MOTOROLA; break;
+-                                        case "BINARAIFF": ft = CueFileType.AIFF; break;
++                                        case "AIFF": ft = CueFileType.AIFF; break;
+                                         case "WAVE": ft = CueFileType.WAVE; break;
+                                         case "MP3": ft = CueFileType.MP3; break;
+                                     }
+@@ -3341,7 +3357,10 @@ class CueFormat {
+                                 CueTrackFlags flags = default;
+                                 while (!p.Eof)
+                                     switch (z = p.ReadToken().ToUpperInvariant()) {
+-                                        case "DATA":
++                                        // DATA sat directly above default:, so it fell through and
++                                        // logged "Unknown FLAG: DATA" for a flag the enum defines and
++                                        // the comment documents.
++                                        case "DATA": flags |= CueTrackFlags.DATA; break;
+                                         default: Log.Warn($"Unknown FLAG: {z}"); break;
+                                         case "DCP": flags |= CueTrackFlags.DCP; break;
+                                         case "4CH": flags |= CueTrackFlags._4CH; break;
+@@ -4250,6 +4269,10 @@ class MdsFormat {
+                 var track = new ATrack();
+                 var bytesRead = s.Read(trackHeader, offset: 0, count: trackHeader.Length);
+                 Log.Assert(bytesRead == trackHeader.Length, "reached end-of-file while reading track header");
++                // The 80-byte read above advanced the stream past this block. The field
++                // reads below are 80 bytes wide too, so without rewinding, every track was
++                // parsed from the *next* block and only every other block was visited.
++                s.Seek(-trackHeader.Length, SeekOrigin.Current);
+                 track.Mode = r.ReadByte();
+                 track.SubMode = r.ReadByte();
+                 track.ADR_Control = r.ReadByte();
+@@ -5069,8 +5092,11 @@ static class NrgFormat {
+             else {
+                 nrgf.FileID = r.ReadFUString(4);
+                 if (nrgf.FileID != "NERO") throw new InvalidOperationException("Malformed NRG format: Could not find NERO/NER5 signature!");
+-                nrgf.FileOffset = r.ReadUInt32();
+-                if (BitConverter.IsLittleEndian) nrgf.FileOffset = BinaryPrimitives.ReverseEndianness(nrgf.FileOffset);
++                var v1Offset = r.ReadUInt32();
++                // Reverse as uint32 *before* widening: reversing the widened long moves
++                // the meaningful bytes into the high word (0x20 -> 0x2000000000000000).
++                if (BitConverter.IsLittleEndian) v1Offset = BinaryPrimitives.ReverseEndianness(v1Offset);
++                nrgf.FileOffset = v1Offset;
+             }
+             stream.Seek(nrgf.FileOffset, SeekOrigin.Begin);
+ 
+@@ -5811,10 +5837,14 @@ abstract class SS_Base : SectorSynthJob2448 {
+ class SS_Mode1_2048 : SS_Base {
+     public override void Synth(SectorSynthJob job) {
+         var ecm = (job.Parts & ESectorSynthPart.ECMAny) != 0;
+-        if (ecm) job.Parts |= ESectorSynthPart.User2048 | ESectorSynthPart.Header16; // ecm needs these parts for synth
+-        // read the sector user data
+-        if ((job.Parts & ESectorSynthPart.User2048) != 0) Blob.Read(BlobOffset, job.DestBuffer2448, job.DestOffset + 16, 2048);
+-        if ((job.Parts & ESectorSynthPart.Header16) != 0) SynthUtils.SectorHeader(job.DestBuffer2448, job.DestOffset + 0, job.LBA, 1);
++        // DiscSectorReader keeps one SectorSynthJob as a field and reuses it for
++        // every read, so OR-ing into job.Parts here permanently added these parts to
++        // every later read through that reader. Use a local instead.
++        var parts = job.Parts;
++        if (ecm) parts |= ESectorSynthPart.User2048 | ESectorSynthPart.Header16;
++        // read the sector user data (from the local `parts`, not the shared job)
++        if ((parts & ESectorSynthPart.User2048) != 0) Blob.Read(BlobOffset, job.DestBuffer2448, job.DestOffset + 16, 2048);
++        if ((parts & ESectorSynthPart.Header16) != 0) SynthUtils.SectorHeader(job.DestBuffer2448, job.DestOffset + 0, job.LBA, 1);
+         if (ecm) SynthUtils.ECM_Mode1(job.DestBuffer2448, job.DestOffset + 0);
+         SynthSubchannelAsNeed(job);
+     }
+@@ -5989,7 +6019,12 @@ class Synthesize_A0A1A2(int firstRecordedTrackNumber, int lastRecordedTrackNumbe
+         // first recorded track number:
+         sq.q_index.BCDValue = 0xA0;
+         sq.ap_min.DecimalValue = FirstRecordedTrackNumber;
+-        sq.ap_sec.DecimalValue = SessionFormat switch {
++        // DecimalValue is a decimal->BCD setter, so assigning the hex literal 0x10
++        // stored BCD 0x16 - the standard requires PSEC to be BCD 0x10 for CD-I and
++        // 0x20 for CD-XA. It round-tripped within this codebase (the reader also
++        // compares DecimalValue against 0x10), which is why it survived, but the byte
++        // written into the Q subchannel was wrong for any external reader.
++        sq.ap_sec.BCDValue = SessionFormat switch {
+             DiscSessionFormat.Type00_CDROM_CDDA => 0x00,
+             DiscSessionFormat.Type10_CDI => 0x10,
+             DiscSessionFormat.Type20_CDXA => 0x20,
+diff --git a/Vfx/OpenStack.Vfx/N64.cs b/Vfx/OpenStack.Vfx/N64.cs
+index 92934ee..329c9c0 100644
+--- a/Vfx/OpenStack.Vfx/N64.cs
++++ b/Vfx/OpenStack.Vfx/N64.cs
+@@ -86,7 +86,7 @@ unsafe class N64Rom {
+             Md5 = md5.ComputeHash(newImage);
+         }
+         SystemType = CountryCodeToSystemType(Header.CountryCode);
+-        Header.Name[20] = (sbyte)'\0';
++        Header.Name[19] = (sbyte)'\0'; // was [20]: one past the end of a 20-byte buffer
+         fixed (sbyte* _name = Header.Name) Name = new string(_name).Trim();
+         // display
+         Log.Info($"Name: {Name}");
+diff --git a/Vfx/OpenStack.Vfx/Util.cs b/Vfx/OpenStack.Vfx/Util.cs
+index 3b79a3f..d23e54d 100644
+--- a/Vfx/OpenStack.Vfx/Util.cs
++++ b/Vfx/OpenStack.Vfx/Util.cs
+@@ -67,7 +67,12 @@ public unsafe static class Util {
+         src.Seek(srcOffset, SeekOrigin.Begin);
+         while (size > 0) {
+             var size_ = (int)(size > bufferSize ? bufferSize : size);
+-            src.Read(buf, 0, size_);
++            var read_ = src.Read(buf, 0, size_);
++            // Was discarded. Stream.Read may legally return fewer bytes than asked -
++            // routinely so on the network and compressed streams this VFS layers over -
++            // and the write below then emitted whatever was left in buf from the
++            // previous iteration while still counting it as copied.
++            if (read_ != size_) throw new EndOfStreamException($"expected {size_} bytes, got {read_}");
+             dst.Write(buf, 0, size_);
+             size -= size_;
+         }
+diff --git a/Vfx/OpenStack.Vfx/Vfx.cs b/Vfx/OpenStack.Vfx/Vfx.cs
+index 2e6bd7b..77aa005 100644
+--- a/Vfx/OpenStack.Vfx/Vfx.cs
++++ b/Vfx/OpenStack.Vfx/Vfx.cs
+@@ -81,11 +81,14 @@ public abstract class FileSystem {
+     public static Func<string, bool> CreateMatcher(string searchPattern) {
+         if (string.IsNullOrEmpty(searchPattern)) return x => true;
+         var wildcardCount = searchPattern.Count(x => x.Equals('*'));
+-        if (wildcardCount <= 0) return x => x.Equals(searchPattern, StringComparison.CurrentCultureIgnoreCase);
++        // Paths need ordinal comparison. Under a Turkish locale "I".ToLower() is
++        // "ı", so INDEX.DAT did not match the pattern index.dat while the same
++        // build worked in en-US - asset lookup was silently locale-dependent.
++        if (wildcardCount <= 0) return x => x.Equals(searchPattern, StringComparison.OrdinalIgnoreCase);
+         else if (wildcardCount == 1) {
+             var newPattern = searchPattern.Replace("*", "");
+-            if (searchPattern.StartsWith("*")) return x => x.EndsWith(newPattern, StringComparison.CurrentCultureIgnoreCase);
+-            else if (searchPattern.EndsWith("*")) return x => x.StartsWith(newPattern, StringComparison.CurrentCultureIgnoreCase);
++            if (searchPattern.StartsWith("*")) return x => x.EndsWith(newPattern, StringComparison.OrdinalIgnoreCase);
++            else if (searchPattern.EndsWith("*")) return x => x.StartsWith(newPattern, StringComparison.OrdinalIgnoreCase);
+         }
+         var regexPattern = $"^{Regex.Escape(searchPattern).Replace("\\*", ".*")}$";
+         return x => {
+-- 
+2.43.0
+
+
+From 1d6c46ff844c30514ec2f5e55637939a343cb0e6 Mon Sep 17 00:00:00 2001
+From: port <p@p>
+Date: Thu, 3 Sep 2026 10:27:01 +0000
+Subject: [PATCH 2/3] Settle the MurmurHash question against SMHasher's
+ verification value
+
+MurmurHash3's algorithm is correct - the ported implementation reproduces
+SMHasher's Murmur3A verification value 0xB0F57EE3 exactly, so the only
+deviation is the seed choice.
+
+MurmurHash2's empty-input short circuit is a real deviation: the verification
+procedure hashes a zero-length key with seed 256, where the reference gives
+0xD1E836D3 and this returns 0 regardless of seed. Every non-empty input agrees.
+
+Still not applied - the open question is whether any hash is persisted.
+---
+ FIXES-NOT-APPLIED.md | 68 +++++++++++++++++++++++++++++++++-----------
+ 1 file changed, 52 insertions(+), 16 deletions(-)
+
+diff --git a/FIXES-NOT-APPLIED.md b/FIXES-NOT-APPLIED.md
+index d4a959b..070c2bc 100644
+--- a/FIXES-NOT-APPLIED.md
++++ b/FIXES-NOT-APPLIED.md
+@@ -69,24 +69,60 @@ truncation.
+ 
+ **Files:** `Core/OpenStack/Algorithms/MurmurHash2.cs`, `MurmurHash3.cs`
+ 
+-Three deviations from the references, all preserved:
++**Now checked against the authoritative reference.** SMHasher (Austin Appleby's
++own test suite, and the maintained forks below) does not use fixed string
++vectors — it uses a single 32-bit **verification value** computed by hashing
++keys of every length 0..=255, each with a different seed, then hashing the
++concatenated results. That covers all lengths, all tail cases, and all seeds in
++one number, so it is a far better reference than ad-hoc strings.
+ 
+-* `MurmurHash2` short-circuits empty input to `0`; the reference runs the final
+-  mix and returns a seed-dependent value.
+-* `MurmurHash2` hashes strings as **ASCII** (so non-ASCII becomes `?` and
+-  collides); `MurmurHash3` hashes them as **UTF-16**. The two disagree on
+-  identical string input.
+-* `MurmurHash3` uses a seed of `0xFFFFFFFF`, not the conventional `0`.
++Expected values, from `rurban/smhasher`'s `main.cpp`:
+ 
+-**Why not fixed:** any of these changes every hash the codebase produces. If
+-hashes are persisted anywhere — a cache key, an asset index, a file name — a
+-"fix" invalidates all of it.
+-
+-**To decide:** whether any hash from these is written to disk or compared across
+-runs. If not, align both on UTF-8 and the reference seeds. If so, leave them and
+-document that they are not reference-compatible.
+-
+----
++| name | variant | verification value |
++|---|---|---|
++| `Murmur3A` | MurmurHash3_x86_32 | `0xB0F57EE3` |
++| `Murmur3C` | MurmurHash3_x86_128 | `0xB3ECE62A` |
++| `Murmur3F` | MurmurHash3_x64_128 | `0x6384BA69` |
++
++Where to get it:
++
++* `github.com/aappleby/smhasher` — the original, public domain, author disclaims
++  copyright. Effectively unmaintained (the wiki itself says the numbers are
++  stale, last edited 2016), but it is the canonical algorithm.
++* `github.com/rurban/smhasher` — the actively maintained fork; this is where the
++  verification-value table above lives.
++* `gitlab.com/fwojcik/smhasher3` — SMHasher3, a rewrite based on rurban's fork.
++
++### What this settles
++
++**`MurmurHash3`: the algorithm is correct.** I ran the verification procedure
++against the ported implementation and it produces exactly `0xB0F57EE3`. So the
++only deviation is the **seed** (`0xFFFFFFFF` instead of `0`), which is a
++legitimate configuration choice, not a defect. The port now carries the
++verification test (`passes_the_smhasher_verification_test`).
++
++**`MurmurHash2`: the empty-input short circuit is a genuine deviation.** The
++verification procedure hashes a zero-length key with seed 256; reference
++MurmurHash2 returns `0xD1E836D3` there, while `if (l == 0) return 0;` returns 0
++regardless of seed. So this implementation cannot reproduce a reference value
++for *any* seed. Every non-empty input agrees exactly, so the short circuit is
++the whole of the difference.
++
++**Still not applied**, because the remaining question is not "is it correct" but
++"is it persisted": both changes alter every hash the codebase produces, and if
++any hash is written to disk or compared across runs — a cache key, an asset
++index, a filename — a fix invalidates it.
++
++**To decide:** grep for anywhere a Murmur result is serialized or compared
++across process runs. If none, remove the `l == 0` guard from `MurmurHash2` and
++align `MurmurHash3`'s default seed to 0; both then match the reference and the
++verification test can go in the C# test project too. If some, leave them and
++record in a comment that they are deliberately not reference-compatible.
++
++Separately, the string-encoding split is unaffected by the above and still
++wants a decision: `MurmurHash2` hashes strings as **ASCII** (so non-ASCII
++becomes `?` and collides), `MurmurHash3` as **UTF-16**. Aligning both on UTF-8
++would be the conventional choice.
+ 
+ ## 4. `Camera.CopyFrom` does not copy `Scale`
+ 
+-- 
+2.43.0
+
+
+From 89e35d6b5aa59ccce49acfeee6a3b4ecdd740b77 Mon Sep 17 00:00:00 2001
+From: port <p@p>
+Date: Thu, 3 Sep 2026 10:29:49 +0000
+Subject: [PATCH 3/3] Fix MurmurHash2's empty-input short circuit; record the
+ NuGet assessment
+
+The short circuit made the function unable to reproduce SMHasher's verification
+value for any seed (reference MurmurHash2("", 256) is 0xD1E836D3; this returned
+0). Every non-empty input already matched.
+
+Safe to apply because the solution has exactly one MurmurHash call site -
+ShaderLoader.CalculateShaderCacheHash - and its result keys an in-memory
+Dictionary<uint, Shader> rebuilt every run, so no persisted value can be
+invalidated. MurmurHash3 has no call sites at all.
+
+Also assessed the NuGet options and recommend against a dependency: 66 verified
+lines, one call site, and no package is both current and clearly maintained.
+---
+ Core/OpenStack/Algorithms/MurmurHash2.cs |   8 +-
+ FIXES-NOT-APPLIED.md                     | 129 ++++++++++++++---------
+ 2 files changed, 88 insertions(+), 49 deletions(-)
+
+diff --git a/Core/OpenStack/Algorithms/MurmurHash2.cs b/Core/OpenStack/Algorithms/MurmurHash2.cs
+index 1df68b6..b0ddf5f 100644
+--- a/Core/OpenStack/Algorithms/MurmurHash2.cs
++++ b/Core/OpenStack/Algorithms/MurmurHash2.cs
+@@ -9,7 +9,13 @@ public static class MurmurHash2 {
+     public static uint Hash(string data, uint seed) => Hash(Encoding.ASCII.GetBytes(data), seed);
+     public static uint Hash(byte[] data, uint seed) {
+         var l = data.Length;
+-        if (l == 0) return 0;
++        // Was `if (l == 0) return 0;`. Reference MurmurHash2 runs the final mix over
++        // h = seed ^ 0 and returns a seed-dependent value, so the short circuit made
++        // this unable to reproduce SMHasher's verification value for any seed
++        // (reference MurmurHash2("", seed: 256) is 0xD1E836D3, this returned 0).
++        // Safe to change: the only caller in the solution is
++        // ShaderLoader.CalculateShaderCacheHash, whose result keys an in-memory
++        // Dictionary<uint, Shader> that is rebuilt every run - no hash is persisted.
+ 
+         var h = seed ^ (uint)l;
+         var i = 0;
+diff --git a/FIXES-NOT-APPLIED.md b/FIXES-NOT-APPLIED.md
+index 070c2bc..833ee72 100644
+--- a/FIXES-NOT-APPLIED.md
++++ b/FIXES-NOT-APPLIED.md
+@@ -65,18 +65,17 @@ truncation.
+ 
+ ---
+ 
+-## 3. `MurmurHash2` / `MurmurHash3` conventions
++## 3. `MurmurHash2` / `MurmurHash3` — RESOLVED, mostly applied
+ 
+-**Files:** `Core/OpenStack/Algorithms/MurmurHash2.cs`, `MurmurHash3.cs`
++Kept here as a record of how it was settled, since the reasoning is the useful
++part.
+ 
+-**Now checked against the authoritative reference.** SMHasher (Austin Appleby's
+-own test suite, and the maintained forks below) does not use fixed string
+-vectors — it uses a single 32-bit **verification value** computed by hashing
+-keys of every length 0..=255, each with a different seed, then hashing the
+-concatenated results. That covers all lengths, all tail cases, and all seeds in
+-one number, so it is a far better reference than ad-hoc strings.
++### The reference
+ 
+-Expected values, from `rurban/smhasher`'s `main.cpp`:
++SMHasher does not use fixed string vectors. It computes a single 32-bit
++**verification value**: hash keys of every length 0..=255, each with a different
++seed, then hash the concatenated results. One number covering all lengths, all
++tail cases, and all seeds.
+ 
+ | name | variant | verification value |
+ |---|---|---|
+@@ -84,45 +83,79 @@ Expected values, from `rurban/smhasher`'s `main.cpp`:
+ | `Murmur3C` | MurmurHash3_x86_128 | `0xB3ECE62A` |
+ | `Murmur3F` | MurmurHash3_x64_128 | `0x6384BA69` |
+ 
+-Where to get it:
+-
+-* `github.com/aappleby/smhasher` — the original, public domain, author disclaims
+-  copyright. Effectively unmaintained (the wiki itself says the numbers are
+-  stale, last edited 2016), but it is the canonical algorithm.
+-* `github.com/rurban/smhasher` — the actively maintained fork; this is where the
+-  verification-value table above lives.
+-* `gitlab.com/fwojcik/smhasher3` — SMHasher3, a rewrite based on rurban's fork.
+-
+-### What this settles
+-
+-**`MurmurHash3`: the algorithm is correct.** I ran the verification procedure
+-against the ported implementation and it produces exactly `0xB0F57EE3`. So the
+-only deviation is the **seed** (`0xFFFFFFFF` instead of `0`), which is a
+-legitimate configuration choice, not a defect. The port now carries the
+-verification test (`passes_the_smhasher_verification_test`).
+-
+-**`MurmurHash2`: the empty-input short circuit is a genuine deviation.** The
+-verification procedure hashes a zero-length key with seed 256; reference
+-MurmurHash2 returns `0xD1E836D3` there, while `if (l == 0) return 0;` returns 0
+-regardless of seed. So this implementation cannot reproduce a reference value
+-for *any* seed. Every non-empty input agrees exactly, so the short circuit is
+-the whole of the difference.
+-
+-**Still not applied**, because the remaining question is not "is it correct" but
+-"is it persisted": both changes alter every hash the codebase produces, and if
+-any hash is written to disk or compared across runs — a cache key, an asset
+-index, a filename — a fix invalidates it.
+-
+-**To decide:** grep for anywhere a Murmur result is serialized or compared
+-across process runs. If none, remove the `l == 0` guard from `MurmurHash2` and
+-align `MurmurHash3`'s default seed to 0; both then match the reference and the
+-verification test can go in the C# test project too. If some, leave them and
+-record in a comment that they are deliberately not reference-compatible.
+-
+-Separately, the string-encoding split is unaffected by the above and still
+-wants a decision: `MurmurHash2` hashes strings as **ASCII** (so non-ASCII
+-becomes `?` and collides), `MurmurHash3` as **UTF-16**. Aligning both on UTF-8
+-would be the conventional choice.
++* `github.com/aappleby/smhasher` — the original. Public domain, author
++  disclaims copyright. Effectively unmaintained (its own wiki says the figures
++  are stale; last edited 2016), but it is the canonical algorithm.
++* `github.com/rurban/smhasher` — the maintained fork, and where the table above
++  lives.
++* `gitlab.com/fwojcik/smhasher3` — SMHasher3, a rewrite based on rurban's.
++
++### What it showed
++
++**`MurmurHash3`'s algorithm is correct** — the implementation reproduces
++`0xB0F57EE3` exactly, so the only deviation was its seed (`0xFFFFFFFF` rather
++than `0`). And `MurmurHash3` has **zero call sites** in the solution, so the
++seed choice is moot. Left alone.
++
++**`MurmurHash2`'s empty-input short circuit was a genuine deviation** and is
++now **fixed**. The verification procedure hashes a zero-length key with seed
++256, where the reference gives `0xD1E836D3` and `if (l == 0) return 0;`
++returned 0 regardless of seed. Every non-empty input already agreed exactly, so
++that guard was the whole of the difference.
++
++### Why it became safe to apply
++
++The blocker was hash stability — a fix changes every hash, which matters if any
++is persisted. There is exactly **one** call site in the solution:
++
++    Platforms/OpenStack.Platform.OpenGL/Gfx/OpenGL.cs:93
++    ShaderLoader.CalculateShaderCacheHash -> MurmurHash2.Hash(b.ToString(), ShaderSeed)
++
++Its result keys `readonly Dictionary<uint, Shader> CachedShaders` — an in-memory
++dictionary rebuilt every run. Nothing is written to disk or compared across
++processes, so no stored value could be invalidated.
++
++### Still open: the string encoding
++
++`MurmurHash2.Hash(string)` uses `Encoding.ASCII`, so any non-ASCII character
++becomes `?` and collides. `MurmurHash3` uses UTF-16 for the same job, so the two
++disagree on identical input.
++
++In practice the one call site hashes shader names and preprocessor define keys,
++which are ASCII identifiers, so this is currently harmless. UTF-8 for both would
++be the conventional choice, and is a one-line change if you want it.
++
++### On taking a NuGet dependency instead
++
++I looked; I would not. There is no clear winner, and the case for a dependency
++is weak here:
++
++| package | state |
++|---|---|
++| `MurmurHash-net-core` | Most downloaded (~1.7M), but last updated 2017, targets netstandard1.6 |
++| `System.Data.HashFunction.MurmurHash` | 2018, .NET Framework 4.5; NuGet notes it is "not used by any popular GitHub repositories" |
++| `MurmurHash.Net` | Still at 0.0.2 (2020) |
++| `CloudMesh.MurmurHash` | Modern targeting (net6-8), derived from Akka.net's code |
++| `JeremyEspresso.MurmurHash` | Modern, `Span`-based, zero-allocation |
++| `MurmurIncrementalHash` | net6.0, supports incremental hashing |
++
++Against that: this solution targets **net10.0**, the two files are **28 and 38
++live lines**, they are now verified against the authoritative reference, and
++they have **one call site between them**. Adding a single-maintainer dependency
++last touched in 2017-2020 to replace 66 verified lines is a net increase in
++risk.
++
++The better question is whether MurmurHash is needed at all here. The one use is
++an in-memory dictionary key with no stability or distribution requirement —
++`HashCode.Combine` over the name and the sorted defines, or simply keying the
++dictionary on the built string, would remove both files. If you want the
++dependency anyway, `CloudMesh.MurmurHash` or `JeremyEspresso.MurmurHash` are the
++two I would consider on target-framework grounds.
++
++Either way, add the verification value as a test — it is about 15 lines and it
++is the check that would have caught the short circuit. The Rust port has it in
++`core/openstack/src/algorithms/murmur_hash3.rs` as
++`passes_the_smhasher_verification_test`.
+ 
+ ## 4. `Camera.CopyFrom` does not copy `Scale`
+ 
+-- 
+2.43.0
+

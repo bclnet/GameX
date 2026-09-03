@@ -1,0 +1,138 @@
+﻿using OpenStack;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using System.Windows;
+using System.Windows.Controls;
+using static GameX.FamilyManager;
+
+namespace GameX.App.Explorer.Views;
+
+/// <summary>
+/// MainPageTab
+/// </summary>
+public class MainPageTab {
+    public string Name { get; set; }
+    public Archive Archive { get; set; }
+    public IList<FamilyApp> AppList { get; set; }
+    public string Text { get; set; }
+}
+
+/// <summary>
+/// Interaction logic for MainPage.xaml
+/// </summary>
+public partial class MainPage : Window, INotifyPropertyChanged {
+    public readonly static MetaManager Manager = ResourceManager.Current;
+    public static MainPage Current;
+
+    public MainPage() {
+        InitializeComponent();
+        Current = this;
+        DataContext = this;
+        Platforms = [.. PlatformX.Platforms.Where(s => s != null && s.Enabled)];
+        Platform.SelectedIndex = ((List<Platform>)Platforms)?.FindIndex(s => s.Id == Option.Platform) ?? -1;
+    }
+
+    public event PropertyChangedEventHandler PropertyChanged;
+    void OnPropertyChanged([CallerMemberName] string propertyName = "") => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
+    public MainPage Open(Family family, IEnumerable<Uri> uris, string path = null) {
+        var selected = (Platform)Platform.SelectedItem;
+        PlatformX.Activate(selected);
+        foreach (var archive in Archives) archive?.Dispose();
+        Archives.Clear();
+        if (family == null) return this;
+        FamilyApps = family.Apps;
+        foreach (var s in uris) {
+            Log.WriteLine($"Opening {s}");
+            var arc = family.GetArchive(s);
+            if (arc != null) Archives.Add(arc);
+        }
+        Log.WriteLine("Done");
+        OnOpenedAsync(family, path).Wait();
+        return this;
+    }
+
+    public void SetPlatform(Platform platform) {
+        PlatformX.Activate(platform);
+        FileContent.SetPlatform(platform);
+    }
+
+    IList<Platform> _platforms;
+    public IList<Platform> Platforms {
+        get => _platforms;
+        set { _platforms = value; OnPropertyChanged(); }
+    }
+
+    IList<MainPageTab> _mainTabs = [];
+    public IList<MainPageTab> MainTabs {
+        get => _mainTabs;
+        set { _mainTabs = value; OnPropertyChanged(); }
+    }
+
+    public readonly IList<Archive> Archives = [];
+    public Dictionary<string, FamilyApp> FamilyApps;
+
+    public Task OnOpenedAsync(Family family, string path = null) {
+        var tabs = Archives.Select(archive => new MainPageTab {
+            Name = archive.Name,
+            Archive = archive,
+        }).ToList();
+        var firstArchive = tabs.FirstOrDefault()?.Archive ?? Archive.Empty;
+        if (FamilyApps.Count > 0)
+            tabs.Add(new MainPageTab {
+                Name = "Apps",
+                Archive = firstArchive,
+                AppList = [.. FamilyApps.Values],
+                Text = "Choose an application.",
+            });
+        if (!string.IsNullOrEmpty(family.Description))
+            tabs.Add(new MainPageTab {
+                Name = "Information",
+                Text = family.Description,
+            });
+        MainTabs = tabs;
+
+        // default main tab to first / second
+        MainTabControl.SelectedIndex = 0; // family.Apps != null ? 1 : 0;
+        return Task.CompletedTask;
+    }
+
+    void Platform_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+        var selected = (Platform)Platform.SelectedItem;
+        SetPlatform(selected);
+    }
+
+    #region Menu
+
+    internal void App_Click(object sender, EventArgs e) {
+        var button = (Button)sender;
+        var app = (FamilyApp)button.DataContext;
+        app.OpenAsync(app.ExplorerType, Manager).Wait();
+    }
+
+    internal void OpenPage_Click(object sender, RoutedEventArgs e) {
+        var openPage = new OpenPage();
+        if (openPage.ShowDialog() == true) Current.Open((Family)openPage.Family.SelectedItem, openPage.ArcUris);
+    }
+
+    void OptionsPage_Click(object sender, RoutedEventArgs e) {
+        var optionsPage = new OptionsPage();
+        optionsPage.ShowDialog();
+    }
+
+    void WorldMap_Click(object sender, RoutedEventArgs e) {
+        //if (DatManager.CellDat == null || DatManager.PortalDat == null) return;
+        //EngineView.ViewMode = ViewMode.Map;
+    }
+
+    void AboutPage_Click(object sender, RoutedEventArgs e) {
+        var aboutPage = new AboutPage();
+        aboutPage.ShowDialog();
+    }
+
+    void Guide_Click(object sender, RoutedEventArgs e) {
+        //Process.Start(@"docs\index.html");
+    }
+
+    #endregion
+}

@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.0.11222.15
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Applications", "Applications", "{0911DDF1-E514-4BCF-915A-49999D5D168C}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Apps", "Apps", "{0911DDF1-E514-4BCF-915A-49999D5D168C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.App.Explorer", "Applications\GameX.App.Explorer\GameX.App.Explorer.csproj", "{38C4E47D-7418-41FD-8017-FB5104D128BA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.App.Explorer", "Apps\GameX.App.Explorer\GameX.App.Explorer.csproj", "{38C4E47D-7418-41FD-8017-FB5104D128BA}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.App.Cli", "Applications\GameX.App.Cli\GameX.App.Cli.csproj", "{F2C4C5A4-216F-43D9-8B8B-A793F70B3539}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Cli", "GameX.Cli\GameX.Cli.csproj", "{F2C4C5A4-216F-43D9-8B8B-A793F70B3539}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "OpenStack", "OpenStack", "{4EC06189-D9CE-42F3-BFA0-F70810EF617B}"
 EndProject
@@ -82,7 +82,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.ID", "Families\GameX.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Cryptic", "Families\GameX.Cryptic\GameX.Cryptic.csproj", "{4EB47393-4083-4C1E-997C-00F5775EB126}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.App.ExplorerM", "Applications\GameX.App.ExplorerM\GameX.App.ExplorerM.csproj", "{0EC68FDD-F2AF-4A41-A7AE-EB194E3DFC8D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.App.ExplorerM", "Apps\GameX.App.ExplorerM\GameX.App.ExplorerM.csproj", "{0EC68FDD-F2AF-4A41-A7AE-EB194E3DFC8D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Frontier", "Families\GameX.Frontier\GameX.Frontier.csproj", "{3DBBC1EF-1817-4A75-84AB-291B8444D925}"
 EndProject
@@ -154,7 +154,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStack", "..\OpenStack\d
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Platforms", "Platforms", "{67806ED7-050A-43D3-BED6-B00B5621C6D6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStack.Platform.Tests", "..\OpenStack\dotnet\Platforms\OpenStack.Platform.Tests\OpenStack.Platform.Tests.csproj", "{4B338D03-D3E6-B702-EBB2-3D945EB01A18}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStack.PlatformTests", "..\OpenStack\dotnet\Platforms\OpenStack.PlatformTests\OpenStack.PlatformTests.csproj", "{4B338D03-D3E6-B702-EBB2-3D945EB01A18}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStack.Wpf.Control", "..\OpenStack\dotnet\Platforms\OpenStack.Wpf.Control\OpenStack.Wpf.Control.csproj", "{AC1F45D4-D66D-1D4A-26AF-D0CCCA9151CC}"
 EndProject
@@ -195,7 +195,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Families", "Families", "{1B
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX._MODEL", "Families\GameX._MODEL\GameX._MODEL.csproj", "{B62AF6AA-4B5D-D44A-2A6F-E6280C06E04D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.App.Client", "Applications\GameX.App.Client\GameX.App.Client.csproj", "{7BF4B28F-77F2-4CD2-5B70-E7021AB5AC67}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.App.Client", "Apps\GameX.App.Client\GameX.App.Client.csproj", "{7BF4B28F-77F2-4CD2-5B70-E7021AB5AC67}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Xbox", "Families\GameX.Xbox\GameX.Xbox.csproj", "{0BEFE1BC-33D9-CCBA-0808-A240616A1307}"
 EndProject
@@ -212,6 +212,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Firaxis", "Families\GameX.Firaxis\GameX.Firaxis.csproj", "{018A26E5-BE82-D9F1-5F19-23A47F3FDA46}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Uncore.Program", "Families\GameX.Uncore.Program\GameX.Uncore.Program.csproj", "{650810E7-E39F-44DA-905C-476FB5D45E1E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStack.PolyfillsTests", "..\OpenStack\dotnet\Core\OpenStack.PolyfillsTests\OpenStack.PolyfillsTests.csproj", "{C1C5ED8A-8909-A3E7-98E0-34AACE3AB542}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStack.PolyIOTests", "..\OpenStack\dotnet\Core\OpenStack.PolyIOTests\OpenStack.PolyIOTests.csproj", "{73051474-CC80-1FA3-9086-BFB9A3C02EC9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -1305,13 +1309,36 @@ Global
 		{650810E7-E39F-44DA-905C-476FB5D45E1E}.Release|x64.Build.0 = Release|Any CPU
 		{650810E7-E39F-44DA-905C-476FB5D45E1E}.Release|x86.ActiveCfg = Release|Any CPU
 		{650810E7-E39F-44DA-905C-476FB5D45E1E}.Release|x86.Build.0 = Release|Any CPU
+		{C1C5ED8A-8909-A3E7-98E0-34AACE3AB542}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C1C5ED8A-8909-A3E7-98E0-34AACE3AB542}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C1C5ED8A-8909-A3E7-98E0-34AACE3AB542}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C1C5ED8A-8909-A3E7-98E0-34AACE3AB542}.Debug|x64.Build.0 = Debug|Any CPU
+		{C1C5ED8A-8909-A3E7-98E0-34AACE3AB542}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C1C5ED8A-8909-A3E7-98E0-34AACE3AB542}.Debug|x86.Build.0 = Debug|Any CPU
+		{C1C5ED8A-8909-A3E7-98E0-34AACE3AB542}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C1C5ED8A-8909-A3E7-98E0-34AACE3AB542}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C1C5ED8A-8909-A3E7-98E0-34AACE3AB542}.Release|x64.ActiveCfg = Release|Any CPU
+		{C1C5ED8A-8909-A3E7-98E0-34AACE3AB542}.Release|x64.Build.0 = Release|Any CPU
+		{C1C5ED8A-8909-A3E7-98E0-34AACE3AB542}.Release|x86.ActiveCfg = Release|Any CPU
+		{C1C5ED8A-8909-A3E7-98E0-34AACE3AB542}.Release|x86.Build.0 = Release|Any CPU
+		{73051474-CC80-1FA3-9086-BFB9A3C02EC9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73051474-CC80-1FA3-9086-BFB9A3C02EC9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73051474-CC80-1FA3-9086-BFB9A3C02EC9}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{73051474-CC80-1FA3-9086-BFB9A3C02EC9}.Debug|x64.Build.0 = Debug|Any CPU
+		{73051474-CC80-1FA3-9086-BFB9A3C02EC9}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{73051474-CC80-1FA3-9086-BFB9A3C02EC9}.Debug|x86.Build.0 = Debug|Any CPU
+		{73051474-CC80-1FA3-9086-BFB9A3C02EC9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73051474-CC80-1FA3-9086-BFB9A3C02EC9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73051474-CC80-1FA3-9086-BFB9A3C02EC9}.Release|x64.ActiveCfg = Release|Any CPU
+		{73051474-CC80-1FA3-9086-BFB9A3C02EC9}.Release|x64.Build.0 = Release|Any CPU
+		{73051474-CC80-1FA3-9086-BFB9A3C02EC9}.Release|x86.ActiveCfg = Release|Any CPU
+		{73051474-CC80-1FA3-9086-BFB9A3C02EC9}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{38C4E47D-7418-41FD-8017-FB5104D128BA} = {0911DDF1-E514-4BCF-915A-49999D5D168C}
-		{F2C4C5A4-216F-43D9-8B8B-A793F70B3539} = {0911DDF1-E514-4BCF-915A-49999D5D168C}
 		{25CF4BF8-091C-43FC-8ADB-D2E1D80EEAF5} = {6EC2027E-D509-415E-8939-62A2A3C2CE1F}
 		{5FA4394C-FC95-4985-AC57-945F74DFB546} = {6EC2027E-D509-415E-8939-62A2A3C2CE1F}
 		{7A2A2C87-7854-472F-9F5E-97CB5AE7F4E4} = {6D2DEF34-0211-49A7-B0CE-8AF7AE738D8A}
@@ -1407,6 +1434,8 @@ Global
 		{D40525EE-4EA0-DDE2-1B36-AF8E4A793E58} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
 		{018A26E5-BE82-D9F1-5F19-23A47F3FDA46} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
 		{650810E7-E39F-44DA-905C-476FB5D45E1E} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
+		{C1C5ED8A-8909-A3E7-98E0-34AACE3AB542} = {D2430DDB-CF76-4570-8F9F-D8EAC21C9D95}
+		{73051474-CC80-1FA3-9086-BFB9A3C02EC9} = {D2430DDB-CF76-4570-8F9F-D8EAC21C9D95}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A9F1BB93-CFBC-4E41-A865-325B22465054}

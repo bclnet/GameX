@@ -7,8 +7,7 @@ namespace GameX.WB.Formats.AC.Props;
 
 public static partial class EnumExtensions { }
 
-public enum AccessLevel
-{
+public enum AccessLevel {
     Player = 0,
     Advocate = 1,
     Sentinel = 2,
@@ -18,8 +17,7 @@ public enum AccessLevel
 }
 
 [Flags]
-public enum ActivationResponse
-{
+public enum ActivationResponse {
     Undef = 0,
     Use = 0x2,
     Animate = 0x4,
@@ -30,8 +28,7 @@ public enum ActivationResponse
 }
 
 [Flags]
-public enum AetheriaBitfield
-{
+public enum AetheriaBitfield {
     None = 0x0,
     Blue = 0x1,
     Yellow = 0x2,
@@ -44,8 +41,7 @@ public enum AetheriaBitfield
 /// Determines optional AI abilities
 /// </summary>
 [Flags]
-public enum AiOption
-{
+public enum AiOption {
     None = 0,
     CanOpenDoors = 1
 }
@@ -53,8 +49,7 @@ public enum AiOption
 /// <summary>
 /// Actions related to /allegiance house
 /// </summary>
-public enum AllegianceHouseAction : uint
-{
+public enum AllegianceHouseAction : uint {
     Undef = 0,
     Help = 1,
     CheckStatus = 1,  // client naming
@@ -64,8 +59,7 @@ public enum AllegianceHouseAction : uint
     StorageClose = 5
 }
 
-public enum AllegianceLockAction : uint
-{
+public enum AllegianceLockAction : uint {
     Undef = 0,
     Off = 1,
     On = 2,
@@ -75,16 +69,14 @@ public enum AllegianceLockAction : uint
     ClearApproved = 6
 }
 
-public enum AllegianceOfficerLevel : uint
-{
+public enum AllegianceOfficerLevel : uint {
     Undef = 0,
     Speaker = 1,
     Seneschal = 2,
     Castellan = 3
 }
 
-public enum AllegiancePermissionLevel
-{
+public enum AllegiancePermissionLevel {
     None = 0,
     Speaker = 1,
     Seneschal = 2,
@@ -93,8 +85,7 @@ public enum AllegiancePermissionLevel
 }
 
 [Flags]
-public enum AmmoType : ushort
-{
+public enum AmmoType : ushort {
     None = 0x0,
     Arrow = 0x1,
     Bolt = 0x2,
@@ -108,21 +99,18 @@ public enum AmmoType : ushort
 }
 
 [Flags]
-public enum AnimationFlags
-{
+public enum AnimationFlags {
     PosFrames = 0x1
 }
 
-public enum AnimationHookDir
-{
+public enum AnimationHookDir {
     Unknown = -2,
     Backward = -1,
     Both = 0,
     Forward = 1,
 }
 
-public enum AnimationHookType
-{
+public enum AnimationHookType {
     Unknown = -1,
     NoOp = 0,
     Sound = 1,
@@ -155,8 +143,7 @@ public enum AnimationHookType
 }
 
 [Flags]
-public enum AppraisalLongDescDecorations
-{
+public enum AppraisalLongDescDecorations {
     None = 0x0,
     PrependWorkmanship = 0x1,
     PrependMaterial = 0x2,
@@ -165,8 +152,7 @@ public enum AppraisalLongDescDecorations
 
 // guessing on this one based on available data
 // Leather (2) is used for lots of things that aren't also animal hide... Shields, masks, etc.
-public enum ArmorType
-{
+public enum ArmorType {
     None = 0,
     Cloth = 1,
     Leather = 2,
@@ -177,8 +163,7 @@ public enum ArmorType
 }
 
 [Flags]
-public enum AttackConditions
-{
+public enum AttackConditions {
     None = 0x0,
     CriticalProtectionAugmentation = 0x1,
     Recklessness = 0x2,
@@ -186,18 +171,15 @@ public enum AttackConditions
     Overpower = 0x8
 }
 
-public enum AttackHeight
-{
+public enum AttackHeight {
     High = 1,
     Medium = 2,
     Low = 3
 }
 
-partial class EnumExtensions
-{
+partial class EnumExtensions {
     public static string GetString(this AttackHeight attackHeight)
-        => attackHeight switch
-        {
+        => attackHeight switch {
             AttackHeight.High => "High",
             AttackHeight.Medium => "Med",
             AttackHeight.Low => "Low",
@@ -205,8 +187,7 @@ partial class EnumExtensions
         };
 
     public static Quadrant ToQuadrant(this AttackHeight attackHeight)
-        => attackHeight switch
-        {
+        => attackHeight switch {
             AttackHeight.High => Quadrant.High,
             AttackHeight.Medium => Quadrant.Medium,
             AttackHeight.Low => Quadrant.Low,
@@ -215,8 +196,7 @@ partial class EnumExtensions
 }
 
 [Flags]
-public enum AttackType
-{
+public enum AttackType {
     Undef = 0x0,
     Punch = 0x0001,
     Thrust = 0x0002,
@@ -247,15 +227,12 @@ public enum AttackType
     MultiStrike = DoubleStrike | TripleStrike
 }
 
-partial class EnumExtensions
-{
+partial class EnumExtensions {
     public static bool IsMultiStrike(this AttackType attackType) => (attackType & AttackType.MultiStrike) != 0;
 
-    public static AttackType ReduceMultiStrike(this AttackType attackType)
-    {
+    public static AttackType ReduceMultiStrike(this AttackType attackType) {
         if (!attackType.IsMultiStrike()) return AttackType.Undef;
-        switch (attackType)
-        {
+        switch (attackType) {
             case AttackType.DoubleThrust:
             case AttackType.TripleThrust: return AttackType.Thrust;
             case AttackType.DoubleSlash:
@@ -270,8 +247,7 @@ partial class EnumExtensions
 }
 
 [Flags]
-public enum AttributeCache : uint
-{
+public enum AttributeCache : uint {
     Undef = 0x00000000,
     Strength = 0x00000001,
     Endurance = 0x00000002,
@@ -286,15 +262,13 @@ public enum AttributeCache : uint
     Full = Strength | Endurance | Quickness | Coordination | Focus | Self | Health | Stamina | Mana
 }
 
-public enum AttunedStatus
-{
+public enum AttunedStatus {
     Normal,
     Attuned,
     Sticky
 }
 
-public enum AugmentationType
-{
+public enum AugmentationType {
     None = 0,
     /// <summary>
     /// Reinforcement of the Lugians - +5 strength
@@ -463,8 +437,7 @@ public enum AugmentationType
     FociVoid = 42,
 }
 
-partial class EnumExtensions
-{
+partial class EnumExtensions {
     /// <summary>
     /// Returns TRUE if this AugmentationType belongs to the 'innate attribute' family,
     /// which has a shared cap of 10
@@ -480,10 +453,8 @@ partial class EnumExtensions
     /// <summary>
     /// Returns TRUE if this AugmentationType specializes a skill
     /// </summary>
-    public static bool IsSkill(this AugmentationType type)
-    {
-        switch (type)
-        {
+    public static bool IsSkill(this AugmentationType type) {
+        switch (type) {
             case AugmentationType.Salvage:
             case AugmentationType.ItemTinkering:
             case AugmentationType.ArmorTinkering:
@@ -494,8 +465,7 @@ partial class EnumExtensions
     }
 
     public static PropertyAttribute GetAttribute(this AugmentationType type)
-        => type switch
-        {
+        => type switch {
             AugmentationType.Strength => PropertyAttribute.Strength,
             AugmentationType.Endurance => PropertyAttribute.Endurance,
             AugmentationType.Coordination => PropertyAttribute.Coordination,
@@ -506,8 +476,7 @@ partial class EnumExtensions
         };
 
     public static Skill GetSkill(this AugmentationType type)
-        => type switch
-        {
+        => type switch {
             AugmentationType.Salvage => Skill.Salvaging,
             AugmentationType.ItemTinkering => Skill.ItemTinkering,
             AugmentationType.ArmorTinkering => Skill.ArmorTinkering,
@@ -516,8 +485,7 @@ partial class EnumExtensions
             _ => Skill.None,
         };
 
-    public static PlayScript GetEffect(this AugmentationType type)
-    {
+    public static PlayScript GetEffect(this AugmentationType type) {
         if (IsAttribute(type)) return PlayScript.AugmentationUseAttribute;
         else if (IsResist(type)) return PlayScript.AugmentationUseResistances;
         else if (IsSkill(type)) return PlayScript.AugmentationUseSkill;
@@ -525,8 +493,7 @@ partial class EnumExtensions
     }
 }
 [Flags]
-public enum AuthFlags
-{
+public enum AuthFlags {
     None = 0x0,
     EnableCrypto = 0x1,
     AdminAccountOverride = 0x2,   // admin logging in as another account
@@ -534,8 +501,7 @@ public enum AuthFlags
     LastDefault = 0x4
 }
 
-public enum BondedStatus
-{
+public enum BondedStatus {
     Destroy = -2,
     Slippery = -1,
     Normal = 0,
@@ -543,8 +509,7 @@ public enum BondedStatus
     Sticky = 2
 }
 
-public enum BSPType
-{
+public enum BSPType {
     Drawing = 0,
     Physics = 1,
     Cell = 2,
@@ -555,8 +520,7 @@ public enum BSPType
 /// Used with F7B0 0147: Game Event -> Group Chat (ChatChannel)
 /// </summary>
 [Flags]
-public enum Channel
-{
+public enum Channel {
     // S_CONSTANT: Type:             0x108E, Value: (LF_ULONG) 2130737152, GhostChans_ChannelID
     // S_CONSTANT: Type:             0x108E, Value: 1855, ValidChans_ChannelID
     // S_CONSTANT: Type:             0x108E, Value: (LF_ULONG) 1048576, Samsur_ChannelID
@@ -694,8 +658,7 @@ public enum Channel
 /// Used with F7B1 0005: GameAction -> Set Single Character Option - Only those that have values will trigger that GameAction.<para />
 /// In the client, this is named PlayerOption.
 /// </summary>
-public enum CharacterOption
-{
+public enum CharacterOption {
     /// <summary>
     /// AutoRepeatAttacks
     /// </summary>
@@ -918,20 +881,17 @@ public enum CharacterOption
     [CharacterOptions2(CharacterOptions2.Default)] CharacterOptions2Default = 0x36
 }
 
-partial class EnumExtensions
-{
+partial class EnumExtensions {
     public static CharacterOptions1Attribute GetCharacterOptions1Attribute(this CharacterOption val) => val.GetAttributeOfType<CharacterOptions1Attribute>();
     public static CharacterOptions2Attribute GetCharacterOptions2Attribute(this CharacterOption val) => val.GetAttributeOfType<CharacterOptions2Attribute>();
     public static uint GetCharacterOptions1Flag(this ReadOnlyDictionary<CharacterOption, bool> options) => GetCharacterOptions1Flag(options.ToDictionary(k => k.Key, v => v.Value));
-    public static uint GetCharacterOptions1Flag(this Dictionary<CharacterOption, bool> options)
-    {
+    public static uint GetCharacterOptions1Flag(this Dictionary<CharacterOption, bool> options) {
         var flags = 0U;
         foreach (var option in options.Where(o => o.Key.GetCharacterOptions1Attribute() != null)) if (option.Value) flags |= (uint)option.Key.GetCharacterOptions1Attribute().Option;
         return flags;
     }
     public static uint GetCharacterOptions2Flag(this ReadOnlyDictionary<CharacterOption, bool> options) => GetCharacterOptions2Flag(options.ToDictionary(k => k.Key, v => v.Value));
-    public static uint GetCharacterOptions2Flag(this Dictionary<CharacterOption, bool> options)
-    {
+    public static uint GetCharacterOptions2Flag(this Dictionary<CharacterOption, bool> options) {
         var flags = 0U;
         foreach (var option in options.Where(o => o.Key.GetCharacterOptions2Attribute() != null)) if (option.Value) flags |= (uint)option.Key.GetCharacterOptions2Attribute().Option;
         return flags;
@@ -940,8 +900,7 @@ partial class EnumExtensions
 
 // Thanks to tfarley (aclogview) for these enums
 [Flags]
-public enum CharacterOptionDataFlag : uint
-{
+public enum CharacterOptionDataFlag : uint {
     Shortcut = 0x00000001,
     SquelchList = 0x00000002,
     MultiSpellList = 0x00000004,
@@ -962,8 +921,7 @@ public enum CharacterOptionDataFlag : uint
 /// /// In the client, this is named CharacterOption.
 /// </summary>
 [Flags]
-public enum CharacterOptions1 : uint
-{
+public enum CharacterOptions1 : uint {
     NotUsed1 = 0x00000001,
     AutoRepeatAttack = 0x00000002,
     IgnoreAllegianceRequests = 0x00000004,
@@ -1006,8 +964,7 @@ public enum CharacterOptions1 : uint
 /// Used with F7B1 01A1: GameAction -> Set Character Options - Sent as a flag with the "true" values ORed
 /// </summary>
 [Flags]
-public enum CharacterOptions2 : uint
-{
+public enum CharacterOptions2 : uint {
     PersistentAtDay = 0x00000001,
     DisplayDateOfBirth = 0x00000002,
     DisplayChessRank = 0x00000004,
@@ -1044,8 +1001,7 @@ public enum CharacterOptions2 : uint
     Default = HearGeneralChat | HearTradeChat | HearLFGChat | LeadMissileTargets | ConfirmVolatileRareUse | ShowHelm | ShowCloak // 9733888
 }
 
-public enum CharacterTitle : uint
-{
+public enum CharacterTitle : uint {
     Invalid,
     Adventurer,
     Archer,
@@ -1947,8 +1903,7 @@ public enum CharacterTitle : uint
 /// The ChatDisplayMask identifies that types of chat that are displayed in each chat window.<para />
 /// Used by CharacterOptionData: The CharacterOptionData structure contains character options.
 /// </summary>
-public enum ChatDisplayMask : long
-{
+public enum ChatDisplayMask : long {
     /// <summary>
     /// Gameplay (main chat window only)
     /// </summary>
@@ -1977,8 +1932,7 @@ public enum ChatDisplayMask : long
 /// Used with F7B0 01F4: Game Event -> Squelch and Filter List
 /// </summary>
 [Flags]
-public enum ChatFilterMask
-{
+public enum ChatFilterMask {
     Speech = 0x00000004,
     Tell = 0x00000008,
     Combat = 0x00000040,
@@ -2007,8 +1961,7 @@ public enum ChatFilterMask
 /// Used with F7E0: Server Message
 ///     0x00, 0x03, 0x04, 0x05, 0x06, 0x07, 0x0D, 0x10, 0x11, 0x17, 0x18
 /// </summary>
-public enum ChatMessageType : uint
-{
+public enum ChatMessageType : uint {
     /// <summary>
     /// allegiance MOTD
     /// 
@@ -2274,8 +2227,7 @@ public enum ChatMessageType : uint
     AdminTell = 0x1F,
 }
 
-partial class EnumExtensions
-{
+partial class EnumExtensions {
     public static SquelchMask ToMask(this ChatMessageType type) => type == ChatMessageType.AllChannels ? SquelchMask.AllChannels : (SquelchMask)(1 << (int)type);
 }
 
@@ -2283,8 +2235,7 @@ partial class EnumExtensions
 /// The ChatNetworkBlobType identifies the type of Turbine Chat message.<para />
 /// Used with F7DE: Turbine Chat
 /// </summary>
-public enum ChatNetworkBlobType
-{
+public enum ChatNetworkBlobType {
     NETBLOB_UNKNOWN = 0,
 
     /// <summary>
@@ -2306,8 +2257,7 @@ public enum ChatNetworkBlobType
     NETBLOB_RESPONSE_XMLRPC = 6,
 }
 
-public enum ChatType
-{
+public enum ChatType {
     Undef,
     Allegiance,
     General,
@@ -2321,8 +2271,7 @@ public enum ChatType
     Olthoi
 }
 
-public enum ChessAiState
-{
+public enum ChessAiState {
     None,
     WaitingToStart,     // work has been requested, future object will be initialised and made valid next update
     WaitingForWorker,   // future object is valid but has yet to start a worker thread
@@ -2330,15 +2279,13 @@ public enum ChessAiState
     WaitingForFinish    // worker has finished calculating ai move, future get will not block or block for a short time
 }
 
-public enum ChessColor
-{
+public enum ChessColor {
     None = -1,
     White = 0,
     Black = 1,
 }
 
-public enum ChessDelayedActionType
-{
+public enum ChessDelayedActionType {
     Start,
     Move,
     MovePass,
@@ -2347,8 +2294,7 @@ public enum ChessDelayedActionType
 }
 
 [Flags]
-public enum ChessMoveFlag
-{
+public enum ChessMoveFlag {
     None = 0x0,
     Normal = 0x1,
     Capture = 0x2,
@@ -2364,8 +2310,7 @@ public enum ChessMoveFlag
 /// Negative/0 values are failures.
 /// </summary>
 //[Flags]
-public enum ChessMoveResult : int
-{
+public enum ChessMoveResult : int {
     NoMoveResult = 0x0000,
     OKMoveToEmptySquare = 0x0001,
     OKMoveToOccupiedSquare = 0x0002,
@@ -2400,8 +2345,7 @@ public enum ChessMoveResult : int
     BadMoveInvalidBoardState = -111
 }
 
-public enum ChessMoveType
-{
+public enum ChessMoveType {
     Invalid,
     Pass,
     Resign,
@@ -2411,8 +2355,7 @@ public enum ChessMoveType
     SelectedPiece
 }
 
-public enum ChessPieceType
-{
+public enum ChessPieceType {
     Empty,
     Pawn,
     Rook,
@@ -2423,15 +2366,13 @@ public enum ChessPieceType
     Count
 }
 
-public enum ChessState
-{
+public enum ChessState {
     WaitingForPlayers,
     InProgress,
     Finished
 }
 
-public enum CloakStatus
-{
+public enum CloakStatus {
     Undef,
     Off,
     On,
@@ -2439,8 +2380,7 @@ public enum CloakStatus
     Creature
 }
 
-public enum CombatBodyPart
-{
+public enum CombatBodyPart {
     Undefined = -1,
     Head = 0,
     Chest = 1,
@@ -2473,8 +2413,7 @@ public enum CombatBodyPart
 }
 
 [Flags]
-public enum CombatMode
-{
+public enum CombatMode {
     Undef = 0x00,
     NonCombat = 0x01,
     Melee = 0x02,
@@ -2489,8 +2428,7 @@ public enum CombatMode
 /// exported from the decompiled client.
 /// </summary>
 [Flags]
-public enum CombatStyle
-{
+public enum CombatStyle {
     Undef = 0x00000,
     Unarmed = 0x00001,
     OneHanded = 0x00002,
@@ -2517,8 +2455,7 @@ public enum CombatStyle
     All = 0xFFFF
 }
 
-public enum CombatUse : byte
-{
+public enum CombatUse : byte {
     None = 0x00,
     Melee = 0x01,
     Missile = 0x02,
@@ -2528,8 +2465,7 @@ public enum CombatUse : byte
 }
 
 [Flags]
-public enum CommandMask : uint
-{
+public enum CommandMask : uint {
     Style = 0x80000000,
     SubState = 0x40000000,
     Modifier = 0x20000000,
@@ -2542,8 +2478,7 @@ public enum CommandMask : uint
 }
 
 // todo: verify
-public enum CompareType
-{
+public enum CompareType {
     GreaterThan = 0,
     LessThanEqual = 1,
     LessThan = 2,
@@ -2555,8 +2490,7 @@ public enum CompareType
     Exist = 8
 }
 
-public enum ConfirmationType : uint
-{
+public enum ConfirmationType : uint {
     Undefined = 0x00,
     SwearAllegiance = 0x01,
     AlterSkill = 0x02,
@@ -2567,21 +2501,18 @@ public enum ConfirmationType : uint
     Yes_No = 0x07
 }
 
-public enum ContainerType
-{
+public enum ContainerType {
     NonContainer = 0,
     Container = 1,
     Foci = 2
 }
 
-public enum ContentType
-{
+public enum ContentType {
     Patch = 1,
     Quest = 2
 }
 
-public enum ContractId : uint
-{
+public enum ContractId : uint {
     Undef,
     Contract_1_The_Shadows_of_Bitter_Winter,
     Contract_2_Test_Quest_Stamping,
@@ -2913,8 +2844,7 @@ public enum ContractId : uint
 /// </summary>
 /// 
 [Flags]
-public enum CoverageMask : uint
-{
+public enum CoverageMask : uint {
     Unknown = 0x00000001,
     UnderwearUpperLegs = 0x00000002,
     UnderwearLowerLegs = 0x00000004,
@@ -2933,8 +2863,7 @@ public enum CoverageMask : uint
     Feet = 0x00010000,
 }
 
-public enum CoverageMaskHelper : uint
-{
+public enum CoverageMaskHelper : uint {
     // for server comparison only
     Underwear = CoverageMask.UnderwearUpperLegs | CoverageMask.UnderwearLowerLegs | CoverageMask.UnderwearChest | CoverageMask.UnderwearAbdomen | CoverageMask.UnderwearUpperArms | CoverageMask.UnderwearLowerArms,
     Outerwear = CoverageMask.OuterwearUpperLegs | CoverageMask.OuterwearLowerLegs | CoverageMask.OuterwearChest | CoverageMask.OuterwearAbdomen | CoverageMask.OuterwearUpperArms | CoverageMask.OuterwearLowerArms | CoverageMask.Head | CoverageMask.Hands | CoverageMask.Feet,
@@ -2952,8 +2881,7 @@ public enum CoverageMaskHelper : uint
     Extremities = CoverageMask.Head | CoverageMask.Hands | CoverageMask.Feet,
 }
 
-public enum CreatureType : uint
-{
+public enum CreatureType : uint {
     Invalid,
     Olthoi,
     Banderling,
@@ -3061,8 +2989,7 @@ public enum CreatureType : uint
 /// <summary>
 /// Polygon culling mode
 /// </summary>
-public enum CullMode
-{
+public enum CullMode {
     Landblock = 0x0,     // not in dat, but it seems to be used for this?
     None = 0x1,
     Clockwise = 0x2,
@@ -3070,8 +2997,7 @@ public enum CullMode
 }
 
 [Flags]
-public enum DamageType
-{
+public enum DamageType {
     Undef = 0x0,
     Slash = 0x1,
     Pierce = 0x2,
@@ -3091,11 +3017,9 @@ public enum DamageType
     Elemental = Cold | Fire | Acid | Electric,
 }
 
-partial class EnumExtensions
-{
+partial class EnumExtensions {
     public static string GetName(this DamageType damageType)
-        => damageType switch
-        {
+        => damageType switch {
             DamageType.Undef => "Undefined",
             DamageType.Slash => "Slashing",
             DamageType.Pierce => "Piercing",
@@ -3115,10 +3039,8 @@ partial class EnumExtensions
     public static bool IsMultiDamage(this DamageType damageType)
         => Polyfill.EnumHasMultiple((uint)damageType);
 
-    public static DamageType SelectDamageType(this DamageType damageType, float? powerLevel = null)
-    {
-        if (powerLevel == null)
-        {
+    public static DamageType SelectDamageType(this DamageType damageType, float? powerLevel = null) {
+        if (powerLevel == null) {
             // select random damage type
             var damageTypes = damageType.GetFlags();
             var rng = ThreadSafeRandom.Next(1, damageTypes.Count - 1);
@@ -3134,8 +3056,7 @@ partial class EnumExtensions
 /// <summary>
 /// Used to select a database when calling a function.
 /// </summary>
-public enum DatabaseSelectionOption
-{
+public enum DatabaseSelectionOption {
     None = 0,
     Authentication = 1,
     Shard = 2,
@@ -3143,8 +3064,7 @@ public enum DatabaseSelectionOption
     All = 4
 }
 
-public enum DelayedActionType
-{
+public enum DelayedActionType {
     Start,
     Move,
     MovePass,
@@ -3153,8 +3073,7 @@ public enum DelayedActionType
 }
 
 [Flags]
-public enum DestinationType
-{
+public enum DestinationType {
     Undef = 0,
     Contain = 1,
     Wield = 2,
@@ -3171,15 +3090,13 @@ public enum DestinationType
 /// <summary>
 /// The type of spells to dispel
 /// </summary>
-public enum DispelType
-{
+public enum DispelType {
     All,
     Positive,
     Negative
 }
 
-public enum EffectArgumentType
-{
+public enum EffectArgumentType {
     Invalid,
     Double,
     Int,
@@ -3191,8 +3108,7 @@ public enum EffectArgumentType
     Int64
 }
 
-public enum EmitterType
-{
+public enum EmitterType {
     Unknown = 0,
     BirthratePerSec = 1,
     BirthratePerMeter = 2,
@@ -3201,8 +3117,7 @@ public enum EmitterType
 /// <summary>
 /// exported from the decompiled client.  actual usage of these is 100% speculative.
 /// </summary>
-public enum EmoteCategory
-{
+public enum EmoteCategory {
     Invalid = 0,
     /// <summary>
     /// Not used as a direct refusal to accept item but as a mechanism to "examine" item but allow player to keep
@@ -3251,8 +3166,7 @@ public enum EmoteCategory
 /// <summary>
 /// exported from the decompiled client.  actual usage of these is 100% speculative.
 /// </summary>
-public enum EmoteType
-{
+public enum EmoteType {
     Invalid = 0,
     InvalidVendor = 0,
     Act = 1,
@@ -3382,8 +3296,7 @@ public enum EmoteType
 }
 
 [Flags]
-public enum EnchantmentMask
-{
+public enum EnchantmentMask {
     Multiplicative = 0x1,
     Additive = 0x2,
     Vitae = 0x4,
@@ -3394,8 +3307,7 @@ public enum EnchantmentMask
 /// These flags are used to determine what enchantments stack.
 /// </summary>
 [Flags]
-public enum EnchantmentTypeFlags
-{
+public enum EnchantmentTypeFlags {
     Undef = 0x0000000,
     Attribute = 0x0000001,
     SecondAtt = 0x0000002,
@@ -3419,23 +3331,20 @@ public enum EnchantmentTypeFlags
     StatTypes = 0x00000FF,
 }
 
-public enum EndTradeReason
-{
+public enum EndTradeReason {
     Normal = 0x1,
     EnteredCombat = 0x2,
     Canceled = 0x51
 }
 
 [Flags]
-public enum EnvCellFlags
-{
+public enum EnvCellFlags {
     SeenOutside = 0x1,
     HasStaticObjs = 0x2,
     HasRestrictionObj = 0x8
 }
 
-public enum EnvironChangeType
-{
+public enum EnvironChangeType {
     Clear = 0x00,
     RedFog = 0x01,
     BlueFog = 0x02,
@@ -3466,8 +3375,7 @@ public enum EnvironChangeType
     Thunder6Sound = 0x7B
 }
 
-partial class EnumExtensions
-{
+partial class EnumExtensions {
     public static bool IsFog(this EnvironChangeType type) => type <= EnvironChangeType.BlackFog2;
     public static bool IsSound(this EnvironChangeType type) => type >= EnvironChangeType.RoarSound;
 }
@@ -3476,8 +3384,7 @@ partial class EnumExtensions
 /// This data is sent as loc in the player description message F7B0 -0013
 /// </summary>
 [Flags]
-public enum EquipMask : uint
-{
+public enum EquipMask : uint {
     None = 0x00000000,
     HeadWear = 0x00000001,
     ChestWear = 0x00000002,
@@ -3528,8 +3435,7 @@ public enum EquipMask : uint
 }
 
 // List of equipment sets for armor/weapons. Compiled from aclogview, and the client.
-public enum EquipmentSet
-{
+public enum EquipmentSet {
     Invalid = 0,
     Test = 1,
     Test2 = 2,
@@ -3675,8 +3581,7 @@ public enum EquipmentSet
 }
 
 [Flags]
-public enum ExperienceHandlingType
-{
+public enum ExperienceHandlingType {
     Undef = 0x0,   // 000 0000
     ApplyLevelMod = 0x1,   // 000 0001
     ShareWithFellows = 0x2,   // 000 0010
@@ -3697,8 +3602,7 @@ public enum ExperienceHandlingType
 }
 
 [Flags]
-public enum FactionBits
-{
+public enum FactionBits {
     None = 0x0,
     CelestialHand = 0x1,
     EldrytchWeb = 0x2,
@@ -3708,8 +3612,7 @@ public enum FactionBits
     ValidFactions = CelestialHand | EldrytchWeb | RadiantBlood
 }
 
-partial class EnumExtensions
-{
+partial class EnumExtensions {
     /// <summary>
     /// Will add a space infront of capital letter words in a string
     /// </summary>
@@ -3719,16 +3622,14 @@ partial class EnumExtensions
         => new string(factionBits.ToString().ToCharArray().SelectMany((c, i) => i > 0 && char.IsUpper(c) ? new char[] { ' ', c } : new char[] { c }).ToArray());
 }
 
-public enum FellowUpdateType
-{
+public enum FellowUpdateType {
     Undef,
     Full,
     Stats,
     Vitals
 }
 
-public enum GameEventState
-{
+public enum GameEventState {
     Undef = 0x0,
     Enabled = 0x1,
     Disabled = 0x2,
@@ -3736,8 +3637,7 @@ public enum GameEventState
     On = 0x4
 }
 
-public enum GamePieceState
-{
+public enum GamePieceState {
     None,
     MoveToSquare,
     WaitingForMoveToSquare,
@@ -3747,30 +3647,26 @@ public enum GamePieceState
     Combat
 }
 
-public enum Gender
-{
+public enum Gender {
     Invalid = 0,
     Male = 1,
     Female = 2
 }
 
-public enum GeneratorDefinedTimes
-{
+public enum GeneratorDefinedTimes {
     Undef,
     Dusk,
     Dawn
 }
 
-public enum GeneratorDestruct
-{
+public enum GeneratorDestruct {
     Undef,
     Nothing,
     Destroy,
     Kill
 }
 
-public enum GeneratorTimeType
-{
+public enum GeneratorTimeType {
     Undef,
     RealTime,
     Defined,
@@ -3779,16 +3675,14 @@ public enum GeneratorTimeType
     Day
 }
 
-public enum GeneratorType
-{
+public enum GeneratorType {
     Undef,
     Relative,
     Absolute
 }
 
 [Flags]
-public enum GfxObjFlags : uint
-{
+public enum GfxObjFlags : uint {
     HasPhysics = 0x1,
     HasDrawing = 0x2,
     Unknown = 0x4,
@@ -3796,16 +3690,14 @@ public enum GfxObjFlags : uint
 }
 
 [Flags]
-public enum HARBitfield
-{
+public enum HARBitfield {
     Undef = 0x0,
     OpenHouse = 0x1,
     AllegianceGuests = 0x2,
     AllegianceStorage = 0x4
 }
 
-public enum HeritageGroup
-{
+public enum HeritageGroup {
     Invalid = 0,
     Aluvian = 1,
     Gharundim = 2,
@@ -3822,15 +3714,13 @@ public enum HeritageGroup
     OlthoiAcid = 13
 }
 
-public enum HoldKey : uint
-{
+public enum HoldKey : uint {
     Invalid = 0x0,
     None = 0x1,
     Run = 0x2
 }
 
-public enum HookGroupType
-{
+public enum HookGroupType {
     Undef = 0x0,
     NoisemakingItems = 0x1,
     TestItems = 0x2,
@@ -3840,8 +3730,7 @@ public enum HookGroupType
     SpellTeachingItems = 0x20
 }
 
-partial class EnumExtensions
-{
+partial class EnumExtensions {
     /// <summary>
     /// Will add a space infront of capital letter words in a string
     /// </summary>
@@ -3851,8 +3740,7 @@ partial class EnumExtensions
 }
 
 [Flags]
-public enum HookType
-{
+public enum HookType {
     Undef = 0x00,
     Floor = 0x01,
     Wall = 0x02,
@@ -3862,22 +3750,19 @@ public enum HookType
 }
 
 [Flags]
-public enum HouseBitfield
-{
+public enum HouseBitfield {
     Undef,
     Active,
     RequiresMonarch
 }
 
-public enum HouseStatus
-{
+public enum HouseStatus {
     Disabled = -1,
     InActive,
     Active
 }
 
-public enum HouseType
-{
+public enum HouseType {
     Undef,
     Cottage,
     Villa,
@@ -3886,8 +3771,7 @@ public enum HouseType
 }
 
 [Flags]
-public enum IdentifyResponseFlags
-{
+public enum IdentifyResponseFlags {
     None = 0x0000,
     IntStatsTable = 0x0001,
     BoolStatsTable = 0x0002,
@@ -3909,16 +3793,14 @@ public enum IdentifyResponseFlags
 /// <summary>
 /// Account lookup Types
 /// </summary>
-public enum AccountLookupType
-{
+public enum AccountLookupType {
     Undef,
     Subscription,
     Character,
     Iid,
 }
 
-public enum ImageScaleType
-{
+public enum ImageScaleType {
     Full = 0x0,
     Half = 0x1,
     Quarter = 0x2,
@@ -3926,8 +3808,7 @@ public enum ImageScaleType
 }
 
 [Flags]
-public enum ImbuedEffectType : uint
-{
+public enum ImbuedEffectType : uint {
     Undef = 0,
     CriticalStrike = 0x0001,
     CripplingBlow = 0x0002,
@@ -3951,8 +3832,7 @@ public enum ImbuedEffectType : uint
 }
 
 [Flags]
-public enum ItemType : uint
-{
+public enum ItemType : uint {
     None = 0x00000000,
     MeleeWeapon = 0x00000001,
     Armor = 0x00000002,
@@ -4000,8 +3880,7 @@ public enum ItemType : uint
     VendorGrocer = Food | Container | Writable | Key | PromissoryNote | CraftCookingBase
 }
 
-public enum ItemXpStyle
-{
+public enum ItemXpStyle {
     Undef,
     Fixed,
     ScalesWithLevel,
@@ -4009,8 +3888,7 @@ public enum ItemXpStyle
 }
 
 [Flags]
-public enum LifestoneType : uint
-{
+public enum LifestoneType : uint {
     Original = 0x020002EEu,  // Weenie Class ID 509
     New = 0x02000EADu,  // Weenie Class ID 23618
     CandethKeep = 0x020002EEu,  // Weenie Class ID 24572 :: model ID needs to be fixed
@@ -4018,8 +3896,7 @@ public enum LifestoneType : uint
     Broken = 0x020002EEu   // Weenie Class ID 27457 :: model ID needs to be fixed
 }
 
-public enum MagicSchool
-{
+public enum MagicSchool {
     None = 0,
     WarMagic = 1,
     LifeMagic = 2,
@@ -4028,15 +3905,13 @@ public enum MagicSchool
     VoidMagic = 5,
 }
 
-public enum MapScope : byte
-{
+public enum MapScope : byte {
     Outdoors = 0,
     IndoorsSmall = 1,
     IndoorsLarge = 2
 }
 
-public enum MaterialType : uint
-{
+public enum MaterialType : uint {
     Unknown = 0x00000000,
     Ceramic = 0x00000001,
     Porcelain = 0x00000002,
@@ -4117,8 +3992,7 @@ public enum MaterialType : uint
     Teak = 0x0000004D,
 }
 
-public enum ModificationOperation
-{
+public enum ModificationOperation {
     None = 0,
     SetValue = 1,
     Add = 2,
@@ -4129,8 +4003,7 @@ public enum ModificationOperation
     AddSpell = 7
 }
 
-public enum ModificationType
-{
+public enum ModificationType {
     SuccessTarget = 0,
     SuccessSource = 1,
     SuccessPlayer = 2,
@@ -4141,8 +4014,7 @@ public enum ModificationType
     FailureResult = 7
 }
 
-public enum ModifierType
-{
+public enum ModifierType {
     None,
     Buffed,
     Debuffed
@@ -4150,8 +4022,7 @@ public enum ModifierType
 
 // TODO: Figure out what bitfield(s) these values map to and replace with OR's
 // Note: These IDs are from the last version of the client.Earlier versions of the client had different values for some of the enums.
-public enum MotionCommand : uint
-{
+public enum MotionCommand : uint {
     Invalid = 0x0,
     HoldRun = 0x85000001,
     HoldSidestep = 0x85000002,
@@ -4567,19 +4438,16 @@ public enum MotionCommand : uint
     WoahDuplicate2 = 0x1000019b, // Appears to be the same as Motion_Woah except it starts with 0x10 instead of 0x13
 }
 
-partial class EnumExtensions
-{
+partial class EnumExtensions {
     public static MotionCommand GetMotion(this MotionCommand motionCommand) => (int)motionCommand == 0x10000162 ? MotionCommand.Fishing : motionCommand;
 
     public static bool IsMultiStrike(this MotionCommand motionCommand)
         => motionCommand >= MotionCommand.DoubleSlashLow && motionCommand <= MotionCommand.TripleThrustHigh ||
         motionCommand >= MotionCommand.OffhandDoubleSlashLow && motionCommand <= MotionCommand.OffhandTripleThrustHigh;
 
-    public static MotionCommand ReduceMultiStrike(this MotionCommand motionCommand)
-    {
+    public static MotionCommand ReduceMultiStrike(this MotionCommand motionCommand) {
         if (!motionCommand.IsMultiStrike()) return MotionCommand.Invalid;
-        switch (motionCommand)
-        {
+        switch (motionCommand) {
             case MotionCommand.DoubleSlashLow:
             case MotionCommand.TripleSlashLow: return MotionCommand.SlashLow;
             case MotionCommand.DoubleSlashMed:
@@ -4612,11 +4480,9 @@ partial class EnumExtensions
         => motionCommand >= MotionCommand.AttackHigh2 && motionCommand <= MotionCommand.AttackLow3 ||
         motionCommand >= MotionCommand.AttackHigh4 && motionCommand <= MotionCommand.AttackLow6;
 
-    public static MotionCommand ReduceSubsequent(this MotionCommand motionCommand)
-    {
+    public static MotionCommand ReduceSubsequent(this MotionCommand motionCommand) {
         if (!motionCommand.IsSubsequent()) return MotionCommand.Invalid;
-        switch (motionCommand)
-        {
+        switch (motionCommand) {
             case MotionCommand.AttackLow2:
             case MotionCommand.AttackLow3:
             case MotionCommand.AttackLow4:
@@ -4636,10 +4502,8 @@ partial class EnumExtensions
         }
     }
 
-    public static float GetAimAngle(this MotionCommand motion)
-    {
-        return motion switch
-        {
+    public static float GetAimAngle(this MotionCommand motion) {
+        return motion switch {
             MotionCommand.AimHigh15 => 15.0f,
             MotionCommand.AimHigh30 => 30.0f,
             MotionCommand.AimHigh45 => 45.0f,
@@ -4658,15 +4522,13 @@ partial class EnumExtensions
 }
 
 [Flags]
-public enum MotionDataFlags : byte
-{
+public enum MotionDataFlags : byte {
     HasVelocity = 0x1,
     HasOmega = 0x2
 }
 
 [Flags]
-public enum MotionFlags : byte
-{
+public enum MotionFlags : byte {
     None = 0x0,
     StickToObject = 0x1,
     StandingLongJump = 0x2
@@ -4676,8 +4538,7 @@ public enum MotionFlags : byte
 /// The list of stances for players and creatures
 /// This is a subset of MotionCommand
 /// </summary>
-public enum MotionStance : uint
-{
+public enum MotionStance : uint {
     Invalid = 0x80000000,
     HandCombat = 0x8000003c,
     NonCombat = 0x8000003d,
@@ -4702,8 +4563,7 @@ public enum MotionStance : uint
 /// <summary>
 /// A subset of MotionCommand & 0xFFFF
 /// </summary>
-public enum MovementCommand : ushort
-{
+public enum MovementCommand : ushort {
     Invalid = 0x0,
     HoldRun = 0x1,
     HoldSideStep = 0x2,
@@ -4718,16 +4578,14 @@ public enum MovementCommand : ushort
 }
 
 [Flags]
-public enum MovementOption : byte
-{
+public enum MovementOption : byte {
     None = 0x0,
     StickToObject = 0x1,
     StandingLongJump = 0x2
 }
 
 [Flags]
-public enum MovementParams : uint
-{
+public enum MovementParams : uint {
     CanWalk = 0x1,
     CanRun = 0x2,
     CanSideStep = 0x4,
@@ -4748,8 +4606,7 @@ public enum MovementParams : uint
     DisableJumpDuringLink = 0x20000
 }
 
-partial class EnumExtensions
-{
+partial class EnumExtensions {
     public static MovementParams Default =
         MovementParams.CanWalk |
         MovementParams.CanRun |
@@ -4768,8 +4625,7 @@ partial class EnumExtensions
 /// This is sent as part of the InterpretedMotionState network structure
 /// </summary>
 [Flags]
-public enum MovementStateFlag : uint
-{
+public enum MovementStateFlag : uint {
     Invalid = 0x0,
     CurrentStyle = 0x1,
     ForwardCommand = 0x2,
@@ -4784,8 +4640,7 @@ public enum MovementStateFlag : uint
 /// These are used with various movement related messages.
 /// 0 & 6-9 are used with F74C movement
 /// </summary>
-public enum MovementType : byte
-{
+public enum MovementType : byte {
     Invalid = 0x0,
     RawCommand = 0x1,
     InterpretedCommand = 0x2,
@@ -4802,8 +4657,7 @@ public enum MovementType : byte
 /// These are used with various movement related messages.
 /// 0 & 6-9 are used with F74C Animation
 /// </summary>
-public enum MovementTypes
-{
+public enum MovementTypes {
     General = 0x0, // This was named Invalid in ACLogView
     RawCommand = 0x1,
     InterpretedCommand = 0x2,
@@ -4817,8 +4671,7 @@ public enum MovementTypes
 }
 
 [Flags]
-public enum MutateFilter
-{
+public enum MutateFilter {
     // custom
     Undef = 0x0,
     ArmorModVsAcid = 0x1,
@@ -4843,8 +4696,7 @@ public enum MutateFilter
     Base = Icon | ItemWorkmanship | LongDesc | Name | ResistItemAppraisal | Setup | ShortDesc | Value,
 }
 
-public enum MutationEffectType
-{
+public enum MutationEffectType {
     Assign,
     Add,
     Subtract,
@@ -4862,8 +4714,7 @@ public enum MutationEffectType
     AssignDivide
 }
 
-public enum NumberingType : byte
-{
+public enum NumberingType : byte {
     Undefined = 0x0,
     Normal = 0x1,
     Sequential = 0x1,
@@ -4873,8 +4724,7 @@ public enum NumberingType : byte
 }
 
 [Flags]
-public enum ObjectDescriptionFlag
-{
+public enum ObjectDescriptionFlag {
     None = 0x00000000,
     Openable = 0x00000001,
     Inscribable = 0x00000002,
@@ -4908,8 +4758,7 @@ public enum ObjectDescriptionFlag
     WieldLeft = 0x40000000,
 }
 
-public enum PaletteTemplate
-{
+public enum PaletteTemplate {
     Undef,
     AquaBlue,
     Blue,
@@ -5006,8 +4855,7 @@ public enum PaletteTemplate
     DyeSpringBlack
 }
 
-public enum ParentLocation
-{
+public enum ParentLocation {
     None = 0,
     RightHand = 1,
     LeftHand = 2,
@@ -5020,8 +4868,7 @@ public enum ParentLocation
     LeftUnarmed = 9
 }
 
-public enum ParticleType
-{
+public enum ParticleType {
     Unknown = 0,
     Still = 1,
     LocalVelocity = 2,
@@ -5039,8 +4886,7 @@ public enum ParticleType
 }
 
 [Flags]
-public enum PhysicsDescriptionFlag
-{
+public enum PhysicsDescriptionFlag {
     None = 0x000000,
     CSetup = 0x000001,      // model resource
     MTable = 0x000002,      // motion table / animation set
@@ -5064,8 +4910,7 @@ public enum PhysicsDescriptionFlag
 }
 
 [Flags]
-public enum PhysicsState
-{
+public enum PhysicsState {
     Static = 0x00000001,
     Unused1 = 0x00000002,
     Ethereal = 0x00000004,
@@ -5093,15 +4938,13 @@ public enum PhysicsState
     Frozen = 0x01000000,
 }
 
-public enum PickupState
-{
+public enum PickupState {
     None,
     Start,
     Return
 }
 
-public enum PKLevel : uint
-{
+public enum PKLevel : uint {
     NPK = 0,
     PK = 1,
     PKLite = 2,
@@ -5109,8 +4952,7 @@ public enum PKLevel : uint
 }
 
 // Research provided by a fellow traveler, Thanks for your generosity and hard work!
-public enum Placement : uint
-{
+public enum Placement : uint {
     Default = 0,
     RightHandCombat = 1,
     RightHandNonCombat = 2,
@@ -5156,8 +4998,7 @@ public enum Placement : uint
 }
 
 [Flags]
-public enum PlayerKillerStatus : uint
-{
+public enum PlayerKillerStatus : uint {
     Undef = 0x00,
     Protected = 0x01,
     NPK = 0x02,
@@ -5173,8 +5014,7 @@ public enum PlayerKillerStatus : uint
     Baelzharon = Free
 }
 
-public enum PlayScript : uint
-{
+public enum PlayScript : uint {
     Invalid = 0x00,
     Test1 = 0x01,
     Test2 = 0x02,
@@ -5352,8 +5192,7 @@ public enum PlayScript : uint
 }
 
 [Flags]
-public enum PortalBitmask
-{
+public enum PortalBitmask {
     Undef = 0x00,
     //NotPassable = 0x00,
     Unrestricted = 0x01,
@@ -5371,22 +5210,19 @@ public enum PortalBitmask
 }
 
 [Flags]
-public enum PortalFlags
-{
+public enum PortalFlags {
     ExactMatch = 0x1,
     PortalSide = 0x2
 }
 
-public enum PortalLinkType
-{
+public enum PortalLinkType {
     Undef,
     LinkedLifestone,
     LinkedPortalOne,
     LinkedPortalTwo
 }
 
-public enum PortalRecallType
-{
+public enum PortalRecallType {
     Undef,
     LastLifestone,
     LinkedLifestone,
@@ -5395,16 +5231,14 @@ public enum PortalRecallType
     LinkedPortalTwo
 }
 
-public enum PortalSummonType
-{
+public enum PortalSummonType {
     Undef,
     LinkedPortalOne,
     LinkedPortalTwo
 }
 
 [Flags]
-public enum PortalType : uint
-{
+public enum PortalType : uint {
     Purple = 0x020001B3u,
     Blue = 0x020005D2u,
     Green = 0x020005D3u,
@@ -5421,8 +5255,7 @@ public enum PortalType : uint
 /// The PositionFlags indicate the fields present in the Position structure
 /// </summary>
 [Flags]
-public enum PositionFlags : uint
-{
+public enum PositionFlags : uint {
     None = 0x00,   // no data
     HasVelocity = 0x01,   // velocity vector is present
     HasPlacementID = 0x02,   // placement id is present
@@ -5433,16 +5266,14 @@ public enum PositionFlags : uint
     OrientationHasNoZ = 0x40,   // orientation quaternion has no z component
 }
 
-public enum PowerAccuracy
-{
+public enum PowerAccuracy {
     Low = 1,
     Medium = 2,
     High = 3
 }
 
 [Flags]
-public enum Quadrant
-{
+public enum Quadrant {
     None = 0x0,
     High = 0x1,
     Medium = 0x2,
@@ -5453,8 +5284,7 @@ public enum Quadrant
     Back = 0x40
 }
 
-public enum QuadrantIndex
-{
+public enum QuadrantIndex {
     HLF = 0,
     MLF = 1,
     LLF = 2,
@@ -5472,8 +5302,7 @@ public enum QuadrantIndex
     LRB = 11
 }
 
-partial class EnumExtensions
-{
+partial class EnumExtensions {
     public const Quadrant HLF = Quadrant.High | Quadrant.Left | Quadrant.Front;
     public const Quadrant MLF = Quadrant.Medium | Quadrant.Left | Quadrant.Front;
     public const Quadrant LLF = Quadrant.Low | Quadrant.Left | Quadrant.Front;
@@ -5491,8 +5320,7 @@ partial class EnumExtensions
     public const Quadrant LRB = Quadrant.Low | Quadrant.Right | Quadrant.Back;
 
     public static Quadrant ToQuadrant(this QuadrantIndex idx)
-        => idx switch
-        {
+        => idx switch {
             QuadrantIndex.HLF => HLF,
             QuadrantIndex.MLF => MLF,
             QuadrantIndex.LLF => LLF,
@@ -5509,8 +5337,7 @@ partial class EnumExtensions
         };
 
     public static QuadrantIndex GetIndex(this Quadrant quadrant)
-        => quadrant switch
-        {
+        => quadrant switch {
             HLF => QuadrantIndex.HLF,
             MLF => QuadrantIndex.MLF,
             LLF => QuadrantIndex.LLF,
@@ -5527,8 +5354,7 @@ partial class EnumExtensions
         };
 }
 
-public enum RadarBehavior : byte
-{
+public enum RadarBehavior : byte {
     Undefined = 0,
     ShowNever = 1,
     ShowMovement = 2,
@@ -5536,8 +5362,7 @@ public enum RadarBehavior : byte
     ShowAlways = 4
 }
 
-public enum RadarColor : byte
-{
+public enum RadarColor : byte {
     Default = 0x00,
     Blue = 0x01,
     Gold = 0x02,
@@ -5564,8 +5389,7 @@ public enum RadarColor : byte
 }
 
 [Flags]
-public enum RecipeResult
-{
+public enum RecipeResult {
     SourceItemDestroyed = 1,
     TargetItemDestroyed = 2,
     SourceItemUsesDecrement = 4,
@@ -5576,8 +5400,7 @@ public enum RecipeResult
     FailureItem2 = 128
 }
 
-public enum RecipeSourceType
-{
+public enum RecipeSourceType {
     Player = 0,
     Source = 1,
     Dye = 60
@@ -5587,8 +5410,7 @@ public enum RecipeSourceType
 /// these are not from the client, but rather a classification of how a "Use A on B" formula is
 /// intended to work.  this logic drives the basic flow of how these interations work
 /// </summary>
-public enum RecipeType
-{
+public enum RecipeType {
     None = 0,
     CreateItem = 1,
     Healing = 2,
@@ -5599,8 +5421,7 @@ public enum RecipeType
 }
 
 [Flags]
-public enum RegenerationType : uint
-{
+public enum RegenerationType : uint {
     Undef = 0x0,
     Destruction = 0x1,
     PickUp = 0x2,
@@ -5608,8 +5429,7 @@ public enum RegenerationType : uint
 }
 
 [Flags]
-public enum RegenLocationType : uint
-{
+public enum RegenLocationType : uint {
     Undef = 0x00,
     OnTop = 0x01,
     Scatter = 0x02,
@@ -5627,15 +5447,13 @@ public enum RegenLocationType : uint
     ShopTreasure = Shop | Treasure // 96
 }
 
-public enum RequirementType
-{
+public enum RequirementType {
     Target = 0,
     Source = 1,
     Player = 2
 }
 
-public enum ResistanceType
-{
+public enum ResistanceType {
     Undef,
     Slash,
     Pierce,
@@ -5653,8 +5471,7 @@ public enum ResistanceType
     ManaBoost
 }
 
-public enum SecurityLevel
-{
+public enum SecurityLevel {
     // 0x00018b49 : Length = 530, Leaf = 0x1203 LF_FIELDLIST
     // list[0] = LF_ENUMERATE, public, value = 0, name = 'Undef_SecurityLevel'
     // list[1] = LF_ENUMERATE, public, value = 0, name = 'Player_SecurityLevel'
@@ -5700,8 +5517,7 @@ public enum SecurityLevel
 }
 
 // These are hard-coded in the acclient.exe
-public enum SetupConst : uint
-{
+public enum SetupConst : uint {
     HumanMale = 0x02000001,
     HumanFemale = 0x0200004E,
 
@@ -5752,8 +5568,7 @@ public enum SetupConst : uint
 }
 
 [Flags]
-public enum SetupFlags
-{
+public enum SetupFlags {
     HasParent = 0x1,
     HasDefaultScale = 0x2,
     AllowFreeHeading = 0x4,
@@ -5761,24 +5576,21 @@ public enum SetupFlags
 }
 
 [Flags]
-public enum ShareType
-{
+public enum ShareType {
     None = 0x0,
     Fellowship = 0x1,
     Allegiance = 0x2,
     All = 0x3
 }
 
-public enum Sidedness
-{
+public enum Sidedness {
     Positive = 0x0,
     Negative = 0x1,
     InPlane = 0x2,
     Crossing = 0x3
 }
 
-public enum SimplePolygonType
-{
+public enum SimplePolygonType {
     SimplePolygon = 0x0,
     PathPolygon = 0x1,
     PlanarPolygon = 0x2
@@ -5789,8 +5601,7 @@ public enum SimplePolygonType
 /// as retired or unused --ABSOLUTELY CANNOT-- be removed. Skills that are none, retired, or not
 /// implemented have been removed from the SkillHelper.ValidSkills hashset below.
 /// </summary>
-public enum Skill
-{
+public enum Skill {
     None,
     Axe,                 /* Retired */
     Bow,                 /* Retired */
@@ -5848,8 +5659,7 @@ public enum Skill
     Summoning
 }
 
-partial class EnumExtensions
-{
+partial class EnumExtensions {
     public static List<Skill> RetiredMelee = new List<Skill>()
     {
         Skill.Axe,
@@ -5879,8 +5689,7 @@ partial class EnumExtensions
     public static string ToSentence(this Skill skill) => new string(skill.ToString().ToCharArray().SelectMany((c, i) => i > 0 && char.IsUpper(c) ? new char[] { ' ', c } : new char[] { c }).ToArray());
 }
 
-partial class EnumExtensions
-{
+partial class EnumExtensions {
     public static HashSet<Skill> ValidSkills = new HashSet<Skill>
     {
         Skill.MeleeDefense,
@@ -5959,16 +5768,14 @@ partial class EnumExtensions
     };
 }
 
-public enum SkillAdvancementClass : uint
-{
+public enum SkillAdvancementClass : uint {
     Inactive,
     Untrained,
     Trained,
     Specialized
 }
 
-public enum Sound : uint
-{
+public enum Sound : uint {
     Invalid = 0x00,
     Speak1 = 0x01,
     Random = 0x02,
@@ -6179,16 +5986,14 @@ public enum Sound : uint
 /// <summary>
 /// Used to select a data source location.
 /// </summary>
-public enum SourceSelectionOption
-{
+public enum SourceSelectionOption {
     None = 0,
     Github = 1,
     LocalDisk = 2
 }
 
 [Flags]
-public enum SpellBitfield
-{
+public enum SpellBitfield {
     Resistable = 0x1,
     PKSensitive = 0x2,
     Beneficial = 0x4,
@@ -6212,8 +6017,7 @@ public enum SpellBitfield
 /// <summary>
 /// The various options for filtering the spellbook
 /// </summary>
-public enum SpellBookFilterOptions : uint
-{
+public enum SpellBookFilterOptions : uint {
     None = 0x0000,
     Creature = 0x0001,
     Item = 0x0002,
@@ -6231,8 +6035,7 @@ public enum SpellBookFilterOptions : uint
     Void = 0x2000,
 }
 
-public enum SpellCategory : uint
-{
+public enum SpellCategory : uint {
     Undef = 0,
     StrengthRaising = 1,
     StrengthLowering = 2,
@@ -6965,8 +6768,7 @@ public enum SpellCategory : uint
 }
 
 [Flags]
-public enum SpellFlags
-{
+public enum SpellFlags {
     Resistable = 0x1,
     PKSensitive = 0x2,
     Beneficial = 0x4,
@@ -6987,8 +6789,7 @@ public enum SpellFlags
     UNKNOWN = 0x20000
 }
 
-public enum SpellId : uint
-{
+public enum SpellId : uint {
     Undef,
     StrengthOther1,
     StrengthSelf1,
@@ -13362,8 +13163,7 @@ public enum SpellId : uint
     PortalGemCooldown = 0x8000 | 1000   // 15 second cooldown
 }
 
-partial class EnumExtensions
-{
+partial class EnumExtensions {
     /// <summary>
     /// A list of spells used by the Dirty Fighting skill
     /// </summary>
@@ -13462,8 +13262,7 @@ partial class EnumExtensions
     };
 }
 
-public enum SpellType
-{
+public enum SpellType {
     Undef,
     Enchantment,
     Projectile,
@@ -13483,8 +13282,7 @@ public enum SpellType
 }
 
 [Flags]
-public enum SquelchMask : uint
-{
+public enum SquelchMask : uint {
     // this is equivalent to 1 << ChatMessageType
     None = 0x0,
     Speech = 0x4,
@@ -13505,18 +13303,15 @@ public enum SquelchMask : uint
     AllChannels = 0xFFFFFFFF
 }
 
-partial class EnumExtensions
-{
-    public static SquelchMask Add(this SquelchMask maskA, SquelchMask maskB)
-    {
+partial class EnumExtensions {
+    public static SquelchMask Add(this SquelchMask maskA, SquelchMask maskB) {
         if (maskA == SquelchMask.AllChannels || maskB == SquelchMask.AllChannels)
             return SquelchMask.AllChannels;
         var result = maskA | maskB;
         return result == SquelchMask.Combined ? SquelchMask.AllChannels : result;
     }
 
-    public static SquelchMask Remove(this SquelchMask maskA, SquelchMask maskB)
-    {
+    public static SquelchMask Remove(this SquelchMask maskA, SquelchMask maskB) {
         if (maskB == SquelchMask.AllChannels)
             return SquelchMask.None;
         var result = maskA;
@@ -13530,8 +13325,7 @@ partial class EnumExtensions
 /// <summary>
 /// This should be the same as MotionStance & 0xFFFF
 /// </summary>
-public enum StanceMode : ushort
-{
+public enum StanceMode : ushort {
     Invalid = 0x0,
     HandCombat = 0x3c,
     NonCombat = 0x3d,
@@ -13553,8 +13347,7 @@ public enum StanceMode : ushort
     ThrownShieldCombat = 0x13c,  // 139 in PY16
 }
 
-public enum StatType
-{
+public enum StatType {
     Undef = 0,
     Int = 1,
     Float = 2,
@@ -13575,8 +13368,7 @@ public enum StatType
     NumStatTypes = 15
 }
 
-public enum StipplingType
-{
+public enum StipplingType {
     None = 0x0,
     Positive = 0x1,
     Negative = 0x2,
@@ -13586,8 +13378,7 @@ public enum StipplingType
     NoUVS = 0x14
 }
 
-public enum SubscriptionStatus
-{
+public enum SubscriptionStatus {
     No_Subscription,
     AsheronsCall_Subscription,
     DarkMajesty_Subscription,
@@ -13595,16 +13386,14 @@ public enum SubscriptionStatus
     ThroneOfDestiny_Preordered
 }
 
-public enum SummoningMastery
-{
+public enum SummoningMastery {
     Undef,
     Primalist,
     Necromancer,
     Naturalist
 }
 
-public enum SurfaceHandler
-{
+public enum SurfaceHandler {
     Invalid = 0x0,
     Database = 0x1,
     PalShift = 0x2,
@@ -13618,8 +13407,7 @@ public enum SurfaceHandler
 /// These are the different image formats that textures (RenderSurface) are stored in the dat files.
 /// While these are all defined, only a handful are actually used.
 /// </summary>
-public enum SurfacePixelFormat : uint
-{
+public enum SurfacePixelFormat : uint {
     PFID_UNKNOWN = 0,
     PFID_R8G8B8 = 20,
     PFID_A8R8G8B8 = 21,
@@ -13678,8 +13466,7 @@ public enum SurfacePixelFormat : uint
 }
 
 [Flags]
-public enum SurfaceType : uint
-{
+public enum SurfaceType : uint {
     Base1Solid = 0x1,
     Base1Image = 0x2,
     Base1ClipMap = 0x4,
@@ -13699,8 +13486,7 @@ public enum SurfaceType : uint
 /// Determines the monster behavior for which players are targetted
 /// </summary>
 [Flags]
-public enum TargetingTactic
-{
+public enum TargetingTactic {
     // note that this is still trying to be figured out...
     None = 0x00,
     Random = 0x01,   // target a random player every now and then
@@ -13716,8 +13502,7 @@ public enum TargetingTactic
 /// Determines when a monster will attack
 /// </summary>
 [Flags]
-public enum Tolerance
-{
+public enum Tolerance {
     None = 0,  // attack targets in range
     NoAttack = 1,  // never attack
     Appraise = 2,  // attack when ID'd or attacked
@@ -13729,8 +13514,7 @@ public enum Tolerance
     Monster = 128 // only attack other monsters
 }
 
-public enum TradeSide
-{
+public enum TradeSide {
     Self = 0x1,
     Partner = 0x2,
 }
@@ -13739,16 +13523,14 @@ public enum TradeSide
 /// Indicates the source and destination for life magic transfer spells
 /// </summary>
 [Flags]
-public enum TransferFlags
-{
+public enum TransferFlags {
     CasterSource = 0x1,
     TargetSource = 0x2,
     CasterDestination = 0x4,
     TargetDestination = 0x8
 }
 
-public enum TreasureClass
-{
+public enum TreasureClass {
     // retail
     Undef,
     Pyreal,
@@ -13811,8 +13593,7 @@ public enum TreasureClass
     EncapsulatedSpirit,
 }
 
-public enum TreasureType
-{
+public enum TreasureType {
     Undef,
     Item,
     MagicItem,
@@ -13820,8 +13601,7 @@ public enum TreasureType
 };
 
 [Flags]
-public enum UIEffects : uint
-{
+public enum UIEffects : uint {
     Undef = 0x0000,
     Magical = 0x0001,
     Poisoned = 0x0002,
@@ -13842,8 +13622,7 @@ public enum UIEffects : uint
 /// this is used as a flag to tell the client what we are sending about the position of the object.
 /// </summary>
 [Flags]
-public enum UpdatePositionFlag
-{
+public enum UpdatePositionFlag {
     /// <summary>
     /// The I got nothing for you....
     /// </summary>
@@ -13879,8 +13658,7 @@ public enum UpdatePositionFlag
 }
 
 [Flags]
-public enum Usable : uint
-{
+public enum Usable : uint {
     Undef = 0x00,
     No = 0x01,
     Self = 0x02,
@@ -13930,16 +13708,14 @@ public enum Usable : uint
     TargetMask = 0xFFFF0000,
 }
 
-partial class EnumExtensions
-{
+partial class EnumExtensions {
     public static Usable GetSourceFlags(this Usable usable) => usable & Usable.SourceMask;
 
     public static Usable GetTargetFlags(this Usable usable) => (Usable)((uint)usable >> 16);
 }
 
 // Verified against GDL, much <3 to you P.
-public enum VendorType
-{
+public enum VendorType {
     Undef = 0,
     Open = 1,
     Close = 2,
@@ -13948,14 +13724,12 @@ public enum VendorType
     Heartbeat = 5
 }
 
-public enum VertexType
-{
+public enum VertexType {
     Unkonwn = 0x0,
     CSWVertexType = 0x1
 }
 
-public enum Vital : uint
-{
+public enum Vital : uint {
     Undefined,
     MaxHealth,
     Health,
@@ -13965,8 +13739,7 @@ public enum Vital : uint
     Mana
 }
 
-public enum WeaponType
-{
+public enum WeaponType {
     Undef,
     Unarmed,
     Sword,
@@ -13982,8 +13755,7 @@ public enum WeaponType
     Magic
 }
 
-public enum WieldRequirement
-{
+public enum WieldRequirement {
     Invalid,
     Skill,
     RawSkill,
@@ -14003,8 +13775,7 @@ public enum WieldRequirement
 /// For leveling up items,
 /// only kill and quest XP are taken into consideration
 /// </summary>
-public enum XpType
-{
+public enum XpType {
     Kill,
     Quest,
     Proficiency,

@@ -5,8 +5,7 @@ namespace GameX.WB.Formats.AC.Props;
 /// <summary>
 /// Weenie Classes found in Feb 05 pdb
 /// </summary>
-public enum WeenieClassName : ushort
-{
+public enum WeenieClassName : ushort {
     W_UNDEF_CLASS = 0,
     W_HUMAN_CLASS = 1,
     W_GENERICAI_CLASS = 2,
@@ -31141,8 +31140,7 @@ public enum WeenieClassName : ushort
 /// Client error messages:
 /// https://ac.yotesfan.com/client/errors.php
 /// </summary>
-public enum WeenieError
-{
+public enum WeenieError {
     /// <summary>
     /// No error (success)
     /// </summary>
@@ -32506,8 +32504,7 @@ public enum WeenieError
 /// We split the enum up into 2 enums because each function uses only a specific set of the enum values.<para/>
 /// There are cases where the value was used by multiple messages e.g. 0x0036 ActionCancelled.
 /// </summary>
-public enum WeenieErrorWithString
-{
+public enum WeenieErrorWithString {
     /// <summary>
     ///  is too busy to accept gifts right now.
     /// </summary>
@@ -33075,8 +33072,7 @@ public enum WeenieErrorWithString
 }
 
 [Flags]
-public enum WeenieHeaderFlag : uint
-{
+public enum WeenieHeaderFlag : uint {
     None = 0x00000000,
     PluralName = 0x00000001,
     ItemsCapacity = 0x00000002,
@@ -33113,8 +33109,7 @@ public enum WeenieHeaderFlag : uint
 }
 
 [Flags]
-public enum WeenieHeaderFlag2 : uint
-{
+public enum WeenieHeaderFlag2 : uint {
     None = 0x00,
     IconUnderlay = 0x01,
     Cooldown = 0x02,
@@ -33122,8 +33117,7 @@ public enum WeenieHeaderFlag2 : uint
     PetOwner = 0x08
 }
 
-public enum WeenieType : uint
-{
+public enum WeenieType : uint {
     Undef,
     Generic,
     Clothing,

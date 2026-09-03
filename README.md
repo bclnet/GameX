@@ -21,17 +21,17 @@ GameX is an open-source, cross-platform solution for delivering game assets as a
 4. Application - a collection of application to interact with
 
 
-## [Applications](docs/Applications/Readme.md)
+## [Apps](docs/Apps/Readme.md)
 Multiple applications are included in GameX to make it easier to work with the game assets.
 
 The following are the current applications:
 
 | ID                                               | Name
 | --                                               | --  
-| [Command Line Interface](docs/Applications/Command%20Line%20Interface/Readme.md)| A CLI tool.
-| [Explorer](docs/Applications/Explorer/Readme.md)                   | An application explorer.
-| [Unity Plugin](docs/Applications/Unity%20Plugin/Readme.md)         | A Unity plugin.
-| [Unreal Plugin](docs/Applications/Unreal%20Plugin/Readme.md)       | A Unreal plugin.
+| [Command Line Interface](docs/Apps/Command%20Line%20Interface/Readme.md)| A CLI tool.
+| [Explorer](docs/Apps/Explorer/Readme.md)                   | An application explorer.
+| [Unity Plugin](docs/Apps/Unity%20Plugin/Readme.md)         | A Unity plugin.
+| [Unreal Plugin](docs/Apps/Unreal%20Plugin/Readme.md)       | A Unreal plugin.
 
 ## [Context](docs/Context/Readme.md)
 Context provides the interface for interacting with this service

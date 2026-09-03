@@ -126,7 +126,7 @@ Context provides the interface for interacting with this service
 
 | type          | name          | description
 | ---           | ---           | ---   
-| **class**     | **DefaultOptions** | Default Options for Applications.
+| **class**     | **DefaultOptions** | Default Options.
 | IDictionary<string, Family>| Families | Gets the families.
 | Family        | GetFamily(string familyName, bool throwOnError = true) | Gets the specified family.
 | Family        | ParseFamily(string json) | Parses the family.

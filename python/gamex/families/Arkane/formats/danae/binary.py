@@ -230,14 +230,12 @@ class Binary_Ftl(IHaveMetaInfo):
             if s.numGroups > 0:
                 print('FTL_GROUPLIST')
                 groupList = r.readSEach(Binary_Ftl.FTL_GROUPLIST, s.numGroups)
-b                obj.groupList = [None]*s.numGroups
+                obj.groupList = [None]*s.numGroups
                 for i in range(s.numGroups):
                     obj.groupList[i] = groupList[i].to()
                     if obj.groupList[i].numIndex > 0: obj.groupList[i].indexes = r.readPArray(None, 'i', obj.groupList[i].numIndex)
-            print('HERE')
             # Alloc'n'Copy action points
             if s.numAction > 0:
-                print('FTL_ACTIONLIST')
                 actionList = r.readSEach(Binary_Ftl.FTL_ACTIONLIST, s.numAction)
                 obj.actionList = [None]*s.numAction
                 for i in range(s.numAction):
@@ -245,7 +243,6 @@ b                obj.groupList = [None]*s.numGroups
 
             # Alloc'n'Copy selections
             if s.numSelections > 0:
-                print('FTL_SELECTIONS')
                 selections = r.readSEach(Binary_Ftl.FTL_SELECTIONS, s.numSelections)
                 obj.selections = [None]*s.numSelections
                 for i in range(s.numSelections):

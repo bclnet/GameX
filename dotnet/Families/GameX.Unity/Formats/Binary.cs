@@ -332,7 +332,7 @@ public unsafe class Binary_Unity : ArcBinary<Binary_Unity> {
                 // read secondary
                 if (version >= 0x15) {
                     //var depListLen = (int)r.ReadUInt32E(endian); Deps = depListLen >= 0 ? r.ReadPArray("I" => r.ReadUInt32E(endian)), depListLen) : new uint[0];
-                    if (!secondaryTypeTree) Deps = r.ReadL32PArray<uint>("I", endian: endian);
+                    if (!secondaryTypeTree) Deps = r.ReadL32PArray<uint>("I", big: endian);
                     else Headers = r.ReadVAStringList().ToArray();
                 }
             }
@@ -359,7 +359,7 @@ public unsafe class Binary_Unity : ArcBinary<Binary_Unity> {
                 ArrayFlag = r.ReadUInt32X(endian);
                 Flags1 = r.ReadUInt32X(endian);
                 Flags2 = version == 3 ? unchecked((uint)-1) : r.ReadUInt32X(endian);
-                if (hasTypeTree) Children = r.ReadL32FArray(_ => new TypeField_07(true, r, version, endian), endian: endian);
+                if (hasTypeTree) Children = r.ReadL32FArray(_ => new TypeField_07(true, r, version, endian), big: endian);
             }
         }
 
@@ -448,9 +448,9 @@ public unsafe class Binary_Unity : ArcBinary<Binary_Unity> {
             if (format >= 0x0E && AssetCount > 0) r.Align();
             r.Skip(FileInfo.GetSize(AssetCount, format));
             //
-            Preloads = format >= 0x0B ? r.ReadL32FArray(_ => new Preload(r, format, endian), endian: endian) : new Preload[0];
-            Dependencies = r.ReadL32FArray(_ => new FileDependency(r, format, endian), endian: endian);
-            SecondaryTypes = format >= 0x14 ? r.ReadL32FArray(_ => new Type_0D(Tree.HasTypeTree, r, format, endian), endian: endian) : new Type_0D[0];
+            Preloads = format >= 0x0B ? r.ReadL32FArray(_ => new Preload(r, format, endian), big: endian) : new Preload[0];
+            Dependencies = r.ReadL32FArray(_ => new FileDependency(r, format, endian), big: endian);
+            SecondaryTypes = format >= 0x14 ? r.ReadL32FArray(_ => new Type_0D(Tree.HasTypeTree, r, format, endian), big: endian) : new Type_0D[0];
             Unknown = r.ReadVAString();
             // verify
             Success = Verify(r);
@@ -465,7 +465,7 @@ public unsafe class Binary_Unity : ArcBinary<Binary_Unity> {
             if (format > 0x16 || format < 0x08) Log.Info("WARNING: AssetsTools (for .assets versions 8-22) wasn't tested with this .assets' version, likely parsing or writing the file won't work properly!");
 
             r.Seek(AssetTablePos);
-            var fileInfos = r.ReadL32FArray(_ => new FileInfo(_, format, endian), endian: endian);
+            var fileInfos = r.ReadL32FArray(_ => new FileInfo(_, format, endian), big: endian);
             Log.Info($"INFO: The .assets file has {fileInfos.Length} assets (info list : {FileInfo.GetSize(format)} bytes)");
             if (fileInfos.Length > 0) {
                 if (Header.MetadataSize < 8) { errorData = "Invalid metadata size"; goto _fileFormatError; }
@@ -589,7 +589,7 @@ public unsafe class Binary_Unity : ArcBinary<Binary_Unity> {
             File = file;
             var format = file.Header.Format; var endian = file.Header.BigEndian;
             r.Seek(file.AssetTablePos);
-            FileInfos = r.ReadL32FArray(_ => new FileInfo(file, _, format, endian), endian: endian);
+            FileInfos = r.ReadL32FArray(_ => new FileInfo(file, _, format, endian), big: endian);
         }
     }
 
@@ -1359,13 +1359,13 @@ public unsafe class Binary_Unity : ArcBinary<Binary_Unity> {
                     DecompressedSize = _.ReadUInt32E(),
                     CompressedSize = _.ReadUInt32E(),
                     Flags = _.ReadUInt16E(),
-                }, endian: true);
+                }, big: true);
                 Directories = r.ReadL32FArray(_ => new Directory {
                     Offset = _.ReadUInt64E(),
                     DecompressedSize = _.ReadUInt64E(),
                     Flags = _.ReadUInt32E(),
                     Name = _.ReadVAString(400),
-                }, endian: true);
+                }, big: true);
             }
         }
 
@@ -1469,7 +1469,7 @@ public unsafe class Binary_Unity : ArcBinary<Binary_Unity> {
                 Blocks3 = r.ReadL32FArray(_ => new Block {
                     CompressedSize = _.ReadUInt32E(),
                     DecompressedSize = _.ReadUInt32E(),
-                }, endian: true);
+                }, big: true);
                 if (FileVersion >= 2) FileSize = r.ReadUInt32E();
                 if (FileVersion >= 3) Unknown2 = r.ReadUInt32E();
                 Unknown3 = r.ReadByte();
@@ -1481,7 +1481,7 @@ public unsafe class Binary_Unity : ArcBinary<Binary_Unity> {
                         Name = _.ReadVAString(400),
                         Offset = _.ReadUInt32E(),
                         DecompressedSize = _.ReadUInt32E(),
-                    }, endian: true);
+                    }, big: true);
                 }
                 else return;
             }

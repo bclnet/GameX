@@ -7,13 +7,30 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-using static System.IO.Polyfill;
+using static System.IO.Poly;
 #pragma warning disable CS0169, CS0649
 
 // https://www.gamers.org/dEngine/quake/spec/quake-spec34/qkspec_3.htm
 // https://wiki.eternalmods.com/books/8-reverse-engineering-file-formats
 
 namespace GameX.ID.Formats;
+
+#region Lump
+
+// lumps
+[StructLayout(LayoutKind.Sequential)]
+public struct X_LumpON { public int Offset; public int Num; }
+
+[StructLayout(LayoutKind.Sequential)]
+public struct X_LumpNO { public int Num; public int Offset; }
+
+[StructLayout(LayoutKind.Sequential)]
+public struct X_LumpNO2 { public int Num; public int Offset; public int Offset2; }
+
+[StructLayout(LayoutKind.Sequential)]
+public struct X_Lump2NO { public int Num; public int Offset; public int Offset2; }
+
+#endregion
 
 #region Binary_BspY
 // https://developer.valvesoftware.com/wiki/BSP_(Quake)

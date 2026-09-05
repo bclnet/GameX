@@ -19,8 +19,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\OpenStack\dotnet\Platforms\OpenStack.Platform.Mg\OpenStack.Platform.Mg.csproj" />
-    <ProjectReference Include="..\..\..\OpenStack\dotnet\Platforms\OpenStack.Platform.Sdl\OpenStack.Platform.Sdl.csproj" />
+    <ProjectReference Include="..\..\..\OpenStack\dotnet\Platforms\OpenStk.Platform.Mg\OpenStk.Platform.Mg.csproj" />
+    <ProjectReference Include="..\..\..\OpenStack\dotnet\Platforms\OpenStk.Platform.Sdl\OpenStk.Platform.Sdl.csproj" />
     <ProjectReference Include="..\..\Core\GameX\GameX.csproj" />
   </ItemGroup>
 

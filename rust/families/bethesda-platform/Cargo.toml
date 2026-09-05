@@ -1,0 +1,10 @@
+[package]
+name = "gamex-bethesda-platform"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+gamex-bethesda = { path = "../../families/bethesda" }
+gamex-platform-unity = { path = "../../platforms/platform-unity" }

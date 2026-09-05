@@ -117,7 +117,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\OpenStack\dotnet\Core\OpenStack\OpenStack.csproj" />
+    <ProjectReference Include="..\..\..\OpenStack\dotnet\Core\OpenStk\OpenStk.csproj" />
   </ItemGroup>
 
   <ItemGroup>

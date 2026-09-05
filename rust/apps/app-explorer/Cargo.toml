@@ -1,0 +1,18 @@
+[package]
+name = "gamex-app-explorer"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+gamex-all = { path = "../../core/all" }
+gamex-cig-explorer = { path = "../../families/cig-explorer" }
+gamex-platform-godot = { path = "../../platforms/platform-godot" }
+gamex-platform-o3de = { path = "../../platforms/platform-o3de" }
+gamex-platform-ogre = { path = "../../platforms/platform-ogre" }
+gamex-platform-opengl = { path = "../../platforms/platform-opengl" }
+gamex-platform-sdl = { path = "../../platforms/platform-sdl" }
+gamex-platform-stride = { path = "../../platforms/platform-stride" }
+gamex-platform-unity = { path = "../../platforms/platform-unity" }
+gamex-platform-unreal = { path = "../../platforms/platform-unreal" }

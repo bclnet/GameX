@@ -26,9 +26,9 @@ Highlights:
  Core/OpenStack.Polyfills/Log.cs               |  19 +-
  .../ByteArrayComparer.cs                      |  12 +-
  .../System/StreamExtensions.cs                |   3 +
- Core/OpenStack/Platform.cs                    |   7 +-
- Core/OpenStack/Profiler.cs                    |   5 +-
- Core/OpenStack/Util.cs                        |   4 +-
+ Core/OpenStk/Platform.cs                    |   7 +-
+ Core/OpenStk/Profiler.cs                    |   5 +-
+ Core/OpenStk/Util.cs                        |   4 +-
  FIXES-NOT-APPLIED.md                          | 217 ++++++++++++++++++
  Gfx/OpenStack.Gfx.Egin/Egin_Animate.cs        |   5 +-
  Gfx/OpenStack.Gfx/Gfx_Bitmap.cs               |   2 +-
@@ -135,10 +135,10 @@ index 1771c0f..28848dc 100644
              dest.Write(buffer, 0, n);
              len -= n;
          }
-diff --git a/Core/OpenStack/Platform.cs b/Core/OpenStack/Platform.cs
+diff --git a/Core/OpenStk/Platform.cs b/Core/OpenStk/Platform.cs
 index 39a3f42..52a35cb 100644
---- a/Core/OpenStack/Platform.cs
-+++ b/Core/OpenStack/Platform.cs
+--- a/Core/OpenStk/Platform.cs
++++ b/Core/OpenStk/Platform.cs
 @@ -82,7 +82,12 @@ public abstract class Platform(string id, string name) {
  /// </summary>
  public static class PlatformX {
@@ -153,10 +153,10 @@ index 39a3f42..52a35cb 100644
      //public static Action Hook;
  
      /// <summary>
-diff --git a/Core/OpenStack/Profiler.cs b/Core/OpenStack/Profiler.cs
+diff --git a/Core/OpenStk/Profiler.cs b/Core/OpenStk/Profiler.cs
 index 3dab303..abaef2d 100644
---- a/Core/OpenStack/Profiler.cs
-+++ b/Core/OpenStack/Profiler.cs
+--- a/Core/OpenStk/Profiler.cs
++++ b/Core/OpenStk/Profiler.cs
 @@ -16,7 +16,10 @@ public static class Profiler {
              AddNewHitLength(time);
          }
@@ -169,10 +169,10 @@ index 3dab303..abaef2d 100644
  
          public double TimeInContext {
              get {
-diff --git a/Core/OpenStack/Util.cs b/Core/OpenStack/Util.cs
+diff --git a/Core/OpenStk/Util.cs b/Core/OpenStk/Util.cs
 index 9753707..aa0d338 100644
---- a/Core/OpenStack/Util.cs
-+++ b/Core/OpenStack/Util.cs
+--- a/Core/OpenStk/Util.cs
++++ b/Core/OpenStk/Util.cs
 @@ -9,7 +9,7 @@ namespace OpenStack;
  public static class Util {
      public static string DecodePath(string ApplicationPath, string path, string rootPath = null) =>
@@ -266,7 +266,7 @@ index 0000000..d4a959b
 +
 +## 3. `MurmurHash2` / `MurmurHash3` conventions
 +
-+**Files:** `Core/OpenStack/Algorithms/MurmurHash2.cs`, `MurmurHash3.cs`
++**Files:** `Core/OpenStk/Algorithms/MurmurHash2.cs`, `MurmurHash3.cs`
 +
 +Three deviations from the references, all preserved:
 +
@@ -806,7 +806,7 @@ index d4a959b..070c2bc 100644
 +++ b/FIXES-NOT-APPLIED.md
 @@ -69,24 +69,60 @@ truncation.
  
- **Files:** `Core/OpenStack/Algorithms/MurmurHash2.cs`, `MurmurHash3.cs`
+ **Files:** `Core/OpenStk/Algorithms/MurmurHash2.cs`, `MurmurHash3.cs`
  
 -Three deviations from the references, all preserved:
 +**Now checked against the authoritative reference.** SMHasher (Austin Appleby's
@@ -903,14 +903,14 @@ invalidated. MurmurHash3 has no call sites at all.
 Also assessed the NuGet options and recommend against a dependency: 66 verified
 lines, one call site, and no package is both current and clearly maintained.
 ---
- Core/OpenStack/Algorithms/MurmurHash2.cs |   8 +-
+ Core/OpenStk/Algorithms/MurmurHash2.cs |   8 +-
  FIXES-NOT-APPLIED.md                     | 129 ++++++++++++++---------
  2 files changed, 88 insertions(+), 49 deletions(-)
 
-diff --git a/Core/OpenStack/Algorithms/MurmurHash2.cs b/Core/OpenStack/Algorithms/MurmurHash2.cs
+diff --git a/Core/OpenStk/Algorithms/MurmurHash2.cs b/Core/OpenStk/Algorithms/MurmurHash2.cs
 index 1df68b6..b0ddf5f 100644
---- a/Core/OpenStack/Algorithms/MurmurHash2.cs
-+++ b/Core/OpenStack/Algorithms/MurmurHash2.cs
+--- a/Core/OpenStk/Algorithms/MurmurHash2.cs
++++ b/Core/OpenStk/Algorithms/MurmurHash2.cs
 @@ -9,7 +9,13 @@ public static class MurmurHash2 {
      public static uint Hash(string data, uint seed) => Hash(Encoding.ASCII.GetBytes(data), seed);
      public static uint Hash(byte[] data, uint seed) {
@@ -937,7 +937,7 @@ index 070c2bc..833ee72 100644
 -## 3. `MurmurHash2` / `MurmurHash3` conventions
 +## 3. `MurmurHash2` / `MurmurHash3` — RESOLVED, mostly applied
  
--**Files:** `Core/OpenStack/Algorithms/MurmurHash2.cs`, `MurmurHash3.cs`
+-**Files:** `Core/OpenStk/Algorithms/MurmurHash2.cs`, `MurmurHash3.cs`
 +Kept here as a record of how it was settled, since the reasoning is the useful
 +part.
  

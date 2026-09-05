@@ -1290,8 +1290,8 @@ public unsafe class Binary_Multi : IHaveMetaInfo {
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = this }),
         new("Multi", items: [
-            new($"Center: {Min}"),
-            new($"Radius: {Max}"),
+            new($"Min: {Min}"),
+            new($"Max: {Max}"),
             new($"Center: {Center}"),
             new($"Width: {Width}"),
             new($"Height: {Height}"),

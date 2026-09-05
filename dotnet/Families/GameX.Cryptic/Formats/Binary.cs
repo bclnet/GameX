@@ -329,9 +329,9 @@ public unsafe class Binary_MSet : IHaveMetaInfo {
             FileVersion = header.FileVersion,
             DataCrc = header.DataCrc,
             ModelDefinitions = r.ReadL16FArray(r1 => new MSetModelDefinition {
-                ModelName = r1.ReadL16AString(endian: true),
-                ModelOffsets = r1.ReadL16SArray<MSetModelOffset>(endian: true),
-            }, endian: true)
+                ModelName = r1.ReadL16AString(big: true),
+                ModelOffsets = r1.ReadL16SArray<MSetModelOffset>(big: true),
+            }, big: true)
         };
         r.Skip(3 * sizeof(int));
         static int PaddingSize(int len) => (4 - ((len + 6) & 3)) & 3;

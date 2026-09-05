@@ -12,9 +12,26 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using static GameX.Valve.Formats.Vpk.D_Texture;
-using static System.IO.Polyfill;
+using static System.IO.Poly;
 
 namespace GameX.Valve.Formats;
+
+#region Lump
+
+// lumps
+[StructLayout(LayoutKind.Sequential)]
+public struct X_LumpON { public int Offset; public int Num; }
+
+[StructLayout(LayoutKind.Sequential)]
+public struct X_LumpNO { public int Num; public int Offset; }
+
+[StructLayout(LayoutKind.Sequential)]
+public struct X_LumpNO2 { public int Num; public int Offset; public int Offset2; }
+
+[StructLayout(LayoutKind.Sequential)]
+public struct X_Lump2NO { public int Num; public int Offset; public int Offset2; }
+
+#endregion
 
 #if false
 #region Binary_Bsp30

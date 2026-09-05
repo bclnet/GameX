@@ -2,7 +2,7 @@ from __future__ import annotations
 import os, numpy as np
 from io import BytesIO
 from enum import Enum, Flag
-from openstk.core import _throw, _pathExtension, unsafe, BinaryReader, X_LumpON, X_LumpNO, X_LumpNO2, X_Lump2NO
+from openstk.core import _throw, _pathExtension, unsafe, BinaryReader
 from openstk.gfx import Raster, Texture_Bytes, ITexture, ITextureFrames, TextureFlags, TextureFormat, TexturePixel
 from gamex import Archive, BinaryArchive, ArcBinary, ArcBinaryT, FileSource, MetaInfo, MetaManager, MetaContent, IHaveMetaInfo
 from gamex.families.Uncore.formats.compression import decompressBlast
@@ -11,6 +11,25 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import serialization
+
+# lumps
+class X_LumpON:
+     offset: int
+     num: int
+
+class X_LumpNO:
+    num: int
+    offset: int
+
+class X_LumpNO2:
+    num: int
+    offset: int
+    offset2: int
+
+class X_Lump2NO:
+    offset2: int
+    num: int
+    offset: int
 
 #region Binary_Bsp30 - tag::Binary_Bsp30[]
 

@@ -40,15 +40,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Phy", "Phy", "{CFD8D658-BE5
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Gfx", "Gfx", "{8AFD3AEA-A28F-43C7-8D42-0CF8388BE7D2}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStack.Gfx", "..\OpenStack\dotnet\Gfx\OpenStack.Gfx\OpenStack.Gfx.csproj", "{5D3D4FC2-C888-4462-96CD-72B6030C9E26}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStk.Gfx", "..\OpenStack\dotnet\Gfx\OpenStk.Gfx\OpenStk.Gfx.csproj", "{5D3D4FC2-C888-4462-96CD-72B6030C9E26}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStack.Platform.OpenGL", "..\OpenStack\dotnet\Platforms\OpenStack.Platform.OpenGL\OpenStack.Platform.OpenGL.csproj", "{CEE4D753-134D-4B37-877B-912CBD0AE852}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStk.Platform.OpenGL", "..\OpenStack\dotnet\Platforms\OpenStk.Platform.OpenGL\OpenStk.Platform.OpenGL.csproj", "{CEE4D753-134D-4B37-877B-912CBD0AE852}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStack.GfxTests", "..\OpenStack\dotnet\Gfx\OpenStack.GfxTests\OpenStack.GfxTests.csproj", "{408C5AA0-004B-4237-9D5D-D9ECC35EE35F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStk.GfxTests", "..\OpenStack\dotnet\Gfx\OpenStk.GfxTests\OpenStk.GfxTests.csproj", "{408C5AA0-004B-4237-9D5D-D9ECC35EE35F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{D2430DDB-CF76-4570-8F9F-D8EAC21C9D95}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStack.Polyfills", "..\OpenStack\dotnet\Core\OpenStack.Polyfills\OpenStack.Polyfills.csproj", "{88DCAFE5-1E2F-4F05-BDC9-F92CD0E8B67C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Cyanide", "Families\GameX.Cyanide\GameX.Cyanide.csproj", "{3043A7F6-2E15-48F5-BC05-436E82D644D4}"
 EndProject
@@ -70,7 +68,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Valve.Platform", "Fam
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Monolith", "Families\GameX.Monolith\GameX.Monolith.csproj", "{E7BCDDDF-CACE-4D9D-87E3-A455449FD19D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStack.PolyIO", "..\OpenStack\dotnet\Core\OpenStack.PolyIO\OpenStack.PolyIO.csproj", "{C9E0A904-D76C-45C9-B1B2-D2DCE789177A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStk.Poly", "..\OpenStack\dotnet\Core\OpenStk.Poly\OpenStk.Poly.csproj", "{C9E0A904-D76C-45C9-B1B2-D2DCE789177A}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Frictional", "Families\GameX.Frictional\GameX.Frictional.csproj", "{986869A8-BA1E-4301-94AE-DDFD614E2547}"
 EndProject
@@ -108,23 +106,23 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameX.Bullfrog.Game", "Fami
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sfx", "Sfx", "{4050146F-FAF9-4C0A-9FFA-E63FA38FA2A0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStack.Sfx", "..\OpenStack\dotnet\Sfx\OpenStack.Sfx\OpenStack.Sfx.csproj", "{9E8E19DE-2002-4110-B82C-8833AD31EEE3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStk.Sfx", "..\OpenStack\dotnet\Sfx\OpenStk.Sfx\OpenStk.Sfx.csproj", "{9E8E19DE-2002-4110-B82C-8833AD31EEE3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStack.Sfx.Al", "..\OpenStack\dotnet\Sfx\OpenStack.Sfx.Al\OpenStack.Sfx.Al.csproj", "{8DCEC046-8A5D-46D6-8C97-47C3199C951A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStk.Sfx.Al", "..\OpenStack\dotnet\Sfx\OpenStk.Sfx.Al\OpenStk.Sfx.Al.csproj", "{8DCEC046-8A5D-46D6-8C97-47C3199C951A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Aix", "Aix", "{0A6B5F30-FA60-47C3-88C6-B26FB1F88481}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStack.Aix", "..\OpenStack\dotnet\Aix\OpenStack.Aix\OpenStack.Aix.csproj", "{002DC696-6320-4CA4-9AAE-C9510CEFC382}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStk.Aix", "..\OpenStack\dotnet\Aix\OpenStk.Aix\OpenStk.Aix.csproj", "{002DC696-6320-4CA4-9AAE-C9510CEFC382}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStack.SfxTests", "..\OpenStack\dotnet\Sfx\OpenStack.SfxTests\OpenStack.SfxTests.csproj", "{E4F14285-9F72-465B-89A0-21AC54899B54}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStk.SfxTests", "..\OpenStack\dotnet\Sfx\OpenStk.SfxTests\OpenStk.SfxTests.csproj", "{E4F14285-9F72-465B-89A0-21AC54899B54}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStack.AixTests", "..\OpenStack\dotnet\Aix\OpenStack.AixTests\OpenStack.AixTests.csproj", "{C0703A7B-3846-44CB-A5DB-BA04C5CF8C4D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStk.AixTests", "..\OpenStack\dotnet\Aix\OpenStk.AixTests\OpenStk.AixTests.csproj", "{C0703A7B-3846-44CB-A5DB-BA04C5CF8C4D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStack.Phy", "..\OpenStack\dotnet\Phy\OpenStack.Phy\OpenStack.Phy.csproj", "{2F14A676-638E-46EA-8C05-361F87004AC3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStk.Phy", "..\OpenStack\dotnet\Phy\OpenStk.Phy\OpenStk.Phy.csproj", "{2F14A676-638E-46EA-8C05-361F87004AC3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStack.PhyTests", "..\OpenStack\dotnet\Phy\OpenStack.PhyTests\OpenStack.PhyTests.csproj", "{28CFED39-7B0C-4C72-9172-F572D7964592}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStk.PhyTests", "..\OpenStack\dotnet\Phy\OpenStk.PhyTests\OpenStk.PhyTests.csproj", "{28CFED39-7B0C-4C72-9172-F572D7964592}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStack.Sfx.Ogg", "..\OpenStack\dotnet\Sfx\OpenStack.Sfx.Ogg\OpenStack.Sfx.Ogg.csproj", "{FEA4F71F-C354-4123-AF7E-1AC16A79F35A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenStk.Sfx.Ogg", "..\OpenStack\dotnet\Sfx\OpenStk.Sfx.Ogg\OpenStk.Sfx.Ogg.csproj", "{FEA4F71F-C354-4123-AF7E-1AC16A79F35A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.FileSystems", "Core\GameX.FileSystems\GameX.FileSystems.csproj", "{C5DE810E-A11C-4C99-85A8-24D3EB4175B3}"
 EndProject
@@ -140,35 +138,35 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Platform.Godot", "Pla
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Platform.Sdl", "Platforms\GameX.Platform.Sdl\GameX.Platform.Sdl.csproj", "{79E5E91A-426D-4A56-2C48-502EC85CE5F2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStack.Platform.Godot", "..\OpenStack\dotnet\Platforms\OpenStack.Platform.Godot\OpenStack.Platform.Godot.csproj", "{CD5AC3FB-55BE-9983-56B8-62D61F29B2B3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStk.Platform.Godot", "..\OpenStack\dotnet\Platforms\OpenStk.Platform.Godot\OpenStk.Platform.Godot.csproj", "{CD5AC3FB-55BE-9983-56B8-62D61F29B2B3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStack.Platform.Sdl", "..\OpenStack\dotnet\Platforms\OpenStack.Platform.Sdl\OpenStack.Platform.Sdl.csproj", "{767C2571-6F05-8F82-9CEA-39C634DB30B4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStk.Platform.Sdl", "..\OpenStack\dotnet\Platforms\OpenStk.Platform.Sdl\OpenStk.Platform.Sdl.csproj", "{767C2571-6F05-8F82-9CEA-39C634DB30B4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStack.Platform.Stride", "..\OpenStack\dotnet\Platforms\OpenStack.Platform.Stride\OpenStack.Platform.Stride.csproj", "{D937C3A0-239F-0C75-D71A-B5AE03F83D73}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStk.Platform.Stride", "..\OpenStack\dotnet\Platforms\OpenStk.Platform.Stride\OpenStk.Platform.Stride.csproj", "{D937C3A0-239F-0C75-D71A-B5AE03F83D73}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStack.Platform.Unity", "..\OpenStack\dotnet\Platforms\OpenStack.Platform.Unity\OpenStack.Platform.Unity.csproj", "{6BE2222C-E8FC-1DC1-8DEA-9A73B7FB19BB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStk.Platform.Unity", "..\OpenStack\dotnet\Platforms\OpenStk.Platform.Unity\OpenStk.Platform.Unity.csproj", "{6BE2222C-E8FC-1DC1-8DEA-9A73B7FB19BB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStack.Platform.Ogre", "..\OpenStack\dotnet\Platforms\OpenStack.Platform.Ogre\OpenStack.Platform.Ogre.csproj", "{5ED70967-F410-E759-B6F2-59132F41128D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStk.Platform.Ogre", "..\OpenStack\dotnet\Platforms\OpenStk.Platform.Ogre\OpenStk.Platform.Ogre.csproj", "{5ED70967-F410-E759-B6F2-59132F41128D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStack", "..\OpenStack\dotnet\Core\OpenStack\OpenStack.csproj", "{31DBD16D-8F69-1380-88B6-7BAE1A404898}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStk", "..\OpenStack\dotnet\Core\OpenStk\OpenStk.csproj", "{31DBD16D-8F69-1380-88B6-7BAE1A404898}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Platforms", "Platforms", "{67806ED7-050A-43D3-BED6-B00B5621C6D6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStack.PlatformTests", "..\OpenStack\dotnet\Platforms\OpenStack.PlatformTests\OpenStack.PlatformTests.csproj", "{4B338D03-D3E6-B702-EBB2-3D945EB01A18}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStk.PlatformTests", "..\OpenStack\dotnet\Platforms\OpenStk.PlatformTests\OpenStk.PlatformTests.csproj", "{4B338D03-D3E6-B702-EBB2-3D945EB01A18}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStack.Wpf.Control", "..\OpenStack\dotnet\Platforms\OpenStack.Wpf.Control\OpenStack.Wpf.Control.csproj", "{AC1F45D4-D66D-1D4A-26AF-D0CCCA9151CC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStk.Wpf.Control", "..\OpenStack\dotnet\Platforms\OpenStk.Wpf.Control\OpenStk.Wpf.Control.csproj", "{AC1F45D4-D66D-1D4A-26AF-D0CCCA9151CC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStack.Wpf.Stride", "..\OpenStack\dotnet\Platforms\OpenStack.Wpf.Stride\OpenStack.Wpf.Stride.csproj", "{D74F741E-FFD9-1A9C-0143-06DCA4E9A57E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStk.Wpf.Stride", "..\OpenStack\dotnet\Platforms\OpenStk.Wpf.Stride\OpenStk.Wpf.Stride.csproj", "{D74F741E-FFD9-1A9C-0143-06DCA4E9A57E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Platform.Ogre", "Platforms\GameX.Platform.Ogre\GameX.Platform.Ogre.csproj", "{A407CB92-46BE-F552-2694-5D1216E97859}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStack.Platform.O3de", "..\OpenStack\dotnet\Platforms\OpenStack.Platform.O3de\OpenStack.Platform.O3de.csproj", "{D1989B1B-B8DE-62F8-BBF0-583C0DB72EC3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStk.Platform.O3de", "..\OpenStack\dotnet\Platforms\OpenStk.Platform.O3de\OpenStk.Platform.O3de.csproj", "{D1989B1B-B8DE-62F8-BBF0-583C0DB72EC3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStack.Platform.Unreal", "..\OpenStack\dotnet\Platforms\OpenStack.Platform.Unreal\OpenStack.Platform.Unreal.csproj", "{CF3FFDE2-A9A6-DC68-7B83-E7EF41F054D2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStk.Platform.Unreal", "..\OpenStack\dotnet\Platforms\OpenStk.Platform.Unreal\OpenStk.Platform.Unreal.csproj", "{CF3FFDE2-A9A6-DC68-7B83-E7EF41F054D2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStack.Gfx.Egin", "..\OpenStack\dotnet\Gfx\OpenStack.Gfx.Egin\OpenStack.Gfx.Egin.csproj", "{914D2C31-C65C-4A1C-A49E-042D85B2C277}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStk.Gfx.Egin", "..\OpenStack\dotnet\Gfx\OpenStk.Gfx.Egin\OpenStk.Gfx.Egin.csproj", "{914D2C31-C65C-4A1C-A49E-042D85B2C277}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStack.Gfx.Other", "..\OpenStack\dotnet\Gfx\OpenStack.Gfx.Other\OpenStack.Gfx.Other.csproj", "{35EB7B34-7A6C-D94B-1540-B9BBC8D51C03}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStk.Gfx.Other", "..\OpenStack\dotnet\Gfx\OpenStk.Gfx.Other\OpenStk.Gfx.Other.csproj", "{35EB7B34-7A6C-D94B-1540-B9BBC8D51C03}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Platform.O3de", "Platforms\GameX.Platform.O3de\GameX.Platform.O3de.csproj", "{D15015C2-7AB7-0BA5-54B2-4DD29AFC71BE}"
 EndProject
@@ -178,9 +176,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Nintendo", "Families\
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Vfx", "Vfx", "{CA697A85-C9AB-4493-8590-D0849ACE887C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStack.Vfx", "..\OpenStack\dotnet\Vfx\OpenStack.Vfx\OpenStack.Vfx.csproj", "{9651769D-906D-4A63-E886-8872137E5DEB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStk.Vfx", "..\OpenStack\dotnet\Vfx\OpenStk.Vfx\OpenStk.Vfx.csproj", "{9651769D-906D-4A63-E886-8872137E5DEB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStack.Vfx.Program", "..\OpenStack\dotnet\Vfx\OpenStack.Vfx.Program\OpenStack.Vfx.Program.csproj", "{48B311BE-1704-A130-F490-59244FEBDD5C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStk.Vfx.Program", "..\OpenStack\dotnet\Vfx\OpenStk.Vfx.Program\OpenStk.Vfx.Program.csproj", "{48B311BE-1704-A130-F490-59244FEBDD5C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Gamebryo", "Families\GameX.Gamebryo\GameX.Gamebryo.csproj", "{25F2365B-DAD9-8113-BA7E-F5218C651884}"
 EndProject
@@ -201,11 +199,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Xbox", "Families\Game
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Platform.Mg", "Platforms\GameX.Platform.Mg\GameX.Platform.Mg.csproj", "{7148F3CB-2221-226B-A5B5-1ADE2056D69E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStack.Platform.Mg", "..\OpenStack\dotnet\Platforms\OpenStack.Platform.Mg\OpenStack.Platform.Mg.csproj", "{2C2892A1-A02A-568A-1B15-BA242F8D39DE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStk.Platform.Mg", "..\OpenStack\dotnet\Platforms\OpenStk.Platform.Mg\OpenStk.Platform.Mg.csproj", "{2C2892A1-A02A-568A-1B15-BA242F8D39DE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Platform.EginX", "Platforms\GameX.Platform.EginX\GameX.Platform.EginX.csproj", "{9C3B8908-FF34-5E99-0021-7B222317FF2C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStack.Platform.EginX", "..\OpenStack\dotnet\Platforms\OpenStack.Platform.EginX\OpenStack.Platform.EginX.csproj", "{6282AC60-C92E-7E65-9534-C28949C62AE8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStk.Platform.EginX", "..\OpenStack\dotnet\Platforms\OpenStk.Platform.EginX\OpenStk.Platform.EginX.csproj", "{6282AC60-C92E-7E65-9534-C28949C62AE8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Uncore", "Families\GameX.Uncore\GameX.Uncore.csproj", "{D40525EE-4EA0-DDE2-1B36-AF8E4A793E58}"
 EndProject
@@ -213,9 +211,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Firaxis", "Families\G
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameX.Uncore.Program", "Families\GameX.Uncore.Program\GameX.Uncore.Program.csproj", "{650810E7-E39F-44DA-905C-476FB5D45E1E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStack.PolyfillsTests", "..\OpenStack\dotnet\Core\OpenStack.PolyfillsTests\OpenStack.PolyfillsTests.csproj", "{C1C5ED8A-8909-A3E7-98E0-34AACE3AB542}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStack.PolyIOTests", "..\OpenStack\dotnet\Core\OpenStack.PolyIOTests\OpenStack.PolyIOTests.csproj", "{73051474-CC80-1FA3-9086-BFB9A3C02EC9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenStk.PolyTests", "..\OpenStack\dotnet\Core\OpenStk.PolyTests\OpenStk.PolyTests.csproj", "{73051474-CC80-1FA3-9086-BFB9A3C02EC9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -395,18 +391,6 @@ Global
 		{408C5AA0-004B-4237-9D5D-D9ECC35EE35F}.Release|x64.Build.0 = Release|Any CPU
 		{408C5AA0-004B-4237-9D5D-D9ECC35EE35F}.Release|x86.ActiveCfg = Release|Any CPU
 		{408C5AA0-004B-4237-9D5D-D9ECC35EE35F}.Release|x86.Build.0 = Release|Any CPU
-		{88DCAFE5-1E2F-4F05-BDC9-F92CD0E8B67C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{88DCAFE5-1E2F-4F05-BDC9-F92CD0E8B67C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{88DCAFE5-1E2F-4F05-BDC9-F92CD0E8B67C}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{88DCAFE5-1E2F-4F05-BDC9-F92CD0E8B67C}.Debug|x64.Build.0 = Debug|Any CPU
-		{88DCAFE5-1E2F-4F05-BDC9-F92CD0E8B67C}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{88DCAFE5-1E2F-4F05-BDC9-F92CD0E8B67C}.Debug|x86.Build.0 = Debug|Any CPU
-		{88DCAFE5-1E2F-4F05-BDC9-F92CD0E8B67C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{88DCAFE5-1E2F-4F05-BDC9-F92CD0E8B67C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{88DCAFE5-1E2F-4F05-BDC9-F92CD0E8B67C}.Release|x64.ActiveCfg = Release|Any CPU
-		{88DCAFE5-1E2F-4F05-BDC9-F92CD0E8B67C}.Release|x64.Build.0 = Release|Any CPU
-		{88DCAFE5-1E2F-4F05-BDC9-F92CD0E8B67C}.Release|x86.ActiveCfg = Release|Any CPU
-		{88DCAFE5-1E2F-4F05-BDC9-F92CD0E8B67C}.Release|x86.Build.0 = Release|Any CPU
 		{3043A7F6-2E15-48F5-BC05-436E82D644D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3043A7F6-2E15-48F5-BC05-436E82D644D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3043A7F6-2E15-48F5-BC05-436E82D644D4}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -1309,18 +1293,6 @@ Global
 		{650810E7-E39F-44DA-905C-476FB5D45E1E}.Release|x64.Build.0 = Release|Any CPU
 		{650810E7-E39F-44DA-905C-476FB5D45E1E}.Release|x86.ActiveCfg = Release|Any CPU
 		{650810E7-E39F-44DA-905C-476FB5D45E1E}.Release|x86.Build.0 = Release|Any CPU
-		{C1C5ED8A-8909-A3E7-98E0-34AACE3AB542}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C1C5ED8A-8909-A3E7-98E0-34AACE3AB542}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C1C5ED8A-8909-A3E7-98E0-34AACE3AB542}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{C1C5ED8A-8909-A3E7-98E0-34AACE3AB542}.Debug|x64.Build.0 = Debug|Any CPU
-		{C1C5ED8A-8909-A3E7-98E0-34AACE3AB542}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{C1C5ED8A-8909-A3E7-98E0-34AACE3AB542}.Debug|x86.Build.0 = Debug|Any CPU
-		{C1C5ED8A-8909-A3E7-98E0-34AACE3AB542}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C1C5ED8A-8909-A3E7-98E0-34AACE3AB542}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C1C5ED8A-8909-A3E7-98E0-34AACE3AB542}.Release|x64.ActiveCfg = Release|Any CPU
-		{C1C5ED8A-8909-A3E7-98E0-34AACE3AB542}.Release|x64.Build.0 = Release|Any CPU
-		{C1C5ED8A-8909-A3E7-98E0-34AACE3AB542}.Release|x86.ActiveCfg = Release|Any CPU
-		{C1C5ED8A-8909-A3E7-98E0-34AACE3AB542}.Release|x86.Build.0 = Release|Any CPU
 		{73051474-CC80-1FA3-9086-BFB9A3C02EC9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{73051474-CC80-1FA3-9086-BFB9A3C02EC9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{73051474-CC80-1FA3-9086-BFB9A3C02EC9}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -1354,7 +1326,6 @@ Global
 		{CEE4D753-134D-4B37-877B-912CBD0AE852} = {67806ED7-050A-43D3-BED6-B00B5621C6D6}
 		{408C5AA0-004B-4237-9D5D-D9ECC35EE35F} = {8AFD3AEA-A28F-43C7-8D42-0CF8388BE7D2}
 		{D2430DDB-CF76-4570-8F9F-D8EAC21C9D95} = {4EC06189-D9CE-42F3-BFA0-F70810EF617B}
-		{88DCAFE5-1E2F-4F05-BDC9-F92CD0E8B67C} = {D2430DDB-CF76-4570-8F9F-D8EAC21C9D95}
 		{3043A7F6-2E15-48F5-BC05-436E82D644D4} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
 		{A88A4ECA-E3A0-4FE5-BAB8-65FDAA420E47} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
 		{562D7A0E-76A3-49F6-8E64-2900CDEC2495} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
@@ -1434,7 +1405,6 @@ Global
 		{D40525EE-4EA0-DDE2-1B36-AF8E4A793E58} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
 		{018A26E5-BE82-D9F1-5F19-23A47F3FDA46} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
 		{650810E7-E39F-44DA-905C-476FB5D45E1E} = {1B87B12B-21F4-497B-AA06-C0423BD1C76B}
-		{C1C5ED8A-8909-A3E7-98E0-34AACE3AB542} = {D2430DDB-CF76-4570-8F9F-D8EAC21C9D95}
 		{73051474-CC80-1FA3-9086-BFB9A3C02EC9} = {D2430DDB-CF76-4570-8F9F-D8EAC21C9D95}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution

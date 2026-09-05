@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\OpenStack\dotnet\Platforms\OpenStack.Platform.Unity\OpenStack.Platform.Unity.csproj" />
+    <ProjectReference Include="..\..\..\OpenStack\dotnet\Platforms\OpenStk.Platform.Unity\OpenStk.Platform.Unity.csproj" />
     <ProjectReference Include="..\..\Core\GameX\GameX.csproj" />
     <ProjectReference Include="..\..\Families\GameX.Gamebryo\GameX.Gamebryo.csproj" />
   </ItemGroup>

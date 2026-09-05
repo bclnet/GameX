@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\OpenStack\dotnet\Platforms\OpenStack.Platform.Godot\OpenStack.Platform.Godot.csproj" />
+    <ProjectReference Include="..\..\..\OpenStack\dotnet\Platforms\OpenStk.Platform.Godot\OpenStk.Platform.Godot.csproj" />
     <ProjectReference Include="..\..\Core\GameX\GameX.csproj" />
   </ItemGroup>
 

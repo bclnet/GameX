@@ -15,7 +15,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\OpenStack\dotnet\Gfx\OpenStack.Gfx.Egin\OpenStack.Gfx.Egin.csproj" />
+    <ProjectReference Include="..\..\..\OpenStack\dotnet\Gfx\OpenStk.Gfx.Egin\OpenStk.Gfx.Egin.csproj" />
     <ProjectReference Include="..\..\Core\GameX\GameX.csproj" />
     <ProjectReference Include="..\GameX.ID\GameX.ID.csproj" />
     <ProjectReference Include="..\GameX.Uncore\GameX.Uncore.csproj" />

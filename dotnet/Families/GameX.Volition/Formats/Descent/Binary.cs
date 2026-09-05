@@ -29,7 +29,7 @@ public class Binary_Bmp : IHaveMetaInfo, ITexture {
 
         // get palette
         Palette = game.Id switch {
-            "Radius" => Games.D.Database.Palette.Records,
+            "D" => Games.D.Database.Palette.Records,
             "D2" => Games.D2.Database.Palette.Records,
             _ => throw new ArgumentOutOfRangeException(nameof(game.Id), game.Id),
         };

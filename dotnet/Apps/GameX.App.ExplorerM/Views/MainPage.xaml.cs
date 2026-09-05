@@ -1,6 +1,6 @@
-﻿using OpenStack;
+﻿using OpenStk;
 using static GameX.FamilyManager;
-using Platform = OpenStack.Platform;
+using Platform = OpenStk.Platform;
 
 namespace GameX.App.Explorer.Views;
 

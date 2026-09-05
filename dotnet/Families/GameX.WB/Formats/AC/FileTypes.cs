@@ -1,7 +1,7 @@
 using GameX.WB.Formats.AC.AnimationHooks;
 using GameX.WB.Formats.AC.Entity;
 using GameX.WB.Formats.AC.Props;
-using OpenStack.Gfx;
+using OpenStk.Gfx;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -12,7 +12,7 @@ using System.Numerics;
 using System.Text;
 using System.Drawing.Imaging;
 using static GameX.WB.Formats.AC.Props.SurfacePixelFormat;
-using OpenStack;
+using OpenStk;
 
 namespace GameX.WB.Formats.AC.FileTypes;
 

@@ -1,5 +1,5 @@
 ﻿using GameX.Gamebryo.Formats.Nif;
-using OpenStack.Gfx;
+using OpenStk.Gfx;
 using System;
 
 namespace GameX.Gamebryo.Platforms;

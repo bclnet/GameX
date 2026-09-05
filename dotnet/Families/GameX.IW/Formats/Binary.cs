@@ -1,6 +1,6 @@
 ﻿using GameX.Blizzard.Formats.Casc;
 using ICSharpCode.SharpZipLib.Zip;
-using OpenStack.Gfx;
+using OpenStk.Gfx;
 using System;
 using System.Collections.Generic;
 using System.IO;

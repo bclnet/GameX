@@ -1,7 +1,7 @@
 ﻿using GameX.BlizzardProto;
 using Google.Protobuf;
 using Microsoft.Win32;
-using OpenStack;
+using OpenStk;
 using SQLitePCL;
 using System;
 using System.Collections.Generic;

@@ -1,8 +1,8 @@
 ﻿using GameX.Formats;
-using OpenStack;
-using OpenStack.Gfx;
-using OpenStack.Sfx;
-using OpenStack.Vfx;
+using OpenStk;
+using OpenStk.Gfx;
+using OpenStk.Sfx;
+using OpenStk.Vfx;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;

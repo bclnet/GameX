@@ -1,5 +1,5 @@
-﻿using OpenStack;
-using Platform = OpenStack.Platform;
+﻿using OpenStk;
+using Platform = OpenStk.Platform;
 
 namespace GameX.App.Explorer.Views;
 

@@ -1,7 +1,7 @@
 ﻿using GameX.Gamebryo.Formats;
-using OpenStack;
-using OpenStack.Gfx;
-using OpenStack.Gfx.OpenGL;
+using OpenStk;
+using OpenStk.Gfx;
+using OpenStk.Gfx.OpenGL;
 
 namespace GameX.Platforms.OpenGL;
 

@@ -1,6 +1,6 @@
-﻿using OpenStack;
-using OpenStack.Gfx;
-using OpenStack.Gfx.Mg;
+﻿using OpenStk;
+using OpenStk.Gfx;
+using OpenStk.Gfx.Mg;
 #pragma warning disable CS9113
 
 namespace GameX.Platforms.Mg;

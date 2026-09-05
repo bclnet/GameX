@@ -5,7 +5,7 @@ using GameX.Crytek.Formats.Dunia;
 using ICSharpCode.SharpZipLib.Zip.Compression;
 using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 using K4os.Compression.LZ4;
-using OpenStack;
+using OpenStk;
 using Org.BouncyCastle.Asn1.Cms;
 using System;
 using System.Collections.Generic;

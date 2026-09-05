@@ -1,6 +1,6 @@
-﻿using OpenStack;
-using OpenStack.Gfx;
-using OpenStack.Gfx.O3de;
+﻿using OpenStk;
+using OpenStk.Gfx;
+using OpenStk.Gfx.O3de;
 #pragma warning disable CS9113, CS0169
 
 namespace GameX.Platforms.O3de;

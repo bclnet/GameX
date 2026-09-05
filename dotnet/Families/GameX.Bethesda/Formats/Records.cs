@@ -1,6 +1,6 @@
 using GameX.Gamebryo.Formats.Nif;
 using GameX.Uncore.Formats;
-using OpenStack;
+using OpenStk;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,7 +11,7 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
 using static GameX.Bethesda.Formats.Records.FormType;
-using static OpenStack.CellManager;
+using static OpenStk.CellManager;
 using static System.IO.Poly;
 #pragma warning disable CS9113
 

@@ -6,9 +6,9 @@ using GameX.Platforms.Sdl;
 using GameX.Platforms.Stride;
 using GameX.Platforms.Unity;
 using GameX.Platforms.Unreal;
-using OpenStack;
-using OpenStack.Gfx;
-using OpenStack.Wpf.Control;
+using OpenStk;
+using OpenStk.Gfx;
+using OpenStk.Wpf.Control;
 
 namespace GameX.App.Explorer.Controls;
 

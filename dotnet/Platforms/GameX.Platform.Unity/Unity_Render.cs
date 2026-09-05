@@ -1,7 +1,7 @@
 ﻿using GameX.Gamebryo.Formats;
-using OpenStack;
-using OpenStack.Gfx;
-using OpenStack.Gfx.Unity;
+using OpenStk;
+using OpenStk.Gfx;
+using OpenStk.Gfx.Unity;
 using System;
 #pragma warning disable CS9113
 

@@ -1,6 +1,6 @@
-﻿using OpenStack;
-using OpenStack.Gfx;
-using OpenStack.Gfx.Egin;
+﻿using OpenStk;
+using OpenStk.Gfx;
+using OpenStk.Gfx.Egin;
 using System.Collections.Generic;
 
 namespace GameX.Valve.Formats.Vpk;

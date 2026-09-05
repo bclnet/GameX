@@ -1,6 +1,6 @@
 ﻿using GameX.Formats;
 using GameX.Formats.IUnknown;
-using OpenStack.Vfx;
+using OpenStk.Vfx;
 using System;
 using System.IO;
 using System.Linq;

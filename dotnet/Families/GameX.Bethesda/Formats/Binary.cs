@@ -1,7 +1,7 @@
 ﻿using GameX.Bethesda.Formats.Records;
 using GameX.Uncore.Formats;
-using OpenStack;
-using OpenStack.Gfx;
+using OpenStk;
+using OpenStk.Gfx;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,7 +9,7 @@ using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using static OpenStack.CellManager;
+using static OpenStk.CellManager;
 
 namespace GameX.Bethesda.Formats;
 

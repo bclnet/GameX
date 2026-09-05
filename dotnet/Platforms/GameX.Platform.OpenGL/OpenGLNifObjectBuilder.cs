@@ -1,8 +1,8 @@
 ﻿using GameX.Gamebryo.Formats;
 using GameX.Gamebryo.Formats.Nif;
-using OpenStack;
-using OpenStack.Gfx;
-using OpenStack.Gfx.OpenGL;
+using OpenStk;
+using OpenStk.Gfx;
+using OpenStk.Gfx.OpenGL;
 using System;
 using System.Numerics;
 using System.Threading.Tasks;

@@ -1,7 +1,7 @@
 ﻿using Godot;
-using OpenStack;
-using OpenStack.Gfx;
-using OpenStack.Gfx.Godot;
+using OpenStk;
+using OpenStk.Gfx;
+using OpenStk.Gfx.Godot;
 using System;
 #pragma warning disable CS9113
 

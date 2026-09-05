@@ -1,6 +1,6 @@
-﻿using OpenStack;
-using OpenStack.Gfx;
-using OpenStack.Gfx.Sdl;
+﻿using OpenStk;
+using OpenStk.Gfx;
+using OpenStk.Gfx.Sdl;
 #pragma warning disable CS9113
 
 namespace GameX.Platforms.Sdl;

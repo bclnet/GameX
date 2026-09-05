@@ -1,6 +1,6 @@
-﻿using OpenStack;
-using OpenStack.Gfx;
-using OpenStack.Gfx.Stride;
+﻿using OpenStk;
+using OpenStk.Gfx;
+using OpenStk.Gfx.Stride;
 #pragma warning disable CS9113
 
 namespace GameX.Platforms.Stride;

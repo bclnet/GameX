@@ -3,7 +3,7 @@ using GameX.Formats.IUnknown;
 using GameX.Transforms;
 using GameX.Uncore;
 using Microsoft.Extensions.FileSystemGlobbing;
-using OpenStack.Vfx;
+using OpenStk.Vfx;
 using System;
 using System.Collections.Generic;
 using System.IO;

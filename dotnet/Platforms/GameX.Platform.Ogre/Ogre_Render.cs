@@ -1,6 +1,6 @@
-﻿using OpenStack;
-using OpenStack.Gfx;
-using OpenStack.Gfx.Ogre;
+﻿using OpenStk;
+using OpenStk.Gfx;
+using OpenStk.Gfx.Ogre;
 #pragma warning disable CS9113, CS0169
 
 namespace GameX.Platforms.Ogre;

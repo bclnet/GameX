@@ -1,7 +1,7 @@
 ﻿using CommandLine;
 using GameX.App;
-using OpenStack;
-using OpenStack.Vfx;
+using OpenStk;
+using OpenStk.Vfx;
 using System;
 using System.Threading.Tasks;
 

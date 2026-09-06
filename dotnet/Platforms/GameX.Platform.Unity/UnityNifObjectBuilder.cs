@@ -28,7 +28,7 @@ public static class UnityNifObjectBuilder {
             var gobj = await InstantiateRootNiObject(name, source, isStatic, materialManager, s);
             // If the file doesn't contain any NiObjects we are looking for, return an empty Object.
             if (gobj == null) {
-                Log.Info($"{name} resulted in a null Object when instantiated.");
+                Log.Info($"{name} resulted in a null B_Object when instantiated.");
                 gobj = new Object(name);
             }
             // If gobj != null and the root NiObject is an NiNode, discard any transformations (Morrowind apparently does).

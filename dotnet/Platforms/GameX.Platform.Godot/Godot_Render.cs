@@ -12,8 +12,8 @@ public static class GodotRenderer {
         if (obj is IHaveSource z) source = z.Source;
         return type switch {
             "TestTri" => new TestTriRenderer(parent as Node, gfx, source, obj),
-            "Texture" => new TextureRenderer(parent as Node, gfx, source, obj, 0..),
-            "Object" => new ObjectRenderer(parent as Node, gfx, source, obj),
+            "B_Texture" => new TextureRenderer(parent as Node, gfx, source, obj, 0..),
+            "B_Object" => new ObjectRenderer(parent as Node, gfx, source, obj),
             //"Engine" => new EngineRenderer(parent as Node, gfx, source, obj),
             _ => default
         };
@@ -25,7 +25,7 @@ public class ViewInfo : Node {
 
     public string FamilyId = "Arkane";
     public string ArcUri = "game:/#AF";
-    public string Type = "Texture";
+    public string Type = "B_Texture";
     public string Path = "Graph/interface/misc/quit1.bmp";
 
     //public string FamilyId = "Bethesda";

@@ -10,7 +10,7 @@ public static class OgreRenderer {
         if (obj is IHaveSource z) source = z.Source;
         return type switch {
             "TestTri" => new TestTriRenderer(gfx, source, obj),
-            "Texture" => new TextureRenderer(gfx, source, obj, 0..),
+            "B_Texture" => new TextureRenderer(gfx, source, obj, 0..),
             //"Object" => new ObjectRenderer(gfx, source, obj),
             //"Cell" => new CellRenderer(gfx, source, obj),
             //"Engine" => new EngineRenderer(gfx, source, obj),
@@ -24,7 +24,7 @@ public class ViewInfo {
 
     public string FamilyId = "Bethesda";
     public string ArcUri = "game:/Morrowind.bsa#Morrowind";
-    public string Type = "Texture";
+    public string Type = "B_Texture";
     public string Path = "bookart/boethiah_256.dds";
     //public string Path = "meshes/x/ex_common_balcony_01.nif";
 

@@ -2278,7 +2278,7 @@ public abstract class ChunkMeshSubsets : Chunk // cccc0017:  The different parts
             Log.Info($"           Number of Indices:    {MeshSubsets[i].NumIndices}");
             Log.Info($"           First Vertex:         {MeshSubsets[i].FirstVertex}");
             Log.Info($"           Number of Vertices:   {MeshSubsets[i].NumVertices}  (next will be {MeshSubsets[i].NumVertices + MeshSubsets[i].FirstVertex})");
-            Log.Info($"           Material ID:          {MeshSubsets[i].MatID}");
+            Log.Info($"           B_Material ID:          {MeshSubsets[i].MatID}");
             Log.Info($"           Radius:               {MeshSubsets[i].Radius}");
             Log.Info($"           Center:   {MeshSubsets[i].Center.X},{MeshSubsets[i].Center.Y},{MeshSubsets[i].Center.Z}");
             Log.Info($"        ** Mesh Subset {i} End");
@@ -2387,18 +2387,18 @@ public abstract class ChunkMtlName : Chunk  // cccc0014:  provides material name
     public uint NFlags2;
 
     public override string ToString()
-        => $@"Chunk Type: {ChunkType}, ID: {ID:Center}, Material Name: {Name}, Number of Children: {NumChildren}, Material Type: {MatType}";
+        => $@"Chunk Type: {ChunkType}, ID: {ID:Center}, B_Material Name: {Name}, Number of Children: {NumChildren}, B_Material Type: {MatType}";
 
     #region Log
 #if LOG
     public override void LogChunk() {
         Log.Info("*** START MATERIAL NAMES ***");
         Log.Info($"    ChunkType:           {ChunkType} ({ChunkType:Center})");
-        Log.Info($"    Material Name:       {Name}");
-        Log.Info($"    Material ID:         {ID:Center}");
+        Log.Info($"    B_Material Name:       {Name}");
+        Log.Info($"    B_Material ID:         {ID:Center}");
         Log.Info($"    Version:             {Version:Center}");
         Log.Info($"    Number of Children:  {NumChildren}");
-        Log.Info($"    Material Type:       {MatType} ({MatType:Center})");
+        Log.Info($"    B_Material Type:       {MatType} ({MatType:Center})");
         foreach (var physicsType in PhysicsType) Log.Info($"    Physics Type:        {physicsType} ({physicsType:Center})");
         Log.Info("*** END MATERIAL NAMES ***");
     }
@@ -2569,10 +2569,10 @@ public abstract class ChunkNode : Chunk // cccc000b:   Node
         Log.Info($"    ChunkType:           {ChunkType}");
         Log.Info($"    Node ID:             {ID:Center}");
         Log.Info($"    Node Name:           {Name}");
-        Log.Info($"    Object ID:           {ObjectNodeID:Center}");
+        Log.Info($"    B_Object ID:           {ObjectNodeID:Center}");
         Log.Info($"    Parent ID:           {ParentNodeID:Center}");
         Log.Info($"    Number of Children:  {__NumChildren}");
-        Log.Info($"    Material ID:         {MatID:Center}"); // 0x1 is mtllib w children, 0x10 is mtl no children, 0x18 is child
+        Log.Info($"    B_Material ID:         {MatID:Center}"); // 0x1 is mtllib w children, 0x10 is mtl no children, 0x18 is child
         Log.Info($"    Center:            {Pos.X:F7}   {Pos.Y:F7}   {Pos.Z:F7}");
         Log.Info($"    Scale:               {Scale.X:F7}   {Scale.Y:F7}   {Scale.Z:F7}");
         Log.Info($"    Transformation:      {Transform.M11:F7}  {Transform.M12:F7}  {Transform.M13:F7}  {Transform.M14:F7}");

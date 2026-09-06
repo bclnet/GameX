@@ -86,13 +86,13 @@ public class Binary_Dds : IHaveMetaInfo, ITexture {
     public int Depth => 0;
     public int MipMaps { get; }
     public TextureFlags TexFlags => 0;
-    public T Create<T>(string platform, Func<object, T> func) => func(CapsReadDds ? new Texture_Dds(Bytes) : new Texture_Bytes(Bytes, Format.value, Spans));
+    public T Create<T>(string platform, Func<object, T> func) => func(CapsReadDds ? new TextureAsDds(Bytes) : new TextureAsBytes(Bytes, Format.value, Spans));
 
     #endregion
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new(null, new MetaContent { Type = "Texture", Name = Path.GetFileName(file.Path), Value = this }),
-        new("Texture", items: [
+        new(null, new MetaContent { Type = "B_Texture", Name = Path.GetFileName(file.Path), Value = this }),
+        new("B_Texture", items: [
             new($"Format: {Format.type}"),
             new($"Width: {Width}"),
             new($"Height: {Height}"),
@@ -620,12 +620,12 @@ public unsafe class Binary_Img : IHaveMetaInfo, ITexture {
     public int Depth { get; } = 0;
     public int MipMaps { get; } = 1;
     public TextureFlags TexFlags { get; } = 0;
-    public T Create<T>(string platform, Func<object, T> func) => func(new Texture_Bytes(Bytes, Format.value, null));
+    public T Create<T>(string platform, Func<object, T> func) => func(new TextureAsBytes(Bytes, Format.value, null));
 
     #endregion
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new(null, new MetaContent { Type = "Texture", Name = Path.GetFileName(file.Path), Value = this }),
+        new(null, new MetaContent { Type = "B_Texture", Name = Path.GetFileName(file.Path), Value = this }),
         new($"{nameof(Binary_Img)}", items: [
             new($"Format: {Format.type}"),
             new($"Width: {Width}"),
@@ -882,13 +882,13 @@ public unsafe class Binary_Pcx : IHaveMetaInfo, ITexture {
             1 => Decode4bpp(),
             _ => throw new FormatException($"Unknown bpp: {Header.Bpp}"),
         };
-        return func(new Texture_Bytes(bytes, Format, null));
+        return func(new TextureAsBytes(bytes, Format, null));
     }
 
     #endregion
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new(null, new MetaContent { Type = "Texture", Name = Path.GetFileName(file.Path), Value = this }),
+        new(null, new MetaContent { Type = "B_Texture", Name = Path.GetFileName(file.Path), Value = this }),
         new($"{nameof(Binary_Pcx)}", items: [
             new($"Width: {Width}"),
             new($"Height: {Height}"),
@@ -979,12 +979,12 @@ public class Binary_Raw : IHaveMetaInfo, ITexture {
     //    pixel += 4;
     //}
 
-    public T Create<T>(string platform, Func<object, T> func) => func(new Texture_Bytes([.. Body.SelectMany(s => PaletteData[s])], Format, null));
+    public T Create<T>(string platform, Func<object, T> func) => func(new TextureAsBytes([.. Body.SelectMany(s => PaletteData[s])], Format, null));
 
     #endregion
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new(null, new MetaContent { Type = "Texture", Name = Path.GetFileName(file.Path), Value = this }),
+        new(null, new MetaContent { Type = "B_Texture", Name = Path.GetFileName(file.Path), Value = this }),
         new($"{nameof(Binary_Raw)}", items: [
             new($"Palette: {Palette}"),
             new($"Width: {Width}"),
@@ -1314,7 +1314,7 @@ public unsafe class Binary_Tga : IHaveMetaInfo, ITexture {
         if (flipH) FlipH(bytes);
         if (flipV) FlipV(bytes);
 
-        return func(new Texture_Bytes(bytes, Format, null));
+        return func(new TextureAsBytes(bytes, Format, null));
     }
 
     // Returns the pixel at coordinates (x,y) for reading or writing.
@@ -1361,7 +1361,7 @@ public unsafe class Binary_Tga : IHaveMetaInfo, ITexture {
     #endregion
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new(null, new MetaContent { Type = "Texture", Name = Path.GetFileName(file.Path), Value = this }),
+        new(null, new MetaContent { Type = "B_Texture", Name = Path.GetFileName(file.Path), Value = this }),
         new($"{nameof(Binary_Tga)}", items: [
             new($"Format: {PixelFormat}"),
             new($"Width: {Width}"),
@@ -1413,7 +1413,7 @@ public unsafe class Binary_Xga(BinaryReader r, object tag) : IHaveMetaInfo, ITex
     public TextureFlags TexFlags { get; } = 0;
     public T Create<T>(string platform, Func<object, T> func) {
         static byte[] Decode1() => null;
-        return func(new Texture_Bytes(Type switch {
+        return func(new TextureAsBytes(Type switch {
             1 => Decode1(),
             _ => throw new FormatException($"Unsupported type: {Type}"),
         }, Format, null));
@@ -1422,7 +1422,7 @@ public unsafe class Binary_Xga(BinaryReader r, object tag) : IHaveMetaInfo, ITex
     #endregion
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new(null, new MetaContent { Type = "Texture", Name = Path.GetFileName(file.Path), Value = this }),
+        new(null, new MetaContent { Type = "B_Texture", Name = Path.GetFileName(file.Path), Value = this }),
         new($"{nameof(Binary_Xga)}", items: [
             new($"Type: {Type}"),
             new($"Width: {Width}"),

@@ -88,7 +88,7 @@ public class CompiledShader : IHaveMetaInfo {
     public CompiledShader(BinaryReader r, string filename) => Read(r, filename);
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new(null, new MetaContent { Type = "Text", Name = "Shader", Value = Shader }),
+        new(null, new MetaContent { Type = "Text", Name = "B_Shader", Value = Shader }),
         new("CompiledShader", items: [
             new($"ShaderType: {ShaderType}"),
             new($"ShaderPlatform: {ShaderPlatform}"),

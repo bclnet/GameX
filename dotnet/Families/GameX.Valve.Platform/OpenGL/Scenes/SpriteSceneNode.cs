@@ -63,7 +63,7 @@ public class SpriteSceneNode : SceneNode {
         var offset = 0;
 
         foreach (var (name, size) in attributes) {
-            var attributeLocation = shader.GetAttribLocation(name);
+            var attributeLocation = shader.AttribLocation(name);
             GL.EnableVertexAttribArray(attributeLocation);
             GL.VertexAttribPointer(attributeLocation, size, VertexAttribPointerType.Float, false, stride, offset);
             offset += sizeof(float) * size;
@@ -92,10 +92,10 @@ public class SpriteSceneNode : SceneNode {
         var test = billboardMatrix * scaleMatrix * translationMatrix;
         var test2 = test.ToOpenTK();
 
-        GL.UniformMatrix4f(shader.GetUniformLocation("uProjectionViewMatrix"), 1, false, in viewProjectionMatrix);
+        GL.UniformMatrix4f(shader.UniformLocation("uProjectionViewMatrix"), 1, false, in viewProjectionMatrix);
 
         var transformTk = Transform;
-        GL.UniformMatrix4f(shader.GetUniformLocation("transform"), 1, false, in test2);
+        GL.UniformMatrix4f(shader.UniformLocation("transform"), 1, false, in test2);
 
         material.Render(shader);
 

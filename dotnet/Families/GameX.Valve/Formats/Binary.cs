@@ -190,7 +190,7 @@ public class Binary_Src : IDisposable, IHaveMetaInfo, Indirect<ITexture>, Indire
         Reader = r;
         FileSize = r.ReadUInt32();
         if (FileSize == 0x55AA1234) throw new FormatException("VPK file");
-        else if (FileSize == CompiledShader.MAGIC) throw new FormatException("Shader file");
+        else if (FileSize == CompiledShader.MAGIC) throw new FormatException("B_Shader file");
         else if (FileSize != r.BaseStream.Length) { }
         var headerVersion = r.ReadUInt16();
         if (headerVersion != KnownHeaderVersion) throw new FormatException($"Bad Magic: {headerVersion}, expected {KnownHeaderVersion}");
@@ -274,8 +274,8 @@ public class Binary_Src : IDisposable, IHaveMetaInfo, Indirect<ITexture>, Indire
                     try {
                         nodes.AddRange([
                             //new(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "PICTURE" }), //(tex.GenerateBitmap().ToBitmap(), tex.Width, tex.Height)
-                            new(null, new MetaContent { Type = "Texture", Name = "Texture", Value = this, Dispose = this }),
-                            new("Texture", items: [
+                            new(null, new MetaContent { Type = "B_Texture", Name = "B_Texture", Value = this, Dispose = this }),
+                            new("B_Texture", items: [
                                 new($"Width: {data.Width}"),
                                 new($"Height: {data.Height}"),
                                 new($"NumMipMaps: {data.NumMipMaps}"),
@@ -311,7 +311,7 @@ public class Binary_Src : IDisposable, IHaveMetaInfo, Indirect<ITexture>, Indire
             case ResourceType.WorldNode: nodes.Add(new(null, new MetaContent { Type = "World", Name = "World Node", Value = (D_WorldNode)DATA, Dispose = this })); break;
             case ResourceType.Model: nodes.Add(new(null, new MetaContent { Type = "UnknownFileModel", Name = "UnknownFileModel", Value = this, Dispose = this })); break;
             case ResourceType.Mesh: nodes.Add(new(null, new MetaContent { Type = "UnknownFileModel", Name = "Mesh", Value = this, Dispose = this })); break;
-            case ResourceType.Material: nodes.Add(new(null, new MetaContent { Type = "Material", Name = "Material", Value = this, Dispose = this })); break;
+            case ResourceType.Material: nodes.Add(new(null, new MetaContent { Type = "B_Material", Name = "B_Material", Value = this, Dispose = this })); break;
         }
         foreach (var block in Blocks) {
             if (block is RERL repl) { nodes.Add(new(null, new MetaContent { Type = "DataGrid", Name = "External Refs", Value = repl.RERLInfos })); continue; }
@@ -978,13 +978,13 @@ public unsafe class Binary_Mdl10 : ITexture, IHaveMetaInfo {
         Width = tex.Width; Height = tex.Height;
         var buf = new byte[Width * Height * 3];
         Raster.BlitByPalette(buf, 3, tex.Pixels, tex.Palette, 3);
-        return func(new Texture_Bytes(buf, Format, null));
+        return func(new TextureAsBytes(buf, Format, null));
     }
 
     #endregion
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new(null, new MetaContent { Type = "Texture", Name = Path.GetFileName(file.Path), Value = this }),
+        new(null, new MetaContent { Type = "B_Texture", Name = Path.GetFileName(file.Path), Value = this }),
         new("UnknownFileModel", items: [
             new($"Name: {Name}"),
         ]),
@@ -1505,8 +1505,8 @@ public unsafe class Binary_Wad3X : ITexture, IHaveMetaInfo {
         height = (int)r.ReadUInt32();
 
         // validate
-        if (width > 0x1000 || height > 0x1000) throw new FormatException("Texture width or height exceeds maximum size!");
-        else if (width == 0 || height == 0) throw new FormatException("Texture width and height must be larger than 0!");
+        if (width > 0x1000 || height > 0x1000) throw new FormatException("B_Texture width or height exceeds maximum size!");
+        else if (width == 0 || height == 0) throw new FormatException("B_Texture width and height must be larger than 0!");
 
         // read pixel offsets
         if (type == Formats.Tex2 || type == Formats.Tex) {
@@ -1565,14 +1565,14 @@ public unsafe class Binary_Wad3X : ITexture, IHaveMetaInfo {
             size = p.Length * bbp; var span = spans[index] = new Range(offset, offset + size);
             Raster.BlitByPalette(buf.AsSpan(span), bbp, p, palette, 3, transparent ? 0xFF : null);
         }
-        return func(new Texture_Bytes(buf, Format.value, spans));
+        return func(new TextureAsBytes(buf, Format.value, spans));
     }
 
     #endregion
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new(null, new MetaContent { Type = "Texture", Name = Path.GetFileName(file.Path), Value = this }),
-        new("Texture", items: [
+        new(null, new MetaContent { Type = "B_Texture", Name = Path.GetFileName(file.Path), Value = this }),
+        new("B_Texture", items: [
             new($"Name: {name}"),
             new($"Format: {Format.type}"),
             new($"Width: {Width}"),

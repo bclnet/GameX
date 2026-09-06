@@ -6,7 +6,7 @@ namespace GameX.Formats;
 [TestClass]
 public class GfxObjectTest {
     [TestMethod]
-    [DataRow("AC:AC", "client_highres.dat:Texture/060043BE.tex")]
+    [DataRow("AC:AC", "client_highres.dat:B_Texture/060043BE.tex")]
     [DataRow("Cry:MWO", "GameData.arc:GameModeObjects.xml")]
     [DataRow("Rsi:StarCitizen", "Engine/default_cch.dds")]
     [DataRow("Red:Witcher", "main.key:2da00.bif")]

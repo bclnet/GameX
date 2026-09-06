@@ -60,7 +60,7 @@ static class Z {
             if (r.AtEnd()) throw new Exception("unexpected EOF during load");
             var type = r.ReadL32AString(80);
             if (type == "End Of File") break;
-            else if (type == "Top Level Object") {
+            else if (type == "Top Level B_Object") {
                 type = r.ReadL32AString(80);
                 var p = r.ReadInt32() - 1;
                 //if (p != i) linkMap.insert(p, i);

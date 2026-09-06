@@ -474,12 +474,12 @@ public class Texture2D : Texture, IHaveMetaInfo, ITexture {
             //SurfaceFormat.HdrBlendable => (TextureFormat.RGBA32, TexturePixel.Unknown),
             _ => throw new Exception($"Unknown Format: {Format}"),
         };
-        return func(new Texture_Bytes(buf, format, null));
+        return func(new TextureAsBytes(buf, format, null));
     }
     #endregion
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new(null, new MetaContent { Type = "Texture", Name = Path.GetFileName(file.Path), Value = this }),
+        new(null, new MetaContent { Type = "B_Texture", Name = Path.GetFileName(file.Path), Value = this }),
             new("Texture2D", items: [
                 new($"Format: {Format}"),
                 new($"Width: {Width}"),
@@ -734,7 +734,7 @@ public class SpriteFont : IHaveMetaInfo {
     }
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new(null, new MetaContent { Type = "Texture", Name = Path.GetFileName(file.Path), Value = Texture }),
+        new(null, new MetaContent { Type = "B_Texture", Name = Path.GetFileName(file.Path), Value = Texture }),
             new("SpriteFont", items: [
                 new($"Format: {Texture.Format}"),
                 new($"Width: {Texture.Width}"),
@@ -907,7 +907,7 @@ public class Song : IHaveMetaInfo {
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new(null, new MetaContent { Type = "Data", Name = Path.GetFileName(file.Path), Value = this }),
-            new("Texture", items: [
+            new("B_Texture", items: [
                 new($"Filename: {Filename}"),
                 new($"Duration: {Duration}")
             ])];

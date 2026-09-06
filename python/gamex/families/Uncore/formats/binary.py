@@ -6,7 +6,7 @@ from PIL import Image
 from enum import Enum
 from quaternion import quaternion
 from openstk.core import _pathExtension, PlatformX, Int3, ICellDatabase
-from openstk.gfx import Raster, DDS_HEADER, Texture_Dds, Texture_Bytes, ITexture, TextureFormat, TexturePixel
+from openstk.gfx import Raster, DDS_HEADER, TextureAsDds, TextureAsBytes, ITexture, TextureFormat, TexturePixel
 from gamex import ArcBinary, ArcBinaryT, FileSource, BinaryArchive, MetaManager, MetaInfo, MetaContent, IHaveMetaInfo
 from zipfile import ZipFile
 
@@ -60,7 +60,7 @@ class Binary_Dds(IHaveMetaInfo, ITexture):
     depth: int = 0
     mipMaps: int = 1
     texFlags: TextureFlags = 0
-    def create(self, platform: str, func: callable): return func(Texture_Dds(self.bytes) if self.capsReadDds else Texture_Bytes(self.bytes, self.format[2], self.spans))
+    def create(self, platform: str, func: callable): return func(TextureAsDds(self.bytes) if self.capsReadDds else TextureAsBytes(self.bytes, self.format[2], self.spans))
 
     #endregion
 
@@ -131,7 +131,7 @@ class Binary_Img(IHaveMetaInfo, ITexture):
     depth: int = 0
     mipMaps: int = 1
     texFlags: TextureFlags = 0
-    def create(self, platform: str, func: callable): return func(Texture_Bytes(self.bytes, self.format[1], None))
+    def create(self, platform: str, func: callable): return func(TextureAsBytes(self.bytes, self.format[1], None))
 
     #endregion
 
@@ -296,7 +296,7 @@ class Binary_Pcx(IHaveMetaInfo, ITexture):
             case 8: bytes = decode8bpp()
             case 1: bytes = decode4bpp()
             case _: raise Exception(f'Unknown bpp: {header.bpp}')
-        return func(Texture_Bytes(bytes, self.format, None))
+        return func(TextureAsBytes(bytes, self.format, None))
 
     #endregion
 
@@ -503,7 +503,7 @@ class Binary_Tga(IHaveMetaInfo, ITexture):
         if index < 0 and index >= map.entryCount: raise Exception('COLOR_MAP_INDEX_FAILED')
         # Buffer.BlockCopy(map.pixels, map.bytesPerEntry * index, dest, offset, map.bytesPerEntry)
 
-    def _lambdax(self) -> Texture_Bytes:
+    def _lambdax(self) -> TextureAsBytes:
         # decodeRle
         def decodeRle(data: bytearray):
             isColorMapped = self.header.IS_COLOR_MAPPED
@@ -559,7 +559,7 @@ class Binary_Tga(IHaveMetaInfo, ITexture):
         if flipH: self.flipH(bytes)
         if flipV: self.flipV(bytes)
         
-        return Texture_Bytes(bytes, self.format, None)
+        return TextureAsBytes(bytes, self.format, None)
     def create(self, platform: str, func: callable): return func(_lambdax)
 
     # returns the pixel at coordinates (x,y) for reading or writing.

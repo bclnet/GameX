@@ -13,9 +13,9 @@ public static class OpenGLRenderer {
         if (obj is IHaveSource z) source = z.Source;
         return type switch {
             "TestTri" => new TestTriRenderer(gfx, source, obj),
-            "Texture" or "VideoTexture" => new TextureRenderer(gfx, source, obj, 0.., false),
-            "Object" => new ObjectRenderer(gfx, source, obj),
-            "Material" => new MaterialRenderer(gfx, source, obj),
+            "B_Texture" or "VideoTexture" => new TextureRenderer(gfx, source, obj, 0.., false),
+            "B_Object" => new ObjectRenderer(gfx, source, obj),
+            "B_Material" => new MaterialRenderer(gfx, source, obj),
             "Particle" => new ParticleRenderer(gfx, source, obj),
             //"World" => new OpenGLWorldRenderer(gfx, source,obj),
             "Engine" => new EngineRenderer(gfx, source, obj),

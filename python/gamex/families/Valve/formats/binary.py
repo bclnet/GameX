@@ -3,7 +3,7 @@ import os, numpy as np
 from io import BytesIO
 from enum import Enum, Flag
 from openstk.core import _throw, _pathExtension, unsafe, BinaryReader
-from openstk.gfx import Raster, Texture_Bytes, ITexture, ITextureFrames, TextureFlags, TextureFormat, TexturePixel
+from openstk.gfx import Raster, TextureAsBytes, ITexture, ITextureFramesSelect, TextureFlags, TextureFormat, TexturePixel
 from gamex import Archive, BinaryArchive, ArcBinary, ArcBinaryT, FileSource, MetaInfo, MetaManager, MetaContent, IHaveMetaInfo
 from gamex.families.Uncore.formats.compression import decompressBlast
 from hashlib import md5
@@ -156,7 +156,7 @@ class Binary_Src(IHaveMetaInfo):
 #region Binary_Spr - tag::Binary_Spr[]
 
 # Binary_Spr
-class Binary_Spr(IHaveMetaInfo, ITextureFrames):
+class Binary_Spr(IHaveMetaInfo, ITextureFramesSelect):
     @staticmethod
     async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Spr(r)
 
@@ -234,7 +234,7 @@ class Binary_Spr(IHaveMetaInfo, ITextureFrames):
     mipMaps: int = 1
     texFlags: TextureFlags = 0
     fps: int = 60
-    def create(self, platform: str, func: callable): return func(Texture_Bytes(self.bytes, format, None))
+    def create(self, platform: str, func: callable): return func(TextureAsBytes(self.bytes, format, None))
 
     def hasFrames(self) -> bool: return self.frame < len(self.frames)
 
@@ -803,12 +803,12 @@ class Binary_Mdl10(IHaveMetaInfo, ITexture):
     depth: int = 0
     mipMaps: int = 1
     texFlags: TextureFlags = 0
-    def _lambdax(self) -> Texture_Bytes:
+    def _lambdax(self) -> TextureAsBytes:
         tex = self.textures[0]
         self.width = tex.width; self.height = tex.height
         buf = bytearray(self.width * self.height * 3); mv = memoryview(buf)
         Raster.blitByPalette(mv, 3, tex.pixels, tex.palette, 3)
-        return Texture_Bytes(buf, self.format, None)
+        return TextureAsBytes(buf, self.format, None)
     def create(self, platform: str, func: callable): return func(_lambdax)
 
     #endregion
@@ -1340,14 +1340,14 @@ class Binary_Wad3X(IHaveMetaInfo, ITexture):
     mipMaps: int = 1
     texFlags: TextureFlags = 0
 
-    def _lambdax(self) -> Texture_Bytes:
+    def _lambdax(self) -> TextureAsBytes:
         bbp = 4 if self.transparent else 3
         buf = bytearray(sum([len(x) for x in self.pixels]) * bbp); mv = memoryview(buf)
         spans = [range(0, 0)] * len(self.pixels); offset = 0
         for i, p in enumerate(self.pixels):
             size = len(p) * bbp; span = spans[i] = range(offset, offset + size); offset += size
             Raster.blitByPalette(mv[span.start:span.stop], bbp, p, self.palette, 3, 0xFF if self.transparent else None)
-        return Texture_Bytes(buf, self.format[1], spans)
+        return TextureAsBytes(buf, self.format[1], spans)
     def create(self, platform: str, func: callable): return func(_lambdax)
 
     #endregion

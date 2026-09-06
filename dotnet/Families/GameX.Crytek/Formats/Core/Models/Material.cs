@@ -31,12 +31,12 @@ public class PublicParams {
     [XmlAttribute(AttributeName = "DetailGlossScale")] public string DetailGlossScale { get; set; }
 }
 
-[XmlRoot(ElementName = "Material")]
+[XmlRoot(ElementName = "B_Material")]
 public class Material {
     [XmlElement(ElementName = "PublicParams")] public PublicParams PublicParams { get; set; }
     [XmlAttribute(AttributeName = "Name")] public string Name { get; set; }
     [XmlAttribute(AttributeName = "MtlFlags")] public string MtlFlags { get; set; }
-    [XmlAttribute(AttributeName = "Shader")] public string Shader { get; set; }
+    [XmlAttribute(AttributeName = "B_Shader")] public string Shader { get; set; }
     [XmlAttribute(AttributeName = "GenMask")] public string GenMask { get; set; }
     [XmlAttribute(AttributeName = "StringGenMask")] public string StringGenMask { get; set; }
     [XmlAttribute(AttributeName = "SurfaceType")] public string SurfaceType { get; set; }
@@ -61,7 +61,7 @@ public class Material {
     }
 }
 
-[XmlRoot(ElementName = "Texture")]
+[XmlRoot(ElementName = "B_Texture")]
 public class Texture {
     [XmlAttribute(AttributeName = "Map")] public string Map { get; set; }
     [XmlAttribute(AttributeName = "File")] public string File { get; set; }
@@ -69,16 +69,16 @@ public class Texture {
 
 [XmlRoot(ElementName = "Textures")]
 public class Textures {
-    [XmlElement(ElementName = "Texture")] public List<Texture> Texture { get; set; }
+    [XmlElement(ElementName = "B_Texture")] public List<Texture> Texture { get; set; }
 }
 
 [XmlRoot(ElementName = "SubMaterials")]
 public class SubMaterials {
-    [XmlElement(ElementName = "Material")] public List<Material> Material { get; set; }
+    [XmlElement(ElementName = "B_Material")] public List<Material> Material { get; set; }
 }
 
 [XmlRoot(ElementName = "xml")]
 public class Xml {
-    [XmlElement(ElementName = "Material")] public Material Material { get; set; }
+    [XmlElement(ElementName = "B_Material")] public Material Material { get; set; }
 }
 

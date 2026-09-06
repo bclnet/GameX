@@ -50,7 +50,7 @@ partial class WavefrontFileWriter {
             var materials = File.Materials.ToArray();
             if (materials.Length > subset.MatId) w.WriteLine("usemtl {0}", materials[subset.MatId].Name);
             else {
-                if (materials.Length > 0) Log.Info($"Missing Material {subset.MatId}");
+                if (materials.Length > 0) Log.Info($"Missing B_Material {subset.MatId}");
                 // The material file doesn't have any elements with the Name of the material.  Use the object name.
                 w.WriteLine($"usemtl {File.Name}_{subset.MatId}");
             }

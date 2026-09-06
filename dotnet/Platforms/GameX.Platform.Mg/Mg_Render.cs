@@ -10,7 +10,7 @@ public static class MgRenderer {
         if (obj is IHaveSource z) source = z.Source;
         return type switch {
             "TestTri" => new TestTriRenderer(gfx, source, obj),
-            "Texture" => new SpriteRenderer(gfx, source, obj),
+            "B_Texture" => new SpriteRenderer(gfx, source, obj),
             //"Object" => new ObjectRenderer(gfx, source, obj),
             _ => default
         };

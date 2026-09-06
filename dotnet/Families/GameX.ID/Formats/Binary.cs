@@ -846,7 +846,7 @@ public unsafe class Binary_Lmp : IHaveMetaInfo, ITexture {
     public int Depth { get; } = 0;
     public int MipMaps { get; } = 1;
     public TextureFlags TexFlags { get; } = 0;
-    public T Create<T>(string platform, Func<object, T> func) => func(new Texture_Bytes(Pixels, Format, null));
+    public T Create<T>(string platform, Func<object, T> func) => func(new TextureAsBytes(Pixels, Format, null));
 
     #endregion
 
@@ -1043,11 +1043,11 @@ public unsafe class Binary_Spr : ITextureFrames, IHaveMetaInfo {
     public int MipMaps => 1;
     public TextureFlags TexFlags => 0;
     public int Fps { get; } = 60;
-    public T Create<T>(string platform, Func<object, T> func) => func(new Texture_Bytes(bytes, Format, null));
+    public T Create<T>(string platform, Func<object, T> func) => func(new TextureAsBytes(bytes, Format, null));
 
     public bool HasFrames => frame < frames.Length;
 
-    public bool DecodeFrame() {
+    public bool NextFrame() {
         var p = pixels[frame];
         Raster.BlitByPalette(bytes, 4, p, palette, 3);
         frame++;
@@ -1058,7 +1058,7 @@ public unsafe class Binary_Spr : ITextureFrames, IHaveMetaInfo {
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new(null, new MetaContent { Type = "VideoTexture", Name = Path.GetFileName(file.Path), Value = this }),
-        new("Sprite", items: [
+        new("B_Sprite", items: [
             new($"Frames: {frames.Length}"),
             new($"Width: {Width}"),
             new($"Height: {Height}"),

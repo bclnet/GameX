@@ -6,7 +6,7 @@ namespace GameX.Formats;
 [TestClass]
 public class LoadSingleFileDataTest {
     [TestMethod]
-    [DataRow("AC:AC", ">client_highres.dat:Texture/060043BE.tex", 32792)]
+    [DataRow("AC:AC", ">client_highres.dat:B_Texture/060043BE.tex", 32792)]
     [DataRow("Arkane:AF", ">data.arc:GRAPH/particles/BOOM.jpg", 1923)]
     [DataRow("Arkane:DOM", ">depot_2101_dir.vpk:platform/config/server.vdf", 13)]
     [DataRow("Arkane:D", ">game1.Index:strings/english_m.lang", 765258)]

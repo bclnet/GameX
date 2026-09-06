@@ -65,8 +65,8 @@ public class FormatTests2 {
     public void SurfaceTexture(string sampleFile) => LoadObject<SurfaceTexture>(portal, sampleFile);
 
     [TestMethod]
-    [DataRow("Texture/06000133.jpg")]
-    [DataRow("Texture/06007576.jpg")]
+    [DataRow("B_Texture/06000133.jpg")]
+    [DataRow("B_Texture/06007576.jpg")]
     public void Texture(string sampleFile) => LoadObject<Texture>(portal, sampleFile);
 
     [TestMethod]

@@ -257,13 +257,13 @@ public unsafe class Binary_Bitmap : IHaveMetaInfo, ITexture {
     public int Depth { get; } = 0;
     public int MipMaps { get; } = 1;
     public TextureFlags TexFlags { get; } = 0;
-    public T Create<T>(string platform, Func<object, T> func) => func(new Texture_Bytes(Current?.Pixels, Format[BytesPerPixel == 1 ? 0 : 1], null));
+    public T Create<T>(string platform, Func<object, T> func) => func(new TextureAsBytes(Current?.Pixels, Format[BytesPerPixel == 1 ? 0 : 1], null));
 
     #endregion
 
     // IHaveMetaInfo
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new(null, new MetaContent { Type = "Texture", Name = Path.GetFileName(file.Path), Value = this }),
+        new(null, new MetaContent { Type = "B_Texture", Name = Path.GetFileName(file.Path), Value = this }),
         new("Bitmap", items: [
             new($"BytesPerPixel: {BytesPerPixel}"),
             new($"Index: {Index}"),
@@ -412,13 +412,13 @@ public unsafe class Binary_Texture : IHaveMetaInfo, ITexture {
     public int Depth { get; } = 0;
     public int MipMaps { get; } = 1;
     public TextureFlags TexFlags { get; } = 0;
-    public T Create<T>(string platform, Func<object, T> func) => func(new Texture_Bytes(Pixels, Formats[BytesPerPixel == 1 ? 0 : 1], null));
+    public T Create<T>(string platform, Func<object, T> func) => func(new TextureAsBytes(Pixels, Formats[BytesPerPixel == 1 ? 0 : 1], null));
     #endregion
 
     // IHaveMetaInfo
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new(null, new MetaContent { Type = "Texture", Name = Path.GetFileName(file.Path), Value = this }),
-        new("Texture", items: [
+        new(null, new MetaContent { Type = "B_Texture", Name = Path.GetFileName(file.Path), Value = this }),
+        new("B_Texture", items: [
             new($"BytesPerPixel: {BytesPerPixel}"),
             new($"Width: {Width}"),
             new($"Height: {Height}"),

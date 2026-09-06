@@ -154,7 +154,7 @@ public unsafe class Binary_Dat : ArcBinary<Binary_Dat> {
 
 #region Binary_Frm
 
-public class Binary_Frm : IHaveMetaInfo, ITextureFramesSelect {
+public class Binary_Frm : IHaveMetaInfo, ITextureFrames, ITextureSelect {
     public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Frm(r, f, s));
 
     #region Headers
@@ -216,7 +216,7 @@ public class Binary_Frm : IHaveMetaInfo, ITextureFramesSelect {
         Frames = [.. frames];
 
         // select a frame
-        FrameSelect(0);
+        Select(0);
     }
 
     async Task<Binary_Pal2> GetPalletObjAsync(string path, BinaryArchive s) {
@@ -238,22 +238,22 @@ public class Binary_Frm : IHaveMetaInfo, ITextureFramesSelect {
     public int Depth => 0;
     public int MipMaps => 1;
     public TextureFlags TexFlags => 0;
-    public T Create<T>(string platform, Func<object, T> func) => func(new Texture_Bytes(Bytes, Format, null));
+    public T Create<T>(string platform, Func<object, T> func) => func(new TextureAsBytes(Bytes, Format, null));
 
-    // ITextureFrames
+    // ITextureFrames + ITextureSelect
     public int Fps => Header.Fps;
-    public int FrameMax => Frames.Length == 1 ? 1 : Header.FramesPerDirection;
-    public void FrameSelect(int id) {
+    public int MaxId => Frames.Length == 1 ? 1 : Header.FramesPerDirection;
+    public void Select(int id) {
         Bytes = Frames[id].b;
         Width = Frames[id].f.Width;
         Height = Frames[id].f.Height;
     }
     public bool HasFrames => false;
-    public bool DecodeFrame() => false;
+    public bool NextFrame() => false;
 
     // IHaveMetaInfo
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new(null, new MetaContent { Type = "Texture", Name = Path.GetFileName(file.Path), Value = this }),
+        new(null, new MetaContent { Type = "B_Texture", Name = Path.GetFileName(file.Path), Value = this }),
             new($"{nameof(Binary_Frm)}", items: [
                 new($"Frames: {Frames.Length}"),
                 new($"Width: {Width}"),
@@ -351,11 +351,11 @@ public unsafe class Binary_Rix : IHaveMetaInfo, ITexture {
     public int Depth => 0;
     public int MipMaps => 1;
     public TextureFlags TexFlags => 0;
-    public T Create<T>(string platform, Func<object, T> func) => func(new Texture_Bytes(Bytes, Format, null));
+    public T Create<T>(string platform, Func<object, T> func) => func(new TextureAsBytes(Bytes, Format, null));
 
     // IHaveMetaInfo
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new(null, new MetaContent { Type = "Texture", Name = Path.GetFileName(file.Path), Value = this }),
+        new(null, new MetaContent { Type = "B_Texture", Name = Path.GetFileName(file.Path), Value = this }),
             new($"{nameof(Binary_Rix)}", items: [
                 new($"Width: {Width}"),
                 new($"Height: {Height}"),

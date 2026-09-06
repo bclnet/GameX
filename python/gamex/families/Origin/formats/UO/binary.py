@@ -3,7 +3,7 @@ import os, re, struct, numpy as np
 from enum import Enum, Flag
 from itertools import groupby
 from openstk.core import unsafe
-from openstk.gfx import Texture_Bytes, ITexture, TextureFormat, TexturePixel
+from openstk.gfx import TextureAsBytes, ITexture, TextureFormat, TexturePixel
 from gamex import FileSource, MetaInfo, MetaContent, IHaveMetaInfo, DesSer
 
 # typedefs
@@ -463,7 +463,7 @@ class Binary_Gump(IHaveMetaInfo, ITexture):
     depth: int = 0
     mipMaps: int = 1
     texFlags: TextureFlags = 0
-    def create(self, platform: str, func: callable): return func(Texture_Bytes(self.pixels, self.format, None))
+    def create(self, platform: str, func: callable): return func(TextureAsBytes(self.pixels, self.format, None))
 
     #endregion
 
@@ -586,7 +586,7 @@ class Binary_Land(IHaveMetaInfo, ITexture):
     depth: int = 0
     mipMaps: int = 1
     texFlags: TextureFlags = 0
-    def create(self, platform: str, func: callable): return func(Texture_Bytes(self.pixels, self.format, None))
+    def create(self, platform: str, func: callable): return func(TextureAsBytes(self.pixels, self.format, None))
 
     #endregion
 
@@ -624,7 +624,7 @@ class Binary_Light(IHaveMetaInfo, ITexture):
     depth: int = 0
     mipMaps: int = 1
     texFlags: TextureFlags = 0
-    def create(self, platform: str, func: callable): return func(Texture_Bytes(self.pixels, self.format, None))
+    def create(self, platform: str, func: callable): return func(TextureAsBytes(self.pixels, self.format, None))
 
     #endregion
 
@@ -734,7 +734,7 @@ class Binary_MultiMap(IHaveMetaInfo, ITexture):
     depth: int = 0
     mipMaps: int = 1
     texFlags: TextureFlags = 0
-    def create(self, platform: str, func: callable): return func(Texture_Bytes(self.pixels, self.format, None))
+    def create(self, platform: str, func: callable): return func(TextureAsBytes(self.pixels, self.format, None))
 
     #endregion
 
@@ -936,7 +936,7 @@ class Binary_Art(IHaveMetaInfo, ITexture):
     depth: int = 0
     mipMaps: int = 1
     texFlags: TextureFlags = 0
-    def create(self, platform: str, func: callable): return func(Texture_Bytes(self.pixels, self.format, None))
+    def create(self, platform: str, func: callable): return func(TextureAsBytes(self.pixels, self.format, None))
 
     #endregion
 

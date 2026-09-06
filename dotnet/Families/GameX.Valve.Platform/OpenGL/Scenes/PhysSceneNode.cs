@@ -187,11 +187,11 @@ public class PhysSceneNode : SceneNode {
         GL.BufferData(BufferTarget.ElementArrayBuffer, inds.Count * sizeof(int), inds.ToArray(), BufferUsage.StaticDraw);
 
         const int stride = sizeof(float) * 7;
-        var positionAttributeLocation = shader.GetAttribLocation("aVertexPosition");
+        var positionAttributeLocation = shader.AttribLocation("aVertexPosition");
         GL.EnableVertexAttribArray(positionAttributeLocation);
         GL.VertexAttribPointer(positionAttributeLocation, 3, VertexAttribPointerType.Float, false, stride, 0);
 
-        var colorAttributeLocation = shader.GetAttribLocation("aVertexColor");
+        var colorAttributeLocation = shader.AttribLocation("aVertexColor");
         GL.EnableVertexAttribArray(colorAttributeLocation);
         GL.VertexAttribPointer(colorAttributeLocation, 4, VertexAttribPointerType.Float, false, stride, sizeof(float) * 3);
 
@@ -257,7 +257,7 @@ public class PhysSceneNode : SceneNode {
         if (!Enabled) return;
         var viewProjectionMatrix = (Transform * context.Camera.ViewProjectionMatrix).ToOpenTK();
         GL.UseProgram(shader.Program);
-        GL.UniformMatrix4f(shader.GetUniformLocation("uProjectionViewMatrix"), 1, false, in viewProjectionMatrix);
+        GL.UniformMatrix4f(shader.UniformLocation("uProjectionViewMatrix"), 1, false, in viewProjectionMatrix);
         GL.DepthMask(false);
         GL.BindVertexArray(vaoHandle);
         GL.DrawElements(PrimitiveType.Lines, indexCount, DrawElementsType.UnsignedInt, 0);

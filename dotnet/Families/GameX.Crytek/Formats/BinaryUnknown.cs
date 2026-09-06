@@ -16,7 +16,7 @@ partial class Binary_CryFile : IUnknownFileModel {
     IEnumerable<UnknownMesh> IUnknownFileModel.Meshes {
         get {
             foreach (var node in NodeMap.Values) {
-                if (node.ObjectChunk == null) { Log.Info($"Skipped node with missing Object {node.Name}"); continue; }
+                if (node.ObjectChunk == null) { Log.Info($"Skipped node with missing B_Object {node.Name}"); continue; }
                 if (node.ObjectChunk.ChunkType == ChunkType.Helper) { continue; }
                 if (node.ObjectChunk.ChunkType != ChunkType.Mesh) { Log.Info($"Skipped a {node.ObjectChunk.ChunkType} chunk"); continue; }
                 if (node.ObjectChunk is not ChunkMesh chunk) { Log.Info($"Invalid ChunkMesh in {node.Name}"); continue; }

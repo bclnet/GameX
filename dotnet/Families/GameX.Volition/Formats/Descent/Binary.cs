@@ -91,7 +91,7 @@ public class Binary_Bmp : IHaveMetaInfo, ITexture {
         }
 
         byte[] DecodeRaw() => Body.SelectMany(s => Palette[s]).ToArray();
-        return func(new Texture_Bytes((PigFlags & (PIG_Flags.RLE | PIG_Flags.RLEBIG)) != 0
+        return func(new TextureAsBytes((PigFlags & (PIG_Flags.RLE | PIG_Flags.RLEBIG)) != 0
             ? DecodeRLE()
             : DecodeRaw(), Format, null));
     }
@@ -99,7 +99,7 @@ public class Binary_Bmp : IHaveMetaInfo, ITexture {
     #endregion
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new(null, new MetaContent { Type = "Texture", Name = Path.GetFileName(file.Path), Value = this }),
+        new(null, new MetaContent { Type = "B_Texture", Name = Path.GetFileName(file.Path), Value = this }),
         new($"{nameof(Binary_Bmp)}", items: [
             new($"PigFlags: {PigFlags}"),
             new($"Width: {Width}"),

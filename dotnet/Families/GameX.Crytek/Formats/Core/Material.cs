@@ -10,7 +10,7 @@ namespace GameX.Crytek.Formats.Core;
 /// <summary>
 /// Representation of a CryEngine .mtl file
 /// </summary>
-[XmlRoot(ElementName = "Material")]
+[XmlRoot(ElementName = "B_Material")]
 public partial class Material {
     #region Data Structures
 
@@ -42,7 +42,7 @@ public partial class Material {
     /// <summary>
     /// The texture object
     /// </summary>
-    [XmlRoot(ElementName = "Texture")]
+    [XmlRoot(ElementName = "B_Texture")]
     public partial class Texture {
         public enum TypeEnum {
             [XmlEnum("0")] Default = 0,
@@ -133,7 +133,7 @@ public partial class Material {
     [XmlAttribute(AttributeName = "MatTemplate")] public string Template { get; set; }
     [XmlAttribute(AttributeName = "MatSubTemplate")] public string SubTemplate { get; set; }
     [XmlAttribute(AttributeName = "vertModifType")] public short VertModifierType { get; set; }
-    [XmlAttribute(AttributeName = "Shader"), DefaultValue("")] public string Shader { get; set; }
+    [XmlAttribute(AttributeName = "B_Shader"), DefaultValue("")] public string Shader { get; set; }
     [XmlAttribute(AttributeName = "GenMask"), DefaultValue("")] public string GenMask { get; set; }
     [XmlAttribute(AttributeName = "StringGenMask"), DefaultValue("")] public string StringGenMask { get; set; }
     [XmlAttribute(AttributeName = "SurfaceType"), DefaultValue(null)] public string SurfaceType { get; set; }
@@ -170,10 +170,10 @@ public partial class Material {
 
     #region Elements
 
-    [XmlArray(ElementName = "SubMaterials"), XmlArrayItem(ElementName = "Material")] public Material[] SubMaterials { get; set; }
+    [XmlArray(ElementName = "SubMaterials"), XmlArrayItem(ElementName = "B_Material")] public Material[] SubMaterials { get; set; }
     [XmlElement(ElementName = "PublicParams")] internal PublicParameters PublicParams { get; set; }
     // TODO: TimeOfDay Support
-    [XmlArray(ElementName = "Textures"), XmlArrayItem(ElementName = "Texture")] public Texture[] Textures { get; set; }
+    [XmlArray(ElementName = "Textures"), XmlArrayItem(ElementName = "B_Texture")] public Texture[] Textures { get; set; }
 
     #endregion
 

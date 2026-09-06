@@ -71,7 +71,7 @@ public partial class PrefabsLibraryPrefab {
     private string libraryField;
 
     /// <remarks/>
-    [System.Xml.Serialization.XmlArrayItemAttribute("Object", IsNullable = false)]
+    [System.Xml.Serialization.XmlArrayItemAttribute("B_Object", IsNullable = false)]
     public PrefabsLibraryPrefabObject[] Objects {
         get {
             return this.objectsField;
@@ -309,7 +309,7 @@ public partial class PrefabsLibraryPrefabObject {
     }
 
     /// <remarks/>
-    [System.Xml.Serialization.XmlArrayItemAttribute("Object", IsNullable = false)]
+    [System.Xml.Serialization.XmlArrayItemAttribute("B_Object", IsNullable = false)]
     public PrefabsLibraryPrefabObjectObject[] Objects {
         get {
             return this.objectsField;

@@ -557,7 +557,7 @@ public struct PhysicalProxy {
         Log.Info($"        ID: {ID:Center}");
         Log.Info($"        Num Vertices: {NumVertices:Center}");
         Log.Info($"        Num Indices:  {NumIndices:Center}");
-        Log.Info($"        Material Index: {Material:Center}");
+        Log.Info($"        B_Material Index: {Material:Center}");
     }
 #endif
     #endregion

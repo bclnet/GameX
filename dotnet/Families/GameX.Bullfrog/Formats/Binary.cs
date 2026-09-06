@@ -295,12 +295,12 @@ public unsafe class Binary_Fli : IDisposable, ITextureFrames, IHaveMetaInfo {
     public int MipMaps => 0;
     public TextureFlags TexFlags => 0;
     public int Fps { get; }
-    public T Create<T>(string platform, Func<object, T> func) => func(new Texture_Bytes(Bytes, Format, null));
+    public T Create<T>(string platform, Func<object, T> func) => func(new TextureAsBytes(Bytes, Format, null));
     #endregion
 
     public bool HasFrames => NumFrames > 0;
 
-    public bool DecodeFrame() {
+    public bool NextFrame() {
         var r = R;
         X_FrameHeader frameHeader;
         var header = r.ReadS<X_ChunkHeader>(); header = X_ChunkHeader.Run(ref header);

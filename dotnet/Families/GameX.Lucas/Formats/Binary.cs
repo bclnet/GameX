@@ -293,13 +293,14 @@ public class Binary_Nwx : IHaveMetaInfo, ITextureSelect {
                     bytes[i + 3] = pixel == 0 ? (byte)0 : (byte)255;
                 }
         }
-        return func(new Texture_Bytes(bytes, Format, null));
+        return func(new TextureAsBytes(bytes, Format, null));
     }
+    public int MaxId => -1;
     public void Select(int id) => (Width, Height, Flip, CellData) = Cells[id % Cells.Count];
     #endregion
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new(null, new MetaContent { Type = "Texture", Name = Path.GetFileName(file.Path), Value = this }),
+        new(null, new MetaContent { Type = "B_Texture", Name = Path.GetFileName(file.Path), Value = this }),
         new($"{nameof(Binary_Nwx)}", items: [
             new($"Cells: {Cells.Count}"),
             //new($"Width: {Width}"),
@@ -1056,12 +1057,12 @@ public unsafe class Binary_Xga : IHaveMetaInfo, ITexture {
         //    //1 => Decode4bpp(),
         //    _ => throw new FormatException($"Unsupported bpp: {Header.Bpp}"),
         //};
-        return func(new Texture_Bytes(null, Format, null)); // bytes;
+        return func(new TextureAsBytes(null, Format, null)); // bytes;
     }
     #endregion
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new(null, new MetaContent { Type = "Texture", Name = Path.GetFileName(file.Path), Value = this }),
+        new(null, new MetaContent { Type = "B_Texture", Name = Path.GetFileName(file.Path), Value = this }),
         new($"{nameof(Binary_Xga)}", items: [
             new($"Width: {Width}"),
             new($"Height: {Height}"),

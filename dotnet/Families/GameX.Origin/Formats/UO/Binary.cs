@@ -769,14 +769,14 @@ public unsafe class Binary_Gump : IHaveMetaInfo, ITexture {
     public int Depth { get; } = 0;
     public int MipMaps { get; } = 1;
     public TextureFlags TexFlags { get; } = 0;
-    public T Create<T>(string platform, Func<object, T> func) => func(new Texture_Bytes(Pixels, Format, null));
+    public T Create<T>(string platform, Func<object, T> func) => func(new TextureAsBytes(Pixels, Format, null));
     #endregion
 
     public override string ToString() => this.Serialize();
 
     // IHaveMetaInfo
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new(null, new MetaContent { Type = "Texture", Name = Path.GetFileName(file.Path), Value = this }),
+        new(null, new MetaContent { Type = "B_Texture", Name = Path.GetFileName(file.Path), Value = this }),
         new("Gump", items: [
             new($"Width: {Width}"),
             new($"Height: {Height}"),
@@ -927,12 +927,12 @@ public unsafe class Binary_Land : IHaveMetaInfo, ITexture {
     public int Depth { get; } = 0;
     public int MipMaps { get; } = 1;
     public TextureFlags TexFlags { get; } = 0;
-    public T Create<T>(string platform, Func<object, T> func) => func(new Texture_Bytes(Pixels, Format, null));
+    public T Create<T>(string platform, Func<object, T> func) => func(new TextureAsBytes(Pixels, Format, null));
     #endregion
 
     // IHaveMetaInfo
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new(null, new MetaContent { Type = "Texture", Name = Path.GetFileName(file.Path), Value = this }),
+        new(null, new MetaContent { Type = "B_Texture", Name = Path.GetFileName(file.Path), Value = this }),
         new("Land", items: [
             new($"Width: {Width}"),
             new($"Height: {Height}"),
@@ -974,12 +974,12 @@ public unsafe class Binary_Light : IHaveMetaInfo, ITexture {
     public int Depth { get; } = 0;
     public int MipMaps { get; } = 1;
     public TextureFlags TexFlags { get; } = 0;
-    public T Create<T>(string platform, Func<object, T> func) => func(new Texture_Bytes(Pixels, Format, null));
+    public T Create<T>(string platform, Func<object, T> func) => func(new TextureAsBytes(Pixels, Format, null));
     #endregion
 
     // IHaveMetaInfo
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new(null, new MetaContent { Type = "Texture", Name = Path.GetFileName(file.Path), Value = this }),
+        new(null, new MetaContent { Type = "B_Texture", Name = Path.GetFileName(file.Path), Value = this }),
         new("Light", items: [
             new($"Width: {Width}"),
             new($"Height: {Height}"),
@@ -1110,12 +1110,12 @@ public unsafe class Binary_MultiMap : IHaveMetaInfo, ITexture {
     public int Depth { get; } = 0;
     public int MipMaps { get; } = 1;
     public TextureFlags TexFlags { get; } = 0;
-    public T Create<T>(string platform, Func<object, T> func) => func(new Texture_Bytes(Pixels, Format, null));
+    public T Create<T>(string platform, Func<object, T> func) => func(new TextureAsBytes(Pixels, Format, null));
     #endregion
 
     // IHaveMetaInfo
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new(null, new MetaContent { Type = "Texture", Name = Path.GetFileName(file.Path), Value = this }),
+        new(null, new MetaContent { Type = "B_Texture", Name = Path.GetFileName(file.Path), Value = this }),
         new("MultiMap", items: [
             new($"Width: {Width}"),
             new($"Height: {Height}"),
@@ -1486,12 +1486,12 @@ public unsafe class Binary_Art : IHaveMetaInfo, ITexture {
     public int Depth { get; } = 0;
     public int MipMaps { get; } = 1;
     public TextureFlags TexFlags { get; } = 0;
-    public T Create<T>(string platform, Func<object, T> func) => func(new Texture_Bytes(Pixels, Format, null));
+    public T Create<T>(string platform, Func<object, T> func) => func(new TextureAsBytes(Pixels, Format, null));
     #endregion
 
     // IHaveMetaInfo
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new(null, new MetaContent { Type = "Texture", Name = Path.GetFileName(file.Path), Value = this }),
+        new(null, new MetaContent { Type = "B_Texture", Name = Path.GetFileName(file.Path), Value = this }),
         new("Art", items: [
             new($"Width: {Width}"),
             new($"Height: {Height}"),

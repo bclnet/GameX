@@ -162,13 +162,13 @@ public unsafe class Texture : IHaveMetaInfo, ITexture {
         //var bytes = Expand();
         //mips = new[] { Range.All };
         //return bytes;
-        return func(new Texture_Bytes(null, null, null));
+        return func(new TextureAsBytes(null, null, null));
     }
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) {
         var nodes = new List<MetaInfo> {
             //new MetaInfo(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "PICTURE" }),
-            new MetaInfo(null, new MetaContent { Type = "Texture", Name = Path.GetFileName(file.Path), Value = this }),
+            new MetaInfo(null, new MetaContent { Type = "B_Texture", Name = Path.GetFileName(file.Path), Value = this }),
             //new MetaInfo($"{nameof(Texture)}: {Id:X8}", items: new List<MetaInfo> {
             //    new MetaInfo($"Unknown: {Unknown}"),
             //    new MetaInfo($"Format: {Format.type}"),

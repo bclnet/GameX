@@ -558,7 +558,7 @@ public class CloObjectEffect(BinaryReader r) : IHaveMetaInfo
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new($"Index: {Index}"),
         new($"UnknownFileModel ID: {ModelId:X8}", clickable: true),
-        new($"Texture Effects", items: CloTextureEffects.Select(x=> new MetaInfo($"{x}", clickable: true))),
+        new($"B_Texture Effects", items: CloTextureEffects.Select(x=> new MetaInfo($"{x}", clickable: true))),
     ];
 }
 #endregion
@@ -645,7 +645,7 @@ public class ClothingBaseEffect(BinaryReader r) : IHaveMetaInfo
     public readonly CloObjectEffect[] CloObjectEffects = r.ReadL32FArray(x => new CloObjectEffect(x));
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new("Object Effects", items: CloObjectEffects.OrderBy(i => i.Index).Select(x => {
+        new("B_Object Effects", items: CloObjectEffects.OrderBy(i => i.Index).Select(x => {
             var items = (x as IHaveMetaInfo).GetInfoNodes();
             var name = items[0].Name;
             items.RemoveAt(0);
@@ -1188,7 +1188,7 @@ public class ObjDesc : IHaveMetaInfo
             items.RemoveAt(0);
             return new MetaInfo(name, items: items);
         })) : null,
-        TextureChanges.Count > 0 ? new("Texture Changes", items: TextureChanges.Select(x => new MetaInfo($"{x}", clickable: true))) : null,
+        TextureChanges.Count > 0 ? new("B_Texture Changes", items: TextureChanges.Select(x => new MetaInfo($"{x}", clickable: true))) : null,
         AnimPartChanges.Count > 0 ? new("AnimPart Changes", items: AnimPartChanges.Select(x => new MetaInfo($"{x}", clickable: true))) : null,
     ];
 
@@ -1228,7 +1228,7 @@ public class ObjectDesc(BinaryReader r) : IHaveMetaInfo
     public readonly uint WeenieObj = r.ReadUInt32();
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new($"Object ID: {ObjId:X8}", clickable: true),
+        new($"B_Object ID: {ObjId:X8}", clickable: true),
         new($"BaseLoc: {BaseLoc}"),
         new($"Frequency: {Freq}"),
         new($"DisplaceX: {DisplaceX} DisplaceY: {DisplaceY}"),
@@ -2394,8 +2394,8 @@ public class TextureMapChange(BinaryReader r) : IHaveMetaInfo
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new($"PartIdx: {PartIndex}"),
-        new($"Old Texture: {OldTexture:X8}", clickable: true),
-        new($"New Texture: {NewTexture:X8}", clickable: true),
+        new($"Old B_Texture: {OldTexture:X8}", clickable: true),
+        new($"New B_Texture: {NewTexture:X8}", clickable: true),
     ];
 }
 #endregion

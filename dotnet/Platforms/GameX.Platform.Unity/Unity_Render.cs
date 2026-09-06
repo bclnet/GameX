@@ -18,8 +18,8 @@ public static class UnityRenderer {
             "TestTri" => new TestTriRenderer(gfx, source, obj),
             //"Material" => new MaterialRenderer(gfx, source, obj),
             //"Particle" => new ParticleRenderer(gfx, source, obj),
-            "Texture" or "VideoTexture" => new TextureRenderer(gfx, source, obj),
-            "Object" => new ObjectRenderer(gfx, source, obj),
+            "B_Texture" or "VideoTexture" => new TextureRenderer(gfx, source, obj),
+            "B_Object" => new ObjectRenderer(gfx, source, obj),
             "Engine" => new EngineRenderer(gfx, source, obj),
             _ => new ObjectRenderer(gfx, source, obj),
         };

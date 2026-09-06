@@ -1567,7 +1567,7 @@ public class Scene : FileType, IHaveMetaInfo {
         new($"{nameof(Scene)}: {Id:X8}", items: [
             new("Objects", items: Objects.Select(x => {
                 var items = (x as IHaveMetaInfo).GetInfoNodes();
-                var name = items[0].Name.Replace("Object ID: ", "");
+                var name = items[0].Name.Replace("B_Object ID: ", "");
                 items.RemoveAt(0);
                 return new MetaInfo(name, items: items, clickable: true);
             })),
@@ -2016,7 +2016,7 @@ public class Surface : FileType, IHaveMetaInfo {
         return [
             new($"{nameof(Surface)}: {Id:X8}", items: [
                 new($"Type: {Type}"),
-                hasSurface ? new($"Surface Texture: {OrigTextureId:X8}", clickable: true) : null,
+                hasSurface ? new($"Surface B_Texture: {OrigTextureId:X8}", clickable: true) : null,
                 hasSurface && OrigPaletteId != 0 ? new($"Palette ID: {OrigPaletteId:X8}", clickable: true) : null,
                 !hasSurface ? new($"Color: {ColorX.ToRGBA(ColorValue)}") : null,
                 /*Translucency != 0f ?*/ new($"Translucency: {Translucency}") /*: null*/,
@@ -2047,7 +2047,7 @@ public class SurfaceTexture : FileType, IHaveMetaInfo {
         new($"{nameof(SurfaceTexture)}: {Id:X8}", items: [
             new($"Unknown: {Unknown}"),
             new($"UnknownByte: {UnknownByte}"),
-            new("Texture", items: Textures.Select(x => new MetaInfo($"{x:X8}", clickable: true))),
+            new("B_Texture", items: Textures.Select(x => new MetaInfo($"{x:X8}", clickable: true))),
         ])
     ];
 }
@@ -2260,13 +2260,13 @@ public unsafe class Texture : FileType, IHaveMetaInfo, ITexture {
                 default: Console.WriteLine($"Unhandled SurfacePixelFormat ({Format}) in RenderSurface {Id:X8}"); return null;
             }
         }
-        return func(new Texture_Bytes(Expand(), Format.value, new[] { Range.All }));
+        return func(new TextureAsBytes(Expand(), Format.value, new[] { Range.All }));
     }
     #endregion
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         //new(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "PICTURE" }),
-        new(null, new MetaContent { Type = "Texture", Name = Path.GetFileName(file.Path), Value = this }),
+        new(null, new MetaContent { Type = "B_Texture", Name = Path.GetFileName(file.Path), Value = this }),
         new($"{nameof(Texture)}: {Id:X8}", items: [
             new($"Unknown: {Unknown}"),
             new($"Format: {Format.type}"),

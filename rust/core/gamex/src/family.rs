@@ -18,7 +18,7 @@
 //         : new Family(elem);
 //
 // Same shape for `gameType`, `engineType`, `pakFileType` and so on. Rust has no
-// `Activator`, and this is exactly the case `openstack_polyio`'s `TypeRegistry`
+// `Activator`, and this is exactly the case `openstack_poly`'s `TypeRegistry`
 // was built for during the library port — `register_type!` plus
 // `TypeRegistry::create(name)`. Reusing it here rather than inventing a second
 // mechanism.

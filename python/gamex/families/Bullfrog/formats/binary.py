@@ -3,7 +3,7 @@ import os, ctypes
 from enum import Enum
 from io import BytesIO
 from openstk.core import _pathExtension
-from openstk.gfx import Raster, ITextureFrames, TextureFormat, TexturePixel
+from openstk.gfx import Raster, ITextureFramesSelect, TextureFormat, TexturePixel
 from gamex import ArcBinary, ArcBinaryT, FileSource, MetaInfo, MetaContent, IHaveMetaInfo
 
 #region Binary_Bullfrog
@@ -101,7 +101,7 @@ class Binary_Bullfrog(ArcBinaryT):
 #region Binary_Fli
 
 # Binary_Fli
-class Binary_Fli(IHaveMetaInfo, ITextureFrames):
+class Binary_Fli(IHaveMetaInfo, ITextureFramesSelect):
     @staticmethod
     async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Fli(r, f)
 
@@ -181,7 +181,7 @@ class Binary_Fli(IHaveMetaInfo, ITextureFrames):
     mipMaps: int = 1
     texFlags: TextureFlags = 0
     fps: int = 1
-    def create(self, platform: str, func: callable): return func(Texture_Bytes(self.bytes, self.format, None))
+    def create(self, platform: str, func: callable): return func(TextureAsBytes(self.bytes, self.format, None))
 
     def hasFrames(self) -> bool: return self.numFrames > 0
 

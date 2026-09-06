@@ -8088,10 +8088,10 @@ public class D_Material : XKV3_NTRO, IMaterial {
         foreach (var kv in Data.GetArray("m_intParams")) args.Add(kv.Get<string>("m_name"), kv.GetInt64("m_nValue") != 0);
 
         var specialDeps = (R_SpecialDependencies)Parent.REDI.Structs[REDI.REDIStruct.SpecialDependencies];
-        var hemiOctIsoRoughness_RG_B = specialDeps.List.Any(dependancy => dependancy.CompilerIdentifier == "CompileTexture" && dependancy.String == "Texture Compiler Version Mip HemiOctIsoRoughness_RG_B");
+        var hemiOctIsoRoughness_RG_B = specialDeps.List.Any(dependancy => dependancy.CompilerIdentifier == "CompileTexture" && dependancy.String == "B_Texture Compiler Version Mip HemiOctIsoRoughness_RG_B");
         if (hemiOctIsoRoughness_RG_B) args.Add("HemiOctIsoRoughness_RG_B", true);
 
-        var invert = specialDeps.List.Any(dependancy => dependancy.CompilerIdentifier == "CompileTexture" && dependancy.String == "Texture Compiler Version LegacySource1InvertNormals");
+        var invert = specialDeps.List.Any(dependancy => dependancy.CompilerIdentifier == "CompileTexture" && dependancy.String == "B_Texture Compiler Version LegacySource1InvertNormals");
         if (invert) args.Add("LegacySource1InvertNormals", true);
 
         return args;
@@ -9389,7 +9389,7 @@ public class D_Texture : DATA, ITexture {
             }
             Bytes = b.ToArray();
         }
-        return func(new Texture_Bytes(Bytes, TexFormat.value, Mips));
+        return func(new TextureAsBytes(Bytes, TexFormat.value, Mips));
     }
 
     #endregion

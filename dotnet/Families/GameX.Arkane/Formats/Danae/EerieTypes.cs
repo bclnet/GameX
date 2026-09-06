@@ -159,7 +159,7 @@ public struct E_SPHERE {
     public float Radius;
 }
 
-[DebuggerDisplay("Texture: {Path}")]
+[DebuggerDisplay("B_Texture: {Path}")]
 public class E_TEXTURE {
     public int Id;
     public string Path;

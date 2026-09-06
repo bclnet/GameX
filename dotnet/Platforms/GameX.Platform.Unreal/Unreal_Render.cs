@@ -11,7 +11,7 @@ public static class UnrealRenderer {
         if (obj is IHaveSource z) source = z.Source;
         return type switch {
             "TestTri" => new TestTriRenderer(gfx, source, obj),
-            "Texture" => new TextureRenderer(gfx, source, obj, 0..),
+            "B_Texture" => new TextureRenderer(gfx, source, obj, 0..),
             //"Object" => new ObjectRenderer(gfx, source, obj),
             //"Cell" => new CellRenderer(gfx, source, obj),
             //"Engine" => new EngineRenderer(gfx, source, obj),

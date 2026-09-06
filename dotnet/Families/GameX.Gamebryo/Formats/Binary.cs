@@ -31,7 +31,7 @@ public class Binary_Nif(BinaryReader r, FileSource f, Archive s) : NiReader(r), 
     public IEnumerable<string> GetTexturePaths() => Blocks.Select(s => s is NiSourceTexture z && !string.IsNullOrEmpty(z.FileName) ? z.FileName : null).Where(s => s != null);
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new(null, new MetaContent { Type = "Object", Name = Name, Value = this }),
+        new(null, new MetaContent { Type = "B_Object", Name = Name, Value = this }),
         new("NIF", items: [
             new($"NumBlocks: {NumBlocks}"),
         ]),

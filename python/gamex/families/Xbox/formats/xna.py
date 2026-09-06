@@ -5,7 +5,7 @@ from enum import IntEnum
 from decimal import Decimal
 from numpy import ndarray, array
 from openstk.core import _throw, BinaryReader
-from openstk.gfx import Raster, Texture_Bytes, ITexture, TextureFormat, TexturePixel
+from openstk.gfx import Raster, TextureAsBytes, ITexture, TextureFormat, TexturePixel
 from openstk.sys.drawing import Plane, Point, Rectangle, BoundingBox, BoundingSphere, BoundingFrustum, Ray, Curve
 from openstk.sys.typex import *
 from openstk.sys.mscorlib.System import *
@@ -519,7 +519,7 @@ class Texture2D(IHaveMetaInfo, ITexture):
             # case SurfaceFormat.HalfVector4: format = (TextureFormat.X, TexturePixel.Unknown)
             # case SurfaceFormat.HdrBlendable: format = (TextureFormat.X, TexturePixel.Unknown)
             case _: raise Exception('Unknown Format: {Format}')
-        return func(Texture_Bytes(buf, format, None))
+        return func(TextureAsBytes(buf, format, None))
     #endregion
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
         MetaInfo(None, MetaContent(type = 'Texture', name = os.path.basename(file.path), value = self)),

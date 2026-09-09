@@ -117,7 +117,7 @@ public class Binary_Fsb(BinaryReader r, int fileSize) : IHaveMetaInfo {
     public readonly byte[] Data = r.ReadBytes(fileSize);
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "FSB Audio" }),
+        new(null, new MetaContent { Type = "Text", Name = Path.GetFileName(file.Path), Value = "FSB B_Audio" }),
     ];
 }
 

@@ -4,6 +4,7 @@ using OpenStk;
 using OpenStk.Gfx;
 using OpenStk.Gfx.OpenGL;
 using System;
+using System.Diagnostics;
 using System.Numerics;
 using System.Threading.Tasks;
 using static GameX.Gamebryo.Platforms.NifObjectBuilder;
@@ -14,11 +15,11 @@ namespace GameX.Platforms.OpenGL;
 public static class OpenGLNifObjectBuilder {
     public static async Task<Object> BuildObject(ISource source, object path, bool isStatic, MaterialManager<GLRenderMaterial, int> materialManager) {
         var o = (Binary_Nif)path; var name = o.Name;
-        Log.Assert(name != null && o.Roots.Length > 0);
+        Debug.Assert(name != null && o.Roots.Length > 0);
 
         // preload textures
         var textureManager = materialManager.TextureManager;
-        foreach (var texturePath in o.GetTexturePaths()) textureManager.PreloadTexture(source, texturePath);
+        foreach (var texturePath in o.GetTexturePaths()) textureManager.Preload(source, texturePath);
 
         // NIF files can have any number of root NiObjects.
         // If there is only one root, instantiate that directly.

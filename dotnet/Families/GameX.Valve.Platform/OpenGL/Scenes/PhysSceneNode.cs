@@ -16,7 +16,7 @@ namespace GameX.Valve.OpenGL.Scenes;
 public class PhysSceneNode : SceneNode {
     public bool Enabled { get; set; }
     public bool IsTrigger { get; set; }
-    readonly Shader shader;
+    readonly GfxShader shader;
     readonly int indexCount;
     readonly int vboHandle;
     readonly int iboHandle;
@@ -171,7 +171,7 @@ public class PhysSceneNode : SceneNode {
             //Console.WriteLine($"Phys mesh verts {verts.Count} inds {inds.Count}");
         }
 
-        (shader, _) = ((OpenGLGfxModel)Scene.Gfx[GfX.XModel]).ShaderManager.CreateShader(source, "vrf.grid", new Dictionary<string, bool>()).Result;
+        (shader, _) = ((OpenGLGfxModel)Scene.Gfx[GfX.XModel]).ShaderManager.Create(source, "vrf.grid", new Dictionary<string, bool>()).Result;
         GL.UseProgram(shader.Program);
 
         vaoHandle = GL.GenVertexArray();

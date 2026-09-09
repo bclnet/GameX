@@ -3,7 +3,7 @@ import os, numpy as np
 from io import BytesIO
 from enum import Enum, Flag
 from openstk.core import _throw, _pathExtension, unsafe, BinaryReader
-from openstk.gfx import Raster, TextureAsBytes, ITexture, ITextureFramesSelect, TextureFlags, TextureFormat, TexturePixel
+from openstk.gfx import Raster, TextureAsBytes, ITexture, ITextureSelect, ITextureFrames, TextureFlags, TextureFormat, TexturePixel
 from gamex import Archive, BinaryArchive, ArcBinary, ArcBinaryT, FileSource, MetaInfo, MetaManager, MetaContent, IHaveMetaInfo
 from gamex.families.Uncore.formats.compression import decompressBlast
 from hashlib import md5
@@ -152,111 +152,6 @@ class Binary_Src(IHaveMetaInfo):
         ]
 
 #endregion - tag::Binary_Src[]
-
-#region Binary_Spr - tag::Binary_Spr[]
-
-# Binary_Spr
-class Binary_Spr(IHaveMetaInfo, ITextureFramesSelect):
-    @staticmethod
-    async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Spr(r)
-
-    #region Headers
-
-    S_MAGIC = 0x50534449 #: IDSP
-
-    class SprType(Enum):
-        VP_PARALLEL_UPRIGHT = 0
-        FACING_UPRIGHT = 1
-        VP_PARALLEL = 2
-        ORIENTED = 3
-        VP_PARALLEL_ORIENTED = 4
-
-    class SprTextFormat(Enum):
-        SPR_NORMAL = 0
-        SPR_ADDITIVE = 1
-        SPR_INDEXALPHA = 2
-        SPR_ALPHTEST = 3
-
-    class SprSynchType(Enum):
-        Synchronized = 0
-        Random = 1
-
-    class S_Header:
-        _struct = ('<I3if3ifi', 40)
-        def __init__(self, t):
-            (self.magic,
-            self.version,
-            self.type,
-            self.textFormat,
-            self.boundingRadius,
-            self.maxWidth,
-            self.maxHeight,
-            self.numFrames,
-            self.beamLen,
-            self.synchType) = t
-
-    class S_Frame:
-        _struct = ('<5i', 20)
-        def __init__(self, t):
-            (self.group,
-            self.originX,
-            self.originY,
-            self.width,
-            self.height) = t
-
-    #endregion
-
-    def __init__(self, r: BinaryReader):
-        # read file
-        header = r.readS(self.S_Header)
-        if header.magic != self.S_MAGIC: raise Exception('BAD MAGIC')
-
-        # load palette
-        self.palette = r.readBytes(r.readUInt16() * 3)
-
-        # load frames
-        frames = self.frames = [self.S_Frame] * header.numFrames
-        pixels = self.pixels = [bytearray] * header.numFrames
-        for i in range(header.numFrames):
-            frame = frames[i] = r.readS(self.S_Frame)
-            pixels[i] = r.readBytes(frame.width * frame.height)
-        self.width = frames[0].width
-        self.height = frames[0].height
-        self.bytes = bytearray(self.width * self.height << 4)
-        self.frame = 0
-
-    #region ITexture
-
-    format: tuple = (TextureFormat.RGBA32, TexturePixel.Unknown)
-    width: int = 0
-    height: int = 0
-    depth: int = 0
-    mipMaps: int = 1
-    texFlags: TextureFlags = 0
-    fps: int = 60
-    def create(self, platform: str, func: callable): return func(TextureAsBytes(self.bytes, format, None))
-
-    def hasFrames(self) -> bool: return self.frame < len(self.frames)
-
-    def decodeFrame(self) -> bool:
-        p = self.pixels[self.frame]
-        Raster.blitByPalette(self.bytes, 4, p, self.palette, 3)
-        self.frame += 1
-        return True
-
-    #endregion
-
-    def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        MetaInfo(None, MetaContent(type = 'VideoTexture', name = os.path.basename(file.path), value = self)),
-        MetaInfo('Sprite', items = [
-            MetaInfo(f'Frames: {len(self.frames)}'),
-            MetaInfo(f'Width: {self.width}'),
-            MetaInfo(f'Height: {self.height}'),
-            MetaInfo(f'Mipmaps: {self.mipMaps}')
-            ])
-        ]
-
-#endregion - end::Binary_Spr[]
 
 #region Binary_Mdl10 - tag::Binary_Mdl10[]
 

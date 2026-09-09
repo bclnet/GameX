@@ -50,8 +50,8 @@ class TextureView(VulkenView):
         # self.camera.setLocation(np.array([200., 200., 200.]))
         # self.camera.lookAt(np.zeros(3))
 
-        self.gl.textureManager.deleteTexture(self.obj)
-        texture, _ = self.gl.textureManager.createTexture(self.obj, self.level)
+        self.gl.textureManager.delete(self.obj)
+        texture, _ = self.gl.textureManager.create(self.obj, self.level)
         self.renderers.clear()
         self.renderers.append(TextureRenderer(self.gl, texture, self.background))
 

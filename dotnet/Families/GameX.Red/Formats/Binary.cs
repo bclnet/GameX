@@ -3,6 +3,7 @@ using OpenStk;
 using OpenStk.Gfx;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -600,8 +601,8 @@ public unsafe class Binary_Red : ArcBinary<Binary_Red> {
                         source.Version = 'T';
                         r.Seek(r.BaseStream.Length - 20);
                         var header = r.ReadS<CACHE_TEX_Header>();
-                        Log.Assert(header.Unk1 == 1415070536);
-                        Log.Assert(header.Unk2 == 6);
+                        Debug.Assert(header.Unk1 == 1415070536);
+                        Debug.Assert(header.Unk2 == 6);
                         source.Files = files = new FileSource[header.NumFiles];
                         var offset = 20 + 12 + (header.NumFiles * 52) + header.NamesSize + (header.ChunksSize * 4);
                         r.Seek(r.BaseStream.Length - offset);

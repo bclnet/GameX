@@ -53,7 +53,7 @@ match __current__:
         option = GlobalOption(
             Platform = "GL",
             ForceOpen = True,
-            ForcePath = "sample:4",
+            ForcePath = "sample:1",
             Family = "Arkane",
             Game = "AF", # Arx Fatalis
             # Game = "DOM", # Dark Messiah of Might and Magic [source]

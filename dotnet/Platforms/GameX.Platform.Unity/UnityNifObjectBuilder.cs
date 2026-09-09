@@ -14,11 +14,11 @@ namespace GameX.Platforms.Unity;
 public static class UnityNifObjectBuilder {
     public static async Task<Object> BuildObject(ISource source, object path, bool isStatic, MaterialManager<Material, Texture2D> materialManager) {
         var o = (Binary_Nif)path; var name = o.Name;
-        Log.Assert(name != null && o.Roots.Length > 0);
+        Debug.Assert(name != null && o.Roots.Length > 0);
 
         // preload textures
         var textureManager = materialManager.TextureManager;
-        foreach (var texturePath in o.GetTexturePaths()) textureManager.PreloadTexture(source, texturePath);
+        foreach (var texturePath in o.GetTexturePaths()) textureManager.Preload(source, texturePath);
 
         // NIF files can have any number of root NiObjects.
         // If there is only one root, instantiate that directly.
@@ -145,7 +145,7 @@ public static class UnityNifObjectBuilder {
             obj.AddComponent<MeshFilter>().mesh = mesh;
             var materialProps = ToMaterialProp(s);
             var meshRenderer = obj.AddComponent<MeshRenderer>();
-            (meshRenderer.material, _) = await materialManager.CreateMaterial(source, materialProps);
+            (meshRenderer.material, _) = await materialManager.Create(source, materialProps);
             if (materialProps.Textures == null || s.Flags.HasFlag(Flags.Hidden)) meshRenderer.enabled = false;
             obj.isStatic = isStatic;
         }

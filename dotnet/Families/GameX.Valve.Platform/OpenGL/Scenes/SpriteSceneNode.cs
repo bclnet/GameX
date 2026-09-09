@@ -15,14 +15,14 @@ public class SpriteSceneNode : SceneNode {
     readonly int quadVao;
 
     readonly GLRenderMaterial material;
-    readonly Shader shader;
+    readonly GfxShader shader;
     readonly Vector3 position;
     readonly float size;
 
     public SpriteSceneNode(Scene scene, ISource source, Binary_Src resource, Vector3 position) : base(scene) {
         var gfxModel = (OpenGLGfxModel)scene.Gfx[GfX.XModel];
-        (material, _) = gfxModel.MaterialManager.CreateMaterial(source, resource).Result;
-        (shader, _) = gfxModel.ShaderManager.CreateShader(source, material.Material.ShaderName, material.Material.ShaderArgs).Result;
+        (material, _) = gfxModel.MaterialManager.Create(source, resource).Result;
+        (shader, _) = gfxModel.ShaderManager.Create(source, material.Material.ShaderName, material.Material.ShaderArgs).Result;
 
         if (quadVao == 0) quadVao = SetupQuadBuffer();
 

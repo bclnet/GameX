@@ -2,7 +2,8 @@ from __future__ import annotations
 import os
 from openstk.core import _pathExtension
 from gamex import Archive, BinaryArchive
-from gamex.families.Valve.formats.binary import Binary_Bsp30, Binary_Src, Binary_Spr, Binary_Mdl10, Binary_Mdl40, Binary_Vpk, Binary_Wad3, Binary_Wad3X
+from gamex.families.ID.formats.binary import Binary_Spr
+from gamex.families.Valve.formats.binary import Binary_Bsp30, Binary_Src, Binary_Mdl10, Binary_Mdl40, Binary_Vpk, Binary_Wad3, Binary_Wad3X
 from gamex.families.GameX_Uncore import UncoreArchive
 
 # ValveArchive

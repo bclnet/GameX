@@ -1,7 +1,7 @@
 GameX
 ===
 
-GameX is an open-source, framework for scalable game asset delivery as a service.
+GameX is an open-source framework for scalable game asset delivery as a service.
 
 ### GameX Benefits:
 * Portable (windows, apple, linux, mobile, intel, arm)

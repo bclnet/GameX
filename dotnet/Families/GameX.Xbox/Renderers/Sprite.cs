@@ -1,0 +1,1 @@
+namespace GameX.Xbox.Renderers;

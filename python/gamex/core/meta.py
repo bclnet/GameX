@@ -1,0 +1,170 @@
+from __future__ import annotations
+import sys, os, re, pathlib
+from io import BytesIO
+from openx.core import _throw
+
+# FileSource
+class FileSource:
+    emptyAssetFactory = lambda a, b, c: None
+    def __init__(self, id = None, path = None, offset = None, fileSize = None, packedSize = None, compressed = None, flags = None, hash = None, date = None, arc = None, parts = None, data = None, tag = None, lazy = None):
+        self.id = id
+        self.path = path
+        self.offset = offset
+        self.fileSize = fileSize
+        self.packedSize = packedSize
+        self.compressed = compressed
+        self.flags = flags
+        self.hash = hash
+        self.date = date
+        self.arc = arc
+        self.parts = parts
+        self.data = data
+        self.tag = tag
+        # lazy
+        self.lazy = lazy
+        # cache
+        self.cachedObjectFactory = None
+        self.cachedObjectOption = None
+    def fix(self):
+        if self.lazy: self.lazy(self)
+        return self
+    def __repr__(self): return f'{self.path}:{self.fileSize}'
+
+# MetaContent
+class MetaContent:
+    def __init__(self, type: str, name: str, value: object = None, 
+        tag: object = None, maxWidth: int = None, maxHeight: int = None,
+        dispose: object = None, engineType: type = None):
+        self.type = type
+        self.name = name
+        self.value = value
+        self.tag = tag
+        self.maxWidth = maxWidth
+        self.maxHeight = maxHeight
+        self.dispose = dispose
+        self.engineType = engineType
+
+# MetaInfo
+class MetaInfo:
+    def __init__(self, name: str, tag: object = None, items: list[MetaInfo] = None, clickable: bool = False):
+        self.name = name
+        self.tag = tag
+        self.items = items or []
+        self.clickable = clickable
+
+# MetaItem
+class MetaItem:
+    class Filter:
+        def __init__(self, name: str, description: str = None):
+            self.name = name
+            self.description = description
+
+    def __init__(self, source: object, name: str, icon: object = None, tag: object = None, archive: Archive = None, items: list[MetaItem] = None):
+        self.source = source
+        self.name = name
+        self.icon = icon
+        self.tag = tag
+        self.archive = archive
+        self.items = items or []
+
+    def findByPath(self, path: str, manager: MetaManager) -> MetaItem:
+        paths = re.split('\\\\|/|:', path, 1)
+        node = next(iter([x for x in self.items if x.name == paths[0]]), None)
+        if node and isinstance(node.source, FileSource) and node.source.arc: node.source.arc.open(node.items, manager)
+        return node if not node or len(paths) == 1 else node.findByPath(paths[1], manager)
+
+    @staticmethod
+    def findByPathForNodes(nodes: list[MetaItem], path: str, manager: MetaManager) -> MetaItem:
+        paths = re.split('\\\\|/|:', path, 1)
+        node = next(iter([x for x in nodes if x.name == paths[0]]), None)
+        if node and isinstance(node.source, FileSource) and node.source.arc: node.source.arc.open(node.items, manager)
+        return node if not node or len(paths) == 1 else node.findByPath(paths[1], manager)
+
+# IHaveMetaInfo
+class IHaveMetaInfo:
+    def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: pass
+
+# MetaManager
+class MetaManager:
+    def __init__(self, folderIcon: object = None, packageIcon: object = None):
+        self.folderIcon = folderIcon
+        self.packageIcon = packageIcon
+
+    def getIcon(self, name: str) -> object: pass
+
+    def getImage(self, name: str) -> object: pass
+
+    @staticmethod
+    def _guessStringOrBytes(stream: BytesIO) -> object:
+        return stream
+
+    @staticmethod
+    async def getMetaInfos(manager: MetaManager, archive: BinaryArchive, file: FileSource) -> list[MetaInfo]:
+        nodes = None
+        obj = await archive.getAsset(object, file)
+        match obj:
+            case None: return None
+            case s if isinstance(obj, IHaveMetaInfo): nodes = s.getInfoNodes(manager, file)
+            case s if isinstance(obj, BytesIO):
+                value = MetaManager._guessStringOrBytes(s)
+                nodes = [
+                    MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = obj)),
+                    MetaInfo('Text', items = [
+                        MetaInfo(f'Length: {len(obj)}')
+                        ])
+                ] if isinstance(obj, str) else [
+                    MetaInfo(None, MetaContent(type = 'Hex', name = os.path.basename(file.path), value = obj)),
+                    MetaInfo('Bytes', items = [
+                        MetaInfo(f'Length: {sys.getsizeof(obj)}')
+                        ])
+                ] if isinstance(obj, BytesIO) else \
+                    _throw(f'Unknown {obj}')
+        nodes.append(MetaInfo('File', items = [
+            MetaInfo(f'Path: {file.path}'),
+            MetaInfo(f'FileSize: {file.fileSize}'),
+            MetaInfo(f'AtEnd: {archive.atEnd}'),
+            MetaInfo('Parts', items = [MetaInfo(f'{s.fileSize}@{s.path}') for s in file.parts]) if file.parts else None
+            ]))
+        # nodes.append(MetaInfo(None, MetaContent(type='Hex',name='TEST',value=BytesIO())))
+        return nodes
+
+    @staticmethod
+    def getMetaItems(manager: MetaManager, archive: BinaryArchive) -> list[MetaItem]:
+        if not manager: raise Exception('manager')
+
+        root = []
+        if not archive.files: return root
+        currentPath = None; currentFolder = None
+
+        # parse paths
+        for file in sorted(archive.files, key = lambda x: x.path):
+            # next path, skip empty
+            path = file.path[archive.pathSkip:]
+            if not path: continue
+
+            # folder
+            fileFolder = os.path.dirname(path)
+            if currentPath != fileFolder:
+                currentPath = fileFolder
+                currentFolder = root
+                if fileFolder:
+                    for folder in fileFolder.split('/'):
+                        found = next(iter([x for x in currentFolder if x.name == folder and not x.archive]), None)
+                        if found: currentFolder = found.items
+                        else:
+                            found = MetaItem(None, folder, manager.folderIcon)
+                            currentFolder.append(found)
+                            currentFolder = found.items
+            # pakfile
+            if file.arc:
+                items = MetaManager.getMetaItems(manager, file.arc)
+                currentFolder.append(MetaItem(file, os.path.basename(file.path), manager.packageIcon, archive = archive, items = items))
+                continue
+                
+            # file
+            fileName = os.path.basename(path)
+            fileNameForIcon = archive.fileMask(fileName) or fileName if archive.fileMask else fileName
+            _, extentionForIcon = os.path.splitext(fileNameForIcon)
+            if extentionForIcon: extentionForIcon = extentionForIcon[1:]
+            currentFolder.append(MetaItem(file, fileName, manager.getIcon(extentionForIcon), archive = archive))
+        return root

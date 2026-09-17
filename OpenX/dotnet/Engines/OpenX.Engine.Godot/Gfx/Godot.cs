@@ -1,0 +1,34 @@
+﻿using Godot;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace OpenX.Gfx.Godot;
+
+#region Extensions
+
+// GodotX
+public static class GodotX {
+    public static Dictionary<Type, Func<ISource, object, bool, MaterialManager<Material, Texture2D>, Task<Node>>> BuildersByType = [];
+    /// <summary>
+    /// ToGodot
+    /// </summary>
+    /// <param name="source"></param>
+    /// <returns></returns>
+    public static Vector3 ToGodot(this System.Numerics.Vector3 source) => new(source.X, source.Z, source.Y);
+    /// <summary>
+    /// ToGodot
+    /// </summary>
+    /// <param name="source"></param>
+    /// <returns></returns>
+    public static Quaternion ToGodot(this System.Numerics.Quaternion source) => new(source.X, source.Y, source.Z, source.W);
+
+    /// <summary>
+    /// Adds mesh colliders to every descandant object with a mesh filter but no mesh collider, including the object itself.
+    /// </summary>
+    public static void AddMissingMeshCollidersRecursively(this Node3D source, bool isStatic = true) {
+        if (!isStatic) return;
+    }
+}
+
+#endregion

@@ -1,0 +1,10 @@
+[package]
+name = "gamex-valve-platform"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+gamex-valve = { path = "../../families/valve" }
+openstack-platform-opengl = { path = "../../../OpenStack/rust/platforms/opengl" }

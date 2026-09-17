@@ -1,0 +1,50 @@
+[[ch01-getting-started]]
+== Getting Started
+
+--- Intro ---
+Write the paragraph for the chapter with the following sections:
+
+Game Families, Locating Files, Decoding Archives, Decoding Assets, Using Assets
+
+=== Game Families
+```gpt
+Write a section of the introductory chapter for the following:
+
+Game Families
+
+Development studios typically reuse technologies and asset formats developed for previous games or through acquisition.
+Grouping games by their studios allows common settings and small iterations between games to simply the file format decoding for these games.
+
+Games and their asset formats are grouped into families.
+```
+
+include::book/01-introduction/_intro.asc[]
+
+=== Game Families
+ditaa:book/01-introduction/sections/01-game-families.ditaa[]
+
+include::book/01-introduction/sections/01-game-families.asc[]
+
+=== Locating Files
+```gpt
+Write a section of the introductory chapter for the following:
+
+Locating Files:
+Locate the game files for any installed game.
+A combination of Windows Registry entries, Game Store applications, or specific folders help to locate any installed games and file locations.
+```
+
+
+=== Decoding Archives
+include::book/01-introduction/sections/03-decoding-archives.asc[]
+
+=== Decoding Assets
+include::book/01-introduction/sections/04-decoding-assets.asc[]
+
+=== Using Assets
+include::book/01-introduction/sections/05-using-assets.asc[]
+
+=== Summary
+
+--- Summmary ---
+Write the summary paragraph for this chapter.

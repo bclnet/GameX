@@ -1,0 +1,54 @@
+﻿{
+  "id": "Cig",
+  "name": "Cloud Imperium Games",
+  "studio": "Cloud Imperium Games",
+  "description": "CIG formats used in StarCitizen",
+  "url": "https://starcitizen.fandom.com/wiki/Cloud_Imperium_Games_Corporation",
+  "samples": [
+    "CigFamily.Sample.json"
+  ],
+  "engines": {
+    "StarEngine": {}
+  },
+  "games": {
+    "*": {
+      "archiveType": "GameX.Cig.CigArchive, GameX.Cig"
+    },
+    "StarCitizen": {
+      "name": "Star Citizen",
+      "url": [
+        "https://en.wikipedia.org/wiki/Star_Citizen",
+        "https://robertsspaceindustries.com/playstarcitizen"
+      ],
+      "key": "hex:5E7A2002302EEB1A3BB617C30FDE1E47",
+      "engine": "StarEngine",
+      "arcExt": ".p4k",
+      "files": {
+        "key": [
+          "WinReg:81bfc699-f883-50c7-b674-2483b6baae23",
+          "Local:StarCitizen/LIVE"
+        ],
+        "WinReg:81bfc699-f883-50c7-b674-2483b6baae23": {
+          "path": "%path%/../StarCitizen/LIVE"
+        }
+      }
+    }
+  },
+  "apps": {
+    "DataForge": {
+      "name": "DataForge",
+      "appType": "GameX.Cig.Apps.DataForgeApp, GameX.Cig",
+      "explorerAppType": "GameX.Cig.Apps.DataForge.App, GameX.Cig.Explorer"
+    },
+    "StarWords": {
+      "name": "StarWords",
+      "appType": "GameX.Cig.Apps.StarWordsApp, GameX.Cig",
+      "explorerAppType": "GameX.Cig.Apps.StarWords.App, GameX.Cig.Explorer"
+    },
+    "Subsumption": {
+      "name": "Subsumption",
+      "appType": "GameX.Cig.Apps.SubsumptionApp, GameX.Cig",
+      "explorerAppType": "GameX.Cig.Apps.Subsumption.App, GameX.Cig.Explorer"
+    }
+  }
+}

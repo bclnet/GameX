@@ -1,0 +1,14 @@
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace OpenX.Gfx;
+
+/// <summary>
+/// TestPlatformStats
+/// </summary>
+[TestClass]
+public class TestPlatformStats {
+    [TestMethod]
+    public void Test_Init() {
+        Assert.AreEqual(0, GfX.MaxTextureMaxAnisotropy);
+    }
+}

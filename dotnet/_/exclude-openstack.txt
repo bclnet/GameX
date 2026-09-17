@@ -1,0 +1,7 @@
+﻿OpenEngine
+OpenEngine.Gfx
+OpenEngine.Gfx.Gl
+OpenEngine.Gfx.Egin
+OpenEngine.Engine.OpenGL
+OpenEngine.Sfx
+OpenEngine.Vfx

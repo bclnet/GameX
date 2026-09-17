@@ -1,0 +1,76 @@
+import sys, os, numpy as np
+from PyQt6.QtCore import Qt, QEvent, QTimer, QElapsedTimer
+from PyQt6.QtGui import QWindow
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton
+from openx.core import ISource
+from openx.gfx import ITextureSelect, MouseState, KeyboardState
+
+# typedefs
+class Renderer: pass
+class Camera: pass
+class IOpenGfx: pass
+class IOpenSfx: pass
+
+#region EginXWidget
+
+class EginXWidget(QWidget):
+    # Binding
+    def __init__(self, parent: object, tab: object):
+        loadPrcFileData('', """
+        allow-parent 1
+        window-title GameX
+        show-frame-rate-meter #t
+        """)
+        super(QWidget, self).__init__(parent)
+        self.source: ISource = parent.source
+        self.source2: object = tab
+        self.path: object = parent.path
+        self.value: object = tab.value
+        self.type: str = tab.type
+        self.renderer: Renderer = None
+        self.id: int = 0
+        # print('win: %s' % base.win.getProperties())
+
+        # self.disableMouse()
+        # self.camera.setPos(0, -10, 0)
+        # self.camera.lookAt(0, 0, 0)
+        self.onSourceChanged()
+
+    def createRenderer(self) -> Renderer: pass
+    
+    def onSourceChanged(self) -> None:
+        if not self.source or not self.path or not self.value or not self.type: return
+        self.renderer = self.createRenderer()
+        if self.renderer: self.renderer.start()
+        if isinstance(self.value, ITextureSelect): self.value.select(self.id)
+
+    def closeEvent(self, event):
+        self.taskMgr.stop()
+        self.closeWindow()
+        self.destroy()
+
+    # Render
+
+    def showEvent(self, event: QEvent) -> None:
+        super().showEvent(event)
+        wp = WindowProperties().getDefault()
+        # wp.setForeground(False)
+        # wp.setOrigin(0, 0)
+        wp.setSize(self.width(), self.height())
+        # wp.setParentWindow(int(self.winId()))
+        self.openDefaultWindow(props=wp)
+        self.run()
+        
+    def tick(self):
+        print('tick')
+    #     self.engine.render_frame()
+        self.clock.tick()
+
+    def resizeEvent(self, event):
+        wp = WindowProperties()
+        wp.setParentWindow(int(self.winId()))
+        wp.setSize(self.width(), self.height())
+        # self.win.requestProperties(wp)
+        # self.openDefaultWindow(props=wp)
+
+#endregion

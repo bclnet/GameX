@@ -1,0 +1,14 @@
+// mirrors dotnet folder `collada` — see PORT_MAP.tsv
+pub mod collada_file_writer;
+pub mod collada_file_writer_create_node;
+pub mod collada_file_writer_output_test;
+pub mod collada_file_writer_set_asset;
+pub mod collada_file_writer_set_library_controllers;
+pub mod collada_file_writer_set_library_effects;
+pub mod collada_file_writer_set_library_geometries;
+pub mod collada_file_writer_set_library_images;
+pub mod collada_file_writer_set_library_materials;
+pub mod collada_file_writer_set_library_visual_scenes;
+pub mod collada_file_writer_set_library_visual_scenes_with_skeleton;
+pub mod collada_file_writer_set_scene;
+pub mod collada_file_writer_validate_xml;

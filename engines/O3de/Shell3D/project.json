@@ -1,0 +1,27 @@
+{
+    "project_name": "Shell3D",
+    "version": "1.0.0",
+    "project_id": "{C155A736-60AB-476C-8C95-6ABAF0094C74}",
+    "origin": "The primary repo for Shell3D goes here: i.e. http://www.mydomain.com",
+    "license": "What license Shell3D uses goes here: i.e. https://opensource.org/licenses/Apache-2.0 Or https://opensource.org/licenses/MIT etc.",
+    "display_name": "Shell3D",
+    "summary": "A short description of Shell3D.",
+    "canonical_tags": [
+        "Project"
+    ],
+    "user_tags": [
+        "Shell3D"
+    ],
+    "icon_path": "preview.png",
+    "engine": "o3de-sdk",
+    "external_subdirectories": [
+        "Gem"
+    ],
+    "gem_names": [
+        "Shell3D",
+        "Atom",
+        "CameraFramework",
+        "ImGui"
+    ],
+    "engine_version": "2.5.2"
+}

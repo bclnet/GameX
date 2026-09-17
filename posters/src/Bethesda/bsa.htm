@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="../base.css">
+    <style type="text/css">
+        #body {
+            position: relative;
+            width: 400px;
+        }
+
+        #title {
+            float: right;
+        }
+
+        #OB_Header {
+            position: absolute;
+        }
+
+        #OB_Folder {
+            position: absolute;
+            top: 215px;
+        }
+
+        #OB_FolderSSE {
+            position: absolute;
+            top: 200px;
+            left: 150px;
+        }
+
+        #OB_File {
+            position: absolute;
+            top: 340px;
+        }
+
+        #MW_Header {
+            position: absolute;
+            left: 150px;
+        }
+
+        #MW_File {
+            position: absolute;
+            top: 95px;
+            left: 150px;
+        }
+
+        #Magic {
+            position: absolute;
+            font-size: .75em;
+            left: 150px;
+            top: 340px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="body" />
+
+    <div id="title">
+        <h1>BSA</h1>
+    </div>
+
+    <div id="OB_Header">
+        <h2>8I</h2>
+        <h3>OB_Header</h3>
+        Version<br />
+        FolderRecordOffset<br />
+        ArchiveFlags<br />
+        FolderCount<br />
+        FileCount<br />
+        FolderNameLength<br />
+        FileNameLength<br />
+        FileFlags<br />
+    </div>
+
+    <div id="OB_Folder">
+        <h2>Q2I</h2>
+        <h3>OB_Folder</h3>
+        Hash<br />
+        FileCount<br />
+        Offset<br />
+    </div>
+
+    <div id="OB_FolderSSE">
+        <h2>Q2IQ</h2>
+        <h3>OB_FolderSSE</h3>
+        Hash<br />
+        FileCount<br />
+        Unk<br />
+        Offset<br />
+    </div>
+
+    <div id="OB_File">
+        <h2>Q2I</h2>
+        <h3>OB_File</h3>
+        Hash<br />
+        Size<br />
+        Offset<br />
+    </div>
+
+    <div id="MW_Header">
+        <h2>2I</h2>
+        <h3>MW_Header</h3>
+        HashOffset<br />
+        FileCount<br />
+    </div>
+
+    <div id="MW_File">
+        <h2>2I</h2>
+        <h3>MW_File</h3>
+        FileSize<br />
+        FileOffset<br />
+    </div>
+
+    <div id="Magic">
+        <h2>Magic</h2>
+        OB_BSAHEADER_FILEID = 0x00415342<br />
+        OB_BSAHEADER_VERSION = 0x67<br />
+        F3_BSAHEADER_VERSION = 0x68<br />
+        SSE_BSAHEADER_VERSION = 0x69<br />
+        MW_BSAHEADER_FILEID = 0x00000100<br />
+    </div>
+</body>
+
+</html>

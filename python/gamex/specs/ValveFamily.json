@@ -1,0 +1,891 @@
+﻿{
+  "id": "Valve",
+  "name": "Valve",
+  "studio": "Valve",
+  "description": "Valve formats used by Source/Source 2",
+  "url": [
+    "https://en.wikipedia.org/wiki/Valve_Corporation",
+    "https://en.wikipedia.org/wiki/List_of_Valve_games"
+  ],
+  "samples": [
+    "ValveFamily.Sample.json"
+  ],
+  "engines": {
+    "GoldSrc": {},
+    "Source": {},
+    "Source2": {}
+  },
+  "games": {
+    "*": {
+      "archiveType": "GameX.Valve.ValveArchive, GameX.Valve",
+      "engine": "GoldSrc",
+      "searchBy": "AllDir",
+      "arcExt": [
+        ".wad",
+        ".bsp"
+      ]
+    },
+    "HL": {
+      "name": "Half-Life",
+      "url": "https://en.wikipedia.org/wiki/Half-Life_(video_game)",
+      "dls": "https://store.steampowered.com/app/70/HalfLife/",
+      "date": "1998-11-19",
+      "tags": "HalfLife",
+      "path": [
+        "valve",
+        "valve_hd"
+      ],
+      "files": {
+        "key": [
+          "Steam:70",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 70",
+          "Local:Half-Life"
+        ]
+      },
+      "status": "open;read;tex:GL"
+    },
+    "TF": {
+      "name": "Team Fortress Classic",
+      "url": "https://en.wikipedia.org/wiki/Team_Fortress_Classic",
+      "dls": "https://store.steampowered.com/app/20/Team_Fortress_Classic/",
+      "date": "1999-04-07",
+      "tags": "TeamFortress",
+      "path": "tfc",
+      "files": {
+        "key": [
+          "Steam:20",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 20",
+          "Local:Half-Life"
+        ]
+      },
+      "status": "open;read;tex:GL"
+    },
+    "HL:OF": {
+      "name": "Half-Life: Opposing Force",
+      "url": "https://en.wikipedia.org/wiki/Half-Life:_Opposing_Force",
+      "dls": "https://store.steampowered.com/app/50/HalfLife_Opposing_Force/",
+      "date": "1999-11-19",
+      "tags": "HalfLife",
+      "path": [
+        "gearbox",
+        "gearbox_hd"
+      ],
+      "files": {
+        "key": [
+          "Steam:50",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 50",
+          "Local:Half-Life"
+        ]
+      },
+      "status": "open;read"
+    },
+    "Ricochet": {
+      "name": "Ricochet",
+      "url": "https://developer.valvesoftware.com/wiki/Ricochet",
+      "dls": "https://store.steampowered.com/app/60/Ricochet/",
+      "date": "2000-11-01",
+      "tags": "",
+      "path": "ricochet",
+      "files": {
+        "key": [
+          "Steam:60",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 60",
+          "Local:Half-Life"
+        ]
+      },
+      "status": "open;read"
+    },
+    "CS": {
+      "name": "Counter-Strike",
+      "url": "https://en.wikipedia.org/wiki/Counter-Strike_(video_game)",
+      "dls": "https://store.steampowered.com/app/10/CounterStrike/",
+      "date": "2000-11-09",
+      "tags": "CounterStrike",
+      "path": "cstrike",
+      "files": {
+        "key": [
+          "Steam:10",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 10",
+          "Local:Half-Life"
+        ]
+      },
+      "status": "open;read"
+    },
+    "DM": {
+      "name": "Deathmatch Classic",
+      "url": "https://developer.valvesoftware.com/wiki/Deathmatch_Classic",
+      "dls": "https://store.steampowered.com/app/40/Deathmatch_Classic/",
+      "date": "2001-06-07",
+      "tags": "HalfLife",
+      "path": "dmc",
+      "files": {
+        "key": [
+          "Steam:40",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 40",
+          "Local:Half-Life"
+        ]
+      },
+      "status": "open;read"
+    },
+    "HL:BS": {
+      "name": "Half-Life: Blue Shift",
+      "url": "https://en.wikipedia.org/wiki/Half-Life:_Blue_Shift",
+      "dls": "https://store.steampowered.com/app/130/HalfLife_Blue_Shift/",
+      "date": "2001-06-12",
+      "tags": "HalfLife",
+      "path": "bshift",
+      "files": {
+        "key": [
+          "Steam:130",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 130",
+          "Local:Half-Life"
+        ]
+      },
+      "status": "open;read"
+    },
+    "DOD": {
+      "name": "Day of Defeat",
+      "url": "https://en.wikipedia.org/wiki/Day_of_Defeat",
+      "dls": "https://store.steampowered.com/app/30/Day_of_Defeat/",
+      "date": "2003-05-01",
+      "tags": "DayOfDefeat",
+      "path": "dod",
+      "files": {
+        "key": [
+          "Steam:30",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 30",
+          "Local:Half-Life"
+        ]
+      },
+      "status": "open;read"
+    },
+    "CS:CZ": {
+      "name": "Counter-Strike: Condition Zero",
+      "url": "https://en.wikipedia.org/wiki/Counter-Strike:_Condition_Zero",
+      "dls": "https://store.steampowered.com/app/80/CounterStrike_Condition_Zero/",
+      "date": "2004-05-23",
+      "tags": "CounterStrike",
+      "path": "czero",
+      "files": {
+        "key": [
+          "Steam:80",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 80",
+          "Local:Half-Life"
+        ]
+      },
+      "status": "open;read"
+    },
+    "*2": {
+      "engine": "Source",
+      "arcExt": "_dir.vpk"
+    },
+    "CS:Src": {
+      "name": "Counter-Strike: Source",
+      "url": "https://en.wikipedia.org/wiki/Counter-Strike:_Source",
+      "dls": "https://store.steampowered.com/app/240/CounterStrike_Source/",
+      "date": "2004-10-07",
+      "tags": "CounterStrike",
+      "path": [
+        "platform",
+        "hl2",
+        "cstrike"
+      ],
+      "files": {
+        "key": [
+          "Steam:240",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 240",
+          "Local:Counter-Strike Source"
+        ]
+      },
+      "status": "open;read"
+    },
+    "HL:Src": {
+      "name": "Half-Life: Source",
+      "url": "https://developer.valvesoftware.com/wiki/Half-Life:_Source",
+      "dls": "https://store.steampowered.com/app/280/HalfLife_Source/",
+      "date": "2004-11-16",
+      "tags": "HalfLife",
+      "path": [
+        "platform",
+        "hl1"
+      ],
+      "files": {
+        "key": [
+          "Steam:280",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 280",
+          "Local:Half-Life 2"
+        ]
+      },
+      "status": "open;read"
+    },
+    "HL2": {
+      "name": "Half-Life 2",
+      "url": "https://en.wikipedia.org/wiki/Half-Life_2",
+      "dls": "https://store.steampowered.com/app/220/HalfLife_2/",
+      "date": "2004-11-16",
+      "tags": "HalfLife2",
+      "path": [
+        "platform",
+        "hl2"
+      ],
+      "files": {
+        "key": [
+          "Steam:220",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 220",
+          "Local:Half-Life 2"
+        ]
+      },
+      "status": "open;read"
+    },
+    "HL2:DM": {
+      "name": "Half-Life 2: Deathmatch",
+      "url": "https://en.wikipedia.org/wiki/Half-Life_2:_Deathmatch",
+      "dls": "https://store.steampowered.com/app/320/HalfLife_2_Deathmatch/",
+      "date": "2004-12-01",
+      "tags": "HalfLife2",
+      "path": [
+        "platform",
+        "hl2",
+        "hl2mp"
+      ],
+      "files": {
+        "key": [
+          "Steam:320",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 320",
+          "Local:Half-Life 2 Deathmatch"
+        ]
+      },
+      "status": "open;read"
+    },
+    "DOD:Src": {
+      "name": "Day of Defeat: Source",
+      "url": "https://en.wikipedia.org/wiki/Day_of_Defeat:_Source",
+      "dls": "https://store.steampowered.com/app/300/Day_of_Defeat_Source/",
+      "date": "2005-09-26",
+      "tags": "DayOfDefeat",
+      "path": [
+        "platform",
+        "hl2",
+        "dod"
+      ],
+      "files": {
+        "key": [
+          "Steam:300",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 300",
+          "Local:Day of Defeat Source"
+        ]
+      },
+      "status": "open;read"
+    },
+    "HL2:LC": {
+      "name": "Half-Life 2: Lost Coast",
+      "url": "https://en.wikipedia.org/wiki/Half-Life_2:_Lost_Coast",
+      "dls": "https://store.steampowered.com/app/340/HalfLife_2_Lost_Coast/",
+      "date": "2005-10-27",
+      "tags": "HalfLife",
+      "path": [
+        "platform",
+        "hl2",
+        "lostcoast"
+      ],
+      "files": {
+        "key": [
+          "Steam:340",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 340",
+          "Local:Half-Life 2"
+        ]
+      },
+      "status": "open;read"
+    },
+    "HL:DM:Src": {
+      "name": "Half-Life Deathmatch: Source",
+      "url": "https://en.wikipedia.org/wiki/Half-Life_Deathmatch:_Source",
+      "dls": "https://store.steampowered.com/app/360/HalfLife_Deathmatch_Source/",
+      "date": "2006-05-01",
+      "tags": "HalfLife",
+      "path": [
+        "platform",
+        "hl2",
+        "hl1mp"
+      ],
+      "files": {
+        "key": [
+          "Steam:360",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 360",
+          "Local:Half-Life 1 Source Deathmatch"
+        ]
+      },
+      "status": "open;read"
+    },
+    "HL2:E1": {
+      "name": "Half-Life 2: Episode One",
+      "url": "https://en.wikipedia.org/wiki/Half-Life_2:_Episode_One",
+      "dls": "https://store.steampowered.com/app/380/HalfLife_2_Episode_One/",
+      "date": "2006-06-01",
+      "tags": "HalfLife2",
+      "path": [
+        "platform",
+        "hl2",
+        "episodic"
+      ],
+      "files": {
+        "key": [
+          "Steam:380",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 380",
+          "Local:Half-Life 2"
+        ]
+      },
+      "status": "open;read"
+    },
+    "HL2:E2": {
+      "name": "Half-Life 2: Episode Two",
+      "url": "https://en.wikipedia.org/wiki/Half-Life_2:_Episode_Two",
+      "dls": "https://store.steampowered.com/app/420/HalfLife_2_Episode_Two/",
+      "date": "2007-10-10",
+      "tags": "HalfLife2",
+      "path": [
+        "ep2",
+        "hl2"
+      ],
+      "files": {
+        "key": [
+          "Steam:420",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 420",
+          "Local:Half-Life 2"
+        ]
+      },
+      "status": "open;read"
+    },
+    "Portal": {
+      "name": "Portal",
+      "url": "https://en.wikipedia.org/wiki/Portal_(video_game)",
+      "dls": "https://store.steampowered.com/app/400/Portal/",
+      "date": "2007-10-10",
+      "tags": "Portal",
+      "path": [
+        "portal",
+        "hl2"
+      ],
+      "files": {
+        "key": [
+          "Steam:400",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 400",
+          "Local:Portal"
+        ]
+      },
+      "status": "open;read"
+    },
+    "TF2": {
+      "name": "Team Fortress 2",
+      "url": "https://en.wikipedia.org/wiki/Team_Fortress_2",
+      "dls": "https://store.steampowered.com/app/440/Team_Fortress_2/",
+      "date": "2007-10-10",
+      "tags": "TeamFortress",
+      "path": [
+        "tf",
+        "hl2"
+      ],
+      "files": {
+        "key": [
+          "Steam:440",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 440",
+          "Local:Team Fortress 2"
+        ]
+      },
+      "status": "open;read"
+    },
+    "L4D": {
+      "name": "Left 4 Dead",
+      "url": "https://en.wikipedia.org/wiki/Left_4_Dead",
+      "dls": "https://store.steampowered.com/app/500/Left_4_Dead/",
+      "date": "2008-11-17",
+      "tags": "Left4Dead",
+      "path": [
+        "platform",
+        "hl2",
+        "left4dead"
+      ],
+      "files": {
+        "key": [
+          "Steam:500",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 500",
+          "Local:left 4 dead"
+        ]
+      },
+      "status": "open;read"
+    },
+    "L4D2": {
+      "name": "Left 4 Dead 2",
+      "url": "https://en.wikipedia.org/wiki/Left_4_Dead_2",
+      "dls": "https://store.steampowered.com/app/550/Left_4_Dead_2/",
+      "date": "2009-11-17",
+      "tags": "Left4Dead",
+      "path": [
+        "platform",
+        "hl2",
+        "left4dead2",
+        "update"
+      ],
+      "dlcs": {
+        "dlc1": {
+          "path": "left4dead2_dlc1"
+        },
+        "dlc2": {
+          "path": "left4dead2_dlc2"
+        },
+        "dlc3": {
+          "path": "left4dead2_dlc3"
+        }
+      },
+      "status": "open;read",
+      "files": {
+        "key": [
+          "Steam:550",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 550",
+          "Local:Left 4 Dead 2"
+        ]
+      }
+    },
+    "AlienSwarm": {
+      "name": "Alien Swarm",
+      "url": "https://en.wikipedia.org/wiki/Alien_Swarm",
+      "dls": "https://store.steampowered.com/app/630/Alien_Swarm/",
+      "date": "2010-07-19",
+      "tags": "AlienSwarm",
+      "files": {
+        "key": [
+          "Steam:550",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 550",
+          "Local:Left 4 Dead 2"
+        ]
+      },
+      "status": "open;read"
+    },
+    "Portal2": {
+      "name": "Portal 2",
+      "url": "https://en.wikipedia.org/wiki/Portal_2",
+      "dls": "https://store.steampowered.com/app/620/Portal_2/",
+      "date": "2011-04-18",
+      "tags": "Portal",
+      "path": [
+        "platform",
+        "portal2",
+        "update"
+      ],
+      "dlcs": {
+        "dlc1": {
+          "path": "portal2_dlc1"
+        },
+        "dlc2": {
+          "path": "portal2_dlc2"
+        }
+      },
+      "files": {
+        "key": [
+          "Steam:620",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 620",
+          "Local:Portal 2"
+        ]
+      },
+      "status": "open;read"
+    },
+    "*3": {
+      "engine": "Source2",
+      "arcExt": "_dir.vpk"
+    },
+    "CS2": {
+      "name": "Counter-Strike 2",
+      "url": [
+        "https://en.wikipedia.org/wiki/Counter-Strike_2",
+        "https://en.wikipedia.org/wiki/Counter-Strike:_Global_Offensive"
+      ],
+      "dls": "https://store.steampowered.com/app/730/CounterStrike_2/",
+      "date": "2012-08-21",
+      "tags": "CounterStrike",
+      "path": [
+        "csgo",
+        "platform"
+      ],
+      "files": {
+        "key": [
+          "Steam:730",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 730",
+          "Local:Counter-Strike Global Offensive"
+        ]
+      },
+      "status": "open;read"
+    },
+    "D2": {
+      "name": "Dota 2",
+      "url": "https://en.wikipedia.org/wiki/Dota_2",
+      "dls": "https://store.steampowered.com/app/570/Dota_2/",
+      "date": "2013-07-09",
+      "tags": "Dota",
+      "path": [
+        "core",
+        "dota"
+      ],
+      "dlcs": {
+        "addon_template": {
+          "path": "dota_addons/addon_template"
+        },
+        "adventure_example": {
+          "path": "dota_addons/adventure_example"
+        },
+        "aghanim": {
+          "path": "dota_addons/aghanim"
+        },
+        "cavern": {
+          "path": "dota_addons/cavern"
+        },
+        "conquest": {
+          "path": "dota_addons/conquest"
+        },
+        "diretide2020": {
+          "path": "dota_addons/diretide2020"
+        },
+        "dungeon": {
+          "path": "dota_addons/dungeon"
+        },
+        "frostivus_2017": {
+          "path": "dota_addons/frostivus_2017"
+        },
+        "hero_demo": {
+          "path": "dota_addons/hero_demo"
+        },
+        "holdout": {
+          "path": "dota_addons/holdout"
+        },
+        "holdout_example": {
+          "path": "dota_addons/holdout_example"
+        },
+        "jungle_spirits_2019": {
+          "path": "dota_addons/jungle_spirits_2019"
+        },
+        "last_hit_trainer": {
+          "path": "dota_addons/last_hit_trainer"
+        },
+        "lua_ability_example": {
+          "path": "dota_addons/lua_ability_example"
+        },
+        "manyplayer_example": {
+          "path": "dota_addons/manyplayer_example"
+        },
+        "nemestice": {
+          "path": "dota_addons/nemestice"
+        },
+        "new_bloom_2017": {
+          "path": "dota_addons/new_bloom_2017"
+        },
+        "npx_2019": {
+          "path": "dota_addons/npx_2019"
+        },
+        "overthrow": {
+          "path": "dota_addons/overthrow"
+        },
+        "rpg_example": {
+          "path": "dota_addons/rpg_example"
+        },
+        "tutorial_assist_game": {
+          "path": "dota_addons/tutorial_assist_game"
+        },
+        "tutorial_basics": {
+          "path": "dota_addons/tutorial_basics"
+        },
+        "ui_example": {
+          "path": "dota_addons/ui_example"
+        },
+        "winter_2018": {
+          "path": "dota_addons/winter_2018"
+        },
+        "winter2022": {
+          "path": "dota_addons/winter2022"
+        },
+        "workshop_testbed": {
+          "path": "dota_addons/workshop_testbed"
+        }
+      },
+      "locales": {
+        "ko": {
+          "name": "koreana"
+        },
+        "ru": {
+          "name": "russian"
+        },
+        "zh": {
+          "name": "chinese"
+        }
+      },
+      "files": {
+        "key": [
+          "Steam:570",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 570",
+          "Local:dota 2 beta"
+        ],
+        "path": "game"
+      },
+      "filters": {
+        "Animation": ".vanim_c",
+        "Particle": ".vpcf_c",
+        "Material": ".vmat_c",
+        "Mesh": ".vmesh_c",
+        "Textures": ".vtex_c",
+        "Model": ".vmdl_c",
+        "Physics": ".vphys_c",
+        "Sound": ".vsnd_c",
+        "World": ".vwrld_c",
+        "WorldNode": ".vwnod_c",
+        "Panorama": ".vtxt_c"
+      },
+      "status": "open;read;tex:GL"
+    },
+    "CS:NZ": {
+      "name": "Counter-Strike Nexon",
+      "url": "https://en.wikipedia.org/wiki/Counter-Strike_Nexon",
+      "dls": "https://store.steampowered.com/app/273110/CounterStrike_Nexon/",
+      "date": "2014-10-04",
+      "tags": "CounterStrike",
+      "files": {
+        "key": [
+          "Steam:273110",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 273110",
+          "Local:CSNZ"
+        ],
+        "path": "Data"
+      },
+      "status": "open;read"
+    },
+    "TheLab:RR": {
+      "name": "The Lab: Robot Repair",
+      "url": "https://en.wikipedia.org/wiki/The_Lab_(video_game)",
+      "dls": "https://store.steampowered.com/app/450390/The_Lab/",
+      "date": "2016-05-05",
+      "tags": "VR",
+      "path": [
+        "core",
+        "portal2_imported",
+        "vr"
+      ],
+      "files": {
+        "key": [
+          "Steam:450390",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 450390",
+          "Local:The Lab"
+        ],
+        "path": "RobotRepair"
+      },
+      "status": "open;read;tex:GL;model:GL"
+    },
+    "TheLab:SS": {
+      "name": "The Lab: Secret Shop",
+      "url": "https://en.wikipedia.org/wiki/The_Lab_(video_game)",
+      "dls": "https://store.steampowered.com/app/450390/The_Lab/",
+      "date": "2016-05-05",
+      "engine": "Unity",
+      "tags": "VR",
+      "arcExt": ".assets",
+      "files": {
+        "key": [
+          "Steam:450390",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 450390",
+          "Local:The Lab"
+        ],
+        "path": "SecretShop/win64/SecretShop_Data"
+      },
+      "status": "!unity"
+    },
+    "TheLab:TL": {
+      "name": "The Lab: The Lab",
+      "url": "https://en.wikipedia.org/wiki/The_Lab_(video_game)",
+      "dls": "https://store.steampowered.com/app/450390/The_Lab/",
+      "date": "2016-05-05",
+      "engine": "Unity",
+      "tags": "VR",
+      "arcExt": ".assets",
+      "files": {
+        "key": [
+          "Steam:450390",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 450390",
+          "Local:The Lab"
+        ],
+        "path": "TheLab/win64/TheLab_Data"
+      },
+      "status": "!unity"
+    },
+    "Artifact": {
+      "name": "Artifact",
+      "url": "https://en.wikipedia.org/wiki/Artifact_(video_game)",
+      "dls": "https://store.steampowered.com/app/583950/Artifact/",
+      "date": "2018-11-28",
+      "tags": "Dota",
+      "path": [
+        "core",
+        "dcg"
+      ],
+      "files": {
+        "key": [
+          "Steam:583950",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 583950",
+          "Local:Artifact"
+        ],
+        "path": "game"
+      },
+      "status": ""
+    },
+    "DU": {
+      "name": "Dota Underlords",
+      "url": "https://en.wikipedia.org/wiki/Dota_Underlords",
+      "dls": "https://store.steampowered.com/app/1046930/Dota_Underlords/",
+      "date": "2020-02-25",
+      "tags": "Dota",
+      "path": [
+        "core",
+        "dac",
+        "dac_desktop"
+      ],
+      "files": {
+        "key": [
+          "Steam:1046930",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 1046930",
+          "Local:Underlords"
+        ],
+        "path": "game"
+      },
+      "status": ""
+    },
+    "HL:A": {
+      "name": "Half-Life: Alyx",
+      "url": "https://en.wikipedia.org/wiki/Half-Life:_Alyx",
+      "dls": "https://store.steampowered.com/app/546560/HalfLife_Alyx/",
+      "date": "2020-03-23",
+      "tags": "HalfLife VR",
+      "path": [
+        "core",
+        "hlvr"
+      ],
+      "files": {
+        "key": [
+          "Steam:546560",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 546560",
+          "Local:Half-Life Alyx"
+        ],
+        "path": "game"
+      },
+      "status": "open;read;tex:GL;model:GL"
+    }
+  },
+  "ArtifactF": {
+    "name": "Artifact Foundry",
+    "url": "https://en.wikipedia.org/wiki/Artifact_(video_game)",
+    "dls": "https://store.steampowered.com/app/1269260/Artifact_Foundry/",
+    "date": "2021-03-04",
+    "tags": "Dota",
+    "path": [
+      "core",
+      "dcg"
+    ],
+    "files": {
+      "key": [
+        "Steam:1269260",
+        "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 1269260",
+        "Local:Artifact 2.0"
+      ],
+      "path": "game"
+    },
+    "status": ""
+  },
+  "Aperture:DJ": {
+    "name": "Aperture Desk Job",
+    "url": "https://en.wikipedia.org/wiki/Aperture_Desk_Job",
+    "dls": "https://store.steampowered.com/app/1902490/Aperture_Desk_Job/",
+    "date": "2022-03-01",
+    "tags": "",
+    "path": [
+      "core",
+      "steampal"
+    ],
+    "files": {
+      "key": [
+        "Steam:1902490",
+        "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 1902490",
+        "Local:Aperture Desk Job"
+      ],
+      "path": "game"
+    },
+    "status": ""
+  },
+  "Deadlock": {
+    "name": "Deadlock (future)",
+    "url": "https://en.wikipedia.org/wiki/Deadlock_(video_game)",
+    "dls": "https://store.steampowered.com/app/1422450/Deadlock/",
+    "tags": "",
+    "path": [
+      "core"
+    ],
+    "files": {
+      "key": [
+        "Steam:1422450",
+        "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 1422450",
+        "Local:Deadlock"
+      ],
+      "path": "game"
+    },
+    "status": ""
+  },
+  "CodenameGordon": {
+    "name": "Codename Gordon",
+    "url": "https://developer.valvesoftware.com/wiki/Codename:_Gordon",
+    "date": "2004-05-18",
+    "engine": "Flash",
+    "tags": "",
+    "files": {
+      "key": [
+        "Steam:92",
+        "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 92",
+        "Local:Codename Gordon"
+      ]
+    },
+    "status": ""
+  },
+  "GarrysMod": {
+    "name": "Garry's Mod",
+    "url": "https://en.wikipedia.org/wiki/Garry%27s_Mod",
+    "dls": "https://store.steampowered.com/app/4000/Garrys_Mod/",
+    "date": "2006-11-29",
+    "path": [
+      "platform",
+      "sourceengine",
+      "garrysmod"
+    ],
+    "files": {
+      "key": [
+        "Steam:4000",
+        "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 4000",
+        "Local:GarrysMod"
+      ]
+    },
+    "status": ""
+  },
+  "Portal:SA": {
+    "name": "Portal: Still Alive",
+    "url": "https://en.wikipedia.org/wiki/Portal:Still_Alive",
+    "date": "2010-06-26"
+  },
+  "Aperture:HL": {
+    "name": "Aperture Hand Lab",
+    "url": "https://en.wikipedia.org/wiki/Aperture_Hand_Lab",
+    "dls": "https://store.steampowered.com/app/868020/Aperture_Hand_Lab/",
+    "date": "2019-06-25",
+    "engine": "Unity",
+    "tags": "VR",
+    "files": {
+      "key": [
+        "Steam:868020",
+        "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 868020",
+        "Local:Knux"
+      ],
+      "path": "Knux_Data"
+    },
+    "status": ""
+  }
+}

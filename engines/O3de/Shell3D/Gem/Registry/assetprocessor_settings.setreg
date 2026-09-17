@@ -1,0 +1,18 @@
+{
+    "Amazon": {
+        "AssetProcessor": {
+            "Settings": {
+                "ScanFolder Shell3D/Assets": {
+                    "watch": "@GEMROOT:Shell3D@/Assets",
+                    "recursive": 1,
+                    "order": 101
+                },
+                "ScanFolder Shell3D/Registry": {
+                    "watch": "@GEMROOT:Shell3D@/Registry",
+                    "recursive": 1,
+                    "order": 102
+                }
+            }
+        }
+    }
+}

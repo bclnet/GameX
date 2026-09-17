@@ -1,0 +1,127 @@
+﻿{
+    "AxiomVerge": {
+        "name": "Axiom Verge",
+        "files": [
+            {
+                "path": "Animals/BabyBlue Chicken.xnb",
+                "type": "Texture2D"
+            }
+        ]
+    },
+    "StardewValley": {
+        "name": "Stardew Valley",
+        "files": [
+            {
+                "path": "Animals/BabyBlue Chicken.xnb",
+                "type": "Texture2D"
+            },
+            {
+                "path": [
+                    "Fonts/tinyFont.xnb",
+                    "Fonts/Chinese.xnb",
+                    "Fonts/Chinese_round/Chinese.xnb"
+                ],
+                "type": "SpriteFont"
+            },
+            {
+                "path": "Characters/Dialogue/Alex.xnb",
+                "type": "Text"
+            },
+            {
+                "path": "Maps/Barn.xnb",
+                "type": "xTile"
+            },
+            {
+                "path": [
+                    "Data/FruitTrees.xnb",
+                    "Data/Locations.xnb",
+                    "Data/WorldMap.xnb"
+                ],
+                "type": "Errors"
+            },
+            {
+                "path": "Data/AdditionalFarms.xnb"
+            },
+            {
+                "path": [
+                    "Data/AdditionalFarms.xnb",
+                    "Data/AdditionalLanguages.xnb",
+                    "Data/AdditionalWallpaperFlooring.xnb",
+                    "Data/AudioChanges.xnb",
+                    "Data/BigCraftables.xnb",
+                    "Data/Buffs.xnb",
+                    "Data/Buildings.xnb",
+                    "Data/Characters.xnb",
+                    "Data/Concessions.xnb",
+                    "Data/ConcessionTastes.xnb",
+                    "Data/Crops.xnb",
+                    "Data/FarmAnimals.xnb",
+                    "Data/Fences.xnb",
+                    "Data/FishPondData.xnb",
+                    "Data/FloorsAndPaths.xnb",
+                    "Data/FruitTrees.xnb",
+                    "Data/GarbageCans.xnb",
+                    "Data/GiantCrops.xnb",
+                    "Data/HomeRenovations.xnb",
+                    "Data/IncomingPhoneCalls.xnb",
+                    "Data/JukeboxTracks.xnb",
+                    "Data/LocationContexts.xnb",
+                    "Data/Locations.xnb",
+                    "Data/LostItemsShop.xnb",
+                    "Data/Machines.xnb",
+                    "Data/MakeoverOutfits.xnb",
+                    "Data/Mannequins.xnb",
+                    "Data/Minecarts.xnb",
+                    "Data/MonsterSlayerQuests.xnb",
+                    "Data/Movies.xnb",
+                    "Data/MoviesReactions.xnb",
+                    "Data/MuseumRewards.xnb",
+                    "Data/Objects.xnb",
+                    "Data/Pants.xnb",
+                    "Data/PassiveFestivals.xnb",
+                    "Data/Pets.xnb",
+                    "Data/Powers.xnb",
+                    "Data/RandomBundles.xnb",
+                    "Data/Shirts.xnb",
+                    "Data/Shops.xnb",
+                    "Data/SpecialOrders.xnb",
+                    "Data/TailoringRecipes.xnb",
+                    "Data/Tools.xnb",
+                    "Data/TriggerActions.xnb",
+                    "Data/Trinkets.xnb",
+                    "Data/Weapons.xnb",
+                    "Data/Weddings.xnb",
+                    "Data/WildTrees.xnb",
+                    "Data/WorldMap.xnb"
+                ],
+                "type": "Custom"
+            }
+        ]
+    },
+    "Celeste": {
+        "name": "Axiom Verge",
+        "files": [
+            {
+                "path": "Animals/BabyBlue Chicken.xnb",
+                "type": "Texture2D"
+            }
+        ]
+    },
+    "AxiomVerge2": {
+        "name": "Axiom Verge 2",
+        "files": [
+            {
+                "path": "Art/Backgrounds/BreachTexture.xnb",
+                "type": "Texture2D"
+            },
+            {
+                "path": "Art/TileMaps/World.xnb",
+                "type": "Custom"
+            },
+            {
+                "path": "Fonts/AV8ptMonogame.xnb",
+                "type": "Font"
+            }
+        ]
+    }
+}

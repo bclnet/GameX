@@ -1,0 +1,187 @@
+﻿{
+  "id": "Mythic",
+  "name": "Mythic Entertainment",
+  "studio": "Mythic Entertainment",
+  "description": "an American video game developer based in Fairfax, Virginia that was most widely recognized for developing the 2001 massively multiplayer online role-playing.",
+  "url": "https://en.wikipedia.org/wiki/Mythic_Entertainment",
+  "samples": [
+    "MythicFamily.Sample.json"
+  ],
+  "games": {
+    "*": {
+      "archiveType": "GameX.Mythic.MythicArchive, GameX.Mythic"
+    },
+    "DG": {
+      "name": "Dragon's Gate",
+      "date": "1996-01-01",
+      "url": "https://en.wikipedia.org/wiki/Dragon%27s_Gate"
+    },
+    "RM": {
+      "name": "Rolemaster: Magestorm",
+      "date": "1996-01-01",
+      "url": "https://en.wikipedia.org/wiki/Magestorm",
+      "dnl": "https://www.gamemodi.net/#magestorm",
+      "engine": "Magestorm",
+      "files": {
+        "key": [
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/{894833F2-25F6-4F87-9EF6-04998E436B8E}_is1"
+        ]
+      }
+    },
+    "AO": {
+      "name": "Aliens Online",
+      "date": "1998-04-16",
+      "url": "https://en.wikipedia.org/wiki/Aliens_Online",
+      "dnl": "https://oldgamesdownload.com/aliens-online",
+      "engine": "Magestorm",
+      "files": {
+        "key": [
+          "Abandon:Aliens_Online_Win_Preinstalled_EN.zip"
+        ],
+        "path": "Game Files"
+      }
+    },
+    "GO": {
+      "name": "Godzilla Online",
+      "date": "1998-11-01",
+      "url": [
+        "https://en.wikipedia.org/wiki/Godzilla_Online",
+        "https://www.reddit.com/r/lostmedia/comments/zzdz8a/partially_lost_godzilla_online_a_1998_godzilla/"
+      ],
+      "dnl": "https://archive.org/details/godzilla_202212",
+      "engine": "Magestorm",
+      "files": {
+        "key": [
+          "Archive:godzilla_202212"
+        ],
+        "path": "GODZILLA"
+      }
+    },
+    "ST": {
+      "name": "Starship Troopers: Battlespace",
+      "date": "1998-01-01",
+      "url": "https://www.gog.com/dreamlist/game/starship-troopers-battlespace-1998"
+    },
+    "DF": {
+      "name": "Darkness Falls: The Crusade",
+      "date": "1999-01-01",
+      "url": "https://muds.fandom.com/wiki/Darkness_Falls:_The_Crusade"
+    },
+    "SB": {
+      "name": "Spellbinder: The Nexus Conflict",
+      "date": "1999-12-04",
+      "url": "https://en.wikipedia.org/wiki/Spellbinder:_The_Nexus_Conflict",
+      "dnl": "https://archive.org/details/SpellbinderTheNexusConflictDemo"
+    },
+    "ID4": {
+      "name": "ID4 Online",
+      "date": "2000-01-01",
+      "url": "https://en.wikipedia.org/wiki/ID4_Online"
+    },
+    "DAoC": {
+      "name": "Dark Age of Camelot",
+      "date": "2001-10-09",
+      "url": "https://en.wikipedia.org/wiki/Dark_Age_of_Camelot",
+      "dlcs": {
+        "toa": {
+          "name": "Trials of Atlantis",
+          "date": "2003-10-28",
+          "url": "https://en.wikipedia.org/wiki/Dark_Age_of_Camelot:_Trials_of_Atlantis"
+        },
+        "c": {
+          "name": "Catacombs",
+          "date": "2004-12-07",
+          "url": "https://en.wikipedia.org/wiki/Dark_Age_of_Camelot:_Catacombs"
+        },
+        "dr": {
+          "name": "Darkness Rising",
+          "date": "2005-10-11",
+          "url": "https://en.wikipedia.org/wiki/Dark_Age_of_Camelot:_Darkness_Rising"
+        }
+      },
+      "arcExt": [
+        ".mpk",
+        ".npk",
+        ".myp"
+      ],
+      "files": {
+        "key": [
+          "WinReg:Electronic Arts/EA Games/Dark Age of Camelot",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Dark Age of Camelot"
+        ]
+      }
+    },
+    "WAR": {
+      "name": "Warhammer Online: Age of Reckoning",
+      "date": "2008-09-18",
+      "url": "https://en.wikipedia.org/wiki/Warhammer_Online:_Age_of_Reckoning",
+      "dnl": "https://www.returnofreckoning.com/forum/install",
+      "engine": "Gamebryo",
+      "arcExt": ".myp",
+      "files": {
+        "key": [
+          "WinReg:@Return of Reckoning/Return of Reckoning"
+        ]
+      }
+    },
+    "UO": {
+      "name": "Ultima Online: Stygian Abyss",
+      "date": "2009-09-08",
+      "url": "https://en.wikipedia.org/wiki/Ultima_Online_expansions#Stygian_Abyss",
+      "dnl": "https://uo.com/client-download/",
+      "files": {
+        "key": [
+          "WinReg:Origin Worlds Online/Ultima Online/KR Legacy Beta",
+          "WinReg:EA Games/Ultima Online: Mondain's Legacy/1.00.0000",
+          "WinReg:Origin Worlds Online/Ultima Online/1.0",
+          "WinReg:Origin Worlds Online/Ultima Online Third Dawn/1.0",
+          "WinReg:EA GAMES/Ultima Online Samurai Empire",
+          "WinReg:EA Games/Ultima Online: Mondain's Legacy",
+          "WinReg:EA GAMES/Ultima Online Samurai Empire/1.0",
+          "WinReg:EA GAMES/Ultima Online Samurai Empire/1.00.0000",
+          "WinReg:EA GAMES/Ultima Online: Samurai Empire/1.0",
+          "WinReg:EA GAMES/Ultima Online: Samurai Empire/1.00.0000",
+          "WinReg:EA Games/Ultima Online: Mondain's Legacy/1.0",
+          "WinReg:EA Games/Ultima Online: Mondain's Legacy/1.00.0000",
+          "WinReg:Origin Worlds Online/Ultima Online Samurai Empire BETA/2d/1.0",
+          "WinReg:Origin Worlds Online/Ultima Online Samurai Empire BETA/3d/1.0",
+          "WinReg:Origin Worlds Online/Ultima Online Samurai Empire/2d/1.0",
+          "WinReg:Origin Worlds Online/Ultima Online Samurai Empire/3d/1.0",
+          "WinReg:Electronic Arts/EA Games/Ultima Online Stygian Abyss Classic",
+          "WinReg:Electronic Arts/EA Games/Ultima Online Classic",
+          "Local:Ultima Online Classic",
+          "Local:Ultima Online Enhanced"
+        ]
+      }
+    },
+    "DA2": {
+      "name": "Dragon Age II",
+      "date": "2011-03-08",
+      "url": [
+        "https://en.wikipedia.org/wiki/Dragon_Age_II",
+        "https://store.steampowered.com/app/1238040"
+      ],
+      "files": {
+        "key": [
+          "Steam:1238040",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 1238040",
+          "Local:Dragon Age II"
+        ]
+      }
+    },
+    "UF:QftA": {
+      "name": "Ultima Forever: Quest for the Avatar",
+      "date": "2013-08-07",
+      "url": "https://en.wikipedia.org/wiki/Ultima_Forever:_Quest_for_the_Avatar"
+    },
+    "DK": {
+      "name": "Dungeon Keeper",
+      "date": "2014-01-30",
+      "url": "https://en.wikipedia.org/wiki/Dungeon_Keeper_(2014_video_game)",
+      "dnl": [
+        "https://dungeon-keeper.en.uptodown.com/android/download",
+        "https://dungeon-keeper-ue3.en.softonic.com/android/download"
+      ]
+    }
+  }
+}

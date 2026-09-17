@@ -1,0 +1,645 @@
+﻿{
+  "HL": {
+    "name": "Half-Life",
+    "files": [
+      {
+        "path": "valve/game.tga",
+        "type": "Image"
+      },
+      {
+        "path": "valve/overviews/boot_camp.bmp",
+        "type": "Image"
+      },
+      {
+        "path": "valve/cached.wad:LOADING.pic",
+        "type": "Texture"
+      },
+      {
+        "path": "valve/decals.wad:{LARGE#S0.tex",
+        "type": "Texture"
+      },
+      {
+        "path": "valve/fonts.wad:FONT2.fnt",
+        "type": "Texture:Font"
+      },
+      {
+        "path": "valve/sprites/640hud1.spr",
+        "type": "Sprite"
+      },
+      {
+        "path": "valve/sprites/640_logo.spr",
+        "type": "Sprite"
+      },
+      {
+        "path": "valve/models/aflock.mdl",
+        "type": "Model"
+      },
+      {
+        "path": "valve/models/apache.mdl",
+        "type": "Model"
+      },
+      {
+        "path": "valve/models/zombie.mdl",
+        "type": "Model"
+      },
+      {
+        "path": "valve/maps/boot_camp.bsp:entities.txt",
+        "type": "Bsp"
+      }
+    ]
+  },
+  "TF": {
+    "name": "Team Fortress Classic",
+    "files": [
+      {
+        "path": "game.tga",
+        "type": "Image"
+      },
+      {
+        "path": "overviews/2fort.bmp",
+        "type": "Image"
+      },
+      {
+        "path": "cached.wad:CONBACK640.pic",
+        "type": "Texture"
+      },
+      {
+        "path": "tfc2.wad:{EASTLINE1.tex",
+        "type": "Texture"
+      },
+      {
+        "path": "sprites/tfchud01.spr",
+        "type": "Sprite"
+      },
+      {
+        "path": "models/backpack.mdl",
+        "type": "Model"
+      },
+      {
+        "path": "maps/2fort.bsp:entities.txt",
+        "type": "Bsp"
+      }
+    ]
+  },
+  "HL:OF": {
+    "name": "Half-Life: Opposing Force",
+    "files": [
+      {
+        "path": "gearbox/game.tga",
+        "type": "Image"
+      },
+      {
+        "path": "gearbox/cached.wad:CONBACK.pic",
+        "type": "Texture"
+      },
+      {
+        "path": "gearbox/op4ctf.wad:cp_jungle.tex",
+        "type": "Texture"
+      },
+      {
+        "path": "gearbox/sprites/640hud1.spr",
+        "type": "Sprite"
+      },
+      {
+        "path": "gearbox/models/barney.mdl",
+        "type": "Model"
+      },
+      {
+        "path": "gearbox/maps/of0a0.bsp:entities.txt",
+        "type": "Bsp"
+      }
+    ]
+  },
+  "Ricochet": {
+    "name": "Ricochet",
+    "files": [
+      {
+        "path": "game.tga",
+        "type": "Image"
+      },
+      {
+        "path": "cached.wad:CONBACK640.pic",
+        "type": "Texture"
+      },
+      {
+        "path": "sprites/640_0bounce.spr",
+        "type": "Sprite"
+      },
+      {
+        "path": "models/disc.mdl",
+        "type": "Model"
+      },
+      {
+        "path": "maps/rc_arena.bsp:entities.txt",
+        "type": "Bsp"
+      }
+    ]
+  },
+  "CS": {
+    "name": "Counter-Strike",
+    "files": [
+      {
+        "path": "game.tga",
+        "type": "Image"
+      },
+      {
+        "path": "cached.wad:CONBACK.pic",
+        "type": "Texture"
+      },
+      {
+        "path": "sprites/640hud1.spr",
+        "type": "Sprite"
+      },
+      {
+        "path": "models/bag.mdl",
+        "type": "Model"
+      },
+      {
+        "path": "maps/cs_747.bsp:entities.txt",
+        "type": "Bsp"
+      }
+    ]
+  },
+  "DM": {
+    "name": "Deathmatch Classic",
+    "files": [
+      {
+        "path": "game.tga",
+        "type": "Image"
+      },
+      {
+        "path": "overviews/dmc_dm2.bmp",
+        "type": "Image"
+      },
+      {
+        "path": "cached.wad:CONBACK.pic",
+        "type": "Texture"
+      },
+      {
+        "path": "sprites/640hud1.spr",
+        "type": "Sprite"
+      },
+      {
+        "path": "models/armour_g.mdl",
+        "type": "Model"
+      },
+      {
+        "path": "maps/dmc_dm2.bsp:entities.txt",
+        "type": "Bsp"
+      }
+    ]
+  },
+  "HL:BS": {
+    "name": "Half-Life: Blue Shift",
+    "files": [
+      {
+        "path": "game.tga",
+        "type": "Image"
+      },
+      {
+        "path": "cached.wad:CONBACK.pic",
+        "type": "Texture"
+      },
+      {
+        "path": "sprites/640hud1.spr",
+        "type": "Sprite"
+      },
+      {
+        "path": "models/aflock.mdl",
+        "type": "Model"
+      },
+      {
+        "path": "maps/ba_canal1.bsp:entities.txt",
+        "type": "Bsp"
+      }
+    ]
+  },
+  "DOD": {
+    "name": "Day of Defeat",
+    "files": [
+      {
+        "path": "game.tga",
+        "type": "Image"
+      },
+      {
+        "path": "overviews/dod_anzio.bmp",
+        "type": "Image"
+      },
+      {
+        "path": "sprites/weapons1.spr",
+        "type": "Sprite"
+      },
+      {
+        "path": "models/allied_grunt.mdl",
+        "type": "Model"
+      },
+      {
+        "path": "maps/dod_anzio.bsp:entities.txt",
+        "type": "Bsp"
+      }
+    ]
+  },
+  "CS:CZ": {
+    "name": "Counter-Strike: Condition Zero",
+    "files": [
+      {
+        "path": "game.tga",
+        "type": "Image"
+      },
+      {
+        "path": "overviews/cs_downed_cz.bmp",
+        "type": "Image"
+      },
+      {
+        "path": "gfx/vgui/sas.tga",
+        "type": "Image"
+      },
+      {
+        "path": "models/hostageA.mdl",
+        "type": "Model"
+      },
+      {
+        "path": "maps/cs_downed_cz.bsp:entities.txt",
+        "type": "Bsp"
+      }
+    ]
+  },
+  "HL:Src": {
+    "name": "Half-Life: Source",
+    "files": [
+      {
+        "path": "hl1/hl1_pak_dir.vpk:console.log",
+        "type": "Text"
+      },
+      {
+        "path": "hl1/hl1_pak_dir.vpk:materials/console/background02.vmt",
+        "type": "Material"
+      },
+      {
+        "path": "hl1/hl1_pak_dir.vpk:materials/console/background02.vtf",
+        "type": "Texture"
+      },
+      {
+        "path": "hl1/hl1_pak_dir.vpk:models/aflock.mdl",
+        "type": "Model"
+      }
+    ]
+  },
+  "CS:Src": {
+    "name": "Counter-Strike: Source",
+    "files": [
+      {
+        "path": "cstrike/cstrike_pak_dir.vpk:credits.txt",
+        "type": "Text"
+      },
+      {
+        "path": "cstrike/cstrike_pak_dir.vpk:materials/console/background01.vmt",
+        "type": "Material"
+      },
+      {
+        "path": "cstrike/cstrike_pak_dir.vpk:materials/console/background01.vtf",
+        "type": "Texture"
+      },
+      {
+        "path": "cstrike/cstrike_pak_dir.vpk:models/items/cs_gift.mdl",
+        "type": "Model"
+      }
+    ]
+  },
+  "HL2": {
+    "name": "Half-Life 2",
+    "files": [
+      {
+        "path": "hl2/hl2_pak_dir.vpk:maplist.txt",
+        "type": "Text"
+      },
+      {
+        "path": "hl2/hl2_textures_dir.vpk:materials/console/background01.vmt",
+        "type": "Material"
+      },
+      {
+        "path": "hl2/hl2_textures_dir.vpk:materials/console/background01.vtf",
+        "type": "Texture"
+      },
+      {
+        "path": "hl2/hl2_misc_dir.vpk:models/advisor.mdl",
+        "type": "Model"
+      }
+    ]
+  },
+  "HL2:DM": {
+    "name": "Half-Life 2: Deathmatch",
+    "files": [
+      {
+        "path": "hl2mp/hl2mp_pak_dir.vpk:maplist.txt",
+        "type": "Text"
+      },
+      {
+        "path": "hl2mp/hl2mp_pak_dir.vpk:materials/console/background01.vmt",
+        "type": "Material"
+      },
+      {
+        "path": "hl2mp/hl2mp_pak_dir.vpk:materials/console/background01.vtf",
+        "type": "Texture"
+      },
+      {
+        "path": "hl2mp/hl2mp_pak_dir.vpk:models/police_ss.mdl",
+        "type": "Model"
+      }
+    ]
+  },
+  "HL:DM:Src": {
+    "name": "Half-Life Deathmatch: Source",
+    "files": [
+      {
+        "path": "hl1mp/hl1mp_pak_dir.vpk:maplist.txt",
+        "type": "Text"
+      },
+      {
+        "path": "hl1mp/hl1mp_pak_dir.vpk:materials/spraypaint/8ball1.vmt",
+        "type": "Material"
+      },
+      {
+        "path": "hl1mp/hl1mp_pak_dir.vpk:materials/spraypaint/8ball1.vtf",
+        "type": "Texture"
+      },
+      {
+        "path": "hl1mp/hl1mp_pak_dir.vpk:models/mp/crate.mdl",
+        "type": "Model"
+      }
+    ]
+  },
+  "HL2:E1": {
+    "name": "Half-Life 2: Episode One",
+    "files": [
+      {
+        "path": "episodic/ep1_pak_dir.vpk:maplist.txt",
+        "type": "Text"
+      },
+      {
+        "path": "episodic/ep1_pak_dir.vpk:materials/console/ep1_background01.vmt",
+        "type": "Material"
+      },
+      {
+        "path": "episodic/ep1_pak_dir.vpk:materials/console/ep1_background01.vtf",
+        "type": "Texture"
+      },
+      {
+        "path": "episodic/ep1_pak_dir.vpk:models/advisorpod.mdl",
+        "type": "Model"
+      }
+    ]
+  },
+  "Portal": {
+    "name": "Portal",
+    "files": [
+      {
+        "path": "portal/portal_pak_dir.vpk:maplist.txt",
+        "type": "Text"
+      },
+      {
+        "path": "portal/portal_pak_dir.vpk:materials/console/background1.vmt",
+        "type": "Material"
+      },
+      {
+        "path": "portal/portal_pak_dir.vpk:materials/console/background1.vtf",
+        "type": "Texture"
+      },
+      {
+        "path": "portal/portal_pak_dir.vpk:models/blackin.mdl",
+        "type": "Model"
+      }
+    ]
+  },
+  "HL2:E2": {
+    "name": "Half-Life 2: Episode Two",
+    "files": [
+      {
+        "path": "ep2/ep2_pak_dir.vpk:maplist.txt",
+        "type": "Text"
+      },
+      {
+        "path": "ep2/ep2_pak_dir.vpk:materials/console/ep2_background01.vmt",
+        "type": "Material"
+      },
+      {
+        "path": "ep2/ep2_pak_dir.vpk:materials/console/ep2_background01.vtf",
+        "type": "Texture"
+      },
+      {
+        "path": "ep2/ep2_pak_dir.vpk:models/advisor.mdl",
+        "type": "Model"
+      }
+    ]
+  },
+  "TF2": {
+    "name": "Team Fortress 2",
+    "files": [
+      {
+        "path": "tf/tf2_misc_dir.vpk:maplist.txt",
+        "type": "Text"
+      },
+      {
+        "path": "tf/tf2_textures_dir.vpk:materials/console/background01.vmt",
+        "type": "Material"
+      },
+      {
+        "path": "tf/tf2_textures_dir.vpk:materials/console/background01.vtf",
+        "type": "Texture"
+      },
+      {
+        "path": "tf/tf2_misc_dir.vpk:models/ambulance.mdl",
+        "type": "Model"
+      }
+    ]
+  },
+  "L4D": {
+    "name": "Left 4 Dead",
+    "files": [
+      {
+        "path": "left4dead/pak01_dir.vpk:materials/console/background01.vmt",
+        "type": "Material"
+      },
+      {
+        "path": "left4dead/pak01_dir.vpk:materials/console/background01.vtf",
+        "type": "Texture"
+      },
+      {
+        "path": "left4dead/pak01_dir.vpk:models/error.mdl",
+        "type": "Model"
+      }
+    ]
+  },
+  "L4D2": {
+    "name": "Left 4 Dead 2",
+    "files": [
+      {
+        "path": "left4dead2/pak01_dir.vpk:credits.txt",
+        "type": "Text"
+      },
+      {
+        "path": "left4dead2/pak01_dir.vpk:materials/console/background01.vmt",
+        "type": "Material"
+      },
+      {
+        "path": "left4dead2/pak01_dir.vpk:materials/console/background01.vtf",
+        "type": "Texture"
+      },
+      {
+        "path": "left4dead2/pak01_dir.vpk:models/error.mdl",
+        "type": "Model"
+      }
+    ]
+  },
+  "DOD:Src": {
+    "name": "Day of Defeat: Source",
+    "files": [
+      {
+        "path": "dod/dod_pak_dir.vpk:maplist.txt",
+        "type": "Text"
+      },
+      {
+        "path": "dod/dod_pak_dir.vpk:materials/console/background01.vmt",
+        "type": "Material"
+      },
+      {
+        "path": "dod/dod_pak_dir.vpk:materials/console/background01.vtf",
+        "type": "Texture"
+      },
+      {
+        "path": "dod/dod_pak_dir.vpk:models/error.mdl",
+        "type": "Model"
+      }
+    ]
+  },
+  "Portal2": {
+    "name": "Portal 2",
+    "files": [
+      {
+        "path": "portal2/pak01_dir.vpk:materials/console/startup_loading.vmt",
+        "type": "Material"
+      },
+      {
+        "path": "portal2/pak01_dir.vpk:materials/console/startup_loading.vtf",
+        "type": "Texture"
+      },
+      {
+        "path": "portal2/pak01_dir.vpk:models/error.mdl",
+        "type": "Model"
+      }
+    ]
+  },
+  "CS:GO": {
+    "name": "Counter-Strike: Global Offensive",
+    "files": [
+      {
+        "path": "pak01_dir.vpk:textures/dev/albedo_chart.vtex_c",
+        "type": "Texture"
+      },
+      {
+        "path": "pak01_dir.vpk:models/dev/materialforerrormodel.vmat_c",
+        "type": "Material"
+      },
+      {
+        "path": "pak01_dir.vpk:models/dev/error.vmesh_c",
+        "type": "Mesh"
+      },
+      {
+        "path": "pak01_dir.vpk:models/dev/error.vphy_c",
+        "type": "Phy"
+      },
+      {
+        "path": "pak01_dir.vpk:models/dev/error.vmdl_c",
+        "type": "Model"
+      }
+    ]
+  },
+  "D2": {
+    "name": "Dota 2",
+    "files": [
+      {
+        "path": "pak01_dir.vpk:textures/dev/albedo_chart.vtex_c",
+        "type": "Texture"
+      },
+      {
+        "path": "pak01_dir.vpk:models/dev/materialforerrormodel.vmat_c",
+        "type": "Material"
+      },
+      {
+        "path": "pak01_dir.vpk:models/dev/error.vmesh_c",
+        "type": "Mesh"
+      },
+      {
+        "path": "pak01_dir.vpk:models/dev/error.vphy_c",
+        "type": "Phy"
+      },
+      {
+        "path": "pak01_dir.vpk:models/dev/error.vmdl_c",
+        "type": "Model"
+      },
+      {
+        "path": "dota/pak01_dir.vpk:stringtokendatabase.txt",
+        "size": 35624,
+        "type": "Test"
+      }
+    ]
+  },
+  "TheLab:RR": {
+    "name": "The Lab: Robot Repair",
+    "files": []
+  },
+  "TheLab:SS": {
+    "name": "The Lab: Secret Shop",
+    "files": []
+  },
+  "TheLab:TL": {
+    "name": "The Lab: The Lab",
+    "files": [
+      {
+        "path": "pak01_dir.vpk:textures/dev/albedo_chart.vtex_c",
+        "type": "Texture"
+      },
+      {
+        "path": "pak01_dir.vpk:models/dev/materialforerrormodel.vmat_c",
+        "type": "Material"
+      },
+      {
+        "path": "pak01_dir.vpk:models/dev/error.vmesh_c",
+        "type": "Mesh"
+      },
+      {
+        "path": "pak01_dir.vpk:models/dev/error.vphy_c",
+        "type": "Phy"
+      },
+      {
+        "path": "pak01_dir.vpk:models/dev/error.vmdl_c",
+        "type": "Model"
+      }
+    ]
+  },
+  "HL:Alyx": {
+    "name": "Half-Life: Alyx",
+    "files": [
+      {
+        "path": "pak01_dir.vpk:textures/dev/albedo_chart.vtex_c",
+        "type": "Texture"
+      },
+      {
+        "path": "pak01_dir.vpk:models/dev/materialforerrormodel.vmat_c",
+        "type": "Material"
+      },
+      {
+        "path": "pak01_dir.vpk:models/dev/error.vmesh_c",
+        "type": "Mesh"
+      },
+      {
+        "path": "pak01_dir.vpk:models/dev/error.vphy_c",
+        "type": "Phy"
+      },
+      {
+        "path": "pak01_dir.vpk:models/dev/error.vmdl_c",
+        "type": "Model"
+      }
+    ]
+  }
+}

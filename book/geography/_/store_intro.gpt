@@ -1,0 +1,20 @@
+Write the 4th chapter of a technical book using the following headers and details:
+
+File Manager:
+
+A file manager helps to locate the game folders looking in specific directories, store managers or the windows registry.
+
+    * ApplicationByDirectory
+    Searches for the game in the game specified folder(s) located in the /Games folder.
+
+    * ApplicationByStore
+    Seaches for the game in the game specified store manager(s) using the following store managers:
+        * Blizzard Store Manager
+        * Epic Store Manager
+        * Gog Store Manager
+        * Steam Store Manager
+
+
+
+Sub folder:
+Some games start in a sub-folder of the root game folder, a game can specify path(s) which are combined with found root folder.

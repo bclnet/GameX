@@ -1,0 +1,11 @@
+﻿{
+  "APP": {
+    "name": "Application",
+    "files": [
+      {
+        "path": "testtri.gfx",
+        "type": "Test"
+      }
+    ]
+  }
+}

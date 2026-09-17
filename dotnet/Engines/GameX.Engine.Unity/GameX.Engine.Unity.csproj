@@ -1,0 +1,46 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <Optimize>False</Optimize>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <Optimize>True</Optimize>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\..\docs\Engines\Unity\Readme.md" Link="Readme.md" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\OpenX\dotnet\Engines\OpenX.Engine.Unity\OpenX.Engine.Unity.csproj" />
+    <ProjectReference Include="..\..\Core\GameX\GameX.csproj" />
+    <ProjectReference Include="..\..\Families\GameX.Gamebryo\GameX.Gamebryo.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="UnityEngine">
+      <HintPath>..\..\..\OpenX\dotnet\Engines\Unity\6000.4.5f1\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>..\..\..\OpenX\dotnet\Engines\Unity\6000.4.5f1\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>..\..\..\OpenX\dotnet\Engines\Unity\6000.4.5f1\UnityEngine.PhysicsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UIElementsModule">
+      <HintPath>..\..\..\OpenX\dotnet\Engines\Unity\6000.4.5f1\UnityEngine.UIElementsModule.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' == 'Windows_NT'">
+    <Exec Command="xcopy /Y &quot;$(TargetDir)GameX.Engine.Unity*.dll&quot; &quot;$(SolutionDir)..\engines\Plugins\GameX.Engine.Unity\$(Configuration)\&quot; /EXCLUDE:$(SolutionDir)exclude-engine-unity.txt&#xD;&#xA;xcopy /Y &quot;$(TargetDir)OpenX.Engine.Unity*.dll&quot; &quot;$(SolutionDir)..\engines\Plugins\GameX.Engine.Unity\$(Configuration)\&quot; /EXCLUDE:$(SolutionDir)exclude-engine-unity.txt" />
+  </Target>
+
+</Project>

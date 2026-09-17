@@ -1,0 +1,45 @@
+[package]
+name = "gamex-all"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+gamex-arkane = { path = "../../families/arkane" }
+gamex-beamdog = { path = "../../families/beamdog" }
+gamex-bethesda = { path = "../../families/bethesda" }
+gamex-bioware = { path = "../../families/bioware" }
+gamex-black = { path = "../../families/black" }
+gamex-blizzard = { path = "../../families/blizzard" }
+gamex-bohemia = { path = "../../families/bohemia" }
+gamex-bullfrog = { path = "../../families/bullfrog" }
+gamex-capcom = { path = "../../families/capcom" }
+gamex-cig = { path = "../../families/cig" }
+gamex-cryptic = { path = "../../families/cryptic" }
+gamex-crytek = { path = "../../families/crytek" }
+gamex-cyanide = { path = "../../families/cyanide" }
+gamex-ea = { path = "../../families/ea" }
+gamex-epic = { path = "../../families/epic" }
+gamex-firaxis = { path = "../../families/firaxis" }
+gamex-frictional = { path = "../../families/frictional" }
+gamex-frontier = { path = "../../families/frontier" }
+gamex-gamebryo = { path = "../../families/gamebryo" }
+gamex-id = { path = "../../families/id" }
+gamex-iw = { path = "../../families/iw" }
+gamex-lucas = { path = "../../families/lucas" }
+gamex-monolith = { path = "../../families/monolith" }
+gamex-mythic = { path = "../../families/mythic" }
+gamex-nintendo = { path = "../../families/nintendo" }
+gamex-origin = { path = "../../families/origin" }
+gamex-red = { path = "../../families/red" }
+gamex-resource = { path = "../../core/resource" }
+gamex-rockstar = { path = "../../families/rockstar" }
+gamex-ubisoft = { path = "../../families/ubisoft" }
+gamex-uncore = { path = "../../families/uncore" }
+gamex-unity = { path = "../../families/unity" }
+gamex-valve = { path = "../../families/valve" }
+gamex-volition = { path = "../../families/volition" }
+gamex-wb = { path = "../../families/wb" }
+gamex-x2k = { path = "../../families/x2k" }
+gamex-xbox = { path = "../../families/xbox" }

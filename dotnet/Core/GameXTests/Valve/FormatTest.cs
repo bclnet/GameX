@@ -1,0 +1,33 @@
+using GameX.Valve.Formats;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+
+namespace GameX.Valve;
+
+[TestClass]
+public class FormatTest {
+    static readonly Family family = FamilyManager.GetFamily("Valve");
+    static readonly Archive dota2 = family.GetArchive(new Uri("game:/dota/pak01_dir.vpk#Dota2"));
+
+    [TestMethod]
+    [DataRow("materials/models/courier/frog/frog_color_psd_15017e0b.vtex_c")]
+    [DataRow("materials/models/courier/frog/frog_normal_psd_a5b783cb.vtex_c")]
+    [DataRow("materials/models/courier/frog/frog_specmask_tga_a889a311.vtex_c")]
+    public void AGRP(string sampleFile) => LoadObject<Binary_Src>(dota2, sampleFile);
+
+    [TestMethod]
+    [DataRow("materials/models/courier/frog/frog_color_psd_15017e0b.vtex_c")]
+    [DataRow("materials/models/courier/frog/frog_normal_psd_a5b783cb.vtex_c")]
+    [DataRow("materials/models/courier/frog/frog_specmask_tga_a889a311.vtex_c")]
+    public void DATATexture(string sampleFile) => LoadObject<Binary_Src>(dota2, sampleFile);
+
+    [TestMethod]
+    [DataRow("materials/models/courier/frog/frog.vmat_c")]
+    [DataRow("materials/vgui/800corner.vmat_c")]
+    public void DATAMaterial(string sampleFile) => LoadObject<Binary_Src>(dota2, sampleFile);
+
+    static void LoadObject<T>(Archive source, string sampleFile) {
+        Assert.IsTrue(source.Contains(sampleFile));
+        var result = source.GetAsset<T>(sampleFile).Result;
+    }
+}

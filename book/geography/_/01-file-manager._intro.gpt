@@ -1,0 +1,19 @@
+Rewrite the following paragraph:
+
+A File Manager centralizes file information like Paths, Ignores, and Filters.
+
+Paths are located in the game folders by looking in specific directories, the existing store managers or the windows registry.
+
+    * getPathByDirectory
+    Searches for the game in the game specified folder(s) located in the /Games folder.
+
+    * getPathByStoreKey
+    Searches for the game in the game specified store manager(s) using the following store managers:
+        Blizzard Store Manager
+        Epic Store Manager
+        Gog Store Manager
+        Steam Store Manager
+
+
+
+Some games start in a sub-folder of the root game folder, a game can specify additional path(s) which are combined with initially found root folder.

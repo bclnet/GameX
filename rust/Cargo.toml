@@ -1,0 +1,77 @@
+[workspace]
+resolver = "2"
+members = [
+    "cli",
+    "apps/app-client",
+    "apps/app-explorer",
+    "core/all",
+    "core/filesystems",
+    "core/gamex",
+    "core/resource",
+    "families/arkane",
+    "families/beamdog",
+    "families/bethesda",
+    "families/bethesda-platform",
+    "families/bioware",
+    "families/black",
+    "families/blizzard",
+    "families/bohemia",
+    "families/bullfrog",
+    "families/bullfrog-game",
+    "families/capcom",
+    "families/cig",
+    "families/cig-explorer",
+    "families/cryptic",
+    "families/crytek",
+    "families/cyanide",
+    "families/ea",
+    "families/epic",
+    "families/firaxis",
+    "families/frictional",
+    "families/frontier",
+    "families/gamebryo",
+    "families/id",
+    "families/iw",
+    "families/lucas",
+    "families/monolith",
+    "families/mythic",
+    "families/nintendo",
+    "families/origin",
+    "families/red",
+    "families/rockstar",
+    "families/ubisoft",
+    "families/uncore",
+    "families/uncore-program",
+    "families/unity",
+    "families/valve",
+    "families/valve-platform",
+    "families/volition",
+    "families/wb",
+    "families/x2k",
+    "families/xbox",
+    "platforms/platform-eginx",
+    "platforms/platform-godot",
+    "platforms/platform-mg",
+    "platforms/platform-o3de",
+    "platforms/platform-ogre",
+    "platforms/platform-opengl",
+    "platforms/platform-sdl",
+    "platforms/platform-stride",
+    "platforms/platform-unity",
+    "platforms/platform-unreal",
+]
+
+[workspace.package]
+edition = "2021"
+rust-version = "1.75"
+license = "MIT"
+
+[workspace.dependencies]
+bytemuck = { version = "1", features = ["derive"] }
+glam = { version = "0.29", features = ["bytemuck"] }
+half = "2"
+bitflags = "2"
+
+[profile.release]
+lto = true
+codegen-units = 1

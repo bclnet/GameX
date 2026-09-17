@@ -1,0 +1,32 @@
+﻿{
+  "StarCitizen": {
+    "name": "Star Citizen",
+    "files": [
+      {
+        "path": "Data.p4k:Data/Libs/globalTokens.json",
+        "type": "Text"
+      },
+      {
+        "path": "Data.p4k:Data/Game2.dcb",
+        "type": "Dataforge"
+      },
+      {
+        "path": "Data.p4k:Data/Textures/bubble_ddna.dds.a",
+        "type": "Texture"
+      },
+      {
+        "path": "Data.p4k:Data/Textures/references/color.dds",
+        "type": "Texture"
+      },
+      {
+        "path": "Data.p4k:Data/Textures/asteroids/asteroid_dmg_brown_organic_01_ddn.dds",
+        "type": "Texture"
+      },
+      {
+        "path": "Data.p4k:Engine/default_cch.dds",
+        "size": 16520,
+        "type": "Test"
+      }
+    ]
+  }
+}

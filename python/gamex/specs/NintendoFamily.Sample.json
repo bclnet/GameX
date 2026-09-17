@@ -1,0 +1,11 @@
+﻿{
+  "Fallout": {
+    "name": "Fallout",
+    "files": [
+      {
+        "path": "CRITTER.DAT:ART/CRITTERS/CRITTERS.LST",
+        "type": "Unknown"
+      }
+    ]
+  }
+}

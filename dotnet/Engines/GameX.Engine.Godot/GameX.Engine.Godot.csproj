@@ -1,0 +1,42 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <Optimize>False</Optimize>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <Optimize>True</Optimize>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\..\docs\Engines\Godot\Readme.md" Link="Readme.md" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\OpenX\dotnet\Engines\OpenX.Engine.Godot\OpenX.Engine.Godot.csproj" />
+    <ProjectReference Include="..\..\Core\GameX\GameX.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="GodotSharp">
+      <HintPath>..\..\..\OpenX\dotnet\Engines\Godot\4.6.2\Debug\GodotSharp.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Assets\Game2.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' == 'Windows_NT'">
+	<Exec Command="xcopy /Y &quot;$(TargetDir)GameX.Engine.Godot*.dll&quot; &quot;$(SolutionDir)..\engines\Plugins\GameX.Engine.Godot\$(Configuration)\&quot; /EXCLUDE:$(SolutionDir)exclude-engine-godot.txt&#xD;&#xA;xcopy /Y &quot;$(TargetDir)OpenX.Engine.Godot*.dll&quot; &quot;$(SolutionDir)..\engines\Plugins\GameX.Engine.Godot\$(Configuration)\&quot; /EXCLUDE:$(SolutionDir)exclude-engine-godot.txt" />
+  </Target>
+
+</Project>

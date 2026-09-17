@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="../base.css">
+    <style type="text/css">
+        #body {
+            position: relative;
+            width: 400px;
+        }
+
+        #title {
+            float: right;
+        }
+
+        #F4_HeaderType {
+            position: absolute;
+            font-size: .75em;
+            left: 150px;
+        }
+
+        #F4_Header {
+            position: absolute;
+        }
+
+        #F4_File {
+            position: absolute;
+            top: 140px;
+        }
+
+        #F4_Texture {
+            position: absolute;
+            left: 150px;
+            top: 80px;
+        }
+
+        #F4_TextureChunk {
+            position: absolute;
+            left: 150px;
+            top: 380px;
+        }
+
+        #F4_GNMF {
+            position: absolute;
+            top: 360px;
+        }
+
+        #Magic {
+            position: absolute;
+            font-size: .75em;
+            left: 150px;
+            top: 560px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="body" />
+
+    <div id="title">
+        <h1>BA2</h1>
+    </div>
+
+    <div id="F4_HeaderType">
+        <h2>F4_HeaderType</h2>
+        GNRL = 0x4c524e47<br />
+        DX10 = 0x30315844<br />
+        GNMF = 0x464d4e47<br />
+    </div>
+
+    <div id="F4_Header">
+        <h2>3IQ</h2>
+        <h3>F4_Header</h3>
+        Version<br />
+        Type (F4_HeaderType)<br />
+        NumFiles<br />
+        NameTableOffset<br />
+    </div>
+
+    <div id="F4_File">
+        <h2>4IQ3I</h2>
+        <h3>F4_File</h3>
+        NameHash<br />
+        Ext<br />
+        DirHash<br />
+        Flags<br />
+        Offset<br />
+        PackedSize<br />
+        FileSize<br />
+        Align<br />
+    </div>
+
+    <div id="F4_Texture">
+        <h2>3I2B3H4B</h2>
+        <h3>F4_Texture</h3>
+        NameHash<br />
+        Ext<br />
+        DirHash<br />
+        Unk0C<br />
+        NumChunks<br />
+        ChunkHeaderSize<br />
+        Height<br />
+        Width<br />
+        NumMips<br />
+        Format<br />
+        IsCubemap<br />
+        TileMode<br />
+    </div>
+
+    <div id="F4_TextureChunk">
+        <h2>Q2I2HI</h2>
+        <h3>F4_TextureChunk</h3>
+        Offset<br />
+        PackedSize<br />
+        FileSize<br />
+        StartMip<br />
+        EndMip<br />
+        Align<br />
+    </div>
+
+    <div id="F4_GNMF">
+        <h2>3I2BH32sQ4I</h2>
+        <h3>F4_GNMF</h3>
+        NameHash<br />
+        Ext<br />
+        DirHash<br />
+        Unk0C<br />
+        NumChunks<br />
+        Unk0E<br />
+        Header<br />
+        Offset<br />
+        PackedSize<br />
+        FileSize<br />
+        Unk40<br />
+        Align<br />
+    </div>
+
+    <div id="Magic">
+        <h2>Magic</h2>
+        F4_BSAHEADER_FILEID = 0x58445442<br />
+        F4_BSAHEADER_VERSION1 = 0x01<br />
+        F4_BSAHEADER_VERSION2 = 0x02<br />
+    </div>
+</body>
+
+</html>

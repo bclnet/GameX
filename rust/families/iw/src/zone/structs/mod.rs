@@ -1,0 +1,22 @@
+// mirrors dotnet folder `structs` — see PORT_MAP.tsv
+pub mod asset_structs;
+pub mod asset_structs_plus;
+pub mod col_map;
+pub mod fx;
+pub mod gfx_world;
+pub mod i_direct3_d;
+pub mod maps;
+pub mod maps_plus;
+pub mod material;
+pub mod material_plus;
+pub mod menu;
+pub mod sound_alias;
+pub mod structured_data_def;
+pub mod vehicle;
+pub mod vehicle_plus;
+pub mod weapon;
+pub mod weapon_plus;
+pub mod x_anim;
+pub mod x_anim_plus;
+pub mod x_model;
+pub mod x_model_plus;

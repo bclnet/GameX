@@ -1,0 +1,118 @@
+import os
+from io import BytesIO
+from gamex.core.binary import ArcBinaryT
+from gamex.core.meta import FileSource
+from gamex.families.Uncore.formats.compression import decompressLzss, decompressZlib
+
+# typedefs
+class BinaryReader: pass
+class BinaryArchive: pass
+
+#region Binary_Dat - tag::Binary_Dat[]
+
+# Binary_Dat
+class Binary_Dat(ArcBinaryT):
+    #region F1/F2
+
+    F1_HEADER_FILEID = 0x000000001
+    class F1_Header:
+        _struct = ('>4I', 16)
+        def __init__(self, t):
+            (self.directoryCount,
+            self.unknown1,
+            self.unknown2,
+            self.unknown3) = t
+    class F1_Directory:
+        _struct = ('>4I', 16)
+        def __init__(self, t):
+            (self.fileCount,
+            self.unknown1,
+            self.unknown2,
+            self.unknown3) = t
+    class F1_File:
+        _struct = ('>4I', 16)
+        def __init__(self, t):
+            (self.attributes,
+            self.offset,
+            self.size,
+            self.packedSize) = t
+
+    F2_HEADER_FILEID = 0x000000011
+    class F2_Header:
+        _struct = ('<2I', 8)
+        def __init__(self, t):
+            (self.treeSize,
+            self.dataSize) = t
+    class F2_File:
+        _struct = ('<B3I', 13)
+        def __init__(self, t):
+            (self.type,
+            self.realSize,
+            self.packedSize,
+            self.offset) = t
+
+    #endregion
+
+    # read
+    def read(self, source: BinaryArchive, r: BinaryReader, tag: object = None) -> None:
+        gameId = source.game.id
+
+        # Fallout
+        if gameId == 'Fallout':
+            source.magic = self.F1_HEADER_FILEID
+            header = r.readS(self.F1_Header)
+            directoryPaths = [r.readL8Encoding().replace('\\', '/') for x in range(header.directoryCount)]
+
+            # create file metadatas
+            source.files = files = []
+            for i in range(header.directoryCount):
+                directory = r.readS(self.F1_Directory)
+                directoryPath = f'{directoryPaths[i]}/' if directoryPaths[i] != '.' else ''
+                for _ in range(directory.fileCount):
+                    path = directoryPath + r.readL8Encoding().replace('\\', '/')
+                    file = r.readS(self.F1_File)
+                    files.append(FileSource(
+                        path = path,
+                        compressed = file.attributes & 0x40,
+                        offset = file.offset,
+                        fileSize = file.size,
+                        packedSize = file.packedSize))
+        
+        # Fallout2
+        elif gameId == 'Fallout2':
+            source.magic = self.F2_HEADER_FILEID
+            r.seek(r.length() - 8)
+            header = r.readS(self.F2_Header)
+            r.seek(header.dataSize - header.treeSize - 8)
+
+            # create file metadatas
+            source.files = files = []
+            filenum = r.readInt32()
+            for i in range(filenum):
+                path = r.readL32Encoding().replace('\\', '/')
+                file = r.readS(self.F2_File)
+                files.append(FileSource(
+                    path = path,
+                    compressed = file.type,
+                    fileSize = file.realSize,
+                    packedSize = file.packedSize,
+                    offset = file.offset))
+
+    # readData
+    def readData(self, source: BinaryArchive, r: BinaryReader, file: FileSource, option: object = None) -> BytesIO:
+        magic = source.magic
+        # F1
+        if magic == self.F1_HEADER_FILEID:
+            r.seek(file.offset)
+            return BytesIO(
+                r.readBytes(file.packedSize) if file.compressed == 0 else \
+                decompressLzss(r, file.packedSize, file.fileSize))
+        # F2
+        elif magic == self.F2_HEADER_FILEID:
+            r.seek(file.offset)
+            return BytesIO(
+                decompressZlib(r, file.packedSize, -1) if r.peek(lambda z : z.readUInt16()) == 0xda78 else \
+                r.readBytes(file.packedSize))
+        else: raise Exception('BAD MAGIC')
+
+#endregion - end::Binary_Dat[]

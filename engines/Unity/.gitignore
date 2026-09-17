@@ -1,0 +1,24 @@
+# Folder to exclude
+Data Files/
+Library/
+Logs/
+UserSettings/
+Screenshots/
+Exports/
+Assembly-CSharp*
+
+# Unity3D
+UnityGenerated/
+DerivedData/
+Assets/AssetStoreTools*
+sysinfo.txt
+*.unitypackage
+UIElementsSchema/
+**/Assets/_Ter*
+
+# Unity3D Plugins
+**/Assets/Plugins/**/*
+
+# GameX Simlinks
+**/Assets/Plugins/GameX*/*
+**/Assets/Plugins/System*/*

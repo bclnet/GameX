@@ -1,0 +1,127 @@
+﻿{
+  "id": "Red",
+  "name": "REDengine",
+  "studio": "CD Projekt Red",
+  "description": "REDengine file formats including the Witcher Series",
+  "url": "https://en.wikipedia.org/wiki/CD_Projekt",
+  "samples": [
+    "RedFamily.Sample.json"
+  ],
+  "engines": {
+    "Aurora": {},
+    "REDengine": {}
+  },
+  "games": {
+    "*": {
+      "archiveType": "GameX.Red.RedArchive, GameX.Red"
+    },
+    "Witcher": {
+      "name": "The Witcher Enhanced Edition",
+      "date": "October 26, 2007",
+      "engine": "Aurora",
+      "url": "https://en.wikipedia.org/wiki/The_Witcher_(video_game)",
+      "dls": [
+        "https://store.steampowered.com/app/20900/The_Witcher_Enhanced_Edition_Directors_Cut/",
+        "https://www.gog.com/en/game/the_witcher"
+      ],
+      "arcExt": ".key",
+      //"arc": "game:/*.key"
+      "arc": "game:/main.key",
+      //"pakZ": "game:/attackeffects.2da",
+      //"arc": "game:/dialog_3.tlk",
+      "files": {
+        "key": [
+          "Steam:20900",
+          "Gog:1207658924",
+          "WinReg:CD Projekt RED/The Witcher",
+          "WinReg:GOG.com/Games/1207658924",
+          "Local:The Witcher Enhanced Edition"
+        ],
+        "path": "Data"
+      }
+    },
+    "Witcher2": {
+      "name": "The Witcher 2",
+      "engine": "REDengine",
+      "url": "https://en.wikipedia.org/wiki/The_Witcher_2:_Assassins_of_Kings",
+      "dls": [
+        "https://store.steampowered.com/app/20920/The_Witcher_2_Assassins_of_Kings_Enhanced_Edition/",
+        "https://www.gog.com/en/game/the_witcher_2"
+      ],
+      "arc": "game:/*",
+      "pak_": "game:/base_scripts.dzip",
+      "pak2": "game:/br0.w2strings",
+      "files": {
+        "key": [
+          "Steam:20920",
+          "Gog:1207658930",
+          "WinReg:CD Projekt RED/The Witcher 2",
+          "WinReg:GOG.com/Games/1207658930",
+          "Local:The Witcher 2"
+        ],
+        "path": "CookedPC"
+      }
+    },
+    "Witcher3": {
+      "name": "The Witcher 3: Wild Hunt",
+      "url": "https://en.wikipedia.org/wiki/The_Witcher_3:_Wild_Hunt",
+      "dls": [
+        "https://store.steampowered.com/app/292030/The_Witcher_3_Wild_Hunt/",
+        "https://www.gog.com/en/game/the_witcher_3_wild_hunt",
+        "https://www.gog.com/en/game/the_witcher_3_wild_hunt_game_of_the_year_edition"
+      ],
+      "date": "December 10, 2020",
+      "engine": "REDengine",
+      "arc": "game:/content0/texture.cache",
+      "pak0": "game:/content0/bundles/xml.bundle",
+      "pak1": "game:/content0/ar.w3strings",
+      "files": {
+        "key": [
+          "Steam:292030",
+          "Gog:1207664643",
+          "Gog:1495134320",
+          "WinReg:GOG.com/Games/1207664643",
+          //"WinReg:GOG.com/Games/1430742867",
+          "WinReg:GOG.com/Games/1495134320",
+          "Local:The Witcher 3 Wild Hunt"
+        ],
+        "path": "content"
+      }
+    },
+    "CP77": {
+      "name": "Cyberpunk 2077",
+      "url": "https://en.wikipedia.org/wiki/Cyberpunk_2077",
+      "dls": [
+        "https://store.steampowered.com/app/1091500/Cyberpunk_2077/",
+        "https://www.gog.com/en/game/cyberpunk_2077"
+      ],
+      "date": "December 10, 2020",
+      "engine": "REDengine:4",
+      "arcExt": ".archive",
+      "arc": "game:/basegame_2_mainmenu.archive",
+      "pak1": "game:/lang_en_text.archive",
+      //"arc": "game:/lang_en_voice.archive"
+      //"arc": "game:/*.archive"
+      "local": {
+        "key": [
+          "Steam:1091500",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 1091500",
+          "Local:Cyberpunk 2077"
+        ],
+        "path": "archive/pc/content"
+      }
+    },
+    "Witcher4": {
+      "name": "The Witcher IV (future)",
+      "url": "https://en.wikipedia.org/wiki/The_Witcher_IV",
+      "engine": "Unreal",
+      "local": {
+        "key": [
+          "Steam:0",
+          "WinReg:Microsoft/Windows/CurrentVersion/Uninstall/Steam App 0",
+          "Local:Witcher4"
+        ]
+      }
+    }
+  }
+}

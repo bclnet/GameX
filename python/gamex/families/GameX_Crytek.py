@@ -1,0 +1,40 @@
+from __future__ import annotations
+import os
+from openx.core import _pathExtension
+from gamex import ArcBinary, Archive, BinaryArchive, FileOption
+from gamex.families.GameX_Uncore import UncoreArchive
+from gamex.families.Crytek.formats.binary import Binary_ArcheAge, Binary_Dunia, Binary_Cry3
+from gamex.families.Crytek.formats.dunia.binary import Binary_Fcb, Binary_Xbt, Binary_Xbg, Binary_Map
+
+# CrytekArchive
+class CrytekArchive(BinaryArchive):
+    def __init__(self, parent: Archive, state: BinaryState):
+        super().__init__(parent, state, self.getArcBinary(state.game, _pathExtension(state.path).lower()))
+        self.assetFactoryFunc = self.assetFactory
+
+    #region Factories
+
+    @staticmethod
+    def getArcBinary(game: FamilyGame, extension: str) -> ArcBinary:
+        match game.engine[0]:
+            case 'ArcheAge': return Binary_ArcheAge(game.key)
+            case 'Dunia': return Binary_Dunia()
+            case _: return Binary_Cry3(game.key)
+
+    @staticmethod
+    def assetFactory(source: FileSource, game: FamilyGame) -> tuple[object, callable]:
+        match game.engine[0]:
+            case 'Dunia':
+                match _pathExtension(source.path).lower():
+                    case '.fc2map': return (FileOption.StreamObject, Binary_Map.factory)
+                    case '.xbt': return (FileOption.StreamObject, Binary_Xbt.factory)
+                    case '.xbg': return (FileOption.StreamObject, Binary_Xbg.factory)
+                    case '.fcb': return (FileOption.StreamObject, Binary_Fcb.factory)
+                    case _: return UncoreArchive.assetFactory(source, game)
+            case _:
+                match _pathExtension(source.path).lower():
+                    # case '.xml': : return (FileOption.StreamObject, Binary_CryXml.factory)
+                    # case '.cgf' | '.cga' | '.chr' | '.skin' | '.anim': return (FileOption.StreamObject, Binary_CryFile.factory)
+                    case _: return UncoreArchive.assetFactory(source, game)
+
+    #endregion

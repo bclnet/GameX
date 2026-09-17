@@ -1,0 +1,54 @@
+from __future__ import annotations
+import os
+from openx.core import ISource
+from openx.gfx import GfX, Renderer
+
+# typedefs
+class ExGfxModel: pass
+class GfxShader: pass
+class Camera: pass
+class IOpenGfx: pass
+
+#region TestTriRenderer
+
+# TestTriRenderer
+class TestTriRenderer(Renderer):
+    def __init__(self, gfx: list[IOpenGfx], source: ISource, obj: object): pass
+
+    def start(self):
+        scene = self.scene = base.loader.loadModel('models/environment')
+        scene.reparentTo(base.render)
+        scene.setScale(0.25, 0.25, 0.25)
+        scene.setPos(-8, 42, 0)
+        # self.scene = self.loader.loadModel('teapot')
+        # self.scene.reparentTo(self.render)
+
+#endregion
+
+#region TextureRenderer
+
+# TextureRenderer
+class TextureRenderer(Renderer):
+    def __init__(self, gfx: list[IOpenGfx], source: ISource, obj: object):
+        self.gfxModel: ExGfxModel = gfx[GfX.XModel]
+        self.obj = obj
+        # gfxModel.textureManager.delete(obj)
+        # self.tex: int = gfxModel.textureManager.create(obj, self.level)[0]
+        self.frameDelay: int = 0
+
+    def start(self):
+        card = base.render.attachNewNode(CardMaker('card').generate())
+        tex = loader.loadTexture('maps/noise.rgb')
+        card.setTexture(tex)
+        card.setScale(4.0, 4.0, 4.0)
+        card.setPos(-8, 42, 0)
+
+    # def update(self, deltaTime: float) -> None:
+    #     obj: ITextureFrames = self.obj
+    #     if not self.gfx or not obj or not obj.hasFrames(): return
+    #     self.frameDelay += deltaTime
+    #     if self.frameDelay <= obj.fps or not obj.decodeFrame(): return
+    #     self.frameDelay = 0 # reset delay between frames
+    #     self.gfx.textureManager.reloadTexture(obj)
+
+#endregion

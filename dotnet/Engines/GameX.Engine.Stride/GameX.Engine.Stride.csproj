@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <Optimize>False</Optimize>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <Optimize>True</Optimize>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\..\docs\Engines\Stride\Readme.md" Link="Readme.md" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\OpenX\dotnet\Engines\OpenX.Engine.Stride\OpenX.Engine.Stride.csproj" />
+    <ProjectReference Include="..\..\..\OpenX\dotnet\Sfx\OpenX.Sfx\OpenX.Sfx.csproj" />
+    <ProjectReference Include="..\..\Core\GameX\GameX.csproj" />
+  </ItemGroup>
+
+</Project>

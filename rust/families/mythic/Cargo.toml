@@ -1,0 +1,12 @@
+[package]
+name = "gamex-mythic"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+gamex = { path = "../../core/gamex" }
+gamex-bioware = { path = "../../families/bioware" }
+gamex-gamebryo = { path = "../../families/gamebryo" }
+gamex-uncore = { path = "../../families/uncore" }

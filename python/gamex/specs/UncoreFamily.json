@@ -1,0 +1,31 @@
+﻿{
+  "id": "Uncore",
+  "name": "Uncore",
+  "studio": "",
+  "description": "Uncore formats",
+  "familyType": "GameX.Uncore.UncoreFamily, GameX.Uncore",
+  "samples": [
+    "UncoreFamily.Sample.json"
+  ],
+  "games": {
+    "*": {
+      "archiveType": "GameX.Uncore.UncoreArchive, GameX.Uncore"
+    },
+    "APP": {
+      "name": "Application",
+      "files": {
+        "key": "Direct:%AppPath%"
+      },
+      "virtuals": {
+        "testtri.gfx": null
+      }
+    },
+    "CAT": {
+      "name": "Catalog",
+      "arc": "game:/main.yaml",
+      "files": {
+        "key": "Direct:%AppPath%/catalogs"
+      }
+    }
+  }
+}

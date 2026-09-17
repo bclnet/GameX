@@ -1,0 +1,11 @@
+﻿TBD
+https://zeldamods.org/wiki/Resource_system#Resource_size_table
+https://github.com/NiceneNerd/Wild-Bits
+https://github.com/zeldamods/oead
+https://github.com/DarkMatterCore/nxdumptool
+https://github.com/Thealexbarney/LibHac
+https://github.com/Myster-Tee/NxFileViewer
+https://github.com/dolphin-emu/dolphin
+https://github.com/devkitPro/libctru/tree/master/libctru/source
+https://github.com/dnasdw/3dstool
+https://github.com/ObsidianX/3dstools

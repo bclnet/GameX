@@ -1,0 +1,340 @@
+from __future__ import annotations
+import math, traceback
+from numpy import ndarray, array, ones, zeros
+from openx.core import Engine, EngineX
+from openx.client import IClientHost
+from openx.gfx import IOpenGfxApi, IOpenGfxModel, IOpenGfxLight, IOpenGfxTerrain, TextureAsDds, TextureAsBytes, TextureFlags, TextureFormat, TexturePixel, ObjectModelBuilder, ObjectModelManager, IMaterial, MaterialStdProp, MaterialBuilder, MaterialManager, GfxShader, ShaderBuilder, ShaderManager, TextureBuilder, TextureManager
+from openx.engines.panda3d.gfx.panda3d import Panda3dX
+from openx.engines.system import SystemSfx
+
+from panda3d.core import StringStream, Material, PandaNode, NodePath, Texture, TextureStage, PNMImage, PTAUchar, CPTAUchar, PointLight, GeoMipTerrain
+
+# types
+type Vector3 = ndarray
+
+#region Client
+
+# Panda3dClientHost
+class Panda3dClientHost(IClientHost):
+    def __init__(self, client: callable): pass
+
+#endregion
+
+#region Engine
+
+# Panda3dObjectModelBuilder
+class Panda3dObjectModelBuilder(ObjectModelBuilder):
+    def instance(self, src: object) -> object:
+        return 'clone'
+    async def create(self, source: ISource, path: object, static_: bool, materialManager: MaterialManager) -> object:
+        builder = Panda3dX.buildersByType[path.__class__.__name__]
+        try:
+            s = await builder(source, path, static_, materialManager)
+            return s
+        except Exception as e: print(e); traceback.print_exc()
+    def ensure(self) -> None: pass
+
+# Panda3dShaderBuilder
+class Panda3dShaderBuilder(ShaderBuilder):
+    def create(self, path: object, args: dict[str, bool]) -> GfxShader: raise NotImplementedError()
+
+# Panda3dTextureBuilder
+# https://docs.panda3d.org/1.10/python/programming/texturing/simple-texturing#simple-texturing
+# https://docs.panda3d.org/1.10/python/programming/texturing/creating-textures#creating-new-textures-from-scratch
+class Panda3dTextureBuilder(TextureBuilder):
+    _default: Texture = None
+    @property
+    def default(self) -> Texture:
+        if self._default: return self._default
+        self._default = self._createDefault()
+        return self._default
+
+    def release(self) -> None:
+        if self._default: self._default.release(); self._default = None
+
+    def _createDefault(self) -> Texture: return base.loader.loadModel('maps/noise.rgb')
+
+    def createNormalMap(self, src: Texture, strength: float) -> Texture:
+        return 0
+
+    def createSolid(self, width: int, height: int, pixels: object) -> Texture:
+        tex = Texture('texture')
+        tex.setup2dTexture(width, height, Texture.TUnsignedByte, Texture.F_rgb)
+        # tex.setClearColor(pixels)
+        return 0
+
+    def create(self, reuse: Texture, src: ITexture, level2: range = None) -> Texture:
+        @staticmethod
+        def _lambdax(x: object) -> Texture:
+            match x:
+                case TextureAsDds():
+                    if reuse != None: raise NotImplementedError()
+                    tex = Texture('texture')
+                    tex.readDds(StringStream(x.bytes))
+                    return tex
+                case TextureAsBytes():
+                    tex = reuse if reuse != None else Texture('texture')
+                    numMipMaps = max(1, src.mipMaps)
+                    width = src.width; height = src.height
+                    level = (0, numMipMaps)
+
+                    # if level[0] > 0: tex.setBaseLevel(level[0])
+                    # tex.setMaxLevel(level[1] - 1)
+                    bytes, fmt, spans = (x.bytes, x.format, x.spans)
+                    # decode
+                    def compressedTexImage2D(tex, level, internalFormat) -> bool:
+                        width = tex.width; height = tex.height
+                        if spans:
+                            for l in range(level[0], level[1]):
+                                span = spans[l]
+                                if span[0] < 0: return False
+                                pixels = bytes[span[0]:span[1]]
+                                # tex.setRamMipmapImage(l, CPTAUchar(pixels))
+                                # GL.CompressedTexImage2D(TextureTarget.Texture2D, l, internalFormat, width >> l, height >> l, 0, pixels.Length, (IntPtr)data);
+                        else: pass #GL.CompressedTexImage2D(TextureTarget.Texture2D, 0, internalFormat, width, height, 0, bytes.Length, (IntPtr)data);
+                        return True
+                    def texImage2D(tex, level, internalFormat, format, type) -> bool:
+                        width = tex.width; height = tex.height
+                        if spans:
+                            for l in range(level[0], level[1]):
+                                span = spans[l]
+                                if span[0] < 0: return False
+                                pixels = bytes[span[0]:span[1]]
+                                # GL.TexImage2D(TextureTarget.Texture2D, l, internalFormat, width >> l, height >> l, 0, format, type, (IntPtr)data);
+                        else: pass #GL.TexImage2D(TextureTarget.Texture2D, 0, internalFormat, width, height, 0, format, type, (IntPtr)data)
+                        return True
+                    # process
+                    if not bytes: return self.default
+                    elif isinstance(fmt, tuple):
+                        formatx, pixel = fmt
+                        s = pixel & TexturePixel.Signed
+                        f = pixel & TexturePixel.Float
+                        if formatx & TextureFormat.Compressed:
+                            match formatx:
+                                case TextureFormat.DXT1: format, compression = Texture.FRgb, Texture.CMDxt1 # if s else Texture.FRgb, Texture.CMDxt1
+                                case TextureFormat.DXT1A: format, compression = Texture.FRgb, Texture.CMDxt1
+                                case TextureFormat.DXT3: format, compression = Texture.FRgba, Texture.CMDxt3
+                                case TextureFormat.DXT5: format, compression = Texture.FRgba, Texture.CMDxt5
+                                case TextureFormat.BC4: format, compression = Texture.FRgba, Texture.CMRgtc
+                                case TextureFormat.BC5: format, compression = Texture.FRgba, Texture.CMRgtc
+                                # case TextureFormat.BC6H: format, compression = Texture.FRgba, Texture.??
+                                # case TextureFormat.BC7: format, compression = Texture.FRgba, Texture.??
+                                case TextureFormat.ETC2: format, compression = Texture.FRgba, Texture.CMEtc2
+                                case TextureFormat.ETC2_EAC: format, compression = Texture.FRgba, Texture.CMEac
+                                case _: raise Exception(f'Unknown format: {formatx}')
+                            # tex.setup2dTexture(width, height, Texture.TUnsignedByte, format)
+                            # tex.setRamImage(bytes, compression)
+                            if compression == 0 or not compressedTexImage2D(src, level, compression): return self.default
+                        else:
+                            match formatx:
+                                case TextureFormat.I8: type, format = Texture.TUnsignedByte, Texture.FLuminance
+                                case TextureFormat.L8: type, format = Texture.TUnsignedByte, Texture.FLuminance
+                                case TextureFormat.R8: type, format = Texture.TUnsignedByte, Texture.FR8i
+                                case TextureFormat.R16: type, format = Texture.TFloat, Texture.FR16 if f else Texture.TUnsignedShort, Texture.FR16i
+                                case TextureFormat.RG16: type, format = Texture.TFloat, Texture.FRg16 if f else Texture.TUnsignedShort, Texture.FRg16i
+                                case TextureFormat.RGB24: type, format = Texture.TUnsignedByte, Texture.FRgb8
+                                case TextureFormat.RGB565: type, format = Texture.TUnsignedByte, Texture.FRgb565
+                                case TextureFormat.RGBA32: type, format = Texture.TUnsignedByte, Texture.FRgba8
+                                case TextureFormat.ARGB32: type, format = Texture.TUnsignedInt, Texture.FRgba8
+                                case TextureFormat.BGRA32: type, format = Texture.TUnsignedInt, Texture.FRgba8
+                                case TextureFormat.BGRA1555: type, format = Texture.TUnsignedShort, Texture.FRgba8
+                                case _: raise Exception(f'Unknown format: {formatx}')
+                            # tex.setup2dTexture(width, height, Texture.TUnsignedByte, format)
+                    else: raise Exception(f'Unknown format: {fmt}')
+                    tex.setMinfilter(Texture.FTLinearMipmapLinear)
+
+                    # set mip-maps
+                    # offset = 0; width2 = width; height2 = height
+                    # for level in range(numMipMaps):
+                    #     size = tex.getExpectedRamMipmapImageSize(level+1)
+                    #     image = bytes[offset:offset+size]
+                    #     tex.setRamMipmapImage(level, CPTAUchar(image))
+                    #     offset += size; width2 = max(1, width2 // 2); height2 = max(1, height2 // 2)
+                    # tex.prepare(base.win.getGsg())
+                    # tex.prepare(base.graphicsEngine.getGs())
+                    return tex
+                case _: raise Exception(f'Unknown x: {x}')
+        return src.create('PD', _lambdax)
+
+    def deleteTexture(self, texture: Texture) -> None: texture.release()
+
+class MaterialPoly():
+    def __init__(self, mat: Material, texs: dict[str,Texture] = {}):
+        self.mat = mat
+        self.texs = texs
+    def apply(self, node: NodePath) -> None:
+        node.setMaterial(self.mat)
+        # mainTex = p.textures['Main'] if 'Main' in p.textures else None
+        # if mainTex:
+        #     m.texs[.append]((, None))
+        #     bumpTex = p.textures['Bump'] if 'Bump' in p.textures else None
+        #     if bumpTex:
+        #         s = TextureStage('norm'); s.setMode(TextureStage.M_normal)
+        #         ts.append((self.textureManager.create(bumpTex).tex, s))
+        pass
+
+# Panda3dMaterialBuilder
+# https://docs.panda3d.org/1.10/python/programming/render-attributes/materials
+class Panda3dMaterialBuilder(MaterialBuilder):
+    def __init__(self, textureManager: TextureManager):
+        super().__init__(textureManager)
+
+    _defaultMaterial: MaterialPoly; _terrainMaterial: MaterialPoly
+    @property
+    def default(self) -> MaterialPoly:
+        if self._default: return self._default
+        self._default = self._createDefault()
+        return self._default
+    @property
+    def terrain(self) -> MaterialPoly:
+        if self._terrain: return self._terrain
+        self._terrain = self._createTerrain()
+        return self._terrain
+
+    def _createDefault() -> MaterialPoly:
+        m = MaterialPoly(Material(), {'Main': self.textureManager.default})
+        return m
+
+    def _createTerrain() -> MaterialPoly:
+        m = MaterialPoly(Material(), {'Main': self.textureManager.terrain})
+        return m
+
+    async def create(self, source: ISource, path: object) -> MaterialPoly:
+        match path:
+            case p if isinstance(path, MaterialStdProp):
+                m = MaterialPoly(Material(), {k:(await self.textureManager.create(source, v))[0] for k, v in p.textures.items() if k == 'Main' or k == 'Bump'})
+                return m
+            # case s if isinstance(path, MaterialShaderProp): return m
+            case _: raise Exception(f'Unknown: {path}')
+
+# Panda3dGfxApi
+class Panda3dGfxApi(IOpenGfxApi):
+    def __init__(self): pass
+    def addMeshCollider(self, src: NodePath, mesh: object, isKinematic: bool, static_: bool) -> None: raise NotImplementedError();
+    def addMeshRenderer(self, src: NodePath, mesh: object, material: Material, enabled: bool, static_: bool) -> None: raise NotImplementedError();
+    def addMissingMeshCollidersRecursively(self, src: NodePath, static_: bool) -> None: raise NotImplementedError();
+    def attach(self, method: GfxAttach, src: NodePath, args: list[object]) -> None: pass
+    def createMesh(self, mesh: object) -> NodePath: raise NotImplementedError();
+    def createObject(self, name: str, tag: str = None, parent: NodePath = None) -> NodePath:
+        n = PandaNode(name)
+        if tag: n.setTag('tag', tag)
+        p = parent or base.render
+        s = p.attachNewNode(n)
+        return s
+    def setLayerRecursively(self, src: NodePath, layer: int) -> None: raise NotImplementedError();
+    def parent(self, src: PandNodePathaNode, parent: NodePath) -> None: raise NotImplementedError();
+    def transform(self, src: NodePath, position: Vector3, rotation: quaternion, localScale: Vector3) -> None: raise NotImplementedError();
+    def transform(self, src: NodePath, position: Vector3, rotation: Matrix4x4, localScale: Vector3) -> None: raise NotImplementedError();
+    def setVisible(self, src: NodePath, visible: bool) -> None:
+        src.show()
+        # if visible:
+        #     if src.isHidden(): src.show()
+        # else:
+        #     if not src.isHidden(): src.hide()
+    def destroy(self, src: NodePath) -> None: src.removeNode()
+
+# Panda3dGfx
+class Panda3dGfxModel(IOpenGfxModel):
+    def __init__(self):
+        self.textureManager: TextureManager = TextureManager(Panda3dTextureBuilder())
+        self.materialManager: MaterialManager = MaterialManager(self.textureManager, Panda3dMaterialBuilder(self.textureManager))
+        self.objectManager: ObjectModelManager = ObjectModelManager(self.materialManager, Panda3dObjectModelBuilder())
+        self.shaderManager: ShaderManager = ShaderManager(Panda3dShaderBuilder())
+    def preload(self, source: ISource, path: object) -> None: self.objectManager.preload(source, path)
+    def preloadTexture(self, source: ISource, path: object) -> None: self.textureManager.preload(source, path)
+    def create(self, source: ISource, path: object, static_: bool, parent: object = None) -> tuple[object, object]: return self.objectManager.create(source, path, static_, parent)
+    def createShader(self, source: ISource, path: object, args: dict[str, bool] = None) -> tuple[GfxShader, object]: return self.shaderManager.create(source, path, args)
+    def createTexture(self, source: ISource, path: object, level: range = None) -> tuple[int, object]: return self.textureManager.create(source, path, level)
+
+# Panda3dGfxLight
+class Panda3dGfxLight(IOpenGfxLight):
+    def __init__(self): pass
+    def createLight(self, name: str, position: Vector3, radius: float, color: Color, indoors: bool, parent: NodePath = None) -> NodePath:
+        n = PointLight(name)
+        n.setColor((0.7, 0.7, 0.7, 1))
+        p = parent or base.render
+        s = p.attachNewNode(n)
+        if position: s.setPos(vector3ToPanda(position))
+        base.render.setLight(s)
+        return s
+    def createReflectionProbe(self, name: str, position: Vector3, parent: object = None) -> object: return 'probe'
+
+# Panda3dGfxTerrain
+class Panda3dGfxTerrain(IOpenGfxTerrain):
+    class TerrainLayer:
+        def __init__(self, diffuseTexture: Texture, smoothness: float, metallic: float, maskMapTexture: Texture, normalMapTexture: Texture, tileSize: Vector3):
+            self.diffuseTexture = diffuseTexture
+            self.smoothness = smoothness
+            self.metallic = metallic
+            self.maskMapTexture = maskMapTexture
+            self.normalMapTexture = normalMapTexture
+            self.tileSize = tileSize
+    class TerrainData:
+        def __init__(self, heightmapResolution: int):
+            self.heightmapResolution: int = heightmapResolution
+            self.heights: PNMImage = PNMImage(heightmapResolution, heightmapResolution, 1); self.heights.setMaxval(0xffff)
+            self.size: Vector3 = None
+            self.terrainLayers: list[TerrainLayer] = None
+            self.alphamapResolution: int = 0
+            self.alphamap: ndarray = None
+        def setHeights(self, x: int, y: int, heights: ndarray) -> None:
+            s = self.heights; z = self.heightmapResolution
+            for y in range(z):
+                for x in range(z):
+                    h = heights[y, x] # Get float value (0.0 to 1.0)
+                    # h = (h / 2) + .5
+                    s.setGray(x, y, h) # Set pixel: 0.0 (black) is lowest, 1.0 (white) is highest
+        def setAlphamaps(self, x: int, y: int, alphamap: ndarray) -> None: self.alphamap = alphamap
+    def __init__(self): pass
+    def createData(self, offset: int, heights: ndarray, heightRange: float, sampleDistance: float, layers: list[GfxTerrainLayer], alphaMap: ndarray) -> object:
+        hShape = heights.shape; aShape = alphaMap.shape
+        assert(hShape[0] == hShape[1] and heightRange >= 0 and sampleDistance >= 0)
+        resolution = hShape[0]
+        s = Panda3dGfxTerrain.TerrainData(heightmapResolution=resolution)
+        terrainWidth = (resolution + offset) * sampleDistance
+        if not math.isclose(heightRange, 0): s.size = array([terrainWidth, heightRange, terrainWidth]); s.setHeights(0, 0, heights)
+        else: s.size = array([terrainWidth, 1., terrainWidth])
+        s.terrainLayers = [Panda3dGfxTerrain.TerrainLayer(
+            diffuseTexture=s.texture,
+            smoothness=s.smoothness,
+            metallic=s.metallic,
+            maskMapTexture=s.maskMapTexture,
+            normalMapTexture=s.normalMapTexture,
+            tileSize=s.tileSize) for s in layers]
+        if alphaMap.size == 0: assert(aShape[0] == aShape[1]); s.alphamapResolution = alphaMap[0]; s.setAlphamaps(0, 0, alphaMap)
+        return s
+    def create(self, name: str, position: Vector3, data: object, parent: NodePath = None) -> NodePath:
+        # print(f't: {parent}')
+        t = GeoMipTerrain(name) # Create the GeoMipTerrain instance
+        t.setHeightfield(data.heights) # Load a heightfield image (preferably power-of-two plus one, e.g., 513x513)
+        # t.setBlockSize(32) #data.size[0]
+        # t.setNear(40); t.setFar(100)
+        t.setBruteforce(True) # Bruteforce disables Level of Detail (LOD) for simple, small maps
+        t.generate()
+        s = t.getRoot()
+        s.setTexture(base.loader.loadTexture('maps/envir-ground.jpg'))
+        # s.setTexture(data.terrainLayers[0].diffuseTexture)
+        s.reparentTo(parent or base.render)
+        # for i, l in enumerate(data.terrainLayers):
+        #     print(l)
+        #     ts = TextureStage(f'{i}'); ts.setSort(i)
+        #     if i > 0:
+        #         # ts.setCombineAlpha(TextureStage.CMReplace, TextureStage.CSTexture, TextureStage.COSrcColor)
+        #         ts.setMode(TextureStage.MBlend)
+        #     n.setTexture(ts, l.diffuseTexture)
+        s.setSz(10) # data.size[1]
+        if position.size != 0: s.setPos(vector3ToPanda(position))
+        return s
+
+# Panda3dEngine
+class Panda3dEngine(Engine):
+    def __init__(self):
+        super().__init__('PD', 'Panda3D')
+        self.caps = EngineX.Caps.ReadDds
+        self.gfxFactory = staticmethod(lambda: [Panda3dGfxApi(), None, None, Panda3dGfxModel(), Panda3dGfxLight(), Panda3dGfxTerrain()])
+        self.sfxFactory = staticmethod(lambda: [SystemSfx()])
+Panda3dEngine.this = Panda3dEngine()
+
+#endregion
+
+def vector3ToPanda(pos: Vector3) -> tuple: return (pos[0]+1000, pos[1]+1000, pos[2])

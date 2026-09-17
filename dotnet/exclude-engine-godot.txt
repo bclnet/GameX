@@ -1,0 +1,3 @@
+﻿# Header
+GameX.Engine.Godot.dll
+OpenX.Engine.Godot.dll

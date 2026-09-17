@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="../base.css">
+    <style type="text/css">
+        #body {
+            position: relative;
+            width: 400px;
+        }
+
+        #title {
+            float: right;
+        }
+
+        #Header {
+            position: absolute;
+        }
+
+        #Frame {
+            position: absolute;
+            left: 180px;
+        }
+
+        #Type {
+            position: absolute;
+            font-size: .75em;
+            top: 260px;
+        }
+
+        #TextFormat {
+            position: absolute;
+            font-size: .75em;
+            left: 180px;
+            top: 160px;
+        }
+
+        #SynchType {
+            position: absolute;
+            font-size: .75em;
+            left: 180px;
+            top: 260px;
+        }
+
+        #Magic {
+            position: absolute;
+            font-size: .75em;
+            left: 180px;
+            top: 315px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="body" />
+
+    <div id="title">
+        <h1>SPR</h1>
+    </div>
+
+    <div id="Header">
+        <h2>I3if3ifi</h2>
+        <h3>Header</h3>
+        Magic<br />
+        Version<br />
+        Type (Type)<br />
+        TextFormat (TextFormat)<br />
+        BoundingRadius<br />
+        MaxWidth<br />
+        MaxHeight<br />
+        NumFrames<br />
+        BeamLen<br />
+        SynchType (SynchType)<br />
+    </div>
+
+    <div id="Type">
+        <h3>Type</h3>
+        VP_PARALLEL_UPRIGHT = 0<br />
+        FACING_UPRIGHT = 1<br />
+        VP_PARALLEL = 2<br />
+        ORIENTED = 3<br />
+        VP_PARALLEL_ORIENTED = 4<br />
+    </div>
+
+    <div id="TextFormat">
+        <h3>TextFormat</h3>
+        SPR_NORMAL = 0<br />
+        SPR_ADDITIVE = 1<br />
+        SPR_INDEXALPHA = 2<br />
+        SPR_ALPHTEST = 3<br />
+    </div>
+
+    <div id="SynchType">
+        <h3>SynchType</h3>
+        Synchronized = 0<br />
+        Random = 1<br />
+    </div>
+
+    <div id="Frame">
+        <h2>5i</h2>
+        <h3>Frame</h3>
+        Group<br />
+        OriginX<br />
+        OriginY<br />
+        Width<br />
+        Height<br />
+    </div>
+
+    <div id="Magic">
+        <h2>Magic</h2>
+        MAGIC = 0x50534449<br />
+    </div>
+</body>
+
+</html>

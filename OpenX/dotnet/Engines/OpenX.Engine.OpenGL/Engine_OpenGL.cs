@@ -145,7 +145,7 @@ class OpenGLShaderBuilder : ShaderBuilder<GfxShader> {
             GL.GetProgramInfoLog(shader.Program, out var linkInfo);
             throw new Exception($"Error linking shaders: {linkInfo} (link status = {linkStatus})");
         }
-        //Log.Info($"B_Shader {name}({string.Join(", ", args.Keys)}) compiled and linked succesfully");
+        //Log.Info($"Shader {name}({string.Join(", ", args.Keys)}) compiled and linked succesfully");
         return shader;
     }
 

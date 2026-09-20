@@ -15,10 +15,6 @@
         "type": "Texture"
       },
       {
-        "path": "data.pak:GAME/GRAPH/OBJ3D/INTERACTIVE/NPC/RATMAN_BASE/RATMAN_BASE.FTL",
-        "type": "Model"
-      },
-      {
         "path": [
           "data.pak:GAME/GRAPH/INTERFACE/BOOK/RUNES/LACET.FTL",
           "data.pak:GAME/GRAPH/OBJ3D/INTERACTIVE/NPC/RATMAN_BASE/RATMAN_BASE.FTL"

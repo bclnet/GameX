@@ -1,7 +1,8 @@
 import os
 from io import BytesIO
 from numpy import ndarray, array
-from gamex import ArcBinary, FileSource, MetaInfo, MetaContent, IHaveMetaInfo
+from openx.core import IWriteToStream, unsafe
+from gamex import ArcBinary, FileSource, MetaInfo, MetaContent, IHaveMetaInfo, DesSer
 from gamex.families.Arkane.formats.danae.eerieTypes import POLY, TLVERTEX, E_VERTEX, E_TEXTURE, E_FACE, E_GROUPLIST, E_ACTIONLIST, E_SELECTIONS, E_3DOBJ, E_SPRINGS, CLOTHESVERTEX, CLOTHES_DATA, COLLISION_SPHERE, COLLISION_SPHERES_DATA
 
 # typedefs
@@ -10,17 +11,20 @@ class BinaryArchive: pass
 class Archive: pass
 class MetaManager: pass
 
+# types
+type Vector3 = ndarray
+
 #region Binary_Ftl
 
 # Binary_Ftl
-class Binary_Ftl(IHaveMetaInfo):
+class Binary_Ftl(IHaveMetaInfo, IWriteToStream):
     @staticmethod
     async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Ftl(r)
 
     #region Headers
 
-    FTL_MAGIC = 0x004c5446
-    FTL_VERSION = 0.83257
+    _FTL_MAGIC = 0x004c5446
+    _FTL_VERSION = 0.83257
 
     class FTL_HEADER:
         _struct = ('<6i', 24)
@@ -59,7 +63,7 @@ class Binary_Ftl(IHaveMetaInfo):
             self.numSelections,
             self.origin,
             self.name) = t
-            self.name = self.name.decode('ascii')
+            self.name = unsafe.fixedAStringScan(self.name, 256)
 
     class FTL_VERTEX:
         _struct = (f'{TLVERTEX._struct[0]}6f', 32 + 24)
@@ -80,7 +84,7 @@ class Binary_Ftl(IHaveMetaInfo):
         _struct = ('<256s', 256)
         def __init__(self, t):
             (self.name) = t
-            self.name = self.name.decode('ascii')
+            self.name = unsafe.fixedAStringScan(self.name, 256)
         def to(s) -> E_TEXTURE:
             name: str  = s.name
             poly: POLY = POLY.NONE_
@@ -142,7 +146,7 @@ class Binary_Ftl(IHaveMetaInfo):
             self.numIndex,
             self.trash, #indexes
             self.size) = t
-            self.name = self.name.decode('ascii', 'ignore')
+            self.name = unsafe.fixedAStringScan(self.name, 256)
         def to(s) -> E_GROUPLIST:
             return E_GROUPLIST(
                 name = s.name,
@@ -157,7 +161,7 @@ class Binary_Ftl(IHaveMetaInfo):
             self.idx, #index vertex
             self.act, #action
             self.sfx) = t #sfx
-            self.name = self.name.decode('ascii', 'ignore')
+            self.name = unsafe.fixedAStringScan(self.name, 256)
         def to(s) -> E_ACTIONLIST:
             return E_ACTIONLIST(
                 name = s.name,
@@ -171,7 +175,7 @@ class Binary_Ftl(IHaveMetaInfo):
             (self.name,
             self.numSelected,
             self.trash) = t #selected
-            self.name = self.name.decode('ascii', 'ignore')
+            self.name = unsafe.fixedAStringScan(self.name, 64)
         def to(s) -> E_SELECTIONS:
             return E_SELECTIONS(
                 name = s.name,
@@ -182,11 +186,11 @@ class Binary_Ftl(IHaveMetaInfo):
     obj: E_3DOBJ
 
     def __init__(self, r: BinaryReader):
-        obj = E_3DOBJ()
+        obj = self.obj = E_3DOBJ()
         magic = r.readUInt32()
-        if magic != Binary_Ftl.FTL_MAGIC: raise Exception(f"Invalid FTL magic: '{magic}'.")
+        if magic != Binary_Ftl._FTL_MAGIC: raise Exception(f"Invalid FTL magic: '{magic}'.")
         version = r.readSingle()
-        if version != Binary_Ftl.FTL_VERSION: raise Exception(f"Invalid FLT version: '{version}'.")
+        if version != Binary_Ftl._FTL_VERSION: raise Exception(f"Invalid FLT version: '{version}'.")
         r.skip(512) # skip checksum
         header = r.readS(Binary_Ftl.FTL_HEADER)
 
@@ -275,11 +279,17 @@ class Binary_Ftl(IHaveMetaInfo):
         # process
         obj._centerObjectCoordinates()
         obj._createCedricData()
-        obj._createPFaces()
         obj._precomputeFastAccess()
 
+
+    def writeToStream(self, stream: object): return DesSer.serialize(self, stream)
+    def __repr__(self): return DesSer.serialize(self)
+
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        # MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self.data))
+        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self)),
+        MetaInfo('FTL', items = [
+            MetaInfo(f'Obj: {self.obj}')
+            ])
         ]
 
 #endregion
@@ -287,19 +297,154 @@ class Binary_Ftl(IHaveMetaInfo):
 #region Binary_Fts
 
 # Binary_Fts
-class Binary_Fts(IHaveMetaInfo):
+class Binary_Fts(IHaveMetaInfo, IWriteToStream):
     @staticmethod
     async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Fts(r)
 
     #region Headers
 
+    class ANCHOR_DATA:
+        pos: Vector3
+        numLinked: int
+        flags: int
+        linked: list[int]
+        radius: float
+        height: float
+
+    class E_BKG_INFO:
+        treat: int
+        nothing: bool
+        numPoly: int
+        numIAnchors: int
+        numPolyin: int
+        frustrumMinY: float
+        frustrumMaxY: float
+        polydata: list[E_POLY]
+        # polyin: list[list[E_POLY]]
+        ianchors: list[int] # index on anchors list
+        flags: int
+        tileMinY: float
+        tileMaxY: float
+
+    class E_SMINMAX:
+        min: int
+        max: int
+
+    class F_BKG_DATA:
+        treat: int
+        nothing: int
+        numPoly: int
+        numIAnchors: int
+        numPolyin: int
+        flags: int
+        frustrumMinY: float
+        frustrumMaxY: float
+        polydata: list[E_POLY]
+        polyin: list[list[E_POLY]]
+        ianchors: list[int] # index on anchors list
+
+    _MAX_BKGX = 160
+    _MAX_BKGZ = 160
+    _BKG_SIZX = 100
+    _BKG_SIZZ = 100
+
+    class E_BACKGROUND:
+        fastdata: F_BKG_DATA #[,]  = new F_BKG_DATA[MAX_BKGX, MAX_BKGZ];
+        exist: int = 1
+        xsize: int
+        zsize: int
+        xdiv: int
+        zdiv: int
+        xmul: float
+        zmul: float
+        backg: list[E_BKG_INFO]
+        ambient: Vector3
+        ambient255: Vector3
+        minMax: list[E_SMINMAX]
+        numAnchors: int
+        anchors: list[ANCHOR_DATA]
+        name: str
+        def __init__(self, sx: int=_MAX_BKGX, sz: int=_MAX_BKGZ, xdiv: int=_BKG_SIZX, zdiv: int=_BKG_SIZZ):
+            self.xsize = sx
+            self.zsize = sz
+            if xdiv < 0: xdiv = 1
+            if zdiv < 0: zdiv = 1
+            self.xdiv = xdiv
+            self.zdiv = zdiv
+            self.xmul = 1. / Xdiv
+            self.zmul = 1. / Zdiv
+            self.backg = [E_BKG_INFO()]*(sx * sz)
+            for i in range(len(self.backg)): self.backg[i].nothing = True
+            self.minMax = [E_SMINMAX()]*sz
+            for i in range(len(self.minMax)):
+                self.minMax[i].Min = 9999
+                self.minMax[i].Max = -1
+
+    _FTS_VERSION = 0.141
+
+    class FTS_HEADER:
+        _struct = ('<256sifi3i', 256 + 24)
+        def __init__(self, t):
+            pad = self.pad = [0]*3
+            (self.path,
+            self.count,
+            self.version,
+            self.compressedsize,
+            pad[0], pad[1], pad[2]) = t
+            self.path = unsafe.fixedAStringScan(self.path, 256)
+
+    class FTS_HEADER2:
+        _struct = ('<256s', 256)
+        def __init__(self, t):
+            (self.path) = t
+            self.path = unsafe.fixedAStringScan(self.path, 256)
+
+    class F_VERTEX:
+        def __init__(self):
+            self.sy = 0
+            self.ssx = 0
+            self.ssz = 0
+            self.stu = 0
+            self.stv = 0
+
+    class F_POLY:
+        _struct = ('<20fi20fi2h', 172)
+        def __init__(self, t):
+            v0 = self.v0 = F_VERTEX()
+            (v0,
+
+    class F_LEVEL:
+        playerPos: Vector3 
+        mscenePos: Vector3
+        textures: list[E_TEXTURE]
+        backg: list[E_BKG_INFO]
+        portals: E_PORTAL_DATA
+        numRoomDistance: int
+        roomDistance: list[ROOM_DIST_DATA]
+
     #endregion
 
+    level: F_LEVEL
+    bkg: E_BACKGROUND
+
     def __init__(self, r: BinaryReader):
-        pass
+        header = r.readS(Binary_Fts.FTS_HEADER)
+        if header.version != Binary_Fts._FTS_VERSION: raise Exception('BAD MAGIC')
+        if header.count > 0:
+            count = 0
+            while count < header.count:
+                r.readS<FTS_HEADER2>()
+                r.skip(512) # skip check
+                count += 1
+                if count > 60: raise Exception('BAD HEADER')
+        self.level = F_LEVEL()
+        self.bkg = E_BACKGROUND()
+
+    def writeToStream(self, stream: object): return DesSer.serialize(self, stream)
+    def __repr__(self): return DesSer.serialize(self)
 
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        # MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self.data))
+        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self.data))
         ]
 
 #endregion
@@ -307,15 +452,18 @@ class Binary_Fts(IHaveMetaInfo):
 #region Binary_Tea
 
 # Binary_Tea
-class Binary_Tea(IHaveMetaInfo):
+class Binary_Tea(IHaveMetaInfo, IWriteToStream):
     @staticmethod
     async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Tea(r)
 
     def __init__(self, r: BinaryReader):
         pass
 
+    def writeToStream(self, stream: object): return DesSer.serialize(self, stream)
+    def __repr__(self): return DesSer.serialize(self)
+
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        # MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self.data))
+        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self.data))
         ]
 
 #endregion

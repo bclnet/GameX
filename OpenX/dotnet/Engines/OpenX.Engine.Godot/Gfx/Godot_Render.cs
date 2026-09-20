@@ -39,7 +39,7 @@ public class TextureRenderer : Renderer {
 
     public override void Start() {
         var obj = new MeshInstance3D {
-            Name = "B_Texture",
+            Name = "Texture",
             Mesh = new PlaneMesh { Size = new Vector2(12f, 12f) },
             //RotationDegrees = new Vector3(-90f, -180f, 180f)
         };

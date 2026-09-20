@@ -12,8 +12,9 @@ using System.Threading.Tasks;
 namespace GameX.Arkane.Formats.Danae;
 
 #region Binary_Ftl
+// https://github.com/OpenSourcedGames/Arx-Fatalis/blob/master/Sources/DANAE/ARX_FTL.cpp#L575
 
-public class Binary_Ftl : IHaveMetaInfo,IWriteToStream {
+public class Binary_Ftl : IHaveMetaInfo, IWriteToStream {
     public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Ftl(r));
 
     #region Headers
@@ -176,7 +177,6 @@ public class Binary_Ftl : IHaveMetaInfo,IWriteToStream {
 
     public readonly E_3DOBJ Obj;
 
-    // https://github.com/OpenSourcedGames/Arx-Fatalis/blob/master/Sources/DANAE/ARX_FTL.cpp#L575
     public Binary_Ftl(BinaryReader r) {
         var obj = Obj = new E_3DOBJ();
         var magic = r.ReadUInt32();
@@ -287,7 +287,6 @@ public class Binary_Ftl : IHaveMetaInfo,IWriteToStream {
         // process
         obj.CenterObjectCoordinates();
         obj.CreateCedricData();
-        //obj.CreatePFaces();
         obj.PrecomputeFastAccess();
     }
 
@@ -296,7 +295,8 @@ public class Binary_Ftl : IHaveMetaInfo,IWriteToStream {
 
     // IHaveMetaInfo
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
-        new("BinaryFTL", items: [
+        new(null, new MetaContent { Type = "Text", Name = "Name", Value = this }),
+        new("FTL", items: [
             new($"Obj: {Obj}"),
         ])
     ];
@@ -305,14 +305,14 @@ public class Binary_Ftl : IHaveMetaInfo,IWriteToStream {
 #endregion
 
 #region Binary_Fts
+// https://github.com/OpenSourcedGames/Arx-Fatalis/blob/master/Sources/EERIE/EERIEPoly.cpp#L3755
 
-public unsafe class Binary_Fts : IHaveMetaInfo {
+public unsafe class Binary_Fts : IHaveMetaInfo, IWriteToStream {
     public static Task<object> Factory(BinaryReader r, FileSource f, Archive s) => Task.FromResult((object)new Binary_Fts(r));
 
-    #region Headers : Struct
+    #region Headers
 
     struct ANCHOR_DATA {
-        public static (string, int) Struct = ("<3f2h?2f", sizeof(ANCHOR_DATA));
         public Vector3 Pos;
         public short NumLinked;
         public short Flags;
@@ -322,7 +322,6 @@ public unsafe class Binary_Fts : IHaveMetaInfo {
     }
 
     public struct E_BKG_INFO {
-        public static (string, int) Struct = ("<?", sizeof(E_BKG_INFO));
         public byte Treat;
         public bool Nothing;
         public short NumPoly;
@@ -339,7 +338,6 @@ public unsafe class Binary_Fts : IHaveMetaInfo {
     }
 
     struct E_SMINMAX {
-        public static (string, int) Struct = ("<2h", sizeof(E_SMINMAX));
         public short Min;
         public short Max;
     }
@@ -350,8 +348,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo {
     //const int FBD_TREAT = 1;
     //const int FBD_NOTHING = 2;
 
-    struct FAST_BKG_DATA {
-        public static (string, int) Struct = ("<?", sizeof(FAST_BKG_DATA));
+    struct F_BKG_DATA {
         public byte Treat;
         public byte Nothing;
         public short NumPoly;
@@ -371,7 +368,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo {
     const int BKG_SIZZ = 100;
 
     class E_BACKGROUND {
-        public FAST_BKG_DATA[,] fastdata = new FAST_BKG_DATA[MAX_BKGX, MAX_BKGZ];
+        public F_BKG_DATA[,] fastdata = new F_BKG_DATA[MAX_BKGX, MAX_BKGZ];
         public int exist = 1;
         public short XSize;
         public short ZSize;
@@ -405,12 +402,9 @@ public unsafe class Binary_Fts : IHaveMetaInfo {
         }
     }
 
-    #endregion
-
-    #region Headers
-
-    const float NON_PORTAL_VERSION = 0.136f;
+    //const float NON_PORTAL_VERSION = 0.136f;
     const float FTS_VERSION = 0.141f;
+    //const int SIZ_WRK = 10;
 
     [StructLayout(LayoutKind.Sequential)]
     struct FTS_HEADER {
@@ -428,21 +422,9 @@ public unsafe class Binary_Fts : IHaveMetaInfo {
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)] public string Path;
     }
 
-    const int SIZ_WRK = 10;
-
-    public class FastLevel {
-        public Vector3 PlayerPos;
-        public Vector3 MscenePos;
-        public E_TEXTURE[] Textures;
-        public E_BKG_INFO[] Backg;
-        public E_PORTAL_DATA Portals;
-        public int NumRoomDistance;
-        public ROOM_DIST_DATA[] RoomDistance;
-    }
-
     [StructLayout(LayoutKind.Sequential)]
-    struct FAST_VERTEX {
-        public static (string, int) Struct = ("<5f", sizeof(FAST_VERTEX));
+    struct F_VERTEX {
+        //public static (string, int) Struct = ("<5f", 20);
         public float sy;
         public float ssx;
         public float ssz;
@@ -451,9 +433,9 @@ public unsafe class Binary_Fts : IHaveMetaInfo {
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct FAST_EERIEPOLY {
-        public static (string, int) Struct = ("<20fi20f?2h", sizeof(FAST_EERIEPOLY));
-        public FAST_VERTEX V0; public FAST_VERTEX V1; public FAST_VERTEX V2; public FAST_VERTEX V3;
+    struct F_POLY {
+        public static (string, int) Struct = ("<20fi20fi2h", 172);
+        public F_VERTEX V0; public F_VERTEX V1; public F_VERTEX V2; public F_VERTEX V3;
         public int TexPtr;
         public Vector3 Norm;
         public Vector3 Norm2;
@@ -465,8 +447,8 @@ public unsafe class Binary_Fts : IHaveMetaInfo {
         public short Paddy;
     }
 
-    struct FAST_SCENE_HEADER {
-        public static (string, int) Struct = ("<f5i6f2i", sizeof(FAST_SCENE_HEADER));
+    struct F_SCENE_HEADER {
+        public static (string, int) Struct = ("<f5i6f2i", sizeof(F_SCENE_HEADER));
         public float Version;
         public int SizeX;
         public int SizeZ;
@@ -480,7 +462,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo {
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct FAST_TEXTURE_CONTAINER {
+    struct F_TEXTURE_CONTAINER {
         public static (string, int) Struct = ("<2i256s", 8 + 256);
         public int TcPtr;
         public int TempPtr;
@@ -488,8 +470,8 @@ public unsafe class Binary_Fts : IHaveMetaInfo {
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct FAST_ANCHOR_DATA {
-        public static (string, int) Struct = ("<5f2h", sizeof(FAST_ANCHOR_DATA));
+    struct F_ANCHOR_DATA {
+        public static (string, int) Struct = ("<5f2h", sizeof(F_ANCHOR_DATA));
         public Vector3 Pos;
         public float Radius;
         public float Height;
@@ -498,8 +480,8 @@ public unsafe class Binary_Fts : IHaveMetaInfo {
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct FAST_SCENE_INFO {
-        public static (string, int) Struct = ("<2I", sizeof(FAST_SCENE_INFO));
+    struct F_SCENE_INFO {
+        public static (string, int) Struct = ("<2I", sizeof(F_SCENE_INFO));
         public int NumPoly;
         public int NumIAnchors;
     }
@@ -519,47 +501,53 @@ public unsafe class Binary_Fts : IHaveMetaInfo {
         public Vector3 EndPos;
     }
 
+    public class F_LEVEL {
+        public Vector3 PlayerPos;
+        public Vector3 MscenePos;
+        public E_TEXTURE[] Textures;
+        public E_BKG_INFO[] Backg;
+        public E_PORTAL_DATA Portals;
+        public int NumRoomDistance;
+        public ROOM_DIST_DATA[] RoomDistance;
+    }
+
     #endregion
 
-    public readonly FastLevel Level;
+    public readonly F_LEVEL Level;
     readonly E_BACKGROUND Bkg;
 
-    // https://github.com/OpenSourcedGames/Arx-Fatalis/blob/master/Sources/EERIE/EERIEPoly.cpp#L3755
     public Binary_Fts(BinaryReader r) {
         int i, j, k, kk;
         var header = r.ReadS<FTS_HEADER>();
         if (header.Version != FTS_VERSION) throw new FormatException("BAD MAGIC");
-        //Log($"Header1: {r.Position():x}, {header.Path}");
         if (header.Count > 0) {
             var count = 0;
             while (count < header.Count) {
                 r.ReadS<FTS_HEADER2>();
                 r.Skip(512); // skip check
-                //Log($"Unique[{count}]: {r.Position():x}");
                 count++;
                 if (count > 60) throw new FormatException("BAD HEADER");
             }
         }
-        //Log($"Unique: {r.Position():x}");
 
-        Level = new FastLevel();
+        Level = new F_LEVEL();
         Bkg = new E_BACKGROUND();
         var s = new MemoryStream(r.DecompressBlast((int)(r.BaseStream.Length - r.BaseStream.Position), header.Compressedsize));
         using var r2 = new BinaryReader(s);
 
         // read
-        var fsh = r2.ReadS<FAST_SCENE_HEADER>();
+        var fsh = r2.ReadS<F_SCENE_HEADER>();
         if (fsh.Version != FTS_VERSION) throw new FormatException("BAD MAGIC");
         if (fsh.SizeX != Bkg.XSize) throw new FormatException("BAD HEADER");
         if (fsh.SizeZ != Bkg.ZSize) throw new FormatException("BAD HEADER");
         Level.PlayerPos = fsh.PlayerPos;
         Level.MscenePos = fsh.MscenePos;
-        Log.Info($"Header2: {r2.Tell():x}, {sizeof(FAST_SCENE_HEADER)}");
+        Log.Info($"Header2: {r2.Tell():x}, {sizeof(F_SCENE_HEADER)}");
 
         // textures
         var textures = Level.Textures = new E_TEXTURE[fsh.NumTextures];
         for (k = 0; k < textures.Length; k++) {
-            var ftc = r2.ReadS<FAST_TEXTURE_CONTAINER>();
+            var ftc = r2.ReadS<F_TEXTURE_CONTAINER>();
             textures[k] = new E_TEXTURE { Id = ftc.TcPtr, Path = ftc.Fic };
         }
         //Log($"Texture: {r2.Position():x}");
@@ -569,7 +557,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo {
         for (j = 0; j < fsh.SizeZ; j++)
             for (i = 0; i < fsh.SizeX; i++) {
                 ref E_BKG_INFO bi = ref backg[i + j * fsh.SizeX];
-                var fsi = r2.ReadS<FAST_SCENE_INFO>();
+                var fsi = r2.ReadS<F_SCENE_INFO>();
                 //if (fsi.NumPoly > 0) Log($"F[{j},{i}]: {r2.Position():x}, {fsi.NumPoly}, {fsi.NumIAnchors}");
                 bi.NumIAnchors = (short)fsi.NumIAnchors;
                 bi.NumPoly = (short)fsi.NumPoly;
@@ -579,7 +567,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo {
                 bi.FrustrumMaxY = -99999999f;
                 bi.FrustrumMinY = 99999999f;
                 for (k = 0; k < fsi.NumPoly; k++) {
-                    var ep = r2.ReadS<FAST_EERIEPOLY>();
+                    var ep = r2.ReadS<F_POLY>();
                     var tex = ep.TexPtr != 0
                         ? textures.FirstOrDefault(x => x.Id == ep.TexPtr)
                         : null;
@@ -652,7 +640,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo {
         var anchors = Bkg.Anchors = fsh.NumAnchors > 0 ? new ANCHOR_DATA[fsh.NumAnchors] : null;
         for (i = 0; i < fsh.NumAnchors; i++) {
             ref ANCHOR_DATA a = ref anchors[i];
-            var fad = r2.ReadS<FAST_ANCHOR_DATA>();
+            var fad = r2.ReadS<F_ANCHOR_DATA>();
             a.Flags = fad.Flags;
             a.Pos = fad.Pos;
             a.NumLinked = fad.NumLinked;
@@ -736,7 +724,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo {
         eg.Nothing = false;
     }
 
-    static void SetRoomDistance(FastLevel level, long i, long j, float val, ref Vector3 p1, ref Vector3 p2) {
+    static void SetRoomDistance(F_LEVEL level, long i, long j, float val, ref Vector3 p1, ref Vector3 p2) {
         if (i < 0 || j < 0 || i >= level.NumRoomDistance || j >= level.NumRoomDistance || level.RoomDistance == null) return;
         var offs = i + j * level.NumRoomDistance;
         ref ROOM_DIST_DATA rd = ref level.RoomDistance[offs];
@@ -748,10 +736,14 @@ public unsafe class Binary_Fts : IHaveMetaInfo {
     static void ComputePolyIn() {
     }
 
+    public void WriteToStream(Stream stream) => this.Serialize(stream);
+    public override string ToString() => this.Serialize();
+
     // IHaveMetaInfo
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag)
         => [
-            new("BinaryFTS", items: [
+            new(null, new MetaContent { Type = "Text", Name = "Name", Value = this }),
+            new("FTS", items: [
                 new($"Level: {Level}"),
                 new($"Bkg: {Bkg}"),
             ])

@@ -377,7 +377,7 @@ namespace GameX.IW.Formats {
             for (var i = 0; i < assetInfos.Length; i++) {
                 var info = assetInfos[i];
                 switch (info) {
-                    case "B_Material": {
+                    case "Material": {
                             var mat = new COD_Material(r);
                             break;
                         }

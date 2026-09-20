@@ -92,7 +92,7 @@ public class Binary_Dds : IHaveMetaInfo, ITexture {
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new(null, new MetaContent { Type = "Texture", Name = Path.GetFileName(file.Path), Value = this }),
-        new("B_Texture", items: [
+        new("Texture", items: [
             new($"Format: {Format.type}"),
             new($"Width: {Width}"),
             new($"Height: {Height}"),

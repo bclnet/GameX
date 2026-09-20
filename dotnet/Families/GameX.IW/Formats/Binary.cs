@@ -646,7 +646,7 @@ public class Binary_Iwi : ITexture, IHaveMetaInfo {
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new(null, new MetaContent { Type = "Texture", Name = Path.GetFileName(file.Path), Value = this }),
-            new("B_Texture", items: [
+            new("Texture", items: [
                 new($"Format: {Format.type}"),
                 new($"Width: {Header.Width}"),
                 new($"Height: {Header.Height}"),

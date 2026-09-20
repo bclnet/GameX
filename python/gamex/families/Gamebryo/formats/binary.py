@@ -23,7 +23,6 @@ class Binary_Nif(NiReader, IHaveMetaInfo, IHaveSource, IWriteToStream):
         self.source: ISource = s
 
     def writeToStream(self, stream: object): return DesSer.serialize(self, stream)
-
     def __repr__(self): return DesSer.serialize(self)
 
     #region IModel

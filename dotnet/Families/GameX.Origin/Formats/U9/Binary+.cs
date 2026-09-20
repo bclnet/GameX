@@ -418,7 +418,7 @@ public unsafe class Binary_Texture : IHaveMetaInfo, ITexture {
     // IHaveMetaInfo
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new(null, new MetaContent { Type = "Texture", Name = Path.GetFileName(file.Path), Value = this }),
-        new("B_Texture", items: [
+        new("Texture", items: [
             new($"BytesPerPixel: {BytesPerPixel}"),
             new($"Width: {Width}"),
             new($"Height: {Height}"),

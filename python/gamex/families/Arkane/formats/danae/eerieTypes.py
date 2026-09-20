@@ -1,5 +1,6 @@
 from numpy import ndarray, array
 from enum import Enum, Flag
+from quaternion import quaternion
 
 # types
 type Vector2 = ndarray
@@ -483,10 +484,14 @@ class E_BONE:
     numIdxVertices: int; idxVertices: list[int]
     originalGroup: E_GROUPLIST
     father: int
-    quatAnim: Quaternion; transAnim: Vector3; scaleAnim: Vector3
-    quatLast: Quaternion; transLast: Vector3; scaleLast: Vector3
-    quatInit: Quaternion; transInit: Vector3; scaleInit: Vector3
-    transInitGlobal: Vector3
+    quatAnim: quaternion; transAnim: Vector3; scaleAnim: Vector3
+    quatLast: quaternion; transLast: Vector3; scaleLast: Vector3
+    quatInit: quaternion; transInit: Vector3; scaleInit: Vector3
+    transInitGlobal: Vector3 = None
+    def __init__(self):
+        self.numIdxVertices = 0; self.idxVertices = []
+        self.quatInit = quaternion(); self.quatAnim = quaternion()
+        self.scaleInit = array([0]*3); self.scaleAnim = array([0]*3)
     def addIdxToBone(self, idx: int) -> None: self.idxVertices.append(idx); self.numIdxVertices += 1
 
 class E_CDATA:
@@ -541,13 +546,127 @@ class E_3DOBJ:
     #ndata: NEIGHBOURS_DATA
     cdata: CLOTHES_DATA
     sdata: COLLISION_SPHERES_DATA
-    #fastAccess: EERIE_FASTACCESS
+    fastAccess: E_FASTACCESS
     #c_data: EERIE_C_DATA
 
-    def _centerObjectCoordinates(self) -> None: pass
-    def _createCedricData(self) -> None: pass
-    def _createPFaces(self) -> None: pass
-    def _precomputeFastAccess(self) -> None: pass
+    def _centerObjectCoordinates(self) -> None:
+        offset = self.vertexList[self.origin].v
+        if offset[0] == 0 and offset[1] == 0 and offset[2] == 0: return
+        log.info(f'NOT CENTERED {self.file}\n')
+        for i in range(self.numVertex): self.vertexList[i].v -= offset; self.vertexList[i].vert.s -= offset
+        self.point0 -= offset
+    def _createCedricData(self) -> None:
+        def getFather(origin: int, startGroup: int) -> int:
+            for i in range(startGroup, -1, -1):
+                for j in range(self.groupList[i].numIndex):
+                    if self.groupList[i].indexes[j] == origin: return i
+            return -1
+
+        self.cdata = E_CDATA()
+        if self.numGroups <= 0:
+            self.cdata.numBones = 1; self.cdata.bones = [E_BONE()]*1
+            s = self.cdata.bones[0]
+            for i in range(self.numVertex): s.addIdxToBone(i)
+            s.transInitGlobal = s.TransInit
+            s.originalGroup = None
+            s.father = -1
+        else:
+            self.cdata.numBones = self.numGroups; self.cdata.bones = [E_BONE()]*self.cdata.numBones
+            temp = [False]*self.numVertex
+            for i in range(self.numGroups - 1, -1, -1):
+                s = self.cdata.bones[i]
+                vorigin = self.vertexList[self.groupList[i].origin]
+                for j in range(self.groupList[i].numIndex):
+                    if not temp[self.groupList[i].indexes[j]]: temp[self.groupList[i].indexes[j]] = True; s.addIdxToBone(self.groupList[i].indexes[j])
+                s.transInit = vorigin.v.copy()
+                s.transInitGlobal = s.transInit
+                s.originalGroup = self.groupList[i];
+                s.father = getFather(self.groupList[i].origin, i - 1)
+
+            # Try to correct lonely vertex
+            for i in range(self.numVertex):
+                ok = False
+                for j in range(self.numGroups):
+                    for k in range(self.groupList[j].numIndex):
+                        if self.groupList[j].indexes[k] == i: ok = True; break
+                    if ok: break
+                if not ok: self.cdata.bones[0].addIdxToBone(i)
+
+            for i in range(self.numGroups - 1, -1, -1):
+                s = self.cdata.bones[i]
+                if s.father >= 0: s.transInit -= self.cdata.bones[s.father].transInit
+                s.transInitGlobal = s.transInit
+
+        # Build proper mesh
+        obj = self.cdata
+        for i in range(obj.numBones):
+            s = obj.bones[i];
+            if s.father >= 0:
+                f = obj.bones[s.father]
+                s.quatAnim = f.quatAnim * s.quatInit # Rotation
+                E_3DOBJ._transformVertexQuat(f.quatAnim, s.transInit, s.transAnim) # Translation
+                s.transAnim = f.transAnim + s.transAnim
+                s.ScaleAnim = array([1.]*3) # Scale
+            else:
+                s.quatAnim = s.quatInit # Rotation
+                s.transAnim = s.transInit # Translation
+                s.scaleAnim = array([1.]*3) # Scale
+        self.vertexLocal = [array([None]*4)]*self.numVertex
+        for i in range(obj.numBones):
+            s = obj.bones[i]
+            vec = s.transAnim
+            for v in range(s.numIdxVertices):
+                t = self.vertexList[s.idxVertices[v]].v - vec
+                E_3DOBJ._transformInverseVertexQuat(s.quatAnim, t, t)
+                self.vertexLocal[s.idxVertices[v]] = array([t[0], t[1], t[2], 0.])
+    
+    def _precomputeFastAccess(self) -> None:
+        def getSelection(selName: str) -> int:
+            selName = selName.casefold()
+            for i in range(self.numSelections):
+                if self.selections[i].name.casefold() == selName: return i
+            return -1
+        def getGroup(groupName: str) -> None:
+            groupName = groupName.casefold()
+            for i in range(self.numGroups):
+                if self.groupList[i].name.casefold() == groupName: return i
+            return -1
+        def getActionPointIdx(text: str) -> None:
+            text = text.casefold()
+            for i in range(self.numAction):
+                if self.actionList[i].name.casefold() == text: return self.actionList[i].idx
+            return -1
+        self.fastAccess = E_FASTACCESS(
+            vright = getActionPointIdx('V_RIGHT'),
+            uright = getActionPointIdx('U_RIGHT'),
+            viewAttach = getActionPointIdx('View_attach'),
+            primaryAttach = getActionPointIdx('PRIMARY_ATTACH'),
+            leftAttach = getActionPointIdx('LEFT_ATTACH'),
+            weaponAttach = getActionPointIdx('WEAPON_ATTACH'),
+            secondaryAttach = getActionPointIdx('SECONDARY_ATTACH'),
+            jawGroup = getGroup('jaw'),
+            mouthGroup = (mouthGroup := getGroup('mouth all')),
+            mouthGroupOrigin = -1 if mouthGroup == -1 else self.groupList[mouthGroup].origin,
+            headGroup = (headGroup := getGroup('head')),
+            headGroupOrigin = -1 if headGroup == -1 else self.groupList[headGroup].origin,
+            fire = getActionPointIdx('FIRE'),
+            carryAttach = getActionPointIdx('CARRY_ATTACH'),
+            selHead = getSelection('head'),
+            selChest = getSelection('chest'),
+            selLeggings = getSelection('leggings'))
+
+    @staticmethod
+    def _transformVertexQuat(q: quaternion, s: Vector3, t: Vector3) -> None:
+        rx = s[0] * q.w - s[1] * q.z + s[2] * q.y; ry = s[1] * q.w - s[2] * q.x + s[0] * q.z; rz = s[2] * q.w - s[0] * q.y + s[1] * q.x; rw = s[0] * q.x + s[1] * q.y + s[2] * q.z
+        t[0] = q.w * rx + q.x * rw + q.y * rz - q.z * ry; t[1] = q.w * ry + q.y * rw + q.z * rx - q.x * rz; t[2] = q.w * rz + q.z * rw + q.x * ry - q.y * rx
+
+    @staticmethod
+    def _transformInverseVertexQuat(q: quaternion, s: Vector3, t: Vector3) -> None:
+        p = quaternion.inverse(q)
+        x = s[0]; y = s[1]; z = s[2]
+        qx = p.x; qy = p.y; qz = p.z; qw = p.w
+        rx = x * qw - y * qz + z * qy; ry = y * qw - z * qx + x * qz; rz = z * qw - x * qy + y * qx; rw = x * qx + y * qy + z * qz
+        t[0] = qw * rx + qx * rw + qy * rz - qz * ry; t[1] = qw * ry + qy * rw + qz * rx - qx * rz; t[2] = qw * rz + qz * rw + qx * ry - qy * rx
 
 #struct
 #{

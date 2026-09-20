@@ -1058,7 +1058,7 @@ public unsafe class Binary_Spr : ITextureFrames, IHaveMetaInfo {
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new(null, new MetaContent { Type = "VideoTexture", Name = Path.GetFileName(file.Path), Value = this }),
-        new("B_Sprite", items: [
+        new("Sprite", items: [
             new($"Frames: {frames.Length}"),
             new($"Width: {Width}"),
             new($"Height: {Height}"),

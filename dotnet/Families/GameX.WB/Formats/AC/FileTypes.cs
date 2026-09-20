@@ -1567,7 +1567,7 @@ public class Scene : FileType, IHaveMetaInfo {
         new($"{nameof(Scene)}: {Id:X8}", items: [
             new("Objects", items: Objects.Select(x => {
                 var items = (x as IHaveMetaInfo).GetInfoNodes();
-                var name = items[0].Name.Replace("B_Object ID: ", "");
+                var name = items[0].Name.Replace("Object ID: ", "");
                 items.RemoveAt(0);
                 return new MetaInfo(name, items: items, clickable: true);
             })),
@@ -2047,7 +2047,7 @@ public class SurfaceTexture : FileType, IHaveMetaInfo {
         new($"{nameof(SurfaceTexture)}: {Id:X8}", items: [
             new($"Unknown: {Unknown}"),
             new($"UnknownByte: {UnknownByte}"),
-            new("B_Texture", items: Textures.Select(x => new MetaInfo($"{x:X8}", clickable: true))),
+            new("Texture", items: Textures.Select(x => new MetaInfo($"{x:X8}", clickable: true))),
         ])
     ];
 }

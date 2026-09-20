@@ -907,7 +907,7 @@ public class Song : IHaveMetaInfo {
 
     List<MetaInfo> IHaveMetaInfo.GetInfoNodes(MetaManager resource, FileSource file, object tag) => [
         new(null, new MetaContent { Type = "Data", Name = Path.GetFileName(file.Path), Value = this }),
-            new("B_Texture", items: [
+            new("Texture", items: [
                 new($"Filename: {Filename}"),
                 new($"Duration: {Duration}")
             ])];

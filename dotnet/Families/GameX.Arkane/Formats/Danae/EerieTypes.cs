@@ -104,7 +104,7 @@ public enum MATERIAL {
 }
 
 [Flags]
-public enum POLY {
+public enum POLY : int {
     NONE_ = 0,
     NO_SHADOW = 1,
     DOUBLESIDED = 1 << 1,
@@ -161,7 +161,7 @@ public struct E_SPHERE {
     public float Radius;
 }
 
-[DebuggerDisplay("B_Texture: {Path}")]
+[DebuggerDisplay("Texture: {Path}")]
 public class E_TEXTURE {
     public int Id;
     public string Path;
@@ -508,8 +508,6 @@ public class E_3DOBJ {
             CData.NumBones = 1; CData.Bones = new E_BONE[1];
             ref E_BONE s = ref CData.Bones[0];
             for (i = 0; i < NumVertex; i++) s.AddIdxToBone(i);
-            //s.QuatInit = new Quaternion(); s.QuatAnim = new Quaternion();
-            //s.ScaleInit = new Vector3(); s.ScaleAnim = new Vector3();
             s.TransInitGlobal = s.TransInit;
             s.OriginalGroup = null;
             s.Father = -1;
@@ -522,8 +520,6 @@ public class E_3DOBJ {
                 var vorigin = VertexList[GroupList[i].Origin];
                 for (var j = 0; j < GroupList[i].NumIndex; j++)
                     if (!temp[GroupList[i].Indexes[j]]) { temp[GroupList[i].Indexes[j]] = true; s.AddIdxToBone(GroupList[i].Indexes[j]); }
-                //s.QuatInit = new Quaternion(); s.QuatAnim = new Quaternion();
-                //s.ScaleInit = new Vector3(); s.ScaleAnim = new Vector3();
                 s.TransInit = vorigin.V;
                 s.TransInitGlobal = s.TransInit;
                 s.OriginalGroup = GroupList[i];
@@ -548,7 +544,6 @@ public class E_3DOBJ {
             }
         }
 
-#if true //CEDRIC
         // Build proper mesh
         E_CDATA obj = CData;
         for (i = 0; i != obj.NumBones; i++) {
@@ -576,22 +571,6 @@ public class E_3DOBJ {
                 VertexLocal[s.IdxVertices[v]] = new Vector4(t.X, t.Y, t.Z, 0f);
             }
         }
-#endif
-    }
-
-    void TransformVertexQuat(ref Quaternion q, ref Vector3 s, ref Vector3 t) {
-        float rx = s.X * q.W - s.Y * q.Z + s.Z * q.Y, ry = s.Y * q.W - s.Z * q.X + s.X * q.Z, rz = s.Z * q.W - s.X * q.Y + s.Y * q.X, rw = s.X * q.X + s.Y * q.Y + s.Z * q.Z;
-        t.X = q.W * rx + q.X * rw + q.Y * rz - q.Z * ry; t.Y = q.W * ry + q.Y * rw + q.Z * rx - q.X * rz; t.Z = q.W * rz + q.Z * rw + q.X * ry - q.Y * rx;
-    }
-
-    void TransformInverseVertexQuat(ref Quaternion q, ref Vector3 s, ref Vector3 t) {
-        var rq = Quaternion.Inverse(q);
-        float x = s.X, y = s.Y, z = s.Z;
-        float qx = rq.X, qy = rq.Y, qz = rq.Z, qw = rq.W;
-        float rx = x * qw - y * qz + z * qy, ry = y * qw - z * qx + x * qz, rz = z * qw - x * qy + y * qx, rw = x * qx + y * qy + z * qz;
-        t.X = qw * rx + qx * rw + qy * rz - qz * ry;
-        t.Y = qw * ry + qy * rw + qz * rx - qx * rz;
-        t.Z = qw * rz + qz * rw + qx * ry - qy * rx;
     }
 
     internal void PrecomputeFastAccess() {
@@ -610,23 +589,39 @@ public class E_3DOBJ {
                 if (ActionList[i].Name.Equals(text, StringComparison.OrdinalIgnoreCase)) return (short)ActionList[i].Idx;
             return -1;
         }
-        FastAccess.VRight = GetActionPointIdx("V_RIGHT");
-        FastAccess.URight = GetActionPointIdx("U_RIGHT");
-        FastAccess.ViewAttach = GetActionPointIdx("View_attach");
-        FastAccess.PrimaryAttach = GetActionPointIdx("PRIMARY_ATTACH");
-        FastAccess.LeftAttach = GetActionPointIdx("LEFT_ATTACH");
-        FastAccess.WeaponAttach = GetActionPointIdx("WEAPON_ATTACH");
-        FastAccess.SecondaryAttach = GetActionPointIdx("SECONDARY_ATTACH");
-        FastAccess.JawGroup = GetGroup("jaw");
-        FastAccess.MouthGroup = GetGroup("mouth all");
-        FastAccess.MouthGroupOrigin = (short)(FastAccess.MouthGroup == -1 ? -1 : GroupList[FastAccess.MouthGroup].Origin);
-        FastAccess.HeadGroup = GetGroup("head");
-        FastAccess.HeadGroupOrigin = (short)(FastAccess.HeadGroup == -1 ? -1 : GroupList[FastAccess.HeadGroup].Origin);
-        FastAccess.Fire = GetActionPointIdx("FIRE");
-        FastAccess.CarryAttach = GetActionPointIdx("CARRY_ATTACH");
-        FastAccess.SelHead = GetSelection("head");
-        FastAccess.SelChest = GetSelection("chest");
-        FastAccess.SelLeggings = GetSelection("leggings");
+        short mouthGroup, headGroup;
+        FastAccess = new E_FASTACCESS {
+            VRight = GetActionPointIdx("V_RIGHT"),
+            URight = GetActionPointIdx("U_RIGHT"),
+            ViewAttach = GetActionPointIdx("View_attach"),
+            PrimaryAttach = GetActionPointIdx("PRIMARY_ATTACH"),
+            LeftAttach = GetActionPointIdx("LEFT_ATTACH"),
+            WeaponAttach = GetActionPointIdx("WEAPON_ATTACH"),
+            SecondaryAttach = GetActionPointIdx("SECONDARY_ATTACH"),
+            JawGroup = GetGroup("jaw"),
+            MouthGroup = mouthGroup = GetGroup("mouth all"),
+            MouthGroupOrigin = (short)(mouthGroup == -1 ? -1 : GroupList[mouthGroup].Origin),
+            HeadGroup = headGroup = GetGroup("head"),
+            HeadGroupOrigin = (short)(headGroup == -1 ? -1 : GroupList[headGroup].Origin),
+            Fire = GetActionPointIdx("FIRE"),
+            CarryAttach = GetActionPointIdx("CARRY_ATTACH"),
+            SelHead = GetSelection("head"),
+            SelChest = GetSelection("chest"),
+            SelLeggings = GetSelection("leggings"),
+        };
+    }
+
+    void TransformVertexQuat(ref Quaternion q, ref Vector3 s, ref Vector3 t) {
+        float rx = s.X * q.W - s.Y * q.Z + s.Z * q.Y, ry = s.Y * q.W - s.Z * q.X + s.X * q.Z, rz = s.Z * q.W - s.X * q.Y + s.Y * q.X, rw = s.X * q.X + s.Y * q.Y + s.Z * q.Z;
+        t.X = q.W * rx + q.X * rw + q.Y * rz - q.Z * ry; t.Y = q.W * ry + q.Y * rw + q.Z * rx - q.X * rz; t.Z = q.W * rz + q.Z * rw + q.X * ry - q.Y * rx;
+    }
+
+    void TransformInverseVertexQuat(ref Quaternion q, ref Vector3 s, ref Vector3 t) {
+        var p = Quaternion.Inverse(q);
+        float x = s.X, y = s.Y, z = s.Z;
+        float qx = p.X, qy = p.Y, qz = p.Z, qw = p.W;
+        float rx = x * qw - y * qz + z * qy, ry = y * qw - z * qx + x * qz, rz = z * qw - x * qy + y * qx, rw = x * qx + y * qy + z * qz;
+        t.X = qw * rx + qx * rw + qy * rz - qz * ry; t.Y = qw * ry + qy * rw + qz * rx - qx * rz; t.Z = qw * rz + qz * rw + qx * ry - qy * rx;
     }
 }
 
@@ -703,8 +698,7 @@ public class E_3DOBJ {
 //Portal Data;
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct SAVE_EERIEPOLY {
-    public static (string, int) Struct = ("<?", sizeof(SAVE_EERIEPOLY));
+public struct SAVE_EPOLY {
     public POLY Type;  // at least 16 bits
     public Vector3 Min; public Vector3 Max;
     public Vector3 Norm; public Vector3 Norm2;
@@ -722,7 +716,7 @@ public unsafe struct SAVE_EERIEPOLY {
 [StructLayout(LayoutKind.Sequential)]
 public unsafe struct E_SAVE_PORTALS {
     public static (string, int) Struct = ("<?", sizeof(E_SAVE_PORTALS));
-    public SAVE_EERIEPOLY Poly;
+    public SAVE_EPOLY Poly;
     public int Room1; // facing normal
     public int Room2;
     public short UsePortal;
@@ -742,6 +736,7 @@ public unsafe struct E_PORTALS {
 }
 
 public struct EP_DATA {
+    public static (string, int) Struct = ("<4h", 8);
     public short Px;
     public short Py;
     public short Idx;

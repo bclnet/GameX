@@ -34,6 +34,6 @@ def fixedAStringScan(data: bytes, length: int) -> str:
     i = 0
     while data[i] != 0 and (length := length - 1) > 0: i += 1
     return data[:i].decode('ascii') if i > 0 else None
-def fixedAString(data: bytes, length: int) -> str: return data.decode('ascii').rstrip('\00')
+def fixedAString(data: bytes, length: int) -> str: return data.decode('ascii', 'replace').rstrip('\00')
 def fixedTArray(pat: str, data: bytes, length: int) -> list: return list(struct.unpack(f'<{length}{pat}', data))
     

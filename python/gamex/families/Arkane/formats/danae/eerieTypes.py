@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from numpy import ndarray, array
 from enum import Enum, Flag
 from quaternion import quaternion
@@ -170,15 +171,13 @@ class E_SPHERE:
     origin: Vector3
     radius: float
 
+@dataclass
 class E_TEXTURE:
     id: int
     path: str
-    poly: POLY
-    def __init__(self, id: int=None, path: str=None, poly: POLY=None):
-        self.id = id
-        self.path = path
-        self.poly = poly
+    poly: POLY = None
 
+@dataclass
 class E_POLY:
     type: POLY # at least 16 bits
     min: Vector3; max: Vector3
@@ -190,21 +189,18 @@ class E_POLY:
     transVal: float
     area: float
     room: int
-    misc: int
+    misc: int = 0
     #distBump: float
     #uslInd: list[int]
 
+@dataclass
 class E_VERTEX:
     vert: TLVERTEX
     v: Vector3
     norm: Vector3
     vworld: Vector3
-    def __init__(self, vert: TLVERTEX=None, v: Vector3=None, norm: Vector3=None, vworld: Vector3=None):
-        self.vert = vert
-        self.v = v
-        self.norm = norm
-        self.vworld = vworld
 
+@dataclass
 class E_FACE:
     faceType: int;  # 0 = flat, 1 = text, 2 = Double-Side
     texId: int
@@ -218,20 +214,7 @@ class E_FACE:
     ou: Vector3
     ov: Vector3
     color: list[Vector2]
-    def __init__(self, faceType: int=None, texId: int=None, vid: Vector3=None, u: Vector3=None, v: Vector3=None, transVal: float=None, norm: Vector3=None, nrmls: list[Vector3]=None, temp: float=None, ou: Vector3=None, ov: Vector3=None, color: list[Vector2]=None):
-        self.faceType = faceType
-        self.texId = texId
-        self.vid = vid
-        self.u = u
-        self.v = v
-        self.transVal = transVal
-        self.norm = norm
-        self.nrmls = nrmls
-        self.temp = temp
-        self.ou = ou
-        self.ov = ov
-        self.color = color
-
+    
 ##define MAX_PFACE 16
 #struct E_PFACE
 #{
@@ -269,6 +252,12 @@ class PROGRESSIVE_DATA: # Aligned 1 2 4
     padd: int
 
 class E_SPRINGS:
+    startidx: int
+    endidx: int
+    restlength: float
+    constant: float # spring constant
+    damping: float # spring damping
+    type: int
     _struct = ('<2h3fi', 20)
     def __init__(self, t):
         (self.startidx,
@@ -277,18 +266,23 @@ class E_SPRINGS:
         self.constant,
         self.damping,
         self.type) = t
-    startidx: int
-    endidx: int
-    restlength: float
-    constant: float # spring constant
-    damping: float # spring damping
-    type: int
 
 ##define CLOTHES_FLAG_NORMAL	0
 ##define CLOTHES_FLAG_FIX	1
 ##define CLOTHES_FLAG_NOCOL	2
 
 class CLOTHESVERTEX:
+    idx: int
+    flags: int
+    coll: int
+    pos: Vector3
+    velocity: Vector3
+    force: Vector3
+    mass: float # 1.f/mass
+    t_pos: Vector3
+    t_velocity: Vector3
+    t_force: Vector3
+    lastpos: Vector3
     _struct = ('<h2b22f', 92)
     def __init__(self, t):
         pos = self.pos = array([None]*3)
@@ -309,36 +303,24 @@ class CLOTHESVERTEX:
         t_velocity[0], t_velocity[1], t_velocity[2],
         t_force[0], t_force[1], t_force[2],
         lastpos[0], lastpos[1], lastpos[2]) = t
-    idx: int
-    flags: int
-    coll: int
-    pos: Vector3
-    velocity: Vector3
-    force: Vector3
-    mass: float # 1.f/mass
-    #
-    t_pos: Vector3
-    t_velocity: Vector3
-    t_force: Vector3
-    #
-    lastpos: Vector3
 
+@dataclass
 class CLOTHES_DATA:
     cvert: list[CLOTHESVERTEX]
     springs: list[E_SPRINGS]
-    def __init__(self, cvert: list[CLOTHESVERTEX]=None, springs: list[E_SPRINGS]=None):
-        self.cvert = cvert
-        self.springs = springs
+    # def __init__(self, cvert: list[CLOTHESVERTEX]=None, springs: list[E_SPRINGS]=None):
+    #     self.cvert = cvert
+    #     self.springs = springs
 
 class COLLISION_SPHERE:
+    idx: int
+    flags: int
+    radius: float
     _struct = ('<2hf', 8)
     def __init__(self, t):
         (self.idx,
         self.flags,
         self.radius) = t
-    idx: int
-    flags: int
-    radius: float
 
 #struct
 #{
@@ -369,29 +351,31 @@ class COLLISION_SPHERE:
 #unsigned char* bmpdata;
 #} EERIE_MAP; # Aligned 1 2 4
 
+@dataclass
 class E_GROUPLIST:
     name: str
     origin: int
     numIndex: int
     indexes: list[int]
     size: float
-    def __init__(self, name: str=None, origin: int=None, numIndex: int=None, indexes: list[int]=None, size: float=None):
-        self.name = name
-        self.origin = origin
-        self.numIndex = numIndex
-        self.indexes = indexes
-        self.size = size
+    # def __init__(self, name: str=None, origin: int=None, numIndex: int=None, indexes: list[int]=None, size: float=None):
+    #     self.name = name
+    #     self.origin = origin
+    #     self.numIndex = numIndex
+    #     self.indexes = indexes
+    #     self.size = size
 
+@dataclass
 class E_ACTIONLIST:
     name: str
     idx: int #index vertex;
     act: int #action
     sfx: int #sfx
-    def __init__(self, name: str=None, idx: int=None, act: int=None, sfx: int=None):
-        self.name = name
-        self.idx = idx
-        self.act = act
-        self.sfx = sfx
+    # def __init__(self, name: str=None, idx: int=None, act: int=None, sfx: int=None):
+    #     self.name = name
+    #     self.idx = idx
+    #     self.act = act
+    #     self.sfx = sfx
 
 #struct
 #{
@@ -422,17 +406,19 @@ class E_ACTIONLIST:
 #void* io;
 #} EERIE_LINKED; # Aligned 1 2 4
 
+@dataclass
 class E_SELECTIONS:
     name: str
     numSelected: int
     selected: list[int]
-    def __init__(self, name: str=None, numSelected: int=None, selected: list[int]=None):
-        self.name = name
-        self.numSelected = numSelected
-        self.selected = selected
+    # def __init__(self, name: str=None, numSelected: int=None, selected: list[int]=None):
+    #     self.name = name
+    #     self.numSelected = numSelected
+    #     self.selected = selected
 
 ##define DRAWFLAG_HIGHLIGHT	1
 
+@dataclass
 class E_FASTACCESS:
     viewAttach: int
     primaryAttach: int
@@ -452,24 +438,24 @@ class E_FASTACCESS:
     selLeggings: int
     carryAttach: int
     _padd: int
-    def __init__(self, viewAttach: int=None, primaryAttach: int=None, leftAttach: int=None, weaponAttach: int=None, secondaryAttach: int=None, mouthGroup: int=None, jawGroup: int=None, headGroupOrigin: int=None, headGroup: int=None, mouthGroupOrigin: int=None, vright: int=None, uright: int=None, fire: int=None, selHead: int=None, selChest: int=None, selLeggings: int=None, carryAttach: int=None):
-        self.viewAttach = viewAttach
-        self.primaryAttach = primaryAttach
-        self.leftAttach = leftAttach
-        self.weaponAttach = weaponAttach
-        self.secondaryAttach = secondaryAttach
-        self.mouthGroup = mouthGroup
-        self.jawGroup = jawGroup
-        self.headGroupOrigin = headGroupOrigin
-        self.headGroup = headGroup
-        self.mouthGroupOrigin = mouthGroupOrigin
-        self.vright = vright
-        self.uright = uright
-        self.fire = fire
-        self.selHead = selHead
-        self.selChest = selChest
-        self.selLeggings = selLeggings
-        self.carryAttach = carryAttach
+    # def __init__(self, viewAttach: int=None, primaryAttach: int=None, leftAttach: int=None, weaponAttach: int=None, secondaryAttach: int=None, mouthGroup: int=None, jawGroup: int=None, headGroupOrigin: int=None, headGroup: int=None, mouthGroupOrigin: int=None, vright: int=None, uright: int=None, fire: int=None, selHead: int=None, selChest: int=None, selLeggings: int=None, carryAttach: int=None):
+    #     self.viewAttach = viewAttach
+    #     self.primaryAttach = primaryAttach
+    #     self.leftAttach = leftAttach
+    #     self.weaponAttach = weaponAttach
+    #     self.secondaryAttach = secondaryAttach
+    #     self.mouthGroup = mouthGroup
+    #     self.jawGroup = jawGroup
+    #     self.headGroupOrigin = headGroupOrigin
+    #     self.headGroup = headGroup
+    #     self.mouthGroupOrigin = mouthGroupOrigin
+    #     self.vright = vright
+    #     self.uright = uright
+    #     self.fire = fire
+    #     self.selHead = selHead
+    #     self.selChest = selChest
+    #     self.selLeggings = selLeggings
+    #     self.carryAttach = carryAttach
 
 class E_BONE:
     numIdxVertices: int = 0; idxVertices: list[int] = []
@@ -481,9 +467,6 @@ class E_BONE:
     transInitGlobal: Vector3 = array([0]*3)
     def __init__(self): self.idxVertices = []
     def addIdxToBone(self, idx: int) -> None: self.idxVertices.append(idx); self.numIdxVertices += 1
-
-class E_CDATA:
-    bones: list[E_BONE]; numBones: int
 
 ##########################################
 #struct
@@ -533,14 +516,14 @@ class E_3DOBJ:
     #pdata: PROGRESSIVE_DATA
     #ndata: NEIGHBOURS_DATA
     cdata: CLOTHES_DATA
-    spheres: list[COLLISION_SPHERES]
+    spheres: list[COLLISION_SPHERE]
     fastAccess: E_FASTACCESS
     bones: list[E_BONE]
 
     def _centerObjectCoordinates(self) -> None:
         offset = self.vertexs[self.origin].v
         if offset[0] == 0 and offset[1] == 0 and offset[2] == 0: return
-        log.info(f'NOT CENTERED {self.file}\n')
+        # log.info(f'NOT CENTERED {self.file}\n')
         for i in range(self.numVertex): self.vertexs[i].v -= offset; self.vertexs[i].vert.s -= offset
         self.point0 -= offset
     def _createCedricData(self) -> None:
@@ -592,7 +575,7 @@ class E_3DOBJ:
                 s.quatAnim = f.quatAnim * s.quatInit # Rotation
                 E_3DOBJ._transformVertexQuat(f.quatAnim, s.transInit, s.transAnim) # Translation
                 s.transAnim = f.transAnim + s.transAnim
-                s.ScaleAnim = array([1.]*3) # Scale
+                s.scaleAnim = array([1.]*3) # Scale
             else:
                 s.quatAnim = s.quatInit # Rotation
                 s.transAnim = s.transInit # Translation
@@ -757,7 +740,7 @@ class SAVE_EPOLY:
         self.room,
         self.misc) = t[77:]
     def to(s) -> E_POLY:
-        return E_PORTALS(
+        return E_POLY(
             area = s.area,
             type = s.type,
             transVal = s.transVal,
@@ -785,14 +768,15 @@ class E_SAVE_PORTALS:
         self.room2,
         self.usePortal,
         self.paddy) = t[97:]
-    def to(s) -> E_PORTALS:
+    def to(s) -> 'E_PORTALS':
         return E_PORTALS(
-            poly = s.poly.to()
-            room1 = s.room1
-            room2 = s.room2
-            usePortal = s.usePortal
+            poly = s.poly.to(),
+            room1 = s.room1,
+            room2 = s.room2,
+            usePortal = s.usePortal,
             paddy = s.paddy)
 
+@dataclass
 class E_PORTALS:
     poly: E_POLY
     room1: int # facing normal

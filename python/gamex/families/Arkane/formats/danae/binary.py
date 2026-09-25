@@ -2,8 +2,8 @@ import os, copy
 from io import BytesIO
 from numpy import linalg, ndarray, array, zeros
 from openx.core import log, IWriteToStream, BinaryReader, unsafe
-from gamex import ArcBinary, FileSource, MetaInfo, MetaContent, IHaveMetaInfo, DesSer
-from gamex.families.Arkane.formats.danae.eerieTypes import POLY, TLVERTEX, E_VERTEX, E_TEXTURE, E_POLY, E_FACE, E_SPRINGS, CLOTHESVERTEX, CLOTHES_DATA, COLLISION_SPHERE, COLLISION_SPHERES_DATA, E_GROUPLIST, E_ACTIONLIST, E_SELECTIONS, E_3DOBJ, E_SAVE_PORTALS, E_PORTALS, E_ROOM_DATA, E_SAVE_ROOM_DATA, E_PORTAL_DATA
+from gamex import FileSource, MetaInfo, MetaContent, IHaveMetaInfo, DesSer
+from gamex.families.Arkane.formats.danae.eerieTypes import POLY, TLVERTEX, E_VERTEX, E_TEXTURE, E_POLY, E_FACE, PROGRESSIVE_DATA, E_SPRINGS, CLOTHESVERTEX, CLOTHES_DATA, COLLISION_SPHERE, E_GROUPLIST, E_ACTIONLIST, E_SELECTIONS, E_3DOBJ, E_SAVE_PORTALS, E_PORTALS, E_ROOM_DATA, E_SAVE_ROOM_DATA, E_PORTAL_DATA
 from gamex.families.Uncore.formats.compression import decompressBlast
 
 # typedefs
@@ -363,9 +363,9 @@ class Binary_Fts(IHaveMetaInfo, IWriteToStream):
             self.room,
             self.paddy) = t
             self.type = POLY(self.type)
-        def to(s, textures: list[E_TEXTURE], bkg: Binary_Fts.E_BACKGROUND) -> E_POLY:
+        def to(s, textures: list[E_TEXTURE], bkg: 'E_BACKGROUND') -> E_POLY:
             @staticmethod
-            def declareEGInfo(bkg: Binary_Fts.E_BACKGROUND, x: float, y: float, z: float) -> None:
+            def declareEGInfo(bkg: 'E_BACKGROUND', x: float, y: float, z: float) -> None:
                 posx = int(x * bkg.xmul)
                 if posx < 0: return
                 elif posx >= bkg.xsize: return
@@ -377,19 +377,21 @@ class Binary_Fts(IHaveMetaInfo, IWriteToStream):
 
             texPtr = s.texPtr
             t = E_POLY(
-                room = s.room
-                area = s.area
-                norm = s.norm
-                norm2 = s.norm2
-                nrml = [s.nrml0, s.nrml1, s.nrml2, s.nrml3]
-                tex = next((x for x in textures if x.id == texPtr), None) if texPtr != 0 else None
-                transVal = s.transval
-                type = s.type
+                room = s.room,
+                area = s.area,
+                norm = s.norm, norm2 = s.norm2,
+                nrml = [s.nrml0, s.nrml1, s.nrml2, s.nrml3],
+                tex = next((x for x in textures if x.id == texPtr), None) if texPtr != 0 else None,
+                transVal = s.transVal,
+                type = s.type,
                 v = [
                     TLVERTEX(color = 0xFFFFFFFF, rhw = 1., specular = 1, s = array([s.v0.ssx, s.v0.sy, s.v0.ssz]), t = array([s.v0.stu, s.v0.stv])),
                     TLVERTEX(color = 0xFFFFFFFF, rhw = 1., specular = 1, s = array([s.v1.ssx, s.v1.sy, s.v1.ssz]), t = array([s.v1.stu, s.v1.stv])),
                     TLVERTEX(color = 0xFFFFFFFF, rhw = 1., specular = 1, s = array([s.v2.ssx, s.v2.sy, s.v2.ssz]), t = array([s.v2.stu, s.v2.stv])),
-                    TLVERTEX(color = 0xFFFFFFFF, rhw = 1., specular = 1, s = array([s.v3.ssx, s.v3.sy, s.v3.ssz]), t = array([s.v3.stu, s.v3.stv]))]
+                    TLVERTEX(color = 0xFFFFFFFF, rhw = 1., specular = 1, s = array([s.v3.ssx, s.v3.sy, s.v3.ssz]), t = array([s.v3.stu, s.v3.stv]))],
+                tv = None,
+                center = None,
+                min = None, max = None
             )
 
             # clone v
@@ -492,7 +494,7 @@ class Binary_Fts(IHaveMetaInfo, IWriteToStream):
 
     def __init__(self, r: BinaryReader):
         @staticmethod
-        def setRoomDistance(level: Binary_Fts.F_LEVEL, i: int, j: int, rd: ROOM_DIST_DATA) -> None:
+        def setRoomDistance(level: Binary_Fts.F_LEVEL, i: int, j: int, rd: Binary_Fts.ROOM_DIST_DATA) -> None:
             if i < 0 or j < 0 or i >= level.numRoomDistance or j >= level.numRoomDistance or level.roomDistance == None: return
             level.roomDistance[i + j * level.numRoomDistance] = rd
 
@@ -519,7 +521,7 @@ class Binary_Fts(IHaveMetaInfo, IWriteToStream):
             # log.info(f'Header2: {r2.tell()}, 24')
             
             # textures
-            textures = self.level.textures = [z.to() for z in r.readSArray(Binary_Ftl.F_TEXTURE_CONTAINER, fsh.numTextures)]
+            textures = self.level.textures = [z.to() for z in r2.readSArray(Binary_Fts.F_TEXTURE_CONTAINER, fsh.numTextures)]
             # log.info(f'Texture: {r2.tell()}')
 
             # backg
@@ -557,9 +559,9 @@ class Binary_Fts(IHaveMetaInfo, IWriteToStream):
             portals: E_PORTAL_DATA = None
             if fsh.numRooms > 0:
                 portals = self.level.portals = E_PORTAL_DATA(
-                    numRooms = fsh.numRooms
-                    room = [E_ROOM_DATA()]*(fsh.numRooms + 1)
-                    numTotal = fsh.numPortals
+                    numRooms = fsh.numRooms,
+                    room = [E_ROOM_DATA()]*(fsh.numRooms + 1),
+                    numTotal = fsh.numPortals,
                     portals = [z.to() for z in r2.readSArray(E_SAVE_PORTALS, fsh.numPortals)])
                 for i in range(portals.numRooms + 1):
                     x = r2.readS(E_SAVE_ROOM_DATA)
@@ -567,15 +569,15 @@ class Binary_Fts(IHaveMetaInfo, IWriteToStream):
                         numPortals = x.numPortals,
                         numPolys = x.numPolys,
                         portals = r2.readPArray(None, 'i', x.numPortals) if x.numPortals > 0 else None,
-                        rpData = r2.readSArray(EP_DATA, x.numPolys) if x.numPolys > 0 else None)
+                        rpData = r2.readSArray(Binary_Fts.EP_DATA, x.numPolys) if x.numPolys > 0 else None)
             #log.info(f'Portals: {r2.tell()}')
 
             if portals:
                 numRoomDistance = self.level.numRoomDistance = portals.numRooms + 1
-                self.level.roomDistance = [ROOM_DIST_DATA()]*(numRoomDistance * numRoomDistance)
+                self.level.roomDistance = [Binary_Fts.ROOM_DIST_DATA()]*(numRoomDistance * numRoomDistance)
                 for n in range(numRoomDistance):
                     for m in range(numRoomDistance):
-                        setRoomDistance(self.level, m, n, r2.readS(ROOM_DIST_DATA))
+                        setRoomDistance(self.level, m, n, r2.readS(Binary_Fts.ROOM_DIST_DATA))
             else: self.level.numRoomDistance = 0; self.level.roomDistance = None
             #log.info(f'RoomDistance: {r2.tell()}')
 

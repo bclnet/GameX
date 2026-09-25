@@ -137,19 +137,27 @@ class POLY(Flag):
 
 class TLVERTEX:
     _struct = ('<4f2I2f', 32)
-    s: Vector3           # Screen coordinates
-    rhw: float           # Reciprocal of homogeneous w
+    s: Vector3          # Screen coordinates
+    rhw: float          # Reciprocal of homogeneous w
     color: int          # Vertex color
     specular: int       # Specular component of vertex
-    t: Vector2           # Texture coordinates
-    def __init__(self, t):
-        s = self.s = array([None]*3)
-        t_ = self.t = array([None]*2)
-        (s[0], s[1], s[2],
-        self.rhw,
-        self.color,
-        self.specular,
-        t_[0], t_[1]) = t
+    t: Vector2          # Texture coordinates
+    def __init__(self, *args, **kwargs):
+        if len(args) == 1:
+            s = self.s = array([None]*3)
+            t = self.t = array([None]*2)
+            (s[0], s[1], s[2],
+            self.rhw,
+            self.color,
+            self.specular,
+            t[0], t[1]) = args[0]
+        elif kwargs:
+            self.s = kwargs.get('s')
+            self.rhw = kwargs.get('rhw')
+            self.color = kwargs.get('color')
+            self.specular = kwargs.get('specular')
+            self.t = kwargs.get('t')
+        else: raise NotImplementedError('TLVERTEX')
 
 class E_CYLINDER:
     _struct = ('<5f', 20)
@@ -173,13 +181,10 @@ class E_TEXTURE:
 
 class E_POLY:
     type: POLY # at least 16 bits
-    min: Vector3
-    max: Vector3
-    norm: Vector3
-    norm2: Vector3
-    v: list[TLVERTEX] # new TLVERTEX[4];
-    tv: list[TLVERTEX] # new TLVERTEX[4];
-    nrml: list[Vector3] # new Vector3[4];
+    min: Vector3; max: Vector3
+    norm: Vector3; norm2: Vector3
+    v: list[TLVERTEX]; tv: list[TLVERTEX]
+    nrml: list[Vector3]
     tex: E_TEXTURE
     center: Vector3
     transVal: float
@@ -187,9 +192,7 @@ class E_POLY:
     room: int
     misc: int
     #distBump: float
-    #uslInd: list[int] # new ushort[4];
-    def memset(self):
-        self.misc = 0
+    #uslInd: list[int]
 
 class E_VERTEX:
     vert: TLVERTEX
@@ -322,14 +325,9 @@ class CLOTHESVERTEX:
 
 class CLOTHES_DATA:
     cvert: list[CLOTHESVERTEX]
-    #backup: list[CLOTHESVERTEX]
-    numCvert: int
-    numSprings: int
     springs: list[E_SPRINGS]
-    def __init__(self, cvert: list[CLOTHESVERTEX]=None, numCvert: int=None, numSprings: int=None, springs: list[E_SPRINGS]=None):
+    def __init__(self, cvert: list[CLOTHESVERTEX]=None, springs: list[E_SPRINGS]=None):
         self.cvert = cvert
-        self.numCvert = numCvert
-        self.numSprings = numSprings
         self.springs = springs
 
 class COLLISION_SPHERE:
@@ -341,13 +339,6 @@ class COLLISION_SPHERE:
     idx: int
     flags: int
     radius: float
-
-class COLLISION_SPHERES_DATA:
-    numSpheres: int
-    spheres: list[COLLISION_SPHERE]
-    def __init__(self, numSpheres: int=None, spheres: list[COLLISION_SPHERE]=None):
-        self.numSpheres = numSpheres
-        self.spheres = spheres
 
 #struct
 #{
@@ -481,17 +472,14 @@ class E_FASTACCESS:
         self.carryAttach = carryAttach
 
 class E_BONE:
-    numIdxVertices: int; idxVertices: list[int]
-    originalGroup: E_GROUPLIST
-    father: int
-    quatAnim: quaternion; transAnim: Vector3; scaleAnim: Vector3
-    quatLast: quaternion; transLast: Vector3; scaleLast: Vector3
-    quatInit: quaternion; transInit: Vector3; scaleInit: Vector3
-    transInitGlobal: Vector3 = None
-    def __init__(self):
-        self.numIdxVertices = 0; self.idxVertices = []
-        self.quatInit = quaternion(); self.quatAnim = quaternion()
-        self.scaleInit = array([0]*3); self.scaleAnim = array([0]*3)
+    numIdxVertices: int = 0; idxVertices: list[int] = []
+    originalGroup: E_GROUPLIST = None
+    father: int = 0
+    quatAnim: quaternion = quaternion(); transAnim: Vector3 = array([0]*3); scaleAnim: Vector3 = array([0]*3)
+    quatLast: quaternion = quaternion(); transLast: Vector3 = array([0]*3); scaleLast: Vector3 = array([0]*3)
+    quatInit: quaternion = quaternion(); transInit: Vector3 = array([0]*3); scaleInit: Vector3 = array([0]*3)
+    transInitGlobal: Vector3 = array([0]*3)
+    def __init__(self): self.idxVertices = []
     def addIdxToBone(self, idx: int) -> None: self.idxVertices.append(idx); self.numIdxVertices += 1
 
 class E_CDATA:
@@ -524,14 +512,14 @@ class E_3DOBJ:
     numSelections: int
     #drawFlags: int
     #VertexLocal: EERIE_3DPAD
-    vertexList: list[E_VERTEX]
-    #vertexList3: list[E_VERTEX]
+    vertexs: list[E_VERTEX]
+    #vertexs3: list[E_VERTEX]
 
-    faceList: list[E_FACE]
-    #pfaceList: list[EERIE_PFACE];
-    #mapList: list[EERIE_MAP]
-    groupList: list[E_GROUPLIST]
-    actionList: list[E_ACTIONLIST]
+    faces: list[E_FACE]
+    #pfaces: list[EERIE_PFACE];
+    #maps: list[EERIE_MAP]
+    groups: list[E_GROUPLIST]
+    actions: list[E_ACTIONLIST]
     selections: list[E_SELECTIONS]
     textures: list[E_TEXTURE]
 
@@ -545,64 +533,62 @@ class E_3DOBJ:
     #pdata: PROGRESSIVE_DATA
     #ndata: NEIGHBOURS_DATA
     cdata: CLOTHES_DATA
-    sdata: COLLISION_SPHERES_DATA
+    spheres: list[COLLISION_SPHERES]
     fastAccess: E_FASTACCESS
-    #c_data: EERIE_C_DATA
+    bones: list[E_BONE]
 
     def _centerObjectCoordinates(self) -> None:
-        offset = self.vertexList[self.origin].v
+        offset = self.vertexs[self.origin].v
         if offset[0] == 0 and offset[1] == 0 and offset[2] == 0: return
         log.info(f'NOT CENTERED {self.file}\n')
-        for i in range(self.numVertex): self.vertexList[i].v -= offset; self.vertexList[i].vert.s -= offset
+        for i in range(self.numVertex): self.vertexs[i].v -= offset; self.vertexs[i].vert.s -= offset
         self.point0 -= offset
     def _createCedricData(self) -> None:
         def getFather(origin: int, startGroup: int) -> int:
             for i in range(startGroup, -1, -1):
-                for j in range(self.groupList[i].numIndex):
-                    if self.groupList[i].indexes[j] == origin: return i
+                for j in range(self.groups[i].numIndex):
+                    if self.groups[i].indexes[j] == origin: return i
             return -1
 
-        self.cdata = E_CDATA()
         if self.numGroups <= 0:
-            self.cdata.numBones = 1; self.cdata.bones = [E_BONE()]*1
-            s = self.cdata.bones[0]
+            self.bones = [E_BONE()]*1
+            s = self.bones[0]
             for i in range(self.numVertex): s.addIdxToBone(i)
-            s.transInitGlobal = s.TransInit
+            s.transInitGlobal = s.transInit
             s.originalGroup = None
             s.father = -1
         else:
-            self.cdata.numBones = self.numGroups; self.cdata.bones = [E_BONE()]*self.cdata.numBones
+            self.bones = [E_BONE()]*self.numGroups
             temp = [False]*self.numVertex
             for i in range(self.numGroups - 1, -1, -1):
-                s = self.cdata.bones[i]
-                vorigin = self.vertexList[self.groupList[i].origin]
-                for j in range(self.groupList[i].numIndex):
-                    if not temp[self.groupList[i].indexes[j]]: temp[self.groupList[i].indexes[j]] = True; s.addIdxToBone(self.groupList[i].indexes[j])
+                s = self.bones[i]
+                vorigin = self.vertexs[self.groups[i].origin]
+                for j in range(self.groups[i].numIndex):
+                    if not temp[self.groups[i].indexes[j]]: temp[self.groups[i].indexes[j]] = True; s.addIdxToBone(self.groups[i].indexes[j])
                 s.transInit = vorigin.v.copy()
                 s.transInitGlobal = s.transInit
-                s.originalGroup = self.groupList[i];
-                s.father = getFather(self.groupList[i].origin, i - 1)
+                s.originalGroup = self.groups[i]
+                s.father = getFather(self.groups[i].origin, i - 1)
 
             # Try to correct lonely vertex
             for i in range(self.numVertex):
                 ok = False
                 for j in range(self.numGroups):
-                    for k in range(self.groupList[j].numIndex):
-                        if self.groupList[j].indexes[k] == i: ok = True; break
+                    for k in range(self.groups[j].numIndex):
+                        if self.groups[j].indexes[k] == i: ok = True; break
                     if ok: break
-                if not ok: self.cdata.bones[0].addIdxToBone(i)
+                if not ok: self.bones[0].addIdxToBone(i)
 
             for i in range(self.numGroups - 1, -1, -1):
-                s = self.cdata.bones[i]
-                if s.father >= 0: s.transInit -= self.cdata.bones[s.father].transInit
+                s = self.bones[i]
+                if s.father >= 0: s.transInit -= self.bones[s.father].transInit
                 s.transInitGlobal = s.transInit
 
         # Build proper mesh
-        obj = self.cdata
-        for i in range(obj.numBones):
-            s = obj.bones[i];
+        for i in range(len(self.bones)):
+            s = self.bones[i]
             if s.father >= 0:
-                f = obj.bones[s.father]
+                f = self.bones[s.father]
                 s.quatAnim = f.quatAnim * s.quatInit # Rotation
                 E_3DOBJ._transformVertexQuat(f.quatAnim, s.transInit, s.transAnim) # Translation
                 s.transAnim = f.transAnim + s.transAnim
@@ -612,11 +598,11 @@ class E_3DOBJ:
                 s.transAnim = s.transInit # Translation
                 s.scaleAnim = array([1.]*3) # Scale
         self.vertexLocal = [array([None]*4)]*self.numVertex
-        for i in range(obj.numBones):
-            s = obj.bones[i]
+        for i in range(len(self.bones)):
+            s = self.bones[i]
             vec = s.transAnim
             for v in range(s.numIdxVertices):
-                t = self.vertexList[s.idxVertices[v]].v - vec
+                t = self.vertexs[s.idxVertices[v]].v - vec
                 E_3DOBJ._transformInverseVertexQuat(s.quatAnim, t, t)
                 self.vertexLocal[s.idxVertices[v]] = array([t[0], t[1], t[2], 0.])
     
@@ -629,12 +615,12 @@ class E_3DOBJ:
         def getGroup(groupName: str) -> None:
             groupName = groupName.casefold()
             for i in range(self.numGroups):
-                if self.groupList[i].name.casefold() == groupName: return i
+                if self.groups[i].name.casefold() == groupName: return i
             return -1
         def getActionPointIdx(text: str) -> None:
             text = text.casefold()
             for i in range(self.numAction):
-                if self.actionList[i].name.casefold() == text: return self.actionList[i].idx
+                if self.actions[i].name.casefold() == text: return self.actions[i].idx
             return -1
         self.fastAccess = E_FASTACCESS(
             vright = getActionPointIdx('V_RIGHT'),
@@ -646,9 +632,9 @@ class E_3DOBJ:
             secondaryAttach = getActionPointIdx('SECONDARY_ATTACH'),
             jawGroup = getGroup('jaw'),
             mouthGroup = (mouthGroup := getGroup('mouth all')),
-            mouthGroupOrigin = -1 if mouthGroup == -1 else self.groupList[mouthGroup].origin,
+            mouthGroupOrigin = -1 if mouthGroup == -1 else self.groups[mouthGroup].origin,
             headGroup = (headGroup := getGroup('head')),
-            headGroupOrigin = -1 if headGroup == -1 else self.groupList[headGroup].origin,
+            headGroupOrigin = -1 if headGroup == -1 else self.groups[headGroup].origin,
             fire = getActionPointIdx('FIRE'),
             carryAttach = getActionPointIdx('CARRY_ATTACH'),
             selHead = getSelection('head'),
@@ -738,8 +724,7 @@ class E_3DOBJ:
 ##-------------------------------------------------------------------------
 #Portal Data;
 
-class SAVE_EERIEPOLY:
-    _struct = ('<?', -1)
+class SAVE_EPOLY:
     type: POLY # at least 16 bits
     min: Vector3; max: Vector3
     norm: Vector3; norm2: Vector3
@@ -752,30 +737,76 @@ class SAVE_EERIEPOLY:
     area: float
     room: int
     misc: int
+    _v = '4f2I2f'
+    _struct = (f'i12f{_v}{_v}{_v}{_v}{_v}{_v}{_v}{_v}12fi5f2h', 384)
+    def __init__(self, t):
+        min = self.min = array([None]*3); max = self.max = array([None]*3)
+        norm = self.norm = array([None]*3); norm2 = self.norm2 = array([None]*3)
+        (self.type,
+        min[0], min[1], min[2], max[0], max[1], max[2],
+        norm[0], norm[1], norm[2], norm2[0], norm2[1], norm2[2]) = t[:13]
+        self.v0 = TLVERTEX(t[13:21]); self.v1 = TLVERTEX(t[21:29]); self.v2 = TLVERTEX(t[29:37]); self.v3 = TLVERTEX(t[37:45])
+        self.tv0 = TLVERTEX(t[45:53]); self.tv1 = TLVERTEX(t[53:61]); self.tv2 = TLVERTEX(t[61:69]); self.tv3 = TLVERTEX(t[69:77])
+        nrml0 = self.nrml0 = array([None]*3); nrml1 = self.nrml1 = array([None]*3); nrml2 = self.nrml2 = array([None]*3); nrml3 = self.nrml3 = array([None]*3)
+        center = self.center = array([None]*3)
+        (nrml0[0], nrml0[1], nrml0[2], nrml1[0], nrml1[1], nrml1[2], nrml2[0], nrml2[1], nrml2[2], nrml3[0], nrml3[1], nrml3[2],
+        self.texPtr,
+        center[0], center[1], center[2],
+        self.transVal,
+        self.area,
+        self.room,
+        self.misc) = t[77:]
+    def to(s) -> E_POLY:
+        return E_PORTALS(
+            area = s.area,
+            type = s.type,
+            transVal = s.transVal,
+            room = s.room,
+            misc = s.misc,
+            center = s.center,
+            max = s.max,
+            min = s.min,
+            norm = s.norm,
+            norm2 = s.norm2,
+            nrml = [s.nrml0, s.nrml1, s.nrml2, s.nrml3],
+            v = [s.v0, s.v1, s.v2, s.v3],
+            tv = [s.tv0, s.tv1, s.tv2, s.tv3])
 
 class E_SAVE_PORTALS:
-    _struct = ('<?', -1)
-    poly: SAVE_EERIEPOLY
+    poly: SAVE_EPOLY
     room1: int # facing normal
     room2: int
     usePortal: int
     paddy: int
+    _struct = (f'<{SAVE_EPOLY._struct[0]}2i2h', 384 + 12)
+    def __init__(self, t):
+        self.poly = SAVE_EPOLY(t[:97])
+        (self.room1,
+        self.room2,
+        self.usePortal,
+        self.paddy) = t[97:]
+    def to(s) -> E_PORTALS:
+        return E_PORTALS(
+            poly = s.poly.to()
+            room1 = s.room1
+            room2 = s.room2
+            usePortal = s.usePortal
+            paddy = s.paddy)
 
 class E_PORTALS:
-    _struct = ('<?', -1)
     poly: E_POLY
     room1: int # facing normal
     room2: int
     usePortal: int
     paddy: int
 
-    def memset(): pass
-
 class EP_DATA:
-    px: int
-    py: int
-    idx: int
-    padd: int
+    _struct = ('<4h', 8)
+    def __init___(self, t):
+        (self.px,
+        self.py,
+        self.idx,
+        self.padd) = t
 
 class E_ROOM_DATA:
     numPortals: int
@@ -790,11 +821,12 @@ class E_ROOM_DATA:
     textureContainer: E_TEXTURE
 
 class E_SAVE_ROOM_DATA:
-    _struct = ('<2i6i', -1)
+    _struct = ('<8i', 32)
     def __init___(self, t):
+        padd = self.padd = [0]*6
         (self.numPolys,
         self.numPortals,
-        self.padd) = t
+        padd[0], padd[1], padd[2], padd[3], padd[4], padd[5]) = t
 
 class E_PORTAL_DATA:
     numRooms: int

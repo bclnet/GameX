@@ -1,5 +1,7 @@
+using GameX.Crytek.Formats.Models;
 using GameX.Uncore.Formats;
-using OpenX;
+using MathNet.Numerics;
+using MathNet.Numerics.Financial;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -34,25 +36,6 @@ public class Binary_Ftl : IHaveMetaInfo, IWriteToStream {
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct FTL_PROGRESSIVEHEADER {
-        public static (string, int) Struct = ("<i", 4);
-        public int NumVertex;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    struct FTL_CLOTHESHEADER {
-        public static (string, int) Struct = ("<2i", 8);
-        public int NumCvert;
-        public int NumSprings;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    struct FTL_COLLISIONSPHERESHEADER {
-        public static (string, int) Struct = ("<i", 4);
-        public int NumSpheres;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
     struct FTL_3DHEADER {
         public static (string, int) Struct = ("<7i256s", 28 + 256);
         public int NumVertex;
@@ -71,12 +54,15 @@ public class Binary_Ftl : IHaveMetaInfo, IWriteToStream {
         public TLVERTEX Vert;
         public Vector3 V;
         public Vector3 Norm;
-        public static implicit operator E_VERTEX(FTL_VERTEX s) => new() {
-            Vert = s.Vert,
-            V = s.V,
-            Norm = s.Norm,
-            VWorld = default,
-        };
+        public static implicit operator E_VERTEX(FTL_VERTEX s) {
+            s.Vert.Color = 0xFF000000;
+            return new E_VERTEX {
+                Vert = s.Vert,
+                V = s.V,
+                Norm = s.Norm,
+                VWorld = default,
+            };
+        }
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -188,6 +174,8 @@ public class Binary_Ftl : IHaveMetaInfo, IWriteToStream {
 
         // Check For & Load 3D Data
         if (header.Offset3Ddata != -1) {
+            E_GROUPLIST _groupZ(FTL_GROUPLIST s) { var z = (E_GROUPLIST)s; z.Indexes = z.NumIndex > 0 ? r.ReadPArray<int>("i", z.NumIndex) : null; return z; }
+            E_SELECTIONS _selectionsZ(FTL_SELECTIONS s) { var z = (E_SELECTIONS)s; z.Selected = r.ReadPArray<int>("i", z.NumSelected); return z; }
             r.Seek(header.Offset3Ddata);
             var s = r.ReadS<FTL_3DHEADER>();
             obj.NumVertex = s.NumVertex;
@@ -198,89 +186,34 @@ public class Binary_Ftl : IHaveMetaInfo, IWriteToStream {
             obj.NumSelections = s.NumSelections;
             obj.Origin = s.Origin;
             obj.File = s.Name;
-
-            // Alloc'n'Copy vertices
-            if (s.NumVertex > 0) {
-                var vertexList = r.ReadSArray<FTL_VERTEX>(s.NumVertex);
-                obj.VertexList = new E_VERTEX[s.NumVertex];
-                for (var i = 0; i < obj.VertexList.Length; i++) {
-                    obj.VertexList[i] = vertexList[i];
-                    obj.VertexList[i].Vert.Color = 0xFF000000;
-                }
-                obj.Point0 = obj.VertexList[obj.Origin].V;
-            }
-
-            // Alloc'n'Copy faces
-            if (s.NumFaces > 0) {
-                var faceList = r.ReadSArray<FTL_FACE>(s.NumFaces);
-                obj.FaceList = new E_FACE[s.NumFaces];
-                for (var i = 0; i < obj.FaceList.Length; i++)
-                    obj.FaceList[i] = faceList[i];
-            }
-
-            // Alloc'n'Copy textures
-            if (s.NumMaps > 0) {
-                var textures = r.ReadSEach<FTL_TEXTURE>(s.NumMaps);
-                obj.Textures = new E_TEXTURE[s.NumMaps];
-                for (var i = 0; i < obj.Textures.Length; i++)
-                    obj.Textures[i] = textures[i];
-            }
-
-            // Alloc'n'Copy groups
-            if (s.NumGroups > 0) {
-                var groupList = r.ReadSEach<FTL_GROUPLIST>(s.NumGroups);
-                obj.GroupList = new E_GROUPLIST[s.NumGroups];
-                for (var i = 0; i < obj.GroupList.Length; i++) {
-                    obj.GroupList[i] = groupList[i];
-                    if (obj.GroupList[i].NumIndex > 0) obj.GroupList[i].Indexes = r.ReadPArray<int>("i", obj.GroupList[i].NumIndex);
-                }
-            }
-
-            // Alloc'n'Copy action points
-            if (s.NumAction > 0) {
-                var actionList = r.ReadSEach<FTL_ACTIONLIST>(s.NumAction);
-                obj.ActionList = new E_ACTIONLIST[s.NumAction];
-                for (var i = 0; i < obj.ActionList.Length; i++)
-                    obj.ActionList[i] = actionList[i];
-            }
-
-            // Alloc'n'Copy selections
-            if (s.NumSelections > 0) {
-                var selections = r.ReadSEach<FTL_SELECTIONS>(s.NumSelections);
-                obj.Selections = new E_SELECTIONS[s.NumSelections];
-                for (var i = 0; i < obj.Selections.Length; i++) {
-                    obj.Selections[i] = selections[i];
-                    obj.Selections[i].Selected = r.ReadPArray<int>("i", obj.Selections[i].NumSelected);
-                }
-            }
+            obj.Vertexs = s.NumVertex > 0 ? [.. r.ReadSArray<FTL_VERTEX>(s.NumVertex).Cast<E_VERTEX>()] : null; obj.Point0 = s.NumVertex > 0 ? obj.Vertexs[obj.Origin].V : default;
+            obj.Faces = s.NumFaces > 0 ? [.. r.ReadSArray<FTL_FACE>(s.NumFaces).Cast<E_FACE>()] : null;
+            obj.Textures = s.NumMaps > 0 ? [.. r.ReadSEach<FTL_TEXTURE>(s.NumMaps).Cast<E_TEXTURE>()] : null;
+            obj.Groups = s.NumGroups > 0 ? [.. r.ReadSEach<FTL_GROUPLIST>(s.NumGroups).Select(_groupZ)] : null;
+            obj.Actions = s.NumAction > 0 ? [.. r.ReadSEach<FTL_ACTIONLIST>(s.NumAction).Cast<E_ACTIONLIST>()] : null;
+            obj.Selections = s.NumSelections > 0 ? [.. r.ReadSEach<FTL_SELECTIONS>(s.NumSelections).Select(_selectionsZ)] : null;
         }
 
-        // Alloc'n'Copy Collision Spheres Data
+        // collision spheres
         if (header.OffsetCollisionSpheres != -1) {
             r.Seek(header.OffsetCollisionSpheres);
-            var csh = r.ReadS<FTL_COLLISIONSPHERESHEADER>();
-            obj.Sdata = new COLLISION_SPHERES_DATA {
-                NumSpheres = csh.NumSpheres,
-                Spheres = r.ReadSArray<COLLISION_SPHERE>(csh.NumSpheres),
-            };
+            obj.Spheres = r.ReadL32SArray<COLLISION_SPHERE>();
         }
 
-        // Alloc'n'Copy Progressive DATA
+        // progressive data
         if (header.OffsetProgressiveData != -1) {
             r.Seek(header.OffsetProgressiveData);
-            var ph = r.ReadS<FTL_PROGRESSIVEHEADER>();
-            r.Skip(PROGRESSIVE_DATA.SIZEOF * ph.NumVertex);
+            var numVertex = r.ReadInt32();
+            r.Skip(PROGRESSIVE_DATA.SIZEOF * numVertex);
         }
 
-        // Alloc'n'Copy Clothes DATA
+        // clothes data
         if (header.OffsetClothesData != -1) {
             r.Seek(header.OffsetClothesData);
-            var ch = r.ReadS<FTL_CLOTHESHEADER>();
+            int numCvert = r.ReadInt32(), numSprings = r.ReadInt32();
             obj.Cdata = new CLOTHES_DATA {
-                NumCvert = (short)ch.NumCvert,
-                NumSprings = (short)ch.NumSprings,
-                Cvert = r.ReadSArray<CLOTHESVERTEX>(ch.NumCvert),
-                Springs = r.ReadSArray<E_SPRINGS>(ch.NumSprings),
+                Cvert = r.ReadSArray<CLOTHESVERTEX>(numCvert),
+                Springs = r.ReadSArray<E_SPRINGS>(numSprings),
             };
         }
 
@@ -335,6 +268,18 @@ public unsafe class Binary_Fts : IHaveMetaInfo, IWriteToStream {
         public int Flags;
         public float TileMinY;
         public float TileMaxY;
+        //public static implicit operator E_BKG_INFO(F_SCENE_INFO s) => new() {
+        //    FaceType = s.FaceType,
+        //    TexId = s.TexId,
+        //    U = s.U,
+        //    V = s.V,
+        //    Ou = s.Ou,
+        //    Ov = s.Ov,
+        //    TransVal = s.TransVal,
+        //    Norm = s.Norm,
+        //    Nrmls = [s.Nrmls0, s.Nrmls1, s.Nrmls2],
+        //    Temp = s.Temp,
+        //};
     }
 
     struct E_SMINMAX {
@@ -362,10 +307,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo, IWriteToStream {
         public int[] IAnchors; // index on anchors list
     }
 
-    const int MAX_BKGX = 160;
-    const int MAX_BKGZ = 160;
-    const int BKG_SIZX = 100;
-    const int BKG_SIZZ = 100;
+    const int MAX_BKGX = 160, MAX_BKGZ = 160, BKG_SIZX = 100, BKG_SIZZ = 100;
 
     class E_BACKGROUND {
         public F_BKG_DATA[,] fastdata = new F_BKG_DATA[MAX_BKGX, MAX_BKGZ];
@@ -395,10 +337,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo, IWriteToStream {
             Backg = new E_BKG_INFO[sx * sz];
             for (var i = 0; i < Backg.Length; i++) Backg[i].Nothing = true;
             MinMax = new E_SMINMAX[sz];
-            for (var i = 0; i < MinMax.Length; i++) {
-                MinMax[i].Min = 9999;
-                MinMax[i].Max = -1;
-            }
+            for (var i = 0; i < MinMax.Length; i++) { MinMax[i].Min = 9999; MinMax[i].Max = -1; }
         }
     }
 
@@ -437,18 +376,80 @@ public unsafe class Binary_Fts : IHaveMetaInfo, IWriteToStream {
         public static (string, int) Struct = ("<20fi20fi2h", 172);
         public F_VERTEX V0; public F_VERTEX V1; public F_VERTEX V2; public F_VERTEX V3;
         public int TexPtr;
-        public Vector3 Norm;
-        public Vector3 Norm2;
+        public Vector3 Norm; public Vector3 Norm2;
         public Vector3 Nrml0; public Vector3 Nrml1; public Vector3 Nrml2; public Vector3 Nrml3;
-        public float Transval;
+        public float TransVal;
         public float Area;
         public POLY Type;
         public short Room;
         public short Paddy;
+        public E_POLY To(E_TEXTURE[] textures, E_BACKGROUND bkg) {
+            static void DeclareEGInfo(E_BACKGROUND bkg, float x, float y, float z) {
+                var posx = (int)(float)(x * bkg.Xmul);
+                if (posx < 0) return;
+                else if (posx >= bkg.XSize) return;
+                var posz = (int)(float)(z * bkg.Zmul);
+                if (posz < 0) return;
+                else if (posz >= bkg.ZSize) return;
+                ref E_BKG_INFO eg = ref bkg.Backg[posx + posz * bkg.XSize];
+                eg.Nothing = false;
+            }
+
+            var texPtr = TexPtr;
+            var t = new E_POLY {
+                Room = Room,
+                Area = Area,
+                Norm = Norm,
+                Norm2 = Norm2,
+                Nrml = [Nrml0, Nrml1, Nrml2, Nrml3],
+                Tex = texPtr != 0 ? textures.FirstOrDefault(x => x.Id == texPtr) : null,
+                TransVal = TransVal,
+                Type = Type,
+                V = [
+                    new() { Color = 0xFFFFFFFF, Rhw = 1f, Specular = 1, S = new Vector3(V0.ssx, V0.sy, V0.ssz), T = new Vector2(V0.stu, V0.stv) },
+                    new() { Color = 0xFFFFFFFF, Rhw = 1f, Specular = 1, S = new Vector3(V1.ssx, V1.sy, V1.ssz), T = new Vector2(V1.stu, V1.stv) },
+                    new() { Color = 0xFFFFFFFF, Rhw = 1f, Specular = 1, S = new Vector3(V2.ssx, V2.sy, V2.ssz), T = new Vector2(V2.stu, V2.stv) },
+                    new() { Color = 0xFFFFFFFF, Rhw = 1f, Specular = 1, S = new Vector3(V3.ssx, V3.sy, V3.ssz), T = new Vector2(V3.stu, V3.stv) },
+                ]
+            };
+
+            // clone v
+            t.Tv = (TLVERTEX[])t.V.Clone();
+            for (var kk = 0; kk < 4; kk++) t.Tv[kk].Color = 0xFF000000;
+
+            // re-center
+            int to; float div;
+            if ((Type & POLY.QUAD) != 0) { to = 4; div = 0.25f; }
+            else { to = 3; div = 0.333333333333f; }
+            t.Center = Vector3.Zero;
+            for (var h = 0; h < to; h++) {
+                t.Center += t.V[h].S;
+                if (h != 0) {
+                    t.Max.X = Math.Max(t.Max.X, t.V[h].S.X); t.Min.X = Math.Min(t.Min.X, t.V[h].S.X);
+                    t.Max.Y = Math.Max(t.Max.Y, t.V[h].S.Y); t.Min.Y = Math.Min(t.Min.Y, t.V[h].S.Y);
+                    t.Max.Z = Math.Max(t.Max.Z, t.V[h].S.Z); t.Min.Z = Math.Min(t.Min.Z, t.V[h].S.Z);
+                }
+                else t.Min = t.Max = t.V[0].S;
+            }
+            t.Center *= div;
+
+            // distance
+            var dist = 0f;
+            for (var h = 0; h < to; h++) dist = Math.Max(dist, Vector3.Distance(t.V[h].S, t.Center));
+            t.V[0].Rhw = dist;
+
+            // declare
+            DeclareEGInfo(bkg, t.Center.X, t.Center.Y, t.Center.Z);
+            DeclareEGInfo(bkg, t.V[0].S.X, t.V[0].S.Y, t.V[0].S.Z);
+            DeclareEGInfo(bkg, t.V[1].S.X, t.V[1].S.Y, t.V[1].S.Z);
+            DeclareEGInfo(bkg, t.V[2].S.X, t.V[2].S.Y, t.V[2].S.Z);
+            if ((Type & POLY.QUAD) != 0) DeclareEGInfo(bkg, t.V[3].S.X, t.V[3].S.Y, t.V[3].S.Z);
+            return t;
+        }
     }
 
     struct F_SCENE_HEADER {
-        public static (string, int) Struct = ("<f5i6f2i", sizeof(F_SCENE_HEADER));
+        public static (string, int) Struct = ("<f5i6f2i", 56);
         public float Version;
         public int SizeX;
         public int SizeZ;
@@ -467,11 +468,15 @@ public unsafe class Binary_Fts : IHaveMetaInfo, IWriteToStream {
         public int TcPtr;
         public int TempPtr;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)] public string Fic;
+        public static implicit operator E_TEXTURE(F_TEXTURE_CONTAINER s) => new() {
+            Id = s.TcPtr,
+            Path = s.Fic
+        };
     }
 
     [StructLayout(LayoutKind.Sequential)]
     struct F_ANCHOR_DATA {
-        public static (string, int) Struct = ("<5f2h", sizeof(F_ANCHOR_DATA));
+        public static (string, int) Struct = ("<5f2h", 24);
         public Vector3 Pos;
         public float Radius;
         public float Height;
@@ -481,21 +486,14 @@ public unsafe class Binary_Fts : IHaveMetaInfo, IWriteToStream {
 
     [StructLayout(LayoutKind.Sequential)]
     struct F_SCENE_INFO {
-        public static (string, int) Struct = ("<2I", sizeof(F_SCENE_INFO));
+        public static (string, int) Struct = ("<2I", 8);
         public int NumPoly;
         public int NumIAnchors;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    struct ROOM_DIST_DATA_SAVE {
-        public static (string, int) Struct = ("<7f", sizeof(ROOM_DIST_DATA_SAVE));
-        public float Distance; // -1 means use truedist
-        public Vector3 StartPos;
-        public Vector3 EndPos;
-    }
-
-    public struct ROOM_DIST_DATA {
-        public static (string, int) Struct = ("<7f", sizeof(ROOM_DIST_DATA));
+    public struct ROOM_DIST_DATA { //:includes ROOM_DIST_DATA_SAVE
+        public static (string, int) Struct = ("<7f", 28);
         public float Distance; // -1 means use truedist
         public Vector3 StartPos;
         public Vector3 EndPos;
@@ -517,7 +515,11 @@ public unsafe class Binary_Fts : IHaveMetaInfo, IWriteToStream {
     readonly E_BACKGROUND Bkg;
 
     public Binary_Fts(BinaryReader r) {
-        int i, j, k, kk;
+        static void SetRoomDistance(F_LEVEL level, long i, long j, ROOM_DIST_DATA rdd) {
+            if (i < 0 || j < 0 || i >= level.NumRoomDistance || j >= level.NumRoomDistance || level.RoomDistance == null) return;
+            level.RoomDistance[i + j * level.NumRoomDistance] = rdd;
+        }
+
         var header = r.ReadS<FTS_HEADER>();
         if (header.Version != FTS_VERSION) throw new FormatException("BAD MAGIC");
         if (header.Count > 0) {
@@ -530,207 +532,92 @@ public unsafe class Binary_Fts : IHaveMetaInfo, IWriteToStream {
             }
         }
 
+        int i, j;
         Level = new F_LEVEL();
         Bkg = new E_BACKGROUND();
         var s = new MemoryStream(r.DecompressBlast((int)(r.BaseStream.Length - r.BaseStream.Position), header.Compressedsize));
         using var r2 = new BinaryReader(s);
+        {
+            // read
+            var fsh = r2.ReadS<F_SCENE_HEADER>();
+            if (fsh.Version != FTS_VERSION) throw new FormatException("BAD MAGIC");
+            if (fsh.SizeX != Bkg.XSize) throw new FormatException("BAD HEADER");
+            if (fsh.SizeZ != Bkg.ZSize) throw new FormatException("BAD HEADER");
+            Level.PlayerPos = fsh.PlayerPos;
+            Level.MscenePos = fsh.MscenePos;
+            //Log.Info($"Header2: {r2.Tell():x}, 56");
 
-        // read
-        var fsh = r2.ReadS<F_SCENE_HEADER>();
-        if (fsh.Version != FTS_VERSION) throw new FormatException("BAD MAGIC");
-        if (fsh.SizeX != Bkg.XSize) throw new FormatException("BAD HEADER");
-        if (fsh.SizeZ != Bkg.ZSize) throw new FormatException("BAD HEADER");
-        Level.PlayerPos = fsh.PlayerPos;
-        Level.MscenePos = fsh.MscenePos;
-        Log.Info($"Header2: {r2.Tell():x}, {sizeof(F_SCENE_HEADER)}");
+            // textures
+            var textures = Level.Textures = [.. r2.ReadSArray<F_TEXTURE_CONTAINER>(fsh.NumTextures).Cast<E_TEXTURE>()];
+            //Log.Info($"Texture: {r2.Tell():x}");
 
-        // textures
-        var textures = Level.Textures = new E_TEXTURE[fsh.NumTextures];
-        for (k = 0; k < textures.Length; k++) {
-            var ftc = r2.ReadS<F_TEXTURE_CONTAINER>();
-            textures[k] = new E_TEXTURE { Id = ftc.TcPtr, Path = ftc.Fic };
-        }
-        //Log($"Texture: {r2.Position():x}");
-
-        // backg
-        var backg = Bkg.Backg;
-        for (j = 0; j < fsh.SizeZ; j++)
-            for (i = 0; i < fsh.SizeX; i++) {
-                ref E_BKG_INFO bi = ref backg[i + j * fsh.SizeX];
-                var fsi = r2.ReadS<F_SCENE_INFO>();
-                //if (fsi.NumPoly > 0) Log($"F[{j},{i}]: {r2.Position():x}, {fsi.NumPoly}, {fsi.NumIAnchors}");
-                bi.NumIAnchors = (short)fsi.NumIAnchors;
-                bi.NumPoly = (short)fsi.NumPoly;
-                bi.Polydata = fsi.NumPoly > 0 ? new E_POLY[fsi.NumPoly] : null;
-                bi.Treat = 0;
-                bi.Nothing = fsi.NumPoly == 0;
-                bi.FrustrumMaxY = -99999999f;
-                bi.FrustrumMinY = 99999999f;
-                for (k = 0; k < fsi.NumPoly; k++) {
-                    var ep = r2.ReadS<F_POLY>();
-                    var tex = ep.TexPtr != 0
-                        ? textures.FirstOrDefault(x => x.Id == ep.TexPtr)
-                        : null;
-                    ref E_POLY ep2 = ref bi.Polydata[k];
-                    ep2.memset();
-                    ep2.Room = ep.Room;
-                    ep2.Area = ep.Area;
-                    ep2.Norm = ep.Norm;
-                    ep2.Norm2 = ep.Norm2;
-                    ep2.Nrml = [ep.Nrml0, ep.Nrml1, ep.Nrml2, ep.Nrml3];
-                    ep2.Tex = tex;
-                    ep2.TransVal = ep.Transval;
-                    ep2.Type = ep.Type;
-                    ep2.V = [
-                        new() { Color = 0xFFFFFFFF, Rhw = 1, Specular = 1, S = new Vector3(ep.V0.ssx, ep.V0.sy, ep.V0.ssz), T = new Vector2(ep.V0.stu, ep.V0.stv) },
-                        new() { Color = 0xFFFFFFFF, Rhw = 1, Specular = 1, S = new Vector3(ep.V1.ssx, ep.V1.sy, ep.V1.ssz), T = new Vector2(ep.V1.stu, ep.V1.stv) },
-                        new() { Color = 0xFFFFFFFF, Rhw = 1, Specular = 1, S = new Vector3(ep.V2.ssx, ep.V2.sy, ep.V2.ssz), T = new Vector2(ep.V2.stu, ep.V2.stv) },
-                        new() { Color = 0xFFFFFFFF, Rhw = 1, Specular = 1, S = new Vector3(ep.V3.ssx, ep.V3.sy, ep.V3.ssz), T = new Vector2(ep.V3.stu, ep.V3.stv) },
-                    ];
-
-                    // clone v
-                    ep2.Tv = (TLVERTEX[])ep2.V.Clone();
-                    for (kk = 0; kk < 4; kk++) ep2.Tv[kk].Color = 0xFF000000;
-
-                    // re-center
-                    int to; float div;
-                    if ((ep.Type & POLY.QUAD) != 0) { to = 4; div = 0.25f; }
-                    else { to = 3; div = 0.333333333333f; }
-                    ep2.Center = Vector3.Zero;
-                    for (var h = 0; h < to; h++) {
-                        ep2.Center.X += ep2.V[h].S.X;
-                        ep2.Center.Y += ep2.V[h].S.Y;
-                        ep2.Center.Z += ep2.V[h].S.Z;
-                        if (h != 0) {
-                            ep2.Max.X = Math.Max(ep2.Max.X, ep2.V[h].S.X);
-                            ep2.Min.X = Math.Min(ep2.Min.X, ep2.V[h].S.X);
-                            ep2.Max.Y = Math.Max(ep2.Max.Y, ep2.V[h].S.Y);
-                            ep2.Min.Y = Math.Min(ep2.Min.Y, ep2.V[h].S.Y);
-                            ep2.Max.Z = Math.Max(ep2.Max.Z, ep2.V[h].S.Z);
-                            ep2.Min.Z = Math.Min(ep2.Min.Z, ep2.V[h].S.Z);
-                        }
-                        else {
-                            ep2.Min.X = ep2.Max.X = ep2.V[0].S.X;
-                            ep2.Min.Y = ep2.Max.Y = ep2.V[0].S.Y;
-                            ep2.Min.Z = ep2.Max.Z = ep2.V[0].S.Z;
-                        }
-                    }
-                    ep2.Center.X *= div;
-                    ep2.Center.Y *= div;
-                    ep2.Center.Z *= div;
-
-                    // distance
-                    var dist = 0f; for (var h = 0; h < to; h++) dist = Math.Max(dist, Vector3.Distance(ep2.V[h].S, ep2.Center));
-                    ep2.V[0].Rhw = dist;
-
-                    // declare
-                    DeclareEGInfo(Bkg, ep2.Center.X, ep2.Center.Y, ep2.Center.Z);
-                    DeclareEGInfo(Bkg, ep2.V[0].S.X, ep2.V[0].S.Y, ep2.V[0].S.Z);
-                    DeclareEGInfo(Bkg, ep2.V[1].S.X, ep2.V[1].S.Y, ep2.V[1].S.Z);
-                    DeclareEGInfo(Bkg, ep2.V[2].S.X, ep2.V[2].S.Y, ep2.V[2].S.Z);
-                    if ((ep.Type & POLY.QUAD) != 0) DeclareEGInfo(Bkg, ep2.V[3].S.X, ep2.V[3].S.Y, ep2.V[3].S.Z);
+            // backg
+            var backg = Bkg.Backg;
+            for (j = 0; j < fsh.SizeZ; j++)
+                for (i = 0; i < fsh.SizeX; i++) {
+                    ref E_BKG_INFO bi = ref backg[i + j * fsh.SizeX];
+                    var fsi = r2.ReadS<F_SCENE_INFO>();
+                    //if (fsi.NumPoly > 0) Log.Info($"F[{j},{i}]: {r2.Tell():x}, {fsi.NumPoly}, {fsi.NumIAnchors}");
+                    bi.NumIAnchors = (short)fsi.NumIAnchors;
+                    bi.NumPoly = (short)fsi.NumPoly;
+                    bi.Polydata = fsi.NumPoly > 0 ? [.. r2.ReadSArray<F_POLY>(fsi.NumPoly).Select(z => z.To(textures, Bkg))] : null;
+                    bi.Treat = 0;
+                    bi.Nothing = fsi.NumPoly == 0;
+                    bi.FrustrumMaxY = -99999999f;
+                    bi.FrustrumMinY = 99999999f;
+                    bi.IAnchors = fsi.NumIAnchors <= 0 ? null : r2.ReadPArray<int>("i", fsi.NumIAnchors);
                 }
+            //Log.Info($"Background: {r2.Tell():x}");
 
-                bi.IAnchors = fsi.NumIAnchors <= 0 ? null : r2.ReadPArray<int>("i", fsi.NumIAnchors);
+            // anchors
+            Bkg.NumAnchors = fsh.NumAnchors;
+            var anchors = Bkg.Anchors = fsh.NumAnchors > 0 ? new ANCHOR_DATA[fsh.NumAnchors] : null;
+            for (i = 0; i < fsh.NumAnchors; i++) {
+                ref ANCHOR_DATA a = ref anchors[i];
+                var fad = r2.ReadS<F_ANCHOR_DATA>();
+                a.Flags = fad.Flags;
+                a.Pos = fad.Pos;
+                a.NumLinked = fad.NumLinked;
+                a.Height = fad.Height;
+                a.Radius = fad.Radius;
+                a.Linked = fad.NumLinked > 0 ? r2.ReadPArray<int>("i", fad.NumLinked) : null;
             }
-        //Log($"Background: {r2.Position():x}");
+            //Log.Info($"Anchors: {r2.Tell():x}");
 
-        // anchors
-        Bkg.NumAnchors = fsh.NumAnchors;
-        var anchors = Bkg.Anchors = fsh.NumAnchors > 0 ? new ANCHOR_DATA[fsh.NumAnchors] : null;
-        for (i = 0; i < fsh.NumAnchors; i++) {
-            ref ANCHOR_DATA a = ref anchors[i];
-            var fad = r2.ReadS<F_ANCHOR_DATA>();
-            a.Flags = fad.Flags;
-            a.Pos = fad.Pos;
-            a.NumLinked = fad.NumLinked;
-            a.Height = fad.Height;
-            a.Radius = fad.Radius;
-            a.Linked = fad.NumLinked > 0 ? r2.ReadPArray<int>("i", fad.NumLinked) : null;
-        }
-        //Log($"Anchors: {r2.Position():x}");
-
-        // rooms
-        E_PORTAL_DATA portals = null;
-        if (fsh.NumRooms > 0) {
-            portals = Level.Portals = new E_PORTAL_DATA();
-            portals.NumRooms = fsh.NumRooms;
-            portals.Room = new E_ROOM_DATA[portals.NumRooms + 1];
-            portals.NumTotal = fsh.NumPortals;
-            var levelPortals = portals.Portals = new E_PORTALS[portals.NumTotal];
-            for (i = 0; i < portals.NumTotal; i++) {
-                ref E_PORTALS p = ref levelPortals[i];
-                var epo = r2.ReadS<E_SAVE_PORTALS>();
-                p.memset();
-                p.Room1 = epo.Room1;
-                p.Room2 = epo.Room2;
-                p.UsePortal = epo.UsePortal;
-                p.Paddy = epo.Paddy;
-                p.Poly.Area = epo.Poly.Area;
-                p.Poly.Type = epo.Poly.Type;
-                p.Poly.TransVal = epo.Poly.TransVal;
-                p.Poly.Room = epo.Poly.Room;
-                p.Poly.Misc = epo.Poly.Misc;
-                p.Poly.Center = epo.Poly.Center;
-                p.Poly.Max = epo.Poly.Max;
-                p.Poly.Min = epo.Poly.Min;
-                p.Poly.Norm = epo.Poly.Norm;
-                p.Poly.Norm2 = epo.Poly.Norm2;
-                p.Poly.Nrml = [epo.Poly.Nrml0, epo.Poly.Nrml1, epo.Poly.Nrml2, epo.Poly.Nrml3];
-                p.Poly.V = [epo.Poly.V0, epo.Poly.V1, epo.Poly.V2, epo.Poly.V3];
-                p.Poly.Tv = [epo.Poly.Tv0, epo.Poly.Tv1, epo.Poly.Tv2, epo.Poly.Tv3];
-            }
-            for (i = 0; i < portals.NumRooms + 1; i++) {
-                var rd = portals.Room[i] = new E_ROOM_DATA();
-                var erd = r2.ReadS<E_SAVE_ROOM_DATA>();
-                rd.NumPortals = erd.NumPortals;
-                rd.NumPolys = erd.NumPolys;
-                rd.Portals = rd.NumPortals > 0 ? r2.ReadPArray<int>("i", rd.NumPortals) : null;
-                rd.EpData = rd.NumPolys > 0 ? r2.ReadSArray<EP_DATA>(rd.NumPolys) : null;
-            }
-        }
-        //Log($"Portals: {r2.Position():x}");
-
-        if (portals != null) {
-            var numRoomDistance = Level.NumRoomDistance = portals.NumRooms + 1;
-            Level.RoomDistance = new ROOM_DIST_DATA[numRoomDistance * numRoomDistance];
-            for (var n = 0; n < numRoomDistance; n++)
-                for (var m = 0; m < numRoomDistance; m++) {
-                    var rdds = r2.ReadS<ROOM_DIST_DATA_SAVE>();
-                    SetRoomDistance(Level, m, n, rdds.Distance, ref rdds.StartPos, ref rdds.EndPos);
+            // rooms
+            E_PORTAL_DATA portals = null;
+            if (fsh.NumRooms > 0) {
+                portals = Level.Portals = new E_PORTAL_DATA {
+                    NumRooms = fsh.NumRooms,
+                    Room = new E_ROOM_DATA[portals.NumRooms + 1],
+                    NumTotal = fsh.NumPortals,
+                    Portals = [.. r2.ReadSArray<E_SAVE_PORTALS>(fsh.NumPortals).Cast<E_PORTALS>()],
+                };
+                for (i = 0; i < portals.NumRooms + 1; i++) {
+                    var x = r2.ReadS<E_SAVE_ROOM_DATA>();
+                    portals.Room[i] = new E_ROOM_DATA {
+                        NumPortals = x.NumPortals,
+                        NumPolys = x.NumPolys,
+                        Portals = x.NumPortals > 0 ? r2.ReadPArray<int>("i", x.NumPortals) : null,
+                        EpData = x.NumPolys > 0 ? r2.ReadSArray<EP_DATA>(x.NumPolys) : null,
+                    };
                 }
+            }
+            //Log.Info($"Portals: {r2.Tell():x}");
+            if (portals != null) {
+                var numRoomDistance = Level.NumRoomDistance = portals.NumRooms + 1;
+                Level.RoomDistance = new ROOM_DIST_DATA[numRoomDistance * numRoomDistance];
+                for (var n = 0; n < numRoomDistance; n++)
+                    for (var m = 0; m < numRoomDistance; m++)
+                        SetRoomDistance(Level, m, n, r2.ReadS<ROOM_DIST_DATA>());
+            }
+            else { Level.NumRoomDistance = 0; Level.RoomDistance = null; }
+            //Log.Info($"RoomDistance: {r2.Tell():x}");
         }
-        else {
-            Level.NumRoomDistance = 0;
-            Level.RoomDistance = null;
-        }
-        //Log($"RoomDistance: {r2.Position():x}");
         ComputePolyIn();
         //PATHFINDER_Create();
         //PORTAL_Blend_Portals_And_Rooms();
         //ComputePortalVertexBuffer();
-    }
-
-    static void DeclareEGInfo(E_BACKGROUND bkg, float x, float y, float z) {
-        var posx = (int)(float)(x * bkg.Xmul);
-        if (posx < 0) return;
-        else if (posx >= bkg.XSize) return;
-
-        var posz = (int)(float)(z * bkg.Zmul);
-        if (posz < 0) return;
-        else if (posz >= bkg.ZSize) return;
-
-        ref E_BKG_INFO eg = ref bkg.Backg[posx + posz * bkg.XSize];
-        eg.Nothing = false;
-    }
-
-    static void SetRoomDistance(F_LEVEL level, long i, long j, float val, ref Vector3 p1, ref Vector3 p2) {
-        if (i < 0 || j < 0 || i >= level.NumRoomDistance || j >= level.NumRoomDistance || level.RoomDistance == null) return;
-        var offs = i + j * level.NumRoomDistance;
-        ref ROOM_DIST_DATA rd = ref level.RoomDistance[offs];
-        rd.StartPos = p1;
-        rd.EndPos = p2;
-        rd.Distance = val;
     }
 
     static void ComputePolyIn() {

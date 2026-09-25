@@ -168,15 +168,12 @@ public class E_TEXTURE {
     public POLY Poly;
 }
 
-public struct E_POLY {
+public class E_POLY {
     public POLY Type;  // at least 16 bits
-    public Vector3 Min;
-    public Vector3 Max;
-    public Vector3 Norm;
-    public Vector3 Norm2;
-    public TLVERTEX[] V; // new TLVERTEX[4];
-    public TLVERTEX[] Tv; // new TLVERTEX[4];
-    public Vector3[] Nrml; // new Vector3[4];
+    public Vector3 Min; public Vector3 Max;
+    public Vector3 Norm; public Vector3 Norm2;
+    public TLVERTEX[] V; public TLVERTEX[] Tv;
+    public Vector3[] Nrml;
     public E_TEXTURE Tex;
     public Vector3 Center;
     public float TransVal;
@@ -185,9 +182,6 @@ public struct E_POLY {
     public short Misc;
     //public float DistBump;
     //public ushort[] UslInd;// new ushort[4];
-    internal void memset() {
-        Misc = 0;
-    }
 }
 
 public struct E_VERTEX {
@@ -287,9 +281,7 @@ public struct CLOTHESVERTEX {
 }
 
 public struct CLOTHES_DATA {
-    public CLOTHESVERTEX[] Cvert; //public CLOTHESVERTEX[] backup;
-    public short NumCvert;
-    public short NumSprings;
+    public CLOTHESVERTEX[] Cvert;
     public E_SPRINGS[] Springs;
 }
 
@@ -298,11 +290,6 @@ public struct COLLISION_SPHERE {
     public short Idx;
     public short Flags;
     public float Radius;
-}
-
-public struct COLLISION_SPHERES_DATA {
-    public int NumSpheres;
-    public COLLISION_SPHERE[] Spheres;
 }
 
 //struct
@@ -462,13 +449,13 @@ public class E_3DOBJ {
     public int NumSelections;
     //public uint DrawFlags;
     public Vector4[] VertexLocal;
-    public E_VERTEX[] VertexList; //public E_VERTEX[] VertexList3;
+    public E_VERTEX[] Vertexs; //public E_VERTEX[] Vertexs3;
 
-    public E_FACE[] FaceList;
-    //public E_PFACE* PfaceList;
-    //public E_MAP* MapList;
-    public E_GROUPLIST[] GroupList;
-    public E_ACTIONLIST[] ActionList;
+    public E_FACE[] Faces;
+    //public E_PFACE* Pfaces;
+    //public E_MAP* Maps;
+    public E_GROUPLIST[] Groups;
+    public E_ACTIONLIST[] Actions;
     public E_SELECTIONS[] Selections;
     public E_TEXTURE[] Textures;
 
@@ -482,74 +469,72 @@ public class E_3DOBJ {
     //public PROGRESSIVE_DATA Pdata;
     //public NEIGHBOURS_DATA Ndata;
     public CLOTHES_DATA Cdata;
-    public COLLISION_SPHERES_DATA Sdata;
+    public COLLISION_SPHERE[] Spheres;
     public E_FASTACCESS FastAccess;
-    public E_CDATA CData;
+    public E_BONE[] Bones;
 
     internal void CenterObjectCoordinates() {
-        var offset = VertexList[Origin].V;
+        var offset = Vertexs[Origin].V;
         if (offset.X == 0 && offset.Y == 0 && offset.Z == 0) return;
         Log.Info($"NOT CENTERED {File}\n");
-        for (var i = 0; i < NumVertex; i++) { VertexList[i].V -= offset; VertexList[i].Vert.S -= offset; }
+        for (var i = 0; i < NumVertex; i++) { Vertexs[i].V -= offset; Vertexs[i].Vert.S -= offset; }
         Point0 -= offset;
     }
 
     internal void CreateCedricData() {
         int GetFather(int origin, int startGroup) {
             for (var i = startGroup; i >= 0; i--)
-                for (var j = 0; j < GroupList[i].NumIndex; j++)
-                    if (GroupList[i].Indexes[j] == origin) return i;
+                for (var j = 0; j < Groups[i].NumIndex; j++)
+                    if (Groups[i].Indexes[j] == origin) return i;
             return -1;
         }
 
         bool[] temp; int i;
-        CData = new E_CDATA();
         if (NumGroups <= 0) {
-            CData.NumBones = 1; CData.Bones = new E_BONE[1];
-            ref E_BONE s = ref CData.Bones[0];
+            Bones = new E_BONE[1];
+            ref E_BONE s = ref Bones[0];
             for (i = 0; i < NumVertex; i++) s.AddIdxToBone(i);
             s.TransInitGlobal = s.TransInit;
             s.OriginalGroup = null;
             s.Father = -1;
         }
         else {
-            CData.NumBones = NumGroups; CData.Bones = new E_BONE[CData.NumBones];
+            Bones = new E_BONE[NumGroups];
             temp = new bool[NumVertex];
             for (i = NumGroups - 1; i >= 0; i--) {
-                ref E_BONE s = ref CData.Bones[i];
-                var vorigin = VertexList[GroupList[i].Origin];
-                for (var j = 0; j < GroupList[i].NumIndex; j++)
-                    if (!temp[GroupList[i].Indexes[j]]) { temp[GroupList[i].Indexes[j]] = true; s.AddIdxToBone(GroupList[i].Indexes[j]); }
+                ref E_BONE s = ref Bones[i];
+                var vorigin = Vertexs[Groups[i].Origin];
+                for (var j = 0; j < Groups[i].NumIndex; j++)
+                    if (!temp[Groups[i].Indexes[j]]) { temp[Groups[i].Indexes[j]] = true; s.AddIdxToBone(Groups[i].Indexes[j]); }
                 s.TransInit = vorigin.V;
                 s.TransInitGlobal = s.TransInit;
-                s.OriginalGroup = GroupList[i];
-                s.Father = GetFather(GroupList[i].Origin, i - 1);
+                s.OriginalGroup = Groups[i];
+                s.Father = GetFather(Groups[i].Origin, i - 1);
             }
 
             // Try to correct lonely vertex
             for (i = 0; i < NumVertex; i++) {
                 var ok = false;
                 for (var j = 0; j < NumGroups; j++) {
-                    for (var k = 0; k < GroupList[j].NumIndex; k++)
-                        if (GroupList[j].Indexes[k] == i) { ok = true; break; }
+                    for (var k = 0; k < Groups[j].NumIndex; k++)
+                        if (Groups[j].Indexes[k] == i) { ok = true; break; }
                     if (ok) break;
                 }
-                if (!ok) CData.Bones[0].AddIdxToBone(i);
+                if (!ok) Bones[0].AddIdxToBone(i);
             }
 
             for (i = NumGroups - 1; i >= 0; i--) {
-                ref E_BONE s = ref CData.Bones[i];
-                if (s.Father >= 0) s.TransInit -= CData.Bones[s.Father].TransInit;
+                ref E_BONE s = ref Bones[i];
+                if (s.Father >= 0) s.TransInit -= Bones[s.Father].TransInit;
                 s.TransInitGlobal = s.TransInit;
             }
         }
 
         // Build proper mesh
-        E_CDATA obj = CData;
-        for (i = 0; i != obj.NumBones; i++) {
-            ref E_BONE s = ref obj.Bones[i];
+        for (i = 0; i != Bones.Length; i++) {
+            ref E_BONE s = ref Bones[i];
             if (s.Father >= 0) {
-                ref E_BONE f = ref obj.Bones[s.Father];
+                ref E_BONE f = ref Bones[s.Father];
                 s.QuatAnim = f.QuatAnim * s.QuatInit; // Rotation
                 TransformVertexQuat(ref f.QuatAnim, ref s.TransInit, ref s.TransAnim); // Translation
                 s.TransAnim = f.TransAnim + s.TransAnim;
@@ -562,11 +547,11 @@ public class E_3DOBJ {
             }
         }
         VertexLocal = new Vector4[NumVertex];
-        for (i = 0; i != obj.NumBones; i++) {
-            ref E_BONE s = ref obj.Bones[i];
+        for (i = 0; i != Bones.Length; i++) {
+            ref E_BONE s = ref Bones[i];
             var vec = s.TransAnim;
             for (var v = 0; v != s.NumIdxVertices; v++) {
-                var t = VertexList[s.IdxVertices[v]].V - vec;
+                var t = Vertexs[s.IdxVertices[v]].V - vec;
                 TransformInverseVertexQuat(ref s.QuatAnim, ref t, ref t);
                 VertexLocal[s.IdxVertices[v]] = new Vector4(t.X, t.Y, t.Z, 0f);
             }
@@ -581,12 +566,12 @@ public class E_3DOBJ {
         }
         short GetGroup(string groupName) {
             for (var i = 0; i < NumGroups; i++)
-                if (GroupList[i].Name.Equals(groupName, StringComparison.OrdinalIgnoreCase)) return (short)i;
+                if (Groups[i].Name.Equals(groupName, StringComparison.OrdinalIgnoreCase)) return (short)i;
             return -1;
         }
         short GetActionPointIdx(string text) {
             for (var i = 0; i < NumAction; i++)
-                if (ActionList[i].Name.Equals(text, StringComparison.OrdinalIgnoreCase)) return (short)ActionList[i].Idx;
+                if (Actions[i].Name.Equals(text, StringComparison.OrdinalIgnoreCase)) return (short)Actions[i].Idx;
             return -1;
         }
         short mouthGroup, headGroup;
@@ -600,9 +585,9 @@ public class E_3DOBJ {
             SecondaryAttach = GetActionPointIdx("SECONDARY_ATTACH"),
             JawGroup = GetGroup("jaw"),
             MouthGroup = mouthGroup = GetGroup("mouth all"),
-            MouthGroupOrigin = (short)(mouthGroup == -1 ? -1 : GroupList[mouthGroup].Origin),
+            MouthGroupOrigin = (short)(mouthGroup == -1 ? -1 : Groups[mouthGroup].Origin),
             HeadGroup = headGroup = GetGroup("head"),
-            HeadGroupOrigin = (short)(headGroup == -1 ? -1 : GroupList[headGroup].Origin),
+            HeadGroupOrigin = (short)(headGroup == -1 ? -1 : Groups[headGroup].Origin),
             Fire = GetActionPointIdx("FIRE"),
             CarryAttach = GetActionPointIdx("CARRY_ATTACH"),
             SelHead = GetSelection("head"),
@@ -699,6 +684,8 @@ public class E_3DOBJ {
 
 [StructLayout(LayoutKind.Sequential)]
 public struct SAVE_EPOLY {
+    const string _v = "4f2I2f";
+    public static (string, int) Struct = ($"i12f{_v}{_v}{_v}{_v}{_v}{_v}{_v}{_v}12fi5f2h", 384);
     public POLY Type;  // at least 16 bits
     public Vector3 Min; public Vector3 Max;
     public Vector3 Norm; public Vector3 Norm2;
@@ -711,28 +698,46 @@ public struct SAVE_EPOLY {
     public float Area;
     public short Room;
     public short Misc;
+    public static implicit operator E_POLY(SAVE_EPOLY s) => new() {
+        Area = s.Area,
+        Type = s.Type,
+        TransVal = s.TransVal,
+        Room = s.Room,
+        Misc = s.Misc,
+        Center = s.Center,
+        Max = s.Max,
+        Min = s.Min,
+        Norm = s.Norm,
+        Norm2 = s.Norm2,
+        Nrml = [s.Nrml0, s.Nrml1, s.Nrml2, s.Nrml3],
+        V = [s.V0, s.V1, s.V2, s.V3],
+        Tv = [s.Tv0, s.Tv1, s.Tv2, s.Tv3],
+    };
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct E_SAVE_PORTALS {
-    public static (string, int) Struct = ("<?", sizeof(E_SAVE_PORTALS));
+public struct E_SAVE_PORTALS {
+    public static (string, int) Struct = ($"<{SAVE_EPOLY.Struct.Item1}2i2h", 384 + 12);
     public SAVE_EPOLY Poly;
     public int Room1; // facing normal
     public int Room2;
     public short UsePortal;
     public short Paddy;
+    public static implicit operator E_PORTALS(E_SAVE_PORTALS s) => new() {
+        Poly = s.Poly,
+        Room1 = s.Room1,
+        Room2 = s.Room2,
+        UsePortal = s.UsePortal,
+        Paddy = s.Paddy,
+    };
 }
 
-public unsafe struct E_PORTALS {
-    public static (string, int) Struct = ("<?", sizeof(E_PORTALS));
+public struct E_PORTALS {
     public E_POLY Poly;
     public int Room1; // facing normal
     public int Room2;
     public short UsePortal;
     public short Paddy;
-
-    internal void memset() {
-    }
 }
 
 public struct EP_DATA {
@@ -758,7 +763,7 @@ public class E_ROOM_DATA {
 
 [StructLayout(LayoutKind.Sequential)]
 public unsafe struct E_SAVE_ROOM_DATA {
-    public static (string, int) Struct = ("<2i6i", sizeof(E_SAVE_ROOM_DATA));
+    public static (string, int) Struct = ("<8i", 32);
     public int NumPortals;
     public int NumPolys;
     public fixed int Padd[6];

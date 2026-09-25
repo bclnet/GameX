@@ -38,7 +38,7 @@ class CustomEncoder(json.JSONEncoder):
                     case (2, 2): return [
                         f'{s[0][0]:.9g} {s[0][1]:.9g}',
                         f'{s[1][0]:.9g} {s[1][1]:.9g}'] #matrix2x2
-                    case (2, 3): return [
+                    case (3, 3): return [
                         f'{s[0][0]:.9g} {s[0][1]:.9g} {s[0][2]:.9g}',
                         f'{s[1][0]:.9g} {s[1][1]:.9g} {s[1][2]:.9g}',
                         f'{s[2][0]:.9g} {s[2][1]:.9g} {s[2][2]:.9g}'] #matrix3x3
@@ -46,12 +46,12 @@ class CustomEncoder(json.JSONEncoder):
                     #     f'{s[0][0]:.9g} {s[0][1]:.9g} {s[0][2]:.9g}',
                     #     f'{s[1][0]:.9g} {s[1][1]:.9g} {s[1][2]:.9g}',
                     #     f'{s[2][0]:.9g} {s[2][1]:.9g} {s[2][2]:.9g}'] #matrix3x4
-                    case (2, 4): return [
+                    case (4, 4): return [
                         f'{s[0][0]:.9g} {s[0][1]:.9g} {s[0][2]:.9g} {s[0][3]:.9g}',
                         f'{s[1][0]:.9g} {s[1][1]:.9g} {s[1][2]:.9g} {s[1][3]:.9g}',
                         f'{s[2][0]:.9g} {s[2][1]:.9g} {s[2][2]:.9g} {s[2][3]:.9g}',
                         f'{s[3][0]:.9g} {s[3][1]:.9g} {s[3][2]:.9g} {s[3][3]:.9g}'] #matrix4x4
-                    case _: raise Exception('Unknown mapping')
+                    case _: return f'MATRIX: {len(s.shape), s.shape[0]}' #raise Exception(f'Unknown mapping {len(s.shape), s.shape[0]}')
             # case Color3(): return f'{s.r:.9g} {s.g:.9g} {s.b:.9g}' #color3
             # case Color4(): return f'{s.r:.9g} {s.g:.9g} {s.b:.9g} {s.a:.9g}' #color4
         n = type(s).__name__; c = {jsonKey(k):jsonValue(getattr(s, k)) for k in dir(s) if not k.startswith('_') and not callable(getattr(s, k))}; d = {k:v for k,v in c.items() if not callable(v)}

@@ -589,7 +589,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo, IWriteToStream {
             if (fsh.NumRooms > 0) {
                 portals = Level.Portals = new E_PORTAL_DATA {
                     NumRooms = fsh.NumRooms,
-                    Room = new E_ROOM_DATA[portals.NumRooms + 1],
+                    Room = new E_ROOM_DATA[fsh.NumRooms + 1],
                     NumTotal = fsh.NumPortals,
                     Portals = [.. r2.ReadSArray<E_SAVE_PORTALS>(fsh.NumPortals).Cast<E_PORTALS>()],
                 };

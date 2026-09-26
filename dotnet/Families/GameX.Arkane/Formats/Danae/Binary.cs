@@ -1,7 +1,5 @@
-using GameX.Crytek.Formats.Models;
+using GameX.Bullfrog;
 using GameX.Uncore.Formats;
-using MathNet.Numerics;
-using MathNet.Numerics.Financial;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -54,7 +52,7 @@ public class Binary_Ftl : IHaveMetaInfo, IWriteToStream {
         public TLVERTEX Vert;
         public Vector3 V;
         public Vector3 Norm;
-        public static implicit operator E_VERTEX(FTL_VERTEX s) {
+        public static E_VERTEX To(FTL_VERTEX s) {
             s.Vert.Color = 0xFF000000;
             return new E_VERTEX {
                 Vert = s.Vert,
@@ -69,7 +67,7 @@ public class Binary_Ftl : IHaveMetaInfo, IWriteToStream {
     struct FTL_TEXTURE {
         public static (string, int) Struct = ("<256s", 256);
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)] public string Name;
-        public static implicit operator E_TEXTURE(FTL_TEXTURE s) {
+        public static E_TEXTURE To(FTL_TEXTURE s) {
             var name = s.Name;
             POLY poly = 0;
             if (name.Contains("NPC_")) poly |= POLY.LATE_MIP;
@@ -81,7 +79,7 @@ public class Binary_Ftl : IHaveMetaInfo, IWriteToStream {
             else if (name.Contains("spider_web")) poly |= POLY.WATER | POLY.TRANS;
             else if (name.Contains("[metal]")) poly |= POLY.METAL;
             return new E_TEXTURE {
-                Path = s.Name,
+                Path = name,
                 Poly = poly,
             };
         }
@@ -102,7 +100,7 @@ public class Binary_Ftl : IHaveMetaInfo, IWriteToStream {
         public Vector3 Norm;
         public Vector3 Nrmls0; public Vector3 Nrmls1; public Vector3 Nrmls2;
         public float Temp;
-        public static implicit operator E_FACE(FTL_FACE s) => new() {
+        public static E_FACE To(FTL_FACE s) => new() {
             FaceType = s.FaceType,
             TexId = s.TexId,
             U = s.U,
@@ -124,7 +122,7 @@ public class Binary_Ftl : IHaveMetaInfo, IWriteToStream {
         public int NumIndex;
         public int Trash; // Indexes;
         public float Size;
-        public static implicit operator E_GROUPLIST(FTL_GROUPLIST s) => new() {
+        public static E_GROUPLIST To(FTL_GROUPLIST s) => new() {
             Name = s.Name,
             Origin = s.Origin,
             NumIndex = s.NumIndex,
@@ -139,7 +137,7 @@ public class Binary_Ftl : IHaveMetaInfo, IWriteToStream {
         public int Idx; //index vertex;
         public int Act; //action
         public int Sfx; //sfx
-        public static implicit operator E_ACTIONLIST(FTL_ACTIONLIST s) => new() {
+        public static E_ACTIONLIST To(FTL_ACTIONLIST s) => new() {
             Name = s.Name,
             Idx = s.Idx,
             Act = s.Act,
@@ -153,7 +151,7 @@ public class Binary_Ftl : IHaveMetaInfo, IWriteToStream {
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)] string Name;
         public int NumSelected;
         public int Trash; //Selected;
-        public static implicit operator E_SELECTIONS(FTL_SELECTIONS s) => new() {
+        public static E_SELECTIONS To(FTL_SELECTIONS s) => new() {
             Name = s.Name,
             NumSelected = s.NumSelected,
         };
@@ -174,8 +172,8 @@ public class Binary_Ftl : IHaveMetaInfo, IWriteToStream {
 
         // Check For & Load 3D Data
         if (header.Offset3Ddata != -1) {
-            E_GROUPLIST _groupZ(FTL_GROUPLIST s) { var z = (E_GROUPLIST)s; z.Indexes = z.NumIndex > 0 ? r.ReadPArray<int>("i", z.NumIndex) : null; return z; }
-            E_SELECTIONS _selectionsZ(FTL_SELECTIONS s) { var z = (E_SELECTIONS)s; z.Selected = r.ReadPArray<int>("i", z.NumSelected); return z; }
+            E_GROUPLIST _groupZ(FTL_GROUPLIST s) { var z = FTL_GROUPLIST.To(s); z.Indexes = z.NumIndex > 0 ? r.ReadPArray<int>("i", z.NumIndex) : null; return z; }
+            E_SELECTIONS _selectionsZ(FTL_SELECTIONS s) { var z = FTL_SELECTIONS.To(s); z.Selected = r.ReadPArray<int>("i", z.NumSelected); return z; }
             r.Seek(header.Offset3Ddata);
             var s = r.ReadS<FTL_3DHEADER>();
             obj.NumVertex = s.NumVertex;
@@ -186,11 +184,11 @@ public class Binary_Ftl : IHaveMetaInfo, IWriteToStream {
             obj.NumSelections = s.NumSelections;
             obj.Origin = s.Origin;
             obj.File = s.Name;
-            obj.Vertexs = s.NumVertex > 0 ? [.. r.ReadSArray<FTL_VERTEX>(s.NumVertex).Cast<E_VERTEX>()] : null; obj.Point0 = s.NumVertex > 0 ? obj.Vertexs[obj.Origin].V : default;
-            obj.Faces = s.NumFaces > 0 ? [.. r.ReadSArray<FTL_FACE>(s.NumFaces).Cast<E_FACE>()] : null;
-            obj.Textures = s.NumMaps > 0 ? [.. r.ReadSEach<FTL_TEXTURE>(s.NumMaps).Cast<E_TEXTURE>()] : null;
+            obj.Vertexs = s.NumVertex > 0 ? [.. r.ReadSArray<FTL_VERTEX>(s.NumVertex).Select(FTL_VERTEX.To)] : null; obj.Point0 = s.NumVertex > 0 ? obj.Vertexs[obj.Origin].V : default;
+            obj.Faces = s.NumFaces > 0 ? [.. r.ReadSArray<FTL_FACE>(s.NumFaces).Select(FTL_FACE.To)] : null;
+            obj.Textures = s.NumMaps > 0 ? [.. r.ReadSEach<FTL_TEXTURE>(s.NumMaps).Select(FTL_TEXTURE.To)] : null;
             obj.Groups = s.NumGroups > 0 ? [.. r.ReadSEach<FTL_GROUPLIST>(s.NumGroups).Select(_groupZ)] : null;
-            obj.Actions = s.NumAction > 0 ? [.. r.ReadSEach<FTL_ACTIONLIST>(s.NumAction).Cast<E_ACTIONLIST>()] : null;
+            obj.Actions = s.NumAction > 0 ? [.. r.ReadSEach<FTL_ACTIONLIST>(s.NumAction).Select(FTL_ACTIONLIST.To)] : null;
             obj.Selections = s.NumSelections > 0 ? [.. r.ReadSEach<FTL_SELECTIONS>(s.NumSelections).Select(_selectionsZ)] : null;
         }
 
@@ -383,7 +381,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo, IWriteToStream {
         public POLY Type;
         public short Room;
         public short Paddy;
-        public E_POLY To(E_TEXTURE[] textures, E_BACKGROUND bkg) {
+        public static E_POLY To(F_POLY s, E_TEXTURE[] textures, E_BACKGROUND bkg) {
             static void DeclareEGInfo(E_BACKGROUND bkg, float x, float y, float z) {
                 var posx = (int)(float)(x * bkg.Xmul);
                 if (posx < 0) return;
@@ -395,21 +393,21 @@ public unsafe class Binary_Fts : IHaveMetaInfo, IWriteToStream {
                 eg.Nothing = false;
             }
 
-            var texPtr = TexPtr;
+            var texPtr = s.TexPtr;
             var t = new E_POLY {
-                Room = Room,
-                Area = Area,
-                Norm = Norm,
-                Norm2 = Norm2,
-                Nrml = [Nrml0, Nrml1, Nrml2, Nrml3],
+                Room = s.Room,
+                Area = s.Area,
+                Norm = s.Norm,
+                Norm2 = s.Norm2,
+                Nrml = [s.Nrml0, s.Nrml1, s.Nrml2, s.Nrml3],
                 Tex = texPtr != 0 ? textures.FirstOrDefault(x => x.Id == texPtr) : null,
-                TransVal = TransVal,
-                Type = Type,
+                TransVal = s.TransVal,
+                Type = s.Type,
                 V = [
-                    new() { Color = 0xFFFFFFFF, Rhw = 1f, Specular = 1, S = new Vector3(V0.ssx, V0.sy, V0.ssz), T = new Vector2(V0.stu, V0.stv) },
-                    new() { Color = 0xFFFFFFFF, Rhw = 1f, Specular = 1, S = new Vector3(V1.ssx, V1.sy, V1.ssz), T = new Vector2(V1.stu, V1.stv) },
-                    new() { Color = 0xFFFFFFFF, Rhw = 1f, Specular = 1, S = new Vector3(V2.ssx, V2.sy, V2.ssz), T = new Vector2(V2.stu, V2.stv) },
-                    new() { Color = 0xFFFFFFFF, Rhw = 1f, Specular = 1, S = new Vector3(V3.ssx, V3.sy, V3.ssz), T = new Vector2(V3.stu, V3.stv) },
+                    new() { Color = 0xFFFFFFFF, Rhw = 1f, Specular = 1, S = new Vector3(s.V0.ssx, s.V0.sy, s.V0.ssz), T = new Vector2(s.V0.stu, s.V0.stv) },
+                    new() { Color = 0xFFFFFFFF, Rhw = 1f, Specular = 1, S = new Vector3(s.V1.ssx, s.V1.sy, s.V1.ssz), T = new Vector2(s.V1.stu, s.V1.stv) },
+                    new() { Color = 0xFFFFFFFF, Rhw = 1f, Specular = 1, S = new Vector3(s.V2.ssx, s.V2.sy, s.V2.ssz), T = new Vector2(s.V2.stu, s.V2.stv) },
+                    new() { Color = 0xFFFFFFFF, Rhw = 1f, Specular = 1, S = new Vector3(s.V3.ssx, s.V3.sy, s.V3.ssz), T = new Vector2(s.V3.stu, s.V3.stv) },
                 ]
             };
 
@@ -419,7 +417,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo, IWriteToStream {
 
             // re-center
             int to; float div;
-            if ((Type & POLY.QUAD) != 0) { to = 4; div = 0.25f; }
+            if ((s.Type & POLY.QUAD) != 0) { to = 4; div = 0.25f; }
             else { to = 3; div = 0.333333333333f; }
             t.Center = Vector3.Zero;
             for (var h = 0; h < to; h++) {
@@ -443,7 +441,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo, IWriteToStream {
             DeclareEGInfo(bkg, t.V[0].S.X, t.V[0].S.Y, t.V[0].S.Z);
             DeclareEGInfo(bkg, t.V[1].S.X, t.V[1].S.Y, t.V[1].S.Z);
             DeclareEGInfo(bkg, t.V[2].S.X, t.V[2].S.Y, t.V[2].S.Z);
-            if ((Type & POLY.QUAD) != 0) DeclareEGInfo(bkg, t.V[3].S.X, t.V[3].S.Y, t.V[3].S.Z);
+            if ((s.Type & POLY.QUAD) != 0) DeclareEGInfo(bkg, t.V[3].S.X, t.V[3].S.Y, t.V[3].S.Z);
             return t;
         }
     }
@@ -468,7 +466,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo, IWriteToStream {
         public int TcPtr;
         public int TempPtr;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)] public string Fic;
-        public static implicit operator E_TEXTURE(F_TEXTURE_CONTAINER s) => new() {
+        public static E_TEXTURE To(F_TEXTURE_CONTAINER s) => new() {
             Id = s.TcPtr,
             Path = s.Fic
         };
@@ -548,7 +546,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo, IWriteToStream {
             //Log.Info($"Header2: {r2.Tell():x}, 56");
 
             // textures
-            var textures = Level.Textures = [.. r2.ReadSArray<F_TEXTURE_CONTAINER>(fsh.NumTextures).Cast<E_TEXTURE>()];
+            var textures = Level.Textures = [.. r2.ReadSArray<F_TEXTURE_CONTAINER>(fsh.NumTextures).Select(F_TEXTURE_CONTAINER.To)];
             //Log.Info($"Texture: {r2.Tell():x}");
 
             // backg
@@ -560,7 +558,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo, IWriteToStream {
                     //if (fsi.NumPoly > 0) Log.Info($"F[{j},{i}]: {r2.Tell():x}, {fsi.NumPoly}, {fsi.NumIAnchors}");
                     bi.NumIAnchors = (short)fsi.NumIAnchors;
                     bi.NumPoly = (short)fsi.NumPoly;
-                    bi.Polydata = fsi.NumPoly > 0 ? [.. r2.ReadSArray<F_POLY>(fsi.NumPoly).Select(z => z.To(textures, Bkg))] : null;
+                    bi.Polydata = fsi.NumPoly > 0 ? [.. r2.ReadSArray<F_POLY>(fsi.NumPoly).Select(s => F_POLY.To(s, textures, Bkg))] : null;
                     bi.Treat = 0;
                     bi.Nothing = fsi.NumPoly == 0;
                     bi.FrustrumMaxY = -99999999f;

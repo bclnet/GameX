@@ -84,7 +84,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' == 'Windows_NT'">
-    <Exec Command="xcopy /Y &quot;$(TargetDir)GameX.Resource*.dll&quot; &quot;$(SolutionDir)..\platforms\Plugins\GameX.Resource\$(Configuration)\&quot;" />
+    <Exec Command="xcopy /Y &quot;$(TargetDir)GameX.Resource*.dll&quot; &quot;$(SolutionDir)..\engines\Plugins\GameX.Resource\$(Configuration)\&quot;" />
   </Target>
 
 </Project>

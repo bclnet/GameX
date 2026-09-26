@@ -57,6 +57,7 @@ class Binary_Ftl(IHaveMetaInfo, IWriteToStream):
             norm = self.norm = array([None]*3)
             (v[0], v[1], v[2],
             norm[0], norm[1], norm[2]) = t[8:]
+        @staticmethod
         def to(s) -> E_VERTEX:
             s.vert.color = 0xFF000000
             return E_VERTEX(
@@ -70,8 +71,9 @@ class Binary_Ftl(IHaveMetaInfo, IWriteToStream):
         def __init__(self, t):
             (self.name) = t
             self.name = unsafe.fixedAStringScan(self.name, 256)
+        @staticmethod
         def to(s) -> E_TEXTURE:
-            name: str  = s.name
+            name: str = s.name
             poly: POLY = POLY.NONE_
             if 'NPC_' in name: poly |= POLY.LATE_MIP
             if 'nocol' in name: poly |= POLY.NOCOL
@@ -82,7 +84,7 @@ class Binary_Ftl(IHaveMetaInfo, IWriteToStream):
             elif 'spider_web' in name: poly |= POLY.WATER | POLY.TRANS
             elif '[metal]' in name: poly |= POLY.METAL
             return E_TEXTURE(
-                path = s.name,
+                path = name,
                 poly = poly)
 
     class FTL_FACE:
@@ -110,6 +112,7 @@ class Binary_Ftl(IHaveMetaInfo, IWriteToStream):
             norm[0], norm[1], norm[2],
             nrmls0[0], nrmls0[1], nrmls0[2], nrmls1[0], nrmls1[1], nrmls1[2], nrmls2[0], nrmls2[1], nrmls2[2],
             self.temp) = t
+        @staticmethod
         def to(s) -> E_FACE:
             return E_FACE(
                 faceType = s.faceType,
@@ -132,6 +135,7 @@ class Binary_Ftl(IHaveMetaInfo, IWriteToStream):
             self.trash, #indexes
             self.size) = t
             self.name = unsafe.fixedAStringScan(self.name, 256)
+        @staticmethod
         def to(s) -> E_GROUPLIST:
             return E_GROUPLIST(
                 name = s.name,
@@ -147,6 +151,7 @@ class Binary_Ftl(IHaveMetaInfo, IWriteToStream):
             self.act, #action
             self.sfx) = t #sfx
             self.name = unsafe.fixedAStringScan(self.name, 256)
+        @staticmethod
         def to(s) -> E_ACTIONLIST:
             return E_ACTIONLIST(
                 name = s.name,
@@ -161,6 +166,7 @@ class Binary_Ftl(IHaveMetaInfo, IWriteToStream):
             self.numSelected,
             self.trash) = t #selected
             self.name = unsafe.fixedAStringScan(self.name, 64)
+        @staticmethod
         def to(s) -> E_SELECTIONS:
             return E_SELECTIONS(
                 name = s.name,
@@ -363,6 +369,7 @@ class Binary_Fts(IHaveMetaInfo, IWriteToStream):
             self.room,
             self.paddy) = t
             self.type = POLY(self.type)
+        @staticmethod
         def to(s, textures: list[E_TEXTURE], bkg: Binary_Fts.E_BACKGROUND) -> E_POLY:
             @staticmethod
             def declareEGInfo(bkg: Binary_Fts.E_BACKGROUND, x: float, y: float, z: float) -> None:
@@ -446,6 +453,7 @@ class Binary_Fts(IHaveMetaInfo, IWriteToStream):
             self.tempPtr,
             self.fic) = t
             self.fic = unsafe.fixedAStringScan(self.fic, 256)
+        @staticmethod
         def to(s) -> E_TEXTURE:
             return E_TEXTURE(
                 id = s.tcPtr,

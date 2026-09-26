@@ -698,7 +698,7 @@ public struct SAVE_EPOLY {
     public float Area;
     public short Room;
     public short Misc;
-    public static implicit operator E_POLY(SAVE_EPOLY s) => new() {
+    public static E_POLY To(SAVE_EPOLY s) => new() {
         Area = s.Area,
         Type = s.Type,
         TransVal = s.TransVal,
@@ -723,7 +723,7 @@ public struct E_SAVE_PORTALS {
     public int Room2;
     public short UsePortal;
     public short Paddy;
-    public static implicit operator E_PORTALS(E_SAVE_PORTALS s) => new() {
+    public static E_PORTALS To(E_SAVE_PORTALS s) => new() {
         Poly = s.Poly,
         Room1 = s.Room1,
         Room2 = s.Room2,

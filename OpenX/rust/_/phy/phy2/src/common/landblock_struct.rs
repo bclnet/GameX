@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/LandblockStruct.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/LandblockStruct.cs
 // PORT-SHA: a3552989f91ebf39
 // PORT-STATUS: todo (695 LOC in C#)
 //

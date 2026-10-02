@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack.PolyIO/System.IO/IStream.cs
+// PORT-SOURCE: Core/OpenX.PolyIO/System.IO/IStream.cs
 // PORT-SHA: d06f603e07936776
 // PORT-STATUS: done
 

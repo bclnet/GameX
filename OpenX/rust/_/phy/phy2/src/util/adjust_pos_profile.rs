@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Util/AdjustPosProfile.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Util/AdjustPosProfile.cs
 // PORT-SHA: e8e08c45abb15275
 // PORT-STATUS: todo (17 LOC in C#)
 //

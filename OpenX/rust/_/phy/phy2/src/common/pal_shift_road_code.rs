@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/PalShiftRoadCode.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/PalShiftRoadCode.cs
 // PORT-SHA: f5c2e957648d1ac4
 // PORT-STATUS: todo (8 LOC in C#)
 //

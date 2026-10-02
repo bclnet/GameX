@@ -9,8 +9,8 @@
 //         public object Tag = state.Tag;
 //     }
 //
-// `ClientBase` and `ClientState` come from `OpenStack.Client`, whose Rust
-// counterpart is `openstack::client` — ported, and its `ClientHost`/`Scene`
+// `ClientBase` and `ClientState` come from `OpenX.Client`, whose Rust
+// counterpart is `openx::client` — ported, and its `ClientHost`/`Scene`
 // traits are the shape this plugs into. `Archive` is in `GameX.FileSystems`,
 // still outstanding, so the field is left out rather than stubbed.
 //

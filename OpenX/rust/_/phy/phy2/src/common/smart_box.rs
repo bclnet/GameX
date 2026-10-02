@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/SmartBox.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/SmartBox.cs
 // PORT-SHA: 6e990c6c63b2ee3c
 // PORT-STATUS: todo (54 LOC in C#)
 //

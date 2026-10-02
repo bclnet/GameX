@@ -15,7 +15,7 @@ class PARAMETERS_LZX(Structure):
     ]
 
 # https://stackoverflow.com/questions/252417/how-can-i-use-a-dll-file-from-python
-so = CDLL(os.path.abspath(__file__.replace('xcompress.py', '../../core/x64/xcompress64.dll')))
+so = CDLL(os.path.abspath(__file__.replace('xcompress.py', '../../../../third_party/xcompress/xcompress64.dll')))
 
 so.XMemCreateCompressionContext.argtypes = [c_int, POINTER(PARAMETERS_LZX), c_int, POINTER(c_void_p)]
 so.XMemResetCompressionContext.argtypes = [c_void_p]

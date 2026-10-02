@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack.Polyfills/System/BitReverseX.cs
+// PORT-SOURCE: Core/OpenX.Polyfills/System/BitReverseX.cs
 // PORT-SHA: d94eab2fe6512403
 // PORT-STATUS: done
 //

@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Combat/AttackCone.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Combat/AttackCone.cs
 // PORT-SHA: 0732191c49c03719
 // PORT-STATUS: todo (13 LOC in C#)
 //

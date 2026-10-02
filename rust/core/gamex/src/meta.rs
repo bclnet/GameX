@@ -11,7 +11,7 @@
 //   1. **`FileSource` has 15 public mutable fields, four of them untyped.**
 //      `Tag`, `Tag2`, `CachedObjectOption` and `MetaContent.Value`/`Tag` are
 //      all `object`, so what a field holds depends on which archive produced
-//      it. That is the same `object`-typed API surface flagged in the OpenStack
+//      it. That is the same `object`-typed API surface flagged in the OpenX
 //      review, and it is where several of that port's bugs lived. Modelled here
 //      with an explicit enum rather than `Box<dyn Any>` — a closed set is
 //      checkable, and every consumer in the tree stores one of a handful of

@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/PhysicsTimer.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/PhysicsTimer.cs
 // PORT-SHA: baa9c12638c1cfa1
 // PORT-STATUS: todo (24 LOC in C#)
 //

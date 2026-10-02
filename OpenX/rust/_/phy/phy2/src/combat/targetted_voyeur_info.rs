@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Combat/TargettedVoyeurInfo.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Combat/TargettedVoyeurInfo.cs
 // PORT-SHA: cdb162fd8c9949a7
 // PORT-STATUS: todo (21 LOC in C#)
 //

@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack/Platform.cs
+// PORT-SOURCE: Core/OpenX/Platform.cs
 // PORT-SHA: bfce3236f8c25da0
 // PORT-STATUS: done
 //
@@ -125,7 +125,7 @@ pub trait Platform: Send + Sync {
     ///
     /// The base implementation installs the platform's assert and log
     /// callbacks into the global `Log`. Logging setup is the caller's business
-    /// here — `openstack_polyfills::log::set_sink` does it directly — so this
+    /// here — `openx_poly::log::set_sink` does it directly — so this
     /// defaults to doing nothing.
     fn activate(&self) {}
 

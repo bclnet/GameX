@@ -1,11 +1,11 @@
-// PORT-SOURCE: Gfx/OpenStack.Gfx.Egin/Egin_Particle.cs
+// PORT-SOURCE: Gfx/OpenX.Gfx.Egin/Egin_Particle.cs
 // PORT-SHA: 50cef39679b48ca4
 // PORT-STATUS: done
 //
 // A data-driven particle system: emitters produce particles, initializers set
 // their starting state, operators advance them per frame. Every concrete type
 // is configured from an `IDictionary<string, object>` of `m_fl*` keys — Valve
-// particle-system KV blobs — which is what `openstack_polyfills`' `KV` enum
+// particle-system KV blobs — which is what `openx_poly`' `KV` enum
 // exists for, so it is used here instead of an untyped map.
 //
 // PARTIAL PORT. The core is done: `Particle`, `ParticleBag`, the four trait
@@ -53,7 +53,7 @@
 // `Rotation.Z` and `Rotation.Y`, ignoring `Rotation.X` entirely.
 
 use glam::{Mat4, Vec3};
-use openstack_polyfills::system_collections_generic::kv_extensions::KV;
+use openx_poly::system_collections_generic::kv_extensions::KV;
 
 /// C# `Particle.Particle(IDictionary<string, object>)` default radius.
 const DEFAULT_CONSTANT_RADIUS: f32 = 5.0;
@@ -552,7 +552,7 @@ impl ParticleOperator for FadeAndKill {
 // `InterpolateRadius`, `OscillateScalar`, `SpinUpdate`. Each is a handful of
 // lines reading `m_fl*` keys and writing one or two `Particle` fields, all
 // following `ParticleInitializer` or `ParticleOperator` above. The randomised
-// ones need an RNG decision first — `openstack-phy2`'s `LazyRandom` has the
+// ones need an RNG decision first — `openx-phy2`'s `LazyRandom` has the
 // unbounded-growth problem noted in PORTING.md, so this crate should take
 // `rand` or a small xorshift rather than copy it.
 //

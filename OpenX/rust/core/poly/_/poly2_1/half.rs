@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack.Polyfills/Poly2.1/Half.cs
+// PORT-SOURCE: Core/OpenX.Polyfills/Poly2.1/Half.cs
 // PORT-SHA: 3d6d7a7948fe44ca
 // PORT-STATUS: done
 //
@@ -7,7 +7,7 @@
 // polyfill for a missing BCL type — precisely the kind of file that has no
 // reason to exist in Rust.
 //
-// Re-exports the same `half::f16` that `openstack-polyio`'s `system/half_float.rs`
+// Re-exports the same `half::f16` that `openx-poly`'s `system/half_float.rs`
 // uses, so the two C# half types (`Half` here, `HalfFloat` there — a genuine
 // duplication on the C# side) converge on one Rust type instead of two.
 //

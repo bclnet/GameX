@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack.PolyIO/System.Text/ValueStringBuilder.cs
+// PORT-SOURCE: Core/OpenX.PolyIO/System.Text/ValueStringBuilder.cs
 // PORT-SHA: d68fbc086802c132
 // PORT-STATUS: done
 //

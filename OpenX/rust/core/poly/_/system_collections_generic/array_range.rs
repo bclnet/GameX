@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack.Polyfills/System.Collections.Generic/ArrayRange.cs
+// PORT-SOURCE: Core/OpenX.Polyfills/System.Collections.Generic/ArrayRange.cs
 // PORT-SHA: 28c63ee49bd7671f
 // PORT-STATUS: done
 //

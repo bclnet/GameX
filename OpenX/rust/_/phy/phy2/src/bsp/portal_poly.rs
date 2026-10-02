@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/BSP/PortalPoly.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/BSP/PortalPoly.cs
 // PORT-SHA: 7d17a876eaeca692
 // PORT-STATUS: todo (30 LOC in C#)
 //

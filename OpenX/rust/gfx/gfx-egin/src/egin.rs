@@ -1,4 +1,4 @@
-// PORT-SOURCE: Gfx/OpenStack.Gfx.Egin/Egin.cs
+// PORT-SOURCE: Gfx/OpenX.Gfx.Egin/Egin.cs
 // PORT-SHA: bcff1210abe646a8
 // PORT-STATUS: done
 //

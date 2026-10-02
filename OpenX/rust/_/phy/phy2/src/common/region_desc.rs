@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/RegionDesc.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/RegionDesc.cs
 // PORT-SHA: a36acfb95044ba73
 // PORT-STATUS: todo (30 LOC in C#)
 //

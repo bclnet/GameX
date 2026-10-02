@@ -1,5 +1,5 @@
 [package]
-name = "gamex-platform-stride"
+name = "gamex-engine-stride"
 version = "0.1.0"
 edition.workspace = true
 rust-version.workspace = true
@@ -7,5 +7,5 @@ license.workspace = true
 
 [dependencies]
 gamex = { path = "../../core/gamex" }
-openstack-platform-stride = { path = "../../../OpenStack/rust/platforms/stride" }
-openstack-sfx = { path = "../../../OpenStack/rust/sfx/sfx" }
+openx-engine-stride = { path = "../../../OpenX/rust/engines/stride" }
+openx-sfx = { path = "../../../OpenX/rust/sfx/sfx" }

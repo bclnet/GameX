@@ -1,4 +1,4 @@
-// PORT-SOURCE: Platforms/OpenStack.Platform.Ogre/Platform_Ogre.cs
+// PORT-SOURCE: Engines/OpenX.Engine.Ogre/Platform_Ogre.cs
 // PORT-SHA: 995742497bf41480
 // PORT-STATUS: done
 //
@@ -9,7 +9,7 @@
 // manager slots the backend fills. None of it touches Ogre — there is no Ogre binding in the C# project either.
 //
 
-use openstack::platform::{Caps, Platform};
+use openx::platform::{Caps, Platform};
 
 use crate::slots::{GfxSlots, SfxSlots};
 

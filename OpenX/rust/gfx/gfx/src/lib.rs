@@ -1,4 +1,4 @@
-//! `openstack-gfx` — 1:1 port of .NET project `OpenStack.Gfx`.
+//! `openx-gfx` — 1:1 port of .NET project `OpenX.Gfx`.
 //!
 //! Module layout mirrors the C# file layout. See PORT_MAP.tsv and PORTING.md.
 //!
@@ -13,11 +13,14 @@ pub mod gfx_texture;
 
 pub mod prelude {
     pub use crate::gfx::{
-        GfX, GfxAlphaMode, GfxAttach, GfxBlendMode, Backend,
-        Shader, ShaderBuilder, ShaderManager,
+        GfX, GfxAlphaMode, GfxAttach, GfxBlendMode, Backend, AnyBox, AnyArc, Color,
+        ObjectSpriteBuilder, ObjectSpriteManager,
+        IObjectModel, ObjectModelBuilder, ObjectModelManager,
+        GfxShader, ShaderBuilder, ShaderManager,
         ISprite, SpriteBuilder, SpriteManager,
         TextureAsDds, TextureAsBytes, ITexture, ITextureSelect, ITextureFrames, TextureBuilder, TextureManager,
-        MaterialProp, IMaterial, MaterialBuilder, MaterialManager,
+        IMaterial, MaterialProp, MaterialPropKind, MaterialStdProp, MaterialStd2Prop, MaterialShaderProp, MaterialShaderVProp, MaterialBuilder, MaterialManager,
+        IOpenGfx, IOpenGfxApi, IOpenGfxSprite, IOpenGfxModel, IOpenGfxLight, GfxTerrainLayer, IOpenGfxTerrain,
     };
     pub use crate::gfx_texture::{TextureFlags, TextureFormat, DDS_HEADER, DDS_PIXELFORMAT}; // DdsError
     // pub use crate::gfx_render::{blit_by_palette, Color32, Colorf, Pass, Renderer};

@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/PhysicsDesc.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/PhysicsDesc.cs
 // PORT-SHA: 4b50d737aacea26c
 // PORT-STATUS: todo (56 LOC in C#)
 //

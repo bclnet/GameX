@@ -1,4 +1,4 @@
-﻿using CommandLine;
+using CommandLine;
 using GameX.Uncore.Formats.Collada;
 using GameX.Formats.IUnknown;
 using GameX.Uncore.Formats.Wavefront;
@@ -104,7 +104,7 @@ partial class Program {
         //args = ["get", "-f", "Crytek", "-u", "game:/worlds/worlds.fat#FarCry2", "-m", "*", "-p", @"D:\T_\FarCry2C"];
 
         //args = ["list", "-f", "Arkane"];
-        args = ["get", "-f", "Arkane", "-u", "game:/data.pak#AF", "-m", "*.ftl", "-o", "StreamObject", "-p", @"D:\T_\AFC.ftl"];
+        //args = ["get", "-f", "Arkane", "-u", "game:/data.pak#AF", "-m", "GAME/GRAPH/INTERFACE/BOOK/RUNES/LACET.FTL", "-o", "StreamObject", "-p", @"D:\T_\AFC"];
         //args = ["list", "-f", "Blizzard"];
         //args = ["list", "-f", "Bioware"];
         //args = ["list", "-f", "Valve"];

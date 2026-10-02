@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/CylSphere.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/CylSphere.cs
 // PORT-SHA: d81d257e8baa4089
 // PORT-STATUS: todo (483 LOC in C#)
 //

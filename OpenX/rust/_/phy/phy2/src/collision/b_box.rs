@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Collision/BBox.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Collision/BBox.cs
 // PORT-SHA: 23e25494a7e2f476
 // PORT-STATUS: todo (129 LOC in C#)
 //

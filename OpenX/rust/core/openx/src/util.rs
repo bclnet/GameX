@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack/Util.cs
+// PORT-SOURCE: Core/OpenX/Util.cs
 // PORT-SHA: 8b5ee25c93d41286
 // PORT-STATUS: done
 //
@@ -139,7 +139,7 @@ mod tests {
     #[test]
     fn flush_clears_the_dirty_flag() {
         // The C# sets Dirty = true here, so it can never skip a write again.
-        let dir = std::env::temp_dir().join("openstack-settings-test.yaml");
+        let dir = std::env::temp_dir().join("openx-settings-test.yaml");
         let mut s = SettingsDict::new(&dir);
         assert!(!s.is_dirty());
         s.insert("a", "1");

@@ -10,4 +10,4 @@ gamex = { path = "../../core/gamex" }
 gamex-id = { path = "../../families/id" }
 gamex-uncore = { path = "../../families/uncore" }
 gamex-unity = { path = "../../families/unity" }
-openstack-gfx-egin = { path = "../../../OpenStack/rust/gfx/gfx-egin" }
+openx-gfx-egin = { path = "../../../OpenX/rust/gfx/gfx-egin" }

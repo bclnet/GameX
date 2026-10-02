@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack.Polyfills/System.Collections.Generic/ByteArrayComparer.cs
+// PORT-SOURCE: Core/OpenX.Polyfills/System.Collections.Generic/ByteArrayComparer.cs
 // PORT-SHA: f8a449f301ee571c
 // PORT-STATUS: done
 //

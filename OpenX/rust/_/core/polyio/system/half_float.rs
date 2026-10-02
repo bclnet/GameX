@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack.PolyIO/System/HalfFloat.cs
+// PORT-SOURCE: Core/OpenX.PolyIO/System/HalfFloat.cs
 // PORT-SHA: 7a205540ac5008bd
 // PORT-STATUS: done
 //

@@ -1,4 +1,4 @@
-// PORT-SOURCE: Platforms/GameX.Platform.OpenGL/OpenGLNifObjectBuilder.cs
+// PORT-SOURCE: Engines/GameX.Engine.OpenGL/OpenGLNifObjectBuilder.cs
 // PORT-SHA: abdf2d2857b7a426
 // PORT-STATUS: todo (119 live LOC in C#)
 //

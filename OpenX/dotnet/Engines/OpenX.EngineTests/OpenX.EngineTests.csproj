@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\OpenX.Engine.Mirage\OpenX.Engine.Mirage.csproj" />
     <ProjectReference Include="..\OpenX.Engine.OpenGL\OpenX.Engine.OpenGL.csproj" />
   </ItemGroup>
 

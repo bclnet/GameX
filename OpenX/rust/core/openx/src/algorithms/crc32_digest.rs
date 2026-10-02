@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack/Algorithms/Crc32Digest.cs
+// PORT-SOURCE: Core/OpenX/Algorithms/Crc32Digest.cs
 // PORT-SHA: dd4ea5d59b228eb8
 // PORT-STATUS: done
 //

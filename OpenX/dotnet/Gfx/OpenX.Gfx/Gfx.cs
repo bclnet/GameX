@@ -65,7 +65,7 @@ public abstract class ObjectSpriteBuilder<B_Object, B_Sprite> {
 public class ObjectSpriteManager<B_Object, B_Sprite>(ObjectSpriteBuilder<B_Object, B_Sprite> builder) {
     readonly ObjectSpriteBuilder<B_Object, B_Sprite> Builder = builder;
     readonly Dictionary<object, Task<object>> Tasks = [];
-    static readonly Dictionary<object, (B_Object obj, object tag)> Cached = [];
+    readonly Dictionary<object, (B_Object obj, object tag)> Cached = [];
 
     public async Task<(B_Object obj, object tag)> Create(ISource source, object path, B_Object parent = default) {
         var key = (source, path);
@@ -126,7 +126,7 @@ public class ObjectModelManager<B_Object, B_Material, B_Texture>(MaterialManager
     readonly MaterialManager<B_Material, B_Texture> MaterialManager = materialManager;
     readonly ObjectModelBuilder<B_Object, B_Material, B_Texture> Builder = builder;
     readonly Dictionary<object, Task<object>> Tasks = [];
-    static readonly Dictionary<object, (B_Object obj, object tag)> Cached = [];
+    readonly Dictionary<object, (B_Object obj, object tag)> Cached = [];
 
     public async Task<(B_Object obj, object tag)> Create(ISource source, object path, bool static_, B_Object parent = default) {
         var key = (source, path);
@@ -222,7 +222,7 @@ public abstract class ShaderBuilder<B_Shader> {
 public class ShaderManager<B_Shader>(ShaderBuilder<B_Shader> builder) {
     static readonly Dictionary<string, bool> EmptyArgs = [];
     readonly ShaderBuilder<B_Shader> Builder = builder;
-    static readonly Dictionary<object, (B_Shader sha, object tag)> Cached = [];
+    readonly Dictionary<object, (B_Shader sha, object tag)> Cached = [];
 
     public async Task<(B_Shader sha, object tag)> Create(ISource source, object path, Dictionary<string, bool> args = null) {
         var argx = args != null ? string.Join(",", args.Where(x => x.Value).Select(x => x.Key)) : null;
@@ -264,7 +264,7 @@ public abstract class SpriteBuilder<B_Sprite> {
 public class SpriteManager<B_Sprite>(SpriteBuilder<B_Sprite> builder) {
     readonly SpriteBuilder<B_Sprite> Builder = builder;
     readonly Dictionary<object, Task<ISprite>> Tasks = [];
-    static readonly Dictionary<object, (B_Sprite spr, object tag)> Cached = [];
+    readonly Dictionary<object, (B_Sprite spr, object tag)> Cached = [];
 
     public B_Sprite Default => Builder.Default;
 
@@ -376,9 +376,9 @@ public class TextureManager<B_Texture>(TextureBuilder<B_Texture> builder) {
 
     readonly TextureBuilder<B_Texture> Builder = builder;
     readonly Dictionary<object, Task<ITexture>> Tasks = [];
-    static readonly Dictionary<B_Texture, B_Texture> CachedNormalMaps = [];
-    static readonly Dictionary<Solid, B_Texture> CachedSolids = [];
-    static readonly Dictionary<object, (B_Texture tex, object tag)> Cached = [];
+    readonly Dictionary<B_Texture, B_Texture> CachedNormalMaps = [];
+    readonly Dictionary<Solid, B_Texture> CachedSolids = [];
+    readonly Dictionary<object, (B_Texture tex, object tag)> Cached = [];
     public B_Texture Default => Builder.Default;
     const float NormalMapIntensity = 0.75f;
 
@@ -524,7 +524,7 @@ public abstract class MaterialBuilder<B_Material, B_Texture>(TextureManager<B_Te
 public class MaterialManager<B_Material, B_Texture>(TextureManager<B_Texture> textureManager, MaterialBuilder<B_Material, B_Texture> builder) {
     readonly MaterialBuilder<B_Material, B_Texture> Builder = builder;
     readonly Dictionary<object, Task<MaterialProp>> Tasks = [];
-    static readonly Dictionary<object, (B_Material material, object tag)> Cached = [];
+    readonly Dictionary<object, (B_Material material, object tag)> Cached = [];
 
     public TextureManager<B_Texture> TextureManager { get; } = textureManager;
     public B_Material Default => Builder.Default;

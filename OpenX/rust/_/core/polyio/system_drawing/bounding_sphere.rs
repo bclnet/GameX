@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack.PolyIO/System.Drawing/BoundingSphere.cs
+// PORT-SOURCE: Core/OpenX.PolyIO/System.Drawing/BoundingSphere.cs
 // PORT-SHA: bb5941bfb1e54da2
 // PORT-STATUS: done
 //

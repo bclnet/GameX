@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Animation/InterpolationNode.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Animation/InterpolationNode.cs
 // PORT-SHA: 7f0b6ad3d998b455
 // PORT-STATUS: todo (29 LOC in C#)
 //

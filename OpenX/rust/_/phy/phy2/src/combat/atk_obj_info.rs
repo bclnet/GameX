@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Combat/AtkObjInfo.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Combat/AtkObjInfo.cs
 // PORT-SHA: 0bc01f4c57ff314b
 // PORT-STATUS: todo (10 LOC in C#)
 //

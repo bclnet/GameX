@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Managers/ServerObjectManager.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Managers/ServerObjectManager.cs
 // PORT-SHA: 06e99b72fa34014d
 // PORT-STATUS: todo (41 LOC in C#)
 //

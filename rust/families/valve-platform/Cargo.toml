@@ -7,4 +7,4 @@ license.workspace = true
 
 [dependencies]
 gamex-valve = { path = "../../families/valve" }
-openstack-platform-opengl = { path = "../../../OpenStack/rust/platforms/opengl" }
+openx-engine-opengl = { path = "../../../OpenX/rust/engines/opengl" }

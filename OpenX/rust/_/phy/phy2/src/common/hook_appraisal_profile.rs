@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/HookAppraisalProfile.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/HookAppraisalProfile.cs
 // PORT-SHA: 3c5a988276d816f1
 // PORT-STATUS: todo (13 LOC in C#)
 //

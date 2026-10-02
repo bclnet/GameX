@@ -1,4 +1,4 @@
-// PORT-SOURCE: Platforms/OpenStack.Platform.OpenGL/Platform_OpenGL.cs
+// PORT-SOURCE: Engines/OpenX.Engine.OpenGL/Platform_OpenGL.cs
 // PORT-SHA: a3ccdc40914a4099
 // PORT-STATUS: done
 //
@@ -23,7 +23,7 @@
 // The slot map below is what the C# *intended*; `gfx_slots_bug_compat` is what
 // it actually produces.
 
-use openstack::platform::{Caps, Platform};
+use openx::platform::{Caps, Platform};
 
 use crate::slots::{GfxSlots, SfxSlots};
 

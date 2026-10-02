@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/TerrainAlphaMap.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/TerrainAlphaMap.cs
 // PORT-SHA: ff5db31c11f262d1
 // PORT-STATUS: todo (23 LOC in C#)
 //

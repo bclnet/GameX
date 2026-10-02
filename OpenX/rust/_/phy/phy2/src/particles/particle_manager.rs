@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Particles/ParticleManager.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Particles/ParticleManager.cs
 // PORT-SHA: fe15f55792be4839
 // PORT-STATUS: todo (83 LOC in C#)
 //

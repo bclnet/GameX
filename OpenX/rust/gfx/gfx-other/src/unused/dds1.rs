@@ -1,4 +1,4 @@
-// PORT-SOURCE: Gfx/OpenStack.Gfx.Other/Unused/Dds1.cs
+// PORT-SOURCE: Gfx/OpenX.Gfx.Other/Unused/Dds1.cs
 // PORT-SHA: f86e006a8916f690
 // PORT-STATUS: done
 //
@@ -6,10 +6,10 @@
 // compiled at all, and it sits in a folder named `Unused`. Every type it
 // declares has zero references anywhere in the solution.
 //
-// The namespace is also `OpenStack.Graphics.DirectX_` — the old name, with a
-// trailing underscore — while the live code uses `OpenStack.Gfx`. This is a
+// The namespace is also `OpenX.Graphics.DirectX_` — the old name, with a
+// trailing underscore — while the live code uses `OpenX.Gfx`. This is a
 // superseded earlier attempt kept beside its replacement: `gfx_texture.rs` in
-// `openstack-gfx` is the live DDS/texture path.
+// `openx-gfx` is the live DDS/texture path.
 //
 // Kept as a file so the 1:1 mapping holds and `sync-check.sh` notices if the
 // `#if false` is ever removed.

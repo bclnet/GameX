@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack/Algorithms/AsnKeyParser.cs
+// PORT-SOURCE: Core/OpenX/Algorithms/AsnKeyParser.cs
 // PORT-SHA: b073712bea46cbc4
 // PORT-STATUS: done
 //

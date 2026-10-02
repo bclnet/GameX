@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Hooks/PhysicsHookType.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Hooks/PhysicsHookType.cs
 // PORT-SHA: f847f6062ee98dc6
 // PORT-STATUS: todo (14 LOC in C#)
 //

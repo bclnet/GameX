@@ -1,4 +1,4 @@
-// PORT-SOURCE: Platforms/OpenStack.Platform.Unity/Platform_Unity.cs
+// PORT-SOURCE: Engines/OpenX.Engine.Unity/Platform_Unity.cs
 // PORT-SHA: e8b0e03f9431f852
 // PORT-STATUS: done
 //
@@ -15,7 +15,7 @@
 // claiming `Drawing` despite filling every slot.
 //
 
-use openstack::platform::{Caps, Platform};
+use openx::platform::{Caps, Platform};
 
 use crate::slots::{GfxSlots, SfxSlots};
 

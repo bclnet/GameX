@@ -6,6 +6,7 @@ The following are the current platforms:
 
 | ID                                  | Name
 | --                                  | --  
+| [Mirage](Mirage/Readme.md)          | The Mirage headless test engine (code MR)
 | [OpenGL](OpenGL/Readme.md)          | The OpenGL platform
 | [StereoKit](StereoKit/Readme.md)    | The StereoKit platform
 | [Unity](Unity/Readme.md)            | The Unity platform

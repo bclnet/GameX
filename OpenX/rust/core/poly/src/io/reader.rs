@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack.PolyIO/System.IO/Polyfill+BinaryReader.cs
+// PORT-SOURCE: Core/OpenX.PolyIO/System.IO/Polyfill+BinaryReader.cs
 // PORT-SHA: 2c5aa88138cbe33c
 // PORT-STATUS: done
 //

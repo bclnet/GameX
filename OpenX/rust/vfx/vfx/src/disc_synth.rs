@@ -1,4 +1,4 @@
-// PORT-SOURCE: Vfx/OpenStack.Vfx/Disc.cs (ECM / Synth / Synth:Jobs / Synth:Jobs2)
+// PORT-SOURCE: Vfx/OpenX.Vfx/Disc.cs (ECM / Synth / Synth:Jobs / Synth:Jobs2)
 // PORT-SHA: SHARED
 // PORT-SHARED: yes  (extracted from the source file above, which has its own .rs)
 // PORT-STATUS: done

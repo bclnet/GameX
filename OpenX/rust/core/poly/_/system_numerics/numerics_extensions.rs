@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack.Polyfills/System.Numerics/NumericsExtensions.cs
+// PORT-SOURCE: Core/OpenX.Polyfills/System.Numerics/NumericsExtensions.cs
 // PORT-SHA: 089ffc59c098a9cd
 // PORT-STATUS: done
 //
@@ -9,7 +9,7 @@
 //      MathNet.Numerics by converting to a heap-allocated `Matrix<float>`,
 //      operating, and converting back. For a 3x3 that is enormously more
 //      expensive than the closed form. All five are already implemented
-//      directly on `Matrix3x3` in `openstack-polyio`, so they are re-exported
+//      directly on `Matrix3x3` in `openx-poly`, so they are re-exported
 //      here rather than duplicated.
 //   2. Debug logging of vectors and matrices, ported below.
 //

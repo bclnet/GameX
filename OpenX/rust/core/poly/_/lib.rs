@@ -1,4 +1,4 @@
-//! `openstack-polyfills` — 1:1 port of .NET project `OpenStack.Polyfills`.
+//! `openx-poly` — 1:1 port of .NET project `OpenX.Polyfills`.
 //!
 //! Module layout mirrors the C# folder/file layout. See PORT_MAP.tsv and
 //! PORTING.md at the workspace root.

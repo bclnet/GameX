@@ -1,4 +1,4 @@
-// PORT-SOURCE: Platforms/OpenStack.Platform.Mg/Platform_Mg.cs
+// PORT-SOURCE: Engines/OpenX.Engine.Mg/Platform_Mg.cs
 // PORT-SHA: a3c7e5e9d567aefc
 // PORT-STATUS: done
 //
@@ -12,7 +12,7 @@
 // rewritten against `wgpu` or `bevy`. This registration layer stands alone.
 //
 
-use openstack::platform::{Caps, Platform};
+use openx::platform::{Caps, Platform};
 
 use crate::slots::{GfxSlots, SfxSlots};
 

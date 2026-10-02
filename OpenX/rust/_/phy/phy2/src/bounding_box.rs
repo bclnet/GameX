@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/BoundingBox.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/BoundingBox.cs
 // PORT-SHA: 0595c2aeb7866df4
 // PORT-STATUS: todo (173 LOC in C#)
 //

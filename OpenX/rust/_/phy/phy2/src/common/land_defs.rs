@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/LandDefs.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/LandDefs.cs
 // PORT-SHA: 7daf591c0a122c04
 // PORT-STATUS: todo (254 LOC in C#)
 //

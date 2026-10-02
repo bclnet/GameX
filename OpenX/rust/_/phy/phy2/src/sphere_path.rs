@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/SpherePath.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/SpherePath.cs
 // PORT-SHA: f20e7fdc736374fd
 // PORT-STATUS: todo (319 LOC in C#)
 //

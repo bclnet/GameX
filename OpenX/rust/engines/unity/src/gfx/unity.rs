@@ -1,4 +1,4 @@
-// PORT-SOURCE: Platforms/OpenStack.Platform.Unity/Gfx/Unity.cs
+// PORT-SOURCE: Engines/OpenX.Engine.Unity/Gfx/Unity.cs
 // PORT-SHA: 4da3900cae29b67e
 // PORT-STATUS: done
 //
@@ -15,11 +15,11 @@
 //     library Unity calls into), but the `MonoBehaviour`/`UnityEngine`
 //     code in this crate is exactly the part that must stay C#.
 //   * The right split is: keep this crate in C#, and have it call into a
-//     Rust `cdylib` built from the ported `openstack-*` crates.
+//     Rust `cdylib` built from the ported `openx-*` crates.
 //
 // The abstraction it plugs into is already ported and engine-agnostic:
-// implement `openstack_gfx::gfx::Backend` plus the `TextureBuilder` /
-// `MaterialBuilder` / `ShaderBuilder` traits, and `openstack::platform::Platform`.
+// implement `openx_gfx::gfx::Backend` plus the `TextureBuilder` /
+// `MaterialBuilder` / `ShaderBuilder` traits, and `openx::platform::Platform`.
 // Nothing above this layer needs to change.
 //
 // Kept as a file so the 1:1 mapping holds and `sync-check.sh` tracks drift.

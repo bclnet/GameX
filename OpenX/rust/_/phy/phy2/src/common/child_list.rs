@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/ChildList.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/ChildList.cs
 // PORT-SHA: 5c20592074777c68
 // PORT-STATUS: todo (53 LOC in C#)
 //

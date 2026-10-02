@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/EnvCell.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/EnvCell.cs
 // PORT-SHA: 16a823fee609a6ee
 // PORT-STATUS: todo (475 LOC in C#)
 //

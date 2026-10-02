@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Extensions/QuaternionExtensions.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Extensions/QuaternionExtensions.cs
 // PORT-SHA: bea8e44f7572cd2e
 // PORT-STATUS: done
 

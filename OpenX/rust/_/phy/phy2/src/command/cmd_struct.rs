@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Command/CmdStruct.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Command/CmdStruct.cs
 // PORT-SHA: cf5f22815cae31db
 // PORT-STATUS: todo (12 LOC in C#)
 //

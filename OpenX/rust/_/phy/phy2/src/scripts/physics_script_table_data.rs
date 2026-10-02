@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Scripts/PhysicsScriptTableData.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Scripts/PhysicsScriptTableData.cs
 // PORT-SHA: 162aafe5aecdfa30
 // PORT-STATUS: todo (9 LOC in C#)
 //

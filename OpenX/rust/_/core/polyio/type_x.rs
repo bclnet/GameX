@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack.PolyIO/TypeX.cs
+// PORT-SOURCE: Core/OpenX.PolyIO/TypeX.cs
 // PORT-SHA: 74ce0c87f971da34
 // PORT-STATUS: done
 //

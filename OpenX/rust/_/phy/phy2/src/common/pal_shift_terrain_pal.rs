@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/PalShiftTerrainPal.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/PalShiftTerrainPal.cs
 // PORT-SHA: 6836d3b34cc4becb
 // PORT-STATUS: todo (8 LOC in C#)
 //

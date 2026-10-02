@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack/Manager.cs
+// PORT-SOURCE: Core/OpenX/Manager.cs
 // PORT-SHA: d562394db202ebac
 // PORT-STATUS: done
 //
@@ -6,7 +6,7 @@
 // player, builds each through a `CellBuilder`, and cancels/destroys cells that
 // fall out of range. `CellBuilder<Object, Material, Texture, Shader>` is the
 // generic that closes over a backend's handle types — the same shape `gfx` uses,
-// so this reuses `openstack_gfx::gfx::Backend`'s associated types.
+// so this reuses `openx_gfx::gfx::Backend`'s associated types.
 //
 // ===================== FOUR C#-SIDE BUGS ==================================
 //
@@ -47,7 +47,7 @@
 
 use std::collections::HashMap;
 
-use openstack_gfx::gfx::{Backend, GfxAttach};
+use openx_gfx::gfx::{Backend, GfxAttach};
 use poly::system_numerics::polyfill::Int3;
 use poly::system_numerics::vector3::Vec3;
 

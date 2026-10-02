@@ -1,4 +1,4 @@
-// PORT-SOURCE: Platforms/GameX.Platform.Stride/Stride_Render.cs
+// PORT-SOURCE: Engines/GameX.Engine.Stride/Stride_Render.cs
 // PORT-SHA: 34ee8ea0bea9b89a
 // PORT-STATUS: todo (15 live LOC in C#)
 //

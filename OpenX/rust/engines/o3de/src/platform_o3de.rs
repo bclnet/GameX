@@ -1,4 +1,4 @@
-// PORT-SOURCE: Platforms/OpenStack.Platform.O3de/Platform_O3de.cs
+// PORT-SOURCE: Engines/OpenX.Engine.O3de/Platform_O3de.cs
 // PORT-SHA: 524150ae413b7ac6
 // PORT-STATUS: done
 //
@@ -9,7 +9,7 @@
 // manager slots the backend fills. None of it touches O3DE — there is no O3DE binding in the C# project either.
 //
 
-use openstack::platform::{Caps, Platform};
+use openx::platform::{Caps, Platform};
 
 use crate::slots::{GfxSlots, SfxSlots};
 

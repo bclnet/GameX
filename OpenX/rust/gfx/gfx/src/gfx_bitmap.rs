@@ -1,4 +1,4 @@
-// PORT-SOURCE: Gfx/OpenStack.Gfx/Gfx_Bitmap.cs
+// PORT-SOURCE: Gfx/OpenX.Gfx/Gfx_Bitmap.cs
 // PORT-SHA: e09458ad7e0d280a
 // PORT-STATUS: done
 //

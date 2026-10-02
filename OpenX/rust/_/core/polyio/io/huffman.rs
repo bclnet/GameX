@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack.PolyIO/System.IO/Huffman.cs
+// PORT-SOURCE: Core/OpenX.PolyIO/System.IO/Huffman.cs
 // PORT-SHA: da751abc8e5773a4
 // PORT-STATUS: done
 //

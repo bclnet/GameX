@@ -7,5 +7,5 @@ license.workspace = true
 
 [dependencies]
 gamex-all = { path = "../../core/all" }
-gamex-platform-eginx = { path = "../../platforms/platform-eginx" }
-gamex-platform-mg = { path = "../../platforms/platform-mg" }
+gamex-engine-eginx = { path = "../../engines/engine-eginx" }
+gamex-engine-mg = { path = "../../engines/engine-mg" }

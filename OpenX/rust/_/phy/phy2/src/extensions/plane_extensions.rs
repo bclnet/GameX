@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Extensions/PlaneExtensions.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Extensions/PlaneExtensions.cs
 // PORT-SHA: 730e2a94ce017eef
 // PORT-STATUS: todo (98 LOC in C#)
 //

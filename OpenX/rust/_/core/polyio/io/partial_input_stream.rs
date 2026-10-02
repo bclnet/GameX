@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack.PolyIO/System.IO/PartialInputStream.cs
+// PORT-SOURCE: Core/OpenX.PolyIO/System.IO/PartialInputStream.cs
 // PORT-SHA: 0686506f55227849
 // PORT-STATUS: done
 //

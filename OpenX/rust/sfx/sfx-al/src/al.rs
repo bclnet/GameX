@@ -1,4 +1,4 @@
-// PORT-SOURCE: Sfx/OpenStack.Sfx.Al/AL.cs
+// PORT-SOURCE: Sfx/OpenX.Sfx.Al/AL.cs
 // PORT-SHA: a6cdc3b71663d242
 // PORT-STATUS: done
 //
@@ -9,7 +9,7 @@
 // Two reasons not to hand-translate it:
 //
 //   1. **Nothing in the solution calls it.** The only project referencing
-//      `OpenStack.Sfx.Al` is `OpenStack.SfxTests`. There is not one call site
+//      `OpenX.Sfx.Al` is `OpenX.SfxTests`. There is not one call site
 //      in the shipping code.
 //   2. **Rust already has this.** FFI bindings are exactly what a `-sys` crate
 //      is for: `openal-sys` / `alto` for OpenAL directly, or `cpal` / `rodio`
@@ -18,7 +18,7 @@
 //      sync by hand across two languages — a single mistyped signature here is
 //      undefined behaviour at the FFI boundary, and there are 134 chances.
 //
-// When the audio backend is built, implement `openstack_sfx::AudioBuilder` over
+// When the audio backend is built, implement `openx_sfx::AudioBuilder` over
 // whichever crate is chosen. That trait is the whole surface the rest of the
 // codebase needs; none of it reaches into AL directly.
 //

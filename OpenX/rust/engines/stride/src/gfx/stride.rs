@@ -1,4 +1,4 @@
-// PORT-SOURCE: Platforms/OpenStack.Platform.Stride/Gfx/Stride.cs
+// PORT-SOURCE: Engines/OpenX.Engine.Stride/Gfx/Stride.cs
 // PORT-SHA: f882015b97cb8021
 // PORT-STATUS: done
 //
@@ -15,8 +15,8 @@
 //   * `wgpu` + `winit` — if only rendering and windowing are wanted.
 //
 // The abstraction it plugs into is already ported and engine-agnostic:
-// implement `openstack_gfx::gfx::Backend` plus the `TextureBuilder` /
-// `MaterialBuilder` / `ShaderBuilder` traits, and `openstack::platform::Platform`.
+// implement `openx_gfx::gfx::Backend` plus the `TextureBuilder` /
+// `MaterialBuilder` / `ShaderBuilder` traits, and `openx::platform::Platform`.
 // Nothing above this layer needs to change.
 //
 // Kept as a file so the 1:1 mapping holds and `sync-check.sh` tracks drift.

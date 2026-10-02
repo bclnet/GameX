@@ -1,4 +1,4 @@
-// PORT-SOURCE: Gfx/OpenStack.Gfx.Egin/Egin_Animate.cs
+// PORT-SOURCE: Gfx/OpenX.Gfx.Egin/Egin_Animate.cs
 // PORT-SHA: 52745a15b256722b
 // PORT-STATUS: done
 //
@@ -495,7 +495,7 @@ mod tests {
     }
 
     // The expected values below are the C# test suite's own assertions from
-    // `OpenStack.GfxTests/Egin/Gfx_Animate.cs`.
+    // `OpenX.GfxTests/Egin/Gfx_Animate.cs`.
 
     #[test]
     fn bone_init_matches_the_c_sharp() {

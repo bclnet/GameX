@@ -1,4 +1,4 @@
-//! `openstack-vfx` — 1:1 port of .NET project `OpenStack.Vfx`.
+//! `openx-vfx` — 1:1 port of .NET project `OpenX.Vfx`.
 //!
 //! Module layout mirrors the C# file layout. See PORT_MAP.tsv and PORTING.md.
 //!

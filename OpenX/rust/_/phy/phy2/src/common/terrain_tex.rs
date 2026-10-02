@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/TerrainTex.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/TerrainTex.cs
 // PORT-SHA: 9e789444f60ea81b
 // PORT-STATUS: todo (48 LOC in C#)
 //

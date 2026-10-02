@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/TexMerge.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/TexMerge.cs
 // PORT-SHA: fe8ed9d230db7895
 // PORT-STATUS: todo (428 LOC in C#)
 //

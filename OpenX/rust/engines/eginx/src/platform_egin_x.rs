@@ -1,4 +1,4 @@
-// PORT-SOURCE: Platforms/OpenStack.Platform.EginX/Platform_EginX.cs
+// PORT-SOURCE: Engines/OpenX.Engine.EginX/Platform_EginX.cs
 // PORT-SHA: 0db8c6752d56a576
 // PORT-STATUS: done
 //
@@ -9,7 +9,7 @@
 // manager slots the backend fills. None of it touches a graphics API at all — the EginX renderer half is still scaffolding in C# too.
 //
 
-use openstack::platform::{Caps, Platform};
+use openx::platform::{Caps, Platform};
 
 use crate::slots::{GfxSlots, SfxSlots};
 

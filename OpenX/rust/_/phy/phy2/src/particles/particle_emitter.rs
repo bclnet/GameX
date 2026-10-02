@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Particles/ParticleEmitter.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Particles/ParticleEmitter.cs
 // PORT-SHA: 4b9272eb0dd58354
 // PORT-STATUS: todo (291 LOC in C#)
 //

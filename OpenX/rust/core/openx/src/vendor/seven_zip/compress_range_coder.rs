@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack/_LIB/SevenZip/Compress_RangeCoder.cs
+// PORT-SOURCE: Core/OpenX/_LIB/SevenZip/Compress_RangeCoder.cs
 // PORT-SHA: 72adbb9699cdc376
 // PORT-STATUS: done
 //
@@ -16,7 +16,7 @@
 // specific inputs, and the result would need the same maintenance as the
 // original for no gain over a maintained crate.
 //
-// `openstack-vfx` already needs 7z reading for `SevenZipFileSystem`; wire both
+// `openx-vfx` already needs 7z reading for `SevenZipFileSystem`; wire both
 // to the same crate when that lands.
 //
 // Kept as a file so the 1:1 mapping holds and `sync-check.sh` notices if the C#

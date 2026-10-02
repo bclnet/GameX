@@ -7,4 +7,4 @@ license.workspace = true
 
 [dependencies]
 gamex-bethesda = { path = "../../families/bethesda" }
-gamex-platform-unity = { path = "../../platforms/platform-unity" }
+gamex-engine-unity = { path = "../../engines/engine-unity" }

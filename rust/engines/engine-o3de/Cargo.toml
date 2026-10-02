@@ -1,5 +1,5 @@
 [package]
-name = "gamex-platform-o3de"
+name = "gamex-engine-o3de"
 version = "0.1.0"
 edition.workspace = true
 rust-version.workspace = true
@@ -7,4 +7,4 @@ license.workspace = true
 
 [dependencies]
 gamex = { path = "../../core/gamex" }
-openstack-platform-o3de = { path = "../../../OpenStack/rust/platforms/o3de" }
+openx-engine-o3de = { path = "../../../OpenX/rust/engines/o3de" }

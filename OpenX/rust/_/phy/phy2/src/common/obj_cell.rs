@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/ObjCell.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/ObjCell.cs
 // PORT-SHA: 5455a3918d30383b
 // PORT-STATUS: todo (626 LOC in C#)
 //

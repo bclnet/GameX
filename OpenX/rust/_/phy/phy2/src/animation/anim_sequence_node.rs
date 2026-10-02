@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Animation/AnimSequenceNode.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Animation/AnimSequenceNode.cs
 // PORT-SHA: b31b722e44b9b771
 // PORT-STATUS: todo (115 LOC in C#)
 //

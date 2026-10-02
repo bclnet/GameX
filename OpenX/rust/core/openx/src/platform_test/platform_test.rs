@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack/Platform_Test/Platform_Test.cs
+// PORT-SOURCE: Core/OpenX/Platform_Test/Platform_Test.cs
 // PORT-SHA: 6cc0bcef39c1321d
 // PORT-STATUS: done
 //
@@ -12,12 +12,12 @@
 // graphics or audio fails regardless of whether the code is correct. Combined
 // with `PlatformX.InTestHost` selecting it automatically (by sniffing assembly
 // names for a `testhost,` prefix), the effect is that graphics-touching tests
-// cannot pass — which is consistent with `OpenStack.SfxTests` containing one
+// cannot pass — which is consistent with `OpenX.SfxTests` containing one
 // empty test method.
 //
 // Not ported. Rust test doubles go beside the tests that use them, and the
 // pattern is already in the tree: `gfx`'s `CountingBuilder`, `sfx`'s
-// `Counting`, and `openstack`'s `Fake` platform are all real doubles that
+// `Counting`, and `openx`'s `Fake` platform are all real doubles that
 // return values and let assertions run.
 //
 // `TestClientHost.Dispose()` throws too, the same defect as

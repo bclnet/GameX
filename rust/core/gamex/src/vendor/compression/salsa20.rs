@@ -9,7 +9,7 @@
 // rotation constant or a mis-ordered quarter-round produces a keystream that
 // looks random, encrypts and decrypts self-consistently, and is
 // cryptographically worthless. A round-trip test catches none of that. Same
-// judgement as `AsnKeyParser.cs` and the NCCH crypto in the OpenStack port.
+// judgement as `AsnKeyParser.cs` and the NCCH crypto in the OpenX port.
 //
 // Use RustCrypto's `salsa20` crate — audited, fuzzed, and tested against the
 // published ECRYPT/eSTREAM vectors:

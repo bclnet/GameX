@@ -1,10 +1,10 @@
-// PORT-SOURCE: Vfx/OpenStack.Vfx/ExtServices/LibChd.cs
+// PORT-SOURCE: Vfx/OpenX.Vfx/ExtServices/LibChd.cs
 // PORT-SHA: ec29e1c226382277
 // PORT-STATUS: done
 //
 // P/Invoke bindings to libchdr, for MAME CHD compressed disc images.
 //
-// NOT PORTED — same call as `openstack-sfx-al` and `openstack-sfx-ogg`: this is
+// NOT PORTED — same call as `openx-sfx-al` and `openx-sfx-ogg`: this is
 // FFI declarations with no logic. Rust has `chd-rs` (pure Rust) and
 // `chd-sys`/`libchdr` bindings, either of which is maintained and tested against
 // real images.

@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack.Polyfills/Poly2.1/BitConverterX.cs
+// PORT-SOURCE: Core/OpenX.Polyfills/Poly2.1/BitConverterX.cs
 // PORT-SHA: b82739d30e582ed8
 // PORT-STATUS: done
 //

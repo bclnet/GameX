@@ -1,4 +1,4 @@
-// PORT-SOURCE: Platforms/OpenStack.Platform.Stride/Platform_Stride.cs
+// PORT-SOURCE: Engines/OpenX.Engine.Stride/Platform_Stride.cs
 // PORT-SHA: e18bbe030c7700cd
 // PORT-STATUS: done
 //
@@ -12,7 +12,7 @@
 // this crate does not port. This registration layer does.
 //
 
-use openstack::platform::{Caps, Platform};
+use openx::platform::{Caps, Platform};
 
 use crate::slots::{GfxSlots, SfxSlots};
 

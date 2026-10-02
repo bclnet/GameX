@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Setup.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Setup.cs
 // PORT-SHA: 48226deaf5701f7a
 // PORT-STATUS: todo (141 LOC in C#)
 //

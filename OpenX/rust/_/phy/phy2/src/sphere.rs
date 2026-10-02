@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Sphere.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Sphere.cs
 // PORT-SHA: 709857328362bcd1
 // PORT-STATUS: done
 //

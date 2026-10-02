@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack.Polyfills/System/StreamExtensions.cs
+// PORT-SOURCE: Core/OpenX.Polyfills/System/StreamExtensions.cs
 // PORT-SHA: 2d1a34c699061236
 // PORT-STATUS: done
 //

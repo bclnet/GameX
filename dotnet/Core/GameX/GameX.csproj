@@ -101,7 +101,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\Engines\Native\x64\oo2ext_7_win64.dll" Link="oo2ext_7_win64.dll">
+    <None Include="..\..\..\third_party\oodle\oo2ext_7_win64.dll" Link="oo2ext_7_win64.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\..\third_party\xcompress\xcompress64.dll" Link="x64\xcompress64.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
@@ -118,12 +121,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\OpenX\dotnet\Core\OpenX\OpenX.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="x64\xcompress64.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
 </Project>

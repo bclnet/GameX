@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack.PolyIO/System.IO/Polyfill.cs
+// PORT-SOURCE: Core/OpenX.PolyIO/System.IO/Polyfill.cs
 // PORT-SHA: 348ffb11dac35500
 // PORT-STATUS: done
 //

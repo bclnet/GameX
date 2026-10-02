@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack.Polyfills/System.Globalization/Grammar.cs
+// PORT-SOURCE: Core/OpenX.Polyfills/System.Globalization/Grammar.cs
 // PORT-SHA: ca995a91c9d4f0d9
 // PORT-STATUS: done
 //

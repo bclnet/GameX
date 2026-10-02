@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/WeenieDesc.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/WeenieDesc.cs
 // PORT-SHA: 32062879a49c2f0c
 // PORT-STATUS: todo (12 LOC in C#)
 //

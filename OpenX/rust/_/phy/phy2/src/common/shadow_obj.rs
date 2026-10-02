@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/ShadowObj.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/ShadowObj.cs
 // PORT-SHA: 49a262126a3020d5
 // PORT-STATUS: todo (14 LOC in C#)
 //

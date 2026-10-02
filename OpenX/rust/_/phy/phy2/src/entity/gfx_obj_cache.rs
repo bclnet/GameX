@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Entity/GfxObjCache.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Entity/GfxObjCache.cs
 // PORT-SHA: eaee81718c0cbf1f
 // PORT-STATUS: todo (65 LOC in C#)
 //

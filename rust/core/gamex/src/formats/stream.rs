@@ -3,7 +3,7 @@
 // PORT-STATUS: done
 //
 // PARTIAL PORT: the `.set` and `.meta` sidecar parsers. `PakBinaryCanStream`
-// itself derives from `ArcBinary` in `OpenStack.Vfx` and drives
+// itself derives from `ArcBinary` in `OpenX.Vfx` and drives
 // `BinaryArchive`, which is in `GameX.FileSystems` — both outstanding.
 //
 // These sidecars are plain ASCII line lists that accompany a streamed archive:

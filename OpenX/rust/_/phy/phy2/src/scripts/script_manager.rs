@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Scripts/ScriptManager.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Scripts/ScriptManager.cs
 // PORT-SHA: 310c58af87d57552
 // PORT-STATUS: todo (31 LOC in C#)
 //

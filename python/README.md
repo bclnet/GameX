@@ -20,3 +20,6 @@ https://stackoverflow.com/questions/13689628/is-there-a-python-equivalent-to-mem
 ## pip3 install numba --pre
 pip3 install --editable ../OpenX/python
 pip3 install --editable .
+
+
+quaternionic

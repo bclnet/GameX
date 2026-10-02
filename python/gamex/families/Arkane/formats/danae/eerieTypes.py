@@ -1,5 +1,5 @@
-from dataclasses import dataclass
-from numpy import ndarray, array
+from dataclasses import dataclass, field
+from numpy import ndarray, array, zeros
 from enum import Enum, Flag
 from quaternion import quaternion
 
@@ -175,7 +175,7 @@ class E_SPHERE:
 class E_TEXTURE:
     id: int
     path: str
-    poly: POLY = None
+    poly: POLY
 
 @dataclass
 class E_POLY:
@@ -216,31 +216,28 @@ class E_FACE:
     color: list[Vector2]
     
 ##define MAX_PFACE 16
-#struct E_PFACE
-#{
-#    #short faceidx[MAX_PFACE];
-#    #int facetype;
-#    #short texid;  #long
-#    #short nbvert;
-#    #float transval;
-#    #ushort vid[MAX_PFACE];
-#    #float u[MAX_PFACE];
-#    #float v[MAX_PFACE];
-#    #D3DCOLOR color[MAX_PFACE];
-#}
+#@dataclass
+#class E_PFACE:
+#    #faceidx: list[short] #[MAX_PFACE]
+#    #facetype: int
+#    #texid: int #long
+#    #nbvert: int
+#    #transVal: float
+#    #vid: list[int] #[MAX_PFACE]
+#    #u: list[float] #[MAX_PFACE]
+#    #v: list[float] #[MAX_PFACE]
+#    #color: list[D3DCOLOR] #[MAX_PFACE]
 
 ##***********************************************************************
 ##*		BEGIN EERIE OBJECT STRUCTURES									*
 ##***********************************************************************
-#struct
-#{
-#    short nb_Nvertex;
-#short nb_Nfaces;
-#short* Nvertex;
-#short* Nfaces;
-#} NEIGHBOURS_DATA; # Aligned 1 2 4
+#class NEIGHBOURS_DATA:
+#   numNvertex: int
+#   numNfaces: int
+#   nvertex: list[int]
+#   nfaces: list[int]
 
-class PROGRESSIVE_DATA: # Aligned 1 2 4
+class PROGRESSIVE_DATA:
     SIZEOF = 16
     # ingame data
     actualCollapse: int # -1 = no collapse
@@ -308,9 +305,6 @@ class CLOTHESVERTEX:
 class CLOTHES_DATA:
     cvert: list[CLOTHESVERTEX]
     springs: list[E_SPRINGS]
-    # def __init__(self, cvert: list[CLOTHESVERTEX]=None, springs: list[E_SPRINGS]=None):
-    #     self.cvert = cvert
-    #     self.springs = springs
 
 class COLLISION_SPHERE:
     idx: int
@@ -322,34 +316,28 @@ class COLLISION_SPHERE:
         self.flags,
         self.radius) = t
 
-#struct
-#{
-#    Vector3 initpos;
-#Vector3 temp;
-#Vector3 pos;
-#Vector3 velocity;
-#Vector3 force;
-#Vector3 inertia;
-#float mass;
-#} PHYSVERT; # Aligned 1 2 4
+#class PHYSVERT:
+#   initpos: Vector3
+#   temp: Vector3
+#   pos: Vector3
+#   velocity: Vector3
+#   force: Vector3
+#   inertia: Vector3
+#   mass: float
 
-#struct
-#{
-#    PHYSVERT* vert;
-#long nb_physvert;
-#short active;
-#short stopcount;
-#float radius; #radius around vert[0].pos for spherical collision
-#float storedtiming;
-#} PHYSICS_BOX_DATA; # Aligned 1 2 4
+#class PHYSICS_BOX_DATA:
+#   vert: list[PHYSVERT]
+#   numPhysvert: int;
+#   active: int
+#   stopcount: int
+#   radius: float #radius around vert[0].pos for spherical collision
+#   storedtiming: float
 
-#struct
-#{
-#    long sx;
-#long sy;
-#unsigned long bpp;
-#unsigned char* bmpdata;
-#} EERIE_MAP; # Aligned 1 2 4
+#class EERIE_MAP:
+#   sx: int
+#   sy: int
+#   bpp: int
+#   bmpdata: bytes
 
 @dataclass
 class E_GROUPLIST:
@@ -358,12 +346,6 @@ class E_GROUPLIST:
     numIndex: int
     indexes: list[int]
     size: float
-    # def __init__(self, name: str=None, origin: int=None, numIndex: int=None, indexes: list[int]=None, size: float=None):
-    #     self.name = name
-    #     self.origin = origin
-    #     self.numIndex = numIndex
-    #     self.indexes = indexes
-    #     self.size = size
 
 @dataclass
 class E_ACTIONLIST:
@@ -371,11 +353,6 @@ class E_ACTIONLIST:
     idx: int #index vertex;
     act: int #action
     sfx: int #sfx
-    # def __init__(self, name: str=None, idx: int=None, act: int=None, sfx: int=None):
-    #     self.name = name
-    #     self.idx = idx
-    #     self.act = act
-    #     self.sfx = sfx
 
 #struct
 #{
@@ -411,10 +388,6 @@ class E_SELECTIONS:
     name: str
     numSelected: int
     selected: list[int]
-    # def __init__(self, name: str=None, numSelected: int=None, selected: list[int]=None):
-    #     self.name = name
-    #     self.numSelected = numSelected
-    #     self.selected = selected
 
 ##define DRAWFLAG_HIGHLIGHT	1
 
@@ -437,25 +410,7 @@ class E_FASTACCESS:
     selChest: int
     selLeggings: int
     carryAttach: int
-    _padd: int
-    # def __init__(self, viewAttach: int=None, primaryAttach: int=None, leftAttach: int=None, weaponAttach: int=None, secondaryAttach: int=None, mouthGroup: int=None, jawGroup: int=None, headGroupOrigin: int=None, headGroup: int=None, mouthGroupOrigin: int=None, vright: int=None, uright: int=None, fire: int=None, selHead: int=None, selChest: int=None, selLeggings: int=None, carryAttach: int=None):
-    #     self.viewAttach = viewAttach
-    #     self.primaryAttach = primaryAttach
-    #     self.leftAttach = leftAttach
-    #     self.weaponAttach = weaponAttach
-    #     self.secondaryAttach = secondaryAttach
-    #     self.mouthGroup = mouthGroup
-    #     self.jawGroup = jawGroup
-    #     self.headGroupOrigin = headGroupOrigin
-    #     self.headGroup = headGroup
-    #     self.mouthGroupOrigin = mouthGroupOrigin
-    #     self.vright = vright
-    #     self.uright = uright
-    #     self.fire = fire
-    #     self.selHead = selHead
-    #     self.selChest = selChest
-    #     self.selLeggings = selLeggings
-    #     self.carryAttach = carryAttach
+    _padd: int = 0
 
 class E_BONE:
     numIdxVertices: int = 0; idxVertices: list[int] = []
@@ -477,48 +432,49 @@ class E_BONE:
 #float w;
 #} EERIE_3DPAD;
 
+@dataclass
 class E_3DOBJ:
-    #name: str
-    file: str
-    #pos: Vector3
-    point0: Vector3
-    #angle: Vector3
-    origin: int
-    #ident: int
-    numVertex: int
-    #trueNumVertex: int
-    numFaces: int
-    numPfaces: int
-    numMaps: int
-    numGroups: int
-    numAction: int
-    numSelections: int
-    #drawFlags: int
-    #VertexLocal: EERIE_3DPAD
-    vertexs: list[E_VERTEX]
-    #vertexs3: list[E_VERTEX]
+    #name: str = 0
+    file: str = 0
+    #pos: Vector3 = field(default_factory=list)
+    point0: Vector3 = field(default_factory=list)
+    #angle: Vector3 = field(default_factory=list)
+    origin: int = 0
+    #ident: int = 0
+    numVertex: int = 0
+    #trueNumVertex: int = 0
+    numFaces: int = 0
+    numPfaces: int = 0
+    numMaps: int = 0
+    numGroups: int = 0
+    numAction: int = 0
+    numSelections: int = 0
+    #drawFlags: int = 0
+    #VertexLocal: EERIE_3DPAD = None
+    vertexs: list[E_VERTEX] = None
+    #vertexs3: list[E_VERTEX] = None
 
-    faces: list[E_FACE]
-    #pfaces: list[EERIE_PFACE];
-    #maps: list[EERIE_MAP]
-    groups: list[E_GROUPLIST]
-    actions: list[E_ACTIONLIST]
-    selections: list[E_SELECTIONS]
-    textures: list[E_TEXTURE]
+    faces: list[E_FACE] = None
+    #pfaces: list[EERIE_PFACE] = None
+    #maps: list[EERIE_MAP] = None
+    groups: list[E_GROUPLIST] = None
+    actions: list[E_ACTIONLIST] = None
+    selections: list[E_SELECTIONS] = None
+    textures: list[E_TEXTURE] = None
 
-    #originalTextures: bytes
-    #cub: CUB3D
-    #quat: EERIE_QUAT
-    #linked: EERIE_LINKED
-    #numLinked: int
+    #originalTextures: bytes = None
+    #cub: CUB3D = None
+    #quat: EERIE_QUAT = None
+    #linked: EERIE_LINKED = None
+    #numLinked: int = 0
 
-    #pbox: PHYSICS_BOX_DATA
-    #pdata: PROGRESSIVE_DATA
-    #ndata: NEIGHBOURS_DATA
-    cdata: CLOTHES_DATA
-    spheres: list[COLLISION_SPHERE]
-    fastAccess: E_FASTACCESS
-    bones: list[E_BONE]
+    #pbox: PHYSICS_BOX_DATA = None
+    #pdata: PROGRESSIVE_DATA = None
+    #ndata: NEIGHBOURS_DATA = None
+    cdata: CLOTHES_DATA = None
+    spheres: list[COLLISION_SPHERE] = None
+    fastAccess: E_FASTACCESS = None
+    bones: list[E_BONE] = None
 
     def _centerObjectCoordinates(self) -> None:
         offset = self.vertexs[self.origin].v
@@ -631,6 +587,7 @@ class E_3DOBJ:
 
     @staticmethod
     def _transformInverseVertexQuat(q: quaternion, s: Vector3, t: Vector3) -> None:
+        if q == quaternion(0., 0., 0.): t[0] = t[1] = t[2] = 0.; return
         p = quaternion.inverse(q)
         x = s[0]; y = s[1]; z = s[2]
         qx = p.x; qy = p.y; qz = p.z; qw = p.w
@@ -753,7 +710,8 @@ class SAVE_EPOLY:
             norm2 = s.norm2,
             nrml = [s.nrml0, s.nrml1, s.nrml2, s.nrml3],
             v = [s.v0, s.v1, s.v2, s.v3],
-            tv = [s.tv0, s.tv1, s.tv2, s.tv3])
+            tv = [s.tv0, s.tv1, s.tv2, s.tv3],
+            tex = None)
 
 class E_SAVE_PORTALS:
     poly: SAVE_EPOLY
@@ -770,7 +728,7 @@ class E_SAVE_PORTALS:
         self.paddy) = t[97:]
     def to(s) -> 'E_PORTALS':
         return E_PORTALS(
-            poly = s.poly.to(),
+            poly = SAVE_EPOLY.to(s.poly),
             room1 = s.room1,
             room2 = s.room2,
             usePortal = s.usePortal,
@@ -786,32 +744,34 @@ class E_PORTALS:
 
 class EP_DATA:
     _struct = ('<4h', 8)
-    def __init___(self, t):
+    def __init__(self, t):
         (self.px,
         self.py,
         self.idx,
         self.padd) = t
 
+@dataclass
 class E_ROOM_DATA:
     numPortals: int
     portals: list[int]
     numPolys: int
     epData: list[EP_DATA]
-    center: Vector3
-    radius: float
-    pussIndice: list[int]
+    center: Vector3 = None
+    radius: float = 0.
+    pussIndice: list[int] = None
     #vertexBuffer: LPDIRECT3DVERTEXBUFFER7
-    numTextures: int
-    textureContainer: E_TEXTURE
+    numTextures: int = 0
+    textureContainer: E_TEXTURE = None
 
 class E_SAVE_ROOM_DATA:
     _struct = ('<8i', 32)
-    def __init___(self, t):
+    def __init__(self, t):
         padd = self.padd = [0]*6
         (self.numPolys,
         self.numPortals,
         padd[0], padd[1], padd[2], padd[3], padd[4], padd[5]) = t
 
+@dataclass
 class E_PORTAL_DATA:
     numRooms: int
     room: list[E_ROOM_DATA]

@@ -1,10 +1,9 @@
-import sys
-from numpy import ndarray, nditer
+import sys, numpy as np
 
 # Calculates the minimum and maximum values of a 2D array.
-def getExtrema(source: ndarray) -> tuple[float, float]:
+def getExtrema(source: np.ndarray) -> tuple[float, float]:
     min0 = sys.float_info.max; max0 = sys.float_info.min
-    for s in nditer(source): min0 = min(min0, s); max0 = max(max0, s)
+    for s in np.nditer(source): min0 = min(min0, s); max0 = max(max0, s)
     return (min0, max0)
 
 def changeRange(x: float, min0: float, max0: float, min1: float, max1: float) -> float:

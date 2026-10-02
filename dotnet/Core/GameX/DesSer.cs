@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using System.Security;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -48,6 +47,8 @@ public static class DesSer {
             new FloatJsonConverter(),
             new Vector2JsonConverter(),
             new Vector3JsonConverter(),
+            new Vector3U16JsonConverter(),
+            new Vector3I16JsonConverter(),
             new Vector4JsonConverter(),
             new Matrix2x2JsonConverter(),
             new Matrix3x3JsonConverter(),
@@ -119,6 +120,14 @@ class Vector2JsonConverter : JsonConverter<Vector2> {
 class Vector3JsonConverter : JsonConverter<Vector3> {
     public override Vector3 Read(ref Utf8JsonReader r, Type s, JsonSerializerOptions options) => throw new NotImplementedException();
     public override void Write(Utf8JsonWriter w, Vector3 s, JsonSerializerOptions options) => w.WriteStringValue($"{s.X:g9} {s.Y:g9} {s.Z:g9}");
+}
+class Vector3U16JsonConverter : JsonConverter<Vector3<ushort>> {
+    public override Vector3<ushort> Read(ref Utf8JsonReader r, Type s, JsonSerializerOptions options) => throw new NotImplementedException();
+    public override void Write(Utf8JsonWriter w, Vector3<ushort> s, JsonSerializerOptions options) => w.WriteStringValue($"{s.X:g9} {s.Y:g9} {s.Z:g9}");
+}
+class Vector3I16JsonConverter : JsonConverter<Vector3<short>> {
+    public override Vector3<short> Read(ref Utf8JsonReader r, Type s, JsonSerializerOptions options) => throw new NotImplementedException();
+    public override void Write(Utf8JsonWriter w, Vector3<short> s, JsonSerializerOptions options) => w.WriteStringValue($"{s.X:g9} {s.Y:g9} {s.Z:g9}");
 }
 
 class Vector4JsonConverter : JsonConverter<Vector4> {

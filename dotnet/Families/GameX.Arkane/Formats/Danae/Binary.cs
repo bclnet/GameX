@@ -70,14 +70,16 @@ public class Binary_Ftl : IHaveMetaInfo, IWriteToStream {
         public static E_TEXTURE To(FTL_TEXTURE s) {
             var name = s.Name;
             POLY poly = 0;
-            if (name.Contains("NPC_")) poly |= POLY.LATE_MIP;
-            if (name.Contains("nocol")) poly |= POLY.NOCOL;
-            if (name.Contains("climb")) poly |= POLY.CLIMB; // change string depending on GFX guys
-            if (name.Contains("fall")) poly |= POLY.FALL;
-            if (name.Contains("lava")) poly |= POLY.LAVA;
-            if (name.Contains("water")) poly |= POLY.WATER | POLY.TRANS;
-            else if (name.Contains("spider_web")) poly |= POLY.WATER | POLY.TRANS;
-            else if (name.Contains("[metal]")) poly |= POLY.METAL;
+            if (name != "") {
+                if (name.Contains("NPC_")) poly |= POLY.LATE_MIP;
+                if (name.Contains("nocol")) poly |= POLY.NOCOL;
+                if (name.Contains("climb")) poly |= POLY.CLIMB; // change string depending on GFX guys
+                if (name.Contains("fall")) poly |= POLY.FALL;
+                if (name.Contains("lava")) poly |= POLY.LAVA;
+                if (name.Contains("water")) poly |= POLY.WATER | POLY.TRANS;
+                else if (name.Contains("spider_web")) poly |= POLY.WATER | POLY.TRANS;
+                else if (name.Contains("[metal]")) poly |= POLY.METAL;
+            }
             return new E_TEXTURE {
                 Path = name,
                 Poly = poly,
@@ -122,10 +124,11 @@ public class Binary_Ftl : IHaveMetaInfo, IWriteToStream {
         public int NumIndex;
         public int Trash; // Indexes;
         public float Size;
-        public static E_GROUPLIST To(FTL_GROUPLIST s) => new() {
+        public static E_GROUPLIST To(FTL_GROUPLIST s, int[] indexes) => new() {
             Name = s.Name,
             Origin = s.Origin,
             NumIndex = s.NumIndex,
+            Indexes = indexes,
             Size = s.Size,
         };
     }
@@ -151,9 +154,10 @@ public class Binary_Ftl : IHaveMetaInfo, IWriteToStream {
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)] string Name;
         public int NumSelected;
         public int Trash; //Selected;
-        public static E_SELECTIONS To(FTL_SELECTIONS s) => new() {
+        public static E_SELECTIONS To(FTL_SELECTIONS s, int[] selected) => new() {
             Name = s.Name,
             NumSelected = s.NumSelected,
+            Selected = selected,
         };
     }
 
@@ -172,8 +176,6 @@ public class Binary_Ftl : IHaveMetaInfo, IWriteToStream {
 
         // Check For & Load 3D Data
         if (header.Offset3Ddata != -1) {
-            E_GROUPLIST _groupZ(FTL_GROUPLIST s) { var z = FTL_GROUPLIST.To(s); z.Indexes = z.NumIndex > 0 ? r.ReadPArray<int>("i", z.NumIndex) : null; return z; }
-            E_SELECTIONS _selectionsZ(FTL_SELECTIONS s) { var z = FTL_SELECTIONS.To(s); z.Selected = r.ReadPArray<int>("i", z.NumSelected); return z; }
             r.Seek(header.Offset3Ddata);
             var s = r.ReadS<FTL_3DHEADER>();
             obj.NumVertex = s.NumVertex;
@@ -187,9 +189,9 @@ public class Binary_Ftl : IHaveMetaInfo, IWriteToStream {
             obj.Vertexs = s.NumVertex > 0 ? [.. r.ReadSArray<FTL_VERTEX>(s.NumVertex).Select(FTL_VERTEX.To)] : null; obj.Point0 = s.NumVertex > 0 ? obj.Vertexs[obj.Origin].V : default;
             obj.Faces = s.NumFaces > 0 ? [.. r.ReadSArray<FTL_FACE>(s.NumFaces).Select(FTL_FACE.To)] : null;
             obj.Textures = s.NumMaps > 0 ? [.. r.ReadSEach<FTL_TEXTURE>(s.NumMaps).Select(FTL_TEXTURE.To)] : null;
-            obj.Groups = s.NumGroups > 0 ? [.. r.ReadSEach<FTL_GROUPLIST>(s.NumGroups).Select(_groupZ)] : null;
+            obj.Groups = s.NumGroups > 0 ? [.. r.ReadSEach<FTL_GROUPLIST>(s.NumGroups).Select(s => FTL_GROUPLIST.To(s, s.NumIndex > 0 ? r.ReadPArray<int>("i", s.NumIndex) : null))] : null;
             obj.Actions = s.NumAction > 0 ? [.. r.ReadSEach<FTL_ACTIONLIST>(s.NumAction).Select(FTL_ACTIONLIST.To)] : null;
-            obj.Selections = s.NumSelections > 0 ? [.. r.ReadSEach<FTL_SELECTIONS>(s.NumSelections).Select(_selectionsZ)] : null;
+            obj.Selections = s.NumSelections > 0 ? [.. r.ReadSEach<FTL_SELECTIONS>(s.NumSelections).Select(s => FTL_SELECTIONS.To(s, r.ReadPArray<int>("i", s.NumSelected)))] : null;
         }
 
         // collision spheres
@@ -589,7 +591,7 @@ public unsafe class Binary_Fts : IHaveMetaInfo, IWriteToStream {
                     NumRooms = fsh.NumRooms,
                     Room = new E_ROOM_DATA[fsh.NumRooms + 1],
                     NumTotal = fsh.NumPortals,
-                    Portals = [.. r2.ReadSArray<E_SAVE_PORTALS>(fsh.NumPortals).Cast<E_PORTALS>()],
+                    Portals = [.. r2.ReadSArray<E_SAVE_PORTALS>(fsh.NumPortals).Select(E_SAVE_PORTALS.To)],
                 };
                 for (i = 0; i < portals.NumRooms + 1; i++) {
                     var x = r2.ReadS<E_SAVE_ROOM_DATA>();

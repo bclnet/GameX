@@ -3,7 +3,7 @@ from io import BytesIO
 from numpy import linalg, ndarray, array, zeros
 from openx.core import log, IWriteToStream, BinaryReader, unsafe
 from gamex import FileSource, MetaInfo, MetaContent, IHaveMetaInfo, DesSer
-from gamex.families.Arkane.formats.danae.eerieTypes import POLY, TLVERTEX, E_VERTEX, E_TEXTURE, E_POLY, E_FACE, PROGRESSIVE_DATA, E_SPRINGS, CLOTHESVERTEX, CLOTHES_DATA, COLLISION_SPHERE, E_GROUPLIST, E_ACTIONLIST, E_SELECTIONS, E_3DOBJ, E_SAVE_PORTALS, E_PORTALS, E_ROOM_DATA, E_SAVE_ROOM_DATA, E_PORTAL_DATA
+from gamex.families.Arkane.formats.danae.eerieTypes import POLY, TLVERTEX, E_VERTEX, E_TEXTURE, E_POLY, E_FACE, PROGRESSIVE_DATA, E_SPRINGS, CLOTHESVERTEX, CLOTHES_DATA, COLLISION_SPHERE, E_GROUPLIST, E_ACTIONLIST, E_SELECTIONS, E_3DOBJ, E_SAVE_PORTALS, E_PORTALS, EP_DATA, E_ROOM_DATA, E_SAVE_ROOM_DATA, E_PORTAL_DATA
 from gamex.families.Uncore.formats.compression import decompressBlast
 
 # typedefs
@@ -73,17 +73,19 @@ class Binary_Ftl(IHaveMetaInfo, IWriteToStream):
             self.name = unsafe.fixedAStringScan(self.name, 256)
         @staticmethod
         def to(s) -> E_TEXTURE:
-            name: str = s.name
-            poly: POLY = POLY.NONE_
-            if 'NPC_' in name: poly |= POLY.LATE_MIP
-            if 'nocol' in name: poly |= POLY.NOCOL
-            if 'climb' in name: poly |= POLY.CLIMB # change string depending on GFX guys
-            if 'fall' in name: poly |= POLY.FALL
-            if 'lava' in name: poly |= POLY.LAVA
-            if 'water' in name: poly |= POLY.WATER | POLY.TRANS
-            elif 'spider_web' in name: poly |= POLY.WATER | POLY.TRANS
-            elif '[metal]' in name: poly |= POLY.METAL
+            name = s.name
+            poly = POLY.NONE_
+            if name:
+                if 'NPC_' in name: poly |= POLY.LATE_MIP
+                if 'nocol' in name: poly |= POLY.NOCOL
+                if 'climb' in name: poly |= POLY.CLIMB # change string depending on GFX guys
+                if 'fall' in name: poly |= POLY.FALL
+                if 'lava' in name: poly |= POLY.LAVA
+                if 'water' in name: poly |= POLY.WATER | POLY.TRANS
+                elif 'spider_web' in name: poly |= POLY.WATER | POLY.TRANS
+                elif '[metal]' in name: poly |= POLY.METAL
             return E_TEXTURE(
+                id = 0,
                 path = name,
                 poly = poly)
 
@@ -124,7 +126,9 @@ class Binary_Ftl(IHaveMetaInfo, IWriteToStream):
                 transVal = s.transVal,
                 norm = s.norm,
                 nrmls = [s.nrmls0, s.nrmls1, s.nrmls2],
-                temp = s.temp)
+                temp = s.temp,
+                vid = array([0, 0, 0]),
+                color = None)
 
     class FTL_GROUPLIST:
         _struct = ('<256s3if', 256 + 16)
@@ -136,11 +140,12 @@ class Binary_Ftl(IHaveMetaInfo, IWriteToStream):
             self.size) = t
             self.name = unsafe.fixedAStringScan(self.name, 256)
         @staticmethod
-        def to(s) -> E_GROUPLIST:
+        def to(s, indexes: list[int]) -> E_GROUPLIST:
             return E_GROUPLIST(
                 name = s.name,
                 origin = s.origin,
                 numIndex = s.numIndex,
+                indexes = indexes,
                 size = s.size)
 
     class FTL_ACTIONLIST:
@@ -167,10 +172,11 @@ class Binary_Ftl(IHaveMetaInfo, IWriteToStream):
             self.trash) = t #selected
             self.name = unsafe.fixedAStringScan(self.name, 64)
         @staticmethod
-        def to(s) -> E_SELECTIONS:
+        def to(s, selected: list[int]) -> E_SELECTIONS:
             return E_SELECTIONS(
                 name = s.name,
-                numSelected = s.numSelected)
+                numSelected = s.numSelected,
+                selected = selected)
 
     #endregion
 
@@ -187,8 +193,6 @@ class Binary_Ftl(IHaveMetaInfo, IWriteToStream):
 
         # Check For & Load 3D Data
         if header.offset3Ddata != -1:
-            def _groupZ(t) -> E_GROUPLIST: z = t.to(); z.indexes = r.readPArray(None, 'i', z.numIndex) if z.numIndex > 0 else None; return z
-            def _selectionsZ(t) -> E_SELECTIONS: z = t.to(); z.selected = r.readPArray(None, 'i', z.numSelected); return z
             r.seek(header.offset3Ddata)
             s = r.readS(Binary_Ftl.FTL_3DHEADER)
             obj.numVertex = s.numVertex
@@ -199,12 +203,12 @@ class Binary_Ftl(IHaveMetaInfo, IWriteToStream):
             obj.numSelections = s.numSelections
             obj.origin = s.origin
             obj.file = s.name
-            obj.vertexs = [z.to() for z in r.readSArray(Binary_Ftl.FTL_VERTEX, s.numVertex)] if s.numVertex > 0 else None; obj.point0 = obj.vertexs[obj.origin].v if s.numVertex > 0 else None
-            obj.faces = [z.to() for z in r.readSArray(Binary_Ftl.FTL_FACE, s.numFaces)] if s.numFaces > 0 else None
-            obj.textures = [z.to() for z in r.readSEach(Binary_Ftl.FTL_TEXTURE, s.numMaps)] if s.numMaps > 0 else None
-            obj.groups = [_groupZ(z) for z in r.readSEach(Binary_Ftl.FTL_GROUPLIST, s.numGroups)] if s.numGroups > 0 else None
-            obj.actions = [z.to() for z in r.readSEach(Binary_Ftl.FTL_ACTIONLIST, s.numAction)] if s.numAction > 0 else None
-            obj.selections = [_selectionsZ(z) for z in r.readSEach(Binary_Ftl.FTL_SELECTIONS, s.numSelections)] if s.numSelections > 0 else None
+            obj.vertexs = [Binary_Ftl.FTL_VERTEX.to(z) for z in r.readSArray(Binary_Ftl.FTL_VERTEX, s.numVertex)] if s.numVertex > 0 else None; obj.point0 = obj.vertexs[obj.origin].v if s.numVertex > 0 else None
+            obj.faces = [Binary_Ftl.FTL_FACE.to(z) for z in r.readSArray(Binary_Ftl.FTL_FACE, s.numFaces)] if s.numFaces > 0 else None
+            obj.textures = [Binary_Ftl.FTL_TEXTURE.to(z) for z in r.readSEach(Binary_Ftl.FTL_TEXTURE, s.numMaps)] if s.numMaps > 0 else None
+            obj.groups = [Binary_Ftl.FTL_GROUPLIST.to(z, r.readPArray(None, 'i', z.numIndex) if z.numIndex > 0 else None) for z in r.readSEach(Binary_Ftl.FTL_GROUPLIST, s.numGroups)] if s.numGroups > 0 else None
+            obj.actions = [Binary_Ftl.FTL_ACTIONLIST.to(z) for z in r.readSEach(Binary_Ftl.FTL_ACTIONLIST, s.numAction)] if s.numAction > 0 else None
+            obj.selections = [Binary_Ftl.FTL_SELECTIONS.to(z, r.readPArray(None, 'i', z.numSelected)) for z in r.readSEach(Binary_Ftl.FTL_SELECTIONS, s.numSelections)] if s.numSelections > 0 else None
 
         # collision spheres
         if header.offsetCollisionSpheres != -1:
@@ -370,7 +374,7 @@ class Binary_Fts(IHaveMetaInfo, IWriteToStream):
             self.paddy) = t
             self.type = POLY(self.type)
         @staticmethod
-        def to(s, textures: list[E_TEXTURE], bkg: Binary_Fts.E_BACKGROUND) -> E_POLY:
+        def to(s, textures: list[E_TEXTURE], bkg: 'E_BACKGROUND') -> E_POLY:
             @staticmethod
             def declareEGInfo(bkg: Binary_Fts.E_BACKGROUND, x: float, y: float, z: float) -> None:
                 posx = int(x * bkg.xmul)
@@ -529,7 +533,7 @@ class Binary_Fts(IHaveMetaInfo, IWriteToStream):
             # log.info(f'Header2: {r2.tell()}, 24')
             
             # textures
-            textures = self.level.textures = [z.to() for z in r2.readSArray(Binary_Fts.F_TEXTURE_CONTAINER, fsh.numTextures)]
+            textures = self.level.textures = [Binary_Fts.F_TEXTURE_CONTAINER.to(z) for z in r2.readSArray(Binary_Fts.F_TEXTURE_CONTAINER, fsh.numTextures)]
             # log.info(f'Texture: {r2.tell()}')
 
             # backg
@@ -541,7 +545,7 @@ class Binary_Fts(IHaveMetaInfo, IWriteToStream):
                     #if fsi.numPoly > 0: log.info(f"F[{j},{i}]: {r2.tell()}, {fsi.numPoly}, {fsi.numIAnchors}')
                     bi.numIAnchors = fsi.numIAnchors
                     bi.numPoly = fsi.numPoly
-                    bi.polydata = [z.to(textures, self.bkg) for z in r2.readSArray(Binary_Fts.F_POLY, fsi.numPoly)] if fsi.numPoly > 0 else None
+                    bi.polydata = [Binary_Fts.F_POLY.to(z, textures, self.bkg) for z in r2.readSArray(Binary_Fts.F_POLY, fsi.numPoly)] if fsi.numPoly > 0 else None
                     bi.treat = 0
                     bi.nothing = fsi.numPoly == 0
                     bi.frustrumMaxY = -99999999.
@@ -568,16 +572,16 @@ class Binary_Fts(IHaveMetaInfo, IWriteToStream):
             if fsh.numRooms > 0:
                 portals = self.level.portals = E_PORTAL_DATA(
                     numRooms = fsh.numRooms,
-                    room = [E_ROOM_DATA()]*(fsh.numRooms + 1),
+                    room = [None]*(fsh.numRooms + 1),
                     numTotal = fsh.numPortals,
-                    portals = [z.to() for z in r2.readSArray(E_SAVE_PORTALS, fsh.numPortals)])
+                    portals = [E_SAVE_PORTALS.to(z) for z in r2.readSArray(E_SAVE_PORTALS, fsh.numPortals)])
                 for i in range(portals.numRooms + 1):
                     x = r2.readS(E_SAVE_ROOM_DATA)
                     portals.room[i] = E_ROOM_DATA(
                         numPortals = x.numPortals,
                         numPolys = x.numPolys,
                         portals = r2.readPArray(None, 'i', x.numPortals) if x.numPortals > 0 else None,
-                        rpData = r2.readSArray(Binary_Fts.EP_DATA, x.numPolys) if x.numPolys > 0 else None)
+                        epData = r2.readSArray(EP_DATA, x.numPolys) if x.numPolys > 0 else None)
             #log.info(f'Portals: {r2.tell()}')
 
             if portals:

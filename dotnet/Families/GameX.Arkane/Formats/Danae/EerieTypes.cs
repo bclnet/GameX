@@ -191,18 +191,16 @@ public struct E_VERTEX {
     public Vector3 VWorld;
 }
 
-public struct E_FACE {
+public class E_FACE {
     public int FaceType;  // 0 = flat, 1 = text, 2 = Double-Side
     public short TexId;
     public Vector3<ushort> Vid;
     public Vector3 U;
     public Vector3 V;
-
     public float TransVal;
     public Vector3 Norm;
     public Vector3[] Nrmls;
     public float Temp;
-
     public Vector3<short> Ou;
     public Vector3<short> Ov;
     public Vector2[] Color;
@@ -280,7 +278,7 @@ public struct CLOTHESVERTEX {
     public Vector3 Lastpos;
 }
 
-public struct CLOTHES_DATA {
+public class CLOTHES_DATA {
     public CLOTHESVERTEX[] Cvert;
     public E_SPRINGS[] Springs;
 }
@@ -724,7 +722,7 @@ public struct E_SAVE_PORTALS {
     public short UsePortal;
     public short Paddy;
     public static E_PORTALS To(E_SAVE_PORTALS s) => new() {
-        Poly = s.Poly,
+        Poly = SAVE_EPOLY.To(s.Poly),
         Room1 = s.Room1,
         Room2 = s.Room2,
         UsePortal = s.UsePortal,

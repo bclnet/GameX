@@ -32,3 +32,6 @@ ipch/
 out/
 TestResults/
 __pycache__/
+# Merge leftovers
+*.orig
+*.rej

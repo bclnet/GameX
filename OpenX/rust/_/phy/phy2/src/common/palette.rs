@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/Palette.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/Palette.cs
 // PORT-SHA: 271c447dda57224a
 // PORT-STATUS: todo (6 LOC in C#)
 //

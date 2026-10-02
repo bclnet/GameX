@@ -1,4 +1,4 @@
-// PORT-SOURCE: Vfx/OpenStack.Vfx.Program/Program.cs
+// PORT-SOURCE: Vfx/OpenX.Vfx.Program/Program.cs
 // PORT-SHA: ed0c414069484bc7
 // PORT-STATUS: done
 //
@@ -8,7 +8,7 @@
 // them hardcodes an absolute path from one machine:
 //
 //     E:\ArchiveLibrary\Rockstar\Monster Truck Madness 64 (USA).7z
-//     C:\_GITHUB\bclnet\GameX\OpenStack\dotnet\...\bin\Debug\net9.0\0.cxi
+//     C:\_GITHUB\bclnet\GameX\OpenX\dotnet\...\bin\Debug\net9.0\0.cxi
 //
 // It cannot run anywhere else, and several passes depend on intermediate files
 // (`0.cxi`, `romfs.bin`) that an earlier pass must have written into a `bin`

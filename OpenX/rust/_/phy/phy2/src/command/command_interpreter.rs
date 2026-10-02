@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Command/CommandInterpreter.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Command/CommandInterpreter.cs
 // PORT-SHA: cf4d7a42d8fc181c
 // PORT-STATUS: todo (885 LOC in C#)
 //

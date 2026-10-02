@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Sound/SoundData.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Sound/SoundData.cs
 // PORT-SHA: a5cb4e67f599ec43
 // PORT-STATUS: todo (10 LOC in C#)
 //

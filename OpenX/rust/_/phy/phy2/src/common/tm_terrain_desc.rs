@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/TMTerrainDesc.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/TMTerrainDesc.cs
 // PORT-SHA: dd8a6a76f15db879
 // PORT-STATUS: todo (18 LOC in C#)
 //

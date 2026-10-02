@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/PhysicsGlobals.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/PhysicsGlobals.cs
 // PORT-SHA: f961c3e3712c528e
 // PORT-STATUS: done
 //

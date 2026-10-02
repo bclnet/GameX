@@ -1,4 +1,4 @@
-// PORT-SOURCE: Sfx/OpenStack.Sfx/Sfx.cs
+// PORT-SOURCE: Sfx/OpenX.Sfx/Sfx.cs
 // PORT-SHA: 749113bf668ce72a
 // PORT-STATUS: done
 //
@@ -30,7 +30,7 @@
 
 use std::collections::HashMap;
 
-/// The backend's handle types. Mirrors `openstack_gfx::gfx::Backend`.
+/// The backend's handle types. Mirrors `openx_gfx::gfx::Backend`.
 pub trait SfxBackend {
     /// C# `Audio` — the backend's buffer/source handle.
     type Audio: Clone;

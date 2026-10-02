@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/PartCell.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/PartCell.cs
 // PORT-SHA: 81ef76603bfcc3cf
 // PORT-STATUS: todo (43 LOC in C#)
 //

@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack/Client.cs
+// PORT-SOURCE: Core/OpenX/Client.cs
 // PORT-SHA: 583752ebfbad2dfe
 // PORT-STATUS: done
 //
@@ -28,7 +28,7 @@
 // What is ported here is the part with actual semantics: the scene lifecycle
 // (whose `IsDestroyed`/`IsLoaded` flags encode real state transitions) and
 // frame timing. The plugin system is left out until there is something to plug
-// in; `TypeRegistry` in `openstack-polyio` is the mechanism for it when that
+// in; `TypeRegistry` in `openx-poly` is the mechanism for it when that
 // day comes.
 
 /// C# `static class GlobalTime`.

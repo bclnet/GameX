@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/Position.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/Position.cs
 // PORT-SHA: 7704eec15516d473
 // PORT-STATUS: todo (325 LOC in C#)
 //

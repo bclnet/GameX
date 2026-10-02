@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/VertexArray.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/VertexArray.cs
 // PORT-SHA: 8acfa600fb778e2b
 // PORT-STATUS: todo (23 LOC in C#)
 //

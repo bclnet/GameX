@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/CellArray.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/CellArray.cs
 // PORT-SHA: 32e0704b2e025a82
 // PORT-STATUS: todo (49 LOC in C#)
 //

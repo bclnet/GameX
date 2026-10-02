@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Combat/DetectionCylsphere.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Combat/DetectionCylsphere.cs
 // PORT-SHA: 26c937d2ad671ab2
 // PORT-STATUS: todo (11 LOC in C#)
 //

@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/Vertex.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/Vertex.cs
 // PORT-SHA: 5d5d27138b7be103
 // PORT-STATUS: todo (71 LOC in C#)
 //

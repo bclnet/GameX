@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack.Polyfills/System.Collections.Generic/GenericPoolX.cs
+// PORT-SOURCE: Core/OpenX.Polyfills/System.Collections.Generic/GenericPoolX.cs
 // PORT-SHA: 0539af1ef504d469
 // PORT-STATUS: done
 //

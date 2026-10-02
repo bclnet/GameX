@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/ObjCache.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/ObjCache.cs
 // PORT-SHA: ba6f0b70ac7a8c13
 // PORT-STATUS: todo (22 LOC in C#)
 //

@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Command/ACCmdInterp.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Command/ACCmdInterp.cs
 // PORT-SHA: 8adf4f33697a4364
 // PORT-STATUS: todo (118 LOC in C#)
 //

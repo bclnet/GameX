@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/ImgTex.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/ImgTex.cs
 // PORT-SHA: 4f256083efcd70f7
 // PORT-STATUS: todo (222 LOC in C#)
 //

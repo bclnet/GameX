@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Managers/TargetManager.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Managers/TargetManager.cs
 // PORT-SHA: c4954e5ddb045d72
 // PORT-STATUS: todo (181 LOC in C#)
 //

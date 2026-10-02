@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack.PolyIO/System.Numerics/Matrix2x2.cs
+// PORT-SOURCE: Core/OpenX.PolyIO/System.Numerics/Matrix2x2.cs
 // PORT-SHA: 075ce425754a645d
 // PORT-STATUS: done
 //

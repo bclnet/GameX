@@ -5,7 +5,7 @@
 // A length-limited view over another stream: reads at most `length` bytes and
 // then reports EOF, without closing the underlying stream unless asked.
 //
-// Same shape as `PartialInputStream` in the OpenStack port, and the same design
+// Same shape as `PartialInputStream` in the OpenX port, and the same design
 // decision applies: **ownership is explicit in the type.** `NestedStream` owns
 // its source by default; `SharedSource` is the borrowing variant. The C# takes
 // a `Stream` reference and a `leaveOpen` flag, which leaves who-owns-what to a
@@ -36,7 +36,7 @@
 //      `bytesRead == count`, so a source that returns fewer bytes leaves the
 //      view reporting data remaining while the source is exhausted. Callers
 //      see a truncated file rather than an error — the same defect as
-//      `Util.CopyFile` in the OpenStack port.
+//      `Util.CopyFile` in the OpenX port.
 
 use std::io::{self, Read, Seek, SeekFrom};
 

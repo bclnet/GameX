@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/RoadAlphaMap.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/RoadAlphaMap.cs
 // PORT-SHA: b8d10d0605aa2459
 // PORT-STATUS: todo (21 LOC in C#)
 //

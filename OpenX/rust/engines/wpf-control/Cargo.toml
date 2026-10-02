@@ -1,13 +1,13 @@
 [package]
-name = "openstack-wpf-control"
+name = "openx-wpf-control"
 version = "0.1.0"
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 
 [dependencies]
-openstack-platform-godot = { path = "../../platforms/godot" }
-openstack-platform-ogre = { path = "../../platforms/ogre" }
-openstack-platform-opengl = { path = "../../platforms/opengl" }
-openstack-platform-sdl = { path = "../../platforms/sdl" }
-openstack-platform-unity = { path = "../../platforms/unity" }
+openx-engine-godot = { path = "../../engines/godot" }
+openx-engine-ogre = { path = "../../engines/ogre" }
+openx-engine-opengl = { path = "../../engines/opengl" }
+openx-engine-sdl = { path = "../../engines/sdl" }
+openx-engine-unity = { path = "../../engines/unity" }

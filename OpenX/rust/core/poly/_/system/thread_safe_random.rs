@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack.Polyfills/System/ThreadSafeRandom.cs
+// PORT-SOURCE: Core/OpenX.Polyfills/System/ThreadSafeRandom.cs
 // PORT-SHA: a3ad71a04ce54244
 // PORT-STATUS: done
 //

@@ -1,4 +1,4 @@
-// PORT-SOURCE: Gfx/OpenStack.Gfx/TextureHelper.cs
+// PORT-SOURCE: Gfx/OpenX.Gfx/TextureHelper.cs
 // PORT-SHA: b43a13d1ff0de054
 // PORT-STATUS: done
 //

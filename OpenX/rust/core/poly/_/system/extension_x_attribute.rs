@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack.Polyfills/System/ExtensionXAttribute.cs
+// PORT-SOURCE: Core/OpenX.Polyfills/System/ExtensionXAttribute.cs
 // PORT-SHA: e71538f66f6b247c
 // PORT-STATUS: done
 //
@@ -13,7 +13,7 @@
 /// Maps a variant to the file extension it represents.
 ///
 /// ```
-/// # use openstack_polyfills::system::extension_x_attribute::HasExtension;
+/// # use openx_poly::system::extension_x_attribute::HasExtension;
 /// #[derive(Clone, Copy)]
 /// enum Kind { Dds, Png }
 ///

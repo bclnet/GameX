@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/ObjectDesc.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/ObjectDesc.cs
 // PORT-SHA: 21ac5a3ee727aa49
 // PORT-STATUS: todo (108 LOC in C#)
 //

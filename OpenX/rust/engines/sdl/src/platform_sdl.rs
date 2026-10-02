@@ -1,4 +1,4 @@
-// PORT-SOURCE: Platforms/OpenStack.Platform.Sdl/Platform_Sdl.cs
+// PORT-SOURCE: Engines/OpenX.Engine.Sdl/Platform_Sdl.cs
 // PORT-SHA: bd4d390b1cfb29a9
 // PORT-STATUS: done
 //
@@ -12,7 +12,7 @@
 // layer is translated here.
 //
 
-use openstack::platform::{Caps, Platform};
+use openx::platform::{Caps, Platform};
 
 use crate::slots::{GfxSlots, SfxSlots};
 

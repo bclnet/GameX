@@ -1,9 +1,9 @@
-// PORT-SOURCE: Core/OpenStack.PolyIO/System.Numerics/Vector4.cs
+// PORT-SOURCE: Core/OpenX.PolyIO/System.Numerics/Vector4.cs
 // PORT-SHA: 82eba87a652bef21
 // PORT-STATUS: done
 //
 // Same story as `vector3.rs`. The only real instantiations of the generic form
-// are two `Vector4<int>` returns in `Gfx/OpenStack.Gfx/TextureSequences.cs`
+// are two `Vector4<int>` returns in `Gfx/OpenX.Gfx/TextureSequences.cs`
 // (`GetCroppedRect` / `GetUncroppedRect`), which are rectangles-as-vectors.
 
 /// C# `System.Numerics.Vector4` (BCL, float).

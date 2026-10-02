@@ -10,7 +10,7 @@
 //
 // `CanTransformAsset` returns a constant `false`, so `TransformAsset` is
 // unreachable through any caller that checks first — which is the same
-// arrangement as `Platform_Test` in the OpenStack port: a guard that always
+// arrangement as `Platform_Test` in the OpenX port: a guard that always
 // declines in front of a body that always throws.
 //
 // When this is implemented, the shape it produces is

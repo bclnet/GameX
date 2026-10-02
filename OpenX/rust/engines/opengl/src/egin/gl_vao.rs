@@ -1,4 +1,4 @@
-// PORT-SOURCE: Platforms/OpenStack.Platform.OpenGL/Egin/Gl_Render.cs (GLMeshBufferCache)
+// PORT-SOURCE: Engines/OpenX.Engine.OpenGL/Egin/Gl_Render.cs (GLMeshBufferCache)
 // PORT-SHA: SHARED
 // PORT-SHARED: yes  (extracted from the source file above, which has its own .rs)
 // PORT-STATUS: done
@@ -25,13 +25,13 @@
 use std::collections::HashMap;
 
 use glow::HasContext;
-use openstack_gfx_egin::egin_vbib::{Attribute, Kind, OnDiskBufferData, RenderSlotType, Vbib};
+use openx_gfx_egin::egin_vbib::{Attribute, Kind, OnDiskBufferData, RenderSlotType, Vbib};
 
 use super::gl_render::MeshBuffer;
 
 /// glow's element-type constant for an attribute component.
-fn gl_element_type(e: openstack_gfx_egin::egin_vbib::ElementType) -> u32 {
-    use openstack_gfx_egin::egin_vbib::ElementType as E;
+fn gl_element_type(e: openx_gfx_egin::egin_vbib::ElementType) -> u32 {
+    use openx_gfx_egin::egin_vbib::ElementType as E;
     match e {
         E::U8 => glow::UNSIGNED_BYTE,
         E::I8 => glow::BYTE,
@@ -251,8 +251,8 @@ impl GlVaoCache {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use openstack_gfx::gfx_texture::DXGI_FORMAT;
-    use openstack_gfx_egin::egin_vbib::Attribute;
+    use openx_gfx::gfx_texture::DXGI_FORMAT;
+    use openx_gfx_egin::egin_vbib::Attribute;
 
     fn attr(name: &str, format: DXGI_FORMAT, slot: RenderSlotType, rate: i32) -> Attribute {
         Attribute {
@@ -300,7 +300,7 @@ mod tests {
 
     #[test]
     fn element_types_map_to_gl_constants() {
-        use openstack_gfx_egin::egin_vbib::ElementType as E;
+        use openx_gfx_egin::egin_vbib::ElementType as E;
         assert_eq!(gl_element_type(E::U8), glow::UNSIGNED_BYTE);
         assert_eq!(gl_element_type(E::I16), glow::SHORT);
         assert_eq!(gl_element_type(E::F16), glow::HALF_FLOAT);

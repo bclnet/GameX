@@ -1,4 +1,4 @@
-// PORT-SOURCE: Gfx/OpenStack.Gfx/TextureSequences.cs
+// PORT-SOURCE: Gfx/OpenX.Gfx/TextureSequences.cs
 // PORT-SHA: d9c548630b73acb1
 // PORT-STATUS: done
 //

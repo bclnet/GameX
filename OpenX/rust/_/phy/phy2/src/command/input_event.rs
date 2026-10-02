@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Command/InputEvent.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Command/InputEvent.cs
 // PORT-SHA: 05a6515a36e22497
 // PORT-STATUS: todo (12 LOC in C#)
 //

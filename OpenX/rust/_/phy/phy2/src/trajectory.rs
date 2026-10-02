@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Trajectory.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Trajectory.cs
 // PORT-SHA: 96661589f6bb938e
 // PORT-STATUS: todo (638 LOC in C#)
 //

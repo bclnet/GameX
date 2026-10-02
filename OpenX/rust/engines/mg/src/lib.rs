@@ -1,4 +1,4 @@
-//! `openstack-platform-mg` — 1:1 port of its .NET project.
+//! `openx-engine-mg` — 1:1 port of its .NET project.
 //!
 //! The platform **registration** layer is translated: id, name, capability
 //! flags, and which `GfX.X*` manager slots the backend fills. That half is

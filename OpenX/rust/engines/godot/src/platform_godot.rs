@@ -1,4 +1,4 @@
-// PORT-SOURCE: Platforms/OpenStack.Platform.Godot/Platform_Godot.cs
+// PORT-SOURCE: Engines/OpenX.Engine.Godot/Platform_Godot.cs
 // PORT-SHA: 739d3d9cba092795
 // PORT-STATUS: done
 //
@@ -13,7 +13,7 @@
 // defect as `phy2`. When it is fixed, `godot` (gdext) is the Rust binding.
 //
 
-use openstack::platform::{Caps, Platform};
+use openx::platform::{Caps, Platform};
 
 use crate::slots::{GfxSlots, SfxSlots};
 

@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/ChatRoomTracker.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/ChatRoomTracker.cs
 // PORT-SHA: 965877efcb20322d
 // PORT-STATUS: todo (14 LOC in C#)
 //

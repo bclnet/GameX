@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/BuildingObj.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/BuildingObj.cs
 // PORT-SHA: b1528a2a1428688a
 // PORT-STATUS: todo (158 LOC in C#)
 //

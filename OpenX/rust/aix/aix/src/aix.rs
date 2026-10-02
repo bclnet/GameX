@@ -1,4 +1,4 @@
-// PORT-SOURCE: Aix/OpenStack.Aix/Aix.cs
+// PORT-SOURCE: Aix/OpenX.Aix/Aix.cs
 // PORT-SHA: 5c5a200d7c6fcc0b
 // PORT-STATUS: done
 //

@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack.PolyIO/System.IO/CircularBuffer.cs
+// PORT-SOURCE: Core/OpenX.PolyIO/System.IO/CircularBuffer.cs
 // PORT-SHA: af0a78b40bbe84f8
 // PORT-STATUS: done
 //

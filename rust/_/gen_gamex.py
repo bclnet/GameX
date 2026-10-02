@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Build a Rust workspace mirroring the GameX solution 1:1, and emit PORT_MAP.tsv.
 
-Same approach as the OpenStack port's gen_port.py, but the crate map is derived
+Same approach as the OpenX port's gen_port.py, but the crate map is derived
 from the project tree rather than hand-listed - there are 60 projects and the
 naming is regular.
 
-GameX references OpenStack as a sibling checkout (..\\..\\..\\OpenStack\\dotnet\\...),
+GameX references OpenX as a sibling checkout (..\\..\\..\\OpenX\\dotnet\\...),
 so those turn into path dependencies on the crates from the earlier port.
 """
 import csv
@@ -16,8 +16,8 @@ from pathlib import Path
 
 SRC = Path("/home/claude/src/gamex/dotnet")
 OUT = Path("/home/claude/gamex-rust")
-# Where the ported OpenStack crates live, relative to a GameX crate directory.
-OPENSTACK_REL = "../../../rust"
+# Where the ported OpenX crates live, relative to a GameX crate directory.
+OPENX_REL = "../../../rust"
 SKIP = {"bin", "obj", ".vs", "packages", "node_modules"}
 
 RUST_KEYWORDS = {
@@ -32,31 +32,31 @@ RUST_KEYWORDS = {
 DIR_REMAP = {"lib": "vendor", "main": "main_", "mod": "mod_"}
 
 # The acronym heuristic below is right for HTTPServer -> http_server but wrong for
-# names like FFmpeg. Kept as an explicit table, as in the OpenStack port.
+# names like FFmpeg. Kept as an explicit table, as in the OpenX port.
 NAME_OVERRIDES = {
     "FFmpegService": "ffmpeg_service",
     "FFmpeg": "ffmpeg",
 }
 
-# Which .NET project maps to which OpenStack crate, for dependency wiring.
-OPENSTACK_CRATES = {
-    "OpenStack": ("openstack", "core/openstack"),
-    "OpenStack.Gfx": ("openstack-gfx", "gfx/gfx"),
-    "OpenStack.Gfx.Egin": ("openstack-gfx-egin", "gfx/gfx-egin"),
-    "OpenStack.Sfx": ("openstack-sfx", "sfx/sfx"),
-    "OpenStack.Vfx": ("openstack-vfx", "vfx/vfx"),
-    "OpenStack.PolyIO": ("openstack-polyio", "core/polyio"),
-    "OpenStack.Polyfills": ("openstack-polyfills", "core/polyfills"),
-    "OpenStack.Platform.EginX": ("openstack-platform-eginx", "platforms/eginx"),
-    "OpenStack.Platform.Godot": ("openstack-platform-godot", "platforms/godot"),
-    "OpenStack.Platform.Mg": ("openstack-platform-mg", "platforms/mg"),
-    "OpenStack.Platform.O3de": ("openstack-platform-o3de", "platforms/o3de"),
-    "OpenStack.Platform.Ogre": ("openstack-platform-ogre", "platforms/ogre"),
-    "OpenStack.Platform.OpenGL": ("openstack-platform-opengl", "platforms/opengl"),
-    "OpenStack.Platform.Sdl": ("openstack-platform-sdl", "platforms/sdl"),
-    "OpenStack.Platform.Stride": ("openstack-platform-stride", "platforms/stride"),
-    "OpenStack.Platform.Unity": ("openstack-platform-unity", "platforms/unity"),
-    "OpenStack.Platform.Unreal": ("openstack-platform-unreal", "platforms/unreal"),
+# Which .NET project maps to which OpenX crate, for dependency wiring.
+OPENX_CRATES = {
+    "OpenX": ("openx", "core/openx"),
+    "OpenX.Gfx": ("openx-gfx", "gfx/gfx"),
+    "OpenX.Gfx.Egin": ("openx-gfx-egin", "gfx/gfx-egin"),
+    "OpenX.Sfx": ("openx-sfx", "sfx/sfx"),
+    "OpenX.Vfx": ("openx-vfx", "vfx/vfx"),
+    "OpenX.PolyIO": ("openx-poly", "core/polyio"),
+    "OpenX.Polyfills": ("openx-poly", "core/polyfills"),
+    "OpenX.Engine.EginX": ("openx-engine-eginx", "engines/eginx"),
+    "OpenX.Engine.Godot": ("openx-engine-godot", "engines/godot"),
+    "OpenX.Engine.Mg": ("openx-engine-mg", "engines/mg"),
+    "OpenX.Engine.O3de": ("openx-engine-o3de", "engines/o3de"),
+    "OpenX.Engine.Ogre": ("openx-engine-ogre", "engines/ogre"),
+    "OpenX.Engine.OpenGL": ("openx-engine-opengl", "engines/opengl"),
+    "OpenX.Engine.Sdl": ("openx-engine-sdl", "engines/sdl"),
+    "OpenX.Engine.Stride": ("openx-engine-stride", "engines/stride"),
+    "OpenX.Engine.Unity": ("openx-engine-unity", "engines/unity"),
+    "OpenX.Engine.Unreal": ("openx-engine-unreal", "engines/unreal"),
 }
 
 
@@ -191,7 +191,7 @@ def main() -> int:
         "\n[profile.release]\nlto = true\ncodegen-units = 1\n"
     )
 
-    # Per-project dependency wiring, GameX-internal and OpenStack.
+    # Per-project dependency wiring, GameX-internal and OpenX.
     for name, d in projects.items():
         crate, cdir = crates[name]
         csproj = d / f"{name}.csproj"
@@ -203,10 +203,10 @@ def main() -> int:
                 dc, dd = crates[stem]
                 depth = len(Path(cdir).parts)
                 deps.append(f'{dc} = {{ path = "{"../" * depth}{dd}" }}')
-            elif stem in OPENSTACK_CRATES:
-                oc, od = OPENSTACK_CRATES[stem]
+            elif stem in OPENX_CRATES:
+                oc, od = OPENX_CRATES[stem]
                 depth = len(Path(cdir).parts)
-                deps.append(f'{oc} = {{ path = "{"../" * depth}{OPENSTACK_REL}/{od}" }}')
+                deps.append(f'{oc} = {{ path = "{"../" * depth}{OPENX_REL}/{od}" }}')
         cd = OUT / cdir
         (cd / "src").mkdir(parents=True, exist_ok=True)
         (cd / "Cargo.toml").write_text(

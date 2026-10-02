@@ -1,4 +1,4 @@
-//! `openstack-polyio` — 1:1 port of .NET project `OpenStack.PolyIO`.
+//! `openx-poly` — 1:1 port of .NET project `OpenX.PolyIO`.
 //!
 //! Module layout mirrors the C# folder/file layout exactly so the two trees can
 //! be diffed and updated in parallel. Every file carries a `PORT-SOURCE` header
@@ -20,7 +20,7 @@ pub mod io;
 /// The names worth importing together. C# got these via `global using` and
 /// namespace-wide extension methods; Rust needs the traits in scope explicitly.
 pub mod prelude {
-    pub use crate::core::{SourcePath, SourceTag, IHaveSource, ISource, ISourceExt};
+    pub use crate::core::{SourcePath, SourceTag, SourceRef, SourceKey, IHaveSource, ISource, ISourceExt};
 
     // pub use crate::io::bit_stream::BitStream;
     // pub use crate::io::byte_xor_stream::ByteXorStream;

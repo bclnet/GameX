@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack.PolyIO/System.Numerics/Cry+Unused/ByteArray.cs
+// PORT-SOURCE: Core/OpenX.PolyIO/System.Numerics/Cry+Unused/ByteArray.cs
 // PORT-SHA: dd39097fb0e524e4
 // PORT-STATUS: done
 //

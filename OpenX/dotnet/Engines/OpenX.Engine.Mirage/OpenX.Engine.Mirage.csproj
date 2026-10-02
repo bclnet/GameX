@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<LangVersion>latest</LangVersion>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\..\..\Mirage\dotnet\Mirage\Mirage.csproj" />
+	  <ProjectReference Include="..\..\Core\OpenX\OpenX.csproj" />
+	</ItemGroup>
+
+</Project>

@@ -2,8 +2,8 @@
 //
 // Every file here is wrapped in `#if false` and declares types with no
 // references anywhere in the solution. The namespace is the superseded
-// `OpenStack.Graphics.DirectX_`. Nothing is ported; the live DDS path is
-// `openstack_gfx::gfx_texture`.
+// `OpenX.Graphics.DirectX_`. Nothing is ported; the live DDS path is
+// `openx_gfx::gfx_texture`.
 pub mod dds1;
 pub mod dds2;
 pub mod direct_x_extensions;

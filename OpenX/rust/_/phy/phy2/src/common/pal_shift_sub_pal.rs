@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/PalShiftSubPal.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/PalShiftSubPal.cs
 // PORT-SHA: 3e84188b443d3097
 // PORT-STATUS: todo (8 LOC in C#)
 //

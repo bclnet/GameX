@@ -1,4 +1,4 @@
-//! `openstack-gfx-other` — 1:1 mapping of .NET project `OpenStack.Gfx.Other`.
+//! `openx-gfx-other` — 1:1 mapping of .NET project `OpenX.Gfx.Other`.
 //!
 //! 8 of its 9 files live in an `Unused/` folder wrapped in `#if false` — not
 //! compiled, no references. The one live file, `HalfPrecConverter`, is the

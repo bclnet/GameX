@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack.PolyIO/System.Drawing/Rectangle.cs
+// PORT-SOURCE: Core/OpenX.PolyIO/System.Drawing/Rectangle.cs
 // PORT-SHA: 4e382e50fb2843b0
 // PORT-STATUS: done
 //

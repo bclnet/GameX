@@ -1,4 +1,4 @@
-//! `openstack-platform-opengl` — 1:1 port of its .NET project.
+//! `openx-engine-opengl` — 1:1 port of its .NET project.
 //!
 //! **This crate has never been compiled or run.** The platform registration
 //! layer is a straightforward translation; the GL layer in `egin::gl_render` is

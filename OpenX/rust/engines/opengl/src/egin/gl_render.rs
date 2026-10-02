@@ -1,4 +1,4 @@
-// PORT-SOURCE: Platforms/OpenStack.Platform.OpenGL/Egin/Gl_Render.cs
+// PORT-SOURCE: Engines/OpenX.Engine.OpenGL/Egin/Gl_Render.cs
 // PORT-SHA: 0681d4a8072d93b2
 // PORT-STATUS: done
 //
@@ -60,7 +60,7 @@
 // range fits (see its docs); `TexParameteri` passes `TextureMinFilter::Nearest`
 // for the *mag* filter (the values coincide, so it works by luck); and the
 // `GLPickingTexture` constructor uses `.Result` on an async shader load — the
-// deadlock pattern documented in `openstack-sfx`.
+// deadlock pattern documented in `openx-sfx`.
 
 use glow::HasContext;
 
@@ -520,7 +520,7 @@ pub unsafe fn gfx_viewport(
 // crate decision — `winit` vs SDL), `GLMeshBufferCache`, `MeshBatchRenderer`,
 // `GLRenderMaterial`, `GLRenderableMesh`, `OctreeDebugRenderer<T>`,
 // `MeshSceneNode`, and `ParticleControllerFactory`. All depend on the
-// `IVBIB`/`OnDiskBufferData` GPU-descriptor types that `openstack-gfx-egin`
+// `IVBIB`/`OnDiskBufferData` GPU-descriptor types that `openx-gfx-egin`
 // also leaves unported, so they are blocked on the same decision.
 
 #[cfg(test)]

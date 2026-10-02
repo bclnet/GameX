@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack.Polyfills/MathNet.Numerics/NumericsExtensions.cs
+// PORT-SOURCE: Core/OpenX.Polyfills/MathNet.Numerics/NumericsExtensions.cs
 // PORT-SHA: 350576d153a6da63
 // PORT-STATUS: done
 //
@@ -8,7 +8,7 @@
 //
 // NOT PORTED, and nothing is lost. This file exists purely to reach a linear
 // algebra library; `glam` provides those operations directly on `Mat3`/`Mat4`
-// with no allocation and no conversion, and `openstack-polyio`'s `Matrix3x3`
+// with no allocation and no conversion, and `openx-poly`'s `Matrix3x3`
 // already implements all five call sites in closed form.
 //
 // Dropping this removes a dependency and a per-call heap allocation from every

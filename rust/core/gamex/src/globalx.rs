@@ -18,7 +18,7 @@
 //      `R`, `G`, `B` are `float` in 0..1 everywhere else in the type — the
 //      `AsColor` property multiplies by 255 — so a byte of 255 becomes 255.0,
 //      not 1.0, and `AsColor` then computes 255 * 255. This is the same defect
-//      as `Colorf(uint, Format.ARGB32)` in the OpenStack port. **Fix in the
+//      as `Colorf(uint, Format.ARGB32)` in the OpenX port. **Fix in the
 //      C#**: divide by 255.
 //
 //   2. **`AsColor` casts without clamping.** `(int)(R * 255f)` on a component

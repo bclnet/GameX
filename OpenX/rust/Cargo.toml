@@ -1,13 +1,6 @@
 [workspace]
 resolver = "2"
-members = [
-    "aix/aix",
-    "core/poly",
-    "gfx/gfx",
-    "phy/phy",
-]
 
-[blah]
 members = [
     "aix/aix",
     "core/openx",
@@ -16,20 +9,20 @@ members = [
     "gfx/gfx-egin",
     "gfx/gfx-other",
     "phy/phy",
-    "platforms/eginx",
-    "platforms/godot",
-    "platforms/mg",
-    "platforms/o3de",
-    "platforms/ogre",
-    "platforms/opengl",
-    "platforms/sdl",
-    "platforms/stride",
-    "platforms/tests",
-    "platforms/unity",
-    "platforms/unreal",
-    "platforms/vk",
-    "platforms/wpf-control",
-    "platforms/wpf-stride",
+    "engines/eginx",
+    "engines/godot",
+    "engines/mg",
+    "engines/o3de",
+    "engines/ogre",
+    "engines/opengl",
+    "engines/sdl",
+    "engines/stride",
+    "engines/tests",
+    "engines/unity",
+    "engines/unreal",
+    "engines/vk",
+    "engines/wpf-control",
+    "engines/wpf-stride",
     "sfx/sfx",
     "sfx/sfx-al",
     "sfx/sfx-ogg",

@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/MasterDBMap.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/MasterDBMap.cs
 // PORT-SHA: 7a2fccb2af38ce66
 // PORT-STATUS: todo (16 LOC in C#)
 //

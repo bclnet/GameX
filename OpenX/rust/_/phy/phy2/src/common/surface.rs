@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/Surface.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/Surface.cs
 // PORT-SHA: 699b7e127870d35c
 // PORT-STATUS: todo (64 LOC in C#)
 //

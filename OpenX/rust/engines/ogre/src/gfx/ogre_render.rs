@@ -1,14 +1,14 @@
-// PORT-SOURCE: Platforms/OpenStack.Platform.Ogre/Gfx/Ogre_Render.cs
+// PORT-SOURCE: Engines/OpenX.Engine.Ogre/Gfx/Ogre_Render.cs
 // PORT-SHA: 885c344625648bbd
 // PORT-STATUS: done
 //
 // NOT PORTED — there is no implementation here to port.
 //
-// The C# `OpenStack.Platform.Ogre` project is a skeleton: 105 live lines, 6 members throwing `NotImplementedException`, and no Ogre binding of any kind — no package reference, no P/Invoke. It declares the shape a
+// The C# `OpenX.Engine.Ogre` project is a skeleton: 105 live lines, 6 members throwing `NotImplementedException`, and no Ogre binding of any kind — no package reference, no P/Invoke. It declares the shape a
 // backend would take and does not fill it in, so there is no behaviour to
 // translate.
 //
-// When this backend is built, implement `openstack_gfx::gfx::Backend` and the
+// When this backend is built, implement `openx_gfx::gfx::Backend` and the
 // builder traits directly in Rust against Ogre's C++ API via `bindgen`, or `wgpu` directly — that is a smaller job
 // than porting an empty scaffold and then filling it in twice.
 //

@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Util/AdjustCell.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Util/AdjustCell.cs
 // PORT-SHA: 78d010d69c513aff
 // PORT-STATUS: todo (59 LOC in C#)
 //

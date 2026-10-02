@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack/Algorithms/MurmurHash3.cs
+// PORT-SOURCE: Core/OpenX/Algorithms/MurmurHash3.cs
 // PORT-SHA: e889830211845e78
 // PORT-STATUS: done
 //

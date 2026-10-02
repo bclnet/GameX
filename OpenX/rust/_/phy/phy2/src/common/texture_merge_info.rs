@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/TextureMergeInfo.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/TextureMergeInfo.cs
 // PORT-SHA: 2d71738a2c84f453
 // PORT-STATUS: todo (109 LOC in C#)
 //

@@ -1,4 +1,4 @@
-//! `openstack-gfx-egin` — 1:1 port of .NET project `OpenStack.Gfx.Egin`.
+//! `openx-gfx-egin` — 1:1 port of .NET project `OpenX.Gfx.Egin`.
 //!
 //! `egin_render` (AABB + Camera) and `egin_animate` (skeletal animation) are
 //! both ported and **verified numerically against the C# test suite's own

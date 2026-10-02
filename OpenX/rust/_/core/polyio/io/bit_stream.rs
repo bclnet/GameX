@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack.PolyIO/System.IO/BitStream.cs
+// PORT-SOURCE: Core/OpenX.PolyIO/System.IO/BitStream.cs
 // PORT-SHA: 09d3020aa16a4f8f
 // PORT-STATUS: done
 //

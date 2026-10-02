@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack.PolyIO/System.Drawing/Curve.cs
+// PORT-SOURCE: Core/OpenX.PolyIO/System.Drawing/Curve.cs
 // PORT-SHA: 63b58b2c3684b4ac
 // PORT-STATUS: done
 //

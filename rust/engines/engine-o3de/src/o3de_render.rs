@@ -1,4 +1,4 @@
-// PORT-SOURCE: Platforms/GameX.Platform.O3de/O3de_Render.cs
+// PORT-SOURCE: Engines/GameX.Engine.O3de/O3de_Render.cs
 // PORT-SHA: 20afab1a639413b9
 // PORT-STATUS: todo (26 live LOC in C#)
 //

@@ -1,4 +1,4 @@
-// PORT-SOURCE: Platforms/OpenStack.Wpf.Control/UI/GLWpfControl.cs
+// PORT-SOURCE: Engines/OpenX.Wpf.Control/UI/GLWpfControl.cs
 // PORT-SHA: 4ea4ba1b3901a956
 // PORT-STATUS: done
 //
@@ -20,8 +20,8 @@
 //   Rust application, which would use `winit` and own its own surface.
 //
 // The abstraction it plugs into is already ported and engine-agnostic:
-// implement `openstack_gfx::gfx::Backend` plus the `TextureBuilder` /
-// `MaterialBuilder` / `ShaderBuilder` traits, and `openstack::platform::Platform`.
+// implement `openx_gfx::gfx::Backend` plus the `TextureBuilder` /
+// `MaterialBuilder` / `ShaderBuilder` traits, and `openx::platform::Platform`.
 // Nothing above this layer needs to change.
 //
 // Kept as a file so the 1:1 mapping holds and `sync-check.sh` tracks drift.

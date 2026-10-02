@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Animation/MotionInterp.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Animation/MotionInterp.cs
 // PORT-SHA: 5a955beb7cdbb267
 // PORT-STATUS: todo (835 LOC in C#)
 //

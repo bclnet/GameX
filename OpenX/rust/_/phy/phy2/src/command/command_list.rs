@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Command/CommandList.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Command/CommandList.cs
 // PORT-SHA: 250245c67a20cc48
 // PORT-STATUS: todo (127 LOC in C#)
 //

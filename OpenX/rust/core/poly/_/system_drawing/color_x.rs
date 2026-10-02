@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack.Polyfills/System.Drawing/ColorX.cs
+// PORT-SOURCE: Core/OpenX.Polyfills/System.Drawing/ColorX.cs
 // PORT-SHA: 039d2c5a9a54e84f
 // PORT-STATUS: done
 

@@ -1,4 +1,4 @@
-// PORT-SOURCE: Sfx/OpenStack.Sfx.Ogg/Sfx_OggVorbis.cs
+// PORT-SOURCE: Sfx/OpenX.Sfx.Ogg/Sfx_OggVorbis.cs
 // PORT-SHA: 7b895d2226c9d562
 // PORT-STATUS: done
 //
@@ -6,7 +6,7 @@
 // the `ogg_sync_state` / `vorbis_dsp_state` / `OggVorbis_File` structs needed to
 // call native libogg and libvorbis. It carries no decoding logic of its own.
 //
-// Same reasoning as `openstack-sfx-al`:
+// Same reasoning as `openx-sfx-al`:
 //
 //   * Rust has `lewton` (pure-Rust Vorbis), `symphonia` (pure-Rust, many
 //     formats, one API), and `ogg` for the container — all safe, maintained,
@@ -19,7 +19,7 @@
 // dependencies entirely, which the C# has to bundle per platform.
 //
 // To wire it up: decode to PCM with `lewton` or `symphonia`, fill an
-// `openstack_sfx::Audio`, and hand it to `AudioManager::create`. Nothing else
+// `openx_sfx::Audio`, and hand it to `AudioManager::create`. Nothing else
 // in the codebase touches Vorbis directly.
 //
 // Kept as a file so the 1:1 mapping holds and `sync-check.sh` watches it.

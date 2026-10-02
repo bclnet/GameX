@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/LandCell.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/LandCell.cs
 // PORT-SHA: cb473088eba95f68
 // PORT-STATUS: todo (332 LOC in C#)
 //

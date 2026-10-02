@@ -1,4 +1,4 @@
-# Porting OpenStack (.NET) to Rust
+# Porting OpenX (.NET) to Rust
 
 This workspace is a **file-for-file** port. Every `.rs` maps to exactly one
 `.cs`, so a change on either side has one obvious counterpart on the other.
@@ -20,7 +20,7 @@ Three pieces:
 2. **A header in every `.rs`** naming its source and the hash of that source at
    port time:
    ```rust
-   // PORT-SOURCE: Core/OpenStack.PolyIO/System.IO/BitStream.cs
+   // PORT-SOURCE: Core/OpenX.PolyIO/System.IO/BitStream.cs
    // PORT-SHA: 09d3020aa16a4f8f
    // PORT-STATUS: done
    ```
@@ -37,7 +37,7 @@ the equivalent change, update `PORT-SHA` to the new hash.
 
 | C# | Rust |
 |---|---|
-| project `OpenStack.Gfx` | crate `openstack-gfx`, dir `gfx/gfx/` |
+| project `OpenX.Gfx` | crate `openx-gfx`, dir `gfx/gfx/` |
 | folder `System.IO/` | module `system_io/` |
 | file `Polyfill+BinaryReader.cs` | `polyfill_binary_reader.rs` |
 | `ReadL32AString` | `read_l32_a_string` |
@@ -156,7 +156,7 @@ surfaces as a runtime "not found" with nothing to grep for. Explicit
 registration fails at compile time instead. Swapping in `inventory` later only
 means replacing the body of `register`.
 
-This unblocks `core/openstack` at far lower cost than expected.
+This unblocks `core/openx` at far lower cost than expected.
 
 ### `async`/`Task<T>` → futures (82 sites)
 
@@ -279,7 +279,7 @@ Bottom-up along the dependency graph, so nothing is ported against a stub:
    below). `vfx` — 7/9: VFS layer, `Util`, `N64`, and the external-service
    decisions are done. **Remaining: `Disc.cs` (4,145 live) and `X3ds.cs`
    (2,658) — see "The work that is actually left" below.**
-4. `core/openstack` → depends on all three. **Resolve the reflection strategy
+4. `core/openx` → depends on all three. **Resolve the reflection strategy
    before starting this crate.**
 5. `phy2` — 27k LOC, the largest single crate, but self-contained (no project
    references), so it can proceed in parallel with everything above.
@@ -499,11 +499,11 @@ visible at the file, not just here.
 
 | C# project | Live lines | What it is |
 |---|---|---|
-| `OpenStack.Sfx.Al` | 4,660 over 11 files | Vendored OpenTK OpenAL bindings, 134 `DllImport`s |
-| `OpenStack.Sfx.Ogg` | 383 | 148 `DllImport`s over native libogg/libvorbis |
+| `OpenX.Sfx.Al` | 4,660 over 11 files | Vendored OpenTK OpenAL bindings, 134 `DllImport`s |
+| `OpenX.Sfx.Ogg` | 383 | 148 `DllImport`s over native libogg/libvorbis |
 
-Neither is called from anywhere in the shipping solution — `OpenStack.Sfx.Al`'s
-only referencing project is `OpenStack.SfxTests`. Hand-translating 282 FFI
+Neither is called from anywhere in the shipping solution — `OpenX.Sfx.Al`'s
+only referencing project is `OpenX.SfxTests`. Hand-translating 282 FFI
 signatures plus their layout-sensitive structs means 282 chances at undefined
 behaviour and a permanent obligation to keep two copies aligned as the native
 libraries change.
@@ -513,7 +513,7 @@ for audio output, and `lewton` / `symphonia` for Vorbis — the latter pure Rust
 which also drops libogg and libvorbis from the shipping dependencies the C# has
 to bundle per platform.
 
-The whole surface the codebase needs is `openstack_sfx::AudioBuilder`. A backend
+The whole surface the codebase needs is `openx_sfx::AudioBuilder`. A backend
 implements that over whichever crate is chosen; nothing else reaches into AL or
 Vorbis directly.
 
@@ -534,9 +534,9 @@ Vorbis directly.
   task and fails identically.
 - **`LoadAudio`'s guard is `Log.Assert`**, whose body is empty (again), so the
   duplicate-load check does nothing.
-- **`OpenStack.SfxTests` tests nothing.** Its single test method `Test_Init` has
+- **`OpenX.SfxTests` tests nothing.** Its single test method `Test_Init` has
   an empty body — it passes unconditionally, and would keep passing if all of
-  `OpenStack.Sfx` were deleted.
+  `OpenX.Sfx` were deleted.
 
 ### Found while porting `vfx`
 
@@ -600,7 +600,7 @@ future mismatch fail the gate rather than sitting unnoticed.
   and discards it; `FileExists`/`FileInfo`/`Open` are all
   `NotImplementedException` and `Glob` returns empty. Same shape as
   `NetworkFileSystem` — reads as a feature, is not one.
-- **`OpenStack.Vfx.Program` is a checked-in scratchpad.** `Main` calls `Pass0`;
+- **`OpenX.Vfx.Program` is a checked-in scratchpad.** `Main` calls `Pass0`;
   `Pass1`-`Pass3` are unreferenced. All of them hardcode absolute paths from one
   machine (`E:\ArchiveLibrary\...`, `C:\_GITHUB\bclnet\...\bin\Debug\net9.0\`),
   and later passes consume files an earlier pass must have written. It cannot
@@ -617,18 +617,18 @@ no shortcuts.
 | Area | Files | Character |
 |---|---|---|
 | `phy2` | 164 | **Dropped at your direction.** (It also does not compile in C# — see below.) |
-| `openstack` core | 19 | Depends on polyio/polyfills/gfx/sfx/vfx — all now available. The `TypeRegistry` it needed is in place. |
+| `openx` core | 19 | Depends on polyio/polyfills/gfx/sfx/vfx — all now available. The `TypeRegistry` it needed is in place. |
 | `vfx` disc/3DS | 2 | 6,800 live lines of container parsing: CD/DVD sector layouts, CHD, NCCH/NCSD crypto. |
 | `gfx-egin` | 4 | 4/4 files, but `Egin_Particle` and `Egin_Render` are **partial** — see below. |
 | `gfx-other` | 9 | **Done** — 8 of 9 were `#if false`. |
 | `platforms/*` | ~70 | **Check viability before starting.** Several (Stride, Unreal, WPF) may have no usable Rust binding, and a C# shim may beat a port. |
 | `*Tests` | ~15 | Mostly empty, as `SfxTests` was. |
 
-**`openstack` core is done (19/19).** With it, every crate the rest of the
+**`openx` core is done (19/19).** With it, every crate the rest of the
 solution depends on is complete: `polyio`, `polyfills`, `gfx`, `sfx`, and
-`openstack`. What remains has no unported dependencies.
+`openx`. What remains has no unported dependencies.
 
-### Found while porting `openstack` core
+### Found while porting `openx` core
 
 - **`Util.DecodePath` slices `%ModelPath%` at the wrong offset.** The token is
   11 characters but the branch is `path[6..]`, so `%ModelPath%/tex.dds` expands
@@ -673,7 +673,7 @@ reference vectors at seed 0.
 
 The vendored `_LIB/SevenZip` (2,745 lines, the public-domain LZMA SDK) is not
 ported, for the same reasons as the audio bindings — use `lzma-rs` or
-`sevenz-rust`. `openstack-vfx` needs 7z reading for `SevenZipFileSystem` too;
+`sevenz-rust`. `openx-vfx` needs 7z reading for `SevenZipFileSystem` too;
 wire both to the same crate.
 
 ### Found while porting `Manager.cs`
@@ -712,7 +712,7 @@ C# needed a non-generic `abstract class CellBuilder` alongside the generic
 something untyped to hold, and every override cast back. Parameterising
 `CellManager` by `B: Backend` collapses the pair into one trait with no casts.
 
-### Found while finishing `openstack` core
+### Found while finishing `openx` core
 
 - **`ProfileData.LastTime` returns the oldest sample, not the newest.**
   `AddNewHitLength` writes at `LastIndex % N` and *then* increments, so
@@ -778,7 +778,7 @@ callers** in the solution, so nothing is blocked.
 
 This needs saying plainly, because it changes what "porting `phy2`" means.
 
-`OpenStack.Phy2` is a mid-migration copy of **ACE (Asheron's Call Emulator)**
+`OpenX.Phy2` is a mid-migration copy of **ACE (Asheron's Call Emulator)**
 server physics. **107 of its 164 files reference namespaces that exist nowhere
 in the solution**, and its `.csproj` has no `PackageReference` or
 `ProjectReference` supplying any of them:
@@ -841,7 +841,7 @@ apply to it.
 
 ## Verified against the C# test suite
 
-`OpenStack.GfxTests/Gfx_Texture.cs` embeds two real DDS files as base64 and
+`OpenX.GfxTests/Gfx_Texture.cs` embeds two real DDS files as base64 and
 asserts their decoded width, height, and payload. Those are the first external
 test vectors available anywhere in this port, and `gfx_texture.rs` is now
 checked against them rather than only against itself.
@@ -883,13 +883,13 @@ reason that method is inert on the test path.
   here, so the Rust tree has one — but **consolidating the C# side is worth
   doing**.
 - **8 of `Gfx.Other`'s 9 files are wrapped in `#if false`** inside a folder
-  named `Unused`, under the superseded `OpenStack.Graphics.DirectX_` namespace.
-  Not compiled, zero references. `openstack-gfx`'s `gfx_texture` is the live
+  named `Unused`, under the superseded `OpenX.Graphics.DirectX_` namespace.
+  Not compiled, zero references. `openx-gfx`'s `gfx_texture` is the live
   DDS path.
 
 ### `Camera` verified numerically against the C# tests
 
-`OpenStack.GfxTests/Egin/Gfx_Render.cs` asserts specific float values for the
+`OpenX.GfxTests/Egin/Gfx_Render.cs` asserts specific float values for the
 camera's initial pitch and yaw, its forward and right vectors, its projection
 `M11`, and six entries of its view-projection matrix. The port reproduces all of
 them, which is worth more than it might sound, because this file is where the
@@ -927,7 +927,7 @@ the trees can be compared entry by entry rather than by eye.
   two typed methods.
 - **`AABB`'s point containment is half-open (`< max`) but its box containment is
   closed (`<= max`)** — inconsistent within one type, and different again from
-  `openstack_gfx`'s `BoundingBox::contains`, which is closed on both sides.
+  `openx_gfx`'s `BoundingBox::contains`, which is closed on both sides.
 - **`AABB.Transform` reduces over `Vector4` including `w`**, taking min/max of
   the `w` component and then discarding it. Harmless for affine transforms
   (`w` is 1 throughout), meaningless for projective ones. The port uses
@@ -1016,7 +1016,7 @@ crypto refusal).
 - **`Particle.GetRotationMatrix` ignores `Rotation.X`**, composing only Z and Y.
 - **`ParticleExtensions` is declared three times in the same file**, each a
   different set of KV-reading helpers. `KV`'s accessors in
-  `openstack-polyfills` cover all three.
+  `openx-poly` cover all three.
 
 ---
 
@@ -1081,7 +1081,7 @@ incrementally.
 No Rust code here has been compiled — that constraint held throughout, and it is
 the single largest caveat on this work. What *was* possible:
 
-* **External test vectors.** `OpenStack.GfxTests` embeds two real DDS files as
+* **External test vectors.** `OpenX.GfxTests` embeds two real DDS files as
   base64 and asserts camera/bone values numerically. The port reproduces the DDS
   bytes **exactly, both directions**, and matches all six asserted
   view-projection entries plus the bind-pose matrices. That independently
@@ -1250,7 +1250,7 @@ Not ported, and blocked rather than skipped: `GLDebugCamera` (needs a windowing
 crate decision — `winit` vs SDL), and `GLMeshBufferCache`, `MeshBatchRenderer`,
 `GLRenderMaterial`, `GLRenderableMesh`, `OctreeDebugRenderer<T>`,
 `MeshSceneNode`, `ParticleControllerFactory` — all of which depend on the
-`IVBIB`/`OnDiskBufferData` GPU descriptors that `openstack-gfx-egin` also leaves
+`IVBIB`/`OnDiskBufferData` GPU descriptors that `openx-gfx-egin` also leaves
 unported.
 
 ### Four more C#-side bugs, one of them memory corruption
@@ -1281,7 +1281,7 @@ of the array; and `TexParameteri` passes `TextureMinFilter.Nearest` for the
 ## Finishing gfx: the VBIB descriptors
 
 `OnDiskBufferData`, its `Attribute`, and `IVBIB` are now ported, in
-`openstack-gfx-egin::egin_vbib`. These were **the** blocker: both
+`openx-gfx-egin::egin_vbib`. These were **the** blocker: both
 `egin_render.rs` and `platform-opengl`'s `gl_render.rs` had listed unported
 classes solely because these descriptors were missing. One module unblocks
 `GLMeshBufferCache`, `MeshBatchRenderer`, `GLRenderableMesh`, and the rest.

@@ -17,7 +17,7 @@
 // own BLTE 'E' (encrypted) block path.
 //
 // That is the same pattern as the three disagreeing binary16 implementations in
-// the OpenStack port, except here it is cryptography. If the two differ
+// the OpenX port, except here it is cryptography. If the two differ
 // anywhere — a rotation constant, a counter width, the block-boundary handling
 // — then whether a file decrypts correctly depends on which file the caller
 // happened to `using`. Neither has tests.

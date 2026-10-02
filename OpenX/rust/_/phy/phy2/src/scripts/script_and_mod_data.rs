@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Scripts/ScriptAndModData.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Scripts/ScriptAndModData.cs
 // PORT-SHA: 33cfc33758a3f128
 // PORT-STATUS: todo (8 LOC in C#)
 //

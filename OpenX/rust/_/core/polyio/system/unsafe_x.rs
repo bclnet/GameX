@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack.PolyIO/System/UnsafeX.cs
+// PORT-SOURCE: Core/OpenX.PolyIO/System/UnsafeX.cs
 // PORT-SHA: 638ab139e00ac244
 // PORT-STATUS: done
 //
@@ -31,7 +31,7 @@
 //
 // NOT PORTED: `MarshalP`/`MarshalPArray`/`MarshalPSymbol*`/`Shape<T>` — the
 // pattern-string machinery. It is driven by runtime format strings and is
-// entangled with the reflection design still open in `openstack-core`; see
+// entangled with the reflection design still open in `openx-core`; see
 // PORTING.md. Nothing in the ported tree calls it yet.
 
 use bytemuck::{AnyBitPattern, NoUninit, Pod, PodCastError};

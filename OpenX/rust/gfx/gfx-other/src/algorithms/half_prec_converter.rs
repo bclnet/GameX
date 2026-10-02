@@ -1,4 +1,4 @@
-// PORT-SOURCE: Gfx/OpenStack.Gfx.Other/Algorithms/HalfPrecConverter.cs
+// PORT-SOURCE: Gfx/OpenX.Gfx.Other/Algorithms/HalfPrecConverter.cs
 // PORT-SHA: 9420f970db920076
 // PORT-STATUS: done
 //
@@ -6,8 +6,8 @@
 // union to reinterpret the float's bits.
 //
 // **THIS IS THE THIRD BINARY16 IMPLEMENTATION IN THE SOLUTION**, after
-// `Core/OpenStack.PolyIO/System/HalfFloat.cs` and
-// `Core/OpenStack.Polyfills/Poly2.1/Half.cs`. All three convert between f32 and
+// `Core/OpenX.PolyIO/System/HalfFloat.cs` and
+// `Core/OpenX.Polyfills/Poly2.1/Half.cs`. All three convert between f32 and
 // binary16, and they do not agree:
 //
 //   * `PolyIO/HalfFloat` **truncates** (round toward zero).

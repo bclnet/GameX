@@ -1,4 +1,4 @@
-// PORT-SOURCE: Vfx/OpenStack.Vfx/Vfx_Network.cs
+// PORT-SOURCE: Vfx/OpenX.Vfx/Vfx_Network.cs
 // PORT-SHA: 1de2e94abd13dcbd
 // PORT-STATUS: done
 //
@@ -11,7 +11,7 @@
 // at `AsyncCoroutineQueue`, and it should be made once, against a real caller.
 //
 // There is no such caller yet: `NetworkHost` is referenced only from
-// `OpenStack.Vfx.Program`. `ureq` is the better default unless something else
+// `OpenX.Vfx.Program`. `ureq` is the better default unless something else
 // in the workspace already needs an async runtime, since nothing about this
 // class benefits from one — it is request/response with a cache.
 //

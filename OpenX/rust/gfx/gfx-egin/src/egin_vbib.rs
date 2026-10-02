@@ -1,11 +1,11 @@
-// PORT-SOURCE: Gfx/OpenStack.Gfx.Egin/Egin_Render.cs (OnDiskBufferData / IVBIB)
+// PORT-SOURCE: Gfx/OpenX.Gfx.Egin/Egin_Render.cs (OnDiskBufferData / IVBIB)
 // PORT-SHA: SHARED
 // PORT-SHARED: yes  (extracted from the source file above, which has its own .rs)
 // PORT-STATUS: done
 //
 // The GPU buffer descriptors — `OnDiskBufferData`, its `Attribute`, and the
 // `IVBIB` container. These were the blocker noted in `egin_render.rs` and in
-// `openstack-platform-opengl`: both crates left work unported because these
+// `openx-engine-opengl`: both crates left work unported because these
 // types were missing. Porting them here unblocks both.
 //
 // They live in their own module rather than in `egin_render` because they are
@@ -58,7 +58,7 @@
 // reflection-based slow path — hashed on every draw. Neither dictionary is ever
 // evicted and no VAO is ever deleted, so both leak for the process lifetime.
 
-use openstack_gfx::gfx_texture::DXGI_FORMAT;
+use openx_gfx::gfx_texture::DXGI_FORMAT;
 
 /// C# `OnDiskBufferData.RenderSlotType`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]

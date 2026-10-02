@@ -1,4 +1,4 @@
-// PORT-SOURCE: Vfx/OpenStack.Vfx/Disc.cs (Blob / DiscSector / Sbi / Records)
+// PORT-SOURCE: Vfx/OpenX.Vfx/Disc.cs (Blob / DiscSector / Sbi / Records)
 // PORT-SHA: SHARED
 // PORT-SHARED: yes  (extracted from the source file above, which has its own .rs)
 // PORT-STATUS: done

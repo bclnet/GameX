@@ -1,8 +1,8 @@
 # Porting GameX (.NET) to Rust
 
-Companion to the OpenStack port. GameX **depends on** that library — its
+Companion to the OpenX port. GameX **depends on** that library — its
 `.csproj` files reference it as a sibling checkout
-(`..\..\..\OpenStack\dotnet\...`), so the crate wiring here points at the crates
+(`..\..\..\OpenX\dotnet\...`), so the crate wiring here points at the crates
 from that port.
 
 | | |
@@ -81,7 +81,7 @@ the output.
 
 ## Naming and layout
 
-Same conventions as the OpenStack port: one `.rs` per `.cs`, folder structure
+Same conventions as the OpenX port: one `.rs` per `.cs`, folder structure
 mirrored, `PORT_MAP.tsv` + per-file `PORT-SHA` headers + `sync-check.sh` for
 drift.
 
@@ -133,7 +133,7 @@ The dependency graph is clean and layered:
 
 `_LIB` (Collada, Doboz, Blast, Salsa20, LZO, LZSS, XCompress, OodleLZ, LZF) and
 `BlizzardProtoDatabase.cs` should be crate substitutions rather than ports, on
-the same reasoning as the OpenStack wrapper crates — see that port's
+the same reasoning as the OpenX wrapper crates — see that port's
 `PORTING.md`. `prost` covers the protobuf; the compression codecs have
 established Rust equivalents except Doboz and XCompress, which need a decision.
 
@@ -212,7 +212,7 @@ var family = familyType != null
 ```
 
 Same shape for `gameType`, `engineType`, `pakFileType`. Rust has no `Activator`,
-and this is precisely what `openstack_polyio`'s `TypeRegistry` was built for
+and this is precisely what `openx_poly`'s `TypeRegistry` was built for
 during the library port — so it is reused rather than reinvented.
 
 Worth flagging on its own merits: `Type.GetType` + `Activator.CreateInstance`
@@ -298,7 +298,7 @@ guard makes those lines **vanish from the archive** rather than error.
 0..1 floats everywhere else in the type (`AsColor` multiplies by 255), so a byte
 of 255 becomes 255.0 and `AsColor` computes 255 × 255, which
 `Color.FromArgb` rejects. Identical to the `Colorf(uint, Format.ARGB32)` defect
-in the OpenStack port, and `AsColor` also casts without clamping.
+in the OpenX port, and `AsColor` also casts without clamping.
 
 ### Two open questions for someone with domain knowledge
 
@@ -318,7 +318,7 @@ in the OpenStack port, and `AsColor` also casts without clamping.
   read and stored, consumed by nothing: 24 bytes per skinned vertex.
 * `UnknownTransform.CanTransformAsset` returns constant `false` in front of a
   `TransformAsset` that always throws — the same arrangement as
-  `Platform_Test` in the OpenStack port.
+  `Platform_Test` in the OpenX port.
 * `Assembly.cs` grants `InternalsVisibleTo("GameX.Uncore")`, a *runtime*
   dependency rather than a test project, so core is exposing internals across a
   real boundary.
@@ -363,7 +363,7 @@ namespace they imported: `Casc/KeyService.cs`,
 `Families/GameX.IW/Formats/FastFile.cs`, and CASC's BLTE 'E' block path. Neither
 has tests.
 
-Same pattern as the three disagreeing binary16 implementations in the OpenStack
+Same pattern as the three disagreeing binary16 implementations in the OpenX
 port, except this is cryptography: if the two differ anywhere — a rotation
 constant, a counter width, block-boundary handling — then whether a file
 decrypts correctly depends on an import. **Diff them before deleting either.** A
@@ -455,7 +455,7 @@ consumed, which is correct only while nothing else moves the underlying stream.
 Two `NestedStream`s over one source silently interleave, and each reports a
 plausible `Position` throughout. Nothing in the type prevents constructing them.
 
-Ported with the same decision as `PartialInputStream` in the OpenStack port:
+Ported with the same decision as `PartialInputStream` in the OpenX port:
 ownership is explicit in the type. `NestedStream` owns its source;
 `SharedSource` is the borrowing variant, so the sequencing that the C#'s
 `leaveOpen` bool leaves implicit becomes a borrow the compiler checks. An
@@ -468,7 +468,7 @@ and pass; the `Memory<byte>` and array read paths use *different*
 end-of-stream conditions (`remainingBytes < 0`, which its own arithmetic cannot
 reach, versus `count <= 0`); and a short read from the source ends the window
 early and silently, leaving the view claiming data remains — the same shape as
-`Util.CopyFile` in the OpenStack port.
+`Util.CopyFile` in the OpenX port.
 
 ### Smaller CASC notes
 
@@ -500,7 +500,7 @@ URL literal would have been misreported** — and this port is full of them.
 Rewritten as a single-pass tokenizer handling line comments, nested block
 comments (Rust allows nesting), raw strings (`r#"..."#`), byte strings, char
 literals and lifetimes. Both ports re-verify clean: 52 GameX files and all 224
-OpenStack files.
+OpenX files.
 
 That is the second bug in this checker (the first was a missing `DOTALL` that
 desynced on multi-line strings). A tool that reports "0 imbalanced" is only

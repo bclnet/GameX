@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Collision/CollisionInfo.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Collision/CollisionInfo.cs
 // PORT-SHA: d9fca8f5123de070
 // PORT-STATUS: todo (78 LOC in C#)
 //

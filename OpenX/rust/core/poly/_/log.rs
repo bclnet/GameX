@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack.Polyfills/Log.cs
+// PORT-SOURCE: Core/OpenX.Polyfills/Log.cs
 // PORT-SHA: 6b9de09a36e10c69
 // PORT-STATUS: done
 //

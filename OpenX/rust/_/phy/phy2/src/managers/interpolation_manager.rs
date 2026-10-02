@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Managers/InterpolationManager.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Managers/InterpolationManager.cs
 // PORT-SHA: 5d9c2f021f4e56d1
 // PORT-STATUS: todo (260 LOC in C#)
 //

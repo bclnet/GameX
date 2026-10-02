@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Extensions/QueueExtensions.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Extensions/QueueExtensions.cs
 // PORT-SHA: ae498714494a9c73
 // PORT-STATUS: todo (70 LOC in C#)
 //

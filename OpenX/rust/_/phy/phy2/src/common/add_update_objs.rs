@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/AddUpdateObjs.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/AddUpdateObjs.cs
 // PORT-SHA: 0fca602e43e2a6ae
 // PORT-STATUS: todo (16 LOC in C#)
 //

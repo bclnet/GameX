@@ -1,4 +1,4 @@
-// PORT-SOURCE: Vfx/OpenStack.Vfx/Disc.cs
+// PORT-SOURCE: Vfx/OpenX.Vfx/Disc.cs
 // PORT-SHA: bc289b4021d9735a
 // PORT-STATUS: done
 //
@@ -18,7 +18,7 @@
 // WHAT IS NOT, AND WHY. The rest divides into two groups:
 //
 //   1. **`ChdFormat` (624 lines, 167 FFI/crypto references)** depends on
-//      `OpenStack.ExtServices.LibChd`, the P/Invoke layer to native libchdr —
+//      `OpenX.ExtServices.LibChd`, the P/Invoke layer to native libchdr —
 //      which is itself unported (see `ext_services/lib_chd.rs`, where the
 //      decision is to use `chd-rs` rather than hand-translate 148 FFI
 //      declarations). This region cannot be ported before that choice is made.

@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/SortCell.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/SortCell.cs
 // PORT-SHA: bc07f49d560fad0c
 // PORT-STATUS: todo (70 LOC in C#)
 //

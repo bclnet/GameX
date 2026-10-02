@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Managers/StickyManager.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Managers/StickyManager.cs
 // PORT-SHA: 62dd9726ad3a43f5
 // PORT-STATUS: todo (135 LOC in C#)
 //

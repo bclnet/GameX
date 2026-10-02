@@ -27,8 +27,8 @@ NO_RUST_ENGINE = """//
 {alternatives}
 //
 // The abstraction it plugs into is already ported and engine-agnostic:
-// implement `openstack_gfx::gfx::Backend` plus the `TextureBuilder` /
-// `MaterialBuilder` / `ShaderBuilder` traits, and `openstack::platform::Platform`.
+// implement `openx_gfx::gfx::Backend` plus the `TextureBuilder` /
+// `MaterialBuilder` / `ShaderBuilder` traits, and `openx::platform::Platform`.
 // Nothing above this layer needs to change.
 //
 // Kept as a file so the 1:1 mapping holds and `sync-check.sh` tracks drift."""
@@ -40,7 +40,7 @@ SKELETON = """//
 // backend would take and does not fill it in, so there is no behaviour to
 // translate.
 //
-// When this backend is built, implement `openstack_gfx::gfx::Backend` and the
+// When this backend is built, implement `openx_gfx::gfx::Backend` and the
 // builder traits directly in Rust against {binding} — that is a smaller job
 // than porting an empty scaffold and then filling it in twice.
 //
@@ -74,17 +74,17 @@ TEST_PROJECT = """//
 // side adds tests worth carrying over."""
 
 CRATES = {
-    "openstack-platform-stride": NO_RUST_ENGINE.format(
+    "openx-engine-stride": NO_RUST_ENGINE.format(
         engine="Stride", kind="game engine",
         alternatives="//   * `bevy` — a full ECS engine, the closest match in scope.\n"
                      "//   * `wgpu` + `winit` — if only rendering and windowing are wanted."),
-    "openstack-wpf-stride": NO_RUST_ENGINE.format(
+    "openx-wpf-stride": NO_RUST_ENGINE.format(
         engine="Stride (embedded in WPF)", kind="game engine hosted in a .NET-only UI framework",
         alternatives="//   * `bevy` or `wgpu` for the engine half.\n"
                      "//   * `egui`, `iced`, or `tauri` for the UI half.\n"
                      "//   Note this crate needs *both*, which is why it is the least portable\n"
                      "//   thing in the solution."),
-    "openstack-wpf-control": NO_RUST_ENGINE.format(
+    "openx-wpf-control": NO_RUST_ENGINE.format(
         engine="WPF", kind="UI framework (Windows-only, and not available outside .NET)",
         alternatives="//   * `egui` — immediate-mode, easiest to embed next to a GL context.\n"
                      "//   * `iced` or `slint` — retained-mode, closer to WPF's model.\n"
@@ -93,14 +93,14 @@ CRATES = {
                      "//   of Win32 and D3D-GL sharing glue that exists purely to put a GL\n"
                      "//   surface inside a WPF window. None of it has a reason to exist in a\n"
                      "//   Rust application, which would use `winit` and own its own surface."),
-    "openstack-platform-unity": NO_RUST_ENGINE.format(
+    "openx-engine-unity": NO_RUST_ENGINE.format(
         engine="Unity", kind="engine whose scripting layer is C#",
         alternatives="//   * Nothing directly. Rust can build Unity *native plugins* (a C ABI\n"
                      "//     library Unity calls into), but the `MonoBehaviour`/`UnityEngine`\n"
                      "//     code in this crate is exactly the part that must stay C#.\n"
                      "//   * The right split is: keep this crate in C#, and have it call into a\n"
-                     "//     Rust `cdylib` built from the ported `openstack-*` crates."),
-    "openstack-platform-mg": NO_RUST_ENGINE.format(
+                     "//     Rust `cdylib` built from the ported `openx-*` crates."),
+    "openx-engine-mg": NO_RUST_ENGINE.format(
         engine="MonoGame", kind="game framework",
         alternatives="//   * `bevy` — closest in scope.\n"
                      "//   * `wgpu` + `winit` — for the graphics/windowing subset.\n"
@@ -108,77 +108,77 @@ CRATES = {
                      "//   SolidColorTextureCache) is generic 2D-batching logic that would\n"
                      "//   transfer, but it is written against `Microsoft.Xna.Framework.Graphics`\n"
                      "//   types throughout."),
-    "openstack-platform-o3de": SKELETON.format(
-        proj="OpenStack.Platform.O3de",
+    "openx-engine-o3de": SKELETON.format(
+        proj="OpenX.Engine.O3de",
         detail="104 live lines, with 5 of its ~22 members throwing "
                "`NotImplementedException` and the rest holding cast fields. There is no O3DE "
                "binding — no package reference, no P/Invoke, no `using` outside the BCL.",
         binding="O3DE's C++ API via `bindgen`, or a Rust engine instead"),
-    "openstack-platform-ogre": SKELETON.format(
-        proj="OpenStack.Platform.Ogre",
+    "openx-engine-ogre": SKELETON.format(
+        proj="OpenX.Engine.Ogre",
         detail="105 live lines, 6 members throwing `NotImplementedException`, and no Ogre "
                "binding of any kind — no package reference, no P/Invoke.",
         binding="Ogre's C++ API via `bindgen`, or `wgpu` directly"),
-    "openstack-platform-unreal": SKELETON.format(
-        proj="OpenStack.Platform.Unreal",
+    "openx-engine-unreal": SKELETON.format(
+        proj="OpenX.Engine.Unreal",
         detail="115 live lines and **19** `NotImplementedException` throws across ~35 "
                "members — nearly every member. No Unreal binding exists; Unreal's API is C++ "
                "and this project never reaches it.",
         binding="Unreal's C++ API (which in practice means writing the plugin in C++)"),
-    "openstack-platform-eginx": SKELETON.format(
-        proj="OpenStack.Platform.EginX",
+    "openx-engine-eginx": SKELETON.format(
+        proj="OpenX.Engine.EginX",
         detail="260 live lines of scaffolding for the in-house 'Egin' renderer, with no "
                "graphics API behind it — `Eng.cs` is a class skeleton and the `Gfx/` files are "
                "cast-and-forward shims.",
-        binding="`wgpu`, once `openstack-gfx-egin`'s renderer half has a target"),
-    "openstack-platform-vk": SKELETON.format(
-        proj="OpenStack.Platform.Vk",
+        binding="`wgpu`, once `openx-gfx-egin`'s renderer half has a target"),
+    "openx-engine-vk": SKELETON.format(
+        proj="OpenX.Engine.Vk",
         detail="**3 live lines** — a namespace declaration and an empty class. The "
                "`OpenTK.NetStandard` package reference is never used.",
         binding="`ash` (thin Vulkan bindings) or `vulkano` (safe wrapper)"),
-    "openstack-platform-godot": SKELETON.format(
-        proj="OpenStack.Platform.Godot",
+    "openx-engine-godot": SKELETON.format(
+        proj="OpenX.Engine.Godot",
         detail="468 live lines that reference Godot types (`XShader`) without any Godot "
                "package reference — so it does not compile as given, the same defect as `phy2`.",
         binding="`godot` (gdext), which is a first-class Rust binding for Godot 4"),
-    "openstack-platform-opengl": VIABLE_DEFERRED.format(
+    "openx-engine-opengl": VIABLE_DEFERRED.format(
         binding="`glow` (GL bindings), `glutin`/`winit` (context and windowing), "
                 "or `wgpu` if a modern API is acceptable",
         size="This is the largest platform crate: 2,453 live lines across 5 files, of which "
              "`Gfx/OpenGL_Render.cs` (1,004) and `Egin/Gl_Render.cs` (791) are the real work."),
-    "openstack-platform-sdl": VIABLE_DEFERRED.format(
+    "openx-engine-sdl": VIABLE_DEFERRED.format(
         binding="`sdl2` or `sdl3-sys`",
         size="Small: 107 live lines across 3 files, mostly window and event plumbing."),
-    "openstack-platform-tests": TEST_PROJECT.format(
+    "openx-engine-tests": TEST_PROJECT.format(
         detail="Its `Gl_Render`/`Gl_Renderer`/`Gl` tests exercise the OpenGL backend, which "
                "is itself not ported yet — so there is nothing here to test against."),
-    "openstack-gfx-tests": TEST_PROJECT.format(
+    "openx-gfx-tests": TEST_PROJECT.format(
         detail="**These tests were valuable and have been mined.** The DDS header vectors from "
                "`Gfx_Texture.cs` and the camera/bone assertions from `Egin/Gfx_Render.cs` and "
-               "`Egin/Gfx_Animate.cs` are now test cases in `openstack-gfx`'s `gfx_texture` and "
-               "`openstack-gfx-egin`'s `egin_render`/`egin_animate` — the only external "
+               "`Egin/Gfx_Animate.cs` are now test cases in `openx-gfx`'s `gfx_texture` and "
+               "`openx-gfx-egin`'s `egin_render`/`egin_animate` — the only external "
                "verification available anywhere in this port. See PORTING.md."),
-    "openstack-aix-tests": TEST_PROJECT.format(
+    "openx-aix-tests": TEST_PROJECT.format(
         detail="One test method with an empty body, plus a `[assembly: Parallelize]` attribute "
                "(Rust's harness is parallel by default). Nothing to carry over."),
-    "openstack-phy-tests": TEST_PROJECT.format(
+    "openx-phy-tests": TEST_PROJECT.format(
         detail="One test method with an empty body, plus a `[assembly: Parallelize]` attribute. "
                "Nothing to carry over."),
 }
 
 # aix and phy are 11-line stubs; handled separately for a precise note.
 TINY = {
-    "openstack-aix": """//
+    "openx-aix": """//
 // NOT PORTED — 11 live lines: a namespace declaration and an empty `Aix` class
 // with no members. The project exists to reserve the name; there is no AI layer
 // implemented yet.
 //
 // Kept as a file so the 1:1 mapping holds and `sync-check.sh` notices when it
 // grows content.""",
-    "openstack-phy": """//
+    "openx-phy": """//
 // NOT PORTED — 11 live lines: a namespace declaration and an empty `Phy` class
 // with no members. This is the placeholder for a physics abstraction; the actual
-// physics lives in `OpenStack.Phy2`, which does not compile (see PORTING.md).
+// physics lives in `OpenX.Phy2`, which does not compile (see PORTING.md).
 //
 // Kept as a file so the 1:1 mapping holds and `sync-check.sh` notices when it
 // grows content.""",

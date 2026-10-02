@@ -1,4 +1,4 @@
-// PORT-SOURCE: Platforms/OpenStack.Platform.Tests/Assembly.cs
+// PORT-SOURCE: Engines/OpenX.Engine.Tests/Assembly.cs
 // PORT-SHA: b3c4f035666d2f36
 // PORT-STATUS: done
 //

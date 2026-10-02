@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Polygon.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Polygon.cs
 // PORT-SHA: 636aeb4a3d0aa006
 // PORT-STATUS: todo (450 LOC in C#)
 //

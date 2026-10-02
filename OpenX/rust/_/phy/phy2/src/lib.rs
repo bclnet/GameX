@@ -1,8 +1,8 @@
-//! `openstack-phy2` — 1:1 port of .NET project `OpenStack.Phy2`.
+//! `openx-phy2` — 1:1 port of .NET project `OpenX.Phy2`.
 //!
 //! # This project does not compile in C#
 //!
-//! `OpenStack.Phy2` is a mid-migration copy of ACE (Asheron's Call Emulator)
+//! `OpenX.Phy2` is a mid-migration copy of ACE (Asheron's Call Emulator)
 //! server physics. **107 of its 164 files reference 21 namespaces that exist
 //! nowhere in the solution** — `ACE.Entity.Enum`, `ACE.Server.Physics.Common`,
 //! `ACE.DatLoader.Entity`, and so on — and the `.csproj` has no

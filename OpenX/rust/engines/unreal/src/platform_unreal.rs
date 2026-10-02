@@ -1,4 +1,4 @@
-// PORT-SOURCE: Platforms/OpenStack.Platform.Unreal/Platform_Unreal.cs
+// PORT-SOURCE: Engines/OpenX.Engine.Unreal/Platform_Unreal.cs
 // PORT-SHA: 47f3a900ee3207a2
 // PORT-STATUS: done
 //
@@ -9,7 +9,7 @@
 // manager slots the backend fills. None of it touches Unreal — 19 of its ~35 members throw `NotImplementedException`.
 //
 
-use openstack::platform::{Caps, Platform};
+use openx::platform::{Caps, Platform};
 
 use crate::slots::{GfxSlots, SfxSlots};
 

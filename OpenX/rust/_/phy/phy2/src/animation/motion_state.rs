@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Animation/MotionState.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Animation/MotionState.cs
 // PORT-SHA: 3271f58e736b1f99
 // PORT-STATUS: todo (83 LOC in C#)
 //

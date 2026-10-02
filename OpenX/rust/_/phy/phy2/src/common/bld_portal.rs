@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/BldPortal.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/BldPortal.cs
 // PORT-SHA: cca976d27a6a1c20
 // PORT-STATUS: todo (62 LOC in C#)
 //

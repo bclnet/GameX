@@ -1,5 +1,5 @@
 [package]
-name = "gamex-platform-eginx"
+name = "gamex-engine-eginx"
 version = "0.1.0"
 edition.workspace = true
 rust-version.workspace = true
@@ -7,4 +7,4 @@ license.workspace = true
 
 [dependencies]
 gamex = { path = "../../core/gamex" }
-openstack-platform-eginx = { path = "../../../OpenStack/rust/platforms/eginx" }
+openx-engine-eginx = { path = "../../../OpenX/rust/engines/eginx" }

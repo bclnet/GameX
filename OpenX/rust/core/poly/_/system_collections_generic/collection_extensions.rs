@@ -1,4 +1,4 @@
-// PORT-SOURCE: Core/OpenStack.Polyfills/System.Collections.Generic/CollectionExtensions.cs
+// PORT-SOURCE: Core/OpenX.Polyfills/System.Collections.Generic/CollectionExtensions.cs
 // PORT-SHA: dc167f5211f8b7fb
 // PORT-STATUS: done
 //

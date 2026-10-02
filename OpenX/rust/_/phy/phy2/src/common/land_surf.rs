@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Common/LandSurf.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Common/LandSurf.cs
 // PORT-SHA: 00c2407fd1672ed9
 // PORT-STATUS: todo (115 LOC in C#)
 //

@@ -1,4 +1,4 @@
-// PORT-SOURCE: Phy/OpenStack.Phy2/Combat/TargetInfo.cs
+// PORT-SOURCE: Phy/OpenX.Phy2/Combat/TargetInfo.cs
 // PORT-SHA: b70f5d29ec4b361b
 // PORT-STATUS: todo (58 LOC in C#)
 //

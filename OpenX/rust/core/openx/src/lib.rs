@@ -1,4 +1,4 @@
-//! `openstack` — 1:1 port of .NET project `OpenStack`.
+//! `openx` — 1:1 port of .NET project `OpenX`.
 //!
 //! The integration crate: it depends on `polyio`, `polyfills`, `gfx`, `sfx`, and
 //! `vfx`, all of which are ported. Module layout mirrors the C# file layout; see

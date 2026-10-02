@@ -1,4 +1,4 @@
-// PORT-SOURCE: Gfx/OpenStack.Gfx.Egin/Egin_Render.cs
+// PORT-SOURCE: Gfx/OpenX.Gfx.Egin/Egin_Render.cs
 // PORT-SHA: 8ed891fd57d72b60
 // PORT-STATUS: done
 //
@@ -66,7 +66,7 @@ impl Aabb {
     ///
     /// Note the bounds are **half-open**: `>= min` but `< max`, so a point on
     /// the max face is outside. That is deliberate for voxel-style indexing and
-    /// differs from `openstack_gfx`'s `BoundingBox::contains`, which is closed
+    /// differs from `openx_gfx`'s `BoundingBox::contains`, which is closed
     /// on both sides.
     #[inline]
     pub fn contains_point(&self, p: Vec3) -> bool {
@@ -366,7 +366,7 @@ pub trait CameraViewport {
 mod tests {
     use super::*;
 
-    // The expected values below come from `OpenStack.GfxTests/Egin/Gfx_Render.cs`
+    // The expected values below come from `OpenX.GfxTests/Egin/Gfx_Render.cs`
     // — the C# test suite's own assertions. Matching them means this port agrees
     // with the C# numerically, not just structurally, and it pins the
     // row-major/column-major mapping documented at the top of this file.

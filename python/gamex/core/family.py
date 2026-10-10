@@ -103,7 +103,7 @@ def createFileSystem(vfxType: str, path: SystemPath, subPath: str, host: str = N
     baseRoot = path.root if not subPath else os.path.join(path.root, subPath)
     if baseRoot.endswith('/') or baseRoot.endswith('\\'): baseRoot = baseRoot[:-1]
     basePaths = path.paths if path else None
-    vfx = DirectoryFileSystem(baseRoot, next(iter(basePaths), None) if path else None) if not basePaths or len(basePaths) <= 1 else \
+    vfx = DirectoryFileSystem(baseRoot, next(iter(basePaths or []), None)) if not basePaths or len(basePaths) <= 1 else \
         AggregateFileSystem([DirectoryFileSystem(baseRoot, s).next() for s in basePaths])
     return vfx.next()
 
@@ -218,7 +218,7 @@ games: {[x for x in self.games.values()]}'''
         vfxType = game.vfxType
         vfx = \
             (createFileSystem(vfxType, found, subPath) if found else None) if uri.scheme == 'game' else \
-            (createFileSystem(vfxType, SystemPath(uri.path, None), subPath) if uri.path else None) if uri.scheme == 'file' else \
+            (createFileSystem(vfxType, SystemPath(uri.path, None, None), subPath) if uri.path else None) if uri.scheme == 'file' else \
             (createFileSystem(vfxType, found, subPath, uri) if uri.netloc else None) if uri.scheme.startswith('http') else None
         if not vfx:
             if throwOnError: raise Exception(f'{game.id}: unable to find game')

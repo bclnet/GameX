@@ -122,7 +122,7 @@ static class Store_Blizzard {
             // mac paths
             string[] home = [Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "/Users/Shared"];
             string[] search = ["Battle.net/Agent"];
-            paths = search.SelectMany(x => search, (s, h) => Path.Join(h, s, "data"));
+            paths = home.SelectMany(h => search, (h, s) => Path.Join(h, s, "data"));
         }
         else throw new PlatformNotSupportedException();
         return paths.FirstOrDefault(Directory.Exists);
@@ -175,18 +175,18 @@ static class Store_Epic {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
             var home = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
             string[] search = [@"Epic\EpicGamesLauncher"];
-            paths = search.Select(path => Path.Join(home, path, "Sbi"));
+            paths = search.Select(path => Path.Join(home, path, "Data"));
         }
         else if (RuntimeInformation.OSDescription.StartsWith("android-")) return null;
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
             var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             string[] search = ["Epic/EpicGamesLauncher"];
-            paths = search.Select(path => Path.Join(home, path, "Sbi"));
+            paths = search.Select(path => Path.Join(home, path, "Data"));
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) {
             string[] home = [Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "/Users/Shared"];
             string[] search = ["Epic/EpicGamesLauncher"];
-            paths = search.SelectMany(x => search, (s, h) => Path.Join(h, s, "Sbi"));
+            paths = home.SelectMany(h => search, (h, s) => Path.Join(h, s, "Data"));
         }
         else throw new PlatformNotSupportedException();
         return paths.FirstOrDefault(Directory.Exists);
@@ -195,7 +195,7 @@ static class Store_Epic {
         string dbPath;
         var path = Paths;
         var root = GetPath();
-        if (root == null || !File.Exists(dbPath = Path.Combine(root, "Manifests"))) return;
+        if (root == null || !Directory.Exists(dbPath = Path.Combine(root, "Manifests"))) return;
         // # query games
         foreach (var s in Directory.EnumerateFiles(dbPath).Where(s => s.EndsWith(".item"))) {
             // add appPath if exists
@@ -230,7 +230,7 @@ static class Store_Gog {
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) {
             string[] home = [Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "/Users/Shared"];
             string[] search = ["GOG.com/Galaxy"];
-            paths = search.SelectMany(x => search, (s, h) => Path.Join(h, s, "Storage"));
+            paths = home.SelectMany(h => search, (h, s) => Path.Join(h, s, "Storage"));
 
         }
         else throw new PlatformNotSupportedException();
@@ -300,9 +300,9 @@ static class Store_Steam {
                 index = firstEnd + 1;
                 var first = region.Substring(firstStart + 1, firstEnd - firstStart - 1);
                 int secondStart = region.IndexOf('"', index), secondOpen = region.IndexOf('{', index);
-                if (secondStart == -1)
+                if (secondStart == -1 && secondOpen == -1)
                     Get.Add(first, null);
-                else if (secondOpen == -1 || secondStart < secondOpen) {
+                else if (secondOpen == -1 || (secondStart != -1 && secondStart < secondOpen)) {
                     var secondEnd = region.IndexOf('"', secondStart + 1);
                     index = secondEnd + 1;
                     var second = region.Substring(secondStart + 1, secondEnd - secondStart - 1);
@@ -368,7 +368,7 @@ static class Store_Steam {
             // mac paths
             string[] home = [Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "/Users/Shared"];
             string[] search = ["Library/Application Support/Steam"];
-            paths = search.SelectMany(x => search, (s, h) => Path.Join(h, s));
+            paths = home.SelectMany(h => search, (h, s) => Path.Join(h, s));
         }
         else throw new PlatformNotSupportedException();
         return paths.FirstOrDefault(Directory.Exists);
@@ -414,7 +414,7 @@ static class Store_Ubisoft {
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
             string[] home = [Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "/Users/Shared"];
             string[] search = ["??"];
-            paths = search.SelectMany(x => search, (s, h) => Path.Join(h, s));
+            paths = home.SelectMany(h => search, (h, s) => Path.Join(h, s));
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) {
             var home = "/Users/Shared";

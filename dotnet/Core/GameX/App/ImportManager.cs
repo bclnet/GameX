@@ -44,7 +44,7 @@ public static class ImportManager {
         if (from == 0) await source.ArcBinary.Write(source, w, "Header");
 
         // write files
-        Parallel.For(0, source.Files.Count, new ParallelOptions { MaxDegreeOfParallelism = MaxDegreeOfParallelism }, async index => {
+        await ParallelX.ForAsync(0, source.Files.Count, new ParallelOptions { MaxDegreeOfParallelism = MaxDegreeOfParallelism }, async (index, ct) => {
             var file = source.Files[index].Fix();
             var newPath = Path.Combine(filePath, file.Path);
 

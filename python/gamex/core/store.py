@@ -234,9 +234,9 @@ class store_steam:
                 first = region[firstStart + 1:firstEnd]
                 secondStart = region.find('"', index)
                 secondOpen = region.find('{', index)
-                if secondStart == -1:
+                if secondStart == -1 and secondOpen == -1:
                     self.get[first] = None
-                elif secondOpen == -1 or secondStart < secondOpen:
+                elif secondOpen == -1 or (secondStart != -1 and secondStart < secondOpen):
                     secondEnd = region.find('"', secondStart + 1)
                     index = secondEnd + 1
                     second = region[secondStart + 1:secondEnd]

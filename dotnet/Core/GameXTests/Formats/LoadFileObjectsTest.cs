@@ -43,7 +43,7 @@ public class LoadFileObjectsTest {
         if (source is not BinaryArchive arc) throw new NotSupportedException();
 
         // write files
-        Parallel.For(0, arc.Files.Count, new ParallelOptions { MaxDegreeOfParallelism = 1 }, async index => {
+        return ParallelX.ForAsync(0, arc.Files.Count, new ParallelOptions { MaxDegreeOfParallelism = 1 }, async (index, ct) => {
             var file = arc.Files[index].Fix();
 
             // extract arc
@@ -62,7 +62,5 @@ public class LoadFileObjectsTest {
             }
             else if (obj is IDisposable disposable) disposable.Dispose();
         });
-
-        return Task.CompletedTask;
     }
 }

@@ -44,7 +44,7 @@ public static class ExportManager {
         // create directory
         if (!string.IsNullOrEmpty(filePath) && !Directory.Exists(filePath)) Directory.CreateDirectory(filePath);
         // write files
-        Parallel.For(from, source.Files.Count, new ParallelOptions { MaxDegreeOfParallelism = MaxDegreeOfParallelism }, async index => {
+        await ParallelX.ForAsync(from, source.Files.Count, new ParallelOptions { MaxDegreeOfParallelism = MaxDegreeOfParallelism }, async (index, ct) => {
             var file = source.Files[index].Fix();
             if (match != null && !match(file.Path)) return;
             var newPath = filePath != null ? Path.Combine(filePath, file.Path) : null;

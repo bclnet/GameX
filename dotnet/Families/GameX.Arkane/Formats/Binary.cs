@@ -16,7 +16,8 @@ public unsafe class Binary_Danae : ArcBinary<Binary_Danae> {
         #region Encryption
 
         var key = (byte[])source.Game.Key; int keyLength = key.Length, keyIndex = 0;
-        int readInt32(ref byte* b) {
+        int readInt32(ref byte* b, byte* end) {
+            if (b + 4 > end) throw new FormatException("truncated FAT");
             var p = b;
             *(p + 0) = (byte)(*(p + 0) ^ key[keyIndex++]); if (keyIndex >= keyLength) keyIndex = 0;
             *(p + 1) = (byte)(*(p + 1) ^ key[keyIndex++]); if (keyIndex >= keyLength) keyIndex = 0;
@@ -25,9 +26,10 @@ public unsafe class Binary_Danae : ArcBinary<Binary_Danae> {
             b += 4;
             return *(int*)p;
         }
-        string readString(ref byte* b) {
+        string readString(ref byte* b, byte* end) {
             var p = b;
             while (true) {
+                if (p >= end) throw new FormatException("truncated FAT");
                 *p = (byte)(*p ^ key[keyIndex++]); if (keyIndex >= keyLength) keyIndex = 0;
                 if (*p == 0) break;
                 p++;
@@ -49,18 +51,18 @@ public unsafe class Binary_Danae : ArcBinary<Binary_Danae> {
 
         // while there are bytes
         fixed (byte* _ = fatBytes) {
-            byte* c = _, end = _ + fatSize;
+            byte* c = _, end = _ + fatBytes.Length;
             while (c < end) {
-                var dirPath = readString(ref c).Replace('\\', '/');
-                var numFiles = readInt32(ref c);
+                var dirPath = readString(ref c, end).Replace('\\', '/');
+                var numFiles = readInt32(ref c, end);
                 for (var i = 0; i < numFiles; i++) {
                     // get file
                     var file = new FileSource {
-                        Path = dirPath + readString(ref c).Replace('\\', '/'),
-                        Offset = readInt32(ref c),
-                        Compressed = readInt32(ref c),
-                        FileSize = readInt32(ref c),
-                        PackedSize = readInt32(ref c),
+                        Path = dirPath + readString(ref c, end).Replace('\\', '/'),
+                        Offset = readInt32(ref c, end),
+                        Compressed = readInt32(ref c, end),
+                        FileSize = readInt32(ref c, end),
+                        PackedSize = readInt32(ref c, end),
                     };
                     // special case
                     if (file.Path.EndsWith(".ftl", StringComparison.OrdinalIgnoreCase)) file.Compressed = 1;

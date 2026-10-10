@@ -43,7 +43,7 @@ public class LoadFileDataTest {
         if (source is not BinaryArchive arc) throw new NotSupportedException();
 
         // write files
-        Parallel.For(0, arc.Files.Count, new ParallelOptions { /*MaxDegreeOfParallelism = 1*/ }, async index => {
+        return ParallelX.ForAsync(0, arc.Files.Count, new ParallelOptions { /*MaxDegreeOfParallelism = 1*/ }, async (index, ct) => {
             var file = arc.Files[index].Fix();
 
             // extract arc
@@ -57,7 +57,5 @@ public class LoadFileDataTest {
             using var s = await arc.GetData(file);
             s.ReadAllBytes();
         });
-
-        return Task.CompletedTask;
     }
 }

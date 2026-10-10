@@ -57,6 +57,13 @@ Rust: both workspaces resolve, but check per crate (`cargo check -p <crate>`), n
 - Rust: mirrors C# names too (camelCase methods, `ISource`, `I*` traits) with `non_snake_case` allowed; one `.rs` per `.cs`.
 - C# caches keyed on `(ISource source, object path)` rely on reference identity; the Rust equivalent is `openx_poly::core::SourceRef`.
 - Match the surrounding file's density and idiom over general style preferences.
+- Prefer lean code. Don't add defensive checks, validation or hardening the code doesn't already have unless asked; fix the bug in front of you and stop.
+
+## Known, accepted exceptions
+
+Don't fix or report these:
+
+- **Archive paths aren't sanitized.** `ExportManager`/`ImportManager` (C#) and `exportManager.py` combine archive entry names with the output folder unchecked, so a `../` or rooted entry name can write (or, on import, read) outside that folder. This is deliberate: GameX trusts the archives it opens.
 
 ## Git
 

@@ -1,0 +1,21 @@
+# System files
+Thumbs.db
+*.DS_Store
+.vs/
+.vscode/
+.idea/
+
+# Build output
+bin/
+obj/
+out/
+TestResults/
+
+# User files
+*.user
+*.userprefs
+*.suo
+
+# Merge leftovers
+*.orig
+*.rej

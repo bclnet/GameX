@@ -1,9 +1,16 @@
 import time, asyncio
+from concurrent.futures import ThreadPoolExecutor
 from typing import Iterator, Generic, TypeVar # https://stackoverflow.com/questions/74472798/how-to-define-python-generic-classes
 T = TypeVar('T')
 
 # async def _parallelForTask(f: int, t: int, s: int, c: callable) -> list[object]: [await c(idx) for idx in range(f, t, s)]
 # async def parallelFor(f: int, t: int, o: set, c: callable) -> list[object]: await asyncio.gather(*[_parallelForTask(f, t, i + 1, c) for i in range(o['max'] or 1)])
+
+# runs a coroutine to completion from synchronous code, like C#'s GetAwaiter().GetResult(); inside a running event loop it runs on its own thread
+def runSync(coro: object) -> any:
+    try: asyncio.get_running_loop()
+    except RuntimeError: return asyncio.run(coro)
+    with ThreadPoolExecutor(1) as x: return x.submit(asyncio.run, coro).result()
 
 async def parallelFor(f: int, t: int, options: set, func: callable) -> list[any]:
     semaphore = asyncio.Semaphore(options['max'] or 1)

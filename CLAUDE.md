@@ -46,7 +46,7 @@ Rust: both workspaces resolve, but check per crate (`cargo check -p <crate>`), n
 - **`dotnet/Core/GameX/_Config.cs` and `python/gamex/_config.py`** select a debug family/game via `#define` / options. Also owner-toggled; not a bug.
 - **`import gamex` has side effects** — it runs `init()`, which opens archives.
 - **Store paths are personal** (`E:\AbandonLibrary`, `G:\...`). Game detection in `Core/GameX/Store.cs` only fully works on Windows.
-- **Ports must stay in step.** A change to a format or to core behaviour in C# usually has a Python twin (`python/gamex/families/<Family>/...`) and a Rust file listed in `PORT_MAP.tsv`. Say which ports you did and didn't update.
+- **Every change goes to every language** ([ADR 0001](docs/ADR/0001-ports-stay-one-to-one.md)). A change to C# is made to its Python twin (`python/gamex/...`, `OpenX/python/...`) and its Rust twin (listed in `PORT_MAP.tsv`) in the same change, with the same names and shape. Where a twin doesn't exist yet, say so; list each language as updated, not applicable, or still to do.
 - **Rust port files carry `PORT-SOURCE` / `PORT-SHA` / `PORT-STATUS` headers**; keep them when editing.
 - **Stale tests exist in all three ports.** A test module referring to names that no longer exist is stale, not a signal the code is wrong.
 

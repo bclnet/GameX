@@ -156,7 +156,7 @@ public abstract class Binary : IDisposable {
     /// </summary>
     public Binary Close() {
         Status = Stat.Closing;
-        Closing();
+        Closing().GetAwaiter().GetResult();
         if (Tag is IDisposable s) s.Dispose();
         Status = Stat.Closed;
         return this;
@@ -165,7 +165,7 @@ public abstract class Binary : IDisposable {
     /// <summary>
     /// Closes this instance.
     /// </summary>
-    public virtual void Closing() { }
+    public virtual Task Closing() => Task.CompletedTask;
 
     /// <summary>
     /// Opens this instance.
@@ -175,7 +175,7 @@ public abstract class Binary : IDisposable {
         Status = Stat.Opening;
         var watch = new Stopwatch();
         watch.Start();
-        Opening();
+        Opening().GetAwaiter().GetResult();
         watch.Stop();
         Status = Stat.Opened;
         Log.Info($"Opened[{Game.Id}]: {Name} @ {watch.ElapsedMilliseconds}ms");
@@ -185,7 +185,7 @@ public abstract class Binary : IDisposable {
     /// <summary>
     /// Opens this instance.
     /// </summary>
-    public virtual void Opening() { }
+    public virtual Task Opening() => Task.CompletedTask;
 }
 
 #endregion
@@ -471,7 +471,7 @@ public abstract class BinaryArchive(Archive parent, BinaryState state, ArcBinary
     /// <summary>
     /// Opens this instance.
     /// </summary>
-    public async override void Opening() {
+    public override async Task Opening() {
         await Read(Tag);
         await Process();
         Valid = Files != null;
@@ -481,7 +481,7 @@ public abstract class BinaryArchive(Archive parent, BinaryState state, ArcBinary
     /// <summary>
     /// Closes this instance.
     /// </summary>
-    public override void Closing() {
+    public override Task Closing() {
         Valid = false;
         Count = 0;
         Files = null;
@@ -490,6 +490,7 @@ public abstract class BinaryArchive(Archive parent, BinaryState state, ArcBinary
         FilesByPath = null;
         foreach (var r in Readers.Values) r.Dispose();
         Readers.Clear();
+        return Task.CompletedTask;
     }
 
     /// <summary>
@@ -793,20 +794,22 @@ public class MultiArchive : Archive {
     /// <summary>
     /// Opens this instance.
     /// </summary>
-    public override void Opening() {
+    public override Task Opening() {
         var count = 0;
         foreach (var s in Archives) { s.Open(); count += s.Count; }
         Valid = true;
         Count = count;
+        return Task.CompletedTask;
     }
 
     /// <summary>
     /// Closes this instance.
     /// </summary>
-    public override void Closing() {
+    public override Task Closing() {
         foreach (var s in Archives) s.Close();
         Valid = false;
         Count = 0;
+        return Task.CompletedTask;
     }
 
     /// <summary>
@@ -986,8 +989,8 @@ public class ArcBinary<Self> : ArcBinary where Self : ArcBinary, new() {
             //Open();
         }
 
-        public async override void Opening() { R = new BinaryReader(await Parent.ReadData(File)); Pool = new StaticPool<BinaryReader>(R); base.Opening(); }
-        public override void Closing() { R?.Dispose(); base.Closing(); }
+        public override async Task Opening() { R = new BinaryReader(await Parent.ReadData(File)); Pool = new StaticPool<BinaryReader>(R); await base.Opening(); }
+        public override Task Closing() { R?.Dispose(); return base.Closing(); }
         public override IGenericPool<BinaryReader> GetReader(string path = null, bool pooled = true) => Pool;
     }
 }

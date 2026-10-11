@@ -3,7 +3,7 @@ import sys, os, re, time
 from itertools import groupby
 from enum import Enum, Flag
 from io import BytesIO
-from openx.core import _throw, ISource, EngineX, BinaryReader, GenericPool, SinglePool, StaticPool, IDatabase
+from openx.core import _throw, runSync, ISource, EngineX, BinaryReader, GenericPool, SinglePool, StaticPool, IDatabase
 from gamex.core.meta import FileSource, MetaManager, MetaItem, MetaInfo
 
 # FileOption
@@ -45,21 +45,21 @@ class Binary:
     def __repr__(self): return f'{self.name}#{self.game.id}'
     def close(self) -> None:
         self.status = self.Stat.Closing
-        self.closing()
+        runSync(self.closing())
         self.status = self.Stat.Closed
         return self
-    def closing(self) -> None: pass
+    async def closing(self) -> None: pass
     def open(self) -> None:
         if self.status != self.Stat.Closed: return self
         self.status = self.Stat.Opening
         start = time.time()
-        self.opening()
+        runSync(self.opening())
         end = time.time()
         self.status = self.Stat.Opened
         elapsed = round(end - start, 4)
         print(f'Opened[{self.game.id}]: {self.name} @ {elapsed}ms')
         return self
-    def opening(self) -> None: pass
+    async def opening(self) -> None: pass
 # end::Binary[]
 
 # tag::Archive[]
@@ -139,13 +139,13 @@ class BinaryArchive(Archive):
     
     #endregion
 
-    def opening(self) -> None:
+    async def opening(self) -> None:
         self.read()
         self.process()
         self.valid = self.files != None
         self.count = len(self.filesByPath)
 
-    def closing(self) -> None:
+    async def closing(self) -> None:
         self.valid = False
         self.count = 0
         self.files = None
@@ -292,13 +292,13 @@ class MultiArchive(Archive):
         self.name = name
         self.archives = archives or _throw('Empty archives')
 
-    def opening(self):
+    async def opening(self) -> None:
         count = 0
         for s in self.archives: s.open(); count += s.count
         self.valid = True
         self.count = count
 
-    def closing(self):
+    async def closing(self) -> None:
         for s in self.archives: s.close()
         self.valid = False
         self.count = 0
@@ -396,8 +396,8 @@ class ArcBinaryT(ArcBinary):
             self.file: FileSource = file
             # self.open()
 
-        def opening(self) -> None: self.r = BinaryReader(self.parent.readData(file)); self.pool = StaticPool[BinaryReader](self.r); super().opening()
-        def closing(self) -> None: self.r.__exit__(); super().closing()
+        async def opening(self) -> None: self.r = BinaryReader(self.parent.readData(file)); self.pool = StaticPool[BinaryReader](self.r); await super().opening()
+        async def closing(self) -> None: self.r.__exit__(); await super().closing()
         def getReader(path: str, pooled: bool) -> IGenericPool[BinaryReader]: return self.pool
 
         # def read(self, r: BinaryReader, tag: object = None):

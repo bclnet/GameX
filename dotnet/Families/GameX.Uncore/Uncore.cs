@@ -30,8 +30,8 @@ public class UncoreArchive : Archive {
     #region Base
 
     //public override void Dispose() { }
-    public override void Closing() { }
-    public override void Opening() { }
+    public override Task Closing() => Task.CompletedTask;
+    public override Task Opening() => Task.CompletedTask;
     public override bool Contains(object path) => false;
     public override (Archive, FileSource) GetSource(object path, bool throwOnError = true) => throw new NotImplementedException();
     public override Task<Stream> GetData(object path, object option = default, bool throwOnError = true) => throw new NotImplementedException();

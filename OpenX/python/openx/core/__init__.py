@@ -1,7 +1,7 @@
 from openx.core.poly.find import findType
 import openx.core.poly.log as log
 from openx.core.poly.poly import Byte2, Int2, Byte3, Int3, Float3, Float4
-from openx.core.poly.pool import parallelFor, AsyncCoroutineQueue, CoroutineQueue, IGenericPool, GenericPool, SinglePool, StaticPool
+from openx.core.poly.pool import runSync, parallelFor, AsyncCoroutineQueue, CoroutineQueue, IGenericPool, GenericPool, SinglePool, StaticPool
 from openx.core.poly.reader import BinaryReader
 # from openx.core.poly.system import getExtrema, changeRange
 import openx.core.poly.system as system
@@ -16,7 +16,7 @@ __all__ = [
     'findType',
     'log',
     'Byte2', 'Int2', 'Byte3', 'Int3', 'Float3', 'Float4',
-    'parallelFor', 'AsyncCoroutineQueue', 'CoroutineQueue', 'IGenericPool', 'GenericPool', 'SinglePool', 'StaticPool',
+    'runSync', 'parallelFor', 'AsyncCoroutineQueue', 'CoroutineQueue', 'IGenericPool', 'GenericPool', 'SinglePool', 'StaticPool',
     'BinaryReader',
     'system',
     'unsafe',

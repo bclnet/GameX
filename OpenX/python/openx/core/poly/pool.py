@@ -60,7 +60,7 @@ class SinglePool(GenericPool, Generic[T]):
     def release(self, item: T) -> None: self.reset and self.reset(item); self.single.__exit__(None, None, None)
 
 class StaticPool(GenericPool, Generic[T]):
-    def __init__(self, single: T, reset: callable = None): super().__init__(None, reset); self.static: T = static
+    def __init__(self, static: T, reset: callable = None): super().__init__(None, reset); self.static: T = static
     def get(self) -> None: return self.static
     def release(self, item: T) -> None: self.reset and self.reset(item)
 

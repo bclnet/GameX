@@ -123,7 +123,7 @@ class Binary_Void(ArcBinaryT):
                 if not path.endswith('.index'): continue
                 files.append(FileSource(
                     path = path,
-                    arc = self.SubArchive(self, None, source, source.game, source.fileSystem, path)))
+                    arc = self.SubArchive(source, None, path)))
             return
 
         # find files

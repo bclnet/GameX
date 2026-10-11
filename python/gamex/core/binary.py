@@ -383,22 +383,23 @@ class ArcBinaryT(ArcBinary):
         if cls.current is None: cls.current = super().__new__(cls)
         return cls.current
 
-    class SubArchive(BinaryArchive):
-        current  = None
-        def __new__(cls, *args):
-            if cls.current is None: cls.current = super().__new__(cls)
-            return cls.current
+    # each format gets its own SubArchive that reads with that format, like C#'s ArcBinary<Self>.Current
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        cls.SubArchive = type('SubArchive', (ArcBinaryT.SubArchive,), {'binary': cls})
 
-        def __init__(self, parent: BinaryArchive, file: FileSource, path: str, tag: object = None, source: BinaryArchive = None):
-            super().__init__(parent, BinaryState(parent.vfx, parent.game, parent.edition, path, tag), source or self.current)
+    class SubArchive(BinaryArchive):
+        binary: type = None
+        def __init__(self, parent: BinaryArchive, file: FileSource, path: str, tag: object = None, source: ArcBinary = None):
+            super().__init__(parent, BinaryState(parent.vfx, parent.game, parent.edition, path, tag), source or self.binary())
             self.assetFactoryFunc: callable = parent.assetFactoryFunc
             self.parent: BinaryArchive = parent
             self.file: FileSource = file
             # self.open()
 
-        async def opening(self) -> None: self.r = BinaryReader(self.parent.readData(file)); self.pool = StaticPool[BinaryReader](self.r); await super().opening()
-        async def closing(self) -> None: self.r.__exit__(); await super().closing()
-        def getReader(path: str, pooled: bool) -> IGenericPool[BinaryReader]: return self.pool
+        async def opening(self) -> None: self.r = BinaryReader(self.parent.readData(self.file)); self.pool = StaticPool[BinaryReader](self.r); await super().opening()
+        async def closing(self) -> None: self.r and self.r.dispose(); await super().closing()
+        def getReader(self, path: str = None, pooled: bool = True) -> IGenericPool[BinaryReader]: return self.pool
 
         # def read(self, r: BinaryReader, tag: object = None):
         #     if self.useReader: super().read(r, tag); return

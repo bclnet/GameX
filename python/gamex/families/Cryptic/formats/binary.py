@@ -109,7 +109,7 @@ class Binary_Hogg(ArcBinaryT):
         for i in range(numFiles):
             file = files[i]
             file.path = fileAttribs[attributeEntries[i].pathId][:-1].decode('ascii')
-            if file.path.endswith('.hogg'): file.arc = PakBinary_Hogg.SubArchive(self, file, source, source.game, source.fileSystem, file.path, file.tag)
+            if file.path.endswith('.hogg'): file.arc = self.SubArchive(source, file, file.path)
         
         # remove filesize of -1 and file 0
         source.files = [x for x in files if x.fileSize != -1 and x.id != 0]

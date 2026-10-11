@@ -61,6 +61,12 @@ members = [
     "engines/engine-unreal",
 ]
 
+[workspace.lints.rust]
+# C# names in camelCase (no Rust naming conventions), see CLAUDE.md
+nonstandard_style = "allow"
+# porting file by file: unused imports, variables and code are expected for now
+unused = "allow"
+
 [workspace.package]
 edition = "2021"
 rust-version = "1.75"

@@ -21,14 +21,8 @@
 //
 // Things worth knowing, none of them changed here:
 //
-//   * Every macOS branch does
-//     `search.SelectMany(x => search, (s, h) => Path.Join(h, s, tail))`, which
-//     crosses `search` with itself and never reads the `home` array declared
-//     directly above it. Reproduced in `cross_search_with_itself`.
 //   * `Store_Blizzard`'s Linux branch searches `.steam*` + `appcache`, the same
 //     paths as `Store_Steam`.
-//   * `Store_Epic` joins `"Sbi"` on all three platforms; the constructor then
-//     looks for `Manifests` beneath it.
 //   * Three Linux `search` arrays are the literal `["??"]` (Gog, Ubisoft, and
 //     one more).
 //   * `Store_Abandon` and `Store_Archive` roots are `E:\AbandonLibrary` and
@@ -43,7 +37,7 @@
 // otherwise:
 //
 //   * **Plan-building is separated from filesystem probing.** `SearchPlan`
-//     holds candidate paths; `first_existing` takes an `exists` predicate. The
+//     holds candidate paths; `firstExisting` takes an `exists` predicate. The
 //     C# interleaves them inside one expression, which cannot be unit-tested at
 //     all. The candidates produced are identical.
 //   * **Static constructors become explicit builders.** Rust has no static
@@ -51,13 +45,13 @@
 //     `TypeInitializationException` behaviour would mean panicking in a lazy
 //     static. The builders return their map; duplicate keys use `insert`
 //     (last-wins) rather than panicking, which is the one behavioural
-//     difference and is noted at `library_paths`.
+//     difference and is noted at `libraryPaths`.
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 /// C# `Store.GetPathByKey`'s key prefixes.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum StoreKind {
     Steam,
     Gog,
@@ -106,12 +100,12 @@ impl StoreKind {
     }
 
     /// Whether this kind is keyed by `"{family}/{value}"` rather than by value.
-    pub fn is_family_keyed(self) -> bool {
+    pub fn isFamilyKeyed(self) -> bool {
         matches!(self, Self::Abandon | Self::Archive)
     }
 
     /// Kinds the C# resolves to null unconditionally.
-    pub fn is_unresolvable(self) -> bool {
+    pub fn isUnresolvable(self) -> bool {
         matches!(self, Self::Droid | Self::Play | Self::Xbox | Self::Unknown)
     }
 }
@@ -120,7 +114,7 @@ impl StoreKind {
 ///
 /// Returns `Err` on an unrecognised prefix instead of throwing, so one bad
 /// config entry does not abort the whole family load.
-pub fn path_by_key<'a>(
+pub fn getPathByKey<'a>(
     key: &str,
     family: &str,
     stores: &'a HashMap<StoreKind, HashMap<String, PathBuf>>,
@@ -130,10 +124,10 @@ pub fn path_by_key<'a>(
         None => (key, ""),
     };
     let kind = StoreKind::parse(k).ok_or_else(|| format!("unknown store prefix: {k}"))?;
-    if kind.is_unresolvable() {
+    if kind.isUnresolvable() {
         return Ok(None);
     }
-    let lookup = if kind.is_family_keyed() {
+    let lookup = if kind.isFamilyKeyed() {
         format!("{family}/{v}")
     } else {
         v.to_string()
@@ -181,7 +175,7 @@ impl SearchPlan {
     }
 
     /// C# `paths.FirstOrDefault(Directory.Exists)`.
-    pub fn first_existing(&self, exists: &impl Fn(&Path) -> bool) -> Option<&PathBuf> {
+    pub fn firstExisting(&self, exists: &impl Fn(&Path) -> bool) -> Option<&PathBuf> {
         self.candidates.iter().find(|p| exists(p))
     }
 }
@@ -190,29 +184,17 @@ impl SearchPlan {
 pub mod plans {
     use super::*;
 
-    /// The macOS expression every store uses:
-    /// `search.SelectMany(x => search, (s, h) => Path.Join(h, s, tail))`.
-    ///
-    /// Both operands come from `search`; the `home` array the C# declares on
-    /// the line above is not referenced. Kept as-is.
-    fn cross_search_with_itself(suffixes: &[&str], tail: &str) -> SearchPlan {
-        let mut candidates = Vec::new();
-        for s in suffixes {
-            for h in suffixes {
-                let mut p = PathBuf::from(h).join(s);
-                if !tail.is_empty() {
-                    p = p.join(tail);
-                }
-                candidates.push(p);
-            }
-        }
-        SearchPlan { candidates }
+    /// The C# branches that search two homes:
+    /// `string[] home = [UserProfile, "/Users/Shared"]` then
+    /// `home.SelectMany(h => search, (h, s) => Path.Join(h, s, tail))`.
+    fn crossHomes(home: &Path, suffixes: &[&str], tail: &str) -> SearchPlan {
+        SearchPlan::cross(&[home.to_path_buf(), PathBuf::from("/Users/Shared")], suffixes, tail)
     }
 
     /// `home` joined with each suffix, then `tail` — the C#'s
     /// `search.Select(path => Path.Join(home, path, tail))`. Note `home` is a
     /// single path in these branches, not an array.
-    fn under_home(home: &Path, suffixes: &[&str], tail: &str) -> SearchPlan {
+    fn underHome(home: &Path, suffixes: &[&str], tail: &str) -> SearchPlan {
         SearchPlan {
             candidates: suffixes
                 .iter()
@@ -232,12 +214,12 @@ pub mod plans {
                 candidates: vec![home.join("Battle.net").join("Agent")],
             },
             // C#: the Steam search paths, verbatim.
-            Os::Linux => under_home(
+            Os::Linux => underHome(
                 home,
                 &[".steam", ".steam/steam", ".steam/root", ".local/share/Steam"],
                 "appcache",
             ),
-            Os::MacOs => cross_search_with_itself(&["Battle.net/Agent"], "data"),
+            Os::MacOs => crossHomes(home, &["Battle.net/Agent"], "data"),
             Os::Android => return None,
         })
     }
@@ -245,9 +227,9 @@ pub mod plans {
     /// C# `Store_Epic.GetPath()`.
     pub fn epic(os: Os, home: &Path) -> Option<SearchPlan> {
         Some(match os {
-            Os::Windows => under_home(home, &[r"Epic\EpicGamesLauncher"], "Sbi"),
-            Os::Linux => under_home(home, &["Epic/EpicGamesLauncher"], "Sbi"),
-            Os::MacOs => cross_search_with_itself(&["Epic/EpicGamesLauncher"], "Sbi"),
+            Os::Windows => underHome(home, &[r"Epic\EpicGamesLauncher"], "Data"),
+            Os::Linux => underHome(home, &["Epic/EpicGamesLauncher"], "Data"),
+            Os::MacOs => crossHomes(home, &["Epic/EpicGamesLauncher"], "Data"),
             Os::Android => return None,
         })
     }
@@ -255,9 +237,9 @@ pub mod plans {
     /// C# `Store_Gog.GetPath()`.
     pub fn gog(os: Os, home: &Path) -> Option<SearchPlan> {
         Some(match os {
-            Os::Windows => under_home(home, &[r"GOG.com\Galaxy"], "storage"),
-            Os::Linux => under_home(home, &["??"], "Storage"),
-            Os::MacOs => cross_search_with_itself(&["GOG.com/Galaxy"], "Storage"),
+            Os::Windows => underHome(home, &[r"GOG.com\Galaxy"], "storage"),
+            Os::Linux => underHome(home, &["??"], "Storage"),
+            Os::MacOs => crossHomes(home, &["GOG.com/Galaxy"], "Storage"),
             Os::Android => return None,
         })
     }
@@ -265,12 +247,12 @@ pub mod plans {
     /// C# `Store_Steam.GetPath()`.
     pub fn steam(os: Os, home: &Path) -> Option<SearchPlan> {
         Some(match os {
-            Os::Linux => under_home(
+            Os::Linux => underHome(
                 home,
                 &[".steam", ".steam/steam", ".steam/root", ".local/share/Steam"],
                 "appcache",
             ),
-            Os::MacOs => cross_search_with_itself(&["Library/Application Support/Steam"], ""),
+            Os::MacOs => crossHomes(home, &["Library/Application Support/Steam"], ""),
             Os::Windows | Os::Android => return None,
         })
     }
@@ -278,9 +260,10 @@ pub mod plans {
     /// C# `Store_Ubisoft.GetPath()`.
     pub fn ubisoft(os: Os, home: &Path) -> Option<SearchPlan> {
         Some(match os {
-            Os::Windows => under_home(home, &["Ubisoft Query Launcher"], ""),
-            Os::Linux => cross_search_with_itself(&["??"], ""),
-            Os::MacOs => under_home(home, &["??"], ""),
+            Os::Windows => underHome(home, &["Ubisoft Query Launcher"], ""),
+            Os::Linux => crossHomes(home, &["??"], ""),
+            // C#: var home = "/Users/Shared";
+            Os::MacOs => underHome(Path::new("/Users/Shared"), &["??"], ""),
             Os::Android => return None,
         })
     }
@@ -301,16 +284,16 @@ pub fn direct(key: &str) -> PathBuf {
 /// The roots are [`ABANDON_ROOT`] and [`ARCHIVE_ROOT`], transcribed from the
 /// C#. Taken as an argument here only because Rust cannot run this from a
 /// static initialiser; pass the constant to match the C# exactly.
-pub fn library_paths(
+pub fn libraryPaths(
     root: &Path,
-    list_dirs: &impl Fn(&Path) -> Vec<PathBuf>,
-    list_files: &impl Fn(&Path) -> Vec<PathBuf>,
-    include_subdirs: bool,
+    listDirs: &impl Fn(&Path) -> Vec<PathBuf>,
+    listFiles: &impl Fn(&Path) -> Vec<PathBuf>,
+    includeSubdirs: bool,
 ) -> HashMap<String, PathBuf> {
     let mut out = HashMap::new();
-    for dir in list_dirs(root) {
+    for dir in listDirs(root) {
         let Some(group) = dir.file_name().and_then(|s| s.to_str()) else { continue };
-        for f in list_files(&dir) {
+        for f in listFiles(&dir) {
             if let Some(n) = f.file_name().and_then(|s| s.to_str()) {
                 // The C# uses `paths.Add`, which throws on a duplicate key.
                 // `insert` is last-wins. This is the one deliberate behavioural
@@ -320,8 +303,8 @@ pub fn library_paths(
                 out.insert(format!("{group}/{n}"), f);
             }
         }
-        if include_subdirs {
-            for d in list_dirs(&dir) {
+        if includeSubdirs {
+            for d in listDirs(&dir) {
                 if let Some(n) = d.file_name().and_then(|s| s.to_str()) {
                     // C# skips dot-directories here.
                     if !n.starts_with('.') {
@@ -347,7 +330,7 @@ mod tests {
     }
 
     #[test]
-    fn key_prefixes_parse() {
+    fn keyPrefixesParse() {
         assert_eq!(StoreKind::parse("Steam"), Some(StoreKind::Steam));
         assert_eq!(StoreKind::parse("Query"), Some(StoreKind::Archive));
         assert_eq!(StoreKind::parse("x"), Some(StoreKind::Unknown));
@@ -355,43 +338,42 @@ mod tests {
     }
 
     #[test]
-    fn an_unknown_prefix_is_an_error_not_a_throw() {
+    fn anUnknownPrefixIsAnErrorNotAThrow() {
         // The C# raises ArgumentOutOfRangeException, aborting the family load.
         let stores = HashMap::new();
-        assert!(path_by_key("Nope:x", "fam", &stores).is_err());
+        assert!(getPathByKey("Nope:x", "fam", &stores).is_err());
     }
 
     #[test]
-    fn family_keyed_stores_prepend_the_family() {
+    fn familyKeyedStoresPrependTheFamily() {
         let mut m = HashMap::new();
         m.insert("Bethesda/skyrim.esm".to_string(), home("/a/skyrim.esm"));
         let mut stores = HashMap::new();
         stores.insert(StoreKind::Abandon, m);
         assert_eq!(
-            path_by_key("Abandon:skyrim.esm", "Bethesda", &stores).unwrap(),
+            getPathByKey("Abandon:skyrim.esm", "Bethesda", &stores).unwrap(),
             Some(&home("/a/skyrim.esm"))
         );
         // The same value under a different family must not resolve.
-        assert_eq!(path_by_key("Abandon:skyrim.esm", "Valve", &stores).unwrap(), None);
+        assert_eq!(getPathByKey("Abandon:skyrim.esm", "Valve", &stores).unwrap(), None);
     }
 
     #[test]
-    fn unresolvable_kinds_return_none_without_lookup() {
+    fn unresolvableKindsReturnNoneWithoutLookup() {
         let stores = HashMap::new();
         for k in ["Droid:x", "Play:x", "Xbox:x", "Unknown:x", "x:x"] {
-            assert_eq!(path_by_key(k, "f", &stores).unwrap(), None, "{k}");
+            assert_eq!(getPathByKey(k, "f", &stores).unwrap(), None, "{k}");
         }
     }
 
     #[test]
-    fn a_key_without_a_colon_is_handled() {
+    fn aKeyWithoutAColonIsHandled() {
         let stores = HashMap::new();
-        assert!(path_by_key("Steam", "f", &stores).is_ok());
+        assert!(getPathByKey("Steam", "f", &stores).is_ok());
     }
 
     #[test]
-    fn cross_helper_uses_the_homes_it_is_given() {
-        // This helper is not what the macOS branches call; see the next test.
+    fn crossHelperUsesTheHomesItIsGiven() {
         let homes = [home("/Users/me"), home("/Users/Shared")];
         let p = SearchPlan::cross(&homes, &["Battle.net/Agent"], "data");
         assert_eq!(p.candidates.len(), 2);
@@ -399,16 +381,16 @@ mod tests {
     }
 
     #[test]
-    fn macos_plans_match_the_c_sharp_self_cross() {
-        // Faithful: `search.SelectMany(x => search, (s, h) => ...)` produces one
-        // relative candidate with the suffix twice, and no home directory.
+    fn macosPlansSearchTheUserAndSharedHomes() {
+        // C#: home.SelectMany(h => search, (h, s) => Path.Join(h, s, "data"))
         let p = plans::blizzard(Os::MacOs, Path::new("/Users/me")).unwrap();
-        assert_eq!(p.candidates.len(), 1);
-        assert_eq!(p.candidates[0], home("Battle.net/Agent/Battle.net/Agent/data"));
+        assert_eq!(p.candidates, vec![home("/Users/me/Battle.net/Agent/data"), home("/Users/Shared/Battle.net/Agent/data")]);
+        let u = plans::ubisoft(Os::MacOs, Path::new("/Users/me")).unwrap();
+        assert_eq!(u.candidates, vec![home("/Users/Shared/??")]);
     }
 
     #[test]
-    fn blizzard_linux_uses_the_steam_paths_as_written() {
+    fn blizzardLinuxUsesTheSteamPathsAsWritten() {
         let p = plans::blizzard(Os::Linux, Path::new("/home/me")).unwrap();
         assert_eq!(p.candidates.len(), 4);
         assert_eq!(p.candidates[0], home("/home/me/.steam/appcache"));
@@ -416,17 +398,17 @@ mod tests {
     }
 
     #[test]
-    fn blizzard_windows_joins_battle_net_agent() {
+    fn blizzardWindowsJoinsBattleNetAgent() {
         let p = plans::blizzard(Os::Windows, Path::new("/ProgramData")).unwrap();
         assert_eq!(p.candidates, vec![home("/ProgramData/Battle.net/Agent")]);
     }
 
     #[test]
-    fn epic_joins_sbi_as_written() {
-        for os in [Os::Windows, Os::Linux] {
+    fn epicJoinsData() {
+        for os in [Os::Windows, Os::Linux, Os::MacOs] {
             let p = plans::epic(os, Path::new("/ProgramData")).unwrap();
             assert!(
-                p.candidates[0].ends_with("Sbi"),
+                p.candidates[0].ends_with("Data"),
                 "{os:?}: {:?}",
                 p.candidates[0]
             );
@@ -434,13 +416,13 @@ mod tests {
     }
 
     #[test]
-    fn gog_linux_searches_the_literal_placeholder() {
+    fn gogLinuxSearchesTheLiteralPlaceholder() {
         let p = plans::gog(Os::Linux, Path::new("/home/me")).unwrap();
         assert_eq!(p.candidates, vec![home("/home/me/??/Storage")]);
     }
 
     #[test]
-    fn steam_and_ubisoft_plans_are_transcribed() {
+    fn steamAndUbisoftPlansAreTranscribed() {
         let s = plans::steam(Os::Linux, Path::new("/home/me")).unwrap();
         assert_eq!(s.candidates.len(), 4);
         let u = plans::ubisoft(Os::Windows, Path::new("/ProgramData")).unwrap();
@@ -448,31 +430,31 @@ mod tests {
     }
 
     #[test]
-    fn android_yields_no_plan_as_in_the_c_sharp() {
+    fn androidYieldsNoPlanAsInTheCSharp() {
         for f in [plans::blizzard, plans::epic, plans::gog, plans::steam, plans::ubisoft] {
             assert!(f(Os::Android, Path::new("/x")).is_none());
         }
     }
 
     #[test]
-    fn library_roots_are_the_c_sharp_constants() {
+    fn libraryRootsAreTheCSharpConstants() {
         assert!(ABANDON_ROOT.ends_with("AbandonLibrary"));
         assert!(ARCHIVE_ROOT.ends_with("ArchiveLibrary"));
     }
 
     #[test]
-    fn first_existing_picks_the_first_hit() {
+    fn firstExistingPicksTheFirstHit() {
         let p = SearchPlan {
             candidates: vec![home("/no"), home("/yes"), home("/also")],
         };
         let exists = |x: &Path| x == Path::new("/yes") || x == Path::new("/also");
-        assert_eq!(p.first_existing(&exists), Some(&home("/yes")));
+        assert_eq!(p.firstExisting(&exists), Some(&home("/yes")));
         let none = |_: &Path| false;
-        assert!(p.first_existing(&none).is_none());
+        assert!(p.firstExisting(&none).is_none());
     }
 
     #[test]
-    fn duplicate_library_names_do_not_panic() {
+    fn duplicateLibraryNamesDoNotPanic() {
         // Bug 7: the C# `paths.Add` throws ArgumentException from a static ctor.
         let dirs = |p: &Path| {
             if p == Path::new("/lib") {
@@ -483,27 +465,27 @@ mod tests {
         };
         // Both groups contain a file with the same name.
         let files = |p: &Path| vec![p.join("game.dat")];
-        let out = library_paths(Path::new("/lib"), &dirs, &files, false);
+        let out = libraryPaths(Path::new("/lib"), &dirs, &files, false);
         assert_eq!(out.len(), 2, "keyed by group, so both survive");
         assert!(out.contains_key("a/game.dat"));
         assert!(out.contains_key("b/game.dat"));
     }
 
     #[test]
-    fn library_subdirs_skip_dot_directories() {
+    fn librarySubdirsSkipDotDirectories() {
         let dirs = |p: &Path| match p.to_str().unwrap() {
             "/lib" => vec![PathBuf::from("/lib/a")],
             "/lib/a" => vec![PathBuf::from("/lib/a/.git"), PathBuf::from("/lib/a/data")],
             _ => vec![],
         };
         let files = |_: &Path| vec![];
-        let out = library_paths(Path::new("/lib"), &dirs, &files, true);
+        let out = libraryPaths(Path::new("/lib"), &dirs, &files, true);
         assert!(out.contains_key("a/data"));
         assert!(!out.contains_key("a/.git"), "dot-directories are skipped");
     }
 
     #[test]
-    fn direct_returns_the_key_verbatim() {
+    fn directReturnsTheKeyVerbatim() {
         assert_eq!(direct("/opt/games/thing"), PathBuf::from("/opt/games/thing"));
     }
 }

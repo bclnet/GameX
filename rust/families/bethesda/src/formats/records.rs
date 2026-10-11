@@ -1848,7 +1848,7 @@ bitflags::bitflags! {
 #[repr(i32)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum EfidType_ {
-    Self = 0x0,
+    Self_ = 0x0,
     Touch = 0x1,
     Target = 0x2,
 }
@@ -1858,7 +1858,7 @@ impl EfidType_ {
     /// a C-style cast would produce a value outside the enum, which is UB.
     pub fn from_raw(v: i32) -> Option<Self> {
         Some(match v {
-            0x0 => Self::Self,
+            0x0 => Self::Self_,
             0x1 => Self::Touch,
             0x2 => Self::Target,
             _ => return None,
@@ -2131,7 +2131,7 @@ bitflags::bitflags! {
 #[repr(u32)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum EnamRange_ {
-    Self = 0x0,
+    Self_ = 0x0,
     Touch = 0x1,
     Target = 0x2,
 }
@@ -2141,7 +2141,7 @@ impl EnamRange_ {
     /// a C-style cast would produce a value outside the enum, which is UB.
     pub fn from_raw(v: u32) -> Option<Self> {
         Some(match v {
-            0x0 => Self::Self,
+            0x0 => Self::Self_,
             0x1 => Self::Touch,
             0x2 => Self::Target,
             _ => return None,
@@ -2898,7 +2898,7 @@ bitflags::bitflags! {
         const Recover = 0x2;
         const Detrimental = 0x4;
         const MagnitudePercent = 0x8;
-        const Self = 0x10;
+        const Self_ = 0x10;
         const Touch = 0x20;
         const Target = 0x40;
         const NoDuration = 0x80;

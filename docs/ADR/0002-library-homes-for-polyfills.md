@@ -3,6 +3,7 @@ ADR 0002: Polyfills go to the library they extend
 
 * **Status:** Proposed
 * **Date:** 2026-10-11
+* **Scope:** OpenX only. GameX's ports stay one-to-one with C#, file for file and type for type.
 
 ## Context
 

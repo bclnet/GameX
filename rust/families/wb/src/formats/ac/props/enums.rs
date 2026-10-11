@@ -3,7 +3,7 @@
 // PORT-STATUS: done
 // PORT-GENERATED: gen_enums.py — do not hand-edit; regenerate instead.
 //
-// 188 enum(s), 11569 members, generated from the C#
+// 188 enum(s), 11624 members, generated from the C#
 // rather than transcribed. At this size a one-digit typo would mis-identify a
 // game asset in a way no test would obviously catch.
 //
@@ -36,7 +36,7 @@
 //   BondedStatus                       i32   enum          5 members
 //   BSPType                            i32   enum          3 members
 //   Channel                            i32   bitflags     37 members
-//   CharacterOption                    i32   enum          0 members
+//   CharacterOption                    i32   enum         55 members
 //   CharacterOptionDataFlag            u32   bitflags     11 members
 //   CharacterOptions1                  u32   bitflags     33 members
 //   CharacterOptions2                  u32   bitflags     33 members
@@ -656,7 +656,7 @@ bitflags::bitflags! {
         const Quickness = 0x4;
         const Coordination = 0x8;
         const Focus = 0x10;
-        const Self = 0x20;
+        const Self_ = 0x20;
         const Health = 0x40;
         const Stamina = 0x80;
         const Mana = 0x100;
@@ -700,7 +700,7 @@ pub enum AugmentationType {
     Coordination = 0x3,
     Quickness = 0x4,
     Focus = 0x5,
-    Self = 0x6,
+    Self_ = 0x6,
     Salvage = 0x7,
     ItemTinkering = 0x8,
     ArmorTinkering = 0x9,
@@ -749,7 +749,7 @@ impl AugmentationType {
             0x3 => Self::Coordination,
             0x4 => Self::Quickness,
             0x5 => Self::Focus,
-            0x6 => Self::Self,
+            0x6 => Self::Self_,
             0x7 => Self::Salvage,
             0x8 => Self::ItemTinkering,
             0x9 => Self::ArmorTinkering,
@@ -916,6 +916,61 @@ bitflags::bitflags! {
 #[repr(i32)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum CharacterOption {
+    AutoRepeatAttacks = 0x0,
+    IgnoreAllegianceRequests = 0x1,
+    IgnoreFellowshipRequests = 0x2,
+    IgnoreAllTradeRequests = 0x3,
+    DisableMostWeatherEffects = 0x4,
+    AlwaysDaylightOutdoors = 0x5,
+    LetOtherPlayersGiveYouItems = 0x6,
+    KeepCombatTargetsInView = 0x7,
+    Display3dTooltips = 0x8,
+    AttemptToDeceiveOtherPlayers = 0x9,
+    RunAsDefaultMovement = 0xa,
+    StayInChatModeAfterSendingMessage = 0xb,
+    AdvancedCombatInterface = 0xc,
+    AutoTarget = 0xd,
+    VividTargetingIndicator = 0xe,
+    ShareFellowshipExpAndLuminance = 0xf,
+    AcceptCorpseLootingPermissions = 0x10,
+    ShareFellowshipLoot = 0x11,
+    AutomaticallyAcceptFellowshipRequests = 0x12,
+    SideBySideVitals = 0x13,
+    ShowCoordinatesByTheRadar = 0x14,
+    DisplaySpellDurations = 0x15,
+    DisableHouseRestrictionEffects = 0x16,
+    DragItemToPlayerOpensTrade = 0x17,
+    ShowAllegianceLogons = 0x18,
+    UseChargeAttack = 0x19,
+    UseCraftingChanceOfSuccessDialog = 0x1a,
+    ListenToAllegianceChat = 0x1b,
+    AllowOthersToSeeYourDateOfBirth = 0x1c,
+    AllowOthersToSeeYourAge = 0x1d,
+    AllowOthersToSeeYourChessRank = 0x1e,
+    AllowOthersToSeeYourFishingSkill = 0x1f,
+    AllowOthersToSeeYourNumberOfDeaths = 0x20,
+    DisplayTimestamps = 0x21,
+    SalvageMultipleMaterialsAtOnce = 0x22,
+    ListenToGeneralChat = 0x23,
+    ListenToTradeChat = 0x24,
+    ListenToLFGChat = 0x25,
+    ListenToRoleplayChat = 0x26,
+    AppearOffline = 0x27,
+    AllowOthersToSeeYourNumberOfTitles = 0x28,
+    UseMainPackAsDefaultForPickingUpItems = 0x29,
+    LeadMissileTargets = 0x2a,
+    UseFastMissiles = 0x2b,
+    FilterLanguage = 0x2c,
+    ConfirmUseOfRareGems = 0x2d,
+    ListenToSocietyChat = 0x2e,
+    ShowYourHelmOrHeadGear = 0x2f,
+    DisableDistanceFog = 0x30,
+    UseMouseTurning = 0x31,
+    ShowYourCloak = 0x32,
+    LockUI = 0x33,
+    ListenToPKDeathMessages = 0x34,
+    CharacterOptions1Default = 0x35,
+    CharacterOptions2Default = 0x36,
 }
 
 impl CharacterOption {
@@ -923,6 +978,61 @@ impl CharacterOption {
     /// a C-style cast would produce a value outside the enum, which is UB.
     pub fn from_raw(v: i32) -> Option<Self> {
         Some(match v {
+            0x0 => Self::AutoRepeatAttacks,
+            0x1 => Self::IgnoreAllegianceRequests,
+            0x2 => Self::IgnoreFellowshipRequests,
+            0x3 => Self::IgnoreAllTradeRequests,
+            0x4 => Self::DisableMostWeatherEffects,
+            0x5 => Self::AlwaysDaylightOutdoors,
+            0x6 => Self::LetOtherPlayersGiveYouItems,
+            0x7 => Self::KeepCombatTargetsInView,
+            0x8 => Self::Display3dTooltips,
+            0x9 => Self::AttemptToDeceiveOtherPlayers,
+            0xa => Self::RunAsDefaultMovement,
+            0xb => Self::StayInChatModeAfterSendingMessage,
+            0xc => Self::AdvancedCombatInterface,
+            0xd => Self::AutoTarget,
+            0xe => Self::VividTargetingIndicator,
+            0xf => Self::ShareFellowshipExpAndLuminance,
+            0x10 => Self::AcceptCorpseLootingPermissions,
+            0x11 => Self::ShareFellowshipLoot,
+            0x12 => Self::AutomaticallyAcceptFellowshipRequests,
+            0x13 => Self::SideBySideVitals,
+            0x14 => Self::ShowCoordinatesByTheRadar,
+            0x15 => Self::DisplaySpellDurations,
+            0x16 => Self::DisableHouseRestrictionEffects,
+            0x17 => Self::DragItemToPlayerOpensTrade,
+            0x18 => Self::ShowAllegianceLogons,
+            0x19 => Self::UseChargeAttack,
+            0x1a => Self::UseCraftingChanceOfSuccessDialog,
+            0x1b => Self::ListenToAllegianceChat,
+            0x1c => Self::AllowOthersToSeeYourDateOfBirth,
+            0x1d => Self::AllowOthersToSeeYourAge,
+            0x1e => Self::AllowOthersToSeeYourChessRank,
+            0x1f => Self::AllowOthersToSeeYourFishingSkill,
+            0x20 => Self::AllowOthersToSeeYourNumberOfDeaths,
+            0x21 => Self::DisplayTimestamps,
+            0x22 => Self::SalvageMultipleMaterialsAtOnce,
+            0x23 => Self::ListenToGeneralChat,
+            0x24 => Self::ListenToTradeChat,
+            0x25 => Self::ListenToLFGChat,
+            0x26 => Self::ListenToRoleplayChat,
+            0x27 => Self::AppearOffline,
+            0x28 => Self::AllowOthersToSeeYourNumberOfTitles,
+            0x29 => Self::UseMainPackAsDefaultForPickingUpItems,
+            0x2a => Self::LeadMissileTargets,
+            0x2b => Self::UseFastMissiles,
+            0x2c => Self::FilterLanguage,
+            0x2d => Self::ConfirmUseOfRareGems,
+            0x2e => Self::ListenToSocietyChat,
+            0x2f => Self::ShowYourHelmOrHeadGear,
+            0x30 => Self::DisableDistanceFog,
+            0x31 => Self::UseMouseTurning,
+            0x32 => Self::ShowYourCloak,
+            0x33 => Self::LockUI,
+            0x34 => Self::ListenToPKDeathMessages,
+            0x35 => Self::CharacterOptions1Default,
+            0x36 => Self::CharacterOptions2Default,
             _ => return None,
         })
     }
@@ -3541,7 +3651,7 @@ bitflags::bitflags! {
         const Toggle = 0x4000000;
         const ChatEmote = 0x2000000;
         const Mappable = 0x1000000;
-        const Command = -0xff000001;
+        const Command = 0xffffff;
     }
 }
 
@@ -25052,7 +25162,7 @@ bitflags::bitflags! {
 #[repr(i32)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TradeSide {
-    Self = 0x1,
+    Self_ = 0x1,
     Partner = 0x2,
 }
 
@@ -25061,7 +25171,7 @@ impl TradeSide {
     /// a C-style cast would produce a value outside the enum, which is UB.
     pub fn from_raw(v: i32) -> Option<Self> {
         Some(match v {
-            0x1 => Self::Self,
+            0x1 => Self::Self_,
             0x2 => Self::Partner,
             _ => return None,
         })
@@ -25231,7 +25341,7 @@ bitflags::bitflags! {
     pub struct Usable: u32 {
         const Undef = 0x0;
         const No = 0x1;
-        const Self = 0x2;
+        const Self_ = 0x2;
         const Wielded = 0x4;
         const Contained = 0x8;
         const Viewed = 0x10;

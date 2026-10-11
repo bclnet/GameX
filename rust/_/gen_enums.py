@@ -34,8 +34,14 @@ CS_TO_RUST = {
 }
 
 
+# keywords a raw identifier (r#...) cannot escape; these get a trailing underscore
+NOT_RAW = {"self", "Self", "super", "crate"}
+
+
 def ident(name: str) -> str:
     """C# member name -> valid Rust ident, preserved verbatim where possible."""
+    if name in NOT_RAW:
+        return name + "_"
     if name in RUST_KEYWORDS:
         return f"r#{name}"
     if name and name[0].isdigit():
@@ -109,8 +115,12 @@ def parse_enums(text: str):
         members = []
         buf, depth, comment = "", 0, ""
         def flush(buf, comment):
-            s = buf.strip()
-            if not s or s.startswith("["):
+            # Members can carry attributes on the same line
+            # (`[CharacterOptions1(...)] AutoRepeatAttacks = 0x00`); drop the
+            # attributes, keep the member. Skipping the whole line emptied
+            # WB's CharacterOption.
+            s = re.sub(r"^(?:\[[^\[\]]*\]\s*)+", "", buf.strip())
+            if not s:
                 return
             if "=" in s:
                 nm, expr = s.split("=", 1)
@@ -192,6 +202,20 @@ def _eval_member(expr, env):
         return None
 
 
+# (bits, signed) for each Rust underlying type
+WIDTHS = {"u8": (8, False), "i8": (8, True), "u16": (16, False), "i16": (16, True),
+          "u32": (32, False), "i32": (32, True), "u64": (64, False), "i64": (64, True)}
+
+
+def wrap(v, base):
+    """C# evaluates an enum's constant expressions in its underlying type, so
+    `~(A | B)` on a `uint` enum is unsigned. Python ints have no width, so `~`
+    goes negative; wrap to the type the way C# does."""
+    bits, signed = WIDTHS.get(base, (32, True))
+    v &= (1 << bits) - 1
+    return v - (1 << bits) if signed and v >> (bits - 1) else v
+
+
 def resolve(members, base, shared=None):
     """Resolve C# discriminant expressions to integers, C#'s auto-increment rules.
 
@@ -233,6 +257,9 @@ def resolve(members, base, shared=None):
         if not progressed:
             break
 
+    for s in slots:
+        if s[1] is not None:
+            s[1] = wrap(s[1], base)
     if shared is not None:
         shared.update({s[0]: s[1] for s in slots if s[1] is not None})
     return [(s[0], s[1], s[2]) for s in slots]
@@ -267,7 +294,7 @@ def emit(name, base, is_flags, doc, resolved) -> str:
         lines.append(f"    pub struct {name}: {base} {{")
         for n, v, c in numeric:
             tail = f" // {c}" if c else ""
-            lines.append(f"        const {n} = {v:#x};{tail}")
+            lines.append(f"        const {ident(n)} = {v:#x};{tail}")
         lines.append("    }")
         lines.append("}")
         if skipped:

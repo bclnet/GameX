@@ -74,6 +74,7 @@ dependencies = [
 name = "gamex"
 version = "0.1.0"
 dependencies = [
+ "glam",
  "openx",
 ]
 
@@ -169,6 +170,7 @@ dependencies = [
 name = "gamex-bethesda"
 version = "0.1.0"
 dependencies = [
+ "bitflags",
  "gamex",
  "gamex-gamebryo",
  "gamex-uncore",
@@ -390,6 +392,9 @@ dependencies = [
 [[package]]
 name = "gamex-filesystems"
 version = "0.1.0"
+dependencies = [
+ "bitflags",
+]
 
 [[package]]
 name = "gamex-firaxis"
@@ -419,6 +424,7 @@ dependencies = [
 name = "gamex-gamebryo"
 version = "0.1.0"
 dependencies = [
+ "bitflags",
  "gamex",
  "gamex-uncore",
 ]
@@ -566,6 +572,7 @@ dependencies = [
 name = "gamex-wb"
 version = "0.1.0"
 dependencies = [
+ "bitflags",
  "gamex",
  "gamex-uncore",
 ]
@@ -597,9 +604,9 @@ dependencies = [
 
 [[package]]
 name = "glow"
-version = "0.14.2"
+version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d51fa363f025f5c111e03f13eda21162faeacb6911fe8caa0c0349f9cf0c4483"
+checksum = "263218b0ba2b0715c3370fb04674f5f8aa331594b521c94ff0a8e4a8472d1386"
 dependencies = [
  "js-sys",
  "slotmap",
@@ -639,6 +646,7 @@ checksum = "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
 name = "openx"
 version = "0.1.0"
 dependencies = [
+ "glam",
  "openx-gfx",
  "openx-poly",
  "openx-sfx",

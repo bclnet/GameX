@@ -31,7 +31,13 @@ def cs_pairs(path):
         return best[1] if best else None
 
     out, shared, seen = {}, {}, {}
-    for m in re.finditer(r'public enum (\w+)(?:\s*:\s*\w+)?\s*\{', cs):
+    for m in re.finditer(r'public enum (\w+)(?:\s*:\s*(\w+))?\s*\{', cs):
+        # C# evaluates members in the enum's underlying type (default int)
+        bits, signed = {'byte': (8, 0), 'sbyte': (8, 1), 'short': (16, 1), 'ushort': (16, 0), 'int': (32, 1),
+                        'uint': (32, 0), 'long': (64, 1), 'ulong': (64, 0)}.get(m.group(2) or 'int', (32, 1))
+        def fit(v, bits=bits, signed=signed):
+            v %= 1 << bits
+            return v - (1 << bits) if signed and v >= 1 << (bits - 1) else v
         i, depth = m.end(), 1
         while depth and i < len(cs):
             if cs[i] == '{': depth += 1
@@ -53,7 +59,9 @@ def cs_pairs(path):
         env, nxt, pend = dict(shared), 0, []
         for s in parts:
             s = s.strip()
-            if not s or s.startswith('['): continue
+            # a member may start with its own attributes: skip past each ']'
+            while s.startswith('['): s = s[s.index(']') + 1:].strip()
+            if not s: continue
             if '=' in s:
                 n, e = s.split('=', 1); n, e = n.strip(), ' '.join(e.split())
                 e = re.sub(r'\b(0[xX][0-9a-fA-F]+|\d+)[uUlL]+\b', r'\1', e)
@@ -70,7 +78,7 @@ def cs_pairs(path):
                 for tok in set(re.findall(r'\b[A-Za-z_]\w*\b', x)):
                     if tok in env: x = re.sub(rf'\b{re.escape(tok)}\b', str(env[tok]), x)
                 try:
-                    v = eval(x, {'__builtins__': {}}, {})
+                    v = fit(eval(x, {'__builtins__': {}}, {}))
                     env[n] = v; out[(ename, n)] = v
                 except Exception:
                     again.append((n, e))
@@ -78,6 +86,11 @@ def cs_pairs(path):
             pend = again
         shared.update(env)
     return out
+
+# gen_enums.py writes keywords a raw identifier can't escape with a trailing underscore
+def csName(rustName: str) -> str:
+    return rustName[:-1] if rustName in ("self_", "Self_", "super_", "crate_") else rustName
+
 
 def rs_pairs(path):
     rs = Path(path).read_text()
@@ -90,10 +103,10 @@ def rs_pairs(path):
         # Skipping those lines made every alias look like a missing member.
         am = re.match(r'\s+pub const (?:r#)?(\w+): Self = Self::(?:r#)?(\w+);', line)
         if am and cur:
-            aliases.setdefault(cur, []).append((am.group(1), am.group(2)))
+            aliases.setdefault(cur, []).append((csName(am.group(1)), csName(am.group(2))))
             continue
         vm = re.match(r'\s+(?:const )?(?:r#)?(\w+)(?::\s*Self)?\s*=\s*(-?0x[0-9a-fA-F]+|-?\d+)', line)
-        if vm and cur: out[(cur, vm.group(1))] = int(vm.group(2), 0)
+        if vm and cur: out[(cur, csName(vm.group(1)))] = int(vm.group(2), 0)
     return out
 
 bad = 0

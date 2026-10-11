@@ -1,7 +1,7 @@
 ADR 0004: Rust UI is Slint, view for view with C#'s XAML
 ===
 
-* **Status:** Accepted
+* **Status:** Superseded by [ADR 0005](0005-rust-ui-egui.md)
 * **Date:** 2026-10-11
 
 ## Context

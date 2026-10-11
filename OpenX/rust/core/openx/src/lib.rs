@@ -26,5 +26,5 @@ pub mod prelude {
     pub use crate::platform::{activate, Caps, Os, Platform, UnknownPlatform, EPSILON};
     pub use crate::client::{ClientHost, GlobalTime, Scene, SceneState};
     pub use crate::profiler::{ProfileData, Profiler, ProfilerError};
-    pub use crate::util::{decode_path, PathRoots, SettingsDict};
+    pub use crate::util::{decodePath, YamlDict};
 }

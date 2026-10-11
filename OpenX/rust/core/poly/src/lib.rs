@@ -10,6 +10,7 @@
 //! project decision recorded in `PORTING.md`.
 
 pub mod core;
+pub mod poly;
 // pub mod system;
 // pub mod system_drawing;
 pub mod io;
@@ -21,6 +22,7 @@ pub mod io;
 /// namespace-wide extension methods; Rust needs the traits in scope explicitly.
 pub mod prelude {
     pub use crate::core::{SourcePath, SourceTag, SourceRef, SourceKey, IHaveSource, ISource, ISourceExt};
+    pub use crate::poly::{Byte2, Int2, Byte3, Int3, Float2, Float3, Float4};
 
     // pub use crate::io::bit_stream::BitStream;
     // pub use crate::io::byte_xor_stream::ByteXorStream;

@@ -12,3 +12,6 @@ non_snake_case = "allow"
 openx-gfx = { path = "../gfx" }
 openx-poly = { path = "../../core/poly" }
 glam = { workspace = true }
+
+[features]
+full = ["openx-gfx/full"]

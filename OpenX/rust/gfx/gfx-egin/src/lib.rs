@@ -12,7 +12,7 @@
 pub mod egin;
 pub mod egin_animate;
 pub mod egin_vbib;
-pub mod egin_particle;
+#[cfg(feature = "full")] pub mod egin_particle;
 pub mod egin_render;
 
 pub mod prelude {

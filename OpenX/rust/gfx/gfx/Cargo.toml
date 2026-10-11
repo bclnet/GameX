@@ -13,3 +13,6 @@ openx-poly = { path = "../../core/poly" }
 bytemuck = { workspace = true }
 bitflags = { workspace = true }
 glam = { workspace = true }
+
+[features]
+full = []

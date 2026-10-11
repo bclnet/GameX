@@ -5,9 +5,12 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 
+[lints.rust]
+non_snake_case = "allow"
+
 [dependencies]
 openx = { path = "../../core/openx" }
 openx-gfx = { path = "../../gfx/gfx" }
 openx-gfx-egin = { path = "../../gfx/gfx-egin" }
 glam = { workspace = true }
-glow = "0.14"
+glow = "0.18"

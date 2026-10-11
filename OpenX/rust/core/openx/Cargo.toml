@@ -13,3 +13,7 @@ openx-gfx = { path = "../../gfx/gfx" }
 openx-poly = { path = "../poly" }
 openx-sfx = { path = "../../sfx/sfx" }
 openx-vfx = { path = "../../vfx/vfx" }
+glam = { workspace = true }
+
+[features]
+full = ["openx-gfx/full", "openx-vfx/full"]

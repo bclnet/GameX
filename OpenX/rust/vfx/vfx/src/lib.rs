@@ -16,7 +16,7 @@ pub mod disc_addressing;
 pub mod disc_ccd;
 pub mod disc_cdi;
 pub mod disc_cue;
-pub mod disc_mds;
+#[cfg(feature = "full")] pub mod disc_mds;
 pub mod disc_nrg;
 pub mod disc_sector;
 pub mod disc_synth;
@@ -31,7 +31,7 @@ pub mod prelude {
     pub use crate::disc_addressing::{Bcd2, Msf, FRAMES_PER_SECOND, LEAD_IN_SECTORS};
     pub use crate::disc_ccd::{CcdFile, CcdSession, CcdTocEntry, CcdTrack};
     pub use crate::disc_cdi::{CdiFile, CdiSession, CdiTrack, CdiTrackHeader};
-    pub use crate::disc_mds::{MdsFile, MdsHeader, MdsSession, MdsTrack};
+    #[cfg(feature = "full")] pub use crate::disc_mds::{MdsFile, MdsHeader, MdsSession, MdsTrack};
     pub use crate::disc_nrg::{NrgCue, NrgFile, NrgTaoTrack, NrgTrackIndex, NrgVersion};
     pub use crate::disc_sector::{Blob, DiscToc, MemoryBlob, SbiFile, SbiPatch, SectorReaderPolicy, TocItem};
     pub use crate::disc_synth::{ecm, offsets, SessionFormat, SynthPart};

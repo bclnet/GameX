@@ -21,7 +21,7 @@ The ports are meant to be read side by side: the same files, the same types, the
 A change is not done until it has been made in every language that has the code.
 
 1. **Same change, same commit.** A behaviour or API change to C# is made to the Python and Rust twins in the same change, not in a follow-up.
-2. **Same shape and names.** Keep the same types, members, method names and control flow. Don't add language-specific naming such as an `Async` suffix in one port only; follow the casing each port already uses (`Opening`, `opening`).
+2. **Same shape and names.** Keep the same types, members, method names and control flow. Don't add language-specific naming such as an `Async` suffix in one port only; names are C#'s, with members in camelCase in both Python and Rust (`Opening` / `opening`, `DecodePath` / `decodePath`) and types in C#'s PascalCase. Rust does not use snake_case.
 3. **Nearest equivalent where a language differs.** When a language can't express the change directly, use its closest equivalent and say so at the site. Example: C# `Opening().GetAwaiter().GetResult()` is Python `runSync(self.opening())`.
 4. **Missing twin, record it.** If a port doesn't have the code yet (a Rust `PORT-STATUS: todo` stub, or a family Python hasn't ported), don't invent it as part of the change. Note it in the change description so the port picks up the current shape when it's written; for Rust, `PORT_MAP.tsv` and `sync-check.sh` track the C# file it must follow.
 5. **Say what was updated.** Every change description lists each language as updated, not applicable (and why), or still to do.

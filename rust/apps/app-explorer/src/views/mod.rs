@@ -1,5 +1,6 @@
 // mirrors dotnet folder `views` — see PORT_MAP.tsv
 pub mod about_page_xaml;
+pub mod app_hex_widget;
 pub mod audio_player_xaml;
 pub mod custom_xaml;
 pub mod file_content_xaml;

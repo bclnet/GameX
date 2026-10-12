@@ -5,6 +5,7 @@
 
 pub mod app;
 pub mod assembly;
+pub mod binary;
 pub mod blizzard_proto_database;
 pub mod client;
 pub mod config;

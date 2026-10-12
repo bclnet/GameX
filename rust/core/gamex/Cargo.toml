@@ -10,4 +10,10 @@ workspace = true
 
 [dependencies]
 openx = { path = "../../../OpenX/rust/core/openx" }
+openx-poly = { path = "../../../OpenX/rust/core/poly" }
+openx-vfx = { path = "../../../OpenX/rust/vfx/vfx" }
 glam = { workspace = true }
+indexmap = "2"
+serde_json = { version = "1", features = ["preserve_order"] }
+bitflags = { workspace = true }
+md-5 = "0.10"

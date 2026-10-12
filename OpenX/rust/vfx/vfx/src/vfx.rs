@@ -53,15 +53,15 @@ pub trait VfsRead: Read + Seek {}
 impl<T: Read + Seek> VfsRead for T {}
 
 /// C# `abstract class FileSystem`.
-pub trait FileSystem {
+pub trait FileSystem: Send + Sync {
     /// C# `Glob(string path, string searchPattern)`.
-    fn glob(&self, path: &str, search_pattern: &str) -> Vec<String>;
+    fn glob(&self, path: &str, searchPattern: &str) -> Vec<String>;
 
     /// C# `FileExists(string path)`.
-    fn file_exists(&self, path: &str) -> bool;
+    fn fileExists(&self, path: &str) -> bool;
 
     /// C# `FileInfo(string path)` — `None` where the C# returned `(null, 0)`.
-    fn file_info(&self, path: &str) -> Option<FileInfo>;
+    fn fileInfo(&self, path: &str) -> Option<FileInfo>;
 
     /// C# `Open(string path, string mode)`.
     ///
@@ -74,21 +74,21 @@ pub trait FileSystem {
     ///
     /// Expands `(a:b:c)` alternation groups in the pattern before globbing, so
     /// `tex(0:1).dds` searches `tex0.dds` and `tex1.dds`.
-    fn find_paths(&self, path: &str, search_pattern: &str) -> Vec<String> {
-        if let Some((prefix, alts, suffix)) = split_alternation(search_pattern) {
+    fn findPaths(&self, path: &str, searchPattern: &str) -> Vec<String> {
+        if let Some((prefix, alts, suffix)) = splitAlternation(searchPattern) {
             let mut out = Vec::new();
             for alt in alts {
                 let expanded = format!("{prefix}{alt}{suffix}");
-                out.extend(self.find_paths(path, &expanded));
+                out.extend(self.findPaths(path, &expanded));
             }
             return out;
         }
-        self.glob(path, search_pattern)
+        self.glob(path, searchPattern)
     }
 }
 
 /// Splits `"a(x:y)b"` into `("a", ["x", "y"], "b")`.
-fn split_alternation(pattern: &str) -> Option<(&str, Vec<&str>, &str)> {
+fn splitAlternation(pattern: &str) -> Option<(&str, Vec<&str>, &str)> {
     let start = pattern.find('(')?;
     let mid = pattern[start..].find(':')? + start;
     let end = pattern[mid..].find(')')? + mid;
@@ -106,37 +106,37 @@ fn split_alternation(pattern: &str) -> Option<(&str, Vec<&str>, &str)> {
 ///
 /// Locale-invariant, unlike the C# — see the module header. An empty pattern
 /// matches everything, as in the C#.
-pub fn create_matcher(search_pattern: &str) -> Box<dyn Fn(&str) -> bool> {
-    if search_pattern.is_empty() {
+pub fn createMatcher(searchPattern: &str) -> Box<dyn Fn(&str) -> bool> {
+    if searchPattern.is_empty() {
         return Box::new(|_| true);
     }
-    let stars = search_pattern.matches('*').count();
+    let stars = searchPattern.matches('*').count();
     if stars == 0 {
-        let p = search_pattern.to_ascii_lowercase();
+        let p = searchPattern.to_ascii_lowercase();
         return Box::new(move |x| x.to_ascii_lowercase() == p);
     }
     if stars == 1 {
-        let bare = search_pattern.replace('*', "").to_ascii_lowercase();
-        if search_pattern.starts_with('*') {
+        let bare = searchPattern.replace('*', "").to_ascii_lowercase();
+        if searchPattern.starts_with('*') {
             return Box::new(move |x| x.to_ascii_lowercase().ends_with(&bare));
         }
-        if search_pattern.ends_with('*') {
+        if searchPattern.ends_with('*') {
             return Box::new(move |x| x.to_ascii_lowercase().starts_with(&bare));
         }
     }
     // General case: `*` matches any run, everything else is literal. The C#
     // built a regex here; a direct matcher avoids the dependency and the
     // `catch { return false; }` that silently swallowed bad patterns.
-    let parts: Vec<String> = search_pattern
+    let parts: Vec<String> = searchPattern
         .to_ascii_lowercase()
         .split('*')
         .map(str::to_string)
         .collect();
-    Box::new(move |x| glob_match(&x.to_ascii_lowercase(), &parts))
+    Box::new(move |x| globMatch(&x.to_ascii_lowercase(), &parts))
 }
 
 /// `parts` are the literal runs between `*`s, already lowercased.
-fn glob_match(s: &str, parts: &[String]) -> bool {
+fn globMatch(s: &str, parts: &[String]) -> bool {
     if parts.is_empty() {
         return true;
     }
@@ -175,8 +175,8 @@ impl VirtualFileSystem {
 }
 
 impl FileSystem for VirtualFileSystem {
-    fn glob(&self, _path: &str, search_pattern: &str) -> Vec<String> {
-        let m = create_matcher(search_pattern);
+    fn glob(&self, _path: &str, searchPattern: &str) -> Vec<String> {
+        let m = createMatcher(searchPattern);
         let mut out: Vec<String> = self
             .virtuals
             .keys()
@@ -189,11 +189,11 @@ impl FileSystem for VirtualFileSystem {
         out
     }
 
-    fn file_exists(&self, path: &str) -> bool {
+    fn fileExists(&self, path: &str) -> bool {
         self.virtuals.contains_key(path)
     }
 
-    fn file_info(&self, path: &str) -> Option<FileInfo> {
+    fn fileInfo(&self, path: &str) -> Option<FileInfo> {
         self.virtuals.get(path).map(|d| FileInfo {
             path: path.to_string(),
             length: d.len() as u64,
@@ -220,19 +220,19 @@ impl AggregateFileSystem {
 }
 
 impl FileSystem for AggregateFileSystem {
-    fn glob(&self, path: &str, search_pattern: &str) -> Vec<String> {
+    fn glob(&self, path: &str, searchPattern: &str) -> Vec<String> {
         self.aggregate
             .iter()
-            .flat_map(|f| f.glob(path, search_pattern))
+            .flat_map(|f| f.glob(path, searchPattern))
             .collect()
     }
 
-    fn file_exists(&self, path: &str) -> bool {
-        self.aggregate.iter().any(|f| f.file_exists(path))
+    fn fileExists(&self, path: &str) -> bool {
+        self.aggregate.iter().any(|f| f.fileExists(path))
     }
 
-    fn file_info(&self, path: &str) -> Option<FileInfo> {
-        self.aggregate.iter().find_map(|f| f.file_info(path))
+    fn fileInfo(&self, path: &str) -> Option<FileInfo> {
+        self.aggregate.iter().find_map(|f| f.fileInfo(path))
     }
 
     fn open(&self, path: &str) -> Option<Box<dyn VfsRead + '_>> {
@@ -276,22 +276,22 @@ impl DirectoryFileSystem {
 }
 
 impl FileSystem for DirectoryFileSystem {
-    fn glob(&self, path: &str, search_pattern: &str) -> Vec<String> {
+    fn glob(&self, path: &str, searchPattern: &str) -> Vec<String> {
         let Some(base) = self.resolve(path) else {
             return Vec::new();
         };
-        let m = create_matcher(search_pattern);
+        let m = createMatcher(searchPattern);
         let mut out = Vec::new();
         walk(&base, &base, &m, &mut out);
         out.sort();
         out
     }
 
-    fn file_exists(&self, path: &str) -> bool {
+    fn fileExists(&self, path: &str) -> bool {
         self.resolve(path).map(|p| p.is_file()).unwrap_or(false)
     }
 
-    fn file_info(&self, path: &str) -> Option<FileInfo> {
+    fn fileInfo(&self, path: &str) -> Option<FileInfo> {
         let p = self.resolve(path)?;
         let md = std::fs::metadata(&p).ok()?;
         if !md.is_file() {
@@ -347,7 +347,7 @@ mod tests {
     #[test]
     fn exact_match_is_case_insensitive_but_locale_invariant() {
         // Under a Turkish locale the C# fails this: "I".ToLower() is "ı".
-        let m = create_matcher("a/index.dat");
+        let m = createMatcher("a/index.dat");
         assert!(m("a/INDEX.DAT"));
         assert!(m("A/Index.Dat"));
         assert!(!m("a/index.dat2"));
@@ -355,45 +355,45 @@ mod tests {
 
     #[test]
     fn prefix_and_suffix_wildcards() {
-        assert!(create_matcher("*.dds")("b/tex0.dds"));
-        assert!(!create_matcher("*.dds")("b/tex0.png"));
-        assert!(create_matcher("b/*")("b/tex0.dds"));
-        assert!(!create_matcher("b/*")("a/tex0.dds"));
+        assert!(createMatcher("*.dds")("b/tex0.dds"));
+        assert!(!createMatcher("*.dds")("b/tex0.png"));
+        assert!(createMatcher("b/*")("b/tex0.dds"));
+        assert!(!createMatcher("b/*")("a/tex0.dds"));
     }
 
     #[test]
     fn interior_wildcards_match_runs() {
-        let m = create_matcher("b/*.dds");
+        let m = createMatcher("b/*.dds");
         assert!(m("b/tex0.dds"));
         assert!(!m("a/tex0.dds"));
-        let m2 = create_matcher("*tex*dds");
+        let m2 = createMatcher("*tex*dds");
         assert!(m2("b/tex1.dds"));
         assert!(!m2("b/img1.png"));
     }
 
     #[test]
     fn empty_pattern_matches_everything() {
-        assert!(create_matcher("")("anything at all"));
+        assert!(createMatcher("")("anything at all"));
     }
 
     #[test]
     fn alternation_groups_expand() {
         let f = vfs();
-        let mut found = f.find_paths("", "b/tex(0:1).dds");
+        let mut found = f.findPaths("", "b/tex(0:1).dds");
         found.sort();
         assert_eq!(found, vec!["b/tex0.dds", "b/tex1.dds"]);
     }
 
     #[test]
     fn alternation_with_no_group_falls_through_to_glob() {
-        assert_eq!(vfs().find_paths("", "b/tex0.dds"), vec!["b/tex0.dds"]);
+        assert_eq!(vfs().findPaths("", "b/tex0.dds"), vec!["b/tex0.dds"]);
     }
 
     #[test]
     fn virtual_fs_reads_back_what_was_put_in() {
         let f = vfs();
-        assert!(f.file_exists("a/index.dat"));
-        assert_eq!(f.file_info("a/index.dat").unwrap().length, 3);
+        assert!(f.fileExists("a/index.dat"));
+        assert_eq!(f.fileInfo("a/index.dat").unwrap().length, 3);
         let mut s = String::new();
         f.open("a/index.dat").unwrap().read_to_string(&mut s).unwrap();
         assert_eq!(s, "one");
@@ -404,8 +404,8 @@ mod tests {
         // The archive filesystems in C# throw here, which breaks the aggregate.
         let f = vfs();
         assert!(f.open("nope").is_none());
-        assert!(f.file_info("nope").is_none());
-        assert!(!f.file_exists("nope"));
+        assert!(f.fileInfo("nope").is_none());
+        assert!(!f.fileExists("nope"));
     }
 
     #[test]
@@ -418,8 +418,8 @@ mod tests {
             Box::new(VirtualFileSystem::new(a)),
             Box::new(VirtualFileSystem::new(b)),
         ]);
-        assert!(agg.file_exists("only_in_a"));
-        assert!(agg.file_exists("only_in_b"));
+        assert!(agg.fileExists("only_in_a"));
+        assert!(agg.fileExists("only_in_b"));
         assert!(agg.open("only_in_b").is_some(), "must not stop at the first miss");
         assert!(agg.open("nowhere").is_none());
     }

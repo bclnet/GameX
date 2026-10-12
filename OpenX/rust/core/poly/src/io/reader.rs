@@ -15,7 +15,7 @@
 // returns the new position instead, since `&mut self` chaining fights the
 // borrow checker for no real gain.
 
-use std::io::{copy, Error, ErrorKind, Read, Seek, Write}; //, SeekFrom, Write}; //self
+use std::io::{copy, Error, ErrorKind, Read, Seek, SeekFrom, Write}; //self
 // use rust_decimal::Decimal;
 
 // use super::polyfill::X_BoundBox;
@@ -157,11 +157,11 @@ pub trait BinaryReaderExt: Read + Seek {
     //     Ok(self.seek(SeekFrom::Start(offset))?)
     // }
 
-    // /// C# `Skip(long count)` — relative.
-    // #[inline]
-    // fn skip(&mut self, count: i64) -> Result<u64> {
-    //     Ok(self.seek(SeekFrom::Current(count))?)
-    // }
+    /// C# `Skip(long count)` — relative.
+    #[inline]
+    fn skip(&mut self, count: i64) -> Result<u64> {
+        Ok(self.seek(SeekFrom::Current(count))?)
+    }
 
     // /// C# `End(long offset)`.
     // #[inline]

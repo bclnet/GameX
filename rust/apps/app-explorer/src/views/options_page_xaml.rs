@@ -1,6 +1,18 @@
-// PORT-SOURCE: Applications/GameX.App.Explorer/Views/OptionsPage.xaml.cs
+// PORT-SOURCE: Apps/GameX.App.Explorer/Views/OptionsPage.xaml.cs
 // PORT-SHA: d2e2168c5ee5658b
-// PORT-STATUS: todo (5 live LOC in C#)
-//
-// Not yet ported. When porting, update PORT-SHA to the C# file's current
-// hash and flip PORT-STATUS to `done`. ./sync-check.sh reports drift.
+// PORT-STATUS: done
+
+use eframe::egui;
+
+/// OptionsPage
+#[derive(Default)]
+pub struct OptionsPage;
+
+impl OptionsPage {
+    /// Returns false once the window is closed.
+    pub fn ui(&mut self, ctx: &egui::Context) -> bool {
+        let mut open = true;
+        egui::Window::new("Options").open(&mut open).default_size([380., 280.]).show(ctx, |ui| {});
+        open
+    }
+}

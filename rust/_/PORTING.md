@@ -199,48 +199,33 @@ than hand-porting 4,986 generated lines — and it would fix the C# side too,
 which currently cannot regenerate either.
 
 
-## `Family.cs` — reflection becomes the type registry
+## `Family.cs` / `Binary.cs` / `Meta.cs` — the core model
 
-The C# resolves polymorphic types from strings in the family JSON:
+Ported in full (October 2026); each file's header says how C#'s shapes map:
+`Family`/`FamilyGame`/... are structs shared as `Arc`s with back references in a
+`OnceLock`; `Archive` is a trait (its virtual members) plus `ArchiveExt`;
+`BinaryArchive` is a struct whose overriding subclasses (`ManyArchive`,
+`SubArchive`, `StreamArchive`) plug in a `BinaryArchiveVirtual`; C# `object` is
+`meta::Tag`; `Task<T>` is a boxed future and `Open`/`Close` wait on it with
+`binary::getResult`. Specs are embedded at build time (`core/gamex/build.rs`),
+as C# embeds them as resources.
 
-```csharp
-var familyType = _valueF(elem, "familyType",
-    z => Type.GetType(z.GetString(), false) ?? throw new ArgumentOutOfRangeException(...));
-var family = familyType != null
-    ? (Family)Activator.CreateInstance(familyType, elem)
-    : new Family(elem);
-```
+`Type.GetType` + `Activator.CreateInstance` becomes a registry:
+`family::registerType(name, factory)` / `findType`, keyed by the C# type name
+in the spec (`"GameX.Uncore.UncoreArchive, GameX.Uncore"`). Family crates
+register their `archiveType` (`ArchiveFactory`), `vfxType`, `clientType` and
+explorer apps; until one is registered, `CreateArchive` fails with
+"unknown ArchiveType". `familyType`, `gameType`, `engineType`, `appType` and
+`detectorType` are recorded but build the base type. When openx's parked
+`TypeRegistry` (`OpenX/rust/core/poly/_/`) comes back out, the registry moves
+there. Only registered types are reachable, so a spec can't instantiate an
+arbitrary type as C#'s `Type.GetType` allows.
 
-Same shape for `gameType`, `engineType`, `pakFileType`. Rust has no `Activator`,
-and this is precisely what `openx_poly`'s `TypeRegistry` was built for
-during the library port — so it is reused rather than reinvented.
-
-Worth flagging on its own merits: `Type.GetType` + `Activator.CreateInstance`
-means **a family JSON file can instantiate any type in any loaded assembly**.
-That is a deserialization gadget if family JSON is ever fetched rather than
-shipped. Only registered types are reachable through a registry, so the
-exposure disappears as a side effect of the translation.
-
-Three observations:
-
-* **`CreateFamily` recurses through `Specs` with no cycle detection.** A spec
-  referencing itself, directly or through a chain, recurses until the stack
-  overflows — which .NET cannot catch, so there is no diagnostic. Family JSON is
-  shipped, so this is an editing hazard rather than an attack, but the failure
-  mode is a hard process death. `resolve_specs` returns `SpecCycle` instead.
-* **`ParseKey`'s `hex:/` branch is ambiguous, and I did not resolve it.** It
-  reads `len >> 2` groups taking two hex digits at `(x << 2) + 2` — a 4-char
-  group with the pair at index 2, which fits an escape-style `\xNN\xNN`
-  encoding. But the guard tests for `/`, not `\`. Either the sentinel or the
-  stride is wrong. Both readings are implemented behind `HexStride`, and a test
-  demonstrates they disagree on the same input (`/x01/x02` -> `[01, 02]` under
-  the C#'s stride, rejected under the other; `/0102` -> `[16]` vs `[01, 02]`).
-  **This one needs someone who knows which format the config files actually
-  use.**
-* **A `*`-prefixed game id sets the default template and returns null**, so
-  every caller has to know that. Modelled as `GameEntry::DefaultTemplate` so it
-  cannot be missed.
-
+Kept as in C#: `CreateFamily` recurses through `specs` with no cycle check; a
+`*` game id becomes the default and `CreateFamilyGame` returns null (`None`);
+`ParseKey`'s `hex:/` form reads `/xNN` groups (the stride fits that form; no
+spec uses it today); keys of an unknown store (`Archive:` in Mythic and
+Nintendo) log an error from `FamilyGame`'s constructor, as C# does.
 
 ## `GameX` core is done — 32 of 33 files
 
@@ -307,8 +292,6 @@ in the OpenX port, and `AsColor` also casts without clamping.
   scaled, and the two differ by 256× in every skinned vertex.
   `IntVertex::weights_normalised` makes the ambiguity visible; it needs
   resolving from the formats, not the code.
-* **`ParseKey`'s `hex:/` stride** (see the `Family.cs` section) — reads 4-char
-  groups with the pair at index 2, which fits `\xNN\xNN`, but guards on `/`.
 
 ### Smaller notes
 

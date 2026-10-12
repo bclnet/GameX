@@ -25,7 +25,7 @@
 // Those commented alternatives turned out to be the most useful thing in the
 // file — 421 game ids with descriptions, which is the
 // closest thing to a game-id registry in the repository. They are preserved in
-// [`ALTERNATIVES`] because they resolved an open question elsewhere; see the
+// [`Alternatives`] because they resolved an open question elsewhere; see the
 // note on the `Height` rename in PORTING.md.
 //
 // ===================== TWO C#-SIDE OBSERVATIONS ==========================
@@ -44,343 +44,343 @@
 /// C# `FamilyManager.GlobalOption`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct GlobalOption {
-    pub platform: Option<&'static str>,
-    pub find_key: Option<&'static str>,
+    pub engine: Option<&'static str>,
+    pub findKey: Option<&'static str>,
     pub family: Option<&'static str>,
     pub game: Option<&'static str>,
     pub edition: Option<&'static str>,
-    pub force_path: Option<&'static str>,
-    pub force_open: bool,
+    pub forcePath: Option<&'static str>,
+    pub forceOpen: bool,
 }
 
 /// The branch `#define Arkane` selects in the committed C#.
-pub const DEFAULT_FAMILY: &str = "Arkane";
+pub const DefaultFamily: &str = "Arkane";
 
 /// Every `#if` branch, keyed by the family name the C# used as its symbol.
-pub static OPTIONS: &[(&str, GlobalOption)] = &[
+pub static Options: &[(&str, GlobalOption)] = &[
     ("Arkane", GlobalOption {
-        platform: Some("GL"),
-        find_key: None,
+        engine: Some("GL"),
+        findKey: None,
         family: Some("Arkane"),
         game: Some("AF"),
         edition: None,
-        force_path: Some("sample:4"),
-        force_open: true,
+        forcePath: Some("sample:4"),
+        forceOpen: true,
     }),
     ("Beamdog", GlobalOption {
-        platform: Some("UK"),
-        find_key: None,
+        engine: Some("UK"),
+        findKey: None,
         family: Some("Beamdog"),
         game: Some("MDK2:HD"),
         edition: None,
-        force_path: Some("sample:0"),
-        force_open: true,
+        forcePath: Some("sample:0"),
+        forceOpen: true,
     }),
     ("Bethesda", GlobalOption {
-        platform: Some("GL"),
-        find_key: None,
+        engine: Some("GL"),
+        findKey: None,
         family: Some("Bethesda"),
         game: Some("Morrowind"),
         edition: None,
-        force_path: Some("sample:3"),
-        force_open: true,
+        forcePath: Some("sample:3"),
+        forceOpen: true,
     }),
     ("Bioware", GlobalOption {
-        platform: Some("GL"),
-        find_key: None,
+        engine: Some("GL"),
+        findKey: None,
         family: Some("Bioware"),
         game: Some("SWTOR"),
         edition: None,
-        force_path: Some("sample:0"),
-        force_open: true,
+        forcePath: Some("sample:0"),
+        forceOpen: true,
     }),
     ("Black", GlobalOption {
-        platform: Some("GL"),
-        find_key: None,
+        engine: Some("GL"),
+        findKey: None,
         family: Some("Black"),
         game: None,
         edition: None,
-        force_path: Some("sample:*"),
-        force_open: true,
+        forcePath: Some("sample:*"),
+        forceOpen: true,
     }),
     ("Blizzard", GlobalOption {
-        platform: Some("GL"),
-        find_key: None,
+        engine: Some("GL"),
+        findKey: None,
         family: Some("Blizzard"),
         game: None,
         edition: None,
-        force_path: Some("sample:*"),
-        force_open: true,
+        forcePath: Some("sample:*"),
+        forceOpen: true,
     }),
     ("Bohemia", GlobalOption {
-        platform: Some("GL"),
-        find_key: None,
+        engine: Some("GL"),
+        findKey: None,
         family: Some("Bohemia"),
         game: None,
         edition: None,
-        force_path: Some("sample:*"),
-        force_open: true,
+        forcePath: Some("sample:*"),
+        forceOpen: true,
     }),
     ("Bullfrog", GlobalOption {
-        platform: Some("GL"),
-        find_key: None,
+        engine: Some("GL"),
+        findKey: None,
         family: Some("Bullfrog"),
         game: Some("S"),
         edition: None,
-        force_path: Some("sample:0"),
-        force_open: true,
+        forcePath: Some("sample:0"),
+        forceOpen: true,
     }),
     ("Capcom", GlobalOption {
-        platform: Some("GL"),
-        find_key: None,
+        engine: Some("GL"),
+        findKey: None,
         family: Some("Capcom"),
         game: None,
         edition: None,
-        force_path: Some("sample:*"),
-        force_open: false,
+        forcePath: Some("sample:*"),
+        forceOpen: false,
     }),
     ("Cig", GlobalOption {
-        platform: Some("GL"),
-        find_key: None,
+        engine: Some("GL"),
+        findKey: None,
         family: Some("Cig"),
         game: Some("StarCitizen"),
         edition: None,
-        force_path: Some("sample:*"),
-        force_open: true,
+        forcePath: Some("sample:*"),
+        forceOpen: true,
     }),
     ("Cryptic", GlobalOption {
-        platform: Some("GL"),
-        find_key: None,
+        engine: Some("GL"),
+        findKey: None,
         family: Some("Cryptic"),
         game: Some("CO"),
         edition: None,
-        force_path: Some("sample:1"),
-        force_open: true,
+        forcePath: Some("sample:1"),
+        forceOpen: true,
     }),
     ("Crytek", GlobalOption {
-        platform: Some("GL"),
-        find_key: None,
+        engine: Some("GL"),
+        findKey: None,
         family: Some("Crytek"),
         game: Some("FarCry2"),
         edition: None,
-        force_path: Some("sample:1"),
-        force_open: true,
+        forcePath: Some("sample:1"),
+        forceOpen: true,
     }),
     ("Cyanide", GlobalOption {
-        platform: Some("GL"),
-        find_key: None,
+        engine: Some("GL"),
+        findKey: None,
         family: Some("Cyanide"),
         game: None,
         edition: None,
-        force_path: Some("sample:*"),
-        force_open: true,
+        forcePath: Some("sample:*"),
+        forceOpen: true,
     }),
     ("EA", GlobalOption {
-        platform: Some("GL"),
-        find_key: None,
+        engine: Some("GL"),
+        findKey: None,
         family: Some("EA"),
         game: Some("xx"),
         edition: None,
-        force_path: Some("sample:*"),
-        force_open: true,
+        forcePath: Some("sample:*"),
+        forceOpen: true,
     }),
     ("Epic", GlobalOption {
-        platform: Some("GL"),
-        find_key: None,
+        engine: Some("GL"),
+        findKey: None,
         family: Some("Epic"),
         game: Some("UE1"),
         edition: None,
-        force_path: Some("sample:*"),
-        force_open: true,
+        forcePath: Some("sample:*"),
+        forceOpen: true,
     }),
     ("Firaxis", GlobalOption {
-        platform: Some("GL"),
-        find_key: None,
+        engine: Some("GL"),
+        findKey: None,
         family: Some("Firaxis"),
         game: Some("UE1"),
         edition: None,
-        force_path: Some("sample:*"),
-        force_open: true,
+        forcePath: Some("sample:*"),
+        forceOpen: true,
     }),
     ("Frictional", GlobalOption {
-        platform: Some("GL"),
-        find_key: None,
+        engine: Some("GL"),
+        findKey: None,
         family: Some("Frictional"),
         game: None,
         edition: None,
-        force_path: Some("sample:*"),
-        force_open: true,
+        forcePath: Some("sample:*"),
+        forceOpen: true,
     }),
     ("Frontier", GlobalOption {
-        platform: Some("GL"),
-        find_key: None,
+        engine: Some("GL"),
+        findKey: None,
         family: Some("Frontier"),
         game: None,
         edition: None,
-        force_path: Some("sample:*"),
-        force_open: true,
+        forcePath: Some("sample:*"),
+        forceOpen: true,
     }),
     ("Gamebryo", GlobalOption {
-        platform: Some("GL"),
-        find_key: None,
+        engine: Some("GL"),
+        findKey: None,
         family: Some("Gamebryo"),
         game: None,
         edition: None,
-        force_path: Some("sample:*"),
-        force_open: true,
+        forcePath: Some("sample:*"),
+        forceOpen: true,
     }),
     ("ID", GlobalOption {
-        platform: Some("GL"),
-        find_key: None,
+        engine: Some("GL"),
+        findKey: None,
         family: Some("ID"),
         game: Some("Q"),
         edition: None,
-        force_path: Some("sample:1"),
-        force_open: true,
+        forcePath: Some("sample:1"),
+        forceOpen: true,
     }),
     ("IW", GlobalOption {
-        platform: Some("GL"),
-        find_key: None,
+        engine: Some("GL"),
+        findKey: None,
         family: Some("IW"),
         game: Some("BO4"),
         edition: None,
-        force_path: Some("sample:*"),
-        force_open: true,
+        forcePath: Some("sample:*"),
+        forceOpen: true,
     }),
     ("Lucas", GlobalOption {
-        platform: Some("GL"),
-        find_key: None,
+        engine: Some("GL"),
+        findKey: None,
         family: Some("Lucas"),
         game: Some("MM"),
         edition: None,
-        force_path: Some("sample:0"),
-        force_open: true,
+        forcePath: Some("sample:0"),
+        forceOpen: true,
     }),
     ("Monolith", GlobalOption {
-        platform: Some("GL"),
-        find_key: None,
+        engine: Some("GL"),
+        findKey: None,
         family: Some("Monolith"),
         game: None,
         edition: None,
-        force_path: Some("sample:*"),
-        force_open: true,
+        forcePath: Some("sample:*"),
+        forceOpen: true,
     }),
     ("Mythic", GlobalOption {
-        platform: Some("GL"),
-        find_key: None,
+        engine: Some("GL"),
+        findKey: None,
         family: Some("Mythic"),
         game: Some("UO"),
         edition: None,
-        force_path: Some("sample:0"),
-        force_open: true,
+        forcePath: Some("sample:0"),
+        forceOpen: true,
     }),
     ("Nintendo", GlobalOption {
-        platform: Some("GL"),
-        find_key: None,
+        engine: Some("GL"),
+        findKey: None,
         family: Some("Nintendo"),
         game: Some("Z:TFH"),
         edition: None,
-        force_path: Some("sample:0"),
-        force_open: true,
+        forcePath: Some("sample:0"),
+        forceOpen: true,
     }),
     ("Origin", GlobalOption {
-        platform: Some("GL"),
-        find_key: None,
+        engine: Some("GL"),
+        findKey: None,
         family: Some("Origin"),
         game: Some("UO"),
         edition: None,
-        force_path: Some("sample:0"),
-        force_open: true,
+        forcePath: Some("sample:0"),
+        forceOpen: true,
     }),
     ("Red", GlobalOption {
-        platform: Some("GL"),
-        find_key: None,
+        engine: Some("GL"),
+        findKey: None,
         family: Some("Red"),
         game: Some("Witcher"),
         edition: None,
-        force_path: Some("sample:*"),
-        force_open: true,
+        forcePath: Some("sample:*"),
+        forceOpen: true,
     }),
     ("Rockstar", GlobalOption {
-        platform: Some("GL"),
-        find_key: None,
+        engine: Some("GL"),
+        findKey: None,
         family: Some("Rockstar"),
         game: Some("GTA2"),
         edition: None,
-        force_path: Some("sample:0"),
-        force_open: true,
+        forcePath: Some("sample:0"),
+        forceOpen: true,
     }),
     ("Ubisoft", GlobalOption {
-        platform: Some("GL"),
-        find_key: None,
+        engine: Some("GL"),
+        findKey: None,
         family: Some("Ubisoft"),
         game: None,
         edition: None,
-        force_path: Some("sample:*"),
-        force_open: true,
+        forcePath: Some("sample:*"),
+        forceOpen: true,
     }),
     ("Uncore", GlobalOption {
-        platform: Some("GL"),
-        find_key: None,
+        engine: Some("GL"),
+        findKey: None,
         family: Some("Uncore"),
         game: Some("APP"),
         edition: None,
-        force_path: Some("sample:0"),
-        force_open: true,
+        forcePath: Some("sample:0"),
+        forceOpen: true,
     }),
     ("Unity", GlobalOption {
-        platform: Some("GL"),
-        find_key: None,
+        engine: Some("GL"),
+        findKey: None,
         family: Some("Unity"),
         game: None,
         edition: None,
-        force_path: Some("sample:*"),
-        force_open: true,
+        forcePath: Some("sample:*"),
+        forceOpen: true,
     }),
     ("Valve", GlobalOption {
-        platform: Some("GL"),
-        find_key: None,
+        engine: Some("GL"),
+        findKey: None,
         family: Some("Valve"),
         game: Some("HL:Src"),
         edition: None,
-        force_path: Some("sample:0"),
-        force_open: true,
+        forcePath: Some("sample:0"),
+        forceOpen: true,
     }),
     ("Volition", GlobalOption {
-        platform: Some("GL"),
-        find_key: None,
+        engine: Some("GL"),
+        findKey: None,
         family: Some("Volition"),
         game: Some("D2"),
         edition: None,
-        force_path: Some("sample:0"),
-        force_open: true,
+        forcePath: Some("sample:0"),
+        forceOpen: true,
     }),
     ("WB", GlobalOption {
-        platform: Some("GL"),
-        find_key: None,
+        engine: Some("GL"),
+        findKey: None,
         family: Some("WB"),
         game: Some("AC"),
         edition: None,
-        force_path: Some("sample:0"),
-        force_open: true,
+        forcePath: Some("sample:0"),
+        forceOpen: true,
     }),
     ("X2K", GlobalOption {
-        platform: Some("GL"),
-        find_key: None,
+        engine: Some("GL"),
+        findKey: None,
         family: Some("X2K"),
         game: Some("XX"),
         edition: None,
-        force_path: Some("sample:0"),
-        force_open: true,
+        forcePath: Some("sample:0"),
+        forceOpen: true,
     }),
     ("Xbox", GlobalOption {
-        platform: Some("GL"),
-        find_key: None,
+        engine: Some("GL"),
+        findKey: None,
         family: Some("Xbox"),
         game: Some("StardewValley"),
         edition: None,
-        force_path: Some("sample:5"),
-        force_open: true,
+        forcePath: Some("sample:5"),
+        forceOpen: true,
     }),
 ];
 
@@ -389,7 +389,7 @@ pub static OPTIONS: &[(&str, GlobalOption)] = &[
 ///
 /// Not executable configuration — it is the only place in the repository that
 /// maps a game id to a human name, so it is worth keeping.
-pub static ALTERNATIVES: &[(&str, &str, &str)] = &[
+pub static Alternatives: &[(&str, &str, &str)] = &[
     ("Arkane", "DOM", "Dark Messiah of Might and Magic [source]"),
     ("Arkane", "D", "Dishonored [unreal]"),
     ("Arkane", "D2", "Dishonored 2"),
@@ -813,10 +813,13 @@ pub static ALTERNATIVES: &[(&str, &str, &str)] = &[
     ("Xbox", "AxiomVerge2", "Axiom Verge 2"),
 ];
 
+/// C# `FamilyManager.FamilyIds`.
+pub static FamilyIds: &[&str] = &["Arkane", "Beamdog", "Bethesda", "Bioware", "Black", "Blizzard", "Bohemia", "Bullfrog", "Capcom", "Cig", "Cryptic", "Crytek", "Cyanide", "EA", "Epic", "Firaxis", "Frictional", "Frontier", "Gamebryo", "ID", "IW", "Lucas", "Monolith", "Mythic", "Nintendo", "Origin", "Red", "Rockstar", "Ubisoft", "Uncore", "Unity", "Valve", "Volition", "WB", "X2K", "Xbox"];
+
 /// C# `FamilyManager.Option` — the selected option.
 pub fn option() -> GlobalOption {
-    for (k, v) in OPTIONS {
-        if *k == DEFAULT_FAMILY {
+    for (k, v) in Options {
+        if *k == DefaultFamily {
             return *v;
         }
     }
@@ -824,19 +827,19 @@ pub fn option() -> GlobalOption {
 }
 
 /// Select a different branch by name, which the C# can only do by recompiling.
-pub fn option_for(family: &str) -> Option<GlobalOption> {
-    OPTIONS.iter().find(|(k, _)| *k == family).map(|(_, v)| *v)
+pub fn optionFor(family: &str) -> Option<GlobalOption> {
+    Options.iter().find(|(k, _)| *k == family).map(|(_, v)| *v)
 }
 
 /// Known game ids for a family, from the commented alternatives plus the
 /// active one.
-pub fn known_games(family: &str) -> Vec<(&'static str, &'static str)> {
-    let mut v: Vec<(&str, &str)> = ALTERNATIVES
+pub fn knownGames(family: &str) -> Vec<(&'static str, &'static str)> {
+    let mut v: Vec<(&str, &str)> = Alternatives
         .iter()
         .filter(|(f, _, _)| *f == family)
         .map(|(_, g, d)| (*g, *d))
         .collect();
-    if let Some(o) = option_for(family) {
+    if let Some(o) = optionFor(family) {
         if let Some(g) = o.game {
             v.insert(0, (g, "(active in the committed config)"));
         }
@@ -849,19 +852,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn every_branch_was_extracted() {
-        assert_eq!(OPTIONS.len(), 36);
+    fn everyBranchWasExtracted() {
+        assert_eq!(Options.len(), 36);
     }
 
     #[test]
-    fn the_active_branch_is_the_one_the_define_selects() {
-        assert_eq!(DEFAULT_FAMILY, "Arkane");
+    fn theActiveBranchIsTheOneTheDefineSelects() {
+        assert_eq!(DefaultFamily, "Arkane");
         let o = option();
         assert_eq!(o.family, Some("Arkane"));
     }
 
     #[test]
-    fn the_active_game_is_read_from_the_uncommented_line() {
+    fn theActiveGameIsReadFromTheUncommentedLine() {
         // A regex over the raw block reads the last `Game =`, which is a
         // commented-out `RF`. The active value is `AF`.
         assert_eq!(option().game, Some("AF"));
@@ -869,31 +872,31 @@ mod tests {
     }
 
     #[test]
-    fn debug_overrides_are_present_as_the_c_sharp_has_them() {
+    fn debugOverridesArePresentAsTheCSharpHasThem() {
         let o = option();
-        assert!(o.force_open, "committed enabled");
-        assert_eq!(o.force_path, Some("sample:4"));
+        assert!(o.forceOpen, "committed enabled");
+        assert_eq!(o.forcePath, Some("sample:4"));
     }
 
     #[test]
-    fn every_branch_names_its_family() {
-        for (k, v) in OPTIONS {
+    fn everyBranchNamesItsFamily() {
+        for (k, v) in Options {
             assert_eq!(v.family, Some(*k), "branch {k} disagrees with its symbol");
         }
     }
 
     #[test]
-    fn other_families_are_selectable_without_recompiling() {
-        let b = option_for("Bethesda").expect("Bethesda branch");
+    fn otherFamiliesAreSelectableWithoutRecompiling() {
+        let b = optionFor("Bethesda").expect("Bethesda branch");
         assert_eq!(b.family, Some("Bethesda"));
-        assert!(option_for("NotAFamily").is_none());
+        assert!(optionFor("NotAFamily").is_none());
     }
 
     #[test]
-    fn the_alternatives_registry_survived_extraction() {
-        assert_eq!(ALTERNATIVES.len(), 421);
+    fn theAlternativesRegistrySurvivedExtraction() {
+        assert_eq!(Alternatives.len(), 421);
         // The ids that resolved the rename question elsewhere.
-        let arkane: Vec<&str> = ALTERNATIVES.iter()
+        let arkane: Vec<&str> = Alternatives.iter()
             .filter(|(f, _, _)| *f == "Arkane").map(|(_, g, _)| *g).collect();
         assert!(arkane.contains(&"D"), "Dishonored");
         assert!(arkane.contains(&"D:DOTO"), "Death of the Outsider");
@@ -902,17 +905,17 @@ mod tests {
     }
 
     #[test]
-    fn known_games_puts_the_active_id_first() {
-        let g = known_games("Arkane");
+    fn knownGamesPutsTheActiveIdFirst() {
+        let g = knownGames("Arkane");
         assert_eq!(g[0].0, "AF");
         assert!(g.len() > 1);
     }
 
     #[test]
-    fn no_alternative_id_looks_like_a_renamed_symbol() {
+    fn noAlternativeIdLooksLikeARenamedSymbol() {
         // `Radius` and `Height` appear as game ids in TestHelper.cs but are not
         // ids at all - this registry is the evidence.
-        for (_, gid, _) in ALTERNATIVES {
+        for (_, gid, _) in Alternatives {
             assert!(!gid.contains("Radius"), "{gid}");
             assert!(!gid.contains("Height"), "{gid}");
         }

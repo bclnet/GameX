@@ -14,6 +14,7 @@ pub mod poly;
 // pub mod system;
 // pub mod system_drawing;
 pub mod io;
+pub mod pool;
 // pub mod system_numerics;
 // pub mod system_text;
 // pub mod type_x;
@@ -32,6 +33,7 @@ pub mod prelude {
     // pub use crate::io::partial_input_stream::{PartialInputStream, SharedSource};
     pub use crate::io::poly::{X_BoundBox};
     pub use crate::io::reader::{BinaryReaderExt};
+    pub use crate::pool::KV;
     // pub use crate::io::polyfill_binary_writer::BinaryWriterExt;
     // pub use crate::io::indented_text_writer::{IndentedIoWriter, IndentedTextWriter};
     // pub use crate::io::polyfill_stream::{StreamExt, StreamWriteExt};

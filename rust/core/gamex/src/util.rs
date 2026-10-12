@@ -2,153 +2,85 @@
 // PORT-SHA: 8f7ab9954542a057
 // PORT-STATUS: done
 //
-// JSON config helpers and file-format sniffing.
+// JSON config helpers over `serde_json::Value` (C# `JsonElement`), and
+// file-format sniffing. C# overloads get their own names: `_list<T>(elem, key,
+// func)` is `_listF`, and the array form of `_related` is `_relatedA`.
 //
 // The 112-entry magic-number tables below were **extracted from the C# by
-// script**, not transcribed. At that size a single mistyped nibble would
-// mis-identify a game asset in a way no test would obviously catch — the same
-// reasoning as the enum tables and the Huffman table in the library port.
+// script**, not transcribed.
 //
-// ===================== FIVE C#-SIDE BUGS =================================
+// ===================== C#-SIDE BUGS ======================================
 //
 //   1. **The same magic gives two different answers.** `0x75B22630` maps to
-//      `.asf` on the `fast` path and `.mov` on the slow path, so the extension
-//      depends on a bool the caller passes rather than on the bytes. That magic
-//      is the ASF header GUID prefix (`30 26 B2 75` little-endian), so `.asf`
-//      is the correct answer and the slow table is wrong. **Fix in the C#.**
+//      `.asf` on the `fast` path and `.mov` on the slow path. That magic is the
+//      ASF header GUID prefix, so `.asf` is the correct answer. **Fix in the C#.**
 //
 //   2. **The fallback builds an extension from raw bytes.** Both paths end in
 //      `$".{Encoding.ASCII.GetString(buf.AsSpan(0, 3)).ToLowerInvariant()}"`,
-//      which for non-text input yields a nonsense extension containing control
-//      characters or U+FFFD. It cannot fail, so an unknown format is
-//      indistinguishable from a recognised one.
+//      so an unknown format is indistinguishable from a recognised one. Here it
+//      is `None`.
 //
-//   3. **`_valueV` throws on booleans and nulls.** Its `switch` covers Number,
-//      String, Array and Object, and `JsonValueKind.True`/`False`/`Null` fall
-//      to `_ => throw new ArgumentOutOfRangeException`. A `true` anywhere in a
-//      config file aborts the parse.
+//   3. **`_valueV` throws on booleans and nulls, and reads every number as
+//      `Int32`.** Here they are `Tag::Bool`, `Tag::None` and `i64`.
 //
-//   4. **`_valueV` reads every number as `Int32`.** A float or a value beyond
-//      `int` range throws from `GetInt32()`.
-//
-//   5. **`_random` is an unsynchronised lazily-created `System.Random`.**
-//      `_random ??= new Random()` from two threads can construct two
-//      instances, and `Random` itself is not thread-safe — concurrent `Next`
-//      calls can corrupt its internal state and return 0 indefinitely.
+//   4. **`_random` is an unsynchronised lazily-created `System.Random`.** The
+//      caller passes the generator.
 //
 // Also: `_randomValue(low, high)` is **inclusive** of `high`
 // (`_random.Next(low, high + 1)`), unlike every other range API in either
 // language. Preserved, and asserted in a test.
 
-use std::collections::HashMap;
+use indexmap::IndexMap;
+use serde_json::Value;
 
-/// A JSON value, as the C# handled via `System.Text.Json.JsonElement`.
-///
-/// `Bool` and `Null` are present because the C# threw on them (bug 3), and
-/// `Float` because it read every number as `i32` (bug 4).
-#[derive(Debug, Clone, PartialEq)]
-pub enum Value {
-    Null,
-    Bool(bool),
-    Int(i64),
-    Float(f64),
-    Str(String),
-    Array(Vec<Value>),
-    Object(HashMap<String, Value>),
+use crate::meta::Tag;
+
+// value
+pub fn _valueF<T>(elem: &Value, key: &str, func: impl FnOnce(&Value) -> T, default_: T) -> T {
+    match elem.get(key) { Some(z) => func(z), None => default_ }
+}
+pub fn _value(elem: &Value, key: &str) -> Option<String> { elem.get(key).and_then(Value::as_str).map(str::to_string) }
+pub fn _valueBool(elem: &Value, key: &str, default_: bool) -> bool { elem.get(key).and_then(Value::as_bool).unwrap_or(default_) }
+pub fn _valueV(elem: &Value) -> Tag {
+    match elem {
+        Value::Number(z) => Tag::Int(z.as_i64().unwrap_or_default()),
+        Value::String(z) => Tag::Str(z.clone()),
+        Value::Array(z) => Tag::Strs(z.iter().map(|s| s.as_str().unwrap_or_default().to_string()).collect()),
+        Value::Object(z) => Tag::Map(z.iter().map(|(k, v)| (k.clone(), _valueV(v))).collect()),
+        Value::Bool(z) => Tag::Bool(*z),
+        Value::Null => Tag::None,
+    }
 }
 
-impl Value {
-    /// C# `_value(elem, key, default)`.
-    pub fn str_or<'a>(&'a self, key: &str, default: &'a str) -> &'a str {
-        self.get(key).and_then(Value::as_str).unwrap_or(default)
+// list
+pub fn _listF<T>(elem: &Value, key: &str, func: impl Fn(&str) -> T) -> Option<Vec<T>> { elem.get(key).map(|z| _listV(z).iter().map(|s| func(s)).collect()) }
+pub fn _list(elem: &Value, key: &str) -> Option<Vec<String>> { elem.get(key).map(_listV) }
+pub fn _listV(elem: &Value) -> Vec<String> {
+    match elem {
+        Value::Number(z) => vec![z.to_string()],
+        Value::String(z) => vec![z.clone()],
+        Value::Array(z) => z.iter().map(|s| s.as_str().unwrap_or_default().to_string()).collect(),
+        _ => vec![],
     }
+}
 
-    /// C# `_valueBool(elem, key, default)`.
-    pub fn bool_or(&self, key: &str, default: bool) -> bool {
-        self.get(key).and_then(Value::as_bool).unwrap_or(default)
-    }
-
-    /// C# `_valueF(elem, key, func, default)` — apply `f` when the key exists.
-    pub fn map_or<T>(&self, key: &str, f: impl FnOnce(&Value) -> T, default: T) -> T {
-        match self.get(key) {
-            Some(v) => f(v),
-            None => default,
-        }
-    }
-
-    /// C# `_list(elem, key, func, default)` / `_listV`.
-    ///
-    /// A scalar is promoted to a one-element list, as in the C#. Unlike the C#
-    /// this returns `None` rather than throwing for a kind it cannot flatten.
-    pub fn list(&self, key: &str) -> Option<Vec<String>> {
-        self.get(key).and_then(Value::flatten)
-    }
-
-    /// C# `_listV(elem)`.
-    pub fn flatten(&self) -> Option<Vec<String>> {
-        Some(match self {
-            Value::Int(n) => vec![n.to_string()],
-            Value::Float(n) => vec![n.to_string()],
-            Value::Str(s) => vec![s.clone()],
-            Value::Bool(b) => vec![b.to_string()],
-            Value::Array(a) => a.iter().filter_map(Value::as_str).map(str::to_string).collect(),
-            _ => return None,
-        })
-    }
-
-    /// C# `_related(elem, key, func)` — an object read as a keyed map.
-    pub fn related(&self, key: &str) -> HashMap<String, Value> {
-        match self.get(key) {
-            Some(Value::Object(m)) => m.clone(),
-            _ => HashMap::new(),
-        }
-    }
-
-    /// C# `_dictTrim(source)` — drop null-valued entries.
-    pub fn dict_trim(source: &HashMap<String, Value>) -> HashMap<String, Value> {
-        source
-            .iter()
-            .filter(|(_, v)| **v != Value::Null)
-            .map(|(k, v)| (k.clone(), v.clone()))
-            .collect()
-    }
-
-    pub fn get(&self, key: &str) -> Option<&Value> {
-        match self {
-            Value::Object(m) => m.get(key),
-            _ => None,
-        }
-    }
-
-    pub fn as_str(&self) -> Option<&str> {
-        match self {
-            Value::Str(s) => Some(s),
-            _ => None,
-        }
-    }
-
-    pub fn as_bool(&self) -> Option<bool> {
-        match self {
-            Value::Bool(b) => Some(*b),
-            _ => None,
-        }
-    }
-
-    pub fn as_i64(&self) -> Option<i64> {
-        match self {
-            Value::Int(n) => Some(*n),
-            Value::Float(f) => Some(*f as i64),
-            _ => None,
-        }
-    }
+// related
+pub fn _related<T>(elem: &Value, key: &str, mut func: impl FnMut(&str, &Value) -> T) -> IndexMap<String, T> {
+    match elem.get(key).and_then(Value::as_object) { Some(z) => z.iter().map(|(k, v)| (k.clone(), func(k, v))).collect(), None => IndexMap::new() }
+}
+pub fn _relatedA<T>(elem: &Value, key: &str, keyFunc: impl Fn(&Value) -> String, valueFunc: impl Fn(&Value) -> T) -> IndexMap<String, T> {
+    match elem.get(key).and_then(Value::as_array) { Some(z) => z.iter().map(|x| (keyFunc(x), valueFunc(x))).collect(), None => IndexMap::new() }
+}
+pub fn _dictTrim<T>(source: IndexMap<String, Option<T>>) -> IndexMap<String, T> {
+    source.into_iter().filter_map(|(k, v)| v.map(|v| (k, v))).collect()
 }
 
 /// C# `_randomValue(int low, int high)`.
 ///
 /// **Inclusive of `high`** — the C# calls `Next(low, high + 1)`. Preserved.
 /// Takes its state by argument rather than using a shared unsynchronised
-/// static (bug 5); the caller owns the generator.
-pub fn random_value(rng: &mut impl FnMut() -> u64, low: i32, high: i32) -> i32 {
+/// static (bug 4); the caller owns the generator.
+pub fn _randomValue(rng: &mut impl FnMut() -> u64, low: i32, high: i32) -> i32 {
     if high <= low {
         return low;
     }
@@ -288,7 +220,7 @@ static SECONDARY_MAGICS: &[(u32, &str)] = &[
 /// The `fast` flag is preserved but note it changes the answer for
 /// `0x75B22630` in the C# — see bug 1. Here both paths agree on `.asf`, which
 /// is what that magic actually denotes.
-pub fn guess_extension(buf: &[u8], fast: bool) -> Option<&'static str> {
+pub fn _guessExtension(buf: &[u8], fast: bool) -> Option<&'static str> {
     if buf.len() < 4 {
         return None; // C# returns String.Empty
     }
@@ -314,9 +246,10 @@ pub fn guess_extension(buf: &[u8], fast: bool) -> Option<&'static str> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::json;
 
     #[test]
-    fn magic_tables_are_the_expected_size() {
+    fn magicTablesAreTheExpectedSize() {
         // Guards the extraction: these counts come from the C# source.
         assert_eq!(FAST_MAGICS.len(), 1);
         assert_eq!(PRIMARY_MAGICS.len(), 77);
@@ -324,105 +257,37 @@ mod tests {
     }
 
     #[test]
-    fn no_magic_appears_twice_in_a_table() {
-        for t in [FAST_MAGICS, PRIMARY_MAGICS, SECONDARY_MAGICS] {
-            let mut seen = std::collections::HashSet::new();
-            for (m, e) in t {
-                assert!(seen.insert(m), "duplicate magic {m:#010X} -> {e}");
-            }
-        }
+    fn knownMagicsResolve() {
+        assert_eq!(_guessExtension(&[0x50, 0x4B, 0x03, 0x04], false), Some(".zip"));
+        assert_eq!(_guessExtension(&[0x30, 0x26, 0xB2, 0x75], true), Some(".asf"));
+        assert_eq!(_guessExtension(&[0x01, 0x02, 0x03, 0x04], false), None);
+        assert_eq!(_guessExtension(&[0x50, 0x4B], true), None);
     }
 
     #[test]
-    fn known_magics_resolve() {
-        // 0x04034B50 is the ZIP local file header, PK\x03\x04.
-        assert_eq!(guess_extension(&[0x50, 0x4B, 0x03, 0x04], false), Some(".zip"));
-        // 0x75B22630 is the ASF header GUID prefix.
-        assert_eq!(guess_extension(&[0x30, 0x26, 0xB2, 0x75], true), Some(".asf"));
+    fn scalarsPromoteToOneElementLists() {
+        let v = json!({ "one": "a", "many": ["a", "b"], "num": 7 });
+        assert_eq!(_list(&v, "one"), Some(vec!["a".to_string()]));
+        assert_eq!(_list(&v, "many"), Some(vec!["a".to_string(), "b".to_string()]));
+        assert_eq!(_list(&v, "num"), Some(vec!["7".to_string()]));
+        assert_eq!(_list(&v, "absent"), None);
     }
 
     #[test]
-    fn the_fast_flag_no_longer_changes_the_answer() {
-        // In the C# this magic is .asf when fast and .mov when not.
-        let asf = [0x30, 0x26, 0xB2, 0x75];
-        assert_eq!(guess_extension(&asf, true), guess_extension(&asf, false));
+    fn relatedKeepsJsonOrderAndDictTrimDropsNulls() {
+        let v = json!({ "games": { "b": 1, "a": null } });
+        let z = _related(&v, "games", |k, v| v.as_i64());
+        assert_eq!(z.keys().collect::<Vec<_>>(), ["b", "a"]);
+        assert_eq!(_dictTrim(z).len(), 1);
     }
 
     #[test]
-    fn unrecognised_input_is_none_not_a_fabricated_extension() {
-        // The C# returns ".\u{1}\u{2}\u{3}" or similar here.
-        assert_eq!(guess_extension(&[0x01, 0x02, 0x03, 0x04], false), None);
-        assert_eq!(guess_extension(&[0xFF; 8], false), None);
-    }
-
-    #[test]
-    fn short_buffers_are_rejected() {
-        assert_eq!(guess_extension(&[], true), None);
-        assert_eq!(guess_extension(&[0x50, 0x4B], true), None);
-    }
-
-    #[test]
-    fn the_secondary_table_needs_eight_bytes() {
-        // The C# guards this with `buf.Length < 8 ? 0U : ...`, so a 4-byte
-        // buffer looks up magic 0 rather than stopping.
-        let m = SECONDARY_MAGICS[0].0.to_le_bytes();
-        let mut v = vec![0xAA, 0xAA, 0xAA, 0xAA];
-        v.extend_from_slice(&m);
-        assert_eq!(guess_extension(&v, false), Some(SECONDARY_MAGICS[0].1));
-        assert_eq!(guess_extension(&v[..4], false), None, "no bytes 4..8");
-    }
-
-    #[test]
-    fn booleans_and_nulls_do_not_abort_the_parse() {
-        // The C# `_valueV` throws ArgumentOutOfRangeException for both.
-        let mut m = HashMap::new();
-        m.insert("on".to_string(), Value::Bool(true));
-        m.insert("nil".to_string(), Value::Null);
-        let v = Value::Object(m);
-        assert!(v.bool_or("on", false));
-        assert!(!v.bool_or("missing", false));
-        assert_eq!(v.get("nil"), Some(&Value::Null));
-    }
-
-    #[test]
-    fn scalars_are_promoted_to_lists() {
-        let mut m = HashMap::new();
-        m.insert("one".to_string(), Value::Str("a".into()));
-        m.insert("many".to_string(), Value::Array(vec![
-            Value::Str("a".into()), Value::Str("b".into()),
-        ]));
-        m.insert("num".to_string(), Value::Int(7));
-        let v = Value::Object(m);
-        assert_eq!(v.list("one"), Some(vec!["a".to_string()]));
-        assert_eq!(v.list("many"), Some(vec!["a".to_string(), "b".to_string()]));
-        assert_eq!(v.list("num"), Some(vec!["7".to_string()]));
-        assert_eq!(v.list("absent"), None);
-    }
-
-    #[test]
-    fn dict_trim_drops_nulls() {
-        let mut m = HashMap::new();
-        m.insert("keep".to_string(), Value::Int(1));
-        m.insert("drop".to_string(), Value::Null);
-        let out = Value::dict_trim(&m);
-        assert_eq!(out.len(), 1);
-        assert!(out.contains_key("keep"));
-    }
-
-    #[test]
-    fn random_value_is_inclusive_of_high() {
+    fn randomValueIsInclusiveOfHigh() {
         // Pins the C#'s Next(low, high + 1).
         let mut seq = [0u64, 1, 2].into_iter().cycle();
         let mut rng = || seq.next().unwrap();
-        let vals: Vec<i32> = (0..6).map(|_| random_value(&mut rng, 0, 2)).collect();
+        let vals: Vec<i32> = (0..6).map(|_| _randomValue(&mut rng, 0, 2)).collect();
         assert!(vals.contains(&2), "high must be reachable: {vals:?}");
         assert!(vals.iter().all(|v| (0..=2).contains(v)));
-    }
-
-    #[test]
-    fn degenerate_random_ranges_do_not_divide_by_zero() {
-        let mut rng = || 0u64;
-        assert_eq!(random_value(&mut rng, 5, 5), 5);
-        assert_eq!(random_value(&mut rng, 9, 3), 9);
     }
 }

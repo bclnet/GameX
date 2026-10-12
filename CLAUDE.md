@@ -38,7 +38,7 @@ Everything else is an integration test against installed games and is expected t
 
 To test GameX code without a GPU or game install, use the Mirage engine: `MirageEngine.Reset()`, render through `MirageRenderer.CreateRenderer(...)`, assert on `MirageEngine.Tree.ToText()`. See `docs/Engines/Mirage/Readme.md`.
 
-Rust: both workspaces resolve, but check per crate (`cargo check -p <crate>`), not `--workspace`. Currently compiling in `OpenX/rust`: `openx-poly`, `openx-gfx`, `openx-gfx-other`, `openx-phy`, `openx-aix`, `openx-sfx*`. Blocked: `openx-vfx` (`disc_mds.rs`) and `openx-gfx-egin` (needs `KV` from `core/poly/_/`), which block `openx` and everything in `rust/`.
+Rust: both workspaces build with zero errors (`cargo check --workspace` in `OpenX/rust` and in `rust/`), and so does `cargo check -p openx --features full` in `OpenX/rust`. Some crates' own `#[cfg(test)]` modules are stale and don't compile (e.g. `openx-poly`'s `reader.rs`, `openx-vfx`'s `disc_nrg.rs`), so `cargo test` works per crate, not everywhere.
 
 ## Things that will bite you
 

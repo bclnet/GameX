@@ -1,263 +1,316 @@
 // PORT-SOURCE: Core/GameX/Formats/Stream.cs
-// PORT-SHA: a916652e080e48c8
+// PORT-SHA: abfbc4fa3cd0545d
 // PORT-STATUS: done
 //
-// PARTIAL PORT: the `.set` and `.meta` sidecar parsers. `PakBinaryCanStream`
-// itself derives from `ArcBinary` in `OpenX.Vfx` and drives
-// `BinaryArchive`, which is in `GameX.FileSystems` — both outstanding.
+// `.set`, `.meta` and `.raw` are plain ASCII line lists beside a streamed
+// archive: `.set` names the files, `.meta` marks which are compressed or
+// encrypted, `.raw` lists raw files.
 //
-// These sidecars are plain ASCII line lists that accompany a streamed archive:
-// `.set` names the files, `.meta` marks which are compressed or encrypted.
+// `StreamArchive`'s network host (`NetworkHost`) isn't in openx's Rust port, so
+// only its local-folder form is here.
 //
-// ===================== THREE C#-SIDE BUGS ================================
+// ===================== C#-SIDE BUGS, KEPT ================================
 //
-//   1. **An empty `.set` file crashes.** The guard is
-//
-//          var lines = Encoding.ASCII.GetString(data)?.Split('\n');
-//          if (lines?.Length == 0) return Task.CompletedTask;
-//          var startIndex = Path.GetDirectoryName(lines[0]...).Length + 1;
-//
-//      `GetString` never returns null and `"".Split('\n')` yields `[""]` — one
-//      element, not zero — so the guard never fires. `lines[0]` is then `""`,
-//      `Path.GetDirectoryName("")` returns null on .NET Core, and `.Length`
-//      throws `NullReferenceException`. The check tests the one length `Split`
-//      cannot produce.
-//
-//   2. **`startIndex` is computed from the first line and applied to all of
-//      them.** It is the directory-name length of `lines[0]`, so every
-//      subsequent path is sliced at that offset regardless of its own depth. A
-//      `.set` listing files from two directory levels silently truncates or
-//      mis-cuts every entry outside the first one's depth. The
-//      `line.Length >= startIndex` guard only prevents the range error — it
-//      skips those lines instead, so they vanish from the archive rather than
-//      erroring.
-//
-//   3. **`_ = source.Process()` discards a task.** The `"Meta"` branch starts
-//      `Process()` and throws the result away, so the metadata below is applied
-//      while that work may still be running, against `source.Files` it mutates.
-//      The discard is explicit (`_ =`), so it reads as deliberate, but nothing
-//      orders the two.
+//   1. **An empty `.set` file crashes.** `"".Split('\n')` is `[""]`, so the
+//      `Length == 0` guard never fires and `Path.GetDirectoryName("")` is null.
+//      Here that is an `InvalidData` error.
+//   2. **`startIndex` comes from the first line and is applied to all of them**,
+//      so lines from another depth are mis-cut or dropped.
+//   3. **`StreamArchive.Read` reads `.meta` from the `.set` path**
+//      (`File.Open(setPath, ...)` in the `metaPath` branch).
+//   4. **`.meta` entries look files up by the raw line**, not the trimmed path,
+//      and `First()` throws when the entry is missing.
 
-/// One entry parsed from a `.set` sidecar.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct SetEntry {
-    pub path: String,
+use std::collections::HashSet;
+use std::io::{self, Error, ErrorKind, Read, Write};
+use std::path::Path;
+use std::sync::Arc;
+
+use openx_vfx::vfx::VfsRead;
+
+use crate::binary::{newArchive, ok, err, Archive, ArcBinary, BinaryArchive, BinaryArchiveVirtual, BinaryState, Stream, Task};
+use crate::meta::{FileSource, Tag};
+
+// #region Stream
+
+pub struct PakBinaryCanStream;
+
+fn readToEnd(r: Option<&mut dyn VfsRead>) -> io::Result<Vec<u8>> {
+    let r = r.ok_or_else(|| Error::new(ErrorKind::InvalidInput, "r"))?;
+    let mut data = Vec::new();
+    r.read_to_end(&mut data)?;
+    Ok(data)
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum SetError {
-    /// The first line has no directory component to measure, so the C#'s
-    /// `startIndex` cannot be computed. It throws `NullReferenceException`.
-    NoLeadingDirectory,
-}
+/// C# `Encoding.ASCII.GetString`.
+fn ascii(data: &[u8]) -> String { data.iter().map(|&c| if c < 0x80 { c as char } else { '?' }).collect() }
 
-impl std::fmt::Display for SetError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::NoLeadingDirectory => {
-                write!(f, ".set first line has no directory component")
-            }
-        }
-    }
-}
-
-impl std::error::Error for SetError {}
-
-/// C#'s `Path.GetDirectoryName(x).Length + 1` on a `/`-normalised path.
-///
-/// `None` where the C# gets null and then throws on `.Length`.
-fn strip_offset(first_line: &str) -> Option<usize> {
-    let l = first_line.trim_end().replace('\\', "/");
-    l.rfind('/').map(|i| i + 1)
-}
-
-/// C# `PakBinaryCanStream.Read(..., tag: "Set")`.
-///
-/// Every path is sliced at an offset derived from the **first** line, which is
-/// bug 2 — preserved, because changing it changes which files an archive
-/// contains. `skipped` reports the lines the C# silently drops so a caller can
-/// notice.
-pub fn parse_set(data: &[u8]) -> Result<(Vec<SetEntry>, usize), SetError> {
-    let text = String::from_utf8_lossy(data);
-    let lines: Vec<&str> = text.split('\n').collect();
-    // The C# tests `lines?.Length == 0`, which Split cannot produce (bug 1).
-    if lines.first().map(|l| l.trim_end().is_empty()).unwrap_or(true) {
-        return Ok((Vec::new(), 0));
-    }
-    let start = strip_offset(lines[0]).ok_or(SetError::NoLeadingDirectory)?;
-    let mut out = Vec::new();
-    let mut skipped = 0;
-    for line in &lines {
-        if line.len() < start {
-            skipped += 1;
-            continue;
-        }
-        let path = line[start..].trim_end().replace('\\', "/");
-        // C# excludes the sidecar itself.
-        if path != ".set" && !path.is_empty() {
-            out.push(SetEntry { path });
-        }
-    }
-    Ok((out, skipped))
-}
-
-/// C# `.meta` parser states, from its `state` sentinel.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum MetaState {
-    /// C# `state == -1` — looking for a section header.
-    Seeking,
-    Params,
-    Compressed,
-    Crypted,
-}
-
-/// What a `.meta` sidecar says about an archive.
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub struct MetaSidecar {
-    /// C# `AllCompressed` — sets `Compressed = 1` on every file.
-    pub all_compressed: bool,
-    /// `key=value` lines under `Params:`.
-    pub params: Vec<(String, String)>,
-    /// Paths listed under `Compressed:`.
-    pub compressed: Vec<String>,
-    /// Paths listed under `Crypted:`.
-    pub crypted: Vec<String>,
-}
-
-/// C# `PakBinaryCanStream.Read(..., tag: "Meta")`.
-pub fn parse_meta(data: &[u8]) -> MetaSidecar {
-    let text = String::from_utf8_lossy(data);
-    let mut out = MetaSidecar::default();
-    let mut state = MetaState::Seeking;
-    for raw in text.split('\n') {
-        let line = raw.trim_end().replace('\\', "/");
-        match state {
-            MetaState::Seeking => match line.as_str() {
-                "Params:" => state = MetaState::Params,
-                "AllCompressed" => out.all_compressed = true,
-                "Compressed:" => state = MetaState::Compressed,
-                "Crypted:" => state = MetaState::Crypted,
-                _ => {}
-            },
-            // A section runs until the next header. The C# switches on the same
-            // literals inside each state, so a header ends the previous section.
-            _ => match line.as_str() {
-                "Params:" => state = MetaState::Params,
-                "Compressed:" => state = MetaState::Compressed,
-                "Crypted:" => state = MetaState::Crypted,
-                "AllCompressed" => {
-                    out.all_compressed = true;
-                    state = MetaState::Seeking;
+impl ArcBinary for PakBinaryCanStream {
+    fn read<'a>(&'a self, source: &'a BinaryArchive, r: Option<&'a mut dyn VfsRead>, tag: &'a Tag) -> Task<'a, ()> {
+        Box::pin(async move {
+            match tag {
+                Tag::None => Ok(()),
+                Tag::Str(z) if z == "Set" => {
+                    let data = readToEnd(r)?;
+                    // dir /s/b/a-d > .set
+                    let text = ascii(&data);
+                    let lines: Vec<&str> = text.split('\n').collect();
+                    let first = lines[0].trim_end().replace('\\', "/");
+                    let Some(dir) = first.rfind('/').map(|i| &first[..i]) else { return Err(Error::new(ErrorKind::InvalidData, "NullReference: GetDirectoryName")) };
+                    let startIndex = dir.len() + 1;
+                    let mut files = Vec::new();
+                    for line in lines {
+                        if line.len() < startIndex { continue; }
+                        let path = line.get(startIndex..).unwrap_or_default().trim_end().replace('\\', "/");
+                        if path != ".set" { files.push(Arc::new(FileSource { path, ..Default::default() })); }
+                    }
+                    source.setFiles(Some(files));
+                    Ok(())
                 }
-                "" => {}
-                _ => match state {
-                    MetaState::Params => {
-                        if let Some((k, v)) = line.split_once('=') {
-                            out.params.push((k.trim().to_string(), v.trim().to_string()));
+                Tag::Str(z) if z == "Meta" => {
+                    source.process().await?;
+
+                    let data = readToEnd(r)?;
+                    let text = ascii(&data);
+                    let mut state = -1;
+                    let mut files: Vec<FileSource> = source.files().unwrap_or_default().iter().map(|s| (**s).clone()).collect();
+                    let index = |line: &str| -> io::Result<usize> {
+                        let first = source.filesByPath.read().unwrap().as_ref().and_then(|z| z.get(&line.to_lowercase()).and_then(|s| s.first().cloned()));
+                        let first = first.ok_or_else(|| Error::new(ErrorKind::InvalidData, "Sequence contains no elements"))?;
+                        source.files().unwrap_or_default().iter().position(|s| Arc::ptr_eq(s, &first)).ok_or_else(|| Error::new(ErrorKind::InvalidData, line.to_string()))
+                    };
+                    for line in text.split('\n') {
+                        let path = line.trim_end().replace('\\', "/");
+                        if state == -1 {
+                            if path == "Params:" { state = 0; }
+                            else if path == "AllCompressed" { for file in files.iter_mut() { file.compressed = 1; } }
+                            else if path == "Compressed:" { state = 1; }
+                            else if path == "Crypted:" { state = 2; }
+                        }
+                        else {
+                            if line.is_empty() { state = -1; continue; }
+                            match state {
+                                0 => { let mut args = line.splitn(2, ':'); let k = args.next().unwrap_or_default().to_string(); source.params.lock().unwrap().insert(k, args.next().unwrap_or_default().to_string()); }
+                                1 => files[index(line)?].compressed = 1,
+                                2 => files[index(line)?].flags = 1,
+                                _ => {}
+                            }
                         }
                     }
-                    MetaState::Compressed => out.compressed.push(line),
-                    MetaState::Crypted => out.crypted.push(line),
-                    MetaState::Seeking => {}
-                },
-            },
-        }
+                    source.setFiles(Some(files.into_iter().map(Arc::new).collect()));
+                    Ok(())
+                }
+                Tag::Str(z) if z == "Raw" => {
+                    let data = readToEnd(r)?;
+                    let filesRawSet: HashSet<String> = ascii(&data).split('\n').map(|line| line.trim_end().replace('\\', "/")).collect();
+                    *source.filesRawSet.write().unwrap() = Some(filesRawSet);
+                    Ok(())
+                }
+                _ => Err(Error::new(ErrorKind::InvalidInput, format!("tag: {tag:?}"))),
+            }
+        })
     }
-    out
+
+    fn write<'a>(&'a self, source: &'a BinaryArchive, w: Option<&'a mut dyn Write>, tag: &'a Tag) -> Task<'a, ()> {
+        Box::pin(async move {
+            let w = w.ok_or_else(|| Error::new(ErrorKind::InvalidInput, "w"))?;
+            let files = source.files().unwrap_or_default();
+            match tag {
+                Tag::None => Ok(()),
+                Tag::Str(z) if z == "Set" => {
+                    let pathAsBytes = format!("C:/{}/", source.base.name);
+                    w.write_all(pathAsBytes.as_bytes())?;
+                    w.write_all(b".set\n")?;
+                    // files
+                    for file in &files { w.write_all(pathAsBytes.as_bytes())?; w.write_all(file.path.as_bytes())?; w.write_all(b"\n")?; }
+                    w.flush()
+                }
+                Tag::Str(z) if z == "Meta" => {
+                    // meta
+                    let params = source.params.lock().unwrap().clone();
+                    if !params.is_empty() {
+                        w.write_all(b"Params:\n")?;
+                        for (k, v) in &params { w.write_all(format!("{k}:{v}\n").as_bytes())?; }
+                        w.write_all(b"\n")?;
+                    }
+                    // compressed
+                    let numCompressed = files.iter().filter(|x| x.compressed != 0).count();
+                    if files.len() == numCompressed { w.write_all(b"AllCompressed\n")?; }
+                    else if numCompressed > 0 {
+                        w.write_all(b"Compressed:\n")?;
+                        for file in files.iter().filter(|x| x.compressed != 0) { w.write_all(file.path.as_bytes())?; w.write_all(b"\n")?; }
+                        w.write_all(b"\n")?;
+                    }
+                    // crypted
+                    if files.iter().any(|x| x.flags != 0) {
+                        w.write_all(b"Crypted:\n")?;
+                        for file in files.iter().filter(|x| x.flags != 0) { w.write_all(file.path.as_bytes())?; w.write_all(b"\n")?; }
+                        w.write_all(b"\n")?;
+                    }
+                    w.flush()
+                }
+                Tag::Str(z) if z == "Raw" => {
+                    let filesRawSet = source.filesRawSet.read().unwrap().clone().ok_or_else(|| Error::new(ErrorKind::InvalidInput, "FilesRawSet"))?;
+                    for file in filesRawSet { w.write_all(file.as_bytes())?; w.write_all(b"\n")?; }
+                    w.flush()
+                }
+                _ => Err(Error::new(ErrorKind::InvalidInput, format!("tag: {tag:?}"))),
+            }
+        })
+    }
+}
+
+/// StreamArchive
+pub struct StreamArchive;
+
+impl StreamArchive {
+    pub fn new(parent: Option<Arc<dyn Archive>>, state: BinaryState) -> Arc<BinaryArchive> {
+        let mut s = BinaryArchive::new(parent, state, Some(Arc::new(PakBinaryCanStream)));
+        s.useReader = false;
+        s.virt = Some(Box::new(StreamArchive));
+        newArchive(s)
+    }
+
+    pub fn fromParent(parent: &Arc<BinaryArchive>, state: BinaryState) -> Arc<BinaryArchive> {
+        let mut s = BinaryArchive::new(Some(parent.base.this()), state, Some(Arc::new(PakBinaryCanStream)));
+        s.useReader = false;
+        s.setFiles(parent.files());
+        s.virt = Some(Box::new(StreamArchive));
+        newArchive(s)
+    }
+}
+
+impl BinaryArchiveVirtual for StreamArchive {
+    fn read<'a>(&'a self, s: &'a BinaryArchive, tag: &'a Tag) -> Task<'a, ()> {
+        Box::pin(async move {
+            // read arc
+            let path = Path::new(&s.base.binPath);
+            if s.base.binPath.is_empty() || !path.is_dir() { return Ok(()); }
+            let stream = <dyn ArcBinary>::stream();
+            let setPath = path.join(".set");
+            if setPath.exists() { let mut r = std::fs::File::open(&setPath)?; stream.read(s, Some(&mut r), &Tag::Str("Set".into())).await?; }
+            let metaPath = path.join(".meta");
+            if metaPath.exists() { let mut r = std::fs::File::open(&setPath)?; stream.read(s, Some(&mut r), &Tag::Str("Meta".into())).await?; }
+            let rawPath = path.join(".raw");
+            if rawPath.exists() { let mut r = std::fs::File::open(&rawPath)?; stream.read(s, Some(&mut r), &Tag::Str("Raw".into())).await?; }
+            Ok(())
+        })
+    }
+
+    fn write<'a>(&'a self, s: &'a BinaryArchive, tag: &'a Tag) -> Task<'a, ()> {
+        Box::pin(async move {
+            // write arc
+            let path = Path::new(&s.base.binPath);
+            if !s.base.binPath.is_empty() && !path.is_dir() { std::fs::create_dir_all(path)?; }
+            let stream = <dyn ArcBinary>::stream();
+            let mut w = std::fs::File::create(path.join(".set"))?;
+            stream.write(s, Some(&mut w), &Tag::Str("Set".into())).await?;
+            let mut w = std::fs::File::create(path.join(".meta"))?;
+            stream.write(s, Some(&mut w), &Tag::Str("Meta".into())).await?;
+            let rawPath = path.join(".raw");
+            if s.filesRawSet.read().unwrap().as_ref().is_some_and(|z| !z.is_empty()) { let mut w = std::fs::File::create(&rawPath)?; stream.write(s, Some(&mut w), &Tag::Str("Raw".into())).await?; }
+            else if rawPath.exists() { std::fs::remove_file(&rawPath)?; }
+            Ok(())
+        })
+    }
+
+    fn readData<'a>(&'a self, s: &'a BinaryArchive, file: &'a Arc<FileSource>, option: &'a Tag) -> Task<'a, Option<Stream>> {
+        Box::pin(async move {
+            // read arc
+            let path = Path::new(&s.base.binPath).join(&file.path);
+            Ok(if path.is_file() { Some(Box::new(std::fs::File::open(path)?) as Stream) } else { None })
+        })
+    }
+
+    fn writeData<'a>(&'a self, s: &'a BinaryArchive, file: &'a Arc<FileSource>, data: Stream, option: &'a Tag) -> Task<'a, ()> {
+        err(ErrorKind::Unsupported, "NotSupported".into())
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::binary::{getResult, ArchiveExt};
+    use crate::family::FamilyGame;
+    use crate::meta::{MetaItem, MetaManager};
 
-    #[test]
-    fn an_empty_set_file_does_not_panic() {
-        // The C# guard tests `lines.Length == 0`, which Split never produces,
-        // then dereferences the null from GetDirectoryName("").
-        assert_eq!(parse_set(b""), Ok((Vec::new(), 0)));
-        assert_eq!(parse_set(b"\n\n"), Ok((Vec::new(), 0)));
+    struct Manager;
+    impl MetaManager for Manager {
+        fn folderIcon(&self) -> Tag { Tag::Str("folder".into()) }
+        fn packageIcon(&self) -> Tag { Tag::Str("package".into()) }
+        fn getIcon(&self, name: &str) -> Tag { Tag::Str(name.into()) }
+        fn getImage(&self, name: &str) -> Tag { Tag::None }
+    }
+
+    fn folder(name: &str) -> std::path::PathBuf {
+        let dir = std::env::temp_dir().join(format!("gamex-stream-{name}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(dir.join("arc/sub")).unwrap();
+        dir
     }
 
     #[test]
-    fn a_first_line_with_no_directory_is_an_error_not_a_panic() {
-        assert_eq!(parse_set(b"noslash\nx"), Err(SetError::NoLeadingDirectory));
+    fn aStreamArchiveOpensOverALocalFolder() {
+        let dir = folder("open");
+        let arc = dir.join("arc");
+        std::fs::write(arc.join(".set"), "C:/arc/.set\nC:/arc/a.txt\r\nC:/arc/sub/b.bin\n").unwrap();
+        std::fs::write(arc.join("a.txt"), "hello").unwrap();
+        std::fs::write(arc.join("sub/b.bin"), [1u8, 0, 2]).unwrap();
+        let state = BinaryState::new(Arc::new(openx_vfx::vfx::DirectoryFileSystem::new(&dir)), FamilyGame::empty(), None, Some(arc.to_str().unwrap()), Tag::None);
+        let archive = StreamArchive::new(None, state);
+        let mut items: Vec<MetaItem> = vec![];
+        archive.open(Some(&mut items), Some(&Manager)).unwrap();
+        assert_eq!(archive.base.count(), 2);
+        assert!(archive.contains(&Tag::Str("SUB\\B.BIN".into())).unwrap(), "paths are case-insensitive");
+
+        // the MetaItem tree: a.txt, then sub/ holding b.bin
+        assert_eq!(items.iter().map(|s| s.name.as_str()).collect::<Vec<_>>(), ["a.txt", "sub"]);
+        assert_eq!(items[0].icon, Tag::Str("txt".into()));
+        assert_eq!(items[1].icon, Tag::Str("folder".into()));
+        assert_eq!(items[1].items[0].name, "b.bin");
+        let found = MetaItem::findByPathForNodes(&mut items, "sub/b.bin", &Manager).unwrap().clone();
+        assert_eq!(found.source.asFileSource().unwrap().path, "sub/b.bin");
+
+        // MetaInfos: text and bytes
+        let infos = getResult(archive.getMetaInfos(&Manager, &items[0])).unwrap().unwrap();
+        assert_eq!(infos[0].tag.asMetaContent().unwrap().value, Tag::Str("hello".into()));
+        let infos = getResult(archive.getMetaInfos(&Manager, &found)).unwrap().unwrap();
+        assert_eq!(infos[0].tag.asMetaContent().unwrap().type_, "Hex");
+        assert_eq!(infos[2].name.as_deref(), Some("File"));
+
+        // archives are ISources, so the cache managers can key on them
+        let source = openx_poly::core::SourceRef(archive.clone() as Arc<dyn Archive> as Arc<dyn openx_poly::core::ISource>);
+        assert_eq!(source, source.clone());
+
+        archive.close().unwrap();
+        assert!(archive.files().is_none());
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]
-    fn paths_are_stripped_of_the_first_lines_directory() {
-        let d = b"data/a.txt\ndata/b.txt\ndata/c.txt";
-        let (files, skipped) = parse_set(d).unwrap();
-        assert_eq!(
-            files.iter().map(|f| f.path.as_str()).collect::<Vec<_>>(),
-            vec!["a.txt", "b.txt", "c.txt"]
-        );
-        assert_eq!(skipped, 0);
+    fn setMetaAndRawWriteAndReadBack() {
+        let dir = folder("write");
+        let arc = dir.join("arc");
+        std::fs::write(arc.join(".set"), "C:/arc/.set\nC:/arc/a.txt\nC:/arc/b.txt\n").unwrap();
+        let state = || BinaryState::new(Arc::new(openx_vfx::vfx::DirectoryFileSystem::new(&dir)), FamilyGame::empty(), None, Some(arc.to_str().unwrap()), Tag::None);
+        let archive = StreamArchive::new(None, state());
+        archive.open(None, None).unwrap();
+        archive.params.lock().unwrap().insert("k".into(), "v".into());
+        let files: Vec<Arc<FileSource>> = archive.files().unwrap().iter().map(|s| Arc::new(FileSource { compressed: (s.path == "b.txt") as i32, ..(**s).clone() })).collect();
+        archive.setFiles(Some(files));
+        getResult(archive.write(&Tag::None)).unwrap();
+        assert_eq!(std::fs::read_to_string(arc.join(".meta")).unwrap(), "Params:\nk:v\n\nCompressed:\nb.txt\n\n");
+        assert_eq!(std::fs::read_to_string(arc.join(".set")).unwrap(), "C:/arc/.set\nC:/arc/a.txt\nC:/arc/b.txt\n");
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]
-    fn backslashes_are_normalised() {
-        let (files, _) = parse_set(b"data\\a.txt\ndata\\sub\\b.txt").unwrap();
-        assert_eq!(files[0].path, "a.txt");
-        assert_eq!(files[1].path, "sub/b.txt");
-    }
-
-    #[test]
-    fn the_sidecar_itself_is_excluded() {
-        let (files, _) = parse_set(b"data/a.txt\ndata/.set").unwrap();
-        assert_eq!(files.len(), 1);
-        assert_eq!(files[0].path, "a.txt");
-    }
-
-    #[test]
-    fn mixed_directory_depths_mis_cut_as_in_the_c_sharp() {
-        // Bug 2: startIndex comes from line 0 only. A shallower path later is
-        // sliced at the wrong offset; a shorter one is dropped entirely.
-        let (files, skipped) = parse_set(b"deep/nested/a.txt\nb.txt").unwrap();
-        assert_eq!(files[0].path, "a.txt");
-        // "b.txt" is 5 chars, startIndex is 12, so the C# skips it.
-        assert_eq!(skipped, 1, "the second line vanishes rather than erroring");
-        assert_eq!(files.len(), 1);
-    }
-
-    #[test]
-    fn meta_all_compressed_is_a_bare_flag() {
-        let m = parse_meta(b"AllCompressed");
-        assert!(m.all_compressed);
-        assert!(m.compressed.is_empty());
-    }
-
-    #[test]
-    fn meta_sections_collect_their_entries() {
-        let m = parse_meta(b"Params:\nkey=value\nother = two\nCompressed:\na.txt\nb.txt\nCrypted:\nc.txt");
-        assert_eq!(
-            m.params,
-            vec![("key".to_string(), "value".to_string()), ("other".to_string(), "two".to_string())]
-        );
-        assert_eq!(m.compressed, vec!["a.txt", "b.txt"]);
-        assert_eq!(m.crypted, vec!["c.txt"]);
-    }
-
-    #[test]
-    fn a_header_ends_the_previous_section() {
-        let m = parse_meta(b"Compressed:\na.txt\nCrypted:\nb.txt");
-        assert_eq!(m.compressed, vec!["a.txt"]);
-        assert_eq!(m.crypted, vec!["b.txt"]);
-    }
-
-    #[test]
-    fn params_without_an_equals_are_skipped() {
-        let m = parse_meta(b"Params:\nnoequals\nk=v");
-        assert_eq!(m.params, vec![("k".to_string(), "v".to_string())]);
-    }
-
-    #[test]
-    fn an_empty_meta_file_yields_defaults() {
-        assert_eq!(parse_meta(b""), MetaSidecar::default());
-    }
-
-    #[test]
-    fn meta_normalises_backslashes_too() {
-        let m = parse_meta(b"Compressed:\nsub\\a.txt");
-        assert_eq!(m.compressed, vec!["sub/a.txt"]);
+    fn anEmptySetIsAnErrorNotACrash() {
+        let dir = folder("empty");
+        let arc = dir.join("arc");
+        std::fs::write(arc.join(".set"), "").unwrap();
+        let state = BinaryState::new(Arc::new(openx_vfx::vfx::DirectoryFileSystem::new(&dir)), FamilyGame::empty(), None, Some(arc.to_str().unwrap()), Tag::None);
+        assert!(StreamArchive::new(None, state).open(None, None).is_err());
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 }

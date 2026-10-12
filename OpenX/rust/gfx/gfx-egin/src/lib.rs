@@ -3,7 +3,7 @@
 //! `egin_render` (AABB + Camera) and `egin_animate` (skeletal animation) are
 //! both ported and **verified numerically against the C# test suite's own
 //! assertions** — see their test modules. `egin_particle` (693 live lines) is
-//! outstanding.
+//! partly ported; its header lists what is left.
 //!
 //! The matrix-convention note at the top of `egin_render` is the important
 //! reading for anyone extending this crate: System.Numerics is row-vector /
@@ -12,7 +12,7 @@
 pub mod egin;
 pub mod egin_animate;
 pub mod egin_vbib;
-#[cfg(feature = "full")] pub mod egin_particle;
+pub mod egin_particle;
 pub mod egin_render;
 
 pub mod prelude {

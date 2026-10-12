@@ -1,4 +1,4 @@
-// PORT-SOURCE: Applications/GameX.App.Explorer/Views/AudioPlayer.xaml.cs
+// PORT-SOURCE: Apps/GameX.App.Explorer/Views/AudioPlayer.xaml.cs
 // PORT-SHA: 0ff23c031b49053d
 // PORT-STATUS: todo (59 live LOC in C#)
 //

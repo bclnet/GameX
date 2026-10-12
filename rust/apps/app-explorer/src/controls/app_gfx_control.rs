@@ -1,4 +1,4 @@
-// PORT-SOURCE: Applications/GameX.App.Explorer/Controls/AppGfxControl.cs
+// PORT-SOURCE: Apps/GameX.App.Explorer/Controls/AppGfxControl.cs
 // PORT-SHA: 4579ec0e9b203eba
 // PORT-STATUS: todo (36 live LOC in C#)
 //

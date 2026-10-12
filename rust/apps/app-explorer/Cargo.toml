@@ -19,3 +19,16 @@ gamex-engine-sdl = { path = "../../engines/engine-sdl" }
 gamex-engine-stride = { path = "../../engines/engine-stride" }
 gamex-engine-unity = { path = "../../engines/engine-unity" }
 gamex-engine-unreal = { path = "../../engines/engine-unreal" }
+gamex = { path = "../../core/gamex" }
+gamex-uncore = { path = "../../families/uncore" }
+openx = { path = "../../../OpenX/rust/core/openx" }
+openx-poly = { path = "../../../OpenX/rust/core/poly" }
+indexmap = "2"
+eframe = { version = "0.36", default-features = false, features = ["accesskit", "default_fonts", "glow", "wayland", "x11"] }
+egui_extras = { version = "0.36", features = ["image"] }
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "bmp", "tga", "gif"] }
+rfd = "0.17"
+
+[[bin]]
+name = "gamex-app-explorer"
+path = "src/main.rs"

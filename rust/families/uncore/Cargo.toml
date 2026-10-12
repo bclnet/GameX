@@ -10,3 +10,4 @@ workspace = true
 
 [dependencies]
 gamex = { path = "../../core/gamex" }
+openx-poly = { path = "../../../OpenX/rust/core/poly" }

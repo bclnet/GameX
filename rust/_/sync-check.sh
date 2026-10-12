@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # sync-check.sh — report drift between the C# tree and this Rust port.
 #
-#   ./sync-check.sh [path-to-dotnet-tree]
+#   bash rust/_/sync-check.sh [path-to-dotnet-tree]   (default: the repo's dotnet/)
 #
 # For every row in PORT_MAP.tsv it compares the C# file's current hash against
 # the PORT-SHA recorded in the corresponding .rs header, and reports:
@@ -17,8 +17,9 @@
 
 set -uo pipefail
 
-DOTNET_ROOT="${1:-../src/gamex/dotnet}"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+RUST="$(dirname "$HERE")"   # PORT_MAP.tsv's rs_path is relative to rust/
+DOTNET_ROOT="${1:-$RUST/../dotnet}"
 MAP="$HERE/PORT_MAP.tsv"
 
 [[ -f "$MAP" ]] || { echo "no PORT_MAP.tsv next to $0" >&2; exit 2; }
@@ -31,7 +32,7 @@ hash_of() { sha256sum "$1" | cut -c1-16; }
 while IFS=$'\t' read -r status loc sha cs rs crate; do
     [[ "$status" == "status" ]] && continue
     cs_abs="$DOTNET_ROOT/$cs"
-    rs_abs="$HERE/$rs"
+    rs_abs="$RUST/$rs"
 
     if [[ ! -f "$cs_abs" ]]; then
         echo "MISSING  $cs"
@@ -65,13 +66,13 @@ done < "$MAP"
 # hand-written path drifting from the generator's naming (e.g. FFmpegService).
 orphan=0
 while IFS= read -r rs; do
-    rel="${rs#"$HERE"/}"
+    rel="${rs#"$RUST"/}"
     # PORT-SHARED marks a module deliberately extracted from a C# file that
     # already has its own mapped .rs — shared by two crates, so it cannot sit at
     # a single 1:1 path. Not an orphan.
     grep -q '^// PORT-SHARED: yes' "$rs" && continue
     grep -qF $'\t'"$rel"$'\t' "$MAP" || { echo "ORPHAN   $rel (done, but not in PORT_MAP)"; orphan=$((orphan + 1)); }
-done < <(grep -rl '^// PORT-STATUS: done' --include='*.rs' "$HERE" | sort)
+done < <(grep -rl '^// PORT-STATUS: done' --include='*.rs' --exclude-dir=target "$RUST" | sort)
 
 # C# files that exist but were never mapped
 while IFS= read -r f; do

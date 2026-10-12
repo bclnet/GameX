@@ -39,7 +39,7 @@ use serde_json::Value;
 
 use crate::binary::{Archive, ArchiveExt, BinaryState, ManyArchive, MultiArchive, Vfx};
 use crate::meta::{fileName, MetaManager, Tag};
-use crate::store::{self, StoreKind};
+use crate::store::Store;
 use crate::util::{_dictTrim, _list, _listF, _related, _relatedA, _value, _valueF, _valueV};
 
 fn argumentOutOfRange(name: &str, msg: impl fmt::Display) -> Error { Error::new(ErrorKind::InvalidInput, format!("{name}: {msg}")) }
@@ -232,7 +232,8 @@ impl Uri {
             return Err(argumentOutOfRange("uri", s));
         };
         let rest = &s[scheme.len() + 1..];
-        let (host, path) = match rest.strip_prefix("//") { Some(z) => match z.find('/') { Some(i) => (&z[..i], &z[i..]), None => (z, "/") }, None => ("", rest) };
+        // .NET reads a drive letter after `file://` as the path, not the host
+        let (host, path) = match rest.strip_prefix("//") { Some(z) if scheme.eq_ignore_ascii_case("file") && z.get(1..2) == Some(":") => ("", z), Some(z) => match z.find('/') { Some(i) => (&z[..i], &z[i..]), None => (z, "/") }, None => ("", rest) };
         let scheme = scheme.to_lowercase();
         let isFile = scheme == "file";
         let localPath = if isFile && path.get(2..3) == Some(":") { path[1..].to_string() } else { path.to_string() };
@@ -907,7 +908,7 @@ impl FamilyGame {
         let Some(keys) = &files.keys else { return Ok(None) };
         for key in keys.iter().filter(|k| startsWith.map_or(true, |s| s.starts_with(k.as_str()))) {
             let (k, v) = match key.split_once('#') { Some((k, v)) => (k, Some(v.to_string())), None => (key.as_str(), None) };
-            let Some(path) = getPathByKey(k, family)? else { continue };
+            let Some(path) = Store::getPathByKey(k, family, elem)? else { continue };
             if path.is_empty() { continue; }
             let mut path = getFullPath(&decodePath(&applicationPath(), &path, None));
             if !std::path::Path::new(&path).exists() { continue; }
@@ -1026,22 +1027,12 @@ fn parseDate(s: &str) -> io::Result<SystemTime> {
 }
 
 /// C# `EngineX.ApplicationPath`: the executable's folder.
-fn applicationPath() -> String {
+pub(crate) fn applicationPath() -> String {
     std::env::current_exe().ok().and_then(|s| s.parent().map(|s| s.to_string_lossy().into_owned())).unwrap_or_default()
 }
 
 /// C# `Path.GetFullPath`.
-fn getFullPath(path: &str) -> String { std::path::absolute(path).map(|s| s.to_string_lossy().into_owned()).unwrap_or_else(|_| path.to_string()) }
-
-/// C# `Store.GetPathByKey(key, family, elem)`. Only `Direct:` resolves until `Store.cs`'s store maps are ported.
-fn getPathByKey(key: &str, family: &str) -> io::Result<Option<String>> {
-    let (k, v) = key.split_once(':').unwrap_or((key, ""));
-    match StoreKind::parse(k) {
-        Some(StoreKind::Direct) => Ok(Some(store::direct(v).to_string_lossy().into_owned())),
-        Some(_) => Ok(store::getPathByKey(key, family, &HashMap::new()).map_err(|e| argumentOutOfRange("key", e))?.map(|s| s.to_string_lossy().into_owned())),
-        None => Err(argumentOutOfRange("key", key)),
-    }
-}
+pub(crate) fn getFullPath(path: &str) -> String { std::path::absolute(path).map(|s| s.to_string_lossy().into_owned()).unwrap_or_else(|_| path.to_string()) }
 
 // #region Loader
 
@@ -1159,6 +1150,10 @@ mod tests {
         assert_eq!((u.scheme.as_str(), u.localPath.as_str(), u.fragment.as_str(), u.isFile), ("game", "/main.yaml", "#CAT", false));
         let u = Uri::parse("file:///tmp/x#APP").unwrap();
         assert_eq!((u.localPath.as_str(), u.isFile), ("/tmp/x", true));
+        let u = Uri::parse(r"file://C:\tmp\x#APP").unwrap();
+        assert_eq!((u.host.as_str(), u.localPath.as_str()), ("", r"C:\tmp\x"));
+        let u = Uri::parse("file:///C:/tmp/x#APP").unwrap();
+        assert_eq!(u.localPath.as_str(), "C:/tmp/x");
         assert_eq!(FamilyGame::toUri("APP", Some("e"), None), "game:/#APP.e");
     }
 

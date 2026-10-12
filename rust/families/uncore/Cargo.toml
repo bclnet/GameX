@@ -11,3 +11,8 @@ workspace = true
 [dependencies]
 gamex = { path = "../../core/gamex" }
 openx-poly = { path = "../../../OpenX/rust/core/poly" }
+openx = { path = "../../../OpenX/rust/core/openx" }
+openx-gfx = { path = "../../../OpenX/rust/gfx/gfx" }
+bytemuck = { workspace = true, features = ["min_const_generics"] }
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "bmp", "gif", "tiff"] }
+flate2 = "1"

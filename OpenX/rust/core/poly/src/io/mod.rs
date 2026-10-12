@@ -3,7 +3,7 @@
 // pub mod byte_xor_stream;
 // pub mod circular_buffer;
 // pub mod huffman;
-// pub mod i_stream;
+pub mod i_stream;
 // pub mod indented_text_writer;
 // pub mod partial_input_stream;
 pub mod poly;

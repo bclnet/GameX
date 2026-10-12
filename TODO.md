@@ -2,21 +2,21 @@
 
 What's next, in order. Pick from the top, and update this file in the same commit as the work: remove what's done and add what you find. Rules and conventions are in [CLAUDE.md](CLAUDE.md); decisions are in [docs/ADR](docs/ADR/Readme.md).
 
-Last updated 2026-10-12, after commit 585c66a.
+Last updated 2026-10-12, after the Arx Fatalis work (on top of 8b643d9).
 
 ## Where things stand
 
-- **Both Rust workspaces build clean.** `cargo check --workspace` gives zero errors and warnings in `OpenX/rust` and `rust/`, and so does `cargo check -p openx --features full`. `cargo test -p gamex` passes 60 tests.
-- **Rust port: 70 files done, 328 still `PORT-STATUS: todo` stubs.** The core model is done: `rust/core/gamex` has `family.rs` (Family.cs), `binary.rs` (Binary.cs), `meta.rs`, `util.rs`, `config.rs`, `store.rs` and `formats/stream.rs`. The specs are embedded by `rust/core/gamex/build.rs`.
-- **The Rust Explorer runs on egui** (ADR 0005): `cargo run -p gamex-app-explorer` from `rust/`. The Open dialog lists families and games. Opening an Uncore `file://<dir>#APP` folder shows its file tree, info tree, and text or hex content.
+- **Both Rust workspaces build clean.** `cargo check --workspace` gives zero errors and warnings in `OpenX/rust` and `rust/`, and so does `cargo check -p openx --features full`. `cargo test -p gamex` passes 49 tests (the store tests were rewritten for the new port, so there are fewer), `gamex-arkane` 4, `openx-gfx` 12. Three older tests fail; see section 5.
+- **Rust port: 73 files done, 328 still `todo` in `PORT_MAP.tsv`** (Uncore's `Formats/Binary.cs` and `Formats/Compression.cs` are `PORT-STATUS: partial` and count as `todo`). The core model is done, including `store.rs` with every store but Blizzard.
+- **Arx Fatalis opens in the Rust Explorer.** `cargo run -p gamex-app-explorer` from `rust/` finds it through GOG, and every file in its seven `.pak`s reads: text, scripts, `.wav`, `.tga`, `.ftl` / `.fts` / `.tea` models and levels. **Images (`.bmp` / `.jpg`) show an error, not hex:** `Binary_Img` needs `Caps::DRAWING`, as in C#, and the Explorer only has the Unknown engine (section 1).
+- `openx_poly`'s `BinaryReaderExt` now has `readS` / `readSArray` / `readSEach` / `readL32SArray` / `readPArray` (C#'s `MarshalS`, through `IStruct` in `openx_poly::system::unsafe_x`), `tell` and the `F`/`L32` string readers.
 
-## 1. Make a real game open in the Rust Explorer
+## 1. Show Arx Fatalis's images and models
 
-The Explorer preselects Arkane / Arx Fatalis from the config, so Arkane is the first target. Today a real game fails with "unable to find archive" or "unknown ArchiveType".
-
-- [ ] **Port Store.cs's store maps** into `rust/core/gamex/src/store.rs`. Only `Direct:` keys resolve today, so only Uncore's games are found. Steam, GOG, Epic and the rest need their paths. Store detection only fully works on Windows (CLAUDE.md).
-- [ ] **Register archive types from each family crate.** Rust has no reflection: C#'s `Type.GetType` is `registerType` / `findType` in `family.rs`, keyed by the C# type name in the spec. Copy `rust/families/uncore/src/uncore.rs`'s `register()`, and call it from the Explorer's `App` at startup. Start with Arkane (2 stub files).
-- [ ] **Port Uncore's `Formats/Binary.cs`** (`Binary_Txt`, `Binary_Img` and the rest). Until then images show as hex. It has no PORT_MAP row yet; add one.
+- [ ] **Host an engine in the Explorer.** This is section 2's engine view (`TViewGfx`); until a Rust engine with `Caps::DRAWING` is listed, `Binary_Img` refuses to decode, and "Texture" content has nowhere to go. A throwaway test with a `DRAWING` platform decoded all 3,307 of Arx's `.bmp` / `.jpg` files.
+- [ ] **Port `Binary_Dds`.** Needs `DDS_HEADER.Read`, commented out in `OpenX/rust/gfx/gfx/src/gfx_texture.rs`. Uncore's other missing types: `Binary_Plist` (needs `formats/apple/plist_reader.rs`), `Binary_Zip` (needs a zip crate), `Binary_Engine` (needs `ICellDatabase`).
+- [ ] **Arkane's other games** (Dishonored, Prey, Dark Messiah, Wolfenstein) need Crytek's, Epic's, Valve's and ID's archive binaries and asset factories; `ArkaneArchive::getArcBinary` fails for them.
+- [ ] **Register the other families** the same way (`register()` in the family's main file, called from `rust/apps/app-explorer/src/app_xaml.rs`) as each one's archive type is ported.
 
 ## 2. Finish the Rust Explorer's views
 
@@ -44,14 +44,18 @@ Families with the most stub files: IW 31, Cig Explorer 25, Uncore 22, Crytek 19,
 ## 5. Smaller known issues
 
 - [ ] **Python doesn't decode `%20` in file URIs.**
-- [ ] **Arkane's blast decompression** fails on `.bmp` exports (143 errors). This predates the Rust work.
+- [ ] **Arkane's blast decompression** fails on `.bmp` exports in C# (143 errors). The Rust port of Blast.cs reads all 1,314 of Arx's `.bmp`s, so compare the two.
 - [ ] **Python's Bullfrog and Beamdog readers** need porting properly from C#.
 - [ ] **6 Rust files still name `Applications/` in their `PORT-SOURCE` header**, as do 6 rows of `rust/_/PORT_MAP.tsv`. C#'s folder is now `dotnet/Apps/`.
-- [ ] **`bash rust/_/sync-check.sh` reports 13 STALE `done` files**, where the C# changed after the port: `ImportManager`, `Client`, `DesSer`, `Globalx`, `Store`, `_Config`, `Collada`, `RootHandlers`, Bethesda `Records`, Gamebryo `Nif`, Uncore `Network`, and WB `Enums` / `Enums+Weenie`. Port each change, then bump its PORT-SHA. It also reports 13 MISSING rows: the 6 `Applications/` ones, `Gamebryo/Formats/Nif.o.cs`, and 6 `GameX.Valve.Platform/OpenGL` files. And it reports 97 C# files with no row, 22 of them in the C#-only `Apps/GameX.App.ExplorerM`.
+- [ ] **`bash rust/_/sync-check.sh` reports 12 STALE `done` files**, where the C# changed after the port: `ImportManager`, `Client`, `DesSer`, `Globalx`, `_Config`, `Collada`, `RootHandlers`, Bethesda `Records`, Gamebryo `Nif`, Uncore `Network`, and WB `Enums` / `Enums+Weenie`. Port each change, then bump its PORT-SHA. It also reports 13 MISSING rows: the 6 `Applications/` ones, `Gamebryo/Formats/Nif.o.cs`, and 6 `GameX.Valve.Platform/OpenGL` files. And it reports 94 C# files with no row, 22 of them in the C#-only `Apps/GameX.App.ExplorerM`.
 - [ ] **Some `done` headers cover only enums.** `families/bethesda/src/formats/records.rs` holds just the generated enums of `Records.cs`, which also has about 350 classes. Check the other `gen_enums.py` outputs the same way.
-- [ ] **`gen_enums.py` emits `from_raw`.** That's snake_case, so rename it to `fromRaw` in the generator and regenerate.
+- [ ] **Regenerate the enum files.** `gen_enums.py` now emits `fromRaw` / `toRaw`, but 8 files generated before still have `from_raw` / `to_raw` (`grep -rln from_raw --include=*.rs rust`).
 - [ ] **Porting scripts with dead paths:** `rust/_/stamp.py` and `gen_gamex.py` point at `/home/claude/...`. `OpenX/rust/_/sync-check.sh` has no `PORT_MAP.tsv` to read and still defaults to `../src/dotnet`.
-- [ ] **Stale `#[cfg(test)]` modules** don't compile, e.g. `openx-poly`'s `reader.rs` and `openx-vfx`'s `disc_nrg.rs`. Fix or remove them when you touch those files.
+- [ ] **Stale `#[cfg(test)]` modules** don't compile, e.g. `openx-vfx`'s `disc_nrg.rs`. Fix or remove them when you touch those files. (`openx-poly`'s `reader.rs` is fixed.)
+- [ ] **Three tests fail:** `openx-poly`'s `pool::tests::numeric_strings_convert_like_the_c_sharp` (it never ran before, because `reader.rs`'s tests didn't compile), and `gamex-uncore`'s `network.rs` tests `credential_opcodes_are_redacted` and `non_printable_bytes_become_dots`.
+- [ ] **Store.cs looks renamed in three places** (see `rust/_/PORTING.md`, Store.cs): it switches on `"Query"` where the specs say `Archive:` (57 keys, which throw), reads registry values `"ModelPath"` / `"Installed ModelPath"`, and looks in `Ubisoft Query Launcher`. Python has `Archive`, `Path` and `Ubisoft Game Launcher`. Rust follows C#. Owner to decide; fix all three languages together.
+- [ ] **`Store_Blizzard` can't read `product.db`** in Rust: `BlizzardProtoDatabase.cs` isn't ported (its `.proto` schema isn't in the repo).
+- [ ] **Uncore's `Compression.cs`** has only Blast and Zlib in Rust. Doboz, Lzf, Lzss, Oodle and Xmem wait on `rust/core/gamex/src/vendor/compression/`'s placeholders; Lz4, Lzo, Zstd, Lzma need crates.
 
 ## Dates
 

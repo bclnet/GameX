@@ -2,9 +2,9 @@
 // PORT-SHA: cf108586ac269047
 // PORT-STATUS: done
 //
-// PARTIAL PORT: AssetFactory's Binary_* factories live in Formats/Binary.cs,
-// which isn't ported, so every file gets (0, null) and the Explorer falls back
-// to MetaManager's text-or-hex content.
+// PARTIAL PORT: AssetFactory's `.dds` (Binary_Dds) and `.start` (Binary_Engine)
+// arms return (0, null), since formats/binary.rs doesn't port those types yet,
+// so those files fall back to MetaManager's text-or-hex content.
 //
 // C# finds UncoreArchive by name through Type.GetType; `register` adds it to
 // gamex's type registry under the same name, and an app calls it at startup.
@@ -14,7 +14,8 @@ use std::sync::Arc;
 use gamex::archiveSource;
 use gamex::binary::{newArchive, AssetFactory, Archive, Binary, BinaryState, Stream, Task};
 use gamex::family::{registerType, ArchiveFactory, FamilyGame};
-use gamex::meta::{FileSource, Tag};
+use gamex::meta::{extension, FileSource, Tag};
+use crate::formats::binary::{Binary_Img, Binary_Pcx, Binary_Snd, Binary_Tga, Binary_TestTri, Binary_Txt};
 
 pub fn register() {
     registerType::<ArchiveFactory>("GameX.Uncore.UncoreArchive, GameX.Uncore", |parent, state| Ok(UncoreArchive::new(parent, state)));
@@ -39,7 +40,19 @@ impl UncoreArchive {
     // Factories
 
     pub fn assetFactory(source: &FileSource, game: &FamilyGame) -> (Tag, Option<AssetFactory>) {
-        (Tag::Int(0), None)
+        match extension(&source.path).to_lowercase().as_str() {
+            ".txt" | ".ini" | ".cfg" | ".csv" | ".xml" => (Tag::Int(0), Some(Binary_Txt::factory)),
+            ".wav" | ".mp3" => (Tag::Int(0), Some(Binary_Snd::factory)),
+            ".bmp" | ".jpg" | ".png" | ".gif" | ".tiff" => (Tag::Int(0), Some(Binary_Img::factory)), // Exif
+            ".pcx" => (Tag::Int(0), Some(Binary_Pcx::factory)),
+            ".tga" => (Tag::Int(0), Some(Binary_Tga::factory)),
+            ".dds" => (Tag::Int(0), None), // Binary_Dds: not ported
+            ".start" => (Tag::Int(0), None), // Binary_Engine: not ported
+            _ => match source.path.as_str() {
+                "testtri.gfx" => (Tag::Int(0), Some(Binary_TestTri::factory)),
+                _ => (Tag::Int(0), None),
+            }
+        }
     }
 }
 

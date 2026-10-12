@@ -17,3 +17,9 @@ indexmap = "2"
 serde_json = { version = "1", features = ["preserve_order"] }
 bitflags = { workspace = true }
 md-5 = "0.10"
+rusqlite = { version = "0.40", features = ["bundled"] }
+sxd-document = "0.3"
+sxd-xpath = "0.4"
+
+[target.'cfg(windows)'.dependencies]
+winreg = "0.56"

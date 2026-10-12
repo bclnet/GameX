@@ -9,7 +9,7 @@ What this handles:
   * explicit and implicit (auto-incrementing) discriminants
   * hex, negative, and character literals
   * `A = B` aliases and `A = B | C` composites, resolved against earlier members
-  * [Flags] enums -> bitflags!, plain enums -> a Rust enum + from_raw()
+  * [Flags] enums -> bitflags!, plain enums -> a Rust enum + fromRaw()
   * duplicate discriminants (legal in C#, not in a Rust enum) -> the first
     becomes a variant, the rest become associated consts
   * XML doc comments and trailing // comments, carried across
@@ -339,7 +339,7 @@ def emit(name, base, is_flags, doc, resolved) -> str:
         lines.append(f"    pub const {ident(n)}: Self = Self::{ident(first)};{tail}")
     lines.append(f"    /// Decode from the on-disk value. `None` for anything undefined —")
     lines.append(f"    /// a C-style cast would produce a value outside the enum, which is UB.")
-    lines.append(f"    pub fn from_raw(v: {base}) -> Option<Self> {{")
+    lines.append(f"    pub fn fromRaw(v: {base}) -> Option<Self> {{")
     lines.append("        Some(match v {")
     for n, v, _ in variants:
         lines.append(f"            {v:#x} => Self::{ident(n)},")
@@ -347,7 +347,7 @@ def emit(name, base, is_flags, doc, resolved) -> str:
     lines.append("        })")
     lines.append("    }")
     lines.append(f"    /// The on-disk value.")
-    lines.append(f"    pub fn to_raw(self) -> {base} {{")
+    lines.append(f"    pub fn toRaw(self) -> {base} {{")
     lines.append(f"        self as {base}")
     lines.append("    }")
     lines.append("}")
@@ -415,7 +415,7 @@ def main() -> int:
     header += ["", "#![allow(non_camel_case_types, non_upper_case_globals)]", ""]
 
     dst.parent.mkdir(parents=True, exist_ok=True)
-    dst.write_text("\n".join(header) + "\n" + "\n".join(body))
+    dst.write_text("\n".join(header) + "\n" + "\n".join(body), encoding="utf-8")
     total_m = sum(s[3] for s in stats)
     total_ok = sum(s[4] for s in stats)
     print(f"{src.name}: {len(enums)} enums, {total_ok}/{total_m} members -> {dst}")

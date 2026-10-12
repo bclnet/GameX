@@ -127,8 +127,9 @@ pub struct FileSource {
     // lazy
     pub lazy: Option<FileSourceLazy>,
     // cached
-    pub(crate) cachedObjectFactory: OnceLock<Option<AssetFactory>>,
-    pub(crate) cachedObjectOption: OnceLock<Tag>,
+    /// C# `internal`; `pub` so family crates can build a `FileSource` with `..Default::default()`.
+    pub cachedObjectFactory: OnceLock<Option<AssetFactory>>,
+    pub cachedObjectOption: OnceLock<Tag>,
 }
 
 impl FileSource {
@@ -372,9 +373,9 @@ impl dyn MetaManager {
 // #endregion
 
 // C# `System.IO.Path`, on either separator.
-pub(crate) fn fileName(path: &str) -> String { path.rsplit(['\\', '/']).next().unwrap_or("").to_string() }
-pub(crate) fn directoryName(path: &str) -> &str { path.rfind(['\\', '/']).map(|i| &path[..i]).unwrap_or("") }
-pub(crate) fn extension(path: &str) -> String {
+pub fn fileName(path: &str) -> String { path.rsplit(['\\', '/']).next().unwrap_or("").to_string() }
+pub fn directoryName(path: &str) -> &str { path.rfind(['\\', '/']).map(|i| &path[..i]).unwrap_or("") }
+pub fn extension(path: &str) -> String {
     let name = fileName(path);
     name.rfind('.').map(|i| name[i..].to_string()).unwrap_or_default()
 }

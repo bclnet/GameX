@@ -16,6 +16,8 @@
 // borrow checker for no real gain.
 
 use std::io::{copy, Error, ErrorKind, Read, Seek, SeekFrom, Write}; //self
+use bytemuck::Pod;
+use crate::system::unsafe_x::{IStruct, MarshalPArray, MarshalS, MarshalSArray};
 // use rust_decimal::Decimal;
 
 // use super::polyfill::X_BoundBox;
@@ -162,6 +164,36 @@ pub trait BinaryReaderExt: Read + Seek {
     fn skip(&mut self, count: i64) -> Result<u64> {
         Ok(self.seek(SeekFrom::Current(count))?)
     }
+
+    /// C# `Tell()`. C#'s `Seek(long offset)` is `seek(SeekFrom::Start(offset))`:
+    /// a trait method named `seek` would clash with `std::io::Seek::seek`.
+    #[inline] fn tell(&mut self) -> Result<u64> { self.stream_position() }
+
+    //#region String
+
+    /// C# `ReadFUString(int length)`: fixed-length UTF-8.
+    fn readFUString(&mut self, length: usize) -> Result<Option<String>> { if length == 0 { return Ok(None) } let b = self.readBytes(length)?; Ok(Some(String::from_utf8_lossy(&b).trim_end_matches('\0').to_string())) }
+    /// C# `ReadL32UString(int maxLength, bool big)`: length-prefixed UTF-8.
+    fn readL32UString(&mut self, maxLength: usize, big: bool) -> Result<Option<String>> { let length = self.readUInt32X(big)? as usize; if maxLength > 0 && length > maxLength { return Err(Error::new(ErrorKind::InvalidData, "string length exceeds maximum length")) } if length == 0 { return Ok(None) } let b = self.readBytes(length)?; Ok(Some(String::from_utf8_lossy(&b).trim_end_matches('\0').to_string())) }
+    /// C# `ReadFAString(int length)`: fixed-length ASCII, which .NET decodes with `?` for bytes over 0x7F.
+    fn readFAString(&mut self, length: usize) -> Result<Option<String>> { if length == 0 { return Ok(None) } let b = self.readBytes(length)?; Ok(Some(b.iter().map(|&c| if c < 0x80 { c as char } else { '?' }).collect::<String>().trim_end_matches('\0').to_string())) }
+
+    //#endregion
+
+    //#region Struct
+
+    /// C# `ReadS<T>()`.
+    fn readS<T: IStruct>(&mut self) -> Result<T> { MarshalS(&mut |n| self.readBytes(n), 0) }
+    /// C# `ReadPArray<T>(string pat, int count)`.
+    fn readPArray<T: Pod>(&mut self, pat: &str, count: usize) -> Result<Vec<T>> { if count > 0 { MarshalPArray(pat, &mut |n| self.readBytes(n * count), count) } else { Ok(Vec::new()) } }
+    /// C# `ReadL32SArray<T>(int sizeOf, bool big)`.
+    fn readL32SArray<T: IStruct>(&mut self, sizeOf: i32, big: bool) -> Result<Vec<T>> { let count = self.readUInt32X(big)? as usize; self.readSArray(count, sizeOf) }
+    /// C# `ReadSArray<T>(int count, int sizeOf)`.
+    fn readSArray<T: IStruct>(&mut self, count: usize, sizeOf: i32) -> Result<Vec<T>> { if count > 0 { MarshalSArray(&mut |n| self.readBytes(n), count, sizeOf) } else { Ok(Vec::new()) } }
+    /// C# `ReadSEach<T>(int count)`.
+    fn readSEach<T: IStruct>(&mut self, count: usize) -> Result<Vec<T>> { let mut s = Vec::with_capacity(count); for _ in 0..count { s.push(MarshalS(&mut |n| self.readBytes(n), -1)?); } Ok(s) }
+
+    //#endregion
 
     // /// C# `End(long offset)`.
     // #[inline]
@@ -563,77 +595,64 @@ mod tests {
     use std::io::Cursor;
 
     #[test]
-    fn endianness_pairs_agree() {
+    fn endiannessPairsAgree() {
         let mut c = Cursor::new(vec![0x01, 0x02, 0x03, 0x04]);
-        assert_eq!(c.read_u32().unwrap(), 0x04030201);
-        c.seek_to(0).unwrap();
-        assert_eq!(c.read_u32_be().unwrap(), 0x01020304);
-        c.seek_to(0).unwrap();
-        assert_eq!(c.read_u32_x(true).unwrap(), 0x01020304);
+        assert_eq!(c.readUInt32().unwrap(), 0x04030201);
+        c.seek(SeekFrom::Start(0)).unwrap();
+        assert_eq!(c.readUInt32E().unwrap(), 0x01020304);
+        c.seek(SeekFrom::Start(0)).unwrap();
+        assert_eq!(c.readUInt32X(true).unwrap(), 0x01020304);
     }
 
     #[test]
-    fn align_rounds_up_and_is_idempotent() {
-        let mut c = Cursor::new(vec![0u8; 32]);
-        c.seek_to(5).unwrap();
-        assert_eq!(c.align(4).unwrap(), 8);
-        assert_eq!(c.align(4).unwrap(), 8, "already aligned must not advance");
-    }
-
-    #[test]
-    fn length_prefixed_zero_is_none_not_empty() {
+    fn lengthPrefixedZeroIsNoneNotEmpty() {
         // Mirrors the C# `null` return, which callers branch on.
-        let mut c = Cursor::new(vec![0x00]);
-        assert!(c.read_l8_a_string(0).unwrap().is_none());
+        let mut c = Cursor::new(vec![0, 0, 0, 0]);
+        assert!(c.readL32UString(0, false).unwrap().is_none());
     }
 
     #[test]
-    fn max_length_is_enforced() {
-        let mut c = Cursor::new(vec![0x10, b'a']);
-        assert!(matches!(
-            c.read_l8_a_string(4),
-            Err(ReadError::LengthExceeded { got: 16, max: 4 })
-        ));
+    fn maxLengthIsEnforced() {
+        let mut c = Cursor::new(vec![0x10, 0, 0, 0, b'a']);
+        assert!(c.readL32UString(4, false).is_err());
     }
 
     #[test]
-    fn strings_trim_trailing_nuls() {
+    fn stringsTrimTrailingNuls() {
         let mut c = Cursor::new(b"hi\0\0".to_vec());
-        assert_eq!(c.read_fa_string(4).unwrap().unwrap(), "hi");
+        assert_eq!(c.readFAString(4).unwrap().unwrap(), "hi");
     }
 
     #[test]
-    fn read_to_value_consumes_sentinel_but_excludes_it() {
+    fn readToValueConsumesSentinelButExcludesIt() {
         let mut c = Cursor::new(b"ab\0cd".to_vec());
-        assert_eq!(c.read_to_value(0, usize::MAX).unwrap(), b"ab");
+        assert_eq!(c.readToValue(0, usize::MAX, None).unwrap(), b"ab");
         assert_eq!(c.tell().unwrap(), 3, "sentinel must be consumed");
     }
 
     #[test]
-    fn peek_restores_position() {
-        let mut c = Cursor::new(vec![1, 2, 3, 4, 5, 6, 7, 8]);
-        c.seek_to(2).unwrap();
-        let v = c.peek(2, Origin::Current, |r| r.readByte()).unwrap();
-        assert_eq!(v, 5);
-        assert_eq!(c.tell().unwrap(), 2);
-    }
-
-    #[test]
-    fn varint_decodes_known_value() {
+    fn varintDecodesKnownValue() {
         let mut c = Cursor::new(vec![0xE5, 0x8E, 0x26]);
-        assert_eq!(c.read_int_v7().unwrap(), 624485);
+        assert_eq!(c.readIntV7().unwrap(), 624485);
     }
 
     #[test]
-    fn obfuscated_string_swaps_nibbles() {
-        // 'A' == 0x41; stored nibble-swapped as 0x14.
-        let mut c = Cursor::new(vec![0x01, 0x00, 0x14]);
-        assert_eq!(c.read_l16_o_string().unwrap(), "A");
+    fn uintV8SelectsWidthByTopBits() {
+        assert_eq!(Cursor::new(vec![0x7F]).readUIntV8().unwrap(), 0x7F);
+        assert_eq!(Cursor::new(vec![0x81, 0x02]).readUIntV8().unwrap(), 0x0102);
     }
 
     #[test]
-    fn uint_v8_selects_width_by_top_bits() {
-        assert_eq!(Cursor::new(vec![0x7F]).read_uint_v8().unwrap(), 0x7F);
-        assert_eq!(Cursor::new(vec![0x81, 0x02]).read_uint_v8().unwrap(), 0x0102);
+    fn structsAndArraysRead() {
+        #[repr(C)]
+        #[derive(Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
+        struct Pair { A: i32, B: i32 }
+        impl IStruct for Pair { const Struct: (&'static str, usize) = ("<2i", 8); }
+        let mut c = Cursor::new(vec![1, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 4, 0, 0, 0, 5, 0, 0, 0, 6, 0, 0, 0]);
+        let p: Pair = c.readS().unwrap();
+        assert_eq!((p.A, p.B), (1, 2));
+        let a: Vec<Pair> = c.readL32SArray(0, false).unwrap();
+        assert_eq!(a.len(), 2);
+        assert_eq!((a[1].A, a[1].B), (5, 6));
     }
 }

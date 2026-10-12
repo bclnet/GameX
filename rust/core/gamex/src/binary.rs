@@ -805,13 +805,13 @@ impl dyn ArcBinary {
 
 /// C# `ArcBinary<Self>.SubArchive`: an archive read out of a file of its parent.
 pub struct SubArchive {
-    file: Arc<FileSource>,
+    file: Option<Arc<FileSource>>,
     parent: Arc<BinaryArchive>,
     r: Mutex<Option<Stream>>,
 }
 
 impl SubArchive {
-    pub fn new(parent: &Arc<BinaryArchive>, file: Arc<FileSource>, path: &str, tag: Tag, source: Arc<dyn ArcBinary>) -> Arc<BinaryArchive> {
+    pub fn new(parent: &Arc<BinaryArchive>, file: Option<Arc<FileSource>>, path: &str, tag: Tag, source: Arc<dyn ArcBinary>) -> Arc<BinaryArchive> {
         let state = BinaryState::new(parent.base.vfx.clone(), parent.base.game.clone(), parent.base.edition.clone(), Some(path), tag);
         let mut s = BinaryArchive::new(Some(parent.base.this()), state, Some(source));
         s.base.assetFactoryFunc = parent.base.assetFactoryFunc;
@@ -828,7 +828,8 @@ impl Seek for StaticReader<'_> { fn seek(&mut self, pos: SeekFrom) -> io::Result
 impl BinaryArchiveVirtual for SubArchive {
     fn opening<'a>(&'a self, s: &'a BinaryArchive) -> Task<'a, ()> {
         Box::pin(async move {
-            let r = self.parent.readData(&self.file, &Tag::None).await?.ok_or_else(|| Error::new(ErrorKind::NotFound, self.file.path.clone()))?;
+            let file = self.file.as_ref().ok_or_else(|| Error::new(ErrorKind::InvalidData, "NullReferenceException: File"))?;
+            let r = self.parent.readData(file, &Tag::None).await?.ok_or_else(|| Error::new(ErrorKind::NotFound, file.path.clone()))?;
             *self.r.lock().unwrap() = Some(r);
             s.baseOpening().await
         })

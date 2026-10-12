@@ -743,44 +743,47 @@ Beyond the rename damage above:
 
 ## `Store.cs` — ported as-is
 
-Game-store install-path discovery. **The path data is transcribed exactly**,
-including the parts that look wrong; an earlier draft of this port "corrected"
-them and substituted paths I had invented, which was worse than porting yours,
-since invented paths carry no evidence at all. Observations are comments;
-behaviour matches the C#.
+Game-store install-path discovery, ported again in C#'s shape: each
+`static class Store_X` is a module whose `Paths` is a `LazyLock`, and whose
+static constructor is `init`. An `init` error is kept and returned on every
+`Paths()` call, as C# rethrows `TypeInitializationException`, and `add` throws on
+a duplicate key like `Dictionary.Add`. FamilyGame logs the error and leaves the
+game not found, as C# does. The earlier port's `SearchPlan` / `StoreKind` split
+is gone.
 
-Recorded, not changed:
+Kept as C# has it. Python's twin (`python/gamex/core/store.py`) has the other
+spelling in each case, so these look like rename damage in the C#:
 
-* Every macOS branch does
-  `search.SelectMany(x => search, (s, h) => Path.Join(h, s, tail))`, which
-  crosses `search` with itself and never reads the `home` array declared on the
-  line above. Five sites: lines 125, 189, 233, 371, 417.
-* `Store_Blizzard`'s Linux branch searches `.steam`, `.steam/steam`,
-  `.steam/root`, `.local/share/Steam` plus `appcache` — the same paths as
-  `Store_Steam`.
-* `Store_Epic` joins `"Sbi"` on all three platforms; the constructor then looks
-  for `Manifests` beneath it. `"Sbi"` appears only in this store.
-* Three Linux `search` arrays are the literal `["??"]`.
+* `GetPathByKey` switches on `"Query"` for `Store_Archive`, but the specs use
+  `Archive:` (57 keys). An `Archive:` key throws `ArgumentOutOfRangeException`,
+  so the game is not found even when a later key would have found it.
+* `Store_WinReg` reads the registry values `"ModelPath"` and
+  `"Installed ModelPath"`; Python reads `"Path"` and `"Installed Path"`. GOG
+  writes `path`, so `WinReg:GOG.com/Games/...` keys resolve only through the
+  `Exe` fallback (GOG's `exe` value).
+* `Store_Ubisoft` looks in `%LocalAppData%\Ubisoft Query Launcher`; Python looks
+  in `Ubisoft Game Launcher`.
+
+Also kept:
+
+* `Store_Blizzard`'s Linux branch searches the Steam paths plus `appcache`.
+* `Store_Steam`'s Linux branch searches `.../appcache`, then looks for
+  `steamapps/libraryfolders.vdf` under it.
+* Three `search` arrays are the literal `["??"]` (Gog on Linux, Ubisoft on
+  Linux and macOS).
 * `Store_Abandon` / `Store_Archive` roots are `E:\AbandonLibrary` and
-  `E:\ArchiveLibrary`, preserved as `ABANDON_ROOT` / `ARCHIVE_ROOT`.
+  `E:\ArchiveLibrary` on every OS.
 * `Store_Blizzard`'s protobuf fallback re-parses the same `Stream` after a
-  failed parse has advanced it to the end.
-* Every store walks the filesystem from a **static constructor** using
-  `paths.Add` / `ToDictionary`, which throw on duplicate keys — surfacing as
-  `TypeInitializationException` and poisoning the type process-wide.
+  failed parse has advanced it to the end. (Not reachable in Rust yet:
+  `BlizzardProtoDatabase.cs` isn't ported, so Rust's Blizzard `Paths` is empty.)
 
-Two things do differ, only because a 1:1 translation is impossible:
+Two differences:
 
-* **Plan-building is split from filesystem probing.** `SearchPlan` holds
-  candidates; `first_existing` takes an `exists` predicate. The C# interleaves
-  them in one expression, which cannot be unit-tested. The candidates produced
-  are identical, and the tests assert the C#'s actual output — including the
-  self-crossed macOS paths.
-* **Static constructors become explicit builders**, since Rust has no static
-  initialiser that runs I/O. `library_paths` uses `insert` (last-wins) where the
-  C# uses `Add`; panicking inside a lazy static would be worse than the C#'s
-  exception. That is the file's one behavioural difference and it is noted at
-  the function.
+* `Store_Gog` loops on `sqlite3_step` until `SQLITE_DONE`, so any other result
+  code (`SQLITE_BUSY`, `SQLITE_ERROR`) loops forever. Rust's `rusqlite` loop
+  stops at the first failed row.
+* `DriveInfo.GetDrives()` lists every mount point off Windows; Rust's
+  `getDrives` lists drive letters on Windows and `/` elsewhere.
 
 ## `_Config.cs` — 36 `#if` branches to a runtime table
 
@@ -809,3 +812,57 @@ set in **every** branch — debug overrides committed enabled, so a release buil
 inherits them — and changing family requires a recompile.
 
 
+
+## Arkane, Uncore's formats and Blast — ported for Arx Fatalis
+
+Ported to open Arx Fatalis in the Explorer: Arkane's `Arkane.cs`,
+`Formats/Binary.cs`, `Formats/Danae/Binary.cs` and `EerieTypes.cs`; Uncore's
+`Formats/Binary.cs` (13 of 17 types) and `Formats/Compression.cs` (Blast and
+Zlib); and `Core/GameX/_LIB/Compression/Blast.cs`. Against the GOG install,
+every file in Arx's seven `.pak`s reads, including the blast-compressed ones.
+So the C# Explorer's 143 blast errors on `.bmp` exports don't reproduce in Rust.
+
+Stand-ins:
+
+* `Binary_Img` decodes with the `image` crate in place of System.Drawing, and
+  keeps C#'s check: without `Caps::DRAWING` it fails, as C# throws
+  `NotImplementedException`. The Rust Explorer only has the Unknown engine,
+  which has no caps, so images show an error there until an engine is hosted.
+  `image` gives packed RGB/RGBA rows, where GDI+ gives padded BGR/BGRA, and
+  GIFs come out RGBA rather than indexed.
+* Rust's `ITexture` has no `Create<T>`; each texture type has an inherent
+  `create`. `MetaContent { Value = this }` is `Tag::Any(Arc<Self>)`, kept as the
+  same object through a `Weak` set with `Arc::new_cyclic`.
+* `Binary_Msg.Factory(string)` and `Binary_Raw.FactoryMethod` return closures
+  (`FuncAsset`), since `AssetFactory` is a plain `fn`.
+* Danae's `ToString()` / `WriteToStream` are `this.Serialize()` (JSON through
+  `DesSer`) in C#; Rust writes the `{:#?}` form until `DesSer` is ported.
+* A C# `NullReferenceException` / `IndexOutOfRangeException` is usually a panic
+  in Rust (Pcx/Tga `create`, Iif without an XDIR chunk, an FTL with no 3D data).
+
+C# bugs kept as is:
+
+* `UnsafeX.MarshalSArray` calls `MarshalSApply(bytes, p)` with the default
+  `count = 1`, so only the first element of a big-endian array is swapped.
+* `Compression.CompressZlib` never calls `Deflater.Finish()`, so its output is
+  truncated; with miniz it is empty for a 100 KB input. Its only caller is IW's
+  `ZStream.compressZlib`.
+* `Blast.Decompress(byte[], byte[])` copies past the end of `outputBuffer` when
+  the last chunk doesn't fit; Rust panics on the slice.
+* Tga: `GetColorFromMap`'s `index < 0 && index >= EntryCount` is never true;
+  `decodeRle` reads the map index at offset `o`, not 0; `decode` reads
+  `pixelSize` bytes per 1-byte index; `Create` sets `Map.Pixels` to null, so a
+  second `Create` differs.
+* Iif: `HandleChunkXDIR` compares `chunk.Size` with `Chunk.INFO`; `WriteMidi`
+  checks `track > Tracks` (`>=` meant); `WriteMidiMTrk`'s size includes its 4
+  size bytes. `WavData.Struct` has the wrong pattern `"<3I2H6I"`.
+* Danae: `CreateCedricData` never sets `QuatInit`, so `Quaternion.Inverse` of
+  all zeros makes every `VertexLocal` NaN (`E_BONE`'s `Default` is written by
+  hand to keep the zero quaternion). `FTL_FACE.To` drops `Rgb` and `Vid`.
+  `E_BACKGROUND` only fixes `xdiv < 0`, so 0 gives `Xmul = inf`.
+  `F_LEVEL.Backg` is never assigned. `$"Obj: {Obj}"` prints a type name.
+
+Python twins differ from C# here, not fixed: `decompressBlast` returns a fixed
+`bytearray(newLength)`; Danae's `E_BACKGROUND` builds `[X()]*n` (one shared
+object) and sets `Min`/`Max` capitalised; `FTL_FACE` sets `self.rbg`;
+`Binary_Tea` declares `IWriteToStream` and reads a missing `self.data`.

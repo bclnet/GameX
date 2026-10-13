@@ -924,3 +924,25 @@ Differences:
 `egin_render.rs` and `gfx_render.rs` were older snake_case ports; they're
 camelCase now. `egin_render`'s `Camera` no longer guards a zero-height
 viewport or looking at its own position, to match C#.
+
+## Big generated enums are `ConstEnum`s
+
+`gamex-wb` needed over 20 GB to check, so nothing using `gamex-all` (the
+Explorer, the client, the CLI) built on a 32 GB machine. The cause is
+`#[derive(Debug)]` on a big Rust enum: rustc's memory grows with the square of
+the variant count (0.1 GB at 2,000, 1.5 GB at 8,000, about 23 GB for
+`WeenieClassName`'s 31,108). A hand-written `Debug` match is as bad; the enum
+itself, its other derives and `fromRaw`'s match are cheap.
+
+So `gen_enums.py` emits a plain C# enum with more than `BIG_ENUM` (1,000)
+members as a `ConstEnum` (`openx_poly::system::const_enum`): a newtype over the
+C# base type, each member an associated const, and a sorted name table for
+`Debug`. That's closer to C# anyway: a C# enum is its integer, and any value is
+valid. `match` on the consts works. `fromRaw` / `toRaw` stay for the same API as
+the other generated enums. It applies to WB's `WeenieClassName` and `SpellId`;
+`gamex-wb` now checks in 5 seconds under 1 GB. (A `constEnum!` macro was as
+small but took 37 s to expand, so the generator writes the items itself.)
+
+Fixed in the tooling on the way: `gen_enums.py` wrote CRLF on Windows (text
+mode), and `verify_enums.py` collected aliases but never counted them, so
+`Enums.cs` failed with 27 "missing" aliases. It now passes 11,624 of 11,624.

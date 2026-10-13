@@ -10,6 +10,8 @@ What this handles:
   * hex, negative, and character literals
   * `A = B` aliases and `A = B | C` composites, resolved against earlier members
   * [Flags] enums -> bitflags!, plain enums -> a Rust enum + fromRaw()
+  * plain enums over BIG_ENUM variants -> a `ConstEnum` newtype with associated
+    consts (openx_poly), since a Rust enum that size is too costly to compile
   * duplicate discriminants (legal in C#, not in a Rust enum) -> the first
     becomes a variant, the rest become associated consts
   * XML doc comments and trailing // comments, carried across
@@ -32,6 +34,11 @@ CS_TO_RUST = {
     "byte": "u8", "sbyte": "i8", "short": "i16", "ushort": "u16",
     "int": "i32", "uint": "u32", "long": "i64", "ulong": "u64",
 }
+
+
+# plain enums with more variants than this become a ConstEnum newtype instead
+# of a Rust enum, whose derives cost rustc memory quadratic in the variant count
+BIG_ENUM = 1000
 
 
 # keywords a raw identifier (r#...) cannot escape; these get a trailing underscore
@@ -279,6 +286,54 @@ def doc_lines(doc: str, indent: str = "") -> str:
     return "\n".join(out) + ("\n" if out else "")
 
 
+def emitConstEnum(name, base, doc, variants, aliases, skipped) -> str:
+    """A plain enum over BIG_ENUM variants, as openx_poly's `ConstEnum`: rustc's
+    cost for a Rust enum's derives grows with the square of its variants
+    (`#[derive(Debug)]` on WeenieClassName's 31,108 needs about 23 GB)."""
+    lines = []
+    if doc:
+        lines.append(doc_lines(doc).rstrip("\n"))
+    lines.append(f"/// C# `enum {name} : {base}`, as a `ConstEnum`: {len(variants)} variants is too many for a")
+    lines.append("/// Rust enum to compile cheaply. Each C# member is an associated const.")
+    lines.append("#[repr(transparent)]")
+    lines.append("#[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Default)]")
+    lines.append(f"pub struct {name}(pub {base});")
+    lines.append("")
+    lines.append(f"impl {name} {{")
+    for n, v, c in variants:
+        tail = f" // {c}" if c else ""
+        lines.append(f"    pub const {ident(n)}: Self = Self({v:#x});{tail}")
+    for n, first, v, c in aliases:
+        tail = f" // {c}" if c else ""
+        lines.append(f"    /// Alias of [`Self::{ident(first)}`].")
+        lines.append(f"    pub const {ident(n)}: Self = Self::{ident(first)};{tail}")
+    lines.append("    /// Decode from the on-disk value. `None` for a value no member names.")
+    lines.append(f"    pub fn fromRaw(v: {base}) -> Option<Self> {{ let s = Self(v); s.name().map(|_| s) }}")
+    lines.append("    /// The on-disk value.")
+    lines.append(f"    pub fn toRaw(self) -> {base} {{ self.0 }}")
+    lines.append("}")
+    lines.append("")
+    lines.append(f"impl ConstEnum for {name} {{")
+    lines.append(f"    type Raw = {base};")
+    lines.append(f"    const Names: &'static [({base}, &'static str)] = &[")
+    for n, v, _ in sorted(variants, key=lambda x: x[1]):
+        lines.append(f"        ({v:#x}, \"{ident(n)}\"),")
+    lines.append("    ];")
+    lines.append(f"    fn raw(self) -> {base} {{ self.0 }}")
+    lines.append("}")
+    lines.append("")
+    lines.append(f"impl std::fmt::Debug for {name} {{")
+    lines.append("    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { ConstEnum::fmt(self, f) }")
+    lines.append("}")
+    if skipped:
+        lines.append("")
+        lines.append(f"// NOT GENERATED from {name}: {len(skipped)} member(s) whose C# initialiser")
+        lines.append("// could not be resolved to a constant. Listed so the gap is visible:")
+        for n, c in skipped[:20]:
+            lines.append(f"//   {n}" + (f"  // {c}" if c else ""))
+    return "\n".join(lines) + "\n"
+
+
 def emit(name, base, is_flags, doc, resolved) -> str:
     numeric = [(n, v, c) for n, v, c in resolved if v is not None]
     skipped = [(n, c) for n, v, c in resolved if v is None]
@@ -316,6 +371,9 @@ def emit(name, base, is_flags, doc, resolved) -> str:
         else:
             seen[v] = n
             variants.append((n, v, c))
+
+    if len(variants) > BIG_ENUM:
+        return emitConstEnum(name, base, doc, variants, aliases, skipped)
 
     if doc:
         lines.append(doc_lines(doc).rstrip("\n"))
@@ -409,13 +467,17 @@ def main() -> int:
         "// Per enum:",
     ]
     for name, base, is_flags, total, ok in stats:
-        kind = "bitflags" if is_flags else "enum"
+        kind = "bitflags" if is_flags else "constenum" if ok > BIG_ENUM else "enum"
         note = "" if ok == total else f"  ({total - ok} unresolved)"
         header.append(f"//   {name:<34} {base:<5} {kind:<8} {ok:>6} members{note}")
     header += ["", "#![allow(non_camel_case_types, non_upper_case_globals)]", ""]
+    if any(not f and ok > BIG_ENUM for _, _, f, _, ok in stats):
+        header += ["use openx_poly::system::const_enum::ConstEnum;", ""]
 
     dst.parent.mkdir(parents=True, exist_ok=True)
-    dst.write_text("\n".join(header) + "\n" + "\n".join(body), encoding="utf-8")
+    # newline="\n": on Windows, text mode would write CRLF
+    with open(dst, "w", encoding="utf-8", newline="\n") as f:
+        f.write("\n".join(header) + "\n" + "\n".join(body))
     total_m = sum(s[3] for s in stats)
     total_ok = sum(s[4] for s in stats)
     print(f"{src.name}: {len(enums)} enums, {total_ok}/{total_m} members -> {dst}")

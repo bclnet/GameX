@@ -96,8 +96,11 @@ def rs_pairs(path):
     rs = Path(path).read_text()
     out, cur, aliases = {}, None, {}
     for line in rs.split('\n'):
-        em = re.match(r'pub enum (\w+)', line) or re.match(r'\s*pub struct (\w+):', line)
+        em = re.match(r'pub enum (\w+)', line) or re.match(r'\s*pub struct (\w+):', line) or re.match(r'pub struct (\w+)\(pub \w+\);', line)
         if em: cur = em.group(1); continue
+        # A ConstEnum member: `pub const X: Self = Self(0x1);`.
+        cm = re.match(r'\s+pub const (?:r#)?(\w+): Self = Self\((-?0x[0-9a-fA-F]+|-?\d+)\);', line)
+        if cm and cur: out[(cur, csName(cm.group(1)))] = int(cm.group(2), 0); continue
         # An alias (`pub const X: Self = Self::Y;`) is how a duplicate C#
         # discriminant is represented, since a Rust enum cannot repeat one.
         # Skipping those lines made every alias look like a missing member.
@@ -107,6 +110,10 @@ def rs_pairs(path):
             continue
         vm = re.match(r'\s+(?:const )?(?:r#)?(\w+)(?::\s*Self)?\s*=\s*(-?0x[0-9a-fA-F]+|-?\d+)', line)
         if vm and cur: out[(cur, csName(vm.group(1)))] = int(vm.group(2), 0)
+    # an alias has its target's value
+    for cur, pairs in aliases.items():
+        for alias, target in pairs:
+            if (cur, target) in out: out[(cur, alias)] = out[(cur, target)]
     return out
 
 bad = 0

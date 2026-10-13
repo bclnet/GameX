@@ -1729,6 +1729,7 @@ dependencies = [
  "bitflags 2.13.1",
  "gamex",
  "gamex-uncore",
+ "openx-poly",
 ]
 
 [[package]]

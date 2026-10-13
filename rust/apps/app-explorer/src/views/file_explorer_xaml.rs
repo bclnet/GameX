@@ -129,11 +129,13 @@ impl FileExplorer {
     pub fn ui(&mut self, ui: &mut egui::Ui, fileContent: &mut FileContent) {
         ui.label("File Filter");
         let (mut keyUp, mut selected) = (false, None);
-        ui.horizontal(|ui| {
-            keyUp = ui.add(egui::TextEdit::singleline(&mut self.filter).desired_width(ui.available_width() - 30.)).changed();
+        // right to left, so the text box takes exactly what the drop-down leaves: a row wider than
+        // the panel makes the resizable panel grow a little every frame
+        ui.allocate_ui_with_layout(egui::vec2(ui.available_width(), ui.spacing().interact_size.y), egui::Layout::right_to_left(egui::Align::Center), |ui| {
             egui::ComboBox::from_id_salt("Filter").width(20.).selected_text("").show_ui(ui, |ui| {
                 for s in self.filters.iter().flatten() { if ui.selectable_label(false, &s.name).clicked() { selected = Some(s.clone()); } }
             });
+            keyUp = ui.add(egui::TextEdit::singleline(&mut self.filter).desired_width(ui.available_width())).changed();
         });
         if keyUp { self.onFilterKeyUp(); }
         if let Some(filter) = selected { self.filter = filter.name.clone(); self.onFilterSelected(&filter); }

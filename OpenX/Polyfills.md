@@ -16,6 +16,7 @@ To find a type's counterpart in another language, look up its row. When somethin
 | `System/` (`MathX`, `ConvertX`, `UnsafeX`, `ThreadSafeRandom`, ...) | `system.py`, `unsafe.py` | `openx_poly::system` |
 | `System.Collections.Generic/` (pools, coroutine queues, `KV`) | `pool.py` | `openx_poly::pool` |
 | `System.Drawing/` (`Color`, `BoundingBox`, `Ray`, ...) | `openx.sys.drawing` | `openx_poly::drawing` |
+| C# `enum`s too big for a Rust enum (over 1,000 members; gen_enums.py decides) | Python `enum` | `openx_poly::system::const_enum::ConstEnum`: a newtype over the base type with associated consts |
 | `Log.cs` | `log.py` | `openx_poly::log` |
 | `ISource.cs` | `openx.core.core` | `openx_poly::core` |
 | `System.Text/` `ValueStringBuilder`, `System.Security.Cryptography/`, `MathNet.Numerics/` | | Rust's `String`, RustCrypto crates, when something needs them |

@@ -71,7 +71,8 @@ impl GLWpfControl {
             if response.hovered() != camera.mouseOverRenderArea { camera.event(if response.hovered() { EventType::MouseEnter } else { EventType::MouseLeave }, None, None); }
         }
         let this = this.clone();
-        ui.painter().add(egui::PaintCallback { rect, callback: Arc::new(egui_glow::CallbackFn::new(move |info, painter| {
+        // clipped to the control, so its glClear stays inside it as on WPF's own surface
+        ui.painter_at(rect).add(egui::PaintCallback { rect, callback: Arc::new(egui_glow::CallbackFn::new(move |info, painter| {
             setGL(painter.gl().clone());
             let mut s = this.lock().unwrap();
             if !s.base().initialized { s.base().initialized = true; s.base().onInitialized(); }

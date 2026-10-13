@@ -8,6 +8,7 @@
 // LoadFamilies and GetFamily errors, which the C# throws, go to RunError.
 
 use openx::platform::{Platform, UnknownPlatform};
+use openx_engine_opengl::engine_open_gl::OpenGLEngine;
 use gamex::{config::option, family::{getFamily, loadFamilies}};
 use crate::app_shell_xaml::AppShell;
 
@@ -15,9 +16,9 @@ use crate::app_shell_xaml::AppShell;
 pub struct App;
 
 impl App {
-    /// C# `EngineX.Engines.UnionWith([GodotShellEngine.This, ...])`. None of
-    /// those engines has a Rust port yet, so this is EngineX's own UnknownEngine.
-    pub fn engines() -> Vec<Box<dyn Platform>> { vec![Box::new(UnknownPlatform)] }
+    /// C# `EngineX.Engines.UnionWith([GodotShellEngine.This, ...])`, with EngineX's own
+    /// UnknownEngine. Of those engines only OpenGL has a Rust port.
+    pub fn engines() -> Vec<Box<dyn Platform>> { vec![Box::new(UnknownPlatform), Box::new(OpenGLEngine::This)] }
 
     const args: Option<&'static [&'static str]> = Some(&[]);
     //const args: Option<&'static [&'static str]> = Some(&["open", "-f", "Arkane", "-u", "game:/readme.txt#AF"]);

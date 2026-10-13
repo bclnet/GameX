@@ -12,5 +12,8 @@ workspace = true
 openx = { path = "../../core/openx" }
 openx-gfx = { path = "../../gfx/gfx" }
 openx-gfx-egin = { path = "../../gfx/gfx-egin" }
+openx-poly = { path = "../../core/poly" }
+bytemuck = { workspace = true }
+regex = "1"
 glam = { workspace = true }
 glow = "0.17" # eframe's version, so egui hosts the engine directly (ADR 0005)

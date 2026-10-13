@@ -37,9 +37,9 @@
 //     the path. `SourcePath` is a real path type, so that case is a separate
 //     method (`createFrom`) that takes the decoded asset and a path to cache
 //     it under.
-//   * `ITexture.Create<T>(string platform, Func<object, T>)` and its siblings
-//     on `ISprite` / `IMaterial` are not object-safe generics and have no
-//     callers in the ported tree; they are dropped from the traits.
+//   * `ITexture.Create<T>(string platform, Func<object, T>)` is a generic, so
+//     `ITexture::create` hands the value to a `&mut dyn FnMut(&dyn Any)` instead.
+//     Its siblings on `ISprite` / `IMaterial` have no callers yet and are left out.
 //
 // Sources hand assets back through `ISource::getAssetAny` as `Box<dyn Any + Send + Sync>`.
 // The managers downcast that to `Box<dyn ITexture>`, `Box<dyn ISprite>` or
@@ -272,7 +272,7 @@ impl GfxShader {
 
 /// C# `abstract class ShaderBuilder<B_Shader>`.
 pub trait ShaderBuilder<B: Backend> {
-    fn create(&mut self, path: &SourcePath, args: &HashMap<String, bool>) -> B::Shader;
+    fn create(&mut self, path: &SourcePath, args: &HashMap<String, bool>) -> Result<B::Shader, Error>;
 }
 
 /// C# `class ShaderManager<B_Shader>`. The C# `Create` is `async` but never
@@ -288,18 +288,18 @@ impl<B: Backend, SB: ShaderBuilder<B>> ShaderManager<B, SB> {
         Self { builder, cached: HashMap::new() }
     }
 
-    pub fn create(&mut self, source: &SourceRef, path: &SourcePath, args: Option<&HashMap<String, bool>>) -> B::Shader {
+    pub fn create(&mut self, source: &SourceRef, path: &SourcePath, args: Option<&HashMap<String, bool>>) -> Result<B::Shader, Error> {
         let argx = args.map_or(String::new(), |a| {
             let mut on: Vec<&str> = a.iter().filter(|(_, &v)| v).map(|(k, _)| k.as_str()).collect();
             on.sort_unstable(); // C# joins in dictionary order, which is not stable across runs
             on.join(",")
         });
         let key = (key(source, path), argx);
-        if let Some(s) = self.cached.get(&key) { return s.clone(); }
+        if let Some(s) = self.cached.get(&key) { return Ok(s.clone()); }
         let empty = HashMap::new();
-        let s = self.builder.create(path, args.unwrap_or(&empty));
+        let s = self.builder.create(path, args.unwrap_or(&empty))?;
         self.cached.insert(key, s.clone());
-        s
+        Ok(s)
     }
 
     pub fn clear(&mut self) { self.cached.clear(); }
@@ -407,6 +407,10 @@ pub trait ITexture: Send + Sync {
     fn depth(&self) -> i32;
     fn mipMaps(&self) -> i32;
     fn texFlags(&self) -> TextureFlags;
+    /// C# `T Create<T>(string platform, Func<object, T> func)`. A generic method isn't
+    /// object-safe, so `func` gets the value (`TextureAsBytes`, `TextureAsDds`) and the
+    /// caller keeps what it builds.
+    fn create(&self, platform: &str, func: &mut dyn FnMut(&dyn Any)) -> Result<(), Error>;
 }
 
 /// C# `interface ITextureSelect : ITexture`.
@@ -427,7 +431,7 @@ pub trait TextureBuilder<B: Backend> {
     fn default(&self) -> B::Texture;
     fn createNormalMap(&mut self, src: &B::Texture, strength: f32) -> B::Texture;
     fn createSolid(&mut self, width: i32, height: i32, rgbas: &[f32]) -> B::Texture;
-    fn create(&mut self, reuse: Option<B::Texture>, src: &dyn ITexture, level: Option<Range<i32>>) -> B::Texture;
+    fn create(&mut self, reuse: Option<B::Texture>, src: &dyn ITexture, level: Option<Range<i32>>) -> Result<B::Texture, Error>;
     fn delete(&mut self, src: &B::Texture);
 }
 
@@ -492,29 +496,30 @@ impl<B: Backend, TB: TextureBuilder<B>> TextureManager<B, TB> {
         let key = key(source, path);
         if let Some(c) = self.cached.get(&key) { return Ok(c.clone()); }
         let tag: Arc<dyn ITexture> = Arc::from(self.load(&key).await?);
-        Ok(self.insert(key, tag, level))
+        self.insert(key, tag, level)
     }
 
     /// C# `Create` with `path is ITexture z` — an already-decoded texture, cached under `path`.
-    pub fn createFrom(&mut self, source: &SourceRef, path: &SourcePath, tex: Arc<dyn ITexture>, level: Option<Range<i32>>) -> (B::Texture, Arc<dyn ITexture>) {
+    pub fn createFrom(&mut self, source: &SourceRef, path: &SourcePath, tex: Arc<dyn ITexture>, level: Option<Range<i32>>) -> Result<(B::Texture, Arc<dyn ITexture>), Error> {
         let key = key(source, path);
-        if let Some(c) = self.cached.get(&key) { return c.clone(); }
+        if let Some(c) = self.cached.get(&key) { return Ok(c.clone()); }
         self.insert(key, tex, level)
     }
 
-    fn insert(&mut self, key: SourceKey, tag: Arc<dyn ITexture>, level: Option<Range<i32>>) -> (B::Texture, Arc<dyn ITexture>) {
-        let obj = self.builder.create(None, &*tag, level);
+    fn insert(&mut self, key: SourceKey, tag: Arc<dyn ITexture>, level: Option<Range<i32>>) -> Result<(B::Texture, Arc<dyn ITexture>), Error> {
+        let obj = self.builder.create(None, &*tag, level)?;
         self.cached.insert(key, (obj.clone(), tag.clone()));
-        (obj, tag)
+        Ok((obj, tag))
     }
 
     /// C# `Reload(ISource source, object path, Range? level)`. `None` when the path was never loaded.
-    pub fn reload(&mut self, source: &SourceRef, path: &SourcePath, level: Option<Range<i32>>) -> Option<(B::Texture, Arc<dyn ITexture>)> {
+    pub fn reload(&mut self, source: &SourceRef, path: &SourcePath, level: Option<Range<i32>>) -> Option<Result<(B::Texture, Arc<dyn ITexture>), Error>> {
         let key = key(source, path);
         let (existing, tag) = self.cached.get(&key)?.clone();
-        let t = self.builder.create(Some(existing), &*tag, level);
-        self.cached.insert(key, (t.clone(), tag.clone()));
-        Some((t, tag))
+        Some(self.builder.create(Some(existing), &*tag, level).map(|t| {
+            self.cached.insert(key, (t.clone(), tag.clone()));
+            (t, tag)
+        }))
     }
 
     pub fn preload(&mut self, source: &SourceRef, path: &SourcePath) {
@@ -682,6 +687,11 @@ impl<B: Backend, TB: TextureBuilder<B>, MB: MaterialBuilder<B, TB>> MaterialMana
 /// C# `interface IOpenGfx`.
 pub trait IOpenGfx {}
 
+/// C# `IOpenGfx[]`, indexed by `GfX.X*`. Each slot is the backend's object
+/// (`Mutex<OpenGLGfxModel>`, ...) as `Any`; a renderer downcasts it, as C#
+/// casts `(OpenGLGfxModel)gfx[GfX.XModel]`. `None` is C#'s `null` slot.
+pub type IOpenGfxs = Vec<Option<AnyArc>>;
+
 /// C# `interface IOpenGfxApi<B_Object, B_Material>`.
 pub trait IOpenGfxApi<B: Backend>: IOpenGfx {
     fn createObject(&mut self, name: &str, tag: Option<&str>, parent: Option<&B::Object>) -> B::Object;
@@ -720,7 +730,7 @@ pub trait IOpenGfxModel<B: Backend>: IOpenGfx {
     fn preload(&mut self, source: &SourceRef, path: &SourcePath);
     fn preloadTexture(&mut self, source: &SourceRef, path: &SourcePath);
     fn create<'a>(&'a mut self, source: &'a SourceRef, path: &'a SourcePath, isStatic: bool, parent: Option<&'a B::Object>) -> BoxFuture<'a, Result<(B::Object, AnyArc), Error>>;
-    fn createShader(&mut self, source: &SourceRef, path: &SourcePath, args: Option<&HashMap<String, bool>>) -> B::Shader;
+    fn createShader(&mut self, source: &SourceRef, path: &SourcePath, args: Option<&HashMap<String, bool>>) -> Result<B::Shader, Error>;
     fn createTexture<'a>(&'a mut self, source: &'a SourceRef, path: &'a SourcePath, level: Option<Range<i32>>) -> BoxFuture<'a, Result<(B::Texture, Arc<dyn ITexture>), Error>>;
     fn post(&mut self, src: &B::Object, position: Vec3, eulerAngles: Vec3, scale: Option<f32>, parent: Option<&B::Object>);
 }
@@ -794,6 +804,7 @@ mod tests {
         fn depth(&self) -> i32 { 1 }
         fn mipMaps(&self) -> i32 { 1 }
         fn texFlags(&self) -> TextureFlags { TextureFlags::empty() }
+        fn create(&self, _platform: &str, _func: &mut dyn FnMut(&dyn Any)) -> Result<(), Error> { Ok(()) }
     }
 
     struct FakeSprite;
@@ -829,7 +840,7 @@ mod tests {
         fn default(&self) -> H { H(0) }
         fn createNormalMap(&mut self, _src: &H, _strength: f32) -> H { self.0.issue() }
         fn createSolid(&mut self, _w: i32, _h: i32, _rgbas: &[f32]) -> H { self.0.issue() }
-        fn create(&mut self, _reuse: Option<H>, _src: &dyn ITexture, _level: Option<Range<i32>>) -> H { self.0.issue() }
+        fn create(&mut self, _reuse: Option<H>, _src: &dyn ITexture, _level: Option<Range<i32>>) -> Result<H, Error> { Ok(self.0.issue()) }
         fn delete(&mut self, _src: &H) { self.0.deletes += 1; }
     }
 
@@ -906,7 +917,7 @@ mod tests {
     fn texture_createFrom_usesTheDecodedAsset() {
         let src = source();
         let mut m = TextureManager::<Test, _>::new(TexBuilder(Counter::default()));
-        let (a, tag) = m.createFrom(&src, &"a.tex".into(), Arc::new(FakeTex(99)), None);
+        let (a, tag) = m.createFrom(&src, &"a.tex".into(), Arc::new(FakeTex(99)), None).unwrap();
         assert_eq!(tag.width(), 99);
         let (b, _) = block_on(m.create(&src, &"a.tex".into(), None)).unwrap();
         assert_eq!(a, b, "the path is now cached, so create does not load");
@@ -918,7 +929,7 @@ mod tests {
         let src = source();
         let mut m = TextureManager::<Test, _>::new(TexBuilder(Counter::default()));
         let (first, _) = block_on(m.create(&src, &"a.tex".into(), None)).unwrap();
-        let (reloaded, _) = m.reload(&src, &"a.tex".into(), None).unwrap();
+        let (reloaded, _) = m.reload(&src, &"a.tex".into(), None).unwrap().unwrap();
         assert_ne!(first, reloaded, "builder issued a new handle");
         let (again, _) = block_on(m.create(&src, &"a.tex".into(), None)).unwrap();
         assert_eq!(again, reloaded, "cache updated");
@@ -973,15 +984,15 @@ mod tests {
     fn shader_variantsKeyOnTheirDefines() {
         struct SB;
         impl ShaderBuilder<Test> for SB {
-            fn create(&mut self, _p: &SourcePath, args: &HashMap<String, bool>) -> H { H(args.values().filter(|v| **v).count() as u32) }
+            fn create(&mut self, _p: &SourcePath, args: &HashMap<String, bool>) -> Result<H, Error> { Ok(H(args.values().filter(|v| **v).count() as u32)) }
         }
         let src = source();
         let mut m = ShaderManager::<Test, _>::new(SB);
         let mut on = HashMap::new();
         on.insert("HAS_NORMAL".to_string(), true);
-        let plain = m.create(&src, &"std".into(), None);
-        let with = m.create(&src, &"std".into(), Some(&on));
-        let with2 = m.create(&src, &"std".into(), Some(&on));
+        let plain = m.create(&src, &"std".into(), None).unwrap();
+        let with = m.create(&src, &"std".into(), Some(&on)).unwrap();
+        let with2 = m.create(&src, &"std".into(), Some(&on)).unwrap();
         assert_ne!(plain, with, "defines must not collide in the cache");
         assert_eq!(with, with2);
     }

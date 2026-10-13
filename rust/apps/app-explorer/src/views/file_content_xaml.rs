@@ -4,17 +4,20 @@
 //
 // FileContent.xaml's DataTemplates and triggers become `FileContent::key` and
 // the `Template` each content tab builds once (Python's `updateTabs`).
-// TViewGfx and TAudioPlayer are placeholders: no OpenX engine control or audio
-// player is hosted in egui yet. TDataGrid shows as text, as in Python.
+// TViewGfx:GL hosts OpenX's OpenGL control (`AppOpenGLControl`) in an egui
+// paint callback; the other engines' TViewGfx and TAudioPlayer are
+// placeholders. TDataGrid shows as text, as in Python.
 // C#'s Dispose of the old tabs is Drop; images are also dropped from egui's
 // cache, which keys them by uri.
 
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use eframe::egui;
 use gamex::meta::{MetaContent, MetaInfo, MetaItem, Tag};
 use openx::platform::Platform;
 use openx_poly::core::SourceRef;
+use openx_wpf_control::open_gl_control::OpenGLControl;
+use crate::controls::app_gfx_control::AppOpenGLControl;
 use super::app_hex_widget::AppHexWidget;
 use super::custom_xaml::Custom;
 
@@ -25,6 +28,8 @@ enum Template {
     THex(AppHexWidget),
     TAudioPlayer,
     TViewGfx(String),
+    /// `TViewGfx:GL`: `<controls:AppOpenGLControl Source2="{Binding}" Value="{Binding Value}" Type="{Binding Type}" />`.
+    TViewGfxGL(Arc<Mutex<OpenGLControl>>),
     TCustom(Custom),
 }
 
@@ -83,6 +88,10 @@ impl FileContent {
             },
             "TAudioPlayer" => Template::TAudioPlayer,
             "TCustom" => Template::TCustom(Custom::default()),
+            "TViewGfx:GL" => match &self.source {
+                Some(source) => Template::TViewGfxGL(AppOpenGLControl::new(source.clone(), s.value.clone(), s.type_.clone())),
+                None => Template::TText(text()),
+            },
             z if z.starts_with("TViewGfx:") => Template::TViewGfx(z.into()),
             _ => Template::TText(text()),
         }
@@ -117,6 +126,7 @@ impl FileContent {
             Template::THex(z) => z.ui(ui),
             Template::TAudioPlayer => { ui.label("Audio player not ported to Rust yet."); }
             Template::TViewGfx(z) => { ui.label(format!("{z}: engine view not ported to Rust yet.")); }
+            Template::TViewGfxGL(z) => OpenGLControl::ui(z, ui),
             Template::TCustom(z) => z.ui(ui),
         }
     }

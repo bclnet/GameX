@@ -10,6 +10,7 @@ workspace = true
 
 [dependencies]
 openx = { path = "../../../OpenX/rust/core/openx" }
+openx-gfx = { path = "../../../OpenX/rust/gfx/gfx" }
 openx-poly = { path = "../../../OpenX/rust/core/poly" }
 openx-vfx = { path = "../../../OpenX/rust/vfx/vfx" }
 glam = { workspace = true }

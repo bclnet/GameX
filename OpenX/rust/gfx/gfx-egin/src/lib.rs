@@ -20,6 +20,6 @@ pub mod prelude {
         Animation, AnimationController, Bone, ChannelAttribute, Frame, FrameBone, FrameCache,
         FrameIndex, Skeleton,
     };
-    pub use crate::egin_render::{Aabb, Camera, CameraViewport, CAMERA_SPEED, FOV};
+    pub use crate::egin_render::{Aabb, Camera, CameraViewport, EginRenderer, CAMERA_SPEED, FOV};
     pub use crate::egin_vbib::{Attribute, AttributeLayout, OnDiskBufferData, RenderSlotType, Vbib};
 }

@@ -39,6 +39,8 @@ pub enum Tag {
     MetaContent(Arc<MetaContent>),
     /// An object implementing C# `IHaveMetaInfo`.
     Info(Arc<dyn IHaveMetaInfo>),
+    /// An object implementing OpenX's `ITexture`, as a `MetaContent` value for the engine view.
+    Texture(Arc<dyn openx_gfx::gfx::ITexture>),
     Stream(Arc<Mutex<Stream>>),
     Any(Arc<dyn Any + Send + Sync>),
 }
@@ -69,6 +71,7 @@ impl PartialEq for Tag {
             (Tag::Archive(a), Tag::Archive(b)) => Arc::ptr_eq(a, b),
             (Tag::MetaContent(a), Tag::MetaContent(b)) => Arc::ptr_eq(a, b),
             (Tag::Info(a), Tag::Info(b)) => Arc::ptr_eq(a, b),
+            (Tag::Texture(a), Tag::Texture(b)) => Arc::ptr_eq(a, b),
             (Tag::Stream(a), Tag::Stream(b)) => Arc::ptr_eq(a, b),
             (Tag::Any(a), Tag::Any(b)) => Arc::ptr_eq(a, b),
             _ => false,
@@ -90,6 +93,7 @@ impl fmt::Debug for Tag {
             Tag::Archive(z) => write!(f, "Archive({})", z.base().name),
             Tag::MetaContent(z) => write!(f, "{z:?}"),
             Tag::Info(_) => write!(f, "IHaveMetaInfo"),
+            Tag::Texture(_) => write!(f, "ITexture"),
             Tag::Stream(_) => write!(f, "Stream"),
             Tag::Any(_) => write!(f, "object"),
         }

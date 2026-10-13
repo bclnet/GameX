@@ -516,11 +516,11 @@ mod tests {
             (1, 1, 1.0), (2, 2, 1.0),
             (3, 0, 1.0), (3, 1, 1.0), (3, 2, 1.0), (3, 3, 1.0),
         ] {
-            let got = Camera::cs_element(b.bind_pose, r, c);
+            let got = Camera::csElement(b.bind_pose, r, c);
             assert!((got - exp).abs() < 1e-6, "BindPose M{}{}: {got} != {exp}", r + 1, c + 1);
         }
         for (r, c, exp) in [(3, 0, -1.0f32), (3, 1, -1.0), (3, 2, -1.0), (3, 3, 1.0)] {
-            let got = Camera::cs_element(b.inverse_bind_pose, r, c);
+            let got = Camera::csElement(b.inverse_bind_pose, r, c);
             assert!((got - exp).abs() < 1e-6, "Inverse M{}{}: {got} != {exp}", r + 1, c + 1);
         }
     }

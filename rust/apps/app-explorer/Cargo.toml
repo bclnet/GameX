@@ -24,6 +24,8 @@ gamex-arkane = { path = "../../families/arkane" }
 gamex-uncore = { path = "../../families/uncore" }
 openx = { path = "../../../OpenX/rust/core/openx" }
 openx-poly = { path = "../../../OpenX/rust/core/poly" }
+openx-engine-opengl = { path = "../../../OpenX/rust/engines/opengl" }
+openx-wpf-control = { path = "../../../OpenX/rust/engines/wpf-control" }
 indexmap = "2"
 eframe = { version = "0.36", default-features = false, features = ["accesskit", "default_fonts", "glow", "wayland", "x11"] }
 egui_extras = { version = "0.36", features = ["image"] }

@@ -59,6 +59,8 @@ fn arc<T: IHaveMetaInfo>(mut s: T, me: fn(&mut T) -> &mut Weak<T>) -> Tag { Tag:
 
 /// C# `Value = this`.
 fn this<T: Any + Send + Sync>(me: &Weak<T>) -> Tag { me.upgrade().map_or(Tag::None, |s| Tag::Any(s)) }
+/// `Value = this` for a texture: the engine view takes it as `ITexture`.
+fn thisTexture<T: ITexture + 'static>(me: &Weak<T>) -> Tag { me.upgrade().map_or(Tag::None, |s| Tag::Texture(s)) }
 
 /// C# `Path.GetFileName(file.Path)`.
 fn name(file: Option<&Arc<FileSource>>) -> String { file.map_or(String::new(), |s| fileName(&s.path)) }
@@ -664,11 +666,12 @@ impl ITexture for Binary_Img {
     fn depth(&self) -> i32 { self.depth }
     fn mipMaps(&self) -> i32 { self.mipMaps }
     fn texFlags(&self) -> TextureFlags { self.texFlags }
+    fn create(&self, platform: &str, func: &mut dyn FnMut(&dyn Any)) -> io::Result<()> { Self::create(self, platform, |x| func(&*x)) }
 }
 
 impl IHaveMetaInfo for Binary_Img {
     fn getInfoNodes(&self, resource: Option<&dyn MetaManager>, file: Option<&Arc<FileSource>>, tag: &Tag) -> Vec<MetaInfo> { vec![
-        content("Texture", file, this(&self.me)),
+        content("Texture", file, thisTexture(&self.me)),
         MetaInfo::new(Some("Binary_Img".into()), Tag::None, vec![
             node(format!("Format: {}", self.format.0)),
             node(format!("Width: {}", self.width)),
@@ -928,11 +931,12 @@ impl ITexture for Binary_Pcx {
     fn depth(&self) -> i32 { self.depth }
     fn mipMaps(&self) -> i32 { self.mipMaps }
     fn texFlags(&self) -> TextureFlags { self.texFlags }
+    fn create(&self, platform: &str, func: &mut dyn FnMut(&dyn Any)) -> io::Result<()> { Self::create(self, platform, |x| func(&*x)) }
 }
 
 impl IHaveMetaInfo for Binary_Pcx {
     fn getInfoNodes(&self, resource: Option<&dyn MetaManager>, file: Option<&Arc<FileSource>>, tag: &Tag) -> Vec<MetaInfo> { vec![
-        content("Texture", file, this(&self.me)),
+        content("Texture", file, thisTexture(&self.me)),
         MetaInfo::new(Some("Binary_Pcx".into()), Tag::None, vec![
             node(format!("Width: {}", self.width)),
             node(format!("Height: {}", self.height)),
@@ -1004,11 +1008,12 @@ impl ITexture for Binary_Raw {
     fn depth(&self) -> i32 { self.depth }
     fn mipMaps(&self) -> i32 { self.mipMaps }
     fn texFlags(&self) -> TextureFlags { self.texFlags }
+    fn create(&self, platform: &str, func: &mut dyn FnMut(&dyn Any)) -> io::Result<()> { Self::create(self, platform, |x| func(&*x)) }
 }
 
 impl IHaveMetaInfo for Binary_Raw {
     fn getInfoNodes(&self, resource: Option<&dyn MetaManager>, file: Option<&Arc<FileSource>>, tag: &Tag) -> Vec<MetaInfo> { vec![
-        content("Texture", file, this(&self.me)),
+        content("Texture", file, thisTexture(&self.me)),
         MetaInfo::new(Some("Binary_Raw".into()), Tag::None, vec![
             node(format!("Palette: {}", self.palette.as_deref().unwrap_or(""))),
             node(format!("Width: {}", self.width)),
@@ -1423,11 +1428,12 @@ impl ITexture for Binary_Tga {
     fn depth(&self) -> i32 { self.depth }
     fn mipMaps(&self) -> i32 { self.mipMaps }
     fn texFlags(&self) -> TextureFlags { self.texFlags }
+    fn create(&self, platform: &str, func: &mut dyn FnMut(&dyn Any)) -> io::Result<()> { Self::create(self, platform, |x| func(&*x)) }
 }
 
 impl IHaveMetaInfo for Binary_Tga {
     fn getInfoNodes(&self, resource: Option<&dyn MetaManager>, file: Option<&Arc<FileSource>>, tag: &Tag) -> Vec<MetaInfo> { vec![
-        content("Texture", file, this(&self.me)),
+        content("Texture", file, thisTexture(&self.me)),
         MetaInfo::new(Some("Binary_Tga".into()), Tag::None, vec![
             node(format!("Format: {:?}", self.pixelFormat)),
             node(format!("Width: {}", self.width)),
@@ -1501,11 +1507,12 @@ impl ITexture for Binary_Xga {
     fn depth(&self) -> i32 { self.depth }
     fn mipMaps(&self) -> i32 { self.mipMaps }
     fn texFlags(&self) -> TextureFlags { self.texFlags }
+    fn create(&self, platform: &str, func: &mut dyn FnMut(&dyn Any)) -> io::Result<()> { Self::create(self, platform, |x| func(&*x)) }
 }
 
 impl IHaveMetaInfo for Binary_Xga {
     fn getInfoNodes(&self, resource: Option<&dyn MetaManager>, file: Option<&Arc<FileSource>>, tag: &Tag) -> Vec<MetaInfo> { vec![
-        content("Texture", file, this(&self.me)),
+        content("Texture", file, thisTexture(&self.me)),
         MetaInfo::new(Some("Binary_Xga".into()), Tag::None, vec![
             node(format!("Type: {}", self.type_)),
             node(format!("Width: {}", self.width)),

@@ -1,8 +1,8 @@
 //! `openx-wpf-control` — 1:1 mapping of its .NET project.
 //!
-//! Nothing here is translated. Each module states why at the file; the
-//! summary is in PORTING.md under "Platform backends: the viability
-//! assessment".
+//! In Rust the WPF host is egui (ADR 0005): `open_gl_control` and
+//! `ui::gl_wpf_control` host OpenX's OpenGL engine in an egui paint callback.
+//! Nothing else here is translated yet; each module states why at the file.
 
 pub mod console_manager;
 pub mod godot_control;

@@ -12,5 +12,10 @@ workspace = true
 openx-engine-godot = { path = "../../engines/godot" }
 openx-engine-ogre = { path = "../../engines/ogre" }
 openx-engine-opengl = { path = "../../engines/opengl" }
+openx-gfx = { path = "../../gfx/gfx" }
+openx-gfx-egin = { path = "../../gfx/gfx-egin" }
+egui = "0.36" # the egui host (ADR 0005)
+egui_glow = "0.36"
+glow = "0.17"
 openx-engine-sdl = { path = "../../engines/sdl" }
 openx-engine-unity = { path = "../../engines/unity" }

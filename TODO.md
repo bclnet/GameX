@@ -2,25 +2,24 @@
 
 What's next, in order. Pick from the top, and update this file in the same commit as the work: remove what's done and add what you find. Rules and conventions are in [CLAUDE.md](CLAUDE.md); decisions are in [docs/ADR](docs/ADR/Readme.md).
 
-Last updated 2026-10-12, after the Arx Fatalis work (on top of 8b643d9).
+Last updated 2026-10-12, after the OpenGL engine view (on top of d6111c2).
 
 ## Where things stand
 
-- **Both Rust workspaces build clean.** `cargo check --workspace` gives zero errors and warnings in `OpenX/rust` and `rust/`, and so does `cargo check -p openx --features full`. `cargo test -p gamex` passes 49 tests (the store tests were rewritten for the new port, so there are fewer), `gamex-arkane` 4, `openx-gfx` 12. Three older tests fail; see section 5.
-- **Rust port: 73 files done, 328 still `todo` in `PORT_MAP.tsv`** (Uncore's `Formats/Binary.cs` and `Formats/Compression.cs` are `PORT-STATUS: partial` and count as `todo`). The core model is done, including `store.rs` with every store but Blizzard.
-- **Arx Fatalis opens in the Rust Explorer.** `cargo run -p gamex-app-explorer` from `rust/` finds it through GOG, and every file in its seven `.pak`s reads: text, scripts, `.wav`, `.tga`, `.ftl` / `.fts` / `.tea` models and levels. **Images (`.bmp` / `.jpg`) show an error, not hex:** `Binary_Img` needs `Caps::DRAWING`, as in C#, and the Explorer only has the Unknown engine (section 1).
-- `openx_poly`'s `BinaryReaderExt` now has `readS` / `readSArray` / `readSEach` / `readL32SArray` / `readPArray` (C#'s `MarshalS`, through `IStruct` in `openx_poly::system::unsafe_x`), `tell` and the `F`/`L32` string readers.
+- **OpenX's Rust workspace builds clean**: `cargo check --workspace` and `cargo check -p openx --features full` give zero errors and warnings. **GameX's builds clean except `gamex-wb` and the three apps that depend on it through `gamex-all`** (`app-explorer`, `app-client`, `cli`); see section 1.
+- Tests: `gamex` 49, `gamex-arkane` 4, `openx-gfx` 24, `openx-gfx-egin` 62, `openx-engine-opengl` 15. Three older tests fail; see section 5.
+- **Rust port: 75 files done, 326 still `todo` in `PORT_MAP.tsv`** (partial files count as `todo`). The core model is done, including `store.rs` with every store but Blizzard.
+- **Arx Fatalis opens in the Rust Explorer** through GOG, and every file in its seven `.pak`s reads: text, scripts, `.wav`, `.tga`, `.bmp` / `.jpg`, `.ftl` / `.fts` / `.tea`.
+- **OpenX's OpenGL engine runs in egui.** `OpenGLEngine` is in the Explorer's engine list (the config picks `GL`), and a "Texture" tab hosts `AppOpenGLControl`: OpenX's `OpenGLControl` in an egui paint callback on eframe's GL context. A scratch harness drew Arx's `.bmp` and `.jpg` textures through it. See PORTING.md, "OpenX's OpenGL engine in the egui Explorer".
 
-## 1. Show Arx Fatalis's images and models
+## 1. Unblock the GameX build
 
-- [ ] **Host an engine in the Explorer.** This is section 2's engine view (`TViewGfx`); until a Rust engine with `Caps::DRAWING` is listed, `Binary_Img` refuses to decode, and "Texture" content has nowhere to go. A throwaway test with a `DRAWING` platform decoded all 3,307 of Arx's `.bmp` / `.jpg` files.
-- [ ] **Port `Binary_Dds`.** Needs `DDS_HEADER.Read`, commented out in `OpenX/rust/gfx/gfx/src/gfx_texture.rs`. Uncore's other missing types: `Binary_Plist` (needs `formats/apple/plist_reader.rs`), `Binary_Zip` (needs a zip crate), `Binary_Engine` (needs `ICellDatabase`).
-- [ ] **Arkane's other games** (Dishonored, Prey, Dark Messiah, Wolfenstein) need Crytek's, Epic's, Valve's and ID's archive binaries and asset factories; `ArkaneArchive::getArcBinary` fails for them.
-- [ ] **Register the other families** the same way (`register()` in the family's main file, called from `rust/apps/app-explorer/src/app_xaml.rs`) as each one's archive type is ported.
+- [ ] **`gamex-wb` needs over 20 GB of memory to check.** `families/wb/src/formats/ac/props/enums_weenie.rs` is generated: `WeenieClassName` has 31,108 variants with `#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]`. Removing `fromRaw` doesn't help, so it's the enum itself. On a 32 GB machine with other programs running, rustc runs out of memory, and nothing that depends on `gamex-all` builds, including the Explorer. Change what `gen_enums.py` emits for an enum this size (e.g. a `u16` newtype with associated consts and a name table), regenerate, and check the Explorer runs with the Texture view (it hasn't been run since the engine work; the harness has).
 
 ## 2. Finish the Rust Explorer's views
 
-- [ ] **Engine view** (`TViewGfx`): host OpenX's GL engine in an egui paint callback. OpenX's glow is pinned to 0.17 to match eframe (ADR 0005). The engine list currently shows only Unknown.
+- [ ] **Engine view, the rest:** OpenX's `ObjectRenderer` (C# passes the loaded object as the manager's `path`; Rust's `SourcePath` can't carry one), `ParticleRenderer` (needs `Egin_Particle.cs` and egin's scene types), `EngineRenderer` (needs `OpenGLOpenEngine`, which needs `CellManager`), and the other engines' controls in `AppGfxControl.cs`. `ITextureSelect` / `ITextureFrames` aren't reachable through `Tag::Texture`, so frame stepping and `Select` aren't wired.
+- [ ] **OpenX's Rust `platform.rs` is still C#'s old `Platform.cs`.** C# renamed it `Engine.cs` (`Engine`, `EngineX`), with `GfxFactory` / `SfxFactory` and `EngineX.Gfx`. Port it, so `OpenGLEngine::gfx()` (the stand-in) goes, and camelCase its snake_case names (`platform_os`, `current_caps`).
 - [ ] **Audio player** (`TAudioPlayer`): buttons in egui, playback through OpenX's sfx.
 - [ ] **Data grid** (`TDataGrid`): a table with `egui_extras::TableBuilder`.
 - [ ] **Family apps:** nothing registers an `AppStartup` yet, so `FamilyApp::openAsync` finds nothing.
@@ -39,11 +38,16 @@ These limit the core model; each is noted in the file headers.
 
 ## 4. Port the GameX families to Rust
 
+- [ ] **Port `Binary_Dds`.** Needs `DDS_HEADER.Read`, commented out in `OpenX/rust/gfx/gfx/src/gfx_texture.rs`. Uncore's other missing types: `Binary_Plist` (needs `formats/apple/plist_reader.rs`), `Binary_Zip` (needs a zip crate), `Binary_Engine` (needs `ICellDatabase`).
+- [ ] **Arkane's other games** (Dishonored, Prey, Dark Messiah, Wolfenstein) need Crytek's, Epic's, Valve's and ID's archive binaries and asset factories; `ArkaneArchive::getArcBinary` fails for them.
+- [ ] **Register the other families** the same way (`register()` in the family's main file, called from `rust/apps/app-explorer/src/app_xaml.rs`) as each one's archive type is ported.
+
 Families with the most stub files: IW 31, Cig Explorer 25, Uncore 22, Crytek 19, WB 17, Origin 13, Blizzard 13, Epic 11. Most others have 1 to 8. Families that Python already has are the easiest start, because Python shows the camelCase shape.
 
 ## 5. Smaller known issues
 
 - [ ] **Python doesn't decode `%20` in file URIs.**
+- [ ] **C# OpenGL bugs the port kept** (PORTING.md, "OpenX's OpenGL engine in the egui Explorer"): `ARGB32` uploads as `Rgb` + `UnsignedInt8888Rev`, so RGBA images don't upload; anisotropy is set with the query enum 0x84FF; `TestTriRenderer` draws 6 of 3 vertices; only `plane` / `testtri` shaders are embedded. Owner to decide; fix all three languages together.
 - [ ] **Arkane's blast decompression** fails on `.bmp` exports in C# (143 errors). The Rust port of Blast.cs reads all 1,314 of Arx's `.bmp`s, so compare the two.
 - [ ] **Python's Bullfrog and Beamdog readers** need porting properly from C#.
 - [ ] **6 Rust files still name `Applications/` in their `PORT-SOURCE` header**, as do 6 rows of `rust/_/PORT_MAP.tsv`. C#'s folder is now `dotnet/Apps/`.

@@ -866,3 +866,61 @@ Python twins differ from C# here, not fixed: `decompressBlast` returns a fixed
 `bytearray(newLength)`; Danae's `E_BACKGROUND` builds `[X()]*n` (one shared
 object) and sets `Min`/`Max` capitalised; `FTL_FACE` sets `self.rbg`;
 `Binary_Tea` declares `IWriteToStream` and reads a missing `self.data`.
+
+## OpenX's OpenGL engine in the egui Explorer
+
+Ported: `Engine_OpenGL.cs` (`engine_open_gl.rs`), `Gfx/OpenGL.cs`, the
+texture, test-triangle, material, grid and world renderers of
+`Gfx/OpenGL_Render.cs`, the cameras and `GLRenderMaterial` of
+`Egin/Gl_Render.cs`, `Renderer` / `Pass` (`Gfx_Render.cs`), `EginRenderer`
+and `RenderMaterial` (`Egin_Render.cs`), and the WPF host, `OpenGLControl.cs`
+and `UI/GLWpfControl.cs`, as an egui control (ADR 0005). GameX's
+`OpenGL_Render.cs` and the Explorer's `AppGfxControl.cs` (OpenGL only) use them.
+A scratch harness on the GOG install drew Arx Fatalis's `.bmp` and `.jpg`
+textures this way.
+
+How it maps:
+
+* C#'s static OpenTK `GL` is `gfx::open_gl::GL()`, set once from eframe's
+  `glow::Context` by the control's paint callback. GL names stay C#'s `int`s.
+* `IOpenGfx[]` is `IOpenGfxs`; a renderer downcasts the model slot to
+  `Mutex<OpenGLGfxModel>`, as C# casts it.
+* OpenX's Rust `Platform` predates C#'s rename to `Engine` and has no
+  `GfxFactory` or `EngineX.Gfx`, so `OpenGLEngine::gfx()` makes the
+  `GfxFactory` array once and the Explorer uses that.
+* C#'s managers share one texture and material manager by reference; Rust's
+  object manager owns the material manager, which owns the texture manager.
+* `ITexture.Create<T>` is back on the trait as `create(platform, &mut dyn FnMut(&dyn Any))`.
+  A texture `MetaContent`'s value is `Tag::Texture(Arc<dyn ITexture>)`.
+* `ShaderBuilder::create` and `TextureBuilder::create` return `Result`, where C# throws.
+* The renderer is made on the first frame (C#: when a bound property changes),
+  because GL needs eframe's context.
+
+C# bugs kept as is:
+
+* `TestTriRenderer` draws 6 vertices from a 3-vertex buffer.
+* `GridRenderer` counts vertices as `floats / 3`, but each vertex is 7 floats.
+* `OpenGLTextureBuilder` sets anisotropy with `MaxTextureMaxAnisotropyExt`
+  (0x84FF, the query), not `TextureMaxAnisotropyExt` (0x84FE).
+* `ARGB32` uploads as `Rgb` + `UnsignedInt8888Rev`, an invalid GL pairing, so
+  RGBA images (labelled `ARGB32` by `Binary_Img`) fail to upload.
+* Only `plane` and `testtri` are embedded in the csproj, so every `vrf.*`
+  shader (material, grid) fails to load.
+* `OpenGLControl.Tick` renders, then `GLWpfControl.Render` clears and renders
+  again, so each frame draws twice.
+* `GLDebugCamera.HandleInput` adds `Scroll.X - MouseState.X` to the scroll
+  delta, and nothing calls `HandleInput` (commented out in C#).
+
+Differences:
+
+* eframe gives a GL 3.3 core context where C# asks OpenTK for 4.6
+  compatibility. NVIDIA still compiles the `#version 460` plane shader; other
+  drivers may not.
+* glow has no double uniforms, so `GLRenderMaterial`'s `Uniform1d` int params
+  are set as floats.
+* `ObjectRenderer` isn't ported: C# passes the loaded object as the manager's
+  `path`, and Rust's `SourcePath` is only a string or an int.
+
+`egin_render.rs` and `gfx_render.rs` were older snake_case ports; they're
+camelCase now. `egin_render`'s `Camera` no longer guards a zero-height
+viewport or looking at its own position, to match C#.

@@ -92,7 +92,7 @@ class Binary_Ftl(IHaveMetaInfo, IWriteToStream):
     class FTL_FACE:
         _struct = ('<4i3Hh6f6h14f', 116)
         def __init__(self, t):
-            rgb = self.rbg = array([None]*3)
+            rgb = self.rgb = array([None]*3)
             vid = self.vid = array([None]*3)
             u = self.u = array([None]*3)
             v = self.v = array([None]*3)
@@ -324,10 +324,10 @@ class Binary_Fts(IHaveMetaInfo, IWriteToStream):
             self.zdiv = zdiv
             self.xmul = 1. / xdiv
             self.zmul = 1. / zdiv
-            self.backg = [Binary_Fts.E_BKG_INFO()]*(sx * sz)
+            self.backg = [Binary_Fts.E_BKG_INFO() for _ in range(sx * sz)]
             for i in range(len(self.backg)): self.backg[i].nothing = True
-            self.minMax = [Binary_Fts.E_SMINMAX()]*sz
-            for i in range(len(self.minMax)): self.minMax[i].Min = 9999; self.minMax[i].Max = -1
+            self.minMax = [Binary_Fts.E_SMINMAX() for _ in range(sz)]
+            for i in range(len(self.minMax)): self.minMax[i].min = 9999; self.minMax[i].max = -1
 
     _FTS_VERSION = 0.141
 
@@ -555,7 +555,7 @@ class Binary_Fts(IHaveMetaInfo, IWriteToStream):
 
             # anchors
             self.bkg.numAnchors = fsh.numAnchors
-            anchors = self.bkg.anchors = [Binary_Fts.ANCHOR_DATA()]*fsh.numAnchors if fsh.numAnchors > 0 else None
+            anchors = self.bkg.anchors = [Binary_Fts.ANCHOR_DATA() for _ in range(fsh.numAnchors)] if fsh.numAnchors > 0 else None
             for i in range(fsh.numAnchors):
                 a = anchors[i]
                 fad = r2.readS(Binary_Fts.F_ANCHOR_DATA)
@@ -586,7 +586,7 @@ class Binary_Fts(IHaveMetaInfo, IWriteToStream):
 
             if portals:
                 numRoomDistance = self.level.numRoomDistance = portals.numRooms + 1
-                self.level.roomDistance = [Binary_Fts.ROOM_DIST_DATA()]*(numRoomDistance * numRoomDistance)
+                self.level.roomDistance = [Binary_Fts.ROOM_DIST_DATA((0.,)*7) for _ in range(numRoomDistance * numRoomDistance)]
                 for n in range(numRoomDistance):
                     for m in range(numRoomDistance):
                         setRoomDistance(self.level, m, n, r2.readS(Binary_Fts.ROOM_DIST_DATA))
@@ -605,18 +605,18 @@ class Binary_Fts(IHaveMetaInfo, IWriteToStream):
 #region Binary_Tea
 
 # Binary_Tea
-class Binary_Tea(IHaveMetaInfo, IWriteToStream):
+class Binary_Tea(IHaveMetaInfo):
     @staticmethod
     async def factory(r: BinaryReader, f: FileSource, s: Archive): return Binary_Tea(r)
 
+    # https://github.com/OpenSourcedGames/Arx-Fatalis/blob/master/Sources/EERIE/EERIEAnim.cpp#L355
     def __init__(self, r: BinaryReader):
         pass
 
-    def writeToStream(self, stream: object): return DesSer.serialize(self, stream)
-    def __repr__(self): return DesSer.serialize(self)
-
     def getInfoNodes(self, resource: MetaManager = None, file: FileSource = None, tag: object = None) -> list[MetaInfo]: return [
-        MetaInfo(None, MetaContent(type = 'Text', name = os.path.basename(file.path), value = self.data))
+        MetaInfo('BinaryTEA', items = [
+            MetaInfo(f'Type: Center')
+            ])
         ]
 
 #endregion

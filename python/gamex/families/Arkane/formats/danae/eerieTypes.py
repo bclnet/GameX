@@ -175,7 +175,7 @@ class E_SPHERE:
 class E_TEXTURE:
     id: int
     path: str
-    poly: POLY
+    poly: POLY = POLY(0)
 
 @dataclass
 class E_POLY:
@@ -422,6 +422,9 @@ class E_BONE:
     transInitGlobal: Vector3 = array([0]*3)
     def __init__(self): self.idxVertices = []
     def addIdxToBone(self, idx: int) -> None: self.idxVertices.append(idx); self.numIdxVertices += 1
+
+class E_CDATA:
+    bones: list[E_BONE] = None; numBones: int = 0
 
 ##########################################
 #struct
@@ -767,8 +770,8 @@ class E_SAVE_ROOM_DATA:
     _struct = ('<8i', 32)
     def __init__(self, t):
         padd = self.padd = [0]*6
-        (self.numPolys,
-        self.numPortals,
+        (self.numPortals,
+        self.numPolys,
         padd[0], padd[1], padd[2], padd[3], padd[4], padd[5]) = t
 
 @dataclass

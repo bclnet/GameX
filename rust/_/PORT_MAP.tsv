@@ -13,7 +13,7 @@ done	180	abfbc4fa3cd0545d	Core/GameX/Formats/Stream.cs	core/gamex/src/formats/st
 done	70	307f2118fdbdfacb	Core/GameX/Globalx.cs	core/gamex/src/globalx.rs	gamex
 done	0	f1945cd6c19e56b3	Core/GameX/Manager.cs	core/gamex/src/manager.rs	gamex
 done	183	6f4c4365263f54a7	Core/GameX/Meta.cs	core/gamex/src/meta.rs	gamex
-done	400	38c2220e20a06fa7	Core/GameX/Store.cs	core/gamex/src/store.rs	gamex
+done	400	1e064917bedaf2cd	Core/GameX/Store.cs	core/gamex/src/store.rs	gamex
 done	9	e6a95fbe28938834	Core/GameX/Transforms/UnknownTransform.cs	core/gamex/src/transforms/unknown_transform.rs	gamex
 done	173	8f7ab9954542a057	Core/GameX/Util.cs	core/gamex/src/util.rs	gamex
 done	295	be305f29e6d389d2	Core/GameX/_Config.cs	core/gamex/src/config.rs	gamex

@@ -1,6 +1,7 @@
 from __future__ import annotations
 import os, sys
 from enum import Enum, Flag
+from numpy import float32
 from openx.core.core import ISource
 from openx.core.util import decodePath, YamlDict
 
@@ -17,15 +18,27 @@ class Engine:
         self.gfxFactory: callable = None
         self.sfxFactory: callable = None
         self.logFunc: callable = lambda a: print(a)
+    @property
+    def displayName(self) -> str: return self.name
     def activate(self) -> None: pass
     def deactivate(self) -> None: pass
 
 # EngineX
 class EngineX:
+    @staticmethod
+    def getEpsilon() -> float:
+        epsilon = float32(1.)
+        while True:
+            epsilon *= float32(.5); comparison = float32(1.) + epsilon
+            if not comparison > 1.: break
+        return float(epsilon)
+    epsilon: float = getEpsilon()
+
     # The Caps.
     class Caps(Flag):
         None_ = 0x0
         ReadDds = 0x1
+        Drawing = 0x2
 
     # The OS.
     class OS(Enum):

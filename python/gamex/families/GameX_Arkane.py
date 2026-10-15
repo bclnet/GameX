@@ -16,7 +16,7 @@ class ArkaneArchive(BinaryArchive):
         match state.game.engine[0]:
             # case 'CryEngine': self.assetFactoryFunc = Crytek.CrytekArchive.AssetFactory
             # case 'Unreal': self.assetFactoryFunc = Epic.EpicArchive.AssetFactory
-            case 'Valve': self.assetFactoryFunc = ValveArchive.AssetFactory
+            case 'Source': self.assetFactoryFunc = ValveArchive.assetFactory
             # case 'idTech7': self.assetFactoryFunc = Id.IdArchive.AssetFactory
             case _: self.assetFactoryFunc = self.assetFactory
         self.useFileId = True
@@ -30,7 +30,7 @@ class ArkaneArchive(BinaryArchive):
             case 'Void': return Binary_Void()
             # case 'CryEngine': return Binary_Void()
             # case 'Unreal': return Binary_Void()
-            case 'Valve': return Binary_Vpk()
+            case 'Source': return Binary_Vpk()
             # case 'idTech7': return Binary_Void()
             case _: raise Exception(f'Unknown: {game.engine[0]}')
 

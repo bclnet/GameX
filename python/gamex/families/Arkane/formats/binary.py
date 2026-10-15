@@ -2,7 +2,7 @@ import os
 from io import BytesIO
 from openx.core import _pathExtension
 from gamex import FileSource, ArcBinaryT
-from gamex.families.Uncore.formats.compression import decompressBlast
+from gamex.families.Uncore.formats.compression import decompressBlast, decompressZlib
 
 # typedefs
 class BinaryReader: pass
@@ -161,4 +161,21 @@ class Binary_Void(ArcBinaryT):
 
     # readData
     def readData(self, source: BinaryArchive, r: BinaryReader, file: FileSource, option: object = None) -> BytesIO:
-        pass
+        if file.fileSize == 0 or file.offset in self._badPositions: return BytesIO()
+        (path, tag1, tag2) = file.tag
+        def _read(r2: BinaryReader) -> BytesIO:
+            r2.seek(file.offset)
+            return BytesIO(
+                decompressZlib(r2, file.packedSize, file.fileSize) if file.compressed != 0 else                 r2.readBytes(file.packedSize))
+        return source.readerT(_read, path)
+
+    # Bad Positions - Dishonored2
+    _badPositions = {
+        293, #: generated/decls/renderparm/atm/worldfog/artistscatteringcolor.decl
+        917004, #: generated/decls/renderparm/ocean/patchtransform.decl
+        9923823, #: generated/decls/soundevent/sound_events/bsp/bsp_physmat/bsp_foosteps/bsp_fs_player/emily/fs_e_metal_chandelier/fs_e_metal_chandelier_w.decl
+        9924002, #: generated/decls/fx/contactsystem/w.emily_env.metal.chandelier.fx.decl
+        32872162, #: generated/image/models/effects/textures/gameplay/blood/blood_leads_05_fl.bimage7
+        32966564, #: generated/decls/material/models/effects/materials/gameplay/blood/blood_leads_05_bf.material.decl
+        45704814, #: generated/decls/fx/contactsystem/pr.ar.venom_env.tile.fx.decl
+        }

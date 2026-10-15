@@ -372,11 +372,11 @@ class store_winreg:
 
     @staticmethod
     def getSingleFileValue(path: str, ext: str, select: str) -> str:
-        if not os.fileExists(path): return None
+        if not os.path.isfile(path): return None
         with open(path, 'r') as f: content = f.read()
         match ext:
-            case 'xml': raise NotImplementedError('store_winreg.getSingleFileValue.xml') #return XDocument.Parse(content).XPathSelectElement(select)?.Value,
+            case 'xml': from xml.etree import ElementTree; value = getattr(ElementTree.fromstring(content).find(f'.{select}' if select.startswith('/') else select), 'text', None)
             case _: raise Exception(f'Unknown {ext}')
-        return os.path.basename(value) if value else None
+        return os.path.dirname(value) if value else None
 
 #endregion

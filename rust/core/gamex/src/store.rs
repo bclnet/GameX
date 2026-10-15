@@ -1,5 +1,5 @@
 // PORT-SOURCE: Core/GameX/Store.cs
-// PORT-SHA: 38c2220e20a06fa7
+// PORT-SHA: 1e064917bedaf2cd
 // PORT-STATUS: done
 //
 // PARTIAL PORT: `Store_Blizzard` finds Battle.net's `product.db` but can't read
@@ -17,10 +17,6 @@
 // SQLitePCL is `rusqlite`, `System.Text.Json` is `serde_json`, and `XDocument` +
 // `XPathSelectElement` are `sxd_document` + `sxd_xpath`. `Environment.GetFolderPath`,
 // `DriveInfo.GetDrives` and `RuntimeInformation` are the helpers at the bottom.
-//
-// Kept as C# has them (see rust/_/PORTING.md): the `"Query"` key for
-// `Store_Archive`, `"ModelPath"` / `"Installed ModelPath"` in `Store_WinReg`, and
-// `"Ubisoft Query Launcher"`.
 
 use std::collections::HashMap;
 use std::io::{self, Error, ErrorKind};
@@ -75,7 +71,7 @@ impl Store {
             "Epic" => tryGetValue(Store_Epic::Paths()?, v),
             "Ubisoft" => tryGetValue(Store_Ubisoft::Paths()?, v),
             "Abandon" => tryGetValue(Store_Abandon::Paths()?, Some(&format!("{family}/{}", v.unwrap_or_default()))),
-            "Query" => tryGetValue(Store_Archive::Paths()?, Some(&format!("{family}/{}", v.unwrap_or_default()))),
+            "Archive" => tryGetValue(Store_Archive::Paths()?, Some(&format!("{family}/{}", v.unwrap_or_default()))),
             "WinReg" => Store_WinReg::getPathByKey(v, elem),
             "Local" => tryGetValue(Store_Local::Paths()?, v),
             "Direct" => Ok(Store_Direct::getPathByKey(v)),
@@ -431,7 +427,7 @@ pub mod Store_Ubisoft {
     pub fn Paths() -> io::Result<&'static HashMap<String, String>> { paths(&_Paths) }
     fn getPath() -> io::Result<Option<String>> {
         let paths: Vec<String> = match PlatformOS {
-            OS::Windows => { let home = localApplicationData(); let search = ["Ubisoft Query Launcher"]; search.iter().map(|path| pathJoin(&[&home, path])).collect() }
+            OS::Windows => { let home = localApplicationData(); let search = ["Ubisoft Game Launcher"]; search.iter().map(|path| pathJoin(&[&home, path])).collect() }
             OS::Android => return Ok(None),
             OS::Linux => { let home = [userProfile(), "/Users/Shared".into()]; let search = ["??"]; home.iter().flat_map(|h| search.iter().map(move |s| pathJoin(&[h, s]))).collect() }
             OS::OSX => { let home = "/Users/Shared"; let search = ["??"]; search.iter().map(|path| pathJoin(&[home, path])).collect() }
@@ -483,12 +479,12 @@ pub mod Store_WinReg {
                 .or_else(|_| RegKey::predef(HKEY_CLASSES_ROOT).open_subkey(format!("VirtualStore\\MACHINE\\{keyPath}")));
             let Ok(key) = key else { continue };
             // search directories
-            let mut path = ["ModelPath", "Install Dir", "InstallDir", "InstallLocation", ""].iter()
+            let mut path = ["Path", "Install Dir", "InstallDir", "InstallLocation", ""].iter()
                 .filter_map(|x| key.get_value::<String, _>(x).ok())
                 .find(|x| !x.is_empty() && Path::new(x).is_dir());
             if path.is_none() {
                 // search files
-                path = ["Installed ModelPath", "ExePath", "Exe"].iter()
+                path = ["Installed Path", "ExePath", "Exe"].iter()
                     .filter_map(|x| key.get_value::<String, _>(x).ok())
                     .find(|x| !x.is_empty() && Path::new(x).is_file());
                 if let Some(z) = path { path = Some(getDirectoryName(&z)); }

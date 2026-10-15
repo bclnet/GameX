@@ -751,20 +751,12 @@ a duplicate key like `Dictionary.Add`. FamilyGame logs the error and leaves the
 game not found, as C# does. The earlier port's `SearchPlan` / `StoreKind` split
 is gone.
 
-Kept as C# has it. Python's twin (`python/gamex/core/store.py`) has the other
-spelling in each case, so these look like rename damage in the C#:
+C# once had three names damaged by a rename: `"Query"` for the specs'
+`Archive:` keys (57 of them, which threw), the registry values `"ModelPath"` /
+`"Installed ModelPath"`, and `Ubisoft Query Launcher`. All three ports now use
+Python's `Archive`, `Path` / `Installed Path` and `Ubisoft Game Launcher`.
 
-* `GetPathByKey` switches on `"Query"` for `Store_Archive`, but the specs use
-  `Archive:` (57 keys). An `Archive:` key throws `ArgumentOutOfRangeException`,
-  so the game is not found even when a later key would have found it.
-* `Store_WinReg` reads the registry values `"ModelPath"` and
-  `"Installed ModelPath"`; Python reads `"Path"` and `"Installed Path"`. GOG
-  writes `path`, so `WinReg:GOG.com/Games/...` keys resolve only through the
-  `Exe` fallback (GOG's `exe` value).
-* `Store_Ubisoft` looks in `%LocalAppData%\Ubisoft Query Launcher`; Python looks
-  in `Ubisoft Game Launcher`.
-
-Also kept:
+Kept as C# has it:
 
 * `Store_Blizzard`'s Linux branch searches the Steam paths plus `appcache`.
 * `Store_Steam`'s Linux branch searches `.../appcache`, then looks for

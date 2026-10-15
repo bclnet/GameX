@@ -40,7 +40,7 @@ public static class Store {
             "Epic" => Store_Epic.Paths.TryGetValue(v, out var z) ? z : null,
             "Ubisoft" => Store_Ubisoft.Paths.TryGetValue(v, out var z) ? z : null,
             "Abandon" => Store_Abandon.Paths.TryGetValue($"{family}/{v}", out var z) ? z : null,
-            "Query" => Store_Archive.Paths.TryGetValue($"{family}/{v}", out var z) ? z : null,
+            "Archive" => Store_Archive.Paths.TryGetValue($"{family}/{v}", out var z) ? z : null,
             "WinReg" => Store_WinReg.GetPathByKey(v, elem),
             "Local" => Store_Local.Paths.TryGetValue(v, out var z) ? z : null,
             "Direct" => Store_Direct.GetPathByKey(v),
@@ -407,7 +407,7 @@ static class Store_Ubisoft {
         IEnumerable<string> paths;
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
             var home = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            string[] search = ["Ubisoft Query Launcher"];
+            string[] search = ["Ubisoft Game Launcher"];
             paths = search.Select(path => Path.Join(home, path));
         }
         else if (RuntimeInformation.OSDescription.StartsWith("android-")) return null;
@@ -469,12 +469,12 @@ static class Store_WinReg {
                     .Select(x => x()).FirstOrDefault(x => x != null);
                 if (key == null) continue;
                 // search directories
-                var path = new[] { "ModelPath", "Install Dir", "InstallDir", "InstallLocation", "" }
+                var path = new[] { "Path", "Install Dir", "InstallDir", "InstallLocation", "" }
                     .Select(x => key.GetValue(x) as string)
                     .FirstOrDefault(x => !string.IsNullOrEmpty(x) && Directory.Exists(x));
                 if (path == null) {
                     // search files
-                    path = new[] { "Installed ModelPath", "ExePath", "Exe" }
+                    path = new[] { "Installed Path", "ExePath", "Exe" }
                         .Select(x => key.GetValue(x) as string)
                         .FirstOrDefault(x => !string.IsNullOrEmpty(x) && File.Exists(x));
                     if (path != null) path = Path.GetDirectoryName(path);

@@ -439,7 +439,7 @@ class Binary_Tga(IHaveMetaInfo, ITexture):
 
         def getColorMap(self, r: BinaryReader) -> object: #ColorMap
             mapSize = self.mapLength * Binary_Tga.bitsToBytes(self.mapEntrySize)
-            s = ColorMap()
+            s = Binary_Tga.ColorMap()
             if self.IS_COLOR_MAPPED:
                 s.firstIndex = self.mapFirstEntry
                 s.entryCount = self.mapLength

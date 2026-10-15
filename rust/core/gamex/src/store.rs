@@ -28,7 +28,7 @@ use std::path::Path;
 use std::sync::LazyLock;
 
 use indexmap::IndexMap;
-use openx::platform::{platform_os, Os};
+use openx::engine::EngineX::{PlatformOS, OS};
 use openx::util::decodePath;
 use serde_json::Value;
 
@@ -149,14 +149,14 @@ pub mod Store_Blizzard {
     static _Paths: Paths = LazyLock::new(|| init().map_err(|e| e.to_string()));
     pub fn Paths() -> io::Result<&'static HashMap<String, String>> { paths(&_Paths) }
     fn getPath() -> io::Result<Option<String>> {
-        let paths: Vec<String> = match platform_os() {
+        let paths: Vec<String> = match PlatformOS {
             // windows paths
-            Os::Windows => { let home = commonApplicationData(); vec![pathJoin(&[&home, "Battle.net", "Agent"])] }
-            Os::Android => return Ok(None),
+            OS::Windows => { let home = commonApplicationData(); vec![pathJoin(&[&home, "Battle.net", "Agent"])] }
+            OS::Android => return Ok(None),
             // linux paths
-            Os::Linux => { let home = userProfile(); [".steam", ".steam/steam", ".steam/root", ".local/share/Steam"].iter().map(|path| pathJoin(&[&home, path, "appcache"])).collect() }
+            OS::Linux => { let home = userProfile(); [".steam", ".steam/steam", ".steam/root", ".local/share/Steam"].iter().map(|path| pathJoin(&[&home, path, "appcache"])).collect() }
             // mac paths
-            Os::OSX => { let home = [userProfile(), "/Users/Shared".into()]; let search = ["Battle.net/Agent"]; home.iter().flat_map(|h| search.iter().map(move |s| pathJoin(&[h, s, "data"]))).collect() }
+            OS::OSX => { let home = [userProfile(), "/Users/Shared".into()]; let search = ["Battle.net/Agent"]; home.iter().flat_map(|h| search.iter().map(move |s| pathJoin(&[h, s, "data"]))).collect() }
             _ => return Err(platformNotSupported()),
         };
         Ok(paths.into_iter().find(|s| Path::new(s).is_dir()))
@@ -193,11 +193,11 @@ pub mod Store_Epic {
     static _Paths: Paths = LazyLock::new(|| init().map_err(|e| e.to_string()));
     pub fn Paths() -> io::Result<&'static HashMap<String, String>> { paths(&_Paths) }
     fn getPath() -> io::Result<Option<String>> {
-        let paths: Vec<String> = match platform_os() {
-            Os::Windows => { let home = commonApplicationData(); let search = [r"Epic\EpicGamesLauncher"]; search.iter().map(|path| pathJoin(&[&home, path, "Data"])).collect() }
-            Os::Android => return Ok(None),
-            Os::Linux => { let home = userProfile(); let search = ["Epic/EpicGamesLauncher"]; search.iter().map(|path| pathJoin(&[&home, path, "Data"])).collect() }
-            Os::OSX => { let home = [userProfile(), "/Users/Shared".into()]; let search = ["Epic/EpicGamesLauncher"]; home.iter().flat_map(|h| search.iter().map(move |s| pathJoin(&[h, s, "Data"]))).collect() }
+        let paths: Vec<String> = match PlatformOS {
+            OS::Windows => { let home = commonApplicationData(); let search = [r"Epic\EpicGamesLauncher"]; search.iter().map(|path| pathJoin(&[&home, path, "Data"])).collect() }
+            OS::Android => return Ok(None),
+            OS::Linux => { let home = userProfile(); let search = ["Epic/EpicGamesLauncher"]; search.iter().map(|path| pathJoin(&[&home, path, "Data"])).collect() }
+            OS::OSX => { let home = [userProfile(), "/Users/Shared".into()]; let search = ["Epic/EpicGamesLauncher"]; home.iter().flat_map(|h| search.iter().map(move |s| pathJoin(&[h, s, "Data"]))).collect() }
             _ => return Err(platformNotSupported()),
         };
         Ok(paths.into_iter().find(|s| Path::new(s).is_dir()))
@@ -231,11 +231,11 @@ pub mod Store_Gog {
     static _Paths: Paths = LazyLock::new(|| init().map_err(|e| e.to_string()));
     pub fn Paths() -> io::Result<&'static HashMap<String, String>> { paths(&_Paths) }
     fn getPath() -> io::Result<Option<String>> {
-        let paths: Vec<String> = match platform_os() {
-            Os::Windows => { let home = commonApplicationData(); let search = [r"GOG.com\Galaxy"]; search.iter().map(|path| pathJoin(&[&home, path, "storage"])).collect() }
-            Os::Android => return Ok(None),
-            Os::Linux => { let home = userProfile(); let search = ["??"]; search.iter().map(|path| pathJoin(&[&home, path, "Storage"])).collect() }
-            Os::OSX => { let home = [userProfile(), "/Users/Shared".into()]; let search = ["GOG.com/Galaxy"]; home.iter().flat_map(|h| search.iter().map(move |s| pathJoin(&[h, s, "Storage"]))).collect() }
+        let paths: Vec<String> = match PlatformOS {
+            OS::Windows => { let home = commonApplicationData(); let search = [r"GOG.com\Galaxy"]; search.iter().map(|path| pathJoin(&[&home, path, "storage"])).collect() }
+            OS::Android => return Ok(None),
+            OS::Linux => { let home = userProfile(); let search = ["??"]; search.iter().map(|path| pathJoin(&[&home, path, "Storage"])).collect() }
+            OS::OSX => { let home = [userProfile(), "/Users/Shared".into()]; let search = ["GOG.com/Galaxy"]; home.iter().flat_map(|h| search.iter().map(move |s| pathJoin(&[h, s, "Storage"]))).collect() }
             _ => return Err(platformNotSupported()),
         };
         Ok(paths.into_iter().find(|s| Path::new(s).is_dir()))
@@ -275,7 +275,7 @@ pub mod Store_Local {
         // get locale games
         let mut gameRoots: Vec<String> = getDrives().iter().map(|x| pathCombine(x, GAMESPATH)).collect();
         gameRoots.push(pathCombine(&userProfile(), GAMESPATH));
-        if platform_os() == Os::Android { gameRoots.push(pathCombine("/sdcard", GAMESPATH)); }
+        if PlatformOS == OS::Android { gameRoots.push(pathCombine("/sdcard", GAMESPATH)); }
         let mut paths = HashMap::new();
         for x in gameRoots.iter().filter(|s| Path::new(s).is_dir()) {
             for x in enumerateDirectories(x)? { add(&mut paths, getFileName(&x), x)?; }
@@ -376,9 +376,9 @@ pub mod Store_Steam {
     static _Paths: Paths = LazyLock::new(|| init().map_err(|e| e.to_string()));
     pub fn Paths() -> io::Result<&'static HashMap<String, String>> { paths(&_Paths) }
     fn getPath() -> io::Result<Option<String>> {
-        let paths: Vec<String> = match platform_os() {
+        let paths: Vec<String> = match PlatformOS {
             // windows paths
-            Os::Windows => {
+            OS::Windows => {
                 #[cfg(windows)] {
                     use winreg::{enums::*, RegKey};
                     let key = RegKey::predef(HKEY_CURRENT_USER).open_subkey(r"SOFTWARE\Valve\Steam")
@@ -388,11 +388,11 @@ pub mod Store_Steam {
                 }
                 #[cfg(not(windows))] return Ok(None);
             }
-            Os::Android => return Ok(None),
+            OS::Android => return Ok(None),
             // linux paths
-            Os::Linux => { let home = userProfile(); let search = [".steam", ".steam/steam", ".steam/root", ".local/share/Steam"]; search.iter().map(|path| pathJoin(&[&home, path, "appcache"])).collect() }
+            OS::Linux => { let home = userProfile(); let search = [".steam", ".steam/steam", ".steam/root", ".local/share/Steam"]; search.iter().map(|path| pathJoin(&[&home, path, "appcache"])).collect() }
             // mac paths
-            Os::OSX => { let home = [userProfile(), "/Users/Shared".into()]; let search = ["Library/Application Support/Steam"]; home.iter().flat_map(|h| search.iter().map(move |s| pathJoin(&[h, s]))).collect() }
+            OS::OSX => { let home = [userProfile(), "/Users/Shared".into()]; let search = ["Library/Application Support/Steam"]; home.iter().flat_map(|h| search.iter().map(move |s| pathJoin(&[h, s]))).collect() }
             _ => return Err(platformNotSupported()),
         };
         Ok(paths.into_iter().find(|s| Path::new(s).is_dir()))
@@ -430,11 +430,11 @@ pub mod Store_Ubisoft {
     static _Paths: Paths = LazyLock::new(|| init().map_err(|e| e.to_string()));
     pub fn Paths() -> io::Result<&'static HashMap<String, String>> { paths(&_Paths) }
     fn getPath() -> io::Result<Option<String>> {
-        let paths: Vec<String> = match platform_os() {
-            Os::Windows => { let home = localApplicationData(); let search = ["Ubisoft Query Launcher"]; search.iter().map(|path| pathJoin(&[&home, path])).collect() }
-            Os::Android => return Ok(None),
-            Os::Linux => { let home = [userProfile(), "/Users/Shared".into()]; let search = ["??"]; home.iter().flat_map(|h| search.iter().map(move |s| pathJoin(&[h, s]))).collect() }
-            Os::OSX => { let home = "/Users/Shared"; let search = ["??"]; search.iter().map(|path| pathJoin(&[home, path])).collect() }
+        let paths: Vec<String> = match PlatformOS {
+            OS::Windows => { let home = localApplicationData(); let search = ["Ubisoft Query Launcher"]; search.iter().map(|path| pathJoin(&[&home, path])).collect() }
+            OS::Android => return Ok(None),
+            OS::Linux => { let home = [userProfile(), "/Users/Shared".into()]; let search = ["??"]; home.iter().flat_map(|h| search.iter().map(move |s| pathJoin(&[h, s]))).collect() }
+            OS::OSX => { let home = "/Users/Shared"; let search = ["??"]; search.iter().map(|path| pathJoin(&[home, path])).collect() }
             _ => return Err(platformNotSupported()),
         };
         Ok(paths.into_iter().find(|s| Path::new(s).is_dir()))
@@ -465,7 +465,7 @@ pub mod Store_WinReg {
     use super::*;
 
     pub fn getPathByKey(key: Option<&str>, elem: &Value) -> io::Result<Option<String>> {
-        if platform_os() != Os::Windows { return Ok(None) }
+        if PlatformOS != OS::Windows { return Ok(None) }
         let key = key.ok_or_else(|| Error::new(ErrorKind::InvalidInput, "ArgumentNullException: propertyName"))?;
         getPathByRegistryKey(key, elem.get(key))
     }

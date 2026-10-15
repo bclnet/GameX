@@ -885,9 +885,8 @@ How it maps:
   `glow::Context` by the control's paint callback. GL names stay C#'s `int`s.
 * `IOpenGfx[]` is `IOpenGfxs`; a renderer downcasts the model slot to
   `Mutex<OpenGLGfxModel>`, as C# casts it.
-* OpenX's Rust `Platform` predates C#'s rename to `Engine` and has no
-  `GfxFactory` or `EngineX.Gfx`, so `OpenGLEngine::gfx()` makes the
-  `GfxFactory` array once and the Explorer uses that.
+* The Explorer's GL control gets C#'s `EngineX.Gfx`, the active engine's
+  `GfxFactory` array (OpenX's `engine.rs`, the port of `Engine.cs`).
 * C#'s managers share one texture and material manager by reference; Rust's
   object manager owns the material manager, which owns the texture manager.
 * `ITexture.Create<T>` is back on the trait as `create(platform, &mut dyn FnMut(&dyn Any))`.
@@ -946,3 +945,23 @@ small but took 37 s to expand, so the generator writes the items itself.)
 Fixed in the tooling on the way: `gen_enums.py` wrote CRLF on Windows (text
 mode), and `verify_enums.py` collected aliases but never counted them, so
 `Enums.cs` failed with 27 "missing" aliases. It now passes 11,624 of 11,624.
+
+## OpenX's `Engine.cs` replaces the old `Platform.cs` port
+
+OpenX's Rust `platform.rs` was a port of C#'s `Platform.cs`, from before C#
+renamed it `Engine.cs`. Now:
+
+* `openx::engine` ports `Engine.cs`. `Engine` is a struct with C#'s fields
+  (`caps`, `gfxFactory`, `sfxFactory`, ...), since C#'s subclasses only set
+  them in a constructor; each engine is a `This()` returning its one
+  `&'static Engine`. `EngineX` is a module (`Activate`, `Current`, `Engines`,
+  `Gfx`, `Sfx`, `PlatformOS`, `Caps`, `DecodePath`), its mutable state behind
+  one lock. `EnginesUnionWith` is C#'s `Engines.UnionWith`, which the
+  Explorer's `App` calls with C#'s engine list.
+* `engine_unknown` / `engine_test` / `engine_system` mirror C#'s `Engine_*`
+  folders. `TestEngine`'s gfx objects are bare types (every C# member throws);
+  `SystemSfx` isn't ported yet (openx-sfx's `AudioManager` isn't C#'s shape).
+* The nine other engine crates register `XEngine` (and `XShellEngine`) with
+  C#'s id, name and caps. Their backends aren't ported, so their factories are
+  `Engine`'s default, none.
+* openx-sfx gained `IOpenSfx` / `IOpenSfxs`, and is camelCase.

@@ -5,7 +5,7 @@ description: Checklist for porting one C# (or Python) file of GameX or OpenX to 
 
 # Port one C# file to Rust
 
-The rules are in [CLAUDE.md](../../../CLAUDE.md) (naming, value types, `full` gating, `_/` folders, lean code) and the ADRs it links. This is the order to apply them in, one file per pass. Run every command from the repo root.
+The rules are in [CLAUDE.md](../../../CLAUDE.md) (naming, value types, `full` gating, `_/` folders, lean code) and the ADRs it links. This is the order to apply them in, one file per pass. Run every command from the repo root. On Windows the interpreter is `python`, not `python3`.
 
 ## 1. Find the source, its map row and its twins
 
@@ -29,13 +29,17 @@ The rules are in [CLAUDE.md](../../../CLAUDE.md) (naming, value types, `full` ga
 
   If there's no twin, say so in the change description ([ADR 0001](../../../docs/ADR/0001-ports-stay-one-to-one.md)).
 - [ ] Read the current `.rs` file and **check it against the C#, member by member**, even if it says `done`. `family.rs` and `meta.rs` were marked `done` while missing most of their types, and the generated `families/bethesda/src/formats/records.rs` is `done` with only the enums of a 9,000-line file.
+- [ ] **OpenX's Rust tree is mostly an older port that drifted from C#.** Many of its `done` files are snake_case, "fix" C# bugs (guards, different semantics), or follow a C# file that has since been renamed (`Platform.cs` → `Engine.cs`, `Platform_X.cs` → `Engine_X.cs`). Check that the file named in `PORT-SOURCE` still exists, and port to today's C#; convert the file's names to camelCase while you're in it (CLAUDE.md).
 - [ ] Check what it uses. If a dependency is still a `todo` stub, port that first, or gate this one (step 4).
 
 ## 2. Write it
 
 - [ ] Use C#'s names: members in camelCase, types in PascalCase, never snake_case (CLAUDE.md, Conventions). File and module names come from `PORT_MAP`'s `rs_path`.
 - [ ] Use one `.rs` per `.cs`, with the same members in the same order and the same control flow (ADR 0001). Value types follow [ADR 0003](../../../docs/ADR/0003-value-types.md).
-- [ ] Reuse the shapes the core already settled, and don't invent new ones. The header of `rust/core/gamex/src/binary.rs` lists them: `Archive` trait + `ArchiveExt`, C# `object` → `meta::Tag`, `Task<T>` → boxed future waited on with `getResult`, `Stream`, `AssetFactory`. Compare it with `dotnet/Core/GameX/Binary.cs` for a finished example.
+- [ ] Reuse the shapes the core already settled, and don't invent new ones. The header of `rust/core/gamex/src/binary.rs` lists them: `Archive` trait + `ArchiveExt`, C# `object` → `meta::Tag`, `Task<T>` → boxed future waited on with `getResult`, `Stream`, `AssetFactory`. Compare it with `dotnet/Core/GameX/Binary.cs` for a finished example. Others settled since:
+  - **Struct reads:** a C# struct with a `Struct` field implements `openx_poly::system::unsafe_x::IStruct` (`const Struct: (&'static str, usize)`) on a `bytemuck::Pod` struct (`#[repr(C, packed)]` for `Pack = 1`); read it with `BinaryReaderExt`'s `readS` / `readSArray` / `readSEach` / `readL32SArray` / `readPArray`. C#'s `r.Seek(x)` is `r.seek(SeekFrom::Start(x))`. Missing reader members get added to `BinaryReaderExt` under C#'s name.
+  - **Formats:** `ArcBinary<T>.Current` is `current()` (`families/arkane/src/formats/binary.rs`); a `Binary_X.Factory` returns `Tag::Info(Arc::new(..))`; a texture's `MetaContent` value is `Tag::Texture` (`families/uncore/src/formats/binary.rs`). Another crate builds a `FileSource` with `..Default::default()`.
+  - **C# static classes** are `pub mod X` with `LazyLock` statics (`Store_Steam` in `core/gamex/src/store.rs`, `EngineX` in OpenX's `engine.rs`). A class whose subclasses only set fields in their constructors is a struct, and each subclass a `This()` returning its `&'static` value (`Engine`, `OpenGLEngine::This()`).
 - [ ] Where Rust or OpenX's Rust port can't do what C# does, use the nearest equivalent and say so in the header (binary.rs's "Not yet in openx's Rust port" list).
 - [ ] Keep C#'s behaviour, bugs included. Record what you find in `rust/_/PORTING.md` instead of fixing it in one language only.
 - [ ] **Enum tables are generated, not transcribed:**
@@ -43,7 +47,9 @@ The rules are in [CLAUDE.md](../../../CLAUDE.md) (naming, value types, `full` ga
   python3 rust/_/gen_enums.py dotnet/<cs_path> rust/<rs_path> <cs_path>
   python3 rust/_/verify_enums.py dotnet/<cs_path>:rust/<rs_path>
   ```
-  The verifier must print `OK ... missing= 0 mismatched= 0`. The generator writes `PORT-SHA: PLACEHOLDER` and `PORT-STATUS: done` even when the C# file has more than enums, so set both by hand (step 5). It also emits `from_raw`. That snake_case name is the generator's; fix it in `gen_enums.py`, not in the output.
+  The verifier must print `OK ... missing= 0 mismatched= 0`. The generator writes `PORT-SHA: PLACEHOLDER` and `PORT-STATUS: done` even when the C# file has more than enums, so set both by hand (step 5): the current hash only if the C# file is nothing but enums, otherwise keep the old one. Fix generator problems in `gen_enums.py`, never in its output.
+  - A plain enum over `BIG_ENUM` (1,000) members comes out as a `ConstEnum` (`openx_poly::system::const_enum`): a newtype with associated consts. `#[derive(Debug)]` on a Rust enum that size costs rustc memory quadratic in the variants (about 23 GB for WB's 31,108-member `WeenieClassName`). The crate needs `openx-poly` as a dependency.
+  - Enum files generated before the `fromRaw` / LF fixes still have `from_raw` (TODO.md lists them).
 
 ## 3. Register types a spec names
 
@@ -57,6 +63,7 @@ Rust has no `Type.GetType`. If the C# type appears in a spec (`grep -l 'GameX.Ar
   ```
   The factory type follows the spec key (`rust/core/gamex/src/family.rs`): `archiveType` → `ArchiveFactory`, `vfxType` → `FileSystemFactory`, `clientType` → `ClientFactory`, `explorerAppType` → `AppStartup`.
 - [ ] Call it at startup in `rust/apps/app-explorer/src/app_xaml.rs`, next to `gamex_uncore::uncore::register();`. Until then, opening that family fails with "unknown ArchiveType".
+- [ ] OpenX engines aren't found by reflection either: the Explorer's `App::app()` (C#'s static constructor) lists them with `EngineX::EnginesUnionWith`, and only those show in its engine list.
 
 ## 4. Build
 
@@ -68,14 +75,15 @@ Rust has no `Type.GetType`. If the C# type appears in a spec (`grep -l 'GameX.Ar
   ```bash
   cd OpenX/rust && cargo check --workspace && cargo check -p openx --features full
   ```
-- [ ] Tests for the crate you changed (`gamex` passes 60):
+- [ ] Tests for the crate you changed (TODO.md's "Where things stand" has the current counts and the known failures):
   ```bash
   cd rust && cargo test -p gamex
   ```
   Some crates' own `#[cfg(test)]` modules are stale (CLAUDE.md), so test per crate.
-- [ ] Aim for zero errors and no new warnings.
+- [ ] Aim for zero errors and no new warnings. rustc should stay around 1 GB; if a crate needs several GB, suspect a huge generated item (see the enum step) and measure before retrying, since an out-of-memory build can take the whole machine down.
 - [ ] **If it can't compile yet** because it needs unported code, keep it declared and gate it in the parent with `#[cfg(feature = "full")] pub mod foo;`. Give the crate `[features] full = []` if it lacks one (`OpenX/rust/vfx/vfx/Cargo.toml`). Don't move files to make a crate build, and don't un-park whole `_/` folders.
 - [ ] A new crate needs `[lints]` / `workspace = true`.
+- [ ] If the change shows in the Explorer (a format, a view, an engine), look at it there: CLAUDE.md, "Seeing the Rust Explorer".
 
 ## 5. Header and map: only when complete
 

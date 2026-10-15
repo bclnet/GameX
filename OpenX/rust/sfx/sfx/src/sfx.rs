@@ -28,7 +28,15 @@
 // wait to deadlock on. If a caller wants to load and build in one step, it
 // awaits the load itself and then calls `create`.
 
+use std::any::Any;
 use std::collections::HashMap;
+use std::sync::Arc;
+
+/// C# `interface IOpenSfx`.
+pub trait IOpenSfx {}
+
+/// C# `IOpenSfx[]`: each slot is the backend's object as `Any`, as `openx_gfx::gfx::IOpenGfxs`.
+pub type IOpenSfxs = Vec<Option<Arc<dyn Any + Send + Sync>>>;
 
 /// The backend's handle types. Mirrors `openx_gfx::gfx::Backend`.
 pub trait SfxBackend {
@@ -54,20 +62,20 @@ pub trait AudioBuilder<B: SfxBackend> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Audio {
     pub channels: u16,
-    pub sample_rate: u32,
-    pub bits_per_sample: u16,
+    pub sampleRate: u32,
+    pub bitsPerSample: u16,
     pub data: Vec<u8>,
 }
 
 impl Audio {
     /// Duration in seconds, or `None` if the header describes no frames.
-    pub fn duration_secs(&self) -> Option<f64> {
-        let bytes_per_frame =
-            self.channels as usize * (self.bits_per_sample as usize / 8);
-        if bytes_per_frame == 0 || self.sample_rate == 0 {
+    pub fn durationSecs(&self) -> Option<f64> {
+        let bytesPerFrame =
+            self.channels as usize * (self.bitsPerSample as usize / 8);
+        if bytesPerFrame == 0 || self.sampleRate == 0 {
             return None;
         }
-        Some(self.data.len() as f64 / bytes_per_frame as f64 / self.sample_rate as f64)
+        Some(self.data.len() as f64 / bytesPerFrame as f64 / self.sampleRate as f64)
     }
 }
 
@@ -127,7 +135,7 @@ impl<B: SfxBackend, AB: AudioBuilder<B>> AudioManager<B, AB> {
         self.cached.len()
     }
 
-    pub fn is_empty(&self) -> bool {
+    pub fn isEmpty(&self) -> bool {
         self.cached.is_empty()
     }
 }
@@ -169,14 +177,14 @@ mod tests {
     fn pcm() -> Audio {
         Audio {
             channels: 2,
-            sample_rate: 44100,
-            bits_per_sample: 16,
+            sampleRate: 44100,
+            bitsPerSample: 16,
             data: vec![0; 44100 * 4], // one second of stereo 16-bit
         }
     }
 
     #[test]
-    fn cache_hits_by_path() {
+    fn cacheHitsByPath() {
         let mut m = AudioManager::<Test, _>::new(Counting::default());
         let a = m.create("shot.wav", &pcm());
         let b = m.create("shot.wav", &pcm());
@@ -185,42 +193,42 @@ mod tests {
     }
 
     #[test]
-    fn delete_releases_the_handle() {
+    fn deleteReleasesTheHandle() {
         let mut m = AudioManager::<Test, _>::new(Counting::default());
         m.create("a.wav", &pcm());
         m.delete("a.wav");
         assert_eq!(m.builder.deletes, 1);
-        assert!(m.is_empty());
+        assert!(m.isEmpty());
         // Deleting again is a no-op, not a panic.
         m.delete("a.wav");
         assert_eq!(m.builder.deletes, 1);
     }
 
     #[test]
-    fn clear_releases_everything() {
+    fn clearReleasesEverything() {
         let mut m = AudioManager::<Test, _>::new(Counting::default());
         m.create("a.wav", &pcm());
         m.create("b.wav", &pcm());
         m.clear();
         assert_eq!(m.builder.deletes, 2);
-        assert!(m.is_empty());
+        assert!(m.isEmpty());
     }
 
     #[test]
-    fn duration_from_pcm_header() {
-        assert!((pcm().duration_secs().unwrap() - 1.0).abs() < 1e-9);
+    fn durationFromPcmHeader() {
+        assert!((pcm().durationSecs().unwrap() - 1.0).abs() < 1e-9);
     }
 
     #[test]
-    fn degenerate_headers_do_not_divide_by_zero() {
-        let bad = Audio { channels: 0, sample_rate: 44100, bits_per_sample: 16, data: vec![0; 8] };
-        assert!(bad.duration_secs().is_none());
-        let bad2 = Audio { channels: 2, sample_rate: 0, bits_per_sample: 16, data: vec![0; 8] };
-        assert!(bad2.duration_secs().is_none());
+    fn degenerateHeadersDoNotDivideByZero() {
+        let bad = Audio { channels: 0, sampleRate: 44100, bitsPerSample: 16, data: vec![0; 8] };
+        assert!(bad.durationSecs().is_none());
+        let bad2 = Audio { channels: 2, sampleRate: 0, bitsPerSample: 16, data: vec![0; 8] };
+        assert!(bad2.durationSecs().is_none());
     }
 
     #[test]
-    fn get_does_not_build() {
+    fn getDoesNotBuild() {
         let mut m = AudioManager::<Test, _>::new(Counting::default());
         assert!(m.get("nope.wav").is_none());
         assert_eq!(m.builder.creates, 0);

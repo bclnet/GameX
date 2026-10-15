@@ -24,7 +24,14 @@ gamex-arkane = { path = "../../families/arkane" }
 gamex-uncore = { path = "../../families/uncore" }
 openx = { path = "../../../OpenX/rust/core/openx" }
 openx-poly = { path = "../../../OpenX/rust/core/poly" }
+openx-engine-godot = { path = "../../../OpenX/rust/engines/godot" }
+openx-engine-o3de = { path = "../../../OpenX/rust/engines/o3de" }
+openx-engine-ogre = { path = "../../../OpenX/rust/engines/ogre" }
 openx-engine-opengl = { path = "../../../OpenX/rust/engines/opengl" }
+openx-engine-sdl = { path = "../../../OpenX/rust/engines/sdl" }
+openx-engine-stride = { path = "../../../OpenX/rust/engines/stride" }
+openx-engine-unity = { path = "../../../OpenX/rust/engines/unity" }
+openx-engine-unreal = { path = "../../../OpenX/rust/engines/unreal" }
 openx-wpf-control = { path = "../../../OpenX/rust/engines/wpf-control" }
 indexmap = "2"
 eframe = { version = "0.36", default-features = false, features = ["accesskit", "default_fonts", "glow", "wayland", "x11"] }

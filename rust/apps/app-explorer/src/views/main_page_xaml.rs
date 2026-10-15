@@ -15,7 +15,7 @@ use gamex::binary::{Archive, ArchiveExt};
 use gamex::config::option;
 use gamex::family::{Family, FamilyApp};
 use indexmap::IndexMap;
-use openx::platform::{activate, Platform};
+use openx::engine::{Engine, EngineX};
 use crate::app_xaml::App;
 use crate::resources::resource_manager::ResourceManager;
 use super::about_page_xaml::AboutPage;
@@ -57,7 +57,7 @@ impl MainPageTab {
 
 /// MainPage
 pub struct MainPage {
-    pub engines: Vec<Box<dyn Platform>>,
+    pub engines: Vec<&'static Engine>,
     engine: Option<usize>,
     mainTabs: Vec<MainPageTab>,
     mainTab: usize,
@@ -72,8 +72,8 @@ pub struct MainPage {
 
 impl MainPage {
     pub fn new() -> Self {
-        let engines: Vec<_> = App::engines().into_iter().filter(|s| s.enabled()).collect();
-        let engine = engines.iter().position(|s| Some(s.id()) == option().engine);
+        let engines: Vec<_> = EngineX::Engines().into_iter().filter(|s| s.enabled).collect();
+        let engine = engines.iter().position(|s| Some(s.id) == option().engine);
         let mut s = Self {
             engines, engine: None, mainTabs: vec![], mainTab: 0, log: String::new(), fileContent: FileContent::default(),
             archives: vec![], familyApps: None, openPage: None, optionsPage: None, aboutPage: None,
@@ -96,7 +96,7 @@ impl MainPage {
     }
 
     pub fn open(&mut self, family: Option<Arc<Family>>, uris: Vec<String>, path: Option<String>) -> &mut Self {
-        if let Some(selected) = self.engine { activate(App::engines().swap_remove(selected)); }
+        if let Some(selected) = self.engine { EngineX::Activate(Some(self.engines[selected])); }
         for archive in &self.archives { let _ = archive.close(); }
         self.archives.clear();
         let Some(family) = family else { return self };
@@ -114,9 +114,9 @@ impl MainPage {
     }
 
     pub fn setEngine(&mut self, platform: Option<usize>) {
-        let engine = platform.map(|i| App::engines().swap_remove(i));
-        self.fileContent.setEngine(engine.as_deref());
-        if let Some(engine) = engine { activate(engine); }
+        let engine = platform.map(|i| self.engines[i]);
+        EngineX::Activate(engine);
+        self.fileContent.setEngine(engine);
     }
 
     pub fn onOpenedAsync(&mut self, family: &Family, path: Option<String>) {
@@ -197,8 +197,8 @@ impl eframe::App for MainPage {
             egui::Panel::right("LogPane").exact_size(200.).show_separator_line(false).show(ui, |ui| {
                 let mut engine = self.engine;
                 egui::ComboBox::from_id_salt("Engine").width(ui.available_width())
-                    .selected_text(engine.map_or("", |i| self.engines[i].name()))
-                    .show_ui(ui, |ui| { for (i, s) in self.engines.iter().enumerate() { ui.selectable_value(&mut engine, Some(i), s.name()); } });
+                    .selected_text(engine.map_or("", |i| self.engines[i].name))
+                    .show_ui(ui, |ui| { for (i, s) in self.engines.iter().enumerate() { ui.selectable_value(&mut engine, Some(i), s.name); } });
                 if engine != self.engine { self.engine_SelectionChanged(engine); }
             });
             egui::ScrollArea::vertical().stick_to_bottom(true).auto_shrink(false).show(ui, |ui| {

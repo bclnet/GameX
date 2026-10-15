@@ -4,17 +4,12 @@
 //
 // Not ported: `OpenGLGfxSprite3D`'s sprite manager (C# never creates it either:
 // its constructor line is commented out), and `OpenGLEngine`'s `SfxFactory`
-// (`SystemSfx` isn't in openx-sfx's Rust port).
+// (`SystemSfx`, openx's engine_system, isn't ported), so its one slot is empty.
 //
 // The C# managers share one `TextureManager` and one `MaterialManager` by
 // reference. Rust's own them: the object manager holds the material manager,
 // which holds the texture manager, so `OpenGLGfxModel`'s accessors reach into
 // that chain. `OpenGLGfxTerrain` keeps its own pair, as the C# does.
-//
-// OpenX's Rust `Platform` (Platform.cs, before C# renamed it Engine.cs) has
-// no `GfxFactory` and no `EngineX.Gfx`. So `OpenGLEngine::gfx()` builds the
-// C# `GfxFactory` array once and hands it out, standing in for `EngineX.Gfx`
-// after `EngineX.Activate(OpenGLEngine.This)`.
 //
 // GL names are C#'s `int`s (0 is none, -1 is unset). Shaders are embedded with
 // `include_str!`, as C# embeds `Gfx/Shaders/*` as resources; the csproj embeds
@@ -29,7 +24,7 @@ use std::sync::atomic::{AtomicI32, Ordering};
 use std::sync::{Arc, LazyLock, Mutex};
 use glam::{Mat4, Quat, Vec3, Vec4};
 use glow::HasContext;
-use openx::platform::{Caps, Platform};
+use openx::engine::{Engine, EngineX};
 use openx_gfx::gfx::*;
 use openx_gfx::gfx_texture::{TextureFlags, TextureFormat, TexturePixel};
 use openx_poly::core::{BoxFuture, SourcePath, SourceRef};
@@ -562,28 +557,19 @@ impl IOpenGfxTerrain<OpenGLBackend> for OpenGLGfxTerrain {
 }
 
 /// OpenGLEngine
-#[derive(Debug, Clone, Copy, Default)]
 pub struct OpenGLEngine;
 
 impl OpenGLEngine {
-    pub const This: OpenGLEngine = OpenGLEngine;
-
-    /// C# `GfxFactory`.
-    pub fn gfxFactory() -> IOpenGfxs {
-        vec![Some(Arc::new(Mutex::new(OpenGLGfxApi))), None, Some(Arc::new(Mutex::new(OpenGLGfxSprite3D))), Some(Arc::new(Mutex::new(OpenGLGfxModel::new()))), None, Some(Arc::new(Mutex::new(OpenGLGfxTerrain::new())))]
+    pub fn This() -> &'static Engine {
+        static This: LazyLock<Engine> = LazyLock::new(|| Engine {
+            caps: EngineX::Caps::Drawing,
+            gfxFactory: || Some(vec![Some(Arc::new(Mutex::new(OpenGLGfxApi))), None, Some(Arc::new(Mutex::new(OpenGLGfxSprite3D))), Some(Arc::new(Mutex::new(OpenGLGfxModel::new()))), None, Some(Arc::new(Mutex::new(OpenGLGfxTerrain::new())))]),
+            // C#: [new SystemSfx()]; SystemSfx isn't ported (openx's engine_system)
+            sfxFactory: || Some(vec![None]),
+            ..Engine::new("GL", "OpenGL")
+        });
+        &This
     }
-
-    /// C# `EngineX.Gfx` once this engine is active: `GfxFactory()`, made once.
-    pub fn gfx() -> &'static IOpenGfxs {
-        static Gfx: LazyLock<IOpenGfxs> = LazyLock::new(OpenGLEngine::gfxFactory);
-        &Gfx
-    }
-}
-
-impl Platform for OpenGLEngine {
-    fn id(&self) -> &str { "GL" }
-    fn name(&self) -> &str { "OpenGL" }
-    fn caps(&self) -> Caps { Caps::DRAWING }
 }
 
 // #endregion

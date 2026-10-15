@@ -10,7 +10,7 @@ GameX loads game assets (textures, models, levels, audio) out of the archive for
 | -- | -- |
 | `dotnet/` | GameX in C# — the reference implementation. `Core/GameX` (Family → Game → Archive model, store detection), `Families/GameX.*` (one project per family), `Engines/GameX.Engine.*`, `GameX.Cli`, `Apps/` (WPF/MAUI explorers, Windows-only) |
 | `python/gamex/` | Python port. Same structure, fewer families implemented |
-| `rust/` | Rust port. The core model (`core/gamex`) and the egui Explorer (`apps/app-explorer`) work; most family files are still `PORT-STATUS: todo` stubs. See `rust/_/PORTING.md` and `PORT_MAP.tsv` |
+| `rust/` | Rust port. The core model (`core/gamex`), Uncore and Arkane, and the egui Explorer (`apps/app-explorer`, which opens Arx Fatalis and draws textures through OpenX's OpenGL engine) work; most family files are still `PORT-STATUS: todo` stubs. See `rust/_/PORTING.md` and `PORT_MAP.tsv` |
 | `OpenX/` | The engine-abstraction library GameX sits on (`OpenX.Poly`, `Gfx`, `Sfx`, `Vfx`, `Engines/OpenX.Engine.*`), vendored in-tree in all three languages. Formerly named OpenStack |
 | `Mirage/` | Headless test engine (scene graph with a text form). Mirrors github.com/bclnet/Mirage |
 | `python/gamex/specs/*.json` | Family/game definitions. **Single source of truth** — the C# build embeds these same files |
@@ -40,7 +40,13 @@ Everything else is an integration test against installed games and is expected t
 
 To test GameX code without a GPU or game install, use the Mirage engine: `MirageEngine.Reset()`, render through `MirageRenderer.CreateRenderer(...)`, assert on `MirageEngine.Tree.ToText()`. See `docs/Engines/Mirage/Readme.md`.
 
-Rust: both workspaces build with zero errors (`cargo check --workspace` in `OpenX/rust` and in `rust/`), and so does `cargo check -p openx --features full` in `OpenX/rust`. Some crates' own `#[cfg(test)]` modules are stale and don't compile (e.g. `openx-poly`'s `reader.rs`, `openx-vfx`'s `disc_nrg.rs`), so `cargo test` works per crate, not everywhere. `cargo test -p gamex` (in `rust/`) loads every family spec and opens archives over local files. `cargo run -p gamex-app-explorer` opens the Rust Explorer.
+Rust: both workspaces build with zero errors and warnings (`cargo check --workspace` in `OpenX/rust` and in `rust/`), and so does `cargo check -p openx --features full` in `OpenX/rust`. Some crates' own `#[cfg(test)]` modules are stale and don't compile (e.g. `openx-vfx`'s `disc_nrg.rs`), so `cargo test` works per crate, not everywhere; TODO.md lists the known test failures. `cargo test -p gamex` (in `rust/`) loads every family spec and opens archives over local files. `cargo run -p gamex-app-explorer` opens the Rust Explorer.
+
+### Seeing the Rust Explorer
+
+- It opens the config's family and game (`rust/core/gamex/src/config.rs`, the twin of `_Config.cs`) and selects `forcePath`: `sample:N` is entry N of the family's `python/gamex/specs/*Family.Sample.json` (Arkane's `sample:1` is textures). These are the owner's settings; change them only for a run and put them back.
+- Screenshots taken from outside (GDI `CopyFromScreen`, `PrintWindow`) come out white for eframe's GL window. To see it, patch `MainPage::ui` for the run: `request_repaint()` (egui only repaints on input otherwise), send `egui::ViewportCommand::Screenshot` after a few hundred frames, save the `egui::Event::Screenshot` image with the `image` crate, then close. Revert the patch afterwards.
+- egui's resizable side panel grows to fit any row wider than it, a few pixels every frame, until it fills the window; size rows to the space actually left (`file_explorer_xaml.rs`'s filter row).
 
 ## Things that will bite you
 
@@ -51,6 +57,8 @@ Rust: both workspaces build with zero errors (`cargo check --workspace` in `Open
 - **Every change goes to every language** ([ADR 0001](docs/ADR/0001-ports-stay-one-to-one.md)). A change to C# is made to its Python twin (`python/gamex/...`, `OpenX/python/...`) and its Rust twin (listed in `PORT_MAP.tsv`) in the same change, with the same names and shape. Where a twin doesn't exist yet, say so; list each language as updated, not applicable, or still to do. The MAUI explorer (`dotnet/Apps/GameX.App.ExplorerM`) is C#-only: it has no Python or Rust port and doesn't need one. UI: C# WPF, Python PyQt6, Rust egui (eframe), with each XAML view and its code-behind one `.rs` file (`views/file_explorer_xaml.rs`) ([ADR 0005](docs/ADR/0005-rust-ui-egui.md)).
 - **Porting a file to Rust: follow the `port-to-rust` skill** (`.claude/skills/port-to-rust/SKILL.md`). It covers the `PORT-SOURCE` / `PORT-SHA` / `PORT-STATUS` headers (keep them when editing, and don't trust a `done` header), `PORT_MAP.tsv`, and registering spec types, since Rust has no `Type.GetType`. An unregistered family fails with "unknown ArchiveType".
 - **Stale tests exist in all three ports.** A test module referring to names that no longer exist is stale, not a signal the code is wrong.
+- **Line endings on Windows.** `.rs`, `.md`, `.tsv` and `.py` files are LF (`.cs` are CRLF + BOM, see Conventions). Python's text mode writes CRLF on Windows (open with `newline="\n"`), and PowerShell's `Set-Content -Encoding utf8` adds a BOM; check with `file` after a scripted edit.
+- **No reflection in Rust.** Archive types, engines and apps are found by registration (the `port-to-rust` skill, step 3); a Rust Explorer that can't open a family or list an engine is usually missing a `register()` or `EngineX::EnginesUnionWith` call.
 
 ## Conventions
 
@@ -73,5 +81,6 @@ Don't fix or report these:
 ## Git
 
 - The owner commits as plain `updates` and works from more than one machine. Pull before starting; never force-push `master`.
+- Work lands on `master` directly (no PRs): when asked to commit, fast-forward `master` to the work and push it; delete any branch you made once it's merged.
 - Commit or push only when asked.
 - `*.orig` / `*.rej` are ignored; don't commit merge leftovers.

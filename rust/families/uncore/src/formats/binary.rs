@@ -18,10 +18,11 @@
 //   captures its arguments. `AssetFactory` is a plain `fn`, so they return a boxed closure of the
 //   same signature; a caller wraps it in its own `fn` to use it as an `AssetFactory`.
 // - `MetaContent { Value = this }`: each such type keeps a `me: Weak<Self>`, set when its factory
-//   builds the `Arc`, and the content's value is that `Arc` as `Tag::Any` (same object, as in C#).
-// - `ITexture.Create<T>(string platform, Func<object, T> func)` isn't on Rust's `ITexture` (see
-//   openx-gfx's gfx.rs header), so each texture has an inherent `create` passing the
-//   `TextureAsBytes` as `Box<dyn Any>`, returning `io::Result` where C# can throw.
+//   builds the `Arc`, and the content's value is that `Arc` as `Tag::Any` (same object, as in C#),
+//   or `Tag::Texture` for a texture, which the engine view takes as `ITexture`.
+// - `ITexture.Create<T>(string platform, Func<object, T> func)`: each texture has an inherent
+//   `create` passing the `TextureAsBytes` as `Box<dyn Any>`, returning `io::Result` where C# can
+//   throw, and `ITexture::create` forwards to it.
 // - Nested C# types are at module level under their own name; where two would collide they are
 //   prefixed with the enclosing type (`Binary_PcxX_Header`, `Binary_TgaX_Header`, `Binary_RawTag`).
 // - C# exceptions are `io::Error`s; `Log.Info` is `eprintln!`.
@@ -46,7 +47,7 @@ use bytemuck::{Pod, Zeroable};
 use gamex::binary::{Archive, Stream, Task};
 use gamex::family::FamilyGame;
 use gamex::meta::{fileName, extension, FileSource, IHaveMetaInfo, MetaContent, MetaInfo, MetaManager, Tag};
-use openx::platform::{current_caps, Caps};
+use openx::engine::EngineX::{self, Caps};
 use openx_gfx::gfx::{AnyArc, ITexture, TextureAsBytes};
 use openx_gfx::gfx_texture::{TextureFlags, TextureFormat, TexturePixel};
 use openx_poly::prelude::{BinaryReaderExt, IStruct};
@@ -628,7 +629,7 @@ impl Binary_Img {
     pub fn factory<'a>(r: &'a mut Stream, f: Arc<FileSource>, s: &'a dyn Archive) -> Task<'a, Tag> { fromResult(Binary_Img::new(r, &f).map(|s| arc(s, |s| &mut s.me))) }
 
     pub fn new(r: &mut Stream, f: &FileSource) -> io::Result<Self> {
-        let capsDrawing = current_caps().contains(Caps::DRAWING);
+        let capsDrawing = EngineX::Current().caps.contains(Caps::Drawing);
         if capsDrawing {
             let data = r.readBytes(f.fileSize as usize)?;
             let rawFormat = image::guess_format(&data).map_err(|e| Error::new(ErrorKind::InvalidData, e))?;

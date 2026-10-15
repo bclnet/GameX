@@ -7,8 +7,15 @@
 //
 // LoadFamilies and GetFamily errors, which the C# throws, go to RunError.
 
-use openx::platform::{Platform, UnknownPlatform};
+use openx::engine::EngineX;
+use openx_engine_godot::engine_godot::GodotShellEngine;
+use openx_engine_o3de::engine_o3de::O3deShellEngine;
+use openx_engine_ogre::engine_ogre::OgreEngine;
 use openx_engine_opengl::engine_open_gl::OpenGLEngine;
+use openx_engine_sdl::engine_sdl::SdlEngine;
+use openx_engine_stride::engine_stride::StrideEngine;
+use openx_engine_unity::engine_unity::UnityShellEngine;
+use openx_engine_unreal::engine_unreal::UnrealShellEngine;
 use gamex::{config::option, family::{getFamily, loadFamilies}};
 use crate::app_shell_xaml::AppShell;
 
@@ -16,9 +23,18 @@ use crate::app_shell_xaml::AppShell;
 pub struct App;
 
 impl App {
-    /// C# `EngineX.Engines.UnionWith([GodotShellEngine.This, ...])`, with EngineX's own
-    /// UnknownEngine. Of those engines only OpenGL has a Rust port.
-    pub fn engines() -> Vec<Box<dyn Platform>> { vec![Box::new(UnknownPlatform), Box::new(OpenGLEngine::This)] }
+    /// C#'s static constructor. Of these engines only OpenGL draws in Rust; the others are registered but have no backend.
+    fn app() {
+        EngineX::EnginesUnionWith(&[
+            GodotShellEngine::This(),
+            O3deShellEngine::This(),
+            OgreEngine::This(),
+            OpenGLEngine::This(),
+            SdlEngine::This(),
+            StrideEngine::This(),
+            UnityShellEngine::This(),
+            UnrealShellEngine::This()]);
+    }
 
     const args: Option<&'static [&'static str]> = Some(&[]);
     //const args: Option<&'static [&'static str]> = Some(&["open", "-f", "Arkane", "-u", "game:/readme.txt#AF"]);
@@ -27,6 +43,7 @@ impl App {
     //const args: Option<&'static [&'static str]> = Some(&["open", "-f", "Valve", "-u", "game:/dota/pak01_dir.vpk#Dota2", "-p", "materials/models/npc_minions/siege1_color_psd_12a9c12b.vtex_c"]);
 
     pub fn application_Startup(e: Vec<String>) -> i32 {
+        Self::app();
         // C# finds archive types by reflection; Rust's family crates register theirs.
         gamex_uncore::uncore::register();
         gamex_arkane::arkane::register();

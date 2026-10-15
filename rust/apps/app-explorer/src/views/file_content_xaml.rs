@@ -14,7 +14,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use eframe::egui;
 use gamex::meta::{MetaContent, MetaInfo, MetaItem, Tag};
-use openx::platform::Platform;
+use openx::engine::Engine;
 use openx_poly::core::SourceRef;
 use openx_wpf_control::open_gl_control::OpenGLControl;
 use crate::controls::app_gfx_control::AppOpenGLControl;
@@ -45,8 +45,8 @@ pub struct FileContent {
 }
 
 impl FileContent {
-    pub fn setEngine(&mut self, engine: Option<&dyn Platform>) {
-        let plat = engine.map_or("UK", |s| s.id());
+    pub fn setEngine(&mut self, engine: Option<&Engine>) {
+        let plat = engine.map_or("UK", |s| s.id);
         self.viewGfx = match plat {
             "GD" | "O3" | "OG" | "GL" | "SD" | "ST" | "UN" | "UR" => format!("TViewGfx:{plat}"),
             _ => "TText".into(),

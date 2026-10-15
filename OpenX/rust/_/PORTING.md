@@ -644,7 +644,8 @@ solution depends on is complete: `polyio`, `polyfills`, `gfx`, `sfx`, and
   when `1 + epsilon` rounds back to 1, i.e. it returns the first value too small
   to matter — one halving past the one that does. For `f32` that is 2^-24
   (5.96e-8) instead of 2^-23 (1.19e-7), making every tolerance built on it twice
-  as strict as intended. `f32::EPSILON` is exact and needs no runtime probing.
+  as strict as intended. (C#'s `PlatformX` is now `EngineX`, in Engine.cs; the
+  Rust `EngineX::Epsilon` keeps the C# value, and a test pins it.)
 - **`PlatformX`'s globals are unsynchronised.** `Current`, `Gfx`, `Sfx`,
   `Platforms`, and `Options` are mutable statics, and `Activate` writes several
   in sequence. Concurrent activation interleaves those writes and can leave
@@ -656,7 +657,7 @@ solution depends on is complete: `polyio`, `polyfills`, `gfx`, `sfx`, and
   and chose the quiet option.)
 - **`PlatformX.InTestHost` sniffs loaded assembly names** for a `testhost,`
   prefix and silently swaps in `TestPlatform`. Any dependency whose name starts
-  that way would trigger it. Rust uses `#[cfg(test)]`.
+  that way would trigger it. Rust uses `#[cfg(test)]` (`EngineX::InTestHost`).
 - **`Cache.cs` is two empty classes** — `FsCache` and `MemCache`, no fields, no
   methods, no callers.
 - **`MurmurHash2` and `MurmurHash3` disagree on string input**: the former
@@ -1198,8 +1199,9 @@ stray `null`, `CellBuilder.CreateLand` finds no terrain provider, and
 `gfx[GfX.XTerrain]` call site in the solution, which is why it went unnoticed.
 The fix is deleting the stray `null` at index 5.
 
-`slots.rs` (shared across the platform crates) carries the write-up, and
-`gfx_slots_bug_compat` preserves the observed behaviour beside the intended one.
+C# has since fixed this: `Engine_OpenGL.cs`'s factory has six slots, terrain at
+index 5. The Rust `slots.rs` files are gone; each engine crate's `engine_*.rs`
+registers an `openx::engine::Engine`, whose `gfxFactory` is C#'s `GfxFactory`.
 
 Two smaller findings from the same layer:
 

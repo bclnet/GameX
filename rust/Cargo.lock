@@ -1280,7 +1280,14 @@ dependencies = [
  "image",
  "indexmap",
  "openx",
+ "openx-engine-godot",
+ "openx-engine-o3de",
+ "openx-engine-ogre",
  "openx-engine-opengl",
+ "openx-engine-sdl",
+ "openx-engine-stride",
+ "openx-engine-unity",
+ "openx-engine-unreal",
  "openx-poly",
  "openx-wpf-control",
  "rfd",
@@ -2693,6 +2700,7 @@ checksum = "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
 name = "openx"
 version = "0.1.0"
 dependencies = [
+ "bitflags 2.13.1",
  "glam",
  "openx-gfx",
  "openx-poly",

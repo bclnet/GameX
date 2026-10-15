@@ -2,7 +2,7 @@
 
 What's next, in order. Pick from the top, and update this file in the same commit as the work: remove what's done and add what you find. Rules and conventions are in [CLAUDE.md](CLAUDE.md); decisions are in [docs/ADR](docs/ADR/Readme.md).
 
-Last updated 2026-10-12, after unblocking the gamex-wb build (on top of 106d467).
+Last updated 2026-10-12, after porting OpenX's Engine.cs (on top of 8fbef42).
 
 ## Where things stand
 
@@ -10,13 +10,13 @@ Last updated 2026-10-12, after unblocking the gamex-wb build (on top of 106d467)
 - Tests: `gamex` 49, `gamex-arkane` 4, `openx-gfx` 24, `openx-gfx-egin` 62, `openx-engine-opengl` 15, `openx-poly` 18. Three older tests fail; see section 4.
 - **Rust port: 75 files done, 326 still `todo` in `PORT_MAP.tsv`** (partial files count as `todo`). The core model is done, including `store.rs` with every store but Blizzard.
 - **Arx Fatalis opens in the Rust Explorer** through GOG, and every file in its seven `.pak`s reads: text, scripts, `.wav`, `.tga`, `.bmp` / `.jpg`, `.ftl` / `.fts` / `.tea`.
+- **OpenX's engines are C#'s `Engine` / `EngineX`** (`openx::engine`), and the Explorer lists C#'s engines: OpenGL draws; the others are registered without a backend.
 - **The Explorer shows Arx's textures.** `OpenGLEngine` is in the engine list (the config picks `GL`), and a "Texture" tab hosts `AppOpenGLControl`: OpenX's `OpenGLControl` in an egui paint callback on eframe's GL context. Checked on `data.pak:GRAPH/particles/Boom.bmp` with the config's `forcePath` set to `sample:1` for the run. See PORTING.md, "OpenX's OpenGL engine in the egui Explorer".
 
 ## 1. Finish the Rust Explorer's views
 
 - [ ] **Engine view, the rest:** OpenX's `ObjectRenderer` (C# passes the loaded object as the manager's `path`; Rust's `SourcePath` can't carry one), `ParticleRenderer` (needs `Egin_Particle.cs` and egin's scene types), `EngineRenderer` (needs `OpenGLOpenEngine`, which needs `CellManager`), and the other engines' controls in `AppGfxControl.cs`. `ITextureSelect` / `ITextureFrames` aren't reachable through `Tag::Texture`, so frame stepping and `Select` aren't wired.
-- [ ] **OpenX's Rust `platform.rs` is still C#'s old `Platform.cs`.** C# renamed it `Engine.cs` (`Engine`, `EngineX`), with `GfxFactory` / `SfxFactory` and `EngineX.Gfx`. Port it, so `OpenGLEngine::gfx()` (the stand-in) goes, and camelCase its snake_case names (`platform_os`, `current_caps`).
-- [ ] **Audio player** (`TAudioPlayer`): buttons in egui, playback through OpenX's sfx.
+- [ ] **Audio player** (`TAudioPlayer`): buttons in egui, playback through OpenX's sfx. Port `Engine_System`'s `SystemSfx` / `SystemAudioBuilder` first (`OpenX/rust/core/openx/src/engine_system/`), with openx-sfx's `AudioManager` / `AudioBuilder` brought to C#'s shape (built from `(ISource, path)`), and give `OpenGLEngine`'s `sfxFactory` its `SystemSfx`.
 - [ ] **Data grid** (`TDataGrid`): a table with `egui_extras::TableBuilder`.
 - [ ] **Family apps:** nothing registers an `AppStartup` yet, so `FamilyApp::openAsync` finds nothing.
 

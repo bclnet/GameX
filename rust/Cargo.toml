@@ -47,6 +47,7 @@ members = [
     "families/valve-platform",
     "families/volition",
     "families/wb",
+    "families/wb-props",
     "families/x2k",
     "families/xbox",
     "engines/engine-eginx",

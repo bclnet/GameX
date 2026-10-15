@@ -938,6 +938,33 @@ Fixed in the tooling on the way: `gen_enums.py` wrote CRLF on Windows (text
 mode), and `verify_enums.py` collected aliases but never counted them, so
 `Enums.cs` failed with 27 "missing" aliases. It now passes 11,624 of 11,624.
 
+## WB's Props are their own project
+
+WB's `Formats/AC/Props` folder (`Enums.cs`, `Enums+Weenie.cs`, `Properties.cs`)
+is its own project in all three languages: C#'s `GameX.WB.Props` (referenced
+by `GameX.WB`, and needing only `OpenX.Poly`), Rust's `gamex-wb-props`
+(`rust/families/wb-props`, re-exported at `gamex_wb::formats::ac::props`), and
+Python's `GameX_WB_Props.py` with `WB_Props/formats/AC/props/`. Names and
+namespaces didn't change.
+
+The reason is Rust's build: cargo compiles and caches per crate, so inside
+`gamex-wb` every edit to WB recompiled 44,000 lines of enums (2 s to check, 9 s
+to build). In their own crate they compile once; a WB edit now takes 0.25 s.
+
+The enums' 60 MB `.rlib` is compiler bookkeeping, not shipped code: 33 MB of
+metadata (about 300 bytes for each of `WeenieClassName`'s 31,108 associated
+consts, public or private), 7 MB of debug info, 4 MB of names, 0.5 MB of code,
+and relocations for the name table's 31,108 `&str` pointers. A test program
+using one const and `name()` is 1.8 MB, most of it that name table. Storing the
+names as one string plus offsets would cut that to 1.2 MB, the `.rlib` from 19
+to 12 MB, and the build from 1.7 to 0.8 s (TODO.md).
+
+`gen_enums.py` writes the Python twin too (an `out.py` destination): `IntEnum`
+and `IntFlag`, and a class of int constants with a `Names` dict for plain enums
+over `BIG_ENUM`. An `IntEnum` of `WeenieClassName` takes 2.2 s to import; the
+constants take 0.1 s. Python's `IntFlag` holds C#'s signed flags unsigned
+(`ChatFilterMask.AllMessageTypes` is `0xffffffff`, Rust's `-0x1`).
+
 ## OpenX's `Engine.cs` replaces the old `Platform.cs` port
 
 OpenX's Rust `platform.rs` was a port of C#'s `Platform.cs`, from before C#

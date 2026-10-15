@@ -5,4 +5,4 @@ pub mod entity_plus;
 pub mod file_types;
 pub mod file_types_plus;
 pub mod models;
-pub mod props;
+pub use gamex_wb_props::formats::ac::props; // GameX.WB.Props

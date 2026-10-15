@@ -382,9 +382,9 @@ todo	2001	e6ea39a4dcd0d97a	Families/GameX.WB/Formats/AC/Entity.cs	families/wb/sr
 todo	0	8ccb8e17e1c23c2b	Families/GameX.WB/Formats/AC/FileTypes+.cs	families/wb/src/formats/ac/file_types_plus.rs	gamex-wb
 todo	1805	6637fad662f22dc2	Families/GameX.WB/Formats/AC/FileTypes.cs	families/wb/src/formats/ac/file_types.rs	gamex-wb
 todo	1303	26feef60c212b2ef	Families/GameX.WB/Formats/AC/Models.cs	families/wb/src/formats/ac/models.rs	gamex-wb
-done	31722	d3aeb600a5144d71	Families/GameX.WB/Formats/AC/Props/Enums+Weenie.cs	families/wb/src/formats/ac/props/enums_weenie.rs	gamex-wb
-done	12796	93ab3ac7404fc3f9	Families/GameX.WB/Formats/AC/Props/Enums.cs	families/wb/src/formats/ac/props/enums.rs	gamex-wb
-todo	1190	cbd3c66552610127	Families/GameX.WB/Formats/AC/Props/Properties.cs	families/wb/src/formats/ac/props/properties.rs	gamex-wb
+done	31722	d3aeb600a5144d71	Families/GameX.WB.Props/Formats/AC/Props/Enums+Weenie.cs	families/wb-props/src/formats/ac/props/enums_weenie.rs	gamex-wb-props
+done	12796	93ab3ac7404fc3f9	Families/GameX.WB.Props/Formats/AC/Props/Enums.cs	families/wb-props/src/formats/ac/props/enums.rs	gamex-wb-props
+todo	1190	cbd3c66552610127	Families/GameX.WB.Props/Formats/AC/Props/Properties.cs	families/wb-props/src/formats/ac/props/properties.rs	gamex-wb-props
 todo	98	4601fb7b26c4b532	Families/GameX.WB/Formats/PakFileType.cs	families/wb/src/formats/pak_file_type.rs	gamex-wb
 todo	21	1f97ad9dca059703	Families/GameX.WB/Games/AC/Database.cs	families/wb/src/games/ac/database.rs	gamex-wb
 todo	4	3c3926b522398e11	Families/GameX.WB/Games/AC/DatabaseCell.cs	families/wb/src/games/ac/database_cell.rs	gamex-wb

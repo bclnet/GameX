@@ -15,9 +15,12 @@ What this handles:
   * duplicate discriminants (legal in C#, not in a Rust enum) -> the first
     becomes a variant, the rest become associated consts
   * XML doc comments and trailing // comments, carried across
+  * an `out.py` destination writes the Python twin instead (IntEnum / IntFlag,
+    and a class of int constants for plain enums over BIG_ENUM)
 
-Usage: gen_enums.py <Enums.cs> <out.rs> <PORT-SOURCE path>
+Usage: gen_enums.py <Enums.cs> <out.rs|out.py> <PORT-SOURCE path>
 """
+import keyword
 import re
 import sys
 from pathlib import Path
@@ -418,6 +421,73 @@ def emit(name, base, is_flags, doc, resolved) -> str:
     return "\n".join(lines) + "\n"
 
 
+def pyIdent(name: str) -> str:
+    """C# member name -> valid Python name: keywords (`None`) get a trailing underscore."""
+    if keyword.iskeyword(name):
+        return name + "_"
+    if name and name[0].isdigit():
+        return "_" + name
+    return name
+
+
+def pyDoc(doc: str) -> list:
+    return [f"# {l}" for l in doc_lines(doc).replace("/// ", "").splitlines() if l.strip()]
+
+
+def emitPython(name, base, is_flags, doc, resolved) -> str:
+    """One enum as Python: IntFlag for [Flags], IntEnum for plain, and a class of
+    int constants for plain enums over BIG_ENUM members, which an Enum class
+    takes seconds to build at import (WeenieClassName: 2.2 s, constants: 0.08 s).
+    Python Enums alias duplicate values themselves, so every C# name resolves."""
+    numeric = [(n, v, c) for n, v, c in resolved if v is not None]
+    skipped = [(n, c) for n, v, c in resolved if v is None]
+    lines = pyDoc(doc)
+    big = not is_flags and len({v for _, v, _ in numeric}) > BIG_ENUM
+    if is_flags:
+        # IntFlag members are unsigned bit patterns; C#'s signed flags wrap negative
+        bits = WIDTHS.get(base, (32, True))[0]
+        numeric = [(n, v & ((1 << bits) - 1), c) for n, v, c in numeric]
+    kind = "" if big else "(IntFlag)" if is_flags else "(IntEnum)"
+    if big:
+        lines.append(f"# C# `enum {name} : {base}`, as int constants: {len(numeric)} members is too many for a")
+        lines.append("# Python Enum to import quickly. `Names` maps a value to its first C# name.")
+    lines.append(f"class {name}{kind}:")
+    for n, v, c in numeric:
+        lines.append(f"    {pyIdent(n)} = {v:#x}" + (f" # {c}" if c else ""))
+    if big:
+        lines.append("    Names: dict[int, str] = {v: k for k, v in reversed(list(locals().items())) if isinstance(v, int)}")
+        lines.append("    @staticmethod")
+        lines.append(f"    def name(v: int) -> str: return {name}.Names.get(v)")
+    if not numeric and not big:
+        lines.append("    pass")
+    for n, c in skipped[:20]:
+        lines.append(f"    # NOT GENERATED: {n}" + (f" # {c}" if c else ""))
+    return "\n".join(lines) + "\n"
+
+
+def mainPython(src, dst, enums) -> int:
+    """`gen_enums.py <Enums.cs> <out.py> <source>`: the Python twin, from the same parse."""
+    body, shared, any_flags, any_plain, total, total_ok = [], {}, False, False, 0, 0
+    for name, base, is_flags, doc, members in enums:
+        resolved = resolve(members, base, shared)
+        body.append(emitPython(name, base, is_flags, doc, resolved))
+        any_flags |= is_flags
+        any_plain |= not is_flags and len({v for _, v, _ in resolved if v is not None}) <= BIG_ENUM
+        total += len(members)
+        total_ok += sum(1 for _, v, _ in resolved if v is not None)
+    imports = [x for x, used in (("IntEnum", any_plain), ("IntFlag", any_flags)) if used]
+    header = [f"# Generated from {sys.argv[3]} by rust/_/gen_enums.py: regenerate, don't hand-edit.",
+              f"# {len(enums)} enum(s), {total_ok}/{total} members.",
+              "from __future__ import annotations"]
+    if imports:
+        header.append(f"from enum import {', '.join(imports)}")
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    with open(dst, "w", encoding="utf-8", newline="\n") as f:
+        f.write("\n".join(header) + "\n\n" + "\n".join(body))
+    print(f"{src.name}: {len(enums)} enums, {total_ok}/{total} members -> {dst}")
+    return 0
+
+
 def main() -> int:
     if len(sys.argv) != 4:
         print(__doc__)
@@ -439,6 +509,8 @@ def main() -> int:
         seen_names[name] = n + 1
         fixed.append((f"{name}{n + 1}" if n else name, base, is_flags, doc, members))
     enums = fixed
+    if dst.suffix == ".py":
+        return mainPython(src, dst, enums)
 
     body, stats = [], []
     any_flags = False

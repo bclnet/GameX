@@ -28,6 +28,8 @@ dotnet build dotnet/GameX.Cli/GameX.Cli.csproj
 dotnet build dotnet/Core/GameXTests/GameXTests.csproj      # builds every family
 ```
 
+On Windows, `GameX.Resource`'s post-build `xcopy` needs `$(SolutionDir)`, which a single-project build leaves undefined; add `-p:SolutionDir=<repo>\dotnet\` (it copies into the gitignored `engines/Plugins/GameX.Resource/`).
+
 Tests that run anywhere (no game files needed):
 
 ```bash
@@ -67,6 +69,7 @@ Python: put `python/` and `OpenX/python/` on `sys.path`, then `import gamex` (wh
 - C#: file-scoped namespaces, K&R braces (opening brace on the same line), primary constructors, 4-space indent, `#region` blocks, `///` summaries. Files are **CRLF with a UTF-8 BOM** — preserve both when editing `.cs`, `.csproj`, `.sln`. (`dotnet sln add` rewrites the `.sln` with LF; convert it back.)
 - Python: camelCase method names mirroring the C# (`getFamily`, `parseHash`), one-line bodies are common. Needs Python ≥ 3.10 (`match`), despite what `setup.cfg` says.
 - Rust: C# names in camelCase, exactly as Python does: `decodePath`, `getArchive`, `fileSize`; types and traits keep C#'s PascalCase (`ISource`, `I*` traits). **Never write snake_case names**, and convert existing snake_case names to camelCase in any file you touch. Naming and unused-code warnings are allowed once per workspace (`[workspace.lints.rust]` in `OpenX/rust/Cargo.toml` and `rust/Cargo.toml`); every crate's `Cargo.toml` has `[lints]` / `workspace = true`, so add that to any new crate. One `.rs` per `.cs`.
+- A C# sub-project `GameX.X.Sub` (e.g. `GameX.WB.Props`, `GameX.Bethesda.Platform`) is the Rust crate `rust/families/x-sub` (`gamex-x-sub`) and the Python module `python/gamex/families/GameX_X_Sub.py` with its files under `X_Sub/`. Keep the three in step when a project is split or added.
 - Where things live (OpenX only; GameX stays one-to-one with C#, file for file): C# polyfills for .NET libraries map to the matching Python/Rust library, not to copies of C#'s namespace folders. The table of homes is [`OpenX/Polyfills.md`](OpenX/Polyfills.md); the rules are [ADR 0002](docs/ADR/0002-library-homes-for-polyfills.md). E.g. `System.Numerics` → glam, `Int3` → `openx_poly::poly` alias of `glam::IVec3`. Update the table when something moves.
 - C# value types ([ADR 0003](docs/ADR/0003-value-types.md)): ports match C#'s behaviour, not its lines. Python creates C#'s implicit defaults and copies explicitly (marked `# C# value type`); Rust structs derive `Clone`/`Default` (and `Copy`), `default(T)` is `Default::default()`, nullable classes are `Option<T>`.
 - Rust slim builds: a module that doesn't compile yet stays declared and gated with `#[cfg(feature = "full")]`; `cargo build` compiles the working set, `cargo check --features full` shows what's left. Don't move files to make a crate compile. Folders named `_/` (e.g. `OpenX/rust/core/poly/_/`) hold code the owner parked on purpose. Move individual features, functions or types back out of `_/` when something needs them; don't un-park whole folders.
@@ -83,7 +86,7 @@ Don't fix or report these:
 ## Git
 
 - The owner commits as plain `updates` and works from more than one machine. Pull before starting; never force-push `master`.
-- Work in the main checkout on `master`, even when the session starts in a `.claude/worktrees/` worktree: the owner watches the changes there as they happen. Move any work already in a worktree across first (`git diff --binary` | `git apply --binary`), then use paths into the main checkout.
+- Work in the main checkout on `master`, even when the session starts in a `.claude/worktrees/` worktree: the owner watches the changes there as they happen. Move any work already in a worktree across first (`git diff --binary` | `git apply --binary`), then use paths into the main checkout. A hook blocks the Edit and Write tools outside the session's worktree, so edits there go through scripts (keep each file's line endings); starting the session in the main checkout avoids that.
 - Work lands on `master` directly (no PRs): when asked to commit, commit on `master` and push it; delete any branch you made.
 - Commit or push only when asked.
 - `*.orig` / `*.rej` are ignored; don't commit merge leftovers.

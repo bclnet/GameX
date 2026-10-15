@@ -1,4 +1,4 @@
-// PORT-SOURCE: Families/GameX.WB/Formats/AC/Props/Properties.cs
+// PORT-SOURCE: Families/GameX.WB.Props/Formats/AC/Props/Properties.cs
 // PORT-SHA: cbd3c66552610127
 // PORT-STATUS: todo (1190 live LOC in C#)
 //

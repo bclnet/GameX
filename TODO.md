@@ -2,7 +2,7 @@
 
 What's next, in order. Pick from the top, and update this file in the same commit as the work: remove what's done and add what you find. Rules and conventions are in [CLAUDE.md](CLAUDE.md); decisions are in [docs/ADR](docs/ADR/Readme.md).
 
-Last updated 2026-10-15, after bringing Python's Arkane, Engine.cs and Store.cs up to C# (on top of 89189fb).
+Last updated 2026-10-15, after splitting WB's Props into their own project in all three languages (on top of aedeb19).
 
 ## Where things stand
 
@@ -29,6 +29,8 @@ Last updated 2026-10-15, after bringing Python's Arkane, Engine.cs and Store.cs 
 | 29 `done` rows that are empty placeholders (Collada, compression, `DesSer`, `Manager`, ...) | Rust | large | 5 |
 | 11 STALE `done` files and 13 missing rows from `sync-check.sh` | Rust | medium | 5 |
 | Enum files still on `from_raw`; enum-only `done` headers | Rust | small | 5 |
+| `ConstEnum` names as one string plus offsets (smaller, faster builds) | Rust | small | 5 |
+| WB's `Properties.cs` | Rust, Python | medium | 5 |
 | C# OpenGL bugs the ports kept | all three, owner decides | small | 5 |
 | Blast fails on `.bmp` exports | C# | small | 5 |
 | Bullfrog and Beamdog readers; `%20` in file URIs | Python | medium | 5 |
@@ -81,6 +83,8 @@ C# files Rust has ported whose Python twin is missing or behind (ADR 0001). Pyth
 - [ ] **`bash rust/_/sync-check.sh` reports 11 STALE `done` files**, where the C# changed after the port: `ImportManager`, `Client`, `DesSer`, `Globalx`, `_Config`, `Collada`, `RootHandlers`, Bethesda `Records`, Gamebryo `Nif`, Uncore `Network`, and WB `Enums` (its 18 classes aren't ported; its enums are current). Port each change, then bump its PORT-SHA. It also reports 13 MISSING rows: the 6 `Applications/` ones, `Gamebryo/Formats/Nif.o.cs`, and 6 `GameX.Valve.Platform/OpenGL` files. And it reports 94 C# files with no row, 22 of them in the C#-only `Apps/GameX.App.ExplorerM`.
 - [ ] **29 `done` rows are empty placeholders** whose header says "NOT PORTED": `App/ImportManager`, `App/ManifestManager`, `Assembly`, `BlizzardProtoDatabase`, `DesSer`, `Manager`, `Transforms/UnknownTransform`, the six `_LIB/Collada` files, `_LIB/Compression`'s Doboz (3), `Lzf`, `Lzo`, `Lzss`, `OodleLZ`, `Salsa20` and `XCompress`, Casc's `BackgroundWorkerEx`, `CdnCacheStats`, `Logger`, `PerfCounter` and `Salsa20`, and Uncore's `_LIB/System.IO.Compression` and `System.Security.Cryptography`. Mark them `todo` in `PORT_MAP.tsv`, or port them.
 - [ ] **Some `done` headers cover only enums.** `families/bethesda/src/formats/records.rs` holds just the generated enums of `Records.cs`, which also has about 350 classes. Check the other `gen_enums.py` outputs the same way.
+- [ ] **`ConstEnum`'s name table as one string plus offsets.** Each `(value, &str)` entry is a pointer with a relocation; one string plus `(value, offset)` pairs cut `WeenieClassName`'s `.rlib` from 19 to 12 MB, its build from 1.7 to 0.8 s, and a program using it from 1.8 to 1.2 MB (PORTING.md, "WB's Props are their own project"). Change `openx_poly::system::const_enum` and `gen_enums.py`, then regenerate.
+- [ ] **WB's `Properties.cs`** (`GameX.WB.Props`) is a `todo` stub in Rust and has no Python twin.
 - [ ] **Regenerate the other enum files.** WB's two are regenerated (camelCase `fromRaw` / `toRaw`, LF, `ConstEnum` for the big ones). `casc/root_handlers.rs`, Bethesda `records.rs`, Gamebryo `nif.rs` / `nif_o.rs` and Stardew Valley's `game_data.rs` still have `from_raw` / `to_raw`; regenerate them and set their headers by hand (the generator writes `PORT-SHA: PLACEHOLDER`), keeping the old hash where the C# file has more than enums.
 - [ ] **`Graph/interface/misc/quit1.bmp` doesn't decode**: the `image` crate says "The image format could not be determined" (it's Arx sample 1's first path, outside the `.pak`s). Compare with what System.Drawing makes of it.
 - [ ] **Porting scripts with dead paths:** `rust/_/stamp.py` and `gen_gamex.py` point at `/home/claude/...`. `OpenX/rust/_/sync-check.sh` has no `PORT_MAP.tsv` to read and still defaults to `../src/dotnet`.

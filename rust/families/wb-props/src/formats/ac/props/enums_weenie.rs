@@ -1,4 +1,4 @@
-// PORT-SOURCE: Families/GameX.WB/Formats/AC/Props/Enums+Weenie.cs
+// PORT-SOURCE: Families/GameX.WB.Props/Formats/AC/Props/Enums+Weenie.cs
 // PORT-SHA: d3aeb600a5144d71
 // PORT-STATUS: done
 // PORT-GENERATED: gen_enums.py — do not hand-edit; regenerate instead.

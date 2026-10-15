@@ -12,4 +12,5 @@ workspace = true
 bitflags = { workspace = true }
 gamex = { path = "../../core/gamex" }
 gamex-uncore = { path = "../../families/uncore" }
+gamex-wb-props = { path = "../../families/wb-props" }
 openx-poly = { path = "../../../OpenX/rust/core/poly" }

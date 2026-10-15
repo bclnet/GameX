@@ -20,6 +20,8 @@ The rules are in [CLAUDE.md](../../../CLAUDE.md) (naming, value types, `full` ga
   ```bash
   python3 -c 'import sys; sys.path.insert(0, "rust/_"); from pathlib import Path; from gen_gamex import rust_path_for, live_loc, sha; p = Path(sys.argv[1]); print(live_loc(p), sha(p), rust_path_for(p.relative_to(sys.argv[2])))' dotnet/Families/GameX.Uncore/Formats/Binary.cs dotnet/Families/GameX.Uncore
   ```
+  A `done` row isn't proof of a port: 29 `done` files are placeholders whose header says "NOT PORTED" (TODO.md). Read the `.rs` file before relying on it.
+- [ ] A C# sub-project (`GameX.X.Sub`) has its own crate, `rust/families/x-sub` (`gamex-x-sub`), and its own Python module, `GameX_X_Sub.py` with `X_Sub/` (CLAUDE.md). `gamex-wb-props` is the example.
   Copy the crate directory and crate name from a row of the same project (`grep -m1 'GameX.Uncore/' rust/_/PORT_MAP.tsv`). Write the row as `todo`, create the `.rs` file with the three headers, and declare it with `pub mod` in its parent.
 - [ ] Find the Python twin. It already has the camelCase shape, so start from it when it exists:
   - `Core/GameX/Foo.cs` → `python/gamex/core/foo.py`
@@ -50,6 +52,7 @@ The rules are in [CLAUDE.md](../../../CLAUDE.md) (naming, value types, `full` ga
   The verifier must print `OK ... missing= 0 mismatched= 0`. The generator writes `PORT-SHA: PLACEHOLDER` and `PORT-STATUS: done` even when the C# file has more than enums, so set both by hand (step 5): the current hash only if the C# file is nothing but enums, otherwise keep the old one. Fix generator problems in `gen_enums.py`, never in its output.
   - A plain enum over `BIG_ENUM` (1,000) members comes out as a `ConstEnum` (`openx_poly::system::const_enum`): a newtype with associated consts. `#[derive(Debug)]` on a Rust enum that size costs rustc memory quadratic in the variants (about 23 GB for WB's 31,108-member `WeenieClassName`). The crate needs `openx-poly` as a dependency.
   - Enum files generated before the `fromRaw` / LF fixes still have `from_raw` (TODO.md lists them).
+  - The same command with a `.py` destination writes the Python twin (`IntEnum` / `IntFlag`; a class of int constants over `BIG_ENUM`), so the two stay generated from one parse. WB's are in `python/gamex/families/WB_Props/formats/AC/props/`.
 
 ## 3. Register types a spec names
 
